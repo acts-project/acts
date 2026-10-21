@@ -11,6 +11,10 @@
 #include <iomanip>
 #include <ostream>
 #include <string>
+#include <unordered_map>
+
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 /// Information on a given surface.
 
@@ -31,6 +35,82 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   os << " | " << std::setw(3) << id.approach();
   os << " | " << std::setw(4) << id.sensitive() << " ]";
   return os;
+}
+
+std::unordered_map<std::uint64_t, json> load_geometry_file(
+    std::string geometry_file) {
+  json geom;
+  {
+    std::ifstream gj(geometry_file);
+    if (!gj.good()) {
+      std::cerr << "WARNING: " << geometry_file << " not found." << std::endl;
+    } else {
+      try {
+        gj >> geom;
+      } catch (...) {
+        std::cerr << "WARNING: Failed to parse " << geometry_file << "."
+                  << std::endl;
+      }
+    }
+  }
+  std::unordered_map<std::uint64_t, json> surface_bounds;
+  const auto& entries = geom["Surfaces"]["entries"];
+  for (const auto& entry : entries) {
+    // Handle both old (std::uint64_t) and new (object with component fields)
+    // formats
+    std::uint64_t gid;
+    if (entry["value"]["geo_id"].is_number()) {
+      // Specification: geo_id is a simple std::uint64_t
+      gid = entry["value"]["geo_id"].get<std::uint64_t>();
+    } else if (entry["value"]["geo_id"].is_object()) {
+      // Specification: geo_id is an object with component fields
+      // Reconstruct the std::uint64_t from individual components
+      // Layout: volume (bits 56-63), boundary (bits 48-55), layer (bits 36-47),
+      //         approach (bits 28-35), sensitive (bits 0-27)
+      std::uint64_t gid_value = 0;
+      const auto& geo_id_obj = entry["value"]["geo_id"];
+
+      if (geo_id_obj.contains("volume") && !geo_id_obj["volume"].is_null()) {
+        std::uint32_t volume = static_cast<std::uint32_t>(
+            geo_id_obj["volume"].get<std::uint32_t>());
+        gid_value |= (static_cast<std::uint64_t>(volume) & 0xFF) << 56;
+      }
+      if (geo_id_obj.contains("boundary") &&
+          !geo_id_obj["boundary"].is_null()) {
+        std::uint32_t boundary = static_cast<std::uint32_t>(
+            geo_id_obj["boundary"].get<std::uint32_t>());
+        gid_value |= (static_cast<std::uint64_t>(boundary) & 0xFF) << 48;
+      }
+      if (geo_id_obj.contains("layer") && !geo_id_obj["layer"].is_null()) {
+        std::uint32_t layer = static_cast<std::uint32_t>(
+            geo_id_obj["layer"].get<std::uint32_t>());
+        gid_value |= (static_cast<std::uint64_t>(layer) & 0xFFF) << 36;
+      }
+      if (geo_id_obj.contains("approach") &&
+          !geo_id_obj["approach"].is_null()) {
+        std::uint32_t approach = static_cast<std::uint32_t>(
+            geo_id_obj["approach"].get<std::uint32_t>());
+        gid_value |= (static_cast<std::uint64_t>(approach) & 0xFF) << 28;
+      }
+      if (geo_id_obj.contains("sensitive") &&
+          !geo_id_obj["sensitive"].is_null()) {
+        std::uint32_t sensitive = static_cast<std::uint32_t>(
+            geo_id_obj["sensitive"].get<std::uint32_t>());
+        gid_value |= (static_cast<std::uint64_t>(sensitive) & 0xFFFFF) << 8;
+      }
+      if (geo_id_obj.contains("extra") && !geo_id_obj["extra"].is_null()) {
+        std::uint64_t extra = geo_id_obj["extra"].get<std::uint64_t>();
+        gid_value |= (extra & 0xFF);
+      }
+      gid = gid_value;
+    } else {
+      std::cerr << "WARNING: Unknown geo_id format in geometry file."
+                << std::endl;
+      continue;
+    }
+    surface_bounds[gid] = entry["value"]["bounds"];
+  }
+  return surface_bounds;
 }
 
 /// Initialise the information on each surface.

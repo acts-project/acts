@@ -126,29 +126,6 @@ concept VisitorConcept = requires(T& t, TS& ts) {
 
 }  // namespace detail_lt
 
-/// This namespace contains typedefs and constant values that are used by
-/// other parts of the @c MultiTrajectory implementation. It extracts these
-/// from @c TrackStateTraits using the default maximum measurement dimension.
-/// @deprecated Use aliased types and constants directly
-namespace MultiTrajectoryTraits {
-
-/// Maximum number of measurement dimensions supported by trajectory
-/// @deprecated Use @ref Acts::kMeasurementSizeMax instead.
-[[deprecated("Use Acts::kMeasurementSizeMax instead.")]]
-constexpr unsigned int MeasurementSizeMax = kMeasurementSizeMax;
-
-/// Type alias for trajectory index type
-/// @deprecated Use @ref Acts::TrackIndexType instead.
-using IndexType [[deprecated("Use Acts::TrackIndexType instead.")]] =
-    TrackIndexType;
-
-/// Invalid track state index constant
-/// @deprecated Use @ref Acts::kTrackIndexInvalid instead.
-[[deprecated("Use Acts::kTrackIndexInvalid instead.")]]
-constexpr IndexType kInvalid = kTrackIndexInvalid;
-
-}  // namespace MultiTrajectoryTraits
-
 template <typename T>
 struct IsReadOnlyMultiTrajectory;
 
@@ -460,23 +437,35 @@ class MultiTrajectory {
     return self().has_impl(key, istate);
   }
 
+  /// Get parameters for a track state
+  /// @param parIdx The parameter index
+  /// @return Parameters vector
   typename TrackStateProxy::Parameters parameters(IndexType parIdx)
     requires(!ReadOnly)
   {
     return self().parameters_impl(parIdx);
   }
 
+  /// Get parameters for a track state (const)
+  /// @param parIdx The parameter index
+  /// @return Const parameters vector
   typename ConstTrackStateProxy::ConstParameters parameters(
       IndexType parIdx) const {
     return self().parameters_impl(parIdx);
   }
 
+  /// Get covariance for a track state
+  /// @param covIdx The covariance index
+  /// @return Covariance matrix
   typename TrackStateProxy::Covariance covariance(IndexType covIdx)
     requires(!ReadOnly)
   {
     return self().covariance_impl(covIdx);
   }
 
+  /// Get covariance for a track state (const)
+  /// @param covIdx The covariance index
+  /// @return Const covariance matrix
   typename ConstTrackStateProxy::ConstCovariance covariance(
       IndexType covIdx) const {
     return self().covariance_impl(covIdx);
@@ -707,8 +696,8 @@ class MultiTrajectory {
     visit_measurement(measdim, [this, istate]<std::size_t DIM>(
                                    std::integral_constant<std::size_t, DIM>) {
       self().allocateCalibrated_impl(
-          istate, ActsVector<DIM>{ActsVector<DIM>::Zero()},
-          ActsSquareMatrix<DIM>{ActsSquareMatrix<DIM>::Zero()});
+          istate, Vector<DIM>{Vector<DIM>::Zero()},
+          SquareMatrix<DIM>{SquareMatrix<DIM>::Zero()});
     });
   }
 

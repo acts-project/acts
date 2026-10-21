@@ -17,6 +17,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -71,12 +72,12 @@ MaterialUpdateMode determineMaterialUpdateMode(
 /// @param direction The direction at which to evaluate the material slab
 /// @param updateMode The material update mode
 /// @return The evaluated material slab
-MaterialSlab evaluateMaterialSlab(const GeometryContext& geoContext,
-                                  const Surface& surface,
-                                  Direction propagationDirection,
-                                  const Vector3& position,
-                                  const Vector3& direction,
-                                  MaterialUpdateMode updateMode);
+Result<MaterialSlab> evaluateMaterialSlab(const GeometryContext& geoContext,
+                                          const Surface& surface,
+                                          Direction propagationDirection,
+                                          const Vector3& position,
+                                          const Vector3& direction,
+                                          MaterialUpdateMode updateMode);
 
 /// Evaluate the material slab at the propagation state and surface
 /// @tparam propagator_state_t The type of the propagator state
@@ -87,10 +88,10 @@ MaterialSlab evaluateMaterialSlab(const GeometryContext& geoContext,
 /// @param updateMode The material update mode
 /// @return The evaluated material slab
 template <typename propagator_state_t, typename stepper_t>
-MaterialSlab evaluateMaterialSlab(const propagator_state_t& state,
-                                  const stepper_t& stepper,
-                                  const Surface& surface,
-                                  MaterialUpdateMode updateMode) {
+Result<MaterialSlab> evaluateMaterialSlab(const propagator_state_t& state,
+                                          const stepper_t& stepper,
+                                          const Surface& surface,
+                                          MaterialUpdateMode updateMode) {
   const GeometryContext& geoContext = state.options.geoContext;
   const Direction propagationDirection = state.options.direction;
   const Vector3 position = stepper.position(state.stepping);
@@ -98,35 +99,6 @@ MaterialSlab evaluateMaterialSlab(const propagator_state_t& state,
 
   return evaluateMaterialSlab(geoContext, surface, propagationDirection,
                               position, direction, updateMode);
-}
-
-/// Evaluate the material slab at the current surface given the propagation
-/// state
-/// @tparam propagator_state_t The type of the propagator state
-/// @tparam stepper_t The type of the stepper
-/// @tparam navigator_t The type of the navigator
-/// @param state The current propagator state
-/// @param stepper The stepper used for the propagation
-/// @param navigator The navigator used for the propagation
-/// @param updateMode The material update mode
-/// @return The evaluated material slab
-template <typename propagator_state_t, typename stepper_t, typename navigator_t>
-MaterialSlab evaluateMaterialSlab(const propagator_state_t& state,
-                                  const stepper_t& stepper,
-                                  const navigator_t& navigator,
-                                  MaterialUpdateMode updateMode) {
-  const Surface* surface = navigator.currentSurface(state.navigation);
-  if (surface == nullptr) {
-    return MaterialSlab::Nothing();
-  }
-
-  const GeometryContext& geoContext = state.options.geoContext;
-  const Direction propDir = state.options.direction;
-  const Vector3 pos = stepper.position(state.stepping);
-  const Vector3 dir = stepper.direction(state.stepping);
-
-  return evaluateMaterialSlab(geoContext, *surface, propDir, pos, dir,
-                              updateMode);
 }
 
 /// Struct to hold the material effects computed at a pointwise interaction
@@ -166,7 +138,7 @@ PointwiseMaterialEffects computeMaterialEffects(const propagator_state_t& state,
                                                 const MaterialSlab& slab,
                                                 bool multipleScattering,
                                                 bool energyLoss) {
-  const bool covTransport = state.stepping.covTransport;
+  const bool covTransport = stepper.hasCovariance(state.stepping);
   const Vector3 direction = stepper.direction(state.stepping);
   const float qOverP = stepper.qOverP(state.stepping);
   const ParticleHypothesis& particleHypothesis =
@@ -210,11 +182,12 @@ PointwiseMaterialEffects performMaterialInteraction(
   const float qOverP = stepper.qOverP(state.stepping);
   const double momentum = stepper.absoluteMomentum(state.stepping);
 
+  //! [energy loss update]
   // in forward(backward) propagation, energy decreases(increases) and
   // variances increase(decrease)
   const double nextE = fastHypot(mass, momentum) - effects.eLoss * propDir;
   // put particle at rest if energy loss is too large
-  double nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
+  double nextP = (mass < nextE) ? fastCathetus(nextE, mass) : 0;
 
   // minimum momentum below which we will not push particles via material
   // update
@@ -226,6 +199,11 @@ PointwiseMaterialEffects performMaterialInteraction(
 
   // update track parameters
   stepper.update(state.stepping, position, direction, nextQOverP, time);
+  //! [energy loss update]
+
+  if (!stepper.hasCovariance(state.stepping)) {
+    return effects;
+  }
 
   // Convenience method to update a variance given a change and noise update
   // mode
@@ -238,15 +216,18 @@ PointwiseMaterialEffects performMaterialInteraction(
   };
 
   // update covariance matrix
-  state.stepping.cov(eBoundPhi, eBoundPhi) =
-      updateVariance(state.stepping.cov(eBoundPhi, eBoundPhi),
-                     effects.variancePhi, noiseUpdateMode);
-  state.stepping.cov(eBoundTheta, eBoundTheta) =
-      updateVariance(state.stepping.cov(eBoundTheta, eBoundTheta),
+  //! [covariance update]
+  BoundMatrix covariance = *stepper.covariance(state.stepping);
+  covariance(eBoundPhi, eBoundPhi) = updateVariance(
+      covariance(eBoundPhi, eBoundPhi), effects.variancePhi, noiseUpdateMode);
+  covariance(eBoundTheta, eBoundTheta) =
+      updateVariance(covariance(eBoundTheta, eBoundTheta),
                      effects.varianceTheta, noiseUpdateMode);
-  state.stepping.cov(eBoundQOverP, eBoundQOverP) =
-      updateVariance(state.stepping.cov(eBoundQOverP, eBoundQOverP),
+  covariance(eBoundQOverP, eBoundQOverP) =
+      updateVariance(covariance(eBoundQOverP, eBoundQOverP),
                      effects.varianceQoverP, noiseUpdateMode);
+  stepper.setCovariance(state.stepping, covariance);
+  //! [covariance update]
 
   return effects;
 }
@@ -255,32 +236,28 @@ PointwiseMaterialEffects performMaterialInteraction(
 /// propagation state
 /// @tparam propagator_state_t The type of the propagator state
 /// @tparam stepper_t The type of the stepper
-/// @tparam navigator_t The type of the navigator
 /// @param state The current propagator state
 /// @param stepper The stepper used for the propagation
-/// @param navigator The navigator used for the propagation
+/// @param surface The surface at which to perform the material interaction
 /// @param updateMode The material update mode
 /// @param noiseUpdateMode The noise update mode
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
 /// @param logger The logger to use for verbose output
 /// @return The computed material effects
-template <typename propagator_state_t, typename stepper_t, typename navigator_t>
-PointwiseMaterialEffects performMaterialInteraction(
-    propagator_state_t& state, const stepper_t& stepper,
-    const navigator_t& navigator, MaterialUpdateMode updateMode,
-    NoiseUpdateMode noiseUpdateMode, bool multipleScattering, bool energyLoss,
-    const Logger& logger) {
-  const Surface* surface = navigator.currentSurface(state.navigation);
-  if (surface == nullptr) {
-    ACTS_VERBOSE("No current surface, skip material interaction");
-    return {};
+template <typename propagator_state_t, typename stepper_t>
+Result<PointwiseMaterialEffects> performMaterialInteraction(
+    propagator_state_t& state, const stepper_t& stepper, const Surface& surface,
+    MaterialUpdateMode updateMode, NoiseUpdateMode noiseUpdateMode,
+    bool multipleScattering, bool energyLoss, const Logger& logger) {
+  const Result<MaterialSlab> slabResult =
+      evaluateMaterialSlab(state, stepper, surface, updateMode);
+  if (!slabResult.ok()) {
+    return slabResult.error();
   }
-
-  const MaterialSlab slab =
-      evaluateMaterialSlab(state, stepper, navigator, updateMode);
+  const MaterialSlab& slab = slabResult.value();
   if (slab.isVacuum()) {
-    ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
+    ACTS_VERBOSE("No material effects on surface: " << surface.geometryId()
                                                     << " with update mode: "
                                                     << updateMode);
   }
@@ -291,7 +268,7 @@ PointwiseMaterialEffects performMaterialInteraction(
   const Direction propDir = state.options.direction;
 
   ACTS_VERBOSE("Material effects on surface: "
-               << surface->geometryId() << " with update mode: " << updateMode
+               << surface.geometryId() << " with update mode: " << updateMode
                << " are :");
   ACTS_VERBOSE("eLoss = " << effects.eLoss * propDir << ", "
                           << "variancePhi = " << effects.variancePhi << ", "

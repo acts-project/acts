@@ -24,6 +24,7 @@ namespace Acts {
 template <AmbiguityNetworkConcept AmbiguityNetwork>
 class AmbiguityResolutionML {
  public:
+  /// @brief Configuration for the ambiguity resolution algorithm.
   struct Config {
     /// Path to the model file for the duplicate neural network
     std::string inputDuplicateNN = "";

@@ -23,6 +23,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cstddef>
 #include <initializer_list>
@@ -60,9 +61,10 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 10_mm));
 
-  BOOST_CHECK_THROW(SingleCuboidPortalShell{cylVolume}, std::invalid_argument);
+  BOOST_CHECK_THROW(SingleCuboidPortalShell(gctx, cylVolume),
+                    std::invalid_argument);
 
-  SingleCuboidPortalShell shell1{cube};
+  SingleCuboidPortalShell shell1{gctx, cube};
   BOOST_CHECK_EQUAL(shell1.size(), 6);
 
   using enum CuboidVolumeBounds::Face;
@@ -142,7 +144,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   TrackingVolume vol(Transform3::Identity(),
                      std::make_shared<CuboidVolumeBounds>(30_mm, 40_mm, 50_mm));
 
-  SingleCuboidPortalShell shell{vol};
+  SingleCuboidPortalShell shell{gctx, vol};
 
   const auto pXY = shell.portal(PositiveZFace);
   const auto nXY = shell.portal(NegativeZFace);
@@ -196,8 +198,9 @@ BOOST_AUTO_TEST_SUITE(CuboidStack)
 BOOST_DATA_TEST_CASE(XYZDirection,
                      boost::unit_test::data::make(AxisDirection::AxisX,
                                                   AxisDirection::AxisY,
-                                                  AxisDirection::AxisZ),
-                     dir) {
+                                                  AxisDirection::AxisZ) *
+                         boost::unit_test::data::make(0_degree, 180_degree),
+                     dir, angle) {
   AxisDirection dirOrth1{};
   AxisDirection dirOrth2{};
   std::size_t dirIdx = 0;
@@ -237,13 +240,18 @@ BOOST_DATA_TEST_CASE(XYZDirection,
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
           {boundDir, 100_mm}, {boundDirOrth1, 30_mm}, {boundDirOrth2, 100_mm}});
 
-  TrackingVolume vol1(Transform3{Translation3{Vector3::Unit(dirIdx) * -100_mm}},
+  // A half-turn reverses the global coordinate ordering while preserving
+  // the supplied order along the local stacking axis.
+  const Transform3 placement =
+      Translation3{Vector3{10_mm, 20_mm, 30_mm}} *
+      AngleAxis3{angle, Vector3::Unit((dirIdx + 1) % 3)};
+  TrackingVolume vol1(placement * Translation3{Vector3::Unit(dirIdx) * -100_mm},
                       bounds1);
-  TrackingVolume vol2(Transform3{Translation3{Vector3::Unit(dirIdx) * 100_mm}},
+  TrackingVolume vol2(placement * Translation3{Vector3::Unit(dirIdx) * 100_mm},
                       bounds2);
 
-  SingleCuboidPortalShell shell1{vol1};
-  SingleCuboidPortalShell shell2{vol2};
+  SingleCuboidPortalShell shell1{gctx, vol1};
+  SingleCuboidPortalShell shell2{gctx, vol2};
 
   std::map<CuboidVolumeBounds::Face, Vector3> centers1;
   std::map<CuboidVolumeBounds::Face, Vector3> centers2;
@@ -269,6 +277,8 @@ BOOST_DATA_TEST_CASE(XYZDirection,
         normal = -Vector3::UnitX();
         break;
     }
+
+    normal = placement.linear() * normal;
 
     const auto center1 = shell1.portal(face)->surface().center(gctx);
     const auto center2 = shell2.portal(face)->surface().center(gctx);
@@ -323,6 +333,8 @@ BOOST_DATA_TEST_CASE(XYZDirection,
         break;
     }
 
+    normal = placement.linear() * normal;
+
     BOOST_CHECK_EQUAL(shell1.portal(face), stack.portal(face));
     BOOST_CHECK_EQUAL(shell2.portal(face), stack.portal(face));
 
@@ -344,12 +356,25 @@ BOOST_DATA_TEST_CASE(XYZDirection,
         nullptr);
   }
 
-  shell1 = SingleCuboidPortalShell{vol1};
-  shell2 = SingleCuboidPortalShell{vol2};
+  shell1 = SingleCuboidPortalShell{gctx, vol1};
+  shell2 = SingleCuboidPortalShell{gctx, vol2};
+
+  BOOST_CHECK_THROW(CuboidStackPortalShell(gctx, {&shell2, &shell1}, dir),
+                    AssertionFailureException);
+  // Invalid ordering must be rejected before any portals are merged or fused.
+  BOOST_CHECK_NE(shell1.portal(backFace), shell2.portal(frontFace));
+  for (const auto face : sideFaces) {
+    BOOST_CHECK_NE(shell1.portal(face), shell2.portal(face));
+  }
 
   BOOST_CHECK_THROW(
       CuboidStackPortalShell(gctx, {&shell1, &shell2}, AxisDirection::AxisR),
       std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(EmptyStack) {
+  BOOST_CHECK_THROW(CuboidStackPortalShell(gctx, {}, AxisDirection::AxisZ),
+                    AssertionFailureException);
 }
 
 BOOST_AUTO_TEST_CASE(NestedStacks) {
@@ -395,11 +420,11 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
       base * Translation3{Vector3::UnitX() * 60_mm + Vector3::UnitZ() * 300_mm},
       std::make_shared<CuboidVolumeBounds>(30_mm, 100_mm, 500_mm), "vol4");
 
-  SingleCuboidPortalShell shell1{vol1};
+  SingleCuboidPortalShell shell1{gctx, vol1};
   BOOST_CHECK(shell1.isValid());
-  SingleCuboidPortalShell shell2{vol2};
+  SingleCuboidPortalShell shell2{gctx, vol2};
   BOOST_CHECK(shell2.isValid());
-  SingleCuboidPortalShell shell3{vol3};
+  SingleCuboidPortalShell shell3{gctx, vol3};
   BOOST_CHECK(shell3.isValid());
 
   CuboidStackPortalShell stack{
@@ -407,7 +432,7 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
 
   BOOST_CHECK(stack.isValid());
 
-  SingleCuboidPortalShell shell4{vol4};
+  SingleCuboidPortalShell shell4{gctx, vol4};
   BOOST_CHECK(shell4.isValid());
 
   CuboidStackPortalShell stack2{
@@ -753,7 +778,7 @@ BOOST_AUTO_TEST_CASE(Fill) {
       base * Translation3(Vector3::UnitZ() * 300_mm),
       std::make_shared<CuboidVolumeBounds>(30_mm, 100_mm, 100_mm), "vol2");
 
-  SingleCuboidPortalShell shell{vol1};
+  SingleCuboidPortalShell shell{gctx, vol1};
 
   using enum CuboidVolumeBounds::Face;
 
@@ -772,7 +797,7 @@ BOOST_AUTO_TEST_CASE(RegisterInto) {
       Transform3::Identity(),
       std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm));
 
-  SingleCuboidPortalShell shell{vol1};
+  SingleCuboidPortalShell shell{gctx, vol1};
 
   BOOST_CHECK_EQUAL(vol1.portals().size(), 0);
 

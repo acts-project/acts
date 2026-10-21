@@ -9,13 +9,15 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <iomanip>
+#include <set>
 #include <utility>
 
 namespace Acts {
@@ -25,16 +27,6 @@ Surface::Surface(const Transform3& transform)
 
 Surface::Surface(const SurfacePlacementBase& placement) noexcept
     : GeometryObject(), m_placement(&placement) {}
-
-Surface::Surface(const Surface& other) noexcept
-    : GeometryObject(other),
-      std::enable_shared_from_this<Surface>(),
-      m_placement(other.m_placement),
-      m_surfaceMaterial(other.m_surfaceMaterial) {
-  if (other.m_transform) {
-    m_transform = std::make_unique<Transform3>(*other.m_transform);
-  }
-}
 
 Surface::Surface(const GeometryContext& gctx, const Surface& other,
                  const Transform3& shift) noexcept
@@ -113,7 +105,7 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
   alignToLoc3D.block<1, 3>(eZ, eAlignmentRotation0) =
       pcRowVec * rotToLocalZAxis;
   // The derivative of bound local w.r.t. local 3D Cartesian coordinates
-  ActsMatrix<2, 3> loc3DToBoundLoc =
+  Matrix<2, 3> loc3DToBoundLoc =
       localCartesianToBoundLocalDerivative(gctx, position);
   // Initialize the derivative of bound parameters w.r.t. alignment
   // parameters without path correction
@@ -158,23 +150,6 @@ std::shared_ptr<const Surface> Surface::getSharedPtr() const {
   return shared_from_this();
 }
 
-Surface& Surface::operator=(const Surface& other) {
-  if (&other != this) {
-    GeometryObject::operator=(other);
-    // detector element, identifier & layer association are unique
-    if (other.m_transform) {
-      m_transform = std::make_unique<Transform3>(*other.m_transform);
-    } else {
-      m_transform.reset();
-    }
-    m_associatedLayer = other.m_associatedLayer;
-    m_surfaceMaterial = other.m_surfaceMaterial;
-    m_placement = other.m_placement;
-    m_isSensitive = other.m_isSensitive;
-  }
-  return *this;
-}
-
 bool Surface::operator==(const Surface& other) const {
   // (a) fast exit for pointer comparison
   if (&other == this) {
@@ -212,8 +187,8 @@ bool Surface::operator==(const Surface& other) const {
 
 std::ostream& Surface::toStreamImpl(const GeometryContext& gctx,
                                     std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(4);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(4);
   sl << name() << std::endl;
   const Vector3& sfcenter = center(gctx);
   sl << "     Center position  (x, y, z) = (" << sfcenter.x() << ", "
@@ -230,7 +205,6 @@ std::ostream& Surface::toStreamImpl(const GeometryContext& gctx,
   sl << "                           colZ = (" << rotZ(0) << ", " << rotZ(1)
      << ", " << rotZ(2) << ")" << std::endl;
   sl << "     Bounds  : " << bounds();
-  sl << std::setprecision(-1);
   return sl;
 }
 
@@ -241,13 +215,7 @@ std::string Surface::toString(const GeometryContext& gctx) const {
 }
 
 Vector3 Surface::center(const GeometryContext& gctx) const {
-  // fast access via transform matrix (and not translation())
-  auto tMatrix = localToGlobalTransform(gctx).matrix();
-  return Vector3(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
-}
-
-const Transform3& Surface::transform(const GeometryContext& gctx) const {
-  return localToGlobalTransform(gctx);
+  return localToGlobalTransform(gctx).translation();
 }
 
 const Transform3& Surface::localToGlobalTransform(
@@ -342,10 +310,6 @@ const SurfacePlacementBase* Surface::surfacePlacement() const {
   return m_placement;
 }
 
-const DetectorElementBase* Surface::associatedDetectorElement() const {
-  return dynamic_cast<const DetectorElementBase*>(m_placement);
-}
-
 double Surface::thickness() const {
   return m_thickness;
 }
@@ -353,6 +317,59 @@ double Surface::thickness() const {
 void Surface::assignThickness(double thick) {
   assert(thick >= 0.);
   m_thickness = thick;
+}
+
+const MaterialSlab& Surface::materialSlab(const Vector2& lp) const {
+  if (m_surfaceMaterial == nullptr) {
+    static const MaterialSlab emptyMaterialSlab;
+    return emptyMaterialSlab;
+  }
+  const Vector2 materialLocal = transformSurfaceLocalToMaterialLocal(lp);
+  return m_surfaceMaterial->materialSlab(materialLocal);
+}
+
+MaterialSlab Surface::materialSlab(const Vector2& lp, Direction pDir,
+                                   MaterialUpdateMode mode) const {
+  if (m_surfaceMaterial == nullptr) {
+    return MaterialSlab();
+  }
+  const Vector2 materialLocal = transformSurfaceLocalToMaterialLocal(lp);
+  return m_surfaceMaterial->materialSlab(materialLocal, pDir, mode);
+}
+
+void Surface::assignSurfaceMaterial(
+    std::shared_ptr<const ISurfaceMaterial> material) {
+  if (material != nullptr) {
+    const std::array<AxisDirection, 2> localSurfaceAxes = localAxes();
+    const std::vector<AxisDirection>& localMaterialAxes =
+        material->localAxisDirections();
+
+    if (!std::ranges::includes(
+            std::set(localSurfaceAxes.begin(), localSurfaceAxes.end()),
+            std::set(localMaterialAxes.begin(), localMaterialAxes.end()))) {
+      std::string errorMsg =
+          "Surface::assignSurfaceMaterial: material axis directions " +
+          axesDirectionName(localMaterialAxes) +
+          " are not supported by this surface. Supported axes are: " +
+          axesDirectionName(std::vector<AxisDirection>{localSurfaceAxes.begin(),
+                                                       localSurfaceAxes.end()});
+      throw std::invalid_argument(errorMsg);
+    }
+
+    m_swapMaterialAxes = !localMaterialAxes.empty() &&
+                         localMaterialAxes[0] != localSurfaceAxes[0];
+  }
+
+  m_surfaceMaterial = std::move(material);
+}
+
+Vector2 Surface::transformSurfaceLocalToMaterialLocal(
+    const Vector2& surfaceLocal) const {
+  Vector2 materialLocal = surfaceLocal;
+  if (m_swapMaterialAxes) {
+    std::swap(materialLocal[0], materialLocal[1]);
+  }
+  return materialLocal;
 }
 
 const Layer* Surface::associatedLayer() const {
@@ -368,10 +385,6 @@ Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
 }
 
-void Surface::assignDetectorElement(const SurfacePlacementBase& detelement) {
-  assignSurfacePlacement(detelement);
-}
-
 void Surface::assignSurfacePlacement(const SurfacePlacementBase& placement) {
   m_placement = &placement;
   // resetting the transform as it will be handled through the detector element
@@ -379,11 +392,6 @@ void Surface::assignSurfacePlacement(const SurfacePlacementBase& placement) {
   m_transform.reset();
   // reset sensitivity flag
   m_isSensitive = false;
-}
-
-void Surface::assignSurfaceMaterial(
-    std::shared_ptr<const ISurfaceMaterial> material) {
-  m_surfaceMaterial = std::move(material);
 }
 
 void Surface::associateLayer(const Layer& lay) {
@@ -412,8 +420,13 @@ bool Surface::isSensitive() const {
   }
   return m_isSensitive;
 }
+
 bool Surface::isAlignable() const {
   return m_placement != nullptr;
+}
+
+bool Surface::hasMaterial() const {
+  return m_surfaceMaterial != nullptr;
 }
 
 }  // namespace Acts

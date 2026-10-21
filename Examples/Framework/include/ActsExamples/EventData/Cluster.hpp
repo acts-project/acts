@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
 
 #include <numeric>
@@ -19,6 +20,8 @@ namespace ActsExamples {
 /// Simple struct holding cluster information.
 struct Cluster {
   using Cell = ActsFatras::Segmentizer::ChannelSegment;
+  /// The module the cluster was formed on
+  Acts::GeometryIdentifier geometryId;
   std::size_t sizeLoc0 = 0;
   std::size_t sizeLoc1 = 0;
   std::vector<Cell> channels;

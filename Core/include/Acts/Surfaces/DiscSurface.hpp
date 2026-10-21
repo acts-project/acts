@@ -111,6 +111,8 @@ class DiscSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
+  ~DiscSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other The source sourface for the assignment
@@ -167,10 +169,23 @@ class DiscSurface : public RegularSurface {
   double referencePositionValue(const GeometryContext& gctx,
                                 AxisDirection aDir) const final;
 
+  using Surface::referenceFrame;
+
+  /// Return method for the reference frame
+  /// This is the frame in which the covariance matrix is defined (specialized
+  /// by all surfaces)
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  ///
+  /// @return RotationMatrix3 which defines the three axes of the measurement
+  /// frame
+  RotationMatrix3 referenceFrame(const GeometryContext& gctx) const;
+
   /// This method returns the bounds by reference
   /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const final;
   /// This method returns the shared_ptr to the DiscBounds
+  /// @return Shared pointer to the disc bounds
   const std::shared_ptr<const DiscBounds>& boundsPtr() const;
   /// Overwrite the existing surface bounds with new ones
   /// @param newBounds: Pointer to the new bounds
@@ -334,7 +349,7 @@ class DiscSurface : public RegularSurface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
   /// Merge two disc surfaces into a single one.
@@ -354,6 +369,11 @@ class DiscSurface : public RegularSurface {
 
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
+
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisR, AxisDirection::AxisPhi};
+  }
 };
 
 static_assert(RegularSurfaceConcept<DiscSurface>,

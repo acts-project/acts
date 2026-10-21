@@ -12,7 +12,6 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
-#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 using namespace Acts;
 
@@ -56,16 +55,6 @@ BOOST_AUTO_TEST_CASE(Grid1DAccess) {
   BOOST_CHECK_EQUAL(grid.atPosition(fgAccess), 0u);
   BOOST_CHECK_EQUAL(grid.atPosition(sgAccess), 3u);
   BOOST_CHECK_EQUAL(grid.atPosition(tgAccess), 6u);
-
-  // Can this go into a delegate?
-  auto gsu = std::make_unique<
-      const GridAccess::GlobalSubspace<AxisDirection::AxisX>>();
-  GridAccess::GlobalToGridLocal1DimDelegate gsuDelegate;
-  gsuDelegate
-      .connect<&GridAccess::GlobalSubspace<AxisDirection::AxisX>::toGridLocal>(
-          std::move(gsu));
-
-  BOOST_CHECK(gsuDelegate.connected());
 }
 
 BOOST_AUTO_TEST_CASE(Grid2DAccess) {
@@ -92,48 +81,6 @@ BOOST_AUTO_TEST_CASE(Grid2DAccess) {
                                       AxisDirection::AxisY};
   auto fgAccess = GridAccessHelpers::castPosition<GridType>(gPosition, fCast);
   BOOST_CHECK_EQUAL(grid.atPosition(fgAccess), 300u);
-}
-
-BOOST_AUTO_TEST_CASE(GlobalToGridLocalTests) {
-  GridAccess::GlobalSubspace<AxisDirection::AxisX, AxisDirection::AxisY> gssXY;
-
-  auto xy = gssXY.toGridLocal(Vector3{1., 2., 3.});
-  BOOST_CHECK_EQUAL(xy[0], 1.);
-  BOOST_CHECK_EQUAL(xy[1], 2.);
-
-  GridAccess::GlobalSubspace<AxisDirection::AxisZ> gssZ;
-  auto z = gssZ.toGridLocal(Vector3{1., 2., 3.});
-  BOOST_CHECK_EQUAL(z[0], 3.);
-
-  GridAccess::Affine3Transformed<
-      GridAccess::GlobalSubspace<AxisDirection::AxisZ>>
-      gssZT(gssZ, Transform3{Transform3::Identity()}.pretranslate(
-                      Vector3{0., 0., 100.}));
-
-  auto zt = gssZT.toGridLocal(Vector3{1., 2., 3.});
-  BOOST_CHECK_EQUAL(zt[0], 103.);
-}
-
-BOOST_AUTO_TEST_CASE(BoundToGridLocalTests) {
-  GridAccess::LocalSubspace<0u, 1u> bssXY;
-  auto xy = bssXY.toGridLocal(Vector2{
-      1.,
-      2.,
-  });
-
-  BOOST_CHECK_EQUAL(xy[0], 1.);
-  BOOST_CHECK_EQUAL(xy[1], 2.);
-}
-
-BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTests) {
-  double radius = 100.;
-  double shift = 0.;
-  GridAccess::BoundCylinderToZPhi bctzp(radius, shift);
-
-  auto zphi = bctzp.toGridLocal(Vector2{0.25 * radius, 52.});
-
-  CHECK_CLOSE_ABS(zphi[0], 52., 1.e-6);
-  CHECK_CLOSE_ABS(zphi[1], 0.25, 1.e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

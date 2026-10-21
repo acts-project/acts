@@ -13,21 +13,28 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/PointBounds.hpp"
+#include "Acts/Surfaces/PointSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 
+#include <array>
 #include <fstream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include <nlohmann/json.hpp>
@@ -207,18 +214,111 @@ BOOST_AUTO_TEST_CASE(PerigeeRoundTripTests) {
   BOOST_CHECK_EQUAL(perigeeTest->geometryId(), perigeeRef->geometryId());
 }
 
-BOOST_AUTO_TEST_CASE(SurfacesDetrayTests) {
-  Transform3 trf(Transform3::Identity() * Translation3(0., 0., -7.));
-  auto trapezoid = std::make_shared<TrapezoidBounds>(2., 3., 4.);
-  auto trapezoidPlaneRef = Surface::makeShared<PlaneSurface>(trf, trapezoid);
-  trapezoidPlaneRef->assignGeometryId(GeometryIdentifier(9u));
+BOOST_AUTO_TEST_CASE(PointSurfaceRoundTripTests) {
+  Transform3 trf(Transform3::Identity() * Translation3(1., -2., 3.));
 
-  // Test a rectangle
-  nlohmann::json trapOut =
-      SurfaceJsonConverter::toJsonDetray(gctx, *trapezoidPlaneRef);
-  out.open("Surfaces-detray.json");
-  out << trapOut.dump(2);
+  // unbounded point surface
+  auto pointRef = Surface::makeShared<PointSurface>(trf);
+  pointRef->assignGeometryId(GeometryIdentifier(77u));
+
+  nlohmann::json pointOut = SurfaceJsonConverter::toJson(gctx, *pointRef);
+  out.open("PointSurface.json");
+  out << pointOut.dump(2);
   out.close();
+
+  auto in = std::ifstream("PointSurface.json",
+                          std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json jPointIn;
+  in >> jPointIn;
+  in.close();
+
+  auto pointTest = SurfaceJsonConverter::fromJson(jPointIn);
+  BOOST_CHECK_EQUAL(pointTest->type(), Surface::Point);
+  BOOST_CHECK(pointTest->localToGlobalTransform(gctx).isApprox(
+      pointRef->localToGlobalTransform(gctx)));
+  BOOST_CHECK_EQUAL(pointTest->geometryId(), pointRef->geometryId());
+
+  // bounded point surface (max distance)
+  auto pbounds = std::make_shared<PointBounds>(5.);
+  auto boundedRef = Surface::makeShared<PointSurface>(trf, pbounds);
+  boundedRef->assignGeometryId(GeometryIdentifier(78u));
+
+  nlohmann::json boundedOut = SurfaceJsonConverter::toJson(gctx, *boundedRef);
+  out.open("PointSurfaceBounded.json");
+  out << boundedOut.dump(2);
+  out.close();
+
+  auto bins = std::ifstream("PointSurfaceBounded.json",
+                            std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(bins.good());
+  nlohmann::json jBoundedIn;
+  bins >> jBoundedIn;
+  bins.close();
+
+  auto boundedTest = SurfaceJsonConverter::fromJson(jBoundedIn);
+  BOOST_CHECK_EQUAL(boundedTest->type(), Surface::Point);
+  BOOST_CHECK_EQUAL(boundedTest->bounds(), boundedRef->bounds());
+}
+
+BOOST_AUTO_TEST_CASE(DiamondPlaneSurfaceRoundTripTests) {
+  Transform3 trf(Transform3::Identity() * Translation3(0., 0., -7.));
+  auto diamond = std::make_shared<DiamondBounds>(1., 3., 2., 4., 5.);
+  auto diamondPlaneRef = Surface::makeShared<PlaneSurface>(trf, diamond);
+  diamondPlaneRef->assignGeometryId(GeometryIdentifier(14u));
+
+  nlohmann::json planeOut =
+      SurfaceJsonConverter::toJson(gctx, *diamondPlaneRef);
+  out.open("DiamondPlaneSurface.json");
+  out << planeOut.dump(2);
+  out.close();
+
+  auto in = std::ifstream("DiamondPlaneSurface.json",
+                          std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json planeIn;
+  in >> planeIn;
+  in.close();
+
+  auto diamondPlaneTest = SurfaceJsonConverter::fromJson(planeIn);
+
+  BOOST_CHECK(diamondPlaneTest->localToGlobalTransform(gctx).isApprox(
+      diamondPlaneRef->localToGlobalTransform(gctx)));
+  BOOST_CHECK_EQUAL(diamondPlaneTest->geometryId(),
+                    diamondPlaneRef->geometryId());
+  BOOST_CHECK_EQUAL(diamondPlaneTest->bounds(), diamondPlaneRef->bounds());
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceBoundsDecouplingTests) {
+  Transform3 trf(Transform3::Identity());
+  auto planeRef = Surface::makeShared<PlaneSurface>(
+      trf, std::make_shared<RectangleBounds>(4., 6.));
+
+  nlohmann::json jPlane = SurfaceJsonConverter::toJson(gctx, *planeRef);
+
+  // Surface and bounds each carry their own discriminator, so neither needs
+  // the concatenated "kind" the decoder used to be keyed on
+  BOOST_CHECK(!jPlane.contains("kind"));
+  BOOST_CHECK(!jPlane["bounds"].contains("kind"));
+  BOOST_CHECK_EQUAL(jPlane["type"], "PlaneSurface");
+  BOOST_CHECK_EQUAL(jPlane["bounds"]["type"], "RectangleBounds");
+
+  // ConvexPolygonBounds<N> resolves through the single ConvexPolygonBounds
+  // bounds decoder, whatever N was written
+  std::array<Vector2, 4> vertices{Vector2(-1., -1.), Vector2(1., -1.),
+                                  Vector2(1., 1.), Vector2(-1., 1.)};
+  auto polyRef = Surface::makeShared<PlaneSurface>(
+      trf, std::make_shared<ConvexPolygonBounds<4>>(vertices));
+  auto polyTest = SurfaceJsonConverter::fromJson(
+      SurfaceJsonConverter::toJson(gctx, *polyRef));
+  BOOST_CHECK_EQUAL(polyTest->bounds().type(), SurfaceBounds::eConvexPolygon);
+  BOOST_CHECK(polyTest->bounds().values() == polyRef->bounds().values());
+
+  // A surface paired with bounds it cannot store is a decode-time error
+  nlohmann::json jMismatch = jPlane;
+  jMismatch["type"] = "CylinderSurface";
+  BOOST_CHECK_THROW(SurfaceJsonConverter::fromJson(jMismatch),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

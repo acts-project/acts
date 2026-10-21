@@ -26,6 +26,7 @@
 #include <numbers>
 #include <string>
 #include <tuple>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -172,17 +173,16 @@ BOOST_AUTO_TEST_CASE(test_matrix_dimension_switch) {
   }
 }
 
-using MatrixProductTypes =
-    std::tuple<std::pair<SquareMatrix3, SquareMatrix3>,
-               std::pair<SquareMatrix4, SquareMatrix4>,
-               std::pair<ActsMatrix<8, 8>, ActsMatrix<8, 8>>,
-               std::pair<ActsMatrix<8, 7>, ActsMatrix<7, 4>>>;
+using MatrixProductTypes = std::tuple<std::pair<SquareMatrix3, SquareMatrix3>,
+                                      std::pair<SquareMatrix4, SquareMatrix4>,
+                                      std::pair<Matrix<8, 8>, Matrix<8, 8>>,
+                                      std::pair<Matrix<8, 7>, Matrix<7, 4>>>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
                               MatrixProductTypes) {
   using A = typename Matrices::first_type;
   using B = typename Matrices::second_type;
-  using C = ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime>;
+  using C = Matrix<A::RowsAtCompileTime, B::ColsAtCompileTime>;
 
   for (std::size_t i = 0; i < 100; ++i) {
     A a = A::Random();
@@ -194,6 +194,21 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
     BOOST_CHECK(ref.isApprox(res));
     BOOST_CHECK(res.isApprox(ref));
   }
+}
+
+BOOST_AUTO_TEST_CASE(ContainsValueTest) {
+  std::vector<int> v{};
+  std::unordered_set<int> s{};
+
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(v, 1), false);
+  v.push_back(1);
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(v, 1), true);
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(v, 2), false);
+
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(s, 1), false);
+  s.insert(1);
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(s, 1), true);
+  BOOST_CHECK_EQUAL(Acts::rangeContainsValue(s, 2), false);
 }
 
 BOOST_AUTO_TEST_CASE(range_medium) {

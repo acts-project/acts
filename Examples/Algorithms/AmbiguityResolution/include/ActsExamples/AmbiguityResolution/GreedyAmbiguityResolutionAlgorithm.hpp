@@ -18,10 +18,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
-#include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Evicts tracks that seem to be duplicated.
 ///
@@ -54,7 +52,8 @@ class GreedyAmbiguityResolutionAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  GreedyAmbiguityResolutionAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  explicit GreedyAmbiguityResolutionAlgorithm(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the ambiguity resolution algorithm.
   ///

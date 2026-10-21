@@ -43,9 +43,9 @@ using SingleParameterSmearFunction =
 template <typename generator_t, std::size_t kSize>
 struct BoundParametersSmearer {
   /// Type alias for parameter vector of dimension kSize
-  using ParametersVector = Acts::ActsVector<kSize>;
+  using ParametersVector = Acts::Vector<kSize>;
   /// Type alias for covariance matrix of dimension kSize x kSize
-  using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
+  using CovarianceMatrix = Acts::SquareMatrix<kSize>;
   /// Type alias for smearing result containing parameters and covariance
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
@@ -134,9 +134,9 @@ struct BoundParametersSmearer {
 template <typename generator_t, std::size_t kSize>
 struct FreeParametersSmearer {
   /// Type alias for parameter vector of dimension kSize
-  using ParametersVector = Acts::ActsVector<kSize>;
+  using ParametersVector = Acts::Vector<kSize>;
   /// Type alias for covariance matrix of dimension kSize x kSize
-  using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
+  using CovarianceMatrix = Acts::SquareMatrix<kSize>;
   /// Type alias for smearing result containing parameters and covariance
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 

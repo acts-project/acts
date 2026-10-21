@@ -8,25 +8,25 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <memory>
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
 
-/// Construct track seeds from particles.
+/// Construct track seeds from particles. Each seed holds every space point of
+/// its particle's track, in track order.
 class TruthSeedingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
@@ -40,12 +40,7 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
     /// The input measurement-sim hits map collection.
     std::string inputMeasurementSimHitsMap;
     /// Input space point collections.
-    ///
-    /// We allow multiple space point collections to allow different parts of
-    /// the detector to use different algorithms for space point construction,
-    /// e.g. single-hit space points for pixel-like detectors or double-hit
-    /// space points for strip-like detectors.
-    std::vector<std::string> inputSpacePoints;
+    std::string inputSpacePoints;
     /// Output successfully seeded truth particles.
     std::string outputParticles;
     /// Output proto track collection.
@@ -57,22 +52,14 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
 
     /// Optional particle hypothesis override.
     std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
-
-    /// Minimum deltaR between space points in a seed
-    float deltaRMin = 10 * Acts::UnitConstants::mm;
-    /// Maximum deltaR between space points in a seed
-    float deltaRMax = 200 * Acts::UnitConstants::mm;
-    /// Minimum absDeltaZMin between space points in a seed
-    float absDeltaZMin = 0 * Acts::UnitConstants::mm;
-    /// Maximum absDeltaZMax between space points in a seed
-    float absDeltaZMax = 500 * Acts::UnitConstants::mm;
   };
 
   /// Construct the truth seeding algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TruthSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  explicit TruthSeedingAlgorithm(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the truth seeding algorithm.
   ///
@@ -87,19 +74,19 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<InverseMultimap<SimBarcode>> m_inputParticleMeasurementsMap{
+  ReadDataHandle<ParticleMeasurementsMap> m_inputParticleMeasurementsMap{
       this, "InputParticleMeasurementsMap"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputHits"};
-  ReadDataHandle<InverseMultimap<Index>> m_inputMeasurementSimHitsMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "MeasurementSimHitsMap"};
-  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
-      m_inputSpacePoints{};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<std::vector<Acts::ParticleHypothesis>>
       m_outputParticleHypotheses{this, "OutputParticleHypotheses"};
 };

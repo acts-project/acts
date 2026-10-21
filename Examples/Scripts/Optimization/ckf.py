@@ -129,7 +129,6 @@ def runCKFTracks(
         SeedFinderConfigArg,
         SeedFinderOptionsArg,
         SeedingAlgorithm,
-        TruthEstimatedSeedingAlgorithmConfigArg,
         addCKFTracks,
     )
 
@@ -154,8 +153,8 @@ def runCKFTracks(
             rnd=rnd,
         )
     else:
-        acts.logging.getLogger("CKFExample").info(
-            "Reading particles from %s", inputParticlePath.resolve()
+        acts.getDefaultLogger("CKFExample", acts.logging.INFO).info(
+            "Reading particles from {}", inputParticlePath.resolve()
         )
         assert inputParticlePath.exists()
         s.addReader(
@@ -221,7 +220,11 @@ def runCKFTracks(
             impactMax=ImpactMax * u.mm,
         ),
         SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0, 0)),
-        TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
+        paramEstimationSpacePoints=(
+            acts.examples.SeedSpacePointSelection.SpreadTriplet
+            if truthEstimatedSeeded
+            else None
+        ),
         seedingAlgorithm=(
             SeedingAlgorithm.TruthSmeared
             if truthSmearedSeeded

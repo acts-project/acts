@@ -122,7 +122,7 @@ ActsPlugins::Svg::ProtoSurface ActsPlugins::Svg::SurfaceConverter::convert(
 
   // Decorations
   // - Flag the material
-  if (surface.surfaceMaterial() != nullptr) {
+  if (surface.hasMaterial()) {
     pSurface._decorations["material"] = actsvg::svg::object{};
   }
 

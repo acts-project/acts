@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
@@ -204,7 +205,9 @@ Polyhedron ConeSurface::polyhedronRepresentation(
   double hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
   double avgPhi = bounds().get(ConeBounds::eAveragePhi);
   std::vector<double> refPhi = {};
-  if (bool fullCone = (hPhiSec == std::numbers::pi); !fullCone) {
+  if (bool fullCone =
+          std::abs(hPhiSec - std::numbers::pi) < s_fullAzimuthTolerance;
+      !fullCone) {
     refPhi = {avgPhi};
   }
 
@@ -371,7 +374,7 @@ AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
+Matrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -385,17 +388,20 @@ ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
   const double lsphi = std::sin(lphi);
   // Solve for radius R
   const double R = localPos.z() * bounds().tanAlpha();
-  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
   loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr,
       lphi * bounds().tanAlpha(), 0, 0, 1;
 
   return loc3DToLocBound;
 }
+
 const std::shared_ptr<const ConeBounds>& ConeSurface::boundsPtr() const {
   return m_bounds;
 }
+
 void ConeSurface::assignSurfaceBounds(
     std::shared_ptr<const ConeBounds> newBounds) {
   m_bounds = std::move(newBounds);
 }
+
 }  // namespace Acts

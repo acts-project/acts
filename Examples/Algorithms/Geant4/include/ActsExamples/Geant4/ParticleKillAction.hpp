@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 
@@ -18,6 +17,7 @@
 #include <G4UserSteppingAction.hh>
 
 class G4Step;
+
 namespace Acts {
 class Volume;
 }  // namespace Acts
@@ -51,11 +51,10 @@ class ParticleKillAction : public G4UserSteppingAction {
                               std::unique_ptr<const Acts::Logger> logger =
                                   Acts::getDefaultLogger("ParticleKillAction",
                                                          Acts::Logging::INFO));
-  ~ParticleKillAction() override = default;
 
   /// @brief Called every step, conditionally sets the tracking state to `fStopAndKill`
-  /// @param step is the Geant4 step of the particle
-  void UserSteppingAction(const G4Step* step) override;
+  /// @param stepPtr is the Geant4 step of the particle
+  void UserSteppingAction(const G4Step* stepPtr) override;
 
  private:
   /// Private access method to the event store

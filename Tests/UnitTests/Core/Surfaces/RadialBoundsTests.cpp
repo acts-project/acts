@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <numbers>
 #include <stdexcept>
 #include <vector>
@@ -147,6 +148,22 @@ BOOST_AUTO_TEST_CASE(RadialBoundsCenter) {
   Vector2 centerOffset = radialOffset.center();
   BOOST_CHECK_EQUAL(centerOffset.x(), expectedR);
   BOOST_CHECK_EQUAL(centerOffset.y(), avgPhi);
+}
+
+BOOST_AUTO_TEST_CASE(RadialBoundsCoversFullAzimuth) {
+  // The default sector is the full azimuth
+  BOOST_CHECK(RadialBounds(rMin, rMax).coversFullAzimuth());
+  BOOST_CHECK(RadialBounds(rMin, rMax, std::numbers::pi).coversFullAzimuth());
+
+  // A half sector that is only rounded away from pi still counts as full,
+  // matching CylinderBounds
+  BOOST_CHECK(RadialBounds(rMin, rMax, std::nextafter(std::numbers::pi, 0.))
+                  .coversFullAzimuth());
+
+  // Genuine sectors do not
+  BOOST_CHECK(!RadialBounds(rMin, rMax, halfPhiSector).coversFullAzimuth());
+  BOOST_CHECK(
+      !RadialBounds(rMin, rMax, std::numbers::pi / 2.).coversFullAzimuth());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

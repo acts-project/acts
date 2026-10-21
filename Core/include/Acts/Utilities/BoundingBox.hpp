@@ -12,7 +12,9 @@
 #include "Acts/Utilities/Ray.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
+#include <functional>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -131,15 +133,15 @@ class AxisAlignedBoundingBox {
 
   /// @brief Implements the slab method for Ray/AABB intersections.
   ///
-  /// See https://tavianator.com/fast-branchless-raybounding-box-intersections/,
-  /// https://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/,
-  /// https://medium.com/@bromanz/another-view-on-the-classic-ray-aabb-intersection-algorithm-for-bvh-traversal-41125138b525
-  /// The original algorithms is described in "Graphics Gems (1990)" [1]
-  /// (https://doi.org/10.1016/B978-0-08-050753-8.50084-X)
+  /// @sa https://tavianator.com/2011/ray_box.html
+  /// @sa https://tavianator.com/2015/ray_box_nan.html
+  /// @sa https://medium.com/@bromanz/another-view-on-the-classic-ray-aabb-intersection-algorithm-for-bvh-traversal-41125138b525
+  /// @sa The original algorithm is described in "Graphics Gems (1990)" @cite GraphicsGems1990
   ///
   /// @note This implementation may treat parallel rays on any of the slabs
   ///       as **outside** due to how @c NaNs are handled by Eigen.
-  ///       See https://eigen.tuxfamily.org/bz/show_bug.cgi?id=564
+  ///       See [this
+  ///       issue](https://eigen.tuxfamily.org/bz/show_bug.cgi?id=564).
   /// @param ray The ray to intersect with
   /// @return Whether the ray intersects this AABB
   bool intersect(const Ray<value_type, DIM>& ray) const;
@@ -251,10 +253,27 @@ class AxisAlignedBoundingBox {
   vertex_array_type m_width;
   vertex_array_type m_iwidth;
 
-  self_t* m_left_child{nullptr};
-  self_t* m_right_child{nullptr};
+  self_t* m_leftChild{nullptr};
+  self_t* m_rightChild{nullptr};
   self_t* m_skip{nullptr};
 };
+
+namespace BoundingBoxHierarchy {
+
+/// Visit all entities whose bounding boxes intersect an object.
+///
+/// The hierarchy is traversed without allocating an intermediate container.
+/// The visitor is called once for every intersecting leaf entity.
+///
+/// @tparam object_t Type of object to intersect with the bounding boxes.
+/// @tparam box_t Bounding box type.
+/// @tparam visitor_t Callable accepting a const reference to an entity.
+/// @param object Object to intersect with the hierarchy.
+/// @param root Root node of the bounding box hierarchy. May be `nullptr`.
+/// @param visitor Callable invoked for each intersecting entity.
+template <typename object_t, typename box_t, typename visitor_t>
+void visitIntersecting(const object_t& object, const box_t* root,
+                       visitor_t&& visitor);
 
 /// Build an octree from a list of bounding boxes.
 /// @note @p store and @p prims do not need to contain the same objects. @p store
@@ -263,13 +282,29 @@ class AxisAlignedBoundingBox {
 /// @tparam box_t Works will all box types.
 /// @param store Owns the created boxes by means of `std::unique_ptr`.
 /// @param prims Boxes to store. This is a read only vector.
-/// @param max_depth No subdivisions beyond this level.
-/// @param envelope1 Envelope to add/subtract to dimensions in all directions.
+/// @param maxDepth No subdivisions beyond this level.
+/// @param envelope Envelope to add/subtract to dimensions in all directions.
 /// @return Pointer to the top most bounding box, containing the entire octree
 template <typename box_t>
-box_t* make_octree(std::vector<std::unique_ptr<box_t>>& store,
-                   const std::vector<box_t*>& prims, std::size_t max_depth = 1,
-                   typename box_t::value_type envelope1 = 0);
+box_t* makeOctree(std::vector<std::unique_ptr<box_t>>& store,
+                  const std::vector<box_t*>& prims, std::size_t maxDepth = 1,
+                  typename box_t::value_type envelope = 0);
+
+}  // namespace BoundingBoxHierarchy
+
+/// Build an octree from a list of bounding boxes.
+/// @tparam box_t Works with all box types.
+/// @param store Owns the created boxes by means of `std::unique_ptr`.
+/// @param prims Boxes to store. This is a read-only vector.
+/// @param maxDepth No subdivisions beyond this level.
+/// @param envelope Envelope to add/subtract to dimensions in all directions.
+/// @return Pointer to the topmost bounding box, containing the entire octree.
+/// @deprecated Use Acts::BoundingBoxHierarchy::makeOctree instead.
+template <typename box_t>
+[[deprecated("Use BoundingBoxHierarchy::makeOctree instead")]] box_t*
+make_octree(std::vector<std::unique_ptr<box_t>>& store,
+            const std::vector<box_t*>& prims, std::size_t maxDepth = 1,
+            typename box_t::value_type envelope = 0);
 
 /// Overload of the << operator for bounding boxes.
 /// @tparam T entity type

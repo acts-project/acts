@@ -1,0 +1,42 @@
+# Dedicated Doxygen config for measuring the ACTS public API surface.
+#
+# This is NOT the documentation build (see docs/Doxyfile.in). It mirrors the
+# public/private policy from docs/pages/versioning.md so that the surface metric
+# matches what is considered public API:
+#   * EXTRACT_ALL = NO        -> only *documented* entities count
+#   * detail / Experimental excluded by path and by symbol
+# Only XML is generated; CI/public_api/public_api_surface.py parses it into a report.
+#
+# Run from the repository root:
+#   OUTPUT_DIRECTORY=<dir> doxygen CI/public_api/Doxyfile
+
+PROJECT_NAME           = "ACTS public API"
+# Caller sets DOXY_INPUT (CI/public_api/public_api_surface.py does this).
+INPUT                  = $(DOXY_INPUT)
+RECURSIVE              = YES
+FILE_PATTERNS          = *.hpp *.ipp
+
+# --- what counts as public (mirror docs/pages/versioning.md) ---
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = NO
+EXTRACT_LOCAL_CLASSES  = NO
+EXTRACT_ANON_NSPACES   = NO
+EXCLUDE_PATTERNS       = */detail/*
+EXCLUDE_SYMBOLS        = Acts::*detail* *::detail::* *Experimental*
+
+# --- output: XML only, no docs ---
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+XML_PROGRAMLISTING     = NO
+
+# --- parsing ---
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = NO
+WARN_IF_UNDOCUMENTED   = NO
+WARNINGS               = NO
+QUIET                  = YES
+
+# Caller sets DOXY_OUT to control where XML lands (defaults to CWD otherwise).
+OUTPUT_DIRECTORY       = $(DOXY_OUT)

@@ -12,7 +12,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <algorithm>
 #include <cstdint>

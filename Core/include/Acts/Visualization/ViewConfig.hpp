@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryObject.hpp"
+
 #include <array>
 #include <filesystem>
 #include <string_view>
@@ -147,12 +149,28 @@ struct ViewConfig {
   std::filesystem::path outputName = std::filesystem::path("");
 };
 
+/// View configuration for surface visualization
 static const ViewConfig s_viewSurface = {.color = {170, 170, 170}};
+/// View configuration for portal visualization
 static const ViewConfig s_viewPortal = {.color = Color{"#308c48"}};
+/// View configuration for sensitive surface visualization
 static const ViewConfig s_viewSensitive = {.color = {0, 180, 240}};
+/// View configuration for passive surface visualization
 static const ViewConfig s_viewPassive = {.color = {240, 280, 0}};
+/// View configuration for volume visualization
 static const ViewConfig s_viewVolume = {.color = {220, 220, 0}};
+/// View configuration for grid visualization
 static const ViewConfig s_viewGrid = {.color = {220, 0, 0}};
+/// View configuration for line visualization
 static const ViewConfig s_viewLine = {.color = {0, 0, 220}};
+
+/// Function that takes a GeometryObject as an input and outputs a ViewConfig
+/// This allows to use custom functions for determining the colour of
+/// GeometryObjects
+using ViewConfigFunc = std::function<ViewConfig(const GeometryObject&)>;
+
+/// Default ViewConfigFunc
+/// @return ViewConifg which colors sensitive surfaces green and boundaries orange
+ViewConfig defaultGeometryColoring(const GeometryObject& /*geoObj*/);
 
 }  // namespace Acts

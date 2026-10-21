@@ -14,9 +14,8 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -28,6 +27,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
@@ -37,7 +37,6 @@
 #include <numbers>
 #include <optional>
 #include <random>
-#include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -85,13 +84,14 @@ struct MultiStepperTester {
   auto makeDefaultBoundPars(
       bool cov = true, std::size_t n = 4,
       std::optional<BoundVector> ext_pars = std::nullopt) const {
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-        cmps;
-    using Opt = std::optional<BoundSquareMatrix>;
+    std::shared_ptr<PlaneSurface> surface =
+        CurvilinearSurface(Vector3::Zero(), Vector3{1., 0., 0.}).planeSurface();
+
+    MultiComponentBoundTrackParameters result(surface, cov, particleHypothesis);
+    result.reserve(n);
 
     auto make_random_sym_matrix = []() {
-      auto c = BoundSquareMatrix::Random().eval();
+      auto c = BoundMatrix::Random().eval();
       c *= c.transpose();
       return c;
     };
@@ -119,15 +119,12 @@ struct MultiStepperTester {
         params[eBoundTime] = timeDis(gen);
       }
 
-      cmps.push_back(
-          {1. / n, params, cov ? Opt{make_random_sym_matrix()} : Opt{}});
+      using Opt = std::optional<BoundMatrix>;
+      result.pushComponent(1. / n, params,
+                           cov ? Opt{make_random_sym_matrix()} : Opt{});
     }
 
-    std::shared_ptr<PlaneSurface> surface =
-        CurvilinearSurface(Vector3::Zero(), Vector3{1., 0., 0.}).planeSurface();
-
-    return MultiComponentBoundTrackParameters(surface, cmps,
-                                              particleHypothesis);
+    return result;
   }
 
   void test_config_constructor() const {
@@ -225,17 +222,19 @@ struct MultiStepperTester {
     // Test the result & compare with the input/test for reasonable members
     auto const_iterable = multiStepper.constComponentIterable(state);
     for (const auto cmp : const_iterable) {
-      BOOST_CHECK_EQUAL(cmp.jacTransport(), FreeMatrix::Identity());
-      BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
+      if constexpr (requires { cmp.state().jacTransport; }) {
+        BOOST_CHECK_EQUAL(cmp.state().jacTransport, FreeMatrix::Identity());
+      }
+      BOOST_CHECK_EQUAL(cmp.state().derivative, FreeVector::Zero());
       if constexpr (!Cov) {
-        BOOST_CHECK_EQUAL(cmp.jacToGlobal(), BoundToFreeMatrix::Zero());
-        BOOST_CHECK_EQUAL(cmp.cov(), BoundSquareMatrix::Zero());
+        BOOST_CHECK_EQUAL(cmp.state().jacToGlobal, BoundToFreeMatrix::Zero());
+        BOOST_CHECK(!cmp.state().cov.has_value());
       }
     }
 
     BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
     for (const auto cmp : const_iterable) {
-      BOOST_CHECK_EQUAL(cmp.pathAccumulated(), 0.);
+      BOOST_CHECK_EQUAL(cmp.state().pathAccumulated, 0.);
     }
 
     // covTransport in the MultiEigenStepperLoop is redundant and
@@ -244,23 +243,9 @@ struct MultiStepperTester {
     if constexpr (Concepts::has_components<MultiState>) {
       BOOST_CHECK(!state.covTransport);
       for (const auto &cmp : state.components) {
-        BOOST_CHECK_EQUAL(cmp.state.covTransport, Cov);
+        BOOST_CHECK_EQUAL(cmp.state.cov.has_value(), Cov);
       }
     }
-  }
-
-  void test_multi_stepper_state_invalid() const {
-    MultiOptions options(geoCtx, magCtx);
-    options.maxStepSize = defaultStepSize;
-
-    MultiStepper multiStepper(defaultBField);
-
-    // Empty component vector
-    const auto multi_pars = makeDefaultBoundPars(false, 0);
-    MultiState state = multiStepper.makeState(options);
-
-    BOOST_CHECK_THROW(multiStepper.initialize(state, multi_pars),
-                      std::invalid_argument);
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -274,18 +259,18 @@ struct MultiStepperTester {
     SingleStepper single_stepper(defaultBField);
 
     const BoundVector pars = BoundVector::Ones();
-    const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
-
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-        cmps(4, {0.25, pars, cov});
+    const BoundMatrix cov = BoundMatrix::Identity();
 
     std::shared_ptr<PlaneSurface> surface =
         CurvilinearSurface(Vector3::Zero(), Vector3::Ones().normalized())
             .planeSurface();
 
-    MultiComponentBoundTrackParameters multi_pars(surface, cmps,
+    MultiComponentBoundTrackParameters multi_pars(surface, true,
                                                   particleHypothesis);
+    multi_pars.reserve(4);
+    for (std::size_t i = 0; i < 4; ++i) {
+      multi_pars.pushComponent(0.25, pars, cov);
+    }
     BoundTrackParameters single_pars(surface, pars, cov, particleHypothesis);
 
     MultiState multi_state = multi_stepper.makeState(options);
@@ -303,11 +288,11 @@ struct MultiStepperTester {
       // Single stepper
       auto single_result =
           single_stepper.step(single_state, defaultNDir, nullptr);
-      single_stepper.transportCovarianceToCurvilinear(single_state);
+      single_stepper.transportToCurvilinear(single_state);
 
       // Multi stepper;
       auto multi_result = multi_stepper.step(multi_state, defaultNDir, nullptr);
-      multi_stepper.transportCovarianceToCurvilinear(multi_state);
+      multi_stepper.transportToCurvilinear(multi_state);
 
       // Check equality
       BOOST_REQUIRE(multi_result.ok());
@@ -316,12 +301,16 @@ struct MultiStepperTester {
       BOOST_CHECK_EQUAL(*single_result, *multi_result);
 
       for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
-        BOOST_CHECK_EQUAL(cmp.pars(), single_state.pars);
-        BOOST_CHECK_EQUAL(cmp.cov(), single_state.cov);
-        BOOST_CHECK_EQUAL(cmp.jacTransport(), single_state.jacTransport);
-        BOOST_CHECK_EQUAL(cmp.jacToGlobal(), single_state.jacToGlobal);
-        BOOST_CHECK_EQUAL(cmp.derivative(), single_state.derivative);
-        BOOST_CHECK_EQUAL(cmp.pathAccumulated(), single_state.pathAccumulated);
+        BOOST_CHECK_EQUAL(cmp.state().pars, single_state.pars);
+        BOOST_CHECK(cmp.state().cov == single_state.cov);
+        if constexpr (requires { cmp.state().jacTransport; }) {
+          BOOST_CHECK_EQUAL(cmp.state().jacTransport,
+                            single_state.jacTransport);
+        }
+        BOOST_CHECK_EQUAL(cmp.state().jacToGlobal, single_state.jacToGlobal);
+        BOOST_CHECK_EQUAL(cmp.state().derivative, single_state.derivative);
+        BOOST_CHECK_EQUAL(cmp.state().pathAccumulated,
+                          single_state.pathAccumulated);
       }
     }
   }
@@ -396,14 +385,14 @@ struct MultiStepperTester {
 
     const auto projectors = std::make_tuple(
         [](auto &cmp) -> decltype(auto) { return cmp.status(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.pathAccumulated(); },
+        [](auto &cmp) -> decltype(auto) {
+          return (cmp.state().pathAccumulated);
+        },
         [](auto &cmp) -> decltype(auto) { return cmp.weight(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.pars(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.cov(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.jacTransport(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.derivative(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.jacobian(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.jacToGlobal(); });
+        [](auto &cmp) -> decltype(auto) { return (cmp.state().pars); },
+        [](auto &cmp) -> decltype(auto) { return (*cmp.state().cov); },
+        [](auto &cmp) -> decltype(auto) { return (cmp.state().derivative); },
+        [](auto &cmp) -> decltype(auto) { return (cmp.state().jacToGlobal); });
 
     std::apply(
         [&](const auto &...projs) {
@@ -432,17 +421,20 @@ struct MultiStepperTester {
         CurvilinearSurface(Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-        cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
+    std::vector<std::tuple<double, BoundVector>> cmps(
+        2, {0.5, BoundVector::Zero()});
     std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
     std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
     std::get<BoundVector>(cmps[1])[eBoundTheta] = std::numbers::pi / 2.;
     std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
     std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
-    MultiComponentBoundTrackParameters multi_pars(start_surface, cmps,
-                                                  particleHypothesis);
+    MultiComponentBoundTrackParameters multi_pars(
+        start_surface, cmps,
+        [](const auto &cmp) {
+          return std::tie(std::get<0>(cmp), std::get<1>(cmp));
+        },
+        particleHypothesis);
 
     BOOST_REQUIRE(std::get<1>(multi_pars[0])
                       .direction()
@@ -479,10 +471,13 @@ struct MultiStepperTester {
 
     // Step forward now
     {
-      multi_stepper.step(multi_state, Direction::Forward(), nullptr);
+      BOOST_CHECK(
+          multi_stepper.step(multi_state, Direction::Forward(), nullptr).ok());
 
       // Single stepper
-      single_stepper.step(single_state, Direction::Forward(), nullptr);
+      BOOST_CHECK(
+          single_stepper.step(single_state, Direction::Forward(), nullptr)
+              .ok());
     }
 
     // Update surface status and check again
@@ -541,8 +536,7 @@ struct MultiStepperTester {
         CurvilinearSurface(Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+    std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
         cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
     std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
     std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
@@ -550,8 +544,12 @@ struct MultiStepperTester {
     std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
     std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
-    MultiComponentBoundTrackParameters multi_pars(start_surface, cmps,
-                                                  particleHypothesis);
+    MultiComponentBoundTrackParameters multi_pars(
+        start_surface, cmps,
+        [](const auto &cmp) {
+          return std::tie(std::get<0>(cmp), std::get<1>(cmp));
+        },
+        particleHypothesis);
 
     BOOST_REQUIRE(std::get<1>(multi_pars[0])
                       .direction()
@@ -572,33 +570,47 @@ struct MultiStepperTester {
           multi_state, *right_surface, 0, Direction::Forward(),
           BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
           ConstrainedStep::Type::Navigator);
-      multi_stepper.step(multi_state, Direction::Forward(), nullptr);
+      BOOST_CHECK(
+          multi_stepper.step(multi_state, Direction::Forward(), nullptr).ok());
 
       // Single stepper
       single_stepper.updateSurfaceStatus(
           single_state, *right_surface, 0, Direction::Forward(),
           BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
           ConstrainedStep::Type::Navigator);
-      single_stepper.step(single_state, Direction::Forward(), nullptr);
+      BOOST_CHECK(
+          single_stepper.step(single_state, Direction::Forward(), nullptr)
+              .ok());
     }
 
     // Check component-wise bound-state
     {
-      auto single_bound_state = single_stepper.boundState(
-          single_state, *right_surface, true, FreeToBoundCorrection(false));
+      auto boundState = [&](SingleState &state)
+          -> Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> {
+        auto jacobian = single_stepper.transportToBound(
+            state, *right_surface, FreeToBoundCorrection(false));
+        if (!jacobian.ok()) {
+          return jacobian.error();
+        }
+        auto pars = single_stepper.boundParameters(state, *right_surface);
+        if (!pars.ok()) {
+          return pars.error();
+        }
+        return std::tuple(*pars, *jacobian, single_stepper.pathLength(state));
+      };
+
+      auto single_bound_state = boundState(single_state);
       BOOST_REQUIRE(single_bound_state.ok());
 
       auto cmp_iterable = multi_stepper.componentIterable(multi_state);
       auto cmp_1 = *cmp_iterable.begin();
       auto cmp_2 = *(++cmp_iterable.begin());
 
-      auto bound_state_1 =
-          cmp_1.boundState(*right_surface, true, FreeToBoundCorrection(false));
+      auto bound_state_1 = boundState(cmp_1.state());
       BOOST_REQUIRE(bound_state_1.ok());
       BOOST_CHECK(*single_bound_state == *bound_state_1);
 
-      auto bound_state_2 =
-          cmp_2.boundState(*right_surface, true, FreeToBoundCorrection(false));
+      auto bound_state_2 = boundState(cmp_2.state());
       BOOST_CHECK(bound_state_2.ok());
     }
   }
@@ -616,31 +628,44 @@ struct MultiStepperTester {
     // Use Ones() here, so that the angles are in correct range
     const auto pars = BoundVector::Ones().eval();
     const auto cov = []() {
-      auto c = BoundSquareMatrix::Random().eval();
+      auto c = BoundMatrix::Random().eval();
       c *= c.transpose();
       return c;
     }();
 
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-        cmps(4, {0.25, pars, cov});
-
-    MultiComponentBoundTrackParameters multi_pars(surface, cmps,
+    MultiComponentBoundTrackParameters multi_pars(surface, true,
                                                   particleHypothesis);
+    multi_pars.reserve(4);
+    for (std::size_t i = 0; i < 4; ++i) {
+      multi_pars.pushComponent(0.25, pars, cov);
+    }
     MultiState multi_state = multi_stepper.makeState(options);
     multi_stepper.initialize(multi_state, multi_pars);
 
-    auto res = multi_stepper.boundState(multi_state, *surface, true,
-                                        FreeToBoundCorrection(false));
+    auto jacobian = multi_stepper.transportToBound(
+        multi_state, *surface, FreeToBoundCorrection(false));
+    BOOST_REQUIRE(jacobian.ok());
 
+    auto res = multi_stepper.boundParameters(multi_state, *surface);
     BOOST_REQUIRE(res.ok());
 
-    const auto [bound_pars, jacobian, pathLength] = *res;
+    const auto single_bound_pars = res->merge(ComponentMergeMethod::eMean);
 
-    BOOST_CHECK_EQUAL(jacobian, decltype(jacobian)::Zero());
-    BOOST_CHECK_EQUAL(pathLength, 0.0);
-    BOOST_CHECK(bound_pars.parameters().isApprox(pars, 1.e-8));
-    BOOST_CHECK(bound_pars.covariance()->isApprox(cov, 1.e-8));
+    // all components are equal, so the jacobian is the one of a single state
+    SingleStepper single_stepper(defaultBField);
+    SingleState single_state = single_stepper.makeState(options);
+    single_stepper.initialize(
+        single_state,
+        BoundTrackParameters(surface, pars, cov, particleHypothesis));
+    auto single_jacobian = single_stepper.transportToBound(
+        single_state, *surface, FreeToBoundCorrection(false));
+    BOOST_REQUIRE(single_jacobian.ok());
+
+    BOOST_CHECK(!jacobian->isZero());
+    BOOST_CHECK(jacobian->isApprox(*single_jacobian, 1.e-8));
+    BOOST_CHECK_EQUAL(multi_stepper.pathLength(multi_state), 0.0);
+    BOOST_CHECK(single_bound_pars.parameters().isApprox(pars, 1.e-8));
+    BOOST_CHECK(single_bound_pars.covariance()->isApprox(cov, 1.e-8));
   }
 
   //////////////////////////////////////////////////
@@ -659,30 +684,32 @@ struct MultiStepperTester {
     // Use Ones() here, so that the angles are in correct range
     const auto pars = BoundVector::Ones().eval();
     const auto cov = []() {
-      auto c = BoundSquareMatrix::Random().eval();
+      auto c = BoundMatrix::Random().eval();
       c *= c.transpose();
       return c;
     }();
 
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-        cmps(4, {0.25, pars, cov});
     BoundTrackParameters check_pars(surface, pars, cov, particleHypothesis);
 
-    MultiComponentBoundTrackParameters multi_pars(surface, cmps,
+    MultiComponentBoundTrackParameters multi_pars(surface, true,
                                                   particleHypothesis);
+    multi_pars.reserve(4);
+    for (std::size_t i = 0; i < 4; ++i) {
+      multi_pars.pushComponent(0.25, pars, cov);
+    }
     MultiState multi_state = multi_stepper.makeState(options);
     multi_stepper.initialize(multi_state, multi_pars);
 
-    const auto [curv_pars, jac, pathLength] =
-        multi_stepper.curvilinearState(multi_state);
+    const auto curv_pars = multi_stepper.curvilinearParameters(multi_state);
+    const auto single_curv_pars = curv_pars.merge(ComponentMergeMethod::eMean);
 
-    BOOST_CHECK(curv_pars.fourPosition(geoCtx).isApprox(
+    BOOST_CHECK(single_curv_pars.fourPosition(geoCtx).isApprox(
         check_pars.fourPosition(geoCtx), 1.e-8));
-    BOOST_CHECK(curv_pars.direction().isApprox(check_pars.direction(), 1.e-8));
-    BOOST_CHECK_CLOSE(curv_pars.absoluteMomentum(),
+    BOOST_CHECK(
+        single_curv_pars.direction().isApprox(check_pars.direction(), 1.e-8));
+    BOOST_CHECK_CLOSE(single_curv_pars.absoluteMomentum(),
                       check_pars.absoluteMomentum(), 1.e-8);
-    BOOST_CHECK_CLOSE(curv_pars.charge(), check_pars.charge(), 1.e-8);
+    BOOST_CHECK_CLOSE(single_curv_pars.charge(), check_pars.charge(), 1.e-8);
   }
 
   ////////////////////////////////////
@@ -708,12 +735,12 @@ struct MultiStepperTester {
       auto &sstepping = cmp.state();
 
       BOOST_CHECK_EQUAL(sstepper.position(sstepping),
-                        cmp.pars().template segment<3>(eFreePos0));
+                        cmp.state().pars.template segment<3>(eFreePos0));
       BOOST_CHECK_EQUAL(sstepper.direction(sstepping),
-                        cmp.pars().template segment<3>(eFreeDir0));
-      BOOST_CHECK_EQUAL(sstepper.time(sstepping), cmp.pars()[eFreeTime]);
-      BOOST_CHECK_CLOSE(sstepper.qOverP(sstepping), cmp.pars()[eFreeQOverP],
-                        1.e-8);
+                        cmp.state().pars.template segment<3>(eFreeDir0));
+      BOOST_CHECK_EQUAL(sstepper.time(sstepping), cmp.state().pars[eFreeTime]);
+      BOOST_CHECK_CLOSE(sstepper.qOverP(sstepping),
+                        cmp.state().pars[eFreeQOverP], 1.e-8);
     };
 
     for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
@@ -748,7 +775,7 @@ struct MultiStepperTester {
     }
 
     BOOST_CHECK_EQUAL(multi_stepper.numberComponents(multi_state),
-                      multi_pars.components().size() + 1);
+                      multi_pars.size() + 1);
 
     multi_stepper.clearComponents(multi_state);
 
@@ -772,19 +799,20 @@ struct MultiStepperTester {
         typename Propagator<multi_stepper_t, Navigator>::template Options<>;
     PropagatorOptions options(geoCtx, magCtx);
 
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-        cmps(4, {0.25, BoundVector::Ones().eval(),
-                 BoundSquareMatrix::Identity().eval()});
-    MultiComponentBoundTrackParameters pars(surface, cmps, particleHypothesis);
+    MultiComponentBoundTrackParameters pars(surface, true, particleHypothesis);
+    pars.reserve(4);
+    for (std::size_t i = 0; i < 4; ++i) {
+      pars.pushComponent(0.25, BoundVector::Ones(),
+                         BoundMatrix::Identity().eval());
+    }
 
     // This only checks that this compiles, not that it runs without errors
     // @TODO: Add test that checks the target aborter works correctly
 
     // Instantiate with target
     using type_a =
-        decltype(propagator.template propagate<
-                 decltype(pars), decltype(options), MultiStepperSurfaceReached>(
+        decltype(propagator.template propagate<decltype(options),
+                                               MultiStepperSurfaceReached>(
             pars, *surface, options));
     static_assert(!std::is_same_v<type_a, void>);
 

@@ -1,0 +1,36 @@
+# This file is part of the ACTS project.
+#
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+# CMake include(s).
+cmake_minimum_required(VERSION 3.25)
+include(FetchContent)
+
+# Tell the user what's happening.
+message(STATUS "Building VecMem as part of the TRACCC project")
+
+# Disregard the global C++ flags, to avoid any unhelpful warnings.
+set(CMAKE_CXX_FLAGS)
+
+# Declare where to get VecMem from.
+set(TRACCC_VECMEM_SOURCE
+    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v1.28.0.tar.gz;URL_MD5;054e3f8407fe710dae9f0c47d8089c0d"
+    CACHE STRING
+    "Source for VecMem, when built as part of this project"
+)
+mark_as_advanced(TRACCC_VECMEM_SOURCE)
+FetchContent_Declare(VecMem SYSTEM ${TRACCC_VECMEM_SOURCE})
+
+# Options used in the build of VecMem.
+set(VECMEM_BUILD_TESTING
+    FALSE
+    CACHE BOOL
+    "Turn off the build of the VecMem unit tests"
+)
+
+# Get it into the current directory.
+FetchContent_MakeAvailable(VecMem)

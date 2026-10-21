@@ -1,0 +1,67 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+// Project include(s).
+#include "traccc/definitions/qualifiers.hpp"
+#include "traccc/device/concepts/thread_id.hpp"
+#include "traccc/gbts_seeding/gbts_types.hpp"
+
+// VecMem include(s).
+#include <vecmem/containers/data/vector_view.hpp>
+
+namespace traccc::device {
+
+/// (Global Event Data) Payload for the @c traccc::device::gbts_compress_graph
+/// function
+struct gbts_compress_graph_payload {
+  /// Capacity of the edge buffers (sizes the launch grid)
+  unsigned int nEdgesMax;
+  /// Per node edge buckets: the number of edges the count pass found
+  vecmem::data::vector_view<const unsigned int> num_outgoing_edges;
+  /// Capacity of the compacted graph.
+  unsigned int nConnectedEdgesMax;
+  /// Maximum number of neighbours retained per edge
+  unsigned int nMaxNei;
+  /// Sorted-slot to original spacepoint index map
+  vecmem::data::vector_view<const unsigned int> orig_node_index;
+  /// (src, dst) node indices per edge
+  vecmem::data::vector_view<const uint2> edge_nodes;
+  /// Number of accepted neighbours per edge
+  vecmem::data::vector_view<const unsigned char> num_neighbours;
+  /// Neighbour edge indices per edge (nMaxNei per edge, flat)
+  vecmem::data::vector_view<const unsigned int> neighbours;
+  /// Inclusive prefix sum of the per-edge "kept" flags.
+  vecmem::data::vector_view<const unsigned int> reIndexer;
+  /// Output: compacted neighbour lists in row-major layout; each edge owns
+  /// a block of nMaxNei ints (nei0..neiN-1)
+  vecmem::data::vector_view<unsigned int> output_graph;
+  /// Output: (node1, node2) original spacepoint indices per compacted edge
+  vecmem::data::vector_view<uint2> output_edge_nodes;
+  /// Output: number of neighbours per compacted edge
+  vecmem::data::vector_view<unsigned char> output_num_neighbours;
+};
+
+/// @brief Pack kept edges into the compact "output graph" layout.
+///
+/// Each thread processes one original edge. If it survived re-indexing, the
+/// thread writes, at its compact slot, the source/destination original-SP
+/// indices, the neighbour count, and up to nMaxNei remapped neighbour
+/// indices.
+///
+/// @param[in] thread_id Thread identifier for the kernel launch
+/// @param[in] payload   The global memory payload
+///
+template <concepts::thread_id1 thread_id_t>
+TRACCC_HOST_DEVICE inline void gbts_compress_graph(
+    const thread_id_t& thread_id, const gbts_compress_graph_payload& payload);
+
+}  // namespace traccc::device
+
+#include "traccc/gbts_seeding/device/impl/gbts_compress_graph.ipp"

@@ -83,7 +83,7 @@ struct EigenStepperDenseExtension {
     const auto& particleHypothesis = stepper.particleHypothesis(state);
     float mass = particleHypothesis.mass();
 
-    // i = 0 is used for setup and evaluation of k
+    // i = 0 is used for set up and evaluation of k
     if constexpr (i == 0) {
       // Set up for energy loss
       Vector3 position = stepper.position(state);
@@ -369,7 +369,7 @@ struct EigenStepperDenseExtension {
     // Change of the momentum per path length
     // dPds = dPdE * dEds
     dPds[0] = g * energy[0] / initialMomentum;
-    if (state.covTransport) {
+    if (state.cov.has_value()) {
       // Calculate the change of the energy loss per path length and
       // inverse momentum
       if (state.options.dense.includeGradient) {
@@ -410,7 +410,7 @@ struct EigenStepperDenseExtension {
     dPds[i] = g * energy[i] / currentMomentum;
     qop[i] = stepper.charge(state) / currentMomentum;
     // Calculate term for later error propagation
-    if (state.covTransport) {
+    if (state.cov.has_value()) {
       dLdl[i] = (-qop[i] * qop[i] * g * energy[i] *
                      (3. - (currentMomentum * currentMomentum) /
                                (energy[i] * energy[i])) -

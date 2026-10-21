@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -32,12 +32,14 @@ using namespace Acts::UnitLiterals;
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
 const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
-const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
+const BoundMatrix cov = BoundMatrix::Identity();
 
 void checkParameters(const BoundTrackParameters& params, double phi,
                      double theta, double p, double q, const Vector4& pos4,
                      const Vector3& unitDir) {
-  const auto qOverP = (q != 0) ? (q / p) : (1 / p);
+  const auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(q));
+
+  const auto qOverP = particleHypothesis.qOverP(p, q);
   const auto pos = pos4.segment<3>(ePos0);
 
   const auto* referenceSurface =
@@ -55,15 +57,17 @@ void checkParameters(const BoundTrackParameters& params, double phi,
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundTheta>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundQOverP>(), qOverP, eps, eps);
   // convenience accessors
+  BOOST_CHECK_EQUAL(params.charge(), q);
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eTime], eps, eps);
   CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
-                       eps);
-  CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
-  BOOST_CHECK_EQUAL(params.charge(), q);
+  if (q != 0) {
+    CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
+    CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
+                         eps);
+    CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
+  }
   // curvilinear reference surface
   CHECK_CLOSE_OR_SMALL(referenceSurface->center(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(referenceSurface->normal(geoCtx), unitDir, eps, eps);
@@ -85,31 +89,31 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
-BOOST_DATA_TEST_CASE(
-    NeutralConstruct,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps, x, y, z,
-    time, phiInput, theta, p) {
+BOOST_DATA_TEST_CASE(NeutralConstruct,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps,
+                     x, y, z, time, phiInput, theta, p) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   BoundTrackParameters params = BoundTrackParameters::createCurvilinear(
-      pos4, dir, 1 / p, std::nullopt, ParticleHypothesis::pion0());
+      pos4, dir, 0, std::nullopt, ParticleHypothesis::pion0());
   checkParameters(params, phi, theta, p, 0_e, pos4, dir);
   BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
-  params = BoundTrackParameters::createCurvilinear(pos4, dir, 1 / p, cov,
+  params = BoundTrackParameters::createCurvilinear(pos4, dir, 0, cov,
                                                    ParticleHypothesis::pion0());
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
 
-BOOST_DATA_TEST_CASE(
-    ChargedConstruct,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
-    x, y, z, time, phiInput, theta, p, q) {
+BOOST_DATA_TEST_CASE(ChargedConstruct,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsNonZero,
+                     x, y, z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);
@@ -128,10 +132,10 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
 
-BOOST_DATA_TEST_CASE(
-    AnyConstruct,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsAny, x, y,
-    z, time, phiInput, theta, p, q) {
+BOOST_DATA_TEST_CASE(AnyConstruct,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsAny,
+                     x, y, z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);

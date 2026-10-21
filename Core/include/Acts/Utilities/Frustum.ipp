@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Frustum.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/QuaternionFromTwoVectors.hpp"
 
 #include <numbers>
 
@@ -50,7 +51,7 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
   const VertexType lup = VertexType::UnitX();
 
   transform_type transform;
-  transform = (Eigen::Quaternion<value_type>().setFromTwoVectors(ldir, dir));
+  transform = detail::quaternionFromTwoVectors(ldir, dir);
 
   m_normals[0] = ldir;
 

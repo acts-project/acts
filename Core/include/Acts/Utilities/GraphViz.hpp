@@ -93,18 +93,27 @@ enum class Style {
 
 std::ostream& operator<<(std::ostream& os, const Style& style);
 
+/// GraphViz node descriptor.
 struct Node {
+  /// Node identifier.
   std::string id;
+  /// Node label text.
   std::string label = "";
+  /// Node shape.
   Shape shape = Shape::Ellipse;
+  /// Node style attributes.
   std::vector<Style> style = {Style::Solid};
 };
 
 std::ostream& operator<<(std::ostream& os, const Node& node);
 
+/// GraphViz edge descriptor.
 struct Edge {
+  /// Source node.
   Node from;
+  /// Destination node.
   Node to;
+  /// Edge style.
   Style style = Style::Solid;
 };
 

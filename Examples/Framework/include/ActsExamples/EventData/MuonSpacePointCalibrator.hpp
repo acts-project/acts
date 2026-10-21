@@ -67,7 +67,7 @@ class MuonSpacePointCalibrator {
                            std::unique_ptr<const Acts::Logger> logger);
   /// @brief Abbrivation of the uncalibrated space point container type
   using UnCalibSpVec_t = std::vector<const MuonSpacePoint*>;
-  /// @brief Abbrivation to access a single element in the uncalibrated spacepoint container
+  /// @brief Abbrivation to access a single element in the uncalibrated space point container
   using UnCalibSp_t = UnCalibSpVec_t::value_type;
   /// @brief Use unique pointer for the calibrated measurements
   using CalibSp_t = std::unique_ptr<MuonSpacePoint>;

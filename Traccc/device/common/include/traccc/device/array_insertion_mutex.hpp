@@ -1,0 +1,43 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include <cassert>
+#include <cstdint>
+#include <tuple>
+
+#include "traccc/definitions/qualifiers.hpp"
+
+namespace traccc::device {
+/**
+ * @brief Encode the state of our parameter insertion mutex.
+ */
+TRACCC_HOST_DEVICE inline std::uint64_t encode_insertion_mutex(
+    const bool locked, const std::uint32_t size, const float max) {
+  // Assert that the MSB of the size is zero
+  assert(size <= 0x7FFFFFFF);
+
+  const std::uint32_t hi = size | (locked ? 0x80000000 : 0x0);
+  const std::uint32_t lo = std::bit_cast<std::uint32_t>(max);
+
+  return (static_cast<std::uint64_t>(hi) << 32) | lo;
+}
+
+/**
+ * @brief Decode the state of our parameter insertion mutex.
+ */
+TRACCC_HOST_DEVICE inline std::tuple<bool, std::uint32_t, float>
+decode_insertion_mutex(const std::uint64_t val) {
+  const std::uint32_t hi = static_cast<std::uint32_t>(val >> 32);
+  const std::uint32_t lo = static_cast<std::uint32_t>(val & 0xFFFFFFFF);
+
+  return {static_cast<bool>(hi & 0x80000000), (hi & 0x7FFFFFFF),
+          std::bit_cast<float>(lo)};
+}
+}  // namespace traccc::device

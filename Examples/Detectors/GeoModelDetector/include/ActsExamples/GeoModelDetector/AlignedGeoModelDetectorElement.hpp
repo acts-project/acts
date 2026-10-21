@@ -23,7 +23,7 @@ class Surface;
 namespace ActsExamples {
 /// Define the aligned GeoModel detector element and factory type
 using AlignedGeoModelDetectorElement =
-    ActsExamples::Aligned<ActsPlugins::GeoModelDetectorElement>;
+    Aligned<ActsPlugins::GeoModelDetectorElement>;
 
 std::shared_ptr<AlignedGeoModelDetectorElement>
 alignedGeoModelDetectorElementFactory(const PVConstLink& geoPhysVol,

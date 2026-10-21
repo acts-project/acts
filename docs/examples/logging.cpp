@@ -29,7 +29,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) {
     std::unique_ptr<const Acts::Logger> m_logger;
     const Acts::Logger &logger() const { return *m_logger; }
 
-    MyClass(std::unique_ptr<const Acts::Logger> logger)
+    explicit MyClass(std::unique_ptr<const Acts::Logger> logger)
         : m_logger(std::move(logger)) {}
 
     void doWork() { ACTS_INFO("Doing work in MyClass"); }

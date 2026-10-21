@@ -164,7 +164,7 @@ bool testUnrolling()
   requires(N > 1)
 {
   /// Fill a test matrix with unique values
-  ActsSquareMatrix<N> testMatrix{ActsSquareMatrix<N>::Zero()};
+  SquareMatrix<N> testMatrix{SquareMatrix<N>::Zero()};
   std::size_t counter{N};
   for (std::size_t i = 0; i < N; ++i) {
     for (std::size_t j = 0; j <= i; ++j) {

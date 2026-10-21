@@ -19,8 +19,10 @@ namespace Acts {
 template <typename actor_t>
 concept ActorHasResult = requires { typename actor_t::result_type; };
 
+/// Helper struct exposing ActorHasResult as a boolean.
 template <typename actor_t>
 struct ActorHasResultStruct {
+  /// Whether the actor has a result type
   static constexpr bool value = ActorHasResult<actor_t>;
 };
 

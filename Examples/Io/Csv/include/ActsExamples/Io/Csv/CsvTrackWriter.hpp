@@ -11,11 +11,11 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -88,7 +88,7 @@ class CsvTrackWriter : public WriterT<ConstTrackContainer> {
   struct TrackInfo : public Acts::MultiTrajectoryHelpers::TrajectoryState {
     std::size_t trackId = 0;
     unsigned int seedID = 0;
-    ActsFatras::Barcode particleId;
+    SimBarcode particleId;
     std::size_t nMajorityHits = 0;
     std::string trackType;
     double truthMatchProb = 0;

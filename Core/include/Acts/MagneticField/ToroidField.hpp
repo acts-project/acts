@@ -78,13 +78,13 @@ class ToroidField final : public MagneticFieldProvider {
   };
 
   /// Cache for magnetic field provider
-  struct Cache {
-    explicit Cache(const MagneticFieldContext& /*ctx*/) {}
-  };
+  struct Cache {};
 
   /// Construct with default configuration
   ToroidField();
+
   /// Construct with custom configuration
+  /// @param cfg Configuration parameters
   explicit ToroidField(Config cfg);
 
   /// @copydoc MagneticFieldProvider::makeCache
@@ -95,10 +95,8 @@ class ToroidField final : public MagneticFieldProvider {
   Result<Vector3> getField(const Vector3& position,
                            MagneticFieldProvider::Cache& cache) const override;
 
-  /// Field is defined everywhere
-  bool isInside(const Vector3& /*position*/) const { return true; }
-
   /// Get the configuration
+  /// @return Configuration struct reference
   const Config& config() const { return m_cfg; }
 
  private:

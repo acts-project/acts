@@ -1,0 +1,28 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+// Turn off excessive detector building logs (only works with gcc!)
+// clang-format off
+#include <detray/utils/quiet_log_start.hpp>
+// clang-format on
+
+// Detray include(s).
+#include <detray/test/common/build_telescope_detector.hpp>
+#include <detray/test/common/build_toy_detector.hpp>
+#include <detray/test/common/build_wire_chamber.hpp>
+
+// clang-format off
+#include <detray/utils/quiet_log_end.hpp>
+// clang-format on
+
+// useful for telescope detector creation
+#include <detray/geometry/mask.hpp>
+#include <detray/geometry/shapes/rectangle2D.hpp>
+#include <detray/tracks/ray.hpp>

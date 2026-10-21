@@ -75,14 +75,16 @@ auto GridBinFinder<DIM>::findBins(
   assert(isGridCompatible(grid));
   std::array<std::pair<int, int>, DIM> sizePerAxis =
       getSizePerAxis(locPosition);
-  return grid.neighborHoodIndices(locPosition, sizePerAxis).collect();
+  return grid.multiAxis()
+      .getNeighborHoodIndices(locPosition, sizePerAxis)
+      .collect();
 }
 
 template <std::size_t DIM>
 template <typename stored_t, class... Axes>
 bool GridBinFinder<DIM>::isGridCompatible(
     const Grid<stored_t, Axes...>& grid) const {
-  const std::array<std::size_t, DIM> nLocBins = grid.numLocalBins();
+  const std::array<std::size_t, DIM> nLocBins = grid.multiAxis().getNBins();
   for (std::size_t i(0ul); i < DIM; ++i) {
     std::size_t nBins = nLocBins[i];
     bool isCompabile = std::visit(

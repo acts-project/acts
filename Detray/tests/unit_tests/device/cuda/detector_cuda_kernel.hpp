@@ -1,0 +1,55 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+// Projetc include(s)
+#include "detray/core/detector.hpp"
+#include "detray/definitions/algebra.hpp"
+#include "detray/utils/ranges.hpp"
+
+// Detray test include(s)
+#include "detray/test/framework/types.hpp"
+
+namespace detray {
+
+// some useful type declarations
+using metadata_t = test::toy_metadata;
+using host_detector_t = host::detector<metadata_t>;
+using device_detector_t = device::detector<metadata_t>;
+
+using det_volume_t = typename host_detector_t::volume_type;
+using det_surface_t = typename host_detector_t::surface_type;
+using transform_t = typename host_detector_t::transform3_type;
+using mask_defs = typename host_detector_t::masks;
+
+constexpr auto rectangle_id = mask_defs::id::e_rectangle2D;
+constexpr auto disc_id = mask_defs::id::e_ring2D;
+constexpr auto cylinder_id = mask_defs::id::e_concentric_cylinder2D;
+
+using rectangle_t = types::get<mask_defs, rectangle_id>;
+using disc_t = types::get<mask_defs, disc_id>;
+using cylinder_t = types::get<mask_defs, cylinder_id>;
+
+/// declaration of a test function for detector
+void detector_test(typename host_detector_t::view_type det_data,
+                   vecmem::data::vector_view<det_volume_t> volumes_data,
+                   vecmem::data::vector_view<det_surface_t> surfaces_data,
+                   vecmem::data::vector_view<transform_t> transforms_data,
+                   vecmem::data::vector_view<rectangle_t> rectangles_data,
+                   vecmem::data::vector_view<disc_t> discs_data,
+                   vecmem::data::vector_view<cylinder_t> cylinders_data);
+
+/// declaration of an alignment test function for detector
+void detector_alignment_test(
+    typename host_detector_t::view_type det_data_static,
+    typename host_detector_t::view_type det_data_aligned,
+    vecmem::data::vector_view<transform_t> surfacexf_data_static,
+    vecmem::data::vector_view<transform_t> surfacexf_data_aligned);
+
+}  // namespace detray

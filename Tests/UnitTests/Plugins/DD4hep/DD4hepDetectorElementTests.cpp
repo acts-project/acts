@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
@@ -111,8 +112,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementCylinder) {
   std::shared_ptr<ActsPlugins::DD4hepDetectorElement> cylindricalElement =
       nullptr;
   for (const auto& [chn, child] : world.children()) {
-    cylindricalElement =
-        std::make_shared<ActsPlugins::DD4hepDetectorElement>(child, "XYZ", 10.);
+    cylindricalElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
+        child, TGeoAxes{"XYZ"}, 10.);
   }
 
   BOOST_REQUIRE_NE(cylindricalElement, nullptr);
@@ -145,8 +146,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralCylinder) {
   std::shared_ptr<ActsPlugins::DD4hepDetectorElement> cylindricalElement =
       nullptr;
   for (const auto& [chn, child] : world.children()) {
-    cylindricalElement =
-        std::make_shared<ActsPlugins::DD4hepDetectorElement>(child, "XYZ", 10.);
+    cylindricalElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
+        child, TGeoAxes{"XYZ"}, 10.);
   }
 
   BOOST_REQUIRE_NE(cylindricalElement, nullptr);
@@ -181,7 +182,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementDisc) {
   std::shared_ptr<ActsPlugins::DD4hepDetectorElement> discElement = nullptr;
   for (const auto& [chn, child] : world.children()) {
     discElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
-        child, "XYZ", 10., true);
+        child, TGeoAxes{"XYZ"}, 10.);
   }
 
   BOOST_REQUIRE_NE(discElement, nullptr);
@@ -214,7 +215,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralDisc) {
   std::shared_ptr<ActsPlugins::DD4hepDetectorElement> discElement = nullptr;
   for (const auto& [chn, child] : world.children()) {
     discElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
-        child, "XYZ", 10., true);
+        child, TGeoAxes{"XYZ"}, 10.);
   }
 
   BOOST_REQUIRE_NE(discElement, nullptr);
@@ -251,7 +252,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
       nullptr;
   for (const auto& [chn, child] : world.children()) {
     rectangleElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
-        child, "XYZ", 10., true);
+        child, TGeoAxes{"XYZ"}, 10.);
   }
 
   BOOST_REQUIRE_NE(rectangleElement, nullptr);
@@ -296,7 +297,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementTrapezoid) {
       nullptr;
   for (const auto& [chn, child] : world.children()) {
     trapezoidElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
-        child, "xZ", 10., true);
+        child, TGeoAxes("xZy"), 10.);
   }
 
   BOOST_REQUIRE_NE(trapezoidElement, nullptr);

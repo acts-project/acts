@@ -9,19 +9,20 @@
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <cmath>
+#include <cstddef>
 #include <vector>
 
 #include <TEfficiency.h>
+#include <TGraphAsymmErrors.h>
 #include <TH1F.h>
 #include <TH2F.h>
+#include <TH3F.h>
 #include <TProfile.h>
 #include <boost/histogram/accumulators/weighted_sum.hpp>
 
 using namespace Acts::Experimental;
 
-namespace ActsPlugins {
-
-TH1F* toRoot(const Histogram1& boostHist) {
+std::unique_ptr<TH1F> ActsPlugins::toRoot(const Histogram1& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& axis = bh.axis(0);
 
@@ -29,17 +30,17 @@ TH1F* toRoot(const Histogram1& boostHist) {
   std::vector<double> edges = extractBinEdges(axis);
 
   // Create ROOT histogram with variable binning
-  TH1F* rootHist = new TH1F(boostHist.name().c_str(), boostHist.title().c_str(),
-                            static_cast<int>(axis.size()), edges.data());
+  auto rootHist = std::make_unique<TH1F>(boostHist.name().c_str(),
+                                         boostHist.title().c_str(), axis.size(),
+                                         edges.data());
+  rootHist->Sumw2();
 
-  // Copy bin contents from boost to ROOT
+  // Copy bin contents and errors from boost to ROOT
   for (auto&& x : boost::histogram::indexed(bh)) {
-    // Dereference to get bin content
-    double content = *x;
-
     // ROOT bin numbering starts at 1 (bin 0 is underflow)
-    int rootBinIndex = static_cast<int>(x.index(0)) + 1;
-    rootHist->SetBinContent(rootBinIndex, content);
+    int rootBinIndex = x.index(0) + 1;
+    rootHist->SetBinContent(rootBinIndex, (*x).value());
+    rootHist->SetBinError(rootBinIndex, std::sqrt((*x).variance()));
   }
 
   // Set axis titles from axis metadata
@@ -48,7 +49,7 @@ TH1F* toRoot(const Histogram1& boostHist) {
   return rootHist;
 }
 
-TH2F* toRoot(const Histogram2& boostHist) {
+std::unique_ptr<TH2F> ActsPlugins::toRoot(const Histogram2& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& xAxis = bh.axis(0);
   const auto& yAxis = bh.axis(1);
@@ -60,20 +61,19 @@ TH2F* toRoot(const Histogram2& boostHist) {
   std::vector<double> yEdges = extractBinEdges(yAxis);
 
   // Create ROOT histogram with 2D variable binning
-  TH2F* rootHist = new TH2F(boostHist.name().c_str(), boostHist.title().c_str(),
-                            static_cast<int>(xAxis.size()), xEdges.data(),
-                            static_cast<int>(yAxis.size()), yEdges.data());
+  auto rootHist = std::make_unique<TH2F>(
+      boostHist.name().c_str(), boostHist.title().c_str(), xAxis.size(),
+      xEdges.data(), yAxis.size(), yEdges.data());
+  rootHist->Sumw2();
 
-  // Copy bin contents from boost to ROOT
+  // Copy bin contents and errors from boost to ROOT
   for (auto&& x : boost::histogram::indexed(bh)) {
-    // Dereference to get bin content
-    double content = *x;
-
     // ROOT bin numbering starts at 1 (bin 0 is underflow)
     // indexed() gives us 0-based bin indices for each axis
-    int rootXBin = static_cast<int>(x.index(0)) + 1;
-    int rootYBin = static_cast<int>(x.index(1)) + 1;
-    rootHist->SetBinContent(rootXBin, rootYBin, content);
+    int rootXBin = x.index(0) + 1;
+    int rootYBin = x.index(1) + 1;
+    rootHist->SetBinContent(rootXBin, rootYBin, (*x).value());
+    rootHist->SetBinError(rootXBin, rootYBin, std::sqrt((*x).variance()));
   }
 
   // Set axis titles from axis metadata
@@ -83,7 +83,49 @@ TH2F* toRoot(const Histogram2& boostHist) {
   return rootHist;
 }
 
-TProfile* toRoot(const ProfileHistogram1& boostProfile) {
+std::unique_ptr<TH3F> ActsPlugins::toRoot(const Histogram3& boostHist) {
+  const auto& bh = boostHist.histogram();
+  const auto& xAxis = bh.axis(0);
+  const auto& yAxis = bh.axis(1);
+  const auto& zAxis = bh.axis(2);
+
+  // Extract bin edges from X axis
+  std::vector<double> xEdges = extractBinEdges(xAxis);
+
+  // Extract bin edges from Y axis
+  std::vector<double> yEdges = extractBinEdges(yAxis);
+
+  // Extract bin edges from Z axis
+  std::vector<double> zEdges = extractBinEdges(zAxis);
+
+  // Create ROOT histogram with 3D variable binning
+  auto rootHist = std::make_unique<TH3F>(
+      boostHist.name().c_str(), boostHist.title().c_str(), xAxis.size(),
+      xEdges.data(), yAxis.size(), yEdges.data(), zAxis.size(), zEdges.data());
+  rootHist->Sumw2();
+
+  // Copy bin contents and errors from boost to ROOT
+  for (auto&& x : boost::histogram::indexed(bh)) {
+    // ROOT bin numbering starts at 1 (bin 0 is underflow)
+    // indexed() gives us 0-based bin indices for each axis
+    int rootXBin = x.index(0) + 1;
+    int rootYBin = x.index(1) + 1;
+    int rootZBin = x.index(2) + 1;
+    rootHist->SetBinContent(rootXBin, rootYBin, rootZBin, (*x).value());
+    rootHist->SetBinError(rootXBin, rootYBin, rootZBin,
+                          std::sqrt((*x).variance()));
+  }
+
+  // Set axis titles from axis metadata
+  rootHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
+  rootHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
+  rootHist->GetZaxis()->SetTitle(zAxis.metadata().c_str());
+
+  return rootHist;
+}
+
+std::unique_ptr<TProfile> ActsPlugins::toRoot(
+    const ProfileHistogram1& boostProfile) {
   const auto& bh = boostProfile.histogram();
   const auto& axis = bh.axis(0);
 
@@ -91,9 +133,9 @@ TProfile* toRoot(const ProfileHistogram1& boostProfile) {
   std::vector<double> edges = extractBinEdges(axis);
 
   // Create ROOT TProfile with variable binning
-  TProfile* rootProfile =
-      new TProfile(boostProfile.name().c_str(), boostProfile.title().c_str(),
-                   static_cast<int>(axis.size()), edges.data());
+  auto rootProfile = std::make_unique<TProfile>(boostProfile.name().c_str(),
+                                                boostProfile.title().c_str(),
+                                                axis.size(), edges.data());
 
   // Enable sum of weights squared storage for proper error calculation
   rootProfile->Sumw2();
@@ -109,7 +151,7 @@ TProfile* toRoot(const ProfileHistogram1& boostProfile) {
     const Accumulator& acc = *x;
 
     // ROOT bin numbering starts at 1 (bin 0 is underflow)
-    int rootBinIndex = static_cast<int>(x.index(0)) + 1;
+    int rootBinIndex = x.index(0) + 1;
 
     double count = acc.count();
 
@@ -158,7 +200,7 @@ TProfile* toRoot(const ProfileHistogram1& boostProfile) {
   return rootProfile;
 }
 
-TEfficiency* toRoot(const Efficiency1& boostEff) {
+std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency1& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& axis = accepted.axis(0);
@@ -167,36 +209,40 @@ TEfficiency* toRoot(const Efficiency1& boostEff) {
   std::vector<double> edges = extractBinEdges(axis);
 
   // Create accepted and total TH1F histograms
-  TH1F* acceptedHist =
-      new TH1F((boostEff.name() + "_accepted").c_str(), "Passed",
-               static_cast<int>(axis.size()), edges.data());
+  auto acceptedHist =
+      std::make_unique<TH1F>((boostEff.name() + "_accepted").c_str(), "Passed",
+                             axis.size(), edges.data());
 
-  TH1F* totalHist = new TH1F((boostEff.name() + "_total").c_str(), "Total",
-                             static_cast<int>(axis.size()), edges.data());
+  auto totalHist = std::make_unique<TH1F>((boostEff.name() + "_total").c_str(),
+                                          "Total", axis.size(), edges.data());
 
   // Fill histograms with counts
   for (int i = 0; i < axis.size(); ++i) {
-    double acceptedCount = static_cast<double>(accepted.at(i));
-    double totalCount = static_cast<double>(total.at(i));
+    double acceptedCount = accepted.at(i).value();
+    double totalCount = total.at(i).value();
 
     acceptedHist->SetBinContent(i + 1, acceptedCount);
     totalHist->SetBinContent(i + 1, totalCount);
   }
 
+  // Set X axis title from axis metadata
+  acceptedHist->GetXaxis()->SetTitle(axis.metadata().c_str());
+  totalHist->GetXaxis()->SetTitle(axis.metadata().c_str());
+
+  // Set Y axis titles; use "Efficiency" for total histogram since TEfficiency
+  // will inherit this title for the efficiency graph
+  totalHist->GetYaxis()->SetTitle("Efficiency");
+
   // Create TEfficiency from the two histograms
   // TEfficiency takes ownership of the histograms
-  TEfficiency* rootEff = new TEfficiency(*acceptedHist, *totalHist);
+  auto rootEff = std::make_unique<TEfficiency>(*acceptedHist, *totalHist);
   rootEff->SetName(boostEff.name().c_str());
   rootEff->SetTitle(boostEff.title().c_str());
-
-  // Clean up temporary histograms (TEfficiency made copies)
-  delete acceptedHist;
-  delete totalHist;
 
   return rootEff;
 }
 
-TEfficiency* toRoot(const Efficiency2& boostEff) {
+std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency2& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& xAxis = accepted.axis(0);
@@ -209,37 +255,42 @@ TEfficiency* toRoot(const Efficiency2& boostEff) {
   std::vector<double> yEdges = extractBinEdges(yAxis);
 
   // Create accepted and total TH2F histograms
-  TH2F* acceptedHist =
-      new TH2F((boostEff.name() + "_accepted").c_str(), "Accepted",
-               static_cast<int>(xAxis.size()), xEdges.data(),
-               static_cast<int>(yAxis.size()), yEdges.data());
+  auto acceptedHist = std::make_unique<TH2F>(
+      (boostEff.name() + "_accepted").c_str(), "Accepted", xAxis.size(),
+      xEdges.data(), yAxis.size(), yEdges.data());
 
-  TH2F* totalHist = new TH2F((boostEff.name() + "_total").c_str(), "Total",
-                             static_cast<int>(xAxis.size()), xEdges.data(),
-                             static_cast<int>(yAxis.size()), yEdges.data());
+  auto totalHist = std::make_unique<TH2F>((boostEff.name() + "_total").c_str(),
+                                          "Total", xAxis.size(), xEdges.data(),
+                                          yAxis.size(), yEdges.data());
 
   // Fill histograms with counts
   for (int i = 0; i < xAxis.size(); ++i) {
     for (int j = 0; j < yAxis.size(); ++j) {
-      double acceptedCount = static_cast<double>(accepted.at(i, j));
-      double totalCount = static_cast<double>(total.at(i, j));
+      double acceptedCount = accepted.at(i, j).value();
+      double totalCount = total.at(i, j).value();
 
       acceptedHist->SetBinContent(i + 1, j + 1, acceptedCount);
       totalHist->SetBinContent(i + 1, j + 1, totalCount);
     }
   }
 
+  // Set X axis title from axis metadata
+  acceptedHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
+  totalHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
+
+  // Set Y axis title from axis metadata
+  acceptedHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
+  totalHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
+
+  // Set Z axis titles; use "Efficiency" for total histogram since TEfficiency
+  // will inherit this title for the efficiency graph
+  totalHist->GetZaxis()->SetTitle("Efficiency");
+
   // Create TEfficiency from the two histograms
   // TEfficiency takes ownership of the histograms
-  TEfficiency* rootEff = new TEfficiency(*acceptedHist, *totalHist);
+  auto rootEff = std::make_unique<TEfficiency>(*acceptedHist, *totalHist);
   rootEff->SetName(boostEff.name().c_str());
   rootEff->SetTitle(boostEff.title().c_str());
 
-  // Clean up temporary histograms (TEfficiency made copies)
-  delete acceptedHist;
-  delete totalHist;
-
   return rootEff;
 }
-
-}  // namespace ActsPlugins

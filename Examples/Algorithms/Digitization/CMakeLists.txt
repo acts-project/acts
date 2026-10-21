@@ -1,7 +1,7 @@
 acts_add_library(
     ExamplesDigitization
     src/DigitizationAlgorithm.cpp
-    src/DigitizationConfig.cpp
+    src/GeometricConfig.cpp
     src/DigitizationCoordinatesConverter.cpp
     src/MeasurementCreation.cpp
     src/DigitizationConfigurator.cpp
@@ -13,10 +13,6 @@ target_include_directories(
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-target_link_libraries(
-    ActsExamplesDigitization
-    PUBLIC Acts::ExamplesFramework
-    PRIVATE ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
-)
+target_link_libraries(ActsExamplesDigitization PUBLIC Acts::ExamplesFramework)
 
 acts_compile_headers(ExamplesDigitization GLOB "include/**/*.hpp")

@@ -52,31 +52,47 @@ class BoundaryTolerance {
 
   struct NoneParams {};
 
+  /// Parameters for absolute Euclidean boundary tolerance.
   struct AbsoluteEuclideanParams {
+    /// Tolerance value
     double tolerance{};
   };
 
+  /// Parameters for chi2 boundary tolerance in bound coordinates.
   struct Chi2BoundParams {
+    /// Maximum chi2 value
     double maxChi2{};
+    /// Weight matrix stored as flat array
     std::array<double, 4> weight{};
 
+    /// Get weight matrix as Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<SquareMatrix2> weightMatrix() {
       return Eigen::Map<SquareMatrix2>(weight.data());
     }
 
+    /// Get weight matrix as const Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<const SquareMatrix2> weightMatrix() const {
       return Eigen::Map<const SquareMatrix2>(weight.data());
     }
   };
 
+  /// Parameters for chi2 boundary tolerance in Cartesian coordinates.
   struct Chi2CartesianParams {
+    /// Maximum chi2 value
     double maxChi2{};
+    /// Weight matrix stored as flat array
     std::array<double, 4> weight{};
 
+    /// Get weight matrix as Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<SquareMatrix2> weightMatrix() {
       return Eigen::Map<SquareMatrix2>(weight.data());
     }
 
+    /// Get weight matrix as const Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<const SquareMatrix2> weightMatrix() const {
       return Eigen::Map<const SquareMatrix2>(weight.data());
     }
@@ -208,7 +224,21 @@ class BoundaryTolerance {
   bool isTolerated(const Vector2& boundDelta,
                    const SquareMatrix2& boundToCartesian) const;
 
+  /// Print the boundary tolerance
+  /// @param ostr Stream to which the tolerance is printed
+  /// @param tolerance The tolerance to print
+  /// @return The stream
+  friend std::ostream& operator<<(std::ostream& ostr,
+                                  const BoundaryTolerance& tolerance) {
+    tolerance.print(ostr);
+    return ostr;
+  }
+
  private:
+  /// Print method
+  /// @param ostr Stream to which the object is printed
+  void print(std::ostream& ostr) const;
+
   Variant m_variant;
 
   /// Check if the boundary check is of a specific type.

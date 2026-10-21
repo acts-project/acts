@@ -205,7 +205,8 @@ class KDTree {
   template <typename Result>
   std::vector<Result> rangeSearchMap(
       const range_t &r,
-      std::function<Result(const coordinate_t &, const Type &)> f) const {
+      const std::function<Result(const coordinate_t &, const Type &)> &f)
+      const {
     std::vector<Result> out;
 
     rangeSearchMapInserter(r, f, std::back_inserter(out));
@@ -232,7 +233,7 @@ class KDTree {
   template <typename Result, typename OutputIt>
   void rangeSearchMapInserter(
       const range_t &r,
-      std::function<Result(const coordinate_t &, const Type &)> f,
+      const std::function<Result(const coordinate_t &, const Type &)> &f,
       OutputIt i) const {
     rangeSearchMapDiscard(r, [i, f](const coordinate_t &c,
                                     const Type &v) mutable { i = f(c, v); });

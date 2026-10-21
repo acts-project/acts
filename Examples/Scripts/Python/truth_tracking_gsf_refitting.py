@@ -8,7 +8,7 @@ import acts.examples
 from acts.examples.root import (
     RootTrackStatesWriter,
     RootTrackSummaryWriter,
-    RootTrackFitterPerformanceWriter,
+    RootTrackParameterPerformanceWriter,
 )
 
 from truth_tracking_kalman import runTruthTrackingKalman
@@ -47,7 +47,15 @@ def runRefittingGsf(
     # NOTE we specify clampToRange as True to silence warnings in the test about
     # queries to the loss distribution outside the specified range, since no dedicated
     # approximation for the ODD is done yet.
-    bha = acts.examples.AtlasBetheHeitlerApprox.makeDefault(clampToRange=True)
+    bha = acts.examples.loadBetheHeitlerApproxFromJson(
+        str(
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "Examples/Configs/betheHeitler_geantSim_cdf_nC6_O5.json"
+        ),
+        clamp_to_range=True,
+        no_change_limit=0.0001,
+        single_gaussian_limit=0.002,
+    )
 
     gsfOptions = {
         "betheHeitlerApprox": bha,
@@ -105,7 +113,7 @@ def runRefittingGsf(
     )
 
     s.addWriter(
-        RootTrackFitterPerformanceWriter(
+        RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="gsf_refit_tracks",
             inputParticles="particles_selected",

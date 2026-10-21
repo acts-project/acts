@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -17,24 +18,16 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
 
+#include <atomic>
 #include <cstddef>
+#include <map>
 #include <memory>
+#include <mutex>
 #include <string>
-
-namespace Acts {
-class MagneticFieldProvider;
-class TrackingGeometry;
-}  // namespace Acts
+#include <system_error>
 
 namespace ActsExamples {
-class RandomNumbers;
-struct AlgorithmContext;
-
-namespace detail {
-struct FatrasSimulation;
-}
 
 /// Fast track simulation using the Acts propagation and navigation.
 class FatrasSimulation final : public IAlgorithm {
@@ -90,13 +83,16 @@ class FatrasSimulation final : public IAlgorithm {
   ///
   /// @param cfg is the configuration struct
   /// @param lvl is the logging level
-  FatrasSimulation(Config cfg, Acts::Logging::Level lvl);
+  explicit FatrasSimulation(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
   ~FatrasSimulation() override;
 
   /// Run the simulation for a single event.
   ///
   /// @param ctx the algorithm context containing all event information
-  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
+
+  ProcessCode finalize() override;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
@@ -109,8 +105,16 @@ class FatrasSimulation final : public IAlgorithm {
                                                           "OutputParticles"};
 
  private:
+  struct Impl;
+
   Config m_cfg;
-  std::unique_ptr<detail::FatrasSimulation> m_sim;
+  std::unique_ptr<Impl> m_sim;
+  struct Counters {
+    std::mutex failedParticlesMutex;
+    std::size_t nFailedParticles{0};
+    std::map<std::error_code, std::size_t> failedParticlesByError;
+  };
+  mutable Counters m_counters;
 };
 
 }  // namespace ActsExamples

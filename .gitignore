@@ -31,12 +31,27 @@ x86_64-slc6-gcc49-opt
 #codegen related
 codegen/build/
 codegen/src/codegen.egg-info/
+# the codegen manifest is tracked, despite the blanket *.json rule above
+!codegen/manifest.json
+# the generated material map example shown in the docs, same exception
+!docs/examples/material_map_example.json
+# Draft material schema and its hand-authored validation fixtures.
+!Plugins/Json/schema/material-map-v1.schema.json
+!docs/examples/material-map-v1/*.json
+# generated code shipped in source archives, never committed
+/prebuilt-codegen/
 
 # dont ignore hidden configs
 !.clang-format
 !.github
 !.gitignore
-!.gitlab-ci.yml
 !.clang-tidy
 !.oclint
 !.devcontainer
+
+# don't ignore CMake preset files
+!CMakePresets.json
+
+# physmon reference histograms are fetched by content hash, not committed.
+# See CI/physmon/reference.sha256 and CI/physmon/reference.py
+/CI/physmon/reference/

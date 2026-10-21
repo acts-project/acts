@@ -1,6 +1,8 @@
 add_unittest(AlignmentContext AlignmentContextTests.cpp)
 add_unittest(Blueprint BlueprintTests.cpp)
+add_unittest(BoundaryVolumeResolution BoundaryVolumeResolutionTests.cpp)
 add_unittest(BlueprintApi BlueprintApiTests.cpp)
+add_unittest(BlueprintBuilder BlueprintBuilderTests.cpp)
 add_unittest(ConeVolumeBounds ConeVolumeBoundsTests.cpp)
 add_unittest(ConeLayer ConeLayerTests.cpp)
 add_unittest(CuboidVolumeBounds CuboidVolumeBoundsTests.cpp)

@@ -1,2 +1,10 @@
 @defgroup json_plugin JSON Plugin
 @ingroup plugins
+@brief JSON (de)serialization of geometry, material and configuration.
+
+The file format written by the material converters is documented in
+@ref material_map_json_format.
+
+The @ref material_map_json_schema describes the versioned material
+format handled by @ref Acts::TrackingGeometryMaterialJsonConverter. Legacy material
+converters retain the previous format.

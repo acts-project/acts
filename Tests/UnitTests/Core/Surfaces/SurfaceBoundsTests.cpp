@@ -9,12 +9,26 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/ConeBounds.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/DiamondBounds.hpp"
+#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
+#include "Acts/Surfaces/EllipseBounds.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <cstddef>
+#include <iomanip>
+#include <memory>
+#include <numbers>
 #include <numeric>
 #include <ostream>
+#include <sstream>
 #include <vector>
 
 namespace Acts {
@@ -91,6 +105,41 @@ using namespace Acts;
 
 namespace ActsTests {
 
+namespace {
+
+struct StreamState {
+  std::ios_base::fmtflags flags;
+  std::streamsize precision;
+  std::streamsize width;
+  char fill;
+};
+
+StreamState setNonDefaultStreamState(std::ostringstream& stream) {
+  stream << std::scientific << std::showpos << std::setfill('#')
+         << std::setprecision(3);
+  stream.width(17);
+  return {stream.flags(), stream.precision(), stream.width(), stream.fill()};
+}
+
+void checkStreamState(const std::ostringstream& stream,
+                      const StreamState& state) {
+  BOOST_CHECK(stream.flags() == state.flags);
+  BOOST_CHECK_EQUAL(stream.precision(), state.precision);
+  BOOST_CHECK_EQUAL(stream.width(), state.width);
+  BOOST_CHECK_EQUAL(stream.fill(), state.fill);
+}
+
+void checkStreamStatePreserved(const SurfaceBounds& bounds) {
+  std::ostringstream stream;
+  const auto state = setNonDefaultStreamState(stream);
+
+  bounds.toStream(stream);
+
+  checkStreamState(stream, state);
+}
+
+}  // namespace
+
 BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 /// Unit test for creating compliant/non-compliant SurfaceBounds object
@@ -126,6 +175,26 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
   BOOST_CHECK_EQUAL_COLLECTIONS(
       surfaceboundValues.cbegin(), surfaceboundValues.cend(),
       assignedboundValues.cbegin(), assignedboundValues.cend());
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceBoundsToStreamPreservesStreamState) {
+  std::vector<std::unique_ptr<SurfaceBounds>> bounds;
+  bounds.push_back(
+      std::make_unique<AnnulusBounds>(7.2, 12., 0.7, 1.3, Vector2{-2., 2.}));
+  bounds.push_back(std::make_unique<ConeBounds>(std::numbers::pi / 8., 3., 6.));
+  bounds.push_back(std::make_unique<CylinderBounds>(0.5, 10.));
+  bounds.push_back(std::make_unique<DiamondBounds>(10., 20., 15., 5., 7.));
+  bounds.push_back(std::make_unique<DiscTrapezoidBounds>(1., 5., 2., 6., 0.));
+  bounds.push_back(std::make_unique<EllipseBounds>(1., 2., 3., 4.,
+                                                   std::numbers::pi / 2., 0.));
+  bounds.push_back(std::make_unique<LineBounds>(0.5, 20.));
+  bounds.push_back(std::make_unique<RadialBounds>(1., 5.));
+  bounds.push_back(std::make_unique<RectangleBounds>(10., 5.));
+  bounds.push_back(std::make_unique<TrapezoidBounds>(1., 6., 2.));
+
+  for (const auto& bound : bounds) {
+    checkStreamStatePreserved(*bound);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

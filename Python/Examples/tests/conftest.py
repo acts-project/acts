@@ -1,3 +1,4 @@
+import contextlib
 import multiprocessing
 from pathlib import Path
 import sys
@@ -5,10 +6,9 @@ import os
 import tempfile
 import shutil
 from typing import Dict
-import warnings
 import pytest_check as check
 from collections import namedtuple
-
+import filelock
 
 sys.path = [
     str(Path(__file__).parent.parent.parent.parent / "Examples/Scripts/Python/"),
@@ -17,13 +17,12 @@ sys.path = [
 
 
 import helpers
-import helpers.hash_root
 
 import pytest
 
 import acts
 import acts.examples
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
 
 try:
@@ -32,24 +31,6 @@ try:
     ROOT.gSystem.ResetSignals()
 except ImportError:
     pass
-
-try:
-    if acts.logging.getFailureThreshold() != acts.logging.WARNING:
-        acts.logging.setFailureThreshold(acts.logging.WARNING)
-except RuntimeError:
-    # Repackage with different error string
-    errtype = (
-        "negative"
-        if acts.logging.getFailureThreshold() < acts.logging.WARNING
-        else "positive"
-    )
-    warnings.warn(
-        "Runtime log failure threshold could not be set. "
-        "Compile-time value is probably set via CMake, i.e. "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set, "
-        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
-        f"The pytest test-suite can produce false-{errtype} results in this configuration"
-    )
 
 
 u = acts.UnitConstants
@@ -71,11 +52,12 @@ hash_assertion_failures = []
 
 def _parse_hash_file(file: Path) -> Dict[str, str]:
     res = {}
-    for line in file.open():
-        if line.strip() == "" or line.strip().startswith("#"):
-            continue
-        key, h = line.strip().split(":", 1)
-        res[key.strip()] = h.strip()
+    with file.open() as f:
+        for line in f:
+            if line.strip() == "" or line.strip().startswith("#"):
+                continue
+            key, h = line.strip().split(":", 1)
+            res[key.strip()] = h.strip()
     return res
 
 
@@ -106,13 +88,18 @@ def assert_root_hash(request, root_file_exp_hashes):
         file: Root file to check the expected hash against
         """
         __tracebackhide__ = True
+        # Lazy import: pulls uproot which pulls pyarrow; only relevant for
+        # tests that actually use this fixture.
+        import helpers.hash_root
+
         gkey = f"{request.node.name}__{key}"
         act_hash = helpers.hash_root.hash_root_file(file)
         if not gkey in root_file_exp_hashes:
-            warnings.warn(
-                f'Hash lookup key "{key}" not found for test "{request.node.name}"'
+            check.equal(
+                act_hash,
+                "[MISSING]",
+                msg=f'Hash lookup key "{key}" not found for test "{request.node.name}"',
             )
-            check.equal(act_hash, "[MISSING]")
             exc = RootHashAssertionError(file, gkey, "[MISSING]", act_hash)
             hash_assertion_failures.append(exc)
 
@@ -127,7 +114,9 @@ def assert_root_hash(request, root_file_exp_hashes):
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
-    docs_url = "https://acts.readthedocs.io/en/latest/examples/python_bindings.html#root-file-hash-regression-checks"
+    docs_url = (
+        "https://acts-project.github.io/group__python__testing.html#root_file_hashes"
+    )
     if len(hash_assertion_failures) > 0:
         terminalreporter.ensure_newline()
         terminalreporter.section(
@@ -245,6 +234,10 @@ def trk_geo():
 DetectorConfig = namedtuple(
     "DetectorConfig",
     [
+        # Tests use this only to scope teardown (``with cfg.detector:``). The
+        # detectors below are shared for the whole session, so nothing should
+        # release them -- this is a no-op context manager and the real detector
+        # is kept alive in _detector_config_cache.
         "detector",
         "trackingGeometry",
         "decorators",
@@ -255,45 +248,108 @@ DetectorConfig = namedtuple(
 )
 
 
+_shared_detectors = {}
+
+
+def _shared_detector(key: str, factory):
+    """Build a detector once and reuse it for the rest of the session.
+
+    Constructing the ODD takes ~1s and permanently retains ~16MB: the Acts
+    detector elements are installed as extensions on the dd4hep DetElements
+    (see DD4hepLayerBuilder::createSensitiveSurface) and so outlive the
+    TrackingGeometry they were built for. The suite asks for a detector dozens
+    of times, which is where a large part of the pytest process footprint comes
+    from.
+
+    Sharing is safe: TrackingGeometry is handed out as
+    ``shared_ptr<const TrackingGeometry>`` and neither GenericDetector nor the
+    DD4hep detectors populate any context decorators. Note this also means one
+    dd4hep detector still backs exactly one TrackingGeometry, which the
+    DetElement extension mechanism requires -- it has a single slot per element
+    and throws on a second conversion.
+    """
+    if key not in _shared_detectors:
+        _shared_detectors[key] = factory()
+    return _shared_detectors[key]
+
+
+def _get_generic_detector_config(srcdir: Path) -> DetectorConfig:
+    detector = _shared_detector("generic", acts.examples.GenericDetector)
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
+    return DetectorConfig(
+        contextlib.nullcontext(),
+        trackingGeometry,
+        decorators,
+        geometrySelection=(srcdir / "Examples/Configs/generic-seeding-config.json"),
+        digiConfigFile=(srcdir / "Examples/Configs/generic-digi-smearing-config.json"),
+        name="generic",
+    )
+
+
+def _get_odd_detector_config(srcdir: Path) -> DetectorConfig:
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep not set up")
+
+    detector = _shared_detector("odd", getOpenDataDetector)
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
+    return DetectorConfig(
+        contextlib.nullcontext(),
+        trackingGeometry,
+        decorators,
+        digiConfigFile=(srcdir / "Examples/Configs/odd-digi-smearing-config.json"),
+        geometrySelection=(srcdir / "Examples/Configs/odd-seeding-config.json"),
+        name="odd",
+    )
+
+
+def _srcdir() -> Path:
+    return Path(__file__).resolve().parent.parent.parent.parent
+
+
+@pytest.fixture
+def odd_detector():
+    """The shared session-lifetime default-configuration ODD (requires DD4hep).
+
+    Prefer this over calling getOpenDataDetector() in a test. Do not use it as
+    a context manager -- it is shared, so nothing may release it.
+    """
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep not set up")
+    return _shared_detector("odd", getOpenDataDetector)
+
+
+@pytest.fixture
+def odd_detector_gen3():
+    """The shared session-lifetime default-configuration Gen3 ODD."""
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep not set up")
+    return _shared_detector("odd-gen3", lambda: getOpenDataDetector(gen3=True))
+
+
+@pytest.fixture
+def generic_detector_config():
+    """Detector config for the generic detector only."""
+    return _get_generic_detector_config(_srcdir())
+
+
+@pytest.fixture
+def odd_detector_config():
+    """Detector config for the Open Data Detector only (requires DD4hep)."""
+    return _get_odd_detector_config(_srcdir())
+
+
 @pytest.fixture(params=["generic", pytest.param("odd", marks=pytest.mark.odd)])
 def detector_config(request):
-    srcdir = Path(__file__).resolve().parent.parent.parent.parent
-
+    """Parametrized fixture that runs tests with both generic and ODD detectors."""
+    srcdir = _srcdir()
     if request.param == "generic":
-        detector = acts.examples.GenericDetector()
-        trackingGeometry = detector.trackingGeometry()
-        decorators = detector.contextDecorators()
-        return DetectorConfig(
-            detector,
-            trackingGeometry,
-            decorators,
-            geometrySelection=(srcdir / "Examples/Configs/generic-seeding-config.json"),
-            digiConfigFile=(
-                srcdir / "Examples/Configs/generic-digi-smearing-config.json"
-            ),
-            name=request.param,
-        )
+        return _get_generic_detector_config(srcdir)
     elif request.param == "odd":
-        if not helpers.dd4hepEnabled:
-            pytest.skip("DD4hep not set up")
-
-        odd_dir = getOpenDataDetectorDirectory()
-        matDeco = acts.IMaterialDecorator.fromFile(
-            odd_dir / "data/odd-material-maps.root", level=acts.logging.INFO
-        )
-        detector = getOpenDataDetector(matDeco)
-        trackingGeometry = detector.trackingGeometry()
-        decorators = detector.contextDecorators()
-        return DetectorConfig(
-            detector,
-            trackingGeometry,
-            decorators,
-            digiConfigFile=(srcdir / "Examples/Configs/odd-digi-smearing-config.json"),
-            geometrySelection=(srcdir / "Examples/Configs/odd-seeding-config.json"),
-            name=request.param,
-        )
+        return _get_odd_detector_config(srcdir)
     else:
-        raise ValueError(f"Invalid detector {detector}")
+        raise ValueError(f"Invalid detector {request.param}")
 
 
 @pytest.fixture
@@ -387,33 +443,54 @@ def _do_material_recording(d: Path):
     s = acts.examples.Sequencer(events=2, numThreads=1)
 
     with getOpenDataDetector() as detector:
-        runMaterialRecording(detector, str(d), tracksPerEvent=100, s=s)
-
+        runMaterialRecording(
+            detector=detector,
+            s=s,
+            tracksPerEvent=1000,
+            outputFileBase=d / "geant4_material_tracks",
+        )
         s.run()
 
 
 @pytest.fixture(scope="session")
-def material_recording_session():
+def material_recording_session(tmp_path_factory):
+    tmp_dir = tmp_path_factory.getbasetemp().parent
+    d = Path(tmp_dir) / "material_recording"
+
     if not helpers.geant4Enabled:
         pytest.skip("Geantino recording requested, but Geant4 is not set up")
 
     if not helpers.dd4hepEnabled:
         pytest.skip("DD4hep recording requested, but DD4hep is not set up")
 
-    with tempfile.TemporaryDirectory() as d:
-        # explicitly ask for "spawn" as CI failures were observed with "fork"
-        spawn_context = multiprocessing.get_context("spawn")
-        p = spawn_context.Process(target=_do_material_recording, args=(d,))
-        p.start()
-        p.join()
-        if p.exitcode != 0:
-            raise RuntimeError("Failure to exeecute material recording")
+    with filelock.FileLock(str(d) + ".lock"):
 
-        yield Path(d)
+        if not d.exists():
+            # Record into a scratch directory and only move it into place once
+            # the child has succeeded. `d` lives above the per-run basetemp and
+            # so outlives the session: publishing it up front means a failed
+            # recording leaves an empty directory that every later run happily
+            # reuses, turning a setup error into confusing assertion failures.
+            staging = d.with_name(d.name + f".incomplete.{os.getpid()}")
+            shutil.rmtree(staging, ignore_errors=True)
+            staging.mkdir(parents=True)
+
+            # explicitly ask for "spawn" as CI failures were observed with "fork"
+            spawn_context = multiprocessing.get_context("spawn")
+            p = spawn_context.Process(target=_do_material_recording, args=(staging,))
+            p.start()
+            p.join()
+            if p.exitcode != 0:
+                shutil.rmtree(staging, ignore_errors=True)
+                raise RuntimeError("Failure to execute material recording")
+
+            staging.rename(d)
+
+        return Path(d)
 
 
 @pytest.fixture
 def material_recording(material_recording_session: Path, tmp_path: Path):
     target = tmp_path / material_recording_session.name
     shutil.copytree(material_recording_session, target)
-    yield target
+    return target

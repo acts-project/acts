@@ -28,27 +28,6 @@ namespace Acts {
 /// recommended to start from bit position 16 or in reverse from 63 to avoid
 /// conflicts with future additions.
 enum class TrackStateFlag {
-  MeasurementFlag [[deprecated("Replaced by HasMeasurement; consider to use "
-                               "isMeasurement()/setIsMeasurement() instead")]] =
-      0,
-  ParameterFlag [[deprecated("Replaced by HasParameters; consider to use "
-                             "hasParameters()/setHasParameters() instead")]] =
-      1,
-  OutlierFlag [[deprecated("Replaced by IsOutlier; consider to use "
-                           "isOutlier()/setIsOutlier() instead")]] = 2,
-  HoleFlag [[deprecated("Replaced by IsHole; consider to use "
-                        "isHole()/setIsHole() instead")]] = 3,
-  MaterialFlag [[deprecated("Replaced by HasMaterial; consider to use "
-                            "hasMaterial()/setHasMaterial() instead")]] = 4,
-  SharedHitFlag [[deprecated("Replaced by IsSharedHit; consider to use "
-                             "isSharedHit()/setIsSharedHit() instead")]] = 5,
-  SplitHitFlag [[deprecated("Replaced by IsSplitHit; consider to use "
-                            "isSplitHit()/setIsSplitHit() instead")]] = 6,
-  NoExpectedHitFlag
-  [[deprecated("Replaced by HasNoExpectedHit; consider to use "
-               "hasNoExpectedHit()/setHasNoExpectedHit() instead")]] = 7,
-  NumTrackStateFlags [[deprecated("Replaced by NumFlags")]] = 8,
-
   /// Indicates that the track state has an associated measurement.
   /// Note that an outlier also has a measurement.
   HasMeasurement = 0,
@@ -62,7 +41,9 @@ enum class TrackStateFlag {
   HasMaterial = 4,
   /// Indicates that the track state has a shared hit measurement.
   IsSharedHit = 5,
-  /// Indicates that the track state has a split hit measurement.
+  /// Indicates that the track state has a split hit measurement. The cluster
+  /// splitting decided that more than one particle created the measurement, so
+  /// more than one track may use it. Excludes `IsSharedHit`.
   IsSplitHit = 6,
   /// Indicates that the track state has no expected hit.
   HasNoExpectedHit = 7,
@@ -76,6 +57,10 @@ enum class TrackStateFlag {
 template <typename Derived, bool ReadOnly>
 class TrackStateTypeBase {
  public:
+  /// Whether this flag view is read-only. Named IsReadOnly, not ReadOnly, to
+  /// avoid shadowing the template parameter in its own initializer.
+  static constexpr bool IsReadOnly = ReadOnly;
+
   /// Type alias for underlying raw data type
   using raw_type = std::uint64_t;
   /// Number of bits available in the raw storage type
@@ -87,6 +72,10 @@ class TrackStateTypeBase {
   using enum TrackStateFlag;
 
   /// Assigns the flags from another TrackStateTypeBase
+  /// @tparam DerivedOther The derived type of the other object
+  /// @tparam ReadOnlyOther Whether the other object is read-only
+  /// @param other The track state type to copy from
+  /// @return Reference to this object
   template <typename DerivedOther, bool ReadOnlyOther>
   Derived operator=(
       const TrackStateTypeBase<DerivedOther, ReadOnlyOther>& other)
@@ -229,6 +218,8 @@ class TrackStateTypeBase {
     if (value) {
       setUnchecked(HasMeasurement, false);
       setUnchecked(IsOutlier, false);
+      setUnchecked(IsSharedHit, false);
+      setUnchecked(IsSplitHit, false);
       setUnchecked(HasNoExpectedHit, false);
     }
     setUnchecked(IsHole, value);
@@ -237,6 +228,7 @@ class TrackStateTypeBase {
   }
 
   /// Sets the track state to be a shared hit
+  /// @note A shared hit is not a split hit, so this clears the split flag
   /// @param value the value to set
   /// @return self-reference for chaining
   Derived& setIsSharedHit(bool value = true)
@@ -244,6 +236,7 @@ class TrackStateTypeBase {
   {
     if (value) {
       setUnchecked(HasMeasurement, true);
+      setUnchecked(IsSplitHit, false);
       setUnchecked(HasNoExpectedHit, false);
     }
     setUnchecked(IsSharedHit, value);
@@ -252,6 +245,7 @@ class TrackStateTypeBase {
   }
 
   /// Sets the track state to be a split hit
+  /// @note A split hit is not a shared hit, so this clears the shared flag
   /// @param value the value to set
   /// @return self-reference for chaining
   Derived& setIsSplitHit(bool value = true)
@@ -259,6 +253,7 @@ class TrackStateTypeBase {
   {
     if (value) {
       setUnchecked(HasMeasurement, true);
+      setUnchecked(IsSharedHit, false);
       setUnchecked(HasNoExpectedHit, false);
     }
     setUnchecked(IsSplitHit, value);
@@ -353,7 +348,11 @@ class TrackStateTypeBase {
   }
 
  protected:
+  /// Cast to derived class
+  /// @return Reference to derived object
   Derived& self() { return static_cast<Derived&>(*this); }
+  /// Cast to derived class (const)
+  /// @return Const reference to derived object
   const Derived& self() const { return static_cast<const Derived&>(*this); }
 
   /// Returns the bitset representation of the underlying raw data
@@ -374,22 +373,32 @@ class TrackStateTypeBase {
         "TrackStateType - Hole and Measurement cannot be set simultaneously");
     assert(!(test(IsOutlier) && !test(HasMeasurement)) &&
            "TrackStateType - Outlier flag requires Measurement flag to be set");
+    assert(!(test(IsSharedHit) && test(IsSplitHit)) &&
+           "TrackStateType - SharedHit and SplitHit cannot be set "
+           "simultaneously");
   }
 };
 
 /// @c TrackStateTypeBase captured by value.
 class TrackStateType : public TrackStateTypeBase<TrackStateType, false> {
  public:
+  /// Base class type
   using Base = TrackStateTypeBase<TrackStateType, false>;
 
   TrackStateType() = default;
+  /// Construct from raw value
+  /// @param raw The raw flag bits
   explicit TrackStateType(raw_type raw) : m_raw{raw} {
     Base::assertConsistency();
   }
 
   using Base::operator=;
 
+  /// Access raw storage
+  /// @return Reference to raw storage
   raw_type& raw() { return m_raw; }
+  /// Access raw storage (const)
+  /// @return Const reference to raw storage
   const raw_type& raw() const { return m_raw; }
 
  private:
@@ -402,9 +411,13 @@ template <bool ReadOnly>
 class TrackStateTypeMap
     : public TrackStateTypeBase<TrackStateTypeMap<ReadOnly>, ReadOnly> {
  public:
+  /// Base class type
   using Base = TrackStateTypeBase<TrackStateTypeMap<ReadOnly>, ReadOnly>;
+  /// Underlying raw storage type, const-qualified based on ReadOnly
   using raw_type = const_if_t<ReadOnly, typename Base::raw_type>;
 
+  /// Constructor from external raw storage reference
+  /// @param raw_ref Reference to external raw storage
   explicit TrackStateTypeMap(raw_type& raw_ref) : m_raw_ptr{&raw_ref} {
     assert(m_raw_ptr != nullptr && "TrackStateTypeMap - raw reference is null");
     Base::assertConsistency();
@@ -412,18 +425,24 @@ class TrackStateTypeMap
 
   using Base::operator=;
 
+  /// Access raw storage
+  /// @return Reference to raw storage
   raw_type& raw()
     requires(!ReadOnly)
   {
     return *m_raw_ptr;
   }
+  /// Access raw storage (const)
+  /// @return Const reference to raw storage
   const raw_type& raw() const { return *m_raw_ptr; }
 
  private:
   raw_type* m_raw_ptr{nullptr};
 };
 
+/// Mutable track state type map allowing modification
 using MutableTrackStateTypeMap = TrackStateTypeMap<false>;
+/// Const track state type map for read-only access
 using ConstTrackStateTypeMap = TrackStateTypeMap<true>;
 
 }  // namespace Acts

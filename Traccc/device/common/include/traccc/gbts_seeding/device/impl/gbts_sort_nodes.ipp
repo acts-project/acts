@@ -1,0 +1,115 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+// Project include(s).
+#include "traccc/definitions/math.hpp"
+#include "traccc/definitions/qualifiers.hpp"
+#include "traccc/device/concepts/thread_id.hpp"
+#include "traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
+#include "traccc/gbts_seeding/gbts_seeding_config.hpp"
+#include "traccc/gbts_seeding/gbts_types.hpp"
+
+// VecMem include(s).
+#include <vecmem/containers/device_vector.hpp>
+
+namespace traccc::device {
+
+template <concepts::thread_id1 thread_id_t>
+TRACCC_HOST_DEVICE inline void gbts_sort_nodes(
+    const thread_id_t& thread_id, const gbts_sort_nodes_payload& payload) {
+  const vecmem::device_vector<const float4> d_reducedSP(payload.reducedSP);
+  const vecmem::device_vector<const unsigned long long int> d_sort_keys(
+      payload.sort_keys);
+  const vecmem::device_vector<const unsigned int> d_sort_values(
+      payload.sort_values);
+  vecmem::device_vector<float4> d_node_params(payload.node_params);
+  vecmem::device_vector<float> d_node_phi(payload.node_phi);
+  vecmem::device_vector<unsigned int> d_node_index(payload.node_index);
+  vecmem::device_vector<unsigned int> d_eta_bin_offsets(
+      payload.eta_bin_offsets);
+  const vecmem::device_vector<const float> d_tau_lut(payload.tau_lut);
+
+  const gbts_sort_nodes_params& ap = payload.gbts_sort_nodes_params;
+
+  const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
+  const unsigned int blockDimX = thread_id.getBlockDimX();
+  const unsigned int gridDimX = thread_id.getGridDimX();
+
+  // Eta bin of a sorted key, nEtaBins for the rejected keys.
+  const unsigned int nEtaBins = payload.nEtaBins;
+  auto eta_bin_of = [&](const unsigned int slot) {
+    const unsigned long long int bin =
+        d_sort_keys[slot] >> gbts_sort_key_eta_shift;
+    return (bin < nEtaBins) ? static_cast<unsigned int>(bin) : nEtaBins;
+  };
+
+  for (unsigned int globalIndex = globalIdx; globalIndex < payload.nSp;
+       globalIndex += blockDimX * gridDimX) {
+    // The first slot of every bin writes the offsets of the bins starting
+    // there. The first rejected slot (bin nEtaBins) gives the node count.
+    const unsigned int bin = eta_bin_of(globalIndex);
+    const unsigned int first_bin =
+        (globalIndex == 0u) ? 0u : eta_bin_of(globalIndex - 1u) + 1u;
+    for (unsigned int b = first_bin; b <= bin; ++b) {
+      d_eta_bin_offsets[b] = globalIndex;
+    }
+    if (globalIndex + 1u == payload.nSp) {
+      for (unsigned int b = bin + 1u; b <= nEtaBins; ++b) {
+        d_eta_bin_offsets[b] = payload.nSp;
+      }
+    }
+    if (bin == nEtaBins) {
+      continue;
+    }
+
+    const unsigned int srcIdx = d_sort_values[globalIndex];
+    const float4 sp = d_reducedSP[srcIdx];
+
+    const float Phi = math::atan2(sp.y, sp.x);
+    const float r = math::sqrt(sp.x * sp.x + sp.y * sp.y);
+    const float z = sp.z;
+
+    // Default to the full |tau| acceptance for nodes that carry no usable
+    // cluster width (sp.w <= 0); the per-edge cuts then rely on these
+    // bounds.
+    float min_tau = 0.0f;
+    float max_tau = ap.maxTau;
+
+    if (sp.w > 0) {  // type 0 only
+      if (ap.useTauLUT) {
+        // LUT is laid out as [w_bin_edge, min_tau_0, max_tau_0,
+        // min_tau_1, max_tau_1] per bin.
+        const int tau_bin =
+            5 * static_cast<int>(math::floor(ap.tau_lut_inv_bin * sp.w) - 1.0f);
+        if (tau_bin > -1 && tau_bin < static_cast<int>(ap.tauLutSize)) {
+          min_tau = d_tau_lut[static_cast<unsigned int>(tau_bin) + 1u];
+          max_tau = d_tau_lut[static_cast<unsigned int>(tau_bin) + 2u];
+        }
+        if (max_tau < 0.0f) {
+          max_tau = ap.maxTau;
+        }
+        if (min_tau < 0.0f) {
+          min_tau = 0.0f;
+        }
+      } else {
+        // linear fit + correction for short clusters
+        min_tau = ap.tMin_slope * (sp.w - ap.offset);
+        max_tau = ap.tMax_min + ap.tMax_correction / (sp.w + ap.offset) +
+                  ap.tMax_slope * (sp.w - ap.offset);
+      }
+    }
+
+    d_node_params[globalIndex] = float4{min_tau, max_tau, r, z};
+    d_node_phi[globalIndex] = Phi;
+    d_node_index[globalIndex] = srcIdx;
+  }
+}
+
+}  // namespace traccc::device

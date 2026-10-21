@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <Acts/Propagator/NavigatorStatistics.hpp>
-#include <Acts/Propagator/StepperStatistics.hpp>
+#include "Acts/Propagator/NavigatorStatistics.hpp"
+#include "Acts/Propagator/StepperStatistics.hpp"
 
 namespace Acts {
 

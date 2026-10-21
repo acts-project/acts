@@ -23,8 +23,8 @@ namespace ActsExamples {
 
 EDM4hepSimHitOutputConverter::EDM4hepSimHitOutputConverter(
     const EDM4hepSimHitOutputConverter::Config& config,
-    Acts::Logging::Level level)
-    : PodioOutputConverter("EDM4hepSimHitOutputConverter", level),
+    std::unique_ptr<const Acts::Logger> logger)
+    : PodioOutputConverter("EDM4hepSimHitOutputConverter", std::move(logger)),
       m_cfg(config) {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
@@ -48,8 +48,7 @@ EDM4hepSimHitOutputConverter::EDM4hepSimHitOutputConverter(
 ProcessCode EDM4hepSimHitOutputConverter::execute(
     const AlgorithmContext& ctx) const {
   EDM4hepUtil::MapParticleIdTo particleMapper;
-  std::unordered_map<ActsFatras::Barcode, edm4hep::MutableMCParticle>
-      particleMap;
+  std::unordered_map<SimBarcode, edm4hep::MutableMCParticle> particleMap;
 
   edm4hep::SimTrackerHitCollection simTrackerHitCollection;
 
@@ -63,7 +62,7 @@ ProcessCode EDM4hepSimHitOutputConverter::execute(
       EDM4hepUtil::writeParticle(particle, p);
     }
 
-    particleMapper = [&](ActsFatras::Barcode particleId) {
+    particleMapper = [&](SimBarcode particleId) {
       auto it = particleMap.find(particleId);
       if (it == particleMap.end()) {
         throw std::runtime_error("Particle not found in map");

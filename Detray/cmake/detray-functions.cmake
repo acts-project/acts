@@ -1,0 +1,277 @@
+# This file is part of the ACTS project.
+#
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+# CMake include(s).
+include(CMakeParseArguments)
+
+# Helper function to create and set the `--keep` flag on CUDA targets.
+function(detray_add_cuda_artifact_dir_to_target target)
+    set(cuda_keep_dir
+        "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/cuda_artifacts/${target}/"
+    )
+    add_custom_target(
+        ${target}_cuda_artifact_mkdir
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${cuda_keep_dir}
+    )
+    add_dependencies(${target} ${target}_cuda_artifact_mkdir)
+    target_compile_options(
+        ${target}
+        PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--keep --keep-dir ${cuda_keep_dir}>
+    )
+endfunction(detray_add_cuda_artifact_dir_to_target)
+
+# Helper function for setting up the detray libraries.
+#
+# Usage: detray_add_library( detray_core core "header1.hpp"... )
+#
+function(detray_add_library fullname basename)
+    # Create the library.
+    add_library(${fullname} INTERFACE ${ARG_UNPARSED_ARGUMENTS})
+
+    # Set up how clients should find its headers.
+    target_include_directories(
+        ${fullname}
+        INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
+
+    # Make sure that the library is available as "detray::${basename}" in every
+    # situation.
+    set_target_properties(${fullname} PROPERTIES EXPORT_NAME ${basename})
+    add_library(detray::${basename} ALIAS ${fullname})
+
+    # Set up the installation of the library and its headers.
+    install(
+        TARGETS ${fullname}
+        EXPORT detray-exports
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    )
+    install(
+        DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+        OPTIONAL
+    )
+endfunction(detray_add_library)
+
+# Helper function to set up a target that compiles detray's headers one-by-one.
+#
+# It replaces the per-header `main()` executables detray used to build: this
+# also covers the `detail/` headers, produces one library per component rather
+# than one executable per header, and gives tools like clangd the compiler
+# flags for every header.
+#
+# The generated targets are EXCLUDE_FROM_ALL. `detray_headers` depends on all
+# of them, so `cmake --build . --target detray_headers` compiles every header.
+#
+# This is a thin wrapper around ACTS' `acts_compile_headers`, which the
+# top-level CMakeLists.txt makes available in a standalone detray build too.
+#
+# Note that the detray headers only compile when an algebra plugin is present,
+# so `link` should name one of the algebra-specific targets (e.g.
+# `detray::core_array`) rather than the plugin-less `detray::core`. A `link`
+# that does not exist -- a disabled algebra plugin -- is skipped.
+#
+# Usage: detray_compile_headers( core_array detray::core_array
+#                                include/detray/*.hpp ... )
+#
+function(detray_compile_headers name link)
+    if(NOT TARGET ${link})
+        return()
+    endif()
+
+    acts_compile_headers(
+        ${name}
+        NAME detray_${name}_HEADERS
+        LINK ${link}
+        GLOB ${ARGN}
+    )
+
+    # acts_compile_headers is a no-op when header compilation is turned off.
+    if(NOT TARGET detray_${name}_HEADERS)
+        return()
+    endif()
+
+    if(NOT TARGET detray_headers)
+        add_custom_target(detray_headers)
+    endif()
+    add_dependencies(detray_headers detray_${name}_HEADERS)
+endfunction(detray_compile_headers)
+
+# Helper function for setting up the detray executables.
+#
+# The detray executables are *not* installed with the project, as they are only
+# used for testing / benchmarking the code. Clients of detray do not need them.
+#
+# Usage: detray_add_executable( foo bar.cpp
+#                               LINK_LIBRARIES detray::core )
+#
+function(detray_add_executable name)
+    # Parse the function's options.
+    cmake_parse_arguments(ARG "" "" "LINK_LIBRARIES" ${ARGN})
+
+    # Create the executable.
+    set(exe_name "detray_${name}")
+    add_executable(${exe_name} ${ARG_UNPARSED_ARGUMENTS})
+    if(ARG_LINK_LIBRARIES)
+        target_link_libraries(${exe_name} PRIVATE ${ARG_LINK_LIBRARIES})
+    endif()
+
+    detray_add_cuda_artifact_dir_to_target(${exe_name})
+endfunction(detray_add_executable)
+
+# Helper function for setting up the detray tests.
+#
+# Usage: detray_add_test( core source1.cpp source2.cpp
+#                         LINK_LIBRARIES detray::core )
+#
+function(detray_add_test name)
+    # Parse the function's options.
+    cmake_parse_arguments(ARG "" "" "LINK_LIBRARIES" ${ARGN})
+
+    # Create the test executable.
+    set(test_exe_name "detray_${name}")
+    add_executable(${test_exe_name} ${ARG_UNPARSED_ARGUMENTS})
+    if(ARG_LINK_LIBRARIES)
+        target_link_libraries(${test_exe_name} PRIVATE ${ARG_LINK_LIBRARIES})
+    endif()
+
+    # Run tests with sanitizers
+    if(DETRAY_ENABLE_SANITIZER)
+        # Common flags
+        set(SANITIZER_FLAGS
+            "-fsanitize=address,undefined,pointer-compare,pointer-subtract,float-divide-by-zero"
+        )
+
+        # Extra flags for clang
+        if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+            set(SANITIZER_FLAGS
+                "${SANITIZER_FLAGS},leak,integer,nullability,implicit-conversion,local-bounds"
+            )
+        endif()
+
+        target_compile_options(${test_exe_name} PUBLIC ${SANITIZER_FLAGS})
+        target_link_options(${test_exe_name} PUBLIC ${SANITIZER_FLAGS})
+
+        # Clean up
+        unset(SANITIZER_FLAGS)
+    endif()
+
+    # Run the executable as the test.
+    add_test(NAME ${test_exe_name} COMMAND ${test_exe_name})
+
+    # Set all properties for the test.
+    set_tests_properties(
+        ${test_exe_name}
+        PROPERTIES ENVIRONMENT DETRAY_TEST_DATA_DIR=${PROJECT_SOURCE_DIR}/data/
+    )
+
+    detray_add_cuda_artifact_dir_to_target(${test_exe_name})
+endfunction(detray_add_test)
+
+# Helper function to set up a unit test
+#
+# Usage: See detray_add_test
+#
+function(detray_add_unit_test name)
+    detray_add_test(unit_test_${name} ${ARGN})
+endfunction(detray_add_unit_test)
+
+# Helper function to set up an integration test
+#
+# Usage: See detray_add_test
+#
+function(detray_add_integration_test name)
+    detray_add_test(integration_test_${name} ${ARGN})
+endfunction(detray_add_integration_test)
+
+# Helper function for setting up the detray tutorials.
+#
+# Usage: detray_add_tutorial( core source1.cpp source2.cpp
+#                             LINK_LIBRARIES detray::core )
+#
+function(detray_add_tutorial name)
+    # Parse the function's options.
+    cmake_parse_arguments(ARG "" "" "LINK_LIBRARIES" ${ARGN})
+
+    # Create the tutorial executable.
+    set(tutorial_exe_name "detray_tutorial_${name}")
+    add_executable(${tutorial_exe_name} ${ARG_UNPARSED_ARGUMENTS})
+    if(ARG_LINK_LIBRARIES)
+        target_link_libraries(
+            ${tutorial_exe_name}
+            PRIVATE ${ARG_LINK_LIBRARIES}
+        )
+    endif()
+
+    detray_add_cuda_artifact_dir_to_target(${tutorial_exe_name})
+endfunction(detray_add_tutorial)
+
+# Helper function for adding individual flags to "flag variables".
+#
+# Usage: detray_add_flag( CMAKE_CXX_FLAGS "-Wall" )
+#
+function(detray_add_flag name value)
+    # Escape special characters in the value:
+    set(matchedValue "${value}")
+    foreach(
+        c
+        "*"
+        "."
+        "^"
+        "$"
+        "+"
+        "?"
+    )
+        string(REPLACE "${c}" "\\${c}" matchedValue "${matchedValue}")
+    endforeach()
+
+    # Check if the variable already has this value in it:
+    if("${${name}}" MATCHES "${matchedValue}")
+        return()
+    endif()
+
+    # If not, then let's add it now:
+    set(${name} "${${name}} ${value}" PARENT_SCOPE)
+endfunction(detray_add_flag)
+
+# Generate a single detray sympy codegen header via acts_code_generation and
+# install it alongside the other detray headers. What is generated and where it
+# ends up is described in the ACTS codegen manifest; only the key is given here.
+#
+# Usage: detray_add_codegen_header(
+#            TARGET detray_core
+#            KEY Detray/core/detray/propagator/detail/codegen/full_jacobian.hpp
+#        )
+#
+function(detray_add_codegen_header)
+    set(oneValueArgs TARGET KEY)
+    cmake_parse_arguments(ARG "" "${oneValueArgs}" "" ${ARGN})
+
+    if(NOT ARG_TARGET OR NOT ARG_KEY)
+        message(
+            FATAL_ERROR
+            "detray_add_codegen_header: TARGET and KEY are required"
+        )
+    endif()
+
+    acts_code_generation(
+        ADD_TO_TARGET ${ARG_TARGET}
+        KEY ${ARG_KEY}
+        RESULT_INCLUDE_DIR _gen_root
+        RESULT_OUTPUT _output
+    )
+
+    get_filename_component(_output_subdir ${_output} DIRECTORY)
+    install(
+        FILES ${_gen_root}/${_output}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${_output_subdir}
+    )
+endfunction(detray_add_codegen_header)

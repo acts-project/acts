@@ -13,6 +13,7 @@
 #include "ActsFatras/Digitization/DigitizationData.hpp"
 
 #include <array>
+#include <map>
 #include <utility>
 
 namespace ActsFatras {

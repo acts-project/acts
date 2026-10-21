@@ -11,39 +11,36 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Material/BinnedSurfaceMaterial.hpp>
 
 #include <cstddef>
 #include <ios>
 #include <stdexcept>
-#include <type_traits>
 #include <vector>
 
 #include <TFile.h>
 #include <TH1.h>
 #include <TH2.h>
 
-ActsExamples::RootMaterialWriter::RootMaterialWriter(
-    const ActsExamples::RootMaterialWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+RootMaterialWriter::RootMaterialWriter(const RootMaterialWriter::Config& config,
+                                       Acts::Logging::Level level)
     : m_cfg(config),
       m_logger{Acts::getDefaultLogger("RootMaterialWriter", level)} {
   // Validate the configuration
@@ -62,21 +59,22 @@ ActsExamples::RootMaterialWriter::RootMaterialWriter(
   }
 }
 
-void ActsExamples::RootMaterialWriter::writeMaterial(
+void RootMaterialWriter::writeMaterial(
     const Acts::TrackingGeometryMaterial& detMaterial) {
   // Change to the output file
   m_outputFile->cd();
 
-  const auto& [surfaceMaps, volumeMaps] = detMaterial;
+  const auto& volumeMaps = detMaterial.volumeMaterials;
+  if (!detMaterial.keyedSurfaces.empty()) {
+    throw std::invalid_argument(
+        "ROOT material output does not support stable keys; use JSON");
+  }
 
   // Write the surface material maps
   ActsPlugins::RootMaterialMapIo accessor(m_cfg.accessorConfig,
                                           m_logger->clone("RootMaterialMapIo"));
 
-  for (const auto& [geoId, sMap] : surfaceMaps) {
-    // Get the Surface material
-    accessor.write(*m_outputFile, geoId, *sMap, m_cfg.accessorOptions);
-  }
+  accessor.write(*m_outputFile, detMaterial, m_cfg.accessorOptions);
 
   // Write the volume material maps
   for (auto& [key, value] : volumeMaps) {
@@ -222,14 +220,13 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
   }
 }
 
-ActsExamples::RootMaterialWriter::~RootMaterialWriter() {
+RootMaterialWriter::~RootMaterialWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-void ActsExamples::RootMaterialWriter::write(
-    const Acts::TrackingGeometry& tGeometry) {
+void RootMaterialWriter::write(const Acts::TrackingGeometry& tGeometry) {
   // Create a detector material map and loop recursively through it
   Acts::TrackingGeometryMaterial detMatMap;
   auto hVolume = tGeometry.highestTrackingVolume();
@@ -240,12 +237,13 @@ void ActsExamples::RootMaterialWriter::write(
   writeMaterial(detMatMap);
 }
 
-void ActsExamples::RootMaterialWriter::collectMaterial(
+void RootMaterialWriter::collectMaterial(
     const Acts::TrackingVolume& tVolume,
     Acts::TrackingGeometryMaterial& detMatMap) {
   // If the volume has volume material, write that
   if (tVolume.volumeMaterialPtr() != nullptr && m_cfg.processVolumes) {
-    detMatMap.second[tVolume.geometryId()] = tVolume.volumeMaterialPtr();
+    detMatMap.volumeMaterials[tVolume.geometryId()] =
+        tVolume.volumeMaterialPtr();
   }
 
   // If confined layers exist, loop over them and collect the layer material
@@ -262,7 +260,7 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
     for (auto& bou : tVolume.boundarySurfaces()) {
       const auto& bSurface = bou->surfaceRepresentation();
       if (bSurface.surfaceMaterialSharedPtr() != nullptr) {
-        detMatMap.first[bSurface.geometryId()] =
+        detMatMap.surfaceMaterials[bSurface.geometryId()] =
             bSurface.surfaceMaterialSharedPtr();
       }
     }
@@ -276,13 +274,13 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
   }
 }
 
-void ActsExamples::RootMaterialWriter::collectMaterial(
+void RootMaterialWriter::collectMaterial(
     const Acts::Layer& tLayer, Acts::TrackingGeometryMaterial& detMatMap) {
   // If the representing surface has material, collect it
   const auto& rSurface = tLayer.surfaceRepresentation();
   if (rSurface.surfaceMaterialSharedPtr() != nullptr &&
       m_cfg.processRepresenting) {
-    detMatMap.first[rSurface.geometryId()] =
+    detMatMap.surfaceMaterials[rSurface.geometryId()] =
         rSurface.surfaceMaterialSharedPtr();
   }
 
@@ -290,7 +288,7 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
   if (tLayer.approachDescriptor() != nullptr && m_cfg.processApproaches) {
     for (auto& aSurface : tLayer.approachDescriptor()->containedSurfaces()) {
       if (aSurface->surfaceMaterialSharedPtr() != nullptr) {
-        detMatMap.first[aSurface->geometryId()] =
+        detMatMap.surfaceMaterials[aSurface->geometryId()] =
             aSurface->surfaceMaterialSharedPtr();
       }
     }
@@ -301,9 +299,11 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
     // sensitive surface loop
     for (auto& sSurface : tLayer.surfaceArray()->surfaces()) {
       if (sSurface->surfaceMaterialSharedPtr() != nullptr) {
-        detMatMap.first[sSurface->geometryId()] =
+        detMatMap.surfaceMaterials[sSurface->geometryId()] =
             sSurface->surfaceMaterialSharedPtr();
       }
     }
   }
 }
+
+}  // namespace ActsExamples

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/HashedString.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
@@ -50,6 +52,7 @@ class DataHandleBase {
   const std::string& key() const { return m_key.value(); }
 
   virtual const std::type_info& typeInfo() const = 0;
+  virtual std::uint64_t typeHash() const = 0;
 
   bool isInitialized() const { return m_key.has_value(); }
 
@@ -73,8 +76,8 @@ class DataHandleBase {
 
   // Trampoline functions to avoid having the WhiteBoard as a friend
   template <typename T>
-  void add(WhiteBoard& wb, T&& object) const {
-    wb.add(m_key.value(), std::forward<T>(object));
+  const T& add(WhiteBoard& wb, T&& object) const {
+    return wb.add(m_key.value(), std::forward<T>(object));
   }
 
   template <typename T>
@@ -85,6 +88,16 @@ class DataHandleBase {
   template <typename T>
   T pop(WhiteBoard& wb) const {
     return wb.pop<T>(m_key.value());
+  }
+
+  std::pair<Acts::AnyMoveOnly*, std::uint64_t> getHolder(
+      const WhiteBoard& wb) const {
+    return wb.getHolder(m_key.value());
+  }
+
+  void addHolder(WhiteBoard& wb, std::unique_ptr<Acts::AnyMoveOnly> holder,
+                 std::uint64_t typeHash) const {
+    wb.addHolder(m_key.value(), std::move(holder), typeHash);
   }
 
   SequenceElement* m_parent{nullptr};
@@ -106,7 +119,7 @@ class WriteDataHandleBase : public DataHandleBase {
  public:
   void initialize(std::string_view key);
 
-  bool isCompatible(const DataHandleBase& other) const final;
+  bool isCompatible(const DataHandleBase& other) const override;
 
   void emulate(StateMapType& state, WhiteBoard::AliasMapType& aliases,
                const Acts::Logger& logger) const final;
@@ -159,26 +172,27 @@ class ConsumeDataHandleBase : public ReadDataHandleBase {
 /// handle(wb, 42);  // Store value
 /// @endcode
 template <typename T>
-class WriteDataHandle final : public WriteDataHandleBase {
+class WriteDataHandle /*final*/ : public WriteDataHandleBase {
  public:
   WriteDataHandle(SequenceElement* parent, const std::string& name)
       : WriteDataHandleBase{parent, name} {
     registerAsWriteHandle();
   }
 
-  void operator()(const AlgorithmContext& ctx, T&& value) const {
-    (*this)(ctx.eventStore, std::move(value));
+  const T& operator()(const AlgorithmContext& ctx, T&& value) const {
+    return (*this)(ctx.eventStore, std::move(value));
   }
 
-  void operator()(WhiteBoard& wb, T&& value) const {
+  const T& operator()(WhiteBoard& wb, T&& value) const {
     if (!isInitialized()) {
       throw std::runtime_error{"WriteDataHandle '" + fullName() +
                                "' not initialized"};
     }
-    add(wb, std::move(value));
+    return add(wb, std::move(value));
   }
 
-  const std::type_info& typeInfo() const override { return typeid(T); };
+  const std::type_info& typeInfo() const final { return typeid(T); };
+  std::uint64_t typeHash() const final { return Acts::typeHash<T>(); };
 };
 
 /// A read handle for accessing data from the WhiteBoard.
@@ -192,7 +206,7 @@ class WriteDataHandle final : public WriteDataHandleBase {
 /// const auto& value = handle(wb);  // Access value
 /// @endcode
 template <typename T>
-class ReadDataHandle final : public ReadDataHandleBase {
+class ReadDataHandle /*final*/ : public ReadDataHandleBase {
  public:
   ReadDataHandle(SequenceElement* parent, const std::string& name)
       : ReadDataHandleBase{parent, name} {
@@ -211,7 +225,8 @@ class ReadDataHandle final : public ReadDataHandleBase {
     return get<T>(wb);
   }
 
-  const std::type_info& typeInfo() const override { return typeid(T); };
+  const std::type_info& typeInfo() const final { return typeid(T); };
+  std::uint64_t typeHash() const final { return Acts::typeHash<T>(); };
 };
 
 /// A consume handle for taking ownership of data from the WhiteBoard.
@@ -226,7 +241,7 @@ class ReadDataHandle final : public ReadDataHandleBase {
 /// // value is no longer in WhiteBoard
 /// @endcode
 template <typename T>
-class ConsumeDataHandle final : public ConsumeDataHandleBase {
+class ConsumeDataHandle /*final*/ : public ConsumeDataHandleBase {
  public:
   ConsumeDataHandle(SequenceElement* parent, const std::string& name)
       : ConsumeDataHandleBase{parent, name} {
@@ -245,7 +260,8 @@ class ConsumeDataHandle final : public ConsumeDataHandleBase {
     return pop<T>(wb);
   }
 
-  const std::type_info& typeInfo() const override { return typeid(T); };
+  const std::type_info& typeInfo() const final { return typeid(T); };
+  std::uint64_t typeHash() const final { return Acts::typeHash<T>(); };
 };
 
 }  // namespace ActsExamples

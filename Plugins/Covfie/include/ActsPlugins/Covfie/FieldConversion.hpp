@@ -29,13 +29,16 @@ namespace ActsPlugins::Covfie {
 /// @addtogroup covfie_plugin
 /// @{
 
+/// Backend type for building covfie fields
 using BuilderBackend =
     covfie::backend::strided<covfie::vector::size3,
                              covfie::backend::array<covfie::vector::float3>>;
 
+/// Interpolated magnetic field type in covfie format
 using InterpolatedField = covfie::field<covfie::backend::clamp<
     covfie::backend::affine<covfie::backend::linear<BuilderBackend>>>>;
 
+/// Constant magnetic field type in covfie format
 using ConstantField = covfie::field<
     covfie::backend::constant<covfie::vector::float3, covfie::vector::float3>>;
 

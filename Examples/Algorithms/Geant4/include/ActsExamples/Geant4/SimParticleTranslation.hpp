@@ -16,7 +16,6 @@
 #include <string>
 
 #include <G4VUserPrimaryGeneratorAction.hh>
-#include <globals.hh>
 
 class G4Event;
 
@@ -57,12 +56,10 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "SimParticleTranslation", Acts::Logging::INFO));
 
-  ~SimParticleTranslation() override;
-
   /// Interface method to generate the primary
   ///
-  /// @param anEvent is the event that will be run
-  void GeneratePrimaries(G4Event* anEvent) override;
+  /// @param eventPtr is the event that will be run
+  void GeneratePrimaries(G4Event* eventPtr) override;
 
  protected:
   Config m_cfg;

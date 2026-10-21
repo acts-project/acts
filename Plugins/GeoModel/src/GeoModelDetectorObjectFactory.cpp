@@ -13,6 +13,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
 #include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
 
@@ -144,14 +145,14 @@ void GeoModelDetectorObjectFactory::convertFpv(
 
     for (const auto &convertMe : subVolToTrf) {
       /** Align the surface with the global position of the detector */
-      const Transform3 transform =
-          fpv->getAbsoluteTransform() * convertMe.transform;
+      const Transform3 transform = makeTransform3(fpv->getAbsoluteTransform()) *
+                                   makeTransform3(convertMe.transform);
       convertSensitive(convertMe.volume, transform, *cache.surfBoundFactory,
                        sensitives);
     }
 
     if (sensitives.empty() && matches(name, fpv)) {
-      convertSensitive(fpv, fpv->getAbsoluteTransform(),
+      convertSensitive(fpv, makeTransform3(fpv->getAbsoluteTransform()),
                        *cache.surfBoundFactory, cache.sensitiveSurfaces);
     }
     cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
@@ -170,9 +171,9 @@ void GeoModelDetectorObjectFactory::convertFpv(
     ConvertedGeoVol &convEnvelope = cache.volumeBoxFPVs.emplace_back();
     convEnvelope.name = name;
     convEnvelope.fullPhysVol = fpv;
-    convEnvelope.volume = GeoModel::convertVolume(fpv->getAbsoluteTransform(),
-                                                  fpv->getLogVol()->getShape(),
-                                                  *cache.volumeBoundFactory);
+    convEnvelope.volume = GeoModel::convertVolume(
+        makeTransform3(fpv->getAbsoluteTransform()),
+        fpv->getLogVol()->getShape(), *cache.volumeBoundFactory);
     std::transform(cache.sensitiveSurfaces.begin() + prevSize,
                    cache.sensitiveSurfaces.end(),
                    std::back_inserter(convEnvelope.surfaces),

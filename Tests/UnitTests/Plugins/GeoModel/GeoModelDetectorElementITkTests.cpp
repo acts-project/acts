@@ -60,8 +60,10 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
   auto fphys = make_intrusive<GeoFullPhysVol>(log);
   auto rBounds = std::make_shared<RectangleBounds>(100, 200);
 
-  auto element = GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
-      fphys, rBounds, Transform3::Identity(), 2.0);
+  auto element =
+      GeoModelDetectorElement::createDetectorElement<PlaneSurface,
+                                                     RectangleBounds>(
+          fphys, rBounds, Transform3::Identity(), 2.0);
 
   const int hardware = 0, barrelEndcap = -2, layerWheel = 100, phiModule = 200,
             etaModule = 300, side = 1;

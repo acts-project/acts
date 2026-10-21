@@ -48,10 +48,14 @@ class NavigationStream {
   bool switchToNextCandidate() {
     if (m_currentIndex < m_candidates.size()) {
       ++m_currentIndex;
-      return true;
     }
-    return false;
+    return isValid();
   }
+
+  /// Check if the stream points to a candidate
+  ///
+  /// @return true if the current index is a valid candidate
+  bool isValid() const { return m_currentIndex < m_candidates.size(); }
 
   /// Const access the current candidate
   /// @return Const reference to current candidate
@@ -59,19 +63,21 @@ class NavigationStream {
     return m_candidates.at(m_currentIndex);
   }
 
+  /// Reserve memory for the candidates
+  /// @param n The number of candidates to reserve memory for
+  void reserve(std::size_t n) { m_candidates.reserve(n); }
+
   /// Current Index
   /// @return Index of the current candidate in the vector
   std::size_t currentIndex() const { return m_currentIndex; }
 
   /// Non-const access the candidate vector
   /// @return Mutable reference to vector of navigation candidates
-  std::vector<NavigationTarget>& candidates() { return m_candidates; }
+  std::span<NavigationTarget> candidates() { return m_candidates; }
 
   /// Const access the candidate vector
   /// @return Const reference to vector of navigation candidates
-  const std::vector<NavigationTarget>& candidates() const {
-    return m_candidates;
-  }
+  std::span<const NavigationTarget> candidates() const { return m_candidates; }
 
   /// Non-const access the current candidate
   ///
@@ -85,7 +91,7 @@ class NavigationStream {
   /// The number of active candidates
   /// @return Number of remaining candidates from current position onwards
   std::size_t remainingCandidates() const {
-    return (m_candidates.size() - m_currentIndex);
+    return m_candidates.size() - m_currentIndex;
   }
 
   /// Fill one surface into the candidate vector
@@ -111,19 +117,26 @@ class NavigationStream {
   ///
   /// @param gctx is the geometry context
   /// @param queryPoint holds current position, direction, etc.
-  /// @param cTolerance is the candidate search tolerance
+  /// @param logger is the navigator's logger
   /// @param onSurfaceTolerance is the tolerance for on-surface intersections
+  /// @param candidatesAreUnique the caller guarantees that no surface was
+  ///        added more than once, so the pre-intersection de-duplication pass
+  ///        can be skipped. Candidates that intersect the same surface twice
+  ///        (multi-intersections) are still handled correctly.
   ///
   /// This method will first de-duplicate the candidates on basis of the surface
   /// pointer to make sure that the multi-intersections are handled correctly.
   /// This will allow intializeStream() to be called even as a re-initialization
   /// and still work correctly with at one time valid candidates.
   ///
+  /// Each candidate is intersected with the tolerance it was added with.
+  ///
   /// @return true if the stream is active, false indicates that there are no valid candidates
   bool initialize(const GeometryContext& gctx,
                   const NavigationStream::QueryPoint& queryPoint,
-                  const BoundaryTolerance& cTolerance,
-                  double onSurfaceTolerance = s_onSurfaceTolerance);
+                  const Logger& logger,
+                  double onSurfaceTolerance = s_onSurfaceTolerance,
+                  bool candidatesAreUnique = false);
 
   /// Convenience method to update a stream from a new query point,
   /// this could be called from navigation delegates that do not require
@@ -131,11 +144,13 @@ class NavigationStream {
   ///
   /// @param gctx is the geometry context
   /// @param queryPoint holds current position, direction, etc.
+  /// @param logger is the navigator's logger
   /// @param onSurfaceTolerance is the tolerance for on-surface intersections
   ///
   /// @return true if the stream is active, false indicate no valid candidates left
   bool update(const GeometryContext& gctx,
               const NavigationStream::QueryPoint& queryPoint,
+              const Logger& logger,
               double onSurfaceTolerance = s_onSurfaceTolerance);
 
   /// Reset the navigation stream by clearing all candidates and resetting the
@@ -148,15 +163,29 @@ class NavigationStream {
   /// The candidates of this navigation stream
   std::vector<NavigationTarget> m_candidates;
 
+  /// Reusable scratch buffer for the second valid intersection of surfaces with
+  /// multiple intersections, filled during initialize(). Kept as a member so
+  /// its heap storage is reused across re-initializations instead of being
+  /// reallocated every call.
+  std::vector<NavigationTarget> m_additionalCandidates;
+
   /// The currently active candidate
   std::size_t m_currentIndex = 0u;
 };
 
+/// Append-only helper to add candidates to a navigation stream.
 class AppendOnlyNavigationStream {
  public:
+  /// Constructor from navigation stream reference
+  /// @param stream Navigation stream to append to
   explicit AppendOnlyNavigationStream(NavigationStream& stream);
+  /// Add a surface candidate to the stream
+  /// @param surface The surface to add
+  /// @param bTolerance Boundary tolerance for the surface
   void addSurfaceCandidate(const Surface& surface,
                            const BoundaryTolerance& bTolerance);
+  /// Add a portal candidate to the stream
+  /// @param portal The portal to add
   void addPortalCandidate(const Portal& portal);
 
  private:

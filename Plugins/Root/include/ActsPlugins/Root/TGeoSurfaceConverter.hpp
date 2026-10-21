@@ -11,11 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
-#include <string>
 #include <tuple>
 
 #include "RtypesCore.h"
@@ -52,7 +52,7 @@ struct TGeoSurfaceConverter {
   static std::tuple<std::shared_ptr<const Acts::CylinderBounds>,
                     const Acts::Transform3, double>
   cylinderComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                     const Double_t* translation, const std::string& axes,
+                     const Double_t* translation, TGeoAxes axes,
                      double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape into disk surface components
@@ -67,7 +67,7 @@ struct TGeoSurfaceConverter {
   static std::tuple<std::shared_ptr<const Acts::DiscBounds>,
                     const Acts::Transform3, double>
   discComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                 const Double_t* translation, const std::string& axes,
+                 const Double_t* translation, TGeoAxes axes,
                  double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape into plane surface components
@@ -82,7 +82,7 @@ struct TGeoSurfaceConverter {
   static std::tuple<std::shared_ptr<const Acts::PlanarBounds>,
                     const Acts::Transform3, double>
   planeComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                  const Double_t* translation, const std::string& axes,
+                  const Double_t* translation, TGeoAxes axes,
                   double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape to a Surface
@@ -95,8 +95,21 @@ struct TGeoSurfaceConverter {
   /// @return shared pointer to a surface and the original thickness that
   /// has been condensed to the surface
   static std::tuple<std::shared_ptr<Acts::Surface>, double> toSurface(
-      const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
-      const std::string& axes, double scalor = 10.) noexcept(false);
+      const TGeoShape& tgShape, const TGeoMatrix& tgMatrix, TGeoAxes axes,
+      double scalor = 10.) noexcept(false);
+
+  /// Extract the transform from a TGeoShape by trying cylinder, disc, then
+  /// plane conversion.
+  ///
+  /// @param tgShape The TGeoShape
+  /// @param tgMatrix The matrix representing the transform
+  /// @param axes The axes definition
+  /// @param scalor The unit scalor between TGeo and Acts
+  /// @return The Acts transform
+  /// @throws std::runtime_error if the shape cannot be converted
+  static Acts::Transform3 transformFromShape(
+      const TGeoShape& tgShape, const TGeoMatrix& tgMatrix, TGeoAxes axes,
+      double scalor = 10.) noexcept(false);
 
   /// Translate TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)

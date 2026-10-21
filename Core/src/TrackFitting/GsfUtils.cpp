@@ -71,16 +71,17 @@ double detail::Gsf::applyBetheHeitler(
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
     double weightCutoff, double transverseMomentumCut,
     std::vector<GsfComponent> &componentCache,
-    Updatable<std::size_t> &nInvalidBetheHeitler,
-    Updatable<double> &maxPathXOverX0, const Logger &logger) {
+    std::size_t &nInvalidBetheHeitler, double &maxPathXOverX0,
+    const Logger &logger) {
   const double initialMomentum = initialParameters.absoluteMomentum();
   const ParticleHypothesis &particleHypothesis =
       initialParameters.particleHypothesis();
 
   // Evaluate material slab
-  MaterialSlab slab = surface.surfaceMaterial()->materialSlab(
-      initialParameters.position(geoContext), direction,
-      MaterialUpdateMode::FullUpdate);
+  const Vector2 lposition =
+      initialParameters.parameters().template segment<2>(eBoundLoc0);
+  MaterialSlab slab = surface.materialSlab(lposition, direction,
+                                           MaterialUpdateMode::FullUpdate);
 
   const double pathCorrection =
       surface.pathCorrection(geoContext, initialParameters.position(geoContext),
@@ -88,11 +89,11 @@ double detail::Gsf::applyBetheHeitler(
   slab.scaleThickness(pathCorrection);
 
   const double pathXOverX0 = slab.thicknessInX0();
-  maxPathXOverX0.tmp() = std::max(maxPathXOverX0.tmp(), pathXOverX0);
+  maxPathXOverX0 = std::max(maxPathXOverX0, pathXOverX0);
 
   // Emit a warning if the approximation is not valid for this x/x0
   if (!betheHeitlerApprox.validXOverX0(pathXOverX0)) {
-    ++nInvalidBetheHeitler.tmp();
+    ++nInvalidBetheHeitler;
     ACTS_DEBUG("Bethe-Heitler approximation encountered invalid value for x/x0="
                << pathXOverX0 << " at surface " << surface.geometryId());
   }
@@ -113,7 +114,7 @@ double detail::Gsf::applyBetheHeitler(
       continue;
     }
 
-    if (gaussian.mean < 1.e-8) {
+    if (gaussian.mean < 1e-8) {
       ACTS_WARNING("Skip component with gaussian " << gaussian.mean << " +- "
                                                    << gaussian.var);
       continue;
@@ -122,33 +123,30 @@ double detail::Gsf::applyBetheHeitler(
     // compute delta p from mixture and update parameters
     BoundVector newPars = initialParameters.parameters();
 
-    const auto delta_p = [&]() {
+    const double deltaP = [&]() {
       if (direction == Direction::Forward()) {
-        return initialMomentum * (gaussian.mean - 1.);
+        return initialMomentum * (gaussian.mean - 1);
       } else {
-        return initialMomentum * (1. / gaussian.mean - 1.);
+        return initialMomentum * (1 / gaussian.mean - 1);
       }
     }();
 
-    assert(initialMomentum + delta_p > 0. && "new momentum must be > 0");
-
-    // Apply pT cut here to avoid const of expansion and merging later
-    const auto pT =
-        (initialMomentum + delta_p) * std::sin(newPars[eBoundTheta]);
+    assert(initialMomentum + deltaP > 0 && "new momentum must be > 0");
+    const double pT = (initialMomentum + deltaP) * std::sin(newPars[eBoundTheta]);
     if (pT < transverseMomentumCut) {
       ACTS_VERBOSE("Skip new component with pT=" << pT << " GeV");
       continue;
     }
 
     newPars[eBoundQOverP] = particleHypothesis.qOverP(
-        initialMomentum + delta_p, initialParameters.charge());
+        initialMomentum + deltaP, initialParameters.charge());
 
     // compute inverse variance of p from mixture and update covariance
     BoundMatrix newCov = initialParameters.covariance().value();
 
-    const auto varInvP = [&]() {
+    const double varInvP = [&]() {
       if (direction == Direction::Forward()) {
-        const double f = 1. / (initialMomentum * gaussian.mean);
+        const double f = 1 / (initialMomentum * gaussian.mean);
         return f * f * gaussian.var;
       } else {
         return gaussian.var / (initialMomentum * initialMomentum);
@@ -160,7 +158,7 @@ double detail::Gsf::applyBetheHeitler(
            "new cov not finite");
 
     // Set the remaining things and push to vector
-    componentCache.push_back({newWeight, newPars, newCov});
+    componentCache.emplace_back(newWeight, newPars, newCov);
   }
 
   return pathXOverX0;

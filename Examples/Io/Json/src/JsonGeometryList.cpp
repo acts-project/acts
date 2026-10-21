@@ -10,7 +10,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <initializer_list>
 #include <system_error>
 
 void ActsExamples::from_json(const nlohmann::json& data,

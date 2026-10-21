@@ -20,6 +20,9 @@
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 /// Forward declare cuda stream, to be able to use the header without cuda
 struct CUstream_st;
@@ -54,6 +57,8 @@ struct Device {
   /// @return True if device type is CUDA, false otherwise
   bool isCuda() const { return type == Type::eCUDA; }
 
+  /// @brief Compare two device descriptors for equality
+  /// @return True if both devices have same type and index
   bool operator==(const Device &) const = default;
   /// @brief Compare two device descriptors for equality
   /// @param other Device to compare against
@@ -75,8 +80,8 @@ inline std::ostream &operator<<(std::ostream &os, Device device) {
 
 /// Capture the context of the execution
 struct ExecutionContext {
-  Device device{Device::Type::eCPU};
   /// Target device for execution
+  Device device{Device::Type::eCPU};
   /// CUDA stream for asynchronous execution
   std::optional<cudaStream_t> stream;
 };
@@ -145,8 +150,8 @@ class Tensor {
   std::size_t nbytes() const { return size() * sizeof(T); }
 
   /// Get the device of the tensor
-  Device device() const { return m_device; }
   /// @return Device where tensor data is stored
+  Device device() const { return m_device; }
 
  private:
   Tensor(Shape shape, detail::TensorPtr ptr, const ExecutionContext &ctx)
@@ -157,21 +162,43 @@ class Tensor {
   Device m_device{};
 };
 
+/// @cond
+namespace detail {
+
+/// Throw std::invalid_argument if @p tensor and @p mask are incompatible.
+/// Checks that @p tensor.shape()[matchDim] == @p mask.shape()[0], that the
+/// mask has exactly one column, and that both tensors reside on the same
+/// device.
+/// @tparam T Element type of the data tensor
+/// @param tensor The data tensor
+/// @param mask Boolean mask tensor [N, 1]
+/// @param matchDim The dimension of @p tensor that must equal the mask length
+template <Acts::Concepts::arithmetic T>
+void checkMaskCompatibility(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                            std::size_t matchDim) {
+  if (tensor.shape()[matchDim] != mask.shape()[0]) {
+    throw std::invalid_argument(
+        "tensor shape[" + std::to_string(matchDim) +
+        "]=" + std::to_string(tensor.shape()[matchDim]) +
+        " does not match mask length " + std::to_string(mask.shape()[0]));
+  }
+  if (mask.shape()[1] != 1) {
+    throw std::invalid_argument("mask must have shape [N, 1], got [N, " +
+                                std::to_string(mask.shape()[1]) + "]");
+  }
+  if (tensor.device() != mask.device()) {
+    throw std::invalid_argument(
+        "tensor and mask must reside on the same device");
+  }
+}
+
+}  // namespace detail
+/// @endcond
+
 /// Element-wise sigmoid function for float cpu tensors
 /// @param tensor The tensor to apply the sigmoid function to
 /// @param stream The stream to use for the operation in case of CUDA
 void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream = {});
-
-/// Apply a score cut to the tensor and return a new tensor with the values that
-/// satisfy the cut
-/// @param scores The edge score tensor
-/// @param edgeIndex The edge index tensor
-/// @param cut The score cut value which edges to accept
-/// @param stream The stream to use for the operation in case of CUDA
-/// @return Pair of filtered score and edge index tensors containing only edges above threshold
-std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
-    const Tensor<float> &scores, const Tensor<std::int64_t> &edgeIndex,
-    float cut, std::optional<cudaStream_t> stream = {});
 
 /// Apply a limit on the number of edges consistently on edgeIndex and
 /// edgeFeatures.
@@ -184,6 +211,58 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
     const Tensor<std::int64_t> &edgeIndex,
     const std::optional<Tensor<float>> &edgeFeatures, std::size_t maxEdges,
     std::optional<cudaStream_t> stream);
+
+/// Compute a boolean mask from a score tensor: mask[i] = (scores[i] > cut).
+/// @param scores The edge score tensor [N, 1]
+/// @param cut The score threshold
+/// @param stream The stream to use for the operation in case of CUDA
+/// @return Boolean tensor [N, 1] where true means the edge passes the cut
+Tensor<bool> scoreMask(const Tensor<float> &scores, float cut,
+                       std::optional<cudaStream_t> stream = {});
+
+/// Select rows from a 2D row-major tensor where the mask element is true.
+/// @param tensor Source tensor [N, F] in row-major layout
+/// @param mask Boolean tensor [N, 1]; true means keep the corresponding row
+/// @param execContext Device and stream for output allocation
+/// @return New tensor [M, F] in row-major layout containing only kept rows
+template <Acts::Concepts::arithmetic T>
+Tensor<T> selectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                     const ExecutionContext &execContext);
+
+/// Select columns from a 2D row-major tensor where the mask element is true.
+/// @param tensor Source tensor [R, N] in row-major layout
+/// @param mask Boolean tensor [N, 1]; true means keep the corresponding column
+/// @param execContext Device and stream for output allocation
+/// @return New tensor [R, M] in row-major layout containing only kept columns
+template <Acts::Concepts::arithmetic T>
+Tensor<T> selectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                     const ExecutionContext &execContext);
+
+/// Gather columns from a 2D row-major tensor by index.
+/// dst[r,k] = src[r,indices[k]]
+/// Unlike selectCols, the columns are taken in the order they are listed in,
+/// and a column listed more than once appears more than once in the result.
+/// @param tensor Source tensor [R, N] in row-major layout
+/// @param indices Column indices, each smaller than N
+/// @param execContext Device and stream for output allocation, must be on the
+///        device of @p tensor
+/// @return New tensor [R, K] in row-major layout, K = indices.size()
+/// @throws std::invalid_argument if an index is out of range or the devices
+///         differ
+template <Acts::Concepts::arithmetic T>
+Tensor<T> gatherCols(const Tensor<T> &tensor,
+                     const std::vector<std::size_t> &indices,
+                     const ExecutionContext &execContext);
+
+/// Multiply each column of src with the corresponding scale value
+/// dst[r,n] = src[r,n] * scales[n]
+/// @param src Source tensor [R, N] in row-major layout
+/// @param scales Vector of scale factors of length N, same type as src
+/// @param execContext Device and stream for output allocation
+/// @return New tensor [R, N] in row-major layout containing scaled values
+template <Acts::Concepts::arithmetic T>
+Tensor<T> mulPerColumn(const Tensor<T> &src, const std::vector<T> &scales,
+                       const ExecutionContext &execContext);
 
 /// @}
 }  // namespace ActsPlugins

@@ -1,0 +1,126 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+// Local include(s).
+#include "get_queue.hpp"
+#include "utils.hpp"
+
+// Project include(s).
+#include "traccc/utils/memory_resource.hpp"
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
+
+// Thrust include(s).
+#if !defined(ALPAKA_ACC_SYCL_ENABLED)
+#include <thrust/binary_search.h>
+#include <thrust/copy.h>
+#include <thrust/execution_policy.h>
+#include <thrust/fill.h>
+#include <thrust/scan.h>
+#include <thrust/sort.h>
+#include <thrust/unique.h>
+#endif
+
+// OneDPL include.
+//
+// This is left to a separate file to turn off warnings from oneDPL.
+#if defined(ALPAKA_ACC_SYCL_ENABLED)
+#include "oneDPL.hpp"
+#endif
+
+namespace traccc::alpaka::details {
+
+inline auto getExecutionPolicy([[maybe_unused]] queue &q,
+                               [[maybe_unused]] const memory_resource &mr) {
+#if defined(ALPAKA_ACC_GPU_CUDA_ENABLED)
+  auto stream = ::alpaka::getNativeHandle(get_queue(q));
+  return thrust::cuda::par_nosync(stream_synchronizing_allocator(mr.main, q))
+      .on(stream);
+#elif defined(ALPAKA_ACC_GPU_HIP_ENABLED)
+  auto stream = ::alpaka::getNativeHandle(get_queue(q));
+  return thrust::hip_rocprim::par_nosync(
+             stream_synchronizing_allocator(mr.main, q))
+      .on(stream);
+#elif defined(ALPAKA_ACC_SYCL_ENABLED)
+  auto queue = ::alpaka::getNativeHandle(get_queue(q));
+  return oneapi::dpl::execution::device_policy{queue};
+#else
+  return thrust::host;
+#endif
+}
+
+template <typename RandomAccessIterator1, typename RandomAccessIterator2,
+          typename Compare>
+void sort_by_key(queue &q, const memory_resource &mr,
+                 RandomAccessIterator1 keys_first,
+                 RandomAccessIterator1 keys_last,
+                 RandomAccessIterator2 values_first, Compare comp) {
+  auto execPolicy = getExecutionPolicy(q, mr);
+
+#if defined(ALPAKA_ACC_SYCL_ENABLED)
+  oneapi::dpl::sort_by_key(execPolicy, keys_first, keys_last, values_first,
+                           comp);
+#else
+  thrust::sort_by_key(execPolicy, keys_first, keys_last, values_first, comp);
+#endif
+}
+
+template <typename RandomAccessIterator1, typename RandomAccessIterator2>
+void sort_by_key(queue &q, const memory_resource &mr,
+                 RandomAccessIterator1 keys_first,
+                 RandomAccessIterator1 keys_last,
+                 RandomAccessIterator2 values_first) {
+  auto execPolicy = getExecutionPolicy(q, mr);
+
+#if defined(ALPAKA_ACC_SYCL_ENABLED)
+  oneapi::dpl::sort_by_key(execPolicy, keys_first, keys_last, values_first);
+#else
+  thrust::sort_by_key(execPolicy, keys_first, keys_last, values_first);
+#endif
+}
+
+template <typename ForwardIt1, typename ForwardIt2, typename OutputIt,
+          typename Compare>
+void upper_bound(queue &q, const memory_resource &mr, ForwardIt1 first1,
+                 ForwardIt1 last1, ForwardIt2 first2, ForwardIt2 last2,
+                 OutputIt d_first, Compare comp) {
+  auto execPolicy = getExecutionPolicy(q, mr);
+#if defined(ALPAKA_ACC_SYCL_ENABLED)
+  oneapi::dpl::upper_bound(execPolicy, first1, last1, first2, last2, d_first,
+                           comp);
+#else
+  thrust::upper_bound(execPolicy, first1, last1, first2, last2, d_first, comp);
+#endif
+}
+
+template <typename InputIterator, typename OutputIterator>
+void inclusive_scan(queue &q, const memory_resource &mr, InputIterator first,
+                    InputIterator last, OutputIterator d_first) {
+  auto execPolicy = getExecutionPolicy(q, mr);
+
+#if defined(ALPAKA_ACC_SYCL_ENABLED)
+  oneapi::dpl::inclusive_scan(execPolicy, first, last, d_first);
+#else
+  thrust::inclusive_scan(execPolicy, first, last, d_first);
+#endif
+}
+
+template <typename InputIt, typename OutputIt, typename Compare>
+OutputIt unique_copy(queue &q, const memory_resource &mr, InputIt first,
+                     InputIt last, OutputIt d_first, Compare comp) {
+  auto execPolicy = getExecutionPolicy(q, mr);
+
+#if defined(ALPAKA_ACC_SYCL_ENABLED)
+  return oneapi::dpl::unique_copy(execPolicy, first, last, d_first, comp);
+#else
+  return thrust::unique_copy(execPolicy, first, last, d_first, comp);
+#endif
+}
+
+}  // namespace traccc::alpaka::details

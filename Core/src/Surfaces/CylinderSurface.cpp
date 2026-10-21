@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -27,6 +28,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -45,11 +47,10 @@ CylinderSurface::CylinderSurface(const GeometryContext& gctx,
     : RegularSurface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 CylinderSurface::CylinderSurface(const Transform3& transform, double radius,
-                                 double halfz, double halfphi, double avphi,
-                                 double bevelMinZ, double bevelMaxZ)
+                                 double halfz, double halfphi, double avphi)
     : RegularSurface(transform),
-      m_bounds(std::make_shared<const CylinderBounds>(
-          radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
+      m_bounds(std::make_shared<const CylinderBounds>(radius, halfz, halfphi,
+                                                      avphi)) {}
 
 CylinderSurface::CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
                                  const SurfacePlacementBase& placement)
@@ -329,21 +330,20 @@ AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-ActsMatrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
+Matrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
-  using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = localToGlobalTransform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
-  const double lphi = phi(localPos);
-  const double lcphi = std::cos(lphi);
-  const double lsphi = std::sin(lphi);
+  // the normalised coordinates are already cos and sin of the local azimuth
+  const double lcphi = localPos.x() / lr;
+  const double lsphi = localPos.y() / lr;
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
-  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
   loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr, 0, 0, 0, 1;
 
   return loc3DToLocBound;
@@ -378,31 +378,6 @@ std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
         getSharedPtr(), other.getSharedPtr(),
         "CylinderSurface::merge: surfaces have relative rotation");
   }
-
-  auto checkNoBevel = [this, &logger, &other](const auto& bounds) {
-    if (bounds.get(CylinderBounds::eBevelMinZ) != 0.0) {
-      ACTS_ERROR(
-          "CylinderVolumeStack requires all volumes to have a bevel angle of "
-          "0");
-      throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
-          "CylinderVolumeStack requires all volumes to have a bevel angle of "
-          "0");
-    }
-
-    if (bounds.get(CylinderBounds::eBevelMaxZ) != 0.0) {
-      ACTS_ERROR(
-          "CylinderVolumeStack requires all volumes to have a bevel angle of "
-          "0");
-      throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
-          "CylinderVolumeStack requires all volumes to have a bevel angle of "
-          "0");
-    }
-  };
-
-  checkNoBevel(bounds());
-  checkNoBevel(other.bounds());
 
   // radii need to be identical
   if (std::abs(bounds().get(CylinderBounds::eR) -
@@ -557,9 +532,61 @@ const std::shared_ptr<const CylinderBounds>& CylinderSurface::boundsPtr()
     const {
   return m_bounds;
 }
+
 void CylinderSurface::assignSurfaceBounds(
     std::shared_ptr<const CylinderBounds> newBounds) {
   m_bounds = std::move(newBounds);
+}
+
+void CylinderSurface::assignSurfaceMaterial(
+    std::shared_ptr<const ISurfaceMaterial> material) {
+  if (material != nullptr) {
+    const std::array<AxisDirection, 2> localSurfaceAxes = localAxes();
+    const std::array<AxisDirection, 2> alternativeAxes = {
+        AxisDirection::AxisPhi, AxisDirection::AxisZ};
+    const std::vector<AxisDirection>& localMaterialAxes =
+        material->localAxisDirections();
+
+    if (!std::ranges::includes(
+            std::set(localSurfaceAxes.begin(), localSurfaceAxes.end()),
+            std::set(localMaterialAxes.begin(), localMaterialAxes.end())) &&
+        !std::ranges::includes(
+            std::set(alternativeAxes.begin(), alternativeAxes.end()),
+            std::set(localMaterialAxes.begin(), localMaterialAxes.end()))) {
+      std::string errorMsg =
+          "CylinderSurface::checkSurfaceMaterial: material axis directions " +
+          axesDirectionName(localMaterialAxes) +
+          " are not supported by this surface. Supported axes are: " +
+          axesDirectionName(std::vector<AxisDirection>{
+              localSurfaceAxes.begin(), localSurfaceAxes.end()}) +
+          " or " +
+          axesDirectionName(std::vector<AxisDirection>{alternativeAxes.begin(),
+                                                       alternativeAxes.end()});
+      throw std::invalid_argument(errorMsg);
+    }
+
+    m_swapMaterialAxes = !localMaterialAxes.empty() &&
+                         localMaterialAxes[0] != localSurfaceAxes[0] &&
+                         localMaterialAxes[0] != alternativeAxes[0];
+    m_scaleMaterialAxis =
+        std::ranges::find(localMaterialAxes, AxisDirection::AxisPhi) !=
+        localMaterialAxes.end();
+  }
+
+  m_surfaceMaterial = std::move(material);
+}
+
+Vector2 CylinderSurface::transformSurfaceLocalToMaterialLocal(
+    const Vector2& surfaceLocal) const {
+  Vector2 materialLocal = surfaceLocal;
+  if (m_scaleMaterialAxis) {
+    const double r = bounds().get(CylinderBounds::eR);
+    materialLocal[0] = surfaceLocal[0] / r;
+  }
+  if (m_swapMaterialAxes) {
+    std::swap(materialLocal[0], materialLocal[1]);
+  }
+  return materialLocal;
 }
 
 }  // namespace Acts

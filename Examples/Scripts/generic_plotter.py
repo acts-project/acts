@@ -183,9 +183,7 @@ def main(
   nbins: {b}
   min: {min}
   max: {max}
-                """.format(
-                    k=k, b=len(ax.edges) - 1, min=ax.edges[0], max=ax.edges[-1]
-                )
+                """.format(k=k, b=len(ax.edges) - 1, min=ax.edges[0], max=ax.edges[-1])
                 print(s)
             else:
                 print(k, h.axes[0])

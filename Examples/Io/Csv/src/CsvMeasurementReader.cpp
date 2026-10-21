@@ -14,7 +14,6 @@
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
@@ -103,7 +102,7 @@ inline std::vector<Data> readEverything(
     const std::string& inputDir, const std::string& filename,
     const std::vector<std::string>& optionalColumns, std::size_t event) {
   std::string path = perEventFilepath(inputDir, filename, event);
-  NamedTupleCsvReader<Data> reader(path, optionalColumns);
+  BoostDescribeCsvReader<Data> reader(path, optionalColumns);
 
   std::vector<Data> everything;
   Data one;
@@ -139,6 +138,7 @@ ClusterContainer makeClusters(
 
     for (auto it = begin; it != end; ++it) {
       const auto& cellData = it->second;
+      cluster.geometryId = Acts::GeometryIdentifier(cellData.geometry_id);
       ActsFatras::Segmentizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
                                                          Acts::Vector2::Zero()};
 
@@ -189,7 +189,7 @@ ProcessCode CsvMeasurementReader::read(const AlgorithmContext& ctx) {
   // Prepare containers for the hit data using the framework event data types
   MeasurementContainer tmpMeasurements;
   GeometryIdMultimap<ConstVariableBoundMeasurementProxy> orderedMeasurements;
-  IndexMultimap<Index> measurementSimHitsMap;
+  MeasurementSimHitsMap measurementSimHitsMap;
 
   tmpMeasurements.reserve(measurementData.size());
   orderedMeasurements.reserve(measurementData.size());
@@ -265,7 +265,7 @@ ProcessCode CsvMeasurementReader::read(const AlgorithmContext& ctx) {
       m_outputMeasurementParticlesMap.isInitialized()) {
     const auto hits = m_inputHits(ctx);
 
-    IndexMultimap<ActsFatras::Barcode> outputMap;
+    MeasurementParticlesMap outputMap;
 
     for (const auto& [measIdx, hitIdx] : measurementSimHitsMap) {
       const auto& hit = hits.nth(hitIdx);

@@ -9,6 +9,7 @@
 #include "ActsPlugins/Root/RootMagneticFieldIo.hpp"
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
+#include "Acts/Utilities/Axis.hpp"
 
 #include <stdexcept>
 #include <vector>

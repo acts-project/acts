@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
@@ -281,13 +282,13 @@ AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
+Matrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   // calculate the transformation to local coordinates
   Vector3 localPosition = localToGlobalTransform(gctx).inverse() * position;
   double localPhi = VectorHelpers::phi(localPosition);
 
-  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
   loc3DToLocBound << std::cos(localPhi), std::sin(localPhi), 0, 0, 0, 1;
 
   return loc3DToLocBound;
@@ -296,9 +297,11 @@ ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
 Vector3 LineSurface::lineDirection(const GeometryContext& gctx) const {
   return localToGlobalTransform(gctx).linear().col(2);
 }
+
 const std::shared_ptr<const LineBounds>& LineSurface::boundsPtr() const {
   return m_bounds;
 }
+
 void LineSurface::assignSurfaceBounds(
     std::shared_ptr<const LineBounds> newBounds) {
   m_bounds = std::move(newBounds);

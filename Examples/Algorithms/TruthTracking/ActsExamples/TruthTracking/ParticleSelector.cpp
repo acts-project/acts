@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -23,7 +22,7 @@ namespace ActsExamples {
 
 bool ParticleSelector::MeasurementCounter::isValidParticle(
     const SimParticle& particle,
-    const InverseMultimap<SimBarcode>& particleMeasurementsMap,
+    const ParticleMeasurementsMap& particleMeasurementsMap,
     const MeasurementContainer& measurements) const {
   const auto [measurementsBegin, measurementsEnd] =
       particleMeasurementsMap.equal_range(particle.particleId());
@@ -59,8 +58,8 @@ bool ParticleSelector::MeasurementCounter::isValidParticle(
 }
 
 ParticleSelector::ParticleSelector(const Config& config,
-                                   Acts::Logging::Level level)
-    : IAlgorithm("ParticleSelector", level), m_cfg(config) {
+                                   std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("ParticleSelector", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particles collection");
   }
@@ -88,6 +87,10 @@ ParticleSelector::ParticleSelector(const Config& config,
         "and inputMeasurements");
   }
 
+  logSelectionConfig();
+}
+
+void ParticleSelector::logSelectionConfig() const {
   ACTS_DEBUG("selection particle rho [" << m_cfg.rhoMin << "," << m_cfg.rhoMax
                                         << ")");
   ACTS_DEBUG("selection particle |z| [" << m_cfg.absZMin << "," << m_cfg.absZMax
@@ -123,11 +126,11 @@ ProcessCode ParticleSelector::execute(const AlgorithmContext& ctx) const {
   // prepare input/ output types
   const SimParticleContainer& inputParticles = m_inputParticles(ctx);
 
-  const static InverseMultimap<SimBarcode> emptyMeasurementParticlesMap;
-  const InverseMultimap<SimBarcode>& inputMeasurementParticlesMap =
+  const static ParticleMeasurementsMap emptyParticlesMeasurementMap;
+  const ParticleMeasurementsMap& inputParticlesMeasurementMap =
       m_inputParticleMeasurementsMap.isInitialized()
           ? m_inputParticleMeasurementsMap(ctx)
-          : emptyMeasurementParticlesMap;
+          : emptyParticlesMeasurementMap;
 
   const static MeasurementContainer emptyMeasurements;
   const MeasurementContainer& inputMeasurements =
@@ -164,7 +167,7 @@ ProcessCode ParticleSelector::execute(const AlgorithmContext& ctx) const {
     nInvalidHitCount += static_cast<std::size_t>(!validHitCount);
 
     const std::size_t measurementCount =
-        inputMeasurementParticlesMap.count(p.particleId());
+        inputParticlesMeasurementMap.count(p.particleId());
     const bool validMeasurementCount =
         within(measurementCount, m_cfg.measurementsMin, m_cfg.measurementsMax);
     nInvalidMeasurementCount +=
@@ -172,7 +175,7 @@ ProcessCode ParticleSelector::execute(const AlgorithmContext& ctx) const {
 
     const bool validMeasurementRegionCount =
         m_cfg.measurementCounter.isValidParticle(
-            p, inputMeasurementParticlesMap, inputMeasurements);
+            p, inputParticlesMeasurementMap, inputMeasurements);
     nInvalidMeasurementRegionCount +=
         static_cast<std::size_t>(!validMeasurementRegionCount);
 

@@ -21,7 +21,9 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <iomanip>
 #include <memory>
+#include <sstream>
 
 #include "SurfaceStub.hpp"
 
@@ -80,7 +82,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   Vector3 reference{0., 1., 2.};
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
-  auto pLayer = PlaneLayer::create(pTransform, pPlanarBound);
+  auto pLayer = PlaneLayer::create(pTransform, pPlanarBound, nullptr);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement{pTransform, pPlanarBound, 0.2, pMaterial};
@@ -143,6 +145,29 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   // type() is pure virtual
 }
 
+BOOST_AUTO_TEST_CASE(SurfaceToStreamPreservesStreamState) {
+  std::ostringstream stream;
+  stream << std::scientific << std::showpos << std::setfill('#')
+         << std::setprecision(3);
+  stream.width(17);
+
+  const auto flags = stream.flags();
+  const auto precision = stream.precision();
+  const auto width = stream.width();
+  const auto fill = stream.fill();
+
+  auto bounds = std::make_shared<const RectangleBounds>(5., 10.);
+  auto surface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
+
+  stream << surface->toStream(tgContext);
+
+  BOOST_CHECK(stream.flags() == flags);
+  BOOST_CHECK_EQUAL(stream.precision(), precision);
+  BOOST_CHECK_EQUAL(stream.width(), width);
+  BOOST_CHECK_EQUAL(stream.fill(), fill);
+}
+
 BOOST_AUTO_TEST_CASE(EqualityOperators) {
   // build some test objects
   std::shared_ptr<const Acts::PlanarBounds> pPlanarBound =
@@ -156,7 +181,7 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   // build a planeSurface to be compared
   auto planeSurface =
       Surface::makeShared<PlaneSurface>(pTransform1, pPlanarBound);
-  auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound);
+  auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound, nullptr);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement1{pTransform1, pPlanarBound, 0.2, pMaterial};

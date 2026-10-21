@@ -23,6 +23,13 @@ endif()
 # is much more aggressive and also triggers on e.g., double-to-float
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(cxx_flags "${cxx_flags} -Wfloat-conversion")
+    # __COUNTER__ is classified as a C2y extension in Clang 22+.
+    # Third-party generated code (podio, Boost.Test, etc.) relies on it.
+    include(CheckCXXCompilerFlag)
+    check_cxx_compiler_flag("-Wno-c2y-extensions" _acts_has_wno_c2y)
+    if(_acts_has_wno_c2y)
+        set(cxx_flags "${cxx_flags} -Wno-c2y-extensions")
+    endif()
 endif()
 
 # -Wnull-dereference gets applied to -isystem includes in GCC13,
@@ -37,8 +44,8 @@ if(
     set(cxx_flags "${cxx_flags} -Wnull-dereference")
 endif()
 
-set(ACTS_CXX_STANDARD 20)
-set(ACTS_CXX_STANDARD_FEATURE cxx_std_20)
+set(ACTS_CXX_STANDARD 23)
+set(ACTS_CXX_STANDARD_FEATURE cxx_std_23)
 if(DEFINED CMAKE_CXX_STANDARD)
     if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
         set(ACTS_CXX_STANDARD ${CMAKE_CXX_STANDARD})
@@ -50,6 +57,8 @@ if(DEFINED CMAKE_CXX_STANDARD)
         )
     endif()
 endif()
+
+message(STATUS "C++ standard: ${ACTS_CXX_STANDARD}")
 
 if(ACTS_ENABLE_CPU_PROFILING OR ACTS_ENABLE_MEMORY_PROFILING)
     message(STATUS "Added debug symbol compile flag")
@@ -69,8 +78,6 @@ set(CMAKE_MACOSX_RPATH 1)
 # bake where we found external dependencies, if they
 # were not in the default library directories
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-# set relative library path for ACTS libraries
-set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 
 message(CHECK_START "Checking C++20 std::format support")
 try_compile(

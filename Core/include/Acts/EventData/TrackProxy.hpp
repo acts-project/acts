@@ -9,20 +9,20 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryBackendConcept.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyCommon.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
 
 #include <iterator>
+#include <optional>
 
 namespace Acts {
 
@@ -256,6 +256,7 @@ class TrackProxy
   using Base::chi2;
   using Base::direction;
   using Base::fourMomentum;
+  using Base::isForwardLinked;
   using Base::loc0;
   using Base::loc1;
   using Base::momentum;
@@ -264,6 +265,7 @@ class TrackProxy
   using Base::nMeasurements;
   using Base::nOutliers;
   using Base::nSharedHits;
+  using Base::nSplitHits;
   using Base::phi;
   using Base::qOverP;
   using Base::stemIndex;
@@ -508,8 +510,8 @@ class TrackProxy
   /// - Covariance matrix at reference surface
   /// - Particle hypothesis
   /// - Reference surface (shared pointer is copied)
-  /// - Track summary data (nMeasurements, nHoles, nOutliers, nSharedHits, chi2,
-  /// nDoF)
+  /// - Track summary data (nMeasurements, nHoles, nOutliers, nSharedHits,
+  /// nSplitHits, chi2, nDoF)
   /// - All dynamic track columns
   ///
   /// **What does NOT get copied:**
@@ -545,6 +547,13 @@ class TrackProxy
     nHoles() = other.nHoles();
     nOutliers() = other.nOutliers();
     nSharedHits() = other.nSharedHits();
+    // The split hit column is optional: copy it only if both sides have it
+    if constexpr (requires { other.nSplitHits(); }) {
+      if (hasColumn(detail_tp::kSplitHitsKey) &&
+          other.hasColumn(detail_tp::kSplitHitsKey)) {
+        nSplitHits() = other.nSplitHits();
+      }
+    }
     chi2() = other.chi2();
     nDoF() = other.nDoF();
 
@@ -606,7 +615,10 @@ class TrackProxy
   /// @note This is dangerous with branching track state sequences, as it will break them
   /// @note This also automatically forward-links the track!
   /// @param invertJacobians Whether to invert the Jacobians of the track states
-  void reverseTrackStates(bool invertJacobians = false)
+  /// @return With @p invertJacobians, the inverse of the old first jacobian,
+  ///         which has no slot in the reversed sequence. Empty otherwise, for
+  ///         a track without states, or if that jacobian is zero.
+  std::optional<BoundMatrix> reverseTrackStates(bool invertJacobians = false)
     requires(!ReadOnly)
   {
     IndexType current = tipIndex();
@@ -637,6 +649,12 @@ class TrackProxy
       tipIndex() = current;
       current = prev;
     }
+
+    // `nextJacobian` holds the jacobian of the old first state
+    if (!invertJacobians || next == kInvalid || nextJacobian.isZero()) {
+      return std::nullopt;
+    }
+    return nextJacobian.inverse();
   }
 
   /// @}

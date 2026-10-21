@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
+#include "ActsPlugins/Geant4/Geant4MaterialStepConverter.hpp"
 
 #include <memory>
 #include <string>
@@ -35,6 +36,7 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
     std::shared_ptr<EventStore> eventStore;
 
     std::vector<std::string> excludeMaterials = {};
+    bool recordElementFractions = false;
   };
 
   /// Construct the action
@@ -45,16 +47,18 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
       const Config& cfg,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "SimParticleTranslation", Acts::Logging::INFO));
-  ~MaterialSteppingAction() override;
 
   /// @brief Action per step to be performed
   ///
-  /// @param step is the Geant4 step of the particle
-  void UserSteppingAction(const G4Step* step) override;
+  /// @param stepPtr is the Geant4 step of the particle
+  void UserSteppingAction(const G4Step* stepPtr) override;
 
  private:
   /// Config struct
   Config m_cfg;
+
+  /// Converts the steps into material interactions
+  ActsPlugins::Geant4MaterialStepConverter m_stepConverter;
 
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }

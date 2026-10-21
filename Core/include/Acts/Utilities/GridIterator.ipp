@@ -114,7 +114,7 @@ std::size_t GridGlobalIterator<T, Axes...>::globalBinIndex() const {
 template <typename T, class... Axes>
 std::array<std::size_t, GridGlobalIterator<T, Axes...>::DIM>
 GridGlobalIterator<T, Axes...>::localBinsIndices() const {
-  return m_grid->localBinsFromGlobalBin(m_idx);
+  return m_grid->multiAxis().getLocalBinsFromGlobalBin(m_idx);
 }
 
 // Local Iterator
@@ -122,7 +122,7 @@ template <typename T, class... Axes>
 GridLocalIterator<T, Axes...>::GridLocalIterator(
     const Grid<T, Axes...>& grid, const std::array<std::size_t, DIM>& indices)
     : m_grid(&grid),
-      m_numLocalBins(grid.numLocalBins()),
+      m_numLocalBins(grid.multiAxis().getNBins()),
       m_currentIndex(indices) {
   // Since the user has not defined a custom navigation pattern, we tell the
   // iterator we want to iterate on all the local bins in ascending order from
@@ -138,7 +138,7 @@ GridLocalIterator<T, Axes...>::GridLocalIterator(
     const Grid<T, Axes...>& grid, const std::array<std::size_t, DIM>& indices,
     std::array<std::vector<std::size_t>, DIM> navigation)
     : m_grid(&grid),
-      m_numLocalBins(grid.numLocalBins()),
+      m_numLocalBins(grid.multiAxis().getNBins()),
       m_currentIndex(indices),
       m_navigationIndex(std::move(navigation)) {
   /// We can allow navigation on only a subset of bins.
@@ -243,7 +243,7 @@ void GridLocalIterator<T, Axes...>::increment() {
 
 template <typename T, class... Axes>
 std::size_t GridLocalIterator<T, Axes...>::globalBinIndex() const {
-  return m_grid->globalBinFromLocalBins(localBinsIndices());
+  return m_grid->multiAxis().getGlobalBinFromLocalBins(localBinsIndices());
 }
 
 template <typename T, class... Axes>

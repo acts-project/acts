@@ -1,0 +1,375 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// SYCL include(s).
+#include <sycl/sycl.hpp>
+
+// Local include(s).
+#include "../utils/barrier.hpp"
+#include "../utils/calculate1DimNdRange.hpp"
+#include "../utils/get_queue.hpp"
+#include "../utils/oneDPL.hpp"
+#include "../utils/thread_id.hpp"
+#include "traccc/sycl/gbts_seeding/gbts_seeding_algorithm.hpp"
+
+// Project include(s).
+#include "traccc/gbts_seeding/device/gbts_bid_seeds_for_hits.hpp"
+#include "traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
+#include "traccc/gbts_seeding/device/gbts_build_edge_work_list.hpp"
+#include "traccc/gbts_seeding/device/gbts_compress_graph.hpp"
+#include "traccc/gbts_seeding/device/gbts_convert_seeds.hpp"
+#include "traccc/gbts_seeding/device/gbts_count_graph_edges.hpp"
+#include "traccc/gbts_seeding/device/gbts_count_paths.hpp"
+#include "traccc/gbts_seeding/device/gbts_fill_graph_edges.hpp"
+#include "traccc/gbts_seeding/device/gbts_fill_path_store.hpp"
+#include "traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
+#include "traccc/gbts_seeding/device/gbts_finish_cca.hpp"
+#include "traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
+#include "traccc/gbts_seeding/device/gbts_run_cca_iteration.hpp"
+#include "traccc/gbts_seeding/device/gbts_sort_nodes.hpp"
+#include "traccc/gbts_seeding/gbts_types.hpp"
+
+// VecMem include(s).
+#include <vecmem/containers/data/vector_view.hpp>
+#include <vecmem/utils/sycl/local_accessor.hpp>
+
+// System include(s).
+#include <algorithm>
+
+namespace traccc::sycl {
+
+namespace kernels {
+
+// ---------------------------------------------------------------------------
+// Stage 1 — nodes-making kernels
+// ---------------------------------------------------------------------------
+
+/// Class identifying the kernel running @c traccc::device::gbts_bin_spacepoints
+class gbts_bin_spacepoints;
+
+/// Class identifying the kernel running @c traccc::device::gbts_sort_nodes
+class gbts_sort_nodes;
+
+/// Class identifying the kernel running @c
+/// traccc::device::gbts_find_minmax_radius
+class gbts_find_minmax_radius;
+
+// ---------------------------------------------------------------------------
+// Stage 2 — graph-making kernels
+// ---------------------------------------------------------------------------
+
+/// Class identifying the kernel running @c
+/// traccc::device::gbts_build_edge_work_list
+class gbts_build_edge_work_list;
+
+/// Class identifying the kernel running @c
+/// traccc::device::gbts_count_graph_edges
+class gbts_count_graph_edges;
+
+/// Class identifying the kernel running @c
+/// traccc::device::gbts_fill_graph_edges
+class gbts_fill_graph_edges;
+
+/// Class identifying the kernel running @c
+/// traccc::device::gbts_match_graph_edges
+class gbts_match_graph_edges;
+
+/// Class identifying the kernel running @c traccc::device::gbts_compress_graph
+class gbts_compress_graph;
+
+// ---------------------------------------------------------------------------
+// Stage 3 — graph-processing kernels
+// ---------------------------------------------------------------------------
+
+/// Class identifying the kernel running @c
+/// traccc::device::gbts_run_cca_iteration
+class gbts_run_cca_iteration;
+
+/// Class identifying the kernel running @c traccc::device::gbts_finish_cca
+class gbts_finish_cca;
+
+/// Class identifying the kernel running @c
+/// traccc::device::gbts_count_paths
+class gbts_count_paths;
+
+/// Class identifying the kernel running @c traccc::device::gbts_fill_path_store
+class gbts_fill_path_store;
+
+/// Class identifying the kernel running @c
+/// traccc::device::gbts_bid_seeds_for_hits
+class gbts_bid_seeds_for_hits;
+
+/// Class identifying the kernel running @c traccc::device::gbts_convert_seeds
+class gbts_convert_seeds;
+
+}  // namespace kernels
+
+// ===========================================================================
+// gbts_seeding_algorithm: kernel launchers
+// ===========================================================================
+
+gbts_seeding_algorithm::gbts_seeding_algorithm(
+    const gbts_seedfinder_config& cfg, const memory_resource& mr,
+    const vecmem::copy& copy, queue_wrapper& queue,
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
+    : device::gbts_seeding_algorithm(cfg, mr, copy, std::move(logger)),
+      sycl::algorithm_base{queue, std::move(await_func)} {}
+
+void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
+    const device::gbts_bin_spacepoints_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = 128;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_bin_spacepoints>(
+        details::calculate1DimNdRange(payload.nSp, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_bin_spacepoints(details::thread_id<1>{item}, payload);
+        });
+  });
+}
+
+void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
+    const device::gbts_sort_nodes_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  // Order the nodes by their (eta bin, phi, spacepoint index bits) keys,
+  // carrying the full spacepoint index along as the value.
+  oneapi::dpl::sort_by_key(
+      oneapi::dpl::execution::device_policy{squeue}, payload.sort_keys.ptr(),
+      payload.sort_keys.ptr() + payload.nSp, payload.sort_values.ptr());
+
+  const unsigned int n_threads = 256;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_sort_nodes>(
+        details::calculate1DimNdRange(payload.nSp, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_sort_nodes(details::thread_id<1>{item}, payload);
+        });
+  });
+}
+
+void gbts_seeding_algorithm::gbts_find_minmax_radius_kernel(
+    const device::gbts_find_minmax_radius_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = 128;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_find_minmax_radius>(
+        details::calculate1DimNdRange(payload.nEtaBins, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_find_minmax_radius(details::thread_id<1>{item}, payload);
+        });
+  });
+}
+
+void gbts_seeding_algorithm::gbts_build_edge_work_list_kernel(
+    const device::gbts_build_edge_work_list_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  squeue.submit([&](::sycl::handler& h) {
+    vecmem::sycl::local_accessor<unsigned int> scratch(
+        device::gbts_build_edge_work_list_block_size, h);
+    h.parallel_for<kernels::gbts_build_edge_work_list>(
+        details::calculate1DimNdRange(
+            device::gbts_build_edge_work_list_block_size,
+            device::gbts_build_edge_work_list_block_size),
+        [payload, scratch](::sycl::nd_item<1> item) {
+          const details::barrier<1> barrier{item};
+          device::gbts_build_edge_work_list(
+              details::thread_id<1>{item}, barrier, payload,
+              {vecmem::data::vector_view<unsigned int>(
+                  device::gbts_build_edge_work_list_block_size, &scratch[0])});
+        });
+  });
+}
+
+void gbts_seeding_algorithm::gbts_count_graph_edges_kernel(
+    const device::gbts_count_graph_edges_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  // One thread per inner node of a chunk. The blocks stride over the work
+  // items.
+  const unsigned int n_threads = device::gbts_consts::edge_chunk_size;
+  const unsigned int n_blocks =
+      std::min(payload.nWorkMax, device::gbts_count_graph_edges_max_blocks);
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_count_graph_edges>(
+        details::calculate1DimNdRange(n_blocks * n_threads, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_count_graph_edges(details::thread_id<1>{item}, payload);
+        });
+  });
+
+  // Turn the per-node counts into the edge buckets.
+  vecmem::device_vector<unsigned int> d_num_outgoing_edges(
+      payload.num_outgoing_edges);
+  oneapi::dpl::inclusive_scan(oneapi::dpl::execution::device_policy{squeue},
+                              d_num_outgoing_edges.begin(),
+                              d_num_outgoing_edges.end(),
+                              d_num_outgoing_edges.begin());
+}
+
+void gbts_seeding_algorithm::gbts_fill_graph_edges_kernel(
+    const device::gbts_fill_graph_edges_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = device::gbts_consts::edge_chunk_size;
+  const unsigned int n_blocks =
+      std::min(payload.nWorkMax, device::gbts_fill_graph_edges_max_blocks);
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_fill_graph_edges>(
+        details::calculate1DimNdRange(n_blocks * n_threads, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_fill_graph_edges(details::thread_id<1>{item}, payload);
+        });
+  });
+}
+
+void gbts_seeding_algorithm::gbts_match_graph_edges_kernel(
+    const device::gbts_match_graph_edges_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = 256;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_match_graph_edges>(
+        details::calculate1DimNdRange(payload.nEdgesMax, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_match_graph_edges(details::thread_id<1>{item}, payload);
+        });
+  });
+
+  // Compact the kept edges with a prefix sum over their 0/1 flags.
+  oneapi::dpl::inclusive_scan(
+      oneapi::dpl::execution::device_policy{squeue}, payload.kept.ptr(),
+      payload.kept.ptr() + payload.nEdgesMax, payload.reIndexer.ptr());
+}
+
+void gbts_seeding_algorithm::gbts_compress_graph_kernel(
+    const device::gbts_compress_graph_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = 256;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_compress_graph>(
+        details::calculate1DimNdRange(payload.nEdgesMax, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_compress_graph(details::thread_id<1>{item}, payload);
+        });
+  });
+}
+
+void gbts_seeding_algorithm::gbts_run_cca_iteration_kernel(
+    const device::gbts_run_cca_iteration_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = 256;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_run_cca_iteration>(
+        details::calculate1DimNdRange(payload.nConnectedEdges, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_run_cca_iteration(details::thread_id<1>{item}, payload);
+        });
+  });
+}
+
+void gbts_seeding_algorithm::gbts_finish_cca_kernel(
+    const device::gbts_finish_cca_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = 256;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_finish_cca>(
+        details::calculate1DimNdRange(payload.nConnectedEdges, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_finish_cca(details::thread_id<1>{item}, payload);
+        });
+  });
+}
+
+void gbts_seeding_algorithm::gbts_count_paths_kernel(
+    const device::gbts_count_paths_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = 128;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_count_paths>(
+        details::calculate1DimNdRange(payload.nConnectedEdges, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_count_paths(details::thread_id<1>{item}, payload);
+        });
+  });
+
+  // Path offsets of the path store.
+  oneapi::dpl::inclusive_scan(
+      oneapi::dpl::execution::device_policy{squeue}, payload.path_counts.ptr(),
+      payload.path_counts.ptr() + payload.nConnectedEdges,
+      payload.path_counts.ptr());
+}
+
+void gbts_seeding_algorithm::gbts_fill_path_store_kernel(
+    const device::gbts_fill_path_store_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = 128;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_fill_path_store>(
+        details::calculate1DimNdRange(payload.nPathsGrid, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_fill_path_store(details::thread_id<1>{item}, payload);
+        });
+  });
+}
+
+void gbts_seeding_algorithm::gbts_bid_seeds_for_hits_kernel(
+    const device::gbts_bid_seeds_for_hits_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = 128;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_bid_seeds_for_hits>(
+        details::calculate1DimNdRange(payload.nPathsGrid, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_bid_seeds_for_hits(details::thread_id<1>{item}, payload);
+        });
+  });
+}
+
+void gbts_seeding_algorithm::gbts_convert_seeds_kernel(
+    const device::gbts_convert_seeds_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = 128;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_convert_seeds>(
+        details::calculate1DimNdRange(payload.nPathsGrid, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_convert_seeds(details::thread_id<1>{item}, payload);
+        });
+  });
+}
+
+void gbts_seeding_algorithm::synchronize() const {
+  details::get_queue(queue()).wait_and_throw();
+}
+
+}  // namespace traccc::sycl

@@ -51,9 +51,14 @@ inline constexpr HashedString kNextKey = hashString("next");
 template <typename Derived, bool read_only>
 class TrackStateProxyCommon {
  protected:
+  /// Index type for track states
   using IndexType = Acts::TrackIndexType;
 
+  /// Cast to derived class
+  /// @return Reference to derived proxy
   constexpr Derived& derived() { return static_cast<Derived&>(*this); }
+  /// Cast to derived class (const)
+  /// @return Const reference to derived proxy
   constexpr const Derived& derived() const {
     return static_cast<const Derived&>(*this);
   }
@@ -98,6 +103,12 @@ class TrackStateProxyCommon {
   /// Check for presence of a measurement projector.
   /// @return True if projector indices are stored.
   bool hasProjector() const { return derived().has(detail_tsp::kProjectorKey); }
+
+  /// Check for presence of an uncalibrated source link.
+  /// @return True if an uncalibrated source link is stored.
+  bool hasUncalibratedSourceLink() const {
+    return derived().has(detail_tsp::kUncalibratedKey);
+  }
 
   /// Check for presence of calibrated measurement data.
   /// @return True if calibrated measurements exist.
@@ -355,9 +366,8 @@ class TrackStateProxyCommon {
     assert(derived().template has<detail_tsp::kProjectorKey>());
     assert(subspaceIndices.size() <= eBoundSize);
     BoundSubspaceIndices boundSubspace{};
-    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
-                   boundSubspace.begin(),
-                   [](auto i) { return static_cast<std::uint8_t>(i); });
+    std::ranges::transform(subspaceIndices, boundSubspace.begin(),
+                           [](auto i) { return static_cast<std::uint8_t>(i); });
     derived()
         .template component<SerializedSubspaceIndices,
                             detail_tsp::kProjectorKey>() =
@@ -365,6 +375,10 @@ class TrackStateProxyCommon {
   }
 
   /// Compute the property mask describing which components are present.
+  /// @note This reports which components have *storage allocated*, not which
+  ///       ones hold a meaningful value. The fitters shipped with ACTS
+  ///       allocate a parameter component immediately before writing it, so
+  ///       during fitting the mask grows as the track state is filled.
   /// @return Bit mask of available properties.
   TrackStatePropMask getMask() const {
     using PM = TrackStatePropMask;
@@ -388,6 +402,11 @@ class TrackStateProxyCommon {
   }
 
   /// Access the best available parameters (smoothed, filtered, or predicted).
+  /// @note "Available" means allocated. The fitters shipped with ACTS allocate
+  ///       a parameter component immediately before writing it, so this
+  ///       returns the best parameters that have actually been computed so
+  ///       far. In particular, inside a calibrator this is the predicted
+  ///       state, since filtering has not happened yet.
   /// @return Bound parameter map for the state.
   ConstParametersMap parameters() const {
     if (hasSmoothed()) {
@@ -399,6 +418,7 @@ class TrackStateProxyCommon {
   }
 
   /// Access the best available covariance (smoothed, filtered, or predicted).
+  /// @note "Available" means allocated, see @ref parameters.
   /// @return Bound covariance map for the state.
   ConstCovarianceMap covariance() const {
     if (hasSmoothed()) {

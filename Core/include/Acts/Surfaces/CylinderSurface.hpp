@@ -51,11 +51,8 @@ class CylinderSurface : public RegularSurface {
   /// @param halfz The half length in z
   /// @param halfphi The half opening angle
   /// @param avphi The phi value from which the opening angle spans (both sides)
-  /// @param bevelMinZ (optional) The bevel on the negative z side
-  /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
   CylinderSurface(const Transform3& transform, double radius, double halfz,
-                  double halfphi = std::numbers::pi, double avphi = 0.,
-                  double bevelMinZ = 0., double bevelMaxZ = 0.);
+                  double halfphi = std::numbers::pi, double avphi = 0.);
 
   /// Constructor from Transform3 and CylinderBounds arguments
   ///
@@ -91,6 +88,8 @@ class CylinderSurface : public RegularSurface {
                   const Transform3& shift);
 
  public:
+  ~CylinderSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other is the source cylinder for the copy
@@ -163,7 +162,9 @@ class CylinderSurface : public RegularSurface {
   const CylinderBounds& bounds() const final;
 
   /// This method returns the shared_ptr to the CylinderBounds
+  /// @return Shared pointer to the cylinder bounds
   const std::shared_ptr<const CylinderBounds>& boundsPtr() const;
+
   /// Overwrite the existing surface bounds with new ones
   /// @param newBounds: Pointer to the new bounds
   void assignSurfaceBounds(std::shared_ptr<const CylinderBounds> newBounds);
@@ -260,7 +261,7 @@ class CylinderSurface : public RegularSurface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
   /// Merge two cylinder surfaces into a single one.
@@ -278,10 +279,25 @@ class CylinderSurface : public RegularSurface {
       const CylinderSurface& other, AxisDirection direction,
       bool externalRotation, const Logger& logger = getDummyLogger()) const;
 
+  /// @copydoc Surface::assignSurfaceMaterial
+  void assignSurfaceMaterial(
+      std::shared_ptr<const ISurfaceMaterial> material) override;
+
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
+  }
+
+  /// @copydoc Surface::transformSurfaceLocalToMaterialLocal
+  Vector2 transformSurfaceLocalToMaterialLocal(
+      const Vector2& surfaceLocal) const override;
+
  private:
+  bool m_scaleMaterialAxis = false;
+
   /// Implementation of the intersection solver
   ///
   ///  <b>mathematical motivation:</b>

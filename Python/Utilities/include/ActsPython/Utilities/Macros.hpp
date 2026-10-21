@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <concepts>
+#include <memory>
 
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/variadic/to_seq.hpp>
@@ -26,6 +27,18 @@ template <typename T>
 concept has_write_method =
     requires(T& t, const ActsExamples::AlgorithmContext& ctx) {
       { t.write(ctx) } -> std::same_as<ActsExamples::ProcessCode>;
+    };
+
+/// Concept for types usable with declareAlgorithm.
+/// Requires: nested Config type, constructors (Config const&, Level) and
+/// (Config const&, unique_ptr<Logger>), and config() returning const Config&.
+template <typename A>
+concept DeclarableAlgorithm =
+    requires { typename A::Config; } &&
+    std::constructible_from<A, const typename A::Config&,
+                            std::unique_ptr<const Acts::Logger>> &&
+    requires(const A& a) {
+      { a.config() } -> std::same_as<const typename A::Config&>;
     };
 }  // namespace ActsPython::Concepts
 
@@ -57,14 +70,27 @@ concept has_write_method =
     ACTS_PYTHON_STRUCT_END();                                    \
   } while (0)
 
-template <typename A, typename B>
+template <ActsPython::Concepts::DeclarableAlgorithm A, typename B>
 auto declareAlgorithm(pybind11::module_& m, const char* name) {
   using Config = typename A::Config;
-  auto alg = pybind11::class_<A, B, std::shared_ptr<A>>(m, name)
-                 .def(pybind11::init<const Config&, Acts::Logging::Level>(),
-                      pybind11::arg("config"), pybind11::arg("level"))
-                 .def_property_readonly("config", &A::config);
-  auto c = pybind11::class_<Config>(alg, "Config").def(pybind11::init<>());
+  namespace py = pybind11;
+  auto alg =
+      py::class_<A, B, std::shared_ptr<A>>(m, name)
+          .def(py::init([name](const Config& cfg, Acts::Logging::Level level) {
+                 return std::make_shared<A>(
+                     cfg, Acts::getDefaultLogger(name, level));
+               }),
+               py::arg("config"), py::arg("level"))
+          .def(py::init([](const Config& cfg,
+                           std::unique_ptr<const Acts::Logger> logger) {
+                 return std::make_shared<A>(cfg, std::move(logger));
+               }),
+               py::arg("config"), py::arg("logger"))
+          .def_property_readonly("config", &A::config);
+  auto c = py::class_<Config>(alg, "Config");
+  if constexpr (std::is_default_constructible_v<Config>) {
+    c.def(py::init<>());
+  }
   return std::tuple{alg, c};
 }
 

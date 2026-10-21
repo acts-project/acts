@@ -9,11 +9,10 @@
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
+#include "ActsExamples/Geant4/UnitConversion.hpp"
 
 #include <ostream>
 #include <unordered_map>
@@ -36,11 +35,12 @@ SimParticleTranslation::SimParticleTranslation(
       m_cfg(cfg),
       m_logger(std::move(logger)) {}
 
-SimParticleTranslation::~SimParticleTranslation() = default;
+void SimParticleTranslation::GeneratePrimaries(G4Event* eventPtr) {
+  assert(eventPtr != nullptr);
+  G4Event& event = *eventPtr;
 
-void SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
-  anEvent->SetEventID(m_eventNr++);
-  unsigned int eventID = anEvent->GetEventID();
+  event.SetEventID(m_eventNr++);
+  std::uint32_t eventID = event.GetEventID();
 
   ACTS_DEBUG("Primary Generator Action for Event: " << eventID);
 
@@ -69,42 +69,39 @@ void SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   // We are looping through the particles and flush per vertex
   std::optional<Acts::Vector4> lastVertex;
 
-  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
-  constexpr double convertTime = CLHEP::ns / Acts::UnitConstants::ns;
-  constexpr double convertEnergy = CLHEP::GeV / Acts::UnitConstants::GeV;
-
-  unsigned int pCounter = 0;
-  unsigned int trackId = 1;
+  std::uint32_t pCounter = 0;
+  std::uint32_t trackId = 1;
   // Loop over the input partilces and run
   for (const auto& part : inputParticles) {
-    auto currentVertex = part.fourPosition();
+    const Acts::Vector4 currentVertex = part.fourPosition();
     if (!lastVertex || !currentVertex.isApprox(*lastVertex)) {
       // Add the vertex to the event
       if (pVertex != nullptr) {
-        anEvent->AddPrimaryVertex(pVertex);
+        event.AddPrimaryVertex(pVertex);
         ACTS_DEBUG("Flushing " << pCounter
                                << " particles associated with vertex "
                                << lastVertex->transpose());
         pCounter = 0;
       }
       lastVertex = currentVertex;
-      pVertex = new G4PrimaryVertex(
-          currentVertex[0] * convertLength, currentVertex[1] * convertLength,
-          currentVertex[2] * convertLength, currentVertex[3] * convertTime);
+      pVertex = new G4PrimaryVertex(currentVertex[0] * convertLengthToGeant4,
+                                    currentVertex[1] * convertLengthToGeant4,
+                                    currentVertex[2] * convertLengthToGeant4,
+                                    currentVertex[3] * convertTimeToGeant4);
     }
 
     // Add a new primary to the vertex
 
-    Acts::Vector4 mom4 = part.fourMomentum() * convertEnergy;
+    const Acts::Vector4 mom4 = part.fourMomentum() * convertEnergyToGeant4;
 
     // Particle properties, may be forced to specific value
-    G4int particlePdgCode = m_cfg.forcedPdgCode.value_or(part.pdg());
-    G4double particleCharge = m_cfg.forcedCharge.value_or(part.charge());
-    G4double particleMass =
-        m_cfg.forcedMass.value_or(part.mass() * convertEnergy);
+    const G4int particlePdgCode = m_cfg.forcedPdgCode.value_or(part.pdg());
+    const G4double particleCharge = m_cfg.forcedCharge.value_or(part.charge());
+    const G4double particleMass =
+        m_cfg.forcedMass.value_or(part.mass() * convertEnergyToGeant4);
 
     // Check if it is a Geantino / ChargedGeantino
-    G4ParticleDefinition* particleDefinition =
+    const G4ParticleDefinition* particleDefinition =
         particleTable->FindParticle(particlePdgCode);
     if (particleDefinition == nullptr) {
       if (particlePdgCode == 0 && particleMass == 0 && particleCharge == 0) {
@@ -151,7 +148,7 @@ void SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   }
   // Final vertex to be added
   if (pVertex != nullptr) {
-    anEvent->AddPrimaryVertex(pVertex);
+    event.AddPrimaryVertex(pVertex);
     ACTS_DEBUG("Flushing " << pCounter << " particles associated with vertex "
                            << lastVertex->transpose());
   }

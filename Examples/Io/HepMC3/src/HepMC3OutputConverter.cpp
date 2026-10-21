@@ -19,9 +19,9 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-HepMC3OutputConverter::HepMC3OutputConverter(const Config& config,
-                                             Acts::Logging::Level level)
-    : IAlgorithm{"HepMC3OutputConverter", level}, m_cfg{config} {
+HepMC3OutputConverter::HepMC3OutputConverter(
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm{"HepMC3OutputConverter", std::move(logger)}, m_cfg{config} {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particles collection");
   }

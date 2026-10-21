@@ -33,7 +33,7 @@ using namespace Acts;
 using namespace Acts::detail::Test;
 
 using ParametersVector = Acts::BoundVector;
-using CovarianceMatrix = Acts::BoundSquareMatrix;
+using CovarianceMatrix = Acts::BoundMatrix;
 using Jacobian = Acts::BoundMatrix;
 
 constexpr double tol = 1e-6;

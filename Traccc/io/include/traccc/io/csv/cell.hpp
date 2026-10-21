@@ -1,0 +1,34 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "traccc/io/csv/dfe.hpp"
+
+// System include(s).
+#include <cstdint>
+
+namespace traccc::io::csv {
+
+/// Type used in reading CSV data into memory
+struct cell {
+  std::uint64_t geometry_id = 0;
+  std::uint64_t measurement_id = 0;
+  std::uint32_t channel0 = 0;
+  std::uint32_t channel1 = 0;
+  float timestamp = 0.f;
+  float value = 0.f;
+
+  auto operator<=>(const cell& other) const = default;
+
+  // geometry_id,measurement_id,channel0,channel1,timestamp,value
+  DFE_NAMEDTUPLE(cell, geometry_id, measurement_id, channel0, channel1,
+                 timestamp, value);
+};
+
+}  // namespace traccc::io::csv

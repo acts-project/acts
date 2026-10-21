@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -111,12 +112,11 @@ Vector2 TrapezoidBounds::center() const {
 }
 
 std::ostream& TrapezoidBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY, rotAngle) = "
      << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
      << get(eHalfLengthY) << ", " << get(eRotationAngle) << ")";
-  sl << std::setprecision(-1);
   return sl;
 }
 

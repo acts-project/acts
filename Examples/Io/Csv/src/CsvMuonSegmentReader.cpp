@@ -50,7 +50,7 @@ ProcessCode CsvMuonSegmentReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
 
-  NamedTupleCsvReader<MuonSegmentData> reader(path);
+  BoostDescribeCsvReader<MuonSegmentData> reader(path);
 
   MuonSegmentData data{};
 

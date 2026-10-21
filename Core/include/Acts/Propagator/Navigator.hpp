@@ -8,13 +8,14 @@
 
 #pragma once
 
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
+#include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -22,7 +23,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <map>
+#include <limits>
 #include <optional>
 #include <string>
 
@@ -34,7 +35,7 @@ namespace Acts {
 ///
 /// @tparam object_t Type of the object for navigation to check against
 template <typename object_t>
-struct NavigationOptions {
+struct NavigationOptions final {
   /// The boundary check directive
   BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
 
@@ -51,8 +52,10 @@ struct NavigationOptions {
   /// Hint for end object
   const object_t* endObject = nullptr;
 
-  /// External surface identifier for which the boundary check is ignored
-  std::vector<GeometryIdentifier> externalSurfaces = {};
+  /// Boundary tolerance to use instead of @c boundaryTolerance, for the
+  /// surfaces named by their identifier
+  std::vector<std::pair<GeometryIdentifier, BoundaryTolerance>>
+      extendedSurfaces = {};
 
   /// The minimum distance for a surface to be considered
   double nearLimit = 0;
@@ -77,7 +80,7 @@ struct NavigationOptions {
 /// `state.currentSurface` pointer is set. This actors to observe
 /// that we are on a surface.
 ///
-class Navigator {
+class Navigator final {
  public:
   /// Type alias for navigation surface candidates container
   using NavigationSurfaces =
@@ -89,12 +92,6 @@ class Navigator {
   /// Type alias for navigation boundary candidates container
   using NavigationBoundaries =
       boost::container::small_vector<NavigationTarget, 4>;
-
-  /// Type alias for generic navigation candidates container
-  using NavigationCandidates =
-      boost::container::small_vector<NavigationTarget, 10>;
-
-  using ExternalSurfaces = std::vector<GeometryIdentifier>;
 
   /// Type alias for geometry version enumeration
   using GeometryVersion = TrackingGeometry::GeometryVersion;
@@ -118,6 +115,8 @@ class Navigator {
     bool resolveMaterial = true;
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
+    /// Number of candidates to reserve memory for in the navigation stream
+    std::size_t candidatePreReserve = 50;
   };
 
   /// The navigator options
@@ -127,42 +126,6 @@ class Navigator {
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
 
-    /// The surface tolerance
-    double surfaceTolerance = s_onSurfaceTolerance;
-
-    /// The near limit to resolve surfaces
-    double nearLimit = s_onSurfaceTolerance;
-
-    /// The far limit to resolve surfaces
-    double farLimit = std::numeric_limits<double>::max();
-
-    /// Externally provided surfaces - these are tried to be hit
-    ExternalSurfaces externalSurfaces = {};
-    /// Surfaces that are not part of the tracking geometry
-    std::vector<const Surface*> freeSurfaces = {};
-
-    /// Insert an external surface to be considered during navigation
-    /// @param surface: The surface to add to the list
-    void insertExternalSurface(const Surface& surface) {
-      if (surface.geometryId() != GeometryIdentifier{}) {
-        externalSurfaces.push_back(surface.geometryId());
-      } else {
-        freeSurfaces.push_back(&surface);
-      }
-    }
-    /// @brief Delegate to decide whether free surfaces are appended to the navigation
-    ///        stream given the current volume and the track coordinates. If the
-    ///        delegate is set, it is called in each candidate resolution step
-    ///        for each surface that has not been marked as reached yet.
-    /// @param gctx: Current geometry context carrying the alignment information
-    /// @param currentVol: The current tracking volume in which the propagator resides
-    /// @param pos: Position of the track in global coordinates
-    /// @param dir: Direction vector of the track
-    /// @param surface: Free surface candidate to test
-    using FreeSurfaceSelctor_t = Delegate<bool(
-        const GeometryContext& gctx, const TrackingVolume& currentVol,
-        const Vector3& pos, const Vector3& dir, const Surface& candidate)>;
-    FreeSurfaceSelctor_t freeSurfaceSelector{};
     /// Set the plain navigation options
     /// @param options The plain navigator options to set
     void setPlainOptions(const NavigatorPlainOptions& options) {
@@ -182,6 +145,16 @@ class Navigator {
     /// Navigation options configuration
     Options options;
 
+    /// Management of policy state allocation and deallocation
+    NavigationPolicyStateManager policyStateManager;
+
+    /// Whether the current volume's policy state carries no validity
+    /// constraint. Sourced from INavigationPolicy::isStateless() (probed once
+    /// at construction, fixed thereafter) and cached at each volume transition,
+    /// so the per-step checks read this local bool instead of chasing the
+    /// policy pointer or re-deriving defaultness from the type-erased state.
+    bool policyStateIsDefault = true;
+
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
@@ -200,18 +173,41 @@ class Navigator {
     /// the current boundary index of the navigation state
     std::optional<std::size_t> navBoundaryIndex;
 
-    // Navigation candidates(portals and surfaces together)
-    /// the vector of navigation candidates to work through
-    NavigationCandidates navCandidates = {};
-    /// the current candidate index of the navigation state
-    std::optional<std::size_t> navCandidateIndex;
+    /// far limit applied to the stream candidates, set during candidate
+    /// resolution
+    double navCandidatesFarLimit = std::numeric_limits<double>::max();
 
-    /// Free candidates not part of the tracking geometry.
-    //  They are stored as a pair of surface pointer
-    /// and a boolean indicating whether the surface has already been
-    /// reached during propagation
-    std::vector<std::pair<const Surface*, bool>> freeCandidates{};
+    /// An extended surface with its volume resolved
+    struct ResolvedExtendedSurface {
+      /// The surface
+      const Surface* surface{};
+      /// Tolerance used to intersect the surface
+      BoundaryTolerance boundaryTolerance = BoundaryTolerance::Infinite();
+      /// Volume that holds the surface. Null for Gen1, which scopes through
+      /// the layer.
+      const TrackingVolume* volume{};
+    };
 
+    /// Extended surfaces resolved once at initialization
+    std::vector<ResolvedExtendedSurface> extendedSurfaces{};
+
+    /// An additional surface of the options with its bookkeeping
+    struct AdditionalSurfaceState {
+      /// The entry of the options
+      const AdditionalSurface* entry{};
+      /// Whether the propagation reached the surface
+      bool reached{false};
+    };
+
+    /// Additional surfaces of the options, tracked over the propagation
+    std::vector<AdditionalSurfaceState> additionalSurfaces{};
+
+    /// The staged candidate an additional surface took precedence over. It is
+    /// handed out once the additional surface is no longer the closer one.
+    std::optional<NavigationTarget> pendingTarget;
+
+    /// Get reference to current navigation surface
+    /// @return Reference to current navigation target
     NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
     }
@@ -228,10 +224,9 @@ class Navigator {
 
     /// Get reference to current navigation candidate
     /// @return Reference to current boundary intersection
-    NavigationTarget& navCandidate() {
-      return navCandidates.at(navCandidateIndex.value());
-    }
+    NavigationTarget& navCandidate() { return stream.currentCandidate(); }
 
+    /// Volume where the navigation started
     const TrackingVolume* startVolume = nullptr;
     /// Layer where the navigation started
     const Layer* startLayer = nullptr;
@@ -271,14 +266,20 @@ class Navigator {
       navLayerIndex.reset();
       navBoundaries.clear();
       navBoundaryIndex.reset();
-      navCandidates.clear();
-      navCandidateIndex.reset();
 
       currentLayer = nullptr;
+
+      policyStateManager.reset();
+      policyStateIsDefault = true;
+
+      stream.reset();
     }
 
-    /// Completely reset navigation state to initial conditions
-    void reset() {
+    /// Reset navigation state for renavigating within the same navigation run
+    ///
+    /// @note Keeps the start and target information, which actors rely on for
+    ///       the whole run.
+    void resetForRenavigation() {
       resetAfterVolumeSwitch();
 
       currentVolume = nullptr;
@@ -286,11 +287,20 @@ class Navigator {
 
       navigationBreak = false;
       navigationStage = Stage::initial;
-      // Set the surface reached switches back to false
-      std::ranges::for_each(freeCandidates,
-                            [](std::pair<const Surface*, bool>& freeSurface) {
-                              freeSurface.second = false;
-                            });
+      pendingTarget.reset();
+    }
+
+    /// Completely reset navigation state for a new navigation run
+    ///
+    /// In contrast to @c resetForRenavigation this also drops the start and
+    /// target information.
+    void resetForInitialization() {
+      resetForRenavigation();
+
+      startVolume = nullptr;
+      startLayer = nullptr;
+      startSurface = nullptr;
+      targetSurface = nullptr;
     }
   };
 
@@ -344,17 +354,16 @@ class Navigator {
 
   /// @brief Initialize the navigator state
   ///
-  /// This function initializes the navigator state for a new propagation.
+  /// This function initializes the navigator state for a new propagation. All
+  /// inputs specific to this run are passed here, so a state can be reused
+  /// without carrying anything over.
   ///
   /// @param state The navigation state
-  /// @param position The start position
-  /// @param direction The start direction
-  /// @param propagationDirection The propagation direction
+  /// @param args The initialization arguments of this navigation run
   ///
   /// @return Indication if the initialization was successful
-  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
-                                        const Vector3& direction,
-                                        Direction propagationDirection) const;
+  [[nodiscard]] Result<void> initialize(
+      State& state, const NavigatorInitializeArguments& args) const;
 
   /// @brief Get the next target surface
   ///
@@ -377,7 +386,7 @@ class Navigator {
   /// @param direction The current direction
   ///
   /// @return True if the target is valid
-  bool checkTargetValid(const State& state, const Vector3& position,
+  bool checkTargetValid(State& state, const Vector3& position,
                         const Vector3& direction) const;
 
   /// @brief Handle the surface reached
@@ -393,6 +402,43 @@ class Navigator {
                             const Surface& surface) const;
 
  private:
+  /// @brief Resolve the extended surfaces of the options
+  ///
+  /// Throws if the tracking geometry does not hold a surface.
+  ///
+  /// @param state The navigation state
+  void resolveExtendedSurfaces(State& state) const;
+
+  /// @brief Get the next target of the staged navigation, without the
+  ///        additional surfaces
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return The next staged target
+  NavigationTarget nextStagedTarget(State& state, const Vector3& position,
+                                    const Vector3& direction) const;
+
+  /// @brief Get the closest additional surface from the current position
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return The closest additional surface, or none
+  NavigationTarget nextAdditionalTarget(const State& state,
+                                        const Vector3& position,
+                                        const Vector3& direction) const;
+
+  /// @brief Whether the staged navigation targets the given surface
+  ///
+  /// Tells a surface reached through the tracking geometry apart from one
+  /// reached as an additional surface.
+  ///
+  /// @param state The navigation state
+  /// @param surface The surface the propagation reached
+  /// @return True if the current staged target is that surface
+  bool stagedTargetIs(const State& state, const Surface& surface) const;
+
   /// @brief NextTarget helper function for Gen1 geometry configuration
   ///
   /// @param state The navigation state
@@ -428,6 +474,21 @@ class Navigator {
   /// @param position The current position
   /// @param direction The current direction
   void resolveCandidates(State& state, const Vector3& position,
+                         const Vector3& direction) const;
+
+  /// @brief Create the navigation policy state for the given volume
+  ///
+  /// Volumes whose navigation policy is known to push only default states
+  /// (probed at geometry construction) skip the state creation entirely; the
+  /// matching popState on volume exit is skipped under the same condition.
+  /// The caller must ensure the volume has a navigation policy.
+  ///
+  /// @param state The navigation state
+  /// @param volume The volume to create the policy state for
+  /// @param position The current position
+  /// @param direction The current direction
+  void createPolicyState(State& state, const TrackingVolume& volume,
+                         const Vector3& position,
                          const Vector3& direction) const;
 
   /// @brief Resolve compatible surfaces
@@ -475,6 +536,14 @@ class Navigator {
   /// @param state The state containing current volume info
   /// @return String with volume name for logging
   std::string volInfo(const State& state) const;
+
+  /// @brief Get volume info string for logging
+  ///
+  /// Used where the volume is not reflected in the navigation state yet.
+  ///
+  /// @param volume The volume to report on, may be nullptr
+  /// @return String with volume name for logging
+  std::string volInfo(const TrackingVolume* volume) const;
 
   const Logger& logger() const { return *m_logger; }
 

@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_scaling_test) {
   HomogeneousSurfaceMaterial hsm(mat, 1.);
   hsm.scale(0.5);
 
-  auto matBin = hsm.materialSlab(Vector3(0., 0., 0.));
+  auto matBin = hsm.materialSlab();
 
   BOOST_CHECK_EQUAL(matBin, matHalf);
   BOOST_CHECK_NE(matBin, mat);
@@ -80,11 +80,9 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   HomogeneousSurfaceMaterial hsmbwd(mat, 0.);
 
   auto mat2d = hsmfwd.materialSlab(Vector2{0., 0.});
-  auto mat3d = hsmfwd.materialSlab(Vector3{0., 0., 0.});
 
   // Test equality of the copy
   BOOST_CHECK_EQUAL(mat, mat2d);
-  BOOST_CHECK_EQUAL(mat, mat3d);
 
   Direction fDir = Direction::Forward();
   Direction bDir = Direction::Backward();
@@ -105,14 +103,14 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   BOOST_CHECK_EQUAL(hsmfwd.factor(bDir, post), 0.);
   BOOST_CHECK_EQUAL(hsmfwd.factor(bDir, full), 1.);
 
-  auto matFwdPre = hsmfwd.materialSlab(Vector3{0., 0., 0.}, fDir, pre);
-  auto matBwdPre = hsmfwd.materialSlab(Vector3{0., 0., 0.}, bDir, pre);
+  auto matFwdPre = hsmfwd.materialSlab(Vector2{0., 0.}, fDir, pre);
+  auto matBwdPre = hsmfwd.materialSlab(Vector2{0., 0.}, bDir, pre);
 
-  auto matFwdPost = hsmfwd.materialSlab(Vector3{0., 0., 0.}, fDir, post);
-  auto matBwdPost = hsmfwd.materialSlab(Vector3{0., 0., 0.}, bDir, post);
+  auto matFwdPost = hsmfwd.materialSlab(Vector2{0., 0.}, fDir, post);
+  auto matBwdPost = hsmfwd.materialSlab(Vector2{0., 0.}, bDir, post);
 
-  auto matFwdFull = hsmfwd.materialSlab(Vector3{0., 0., 0.}, fDir, full);
-  auto matBwdFull = hsmfwd.materialSlab(Vector3{0., 0., 0.}, bDir, full);
+  auto matFwdFull = hsmfwd.materialSlab(Vector2{0., 0.}, fDir, full);
+  auto matBwdFull = hsmfwd.materialSlab(Vector2{0., 0.}, bDir, full);
 
   BOOST_CHECK_EQUAL(mat, matFwdFull);
   BOOST_CHECK_EQUAL(mat, matBwdFull);
@@ -132,14 +130,14 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   CHECK_CLOSE_REL(hsmhalf.factor(bDir, post), 0.5, 1e-6);
   BOOST_CHECK_EQUAL(hsmhalf.factor(bDir, full), 1.);
 
-  matFwdPre = hsmhalf.materialSlab(Vector3{0., 0., 0.}, fDir, pre);
-  matBwdPre = hsmhalf.materialSlab(Vector3{0., 0., 0.}, bDir, pre);
+  matFwdPre = hsmhalf.materialSlab(Vector2{0., 0.}, fDir, pre);
+  matBwdPre = hsmhalf.materialSlab(Vector2{0., 0.}, bDir, pre);
 
-  matFwdPost = hsmhalf.materialSlab(Vector3{0., 0., 0.}, fDir, post);
-  matBwdPost = hsmhalf.materialSlab(Vector3{0., 0., 0.}, bDir, post);
+  matFwdPost = hsmhalf.materialSlab(Vector2{0., 0.}, fDir, post);
+  matBwdPost = hsmhalf.materialSlab(Vector2{0., 0.}, bDir, post);
 
-  matFwdFull = hsmhalf.materialSlab(Vector3{0., 0., 0.}, fDir, full);
-  matBwdFull = hsmhalf.materialSlab(Vector3{0., 0., 0.}, bDir, full);
+  matFwdFull = hsmhalf.materialSlab(Vector2{0., 0.}, fDir, full);
+  matBwdFull = hsmhalf.materialSlab(Vector2{0., 0.}, bDir, full);
 
   BOOST_CHECK_EQUAL(matHalf, matFwdPre);
   BOOST_CHECK_EQUAL(matHalf, matBwdPre);
@@ -159,14 +157,14 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, post), 1.);
   BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, full), 1.);
 
-  matFwdPre = hsmbwd.materialSlab(Vector3{0., 0., 0.}, fDir, pre);
-  matBwdPre = hsmbwd.materialSlab(Vector3{0., 0., 0.}, bDir, pre);
+  matFwdPre = hsmbwd.materialSlab(Vector2{0., 0.}, fDir, pre);
+  matBwdPre = hsmbwd.materialSlab(Vector2{0., 0.}, bDir, pre);
 
-  matFwdPost = hsmbwd.materialSlab(Vector3{0., 0., 0.}, fDir, post);
-  matBwdPost = hsmbwd.materialSlab(Vector3{0., 0., 0.}, bDir, post);
+  matFwdPost = hsmbwd.materialSlab(Vector2{0., 0.}, fDir, post);
+  matBwdPost = hsmbwd.materialSlab(Vector2{0., 0.}, bDir, post);
 
-  matFwdFull = hsmbwd.materialSlab(Vector3{0., 0., 0.}, fDir, full);
-  matBwdFull = hsmbwd.materialSlab(Vector3{0., 0., 0.}, bDir, full);
+  matFwdFull = hsmbwd.materialSlab(Vector2{0., 0.}, fDir, full);
+  matBwdFull = hsmbwd.materialSlab(Vector2{0., 0.}, bDir, full);
 
   BOOST_CHECK_EQUAL(mat, matFwdPre);
   BOOST_CHECK_EQUAL(vacuum, matBwdPre);

@@ -12,17 +12,23 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
-#include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
+#include "ActsPodioEdm/TrackerHitLocalCollection.h"
+#include "ActsPodioEdm/TrackerHitLocalSimTrackerHitLinkCollection.h"
 
+#include <array>
 #include <numbers>
 
-#include <edm4hep/EDM4hepVersion.h>
+#include <edm4hep/Constants.h>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
+#include <edm4hep/MutableVertex.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/TrackState.h>
+#include <edm4hep/Vector3f.h>
+#include <edm4hep/Vector4f.h>
 
 using namespace Acts;
 using namespace Acts::detail;
@@ -30,7 +36,7 @@ using namespace Acts::detail;
 namespace ActsPlugins::EDM4hepUtil {
 namespace detail {
 
-ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
+SquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
   // q/p) to the LCIO / edm4hep (see:
   // https://bib-pubdb1.desy.de/record/81214/files/LC-DET-2006-004%5B1%5D.pdf)
@@ -55,7 +61,7 @@ ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   // [      2             sin(theta)]
   // [   sin (theta)                ]
 
-  ActsSquareMatrix<6> J;
+  SquareMatrix<6> J;
   J.setIdentity();
   double sinTheta = std::sin(theta);
   J(3, 3) = -1.0 / (sinTheta * sinTheta);
@@ -65,8 +71,7 @@ ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   return J;
 }
 
-ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
-                                        double Bz) {
+SquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega, double Bz) {
   // [     d      /                     pi\                                  ]
   // [------------|-atan(\tan\lambda) + --|                 0                ]
   // [d\tan\lambda\                     2 /                                  ]
@@ -90,7 +95,7 @@ ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
   // [  /           2    \         /            2     ]
   // [B*\\tan\lambda  + 1/     B*\/  \tan\lambda  + 1 ]
 
-  ActsSquareMatrix<6> J;
+  SquareMatrix<6> J;
   J.setIdentity();
   J(3, 3) = -1 / (tanLambda * tanLambda + 1);
   J(4, 3) = -1 * omega * tanLambda /
@@ -100,22 +105,95 @@ ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
   return J;
 }
 
-void packCovariance(const ActsSquareMatrix<6>& from, float* to) {
-  for (int i = 0; i < from.rows(); i++) {
-    for (int j = 0; j <= i; j++) {
-      std::size_t k = (i + 1) * i / 2 + j;
-      to[k] = from(i, j);
+namespace {
+
+/// Mapping from the parameter order used by @c Parameters::values
+/// (d0, z0, phi, tanLambda, omega, time) onto the EDM4hep track parameter
+/// order, which is a different permutation
+/// (@c edm4hep::TrackParams : d0, phi, omega, z0, tanLambda, time).
+///
+/// The two orders are not the same, so the covariance has to be permuted when
+/// it is packed into (or read back from) an @c edm4hep::TrackState, otherwise
+/// the stored matrix is scrambled with respect to what any other EDM4hep
+/// consumer expects.
+constexpr std::array<edm4hep::TrackParams, 6> kValuesToEdm4hepParam{
+    edm4hep::TrackParams::d0,         // values[0], eBoundLoc0
+    edm4hep::TrackParams::z0,         // values[1], eBoundLoc1
+    edm4hep::TrackParams::phi,        // values[2]
+    edm4hep::TrackParams::tanLambda,  // values[3]
+    edm4hep::TrackParams::omega,      // values[4]
+    edm4hep::TrackParams::time,       // values[5]
+};
+
+}  // namespace
+
+void packCovariance(const SquareMatrix<6>& from, edm4hep::CovMatrix6f& to) {
+  // Let EDM4hep place the elements: setValue takes the parameters by name, so
+  // the packed layout stays whatever EDM4hep says it is.
+  for (std::size_t i = 0; i < 6; ++i) {
+    for (std::size_t j = 0; j <= i; ++j) {
+      to.setValue(static_cast<float>(from(i, j)), kValuesToEdm4hepParam.at(i),
+                  kValuesToEdm4hepParam.at(j));
     }
   }
 }
 
-void unpackCovariance(const float* from, ActsSquareMatrix<6>& to) {
-  auto k = [](std::size_t i, std::size_t j) { return (i + 1) * i / 2 + j; };
-  for (int i = 0; i < to.rows(); i++) {
-    for (int j = 0; j < to.cols(); j++) {
-      to(i, j) = from[j <= i ? k(i, j) : k(j, i)];
+void unpackCovariance(const edm4hep::CovMatrix6f& from, SquareMatrix<6>& to) {
+  for (std::size_t i = 0; i < 6; ++i) {
+    for (std::size_t j = 0; j < 6; ++j) {
+      to(i, j) = from.getValue(kValuesToEdm4hepParam.at(i),
+                               kValuesToEdm4hepParam.at(j));
     }
   }
+}
+
+double localBz(const MagneticFieldProvider& magneticField,
+               MagneticFieldProvider::Cache& fieldCache,
+               const Vector3& position, const Logger& logger) {
+  auto field = magneticField.getField(position, fieldCache);
+  if (!field.ok()) {
+    ACTS_ERROR("Magnetic field lookup failed at "
+               << position.transpose() << ": " << field.error().message());
+    throw std::runtime_error{"Magnetic field lookup failed: " +
+                             field.error().message()};
+  }
+  return (*field).z();
+}
+
+Vector3 referencePoint(const edm4hep::TrackState& trackState) {
+  return Vector3{
+      trackState.referencePoint.x,
+      trackState.referencePoint.y,
+      trackState.referencePoint.z,
+  };
+}
+
+Parameters unpackTrackState(const edm4hep::TrackState& trackState) {
+  Parameters params;
+  params.covariance = BoundMatrix::Zero();
+  params.values = BoundVector::Zero();
+  unpackCovariance(trackState.covMatrix, params.covariance.value());
+  params.values[0] = trackState.D0;
+  params.values[1] = trackState.Z0;
+  params.values[2] = trackState.phi;
+  params.values[3] = trackState.tanLambda;
+  params.values[4] = trackState.omega;
+  params.values[5] = trackState.time;
+
+  params.surface =
+      Surface::makeShared<PerigeeSurface>(referencePoint(trackState));
+
+  return params;
+}
+
+Vector3 pointOfClosestApproach(const GeometryContext& gctx,
+                               const Parameters& params) {
+  // theta and phi are available without knowing the field, so this does not
+  // depend on the q/p conversion that needs Bz.
+  const double theta = std::numbers::pi / 2. - std::atan(params.values[3]);
+  const Vector3 direction = makeDirectionFromPhiTheta(params.values[2], theta);
+  return params.surface->localToGlobal(
+      gctx, Vector2{params.values[0], params.values[1]}, direction);
 }
 
 Parameters convertTrackParametersToEdm4hep(const GeometryContext& gctx,
@@ -127,7 +205,7 @@ Parameters convertTrackParametersToEdm4hep(const GeometryContext& gctx,
   std::shared_ptr<const Surface> refSurface =
       params.referenceSurface().getSharedPtr();
   BoundVector targetPars = params.parameters();
-  std::optional<BoundSquareMatrix> targetCov = params.covariance();
+  std::optional<BoundMatrix> targetCov = params.covariance();
 
   // If the reference surface is a perigee surface, we use that. Otherwise
   // we create a new perigee surface at the global position of the track
@@ -151,8 +229,8 @@ Parameters convertTrackParametersToEdm4hep(const GeometryContext& gctx,
 
   // Only run covariance conversion if we have a covariance input
   if (targetCov) {
-    ActsSquareMatrix<6> J = jacobianToEdm4hep(targetPars[eBoundTheta],
-                                              targetPars[eBoundQOverP], Bz);
+    SquareMatrix<6> J = jacobianToEdm4hep(targetPars[eBoundTheta],
+                                          targetPars[eBoundQOverP], Bz);
     result.covariance = J * targetCov.value() * J.transpose();
   }
 
@@ -173,7 +251,7 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params) {
   BoundVector targetPars;
 
-  ActsSquareMatrix<6> J =
+  SquareMatrix<6> J =
       jacobianFromEdm4hep(params.values[3], params.values[4], Bz);
 
   std::optional<BoundMatrix> cov;
@@ -194,8 +272,67 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
 
 }  // namespace detail
 
-#if EDM4HEP_VERSION_MAJOR >= 1 || \
-    (EDM4HEP_VERSION_MAJOR == 0 && EDM4HEP_VERSION_MINOR == 99)
+edm4hep::TrackState writeTrackState(const GeometryContext& gctx,
+                                    std::int32_t location,
+                                    const BoundTrackParameters& params,
+                                    const MagneticFieldProvider& magneticField,
+                                    MagneticFieldProvider::Cache& fieldCache,
+                                    const Logger& logger) {
+  // The curvature depends on the local field, so evaluate it where the
+  // parameters actually are.
+  const double Bz =
+      detail::localBz(magneticField, fieldCache, params.position(gctx), logger);
+
+  // Convert to the LCIO track parametrization expected by EDM4hep. This also
+  // re-expresses the parameters at a perigee surface if they are not on one
+  // already.
+  const detail::Parameters converted =
+      detail::convertTrackParametersToEdm4hep(gctx, Bz, params);
+
+  edm4hep::TrackState trackState{};
+  trackState.location = location;
+  trackState.D0 = static_cast<float>(converted.values[0]);
+  trackState.Z0 = static_cast<float>(converted.values[1]);
+  trackState.phi = static_cast<float>(converted.values[2]);
+  trackState.tanLambda = static_cast<float>(converted.values[3]);
+  trackState.omega = static_cast<float>(converted.values[4]);
+  trackState.time = static_cast<float>(converted.values[5]);
+
+  if (converted.covariance) {
+    detail::packCovariance(converted.covariance.value(), trackState.covMatrix);
+  }
+
+  // The reference point is the centre of the perigee surface the converted
+  // parameters are expressed on.
+  const Vector3 center = converted.surface->center(gctx);
+  trackState.referencePoint.x = static_cast<float>(center.x());
+  trackState.referencePoint.y = static_cast<float>(center.y());
+  trackState.referencePoint.z = static_cast<float>(center.z());
+
+  ACTS_VERBOSE("- parameters: " << params.parameters().transpose() << " -> "
+                                << converted.values.transpose());
+  if (converted.covariance) {
+    ACTS_VERBOSE("- covariance: \n"
+                 << params.covariance().value_or(BoundMatrix::Zero())
+                 << "\n->\n"
+                 << converted.covariance.value());
+  }
+  ACTS_VERBOSE("- ref surface ctr: " << center.transpose());
+
+  return trackState;
+}
+
+edm4hep::TrackState writeTrackState(const GeometryContext& gctx,
+                                    const MagneticFieldContext& mctx,
+                                    std::int32_t location,
+                                    const BoundTrackParameters& params,
+                                    const MagneticFieldProvider& magneticField,
+                                    const Logger& logger) {
+  auto fieldCache = magneticField.makeCache(mctx);
+  return writeTrackState(gctx, location, params, magneticField, fieldCache,
+                         logger);
+}
+
 edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit) {
   return hit.getParticle();
 }
@@ -204,16 +341,6 @@ void setParticle(edm4hep::MutableSimTrackerHit& hit,
                  const edm4hep::MCParticle& particle) {
   hit.setParticle(particle);
 }
-#else
-edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit) {
-  return hit.getMCParticle();
-}
-
-void setParticle(edm4hep::MutableSimTrackerHit& hit,
-                 const edm4hep::MCParticle& particle) {
-  hit.setMCParticle(particle);
-}
-#endif
 
 std::size_t SimHitAssociation::size() const {
   return m_internalToEdm4hep.size();
@@ -237,6 +364,155 @@ edm4hep::SimTrackerHit SimHitAssociation::lookup(
 
 std::size_t SimHitAssociation::lookup(const edm4hep::SimTrackerHit& hit) const {
   return m_edm4hepToInternal.at(hit.id());
+}
+
+void writeVertex(const Vertex& vertex, edm4hep::MutableVertex to) {
+  static constexpr std::array<edm4hep::FourMomCoords, 4> toEdm4hep = []() {
+    std::array<edm4hep::FourMomCoords, 4> values{};
+    using enum edm4hep::FourMomCoords;
+    values.at(eFreePos0) = x;
+    values.at(eFreePos1) = y;
+    values.at(eFreePos2) = z;
+    values.at(eFreeTime) = t;
+    return values;
+  }();
+
+  // Wrap this in a templated lambda so we can use `if constexpr` to select the
+  // correct write function based on the type of the properties of the `to`
+  // object.
+  auto writeVertex = []<typename T>(const Vertex& vertex_, T& to_)
+    requires(std::is_same_v<T, edm4hep::MutableVertex>)
+  {
+    if constexpr (detail::kEdm4hepVertexHasTime) {
+      Vector4 pos = vertex_.fullPosition();
+      to_.setPosition({static_cast<float>(pos[eFreePos0]),
+                       static_cast<float>(pos[eFreePos1]),
+                       static_cast<float>(pos[eFreePos2]),
+                       static_cast<float>(pos[eFreeTime])});
+
+      edm4hep::CovMatrix4f& cov = to_.getCovMatrix();
+      std::array coords{eFreePos0, eFreePos1, eFreePos2, eFreeTime};
+      for (auto i : coords) {
+        for (auto j : coords) {
+          cov.setValue(static_cast<float>(vertex_.fullCovariance()(i, j)),
+                       toEdm4hep.at(i), toEdm4hep.at(j));
+        }
+      }
+    } else {
+      Vector3 pos = vertex_.position();
+      to_.setPosition({static_cast<float>(pos[eFreePos0]),
+                       static_cast<float>(pos[eFreePos1]),
+                       static_cast<float>(pos[eFreePos2])});
+      edm4hep::CovMatrix3f& cov = to_.getCovMatrix();
+      std::array coords{eFreePos0, eFreePos1, eFreePos2};
+      for (auto i : coords) {
+        for (auto j : coords) {
+          cov.setValue(static_cast<float>(vertex_.covariance()(i, j)),
+                       toEdm4hep.at(i), toEdm4hep.at(j));
+        }
+      }
+    }
+
+    to_.setChi2(static_cast<float>(vertex_.fitQuality().first));
+    to_.setNdf(static_cast<int>(vertex_.fitQuality().second));
+  };
+
+  writeVertex(vertex, to);
+}
+
+void writeMeasurement(const GeometryContext& gctx,
+                      const Eigen::Map<const DynamicVector>& parameters,
+                      const Eigen::Map<const DynamicMatrix>& covariance,
+                      std::span<const std::uint8_t> indices,
+                      std::uint64_t cellId, const Acts::Surface& surface,
+                      ActsPodioEdm::MutableTrackerHitLocal& to) {
+  if (parameters.size() != covariance.rows() ||
+      covariance.rows() != covariance.cols() || parameters.size() < 0 ||
+      indices.size() != static_cast<std::size_t>(parameters.size())) {
+    throw std::runtime_error(
+        "Size mismatch between parameters and covariance matrix");
+  }
+
+  auto dim = static_cast<std::size_t>(parameters.size());
+
+  if (cellId != 0) {
+    to.setCellID(cellId);
+  }
+
+  to.setSubspaceIndices({indices.begin(), indices.end()});
+
+  auto loc0 = std::ranges::find(indices, eBoundLoc0);
+  auto loc1 = std::ranges::find(indices, eBoundLoc1);
+  auto time = std::ranges::find(indices, eBoundTime);
+
+  if (loc0 != indices.end() && loc1 != indices.end()) {
+    Vector2 loc{parameters[std::distance(indices.begin(), loc0)],
+                parameters[std::distance(indices.begin(), loc1)]};
+    Vector3 global = surface.localToGlobal(gctx, loc, Vector3::UnitZ());
+    global /= Acts::UnitConstants::mm;
+    to.setPosition({global.x(), global.y(), global.z()});
+  }
+
+  if (time != indices.end()) {
+    std::size_t timeOffset = std::distance(indices.begin(), time);
+    to.setTime(
+        static_cast<float>(parameters[timeOffset] / Acts::UnitConstants::ns));
+  }
+
+  for (std::size_t i = 0; i < dim; ++i) {
+    to.setValue(static_cast<float>(parameters[i]), i);
+  }
+
+  for (std::size_t i = 0; i < dim; ++i) {
+    for (std::size_t j = 0; j < dim; ++j) {
+      to.setCov(static_cast<float>(covariance(i, j)), i, j);
+    }
+  }
+}
+
+MeasurementData readMeasurement(const ActsPodioEdm::TrackerHitLocal& from) {
+  auto indices = from.getSubspaceIndices();
+  auto meas = from.getMeasurement();
+  auto cov = from.getCovariance();
+
+  const auto dim = indices.size();
+  if (meas.size() != dim || cov.size() != dim * dim) {
+    throw std::runtime_error(
+        std::format("Size mismatch in EDM4hep tracker hit: measurement size "
+                    "{}, covariance size {}, indices size {}",
+                    meas.size(), cov.size(), dim));
+  }
+
+  MeasurementData result;
+  result.cellId = from.getCellID();
+  result.indices = std::move(indices);
+
+  for (std::size_t i = 0; i < dim; ++i) {
+    result.parameters(result.indices[i]) = meas[i];
+  }
+  for (std::size_t i = 0; i < dim; ++i) {
+    for (std::size_t j = 0; j < dim; ++j) {
+      result.covariance(result.indices[i], result.indices[j]) =
+          from.getCov(i, j);
+    }
+  }
+
+  return result;
+}
+
+void writeTrackerHitSimHitLinks(
+    const ActsPodioEdm::TrackerHitLocalCollection& hits,
+    ActsPodioEdm::TrackerHitLocalSimTrackerHitLinkCollection& links,
+    const SimHitForHitIndex& lookup) {
+  for (std::size_t i = 0; i < static_cast<std::size_t>(hits.size()); ++i) {
+    auto simHit = lookup(i);
+    if (!simHit.has_value()) {
+      continue;
+    }
+    auto link = links.create();
+    link.setFrom(hits.at(i));
+    link.setTo(simHit.value());
+  }
 }
 
 }  // namespace ActsPlugins::EDM4hepUtil

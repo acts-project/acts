@@ -12,13 +12,11 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
@@ -32,7 +30,6 @@
 #include <cstddef>
 #include <limits>
 #include <sstream>
-#include <vector>
 
 #include <boost/container/small_vector.hpp>
 
@@ -61,6 +58,12 @@ struct MaxWeightComponent {
 
 template <typename component_chooser_t>
 struct SingleComponentReducer {
+  template <typename stepper_state_t>
+  static std::size_t index(const stepper_state_t& s) {
+    return static_cast<std::size_t>(std::distance(
+        s.components.begin(), component_chooser_t{}(s.components)));
+  }
+
   template <typename stepper_state_t>
   static Vector3 position(const stepper_state_t& s) {
     return component_chooser_t{}(s.components)
@@ -107,11 +110,6 @@ struct SingleComponentReducer {
   static FreeVector pars(const stepper_state_t& s) {
     return component_chooser_t{}(s.components)->state.pars;
   }
-
-  template <typename stepper_state_t>
-  static FreeVector cov(const stepper_state_t& s) {
-    return component_chooser_t{}(s.components)->state.cov;
-  }
 };
 
 }  // namespace detail
@@ -133,7 +131,10 @@ using MaxWeightReducerLoop =
 /// component
 template <Concepts::SingleStepper single_stepper_t,
           typename component_reducer_t = MaxWeightReducerLoop>
-class MultiStepperLoop : public single_stepper_t {
+class MultiStepperLoop final {
+  /// Single stepper instance
+  single_stepper_t m_singleStepper;
+
   /// Limits the number of steps after at least one component reached the
   /// surface
   std::size_t m_stepLimitAfterFirstComponentOnSurface = 50;
@@ -159,13 +160,12 @@ class MultiStepperLoop : public single_stepper_t {
   /// @brief Typedef to the Config of the single component Stepper
   using SingleConfig = typename SingleStepper::Config;
 
-  /// @brief Use the definitions from the Single-stepper
-  using typename SingleStepper::Covariance;
-  using typename SingleStepper::Jacobian;
-
-  /// @brief Define an own bound state
-  using BoundState =
-      std::tuple<MultiComponentBoundTrackParameters, Jacobian, double>;
+  /// Type alias for bound track parameters
+  using BoundParameters = MultiComponentBoundTrackParameters;
+  /// Type alias for jacobian matrix
+  using Jacobian = BoundMatrix;
+  /// Type alias for covariance matrix
+  using Covariance = BoundMatrix;
 
   /// @brief The reducer type
   using Reducer = component_reducer_t;
@@ -173,6 +173,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// @brief How many components can this stepper manage?
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
+  /// Configuration for the multi-stepper loop.
   struct Config : public SingleStepper::Config {
     /// Limits the number of steps after at least one component reached the
     /// surface
@@ -183,6 +184,7 @@ class MultiStepperLoop : public single_stepper_t {
     using SingleOptions::SingleOptions;
   };
 
+  /// State container for multi-component stepping.
   struct State {
     /// The struct that stores the individual components
     struct Component {
@@ -201,6 +203,7 @@ class MultiStepperLoop : public single_stepper_t {
           : state(std::move(state_)), weight(weight_), status(status_) {}
     };
 
+    /// Options for the propagation
     Options options;
 
     /// Particle hypothesis
@@ -209,8 +212,11 @@ class MultiStepperLoop : public single_stepper_t {
     /// The components of which the state consists
     SmallVector<Component> components;
 
+    /// Whether to transport covariance
     bool covTransport = false;
+    /// Accumulated path length
     double pathAccumulated = 0.;
+    /// Number of steps taken
     std::size_t steps = 0;
 
     /// Step-limit counter which limits the number of steps when one component
@@ -235,7 +241,7 @@ class MultiStepperLoop : public single_stepper_t {
   explicit MultiStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("GSF", Logging::INFO))
-      : SingleStepper(std::move(bField)), m_logger(std::move(logger)) {}
+      : m_singleStepper(std::move(bField)), m_logger(std::move(logger)) {}
 
   /// Constructor from a configuration and optionally provided Logger
   /// @param config Configuration object containing stepper settings
@@ -244,10 +250,14 @@ class MultiStepperLoop : public single_stepper_t {
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("MultiStepperLoop",
                                                  Logging::INFO))
-      : SingleStepper(config),
+      : m_singleStepper(config),
         m_stepLimitAfterFirstComponentOnSurface(
             config.stepLimitAfterFirstComponentOnSurface),
         m_logger(std::move(logger)) {}
+
+  /// Get the single stepper instance
+  /// @return Reference to the single stepper instance used internally
+  const SingleStepper& singleStepper() const { return m_singleStepper; }
 
   /// Create a state object for multi-stepping
   /// @param options The propagation options
@@ -260,9 +270,8 @@ class MultiStepperLoop : public single_stepper_t {
   /// Initialize the stepper state from multi-component bound track parameters
   /// @param state The stepper state to initialize
   /// @param par The multi-component bound track parameters
-  void initialize(State& state,
-                  const MultiComponentBoundTrackParameters& par) const {
-    if (par.components().empty()) {
+  void initialize(State& state, const BoundParameters& par) const {
+    if (par.empty()) {
       throw std::invalid_argument(
           "Cannot construct MultiEigenStepperLoop::State with empty "
           "multi-component parameters");
@@ -272,17 +281,18 @@ class MultiStepperLoop : public single_stepper_t {
 
     const auto surface = par.referenceSurface().getSharedPtr();
 
-    for (auto i = 0ul; i < par.components().size(); ++i) {
+    state.components.clear();
+    state.components.reserve(par.size());
+
+    for (std::size_t i = 0; i < par.size(); ++i) {
       const auto& [weight, singlePars] = par[i];
-      auto& cmp =
-          state.components.emplace_back(SingleStepper::makeState(state.options),
-                                        weight, IntersectionStatus::onSurface);
-      SingleStepper::initialize(cmp.state, singlePars);
+      auto& cmp = state.components.emplace_back(
+          m_singleStepper.makeState(state.options), weight,
+          IntersectionStatus::onSurface);
+      m_singleStepper.initialize(cmp.state, singlePars);
     }
 
-    if (std::get<2>(par.components().front())) {
-      state.covTransport = true;
-    }
+    state.covTransport = par.hasCovariance();
   }
 
   /// A proxy struct which allows access to a single component of the
@@ -417,19 +427,19 @@ class MultiStepperLoop : public single_stepper_t {
   /// @param [in] weight Weight of the component to add
   ///
   /// @note: It is not ensured that the weights are normalized afterwards
-  /// @note This function makes no garantuees about how new components are
-  /// initialized, it is up to the caller to ensure that all components are
-  /// valid in the end.
+  /// @note The component is initialized through the single stepper, so its
+  /// jacobians are set whenever @p pars carries a covariance.
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
   /// @return ComponentProxy for the newly added component or error
-  Result<ComponentProxy> addComponent(State& state,
-                                      const BoundTrackParameters& pars,
-                                      double weight) const {
+  ComponentProxy addComponent(State& state, const BoundTrackParameters& pars,
+                              double weight) const {
     auto& cmp =
-        state.components.emplace_back(SingleStepper::makeState(state.options),
+        state.components.emplace_back(m_singleStepper.makeState(state.options),
                                       weight, IntersectionStatus::onSurface);
-    SingleStepper::initialize(cmp.state, pars);
+    m_singleStepper.initialize(cmp.state, pars);
+    // the component starts here, but on the trajectory the multi state is on
+    cmp.state.pathAccumulated = state.pathAccumulated;
 
     return ComponentProxy{state.components.back(), state};
   }
@@ -444,7 +454,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// @note This uses the cache of the first component stored in the state
   /// @return Magnetic field vector at the given position or error
   Result<Vector3> getField(State& state, const Vector3& pos) const {
-    return SingleStepper::getField(state.components.front().state, pos);
+    return m_singleStepper.getField(state.components.front().state, pos);
   }
 
   /// Global particle position accessor
@@ -530,8 +540,8 @@ class MultiStepperLoop : public single_stepper_t {
 
     for (auto& component : state.components) {
       component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
-          *this, component.state, surface, index, navDir, boundaryTolerance,
-          surfaceTolerance, stype, logger);
+          m_singleStepper, component.state, surface, index, navDir,
+          boundaryTolerance, surfaceTolerance, stype, logger);
       ++counts[static_cast<std::size_t>(component.status)];
     }
 
@@ -604,12 +614,12 @@ class MultiStepperLoop : public single_stepper_t {
     for (auto& component : state.components) {
       auto intersection = surface.intersect(
           component.state.options.geoContext,
-          SingleStepper::position(component.state),
-          direction * SingleStepper::direction(component.state),
+          m_singleStepper.position(component.state),
+          direction * m_singleStepper.direction(component.state),
           BoundaryTolerance::None())[oIntersection.index()];
 
-      SingleStepper::updateStepSize(component.state, intersection, direction,
-                                    stype);
+      m_singleStepper.updateStepSize(component.state, intersection, direction,
+                                     stype);
     }
   }
 
@@ -621,7 +631,7 @@ class MultiStepperLoop : public single_stepper_t {
   void updateStepSize(State& state, double stepSize,
                       ConstrainedStep::Type stype) const {
     for (auto& component : state.components) {
-      SingleStepper::updateStepSize(component.state, stepSize, stype);
+      m_singleStepper.updateStepSize(component.state, stepSize, stype);
     }
   }
 
@@ -649,7 +659,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// @param [in] stype The step size type to be released
   void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
     for (auto& component : state.components) {
-      SingleStepper::releaseStepSize(component.state, stype);
+      m_singleStepper.releaseStepSize(component.state, stype);
     }
   }
 
@@ -666,35 +676,43 @@ class MultiStepperLoop : public single_stepper_t {
     return ss.str();
   }
 
-  /// Create and return the bound state at the current position
+  /// Get the stepper statistics
   ///
-  /// @brief This transports (if necessary) the covariance
-  /// to the surface and creates a bound state. It does not check
-  /// if the transported state is at the surface, this needs to
-  /// be guaranteed by the propagator.
-  /// @note This is done by combining the gaussian mixture on the specified
-  /// surface. If the conversion to bound states of some components
-  /// fails, these components are ignored unless all components fail. In this
-  /// case an error code is returned.
-  ///
-  /// @param [in] state State that will be presented as @c BoundState
-  /// @param [in] surface The surface to which we bind the state
-  /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
-  ///
-  /// @return A bound state:
-  ///   - the parameters at the surface
-  ///   - the stepwise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(
-      State& state, const Surface& surface, bool transportCov = true,
-      const FreeToBoundCorrection& freeToBoundCorrection =
-          FreeToBoundCorrection(false)) const;
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The statistics since the last initialization
+  const StepperStatistics& statistics(const State& state) const {
+    return state.statistics;
+  }
 
-  /// @brief If necessary fill additional members needed for curvilinearState
+  /// Get the path length
   ///
-  /// Compute path length derivatives in case they have not been computed
-  /// yet, which is the case if no step has been executed yet.
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The weighted path length of the components
+  double pathLength(const State& state) const { return state.pathAccumulated; }
+
+  /// Check if the state carries a covariance
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return True if the covariance is transported
+  bool hasCovariance(const State& state) const { return state.covTransport; }
+
+  /// Get the bound parameters at the current position
+  ///
+  /// The mixture combines the bound parameters of the components. Components
+  /// that cannot be expressed on @p surface are ignored unless all fail.
+  ///
+  /// @note It does not check if the components are on @p surface. Use
+  ///       @ref transportToBound to put them there.
+  ///
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @param [in] surface The surface of the parameters
+  /// @return The bound mixture, or a failure if no component can be
+  ///         expressed on @p surface
+  Result<BoundParameters> boundParameters(const State& state,
+                                          const Surface& surface) const;
+
+  /// @brief If necessary fill additional members needed for
+  /// transportToCurvilinear
   ///
   /// @param [in, out] state The stepping state (thread-local cache)
   /// @return true if nothing is missing after this call, false otherwise.
@@ -703,53 +721,50 @@ class MultiStepperLoop : public single_stepper_t {
     return true;
   }
 
-  /// Create and return a curvilinear state at the current position
+  /// Get the curvilinear parameters at the current position
   ///
-  /// @brief This transports (if necessary) the covariance
-  /// to the current position and creates a curvilinear state.
   /// @note This is done as a simple average over the free representation
   /// and covariance of the components.
   ///
-  /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] transportCov Flag steering covariance transport
-  ///
-  /// @return A curvilinear state:
-  ///   - the curvilinear parameters at given position
-  ///   - the stepweise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  BoundState curvilinearState(State& state, bool transportCov = true) const;
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @return The curvilinear mixture
+  BoundParameters curvilinearParameters(const State& state) const;
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state
+  /// Transport the covariance of each component to its curvilinear frame
   ///
   /// @param [in,out] state State of the stepper
-  void transportCovarianceToCurvilinear(State& state) const {
-    for (auto& component : state.components) {
-      SingleStepper::transportCovarianceToCurvilinear(component.state);
+  /// @return The jacobian of the component the reducer selects, which also
+  ///         provides the position and direction of the state
+  Jacobian transportToCurvilinear(State& state) const {
+    const std::size_t selected = Reducer::index(state);
+    Jacobian jacobian = Jacobian::Identity();
+    for (std::size_t i = 0; i < state.components.size(); ++i) {
+      Jacobian cmpJacobian =
+          m_singleStepper.transportToCurvilinear(state.components[i].state);
+      if (i == selected) {
+        jacobian = cmpJacobian;
+      }
     }
+    return jacobian;
   }
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current position,
-  /// or direction of the state
+  /// Put each component on a surface and transport its covariance there
   ///
-  /// @tparam surface_t the Surface type
+  /// The components are intersected with @p surface first, because a
+  /// propagation can end when only the mean of the components reached it.
+  /// Components that cannot be expressed on @p surface are ignored unless all
+  /// fail.
   ///
   /// @param [in,out] state State of the stepper
-  /// @param [in] surface is the surface to which the covariance is forwarded
+  /// @param [in] surface The surface to transport the components to
   /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
-  /// to
-  /// @note no check is done if the position is actually on the surface
-  void transportCovarianceToBound(
+  /// @return The jacobian of the component the reducer selects, which also
+  ///         provides the position and direction of the state, or a failure
+  ///         if this component cannot be expressed on @p surface
+  Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
-          FreeToBoundCorrection(false)) const {
-    for (auto& component : state.components) {
-      SingleStepper::transportCovarianceToBound(component.state, surface,
-                                                freeToBoundCorrection);
-    }
-  }
+          FreeToBoundCorrection(false)) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///

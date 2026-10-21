@@ -8,13 +8,15 @@
 
 #pragma once
 
+#include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IGrid.hpp"
 #include "ActsPlugins/Json/ActsJson.hpp"
 #include "ActsPlugins/Json/TrackParametersJsonConverter.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
 namespace Acts {
 
@@ -41,96 +43,14 @@ namespace AxisJsonConverter {
 /// @return a json object to represent the axis
 nlohmann::json toJson(const IAxis& ia);
 
-/// Convert an axis to json - detray style
+/// Convert an axis from json
+//
+/// @param jAxis the serialized axis
 ///
-/// @param ia the axis
-///
-/// @return a json object to represent the axis in detray json
-nlohmann::json toJsonDetray(const IAxis& ia);
+/// @return axis object pointer
+std::unique_ptr<Acts::IAxis> fromJson(const nlohmann::json& jAxis);
 
 }  // namespace AxisJsonConverter
-
-namespace GridAccessJsonConverter {
-
-/// Convert a global to local access to json
-///
-/// @param globalToGridLocal the global to grid local access
-///
-/// @return a json object to represent global class
-nlohmann::json toJson(const GridAccess::IGlobalToGridLocal& globalToGridLocal);
-
-/// Create a global grid to local instance
-///
-/// @param jGlobalToGridLocal the json snippet
-///
-/// @return a newly created object
-std::unique_ptr<const GridAccess::IGlobalToGridLocal> globalToGridLocalFromJson(
-    const nlohmann::json& jGlobalToGridLocal);
-
-/// Create the delegate directly
-///
-/// @param jGlobalToGridLocal the json snippet
-///
-/// This is the usual workflow, as the connect method can be called on
-/// the concreate type
-///
-/// @note the dimension of the delegate has to be known by peeking
-/// into the json object
-GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal1DimDelegateFromJson(
-    const nlohmann::json& jGlobalToGridLocal);
-
-/// Create the delegate directly
-///
-/// @param jGlobalToGridLocal the json snippet
-///
-/// This is the usual workflow, as the connect method can be called on
-/// the concreate type
-///
-/// @note the dimension of the delegate has to be known by peeking
-/// into the json object
-GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal2DimDelegateFromJson(
-    const nlohmann::json& jGlobalToGridLocal);
-
-/// Convert a local to local access to json
-///
-/// @param boundToGridLocal the local to local access
-///
-/// @return a json object to represent local class
-nlohmann::json toJson(const GridAccess::IBoundToGridLocal& boundToGridLocal);
-
-/// Create a local grid to local instance
-///
-/// @param jBoundToGridLocal the json snippet
-///
-/// @return a newly created object
-std::unique_ptr<GridAccess::IBoundToGridLocal> boundToGridLocalFromJson(
-    const nlohmann::json& jBoundToGridLocal);
-
-/// Create the delegate directly
-///
-/// @param jBoundToGridLocal the json snippe
-///
-/// This is the usual workflow, as the connect method can be called on
-/// the concreate type
-///
-/// @note the dimension of the delegate has to be known by peeking
-/// into the json object
-GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal1DimDelegateFromJson(
-    const nlohmann::json& jBoundToGridLocal);
-
-/// Create the delegate directly
-///
-/// @param jBoundToGridLocal the json snippe
-///
-/// This is the usual workflow, as the connect method can be called on
-/// the concreate type
-///
-/// @note the dimension of the delegate has to be known by peeking
-/// into the json object
-GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal2DimDelegateFromJson(
-    const nlohmann::json& jBoundToGridLocal);
-
-}  // namespace GridAccessJsonConverter
 
 namespace GridJsonConverter {
 
@@ -177,74 +97,6 @@ nlohmann::json toJson(const grid_type& grid) {
   return jGrid;
 }
 
-/// @brief Templated grid conversion to json
-///
-/// @tparam grid_type the type of the grid
-/// @param grid the grid object
-/// @param swapAxis - this is needed for detray
-///
-/// @note detray has a different offset for the
-/// local indices, it starts at 0
-///
-/// @return a json object to represent the grid
-template <typename grid_type>
-nlohmann::json toJsonDetray(const grid_type& grid, bool swapAxis = false) {
-  nlohmann::json jGrid;
-  // Get the grid axes & potentially swap them
-  auto axes = grid.axes();
-  if (swapAxis && grid_type::DIM == 2u) {
-    std::swap(axes[0u], axes[1u]);
-  }
-
-  nlohmann::json jAxes;
-
-  // Fill the axes in the order they are
-  for (unsigned int ia = 0u; ia < grid_type::DIM; ++ia) {
-    auto jAxis = AxisJsonConverter::toJsonDetray(*axes[ia]);
-    jAxis["label"] = ia;
-    jAxes.push_back(jAxis);
-  }
-  jGrid["axes"] = jAxes;
-
-  nlohmann::json jData;
-  // 1D connections
-  if constexpr (grid_type::DIM == 1u) {
-    for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
-      // Lookup bin
-      typename grid_type::index_t lbin;
-      lbin[0u] = ib0;
-      nlohmann::json jBin;
-      jBin["content"] = grid.atLocalBins(lbin);
-      // Corrected bin for detray
-      lbin[0u] = ib0 - 1u;
-      jBin["loc_index"] = lbin;
-      jData.push_back(jBin);
-    }
-  }
-
-  // 2D connections
-  if constexpr (grid_type::DIM == 2u) {
-    for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
-      for (unsigned int ib1 = 1u; ib1 <= axes[1u]->getNBins(); ++ib1) {
-        typename grid_type::index_t lbin;
-        // Lookup bin - respect swap (if it happened) for the lookup
-        lbin[0u] = swapAxis ? ib1 : ib0;
-        lbin[1u] = swapAxis ? ib0 : ib1;
-        nlohmann::json jBin;
-        jBin["content"] = grid.atLocalBins(lbin);
-        // Corrected bin for detray
-        lbin[0u] = ib0 - 1u;
-        lbin[1u] = ib1 - 1u;
-        jBin["loc_index"] = lbin;
-        jData.push_back(jBin);
-      }
-    }
-  }
-  jGrid["bins"] = jData;
-
-  return jGrid;
-}
-
 /// @brief Templated grid conversion from json
 ///
 /// @tparam axis_generator_type the type of the axis generator
@@ -282,6 +134,52 @@ auto fromJson(const nlohmann::json& jGrid,
     }
   }
   return grid;
+}
+
+/// @brief Type-erased grid conversion to json
+///
+/// Unlike @c toJson(const grid_type&), this works from the type-erased
+/// @c IGrid / @c AnyGridConstView interfaces, so it does not need the
+/// concrete axis types of the grid to be known at compile time.
+///
+/// @tparam value_type the type of the grid payload
+/// @param grid the type-erased grid
+/// @param view type-erased const view onto the grid values
+///
+/// @return a json object to represent the grid
+template <typename value_type>
+nlohmann::json toJsonAny(const IGrid& grid, AnyGridConstView<value_type> view) {
+  std::size_t dim = grid.dimensions();
+  if (dim != 1u && dim != 2u) {
+    throw std::invalid_argument(
+        "GridJsonConverter::toJsonAny: only 1D and 2D grids are supported.");
+  }
+
+  nlohmann::json jGrid;
+
+  nlohmann::json jAxes;
+  for (std::size_t ia = 0u; ia < dim; ++ia) {
+    jAxes.push_back(AxisJsonConverter::toJson(grid.axis(ia)));
+  }
+  jGrid["axes"] = jAxes;
+
+  nlohmann::json jData;
+  if (dim == 1u) {
+    for (std::size_t ib0 = 1u; ib0 <= grid.axis(0u).getNBins(); ++ib0) {
+      IGrid::AnyIndexType lbin = {ib0};
+      jData.push_back(std::tie(lbin, view.atLocalBins(lbin)));
+    }
+  } else {
+    for (std::size_t ib0 = 1u; ib0 <= grid.axis(0u).getNBins(); ++ib0) {
+      for (std::size_t ib1 = 1u; ib1 <= grid.axis(1u).getNBins(); ++ib1) {
+        IGrid::AnyIndexType lbin = {ib0, ib1};
+        jData.push_back(std::tie(lbin, view.atLocalBins(lbin)));
+      }
+    }
+  }
+  jGrid["data"] = jData;
+
+  return jGrid;
 }
 
 }  // namespace GridJsonConverter

@@ -16,10 +16,8 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <chrono>
 #include <ostream>
 #include <stdexcept>
 #include <system_error>
@@ -29,8 +27,8 @@
 namespace ActsExamples {
 
 IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
-    const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("IterativeVertexFinder", level), m_cfg(config) {
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("IterativeVertexFinder", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameter collection");
   }
@@ -110,12 +108,12 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
   Finder finder(std::move(finderCfg), logger().clone());
   Acts::IVertexFinder::State state{std::in_place_type<Finder::State>,
                                    *m_cfg.bField, ctx.magFieldContext};
-  Options finderOpts(ctx.geoContext, ctx.magFieldContext);
+  Options finderOpts(ctx.recoGeoContext, ctx.magFieldContext);
 
   // find vertices
   auto result = finder.find(inputTracks, finderOpts, state);
 
-  VertexCollection vertices;
+  VertexContainer vertices;
   if (result.ok()) {
     vertices = std::move(result.value());
   } else {

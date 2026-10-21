@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -23,7 +22,6 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootPropagationStepsWriter
 ///

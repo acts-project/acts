@@ -184,3 +184,7 @@ Two main functions exist to interact with the failure threshold:
 
 - @ref Acts::Logging::getFailureThreshold
 - @ref Acts::Logging::setFailureThreshold
+
+Both are only functional in a build configured with
+`ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON`; otherwise the check is compiled out and
+@ref Acts::Logging::setFailureThreshold throws.

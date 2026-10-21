@@ -1,0 +1,27 @@
+diff -ur rocThrust-rocm-7.2.0-orig/CMakeLists.txt rocThrust-rocm-7.2.0-fixed/CMakeLists.txt
+--- rocThrust-rocm-7.2.0-orig/CMakeLists.txt	2025-12-13 03:42:50.000000000 +0100
++++ rocThrust-rocm-7.2.0-fixed/CMakeLists.txt	2026-08-10 16:07:59.498606160 +0200
+@@ -35,12 +35,6 @@
+ set(CMAKE_CXX_STANDARD_REQUIRED ON)
+ set(CMAKE_CXX_EXTENSIONS OFF)
+ 
+-if (CMAKE_CXX_STANDARD EQUAL 14)
+-  message(WARNING "C++14 will be deprecated in the next major release")
+-elseif(NOT CMAKE_CXX_STANDARD EQUAL 17)
+-  message(FATAL_ERROR "Only C++14 and C++17 are supported")
+-endif()
+-
+ # Set HIP flags
+ set(CMAKE_HIP_STANDARD 17)
+ set(CMAKE_HIP_STANDARD_REQUIRED ON)
+@@ -196,10 +190,6 @@
+   list(APPEND COMPILE_OPTIONS -Werror)
+ endif()
+ 
+-if(NOT CMAKE_CXX_STANDARD EQUAL 17)
+-  message(FATAL_ERROR "Only C++17 is supported")
+-endif()
+-
+ if (WIN32)
+   add_compile_options(-xhip)
+   add_compile_definitions(THRUST_IGNORE_DEPRECATED_CPP_DIALECT)

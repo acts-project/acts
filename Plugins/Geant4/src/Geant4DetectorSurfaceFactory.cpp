@@ -68,7 +68,7 @@ void ActsPlugins::Geant4DetectorSurfaceFactory::construct(
     if (surface != nullptr) {
       ++cache.convertedSurfaces;
       // Count the material conversion
-      if (surface->surfaceMaterial() != nullptr) {
+      if (surface->hasMaterial()) {
         ++cache.convertedMaterials;
       }
 

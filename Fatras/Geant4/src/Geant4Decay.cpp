@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
 #include "ActsFatras/Geant4/DummyDetectorConstruction.hpp"
 
 #include <cstdint>
@@ -74,7 +74,7 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
     childParticle.setPosition4(parent.fourPosition())
         .setAbsoluteMomentum(amgMom.norm())
         .setDirection(amgMom)
-        .setProcess(ProcessType::eDecay);
+        .setProcess(GenerationProcess::eDecay);
 
     // Store the particle
     children.push_back(std::move(childParticle));

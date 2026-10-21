@@ -7,7 +7,7 @@ import acts.examples
 from acts.examples.root import (
     RootTrackStatesWriter,
     RootTrackSummaryWriter,
-    RootTrackFitterPerformanceWriter,
+    RootTrackParameterPerformanceWriter,
 )
 
 from truth_tracking_kalman import runTruthTrackingKalman
@@ -24,6 +24,7 @@ def runRefittingKf(
     energyLoss: bool = True,
     reverseFilteringMomThreshold=float("inf"),
     reverseFilteringCovarianceScaling=100.0,
+    useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
 ):
     s = runTruthTrackingKalman(
@@ -33,6 +34,7 @@ def runRefittingKf(
         outputDir=outputDir,
         reverseFilteringMomThreshold=0 * u.GeV,  # use direct smoothing
         reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
+        useJosephFormulation=useJosephFormulation,
         s=s,
     )
 
@@ -44,6 +46,7 @@ def runRefittingKf(
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": acts.logging.INFO,
         "chi2Cut": float("inf"),
+        "useJosephFormulation": useJosephFormulation,
     }
 
     s.addAlgorithm(
@@ -92,7 +95,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        RootTrackFitterPerformanceWriter(
+        RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",

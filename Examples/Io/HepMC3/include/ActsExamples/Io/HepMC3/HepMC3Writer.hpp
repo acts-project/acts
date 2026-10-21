@@ -73,7 +73,7 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
   /// @param [in] event The recorded HepMC3 event
   ///
   /// @return Code describing whether the writing was successful
-  ProcessCode writeT(const ActsExamples::AlgorithmContext& ctx,
+  ProcessCode writeT(const AlgorithmContext& ctx,
                      const std::shared_ptr<HepMC3::GenEvent>& event) override;
 
   ProcessCode finalize() override;

@@ -1,0 +1,35 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Local include(s).
+#include "src/fitting/kernels/specializations/fit_forward_src.cuh"
+#include "src/utils/magnetic_field_types.hpp"
+
+// Project include(s).
+#include "traccc/bfield/magnetic_field_types.hpp"
+#include "traccc/fitting/details/kalman_fitting_types.hpp"
+#include "traccc/geometry/detector.hpp"
+
+// Covfie include(s).
+#include <covfie/core/field.hpp>
+
+namespace traccc::cuda {
+
+using fitter =
+    traccc::details::kalman_fitter_t<detray::detector_device_t<traccc::@DETECTOR_NAME@>,
+                                     covfie::field<@BFIELD_NAME@>::view_t>;
+
+template void fit_forward<fitter>(
+    const dim3& grid_size, const dim3& block_size, std::size_t shared_mem_size,
+    const cudaStream_t& stream, const fitting_config& cfg,
+    const device::fit_payload& payload,
+    const device::fit_tpayload<fitter::detector_type::const_view_type,
+                               fitter::bfield_type, fitter::surface_type>*
+        tpayload);
+
+}  // namespace traccc::cuda

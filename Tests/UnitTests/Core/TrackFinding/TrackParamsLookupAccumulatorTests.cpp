@@ -11,8 +11,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/FreeTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -94,8 +94,8 @@ BOOST_AUTO_TEST_CASE(Exceptions) {
                    .value();
 
   // Get the point of the grid
-  auto bin = grid.localBinsFromGlobalBin(2);
-  auto center = grid.binCenter(bin);
+  auto bin = grid.multiAxis().getLocalBinsFromGlobalBin(2);
+  auto center = grid.multiAxis().getBinCenter(bin);
   Vector2 loc{center.at(0), center.at(1)};
 
   // Fill in grid
@@ -145,8 +145,8 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
     double P = 1.5 * (i + 1);
 
     // Get the point of the grid
-    auto bin = gridBound.localBinsFromGlobalBin(i);
-    auto center = gridBound.binCenter(bin);
+    auto bin = gridBound.multiAxis().getLocalBinsFromGlobalBin(i);
+    auto center = gridBound.multiAxis().getBinCenter(bin);
     Vector2 loc{center.at(0), center.at(1)};
 
     // Accumulate

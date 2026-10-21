@@ -14,6 +14,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "ActsPlugins/Json/VolumeBoundsJsonConverter.hpp"
@@ -152,6 +153,21 @@ BOOST_AUTO_TEST_CASE(GenericCuboid) {
 
   auto genericCuboidTest = VolumeBoundsJsonConverter::fromJson(genericCuboidIn);
   BOOST_CHECK(genericCuboidRef->values() == genericCuboidTest->values());
+}
+
+BOOST_AUTO_TEST_CASE(Diamond) {
+  auto diamondRef =
+      std::make_shared<const DiamondVolumeBounds>(1., 3., 2., 4., 5., 6.);
+  nlohmann::json diamondOut = VolumeBoundsJsonConverter::toJson(*diamondRef);
+
+  auto diamondTest = VolumeBoundsJsonConverter::fromJson(diamondOut);
+  BOOST_REQUIRE(diamondTest != nullptr);
+
+  // Only the six primary values are preserved (eAlphaAngle/eBetaAngle are
+  // computed from them)
+  for (std::size_t i = 0; i < DiamondVolumeBounds::eHalfLengthZ + 1; ++i) {
+    BOOST_CHECK_CLOSE(diamondRef->values()[i], diamondTest->values()[i], 1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(Trapezoid) {

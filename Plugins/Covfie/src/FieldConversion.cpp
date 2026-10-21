@@ -40,7 +40,7 @@ auto newBuilder(const magnetic_field_t& magneticField,
   std::array<double, 3> maxima = {
       std::nexttoward(max[0], -std::numeric_limits<double>::infinity()),
       std::nexttoward(max[1], -std::numeric_limits<double>::infinity()),
-      std::nexttoward(max[1], -std::numeric_limits<double>::infinity()),
+      std::nexttoward(max[2], -std::numeric_limits<double>::infinity()),
   };
 
   Field field(covfie::make_parameter_pack(

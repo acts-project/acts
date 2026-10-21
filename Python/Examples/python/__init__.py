@@ -4,6 +4,7 @@ from typing import Optional, Protocol, Union, List, Dict, Tuple
 import os
 import re
 import acts
+import acts.fatras
 
 from .ActsExamplesPythonBindings import *
 
@@ -11,9 +12,113 @@ from acts._adapter import _patch_config
 
 _patch_config(ActsExamplesPythonBindings)
 
+import warnings
+
+
+class PythonTrackFinderPerformanceWriter(PythonPatternRecognitionPerformanceWriter):
+    """Deprecated alias for :class:`PythonPatternRecognitionPerformanceWriter`."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "PythonTrackFinderPerformanceWriter is deprecated, "
+            "use PythonPatternRecognitionPerformanceWriter instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
+
+class PythonTrackFitterPerformanceWriter(PythonTrackParameterPerformanceWriter):
+    """Deprecated alias for :class:`PythonTrackParameterPerformanceWriter`."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "PythonTrackFitterPerformanceWriter is deprecated, "
+            "use PythonTrackParameterPerformanceWriter instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
+
+_rootAliasesSetup = False
+
+
+def _setupRootAliases(root_module):
+    global _rootAliasesSetup
+    if _rootAliasesSetup:
+        return
+    _rootAliasesSetup = True
+
+    class RootTrackFinderPerformanceWriter(
+        root_module.RootPatternRecognitionPerformanceWriter
+    ):
+        """Deprecated alias for :class:`RootPatternRecognitionPerformanceWriter`."""
+
+        def __init__(self, *args, **kwargs):
+            warnings.warn(
+                "RootTrackFinderPerformanceWriter is deprecated, "
+                "use RootPatternRecognitionPerformanceWriter instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            super().__init__(*args, **kwargs)
+
+    RootTrackFinderPerformanceWriter.__module__ = "acts.examples.root"
+    setattr(
+        root_module,
+        "RootTrackFinderPerformanceWriter",
+        RootTrackFinderPerformanceWriter,
+    )
+
+    class RootTrackFitterPerformanceWriter(
+        root_module.RootTrackParameterPerformanceWriter
+    ):
+        """Deprecated alias for :class:`RootTrackParameterPerformanceWriter`."""
+
+        def __init__(self, *args, **kwargs):
+            warnings.warn(
+                "RootTrackFitterPerformanceWriter is deprecated, "
+                "use RootTrackParameterPerformanceWriter instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            super().__init__(*args, **kwargs)
+
+    RootTrackFitterPerformanceWriter.__module__ = "acts.examples.root"
+    setattr(
+        root_module,
+        "RootTrackFitterPerformanceWriter",
+        RootTrackFitterPerformanceWriter,
+    )
+
+
+def _tryImportRoot(*names: str):
+    """
+    Import `names` from `acts.examples.root`, raising a clear `RuntimeError`
+    if the ROOT plugin was not built into this ACTS installation.
+    """
+    try:
+        import acts.examples.root as _root
+    except ImportError as e:
+        raise RuntimeError("ROOT output requested but ROOT is not available") from e
+
+    _setupRootAliases(_root)
+
+    objs = tuple(getattr(_root, name) for name in names)
+    return objs[0] if len(objs) == 1 else objs
+
+
 _propagators = []
 _concrete_propagators = []
-for stepper in ("Eigen", "Atlas", "StraightLine", "Sympy"):
+for stepper in (
+    "Eigen",
+    "Atlas",
+    "Helix",
+    "GenericRungeKutta",
+    "StraightLine",
+    "Sympy",
+):
     _propagators.append(getattr(acts, f"{stepper}Propagator"))
     _concrete_propagators.append(
         getattr(
@@ -166,10 +271,13 @@ def dump_args(func):
     return dump_args_wrapper
 
 
-def dump_args_calls(myLocal=None, mods=None, quiet=False):
+import_is_hooked = False
+
+
+def dump_args_calls(mods=None, verbose=1, level=0):
     """
     Wrap all Python bindings calls to acts and its submodules in dump_args.
-    Specify myLocal=locals() to include imported symbols too.
+    Will hook `import` to do this also for future imports.
     """
     from collections.abc import Callable
 
@@ -212,23 +320,48 @@ def dump_args_calls(myLocal=None, mods=None, quiet=False):
                 not name.startswith("__")
                 and isinstance(obj, Callable)
                 and hasattr(obj, "__module__")
-                and obj.__module__.startswith("acts.ActsPythonBindings")
+                and re.search(r"^acts\..*PythonBindings", obj.__module__)
                 and obj.__qualname__ != "_Sequencer.Config"
                 and not hasattr(obj, "__wrapped__")
             ):
                 continue
             # wrap class's contained methods
-            done += dump_args_calls(myLocal, [obj], True)
+            done += dump_args_calls([obj], verbose, level + 1)
             wrapped = dump_args(obj)
+            if verbose >= 2:
+                print(f"dump_args_calls: wrap {mod.__name__}.{name}")
             setattr(mod, name, wrapped)
-            if myLocal and hasattr(myLocal, name):
-                setattr(myLocal, name, wrapped)
             done += 1
         if done:
             alldone += done
             donemods.append(f"{mod.__name__}:{done}")
-    if not quiet and donemods:
+    if verbose >= 1 and donemods and level == 0:
         print("dump_args for module functions:", ", ".join(donemods))
+
+    global import_is_hooked
+    if not import_is_hooked:
+        # Now hook import to wrap bindings that are imported later
+        import builtins
+
+        import_orig = builtins.__import__
+
+        importing = False
+
+        def import_with_dump(name, *args, **kwargs):
+            nonlocal importing
+            if importing:
+                return import_orig(name, *args, **kwargs)
+            importing = True
+            module = import_orig(name, *args, **kwargs)
+            dump_args_calls(None, verbose)
+            importing = False
+            return module
+
+        if verbose >= 2:
+            print("dump_args_calls: add hook to import statement")
+        import_is_hooked = True
+        builtins.__import__ = import_with_dump
+
     return alldone
 
 
@@ -390,7 +523,18 @@ class Sequencer(ActsExamplesPythonBindings._Sequencer):
 
         cls._autoFpeMasks = []
 
-        for root, _, files in os.walk(srcdir):
+        for root, dirs, files in os.walk(srcdir):
+            # Every Sequencer-owning process pays for this walk, so keep it off
+            # the parts of a working tree that can never hold a MARK comment:
+            # build trees, vendored sources and anything hidden (.git, and the
+            # nested worktrees/venvs developers keep in the checkout).
+            dirs[:] = [
+                d
+                for d in dirs
+                if not d.startswith(".")
+                and d != "thirdparty"
+                and not d.startswith("build")
+            ]
             root = Path(root)
             for f in files:
                 if (
@@ -402,7 +546,13 @@ class Sequencer(ActsExamplesPythonBindings._Sequencer):
                 f = root / f
                 #  print(f)
                 with f.open("r") as fh:
-                    lines = fh.readlines()
+                    contents = fh.read()
+                # Cheap reject: only a handful of files in the tree carry a
+                # MARK comment, and the per-line regexes below are what makes
+                # the scan expensive.
+                if "MARK:" not in contents:
+                    continue
+                lines = contents.splitlines(keepends=True)
                 for i, line in enumerate(lines):
                     if m := re.match(r".*\/\/ ?MARK: ?(fpeMask\(.*)$", line):
                         exp = m.group(1)

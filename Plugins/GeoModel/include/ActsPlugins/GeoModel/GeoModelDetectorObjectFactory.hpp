@@ -61,29 +61,32 @@ class GeoModelDetectorObjectFactory {
     /// @brief List of surfaces belonging to this volume
     std::vector<std::shared_ptr<Acts::Surface>> surfaces{};
   };
+  /// List of converted GeoModel volumes
   using ConvertedVolList_t = std::vector<ConvertedGeoVol>;
 
+  /// Options for the GeoModel detector object factory
   struct Options {
+    /// Query strings for volume selection
     std::vector<std::string> queries = {};
   };
 
   // substring matching for additional parameters
   // empty vectors will be matched to everything
+  /// @brief Configuration for GeoModel detector object factory
   struct Config {
-    // List for names to match
+    /// List of name patterns to match
     std::vector<std::string> nameList{};
-    // List for materials to match
+    /// List of material patterns to match
     std::vector<std::string> materialList{};
-
-    // boolean flag to build subvolumes
+    /// Boolean flag to build subvolumes
     bool convertSubVolumes = false;
-
-    // flag to build the desired bounding Boxes
+    /// Flag to build the desired bounding boxes
     std::vector<std::string> convertBox;
   };
 
+  /// @brief Cache for storing created detector elements and factory objects
   struct Cache {
-    // The created detector elements and their surfaces
+    /// The created detector elements and their surfaces
     std::vector<GeoModelSensitiveSurface> sensitiveSurfaces;
     /// @brief Pointer to the surface bound factory
     std::shared_ptr<Acts::SurfaceBoundFactory> surfBoundFactory =
@@ -91,12 +94,14 @@ class GeoModelDetectorObjectFactory {
     /// @brief Pointer to the volume bound factory */
     std::shared_ptr<Acts::VolumeBoundFactory> volumeBoundFactory =
         std::make_shared<Acts::VolumeBoundFactory>();
-
-    // The created representation of bounding boxes  and the corresponding Full
-    // Physical Volumes
+    /// The created representation of bounding boxes and the corresponding Full
+    /// Physical Volumes
     ConvertedVolList_t volumeBoxFPVs{};
   };
 
+  /// Constructor
+  /// @param cfg Configuration
+  /// @param mlogger Logger
   explicit GeoModelDetectorObjectFactory(
       const Config& cfg,
       std::unique_ptr<const Acts::Logger> mlogger = Acts::getDefaultLogger(

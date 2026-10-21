@@ -19,6 +19,7 @@ namespace py = pybind11;
 namespace ActsPython {
 
 void addDefinitions(py::module_& m);
+void addEventData(py::module_& m);
 void addMagneticField(py::module_& m);
 void addUtilities(py::module_& m);
 void addVisualization(py::module_& m);
@@ -64,6 +65,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
 
   addSurfaces(m);
   addGeometry(m);
+  addEventData(m);
   addGeometryGen1(m);
   addGeometryGen3(m);
   addNavigation(m);

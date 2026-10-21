@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -17,7 +16,6 @@
 #include "ActsPlugins/Root/RootMeasurementIo.hpp"
 
 #include <ios>
-#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -25,11 +23,12 @@
 #include <TFile.h>
 #include <TTree.h>
 
+namespace ActsExamples {
+
 namespace {
 
 std::tuple<std::vector<double>, std::vector<double>, std::vector<unsigned int>>
-prepareBoundMeasurement(
-    const ActsExamples::ConstVariableBoundMeasurementProxy& m) {
+prepareBoundMeasurement(const ConstVariableBoundMeasurementProxy& m) {
   std::vector<double> measurements = {};
   std::vector<double> variances = {};
   std::vector<unsigned int> subspaceIndex = {};
@@ -45,20 +44,7 @@ prepareBoundMeasurement(
   return {measurements, variances, subspaceIndex};
 }
 
-std::vector<std::tuple<int, int, float>> prepareChannels(
-    const ActsExamples::Cluster& c) {
-  std::vector<std::tuple<int, int, float>> channels = {};
-  for (auto ch : c.channels) {
-    channels.emplace_back(static_cast<int>(ch.bin[0]),
-                          static_cast<int>(ch.bin[1]),
-                          static_cast<float>(ch.activation));
-  }
-  return channels;
-}
-
 }  // namespace
-
-namespace ActsExamples {
 
 RootMeasurementWriter::RootMeasurementWriter(
     const RootMeasurementWriter::Config& config, Acts::Logging::Level level)
@@ -73,7 +59,6 @@ RootMeasurementWriter::RootMeasurementWriter(
         "Missing hit-to-simulated-hits map input collection");
   }
 
-  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
 
@@ -95,8 +80,7 @@ RootMeasurementWriter::RootMeasurementWriter(
   m_outputTree->Branch("particles_generation", &m_particleGeneration);
   m_outputTree->Branch("particles_sub_particle", &m_particleSubParticle);
 
-  ActsPlugins::RootMeasurementIo::Config treeCfg{m_cfg.boundIndices,
-                                                 m_cfg.clusterIndices};
+  ActsPlugins::RootMeasurementIo::Config treeCfg{m_cfg.boundIndices};
   m_measurementIo = std::make_unique<ActsPlugins::RootMeasurementIo>(treeCfg);
   m_measurementIo->connectForWrite(*m_outputTree);
 }
@@ -121,11 +105,6 @@ ProcessCode RootMeasurementWriter::writeT(
   const auto& simHits = m_inputSimHits(ctx);
   const auto& hitSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
-  const ClusterContainer* clusters = nullptr;
-  if (!m_cfg.inputClusters.empty()) {
-    clusters = &m_inputClusters(ctx);
-  }
-
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -143,16 +122,17 @@ ProcessCode RootMeasurementWriter::writeT(
 
     // Fill the identification
     m_measurementIo->fillIdentification(static_cast<int>(ctx.eventNumber),
-                                        geoId);
+                                        hitIdx, geoId);
 
     // Find the contributing simulated hits
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
     // Use average truth in the case of multiple contributing sim hits
     auto [local, pos4, dir] =
-        averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
+        averageSimHits(ctx.simGeoContext, surface, simHits, indices, logger());
     Acts::RotationMatrix3 rot =
         surface
-            .referenceFrame(ctx.geoContext, pos4.segment<3>(Acts::ePos0), dir)
+            .referenceFrame(ctx.simGeoContext, pos4.segment<3>(Acts::ePos0),
+                            dir)
             .inverse();
     std::pair<double, double> angles =
         Acts::VectorHelpers::incidentAngles(dir, rot);
@@ -166,16 +146,9 @@ ProcessCode RootMeasurementWriter::writeT(
     }
     m_measurementIo->fillTruthParameters(local, pos4, dir, angles);
 
-    // Fill the measurement parameters & clusters still
+    // Fill the measurement parameters
     auto [msm, vcs, ssi] = prepareBoundMeasurement(meas);
     m_measurementIo->fillBoundMeasurement(msm, vcs, ssi);
-
-    // Fill the cluster information if available
-    if (clusters != nullptr) {
-      const auto& cluster = (*clusters)[hitIdx];
-      m_measurementIo->fillGlobalPosition(cluster.globalPosition);
-      m_measurementIo->fillCluster(prepareChannels(cluster));
-    }
 
     m_outputTree->Fill();
     m_particleVertexPrimary.clear();

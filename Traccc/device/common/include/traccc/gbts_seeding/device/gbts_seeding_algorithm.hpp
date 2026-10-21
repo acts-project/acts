@@ -1,0 +1,315 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+// Local include(s).
+#include "traccc/device/abstract_awaitable.hpp"
+#include "traccc/device/algorithm_base.hpp"
+#include "traccc/gbts_seeding/device/gbts_bid_seeds_for_hits.hpp"
+#include "traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
+#include "traccc/gbts_seeding/device/gbts_build_edge_work_list.hpp"
+#include "traccc/gbts_seeding/device/gbts_compress_graph.hpp"
+#include "traccc/gbts_seeding/device/gbts_convert_seeds.hpp"
+#include "traccc/gbts_seeding/device/gbts_count_graph_edges.hpp"
+#include "traccc/gbts_seeding/device/gbts_count_paths.hpp"
+#include "traccc/gbts_seeding/device/gbts_fill_graph_edges.hpp"
+#include "traccc/gbts_seeding/device/gbts_fill_path_store.hpp"
+#include "traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
+#include "traccc/gbts_seeding/device/gbts_finish_cca.hpp"
+#include "traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
+#include "traccc/gbts_seeding/device/gbts_run_cca_iteration.hpp"
+#include "traccc/gbts_seeding/device/gbts_sort_nodes.hpp"
+
+// Project include(s).
+#include "traccc/edm/measurement_collection.hpp"
+#include "traccc/edm/seed_collection.hpp"
+#include "traccc/edm/spacepoint_collection.hpp"
+#include "traccc/gbts_seeding/gbts_seeding_config.hpp"
+#include "traccc/gbts_seeding/gbts_types.hpp"
+#include "traccc/utils/algorithm.hpp"
+#include "traccc/utils/memory_resource.hpp"
+#include "traccc/utils/messaging.hpp"
+
+// VecMem include(s).
+#include <vecmem/containers/data/vector_buffer.hpp>
+#include <vecmem/containers/vector.hpp>
+
+// System include(s).
+#include <cstdint>
+#include <memory>
+#include <utility>
+#include <vector>
+
+namespace traccc::device {
+
+/// @brief Main algorithm for performing GBTS seeding on a device
+/// (backend-agnostic).
+///
+/// The algorithm orchestrates the sequence of kernel launches and host-side
+/// synchronisations.  Backend-specific subclasses are responsible for
+/// implementing the individual kernel launchers.
+///
+/// This algorithm returns a buffer which is not necessarily filled yet. A
+/// synchronisation statement is required before destroying this buffer.
+///
+class gbts_seeding_algorithm
+    : public algorithm<edm::seed_collection::buffer(
+          const edm::spacepoint_collection::const_view&,
+          const edm::measurement_collection::const_view&)>,
+      public messaging,
+      public algorithm_base,
+      public virtual abstract_awaitable {
+ public:
+  /// Constructor for the GBTS seed finding algorithm
+  ///
+  /// @param cfg The GBTS seed finding configuration
+  /// @param mr The memory resource(s) to use in the algorithm
+  /// @param copy The copy object to use for copying data between device
+  ///             and host memory blocks
+  /// @param logger The logger instance to use
+  ///
+  gbts_seeding_algorithm(
+      const gbts_seedfinder_config& cfg, const memory_resource& mr,
+      const vecmem::copy& copy,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+
+  /// Destructor
+  virtual ~gbts_seeding_algorithm() = default;
+
+  /// Operator executing the algorithm.
+  ///
+  /// @param spacepoints is a view of all spacepoints in the event
+  /// @param measurements is a view of all measurements in the event
+  /// @return the buffer of track seeds reconstructed from the spacepoints
+  ///
+  output_type operator()(
+      const edm::spacepoint_collection::const_view& spacepoints,
+      const edm::measurement_collection::const_view& measurements)
+      const override;
+
+ protected:
+  /// Wait for outstanding device work before releasing local buffers.
+  virtual void synchronize() const = 0;
+
+  /// @name Kernel launchers (to be implemented by backends)
+  ///
+  /// Each launcher receives the payload of the device function it runs;
+  /// the payload types are defined in the per-function device headers.
+  /// @{
+
+  /// Spacepoint-binning kernel launcher: runs the kernel, then turns the
+  /// per-bin node counts into the node offsets with an in-place exclusive
+  /// scan.
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_bin_spacepoints_kernel(
+      const gbts_bin_spacepoints_payload& payload) const = 0;
+
+  /// Node sorting kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_sort_nodes_kernel(
+      const gbts_sort_nodes_payload& payload) const = 0;
+
+  /// Min/max radius per eta-bin kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_find_minmax_radius_kernel(
+      const gbts_find_minmax_radius_payload& payload) const = 0;
+
+  /// Edge work-list building kernel launcher (single block)
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_build_edge_work_list_kernel(
+      const gbts_build_edge_work_list_payload& payload) const = 0;
+
+  /// Graph edge-counting kernel launcher: runs the kernel, then turns the
+  /// per-node edge counts into the edge buckets with an in-place inclusive
+  /// scan.
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_count_graph_edges_kernel(
+      const gbts_count_graph_edges_payload& payload) const = 0;
+
+  /// Graph edge-filling kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_fill_graph_edges_kernel(
+      const gbts_fill_graph_edges_payload& payload) const = 0;
+
+  /// Graph edge-matching kernel launcher: runs the kernel, then re-indexes
+  /// the kept edges with an inclusive scan of the kept flags.
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_match_graph_edges_kernel(
+      const gbts_match_graph_edges_payload& payload) const = 0;
+
+  /// Graph compression kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_compress_graph_kernel(
+      const gbts_compress_graph_payload& payload) const = 0;
+
+  /// CCA (connected-components iteration) kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_run_cca_iteration_kernel(
+      const gbts_run_cca_iteration_payload& payload) const = 0;
+
+  /// CCA finishing kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_finish_cca_kernel(
+      const gbts_finish_cca_payload& payload) const = 0;
+
+  /// Path counting kernel launcher (followed by the inclusive scan of the
+  /// counts)
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_count_paths_kernel(
+      const gbts_count_paths_payload& payload) const = 0;
+
+  /// Path-store-filling kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_fill_path_store_kernel(
+      const gbts_fill_path_store_payload& payload) const = 0;
+
+  /// Seeds-bid-for-hits kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_bid_seeds_for_hits_kernel(
+      const gbts_bid_seeds_for_hits_payload& payload) const = 0;
+
+  /// GBTS seed conversion kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_convert_seeds_kernel(
+      const gbts_convert_seeds_payload& payload) const = 0;
+
+  /// @}
+
+ private:
+  /// @name Pipeline stages
+  ///
+  /// The pipeline is split into three stage methods so that each stage's
+  /// transient device buffers are local and freed as soon as the stage
+  /// returns; only the cross-stage handles below survive between stages.
+  /// @{
+
+  /// Outputs of the node-making stage that are consumed downstream.
+  struct node_making_output {
+    /// Reduced (x, y, z, w) per original spacepoint (used by seed
+    /// extraction)
+    vecmem::data::vector_buffer<float4> reducedSP;
+    /// Per-node (tau_min, tau_max, r, z)
+    vecmem::data::vector_buffer<float4> node_params;
+    /// Per-node phi
+    vecmem::data::vector_buffer<float> node_phi;
+    /// Per-sorted-slot original spacepoint index
+    vecmem::data::vector_buffer<unsigned int> node_index;
+    /// Per-eta (rmin, rmax) pair
+    vecmem::data::vector_buffer<float> bin_rads;
+    /// Per-eta node offsets, nEtaBins + 1 entries
+    vecmem::data::vector_buffer<unsigned int> eta_bin_offsets;
+  };
+
+  /// Outputs of the graph-making stage that are consumed by seed extraction.
+  struct graph_making_output {
+    /// Compacted, row-major graph
+    vecmem::data::vector_buffer<unsigned int> output_graph;
+    /// (node1, node2) original spacepoint indices per compacted edge
+    vecmem::data::vector_buffer<uint2> output_edge_nodes;
+    /// Number of neighbours per compacted edge
+    vecmem::data::vector_buffer<unsigned char> output_num_neighbours;
+    /// Number of edges that survived re-indexing (0 == nothing to do)
+    unsigned int nConnectedEdges = 0;
+  };
+
+  /// Stage 1: count, bin, sort and characterise nodes.
+  node_making_output make_nodes(
+      const edm::spacepoint_collection::const_view& spacepoints,
+      const edm::measurement_collection::const_view& measurements,
+      const unsigned int nSp) const;
+
+  /// Stage 2: count, fill, match and compress the edge graph. The per-node
+  /// buffers are taken by value so they are released when this stage returns.
+  graph_making_output create_edges(
+      vecmem::data::vector_buffer<float4> node_params,
+      vecmem::data::vector_buffer<float> node_phi,
+      vecmem::data::vector_buffer<unsigned int> node_index,
+      vecmem::data::vector_buffer<float> bin_rads,
+      vecmem::data::vector_buffer<unsigned int> eta_bin_offsets,
+      const unsigned int nSp,
+      vecmem::data::vector_buffer<unsigned int>& counters_buf,
+      vecmem::vector<unsigned int>& h_counters) const;
+
+  /// Stage 3: run the CCA, extract paths, fit and disambiguate into seeds.
+  edm::seed_collection::buffer extract_seeds(
+      vecmem::data::vector_buffer<unsigned int>& output_graph,
+      vecmem::data::vector_buffer<uint2>& output_edge_nodes,
+      vecmem::data::vector_buffer<unsigned char>& output_num_neighbours,
+      vecmem::data::vector_buffer<float4>& reducedSP,
+      const unsigned int nConnectedEdges, const unsigned int nSp,
+      vecmem::vector<unsigned int>& h_counters) const;
+
+  /// Sort and de-duplicate the bin pairs of the configuration and derive
+  /// the per-pair tables the graph making needs (run by the constructor)
+  void prepare_bin_pairs();
+
+  /// @}
+
+  /// GBTS seed-finding configuration.
+  gbts_seedfinder_config m_config;
+  /// Number of bin pairs in m_config.binTables
+  unsigned int m_nBinPairs = 0;
+  /// Largest number of bin pairs sharing one inner bin
+  unsigned int m_maxPairsPerBin1 = 0;
+  /// m_config.binTables as (bin1, bin2)
+  vecmem::data::vector_buffer<uint2> m_bin_pairs_buffer;
+  /// Per bin pair: index of the first pair with the same bin1
+  vecmem::data::vector_buffer<unsigned int> m_pair_group_begin_buffer;
+
+  /// @name Device copies of the configuration tables, uploaded once at
+  ///       construction and shared by every event.
+  /// @{
+
+  /// Volume ID to GBTS layer index map.
+  vecmem::data::vector_buffer<short> m_volume_to_layer_map_buffer;
+  /// (Surface ID, GBTS layer index) pairs, for detectors that need them.
+  vecmem::data::vector_buffer<std::pair<unsigned int, unsigned int>>
+      m_surface_to_layer_map_buffer;
+  /// Per-layer type (barrel / endcap).
+  vecmem::data::vector_buffer<char> m_layer_type_buffer;
+  /// Per-layer (etaBin0, numBins).
+  vecmem::data::vector_buffer<std::pair<unsigned int, unsigned int>>
+      m_layer_info_buffer;
+  /// Per-layer (minEta, deltaEta).
+  vecmem::data::vector_buffer<std::pair<float, float>> m_layer_geo_buffer;
+  /// Optional tau LUT for @c gbts_sort_nodes (a size-1 dummy when unused).
+  vecmem::data::vector_buffer<float> m_tau_lut_buffer;
+
+  /// @}
+};  // class gbts_seeding_algorithm
+
+}  // namespace traccc::device

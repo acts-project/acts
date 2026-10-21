@@ -27,11 +27,16 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <cstddef>
+#include <iterator>
 #include <memory>
+#include <ranges>
+#include <span>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -51,7 +56,6 @@ class TrackingVolume;
 struct GeometryIdentifierHook;
 class Portal;
 class INavigationPolicy;
-
 /// Interface types of the Gen1 geometry model
 /// @note This interface is being replaced, and is subject to removal
 /// @{
@@ -116,6 +120,17 @@ class TrackingVolume : public Volume {
   /// @return Reference to this TrackingVolume after move assignment
   TrackingVolume& operator=(TrackingVolume&&) noexcept;
 
+  /// Constructor for an aligned container volume container Volume
+  /// - vacuum filled volume either as a for other tracking volumes
+  ///
+  /// @param placement is the volume placement object dynamically positioning
+  ///                  the volume in space
+  /// @param volbounds is the description of the volume boundaries
+  /// @param volumeName is a string identifier
+  TrackingVolume(VolumePlacementBase& placement,
+                 std::shared_ptr<VolumeBounds> volbounds,
+                 const std::string& volumeName = "undefined");
+
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
   ///
@@ -174,18 +189,17 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    auto sensitive = [&visitor](const Surface& surface) {
-      if (surface.geometryId().sensitive() == 0) {
-        return;
-      }
-      visitor(&surface);
-    };
-
     if (restrictToSensitives) {
-      apply(sensitive);
+      apply([&visitor](const Surface& surface) {
+        if (surface.geometryId().sensitive() == 0) {
+          return;
+        }
+        visitor(&surface);
+      });
+
     } else {
       apply(overloaded{
-          sensitive,
+          [&visitor](const Surface& surface) { visitor(&surface); },
           [&visitor](const Portal& portal) { visitor(&portal.surface()); },
           [&visitor](const BoundarySurface& bs) {
             visitor(&bs.surfaceRepresentation());
@@ -272,6 +286,10 @@ class TrackingVolume : public Volume {
   /// @param volumeName is the new name of
   void setVolumeName(std::string_view volumeName);
 
+  /// Check if the volume has an associated material description
+  /// @return True if the volume has an associated material, false otherwise
+  bool hasMaterial() const;
+
   /// Return the material of the volume
   /// @return Pointer to volume material or nullptr if no material assigned
   const IVolumeMaterial* volumeMaterial() const;
@@ -328,7 +346,10 @@ class TrackingVolume : public Volume {
   using PortalRange =
       detail::TransformRange<detail::ConstDereference,
                              const std::vector<std::shared_ptr<Portal>>>;
-
+  /// Abrivation of the shared ptr variant holding the placements
+  using PlacementOwnPtr =
+      std::variant<std::shared_ptr<const VolumePlacementBase>,
+                   std::shared_ptr<const SurfacePlacementBase>>;
   /// Return all portals registered under this tracking volume
   /// @return the range of portals
   PortalRange portals() const;
@@ -360,6 +381,7 @@ class TrackingVolume : public Volume {
 
   /// Add a surface to this tracking volume
   /// @param surface The surface to add
+  /// @note The volume takes shared ownership of the placement
   void addSurface(std::shared_ptr<Surface> surface);
 
   /// Add a child volume to this tracking volume
@@ -448,7 +470,7 @@ class TrackingVolume : public Volume {
   /// to the last navigation volume
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bsfMine is the boundary face indicater where to glue
+  /// @param bsfMine is the boundary face indicator where to glue
   /// @param neighbor is the TrackingVolume to be glued
   /// @param bsfNeighbor is the boundary surface of the neighbor
   void glueTrackingVolume(const GeometryContext& gctx,
@@ -460,7 +482,7 @@ class TrackingVolume : public Volume {
   /// to the last navigation volume
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bsfMine is the boundary face indicater where to glue
+  /// @param bsfMine is the boundary face indicator where to glue
   /// @param neighbors are the TrackingVolumes to be glued
   /// @param bsfNeighbor are the boundary surface of the neighbors
   void glueTrackingVolumes(
@@ -470,7 +492,7 @@ class TrackingVolume : public Volume {
 
   /// Provide a new BoundarySurface from the glueing
   ///
-  /// @param bsf is the boundary face indicater where to glue
+  /// @param bsf is the boundary face indicator where to glue
   /// @param bs is the new boundary surface
   /// @param checkmaterial is a flag how to deal with material, if true:
   /// - if the old boundary surface had a material description
@@ -501,16 +523,29 @@ class TrackingVolume : public Volume {
   /// @return Reference to the glue volumes descriptor
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
-  /// Produces a 3D visualization of this tracking volume
-  /// @param helper The visualization helper describing the output format
+  /// @param helper The visualization helper that implement the output
   /// @param gctx The geometry context
   /// @param viewConfig The view configuration
   /// @param portalViewConfig View configuration for portals
   /// @param sensitiveViewConfig View configuration for sensitive surfaces
+  /// @deprecated Use the ViewConfigFunc overload instead
+  [[deprecated("Use the ViewConfigFunc overload instead")]]
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
                  const ViewConfig& viewConfig,
                  const ViewConfig& portalViewConfig,
                  const ViewConfig& sensitiveViewConfig) const;
+
+  /// Produces a 3D visualization of this tracking volume
+  /// @param helper The visualization helper describing the output format
+  /// @param gctx The geometry context
+  /// @param viewConfigFactory Function determining the ViewConfig for each GeometryObject
+  void visualize(
+      IVisualization3D& helper, const GeometryContext& gctx,
+      const ViewConfigFunc& viewConfigFactory = defaultGeometryColoring) const;
+
+  /// @cond
+  using Volume::visualize;
+  /// @endcond
 
   /// Access the navigation policy if any that is registered on this volume
   /// @return a pointer to the navigation policy, or nullptr if none is set
@@ -530,12 +565,26 @@ class TrackingVolume : public Volume {
   /// the default is a noop.
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param args are the navigation arguments
+  /// @param state is the navigation policy state
   /// @param stream is the navigation stream to be updated
   /// @param logger is the logger
   void initializeNavigationCandidates(const GeometryContext& gctx,
                                       const NavigationArguments& args,
+                                      NavigationPolicyState& state,
                                       AppendOnlyNavigationStream& stream,
                                       const Logger& logger) const;
+
+  /// Pass over a (Volume / Surface) placement to share owner ship
+  /// with the volume
+  /// @param placement: Pointer to the placement to be managed by the
+  ///                   tracking volume
+  void retainPlacement(PlacementOwnPtr placement) {
+    m_placements.emplace_back(std::move(placement));
+  }
+
+  /// Returns the view on all the placements owned by the tracking volume
+  /// @returns The const view on all the placements owned by this volume
+  std::span<const PlacementOwnPtr> placements() const;
 
  private:
   void connectDenseBoundarySurfaces(
@@ -583,6 +632,7 @@ class TrackingVolume : public Volume {
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
   std::vector<std::shared_ptr<Portal>> m_portals;
   std::vector<std::shared_ptr<Surface>> m_surfaces;
+  std::vector<PlacementOwnPtr> m_placements;
 
   std::unique_ptr<INavigationPolicy> m_navigationPolicy;
 

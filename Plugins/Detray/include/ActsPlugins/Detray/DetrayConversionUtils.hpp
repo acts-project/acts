@@ -24,14 +24,7 @@
 #include <detray/detectors/default_metadata.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
-namespace ActsPlugins {
-
-using DetrayMetaData = detray::default_metadata<detray::array<double>>;
-
-using DetrayHostDetector = detray::detector<DetrayMetaData>;
-
-/// @ingroup detray_plugin
-namespace DetrayConversionUtils {
+namespace ActsPlugins::DetrayConversionUtils {
 
 /// @addtogroup detray_plugin
 /// @{
@@ -59,6 +52,9 @@ struct Cache {
 detray::axis::bounds convertBinningOption(Acts::BinningOption bOption);
 
 /// Convert the binning value
+///
+/// @note The IO label is ignored during detector construction in detray,
+/// it is only added for readability
 ///
 /// @param bValue the binning value
 ///
@@ -91,7 +87,7 @@ detray::io::axis_payload convertAxis(const Acts::IAxis& axis);
 /// @param slab the material slab to be converted
 ///
 /// @return a detray material slab payload
-detray::io::material_slab_payload convertMaterialSlab(
+detray::io::surface_material_payload convertMaterialSlab(
     const Acts::MaterialSlab& slab);
 
 /// Convert a Transform3 to a detray transform payload
@@ -118,5 +114,4 @@ std::tuple<Acts::BinUtility, bool> convertBinUtilityTo2D(
 
 /// @}
 
-}  // namespace DetrayConversionUtils
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::DetrayConversionUtils

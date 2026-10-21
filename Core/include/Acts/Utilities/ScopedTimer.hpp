@@ -10,7 +10,9 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
+#include <atomic>
 #include <chrono>
+#include <cstddef>
 
 namespace Acts {
 
@@ -46,7 +48,8 @@ class ScopedTimer {
   ///
   /// Automatically calculates and logs the duration between construction
   /// and destruction using the specified logger and level.
-  ~ScopedTimer();
+  /// Exceptions from formatting or logging terminate the process.
+  ~ScopedTimer() noexcept;
 
   ScopedTimer(const ScopedTimer&) = delete;
   ScopedTimer& operator=(const ScopedTimer&) = delete;
@@ -54,10 +57,11 @@ class ScopedTimer {
   ScopedTimer& operator=(ScopedTimer&&) = delete;
 
  private:
-  std::string m_name;              ///< Identifier for the timed block
-  Logging::Level m_lvl;            ///< Logging level for output
-  const Logger* m_logger;          ///< Logger instance for output
-  clock_type::time_point m_start;  ///< Start time of the timer
+  std::string m_name;      ///< Identifier for the timed block
+  Logging::Level m_lvl;    ///< Logging level for output
+  const Logger* m_logger;  ///< Logger instance for output
+  clock_type::time_point m_start =
+      clock_type::now();  ///< Start time of the timer
 };
 
 /// @brief A timer class that measures and averages execution times of multiple samples
@@ -66,6 +70,10 @@ class ScopedTimer {
 /// and calculate statistics (mean, standard deviation) across multiple samples.
 /// It uses RAII through the Sample class to automatically record timing
 /// information.
+///
+/// All samples must be destroyed before this timer. When recording samples on
+/// other threads, synchronize their completion (for example, by joining the
+/// threads) before destroying the timer.
 class AveragingScopedTimer {
  public:
   /// Type alias for high resolution clock used for timing measurements
@@ -90,7 +98,7 @@ class AveragingScopedTimer {
 
    private:
     AveragingScopedTimer* m_parent;
-    clock_type::time_point m_start;
+    clock_type::time_point m_start = clock_type::now();
   };
 
   /// @brief Construct a new AveragingScopedTimer
@@ -105,7 +113,8 @@ class AveragingScopedTimer {
   ///
   /// Outputs total duration and per-sample statistics (mean ± stddev) if
   /// logging is enabled at the configured level.
-  ~AveragingScopedTimer();
+  /// Exceptions from formatting or logging terminate the process.
+  ~AveragingScopedTimer() noexcept;
   AveragingScopedTimer(const AveragingScopedTimer&) = delete;
   AveragingScopedTimer& operator=(const AveragingScopedTimer&) = delete;
   AveragingScopedTimer(AveragingScopedTimer&&) = delete;
@@ -124,10 +133,14 @@ class AveragingScopedTimer {
   /// @param duration Duration of the sample in nanoseconds
   void addSample(std::chrono::nanoseconds duration);
 
-  double m_sumDuration = 0;  ///< Sum of all sample durations
-  double m_sumDurationSquared =
-      0;  ///< Sum of squared durations for stddev calculation
-  std::size_t m_nSamples = 0;  ///< Number of samples recorded
+  /// Accumulators are atomic so samples can be recorded concurrently from
+  /// multiple threads. Relaxed ordering is sufficient because sample completion
+  /// must be synchronized with timer destruction, making all updates visible
+  /// before the destructor reads the aggregate values.
+  std::atomic<double> m_sumDuration{0};  ///< Sum of all sample durations
+  std::atomic<double> m_sumDurationSquared{
+      0};  ///< Sum of squared durations for stddev calculation
+  std::atomic<std::size_t> m_nSamples{0};  ///< Number of samples recorded
 
   std::string m_name;      ///< Name of the timer for logging
   Logging::Level m_lvl;    ///< Logging level for output

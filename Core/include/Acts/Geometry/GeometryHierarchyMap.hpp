@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <initializer_list>
 #include <iterator>
 #include <stdexcept>
@@ -291,8 +292,8 @@ inline auto GeometryHierarchyMap<value_t>::find(
   // might be stored at a higher level. ids for higher levels would always
   // be sorted before the requested id. searching for the first element
   // after the requested ensures that we include the full hierarchy.
-  const auto it = std::upper_bound(m_ids.begin(), m_ids.end(), id.value());
-  auto i = std::distance(m_ids.begin(), it);
+  const auto it = std::ranges::upper_bound(m_ids, id.value());
+  auto i = static_cast<std::size_t>(std::ranges::distance(m_ids.begin(), it));
 
   // now go up the hierarchy to find the first matching element.
   // example: the container stores four identifiers
@@ -326,7 +327,7 @@ inline auto GeometryHierarchyMap<value_t>::find(
     // progresses from more specific to less specific elements. the first
     // match is automatically the appropriate one.
     if (equalWithinMask(id.value(), m_ids[i], m_masks[i])) {
-      return std::next(begin(), i);
+      return std::next(begin(), static_cast<std::ptrdiff_t>(i));
     }
   }
 

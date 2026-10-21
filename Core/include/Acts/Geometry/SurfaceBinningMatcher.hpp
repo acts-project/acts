@@ -17,14 +17,18 @@
 
 namespace Acts {
 
+/// Helper to compare surfaces for binning equivalence.
 struct SurfaceBinningMatcher {
   /// The binning tolerance parameters
   using Range = std::pair<double, double>;
+  /// Tolerance ranges for each axis direction
   std::vector<Range> tolerances{static_cast<int>(numAxisDirections()),
                                 {0., 0.}};
 
   SurfaceBinningMatcher() = default;
 
+  /// Constructor with tolerance parameters
+  /// @param tolpars The tolerance ranges for binning comparison
   explicit SurfaceBinningMatcher(const std::vector<Range>& tolpars)
       : tolerances(tolpars) {}
 
@@ -34,6 +38,7 @@ struct SurfaceBinningMatcher {
   /// @param aDir the axis direction value for the binning
   /// @param one first surface for checking
   /// @param other second surface for checking
+  /// @return True if surfaces are binning-equivalent
   bool operator()(const Acts::GeometryContext& gctx, Acts::AxisDirection aDir,
                   const Acts::Surface* one, const Acts::Surface* other) const {
     // Fast exit

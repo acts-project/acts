@@ -65,15 +65,17 @@ struct ConnectionsBase {
 template <std::size_t GridDim>
 class Connections {};
 
-// On 1-D grid, cells have 1 backward neighbor
+// On 1-D grid, cells have 1 backward space neighbor, but there can be up to 2
+// cells with different times in that space that can connect
 template <>
-struct Connections<1> : public ConnectionsBase<1> {
+struct Connections<1> : public ConnectionsBase<2> {
   using ConnectionsBase::ConnectionsBase;
 };
 
-// On a 2-D grid, cells have 4 backward neighbors
+// On a 2-D grid, cells have 4 backward space neighbors, but there can be up to
+// 2 cells with different times in each of those spaces that can connect
 template <>
-struct Connections<2> : public ConnectionsBase<4> {
+struct Connections<2> : public ConnectionsBase<8> {
   using ConnectionsBase::ConnectionsBase;
 };
 

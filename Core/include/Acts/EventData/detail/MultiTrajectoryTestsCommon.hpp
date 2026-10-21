@@ -29,8 +29,8 @@ constexpr auto kInvalid = kTrackIndexInvalid;
 
 template <typename factory_t>
 class MultiTrajectoryTestsCommon {
-  using ParametersVector = BoundTrackParameters::ParametersVector;
-  using CovarianceMatrix = BoundTrackParameters::CovarianceMatrix;
+  using ParametersVector = BoundVector;
+  using CovarianceMatrix = BoundMatrix;
   using Jacobian = BoundMatrix;
 
   using trajectory_t = typename factory_t::trajectory_t;
@@ -200,9 +200,9 @@ class MultiTrajectoryTestsCommon {
     alwaysPresent(ts);
     ts.allocateCalibrated(5);
     BOOST_CHECK(ts.hasCalibrated());
-    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), Vector<5>::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
-                      ActsSquareMatrix<5>::Zero());
+                      SquareMatrix<5>::Zero());
 
     ts = t.getTrackState(t.addTrackState(PM::None));
     BOOST_CHECK(!ts.hasPredicted());
@@ -249,9 +249,9 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(!ts.hasJacobian());
     ts.allocateCalibrated(5);
     BOOST_CHECK(ts.hasCalibrated());
-    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), Vector<5>::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
-                      ActsSquareMatrix<5>::Zero());
+                      SquareMatrix<5>::Zero());
 
     ts = t.getTrackState(t.addTrackState(PM::Jacobian));
     BOOST_CHECK(!ts.hasPredicted());
@@ -310,9 +310,9 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(ts.hasSmoothed());
     BOOST_CHECK(ts.hasCalibrated());
     BOOST_CHECK(!ts.hasJacobian());
-    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), Vector<5>::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
-                      ActsSquareMatrix<5>::Zero());
+                      SquareMatrix<5>::Zero());
 
     ts.addComponents(PM::Jacobian);
     BOOST_CHECK(ts.hasPredicted());
@@ -327,6 +327,45 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(ts.hasSmoothed());
     BOOST_CHECK(ts.hasCalibrated());
     BOOST_CHECK(ts.hasJacobian());
+  }
+
+  void testAddTrackStateComponentsAfterShareAndUnset() {
+    using PM = TrackStatePropMask;
+
+    trajectory_t t = m_factory.create();
+
+    // adding a component which is only shared must not replace the shared
+    // storage
+    {
+      auto ts = t.makeTrackState(PM::Predicted);
+      ts.predicted() = BoundVector::Constant(42);
+      ts.shareFrom(PM::Predicted, PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+
+      ts.addComponents(PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+      BOOST_CHECK_EQUAL(ts.filtered(), BoundVector::Constant(42));
+      // still the same storage
+      ts.predicted() = BoundVector::Constant(11);
+      BOOST_CHECK_EQUAL(ts.filtered(), BoundVector::Constant(11));
+    }
+
+    // adding a component which was unset must allocate it again
+    {
+      auto ts = t.makeTrackState(PM::Predicted | PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+
+      ts.unset(PM::Filtered);
+      BOOST_CHECK(!ts.hasFiltered());
+
+      ts.addComponents(PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+
+      ts.filtered() = BoundVector::Constant(7);
+      ts.predicted() = BoundVector::Constant(3);
+      // the two must not alias
+      BOOST_CHECK_EQUAL(ts.filtered(), BoundVector::Constant(7));
+    }
   }
 
   void testTrackStateProxyCrossTalk(std::default_random_engine& rng) {
@@ -1229,7 +1268,7 @@ class MultiTrajectoryTestsCommon {
     ts.allocateCalibrated(3);
     BOOST_CHECK_EQUAL(ts.template calibrated<3>(), Vector3::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<3>(),
-                      ActsSquareMatrix<3>::Zero());
+                      SquareMatrix<3>::Zero());
 
     ts.allocateCalibrated(par2.head<3>(), cov2.topLeftCorner<3, 3>());
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 3);

@@ -62,8 +62,8 @@ class Geant4DetectorSurfaceFactory {
       std::tuple<std::shared_ptr<Geant4DetectorElement>,
                  std::shared_ptr<Acts::Surface>>;
 
-  using Geant4PassiveSurface = std::shared_ptr<Acts::Surface>;
   /// Type alias for passive surface
+  using Geant4PassiveSurface = std::shared_ptr<Acts::Surface>;
 
   /// Nested cache that records the conversion status
   struct Cache {

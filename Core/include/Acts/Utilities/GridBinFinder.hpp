@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <variant>
 #include <vector>
@@ -29,7 +29,7 @@ template <std::size_t DIM>
 class GridBinFinder {
  public:
   /// Number of neighbor bins in 3^DIM grid configuration
-  static constexpr std::size_t dimCubed = detail::ipow(3, DIM);
+  static constexpr std::size_t dimCubed = ipow(3, DIM);
 
   /// Type alias for variant storing different bin finding configurations
   using stored_values_t =

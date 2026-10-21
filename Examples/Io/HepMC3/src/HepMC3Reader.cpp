@@ -232,7 +232,7 @@ ProcessCode HepMC3Reader::read(const AlgorithmContext& ctx) {
 }
 
 ProcessCode HepMC3Reader::readSingleFile(
-    const ActsExamples::AlgorithmContext& ctx,
+    const AlgorithmContext& ctx,
     std::shared_ptr<HepMC3::GenEvent>& outputEvent) {
   using enum ProcessCode;
   ACTS_VERBOSE("Reading from single file");
@@ -265,7 +265,7 @@ ProcessCode HepMC3Reader::readSingleFile(
                             Acts::Logging::DEBUG);
     auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
     for (auto& event : events) {
-      auto vertexPosition = (*m_cfg.vertexGenerator)(rng);
+      auto vertexPosition = (*m_cfg.vertexGenerator)(rng, ctx.eventNumber);
 
       ACTS_VERBOSE("Shifting event to " << vertexPosition.transpose());
       // Our internal time unit is ctau, so is HepMC3's, make sure we convert
@@ -295,7 +295,7 @@ ProcessCode HepMC3Reader::readSingleFile(
 }
 
 ProcessCode HepMC3Reader::readCached(
-    const ActsExamples::AlgorithmContext& ctx,
+    const AlgorithmContext& ctx,
     std::vector<std::shared_ptr<HepMC3::GenEvent>>& events) {
   ACTS_VERBOSE("Already read event " << ctx.eventNumber);
   auto it = std::ranges::find_if(
@@ -326,7 +326,7 @@ ProcessCode HepMC3Reader::readCached(
 }
 
 ProcessCode HepMC3Reader::readBuffer(
-    const ActsExamples::AlgorithmContext& ctx,
+    const AlgorithmContext& ctx,
     std::vector<std::shared_ptr<HepMC3::GenEvent>>& outputEvents) {
   using enum ProcessCode;
 
@@ -390,7 +390,7 @@ ProcessCode HepMC3Reader::readBuffer(
 }
 
 ProcessCode HepMC3Reader::readLogicalEvent(
-    const ActsExamples::AlgorithmContext& ctx,
+    const AlgorithmContext& ctx,
     std::vector<std::shared_ptr<HepMC3::GenEvent>>& events) {
   using enum ProcessCode;
   ACTS_VERBOSE("Reading logical event " << ctx.eventNumber);

@@ -23,6 +23,8 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/PointBounds.hpp"
+#include "Acts/Surfaces/PointSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -81,7 +83,7 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
     }
     result.boundValuesSize = values.size();
 
-    Eigen::Map<ActsSquareMatrix<4>> trf{result.transform.data()};
+    Eigen::Map<SquareMatrix<4>> trf{result.transform.data()};
 
     // This is safe ONLY(!) if there is no associated detector element, since
     // the surface will not inspect the geometry context at all by itself.
@@ -98,7 +100,7 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
     return nullptr;
   }
 
-  Eigen::Map<const ActsSquareMatrix<4>> mat{surface.transform.data()};
+  Eigen::Map<const SquareMatrix<4>> mat{surface.transform.data()};
   Transform3 transform{mat};
 
   using T = Surface::SurfaceType;
@@ -200,6 +202,22 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
       throw_assert(surface.boundsType == B::eBoundless,
                    "Unexpected bounds type");
       result = Surface::makeShared<PlaneSurface>(transform);
+      break;
+
+    case T::Point:
+      switch (surface.boundsType) {
+        default:
+          throw std::runtime_error{"Invalid bounds type encountered"};
+
+        case B::eBoundless:
+          result = Surface::makeShared<PointSurface>(transform);
+          break;
+
+        case B::ePoint:
+          result = Surface::makeShared<PointSurface>(
+              transform, createBounds<PointBounds>(surface));
+          break;
+      }
       break;
   }
 

@@ -11,12 +11,15 @@
 
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/Json/ActsJson.hpp"
 #include "ActsPlugins/Json/ProtoAxisJsonConverter.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 using namespace Acts;
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace ActsTests {
 
@@ -144,3 +147,5 @@ BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
+
+ACTS_POP_IGNORE_DEPRECATED()

@@ -140,8 +140,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
           visit_measurement(
               measdim,
               [&]<std::size_t N>(std::integral_constant<std::size_t, N> /*d*/) {
-                trackState.allocateCalibrated(ActsVector<N>::Ones(),
-                                              ActsSquareMatrix<N>::Identity());
+                trackState.allocateCalibrated(Vector<N>::Ones(),
+                                              SquareMatrix<N>::Identity());
 
                 std::array<std::uint8_t, eBoundSize> indices{0};
                 std::iota(indices.begin(), indices.end(), 0);

@@ -23,18 +23,28 @@ class INavigationPolicy;
 
 namespace detail {
 
-/// Concept for factory functions that create navigation policies
+/// Trait detecting a `std::unique_ptr<T>` where `T` derives from
+/// @ref INavigationPolicy.
+/// @tparam T The type to inspect
+template <typename T>
+struct IsNavigationPolicyPtr : std::false_type {};
+
+template <typename T>
+  requires(std::derived_from<T, INavigationPolicy>)
+struct IsNavigationPolicyPtr<std::unique_ptr<T>> : std::true_type {};
+
+/// Concept for factory functions that return a `std::unique_ptr` to a
+/// navigation policy. This allows the factory function to select between
+/// different concrete policy types at runtime (e.g. based on the volume
+/// geometry).
 /// @tparam F The factory function type
 /// @tparam Args The argument types for the factory function
 template <typename F, typename... Args>
-concept NavigationPolicyIsolatedFactoryConcept = requires(
+concept NavigationPolicyPointerFactoryConcept = requires(
     F f, const GeometryContext& gctx, const TrackingVolume& volume,
     const Logger& logger, Args&&... args) {
-  { f(gctx, volume, logger, args...) } -> std::derived_from<INavigationPolicy>;
-
-  requires NavigationPolicyConcept<decltype(f(gctx, volume, logger, args...))>;
-
-  requires(std::is_copy_constructible_v<Args> && ...);
+  requires IsNavigationPolicyPtr<
+      std::remove_cvref_t<decltype(f(gctx, volume, logger, args...))>>::value;
 };
 }  // namespace detail
 
@@ -85,7 +95,10 @@ class NavigationPolicyFactory {
     return std::move(*this);
   }
 
-  /// Add a policy created by a factory function
+  /// Add a policy created by a factory function that returns a
+  /// `std::unique_ptr` to a navigation policy. Returning a pointer allows the
+  /// factory function to select between different concrete policy types at
+  /// runtime (e.g. based on the volume geometry).
   /// @tparam Fn The type of the function to construct the policy
   /// @param fn The factory function
   /// @param args The arguments to pass to the policy factory
@@ -94,12 +107,13 @@ class NavigationPolicyFactory {
   /// @return New instance of this object with the added factory for method
   ///         chaining
   template <typename Fn, typename... Args>
-    requires(detail::NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
+    requires(detail::NavigationPolicyPointerFactoryConcept<Fn, Args...> &&
+             (std::is_copy_constructible_v<Args> && ...))
   constexpr NavigationPolicyFactory add(Fn&& fn, Args&&... args) && {
     auto factory = [=](const GeometryContext& gctx,
-                       const TrackingVolume& volume, const Logger& logger) {
-      using policy_type = decltype(fn(gctx, volume, logger, args...));
-      return std::make_unique<policy_type>(fn(gctx, volume, logger, args...));
+                       const TrackingVolume& volume,
+                       const Logger& logger) -> factory_type::result_type {
+      return fn(gctx, volume, logger, args...);
     };
 
     m_factories.push_back(std::move(factory));

@@ -17,6 +17,16 @@ configure_package_config_file(
     INSTALL_DESTINATION ${install_package_config_dir}
     PATH_VARS CMAKE_INSTALL_BINDIR CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR
 )
+configure_file(
+    ${CMAKE_CURRENT_LIST_DIR}/ActsGeometryModuleHelpers.cmake
+    ${PROJECT_BINARY_DIR}/ActsGeometryModuleHelpers.cmake
+    COPYONLY
+)
+configure_file(
+    ${CMAKE_CURRENT_LIST_DIR}/ActsDD4hepGeometryModuleHelpers.cmake
+    ${PROJECT_BINARY_DIR}/ActsDD4hepGeometryModuleHelpers.cmake
+    COPYONLY
+)
 
 # install cmake package configs
 install(
@@ -83,6 +93,13 @@ file(GLOB_RECURSE _pckg_find_files "${CMAKE_CURRENT_LIST_DIR}/Find*.cmake")
 install(
     FILES ${_pckg_find_files}
     DESTINATION ${install_package_config_dir}/Modules
+)
+
+install(
+    FILES
+        ${CMAKE_CURRENT_LIST_DIR}/ActsGeometryModuleHelpers.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/ActsDD4hepGeometryModuleHelpers.cmake
+    DESTINATION ${install_package_config_dir}
 )
 
 # install target configs for all available components

@@ -10,9 +10,15 @@ acts_add_library(
     ActsExamples/TruthTracking/TruthVertexFinder.cpp
     ActsExamples/TruthTracking/TruthSeedingAlgorithm.cpp
     ActsExamples/TruthTracking/HitSelector.cpp
+    ActsExamples/TruthTracking/VertexTruthMatcher.cpp
+    ActsExamples/TruthTracking/GbtsTrainingAlgorithm.cpp
 )
 target_include_directories(
     ActsExamplesTruthTracking
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
-target_link_libraries(ActsExamplesTruthTracking PUBLIC Acts::ExamplesFramework)
+target_link_libraries(
+    ActsExamplesTruthTracking
+    PUBLIC Acts::ExamplesFramework
+    PRIVATE Acts::PluginJson
+)

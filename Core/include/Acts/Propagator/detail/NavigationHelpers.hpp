@@ -106,8 +106,7 @@ inline void emplaceAllVolumeCandidates(
         continue;
       }
 
-      if (!resolveSensitive ||
-          layer->surfaceRepresentation().surfaceMaterial() != nullptr) {
+      if (!resolveSensitive || layer->surfaceRepresentation().hasMaterial()) {
         candidates.emplace_back(*layer, layer->surfaceRepresentation(),
                                 boundaryToleranceSurfaceApproach);
       }

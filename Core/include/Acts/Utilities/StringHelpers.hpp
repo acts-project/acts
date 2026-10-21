@@ -130,4 +130,16 @@ inline std::string toString(const std::vector<double>& pVector,
   return sout.str();
 }
 
+/// @brief Print the eigen decomposition of a symmetric matrix in terms
+///        of eigen values and eigen vectors
+/// @param mat: Symmetric matrix which is to be decomposed. Accepts any
+///             fixed- or dynamic-size matrix expression via Eigen::Ref.
+/// @return: The string containing the eigen decomposition
+///
+/// @note Defined out-of-line in StringHelpers.cpp so that the heavy
+///       eigen-solver is instantiated only once instead of in every
+///       translation unit and for every matrix size.
+std::string printEigenDecomposition(
+    const Eigen::Ref<const Eigen::MatrixXd>& mat);
+
 }  // namespace Acts

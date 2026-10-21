@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import pathlib, acts, acts.examples, acts.examples.itk
+import pathlib, acts, acts.root, acts.examples, acts.examples.itk
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -23,14 +23,14 @@ ttbar_pu200 = True
 u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
 outputDir = pathlib.Path.cwd() / "itk_output"
-# acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
+# acts.examples.dump_args_calls()  # show acts.examples python binding calls
 
 detector = acts.examples.itk.buildITkGeometry(geo_dir)
 trackingGeometry = detector.trackingGeometry()
 field = acts.root.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=2, numThreads=2, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=16, numThreads=16, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
@@ -100,9 +100,9 @@ addSeeding(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
-    layerMappingConfigFile=geo_dir / "itk-hgtd/GbtsMapping.csv",
-    connectorInputConfigFile=geo_dir / "itk-hgtd/GbtsBinTable.txt",
-    lutInputConfigFile=geo_dir / "itk-hgtd/gbts_ml_pixel_barrel_loose.lut",
+    layerMappingConfigFile=geo_dir / "itk-hgtd/gbts_layers.json",
+    connectorInputConfigFile=geo_dir / "itk-hgtd/gbts_connections.json",
+    lutInputConfigFile=geo_dir / "itk-hgtd/gbts_tau_lut.json",
     outputDirRoot=outputDir,
 )
 

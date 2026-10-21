@@ -12,18 +12,16 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <functional>
-#include <iterator>
 #include <memory>
 #include <numbers>
 #include <optional>
@@ -61,9 +59,6 @@ using V3Vector = std::vector<Vector3>;
 /// 3D points.
 using V3Matrix = std::vector<V3Vector>;
 
-/// @brief Scalar type used for axis values in surface array binning
-using AxisScalar = Vector3::Scalar;
-
 /// @class SurfaceArrayCreator
 ///
 /// It is designed create sub surface arrays to be ordered on Surfaces
@@ -72,31 +67,8 @@ using AxisScalar = Vector3::Scalar;
 class SurfaceArrayCreator {
  public:
   friend struct ActsTests::SurfaceArrayCreatorFixture;
-  friend class SurfaceArray;
 
-  struct ProtoAxis {
-    BinningType bType = BinningType::equidistant;
-    AxisDirection axisDir = AxisDirection::AxisX;
-    std::size_t nBins = 0;
-    AxisScalar min = 0;
-    AxisScalar max = 0;
-    std::vector<AxisScalar> binEdges;
-
-    std::size_t getBin(AxisScalar x) const {
-      if (binEdges.empty()) {
-        // equidistant
-        AxisScalar w = (max - min) / nBins;
-        return static_cast<std::size_t>(std::floor((x - min) / w));
-      } else {
-        // variable
-        const auto it =
-            std::upper_bound(std::begin(binEdges), std::end(binEdges), x);
-        return std::distance(std::begin(binEdges), it) - 1;
-      }
-    }
-  };
-
-  // Configuration struct
+  /// Configuration options for the surface array creator.
   struct Config {
     /// Type-erased function which determines whether two surfaces are
     /// supposed to be considered equivalent in terms of the binning
@@ -130,7 +102,7 @@ class SurfaceArrayCreator {
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, z when extremas and
+  /// - create an array in a cylinder, binned in phi, z when extrema and
   /// bin numbers are known
   /// @warning This function requires the cylinder aligned with the z-axis
   /// @param surfaces is the vector of pointers to sensitive surfaces
@@ -142,17 +114,22 @@ class SurfaceArrayCreator {
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
+  /// @param neighborWindow Bounds on the neighbor window the lookup derives
+  ///        from the crossing angle, in bins per grid axis (phi, z)
+  /// @param overfill Extra cells per direction and axis to fill around each matched cell
   ///
   /// @return a unique pointer to a new SurfaceArray
-  std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
+  SurfaceArray surfaceArrayOnCylinder(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
       std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3& transform = Transform3::Identity()) const;
+      const Transform3& transform = Transform3::Identity(),
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}},
+      std::uint8_t overfill = 0) const;
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, z when extremas and bin
+  /// - create an array in a cylinder, binned in phi, z when extrema and bin
   /// numbers are unknown - this method goes through the surfaces and finds
   /// out the needed information
   /// @warning This function requires the cylinder aligned with the z-axis
@@ -165,17 +142,22 @@ class SurfaceArrayCreator {
   /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
   /// @param bTypeZ the binning type in z direction (equidistant/arbitrary)
   /// @param transform is the (optional) additional transform applied
+  /// @param neighborWindow Bounds on the neighbor window the lookup derives
+  ///        from the crossing angle, in bins per grid axis (phi, z)
+  /// @param overfill Extra cells per direction and axis to fill around each matched cell
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
+  SurfaceArray surfaceArrayOnCylinder(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces,
       BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3& transform = Transform3::Identity()) const;
+      const Transform3& transform = Transform3::Identity(),
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}},
+      std::uint8_t overfill = 0) const;
 
   /// SurfaceArrayCreator interface method
-  /// - create an array on a disc, binned in r, phi when extremas and
+  /// - create an array on a disc, binned in r, phi when extrema and
   /// bin numbers are known
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
@@ -188,18 +170,23 @@ class SurfaceArrayCreator {
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
   /// @param transform is the (optional) additional transform applied
+  /// @param neighborWindow Bounds on the neighbor window the lookup derives
+  ///        from the crossing angle, in bins per grid axis (r, phi)
+  /// @param overfill Extra cells per direction and axis to fill around each matched cell
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
+  SurfaceArray surfaceArrayOnDisc(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
       std::size_t binsPhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3& transform = Transform3::Identity()) const;
+      const Transform3& transform = Transform3::Identity(),
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}},
+      std::uint8_t overfill = 0) const;
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, r when extremas and bin
+  /// - create an array in a cylinder, binned in phi, r when extrema and bin
   /// numbers are unknown - this method goes through the surfaces and finds
   /// out the needed information
   /// @param surfaces is the vector of pointers to sensitive surfaces
@@ -212,17 +199,23 @@ class SurfaceArrayCreator {
   /// @param bTypeR the binning type in r direction (equidistant/arbitrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
   /// @param transform is the (optional) additional transform applied
+  /// @param neighborWindow Bounds on the neighbor window the lookup derives
+  ///        from the crossing angle, in bins per grid axis (r, phi)
+  /// @param overfill Extra cells per direction and axis to fill around each matched cell
   ///
   /// @return a unique pointer a new SurfaceArray
+  ///
   /// @note If there is more than on R-Ring, number of phi bins
   ///       will be set to lowest number of surfaces of any R-ring.
   ///       This ignores bTypePhi and produces equidistant binning in phi
-  std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
+  SurfaceArray surfaceArrayOnDisc(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
       BinningType bTypePhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3& transform = Transform3::Identity()) const;
+      const Transform3& transform = Transform3::Identity(),
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}},
+      std::uint8_t overfill = 0) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
@@ -241,14 +234,19 @@ class SurfaceArrayCreator {
   /// @param [in] aDir Direction of the aligned surfaces
   /// @param [in] protoLayerOpt Optional @c ProtoLayer instance
   /// @param [in] transform is the (optional) additional transform applied
+  /// @param neighborWindow Bounds on the neighbor window the lookup derives
+  ///        from the crossing angle, in bins per grid axis
+  /// @param overfill Extra cells per direction and axis to fill around each matched cell
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray> surfaceArrayOnPlane(
+  SurfaceArray surfaceArrayOnPlane(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
       std::size_t bins2, AxisDirection aDir,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3& transform = Transform3::Identity()) const;
+      const Transform3& transform = Transform3::Identity(),
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 2}},
+      std::uint8_t overfill = 0) const;
 
   /// Static check function for surface equivalent
   ///
@@ -302,6 +300,17 @@ class SurfaceArrayCreator {
     m_logger = std::move(logger);
   }
 
+  /// Determine the number of bins for a binning direction from the number of
+  /// distinct module positions (i.e. one bin per module). Public so navigation
+  /// policies can size their surface-array grids relative to the module count.
+  /// @param gctx the geometry context
+  /// @param surfaces the surfaces to analyse
+  /// @param aDir the binning direction
+  /// @return the number of distinct module positions along @p aDir
+  std::size_t determineBinCount(const GeometryContext& gctx,
+                                const std::vector<const Surface*>& surfaces,
+                                AxisDirection aDir) const;
+
  private:
   /// configuration object
   Config m_cfg;
@@ -313,12 +322,8 @@ class SurfaceArrayCreator {
       const std::vector<const Surface*>& surfaces,
       const std::function<bool(const Surface*, const Surface*)>& equal) const;
 
-  std::size_t determineBinCount(const GeometryContext& gctx,
-                                const std::vector<const Surface*>& surfaces,
-                                AxisDirection aDir) const;
-
   /// SurfaceArrayCreator internal method
-  /// Creates a variable @c ProtoAxis from a vector of (unsorted) surfaces with
+  /// Creates a variable axis from a vector of (unsorted) surfaces with
   /// PlanarBounds
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
@@ -331,21 +336,20 @@ class SurfaceArrayCreator {
   /// @todo implement for x,y binning
   /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
+  /// @param aBoundaryType the AxisBoundaryType for the axis to be created
   /// @param aDir the AxisDirection in which direction should be binned
   /// (currently possible: AxisPhi, AxisR, AxisZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
-  /// @return Instance of @c ProtoAxis containing determined properties
-  /// @note This only creates the @c ProtoAxis, this needs to be turned
-  ///       into an actual @c Axis object to be used
-  ProtoAxis createVariableAxis(const GeometryContext& gctx,
-                               const std::vector<const Surface*>& surfaces,
-                               AxisDirection aDir, const ProtoLayer& protoLayer,
-                               Transform3& transform) const;
+  /// @return Type-erased @c IAxis containing the determined properties
+  std::unique_ptr<const IAxis> createVariableAxis(
+      const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
+      AxisBoundaryType aBoundaryType, AxisDirection aDir,
+      const ProtoLayer& protoLayer, Transform3& transform) const;
 
   /// SurfaceArrayCreator internal method
-  /// Creates a equidistant @c ProtoAxis when the extremas and the bin number
-  /// are
+  /// Creates a equidistant axis when the extrema and the bin number
+  /// are known.
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
   /// "key" surfaces (surfaces with different positions in the binning
@@ -357,86 +361,18 @@ class SurfaceArrayCreator {
   /// @todo implement for x,y binning
   /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
+  /// @param aBoundaryType the AxisBoundaryType for the axis to be created
   /// @param aDir the AxisDirection in which direction should be binned
   /// (currently possible: AxisPhi, AxisR, AxisZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
   /// @param nBins Number of bins to use, 0 means determine automatically
-  /// @return Instance of @c ProtoAxis containing determined properties
-  /// @note This only creates the @c ProtoAxis, this needs to be turned
-  ///       into an actual @c Axis object to be used
-  ProtoAxis createEquidistantAxis(const GeometryContext& gctx,
-                                  const std::vector<const Surface*>& surfaces,
-                                  AxisDirection aDir,
-                                  const ProtoLayer& protoLayer,
-                                  Transform3& transform,
-                                  std::size_t nBins = 0) const;
-
-  /// SurfaceArrayCreator internal method
-  /// @brief Creates a SurfaceGridLookup instance within an any
-  /// This is essentially a factory which absorbs some if/else logic
-  /// that is required by the templating.
-  /// @tparam bdtA AxisBoundaryType of axis A
-  /// @tparam bdtB AxisBoundaryType of axis B
-  /// @param surface the surface of the grid
-  /// @param layerTolerance the layer tolerance
-  /// @param pAxisA ProtoAxis object for axis A
-  /// @param pAxisB ProtoAxis object for axis B
-  template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
-  static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
-  makeSurfaceGridLookup2D(std::shared_ptr<RegularSurface> surface,
-                          double layerTolerance, ProtoAxis pAxisA,
-                          ProtoAxis pAxisB) {
-    using ISGL = SurfaceArray::ISurfaceGridLookup;
-    std::unique_ptr<ISGL> ptr;
-
-    if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
-                                              pAxisA.nBins);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
-                                              pAxisB.nBins);
-
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
-
-    } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
-                                              pAxisA.nBins);
-      Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
-
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
-
-    } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
-      Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
-                                              pAxisB.nBins);
-
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
-
-    } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
-      Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
-
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
-    }
-
-    return ptr;
-  }
+  /// @return Type-erased @c IAxis containing the determined properties
+  std::unique_ptr<const IAxis> createEquidistantAxis(
+      const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
+      AxisBoundaryType aBoundaryType, AxisDirection aDir,
+      const ProtoLayer& protoLayer, Transform3& transform,
+      std::size_t nBins = 0) const;
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;

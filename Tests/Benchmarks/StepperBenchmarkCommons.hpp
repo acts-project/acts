@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -75,7 +74,7 @@ struct BenchmarkStepper {
   void run(Stepper stepper, const std::string& name) const {
     using Propagator = Propagator<Stepper>;
     using PropagatorOptions = typename Propagator::template Options<>;
-    using Covariance = BoundSquareMatrix;
+    using Covariance = BoundMatrix;
 
     // Create a test context
     GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
@@ -118,7 +117,7 @@ struct BenchmarkStepper {
     const auto propagationBenchResult = microBenchmark(
         [&] {
           auto state = propagator.makeState(options);
-          auto initRes = propagator.initialize(state, pars);
+          auto initRes = propagator.initialize(state, pars, nullptr);
           if (!initRes.ok()) {
             ACTS_ERROR("initialization failed: " << initRes.error());
             return;
@@ -132,7 +131,7 @@ struct BenchmarkStepper {
           }
           totalPathLength += r.pathLength;
           numSteps += r.steps;
-          numStepTrials += state.stepping.nStepTrials;
+          numStepTrials += r.statistics.stepping.nAttemptedSteps;
           ++numIters;
         },
         1, toys);

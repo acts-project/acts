@@ -80,8 +80,7 @@ def runGeant4(
             addParticleGun,
         )
 
-        logger = acts.logging.getLogger("Geant4Simulation")
-        logger.setLevel(acts.logging.INFO)
+        logger = acts.getDefaultLogger("Geant4Simulation", acts.logging.INFO)
 
         rnd = acts.examples.RandomNumbers(seed=seed or 42)
 
@@ -169,7 +168,7 @@ def main():
 
     args = parser.parse_args()
 
-    gContext = acts.GeometryContext()
+    gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
     logLevel = logging.INFO
 
     print("🧲 Starting GeoModel Toroid Field Simulation")

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
@@ -182,11 +183,16 @@ std::vector<Vector2> AnnulusBounds::vertices(
 
 SquareMatrix2 AnnulusBounds::boundToCartesianJacobian(
     const Vector2& lposition) const {
+  // the bound coordinates are polar in the surface's own cartesian frame, so
+  // the average phi of the sector does not enter: `DiscSurface::localToGlobal`
+  // places `(r, phi)` at `(r cos phi, r sin phi)` whatever the bounds are
+  const double cosPhi = std::cos(lposition[1]);
+  const double sinPhi = std::sin(lposition[1]);
   SquareMatrix2 j;
-  j(0, 0) = std::cos(lposition[1] - get(eAveragePhi));
-  j(0, 1) = -lposition[0] * std::sin(lposition[1] - get(eAveragePhi));
-  j(1, 0) = std::sin(lposition[1] - get(eAveragePhi));
-  j(1, 1) = lposition[0] * std::cos(lposition[1] - get(eAveragePhi));
+  j(0, 0) = cosPhi;
+  j(0, 1) = -lposition[0] * sinPhi;
+  j(1, 0) = sinPhi;
+  j(1, 1) = lposition[0] * cosPhi;
   return j;
 }
 
@@ -372,7 +378,6 @@ Vector2 AnnulusBounds::closestPoint(const Vector2& lposition,
     double currentDist =
         squaredNorm(lpositionModulePC - currentClosest, metricModulePC);
     if (currentDist < minDist) {
-      minDist = currentDist;
       closest = m_rotationStripPC.inverse() * modulePCToStripPC(currentClosest);
     }
   }
@@ -409,14 +414,13 @@ Vector2 AnnulusBounds::center() const {
 }
 
 std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::AnnulusBounds:  (innerRadius, outerRadius, minPhi, maxPhi) = ";
   sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << phiMin() << ", "
      << phiMax() << ")" << '\n';
   sl << " - shift xy = " << m_shiftXY.x() << ", " << m_shiftXY.y() << '\n';
   sl << " - shift pc = " << m_shiftPC.x() << ", " << m_shiftPC.y() << '\n';
-  sl << std::setprecision(-1);
   return sl;
 }
 

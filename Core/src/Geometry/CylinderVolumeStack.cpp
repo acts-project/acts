@@ -139,7 +139,7 @@ void CylinderVolumeStack::initializeOuterVolume(
           "have CylinderVolumeBounds"};
     }
 
-    checkNoPhiOrBevel(*cylinderBounds, logger);
+    checkNoPhiSector(*cylinderBounds, logger);
 
     volumeTuples.emplace_back(gctx, *volume, m_groupTransform);
   }
@@ -176,8 +176,7 @@ void CylinderVolumeStack::initializeOuterVolume(
     ACTS_VERBOSE("Appending "
                  << gapVolumes.size()
                  << " gap volumes to the end of the volume vector");
-    std::copy(gapVolumes.begin(), gapVolumes.end(),
-              std::back_inserter(volumeTuples));
+    std::ranges::copy(gapVolumes, std::back_inserter(volumeTuples));
 
     ACTS_VERBOSE("*** Volume configuration after z attachment:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
@@ -234,8 +233,7 @@ void CylinderVolumeStack::initializeOuterVolume(
     ACTS_VERBOSE("Appending "
                  << gapVolumes.size()
                  << " gap volumes to the end of the volume vector");
-    std::copy(gapVolumes.begin(), gapVolumes.end(),
-              std::back_inserter(volumeTuples));
+    std::ranges::copy(gapVolumes, std::back_inserter(volumeTuples));
 
     ACTS_VERBOSE("*** Volume configuration after r attachment:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
@@ -596,20 +594,16 @@ void CylinderVolumeStack::checkVolumeAlignment(
 std::pair<double, double> CylinderVolumeStack::synchronizeRBounds(
     std::vector<VolumeTuple>& volumes, const Logger& logger) {
   const double minR =
-      std::min_element(volumes.begin(), volumes.end(),
-                       [](const auto& a, const auto& b) {
-                         return a.bounds->get(CylinderVolumeBounds::eMinR) <
-                                b.bounds->get(CylinderVolumeBounds::eMinR);
-                       })
-          ->bounds->get(CylinderVolumeBounds::eMinR);
+      std::ranges::min_element(volumes, [](const auto& a, const auto& b) {
+        return a.bounds->get(CylinderVolumeBounds::eMinR) <
+               b.bounds->get(CylinderVolumeBounds::eMinR);
+      })->bounds->get(CylinderVolumeBounds::eMinR);
 
   const double maxR =
-      std::max_element(volumes.begin(), volumes.end(),
-                       [](const auto& a, const auto& b) {
-                         return a.bounds->get(CylinderVolumeBounds::eMaxR) <
-                                b.bounds->get(CylinderVolumeBounds::eMaxR);
-                       })
-          ->bounds->get(CylinderVolumeBounds::eMaxR);
+      std::ranges::max_element(volumes, [](const auto& a, const auto& b) {
+        return a.bounds->get(CylinderVolumeBounds::eMaxR) <
+               b.bounds->get(CylinderVolumeBounds::eMaxR);
+      })->bounds->get(CylinderVolumeBounds::eMaxR);
   ACTS_VERBOSE("Found: minR: " << minR << " maxR: " << maxR);
 
   for (auto& vt : volumes) {
@@ -624,17 +618,15 @@ std::pair<double, double> CylinderVolumeStack::synchronizeRBounds(
 
 std::pair<double, double> CylinderVolumeStack::synchronizeZBounds(
     std::vector<VolumeTuple>& volumes, const Logger& logger) {
-  const double minZ = std::min_element(volumes.begin(), volumes.end(),
-                                       [](const auto& a, const auto& b) {
-                                         return a.minZ() < b.minZ();
-                                       })
-                          ->minZ();
+  const double minZ =
+      std::ranges::min_element(volumes, [](const auto& a, const auto& b) {
+        return a.minZ() < b.minZ();
+      })->minZ();
 
-  const double maxZ = std::max_element(volumes.begin(), volumes.end(),
-                                       [](const auto& a, const auto& b) {
-                                         return a.maxZ() < b.maxZ();
-                                       })
-                          ->maxZ();
+  const double maxZ =
+      std::ranges::max_element(volumes, [](const auto& a, const auto& b) {
+        return a.maxZ() < b.maxZ();
+      })->maxZ();
   const double midZ = (minZ + maxZ) / 2.0;
   const double hlZ = (maxZ - minZ) / 2.0;
   ACTS_DEBUG("Found overall z bounds: [ " << minZ << " <- " << midZ << " -> "
@@ -706,7 +698,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
     checkVolumeAlignment(volTemp, logger);
   }
 
-  checkNoPhiOrBevel(*cylBounds, logger);
+  checkNoPhiSector(*cylBounds, logger);
 
   const double newMinR = newVolume.minR();
   const double newMaxR = newVolume.maxR();
@@ -804,7 +796,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
     if (same(newHlZ, oldHlZ)) {
       ACTS_VERBOSE("Halflength z is the same, no z resize needed");
     } else {
-      if (newMinZ < oldMinZ) {
+      if (!same(newMinZ, oldMinZ) && newMinZ < oldMinZ) {
         if (firstStrategy == VolumeResizeStrategy::Expand) {
           ACTS_VERBOSE("Expanding first volume to new z bounds");
 
@@ -862,7 +854,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
         }
       }
 
-      if (newMaxZ > oldMaxZ) {
+      if (!same(newMaxZ, oldMaxZ) && newMaxZ > oldMaxZ) {
         if (secondStrategy == VolumeResizeStrategy::Expand) {
           ACTS_VERBOSE("Expanding last volume to new z bounds");
 
@@ -954,7 +946,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
     ACTS_VERBOSE("*** Volume configuration after z resizing:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
-    if (oldMinR == newMinR && oldMaxR == newMaxR) {
+    if (same(oldMinR, newMinR) && same(oldMaxR, newMaxR)) {
       ACTS_VERBOSE("Radii are the same, no r resize needed");
     } else {
       auto printGapDimensions = [&](const VolumeTuple& gap,
@@ -965,7 +957,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
                                << gap.maxR() << " ]");
       };
 
-      if (oldMinR > newMinR) {
+      if (!same(oldMinR, newMinR) && oldMinR > newMinR) {
         if (firstStrategy == VolumeResizeStrategy::Expand) {
           // expand innermost volume
           auto& first = volumeTuples.front();
@@ -1001,7 +993,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
         }
       }
 
-      if (oldMaxR < newMaxR) {
+      if (!same(oldMaxR, newMaxR) && oldMaxR < newMaxR) {
         if (secondStrategy == VolumeResizeStrategy::Expand) {
           // expand outermost volume
           auto& last = volumeTuples.back();
@@ -1053,8 +1045,8 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
   m_groupTransform = localToGlobalTransform(gctx);
 }
 
-void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
-                                            const Logger& logger) {
+void CylinderVolumeStack::checkNoPhiSector(const CylinderVolumeBounds& bounds,
+                                           const Logger& logger) {
   if (bounds.get(CylinderVolumeBounds::eHalfPhiSector) != std::numbers::pi) {
     ACTS_ERROR(
         "CylinderVolumeStack requires all volumes to have a full "
@@ -1069,24 +1061,6 @@ void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
         "phi of 0");
     throw std::invalid_argument(
         "CylinderVolumeStack requires all volumes to have an average phi of "
-        "0");
-  }
-
-  if (bounds.get(CylinderVolumeBounds::eBevelMinZ) != 0.0) {
-    ACTS_ERROR(
-        "CylinderVolumeStack requires all volumes to have a bevel angle of "
-        "0");
-    throw std::invalid_argument(
-        "CylinderVolumeStack requires all volumes to have a bevel angle of "
-        "0");
-  }
-
-  if (bounds.get(CylinderVolumeBounds::eBevelMaxZ) != 0.0) {
-    ACTS_ERROR(
-        "CylinderVolumeStack requires all volumes to have a bevel angle of "
-        "0");
-    throw std::invalid_argument(
-        "CylinderVolumeStack requires all volumes to have a bevel angle of "
         "0");
   }
 }

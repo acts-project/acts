@@ -173,11 +173,11 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
     ACTS_VERBOSE("Negative layers are present: rmin, rmax | zmin, zmax = "
                  << wConfig.nVolumeConfig.toString());
     std::vector<std::string> centers;
-    std::transform(negativeLayers.begin(), negativeLayers.end(),
-                   std::back_inserter(centers), [&](const auto& layer) {
-                     return std::to_string(
-                         layer->surfaceRepresentation().center(gctx)[eZ]);
-                   });
+    std::ranges::transform(
+        negativeLayers, std::back_inserter(centers), [&](const auto& layer) {
+          return std::to_string(
+              layer->surfaceRepresentation().center(gctx)[eZ]);
+        });
     ACTS_VERBOSE("-> z locations: " << boost::algorithm::join(centers, ", "));
     // add to the string output
     layerConfiguration += " Negative Endcap |";
@@ -187,11 +187,11 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
     ACTS_VERBOSE("Central layers are present:  rmin, rmax | zmin, zmax = "
                  << wConfig.cVolumeConfig.toString());
     std::vector<std::string> centers;
-    std::transform(centralLayers.begin(), centralLayers.end(),
-                   std::back_inserter(centers), [&](const auto& layer) {
-                     return std::to_string(VectorHelpers::perp(
-                         layer->surfaceRepresentation().center(gctx)));
-                   });
+    std::ranges::transform(
+        centralLayers, std::back_inserter(centers), [&](const auto& layer) {
+          return std::to_string(
+              VectorHelpers::perp(layer->surfaceRepresentation().center(gctx)));
+        });
     ACTS_VERBOSE("-> radii: " << boost::algorithm::join(centers, ", "));
     // add to the string output
     layerConfiguration += " Barrel |";
@@ -201,11 +201,11 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
     ACTS_VERBOSE("Positive layers are present: rmin, rmax | zmin, zmax = "
                  << wConfig.pVolumeConfig.toString());
     std::vector<std::string> centers;
-    std::transform(positiveLayers.begin(), positiveLayers.end(),
-                   std::back_inserter(centers), [&](const auto& layer) {
-                     return std::to_string(
-                         layer->surfaceRepresentation().center(gctx)[eZ]);
-                   });
+    std::ranges::transform(
+        positiveLayers, std::back_inserter(centers), [&](const auto& layer) {
+          return std::to_string(
+              layer->surfaceRepresentation().center(gctx)[eZ]);
+        });
     ACTS_VERBOSE("-> z locations: " << boost::algorithm::join(centers, ", "));
     // add to the string output
     layerConfiguration += " Positive Endcap |";

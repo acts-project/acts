@@ -1,0 +1,32 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Local include(s).
+#include "src/utils/magnetic_field_types.hpp"
+#include "src/finding/kernels/specializations/propagate_to_next_surface_src.cuh"
+
+// Project include(s).
+#include "traccc/finding/details/combinatorial_kalman_filter_types.hpp"
+#include "traccc/geometry/detector.hpp"
+
+// Covfie include(s).
+#include <covfie/core/field.hpp>
+
+namespace traccc::cuda {
+
+using bfield_t = covfie::field<@BFIELD_NAME@>::view_t;
+using propagator_t = traccc::details::ckf_propagator_t<detray::detector_device_t<traccc::@DETECTOR_NAME@>, bfield_t>;
+
+template void propagate_to_next_surface<propagator_t, bfield_t>(
+    const dim3& grid_size, const dim3& block_size, std::size_t shared_mem_size,
+    const cudaStream_t& stream, const finding_config&,
+    const detray::detector_device_t<traccc::@DETECTOR_NAME@>*,
+    const bfield_t&,
+    const device::propagate_to_next_surface_payload&);
+
+}  // namespace traccc::cuda

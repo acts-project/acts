@@ -9,7 +9,6 @@
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -49,7 +48,8 @@ ProcessCode CsvTrackParameterWriter::write(const AlgorithmContext& ctx) {
   std::string path = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-  NamedTupleCsvWriter<TrackParameterData> writer(path, m_cfg.outputPrecision);
+  BoostDescribeCsvWriter<TrackParameterData> writer(path,
+                                                    m_cfg.outputPrecision);
 
   TrackParameterData data{};
   for (const auto& track : inputTracks) {

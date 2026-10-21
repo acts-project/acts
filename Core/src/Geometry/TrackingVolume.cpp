@@ -59,17 +59,22 @@ TrackingVolume::TrackingVolume(
 TrackingVolume::TrackingVolume(const Volume& volume,
                                const std::string& volumeName)
     : Volume{volume}, m_name{volumeName} {
-  createBoundarySurfaces();
-  interlinkLayers();
-
   m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 
 TrackingVolume::TrackingVolume(const Transform3& transform,
                                std::shared_ptr<VolumeBounds> volbounds,
                                const std::string& volumeName)
-    : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr, nullptr,
-                     {}, volumeName) {}
+    : Volume{transform, std::move(volbounds)}, m_name{volumeName} {
+  m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
+}
+
+TrackingVolume::TrackingVolume(VolumePlacementBase& placement,
+                               std::shared_ptr<VolumeBounds> volbounds,
+                               const std::string& volumeName)
+    : Volume{placement, std::move(volbounds)}, m_name{volumeName} {
+  m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
+}
 
 TrackingVolume::~TrackingVolume() = default;
 TrackingVolume::TrackingVolume(TrackingVolume&&) noexcept = default;
@@ -160,7 +165,14 @@ void TrackingVolume::createBoundarySurfaces() {
   using Boundary = BoundarySurfaceT<TrackingVolume>;
 
   // Transform Surfaces To BoundarySurfaces
-  auto orientedSurfaces = Volume::volumeBounds().orientedSurfaces(m_transform);
+  if (isAlignable()) {
+    throw std::runtime_error(
+        "createBoundarySurfaces() - Alignable volumes cannot have boundary "
+        "surfaces");
+  }
+  const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+  auto orientedSurfaces =
+      volumeBounds().orientedSurfaces(localToGlobalTransform(gctx));
 
   m_boundarySurfaces.reserve(orientedSurfaces.size());
   for (auto& osf : orientedSurfaces) {
@@ -312,32 +324,33 @@ void TrackingVolume::synchronizeLayers(double envelope) const {
 }
 
 void TrackingVolume::interlinkLayers() {
-  if (m_confinedLayers) {
-    auto& layers = m_confinedLayers->arrayObjects();
+  if (!m_confinedLayers) {
+    return;
+  }
+  auto& layers = m_confinedLayers->arrayObjects();
 
-    // forward register the last one as the previous one
-    //  first <- | -> second, first <- | -> second, first <- | -> second
-    const Layer* lastLayer = nullptr;
-    for (auto& layerPtr : layers) {
-      // we'll need to mutate our confined layers to perform this operation
-      Layer& mutableLayer = *(std::const_pointer_cast<Layer>(layerPtr));
-      // register the layers
-      mutableLayer.m_nextLayerUtility = m_confinedLayers->binUtility();
-      mutableLayer.m_nextLayers.first = lastLayer;
-      // register the volume
-      mutableLayer.encloseTrackingVolume(*this);
-      // remember the last layer
-      lastLayer = &mutableLayer;
-    }
-    // backward loop
-    lastLayer = nullptr;
-    for (auto layerIter = layers.rbegin(); layerIter != layers.rend();
-         ++layerIter) {
-      // set the other next volume
-      Layer& mutableLayer = *(std::const_pointer_cast<Layer>(*layerIter));
-      mutableLayer.m_nextLayers.second = lastLayer;
-      lastLayer = &mutableLayer;
-    }
+  // forward register the last one as the previous one
+  //  first <- | -> second, first <- | -> second, first <- | -> second
+  const Layer* lastLayer = nullptr;
+  for (auto& layerPtr : layers) {
+    // we'll need to mutate our confined layers to perform this operation
+    Layer& mutableLayer = *(std::const_pointer_cast<Layer>(layerPtr));
+    // register the layers
+    mutableLayer.m_nextLayerUtility = m_confinedLayers->binUtility();
+    mutableLayer.m_nextLayers.first = lastLayer;
+    // register the volume
+    mutableLayer.encloseTrackingVolume(*this);
+    // remember the last layer
+    lastLayer = &mutableLayer;
+  }
+  // backward loop
+  lastLayer = nullptr;
+  for (auto layerIter = layers.rbegin(); layerIter != layers.rend();
+       ++layerIter) {
+    // set the other next volume
+    Layer& mutableLayer = *(std::const_pointer_cast<Layer>(*layerIter));
+    mutableLayer.m_nextLayers.second = lastLayer;
+    lastLayer = &mutableLayer;
   }
 }
 
@@ -484,6 +497,10 @@ void TrackingVolume::setVolumeName(std::string_view volumeName) {
   m_name = volumeName;
 }
 
+bool TrackingVolume::hasMaterial() const {
+  return m_volumeMaterial != nullptr;
+}
+
 const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
   return m_volumeMaterial.get();
 }
@@ -553,6 +570,11 @@ TrackingVolume& TrackingVolume::addVolume(
   return *m_volumes.back();
 }
 
+std::span<const TrackingVolume::PlacementOwnPtr> TrackingVolume::placements()
+    const {
+  return m_placements;
+}
+
 TrackingVolume::PortalRange TrackingVolume::portals() const {
   return PortalRange{m_portals};
 }
@@ -588,28 +610,44 @@ void TrackingVolume::visualize(IVisualization3D& helper,
                                const ViewConfig& viewConfig,
                                const ViewConfig& portalViewConfig,
                                const ViewConfig& sensitiveViewConfig) const {
+  visualize(helper, gctx, [&](const GeometryObject& geoObj) {
+    if (geoObj.geometryId().boundary() != 0) {
+      return portalViewConfig;
+    }
+    if (geoObj.geometryId().sensitive() != 0) {
+      return sensitiveViewConfig;
+    }
+    return viewConfig;
+  });
+}
+
+void TrackingVolume::visualize(IVisualization3D& helper,
+                               const GeometryContext& gctx,
+                               const ViewConfigFunc& viewConfigFactory) const {
   helper.object(volumeName());
-  if (viewConfig.visible) {
+  {
+    auto viewConfig = viewConfigFactory(*this);
     Volume::visualize(helper, gctx, viewConfig);
   }
 
-  if (sensitiveViewConfig.visible && !surfaces().empty()) {
+  if (!surfaces().empty()) {
     helper.object(volumeName() + "_sensitives");
     for (const auto& surface : surfaces()) {
-      surface.visualize(helper, gctx, sensitiveViewConfig);
+      auto viewConfig = viewConfigFactory(surface);
+      surface.visualize(helper, gctx, viewConfig);
     }
   }
 
-  if (portalViewConfig.visible) {
+  if (!portals().empty()) {
     helper.object(volumeName() + "_portals");
     for (const auto& portal : portals()) {
-      portal.surface().visualize(helper, gctx, portalViewConfig);
+      auto viewConfig = viewConfigFactory(portal.surface());
+      portal.surface().visualize(helper, gctx, viewConfig);
     }
   }
 
   for (const auto& child : volumes()) {
-    child.visualize(helper, gctx, viewConfig, portalViewConfig,
-                    sensitiveViewConfig);
+    child.visualize(helper, gctx, viewConfigFactory);
   }
 }
 
@@ -633,8 +671,9 @@ void TrackingVolume::setNavigationPolicy(
 
 void TrackingVolume::initializeNavigationCandidates(
     const GeometryContext& gctx, const NavigationArguments& args,
-    AppendOnlyNavigationStream& stream, const Logger& logger) const {
-  m_navigationDelegate(gctx, args, stream, logger);
+    NavigationPolicyState& state, AppendOnlyNavigationStream& stream,
+    const Logger& logger) const {
+  m_navigationDelegate(gctx, args, state, stream, logger);
 }
 
 namespace {

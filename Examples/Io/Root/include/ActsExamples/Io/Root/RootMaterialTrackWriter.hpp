@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include <Acts/Propagator/MaterialInteractor.hpp>
-#include <Acts/Utilities/Logger.hpp>
-#include <ActsPlugins/Root/RootMaterialTrackIo.hpp>
+#include "ActsPlugins/Root/RootMaterialTrackIo.hpp"
 
 #include <mutex>
 #include <string>
@@ -21,10 +21,6 @@
 
 class TFile;
 class TTree;
-
-namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
 namespace Acts {
 // Using some short hands for Recorded Material
@@ -51,13 +47,13 @@ class RootMaterialTrackWriter
  public:
   struct Config {
     /// material collection to write
-    std::string inputMaterialTracks = "material-tracks";
+    std::string inputMaterialTracks = "material_tracks";
     /// path of the output file
     std::string filePath = "";
     /// file access mode
     std::string fileMode = "RECREATE";
     /// name of the output tree
-    std::string treeName = "material-tracks";
+    std::string treeName = "material_tracks";
 
     /// Re-calculate total values from individual steps (for cross-checks)
     bool recalculateTotals = false;
@@ -82,7 +78,7 @@ class RootMaterialTrackWriter
   ~RootMaterialTrackWriter() override;
 
   /// Framework initialize method
-  ActsExamples::ProcessCode finalize() override;
+  ProcessCode finalize() override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

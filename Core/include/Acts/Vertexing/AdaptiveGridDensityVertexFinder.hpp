@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"

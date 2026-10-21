@@ -22,7 +22,6 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out vertices as a flat TTree.
 ///

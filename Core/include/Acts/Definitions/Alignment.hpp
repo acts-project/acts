@@ -34,16 +34,16 @@ enum AlignmentIndices : unsigned int {
 
 // Matrix and vector types related to alignment parameters.
 /// @brief Vector type for alignment parameters
-using AlignmentVector = ActsVector<eAlignmentSize>;
+using AlignmentVector = Vector<eAlignmentSize>;
 /// @brief Row vector type for alignment parameters
-using AlignmentRowVector = ActsMatrix<1, eAlignmentSize>;
+using AlignmentRowVector = Matrix<1, eAlignmentSize>;
 /// @brief Square matrix type for alignment parameters
-using AlignmentMatrix = ActsMatrix<eAlignmentSize, eAlignmentSize>;
+using AlignmentMatrix = Matrix<eAlignmentSize, eAlignmentSize>;
 /// @brief Matrix type for transforming alignment parameters to position
-using AlignmentToPositionMatrix = ActsMatrix<3, eAlignmentSize>;
+using AlignmentToPositionMatrix = Matrix<3, eAlignmentSize>;
 /// @brief Matrix type for transforming alignment parameters to bound parameters
-using AlignmentToBoundMatrix = ActsMatrix<eBoundSize, eAlignmentSize>;
+using AlignmentToBoundMatrix = Matrix<eBoundSize, eAlignmentSize>;
 /// @brief Matrix type for transforming alignment parameters to path length
-using AlignmentToPathMatrix = ActsMatrix<1, eAlignmentSize>;
+using AlignmentToPathMatrix = Matrix<1, eAlignmentSize>;
 
 }  // namespace Acts

@@ -8,100 +8,115 @@
 
 #pragma once
 
-// TODO: update to C++17 style
-#include "Acts/TrackFinding/GbtsConnector.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/GbtsBinning.hpp"
+#include "Acts/Seeding/GbtsLayerConnection.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/detail/GbtsLayer.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
-#include <cmath>
 #include <cstdint>
 #include <map>
-#include <memory>
+#include <optional>
+#include <span>
 #include <vector>
 
 namespace Acts::Experimental {
-class TrigInDetSiLayer {
- public:
-  int m_subdet;  // combined ID
-  int m_type;    // 0: barrel, +/-n : endcap
-  float m_refCoord;
-  float m_minBound, m_maxBound;
 
-  TrigInDetSiLayer(int subdet, short int type, float center, float min,
-                   float max)
-      : m_subdet(subdet),
-        m_type(type),
-        m_refCoord(center),
-        m_minBound(min),
-        m_maxBound(max) {}
+class GbtsNodeStorage;
+class GbtsTrackingFilter;
+class GraphBasedTrackSeeder;
+
+/// z0 range two eta bins must share a trajectory within, which fixes the bin
+/// table. A separate cut from `GraphBasedTrackSeeder::Config::minZ0`.
+struct GbtsZ0Range final {
+  /// Minimum z0.
+  float min = -168.0f * UnitConstants::mm;
+  /// Maximum z0.
+  float max = 168.0f * UnitConstants::mm;
+  /// Margin added to both ends of the range, for hits off the layer line.
+  float z0Tolerance = 5.0f * UnitConstants::mm;
 };
 
-class GbtsLayer {
+/// Geometry helper built from layers and connectors.
+class GbtsGeometry final {
  public:
-  GbtsLayer(const TrigInDetSiLayer& ls, float ew, std::int32_t bin0);
+  /// Constructor
+  /// @param layerDescriptions Layer descriptions for the layers
+  /// @param layerConnections Pairs of layers the seeder may connect
+  /// @param etaBinWidth Width of the eta bins each layer is split into
+  /// @param z0Range z0 range the bin table is built against
+  /// @param logger Logging instance, only used during construction
+  GbtsGeometry(std::span<const GbtsLayerDescription> layerDescriptions,
+               std::span<const GbtsLayerConnection> layerConnections,
+               float etaBinWidth, const GbtsZ0Range& z0Range = {},
+               const Logger& logger = getDummyLogger());
 
-  // accessors
-  int getEtaBin(float zh, float rh) const;
+  /// Get the number of layers the geometry was built from
+  /// @return The layer count
+  std::size_t numLayers() const { return m_layers.size(); }
 
-  float getMinBinRadius(int idx) const;
+  /// Get the number of eta bins across all layers
+  /// @return The bin count
+  std::uint32_t numBins() const { return m_nEtaBins; }
 
-  float getMaxBinRadius(int idx) const;
+  /// Resolve a layer id into the index GbtsNodeStorage::insert takes.
+  /// @param id Layer id, as the layer descriptions carry it
+  /// @return The layer's index, or nullopt if this geometry has no such layer
+  std::optional<GbtsLayerIndex> layerIndex(GbtsExperimentLayerId id) const;
 
-  std::int32_t numOfBins() const { return m_bins.size(); }
-
-  const std::vector<std::int32_t>& getBins() const { return m_bins; }
-
-  const TrigInDetSiLayer* getLayer() const { return m_layer; }
-
-  bool verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
-                 float max_z0) const;
-
- protected:
-  const TrigInDetSiLayer* m_layer{};
-  std::vector<std::int32_t> m_bins;  // eta-bin indices
-  std::vector<float> m_minRadius;
-  std::vector<float> m_maxRadius;
-  std::vector<float> m_minBinCoord;
-  std::vector<float> m_maxBinCoord;
-
-  float m_minEta{};
-  float m_maxEta{};
-  float m_etaBin{};
-  float m_etaBinWidth{};
-  float m_r1{};
-  float m_z1{};
-  float m_r2{};
-  float m_z2{};
-  std::int32_t m_nBins{};
-};
-
-class GbtsGeometry {
- public:
-  GbtsGeometry(const std::vector<TrigInDetSiLayer>& layers,
-               const std::unique_ptr<GbtsConnector>& conn);
-
-  const GbtsLayer* getGbtsLayerByKey(std::uint32_t key) const;
-  const GbtsLayer* getGbtsLayerByIndex(std::int32_t idx) const;
-
-  inline unsigned int getGbtsLayerKeyByIndex(int idx) const {
-    return m_layerKeys[idx];
+  /// Get the description a layer was built from
+  /// @param idx Layer index
+  /// @return Reference to the layer description
+  const GbtsLayerDescription& layerDescription(GbtsLayerIndex idx) const {
+    return layerByIndex(idx).layerDescription();
   }
 
-  int num_bins() const { return m_nEtaBins; }
-  unsigned int num_layers() const { return m_layArray.size(); }
-  const std::vector<std::pair<int, std::vector<int>>>& bin_groups() const {
-    return m_binGroups;
+  /// Get the eta binning the geometry gave a layer
+  /// @param idx Layer index
+  /// @return Reference to the layer's binning
+  const GbtsLayerBinning& layerBinning(GbtsLayerIndex idx) const {
+    return layerByIndex(idx).binning();
   }
 
- protected:
-  const GbtsLayer* addNewLayer(const TrigInDetSiLayer& l, int bin0);
+  /// Get the eta bin pairs the graph is built over, in build order
+  /// @return The bin groups
+  std::span<const GbtsBinGroup> binGroups() const { return m_binGroups; }
 
+ private:
+  // The layer object is shared only with the classes that build the graph.
+  friend class GbtsNodeStorage;
+  friend class GbtsTrackingFilter;
+  friend class GraphBasedTrackSeeder;
+
+  /// Get layer by ID
+  /// @param id Layer ID
+  /// @return Pointer to layer or nullptr
+  const detail::GbtsLayer* layerById(GbtsExperimentLayerId id) const;
+
+  /// Get layer by index
+  /// @param idx Layer index
+  /// @return Reference to layer
+  const detail::GbtsLayer& layerByIndex(GbtsLayerIndex idx) const;
+
+  /// @param layerDescription Layer description for the layer
+  /// @param bin0 Starting bin index
+  /// @return Reference to the newly added layer
+  const detail::GbtsLayer& createLayer(
+      const GbtsLayerDescription& layerDescription, std::uint32_t bin0);
+
+  /// Eta bin width
   float m_etaBinWidth{};
 
-  std::map<unsigned int, GbtsLayer*> m_layMap;
-  std::vector<std::unique_ptr<GbtsLayer>> m_layArray;
-  std::vector<unsigned int> m_layerKeys;
-  int m_nEtaBins{};
+  /// Layer array
+  std::vector<detail::GbtsLayer> m_layers;
+  /// Layer per user ID map
+  std::map<GbtsExperimentLayerId, GbtsLayerIndex> m_layerFromUserIdMap;
+  /// Number of eta bins
+  std::uint32_t m_nEtaBins{};
 
-  std::vector<std::pair<int, std::vector<int>>> m_binGroups;
+  /// Bin groups
+  std::vector<GbtsBinGroup> m_binGroups;
 };
 
 }  // namespace Acts::Experimental

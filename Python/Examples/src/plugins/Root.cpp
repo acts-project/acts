@@ -6,27 +6,32 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
+#include "ActsExamples/Io/Root/RootAthenaDumpWriter.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
+#include "ActsExamples/Io/Root/RootClusterWriter.hpp"
+#include "ActsExamples/Io/Root/RootFileHasher.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
+#include "ActsExamples/Io/Root/RootMeasurementPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointWriter.hpp"
-#include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
+#include "ActsExamples/Io/Root/RootPatternRecognitionPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
-#include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
+#include "ActsExamples/Io/Root/RootSpacePointPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootSpacePointWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackParameterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
@@ -34,8 +39,13 @@
 #include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
+#include "ActsExamples/Root/MuonVisualization.hpp"
+#include "ActsExamples/Root/ScalingCalibrator.hpp"
+#include "ActsExamples/Validation/HistogramFit.hpp"
+#include "ActsPlugins/Root/RootHistogramFit.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
@@ -74,12 +84,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_READER(
         RootAthenaDumpReader, root, "RootAthenaDumpReader", treename,
-        inputfiles, outputMeasurements, outputPixelSpacePoints,
-        outputStripSpacePoints, outputSpacePoints, outputClusters,
-        outputMeasurementParticlesMap, outputParticleMeasurementsMap,
-        outputParticles, onlySpacepoints, onlyPassedParticles,
-        skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
-        absBoundaryTolerance, onlySpacepoints, noTruth, readCellData);
+        inputfiles, outputMeasurements, outputMeasurementSubset,
+        outputPixelSpacePoints, outputStripSpacePoints, outputSpacePoints,
+        outputClusters, outputMeasurementParticlesMap,
+        outputParticleMeasurementsMap, outputParticles, onlySpacePoints,
+        onlyPassedParticles, skipOverlapSPsPhi, skipOverlapSPsEta,
+        geometryIdMap, trackingGeometry, absBoundaryTolerance, noTruth,
+        readCellData);
 
 #ifdef WITH_GEOMODEL_PLUGIN
     ACTS_PYTHON_DECLARE_READER(RootAthenaDumpGeoIdCollector, root,
@@ -93,49 +104,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
   // Output
   {
-    // Bindings for axis variant used in PlotTool configurations
-    {
-      py::class_<Acts::Experimental::AxisVariant>(root, "AxisVariant")
-          .def_static(
-              "regular",
-              [](unsigned bins, double low, double high,
-                 const std::string& title) {
-                return Acts::Experimental::AxisVariant(
-                    Acts::Experimental::BoostRegularAxis(bins, low, high,
-                                                         title));
-              },
-              "bins"_a, "low"_a, "high"_a, "title"_a = "")
-          .def_static(
-              "log",
-              [](unsigned bins, double low, double high,
-                 const std::string& title) {
-                return Acts::Experimental::AxisVariant(
-                    Acts::Experimental::BoostLogAxis(bins, low, high, title));
-              },
-              "bins"_a, "low"_a, "high"_a, "title"_a = "")
-          .def_static(
-              "variable",
-              [](std::vector<double> edges, const std::string& title) {
-                return Acts::Experimental::AxisVariant(
-                    Acts::Experimental::BoostVariableAxis(std::move(edges),
-                                                          title));
-              },
-              "edges"_a, "title"_a = "");
-
-      py::class_<EffPlotTool::Config>(root, "EffPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning", &EffPlotTool::Config::varBinning);
-
-      py::class_<FakePlotTool::Config>(root, "FakePlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning", &FakePlotTool::Config::varBinning);
-
-      py::class_<DuplicationPlotTool::Config>(root, "DuplicationPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning",
-                         &DuplicationPlotTool::Config::varBinning);
-    }
-
     // ROOT WRITERS
     ACTS_PYTHON_DECLARE_WRITER(RootPropagationStepsWriter, root,
                                "RootPropagationStepsWriter", collection,
@@ -163,11 +131,14 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                inputTrackParticleMatching, filePath, fileMode,
                                treeNameTracks, treeNameParticles);
 
-    ACTS_PYTHON_DECLARE_WRITER(RootTrackFitterPerformanceWriter, root,
-                               "RootTrackFitterPerformanceWriter", inputTracks,
-                               inputParticles, inputTrackParticleMatching,
-                               filePath, resPlotToolConfig, effPlotToolConfig,
-                               trackSummaryPlotToolConfig);
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootTrackParameterPerformanceWriter, root,
+        "RootTrackParameterPerformanceWriter", inputTracks, inputParticles,
+        inputTrackParticleMatching, inputSimHits, inputMeasurementSimHitsMap,
+        filePath, resPlotToolConfig, effPlotToolConfig,
+        trackSummaryPlotToolConfig, parameterSource, reference, parameterType,
+        geometrySelection, fitMinEntries, fitSigmaRange, fitIterations,
+        warningThresholdFitFailureFraction);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterWriter, root, "RootTrackParameterWriter",
@@ -209,9 +180,36 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
       auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
-      ACTS_PYTHON_STRUCT(c, inputMeasurements, inputClusters, inputSimHits,
+      ACTS_PYTHON_STRUCT(c, inputMeasurements, inputSimHits,
                          inputMeasurementSimHitsMap, filePath, fileMode,
                          surfaceByIdentifier);
+    }
+
+    {
+      using Writer = RootClusterWriter;
+      auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
+                   root, "RootClusterWriter")
+                   .def(py::init<const Writer::Config&, Logging::Level>(),
+                        py::arg("config"), py::arg("level"));
+
+      auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
+
+      ACTS_PYTHON_STRUCT(c, inputClusters, filePath, fileMode, treeName);
+    }
+
+    {
+      using Writer = RootMeasurementPerformanceWriter;
+      auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
+                   root, "RootMeasurementPerformanceWriter")
+                   .def(py::init<const Writer::Config&, Logging::Level>(),
+                        py::arg("config"), py::arg("level"));
+
+      auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
+
+      ACTS_PYTHON_STRUCT(
+          c, inputMeasurements, inputSimHits, inputMeasurementSimHitsMap,
+          inputMeasurementParticlesMap, inputSimHitMeasurementsMap, filePath,
+          fileMode, countAxis, purityAxis, zAxis, rAxis, etaAxis, phiAxis);
     }
 
     {
@@ -221,6 +219,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
               root, "RootMaterialWriter")
               .def(py::init<const Writer::Config&, Logging::Level>(),
                    py::arg("config"), py::arg("level"))
+              .def("writeMaterial", &Writer::writeMaterial, py::arg("material"))
               .def("write",
                    py::overload_cast<const TrackingGeometry&>(&Writer::write));
 
@@ -239,8 +238,21 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                inputSimHits, filePath, fileMode, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(
-        RootSpacepointWriter, root, "RootSpacepointWriter", inputSpacepoints,
-        inputMeasurementParticlesMap, filePath, fileMode, treeName);
+        RootSpacePointWriter, root, "RootSpacePointWriter", inputSpacePoints,
+        inputSimHits, inputMeasurementParticlesMap, inputMeasurementSimHitsMap,
+        trackingGeometry, filePath, fileMode, treeName);
+
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootSpacePointPerformanceWriter, root,
+        "RootSpacePointPerformanceWriter", inputSpacePoints, inputParticles,
+        inputMeasurements, inputSimHits, inputMeasurementSimHitsMap,
+        inputMeasurementParticlesMap, trackingGeometry, stripGeometrySelection,
+        filePath, fileMode, treeName, zAxis, rAxis, etaAxis, phiAxis);
+
+    ACTS_PYTHON_DECLARE_WRITER(
+        RootAthenaDumpWriter, root, "RootAthenaDumpWriter", inputParticles,
+        inputClusters, inputMeasurements, inputMeasParticleMap,
+        inputSpacePoints, filePath, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackStatesWriter, root, "RootTrackStatesWriter", inputTracks,
@@ -249,29 +261,82 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackSummaryWriter, root, "RootTrackSummaryWriter", inputTracks,
-        inputParticles, inputTrackParticleMatching, filePath, treeName,
-        fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
+        inputParticles, inputTrackParticleMatching, inputJets, filePath,
+        treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific,
+        writeJets);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootVertexNTupleWriter, root, "RootVertexNTupleWriter", inputVertices,
         inputTracks, inputTruthVertices, inputParticles, inputSelectedParticles,
-        inputTrackParticleMatching, bField, filePath, treeName, fileMode,
-        vertexMatchThreshold, trackMatchThreshold, writeTrackInfo);
+        inputTrackParticleMatching, inputVertexTruthMatching, bField, filePath,
+        treeName, fileMode, writeTrackInfo);
 
     ACTS_PYTHON_DECLARE_WRITER(
-        RootTrackFinderPerformanceWriter, root,
-        "RootTrackFinderPerformanceWriter", inputTracks, inputParticles,
+        RootPatternRecognitionPerformanceWriter, root,
+        "RootPatternRecognitionPerformanceWriter", inputTracks, inputParticles,
         inputTrackParticleMatching, inputParticleTrackMatching,
-        inputParticleMeasurementsMap, filePath, fileMode, effPlotToolConfig,
-        fakePlotToolConfig, duplicationPlotToolConfig,
-        trackSummaryPlotToolConfig, subDetectorTrackSummaryVolumes,
-        writeMatchingDetails);
+        inputParticleMeasurementsMap, label, filePath, fileMode,
+        effPlotToolConfig, fakePlotToolConfig, duplicationPlotToolConfig,
+        trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
+        subDetectorTrackSummaryVolumes, writeMatchingDetails);
+  }
 
-    ACTS_PYTHON_DECLARE_WRITER(RootNuclearInteractionParametersWriter, root,
-                               "RootNuclearInteractionParametersWriter",
-                               inputSimulationProcesses, filePath, fileMode,
-                               interactionProbabilityBins, momentumBins,
-                               invariantMassBins, multiplicityMax,
-                               writeOptionalHistograms, nSimulatedEvents);
+  // Calibration
+  {
+    root.def(
+        "makeScalingCalibrator",
+        [](const char* path) -> std::shared_ptr<MeasurementCalibrator> {
+          return std::make_shared<ScalingCalibrator>(path);
+        },
+        py::arg("path"));
+  }
+
+  // Muon visualization
+  {
+    root.def("makeMuonVisualizationFunction", []() {
+      return std::function<void(
+          const std::string&, const Acts::GeometryContext&,
+          const MuonSpacePointBucket&, const SimHitContainer&,
+          const SimParticleContainer&, const Acts::TrackingGeometry&,
+          const Acts::Logger&)>(visualizeMuonSpacePoints);
+    });
+  }
+
+  // Muon Hough visualization
+  {
+    root.def("makeMuonHoughVisualizationFunction", []() {
+      return std::function<void(
+          const std::string&, const MuonSpacePoint::MuonId&,
+          const std::vector<
+              Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
+                  const MuonSpacePoint*>::Maximum>&,
+          const Acts::HoughTransformUtils::HoughPlane<const MuonSpacePoint*>&,
+          const Acts::HoughTransformUtils::HoughAxisRanges&,
+          const MuonSegmentContainer&, const Acts::Logger&)>(
+          visualizeMuonHoughMaxima);
+    });
+  }
+
+  // Content hashing
+  {
+    root.def(
+        "hashRootFile", &ActsExamples::hashRootFile, "path"_a,
+        "orderInvariant"_a = true,
+        "Compute a hash of the numeric content of a ROOT file. Deterministic, "
+        "sensitive to content changes, and (by default) invariant under "
+        "reordering of tree entries. Not byte-compatible with the Python "
+        "hash_root helper.");
+  }
+
+  // Track parameter performance fit backend
+  {
+    root.def(
+        "makeRootHistogramFitFunction",
+        [](const std::string& fitOptions)
+            -> ActsExamples::HistogramFitFunction {
+          return ActsPlugins::RootHistogramFit{
+              ActsPlugins::RootHistogramFit::Config{fitOptions}};
+        },
+        py::arg("fitOptions") = "SQ0");
   }
 }

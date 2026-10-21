@@ -61,9 +61,9 @@ struct BetheHeitler {
     detail::FpeSafeGammaDistribution gDist(
         slab.thicknessInX0() / std::numbers::ln2, 1.);
 
-    const auto u = gDist(generator);
-    const auto z = std::exp(-u);
-    const auto sampledEnergyLoss =
+    const double u = gDist(generator);
+    const double z = std::exp(-u);
+    const double sampledEnergyLoss =
         std::abs(scaleFactor * particle.energy() * (z - 1.));
 
     std::uniform_real_distribution<double> uDist(0., 1.);
@@ -76,7 +76,8 @@ struct BetheHeitler {
                           photon.energy() * photon.direction());
 
     // apply the energy loss
-    particle.correctEnergy(-sampledEnergyLoss);
+    particle.loseEnergy(sampledEnergyLoss,
+                        SimulationOutcome::KilledInteraction);
 
     return {photon};
   }

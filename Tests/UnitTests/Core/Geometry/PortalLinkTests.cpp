@@ -68,7 +68,7 @@ template <typename link_t>
 void visitBins(const link_t& link,
                const std::function<void(const TrackingVolume*)>& func) {
   auto& grid = link.grid();
-  auto loc = grid.numLocalBins();
+  auto loc = grid.multiAxis().getNBins();
   if constexpr (std::decay_t<decltype(grid)>::DIM == 1) {
     for (std::size_t i = 1; i <= loc[0]; i++) {
       func(grid.atLocalBins({i}));
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(Disc) {
     auto discPhi = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                     30_mm, 100_mm, 45_degree);
 
-    // Check thet disc with phi sector does not accept closed axis
+    // Check that the disc with phi sector does not accept closed axis
     BOOST_CHECK_THROW(
         GridPortalLink::make(discPhi, AxisDirection::AxisPhi,
                              Axis{AxisClosed, -45_degree, 45_degree, 3}),
@@ -1767,7 +1767,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
       std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
 
   auto fillCheckerBoard = [&](auto& grid) {
-    auto loc = grid.numLocalBins();
+    auto loc = grid.multiAxis().getNBins();
     for (std::size_t i = 1; i <= loc[0]; ++i) {
       for (std::size_t j = 1; j <= loc[1]; ++j) {
         grid.atLocalBins({i, j}) = (i + j) % 2 == 0 ? vol1.get() : vol2.get();
@@ -1776,7 +1776,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
   };
 
   auto checkCheckerBoard = [&](const auto& grid) {
-    auto loc = grid.numLocalBins();
+    auto loc = grid.multiAxis().getNBins();
     for (std::size_t i = 1; i <= loc[0]; ++i) {
       for (std::size_t j = 1; j <= loc[1]; ++j) {
         const auto* vol = grid.atLocalBins({i, j});
@@ -2457,7 +2457,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
       std::make_shared<CuboidVolumeBounds>(30_mm, 40_mm, 100_mm));
 
   auto fillCheckerBoard = [&](auto& grid) {
-    auto loc = grid.numLocalBins();
+    auto loc = grid.multiAxis().getNBins();
     for (std::size_t i = 1; i <= loc[0]; ++i) {
       for (std::size_t j = 1; j <= loc[1]; ++j) {
         grid.atLocalBins({i, j}) = (i + j) % 2 == 0 ? vol1.get() : vol2.get();
@@ -2466,7 +2466,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
   };
 
   auto checkCheckerBoard = [&](const auto& grid) {
-    auto loc = grid.numLocalBins();
+    auto loc = grid.multiAxis().getNBins();
     for (std::size_t i = 1; i <= loc[0]; ++i) {
       for (std::size_t j = 1; j <= loc[1]; ++j) {
         const auto* vol = grid.atLocalBins({i, j});

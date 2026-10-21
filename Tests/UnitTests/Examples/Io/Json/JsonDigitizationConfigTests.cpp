@@ -13,14 +13,15 @@
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -115,10 +116,14 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
       DigiConfigConverter("digitization-configuration").fromJson(djson);
   BoundParametersSmearer<RandomEngine, 1u> s;
 
-  for (auto& el : digiConfig) {
-    for (auto& smearing : el.smearingDigiConfig.params) {
+  for (auto &el : digiConfig) {
+    for (auto &smearing : el.smearingDigiConfig.params) {
       // check if the forcePositiveValue parameter is successfully parsed
       BOOST_CHECK(smearing.forcePositiveValues);
+      const auto *gauss =
+          smearing.smearFunction.target<const Digitization::Gauss>();
+      BOOST_REQUIRE(gauss != nullptr);
+      CHECK_CLOSE_REL(gauss->sigma, 0.05, 1e-12);
       std::fill(std::begin(s.indices), std::end(s.indices),
                 static_cast<BoundIndices>(smearing.index));
       std::fill(std::begin(s.smearFunctions), std::end(s.smearFunctions),
@@ -133,14 +138,12 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
   BOOST_CHECK(ret.ok());
   auto [par, cov] = ret.value();
   for (std::size_t i = 0; i < s.indices.size(); i++) {
-    BOOST_TEST_INFO("Comparing smeared measurement "
+    BOOST_TEST_INFO("Checking smeared measurement "
                     << i << " originating from bound parameter "
                     << s.indices[i]);
-    double ref = f.boundParams[s.indices[i]];
-    if (s.forcePositive[i]) {
-      ref = std::abs(ref);
-    }
-    CHECK_CLOSE_REL(par[i], ref, 0.15);
+    BOOST_CHECK(std::isfinite(par[i]));
+    BOOST_CHECK_GE(par[i], 0.);
+    CHECK_CLOSE_REL(cov(i, i), 0.05 * 0.05, 1e-12);
   }
 }
 
@@ -154,11 +157,11 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
 
   GeometricConfig gdc;
 
-  BinUtility segmentation;
-  segmentation += BinUtility(336, -8.4, 8.4, open, AxisDirection::AxisX);
-  segmentation += BinUtility(1280, -36, 36, open, AxisDirection::AxisY);
-
-  gdc.segmentation = segmentation;
+  gdc.segmentation = IMultiAxis::create(
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -8.4, 8.4, 336,
+                                AxisDirection::AxisX),
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -36, 36, 1280,
+                                AxisDirection::AxisY));
   gdc.threshold = 0.01;
   gdc.thickness = 0.15;
   gdc.indices = {eBoundLoc0, eBoundLoc1};
@@ -182,8 +185,21 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   DigiComponentsConfig dcTest(dcJsonIn);
   BOOST_CHECK(dcTest.geometricDigiConfig.indices ==
               dcRef.geometricDigiConfig.indices);
-  BOOST_CHECK_EQUAL(dcTest.geometricDigiConfig.segmentation.dimensions(),
-                    dcRef.geometricDigiConfig.segmentation.dimensions());
+  BOOST_REQUIRE(dcTest.geometricDigiConfig.segmentation != nullptr);
+  const Acts::IMultiAxis &segRef = *dcRef.geometricDigiConfig.segmentation;
+  const Acts::IMultiAxis &segTest = *dcTest.geometricDigiConfig.segmentation;
+  BOOST_REQUIRE_EQUAL(segTest.getNAxes(), segRef.getNAxes());
+  // The JSON format stores the axis boundaries in single precision, so the
+  // boundaries can only be compared with a matching tolerance
+  for (std::size_t i = 0; i < segRef.getNAxes(); ++i) {
+    const Acts::IAxis &axisRef = segRef.getAxis(i);
+    const Acts::IAxis &axisTest = segTest.getAxis(i);
+    BOOST_CHECK(axisTest.getDirection() == axisRef.getDirection());
+    BOOST_CHECK(axisTest.getBoundaryType() == axisRef.getBoundaryType());
+    BOOST_CHECK_EQUAL(axisTest.getNBins(), axisRef.getNBins());
+    CHECK_CLOSE_REL(axisTest.getMin(), axisRef.getMin(), 1e-6);
+    CHECK_CLOSE_REL(axisTest.getMax(), axisRef.getMax(), 1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

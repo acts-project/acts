@@ -20,14 +20,9 @@
 #include <memory>
 #include <string>
 
-namespace edm4hep {
-class MCParticle;
-class SimTrackerHit;
-}  // namespace edm4hep
-
-namespace podio {
-class Frame;
-}
+#include <edm4hep/MCParticle.h>
+#include <edm4hep/SimTrackerHit.h>
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 
@@ -90,7 +85,9 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepSimInputConverter(const Config& config, Acts::Logging::Level level);
+  explicit EDM4hepSimInputConverter(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

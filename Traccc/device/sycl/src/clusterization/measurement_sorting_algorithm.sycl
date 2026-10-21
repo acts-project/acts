@@ -1,0 +1,88 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// SYCL include(s).
+#include <sycl/sycl.hpp>
+
+// Local include(s).
+#include "../utils/calculate1DimNdRange.hpp"
+#include "../utils/get_queue.hpp"
+#include "../utils/oneDPL.hpp"
+#include "traccc/sycl/clusterization/measurement_sorting_algorithm.hpp"
+
+// Project include(s).
+#include "traccc/clusterization/device/measurement_sorting.hpp"
+
+// VecMem include(s).
+#include <vecmem/containers/data/vector_buffer.hpp>
+
+namespace traccc::sycl {
+namespace kernels {
+
+/// Kernel filling the sorting keys and the measurement indices.
+class fill_measurement_sort_keys;
+
+/// Kernel filling the output buffer with sorted measurements.
+class fill_sorted_measurements;
+
+}  // namespace kernels
+
+measurement_sorting_algorithm::measurement_sorting_algorithm(
+    const traccc::memory_resource& mr, const vecmem::copy& copy,
+    queue_wrapper& queue, std::unique_ptr<const Logger> logger,
+    await_function_type await_func)
+    : device::measurement_sorting_algorithm(mr, copy, std::move(logger)),
+      sycl::algorithm_base(queue, std::move(await_func)) {}
+
+void measurement_sorting_algorithm::sorting_kernel(
+    const measurement_sorting_kernel_payload& payload) const {
+  const unsigned int n_measurements = payload.n_measurements;
+  ::sycl::queue& squeue = details::get_queue(queue());
+  auto policy = oneapi::dpl::execution::device_policy{squeue};
+
+  const unsigned int num_threads = warp_size() * 8;
+
+  // Sort the indices by the sorting keys, with a radix sort.
+  squeue
+      .submit([&](::sycl::handler& h) {
+        h.parallel_for<kernels::fill_measurement_sort_keys>(
+            details::calculate1DimNdRange(n_measurements, num_threads),
+            [measurements_view = payload.measurements,
+             keys_view = vecmem::get_data(payload.keys),
+             indices_view =
+                 vecmem::get_data(payload.indices)](::sycl::nd_item<1> item) {
+              device::fill_measurement_sort_keys(
+                  static_cast<unsigned int>(item.get_global_id(0)),
+                  measurements_view, keys_view, indices_view);
+            });
+      })
+      .wait_and_throw();
+  oneapi::dpl::sort_by_key(policy, payload.keys.ptr(),
+                           payload.keys.ptr() + n_measurements,
+                           payload.indices.ptr());
+
+  // Fill the output with the sorted measurements.
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::fill_sorted_measurements>(
+        details::calculate1DimNdRange(n_measurements, num_threads),
+        [measurements_view = payload.measurements,
+         output_view = vecmem::get_data(payload.output),
+         sorted_indices_view =
+             vecmem::get_data(payload.indices)](::sycl::nd_item<1> item) {
+          device::fill_sorted_measurements(
+              static_cast<unsigned int>(item.get_global_id(0)),
+              measurements_view, output_view, sorted_indices_view);
+        });
+  });
+}
+
+void measurement_sorting_algorithm::synchronize() const {
+  details::get_queue(queue()).wait_and_throw();
+}
+
+}  // namespace traccc::sycl

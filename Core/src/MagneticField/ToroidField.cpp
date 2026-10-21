@@ -56,7 +56,8 @@ ToroidField::ToroidField(Config cfg) : m_cfg(std::move(cfg)) {
 
 MagneticFieldProvider::Cache ToroidField::makeCache(
     const MagneticFieldContext& mctx) const {
-  return MagneticFieldProvider::Cache(std::in_place_type<Cache>, mctx);
+  static_cast<void>(mctx);
+  return MagneticFieldProvider::Cache(std::in_place_type<Cache>);
 }
 
 Result<Vector3> ToroidField::getField(

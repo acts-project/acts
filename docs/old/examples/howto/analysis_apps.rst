@@ -27,7 +27,7 @@ regions need to be identified and constraint in the ``rz`` plane.
     -h [ --help ]                           Display this help message
     -s [ --silent ]                         Silent mode (without X-window/display).
     -i [ --input ] arg                      Input ROOT file containing the input TTree.
-    -t [ --tree ] arg (=material-tracks)    Input TTree name.
+    -t [ --tree ] arg (=material_tracks)    Input TTree name.
     -o [ --output ] arg                     Output ROOT file with histograms
     -b [ --bins ] arg (=60)                 Number of bins in eta/phi
     -e [ --eta ] arg (=4)                   Eta range.
@@ -44,7 +44,7 @@ will create a material composition plot of the entire detector:
 
     $ <build>/bin/ActsAnalysisMaterialComposition \
         -i geant4_material_tracks.root \
-        -t material-tracks \
+        -t material_tracks \
         -o material_composition.root \
         --sub-names beampipe detector \
         --sub-rmin 0.:0. \

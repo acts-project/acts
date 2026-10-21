@@ -10,13 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Material/BinnedSurfaceMaterial.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -61,7 +58,7 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
     throw std::invalid_argument("Missing file name");
   }
 
-  // Setup ROOT I/O
+  // Set up ROOT I/O
   m_inputFile = TFile::Open(m_cfg.fileName.c_str());
   if (m_inputFile == nullptr) {
     throw std::ios_base::failure("Could not open '" + m_cfg.fileName + "'");
@@ -69,10 +66,9 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
 
   ActsPlugins::RootMaterialMapIo accessor(m_cfg.accessorConfig,
                                           m_logger->clone("RootMaterialMapIo"));
-  auto [surfaceMaps, volumeMaps] =
-      accessor.read(*m_inputFile, m_cfg.accessorOptions);
+  auto maps = accessor.read(*m_inputFile, m_cfg.accessorOptions);
 
-  m_surfaceMaterialMap = std::move(surfaceMaps);
+  m_surfaceMaterialMap = std::move(maps.surfaceMaterials);
 
   // Get the list of keys from the file
   TList* tlist = m_inputFile->GetListOfKeys();
@@ -156,9 +152,9 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
             std::function<Vector2(Vector3)> transfoGlobalToLocal;
             Grid2D grid = createGrid2D(bUtility, transfoGlobalToLocal);
 
-            Grid2D::point_t gMin = grid.minPosition();
-            Grid2D::point_t gMax = grid.maxPosition();
-            Grid2D::index_t gNBins = grid.numLocalBins();
+            Grid2D::point_t gMin = grid.multiAxis().getMinPoint();
+            Grid2D::point_t gMax = grid.multiAxis().getMaxPoint();
+            Grid2D::index_t gNBins = grid.multiAxis().getNBins();
 
             EAxis axis1(gMin[0], gMax[0], gNBins[0]);
             EAxis axis2(gMin[1], gMax[1], gNBins[1]);
@@ -187,9 +183,9 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
             std::function<Vector3(Vector3)> transfoGlobalToLocal;
             Grid3D grid = createGrid3D(bUtility, transfoGlobalToLocal);
 
-            Grid3D::point_t gMin = grid.minPosition();
-            Grid3D::point_t gMax = grid.maxPosition();
-            Grid3D::index_t gNBins = grid.numLocalBins();
+            Grid3D::point_t gMin = grid.multiAxis().getMinPoint();
+            Grid3D::point_t gMax = grid.multiAxis().getMaxPoint();
+            Grid3D::index_t gNBins = grid.multiAxis().getNBins();
 
             EAxis axis1(gMin[0], gMax[0], gNBins[0]);
             EAxis axis2(gMin[1], gMax[1], gNBins[1]);

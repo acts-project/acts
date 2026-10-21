@@ -151,8 +151,11 @@ auto Acts::IterativeVertexFinder::find(
       }  // end reassignTracksAfterFirstFit case
          // still good vertex? might have changed in the meanwhile
       if (isGoodVertex) {
-        removeUsedCompatibleTracks(currentVertex, tracksToFit, seedTracks,
-                                   vertexingOptions, state);
+        Result<void> removeRes = removeUsedCompatibleTracks(
+            currentVertex, tracksToFit, seedTracks, vertexingOptions, state);
+        if (!removeRes.ok()) {
+          return removeRes.error();
+        }
 
         ACTS_DEBUG(
             "Number of seed tracks after removal of compatible tracks "
@@ -169,8 +172,12 @@ auto Acts::IterativeVertexFinder::find(
       if (!isGoodSplitVertex) {
         removeTracks(tracksToFitSplitVertex, seedTracks);
       } else {
-        removeUsedCompatibleTracks(currentSplitVertex, tracksToFitSplitVertex,
-                                   seedTracks, vertexingOptions, state);
+        Result<void> removeRes = removeUsedCompatibleTracks(
+            currentSplitVertex, tracksToFitSplitVertex, seedTracks,
+            vertexingOptions, state);
+        if (!removeRes.ok()) {
+          return removeRes.error();
+        }
       }
     }
     // Now fill vertex collection with vertex
@@ -336,9 +343,10 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
     } else {
       // Track not compatible with vertex
       // Remove track from current vertex
-      auto foundIter = std::ranges::find_if(
-          tracksAtVertex,
-          [&trk](auto trkAtVtx) { return trk == trkAtVtx.originalParams; });
+      auto foundIter =
+          std::ranges::find_if(tracksAtVertex, [&trk](const auto& trkAtVtx) {
+            return trk == trkAtVtx.originalParams;
+          });
       if (foundIter != tracksAtVertex.end()) {
         // Remove track from seed tracks
         tracksAtVertex.erase(foundIter);

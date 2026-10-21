@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -17,7 +16,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// A mock service that changes the magnetic field scale for each event.
 ///

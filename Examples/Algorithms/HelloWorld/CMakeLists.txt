@@ -1,0 +1,13 @@
+acts_add_library(
+    ExamplesHelloWorld
+    src/HelloLoggerAlgorithm.cpp
+    src/HelloRandomAlgorithm.cpp
+    src/HelloWhiteBoardAlgorithm.cpp
+)
+target_include_directories(
+    ActsExamplesHelloWorld
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+target_link_libraries(ActsExamplesHelloWorld PUBLIC Acts::ExamplesFramework)
+
+acts_compile_headers(ExamplesHelloWorld GLOB "include/**/*.hpp")

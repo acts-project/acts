@@ -19,6 +19,7 @@ namespace Acts {
 /// @ingroup magnetic_field
 class NullBField final : public MagneticFieldProvider {
  public:
+  /// Cache object for the null magnetic field provider.
   struct Cache {
     /// @brief constructor with context
     explicit Cache(const MagneticFieldContext& /*mcfg*/) {}

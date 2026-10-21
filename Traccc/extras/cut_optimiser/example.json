@@ -1,0 +1,33 @@
+{
+    "input": {
+        "event_dir": "/data/Acts/odd-simulations-20240506/geant4_ttbar_mu200",
+        "digitization_file": "geometries/odd/odd-digi-geometric-config.json",
+        "conditions_file": "geometries/odd/odd-digi-geometric-config.json",
+        "detector_file": "geometries/odd/odd-detray_geometry_detray.json",
+        "grid_file": "geometries/odd/odd-detray_surface_grids_detray.json",
+        "material_file": "geometries/odd/odd-detray_material_detray.json"
+    },
+    "config": {
+        "truth-finding-min-track-candidates": 7,
+        "track-candidates-range": "7:100"
+    },
+    "parameters": {
+        "max-num-branches-per-surface": [
+            1,
+            2,
+            3
+        ],
+        "max-num-skipping-per-cand": [
+            2,
+            3
+        ],
+        "chi2-max": [
+            2.5,
+            5.0,
+            7.5,
+            10.0,
+            15.0,
+            20.0
+        ]
+    }
+}

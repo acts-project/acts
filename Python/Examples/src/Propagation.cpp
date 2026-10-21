@@ -7,9 +7,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/GenericRungeKuttaStepper.hpp"
+#include "Acts/Propagator/HelixStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -67,13 +68,30 @@ void addPropagation(py::module& mex) {
       mex, "PropagatorInterface");
 
   // Eigen stepper based propagator
-  { addConcretePropagator<EigenStepper<>, Navigator>(mex, "Eigen"); }
+  {
+    addConcretePropagator<EigenStepper<>, Navigator>(mex, "Eigen");
+  }
+
+  // Helix stepper based propagator
+  {
+    addConcretePropagator<HelixStepper, Navigator>(mex, "Helix");
+  }
+
+  // Reference Runge-Kutta stepper based propagator
+  {
+    addConcretePropagator<GenericRungeKuttaStepper, Navigator>(
+        mex, "GenericRungeKutta");
+  }
 
   // ATLAS stepper based propagator
-  { addConcretePropagator<AtlasStepper, Navigator>(mex, "Atlas"); }
+  {
+    addConcretePropagator<AtlasStepper, Navigator>(mex, "Atlas");
+  }
 
   // Sympy stepper based propagator
-  { addConcretePropagator<SympyStepper, Navigator>(mex, "Sympy"); }
+  {
+    addConcretePropagator<SympyStepper, Navigator>(mex, "Sympy");
+  }
 
   // Straight line stepper
   {

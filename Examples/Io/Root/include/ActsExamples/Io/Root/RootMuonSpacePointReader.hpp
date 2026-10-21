@@ -28,11 +28,11 @@ namespace ActsExamples {
 class RootMuonSpacePointReader : public IReader {
  public:
   struct Config {
-    /// Input sim hit collection to write.
+    /// Output space point collection to write.
     std::string outputSpacePoints{"MuonSpacePoints"};
-    /// Path to the output file.
+    /// Path to the input file.
     std::string filePath{};
-    /// Name of the tree within the output file.
+    /// Name of the tree within the input file.
     std::string treeName{"muonSpacePoints"};
   };
 
@@ -57,7 +57,7 @@ class RootMuonSpacePointReader : public IReader {
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const ActsExamples::AlgorithmContext& context) override;
+  ProcessCode read(const AlgorithmContext& context) override;
 
  protected:
   const Acts::Logger& logger() const { return *m_logger; }
@@ -112,6 +112,25 @@ class RootMuonSpacePointReader : public IReader {
   VecReader_t<float> m_driftR{m_reader, "spacePoint_driftRadius"};
   /// @brief Recorded measurement time.
   VecReader_t<float> m_time{m_reader, "spacePoint_time"};
+  /// @brief Transformation from local to global coordinates
+  VecReader_t<float> m_toSectorFrameLinearCol0Phi{
+      m_reader, "spacePoint_toSectorFrameLinearCol0Phi"};
+  VecReader_t<float> m_toSectorFrameLinearCol0Theta{
+      m_reader, "spacePoint_toSectorFrameLinearCol0Theta"};
+  VecReader_t<float> m_toSectorFrameLinearCol1Phi{
+      m_reader, "spacePoint_toSectorFrameLinearCol1Phi"};
+  VecReader_t<float> m_toSectorFrameLinearCol1Theta{
+      m_reader, "spacePoint_toSectorFrameLinearCol1Theta"};
+  VecReader_t<float> m_toSectorFrameLinearCol2Phi{
+      m_reader, "spacePoint_toSectorFrameLinearCol2Phi"};
+  VecReader_t<float> m_toSectorFrameLinearCol2Theta{
+      m_reader, "spacePoint_toSectorFrameLinearCol2Theta"};
+  VecReader_t<float> m_toSectorFrameTranslationX{
+      m_reader, "spacePoint_toSectorFrameTranslationX"};
+  VecReader_t<float> m_toSectorFrameTranslationY{
+      m_reader, "spacePoint_toSectorFrameTranslationY"};
+  VecReader_t<float> m_toSectorFrameTranslationZ{
+      m_reader, "spacePoint_toSectorFrameTranslationZ"};
 };
 
 }  // namespace ActsExamples

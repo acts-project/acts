@@ -8,10 +8,10 @@
 
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Definitions/Units.hpp>
 
 #include <stdexcept>
 #include <vector>
@@ -33,12 +33,12 @@ ProcessCode CsvParticleWriter::writeT(const AlgorithmContext& ctx,
                                       const SimParticleContainer& particles) {
   auto pathParticles = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
-  NamedTupleCsvWriter<ParticleData> writer(pathParticles,
-                                           m_cfg.outputPrecision);
+  BoostDescribeCsvWriter<ParticleData> writer(pathParticles,
+                                              m_cfg.outputPrecision);
 
   ParticleData data;
   for (const auto& particle : particles) {
-    const auto particleID = particle.particleId().asVector();
+    const auto particleID = particle.particleId().asArray();
     data.particle_id_pv = particleID[0];
     data.particle_id_sv = particleID[1];
     data.particle_id_part = particleID[2];

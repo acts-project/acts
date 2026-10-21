@@ -36,12 +36,30 @@ BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
       Acts::fastHypot(static_cast<float>(x), static_cast<float>(y));
   const double fastDouble = Acts::fastHypot(x, y);
 
-  const float stdFloat =
-      std::hypot(static_cast<float>(x), static_cast<float>(y));
-  const double stdDouble = std::hypot(x, y);
+  const float slowFloat =
+      Acts::slowHypot(static_cast<float>(x), static_cast<float>(y));
+  const double slowDouble = Acts::slowHypot(x, y);
 
-  CHECK_CLOSE_REL(stdFloat, fastFloat, 1e-6);
-  CHECK_CLOSE_REL(stdDouble, fastDouble, 1e-6);
+  CHECK_CLOSE_REL(slowFloat, fastFloat, 1e-6);
+  CHECK_CLOSE_REL(slowDouble, fastDouble, 1e-6);
+}
+
+BOOST_DATA_TEST_CASE(fastCathetus, expDist ^ expDist ^ bdata::xrange(100), xExp,
+                     yExp, i) {
+  static_cast<void>(i);
+
+  const auto [y, x] = std::minmax({std::pow(10, xExp), std::pow(10, yExp)});
+
+  const float fastFloat =
+      Acts::fastCathetus(static_cast<float>(x), static_cast<float>(y));
+  const double fastDouble = Acts::fastCathetus(x, y);
+
+  const float slowFloat =
+      Acts::slowCathetus(static_cast<float>(x), static_cast<float>(y));
+  const double slowDouble = Acts::slowCathetus(x, y);
+
+  CHECK_CLOSE_REL(fastFloat, slowFloat, 1e-6);
+  CHECK_CLOSE_REL(fastDouble, slowDouble, 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(ProductTests) {

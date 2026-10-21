@@ -15,7 +15,7 @@ namespace Acts {
 ///  @enum BoundarySurfaceFace
 ///
 ///  Enum to describe the position of the BoundarySurface
-///  respectively to the frame orientatin of the volume,
+///  respectively to the frame orientation of the volume,
 ///  this is mainly meant for code readability.
 ///
 ///  The different numeration sequences can be found in the

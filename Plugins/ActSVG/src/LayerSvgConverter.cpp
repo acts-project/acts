@@ -13,6 +13,8 @@
 #include "ActsPlugins/ActSVG/SurfaceArraySvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 
+#include <stdexcept>
+
 using namespace Acts;
 
 std::vector<actsvg::svg::object> ActsPlugins::Svg::LayerConverter::convert(
@@ -36,36 +38,19 @@ std::vector<actsvg::svg::object> ActsPlugins::Svg::LayerConverter::convert(
     volume._grid_associations = {associations};
   }
 
-  // The sheet
+  // The sheet. module_sheet and grid_sheet stay undefined: actsvg 0.4.57
+  // removed the displays that filled them, and every consumer already skips
+  // undefined sheets, which is what the moduleInfo/gridInfo options produced
+  // when switched off.
   actsvg::svg::object module_sheet;
   actsvg::svg::object grid_sheet;
   actsvg::svg::object xy_layer;
   actsvg::svg::object zr_layer;
 
-  // The module / grid information
-  const auto& layerSurface = layer.surfaceRepresentation();
-  if (layerSurface.type() == Surface::Disc) {
-    if (cOptions.moduleInfo) {
-      module_sheet = actsvg::display::endcap_sheet(
-          cOptions.name + "_modules", volume, {800, 800},
-          actsvg::display::e_module_info);
-    }
-    if (cOptions.gridInfo) {
-      grid_sheet = actsvg::display::endcap_sheet(cOptions.name + "_grid",
-                                                 volume, {800, 800},
-                                                 actsvg::display::e_grid_info);
-    }
-  } else if (layerSurface.type() == Surface::Cylinder) {
-    if (cOptions.moduleInfo) {
-      module_sheet = actsvg::display::barrel_sheet(
-          cOptions.name + "_modules", volume, {800, 800},
-          actsvg::display::e_module_info);
-    }
-    if (cOptions.gridInfo) {
-      grid_sheet = actsvg::display::barrel_sheet(cOptions.name + "_grid",
-                                                 volume, {800, 800},
-                                                 actsvg::display::e_grid_info);
-    }
+  if (cOptions.moduleInfo || cOptions.gridInfo) {
+    throw std::invalid_argument(
+        "LayerConverter: the module and grid sheets were removed in actsvg "
+        "0.4.57 and cannot be produced");
   }
 
   // The z_r view of things

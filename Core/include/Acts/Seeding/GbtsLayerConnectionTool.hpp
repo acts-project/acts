@@ -1,0 +1,117 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <span>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+namespace Acts::Experimental {
+
+/// Builds the GBTS layer connection table from observed track hits.
+class GbtsLayerConnectionTool {
+ public:
+  /// Struct to hold r and z bounds for a given detector layer
+  struct LayerDescription {
+    /// Minimum radius
+    float minR{};
+    /// Maximum radius
+    float maxR{};
+    /// Minimum z coordinate
+    float minZ{};
+    /// Maximum z coordinate
+    float maxZ{};
+    /// layer ID
+    GbtsExperimentLayerId gbtsId{};
+  };
+
+  /// Configuration for the layer connection tool
+  struct Config {
+    /// List of detector layers
+    std::vector<LayerDescription> detectorGeometry{};
+
+    /// Symmeterize layer connection table
+    bool doSymmetrization = false;
+    /// Minimum probability cut applied to layer transitions
+    float probThreshold = -1;
+  };
+
+  /// pair of layer transitions
+  using LayerIdPair = std::pair<GbtsExperimentLayerId, GbtsExperimentLayerId>;
+
+  /// Hash id used for unordered sets and maps
+  struct LayerIdPairHash {
+    /// operator to allow the lookup of std::pair objects
+    /// in unordered maps or sets
+    /// @param pair Layer transition pair
+    /// @return hash id
+    std::size_t operator()(const LayerIdPair& pair) const noexcept {
+      const auto h1 = std::hash<GbtsExperimentLayerId>{}(pair.first);
+      const auto h2 = std::hash<GbtsExperimentLayerId>{}(pair.second);
+
+      return h1 ^ (h2 << 1);
+    }
+  };
+
+  /// Container of pairs of layer transitions
+  using LayerIdPairs = std::unordered_set<LayerIdPair, LayerIdPairHash>;
+  /// Map of layer pair transitions, quantifying the amount of times they occur
+  using LayerIdPairMap =
+      std::unordered_map<LayerIdPair, std::uint32_t, LayerIdPairHash>;
+
+  /// @param config Tool configuration
+  /// @param logger The Acts logger
+  explicit GbtsLayerConnectionTool(
+      const Config& config,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("GbtsLayerConnectionTool", Logging::Level::INFO));
+
+  /// converts layer hits to layer transitions
+  /// @param track the GBTS layers of the hits of a particle, in the order it
+  ///              passed them
+  void addTrack(std::span<const GbtsExperimentLayerId> track);
+
+  /// Creates the connection table
+  /// @return layer pairs
+  GbtsLayerConnectionTool::LayerIdPairs createConnectionTable() const;
+
+ private:
+  /// returns the Acts logger
+  const Logger& logger() const { return *m_logger; }
+
+  /// gets the index to the vector of detector layers via an GBTS id
+  /// @param gbtsId Gbts Id of layer
+  /// @return detector layer index
+  std::uint32_t getIndexByGbtsId(GbtsExperimentLayerId gbtsId) const;
+
+  /// finds the opposide layer of a symmetrical detector with a given reference
+  /// layer
+  /// @param layer the detector layer
+  /// @return oppsite side layers gbts id
+  std::optional<GbtsExperimentLayerId> oppositeSideLayer(
+      GbtsExperimentLayerId layer) const;
+
+  /// Config for layer connection tool
+  Config m_cfg;
+  /// Acts logger
+  std::unique_ptr<const Acts::Logger> m_logger;
+  /// map of layer transition pairs
+  LayerIdPairMap m_layerPairs{};
+  /// total number of tracks used to train the table on
+  std::uint32_t m_totalTracks = 0;
+};
+
+}  // namespace Acts::Experimental

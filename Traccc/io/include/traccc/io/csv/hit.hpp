@@ -1,0 +1,40 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "traccc/io/csv/dfe.hpp"
+
+// System include(s).
+#include <cstdint>
+
+namespace traccc::io::csv {
+
+/// Type to read information into about Fatras hits
+struct hit {
+  std::uint64_t particle_id = 0;
+  std::uint64_t geometry_id = 0;
+  float tx = 0;
+  float ty = 0;
+  float tz = 0;
+  float tt = 0;
+  float tpx = 0;
+  float tpy = 0;
+  float tpz = 0;
+  float te = 0;
+  float deltapx = 0;
+  float deltapy = 0;
+  float deltapz = 0;
+  float deltae = 0;
+  std::uint64_t index = 0;
+
+  DFE_NAMEDTUPLE(hit, particle_id, geometry_id, tx, ty, tz, tt, tpx, tpy, tpz,
+                 te, deltapx, deltapy, deltapz, deltae, index);
+};
+
+}  // namespace traccc::io::csv

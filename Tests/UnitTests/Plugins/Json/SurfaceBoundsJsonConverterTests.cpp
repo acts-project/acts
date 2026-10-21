@@ -9,12 +9,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsPlugins/Json/SurfaceBoundsJsonConverter.hpp"
 
 #include <algorithm>
 #include <fstream>
 #include <memory>
+#include <numbers>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -52,15 +55,37 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsRoundTripTests) {
   BOOST_CHECK(rectangeRef->values() == rectangleTest->values());
 }
 
-BOOST_AUTO_TEST_CASE(SurfaceBoundsDetrayConversion) {
-  auto rectangeRef = std::make_shared<const RectangleBounds>(4., 6.);
-  nlohmann::json rectangleOutDetray =
-      SurfaceBoundsJsonConverter::toJsonDetray(*rectangeRef);
+BOOST_AUTO_TEST_CASE(SurfaceBoundsValueCountTests) {
+  nlohmann::json jShort;
+  jShort["type"] = "CylinderBounds";
+  jShort["values"] = std::vector<double>{30., 200., std::numbers::pi};
+  BOOST_CHECK_THROW(
+      SurfaceBoundsJsonConverter::fromJson<CylinderBounds>(jShort),
+      std::invalid_argument);
 
-  std::vector<double> boundariesRef = {4, 6};
-  BOOST_CHECK_EQUAL(rectangleOutDetray["shape"].get<unsigned int>(), 5u);
-  BOOST_CHECK(rectangleOutDetray["boundaries"].get<std::vector<double>>() ==
-              boundariesRef);
+  // CylinderBounds used to carry two bevel angles after the four values.
+  nlohmann::json jLegacy;
+  jLegacy["type"] = "CylinderBounds";
+  jLegacy["values"] =
+      std::vector<double>{30., 200., std::numbers::pi, 0., 0., 0.};
+  auto legacy = SurfaceBoundsJsonConverter::fromJson<CylinderBounds>(jLegacy);
+  BOOST_CHECK_EQUAL(legacy->values().size(), 4u);
+  BOOST_CHECK_EQUAL(legacy->get(CylinderBounds::eR), 30.);
+
+  nlohmann::json jBeveled;
+  jBeveled["type"] = "CylinderBounds";
+  jBeveled["values"] =
+      std::vector<double>{30., 200., std::numbers::pi, 0., 0.1, 0.};
+  BOOST_CHECK_THROW(
+      SurfaceBoundsJsonConverter::fromJson<CylinderBounds>(jBeveled),
+      std::invalid_argument);
+
+  nlohmann::json jLong;
+  jLong["type"] = "RectangleBounds";
+  jLong["values"] = std::vector<double>{-4., -6., 4., 6., 0.};
+  BOOST_CHECK_THROW(
+      SurfaceBoundsJsonConverter::fromJson<RectangleBounds>(jLong),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

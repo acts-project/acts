@@ -6,13 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+
+#include <cstdint>
+#include <optional>
 
 #pragma once
 
 namespace Acts {
-
-class SurfaceArray;
 
 /// A navigation policy that internally uses the Gen1 @c SurfaceArray class
 class SurfaceArrayNavigationPolicy : public INavigationPolicy {
@@ -26,8 +29,24 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
     /// The type of the layer
     LayerType layerType = LayerType::Cylinder;
     /// The number of bins in the local directions. The interpretation depends
-    /// on the layer type.
+    /// on the layer type. A value of 0 in either direction requests automatic
+    /// determination from the module layout (one bin per module), scaled by
+    /// @c numberOfBinsFactor.
     std::pair<std::size_t, std::size_t> bins;
+    /// Multiplier applied to auto-determined (0) bin counts. Values below one
+    /// coarsen the grid, values above one refine it. Finer grids return fewer
+    /// surfaces per neighbour query, cutting navigation candidate counts.
+    double numberOfBinsFactor = 1.0;
+    /// Envelope added to the ProtoLayer extent when computing the surface-array
+    /// lookup tolerance.
+    ExtentEnvelope envelope = ExtentEnvelope::Zero();
+    /// Bounds on the neighbor window of the surface array, in bins along the
+    /// local axes of the layer type. If not set, the surface array creator
+    /// uses its default for the layer type.
+    std::optional<SurfaceArray::NeighborWindow> neighborWindow = std::nullopt;
+    /// Extra cells per direction and axis that each surface fills around its
+    /// footprint in the surface array.
+    std::uint8_t overfill = 0;
   };
 
   /// Main constructor, which internally creates the surface array acceleration
@@ -42,13 +61,18 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
                                         const TrackingVolume& volume,
                                         const Logger& logger, Config config);
 
+  /// Destructor
+  ~SurfaceArrayNavigationPolicy() override;
+
   /// Update the navigation state from the surface array
   /// @param gctx The geometry context
   /// @param args The navigation arguments
+  /// @param state The navigation policy state
   /// @param stream The navigation stream to update
   /// @param logger The logger
   void initializeCandidates(const GeometryContext& gctx,
                             const NavigationArguments& args,
+                            NavigationPolicyState& state,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;
 
@@ -80,7 +104,13 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
   /// @return The surface array
   const SurfaceArray& surfaceArray() const;
 
+  /// Constant access to config
+  /// @return config
+  const Config& config() const;
+
  private:
+  Config m_cfg;
+
   std::unique_ptr<SurfaceArray> m_surfaceArray{};
   const TrackingVolume& m_volume;
 };

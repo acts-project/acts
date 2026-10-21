@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
     tgpOptions.volumeNames = {volumeName};
     tgpOptions.targetNames = {"PixelActiveo2", "PixelActiveo4", "PixelActiveo5",
                               "PixelActiveo6"};
-    std::string axes = "XYZ";
+    TGeoAxes axes = "XYZ";
     double scale = 10.;
 
     TGeoParser::State tgpState;
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
     tgpOptions.parseRanges.push_back({AxisDirection::AxisZ, {-60., 15.}});
     tgpOptions.unit = 10.;
 
-    std::string axes = "XYZ";
+    TGeoAxes axes = "XYZ";
 
     TGeoParser::State tgpState;
     tgpState.volume = gGeoManager->GetTopVolume();

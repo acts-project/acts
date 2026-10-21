@@ -19,9 +19,9 @@
 namespace ActsExamples {
 
 EDM4hepTrackInputConverter::EDM4hepTrackInputConverter(
-    const Config& config, Acts::Logging::Level level)
-    : PodioInputConverter("EDM4hepTrackInputConverter", level,
-                          config.inputFrame),
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : PodioInputConverter("EDM4hepTrackInputConverter", config.inputFrame,
+                          std::move(logger)),
       m_cfg(config) {
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
@@ -37,7 +37,8 @@ ProcessCode EDM4hepTrackInputConverter::convert(
 
   for (const auto& inputTrack : trackCollection) {
     auto track = tracks.makeTrack();
-    ActsPlugins::EDM4hepUtil::readTrack(inputTrack, track, m_cfg.Bz);
+    ActsPlugins::EDM4hepUtil::readTrack(ctx.recoGeoContext, inputTrack, track,
+                                        m_cfg.Bz);
   }
 
   ConstTrackContainer constTracks{

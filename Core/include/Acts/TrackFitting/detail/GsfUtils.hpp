@@ -10,16 +10,19 @@
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
-#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
@@ -32,13 +35,17 @@
 
 namespace Acts::detail::Gsf {
 
+/// The tolerated difference to 1 to accept weights as normalized
+constexpr static double s_normalizationTolerance = 1.e-4;
+
 template <typename component_range_t, typename projector_t>
 bool weightsAreNormalized(const component_range_t &cmps,
-                          const projector_t &proj, double tol = 1.e-4) {
+                          const projector_t &proj,
+                          double tol = s_normalizationTolerance) {
   double sumOfWeights = 0.0;
 
-  for (auto it = cmps.begin(); it != cmps.end(); ++it) {
-    sumOfWeights += proj(*it);
+  for (auto &&cmp : cmps) {
+    sumOfWeights += proj(cmp);
   }
 
   return std::abs(sumOfWeights - 1.0) < tol;
@@ -50,16 +57,14 @@ void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
 
   // we need decltype(auto) here to support proxy-types with reference
   // semantics, otherwise there is a `cannot bind ... to ...` error
-  for (auto it = cmps.begin(); it != cmps.end(); ++it) {
-    decltype(auto) cmp = *it;
+  for (auto &&cmp : cmps) {
     assert(std::isfinite(proj(cmp)) && "weight not finite in normalization");
     sumOfWeights += proj(cmp);
   }
 
   assert(sumOfWeights > 0 && "sum of weights is not > 0");
 
-  for (auto it = cmps.begin(); it != cmps.end(); ++it) {
-    decltype(auto) cmp = *it;
+  for (auto &&cmp : cmps) {
     proj(cmp) /= sumOfWeights;
   }
 }
@@ -81,14 +86,15 @@ class ScopedGsfInfoPrinterAndChecker {
   void print_component_stats() const {
     std::size_t i = 0;
     for (auto cmp : m_stepper.constComponentIterable(m_state.stepping)) {
-      auto getVector = [&](auto idx) {
-        return cmp.pars().template segment<3>(idx).transpose();
-      };
-      ACTS_VERBOSE("  #" << i++ << " pos: " << getVector(eFreePos0) << ", dir: "
-                         << getVector(eFreeDir0) << ", weight: " << cmp.weight()
-                         << ", status: " << cmp.status()
-                         << ", qop: " << cmp.pars()[eFreeQOverP]
-                         << ", det(cov): " << cmp.cov().determinant());
+      const auto &singleStepper = cmp.singleStepper(m_stepper);
+      ACTS_VERBOSE(
+          "  #" << i++
+                << " pos: " << singleStepper.position(cmp.state()).transpose()
+                << ", dir: " << singleStepper.direction(cmp.state()).transpose()
+                << ", weight: " << cmp.weight() << ", status: " << cmp.status()
+                << ", qop: " << singleStepper.qOverP(cmp.state())
+                << ", det(cov): "
+                << singleStepper.covariance(cmp.state()).value().determinant());
     }
   }
 
@@ -97,9 +103,8 @@ class ScopedGsfInfoPrinterAndChecker {
     [[maybe_unused]] const bool allFinite =
         std::all_of(cmps.begin(), cmps.end(),
                     [](auto cmp) { return std::isfinite(cmp.weight()); });
-    [[maybe_unused]] const bool allNormalized =
-        detail::Gsf::weightsAreNormalized(
-            cmps, [](const auto &cmp) { return cmp.weight(); });
+    [[maybe_unused]] const bool allNormalized = weightsAreNormalized(
+        cmps, [](const auto &cmp) { return cmp.weight(); });
     [[maybe_unused]] const bool zeroComponents =
         m_stepper.numberComponents(m_state.stepping) == 0;
 
@@ -127,7 +132,7 @@ class ScopedGsfInfoPrinterAndChecker {
     // Some initial printing
     checks(true);
     ACTS_VERBOSE("Gsf step "
-                 << state.stepping.steps << " at mean position "
+                 << state.steps << " at mean position "
                  << stepper.position(state.stepping).transpose()
                  << " with direction "
                  << stepper.direction(state.stepping).transpose()
@@ -167,13 +172,15 @@ void computePosteriorWeights(const traj_t &mt,
   // Find minChi2, this can be used to factor some things later in the
   // exponentiation
   const auto minChi2 =
-      mt.getTrackState(*std::min_element(tips.begin(), tips.end(),
-                                         [&](const auto &a, const auto &b) {
-                                           return mt.getTrackState(a).chi2() <
-                                                  mt.getTrackState(b).chi2();
-                                         }))
+      mt.getTrackState(
+            *std::ranges::min_element(tips,
+                                      [&](const auto &a, const auto &b) {
+                                        return mt.getTrackState(a).chi2() <
+                                               mt.getTrackState(b).chi2();
+                                      }))
           .chi2();
 
+  //! [posterior weights]
   // Loop over the tips and compute new weights
   for (auto tip : tips) {
     const auto state = mt.getTrackState(tip);
@@ -188,7 +195,7 @@ void computePosteriorWeights(const traj_t &mt,
       continue;
     }
 
-    const auto factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
+    const double factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
 
     if (!std::isfinite(factor)) {
       // If something is not finite here, just leave the weight as it is
@@ -197,6 +204,7 @@ void computePosteriorWeights(const traj_t &mt,
 
     weights.at(tip) *= factor;
   }
+  //! [posterior weights]
 }
 
 /// Enumeration type to allow templating on the state we want to project on with
@@ -221,14 +229,14 @@ struct MultiTrajectoryProjector {
     const auto proxy = mt.getTrackState(idx);
     switch (type) {
       case StatesType::ePredicted:
-        return std::make_tuple(weights.at(idx), proxy.predicted(),
-                               proxy.predictedCovariance());
+        return std::tuple(weights.at(idx), proxy.predicted(),
+                          proxy.predictedCovariance());
       case StatesType::eFiltered:
-        return std::make_tuple(weights.at(idx), proxy.filtered(),
-                               proxy.filteredCovariance());
+        return std::tuple(weights.at(idx), proxy.filtered(),
+                          proxy.filteredCovariance());
       case StatesType::eSmoothed:
-        return std::make_tuple(weights.at(idx), proxy.smoothed(),
-                               proxy.smoothedCovariance());
+        return std::tuple(weights.at(idx), proxy.smoothed(),
+                          proxy.smoothedCovariance());
       default:
         throw std::invalid_argument(
             "Incorrect StatesType, should be ePredicted"
@@ -266,6 +274,12 @@ struct TemporaryStates {
   traj_t traj;
   std::vector<TrackIndexType> tips;
   std::map<TrackIndexType, double> weights;
+
+  void clear() {
+    traj.clear();
+    tips.clear();
+    weights.clear();
+  }
 };
 
 /// Function that updates the stepper from the MultiTrajectory
@@ -284,8 +298,11 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
 
     auto proxy = tmpStates.traj.getTrackState(idx);
 
-    cmp.pars() = MultiTrajectoryHelpers::freeFiltered(state.geoContext, proxy);
-    cmp.cov() = proxy.filteredCovariance();
+    // The same update the KF and the single-stepper CKF apply after a filter
+    // step, so a component ends up in the same state a single stepper would
+    cmp.update(
+        stepper, MultiTrajectoryHelpers::freeFiltered(state.geoContext, proxy),
+        proxy.filtered(), proxy.filteredCovariance(), proxy.referenceSurface());
     cmp.weight() = tmpStates.weights.at(idx);
   }
 
@@ -298,13 +315,10 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
 }
 
 /// Function that updates the stepper from the ComponentCache
-template <typename propagator_state_t, typename stepper_t, typename navigator_t>
+template <typename propagator_state_t, typename stepper_t>
 void updateStepper(propagator_state_t &state, const stepper_t &stepper,
-                   const navigator_t &navigator,
-                   const std::vector<GsfComponent> &componentCache,
-                   const Logger &logger) {
-  const auto &surface = *navigator.currentSurface(state.navigation);
-
+                   const Surface &surface,
+                   const std::vector<GsfComponent> &componentCache) {
   // Clear components before adding new ones
   stepper.clearComponents(state.stepping);
 
@@ -314,22 +328,7 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
     BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
                                stepper.particleHypothesis(state.stepping));
 
-    auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
-
-    if (!res.ok()) {
-      ACTS_ERROR("Error adding component to MultiStepper");
-      continue;
-    }
-
-    auto &cmp = *res;
-    auto freeParams = cmp.pars();
-    cmp.jacToGlobal() = surface.boundToFreeJacobian(
-        state.geoContext, freeParams.template segment<3>(eFreePos0),
-        freeParams.template segment<3>(eFreeDir0));
-    cmp.pathAccumulated() = state.stepping.pathAccumulated;
-    cmp.jacobian() = BoundMatrix::Identity();
-    cmp.derivative() = FreeVector::Zero();
-    cmp.jacTransport() = FreeMatrix::Identity();
+    stepper.addComponent(state.stepping, std::move(bound), weight);
   }
 }
 
@@ -340,64 +339,39 @@ double applyBetheHeitler(
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
     double weightCutoff, double transverseMomentumCut,
     std::vector<GsfComponent> &componentCache,
-    Updatable<std::size_t> &nInvalidBetheHeitler,
-    Updatable<double> &maxPathXOverX0, const Logger &logger);
-
-template <typename traj_t, typename propagator_state_t, typename stepper_t,
-          typename navigator_t>
-void convoluteComponents(
-    propagator_state_t &state, const stepper_t &stepper,
-    const navigator_t &navigator, const TemporaryStates<traj_t> &tmpStates,
-    const BetheHeitlerApprox &betheHeitlerApprox,
-    std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
-    double weightCutoff, double transverseMomentumCut,
-    std::vector<GsfComponent> &componentCache,
-    Updatable<std::size_t> &nInvalidBetheHeitler,
-    Updatable<double> &maxPathXOverX0, Updatable<double> &sumPathXOverX0,
-    const Logger &logger) {
-  const GeometryContext &geoContext = state.options.geoContext;
-  const Surface &surface = *navigator.currentSurface(state.navigation);
-  const Direction direction = state.options.direction;
-
-  double pathXOverX0 = 0.0;
-  auto cmps = stepper.componentIterable(state.stepping);
-  for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
-    auto proxy = tmpStates.traj.getTrackState(idx);
-
-    BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
-                               proxy.filtered(), proxy.filteredCovariance(),
-                               stepper.particleHypothesis(state.stepping));
-
-    pathXOverX0 += applyBetheHeitler(
-        geoContext, surface, direction, bound, tmpStates.weights.at(idx),
-        betheHeitlerApprox, betheHeitlerCache, weightCutoff,
-        transverseMomentumCut, componentCache, nInvalidBetheHeitler,
-        maxPathXOverX0, logger);
-  }
-
-  // Store average material seen by the components
-  // Should not be too broadly distributed
-  sumPathXOverX0.tmp() += pathXOverX0 / tmpStates.tips.size();
-}
+    std::size_t &nInvalidBetheHeitler, double &maxPathXOverX0,
+    const Logger &logger);
 
 /// Apply the multiple scattering to the state
-template <typename propagator_state_t, typename stepper_t, typename navigator_t>
-void applyMultipleScattering(propagator_state_t &state,
-                             const stepper_t &stepper,
-                             const navigator_t &navigator,
-                             const MaterialUpdateMode &updateMode,
-                             const Logger &logger) {
+template <typename propagator_state_t, typename stepper_t>
+Result<void> applyMultipleScattering(propagator_state_t &state,
+                                     const stepper_t &stepper,
+                                     const Surface &surface,
+                                     const MaterialUpdateMode &updateMode,
+                                     const Logger &logger) {
   for (auto cmp : stepper.componentIterable(state.stepping)) {
     auto singleState = cmp.singleState(state);
     const auto &singleStepper = cmp.singleStepper(stepper);
 
-    detail::performMaterialInteraction(singleState, singleStepper, navigator,
-                                       updateMode, NoiseUpdateMode::addNoise,
-                                       true, false, logger);
+    const Result<detail::PointwiseMaterialEffects> materialInteractionRes =
+        detail::performMaterialInteraction(
+            singleState, singleStepper, surface, updateMode,
+            NoiseUpdateMode::addNoise, true, false, logger);
+    if (!materialInteractionRes.ok()) {
+      ACTS_DEBUG("Error performing material interaction: "
+                 << materialInteractionRes.error());
+      return materialInteractionRes.error();
+    }
 
-    assert(singleState.stepping.cov.array().isFinite().all() &&
+    assert(singleStepper.covariance(singleState.stepping)
+               .value()
+               .array()
+               .isFinite()
+               .all() &&
            "covariance not finite after multi scattering");
   }
+
+  return Result<void>::success();
 }
 
 }  // namespace Acts::detail::Gsf

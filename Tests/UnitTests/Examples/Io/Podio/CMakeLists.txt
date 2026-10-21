@@ -1,0 +1,3 @@
+set(unittest_extra_libraries ActsExamplesIoPodio)
+
+add_unittest(PodioCollectionDataHandle PodioCollectionDataHandleTests.cpp)

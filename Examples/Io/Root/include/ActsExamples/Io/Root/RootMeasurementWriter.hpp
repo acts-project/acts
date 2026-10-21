@@ -11,10 +11,9 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -38,8 +37,8 @@ namespace ActsExamples {
 
 /// @class RootMeasurementWriter
 ///
-/// Write out a planar cluster collection into a root file
-/// to avoid immense long vectors, each cluster is one entry
+/// Write out a measurement collection into a root file
+/// to avoid immense long vectors, each measurement is one entry
 /// in the root file for optimised data writing speed
 /// The event number is part of the written data.
 ///
@@ -52,17 +51,12 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   struct Config {
     /// Which measurement collection to write.
     std::string inputMeasurements;
-    /// Which cluster collection to write (optional)
-    std::string inputClusters;
     /// Which simulated (truth) hits collection to use.
     std::string inputSimHits;
     /// Input collection to map measured hits to simulated hits.
     std::string inputMeasurementSimHitsMap;
     /// Dimensionality of the measurements to write
     std::vector<Acts::BoundIndices> boundIndices = {
-        Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundTime};
-    /// And cluster indices (if available)
-    std::vector<Acts::BoundIndices> clusterIndices = {
         Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundTime};
 
     /// path of the output file
@@ -117,9 +111,8 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// the output tree
   std::unique_ptr<ActsPlugins::RootMeasurementIo> m_measurementIo;
 
-  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 };
 

@@ -44,7 +44,7 @@ struct PathLimitReached {
 
     // Check if the maximum allowed step size has to be updated
     double distance =
-        std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
+        std::abs(internalLimit) - std::abs(stepper.pathLength(state.stepping));
     double tolerance = state.options.surfaceTolerance;
     bool limitReached = (std::abs(distance) < std::abs(tolerance));
     if (limitReached) {
@@ -60,6 +60,10 @@ struct PathLimitReached {
     return false;
   }
 };
+
+/// Tag used in place of a target aborter type to build a propagator state for
+/// a propagation without a target surface
+struct NoTargetAborter {};
 
 /// This is the condition that the Surface has been reached it then triggers a
 /// propagation abort
@@ -129,29 +133,28 @@ struct SurfaceReached {
       reached = true;
     }
 
-    bool intersectionFound = false;
-
-    for (auto [intersectionIndex, intersection] :
-         Acts::enumerate(multiIntersection)) {
-      if (intersection.isValid() &&
-          detail::checkPathLength(intersection.pathLength(), nearLimit,
-                                  farLimit, logger)) {
-        stepper.updateStepSize(state.stepping, intersection.pathLength(),
-                               ConstrainedStep::Type::Actor);
-        ACTS_VERBOSE(
-            "SurfaceReached aborter | "
-            "Target stepSize (surface) updated to "
-            << stepper.outputStepSize(state.stepping));
-        intersectionFound = true;
-        break;
-      }
-    }
-
-    if (!intersectionFound) {
+    if (const auto intersectionIt = std::ranges::find_if(
+            multiIntersection,
+            [&](const auto& intersection) {
+              return intersection.isValid() &&
+                     detail::checkPathLength(intersection.pathLength(),
+                                             nearLimit, farLimit, logger);
+            });
+        intersectionIt != multiIntersection.end()) {
+      stepper.updateSurfaceStatus(
+          state.stepping, *surface, intersectionIt - multiIntersection.begin(),
+          state.options.direction, boundaryTolerance,
+          state.options.surfaceTolerance, ConstrainedStep::Type::Actor, logger);
+      ACTS_VERBOSE(
+          "SurfaceReached aborter | "
+          "Target stepSize (surface) updated to "
+          << stepper.outputStepSize(state.stepping));
+    } else {
       ACTS_VERBOSE(
           "SurfaceReached aborter | "
           "Target intersection not found. Maybe next time?");
     }
+
     return reached;
   }
 };

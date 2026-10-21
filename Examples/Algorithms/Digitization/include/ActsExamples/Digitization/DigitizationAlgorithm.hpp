@@ -15,7 +15,7 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -40,6 +40,8 @@ class DigitizationAlgorithm final : public IAlgorithm {
     std::string inputSimHits = "simhits";
     /// Output measurements collection.
     std::string outputMeasurements = "measurements";
+    /// Output initial measurement subset (all measurements, for pass 1).
+    std::string outputMeasurementSubset = "measurement_subset";
     /// Output cells map (geoID -> collection of cells).
     std::string outputCells = "cells";
     /// Output cluster collection.
@@ -88,7 +90,8 @@ class DigitizationAlgorithm final : public IAlgorithm {
   ///
   /// @param config is the algorithm configuration
   /// @param level is the logging level
-  DigitizationAlgorithm(Config config, Acts::Logging::Level level);
+  explicit DigitizationAlgorithm(
+      Config config, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Build measurement from simulation hits at input.
   ///
@@ -98,6 +101,19 @@ class DigitizationAlgorithm final : public IAlgorithm {
 
   /// Get const access to the config
   const Config& config() const { return m_cfg; }
+
+  // Nested smearer struct that holds geometric digitizer and smearing
+  /// Support up to 4 dimensions.
+  template <std::size_t kSmearDIM>
+  struct CombinedDigitizer {
+    GeometricConfig geometric;
+    ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> smearing;
+  };
+
+  // Support max 4 digitization dimensions - either digital or smeared
+  using Digitizer = std::variant<CombinedDigitizer<0>, CombinedDigitizer<1>,
+                                 CombinedDigitizer<2>, CombinedDigitizer<3>,
+                                 CombinedDigitizer<4>>;
 
  private:
   /// Helper method for creating digitized parameters from clusters
@@ -113,19 +129,6 @@ class DigitizationAlgorithm final : public IAlgorithm {
       const std::vector<ActsFatras::Segmentizer::ChannelSegment>& channels,
       RandomEngine& rng) const;
 
-  /// Nested smearer struct that holds geometric digitizer and smearing
-  /// Support up to 4 dimensions.
-  template <std::size_t kSmearDIM>
-  struct CombinedDigitizer {
-    GeometricConfig geometric;
-    ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> smearing;
-  };
-
-  // Support max 4 digitization dimensions - either digital or smeared
-  using Digitizer = std::variant<CombinedDigitizer<0>, CombinedDigitizer<1>,
-                                 CombinedDigitizer<2>, CombinedDigitizer<3>,
-                                 CombinedDigitizer<4>>;
-
   /// Configuration of the Algorithm
   Config m_cfg;
   /// Digitizers within geometry hierarchy
@@ -140,17 +143,19 @@ class DigitizationAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
+  WriteDataHandle<MeasurementSubset> m_outputMeasurementSubset{
+      this, "OutputMeasurementSubset"};
   WriteDataHandle<CellsMap> m_outputCells{this, "OutputCells"};
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
 
-  WriteDataHandle<IndexMultimap<SimBarcode>> m_outputMeasurementParticlesMap{
+  WriteDataHandle<MeasurementParticlesMap> m_outputMeasurementParticlesMap{
       this, "OutputMeasurementParticlesMap"};
-  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+  WriteDataHandle<MeasurementSimHitsMap> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
 
-  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+  WriteDataHandle<ParticleMeasurementsMap> m_outputParticleMeasurementsMap{
       this, "OutputParticleMeasurementsMap"};
-  WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
+  WriteDataHandle<SimHitMeasurementsMap> m_outputSimHitMeasurementsMap{
       this, "OutputSimHitMeasurementsMap"};
 
   /// Construct a fixed-size smearer from a configuration.

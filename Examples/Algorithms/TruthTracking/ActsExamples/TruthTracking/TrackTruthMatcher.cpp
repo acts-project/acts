@@ -13,16 +13,16 @@
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
-#include <map>
 #include <optional>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
 
 namespace ActsExamples {
 
 TrackTruthMatcher::TrackTruthMatcher(const Config& config,
-                                     Acts::Logging::Level level)
-    : IAlgorithm("TrackTruthMatcher", level), m_cfg(config) {
+                                     std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackTruthMatcher", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks");
   }
@@ -46,8 +46,7 @@ TrackTruthMatcher::TrackTruthMatcher(const Config& config,
   m_outputParticleTrackMatching.initialize(m_cfg.outputParticleTrackMatching);
 }
 
-ActsExamples::ProcessCode TrackTruthMatcher::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackTruthMatcher::execute(const AlgorithmContext& ctx) const {
   // Read input tracks
   const auto& tracks = m_inputTracks(ctx);
 
@@ -60,7 +59,7 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
 
   // TODO this may be computed in a separate algorithm
   // TODO can we wire this through?
-  std::map<SimBarcode, std::size_t> particleTruthHitCount;
+  std::unordered_map<SimBarcode, std::size_t> particleTruthHitCount;
   for (const auto& [_, pid] : hitParticlesMap) {
     particleTruthHitCount[pid]++;
   }
@@ -81,8 +80,7 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
     // Get the majority particleId and majority particle counts
     // Note that the majority particle might not be in the truth seeds
     // collection
-    ActsFatras::Barcode majorityParticleId =
-        particleHitCounts.front().particleId;
+    SimBarcode majorityParticleId = particleHitCounts.front().particleId;
     std::size_t nMajorityHits = particleHitCounts.front().hitCount;
 
     if (!particles.contains(majorityParticleId)) {
@@ -105,9 +103,10 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
 
     if ((!m_cfg.doubleMatching && recoMatched) ||
         (m_cfg.doubleMatching && recoMatched && truthMatched)) {
-      auto& trackParticleMatch = trackParticleMatching[track.index()] = {
-          TrackMatchClassification::Matched, majorityParticleId,
-          particleHitCounts};
+      trackParticleMatching[track.index()] = {TrackMatchClassification::Matched,
+                                              majorityParticleId,
+                                              particleHitCounts};
+      auto& trackParticleMatch = trackParticleMatching[track.index()];
 
       auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
       if (!particleTrackMatch.track) {

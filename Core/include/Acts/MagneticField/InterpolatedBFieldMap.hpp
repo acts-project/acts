@@ -146,7 +146,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     /// @return magnetic field value at the given position
     ///
     /// @pre The given @c position must lie within the current field cell.
-    Vector3 getField(const ActsVector<DIM_POS>& position) const {
+    Vector3 getField(const Vector<DIM_POS>& position) const {
       // defined in Interpolation.hpp
       return interpolate(position, m_lowerLeft, m_upperRight, m_fieldValues);
     }
@@ -156,7 +156,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     /// @param [in] position global 3D position
     /// @return @c true if position is inside the current field cell,
     ///         otherwise @c false
-    bool isInside(const ActsVector<DIM_POS>& position) const {
+    bool isInside(const Vector<DIM_POS>& position) const {
       for (unsigned int i = 0; i < DIM_POS; ++i) {
         if (position[i] < m_lowerLeft[i] || position[i] >= m_upperRight[i]) {
           return false;
@@ -200,7 +200,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   struct Config {
     /// @brief mapping of global 3D coordinates (cartesian)
     /// onto grid space
-    std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos;
+    std::function<Vector<DIM_POS>(const Vector3&)> transformPos;
 
     /// @brief calculating the global 3D coordinates
     /// (cartesian) of the magnetic field with the local n dimensional field and
@@ -223,8 +223,9 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   explicit InterpolatedBFieldMap(Config cfg) : m_cfg{std::move(cfg)} {
     typename Grid::index_t minBin{};
     minBin.fill(1);
-    m_lowerLeft = m_cfg.grid.lowerLeftBinEdge(minBin);
-    m_upperRight = m_cfg.grid.lowerLeftBinEdge(m_cfg.grid.numLocalBins());
+    m_lowerLeft = m_cfg.grid.multiAxis().getLowerLeftBinEdge(minBin);
+    m_upperRight = m_cfg.grid.multiAxis().getLowerLeftBinEdge(
+        m_cfg.grid.multiAxis().getNBins());
   }
 
   /// @brief retrieve field cell for given position
@@ -236,14 +237,17 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   ///      magnetic field map.
   Result<FieldCell> getFieldCell(const Vector3& position) const {
     const auto& gridPosition = m_cfg.transformPos(position);
-    const auto& indices = m_cfg.grid.localBinsFromPosition(gridPosition);
-    const auto& lowerLeft = m_cfg.grid.lowerLeftBinEdge(indices);
-    const auto& upperRight = m_cfg.grid.upperRightBinEdge(indices);
+    const auto& indices =
+        m_cfg.grid.multiAxis().getLocalBinsFromPoint(gridPosition);
+    const auto& lowerLeft = m_cfg.grid.multiAxis().getLowerLeftBinEdge(indices);
+    const auto& upperRight =
+        m_cfg.grid.multiAxis().getUpperRightBinEdge(indices);
 
     // loop through all corner points
     constexpr std::size_t nCorners = 1 << DIM_POS;
     std::array<Vector3, nCorners> neighbors{};
-    const auto& cornerIndices = m_cfg.grid.closestPointsIndices(gridPosition);
+    const auto& cornerIndices =
+        m_cfg.grid.multiAxis().getClosestPointsIndices(gridPosition);
 
     if (!isInsideLocal(gridPosition)) {
       return MagneticFieldError::OutOfBounds;
@@ -263,7 +267,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   ///
   /// @return vector returning number of bins for all field map axes
   std::vector<std::size_t> getNBins() const final {
-    auto nBinsArray = m_cfg.grid.numLocalBins();
+    auto nBinsArray = m_cfg.grid.multiAxis().getNBins();
     return std::vector<std::size_t>(nBinsArray.begin(), nBinsArray.end());
   }
 
@@ -295,7 +299,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @param [in] gridPosition local N-D position
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
-  bool isInsideLocal(const ActsVector<DIM_POS>& gridPosition) const {
+  bool isInsideLocal(const Vector<DIM_POS>& gridPosition) const {
     for (unsigned int i = 0; i < DIM_POS; ++i) {
       if (gridPosition[i] < m_lowerLeft[i] ||
           gridPosition[i] >= m_upperRight[i]) {

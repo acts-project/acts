@@ -13,8 +13,10 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
+#include "Acts/Propagator/MultiStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
@@ -40,8 +42,7 @@ using namespace ActsExamples;
 namespace {
 
 using MultiStepper =
-    Acts::MultiEigenStepperLoop<Acts::EigenStepperDefaultExtension,
-                                Acts::MaxWeightReducerLoop>;
+    Acts::MultiStepperLoop<Acts::SympyStepper, Acts::MaxWeightReducerLoop>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 
@@ -52,7 +53,7 @@ using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
                          Acts::VectorMultiTrajectory, std::shared_ptr>;
 
-struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
+struct GsfFitterFunctionImpl final : public TrackFitterFunction {
   Fitter fitter;
   DirectFitter directFitter;
 
@@ -121,6 +122,10 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         gsfOptions.extensions.mixtureReducer
             .connect<&Acts::reduceMixtureWithKLDistance>();
       } break;
+      case MixtureReductionAlgorithm::KLDistanceNaive: {
+        gsfOptions.extensions.mixtureReducer
+            .connect<&Acts::reduceMixtureWithKLDistanceNaive>();
+      } break;
     }
 
     return gsfOptions;
@@ -138,11 +143,9 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
       std::string key(kFinalMultiComponentStateColumn);
       tracks.template addColumn<FinalMultiComponentState>(key);
     }
-
     if (!tracks.hasColumn(Acts::hashString(kFwdMaxMaterialXOverX0))) {
       tracks.template addColumn<double>(std::string(kFwdMaxMaterialXOverX0));
     }
-
     if (!tracks.hasColumn(Acts::hashString(kFwdSumMaterialXOverX0))) {
       tracks.template addColumn<double>(std::string(kFwdSumMaterialXOverX0));
     }
@@ -164,6 +167,12 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);
       tracks.template addColumn<FinalMultiComponentState>(key);
+    }
+    if (!tracks.hasColumn(Acts::hashString(kFwdMaxMaterialXOverX0))) {
+      tracks.template addColumn<double>(std::string(kFwdMaxMaterialXOverX0));
+    }
+    if (!tracks.hasColumn(Acts::hashString(kFwdSumMaterialXOverX0))) {
+      tracks.template addColumn<double>(std::string(kFwdSumMaterialXOverX0));
     }
 
     return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),

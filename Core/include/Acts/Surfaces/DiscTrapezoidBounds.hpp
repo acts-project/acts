@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <array>
@@ -48,7 +49,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @param minR inner radius
   /// @param maxR outer radius
   /// @param avgPhi average phi value
-  /// @param stereo optional stero angle applied
+  /// @param stereo optional stereo angle applied
   explicit DiscTrapezoidBounds(double halfXminR, double halfXmaxR, double minR,
                                double maxR,
                                double avgPhi = std::numbers::pi / 2.,
@@ -112,12 +113,12 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// This method returns the center radius
   /// @return Center radius calculated from inner and outer bounds
   double rCenter() const {
-    double rmin = get(eMinR);
-    double rmax = get(eMaxR);
-    double hxmin = get(eHalfLengthXminR);
-    double hxmax = get(eHalfLengthXmaxR);
-    auto hmin = std::sqrt(rmin * rmin - hxmin * hxmin);
-    auto hmax = std::sqrt(rmax * rmax - hxmax * hxmax);
+    const double rmin = get(eMinR);
+    const double rmax = get(eMaxR);
+    const double hxmin = get(eHalfLengthXminR);
+    const double hxmax = get(eHalfLengthXmaxR);
+    const double hmin = fastCathetus(rmin, hxmin);
+    const double hmax = fastCathetus(rmax, hxmax);
     return 0.5 * (hmin + hmax);
   }
 
@@ -128,20 +129,20 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// This method returns the halfPhiSector which is covered by the disc
   /// @return Half phi sector angle covered by the disc trapezoid
   double halfPhiSector() const {
-    auto minHalfPhi = std::asin(get(eHalfLengthXminR) / get(eMinR));
-    auto maxHalfPhi = std::asin(get(eHalfLengthXmaxR) / get(eMaxR));
+    const double minHalfPhi = std::asin(get(eHalfLengthXminR) / get(eMinR));
+    const double maxHalfPhi = std::asin(get(eHalfLengthXmaxR) / get(eMaxR));
     return std::max(minHalfPhi, maxHalfPhi);
   }
 
   /// This method returns the half length in Y (this is Rmax -Rmin)
   /// @return Half length in Y direction calculated from radial bounds
   double halfLengthY() const {
-    double rmin = get(eMinR);
-    double rmax = get(eMaxR);
-    double hxmin = get(eHalfLengthXminR);
-    double hxmax = get(eHalfLengthXmaxR);
-    auto hmin = std::sqrt(rmin * rmin - hxmin * hxmin);
-    auto hmax = std::sqrt(rmax * rmax - hxmax * hxmax);
+    const double rmin = get(eMinR);
+    const double rmax = get(eMaxR);
+    const double hxmin = get(eHalfLengthXminR);
+    const double hxmax = get(eHalfLengthXmaxR);
+    const double hmin = fastCathetus(rmin, hxmin);
+    const double hmax = fastCathetus(rmax, hxmax);
     return 0.5 * (hmax - hmin);
   }
 

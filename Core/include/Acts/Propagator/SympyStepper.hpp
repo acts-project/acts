@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -21,28 +21,43 @@
 #include "Acts/Propagator/detail/MaterialEffectsAccumulator.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 
+#include <stdexcept>
+
 namespace Acts {
 
 class IVolumeMaterial;
 
-class SympyStepper {
+/// Stepper implementation using sympy-generated expressions.
+class SympyStepper final {
  public:
-  /// Jacobian, Covariance and State definitions
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
+  /// Type alias for jacobian matrix
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSquareMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  /// Type alias for covariance matrix
+  using Covariance = BoundMatrix;
 
+  /// Configuration for the sympy stepper.
   struct Config {
+    /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
+  /// Runtime options for sympy propagation.
   struct Options : public StepperPlainOptions {
+    /// Whether to perform dense output
     bool doDense = true;
+    /// Maximum radiation length fraction per step
     double maxXOverX0Step = 1;
 
+    /// Constructor
+    /// @param gctx Geometry context
+    /// @param mctx Magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain stepper options
+    /// @param options Plain stepper options
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -62,41 +77,29 @@ class SympyStepper {
     State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)
         : options(optionsIn), fieldCache(std::move(fieldCacheIn)) {}
 
+    // Declaration order matters: members used by `step()` are kept in one
+    // contiguous run of cache lines, the rest come last.
+
     /// Configuration options for the stepper
     Options options;
 
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
-    /// Particle hypothesis
-    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
-
-    /// Covariance matrix (and indicator)
-    /// associated with the initial error on track parameters
-    bool covTransport = false;
-    /// Covariance matrix for error propagation
-    Covariance cov = Covariance::Zero();
-
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
-
-    /// Jacobian from local to the global frame
-    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
-
-    /// Pure transport jacobian part from runge kutta integration
-    FreeMatrix jacTransport = FreeMatrix::Identity();
-
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
 
-    /// Accumulated path length state
-    double pathAccumulated = 0.;
+    /// Bound-to-free jacobian from the last reference surface, transported
+    /// along with the track.
+    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
 
-    /// Total number of performed steps
-    std::size_t nSteps = 0;
+    /// Particle hypothesis
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
-    /// Totoal number of attempted steps
-    std::size_t nStepTrials = 0;
+    /// dt/ds, handed to the vacuum kernel rather than formed in it. Constant
+    /// while q/p is, so it is refreshed wherever q/p moves: initialize(),
+    /// update() and a dense step.
+    double dtds = 1;
 
     /// Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
@@ -104,16 +107,30 @@ class SympyStepper {
     /// Last performed step (for overstep limit calculation)
     double previousStepSize = 0.;
 
-    /// This caches the current magnetic field cell and stays
-    /// (and interpolates) within it as long as this is valid.
-    /// See step() code for details.
-    MagneticFieldProvider::Cache fieldCache;
+    /// Magnetic field at the current position, reused as the next step's
+    /// first sample. Reset whenever the parameters are set from outside.
+    std::optional<Vector3> field;
+
+    /// Accumulated path length state
+    double pathAccumulated = 0.;
+
+    /// Total number of performed steps
+    std::size_t nSteps = 0;
 
     /// Statistics of the stepper
     StepperStatistics statistics;
 
     /// Accumulator for material effects along the trajectory
     detail::MaterialEffectsAccumulator materialEffectsAccumulator;
+
+    /// This caches the current magnetic field cell and stays
+    /// (and interpolates) within it as long as this is valid.
+    /// See step() code for details.
+    MagneticFieldProvider::Cache fieldCache;
+
+    /// Covariance matrix for track parameter uncertainties, set if the
+    /// covariance is transported
+    std::optional<Covariance> cov;
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
@@ -124,10 +141,22 @@ class SympyStepper {
   /// @param config The configuration of the stepper
   explicit SympyStepper(const Config& config);
 
+  /// Create a state object
+  /// @param options Stepper options
+  /// @return State object
   State makeState(const Options& options) const;
 
-  void initialize(State& state, const BoundTrackParameters& par) const;
+  /// Initialize the state from bound track parameters
+  /// @param state The state to initialize
+  /// @param par The bound track parameters
+  void initialize(State& state, const BoundParameters& par) const;
 
+  /// Initialize the state from bound parameters
+  /// @param state The state to initialize
+  /// @param boundParams Bound track parameters vector
+  /// @param cov Covariance matrix
+  /// @param particleHypothesis Particle hypothesis
+  /// @param surface Reference surface
   void initialize(State& state, const BoundVector& boundParams,
                   const std::optional<BoundMatrix>& cov,
                   ParticleHypothesis particleHypothesis,
@@ -139,6 +168,7 @@ class SympyStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
+  /// @return Magnetic field vector
   Result<Vector3> getField(State& state, const Vector3& pos) const {
     // get the field from the cell
     return m_bField->getField(pos, state.fieldCache);
@@ -147,6 +177,7 @@ class SympyStepper {
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Position vector
   Vector3 position(const State& state) const {
     return state.pars.template segment<3>(eFreePos0);
   }
@@ -154,6 +185,7 @@ class SympyStepper {
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Direction vector
   Vector3 direction(const State& state) const {
     return state.pars.template segment<3>(eFreeDir0);
   }
@@ -161,11 +193,13 @@ class SympyStepper {
   /// QoP direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Charge over momentum
   double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Absolute momentum
   double absoluteMomentum(const State& state) const {
     return particleHypothesis(state).extractMomentum(qOverP(state));
   }
@@ -173,6 +207,7 @@ class SympyStepper {
   /// Momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Momentum vector
   Vector3 momentum(const State& state) const {
     return absoluteMomentum(state) * direction(state);
   }
@@ -180,6 +215,7 @@ class SympyStepper {
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Particle charge
   double charge(const State& state) const {
     return particleHypothesis(state).extractCharge(qOverP(state));
   }
@@ -187,6 +223,7 @@ class SympyStepper {
   /// Particle hypothesis
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Particle hypothesis
   const ParticleHypothesis& particleHypothesis(const State& state) const {
     return state.particleHypothesis;
   }
@@ -194,6 +231,7 @@ class SympyStepper {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Time
   double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Update surface status
@@ -209,6 +247,7 @@ class SympyStepper {
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] stype The step size type to be set
   /// @param [in] logger A @c Logger instance
+  /// @return Intersection status
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
@@ -252,6 +291,7 @@ class SympyStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @param stype [in] The step size type to be returned
+  /// @return Step size
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
     return state.stepSize.value(stype);
   }
@@ -267,60 +307,106 @@ class SympyStepper {
   /// Output the Step Size - single component
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
+  /// @return String representation of step size
   std::string outputStepSize(const State& state) const {
     return state.stepSize.toString();
   }
 
-  /// Create and return the bound state at the current position
+  /// Get the step size constraints
   ///
-  /// @brief This transports (if necessary) the covariance
-  /// to the surface and creates a bound state. It does not check
-  /// if the transported state is at the surface, this needs to
-  /// be guaranteed by the propagator
-  ///
-  /// @param [in] state State that will be presented as @c BoundState
-  /// @param [in] surface The surface to which we bind the state
-  /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
-  ///
-  /// @return A bound state:
-  ///   - the parameters at the surface
-  ///   - the stepwise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(
-      State& state, const Surface& surface, bool transportCov = true,
-      const FreeToBoundCorrection& freeToBoundCorrection =
-          FreeToBoundCorrection(false)) const;
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The step size constraints
+  const ConstrainedStep& stepSize(const State& state) const {
+    return state.stepSize;
+  }
 
-  /// @brief If necessary fill additional members needed for curvilinearState
+  /// Get the stepper statistics
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The statistics since the last initialization
+  const StepperStatistics& statistics(const State& state) const {
+    return state.statistics;
+  }
+
+  /// Get the path length
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The path length since the last initialization
+  double pathLength(const State& state) const { return state.pathAccumulated; }
+
+  /// Check if the state carries a covariance
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return True if the covariance is transported
+  bool hasCovariance(const State& state) const { return state.cov.has_value(); }
+
+  /// Get the covariance at the anchor
+  ///
+  /// The anchor is the frame of the last initialization, transport or update.
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The covariance at the anchor, or no value if the state does not
+  ///         carry a covariance
+  const std::optional<Covariance>& covariance(const State& state) const {
+    return state.cov;
+  }
+
+  /// Set the covariance at the anchor
+  ///
+  /// The state must already carry a covariance, because the stepper only
+  /// transports the Jacobian while it has one.
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param [in] covariance The new covariance at the anchor
+  /// @throws std::logic_error if the state does not carry a covariance
+  void setCovariance(State& state, const Covariance& covariance) const {
+    if (!state.cov.has_value()) {
+      throw std::logic_error(
+          "Cannot set the covariance of a state without a covariance");
+    }
+    state.cov = covariance;
+  }
+
+  /// Get the bound parameters at the current position
+  ///
+  /// The parameters carry the covariance at the anchor if the state has one.
+  ///
+  /// @note It does not check if the state is on @p surface or anchored on it
+  ///
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @param [in] surface The surface of the parameters
+  /// @return The bound parameters, or a failure if the position cannot be
+  ///         expressed on @p surface
+  Result<BoundParameters> boundParameters(const State& state,
+                                          const Surface& surface) const;
+
+  /// @brief If necessary fill additional members needed for
+  /// transportToCurvilinear
   ///
   /// Compute path length derivatives in case they have not been computed
   /// yet, which is the case if no step has been executed yet.
   ///
-  /// @param [in, out] state State of the stepper
+  /// @param [in, out] state The state of the stepper
   /// @return true if nothing is missing after this call, false otherwise.
   bool prepareCurvilinearState(State& state) const;
 
-  /// Create and return a curvilinear state at the current position
+  /// Get the curvilinear parameters at the current position
   ///
-  /// @brief This transports (if necessary) the covariance
-  /// to the current position and creates a curvilinear state.
+  /// The parameters carry the covariance at the anchor if the state has one.
   ///
-  /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] transportCov Flag steering covariance transport
-  ///
-  /// @return A curvilinear state:
-  ///   - the curvilinear parameters at given position
-  ///   - the stepweise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  BoundState curvilinearState(State& state, bool transportCov = true) const;
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @return The curvilinear parameters
+  BoundParameters curvilinearParameters(const State& state) const;
 
   /// Method to update a stepper state to the some parameters
+  ///
+  /// This anchors the state on @p surface.
   ///
   /// @param [in,out] state State object that will be updated
   /// @param [in] freeParams Free parameters that will be written into @p state
   /// @param [in] boundParams Corresponding bound parameters used to update jacToGlobal in @p state
   /// @param [in] covariance The covariance that will be written into @p state
+  ///                        if the state carries a covariance
   /// @param [in] surface The surface used to update the jacToGlobal
   void update(State& state, const FreeVector& freeParams,
               const BoundVector& boundParams, const Covariance& covariance,
@@ -336,24 +422,27 @@ class SympyStepper {
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
               double qOverP, double time) const;
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state
+  /// Transport the covariance to the curvilinear frame at the current position
+  ///
+  /// This anchors the state on the curvilinear frame. Without a covariance
+  /// the state does not change.
   ///
   /// @param [in,out] state State of the stepper
-  void transportCovarianceToCurvilinear(State& state) const;
+  /// @return The jacobian from the previous anchor to the curvilinear frame
+  Jacobian transportToCurvilinear(State& state) const;
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current position,
-  /// or direction of the state
+  /// Transport the covariance to a surface at the current position
   ///
-  /// @tparam surface_t the Surface type
+  /// This anchors the state on @p surface. Without a covariance the state
+  /// does not change. The state must be on @p surface, and it stays unchanged
+  /// if it is not.
   ///
   /// @param [in,out] state State of the stepper
-  /// @param [in] surface is the surface to which the covariance is forwarded to
+  /// @param [in] surface The surface to transport the covariance to
   /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
-  /// @note no check is done if the position is actually on the surface
-  void transportCovarianceToBound(
+  /// @return The jacobian from the previous anchor to @p surface, or a failure
+  ///         if the state is not on @p surface
+  Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
@@ -372,12 +461,6 @@ class SympyStepper {
   ///       propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const;
-
-  /// Method that reset the Jacobian to the Identity for when no bound state are
-  /// available
-  ///
-  /// @param [in,out] state State of the stepper
-  void setIdentityJacobian(State& state) const;
 
  protected:
   /// Magnetic field inside of the detector

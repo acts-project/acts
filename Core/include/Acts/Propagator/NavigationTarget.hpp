@@ -111,10 +111,12 @@ class NavigationTarget {
   constexpr NavigationTarget(NavigationTarget&&) noexcept = default;
 
   /// Copy assignment operator
+  /// @return Reference to this object
   constexpr NavigationTarget& operator=(const NavigationTarget&) noexcept =
       default;
 
   /// Move assignment operator
+  /// @return Reference to this object
   constexpr NavigationTarget& operator=(NavigationTarget&&) noexcept = default;
 
   /// Returns the intersection
@@ -221,6 +223,8 @@ class NavigationTarget {
   }
 
   /// Comparison operator by path length
+  /// @param aIntersection First navigation target
+  /// @param bIntersection Second navigation target
   /// @return true if aIntersection is before bIntersection
   constexpr static bool pathLengthOrder(
       const NavigationTarget& aIntersection,
@@ -230,6 +234,8 @@ class NavigationTarget {
   }
 
   /// Comparison operator by closest distance to the reference point
+  /// @param aIntersection First navigation target
+  /// @param bIntersection Second navigation target
   /// @return true if aIntersection is closer than bIntersection
   constexpr static bool closestOrder(
       const NavigationTarget& aIntersection,
@@ -239,6 +245,8 @@ class NavigationTarget {
   }
 
   /// Comparison operator by closest distance to the reference point in the
+  /// @param aIntersection First navigation target
+  /// @param bIntersection Second navigation target
   /// @return true if aIntersection is closer than bIntersection
   constexpr static bool closestForwardOrder(
       const NavigationTarget& aIntersection,
@@ -275,13 +283,20 @@ class NavigationTarget {
   /// Default constructor creating a none target
   constexpr NavigationTarget() = default;
 
-  /// @brief print method
-  /// @param ostr: Stream to which the object is printed
+  /// Print method
+  /// @param ostr Stream to which the object is printed
   void print(std::ostream& ostr) const;
 };
 
 static_assert(std::is_trivially_copy_constructible_v<NavigationTarget>);
 static_assert(std::is_trivially_move_constructible_v<NavigationTarget>);
 static_assert(std::is_trivially_move_assignable_v<NavigationTarget>);
+
+/// Print a list of navigation targets, one target per line
+/// @param ostr Stream to which the targets are printed
+/// @param candidates The targets to print
+/// @return The stream
+std::ostream& operator<<(std::ostream& ostr,
+                         std::span<const NavigationTarget> candidates);
 
 }  // namespace Acts

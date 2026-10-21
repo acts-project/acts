@@ -11,6 +11,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
 #include "ActsPlugins/GeoModel/detail/GeoBoxConverter.hpp"
 #include "ActsPlugins/GeoModel/detail/GeoTrdConverter.hpp"
@@ -27,7 +28,7 @@ namespace ActsPlugins::detail {
 namespace {
 
 template <typename ContainedShape, typename Converter>
-Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
+Result<GeoModelSensitiveSurface> impl(const PVConstLink& geoPV,
                                       const GeoShapeShift& geoShift,
                                       const Transform3& absTransform,
                                       SurfaceBoundFactory& boundFactory,
@@ -38,8 +39,9 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
     return GeoModelConversionError::WrongShapeForConverter;
   }
 
-  return Converter{}(geoPV, *trd, absTransform * geoShift.getX(), boundFactory,
-                     sensitive);
+  return Converter{}(geoPV, *trd,
+                     absTransform * makeTransform3(geoShift.getX()),
+                     boundFactory, sensitive);
 }
 
 }  // namespace

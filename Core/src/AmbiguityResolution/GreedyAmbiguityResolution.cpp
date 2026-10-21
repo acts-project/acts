@@ -8,6 +8,8 @@
 
 #include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
 
+#include <algorithm>
+
 namespace Acts {
 
 namespace {
@@ -19,9 +21,13 @@ static void removeTrack(GreedyAmbiguityResolution::State& state,
   for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
     state.tracksPerMeasurement[iMeasurement].erase(iTrack);
 
+    // If only one track per measurement is left, it is no longer shared
     if (state.tracksPerMeasurement[iMeasurement].size() == 1) {
       auto jTrack = *state.tracksPerMeasurement[iMeasurement].begin();
-      --state.sharedMeasurementsPerTrack[jTrack];
+      // Check if jTrack's measurement is split; if yes, it was never shared
+      if (!state.splitMeasurementsPerTrack[jTrack].contains(iMeasurement)) {
+        --state.sharedMeasurementsPerTrack[jTrack];
+      }
     }
   }
 
@@ -75,21 +81,19 @@ void GreedyAmbiguityResolution::resolve(State& state) const {
 
     // Find the maximum amount of shared measurements per track to decide if we
     // are done or not.
-    auto maximumSharedMeasurements = *std::max_element(
-        state.selectedTracks.begin(), state.selectedTracks.end(),
-        sharedMeasurementsComperator);
+    auto maximumSharedMeasurements = *std::ranges::max_element(
+        state.selectedTracks, sharedMeasurementsComperator);
     ACTS_VERBOSE(
         "maximum shared measurements "
         << state.sharedMeasurementsPerTrack[maximumSharedMeasurements]);
-    if (state.sharedMeasurementsPerTrack[maximumSharedMeasurements] <
+    if (state.sharedMeasurementsPerTrack[maximumSharedMeasurements] <=
         m_cfg.maximumSharedHits) {
       break;
     }
 
     // Find the "worst" track by comparing them to each other
     auto badTrack =
-        *std::max_element(state.selectedTracks.begin(),
-                          state.selectedTracks.end(), trackComperator);
+        *std::ranges::max_element(state.selectedTracks, trackComperator);
     ACTS_VERBOSE("remove track "
                  << badTrack << " nMeas "
                  << state.measurementsPerTrack[badTrack].size() << " nShared "

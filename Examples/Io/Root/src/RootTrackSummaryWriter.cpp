@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
@@ -57,6 +58,9 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
   m_inputTrackParticleMatching.maybeInitialize(
       m_cfg.inputTrackParticleMatching);
+  if (m_cfg.writeJets) {
+    m_inputJets.maybeInitialize(m_cfg.inputJets);
+  }
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -197,6 +201,15 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   if (m_cfg.writeGx2fSpecific) {
     m_outputTree->Branch("nUpdatesGx2f", &m_nUpdatesGx2f);
   }
+
+  if (m_cfg.writeJets) {
+    m_outputTree->Branch("nJets", &m_nJets);
+    m_outputTree->Branch("jet_pt", &m_jet_pt);
+    m_outputTree->Branch("jet_eta", &m_jet_eta);
+    m_outputTree->Branch("jet_phi", &m_jet_phi);
+    m_outputTree->Branch("jet_label", &m_jet_label);
+    m_outputTree->Branch("ntracks_per_jets", &m_ntracks_per_jets);
+  }
 }
 
 RootTrackSummaryWriter::~RootTrackSummaryWriter() {
@@ -238,6 +251,31 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
   // Get the event number
   m_eventNr = ctx.eventNumber;
+
+  std::vector<ActsExamples::TruthJet> jets;
+  std::unordered_map<std::size_t, std::vector<std::int32_t>>
+      jetToTrackIndicesMap;
+
+  // Fill the jet vector if requested
+  if (m_cfg.writeJets) {
+    auto& inputJets = m_inputJets(ctx);
+    jets = inputJets;
+
+    // Loop over jets and fill jet kinematic variables
+    for (std::size_t ijet = 0; ijet < jets.size(); ++ijet) {
+      m_nJets.push_back(jets.size());
+      Acts::Vector4 jet_4mom = jets[ijet].fourMomentum();
+      Acts::Vector3 jet_3mom{jet_4mom[0], jet_4mom[1], jet_4mom[2]};
+
+      float jet_theta = theta(jet_3mom);
+
+      m_jet_pt.push_back(perp(jet_4mom));
+      m_jet_eta.push_back(std::atanh(std::cos(jet_theta)));
+      m_jet_phi.push_back(phi(jet_4mom));
+      m_jet_label.push_back(static_cast<int>(jets[ijet].jetLabel()));
+      m_ntracks_per_jets.push_back(jets[ijet].associatedTracks().size());
+    }
+  }
 
   for (const auto& track : tracks) {
     m_trackNr.push_back(track.index());
@@ -281,7 +319,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     }
 
     // Initialize the truth particle info
-    ActsFatras::Barcode majorityParticleId{};
+    SimBarcode majorityParticleId{};
     TrackMatchClassification trackClassification =
         TrackMatchClassification::Unknown;
     unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
@@ -309,13 +347,15 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
     // Get the majority truth particle to this track
     auto match = trackParticleMatching.find(track.index());
+    if (match != trackParticleMatching.end()) {
+      trackClassification = match->second.classification;
+    }
     bool foundMajorityParticle = false;
     // Get the truth particle info
     if (match != trackParticleMatching.end() &&
         match->second.particle.has_value()) {
       // Get the barcode of the majority truth particle
       majorityParticleId = match->second.particle.value();
-      trackClassification = match->second.classification;
       nMajorityHits = match->second.contributingParticles.front().hitCount;
 
       // Find the truth particle via the barcode
@@ -344,16 +384,17 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         t_prodR = std::sqrt(t_vx * t_vx + t_vy * t_vy);
 
         if (pSurface != nullptr) {
+          // The perigee surface is not aligned, so either context works
           Acts::Intersection3D intersection =
               pSurface
-                  ->intersect(ctx.geoContext, particle.position(),
+                  ->intersect(ctx.recoGeoContext, particle.position(),
                               particle.direction(),
                               Acts::BoundaryTolerance::Infinite())
                   .closest();
           auto position = intersection.position();
 
           // get the truth perigee parameter
-          auto lpResult = pSurface->globalToLocal(ctx.geoContext, position,
+          auto lpResult = pSurface->globalToLocal(ctx.recoGeoContext, position,
                                                   particle.direction());
           if (lpResult.ok()) {
             t_d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
@@ -665,6 +706,15 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   }
 
   m_nUpdatesGx2f.clear();
+
+  if (m_cfg.writeJets) {
+    m_nJets.clear();
+    m_jet_pt.clear();
+    m_jet_eta.clear();
+    m_jet_phi.clear();
+    m_jet_label.clear();
+    m_ntracks_per_jets.clear();
+  }
 
   return ProcessCode::SUCCESS;
 }

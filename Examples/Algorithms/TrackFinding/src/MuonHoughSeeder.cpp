@@ -18,13 +18,6 @@
 #include <format>
 #include <stdexcept>
 
-#include "TBox.h"
-#include "TCanvas.h"
-#include "TH2D.h"
-#include "TLegend.h"
-#include "TMarker.h"
-#include "TStyle.h"
-
 namespace ActsExamples {
 
 // left solution
@@ -61,11 +54,9 @@ auto phiHoughWidth_strip = [](double, const MuonSpacePoint& strip) {
   return std::sqrt(strip.covariance()[Acts::eX]) * 3.;
 };
 
-MuonHoughSeeder::MuonHoughSeeder(MuonHoughSeeder::Config cfg,
-                                 Acts::Logging::Level lvl)
-    : IAlgorithm("MuonHoughSeeder", lvl),
-      m_cfg(std::move(cfg)),
-      m_logger(Acts::getDefaultLogger(name(), lvl)) {
+MuonHoughSeeder::MuonHoughSeeder(const Config& cfg,
+                                 std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("MuonHoughSeeder", std::move(logger)), m_cfg(cfg) {
   if (m_cfg.inSpacePoints.empty()) {
     throw std::invalid_argument(
         "MuonHoughSeeder: Missing drift circle collection");
@@ -104,6 +95,13 @@ ProcessCode MuonHoughSeeder::execute(const AlgorithmContext& ctx) const {
     MuonHoughMaxContainer etaMaxima = constructEtaMaxima(ctx, bucket, etaPlane);
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " Found "
                           << etaMaxima.size() << " eta maxima");
+    if (!m_cfg.extendWithPhi) {
+      outMaxima.insert(outMaxima.end(),
+                       std::make_move_iterator(etaMaxima.begin()),
+                       std::make_move_iterator(etaMaxima.end()));
+      continue;
+    }
+
     MuonHoughMaxContainer stationMaxima =
         extendMaximaWithPhi(ctx, std::move(etaMaxima), phiPlane);
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " Extended the maxima to "
@@ -133,7 +131,7 @@ MuonHoughMaxContainer MuonHoughSeeder::constructEtaMaxima(
     const double y = sp.localPosition().y();
 
     axisRanges.yMin = std::min(axisRanges.yMin, y - m_cfg.etaPlaneMarginIcept);
-    axisRanges.yMax = std::min(axisRanges.yMax, y + m_cfg.etaPlaneMarginIcept);
+    axisRanges.yMax = std::max(axisRanges.yMax, y + m_cfg.etaPlaneMarginIcept);
   }
   /** Ranges are adapted. Now fill the hough plane */
   plane.reset();
@@ -169,10 +167,13 @@ MuonHoughMaxContainer MuonHoughSeeder::constructEtaMaxima(
   }
   /** Create a measurement vector of the pure phi hits to be copied on all eta
    * maxima */
+
   MuonHoughMaximum::HitVec phiHits{};
-  for (const MuonSpacePoint& sp : bucket) {
-    if (!sp.id().measuresEta()) {
-      phiHits.emplace_back(&sp);
+  if (m_cfg.extendWithPhi) {
+    for (const MuonSpacePoint& sp : bucket) {
+      if (!sp.id().measuresEta()) {
+        phiHits.emplace_back(&sp);
+      }
     }
   }
   for (const Maximum_t& peakMax : maxima) {
@@ -210,10 +211,10 @@ MuonHoughMaxContainer MuonHoughSeeder::extendMaximaWithPhi(
       }
       ++nPhiHits;
       const double x = sp->localPosition().x();
-      axisRanges.yMax =
-          std::min(axisRanges.yMax, x + m_cfg.phiPlaneMarginIcept);
       axisRanges.yMin =
           std::min(axisRanges.yMin, x - m_cfg.phiPlaneMarginIcept);
+      axisRanges.yMax =
+          std::max(axisRanges.yMax, x + m_cfg.phiPlaneMarginIcept);
     }
     if (nPhiHits < 2) {
       outMaxima.emplace_back(std::move(etaMax));
@@ -249,105 +250,16 @@ void MuonHoughSeeder::displayMaxima(const AlgorithmContext& ctx,
                                     const MaximumVec_t& maxima,
                                     const HoughPlane_t& plane,
                                     const AxisRange_t& axis) const {
-  if (!m_outCanvas) {
+  if (!m_cfg.dumpVisualization || !m_cfg.visualizationFunction) {
     return;
   }
-  static std::mutex canvasMutex{};
-  // read the hits and circles
   const MuonSegmentContainer& gotTruthSegs = m_inputTruthSegs(ctx);
-  std::lock_guard guard{canvasMutex};
-  std::vector<std::unique_ptr<TObject>> primitives;
-
-  /// Save the hough accumulator as histogram
-  TH2D houghHistoForPlot("houghHist", "HoughPlane;tan(#alpha);z0 [mm]",
-                         plane.nBinsX(), axis.xMin, axis.xMax, plane.nBinsY(),
-                         axis.yMin, axis.yMax);
-  houghHistoForPlot.SetTitle(std::format("Station {:}, side {:}, sector {:2d}",
-                                         MuonId::toString(bucketId.msStation()),
-                                         MuonId::toString(bucketId.side()),
-                                         bucketId.sector())
-                                 .c_str());
-
-  /** Copy the plane content into the histogram */
-  for (int bx = 0; bx < houghHistoForPlot.GetNbinsX(); ++bx) {
-    for (int by = 0; by < houghHistoForPlot.GetNbinsY(); ++by) {
-      houghHistoForPlot.SetBinContent(bx + 1, by + 1, plane.nHits(bx, by));
-    }
-  }
-  /** Set the contours */
-  auto maxHitsAsInt = static_cast<int>(plane.maxHits());
-  houghHistoForPlot.SetContour(maxHitsAsInt + 1);
-  for (int k = 0; k < maxHitsAsInt + 1; ++k) {
-    houghHistoForPlot.SetContourLevel(k, k - 0.5);
-  }
-
-  auto legend = std::make_unique<TLegend>(0.5, 0.7, 1. - gPad->GetRightMargin(),
-                                          1. - gPad->GetTopMargin());
-  legend->SetBorderSize(0);
-  legend->SetFillStyle(0);
-
-  /** Fetch the true parameters */
-  MuonSegmentContainer::const_iterator truthItr = gotTruthSegs.begin();
-  const int trueCoord = bucketId.measuresEta() ? Acts::eY : Acts::eX;
-  while ((truthItr = std::find_if(truthItr, gotTruthSegs.end(),
-                                  [bucketId](const MuonSegment& seg) {
-                                    return seg.id().sameStation(bucketId);
-                                  })) != gotTruthSegs.end()) {
-    const MuonSegment& truthSeg{*truthItr};
-    const float tanAlpha =
-        truthSeg.localDirection()[trueCoord] / truthSeg.localDirection().z();
-    const float intercept = truthSeg.localPosition()[trueCoord];
-
-    auto trueMarker =
-        std::make_unique<TMarker>(tanAlpha, intercept, kOpenCrossX);
-    trueMarker->SetMarkerSize(3);
-    trueMarker->SetMarkerColor(kRed);
-    legend->AddEntry(trueMarker.get(), "True coordinates");
-    primitives.push_back(std::move(trueMarker));
-    ACTS_VERBOSE("Draw true segment " << truthSeg.id()
-                                      << " in bucket: " << bucketId);
-    ++truthItr;
-  }
-
-  bool addedLeg{false};
-  for (const Maximum_t& max : maxima) {
-    auto marker = std::make_unique<TMarker>(max.x, max.y, kFullSquare);
-    marker->SetMarkerSize(1);
-    marker->SetMarkerColor(kBlue);
-
-    auto box = std::make_unique<TBox>(max.x - max.wx, max.y - max.wy,
-                                      max.x + max.wx, max.y + max.wy);
-    box->SetLineColor(kBlue);
-    box->SetFillStyle(1001);
-    box->SetFillColorAlpha(kBlue, 0.1);
-    box->SetLineWidth(0);
-    if (!addedLeg) {
-      legend->AddEntry(marker.get(), "Hough maxima");
-      legend->AddEntry(box.get(), "Hough uncertainties");
-      addedLeg = true;
-    }
-    primitives.push_back(std::move(box));
-    primitives.push_back(std::move(marker));
-  }
-  primitives.emplace_back(std::move(legend));
-  for (auto& prim : primitives) {
-    prim->Draw();
-  }
-
-  m_outCanvas->SaveAs("HoughHistograms.pdf");
-}
-ProcessCode MuonHoughSeeder::initialize() {
-  // book the output canvas
-  m_outCanvas = std::make_unique<TCanvas>("canvas", "", 800, 800);
-  m_outCanvas->SaveAs("HoughHistograms.pdf[");
-  m_outCanvas->SetRightMargin(0.12);
-  m_outCanvas->SetLeftMargin(0.12);
-  gStyle->SetPalette(kGreyScale);
-  gStyle->SetOptStat(0);
-  return ProcessCode::SUCCESS;
-}
-ProcessCode MuonHoughSeeder::finalize() {
-  m_outCanvas->SaveAs("HoughHistograms.pdf]");
-  return ProcessCode::SUCCESS;
+  const std::string outputPath =
+      std::format("HoughHistogram_{}_{}_{}_{}_{}.pdf",
+                  MuonId::toString(bucketId.msStation()),
+                  MuonId::toString(bucketId.side()), bucketId.sector(),
+                  bucketId.measuresEta() ? "eta" : "phi", ctx.eventNumber);
+  m_cfg.visualizationFunction(outputPath, bucketId, maxima, plane, axis,
+                              gotTruthSegs, logger());
 }
 }  // namespace ActsExamples

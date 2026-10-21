@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/TruthTracking/GbtsTrainingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/HitSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleTrackParamExtractor.hpp"
@@ -17,6 +18,7 @@
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/TruthTracking/VertexTruthMatcher.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -37,6 +39,22 @@ void addTruthTracking(py::module& mex) {
                                 inputParticles, inputParticleMeasurementsMap,
                                 inputMeasurements, inputSimHits,
                                 inputMeasurementSimHitsMap, outputProtoTracks);
+  {
+    using Config = Acts::Experimental::GbtsLayerConnectionTool::Config;
+
+    auto c = py::class_<Config>(mex, "GbtsLayerConnectionToolConfig")
+                 .def(py::init<>());
+
+    ACTS_PYTHON_STRUCT(c, doSymmetrization, probThreshold);
+
+    patchKwargsConstructor(c);
+  }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      GbtsTrainingAlgorithm, mex, "GbtsTrainingAlgorithm", inputParticles,
+      inputParticleMeasurementsMap, inputMeasurements, inputSimHits,
+      inputMeasurementSimHitsMap, gbtsLayerConnectionToolConfig,
+      geometryFileDir, trackingGeometry, outputFileDir);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ParticleTrackParamExtractor, mex,
                                 "ParticleTrackParamExtractor", inputParticles,
@@ -54,11 +72,7 @@ void addTruthTracking(py::module& mex) {
     using Alg = ParticleSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "ParticleSelector")
-                   .def(py::init<const Alg::Config&, Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
+    auto [alg, c0] = declareAlgorithm<Alg, IAlgorithm>(mex, "ParticleSelector");
 
     {
       auto mc = py::class_<Alg::MeasurementCounter>(alg, "MeasurementCounter")
@@ -66,8 +80,7 @@ void addTruthTracking(py::module& mex) {
                     .def("addCounter", &Alg::MeasurementCounter::addCounter);
     }
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
+    auto c = c0;
     ACTS_PYTHON_STRUCT(
         c, inputParticles, inputParticleMeasurementsMap, inputMeasurements,
         outputParticles, rhoMin, rhoMax, absZMin, absZMax, timeMin, timeMax,
@@ -95,13 +108,8 @@ void addTruthTracking(py::module& mex) {
     using Alg = TrackParameterSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TrackParameterSelector")
-                   .def(py::init<const Alg::Config&, Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    auto [alg, c] =
+        declareAlgorithm<Alg, IAlgorithm>(mex, "TrackParameterSelector");
 
     ACTS_PYTHON_STRUCT(c, inputTrackParameters, outputTrackParameters, loc0Min,
                        loc0Max, loc1Min, loc1Max, timeMin, timeMax, phiMin,
@@ -130,8 +138,7 @@ void addTruthTracking(py::module& mex) {
       TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm", inputParticles,
       inputParticleMeasurementsMap, inputSimHits, inputMeasurementSimHitsMap,
       inputSpacePoints, outputParticles, outputSeeds, outputProtoTracks,
-      outputParticleHypotheses, particleHypothesis, deltaRMin, deltaRMax,
-      absDeltaZMin, absDeltaZMax);
+      outputParticleHypotheses, particleHypothesis);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(HitSelector, mex, "HitSelector", inputHits,
                                 inputParticlesSelected, outputHits, minX, maxX,
@@ -143,6 +150,11 @@ void addTruthTracking(py::module& mex) {
       TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks, inputParticles,
       inputMeasurementParticlesMap, outputTrackParticleMatching,
       outputParticleTrackMatching, matchingRatio, doubleMatching);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      VertexTruthMatcher, mex, "VertexTruthMatcher", inputVertices, inputTracks,
+      inputParticles, inputTrackParticleMatching, outputVertexTruthMatching,
+      outputTruthVertexMatching, vertexMatchThreshold, minTrkWeight);
 }
 
 }  // namespace ActsPython

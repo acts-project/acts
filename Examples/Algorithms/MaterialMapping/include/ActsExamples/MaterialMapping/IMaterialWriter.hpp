@@ -13,17 +13,25 @@
 
 namespace ActsExamples {
 
-/// @class IMaterialWriter
+/// Output interface for finalized material-mapping results.
 ///
-/// Interface definition for material writing
+/// MaterialMapping passes the same TrackingGeometryMaterial to each writer in
+/// its Config::materialWriters list, allowing one mapping run to produce
+/// several legacy outputs (for example, a JSON map and a ROOT map). Each
+/// writer owns its output configuration and serialization; the mapping
+/// algorithm remains independent of the file format.
+///
+/// Writers are called during MaterialMapping::finalize(). They do not receive
+/// per-event material tracks. New callers can serialize
+/// MaterialMapping::material() directly after the sequencer has run.
 class IMaterialWriter {
  public:
   /// Virtual Destructor
   virtual ~IMaterialWriter() = default;
 
-  /// The single writer class
+  /// Persist the finalized material assignments to the configured output.
   ///
-  /// @param detMaterial the detector material maps
+  /// @param detMaterial Finalized assignments shared with all configured writers
   virtual void writeMaterial(
       const Acts::TrackingGeometryMaterial& detMaterial) = 0;
 };

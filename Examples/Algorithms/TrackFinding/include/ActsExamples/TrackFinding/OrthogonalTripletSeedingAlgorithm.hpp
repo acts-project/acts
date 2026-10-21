@@ -8,16 +8,17 @@
 
 #pragma once
 
+#include "Acts/Seeding/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
-#include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
-#include "Acts/Seeding2/TripletSeeder.hpp"
+#include "Acts/Seeding/TripletSeeder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -167,11 +168,11 @@ class OrthogonalTripletSeedingAlgorithm final : public IAlgorithm {
     /// Maximum number (minus one) of accepted seeds per middle space-point
     /// In dense environments many seeds may be found per middle space-point
     /// Only seeds with the highest weight will be kept if this limit is reached
-    unsigned int maxSeedsPerSpM = 5;
+    std::uint32_t maxSeedsPerSpM = 5;
     /// Maximum limit to number of compatible space-point used in score
     /// calculation. We increase by c1 the weight calculation for each
     /// compatible space-point until we reach compatSeedLimit
-    std::size_t compatSeedLimit = 2;
+    std::uint32_t compatSeedLimit = 2;
 
     /// Increment in seed weight if the number of compatible seeds is larger
     /// than numSeedIncrement, this is used in case of high occupancy scenarios
@@ -218,8 +219,8 @@ class OrthogonalTripletSeedingAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  OrthogonalTripletSeedingAlgorithm(const Config& cfg,
-                                    Acts::Logging::Level lvl);
+  explicit OrthogonalTripletSeedingAlgorithm(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the seeding algorithm.
   ///
@@ -237,11 +238,11 @@ class OrthogonalTripletSeedingAlgorithm final : public IAlgorithm {
   std::unique_ptr<const Acts::Logger> m_filterLogger;
   std::optional<Acts::TripletSeeder> m_seedFinder;
 
-  Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector;
+  Acts::Delegate<bool(const ConstSpacePointProxy&)> m_spacePointSelector;
 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
-                                                            "InputSpacePoints"};
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 };
 
 }  // namespace ActsExamples

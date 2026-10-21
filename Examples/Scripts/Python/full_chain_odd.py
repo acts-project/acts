@@ -23,6 +23,7 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
+    SeedingAlgorithm,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -52,6 +53,13 @@ parser.add_argument(
 )
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
 parser.add_argument("--skip", "-s", help="Number of events", type=int, default=0)
+parser.add_argument(
+    "--jobs",
+    "-j",
+    help="Number of worker threads (-1 uses all cores)",
+    type=int,
+    default=None,
+)
 parser.add_argument("--edm4hep", help="Use edm4hep inputs", type=pathlib.Path)
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
@@ -125,21 +133,42 @@ parser.add_argument(
     action=argparse.BooleanOptionalAction,
 )
 parser.add_argument(
+    "--use-gbts",
+    help="Use the Graph Based Track Seeding (GBTS) instead of triplet seeding",
+    action="store_true",
+)
+parser.add_argument(
+    "--gbts-layer-map",
+    help="GBTS layer map configuration file",
+    type=pathlib.Path,
+)
+parser.add_argument(
+    "--gbts-connection-table",
+    help="GBTS layer connection table configuration file",
+    type=pathlib.Path,
+)
+parser.add_argument(
     "--output-root",
     help="Switch root output on/off",
-    default=True,
+    default=False,
     action=argparse.BooleanOptionalAction,
 )
 parser.add_argument(
     "--output-csv",
     help="Switch csv output on/off",
-    default=True,
+    default=False,
     action=argparse.BooleanOptionalAction,
 )
 parser.add_argument(
     "--output-obj",
     help="Switch obj output on/off",
-    default=True,
+    default=False,
+    action=argparse.BooleanOptionalAction,
+)
+parser.add_argument(
+    "--output-parquet",
+    help="Switch parquet output on/off (requires ACTS_BUILD_EXAMPLES_PARQUET=ON)",
+    default=False,
     action=argparse.BooleanOptionalAction,
 )
 
@@ -152,7 +181,7 @@ ambi_config = args.ambi_config
 seedFilter_ML = args.MLSeedFilter
 geoDir = getOpenDataDetectorDirectory()
 actsDir = pathlib.Path(__file__).parent.parent.parent.parent
-# acts.examples.dump_args_calls(locals())  # show python binding calls
+# acts.examples.dump_args_calls()  # show python binding calls
 
 oddMaterialMap = (
     args.material_config
@@ -164,6 +193,17 @@ oddDigiConfig = (
     args.digi_config
     if args.digi_config
     else actsDir / "Examples/Configs/odd-digi-smearing-config.json"
+)
+
+oddGbtsLayerMap = (
+    args.gbts_layer_map
+    if args.gbts_layer_map
+    else actsDir / "Examples/Configs/odd-gbts-layer-map.json"
+)
+oddGbtsConnectionTable = (
+    args.gbts_connection_table
+    if args.gbts_connection_table
+    else actsDir / "Examples/Configs/odd-gbts-connection-table.json"
 )
 
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
@@ -178,7 +218,7 @@ rnd = acts.examples.RandomNumbers(seed=42)
 s = acts.examples.Sequencer(
     events=args.events,
     skip=args.skip,
-    numThreads=1 if args.geant4 else -1,
+    numThreads=args.jobs if args.jobs is not None else (1 if args.geant4 else -1),
     outputDir=str(outputDir),
 )
 
@@ -335,6 +375,15 @@ if args.reco:
         s,
         trackingGeometry,
         field,
+        **(
+            dict(
+                seedingAlgorithm=SeedingAlgorithm.Gbts,
+                layerMappingConfigFile=oddGbtsLayerMap,
+                connectorInputConfigFile=oddGbtsConnectionTable,
+            )
+            if args.use_gbts
+            else {}
+        ),
         initialSigmas=[
             1 * u.mm,
             1 * u.mm,
@@ -350,7 +399,6 @@ if args.reco:
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
-        logLevel=acts.logging.DEBUG,
     )
 
     if seedFilter_ML:
@@ -408,7 +456,6 @@ if args.reco:
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
         writeCovMat=True,
-        logLevel=acts.logging.DEBUG,
     )
 
     if ambi_ML:
@@ -456,6 +503,91 @@ if args.reco:
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
+    )
+
+if args.output_parquet:
+    try:
+        from acts.arrow import (
+            particleSchema,
+            simHitSchema,
+            trackSchema,
+        )
+        from acts.examples.arrow import (
+            ArrowParticleOutputConverter,
+            ArrowSimHitOutputConverter,
+            ArrowTrackOutputConverter,
+            makeVolumeIdDetectorResolver,
+            ParquetWriter,
+        )
+    except ImportError as e:
+        raise RuntimeError(
+            "Parquet output requested but acts.examples.arrow is not available; "
+            "rebuild with ACTS_BUILD_EXAMPLES_PARQUET=ON."
+        ) from e
+
+    # ODD volume -> detector enum mapping used in parquet simhit export.
+    # 0..8 are subdetector-specific enums; 255 marks unknown/unmatched.
+    _odd_detector_resolver = makeVolumeIdDetectorResolver(
+        {
+            7: 0,  # pixel_neg_endcap
+            8: 1,  # pixel_barrel
+            9: 2,  # pixel_pos_endcap
+            12: 3,  # short_neg_endcap
+            13: 4,  # short_barrel
+            14: 5,  # short_pos_endcap
+            16: 6,  # long_neg_endcap
+            17: 7,  # long_barrel
+            18: 8,  # long_pos_endcap
+        },
+        255,
+    )
+
+    # Each converter parks an arrow::Table on the whiteboard under a fresh
+    # key, and one ParquetWriter picks them all up.
+    arrParticleConv = ArrowParticleOutputConverter(
+        level=acts.logging.INFO,
+        inputParticles="particles_simulated",
+        outputTable="particles_arrow",
+    )
+    s.addAlgorithm(arrParticleConv)
+
+    arrSimHitConv = ArrowSimHitOutputConverter(
+        level=acts.logging.INFO,
+        inputSimHits="simhits",
+        inputParticles="particles_simulated",
+        inputClusters="clusters",
+        inputSimHitMeasurementsMap="simhit_measurements_map",
+        outputTable="simhits_arrow",
+        detectorResolver=_odd_detector_resolver,
+    )
+    s.addAlgorithm(arrSimHitConv)
+
+    if args.reco:
+        arrTrackConv = ArrowTrackOutputConverter(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            inputTrackParticleMatching="track_particle_matching",
+            inputParticles="particles_simulated",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            outputTable="tracks_arrow",
+        )
+        s.addAlgorithm(arrTrackConv)
+
+    s.addWriter(
+        ParquetWriter(
+            level=acts.logging.INFO,
+            outputDir=str(outputDir),
+            collections={
+                arrSimHitConv.config.outputTable: "simhits",
+                arrTrackConv.config.outputTable: "tracks",
+                arrParticleConv.config.outputTable: "particles",
+            },
+            expectedSchemas={
+                arrSimHitConv.config.outputTable: simHitSchema(),
+                arrTrackConv.config.outputTable: trackSchema(),
+                arrParticleConv.config.outputTable: particleSchema(),
+            },
+        )
     )
 
 s.run()

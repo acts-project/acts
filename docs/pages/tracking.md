@@ -7,7 +7,7 @@ been caused by which particle, to group them accordingly, and to estimate the
 associated trajectory. Such charged particle trajectories form the basic input
 to the majority of higher-level reconstruction procedures in many cases.
 
-![Illustration of a track reconstruction chain starting from spacepoints to fully formed tracks.](tracking/tracking.svg) {width=60%}
+![Illustration of a track reconstruction chain starting from space points to fully formed tracks.](tracking/tracking.svg) {width=60%}
 
 This section provides a high-level view of a track reconstruction chain, and is
 largely based on @cite gessinger_befurt_2021_m23d2-xsq75. It gives an overview of the basic
@@ -512,7 +512,7 @@ Additionally, merged clusters typically feature worse position resolution,
 which manifests itself since it negatively affects the final fit of the
 track.
 
-# Spacepoint formation {#spacepoint-formation}
+# Space point formation {#space-point-formation}
 
 The basic input to most forms of pattern recognition algorithms for tracking
 are space points, which need to be assembled from the raw measurements. To this
@@ -521,7 +521,7 @@ geometry description, such as the location and rotation of the sensors. In this
 way, the locations, which are restricted to be local to the sensor surfaces
 intrinsically, can be converted into three dimensional points in space.  See
 @ref sp_formation for a description of the implementation of
-spacepoint formation in the core library.
+space point formation in the core library.
 
 The @ref fig_sensor "figure" below shows an illustration of the information that is consumed for
 a pixel measurement. Shown are three clusters on a sensor, which are caused by

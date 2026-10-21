@@ -10,6 +10,16 @@ target_sources(ActsCore PRIVATE src/ActsVersion.cpp)
 
 target_compile_features(ActsCore PUBLIC ${ACTS_CXX_STANDARD_FEATURE})
 
+set(ACTS_GEOMETRY_MODULE_CAPI 1)
+set(_acts_geometry_module_abi_tag
+    "acts-${Acts_VERSION}|sys-${CMAKE_SYSTEM_NAME}|arch-${CMAKE_SYSTEM_PROCESSOR}|cxx-${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}|capi-${ACTS_GEOMETRY_MODULE_CAPI}"
+)
+set(ACTS_GEOMETRY_MODULE_ABI_TAG
+    "${_acts_geometry_module_abi_tag}"
+    CACHE INTERNAL
+    "ACTS geometry module ABI tag"
+)
+
 target_include_directories(
     ActsCore
     PUBLIC
@@ -19,6 +29,14 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(ActsCore PUBLIC Boost::boost Eigen3::Eigen)
+if(CMAKE_DL_LIBS)
+    target_link_libraries(ActsCore PRIVATE ${CMAKE_DL_LIBS})
+endif()
+
+target_compile_definitions(
+    ActsCore
+    PRIVATE ACTS_GEOMETRY_MODULE_ABI_TAG="${_acts_geometry_module_abi_tag}"
+)
 
 if(ACTS_PARAMETER_DEFINITIONS_HEADER)
     target_compile_definitions(
@@ -35,25 +53,12 @@ if(ACTS_SOURCELINK_SBO_SIZE)
     )
 endif()
 
-if(ACTS_LOG_FAILURE_THRESHOLD)
-    message(
-        STATUS
-        "Enable log failure threshold, set to ${ACTS_LOG_FAILURE_THRESHOLD}"
-    )
+if(ACTS_ENABLE_LOG_FAILURE_THRESHOLD)
+    message(STATUS "Enable log failure threshold")
     target_compile_definitions(
         ActsCore
-        PUBLIC
-            -DACTS_LOG_FAILURE_THRESHOLD=${ACTS_LOG_FAILURE_THRESHOLD}
-            -DACTS_ENABLE_LOG_FAILURE_THRESHOLD
+        PUBLIC -DACTS_ENABLE_LOG_FAILURE_THRESHOLD
     )
-else()
-    if(ACTS_ENABLE_LOG_FAILURE_THRESHOLD)
-        message(STATUS "Enable log failure threshold")
-        target_compile_definitions(
-            ActsCore
-            PUBLIC -DACTS_ENABLE_LOG_FAILURE_THRESHOLD
-        )
-    endif()
 endif()
 
 if(ACTS_ENABLE_CPU_PROFILING)
@@ -147,8 +152,7 @@ add_subdirectory(src/Material)
 add_subdirectory(src/Navigation)
 add_subdirectory(src/Propagator)
 add_subdirectory(src/Seeding)
-add_subdirectory(src/Seeding2)
-add_subdirectory(src/SpacePointFormation2)
+add_subdirectory(src/SpacePointFormation)
 add_subdirectory(src/Surfaces)
 add_subdirectory(src/TrackFinding)
 add_subdirectory(src/TrackFitting)

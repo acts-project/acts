@@ -8,10 +8,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
@@ -23,24 +21,19 @@
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
-#include "ActsPython/Utilities/Macros.hpp"
 
 #include <array>
 #include <memory>
 #include <numbers>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include <boost/algorithm/string/join.hpp>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -48,7 +41,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
-using namespace ActsExamples;
 
 namespace {
 struct GeometryIdentifierHookBinding : public GeometryIdentifierHook {
@@ -66,8 +58,7 @@ struct MaterialSurfaceSelector {
 
   /// @param surface is the test surface
   void operator()(const Surface* surface) {
-    if (surface->surfaceMaterial() != nullptr &&
-        !rangeContainsValue(surfaces, surface)) {
+    if (surface->hasMaterial() && !rangeContainsValue(surfaces, surface)) {
       surfaces.push_back(surface);
     }
   }
@@ -121,18 +112,6 @@ namespace ActsPython {
 void addGeometry(py::module_& m) {
   {
     py::class_<GeometryContext>(m, "GeometryContext")
-        .def(py::init([]() {
-          // Issue Python warning about deprecated default constructor
-          auto warnings = py::module_::import("warnings");
-          auto builtins = py::module_::import("builtins");
-          warnings.attr("warn")(
-              "GeometryContext::dangerouslyDefaultConstruct() is deprecated. "
-              "Use "
-              "GeometryContext.dangerouslyDefaultConstruct() instead to "
-              "make empty context construction explicit.",
-              builtins.attr("DeprecationWarning"));
-          return GeometryContext::dangerouslyDefaultConstruct();
-        }))  // Keep for backward compatibility but warn
         .def_static("dangerouslyDefaultConstruct",
                     &GeometryContext::dangerouslyDefaultConstruct,
                     "Create a default GeometryContext (empty, no alignment "
@@ -185,6 +164,13 @@ void addGeometry(py::module_& m) {
               self = self.withExtra(value);
             })
         .def_property_readonly("value", &GeometryIdentifier::value)
+        .def("__eq__",
+             [](const GeometryIdentifier& self,
+                const GeometryIdentifier& other) { return self == other; })
+        .def("__hash__",
+             [](const GeometryIdentifier& self) {
+               return std::hash<GeometryIdentifier>{}(self);
+             })
         .def("__str__", [](const GeometryIdentifier& self) {
           std::stringstream ss;
           ss << self;
@@ -223,11 +209,18 @@ void addGeometry(py::module_& m) {
                       volPtr, matDec.get(), hook, *logger);
                   return obj;
                 }))
-            .def("visitSurfaces",
-                 [](TrackingGeometry& self, py::function& func) {
-                   self.visitSurfaces(func);
-                 })
+            .def(
+                "visitSurfaces",
+                [](TrackingGeometry& self, py::function& func,
+                   bool restrictToSensitives) {
+                  self.visitSurfaces(func, restrictToSensitives);
+                },
+                py::arg("visitor"), py::arg("restrictToSensitives") = true)
             .def("geoIdSurfaceMap", &TrackingGeometry::geoIdSurfaceMap)
+            .def("findPortal", &TrackingGeometry::findPortal, py::arg("tag"),
+                 py::return_value_policy::reference_internal)
+            .def("findVolumeByName", &TrackingGeometry::findVolumeByName,
+                 py::arg("name"), py::return_value_policy::reference_internal)
             .def("extractMaterialSurfaces",
                  [](TrackingGeometry& self) {
                    MaterialSurfaceSelector selector;
@@ -236,10 +229,18 @@ void addGeometry(py::module_& m) {
                  })
             .def_property_readonly("highestTrackingVolume",
                                    &TrackingGeometry::highestTrackingVolumePtr)
-            .def("visualize", &TrackingGeometry::visualize, py::arg("helper"),
-                 py::arg("gctx"), py::arg("viewConfig") = s_viewVolume,
-                 py::arg("portalViewConfig") = s_viewPortal,
-                 py::arg("sensitiveViewConfig") = s_viewSensitive);
+            .def(
+                "visualize",
+                [](const TrackingGeometry& self, IVisualization3D& helper,
+                   const GeometryContext& gctx, py::object func) {
+                  if (func.is_none()) {
+                    self.visualize(helper, gctx, defaultGeometryColoring);
+                  } else {
+                    self.visualize(helper, gctx, func.cast<ViewConfigFunc>());
+                  }
+                },
+                py::arg("helper"), py::arg("gctx"),
+                py::arg("func") = py::none());
 
     using apply_ptr_t =
         void (TrackingGeometry::*)(TrackingGeometryMutableVisitor&);
@@ -250,6 +251,7 @@ void addGeometry(py::module_& m) {
   {
     py::class_<VolumeBounds, std::shared_ptr<VolumeBounds>>(m, "VolumeBounds")
         .def("type", &VolumeBounds::type)
+        .def("values", &VolumeBounds::values)
         .def("__str__", [](const VolumeBounds& self) {
           std::stringstream ss;
           ss << self;
@@ -259,10 +261,9 @@ void addGeometry(py::module_& m) {
     auto cvb =
         py::class_<CylinderVolumeBounds, std::shared_ptr<CylinderVolumeBounds>,
                    VolumeBounds>(m, "CylinderVolumeBounds")
-            .def(py::init<double, double, double, double, double, double,
-                          double>(),
-                 "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
-                 "avgphi"_a = 0., "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
+            .def(py::init<double, double, double, double, double>(), "rmin"_a,
+                 "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
+                 "avgphi"_a = 0.);
 
     py::enum_<CylinderVolumeBounds::Face>(cvb, "Face")
         .value("PositiveDisc", CylinderVolumeBounds::Face::PositiveDisc)
@@ -275,12 +276,21 @@ void addGeometry(py::module_& m) {
   }
 
   {
-    py::class_<Volume, std::shared_ptr<Volume>>(m, "Volume");
+    py::class_<Volume, std::shared_ptr<Volume>>(m, "Volume")
+        .def_property_readonly(
+            "volumeBounds",
+            py::overload_cast<>(&Volume::volumeBounds, py::const_),
+            py::return_value_policy::reference_internal)
+        .def("center", &Volume::center, py::arg("gctx"))
+        .def("localToGlobalTransform", &Volume::localToGlobalTransform,
+             py::arg("gctx"));
 
     py::class_<TrackingVolume, Volume, std::shared_ptr<TrackingVolume>>(
         m, "TrackingVolume")
         .def(py::init<const Transform3&, std::shared_ptr<VolumeBounds>,
-                      std::string>());
+                      std::string>())
+        .def_property_readonly("volumeName", &TrackingVolume::volumeName)
+        .def_property_readonly("geometryId", &TrackingVolume::geometryId);
   }
 
   {

@@ -4,7 +4,6 @@ import os
 import acts
 import acts.examples
 from acts.examples import GenericDetector, StructureSelector
-from acts.examples.alignment import AlignmentDecorator
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
@@ -81,6 +80,7 @@ def runPropagation(
 
 
 if "__main__" == __name__:
+    # from acts.examples.alignment import AlignmentDecorator
     matDeco = None
     contextDecorators = []
     # matDeco = acts.IMaterialDecorator.fromFile("material.json")

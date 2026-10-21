@@ -1,0 +1,51 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+// Local include(s).
+#include "traccc/device/global_index.hpp"
+#include "traccc/edm/device/device_doublet.hpp"
+#include "traccc/edm/device/doublet_counter.hpp"
+
+// Project include(s).
+#include "traccc/definitions/qualifiers.hpp"
+#include "traccc/edm/spacepoint_collection.hpp"
+#include "traccc/seeding/detail/seeding_config.hpp"
+#include "traccc/seeding/detail/spacepoint_grid.hpp"
+
+namespace traccc::device {
+
+/// Function finding all of the spacepoint doublets
+///
+/// Based on the information collected by @c traccc::device::count_doublets it
+/// can fill collection with the specific doublet pairs that exist in the event.
+///
+/// @param[in] globalIndex       The index of the current thread
+/// @param[in] config            Seedfinder configuration
+/// @param[in] spacepoints       All spacepoints in the event
+/// @param[in] sp_view           The spacepoint grid to find doublets on
+/// @param[in,out] dc_view       Collection with the number of doublets to find;
+///                              @c m_nMidTop is lowered to the number of
+///                              middle-top doublets actually found
+/// @param[out] mb_doublets_view Collection of middle-bottom doublets
+/// @param[out] mt_doublets_view Collection of middle-top doublets
+///
+TRACCC_HOST_DEVICE
+inline void find_doublets(
+    global_index_t globalIndex, const seedfinder_config& config,
+    const edm::spacepoint_collection::const_view& spacepoints,
+    const traccc::details::spacepoint_grid_types::const_view& sp_view,
+    const doublet_counter_collection_types::view& dc_view,
+    device_doublet_collection_types::view mb_doublets_view,
+    device_doublet_collection_types::view mt_doublets_view);
+
+}  // namespace traccc::device
+
+// Include the implementation.
+#include "traccc/seeding/device/impl/find_doublets.ipp"

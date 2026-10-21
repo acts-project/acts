@@ -29,9 +29,9 @@ const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
   return m_fullMaterial;
 }
 
-const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
-    const Vector3& /*gp*/) const {
-  return m_fullMaterial;
+std::vector<Acts::AxisDirection>
+Acts::HomogeneousSurfaceMaterial::localAxisDirections() const {
+  return {};
 }
 
 std::ostream& HomogeneousSurfaceMaterial::toStream(std::ostream& sl) const {

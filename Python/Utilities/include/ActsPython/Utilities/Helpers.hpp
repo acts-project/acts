@@ -31,8 +31,8 @@ void patchKwargsConstructor(T& c) {
 
 /// @brief  This sets a range property on a class
 template <typename T, typename Ur, typename Ut>
-void pythonRangeProperty(T& obj, const std::string& name, Ur Ut::*begin,
-                         Ur Ut::*end) {
+void pythonRangeProperty(T& obj, const std::string& name, Ur Ut::* begin,
+                         Ur Ut::* end) {
   obj.def_property(
       name.c_str(), [=](Ut& self) { return std::pair{self.*begin, self.*end}; },
       [=](Ut& self, std::pair<Ur, Ur> p) {

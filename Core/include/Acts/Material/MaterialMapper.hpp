@@ -14,7 +14,7 @@
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
 #include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
-#include "Acts/Material/interface/ISurfaceMaterialAccumulater.hpp"
+#include "Acts/Material/interface/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -31,8 +31,8 @@ class MaterialMapper {
     /// The assignment finder for material interaction assignments
     std::shared_ptr<const IAssignmentFinder> assignmentFinder = nullptr;
     /// The material accumulator for surfaces
-    std::shared_ptr<const ISurfaceMaterialAccumulater>
-        surfaceMaterialAccumulater = nullptr;
+    std::shared_ptr<const ISurfaceMaterialAccumulator>
+        surfaceMaterialAccumulator = nullptr;
   };
 
   /// @brief nested state struct
@@ -40,8 +40,8 @@ class MaterialMapper {
   /// It holds the states of the sub structs
   struct State {
     /// State of the surface material accumulator
-    std::unique_ptr<ISurfaceMaterialAccumulater::State>
-        surfaceMaterialAccumulaterState;
+    std::unique_ptr<ISurfaceMaterialAccumulator::State>
+        surfaceMaterialAccumulatorState;
   };
 
   /// @brief nested options struct
@@ -58,11 +58,12 @@ class MaterialMapper {
   explicit MaterialMapper(
       const Config& cfg,
       std::unique_ptr<const Logger> mlogger =
-          getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::INFO));
+          getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::INFO));
 
   /// @brief Factory for creating the state
+  /// @param gctx the geometry context
   /// @return Unique pointer to a new material mapping state object
-  std::unique_ptr<State> createState() const;
+  std::unique_ptr<State> createState(const GeometryContext& gctx) const;
 
   /// @brief Map the material interactions to the surfaces
   ///
@@ -80,8 +81,10 @@ class MaterialMapper {
 
   /// Finalize the maps
   /// @param state Material mapping state containing collected data
+  /// @param gctx Geometry context for finalization
   /// @return Tracking geometry material map with finalized surface and volume materials
-  TrackingGeometryMaterial finalizeMaps(const State& state) const;
+  TrackingGeometryMaterial finalizeMaps(const State& state,
+                                        const GeometryContext& gctx) const;
 
  private:
   /// Access method to the logger

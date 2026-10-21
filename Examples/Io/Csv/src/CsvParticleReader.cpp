@@ -16,7 +16,7 @@
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -56,11 +56,11 @@ ProcessCode CsvParticleReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // vt and m are an optional columns
-  NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
+  BoostDescribeCsvReader<ParticleData> reader(path, {"vt", "m"});
   ParticleData data;
 
   while (reader.read(data)) {
-    SimParticleState particle(ActsFatras::Barcode()
+    SimParticleState particle(SimBarcode()
                                   .withVertexPrimary(data.particle_id_pv)
                                   .withVertexSecondary(data.particle_id_sv)
                                   .withParticle(data.particle_id_part)
@@ -69,7 +69,8 @@ ProcessCode CsvParticleReader::read(const AlgorithmContext& ctx) {
                               Acts::PdgParticle{data.particle_type},
                               data.q * Acts::UnitConstants::e,
                               data.m * Acts::UnitConstants::GeV);
-    particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
+    particle.setProcess(
+        static_cast<ActsFatras::GenerationProcess>(data.process));
     particle.setPosition4(
         data.vx * Acts::UnitConstants::mm, data.vy * Acts::UnitConstants::mm,
         data.vz * Acts::UnitConstants::mm, data.vt * Acts::UnitConstants::mm);

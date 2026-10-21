@@ -97,7 +97,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
 
   {
     cs.localCartesianToBoundLocalDerivative(gctx, Vector3{})
-  } -> std::same_as<ActsMatrix<2, 3>>;
+  } -> std::same_as<Matrix<2, 3>>;
 };
 
 template <typename S>

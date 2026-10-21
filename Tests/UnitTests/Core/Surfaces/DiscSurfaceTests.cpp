@@ -17,12 +17,20 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -34,6 +42,7 @@
 #include <memory>
 #include <numbers>
 #include <string>
+#include <vector>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -328,7 +337,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
       discSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                               globalPosition);
   // Check if the result is as expected
-  ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
   expLoc3DToLocBound << 0, 1, 0, -1. / 3, 0, 0;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }
@@ -819,6 +828,98 @@ BOOST_DATA_TEST_CASE(PhiDirection,
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_CASE(DiscSurfaceMaterialAssignment) {
+  auto surface =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 1., 100.);
+  MaterialSlab slab(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
+
+  // HomogeneousSurfaceMaterial is always valid
+  auto homMat = std::make_shared<HomogeneousSurfaceMaterial>(slab);
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(homMat));
+  BOOST_CHECK_NE(surface->surfaceMaterial(), nullptr);
+
+  // nullptr clears the material
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(nullptr));
+  BOOST_CHECK_EQUAL(surface->surfaceMaterial(), nullptr);
+
+  // 1D AxisR - valid for disc
+  BinUtility buR(10, 1.f, 100.f, Acts::open, AxisDirection::AxisR);
+  auto matR = std::make_shared<BinnedSurfaceMaterial>(
+      buR, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matR));
+
+  // 1D AxisPhi - valid for disc
+  BinUtility buPhi(10, -3.14f, 3.14f, Acts::closed, AxisDirection::AxisPhi);
+  auto matPhi = std::make_shared<BinnedSurfaceMaterial>(
+      buPhi, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matPhi));
+
+  // 2D {AxisR, AxisPhi} - valid for disc
+  BinUtility bu2D(5, 1.f, 100.f, Acts::open, AxisDirection::AxisR);
+  bu2D += BinUtility(3, -3.14f, 3.14f, Acts::closed, AxisDirection::AxisPhi);
+  auto mat2D = std::make_shared<BinnedSurfaceMaterial>(
+      bu2D, MaterialSlabMatrix(3, MaterialSlabVector(5, slab)));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(mat2D));
+
+  // Wrong axis directions - should throw
+  for (auto badDir : {AxisDirection::AxisRPhi, AxisDirection::AxisZ,
+                      AxisDirection::AxisX, AxisDirection::AxisY}) {
+    BinUtility buBad(10, 0.f, 10.f, Acts::open, badDir);
+    auto matBad = std::make_shared<BinnedSurfaceMaterial>(
+        buBad, MaterialSlabVector(10, slab));
+    BOOST_CHECK_THROW(surface->assignSurfaceMaterial(matBad),
+                      std::invalid_argument);
+  }
+}
+
+/// A disc's bound coordinates are polar in the surface's own cartesian frame:
+/// `DiscSurface::localToGlobal` places them at `(r cos phi, r sin phi)`
+/// whatever the bounds are. So the bounds' own map to that frame has to agree
+/// with it, at any average phi.
+BOOST_AUTO_TEST_CASE(DiscBoundToCartesianJacobianMatchesTheSurface) {
+  const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const double averagePhi = 0.7;
+
+  std::vector<std::shared_ptr<DiscBounds>> bounds;
+  bounds.push_back(std::make_shared<RadialBounds>(20., 40., 0.4, averagePhi));
+  bounds.push_back(
+      std::make_shared<DiscTrapezoidBounds>(6., 10., 20., 40., averagePhi));
+  bounds.push_back(std::make_shared<AnnulusBounds>(
+      20., 40., -0.2, 0.2, Vector2(0., -5.), averagePhi));
+
+  Transform3 transform = Transform3::Identity();
+  transform.translate(Vector3(0., 0., 300.));
+  transform.rotate(Eigen::AngleAxisd(0.9, Vector3::UnitZ()));
+
+  for (const auto& b : bounds) {
+    auto surface = Surface::makeShared<DiscSurface>(transform, b);
+    const RotationMatrix3 rotation =
+        surface->localToGlobalTransform(gctx).rotation();
+
+    for (const double r : {24., 30., 36.}) {
+      const Vector2 lposition(r, averagePhi + 0.05);
+
+      // d(local cartesian) / d(bound), by central difference on the surface
+      // itself
+      constexpr double h = 1e-6;
+      SquareMatrix2 numeric;
+      for (int i = 0; i < 2; ++i) {
+        Vector2 up = lposition;
+        Vector2 down = lposition;
+        up[i] += h;
+        down[i] -= h;
+        const Vector3 delta = (surface->localToGlobal(gctx, up) -
+                               surface->localToGlobal(gctx, down)) /
+                              (2 * h);
+        // back into the surface's own cartesian frame
+        numeric.col(i) = (rotation.transpose() * delta).head<2>();
+      }
+
+      CHECK_CLOSE_ABS(b->boundToCartesianJacobian(lposition), numeric, 1e-6);
+    }
+  }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

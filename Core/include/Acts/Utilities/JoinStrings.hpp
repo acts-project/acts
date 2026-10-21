@@ -68,13 +68,7 @@ std::string joinStrings(
   return result;
 }
 
-/// Utility to join a range of formattable elements with a delimiter.
-/// @note This overload is selected if the range values are not directly
-///       convertible to `std::string view`, and need to be default-formatted
-///       first.
-/// @param values Range of values to join
-/// @param delimiter Delimiter to insert between elements
-/// @returns Joined string
+/// @cond
 template <std::ranges::range R>
   requires(
       detail::formattable<std::ranges::range_value_t<R>, char> &&
@@ -93,5 +87,6 @@ std::string joinStrings(R&& values, std::string_view delimiter) {
 
   return result;
 }
+/// @endcond
 
 }  // namespace Acts

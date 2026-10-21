@@ -148,7 +148,7 @@ ProcessCode RootPropagationSummaryWriter::writeT(
 
       if (step.surface != nullptr) {
         // Check if the step is a material step
-        if (step.surface->surfaceMaterial() != nullptr) {
+        if (step.surface->hasMaterial()) {
           m_nMaterials++;
         }
       }

@@ -53,6 +53,7 @@ struct MaterialInteractor {
   /// @param navigator The navigator in use
   /// @param result is the mutable result state object
   /// @param logger a logger instance
+  /// @return Result indicating success or failure of the material interaction
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
@@ -78,19 +79,24 @@ struct MaterialInteractor {
       ACTS_VERBOSE("MaterialInteractor | " << "Found material on surface "
                                            << surface->geometryId());
 
-      const MaterialSlab slab = detail::evaluateMaterialSlab(
-          state, stepper, navigator,
+      const Result<MaterialSlab> slabResult = detail::evaluateMaterialSlab(
+          state, stepper, *surface,
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::FullUpdate));
+      if (!slabResult.ok()) {
+        ACTS_DEBUG("MaterialInteractor | "
+                   << "Failed to evaluate material slab: "
+                   << slabResult.error());
+        return Result<void>::failure(slabResult.error());
+      }
+      const MaterialSlab& slab = *slabResult;
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
       if (!slab.isVacuum()) {
         // To integrate process noise, we need to transport
         // the covariance to the current position in space
-        if (state.stepping.covTransport) {
-          stepper.transportCovarianceToCurvilinear(state.stepping);
-        }
+        stepper.transportToCurvilinear(state.stepping);
 
         const double initialMomentum = stepper.absoluteMomentum(state.stepping);
 
@@ -134,7 +140,7 @@ struct MaterialInteractor {
     const TrackingVolume* volume = navigator.currentVolume(state.navigation);
 
     // We only have material interactions if there is potential material
-    if (volume && volume->volumeMaterial()) {
+    if (volume && volume->hasMaterial()) {
       ACTS_VERBOSE("MaterialInteractor | " << "Found material in volume "
                                            << volume->geometryId());
 

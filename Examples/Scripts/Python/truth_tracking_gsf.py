@@ -44,7 +44,7 @@ def runTruthTrackingGsf(
         RootParticleReader,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
-        RootTrackFitterPerformanceWriter,
+        RootTrackParameterPerformanceWriter,
     )
 
     s = s or acts.examples.Sequencer(
@@ -56,7 +56,7 @@ def runTruthTrackingGsf(
 
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
-    logger = acts.logging.getLogger("GSF Example")
+    logger = acts.getDefaultLogger("GSF Example", acts.logging.INFO)
 
     if inputParticlePath is None:
         addParticleGun(
@@ -73,7 +73,7 @@ def runTruthTrackingGsf(
             rnd=rnd,
         )
     else:
-        logger.info("Reading particles from %s", inputParticlePath.resolve())
+        logger.info("Reading particles from {}", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
             RootParticleReader(
@@ -93,7 +93,7 @@ def runTruthTrackingGsf(
             enableInteractions=True,
         )
     else:
-        logger.info("Reading hits from %s", inputSimHitsPath.resolve())
+        logger.info("Reading hits from {}", inputSimHitsPath.resolve())
         s.addReader(
             RootSimHitReader(
                 level=acts.logging.INFO,
@@ -197,7 +197,7 @@ def runTruthTrackingGsf(
     )
 
     s.addWriter(
-        RootTrackFitterPerformanceWriter(
+        RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",

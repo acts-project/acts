@@ -9,10 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <array>
+#include <cmath>
 #include <iosfwd>
 #include <numbers>
 #include <vector>
@@ -109,7 +111,8 @@ class RadialBounds : public DiscBounds {
   /// Returns true for full phi coverage
   /// @return True if bounds cover full azimuthal range (2π), false otherwise
   bool coversFullAzimuth() const final {
-    return (get(eHalfPhiSector) == std::numbers::pi);
+    return std::abs(get(eHalfPhiSector) - std::numbers::pi) <
+           s_fullAzimuthTolerance;
   }
 
   /// Checks if this is inside the radial coverage
@@ -148,7 +151,7 @@ class RadialBounds : public DiscBounds {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line
   ///
-  /// @note that the extremas are given, which may slightly alter the
+  /// @note that the extrema are given, which may slightly alter the
   /// number of segments returned
   ///
   /// @return vector for vertices in 2D

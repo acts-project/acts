@@ -17,7 +17,10 @@ function download {
   tarname=$(basename "$URL")
   curl -SL "$URL" -o "$tarname"
   echo "$HASH $tarname" | sha256sum -c
-  tar -xf "$tarname"
+  # --no-same-owner: as root tar would otherwise restore the uid/gid that
+  # packed the archive, which fails with EINVAL wherever that uid is outside
+  # the container's user namespace mapping.
+  tar --no-same-owner -xf "$tarname"
 }
 
 mkdir -p "${MODEL_STORAGE}"
@@ -32,5 +35,5 @@ download \
   1185060ce697bbc96c9dc32b85e5f0eb4db1f64a645c0fc4d2cb2731cb2ef3dc
 
 download \
-  https://acts.web.cern.ch/ci/gnn/odd_module_map_v01.tar \
-  59f0457f0043bac8594e9f5a3310a709244de980a7b0c206d7d0d95f15455d73
+  https://acts.web.cern.ch/ci/gnn/odd_module_map_v02.tar \
+  1954d20ec0d947476dda06a6982774a193a8ad15dca4dec621b53761f329d493

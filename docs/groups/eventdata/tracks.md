@@ -61,7 +61,7 @@ auto constTrackContainer = /*...*/;
 auto trackProxy = trackContainer.getTrack(5); // is const, even as an lvalue
 ```
 
-![Illustration of the proxy pattern used in the track EDM. The track proxy logically represents a single track, and points to the data stored in the track container.](edm/proxy.png)
+![Illustration of the proxy pattern used in the track EDM. The track proxy logically represents a single track, and points to the data stored in the track container.](edm/proxy.svg)
 
 The track EDM is fully agnostic to the concrete persistency framework
 of an experiment. This avoids having to convert the data between different

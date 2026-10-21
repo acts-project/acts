@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -28,6 +28,7 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 
@@ -40,24 +41,29 @@ class IVolumeMaterial;
 /// The straight line stepper is a simple navigation stepper
 /// to be used to navigate through the tracking geometry. It can be
 /// used for simple material mapping, navigation validation
-class StraightLineStepper {
+class StraightLineStepper final {
  public:
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
   /// Type alias for transport jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
-  using Covariance = BoundSquareMatrix;
-  /// Type alias for bound state containing parameters, jacobian, and path
-  /// length
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using Covariance = BoundMatrix;
   /// Type alias for magnetic field (null field for straight line propagation)
   using BField = NullBField;
 
   struct Config {};
 
+  /// Configuration options for straight line propagation.
   struct Options : public StepperPlainOptions {
+    /// Constructor from geometry and magnetic field contexts
+    /// @param gctx The geometry context
+    /// @param mctx The magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain stepper options
+    /// @param options The plain options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -82,9 +88,6 @@ class StraightLineStepper {
     /// Pure transport jacobian part from runge kutta integration
     FreeMatrix jacTransport = FreeMatrix::Identity();
 
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
-
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
 
@@ -94,21 +97,15 @@ class StraightLineStepper {
     /// Particle hypothesis
     ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
-    /// Boolean to indicate if you need covariance transport
-    bool covTransport = false;
-    /// Covariance matrix for track parameter uncertainties
-    Covariance cov = Covariance::Zero();
-    /// Additional free parameter covariance matrix
-    std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
+    /// Covariance matrix for track parameter uncertainties, set if the
+    /// covariance is transported
+    std::optional<Covariance> cov;
 
     /// accumulated path length state
     double pathAccumulated = 0.;
 
     /// Total number of performed steps
     std::size_t nSteps = 0;
-
-    /// Totoal number of attempted steps
-    std::size_t nStepTrials = 0;
 
     /// adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
@@ -129,7 +126,7 @@ class StraightLineStepper {
   /// Initialize the stepper state from bound track parameters
   /// @param state The stepper state to initialize
   /// @param par The bound track parameters to initialize from
-  void initialize(State& state, const BoundTrackParameters& par) const;
+  void initialize(State& state, const BoundParameters& par) const;
 
   /// Initialize the stepper state from bound parameters and components
   /// @param state The stepper state to initialize
@@ -287,26 +284,76 @@ class StraightLineStepper {
     return state.stepSize.toString();
   }
 
-  /// Create and return the bound state at the current position
+  /// Get the step size constraints
   ///
-  /// @brief It does not check if the transported state is at the surface, this
-  /// needs to be guaranteed by the propagator
-  ///
-  /// @param [in] state State that will be presented as @c BoundState
-  /// @param [in] surface The surface to which we bind the state
-  /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
-  ///
-  /// @return A bound state:
-  ///   - the parameters at the surface
-  ///   - the stepwise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(
-      State& state, const Surface& surface, bool transportCov = true,
-      const FreeToBoundCorrection& freeToBoundCorrection =
-          FreeToBoundCorrection(false)) const;
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The step size constraints
+  const ConstrainedStep& stepSize(const State& state) const {
+    return state.stepSize;
+  }
 
-  /// @brief If necessary fill additional members needed for curvilinearState
+  /// Get the stepper statistics
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The statistics since the last initialization
+  const StepperStatistics& statistics(const State& state) const {
+    return state.statistics;
+  }
+
+  /// Get the path length
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The path length since the last initialization
+  double pathLength(const State& state) const { return state.pathAccumulated; }
+
+  /// Check if the state carries a covariance
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return True if the covariance is transported
+  bool hasCovariance(const State& state) const { return state.cov.has_value(); }
+
+  /// Get the covariance at the anchor
+  ///
+  /// The anchor is the frame of the last initialization, transport or update.
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The covariance at the anchor, or no value if the state does not
+  ///         carry a covariance
+  const std::optional<Covariance>& covariance(const State& state) const {
+    return state.cov;
+  }
+
+  /// Set the covariance at the anchor
+  ///
+  /// The state must already carry a covariance, because the stepper only
+  /// transports the Jacobian while it has one.
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param [in] covariance The new covariance at the anchor
+  /// @throws std::logic_error if the state does not carry a covariance
+  void setCovariance(State& state, const Covariance& covariance) const {
+    if (!state.cov.has_value()) {
+      throw std::logic_error(
+          "Cannot set the covariance of a state without a covariance");
+    }
+    state.cov = covariance;
+  }
+
+  /// Get the bound parameters at the current position
+  ///
+  /// The parameters carry the covariance at the anchor if the state has one.
+  ///
+  /// @note It does not check if the state is on @p surface or anchored on it
+  ///
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @param [in] surface The surface of the parameters
+  /// @return The bound parameters, or a failure if the position cannot be
+  ///         expressed on @p surface
+  Result<BoundParameters> boundParameters(const State& state,
+                                          const Surface& surface) const;
+
+  /// @brief If necessary fill additional members needed for
+  /// transportToCurvilinear
   ///
   /// Compute path length derivatives in case they have not been computed
   /// yet, which is the case if no step has been executed yet.
@@ -332,25 +379,23 @@ class StraightLineStepper {
     return true;
   }
 
-  /// Create and return a curvilinear state at the current position
+  /// Get the curvilinear parameters at the current position
   ///
-  /// @brief This creates a curvilinear state.
+  /// The parameters carry the covariance at the anchor if the state has one.
   ///
-  /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] transportCov Flag steering covariance transport
-  ///
-  /// @return A curvilinear state:
-  ///   - the curvilinear parameters at given position
-  ///   - the stepweise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  BoundState curvilinearState(State& state, bool transportCov = true) const;
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @return The curvilinear parameters
+  BoundParameters curvilinearParameters(const State& state) const;
 
   /// Method to update a stepper state to the some parameters
+  ///
+  /// This anchors the state on @p surface.
   ///
   /// @param [in,out] state State object that will be updated
   /// @param [in] freeParams Free parameters that will be written into @p state
   /// @param [in] boundParams Corresponding bound parameters used to update jacToGlobal in @p state
-  /// @param [in] covariance Covariance that will be written into @p state
+  /// @param [in] covariance Covariance that will be written into @p state if
+  ///                        the state carries a covariance
   /// @param [in] surface The surface used to update the jacToGlobal
   void update(State& state, const FreeVector& freeParams,
               const BoundVector& boundParams, const Covariance& covariance,
@@ -366,26 +411,27 @@ class StraightLineStepper {
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
               double qop, double time) const;
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state - for the moment a dummy method
+  /// Transport the covariance to the curvilinear frame at the current position
+  ///
+  /// This anchors the state on the curvilinear frame. Without a covariance
+  /// the state does not change.
   ///
   /// @param [in,out] state State of the stepper
-  void transportCovarianceToCurvilinear(State& state) const;
+  /// @return The jacobian from the previous anchor to the curvilinear frame
+  Jacobian transportToCurvilinear(State& state) const;
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state - for the moment a dummy method
+  /// Transport the covariance to a surface at the current position
   ///
-  /// @tparam surface_t the surface type - ignored here
+  /// This anchors the state on @p surface. Without a covariance the state
+  /// does not change. The state must be on @p surface, and it stays unchanged
+  /// if it is not.
   ///
-  /// @param [in,out] state The stepper state
-  /// @param [in] surface is the surface to which the covariance is
-  ///        forwarded to
-  /// @note no check is done if the position is actually on the surface
+  /// @param [in,out] state State of the stepper
+  /// @param [in] surface The surface to transport the covariance to
   /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
-  ///
-  void transportCovarianceToBound(
+  /// @return The jacobian from the previous anchor to @p surface, or a failure
+  ///         if the state is not on @p surface
+  Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
@@ -409,20 +455,21 @@ class StraightLineStepper {
     const auto m = state.particleHypothesis.mass();
     const auto p = absoluteMomentum(state);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = fastHypot(1., m / p);
+    const auto dtds = fastHypot(1, m / p);
     // Update the track parameters according to the equations of motion
     Vector3 dir = direction(state);
     state.pars.template segment<3>(eFreePos0) += h * dir;
     state.pars[eFreeTime] += h * dtds;
 
     // Propagate the jacobian
-    if (state.covTransport) {
+    if (state.cov.has_value()) {
       // The step transport matrix in global coordinates
       FreeMatrix D = FreeMatrix::Identity();
-      D.block<3, 3>(0, 4) = ActsSquareMatrix<3>::Identity() * h;
+      D.block<3, 3>(0, 4) = SquareMatrix<3>::Identity() * h;
       // Extend the calculation by the time propagation
-      // Evaluate dt/dlambda
-      D(3, 7) = h * m * m * state.pars[eFreeQOverP] / dtds;
+      // d(t)/d(q/p) = h m^2 (q/p) / (q^2 dt/ds), with the q^2 folded into p
+      // via p = |q| / |q/p|.
+      D(3, 7) = h * m * m / (p * p * state.pars[eFreeQOverP] * dtds);
       // Set the derivative factor the time
       state.derivative(3) = dtds;
       // Update jacobian and derivative
@@ -433,7 +480,6 @@ class StraightLineStepper {
     // state the path length
     state.pathAccumulated += h;
     ++state.nSteps;
-    ++state.nStepTrials;
 
     ++state.statistics.nAttemptedSteps;
     ++state.statistics.nSuccessfulSteps;

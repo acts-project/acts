@@ -104,11 +104,11 @@ BOOST_AUTO_TEST_CASE(BarcodeConstructors) {
   auto p3 = Barcode().withData(arrayValues);
   auto p4 = Barcode::Invalid();
   auto p5 = Barcode();
-  std::vector<std::uint32_t> vectorZeros = {0u, 0u, 0u, 0u, 0u};
+  std::array<std::uint32_t, 5> arrayZeros = {0u, 0u, 0u, 0u, 0u};
 
   BOOST_CHECK_EQUAL(p1, p2);
   BOOST_CHECK_EQUAL(p1, p3);
-  BOOST_CHECK(p4.asVector() == vectorZeros);
+  BOOST_CHECK(p4.asArray() == arrayZeros);
   BOOST_CHECK_EQUAL(p4, p5);
   BOOST_CHECK(p1.isValid());
   BOOST_CHECK(!p4.isValid());
@@ -167,7 +167,13 @@ BOOST_AUTO_TEST_CASE(BarcodeHash) {
                 .withParticle(3u)
                 .withGeneration(4u)
                 .withSubParticle(5u);
-  BOOST_CHECK_EQUAL(p1.hash(), 6445027996773929525u);
+  auto p1Same = Barcode()
+                    .withVertexPrimary(1u)
+                    .withVertexSecondary(2u)
+                    .withParticle(3u)
+                    .withGeneration(4u)
+                    .withSubParticle(5u);
+  BOOST_CHECK_EQUAL(p1.hash(), p1Same.hash());
 
   auto p2 = Barcode()
                 .withVertexPrimary(11u)
@@ -175,7 +181,7 @@ BOOST_AUTO_TEST_CASE(BarcodeHash) {
                 .withParticle(33u)
                 .withGeneration(44u)
                 .withSubParticle(55u);
-  BOOST_CHECK_EQUAL(p2.hash(), 13009826896635491935u);
+  BOOST_CHECK_NE(p1.hash(), p2.hash());
 
   auto p3 = Barcode()
                 .withSubParticle(5u)

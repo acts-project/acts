@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_SUITE(HistogramConversionSuite)
 namespace {
 /// Helper function to test 1D histogram conversion
 void testHist1D(const Histogram1& boostHist) {
-  TH1F* rootHist = toRoot(boostHist);
+  std::unique_ptr<TH1F> rootHist = toRoot(boostHist);
 
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootHist->GetName()), boostHist.name());
@@ -44,13 +44,11 @@ void testHist1D(const Histogram1& boostHist) {
     BOOST_CHECK_CLOSE(rootHist->GetBinContent(i),
                       static_cast<double>(bh.at(i - 1)), 1e-10);
   }
-
-  delete rootHist;
 }
 
 /// Helper function to test 2D histogram conversion
 void testHist2D(const Histogram2& boostHist) {
-  TH2F* rootHist = toRoot(boostHist);
+  std::unique_ptr<TH2F> rootHist = toRoot(boostHist);
 
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootHist->GetName()), boostHist.name());
@@ -68,8 +66,6 @@ void testHist2D(const Histogram2& boostHist) {
                         static_cast<double>(bh.at(i - 1, j - 1)), 1e-10);
     }
   }
-
-  delete rootHist;
 }
 }  // namespace
 
@@ -77,14 +73,12 @@ BOOST_AUTO_TEST_CASE(Conversion_EmptyHistogram) {
   auto axis = AxisVariant(BoostRegularAxis(10, -10.0, 10.0, "x"));
   Histogram1 boostHist("empty", "Empty Histogram", {axis});
 
-  TH1F* rootHist = toRoot(boostHist);
+  std::unique_ptr<TH1F> rootHist = toRoot(boostHist);
 
   BOOST_CHECK_EQUAL(rootHist->GetNbinsX(), 10);
   for (int i = 1; i <= rootHist->GetNbinsX(); ++i) {
     BOOST_CHECK_EQUAL(rootHist->GetBinContent(i), 0.0);
   }
-
-  delete rootHist;
 }
 
 BOOST_AUTO_TEST_CASE(Conversion_Boost1D_to_ROOT_UniformBinning) {
@@ -168,7 +162,7 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
   profile.fill({2.0}, 13.0);
   expectedMeans[2.0] = 11.0;
 
-  TProfile* rootProfile = toRoot(profile);
+  std::unique_ptr<TProfile> rootProfile = toRoot(profile);
 
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootProfile->GetName()), "res_mean_vs_eta");
@@ -191,8 +185,6 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile) {
     BOOST_CHECK_CLOSE(rootProfile->GetBinContent(binIdx + 1),
                       expectedMeans.at(x), 1e-6);
   }
-
-  delete rootProfile;
 }
 
 BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
@@ -232,7 +224,7 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
   }
 
   // Convert ACTS profile to ROOT
-  TProfile* convertedProfile = toRoot(actsProfile);
+  std::unique_ptr<TProfile> convertedProfile = toRoot(actsProfile);
 
   // Compare binning
   BOOST_CHECK_EQUAL(convertedProfile->GetNbinsX(), rootProfile.GetNbinsX());
@@ -259,8 +251,6 @@ BOOST_AUTO_TEST_CASE(Conversion_BoostProfile_to_TProfile_WithErrors) {
     double convertedError = convertedProfile->GetBinError(rootBin);
     BOOST_CHECK_CLOSE(convertedError, rootError, 1e-6);
   }
-
-  delete convertedProfile;
 }
 
 BOOST_AUTO_TEST_CASE(Conversion_Efficiency1D_to_TEfficiency) {
@@ -278,7 +268,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency1D_to_TEfficiency) {
     eff.fill({-1.5}, v);
   }
 
-  TEfficiency* rootEff = toRoot(eff);
+  std::unique_ptr<TEfficiency> rootEff = toRoot(eff);
 
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootEff->GetName()), "eff_vs_eta");
@@ -297,8 +287,6 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency1D_to_TEfficiency) {
                          static_cast<double>(total.at(binIdx));
     BOOST_CHECK_CLOSE(rootEff->GetEfficiency(binIdx + 1), expectedEff, 1e-6);
   }
-
-  delete rootEff;
 }
 
 BOOST_AUTO_TEST_CASE(Conversion_Efficiency2D_to_TEfficiency) {
@@ -316,7 +304,7 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency2D_to_TEfficiency) {
     eff.fill({-1.5, 1.5}, v);
   }
 
-  TEfficiency* rootEff = toRoot(eff);
+  std::unique_ptr<TEfficiency> rootEff = toRoot(eff);
 
   // Verify metadata
   BOOST_CHECK_EQUAL(std::string(rootEff->GetName()), "eff_vs_eta_pt");
@@ -341,8 +329,6 @@ BOOST_AUTO_TEST_CASE(Conversion_Efficiency2D_to_TEfficiency) {
                                           static_cast<int>(yIdx + 1));
     BOOST_CHECK_CLOSE(rootEff->GetEfficiency(globalBin), expectedEff, 1e-6);
   }
-
-  delete rootEff;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

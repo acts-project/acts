@@ -12,9 +12,12 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
 #include <iosfwd>
+#include <optional>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace Acts {
@@ -38,10 +41,19 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 
   /// Constructor with BinningType
   /// @param binning a binning description for the material map binning
+  /// @param materialKey Optional stable identity of the material assignment
   /// @param mappingType is the type of surface mapping associated to the surface
-  explicit ProtoSurfaceMaterialT(const BinningType& binning,
-                                 MappingType mappingType = MappingType::Default)
-      : ISurfaceMaterial(1., mappingType), m_binning(binning) {}
+  explicit ProtoSurfaceMaterialT(
+      const BinningType& binning,
+      MappingType mappingType = MappingType::Default,
+      std::optional<std::string> materialKey = std::nullopt)
+      : ISurfaceMaterial(1., mappingType),
+        m_binning(binning),
+        m_materialKey(std::move(materialKey)) {
+    if (m_materialKey && m_materialKey->empty()) {
+      throw std::invalid_argument("Material key must not be empty");
+    }
+  }
 
   /// Copy constructor
   ///
@@ -61,22 +73,32 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// Assignment operator
   ///
   /// @param smproxy The source proxy
+  /// @return Reference to this object
   ProtoSurfaceMaterialT<BinningType>& operator=(
       const ProtoSurfaceMaterialT<BinningType>& smproxy) = default;
 
   /// Assignment move operator
   ///
   /// @param smproxy The source proxy
+  /// @return Reference to this object
   ProtoSurfaceMaterialT<BinningType>& operator=(
       ProtoSurfaceMaterialT<BinningType>&& smproxy) noexcept = default;
 
   /// Scale operation - dummy implementation
   ///
+  /// @return Reference to this object
   ProtoSurfaceMaterialT<BinningType>& scale(double /*factor*/) final {
     return (*this);
   }
 
+  /// Stable identity of the material assignment, if configured
+  /// @return Optional stable material assignment key
+  const std::optional<std::string>& materialKey() const {
+    return m_materialKey;
+  }
+
   /// Return the BinUtility
+  /// @return Reference to the binning
   const BinningType& binning() const { return (m_binning); }
 
   /// Return method for full material description of the Surface - from local
@@ -87,19 +109,15 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
     return (m_materialSlab);
   }
 
-  /// Return method for full material description of the Surface - from the
-  /// global coordinates
-  ///
-  /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector3& /*gp*/) const final {
-    return (m_materialSlab);
-  }
+  /// @copydoc ISurfaceMaterial::localAxisDirections() const
+  std::vector<AxisDirection> localAxisDirections() const final { return {}; }
 
   using ISurfaceMaterial::materialSlab;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the output stream
+  /// @return The output stream
   std::ostream& toStream(std::ostream& sl) const final {
     sl << "Acts::ProtoSurfaceMaterial : " << std::endl;
     sl << m_binning << std::endl;
@@ -110,6 +128,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// A binning description
   BinningType m_binning;
 
+  std::optional<std::string> m_materialKey;
+
   /// Dummy material properties
   MaterialSlab m_materialSlab = MaterialSlab::Nothing();
 };
@@ -118,11 +138,11 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 /// A surface material implementation that uses BinUtility for binning
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 
-/// @brief Type alias for a prototype surface material using a grid of ProtoAxis
-/// A surface material implementation that uses a vector of ProtoAxis for
-/// grid-based binning
-using ProtoGridSurfaceMaterial =
-    ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
+/// @brief Type alias for a prototype surface material using a multi-axis
+/// binning description
+/// A surface material implementation that carries a MultiAxisSpec2D whose
+/// deferred axes are resolved against the surface during material mapping
+using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<MultiAxisSpec2D>;
 
 /// @}
 

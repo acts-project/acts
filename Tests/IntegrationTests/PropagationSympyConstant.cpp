@@ -13,7 +13,6 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 
 #include "PropagationDatasets.hpp"
@@ -29,10 +28,10 @@ using namespace UnitLiterals;
 using MagneticField = ConstantBField;
 using Stepper = SympyStepper;
 using TestPropagator = Propagator<Stepper>;
-using RiddersPropagator = RiddersPropagator<TestPropagator>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 1_um;
+constexpr auto epsTime = 1_um;
 constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
 
@@ -57,7 +56,7 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
                      phi, theta, p, q, s, bz) {
   runForwardBackwardTest(makePropagator(bz), geoCtx, magCtx,
                          makeParametersCurvilinear(phi, theta, p, q), s, epsPos,
-                         epsDir, epsMom);
+                         epsTime, epsDir, epsMom);
 }
 
 // TODO implement jacobian/covariance tests. right now covariance comparisons

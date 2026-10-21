@@ -65,12 +65,21 @@ struct PointLikeProcess {
   /// Child selection: if a generated child particle should be kept.
   child_particle_selector_t selectChildParticle;
 
+  /// Generate path limits for the process
+  /// @param generator Random number generator
+  /// @param particle Input particle
+  /// @return Pair of minimum and maximum path limits
   template <class generator_t>
   std::pair<double, double> generatePathLimits(generator_t& generator,
                                                const Particle& particle) const {
     return physics.generatePathLimits(generator, particle);
   }
 
+  /// Run the process
+  /// @param rng Random number generator
+  /// @param particle Input particle
+  /// @param generatedParticles Output vector of generated particles
+  /// @return True if process was applied
   template <class generator_t>
   bool run(generator_t& rng, Particle& particle,
            std::vector<Particle>& generatedParticles) const {

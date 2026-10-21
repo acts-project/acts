@@ -34,7 +34,12 @@ namespace ActsPython {
 void addGeometryGen1(py::module_ &m) {
   using SurfacePtrVector = std::vector<std::shared_ptr<const Surface>>;
 
-  py::class_<Layer, std::shared_ptr<Layer>>(m, "Layer");
+  {
+    auto layer = py::class_<Layer, std::shared_ptr<Layer>>(m, "Layer");
+    layer.def_property_readonly(
+        "surfaceRepresentation",
+        py::overload_cast<>(&Layer::surfaceRepresentation, py::const_));
+  }
 
   py::class_<BoundarySurfaceT<TrackingVolume>>(
       m, "BoundarySurfaceT_TrackingVolume");
@@ -121,8 +126,8 @@ void addGeometryGen1(py::module_ &m) {
                   cfg, getDefaultLogger("CylinderVolumeHelper", level));
             }))
             .def("createTrackingVolume",
-                 [](const CylinderVolumeHelper &self, GeometryContext gctx,
-                    const LayerVector &layers,
+                 [](const CylinderVolumeHelper &self,
+                    const GeometryContext &gctx, const LayerVector &layers,
                     std::shared_ptr<VolumeBounds> volumeBounds,
                     const Transform3 &trafo, const std::string &name) {
                    return self.createTrackingVolume(gctx, layers, {},

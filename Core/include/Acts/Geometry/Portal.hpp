@@ -14,7 +14,11 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <exception>
 #include <memory>
+#include <span>
+#include <string>
+#include <vector>
 
 namespace Acts {
 
@@ -30,12 +34,34 @@ class PortalLinkBase;
 
 /// Exception thrown when portals cannot be merged
 class PortalMergingException : public std::exception {
+ public:
+  /// Default constructor producing a generic message.
+  PortalMergingException() = default;
+  /// Construct with a contextual message describing why the merge failed.
+  /// @param message The contextual error message
+  explicit PortalMergingException(std::string message);
+  /// Get exception description.
+  /// @return C-style string describing the exception
   const char* what() const noexcept override;
+
+ private:
+  std::string m_message{"Failure to merge portals"};
 };
 
 /// Exception thrown when portals cannot be fused
 class PortalFusingException : public std::exception {
   const char* what() const noexcept override;
+};
+
+/// Policy controlling how @ref Acts::Portal::merge treats surfaces that carry
+/// material. Merged surfaces cannot retain the material of their inputs, so by
+/// default this is treated as a fatal error.
+enum class PortalMaterialMergePolicy {
+  /// Abort the merge by throwing a @ref PortalMergingException (default).
+  eThrow,
+  /// Continue the merge: discard the input material, tag the merged surface
+  /// with a @ref MergedMaterialMarker and emit a warning. This is lossy.
+  eDiscardAndMark,
 };
 
 /// A portal connects two or more neighboring volumes. Each volume has a set of
@@ -165,10 +191,17 @@ class Portal {
   /// @param bPortal The second portal
   /// @param direction The direction of the merge (e.g. along z)
   /// @param logger The logger to push output to
+  /// @param materialPolicy How to treat surfaces that carry material. By
+  ///        default the merge aborts with an exception; in
+  ///        @ref PortalMaterialMergePolicy::eDiscardAndMark mode the material is
+  ///        discarded, the merged surface is tagged with a
+  ///        @ref MergedMaterialMarker and a warning is emitted.
   /// @return A new merged portal that encompasses both input portals
   static Portal merge(const GeometryContext& gctx, Portal& aPortal,
                       Portal& bPortal, AxisDirection direction,
-                      const Logger& logger = getDummyLogger());
+                      const Logger& logger = getDummyLogger(),
+                      PortalMaterialMergePolicy materialPolicy =
+                          PortalMaterialMergePolicy::eThrow);
 
   /// Resolve the volume for a 3D position and a direction
   /// The @p direction is used to select the right portal link, if it is set.
@@ -224,6 +257,16 @@ class Portal {
   /// @return The portal surface
   RegularSurface& surface();
 
+  /// Add a string tag to this portal. Tags are used to look the portal up from
+  /// the final @ref Acts::TrackingGeometry (e.g. the portal connecting the
+  /// tracker and the calorimeter).
+  /// @param tag The tag to add
+  void addTag(std::string tag);
+
+  /// Access the tags assigned to this portal.
+  /// @return A view of the tags assigned to this portal
+  std::span<const std::string> tags() const;
+
  private:
   /// Helper to check surface equivalence without checking material status. This
   /// is needed because we allow fusing portals with surfaces that are
@@ -241,6 +284,8 @@ class Portal {
 
   std::unique_ptr<PortalLinkBase> m_alongNormal;
   std::unique_ptr<PortalLinkBase> m_oppositeNormal;
+
+  std::vector<std::string> m_tags;
 };
 
 }  // namespace Acts

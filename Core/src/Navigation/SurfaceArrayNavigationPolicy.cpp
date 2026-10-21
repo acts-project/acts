@@ -9,16 +9,21 @@
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <vector>
 
 namespace Acts {
 
 SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     const GeometryContext& gctx, const TrackingVolume& volume,
     const Logger& logger, Config config)
-    : m_volume(volume) {
+    : m_cfg(config), m_volume(volume) {
   ACTS_VERBOSE("Constructing SurfaceArrayNavigationPolicy for volume "
                << volume.volumeName());
   ACTS_VERBOSE("~> Layer type is " << config.layerType);
@@ -48,14 +53,115 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     throw std::runtime_error("Cannot create surface array with zero surfaces");
   }
 
+  ProtoLayer protoLayer(
+      gctx, surfaces, Transform3{volume.localToGlobalTransform(gctx).linear()});
+  protoLayer.envelope = config.envelope;
+
   if (config.layerType == LayerType::Disc) {
     auto [binsR, binsPhi] = config.bins;
-    m_surfaceArray =
-        sac.surfaceArrayOnDisc(gctx, std::move(surfaces), binsPhi, binsR);
+
+    // Auto-determine bin counts from the module layout, scaled by the
+    // configured bin count factor.
+    if (binsR == 0 || binsPhi == 0) {
+      std::vector<const Surface*> rawSurfaces;
+      rawSurfaces.reserve(surfaces.size());
+      for (const auto& s : surfaces) {
+        rawSurfaces.push_back(s.get());
+      }
+      if (binsR == 0) {
+        binsR = std::max<std::size_t>(
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisR)) *
+                            config.numberOfBinsFactor));
+      }
+      if (binsPhi == 0) {
+        binsPhi = std::max<std::size_t>(
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisPhi)) *
+                            config.numberOfBinsFactor));
+      }
+    }
+
+    double layerZ = protoLayer.medium(AxisDirection::AxisZ);
+
+    ACTS_VERBOSE("Creating a disk Layer:");
+    ACTS_VERBOSE(" - at Z position    = " << layerZ);
+    ACTS_VERBOSE(" - from Z min/max   = "
+                 << protoLayer.min(AxisDirection::AxisZ, false) << " / "
+                 << protoLayer.max(AxisDirection::AxisZ, false));
+    ACTS_VERBOSE(" - with R min/max   = "
+                 << protoLayer.min(AxisDirection::AxisR, false) << " (-"
+                 << protoLayer.envelope[AxisDirection::AxisR][0u] << ") / "
+                 << protoLayer.max(AxisDirection::AxisR, false) << " (+"
+                 << protoLayer.envelope[AxisDirection::AxisR][1u] << ")");
+    ACTS_VERBOSE(" - with phi min/max = "
+                 << protoLayer.min(AxisDirection::AxisPhi, false) << " / "
+                 << protoLayer.max(AxisDirection::AxisPhi, false));
+    ACTS_VERBOSE(" - # of modules    = " << surfaces.size() << " ordered in ( "
+                                         << binsR << " x " << binsPhi << ")");
+
+    Transform3 layerTransform{Translation3(0, 0, layerZ)};
+
+    m_surfaceArray = std::make_unique<SurfaceArray>(sac.surfaceArrayOnDisc(
+        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, layerTransform,
+        config.neighborWindow.value_or(
+            SurfaceArray::NeighborWindow{{0, 0}, {2, 1}}),
+        config.overfill));
   } else if (config.layerType == LayerType::Cylinder) {
     auto [binsPhi, binsZ] = config.bins;
-    m_surfaceArray =
-        sac.surfaceArrayOnCylinder(gctx, std::move(surfaces), binsPhi, binsZ);
+
+    // Auto-determine bin counts from the module layout, scaled by the
+    // configured bin count factor.
+    if (binsPhi == 0 || binsZ == 0) {
+      std::vector<const Surface*> rawSurfaces;
+      rawSurfaces.reserve(surfaces.size());
+      for (const auto& s : surfaces) {
+        rawSurfaces.push_back(s.get());
+      }
+      if (binsPhi == 0) {
+        binsPhi = std::max<std::size_t>(
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisPhi)) *
+                            config.numberOfBinsFactor));
+      }
+      if (binsZ == 0) {
+        binsZ = std::max<std::size_t>(
+            1, std::llround(static_cast<double>(sac.determineBinCount(
+                                gctx, rawSurfaces, AxisDirection::AxisZ)) *
+                            config.numberOfBinsFactor));
+      }
+    }
+
+    double layerR = protoLayer.medium(AxisDirection::AxisR);
+    double layerZ = protoLayer.medium(AxisDirection::AxisZ);
+    double layerHalfZ = 0.5 * protoLayer.range(AxisDirection::AxisZ);
+    double layerThickness = protoLayer.range(AxisDirection::AxisR);
+
+    ACTS_VERBOSE("Creating a cylindrical Layer:");
+    ACTS_VERBOSE(" - with layer R     = " << layerR);
+    ACTS_VERBOSE(" - from R min/max   = "
+                 << protoLayer.min(AxisDirection::AxisR, false) << " / "
+                 << protoLayer.max(AxisDirection::AxisR, false));
+    ACTS_VERBOSE(" - with R thickness = " << layerThickness);
+    ACTS_VERBOSE("   - incl envelope  = "
+                 << protoLayer.envelope[AxisDirection::AxisR][0u] << " / "
+                 << protoLayer.envelope[AxisDirection::AxisR][1u]);
+    ACTS_VERBOSE(" - with z min/max   = "
+                 << protoLayer.min(AxisDirection::AxisZ, false) << " (-"
+                 << protoLayer.envelope[AxisDirection::AxisZ][0u] << ") / "
+                 << protoLayer.max(AxisDirection::AxisZ, false) << " (+"
+                 << protoLayer.envelope[AxisDirection::AxisZ][1u] << ")");
+    ACTS_VERBOSE(" - z center         = " << layerZ);
+    ACTS_VERBOSE(" - halflength z     = " << layerHalfZ);
+
+    Transform3 layerTransform{Translation3(0, 0, layerZ)};
+    ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
+
+    m_surfaceArray = std::make_unique<SurfaceArray>(sac.surfaceArrayOnCylinder(
+        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, layerTransform,
+        config.neighborWindow.value_or(
+            SurfaceArray::NeighborWindow{{0, 0}, {1, 2}}),
+        config.overfill));
   } else if (config.layerType == LayerType::Plane) {
     ACTS_ERROR("Plane layers are not yet supported");
     throw std::invalid_argument("Plane layers are not yet supported");
@@ -71,13 +177,13 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
 
 void SurfaceArrayNavigationPolicy::initializeCandidates(
     [[maybe_unused]] const GeometryContext& gctx,
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
+    const NavigationArguments& args, NavigationPolicyState& /*state*/,
+    AppendOnlyNavigationStream& stream, const Logger& logger) const {
   ACTS_VERBOSE("SrfArrNavPol (volume=" << m_volume.volumeName() << ")");
 
   ACTS_VERBOSE("Querying sensitive surfaces at " << args.position.transpose());
-  const std::vector<const Surface*>& sensitiveSurfaces =
-      m_surfaceArray->neighbors(args.position, args.direction);
+  const auto sensitiveSurfaces =
+      m_surfaceArray->neighbors(gctx, args.position, args.direction);
   ACTS_VERBOSE("~> Surface array reports " << sensitiveSurfaces.size()
                                            << " sensitive surfaces");
 
@@ -92,6 +198,13 @@ const Acts::SurfaceArray& SurfaceArrayNavigationPolicy::surfaceArray() const {
 
 void SurfaceArrayNavigationPolicy::connect(NavigationDelegate& delegate) const {
   connectDefault<SurfaceArrayNavigationPolicy>(delegate);
+}
+
+SurfaceArrayNavigationPolicy::~SurfaceArrayNavigationPolicy() = default;
+
+const SurfaceArrayNavigationPolicy::Config&
+SurfaceArrayNavigationPolicy::config() const {
+  return m_cfg;
 }
 
 }  // namespace Acts

@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -22,15 +21,15 @@
 
 #include <cstdint>
 #include <ios>
-#include <ostream>
 #include <stdexcept>
 
 #include <TFile.h>
 #include <TTree.h>
 
-ActsExamples::RootParticleWriter::RootParticleWriter(
-    const ActsExamples::RootParticleWriter::Config& cfg,
-    Acts::Logging::Level lvl)
+namespace ActsExamples {
+
+RootParticleWriter::RootParticleWriter(const RootParticleWriter::Config& cfg,
+                                       Acts::Logging::Level lvl)
     : WriterT(cfg.inputParticles, "RootParticleWriter", lvl), m_cfg(cfg) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
@@ -76,6 +75,8 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("particle", &m_particle);
   m_outputTree->Branch("generation", &m_generation);
   m_outputTree->Branch("sub_particle", &m_subParticle);
+  m_outputTree->Branch("orig_part_idx", &m_origParticleIdx);
+  m_outputTree->Branch("hf_origin", &m_hfOrigin);
 
   if (m_cfg.writeHelixParameters) {
     m_outputTree->Branch("perigee_d0", &m_perigeeD0);
@@ -98,13 +99,13 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("outcome", &m_outcome);
 }
 
-ActsExamples::RootParticleWriter::~RootParticleWriter() {
+RootParticleWriter::~RootParticleWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootParticleWriter::finalize() {
+ProcessCode RootParticleWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -115,8 +116,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
-    const AlgorithmContext& ctx, const SimParticleContainer& particles) {
+ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
+                                       const SimParticleContainer& particles) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -124,6 +125,9 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
   for (const auto& particle : particles) {
     m_particleHash.push_back(particle.particleId().hash());
     m_particleType.push_back(particle.pdg());
+    m_origParticleIdx.push_back(particle.origParticleIdx());
+    m_hfOrigin.push_back(
+        static_cast<std::uint8_t>(particle.heavyFlavourOrigin()));
     m_process.push_back(static_cast<std::uint32_t>(particle.process()));
     // position
     m_vx.push_back(Acts::clampValue<float>(particle.fourPosition().x() /
@@ -190,9 +194,10 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     // Start from truth curvilinear parameters (direction, q/p)
     const Acts::Vector3 startDir = particle.direction();  // unit vector
     const auto qOverP = particle.qOverP();                // ACTS units
+    // The perigee surface is not aligned, so either context works
     auto intersection =
         pSurface
-            ->intersect(ctx.geoContext, particle.position(), startDir,
+            ->intersect(ctx.recoGeoContext, particle.position(), startDir,
                         Acts::BoundaryTolerance::Infinite())
             .closest();
 
@@ -208,7 +213,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
 
       // get the truth perigee parameter
       auto lpResult =
-          pSurface->globalToLocal(ctx.geoContext, position, startDir);
+          pSurface->globalToLocal(ctx.recoGeoContext, position, startDir);
       if (lpResult.ok()) {
         perigeeD0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
         perigeeZ0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
@@ -253,7 +258,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
 
     // Propagation options (need event contexts)
     using PropOptions = PropagatorT::Options<>;
-    PropOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+    PropOptions pOptions(ctx.recoGeoContext, ctx.magFieldContext);
 
     // Choose propagation direction based on the closest intersection
     pOptions.direction =
@@ -359,5 +364,10 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_perigeePt.clear();
   }
 
+  m_origParticleIdx.clear();
+  m_hfOrigin.clear();
+
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

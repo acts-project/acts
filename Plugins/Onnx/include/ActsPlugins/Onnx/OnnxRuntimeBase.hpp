@@ -21,8 +21,8 @@ namespace ActsPlugins {
 using NetworkBatchInput =
     Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
-// General class that sets up the ONNX runtime framework for loading an ML model
-// and using it for inference.
+/// General class that sets up the ONNX runtime framework for loading an ML
+/// model and using it for inference.
 class OnnxRuntimeBase {
  public:
   /// @brief Default constructor

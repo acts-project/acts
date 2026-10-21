@@ -9,17 +9,17 @@
 #include "ActsExamples/TrackFinding/OrthogonalTripletSeedingAlgorithm.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
-#include "Acts/Seeding2/CylindricalSpacePointKDTree.hpp"
-#include "Acts/Seeding2/DoubletSeedFinder.hpp"
-#include "Acts/Seeding2/TripletSeedFinder.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Seeding/BroadTripletSeedFilter.hpp"
+#include "Acts/Seeding/CylindricalSpacePointKDTree.hpp"
+#include "Acts/Seeding/DoubletSeedFinder.hpp"
+#include "Acts/Seeding/TripletSeedFinder.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <cmath>
 #include <csignal>
@@ -30,8 +30,8 @@ namespace ActsExamples {
 namespace {
 
 static inline bool itkFastTrackingCuts(
-    const Acts::ConstSpacePointProxy2 & /*middle*/,
-    const Acts::ConstSpacePointProxy2 &other, float cotTheta,
+    const Acts::ConstSpacePointProxy & /*middle*/,
+    const Acts::ConstSpacePointProxy &other, float cotTheta,
     bool isBottomCandidate) {
   static float rMin = 45;
   static float cotThetaMax = 1.5;
@@ -43,7 +43,7 @@ static inline bool itkFastTrackingCuts(
   return true;
 }
 
-static inline bool itkFastTrackingSPselect(const SimSpacePoint &sp) {
+static inline bool itkFastTrackingSPselect(const ConstSpacePointProxy &sp) {
   // At small r we remove points beyond |z| > 200.
   float r = sp.r();
   float zabs = std::abs(sp.z());
@@ -63,8 +63,9 @@ static inline bool itkFastTrackingSPselect(const SimSpacePoint &sp) {
 }  // namespace
 
 OrthogonalTripletSeedingAlgorithm::OrthogonalTripletSeedingAlgorithm(
-    const Config &cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("OrthogonalTripletSeedingAlgorithm", lvl), m_cfg(cfg) {
+    const Config &cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("OrthogonalTripletSeedingAlgorithm", std::move(logger)),
+      m_cfg(cfg) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 
@@ -92,19 +93,20 @@ OrthogonalTripletSeedingAlgorithm::OrthogonalTripletSeedingAlgorithm(
   m_filterConfig.useDeltaRinsteadOfTopRadius =
       m_cfg.useDeltaRinsteadOfTopRadius;
 
-  m_filterLogger = logger().cloneWithSuffix("Filter");
+  m_filterLogger = this->logger().cloneWithSuffix("Filter");
 
-  m_seedFinder = Acts::TripletSeeder(logger().cloneWithSuffix("Finder"));
+  m_seedFinder = Acts::TripletSeeder(this->logger().cloneWithSuffix("Finder"));
 }
 
 ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     const AlgorithmContext &ctx) const {
-  const SimSpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
+  const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
-  Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::XY |
-      Acts::SpacePointColumns::ZR | Acts::SpacePointColumns::Phi |
-      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR);
+  Acts::SpacePointContainer coreSpacePoints(
+      Acts::SpacePointColumns::CopiedFromIndex |
+      Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
+      Acts::SpacePointColumns::Phi | Acts::SpacePointColumns::VarianceZ |
+      Acts::SpacePointColumns::VarianceR);
   coreSpacePoints.reserve(spacePoints.size());
 
   Acts::Experimental::CylindricalSpacePointKDTreeBuilder kdTreeBuilder;
@@ -113,17 +115,16 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   Acts::Extent rRangeSPExtent;
 
   for (std::size_t i = 0; i < spacePoints.size(); ++i) {
-    const auto &sp = spacePoints[i];
+    const auto sp = spacePoints[i];
 
     // check if the space point passes the selection
     if (m_spacePointSelector.connected() && !m_spacePointSelector(sp)) {
       continue;
     }
 
-    Acts::SpacePointIndex2 newSpIndex = coreSpacePoints.size();
+    Acts::SpacePointIndex newSpIndex = coreSpacePoints.size();
     auto newSp = coreSpacePoints.createSpacePoint();
-    newSp.assignSourceLinks(
-        std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)});
+    newSp.copiedFromIndex() = sp.index();
     newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
                                       static_cast<float>(sp.y())};
     newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
@@ -149,22 +150,24 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   lhOptions.zMax = m_cfg.zMax;
   lhOptions.phiMin = m_cfg.phiMin;
   lhOptions.phiMax = m_cfg.phiMax;
-  lhOptions.deltaRMin = std::isnan(m_cfg.deltaRMinBottom)
-                            ? m_cfg.deltaRMin
-                            : m_cfg.deltaRMinBottom;
-  lhOptions.deltaRMax = std::isnan(m_cfg.deltaRMaxBottom)
-                            ? m_cfg.deltaRMax
-                            : m_cfg.deltaRMaxBottom;
+  // lhOptions (low-high) is used for top candidate search (middle->outer)
+  lhOptions.deltaRMin =
+      std::isnan(m_cfg.deltaRMinTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
+  lhOptions.deltaRMax =
+      std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
   lhOptions.collisionRegionMin = m_cfg.collisionRegionMin;
   lhOptions.collisionRegionMax = m_cfg.collisionRegionMax;
   lhOptions.cotThetaMax = m_cfg.cotThetaMax;
   lhOptions.deltaPhiMax = m_cfg.deltaPhiMax;
   Acts::Experimental::CylindricalSpacePointKDTree::Options hlOptions =
       lhOptions;
-  hlOptions.deltaRMin =
-      std::isnan(m_cfg.deltaRMinTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
-  hlOptions.deltaRMax =
-      std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
+  // hlOptions (high-low) is used for bottom candidate search (middle->inner)
+  hlOptions.deltaRMin = std::isnan(m_cfg.deltaRMinBottom)
+                            ? m_cfg.deltaRMin
+                            : m_cfg.deltaRMinBottom;
+  hlOptions.deltaRMax = std::isnan(m_cfg.deltaRMaxBottom)
+                            ? m_cfg.deltaRMax
+                            : m_cfg.deltaRMaxBottom;
 
   Acts::DoubletSeedFinder::Config bottomDoubletFinderConfig;
   bottomDoubletFinderConfig.spacePointsSortedByRadius = false;
@@ -223,7 +226,6 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
           m_cfg.deltaRMiddleMaxSPRange);
 
   // run the seeding
-  Acts::SeedContainer2 seeds;
   Acts::BroadTripletSeedFilter::State filterState;
   Acts::BroadTripletSeedFilter::Cache filterCache;
   Acts::BroadTripletSeedFilter seedFilter(m_filterConfig, filterState,
@@ -233,14 +235,17 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   static thread_local Acts::Experimental::CylindricalSpacePointKDTree::
       Candidates candidates;
 
+  Acts::SeedContainer seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+
   // Run the seeding algorithm by iterating over all the points in the tree
-  // and seeing what happens if we take them to be our middle spacepoint.
+  // and seeing what happens if we take them to be our middle space point.
   for (const auto &middle : kdTree) {
     ACTS_VERBOSE("Process middle " << middle.second);
 
     const auto spM = coreSpacePoints.at(middle.second).asConst();
 
-    // Cut: Ensure that the middle spacepoint lies within a valid r-region for
+    // Cut: Ensure that the middle space point lies within a valid r-region for
     // middle points.
     const float rM = spM.zr()[1];
     if (m_cfg.useVariableMiddleSPRange) {
@@ -282,44 +287,30 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     candidates.clear();
     kdTree.validTuples(lhOptions, hlOptions, spM, nTopSeedConf, candidates);
 
-    Acts::SpacePointContainer2::ConstSubset bottomSps =
-        coreSpacePoints.subset(candidates.bottom_lh_v).asConst();
-    Acts::SpacePointContainer2::ConstSubset topSps =
-        coreSpacePoints.subset(candidates.top_lh_v).asConst();
     m_seedFinder->createSeedsFromGroup(
         cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,
-        seedFilter, coreSpacePoints, bottomSps, spM, topSps, seeds);
+        seedFilter, coreSpacePoints,
+        coreSpacePoints.subset(candidates.bottom_lh_v).asConst(), spM,
+        coreSpacePoints.subset(candidates.top_lh_v).asConst(), seeds);
 
-    bottomSps = coreSpacePoints.subset(candidates.bottom_hl_v).asConst();
-    topSps = coreSpacePoints.subset(candidates.top_hl_v).asConst();
     m_seedFinder->createSeedsFromGroup(
         cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,
-        seedFilter, coreSpacePoints, bottomSps, spM, topSps, seeds);
+        seedFilter, coreSpacePoints,
+        coreSpacePoints.subset(candidates.bottom_hl_v).asConst(), spM,
+        coreSpacePoints.subset(candidates.top_hl_v).asConst(), seeds);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
 
-  // we have seeds of proxies
-  // convert them to seed of external space points
-  SimSeedContainer seedContainerForStorage;
-  seedContainerForStorage.reserve(seeds.size());
-  for (const auto &seed : seeds) {
-    auto sps = seed.spacePointIndices();
-    seedContainerForStorage.emplace_back(*coreSpacePoints.at(sps[0])
-                                              .sourceLinks()[0]
-                                              .get<const SimSpacePoint *>(),
-                                         *coreSpacePoints.at(sps[1])
-                                              .sourceLinks()[0]
-                                              .get<const SimSpacePoint *>(),
-                                         *coreSpacePoints.at(sps[2])
-                                              .sourceLinks()[0]
-                                              .get<const SimSpacePoint *>());
-    seedContainerForStorage.back().setVertexZ(seed.vertexZ());
-    seedContainerForStorage.back().setQuality(seed.quality());
+  // update seed space point indices to original space point container
+  for (auto seed : seeds) {
+    for (auto &spIndex : seed.spacePointIndices()) {
+      spIndex = coreSpacePoints.at(spIndex).copiedFromIndex();
+    }
   }
 
-  m_outputSeeds(ctx, std::move(seedContainerForStorage));
+  m_outputSeeds(ctx, std::move(seeds));
   return ProcessCode::SUCCESS;
 }
 

@@ -24,7 +24,6 @@
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -69,7 +68,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
   gGeoManager->CloseGeometry();
 
   // Check the 4 possible ways
-  std::vector<std::string> allowedAxes = {"XZ*", "xZ*", "xz*", "Xz*"};
+  std::vector<TGeoAxes> allowedAxes = {"XZY", "xZY", "xzY", "XzY"};
 
   std::size_t itrd = 0;
   for (const auto &axes : allowedAxes) {
@@ -106,7 +105,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
   }
 
   // Check exceptions for not allowed axis definition
-  std::vector<std::string> notAllowed = {"XY*", "YZ*", "ZX*", "ZY*"};
+  std::vector<TGeoAxes> notAllowed = {"XYZ", "YZX", "ZXY", "ZYX"};
   for (const auto &naxis : notAllowed) {
     BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                       *gGeoIdentity, naxis, 1),

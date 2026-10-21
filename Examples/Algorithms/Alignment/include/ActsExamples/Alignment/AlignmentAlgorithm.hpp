@@ -16,11 +16,13 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
 
-#include <functional>
 #include <memory>
 #include <vector>
+
+namespace Acts {
+class MagneticFieldProvider;
+}
 
 namespace ActsExamples {
 
@@ -116,14 +118,14 @@ class AlignmentAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  AlignmentAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  explicit AlignmentAlgorithm(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Framework execute method of the alignment algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
  private:
   Config m_cfg;

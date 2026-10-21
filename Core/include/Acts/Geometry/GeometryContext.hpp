@@ -13,7 +13,6 @@
 #include ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
 #else
 
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/detail/ContextType.hpp"
 
 #include <ostream>
@@ -40,25 +39,15 @@ namespace Acts {
 /// @code
 /// auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 /// @endcode
-///
-/// @note The default constructor is deprecated. Use the factory method
-///       dangerouslyDefaultConstruct() to make empty context creation explicit.
 class GeometryContext : public ContextType {
  public:
   /// Static factory method for default construction
   /// @note Use this when you need a default context for testing or
   ///       simple applications without alignment/conditions data
+  /// @return A default-constructed GeometryContext
   static GeometryContext dangerouslyDefaultConstruct() {
-    ACTS_PUSH_IGNORE_DEPRECATED()
     return GeometryContext();
-    ACTS_POP_IGNORE_DEPRECATED()
   }
-
-  /// Default constructor
-  /// @deprecated Use GeometryContext::dangerouslyDefaultConstruct() instead
-  ///             to make empty context construction explicit
-  [[deprecated("Use GeometryContext::dangerouslyDefaultConstruct() instead")]]
-  GeometryContext() = default;
 
   /// Move construct from arbitrary type (inherited from ContextType)
   /// @tparam T The type of the value to construct from
@@ -78,6 +67,9 @@ class GeometryContext : public ContextType {
 
   /// Inherit assignment operators
   using ContextType::operator=;
+
+ private:
+  GeometryContext() = default;
 };
 
 /// Helper struct that stores an object and a context, and will print it to

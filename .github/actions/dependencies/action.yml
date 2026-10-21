@@ -10,91 +10,175 @@ inputs:
     description: 'Secrets to pass to the action'
     required: false
     default: ''
-  spack_version:
-    description: 'Version of Spack to use'
-    required: false
-    default: 'v1.0.2'
-  spack_repo_version:
-    description: 'Version of Spack builtin repo to use'
-    required: false
-    default: 'v2025.07.0'
-  DEPENDENCY_TAG:
-    description: 'Dependency tag to pull from'
-    required: false
-    default: 'v19.0.0'
   full_install:
     description: 'Whether to do a full dependency installation including Geant4 datasets and Python packages'
     required: false
     default: 'false'
+  cxx_std:
+    description: 'C++ standard for lockfile selection (e.g. 20, 23). Defaults to 23.'
+    required: false
+    default: '23'
+  # v24.5.0 publishes accelerator flavors at cxx23 only. Requests for cxx_std
+  # 20 fall back to the C++23 stack within the requested compiler and flavor;
+  # the selection logs this fallback.
+  flavor:
+    description: 'Accelerator flavor for lockfile selection (e.g. cuda13, rocm7). Defaults to the plain CPU stack.'
+    required: false
+    default: ''
+  env_file:
+    description: 'Where to generate the environment file'
+    required: true
 
 
 runs:
   using: 'composite'
   steps:
+    # First, so every apt-get in this job — including any the caller runs after
+    # this action — benefits, not just the one inside opengl.sh late in setup.sh.
+    - name: Apt mirror
+      uses: ./.github/actions/apt_mirror
+
+    # The Ubuntu build images do not include jq, which validates the JSON
+    # emitted by CI/ccache_stats.sh. macOS installs it with Homebrew below.
+    - name: Install jq for ccache statistics
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        if command -v jq >/dev/null 2>&1; then
+          exit 0
+        fi
+        privilege=()
+        if [ "$(id -u)" != 0 ]; then
+          privilege=(sudo)
+        fi
+        if command -v apt-get >/dev/null 2>&1; then
+          "${privilege[@]}" apt-get update
+          "${privilege[@]}" apt-get install -y --no-install-recommends jq
+        elif command -v dnf >/dev/null 2>&1; then
+          "${privilege[@]}" dnf install -y jq
+        else
+          echo "::error::Cannot install jq: no supported package manager found"
+          exit 1
+        fi
+
+    # Spack is a Python program, so every image we can possibly run on already
+    # ships a usable python3 -- and nothing downstream uses the interpreter this
+    # action leaves behind (setup.sh builds a venv from the spack view and puts
+    # it first on PATH, then unsets the variables setup-python exports). So only
+    # pay for setup-python on the images that would otherwise be stuck.
+    - name: Check for a usable Python
+      id: system-python
+      shell: bash
+      run: |
+        if command -v python3 > /dev/null \
+          && python3 -c 'import sys; sys.exit(sys.version_info < (3, 9))'; then
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          python3 --version
+        else
+          echo "found=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Setup Python version
-      uses: actions/setup-python@v4
+      if: steps.system-python.outputs.found != 'true'
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: "3.12"
 
     - name: Install the latest version of uv
-      uses: astral-sh/setup-uv@v6
+      uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
 
     - name: Prerequisites
       if: startsWith(runner.os, 'macos')
       shell: bash
       run: |
-        brew install ninja ccache
+        brew install ninja ccache jq
 
+    # Half of what is cached lives at ~/.spack, so an entry is only usable by a
+    # runner with the same HOME. Container jobs get /github/home, ubuntu-latest
+    # /home/runner, macOS /Users/runner -- and actions/cache restores an
+    # out-of-workspace path to where it was saved from, not to the current $HOME.
+    # Sharing one key across them means whichever flavour saves first wins and
+    # every other flavour restores a ~/.spack it cannot see: spack finds no
+    # builtin repo, re-clones it at the branch tip and unshallows, which is
+    # exactly the ~50 s the pin below exists to avoid. Keying on HOME keeps each
+    # flavour on its own entry.
+    - name: Cache scope
+      id: cache-scope
+      shell: bash
+      run: echo "home=$(printf '%s' "$HOME" | tr -c 'A-Za-z0-9' '-')" >> "$GITHUB_OUTPUT"
+
+    # Version pins live in CI/dependencies/versions.env; this only exposes them
+    # for the cache key and the spack setup below.
+    - name: Read version pins
+      id: versions
+      shell: bash
+      run: grep -E '^[A-Z_]+=' CI/dependencies/versions.env >> "$GITHUB_OUTPUT"
+
+    # Cached in place rather than via a staging directory: `~` and the workspace
+    # are separate mounts in a container job, so staging meant copying the whole
+    # tree on save and again on restore (~12 s a job) for no gain.
     - name: Restore cache
       id: cache-restore
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
-        path: spack_cache
-        key: spack-r4-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
-
-    - name: Extract cached Spack
-      if: steps.cache-restore.outputs.cache-hit == 'true'
-      shell: bash
-      run: |
-        mv spack_cache/spack .
-        mv spack_cache/.spack ~
+        path: |
+          spack
+          ~/.spack
+        key: spack-r5-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-scope.outputs.home }}-${{ steps.versions.outputs.SPACK_VERSION }}-${{ steps.versions.outputs.SPACK_REPO_VERSION }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Setup Spack from scratch
       if: steps.cache-restore.outputs.cache-hit != 'true'
       shell: bash
       env:
-        SPACK_VERSION: ${{ inputs.spack_version }}
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        SPACK_REPO_VERSION: ${{ steps.versions.outputs.SPACK_REPO_VERSION }}
       run: |
+        # This step clones spack and the builtin package repo itself, i.e.
+        # before setup.sh gets a chance to authenticate github.com fetches.
+        CI/dependencies/github_auth.sh
         CI/dependencies/setup_spack.sh ${PWD}/spack
+        # Pin the builtin package repo *before* anything clones it. Spack clones
+        # it shallow (depth 2) the first time only, and clones the pinned commit
+        # directly when the config already names one, so this lands the cache on
+        # the right commit in ~4 s. The other order -- clone the branch tip (what
+        # `spack list` does), then move to the commit -- makes spack unshallow the
+        # entire repo, and because the cache was built without the pin that is
+        # what every single job was paying, ~50 s each, on a cache *hit*.
+        spack/bin/spack repo update builtin --commit "${SPACK_REPO_VERSION}"
         spack/bin/spack list > /dev/null
         rm -rf spack/.git
-        mkdir spack_cache
-        cp -r spack spack_cache/
-        cp -r ~/.spack spack_cache/
 
     - name: Save cache
       if: steps.cache-restore.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: |
-          spack_cache
+          spack
+          ~/.spack
         key: ${{ steps.cache-restore.outputs.cache-primary-key }}
 
     - name: Install dependencies
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-        SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
-        DEPENDENCY_TAG: ${{ inputs.DEPENDENCY_TAG }}
+        CXXSTD: ${{ inputs.cxx_std }}
+        ENV_FILE: ${{ inputs.env_file }}
+        FULL_INSTALL: ${{ inputs.full_install }}
+        COMPILER: ${{ inputs.compiler }}
+        FLAVOR: ${{ inputs.flavor }}
       run: |
-        args=""
-        if [ "${{ inputs.full_install }}" == "true" ]; then
+        args="-e $ENV_FILE"
+        if [ "$FULL_INSTALL" == "true" ]; then
           echo "Full install"
           args="${args} -f"
         fi
-        if [ -n "${{ inputs.compiler }}" ]; then
+        if [ -n "$COMPILER" ]; then
           echo "With compiler"
-          args="${args} -c ${{ inputs.compiler }}"
+          args="${args} -c $COMPILER"
+        fi
+        if [ -n "$FLAVOR" ]; then
+          echo "With flavor $FLAVOR"
+          args="${args} -F $FLAVOR"
         fi
 
         CI/dependencies/setup.sh $args

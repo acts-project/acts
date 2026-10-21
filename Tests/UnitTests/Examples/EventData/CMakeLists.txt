@@ -1,3 +1,4 @@
 set(unittest_extra_libraries ActsExamplesFramework)
 add_unittest(Measurement MeasurementTests.cpp)
 add_unittest(MuonSpacePointId MuonSpacePointIdTests.cpp)
+add_unittest(JetsTests JetsTests.cpp)

@@ -8,12 +8,16 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/Cluster.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPodioEdm/TrackerHitLocalCollection.h"
+#include "ActsPodioEdm/TrackerHitLocalSimTrackerHitLinkCollection.h"
 
+#include <memory>
 #include <string>
 
 namespace ActsExamples {
@@ -33,19 +37,27 @@ class EDM4hepMeasurementOutputConverter final : public PodioOutputConverter {
   struct Config {
     /// Which measurement collection to write.
     std::string inputMeasurements;
-    /// Which cluster collection to write (optional)
-    std::string inputClusters;
-    /// Name of the output tracker hit plane collection.
-    std::string outputTrackerHitsPlane = "ActsTrackerHitsPlane";
     /// Name of the output tracker hit raw collection.
-    std::string outputTrackerHitsRaw = "ActsTrackerHitsRaw";
+    std::string outputTrackerHitsLocal;
+
+    /// Optional sim hit linking. All three fields must be set together.
+    /// Input sim hit association (internal index ↔ edm4hep hit).
+    std::optional<std::string> inputSimHitAssociation;
+    /// Input map from measurement index to internal sim hit index.
+    std::optional<std::string> inputMeasurementSimHitsMap;
+    /// Name of the output TrackerHitLocalSimTrackerHitLink collection.
+    std::optional<std::string> outputSimHitLinks;
+
+    /// Tracking geometry for surface lookup (local-to-global transform).
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Constructor with
   /// @param config configuration struct
   /// @param level logging level
-  EDM4hepMeasurementOutputConverter(const Config& config,
-                                    Acts::Logging::Level level);
+  explicit EDM4hepMeasurementOutputConverter(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -63,12 +75,18 @@ class EDM4hepMeasurementOutputConverter final : public PodioOutputConverter {
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
 
-  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
+  ReadDataHandle<ActsPlugins::EDM4hepUtil::SimHitAssociation>
+      m_inputSimHitAssociation{this, "InputSimHitAssociation"};
 
-  CollectionBaseWriteHandle m_outputTrackerHitsPlane{this,
-                                                     "OutputTrackerHitsPlane"};
-  CollectionBaseWriteHandle m_outputTrackerHitsRaw{this,
-                                                   "OutputTrackerHitsRaw"};
+  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
+
+  PodioCollectionWriteHandle<ActsPodioEdm::TrackerHitLocalCollection>
+      m_outputTrackerHitsLocal{this, "OutputTrackerHitsLocal"};
+
+  PodioCollectionWriteHandle<
+      ActsPodioEdm::TrackerHitLocalSimTrackerHitLinkCollection>
+      m_outputSimHitLinks{this, "OutputSimHitLinks"};
 };
 
 }  // namespace ActsExamples

@@ -10,6 +10,7 @@
 
 #include <format>
 #include <functional>
+#include <stdexcept>
 #include <type_traits>
 #include <typeindex>
 #include <typeinfo>
@@ -26,21 +27,31 @@ namespace Acts {
 /// derived types of a base class. When invoked with a base class reference,
 /// it will look up and call the appropriate registered function.
 ///
+/// When no registered type matches the object, the call throws
+/// @c std::runtime_error (the historical behavior) unless a fall-through handler
+/// has been installed via @c registerDefault, in which case that handler is
+/// invoked instead and the dispatcher can degrade gracefully.
+///
 /// @tparam base_t The base class type that will be the first parameter
 /// @tparam signature_t The function signature (e.g., return_t(Args...))
 template <typename base_t, typename signature_t>
 class TypeDispatcher;
 
+/// Type dispatcher specialization for function signature
 template <typename base_t, typename return_t, typename... args_t>
 class TypeDispatcher<base_t, return_t(args_t...)> {
  public:
-  // Type aliases for frequently used template parameters
+  /// Base class type
   using base_type = base_t;
+  /// Function return type
   using return_type = return_t;
+  /// Self type
   using self_type = TypeDispatcher<base_type, return_type(args_t...)>;
-
+  /// Function signature type
   using function_signature = return_t(const base_t&, args_t...);
+  /// Function pointer type
   using function_pointer_type = return_t (*)(args_t...);
+  /// Function wrapper type
   using function_type = std::function<function_signature>;
 
   /// Default constructor
@@ -60,6 +71,7 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   /// Register a free function with explicit derived type
   /// @tparam derived_t The derived type to associate the function with
   /// @param func The function pointer
+  /// @return Reference to this dispatcher for chaining
   template <typename derived_t>
     requires std::is_base_of_v<base_t, derived_t>
   self_type& registerFunction(return_t (*func)(const derived_t&, args_t...)) {
@@ -106,6 +118,20 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
     return *this;
   }
 
+  /// Register a fall-through handler, invoked by @c operator() when the object
+  /// matches none of the registered derived types. This replaces the default
+  /// handler, which throws @c std::runtime_error.
+  /// @param func The fall-through handler; must be non-empty
+  /// @return Reference to this dispatcher for chaining
+  self_type& registerDefault(function_type func) {
+    if (!func) {
+      throw std::invalid_argument(
+          "TypeDispatcher default handler must be valid");
+    }
+    m_defaultHandler = std::move(func);
+    return *this;
+  }
+
   /// Call the registered function for the given object's type
   /// @param obj The object to dispatch on
   /// @param args Additional arguments to pass to the function
@@ -124,6 +150,14 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
     }
 
     if (compatibleTypes.empty()) {
+      // No registered derived type matches: defer to the fall-through handler
+      // if one was registered via registerDefault(), otherwise throw (the
+      // historical behavior). Keeping the throw here (rather than in a
+      // default-constructed handler) avoids requiring a complete base_t at
+      // construction time.
+      if (m_defaultHandler) {
+        return m_defaultHandler(obj, std::forward<func_args_t>(args)...);
+      }
       throw std::runtime_error(
           std::format("No function registered for type: {}",
                       boost::core::demangle(typeid(obj).name())));
@@ -184,10 +218,16 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   }
 
   /// Get the number of registered functions
+  /// @return Number of registered functions
   std::size_t size() const { return m_functions.size(); }
 
  private:
   using cast_checker_type = std::function<bool(const base_t&)>;
+
+  /// Optional fall-through handler invoked when no registered derived type
+  /// matches. When empty (the default), such a call throws instead (see
+  /// operator()). Set via registerDefault().
+  function_type m_defaultHandler{};
 
   std::unordered_map<std::type_index, function_type> m_functions;
   std::unordered_map<std::type_index, cast_checker_type> m_castCheckers;

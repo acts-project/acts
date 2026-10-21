@@ -30,3 +30,56 @@ def test_json_material_decorator():
         ),
         level=acts.logging.WARNING,
     )
+
+
+def test_material_map_export(tmp_path):
+    import json
+    from acts.examples import GenericDetector
+    from acts.json import TrackingGeometryMaterialJsonConverter
+
+    converter = TrackingGeometryMaterialJsonConverter()
+    output = tmp_path / "material.json"
+    options = TrackingGeometryMaterialJsonConverter.Options()
+    options.materialFractionBits = 16
+    detector = GenericDetector()
+    geometry = detector.trackingGeometry()
+    material = acts.TrackingGeometryMaterial.fromGeometry(
+        geometry, includeNonMaterial=True
+    )
+    converter.toFile(material, output, options)
+    document = json.loads(output.read_text())
+    assert document["header"]["version"] == 1
+    assert document["surfaces"]
+    assert any(
+        entry["material"]["kind"] == "proto-grid" for entry in document["surfaces"]
+    )
+    material = converter.fromFile(output)
+    converter.toFile(material, output, options)
+    assert json.loads(output.read_text()) == document
+
+    unsupported = acts.TrackingGeometryMaterial()
+    unsupported.volumeMaterials = {acts.GeometryIdentifier(): None}
+    with pytest.raises(ValueError, match="surface material only"):
+        converter.toFile(unsupported, output)
+
+
+@pytest.mark.root
+def test_root_material_write_assignments(tmp_path):
+    from pathlib import Path
+    import uproot
+    from acts.examples.root import RootMaterialWriter
+    from acts.json import TrackingGeometryMaterialJsonConverter
+
+    fixture = (
+        Path(__file__).resolve().parents[3]
+        / "docs/examples/material-map-v1/minimal.json"
+    )
+    material = TrackingGeometryMaterialJsonConverter().fromFile(fixture)
+    output = tmp_path / "material.root"
+    RootMaterialWriter(level=acts.logging.WARNING, filePath=str(output)).writeMaterial(
+        material
+    )
+    with uproot.open(output) as root:
+        tree = root["HomogeneousMaterial"]
+        assert tree["hGeoId"].array(library="np").tolist() == [(1 << 56) | (256 << 8)]
+        assert tree["t"].array(library="np").tolist() == pytest.approx([0.15])

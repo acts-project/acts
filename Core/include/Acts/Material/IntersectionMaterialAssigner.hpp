@@ -30,6 +30,8 @@ namespace Acts {
 /// for candidate inclusion.
 ///
 /// In a large-n material interaction scenario, this is not the most efficient
+///
+/// @ingroup material_mapping
 class IntersectionMaterialAssigner final : public IAssignmentFinder {
  public:
   /// @brief Nested configuration struct

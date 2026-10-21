@@ -11,11 +11,11 @@ macro(add_plugin_binding_if _name _dependency _flag)
         set(_target "ActsPluginsPythonBindings${_name}")
         pybind11_add_module(${_target} src/${_name}.cpp)
 
-        install(TARGETS ${_target} DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
+        install(TARGETS ${_target} DESTINATION ${_acts_python_install_dir})
 
         set_target_properties(
             ${_target}
-            PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+            PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath}"
         )
         set_target_properties(
             ${_target}
@@ -27,10 +27,27 @@ macro(add_plugin_binding_if _name _dependency _flag)
             PUBLIC Acts::Core Acts::PythonUtilities ${_dependency}
         )
         add_dependencies(ActsPythonBindings ${_target})
+        acts_pybind_generate_stubs(
+            acts.${_name_lower}
+            ${_target}
+            ActsPythonBindings
+        )
     endif()
 
     set(PLUGIN_NAME "${_name}")
     set(PLUGIN_BUILD_FLAG "${_flag}")
+
+    # by default, we only expose "Config" objects as
+    # kwargs-style constructors
+    set(SYMBOLS_FOR_KWARGS Config)
+
+    # plugins may add additional symbols to expose this way
+    set(_extra_kwargs "${_name}_MAKE_EXTRA_KWARGS")
+    if(DEFINED ${_extra_kwargs})
+        list(APPEND SYMBOLS_FOR_KWARGS ${${_extra_kwargs}})
+    endif()
+    string(JOIN "\", \"" SYMBOLS_FOR_KWARGS_PY ${SYMBOLS_FOR_KWARGS})
+    set(SYMBOLS_FOR_KWARGS_PY "[\"${SYMBOLS_FOR_KWARGS_PY}\"]")
 
     configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/python/plugin.py.in
@@ -39,20 +56,35 @@ macro(add_plugin_binding_if _name _dependency _flag)
     )
     install(
         FILES ${_python_dir}/acts/${_name_lower}.py
-        DESTINATION ${ACTS_PYTHON_INSTALL_DIR}
+        DESTINATION ${_acts_python_install_dir}
     )
 endmacro()
 
+if(ACTS_BUILD_PLUGIN_MILLE)
+    # Additional classes with kwarg-style
+    # ctors for the Mille plugin
+    set(Mille_MAKE_EXTRA_KWARGS
+        Result
+        MillePedeParameterResult
+        MillePedeSteeringConfig
+        MillePedeEqualityConstraint,
+        MillePedeSolverConfig
+    )
+endif()
+
+add_plugin_binding_if(Arrow Acts::PluginArrow ACTS_BUILD_PLUGIN_ARROW)
+add_plugin_binding_if(Gnn Acts::PluginGnn ACTS_BUILD_PLUGIN_GNN)
 add_plugin_binding_if(Covfie Acts::PluginCovfie ACTS_BUILD_PLUGIN_TRACCC)
 add_plugin_binding_if(Detray Acts::PluginDetray ACTS_BUILD_PLUGIN_TRACCC)
+add_plugin_binding_if(Vecmem Acts::PluginDetray ACTS_BUILD_PLUGIN_TRACCC)
 add_plugin_binding_if(DD4hep ActsPluginDD4hep ACTS_BUILD_PLUGIN_DD4HEP)
 add_plugin_binding_if(Geant4 ActsPluginGeant4 ACTS_BUILD_PLUGIN_GEANT4)
 add_plugin_binding_if(GeoModel Acts::PluginGeoModel ACTS_BUILD_PLUGIN_GEOMODEL)
-add_plugin_binding_if(Hashing Acts::PluginHashing ACTS_BUILD_PLUGIN_HASHING)
 add_plugin_binding_if(Json Acts::PluginJson ACTS_BUILD_PLUGIN_JSON)
 add_plugin_binding_if(Svg Acts::PluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
 add_plugin_binding_if(TGeo Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)
 add_plugin_binding_if(Root Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)
+add_plugin_binding_if(Mille Acts::PluginMille ACTS_BUILD_PLUGIN_MILLE)
 
 # Propagate the list of built plugins to the parent scope
 set(_plugins_built "${_plugins_built}" PARENT_SCOPE)

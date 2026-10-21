@@ -1,0 +1,63 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+// Project include(s).
+#include "traccc/seeding/detail/spacepoint_formation.hpp"
+
+// VecMem include(s).
+#include <vecmem/containers/device_vector.hpp>
+
+// System include(s).
+#include <cassert>
+
+namespace traccc::device {
+
+template <detray::concepts::detector detector_t>
+TRACCC_HOST_DEVICE inline void form_spacepoints(
+    const global_index_t globalIndex,
+    const detray::detector_view_t<detector_t> det_view,
+    const edm::measurement_collection::const_view& measurements_view,
+    const vecmem::data::vector_view<const unsigned int>& spacepoint_index_view,
+    edm::spacepoint_collection::view spacepoints_view) {
+  // Set up the input container(s).
+  const edm::measurement_collection::const_device measurements(
+      measurements_view);
+  const vecmem::device_vector<const unsigned int> spacepoint_index(
+      spacepoint_index_view);
+
+  // Check if anything needs to be done
+  if (globalIndex >= measurements.size()) {
+    return;
+  }
+
+  // Create the tracking geometry
+  typename detray::detector_device_t<detector_t> det(det_view);
+
+  // Set up the output container(s).
+  edm::spacepoint_collection::device spacepoints(spacepoints_view);
+
+  const edm::measurement meas = measurements.at(globalIndex);
+
+  // Fill the spacepoint using the common function.
+  if (traccc::details::is_valid_measurement(meas)) {
+    // The prefix sum is inclusive, so the index of this spacepoint is one
+    // less than the value that belongs to this measurement.
+    const edm::spacepoint_collection::device::size_type i =
+        spacepoint_index.at(globalIndex) - 1u;
+    assert(i < spacepoints.size());
+    edm::spacepoint sp = spacepoints.at(i);
+    traccc::details::fill_pixel_spacepoint(sp, det, meas);
+    sp.measurement_index_1() = globalIndex;
+    sp.measurement_index_2() =
+        edm::spacepoint_collection::device::INVALID_MEASUREMENT_INDEX;
+  }
+}
+
+}  // namespace traccc::device

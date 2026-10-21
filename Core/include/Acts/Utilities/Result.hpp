@@ -23,7 +23,7 @@ namespace Acts {
 /// @tparam E The error, defaults to `std::error_code`
 ///
 template <typename T, typename E = std::error_code>
-class Result {
+class [[nodiscard]] Result {
   /// Private constructor which accepts an external variant.
   /// This is used by the factory static methods to set up
   /// the variant unambiguously in all cases.
@@ -352,7 +352,7 @@ class Result {
 /// @tparam E The type of the error
 /// @{
 template <typename E>
-class Result<void, E> {
+class [[nodiscard]] Result<void, E> {
  public:
   /// Type alias for the value type (void) in successful result
   using ValueType = void;

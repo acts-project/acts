@@ -11,8 +11,8 @@
 #include "Acts/Utilities/Grid.hpp"
 
 #include <array>
+#include <functional>
 #include <span>
-#include <stdexcept>
 #include <unordered_set>
 
 namespace Acts::HoughTransformUtils {
@@ -185,8 +185,8 @@ class HoughPlane {
   /// @param weight: An optional weight to assign to this hit
   template <class PointType>
   void fill(const PointType& measurement, const HoughAxisRanges& axisRanges,
-            LineParametrisation<PointType> linePar,
-            LineParametrisation<PointType> widthPar,
+            const LineParametrisation<PointType>& linePar,
+            const LineParametrisation<PointType>& widthPar,
             const identifier_t& identifier, unsigned layer = 0,
             YieldType weight = 1.0f);
   /// @brief resets the contents of the grid. Can be used to avoid reallocating the histogram
@@ -280,14 +280,14 @@ class HoughPlane {
   /// @param globalBin Global bin index to convert to coordinates
   /// @return Local bin coordinates (x,y) corresponding to global bin index
   Index axisBins(std::size_t globalBin) const {
-    return m_houghHist.localBinsFromGlobalBin(globalBin);
+    return m_houghHist.multiAxis().getLocalBinsFromGlobalBin(globalBin);
   }
 
   /// @brief get the globalBin index given the coordinates of the bin
   /// @param indexBin Bin coordinates to convert to global index
   /// @return Global bin index corresponding to local bin coordinates
   std::size_t globalBin(Index indexBin) const {
-    return m_houghHist.globalBinFromLocalBins(indexBin);
+    return m_houghHist.multiAxis().getGlobalBinFromLocalBins(indexBin);
   }
 
   /// @brief get the bin indices of the cell containing the largest number

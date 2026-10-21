@@ -1,0 +1,29 @@
+name: 'cibuildwheel_wrapper'
+description: 'Build ACTS Python wheels via CI/cibuildwheel.sh, with ccache support'
+
+inputs:
+  package-dir:
+    description: 'Directory containing the package to build (passed to cibuildwheel)'
+    required: false
+    default: '.'
+  cibw-build:
+    description: 'Value for CIBW_BUILD, selecting which Python version(s) to build'
+    required: true
+  github-token:
+    description: 'GitHub token forwarded to the build environment (used by setup.sh)'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install the latest version of uv
+      uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+
+    - name: Build wheels
+      shell: bash
+      run: bash "$ACTION_PATH/../../../CI/cibuildwheel.sh" "$PACKAGE_DIR"
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        PACKAGE_DIR: ${{ inputs.package-dir }}
+        CIBW_BUILD: ${{ inputs.cibw-build }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}

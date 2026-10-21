@@ -1,0 +1,13 @@
+[project]
+name = "detray"
+version = "0.1.0"
+description = "The detray python project"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "MPL-2.0"
+license-files = ["detray/LICENSE"]
+dependencies = []
+
+[project.urls]
+Homepage = "https://acts-project.github.io"
+Repository = "https://github.com/acts-project/detray"

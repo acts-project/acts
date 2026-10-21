@@ -12,6 +12,7 @@
 #include "Acts/Utilities/detail/EigenCompat.hpp"
 
 namespace Acts::detail {
+
 TransformComparator::TransformComparator(const double transTolerance,
                                          const double rotTolerance)
     : m_tolTrans{transTolerance}, m_tolRot{rotTolerance} {}
@@ -29,6 +30,7 @@ int TransformComparator::compare(const Acts::RotationMatrix3& a,
   }
   return 0;
 }
+
 int TransformComparator::compare(const Acts::Transform3& a,
                                  const Acts::Transform3& b) const {
   if (const int tCmp = compare<3>(a.translation(), b.translation());
@@ -37,20 +39,25 @@ int TransformComparator::compare(const Acts::Transform3& a,
   }
   return compare(a.rotation(), b.rotation());
 }
+
 bool TransformComparator::operator()(const Acts::Transform3& a,
                                      const Acts::Transform3& b) const {
   return compare(a, b) < 0;
 }
+
 bool TransformComparator::operator()(const Acts::RotationMatrix3& a,
                                      const RotationMatrix3& b) const {
   return compare(a, b) < 0;
 }
+
 bool TransformComparator::operator()(const Acts::Vector3& a,
                                      const Acts::Vector3& b) const {
   return compare<3>(a, b) < 0;
 }
+
 bool TransformComparator::operator()(const Acts::Vector2& a,
                                      const Acts::Vector2& b) const {
   return compare<2>(a, b) < 0;
 }
+
 }  // namespace Acts::detail

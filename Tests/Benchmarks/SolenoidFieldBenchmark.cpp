@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 
   std::ofstream os{"bfield_bench.csv"};
 
-  auto csv = [&](const std::string& name, auto res) {
+  auto csv = [&](const std::string& name, const auto& res) {
     os << name << "," << res.run_timings.size() << "," << res.iters_per_run
        << "," << res.totalTime().count() << "," << res.runTimeMedian().count()
        << "," << 1.96 * res.runTimeError().count() << ","

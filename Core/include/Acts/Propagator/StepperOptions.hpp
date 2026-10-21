@@ -18,8 +18,11 @@ namespace Acts {
 class GeometryContext;
 class MagneticFieldContext;
 
+/// Common options shared by plain steppers.
 struct StepperPlainOptions {
   /// StepperPlainOptions with context
+  /// @param gctx Geometry context
+  /// @param mctx Magnetic field context
   StepperPlainOptions(const GeometryContext& gctx,
                       const MagneticFieldContext& mctx)
       : geoContext(gctx), magFieldContext(mctx) {}
@@ -45,6 +48,7 @@ struct StepperPlainOptions {
   /// Maximum number of Runge-Kutta steps for the stepper step call
   unsigned int maxRungeKuttaStepTrials = 10000;
 
+  /// Options for dense material effects.
   struct Dense {
     /// Toggle between mean and mode evaluation of energy loss
     bool meanEnergyLoss = true;
@@ -54,7 +58,10 @@ struct StepperPlainOptions {
 
     /// Cut-off value for the momentum
     double momentumCutOff = 0.;
-  } dense;
+  };
+
+  /// Options for dense material effects
+  Dense dense;
 };
 
 }  // namespace Acts

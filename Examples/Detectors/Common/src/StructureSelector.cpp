@@ -8,7 +8,7 @@
 
 #include "ActsExamples/DetectorCommons/StructureSelector.hpp"
 
-#include "ActsExamples/Utilities/GroupBy.hpp"
+namespace ActsExamples {
 
 namespace {
 
@@ -28,7 +28,7 @@ struct SensitiveGetter {
 
 }  // namespace
 
-ActsExamples::StructureSelector::StructureSelector(
+StructureSelector::StructureSelector(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry)
     : m_trackingGeometry(std::move(trackingGeometry)) {
   if (!m_trackingGeometry) {
@@ -41,15 +41,14 @@ ActsExamples::StructureSelector::StructureSelector(
 }
 
 std::vector<std::shared_ptr<const Acts::Surface>>
-ActsExamples::StructureSelector::selectSurfaces(
-    const Acts::GeometryIdentifier& geoId) const {
+StructureSelector::selectSurfaces(const Acts::GeometryIdentifier& geoId) const {
   auto selectedRange =
       selectLowestNonZeroGeometryObject(m_surfaceMultiSet, geoId);
   return {selectedRange.begin(), selectedRange.end()};
 }
 
 std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>
-ActsExamples::StructureSelector::selectedTransforms(
+StructureSelector::selectedTransforms(
     const Acts::GeometryContext& gctx,
     const Acts::GeometryIdentifier& geoId) const {
   std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3> transforms;
@@ -59,3 +58,5 @@ ActsExamples::StructureSelector::selectedTransforms(
   }
   return transforms;
 }
+
+}  // namespace ActsExamples

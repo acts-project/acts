@@ -1,13 +1,14 @@
-add_executable(ActsUnitTestSeedFinder SeedFinderTest.cpp)
-target_link_libraries(ActsUnitTestSeedFinder PRIVATE Acts::Core Boost::boost)
-
+add_unittest(BinnedGroup BinnedGroupTests.cpp)
+add_unittest(BroadTripletSeedFilter BroadTripletSeedFilterTests.cpp)
 add_unittest(EstimateTrackParamsFromSeed EstimateTrackParamsFromSeedTest.cpp)
-add_unittest(BinnedGroupTest BinnedGroupTest.cpp)
-#add_unittest(PathSeeder PathSeederTest.cpp)
 add_unittest(HoughTransformTest HoughTransformTest.cpp)
-add_unittest(UtilityFunctions UtilityFunctionsTests.cpp)
-add_unittest(CandidatesForMiddleSp CandidatesForMiddleSpTests.cpp)
+add_unittest(AdaptiveHoughTransformTest HoughAccumulatorSectionTest.cpp)
 add_unittest(StrawLineResiduals StrawLineResidualTest.cpp)
+add_unittest(SphericalSpacePointGrid SphericalSpacePointGridTests.cpp)
+add_unittest(GbtsSeeding GbtsSeedingTests.cpp)
+add_unittest(SpacePointGridPhiBinning SpacePointGridPhiBinningTests.cpp)
+add_unittest(SortByCotTheta SortByCotThetaTests.cpp)
+add_unittest(DoubletSeedFinder DoubletSeedFinderTests.cpp)
 
 if(ACTS_BUILD_PLUGIN_ROOT)
     add_unittest(FastStrawLineFitTests FastStrawLineFitTests.cpp)
@@ -26,4 +27,6 @@ if(ACTS_BUILD_PLUGIN_ROOT)
         ActsUnitTestStrawLineSeederTest
         PRIVATE ROOT::Tree ROOT::RIO
     )
+
+    set_tests_properties(StrawLineFitterTest PROPERTIES LABELS "slow")
 endif()

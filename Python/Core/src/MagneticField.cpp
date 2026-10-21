@@ -153,7 +153,7 @@ void addMagneticField(py::module_& m) {
 
   m.def(
       "MagneticFieldMapXyz",
-      [](const std::string& filename, double lengthUnit, double BFieldUnit,
+      [](const std::string& filename, double lengthUnit, double bFieldUnit,
          bool firstOctant) {
         const std::filesystem::path file = filename;
 
@@ -166,18 +166,18 @@ void addMagneticField(py::module_& m) {
         if (file.extension() == ".txt") {
           auto map = makeMagneticFieldMapXyzFromText(std::move(mapBins),
                                                      file.native(), lengthUnit,
-                                                     BFieldUnit, firstOctant);
+                                                     bFieldUnit, firstOctant);
           return std::make_shared<decltype(map)>(std::move(map));
         } else {
           throw std::runtime_error("Unsupported magnetic field map file type");
         }
       },
       py::arg("file"), py::arg("lengthUnit") = UnitConstants::mm,
-      py::arg("BFieldUnit") = UnitConstants::T, py::arg("firstOctant") = false);
+      py::arg("bFieldUnit") = UnitConstants::T, py::arg("firstOctant") = false);
 
   m.def(
       "MagneticFieldMapRz",
-      [](const std::string& filename, double lengthUnit, double BFieldUnit,
+      [](const std::string& filename, double lengthUnit, double bFieldUnit,
          bool firstQuadrant) {
         const std::filesystem::path file = filename;
 
@@ -189,14 +189,14 @@ void addMagneticField(py::module_& m) {
         if (file.extension() == ".txt") {
           auto map = makeMagneticFieldMapRzFromText(std::move(mapBins),
                                                     file.native(), lengthUnit,
-                                                    BFieldUnit, firstQuadrant);
+                                                    bFieldUnit, firstQuadrant);
           return std::make_shared<decltype(map)>(std::move(map));
         } else {
           throw std::runtime_error("Unsupported magnetic field map file type");
         }
       },
       py::arg("file"), py::arg("lengthUnit") = UnitConstants::mm,
-      py::arg("BFieldUnit") = UnitConstants::T,
+      py::arg("bFieldUnit") = UnitConstants::T,
       py::arg("firstQuadrant") = false);
 }
 

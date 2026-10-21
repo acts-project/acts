@@ -14,6 +14,7 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetectorElementWithDesign.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsPlugins/DD4hep/DD4hepFieldAdapter.hpp"
@@ -59,7 +60,12 @@ class DD4hepDetectorBase : public Detector {
   explicit DD4hepDetectorBase(const Config& cfg);
 
   /// Interface method to access to the DD4hep geometry
+  /// @return The DD4hep detector
   dd4hep::Detector& dd4hepDetector();
+
+  /// @return The DD4hep detector
+  /// @note This is a const reference to the DD4hep detector
+  const dd4hep::Detector& dd4hepDetector() const;
 
   /// @brief Access to the DD4hep field
   /// @return a shared pointer to the DD4hep field
@@ -118,11 +124,16 @@ class DD4hepDetector final : public DD4hepDetectorBase {
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<const Acts::GeometryIdentifierHook>();
 
-    /// Detector element factory
+    // @TO-DO: Using Detector element factory with design, instead of Detector element factory
+    // Temporary for the verification of the design assignment
+
+    /// Detector element factory with design
     ActsPlugins::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
-        ActsPlugins::DD4hepLayerBuilder::defaultDetectorElementFactory;
+        defaultDetectorElementFactoryWithDesign;
   };
 
+  /// Constructor
+  /// @param cfg The configuration
   explicit DD4hepDetector(const Config& cfg);
 
   /// Access the configuration

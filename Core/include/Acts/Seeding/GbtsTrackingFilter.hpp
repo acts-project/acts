@@ -8,70 +8,124 @@
 
 #pragma once
 
-// TODO: update to C++17 style
-#include "Acts/Seeding/GbtsDataStorage.hpp"  //includes geo which has trigindetsilayer, may move this to trigbase
-#include "Acts/Seeding/GbtsGeometry.hpp"
-#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/detail/GbtsFilterTypes.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
-#include <cmath>
-#include <cstring>
+#include <array>
+#include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace Acts::Experimental {
 
-struct GbtsEdgeState {
+class GbtsGeometry;
+class GraphBasedTrackSeeder;
+
+/// Tracking filter operating on the GBTS edge graph.
+class GbtsTrackingFilter final {
  public:
-  struct Compare {
-    bool operator()(const struct GbtsEdgeState* s1,
-                    const struct GbtsEdgeState* s2) {
-      return s1->m_J > s2->m_J;
-    }
+  /// Configuration for the tracking filter.
+  struct Config {
+    /// Multiple scattering sigma (for 900 MeV track at eta=0).
+    float sigmaMS = 0.016;
+    /// Radiation length fraction per layer (2.5% per layer).
+    float radLen = 0.025;
+
+    /// Measurement uncertainty in x direction.
+    float sigmaX = 0.08 * Acts::UnitConstants::mm;
+    /// Measurement uncertainty in y direction.
+    float sigmaY = 0.25 * Acts::UnitConstants::mm;
+
+    /// Across the strips only. The along-strip resolution is not configured:
+    /// it is derived per node from the node's own strip. See `update`.
+    float sigmaXStrip = 0.03 * Acts::UnitConstants::mm;
+
+    /// Measurement weight in x direction.
+    float weightX = 0.5;
+    /// Measurement weight in y direction.
+    float weightY = 0.5;
+
+    /// Maximum delta chi2 in x direction.
+    float maxDChi2X = 5.0;
+    /// Maximum delta chi2 in y direction.
+    float maxDChi2Y = 6.0;
+
+    /// Chi2 penalty for adding a hit.
+    float addHit = 14.0;
+
+    /// Maximum track curvature.
+    float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
+    /// Maximum longitudinal impact parameter.
+    float maxZ0 = 170.0 * Acts::UnitConstants::mm;
+
+    /// Initial variance of the transverse state (y, dy/dx, d2y/dx2).
+    std::array<float, 3> initialVarianceX = {0.25f, 0.001f, 0.001f};
+    /// Initial variance of the longitudinal state (z, dz/dr).
+    std::array<float, 2> initialVarianceY = {1.5f, 0.001f};
   };
 
-  GbtsEdgeState() = default;
+  /// @param config Configuration for seed finder
+  /// @param geometry GBTS geometry for layer information
+  /// @param logger Logging instance
+  GbtsTrackingFilter(const Config& config,
+                     const std::shared_ptr<const GbtsGeometry>& geometry,
+                     std::unique_ptr<const Logger> logger = getDefaultLogger(
+                         "GbtsTrackingFilter", Logging::Level::INFO));
 
-  explicit GbtsEdgeState(bool f) : m_initialized(f) {}
+ private:
+  // Only the seeder walks the edge graph.
+  friend class GraphBasedTrackSeeder;
 
-  void initialize(GbtsEdge& pS);
-  void clone(const struct GbtsEdgeState& st);
+  using State = detail::GbtsFilterState;
 
-  float m_J{};
+  /// Follow track starting from edge
+  /// @param state Tracking filter state
+  /// @param nodeView View of the node positions and layers
+  /// @param sb Edge storage
+  /// @param pS Starting edge
+  /// @return Final edge state after following the track
+  detail::GbtsEdgeState followTrack(State& state,
+                                    const detail::GbtsNodeView& nodeView,
+                                    std::vector<detail::GbtsEdge>& sb,
+                                    detail::GbtsEdge& pS) const;
 
-  std::vector<GbtsEdge*> m_vs;
+  /// Configuration for the tracking filter.
+  Config m_cfg{};
 
-  float m_X[3]{}, m_Y[2]{}, m_Cx[3][3]{}, m_Cy[2][2]{};
-  float m_refX{}, m_refY{}, m_c{}, m_s{};
+  /// GBTS geometry for layer information
+  std::shared_ptr<const GbtsGeometry> m_geometry;
 
-  bool m_initialized{false};
-};
+  /// Logging instance
+  std::unique_ptr<const Logger> m_logger;
 
-class GbtsTrackingFilter {
- public:
-  static constexpr int MAX_EDGE_STATE = 2500;
-  GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>& g,
-                     std::vector<GbtsEdge>& sb,
-                     const SeedFinderGbtsConfig& config);
+  /// Access the logging instance
+  /// @return Logger reference
+  const Logger& logger() const { return *m_logger; }
 
-  void followTrack(GbtsEdge& pS, GbtsEdgeState& output);
+  /// Propagate edge state
+  /// @param state Tracking filter state
+  /// @param nodeView View of the node positions and layers
+  /// @param sb Edge storage
+  /// @param pS Edge to propagate from
+  /// @param ts Edge state to update
+  void propagate(State& state, const detail::GbtsNodeView& nodeView,
+                 std::vector<detail::GbtsEdge>& sb, detail::GbtsEdge& pS,
+                 detail::GbtsEdgeState& ts) const;
 
- protected:
-  void propagate(GbtsEdge& pS, GbtsEdgeState& ts);
+  /// Update edge state with edge
+  /// @param nodeView View of the node positions and layers
+  /// @param pS Edge to update with
+  /// @param ts Edge state to update
+  /// @return Success flag
+  bool update(const detail::GbtsNodeView& nodeView, const detail::GbtsEdge& pS,
+              detail::GbtsEdgeState& ts) const;
 
-  bool update(GbtsEdge& pS, GbtsEdgeState& ts);
-
-  int getLayerType(int l);
-
-  const std::vector<TrigInDetSiLayer>& m_geo;
-
-  std::vector<GbtsEdge>& m_segStore;
-
-  std::vector<GbtsEdgeState*> m_stateVec;
-
-  std::array<GbtsEdgeState, MAX_EDGE_STATE> m_stateStore;
-
-  int m_globalStateCounter{0};
-
-  const SeedFinderGbtsConfig& m_config;
+  /// Get layer type from layer index
+  /// @param layerIndex Layer index
+  /// @return Layer type
+  GbtsLayerType getLayerType(GbtsLayerIndex layerIndex) const;
 };
 
 }  // namespace Acts::Experimental

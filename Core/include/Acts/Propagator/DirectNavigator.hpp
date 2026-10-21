@@ -14,6 +14,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
+#include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -25,7 +26,6 @@
 
 #include <limits>
 #include <memory>
-#include <vector>
 
 namespace Acts {
 
@@ -39,9 +39,6 @@ namespace Acts {
 ///
 class DirectNavigator {
  public:
-  /// The sequentially crossed surfaces
-  using SurfaceSequence = std::vector<const Surface*>;
-
   /// @brief The nested configuration struct
   struct Config {};
 
@@ -50,27 +47,25 @@ class DirectNavigator {
     /// Constructor from geometry context
     /// @param gctx The geometry context
     explicit Options(const GeometryContext& gctx)
-        : NavigatorPlainOptions(gctx) {}
+        : NavigatorPlainOptions(gctx) {
+      // TODO https://github.com/acts-project/acts/issues/2738
+      // The direct navigator uses a relaxed near limit to discard
+      // intersections "behind us". This is only necessary because some
+      // surfaces have more than one intersection.
+      nearLimit = -100 * UnitConstants::um;
+    }
 
-    /// The Surface sequence
-    SurfaceSequence surfaces;
-
-    /// The surface tolerance
-    double surfaceTolerance = s_onSurfaceTolerance;
-
-    // TODO https://github.com/acts-project/acts/issues/2738
-    /// Distance limit to discard intersections "behind us"
-    /// @note this is only necessary because some surfaces have more than one
-    ///       intersection
-    double nearLimit = -100 * UnitConstants::um;
-
-    /// The far limit to resolve surfaces
-    double farLimit = std::numeric_limits<double>::max();
+    /// The ordered sequence of surfaces to walk through
+    std::vector<const Surface*> surfaceSequence;
 
     /// Set the plain navigator options
     /// @param options The plain navigator options to copy
     void setPlainOptions(const NavigatorPlainOptions& options) {
+      // Preserve the direct-navigator-specific near limit, which differs from
+      // the plain default.
+      const double keepNearLimit = nearLimit;
       static_cast<NavigatorPlainOptions&>(*this) = options;
+      nearLimit = keepNearLimit;
     }
   };
 
@@ -90,10 +85,16 @@ class DirectNavigator {
     /// Propagation direction (forward or backward)
     Direction direction = Direction::Forward();
 
+    /// Surface where the navigation started
+    const Surface* startSurface = nullptr;
+
+    /// Surface that is the target of the navigation
+    const Surface* targetSurface = nullptr;
+
     /// Index of the next surface to try
     /// @note -1 means before the first surface in the sequence and size()
     ///       means after the last surface in the sequence
-    int surfaceIndex = -1;
+    std::int32_t surfaceIndex = -1;
 
     /// Navigation state - external interface: the current surface
     const Surface* currentSurface = nullptr;
@@ -107,7 +108,7 @@ class DirectNavigator {
     /// Get the current navigation surface
     /// @return Reference to the surface at the current surface index
     const Surface& navSurface() const {
-      return *options.surfaces.at(surfaceIndex);
+      return *options.surfaceSequence.at(surfaceIndex);
     }
 
     /// Move to the next surface in the sequence
@@ -124,7 +125,7 @@ class DirectNavigator {
     /// @return True if no more surfaces remain in the propagation direction
     bool endOfSurfaces() const {
       if (direction == Direction::Forward()) {
-        return surfaceIndex >= static_cast<int>(options.surfaces.size());
+        return surfaceIndex >= static_cast<int>(options.surfaceSequence.size());
       }
       return surfaceIndex < 0;
     }
@@ -133,7 +134,7 @@ class DirectNavigator {
     /// @return Number of surfaces left to process in the propagation direction
     int remainingSurfaces() const {
       if (direction == Direction::Forward()) {
-        return options.surfaces.size() - surfaceIndex;
+        return static_cast<int>(options.surfaceSequence.size()) - surfaceIndex;
       }
       return surfaceIndex + 1;
     }
@@ -144,7 +145,7 @@ class DirectNavigator {
     void resetSurfaceIndex() {
       surfaceIndex = direction == Direction::Forward()
                          ? -1
-                         : static_cast<int>(options.surfaces.size());
+                         : static_cast<int>(options.surfaceSequence.size());
     }
   };
 
@@ -190,14 +191,14 @@ class DirectNavigator {
   /// @param state The navigation state
   /// @return Pointer to start surface, nullptr if none
   const Surface* startSurface(const State& state) const {
-    return state.options.startSurface;
+    return state.startSurface;
   }
 
   /// Get the target surface from the navigation state
   /// @param state The navigation state
   /// @return Pointer to target surface, nullptr if none
   const Surface* targetSurface(const State& state) const {
-    return state.options.targetSurface;
+    return state.targetSurface;
   }
 
   /// Check if the end of world has been reached (not applicable for
@@ -221,28 +222,25 @@ class DirectNavigator {
   /// This function initializes the navigator for a new propagation.
   ///
   /// @param state The navigation state
-  /// @param position The start position
-  /// @param direction The start direction
-  /// @param propagationDirection The propagation direction
+  /// @param args The initialization arguments of this navigation run
   /// @return Always returns success result as DirectNavigator initialization cannot fail
-  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
-                                        const Vector3& direction,
-                                        Direction propagationDirection) const {
-    static_cast<void>(position);
-    static_cast<void>(direction);
-
+  [[nodiscard]] Result<void> initialize(
+      State& state, const NavigatorInitializeArguments& args) const {
     ACTS_VERBOSE("Initialize. Surface sequence for navigation:");
-    for (const Surface* surface : state.options.surfaces) {
+    for (const Surface* surface : state.options.surfaceSequence) {
       ACTS_VERBOSE(surface->geometryId()
                    << " - "
                    << surface->center(state.options.geoContext).transpose());
     }
 
-    state.direction = propagationDirection;
-    ACTS_VERBOSE("Navigation direction is " << propagationDirection);
+    state.direction = args.propagationDirection;
+    ACTS_VERBOSE("Navigation direction is " << args.propagationDirection);
+
+    state.startSurface = args.startSurface;
+    state.targetSurface = args.targetSurface;
 
     // We set the current surface to the start surface
-    state.currentSurface = state.options.startSurface;
+    state.currentSurface = state.startSurface;
     if (state.currentSurface != nullptr) {
       ACTS_VERBOSE("Current surface set to start surface "
                    << state.currentSurface->geometryId());
@@ -252,12 +250,13 @@ class DirectNavigator {
 
     // Find initial index.
     auto found =
-        std::ranges::find(state.options.surfaces, state.options.startSurface);
+        std::ranges::find(state.options.surfaceSequence, state.startSurface);
 
-    if (found != state.options.surfaces.end()) {
+    if (found != state.options.surfaceSequence.end()) {
       // The index should be the index before the start surface, depending on
       // the direction
-      state.surfaceIndex = std::distance(state.options.surfaces.begin(), found);
+      state.surfaceIndex =
+          std::distance(state.options.surfaceSequence.begin(), found);
       state.surfaceIndex += state.direction == Direction::Backward() ? 1 : -1;
     } else {
       ACTS_DEBUG(
@@ -300,7 +299,7 @@ class DirectNavigator {
       ACTS_VERBOSE("Next surface candidate is "
                    << state.navSurface().geometryId() << ". "
                    << state.remainingSurfaces() << " out of "
-                   << state.options.surfaces.size()
+                   << state.options.surfaceSequence.size()
                    << " surfaces remain to try.");
 
       // Establish & update the surface status

@@ -25,6 +25,7 @@
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 using namespace Acts;
@@ -116,7 +117,7 @@ std::vector<Surface*> CylindricalTrackingGeometry::surfacesCylinder(
     moduleRotation.col(1) = moduleLocalY;
     moduleRotation.col(2) = moduleLocalZ;
     // Get the moduleTransform
-    auto mModuleTransform = Transform3(Translation3(mCenter) * moduleRotation);
+    auto mModuleTransform = makeTransform3(moduleRotation, mCenter);
     // Create the detector element
     auto detElement = std::make_unique<DetectorElementStub>(
         mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);
@@ -280,7 +281,6 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen1(
 
 std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3(
     const Logger& logger) {
-  using namespace Experimental;
   using namespace UnitLiterals;
   using enum CylinderVolumeBounds::Face;
   using enum AxisDirection;
@@ -292,8 +292,9 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3(
   std::vector<float> binEdges = {// empirical bin edges. these are not checked!
                                  -476.5, 0, 476.5};
 
-  BinUtility binUtility(2u, -std::numbers::pi, std::numbers::pi,
-                        BinningOption::closed, AxisPhi);
+  BinUtility binUtility(2u, -kBeamPipeRadius * std::numbers::pi,
+                        kBeamPipeRadius * std::numbers::pi,
+                        BinningOption::closed, AxisRPhi);
 
   binUtility += Acts::BinUtility(binEdges, BinningOption::open, AxisZ);
 
@@ -380,4 +381,5 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::operator()(
     return buildGen1(logger);
   }
 }
+
 }  // namespace ActsTests

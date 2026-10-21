@@ -17,19 +17,36 @@ namespace Ort {
 class Env;
 class Session;
 class Value;
+class MemoryInfo;
 }  // namespace Ort
 
 namespace ActsPlugins {
 /// @addtogroup gnn_plugin
 /// @{
 
+/// ONNX-based edge classifier for GNN pipeline
 class OnnxEdgeClassifier final : public EdgeClassificationBase {
  public:
+  /// Configuration for OnnxEdgeClassifier
   struct Config {
+    /// Path to the ONNX model file
     std::string modelPath;
+    /// Indices of the node features the model is given, in the order the
+    /// model expects them. A feature may be listed more than once. If empty,
+    /// all node features are passed in their original order.
+    std::vector<int> selectedFeatures = {};
+    /// Per-feature scale factors, the i-th one dividing the i-th model input
+    /// feature (i.e. the i-th entry of selectedFeatures, if given)
+    std::vector<float> featureScales = {};
+    /// Classification threshold cut
     float cut = 0.5;
+    /// Device to allocate the model on
+    Device device = Device::Cuda();
   };
 
+  /// Constructor
+  /// @param cfg Configuration parameters
+  /// @param logger Logger instance
   OnnxEdgeClassifier(const Config &cfg,
                      std::unique_ptr<const Acts::Logger> logger);
   ~OnnxEdgeClassifier();
@@ -37,6 +54,8 @@ class OnnxEdgeClassifier final : public EdgeClassificationBase {
   PipelineTensors operator()(PipelineTensors tensors,
                              const ExecutionContext &execContext = {}) override;
 
+  /// Get configuration
+  /// @return Configuration parameters
   Config config() const { return m_cfg; }
 
  private:

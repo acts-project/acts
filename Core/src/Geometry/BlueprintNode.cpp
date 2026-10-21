@@ -13,13 +13,14 @@
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/PortalDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 
 #include <ostream>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 bool hasDescendent(const BlueprintNode& descendent,
@@ -149,6 +150,18 @@ MaterialDesignatorBlueprintNode& BlueprintNode::addMaterial(
   return *material;
 }
 
+PortalDesignatorBlueprintNode& BlueprintNode::addPortalDesignator(
+    const std::string& name,
+    const std::function<void(PortalDesignatorBlueprintNode& portals)>&
+        callback) {
+  auto portals = std::make_shared<PortalDesignatorBlueprintNode>(name);
+  addChild(portals);
+  if (callback) {
+    callback(*portals);
+  }
+  return *portals;
+}
+
 LayerBlueprintNode& BlueprintNode::addLayer(
     const std::string& name,
     const std::function<void(LayerBlueprintNode& layer)>& callback) {
@@ -192,4 +205,4 @@ void BlueprintNode::addToGraphviz(std::ostream& os) const {
   }
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

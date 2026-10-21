@@ -31,7 +31,7 @@ constexpr unsigned int dim = 2;
 using grid_t = Grid<Acts::Material::ParametersVector,
                     Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>;
 
-ActsVector<dim> trafoGlobalToLocal(const Vector3& global) {
+Vector<dim> trafoGlobalToLocal(const Vector3& global) {
   return {global.x(), global.y()};
 }
 
@@ -110,9 +110,12 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapLookup_test) {
   // Test the grid getter
   auto matMapGrid = matMap.getGrid();
   for (unsigned int i = 0; i < dim; i++) {
-    BOOST_CHECK_EQUAL(grid.numLocalBins()[i], matMapGrid.numLocalBins()[i]);
-    BOOST_CHECK_EQUAL(grid.minPosition()[i], matMapGrid.minPosition()[i]);
-    BOOST_CHECK_EQUAL(grid.maxPosition()[i], matMapGrid.maxPosition()[i]);
+    BOOST_CHECK_EQUAL(grid.multiAxis().getNBins()[i],
+                      matMapGrid.multiAxis().getNBins()[i]);
+    BOOST_CHECK_EQUAL(grid.multiAxis().getMinPoint()[i],
+                      matMapGrid.multiAxis().getMinPoint()[i]);
+    BOOST_CHECK_EQUAL(grid.multiAxis().getMaxPoint()[i],
+                      matMapGrid.multiAxis().getMaxPoint()[i]);
   }
   for (std::size_t i = 0; i < grid.size(); i++) {
     CHECK_CLOSE_REL(grid.at(i), matMapGrid.at(i), 1e-4);

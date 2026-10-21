@@ -16,11 +16,18 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -221,7 +228,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
      Rotation:             colX = (1.000000, 0.000000, 0.000000)\n\
                            colY = (0.000000, 1.000000, 0.000000)\n\
                            colZ = (0.000000, 0.000000, 1.000000)\n\
-     Bounds  : Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, averagePhi, bevelMinZ, bevelMaxZ) = (1.0000000, 10.0000000, 3.1415927, 0.0000000, 0.0000000, 0.0000000)";
+     Bounds  : Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, averagePhi) = (1.0000000, 10.0000000, 3.1415927, 0.0000000)";
   dumpOutput << cylinderSurfaceObject->toStream(testContext);
   BOOST_CHECK(dumpOutput.is_equal(expected));
 }
@@ -302,7 +309,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
       cylinderSurfaceObject->localCartesianToBoundLocalDerivative(
           testContext, globalPosition);
   // Check if the result is as expected
-  ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
   expLoc3DToLocBound << -1, 0, 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }
@@ -400,21 +407,6 @@ BOOST_DATA_TEST_CASE(IncompatibleZDirection,
       base * Translation3{Vector3::UnitZ() * 200_mm}, 35_mm, 100_mm);
   BOOST_CHECK_THROW(
       cyl->mergedWith(*cyl3, Acts::AxisDirection::AxisZ, false, *logger),
-      SurfaceMergingException);
-
-  // Cylinder with bevel
-  auto cyl4 = Surface::makeShared<CylinderSurface>(
-      base * Translation3{Vector3::UnitZ() * 200_mm}, 30_mm, 100_mm,
-      std::numbers::pi, 0, std::numbers::pi / 8.);
-  BOOST_CHECK_THROW(
-      cyl->mergedWith(*cyl4, Acts::AxisDirection::AxisZ, false, *logger),
-      SurfaceMergingException);
-
-  auto cyl5 = Surface::makeShared<CylinderSurface>(
-      base * Translation3{Vector3::UnitZ() * 200_mm}, 30_mm, 100_mm,
-      std::numbers::pi, 0, 0, std::numbers::pi / 8.);
-  BOOST_CHECK_THROW(
-      cyl->mergedWith(*cyl5, Acts::AxisDirection::AxisZ, false, *logger),
       SurfaceMergingException);
 
   // Cylinder with overlap in z
@@ -745,6 +737,57 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_CASE(CylinderSurfaceMaterialAssignment) {
+  auto surface =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 10., 100.);
+  MaterialSlab slab(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
+
+  // HomogeneousSurfaceMaterial is always valid
+  auto homMat = std::make_shared<HomogeneousSurfaceMaterial>(slab);
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(homMat));
+  BOOST_CHECK_NE(surface->surfaceMaterial(), nullptr);
+
+  // nullptr clears the material
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(nullptr));
+  BOOST_CHECK_EQUAL(surface->surfaceMaterial(), nullptr);
+
+  // 1D AxisRPhi - valid for cylinder
+  BinUtility buRPhi(10, 0.f, 62.8f, Acts::closed, AxisDirection::AxisRPhi);
+  auto matRPhi = std::make_shared<BinnedSurfaceMaterial>(
+      buRPhi, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matRPhi));
+
+  // 1D AxisPhi - valid for cylinder
+  BinUtility buPhi(10, 0.f, 1.f, Acts::closed, AxisDirection::AxisPhi);
+  auto matPhi = std::make_shared<BinnedSurfaceMaterial>(
+      buPhi, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matPhi));
+
+  // 1D AxisZ - valid for cylinder
+  BinUtility buZ(10, -100.f, 100.f, Acts::open, AxisDirection::AxisZ);
+  auto matZ = std::make_shared<BinnedSurfaceMaterial>(
+      buZ, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matZ));
+
+  // 2D {AxisRPhi, AxisZ} - valid for cylinder
+  BinUtility bu2D(5, 0.f, 62.8f, Acts::closed, AxisDirection::AxisRPhi);
+  bu2D += BinUtility(3, -100.f, 100.f, Acts::open, AxisDirection::AxisZ);
+  auto mat2D = std::make_shared<BinnedSurfaceMaterial>(
+      bu2D, MaterialSlabMatrix(3, MaterialSlabVector(5, slab)));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(mat2D));
+
+  // Wrong axis directions - should throw
+  for (auto badDir :
+       {AxisDirection::AxisR, AxisDirection::AxisX, AxisDirection::AxisY}) {
+    BinUtility buBad(10, 0.f, 10.f, Acts::open, badDir);
+    auto matBad = std::make_shared<BinnedSurfaceMaterial>(
+        buBad, MaterialSlabVector(10, slab));
+    BOOST_CHECK_THROW(surface->assignSurfaceMaterial(matBad),
+                      std::invalid_argument);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

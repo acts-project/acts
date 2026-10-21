@@ -2,6 +2,7 @@ acts_add_library(
     PluginJson
     src/AlgebraJsonConverter.cpp
     src/ExtentJsonConverter.cpp
+    src/AxisSpecJsonConverter.cpp
     src/GridJsonConverter.cpp
     src/GeometryIdentifierJsonConverter.cpp
     src/IndexGridNavigationJsonConverter.cpp
@@ -11,6 +12,7 @@ acts_add_library(
     src/ProtoAxisJsonConverter.cpp
     src/SurfaceBoundsJsonConverter.cpp
     src/SurfaceJsonConverter.cpp
+    src/SurfaceMaterialJsonConverter.cpp
     src/UtilitiesJsonConverter.cpp
     src/VolumeBoundsJsonConverter.cpp
     src/VolumeJsonConverter.cpp
@@ -19,7 +21,12 @@ acts_add_library(
     src/JsonDetectorElement.cpp
     src/JsonSurfacesReader.cpp
     src/DefinitionsJsonConverter.cpp
-    src/Seeding2ConfigJsonConverter.cpp
+    src/SeedingConfigJsonConverter.cpp
+    src/TrackingGeometryJsonConverter.cpp
+    src/TrackingGeometryMaterialJsonConverter.cpp
+    src/BetheHeitlerApproxJsonConverter.cpp
+    src/GbtsConfigJsonConverter.cpp
+    src/detail/JsonIo.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
@@ -38,4 +45,54 @@ target_link_libraries(
 target_compile_definitions(
     ActsPluginJson
     PRIVATE JSON_DISABLE_ENUM_SERIALIZATION=1
+)
+
+# zstd is optional: without it, reading a compressed file and requesting
+# compressed output both fail with an explanatory error. All zstd use is
+# confined to the .cpp, so the definition stays private and the headers
+# compile identically either way.
+if(ACTS_USE_ZSTD STREQUAL "NEVER")
+    message(STATUS "Json plugin: zstd support disabled (ACTS_USE_ZSTD=NEVER)")
+else()
+    message(
+        CHECK_START
+        "Json plugin: checking for zstd (ACTS_USE_ZSTD=${ACTS_USE_ZSTD})"
+    )
+    if(ACTS_USE_ZSTD STREQUAL "ALWAYS")
+        find_package(ZSTD REQUIRED)
+    else()
+        find_package(ZSTD QUIET)
+    endif()
+    if(ZSTD_FOUND)
+        message(CHECK_PASS "found, compression enabled")
+        target_link_libraries(ActsPluginJson PRIVATE ZSTD::ZSTD)
+        target_compile_definitions(
+            ActsPluginJson
+            PRIVATE ACTS_JSON_ZSTD_SUPPORT=1
+        )
+    else()
+        message(CHECK_PASS "not found, continuing without compression")
+    endif()
+endif()
+
+acts_compile_headers(PluginJson GLOB include/**/*.hpp)
+
+# Offline/editor validation; the codec has no runtime schema dependency.
+install(
+    FILES schema/material-map-v1.schema.json
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/Acts/schema
+)
+
+add_executable(ActsMaterialMapMigrate bin/MaterialMapMigrate.cpp)
+target_link_libraries(ActsMaterialMapMigrate PRIVATE Acts::PluginJson)
+if(ACTS_BUILD_PLUGIN_ROOT)
+    target_link_libraries(ActsMaterialMapMigrate PRIVATE Acts::PluginRoot)
+    target_compile_definitions(
+        ActsMaterialMapMigrate
+        PRIVATE ACTS_MATERIAL_MIGRATE_ROOT
+    )
+endif()
+install(
+    TARGETS ActsMaterialMapMigrate
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin
 )

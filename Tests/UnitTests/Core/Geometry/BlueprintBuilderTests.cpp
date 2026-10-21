@@ -1,0 +1,185 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include <boost/test/unit_test.hpp>
+
+#include "Acts/Geometry/BlueprintBuilder.hpp"
+#include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/LayerBlueprintNode.hpp"
+#include "Acts/Geometry/detail/BlueprintBuilder_impl.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+#include <memory>
+#include <optional>
+#include <span>
+#include <string>
+#include <string_view>
+#include <vector>
+
+using namespace Acts;
+using Acts::detail::OnContainerMutatesContainer;
+using Acts::detail::OnContainerReturnsNode;
+using Acts::detail::OnLayerMutatesLayer;
+using Acts::detail::OnLayerReturnsNode;
+
+namespace ActsTests {
+
+// Regression coverage for the backward-compatible `onLayer`/`onContainer`
+// customizer contract. The customizers were widened from returning the concrete
+// node type (`LayerBlueprintNode` / `ContainerBlueprintNode`) to the base
+// `BlueprintNode`. The accepting concepts use `std::convertible_to` (not
+// `std::same_as`) so that pre-existing client callbacks returning the concrete
+// derived pointer still satisfy the contract.
+
+using Element = int;
+
+// --- onLayer ---------------------------------------------------------------
+
+// Old-style callback: returns the concrete LayerBlueprintNode pointer.
+[[maybe_unused]] auto oldStyleLayer =
+    [](const std::optional<Element>&, std::shared_ptr<LayerBlueprintNode> layer)
+    -> std::shared_ptr<LayerBlueprintNode> { return layer; };
+static_assert(OnLayerReturnsNode<Element, decltype(oldStyleLayer)>,
+              "onLayer callback returning shared_ptr<LayerBlueprintNode> must "
+              "remain accepted (backward compatibility)");
+
+// New-style callback: returns the base BlueprintNode pointer (wrap/replace).
+[[maybe_unused]] auto newStyleLayer =
+    [](const std::optional<Element>&, std::shared_ptr<LayerBlueprintNode> layer)
+    -> std::shared_ptr<BlueprintNode> { return layer; };
+static_assert(OnLayerReturnsNode<Element, decltype(newStyleLayer)>,
+              "onLayer callback returning shared_ptr<BlueprintNode> must be "
+              "accepted");
+
+// In-place mutating callback: returns void.
+[[maybe_unused]] auto mutateLayer = [](const std::optional<Element>&,
+                                       LayerBlueprintNode&) {};
+static_assert(OnLayerMutatesLayer<Element, decltype(mutateLayer)>,
+              "void-returning in-place onLayer callback must be accepted");
+static_assert(!OnLayerReturnsNode<Element, decltype(mutateLayer)>,
+              "void-returning callback must not match the node-returning form");
+
+// --- onContainer -----------------------------------------------------------
+
+// Old-style callback: returns the concrete ContainerBlueprintNode pointer.
+[[maybe_unused]] auto oldStyleContainer =
+    [](const Element&, std::shared_ptr<ContainerBlueprintNode> container)
+    -> std::shared_ptr<ContainerBlueprintNode> { return container; };
+static_assert(
+    OnContainerReturnsNode<Element, decltype(oldStyleContainer)>,
+    "onContainer callback returning shared_ptr<ContainerBlueprintNode> must "
+    "remain accepted (backward compatibility)");
+
+// New-style callback: returns the base BlueprintNode pointer (wrap/replace).
+[[maybe_unused]] auto newStyleContainer =
+    [](const Element&, std::shared_ptr<ContainerBlueprintNode> container)
+    -> std::shared_ptr<BlueprintNode> { return container; };
+static_assert(
+    OnContainerReturnsNode<Element, decltype(newStyleContainer)>,
+    "onContainer callback returning shared_ptr<BlueprintNode> must be "
+    "accepted");
+
+// In-place mutating callback: returns void.
+[[maybe_unused]] auto mutateContainer = [](const Element&,
+                                           ContainerBlueprintNode&) {};
+static_assert(OnContainerMutatesContainer<Element, decltype(mutateContainer)>,
+              "void-returning in-place onContainer callback must be accepted");
+static_assert(!OnContainerReturnsNode<Element, decltype(mutateContainer)>,
+              "void-returning callback must not match the node-returning form");
+
+// A minimal backend satisfying detail::BlueprintBackend plus the barrel/endcap
+// classifier, so the assemblers' member templates can be instantiated. The
+// plugins instantiate the assemblers with `template class`, which does not
+// cover member templates such as `onLayer`, leaving the in-place customizer
+// adapters below uncompiled anywhere else in the tree.
+struct StubBackend {
+  using Element = int;
+
+  struct AxisDefinition {};
+
+  struct LayerSpec {
+    std::optional<std::string> layerName;
+    std::optional<AxisDefinition> axes;
+    std::optional<AxisDefinition> layerAxes;
+  };
+
+  struct Config {};
+
+  static constexpr std::string_view kIdentifier = "Stub";
+
+  StubBackend(const Config& /*cfg*/, const Logger& /*logger*/) {}
+
+  detail::SurfaceVector makeSurfaces(std::span<const Element> /*sensitives*/,
+                                     const LayerSpec& /*layerSpec*/) const {
+    return {};
+  }
+
+  Element world() const { return 0; }
+  std::string nameOf(const Element& /*element*/) const { return {}; }
+  std::vector<Element> children(const Element& /*element*/) const { return {}; }
+  Element parent(const Element& /*element*/) const { return 0; }
+  bool isSensitive(const Element& /*element*/) const { return false; }
+
+  bool isBarrel(const Element& /*element*/) const { return false; }
+  bool isEndcap(const Element& /*element*/) const { return false; }
+  bool isTracker(const Element& /*element*/) const { return false; }
+};
+
+static_assert(detail::BlueprintBackend<StubBackend>);
+static_assert(detail::HasAxisDefinition<StubBackend>);
+static_assert(detail::HasBarrelEndcapClassifier<StubBackend>);
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
+
+BOOST_AUTO_TEST_CASE(CustomizerReturnTypeBackwardCompatibility) {
+  // The substantive checks are the static_asserts above; this case ensures the
+  // translation unit is exercised by the test runner.
+  BOOST_CHECK(true);
+}
+
+// Instantiates every `onLayer`/`onContainer` overload with both accepted
+// callback shapes. The node-returning form stores the callback directly; the
+// void-returning form is wrapped in an adapter lambda, which is what this
+// exercises. Nothing is built -- instantiation is the assertion.
+BOOST_AUTO_TEST_CASE(CustomizerInstantiation) {
+  using Element = StubBackend::Element;
+
+  auto returnsNode = [](const std::optional<Element>&,
+                        std::shared_ptr<LayerBlueprintNode> layer) {
+    return layer;
+  };
+  auto mutatesLayer = [](const std::optional<Element>&, LayerBlueprintNode&) {};
+  auto returnsContainer = [](const Element&,
+                             std::shared_ptr<ContainerBlueprintNode> node) {
+    return node;
+  };
+  auto mutatesContainer = [](const Element&, ContainerBlueprintNode&) {};
+
+  BlueprintBuilder<StubBackend> builder{StubBackend::Config{}};
+
+  static_cast<void>(builder.layers().onLayer(returnsNode));
+  static_cast<void>(builder.layers().onLayer(mutatesLayer));
+
+  static_cast<void>(builder.layersFromSensors().onLayer(returnsNode));
+  static_cast<void>(builder.layersFromSensors().onLayer(mutatesLayer));
+
+  static_cast<void>(builder.layerFromSensors().onLayer(returnsNode));
+  static_cast<void>(builder.layerFromSensors().onLayer(mutatesLayer));
+
+  static_cast<void>(builder.barrelEndcap().onLayer(returnsNode));
+  static_cast<void>(builder.barrelEndcap().onLayer(mutatesLayer));
+  static_cast<void>(builder.barrelEndcap().onContainer(returnsContainer));
+  static_cast<void>(builder.barrelEndcap().onContainer(mutatesContainer));
+
+  BOOST_CHECK(true);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

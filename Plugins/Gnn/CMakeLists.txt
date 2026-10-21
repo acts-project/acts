@@ -1,6 +1,8 @@
 acts_add_library(
     PluginGnn
+    src/CudaUnavailable.cpp
     src/GnnPipeline.cpp
+    src/Stages.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
     src/TruthGraphMetricsHook.cpp
@@ -8,15 +10,7 @@ acts_add_library(
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
-if(ACTS_GNN_ENABLE_CUDA)
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_CUDA)
-    target_sources(
-        ActsPluginGnn
-        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
-    )
-    target_link_libraries(ActsPluginGnn PUBLIC CUDA::nvtx3)
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_NVTX)
-endif()
+acts_compile_headers(PluginGnn GLOB include/**/*.hpp)
 
 if(ACTS_GNN_ENABLE_MODULEMAP)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_MODULEMAP)
@@ -25,6 +19,7 @@ if(ACTS_GNN_ENABLE_MODULEMAP)
         ActsPluginGnn
         PRIVATE ModuleMapGraph::CPU ModuleMapGraph::GPU
     )
+    # EdgeLayerConnector.cu is included in ModuleMapGraph.cu because of ODR violations in ModuleMapGraph
     target_sources(ActsPluginGnn PRIVATE src/ModuleMapCuda.cu)
 endif()
 
@@ -42,12 +37,23 @@ if(ACTS_GNN_ENABLE_TORCH)
             src/TorchMetricLearning.cpp
             src/buildEdges.cpp
     )
+    # FRNN edge building is CUDA-only. One of the two definitions of
+    # detail::buildEdgesFRNN is always linked, so buildEdges.cpp can call it
+    # unconditionally.
+    if(ACTS_ENABLE_CUDA)
+        target_sources(ActsPluginGnn PRIVATE src/buildEdgesFRNN.cpp)
+    else()
+        target_sources(ActsPluginGnn PRIVATE src/buildEdgesFRNNNoCuda.cpp)
+    endif()
 endif()
 
 if(ACTS_GNN_ENABLE_TENSORRT)
     find_package(TensorRT REQUIRED)
     message(STATUS "Found TensorRT ${TensorRT_VERSION}")
-    target_link_libraries(ActsPluginGnn PUBLIC trt::nvinfer trt::nvinfer_plugin)
+    target_link_libraries(
+        ActsPluginGnn
+        PRIVATE trt::nvinfer trt::nvinfer_plugin
+    )
     target_sources(ActsPluginGnn PRIVATE src/TensorRTEdgeClassifier.cpp)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_TENSORRT)
 endif()
@@ -61,34 +67,43 @@ target_include_directories(
 
 target_link_libraries(ActsPluginGnn PUBLIC Acts::Core Boost::boost)
 
-if(ACTS_GNN_ENABLE_CUDA)
-    target_compile_features(ActsPluginGnn PUBLIC cuda_std_20)
-    set_target_properties(
-        ActsPluginGnn
-        PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION OFF
-    )
-    target_compile_options(
-        ActsPluginGnn
-        PRIVATE
-            $<$<COMPILE_LANGUAGE:CUDA>:
-            --dopt=on
-            --generate-line-info
-            --expt-relaxed-constexpr
-            --extended-lambda>
-    )
+if(ACTS_ENABLE_CUDA)
     target_compile_definitions(
         ActsPluginGnn
-        PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
+        PUBLIC
+            ACTS_GNN_WITH_CUDA
+            ACTS_GNN_NVTX
+            # TODO: CUDA_API_PER_THREAD_DEFAULT_STREAM must be consistent across
+            # all TUs in a binary (both .cu and .cpp that include cuda_runtime_api.h).
+            # This should be moved to add_compile_definitions() in the top-level
+            # CMakeLists.txt to guarantee that, rather than relying on the link graph.
+            CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
-    target_link_libraries(ActsPluginGnn PUBLIC CUDA::cudart)
+    set_target_properties(
+        ActsPluginGnn
+        PROPERTIES CUDA_SEPARABLE_COMPILATION OFF
+    )
+    target_link_libraries(ActsPluginGnn PRIVATE CUDA::cudart CUDA::nvtx3)
+    target_sources(
+        ActsPluginGnn
+        PRIVATE
+            src/CudaTrackBuilding.cu
+            src/DWalkTrackBuilding.cu
+            src/JunctionRemoval.cu
+            src/Tensor.cu
+            src/Stages.cu
+    )
 else()
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_CPUONLY)
+    # The other half of DeviceOps.hpp: every device entry point, defined to
+    # throw. Host code calls them unconditionally and dispatches on the runtime
+    # device, so nothing above needs a preprocessor branch.
+    target_sources(ActsPluginGnn PRIVATE src/DeviceOpsNoCuda.cpp)
 endif()
 
 if(ACTS_GNN_ENABLE_TORCH)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_TORCH_BACKEND)
     target_link_libraries(ActsPluginGnn PRIVATE ${TORCH_LIBRARIES})
-    if(ACTS_GNN_ENABLE_CUDA)
+    if(ACTS_ENABLE_CUDA)
         target_link_libraries(ActsPluginGnn PRIVATE frnn)
     endif()
     find_package(TorchScatter QUIET)
@@ -100,7 +115,13 @@ if(ACTS_GNN_ENABLE_TORCH)
     else()
         target_link_libraries(ActsPluginGnn PRIVATE TorchScatter::TorchScatter)
         # Should not discard TorchScatter even if its not needed at this point
-        # since we need the scatter_max operation in the torch script later
-        target_link_options(ActsPluginGnn PUBLIC "-Wl,-no-as-needed")
+        # since we need the scatter_max operation in the torch script later.
+        # --no-as-needed is a GNU ld option that Apple's linker rejects; it
+        # keeps every library on its command line anyway, so nothing is needed
+        # there.
+        target_link_options(
+            ActsPluginGnn
+            PUBLIC "$<$<NOT:$<PLATFORM_ID:Darwin>>:-Wl,-no-as-needed>"
+        )
     endif()
 endif()
