@@ -34,7 +34,7 @@ unsigned int algorithm_base::warp_size() const {
 }
 
 void algorithm_base::synchronize() const {
-  details::get_queue(queue()).wait_and_throw();
+  queue().synchronize();
 }
 
 void algorithm_base::await(vecmem::abstract_event& event) const {
