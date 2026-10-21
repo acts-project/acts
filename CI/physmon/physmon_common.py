@@ -1,9 +1,21 @@
 import collections
 import argparse
+import tempfile
+import urllib.request
 from pathlib import Path
 
 import acts
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
+
+# Provisional Gen3 map, produced locally and hosted as a release asset on a
+# personal fork; not yet the ODD repo's official map (which is still
+# Gen1-keyed and incompatible with Gen3 surfaces). Hosted externally rather
+# than committed: the compressed map is tens of MB, far over this repo's
+# check-added-large-files limit.
+PROVISIONAL_GEN3_MATERIAL_MAP_URL = (
+    "https://github.com/LeaBaumann/acts/releases/download/"
+    "gen3-material-map-provisional-v1/odd_gen3_map.json.zst"
+)
 
 PhysmonSetup = collections.namedtuple(
     "Setup",
@@ -24,16 +36,17 @@ PhysmonSetup = collections.namedtuple(
 def makeSetup() -> PhysmonSetup:
     u = acts.UnitConstants
     srcdir = Path(__file__).resolve().parent.parent.parent
-    odd_dir = getOpenDataDetectorDirectory()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("outdir")
 
     args = parser.parse_args()
 
-    matDeco = acts.IMaterialDecorator.fromFile(
-        odd_dir / "data/odd-material-maps.root", level=acts.logging.INFO
+    matMapPath = (
+        Path(tempfile.gettempdir()) / "odd-material-maps-gen3-provisional.json.zst"
     )
+    urllib.request.urlretrieve(PROVISIONAL_GEN3_MATERIAL_MAP_URL, matMapPath)
+    matDeco = acts.IMaterialDecorator.fromFile(matMapPath, level=acts.logging.INFO)
 
     detector = getOpenDataDetector(matDeco)
     trackingGeometry = detector.trackingGeometry()

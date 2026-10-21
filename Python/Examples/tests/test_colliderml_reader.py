@@ -47,9 +47,12 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
     map generated on the fly) reconstruction geometries. Also checks that the
     dataset's own published tracks are read and converted.
 
-    gen3's seeding config hardcodes gen1 volume/layer IDs, so it currently
-    produces zero seeds on real data; the ROOT performance check is skipped
-    for gen3 until that's fixed.
+    The ROOT performance check now runs for gen3 too, but there is no stored
+    reference hash for it yet in root_file_hashes.txt -- this is expected to
+    fail with "Hash lookup key ... not found" until someone with access to
+    the ColliderML dataset runs it, confirms the tracking performance output
+    is sane, and adds the reference. Left failing on purpose rather than
+    skipped, so this isn't silently forgotten.
     """
     from acts.examples.odd import getOpenDataDetector
     from generate_geoid_map import generate_geoid_map
@@ -58,7 +61,7 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
 
     if reco_geo == "gen3":
         # Build both geometries to generate the mapping on the fly
-        detector_gen1 = getOpenDataDetector()
+        detector_gen1 = getOpenDataDetector(gen3=False)
         geo_gen1 = detector_gen1.trackingGeometry()
 
         detector_gen3 = getOpenDataDetector(gen3=True)
@@ -80,7 +83,7 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
         matDeco = acts.IMaterialDecorator.fromFile(
             odd_dir / "data/odd-material-maps.root", level=acts.logging.WARNING
         )
-        detector = getOpenDataDetector(matDeco)
+        detector = getOpenDataDetector(matDeco, gen3=False)
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
         ctx = detector
@@ -90,20 +93,18 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
     )
 
     perfFile = tmp_path / "performance_colliderml_truth_tracking.root"
-    perfWriter = None
-    if reco_geo == "gen1":
-        RootPatternRecognitionPerformanceWriter = acts.examples._tryImportRoot(
-            "RootPatternRecognitionPerformanceWriter"
-        )
-        perfWriter = RootPatternRecognitionPerformanceWriter(
-            level=acts.logging.WARNING,
-            inputTracks="tracks",
-            inputParticles="particles",
-            inputTrackParticleMatching="track_particle_matching",
-            inputParticleTrackMatching="particle_track_matching",
-            inputParticleMeasurementsMap="particle_measurements_map",
-            filePath=str(perfFile),
-        )
+    RootPatternRecognitionPerformanceWriter = acts.examples._tryImportRoot(
+        "RootPatternRecognitionPerformanceWriter"
+    )
+    perfWriter = RootPatternRecognitionPerformanceWriter(
+        level=acts.logging.WARNING,
+        inputTracks="tracks",
+        inputParticles="particles",
+        inputTrackParticleMatching="track_particle_matching",
+        inputParticleTrackMatching="particle_track_matching",
+        inputParticleMeasurementsMap="particle_measurements_map",
+        filePath=str(perfFile),
+    )
 
     with ctx if ctx is not None else contextlib.nullcontext():
         s = runColliderMLTruthTracking(
@@ -117,11 +118,9 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
             numThreads=1,
         )
         s.addAlgorithm(check_alg)
-        if perfWriter is not None:
-            s.addWriter(perfWriter)
+        s.addWriter(perfWriter)
         s.run()
 
     assert check_alg.events_seen > 0
 
-    if reco_geo == "gen1":
-        assert_root_hash("performance_colliderml_truth_tracking.root", perfFile)
+    assert_root_hash("performance_colliderml_truth_tracking.root", perfFile)

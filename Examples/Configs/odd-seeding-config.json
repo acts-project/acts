@@ -1,50 +1,38 @@
 [
     {
-        "layer": 2,
         "volume": 17
     },
     {
-        "layer": 4,
-        "volume": 17
-    },
-    {
-        "layer": 6,
-        "volume": 17
-    },
-    {
-        "layer": 8,
-        "volume": 17
-    },
-    {
-        "layer": 2,
         "volume": 18
     },
     {
-        "layer": 4,
-        "volume": 18
+        "volume": 19
     },
     {
-        "layer": 6,
-        "volume": 18
+        "volume": 20
     },
     {
-        "layer": 8,
-        "volume": 18
+        "volume": 30
     },
     {
-        "layer": 16,
-        "volume": 16
+        "volume": 31
     },
     {
-        "layer": 14,
-        "volume": 16
+        "volume": 32
     },
     {
-        "layer": 12,
-        "volume": 16
+        "volume": 33
     },
     {
-        "layer": 10,
-        "volume": 16
+        "volume": 47
+    },
+    {
+        "volume": 48
+    },
+    {
+        "volume": 49
+    },
+    {
+        "volume": 50
     }
 ]
