@@ -12,7 +12,6 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
-#include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -450,7 +449,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
     pat.syncState(gctx, beamSpot);
   }
   if (testHit->spacePoint().measuresLoc0() &&
-      !isPhiCompatible(gctx, pat, *testHit)) {
+      !isPhiCompatible(pat, testHit->globalPosition(gctx))) {
     return std::make_pair(LineTestDecision::eRejectHit, LineTestRes{});
   }
 
@@ -536,13 +535,11 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
 bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::isPhiCompatible(
-    const GeometryContext& gctx, const PatternStateAux& pat,
-    const Hit_t& hit) const {
+    const PatternStateAux& pat, const Vector3& pos) const {
   /// We check that the test hit is compatible with the pattern phi, if
   /// available. If not, we check that the test hit is in the same pattern
   /// sector. We expect the test hit to be in the same hemisphere as the
   /// pattern.
-  const Vector3 pos{hit.globalPosition(gctx)};
   if (pat.nPhiLayers > 0) {
     if (Acts::abs(pat.angleToBendPlane(pos)) > m_cfg.phiTolerance) {
       ACTS_VERBOSE(__func__ << "() The pattern with phi = " << inDeg(pat.patPhi)
@@ -777,11 +774,6 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
 
     std::optional<std::uint8_t> patternLineGroup{std::nullopt};
 
-    auto projOntoPhiPlane = [&pat](const Vector3& pos) -> Vector3 {
-      return pos - (pos.dot(pat.bendPlaneNorm) - pat.patPhiOffset) *
-                       pat.bendPlaneNorm;
-    };
-
     std::array<std::vector<Hit_t>, Topology_t::nGroups> phiHitsPerGroup{
         onlyPhiProvider.getPhiOnlyHits(pat, gctx)};
 
@@ -802,11 +794,6 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
           continue;
         }
 
-        if (!isPhiCompatible(gctx, pat, newHit)) {
-          ACTS_VERBOSE(__func__ << "() Phi-only hit not compatible");
-          continue;
-        }
-
         if (!patternLineGroup || *patternLineGroup != group) {
           if (!pat.defineLineAroundHit(gctx, newHit)) {
             ACTS_VERBOSE(__func__ << "() Invalid projection model for group "
@@ -815,35 +802,20 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
           }
           patternLineGroup = group;
         }
-        const Vector3 newHitPos{newHit.globalPosition(gctx)};
-        using SeedingAux =
-            Acts::Experimental::detail::CompSpacePointAuxiliaries;
-        const double stripHalfLength{
-            std::sqrt(newHit.spacePoint().covariance()[Acts::toUnderlying(
-                SeedingAux::ResidualIdx::bending)])};
-        const Vector3 sensorDir{newHit.globalSensorDirection(gctx)};
-        const Vector3 stripLow{
-            projOntoPhiPlane(newHitPos - stripHalfLength * sensorDir)};
-        const Vector3 stripHigh{
-            projOntoPhiPlane(newHitPos + stripHalfLength * sensorDir)};
-        const Vector3 stripDirOnPlane{(stripHigh - stripLow).normalized()};
-
-        const double stripIntersect{
-            Acts::detail::LineHelper::lineIntersect<3>(
-                pat.linePos, pat.lineDir, stripLow, stripDirOnPlane)
-                .pathLength()};
-        const double stripProjLength{(stripHigh - stripLow).norm()};
-
-        ACTS_VERBOSE(__func__ << "() Intersect distance from lower strip edge: "
-                              << stripIntersect
-                              << ", proj strip length: " << stripProjLength);
-
+        const auto [crossPos, distOutsideStrip] =
+            pat.phiStripCrossing(gctx, newHit);
+        ACTS_VERBOSE(__func__ << "() Distance of the pattern line crossing "
+                                 "outside the strip: "
+                              << distOutsideStrip);
         /// Tolerance on the strip edges
         constexpr double margin{10._mm};
-        if (stripIntersect < -margin ||
-            stripIntersect > (stripProjLength + margin)) {
+        if (distOutsideStrip > margin) {
           ACTS_VERBOSE(__func__ << "() The pattern falls outside the test hit "
                                    "strip in eta - skip hit.");
+          continue;
+        }
+        if (!isPhiCompatible(pat, crossPos)) {
+          ACTS_VERBOSE(__func__ << "() Phi-only hit not compatible");
           continue;
         }
 
@@ -851,19 +823,19 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
         /// layer
         if (const auto it = std::ranges::find_if(
                 pat.phiOnlyHits,
-                [&](const Hit_t& h) {
-                  return std::is_eq(Topology_t::compareLayers(h, newHit));
+                [&](const typename PatternStateAux::PhiOnlyHit& h) {
+                  return std::is_eq(Topology_t::compareLayers(h.hit, newHit));
                 });
             it != pat.phiOnlyHits.end()) {
-          if (Acts::abs(pat.angleToBendPlane(it->globalPosition(gctx))) <
-              Acts::abs(pat.angleToBendPlane(newHitPos))) {
+          if (Acts::abs(pat.angleToBendPlane(it->crossPos)) <
+              Acts::abs(pat.angleToBendPlane(crossPos))) {
             ACTS_VERBOSE(__func__ << "() A phi hit with better pull exists on "
                                      "same layer - skip hit.");
             continue;
           }
-          *it = std::move(newHit);
+          *it = {std::move(newHit), crossPos};
         } else {
-          pat.phiOnlyHits.push_back(std::move(newHit));
+          pat.phiOnlyHits.push_back({std::move(newHit), crossPos});
         }
         pat.updateBendPlane(gctx, beamspotInfo);
       }
@@ -902,10 +874,17 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::convertToPattern(
                            std::back_inserter(output.hitsPerGroup[g]),
                            [](const OrderedHit& hit) { return hit.hitPtr; });
   }
-  output.phiOnlyHits = std::move(candidate.phiOnlyHits);
+  output.phiOnlyHits.reserve(candidate.phiOnlyHits.size());
+  std::ranges::transform(candidate.phiOnlyHits,
+                         std::back_inserter(output.phiOnlyHits),
+                         [](typename PatternStateAux::PhiOnlyHit& phiHit) {
+                           return std::move(phiHit.hit);
+                         });
   output.meanNormResidual2 = candidate.getMeanResidual2();
   output.patTheta = candidate.patTheta;
   output.patPhi = candidate.patPhi;
+  output.patPhiOffset = candidate.patPhiOffset;
+  output.bendPlaneCov = std::move(candidate.bendPlaneCov);
   output.sector = Sector_t{candidate.sector.sector()};
   output.nPrecisionLayers = candidate.nPrecisionLayers;
   output.nTriggerLayers = candidate.nTriggerLayers;

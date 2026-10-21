@@ -195,12 +195,12 @@ struct PatternStateAux {
   /// @brief Constructor taking the seed information
   ///  @param gctx: geometry context
   ///  @param seed: seed hit
-  ///  @param sector: sector index of the seed hit
-  ///  @param cfg: configuration object
+  ///  @param sectorIdx: sector index of the seed hit
+  ///  @param config: configuration object
   ///  @param logger: pointer to messaging object
   explicit PatternStateAux(const GeometryContext& gctx, const OrderedHit& seed,
-                           const typename Sector_t::Index_t sector,
-                           const Config& cfg, const Logger* logger);
+                           const typename Sector_t::Index_t sectorIdx,
+                           const Config& config, const Logger* logger);
   /// @brief Move constructor
   ///  @param other: other pattern state to move from
   PatternStateAux(PatternStateAux&& other) noexcept = default;
@@ -294,6 +294,17 @@ struct PatternStateAux {
   ///  @param refHit: reference hit
   ///  @return true if a line with sufficient lever arm was found
   bool defineLineAroundHit(const GeometryContext& gctx, const Hit_t& refHit);
+  /// @brief Compute where the pattern line crosses a phi-only strip. The
+  ///        strip ends are projected onto the bending plane of the pattern
+  ///        and the projected strip is intersected with the pattern line.
+  ///  @param gctx: geometry context
+  ///  @param phiHit: phi-only hit
+  ///  @return: pair of the point on the strip crossed by the pattern line and
+  ///           the distance of this point from the closest strip edge, along
+  ///           the strip projected onto the bending plane (negative if the
+  ///           pattern line crosses the strip within its edges)
+  std::pair<Vector3, double> phiStripCrossing(const GeometryContext& gctx,
+                                           const Hit_t& phiHit) const;
   /// @brief Return the mean normalized residual squared
   double getMeanResidual2() const;
   /// @brief Method returning the number of groups
@@ -358,16 +369,26 @@ struct PatternStateAux {
 
   /// @brief Collection of hits per group. A pattern is determined by the hits belonging to it.
   std::array<std::vector<OrderedHit>, Topology_t::nGroups> hitsPerGroup{};
+  /// @brief Phi-only hit attached to the pattern, together with the point on
+  ///        the strip crossed by the pattern line. The strip position is in
+  ///        general not the crossing point (e.g. the strip centre), so the
+  ///        crossing point is used for the phi of the hit.
+  struct PhiOnlyHit {
+    /// @brief The phi-only hit
+    Hit_t hit;
+    /// @brief Point on the strip crossed by the pattern line
+    Vector3 crossPos{Vector3::Zero()};
+  };
   /// @brief Phi-only hits attached to the pattern
-  std::vector<Hit_t> phiOnlyHits{};
+  std::vector<PhiOnlyHit> phiOnlyHits{};
 
   /// @brief Print the covariance matrix
   static std::string print(const BendPlaneCov_t& cov) {
     std::ostringstream os;
     os << std::format("[varPhi: {}, varOffset: {}, covPhiOffset: {}]",
-                     cov[toUnderlying(BendPlaneCov::ePhiPhi)],
-                     cov[toUnderlying(BendPlaneCov::eOffsetOffset)],
-                     cov[toUnderlying(BendPlaneCov::ePhiOffset)]);
+                      cov[toUnderlying(BendPlaneCov::ePhiPhi)],
+                      cov[toUnderlying(BendPlaneCov::eOffsetOffset)],
+                      cov[toUnderlying(BendPlaneCov::ePhiOffset)]);
     return os.str();
   }
 

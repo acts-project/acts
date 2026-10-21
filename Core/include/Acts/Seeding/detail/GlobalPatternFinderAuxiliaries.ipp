@@ -12,6 +12,7 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
+#include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -162,9 +163,10 @@ double PatternStateAux<Hit_t, Sector_t, Topology_t>::covarianceContraction(
   /// strips. The other entry (the strip half length for 1D strips) refers to
   /// the second measured direction, or to the sensor direction for 1D strips.
   const bool phiOnly{!sp.measuresLoc1()};
-  const CovIdx firstMeasIdx  {phiOnly ? CovIdx::nonBending : CovIdx::bending};
-  const CovIdx secondMeasIdx {phiOnly ? CovIdx::bending : CovIdx::nonBending};
-  const double firstMeasTerm = oneDimContribution(firstMeasIdx, stripDirs.first);
+  const CovIdx firstMeasIdx{phiOnly ? CovIdx::nonBending : CovIdx::bending};
+  const CovIdx secondMeasIdx{phiOnly ? CovIdx::bending : CovIdx::nonBending};
+  const double firstMeasTerm =
+      oneDimContribution(firstMeasIdx, stripDirs.first);
   /// The contribution of the second measured direction is cancelled in case of
   /// projected hits and the second measured direction is same as the sensor
   /// direction.
@@ -172,9 +174,9 @@ double PatternStateAux<Hit_t, Sector_t, Topology_t>::covarianceContraction(
     return firstMeasTerm;
   }
   return firstMeasTerm +
-         (stripDirs.second
-              ? oneDimContribution(secondMeasIdx, *stripDirs.second)
-              : oneDimContribution(secondMeasIdx, hit.globalSensorDirection(gctx)));
+         oneDimContribution(secondMeasIdx,
+                            stripDirs.second ? *stripDirs.second
+                                             : hit.globalSensorDirection(gctx));
 }
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
@@ -335,7 +337,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::updateBendPlane(
   double weightSum{0.}, Sxx{0.}, Sxy{0.}, Syy{0.};
   Vector2 centroid{Vector2::Zero()};  // Sx, Sy
 
-  auto accumulate = [&](const Hit_t& hit) -> void {
+  auto accumulate = [&](const Hit_t& hit, const Vector3& pos) -> void {
     if (!hit.spacePoint().measuresLoc0()) {
       return;
     }
@@ -349,7 +351,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::updateBendPlane(
       return;
     }
     double weight{1. / variance};
-    const Vector2 d{hit.globalPosition(gctx).template head<2>() - bsPos};
+    const Vector2 d{pos.template head<2>() - bsPos};
     const Vector2 wd{weight * d};
 
     weightSum += weight;
@@ -359,11 +361,17 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::updateBendPlane(
     Syy += wd.y() * d.y();
   };
   std::ranges::for_each(hitsPerGroup, [&](const std::vector<OrderedHit>& hits) {
-    std::ranges::for_each(hits,
-                          [&](const OrderedHit& hit) { accumulate(*hit); });
+    std::ranges::for_each(hits, [&](const OrderedHit& hit) {
+      /// Hits measuring eta and phi are already constrained, so we use directly
+      /// the global position
+      accumulate(*hit, hit->globalPosition(gctx));
+    });
   });
-  std::ranges::for_each(phiOnlyHits,
-                        [&](const Hit_t& hit) { accumulate(hit); });
+  std::ranges::for_each(phiOnlyHits, [&](const PhiOnlyHit& phiHit) {
+    /// Phi-only hits are not constrained along the bending coordinate,
+    /// so we use the position on the strip crossed by the pattern line.
+    accumulate(phiHit.hit, phiHit.crossPos);
+  });
 
   if (nPhiLayers == 0) {
     setBendPlaneFromSector();
@@ -679,15 +687,15 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
 PatternStateAux<Hit_t, Sector_t, Topology_t>::PatternStateAux(
     const GeometryContext& gctx, const OrderedHit& seed,
-    const typename Sector_t::Index_t sector, const Config& cfg,
+    const typename Sector_t::Index_t sectorIdx, const Config& config,
     const Acts::Logger* logger)
-    : cfg{cfg},
+    : cfg{config},
       m_logger{logger},
       lastInsertedHit{seed},
       prevLayerHit{seed},
       lineAnchorHit{seed},
       patTheta{VectorHelpers::theta(seed->globalPosition(gctx))},
-      sector{sector} {
+      sector{sectorIdx} {
   /// Add the new hit
   hitsPerGroup[Topology_t::groupIndex(*seed)].push_back(seed);
 
@@ -750,5 +758,37 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::OrderedHit::print(
   ostr << hitPtr->spacePoint()
        << ", group: " << static_cast<int>(Topology_t::groupIndex(*hitPtr))
        << ", globLay: " << static_cast<int>(globLayer);
+}
+
+template <GlobPatFinderHit Hit_t, SectorType Sector_t,
+          PatternTopology<Hit_t> Topology_t>
+std::pair<Vector3, double>
+PatternStateAux<Hit_t, Sector_t, Topology_t>::phiStripCrossing(
+    const GeometryContext& gctx, const Hit_t& phiHit) const {
+  using CovIdx =
+      Acts::Experimental::detail::CompSpacePointAuxiliaries::ResidualIdx;
+  const Vector3 pos{phiHit.globalPosition(gctx)};
+  /// The half length of a 1D phi strip is stored as the covariance of the
+  /// unmeasured (bending) coordinate
+  const double halfLength{std::sqrt(
+      phiHit.spacePoint().covariance()[toUnderlying(CovIdx::bending)])};
+  const Vector3 sensorDir{phiHit.globalSensorDirection(gctx)};
+  auto projOntoPhiPlane = [this](const Vector3& p) -> Vector3 {
+    return p - (p.dot(bendPlaneNorm) - patPhiOffset) * bendPlaneNorm;
+  };
+  const Vector3 stripLow{projOntoPhiPlane(pos - halfLength * sensorDir)};
+  const Vector3 stripHigh{projOntoPhiPlane(pos + halfLength * sensorDir)};
+  const double projLength{(stripHigh - stripLow).norm()};
+  if (projLength < Acts::s_epsilon) {
+    return {pos, 0.};
+  }
+  const double intersect{Acts::detail::LineHelper::lineIntersect<3>(
+                             linePos, lineDir, stripLow,
+                             Vector3{(stripHigh - stripLow) / projLength})
+                             .pathLength()};
+  /// The projection onto the bending plane is affine along the strip, so the
+  /// fraction of the projected strip length maps directly onto the strip
+  return {pos + (intersect / projLength - 0.5) * 2. * halfLength * sensorDir,
+          std::max(-intersect, intersect - projLength)};
 }
 }  // namespace Acts::Experimental::detail

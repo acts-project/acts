@@ -132,8 +132,8 @@ class GlobalPatternFinder {
 
   /// @brief Structure to hold the pattern result
   struct OutputPattern {
-    explicit OutputPattern(typename Sector_t::Index_t sector)
-        : sector{sector} {}
+    explicit OutputPattern(typename Sector_t::Index_t sectorIdx)
+        : sector{sectorIdx} {}
     /// @brief Vector of hits in the pattern
     std::array<std::vector<const Hit_t*>, Topology_t::nGroups> hitsPerGroup{};
     /// @brief Vector of phi-only hits
@@ -142,6 +142,10 @@ class GlobalPatternFinder {
     double meanNormResidual2{0.};
     /// @brief Pattern phi, which is the phi of the bending plane where the pattern lies
     double patPhi{0.};
+    /// @brief Signed offset of the bending plane from the origin
+    double patPhiOffset{0.};
+    /// @brief Covariance of the bending plane
+    PatternStateAux::BendPlaneCov_t bendPlaneCov{};
     /// @brief Pattern theta, which is the value of the seed hit
     double patTheta{0.};
     /// @brief Sector
@@ -248,12 +252,11 @@ class GlobalPatternFinder {
                                           const OrderedHit& testHit,
                                           const BeamspotInfo& beamSpot) const;
   /// @brief Method to check the phi compatibility of a test hit with the pattern
-  ///  @param gctx: geometry context
   ///  @param pat: pattern to be checked
-  ///  @param hit: hit to be checked
+  ///  @param pos: global position at which the phi of the test hit is
+  ///         evaluated
   ///  @return: true if the test hit is phi compatible with the pattern
-  bool isPhiCompatible(const GeometryContext& gctx, const PatternStateAux& pat,
-                       const Hit_t& hit) const;
+  bool isPhiCompatible(const PatternStateAux& pat, const Vector3& pos) const;
   /// @brief Check if a pattern passes the quality cuts
   ///  @param pat: Pattern to be checked
   ///  @return: true if the pattern passes the cuts, false otherwise
