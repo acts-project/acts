@@ -202,9 +202,12 @@ detector elements of their own:
   @ref Acts::StaticBlueprintNode, as opposed to a node assembled from sensitive
   surfaces. The resulting node can then be wrapped in
   @ref Acts::BlueprintNode::addMaterial "addMaterial" like any other. It is
-  available for every blueprint backend that can describe a passive element's
-  shape (`passiveVolumeShape()`); currently that is
-  @ref ActsPlugins::DD4hep::DD4hepBackend "DD4hepBackend".
+  available for every blueprint backend that can describe a passive element as
+  a volume (`passiveVolume()`); currently that is
+  @ref ActsPlugins::DD4hep::DD4hepBackend "DD4hepBackend" and
+  @ref ActsPlugins::TGeoBlueprintBuilderBackend "TGeoBlueprintBuilderBackend",
+  which share the shape conversion in
+  @ref ActsPlugins::TGeoSurfaceConverter::cylinderVolume "TGeoSurfaceConverter::cylinderVolume".
 - @ref ActsPlugins::DD4hep::DD4hepBackend::makeMaterialCollector "DD4hepBackend::makeMaterialCollector"
   creates a synthetic volume with no corresponding DD4hep element at all: a
   catch-all surface placed just outside the tracker envelope, so that material
@@ -214,11 +217,9 @@ detector elements of their own:
   `addCaloMaterialCollector`/`addCaloMaterialCollectorDisc` in
   `OpenDataDetectorBuilder.cpp` for how the ODD uses this for its calorimeter.
 
-Both are currently DD4hep-only: the TGeo blueprint backend
-(@ref ActsPlugins::TGeoBlueprintBuilderBackend) does not implement
-`passiveVolumeShape()` and has no material-collector helper yet, so a TGeo-built
-Gen3 geometry can designate faces on whatever nodes it has but cannot create
-new passive or collector volumes this way.
+The material collector is currently DD4hep-only: the TGeo blueprint backend
+(@ref ActsPlugins::TGeoBlueprintBuilderBackend) has no material-collector
+helper yet.
 
 > [!warning]
 > Blueprint-built geometry ignores material decorators.
