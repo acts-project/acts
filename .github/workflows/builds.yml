@@ -213,6 +213,9 @@ jobs:
           PYTEST_ADDOPTS: "-rs --durations=10"
           # Per-test peak memory summary, see Python/Examples/tests/conftest.py
           ACTS_PYTEST_MEMORY_REPORT: 1
+          # DIAGNOSTIC ONLY, revert: does FPE symbolization cause the per-worker
+          # memory growth? Expect test_fpe.py failures with this set.
+          ACTS_SEQUENCER_DISABLE_FPEMON: 1
         run: |
           source .env
           source build/this_acts_withdeps.sh
