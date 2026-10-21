@@ -13,10 +13,10 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <compare>
 #include <cstdint>
-#include <memory>
 #include <type_traits>
 
 /// Auxiliary concepts and data structures used by the Global Pattern Finder.
@@ -26,6 +26,7 @@
 /// PatternStateAux object used internally by the Global Pattern Finder.
 
 namespace Acts::Experimental::detail {
+using namespace Acts::UnitLiterals;
 /// @brief Definition of the measured directions for strip measurements. The first
 ///  is the primary strip measurement direction and is by definition orthogonal
 /// to the sensor direction. The second direction is the secondary strip
@@ -69,21 +70,15 @@ concept GlobPatFinderHit =
       /// Whether the hit is a precision measurement
       { hit.isPrecision() } -> std::same_as<bool>;
       /// Whether two hits represent overlapping detector information. This
-      /// relation may be less restrictive than operator== and is used when
+      /// relation may be less restrictive than requiring equality and is used when
       /// determining whether reconstructed patterns share detector information.
       { hit.overlaps(otherHit) } -> std::same_as<bool>;
     };
-/// @brief Equality operator for hits.
-template <GlobPatFinderHit Hit_t>
-inline bool operator==(const Hit_t& lhs, const Hit_t& rhs) {
-  return std::addressof(lhs.spacePoint()) == std::addressof(rhs.spacePoint());
-}
-
 /// @brief Concept defining the detector topology used by the pattern finder. The
 ///  detector is assumed to be organized in layers, which are grouped into a
-/// number of groups. The topology describes how detector layers are ordered and
-/// organized into groups, and how hits are associated with the corresponding
-/// layer/group.
+///  number of groups. The topology describes how detector layers are ordered and
+///  organized into groups, and how hits are associated with the corresponding
+///  layer/group.
 template <typename T, typename Hit_t>
 concept PatternTopology =
     GlobPatFinderHit<Hit_t> && requires(const Hit_t& hit1, const Hit_t& hit2) {
@@ -110,7 +105,7 @@ concept SectorType =
       requires std::constructible_from<Sector_t, typename Sector_t::Index_t>;
       /// Returns the sector index of the sector
       { sector.sector() } -> std::same_as<typename Sector_t::Index_t>;
-      /// Returns the phi coordinate of the sector center
+      /// Returns the phi coordinate of the sector center in [rad]
       { sector.phi() } -> std::same_as<double>;
       /// Returns the angular size of the sector in [rad]
       { sector.sectorSize() } -> std::same_as<double>;
@@ -120,7 +115,6 @@ concept SectorType =
       /// Returns whether a given phi coordinate is inside the sector.
       { sector.insideSector(phi) } -> std::same_as<bool>;
     };
-using namespace Acts::UnitLiterals;
 /// @brief Pattern state object storing pattern information during construction
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
@@ -131,14 +125,22 @@ struct PatternStateAux {
     ///         compute a reliable pattern line. Use the beamspot otherwise.
     double minHitDistance4Line{40._mm};
   };
-  /// @brief Beamspot information
+  /// @brief Beamspot information, used as an additional constraint on the
+  ///  pattern line when the lever arm of the hits is too small. The beamspot
+  ///  is also used to compute the pattern bending plane through linear 
+  ///  regression in the transverse plane. The beamspot is modelled as a 
+  ///  cylinder along the beam axis (z), whose radius and half-length act as 
+  ///  the transverse and longitudinal uncertainties of the constraint. They 
+  ///  should therefore be large enough to also cover the deviation of the straight 
+  ///  pattern line from the true trajectory in the transverse plane close to 
+  ///  the beam, e.g. due to the bending in the solenoidal field of the inner detector.
   struct BeamspotInfo {
     /// @brief Beamspot position
     Vector3 position{Vector3::Zero()};
     /// @brief Beamspot radius
-    double radius{0.};
-    /// @brief Beamspot length
-    double length{0.};
+    double radius{30._cm};
+    /// @brief Beamspot (half-)length
+    double length{2._m};
   };
   /// @brief Small wrapper for hits used to build patterns. In general, due to detector
   ///         complexity, the layer number cannot be defined globally, but it
@@ -149,14 +151,16 @@ struct PatternStateAux {
     const Hit_t* hitPtr{nullptr};
     /// @brief Global measurement layer number
     std::uint8_t globLayer{0u};
-    /// Forward commonly used accessors for convenience
+    /// @brief Access to the underlying hit methods
     const Hit_t* operator->() const { return hitPtr; }
+    /// @brief Access to the underlying hit
     const Hit_t& operator*() const { return *hitPtr; }
+    /// @brief Check if two OrderedHit objects are equal: they are equal
+    ///  if they point to the same underlying hit
     bool operator==(const OrderedHit& other) const {
       return hitPtr == other.hitPtr;
     }
-    bool operator==(const Hit_t& other) const { return hitPtr == &other; }
-    /// Print and stream operator
+    /// @brief Print and stream operator
     friend std::ostream& operator<<(std::ostream& ostr, const OrderedHit& c) {
       c.print(ostr);
       return ostr;

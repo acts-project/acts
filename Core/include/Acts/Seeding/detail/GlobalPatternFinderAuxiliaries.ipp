@@ -633,7 +633,7 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
 bool PatternStateAux<Hit_t, Sector_t, Topology_t>::isInPattern(
     const Hit_t& hit) const {
   const auto& hits{hitsPerGroup[Topology_t::groupIndex(hit)]};
-  return std::find(hits.begin(), hits.end(), hit) != hits.end();
+  return std::ranges::find(hits, &hit, &OrderedHit::hitPtr) != hits.end();
 }
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
@@ -706,8 +706,6 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
 void PatternStateAux<Hit_t, Sector_t, Topology_t>::print(std::ostream& ostr,
                                                          bool detailed) const {
-  using namespace Acts::UnitLiterals;
-  auto inDeg = [](double angle) { return angle / 1._degree; };
   ostr << "PatternStateAux Exp Sector: " << static_cast<int>(sector.sector())
        << ", Theta: " << inDeg(patTheta) << ", Phi " << inDeg(patPhi)
        << ", phiOffset: " << patPhiOffset;
@@ -723,7 +721,6 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::print(std::ostream& ostr,
     if (hits.empty()) {
       continue;
     }
-
     ostr << "  Group " << static_cast<int>(g) << " has " << hits.size()
          << " hits ";
     if (detailed) {
