@@ -756,12 +756,15 @@ BOOST_AUTO_TEST_CASE(SurfaceArrayNavigationPolicyRoundTrip) {
                                            .bins = {12, 3}});
   nlohmann::json jDefault = conv.navigationPolicyToJson(defaultPolicy);
   BOOST_CHECK(!jDefault.contains("neighborWindow"));
+  // Older files omit the bin count factor and must retain its default.
+  jDefault.erase("numberOfBinsFactor");
   auto defaultPtr =
       conv.navigationPolicyFromJson(tContext, jDefault, *tVolume, *tLogger);
   auto& defaultRestored =
       dynamic_cast<SurfaceArrayNavigationPolicy&>(*defaultPtr);
   BOOST_CHECK(!defaultRestored.config().neighborWindow.has_value());
   BOOST_CHECK_EQUAL(defaultRestored.config().overfill, 0);
+  BOOST_CHECK_EQUAL(defaultRestored.config().numberOfBinsFactor, 1.0);
 
   // A configured window and overfill survive the round trip
   SurfaceArrayNavigationPolicy policy(
@@ -787,6 +790,51 @@ BOOST_AUTO_TEST_CASE(SurfaceArrayNavigationPolicyRoundTrip) {
   const auto window = restored.surfaceArray().neighborWindow();
   BOOST_CHECK_EQUAL(window.max[0], 1);
   BOOST_CHECK_EQUAL(window.max[1], 8);
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceArrayNavigationPolicyAutoBinsRoundTrip) {
+  auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+  auto tLogger =
+      Acts::getDefaultLogger("SurfaceArrayNavigationJsonTest", Logging::INFO);
+  auto tVolume = makeSurfaceArrayVolume();
+  TrackingGeometryJsonConverter conv;
+
+  SurfaceArrayNavigationPolicy policy(
+      tContext, *tVolume, *tLogger,
+      SurfaceArrayNavigationPolicy::Config{
+          .layerType = SurfaceArrayNavigationPolicy::LayerType::Cylinder,
+          .bins = {0, 0},
+          .numberOfBinsFactor = 5.0});
+  const auto encoded = conv.navigationPolicyToJson(policy);
+  BOOST_CHECK_EQUAL(encoded.value("numberOfBinsFactor", 1.0), 5.0);
+  auto restoredPtr =
+      conv.navigationPolicyFromJson(tContext, encoded, *tVolume, *tLogger);
+  const auto& restored =
+      dynamic_cast<const SurfaceArrayNavigationPolicy&>(*restoredPtr);
+  BOOST_CHECK_EQUAL(restored.config().numberOfBinsFactor, 5.0);
+
+  const auto& originalArray = policy.surfaceArray();
+  const auto& restoredArray = restored.surfaceArray();
+  const auto originalAxes = originalArray.getAxes();
+  const auto restoredAxes = restoredArray.getAxes();
+  BOOST_REQUIRE_EQUAL(originalAxes.size(), 2);
+  BOOST_REQUIRE_EQUAL(restoredAxes.size(), originalAxes.size());
+  BOOST_CHECK_EQUAL(originalAxes[0]->getNBins(), 60);
+  BOOST_CHECK_EQUAL(originalAxes[1]->getNBins(), 15);
+  for (std::size_t axis = 0; axis < originalAxes.size(); ++axis) {
+    BOOST_CHECK_EQUAL(restoredAxes[axis]->getNBins(),
+                      originalAxes[axis]->getNBins());
+  }
+
+  // Rebuilding from the serialized config must preserve the bin assignments.
+  BOOST_REQUIRE_EQUAL(restoredArray.size(), originalArray.size());
+  for (std::size_t bin = 0; bin < originalArray.size(); ++bin) {
+    const auto originalSurfaces = originalArray.at(bin);
+    const auto restoredSurfaces = restoredArray.at(bin);
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        originalSurfaces.begin(), originalSurfaces.end(),
+        restoredSurfaces.begin(), restoredSurfaces.end());
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
