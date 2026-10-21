@@ -32,7 +32,7 @@ def test_packages_visible_in_view_but_not_venv(tmp_path, full_install):
     packages = [
         ("pyyaml", "yaml", "1.0"),
         ("jinja2", "jinja2", "1.0"),
-        ("histcmp", "histcmp", "0.10.0"),
+        ("histcmp", "histcmp", "0.11.0"),
         ("matplotlib", "matplotlib", "1.0"),
         ("pytest_md_report", "pytest_md_report", "1.0"),
     ]
