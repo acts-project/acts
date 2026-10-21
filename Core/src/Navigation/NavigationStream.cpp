@@ -104,7 +104,13 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     }
   }
 
-  // Append the multi intersection candidates
+  // Drop the candidates without a valid intersection before sorting,
+  // would sort last and be cut off anyway...
+  std::erase_if(m_candidates, [](const NavigationTarget& a) {
+    return !a.intersection().isValid();
+  });
+
+  // Append the multi intersection candidates (all valid)
   m_candidates.insert(m_candidates.end(), additionalCandidates.begin(),
                       additionalCandidates.end());
 
@@ -121,15 +127,6 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
                a.intersectionIndex() == b.intersectionIndex();
       });
   m_candidates.erase(nonUniqueRange.begin(), nonUniqueRange.end());
-
-  // The we find the first invalid candidate
-  auto firstInvalid = std::ranges::find_if(
-      m_candidates,
-      [](const NavigationTarget& a) { return !a.intersection().isValid(); });
-
-  // Set the range and initialize
-  m_candidates.resize(std::distance(m_candidates.begin(), firstInvalid),
-                      NavigationTarget::None());
 
   m_currentIndex = 0;
   return isValid();
