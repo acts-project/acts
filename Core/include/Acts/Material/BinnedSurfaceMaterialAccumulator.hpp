@@ -14,7 +14,9 @@
 #include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstdint>
 #include <optional>
+#include <unordered_map>
 
 namespace Acts {
 
@@ -44,6 +46,10 @@ class BinnedSurfaceMaterialAccumulator final
 
     /// Validated surface identities captured by createState.
     std::optional<detail::MaterialSurfaceRegistry> materialSurfaceRegistry;
+
+    /// Cache for the batch accumulation: position of each geometry ID in
+    /// @ref accumulatedMaterial, rebuilt when the number of entries changes
+    std::unordered_map<GeometryIdentifier, std::uint32_t> slotIndex;
   };
 
   /// Constructor

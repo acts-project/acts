@@ -168,13 +168,22 @@ void Acts::BinnedSurfaceMaterialAccumulator::accumulateTracks(
   // Cast into the right state object (guaranteed by upstream algorithm)
   State& cState = static_cast<State&>(state);
 
-  // Every accumulated surface material is an independent slot
+  // Every accumulated surface material is an independent slot, numbered in
+  // map order. The geometry ID lookup is cached in the state, the pointers
+  // are collected per call so that a copied state stays valid.
+  auto& slotIndex = cState.slotIndex;
+  const bool rebuildIndex =
+      slotIndex.size() != cState.accumulatedMaterial.size();
+  if (rebuildIndex) {
+    slotIndex.clear();
+    slotIndex.reserve(cState.accumulatedMaterial.size());
+  }
   std::vector<AccumulatedSurfaceMaterial*> slots;
-  std::unordered_map<GeometryIdentifier, std::uint32_t> slotIndex;
   slots.reserve(cState.accumulatedMaterial.size());
-  slotIndex.reserve(cState.accumulatedMaterial.size());
   for (auto& [geoID, accMaterial] : cState.accumulatedMaterial) {
-    slotIndex.emplace(geoID, static_cast<std::uint32_t>(slots.size()));
+    if (rebuildIndex) {
+      slotIndex.emplace(geoID, static_cast<std::uint32_t>(slots.size()));
+    }
     slots.push_back(&accMaterial);
   }
   auto lookup = [&](const Surface& surface) {
