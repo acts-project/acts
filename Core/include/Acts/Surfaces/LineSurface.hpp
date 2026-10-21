@@ -312,6 +312,12 @@ class LineSurface : public Surface {
   /// Measurement-frame map from local 3D Cartesian coordinates to the bound
   /// position. The radial row of @c localCartesianToBoundLocalDerivative can
   /// point the opposite way.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
+  /// @return Derivative of bound local position w.r.t. local 3D Cartesian
+  /// coordinates
   Matrix<2, 3> alignmentLocalCartesianToBound(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const final;

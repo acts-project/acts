@@ -275,6 +275,12 @@ class PointSurface : public Surface {
   /// fixed global position. That frame depends only on the track direction,
   /// and a local rotation does not move the point, so the rotation block is
   /// zero.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
+  /// @return Derivative of bound track parameters w.r.t. local frame alignment
+  /// parameters without path correction
   AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const final;

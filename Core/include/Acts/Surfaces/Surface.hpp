@@ -590,7 +590,9 @@ class Surface : public virtual GeometryObject,
   /// coordinates
   virtual Matrix<2, 3> alignmentLocalCartesianToBound(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& /*direction*/) const {
+      const Vector3& direction) const {
+    // The default frame does not depend on the track direction.
+    static_cast<void>(direction);
     return localCartesianToBoundLocalDerivative(gctx, position);
   }
 
