@@ -347,7 +347,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::updateBendPlane(
     if (variance < Acts::s_epsilon) {
       ACTS_ERROR("updateBendPlane() Phi hit with zero variance, hit:"
                  << std::endl
-                 << hit.spacePoint());
+                 << Acts::toString(hit.spacePoint()));
       return;
     }
     double weight{1. / variance};
@@ -609,8 +609,9 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::overWriteHit(
     ss << "Trying to overwrite a hit that is not the last inserted hit in "
           "group/layer "
        << static_cast<int>(group) << "/" << lastInsertedHit.globLayer << "\n";
-    ss << "Last inserted hit: " << lastInsertedHit->spacePoint() << "\n";
-    ss << "Last hit in group: " << stHits.back()->spacePoint();
+    ss << "Last inserted hit: " << Acts::toString(lastInsertedHit->spacePoint())
+       << "\n";
+    ss << "Last hit in group: " << Acts::toString(stHits.back()->spacePoint());
     throw std::runtime_error(ss.str());
   }
   stHits.pop_back();
@@ -738,7 +739,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::print(std::ostream& ostr,
     if (detailed) {
       ostr << "\n";
       for (const auto& hit : hits) {
-        ostr << "    " << hit->spacePoint()
+        ostr << "    " << Acts::toString(hit->spacePoint())
              << ", globLay: " << static_cast<int>(hit.globLayer) << "\n";
       }
     }
@@ -755,7 +756,7 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
 void PatternStateAux<Hit_t, Sector_t, Topology_t>::OrderedHit::print(
     std::ostream& ostr) const {
-  ostr << hitPtr->spacePoint()
+  ostr << Acts::toString(hitPtr->spacePoint())
        << ", group: " << static_cast<int>(Topology_t::groupIndex(*hitPtr))
        << ", globLay: " << static_cast<int>(globLayer);
 }

@@ -58,21 +58,6 @@ constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr auto gpfLogLvl = Acts::Logging::Level::INFO;
 /// Number of events per test
 constexpr std::size_t nEvents = 10;
-/// Number of muons per event. In the Mixed test, barrel and endcap muons
-/// alternate.
-constexpr std::size_t nMuonsPerEvent = 2;
-/// Theta search window of the seed selector, used for all the station pairs
-constexpr double s_thetaWindow = 3. * Acts::UnitConstants::degree;
-/// Add background: in a few stations crossed by each muon, an independent
-/// straight line crossing the muon trajectory
-constexpr bool addBackground = false;
-/// Number of stations per muon with a background line
-constexpr std::size_t nBkgStationsPerMuon = 2;
-/// Minimum angle between a background line and the muon in the bending plane
-constexpr double s_bkgMinAngle = 5. * Acts::UnitConstants::degree;
-/// Number of phi-only strip layers on each side of the tubes (phi strips
-/// without an eta partner), outside the combined strip layers
-constexpr std::size_t nPhiOnlyLayers = 1;
 /// Number of tests run in parallel
 const unsigned nThreads =
     logLvl != Acts::Logging::Level::INFO
@@ -83,16 +68,6 @@ std::mutex writeMutex{};
 ACTS_LOCAL_LOGGER(getDefaultLogger("GlobalPatternFinderTest", logLvl));
 
 namespace ActsTests {
-
-/** @brief Stream operator needed by the GPF printouts */
-std::ostream& operator<<(std::ostream& ostr, const FitTestSpacePoint& sp) {
-  ostr << (sp.isStraw() ? "Straw" : "Strip")
-       << " pos: " << toString(sp.localPosition())
-       << ", dir: " << toString(sp.sensorDirection())
-       << ", r: " << sp.driftRadius() << ", loc0/loc1: " << sp.measuresLoc0()
-       << "/" << sp.measuresLoc1();
-  return ostr;
-}
 
 /******************************************************************************
  *                         Toy detector description
@@ -234,7 +209,8 @@ class TestSeedSelector {
  public:
   struct Config {
     bool seedFromMdt{false};
-    double thetaWindow{s_thetaWindow};
+    /** @brief Theta search window, used for all the station pairs */
+    double thetaWindow{3._degree};
   };
   using Window_t = std::array<double, TestTopology::nGroups>;
 
@@ -298,6 +274,46 @@ constexpr double s_genFirstTubeZ{5._m};
  *         half way between the first and the last tube layer */
 constexpr double s_genStationCentreZ{5.8_m};
 
+/** @brief Configuration of the hit generation in each chamber: the
+ *         MeasurementGenerator configuration, extended with the options of
+ *         this test. It is passed to the MeasurementGenerator as its base
+ *         class. */
+struct HitGeneratorConfig : GenCfg_t {
+  /** @brief MDT + combined trigger strips (RPC/TGC like): 2 gas gaps below
+   *         and above the tubes */
+  HitGeneratorConfig() {
+    createStraws = true;
+    twinStraw = false;
+    createStrips = true;
+    combineSpacePoints = true;
+    smearStrips = false;
+    discretizeStrips = true;
+    stripPitchLoc0 = 3._cm;
+    stripPitchLoc1 = 3._cm;
+    stripDirLoc0 = std::vector<Vector3>(2, Vector3::UnitY());
+    stripDirLoc1 = std::vector<Vector3>(2, Vector3::UnitX());
+  }
+  /** @brief Number of phi-only strip layers on each side of the tubes (phi
+   *         strips without an eta partner), outside the combined strip
+   *         layers */
+  std::size_t nPhiOnlyLayers{1};
+  /** @brief Add background: in a few stations crossed by each muon, an
+   *         independent straight line crossing the muon trajectory */
+  bool addBackground{false};
+  /** @brief Number of stations per muon with a background line */
+  std::size_t nBkgStationsPerMuon{2};
+  /** @brief Minimum and maximum angle between a background line and the
+   *         muon in the bending plane */
+  double bkgMinAngle{5._degree};
+  double bkgMaxAngle{40._degree};
+  /** @brief Maximum distance of a background line from the muon in the
+   *         crossed station */
+  double bkgMaxOffset{30._cm};
+  /** @brief Maximum inclination of a background line in the non-bending
+   *         plane */
+  double bkgMaxTilt{5._degree};
+};
+
 struct DetectorConfig {
   /** @brief Distance of the first tube layer of each station from the beam
    *         axis (barrel) or from the transverse plane through the origin
@@ -316,8 +332,14 @@ struct DetectorConfig {
   double endcapZMin{9.2_m};
   double endcapZMax{12.4_m};
   double endcapField{0.5_T};
-  /** @brief Configuration of the measurement generator, used for each chamber */
-  GenCfg_t genCfg{};
+  /** @brief Step size of the trajectory stepping and limits at which it
+   *         stops */
+  double trajStepSize{5._mm};
+  double trajMaxRho{14._m};
+  double trajMaxAbsZ{24._m};
+  double trajMaxPath{40._m};
+  /** @brief Configuration of the hit generation, used for each chamber */
+  HitGeneratorConfig genCfg{};
 
   /** @brief Field strength (along phi) at a given position */
   double field(const double rho, const double z) const {
@@ -382,13 +404,10 @@ class ToroidTrajectory {
   };
 
   ToroidTrajectory(const MuonTruth& muon, const DetectorConfig& cfg) {
-    constexpr double stepSize{5._mm};
-    constexpr double maxRho{14._m};
-    constexpr double maxAbsZ{24._m};
-    constexpr double maxPath{40._m};
+    const double stepSize{cfg.trajStepSize};
     Point point{0., 0., std::atan(std::sinh(muon.eta))};
     m_points.push_back(point);
-    for (double s = 0.; s < maxPath; s += stepSize) {
+    for (double s = 0.; s < cfg.trajMaxPath; s += stepSize) {
       const double kappa{muon.charge * cfg.field(point.rho, point.z) / muon.p};
       const double alpha1{point.alpha + kappa * stepSize};
       if (std::abs(kappa) < s_epsilon) {
@@ -400,8 +419,8 @@ class ToroidTrajectory {
       }
       point.alpha = alpha1;
       /// Stop if the muon leaves the spectrometer or curls back
-      if (point.rho < 0. || point.rho > maxRho || std::abs(point.z) > maxAbsZ ||
-          std::cos(point.alpha) < 0.) {
+      if (point.rho < 0. || point.rho > cfg.trajMaxRho ||
+          std::abs(point.z) > cfg.trajMaxAbsZ || std::cos(point.alpha) < 0.) {
         break;
       }
       m_points.push_back(point);
@@ -485,7 +504,11 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
   linePars[toUnderlying(ParIndex::phi)] = VectorHelpers::phi(locDir);
   const Line_t line{linePars};
 
+  /// The MeasurementGenerator only takes its own configuration: the phi-only
+  /// strips are the loc0 strip layers beyond the loc1 ones
   GenCfg_t genCfg{cfg.genCfg};
+  genCfg.stripDirLoc0.resize(
+      genCfg.stripDirLoc1.size() + cfg.genCfg.nPhiOnlyLayers, Vector3::UnitY());
   genCfg.localToGlobal = localToGlobal;
   for (auto& sp :
        MeasurementGenerator::spawn(line, 0., engine, genCfg, logger())) {
@@ -605,13 +628,7 @@ std::vector<TestHit> spawnBackground(const MuonTruth& muon,
                                      const DetectorConfig& cfg,
                                      RandomEngine& engine,
                                      Container_t& outSpacePoints) {
-  /// Maximum distance of the line from the muon in the crossed station
-  constexpr double maxOffset{30._cm};
-  /// Maximum line inclination w.r.t. the muon in the bending plane
-  constexpr double maxAngle{40._degree};
-  /// Maximum line inclination in the non-bending plane
-  constexpr double maxTilt{5._degree};
-
+  const HitGeneratorConfig& genCfg{cfg.genCfg};
   const TestSector sector{TestSector::fromPhi(muon.phi)};
   const double zSign{muon.eta < 0. ? -1. : 1.};
   const StationCrossings crossings{muonCrossings(muon, cfg)};
@@ -622,7 +639,8 @@ std::vector<TestHit> spawnBackground(const MuonTruth& muon,
     }
   }
   std::ranges::shuffle(crossedStations, engine);
-  crossedStations.resize(std::min(crossedStations.size(), nBkgStationsPerMuon));
+  crossedStations.resize(
+      std::min(crossedStations.size(), genCfg.nBkgStationsPerMuon));
 
   std::vector<TestHit> hits{};
   for (const std::size_t st : crossedStations) {
@@ -635,12 +653,15 @@ std::vector<TestHit> spawnBackground(const MuonTruth& muon,
     const Vector3 bendDir{tangentDir.cross(muonDir)};
 
     const double angleSign{uniform{0., 1.}(engine) < 0.5 ? -1. : 1.};
-    const double angle{angleSign * uniform{s_bkgMinAngle, maxAngle}(engine)};
-    const Vector3 linePos{muonPos +
-                          uniform{-maxOffset, maxOffset}(engine)*bendDir};
+    const double angle{angleSign *
+                       uniform{genCfg.bkgMinAngle, genCfg.bkgMaxAngle}(engine)};
+    const Vector3 linePos{
+        muonPos +
+        uniform{-genCfg.bkgMaxOffset, genCfg.bkgMaxOffset}(engine)*bendDir};
     const Vector3 lineDir{
         (std::cos(angle) * muonDir + std::sin(angle) * bendDir +
-         std::tan(uniform{-maxTilt, maxTilt}(engine)) * tangentDir)
+         std::tan(uniform{-genCfg.bkgMaxTilt, genCfg.bkgMaxTilt}(engine)) *
+             tangentDir)
             .normalized()};
     spawnInStation(linePos, lineDir, static_cast<Station>(st), sector, zSign,
                    -1, cfg, engine, outSpacePoints, hits);
@@ -674,8 +695,15 @@ struct TestConfig {
   GeneratorConfig genCfg{};
   DetectorConfig detCfg{};
   TestSeedSelector::Config seedCfg{};
-  /** @brief Add background lines crossing the muon patterns */
-  bool addBackground{false};
+  /** @brief Beamspot passed to the GPF */
+  GlobalPatternFinder_t::BeamspotInfo beamSpot{Vector3::Zero(), 20._cm, 1._m};
+  /** @brief A pattern is matched to the muon contributing at least this
+   *         fraction of its hits */
+  double patternMatchFraction{0.5};
+  /** @brief A muon is found if the hit efficiency and the purity of its best
+   *         pattern are at least these values */
+  double minFoundEfficiency{0.5};
+  double minFoundPurity{0.5};
   unsigned seed{0};
 };
 
@@ -761,9 +789,7 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
       makeFinderConfig(selector),
       getDefaultLogger(std::format("GPF_{:}", testCfg.name), gpfLogLvl)};
 
-  GlobalPatternFinder_t::BeamspotInfo beamSpot{};
-  beamSpot.radius = 20._cm;
-  beamSpot.length = 1._m;
+  const GlobalPatternFinder_t::BeamspotInfo& beamSpot{testCfg.beamSpot};
 
   RandomEngine engine{testCfg.seed};
   const std::size_t nMuons{testCfg.muonRegions.size()};
@@ -801,7 +827,7 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
                           << ", phi = " << muon.phi / 1._degree
                           << ", q = " << muon.charge << " -> "
                           << nEtaHitsPerMuon[iMuon] << " eta hits.");
-      if (!testCfg.addBackground) {
+      if (!testCfg.detCfg.genCfg.addBackground) {
         continue;
       }
       for (const TestHit& hit :
@@ -847,7 +873,8 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
         }
       }
       for (std::size_t iMuon = 0; iMuon < nMuons; ++iMuon) {
-        if (2 * nMatched[iPat][iMuon] >= nHits[iPat]) {
+        if (nMatched[iPat][iMuon] >=
+            testCfg.patternMatchFraction * nHits[iPat]) {
           patternMuon[iPat] = static_cast<int>(iMuon);
         }
       }
@@ -883,7 +910,8 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
       nPatHits = bestPattern ? nHits[*bestPattern] : 0u;
       efficiency = nTrueEtaHits > 0 ? 1. * bestMatched / nTrueEtaHits : 0.;
       purity = nPatHits > 0 ? 1. * bestMatched / nPatHits : 0.;
-      found = efficiency >= 0.5 && purity >= 0.5;
+      found = efficiency >= testCfg.minFoundEfficiency &&
+              purity >= testCfg.minFoundPurity;
       nFound += found;
       if (bestPattern) {
         const auto& pattern{patterns[*bestPattern]};
@@ -937,6 +965,24 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
 }
 #undef DECLARE_BRANCH
 
+/** @brief Configuration of the launched tests and of their checks */
+struct SuiteConfig {
+  /** @brief Number of muons per event. In the Mixed test, barrel and endcap
+   *         muons alternate. */
+  std::size_t nMuonsPerEvent{2};
+  /** @brief Muon energies, one test per energy and event composition */
+  std::vector<double> energies{5._GeV,  10._GeV,  20._GeV,
+                               50._GeV, 100._GeV, 1000._GeV};
+  /** @brief Random seeds of the Barrel, Endcap and Mixed tests */
+  unsigned barrelSeed{1602};
+  unsigned endcapSeed{1503};
+  unsigned mixedSeed{1701};
+  /** @brief Required fraction of found muons for the tests at or above the
+   *         minimum energy */
+  double minFoundFraction{0.9};
+  double minEnergyForCheck{20._GeV};
+};
+
 BOOST_AUTO_TEST_SUITE(GlobalPatternFinderTestSuite)
 
 BOOST_AUTO_TEST_CASE(MuonPatternFinding) {
@@ -947,24 +993,7 @@ BOOST_AUTO_TEST_CASE(MuonPatternFinding) {
   auto outFile =
       std::make_unique<TFile>("GlobalPatternFinderTest.root", "RECREATE");
 
-  /// Required fraction of found muons above the minimum energy
-  constexpr double minFoundFraction{0.9};
-  constexpr double minEnergyForCheck{20._GeV};
-
-  /// MDT + combined trigger strips (RPC/TGC like): 2 gas gaps below and
-  /// above the tubes, plus nPhiOnlyLayers phi-only strip layers outside them
-  GenCfg_t genCfg{};
-  genCfg.createStraws = true;
-  genCfg.twinStraw = false;
-  genCfg.createStrips = true;
-  genCfg.combineSpacePoints = true;
-  genCfg.smearStrips = false;
-  genCfg.discretizeStrips = true;
-  genCfg.stripPitchLoc0 = 3._cm;
-  genCfg.stripPitchLoc1 = 3._cm;
-  genCfg.stripDirLoc0 =
-      std::vector<Vector3>(2 + nPhiOnlyLayers, Vector3::UnitY());
-  genCfg.stripDirLoc1 = std::vector<Vector3>(2, Vector3::UnitX());
+  const SuiteConfig suiteCfg{};
 
   struct LaunchedTest {
     std::string name{};
@@ -989,15 +1018,12 @@ BOOST_AUTO_TEST_CASE(MuonPatternFinding) {
   auto launchTest = [&](const std::string& testName,
                         const std::vector<Region>& muonRegions,
                         const unsigned seed) {
-    for (const double energy :
-         {5._GeV, 10._GeV, 20._GeV, 50._GeV, 100._GeV, 1000._GeV}) {
+    for (const double energy : suiteCfg.energies) {
       TestConfig testCfg{};
       testCfg.name =
           std::format("{:}{:}GeV", testName, static_cast<int>(energy / 1._GeV));
       testCfg.muonRegions = muonRegions;
       testCfg.genCfg.energy = energy;
-      testCfg.detCfg.genCfg = genCfg;
-      testCfg.addBackground = addBackground;
       testCfg.seed = seed + static_cast<unsigned>(energy / 1._GeV);
       sendSleep();
       tests.emplace_back(testCfg.name, energy,
@@ -1006,15 +1032,17 @@ BOOST_AUTO_TEST_CASE(MuonPatternFinding) {
                          }));
     }
   };
-  std::vector<Region> mixedRegions(nMuonsPerEvent, Region::Barrel);
-  for (std::size_t iMuon = 1; iMuon < nMuonsPerEvent; iMuon += 2) {
+  std::vector<Region> mixedRegions(suiteCfg.nMuonsPerEvent, Region::Barrel);
+  for (std::size_t iMuon = 1; iMuon < suiteCfg.nMuonsPerEvent; iMuon += 2) {
     mixedRegions[iMuon] = Region::Endcap;
   }
-  launchTest("Barrel", std::vector<Region>(nMuonsPerEvent, Region::Barrel),
-             1602);
-  launchTest("Endcap", std::vector<Region>(nMuonsPerEvent, Region::Endcap),
-             1503);
-  launchTest("Mixed", mixedRegions, 1701);
+  launchTest("Barrel",
+             std::vector<Region>(suiteCfg.nMuonsPerEvent, Region::Barrel),
+             suiteCfg.barrelSeed);
+  launchTest("Endcap",
+             std::vector<Region>(suiteCfg.nMuonsPerEvent, Region::Endcap),
+             suiteCfg.endcapSeed);
+  launchTest("Mixed", mixedRegions, suiteCfg.mixedSeed);
 
   /// Wait until all the tests are completed. The checks are done in the main
   /// thread, since Boost.Test assertions are not thread safe.
@@ -1027,9 +1055,9 @@ BOOST_AUTO_TEST_CASE(MuonPatternFinding) {
   int bin{1};
   for (LaunchedTest& test : tests) {
     const TestResult result{test.result.get()};
-    if (test.energy >= minEnergyForCheck) {
+    if (test.energy >= suiteCfg.minEnergyForCheck) {
       BOOST_TEST_CONTEXT("Test " << test.name) {
-        BOOST_CHECK_GE(result.foundFraction, minFoundFraction);
+        BOOST_CHECK_GE(result.foundFraction, suiteCfg.minFoundFraction);
       }
     }
     timeHisto->GetXaxis()->SetBinLabel(bin, test.name.c_str());
