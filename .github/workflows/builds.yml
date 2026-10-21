@@ -1571,6 +1571,7 @@ jobs:
         shell: bash
         run: |
           source "${KEY4HEP_VIEW}/setup.sh"
+          export CMAKE_BUILD_PARALLEL_LEVEL="$(nproc)"
 
           pushd acts
           ccache -z
