@@ -16,12 +16,10 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
 #include "ActsPlugins/Json/AxisSpecJsonConverter.hpp"
 #include "ActsPlugins/Json/GeometryJsonKeys.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
-#include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
 #include <cstddef>
 #include <stdexcept>
@@ -128,28 +126,11 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
     j[Acts::jsonKey().materialkey] = std::move(jMaterial);
     return;
   }
-  // A bin utility needs to be written
-  const Acts::BinUtility* bUtility = nullptr;
-  // Check if we have a proto material
-  auto pvMaterial = dynamic_cast<const Acts::ProtoVolumeMaterial*>(material);
-  if (pvMaterial != nullptr) {
-    // Type is proto material
-    jMaterial[Acts::jsonKey().typekey] = "proto";
-    // By default the protoMaterial is not used for mapping
-    jMaterial[Acts::jsonKey().mapkey] = false;
-    bUtility = &(pvMaterial->binUtility());
-    // Check in the number of bin is different from 1
-    auto& binningData = bUtility->binningData();
-    for (std::size_t ibin = 0; ibin < binningData.size(); ++ibin) {
-      if (binningData[ibin].bins() > 1) {
-        jMaterial[Acts::jsonKey().mapkey] = true;
-        break;
-      }
-    }
-    // Write the bin utility
-    nlohmann::json jBin(*bUtility);
-    jMaterial[Acts::jsonKey().binkey] = jBin;
-    j[Acts::jsonKey().materialkey] = jMaterial;
+  if (const auto* proto = dynamic_cast<const ProtoVolumeMaterial*>(material)) {
+    j[Acts::jsonKey().materialkey] = {
+        {"type", "proto"},
+        {"mapMaterial", true},
+        {"binning", MultiAxisSpecJsonConverter::toJson(proto->binning())}};
     return;
   }
   // Now check if we have a homogeneous material
@@ -218,28 +199,30 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
                                       transform);
     return;
   }
-  // The bin utility and material
-  Acts::BinUtility bUtility;
-  std::vector<Acts::Material> mmat;
-  for (auto& [key, value] : jMaterial.items()) {
-    if (key == Acts::jsonKey().binkey && !value.empty()) {
-      from_json(value, bUtility);
+  if (type == "proto") {
+    if (!jMaterial.contains("binning")) {
+      throw std::invalid_argument(
+          "Proto volume material requires a three-axis binning specification");
     }
-    if (key == Acts::jsonKey().datakey && !value.empty()) {
-      for (const auto& bin : value) {
-        Acts::Material mat = Material::Vacuum();
-        from_json(bin, mat);
-        mmat.push_back(mat);
-      }
+    const auto spec =
+        MultiAxisSpecJsonConverter::fromJson(jMaterial.at("binning"));
+    if (spec.size() != 3) {
+      throw std::invalid_argument("Proto volume material requires three axes");
     }
-  }
-  // We have protoMaterial
-  if (mmat.empty()) {
-    material = new Acts::ProtoVolumeMaterial(bUtility);
+    material = new ProtoVolumeMaterial(MultiAxisSpec3D(
+        std::array{spec.axisSpec(0), spec.axisSpec(1), spec.axisSpec(2)}));
     return;
   }
-  if (mmat.size() == 1) {
-    material = new Acts::HomogeneousVolumeMaterial(mmat[0]);
+  if (type == "homogeneous") {
+    const auto& data = jMaterial.at(Acts::jsonKey().datakey);
+    if (!data.is_array() || data.size() != 1) {
+      throw std::invalid_argument(
+          "Homogeneous volume material requires one material entry");
+    }
+    auto value = Material::Vacuum();
+    from_json(data.at(0), value);
+    material = new HomogeneousVolumeMaterial(value);
     return;
   }
+  throw std::invalid_argument("Unknown volume material type: " + type);
 }
