@@ -8,10 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/ParticleData.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Seeding/GlobalPatternFinder.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -84,10 +87,10 @@ enum class StationLayer : std::uint8_t { Inner, Middle, Outer };
 /// @brief Distance of the first tube layer of each station from the beam
 ///  axis (barrel) or from the transverse plane through the origin
 ///  (endcap). Each station is about 2.3 m thick.
-constexpr std::array<double, s_nStations> s_firstTubeDist{4.65_m, 7.0_m,  9.3_m,
-                                                          7.0_m,  13.0_m, 20.0_m};
+constexpr std::array<double, s_nStations> s_firstTubeDist{
+    4.65_m, 7.0_m, 9.3_m, 7.0_m, 13.0_m, 20.0_m};
 /// @brief Station extension along |z| (barrel) or along rho (endcap)
-constexpr std::array<double, s_nStations> s_extMin{0._m, 0._m, 0._m, 
+constexpr std::array<double, s_nStations> s_extMin{0._m, 0._m, 0._m,
                                                    1._m, 1._m, 1._m};
 constexpr std::array<double, s_nStations> s_extMax{6.5_m, 9.5_m, 12.5_m,
                                                    5._m,  12._m, 12.5_m};
@@ -105,14 +108,16 @@ constexpr double s_envelopeMaxAbsZ{24._m};
 
 /// @brief Whether the station is in the barrel or endcap region
 constexpr Region toRegion(const Station st) {
-  return (st == Station::BI || st == Station::BM || st == Station::BO) ? Region::Barrel : Region::Endcap;
+  return (st == Station::BI || st == Station::BM || st == Station::BO)
+             ? Region::Barrel
+             : Region::Endcap;
 }
 /// @brief Return the station layer (Inner, Middle, Outer) of a station
 constexpr StationLayer toStationLayer(const Station st) {
   return static_cast<StationLayer>(toUnderlying(st) % 3);
 }
 /// @brief Field strength (along phi) at a given position
-static double field(const double rho, const double z) const {
+double field(const double rho, const double z) {
   const double absZ{std::abs(z)};
   if (rho > s_envelopeMaxRho) {
     return 0.;
@@ -121,7 +126,7 @@ static double field(const double rho, const double z) const {
     return absZ < s_endcapToroidZMax ? s_endcapToroidField : 0.;
   }
   return rho > s_barrelToroidRhoMin ? s_barrelToroidField : 0.;
-  }
+}
 
 /// @brief Azimuthal sectorization: 2pi is divided into 16 equal sectors,
 ///         without overlaps. Sector 0 is centred at phi = 0.
@@ -165,7 +170,6 @@ class TestSector {
   Vector3 normalDir() const {
     return Acts::makeDirectionFromPhiTheta(phi() + 90._degree, 90._degree);
   }
-
  private:
   Index_t m_idx{0};
 };
@@ -234,7 +238,7 @@ struct TestTopology {
                ? std::weak_ordering::less
                : std::weak_ordering::greater;
   }
-    /// @brief Return the group index of a hit.
+  /// @brief Return the group index of a hit.
   static std::uint8_t groupIndex(const TestHit& hit) {
     return toUnderlying(hit.station);
   }
@@ -345,14 +349,6 @@ struct HitGeneratorConfig : StrawGenCfg_t {
   double bkgMaxTilt{5._degree};
 };
 
-///////////////////////////////////////////////////////////////////////////////
-/// Detector layout & muon generator
-///////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 /// @brief Truth information of the generated muon
 struct MuonTruth {
   double energy{0.};
@@ -360,7 +356,6 @@ struct MuonTruth {
   double eta{0.};
   double phi{0.};
   int charge{1};
-  double theta() const { return 2. * std::atan(std::exp(-eta)); }
 };
 
 struct GeneratorConfig {
@@ -378,7 +373,7 @@ double randomSign(RandomEngine& engine) {
 
 MuonTruth generateMuon(RandomEngine& engine, const GeneratorConfig& cfg,
                        const Region region) {
-  constexpr double muonMass{105.6583755_MeV};
+  const double muonMass{*findMass(PdgParticle::eMuon)};
   MuonTruth muon{};
   muon.energy = cfg.energy;
   muon.p = std::sqrt(square(cfg.energy) - square(muonMass));
@@ -404,13 +399,16 @@ class ToroidTrajectory {
     double z{0.};
     double alpha{0.};
   };
-  constexpr double s_stepSize{5._mm};
-  constexpr double s_envelopeMaxPath{40._m};
-  ToroidTrajectory(const MuonTruth& muon, const DetectorConfig& cfg) {
-    Point point{0., 0., std::atan(std::sinh(muon.eta))};
+  /// @brief Step size of the trajectory stepping
+  static constexpr double s_stepSize{5._mm};
+  /// @brief Maximum path length of the trajectory stepping
+  static constexpr double s_envelopeMaxPath{40._m};
+  explicit ToroidTrajectory(const MuonTruth& muon) {
+    /// The angle w.r.t. the transverse plane is pi/2 - theta
+    Point point{0., 0., 90._degree - AngleHelpers::thetaFromEta(muon.eta)};
     m_points.push_back(point);
     for (double s = 0.; s < s_envelopeMaxPath; s += s_stepSize) {
-      const double kappa{muon.charge * cfg.field(point.rho, point.z) / muon.p};
+      const double kappa{muon.charge * field(point.rho, point.z) / muon.p};
       const double alpha1{point.alpha + kappa * s_stepSize};
       if (std::abs(kappa) < s_epsilon) {
         point.rho += s_stepSize * std::cos(point.alpha);
@@ -421,8 +419,8 @@ class ToroidTrajectory {
       }
       point.alpha = alpha1;
       /// Stop if the muon leaves the spectrometer or curls back
-      if (point.rho < 0. || point.rho > cfg.trajMaxRho ||
-          std::abs(point.z) > cfg.trajMaxAbsZ || std::cos(point.alpha) < 0.) {
+      if (point.rho < 0. || point.rho > s_envelopeMaxRho ||
+          std::abs(point.z) > s_envelopeMaxAbsZ || std::cos(point.alpha) < 0.) {
         break;
       }
       m_points.push_back(point);
@@ -451,23 +449,23 @@ class ToroidTrajectory {
   std::vector<Point> m_points{};
 };
 
+/// @brief Offset between the local z of the MeasurementGenerator and the
+///         distance from the beam axis (barrel) or from the transverse plane
+///         through the origin (endcap)
+double chamberOffset(const Station st) {
+  return s_firstTubeDist[toUnderlying(st)] -
+         MeasurementGenerator::chamberDistance;
+}
+
 /// @brief Local frame of a chamber of the MeasurementGenerator: x along the
 ///         tubes, y along the bending direction and z orthogonal to the tube
 ///         layers, pointing outwards. The station plane at the local
 ///         z = MeasurementGenerator::chamberDistance is placed at the first
 ///         tube layer distance. Barrel: y = global z, z = sector radial
 ///         direction. Endcap: y = sector radial direction, z = +- global z.
-/// @brief Offset between the local z of the MeasurementGenerator and the
-///         distance from the beam axis (barrel) or from the transverse plane
-///         through the origin (endcap)
-double chamberOffset(const Station st, const DetectorConfig& cfg) {
-  return cfg.firstTubeDist[toUnderlying(st)] -
-         MeasurementGenerator::chamberDistance;
-}
-
 Transform3 chamberFrame(const Station st, const TestSector& sector,
-                        const double zSign, const DetectorConfig& cfg) {
-  const double offset{chamberOffset(st, cfg)};
+                        const double zSign) {
+  const double offset{chamberOffset(st)};
   Transform3 localToGlobal{Transform3::Identity()};
   if (toRegion(st) == Region::Barrel) {
     localToGlobal.linear().col(ePos0) = sector.normalDir();
@@ -484,14 +482,6 @@ Transform3 chamberFrame(const Station st, const TestSector& sector,
   return localToGlobal;
 }
 
-/// @brief Create the space points of a straight line crossing a station. The
-///         MeasurementGenerator is run on the line expressed in the local
-///         chamber frame.
-///  @param globPos: Point on the line, in global coordinates
-///  @param globDir: Direction of the line, in global coordinates
-///  @param muonIdx: Index of the generating muon (-1 for background)
-///  @param outSpacePoints: Container owning the generated space points
-///  @param outHits: Hits wrapping the generated space points
 /// @brief Counters of the checks on the MeasurementGenerator output: the test
 ///        relies on the strip layout, on the phi-only strip convention and on
 ///        the tube layer positions of the generator. Each counter counts the
@@ -509,14 +499,24 @@ struct GeneratorChecks {
   std::size_t nTubesOutside{0};
 };
 
+/// @brief Create the space points of a straight line crossing a station. The
+///         MeasurementGenerator is run on the line expressed in the local
+///         chamber frame.
+///  @param globPos: Point on the line, in global coordinates
+///  @param globDir: Direction of the line, in global coordinates
+///  @param muonIdx: Index of the generating muon (-1 for background)
+///  @param cfg: Configuration of the hit generation
+///  @param outSpacePoints: Container owning the generated space points
+///  @param outHits: Hits wrapping the generated space points
+///  @param checks: Checks on the generator output
 void spawnInStation(const Vector3& globPos, const Vector3& globDir,
                     const Station station, const TestSector& sector,
                     const double zSign, const int muonIdx,
-                    const DetectorConfig& cfg, RandomEngine& engine,
+                    const HitGeneratorConfig& cfg, RandomEngine& engine,
                     Container_t& outSpacePoints, std::vector<TestHit>& outHits,
                     GeneratorChecks& checks) {
   const auto st{toUnderlying(station)};
-  const Transform3 localToGlobal{chamberFrame(station, sector, zSign, cfg)};
+  const Transform3 localToGlobal{chamberFrame(station, sector, zSign)};
   const Vector3 locPos{localToGlobal.inverse() * globPos};
   const Vector3 locDir{localToGlobal.linear().transpose() * globDir};
 
@@ -533,9 +533,9 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
 
   /// The MeasurementGenerator only takes its own configuration: the phi-only
   /// strips are the loc0 strip layers beyond the loc1 ones
-  StrawGenCfg_t genCfg{cfg.genCfg};
-  genCfg.stripDirLoc0.resize(
-      genCfg.stripDirLoc1.size() + cfg.genCfg.nPhiOnlyLayers, Vector3::UnitY());
+  StrawGenCfg_t genCfg{cfg};
+  genCfg.stripDirLoc0.resize(genCfg.stripDirLoc1.size() + cfg.nPhiOnlyLayers,
+                             Vector3::UnitY());
   genCfg.localToGlobal = localToGlobal;
   Container_t spacePoints{
       MeasurementGenerator::spawn(line, 0., engine, genCfg, logger())};
@@ -569,7 +569,7 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
     }
   }
   if (nCombined != 2 * genCfg.stripDirLoc1.size() ||
-      nPhiOnly != 2 * cfg.genCfg.nPhiOnlyLayers || nLoc1Only != 0) {
+      nPhiOnly != 2 * cfg.nPhiOnlyLayers || nLoc1Only != 0) {
     ++checks.nBadStripCounts;
   }
 
@@ -584,12 +584,13 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
     const Vector3 locTrackPos{locPos + (sp->localPosition().z() - locPos.z()) /
                                            locDir.z() * locDir};
     if (isPhiOnly) {
-      const double ySign{toRegion(station) == Region::Barrel && locTrackPos.y() < 0. ? -1. : 1.};
-      sp->updatePosition(
-          Vector3{sp->localPosition().x(),
-                  ySign * 0.5 * (cfg.extMin[st] + cfg.extMax[st]),
-                  sp->localPosition().z()});
-      const double halfLength{0.5 * (cfg.extMax[st] - cfg.extMin[st])};
+      const double ySign{
+          toRegion(station) == Region::Barrel && locTrackPos.y() < 0. ? -1.
+                                                                      : 1.};
+      sp->updatePosition(Vector3{sp->localPosition().x(),
+                                 ySign * 0.5 * (s_extMin[st] + s_extMax[st]),
+                                 sp->localPosition().z()});
+      const double halfLength{0.5 * (s_extMax[st] - s_extMin[st])};
       sp->setStripHalfLength(halfLength);
       if (!sp->measuresLoc0() ||
           sp->covariance()[toUnderlying(CovIdx::bending)] !=
@@ -602,9 +603,10 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
     /// phi-only strips, the track position on the strip plane is checked.
     const Vector3 extPos{isPhiOnly ? Vector3{localToGlobal * locTrackPos}
                                    : hit.position};
-    const double ext{toRegion(station) == Region::Barrel ? std::abs(extPos.z())
-                                       : VectorHelpers::perp(extPos)};
-    if (ext < cfg.extMin[st] || ext > cfg.extMax[st]) {
+    const double ext{toRegion(station) == Region::Barrel
+                         ? std::abs(extPos.z())
+                         : VectorHelpers::perp(extPos)};
+    if (ext < s_extMin[st] || ext > s_extMax[st]) {
       continue;
     }
     /// Combined strip space points are created with (loc0, loc1) strip
@@ -617,7 +619,7 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
     hit.measDir = localToGlobal.linear() * locSensorDir.cross(Vector3::UnitZ());
     hit.station = station;
     hit.sector = sector.sector();
-    hit.layerDistance = chamberOffset(station, cfg) + sp->localPosition().z();
+    hit.layerDistance = chamberOffset(station) + sp->localPosition().z();
     hit.muonIdx = muonIdx;
     outHits.push_back(hit);
     outSpacePoints.push_back(std::move(sp));
@@ -626,18 +628,16 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
 
 /// @brief Distance of the centre plane of a station from the beam axis
 ///         (barrel) or from the transverse plane through the origin (endcap)
-double stationCentreDist(const Station station, const DetectorConfig& cfg) {
-  return chamberOffset(station, cfg) +
-         MeasurementGenerator::tubeLayersCentreZ();
+double stationCentreDist(const Station station) {
+  return chamberOffset(station) + MeasurementGenerator::tubeLayersCentreZ();
 }
 
 /// @brief Point and tangent of the muon trajectory at the centre plane of each
 ///         station of its sector (nullopt if the station is not crossed)
 using StationCrossings =
     std::array<std::optional<std::pair<Vector3, Vector3>>, s_nStations>;
-StationCrossings muonCrossings(const MuonTruth& muon,
-                               const DetectorConfig& cfg) {
-  const ToroidTrajectory trajectory{muon, cfg};
+StationCrossings muonCrossings(const MuonTruth& muon) {
+  const ToroidTrajectory trajectory{muon};
   const Vector3 muonRadialDir{std::cos(muon.phi), std::sin(muon.phi), 0.};
   const TestSector sector{muon.phi};
   const double cosDPhi{std::cos(sector.deltaPhi(muon.phi))};
@@ -646,10 +646,10 @@ StationCrossings muonCrossings(const MuonTruth& muon,
     const auto station{static_cast<Station>(st)};
     /// The muon moves in the half plane at its own phi, which crosses the
     /// barrel planes of the sector at rho * cos(dPhi) = centreDist.
-    const double centreDist{stationCentreDist(station, cfg)};
+    const double centreDist{stationCentreDist(station)};
     const auto point{trajectory.crossing([&](const ToroidTrajectory::Point& p) {
       return toRegion(station) == Region::Barrel ? p.rho * cosDPhi - centreDist
-                                                : std::abs(p.z) - centreDist;
+                                                 : std::abs(p.z) - centreDist;
     })};
     if (point) {
       crossings[st] = std::make_pair(
@@ -674,7 +674,7 @@ double zSide(const MuonTruth& muon) {
 ///  @return The hits wrapping the generated space points
 std::vector<TestHit> spawnHits(const MuonTruth& muon,
                                const StationCrossings& crossings,
-                               const int muonIdx, const DetectorConfig& cfg,
+                               const int muonIdx, const HitGeneratorConfig& cfg,
                                RandomEngine& engine,
                                Container_t& outSpacePoints,
                                GeneratorChecks& checks) {
@@ -703,11 +703,11 @@ std::vector<TestHit> spawnHits(const MuonTruth& muon,
 ///  @return The hits wrapping the generated space points
 std::vector<TestHit> spawnBackground(const MuonTruth& muon,
                                      const StationCrossings& crossings,
-                                     const DetectorConfig& cfg,
+                                     const HitGeneratorConfig& cfg,
                                      RandomEngine& engine,
                                      Container_t& outSpacePoints,
                                      GeneratorChecks& checks) {
-  const HitGeneratorConfig& genCfg{cfg.genCfg};
+  const HitGeneratorConfig& genCfg{cfg};
   const TestSector sector{muon.phi};
   const double zSign{zSide(muon)};
   std::vector<std::size_t> crossedStations{};
@@ -770,7 +770,8 @@ struct TestConfig {
   /// @brief Region of each muon of the event
   std::vector<Region> muonRegions{Region::Barrel, Region::Barrel};
   GeneratorConfig genCfg{};
-  DetectorConfig detCfg{};
+  /// @brief Configuration of the hit generation in each chamber
+  HitGeneratorConfig hitCfg{};
   /// @brief Beamspot passed to the GPF
   GlobalPatternFinder_t::BeamspotInfo beamSpot{Vector3::Zero(), 20._cm, 1._m};
   /// @brief A pattern is matched to the muon contributing at least this
@@ -893,9 +894,9 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
     for (const auto [iMuon, region] : enumerate(testCfg.muonRegions)) {
       const MuonTruth& muon{
           muons.emplace_back(generateMuon(engine, testCfg.genCfg, region))};
-      const StationCrossings crossings{muonCrossings(muon, testCfg.detCfg)};
+      const StationCrossings crossings{muonCrossings(muon)};
       for (const TestHit& hit :
-           spawnHits(muon, crossings, static_cast<int>(iMuon), testCfg.detCfg,
+           spawnHits(muon, crossings, static_cast<int>(iMuon), testCfg.hitCfg,
                      engine, spacePoints, genChecks)) {
         if (hit.sp->measuresLoc1()) {
           etaHits.push_back(hit);
@@ -911,11 +912,11 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
                           << ", phi = " << muon.phi / 1._degree
                           << ", q = " << muon.charge << " -> "
                           << nEtaHitsPerMuon[iMuon] << " eta hits.");
-      if (testCfg.detCfg.genCfg.nBkgStationsPerMuon == 0) {
+      if (testCfg.hitCfg.nBkgStationsPerMuon == 0) {
         continue;
       }
       for (const TestHit& hit :
-           spawnBackground(muon, crossings, testCfg.detCfg, engine, spacePoints,
+           spawnBackground(muon, crossings, testCfg.hitCfg, engine, spacePoints,
                            genChecks)) {
         if (hit.sp->measuresLoc1()) {
           etaHits.push_back(hit);
@@ -973,7 +974,7 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
       trueE = muon.energy / 1._GeV;
       trueEta = muon.eta;
       truePhi = muon.phi / 1._degree;
-      trueTheta = muon.theta() / 1._degree;
+      trueTheta = AngleHelpers::thetaFromEta(muon.eta) / 1._degree;
       trueQ = muon.charge;
       trueSector = TestSector{muon.phi}.sector();
       nTrueEtaHits = nEtaHitsPerMuon[iMuon];
@@ -1040,7 +1041,7 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
   result.phiOnlyFraction =
       nTruePhiOnly > 0 ? static_cast<double>(nMatchedPhiOnly) / nTruePhiOnly
                        : 0.;
-  result.withBackground = testCfg.detCfg.genCfg.nBkgStationsPerMuon > 0;
+  result.withBackground = testCfg.hitCfg.nBkgStationsPerMuon > 0;
   result.genChecks = genChecks;
   std::unique_lock guard{writeMutex};
   outFile.WriteObject(outTree.get(), outTree->GetName());
