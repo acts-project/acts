@@ -55,10 +55,8 @@ unsigned long long getId(const unsigned int index) {
    return 1ULL << shift;
 }
 
-template <detray::concepts::detector detector_t>
 TRACCC_HOST_DEVICE
 void precompute_spacepoint_variables(const global_index_t globalIndex,
-		const detray::detector_view_t<detector_t> det_view,
 		const edm::measurement_collection::const_view& measurements_view,
 		const edm::spacepoint_collection::const_view::size_type n_spacepoints,
                 const edm::spacepoint_collection::const_view& spacepoints_view,
@@ -108,9 +106,6 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
   } // loop on wedges
   if (slice == 0ULL) return; 
   spacepoint_wedge_association[globalIndex] = slice;  
-
-  // Create the tracking geometry
-  typename detray::detector_device_t<detector_t> det(det_view);
 
   // Retrieve the corresponding measurement index and, from it, the geo id
   // all of this is to retrieve the volume_id and layer_id of the 

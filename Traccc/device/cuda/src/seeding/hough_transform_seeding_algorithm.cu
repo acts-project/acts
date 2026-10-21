@@ -30,10 +30,8 @@ namespace kernels {
 		      steps_y, config.min_range_y); 
    }
    
-   template<detray::concepts::detector detector_t>
    __global__
    void precompute_spacepoint_variables(const traccc::hough_seeding_config config,
-		   detray::detector_view_t<detector_t> detector,
 		   const edm::measurement_collection::const_view& measurements,
 		   const edm::spacepoint_collection::const_view::size_type n_spacepoints,
 		   const edm::spacepoint_collection::const_view& spacepoints,
@@ -41,8 +39,7 @@ namespace kernels {
 		   vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id,
 		   vecmem::data::vector_view<scalar>& spacepoint_r,
 		   vecmem::data::vector_view<scalar>& spacepoint_phi) {
-      device::precompute_spacepoint_variables<detector_t>(details::global_index1(),
-		      detector,
+      device::precompute_spacepoint_variables(details::global_index1(),
 		      measurements, n_spacepoints, spacepoints,
 		      config.interaction_center, config.interaction_window, config.eta_width,
 		      spacepoint_wedge_association, spacepoint_detector_id,
@@ -89,16 +86,13 @@ void hough_transform_seeding_algorithm::define_plane_edges_kernel(const define_p
 void hough_transform_seeding_algorithm::precompute_spacepoint_variables_kernel(const precompute_spacepoint_variables_payload& payload) const {
    const unsigned int n_threads = warp_size() * 32;
    const unsigned int n_blocks = (payload.n_spacepoints  + n_threads - 1) / n_threads;
-   detector_buffer_visitor<detector_type_list>(payload.detector,
-                  [&]<detray::concepts::detector detector_t>(const detray::detector_view_t<detector_t>& det) {
-	kernels::precompute_spacepoint_variables<detector_t>
-		<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, det,
+   kernels::precompute_spacepoint_variables
+		<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config,
 				payload.measurements, payload.n_spacepoints, payload.spacepoints,
 				payload.spacepoint_wedge_association,
 				payload.spacepoint_detector_id,
 				payload.spacepoint_r,
 				payload.spacepoint_phi);
-   });
    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 

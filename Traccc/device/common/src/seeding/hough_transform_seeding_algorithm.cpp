@@ -67,7 +67,7 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().setup(vecmem::ignore_event, spacepoint_phi);
   copy().memset(vecmem::ignore_event, spacepoint_phi, 0);
 
-  precompute_spacepoint_variables_kernel({m_config, det,
+  precompute_spacepoint_variables_kernel({m_config,
 		  measurements,
 		  n_spacepoints, spacepoints,
 		  spacepoint_wedge_association,

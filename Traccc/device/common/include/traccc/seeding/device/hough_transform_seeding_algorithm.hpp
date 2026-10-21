@@ -63,8 +63,6 @@ class hough_transform_seeding_algorithm
 
   struct precompute_spacepoint_variables_payload {
     const hough_seeding_config& config;
-    /// The detector object
-    const detector_buffer& detector;
     /// The input measurements
     const edm::measurement_collection::const_view& measurements;
     /// The number of spacepoints in the event
