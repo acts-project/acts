@@ -145,19 +145,19 @@ struct PassiveStubBackend : StubBackend {
     return "passive" + std::to_string(element);
   }
 
-  PassiveVolumeShape passiveVolumeShape(const Element& element) const {
+  Volume passiveVolume(const Element& element) const {
     const double r = static_cast<double>(element);
-    return {Transform3{Translation3(0., 0., r)},
-            std::make_shared<CylinderVolumeBounds>(r, r + 1., 10.)};
+    return Volume(Transform3{Translation3(0., 0., r)},
+                  std::make_shared<CylinderVolumeBounds>(r, r + 1., 10.));
   }
 };
 
 static_assert(detail::BlueprintBackend<StubBackend>);
 static_assert(detail::HasAxisDefinition<StubBackend>);
 static_assert(detail::HasBarrelEndcapClassifier<StubBackend>);
-static_assert(!detail::HasPassiveVolumeShape<StubBackend>);
+static_assert(!detail::HasPassiveVolume<StubBackend>);
 static_assert(detail::BlueprintBackend<PassiveStubBackend>);
-static_assert(detail::HasPassiveVolumeShape<PassiveStubBackend>);
+static_assert(detail::HasPassiveVolume<PassiveStubBackend>);
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 

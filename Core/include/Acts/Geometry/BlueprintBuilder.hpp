@@ -15,8 +15,8 @@
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
-#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -35,17 +35,6 @@
 #include <vector>
 
 namespace Acts {
-
-/// @brief Placement and bounds of a passive (non-sensitive) volume, as
-/// reported by a blueprint backend.
-///
-/// @see BlueprintBuilder::makePassiveElement
-struct PassiveVolumeShape {
-  /// Transform of the volume in the global frame.
-  Transform3 transform = Transform3::Identity();
-  /// Bounds of the volume.
-  std::shared_ptr<VolumeBounds> bounds;
-};
 
 namespace detail {
 
@@ -188,13 +177,14 @@ concept HasLayerNameMember =
 /// element as a volume.
 ///
 /// Backends that satisfy this concept enable
-/// @ref BlueprintBuilder::makePassiveElement, which wraps the returned shape
+/// @ref BlueprintBuilder::makePassiveElement, which wraps the returned volume
 /// into a @ref StaticBlueprintNode. The backend only has to translate its
-/// native shape description; volume and node creation are generic.
+/// native shape description into placement and bounds; tracking volume and
+/// node creation are generic.
 template <typename BackendT>
-concept HasPassiveVolumeShape =
+concept HasPassiveVolume =
     requires(const BackendT& backend, const typename BackendT::Element& elem) {
-      { backend.passiveVolumeShape(elem) } -> std::same_as<PassiveVolumeShape>;
+      { backend.passiveVolume(elem) } -> std::same_as<Volume>;
     };
 
 /// @brief Optional backend capability for barrel/endcap assembly discovery.
@@ -1197,8 +1187,8 @@ class BlueprintBuilder {
   ///
   /// Use for elements that carry material but have no sensitive surfaces of
   /// their own (e.g. support tubes or endplates). The backend describes the
-  /// element's shape via `passiveVolumeShape()`; this method turns it into a
-  /// plain volume, which can then be wrapped in
+  /// element as a @ref Volume via `passiveVolume()`; this method turns it into
+  /// a tracking volume node, which can then be wrapped in
   /// @ref BlueprintNode::addMaterial like any other node.
   /// @param element    Passive detector element.
   /// @param volumeName Name of the created volume. Defaults to the element's
@@ -1207,7 +1197,7 @@ class BlueprintBuilder {
   /// @return Shared pointer to the created @ref StaticBlueprintNode.
   std::shared_ptr<StaticBlueprintNode> makePassiveElement(
       const Element& element, const std::string& volumeName = "") const
-    requires(detail::HasPassiveVolumeShape<Backend>);
+    requires(detail::HasPassiveVolume<Backend>);
 
   /// @brief Return the logger associated with this builder.
   /// @return Reference to the logger instance.

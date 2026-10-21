@@ -190,8 +190,7 @@ std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makeBeampipe() const {
   return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
 }
 
-Acts::PassiveVolumeShape DD4hepBackend::passiveVolumeShape(
-    const Element& element) const {
+Acts::Volume DD4hepBackend::passiveVolume(const Element& element) const {
   const auto tgTransform = element.nominal().worldTransformation();
   const auto& shape = *element.placement().ptr()->GetVolume()->GetShape();
   const auto* rotation = tgTransform.GetRotationMatrix();
@@ -207,10 +206,10 @@ Acts::PassiveVolumeShape DD4hepBackend::passiveVolumeShape(
           shape, rotation, translation, "XYZ", m_cfg.lengthScale);
   if (cylBounds != nullptr) {
     const double medR = cylBounds->get(Acts::CylinderBounds::eR);
-    return {cylTransform,
-            std::make_shared<Acts::CylinderVolumeBounds>(
-                medR - cylThickness / 2.0, medR + cylThickness / 2.0,
-                cylBounds->get(Acts::CylinderBounds::eHalfLengthZ))};
+    return Acts::Volume(
+        cylTransform, std::make_shared<Acts::CylinderVolumeBounds>(
+                          medR - cylThickness / 2.0, medR + cylThickness / 2.0,
+                          cylBounds->get(Acts::CylinderBounds::eHalfLengthZ)));
   }
 
   // Not tube-shaped -- try the opposite aspect ratio (radial extent larger
@@ -228,9 +227,10 @@ Acts::PassiveVolumeShape DD4hepBackend::passiveVolumeShape(
         "or a disc.");
   }
 
-  return {discTransform,
-          std::make_shared<Acts::CylinderVolumeBounds>(
-              discBounds->rMin(), discBounds->rMax(), discThickness / 2.0)};
+  return Acts::Volume(
+      discTransform,
+      std::make_shared<Acts::CylinderVolumeBounds>(
+          discBounds->rMin(), discBounds->rMax(), discThickness / 2.0));
 }
 
 }  // namespace ActsPlugins::DD4hep

@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/BlueprintBuilder.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoAxes.hpp"
@@ -126,8 +127,8 @@ class DD4hepBackend {
   /// @ref Acts::BlueprintBuilder::makePassiveElement.
   /// @param element DD4hep element describing the passive tube or disc.
   /// @throws std::runtime_error if the shape is neither tube- nor disc-like.
-  /// @return Transform and cylinder volume bounds of the element.
-  Acts::PassiveVolumeShape passiveVolumeShape(const Element& element) const;
+  /// @return Volume with the element's placement and cylinder volume bounds.
+  Acts::Volume passiveVolume(const Element& element) const;
 
   /// Return the DD4hep world detector element.
   /// @return Root detector element of the DD4hep hierarchy.
