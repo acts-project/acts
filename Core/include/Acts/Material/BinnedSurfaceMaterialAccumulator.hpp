@@ -67,25 +67,11 @@ class BinnedSurfaceMaterialAccumulator final
   std::unique_ptr<ISurfaceMaterialAccumulator::State> createState(
       const GeometryContext& gctx) const override;
 
-  /// @brief Accumulate the material interaction on the surface
-  ///
-  /// @param state is the state of the accumulator
-  /// @param gctx is the geometry context
-  /// @param interactions is the material interactions, with assigned surfaces
-  /// @param surfacesWithoutAssignment are the surfaces without assignment
-  ///
-  /// @note this the track average over the binned material
-  void accumulate(ISurfaceMaterialAccumulator::State& state,
-                  const GeometryContext& gctx,
-                  const std::vector<MaterialInteraction>& interactions,
-                  const std::vector<IAssignmentFinder::SurfaceAssignment>&
-                      surfacesWithoutAssignment) const override;
-
   /// @brief Accumulate the material of a batch of tracks
   ///
-  /// With a worker pool, the accumulation is sharded by surface: every
-  /// surface processes its share of the batch in track order, so the result
-  /// is bit-identical to the serial single-track accumulation.
+  /// The accumulation is sharded by surface: every surface processes its
+  /// share of the batch in track order, so the result does not depend on
+  /// the worker pool, and the surfaces can be processed concurrently.
   ///
   /// @param state is the state of the accumulator
   /// @param gctx the geometry context

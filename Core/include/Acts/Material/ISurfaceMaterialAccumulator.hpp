@@ -48,20 +48,6 @@ class ISurfaceMaterialAccumulator {
   virtual std::unique_ptr<State> createState(
       const GeometryContext& gctx) const = 0;
 
-  /// @brief Accumulate the material interaction on the surface
-  ///
-  /// @param state is the state of the accumulator
-  /// @param gctx the geometry context
-  /// @param interactions is the material interactions, with assigned surfaces
-  /// @param surfacesWithoutAssignment are the surfaces without assignment
-  ///
-  /// @note this the track average over the binned material
-  virtual void accumulate(
-      State& state, const GeometryContext& gctx,
-      const std::vector<MaterialInteraction>& interactions,
-      const std::vector<IAssignmentFinder::SurfaceAssignment>&
-          surfacesWithoutAssignment) const = 0;
-
   /// The accumulation input of a single track
   struct TrackAccumulation {
     /// The material interactions, with assigned surfaces
@@ -73,10 +59,13 @@ class ISurfaceMaterialAccumulator {
 
   /// @brief Accumulate the material of a batch of tracks
   ///
-  /// The result must be identical to calling the single-track
-  /// @ref accumulate for every track in order. The default does exactly that
-  /// and ignores @p pool; implementations can override this to process
-  /// independent parts of the accumulation concurrently.
+  /// The tracks are accumulated as if one after the other, in the given
+  /// order. Implementations may use @p pool to process independent parts of
+  /// the accumulation concurrently, but the result must not depend on it.
+  ///
+  /// Implementations must override this method. The default forwards every
+  /// track to the deprecated single-track @ref accumulate, to support
+  /// implementations that only override that one.
   ///
   /// @param state is the state of the accumulator
   /// @param gctx the geometry context
@@ -84,13 +73,25 @@ class ISurfaceMaterialAccumulator {
   /// @param pool optional worker pool, nullptr means serial execution
   virtual void accumulateTracks(State& state, const GeometryContext& gctx,
                                 std::span<const TrackAccumulation> tracks,
-                                detail::WorkerPool* pool) const {
-    static_cast<void>(pool);
-    for (const auto& track : tracks) {
-      accumulate(state, gctx, *track.interactions,
-                 *track.surfacesWithoutAssignment);
-    }
-  }
+                                detail::WorkerPool* pool) const;
+
+  /// @brief Accumulate the material interaction on the surface
+  ///
+  /// The default forwards to @ref accumulateTracks with a single track.
+  ///
+  /// @param state is the state of the accumulator
+  /// @param gctx the geometry context
+  /// @param interactions is the material interactions, with assigned surfaces
+  /// @param surfacesWithoutAssignment are the surfaces without assignment
+  ///
+  /// @note this the track average over the binned material
+  [[deprecated(
+      "Use and override ISurfaceMaterialAccumulator::accumulateTracks")]]
+  virtual void accumulate(
+      State& state, const GeometryContext& gctx,
+      const std::vector<MaterialInteraction>& interactions,
+      const std::vector<IAssignmentFinder::SurfaceAssignment>&
+          surfacesWithoutAssignment) const;
 
   /// Finalize the surface material maps
   ///

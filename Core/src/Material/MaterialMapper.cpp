@@ -79,10 +79,12 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
                                   const Options& options) const {
   auto result = assignTrack(gctx, mctx, rmTrack, options);
   // The material interactions
-  m_cfg.surfaceMaterialAccumulator->accumulate(
-      *state.surfaceMaterialAccumulatorState, gctx,
-      result.mapped.second.materialInteractions,
-      result.surfacesWithoutAssignment);
+  ISurfaceMaterialAccumulator::TrackAccumulation track{
+      &result.mapped.second.materialInteractions,
+      &result.surfacesWithoutAssignment};
+  m_cfg.surfaceMaterialAccumulator->accumulateTracks(
+      *state.surfaceMaterialAccumulatorState, gctx, std::span(&track, 1),
+      nullptr);
   // Return the mapped and unmapped material
   return {std::move(result.mapped), std::move(result.unmapped)};
 }

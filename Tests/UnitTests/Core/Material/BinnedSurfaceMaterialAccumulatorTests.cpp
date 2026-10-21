@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/BinnedSurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -25,9 +26,13 @@
 #include "Acts/Utilities/detail/WorkerPool.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <map>
 #include <numbers>
+#include <optional>
 #include <random>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -36,6 +41,45 @@ using namespace Acts;
 namespace ActsTests {
 
 auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+
+namespace {
+
+/// Accumulate a single track, without worker pool
+void accumulateTrack(
+    const ISurfaceMaterialAccumulator& accumulator,
+    ISurfaceMaterialAccumulator::State& state,
+    const std::vector<MaterialInteraction>& interactions,
+    const std::vector<IAssignmentFinder::SurfaceAssignment>& empty) {
+  ISurfaceMaterialAccumulator::TrackAccumulation track{&interactions, &empty};
+  accumulator.accumulateTracks(state, tContext, std::span(&track, 1), nullptr);
+}
+
+/// The original per-track accumulation, kept as the reference: average the
+/// first touched bin of every surface, then apply the empty bin correction
+void referenceAccumulate(
+    BinnedSurfaceMaterialAccumulator::State& state, bool emptyBinCorrection,
+    const std::vector<MaterialInteraction>& interactions,
+    const std::vector<IAssignmentFinder::SurfaceAssignment>& empty) {
+  std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>> touched;
+  for (const auto& mi : interactions) {
+    auto& accMaterial = state.accumulatedMaterial.at(mi.surface->geometryId());
+    auto bin = accMaterial.accumulate(mi.intersection, mi.materialSlab,
+                                      mi.pathCorrection);
+    touched.emplace(&accMaterial, bin);
+  }
+  for (const auto& [accMaterial, bin] : touched) {
+    accMaterial->trackAverage(std::vector<std::array<std::size_t, 3>>{bin},
+                              true);
+  }
+  if (emptyBinCorrection) {
+    for (const auto& missed : empty) {
+      state.accumulatedMaterial.at(missed.surface->geometryId())
+          .trackAverage(missed.position, true);
+    }
+  }
+}
+
+}  // namespace
 
 BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
@@ -147,7 +191,7 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   std::vector<IAssignmentFinder::SurfaceAssignment> emptyHits = {
       {surfaces[2u].get(), 50 * d0, d0}};
 
-  bsma.accumulate(*state, tContext, mInteractions, emptyHits);
+  accumulateTrack(bsma, *state, mInteractions, emptyHits);
 
   // Track 1:
   // - Surface 0 empty hit
@@ -166,7 +210,7 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
 
   mInteractions = {m11, m12};
   emptyHits = {{surfaces[0u].get(), 50 * d1, d1}};
-  bsma.accumulate(*state, tContext, mInteractions, emptyHits);
+  accumulateTrack(bsma, *state, mInteractions, emptyHits);
 
   // Get the maps
   auto maps = bsma.finalizeMaterial(*state, tContext);
@@ -214,13 +258,13 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   mXX.surface = invalidSurface.get();
   mXX.position = 50 * d1;
   mXX.direction = d1;
-  BOOST_CHECK_THROW(bsma.accumulate(*state, tContext, {mXX}, {}),
+  BOOST_CHECK_THROW(accumulateTrack(bsma, *state, {mXX}, {}),
                     std::invalid_argument);
 
   // Invalid surface amongst empty hits
-  BOOST_CHECK_THROW(bsma.accumulate(*state, tContext, {},
-                                    {{invalidSurface.get(), 50 * d1, d1}}),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      accumulateTrack(bsma, *state, {}, {{invalidSurface.get(), 50 * d1, d1}}),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ProtoGridResolutionTest) {
@@ -379,16 +423,28 @@ BOOST_AUTO_TEST_CASE(BatchAccumulationMatchesSerial) {
     cfg.emptyBinCorrection = emptyBinCorrection;
     BinnedSurfaceMaterialAccumulator bsma(cfg);
 
-    // Reference: one track at a time
+    // Reference: the original per-track accumulation
     auto serial = bsma.createState(tContext);
     for (const auto& track : tracks) {
-      bsma.accumulate(*serial, tContext, track.interactions, track.empty);
+      referenceAccumulate(
+          static_cast<BinnedSurfaceMaterialAccumulator::State&>(*serial),
+          emptyBinCorrection, track.interactions, track.empty);
     }
     auto reference = bsma.finalizeMaterial(*serial, tContext);
 
-    // Batches, serial and with workers
-    for (std::size_t nThreads : {1u, 4u}) {
-      detail::WorkerPool pool(nThreads);
+    // One track at a time
+    auto single = bsma.createState(tContext);
+    for (const auto& track : tracks) {
+      accumulateTrack(bsma, *single, track.interactions, track.empty);
+    }
+    checkEqual(reference, bsma.finalizeMaterial(*single, tContext));
+
+    // Batches, without pool and with pools of different size
+    for (std::size_t nThreads : {0u, 1u, 4u}) {
+      std::optional<detail::WorkerPool> pool;
+      if (nThreads > 0) {
+        pool.emplace(nThreads);
+      }
       auto batched = bsma.createState(tContext);
       for (std::size_t begin = 0; begin < tracks.size(); begin += 128) {
         std::vector<ISurfaceMaterialAccumulator::TrackAccumulation> batch;
@@ -396,7 +452,8 @@ BOOST_AUTO_TEST_CASE(BatchAccumulationMatchesSerial) {
              ++t) {
           batch.push_back({&tracks[t].interactions, &tracks[t].empty});
         }
-        bsma.accumulateTracks(*batched, tContext, batch, &pool);
+        bsma.accumulateTracks(*batched, tContext, batch,
+                              pool.has_value() ? &*pool : nullptr);
       }
       checkEqual(reference, bsma.finalizeMaterial(*batched, tContext));
     }

@@ -23,11 +23,15 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
+#include <map>
 #include <numbers>
 #include <random>
+#include <span>
+#include <stdexcept>
 
 using namespace Acts;
 
@@ -117,11 +121,18 @@ class MaterialBlender : public ISurfaceMaterialAccumulator {
   /// @param surfacesWithoutAssignment are the surfaces without assignment
   ///
   /// @note this the track average over the binned material
-  void accumulate(ISurfaceMaterialAccumulator::State& state,
-                  const GeometryContext& /*gctx*/,
-                  const std::vector<MaterialInteraction>& interactions,
-                  const std::vector<IAssignmentFinder::SurfaceAssignment>&
-                  /*surfacesWithoutAssignment*/) const override {
+  void accumulateTracks(ISurfaceMaterialAccumulator::State& state,
+                        const GeometryContext& /*gctx*/,
+                        std::span<const TrackAccumulation> tracks,
+                        detail::WorkerPool* /*pool*/) const override {
+    for (const auto& track : tracks) {
+      accumulateTrack(state, *track.interactions);
+    }
+  }
+
+  void accumulateTrack(
+      ISurfaceMaterialAccumulator::State& state,
+      const std::vector<MaterialInteraction>& interactions) const {
     auto cState = static_cast<State*>(&state);
     for (const auto& mi : interactions) {
       // Get the surface
@@ -139,7 +150,7 @@ class MaterialBlender : public ISurfaceMaterialAccumulator {
     for (auto& [surface, accumulatedMaterial] : cState->accumulatedMaterial) {
       accumulatedMaterial.trackAverage();
     }
-  };
+  }
 
   /// Finalize the surface material maps
   ///
@@ -343,6 +354,80 @@ BOOST_AUTO_TEST_CASE(MaterialMapperBatchMatchesSerial) {
     BOOST_REQUIRE(sm != nullptr && pm != nullptr);
     BOOST_CHECK(sm->fullMaterial() == pm->fullMaterial());
   }
+}
+
+/// Counts the calls of both accumulation methods, overriding only one
+template <bool overrideBatch, bool overrideSingle>
+class CallCounter : public ISurfaceMaterialAccumulator {
+ public:
+  mutable std::size_t batchCalls = 0;
+  mutable std::size_t singleCalls = 0;
+
+  std::unique_ptr<ISurfaceMaterialAccumulator::State> createState(
+      const GeometryContext& /*gctx*/) const override {
+    return std::make_unique<ISurfaceMaterialAccumulator::State>();
+  }
+
+  void accumulateTracks(ISurfaceMaterialAccumulator::State& state,
+                        const GeometryContext& gctx,
+                        std::span<const TrackAccumulation> tracks,
+                        detail::WorkerPool* pool) const override {
+    if constexpr (overrideBatch) {
+      batchCalls += tracks.size();
+    } else {
+      ISurfaceMaterialAccumulator::accumulateTracks(state, gctx, tracks, pool);
+    }
+  }
+
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  void accumulate(ISurfaceMaterialAccumulator::State& state,
+                  const GeometryContext& gctx,
+                  const std::vector<MaterialInteraction>& interactions,
+                  const std::vector<IAssignmentFinder::SurfaceAssignment>&
+                      surfacesWithoutAssignment) const override {
+    if constexpr (overrideSingle) {
+      ++singleCalls;
+    } else {
+      ISurfaceMaterialAccumulator::accumulate(state, gctx, interactions,
+                                              surfacesWithoutAssignment);
+    }
+  }
+  ACTS_POP_IGNORE_DEPRECATED()
+
+  std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
+  finalizeMaterial(ISurfaceMaterialAccumulator::State& /*state*/,
+                   const GeometryContext& /*gctx*/) const override {
+    return {};
+  }
+};
+
+BOOST_AUTO_TEST_CASE(DeprecatedSingleTrackAccumulation) {
+  std::vector<MaterialInteraction> interactions;
+  std::vector<IAssignmentFinder::SurfaceAssignment> empty;
+  std::vector<ISurfaceMaterialAccumulator::TrackAccumulation> tracks(
+      3, {&interactions, &empty});
+
+  // An implementation of the batch method serves single-track calls
+  CallCounter<true, false> modern;
+  auto modernState = modern.createState(tContext);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  modern.ISurfaceMaterialAccumulator::accumulate(*modernState, tContext,
+                                                 interactions, empty);
+  ACTS_POP_IGNORE_DEPRECATED()
+  BOOST_CHECK_EQUAL(modern.batchCalls, 1u);
+
+  // An implementation of the deprecated method serves batch calls
+  CallCounter<false, true> legacy;
+  auto legacyState = legacy.createState(tContext);
+  legacy.accumulateTracks(*legacyState, tContext, tracks, nullptr);
+  BOOST_CHECK_EQUAL(legacy.singleCalls, 3u);
+
+  // Overriding neither is an error instead of an endless recursion
+  CallCounter<false, false> broken;
+  auto brokenState = broken.createState(tContext);
+  BOOST_CHECK_THROW(
+      broken.accumulateTracks(*brokenState, tContext, tracks, nullptr),
+      std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(MaterialMapperInvalidTest) {
