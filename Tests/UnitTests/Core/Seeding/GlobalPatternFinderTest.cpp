@@ -123,7 +123,6 @@ static double field(const double rho, const double z) const {
   return rho > s_barrelToroidRhoMin ? s_barrelToroidField : 0.;
   }
 
-
 /// @brief Azimuthal sectorization: 2pi is divided into 16 equal sectors,
 ///         without overlaps. Sector 0 is centred at phi = 0.
 class TestSector {
