@@ -44,12 +44,8 @@ inline void setAlignToPathLocalCenterDerivative(
     AlignmentToPathMatrix& alignToPath,
     const Vector3& alignToPathWrtGlobalCenter,
     const RotationMatrix3& rotation) {
-  alignToPath[eAlignmentCenter0] =
-      alignToPathWrtGlobalCenter.dot(rotation.col(0));
-  alignToPath[eAlignmentCenter1] =
-      alignToPathWrtGlobalCenter.dot(rotation.col(1));
-  alignToPath[eAlignmentCenter2] =
-      alignToPathWrtGlobalCenter.dot(rotation.col(2));
+  alignToPath.segment<3>(eAlignmentCenter0) =
+      alignToPathWrtGlobalCenter.transpose() * rotation;
 }
 
 }  // namespace Acts::detail

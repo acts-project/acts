@@ -37,6 +37,7 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/LineSurfaceStub.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
 #include <cmath>
 #include <memory>
@@ -240,6 +241,12 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   expAlignToPath << value, value, 0, -value, 3 * value, 0;
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
+
+  checkSurfaceDerivatives(tgContext, line, transform, globalPosition, direction,
+                          [](const Transform3& tf) {
+                            return std::make_shared<LineSurfaceStub>(tf, 2.,
+                                                                     20.);
+                          });
 
   // (b) Test the derivative of bound track parameters local position w.r.t.
   // position in local 3D Cartesian coordinates

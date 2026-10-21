@@ -295,6 +295,17 @@ Matrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
+Matrix<2, 3> LineSurface::alignmentLocalCartesianToBound(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  // Bound loc of a line is globalToLocal, whose axes are the measurement
+  // frame. The radial derivative from localCartesianToBoundLocalDerivative
+  // can point the opposite way.
+  const RotationMatrix3 frame = referenceFrame(gctx, position, direction);
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
+  return (frame.transpose() * rotation).topRows<2>();
+}
+
 Vector3 LineSurface::lineDirection(const GeometryContext& gctx) const {
   return localToGlobalTransform(gctx).linear().col(2);
 }

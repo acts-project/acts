@@ -276,6 +276,9 @@ class DiscSurface : public RegularSurface {
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here.
   ///
+  /// The base jacobian supplies the local cartesian frame. The position block
+  /// is then left-multiplied by the polar map from (x, y) to (r, φ).
+  ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
   /// @param direction global 3D momentum direction

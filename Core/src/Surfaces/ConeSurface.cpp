@@ -109,6 +109,33 @@ RotationMatrix3 ConeSurface::referenceFrame(
   return mFrame;
 }
 
+FreeToBoundMatrix ConeSurface::freeToBoundJacobian(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  // t, φ, θ and q/p come from the base. Its position block follows
+  // referenceFrame, whose transverse axis is the global xy direction and does
+  // not stay along eφ once the cone is offset. Bound (rφ, z) is obtained by
+  // applying (δu, δz) -> ( (R/r) δu + φ tanα δz, δz ) to (eφ, ez).
+  FreeToBoundMatrix jacToLocal =
+      Surface::freeToBoundJacobian(gctx, position, direction);
+
+  const Transform3& toGlobal = localToGlobalTransform(gctx);
+  const Vector3 localPosition = toGlobal.inverse() * position;
+  const double localPhi = phi(localPosition);
+  const auto& rotation = toGlobal.rotation();
+  const Vector3 phiAxis = rotation.col(2).cross(
+      rotation * Vector3(std::cos(localPhi), std::sin(localPhi), 0.));
+  const double radiusOverPerp =
+      localPosition.z() * bounds().tanAlpha() / perp(localPosition);
+  Matrix<2, 2> toBound;
+  toBound << radiusOverPerp, localPhi * bounds().tanAlpha(), 0., 1.;
+  Matrix<2, 3> axisFrame;
+  axisFrame.row(0) = phiAxis.transpose();
+  axisFrame.row(1) = rotation.col(2).transpose();
+  jacToLocal.block<2, 3>(eBoundLoc0, eFreePos0) = toBound * axisFrame;
+  return jacToLocal;
+}
+
 Vector3 ConeSurface::localToGlobal(const GeometryContext& gctx,
                                    const Vector2& lposition) const {
   // create the position in the local 3d frame
@@ -327,51 +354,30 @@ AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
     const Vector3& direction) const {
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
-  // The vector between position and center
-  const auto pcRowVec = (position - center(gctx)).transpose().eval();
-  // The rotation
+  // Constraint F(x, y, z) = x^2 + y^2 - z^2 tan^2(alpha) = 0.
+  // Implicit differentiation gives the alignment-to-path derivative at s = 0.
   const auto& rotation = localToGlobalTransform(gctx).rotation();
-  // The local frame x/y/z axis
-  const auto& localXAxis = rotation.col(0);
-  const auto& localYAxis = rotation.col(1);
-  const auto& localZAxis = rotation.col(2);
-  // The local coordinates
-  const auto localPos = (rotation.transpose() * position).eval();
-  const auto dx = direction.dot(localXAxis);
-  const auto dy = direction.dot(localYAxis);
-  const auto dz = direction.dot(localZAxis);
-  // The normalization factor
-  const auto tanAlpha2 = bounds().tanAlpha() * bounds().tanAlpha();
-  const auto norm = 1 / (1 - dz * dz * (1 + tanAlpha2));
-  // The direction transpose
-  const auto& dirRowVec = direction.transpose();
-  // The derivative of path w.r.t. the local axes
-  // @note The following calculations assume that the intersection of the track
-  // with the cone always satisfy: localPos.z()*tanAlpha =perp(localPos)
-  const auto localXAxisToPath =
-      (-2 * norm * (dx * pcRowVec + localPos.x() * dirRowVec)).eval();
-  const auto localYAxisToPath =
-      (-2 * norm * (dy * pcRowVec + localPos.y() * dirRowVec)).eval();
-  const auto localZAxisToPath =
-      (2 * norm * tanAlpha2 * (dz * pcRowVec + localPos.z() * dirRowVec) -
-       4 * norm * norm * (1 + tanAlpha2) *
-           (dx * localPos.x() + dy * localPos.y() -
-            dz * localPos.z() * tanAlpha2) *
-           dz * dirRowVec)
-          .eval();
-  // Calculate the derivative of local frame axes w.r.t its rotation
-  const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(rotation);
-  // Initialize the derivative of propagation path w.r.t. local frame
-  // translation (origin) and rotation
+  const Vector3 localPos = rotation.transpose() * (position - center(gctx));
+  const Vector3 localDir = rotation.transpose() * direction;
+  const double tanAlpha2 = bounds().tanAlpha() * bounds().tanAlpha();
+  // Vanishes when the track is tangent to the cone.
+  const double denom = localPos.x() * localDir.x() +
+                       localPos.y() * localDir.y() -
+                       tanAlpha2 * localPos.z() * localDir.z();
+
   AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
   const Vector3 globalCenterDerivative =
-      2 * norm * (dx * localXAxis + dy * localYAxis);
+      (localPos.x() * rotation.col(0) + localPos.y() * rotation.col(1) -
+       tanAlpha2 * localPos.z() * rotation.col(2)) /
+      denom;
   detail::setAlignToPathLocalCenterDerivative(alignToPath,
                                               globalCenterDerivative, rotation);
+  // A rotation about local x changes the axis by -local y, about local y by
+  // +local x, and about local z leaves the axis unchanged.
+  const double rotationScale = (1. + tanAlpha2) * localPos.z() / denom;
   alignToPath.segment<3>(eAlignmentRotation0) =
-      localXAxisToPath * rotToLocalXAxis + localYAxisToPath * rotToLocalYAxis +
-      localZAxisToPath * rotToLocalZAxis;
+      Vector3(-rotationScale * localPos.y(), rotationScale * localPos.x(), 0.)
+          .transpose();
 
   return alignToPath;
 }

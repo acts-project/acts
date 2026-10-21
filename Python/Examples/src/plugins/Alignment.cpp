@@ -6,14 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "ActsAlignment/Kernel/Alignment.hpp"
+
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 #include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
+#include "ActsExamples/Alignment/ExampleAlignedTransformUpdater.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentDecorator.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentGenerator.hpp"
-#include "ActsExamples/DetectorCommons/ExampleAlignedTransformUpdater.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"

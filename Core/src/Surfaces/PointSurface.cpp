@@ -184,6 +184,37 @@ BoundToFreeMatrix PointSurface::boundToFreeJacobian(
   return jacToGlobal;
 }
 
+FreeToBoundMatrix PointSurface::freeToBoundJacobian(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+
+  FreeToBoundMatrix jacToLocal =
+      Surface::freeToBoundJacobian(gctx, position, direction);
+
+  // loc = frame(direction)^T * (position - center). The position block above
+  // is that frame. The direction block is the rotation of the frame:
+  // d(loc0)/d(dir) = loc1 * r, d(loc1)/d(dir) = -loc0 * r, with r the
+  // tangential projection of (V × axis) / |axis × T|. axis is global Z, or
+  // global X when the direction is (anti-)parallel to Z.
+  const Vector3 offset = position - center(gctx);
+  const RotationMatrix3 frame = referenceFrame(gctx, position, direction);
+  const Vector3 U = frame.col(0);
+  const Vector3 V = frame.col(1);
+  const Vector3 T = frame.col(2);
+  const double loc0 = U.dot(offset);
+  const double loc1 = V.dot(offset);
+  const bool standard =
+      std::abs(T.dot(Vector3::UnitZ())) < s_curvilinearProjTolerance;
+  const Vector3 axis = standard ? Vector3::UnitZ() : Vector3::UnitX();
+  const Vector3 radial = V.cross(axis) / axis.cross(T).norm();
+  const Vector3 tangential = radial - radial.dot(T) * T;
+  jacToLocal.block<1, 3>(eBoundLoc0, eFreeDir0) = loc1 * tangential.transpose();
+  jacToLocal.block<1, 3>(eBoundLoc1, eFreeDir0) =
+      -loc0 * tangential.transpose();
+  return jacToLocal;
+}
+
 FreeToPathMatrix PointSurface::freeToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
@@ -215,6 +246,23 @@ AlignmentToPathMatrix PointSurface::alignmentToPathDerivative(
   detail::setAlignToPathLocalCenterDerivative(alignToPath, direction, rotation);
 
   return alignToPath;
+}
+
+AlignmentToBoundMatrix
+PointSurface::alignmentToBoundDerivativeWithoutCorrection(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+
+  // A point's bound loc is the measurement-frame coordinate of the fixed
+  // global position. That frame depends only on the track direction, and a
+  // local rotation does not move the point, so the rotation block is zero.
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
+  const RotationMatrix3 frame = referenceFrame(gctx, position, direction);
+  AlignmentToBoundMatrix alignToBound = AlignmentToBoundMatrix::Zero();
+  alignToBound.block<2, 3>(eBoundLoc0, eAlignmentCenter0) =
+      -frame.transpose().topRows<2>() * rotation;
+  return alignToBound;
 }
 
 Matrix<2, 3> PointSurface::localCartesianToBoundLocalDerivative(

@@ -12,8 +12,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "ActsExamples/Alignment/ExampleAlignedTransformUpdater.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentContext.hpp"
-#include "ActsExamples/DetectorCommons/ExampleAlignedTransformUpdater.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <memory>

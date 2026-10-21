@@ -1,5 +1,3 @@
 set(unittest_extra_libraries ActsExamplesAlignment)
 add_unittest(AlignmentGrouping AlignmentGroupingTests.cpp)
-
-set(unittest_extra_libraries ActsExamplesAlignment ActsExamplesDetectorsCommon)
 add_unittest(ExampleAlignedTransformUpdater ExampleAlignedTransformUpdaterTests.cpp)

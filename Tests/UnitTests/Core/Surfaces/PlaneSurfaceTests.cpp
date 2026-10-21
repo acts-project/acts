@@ -37,6 +37,7 @@
 #include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
 #include <cmath>
 #include <memory>
@@ -387,6 +388,12 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // Check if the calculated derivatives are as expected
   CHECK_CLOSE_ABS(alignToloc0, expAlignToloc0, 1e-10);
   CHECK_CLOSE_ABS(alignToloc1, expAlignToloc1, 1e-10);
+
+  checkSurfaceDerivatives(tgContext, *planeSurfaceObject, pTransform,
+                          globalPosition, direction, [&](const Transform3& tf) {
+                            return Surface::makeShared<PlaneSurface>(tf,
+                                                                     rBounds);
+                          });
 }
 
 BOOST_AUTO_TEST_SUITE(PlaneSurfaceMerging)

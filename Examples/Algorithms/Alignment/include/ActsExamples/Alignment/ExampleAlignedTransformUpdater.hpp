@@ -9,7 +9,6 @@
 #pragma once
 
 #include "ActsAlignment/Kernel/Alignment.hpp"
-#include "ActsExamples/DetectorCommons/Aligned.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentContext.hpp"
 
 #include <stdexcept>

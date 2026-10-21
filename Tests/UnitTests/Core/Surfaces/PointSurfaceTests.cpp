@@ -20,6 +20,7 @@
 #include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
 #include <memory>
 #include <numbers>
@@ -296,6 +297,11 @@ BOOST_AUTO_TEST_CASE(PointSurfaceAlignmentToPathDerivative) {
                   expectedCenter, 1e-10);
   // rotation block is zero
   CHECK_CLOSE_ABS(analytic.segment<3>(eAlignmentRotation0).norm(), 0., 1e-12);
+
+  checkSurfaceDerivatives(tgContext, *surface, transform, pos, dir,
+                          [](const Transform3& tf) {
+                            return Surface::makeShared<PointSurface>(tf);
+                          });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

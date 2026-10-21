@@ -234,33 +234,20 @@ FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
 
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+  // The base position block is the local cartesian frame. Bound coordinates
+  // are polar, so left-multiply that block by d(r, φ)/d(x, y).
+  FreeToBoundMatrix jacToLocal =
+      Surface::freeToBoundJacobian(gctx, position, direction);
 
-  // The measurement frame of the surface
-  RotationMatrix3 rframeT =
-      referenceFrame(gctx, position, direction).transpose();
-
-  // calculate the transformation to local coordinates
   const Vector3 posLoc = localToGlobalTransform(gctx).inverse() * position;
   const double lr = perp(posLoc);
   const double lphi = phi(posLoc);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);
-  // rotate into the polar coorindates
-  auto lx = rframeT.block<1, 3>(0, 0);
-  auto ly = rframeT.block<1, 3>(1, 0);
-  // Initialize the jacobian from global to local
-  FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
-  // Local position component
-  jacToLocal.block<1, 3>(eBoundLoc0, eFreePos0) = lcphi * lx + lsphi * ly;
-  jacToLocal.block<1, 3>(eBoundLoc1, eFreePos0) =
-      (lcphi * ly - lsphi * lx) / lr;
-  // Time element
-  jacToLocal(eBoundTime, eFreeTime) = 1;
-  // Directional and momentum elements for reference frame surface
-  jacToLocal.block<2, 3>(eBoundPhi, eFreeDir0) =
-      freeToSphericalDirectionJacobian(direction);
-  jacToLocal(eBoundQOverP, eFreeQOverP) = 1;
+  Matrix<2, 2> cartesianToBound;
+  cartesianToBound << lcphi, lsphi, -lsphi / lr, lcphi / lr;
+  jacToLocal.block<2, 3>(eBoundLoc0, eFreePos0) =
+      cartesianToBound * jacToLocal.block<2, 3>(eBoundLoc0, eFreePos0);
   return jacToLocal;
 }
 
