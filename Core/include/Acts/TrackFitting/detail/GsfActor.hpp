@@ -23,7 +23,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <map>
-#include <optional>
 
 namespace Acts::detail::Gsf {
 
@@ -46,21 +45,12 @@ struct GsfResult {
   /// The last measurement surface. Used to initialize the backward pass.
   const Acts::Surface* lastMeasurementSurface = nullptr;
 
-  struct MeasurementSnapshot {
-    TrackIndexType tip;
-    const Acts::Surface* surface;
-    std::vector<std::tuple<double, BoundVector, BoundMatrix>> components;
-  };
-
-  /// Last valid measurement before any trailing outliers.
-  std::optional<MeasurementSnapshot> lastValidMeasurement;
-
   /// Some counting
   std::size_t measurementStates = 0;
   std::size_t measurementHoles = 0;
   std::size_t processedStates = 0;
 
-  /// Stop forward propagation and smooth from the last valid measurement.
+  /// Stop forward propagation and smooth from the last measurement state.
   bool componentExhausted = false;
 
   std::vector<const Surface*> visitedSurfaces;
@@ -150,13 +140,6 @@ struct GsfActor {
         std::abort();
       }
       return GsfError::NoComponentsLeft;
-    }
-    if (result.lastValidMeasurement) {
-      result.lastMeasurementTip = result.lastValidMeasurement->tip;
-      result.lastMeasurementSurface = result.lastValidMeasurement->surface;
-      result.lastMeasurementComponents =
-          std::move(result.lastValidMeasurement->components);
-      result.lastValidMeasurement.reset();
     }
     result.componentExhausted = true;
     return Result<void>::success();
@@ -423,7 +406,7 @@ struct GsfActor {
     }
 
     if (result.componentExhausted) {
-      ACTS_VERBOSE("Stop forward propagation at the last valid measurement");
+      ACTS_VERBOSE("Stop forward propagation, no components left");
       return true;
     }
     return false;
@@ -558,14 +541,6 @@ struct GsfActor {
                               .setHasMeasurement()
                               .setIsOutlier(isOutlier),
                           jacobian);
-
-    if (isOutlier && !m_cfg.inReversePass && !result.lastValidMeasurement) {
-      result.lastValidMeasurement.emplace(
-          result.lastMeasurementTip, result.lastMeasurementSurface,
-          std::move(result.lastMeasurementComponents));
-    } else if (!isOutlier) {
-      result.lastValidMeasurement.reset();
-    }
 
     result.lastMeasurementTip = result.currentTip;
     result.lastMeasurementSurface = &surface;

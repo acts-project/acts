@@ -165,7 +165,7 @@ struct MomentumCutUpdater {
 
 struct SecondMeasurementOutlier {
   mutable std::size_t calls = 0;
-  bool operator()(VectorMultiTrajectory::ConstTrackStateProxy) const {
+  bool operator()(VectorMultiTrajectory::ConstTrackStateProxy /*state*/) const {
     return ++calls == 2;
   }
 };
@@ -176,8 +176,8 @@ class ExhaustingBetheHeitlerApprox final : public BetheHeitlerApprox {
       : m_exhaustOnCall(exhaustOnCall) {}
 
   std::size_t maxComponents() const override { return 1; }
-  bool validXOverX0(double) const override { return true; }
-  std::span<Component> mixture(double,
+  bool validXOverX0(double /*xOverX0*/) const override { return true; }
+  std::span<Component> mixture(double /*xOverX0*/,
                                std::span<Component> cache) const override {
     cache[0] = {++m_calls == m_exhaustOnCall ? 0.0 : 1.0, 1.0, 0.0};
     return cache.first(1);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(MomentumExhaustionBeforeFirstMeasurementFails) {
   BOOST_CHECK(result.error() == GsfError::NoComponentsLeft);
 }
 
-BOOST_AUTO_TEST_CASE(ForwardExhaustionAfterOutlierUsesLastValidMeasurement) {
+BOOST_AUTO_TEST_CASE(ForwardExhaustionAfterOutlierKeepsTrailingOutlier) {
   TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
   const BoundTrackParameters start = makeParameters();
   std::default_random_engine localRng(42);
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(ForwardExhaustionAfterOutlierUsesLastValidMeasurement) {
                             options, tracks);
   BOOST_REQUIRE(result.ok());
   BOOST_CHECK_EQUAL(result->nMeasurements(), 1u);
-  BOOST_CHECK_EQUAL(result->nOutliers(), 0u);
+  BOOST_CHECK_EQUAL(result->nOutliers(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(MomentumCutRemovesOnlyRejectedComponentsWithoutMaterial) {
