@@ -604,6 +604,29 @@ class MeasurementGenerator {
     /// @brief Local to global transform
     Acts::Transform3 localToGlobal{Acts::Transform3::Identity()};
   };
+  /// @brief Number of tube layers per multilayer
+  static constexpr std::size_t nLayersPerMl = 8;
+  /// @brief Number of overall tube layers
+  static constexpr std::size_t nTubeLayers = nLayersPerMl * 2;
+  /// @brief Position in z of the first tube layer
+  static constexpr double chamberDistance = 5._m;
+  /// @brief Radius of each straw
+  static constexpr double tubeRadius = 15._mm;
+  /// @brief Distance between the first <nLayersPerMl> layers and the second
+  ///        pack
+  static constexpr double tubeLayerDist = 1.2_m;
+  /// @brief Distance between the tube multilayers and to the first strip layer
+  static constexpr double tubeStripDist = 30._cm;
+  /// @brief Distance between two strip layers
+  static constexpr double stripLayDist = 0.5_cm;
+  /// @brief Position in z half way between the first and the last tube layer.
+  ///        Consecutive tube layers are staggered by 2 * tubeRadius in the
+  ///        honeycomb grid, i.e. by 2 * tubeRadius * sin(60 deg) in z.
+  static constexpr double tubeLayersCentreZ() {
+    return chamberDistance +
+           0.5 * ((nTubeLayers - 1) * tubeRadius * std::sqrt(3.) +
+                  tubeLayerDist);
+  }
   /// @brief Extrapolate the straight line track through the straw layers to
   ///        evaluate which tubes were crossed by the track. The straw layers
   ///        are staggered in the z-direction and each layer expands in y. To
@@ -624,21 +647,6 @@ class MeasurementGenerator {
     /// Direction vector to go a negative step in the tube honeycomb grid
     const Vector3 negStaggering{0., -std::cos(60._degree),
                                 std::sin(60._degree)};
-    /// Number of tube layers per multilayer
-    constexpr std::size_t nLayersPerMl = 8;
-    /// Number of overall tubelayers
-    constexpr std::size_t nTubeLayers = nLayersPerMl * 2;
-    /// Position in z of the first tube layer
-    constexpr double chamberDistance = 5._m;
-    /// Radius of each straw
-    constexpr double tubeRadius = 15._mm;
-    /// Distance between the first <nLayersPerMl> layers and the second pack
-    constexpr double tubeLayerDist = 1.2_m;
-    /// Distance between the tube multilayers and to the first strip layer
-    constexpr double tubeStripDist = 30._cm;
-    /// Distance between two strip layers
-    constexpr double stripLayDist = 0.5_cm;
-
     std::array<Vector3, nTubeLayers> tubePositions{
         filledArray<Vector3, nTubeLayers>(chamberDistance * Vector3::UnitZ())};
     /// Fill the positions of the reference tubes 1
