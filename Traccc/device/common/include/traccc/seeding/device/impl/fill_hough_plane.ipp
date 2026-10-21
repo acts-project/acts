@@ -26,7 +26,7 @@ scalar transform(const scalar qopt_value,
 }
 
 TRACCC_HOST_DEVICE
-void ranges(const edm::houghplane_collection<device::N_COLS, device::N_ROWS>::device& container,
+void ranges(const edm::houghplane_collection<unsigned long long, device::N_COLS, device::N_ROWS>::device& container,
             const scalar r,
             const scalar phi,
             unsigned int* min_ranges,
@@ -69,7 +69,7 @@ void fill_hough_plane(const global_index_t globalIndex,
                 const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id_view,
 		const vecmem::data::vector_view<scalar>& spacepoint_r_view,
 		const vecmem::data::vector_view<scalar>& spacepoint_phi_view,
-                edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view houghplanes_view) {
+                edm::houghplane_collection<unsigned long long, device::N_COLS, device::N_ROWS>::view houghplanes_view) {
    if (globalIndex >= n_spacepoints) return;
    
    const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
@@ -78,7 +78,7 @@ void fill_hough_plane(const global_index_t globalIndex,
    const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
    const vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
    
-   edm::houghplane_collection<device::N_COLS, device::N_ROWS>::device houghplanes(houghplanes_view);
+   edm::houghplane_collection<unsigned long long, device::N_COLS, device::N_ROWS>::device houghplanes(houghplanes_view);
 
    // skip if it does not contribute
    if (spacepoint_wedge_association[globalIndex] == 0ULL) return;

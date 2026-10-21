@@ -41,8 +41,8 @@ auto hough_transform_seeding_algorithm::operator()(
   }
 
   // Set up the output buffer.
-  edm::houghplane_collection<N_COLS, N_ROWS>::const_view::size_type n_slices = m_config.wedges.size();
-  edm::houghplane_collection<N_COLS, N_ROWS>::buffer result(n_slices, mr().main);
+  edm::houghplane_collection<unsigned long long, N_COLS, N_ROWS>::const_view::size_type n_slices = m_config.wedges.size();
+  edm::houghplane_collection<unsigned long long, N_COLS, N_ROWS>::buffer result(n_slices, mr().main);
   copy().setup(result)->ignore();
 
   // Fill plane edges
@@ -82,8 +82,8 @@ auto hough_transform_seeding_algorithm::operator()(
 		  result});
 
   /*
-  edm::houghplane_collection<N_COLS, N_ROWS>::const_view host_view;
-  edm::houghplane_collection<N_COLS, N_ROWS>::buffer host_buffer;
+  edm::houghplane_collection<unsigned long long, N_COLS, N_ROWS>::const_view host_view;
+  edm::houghplane_collection<unsigned long long, N_COLS, N_ROWS>::buffer host_buffer;
   if (mr().host) {
     host_buffer = copy().to(result, *(mr().host));
     host_view = host_buffer;
@@ -91,7 +91,7 @@ auto hough_transform_seeding_algorithm::operator()(
     host_view = result;
   }
 
-  edm::houghplane_collection<N_COLS, N_ROWS>::const_device host_device{host_view};
+  edm::houghplane_collection<unsigned long long, N_COLS, N_ROWS>::const_device host_device{host_view};
   for (unsigned int i = 0; i < host_device.size(); ++i) {
     const edm::houghplane plane = host_device.at(i);
     const auto& edges_x = plane.edges_x();

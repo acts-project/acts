@@ -16,7 +16,7 @@ namespace traccc::cuda {
 namespace kernels {
    __global__ 
    void define_plane_edges(const traccc::hough_seeding_config config,
-		   edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view houghplanes) {
+		   edm::houghplane_collection<unsigned long long, device::N_COLS, device::N_ROWS>::view houghplanes) {
       float steps_x = (config.max_range_x - config.min_range_x) / device::N_COLS;
       float steps_y = (config.max_range_y - config.min_range_y) / device::N_ROWS;
       device::define_plane_edges(details::global_index1(), houghplanes,
@@ -51,7 +51,7 @@ namespace kernels {
                    const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id,
 		   vecmem::data::vector_view<scalar>& spacepoint_r,
                    vecmem::data::vector_view<scalar>& spacepoint_phi,
-		   edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view& houghplanes) {
+		   edm::houghplane_collection<unsigned long long, device::N_COLS, device::N_ROWS>::view& houghplanes) {
       device::fill_hough_plane(details::global_index1(),
 		      n_spacepoints, spacepoints,
 		      spacepoint_wedge_association, spacepoint_detector_id,
