@@ -129,6 +129,12 @@ lost here.
 Volume material payloads use `homogeneous`, `proto`, or `grid` under the
 volume's `material` key.
 
+A `proto` contains a three-axis `binning` array of AxisSpec objects, matching
+the surface proxy format. Ranges and boundary types may be deferred; one bin
+in each direction requests homogeneous material. Default geometry export uses
+the volume's canonical axis directions. The mapping consumer supplies missing
+axis properties when it builds the grid.
+
 A `grid` contains a three-axis `binning` array in the same AxisSpec format as
 surface material, an optional `transform` placing the material frame in global
 coordinates, and a `storage` object. Storage has type `direct` (a `material`
