@@ -49,6 +49,38 @@ auto hough_transform_seeding_algorithm::operator()(
   // we will move to a config at a certain point and template the algorithm
   define_plane_edges_kernel({m_config, result});
 
+  // Pre-compute some quantities
+  // These quantities can be computed once per spacepoint
+  // they do not depend on the wedge definition
+  vecmem::data::vector_buffer<unsigned long long> spacepoint_wedge_association(n_spacepoints, mr().main);
+  vecmem::data::vector_buffer<unsigned long long> spacepoint_detector_id(n_spacepoints, mr().main);
+  vecmem::data::vector_buffer<scalar> spacepoint_r(n_spacepoints, mr().main);
+  vecmem::data::vector_buffer<scalar> spacepoint_phi(n_spacepoints, mr().main);
+  //  no idea what these do ...
+  copy().setup(vecmem::ignore_event, spacepoint_wedge_association);
+  copy().memset(vecmem::ignore_event, spacepoint_wedge_association, 0);
+  copy().setup(vecmem::ignore_event, spacepoint_detector_id);
+  copy().memset(vecmem::ignore_event, spacepoint_detector_id, 0);
+  copy().setup(vecmem::ignore_event, spacepoint_r);
+  copy().memset(vecmem::ignore_event, spacepoint_r, 0);
+  copy().setup(vecmem::ignore_event, spacepoint_phi);
+  copy().memset(vecmem::ignore_event, spacepoint_phi, 0);
+
+  precompute_spacepoint_variables_kernel({m_config, det,
+		  measurements,
+		  n_spacepoints, spacepoints,
+		  spacepoint_wedge_association,
+		  spacepoint_detector_id,
+		  spacepoint_r,
+		  spacepoint_phi});
+
+  // Fill the planes with space points
+  fill_hough_plane_kernel({m_config,
+                  n_spacepoints, spacepoints,
+                  spacepoint_wedge_association, spacepoint_detector_id,
+		  spacepoint_r, spacepoint_phi,
+		  result});
+
   /*
   edm::houghplane_collection<N_COLS, N_ROWS>::const_view host_view;
   edm::houghplane_collection<N_COLS, N_ROWS>::buffer host_buffer;
@@ -66,12 +98,6 @@ auto hough_transform_seeding_algorithm::operator()(
     const auto& edges_y = plane.edges_y();
   }
   */
-
-  // Fill the planes with space points
-  fill_hough_plane_kernel({m_config, det, 
-		  measurements,
-		  n_spacepoints, spacepoints, 
-		  result});
 
   synchronize();
 

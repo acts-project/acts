@@ -24,17 +24,38 @@ namespace kernels {
 		     steps_y, config.min_range_y); 
    }
    
-   template <detray::concepts::detector detector_t>   
-   __global__ void __launch_bounds__(1024, 1)
-   fill_hough_plane(const traccc::hough_seeding_config config,
+   template<detray::concepts::detector detector_t>
+   __global__
+   void precompute_spacepoint_variables(const traccc::hough_seeding_config config,
 		   detray::detector_view_t<detector_t> detector,
 		   const edm::measurement_collection::const_view& measurements,
 		   edm::spacepoint_collection::const_view::size_type n_spacepoints,
 		   const edm::spacepoint_collection::const_view& spacepoints,
-		   edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view& houghplanes) {
-      device::fill_hough_plane<detector_t>(details::global_index1(), detector, 
-		      measurements, n_spacepoints, spacepoints, 
+		   vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association,
+		   vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id,
+		   vecmem::data::vector_view<scalar>& spacepoint_r,
+		   vecmem::data::vector_view<scalar>& spacepoint_phi) {
+      device::precompute_spacepoint_variables<detector_t>(details::global_index1(),
+		      detector,
+		      measurements, n_spacepoints, spacepoints,
 		      config.interaction_center, config.interaction_window, config.eta_width,
+		      spacepoint_wedge_association, spacepoint_detector_id,
+		      spacepoint_r, spacepoint_phi);
+   }
+
+   __global__
+   void fill_hough_plane(const traccc::hough_seeding_config config,
+		   edm::spacepoint_collection::const_view::size_type n_spacepoints,
+		   const edm::spacepoint_collection::const_view& spacepoints,
+		   const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association,
+                   const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id,
+		   vecmem::data::vector_view<scalar>& spacepoint_r,
+                   vecmem::data::vector_view<scalar>& spacepoint_phi,
+		   edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view& houghplanes) {
+      device::fill_hough_plane(details::global_index1(),
+		      n_spacepoints, spacepoints,
+		      spacepoint_wedge_association, spacepoint_detector_id,
+		      spacepoint_r, spacepoint_phi,
 		      houghplanes);
    }
 } // namespace kernels
@@ -56,16 +77,32 @@ void hough_transform_seeding_algorithm::define_plane_edges_kernel(const define_p
    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
+void hough_transform_seeding_algorithm::precompute_spacepoint_variables_kernel(const precompute_spacepoint_variables_payload& payload) const {
+   const unsigned int n_threads = warp_size() * 32;
+   const unsigned int n_blocks = (payload.n_spacepoints  + n_threads - 1) / n_threads;
+   detector_buffer_visitor<detector_type_list>(payload.detector,
+                  [&]<detray::concepts::detector detector_t>(const detray::detector_view_t<detector_t>& det) {
+	kernels::precompute_spacepoint_variables<detector_t>
+		<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, det,
+				payload.measurements, payload.n_spacepoints, payload.spacepoints,
+				payload.spacepoint_wedge_association,
+				payload.spacepoint_detector_id,
+				payload.spacepoint_r,
+				payload.spacepoint_phi);
+   });
+   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+}
+
 void hough_transform_seeding_algorithm::fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 4;
-  const unsigned int n_blocks = (payload.n_spacepoints + n_threads - 1) / n_threads;
-  detector_buffer_visitor<detector_type_list>(payload.detector, 
-		  [&]<detray::concepts::detector detector_t>(const detray::detector_view_t<detector_t>& det) {
-      kernels::fill_hough_plane<detector_t>
-      		<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, det, 
-				payload.measurements, payload.n_spacepoints, payload.spacepoints, 
+  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
+  kernels::fill_hough_plane<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config,
+				payload.n_spacepoints, payload.spacepoints,
+				payload.spacepoint_wedge_association,
+				payload.spacepoint_detector_id,
+				payload.spacepoint_r,
+                                payload.spacepoint_phi,
 				payload.houghplanes);
-  });
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 

@@ -61,75 +61,40 @@ void ranges(const edm::houghplane_collection<device::N_COLS, device::N_ROWS>::de
 }
 
 
-template <detray::concepts::detector detector_t>
 TRACCC_HOST_DEVICE
 void fill_hough_plane(const global_index_t globalIndex,
-		const detray::detector_view_t<detector_t> det_view,
-		const edm::measurement_collection::const_view& measurements_view,
-		const edm::spacepoint_collection::const_view::size_type n_spacepoints,
-		const edm::spacepoint_collection::const_view& spacepoints_view,
-		const scalar interactionCenter,
-		const scalar interactionWindow,
-		const scalar etaWidth,
-		edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view houghplanes_view) {
+                const edm::spacepoint_collection::const_view::size_type n_spacepoints,
+                const edm::spacepoint_collection::const_view& spacepoints_view,
+                const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association_view,
+                const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id_view,
+		const vecmem::data::vector_view<scalar>& spacepoint_r_view,
+		const vecmem::data::vector_view<scalar>& spacepoint_phi_view,
+                edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view houghplanes_view) {
    if (globalIndex >= n_spacepoints) return;
-   // we need to pass these from outside
-   std::array<scalar, 25> wedges = {
-  	-2.88f, -2.64f, -2.40f, -2.16f, -1.92f, -1.68f,
-    	-1.44f, -1.20f, -0.96f, -0.72f, -0.48f, -0.24f, 0.00f,
-    	0.24f, 0.48f, 0.72f, 0.96f, 1.20f, 1.44f,
-    	1.68f, 1.92f, 2.16f, 2.40f, 2.64f, 2.88f
-   };
    
    const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
+   const vecmem::device_vector<unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);
+   const vecmem::device_vector<unsigned long long> spacepoint_detector_id(spacepoint_detector_id_view);
+   const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
+   const vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
+   
    edm::houghplane_collection<device::N_COLS, device::N_ROWS>::device houghplanes(houghplanes_view);
 
-   scalar z0_min = interactionCenter - interactionWindow;
-   scalar z0_max = interactionCenter + interactionWindow;
-    
-   scalar r = hypotf(spacepoints[globalIndex].x(), spacepoints[globalIndex].y());
-   scalar eta_at_min = asinhf((spacepoints[globalIndex].z() - z0_min) / r);
-   scalar eta_at_max = asinhf((spacepoints[globalIndex].z() - z0_max) / r);
+   // skip if it does not contribute
+   if (spacepoint_wedge_association[globalIndex] == 0ULL) return;
+ 
+   // arrays for ranges
+   unsigned int min_ranges[device::N_COLS] {};
+   unsigned int max_ranges[device::N_COLS] {};
+   ranges(houghplanes, 
+          spacepoint_r[globalIndex], spacepoint_phi[globalIndex], 
+	  min_ranges, max_ranges);
 
-   // understand what wedge(s) the space points belongs to
-   // wedges define eta ranges and they may overlap
-   //
-   // this implementation has an upper limit on the number of wedges
-   assert(houghplanes.size() == wedges.size());
-   unsigned long long slice = 0ULL;
-    for (unsigned int wedge_idx(0); wedge_idx<houghplanes.size(); ++wedge_idx) {
-        if (eta_at_min < wedges[wedge_idx] - etaWidth) continue;
-        if (eta_at_max > wedges[wedge_idx] + etaWidth) continue;
-        slice |= (1ULL << wedge_idx);
-    } // loop on wedges
-    if (slice == 0ULL) return;
+   unsigned long long slice = spacepoint_wedge_association[globalIndex];
+   const unsigned long long layer_bit = spacepoint_detector_id[globalIndex];
 
-    // Create the tracking geometry
-    typename detray::detector_device_t<detector_t> det(det_view);
-
-    // Retrieve the corresponding measurement index and, from it, the geo id
-    // all of this is to retrieve the volume_id and layer_id of the 
-    // space point
-    const edm::measurement_collection::const_device measurements(measurements_view);
-    const auto& meas = measurements.at(spacepoints[globalIndex].measurement_index_1());
-
-    const detray::geometry::identifier& surface_link = meas.surface_link();
-    const auto volume_id = meas.surface_link().volume();
-    const auto identifier_id = volume_id; // we need to check if we need more ...
-
-    // make hough transformation
-    // result is the same for all planes
-    scalar phi = atan2f(spacepoints[globalIndex].y(), spacepoints[globalIndex].y());
-    ::remainderf(phi, 2.0f * std::numbers::pi_v<scalar>);
-    
-    // arrays for ranges
-    unsigned int min_ranges[device::N_COLS] {};
-    unsigned int max_ranges[device::N_COLS] {};
-    ranges(houghplanes, r, phi, min_ranges, max_ranges);
-
-    // Fill the planes
-    const unsigned long long layer_bit = 1ULL << identifier_id;
-    for (unsigned int x_idx(0); x_idx < device::N_COLS; ++x_idx) {
+   // Fill the planes
+   for (unsigned int x_idx(0); x_idx < device::N_COLS; ++x_idx) {
         const unsigned int first = min_ranges[x_idx];
         const unsigned int last = max_ranges[x_idx];
         if (last == first) continue;
@@ -143,20 +108,20 @@ void fill_hough_plane(const global_index_t globalIndex,
 
             if (diff_phi < device::N_ROWS / 2) {
                 for (unsigned int y_idx(first); y_idx < last; ++y_idx) {
-     		   vecmem::device_atomic_ref<unsigned long long> a2(houghplanes[wedge_idx].plane()[offset + y_idx]);
+     		   vecmem::device_atomic_ref<unsigned long long> a2(houghplanes.plane()[wedge_idx][offset + y_idx]);
 		   a2.fetch_or(layer_bit);
                 }
             } else {
                 for (unsigned int y_idx(0); y_idx < first; ++y_idx) {
-		   vecmem::device_atomic_ref<unsigned long long> a2(houghplanes[wedge_idx].plane()[offset + y_idx]);
+		   vecmem::device_atomic_ref<unsigned long long> a2(houghplanes.plane()[wedge_idx][offset + y_idx]);
                    a2.fetch_or(layer_bit);
                 }
                 for (unsigned int y_idx(last); y_idx < device::N_ROWS; ++y_idx) {
-		   vecmem::device_atomic_ref<unsigned long long> a2(houghplanes[wedge_idx].plane()[offset + y_idx]);
+		   vecmem::device_atomic_ref<unsigned long long> a2(houghplanes.plane()[wedge_idx][offset + y_idx]);
                    a2.fetch_or(layer_bit);
                 }
             } // checks on diff_phi
         } // loop on planes
-    } // loop on x bins
+   } // loop on x bins
 }
 } // namespace
