@@ -68,7 +68,9 @@ class GridVolumeMaterial final : public IVolumeMaterial {
 
   using IVolumeMaterial::material;
 
-  /// @copydoc IVolumeMaterial::toStream
+  /// Write the grid binning description.
+  /// @param stream destination stream
+  /// @return the modified stream
   std::ostream& toStream(std::ostream& stream) const final;
 
   /// @return material binning specification
