@@ -71,15 +71,16 @@ concept GlobPatFinderHit =
       /// Whether the hit is a precision measurement
       { hit.isPrecision() } -> std::same_as<bool>;
       /// Whether two hits represent overlapping detector information. This
-      /// relation may be less restrictive than requiring equality and is used when
-      /// determining whether reconstructed patterns share detector information.
+      /// relation may be less restrictive than requiring equality and is used
+      /// when determining whether reconstructed patterns share detector
+      /// information.
       { hit.overlaps(otherHit) } -> std::same_as<bool>;
     };
 /// @brief Concept defining the detector topology used by the pattern finder. The
 ///  detector is assumed to be organized in layers, which are grouped into a
-///  number of groups. The topology describes how detector layers are ordered and
-///  organized into groups, and how hits are associated with the corresponding
-///  layer/group.
+///  number of groups. The topology describes how detector layers are ordered
+///  and organized into groups, and how hits are associated with the
+///  corresponding layer/group.
 template <typename T, typename Hit_t>
 concept PatternTopology =
     GlobPatFinderHit<Hit_t> && requires(const Hit_t& hit1, const Hit_t& hit2) {
@@ -95,7 +96,7 @@ concept PatternTopology =
       { T::groupIndex(hit1) } -> std::same_as<std::uint8_t>;
     };
 /// @brief Sectorization of the detector in the non-bending coordinate.
-///  In this first implementation of Global Pattern Finder with toroidal 
+///  In this first implementation of Global Pattern Finder with toroidal
 ///  azimuthal field, the sectors are defined along the phi direction.
 template <typename Sector_t>
 concept SectorType =
@@ -128,13 +129,14 @@ struct PatternStateAux {
   };
   /// @brief Beamspot information, used as an additional constraint on the
   ///  pattern line when the lever arm of the hits is too small. The beamspot
-  ///  is also used to compute the pattern bending plane through linear 
-  ///  regression in the transverse plane. The beamspot is modelled as a 
-  ///  cylinder along the beam axis (z), whose radius and half-length act as 
-  ///  the transverse and longitudinal uncertainties of the constraint. They 
-  ///  should therefore be large enough to also cover the deviation of the straight 
-  ///  pattern line from the true trajectory in the transverse plane close to 
-  ///  the beam, e.g. due to the bending in the solenoidal field of the inner detector.
+  ///  is also used to compute the pattern bending plane through linear
+  ///  regression in the transverse plane. The beamspot is modelled as a
+  ///  cylinder along the beam axis (z), whose radius and half-length act as
+  ///  the transverse and longitudinal uncertainties of the constraint. They
+  ///  should therefore be large enough to also cover the deviation of the
+  ///  straight pattern line from the true trajectory in the transverse plane
+  ///  close to the beam, e.g. due to the bending in the solenoidal field of the
+  ///  inner detector.
   struct BeamspotInfo {
     /// @brief Beamspot position
     Vector3 position{Vector3::Zero()};
@@ -304,7 +306,7 @@ struct PatternStateAux {
   ///           the strip projected onto the bending plane (negative if the
   ///           pattern line crosses the strip within its edges)
   std::pair<Vector3, double> phiStripCrossing(const GeometryContext& gctx,
-                                           const Hit_t& phiHit) const;
+                                              const Hit_t& phiHit) const;
   /// @brief Return the mean normalized residual squared
   double getMeanResidual2() const;
   /// @brief Method returning the number of groups
