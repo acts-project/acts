@@ -21,6 +21,25 @@ namespace Acts::Experimental::detail {
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
+template <PatternSeedSelector<Hit_t, Topology_t> SeedSelector_t>
+std::vector<
+    typename GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::OutputPattern>
+GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatterns(
+    const GeometryContext& gctx, const SearchTree_t& treeData,
+    const SeedSelector_t& seedSelector,
+    const BeamspotInfo& beamspotInfo) const {
+  PatternStateAuxVec patterns{
+      findPatternsInEta(gctx, treeData, seedSelector, beamspotInfo)};
+  /// Without the phi-only hit search, the phi layers come only from eta hits
+  /// that also measure phi: apply the same minimum phi layer cut
+  std::erase_if(patterns, [this](const PatternStateAux& pat) {
+    return !passPhiLayerCut(pat);
+  });
+  return convertToPattern(std::move(patterns));
+}
+
+template <GlobPatFinderHit Hit_t, SectorType Sector_t,
+          PatternTopology<Hit_t> Topology_t>
 template <PatternSeedSelector<Hit_t, Topology_t> SeedSelector_t,
           OnlyPhiHitsProvider<Hit_t, Topology_t, Sector_t> OnlyPhiProvider_t>
 std::vector<
@@ -32,9 +51,9 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatterns(
     const BeamspotInfo& beamspotInfo) const {
   PatternStateAuxVec patterns{
       findPatternsInEta(gctx, treeData, seedSelector, beamspotInfo)};
-  if (m_cfg.searchOnlyPhiHits) {
-    addPhiOnlyHits(gctx, beamspotInfo, onlyPhiProvider, patterns);
-  }
+  /// Add phi-only hits to the patterns and remove those that do not have enough
+  /// phi layers afterwards
+  addPhiOnlyHits(gctx, beamspotInfo, onlyPhiProvider, patterns);
   return convertToPattern(std::move(patterns));
 }
 
@@ -576,6 +595,21 @@ bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::passPatternCuts(
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
+bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::passPhiLayerCut(
+    const PatternStateAux& pat) const {
+  if (pat.nPhiLayers < m_cfg.minPhiLayers) {
+    ACTS_VERBOSE(
+        __func__
+        << "() Pattern " << PatternStateAux::detailed(pat) << " has only "
+        << static_cast<int>(pat.nPhiLayers)
+        << " phi layers, below the minimum required - reject this pattern.");
+    return false;
+  }
+  return true;
+}
+
+template <GlobPatFinderHit Hit_t, SectorType Sector_t,
+          PatternTopology<Hit_t> Topology_t>
 bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::insertIfBest(
     const GeometryContext& gctx, PatternStateAuxVec& patterns,
     PatternStateAux&& cand) const {
@@ -834,12 +868,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
         pat.updateBendPlane(gctx, beamspotInfo);
       }
     }
-    if (pat.nPhiLayers < m_cfg.minPhiLayers) {
-      ACTS_VERBOSE(
-          __func__
-          << "() Pattern " << PatternStateAux::detailed(pat) << " has only "
-          << static_cast<int>(pat.nPhiLayers)
-          << " phi layers, below the minimum required - reject this pattern.");
+    if (!passPhiLayerCut(pat)) {
       continue;
     }
     survivingPatterns.push_back(std::move(pat));

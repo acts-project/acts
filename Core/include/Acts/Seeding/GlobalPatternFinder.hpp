@@ -115,9 +115,6 @@ class GlobalPatternFinder {
     unsigned int maxSeedAttempts{2};
     /// @brief Maximum number of missed candidate hits in different measurement layers in a group
     unsigned int maxMissLayersInGroup{2};
-    /// Only-phi hit search
-    /// @brief Whether to search for phi-only hits and attach them to the patterns
-    bool searchOnlyPhiHits{true};
   };
   /// @brief Abbreviation of the seed coordinates
   enum class HitCoords : std::uint8_t {
@@ -163,13 +160,30 @@ class GlobalPatternFinder {
                                    getDefaultLogger("GlobalPatternFinder",
                                                     Logging::Level::INFO));
 
-  /// @brief Main method steering the pattern finding. Given the search tree of space points, it builds patterns in eta,
-  ///         attaches compatible only-phi measurements, and converts the
-  /// PatternStateAuxs into OutputPatterns
+  /// @brief Main method steering the pattern finding. Given the search tree of
+  ///         space points, it builds patterns in eta and converts them into
+  ///         OutputPatterns. No phi-only hits are attached to the patterns.
+  ///         Patterns with fewer phi layers than Config::minPhiLayers are
+  ///         rejected.
   ///  @param gctx: Geometry context
   ///  @param treeData: Data for the search tree
   ///  @param seedSelector: Selector for the seed
-  ///  @param onlyPhiProvider: Provider for only-phi hits
+  ///  @param beamspotInfo: Beamspot information
+  ///  @return: Vector of found patterns
+  template <PatternSeedSelector<Hit_t, Topology_t> SeedSelector_t>
+  std::vector<OutputPattern> findPatterns(
+      const GeometryContext& gctx, const SearchTree_t& treeData,
+      const SeedSelector_t& seedSelector,
+      const BeamspotInfo& beamspotInfo) const;
+  /// @brief Main method steering the pattern finding. Given the search tree of
+  ///         space points, it builds patterns in eta, attaches the compatible
+  ///         phi-only hits, and converts the patterns into OutputPatterns.
+  ///         Patterns with fewer phi layers than Config::minPhiLayers are
+  ///         rejected.
+  ///  @param gctx: Geometry context
+  ///  @param treeData: Data for the search tree
+  ///  @param seedSelector: Selector for the seed
+  ///  @param onlyPhiProvider: Provider for phi-only hits
   ///  @param beamspotInfo: Beamspot information
   ///  @return: Vector of found patterns
   template <PatternSeedSelector<Hit_t, Topology_t> SeedSelector_t,
@@ -244,6 +258,10 @@ class GlobalPatternFinder {
   ///  @param pat: Pattern to be checked
   ///  @return: true if the pattern passes the cuts, false otherwise
   bool passPatternCuts(const PatternStateAux& pat) const;
+  /// @brief Check if a pattern has the minimum number of phi layers
+  ///  @param pat: Pattern to be checked
+  ///  @return: true if the pattern passes the cut, false otherwise
+  bool passPhiLayerCut(const PatternStateAux& pat) const;
   /// @brief Method to insert a pattern into a vector if it is better than the existing patterns
   ///  @param gctx: geometry context
   ///  @param patterns: vector of patterns to insert into
