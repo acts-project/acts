@@ -194,6 +194,51 @@ edm4hep::TrackState writeTrackState(
     const Acts::MagneticFieldProvider& magneticField,
     const Acts::Logger& logger = Acts::getDummyLogger());
 
+/// Convert a single EDM4hep track state into bound track parameters.
+///
+/// This is the inverse of @ref writeTrackState. The parameters are expressed
+/// on a perigee surface at the state's @c referencePoint. The curvature
+/// @c omega is converted to q/p with the local field at the point of closest
+/// approach (the reference point shifted by d0/z0), where
+/// @ref writeTrackState samples it too.
+///
+/// This is the per-state building block used by @ref readTrack. It is exposed
+/// so that clients needing only some states, e.g. the @c AtIP state as
+/// vertexing input, can convert them without filling an Acts track.
+///
+/// @note EDM4hep track states carry no particle species, so the returned
+///       parameters use the default pion hypothesis.
+///
+/// @param gctx The geometry context
+/// @param trackState The EDM4hep track state to convert
+/// @param magneticField The magnetic field provider
+/// @param fieldCache Field lookup cache, reused across calls
+/// @param logger The logger instance
+/// @return The converted bound track parameters
+Acts::BoundTrackParameters readTrackState(
+    const Acts::GeometryContext& gctx, const edm4hep::TrackState& trackState,
+    const Acts::MagneticFieldProvider& magneticField,
+    Acts::MagneticFieldProvider::Cache& fieldCache,
+    const Acts::Logger& logger = Acts::getDummyLogger());
+
+/// Convert a single EDM4hep track state into bound track parameters.
+///
+/// Convenience overload of @ref readTrackState that creates its own field
+/// cache from @p mctx. Prefer the cache-taking overload when converting many
+/// states in a row.
+///
+/// @param gctx The geometry context
+/// @param mctx The magnetic field context
+/// @param trackState The EDM4hep track state to convert
+/// @param magneticField The magnetic field provider
+/// @param logger The logger instance
+/// @return The converted bound track parameters
+Acts::BoundTrackParameters readTrackState(
+    const Acts::GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+    const edm4hep::TrackState& trackState,
+    const Acts::MagneticFieldProvider& magneticField,
+    const Acts::Logger& logger = Acts::getDummyLogger());
+
 /// Callback resolving the EDM4hep tracker hit associated with a measurement
 /// track state.
 ///
@@ -339,13 +384,9 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 /// Read an EDM4hep track into Acts format, using a magnetic field provider.
 ///
 /// This is the general form of @ref readTrack, and the inverse of the
-/// corresponding @ref writeTrack overload. The perigee conversion of each track
-/// state evaluates the local field via @p magneticField at that state's point
-/// of closest approach, which supports spatially varying fields. That is the
-/// same position @ref writeTrackState samples the field at, so the two
-/// round-trip consistently. Note this is not in general the state's
-/// @c referencePoint: for parameters expressed on a perigee the two differ by
-/// d0/z0.
+/// corresponding @ref writeTrack overload. Each track state is converted with
+/// @ref readTrackState, which evaluates the local field via @p magneticField,
+/// so spatially varying fields are supported.
 ///
 /// @param gctx The geometry context
 /// @param mctx The magnetic field context
@@ -364,9 +405,6 @@ void readTrack(const Acts::GeometryContext& gctx,
   TrackStatePropMask mask = TrackStatePropMask::Smoothed;
 
   auto fieldCache = magneticField.makeCache(mctx);
-  auto bzAtPosition = [&](const Acts::Vector3& position) {
-    return detail::localBz(magneticField, fieldCache, position, logger);
-  };
 
   std::optional<edm4hep::TrackState> ipState;
 
@@ -383,20 +421,16 @@ void readTrack(const Acts::GeometryContext& gctx,
       continue;
     }
 
-    auto params = detail::unpackTrackState(trackState);
+    auto converted = readTrackState(gctx, trackState, magneticField,
+                                    fieldCache, logger);
 
     auto ts = track.appendTrackState(mask);
     ts.typeFlags().setIsMeasurement();
 
-    // Evaluate the local field where the particle actually is, matching what
-    // writeTrackState does
-    auto converted = detail::convertTrackParametersFromEdm4hep(
-        bzAtPosition(detail::pointOfClosestApproach(gctx, params)), params);
-
     ts.smoothed() = converted.parameters();
     ts.smoothedCovariance() =
         converted.covariance().value_or(BoundMatrix::Zero());
-    ts.setReferenceSurface(params.surface);
+    ts.setReferenceSurface(converted.referenceSurface().getSharedPtr());
   }
 
   if (!ipState.has_value()) {
@@ -404,12 +438,8 @@ void readTrack(const Acts::GeometryContext& gctx,
     throw std::runtime_error{"Did not find IP state in edm4hep input"};
   }
 
-  detail::Parameters params = detail::unpackTrackState(ipState.value());
-
-  // Evaluate the local field where the particle actually is, matching what
-  // writeTrackState does
-  auto converted = detail::convertTrackParametersFromEdm4hep(
-      bzAtPosition(detail::pointOfClosestApproach(gctx, params)), params);
+  auto converted = readTrackState(gctx, ipState.value(), magneticField,
+                                  fieldCache, logger);
 
   ACTS_VERBOSE("IP state parameters: " << converted.parameters().transpose());
   ACTS_VERBOSE("-> covariance:\n"
@@ -417,7 +447,7 @@ void readTrack(const Acts::GeometryContext& gctx,
 
   track.parameters() = converted.parameters();
   track.covariance() = converted.covariance().value_or(BoundMatrix::Zero());
-  track.setReferenceSurface(params.surface);
+  track.setReferenceSurface(converted.referenceSurface().getSharedPtr());
 
   track.chi2() = from.getChi2();
   track.nDoF() = from.getNdf();

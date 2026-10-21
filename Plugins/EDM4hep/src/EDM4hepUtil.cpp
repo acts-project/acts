@@ -333,6 +333,39 @@ edm4hep::TrackState writeTrackState(const GeometryContext& gctx,
                          logger);
 }
 
+BoundTrackParameters readTrackState(const GeometryContext& gctx,
+                                    const edm4hep::TrackState& trackState,
+                                    const MagneticFieldProvider& magneticField,
+                                    MagneticFieldProvider::Cache& fieldCache,
+                                    const Logger& logger) {
+  const detail::Parameters params = detail::unpackTrackState(trackState);
+
+  // Evaluate the local field where the particle actually is, matching what
+  // writeTrackState does
+  const double Bz =
+      detail::localBz(magneticField, fieldCache,
+                      detail::pointOfClosestApproach(gctx, params), logger);
+
+  BoundTrackParameters converted =
+      detail::convertTrackParametersFromEdm4hep(Bz, params);
+
+  ACTS_VERBOSE("- parameters: " << params.values.transpose() << " -> "
+                                << converted.parameters().transpose());
+  ACTS_VERBOSE("- ref surface ctr: "
+               << params.surface->center(gctx).transpose());
+
+  return converted;
+}
+
+BoundTrackParameters readTrackState(const GeometryContext& gctx,
+                                    const MagneticFieldContext& mctx,
+                                    const edm4hep::TrackState& trackState,
+                                    const MagneticFieldProvider& magneticField,
+                                    const Logger& logger) {
+  auto fieldCache = magneticField.makeCache(mctx);
+  return readTrackState(gctx, trackState, magneticField, fieldCache, logger);
+}
+
 edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit) {
   return hit.getParticle();
 }
