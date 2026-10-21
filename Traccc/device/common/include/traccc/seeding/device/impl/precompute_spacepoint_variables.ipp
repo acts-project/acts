@@ -4,6 +4,57 @@
 
 namespace traccc::device {
 
+TRACCC_HOST_DEVICE
+unsigned long long getId(const unsigned int index) {
+   unsigned long long shift = 0ULL;
+   switch (index) {
+	   // negative endcap (pixels)
+	   case 3: {shift = 0; break;}
+           case 5: {shift = 1; break;}
+	   case 7: {shift = 2; break;}
+	   case 9: {shift = 3; break;}
+	   case 11: {shift = 4; break;}
+	   case 13: {shift = 5; break;}
+	   case 15: {shift = 6; break;}
+           // barrel (pixels)
+	   case 18: {shift = 7; break;}
+	   case 20: {shift = 8; break;}
+	   case 22: {shift = 9; break;}
+	   case 24: {shift = 10; break;}
+ 	   // positive endcap (pixels)
+	   case 27: {shift = 11; break;}
+	   case 29: {shift = 12; break;}
+	   case 31: {shift = 13; break;}
+	   case 33: {shift = 14; break;}
+	   case 35: {shift = 15; break;}
+	   case 37: {shift = 16; break;}
+	   case 39: {shift = 17; break;}
+	   // negative endcap (short strips)
+	   case 45: {shift=18; break;}
+	   case 47: {shift=19; break;}
+	   case 49: {shift=20; break;}
+	   case 51: {shift=21; break;}
+	   case 53: {shift=22; break;}
+	   case 55: {shift=23; break;}
+	   // barrel (short strips)
+	   case 58: {shift=24; break;}
+	   case 60: {shift=25; break;}
+	   case 62: {shift=26; break;}
+	   case 64: {shift=27; break;}
+	   // positive endcap (short strips)
+	   case 67: {shift=28; break;}
+	   case 69: {shift=29; break;}
+	   case 71: {shift=30; break;}
+	   case 73: {shift=31; break;}
+	   case 75: {shift=32; break;}
+	   case 77: {shift=33; break;}
+	   // others
+	   default:
+		   return 0ULL;
+   };
+   return 1ULL << shift;
+}
+
 template <detray::concepts::detector detector_t>
 TRACCC_HOST_DEVICE
 void precompute_spacepoint_variables(const global_index_t globalIndex,
@@ -67,9 +118,8 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
   const edm::measurement_collection::const_device measurements(measurements_view);
   const auto& meas = measurements.at(spacepoints[globalIndex].measurement_index_1());
 
-  const detray::geometry::identifier& surface_link = meas.surface_link();
   const auto volume_id = meas.surface_link().volume();
-  const auto identifier_id = volume_id; // we need to check what we need
+  const auto identifier_id = getId(volume_id);
   spacepoint_detector_id[globalIndex] = identifier_id;
 }
 } // namespace
