@@ -16,6 +16,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/GridVolumeMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/TrackingGeometryMaterial.hpp"
@@ -81,6 +82,10 @@ void RootMaterialWriter::writeMaterial(
     if (vMaterial == nullptr) {
       ACTS_WARNING("No material for volume " << key << " skipping");
       continue;
+    }
+    if (dynamic_cast<const Acts::GridVolumeMaterial*>(vMaterial) != nullptr) {
+      throw std::invalid_argument(
+          "ROOT volume material output does not support grids; use JSON");
     }
 
     // get the geometry ID

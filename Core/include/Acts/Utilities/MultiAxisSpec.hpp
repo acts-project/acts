@@ -174,6 +174,8 @@ class MultiAxisSpecXD : public MultiAxisSpec {
 using MultiAxisSpec1D = MultiAxisSpecXD<1>;
 /// Type alias for a multi-axis spec of dimension 2
 using MultiAxisSpec2D = MultiAxisSpecXD<2>;
+/// Type alias for a multi-axis spec of dimension 3
+using MultiAxisSpec3D = MultiAxisSpecXD<3>;
 
 /// @brief Build the multi-axis of a surface binning against that surface
 ///
