@@ -941,6 +941,13 @@ jobs:
             view: LCG_109
             tests: true
 
+          - tag: 110_alma9_gcc16
+            platform: el9
+            compiler: gcc16
+            repo: sft.cern.ch
+            view: LCG_110
+            tests: true
+
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
