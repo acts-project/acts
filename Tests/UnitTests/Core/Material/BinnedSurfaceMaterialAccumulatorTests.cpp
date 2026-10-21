@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MultiAxisSpec.hpp"
 #include "Acts/Utilities/detail/WorkerPool.hpp"
@@ -438,6 +439,15 @@ BOOST_AUTO_TEST_CASE(BatchAccumulationMatchesSerial) {
       accumulateTrack(bsma, *single, track.interactions, track.empty);
     }
     checkEqual(reference, bsma.finalizeMaterial(*single, tContext));
+
+    // The deprecated single-track method
+    auto deprecated = bsma.createState(tContext);
+    for (const auto& track : tracks) {
+      ACTS_PUSH_IGNORE_DEPRECATED()
+      bsma.accumulate(*deprecated, tContext, track.interactions, track.empty);
+      ACTS_POP_IGNORE_DEPRECATED()
+    }
+    checkEqual(reference, bsma.finalizeMaterial(*deprecated, tContext));
 
     // Batches, without pool and with pools of different size
     for (std::size_t nThreads : {0u, 1u, 4u}) {

@@ -77,7 +77,8 @@ class ISurfaceMaterialAccumulator {
 
   /// @brief Accumulate the material interaction on the surface
   ///
-  /// The default forwards to @ref accumulateTracks with a single track.
+  /// Only called by the default @ref accumulateTracks, to support
+  /// implementations that override this method instead. The default throws.
   ///
   /// @param state is the state of the accumulator
   /// @param gctx the geometry context

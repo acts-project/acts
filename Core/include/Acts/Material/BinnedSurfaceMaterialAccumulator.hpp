@@ -67,6 +67,21 @@ class BinnedSurfaceMaterialAccumulator final
   std::unique_ptr<ISurfaceMaterialAccumulator::State> createState(
       const GeometryContext& gctx) const override;
 
+  /// @brief Accumulate the material interaction on the surface
+  ///
+  /// Forwards to @ref accumulateTracks with a single track.
+  ///
+  /// @param state is the state of the accumulator
+  /// @param gctx the geometry context
+  /// @param interactions is the material interactions, with assigned surfaces
+  /// @param surfacesWithoutAssignment are the surfaces without assignment
+  [[deprecated("Use BinnedSurfaceMaterialAccumulator::accumulateTracks")]]
+  void accumulate(ISurfaceMaterialAccumulator::State& state,
+                  const GeometryContext& gctx,
+                  const std::vector<MaterialInteraction>& interactions,
+                  const std::vector<IAssignmentFinder::SurfaceAssignment>&
+                      surfacesWithoutAssignment) const override;
+
   /// @brief Accumulate the material of a batch of tracks
   ///
   /// The accumulation is sharded by surface: every surface processes its

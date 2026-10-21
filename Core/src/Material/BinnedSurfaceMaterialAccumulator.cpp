@@ -98,6 +98,15 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
   return state;
 }
 
+void Acts::BinnedSurfaceMaterialAccumulator::accumulate(
+    ISurfaceMaterialAccumulator::State& state, const GeometryContext& gctx,
+    const std::vector<MaterialInteraction>& interactions,
+    const std::vector<IAssignmentFinder::SurfaceAssignment>&
+        surfacesWithoutAssignment) const {
+  TrackAccumulation track{&interactions, &surfacesWithoutAssignment};
+  accumulateTracks(state, gctx, std::span(&track, 1), nullptr);
+}
+
 void Acts::BinnedSurfaceMaterialAccumulator::accumulateTracks(
     ISurfaceMaterialAccumulator::State& state, const GeometryContext& /*gctx*/,
     std::span<const TrackAccumulation> tracks, detail::WorkerPool* pool) const {

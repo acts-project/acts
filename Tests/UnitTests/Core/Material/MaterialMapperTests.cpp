@@ -407,22 +407,24 @@ BOOST_AUTO_TEST_CASE(DeprecatedSingleTrackAccumulation) {
   std::vector<ISurfaceMaterialAccumulator::TrackAccumulation> tracks(
       3, {&interactions, &empty});
 
-  // An implementation of the batch method serves single-track calls
-  CallCounter<true, false> modern;
-  auto modernState = modern.createState(tContext);
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  modern.ISurfaceMaterialAccumulator::accumulate(*modernState, tContext,
-                                                 interactions, empty);
-  ACTS_POP_IGNORE_DEPRECATED()
-  BOOST_CHECK_EQUAL(modern.batchCalls, 1u);
-
   // An implementation of the deprecated method serves batch calls
   CallCounter<false, true> legacy;
   auto legacyState = legacy.createState(tContext);
   legacy.accumulateTracks(*legacyState, tContext, tracks, nullptr);
   BOOST_CHECK_EQUAL(legacy.singleCalls, 3u);
 
-  // Overriding neither is an error instead of an endless recursion
+  // The deprecated method does not forward to the batch method
+  CallCounter<true, false> modern;
+  auto modernState = modern.createState(tContext);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  BOOST_CHECK_THROW(
+      modern.accumulate(*modernState, tContext, interactions, empty),
+      std::logic_error);
+  ACTS_POP_IGNORE_DEPRECATED()
+  modern.accumulateTracks(*modernState, tContext, tracks, nullptr);
+  BOOST_CHECK_EQUAL(modern.batchCalls, 3u);
+
+  // Overriding neither is an error
   CallCounter<false, false> broken;
   auto brokenState = broken.createState(tContext);
   BOOST_CHECK_THROW(
