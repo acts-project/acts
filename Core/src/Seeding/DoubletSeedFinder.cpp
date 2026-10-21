@@ -9,34 +9,51 @@
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
 
 #include "Acts/EventData/SpacePointContainer.hpp"
+#include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-#include <cmath>
-#include <limits>
+#include <array>
 #include <stdexcept>
 
 #include <boost/mp11.hpp>
 #include <boost/mp11/algorithm.hpp>
 
+#include "detail/SortByKey.hpp"
+
 namespace Acts {
+
+void DoubletsForMiddleSp::sortByCotTheta(
+    const IndexRange& range,
+    std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
+  SortStorage storage;
+  sortByCotTheta(range, indexAndCotTheta, storage);
+}
+
+void DoubletsForMiddleSp::sortByCotTheta(
+    const IndexRange& range, std::vector<IndexAndCotTheta>& indexAndCotTheta,
+    SortStorage& storage) const {
+  indexAndCotTheta.clear();
+  indexAndCotTheta.reserve(range.second - range.first);
+  for (Index i = range.first; i < range.second; ++i) {
+    indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
+  }
+
+  const auto cotThetaOf = [](const IndexAndCotTheta& item) {
+    return item.cotTheta;
+  };
+
+  // The limit up to which a quadratic sort is used: the rank sort for the whole
+  // list instead of the linear bucket sort, and the insertion pass for one
+  // bucket instead of std::ranges::stable_sort
+  constexpr std::size_t kQuadraticLinearCrossover = 32;
+  detail::sortByKey<kQuadraticLinearCrossover>(std::span(indexAndCotTheta),
+                                               storage, cotThetaOf);
+}
 
 namespace {
 
-/// How the cuts on deltaZ and on the collision region are made, chosen in
-/// create(). Where a range is symmetric about zero, it is tested with one
-/// comparison on the absolute value; an unbounded deltaZ range rejects no
-/// candidate, so its cut is not made.
-enum class ZCuts {
-  /// two comparisons each
-  eGeneral,
-  /// symmetric deltaZ range and collision region
-  eSymmetric,
-  /// symmetric collision region, unbounded deltaZ range
-  eSymmetricNoDeltaZ,
-};
-
 template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR,
-          bool experimentCuts, bool useTime, ZCuts zCuts>
+          bool experimentCuts, bool useTime, bool stripCalibration>
 class Impl final : public DoubletSeedFinder {
  public:
   explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
@@ -79,17 +96,22 @@ class Impl final : public DoubletSeedFinder {
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
 
+    // only filled with the strip calibration
+    [[maybe_unused]] float calibrationTolerance = 0;
+    [[maybe_unused]] OuterStripSpacePointCalibrationDetailsDerived
+        calibrationM{};
+    if constexpr (stripCalibration) {
+      calibrationTolerance = *m_cfg.stripCalibrationTolerance;
+      calibrationM = detail::deriveOuterStripSpacePointCalibrationDetails(
+          middleSp.outerStripCalibrationDetails());
+    }
+
     const auto outsideRangeCheck = [](const float value, const float min,
                                       const float max) {
       // intentionally using `|` after profiling. faster due to better branch
       // prediction
       return static_cast<bool>(static_cast<int>(value < min) |
                                static_cast<int>(value > max));
-    };
-    // Same result as outsideRangeCheck(value, -max, max) for every input, but
-    // one comparison instead of two.
-    const auto outsideSymmetricRange = [](const float value, const float max) {
-      return std::abs(value) > max;
     };
 
     const auto calculateError = [&](float varianceZO, float varianceRO,
@@ -102,9 +124,9 @@ class Impl final : public DoubletSeedFinder {
     for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
              container.xyColumn(), container.zrColumn(),
              container.varianceZColumn(), container.varianceRColumn())) {
-      const float xO = xyO[0];
-      const float yO = xyO[1];
-      const float zO = zrO[0];
+      float xO = xyO[0];
+      float yO = xyO[1];
+      float zO = zrO[0];
       const float rO = zrO[1];
 
       float deltaR = 0;
@@ -141,15 +163,8 @@ class Impl final : public DoubletSeedFinder {
         deltaZ = zO - zM;
       }
 
-      if constexpr (zCuts == ZCuts::eGeneral) {
-        if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
-          continue;
-        }
-      } else if constexpr (zCuts == ZCuts::eSymmetric) {
-        // deltaZMin is -deltaZMax
-        if (outsideSymmetricRange(deltaZ, m_cfg.deltaZMax)) {
-          continue;
-        }
+      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
+        continue;
       }
 
       // the longitudinal impact parameter zOrigin is defined as (zM - rM *
@@ -158,18 +173,9 @@ class Impl final : public DoubletSeedFinder {
       // collisionRegion by deltaR to avoid divisions
       const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
       // check if duplet origin on z axis within collision region
-      // symmetric: collisionRegionMin * deltaR is exactly
-      // -(collisionRegionMax * deltaR), since negation is exact
-      bool outsideCollisionRegion = false;
-      if constexpr (zCuts != ZCuts::eGeneral) {
-        outsideCollisionRegion = outsideSymmetricRange(
-            zOriginTimesDeltaR, m_cfg.collisionRegionMax * deltaR);
-      } else {
-        outsideCollisionRegion = outsideRangeCheck(
-            zOriginTimesDeltaR, m_cfg.collisionRegionMin * deltaR,
-            m_cfg.collisionRegionMax * deltaR);
-      }
-      if (outsideCollisionRegion) {
+      if (outsideRangeCheck(zOriginTimesDeltaR,
+                            m_cfg.collisionRegionMin * deltaR,
+                            m_cfg.collisionRegionMax * deltaR)) {
         continue;
       }
 
@@ -193,6 +199,43 @@ class Impl final : public DoubletSeedFinder {
         }
       }
 
+      // middle space point of this doublet, calibrated if enabled
+      float xMd = xM;
+      float yMd = yM;
+      float rMd = rM;
+      float uIP = middleSpInfo.uIP;
+      float vIPAbsD = vIPAbs;
+
+      // calibrate both space points against their chord
+      if constexpr (stripCalibration) {
+        const std::array<float, 3> chord{xO - xM, yO - yM, zO - zM};
+        std::array<float, 3> calibratedM{};
+        std::array<float, 3> calibratedO{};
+        if (!detail::calibrateOuterStripSpacePoint(
+                chord, calibrationM, calibratedM, calibrationTolerance) ||
+            !detail::calibrateOuterStripSpacePoint(
+                chord,
+                detail::deriveOuterStripSpacePointCalibrationDetails(
+                    container[indexO].outerStripCalibrationDetails()),
+                calibratedO, calibrationTolerance)) {
+          continue;
+        }
+
+        xMd = calibratedM[0];
+        yMd = calibratedM[1];
+        rMd = fastHypot(xMd, yMd);
+        uIP = -1 / rMd;
+        vIPAbsD = impactMax * uIP * uIP;
+
+        xO = calibratedO[0];
+        yO = calibratedO[1];
+        zO = calibratedO[2];
+        const float rOd = fastHypot(xO, yO);
+
+        deltaR = isBottomCandidate ? rMd - rOd : rOd - rMd;
+        deltaZ = isBottomCandidate ? calibratedM[2] - zO : zO - calibratedM[2];
+      }
+
       // if interactionPointCut is false we apply z cuts before coordinate
       // transformation to avoid unnecessary calculations. If
       // interactionPointCut is true we apply the curvature cut first because it
@@ -201,13 +244,14 @@ class Impl final : public DoubletSeedFinder {
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        if (outsideSymmetricRange(deltaZ, m_cfg.cotThetaMax * deltaR)) {
+        if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
+                              m_cfg.cotThetaMax * deltaR)) {
           continue;
         }
 
         // transform SP coordinates to the u-v reference frame
-        const float deltaX = xO - xM;
-        const float deltaY = yO - yM;
+        const float deltaX = xO - xMd;
+        const float deltaY = yO - yMd;
 
         const float xNewFrame =
             deltaX * middleSpInfo.cosPhiM + deltaY * middleSpInfo.sinPhiM;
@@ -244,8 +288,8 @@ class Impl final : public DoubletSeedFinder {
       }
 
       // transform SP coordinates to the u-v reference frame
-      const float deltaX = xO - xM;
-      const float deltaY = yO - yM;
+      const float deltaX = xO - xMd;
+      const float deltaY = yO - yMd;
 
       const float xNewFrame =
           deltaX * middleSpInfo.cosPhiM + deltaY * middleSpInfo.sinPhiM;
@@ -267,16 +311,16 @@ class Impl final : public DoubletSeedFinder {
       // The correct computation would be:
       // yNewFrame * yNewFrame * rM * rM > config.impactMax *
       // config.impactMax * deltaR2
-      if (std::abs(rM * yNewFrame) > impactMax * xNewFrame) {
+      if (std::abs(rMd * yNewFrame) > impactMax * xNewFrame) {
         // in the rotated frame the interaction point is positioned at x = -rM
         // and y ~= impactParam
-        const float vIP = (yNewFrame > 0) ? -vIPAbs : vIPAbs;
+        const float vIP = (yNewFrame > 0) ? -vIPAbsD : vIPAbsD;
 
         // we can obtain aCoef as the slope dv/du of the linear function,
         // estimated using du and dv between the two SP bCoef is obtained by
         // inserting aCoef into the linear equation
-        const float aCoef = (vT - vIP) / (uT - middleSpInfo.uIP);
-        const float bCoef = vIP - aCoef * middleSpInfo.uIP;
+        const float aCoef = (vT - vIP) / (uT - uIP);
+        const float bCoef = vIP - aCoef * uIP;
         // the distance of the straight line from the origin (radius of the
         // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
         // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
@@ -288,7 +332,8 @@ class Impl final : public DoubletSeedFinder {
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
-      if (outsideSymmetricRange(deltaZ, m_cfg.cotThetaMax * deltaR)) {
+      if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
+                            m_cfg.cotThetaMax * deltaR)) {
         continue;
       }
 
@@ -344,30 +389,13 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
   using SortedByROptions = BooleanOptions;
   using ExperimentCutsOptions = BooleanOptions;
   using UseTimeOptions = BooleanOptions;
-  using ZCutsOptions = boost::mp11::mp_list<
-      std::integral_constant<ZCuts, ZCuts::eGeneral>,
-      std::integral_constant<ZCuts, ZCuts::eSymmetric>,
-      std::integral_constant<ZCuts, ZCuts::eSymmetricNoDeltaZ>>;
+  using StripCalibrationOptions = BooleanOptions;
 
   using DoubletOptions =
       boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
                               InteractionPointCutOptions, SortedByROptions,
                               ExperimentCutsOptions, UseTimeOptions,
-                              ZCutsOptions>;
-
-  // Compared exactly: only an exactly symmetric range gives the same cut.
-  const bool symmetricCollisionRegion =
-      config.collisionRegionMin == -config.collisionRegionMax;
-  const bool unboundedDeltaZ =
-      config.deltaZMin == -std::numeric_limits<float>::infinity() &&
-      config.deltaZMax == std::numeric_limits<float>::infinity();
-  ZCuts configZCuts = ZCuts::eGeneral;
-  if (symmetricCollisionRegion && unboundedDeltaZ) {
-    configZCuts = ZCuts::eSymmetricNoDeltaZ;
-  } else if (symmetricCollisionRegion &&
-             config.deltaZMin == -config.deltaZMax) {
-    configZCuts = ZCuts::eSymmetric;
-  }
+                              StripCalibrationOptions>;
 
   std::unique_ptr<DoubletSeedFinder> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
@@ -378,7 +406,7 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
     using ExperimentCuts = boost::mp11::mp_at_c<OptionType, 3>;
     using UseTime = boost::mp11::mp_at_c<OptionType, 4>;
-    using ZCutsOption = boost::mp11::mp_at_c<OptionType, 5>;
+    using StripCalibration = boost::mp11::mp_at_c<OptionType, 5>;
 
     const bool configIsBottomCandidate =
         config.candidateDirection == Direction::Backward();
@@ -387,7 +415,9 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
         config.interactionPointCut != InteractionPointCut::value ||
         config.spacePointsSortedByRadius != SortedByR::value ||
         config.experimentCuts.connected() != ExperimentCuts::value ||
-        config.useTime != UseTime::value || configZCuts != ZCutsOption::value) {
+        config.useTime != UseTime::value ||
+        config.stripCalibrationTolerance.has_value() !=
+            StripCalibration::value) {
       return;  // skip if the configuration does not match
     }
 
@@ -401,7 +431,8 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     // create the implementation for the given configuration
     result = std::make_unique<Impl<
         IsBottomCandidate::value, InteractionPointCut::value, SortedByR::value,
-        ExperimentCuts::value, UseTime::value, ZCutsOption::value>>(config);
+        ExperimentCuts::value, UseTime::value, StripCalibration::value>>(
+        config);
   });
   if (result == nullptr) {
     throw std::runtime_error(

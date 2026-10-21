@@ -64,7 +64,7 @@ numpy==2.4.6 ; python_full_version < '3.12'
     #   scipy
     #   uhi
     #   uproot
-numpy==2.5.3 ; python_full_version >= '3.12'
+numpy==2.5.4 ; python_full_version >= '3.12'
     # via
     #   awkward
     #   awkward-cpp
@@ -88,9 +88,9 @@ pandas==3.0.6
     # via -r Examples/Scripts/requirements.in
 pillow==12.3.0
     # via matplotlib
-pydantic==2.13.5
+pydantic==2.14.0
     # via -r Examples/Scripts/requirements.in
-pydantic-core==2.46.5
+pydantic-core==2.50.0
     # via pydantic
 pygments==2.21.0
     # via rich
@@ -114,7 +114,7 @@ shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-typer==0.27.2
+typer==0.27.3
     # via -r Examples/Scripts/requirements.in
 typing-extensions==4.16.0
     # via
@@ -125,11 +125,11 @@ typing-inspection==0.4.4
     # via pydantic
 tzdata==2026.5 ; sys_platform == 'emscripten' or sys_platform == 'win32'
     # via pandas
-uhi==1.2.0
+uhi==1.2.1
     # via
     #   histoprint
     #   mplhep
-uproot==5.7.6
+uproot==5.7.7
     # via -r Examples/Scripts/requirements.in
 xxhash==4.0.1
     # via uproot

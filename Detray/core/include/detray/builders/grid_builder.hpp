@@ -164,9 +164,15 @@ class grid_builder : public volume_decorator<detector_t> {
 
   /// Add the volume and the grid to the detector @param det
   DETRAY_HOST
-  auto build(detector_t &det, typename detector_t::geometry_context ctx = {}) ->
+  auto build(detector_t &det, const volume_builder_options &opt,
+             typename detector_t::geometry_context ctx = {}) ->
       typename detector_t::volume_type * override {
     DETRAY_VERBOSE_HOST("Build surface grid...");
+
+    if (opt.deduplicate()) {
+      DETRAY_WARN_HOST(this->name()
+                       << ": Surface grid deduplication not yet implemented");
+    }
 
     DETRAY_VERBOSE_HOST(
         " -> Defer to other builders to get complete surface descriptors "
@@ -176,7 +182,7 @@ class grid_builder : public volume_decorator<detector_t> {
 
     // Add the surfaces (portals and/or passives) that are owned by the vol
     typename detector_t::volume_type *vol_ptr =
-        volume_decorator<detector_t>::build(det, ctx);
+        volume_decorator<detector_t>::build(det, opt, ctx);
 
     DETRAY_VERBOSE_HOST("Resume building with updated surface descriptors");
 

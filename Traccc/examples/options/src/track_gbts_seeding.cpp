@@ -119,6 +119,11 @@ track_gbts_seeding::track_gbts_seeding() : interface("GBTS Options") {
           ->default_value(gbts_config.max_connected_edges_per_spacepoint),
       "compacted graph capacity per spacepoint (connected edges beyond it "
       "are dropped)");
+  m_desc.add_options()(
+      "max_paths_per_spacepoint",
+      po::value(&gbts_config.max_paths_per_spacepoint)
+          ->default_value(gbts_config.max_paths_per_spacepoint),
+      "path store capacity per spacepoint (paths beyond it are dropped)");
   // set CLI tuning for seed extraction kalman filter
   m_desc.add_options()(
       "sigmaMS",

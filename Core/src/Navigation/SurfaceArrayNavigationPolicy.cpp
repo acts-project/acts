@@ -103,7 +103,10 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     Transform3 layerTransform{Translation3(0, 0, layerZ)};
 
     m_surfaceArray = std::make_unique<SurfaceArray>(sac.surfaceArrayOnDisc(
-        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, layerTransform));
+        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, layerTransform,
+        config.neighborWindow.value_or(
+            SurfaceArray::NeighborWindow{{0, 0}, {2, 1}}),
+        config.overfill));
   } else if (config.layerType == LayerType::Cylinder) {
     auto [binsPhi, binsZ] = config.bins;
 
@@ -155,7 +158,10 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
 
     m_surfaceArray = std::make_unique<SurfaceArray>(sac.surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, layerTransform));
+        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, layerTransform,
+        config.neighborWindow.value_or(
+            SurfaceArray::NeighborWindow{{0, 0}, {1, 2}}),
+        config.overfill));
   } else if (config.layerType == LayerType::Plane) {
     ACTS_ERROR("Plane layers are not yet supported");
     throw std::invalid_argument("Plane layers are not yet supported");
