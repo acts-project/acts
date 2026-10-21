@@ -79,12 +79,16 @@ class SmoothField final : public MagneticFieldProvider {
   Result<FieldAndGradient> getFieldAndGradient(
       const Vector3& position,
       MagneticFieldProvider::Cache& /*cache*/) const override {
+    ++m_gradientLookups;
     if (!m_withGradient) {
       return Result<FieldAndGradient>::failure(
           MagneticFieldError::NotImplemented);
     }
     return Result<FieldAndGradient>::success(evaluate(position));
   }
+
+  /// Number of calls of getFieldAndGradient
+  std::size_t gradientLookups() const { return m_gradientLookups; }
 
  private:
   FieldAndGradient evaluate(const Vector3& p) const {
@@ -107,6 +111,7 @@ class SmoothField final : public MagneticFieldProvider {
   double m_b0;
   double m_length;
   bool m_withGradient;
+  mutable std::size_t m_gradientLookups = 0;
 };
 
 /// A constant field that fails outside of |x| < xMax
@@ -497,6 +502,9 @@ BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_jacobian) {
       propagateFree(analyticStepper, options, start, pathLength, true);
   CHECK_CLOSE_OR_SMALL(withProviderGradient.jacTransport, analytic.jacTransport,
                        1e-6, 1e-8);
+  // Only the stepper with the analytic field uses the provider gradient
+  BOOST_CHECK_GT(analyticField->gradientLookups(), 0u);
+  BOOST_CHECK_EQUAL(field->gradientLookups(), 0u);
 }
 
 namespace {

@@ -99,8 +99,8 @@ class MagneticFieldProvider {
 
   /// Check if @ref getFieldAndGradient is implemented by this provider.
   ///
-  /// A caller checks this once. If it is false, the caller can use
-  /// @ref Acts::getFieldAndGradientNumerically instead.
+  /// If it is false, the caller has to compute the gradient in a different
+  /// way, for example with finite differences of @ref getField.
   ///
   /// @return true if the provider implements the field gradient
   virtual bool providesFieldGradient() const { return false; }
@@ -119,25 +119,5 @@ class MagneticFieldProvider {
 
   virtual ~MagneticFieldProvider() = default;
 };
-
-/// Compute the magnetic field gradient with central finite differences.
-///
-/// The function looks up the field at @p position and at the six positions
-/// that are @p epsilon away along each axis. The error of the gradient is
-/// proportional to @p epsilon squared for a smooth field. An interpolated
-/// field map is only continuous at its cell edges, so there the result is an
-/// average of the gradients of the neighbouring cells.
-///
-/// @param [in] provider The magnetic field provider
-/// @param [in] position global 3D position for the lookup
-/// @param [in,out] cache Field provider specific cache object
-/// @param [in] epsilon Distance of the lookups from @p position
-///
-/// @return field and gradient at the given position, or the error of the
-///         first lookup that failed
-/// @ingroup magnetic_field
-Result<MagneticFieldProvider::FieldAndGradient> getFieldAndGradientNumerically(
-    const MagneticFieldProvider& provider, const Vector3& position,
-    MagneticFieldProvider::Cache& cache, double epsilon);
 
 }  // namespace Acts

@@ -87,9 +87,11 @@ class MultiRangeBField final : public MagneticFieldProvider {
 
   /// @copydoc MagneticFieldProvider::getFieldAndGradient(const Vector3&,MagneticFieldProvider::Cache&) const
   ///
-  /// @note The field is constant inside each region, so the gradient is
-  ///       zero. The gradient does not describe the steps of the field at the
-  ///       edges of the regions.
+  /// @note The field is the field vector of the region that @ref getField
+  ///       selects. Each region has one constant field vector, so the
+  ///       gradient is zero at every position inside the regions. At the edge
+  ///       between two regions the field jumps. A jump has no finite
+  ///       gradient, so the gradient does not describe it.
   Result<FieldAndGradient> getFieldAndGradient(
       const Vector3& position,
       MagneticFieldProvider::Cache& cache) const override;

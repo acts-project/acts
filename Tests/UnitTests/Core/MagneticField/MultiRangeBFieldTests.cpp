@@ -81,6 +81,8 @@ BOOST_AUTO_TEST_CASE(TestMultiRangeBFieldGradient) {
   std::vector<std::pair<RangeXD<3, double>, Vector3>> inputs;
   inputs.emplace_back(RangeXD<3, double>{{0., 0., 0.}, {3., 3., 3.}},
                       Vector3{0., 0., 2.});
+  inputs.emplace_back(RangeXD<3, double>{{1., 1., 1.}, {2., 2., 2.}},
+                      Vector3{2., 0., 0.});
 
   const MultiRangeBField bfield(std::move(inputs));
   auto bcache = bfield.makeCache(mfContext);
@@ -91,6 +93,23 @@ BOOST_AUTO_TEST_CASE(TestMultiRangeBFieldGradient) {
   BOOST_REQUIRE(inside.ok());
   BOOST_CHECK_EQUAL(inside->field, Vector3(0., 0., 2.));
   BOOST_CHECK_EQUAL(inside->gradient, SquareMatrix3::Zero());
+
+  // The second region overlaps the first one and has the higher priority
+  auto overlap = bfield.getFieldAndGradient({1.5, 1.5, 1.5}, bcache);
+  BOOST_REQUIRE(overlap.ok());
+  BOOST_CHECK_EQUAL(overlap->field, Vector3(2., 0., 0.));
+  BOOST_CHECK_EQUAL(overlap->gradient, SquareMatrix3::Zero());
+
+  // The field must agree with getField at each position
+  for (const Vector3& position :
+       {Vector3(0.5, 0.5, 0.5), Vector3(1.5, 1.5, 1.5), Vector3(2.5, 1.5, 1.5),
+        Vector3(1.5, 0.5, 1.5)}) {
+    auto field = bfield.getField(position, bcache);
+    auto fieldAndGradient = bfield.getFieldAndGradient(position, bcache);
+    BOOST_REQUIRE(field.ok());
+    BOOST_REQUIRE(fieldAndGradient.ok());
+    BOOST_CHECK_EQUAL(fieldAndGradient->field, *field);
+  }
 
   auto outside = bfield.getFieldAndGradient({5., 5., 5.}, bcache);
   BOOST_REQUIRE(!outside.ok());

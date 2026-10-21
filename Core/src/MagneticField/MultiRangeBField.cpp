@@ -75,6 +75,8 @@ Result<Vector3> MultiRangeBField::getField(
 Result<MagneticFieldProvider::FieldAndGradient>
 MultiRangeBField::getFieldAndGradient(
     const Vector3& position, MagneticFieldProvider::Cache& cache) const {
+  // The field of each region is constant, so only the selection of the
+  // region depends on the position
   Result<Vector3> field = getField(position, cache);
   if (!field.ok()) {
     return Result<FieldAndGradient>::failure(field.error());
