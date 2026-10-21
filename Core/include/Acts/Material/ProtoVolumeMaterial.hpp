@@ -69,7 +69,8 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
 
   using IVolumeMaterial::material;
 
-  /// @copydoc IVolumeMaterial::materialCell
+  /// Return an unbounded constant material cell.
+  /// @return the homogeneous material cell
   VolumeMaterialCell materialCell(const Vector3& /*position*/) const final {
     return VolumeMaterialCell(Material::Vacuum());
   }
