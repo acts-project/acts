@@ -15,14 +15,19 @@
 
 namespace traccc::cuda {
 namespace kernels {
+   
+   template<typename T,
+	   unsigned int N_COLS,
+	   unsigned int N_ROWS>
    __global__ 
    void define_plane_edges(const traccc::hough_seeding_config config,
-		   edm::houghplane_collection<unsigned long long, device::N_COLS, device::N_ROWS>::view houghplanes) {
-      float steps_x = (config.max_range_x - config.min_range_x) / device::N_COLS;
-      float steps_y = (config.max_range_y - config.min_range_y) / device::N_ROWS;
-      device::define_plane_edges(details::global_index1(), houghplanes,
-		     steps_x, config.min_range_x,
-		     steps_y, config.min_range_y); 
+		   typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes) {
+      float steps_x = (config.max_range_x - config.min_range_x) / N_COLS;
+      float steps_y = (config.max_range_y - config.min_range_y) / N_ROWS;
+      device::define_plane_edges<T, N_COLS, N_ROWS>(
+		      details::global_index1(), houghplanes,
+		      steps_x, config.min_range_x,
+		      steps_y, config.min_range_y); 
    }
    
    template<detray::concepts::detector detector_t>
@@ -30,7 +35,7 @@ namespace kernels {
    void precompute_spacepoint_variables(const traccc::hough_seeding_config config,
 		   detray::detector_view_t<detector_t> detector,
 		   const edm::measurement_collection::const_view& measurements,
-		   edm::spacepoint_collection::const_view::size_type n_spacepoints,
+		   const edm::spacepoint_collection::const_view::size_type n_spacepoints,
 		   const edm::spacepoint_collection::const_view& spacepoints,
 		   vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association,
 		   vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id,
@@ -48,7 +53,7 @@ namespace kernels {
    __global__
    void fill_hough_plane(const traccc::hough_seeding_config config,
 		   const bfield_t bfield,
-		   edm::spacepoint_collection::const_view::size_type n_spacepoints,
+		   const edm::spacepoint_collection::const_view::size_type n_spacepoints,
 		   const edm::spacepoint_collection::const_view& spacepoints,
 		   const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association,
                    const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id,
@@ -76,7 +81,8 @@ void hough_transform_seeding_algorithm::define_plane_edges_kernel(const define_p
    unsigned int maxValues = std::max(device::N_COLS, device::N_ROWS);
    const unsigned int n_threads = warp_size() * 4;
    const unsigned int n_blocks = (maxValues  + n_threads - 1) / n_threads;
-   kernels::define_plane_edges<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, payload.houghplanes);
+   kernels::define_plane_edges<unsigned long long, device::N_COLS, device::N_ROWS>
+	   <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, payload.houghplanes);
    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 

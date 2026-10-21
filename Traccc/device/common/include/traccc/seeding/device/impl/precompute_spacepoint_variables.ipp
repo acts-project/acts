@@ -9,7 +9,7 @@ TRACCC_HOST_DEVICE
 void precompute_spacepoint_variables(const global_index_t globalIndex,
 		const detray::detector_view_t<detector_t> det_view,
 		const edm::measurement_collection::const_view& measurements_view,
-		edm::spacepoint_collection::const_view::size_type n_spacepoints,
+		const edm::spacepoint_collection::const_view::size_type n_spacepoints,
                 const edm::spacepoint_collection::const_view& spacepoints_view,
 		const scalar interactionCenter,
                 const scalar interactionWindow,

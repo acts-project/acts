@@ -40,7 +40,7 @@ auto hough_transform_seeding_algorithm::operator()(
   if (n_spacepoints == 0) {
     return {};
   }
-
+  
   // Set up the output buffer.
   edm::houghplane_collection<unsigned long long, N_COLS, N_ROWS>::const_view::size_type n_slices = m_config.wedges.size();
   edm::houghplane_collection<unsigned long long, N_COLS, N_ROWS>::buffer result(n_slices, mr().main);
