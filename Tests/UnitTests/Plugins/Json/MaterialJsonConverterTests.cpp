@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/GridSurfaceMaterial.hpp"
+#include "Acts/Material/GridVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/MergedMaterialMarker.hpp"
@@ -157,6 +158,46 @@ BOOST_AUTO_TEST_CASE(MergedMaterialMarkerRoundTrip) {
   BOOST_REQUIRE(markerRead != nullptr);
   BOOST_CHECK(dynamic_cast<const MergedMaterialMarker*>(markerRead.get()) !=
               nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(GridVolumeMaterialStorageRoundTrip) {
+  const MultiAxisSpec3D spec(
+      std::array{AxisSpec::Variable({0., 1., 3.}, AxisBoundaryType::Open),
+                 AxisSpec::Equidistant(1, -1., 1., AxisBoundaryType::Bound),
+                 AxisSpec::Equidistant(1, -1., 1., AxisBoundaryType::Bound)});
+  const auto axes = spec.buildMultiAxis();
+  const auto count = axes->getNTotalBins(true);
+  const Material silicon = Material::fromMolarDensity(1., 2., 3., 4., 5.);
+  GridVolumeMaterial::Direct direct(count, Material::Vacuum());
+  direct.at(axes->getGlobalBinFromLocalBins({1, 1, 1})) = silicon;
+  std::vector<std::size_t> indices(count, 0);
+  indices.at(axes->getGlobalBinFromLocalBins({1, 1, 1})) = 1;
+  const std::vector<Material> palette{Material::Vacuum(), silicon};
+  const Transform3 placement(Translation3(10., 20., 30.));
+  const std::vector<GridVolumeMaterial::Storage> stores{
+      direct, GridVolumeMaterial::Indexed{indices, palette},
+      GridVolumeMaterial::GloballyIndexed{
+          indices, std::make_shared<std::vector<Material>>(palette)}};
+  for (const auto& store : stores) {
+    GridVolumeMaterial original(spec, store, placement);
+    const volumeMaterialPointer pointer = &original;
+    nlohmann::json encoded;
+    to_json(encoded, pointer);
+    volumeMaterialPointer decoded = nullptr;
+    from_json(encoded, decoded);
+    std::unique_ptr<const IVolumeMaterial> owner(decoded);
+    const auto* grid = dynamic_cast<const GridVolumeMaterial*>(decoded);
+    BOOST_REQUIRE(grid != nullptr);
+    BOOST_CHECK(grid->binning() == spec);
+    BOOST_CHECK_EQUAL(grid->storage().index(), store.index());
+    BOOST_CHECK_EQUAL(grid->material(Vector3(10.5, 20., 30.)), silicon);
+    BOOST_CHECK(grid->material(Vector3(11.5, 20., 30.)).isVacuum());
+    BOOST_CHECK(grid->materialCell(Vector3(10.5, 20., 30.))
+                    .isInside(Vector3(10.9, 20., 30.)));
+    auto invalid = encoded;
+    invalid["material"]["storage"]["type"] = "unknown";
+    BOOST_CHECK_THROW(from_json(invalid, decoded), std::invalid_argument);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

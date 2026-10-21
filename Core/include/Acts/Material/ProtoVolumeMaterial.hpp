@@ -67,6 +67,13 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
   /// @return The vacuum material (always the same as this is a proxy)
   const Material material(const Vector3& /*position*/) const final;
 
+  using IVolumeMaterial::material;
+
+  /// @copydoc IVolumeMaterial::materialCell
+  VolumeMaterialCell materialCell(const Vector3& /*position*/) const final {
+    return VolumeMaterialCell(Material::Vacuum());
+  }
+
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream

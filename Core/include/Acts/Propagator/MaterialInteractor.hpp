@@ -148,10 +148,13 @@ struct MaterialInteractor {
       detail::VolumeMaterialInteraction interaction(volume, state, stepper);
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (interaction.evaluateMaterialSlab(state, navigator)) {
+      if (interaction.evaluateMaterialSlab(state, navigator,
+                                           result.volumeMaterialCache)) {
         // Record the result
         recordResult(interaction, result);
       }
+    } else {
+      result.volumeMaterialCache = {};
     }
 
     return Result<void>::success();
