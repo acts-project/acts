@@ -70,6 +70,9 @@ constexpr bool addBackground = false;
 constexpr std::size_t nBkgStationsPerMuon = 2;
 /// Minimum angle between a background line and the muon in the bending plane
 constexpr double s_bkgMinAngle = 5. * Acts::UnitConstants::degree;
+/// Number of phi-only strip layers on each side of the tubes (phi strips
+/// without an eta partner), outside the combined strip layers
+constexpr std::size_t nPhiOnlyLayers = 1;
 /// Number of tests run in parallel
 const unsigned nThreads =
     logLvl != Acts::Logging::Level::INFO
@@ -488,10 +491,28 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
        MeasurementGenerator::spawn(line, 0., engine, genCfg, logger())) {
     TestHit hit{};
     hit.sp = sp.get();
+    /// Phi-only strips are created at the local y = 0: the strip covers the
+    /// whole chamber along the bending direction, so place it at the chamber
+    /// centre and store its half length. For barrel chambers, the chamber is
+    /// in the z hemisphere crossed by the track.
+    const bool isPhiOnly{!sp->isStraw() && !sp->measuresLoc1()};
+    const Vector3 locTrackPos{locPos + (sp->localPosition().z() - locPos.z()) /
+                                           locDir.z() * locDir};
+    if (isPhiOnly) {
+      const double ySign{isBarrel(station) && locTrackPos.y() < 0. ? -1. : 1.};
+      sp->updatePosition(
+          Vector3{sp->localPosition().x(),
+                  ySign * 0.5 * (cfg.extMin[st] + cfg.extMax[st]),
+                  sp->localPosition().z()});
+      sp->setStripHalfLength(0.5 * (cfg.extMax[st] - cfg.extMin[st]));
+    }
     hit.position = localToGlobal * sp->localPosition();
-    /// The generated chambers are unbounded: apply the station extension
-    const double ext{isBarrel(station) ? std::abs(hit.position.z())
-                                       : VectorHelpers::perp(hit.position)};
+    /// The generated chambers are unbounded: apply the station extension. For
+    /// phi-only strips, the track position on the strip plane is checked.
+    const Vector3 extPos{isPhiOnly ? Vector3{localToGlobal * locTrackPos}
+                                   : hit.position};
+    const double ext{isBarrel(station) ? std::abs(extPos.z())
+                                       : VectorHelpers::perp(extPos)};
     if (ext < cfg.extMin[st] || ext > cfg.extMax[st]) {
       continue;
     }
@@ -728,6 +749,7 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
   DECLARE_BRANCH(unsigned, nPatTrigger);
   DECLARE_BRANCH(unsigned, nPatPhi);
   DECLARE_BRANCH(unsigned, nPatPhiOnly);
+  DECLARE_BRANCH(unsigned, nPatPhiOnlyMatched);
   DECLARE_BRANCH(int, patSector);
   DECLARE_BRANCH(double, patTheta);
   DECLARE_BRANCH(double, patPhi);
@@ -745,7 +767,7 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
 
   RandomEngine engine{testCfg.seed};
   const std::size_t nMuons{testCfg.muonRegions.size()};
-  std::size_t nFound{0}, nFakes{0};
+  std::size_t nFound{0}, nFakes{0}, nTruePhiOnly{0}, nMatchedPhiOnly{0};
   double totGpfTime{0.};
   TimePoint_t start = std::chrono::system_clock::now();
   ACTS_INFO("Start test " << testCfg.name << ".");
@@ -869,12 +891,16 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
         nPatTrigger = pattern.nTriggerLayers;
         nPatPhi = pattern.nPhiLayers;
         nPatPhiOnly = pattern.phiOnlyHits.size();
+        nPatPhiOnlyMatched = std::ranges::count_if(
+            pattern.phiOnlyHits,
+            [&](const TestHit& hit) { return hit.muonIdx == muonIdx; });
         patSector = pattern.sector.sector();
         patTheta = pattern.patTheta / 1._degree;
         patPhi = pattern.patPhi / 1._degree;
         meanNormRes2 = pattern.meanNormResidual2;
       } else {
         nPatPrecision = nPatTrigger = nPatPhi = nPatPhiOnly = 0;
+        nPatPhiOnlyMatched = 0;
         patSector = -1;
         patTheta = patPhi = meanNormRes2 = -999.;
       }
@@ -884,6 +910,8 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
                             << " eta hits not found. Efficiency: " << efficiency
                             << ", purity: " << purity);
       }
+      nTruePhiOnly += nTruePhiOnlyHits;
+      nMatchedPhiOnly += nPatPhiOnlyMatched;
       outTree->Fill();
     }
   }
@@ -900,8 +928,10 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
   outFile.WriteObject(outTree.get(), outTree->GetName());
   ACTS_INFO("Test " << testCfg.name << " finished. Found " << nFound << "/"
                     << nEvents * nMuons << " muons, " << nFakes
-                    << " patterns not matched to any muon. It took "
-                    << result.time << " ms, pattern finding: " << result.gpfTime
+                    << " patterns not matched to any muon. Attached "
+                    << nMatchedPhiOnly << "/" << nTruePhiOnly
+                    << " phi-only hits of the muons. It took " << result.time
+                    << " ms, pattern finding: " << result.gpfTime
                     << " us/event.");
   return result;
 }
@@ -922,7 +952,7 @@ BOOST_AUTO_TEST_CASE(MuonPatternFinding) {
   constexpr double minEnergyForCheck{20._GeV};
 
   /// MDT + combined trigger strips (RPC/TGC like): 2 gas gaps below and
-  /// above the tubes
+  /// above the tubes, plus nPhiOnlyLayers phi-only strip layers outside them
   GenCfg_t genCfg{};
   genCfg.createStraws = true;
   genCfg.twinStraw = false;
@@ -932,7 +962,8 @@ BOOST_AUTO_TEST_CASE(MuonPatternFinding) {
   genCfg.discretizeStrips = true;
   genCfg.stripPitchLoc0 = 3._cm;
   genCfg.stripPitchLoc1 = 3._cm;
-  genCfg.stripDirLoc0 = std::vector<Vector3>(2, Vector3::UnitY());
+  genCfg.stripDirLoc0 =
+      std::vector<Vector3>(2 + nPhiOnlyLayers, Vector3::UnitY());
   genCfg.stripDirLoc1 = std::vector<Vector3>(2, Vector3::UnitX());
 
   struct LaunchedTest {

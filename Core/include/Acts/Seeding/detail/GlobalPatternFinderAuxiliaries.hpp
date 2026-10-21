@@ -224,15 +224,21 @@ struct PatternStateAux {
   ///  @param newHit: new hit to replace with
   ///  @param newTestRes: line compatibility test result of the new hit
   void overWriteHit(const OrderedHit& newHit, const LineTestRes& newTestRes);
-  /// @brief Compute the contribution of the intrinsic covariance of the hit to the residual
+  /// @brief Contract the intrinsic covariance of the hit with a vector, i.e.
+  ///        compute the variance of the hit position along that vector. It is
+  ///        used both for the residual uncertainty and for the weight of the
+  ///        hit in the bending plane regression.
   ///  @param gctx: geometry context
-  ///  @param hit: hit for which to compute the intrinsic variance
+  ///  @param hit: hit for which to compute the contracted covariance
   ///  @param contractionVector: vector used to contract the covariance
-  ///  @param isProjected: flag indicating if the hit is projected
-  ///  @return: the intrinsic variance of the hit
-  static double intrinsicVariance(const GeometryContext& gctx, const Hit_t& hit,
-                                  const Vector3& contractionVector,
-                                  bool isProjected);
+  ///  @param isProjected: flag indicating if the hit is projected onto the
+  ///         bending plane. Only used in the residual computation, false
+  ///         otherwise.
+  ///  @return: the contracted covariance of the hit
+  static double covarianceContraction(const GeometryContext& gctx,
+                                      const Hit_t& hit,
+                                      const Vector3& contractionVector,
+                                      bool isProjected = false);
   /// @brief Method to compute the residual of a test hit against the pattern line
   ///  @param gctx: geometry context
   ///  @param testHit: test hit information

@@ -252,6 +252,14 @@ class FitTestSpacePoint {
       m_layer = lay;
     }
   }
+  /// @brief Sets the half length of a 1D strip. As in the experiment's
+  ///        space points, it is stored as the covariance of the unmeasured
+  ///        coordinate, without changing the measured coordinates.
+  void setStripHalfLength(const double halfLength) {
+    using enum ResidualIdx;
+    m_covariance[toUnderlying(m_measLoc0 ? bending : nonBending)] =
+        Acts::square(halfLength);
+  }
 
  private:
   Vector3 m_position{Vector3::Zero()};

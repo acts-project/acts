@@ -127,7 +127,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::updateLineParameters(
 }
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
-double PatternStateAux<Hit_t, Sector_t, Topology_t>::intrinsicVariance(
+double PatternStateAux<Hit_t, Sector_t, Topology_t>::covarianceContraction(
     const GeometryContext& gctx, const Hit_t& hit,
     const Vector3& contractionVector, bool isProjected) {
   const auto& sp = hit.spacePoint();
@@ -152,23 +152,29 @@ double PatternStateAux<Hit_t, Sector_t, Topology_t>::intrinsicVariance(
   /// Strip measurements
   StripMeasurementDirections stripDirs{hit.stripMeasurementDirections(gctx)};
   /// Helper method to compute the contribution of a 1D measurement to the
-  /// residual variance
+  /// contracted covariance
   auto oneDimContribution = [&](CovIdx idx, const Vector3& measDir) -> double {
     return hit.spacePoint().covariance()[Acts::toUnderlying(idx)] *
            Acts::square(measDir.dot(contractionVector));
   };
-  const double bendTerm = oneDimContribution(CovIdx::bending, stripDirs.first);
+  /// The first measured direction carries the covariance of the measured
+  /// coordinate: bending for eta and combined strips, non-bending for phi-only
+  /// strips. The other entry (the strip half length for 1D strips) refers to
+  /// the second measured direction, or to the sensor direction for 1D strips.
+  const bool phiOnly{!sp.measuresLoc1()};
+  const CovIdx firstMeasIdx  {phiOnly ? CovIdx::nonBending : CovIdx::bending};
+  const CovIdx secondMeasIdx {phiOnly ? CovIdx::bending : CovIdx::nonBending};
+  const double firstMeasTerm = oneDimContribution(firstMeasIdx, stripDirs.first);
   /// The contribution of the second measured direction is cancelled in case of
   /// projected hits and the second measured direction is same as the sensor
   /// direction.
   if (isProjected && !stripDirs.second) {
-    return bendTerm;
+    return firstMeasTerm;
   }
-  return bendTerm +
+  return firstMeasTerm +
          (stripDirs.second
-              ? oneDimContribution(CovIdx::nonBending, *stripDirs.second)
-              : oneDimContribution(CovIdx::nonBending,
-                                   hit.globalSensorDirection(gctx)));
+              ? oneDimContribution(secondMeasIdx, *stripDirs.second)
+              : oneDimContribution(secondMeasIdx, hit.globalSensorDirection(gctx)));
 }
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
@@ -234,7 +240,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::computeLineResidual(
     if (!isProjected) {
       residualCovAcc +=
           Acts::square(preFactor) *
-          intrinsicVariance(gctx, hit, resDir, /*isProjected=*/false);
+          covarianceContraction(gctx, hit, resDir, /*isProjected=*/false);
       return;
     }
     const Vector3 sensorDir{hit.globalSensorDirection(gctx)};
@@ -244,7 +250,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::computeLineResidual(
 
     residualCovAcc +=
         Acts::square(preFactor) *
-        intrinsicVariance(gctx, hit, trfDir, /*isProjected=*/true);
+        covarianceContraction(gctx, hit, trfDir, /*isProjected=*/true);
     phiPlaneDerivativeAcc += preFactor * projFactor * pos.dot(eR);
     phiDisplDerivativeAcc += preFactor * projFactor;
   };
@@ -335,7 +341,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::updateBendPlane(
     }
     nPhiLayers++;
     const double variance{
-        intrinsicVariance(gctx, hit, bendPlaneNorm, /*isProjected=*/false)};
+        covarianceContraction(gctx, hit, bendPlaneNorm, /*isProjected=*/false)};
     if (variance < Acts::s_epsilon) {
       ACTS_ERROR("updateBendPlane() Phi hit with zero variance, hit:"
                  << std::endl
