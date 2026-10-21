@@ -22,37 +22,40 @@ scalar transform(const scalar qopt_value,
     return phi_value;
 }
 
+template<typename T,
+	unsigned int N_COLS,
+	unsigned int N_ROWS>
 TRACCC_HOST_DEVICE
-void ranges(const edm::houghplane_collection<unsigned long long, device::N_COLS, device::N_ROWS>::device& container,
+void ranges(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device& container,
 	    const scalar magnetic_field_z,
             const scalar r,
             const scalar phi,
             unsigned int* min_ranges,
             unsigned int* max_ranges) {
-    for (unsigned int i(0); i<device::N_COLS; ++i) {
+    for (unsigned int i(0); i<N_COLS; ++i) {
         scalar min_value_phi = transform(container.edges_x()[i], r, phi, magnetic_field_z);
         scalar max_value_phi = transform(container.edges_x()[i + 1], r, phi, magnetic_field_z);
         if (min_value_phi > max_value_phi) std::swap(min_value_phi, max_value_phi);
         
         // out of bounds
         if (min_value_phi < container.edges_y()[0] ||
-            max_value_phi > container.edges_y()[device::N_ROWS]) {
+            max_value_phi > container.edges_y()[N_ROWS]) {
             min_ranges[i] = 0;
             max_ranges[i] = 0;
             return;
         }
         
         unsigned int phi_bin_min = quant(container.edges_y()[0], 
-                                         container.edges_y()[device::N_ROWS],
-                                         device::N_ROWS, 
+                                         container.edges_y()[N_ROWS],
+                                         N_ROWS, 
                                          min_value_phi);
         unsigned int phi_bin_max = quant(container.edges_y()[0], 
-                                         container.edges_y()[device::N_ROWS],
-                                         device::N_ROWS, 
+                                         container.edges_y()[N_ROWS],
+                                         N_ROWS, 
                                          max_value_phi) + 1;
         
         // Clamp bins
-        if (phi_bin_max > device::N_ROWS) phi_bin_max = device::N_ROWS;
+        if (phi_bin_max > device::N_ROWS) phi_bin_max = N_ROWS;
         min_ranges[i] = phi_bin_min;
         max_ranges[i] = phi_bin_max;
     }
@@ -89,9 +92,11 @@ void fill_hough_plane(const global_index_t globalIndex,
    // arrays for ranges
    unsigned int min_ranges[device::N_COLS] {};
    unsigned int max_ranges[device::N_COLS] {};
-   ranges(houghplanes, covfie_field_at_sp[2],
-          spacepoint_r[globalIndex], spacepoint_phi[globalIndex], 
-	  min_ranges, max_ranges);
+   ranges<unsigned long long, device::N_COLS, device::N_ROWS>(houghplanes, 
+		   covfie_field_at_sp[2],
+		   spacepoint_r[globalIndex],
+		   spacepoint_phi[globalIndex], 
+	           min_ranges, max_ranges);
 
    unsigned long long slice = spacepoint_wedge_association[globalIndex];
    const unsigned long long layer_bit = spacepoint_detector_id[globalIndex];
