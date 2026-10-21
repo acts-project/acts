@@ -21,6 +21,7 @@ hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
       m_config(config) {}
 
 auto hough_transform_seeding_algorithm::operator()(
+		const magnetic_field& bfield,
 		const detector_buffer& det,
 		const edm::measurement_collection::const_view& measurements,
 		const edm::spacepoint_collection::const_view& spacepoints) const -> output_type {
@@ -75,7 +76,7 @@ auto hough_transform_seeding_algorithm::operator()(
 		  spacepoint_phi});
 
   // Fill the planes with space points
-  fill_hough_plane_kernel({m_config,
+  fill_hough_plane_kernel({m_config, bfield,
                   n_spacepoints, spacepoints,
                   spacepoint_wedge_association, spacepoint_detector_id,
 		  spacepoint_r, spacepoint_phi,

@@ -144,7 +144,7 @@ full_chain_hough_transform_algorithm::output_type full_chain_hough_transform_alg
         m_spacepoint_formation(m_device_detector, measurements);
   
     const seeding_algorithm::output_type seeds = 
-	    m_seeding(m_device_detector, measurements, spacepoints); 
+	    m_seeding(m_field, m_device_detector, measurements, spacepoints); 
 
     // Copy the measurements back to the host.
     edm::measurement_collection::host measurements_host(m_host_mr);

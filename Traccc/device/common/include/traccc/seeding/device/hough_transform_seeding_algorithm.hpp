@@ -14,6 +14,7 @@
 #include "traccc/seeding/detail/hough_seeding_config.hpp"
 
 // Project include(s).
+#include "traccc/bfield/magnetic_field.hpp"
 #include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/edm/houghplane_collection.hpp"
@@ -33,6 +34,7 @@ static constexpr unsigned int N_ROWS = 7000u;
 // we need to template the class i guess
 class hough_transform_seeding_algorithm
     : public algorithm<edm::houghplane_collection<unsigned long long, N_COLS, N_ROWS>::buffer(
+	  const magnetic_field&,
 	  const detector_buffer&,
 	  const edm::measurement_collection::const_view&,
 	  const edm::spacepoint_collection::const_view&)>,
@@ -48,6 +50,7 @@ class hough_transform_seeding_algorithm
       std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
   output_type operator()(
+		  const magnetic_field&,
 		  const detector_buffer& det,
 		  const edm::measurement_collection::const_view& measurements,
 		  const edm::spacepoint_collection::const_view& spacepoints) const override;
@@ -80,6 +83,8 @@ class hough_transform_seeding_algorithm
 
   struct fill_hough_planes_kernel_payload {
     const hough_seeding_config& config;
+    /// The magnetic field object
+    const magnetic_field& bfield;
     /// The number of spacepoints in the event
     const edm::spacepoint_collection::const_view::size_type n_spacepoints;
     /// The input spacepoints

@@ -9,6 +9,7 @@
 // Library include(s).
 #include "../utils/cuda_error_handling.hpp"
 #include "../utils/global_index.hpp"
+#include "../utils/magnetic_field_types.hpp"
 #include "../utils/utils.hpp"
 #include "traccc/cuda/seeding/hough_transform_seeding_algorithm.hpp"
 
@@ -43,8 +44,10 @@ namespace kernels {
 		      spacepoint_r, spacepoint_phi);
    }
 
+   template <typename bfield_t>
    __global__
    void fill_hough_plane(const traccc::hough_seeding_config config,
+		   const bfield_t bfield,
 		   edm::spacepoint_collection::const_view::size_type n_spacepoints,
 		   const edm::spacepoint_collection::const_view& spacepoints,
 		   const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association,
@@ -52,7 +55,7 @@ namespace kernels {
 		   vecmem::data::vector_view<scalar>& spacepoint_r,
                    vecmem::data::vector_view<scalar>& spacepoint_phi,
 		   edm::houghplane_collection<unsigned long long, device::N_COLS, device::N_ROWS>::view& houghplanes) {
-      device::fill_hough_plane(details::global_index1(),
+      device::fill_hough_plane(details::global_index1(), bfield,
 		      n_spacepoints, spacepoints,
 		      spacepoint_wedge_association, spacepoint_detector_id,
 		      spacepoint_r, spacepoint_phi,
@@ -96,13 +99,16 @@ void hough_transform_seeding_algorithm::precompute_spacepoint_variables_kernel(c
 void hough_transform_seeding_algorithm::fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const {
   const unsigned int n_threads = warp_size() * 8;
   const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
-  kernels::fill_hough_plane<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config,
-				payload.n_spacepoints, payload.spacepoints,
-				payload.spacepoint_wedge_association,
-				payload.spacepoint_detector_id,
-				payload.spacepoint_r,
-                                payload.spacepoint_phi,
-				payload.houghplanes);
+  magnetic_field_visitor<bfield_type_list<scalar>>(
+  	payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
+		kernels::fill_hough_plane<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, bfield,
+			payload.n_spacepoints, payload.spacepoints,
+			payload.spacepoint_wedge_association,
+			payload.spacepoint_detector_id,
+			payload.spacepoint_r,
+                        payload.spacepoint_phi,
+			payload.houghplanes);
+  });
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 

@@ -2,7 +2,6 @@
 
 #include "traccc/device/global_index.hpp"
 #include "detray/geometry/tracking_surface.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "vecmem/memory/device_atomic_ref.hpp"
 
 namespace traccc::device {
@@ -15,10 +14,8 @@ int quant(scalar min, scalar max, unsigned nSteps, scalar val) {
 TRACCC_HOST_DEVICE
 scalar transform(const scalar qopt_value,
                  const scalar r,
-                 const scalar phi) {
-    // Need to retrieve it from somewhere
-    scalar magnetic_field_z = 2.f * Acts::UnitConstants::T;
-	    
+                 const scalar phi,
+		 const scalar magnetic_field_z) {
     const scalar d0 = 0;
     scalar phi_value = asin(0.50f * r * magnetic_field_z * qopt_value - d0 / r) + phi;
     ::remainderf(phi_value, 2.00f * std::numbers::pi_v<scalar>);
@@ -27,13 +24,14 @@ scalar transform(const scalar qopt_value,
 
 TRACCC_HOST_DEVICE
 void ranges(const edm::houghplane_collection<unsigned long long, device::N_COLS, device::N_ROWS>::device& container,
+	    const scalar magnetic_field_z,
             const scalar r,
             const scalar phi,
             unsigned int* min_ranges,
             unsigned int* max_ranges) {
     for (unsigned int i(0); i<device::N_COLS; ++i) {
-        scalar min_value_phi = transform(container.edges_x()[i], r, phi);
-        scalar max_value_phi = transform(container.edges_x()[i + 1], r, phi);
+        scalar min_value_phi = transform(container.edges_x()[i], r, phi, magnetic_field_z);
+        scalar max_value_phi = transform(container.edges_x()[i + 1], r, phi, magnetic_field_z);
         if (min_value_phi > max_value_phi) std::swap(min_value_phi, max_value_phi);
         
         // out of bounds
@@ -61,8 +59,10 @@ void ranges(const edm::houghplane_collection<unsigned long long, device::N_COLS,
 }
 
 
+template <typename bfield_t>
 TRACCC_HOST_DEVICE
 void fill_hough_plane(const global_index_t globalIndex,
+		const bfield_t& bfield,
                 const edm::spacepoint_collection::const_view::size_type n_spacepoints,
                 const edm::spacepoint_collection::const_view& spacepoints_view,
                 const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association_view,
@@ -82,11 +82,14 @@ void fill_hough_plane(const global_index_t globalIndex,
 
    // skip if it does not contribute
    if (spacepoint_wedge_association[globalIndex] == 0ULL) return;
- 
+
+   // get magnetic field
+   const auto covfie_field_at_sp = bfield.at(spacepoints.x()[globalIndex], spacepoints.y()[globalIndex], spacepoints.z()[globalIndex]);
+
    // arrays for ranges
    unsigned int min_ranges[device::N_COLS] {};
    unsigned int max_ranges[device::N_COLS] {};
-   ranges(houghplanes, 
+   ranges(houghplanes, covfie_field_at_sp[2],
           spacepoint_r[globalIndex], spacepoint_phi[globalIndex], 
 	  min_ranges, max_ranges);
 
