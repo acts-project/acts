@@ -1830,7 +1830,7 @@ def addTruthTrackingGsf(
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
         "weightCutoff": 1.0e-4,
-        "transverseMomentumCut": 500 * u.MeV,
+        "transverseMomentumCut": 100 * u.MeV,
         "reverseFilteringCovarianceScaling": 100.0,
         "level": customLogLevel(),
     }

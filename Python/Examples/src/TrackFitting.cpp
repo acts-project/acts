@@ -122,21 +122,21 @@ void addTrackFitting(py::module& mex) {
            std::shared_ptr<const MagneticFieldProvider> magneticField,
            const std::shared_ptr<const BetheHeitlerApprox>& betheHeitlerApprox,
            std::size_t maxComponents, double weightCutoff,
-           double transverseMomentumCut,
            ComponentMergeMethod componentMergeMethod,
            MixtureReductionAlgorithm mixtureReductionAlgorithm,
-           double reverseFilteringCovarianceScaling, Logging::Level level) {
+           double reverseFilteringCovarianceScaling, Logging::Level level,
+           double transverseMomentumCut) {
           return makeGsfFitterFunction(
               std::move(trackingGeometry), std::move(magneticField),
               betheHeitlerApprox, maxComponents, weightCutoff,
-              transverseMomentumCut, componentMergeMethod,
-              mixtureReductionAlgorithm, reverseFilteringCovarianceScaling,
-              *getDefaultLogger("GSFFunc", level));
+              componentMergeMethod, mixtureReductionAlgorithm,
+              reverseFilteringCovarianceScaling,
+              *getDefaultLogger("GSFFunc", level), transverseMomentumCut);
         },
         "trackingGeometry"_a, "magneticField"_a, "betheHeitlerApprox"_a,
-        "maxComponents"_a, "weightCutoff"_a, "transverseMomentumCut"_a,
-        "componentMergeMethod"_a, "mixtureReductionAlgorithm"_a,
-        "reverseFilteringCovarianceScaling"_a, "level"_a);
+        "maxComponents"_a, "weightCutoff"_a, "componentMergeMethod"_a,
+        "mixtureReductionAlgorithm"_a, "reverseFilteringCovarianceScaling"_a,
+        "level"_a, "transverseMomentumCut"_a = 0.0);
 
     mex.def(
         "makeGlobalChiSquareFitterFunction",

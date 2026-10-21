@@ -84,6 +84,8 @@ auto makeDefaultGsfOptions() {
   opts.extensions = getExtensions();
   opts.propagatorPlainOptions =
       PropagatorPlainOptions(tester.geoCtx, tester.magCtx);
+  opts.transverseMomentumCut =
+      0.0;  // Explicitly disable cut for existing tests
   return opts;
 }
 
@@ -93,7 +95,7 @@ auto makeDefaultGsfOptions() {
 struct MultiCmpsParsInterface : public BoundTrackParameters {
   MultiComponentBoundTrackParameters multi_pars;
 
-  explicit MultiCmpsParsInterface(const MultiComponentBoundTrackParameters &p)
+  explicit MultiCmpsParsInterface(const MultiComponentBoundTrackParameters& p)
       : BoundTrackParameters(p.merge(ComponentMergeMethod::eMean)),
         multi_pars(p) {}
 
@@ -126,7 +128,7 @@ auto makeParameters() {
   deltaLOC1[eBoundLoc1] = 0.5_mm;
 
   BoundVector deltaQOP = BoundVector::Zero();
-  deltaQOP[eBoundQOverP] = 0.01_GeV;
+  deltaQOP[eBoundQOverP] = 1 / 100_GeV;
 
   std::vector<std::tuple<double, BoundVector, BoundMatrix>> cmps = {
       {0.2, cp.parameters(), cov},
@@ -137,13 +139,222 @@ auto makeParameters() {
 
   return MultiCmpsParsInterface(MultiComponentBoundTrackParameters(
       cp.referenceSurface().getSharedPtr(), cmps,
-      [](const auto &cmp) {
+      [](const auto& cmp) {
         return std::tie(std::get<0>(cmp), std::get<1>(cmp), std::get<2>(cmp));
       },
       electron));
 }
 
 BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
+
+struct MomentumCutUpdater {
+  mutable std::size_t calls = 0;
+  std::size_t rejectOnCall = 0;
+
+  Result<void> update(const GeometryContext& geoContext,
+                      VectorMultiTrajectory::TrackStateProxy state,
+                      const Logger& logger) const {
+    auto result =
+        kfUpdater.operator()<VectorMultiTrajectory>(geoContext, state, logger);
+    if (result.ok() && ++calls == rejectOnCall) {
+      state.filtered()[eBoundQOverP] = 1 / 100_MeV;
+    }
+    return result;
+  }
+};
+
+struct SecondMeasurementOutlier {
+  mutable std::size_t calls = 0;
+  bool operator()(VectorMultiTrajectory::ConstTrackStateProxy) const {
+    return ++calls == 2;
+  }
+};
+
+class ExhaustingBetheHeitlerApprox final : public BetheHeitlerApprox {
+ public:
+  explicit ExhaustingBetheHeitlerApprox(std::size_t exhaustOnCall)
+      : m_exhaustOnCall(exhaustOnCall) {}
+
+  std::size_t maxComponents() const override { return 1; }
+  bool validXOverX0(double) const override { return true; }
+  std::span<Component> mixture(double,
+                               std::span<Component> cache) const override {
+    cache[0] = {++m_calls == m_exhaustOnCall ? 0.0 : 1.0, 1.0, 0.0};
+    return cache.first(1);
+  }
+
+ private:
+  std::size_t m_exhaustOnCall;
+  mutable std::size_t m_calls = 0;
+};
+
+BOOST_AUTO_TEST_CASE(
+    ForwardMomentumExhaustionStartsSmoothingAtLastMeasurement) {
+  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  const BoundTrackParameters start = makeParameters();
+  std::default_random_engine localRng(42);
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         start, tester.resolutions, localRng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  auto options = makeDefaultGsfOptions();
+  options.disableAllMaterialHandling = true;
+  options.transverseMomentumCut = 500_MeV;
+  MomentumCutUpdater updater{0, 3};
+  options.extensions.updater.connect<&MomentumCutUpdater::update>(&updater);
+
+  auto result = gsfZero.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                            options, tracks);
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(result->nMeasurements(), 2u);
+  for (const auto state : result->trackStatesReversed()) {
+    if (state.typeFlags().isMeasurement()) {
+      BOOST_CHECK(state.hasSmoothed());
+      BOOST_CHECK(state.smoothed().allFinite());
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(MomentumExhaustionBeforeFirstMeasurementFails) {
+  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  const BoundTrackParameters start = makeParameters();
+  std::default_random_engine localRng(42);
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         start, tester.resolutions, localRng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  auto options = makeDefaultGsfOptions();
+  options.disableAllMaterialHandling = true;
+  options.transverseMomentumCut = 500_MeV;
+  MomentumCutUpdater updater{0, 1};
+  options.extensions.updater.connect<&MomentumCutUpdater::update>(&updater);
+
+  auto result = gsfZero.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                            options, tracks);
+  BOOST_REQUIRE(!result.ok());
+  BOOST_CHECK(result.error() == GsfError::NoComponentsLeft);
+}
+
+BOOST_AUTO_TEST_CASE(ForwardExhaustionAfterOutlierUsesLastValidMeasurement) {
+  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  const BoundTrackParameters start = makeParameters();
+  std::default_random_engine localRng(42);
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         start, tester.resolutions, localRng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  auto options = makeDefaultGsfOptions();
+  options.disableAllMaterialHandling = true;
+  options.transverseMomentumCut = 500_MeV;
+  MomentumCutUpdater updater{0, 2};
+  SecondMeasurementOutlier outlier;
+  options.extensions.updater.connect<&MomentumCutUpdater::update>(&updater);
+  options.extensions.outlierFinder
+      .connect<&SecondMeasurementOutlier::operator()>(&outlier);
+  auto result = gsfZero.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                            options, tracks);
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(result->nMeasurements(), 1u);
+  BOOST_CHECK_EQUAL(result->nOutliers(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(MomentumCutRemovesOnlyRejectedComponentsWithoutMaterial) {
+  using Actor = detail::Gsf::GsfActor<VectorMultiTrajectory>;
+  VectorMultiTrajectory trajectory;
+  const auto start = makeParameters();
+  std::default_random_engine localRng(42);
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         start, tester.resolutions, localRng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  auto options = makeDefaultGsfOptions();
+  options.disableAllMaterialHandling = true;
+  options.weightCutoff = 0.0;
+  options.transverseMomentumCut = 500_MeV;
+  MomentumCutUpdater updater{0, 1};
+  options.extensions.updater.connect<&MomentumCutUpdater::update>(&updater);
+
+  auto propagator = makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T);
+  Propagator::Options<ActorList<Actor>> propagationOptions(tester.geoCtx,
+                                                           tester.magCtx);
+  auto& actor = propagationOptions.actorList.get<Actor>();
+  actor.setOptions(options);
+  auto logger = getDefaultLogger("SelectiveMomentumCut", Logging::INFO);
+  actor.m_cfg.logger = logger.get();
+  std::map<GeometryIdentifier, SourceLink> measurementMap;
+  for (const auto& link : sourceLinks) {
+    measurementMap.emplace(
+        options.extensions.surfaceAccessor(link)->geometryId(), link);
+  }
+  actor.m_cfg.inputMeasurements = &measurementMap;
+  actor.m_cfg.numberMeasurements = measurementMap.size();
+  auto state = propagator.makeState(propagationOptions);
+  BOOST_REQUIRE(propagator.initialize(state, start.multi_pars, nullptr).ok());
+  state.get<Actor::result_type>().fittedStates = &trajectory;
+  auto result = propagator.propagate(state);
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(state.stepping.components.size(), 4u);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialExhaustionStopsForwardButFailsBackward) {
+  const BoundTrackParameters start = makeParameters();
+  std::default_random_engine localRng(42);
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         start, tester.resolutions, localRng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), tester.nMeasurements);
+
+  for (const bool backward : {false, true}) {
+    BOOST_TEST_CONTEXT("backward=" << backward) {
+      TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+      auto options = makeDefaultGsfOptions();
+      options.maxComponents = 1;
+      GSF fitter(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
+                 std::make_shared<ExhaustingBetheHeitlerApprox>(
+                     backward ? tester.nMeasurements + 1 : 3));
+      auto result = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                               options, tracks);
+      if (backward) {
+        BOOST_REQUIRE(!result.ok());
+        BOOST_CHECK(result.error() == GsfError::NoComponentsLeft);
+      } else {
+        BOOST_REQUIRE(result.ok());
+        BOOST_CHECK_EQUAL(result->nMeasurements(), 3u);
+        for (const auto state : result->trackStatesReversed()) {
+          if (state.typeFlags().isMeasurement()) {
+            BOOST_CHECK(state.hasSmoothed());
+          }
+        }
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(MaterialCutUsesTransverseMomentum) {
+  const BoundTrackParameters start = makeParameters();
+  ExhaustingBetheHeitlerApprox approximation(0);
+  auto logger = getDefaultLogger("TransverseMomentumCut", Logging::INFO);
+  for (const double theta : {1_degree, 90_degree}) {
+    for (const double cut : {0_GeV, 500_MeV}) {
+      auto parameters = start.parameters();
+      parameters[eBoundQOverP] = 1 / 10_GeV;
+      parameters[eBoundTheta] = theta;
+      BoundTrackParameters bound(start.referenceSurface().getSharedPtr(),
+                                 parameters, start.covariance(), electron);
+      std::vector<BetheHeitlerApprox::Component> cache;
+      std::vector<GsfComponent> components;
+      std::size_t invalid = 0;
+      double maxMaterial = 0;
+      detail::Gsf::applyBetheHeitler(tester.geoCtx, start.referenceSurface(),
+                                     Direction::Forward(), bound, 1.0,
+                                     approximation, cache, 0.0, components,
+                                     invalid, maxMaterial, *logger, cut);
+      BOOST_CHECK_EQUAL(components.size(),
+                        cut > 0 && theta == 1_degree ? 0u : 1u);
+    }
+  }
+}
 
 BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto multi_pars = makeParameters();

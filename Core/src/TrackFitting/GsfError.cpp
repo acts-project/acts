@@ -31,7 +31,7 @@ class GsfErrorCategory : public std::error_category {
       case GsfError::NoMeasurementStatesCreatedFinal:
         return "No measurement states in the final trajectory";
       case GsfError::NoComponentsLeft:
-        return "All components removed by cuts during forward pass";
+        return "All components removed by cuts";
       default:
         return "unknown";
     }

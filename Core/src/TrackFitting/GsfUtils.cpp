@@ -69,10 +69,9 @@ double detail::Gsf::applyBetheHeitler(
     Direction direction, const BoundTrackParameters &initialParameters,
     double initialWeight, const BetheHeitlerApprox &betheHeitlerApprox,
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
-    double weightCutoff, double transverseMomentumCut,
-    std::vector<GsfComponent> &componentCache,
+    double weightCutoff, std::vector<GsfComponent> &componentCache,
     std::size_t &nInvalidBetheHeitler, double &maxPathXOverX0,
-    const Logger &logger) {
+    const Logger &logger, double transverseMomentumCut) {
   const double initialMomentum = initialParameters.absoluteMomentum();
   const ParticleHypothesis &particleHypothesis =
       initialParameters.particleHypothesis();
@@ -132,7 +131,8 @@ double detail::Gsf::applyBetheHeitler(
     }();
 
     assert(initialMomentum + deltaP > 0 && "new momentum must be > 0");
-    const double pT = (initialMomentum + deltaP) * std::sin(newPars[eBoundTheta]);
+    const double pT =
+        (initialMomentum + deltaP) * std::sin(newPars[eBoundTheta]);
     if (pT < transverseMomentumCut) {
       ACTS_VERBOSE("Skip new component with pT=" << pT << " GeV");
       continue;

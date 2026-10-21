@@ -188,10 +188,10 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     const std::shared_ptr<const Acts::BetheHeitlerApprox>& betheHeitlerApprox,
     std::size_t maxComponents, double weightCutoff,
-    double transverseMomentumCut,
     Acts::ComponentMergeMethod componentMergeMethod,
     MixtureReductionAlgorithm mixtureReductionAlgorithm,
-    double reverseFilteringCovarianceScaling, const Acts::Logger& logger) {
+    double reverseFilteringCovarianceScaling, const Acts::Logger& logger,
+    double transverseMomentumCut) {
   // Standard fitter
   MultiStepper stepper(magneticField, logger.cloneWithSuffix("Step"));
   const auto& geo = *trackingGeometry;

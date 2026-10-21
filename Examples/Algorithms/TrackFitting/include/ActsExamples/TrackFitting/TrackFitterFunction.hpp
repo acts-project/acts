@@ -122,10 +122,10 @@ std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     const std::shared_ptr<const Acts::BetheHeitlerApprox>& betheHeitlerApprox,
     std::size_t maxComponents, double weightCutoff,
-    double transverseMomentumCut,
     Acts::ComponentMergeMethod componentMergeMethod,
     MixtureReductionAlgorithm mixtureReductionAlgorithm,
-    double reverseFilteringCovarianceScaling, const Acts::Logger& logger);
+    double reverseFilteringCovarianceScaling, const Acts::Logger& logger,
+    double transverseMomentumCut = 0.0);
 
 /// Makes a fitter function object for the Global Chi Square Fitter (GX2F)
 ///
