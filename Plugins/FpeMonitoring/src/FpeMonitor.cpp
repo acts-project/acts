@@ -18,6 +18,8 @@
 #include <iterator>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/stacktrace/frame.hpp>
@@ -327,15 +329,38 @@ std::ostream &operator<<(std::ostream &os, FpeType type) {
   return os;
 }
 
+namespace {
+
+// Symbolization goes through a single libbacktrace state shared by all threads
+// (see BOOST_STACKTRACE_BACKTRACE_FORCE_STATIC in CMakeLists.txt), which is not
+// safe to use concurrently.
+std::mutex &symbolizationMutex() {
+  static std::mutex mutex;
+  return mutex;
+}
+
+}  // namespace
+
 std::string FpeMonitor::stackTraceToString(
     const boost::stacktrace::stacktrace &st, std::size_t depth) {
+  std::lock_guard lock{symbolizationMutex()};
   return boost::stacktrace::detail::to_string(st.as_vector().data(),
                                               std::min(depth, st.size()));
 }
 
 std::string FpeMonitor::getSourceLocation(
     const boost::stacktrace::frame &frame) {
-  return frame.source_file() + ":" + std::to_string(frame.source_line());
+  std::lock_guard lock{symbolizationMutex()};
+  // The same frames are looked up for every event that raises an FPE
+  static std::unordered_map<boost::stacktrace::frame::native_frame_ptr_t,
+                            std::string>
+      cache;
+  auto [it, inserted] = cache.try_emplace(frame.address());
+  if (inserted) {
+    it->second =
+        frame.source_file() + ":" + std::to_string(frame.source_line());
+  }
+  return it->second;
 }
 
 bool FpeMonitor::canSymbolize() {
