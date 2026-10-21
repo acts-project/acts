@@ -103,10 +103,62 @@ RotationMatrix3 ConeSurface::referenceFrame(
   mFrame.col(0) = measX;
   mFrame.col(1) = measY;
   mFrame.col(2) = measDepth;
-  // return the rotation matrix
-  //!< @todo fold in alpha
-  // return it
+  // Orthonormal, so it cannot be the bound frame: d(global)/dz carries a
+  // phi*tan(alpha) piece along eφ and is not orthogonal to eφ.
+  // boundToFreeJacobian builds those columns directly.
   return mFrame;
+}
+
+BoundToFreeMatrix ConeSurface::boundToFreeJacobian(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+
+  // Time, phi, theta and q/p stay on the base. Replace its position columns:
+  // those follow referenceFrame (global x/y, no phi*tan(alpha) term). The
+  // bound (rφ, z) derivatives are eφ and tanα e_r - φ tanα eφ + ez.
+  BoundToFreeMatrix jacToGlobal =
+      Surface::boundToFreeJacobian(gctx, position, direction);
+
+  const Transform3& toGlobal = localToGlobalTransform(gctx);
+  const Vector3 localPosition = toGlobal.inverse() * position;
+  const double localPhi = phi(localPosition);
+  const double tanAlpha = bounds().tanAlpha();
+  const auto& rotation = toGlobal.rotation();
+  const Vector3 radial =
+      rotation * Vector3(std::cos(localPhi), std::sin(localPhi), 0.);
+  const Vector3 phiAxis = rotation.col(2).cross(radial);
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundLoc0) = phiAxis;
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundLoc1) =
+      tanAlpha * radial - localPhi * tanAlpha * phiAxis + rotation.col(2);
+  return jacToGlobal;
+}
+
+FreeToBoundMatrix ConeSurface::freeToBoundJacobian(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  // t, φ, θ and q/p come from the base. Its position block follows
+  // referenceFrame, whose transverse axis is the global xy direction and does
+  // not stay along eφ once the cone is offset. Bound (rφ, z) is obtained by
+  // applying (δu, δz) -> ( (R/r) δu + φ tanα δz, δz ) to (eφ, ez).
+  FreeToBoundMatrix jacToLocal =
+      Surface::freeToBoundJacobian(gctx, position, direction);
+
+  const Transform3& toGlobal = localToGlobalTransform(gctx);
+  const Vector3 localPosition = toGlobal.inverse() * position;
+  const double localPhi = phi(localPosition);
+  const auto& rotation = toGlobal.rotation();
+  const Vector3 phiAxis = rotation.col(2).cross(
+      rotation * Vector3(std::cos(localPhi), std::sin(localPhi), 0.));
+  const double radiusOverPerp =
+      localPosition.z() * bounds().tanAlpha() / perp(localPosition);
+  Matrix<2, 2> toBound;
+  toBound << radiusOverPerp, localPhi * bounds().tanAlpha(), 0., 1.;
+  Matrix<2, 3> axisFrame;
+  axisFrame.row(0) = phiAxis.transpose();
+  axisFrame.row(1) = rotation.col(2).transpose();
+  jacToLocal.block<2, 3>(eBoundLoc0, eFreePos0) = toBound * axisFrame;
+  return jacToLocal;
 }
 
 Vector3 ConeSurface::localToGlobal(const GeometryContext& gctx,

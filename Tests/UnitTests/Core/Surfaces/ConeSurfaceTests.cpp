@@ -12,6 +12,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -28,6 +29,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
@@ -293,6 +295,45 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
   Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
   expLoc3DToLocBound << -1, 0, std::numbers::pi / 2. * std::tan(alpha), 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(ConeSurfaceJacobianRoundTrip) {
+  const double alpha = std::numbers::pi / 8.;
+  const AngleAxis3 rotationAngle(std::numbers::pi / 2., Vector3::UnitZ());
+  const Transform3 transform =
+      makeTransform3(rotationAngle.toRotationMatrix(), Vector3(0., 1., 2.));
+  auto cone = Surface::makeShared<ConeSurface>(transform, alpha, false);
+
+  // Nonzero local phi, so d(global)/dz carries the phi*tan(alpha) term, and
+  // the 90 degree rotation keeps that axis off the global x/y used by
+  // referenceFrame.
+  const double z = 1.7;
+  const double localPhi = 0.6;
+  const double radius = z * std::tan(alpha);
+  const Vector2 local(radius * localPhi, z);
+  const Vector3 direction = Vector3(0.25, -0.4, 0.88).normalized();
+  const Vector3 position = cone->localToGlobal(tgContext, local, direction);
+
+  const FreeToBoundMatrix freeToBound =
+      cone->freeToBoundJacobian(tgContext, position, direction);
+  const BoundToFreeMatrix boundToFree =
+      cone->boundToFreeJacobian(tgContext, position, direction);
+  CHECK_CLOSE_ABS(freeToBound * boundToFree, SquareMatrix<6>::Identity(),
+                  1e-10);
+
+  constexpr double step = 1e-6;
+  const Vector3 du =
+      (cone->localToGlobal(tgContext, local + Vector2(step, 0.), direction) -
+       cone->localToGlobal(tgContext, local - Vector2(step, 0.), direction)) /
+      (2. * step);
+  const Vector3 dv =
+      (cone->localToGlobal(tgContext, local + Vector2(0., step), direction) -
+       cone->localToGlobal(tgContext, local - Vector2(0., step), direction)) /
+      (2. * step);
+  const Vector3 loc0Column = boundToFree.block<3, 1>(eFreePos0, eBoundLoc0);
+  const Vector3 loc1Column = boundToFree.block<3, 1>(eFreePos0, eBoundLoc1);
+  CHECK_CLOSE_ABS(loc0Column, du, 1e-8);
+  CHECK_CLOSE_ABS(loc1Column, dv, 1e-8);
 }
 
 BOOST_AUTO_TEST_CASE(ConeSurfaceMaterialAssignment) {
