@@ -226,7 +226,7 @@ jobs:
           # Two workers only: with FPE monitoring on, resolving masked FPE
           # stack traces loads the (RelWithDebInfo) debug info into each
           # worker, several GB that is never freed, so three do not fit.
-          pytest -rfExw -k "not gnn" -v -n 2 --dist loadgroup --max-worker-restart 0
+          pytest -rfExw -k "not gnn" -v -n 3 --dist loadgroup --max-worker-restart 0
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
