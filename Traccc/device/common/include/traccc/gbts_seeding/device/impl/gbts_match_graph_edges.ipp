@@ -52,6 +52,9 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
       payload.gbts_match_graph_edges_params.much_less_scattering_curv;
   const float high_pT_correction =
       payload.gbts_match_graph_edges_params.high_pT_correction;
+	const float eta_correction = payload.gbts_match_graph_edges_params.eta_correction;
+	const float eta_low_threshold = payload.gbts_match_graph_edges_params.eta_low_threshold;
+	const float eta_high_threshold = payload.gbts_match_graph_edges_params.eta_high_threshold;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -108,27 +111,23 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
                                             (curv < much_less_scattering_curv));
       const float high_pT_factor = 1.0f - high_pT_correction * corr;
 			deta_max *= high_pT_factor;
-			deta_max*=1-0.2f*(eta < 1.0f);
-			deta_max *= 1+0.2f*(eta > 2.7f);
+			float eta_correction_factor = 1 - eta_correction*(eta < eta_low_threshold) + eta_correction*(eta > eta_high_threshold);
+			deta_max *= eta_correction;
       const float deta_cut_ratio =
           math::fabs(eta2 - params2.first.x) / deta_max;
       if (deta_cut_ratio > 1.0f) {  // bad match
         continue;
       }
-			float cut_dphi_max2 = cut_dphi_max;
-			cut_dphi_max2*=1-0.2f*(eta < 1.0f);
-			cut_dphi_max2*=1+0.2f*(eta > 2.7f);
+			const float dphi_max = cut_dphi_max*eta_correction_factor;
       const float dPhi_cut_ratio =
           math::fabs(traccc::detail::wrap_phi(Phi2 - params2.first.w)) /
-          cut_dphi_max2;
+          dphi_max;
       if (dPhi_cut_ratio > 1.0f) {
         continue;
       }
-			float cut_dcurv_max2 = cut_dcurv_max;
-			cut_dcurv_max2*=1-0.2f*(eta2 < 1.0f);
-			cut_dcurv_max2*=1+0.2f*(eta2 > 2.7f);
+			const float dcurv_max = cut_dcurv_max*eta_correction_factor;
 			const float dcurv_cut_ratio =
-          math::fabs(curv2 - params2.first.y) / cut_dcurv_max2;
+          math::fabs(curv2 - params2.first.y) / dcurv_max;
       if (dcurv_cut_ratio > 1.0f) {
         continue;
       }
