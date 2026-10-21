@@ -13,6 +13,7 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <array>
+#include <cmath>
 #include <stdexcept>
 
 #include <boost/mp11.hpp>
@@ -113,6 +114,11 @@ class Impl final : public DoubletSeedFinder {
       return static_cast<bool>(static_cast<int>(value < min) |
                                static_cast<int>(value > max));
     };
+    // The deltaZ, collision region and cotTheta ranges are symmetric about
+    // zero, so each is tested with one comparison.
+    const auto outsideSymmetricRange = [](const float value, const float max) {
+      return std::abs(value) > max;
+    };
 
     const auto calculateError = [&](float varianceZO, float varianceRO,
                                     float iDeltaR2, float cotTheta) {
@@ -163,7 +169,7 @@ class Impl final : public DoubletSeedFinder {
         deltaZ = zO - zM;
       }
 
-      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
+      if (outsideSymmetricRange(deltaZ, m_cfg.deltaZMax)) {
         continue;
       }
 
@@ -173,9 +179,8 @@ class Impl final : public DoubletSeedFinder {
       // collisionRegion by deltaR to avoid divisions
       const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
       // check if duplet origin on z axis within collision region
-      if (outsideRangeCheck(zOriginTimesDeltaR,
-                            m_cfg.collisionRegionMin * deltaR,
-                            m_cfg.collisionRegionMax * deltaR)) {
+      if (outsideSymmetricRange(zOriginTimesDeltaR,
+                                m_cfg.collisionRegionMax * deltaR)) {
         continue;
       }
 
@@ -244,8 +249,7 @@ class Impl final : public DoubletSeedFinder {
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                              m_cfg.cotThetaMax * deltaR)) {
+        if (outsideSymmetricRange(deltaZ, m_cfg.cotThetaMax * deltaR)) {
           continue;
         }
 
@@ -332,8 +336,7 @@ class Impl final : public DoubletSeedFinder {
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
-      if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                            m_cfg.cotThetaMax * deltaR)) {
+      if (outsideSymmetricRange(deltaZ, m_cfg.cotThetaMax * deltaR)) {
         continue;
       }
 
@@ -445,6 +448,17 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
 DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
                                                 float bFieldInZ_)
     : Config(config), bFieldInZ(bFieldInZ_) {
+  // The deltaZ and collision region cuts are symmetric about zero and use
+  // only the maxima
+  if (deltaZMin != -deltaZMax) {
+    throw std::invalid_argument(
+        "DoubletSeedFinder: deltaZMin must be -deltaZMax");
+  }
+  if (collisionRegionMin != -collisionRegionMax) {
+    throw std::invalid_argument(
+        "DoubletSeedFinder: collisionRegionMin must be -collisionRegionMax");
+  }
+
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   const float pTPerHelixRadius = bFieldInZ;
   minHelixDiameter2 = square(minPt * 2 / pTPerHelixRadius) * helixCutTolerance;
