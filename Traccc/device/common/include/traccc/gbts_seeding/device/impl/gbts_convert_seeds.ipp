@@ -168,14 +168,14 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
     if (((diff_code != 3) & (diff_code != 6)) | force_dropout) {
       seeds_device.push_back({seed.nodes[seed.size - 1],
                               seed.nodes[(seed.size - 1) / 2 + 1],
-                              seed.nodes[0], quality + 0.66f});
+                              seed.nodes[0], quality});
     }
     // include 2nd order if it consistent with 1 and 3 or only 1 and 3 are
     // consistent
     if ((diff_code == 1) | (diff_code == 6)) {
       seeds_device.push_back({seed.nodes[seed.size - 1],
                               seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
-                              quality + 0.33f});
+                              quality});
     }
     // include 3rd order if it is consistent with 1 and 2 or only 1 and 2
     // are consistent or if only 2 and 3 are consistent
