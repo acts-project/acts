@@ -202,9 +202,6 @@ struct gbts_fit_segments_params {
   float inv_max_curvature = 900.0f;
   // factor to tighen inv_max_curvature when cutting after the fit is complete
   float final_curv_cut_tighten = 1.5f;
-  // detector r and z bounds, used in seed quality calculation
-  float rmax = 350.0f;
-  float zmax = 3000.0f;
 
   // max_z0 is used from the graph_making to insure concistency
 };
@@ -280,7 +277,7 @@ struct gbts_seedfinder_config {
 
   // Edge buffer capacity per spacepoint.
   // edges beyond the capacity are dropped.
-  unsigned int max_edges_per_spacepoint = 16;
+  unsigned int max_edges_per_spacepoint = 8;
   // Capacity of the compacted graph per spacepoint
   // connected edges beyond it are dropped.
   unsigned int max_connected_edges_per_spacepoint = 2;
