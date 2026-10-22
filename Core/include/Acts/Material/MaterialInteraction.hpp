@@ -97,6 +97,8 @@ struct RecordedMaterial {
   double materialInL0 = 0.;
   /// This one is only filled when recordInteractions is switched on
   std::vector<MaterialInteraction> materialInteractions;
+  /// Transient lookup state local to this propagation; excluded from I/O.
+  IVolumeMaterial::Cache volumeMaterialCache;
 };
 
 /// And recorded material track

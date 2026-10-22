@@ -26,6 +26,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
+#include "Acts/Material/GridVolumeMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -48,6 +49,7 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <array>
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -153,6 +155,43 @@ struct StepCollector {
 };
 
 BOOST_AUTO_TEST_SUITE(PropagatorSuite)
+
+BOOST_AUTO_TEST_CASE(dense_extension_refreshes_material_cells) {
+  const MultiAxisSpec3D binning(
+      std::array{AxisSpec::Equidistant(2, 0., 2., AxisBoundaryType::Bound),
+                 AxisSpec::Equidistant(1, -1., 1., AxisBoundaryType::Bound),
+                 AxisSpec::Equidistant(1, -1., 1., AxisBoundaryType::Bound)});
+  const auto axes = binning.buildMultiAxis();
+  GridVolumeMaterial::Direct values(axes->getNTotalBins(true), makeSilicon());
+  values.at(axes->getGlobalBinFromLocalBins({2, 1, 1})) = makeBeryllium();
+  const GridVolumeMaterial grid(binning, std::move(values));
+  using Stepper = EigenStepper<EigenStepperDenseExtension>;
+  Stepper stepper(std::make_shared<NullBField>());
+  auto state = stepper.makeState(Stepper::Options(tgContext, mfContext));
+  auto parameters = BoundTrackParameters::createCurvilinear(
+      Vector4(0.1, 0., 0., 0.), Vector3::UnitX(), 1_e / 5_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+  stepper.initialize(state, parameters);
+  Vector3 knew = Vector3::Zero();
+  std::array<double, 4> kqop{};
+  auto& extension = state.extension;
+  for (double x : {0.1, 0.9, 1., 1.9, 0.5}) {
+    stepper.update(state, Vector3(x, 0., 0.), Vector3::UnitX(), 1_e / 5_GeV,
+                   0.);
+    BOOST_REQUIRE((extension.template k<0, Stepper>(state, stepper, &grid, knew,
+                                                    Vector3::Zero(), kqop)));
+    BOOST_CHECK_EQUAL(extension.material,
+                      x < 1. ? makeSilicon() : makeBeryllium());
+    BOOST_CHECK_EQUAL(extension.materialCache.owner, &grid);
+  }
+  const HomogeneousVolumeMaterial other(makeIron());
+  BOOST_REQUIRE((extension.template k<0, Stepper>(state, stepper, &other, knew,
+                                                  Vector3::Zero(), kqop)));
+  BOOST_CHECK_EQUAL(extension.material, makeIron());
+  BOOST_REQUIRE((extension.template k<0, Stepper>(state, stepper, nullptr, knew,
+                                                  Vector3::Zero(), kqop)));
+  BOOST_CHECK(!extension.materialCache.cell);
+}
 
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {

@@ -12,6 +12,7 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -79,19 +80,22 @@ struct VolumeMaterialInteraction {
   ///
   /// @param [in] state State of the propagation
   /// @param [in] navigator Navigator of the propagation
+  /// @param [in,out] cache Per-propagation volume material cell cache
   ///
   /// @return Boolean statement whether the material is valid
   template <typename propagator_state_t, typename navigator_t>
   bool evaluateMaterialSlab(const propagator_state_t& state,
-                            const navigator_t& navigator) {
+                            const navigator_t& navigator,
+                            IVolumeMaterial::Cache& cache) {
     pathCorrection = 0;
     if (navigator.currentVolume(state.navigation) != nullptr &&
         navigator.currentVolume(state.navigation)->hasMaterial()) {
       slab = MaterialSlab(navigator.currentVolume(state.navigation)
                               ->volumeMaterial()
-                              ->material(pos),
+                              ->material(pos, cache),
                           1);  // state.stepping.StepSize
     } else {
+      cache = {};
       slab = MaterialSlab::Nothing();
     }
     return !slab.isVacuum();

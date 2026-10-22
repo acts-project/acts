@@ -15,6 +15,7 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Material/GridVolumeMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
@@ -86,6 +87,33 @@ struct Navigator {
 
 BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
+BOOST_AUTO_TEST_CASE(volume_material_cells_are_independent_of_volume_binning) {
+  const MultiAxisSpec3D binning(
+      std::array{AxisSpec::Equidistant(2, 0., 2., AxisBoundaryType::Bound),
+                 AxisSpec::Equidistant(1, -1., 1., AxisBoundaryType::Bound),
+                 AxisSpec::Equidistant(1, -1., 1., AxisBoundaryType::Bound)});
+  const auto axes = binning.buildMultiAxis();
+  GridVolumeMaterial::Direct values(axes->getNTotalBins(true), makeSilicon());
+  values.at(axes->getGlobalBinFromLocalBins({2, 1, 1})) = makeBeryllium();
+  auto grid = std::make_shared<GridVolumeMaterial>(binning, std::move(values));
+  auto bounds = std::make_shared<CuboidVolumeBounds>(10., 10., 10.);
+  TrackingVolume volume(Transform3::Identity(), bounds, grid);
+  State state;
+  state.navigation.currentVolume = &volume;
+  state.stepping.p = 1000.;
+  state.stepping.dir = Vector3::UnitX();
+  Stepper stepper;
+  Navigator navigator;
+  IVolumeMaterial::Cache cache;
+  for (double x : {0.1, 0.9, 1., 1.9, 0.5}) {
+    state.stepping.pos = Vector3(x, 0., 0.);
+    detail::VolumeMaterialInteraction interaction(&volume, state, stepper);
+    BOOST_REQUIRE(interaction.evaluateMaterialSlab(state, navigator, cache));
+    BOOST_CHECK_EQUAL(interaction.slab.material(),
+                      x < 1. ? makeSilicon() : makeBeryllium());
+  }
+}
+
 BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   // Create a Tracking Volume
   auto htrans = Transform3(Translation3{-10., -10., 0.});
@@ -129,7 +157,8 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   BOOST_CHECK_EQUAL(volMatInt.navDir, state.options.direction);
 
   // Evaluate the material
-  bool result = volMatInt.evaluateMaterialSlab(state, navigator);
+  IVolumeMaterial::Cache cache;
+  bool result = volMatInt.evaluateMaterialSlab(state, navigator, cache);
   BOOST_CHECK(result);
   BOOST_CHECK_EQUAL(volMatInt.slab.material(), mat);
   BOOST_CHECK_EQUAL(volMatInt.slab.thickness(), 1.);
@@ -137,8 +166,10 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
 
   // Evaluate the material without a tracking volume
   state.navigation.currentVolume = nullptr;
-  result = volMatInt.evaluateMaterialSlab(state, navigator);
+  result = volMatInt.evaluateMaterialSlab(state, navigator, cache);
   BOOST_CHECK(!result);
+  BOOST_CHECK(cache.owner == nullptr);
+  BOOST_CHECK(!cache.cell);
   BOOST_CHECK_EQUAL(volMatInt.pathCorrection, 0.);
 }
 

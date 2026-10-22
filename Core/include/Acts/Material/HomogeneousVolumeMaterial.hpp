@@ -22,7 +22,7 @@ namespace Acts {
 ///
 /// It extends the IVolumeMaterial base class to describe a simple
 /// homogeneous material in a volume
-class HomogeneousVolumeMaterial : public IVolumeMaterial {
+class HomogeneousVolumeMaterial final : public IVolumeMaterial {
  public:
   /// Explicit constructor
   ///
@@ -53,9 +53,16 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   ///
   /// @param position is the request position for the material call
   /// @note @p position is ignored
-  /// @todo interface to change including 'cell'
   /// @return The homogeneous material properties at any position
   const Material material(const Vector3& position) const final;
+
+  using IVolumeMaterial::material;
+
+  /// Return an unbounded constant material cell.
+  /// @return the homogeneous material cell
+  VolumeMaterialCell materialCell(const Vector3& /*position*/) const final {
+    return VolumeMaterialCell(m_material);
+  }
 
   /// Output Method for std::ostream
   ///

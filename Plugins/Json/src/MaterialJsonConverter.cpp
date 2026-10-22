@@ -9,6 +9,7 @@
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Material/GridVolumeMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -16,6 +17,8 @@
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
+#include "ActsPlugins/Json/AxisSpecJsonConverter.hpp"
 #include "ActsPlugins/Json/GeometryJsonKeys.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
@@ -23,6 +26,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -94,7 +98,36 @@ void Acts::from_json(const nlohmann::json& j,
 }
 
 void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
+  if (material == nullptr) {
+    return;
+  }
   nlohmann::json jMaterial;
+  if (const auto* grid = dynamic_cast<const GridVolumeMaterial*>(material)) {
+    jMaterial = {
+        {"type", "grid"},
+        {"mapMaterial", true},
+        {"binning", MultiAxisSpecJsonConverter::toJson(grid->binning())},
+        {"transform", Transform3JsonConverter::toJson(grid->transform())}};
+    jMaterial["storage"] = std::visit(
+        [](const auto& values) -> nlohmann::json {
+          using T = std::decay_t<decltype(values)>;
+          if constexpr (std::is_same_v<T, GridVolumeMaterial::Direct>) {
+            return {{"type", "direct"}, {"material", values}};
+          } else if constexpr (std::is_same_v<T, GridVolumeMaterial::Indexed>) {
+            return {{"type", "indexed"},
+                    {"indices", values.indices},
+                    {"material", values.material}};
+          } else {
+            // Inline shared palettes to keep a volume payload self-contained.
+            return {{"type", "globally-indexed"},
+                    {"indices", values.indices},
+                    {"material", *values.material}};
+          }
+        },
+        grid->storage());
+    j[Acts::jsonKey().materialkey] = std::move(jMaterial);
+    return;
+  }
   // A bin utility needs to be written
   const Acts::BinUtility* bUtility = nullptr;
   // Check if we have a proto material
@@ -149,6 +182,44 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
   // By default no material is return.
   material = nullptr;
   if (jMaterial[Acts::jsonKey().mapkey] == false) {
+    return;
+  }
+  if (type == "grid") {
+    const auto spec =
+        MultiAxisSpecJsonConverter::fromJson(jMaterial.at("binning"));
+    if (spec.size() != 3) {
+      throw std::invalid_argument("Grid volume material requires three axes");
+    }
+    MultiAxisSpec3D binning(
+        std::array{spec.axisSpec(0), spec.axisSpec(1), spec.axisSpec(2)});
+    Transform3 transform = Transform3::Identity();
+    if (jMaterial.contains("transform")) {
+      transform = Transform3JsonConverter::fromJson(jMaterial.at("transform"));
+    }
+    const auto& store = jMaterial.at("storage");
+    const auto storageType = store.at("type").get<std::string>();
+    std::vector<Material> palette;
+    for (const auto& entry : store.at("material")) {
+      auto value = Material::Vacuum();
+      from_json(entry, value);
+      palette.push_back(value);
+    }
+    GridVolumeMaterial::Storage storage;
+    if (storageType == "direct") {
+      storage = std::move(palette);
+    } else if (storageType == "indexed") {
+      storage = GridVolumeMaterial::Indexed{
+          store.at("indices").get<std::vector<std::size_t>>(),
+          std::move(palette)};
+    } else if (storageType == "globally-indexed") {
+      storage = GridVolumeMaterial::GloballyIndexed{
+          store.at("indices").get<std::vector<std::size_t>>(),
+          std::make_shared<std::vector<Material>>(std::move(palette))};
+    } else {
+      throw std::invalid_argument("Unknown grid volume material storage type");
+    }
+    material = new GridVolumeMaterial(std::move(binning), std::move(storage),
+                                      transform);
     return;
   }
   // The bin utility and material
