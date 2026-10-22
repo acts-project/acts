@@ -20,11 +20,14 @@ def runGlobalPatternFinder(
     gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
     trackingGeometry = TrackingGeometryJsonConverter().fromFile(gctx, geoFile)
 
-    # The per-algorithm timing is only meaningful on a single thread
+    # The per-algorithm timing is only meaningful on a single thread. Building
+    # the KDTree of a busy event can underflow in std::nextafter; such floating
+    # point exceptions are reported but do not fail the run
     s = acts.examples.Sequencer(
         events=nEvents if nEvents > 0 else None,
         skip=skip,
         numThreads=numThreads,
+        failOnUnmaskedFpe=False,
         logLevel=logLevel,
     )
 
