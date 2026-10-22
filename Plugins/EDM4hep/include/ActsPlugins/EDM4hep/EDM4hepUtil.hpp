@@ -421,8 +421,8 @@ void readTrack(const Acts::GeometryContext& gctx,
       continue;
     }
 
-    auto converted = readTrackState(gctx, trackState, magneticField,
-                                    fieldCache, logger);
+    auto converted =
+        readTrackState(gctx, trackState, magneticField, fieldCache, logger);
 
     auto ts = track.appendTrackState(mask);
     ts.typeFlags().setIsMeasurement();
@@ -438,8 +438,8 @@ void readTrack(const Acts::GeometryContext& gctx,
     throw std::runtime_error{"Did not find IP state in edm4hep input"};
   }
 
-  auto converted = readTrackState(gctx, ipState.value(), magneticField,
-                                  fieldCache, logger);
+  auto converted =
+      readTrackState(gctx, ipState.value(), magneticField, fieldCache, logger);
 
   ACTS_VERBOSE("IP state parameters: " << converted.parameters().transpose());
   ACTS_VERBOSE("-> covariance:\n"

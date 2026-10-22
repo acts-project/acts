@@ -351,8 +351,8 @@ BoundTrackParameters readTrackState(const GeometryContext& gctx,
 
   ACTS_VERBOSE("- parameters: " << params.values.transpose() << " -> "
                                 << converted.parameters().transpose());
-  ACTS_VERBOSE("- ref surface ctr: "
-               << params.surface->center(gctx).transpose());
+  ACTS_VERBOSE(
+      "- ref surface ctr: " << params.surface->center(gctx).transpose());
 
   return converted;
 }
