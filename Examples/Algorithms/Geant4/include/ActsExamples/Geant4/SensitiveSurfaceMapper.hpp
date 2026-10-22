@@ -24,6 +24,7 @@
 class G4VPhysicalVolume;
 
 namespace Acts {
+class GeometryObject;
 class Surface;
 }  // namespace Acts
 
@@ -56,6 +57,17 @@ struct SensitiveCandidatesBase {
   /// @return a vector of sensitive surfaces
   virtual std::vector<const Acts::Surface*> queryAll() const = 0;
 
+  /// Get the region of the tracking geometry that `queryPosition` resolves a
+  /// given position to and return a pointer used as akey during one
+  /// `remapSensitiveNames` call.
+  ///
+  /// @param gctx the geometry context
+  /// @param position the position to look for sensitive surfaces
+  ///
+  /// @return the region, or nullptr if the candidates can not be cached
+  virtual const Acts::GeometryObject* queryRegion(
+      const Acts::GeometryContext& gctx, const Acts::Vector3& position) const;
+
   virtual ~SensitiveCandidatesBase() = default;
 };
 
@@ -70,6 +82,10 @@ struct SensitiveCandidates : public SensitiveCandidatesBase {
       const Acts::Vector3& position) const override;
 
   std::vector<const Acts::Surface*> queryAll() const override;
+
+  const Acts::GeometryObject* queryRegion(
+      const Acts::GeometryContext& gctx,
+      const Acts::Vector3& position) const override;
 
  private:
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo{};
@@ -155,7 +171,9 @@ class SensitiveSurfaceMapper {
   /// not mapped to 'missing_g4_volumes.obj' in the working directory
   /// @param writeMissingSurfacesAsObj write the sensitive surfaces that
   /// where not mapped to 'missing_acts_surfaces.obj' in the working directory
-  /// @return Returns true only if all sensitive surfaces where mapped
+  /// @return Returns true only if all sensitive surfaces where mapped. Surfaces
+  /// with a sensitive geometry id that are not flagged sensitive
+  /// (`Acts::Surface::isSensitive`) are not required to be mapped.
   bool checkMapping(const State& state, const Acts::GeometryContext& gctx,
                     bool writeMissingG4VolsAsObj = false,
                     bool writeMissingSurfacesAsObj = false) const;
@@ -165,6 +183,16 @@ class SensitiveSurfaceMapper {
   Config m_cfg;
 
  private:
+  class CandidateIndex;
+  struct Cache;
+
+  /// Recursive implementation of the public `remapSensitiveNames`, with the
+  /// candidate lookup cache shared over the whole Geant4 tree
+  void remapSensitiveNames(State& state, Cache& cache,
+                           const Acts::GeometryContext& gctx,
+                           G4VPhysicalVolume* g4PhysicalVolume,
+                           const Acts::Transform3& motherTransform) const;
+
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
 

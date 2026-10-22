@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
+#include <numeric>
 #include <ostream>
 #include <stdexcept>
 #include <utility>

@@ -12,6 +12,7 @@ PhysmonSetup = collections.namedtuple(
         "trackingGeometry",
         "decorators",
         "field",
+        "bFieldInZ",
         "digiConfig",
         "geoSel",
         "gbtsLayerMap",
@@ -22,7 +23,6 @@ PhysmonSetup = collections.namedtuple(
 
 
 def makeSetup() -> PhysmonSetup:
-    u = acts.UnitConstants
     srcdir = Path(__file__).resolve().parent.parent.parent
     odd_dir = getOpenDataDetectorDirectory()
 
@@ -38,6 +38,9 @@ def makeSetup() -> PhysmonSetup:
     detector = getOpenDataDetector(matDeco)
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
+    field = detector.field
+    fieldCache = field.makeCache(acts.MagneticFieldContext())
+    bFieldInZ = field.getField(acts.Vector3(0, 0, 0), fieldCache)[2]
     setup = PhysmonSetup(
         detector=detector,
         trackingGeometry=trackingGeometry,
@@ -46,7 +49,8 @@ def makeSetup() -> PhysmonSetup:
         geoSel=srcdir / "Examples/Configs/odd-seeding-config.json",
         gbtsLayerMap=srcdir / "Examples/Configs/odd-gbts-layer-map.json",
         gbtsConnectionTable=srcdir / "Examples/Configs/odd-gbts-connection-table.json",
-        field=acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T)),
+        field=field,
+        bFieldInZ=bFieldInZ,
         outdir=Path(args.outdir),
     )
 
