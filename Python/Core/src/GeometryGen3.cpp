@@ -82,8 +82,9 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   std::uniform_real_distribution<> dist{-1, 1};
   std::uniform_real_distribution<> subStepDist{0.01, 0.99};
 
-  double thetaMin = 2 * std::atan(std::exp(-etaRange.first));
-  double thetaMax = 2 * std::atan(std::exp(-etaRange.second));
+  // Theta decreases with eta, so the interval endpoints exchange roles.
+  double thetaMin = 2 * std::atan(std::exp(-etaRange.second));
+  double thetaMax = 2 * std::atan(std::exp(-etaRange.first));
   std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
 
   using namespace UnitLiterals;
