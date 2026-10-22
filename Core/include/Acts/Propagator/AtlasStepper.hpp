@@ -1238,7 +1238,7 @@ class AtlasStepper {
     // Skip a zero step: it is the identity, and h = 0 raises an FPE in the
     // 2 / h below
     if (h == 0) {
-      return 0;
+      return 0.;
     }
 
     bool Jac = state.useJacobian;
