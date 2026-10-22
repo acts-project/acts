@@ -17,6 +17,7 @@
 
 // System include(s).
 #include <cassert>
+#include <stdexcept>
 
 namespace traccc::device {
 
@@ -58,6 +59,30 @@ auto triplet_seeding_algorithm::operator()(
     -> output_type {
   // A small sanity check.
   assert(m_data);
+
+  if (m_data->m_finder_config.useStripInfo) {
+    throw std::runtime_error(
+        "Strip aware triplet finding needs the per spacepoint strip "
+        "calibrations; use the operator taking them.");
+  }
+
+  return execute(spacepoints, {});
+}
+
+auto triplet_seeding_algorithm::operator()(
+    const edm::spacepoint_collection::const_view& spacepoints,
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations) const -> output_type {
+  // A small sanity check.
+  assert(m_data);
+
+  return execute(spacepoints, strip_calibrations);
+}
+
+auto triplet_seeding_algorithm::execute(
+    const edm::spacepoint_collection::const_view& spacepoints,
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations) const -> output_type {
 
   // Get the number of spacepoints. In an asynchronous way if possible.
   edm::spacepoint_collection::const_view::size_type n_spacepoints = 0u;
@@ -109,6 +134,10 @@ auto triplet_seeding_algorithm::operator()(
   // Launch the grid population kernel.
   populate_grid_kernel({n_spacepoints, m_data->m_finder_config, spacepoints,
                         grid_buffer, grid_prefix_sum_buffer});
+
+  // The seeds refer to indices in the full spacepoint collection
+  const edm::spacepoint_collection::const_view::size_type n_all_spacepoints =
+      n_spacepoints;
 
   // Update the spacepoint counter. So that it would only count the "good"
   // spacepoints that ended up in the spacepoint grid.
@@ -193,7 +222,8 @@ auto triplet_seeding_algorithm::operator()(
 
   // Launch the triplet counting kernel.
   count_triplets_kernel({globalCounter_host->m_nMidBot, m_data->m_finder_config,
-                         spacepoints, grid_buffer, doublet_counter_buffer,
+                         spacepoints, strip_calibrations, grid_buffer,
+                         doublet_counter_buffer,
                          doublet_buffer_mb, doublet_buffer_mt,
                          triplet_counter_spM_buffer,
                          triplet_counter_midBot_buffer});
@@ -231,7 +261,8 @@ auto triplet_seeding_algorithm::operator()(
 
   // Launch the triplet finding kernel.
   find_triplets_kernel({n_midBotTriplets, m_data->m_finder_config,
-                        m_data->m_filter_config, spacepoints, grid_buffer,
+                        m_data->m_filter_config, spacepoints,
+                        strip_calibrations, grid_buffer,
                         doublet_counter_buffer, doublet_buffer_mt,
                         triplet_counter_spM_buffer,
                         triplet_counter_midBot_buffer, triplet_buffer});
@@ -256,8 +287,36 @@ auto triplet_seeding_algorithm::operator()(
   // Complete seed selection before releasing its intermediate buffers.
   synchronize();
 
-  // Return the seed buffer.
-  return seed_buffer;
+  if (!m_data->m_filter_config.seedConfirmation) {
+    return seed_buffer;
+  }
+
+  // With seed confirmation, drop the seeds whose spacepoints all belong to
+  // seeds of a higher weight.
+  edm::seed_collection::buffer::size_type n_seeds = 0u;
+  if (mr().host) {
+    vecmem::async_size size = copy().get_size(seed_buffer, *(mr().host));
+    n_seeds = size.get();
+  } else {
+    n_seeds = copy().get_size(seed_buffer);
+  }
+  if (n_seeds == 0u) {
+    return seed_buffer;
+  }
+
+  vecmem::data::vector_buffer<unsigned int> best_weight_buffer{
+      n_all_spacepoints, mr().main};
+  copy().setup(best_weight_buffer)->ignore();
+  copy().memset(best_weight_buffer, 0)->ignore();
+  mark_seed_weights_kernel({n_seeds, seed_buffer, best_weight_buffer});
+
+  edm::seed_collection::buffer selected_seed_buffer(
+      n_seeds, mr().main, vecmem::data::buffer_type::resizable);
+  copy().setup(selected_seed_buffer)->ignore();
+  suppress_seeds_kernel(
+      {n_seeds, seed_buffer, best_weight_buffer, selected_seed_buffer});
+
+  return selected_seed_buffer;
 }
 
 }  // namespace traccc::device
