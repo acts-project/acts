@@ -49,15 +49,21 @@ struct RzLookupChild {
     const auto* cylinder =
         dynamic_cast<const CylinderVolumeBounds*>(&v.volumeBounds());
     const auto& trf = v.localToGlobalTransform(gctx);
-    // Only fixed, unrotated full cylinders have the RZ envelope used below.
-    // Alignable volumes must be checked directly in the query's context;
-    // partial cylinders and other orientations/shapes use the same fallback.
-    if (!v.isAlignable() && cylinder != nullptr && trf.linear().isIdentity(0) &&
+    // Only fixed full cylinders with near-identity rotations are indexed.
+    if (!v.isAlignable() && cylinder != nullptr &&
+        trf.linear().isIdentity(1e-12) &&
         cylinder->get(CylinderVolumeBounds::eHalfPhiSector) ==
             std::numbers::pi) {
       const double offset = VectorHelpers::perp(trf.translation());
-      const double margin = maxTolerance + 1e-9;
       const double hz = cylinder->get(CylinderVolumeBounds::eHalfLengthZ);
+      // Bound displacement from the accepted rotation, including tolerance.
+      // This keeps the envelope conservative even for tiny nonzero tilts.
+      const double extent =
+          std::hypot(cylinder->get(CylinderVolumeBounds::eMaxR) + maxTolerance,
+                     hz + maxTolerance);
+      const double margin =
+          maxTolerance + 1e-9 +
+          (trf.linear() - RotationMatrix3::Identity()).norm() * extent;
       m_box.min() =
           Vector2(cylinder->get(CylinderVolumeBounds::eMinR) - offset - margin,
                   trf.translation().z() - hz - margin);
@@ -69,16 +75,9 @@ struct RzLookupChild {
   }
 };
 
-// Nonuniform grid: collect all rectangle edges separately in r and z, sort
-// and deduplicate them, then form their Cartesian product. A rectangle is
-// assigned to every bin it overlaps, including the bin at its upper edge so
-// a query exactly on that edge still finds it.
-//
-// Candidate lists use compressed sparse row storage: m_offsets[cell] and
-// m_offsets[cell + 1] delimit a cell's slice of m_candidates. Count
-// assignments, prefix-sum the counts, then fill slices in hierarchy order.
-// Queries use two binary searches and scan one slice; the lookup performs exact
-// containment.
+// Grid edges are the sorted unique rectangle edges. Each rectangle occupies
+// every intersected cell, including its upper-edge bin. Candidate lists retain
+// hierarchy order and use CSR storage: offsets delimit slices in one array.
 struct RzGrid {
   using Config = RzGridVolumeLookup::Config;
   using RzAxis = Axis<AxisType::Variable, AxisBoundaryType::Bound>;
@@ -101,14 +100,10 @@ struct RzGrid {
       std::sort(e.begin(), e.end());
       e.erase(std::unique(e.begin(), e.end()), e.end());
     }
-    // MultiAxis global indices reserve under-/overflow slots on each axis,
-    // even with bounded axes. N edges give N-1 regular bins, plus two reserved
-    // slots, hence N+1 allocated slots. Include these in the allocation limit.
+    // N edges give N-1 regular bins plus two reserved under-/overflow bins.
     const auto nr = edges[0].size() + 1;
     const auto nz = edges[1].size() + 1;
-    // Equivalent to nr * nz > maxGridCells, without risking overflow in the
-    // multiplication. nz is positive. Returning false makes the whole lookup
-    // use linear selection rather than allocating an oversized grid.
+    // Check nr*nz against the limit without overflowing the product.
     if (nr > config.maxGridCells / nz) {
       return false;
     }
@@ -126,10 +121,8 @@ struct RzGrid {
         }
       }
     };
-    // Count into cell+1 so the prefix sum leaves offsets[0] == 0 and turns
-    // offsets[cell] into the start of that cell's slice. The final offset is
-    // the total number of candidate references, including duplicates across
-    // cells. Fill with separate cursors to preserve these slice boundaries.
+    // Shift counts by one, prefix-sum to slice offsets, then fill with separate
+    // cursors so the offsets remain unchanged.
     for (const auto& child : children) {
       if (!child.m_indexable) {
         continue;
@@ -216,9 +209,7 @@ struct RzGridVolumeLookup::Impl {
     for (const auto& child : root.volumes()) {
       collect(collect, child);
     }
-    // The only grid build: collect all candidates first, then fill the single
-    // grid once. Explicit descendant lookups own their separate indices.
-    // With no indexable candidates, queries use only m_fallbackCandidates.
+    // Build the single grid after collecting the whole indexed scope.
     if (m_hasIndex) {
       m_gridLimit = !m_grid.build(m_children, cfg);
     }
@@ -226,15 +217,13 @@ struct RzGridVolumeLookup::Impl {
 
   void warnAboutFallback(const TrackingVolume& volume, double fraction,
                          const Logger& logger) const {
-    // A threshold of 1 explicitly suppresses this warning; a logger that
-    // filters WARNING also avoids the diagnostic work below.
+    // A threshold of 1 suppresses this warning.
     if (fraction == 1 || !logger.doPrint(Logging::WARNING)) {
       return;
     }
     const auto total = m_children.size();
     const auto affected = m_gridLimit ? total : m_fallbackCandidates.size();
-    // Warn only strictly above the configured fraction. Short-circuit the
-    // empty scope before dividing by total.
+    // Avoid division by zero; warn only above the configured fraction.
     if (total == 0 ||
         static_cast<double>(affected) / static_cast<double>(total) <=
             fraction) {
@@ -270,18 +259,14 @@ struct RzGridVolumeLookup::Impl {
         return false;
       }
       const auto& entry = m_children[id];
-      // Reject on any of two conditions, in increasing cost order:
-      //  - an indexed candidate's conservative RZ box misses the query;
-      //    fallback candidates have no usable box, so skip that test;
-      //  - the actual volume does not contain the point at this tolerance.
-      // A rejected candidate means continue, not terminate the search.
+      // Check the conservative box when available, then exact containment.
+      // A miss continues the search; a match stops this ordered list.
       if ((entry.m_indexable && !entry.m_box.contains(key)) ||
           !entry.m_volume->inside(gctx, p, tolerance)) {
         return true;
       }
       best = id;
-      // This is the first match in this list. The other list may still contain
-      // a smaller ID and therefore a higher-priority match.
+      // The other list may still contain a higher-priority match.
       return false;
     };
     for (auto id : m_fallbackCandidates) {

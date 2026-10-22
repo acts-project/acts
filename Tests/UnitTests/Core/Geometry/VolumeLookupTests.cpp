@@ -699,3 +699,27 @@ BOOST_AUTO_TEST_CASE(RzLookupsRejectGen1Storage) {
         std::invalid_argument);
   }
 }
+
+BOOST_AUTO_TEST_CASE(RzGridNearIdentityRotation) {
+  auto world = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(0., 100., 2000.));
+  Transform3 transform = Transform3::Identity();
+  transform.linear() = AngleAxis3(5e-13, Vector3::UnitY()).toRotationMatrix();
+  auto child = std::make_unique<TrackingVolume>(
+      transform, std::make_shared<CylinderVolumeBounds>(5., 20., 1000.));
+  const auto* expected = child.get();
+  world->addVolume(std::move(child));
+  std::ostringstream output;
+  auto logger = getDefaultLogger("RotationTest", Logging::WARNING, &output);
+  RzGridVolumeLookup::Config config;
+  config.fallbackWarningFraction = 0.;
+  RzGridVolumeLookup lookup(gctx, *world, config, *logger);
+  BOOST_CHECK(output.str().empty());
+  for (double z : {-1000., 0., 1000.}) {
+    for (double r : {5., 20.}) {
+      const Vector3 point = transform * Vector3(r, 0., z);
+      BOOST_CHECK(lookup.lowestTrackingVolume(gctx, point, 1e-6) == expected);
+    }
+  }
+}

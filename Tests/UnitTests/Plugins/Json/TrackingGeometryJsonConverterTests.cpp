@@ -932,25 +932,46 @@ BOOST_AUTO_TEST_CASE(VolumeLookupRoundTrip) {
     auto unknown = encoded;
     unknown["volumes"][0]["volume_lookup"]["kind"] = "Unknown";
     BOOST_CHECK_THROW(converter.fromJson(gctx, unknown), std::invalid_argument);
-    // Recipes from the earlier combined implementation may have extra settings.
-    auto oldRecipe = encoded;
-    oldRecipe["volume_lookup"] = oldRecipe["volumes"][0]["volume_lookup"];
-    oldRecipe["volumes"][0].erase("volume_lookup");
-    oldRecipe["volume_lookup"].erase("fallback_warning_fraction");
-    auto oldGeometry = converter.fromJson(gctx, oldRecipe);
-    BOOST_CHECK_EQUAL(dynamic_cast<const RzGridVolumeLookup*>(
-                          oldGeometry->highestTrackingVolume()->volumeLookup())
-                          ->config()
-                          .fallbackWarningFraction,
-                      0.1);
-    auto combined = encoded;
-    combined["volumes"][0]["volume_lookup"]["leaf_size"] = 2;
-    combined["volumes"][0]["volume_lookup"]["max_depth"] = 12;
-    combined["volumes"][0]["volume_lookup"]["max_grid_cells"] = 20000;
-    BOOST_CHECK(dynamic_cast<const RzGridVolumeLookup*>(
-                    converter.fromJson(gctx, combined)
-                        ->highestTrackingVolume()
-                        ->volumeLookup()) != nullptr);
+    // Only the policy kind is required; settings default independently.
+    auto defaults = encoded;
+    defaults["volumes"][0]["volume_lookup"] = {{"kind", "RzGrid"}};
+    auto defaultGeometry = converter.fromJson(gctx, defaults);
+    const auto* defaultPolicy = dynamic_cast<const RzGridVolumeLookup*>(
+        defaultGeometry->highestTrackingVolume()->volumeLookup());
+    BOOST_REQUIRE(defaultPolicy != nullptr);
+    const RzGridVolumeLookup::Config expectedDefaults;
+    BOOST_CHECK_EQUAL(defaultPolicy->config().maxTolerance,
+                      expectedDefaults.maxTolerance);
+    BOOST_CHECK_EQUAL(defaultPolicy->config().fallbackWarningFraction,
+                      expectedDefaults.fallbackWarningFraction);
+    BOOST_CHECK_EQUAL(defaultPolicy->config().maxGridCells,
+                      expectedDefaults.maxGridCells);
+    defaults["volumes"][0]["volume_lookup"] = {{"kind", "Linear"}};
+    defaultGeometry = converter.fromJson(gctx, defaults);
+    BOOST_CHECK_EQUAL(
+        dynamic_cast<const LinearVolumeLookup*>(
+            defaultGeometry->highestTrackingVolume()->volumeLookup())
+            ->config()
+            .warningThreshold,
+        LinearVolumeLookup::Config{}.warningThreshold);
+    for (const char* kind : {"RzGrid", "Linear"}) {
+      const char* key = std::string_view(kind) == "RzGrid"
+                            ? "max_grid_cells"
+                            : "warning_threshold";
+      for (const nlohmann::json& invalid :
+           {nlohmann::json(-1), nlohmann::json(1.5), nlohmann::json("12")}) {
+        defaults["volumes"][0]["volume_lookup"] = {{"kind", kind},
+                                                   {key, invalid}};
+        BOOST_CHECK_THROW(converter.fromJson(gctx, defaults),
+                          std::invalid_argument);
+      }
+    }
+    // A geometry-wide recipe is not part of the format.
+    auto topLevelOnly = legacy;
+    topLevelOnly["volume_lookup"] = {{"kind", "RzGrid"}};
+    BOOST_CHECK(converter.fromJson(gctx, topLevelOnly)
+                    ->highestTrackingVolume()
+                    ->volumeLookup() == nullptr);
     {
       encoded["volumes"][0]["volume_lookup"]["max_grid_cells"] = -1;
     }

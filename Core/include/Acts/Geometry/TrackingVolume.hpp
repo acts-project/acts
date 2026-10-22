@@ -44,6 +44,7 @@
 #include <boost/container/container_fwd.hpp>
 
 namespace Acts {
+
 class GlueVolumesDescriptor;
 class VolumeBounds;
 template <typename object_t>
@@ -177,14 +178,11 @@ class TrackingVolume : public Volume {
                                              const Vector3& position,
                                              const double tol = 0.) const;
 
-  /// Install an explicit subtree lookup; nullptr restores the default scan.
-  /// An explicit lookup is a delegation boundary for enclosing indices,
-  /// including an explicitly installed linear lookup. Install local policies
-  /// before building enclosing indices. Rebuild those indices after changing
-  /// local policies, volume bounds, transforms or hierarchy. Call before
-  /// concurrent queries.
-  /// Construct the policy for this volume at its final address. Moving the
-  /// volume object requires rebuilding its policy before querying it again.
+  /// Install a subtree lookup; nullptr restores the implicit linear scan.
+  /// Explicit policies stop enclosing indices, including explicit linear ones.
+  /// Install local policies before enclosing indices and concurrent queries.
+  /// Rebuild after changes to bounds, transforms, hierarchy, local policies,
+  /// or the volume's address. Construct the policy for this volume.
   /// @param lookup Policy owned by this volume, or nullptr for the default scan
   void setVolumeLookup(std::unique_ptr<const IVolumeLookup> lookup);
 

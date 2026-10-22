@@ -32,7 +32,6 @@
 #include <fstream>
 #include <random>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 
 #include <pybind11/functional.h>
@@ -49,6 +48,20 @@ using namespace Acts;
 namespace ActsPython {
 namespace {
 using std::uniform_real_distribution;
+
+VolumeLookupFactory wrapVolumeLookupFactory(py::function factory) {
+  return [factory = std::move(factory)](const GeometryContext& gctx,
+                                        const TrackingVolume& volume,
+                                        const Logger& logger) {
+    py::gil_scoped_acquire acquire;
+    // Callback arguments are borrowed; the returned smart holder transfers
+    // ownership of the Python-created lookup to the volume.
+    return factory(py::cast(&gctx, py::return_value_policy::reference),
+                   py::cast(&volume, py::return_value_policy::reference),
+                   py::cast(&logger, py::return_value_policy::reference))
+        .cast<std::unique_ptr<IVolumeLookup>>();
+  };
+}
 
 // This is temporary!
 void pseudoNavigation(const TrackingGeometry& trackingGeometry,
@@ -257,7 +270,10 @@ void addGeometryGen3(py::module_& m) {
 
   rootNode.def(py::init<const Blueprint::Config&>())
       .def_property("volumeLookupFactory", &Blueprint::volumeLookupFactory,
-                    &Blueprint::setVolumeLookupFactory)
+                    [](Blueprint& self, py::function factory) {
+                      self.setVolumeLookupFactory(
+                          wrapVolumeLookupFactory(std::move(factory)));
+                    })
       // Return value needs to be shared pointer because python otherwise
       // can't manage the lifetime
       .def(
@@ -322,9 +338,12 @@ void addGeometryGen3(py::module_& m) {
       .def_readwrite("warningThreshold",
                      &LinearVolumeLookup::Config::warningThreshold);
   linearLookup
-      .def(py::init<const TrackingVolume&, const LinearVolumeLookup::Config&,
-                    const Logger&>(),
-           py::arg("volume"), py::arg("config"), py::arg("logger"))
+      .def(py::init([](const LinearVolumeLookup::Config& config,
+                       const TrackingVolume& volume, const Logger& logger) {
+             return std::make_unique<LinearVolumeLookup>(volume, config,
+                                                         logger);
+           }),
+           py::arg("config"), py::arg("volume"), py::arg("logger"))
       .def_property_readonly("config", [](const LinearVolumeLookup& self) {
         return self.config();
       });
@@ -339,9 +358,12 @@ void addGeometryGen3(py::module_& m) {
                      &GridConfig::fallbackWarningFraction)
       .def_readwrite("maxGridCells", &GridConfig::maxGridCells);
   gridLookup
-      .def(py::init<const GeometryContext&, const TrackingVolume&,
-                    const GridConfig&, const Logger&>(),
-           py::arg("gctx"), py::arg("volume"), py::arg("config"),
+      .def(py::init([](const GridConfig& config, const GeometryContext& gctx,
+                       const TrackingVolume& volume, const Logger& logger) {
+             return std::make_unique<RzGridVolumeLookup>(gctx, volume, config,
+                                                         logger);
+           }),
+           py::arg("config"), py::arg("gctx"), py::arg("volume"),
            py::arg("logger"))
       .def_property_readonly("config", [](const RzGridVolumeLookup& self) {
         return self.config();
@@ -388,7 +410,10 @@ void addGeometryGen3(py::module_& m) {
                py::arg("name") = "undefined")
           .def_property("volumeLookupFactory",
                         &StaticBlueprintNode::volumeLookupFactory,
-                        &StaticBlueprintNode::setVolumeLookupFactory)
+                        [](StaticBlueprintNode& self, py::function factory) {
+                          self.setVolumeLookupFactory(
+                              wrapVolumeLookupFactory(std::move(factory)));
+                        })
           .def_property("navigationPolicyFactory",
                         &StaticBlueprintNode::navigationPolicyFactory,
                         &StaticBlueprintNode::setNavigationPolicyFactory);

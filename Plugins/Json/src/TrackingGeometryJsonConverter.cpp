@@ -50,6 +50,7 @@
 #include <array>
 #include <cstdint>
 #include <filesystem>
+#include <limits>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -171,6 +172,7 @@ constexpr const char* kAlongNormalKey = "along_normal";
 constexpr const char* kOppositeNormalKey = "opposite_normal";
 
 constexpr const char* kNavigationPolicyKey = "navigation_policy";
+constexpr const char* kVolumeLookupKey = "volume_lookup";
 
 constexpr const char* kKindKey = "kind";
 constexpr const char* kValuesKey = "values";
@@ -674,32 +676,34 @@ std::unique_ptr<const Acts::IVolumeLookup> decodeVolumeLookup(
   std::unique_ptr<const IVolumeLookup> policy;
   if (!lookup.is_null()) {
     const auto kind = lookup.at("kind").get<std::string>();
-    // Reject negative integers before conversion to unsigned configuration
-    // values.
-    auto positiveSize = [&](const char* key) {
-      const auto value = lookup.at(key).get<std::int64_t>();
-      if (value <= 0) {
+    // Check the JSON type and range before converting to an unsigned size.
+    auto sizeValue = [&](const char* key, std::size_t defaultValue) {
+      if (!lookup.contains(key)) {
+        return defaultValue;
+      }
+      const auto& value = lookup.at(key);
+      if (!value.is_number_integer() ||
+          (!value.is_number_unsigned() && value.get<std::int64_t>() < 0) ||
+          value.get<std::uint64_t>() >
+              std::numeric_limits<std::size_t>::max()) {
         throw std::invalid_argument(
             std::string("Invalid volume lookup parameter: ") + key);
       }
-      return static_cast<std::size_t>(value);
+      return value.get<std::size_t>();
     };
     if (kind == "RzGrid") {
       RzGridVolumeLookup::Config config;
-      config.maxTolerance = lookup.at("max_tolerance").get<double>();
+      config.maxTolerance = lookup.value("max_tolerance", config.maxTolerance);
       config.fallbackWarningFraction = lookup.value(
           "fallback_warning_fraction", config.fallbackWarningFraction);
-      config.maxGridCells = positiveSize("max_grid_cells");
+      config.maxGridCells = sizeValue("max_grid_cells", config.maxGridCells);
       policy =
           std::make_unique<RzGridVolumeLookup>(gctx, volume, config, logger);
     } else if (kind == "Linear") {
-      const auto& threshold = lookup.at("warning_threshold");
-      if (!threshold.is_number_integer() || threshold.get<std::int64_t>() < 0) {
-        throw std::invalid_argument("Invalid linear lookup warning threshold");
-      }
-      policy = std::make_unique<LinearVolumeLookup>(
-          volume, LinearVolumeLookup::Config{threshold.get<std::size_t>()},
-          logger);
+      LinearVolumeLookup::Config config;
+      config.warningThreshold =
+          sizeValue("warning_threshold", config.warningThreshold);
+      policy = std::make_unique<LinearVolumeLookup>(volume, config, logger);
     } else {
       throw std::invalid_argument("Unknown volume lookup kind: " + kind);
     }
@@ -935,9 +939,7 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
         "geometries");
   }
   ACTS_DEBUG("Serializing TrackingGeometry to JSON");
-  auto encoded =
-      trackingVolumeToJson(gctx, *geometry.highestTrackingVolume(), options);
-  return encoded;
+  return trackingVolumeToJson(gctx, *geometry.highestTrackingVolume(), options);
 }
 
 nlohmann::json Acts::TrackingGeometryJsonConverter::portalLinkToJson(
@@ -1046,7 +1048,7 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
 
     if (auto lookup = encodeVolumeLookup(volume->volumeLookup());
         !lookup.is_null()) {
-      jVolume["volume_lookup"] = std::move(lookup);
+      jVolume[kVolumeLookupKey] = std::move(lookup);
     }
 
     jVolume[kNavigationPolicyKey] =
@@ -1125,12 +1127,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     record.surfaceIds =
         jVolume.value(kSurfaceIdKey, std::vector<std::size_t>{});
     record.navigationPolicy = jVolume.at(kNavigationPolicyKey);
-    record.volumeLookup = jVolume.value("volume_lookup", nlohmann::json{});
-    // Read the earlier geometry-wide recipe as a lookup on the root.
-    if (record.volumeLookup.is_null() && encoded.contains("volume_lookup") &&
-        record.volumeId == encoded.at(kRootVolumeIdKey).get<std::size_t>()) {
-      record.volumeLookup = encoded.at("volume_lookup");
-    }
+    record.volumeLookup = jVolume.value(kVolumeLookupKey, nlohmann::json{});
 
     if (!jVolume["geometry_id"].is_null()) {
       GeometryIdentifier geoID =
@@ -1291,7 +1288,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     for (const auto childId : record.children) {
       self(self, childId);
     }
-    auto* volume = volumePointers.find(volumeId);
+    auto* volume = volumePointers.at(volumeId);
     volume->setVolumeLookup(
         decodeVolumeLookup(gctx, *volume, record.volumeLookup, logger()));
   };
@@ -1341,5 +1338,5 @@ Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
   ACTS_DEBUG("TrackingGeometry reconstruction complete, root volume '"
              << world->volumeName() << "'");
   return std::make_shared<TrackingGeometry>(
-      world, nullptr, GeometryIdentifierHook{}, logger(), false);
+      world, nullptr, GeometryIdentifierHook{}, getDummyLogger(), false);
 }

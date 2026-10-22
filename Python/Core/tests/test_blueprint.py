@@ -188,3 +188,45 @@ def test_optional_material_keys(tmp_path):
     assert isinstance(
         keyed["barrel/outer"].surfaceMaterial, acts.HomogeneousSurfaceMaterial
     )
+
+
+@pytest.mark.parametrize(
+    "lookup_type", [acts.LinearVolumeLookup, acts.RzGridVolumeLookup]
+)
+@pytest.mark.parametrize("local", [False, True])
+def test_volume_lookup_factory_ownership(tmp_path, lookup_type, local):
+    import gc
+
+    root = acts.Blueprint(
+        envelope=acts.ExtentEnvelope(r=[1 * mm, 1 * mm], z=[1 * mm, 1 * mm])
+    )
+    child = root.addStaticVolume(
+        acts.Transform3.Identity(),
+        acts.CylinderVolumeBounds(0, 20 * mm, 30 * mm),
+        name="inner",
+    )
+    wrappers = []
+    calls = []
+
+    def factory(context, volume, logger):
+        config = lookup_type.Config()
+        if lookup_type is acts.LinearVolumeLookup:
+            lookup = lookup_type(config, volume, logger)
+        else:
+            lookup = lookup_type(config, context, volume, logger)
+        wrappers.append(lookup)
+        calls.append(volume)
+        return lookup
+
+    node = child if local else root
+    node.volumeLookupFactory = factory
+    geometry = root.construct(acts.BlueprintOptions(), gctx, level=acts.logging.WARNING)
+    assert len(calls) == 1
+    # C++ now owns the lookup; dropping its Python wrapper must not destroy it.
+    wrappers.clear()
+    calls.clear()
+    del factory, node, child, root
+    gc.collect()
+    path = tmp_path / "navigation.csv"
+    acts.pseudoNavigation(geometry, gctx, path, runs=1, logLevel=acts.logging.WARNING)
+    assert len(path.read_text().splitlines()) > 1
