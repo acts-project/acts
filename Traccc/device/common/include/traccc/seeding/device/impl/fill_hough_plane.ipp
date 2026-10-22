@@ -9,7 +9,7 @@ TRACCC_HOST_DEVICE
 inline unsigned short count_bits(unsigned long long x) {
 	unsigned short nOnes = 0;
 	for (int i(0); i<64; ++i) {
-	   if (x & (1ULL << i) != 0ULL) ++nOnes;
+	   if ((x & (1ULL << i)) != 0ULL) ++nOnes;
 	}
 	return nOnes;
 }
@@ -134,9 +134,19 @@ void fill_hough_plane_by_column(const global_index_t globalIndex,
 	    }
     } // loop on space points
 
+    static const std::array<unsigned short, 25> min_contributions {
+        5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 5, 5
+    };
+
     // Fill the plane
-    for (unsigned int i(0); i<device::N_ROWS; ++i) 
-	    houghplanes.plane()[n_wedge][globalIndex + i] = count_bits(column_values[i]);
+    for (unsigned int i(0); i<device::N_ROWS; ++i) {
+	    unsigned short value = count_bits(column_values[i]);
+	    if (value < min_contributions[n_wedge]) continue;
+	    houghplanes.plane()[n_wedge][globalIndex + i] = value;
+    }
 }
 
 
