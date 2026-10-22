@@ -12,9 +12,8 @@
 #include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 #include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
-#include "Acts/Utilities/Zip.hpp"
 
-#include <ranges>
+#include <span>
 
 #include <Eigen/Dense>
 #include <boost/mp11.hpp>
@@ -66,7 +65,7 @@ class Impl final : public TripletSeedFinder {
   template <typename TopDoublets>
   TopDoublets createPixelTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets topDoublets,
+      const DoubletForMiddleSp& bottomDoublet, TopDoublets topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
     const float varianceZM = spM.varianceZ();
@@ -83,7 +82,7 @@ class Impl final : public TripletSeedFinder {
       tM = spM.time();
       varianceTM = spM.varianceT();
       const ConstSpacePointProxy spB =
-          spacePoints[bottomDoublet.spacePointIndex()];
+          spacePoints[bottomDoublet.spacePointIndex];
       tBAtM = spB.time() + distance(spB, spM);
       varianceTB = spB.varianceT();
     }
@@ -92,11 +91,11 @@ class Impl final : public TripletSeedFinder {
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
                                  topDoublets.size());
 
-    const float cotThetaB = bottomDoublet.cotTheta();
-    const float erB = bottomDoublet.er();
-    const float iDeltaRB = bottomDoublet.iDeltaR();
-    const float Ub = bottomDoublet.u();
-    const float Vb = bottomDoublet.v();
+    const float cotThetaB = bottomDoublet.cotTheta;
+    const float erB = bottomDoublet.er;
+    const float iDeltaRB = bottomDoublet.iDeltaR;
+    const float Ub = bottomDoublet.u;
+    const float Vb = bottomDoublet.v;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     const float iSinTheta2 = 1 + cotThetaB * cotThetaB;
@@ -113,20 +112,20 @@ class Impl final : public TripletSeedFinder {
     const float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
 
     std::size_t topDoubletOffset = 0;
-    for (auto [topDoublet, topDoubletIndex] :
-         zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
-                              0, topDoublets.size()))) {
-      const SpacePointIndex spT = topDoublet.spacePointIndex();
-      const float cotThetaT = topDoublet.cotTheta();
+    for (std::size_t topDoubletIndex = 0; topDoubletIndex < topDoublets.size();
+         ++topDoubletIndex) {
+      const DoubletForMiddleSp& topDoublet = topDoublets[topDoubletIndex];
+      const SpacePointIndex spT = topDoublet.spacePointIndex;
+      const float cotThetaT = topDoublet.cotTheta;
 
       // use geometric average
       const float cotThetaAvg2 = cotThetaB * cotThetaT;
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      const float error2 = topDoublet.er() + erB +
+      const float error2 = topDoublet.er + erB +
                            2 * (cotThetaAvg2 * varianceRM + varianceZM) *
-                               iDeltaRB * topDoublet.iDeltaR();
+                               iDeltaRB * topDoublet.iDeltaR;
 
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
@@ -163,14 +162,14 @@ class Impl final : public TripletSeedFinder {
         }
       }
 
-      const float dU = topDoublet.u() - Ub;
+      const float dU = topDoublet.u - Ub;
       // protects against division by 0
       if (dU == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      const float A = (topDoublet.v() - Vb) / dU;
+      const float A = (topDoublet.v - Vb) / dU;
       const float S2 = 1 + A * A;
       const float B = Vb - A * Ub;
       const float B2 = B * B;
@@ -214,7 +213,7 @@ class Impl final : public TripletSeedFinder {
 
     if constexpr (sortedByCotTheta) {
       // remove the top doublets that were skipped due to cotTheta sorting
-      topDoublets = topDoublets.subrange(topDoubletOffset);
+      topDoublets = topDoublets.subspan(topDoubletOffset);
     }
     return topDoublets;
   }
@@ -222,7 +221,7 @@ class Impl final : public TripletSeedFinder {
   template <typename TopDoublets>
   TopDoublets createStripTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets topDoublets,
+      const DoubletForMiddleSp& bottomDoublet, TopDoublets topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
     const float cosPhiM = spM.xy()[0] / rM;
@@ -234,11 +233,11 @@ class Impl final : public TripletSeedFinder {
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
                                  topDoublets.size());
 
-    const float cotThetaB0 = bottomDoublet.cotTheta();
-    const float erB = bottomDoublet.er();
-    const float iDeltaRB = bottomDoublet.iDeltaR();
-    const float Ub0 = bottomDoublet.u();
-    const float Vb0 = bottomDoublet.v();
+    const float cotThetaB0 = bottomDoublet.cotTheta;
+    const float erB = bottomDoublet.er;
+    const float iDeltaRB = bottomDoublet.iDeltaR;
+    const float Ub0 = bottomDoublet.u;
+    const float Vb0 = bottomDoublet.v;
 
     // times of the middle space point and of the bottom space point transported
     // to the middle one. only filled when the time cut is enabled
@@ -250,7 +249,7 @@ class Impl final : public TripletSeedFinder {
       tM = spM.time();
       varianceTM = spM.varianceT();
       const ConstSpacePointProxy spBTime =
-          spacePoints[bottomDoublet.spacePointIndex()];
+          spacePoints[bottomDoublet.spacePointIndex];
       tBAtM = spBTime.time() + distance(spBTime, spM);
       varianceTB = spBTime.varianceT();
     }
@@ -281,16 +280,15 @@ class Impl final : public TripletSeedFinder {
     const OuterStripSpacePointCalibrationDetailsDerived calM =
         detail::deriveOuterStripSpacePointCalibrationDetails(
             spM.outerStripCalibrationDetails());
-    const ConstSpacePointProxy spB =
-        spacePoints[bottomDoublet.spacePointIndex()];
+    const ConstSpacePointProxy spB = spacePoints[bottomDoublet.spacePointIndex];
     const OuterStripSpacePointCalibrationDetailsDerived calB =
         detail::deriveOuterStripSpacePointCalibrationDetails(
             spB.outerStripCalibrationDetails());
 
     std::size_t topDoubletOffset = 0;
-    for (auto [topDoublet, topDoubletIndex] :
-         zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
-                              0, topDoublets.size()))) {
+    for (std::size_t topDoubletIndex = 0; topDoubletIndex < topDoublets.size();
+         ++topDoubletIndex) {
+      const DoubletForMiddleSp& topDoublet = topDoublets[topDoubletIndex];
       // Pre-filter on the doublet stage cot(theta) difference before the
       // expensive strip coordinate transformation. The doublet cot(theta)
       // values are computed from SP centers and are approximate, so the
@@ -303,7 +301,7 @@ class Impl final : public TripletSeedFinder {
       // `topDoubletOffset` to discard tops that can never satisfy the cut
       // for any subsequent (larger) bottom cotTheta.
       if constexpr (sortedByCotTheta) {
-        const float cotThetaT = topDoublet.cotTheta();
+        const float cotThetaT = topDoublet.cotTheta;
         const float deltaCotTheta = cotThetaB0 - cotThetaT;
         const float cotThetaDiffMax2 =
             m_cfg.cotThetaDiffMax * m_cfg.cotThetaDiffMax;
@@ -319,20 +317,20 @@ class Impl final : public TripletSeedFinder {
       // check the time compatibility of the three space points, before the
       // expensive strip coordinate transformation below
       if constexpr (useTime) {
-        if (!passesTimeCut(spM, spacePoints[topDoublet.spacePointIndex()],
-                           tBAtM, varianceTB, tM, varianceTM)) {
+        if (!passesTimeCut(spM, spacePoints[topDoublet.spacePointIndex], tBAtM,
+                           varianceTB, tM, varianceTM)) {
           continue;
         }
       }
 
       // protects against division by 0
-      const float dU0 = topDoublet.u() - Ub0;
+      const float dU0 = topDoublet.u - Ub0;
       if (dU0 == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      const float A0 = (topDoublet.v() - Vb0) / dU0;
+      const float A0 = (topDoublet.v - Vb0) / dU0;
 
       // The middle strip check is scale-invariant (ratios s1/bd1 and s0/bd1
       // are unaffected by uniform scaling of direction), so we use cosTheta as
@@ -353,8 +351,8 @@ class Impl final : public TripletSeedFinder {
 
       // coordinate transformation and checks for bottom space point
       const float B0 = 2 * (Vb0 - A0 * Ub0);
-      const float Cb = 1 - B0 * bottomDoublet.y();
-      const float Sb = A0 + B0 * bottomDoublet.x();
+      const float Cb = 1 - B0 * bottomDoublet.y;
+      const float Sb = A0 + B0 * bottomDoublet.x;
       const std::array<float, 3> directionBottom = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
@@ -367,15 +365,14 @@ class Impl final : public TripletSeedFinder {
       }
 
       // coordinate transformation and checks for top space point
-      const float Ct = 1 - B0 * topDoublet.y();
-      const float St = A0 + B0 * topDoublet.x();
+      const float Ct = 1 - B0 * topDoublet.y;
+      const float St = A0 + B0 * topDoublet.x;
       const std::array<float, 3> directionTop = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
           zDirectionMiddle};
 
-      const ConstSpacePointProxy spT =
-          spacePoints[topDoublet.spacePointIndex()];
+      const ConstSpacePointProxy spT = spacePoints[topDoublet.spacePointIndex];
       const OuterStripSpacePointCalibrationDetailsDerived calT =
           detail::deriveOuterStripSpacePointCalibrationDetails(
               spT.outerStripCalibrationDetails());
@@ -405,9 +402,9 @@ class Impl final : public TripletSeedFinder {
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      const float error2 = topDoublet.er() + erB +
+      const float error2 = topDoublet.er + erB +
                            2 * (cotThetaAvg2 * varianceRM + varianceZM) *
-                               iDeltaRB * topDoublet.iDeltaR();
+                               iDeltaRB * topDoublet.iDeltaR;
 
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
@@ -476,22 +473,22 @@ class Impl final : public TripletSeedFinder {
 
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
-      tripletTopCandidates.emplace_back(topDoublet.spacePointIndex(),
+      tripletTopCandidates.emplace_back(topDoublet.spacePointIndex,
                                         B / std::sqrt(S2), im);
     }  // loop on tops
 
     if constexpr (sortedByCotTheta) {
       // remove the top doublets that can no longer be compatible with any
       // subsequent bottom doublet (which has a larger approximate cotTheta)
-      topDoublets = topDoublets.subrange(topDoubletOffset);
+      topDoublets = topDoublets.subspan(topDoubletOffset);
     }
     return topDoublets;
   }
 
-  DoubletsForMiddleSp::Range createTripletTopCandidates(
+  std::span<const DoubletForMiddleSp> createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Range topDoublets,
+      const DoubletForMiddleSp& bottomDoublet,
+      std::span<const DoubletForMiddleSp> topDoublets,
       TripletTopCandidates& tripletTopCandidates) const override {
     if constexpr (useStripInfo) {
       return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
@@ -502,24 +499,9 @@ class Impl final : public TripletSeedFinder {
     }
   }
 
-  DoubletsForMiddleSp::Subset createTripletTopCandidates(
+  Subspan createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Subset topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const override {
-    if constexpr (useStripInfo) {
-      return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                             topDoublets, tripletTopCandidates);
-    } else {
-      return createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                             topDoublets, tripletTopCandidates);
-    }
-  }
-
-  DoubletsForMiddleSp::Subset2 createTripletTopCandidates(
-      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Subset2 topDoublets,
+      const DoubletForMiddleSp& bottomDoublet, Subspan topDoublets,
       TripletTopCandidates& tripletTopCandidates) const override {
     if constexpr (useStripInfo) {
       return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,

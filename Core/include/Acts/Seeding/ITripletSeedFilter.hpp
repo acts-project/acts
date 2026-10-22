@@ -41,7 +41,7 @@ class ITripletSeedFilter {
   /// @param tripletTopCandidates Collection of triplet top candidates
   virtual void filterTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomLink,
+      const DoubletForMiddleSp& bottomLink,
       const TripletTopCandidates& tripletTopCandidates) const = 0;
 
   /// Create final seeds for all candidates with the same middle space point

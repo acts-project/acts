@@ -105,9 +105,9 @@ bool BroadTripletSeedFilter::sufficientTopDoublets(
 
 void BroadTripletSeedFilter::filterTripletTopCandidates(
     const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-    const DoubletsForMiddleSp::Proxy& bottomLink,
+    const DoubletForMiddleSp& bottomLink,
     const TripletTopCandidates& tripletTopCandidates) const {
-  auto spB = spacePoints[bottomLink.spacePointIndex()];
+  auto spB = spacePoints[bottomLink.spacePointIndex];
   auto bottomSp = spB.index();
   auto middleSp = spM.index();
 
@@ -126,7 +126,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   if (tripletTopCandidates.size() < minCompatibleTopSPs) {
     return;
   }
-  float zOrigin = spM.zr()[0] - spM.zr()[1] * bottomLink.cotTheta();
+  float zOrigin = spM.zr()[0] - spM.zr()[1] * bottomLink.cotTheta;
 
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
@@ -254,7 +254,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     // closest approach. Real displaced decay seeds have small delta eta.
     if (config().absDeltaEtaWeightFactor > 0 &&
         impact > config().absDeltaEtaMinImpact) {
-      const float etaSeed = std::asinh(bottomLink.cotTheta());
+      const float etaSeed = std::asinh(bottomLink.cotTheta);
       const float etaPCA = std::asinh(zOrigin / impact);
       const float absDeltaEta = std::abs(etaSeed - etaPCA);
       weight -= config().absDeltaEtaWeightFactor * absDeltaEta;
