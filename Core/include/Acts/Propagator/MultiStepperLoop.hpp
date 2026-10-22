@@ -18,7 +18,6 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
-#include "Acts/Propagator/detail/Curvature.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"

@@ -15,8 +15,8 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/Propagator/detail/Curvature.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {

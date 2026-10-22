@@ -33,7 +33,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/Curvature.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -772,7 +772,9 @@ BOOST_AUTO_TEST_CASE(CurvatureZeroCasesAndFieldErrors) {
   const auto start = [](ParticleHypothesis particle =
                             ParticleHypothesis::pion()) {
     return BoundTrackParameters::createCurvilinear(
-        Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt, particle);
+        Vector4::Zero(), Vector3::UnitX(),
+        particle.qOverP(1_GeV, particle.absoluteCharge()), std::nullopt,
+        particle);
   };
   // Exercise the propagator initialization separately: neutral EigenStepper
   // integration is not part of this test, only the supplied navigation data.
@@ -794,7 +796,7 @@ BOOST_AUTO_TEST_CASE(CurvatureZeroCasesAndFieldErrors) {
       EigenStepper<>(std::make_shared<ConstantBField>(Vector3(1_T, 0., 0.))),
       ParticleHypothesis::pion());
   checkZero(EigenStepper<>(std::make_shared<FailingCurvatureField>()),
-            ParticleHypothesis::photon());
+            ParticleHypothesis::photon().withMomentumHypothesis(1_GeV));
 
   Propagator propagator(
       EigenStepper<>(std::make_shared<FailingCurvatureField>()));
