@@ -17,6 +17,8 @@ TRACCC_HOST_DEVICE inline void fill_finding_propagation_sort_keys(
       payload.params_view);
   const vecmem::device_vector<const unsigned int> param_liveness(
       payload.param_liveness_view);
+  const vecmem::device_vector<const unsigned int> condensed_param_map(
+      payload.condensed_param_map_view);
 
   // Keys
   vecmem::device_vector<device::sort_key> keys_device(payload.keys_view);
@@ -33,8 +35,9 @@ TRACCC_HOST_DEVICE inline void fill_finding_propagation_sort_keys(
    * all end up at the end of the array, and so they will produce minimal
    * thread divergence.
    */
+  const unsigned int uncondensed_idx = condensed_param_map.at(globalIndex);
   keys_device.at(globalIndex) =
-      device::get_sort_key(params.at(globalIndex)) +
+      device::get_sort_key(params.at(uncondensed_idx)) +
       (param_liveness.at(globalIndex) == 0u ? device::dead_track_sort_key_offset
                                             : 0.f);
   ids_device.at(globalIndex) = globalIndex;

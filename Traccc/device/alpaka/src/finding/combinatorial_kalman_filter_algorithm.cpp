@@ -28,6 +28,7 @@
 #include "traccc/finding/device/fill_finding_propagation_sort_keys.hpp"
 #include "traccc/finding/device/find_tracks.hpp"
 #include "traccc/finding/device/geo_id_surface_comparator.hpp"
+#include "traccc/finding/device/permute_tracks.hpp"
 #include "traccc/finding/device/progressive_kalman_filter.hpp"
 #include "traccc/finding/device/propagate_to_next_surface.hpp"
 #include "traccc/finding/device/remove_duplicates.hpp"
@@ -130,6 +131,17 @@ struct fill_finding_propagation_sort_keys {
     const device::global_index_t globalThreadIdx =
         ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0];
     device::fill_finding_propagation_sort_keys(globalThreadIdx, payload);
+  }
+};
+
+/// Alpaka kernel functor for @c traccc::device::permute_tracks
+struct permute_tracks {
+  template <typename TAcc>
+  ALPAKA_FN_ACC void operator()(
+      TAcc const& acc, const device::permute_tracks_payload& payload) const {
+    const device::global_index_t globalThreadIdx =
+        ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0];
+    device::permute_tracks(globalThreadIdx, payload);
   }
 };
 
@@ -460,6 +472,20 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_keys(
   assert(param_ids.size_ptr() == nullptr);
   details::sort_by_key(queue(), mr(), keys.ptr(), keys.ptr() + keys.capacity(),
                        param_ids.ptr());
+}
+
+void combinatorial_kalman_filter_algorithm::permute_tracks_kernel(
+    unsigned int n_threads,
+    const device::permute_tracks_payload& payload) const {
+  // Establish the kernel launch parameters.
+  const unsigned int deviceThreads = 256;
+  const unsigned int deviceBlocks =
+      (n_threads + deviceThreads - 1) / deviceThreads;
+
+  // Launch the kernel.
+  ::alpaka::exec<Acc>(details::get_queue(queue()),
+                      makeWorkDiv<Acc>(deviceBlocks, deviceThreads),
+                      kernels::permute_tracks{}, payload);
 }
 
 void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(

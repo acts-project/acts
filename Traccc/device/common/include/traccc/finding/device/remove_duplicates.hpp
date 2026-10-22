@@ -24,9 +24,15 @@ namespace traccc::device {
  */
 struct remove_duplicates_payload {
   /**
-   * @brief View of the links vector.
+   * @brief View of the links of all previous steps, in their final order.
    */
-  const vecmem::data::vector_view<const candidate_link> links_view;
+  const vecmem::data::vector_view<const candidate_link> prev_links_view;
+
+  /**
+   * @brief View of the find_tracks scratch links of the current step, in
+   * their uncondensed order.
+   */
+  const vecmem::data::vector_view<const candidate_link> curr_links_view;
 
   /**
    * @brief View of the last measurement in each link of the current step.
@@ -47,14 +53,15 @@ struct remove_duplicates_payload {
   vecmem::data::vector_view<unsigned int> param_liveness_view;
 
   /**
+   * @brief View of the map from condensed parameter index to the slot in
+   * @c curr_links_view.
+   */
+  vecmem::data::vector_view<const unsigned int> condensed_param_map_view;
+
+  /**
    * @brief The total number of links in this step.
    */
   const unsigned int n_links;
-
-  /**
-   * @brief The starting index of the links belonging to this step.
-   */
-  const unsigned int curr_links_idx;
 
   /**
    * @brief The total number of measurements, used to find holes.
@@ -97,13 +104,18 @@ struct remove_duplicates_payload {
 TRACCC_HOST_DEVICE inline void remove_duplicates(
     global_index_t tid, const finding_config& cfg,
     const remove_duplicates_payload& payload) {
-  const vecmem::device_vector<const candidate_link> links(payload.links_view);
+  const vecmem::device_vector<const candidate_link> prev_links(
+      payload.prev_links_view);
+  const vecmem::device_vector<const candidate_link> curr_links(
+      payload.curr_links_view);
   vecmem::device_vector<unsigned int> param_liveness(
       payload.param_liveness_view);
   const vecmem::device_vector<const unsigned int> link_last_measurement(
       payload.link_last_measurement_view);
   const vecmem::device_vector<const unsigned int> param_ids(
       payload.param_ids_view);
+  vecmem::device_vector<const unsigned int> condensed_param_map(
+      payload.condensed_param_map_view);
 
   /*
    * As is standard fare, we ignore tracks that are out of bounds or that
@@ -146,7 +158,7 @@ TRACCC_HOST_DEVICE inline void remove_duplicates(
    * considered.
    */
   const candidate_link& Lthisbase =
-      links.at(payload.curr_links_idx + param_ids.at(tid));
+      curr_links.at(condensed_param_map.at(param_ids.at(tid)));
 
   /*
    * A core design of this function is that a thread can only remove itself,
@@ -181,7 +193,8 @@ TRACCC_HOST_DEVICE inline void remove_duplicates(
     bool this_is_dominated = true;
 
     candidate_link Lthis = Lthisbase;
-    candidate_link Lthat = links.at(payload.curr_links_idx + param_ids.at(i));
+    candidate_link Lthat =
+        curr_links.at(condensed_param_map.at(param_ids.at(i)));
 
     if (payload.step + 1 - Lthat.n_skipped <=
             cfg.duplicate_removal_minimum_length ||
@@ -202,11 +215,11 @@ TRACCC_HOST_DEVICE inline void remove_duplicates(
        * we only compare actual measurements.
        */
       while (Lthis.meas_idx >= payload.n_measurements && Lthis.step != 0u) {
-        Lthis = links.at(Lthis.previous_candidate_idx);
+        Lthis = prev_links.at(Lthis.previous_candidate_idx);
       }
 
       while (Lthat.meas_idx >= payload.n_measurements && Lthat.step != 0u) {
-        Lthat = links.at(Lthat.previous_candidate_idx);
+        Lthat = prev_links.at(Lthat.previous_candidate_idx);
       }
 
       /*
@@ -238,8 +251,8 @@ TRACCC_HOST_DEVICE inline void remove_duplicates(
          * and we recurse further.
          */
         else {
-          Lthis = links.at(Lthis.previous_candidate_idx);
-          Lthat = links.at(Lthat.previous_candidate_idx);
+          Lthis = prev_links.at(Lthis.previous_candidate_idx);
+          Lthat = prev_links.at(Lthat.previous_candidate_idx);
         }
       }
       /*

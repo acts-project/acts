@@ -37,17 +37,12 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
     return;
   }
 
-  // Theta id
-  vecmem::device_vector<const unsigned int> param_ids(payload.param_ids_view);
-
-  const unsigned int param_id = param_ids.at(globalIndex);
-
   // Links
   vecmem::device_vector<const candidate_link> links(payload.links_view);
   bound_track_parameters_collection_types::device link_predicted_parameters(
       payload.link_predicted_parameter_view);
 
-  const unsigned int link_idx = payload.prev_links_idx + param_id;
+  const unsigned int link_idx = payload.prev_links_idx + globalIndex;
   const candidate_link link = links.at(link_idx);
   assert(link.step == payload.step);
   const unsigned int n_cands = link.step + 1 - link.n_skipped;
@@ -63,12 +58,12 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
   // Parameters
   bound_track_parameters_collection_types::device params(payload.params_view);
 
-  if (params_liveness.at(param_id) == 0u) {
+  if (params_liveness.at(globalIndex) == 0u) {
     return;
   }
 
   // Input bound track parameter
-  const bound_track_parameters<> in_par = params.at(param_id);
+  const bound_track_parameters<> in_par = params.at(globalIndex);
 
   // Create propagator
   propagator_t propagator(cfg.propagation);
@@ -122,39 +117,42 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
       propagation, detray::tie(aborter_state, updater_state, interactor_state,
                                momentum_aborter_state, ckf_aborter_state));
 
+  unsigned int new_liveness = 0u;
+
   // If a surface found, add the parameter for the next step
   if (ckf_aborter_state.success) {
     assert(propagation.navigation().is_on_sensitive());
     assert(!updater_state.bound_params().is_invalid());
 
-    params[param_id] = updater_state.bound_params();
+    params[globalIndex] = updater_state.bound_params();
     if (link_predicted_parameters.capacity() > 0) {
       link_predicted_parameters.at(link_idx) = updater_state.bound_params();
     }
-    params_liveness[param_id] = 1u;
+    new_liveness = 1u;
 
-    const scalar theta = params[param_id].theta();
+    const scalar theta = updater_state.bound_params().theta();
     if (theta <= 0.f || theta >= 2.f * constant<traccc::scalar>::pi) {
       TRACCC_ERROR_DEVICE("Theta is zero after propagation");
-      params_liveness[param_id] = 0u;
+      new_liveness = 0u;
     }
 
-    if (!std::isfinite(params[param_id].phi())) {
+    if (!std::isfinite(updater_state.bound_params().phi())) {
       TRACCC_ERROR_DEVICE(
           "Phi is infinite after propagation (Matrix inversion)");
-      params_liveness[param_id] = 0u;
+      new_liveness = 0u;
     }
 
-    if (math::fabs(params[param_id].qop()) == 0.f) {
+    if (math::fabs(updater_state.bound_params().qop()) == 0.f) {
       TRACCC_ERROR_DEVICE("q/p is zero after propagation");
-      params_liveness[param_id] = 0u;
+      new_liveness = 0u;
     }
   } else {
-    params_liveness[param_id] = 0u;
+    new_liveness = 0u;
   }
 
-  if (params_liveness[param_id] == 0 &&
-      n_cands >= cfg.min_track_candidates_per_track) {
+  params_liveness[globalIndex] = new_liveness;
+
+  if (new_liveness == 0 && n_cands >= cfg.min_track_candidates_per_track) {
     TRACCC_VERBOSE_DEVICE("Create tip: No next sensitive found");
     auto tip_pos = tips.push_back(link_idx);
     tip_lengths.at(tip_pos) = n_cands;

@@ -56,6 +56,7 @@ add_library(
     "src/finding/combinatorial_kalman_filter_algorithm_gather_best_tips_per_measurement_kernel.hip"
     "src/finding/combinatorial_kalman_filter_algorithm_gather_measurement_votes_kernel.hip"
     "src/finding/combinatorial_kalman_filter_algorithm_input_is_valid.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_permute_tracks_kernel.hip"
     "src/finding/combinatorial_kalman_filter_algorithm_progressive_kalman_filter_kernel.hip"
     "src/finding/combinatorial_kalman_filter_algorithm_propagate_to_next_surface_kernel.hip"
     "src/finding/combinatorial_kalman_filter_algorithm_remove_duplicates_kernel.hip"
