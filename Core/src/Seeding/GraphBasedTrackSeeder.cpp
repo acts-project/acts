@@ -361,30 +361,28 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     }
   }
 
-  // The length of the longest path from an edge inwards to a root, stepping
-  // one level up at a time: one for a root, which has no edge further in
-  // that is not left out, and zero if there is no such path. The edges
-  // further in come later, so one pass backwards settles it. An edge whose
-  // settled inner edges all sit more than one level up has no path.
-  std::vector<std::uint32_t> rootReach(nEdges, 0);
+  // The most edges on a chain from an edge inwards to a root, the edge
+  // included, stepping one level up at a time; zero for an edge left out.
+  // The edges further in come later, so one pass backwards settles it.
+  std::vector<std::uint32_t> edgesToRoot(nEdges, 0);
   for (std::uint32_t e = nEdges; e-- > 0;) {
     if (level[e] > maxLength) {
       continue;
     }
-    const detail::GbtsEdge& edge = edgeStorage[e];
-    bool isRoot = true;
-    std::uint32_t reach = 0;
-    for (std::uint32_t k = 0; k < edge.nNei; ++k) {
-      const std::uint32_t inner = edge.vNei[k];
-      if (level[inner] > maxLength) {
-        continue;
-      }
-      isRoot = false;
-      if (level[inner] == level[e] + 1 && rootReach[inner] > 0) {
-        reach = std::max(reach, rootReach[inner] + 1);
+    // A root has no settled edge further in exactly one level up: an edge
+    // further in with a longer chain outwards elsewhere does not end the chain
+    const std::uint32_t nextLevel = level[e] + 1;
+    std::uint32_t length = 1;
+    if (nextLevel <= maxLength) {
+      const detail::GbtsEdge& edge = edgeStorage[e];
+      for (std::uint32_t k = 0; k < edge.nNei; ++k) {
+        const std::uint32_t inner = edge.vNei[k];
+        if (level[inner] == nextLevel) {
+          length = std::max(length, edgesToRoot[inner] + 1);
+        }
       }
     }
-    rootReach[e] = isRoot ? 1 : reach;
+    edgesToRoot[e] = length;
   }
 
   // From every edge, search all paths inwards to a root, fitting on the way.
@@ -403,25 +401,26 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     // every step goes one level up, so the depth is bounded by `maxLength`
     assert(path.size() <= maxLength);
 
-    if (rootReach[e] == 1) {
+    if (edgesToRoot[e] == 1) {
+      // a root completes the chain
       const float quality = -state.j / static_cast<float>(path.size() + 1);
       if (path.size() >= minLength && quality < bestQuality) {
         bestQuality = quality;
         bestState = state;
         bestPath = path;
       }
-    }
-
-    const detail::GbtsEdge& edge = edgeStorage[e];
-    for (std::uint32_t k = 0; k < edge.nNei; ++k) {
-      const std::uint32_t inner = edge.vNei[k];
-      if (level[inner] != level[e] + 1 || rootReach[inner] == 0 ||
-          path.size() + rootReach[inner] < minLength) {
-        continue;
-      }
-      detail::GbtsEdgeState innerState = state;
-      if (filter.update(nodeView, edgeStorage[inner], innerState)) {
-        self(self, inner, innerState);
+    } else {
+      const detail::GbtsEdge& edge = edgeStorage[e];
+      for (std::uint32_t k = 0; k < edge.nNei; ++k) {
+        const std::uint32_t inner = edge.vNei[k];
+        if (level[inner] != level[e] + 1 ||
+            path.size() + edgesToRoot[inner] < minLength) {
+          continue;
+        }
+        detail::GbtsEdgeState innerState = state;
+        if (filter.update(nodeView, edgeStorage[inner], innerState)) {
+          self(self, inner, innerState);
+        }
       }
     }
 
@@ -438,7 +437,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
       --minLength;
     }
 
-    if (rootReach[head] == 0 || rootReach[head] < minLength) {
+    if (edgesToRoot[head] == 0 || edgesToRoot[head] < minLength) {
       continue;
     }
 

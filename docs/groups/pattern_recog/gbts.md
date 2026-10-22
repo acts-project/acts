@@ -206,8 +206,9 @@ which are always created after it, so a single pass over the edges in creation
 order settles every level. Chains longer than `maxChainLength` edges are left
 unsettled and take no part in the extraction.
 
-An edge with no settled edge further in is a **root**, the innermost edge of a
-chain.
+An edge with no settled edge further in exactly one level up is a **root**, the
+innermost edge of a chain. An edge further in that is more than one level up
+belongs to a longer chain outwards elsewhere and does not continue the chain.
 
 ## Seed extraction {#gbts-extraction}
 
