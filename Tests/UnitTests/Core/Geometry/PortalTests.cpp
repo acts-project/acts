@@ -341,7 +341,9 @@ BOOST_AUTO_TEST_CASE(Disc) {
       PortalMergingException);
 
   disc2->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
-      BinUtility{}, MappingType::Default, "original/disc"));
+      MultiAxisSpec2D(
+          {AxisSpec::DeferredEquidistant(1), AxisSpec::DeferredEquidistant(1)}),
+      MappingType::Default, "original/disc"));
 
   // In "keep going" mode, the same merge succeeds: the material is discarded
   // and the merged surface is tagged with a MergedMaterialMarker.
@@ -369,7 +371,9 @@ BOOST_AUTO_TEST_CASE(Disc) {
   disc2->assignSurfaceMaterial(
       std::make_unique<MergedMaterialMarker>(marker.origins()));
   disc1->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
-      BinUtility{}, MappingType::Default, "original/inner-disc"));
+      MultiAxisSpec2D(
+          {AxisSpec::DeferredEquidistant(1), AxisSpec::DeferredEquidistant(1)}),
+      MappingType::Default, "original/inner-disc"));
   portal1 = Portal{
       gctx, {.alongNormal = {disc1, *vol1}, .oppositeNormal = {disc1, *vol2}}};
   portal2 = Portal{
