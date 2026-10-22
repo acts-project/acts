@@ -10,17 +10,9 @@
 
 #include <ostream>
 
-Acts::ProtoVolumeMaterial::ProtoVolumeMaterial(const BinUtility& binUtility)
-    : m_binUtility(binUtility) {}
+Acts::ProtoVolumeMaterial::ProtoVolumeMaterial(const MultiAxisSpec3D& binning)
+    : m_binning(binning) {}
 
-std::ostream& Acts::ProtoVolumeMaterial::toStream(std::ostream& sl) const {
-  sl << "Acts::ProtoVolumeMaterial : " << std::endl;
-  if (m_binUtility.bins(0) * m_binUtility.bins(1) * m_binUtility.bins(2) > 1) {
-    sl << "   - Number of Material bins [0,1] : " << m_binUtility.bins(0)
-       << " / " << m_binUtility.bins(1) << " / " << m_binUtility.bins(2)
-       << std::endl;
-  } else {
-    sl << "   - Homogeneous Material" << std::endl;
-  }
-  return sl;
+std::ostream& Acts::ProtoVolumeMaterial::toStream(std::ostream& stream) const {
+  return stream << "Acts::ProtoVolumeMaterial : " << m_binning;
 }

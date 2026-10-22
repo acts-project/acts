@@ -13,6 +13,7 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/MergedMaterialMarker.hpp"
+#include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
@@ -209,6 +210,35 @@ BOOST_AUTO_TEST_CASE(GridVolumeMaterialStorageRoundTrip) {
     auto invalid = encoded;
     invalid["material"]["storage"]["type"] = "unknown";
     BOOST_CHECK_THROW(from_json(invalid, decoded), std::invalid_argument);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ProtoVolumeMaterialBinningRoundTrip) {
+  const MultiAxisSpec3D binning(std::array{
+      AxisSpec::DeferredEquidistant(5, AxisDirection::AxisR),
+      AxisSpec::Equidistant(8, -std::numbers::pi, std::numbers::pi,
+                            AxisBoundaryType::Closed, AxisDirection::AxisPhi),
+      AxisSpec::DeferredVariable({0., 0.1, 1.}, std::nullopt,
+                                 AxisDirection::AxisZ)});
+  for (const auto& proxy :
+       {ProtoVolumeMaterial{}, ProtoVolumeMaterial{binning}}) {
+    const volumeMaterialPointer pointer = &proxy;
+    nlohmann::json encoded;
+    to_json(encoded, pointer);
+    BOOST_CHECK(encoded["material"].contains("binning"));
+    BOOST_CHECK(!encoded["material"].contains("binUtility"));
+    BOOST_CHECK_EQUAL(encoded["material"]["binning"].size(), 3u);
+    volumeMaterialPointer decoded = nullptr;
+    from_json(encoded, decoded);
+    std::unique_ptr<const IVolumeMaterial> owner(decoded);
+    const auto* typed = dynamic_cast<const ProtoVolumeMaterial*>(decoded);
+    BOOST_REQUIRE(typed != nullptr);
+    BOOST_CHECK(typed->binning() == proxy.binning());
+    BOOST_CHECK(typed->material(Vector3::Zero()).isVacuum());
+    encoded["material"]["binning"].erase(2);
+    BOOST_CHECK_THROW(from_json(encoded, decoded), std::invalid_argument);
+    encoded["material"].erase("binning");
+    BOOST_CHECK_THROW(from_json(encoded, decoded), std::invalid_argument);
   }
 }
 

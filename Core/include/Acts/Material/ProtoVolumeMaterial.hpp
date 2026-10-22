@@ -8,91 +8,47 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Material/Material.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
+#include <array>
 #include <iosfwd>
 
 namespace Acts {
 
-/// @class ProtoVolumeMaterial
+/// Proxy marking a volume for material mapping, carrying three-axis binning.
 ///
-/// @ingroup material
-///
-/// @brief proxy to VolumeMaterial hand over BinUtility
-///
-/// The ProtoVolumeMaterial class acts as a proxy to the VolumeMaterial
-/// to mark the volume on which the material should be mapped on
-/// at construction time of the geometry and to hand over the granularity of
-/// of the material map with the bin Utility.
-
-class ProtoVolumeMaterial : public IVolumeMaterial {
+/// Like ProtoSurfaceMaterial, the proxy carries an AxisSpec for each material
+/// coordinate. Deferred ranges and boundary types are supplied by the mapping
+/// consumer through MultiAxisSpec3D::buildMultiAxis. One bin in each direction
+/// describes homogeneous material. The proxy always returns vacuum.
+class ProtoVolumeMaterial final : public IVolumeMaterial {
  public:
-  /// Constructor without BinUtility - homogeneous material
+  /// Construct a homogeneous proxy with three deferred single-bin axes.
   ProtoVolumeMaterial() = default;
 
-  /// Constructor with BinUtility - multidimensional material
-  ///
-  /// @param binUtility a BinUtility determining the granularity
-  ///        and binning of the material on the volume
-  explicit ProtoVolumeMaterial(const BinUtility& binUtility);
+  /// Construct from fully specified or deferred material binning.
+  /// @param binning three-axis description of the future material map
+  explicit ProtoVolumeMaterial(const MultiAxisSpec3D& binning);
 
-  /// Copy constructor
-  ///
-  /// @param vmproxy The source proxy
-  ProtoVolumeMaterial(const ProtoVolumeMaterial& vmproxy) = default;
+  /// @return the material map's binning specification
+  const MultiAxisSpec3D& binning() const { return m_binning; }
 
-  /// Copy move constructor
-  ///
-  /// @param vmproxy The source proxy
-  ProtoVolumeMaterial(ProtoVolumeMaterial&& vmproxy) = default;
-
-  /// Destructor
-  ///
-  ~ProtoVolumeMaterial() override = default;
-
-  /// Return the BinUtility
-  /// @return Const reference to the bin utility for this material
-  const BinUtility& binUtility() const;
-
-  /// Assignment operator
-  ///
-  /// @param vmproxy The source proxy
-  /// @return Reference to this material proxy for assignment chaining
-  ProtoVolumeMaterial& operator=(const ProtoVolumeMaterial& vmproxy) = default;
-
-  /// Return the material
-  /// @return The vacuum material (always the same as this is a proxy)
-  const Material material(const Vector3& /*position*/) const final;
-
-  using IVolumeMaterial::material;
-
-  /// Return an unbounded constant material cell.
-  /// @return the homogeneous material cell
+  /// Return an unbounded vacuum cell.
+  /// @return the vacuum cell
   VolumeMaterialCell materialCell(const Vector3& /*position*/) const final {
     return VolumeMaterialCell(Material::Vacuum());
   }
 
-  /// Output Method for std::ostream
-  ///
-  /// @param sl The outoput stream
-  /// @return Reference to the output stream for method chaining
-  std::ostream& toStream(std::ostream& sl) const final;
+  /// Write the proxy binning description.
+  /// @param stream destination stream
+  /// @return the modified stream
+  std::ostream& toStream(std::ostream& stream) const final;
 
  private:
-  BinUtility m_binUtility;
-  Material m_material = Material::Vacuum();
+  MultiAxisSpec3D m_binning{std::array{AxisSpec::DeferredEquidistant(1),
+                                       AxisSpec::DeferredEquidistant(1),
+                                       AxisSpec::DeferredEquidistant(1)}};
 };
-
-inline const Acts::Material Acts::ProtoVolumeMaterial::material(
-    const Acts::Vector3& /*position*/) const {
-  return m_material;
-}
-
-inline const Acts::BinUtility& Acts::ProtoVolumeMaterial::binUtility() const {
-  return m_binUtility;
-}
 
 }  // namespace Acts

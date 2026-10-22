@@ -11,9 +11,6 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
-#include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
@@ -190,63 +187,19 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
 
 Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
     const Acts::TrackingVolume* volume) {
-  Acts::BinUtility bUtility;
   if (volume->volumeMaterialPtr() != nullptr) {
     return {volume, volume->volumeMaterialPtr()};
   }
-  // Check which type of bound is associated to the volume
-  auto cyBounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(
-      &(volume->volumeBounds()));
-  auto cutcylBounds = dynamic_cast<const Acts::CutoutCylinderVolumeBounds*>(
-      &(volume->volumeBounds()));
-  auto cuBounds =
-      dynamic_cast<const Acts::CuboidVolumeBounds*>(&(volume->volumeBounds()));
-
-  if (cyBounds != nullptr) {
-    bUtility +=
-        Acts::BinUtility(1, cyBounds->get(Acts::CylinderVolumeBounds::eMinR),
-                         cyBounds->get(Acts::CylinderVolumeBounds::eMaxR),
-                         Acts::open, Acts::AxisDirection::AxisR);
-    bUtility += Acts::BinUtility(
-        1, -cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector),
-        cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector),
-        (cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector) -
-         std::numbers::pi) < Acts::s_epsilon
-            ? Acts::closed
-            : Acts::open,
-        Acts::AxisDirection::AxisPhi);
-    bUtility += Acts::BinUtility(
-        1, -cyBounds->get(Acts::CylinderVolumeBounds::eHalfLengthZ),
-        cyBounds->get(Acts::CylinderVolumeBounds::eHalfLengthZ), Acts::open,
-        Acts::AxisDirection::AxisZ);
+  const auto directions = volume->volumeBounds().canonicalAxes();
+  if (directions.size() != 3) {
+    throw std::invalid_argument(
+        "Volume material requires three canonical axes");
   }
-  if (cutcylBounds != nullptr) {
-    bUtility += Acts::BinUtility(
-        1, cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eMinR),
-        cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eMaxR), Acts::open,
-        Acts::AxisDirection::AxisR);
-    bUtility += Acts::BinUtility(1, -std::numbers::pi_v<float>,
-                                 std::numbers::pi_v<float>, Acts::closed,
-                                 Acts::AxisDirection::AxisPhi);
-    bUtility += Acts::BinUtility(
-        1, -cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eHalfLengthZ),
-        cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eHalfLengthZ),
-        Acts::open, Acts::AxisDirection::AxisZ);
-  } else if (cuBounds != nullptr) {
-    bUtility += Acts::BinUtility(
-        1, -cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthX),
-        cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthX), Acts::open,
-        Acts::AxisDirection::AxisX);
-    bUtility += Acts::BinUtility(
-        1, -cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthY),
-        cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthY), Acts::open,
-        Acts::AxisDirection::AxisY);
-    bUtility += Acts::BinUtility(
-        1, -cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthZ),
-        cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthZ), Acts::open,
-        Acts::AxisDirection::AxisZ);
-  }
-  return {volume, std::make_shared<Acts::ProtoVolumeMaterial>(bUtility)};
+  const Acts::MultiAxisSpec3D binning(
+      std::array{Acts::AxisSpec::DeferredEquidistant(1, directions[0]),
+                 Acts::AxisSpec::DeferredEquidistant(1, directions[1]),
+                 Acts::AxisSpec::DeferredEquidistant(1, directions[2])});
+  return {volume, std::make_shared<Acts::ProtoVolumeMaterial>(binning)};
 }
 }  // namespace
 

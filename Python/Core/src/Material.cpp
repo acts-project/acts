@@ -17,10 +17,14 @@
 #include "Acts/Material/MaterialValidator.hpp"
 #include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <array>
 #include <memory>
+#include <stdexcept>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -65,6 +69,26 @@ void addMaterial(py::module_& m) {
 
     py::class_<IVolumeMaterial, std::shared_ptr<IVolumeMaterial>>(
         m, "IVolumeMaterial");
+
+    py::class_<ProtoVolumeMaterial, IVolumeMaterial,
+               std::shared_ptr<ProtoVolumeMaterial>>(m, "ProtoVolumeMaterial")
+        .def(py::init<>())
+        .def(py::init([](const MultiAxisSpec& binning) {
+               if (binning.size() != 3) {
+                 throw std::invalid_argument(
+                     "ProtoVolumeMaterial requires three axes");
+               }
+               return std::make_shared<ProtoVolumeMaterial>(MultiAxisSpec3D(
+                   std::array{binning.axisSpec(0), binning.axisSpec(1),
+                              binning.axisSpec(2)}));
+             }),
+             py::arg("binning"))
+        .def_property_readonly(
+            "binning",
+            [](const ProtoVolumeMaterial& self) -> const MultiAxisSpec& {
+              return self.binning();
+            },
+            py::return_value_policy::reference_internal);
   }
 
   {
