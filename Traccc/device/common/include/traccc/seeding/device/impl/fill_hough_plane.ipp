@@ -204,11 +204,11 @@ void fill_hough_plane_by_bin(const global_index_t globalIndex,
         5, 5, 5, 5, 5, 5
     };
     
-    for (unsigned int i(0); i<25; ++i) {
-        if (binContents[i] == 0ULL) continue;
-	unsigned short value = count_bits(binContents[i]);
-	if (value < min_contributions[i]) continue;
-        houghplanes.plane()[i][globalIndex] = value;
+    for (unsigned int wedge_idx(0); wedge_idx<25; ++wedge_idx) {
+        if (binContents[wedge_idx] == 0ULL) continue;
+	unsigned short value = count_bits(binContents[wedge_idx]);
+	// if (value < min_contributions[wedge_idx]) continue;
+	houghplanes.plane()[wedge_idx][globalIndex] = value;
     }
 }
 

@@ -22,7 +22,7 @@ hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
 
 auto hough_transform_seeding_algorithm::operator()(
 		const magnetic_field& bfield,
-		const detector_buffer& det,
+		const detector_buffer& /*det*/,
 		const edm::measurement_collection::const_view& measurements,
 		const edm::spacepoint_collection::const_view& spacepoints) const -> output_type {
       	// Get the number of space points. In an asynchronous way if possible.
@@ -40,16 +40,23 @@ auto hough_transform_seeding_algorithm::operator()(
   if (n_spacepoints == 0) {
     return {};
   }
-  
+ 
+  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view::size_type n_slices = m_config.wedges.size(); 
+  vecmem::vector<unsigned int> plane_sizes_host =
+        ((mr().host != nullptr) ? vecmem::vector<unsigned int>(n_slices, mr().host)
+                                : vecmem::vector<unsigned int>(n_slices));
+  for (unsigned int i = 0; i < n_slices; ++i) plane_sizes_host[i] = N_COLS * N_ROWS;
+
   // Set up the output buffer.
-  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view::size_type n_slices = m_config.wedges.size();
-  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer result(n_slices, mr().main);
+  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer result(plane_sizes_host,
+		  mr().main, mr().host, 
+		  vecmem::data::buffer_type::resizable);
   copy().setup(result)->ignore();
 
   // Fill plane edges
   // we will move to a config at a certain point and template the algorithm
   define_plane_edges_kernel({m_config, result});
-
+  
   // Pre-compute some quantities
   // These quantities can be computed once per spacepoint
   // they do not depend on the wedge definition
@@ -74,7 +81,7 @@ auto hough_transform_seeding_algorithm::operator()(
 		  spacepoint_detector_id,
 		  spacepoint_r,
 		  spacepoint_phi});
-
+  
   // Fill the planes with space points
   fill_hough_plane_kernel({m_config, bfield,
                   n_spacepoints, spacepoints,
@@ -82,7 +89,10 @@ auto hough_transform_seeding_algorithm::operator()(
 		  spacepoint_r, spacepoint_phi,
 		  result});
 
-  /*
+/*  
+  synchronize();
+
+
   edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view host_view;
   edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer host_buffer;
   if (mr().host) {
@@ -93,12 +103,28 @@ auto hough_transform_seeding_algorithm::operator()(
   }
 
   edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_device host_device{host_view};
+//  std::cout << std::endl;
+  std::cout << "----------------- SLICE 13 -----------------" << std::endl;
+  for (unsigned int i(0); i<N_COLS; ++i) {
+      for (unsigned int j(0); j<N_ROWS; ++j) {
+	// if (host_device[13].plane()[i * N_ROWS + j] != 0) std::cout << "SOMETHING !!!" << std::endl;
+	std::cout << host_device[13].plane()[i * N_ROWS + j] << " ";
+      }
+      std::cout << std::endl;
+  }
+  std::cout << std::endl;
+
+  /*
+  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_device host_device{host_view};
   for (unsigned int i = 0; i < host_device.size(); ++i) {
     const edm::houghplane plane = host_device.at(i);
     const auto& edges_x = plane.edges_x();
     const auto& edges_y = plane.edges_y();
+    std::cout << "----------------" << std::endl; 
+    std::cout << "n edges x: " << edges_x.size() << ": " << edges_x[0] << " -> " << edges_x[N_COLS] << std::endl; 
+    std::cout << "n edges y: " << edges_y.size() << ": " << edges_y[0] << " -> " << edges_y[N_ROWS] << std::endl;
   }
-  */
+*/
 
   synchronize();
 
