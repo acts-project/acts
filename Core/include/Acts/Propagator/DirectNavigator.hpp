@@ -279,10 +279,12 @@ class DirectNavigator {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
+  /// @param curvature Current global geometric curvature (inverse length)
   ///
   /// @return The next target surface
-  NavigationTarget nextTarget(State& state, const Vector3& position,
-                              const Vector3& direction) const {
+  NavigationTarget nextTarget(
+      State& state, const Vector3& position, const Vector3& direction,
+      const Vector3& /*curvature*/ = Vector3::Zero()) const {
     // Navigator target always resets the current surface
     state.currentSurface = nullptr;
 
@@ -332,10 +334,12 @@ class DirectNavigator {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
+  /// @param curvature Current global geometric curvature (inverse length)
   ///
   /// @return True if the target is valid
   bool checkTargetValid(const State& state, const Vector3& position,
-                        const Vector3& direction) const {
+                        const Vector3& direction,
+                        const Vector3& /*curvature*/ = Vector3::Zero()) const {
     static_cast<void>(state);
     static_cast<void>(position);
     static_cast<void>(direction);
@@ -351,10 +355,12 @@ class DirectNavigator {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
+  /// @param curvature Current global geometric curvature (inverse length)
   /// @param surface The surface reached
-  void handleSurfaceReached(State& state, const Vector3& position,
-                            const Vector3& direction,
-                            const Surface& surface) const {
+  void handleSurfaceReached(
+      State& state, const Vector3& position, const Vector3& direction,
+      const Surface& surface,
+      const Vector3& /*curvature*/ = Vector3::Zero()) const {
     static_cast<void>(position);
     static_cast<void>(direction);
     static_cast<void>(surface);

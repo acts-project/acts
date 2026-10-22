@@ -34,6 +34,10 @@ concept CommonStepper = requires {
     { s.transportToCurvilinear(t) } -> std::same_as<typename Stepper::Jacobian>;
     { s.prepareCurvilinearState(t) } -> std::same_as<bool>;
 
+    requires requires(const Vector3& position) {
+      { s.getField(t, position) } -> std::same_as<Result<Vector3>>;
+    };
+
     requires requires(const typename Stepper::BoundParameters& par) {
       { s.initialize(t, par) } -> std::same_as<void>;
     };
@@ -101,7 +105,6 @@ concept SingleStepper =
       requires requires(const Vector3& v1, const Vector3& v2, double d1,
                         double d2) {
         { s.update(t, v1, v2, d1, d2) } -> std::same_as<void>;
-        { s.getField(t, v1) } -> std::same_as<Result<Vector3>>;
       };
 
       requires requires(const typename Stepper::Covariance& cov) {
