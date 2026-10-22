@@ -30,6 +30,12 @@ struct hough_seeding_config {
     	0.24f, 0.48f, 0.72f, 0.96f, 1.20f, 1.44f,
     	1.68f, 1.92f, 2.16f, 2.40f, 2.64f, 2.88f
     };
+  std::array<unsigned int, 25> min_contributions {
+	5, 5, 5, 5, 5, 5,
+	5, 5, 5, 5, 5, 5, 5,
+	5, 5, 5, 5, 5, 5,
+	5, 5, 5, 5, 5, 5
+  };
 };
 
 }  // namespace traccc
