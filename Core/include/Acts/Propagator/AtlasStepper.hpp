@@ -387,6 +387,14 @@ class AtlasStepper {
     return res;
   }
 
+  /// Current global geometric curvature d(direction)/ds in inverse length.
+  /// Unchanged under propagation reversal; reflects current momentum and field.
+  /// @param state Stepping state; the field cache may be updated
+  /// @return Curvature vector, or a field lookup error
+  Result<Vector3> curvature(State& state) const {
+    return detail::magneticCurvature(*this, state);
+  }
+
   /// Get particle position from stepper state
   /// @param state Stepper state containing track information
   /// @return 3D position vector
