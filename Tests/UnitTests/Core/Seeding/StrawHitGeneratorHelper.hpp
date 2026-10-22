@@ -624,8 +624,8 @@ class MeasurementGenerator {
   ///        honeycomb grid, i.e. by 2 * tubeRadius * sin(60 deg) in z.
   static constexpr double tubeLayersCentreZ() {
     return chamberDistance +
-           0.5 * ((nTubeLayers - 1) * tubeRadius * std::sqrt(3.) +
-                  tubeLayerDist);
+           0.5 *
+               ((nTubeLayers - 1) * tubeRadius * std::sqrt(3.) + tubeLayerDist);
   }
   /// @brief Extrapolate the straight line track through the straw layers to
   ///        evaluate which tubes were crossed by the track. The straw layers

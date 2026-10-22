@@ -16,6 +16,7 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -151,11 +152,9 @@ class TestSector {
     return diff <= 1 || diff == s_nSectors - 1;
   }
   bool insideSector(const double testPhi) const {
-    return std::abs(deltaPhi(testPhi)) <= 0.5 * sectorSize();
-  }
-  /// @brief Signed phi distance from the sector centre, in [-pi, pi]
-  double deltaPhi(const double testPhi) const {
-    return Acts::detail::difference_periodic(testPhi, phi(), 360._degree);
+    const double deltaPhi{
+        Acts::detail::difference_periodic(testPhi, phi(), 360._degree)};
+    return std::abs(deltaPhi) <= 0.5 * sectorSize();
   }
   /// @brief Direction from the beam axis to the sector centre
   Vector3 radialDir() const {
@@ -253,7 +252,8 @@ using HitCoords = GlobalPatternFinder_t::HitCoords;
 class TestSeedSelector {
  public:
   /// @brief Default constructor
-  explicit TestSeedSelector(const double thetaWindow) : m_thetaWindow{thetaWindow} {};
+  explicit TestSeedSelector(const double thetaWindow)
+      : m_thetaWindow{thetaWindow} {};
   /// @brief Whether the hit is good for seeding a pattern: strip hits of the
   ///        Middle and Outer stations
   bool goodForSeeding(const TestHit& hit) const {
@@ -261,9 +261,9 @@ class TestSeedSelector {
            toStationLayer(hit.station) != StationLayer::Inner;
   }
   /// @brief Return the theta search window(s) for a given hit.
-  std::array<double, TestTopology::nGroups> 
-    thetaSearchWindow(const TestHit& /*hit*/) const {
-        return filledArray<double, TestTopology::nGroups>(m_thetaWindow);
+  std::array<double, TestTopology::nGroups> thetaSearchWindow(
+      const TestHit& /*hit*/) const {
+    return filledArray<double, TestTopology::nGroups>(m_thetaWindow);
   }
 
  private:
@@ -390,12 +390,17 @@ MuonTruth generateMuon(RandomEngine& engine, const HitGeneratorConfig& cfg) {
   muon.z0 = uniform{-cfg.vertexMaxAbsZ, cfg.vertexMaxAbsZ}(engine);
   return muon;
 }
-/// @brief Trajectory of a muon from the origin in the half plane at constant
-///         phi. The toroidal field is along phi, so the muon bends in the
-///         (rho, z) plane and phi stays constant. The direction is parametrized
-///         by the angle alpha w.r.t. the transverse plane. Along the path s:
-///         d(alpha)/ds = q * B / p, d(rho)/ds = cos(alpha), dz/ds = sin(alpha).
-///         The trajectory is stepped with exact arcs of constant curvature.
+/// @brief Point and tangent of the muon trajectory at the centre plane of each
+///  station of its sector (nullopt if the station is not crossed)
+using StationCrossings =
+    std::array<std::optional<std::pair<Vector3, Vector3>>, s_nStations>;
+/// @brief Trajectory of a muon from its production vertex on the beam axis,
+///         in the half plane at constant phi. The toroidal field is along phi,
+///         so the muon bends in the (rho, z) plane and phi stays constant. The
+///         direction is parametrized by the angle alpha w.r.t. the transverse
+///         plane. Along the path s: d(alpha)/ds = q * B / p,
+///         d(rho)/ds = cos(alpha), dz/ds = sin(alpha). The trajectory is
+///         stepped with exact arcs of constant curvature.
 class ToroidTrajectory {
  public:
   struct Point {
@@ -411,12 +416,11 @@ class ToroidTrajectory {
   static constexpr double s_envelopeMaxRho{14._m};
   /// @brief Detector envelope extension in |z|
   static constexpr double s_envelopeMaxAbsZ{24._m};
-  /// @brief Constructor from the muon truth. The trajectory 
+  /// @brief Constructor from the muon truth. The trajectory
   ///  is stepped until it leaves the spectrometer or curls back.
-  explicit ToroidTrajectory(const MuonTruth& muon) {
+  explicit ToroidTrajectory(const MuonTruth& muon) : m_phi{muon.phi} {
     /// The angle w.r.t. the transverse plane is pi/2 - theta
-    Point point{0., muon.z0,
-                90._degree - AngleHelpers::thetaFromEta(muon.eta)};
+    Point point{0., muon.z0, 90._degree - AngleHelpers::thetaFromEta(muon.eta)};
     m_points.push_back(point);
     for (double s = 0.; s < s_envelopeMaxPath; s += s_stepSize) {
       const double kappa{muon.charge * field(point.rho, point.z) / muon.energy};
@@ -437,16 +441,43 @@ class ToroidTrajectory {
       m_points.push_back(point);
     }
   }
-  /// @brief Return the first point where the function f of the trajectory
-  ///  points changes sign from negative to positive. The point is
-  ///  linearly interpolated between the two closest steps.
-  template <typename Func_t>
-  std::optional<Point> crossing(const Func_t& f) const {
+  /// @brief Point and tangent of the trajectory at the centre plane of each
+  ///  station of the muon sector (nullopt if the station is not crossed)
+  StationCrossings stationCrossings() const {
+    StationCrossings crossings{};
+    for (std::size_t st = 0; st < s_nStations; ++st) {
+      const auto station{static_cast<Station>(st)};
+      /// The muon moves in the half plane at its own phi, which crosses the
+      /// barrel planes of the sector at rho * cos(dPhi) = centreDist.
+      const auto point{surfaceCrossing(
+          toRegion(station) == Region::Barrel
+              ? TestSector{m_phi}.radialDir()
+              : copysign(1., m_points.front().alpha) * Vector3::UnitZ(),
+          stationCentreDist(station))};
+      if (point) {
+        crossings[st] =
+            std::make_pair(globalPosition(*point),
+                           std::cos(point->alpha) * m_radialDir +
+                               std::sin(point->alpha) * Vector3::UnitZ());
+      }
+    }
+    return crossings;
+  }
+
+ private:
+  /// @brief Global position of a trajectory point
+  Vector3 globalPosition(const Point& p) const {
+    return p.rho * m_radialDir + p.z * Vector3::UnitZ();
+  }
+  /// @brief Return the first point where the trajectory crosses a given
+  ///  plane. The point is linearly interpolated between the two closest steps.
+  std::optional<Point> surfaceCrossing(const Vector3& normal,
+                                       const double offset) const {
     for (std::size_t i = 1; i < m_points.size(); ++i) {
-      const double f0{f(m_points[i - 1])};
-      const double f1{f(m_points[i])};
-      if (f0 < 0. && f1 >= 0.) {
-        const double w{f0 / (f0 - f1)};
+      const double d0{normal.dot(globalPosition(m_points[i - 1])) - offset};
+      const double d1{normal.dot(globalPosition(m_points[i])) - offset};
+      if (d0 < 0. && d1 >= 0.) {
+        const double w{d0 / (d0 - d1)};
         const Point& p0{m_points[i - 1]};
         const Point& p1{m_points[i]};
         return Point{p0.rho + w * (p1.rho - p0.rho), p0.z + w * (p1.z - p0.z),
@@ -456,7 +487,8 @@ class ToroidTrajectory {
     return std::nullopt;
   }
 
- private:
+  double m_phi{0.};
+  const Vector3 m_radialDir{Acts::makeDirectionFromPhiTheta(m_phi, 90._degree)};
   std::vector<Point> m_points{};
 };
 /// @brief Local frame of a chamber of the MeasurementGenerator: x along the
@@ -485,7 +517,7 @@ Transform3 chamberFrame(const Station st, const TestSector& sector,
 }
 /// @brief Container of the space points
 using Container_t = std::vector<std::shared_ptr<FitTestSpacePoint>>;
-/// @brief Create the space points of a straight line crossing a station. 
+/// @brief Create the space points of a straight line crossing a station.
 ///  @param globPos: Point on the line, in global coordinates
 ///  @param globDir: Direction of the line, in global coordinates
 ///  @param muonIdx: Index of the generating muon (-1 for background)
@@ -496,14 +528,17 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
                     const Station station, const TestSector& sector,
                     const double zSign, const int muonIdx,
                     const HitGeneratorConfig& cfg, RandomEngine& engine,
-                    Container_t& outSpacePoints, std::vector<TestHit>& outHits) {
+                    Container_t& outSpacePoints,
+                    std::vector<TestHit>& outHits) {
   const auto st{toUnderlying(station)};
   const Transform3 localToGlobal{chamberFrame(station, sector, zSign)};
   const Vector3 locPos{localToGlobal.inverse() * globPos};
   const Vector3 locDir{localToGlobal.linear().transpose() * globDir};
 
   /// Line parameters are defined at the local z = 0 plane
-  const Vector3 lineIntercept {PlanarHelper::intersectPlane(locPos, locDir, Vector3::UnitZ(), 0.).position()};
+  const Vector3 lineIntercept{
+      PlanarHelper::intersectPlane(locPos, locDir, Vector3::UnitZ(), 0.)
+          .position()};
   Line_t::ParamVector linePars{};
   using ParIndex = Line_t::ParIndex;
   linePars[toUnderlying(ParIndex::x0)] = lineIntercept.x();
@@ -530,11 +565,14 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
     /// track in local y: the z hemisphere for barrel chambers, while for
     /// endcap chambers the local y is the radial distance, always positive.
     const bool isPhiOnly{!sp->measuresLoc1()};
-    const Vector3 locTrackPos{PlanarHelper::intersectPlane(locPos, locDir, Vector3::UnitZ(), sp->localPosition().z()).position()};
+    const Vector3 locTrackPos{
+        PlanarHelper::intersectPlane(locPos, locDir, Vector3::UnitZ(),
+                                     sp->localPosition().z())
+            .position()};
     if (isPhiOnly) {
       sp->updatePosition(Vector3{
           sp->localPosition().x(),
-          std::copysign(0.5 * (s_extMin[st] + s_extMax[st]), locTrackPos.y()),
+          copysign(0.5 * (s_extMin[st] + s_extMax[st]), locTrackPos.y()),
           sp->localPosition().z()});
       sp->setStripHalfLength(0.5 * (s_extMax[st] - s_extMin[st]));
     }
@@ -552,14 +590,14 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
     /// Combined strip space points: the sensor direction is the strip
     /// measuring the bending direction, toNextSensor the complementary strip
     hit.sensorDir = localToGlobal.linear() * sp->sensorDirection();
-    hit.measDirs.first = localToGlobal.linear() *
-                         sp->sensorDirection().cross(Vector3::UnitZ());
+    hit.measDirs.first =
+        localToGlobal.linear() * sp->sensorDirection().cross(Vector3::UnitZ());
     /// The second measured direction is needed only when the complementary
     /// strip is not orthogonal to the sensor direction
     if (!sp->isStraw() && sp->measuresLoc0() && sp->measuresLoc1() &&
         std::abs(sp->sensorDirection().dot(sp->toNextSensor())) > s_epsilon) {
-      hit.measDirs.second = localToGlobal.linear() *
-                            sp->toNextSensor().cross(Vector3::UnitZ());
+      hit.measDirs.second =
+          localToGlobal.linear() * sp->toNextSensor().cross(Vector3::UnitZ());
     }
     hit.station = station;
     hit.sector = sector.sector();
@@ -569,43 +607,9 @@ void spawnInStation(const Vector3& globPos, const Vector3& globDir,
     outSpacePoints.push_back(std::move(sp));
   }
 }
-/// @brief Point and tangent of the muon trajectory at the centre plane of each
-///  station of its sector (nullopt if the station is not crossed)
-using StationCrossings =
-    std::array<std::optional<std::pair<Vector3, Vector3>>, s_nStations>;
-StationCrossings muonCrossings(const MuonTruth& muon) {
-  const ToroidTrajectory trajectory{muon};
-  const Vector3 muonRadialDir{std::cos(muon.phi), std::sin(muon.phi), 0.};
-  const TestSector sector{muon.phi};
-  const double cosDPhi{std::cos(sector.deltaPhi(muon.phi))};
-  StationCrossings crossings{};
-  for (std::size_t st = 0; st < s_nStations; ++st) {
-    const auto station{static_cast<Station>(st)};
-    /// The muon moves in the half plane at its own phi, which crosses the
-    /// barrel planes of the sector at rho * cos(dPhi) = centreDist.
-    const double centreDist{stationCentreDist(station)};
-    const auto point{trajectory.crossing([&](const ToroidTrajectory::Point& p) {
-      return toRegion(station) == Region::Barrel ? p.rho * cosDPhi - centreDist
-                                                 : std::abs(p.z) - centreDist;
-    })};
-    if (point) {
-      crossings[st] = std::make_pair(
-          point->rho * muonRadialDir + point->z * Vector3::UnitZ(),
-          std::cos(point->alpha) * muonRadialDir +
-              std::sin(point->alpha) * Vector3::UnitZ());
-    }
-  }
-  return crossings;
-}
-
-/// @brief Side of the muon in z: -1 or +1
-double zSide(const MuonTruth& muon) {
-  return muon.eta < 0. ? -1. : 1.;
-}
-
 /// @brief Create the space points of the muon in the chambers of its sector.
-///         In each station, the MeasurementGenerator is run on the tangent to
-///         the trajectory at the station centre plane.
+///  In each station, the MeasurementGenerator is run on the tangent to
+///  the trajectory at the station centre plane.
 ///  @param crossings: Crossings of the muon with the station centre planes
 ///  @param outSpacePoints: Container owning the generated space points
 ///  @return The hits wrapping the generated space points
@@ -615,7 +619,7 @@ std::vector<TestHit> spawnHits(const MuonTruth& muon,
                                RandomEngine& engine,
                                Container_t& outSpacePoints) {
   const TestSector sector{muon.phi};
-  const double zSign{zSide(muon)};
+  const double zSign{copysign(1., muon.eta)};
   std::vector<TestHit> hits{};
   for (const auto [st, crossing] : enumerate(crossings)) {
     if (crossing) {
@@ -644,7 +648,7 @@ std::vector<TestHit> spawnBackground(const MuonTruth& muon,
                                      Container_t& outSpacePoints) {
   const HitGeneratorConfig& genCfg{cfg};
   const TestSector sector{muon.phi};
-  const double zSign{zSide(muon)};
+  const double zSign{copysign(1., muon.eta)};
   std::vector<std::size_t> crossedStations{};
   for (const auto [st, crossing] : enumerate(crossings)) {
     if (crossing) {
@@ -836,7 +840,8 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
     for (std::size_t iMuon = 0; iMuon < nMuons; ++iMuon) {
       const MuonTruth& muon{
           muons.emplace_back(generateMuon(engine, testCfg.hitCfg))};
-      const StationCrossings crossings{muonCrossings(muon)};
+      const StationCrossings crossings{
+          ToroidTrajectory{muon}.stationCrossings()};
       for (const TestHit& hit :
            spawnHits(muon, crossings, static_cast<int>(iMuon), testCfg.hitCfg,
                      engine, spacePoints)) {
@@ -857,9 +862,8 @@ TestResult runPatternTest(const TestConfig& testCfg, TFile& outFile) {
       if (testCfg.hitCfg.nBkgStationsPerMuon == 0) {
         continue;
       }
-      for (const TestHit& hit :
-           spawnBackground(muon, crossings, testCfg.hitCfg, engine,
-                           spacePoints)) {
+      for (const TestHit& hit : spawnBackground(muon, crossings, testCfg.hitCfg,
+                                                engine, spacePoints)) {
         if (hit.sp->measuresLoc1()) {
           etaHits.push_back(hit);
           ++nBkgEtaHits;
