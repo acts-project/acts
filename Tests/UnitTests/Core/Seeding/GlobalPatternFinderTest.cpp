@@ -24,10 +24,10 @@
 
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <chrono>
 #include <cmath>
 #include <compare>
-#include <format>
 #include <memory>
 #include <numbers>
 #include <optional>
@@ -378,12 +378,12 @@ class ToroidTrajectory {
     StationCrossings crossings{};
     for (std::size_t st = 0; st < s_nStations; ++st) {
       const auto station{static_cast<Station>(st)};
-      /// The muon moves in the half plane at its own phi, which crosses the
-      /// barrel planes of the sector at rho * cos(dPhi) = centreDist.
+      /// Station planes as in chamberFrame: orthogonal to the sector radial
+      /// direction (barrel) or to the z axis on the muon side (endcap)
       const auto point{surfaceCrossing(
           toRegion(station) == Region::Barrel
               ? TestSector{m_phi}.radialDir()
-              : copysign(1., m_points.front().alpha) * Vector3::UnitZ(),
+              : copySign(1., m_points.front().alpha) * Vector3::UnitZ(),
           stationCentreDist(station))};
       if (point) {
         crossings[st] =
@@ -554,8 +554,8 @@ class GlobalPatternFinderHitGen {
   /// @brief Random sign, -1 or +1 with equal probability
   double randomSign() { return uniform{0., 1.}(m_engine) < 0.5 ? -1. : 1.; }
   /// @brief Local frame of a chamber of the MeasurementGenerator
-  Transform3 chamberFrame(const Station st, const TestSector& sector,
-                          const double zSign) {
+  static Transform3 chamberFrame(const Station st, const TestSector& sector,
+                                 const double zSign) {
     const double offset{chamberOffset(st)};
     Transform3 localToGlobal{Transform3::Identity()};
     if (toRegion(st) == Region::Barrel) {
@@ -578,7 +578,7 @@ class GlobalPatternFinderHitGen {
                       const int muonIdx, std::vector<TestHit>& outHits) {
     const auto st{toUnderlying(station)};
     const Transform3 localToGlobal{
-        chamberFrame(station, sector, copysign(1., globLinePos.z()))};
+        chamberFrame(station, sector, copySign(1., globLinePos.z()))};
     const Vector3 locLinePos{localToGlobal.inverse() * globLinePos};
     const Vector3 locLineDir{localToGlobal.linear().transpose() * globLineDir};
 
@@ -622,7 +622,7 @@ class GlobalPatternFinderHitGen {
       if (isPhiOnly) {
         sp->updatePosition(Vector3{
             sp->localPosition().x(),
-            copysign(0.5 * (s_extMin[st] + s_extMax[st]), locTrackPos.y()),
+            copySign(0.5 * (s_extMin[st] + s_extMax[st]), locTrackPos.y()),
             sp->localPosition().z()});
         sp->setStripHalfLength(0.5 * (s_extMax[st] - s_extMin[st]));
       }
@@ -695,9 +695,7 @@ struct TestConfig {
   /// @brief Required fraction of found muons
   double minFoundFraction{0.99};
   /// @brief Required fraction of the muon phi-only hits attached to their
-  ///        pattern, only without background (with background, the phi-only
-  ///        strips of the background lines crossing the muon compete with
-  ///        the muon ones)
+  ///        pattern (the background lines have no phi-only strips)
   double minPhiOnlyFraction{0.95};
   /// @brief Seed of the random number generator
   long unsigned seed{1602};
@@ -720,13 +718,10 @@ using genCfg_t = GlobalPatternFinderHitGen::Config;
 #define DECLARE_BRANCH(dType, bName) \
   dType bName{};                     \
   outTree->Branch(#bName, &bName);
-// NOLINTBEGIN
-
-TestResult runPatternTest(TestConfig&& testCfg, genCfg_t&& genCfg,
+TestResult runPatternTest(const TestConfig& testCfg, genCfg_t&& genCfg,
                           TFile& outFile) {
-  // NOLINTEND
-  auto outTree = std::make_unique<TTree>(
-      std::format("{:}Tree", "GlobalPatternFinder").c_str(), "MonitorTree");
+  auto outTree =
+      std::make_unique<TTree>("GlobalPatternFinderTree", "MonitorTree");
   outTree->SetDirectory(nullptr);
 
   DECLARE_BRANCH(unsigned, event);
@@ -785,7 +780,8 @@ TestResult runPatternTest(TestConfig&& testCfg, genCfg_t&& genCfg,
     for (std::size_t iMuon = 0; iMuon < nMuons; ++iMuon) {
       const MuonTruth& muon{muons.emplace_back(hitGenerator.generateMuon())};
 
-      for (TestHit& hit : hitGenerator.spawnHits(muon, iMuon)) {
+      for (TestHit& hit :
+           hitGenerator.spawnHits(muon, static_cast<int>(iMuon))) {
         if (hit.sp->measuresLoc1()) {
           if (hit.muonIdx >= 0) {
             ++nEtaHitsPerMuon[iMuon];
@@ -942,9 +938,8 @@ BOOST_AUTO_TEST_SUITE(GlobalPatternFinderTestSuite)
 BOOST_AUTO_TEST_CASE(MuonPatternFinding) {
   auto outFile =
       std::make_unique<TFile>("GlobalPatternFinderTest.root", "RECREATE");
-  TestConfig testCfg{};
-  genCfg_t genCfg{};
-  const TestResult result{runPatternTest(std::move(testCfg), std::move(genCfg), *outFile)};
+  const TestConfig testCfg{};
+  const TestResult result{runPatternTest(testCfg, genCfg_t{}, *outFile)};
   BOOST_CHECK_GE(result.foundFraction, testCfg.minFoundFraction);
   BOOST_CHECK_GE(result.phiOnlyFraction, testCfg.minPhiOnlyFraction);
 }
