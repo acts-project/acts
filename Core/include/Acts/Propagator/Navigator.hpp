@@ -18,6 +18,7 @@
 #include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -140,7 +141,8 @@ class Navigator final {
   struct State {
     /// Constructor with navigation options
     /// @param options_ The navigation options for this state
-    explicit State(const Options& options_) : options(options_) {}
+    explicit State(const Options& options_)
+        : options(options_), additional(VoidNavigator::Options(options_)) {}
 
     /// Navigation options configuration
     Options options;
@@ -191,20 +193,8 @@ class Navigator final {
     /// Extended surfaces resolved once at initialization
     std::vector<ResolvedExtendedSurface> extendedSurfaces{};
 
-    /// An additional surface of the options with its bookkeeping
-    struct AdditionalSurfaceState {
-      /// The entry of the options
-      const AdditionalSurface* entry{};
-      /// Whether the propagation reached the surface
-      bool reached{false};
-    };
-
-    /// Additional surfaces of the options, tracked over the propagation
-    std::vector<AdditionalSurfaceState> additionalSurfaces{};
-
-    /// The staged candidate an additional surface took precedence over. It is
-    /// handed out once the additional surface is no longer the closer one.
-    std::optional<NavigationTarget> pendingTarget;
+    /// State of the navigator that offers the additional surfaces
+    VoidNavigator::State additional;
 
     /// Get reference to current navigation surface
     /// @return Reference to current navigation target
@@ -287,7 +277,6 @@ class Navigator final {
 
       navigationBreak = false;
       navigationStage = Stage::initial;
-      pendingTarget.reset();
     }
 
     /// Completely reset navigation state for a new navigation run
@@ -419,26 +408,6 @@ class Navigator final {
   NavigationTarget nextStagedTarget(State& state, const Vector3& position,
                                     const Vector3& direction) const;
 
-  /// @brief Get the closest additional surface from the current position
-  ///
-  /// @param state The navigation state
-  /// @param position The current position
-  /// @param direction The current direction
-  /// @return The closest additional surface, or none
-  NavigationTarget nextAdditionalTarget(const State& state,
-                                        const Vector3& position,
-                                        const Vector3& direction) const;
-
-  /// @brief Whether the staged navigation targets the given surface
-  ///
-  /// Tells a surface reached through the tracking geometry apart from one
-  /// reached as an additional surface.
-  ///
-  /// @param state The navigation state
-  /// @param surface The surface the propagation reached
-  /// @return True if the current staged target is that surface
-  bool stagedTargetIs(const State& state, const Surface& surface) const;
-
   /// @brief NextTarget helper function for Gen1 geometry configuration
   ///
   /// @param state The navigation state
@@ -548,6 +517,9 @@ class Navigator final {
   const Logger& logger() const { return *m_logger; }
 
   Config m_cfg;
+
+  /// Offers the additional surfaces on top of the tracking geometry
+  VoidNavigator m_additional;
 
   // Cached so we don't have to query the TrackingGeometry constantly.
   TrackingGeometry::GeometryVersion m_geometryVersion{};
