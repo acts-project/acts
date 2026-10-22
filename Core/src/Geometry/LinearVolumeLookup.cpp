@@ -15,21 +15,17 @@
 #include "VolumeLookupImpl.hpp"
 
 namespace Acts {
-struct LinearVolumeLookup::Impl {
-  const TrackingVolume& m_root;
-  Config m_config;
-};
-
-LinearVolumeLookup::~LinearVolumeLookup() = default;
-
 LinearVolumeLookup::LinearVolumeLookup(const TrackingVolume& world,
                                        const Config& config,
                                        const Logger& logger)
-    : m_impl(std::make_unique<Impl>(Impl{world, config})) {
-  const auto warningThreshold = config.warningThreshold;
-  if (warningThreshold == 0 || !logger.doPrint(Logging::WARNING)) {
-    return;
+    : m_root(world), m_config(config) {
+  if (m_config.warningThreshold != 0 && logger.doPrint(Logging::WARNING)) {
+    warnIfNeeded(logger);
   }
+}
+
+void LinearVolumeLookup::warnIfNeeded(const Logger& logger) const {
+  const auto warningThreshold = m_config.warningThreshold;
   std::size_t largest = 0;
   // apply() cannot prune subtrees: explicit child lookups end this scan's
   // scope, and their descendants must not contribute to its warning.
@@ -49,7 +45,7 @@ LinearVolumeLookup::LinearVolumeLookup(const TrackingVolume& world,
       }
     }
   };
-  inspect(inspect, world);
+  inspect(inspect, m_root);
   if (largest > warningThreshold) {
     ACTS_WARNING("Linear volume lookup scans up to "
                  << largest << " siblings (warning threshold "
@@ -60,13 +56,13 @@ LinearVolumeLookup::LinearVolumeLookup(const TrackingVolume& world,
 }
 
 const LinearVolumeLookup::Config& LinearVolumeLookup::config() const {
-  return m_impl->m_config;
+  return m_config;
 }
 
 const TrackingVolume* LinearVolumeLookup::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& position,
     double tolerance) const {
-  return detail::linearVolumeScan(m_impl->m_root, gctx, position, tolerance);
+  return detail::linearVolumeScan(m_root, gctx, position, tolerance);
 }
 const TrackingVolume* detail::linearVolumeScan(const TrackingVolume& root,
                                                const GeometryContext& gctx,

@@ -36,15 +36,15 @@ constexpr std::size_t noRzNode = std::numeric_limits<std::size_t>::max();
 // Unlike Acts::AxisAlignedBoundingBox::intersect, Eigen's AlignedBox includes
 // the upper edges, as required for conservative RZ candidate selection.
 // Conservative envelope for one subtree candidate.
-struct RzLookupChild {
+struct RzVolumeCandidate {
   const TrackingVolume* m_volume;
   Eigen::AlignedBox2d m_box;
   bool m_indexable = false;
   // Stop indexing here and dispatch to this volume's explicitly set lookup.
   bool m_delegate = false;
 
-  RzLookupChild(const GeometryContext& gctx, const TrackingVolume& v,
-                double maxTolerance)
+  RzVolumeCandidate(const GeometryContext& gctx, const TrackingVolume& v,
+                    double maxTolerance)
       : m_volume(&v) {
     const auto* cylinder =
         dynamic_cast<const CylinderVolumeBounds*>(&v.volumeBounds());
@@ -86,7 +86,8 @@ struct RzGrid {
   std::vector<std::size_t> m_offsets;
   std::vector<std::size_t> m_candidates;
 
-  bool build(const std::vector<RzLookupChild>& children, const Config& config) {
+  bool build(const std::vector<RzVolumeCandidate>& children,
+             const Config& config) {
     std::array<std::vector<double>, 2> edges;
     for (int axis = 0; axis < 2; ++axis) {
       auto& e = edges[axis];
@@ -163,7 +164,7 @@ struct RzGridVolumeLookup::Impl {
   std::size_t m_alignable = 0;
   std::size_t m_unsupported = 0;
   Eigen::AlignedBox2d m_domain;
-  std::vector<RzLookupChild> m_children;
+  std::vector<RzVolumeCandidate> m_children;
   std::vector<std::size_t> m_fallbackCandidates;
   // One grid for this lookup's entire collected subtree, not one per volume.
   RzGrid m_grid;
@@ -186,7 +187,7 @@ struct RzGridVolumeLookup::Impl {
     // encode recursive-scan priority; build() below indexes their RZ envelopes.
     auto collect = [&](auto&& self, const TrackingVolume& volume) -> void {
       requireGen3(volume);
-      RzLookupChild entry(gctx, volume, cfg.maxTolerance);
+      RzVolumeCandidate entry(gctx, volume, cfg.maxTolerance);
       entry.m_delegate = volume.volumeLookup() != nullptr;
       if (!entry.m_delegate) {
         for (const auto& child : volume.volumes()) {

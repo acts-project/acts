@@ -12,7 +12,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
-#include <memory>
 
 namespace Acts {
 /// Default lookup policy using the volume hierarchy's existing recursive scan.
@@ -24,8 +23,6 @@ class LinearVolumeLookup final : public IVolumeLookup {
     /// warnings.
     std::size_t warningThreshold = 64;
   };
-
-  ~LinearVolumeLookup() override;
 
   /// Construct a lookup and diagnose a finalized subtree.
   /// @param world Root of the scanned subtree
@@ -44,7 +41,9 @@ class LinearVolumeLookup final : public IVolumeLookup {
                                              double tolerance) const override;
 
  private:
-  struct Impl;
-  std::unique_ptr<const Impl> m_impl;
+  void warnIfNeeded(const Logger& logger) const;
+
+  const TrackingVolume& m_root;
+  Config m_config;
 };
 }  // namespace Acts
