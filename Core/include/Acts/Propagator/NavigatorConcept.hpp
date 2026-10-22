@@ -18,6 +18,41 @@ namespace Acts {
 
 class IVolumeMaterial;
 
+namespace Concepts {
+
+/// Whether nextTarget accepts geometric curvature.
+template <typename Navigator, typename State = typename Navigator::State>
+concept NavigatorNextTargetWithCurvature =
+    requires(const Navigator& n, State& s, const Vector3& position,
+             const Vector3& direction, const Vector3& curvature) {
+      {
+        n.nextTarget(s, position, direction, curvature)
+      } -> std::same_as<NavigationTarget>;
+    };
+
+/// Whether checkTargetValid accepts geometric curvature.
+template <typename Navigator, typename State = typename Navigator::State>
+concept NavigatorCheckTargetValidWithCurvature =
+    requires(const Navigator& n, State& s, const Vector3& position,
+             const Vector3& direction, const Vector3& curvature) {
+      {
+        n.checkTargetValid(s, position, direction, curvature)
+      } -> std::same_as<bool>;
+    };
+
+/// Whether handleSurfaceReached accepts geometric curvature.
+template <typename Navigator, typename State = typename Navigator::State>
+concept NavigatorHandleSurfaceReachedWithCurvature =
+    requires(const Navigator& n, State& s, const Vector3& position,
+             const Vector3& direction, const Vector3& curvature,
+             const Surface& surface) {
+      {
+        n.handleSurfaceReached(s, position, direction, surface, curvature)
+      } -> std::same_as<void>;
+    };
+
+}  // namespace Concepts
+
 /// @brief Concept that is satisfied by navigators.
 template <typename Navigator, typename Options = typename Navigator::Options,
           typename State = typename Navigator::State>
@@ -28,7 +63,7 @@ concept NavigatorConcept = requires {
 
   requires requires(const Navigator& n, const Options& o, State& s,
                     const Surface& sf, const Vector3& position,
-                    const Vector3& direction, const Vector3& curvature,
+                    const Vector3& direction,
                     const NavigatorInitializeArguments& args) {
     { n.makeState(o) } -> std::same_as<State>;
     { n.currentSurface(s) } -> std::same_as<const Surface*>;
@@ -41,31 +76,26 @@ concept NavigatorConcept = requires {
     { n.initialize(s, args) } -> std::same_as<Result<void>>;
     // Keep pre-curvature custom navigators compatible until the next breaking
     // release. Prefer the curvature overload whenever it is available.
-    requires requires {
-      {
-        n.nextTarget(s, position, direction, curvature)
-      } -> std::same_as<NavigationTarget>;
-    } || requires {
-      {
-        n.nextTarget(s, position, direction)
-      } -> std::same_as<NavigationTarget>;
-    };
-    requires requires {
-      {
-        n.checkTargetValid(s, position, direction, curvature)
-      } -> std::same_as<bool>;
-    } || requires {
-      { n.checkTargetValid(s, position, direction) } -> std::same_as<bool>;
-    };
-    requires requires {
-      {
-        n.handleSurfaceReached(s, position, direction, sf, curvature)
-      } -> std::same_as<void>;
-    } || requires {
-      {
-        n.handleSurfaceReached(s, position, direction, sf)
-      } -> std::same_as<void>;
-    };
+    requires Concepts::NavigatorNextTargetWithCurvature<Navigator, State> ||
+                 requires {
+                   {
+                     n.nextTarget(s, position, direction)
+                   } -> std::same_as<NavigationTarget>;
+                 };
+    requires Concepts::NavigatorCheckTargetValidWithCurvature<Navigator,
+                                                              State> ||
+                 requires {
+                   {
+                     n.checkTargetValid(s, position, direction)
+                   } -> std::same_as<bool>;
+                 };
+    requires Concepts::NavigatorHandleSurfaceReachedWithCurvature<Navigator,
+                                                                  State> ||
+                 requires {
+                   {
+                     n.handleSurfaceReached(s, position, direction, sf)
+                   } -> std::same_as<void>;
+                 };
   };
 };
 
