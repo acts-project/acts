@@ -1,0 +1,1085 @@
+{
+    "acts-fatras-synthetic-description": {
+        "format-version": 0
+    },
+    "escapeHalfZ": 3050.0,
+    "escapeRadius": 1000.0,
+    "passives": [
+        {
+            "layer": 0,
+            "maxBound": 2850.0,
+            "minBound": 0.0,
+            "refCoord": 25.0,
+            "shape": "cylinder"
+        }
+    ],
+    "subsystems": [
+        {
+            "barrels": [
+                {
+                    "cylinders": [
+                        {
+                            "halfLengthZ": 244.2,
+                            "layer": 0,
+                            "modules": 1,
+                            "overlapOffset": 7.9,
+                            "overlapProbability": 0.02,
+                            "radius": 34.0
+                        },
+                        {
+                            "halfLengthZ": 245.4,
+                            "layer": 1,
+                            "modules": 1,
+                            "overlapOffset": 7.9,
+                            "overlapProbability": 0.15,
+                            "radius": 99.0
+                        },
+                        {
+                            "halfLengthZ": 374.6,
+                            "layer": 2,
+                            "modules": 1,
+                            "overlapOffset": 7.9,
+                            "overlapProbability": 0.16,
+                            "radius": 160.0
+                        },
+                        {
+                            "halfLengthZ": 374.6,
+                            "layer": 3,
+                            "modules": 1,
+                            "overlapOffset": 7.9,
+                            "overlapProbability": 0.13,
+                            "radius": 228.0
+                        },
+                        {
+                            "halfLengthZ": 374.6,
+                            "layer": 4,
+                            "modules": 1,
+                            "overlapOffset": 7.9,
+                            "overlapProbability": 0.13,
+                            "radius": 291.0
+                        }
+                    ]
+                }
+            ],
+            "endcaps": [
+                {
+                    "discs": [
+                        {
+                            "absZ": 263.0,
+                            "layer": 0,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 291.0,
+                            "layer": 1,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 322.0,
+                            "layer": 2,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 357.0,
+                            "layer": 3,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 396.0,
+                            "layer": 4,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 397.4,
+                            "layer": 5,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 317.7,
+                                    "rMin": 277.0
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 400.5,
+                            "layer": 6,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.4,
+                                    "rMin": 214.7
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 404.7,
+                            "layer": 7,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 188.8,
+                                    "rMin": 148.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 437.0,
+                            "layer": 8,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 450.1,
+                            "layer": 9,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 317.7,
+                                    "rMin": 277.0
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 458.6,
+                            "layer": 10,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.4,
+                                    "rMin": 214.7
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 483.3,
+                            "layer": 11,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 188.8,
+                                    "rMin": 148.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 486.0,
+                            "layer": 12,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 508.9,
+                            "layer": 13,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 317.7,
+                                    "rMin": 277.0
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 525.2,
+                            "layer": 14,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.4,
+                                    "rMin": 214.7
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 543.0,
+                            "layer": 15,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 574.5,
+                            "layer": 16,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 317.7,
+                                    "rMin": 277.0
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 580.9,
+                            "layer": 17,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 188.8,
+                                    "rMin": 148.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 601.6,
+                            "layer": 18,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.4,
+                                    "rMin": 214.7
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 604.0,
+                            "layer": 19,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 647.6,
+                            "layer": 20,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 317.7,
+                                    "rMin": 277.0
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 675.0,
+                            "layer": 21,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 689.1,
+                            "layer": 22,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.4,
+                                    "rMin": 214.7
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 702.1,
+                            "layer": 23,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 188.8,
+                                    "rMin": 148.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 729.3,
+                            "layer": 24,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 317.7,
+                                    "rMin": 277.0
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 749.0,
+                            "layer": 25,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 789.4,
+                            "layer": 26,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.4,
+                                    "rMin": 214.7
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 820.4,
+                            "layer": 27,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 317.7,
+                                    "rMin": 277.0
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 835.0,
+                            "layer": 28,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 852.4,
+                            "layer": 29,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 188.8,
+                                    "rMin": 148.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 904.4,
+                            "layer": 30,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.4,
+                                    "rMin": 214.7
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 922.0,
+                            "layer": 31,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 317.7,
+                                    "rMin": 277.0
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 925.0,
+                            "layer": 32,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1026.0,
+                            "layer": 33,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1035.0,
+                            "layer": 34,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 317.7,
+                                    "rMin": 277.0
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1036.0,
+                            "layer": 35,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.4,
+                                    "rMin": 214.7
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1039.0,
+                            "layer": 36,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 188.8,
+                                    "rMin": 148.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1103.0,
+                            "layer": 37,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 78.5,
+                                    "rMin": 58.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1142.0,
+                            "layer": 38,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 52.9,
+                                    "rMin": 32.6
+                                },
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1146.0,
+                            "layer": 39,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 194.9,
+                                    "rMin": 154.2
+                                },
+                                {
+                                    "rMax": 255.0,
+                                    "rMin": 214.3
+                                },
+                                {
+                                    "rMax": 315.1,
+                                    "rMin": 274.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1229.0,
+                            "layer": 40,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 78.5,
+                                    "rMin": 58.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1249.0,
+                            "layer": 41,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 194.9,
+                                    "rMin": 154.2
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1272.0,
+                            "layer": 42,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1277.0,
+                            "layer": 43,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 315.1,
+                                    "rMin": 274.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1297.0,
+                            "layer": 44,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.0,
+                                    "rMin": 214.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1359.0,
+                            "layer": 45,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 78.5,
+                                    "rMin": 58.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1365.0,
+                            "layer": 46,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 194.9,
+                                    "rMin": 154.2
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1403.0,
+                            "layer": 47,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1427.0,
+                            "layer": 48,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 315.1,
+                                    "rMin": 274.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1473.0,
+                            "layer": 49,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.0,
+                                    "rMin": 214.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1492.0,
+                            "layer": 50,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 194.9,
+                                    "rMin": 154.2
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1503.0,
+                            "layer": 51,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 78.5,
+                                    "rMin": 58.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1553.0,
+                            "layer": 52,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1597.0,
+                            "layer": 53,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 315.1,
+                                    "rMin": 274.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1633.0,
+                            "layer": 54,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 194.9,
+                                    "rMin": 154.2
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1665.0,
+                            "layer": 55,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 78.5,
+                                    "rMin": 58.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1676.0,
+                            "layer": 56,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.0,
+                                    "rMin": 214.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1721.0,
+                            "layer": 57,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1789.0,
+                            "layer": 58,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 194.9,
+                                    "rMin": 154.2
+                                },
+                                {
+                                    "rMax": 315.1,
+                                    "rMin": 274.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1846.0,
+                            "layer": 59,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 78.5,
+                                    "rMin": 58.1
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1909.0,
+                            "layer": 60,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1910.0,
+                            "layer": 61,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.0,
+                                    "rMin": 214.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1961.0,
+                            "layer": 62,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 194.9,
+                                    "rMin": 154.2
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2007.0,
+                            "layer": 63,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 315.1,
+                                    "rMin": 274.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2120.0,
+                            "layer": 64,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2151.0,
+                            "layer": 65,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 194.9,
+                                    "rMin": 154.2
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2180.0,
+                            "layer": 66,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.0,
+                                    "rMin": 214.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2253.0,
+                            "layer": 67,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 315.1,
+                                    "rMin": 274.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2357.0,
+                            "layer": 68,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2361.0,
+                            "layer": 69,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 194.9,
+                                    "rMin": 154.2
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2491.0,
+                            "layer": 70,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 255.0,
+                                    "rMin": 214.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2533.0,
+                            "layer": 71,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 315.1,
+                                    "rMin": 274.3
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2593.0,
+                            "layer": 72,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 194.9,
+                                    "rMin": 154.2
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2621.0,
+                            "layer": 73,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 120.4,
+                                    "rMin": 79.8
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 2850.0,
+                            "layer": 74,
+                            "overlapOffset": 5.0,
+                            "overlapProbability": 0.15,
+                            "rings": [
+                                {
+                                    "rMax": 194.9,
+                                    "rMin": 154.2
+                                },
+                                {
+                                    "rMax": 255.0,
+                                    "rMin": 214.3
+                                },
+                                {
+                                    "rMax": 315.1,
+                                    "rMin": 274.3
+                                }
+                            ]
+                        }
+                    ],
+                    "placement": "mirrored"
+                }
+            ],
+            "name": "itk-pixel",
+            "passives": [
+                {
+                    "layer": 0,
+                    "maxBound": 3001.0,
+                    "minBound": 0.0,
+                    "refCoord": 124.0,
+                    "shape": "cylinder"
+                },
+                {
+                    "layer": 1,
+                    "maxBound": 3001.0,
+                    "minBound": 0.0,
+                    "refCoord": 205.1,
+                    "shape": "cylinder"
+                },
+                {
+                    "layer": 2,
+                    "maxBound": 3001.0,
+                    "minBound": 0.0,
+                    "refCoord": 265.1,
+                    "shape": "cylinder"
+                },
+                {
+                    "layer": 3,
+                    "maxBound": 319.1,
+                    "minBound": 124.0,
+                    "placement": "mirrored",
+                    "refCoord": 378.3,
+                    "shape": "disc"
+                }
+            ]
+        }
+    ]
+}
