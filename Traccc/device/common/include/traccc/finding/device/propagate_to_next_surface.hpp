@@ -36,11 +36,6 @@ struct propagate_to_next_surface_payload {
   vecmem::data::vector_view<unsigned int> params_liveness_view;
 
   /**
-   * @brief View object to the access order of parameters so they are sorted
-   */
-  vecmem::data::vector_view<const unsigned int> param_ids_view;
-
-  /**
    * @brief View object to the vector of candidate links
    */
   vecmem::data::vector_view<const candidate_link> links_view;
@@ -75,6 +70,11 @@ struct propagate_to_next_surface_payload {
    */
   vecmem::data::vector_view<unsigned int> tip_lengths_view;
 
+  /**
+   * @brief View object to the per-link Jacobians (MBF smoother only); the
+   * Jacobian of the propagation departing from link @c i is stored at index
+   * @c i
+   */
   vecmem::data::vector_view<bound_matrix<default_algebra> > jacobian_view;
 };
 
