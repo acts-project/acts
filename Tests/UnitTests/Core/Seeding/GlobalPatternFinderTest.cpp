@@ -473,7 +473,7 @@ class GlobalPatternFinderHitGen {
   };
   /// @brief Constructor from the hit generation configuration and the random
   ///  engine seed.
-  GlobalPatternFinderHitGen(Config&& cfg, long unsigned seed)
+  GlobalPatternFinderHitGen(Config&& cfg, const RandomEngine::result_type seed)
       : m_cfg{std::move(cfg)}, m_engine{seed} {
     m_cfg.stripDirLoc0.resize(m_cfg.stripDirLoc1.size() + m_cfg.nPhiOnlyLayers,
                               Vector3::UnitY());
@@ -698,7 +698,7 @@ struct TestConfig {
   ///        pattern (the background lines have no phi-only strips)
   double minPhiOnlyFraction{0.95};
   /// @brief Seed of the random number generator
-  long unsigned seed{1602};
+  RandomEngine::result_type seed{1602};
 };
 struct TestResult {
   /// @brief Fraction of the muons whose pattern was found
