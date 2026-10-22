@@ -11,6 +11,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -28,7 +29,9 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
 #include <cmath>
 #include <memory>
@@ -270,18 +273,22 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
   const double alpha = std::numbers::pi / 8.;
   const bool symmetric = false;
   const Translation3 translation{0., 1., 2.};
-
-  auto pTransform = Transform3(translation);
+  // Rotate by 90 degrees about global z. The cone axis stays global z, so the
+  // point below stays on the surface. The center columns are then the
+  // local-frame components, not the global center derivative.
+  const AngleAxis3 rotationAngle(std::numbers::pi / 2., Vector3::UnitZ());
+  Transform3 transform =
+      makeTransform3(rotationAngle.toRotationMatrix(), translation.vector());
   auto coneSurfaceObject =
-      Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
+      Surface::makeShared<ConeSurface>(transform, alpha, symmetric);
 
-  const auto& rotation = pTransform.rotation();
+  const auto& rotation = transform.rotation();
   // The local frame z axis
   const Vector3 localZAxis = rotation.col(2);
   // Check the local z axis is aligned to global z axis
   CHECK_CLOSE_ABS(localZAxis, Vector3(0., 0., 1.), 1e-15);
 
-  /// Define the track (global) position and direction
+  // On the cone, along the rotated local x axis. Local z is 1.
   Vector3 globalPosition{0, 1. + std::tan(alpha), 3};
 
   // Test the derivative of bound track parameters local position w.r.t.
@@ -289,10 +296,36 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
   const auto& loc3DToLocBound =
       coneSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                               globalPosition);
-  // Check if the result is as expected
+  // Local position is (tan(alpha), 0, 1), so local phi is 0.
   Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
-  expLoc3DToLocBound << -1, 0, std::numbers::pi / 2. * std::tan(alpha), 0, 0, 1;
+  expLoc3DToLocBound << 0, 1, 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+
+  // Local hit (tan(alpha), 0, 1) and local direction (1, 0, 0). With
+  // tau = tan^2(alpha) the local path derivative is (1, 0, -tan(alpha), 0,
+  // 1 + tau, 0).
+  const double tanAlpha = std::tan(alpha);
+  const double tanAlpha2 = tanAlpha * tanAlpha;
+  const Vector3 hit = transform * Vector3{tanAlpha, 0., 1.};
+  const Vector3 direction = rotation * Vector3{1., 0., 0.};
+  const AlignmentToPathMatrix alignToPath =
+      coneSurfaceObject->alignmentToPathDerivative(tgContext, hit, direction);
+  AlignmentToPathMatrix expected = AlignmentToPathMatrix::Zero();
+  expected << 1., 0., -tanAlpha, 0., 1. + tanAlpha2, 0.;
+  CHECK_CLOSE_ABS(alignToPath, expected, 1e-10);
+
+  // A hit off the local x axis, compared with the intersection path.
+  const double z = 2.;
+  const double phi = 0.4;
+  const double radius = z * tanAlpha;
+  const Vector3 skewedHit =
+      transform * Vector3{radius * std::cos(phi), radius * std::sin(phi), z};
+  const Vector3 skewedDir = rotation * Vector3{0.2, -0.3, 0.5};
+  checkSurfaceDerivatives(tgContext, *coneSurfaceObject, transform, skewedHit,
+                          skewedDir, [&](const Transform3& tf) {
+                            return Surface::makeShared<ConeSurface>(tf, alpha,
+                                                                    symmetric);
+                          });
 }
 
 BOOST_AUTO_TEST_CASE(ConeSurfaceMaterialAssignment) {

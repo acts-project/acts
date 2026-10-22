@@ -37,6 +37,7 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
 #include <cmath>
 #include <memory>
@@ -330,6 +331,14 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   expAlignToPath << 0, 0, 1, 3, 0, 0;
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
+
+  // Tilted so phi and theta are defined. The hit stays on the disc.
+  const Vector3 tiltedDirection = Vector3(0.25, -0.2, 0.95).normalized();
+  checkSurfaceDerivatives(
+      tgContext, *discSurfaceObject, transform, globalPosition, tiltedDirection,
+      [&](const Transform3& tf) {
+        return Surface::makeShared<DiscSurface>(tf, rMin, rMax, halfPhiSector);
+      });
 
   // (b) Test the derivative of bound track parameters local position w.r.t.
   // position in local 3D Cartesian coordinates

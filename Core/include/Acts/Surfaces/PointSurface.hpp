@@ -143,6 +143,19 @@ class PointSurface : public Surface {
                                         const Vector3& position,
                                         const Vector3& direction) const final;
 
+  /// Jacobian from free to bound parameters.
+  ///
+  /// The measurement frame rotates with the track direction, so the loc rows
+  /// have a direction block as well as the position block.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
+  /// @return Jacobian from global to local
+  FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const final;
+
   /// Calculate the derivative of path length at the point-of-closest-approach
   /// w.r.t. free parameters.
   ///
@@ -235,8 +248,9 @@ class PointSurface : public Surface {
                                       unsigned int quarterSegments) const final;
 
   /// Calculate the derivative of path length at the point-of-closest-approach
-  /// w.r.t. alignment parameters of the surface. Only the center (translation)
-  /// contributes; a point has no orientation so the rotation block is zero.
+  /// w.r.t. alignment parameters of the surface. Only translations along the
+  /// local x/y/z axes contribute; a point has no orientation so the rotation
+  /// block is zero.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
@@ -257,6 +271,20 @@ class PointSurface : public Surface {
       const GeometryContext& gctx, const Vector3& position) const final;
 
  protected:
+  /// Bound position of a point is the measurement-frame coordinate of the
+  /// fixed global position. That frame depends only on the track direction,
+  /// and a local rotation does not move the point, so the rotation block is
+  /// zero.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
+  /// @return Derivative of bound track parameters w.r.t. local frame alignment
+  /// parameters without path correction
+  AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
+
   std::shared_ptr<const PointBounds>
       m_bounds;  ///< bounds (shared, may be null)
 

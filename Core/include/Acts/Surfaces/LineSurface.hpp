@@ -280,8 +280,8 @@ class LineSurface : public Surface {
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
-  /// local frame origin in global 3D Cartesian coordinates and its rotation
-  /// represented with extrinsic Euler angles)
+  /// translations along the local x/y/z axes and rotations represented with
+  /// extrinsic Euler angles around the local x/y/z axes)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
@@ -309,6 +309,19 @@ class LineSurface : public Surface {
   Vector3 lineDirection(const GeometryContext& gctx) const;
 
  protected:
+  /// Measurement-frame map from local 3D Cartesian coordinates to the bound
+  /// position. The radial row of @c localCartesianToBoundLocalDerivative can
+  /// point the opposite way.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
+  /// @return Derivative of bound local position w.r.t. local 3D Cartesian
+  /// coordinates
+  Matrix<2, 3> alignmentLocalCartesianToBound(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
+
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
 
   /// @copydoc Surface::localAxes

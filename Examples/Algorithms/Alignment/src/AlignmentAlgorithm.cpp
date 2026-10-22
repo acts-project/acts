@@ -45,6 +45,9 @@ AlignmentAlgorithm::AlignmentAlgorithm(
 }
 
 ProcessCode AlignmentAlgorithm::execute(const AlgorithmContext& ctx) const {
+  // TODO: Collect tracks across events and run one iterative alignment in
+  // finalize(), instead of aligning on a single event here.
+
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
@@ -129,6 +132,9 @@ ProcessCode AlignmentAlgorithm::execute(const AlgorithmContext& ctx) const {
   } else {
     ACTS_WARNING("Alignment failed with " << result.error());
   }
+
+  // TODO: Write Millepede-style alignment results using a shared helper in
+  // the main alignment namespace.
 
   // add alignment parameters to event store
   m_outputAlignmentParameters(ctx, std::move(alignedParameters));

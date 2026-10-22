@@ -266,15 +266,16 @@ AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
   double dz = localZAxis.dot(direction);
   double norm = 1 / (1 - dz * dz);
   // Calculate the derivative of local frame axes w.r.t its rotation
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
   auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(
-          localToGlobalTransform(gctx).rotation());
+      detail::rotationToLocalAxesDerivative(rotation);
 
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
-  alignToPath.segment<3>(eAlignmentCenter0) =
-      norm * (direction.transpose() - dz * localZAxis.transpose());
+  const Vector3 globalCenterDerivative = norm * (direction - dz * localZAxis);
+  detail::setAlignToPathLocalCenterDerivative(alignToPath,
+                                              globalCenterDerivative, rotation);
   alignToPath.segment<3>(eAlignmentRotation0) =
       norm * (dz * pcRowVec.transpose() + pz * direction.transpose()) *
       rotToLocalZAxis;
@@ -292,6 +293,17 @@ Matrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
   loc3DToLocBound << std::cos(localPhi), std::sin(localPhi), 0, 0, 0, 1;
 
   return loc3DToLocBound;
+}
+
+Matrix<2, 3> LineSurface::alignmentLocalCartesianToBound(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  // Bound loc of a line is globalToLocal, whose axes are the measurement
+  // frame. The radial derivative from localCartesianToBoundLocalDerivative
+  // can point the opposite way.
+  const RotationMatrix3 frame = referenceFrame(gctx, position, direction);
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
+  return (frame.transpose() * rotation).topRows<2>();
 }
 
 Vector3 LineSurface::lineDirection(const GeometryContext& gctx) const {

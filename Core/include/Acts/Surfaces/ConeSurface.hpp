@@ -117,6 +117,20 @@ class ConeSurface : public RegularSurface {
                                  const Vector3& position,
                                  const Vector3& direction) const final;
 
+  /// Jacobian from free to bound parameters.
+  ///
+  /// The base jacobian supplies t, φ, θ and q/p. The loc rows are replaced by
+  /// the opening-angle map from (eφ, ez) to (rφ, z). @c referenceFrame is not
+  /// that basis once the cone is offset from the origin.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
+  /// @return Jacobian from global to local
+  FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const final;
+
   /// Return method for surface normal information
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -223,8 +237,8 @@ class ConeSurface : public RegularSurface {
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
-  /// local frame origin in global 3D Cartesian coordinates and its rotation
-  /// represented with extrinsic Euler angles)
+  /// translations along the local x/y/z axes and rotations represented with
+  /// extrinsic Euler angles around the local x/y/z axes)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
