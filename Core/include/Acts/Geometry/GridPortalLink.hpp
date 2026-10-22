@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Geometry/PortalError.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -596,14 +597,27 @@ class GridPortalLinkT : public GridPortalLink {
 
   /// Lookup the tracking volume at a position on the surface
   /// @param position The local position
-  /// @note The position is required to be on the associated surface
-  /// @return The tracking volume (can be null)
+  /// @param tolerance The tolerance on the surface bounds
+  /// @note The position is required to be on the associated surface. A position
+  ///       outside the bounds by less than @p tolerance (a portal reached at
+  ///       its edge) is moved onto the bounds before the lookup.
+  /// @return The tracking volume (can be null), or an error if the position is
+  ///         outside the bounds by more than @p tolerance
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& /*gctx*/, const Vector2& position,
-      double /*tolerance*/ = s_onSurfaceTolerance) const override {
-    throw_assert(surface().insideBounds(position, BoundaryTolerance::None()),
-                 "Checking volume outside of bounds");
-    return m_grid.atPosition(m_projection(position));
+      double tolerance = s_onSurfaceTolerance) const override {
+    if (surface().insideBounds(position, BoundaryTolerance::None())) {
+      return m_grid.atPosition(m_projection(position));
+    }
+    if (!surface().insideBounds(
+            position, BoundaryTolerance::AbsoluteEuclidean(tolerance))) {
+      return Result<const TrackingVolume*>::failure(
+          PortalError::PositionOutsideLinkBounds);
+    }
+    const SurfaceBounds& bounds = surface().bounds();
+    const Vector2 onBounds =
+        bounds.closestPoint(position, bounds.boundToCartesianMetric(position));
+    return m_grid.atPosition(m_projection(onBounds));
   }
 
  private:
