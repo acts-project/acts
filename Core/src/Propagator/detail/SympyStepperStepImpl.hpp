@@ -34,6 +34,12 @@ Result<double> detail::sympyStep(const SympyStepper& stepper,
 
   double h = state.stepSize.value() * propDir;
 
+  // Skip a zero step: it is the identity, and h = 0 raises an FPE in the
+  // kernel's 2 / h
+  if (h == 0.) {
+    return 0.;
+  }
+
   const double initialH = h;
 
   const Vector3 pos = stepper.position(state);

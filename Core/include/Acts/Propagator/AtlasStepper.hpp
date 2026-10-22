@@ -1234,6 +1234,13 @@ class AtlasStepper {
 
     // we use h for keeping the nominclature with the original atlas code
     auto h = state.stepSize.value() * propDir;
+
+    // Skip a zero step: it is the identity, and h = 0 raises an FPE in the
+    // 2 / h below
+    if (h == 0.) {
+      return 0.;
+    }
+
     bool Jac = state.useJacobian;
 
     double* R = &(state.pVector[0]);  // Coordinates
