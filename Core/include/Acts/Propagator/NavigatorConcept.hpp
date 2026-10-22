@@ -39,15 +39,33 @@ concept NavigatorConcept = requires {
     { n.endOfWorldReached(s) } -> std::same_as<bool>;
     { n.navigationBreak(s) } -> std::same_as<bool>;
     { n.initialize(s, args) } -> std::same_as<Result<void>>;
-    {
-      n.nextTarget(s, position, direction, curvature)
-    } -> std::same_as<NavigationTarget>;
-    {
-      n.checkTargetValid(s, position, direction, curvature)
-    } -> std::same_as<bool>;
-    {
-      n.handleSurfaceReached(s, position, direction, sf, curvature)
-    } -> std::same_as<void>;
+    // Keep pre-curvature custom navigators compatible until the next breaking
+    // release. Prefer the curvature overload whenever it is available.
+    requires requires {
+      {
+        n.nextTarget(s, position, direction, curvature)
+      } -> std::same_as<NavigationTarget>;
+    } || requires {
+      {
+        n.nextTarget(s, position, direction)
+      } -> std::same_as<NavigationTarget>;
+    };
+    requires requires {
+      {
+        n.checkTargetValid(s, position, direction, curvature)
+      } -> std::same_as<bool>;
+    } || requires {
+      { n.checkTargetValid(s, position, direction) } -> std::same_as<bool>;
+    };
+    requires requires {
+      {
+        n.handleSurfaceReached(s, position, direction, sf, curvature)
+      } -> std::same_as<void>;
+    } || requires {
+      {
+        n.handleSurfaceReached(s, position, direction, sf)
+      } -> std::same_as<void>;
+    };
   };
 };
 

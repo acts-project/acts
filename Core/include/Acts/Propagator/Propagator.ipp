@@ -37,10 +37,8 @@ Result<void> Propagator<S, N>::updateNavigationState(
     return field.error();
   }
   // Use the physical momentum direction, not the signed navigation direction:
-  // the second spatial derivative is unchanged under path reversal. Use charge
-  // explicitly since neutral track parameters can store 1/p in the q/p slot.
-  state.curvature = (charge / m_stepper.absoluteMomentum(state.stepping)) *
-                    tangent.cross(*field);
+  // the second spatial derivative is unchanged under path reversal.
+  state.curvature = m_stepper.qOverP(state.stepping) * tangent.cross(*field);
   return Result<void>::success();
 }
 
@@ -77,8 +75,21 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
 
   auto getNextTarget = [&]() -> Result<NavigationTarget> {
     for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
-      NavigationTarget nextTarget = m_navigator.nextTarget(
-          state.navigation, state.position, state.direction, state.curvature);
+      NavigationTarget nextTarget = [&] {
+        if constexpr (requires {
+                        {
+                          m_navigator.nextTarget(
+                              state.navigation, state.position, state.direction,
+                              state.curvature)
+                        } -> std::same_as<NavigationTarget>;
+                      }) {
+          return m_navigator.nextTarget(state.navigation, state.position,
+                                        state.direction, state.curvature);
+        } else {
+          return m_navigator.nextTarget(state.navigation, state.position,
+                                        state.direction);
+        }
+      }();
       if (nextTarget.isNone()) {
         return NavigationTarget::None();
       }
@@ -165,9 +176,21 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
         if (auto update = updateNavigationState(state); !update.ok()) {
           return update.error();
         }
-        m_navigator.handleSurfaceReached(state.navigation, state.position,
-                                         state.direction, nextTarget.surface(),
-                                         state.curvature);
+        if constexpr (requires {
+                        {
+                          m_navigator.handleSurfaceReached(
+                              state.navigation, state.position, state.direction,
+                              nextTarget.surface(), state.curvature)
+                        } -> std::same_as<void>;
+                      }) {
+          m_navigator.handleSurfaceReached(
+              state.navigation, state.position, state.direction,
+              nextTarget.surface(), state.curvature);
+        } else {
+          m_navigator.handleSurfaceReached(state.navigation, state.position,
+                                           state.direction,
+                                           nextTarget.surface());
+        }
       }
       if (postStepSurfaceStatus != IntersectionStatus::reachable) {
         nextTarget = NavigationTarget::None();
@@ -196,9 +219,22 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     // Pre-Stepping: target setting
     state.stage = PropagatorStage::preStep;
 
-    if (!nextTarget.isNone() &&
-        !m_navigator.checkTargetValid(state.navigation, state.position,
-                                      state.direction, state.curvature)) {
+    const auto checkTargetValid = [&] {
+      if constexpr (requires {
+                      {
+                        m_navigator.checkTargetValid(
+                            state.navigation, state.position, state.direction,
+                            state.curvature)
+                      } -> std::same_as<bool>;
+                    }) {
+        return m_navigator.checkTargetValid(state.navigation, state.position,
+                                            state.direction, state.curvature);
+      } else {
+        return m_navigator.checkTargetValid(state.navigation, state.position,
+                                            state.direction);
+      }
+    };
+    if (!nextTarget.isNone() && !checkTargetValid()) {
       ACTS_VERBOSE("Target is not valid anymore.");
       nextTarget = NavigationTarget::None();
     }

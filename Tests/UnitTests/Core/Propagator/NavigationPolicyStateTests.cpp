@@ -26,11 +26,14 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -500,6 +503,58 @@ struct CurvatureRecords {
   std::vector<CurvatureRecord> calls;
   double qOverP = 1. / 1_GeV;
 };
+
+// Hide the curvature overloads to model an existing custom navigator.
+class LegacyNavigator : public DirectNavigator {
+ public:
+  struct Calls {
+    unsigned int next = 0;
+    unsigned int valid = 0;
+    unsigned int reached = 0;
+  };
+  std::shared_ptr<Calls> calls = std::make_shared<Calls>();
+
+  NavigationTarget nextTarget(State& state, const Vector3& position,
+                              const Vector3& direction) const {
+    ++calls->next;
+    return DirectNavigator::nextTarget(state, position, direction);
+  }
+  bool checkTargetValid(const State& state, const Vector3& position,
+                        const Vector3& direction) const {
+    ++calls->valid;
+    return DirectNavigator::checkTargetValid(state, position, direction);
+  }
+  void handleSurfaceReached(State& state, const Vector3& position,
+                            const Vector3& direction,
+                            const Surface& surface) const {
+    ++calls->reached;
+    DirectNavigator::handleSurfaceReached(state, position, direction, surface);
+  }
+};
+
+static_assert(NavigatorConcept<LegacyNavigator>);
+static_assert(NavigatorConcept<Navigator>);
+
+BOOST_AUTO_TEST_CASE(LegacyNavigatorPropagation) {
+  LegacyNavigator navigator;
+  const auto calls = navigator.calls;
+  Propagator propagator(StraightLineStepper{}, std::move(navigator));
+  const auto surface =
+      CurvilinearSurface(Vector3(0., 0., 10_mm), Vector3::UnitZ())
+          .planeSurface();
+  decltype(propagator)::Options<> options(gctx, mfContext);
+  options.navigation.surfaceSequence = {surface.get()};
+  options.stepping.maxStepSize = 1_mm;
+  options.pathLimit = 20_mm;
+  const auto start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitZ(), 1. / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+  const auto result = propagator.propagate(start, options);
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_GT(calls->next, 0u);
+  BOOST_CHECK_GT(calls->valid, 0u);
+  BOOST_CHECK_EQUAL(calls->reached, 1u);
+}
 
 class CurvatureRecordingPolicy final : public INavigationPolicy {
  public:
