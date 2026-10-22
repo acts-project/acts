@@ -34,6 +34,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
 #include <cmath>
 #include <numbers>
 
@@ -689,6 +690,100 @@ BOOST_DATA_TEST_CASE(
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
+}
+
+BOOST_AUTO_TEST_CASE(CylinderPolicyClosestApproachTest) {
+  using enum CylinderVolumeBounds::Face;
+
+  struct TestCase {
+    const char* name;
+    Vector3 position;
+    Vector3 direction;
+    CylinderVolumeBounds::Face expected;
+  };
+  const std::array cases{
+      TestCase{"radially inward", {150, 0, 0}, {-1, 0, 0}, InnerCylinder},
+      TestCase{"radially outward", {150, 0, 0}, {1, 0, 0}, OuterCylinder},
+      TestCase{"opposite side inward", {-150, 0, 0}, {1, 0, 0}, InnerCylinder},
+      TestCase{
+          "opposite side outward", {-150, 0, 0}, {-1, 0, 0}, OuterCylinder},
+      TestCase{"zero radial projection", {150, 0, 0}, {0, 1, 0}, OuterCylinder},
+      TestCase{"positive axial", {150, 0, 0}, {0, 0, 1}, PositiveDisc},
+      TestCase{"negative axial", {150, 0, 0}, {0, 0, -1}, NegativeDisc},
+      TestCase{"nearly axial", {150, 0, 0}, {-1e-12, 0, 1}, PositiveDisc},
+      TestCase{"disc before closest approach",
+               {150, 0, 290},
+               {-1, 0, 1},
+               PositiveDisc},
+      TestCase{"negative disc before closest approach",
+               {150, 0, -290},
+               {-1, 0, -1},
+               NegativeDisc},
+      TestCase{"disc after closest approach",
+               {150, 0, 0},
+               {-1, 0, 1},
+               InnerCylinder},
+      TestCase{"negative disc after closest approach",
+               {150, 0, 0},
+               {-1, 0, -1},
+               InnerCylinder},
+      TestCase{
+          "disc plane inside hole", {150, 0, 200}, {-1, 0, 1}, InnerCylinder},
+      TestCase{"disc plane beyond outer radius",
+               {150, 0, 0},
+               {-2, 0, 1},
+               InnerCylinder},
+      TestCase{"just inside tangency",
+               {100 - 1e-6, -200, 0},
+               {0, 1, 0},
+               InnerCylinder},
+      TestCase{"just outside tangency",
+               {100 + 1e-6, -200, 0},
+               {0, 1, 0},
+               OuterCylinder},
+      TestCase{"from inner boundary", {100, 0, 0}, {1, 0, 0}, OuterCylinder},
+      TestCase{"from outer boundary", {400, 0, 0}, {-1, 0, 0}, InnerCylinder},
+      TestCase{"from disc boundary", {150, 0, 300}, {0, 0, -1}, NegativeDisc},
+  };
+
+  const std::array<Transform3, 2> transforms{
+      Transform3::Identity(),
+      Transform3{Translation3{20, -30, 40} *
+                 AngleAxis3{0.7, Vector3{1, 2, 3}.normalized()}}};
+  for (const auto& transform : transforms) {
+    auto cylVolume = std::make_shared<TrackingVolume>(
+        transform,
+        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm),
+        "CylinderVolume");
+    SingleCylinderPortalShell shell{gctx, *cylVolume};
+    shell.applyToVolume();
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
+
+    for (const auto& test : cases) {
+      BOOST_TEST_CONTEXT(test.name << " transform=" << transform.matrix()) {
+        const auto actual = getSmart(test.position, test.direction.normalized(),
+                                     transform, policy);
+        checkEqual({shell.portal(test.expected).get()}, actual, shell);
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CylinderPolicyExactTangencyTest) {
+  auto cylVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm),
+      "CylinderVolume");
+  SingleCylinderPortalShell shell{gctx, *cylVolume};
+  shell.applyToVolume();
+  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
+
+  // Touching the inner cylinder does not exit the volume. Keep the strict
+  // closest-approach comparison, using exactly representable coordinates.
+  const auto actual =
+      getSmart({100, -200, 0}, {0, 1, 0}, Transform3::Identity(), policy);
+  checkEqual({shell.portal(CylinderVolumeBounds::Face::OuterCylinder).get()},
+             actual, shell);
 }
 
 namespace {
