@@ -48,6 +48,7 @@ struct Geant4Handle;
 
 namespace Geant4 {
 struct EventStore;
+class RunManager;
 }  // namespace Geant4
 
 /// Abstracts common Geant4 Acts algorithm behaviour.
@@ -70,6 +71,12 @@ class Geant4SimulationBase : public IAlgorithm {
     /// Optional Geant4 instance overwrite.
     std::shared_ptr<Geant4Handle> geant4Handle;
 
+    /// Keep one Geant4 run open between initialize() and finalize(). Geometry,
+    /// materials, regions and cuts must remain fixed during the run. Requires
+    /// the serial ACTS run manager and execution on the initializing thread.
+    /// Set false to use a separate BeamOn(1) run for each ACTS event.
+    bool persistentRun = true;
+
     /// Cap the largest acceptable step in the propagator
     /// if inf use Geant4 default (100m)
     double propagatorLargestAcceptableStep =
@@ -83,6 +90,9 @@ class Geant4SimulationBase : public IAlgorithm {
 
   /// Initialize the algorithm
   ProcessCode initialize() final;
+
+  /// Close the Geant4 run and invoke the end-of-run action once.
+  ProcessCode finalize() final;
 
   /// Algorithm execute method, called once per event with context
   ///
@@ -112,6 +122,9 @@ class Geant4SimulationBase : public IAlgorithm {
   G4VUserDetectorConstruction* m_detectorConstruction{};
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+
+ private:
+  Geant4::RunManager* m_persistentRun = nullptr;
 };
 
 /// Algorithm to run Geant4 simulation in the ActsExamples framework

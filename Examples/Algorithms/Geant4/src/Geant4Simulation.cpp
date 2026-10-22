@@ -22,6 +22,7 @@
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
 #include "ActsExamples/Geant4/ParticleKillAction.hpp"
 #include "ActsExamples/Geant4/ParticleTrackingAction.hpp"
+#include "ActsExamples/Geant4/RunManager.hpp"
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
@@ -70,7 +71,20 @@ Geant4SimulationBase::Geant4SimulationBase(
   m_geant4Level = this->logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
 }
 
-Geant4SimulationBase::~Geant4SimulationBase() = default;
+Geant4SimulationBase::~Geant4SimulationBase() {
+  // Sequencer finalization is skipped if an earlier algorithm throws.
+  try {
+    finalize();
+  } catch (const std::exception& e) {
+    try {
+      ACTS_ERROR("Failed to close Geant4 run during destruction: " << e.what());
+    } catch (...) {
+      // Logging can throw; destruction must preserve the original failure.
+    }
+  } catch (...) {
+    // A user action can throw a non-standard exception during cleanup.
+  }
+}
 
 void Geant4SimulationBase::commonInitialization() {
   // Set the detector construction
@@ -101,9 +115,34 @@ Geant4::EventStore& Geant4SimulationBase::eventStore() const {
 }
 
 ProcessCode Geant4SimulationBase::initialize() {
-  // Initialize the Geant4 run manager
-  runManager().Initialize();
+  std::lock_guard<std::mutex> guard(m_geant4Instance->mutex);
+  ActsPlugins::FpeMonitor mon{0};
+  if (config().persistentRun) {
+    auto* manager = dynamic_cast<Geant4::RunManager*>(&runManager());
+    if (manager == nullptr) {
+      throw std::invalid_argument(
+          "persistentRun requires ActsExamples::Geant4::RunManager; "
+          "set persistentRun=false for a custom Geant4 run manager");
+    }
+    manager->beginRun();
+    m_persistentRun = manager;
+  } else {
+    runManager().Initialize();
+  }
 
+  return ProcessCode::SUCCESS;
+}
+
+ProcessCode Geant4SimulationBase::finalize() {
+  if (m_geant4Instance == nullptr) {
+    return ProcessCode::SUCCESS;
+  }
+  std::lock_guard<std::mutex> guard(m_geant4Instance->mutex);
+  ActsPlugins::FpeMonitor mon{0};
+  if (m_persistentRun != nullptr) {
+    m_persistentRun->endRun();
+    m_persistentRun = nullptr;
+  }
   return ProcessCode::SUCCESS;
 }
 
@@ -140,12 +179,26 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
   // so use Fatras to simulate a misaligned detector.
   eventStore().geoContext = ctx.simGeoContext;
 
-  ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
-  {
+  ACTS_DEBUG("Processing Geant4 event");
+  try {
     ActsPlugins::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
-    // Start simulation. each track is simulated as a separate Geant4 event.
-    runManager().BeamOn(1);
+    if (config().persistentRun) {
+      if (m_persistentRun == nullptr) {
+        throw std::logic_error(
+            "Geant4 persistent run has not been initialized");
+      }
+      m_persistentRun->processEvent();
+    } else {
+      runManager().BeamOn(1);
+    }
+  } catch (...) {
+    eventStore().store = nullptr;
+    eventStore().inputParticles = nullptr;
+    throw;
   }
+  // The run can outlive this event's WhiteBoard.
+  eventStore().store = nullptr;
+  eventStore().inputParticles = nullptr;
 
   // Print out warnings about possible particle collision if happened
   if (eventStore().particleIdCollisionsInitial > 0 ||

@@ -29,6 +29,7 @@ def runMaterialRecording(
     phiRange=(0.0, 360.0 * u.degree),
     materialTrackCollectionName="material_tracks",
     outputFileBase="geant4_material_tracks",
+    persistentRun=True,
 ):
 
     rnd = RandomNumbers(seed=228)
@@ -76,6 +77,7 @@ def runMaterialRecording(
         inputParticles=hepmc3Converter.config.outputParticles,
         outputMaterialTracks=materialTrackCollectionName,
         recordElementFractions=False,
+        persistentRun=persistentRun,
     )
 
     s.addAlgorithm(g4Alg)
@@ -101,6 +103,11 @@ def main():
     )
     p.add_argument(
         "-t", "--tracks", type=int, default=100, help="Particle tracks per event"
+    )
+    p.add_argument(
+        "--no-persistent-run",
+        action="store_true",
+        help="Start a separate Geant4 run for each event",
     )
     p.add_argument(
         "-i", "--input", type=str, default="", help="input (GDML/SQL) file (optional)"
@@ -154,6 +161,7 @@ def main():
         phiRange=(args.phi_range[0] * u.degree, args.phi_range[1] * u.degree),
         materialTrackCollectionName=args.material_track_collection,
         outputFileBase=args.output,
+        persistentRun=not args.no_persistent_run,
     ).run()
 
 
