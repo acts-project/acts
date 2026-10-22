@@ -26,12 +26,14 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/detail/Curvature.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -724,6 +726,47 @@ class FailingCurvatureField final : public MagneticFieldProvider {
     return Result<Vector3>::success(Vector3::Zero());
   }
 };
+
+// Model a custom stepper written before the curvature accessor existed.
+class LegacyAtlasStepper : public AtlasStepper {
+ public:
+  using AtlasStepper::AtlasStepper;
+  Result<Vector3> curvature(State& state) const = delete;
+};
+static_assert(StepperConcept<LegacyAtlasStepper>);
+
+// An accessor must take precedence over the compatibility field calculation.
+class CustomCurvatureStepper : public AtlasStepper {
+ public:
+  using AtlasStepper::AtlasStepper;
+  Result<Vector3> curvature(State& /*state*/) const {
+    return Result<Vector3>::success(Vector3(0., 0.25, 0.));
+  }
+};
+static_assert(StepperConcept<CustomCurvatureStepper>);
+
+BOOST_AUTO_TEST_CASE(StepperCurvatureCompatibility) {
+  const auto start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+  const Vector3 field(0., 0., 1_T);
+  Propagator legacy{
+      LegacyAtlasStepper(std::make_shared<ConstantBField>(field))};
+  decltype(legacy)::Options<> options(gctx, mfContext);
+  auto state = legacy.makeState(options);
+  BOOST_REQUIRE(legacy.initialize(state, start, nullptr).ok());
+  BOOST_CHECK_SMALL((state.curvature - Vector3(0., -1_T / 1_GeV, 0.)).norm(),
+                    1e-18);
+
+  Propagator custom{
+      CustomCurvatureStepper(std::make_shared<FailingCurvatureField>())};
+  decltype(custom)::Options<> customOptions(gctx, mfContext);
+  customOptions.loopProtection = false;
+  auto customState = custom.makeState(customOptions);
+  BOOST_REQUIRE(custom.initialize(customState, start, nullptr).ok());
+  BOOST_CHECK_SMALL((customState.curvature - Vector3(0., 0.25, 0.)).norm(),
+                    1e-18);
+}
 
 BOOST_AUTO_TEST_CASE(CurvatureZeroCasesAndFieldErrors) {
   const auto start = [](ParticleHypothesis particle =

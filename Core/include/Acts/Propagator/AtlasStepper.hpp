@@ -21,6 +21,7 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
+#include "Acts/Propagator/detail/Curvature.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
@@ -385,6 +386,14 @@ class AtlasStepper {
       state.field = *res;
     }
     return res;
+  }
+
+  /// Current global geometric curvature d(direction)/ds in inverse length.
+  /// Unchanged under propagation reversal; reflects current momentum and field.
+  /// @param state Stepping state; the field cache may be updated
+  /// @return Curvature vector, or a field lookup error
+  Result<Vector3> curvature(State& state) const {
+    return detail::magneticCurvature(*this, state);
   }
 
   /// Get particle position from stepper state

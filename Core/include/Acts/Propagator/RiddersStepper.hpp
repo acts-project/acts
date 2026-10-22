@@ -16,6 +16,7 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
+#include "Acts/Propagator/detail/Curvature.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -287,6 +288,15 @@ class RiddersStepper final {
   /// @return the magnetic field at the given position for the primary stepper state
   Result<Vector3> getField(State& state, const Vector3& position) const {
     return m_stepperImpl.getField(state.primaryStepperState, position);
+  }
+
+  /// Current global geometric curvature d(direction)/ds in inverse length.
+  /// Unchanged under propagation reversal; reflects current momentum and field.
+  /// Uses the primary stepping state.
+  /// @param state Stepping state; the field cache may be updated
+  /// @return Curvature vector, or a field lookup error
+  Result<Vector3> curvature(State& state) const {
+    return detail::getCurvature(m_stepperImpl, state.primaryStepperState);
   }
 
   /// Get the position of the primary stepper state

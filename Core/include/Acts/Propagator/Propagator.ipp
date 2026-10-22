@@ -15,6 +15,7 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/detail/Curvature.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -28,17 +29,11 @@ Result<void> Propagator<S, N>::updateNavigationState(
   const Vector3 tangent = m_stepper.direction(state.stepping);
   state.direction = state.options.direction * tangent;
   state.curvature.setZero();
-  const double charge = m_stepper.charge(state.stepping);
-  if (charge == 0.) {
-    return Result<void>::success();
+  const auto curvature = detail::getCurvature(m_stepper, state.stepping);
+  if (!curvature.ok()) {
+    return curvature.error();
   }
-  const auto field = m_stepper.getField(state.stepping, state.position);
-  if (!field.ok()) {
-    return field.error();
-  }
-  // Use the physical momentum direction, not the signed navigation direction:
-  // the second spatial derivative is unchanged under path reversal.
-  state.curvature = m_stepper.qOverP(state.stepping) * tangent.cross(*field);
+  state.curvature = *curvature;
   return Result<void>::success();
 }
 

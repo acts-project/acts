@@ -18,6 +18,7 @@
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
+#include "Acts/Propagator/detail/Curvature.hpp"
 #include "Acts/Propagator/detail/MaterialEffectsAccumulator.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 
@@ -172,6 +173,14 @@ class SympyStepper final {
   Result<Vector3> getField(State& state, const Vector3& pos) const {
     // get the field from the cell
     return m_bField->getField(pos, state.fieldCache);
+  }
+
+  /// Current global geometric curvature d(direction)/ds in inverse length.
+  /// Unchanged under propagation reversal; reflects current momentum and field.
+  /// @param state Stepping state; the field cache may be updated
+  /// @return Curvature vector, or a field lookup error
+  Result<Vector3> curvature(State& state) const {
+    return detail::magneticCurvature(*this, state);
   }
 
   /// Global particle position accessor
