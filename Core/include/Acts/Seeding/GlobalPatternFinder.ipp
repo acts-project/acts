@@ -211,7 +211,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
     ///  @param toExtend The pattern to extend.
     ///  @return The vector of resulting patterns.
     auto processHitRange =
-        [&](const auto begin, const auto end, const bool isForward,
+        [&](const auto& begin, const auto& end, const bool isForward,
             PatternStateAux&& toExtend) -> PatternStateAuxVec {
       startPatternBuff.clear();
       startPatternBuff.push_back(std::move(toExtend));
