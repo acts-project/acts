@@ -33,7 +33,7 @@ static constexpr unsigned int N_ROWS = 7000u;
 
 // we need to template the class i guess
 class hough_transform_seeding_algorithm
-    : public algorithm<edm::houghplane_collection<unsigned long long, N_COLS, N_ROWS>::buffer(
+    : public algorithm<edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer(
 	  const magnetic_field&,
 	  const detector_buffer&,
 	  const edm::measurement_collection::const_view&,
@@ -58,7 +58,7 @@ class hough_transform_seeding_algorithm
  protected:
   struct define_plane_edges_kernel_payload {
     const hough_seeding_config& config;
-    edm::houghplane_collection<unsigned long long, N_COLS, N_ROWS>::view& houghplanes;
+    edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
   };
 
   struct precompute_spacepoint_variables_payload {
@@ -96,7 +96,7 @@ class hough_transform_seeding_algorithm
     // the space point phi
     vecmem::data::vector_view<scalar>& spacepoint_phi;
     /// The output hough planes
-    edm::houghplane_collection<unsigned long long, N_COLS, N_ROWS>::view& houghplanes;
+    edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
   };
   
   virtual void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const = 0;

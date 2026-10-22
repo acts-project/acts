@@ -56,7 +56,7 @@ namespace kernels {
                    const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id,
 		   vecmem::data::vector_view<scalar>& spacepoint_r,
                    vecmem::data::vector_view<scalar>& spacepoint_phi,
-		   edm::houghplane_collection<unsigned long long, device::N_COLS, device::N_ROWS>::view& houghplanes) {
+		   edm::houghplane_collection<unsigned short, device::N_COLS, device::N_ROWS>::view& houghplanes) {
       device::fill_hough_plane(details::global_index1(), bfield,
 		      n_spacepoints, spacepoints,
 		      spacepoint_wedge_association, spacepoint_detector_id,
@@ -78,7 +78,7 @@ void hough_transform_seeding_algorithm::define_plane_edges_kernel(const define_p
    unsigned int maxValues = std::max(device::N_COLS, device::N_ROWS);
    const unsigned int n_threads = warp_size() * 4;
    const unsigned int n_blocks = (maxValues  + n_threads - 1) / n_threads;
-   kernels::define_plane_edges<unsigned long long, device::N_COLS, device::N_ROWS>
+   kernels::define_plane_edges<unsigned short, device::N_COLS, device::N_ROWS>
 	   <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, payload.houghplanes);
    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
