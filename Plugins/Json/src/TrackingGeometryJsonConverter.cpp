@@ -294,6 +294,9 @@ std::unique_ptr<Acts::INavigationPolicy> decodeSurfaceArrayNavigationPolicy(
                       .get<Acts::SurfaceArrayNavigationPolicy::LayerType>();
   cfg.bins = {encoded.at("bins0").get<std::size_t>(),
               encoded.at("bins1").get<std::size_t>()};
+  if (encoded.contains("numberOfBinsFactor")) {
+    cfg.numberOfBinsFactor = encoded.at("numberOfBinsFactor").get<double>();
+  }
   if (encoded.contains("envelope")) {
     cfg.envelope = encoded.at("envelope").get<Acts::ExtentEnvelope>();
   }
@@ -348,6 +351,7 @@ nlohmann::json encodeSurfaceArrayNavigationPolicy(
   jPolicy["layerType"] = cfg.layerType;
   jPolicy["bins0"] = cfg.bins.first;
   jPolicy["bins1"] = cfg.bins.second;
+  jPolicy["numberOfBinsFactor"] = cfg.numberOfBinsFactor;
   jPolicy["envelope"] = cfg.envelope;
   if (cfg.neighborWindow.has_value()) {
     jPolicy["neighborWindow"] = {{"min", cfg.neighborWindow->min},
