@@ -207,12 +207,16 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
 
   // The parameter weight
   BoundMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+  // The parameter weight without time, used by vertex fits that do not fit
+  // time. It is not a block of the full weight, so it is inverted separately.
+  LinearizedTrack::WeightWithoutTime weightAtPCAWithoutTime =
+      parCovarianceAtPCA.block<eBoundSize - 1, eBoundSize - 1>(0, 0).inverse();
 
   Vector4 linPoint;
   linPoint.head<3>() = perigeeSurface.center(gctx);
   linPoint[3] = linPointTime;
 
-  return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
-                         positionJacobian, momentumJacobian, pca, momentumAtPCA,
-                         constTerm);
+  return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA,
+                         weightAtPCAWithoutTime, linPoint, positionJacobian,
+                         momentumJacobian, pca, momentumAtPCA, constTerm);
 }
