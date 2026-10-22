@@ -505,8 +505,9 @@ class CurvatureRecordingPolicy final : public INavigationPolicy {
  public:
   struct State {};
 
-  CurvatureRecordingPolicy(const GeometryContext&, const TrackingVolume& volume,
-                           const Logger&,
+  CurvatureRecordingPolicy(const GeometryContext& /*gctx*/,
+                           const TrackingVolume& volume,
+                           const Logger& /*logger*/,
                            std::shared_ptr<CurvatureRecords> records)
       : m_volume(volume.volumeName()), m_records(std::move(records)) {}
 
@@ -514,23 +515,26 @@ class CurvatureRecordingPolicy final : public INavigationPolicy {
     connectDefault<CurvatureRecordingPolicy>(delegate);
   }
 
-  void createState(const GeometryContext&, const NavigationArguments& args,
+  void createState(const GeometryContext& /*gctx*/,
+                   const NavigationArguments& args,
                    NavigationPolicyStateManager& manager,
-                   const Logger&) const override {
+                   const Logger& /*logger*/) const override {
     record("create", args);
     manager.pushState<State>();
   }
 
-  bool isValid(const GeometryContext&, const NavigationArguments& args,
-               NavigationPolicyState&, const Logger&) const override {
+  bool isValid(const GeometryContext& /*gctx*/, const NavigationArguments& args,
+               NavigationPolicyState& /*state*/,
+               const Logger& /*logger*/) const override {
     record("valid", args);
     return true;
   }
 
-  void initializeCandidates(const GeometryContext&,
+  void initializeCandidates(const GeometryContext& /*gctx*/,
                             const NavigationArguments& args,
-                            NavigationPolicyState&, AppendOnlyNavigationStream&,
-                            const Logger&) const {
+                            NavigationPolicyState& /*state*/,
+                            AppendOnlyNavigationStream& /*stream*/,
+                            const Logger& /*logger*/) const {
     record("candidates", args);
   }
 
@@ -552,8 +556,9 @@ struct ChangeCurvatureActor {
   std::shared_ptr<CurvatureRecords> records;
 
   template <typename PropagatorState, typename Stepper, typename Nav>
-  Result<void> act(PropagatorState& state, const Stepper& stepper, const Nav&,
-                   result_type& result, const Logger&) const {
+  Result<void> act(PropagatorState& state, const Stepper& stepper,
+                   const Nav& /*navigator*/, result_type& result,
+                   const Logger& /*logger*/) const {
     Vector3 direction = stepper.direction(state.stepping);
     if (state.stage == PropagatorStage::prePropagation) {
       direction = Vector3(1., 0.02, 0.01).normalized();
@@ -570,8 +575,9 @@ struct ChangeCurvatureActor {
   }
 
   template <typename PropagatorState, typename Stepper, typename Nav>
-  bool checkAbort(PropagatorState&, const Stepper&, const Nav&, result_type&,
-                  const Logger&) const {
+  bool checkAbort(PropagatorState& /*state*/, const Stepper& /*stepper*/,
+                  const Nav& /*navigator*/, result_type& /*result*/,
+                  const Logger& /*logger*/) const {
     return false;
   }
 };
@@ -627,9 +633,15 @@ BOOST_AUTO_TEST_CASE(CurvatureReachesEveryPolicyEntryPoint) {
         const Vector3 expected = call.qOverP * physicalDirection.cross(field);
         BOOST_CHECK_SMALL((call.args.curvature - expected).norm(), 1e-12);
         BOOST_CHECK_SMALL(call.args.curvature.dot(call.args.direction), 1e-12);
-        creates += call.entry == "create";
-        candidates += call.entry == "candidates";
-        valid += call.entry == "valid";
+        if (call.entry == "create") {
+          ++creates;
+        }
+        if (call.entry == "candidates") {
+          ++candidates;
+        }
+        if (call.entry == "valid") {
+          ++valid;
+        }
         sawMomentumUpdate |= std::abs(call.qOverP) < 0.3 / 1_GeV;
         sawNewVolume |= call.entry == "create" &&
                         call.volume != records->calls.front().volume;
@@ -646,10 +658,11 @@ BOOST_AUTO_TEST_CASE(CurvatureReachesEveryPolicyEntryPoint) {
 class FailingCurvatureField final : public MagneticFieldProvider {
  public:
   bool fail = true;
-  Cache makeCache(const MagneticFieldContext&) const override {
+  Cache makeCache(const MagneticFieldContext& /*mctx*/) const override {
     return Cache{};
   }
-  Result<Vector3> getField(const Vector3&, Cache&) const override {
+  Result<Vector3> getField(const Vector3& /*position*/,
+                           Cache& /*cache*/) const override {
     if (fail) {
       return Result<Vector3>::failure(MagneticFieldError::OutOfBounds);
     }

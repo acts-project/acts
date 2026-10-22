@@ -284,7 +284,7 @@ class DirectNavigator {
   /// @return The next target surface
   NavigationTarget nextTarget(
       State& state, const Vector3& position, const Vector3& direction,
-      const Vector3& /*curvature*/ = Vector3::Zero()) const {
+      [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
     // Navigator target always resets the current surface
     state.currentSurface = nullptr;
 
@@ -337,9 +337,9 @@ class DirectNavigator {
   /// @param curvature Current global geometric curvature (inverse length)
   ///
   /// @return True if the target is valid
-  bool checkTargetValid(const State& state, const Vector3& position,
-                        const Vector3& direction,
-                        const Vector3& /*curvature*/ = Vector3::Zero()) const {
+  bool checkTargetValid(
+      const State& state, const Vector3& position, const Vector3& direction,
+      [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
     static_cast<void>(state);
     static_cast<void>(position);
     static_cast<void>(direction);
@@ -360,7 +360,7 @@ class DirectNavigator {
   void handleSurfaceReached(
       State& state, const Vector3& position, const Vector3& direction,
       const Surface& surface,
-      const Vector3& /*curvature*/ = Vector3::Zero()) const {
+      [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
     static_cast<void>(position);
     static_cast<void>(direction);
     static_cast<void>(surface);

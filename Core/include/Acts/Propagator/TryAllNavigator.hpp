@@ -308,7 +308,7 @@ class TryAllNavigator final {
   /// @return The next target surface
   NavigationTarget nextTarget(
       State& state, const Vector3& position, const Vector3& direction,
-      const Vector3& /*curvature*/ = Vector3::Zero()) const {
+      [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
     // Navigator preStep always resets the current surface
     state.currentSurface = nullptr;
 
@@ -434,9 +434,9 @@ class TryAllNavigator final {
   /// @param curvature Current global geometric curvature (inverse length)
   ///
   /// @return True if the target is still valid
-  bool checkTargetValid(const State& state, const Vector3& position,
-                        const Vector3& direction,
-                        const Vector3& /*curvature*/ = Vector3::Zero()) const {
+  bool checkTargetValid(
+      const State& state, const Vector3& position, const Vector3& direction,
+      [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
     static_cast<void>(state);
     static_cast<void>(position);
     static_cast<void>(direction);
@@ -456,7 +456,7 @@ class TryAllNavigator final {
   void handleSurfaceReached(
       State& state, const Vector3& position, const Vector3& direction,
       const Surface& /*surface*/,
-      const Vector3& /*curvature*/ = Vector3::Zero()) const {
+      [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
     // Check if the navigator is inactive
     if (state.navigationBreak) {
       return;
