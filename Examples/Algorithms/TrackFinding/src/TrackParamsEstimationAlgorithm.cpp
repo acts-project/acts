@@ -130,6 +130,7 @@ TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   m_inputSeeds.initialize(m_cfg.inputSeeds);
   m_inputTracks.maybeInitialize(m_cfg.inputProtoTracks);
   m_inputParticleHypotheses.maybeInitialize(m_cfg.inputParticleHypotheses);
+  m_inputFreeParameters.maybeInitialize(m_cfg.inputFreeParameters);
 
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
   m_outputSeeds.maybeInitialize(m_cfg.outputSeeds);
@@ -173,6 +174,16 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     inputParticleHypotheses = &inputParticleHypothesesRef;
   }
 
+  const std::vector<Acts::FreeVector>* inputFreeParameters = nullptr;
+  if (m_inputFreeParameters.isInitialized()) {
+    const auto& inputFreeParametersRef = m_inputFreeParameters(ctx);
+    if (seeds.size() != inputFreeParametersRef.size()) {
+      ACTS_FATAL("Inconsistent number of seeds and free parameters");
+      return ProcessCode::ABORT;
+    }
+    inputFreeParameters = &inputFreeParametersRef;
+  }
+
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
 
   IndexSourceLink::SurfaceAccessor surfaceAccessor{*m_cfg.trackingGeometry};
@@ -211,19 +222,27 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
 
     std::span<const SpacePointIndex> selected = seed.spacePointIndices();
 
+    // given free parameters replace the fit, unless they have no momentum
+    const bool hasFreeParams =
+        inputFreeParameters != nullptr &&
+        inputFreeParameters->at(iseed)[Acts::eFreeQOverP] != 0;
+
     // the triplet selections pick three space points
     if (m_cfg.spacePointSelection != SeedSpacePointSelection::All) {
       const std::optional<std::array<SpacePointIndex, 3>> selectedTriplet =
           selectSeedSpacePoints(spacePoints, seed.spacePointIndices(),
                                 m_cfg.spacePointSelection,
                                 m_cfg.minTransverseDistance);
-      if (!selectedTriplet.has_value()) {
+      // a seed with given free parameters keeps all of its space points
+      if (!selectedTriplet.has_value() && !hasFreeParams) {
         ACTS_DEBUG("Seed " << iseed << " failed space point selection, skip");
         ++skipped.selection;
         continue;
       }
-      triplet = *selectedTriplet;
-      selected = triplet;
+      if (selectedTriplet.has_value()) {
+        triplet = *selectedTriplet;
+        selected = triplet;
+      }
     }
 
     // Get the bottom space point and its reference surface
@@ -272,8 +291,14 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
 
     const double t0 = std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time();
 
-    const Acts::Result<Acts::FreeVector> freeParams = estimateFreeParams(
-        positions, field, t0, weights, m_cfg.geometricRefineIterations);
+    Acts::Result<Acts::FreeVector> freeParams =
+        hasFreeParams ? Acts::Result<Acts::FreeVector>::success(
+                            inputFreeParameters->at(iseed))
+                      : estimateFreeParams(positions, field, t0, weights,
+                                           m_cfg.geometricRefineIterations);
+    if (hasFreeParams) {
+      (*freeParams)[Acts::eFreeTime] = t0;
+    }
     if (!freeParams.ok()) {
       ACTS_DEBUG("Seed " << iseed << " could not be fitted: "
                          << freeParams.error().message());
@@ -292,8 +317,19 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
         inputParticleHypotheses != nullptr ? inputParticleHypotheses->at(iseed)
                                            : m_cfg.particleHypothesis;
 
-    const Acts::Result<Acts::BoundVector> boundParams = transportToSurface(
+    Acts::Result<Acts::BoundVector> boundParams = transportToSurface(
         propagator, propagatorOptions, *freeParams, *bottomSurface, hypothesis);
+    // given free parameters which do not reach the surface give way to the fit
+    if (!boundParams.ok() && hasFreeParams) {
+      freeParams = estimateFreeParams(positions, field, t0, weights,
+                                      m_cfg.geometricRefineIterations);
+      if (freeParams.ok() && freeParams->allFinite() &&
+          (*freeParams)[Acts::eFreeQOverP] != 0) {
+        boundParams =
+            transportToSurface(propagator, propagatorOptions, *freeParams,
+                               *bottomSurface, hypothesis);
+      }
+    }
     if (!boundParams.ok()) {
       ACTS_DEBUG("Seed " << iseed
                          << " could not be transported to the surface of its "

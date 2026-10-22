@@ -15,15 +15,16 @@
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <cstdint>
+#include <limits>
+#include <optional>
 #include <vector>
 
 namespace Acts {
 
 /// Container for doublets found by the doublet seed finder.
 ///
-/// Each doublet is stored as one record. The triplet finder visits the
-/// doublets in cotTheta order, i.e. through an index, and reads several
-/// quantities of each; one record keeps them together in memory.
+/// This implementation uses partial AoS/SoA depending on the access pattern in
+/// the doublet finding process.
 class DoubletsForMiddleSp {
  public:
   /// Type alias for index type used in doublets container
@@ -35,31 +36,48 @@ class DoubletsForMiddleSp {
 
   /// Check if the doublets container is empty
   /// @return True if container has no doublets
-  [[nodiscard]] bool empty() const { return m_doublets.empty(); }
+  [[nodiscard]] bool empty() const { return m_spacePoints.empty(); }
   /// Get the number of doublets in container
   /// @return Number of doublets stored
   [[nodiscard]] Index size() const {
-    return static_cast<Index>(m_doublets.size());
+    return static_cast<Index>(m_spacePoints.size());
   }
 
   /// Clear all stored doublets and associated data
-  void clear() { m_doublets.clear(); }
+  void clear() {
+    m_spacePoints.clear();
+    m_cotTheta.clear();
+    m_er_iDeltaR.clear();
+    m_uv.clear();
+    m_xy.clear();
+  }
 
   /// Add a new doublet with associated parameters
-  /// @param sp Index of the other space point of the doublet
-  /// @param cotTheta Cotangent of the doublet's polar angle
-  /// @param iDeltaR Inverse transverse distance between the space points
-  /// @param er Squared uncertainty of cotTheta
-  /// @param u U coordinate of the other space point in the conformal frame
-  /// @param v V coordinate of the other space point in the conformal frame
-  /// @param x X of the other space point relative to the middle one, in the
-  ///   frame rotated to the middle space point's direction
-  /// @param y Y of the other space point relative to the middle one, in the
-  ///   frame rotated to the middle space point's direction
+  /// @param sp space point index for the doublet
+  /// @param cotTheta Cotangent of polar angle
+  /// @param iDeltaR Inverse delta R parameter
+  /// @param er Error in R coordinate
+  /// @param u U coordinate parameter
+  /// @param v V coordinate parameter
+  /// @param x X coordinate
+  /// @param y Y coordinate
   void emplace_back(SpacePointIndex sp, float cotTheta, float iDeltaR, float er,
                     float u, float v, float x, float y) {
-    m_doublets.push_back({sp, cotTheta, iDeltaR, er, u, v, x, y});
+    m_spacePoints.push_back(sp);
+    m_cotTheta.push_back(cotTheta);
+    m_er_iDeltaR.push_back({er, iDeltaR});
+    m_uv.push_back({u, v});
+    m_xy.push_back({x, y});
   }
+
+  /// Get reference to space point indices container
+  /// @return Const reference to space point indices vector
+  const std::vector<SpacePointIndex>& spacePoints() const {
+    return m_spacePoints;
+  }
+  /// Get reference to cotTheta values container
+  /// @return Const reference to cotTheta values vector
+  const std::vector<float>& cotTheta() const { return m_cotTheta; }
 
   /// Pair of doublet index and cotTheta value.
   struct IndexAndCotTheta {
@@ -72,20 +90,30 @@ class DoubletsForMiddleSp {
   /// Type alias for subset of index and cotTheta pairs
   using IndexAndCotThetaSubset = std::span<const IndexAndCotTheta>;
 
-  /// Sort doublets by cotTheta within given range
+  /// Storage for sortByCotTheta, kept by the caller so that sorting does not
+  /// allocate
+  struct SortStorage {
+    /// Doublets being sorted
+    std::vector<IndexAndCotTheta> scratch;
+    /// Bucket counts and indices
+    std::vector<std::uint32_t> buckets;
+  };
+
+  /// Sort doublets by cotTheta within given range. Doublets with equal
+  /// cotTheta keep their index order.
   /// @param range Index range to sort within
   /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
   void sortByCotTheta(const IndexRange& range,
-                      std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
-    indexAndCotTheta.clear();
-    indexAndCotTheta.reserve(range.second - range.first);
-    for (Index i = range.first; i < range.second; ++i) {
-      indexAndCotTheta.emplace_back(i, m_doublets[i].cotTheta);
-    }
-    std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
-      return item.cotTheta;
-    });
-  }
+                      std::vector<IndexAndCotTheta>& indexAndCotTheta) const;
+
+  /// Sort doublets by cotTheta within given range, with storage the caller
+  /// keeps between calls. Doublets with equal cotTheta keep their index order.
+  /// @param range Index range to sort within
+  /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
+  /// @param storage Storage for the sort, of any content
+  void sortByCotTheta(const IndexRange& range,
+                      std::vector<IndexAndCotTheta>& indexAndCotTheta,
+                      SortStorage& storage) const;
 
   /// Proxy accessor for a single doublet entry.
   class Proxy {
@@ -106,30 +134,30 @@ class DoubletsForMiddleSp {
     /// Get space point index pair
     /// @return The space point index
     SpacePointIndex spacePointIndex() const {
-      return m_container->m_doublets[m_index].spacePointIndex;
+      return m_container->m_spacePoints[m_index];
     }
 
     /// Get cotangent of theta
     /// @return The cotTheta value
-    float cotTheta() const { return m_container->m_doublets[m_index].cotTheta; }
+    float cotTheta() const { return m_container->m_cotTheta[m_index]; }
     /// Get er value
     /// @return The er value
-    float er() const { return m_container->m_doublets[m_index].er; }
+    float er() const { return m_container->m_er_iDeltaR[m_index][0]; }
     /// Get inverse delta r
     /// @return The inverse delta r value
-    float iDeltaR() const { return m_container->m_doublets[m_index].iDeltaR; }
+    float iDeltaR() const { return m_container->m_er_iDeltaR[m_index][1]; }
     /// Get u coordinate
     /// @return The u value
-    float u() const { return m_container->m_doublets[m_index].u; }
+    float u() const { return m_container->m_uv[m_index][0]; }
     /// Get v coordinate
     /// @return The v value
-    float v() const { return m_container->m_doublets[m_index].v; }
+    float v() const { return m_container->m_uv[m_index][1]; }
     /// Get x coordinate
     /// @return The x value
-    float x() const { return m_container->m_doublets[m_index].x; }
+    float x() const { return m_container->m_xy[m_index][0]; }
     /// Get y coordinate
     /// @return The y value
-    float y() const { return m_container->m_doublets[m_index].y; }
+    float y() const { return m_container->m_xy[m_index][1]; }
 
    private:
     const DoubletsForMiddleSp* m_container{};
@@ -236,27 +264,13 @@ class DoubletsForMiddleSp {
   }
 
  private:
-  /// Holds all stored quantities of one doublet.
-  struct Doublet {
-    /// Index of the other space point of the doublet
-    SpacePointIndex spacePointIndex{};
-    /// Cotangent of the doublet's polar angle
-    float cotTheta{};
-    /// Inverse transverse distance between the space points
-    float iDeltaR{};
-    /// Squared uncertainty of cotTheta
-    float er{};
-    /// U coordinate of the other space point in the conformal frame
-    float u{};
-    /// V coordinate of the other space point in the conformal frame
-    float v{};
-    /// X of the other space point relative to the middle one, rotated
-    float x{};
-    /// Y of the other space point relative to the middle one, rotated
-    float y{};
-  };
+  std::vector<SpacePointIndex> m_spacePoints;
 
-  std::vector<Doublet> m_doublets;
+  // parameters required to calculate a circle with linear equation
+  std::vector<float> m_cotTheta;
+  std::vector<std::array<float, 2>> m_er_iDeltaR;
+  std::vector<std::array<float, 2>> m_uv;
+  std::vector<std::array<float, 2>> m_xy;
 };
 
 /// Derived quantities for the middle space point in a doublet.
@@ -335,6 +349,12 @@ class DoubletSeedFinder {
     /// corrected for the time of flight between them, in units of their
     /// combined time resolution. Only used when `useTime` is enabled.
     float timeCutNSigma = 5;
+
+    /// If set, calibrate both strip space points against their chord after the
+    /// z origin cut, with this tolerance in strip half lengths. The following
+    /// cuts and the doublet use the calibrated positions.
+    /// Requires `SpacePointColumns::StripCalibrationDetails`.
+    std::optional<float> stripCalibrationTolerance;
 
     /// Type alias for delegate to apply experiment specific cuts during doublet
     /// finding

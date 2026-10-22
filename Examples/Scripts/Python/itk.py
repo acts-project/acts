@@ -4,7 +4,7 @@ import argparse
 
 import acts
 import acts.examples
-from acts.json import MaterialMapJsonConverter
+from acts.json import TrackingGeometryMaterialJsonConverter
 
 from acts.examples import (
     WhiteBoard,
@@ -16,8 +16,6 @@ from acts.examples import (
 
 from acts.examples.json import (
     JsonSurfacesWriter,
-    JsonMaterialWriter,
-    JsonFormat,
 )
 
 
@@ -74,28 +72,16 @@ def runITk(
             )
             writer.write(context)
 
-            jmConverterCfg = MaterialMapJsonConverter.Config(
-                processSensitives=True,
-                processApproaches=True,
-                processRepresenting=True,
-                processBoundaries=True,
-                processVolumes=True,
-                processNonMaterial=True,
-                context=context.recoGeoContext,
-            )
-
             outname = "material-map"
             if not material:
                 outname = "geometry-map"
 
-            jmw = JsonMaterialWriter(
-                level=acts.logging.VERBOSE,
-                converterCfg=jmConverterCfg,
-                fileName=str(json_dir / outname),
-                writeFormat=JsonFormat.Json,
+            material = acts.TrackingGeometryMaterial.fromGeometry(
+                trackingGeometry, includeNonMaterial=True
             )
-
-            jmw.write(trackingGeometry)
+            TrackingGeometryMaterialJsonConverter().toFile(
+                material, json_dir / (outname + ".json")
+            )
 
 
 if "__main__" == __name__:

@@ -532,7 +532,7 @@ class illustrator {
   /// @param view the display view.
   /// @param gctx the geometry context.
   ///
-  /// @return @c actsvg::svg::object of the intersectio record.
+  /// @return @c actsvg::svg::object of the intersection record.
   template <typename view_t, typename intersection_t>
   inline auto draw_intersections(
       const std::string& prefix,
