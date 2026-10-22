@@ -85,9 +85,8 @@ TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) noexcept = default;
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& position,
     const double tol) const {
-  return m_volumeLookup
-             ? m_volumeLookup->lowestTrackingVolume(gctx, position, tol)
-             : detail::linearVolumeScan(*this, gctx, position, tol);
+  return m_volumeLookup ? m_volumeLookup->findLowest(gctx, position, tol)
+                        : detail::linearVolumeScan(*this, gctx, position, tol);
 }
 
 void TrackingVolume::setVolumeLookup(

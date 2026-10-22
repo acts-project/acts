@@ -211,6 +211,7 @@ def test_volume_lookup_factory_ownership(tmp_path, lookup_type, local):
     def factory(context, volume, logger):
         config = lookup_type.Config()
         if lookup_type is acts.LinearVolumeLookup:
+            config.warningThreshold = None
             lookup = lookup_type(config, volume, logger)
         else:
             lookup = lookup_type(config, context, volume, logger)
@@ -230,3 +231,10 @@ def test_volume_lookup_factory_ownership(tmp_path, lookup_type, local):
     path = tmp_path / "navigation.csv"
     acts.pseudoNavigation(geometry, gctx, path, runs=1, logLevel=acts.logging.WARNING)
     assert len(path.read_text().splitlines()) > 1
+
+
+@pytest.mark.parametrize("threshold", [None, 0, 64])
+def test_linear_lookup_warning_threshold(threshold):
+    config = acts.LinearVolumeLookup.Config()
+    config.warningThreshold = threshold
+    assert config.warningThreshold == threshold

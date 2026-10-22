@@ -19,13 +19,14 @@ LinearVolumeLookup::LinearVolumeLookup(const TrackingVolume& world,
                                        const Config& config,
                                        const Logger& logger)
     : m_root(world), m_config(config) {
-  if (m_config.warningThreshold != 0 && logger.doPrint(Logging::WARNING)) {
+  if (m_config.warningThreshold.has_value() &&
+      logger.doPrint(Logging::WARNING)) {
     warnIfNeeded(logger);
   }
 }
 
 void LinearVolumeLookup::warnIfNeeded(const Logger& logger) const {
-  const auto warningThreshold = m_config.warningThreshold;
+  const auto warningThreshold = *m_config.warningThreshold;
   std::size_t largest = 0;
   // apply() cannot prune subtrees: explicit child lookups end this scan's
   // scope, and their descendants must not contribute to its warning.
@@ -59,7 +60,7 @@ const LinearVolumeLookup::Config& LinearVolumeLookup::config() const {
   return m_config;
 }
 
-const TrackingVolume* LinearVolumeLookup::lowestTrackingVolume(
+const TrackingVolume* LinearVolumeLookup::findLowest(
     const GeometryContext& gctx, const Vector3& position,
     double tolerance) const {
   return detail::linearVolumeScan(m_root, gctx, position, tolerance);

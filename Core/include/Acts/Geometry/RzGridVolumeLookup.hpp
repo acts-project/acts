@@ -15,7 +15,10 @@
 #include <memory>
 
 namespace Acts {
-/// Built-in RZ grid spatial index. Rebuild after changing
+/// Built-in RZ grid spatial index. Construct after geometry closure, once
+/// bounds, hierarchy and descendant policies are finalized; prefer installing
+/// through a Blueprint or StaticBlueprintNode lookup factory.
+/// Rebuild after changing
 /// volume bounds, transforms, hierarchy or descendant lookup policies. Indexes
 /// the full subtree, stopping at explicitly configured descendant lookups.
 /// Child volumes must be contained within their parents.
@@ -49,10 +52,10 @@ class RzGridVolumeLookup final : public IVolumeLookup {
                      const Logger& logger = getDummyLogger());
   ~RzGridVolumeLookup() override;
 
-  /// @copydoc IVolumeLookup::lowestTrackingVolume
-  const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3& position,
-                                             double tolerance) const override;
+  /// @copydoc IVolumeLookup::findLowest
+  const TrackingVolume* findLowest(const GeometryContext& gctx,
+                                   const Vector3& position,
+                                   double tolerance) const override;
 
   /// Return construction parameters for serialization.
   /// @return Construction settings

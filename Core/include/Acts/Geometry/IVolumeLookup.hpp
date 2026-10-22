@@ -27,15 +27,15 @@ class IVolumeLookup {
  public:
   virtual ~IVolumeLookup() = default;
 
-  /// Find the deepest containing volume, or nullptr outside the bound root
+  /// Find the lowest containing volume, or nullptr outside the bound root
   /// volume. Respect explicit descendant lookups as delegation boundaries.
   /// @param gctx Geometry context for containment checks
   /// @param position Global query position
   /// @param tolerance Containment tolerance
   /// @return Containing tracking volume
-  virtual const TrackingVolume* lowestTrackingVolume(
-      const GeometryContext& gctx, const Vector3& position,
-      double tolerance) const = 0;
+  virtual const TrackingVolume* findLowest(const GeometryContext& gctx,
+                                           const Vector3& position,
+                                           double tolerance) const = 0;
 };
 /// Construct a non-null lookup for a volume after its descendants are
 /// finalized.

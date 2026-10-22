@@ -948,12 +948,11 @@ BOOST_AUTO_TEST_CASE(VolumeLookupRoundTrip) {
                       expectedDefaults.maxGridCells);
     defaults["volumes"][0]["volume_lookup"] = {{"kind", "Linear"}};
     defaultGeometry = converter.fromJson(gctx, defaults);
-    BOOST_CHECK_EQUAL(
-        dynamic_cast<const LinearVolumeLookup*>(
-            defaultGeometry->highestTrackingVolume()->volumeLookup())
-            ->config()
-            .warningThreshold,
-        LinearVolumeLookup::Config{}.warningThreshold);
+    BOOST_CHECK(dynamic_cast<const LinearVolumeLookup*>(
+                    defaultGeometry->highestTrackingVolume()->volumeLookup())
+                    ->config()
+                    .warningThreshold ==
+                LinearVolumeLookup::Config{}.warningThreshold);
     for (const char* kind : {"RzGrid", "Linear"}) {
       const char* key = std::string_view(kind) == "RzGrid"
                             ? "max_grid_cells"
@@ -979,20 +978,33 @@ BOOST_AUTO_TEST_CASE(VolumeLookupRoundTrip) {
   }
   geometry->highestTrackingVolume()->setVolumeLookup(
       std::make_unique<LinearVolumeLookup>(
-          *world, LinearVolumeLookup::Config{0}, getDummyLogger()));
+          *world, LinearVolumeLookup::Config{std::nullopt}, getDummyLogger()));
   auto linearRecipe = converter.toJson(gctx, *geometry);
   BOOST_CHECK_EQUAL(
       linearRecipe["volumes"][0]["volume_lookup"]["kind"].get<std::string>(),
       "Linear");
+  BOOST_CHECK(linearRecipe["volumes"][0]["volume_lookup"]["warning_threshold"]
+                  .is_null());
   auto restoredLinear = converter.fromJson(gctx, linearRecipe);
   auto* linearPolicy = dynamic_cast<const LinearVolumeLookup*>(
       restoredLinear->highestTrackingVolume()->volumeLookup());
   BOOST_REQUIRE(linearPolicy != nullptr);
-  BOOST_CHECK_EQUAL(linearPolicy->config().warningThreshold, 0);
+  BOOST_CHECK(!linearPolicy->config().warningThreshold.has_value());
+  // Zero is a real threshold and emits a warning for this nonempty subtree.
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  Logging::ScopedFailureThreshold threshold{Logging::ERROR};
+#endif
+  linearRecipe["volumes"][0]["volume_lookup"]["warning_threshold"] = 0;
+  restoredLinear = converter.fromJson(gctx, linearRecipe);
+  linearPolicy = dynamic_cast<const LinearVolumeLookup*>(
+      restoredLinear->highestTrackingVolume()->volumeLookup());
+  BOOST_REQUIRE(linearPolicy != nullptr);
+  BOOST_REQUIRE(linearPolicy->config().warningThreshold.has_value());
+  BOOST_CHECK_EQUAL(*linearPolicy->config().warningThreshold, 0);
   class CustomLookup : public IVolumeLookup {
-    const TrackingVolume* lowestTrackingVolume(
-        const GeometryContext& /*gctx*/, const Vector3& /*position*/,
-        double /*tolerance*/) const override {
+    const TrackingVolume* findLowest(const GeometryContext& /*gctx*/,
+                                     const Vector3& /*position*/,
+                                     double /*tolerance*/) const override {
       return nullptr;
     }
   };

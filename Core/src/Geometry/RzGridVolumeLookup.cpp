@@ -314,7 +314,7 @@ const RzGridVolumeLookup::Config& RzGridVolumeLookup::config() const {
   return m_impl->m_config;
 }
 
-const TrackingVolume* RzGridVolumeLookup::lowestTrackingVolume(
+const TrackingVolume* RzGridVolumeLookup::findLowest(
     const GeometryContext& gctx, const Vector3& position,
     double tolerance) const {
   if (!std::isfinite(tolerance) || tolerance < 0 ||

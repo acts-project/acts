@@ -661,7 +661,10 @@ nlohmann::json encodeVolumeLookup(const Acts::IVolumeLookup* policy) {
   } else if (const auto* linear =
                  dynamic_cast<const LinearVolumeLookup*>(policy)) {
     encoded = {{"kind", "Linear"},
-               {"warning_threshold", linear->config().warningThreshold}};
+               {"warning_threshold",
+                linear->config().warningThreshold
+                    ? nlohmann::json(*linear->config().warningThreshold)
+                    : nlohmann::json(nullptr)}};
   } else {
     throw std::invalid_argument(
         "Unsupported volume lookup policy for JSON serialization");
@@ -701,8 +704,13 @@ std::unique_ptr<const Acts::IVolumeLookup> decodeVolumeLookup(
           std::make_unique<RzGridVolumeLookup>(gctx, volume, config, logger);
     } else if (kind == "Linear") {
       LinearVolumeLookup::Config config;
-      config.warningThreshold =
-          sizeValue("warning_threshold", config.warningThreshold);
+      if (lookup.contains("warning_threshold") &&
+          lookup.at("warning_threshold").is_null()) {
+        config.warningThreshold = std::nullopt;
+      } else {
+        config.warningThreshold =
+            sizeValue("warning_threshold", *config.warningThreshold);
+      }
       policy = std::make_unique<LinearVolumeLookup>(volume, config, logger);
     } else {
       throw std::invalid_argument("Unknown volume lookup kind: " + kind);

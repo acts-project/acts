@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(RzLookupMatchesLinear) {
         Vector3 p(uniform(rng), uniform(rng), uniform(rng));
         BOOST_CHECK(*geometry.resolveLowestTrackingVolume(gctx, p, std::nullopt,
                                                           nullptr, tolerance) ==
-                    linear.lowestTrackingVolume(gctx, p, tolerance));
+                    linear.findLowest(gctx, p, tolerance));
       }
       for (int i = 0; i < 16; ++i) {
         for (double delta : {-2e-3, -1e-3, -1e-6, 0., 1e-6, 1e-3, 2e-3}) {
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(RzLookupMatchesLinear) {
                             Vector3(i * 4. + 2., 0., 20. + i + delta)}) {
             BOOST_CHECK(*geometry.resolveLowestTrackingVolume(
                             gctx, p, std::nullopt, nullptr, tolerance) ==
-                        linear.lowestTrackingVolume(gctx, p, tolerance));
+                        linear.findLowest(gctx, p, tolerance));
           }
         }
       }
@@ -119,13 +119,13 @@ BOOST_AUTO_TEST_CASE(RzLookupFallbacks) {
       cfg.maxGridCells = 1;  // Force bounded-memory fallback.
     }
     RzGridVolumeLookup limited(gctx, *world, cfg);
-    BOOST_CHECK(limited.lowestTrackingVolume(gctx, {40., 0., 0.}, 0.) ==
+    BOOST_CHECK(limited.findLowest(gctx, {40., 0., 0.}, 0.) ==
                 world->lowestTrackingVolume(gctx, {40., 0., 0.}, 0.));
     world->addVolume(std::make_unique<TrackingVolume>(
         Transform3::Identity(),
         std::make_shared<CuboidVolumeBounds>(80., 80., 80.), "box"));
     RzGridVolumeLookup mixed(gctx, *world, cfg);
-    BOOST_CHECK(mixed.lowestTrackingVolume(gctx, {70., 0., 0.}, 0.) ==
+    BOOST_CHECK(mixed.findLowest(gctx, {70., 0., 0.}, 0.) ==
                 world->lowestTrackingVolume(gctx, {70., 0., 0.}, 0.));
 
     MovingPlacement placement;
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(RzLookupFallbacks) {
     RzGridVolumeLookup moving(gctx, *movingWorld, cfg);
     placement.transform.translation().x() = 50.;
     placement.inverse = placement.transform.inverse();
-    BOOST_CHECK(moving.lowestTrackingVolume(gctx, {50., 0., 0.}, 0.) ==
+    BOOST_CHECK(moving.findLowest(gctx, {50., 0., 0.}, 0.) ==
                 &movingWorld->volumes().at(0));
   }
 }
@@ -213,7 +213,13 @@ BOOST_AUTO_TEST_CASE(LinearLookupWarnings) {
   BOOST_CHECK(output.str().find("scans up to 16 siblings") !=
               std::string::npos);
   output.str("");
-  LinearVolumeLookup suppressed(*world, LinearVolumeLookup::Config{0}, *logger);
+  LinearVolumeLookup zeroThreshold(*world, LinearVolumeLookup::Config{0},
+                                   *logger);
+  BOOST_CHECK(output.str().find("scans up to 16 siblings") !=
+              std::string::npos);
+  output.str("");
+  LinearVolumeLookup suppressed(
+      *world, LinearVolumeLookup::Config{std::nullopt}, *logger);
   BOOST_CHECK(output.str().empty());
   for (int i = 16; i < 65; ++i) {
     world->addVolume(std::make_unique<TrackingVolume>(
@@ -321,7 +327,8 @@ BOOST_AUTO_TEST_CASE(BlueprintLookupWarningSettings) {
                const Logger& factoryLogger) -> std::unique_ptr<IVolumeLookup> {
           if (type == 0) {
             return std::make_unique<LinearVolumeLookup>(
-                volume, LinearVolumeLookup::Config{0}, factoryLogger);
+                volume, LinearVolumeLookup::Config{std::nullopt},
+                factoryLogger);
           }
           RzGridVolumeLookup::Config config;
           config.fallbackWarningFraction = 1;
@@ -332,7 +339,7 @@ BOOST_AUTO_TEST_CASE(BlueprintLookupWarningSettings) {
     BOOST_CHECK(output.str().find("volume lookup") == std::string::npos);
     if (auto* linear = dynamic_cast<const LinearVolumeLookup*>(
             geometry->highestTrackingVolume()->volumeLookup())) {
-      BOOST_CHECK_EQUAL(linear->config().warningThreshold, 0);
+      BOOST_CHECK(!linear->config().warningThreshold.has_value());
     }
     if (auto* grid = dynamic_cast<const RzGridVolumeLookup*>(
             geometry->highestTrackingVolume()->volumeLookup())) {
@@ -346,11 +353,11 @@ BOOST_AUTO_TEST_CASE(RecursiveLookupUsesEachVolumesPolicy) {
    public:
     CountingLookup(const TrackingVolume& root, unsigned& calls)
         : m_calls(calls), m_linear(root, {}) {}
-    const TrackingVolume* lowestTrackingVolume(
-        const GeometryContext& context, const Vector3& position,
-        double tolerance) const override {
+    const TrackingVolume* findLowest(const GeometryContext& context,
+                                     const Vector3& position,
+                                     double tolerance) const override {
       ++m_calls;
-      return m_linear.lowestTrackingVolume(context, position, tolerance);
+      return m_linear.findLowest(context, position, tolerance);
     }
 
    private:
@@ -532,11 +539,11 @@ BOOST_AUTO_TEST_CASE(SubtreeLookupDelegatesThroughLinearToAnotherIndex) {
    public:
     CountingLinear(const TrackingVolume& root, unsigned& count)
         : m_count(count), m_linear(root, {}) {}
-    const TrackingVolume* lowestTrackingVolume(
-        const GeometryContext& context, const Vector3& position,
-        double tolerance) const override {
+    const TrackingVolume* findLowest(const GeometryContext& context,
+                                     const Vector3& position,
+                                     double tolerance) const override {
       ++m_count;
-      return m_linear.lowestTrackingVolume(context, position, tolerance);
+      return m_linear.findLowest(context, position, tolerance);
     }
 
    private:
@@ -656,10 +663,9 @@ BOOST_AUTO_TEST_CASE(RzLookupCoincidentBounds) {
   }
   {
     RzGridVolumeLookup lookup(gctx, *world, RzGridVolumeLookup::Config{});
-    BOOST_CHECK(lookup.lowestTrackingVolume(gctx, {5., 0., 0.}, 0.) ==
+    BOOST_CHECK(lookup.findLowest(gctx, {5., 0., 0.}, 0.) ==
                 &world->volumes().at(0));
-    BOOST_CHECK(lookup.lowestTrackingVolume(gctx, {15., 0., 0.}, 0.) ==
-                world.get());
+    BOOST_CHECK(lookup.findLowest(gctx, {15., 0., 0.}, 0.) == world.get());
   }
 }
 
@@ -719,7 +725,7 @@ BOOST_AUTO_TEST_CASE(RzGridNearIdentityRotation) {
   for (double z : {-1000., 0., 1000.}) {
     for (double r : {5., 20.}) {
       const Vector3 point = transform * Vector3(r, 0., z);
-      BOOST_CHECK(lookup.lowestTrackingVolume(gctx, point, 1e-6) == expected);
+      BOOST_CHECK(lookup.findLowest(gctx, point, 1e-6) == expected);
     }
   }
 }

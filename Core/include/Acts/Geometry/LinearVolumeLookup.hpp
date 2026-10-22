@@ -12,16 +12,17 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
+#include <optional>
 
 namespace Acts {
-/// Default lookup policy using the volume hierarchy's existing recursive scan.
+/// Linearly scans children and recursively descends into the selected child.
 class LinearVolumeLookup final : public IVolumeLookup {
  public:
   /// Construction settings.
   struct Config {
-    /// Warn above this sibling count within the scanned subtree; zero disables
-    /// warnings.
-    std::size_t warningThreshold = 64;
+    /// Warn above this sibling count within the scanned subtree.
+    /// std::nullopt disables warnings; zero warns for any children.
+    std::optional<std::size_t> warningThreshold = 64;
   };
 
   /// Construct a lookup and diagnose a finalized subtree.
@@ -35,10 +36,10 @@ class LinearVolumeLookup final : public IVolumeLookup {
   /// @return Construction settings
   const Config& config() const;
 
-  /// @copydoc IVolumeLookup::lowestTrackingVolume
-  const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3& position,
-                                             double tolerance) const override;
+  /// @copydoc IVolumeLookup::findLowest
+  const TrackingVolume* findLowest(const GeometryContext& gctx,
+                                   const Vector3& position,
+                                   double tolerance) const override;
 
  private:
   void warnIfNeeded(const Logger& logger) const;
