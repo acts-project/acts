@@ -777,8 +777,11 @@ class MeasurementGenerator {
             const Vector3 extpPos{discretize(extp.position(), sL, false) +
                                   discretize(extp.position(), sL, true) +
                                   plane * Vector3::UnitZ()};
+            /// The sensor direction is the strip measuring the bending
+            /// direction, toNext is the direction of the strip measuring the
+            /// non-bending direction
             measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                extpPos, genCfg.stripDirLoc0.at(sL), genCfg.stripDirLoc1.at(sL),
+                extpPos, genCfg.stripDirLoc1.at(sL), genCfg.stripDirLoc0.at(sL),
                 stripUncertLoc0, stripUncertLoc1));
             measurements.back()->setLayer(sL);
           } else {
