@@ -90,18 +90,18 @@ class GlobalPatternFinder {
     /// @brief Number of standard deviations to consider for residual acceptance
     double nResidualSigma{3.0};
     /// @brief Maximum phi difference [rad] allowed between two hits belonging to the same pattern
-    double phiTolerance{3._degree};
+    double phiTolerance{3.5 * 1._degree};
     /// @brief Maximum theta difference [rad] allowed between two patterns to be considered overlapping
-    double maxThetaSizeOverlap{5._degree};
+    double maxThetaSizeOverlap{6._degree};
     /// @brief Residual uncertainty to consider the hit as low confidence
-    double lowConfidenceResSigma{50};
+    double lowConfidenceResSigma{50.};
     /// @brief Factor by which the acceptance window is loosened when using the beamspot or searching in a new group
     double loosenAcceptanceFactor{2.};
     /// Pile-up & Fake rate suppression
     /// @brief Minimum number of strip layers in the bending direction required to accept a pattern
-    unsigned int minStripEtaLayers{3};
+    unsigned int minStripEtaLayers{2};
     /// @brief Minimum number of precision layers in the bending direction required to accept a pattern
-    unsigned int minPrecisionLayers{0};
+    unsigned int minPrecisionLayers{8};
     /// @brief Minimum number of phi layers required to accept a pattern
     unsigned int minPhiLayers{1};
     /// @brief Minimum number of layer groups required to accept a pattern
@@ -109,12 +109,12 @@ class GlobalPatternFinder {
     /// @brief Minimum number of layers in a group to be considered a good group
     unsigned int minGroupLayers{4};
     /// @brief Quality cut on the pattern's mean squared normalized residual
-    double meanNormRes2Cut{0.2};
+    double meanNormRes2Cut{3.5};
     /// Pattern recovery power
     /// @brief Maximum number of attempts to build a pattern from hits already used in existing patterns
-    unsigned int maxSeedAttempts{2};
+    unsigned int maxSeedAttempts{3};
     /// @brief Maximum number of missed candidate hits in different measurement layers in a group
-    unsigned int maxMissLayersInGroup{2};
+    unsigned int maxMissLayersInGroup{3};
   };
   /// @brief Abbreviation of the seed coordinates
   enum class HitCoords : std::uint8_t {

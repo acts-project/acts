@@ -123,9 +123,9 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
 struct PatternStateAux {
   /// @brief Configuration object of the residual calculator
   struct Config {
-    /// @brief Minimum distance (in mm) between two hits for being used to
+    /// @brief Minimum distance between two hits for being used to
     ///         compute a reliable pattern line. Use the beamspot otherwise.
-    double minHitDistance4Line{40._mm};
+    double minHitDistance4Line{200._mm};
   };
   /// @brief Beamspot information, used as an additional constraint on the
   ///  pattern line when the lever arm of the hits is too small. The beamspot
