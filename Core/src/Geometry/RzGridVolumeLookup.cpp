@@ -98,8 +98,9 @@ struct RzGrid {
         e.push_back(child.m_box.min()[axis]);
         e.push_back(child.m_box.max()[axis]);
       }
-      std::sort(e.begin(), e.end());
-      e.erase(std::unique(e.begin(), e.end()), e.end());
+      std::ranges::sort(e);
+      const auto duplicates = std::ranges::unique(e);
+      e.erase(duplicates.begin(), duplicates.end());
     }
     // N edges give N-1 regular bins plus two reserved under-/overflow bins.
     const auto nr = edges[0].size() + 1;
