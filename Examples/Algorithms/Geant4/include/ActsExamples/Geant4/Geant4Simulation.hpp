@@ -68,14 +68,8 @@ class Geant4SimulationBase : public IAlgorithm {
     /// Detector instance to access Geant4 geometry construction.
     std::shared_ptr<Detector> detector;
 
-    /// Optional Geant4 instance overwrite.
+    /// Optional Geant4 instance overwrite using Geant4::RunManager.
     std::shared_ptr<Geant4Handle> geant4Handle;
-
-    /// Keep one Geant4 run open between initialize() and finalize(). Geometry,
-    /// materials, regions and cuts must remain fixed during the run. Requires
-    /// the serial ACTS run manager and execution on the initializing thread.
-    /// Set false to use a separate BeamOn(1) run for each ACTS event.
-    bool persistentRun = true;
 
     /// Cap the largest acceptable step in the propagator
     /// if inf use Geant4 default (100m)
@@ -88,7 +82,8 @@ class Geant4SimulationBase : public IAlgorithm {
 
   ~Geant4SimulationBase() override;
 
-  /// Initialize the algorithm
+  /// Open one Geant4 run until finalize(). Geometry, materials, regions and
+  /// cuts must remain fixed. Execute and finalize on the initializing thread.
   ProcessCode initialize() final;
 
   /// Close the Geant4 run and invoke the end-of-run action once.

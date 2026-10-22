@@ -11,13 +11,14 @@ from helpers import dd4hepEnabled, geant4Enabled, hepmc3Enabled, rootEnabled
     not (geant4Enabled and hepmc3Enabled and rootEnabled and dd4hepEnabled),
     reason="Geant4 material recording dependencies not available",
 )
-def test_persistent_material_recording_matches_beam_on(tmp_path):
+def test_material_recording_event_seeds_independent_of_run_length(tmp_path):
     import awkward as ak
     import uproot
 
     scripts = Path(__file__).resolve().parents[3] / "Examples/Scripts/Python"
-    # Each fresh process owns one Geant4 manager. Use a nonzero event offset to
-    # check that ACTS-derived seeds still produce identical material records.
+    # Compare a multi-event run with the same events in separate processes.
+    # A nonzero offset checks that seeds depend on the ACTS event number rather
+    # than the event's position in the Geant4 run.
     script = """
 import sys
 from pathlib import Path
@@ -34,19 +35,19 @@ detector = acts.examples.TelescopeDetector(
     )
 )
 sequencer = acts.examples.Sequencer(
-    events=3, skip=5, numThreads=1, outputDir=str(output)
+    events=int(sys.argv[3]), skip=int(sys.argv[4]), numThreads=1,
+    outputDir=str(output)
 )
 runMaterialRecording(
     detector=detector,
     s=sequencer,
     tracksPerEvent=20,
     outputFileBase=str(output / "material"),
-    persistentRun=sys.argv[3] == "true",
 ).run()
 """
-    outputs = []
-    for persistent in (False, True):
-        output = tmp_path / str(persistent)
+
+    def record(name, events, skip):
+        output = tmp_path / name
         result = subprocess.run(
             [
                 sys.executable,
@@ -54,7 +55,8 @@ runMaterialRecording(
                 script,
                 str(scripts),
                 str(output),
-                str(persistent).lower(),
+                str(events),
+                str(skip),
             ],
             capture_output=True,
             text=True,
@@ -62,6 +64,9 @@ runMaterialRecording(
         assert result.returncode == 0, result.stdout + result.stderr
         with uproot.open(output / "material.root") as file:
             tree = file["material_tracks"]
-            assert tree.num_entries == 60
-            outputs.append(tree.arrays(library="ak"))
-    assert ak.almost_equal(outputs[0], outputs[1], rtol=0, atol=0)
+            assert tree.num_entries == events * 20
+            return tree.arrays(library="ak")
+
+    combined = record("combined", 3, 5)
+    separate = ak.concatenate([record(str(event), 1, event) for event in range(5, 8)])
+    assert ak.almost_equal(combined, separate, rtol=0, atol=0)

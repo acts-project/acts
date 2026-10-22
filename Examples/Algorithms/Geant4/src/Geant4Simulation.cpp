@@ -117,18 +117,13 @@ Geant4::EventStore& Geant4SimulationBase::eventStore() const {
 ProcessCode Geant4SimulationBase::initialize() {
   std::lock_guard<std::mutex> guard(m_geant4Instance->mutex);
   ActsPlugins::FpeMonitor mon{0};
-  if (config().persistentRun) {
-    auto* manager = dynamic_cast<Geant4::RunManager*>(&runManager());
-    if (manager == nullptr) {
-      throw std::invalid_argument(
-          "persistentRun requires ActsExamples::Geant4::RunManager; "
-          "set persistentRun=false for a custom Geant4 run manager");
-    }
-    manager->beginRun();
-    m_persistentRun = manager;
-  } else {
-    runManager().Initialize();
+  auto* manager = dynamic_cast<Geant4::RunManager*>(&runManager());
+  if (manager == nullptr) {
+    throw std::invalid_argument(
+        "Geant4 simulation requires ActsExamples::Geant4::RunManager");
   }
+  manager->beginRun();
+  m_persistentRun = manager;
 
   return ProcessCode::SUCCESS;
 }
@@ -182,15 +177,10 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
   ACTS_DEBUG("Processing Geant4 event");
   try {
     ActsPlugins::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
-    if (config().persistentRun) {
-      if (m_persistentRun == nullptr) {
-        throw std::logic_error(
-            "Geant4 persistent run has not been initialized");
-      }
-      m_persistentRun->processEvent();
-    } else {
-      runManager().BeamOn(1);
+    if (m_persistentRun == nullptr) {
+      throw std::logic_error("Geant4 run has not been initialized");
     }
+    m_persistentRun->processEvent();
   } catch (...) {
     eventStore().store = nullptr;
     eventStore().inputParticles = nullptr;
