@@ -16,7 +16,6 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
 #include <cmath>
@@ -29,14 +28,27 @@
 namespace Acts {
 
 namespace {
+/// Global axis used to build the measurement frame from a unit direction:
+/// global Z, or global X when the direction is (anti-)parallel to Z.
+Vector3 pointFrameAxis(const Vector3& unitDirection) {
+  const bool standard = std::abs(unitDirection.dot(Vector3::UnitZ())) <
+                        s_curvilinearProjTolerance;
+  return standard ? Vector3::UnitZ() : Vector3::UnitX();
+}
+
+/// (axis . T) / |axis x T|, with axis from pointFrameAxis. Scales how the
+/// measurement frame rotates with the direction. Both Jacobians use it.
+double pointFrameAxisScale(const Vector3& unitDirection) {
+  const Vector3 axis = pointFrameAxis(unitDirection);
+  return axis.dot(unitDirection) / axis.cross(unitDirection).norm();
+}
+
 /// Build the curvilinear measurement frame from the momentum @p direction.
-/// Columns are (U, V, T) with T the (normalized) direction, U built from global
-/// Z (falling back to global X when the direction is (anti-)parallel to Z).
+/// Columns are (U, V, T) with T the (normalized) direction and U built from
+/// pointFrameAxis.
 RotationMatrix3 pointReferenceFrame(const Vector3& direction) {
   const Vector3 T = direction.normalized();
-  const bool standard =
-      std::abs(T.dot(Vector3::UnitZ())) < s_curvilinearProjTolerance;
-  Vector3 U = (standard ? Vector3::UnitZ() : Vector3::UnitX()).cross(T);
+  Vector3 U = pointFrameAxis(T).cross(T);
   U.normalize();
   const Vector3 V = T.cross(U);
 
@@ -159,26 +171,23 @@ BoundToFreeMatrix PointSurface::boundToFreeJacobian(
   BoundToFreeMatrix jacToGlobal =
       Surface::boundToFreeJacobian(gctx, position, direction);
 
-  // For the global-Z frame branch the frame axes are
-  //   U = (-sinPhi, cosPhi, 0)
-  //   V = (-cosTheta cosPhi, -cosTheta sinPhi, sinTheta)
-  // with derivatives
-  //   dU/dPhi = cosTheta V - sinTheta T,   dU/dTheta = 0
-  //   dV/dPhi = -cosTheta U,               dV/dTheta = T
-  // and the free position on surface is P = c + loc0 U + loc1 V, so
-  //   dP/dPhi   = loc0 (cosTheta V - sinTheta T) - loc1 cosTheta U
-  //   dP/dTheta = loc1 T
-  // This generalizes the LineSurface patch, which keeps only the loc0 term
-  // (its second axis is fixed to the line). The closed form assumes the
-  // standard (Z-based) branch; near direction parallel to Z the frame uses the
-  // X-based fall-back and this correction is only approximate (as with the
-  // documented forward-eta limitation of the LineSurface).
-  const double cosTheta = direction.z();
-  const double sinTheta = VectorHelpers::perp(direction);
-
-  jacToGlobal.block<3, 1>(eFreePos0, eBoundPhi) =
-      loc0 * (cosTheta * V - sinTheta * T) - loc1 * cosTheta * U;
-  jacToGlobal.block<3, 1>(eFreePos0, eBoundTheta) = loc1 * T;
+  // P = c + loc0 U + loc1 V. U and V rotate with the direction, so the free
+  // position depends on phi and theta at fixed local coordinates. With
+  // s = pointFrameAxisScale(T) and dT perpendicular to T,
+  //   dP = s (U.dT) (loc0 V - loc1 U) - (loc0 (U.dT) + loc1 (V.dT)) T
+  // The direction columns of the base Jacobian are dT/dPhi and dT/dTheta.
+  // s uses pointFrameAxis, so this stays the inverse of freeToBoundJacobian
+  // on the global-Z branch and on the global-X fallback.
+  const double scale = pointFrameAxisScale(T);
+  const auto setPositionColumn = [&](int column) {
+    const Vector3 dT = jacToGlobal.block<3, 1>(eFreeDir0, column);
+    const double uDot = U.dot(dT);
+    jacToGlobal.block<3, 1>(eFreePos0, column) =
+        scale * uDot * (loc0 * V - loc1 * U) -
+        (loc0 * uDot + loc1 * V.dot(dT)) * T;
+  };
+  setPositionColumn(eBoundPhi);
+  setPositionColumn(eBoundTheta);
 
   return jacToGlobal;
 }
@@ -192,10 +201,11 @@ FreeToBoundMatrix PointSurface::freeToBoundJacobian(
       Surface::freeToBoundJacobian(gctx, position, direction);
 
   // loc = frame(direction)^T * (position - center). The position block above
-  // is that frame. The direction block is the rotation of the frame:
-  // d(loc0)/d(dir) = loc1 * r, d(loc1)/d(dir) = -loc0 * r, with r the
-  // tangential projection of (V × axis) / |axis × T|. axis is global Z, or
-  // global X when the direction is (anti-)parallel to Z.
+  // is that frame. Differentiating the frame at fixed position gives
+  //   d(loc0)/d(dir) = loc1 * r,   d(loc1)/d(dir) = -loc0 * r
+  // with r = pointFrameAxisScale(T) * U. The same scale defines the
+  // bound-to-free position/angle block, so the two are inverses on both frame
+  // branches.
   const Vector3 offset = position - center(gctx);
   const RotationMatrix3 frame = referenceFrame(gctx, position, direction);
   const Vector3 U = frame.col(0);
@@ -203,11 +213,7 @@ FreeToBoundMatrix PointSurface::freeToBoundJacobian(
   const Vector3 T = frame.col(2);
   const double loc0 = U.dot(offset);
   const double loc1 = V.dot(offset);
-  const bool standard =
-      std::abs(T.dot(Vector3::UnitZ())) < s_curvilinearProjTolerance;
-  const Vector3 axis = standard ? Vector3::UnitZ() : Vector3::UnitX();
-  const Vector3 radial = V.cross(axis) / axis.cross(T).norm();
-  const Vector3 tangential = radial - radial.dot(T) * T;
+  const Vector3 tangential = pointFrameAxisScale(T) * U;
   jacToLocal.block<1, 3>(eBoundLoc0, eFreeDir0) = loc1 * tangential.transpose();
   jacToLocal.block<1, 3>(eBoundLoc1, eFreeDir0) =
       -loc0 * tangential.transpose();

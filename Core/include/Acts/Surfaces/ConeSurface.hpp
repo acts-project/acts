@@ -103,10 +103,8 @@ class ConeSurface : public RegularSurface {
   /// @return Surface type identifier
   SurfaceType type() const override;
 
-  /// Transverse frame at @p position. The y axis is the cone axis and the
-  /// depth axis is the global x/y direction of @p position. This is not the
-  /// bound-parameter basis: @c boundToFreeJacobian and @c freeToBoundJacobian
-  /// build that from the local azimuth.
+  /// Measurement frame (e_phi, n x e_phi, n) at @p position, with n the cone
+  /// normal.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position where the frame is constructed
@@ -118,12 +116,6 @@ class ConeSurface : public RegularSurface {
 
   /// Jacobian from bound to free parameters.
   ///
-  /// The position columns are the derivatives of @c localToGlobal. With bound
-  /// coordinates (rφ, z) and opening angle α they are eφ and
-  /// tanα e_r − φ tanα eφ + ez. @c referenceFrame cannot supply the second
-  /// column: it takes the global x/y of the position, and the φ tanα term
-  /// makes the two columns non-orthogonal.
-  ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
   /// @param direction global 3D momentum direction
@@ -133,11 +125,6 @@ class ConeSurface : public RegularSurface {
                                         const Vector3& direction) const final;
 
   /// Jacobian from free to bound parameters.
-  ///
-  /// The base jacobian supplies t, φ, θ and q/p. The loc rows are replaced by
-  /// the opening-angle map from (eφ, ez) to (rφ, z), the inverse of
-  /// @c boundToFreeJacobian. @c referenceFrame is not that basis once the cone
-  /// is offset from the origin.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
