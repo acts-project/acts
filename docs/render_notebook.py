@@ -156,8 +156,11 @@ def main(
         for file in nbconvert_dist.files or []
         if file.as_posix().endswith("nbconvert/templates/markdown/conf.json")
     ]
+    # Template discovery uses the basedirs, while Jinja also needs the root
+    # itself to resolve qualified includes such as base/display_priority.j2.
     markdown, resources = MarkdownExporter(
-        extra_template_basedirs=template_basedirs
+        extra_template_basedirs=template_basedirs,
+        extra_template_paths=template_basedirs,
     ).from_notebook_node(notebook)
     markdown = add_page_id(
         to_doxygen_math(markdown),
