@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
+#include "Acts/TrackFinding/SeedDeduplicator.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -109,6 +110,14 @@ void addTrackFinding(py::module_& m) {
 
       ACTS_PYTHON_STRUCT(c, cutSets, absEtaEdges);
     }
+  }
+  {
+    auto tool = py::class_<SeedDeduplicator>(m, "SeedDeduplicator");
+
+    auto c =
+        py::class_<SeedDeduplicator::Config>(tool, "Config").def(py::init<>());
+    patchKwargsConstructor(c);
+    ACTS_PYTHON_STRUCT(c, minScore, maxMissingScore);
   }
 }
 }  // namespace ActsPython
