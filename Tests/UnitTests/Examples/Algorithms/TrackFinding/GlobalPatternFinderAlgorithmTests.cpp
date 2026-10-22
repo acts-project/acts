@@ -17,6 +17,7 @@
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/TrackFinding/GlobalPatternFinderAlgorithm.hpp"
 
+#include <compare>
 #include <cstdint>
 #include <memory>
 #include <numbers>
@@ -183,7 +184,7 @@ BOOST_AUTO_TEST_CASE(hit_payload_and_topology) {
                                      surface.get()};
 
   BOOST_CHECK(first.globalPosition(gctx).isApprox(bucket[0].localPosition()));
-  BOOST_CHECK(first.spacePoint() == &bucket[0]);
+  BOOST_CHECK(&first.spacePoint() == &bucket[0]);
   BOOST_CHECK(first.station == StIndex::BI);
   BOOST_CHECK_EQUAL(static_cast<unsigned>(first.locLayer),
                     static_cast<unsigned>(bucket[0].id().detLayer()));
@@ -194,12 +195,13 @@ BOOST_AUTO_TEST_CASE(hit_payload_and_topology) {
   // The hits are grouped by station and ordered by layer
   BOOST_CHECK_EQUAL(static_cast<int>(PatternTopology::groupIndex(first)),
                     static_cast<int>(Acts::toUnderlying(StIndex::BI)));
-  BOOST_CHECK(PatternTopology::layerSorter(first, second));
-  BOOST_CHECK(!PatternTopology::layerSorter(second, first));
-  BOOST_CHECK(!PatternTopology::sameLayer(first, second));
-  BOOST_CHECK(PatternTopology::sameLayer(second, sameLayerAsSecond));
-  // Two hits on the same layer are ordered by their position along the layer
-  BOOST_CHECK(PatternTopology::layerSorter(second, sameLayerAsSecond));
+  BOOST_CHECK(PatternTopology::compareLayers(first, second) ==
+              std::weak_ordering::less);
+  BOOST_CHECK(PatternTopology::compareLayers(second, first) ==
+              std::weak_ordering::greater);
+  // Two hits on the same layer are equivalent
+  BOOST_CHECK(PatternTopology::compareLayers(second, sameLayerAsSecond) ==
+              std::weak_ordering::equivalent);
 }
 
 BOOST_AUTO_TEST_CASE(seed_selector) {

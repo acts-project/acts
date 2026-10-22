@@ -452,7 +452,7 @@ SeedSelector::SeedSelector(const Config& config)
 bool SeedSelector::goodForSeeding(const HitPayload& hit) const {
   const LayerIndex hitLayer{toLayerIndex(hit.station)};
   if (std::ranges::find(m_seedingLayers, hitLayer) == m_seedingLayers.end() ||
-      (hit.spacePoint()->isStraw() && !m_cfg.seedFromMdt)) {
+      (hit.spacePoint().isStraw() && !m_cfg.seedFromMdt)) {
     return false;
   }
   return true;
@@ -519,7 +519,7 @@ Acts::Vector3 HitPayload::globalSensorDirection(
     const Acts::GeometryContext& gctx) const {
   const auto& surfLinearTrf = surface->localToGlobalTransform(gctx).linear();
 
-  if (spacePoint()->isStraw()) {
+  if (spacePoint().isStraw()) {
     return surfLinearTrf.col(Acts::eZ);
   } else {
     if (nonOrthogonalStrips) {
@@ -532,7 +532,7 @@ Acts::Vector3 HitPayload::globalSensorDirection(
 Acts::Experimental::detail::StripMeasurementDirections
 HitPayload::stripMeasurementDirections(
     const Acts::GeometryContext& gctx) const {
-  assert(!spacePoint()->isStraw());
+  assert(!spacePoint().isStraw());
   const auto& surfLinearTrf = surface->localToGlobalTransform(gctx).linear();
   if (!nonOrthogonalStrips) {
     return {surfLinearTrf.col(Acts::eX), std::nullopt};
@@ -542,43 +542,45 @@ HitPayload::stripMeasurementDirections(
   return {etaMeasDir, Acts::Vector3{surfLinearTrf.col(Acts::eY)}};
 }
 bool HitPayload::operator==(const HitPayload& other) const {
-  return spacePoint() == other.spacePoint();
+  return &spacePoint() == &other.spacePoint();
 }
 bool HitPayload::overlaps(const HitPayload& other) const {
   // A measurement enters a space point for every non-precision hit it was
   // combined with and for every bucket it was sorted into. Those space points
   // share the surface and the precision coordinate and differ only along the
   // sensor, where the non-precision hit placed them
-  return spacePoint()->geometryId() == other.spacePoint()->geometryId() &&
-         std::abs(spacePoint()->localPosition().y() -
-                  other.spacePoint()->localPosition().y()) < Acts::s_epsilon;
+  return spacePoint().geometryId() == other.spacePoint().geometryId() &&
+         std::abs(spacePoint().localPosition().y() -
+                  other.spacePoint().localPosition().y()) < Acts::s_epsilon;
 }
 
-bool PatternTopology::layerSorter(const HitPayload& hit1,
-                                  const HitPayload& hit2) {
-  StIndex st1{hit1.station};
-  StIndex st2{hit2.station};
+std::weak_ordering PatternTopology::compareLayers(const HitPayload& hit1,
+                                                  const HitPayload& hit2) {
+  // Order of two hits that are not on the same layer
+  auto order = [](const bool firstIsInner) {
+    return firstIsInner ? std::weak_ordering::less
+                        : std::weak_ordering::greater;
+  };
+  const StIndex st1{hit1.station};
+  const StIndex st2{hit2.station};
   if (st1 == st2) {
-    // Hits in the same spectrometer sector
-    if (hit1.spacePoint()->id().sameStation(hit2.spacePoint()->id())) {
-      if (hit1.locLayer == hit2.locLayer) {
-        return hit1.spacePoint()->localPosition().y() <
-               hit2.spacePoint()->localPosition().y();
-      }
-      return hit1.locLayer < hit2.locLayer;
-    }
-    // Hits in the same station and different sectors. We can have this case
-    // for hits in the overlap region of two adjacent sectors.
+    const bool sameChamber{
+        hit1.spacePoint().id().sameStation(hit2.spacePoint().id())};
+    // Distance between the two hits along the stacking direction of the
+    // layers: the radius in the barrel and |z| in the endcap
     const double delta{isBarrel(st1)
                            ? Acts::VectorHelpers::perp(hit1.position) -
                                  Acts::VectorHelpers::perp(hit2.position)
                            : std::abs(hit1.position.z()) -
                                  std::abs(hit2.position.z())};
-    if (std::abs(delta) <= Acts::s_epsilon) {
-      return hit1.spacePoint()->localPosition().y() <
-             hit2.spacePoint()->localPosition().y();
+    if ((sameChamber && hit1.locLayer == hit2.locLayer) ||
+        std::abs(delta) <= Acts::s_epsilon) {
+      return std::weak_ordering::equivalent;
     }
-    return delta < 0.;
+    // Hits in one chamber are ordered by their layer number, hits of two
+    // adjacent sectors in the same station by their position
+    return sameChamber ? order(hit1.locLayer < hit2.locLayer)
+                       : order(delta < 0.);
   }
   LayerIndex layer1{toLayerIndex(st1)};
   LayerIndex layer2{toLayerIndex(st2)};
@@ -589,13 +591,13 @@ bool PatternTopology::layerSorter(const HitPayload& hit1,
     if (layer1 == Middle) {
       // If both hits are in the middle layer, the one in the barrel comes
       // first
-      return st1 == StIndex::BM;
+      return order(st1 == StIndex::BM);
     }
     if (layer1 == Inner) {
       // If both hits are in the inner layer, we use the global R, since in
       // large sector BI comes first, while in small sector EI comes first.
-      return Acts::VectorHelpers::perp(hit1.position) <
-             Acts::VectorHelpers::perp(hit2.position);
+      return order(Acts::VectorHelpers::perp(hit1.position) <
+                   Acts::VectorHelpers::perp(hit2.position));
     }
     throw std::runtime_error(
         "Unexpected to have two pattern-compatible hits one in BO and the "
@@ -603,41 +605,25 @@ bool PatternTopology::layerSorter(const HitPayload& hit1,
   }
   if (layer1 == Inner || layer2 == Inner) {
     // If we have one hit in Inner layer for sure it comes first
-    return layer1 == Inner;
+    return order(layer1 == Inner);
   }
   if (layer1 == Outer || layer2 == Outer) {
     // If we have one hit in Outer layer for sure it comes last
-    return layer2 == Outer;
+    return order(layer2 == Outer);
   }
   if (layer1 == BarrelExtended || layer2 == BarrelExtended) {
     // If we have one hit in BarrelExtended and the other in the Middle layer,
     // the former comes first
-    return layer1 == BarrelExtended;
+    return order(layer1 == BarrelExtended);
   }
   // If we have one hit in Extended (EE) layer and the other in the Middle
   // layer, it depends if the latter is endcap or barrel
   if (layer1 == Extended) {
-    return st2 == StIndex::EM;
+    return order(st2 == StIndex::EM);
   }
-  return st1 == StIndex::BM;
+  return order(st1 == StIndex::BM);
 }
 
-bool PatternTopology::sameLayer(const HitPayload& hit1,
-                                const HitPayload& hit2) {
-  if (hit1.station != hit2.station) {
-    return false;
-  }
-  if (hit1.locLayer == hit2.locLayer &&
-      hit1.spacePoint()->id().sameStation(hit2.spacePoint()->id())) {
-    return true;
-  }
-  const double delta{isBarrel(hit1.station)
-                         ? Acts::VectorHelpers::perp(hit1.position) -
-                               Acts::VectorHelpers::perp(hit2.position)
-                         : std::abs(hit1.position.z()) -
-                               std::abs(hit2.position.z())};
-  return std::abs(delta) <= Acts::s_epsilon;
-}
 PatternTopology::GroupIdx PatternTopology::groupIndex(const HitPayload& hit) {
   return static_cast<GroupIdx>(Acts::toUnderlying(hit.station));
 }
@@ -817,7 +803,7 @@ SearchTreeData GlobalPatternFinderAlgorithm::constructTree(
         oss << __func__ << "() Building hit from " << hit << "\n"
             << "Pos: " << Acts::toString(newHit.position) << ", SensorDir: "
             << Acts::toString(newHit.globalSensorDirection(gctx));
-        if (!newHit.spacePoint()->isStraw()) {
+        if (!newHit.spacePoint().isStraw()) {
           oss << ", orthogonalStrips: " << !newHit.nonOrthogonalStrips;
         }
         ACTS_VERBOSE(oss.str());
@@ -846,11 +832,11 @@ SearchTreeData GlobalPatternFinderAlgorithm::constructTree(
     treeData.emplace_back(coords, &hit);
   };
   for (const HitPayload& hit : hitPayloads) {
-    ACTS_VERBOSE(__func__ << "() Spacepoint: " << *hit.spacePoint());
+    ACTS_VERBOSE(__func__ << "() Spacepoint: " << hit.spacePoint());
     const Acts::Vector3& pos{hit.position};
     // The sector of the bucket, from its first hit
     const unsigned msSector{hit.bucket->front().id().sector()};
-    if (hit.spacePoint()->id().measuresPhi()) {
+    if (hit.spacePoint().id().measuresPhi()) {
       // No projection: theta is the same for all sectors
       const double phi{Acts::VectorHelpers::phi(pos)};
       const double theta{Acts::VectorHelpers::theta(pos)};
@@ -895,14 +881,14 @@ MuonGlobalPattern GlobalPatternFinderAlgorithm::convertToPattern(
     outHits.reserve(hits.size());
 
     std::ranges::for_each(hits, [&outHits](const HitPayload* h) {
-      outHits.push_back(h->spacePoint());
+      outHits.push_back(&h->spacePoint());
     });
   }
 
   // Add phi-only hits
   for (const HitPayload& hit : candidate.phiOnlyHits) {
     pattern.hitsPerStation[Acts::toUnderlying(hit.station)].push_back(
-        hit.spacePoint());
+        &hit.spacePoint());
   }
   pattern.theta = candidate.patTheta;
   pattern.phi = candidate.patPhi;

@@ -23,6 +23,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <array>
+#include <compare>
 #include <cstdint>
 #include <memory>
 #include <ostream>
@@ -185,7 +186,7 @@ struct HitPayload {
                       const Acts::Transform3& localToGlobal,
                       const Acts::Surface* measSurface);
   /// @brief Retrieve the space point
-  const MuonSpacePoint* spacePoint() const { return underlyingSp; }
+  const MuonSpacePoint& spacePoint() const { return *underlyingSp; }
   /// @brief Retrieve the global position
   const Acts::Vector3& globalPosition(const Acts::GeometryContext& gctx) const;
   /// @brief Retrieve the sensor direction
@@ -211,12 +212,12 @@ struct HitPayload {
   /// @brief Strip angle when the strips are non-orthogonal
   double stripAngle{0.};
   /// @brief Station index
-  StIndex station{toStationIndex(spacePoint()->id().msStation())};
+  StIndex station{toStationIndex(spacePoint().id().msStation())};
   /// @brief Layer number in the sector frame
   std::uint8_t locLayer{
-      static_cast<std::uint8_t>(spacePoint()->id().detLayer())};
+      static_cast<std::uint8_t>(spacePoint().id().detLayer())};
   /// @brief Is precision hit
-  bool isPrecisionFlag{isPrecisionHit(*spacePoint())};
+  bool isPrecisionFlag{isPrecisionHit(spacePoint())};
   /// @brief Are the strips non-orthogonal
   bool nonOrthogonalStrips{false};
   /// @brief Equal operator: it compares the underlying hit
@@ -240,27 +241,24 @@ class PatternTopology {
   /// @brief Number of groups in a pattern
   static constexpr GroupIdx nGroups{
       static_cast<GroupIdx>(Acts::toUnderlying(StIndex::StIndexMax))};
-  /// @brief Whether the first hit comes before the second one, going from the
-  ///        inside of the spectrometer outwards. Hits of one station are
-  ///        ordered by their layer, hits of different stations by their
-  ///        station layer (inner, extended, middle, outer)
+  /// @brief Order of the layers of two hits, going from the inside of the
+  ///        spectrometer outwards. Hits of one station are ordered by their
+  ///        layer, hits of different stations by their station layer (inner,
+  ///        extended, middle, outer). Two hits are on the same layer if they
+  ///        are on the same layer of one chamber, or at the same radius
+  ///        (barrel) or |z| (endcap) in the same station index
   /// @param hit1 First hit
   /// @param hit2 Second hit
-  /// @return True if hit1 is ordered before hit2
+  /// @return less if hit1 is on an inner layer, greater if on an outer layer,
+  ///         equivalent if both hits are on the same layer
   /// @throws std::runtime_error for one hit in BO and the other in EO, which a
   ///         pattern cannot hold
-  static bool layerSorter(const HitPayload& hit1, const HitPayload& hit2);
+  static std::weak_ordering compareLayers(const HitPayload& hit1,
+                                          const HitPayload& hit2);
   /// @brief Group of a hit, its station index
   /// @param hit Hit of interest
   /// @return The group index of the hit
   static GroupIdx groupIndex(const HitPayload& hit);
-  /// @brief Whether two hits are on the same detector layer: the same layer of
-  ///        the same station, or the same radius (barrel) or |z| (endcap) in
-  ///        the same station index
-  /// @param hit1 First hit
-  /// @param hit2 Second hit
-  /// @return True if both hits are on one layer
-  static bool sameLayer(const HitPayload& hit1, const HitPayload& hit2);
 };
 static_assert(
     Acts::Experimental::detail::PatternTopology<PatternTopology, HitPayload>);
