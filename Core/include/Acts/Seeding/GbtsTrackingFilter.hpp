@@ -57,9 +57,6 @@ class GbtsTrackingFilter final {
 
     /// Maximum track curvature.
     float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
-    /// Maximum longitudinal impact parameter.
-    float maxZ0 = 170.0 * Acts::UnitConstants::mm;
-
     /// Initial variance of the transverse state (y, dy/dx, d2y/dx2).
     std::array<float, 3> initialVarianceX = {0.25f, 0.001f, 0.001f};
     /// Initial variance of the longitudinal state (z, dz/dr).

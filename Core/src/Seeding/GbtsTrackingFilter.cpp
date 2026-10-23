@@ -223,7 +223,8 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
 
   const float z0 = ts.y[0] - refY * ts.y[1];
 
-  if (std::abs(z0) > m_cfg.maxZ0) {
+  const GbtsZ0Range& z0Range = m_geometry->z0Range();
+  if (z0 < z0Range.min || z0 > z0Range.max) {
     return false;
   }
 

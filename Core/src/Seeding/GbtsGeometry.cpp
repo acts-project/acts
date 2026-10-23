@@ -103,8 +103,7 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
 bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
                                    const std::uint32_t b1,
                                    const std::uint32_t b2, const float minZ0,
-                                   const float maxZ0,
-                                   const float z0Tolerance) const {
+                                   const float maxZ0) const {
   const std::array<LayerPoint, 2> ends1 = {pointAt(m_minBinCoord.at(b1)),
                                            pointAt(m_maxBinCoord.at(b1))};
   std::array<LayerPoint, 2> ends2 = {
@@ -152,7 +151,7 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
     return false;
   }
 
-  return !(z0Max < minZ0 - z0Tolerance || z0Min > maxZ0 + z0Tolerance);
+  return !(z0Max < minZ0 || z0Min > maxZ0);
 }
 
 std::uint32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
@@ -188,7 +187,7 @@ GbtsGeometry::GbtsGeometry(
     std::span<const GbtsLayerDescription> layerDescriptions,
     std::span<const GbtsLayerConnection> layerConnections,
     const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
-    : m_etaBinWidth(etaBinWidth) {
+    : m_etaBinWidth(etaBinWidth), m_z0Range(z0Range) {
   const float minZ0 = z0Range.min;
   const float maxZ0 = z0Range.max;
 
@@ -253,8 +252,7 @@ GbtsGeometry::GbtsGeometry(
     for (std::uint32_t b1 = 0; b1 < nDstBins; ++b1) {
       // loop over bins in Layer 2
       for (std::uint32_t b2 = 0; b2 < nSrcBins; ++b2) {
-        if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0,
-                                     z0Range.z0Tolerance)) {
+        if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0)) {
           continue;
         }
 

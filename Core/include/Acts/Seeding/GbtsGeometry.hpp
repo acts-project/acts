@@ -27,15 +27,13 @@ class GbtsNodeStorage;
 class GbtsTrackingFilter;
 class GraphBasedTrackSeeder;
 
-/// z0 range two eta bins must share a trajectory within, which fixes the bin
-/// table. A separate cut from `GraphBasedTrackSeeder::Config::minZ0`.
+/// The z0 window of the seeding: it fixes the bin table, the doublet cut and
+/// the tracking filter cut. Held by the geometry, so there is one.
 struct GbtsZ0Range final {
   /// Minimum z0.
-  float min = -168.0f * UnitConstants::mm;
+  float min = -200.0f * UnitConstants::mm;
   /// Maximum z0.
-  float max = 168.0f * UnitConstants::mm;
-  /// Margin added to both ends of the range, for hits off the layer line.
-  float z0Tolerance = 5.0f * UnitConstants::mm;
+  float max = 200.0f * UnitConstants::mm;
 };
 
 /// Geometry helper built from layers and connectors.
@@ -59,6 +57,10 @@ class GbtsGeometry final {
   /// Get the number of eta bins across all layers
   /// @return The bin count
   std::uint32_t numBins() const { return m_nEtaBins; }
+
+  /// The z0 window of the seeding
+  /// @return The window
+  const GbtsZ0Range& z0Range() const { return m_z0Range; }
 
   /// Resolve a layer id into the index GbtsNodeStorage::insert takes.
   /// @param id Layer id, as the layer descriptions carry it
@@ -107,6 +109,8 @@ class GbtsGeometry final {
 
   /// Eta bin width
   float m_etaBinWidth{};
+  /// The z0 window
+  GbtsZ0Range m_z0Range;
 
   /// Layer array
   std::vector<detail::GbtsLayer> m_layers;

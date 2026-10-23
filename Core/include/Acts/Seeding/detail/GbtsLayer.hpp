@@ -47,11 +47,9 @@ class GbtsLayer final {
   /// @param b2 Second bin index
   /// @param minZ0 Minimum z0 coordinate
   /// @param maxZ0 Maximum z0 coordinate
-  /// @param z0Tolerance Margin added to the z0 range
   /// @return True if bins are compatible
   bool checkCompatibility(const GbtsLayer& otherLayer, std::uint32_t b1,
-                          std::uint32_t b2, float minZ0, float maxZ0,
-                          float z0Tolerance) const;
+                          std::uint32_t b2, float minZ0, float maxZ0) const;
 
  private:
   struct LayerPoint final {
