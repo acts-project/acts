@@ -9,6 +9,7 @@
             },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "ACTS_FORCE_ASSERTIONS": "ON",
                 "TRACCC_BUILD_TESTING": "TRUE",
                 "TRACCC_BUILD_EXAMPLES": "TRUE",
                 "TRACCC_FAIL_ON_WARNINGS": "TRUE",
@@ -25,6 +26,7 @@
             },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "ACTS_FORCE_ASSERTIONS": "ON",
                 "TRACCC_BUILD_TESTING": "TRUE",
                 "TRACCC_BUILD_EXAMPLES": "TRUE",
                 "TRACCC_FAIL_ON_WARNINGS": "TRUE",

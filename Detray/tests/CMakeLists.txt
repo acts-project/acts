@@ -147,6 +147,9 @@ endif()
 
 # Build test executables
 if(DETRAY_BUILD_TESTING)
+    # Check that ACTS_FORCE_ASSERTIONS works
+    acts_add_assertion_tests()
+
     # Build host and device specific test code
     add_subdirectory(include/detray/test/cpu)
 
