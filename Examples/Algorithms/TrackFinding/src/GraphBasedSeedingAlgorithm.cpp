@@ -420,7 +420,6 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("maxOuterRadius: " << cfg2.maxOuterRadius);
   ACTS_DEBUG("===== GbtsTrackFilter =====");
   const auto &cfg3 = m_cfg.trackingFilterConfig;
-  ACTS_DEBUG("sigmaMS: " << cfg3.sigmaMS);
   ACTS_DEBUG("radLen: " << cfg3.radLen);
   ACTS_DEBUG("sigmaX: " << cfg3.sigmaX);
   ACTS_DEBUG("sigmaY: " << cfg3.sigmaY);

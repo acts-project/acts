@@ -212,21 +212,23 @@ class GraphBasedTrackSeeder {
   /// @param graph The graph
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
+  /// @param bFieldInZ Magnetic field along z
   /// @param withFits Whether the fit of the filter to each seed is kept
   void extractSeedsFromTheGraph(const GbtsNodeStorage& nodeStorage,
                                 const GbtsGraph& graph,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
                                 const GbtsTrackingFilter& filter,
-                                bool withFits) const;
+                                float bFieldInZ, bool withFits) const;
 
   /// Extract the best fitted path from every edge inwards to a root edge.
   /// @param nodeView View of the node positions and layers
   /// @param graph The graph
   /// @param filter Tracking filter fitting the paths
+  /// @param bFieldInZ Magnetic field along z
   /// @return The fitted paths, each with its head edge first
   std::vector<detail::GbtsEdgeState> extractBestPathPerEdge(
       const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
-      const GbtsTrackingFilter& filter) const;
+      const GbtsTrackingFilter& filter, float bFieldInZ) const;
 
   /// Estimate the inverse radius of the circle through three nodes.
   /// @param nodeView View of the node positions and layers

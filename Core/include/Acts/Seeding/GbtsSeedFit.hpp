@@ -21,7 +21,7 @@ struct GbtsSeedFit final {
   Vector3 position{Vector3::Zero()};
   /// Azimuthal angle of the direction.
   double phi{0};
-  /// dz/dr of the direction.
+  /// dz/ds of the direction, cot(theta).
   double cotTheta{0};
   /// Signed curvature in the transverse plane.
   double curvature{0};

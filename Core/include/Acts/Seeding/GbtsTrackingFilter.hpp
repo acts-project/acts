@@ -28,9 +28,8 @@ class GbtsTrackingFilter final {
  public:
   /// Configuration for the tracking filter.
   struct Config {
-    /// Multiple scattering sigma (for 900 MeV track at eta=0).
-    float sigmaMS = 0.016;
-    /// Radiation length fraction per layer (2.5% per layer).
+    /// Material of a layer at normal incidence, in radiation lengths. The
+    /// scattering angle follows from it and the momentum of the state.
     float radLen = 0.025;
 
     /// Measurement uncertainty in x direction.
@@ -55,14 +54,15 @@ class GbtsTrackingFilter final {
     /// Chi2 penalty for adding a hit.
     float addHit = 14.0;
 
-    /// Maximum track curvature.
+    /// Maximum track curvature. While the curvature of a state is uncertain
+    /// beyond it, the state scatters at this curvature.
     float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
     /// Maximum longitudinal impact parameter.
     float maxZ0 = 170.0 * Acts::UnitConstants::mm;
 
-    /// Initial variance of the transverse state (y, dy/dx, d2y/dx2).
+    /// Initial variance of the transverse state (y, dy/dx, curvature).
     std::array<float, 3> initialVarianceX = {0.25f, 0.001f, 0.001f};
-    /// Initial variance of the longitudinal state (z, dz/dr).
+    /// Initial variance of the longitudinal state (z, dz/ds).
     std::array<float, 2> initialVarianceY = {1.5f, 0.001f};
   };
 
@@ -81,6 +81,12 @@ class GbtsTrackingFilter final {
   /// Configuration for the tracking filter.
   Config m_cfg{};
 
+  /// Squared Highland angle of a layer at normal incidence, times momentum
+  /// squared: (13.6 MeV)^2 radLen (1 + 0.038 ln radLen)^2.
+  float m_scattering{};
+  /// `maxCurvature` squared.
+  float m_maxCurvature2{};
+
   /// GBTS geometry for layer information
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
@@ -95,9 +101,10 @@ class GbtsTrackingFilter final {
   /// @param nodeView View of the node positions and layers
   /// @param pS Edge to update with
   /// @param ts Edge state to update
+  /// @param bFieldInZ Magnetic field along z, turning curvature into momentum
   /// @return Success flag
   bool update(const detail::GbtsNodeView& nodeView, const detail::GbtsEdge& pS,
-              detail::GbtsEdgeState& ts) const;
+              detail::GbtsEdgeState& ts, float bFieldInZ) const;
 
   /// Get layer type from layer index
   /// @param layerIndex Layer index
