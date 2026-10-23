@@ -28,8 +28,6 @@
 #include <map>
 #include <vector>
 
-#include <Eigen/Dense>
-
 namespace {
 
 using namespace Acts;
@@ -78,8 +76,8 @@ const BoundMatrix kPriorCov = [] {
   return BoundMatrix(d.asDiagonal());
 }();
 
-Eigen::Matrix<double, 2, kDim> projector() {
-  Eigen::Matrix<double, 2, kDim> h = Eigen::Matrix<double, 2, kDim>::Zero();
+Matrix<2, kDim> projector() {
+  Matrix<2, kDim> h = Matrix<2, kDim>::Zero();
   h(0, eBoundLoc0) = 1;
   h(1, eBoundLoc1) = 1;
   return h;
@@ -132,14 +130,14 @@ std::vector<Node> makeModel(Variant variant) {
 }
 
 /// Dense joint posterior of all nodes given all measurements and the prior.
-std::pair<Eigen::VectorXd, Eigen::MatrixXd> densePosterior(
+std::pair<DynamicVector, DynamicMatrix> densePosterior(
     const std::vector<Node>& nodes) {
   const std::size_t n = nodes.size();
   const std::size_t dim = n * kDim;
 
-  Eigen::MatrixXd a = Eigen::MatrixXd::Zero(dim, dim);
-  Eigen::MatrixXd w = Eigen::MatrixXd::Zero(dim, dim);
-  Eigen::VectorXd c = Eigen::VectorXd::Zero(dim);
+  DynamicMatrix a = DynamicMatrix::Zero(dim, dim);
+  DynamicMatrix w = DynamicMatrix::Zero(dim, dim);
+  DynamicVector c = DynamicVector::Zero(dim);
   for (std::size_t i = 0; i < n; ++i) {
     const Node& node = nodes[i];
     if (node.parent < 0) {
@@ -151,13 +149,13 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> densePosterior(
     }
   }
 
-  const Eigen::MatrixXd g = (Eigen::MatrixXd::Identity(dim, dim) - a).inverse();
-  const Eigen::VectorXd priorMean = g * c;
-  const Eigen::MatrixXd priorCov = g * w * g.transpose();
+  const DynamicMatrix g = (DynamicMatrix::Identity(dim, dim) - a).inverse();
+  const DynamicVector priorMean = g * c;
+  const DynamicMatrix priorCov = g * w * g.transpose();
 
-  Eigen::MatrixXd information = priorCov.inverse();
-  Eigen::VectorXd informationVector = information * priorMean;
-  const Eigen::Matrix<double, 2, kDim> h = projector();
+  DynamicMatrix information = priorCov.inverse();
+  DynamicVector informationVector = information * priorMean;
+  const Matrix<2, kDim> h = projector();
   for (std::size_t i = 0; i < n; ++i) {
     const Node& node = nodes[i];
     if (!node.hasMeasurement) {
@@ -169,8 +167,8 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> densePosterior(
     informationVector.segment<kDim>(i * kDim) += h.transpose() * vInv * node.y;
   }
 
-  const Eigen::MatrixXd cov = information.inverse();
-  const Eigen::VectorXd mean = cov * informationVector;
+  const DynamicMatrix cov = information.inverse();
+  const DynamicVector mean = cov * informationVector;
   return {mean, cov};
 }
 
@@ -198,10 +196,9 @@ std::size_t appendState(Container::TrackProxy& track, const Node& node,
     ts.calibratedCovariance<2>() = node.V;
     ts.setProjectorSubspaceIndices(kProjector);
 
-    const Eigen::Matrix<double, 2, kDim> h = projector();
+    const Matrix<2, kDim> h = projector();
     const SquareMatrix2 s = h * predictedCov * h.transpose() + node.V;
-    const Eigen::Matrix<double, kDim, 2> k =
-        predictedCov * h.transpose() * s.inverse();
+    const Matrix<kDim, 2> k = predictedCov * h.transpose() * s.inverse();
     ts.filtered() = predicted + k * (node.y - h * predicted);
     ts.filteredCovariance() = (BoundMatrix::Identity() - k * h) * predictedCov;
   } else {
@@ -290,8 +287,8 @@ Tracklets buildTracklets(Container& tc, const std::vector<Node>& nodes,
 /// posterior. States listed as unsmoothed must have no smoothed component.
 template <typename track_state_proxy_t>
 void checkStateAgainstDense(const track_state_proxy_t& ts, std::size_t node,
-                            const Eigen::VectorXd& mean,
-                            const Eigen::MatrixXd& cov, double tol) {
+                            const DynamicVector& mean, const DynamicMatrix& cov,
+                            double tol) {
   BOOST_REQUIRE(ts.hasSmoothed());
   const BoundVector expMean = mean.segment<kDim>(node * kDim);
   const BoundMatrix expCov = cov.block<kDim, kDim>(node * kDim, node * kDim);

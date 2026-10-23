@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TrackProxyCommon.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
@@ -31,6 +29,50 @@
 
 namespace Acts::detail {
 
+/// Per-track terms of the conditioning on a shared state: the change of the
+/// shared state mapped by `Z = Pp_s Ps_s^-1`
+struct SharedStateCondition {
+  /// `Z (x_s' - x_s)`
+  BoundVector u = BoundVector::Zero();
+  /// `Z (P_s' - P_s) Z^T`
+  BoundMatrix w = BoundMatrix::Zero();
+};
+
+/// Build the conditioning terms from the shared state and its new estimate
+/// @param shared The shared state, smoothed
+/// @param newMean The new estimate of the shared state
+/// @param newCov Its covariance
+/// @param logger The logger
+/// @return The terms, or @ref KalmanFitterError::SmoothFailed if the shared
+///         covariance is not positive definite
+Result<SharedStateCondition> makeSharedStateCondition(
+    const AnyConstTrackStateProxy& shared, const BoundVector& newMean,
+    const BoundMatrix& newCov, const Logger& logger);
+
+/// Sensitivity of the filtered state to the prior mean, `Df = (I - K H) Dp`
+/// @param ts The state
+/// @param dp The sensitivity of its predicted state
+/// @return The sensitivity of its filtered state
+BoundMatrix filteredSensitivity(const AnyConstTrackStateProxy& ts,
+                                const BoundMatrix& dp);
+
+/// Condition one smoothed state and transport the adjoint sensitivity to the
+/// previous state: `T = Df - Pf Psi^`, `x += T u`, `P += T w T^T`,
+/// `Psi^ <- F^T (H^T S^-1 H Dp + (I - K H)^T Psi^)`
+/// @param ts The state
+/// @param dp The sensitivity of its predicted state
+/// @param df The sensitivity of its filtered state
+/// @param psiHat The adjoint sensitivity, in and out
+/// @param condition The per-track terms
+/// @param logger The logger
+/// @return Success, or @ref KalmanFitterError::SmoothFailed if the result is
+///         not finite
+Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
+                                 const BoundMatrix& dp, const BoundMatrix& df,
+                                 BoundMatrix& psiHat,
+                                 const SharedStateCondition& condition,
+                                 const Logger& logger);
+
 /// @brief Condition the smoothed states of a segment on a new estimate of
 /// one of its states
 ///
@@ -40,10 +82,8 @@ namespace Acts::detail {
 /// exact linear-Gaussian update for information that enters through the
 /// shared state. `L_k` is the sensitivity of the smoothed state to the prior
 /// mean of the segment, computed in the modified Bryson-Frazier form with a
-/// forward sweep `Dp_k = F_k Df_(k-1)`, `Df_k = (I - K_k H_k) Dp_k` and a
-/// backward sweep `Psi~_k = H_k^T S_k^-1 H_k Dp_k + (I - K_k H_k)^T Psi^_k`,
-/// `Psi^_(k-1) = F_k^T Psi~_k`, `T_k = Df_k - Pf_k Psi^_k`, and
-/// `L_k = T_k Pp_s Ps_s^-1`.
+/// forward sweep over @ref filteredSensitivity and a backward sweep over
+/// @ref conditionTrackState.
 ///
 /// States before the shared state get a plain smoothing step from the new
 /// estimate. States after the last smoothed state stay as they are.
@@ -60,9 +100,9 @@ namespace Acts::detail {
 ///         is not finite
 template <typename traj_t>
 Result<void> conditionSmoothedStatesOnSharedState(
-    traj_t &trajectory, std::size_t sharedIndex, std::size_t tipIndex,
-    const BoundVector &newMean, const BoundMatrix &newCov,
-    const Logger &logger = getDummyLogger()) {
+    traj_t& trajectory, std::size_t sharedIndex, std::size_t tipIndex,
+    const BoundVector& newMean, const BoundMatrix& newCov,
+    const Logger& logger = getDummyLogger()) {
   using TrackStateProxy = typename traj_t::TrackStateProxy;
 
   // collect the segment from the tip down to the shared state
@@ -93,70 +133,16 @@ Result<void> conditionSmoothedStatesOnSharedState(
     ACTS_DEBUG("Shared state " << sharedIndex << " has no smoothed parameters");
     return KalmanFitterError::SmoothFailed;
   }
-
-  const BoundVector sharedMean = shared.smoothed();
-  const BoundMatrix sharedCov = shared.smoothedCovariance();
-  const BoundVector deltaMean = subtractBoundParameters(newMean, sharedMean);
-  const BoundMatrix deltaCov = newCov - sharedCov;
-  const Eigen::LDLT<BoundMatrix> sharedLdlt(sharedCov);
-  if (sharedLdlt.info() != Eigen::Success || !sharedLdlt.isPositive()) {
-    ACTS_DEBUG("Shared state covariance is not positive definite");
-    return KalmanFitterError::SmoothFailed;
+  auto condition = makeSharedStateCondition(AnyConstTrackStateProxy{shared},
+                                            newMean, newCov, logger);
+  if (!condition.ok()) {
+    return condition.error();
   }
-  // Z = Pp_s Ps_s^-1, applied to the change of the shared state
-  const BoundMatrix sharedPredictedCov = shared.predictedCovariance();
-  const BoundMatrix z = sharedLdlt.solve(sharedPredictedCov).transpose();
-  const BoundVector u = z * deltaMean;
-  const BoundMatrix w = z * deltaCov * z.transpose();
-
-  // Df = (I - K H) Dp
-  auto filteredSensitivity = [](const AnyConstTrackStateProxy &ts,
-                                const BoundMatrix &dp) -> BoundMatrix {
-    if (!ts.typeFlags().isMeasurement()) {
-      return dp;
-    }
-    BoundMatrix df = dp;
-    visit_measurement(
-        ts.calibratedSize(),
-        [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
-          const auto H = ts.projectorSubspaceHelper<N>().projector();
-          const BoundMatrix pp = ts.predictedCovariance();
-          const Eigen::Matrix<double, N, N> s =
-              H * pp * H.transpose() + ts.calibratedCovariance<N>();
-          const Eigen::Matrix<double, eBoundSize, N> k =
-              pp * H.transpose() * s.inverse();
-          df = dp - k * (H * dp);
-        });
-    return df;
-  };
-  // Psi~ = H^T S^-1 H Dp + (I - K H)^T Psi^
-  auto adjointSensitivity = [](const AnyConstTrackStateProxy &ts,
-                               const BoundMatrix &dp,
-                               const BoundMatrix &psiHat) -> BoundMatrix {
-    if (!ts.typeFlags().isMeasurement()) {
-      return psiHat;
-    }
-    BoundMatrix psiTilde = psiHat;
-    visit_measurement(
-        ts.calibratedSize(),
-        [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
-          const auto H = ts.projectorSubspaceHelper<N>().projector();
-          const BoundMatrix pp = ts.predictedCovariance();
-          const Eigen::Matrix<double, N, N> s =
-              H * pp * H.transpose() + ts.calibratedCovariance<N>();
-          const Eigen::Matrix<double, N, N> sInv = s.inverse();
-          const Eigen::Matrix<double, eBoundSize, N> k =
-              pp * H.transpose() * sInv;
-          psiTilde = H.transpose() * (sInv * (H * dp)) + psiHat -
-                     H.transpose() * (k.transpose() * psiHat);
-        });
-    return psiTilde;
-  };
 
   // forward sweep: sensitivities (Dp, Df) of the predicted and filtered
   // states to the prior mean of the segment
-  std::vector<std::pair<BoundMatrix, BoundMatrix>> sensitivities;
-  sensitivities.resize(indices.size());
+  std::vector<std::pair<BoundMatrix, BoundMatrix>> sensitivities(
+      indices.size());
   BoundMatrix df = BoundMatrix::Identity();
   for (std::size_t k = indices.size(); k-- > 0;) {
     auto ts = trajectory.getTrackState(indices[k]);
@@ -172,31 +158,15 @@ Result<void> conditionSmoothedStatesOnSharedState(
     sensitivities[k] = {dp, df};
   }
 
-  // backward sweep: sensitivity of the smoothed states and the update
+  // backward sweep: condition the states from the tip down to the shared one
   BoundMatrix psiHat = BoundMatrix::Zero();
-  for (std::size_t k = 0; k < indices.size(); ++k) {
+  for (std::size_t k = 0; k + 1 < indices.size(); ++k) {
     auto ts = trajectory.getTrackState(indices[k]);
-    const bool isShared = (k + 1 == indices.size());
-    const auto &[dp, dfk] = sensitivities[k];
-
-    if (!isShared) {
-      const BoundMatrix filteredCov =
-          ts.hasFiltered() ? BoundMatrix(ts.filteredCovariance())
-                           : BoundMatrix(ts.predictedCovariance());
-      const BoundMatrix t = dfk - filteredCov * psiHat;
-
-      const BoundVector mean = normalizeBoundParameters(ts.smoothed() + t * u);
-      const BoundMatrix cov = ts.smoothedCovariance() + t * w * t.transpose();
-      if (!mean.allFinite() || !cov.allFinite()) {
-        ACTS_DEBUG("Conditioned state " << ts.index() << " is not finite");
-        return KalmanFitterError::SmoothFailed;
-      }
-      ts.smoothed() = mean;
-      ts.smoothedCovariance() = 0.5 * (cov + cov.transpose());
-
-      const BoundMatrix psiTilde =
-          adjointSensitivity(AnyConstTrackStateProxy{ts}, dp, psiHat);
-      psiHat = ts.jacobian().transpose() * psiTilde;
+    const auto& [dp, dfk] = sensitivities[k];
+    auto res = conditionTrackState(AnyMutableTrackStateProxy{ts}, dp, dfk,
+                                   psiHat, *condition, logger);
+    if (!res.ok()) {
+      return res.error();
     }
   }
 
@@ -242,7 +212,7 @@ Result<void> conditionSmoothedStatesOnSharedState(
 template <TrackStateProxyConcept track_state_proxy_t,
           TrackProxyConcept track_proxy_t>
 std::optional<BoundMatrix> linkTrackletBehind(track_state_proxy_t sharedState,
-                                              track_proxy_t &second,
+                                              track_proxy_t& second,
                                               bool invertJacobians = true) {
   std::optional<BoundMatrix> stitch =
       second.reverseTrackStates(invertJacobians);
