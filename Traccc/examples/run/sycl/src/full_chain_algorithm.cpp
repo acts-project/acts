@@ -116,7 +116,7 @@ full_chain_algorithm::full_chain_algorithm(
                        m_await_function},
       m_measurement_sorting({m_cached_device_mr, &m_cached_pinned_host_mr},
                             m_copy, m_data->m_queue_wrapper,
-                            log->clone("MeasSortingAlg")),
+                            log->clone("MeasSortingAlg"), m_await_function),
       m_spacepoint_formation{{m_cached_device_mr, &m_cached_pinned_host_mr},
                              m_copy,
                              m_data->m_queue_wrapper,

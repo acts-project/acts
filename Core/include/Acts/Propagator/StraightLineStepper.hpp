@@ -146,6 +146,14 @@ class StraightLineStepper final {
     return Result<Vector3>::success({0., 0., 0.});
   }
 
+  /// Current global geometric curvature d(direction)/ds in inverse length.
+  /// Unchanged under propagation reversal; reflects current momentum and field.
+  /// @param state Stepping state; the field cache may be updated
+  /// @return Curvature vector, or a field lookup error
+  Result<Vector3> curvature([[maybe_unused]] State& state) const {
+    return Result<Vector3>::success(Vector3::Zero());
+  }
+
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)

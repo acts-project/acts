@@ -104,7 +104,7 @@ cmake_dependent_option(
 
 # Plugins / Algebra backends
 option(DETRAY_SVG_DISPLAY "Build ActSVG display module" OFF)
-option(DETRAY_ARRAY_PLUGIN "Build Eigen math plugin" ON)
+option(DETRAY_ARRAY_PLUGIN "Build std::array math plugin" ON)
 option(DETRAY_EIGEN_PLUGIN "Build Eigen math plugin" OFF)
 option(DETRAY_FASTOR_PLUGIN "Build Fastor math plugin" OFF)
 option(DETRAY_SMATRIX_PLUGIN "Build ROOT/SMatrix math plugin" OFF)

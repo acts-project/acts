@@ -668,6 +668,9 @@ struct MaterialFixture {
     auto res = bremCkf.findTracks(electronParameters, options, tc);
     BOOST_REQUIRE(res.ok());
     BOOST_REQUIRE_EQUAL(tc.size(), 1u);
+    // the found track must keep the (non-default) start hypothesis
+    BOOST_CHECK_EQUAL(tc.getTrack(0).particleHypothesis(),
+                      electronParameters.particleHypothesis());
     return tc;
   }
 };

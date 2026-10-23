@@ -51,6 +51,9 @@ def getOpenDataDetector(
     buildMuonSystem=False,
 ):
     """This function sets up the open data detector. Requires DD4hep.
+    The DD4hep magnetic field is available as ``detector.field``. Keep the
+    detector alive while using the field.
+
     Parameters
     ----------
     materialDecorator: Material Decorator, take RootMaterialDecorator if non is given
@@ -85,6 +88,8 @@ def getOpenDataDetector(
         xml_files.append(odd_xml_dir / "OpenDataDetectorCalorimeter.xml")
     if buildMuonSystem:
         xml_files.append(odd_xml_dir / "OpenDataDetectorMuonSystem.xml")
+
+    xml_files.append(odd_xml_dir / "OpenDataDetectorField.xml")
 
     for xml_file in xml_files:
         if not xml_file.exists():
@@ -182,4 +187,5 @@ def getOpenDataDetector(
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
+
         return detector
