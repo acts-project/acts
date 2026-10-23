@@ -128,10 +128,10 @@ class Impl final : public TripletSeedFinder {
       // correlation term add up to squares, and the outer space points' terms
       // are not negative. So each cut below can only fire once deltaCotTheta2
       // exceeds its scattering term alone, and the error is only computed then.
-      const auto error2 = [&, &top = topDoublet] {
-        return top.er() + erB +
+      const auto error2 = [&] {
+        return topDoublet.er() + erB +
                2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
-                   top.iDeltaR();
+                   topDoublet.iDeltaR();
       };
 
       const float deltaCotTheta = cotThetaB - cotThetaT;
