@@ -37,7 +37,7 @@ namespace Acts::detail {
 /// @param priorCov Its covariance
 /// @param logger The logger
 /// @return The estimate at the prior node with the segment included, or
-///         @ref KalmanFitterError::SmoothFailed if the predicted covariance
+///         `KalmanFitterError::SmoothFailed` if the predicted covariance
 ///         is not positive definite or the result is not finite
 Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
     const AnyConstTrackStateProxy& first, const BoundVector& priorMean,
@@ -57,7 +57,7 @@ struct SharedStateCondition {
 /// @param newMean The new estimate of the shared state
 /// @param newCov Its covariance
 /// @param logger The logger
-/// @return The terms, or @ref KalmanFitterError::SmoothFailed if the shared
+/// @return The terms, or `KalmanFitterError::SmoothFailed` if the shared
 ///         covariance is not positive definite
 Result<SharedStateCondition> makeSharedStateCondition(
     const AnyConstTrackStateProxy& shared, const BoundVector& newMean,
@@ -79,7 +79,7 @@ BoundMatrix filteredSensitivity(const AnyConstTrackStateProxy& ts,
 /// @param psiHat The adjoint sensitivity, in and out
 /// @param condition The per-track terms
 /// @param logger The logger
-/// @return Success, or @ref KalmanFitterError::SmoothFailed if the result is
+/// @return Success, or `KalmanFitterError::SmoothFailed` if the result is
 ///         not finite
 Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
                                  const BoundMatrix& dp, const BoundMatrix& df,
@@ -109,7 +109,7 @@ Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
 /// @param newMean The new estimate of the shared state
 /// @param newCov Its covariance
 /// @param logger The logger
-/// @return Success, or @ref KalmanFitterError::SmoothFailed if the shared
+/// @return Success, or `KalmanFitterError::SmoothFailed` if the shared
 ///         state is not on the chain, a state lacks components, or a result
 ///         is not finite
 template <typename traj_t>

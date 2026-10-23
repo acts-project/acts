@@ -37,8 +37,8 @@ namespace Acts {
 /// Instead the second tracklet is smoothed alone and one smoothing step
 /// carries its information onto the shared state; the change of the shared
 /// state is transported to the first tracklet by conditioning
-/// (@ref detail::conditionSmoothedStatesOnSharedState); then the chains are linked
-/// (@ref detail::linkTrackletBehind).
+/// (`detail::conditionSmoothedStatesOnSharedState`); then the chains are linked
+/// (`detail::linkTrackletBehind`).
 ///
 /// Afterwards every state on the chain holds smoothed parameters with both
 /// tracklets. States of the first tracklet before the shared state leave the
