@@ -8,123 +8,30 @@
 
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/PropagatorError.hpp"
-#include "Acts/Propagator/SympyStepper.hpp"
-#include "Acts/Propagator/VoidNavigator.hpp"
-#include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <array>
-#include <cmath>
 #include <cstddef>
-#include <optional>
 #include <ostream>
-#include <span>
 #include <stdexcept>
 #include <utility>
 #include <vector>
 
 namespace ActsExamples {
 
-namespace {
-
-// the step is at most a space point's distance from its own module, so there is
-// nothing in between to navigate
-using SeedPropagator =
-    Acts::Propagator<Acts::SympyStepper, Acts::VoidNavigator>;
-using SeedPropagatorOptions = SeedPropagator::Options<>;
-
-Acts::Result<Acts::FreeVector> estimateFreeParams(
-    std::span<const Acts::Vector3> positions, const Acts::Vector3& bField,
-    double t0, std::span<const double> weights, std::size_t refineIterations) {
-  // three positions determine a helix exactly, more are fitted
-  if (positions.size() == 3) {
-    return Acts::Result<Acts::FreeVector>::success(
-        Acts::estimateTrackParamsFromSeed(positions[0], t0, positions[1],
-                                          positions[2], bField));
-  }
-
-  return Acts::estimateTrackParamsFromSpacePoints(positions, bField, t0,
-                                                  refineIterations, weights);
-}
-
-// a space point does not have to lie on the surface of its own measurement
-Acts::Result<Acts::BoundVector> transportToSurface(
-    const SeedPropagator& propagator, const SeedPropagatorOptions& options,
-    const Acts::FreeVector& freeParams, const Acts::Surface& surface,
-    const Acts::ParticleHypothesis& hypothesis) {
-  const Acts::Vector3 direction = freeParams.segment<3>(Acts::eFreeDir0);
-
-  // only for the direction to propagate in, so the bounds do not matter
-  const Acts::Intersection3D intersection =
-      surface
-          .intersect(options.geoContext, freeParams.segment<3>(Acts::eFreePos0),
-                     direction)
-          .closest();
-  if (!intersection.isValid()) {
-    return Acts::Result<Acts::BoundVector>::failure(
-        Acts::PropagatorError::Failure);
-  }
-
-  SeedPropagatorOptions surfaceOptions = options;
-  surfaceOptions.direction =
-      Acts::Direction::fromScalarZeroAsPositive(intersection.pathLength());
-
-  const Acts::BoundTrackParameters start =
-      Acts::BoundTrackParameters::createCurvilinear(
-          freeParams.segment<4>(Acts::eFreePos0), direction,
-          freeParams[Acts::eFreeQOverP], std::nullopt, hypothesis);
-
-  auto result = propagator.propagate(start, surface, surfaceOptions);
-  if (!result.ok()) {
-    return Acts::Result<Acts::BoundVector>::failure(result.error());
-  }
-  return Acts::Result<Acts::BoundVector>::success(
-      result->endParameters.value().parameters());
-}
-
-}  // namespace
-
-TrackParamsEstimationAlgorithm::SpacePointWeight
-TrackParamsEstimationAlgorithm::inverseRadiusPowerWeight(double exponent) {
-  return [exponent](const Acts::Vector3& position) {
-    const double r = Acts::VectorHelpers::perp(position);
-    if (r <= 0) {
-      return 1.;
-    }
-    return std::pow(r, -exponent);
-  };
-}
-
 TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : IAlgorithm("TrackParamsEstimationAlgorithm", std::move(logger)),
-      m_cfg(cfg) {
+      m_cfg(cfg),
+      m_estimator(m_cfg, this->logger().clone()) {
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds input collection");
   }
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing track parameters output collection");
-  }
-  if (!m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
-  }
-  if (!m_cfg.magneticField) {
-    throw std::invalid_argument("Missing magnetic field");
   }
 
   m_inputSeeds.initialize(m_cfg.inputSeeds);
@@ -184,22 +91,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     inputFreeParameters = &inputFreeParametersRef;
   }
 
-  auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
-
-  IndexSourceLink::SurfaceAccessor surfaceAccessor{*m_cfg.trackingGeometry};
-
-  const SpacePointContainer& spacePoints = seeds.spacePointContainer();
-
-  const SeedPropagator propagator(Acts::SympyStepper(m_cfg.magneticField),
-                                  Acts::VoidNavigator(),
-                                  logger().cloneWithSuffix("Propagator"));
-  const SeedPropagatorOptions propagatorOptions(ctx.recoGeoContext,
-                                                ctx.magFieldContext);
-
-  // reused across seeds by the helix fit
-  std::array<SpacePointIndex, 3> triplet{};
-  std::vector<Acts::Vector3> positions;
-  std::vector<double> weights;
+  SeedParamsEstimator::Cache cache = m_estimator.makeCache(ctx.magFieldContext);
 
   struct {
     std::size_t selection = 0;
@@ -220,138 +112,43 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
       continue;
     }
 
-    std::span<const SpacePointIndex> selected = seed.spacePointIndices();
-
-    // given free parameters replace the fit, unless they have no momentum
-    const bool hasFreeParams =
-        inputFreeParameters != nullptr &&
-        inputFreeParameters->at(iseed)[Acts::eFreeQOverP] != 0;
-
-    // the triplet selections pick three space points
-    if (m_cfg.spacePointSelection != SeedSpacePointSelection::All) {
-      const std::optional<std::array<SpacePointIndex, 3>> selectedTriplet =
-          selectSeedSpacePoints(spacePoints, seed.spacePointIndices(),
-                                m_cfg.spacePointSelection,
-                                m_cfg.minTransverseDistance);
-      // a seed with given free parameters keeps all of its space points
-      if (!selectedTriplet.has_value() && !hasFreeParams) {
-        ACTS_DEBUG("Seed " << iseed << " failed space point selection, skip");
-        ++skipped.selection;
-        continue;
-      }
-      if (selectedTriplet.has_value()) {
-        triplet = *selectedTriplet;
-        selected = triplet;
-      }
-    }
-
-    // Get the bottom space point and its reference surface
-    const ConstSpacePointProxy bottomSp = spacePoints.at(selected.front());
-    if (bottomSp.sourceLinks().empty()) {
-      ACTS_WARNING("Missing source link in the space point");
-      continue;
-    }
-
-    const Acts::Vector3 bottomSpVec{bottomSp.x(), bottomSp.y(), bottomSp.z()};
-
-    const Acts::SourceLink& bottomSourceLink = bottomSp.sourceLinks()[0];
-    const Acts::Surface* bottomSurface = surfaceAccessor(bottomSourceLink);
-    if (bottomSurface == nullptr) {
-      ACTS_WARNING(
-          "Surface from source link is not found in the tracking geometry");
-      continue;
-    }
-
-    // Get the magnetic field at the bottom space point
-    const auto fieldRes = m_cfg.magneticField->getField(bottomSpVec, bCache);
-    if (!fieldRes.ok()) {
-      ACTS_ERROR("Field lookup error: " << fieldRes.error());
-      return ProcessCode::ABORT;
-    }
-    const Acts::Vector3& field = *fieldRes;
-
-    if (field.norm() < m_cfg.bFieldMin) {
-      ACTS_WARNING("Magnetic field at seed " << iseed << " is too small "
-                                             << field.norm());
-      continue;
-    }
-
-    positions.clear();
-    for (const SpacePointIndex index : selected) {
-      const ConstSpacePointProxy sp = spacePoints.at(index);
-      positions.emplace_back(sp.x(), sp.y(), sp.z());
-    }
-
-    if (m_cfg.spacePointWeight) {
-      weights.clear();
-      for (const Acts::Vector3& position : positions) {
-        weights.emplace_back(m_cfg.spacePointWeight(position));
-      }
-    }
-
-    const double t0 = std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time();
-
-    Acts::Result<Acts::FreeVector> freeParams =
-        hasFreeParams ? Acts::Result<Acts::FreeVector>::success(
-                            inputFreeParameters->at(iseed))
-                      : estimateFreeParams(positions, field, t0, weights,
-                                           m_cfg.geometricRefineIterations);
-    if (hasFreeParams) {
-      (*freeParams)[Acts::eFreeTime] = t0;
-    }
-    if (!freeParams.ok()) {
-      ACTS_DEBUG("Seed " << iseed << " could not be fitted: "
-                         << freeParams.error().message());
-      ++skipped.fit;
-      continue;
-    }
-    // degenerate space points make the estimate not a number, a straight line
-    // fit leaves q/p at zero, which the covariance transport cannot take
-    if (!freeParams->allFinite() || (*freeParams)[Acts::eFreeQOverP] == 0) {
-      ACTS_DEBUG("Seed " << iseed << " has a degenerate estimate, skip");
-      ++skipped.degenerate;
-      continue;
-    }
-
     const Acts::ParticleHypothesis hypothesis =
         inputParticleHypotheses != nullptr ? inputParticleHypotheses->at(iseed)
                                            : m_cfg.particleHypothesis;
 
-    Acts::Result<Acts::BoundVector> boundParams = transportToSurface(
-        propagator, propagatorOptions, *freeParams, *bottomSurface, hypothesis);
-    // given free parameters which do not reach the surface give way to the fit
-    if (!boundParams.ok() && hasFreeParams) {
-      freeParams = estimateFreeParams(positions, field, t0, weights,
-                                      m_cfg.geometricRefineIterations);
-      if (freeParams.ok() && freeParams->allFinite() &&
-          (*freeParams)[Acts::eFreeQOverP] != 0) {
-        boundParams =
-            transportToSurface(propagator, propagatorOptions, *freeParams,
-                               *bottomSurface, hypothesis);
+    const Acts::Result<TrackParameters, SeedParamsEstimator::Failure> estimate =
+        m_estimator.estimate(
+            ctx.recoGeoContext, ctx.magFieldContext, cache, seed, hypothesis,
+            inputFreeParameters != nullptr ? &inputFreeParameters->at(iseed)
+                                           : nullptr,
+            SeedParamsEstimator::Anchor::First);
+    if (!estimate.ok()) {
+      using enum SeedParamsEstimator::Failure;
+      switch (estimate.error()) {
+        case FieldLookup:
+          return ProcessCode::ABORT;
+        case SpacePointSelection:
+          ++skipped.selection;
+          break;
+        case Fit:
+          ++skipped.fit;
+          break;
+        case Degenerate:
+          ++skipped.degenerate;
+          break;
+        case Transport:
+          ++skipped.transport;
+          break;
+        case MissingSurface:
+        case WeakField:
+          break;
       }
-    }
-    if (!boundParams.ok()) {
-      ACTS_DEBUG("Seed " << iseed
-                         << " could not be transported to the surface of its "
-                            "first space point: "
-                         << boundParams.error().message());
-      ++skipped.transport;
+      ACTS_DEBUG("Seed " << iseed << " has no estimate, skip");
       continue;
     }
 
-    Acts::EstimateTrackParamCovarianceConfig config{
-        .initialSigmas =
-            Eigen::Map<const Acts::BoundVector>{m_cfg.initialSigmas.data()},
-        .initialSigmaQoverPt = m_cfg.initialSigmaQoverPt,
-        .initialSigmaPtRel = m_cfg.initialSigmaPtRel,
-        .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
-            m_cfg.initialVarInflation.data()}};
-
-    const Acts::BoundMatrix cov = Acts::estimateTrackParamCovariance(
-        config, *boundParams, !std::isnan(bottomSp.time()));
-
-    const TrackParameters& trackParams = trackParameters.emplace_back(
-        bottomSurface->getSharedPtr(), *boundParams, cov, hypothesis);
+    const TrackParameters& trackParams =
+        trackParameters.emplace_back(*estimate);
     ACTS_VERBOSE("Estimated track parameters: " << trackParams);
     if (m_outputSeeds.isInitialized()) {
       auto newSp = outputSeeds.createSeed();
