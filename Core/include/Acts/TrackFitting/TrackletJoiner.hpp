@@ -16,7 +16,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
-#include "Acts/TrackFitting/detail/SmootherAdjoint.hpp"
 #include "Acts/TrackFitting/detail/TrackletJoining.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -35,8 +34,8 @@ namespace Acts {
 /// of both without a new propagation. This is the two-way track finding.
 ///
 /// A smoother over the stitched chain would count the first tracklet twice.
-/// Instead the second tracklet is smoothed alone and its adjoint is carried
-/// onto the shared state; the change of the shared
+/// Instead the second tracklet is smoothed alone and one smoothing step
+/// carries its information onto the shared state; the change of the shared
 /// state is transported to the first tracklet by conditioning
 /// (@ref detail::conditionSmoothedStatesOnSharedState); then the chains are linked
 /// (@ref detail::linkTrackletBehind).
@@ -103,15 +102,23 @@ class TrackletJoiner {
     BoundMatrix sharedCov = sharedState.smoothedCovariance();
 
     if (m_cfg.smoothSecond) {
-      detail::SmootherAdjoint adjoint;
-      auto res = smoother.smooth(gctx, trajectory, second.tipIndex(),
-                                 kTrackIndexInvalid, &adjoint, logger);
+      auto res = smoother(gctx, trajectory, second.tipIndex(), logger);
       if (!res.ok()) {
         ACTS_DEBUG("Smoothing of the second tracklet failed: " << res.error());
         return res.error();
       }
-      std::tie(sharedMean, sharedCov) =
-          detail::applySmootherAdjoint(sharedMean, sharedCov, adjoint);
+      // the first state of the second tracklet was predicted from the shared
+      // state
+      auto secondStart = second.outermostTrackState();
+      for (auto ts : second.trackStatesReversed()) {
+        secondStart = ts;
+      }
+      auto prior = detail::smoothPriorNode(AnyConstTrackStateProxy{secondStart},
+                                           sharedMean, sharedCov, logger);
+      if (!prior.ok()) {
+        return prior.error();
+      }
+      std::tie(sharedMean, sharedCov) = *prior;
     }
 
     if (m_cfg.conditionFirst) {

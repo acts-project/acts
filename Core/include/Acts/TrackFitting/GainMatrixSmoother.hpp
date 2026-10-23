@@ -10,10 +10,7 @@
 
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/TrackFitting/KalmanFitterError.hpp"
-#include "Acts/TrackFitting/detail/SmootherAdjoint.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -47,29 +44,6 @@ class GainMatrixSmoother {
   Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
-    return smooth(gctx, trajectory, entryIndex, kTrackIndexInvalid, nullptr,
-                  logger);
-  }
-
-  /// Run the Kalman smoothing for a segment of one trajectory.
-  ///
-  /// @tparam traj_t The MultiTrajectory type
-  /// @param gctx The geometry context to be used
-  /// @param trajectory The trajectory to be smoothed
-  /// @param entryIndex The index of state to start the smoothing
-  /// @param stopIndex The last state to smooth, or @ref kTrackIndexInvalid
-  ///        for the end of the chain
-  /// @param carryOut If set, receives the adjoint transported through the
-  ///        jacobian of the last smoothed state, i.e. onto the node that state
-  ///        was predicted from; the same quantity the @ref MbfSmoother carries,
-  ///        see @ref detail::applySmootherAdjoint
-  /// @param logger Where to write logging information to
-  /// @return The status of the smoothing
-  template <typename traj_t>
-  Result<void> smooth(const GeometryContext& gctx, traj_t& trajectory,
-                      std::size_t entryIndex, std::size_t stopIndex,
-                      detail::SmootherAdjoint* carryOut,
-                      const Logger& logger = getDummyLogger()) const {
     static_cast<void>(gctx);
 
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
@@ -81,68 +55,50 @@ class GainMatrixSmoother {
     prev_ts.shareFrom(TrackStatePropMask::Filtered,
                       TrackStatePropMask::Smoothed);
 
-    bool reachedStop = (prev_ts.index() == stopIndex);
-
     // make sure there is more than one track state
-    if (!prev_ts.hasPrevious() || reachedStop) {
+    if (!prev_ts.hasPrevious()) {
       ACTS_VERBOSE("Only one track state given, smoothing terminates early");
-    } else {
-      ACTS_VERBOSE("Start smoothing from previous track state at index: "
-                   << prev_ts.previous());
+      return Result<void>::success();
+    }
 
-      // default-constructed error represents success, i.e. an invalid error
-      // code
-      std::error_code error;
-      trajectory.applyBackwards(prev_ts.previous(), [&, this](auto ts) {
-        // should have filtered and predicted, this should also include the
-        // covariances.
-        assert(ts.hasFiltered());
-        assert(ts.hasPredicted());
+    ACTS_VERBOSE("Start smoothing from previous track state at index: "
+                 << prev_ts.previous());
 
-        // previous trackstate should have smoothed and predicted
-        assert(prev_ts.hasSmoothed());
-        assert(prev_ts.hasPredicted());
-        assert(prev_ts.hasJacobian());
+    // default-constructed error represents success, i.e. an invalid error code
+    std::error_code error;
+    trajectory.applyBackwards(prev_ts.previous(), [&, this](auto ts) {
+      // should have filtered and predicted, this should also include the
+      // covariances.
+      assert(ts.hasFiltered());
+      assert(ts.hasPredicted());
 
-        ACTS_VERBOSE("Calculate smoothing matrix:");
-        ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
-        ACTS_VERBOSE("Jacobian:\n" << prev_ts.jacobian());
+      // previous trackstate should have smoothed and predicted
+      assert(prev_ts.hasSmoothed());
+      assert(prev_ts.hasPredicted());
+      assert(prev_ts.hasJacobian());
 
-        // ensure the track state has a smoothed component
-        ts.addComponents(TrackStatePropMask::Smoothed);
+      ACTS_VERBOSE("Calculate smoothing matrix:");
+      ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
+      ACTS_VERBOSE("Jacobian:\n" << prev_ts.jacobian());
 
-        if (auto res = calculate(AnyMutableTrackStateProxy{ts},
-                                 AnyConstTrackStateProxy{prev_ts}, logger);
-            !res.ok()) {
-          error = res.error();
-          return false;
-        }
+      // ensure the track state has a smoothed component
+      ts.addComponents(TrackStatePropMask::Smoothed);
 
-        prev_ts = ts;
-        reachedStop = (ts.index() == stopIndex);
-        return !reachedStop;  // continue execution
-      });
-
-      if (error) {
-        return Result<void>::failure(error);
+      if (auto res = calculate(AnyMutableTrackStateProxy{ts},
+                               AnyConstTrackStateProxy{prev_ts}, logger);
+          !res.ok()) {
+        error = res.error();
+        return false;
       }
-    }
 
-    if (stopIndex != kTrackIndexInvalid && !reachedStop) {
-      return KalmanFitterError::SmoothFailed;
-    }
+      prev_ts = ts;
+      return true;  // continue execution
+    });
 
-    if (carryOut != nullptr) {
-      auto adjoint = calculateAdjoint(AnyConstTrackStateProxy{prev_ts}, logger);
-      if (!adjoint.ok()) {
-        return adjoint.error();
-      }
-      *carryOut = *adjoint;
-    }
-
-    return Result<void>::success();
+    return error ? Result<void>::failure(error) : Result<void>::success();
   }
 
+  /// Type alias for delegate to get track state parameters
   using GetParameters =
       Acts::Delegate<TrackStateTraits<kMeasurementSizeMax, false>::Parameters(
           void*)>;
@@ -161,19 +117,6 @@ class GainMatrixSmoother {
   Result<void> calculate(AnyMutableTrackStateProxy ts,
                          AnyConstTrackStateProxy prev_ts,
                          const Logger& logger) const;
-
- private:
-  /// Calculate the adjoint on the node a smoothed state was predicted from:
-  /// `bigLambda = F^T Pp^-1 (Pp - Ps) Pp^-1 F`,
-  /// `smallLambda = -F^T Pp^-1 (xs - xp)`.
-  ///
-  /// @param ts The smoothed state, with predicted, smoothed and jacobian
-  /// @param logger The logger
-  /// @return The adjoint, or @ref KalmanFitterError::SmoothFailed if the
-  ///         predicted covariance is not positive definite or the result is
-  ///         not finite
-  Result<detail::SmootherAdjoint> calculateAdjoint(AnyConstTrackStateProxy ts,
-                                                   const Logger& logger) const;
 };
 
 }  // namespace Acts

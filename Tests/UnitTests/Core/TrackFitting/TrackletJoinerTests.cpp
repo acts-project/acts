@@ -18,7 +18,6 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/TrackFitting/TrackletJoiner.hpp"
-#include "Acts/TrackFitting/detail/SmootherAdjoint.hpp"
 #include "Acts/TrackFitting/detail/TrackletJoining.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -346,96 +345,62 @@ BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 using Smoothers = std::tuple<MbfSmoother, GainMatrixSmoother>;
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(CarriedAdjointIsPriorNodeSmoothing, smoother_t,
-                              Smoothers) {
-  // smoothing with a carried adjoint applied to the node before the segment
-  // equals smoothing a chain that holds that node as a state
+BOOST_AUTO_TEST_CASE_TEMPLATE(PriorNodeStepEqualsSmoothingWithPriorAsState,
+                              smoother_t, Smoothers) {
+  // a segment smoothed on its own, plus one step onto its prior node, equals
+  // the smoothing of a chain that holds the prior node as a state
   const auto nodes = makeModel(Variant::Base);
   Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto full = tc.makeTrack();
   BoundVector mean = kPriorMean;
   BoundMatrix cov = kPriorCov;
+  std::vector<std::size_t> fullIndices;
   for (std::size_t i = 0; i < 4; ++i) {
-    appendState(full, nodes[i], mean, cov);
+    fullIndices.push_back(appendState(full, nodes[i], mean, cov));
     mean = full.outermostTrackState().filtered();
     cov = full.outermostTrackState().filteredCovariance();
   }
-  // a copy, smoothed from the tip down to node 2 with the carry
+  // the segment of nodes 2 and 3, predicted from the filtered node 1
+  auto prior = tc.trackStateContainer().getTrackState(fullIndices[1]);
+  const BoundVector priorMean = prior.filtered();
+  const BoundMatrix priorCov = prior.filteredCovariance();
   auto segment = tc.makeTrack();
-  segment.copyFrom(full);
+  mean = priorMean;
+  cov = priorCov;
+  std::size_t segmentFirst = kTrackIndexInvalid;
+  for (std::size_t i = 2; i < 4; ++i) {
+    const std::size_t index = appendState(segment, nodes[i], mean, cov);
+    if (i == 2) {
+      segmentFirst = index;
+    }
+    mean = segment.outermostTrackState().filtered();
+    cov = segment.outermostTrackState().filteredCovariance();
+  }
+
+  BOOST_REQUIRE(
+      MbfSmoother()(gctx, tc.trackStateContainer(), full.tipIndex()).ok());
+  BOOST_REQUIRE(
+      smoother_t{}(gctx, tc.trackStateContainer(), segment.tipIndex()).ok());
+
+  auto segmentFirstState = tc.trackStateContainer().getTrackState(segmentFirst);
+  auto step =
+      detail::smoothPriorNode(AnyConstTrackStateProxy{segmentFirstState},
+                              priorMean, priorCov, getDummyLogger());
+  BOOST_REQUIRE(step.ok());
+  CHECK_CLOSE_ABS(step->first, prior.smoothed(), 1e-10);
+  CHECK_CLOSE_ABS(step->second, prior.smoothedCovariance(), 1e-10);
+
+  // the segment states are smoothed as in the full chain
   std::vector<std::size_t> segmentIndices;
   for (const auto& ts : segment.trackStatesReversed()) {
     segmentIndices.push_back(ts.index());
   }
-  // chain positions from the tip: node 3, 2, 1, 0
-  const std::size_t stopIndex = segmentIndices[1];
-  const std::size_t priorIndex = segmentIndices[2];
-
-  BOOST_REQUIRE(
-      MbfSmoother()(gctx, tc.trackStateContainer(), full.tipIndex()).ok());
-
-  detail::SmootherAdjoint adjoint;
-  BOOST_REQUIRE(smoother_t{}
-                    .smooth(gctx, tc.trackStateContainer(), segment.tipIndex(),
-                            stopIndex, &adjoint)
-                    .ok());
-
-  auto priorState = tc.trackStateContainer().getTrackState(priorIndex);
-  const auto [priorMean, priorCov] = detail::applySmootherAdjoint(
-      priorState.filtered(), priorState.filteredCovariance(), adjoint);
-
-  // the full chain holds the prior node as state at the same position
-  std::vector<std::size_t> fullIndices;
-  for (const auto& ts : full.trackStatesReversed()) {
-    fullIndices.push_back(ts.index());
-  }
-  auto fullPrior = tc.trackStateContainer().getTrackState(fullIndices[2]);
-  CHECK_CLOSE_ABS(priorMean, fullPrior.smoothed(), 1e-10);
-  CHECK_CLOSE_ABS(priorCov, fullPrior.smoothedCovariance(), 1e-10);
-
-  // the states down to the stop are smoothed as in the full run
   for (std::size_t i = 0; i < 2; ++i) {
     auto a = tc.trackStateContainer().getTrackState(segmentIndices[i]);
-    auto b = tc.trackStateContainer().getTrackState(fullIndices[i]);
+    auto b = tc.trackStateContainer().getTrackState(fullIndices[3 - i]);
     CHECK_CLOSE_ABS(a.smoothed(), b.smoothed(), 1e-10);
     CHECK_CLOSE_ABS(a.smoothedCovariance(), b.smoothedCovariance(), 1e-10);
   }
-
-  // an unreachable stop index is an error
-  BOOST_CHECK(!smoother_t{}
-                   .smooth(gctx, tc.trackStateContainer(), segment.tipIndex(),
-                           full.tipIndex(), nullptr)
-                   .ok());
-}
-
-BOOST_AUTO_TEST_CASE(CarriedAdjointAgreesBetweenSmoothers) {
-  const auto nodes = makeModel(Variant::Base);
-  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto tracklets = buildTracklets(tc, nodes, Variant::Base);
-  auto secondCopy = tc.makeTrack();
-  secondCopy.copyFrom(tracklets.second);
-
-  detail::SmootherAdjoint mbf;
-  detail::SmootherAdjoint rts;
-  BOOST_REQUIRE(MbfSmoother{}
-                    .smooth(gctx, tc.trackStateContainer(),
-                            tracklets.second.tipIndex(), kTrackIndexInvalid,
-                            &mbf)
-                    .ok());
-  BOOST_REQUIRE(GainMatrixSmoother{}
-                    .smooth(gctx, tc.trackStateContainer(),
-                            secondCopy.tipIndex(), kTrackIndexInvalid, &rts)
-                    .ok());
-
-  CHECK_CLOSE_ABS(mbf.bigLambda, rts.bigLambda, 1e-9);
-  CHECK_CLOSE_ABS(mbf.smallLambda, rts.smallLambda, 1e-9);
-
-  const auto [meanA, covA] = detail::applySmootherAdjoint(
-      tracklets.shared.smoothed(), tracklets.shared.smoothedCovariance(), mbf);
-  const auto [meanB, covB] = detail::applySmootherAdjoint(
-      tracklets.shared.smoothed(), tracklets.shared.smoothedCovariance(), rts);
-  CHECK_CLOSE_ABS(meanA, meanB, 1e-10);
-  CHECK_CLOSE_ABS(covA, covB, 1e-10);
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(JoinInPlaceMatchesJointPosterior, smoother_t,

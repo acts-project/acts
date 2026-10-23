@@ -10,10 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
-#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/TrackFitting/KalmanFitterError.hpp"
-#include "Acts/TrackFitting/detail/SmootherAdjoint.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -52,27 +49,6 @@ class MbfSmoother {
   Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
-    return smooth(gctx, trajectory, entryIndex, kTrackIndexInvalid, nullptr,
-                  logger);
-  }
-
-  /// Run the Kalman smoothing for a segment of one trajectory.
-  ///
-  /// @param[in] gctx The geometry context to be used
-  /// @param[in,out] trajectory The trajectory to be smoothed
-  /// @param[in] entryIndex The index of state to start the smoothing
-  /// @param[in] stopIndex The last state to smooth, or @ref kTrackIndexInvalid
-  ///            for the end of the chain
-  /// @param[out] carryOut If set, receives the adjoint transported through the
-  ///             jacobian of the last smoothed state, i.e. onto the node that
-  ///             state was predicted from; see @ref detail::applySmootherAdjoint
-  /// @param[in] logger Where to write logging information to
-  /// @return Success or failure of the MBF smoothing procedure
-  template <typename traj_t>
-  Result<void> smooth(const GeometryContext& gctx, traj_t& trajectory,
-                      std::size_t entryIndex, std::size_t stopIndex,
-                      detail::SmootherAdjoint* carryOut,
-                      const Logger& logger = getDummyLogger()) const {
     static_cast<void>(gctx);
     static_cast<void>(logger);
 
@@ -85,8 +61,6 @@ class MbfSmoother {
     BoundMatrix bigLambdaHat = BoundMatrix::Zero();
     BoundVector smallLambdaHat = BoundVector::Zero();
 
-    bool reachedStop = false;
-
     trajectory.applyBackwards(startTs.index(), [&](TrackStateProxy ts) {
       // ensure the track state has a smoothed component
       ts.addComponents(TrackStatePropMask::Smoothed);
@@ -96,12 +70,9 @@ class MbfSmoother {
       // Smoothe the current state
       calculateSmoothed(internalTrackState, bigLambdaHat, smallLambdaHat);
 
-      reachedStop = (ts.index() == stopIndex);
-      const bool last = reachedStop || !ts.hasPrevious();
-
-      // after the last state the lambdas are only needed for the carry
-      if (last && carryOut == nullptr) {
-        return false;
+      // We smoothed the last state - no need to update the lambdas
+      if (!ts.hasPrevious()) {
+        return;
       }
 
       // Update the lambdas depending on the type of track state
@@ -112,18 +83,7 @@ class MbfSmoother {
         visitNonMeasurement(std::as_const(ts).jacobian(), bigLambdaHat,
                             smallLambdaHat);
       }
-
-      return !last;
     });
-
-    if (stopIndex != kTrackIndexInvalid && !reachedStop) {
-      return KalmanFitterError::SmoothFailed;
-    }
-
-    if (carryOut != nullptr) {
-      carryOut->bigLambda = bigLambdaHat;
-      carryOut->smallLambda = smallLambdaHat;
-    }
 
     return Result<void>::success();
   }

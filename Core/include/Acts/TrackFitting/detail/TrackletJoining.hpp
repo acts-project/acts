@@ -29,6 +29,20 @@
 
 namespace Acts::detail {
 
+/// One smoothing step from the first state of a smoothed segment onto the
+/// prior node it was predicted from: `G = P Fᵀ Pp⁻¹`, `x' = x + G (xs - xp)`,
+/// `P' = P + G (Ps - Pp) Gᵀ`
+/// @param first The first state of the segment, smoothed
+/// @param priorMean The estimate at the prior node
+/// @param priorCov Its covariance
+/// @param logger The logger
+/// @return The estimate at the prior node with the segment included, or
+///         @ref KalmanFitterError::SmoothFailed if the predicted covariance
+///         is not positive definite or the result is not finite
+Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
+    const AnyConstTrackStateProxy& first, const BoundVector& priorMean,
+    const BoundMatrix& priorCov, const Logger& logger);
+
 /// Per-track terms of the conditioning on a shared state: the change of the
 /// shared state mapped by `Z = Pp_s Ps_s^-1`
 struct SharedStateCondition {

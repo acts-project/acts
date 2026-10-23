@@ -16,6 +16,34 @@
 
 namespace Acts::detail {
 
+Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
+    const AnyConstTrackStateProxy& first, const BoundVector& priorMean,
+    const BoundMatrix& priorCov, const Logger& logger) {
+  const BoundMatrix predictedCov = first.predictedCovariance();
+  const Eigen::LDLT<BoundMatrix> ldlt(predictedCov);
+  if (ldlt.info() != Eigen::Success || !ldlt.isPositive()) {
+    ACTS_DEBUG("Predicted covariance of state " << first.index()
+                                                << " is not positive definite");
+    return KalmanFitterError::SmoothFailed;
+  }
+
+  // G = P F^T Pp^-1
+  const BoundMatrix jacobian = first.jacobian();
+  const BoundMatrix g = ldlt.solve(jacobian * priorCov).transpose();
+
+  const BoundVector mean = normalizeBoundParameters(
+      priorMean +
+      g * subtractBoundParameters(first.smoothed(), first.predicted()));
+  const BoundMatrix cov =
+      priorCov + g * (BoundMatrix(first.smoothedCovariance()) - predictedCov) *
+                     g.transpose();
+  if (!mean.allFinite() || !cov.allFinite()) {
+    ACTS_DEBUG("Prior node estimate is not finite");
+    return KalmanFitterError::SmoothFailed;
+  }
+  return std::pair{mean, BoundMatrix(0.5 * (cov + cov.transpose()))};
+}
+
 Result<SharedStateCondition> makeSharedStateCondition(
     const AnyConstTrackStateProxy& shared, const BoundVector& newMean,
     const BoundMatrix& newCov, const Logger& logger) {
