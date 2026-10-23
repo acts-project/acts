@@ -21,7 +21,7 @@ namespace kernels {
 	   unsigned int N_ROWS>
    __global__ 
    void define_plane_edges(const traccc::hough_seeding_config config,
-		   typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes) {
+		                   typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes) {
       float steps_x = (config.max_range_x - config.min_range_x) / N_COLS;
       float steps_y = (config.max_range_y - config.min_range_y) / N_ROWS;
       device::define_plane_edges<T, N_COLS, N_ROWS>(
@@ -46,18 +46,21 @@ namespace kernels {
 		      spacepoint_r, spacepoint_phi);
    }
 
-   template <typename bfield_t>
+   template <typename bfield_t,
+             typename T,
+             unsigned int N_COLS,
+             unsigned int N_ROWS>
    __global__
    void fill_hough_plane(const traccc::hough_seeding_config config,
 		   const bfield_t bfield,
 		   const edm::spacepoint_collection::const_view::size_type n_spacepoints,
 		   const edm::spacepoint_collection::const_view& spacepoints,
 		   const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association,
-                   const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id,
+           const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id,
 		   vecmem::data::vector_view<scalar>& spacepoint_r,
-                   vecmem::data::vector_view<scalar>& spacepoint_phi,
-		   edm::houghplane_collection<unsigned short, device::N_COLS, device::N_ROWS>::view& houghplanes) {
-      device::fill_hough_plane(details::global_index1(), bfield,
+           vecmem::data::vector_view<scalar>& spacepoint_phi,
+		   typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes) {
+      device::fill_hough_plane<bfield_t, T, N_COLS, N_ROWS>(details::global_index1(), bfield,
 		      n_spacepoints, spacepoints,
 		      spacepoint_wedge_association, spacepoint_detector_id,
 		      spacepoint_r, spacepoint_phi,
@@ -101,13 +104,14 @@ void hough_transform_seeding_algorithm::fill_hough_plane_kernel(const fill_hough
   const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
   magnetic_field_visitor<bfield_type_list<scalar>>(
   	payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
-		kernels::fill_hough_plane<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, bfield,
-			payload.n_spacepoints, payload.spacepoints,
-			payload.spacepoint_wedge_association,
-			payload.spacepoint_detector_id,
-			payload.spacepoint_r,
-                        payload.spacepoint_phi,
-			payload.houghplanes);
+		kernels::fill_hough_plane<bfield_view_t, unsigned short, device::N_COLS, device::N_ROWS>
+            <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, bfield,
+			    payload.n_spacepoints, payload.spacepoints,
+			    payload.spacepoint_wedge_association,
+			    payload.spacepoint_detector_id,
+			    payload.spacepoint_r,
+                payload.spacepoint_phi,
+			    payload.houghplanes);
   });
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
