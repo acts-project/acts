@@ -180,8 +180,10 @@ continuation and the curvature difference must all agree within tolerance. The
 @f$\tau@f$ ratio tolerance comes from the layer pairs: a triplet is held to
 the looser of `tauRatioCutInner` of its inner pair and `tauRatioCutOuter` of
 its outer pair, see @ref Acts::Experimental::GbtsLayerConnection.
-@ref Acts::Experimental::assignAdaptiveTauRatioCuts fills them by the ATLAS
-rule. For
+@ref Acts::Experimental::assignAdaptiveTauRatioCuts fills them from the
+layers: wider for a pair that skips a pixel barrel layer or, as the outer
+pair, leaves the pixel barrel, and wider again for a pair with a strip layer.
+For
 pixel-barrel triplets an optional
 @ref Acts::Experimental::GraphBasedTrackSeeder "validateTriplets" step also fits
 a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$. Each

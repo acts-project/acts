@@ -54,8 +54,8 @@ constexpr float kDiscMaxR = 220.f;
 /// createLinkingScheme.py.
 constexpr float kEtaBinWidth = 0.2f;
 
-/// One layer of the toy detector. The ids follow ATLAS, but the seeder does not
-/// read them: it orders the pixel barrel layers by radius.
+/// One layer of the toy detector. The seeder does not read the ids: it orders
+/// the pixel barrel layers by radius.
 struct LayerSpec {
   Experimental::GbtsExperimentLayerId id{};
   GbtsLayerType type{};

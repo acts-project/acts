@@ -31,7 +31,7 @@ struct GbtsLayerConnection {
   float tauRatioCutOuter = 0.007f;
 };
 
-/// The tau ratio tolerances ATLAS tuned GBTS with.
+/// Tau ratio tolerances for `assignAdaptiveTauRatioCuts`.
 struct GbtsAdaptiveTauRatioCuts {
   /// Tolerance of a triplet nothing widens.
   float tauRatioCut = 0.007f;
@@ -41,10 +41,10 @@ struct GbtsAdaptiveTauRatioCuts {
   float tauRatioCorrStrip = 0.03f;
 };
 
-/// Fill the tau ratio tolerances of the layer pairs by the ATLAS rule.
-///
-/// Same as the per-triplet rule, except that a triplet with its inner node off
-/// the pixel barrel and its middle node on it can be widened by its outer pair.
+/// Fill the tau ratio tolerances of the layer pairs. A pair is widened by
+/// `tauRatioCorr` if it skips a pixel barrel layer, or, as an outer pair, if it
+/// leaves the pixel barrel. A pair with a strip layer is widened by
+/// `tauRatioCorrStrip` on top.
 ///
 /// @param connections The layer pairs, whose tolerances are overwritten
 /// @param layers The layers the geometry is built from
