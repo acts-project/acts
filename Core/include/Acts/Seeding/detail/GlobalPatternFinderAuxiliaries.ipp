@@ -783,10 +783,14 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::phiStripCrossing(
   if (projLength < Acts::s_epsilon) {
     return {pos, 0.};
   }
-  const double intersect{Acts::detail::LineHelper::lineIntersect<3>(
-                             linePos, lineDir, stripLow,
-                             Vector3{(stripHigh - stripLow) / projLength})
-                             .pathLength()};
+  const auto intersection{Acts::detail::LineHelper::lineIntersect<3>(
+      linePos, lineDir, stripLow,
+      Vector3{(stripHigh - stripLow) / projLength})};
+  /// The pattern line is parallel to the projected strip: not compatible
+  if (!intersection.isValid()) {
+    return {pos, std::numeric_limits<double>::infinity()};
+  }
+  const double intersect{intersection.pathLength()};
   /// The projection onto the bending plane is affine along the strip, so the
   /// fraction of the projected strip length maps directly onto the strip
   return {pos + (intersect / projLength - 0.5) * 2. * halfLength * sensorDir,

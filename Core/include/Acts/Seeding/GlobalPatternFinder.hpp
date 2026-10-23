@@ -115,6 +115,10 @@ class GlobalPatternFinder {
     unsigned int maxSeedAttempts{3};
     /// @brief Maximum number of missed candidate hits in different measurement layers in a group
     unsigned int maxMissLayersInGroup{3};
+    /// @brief Maximum number of active pattern branches kept after each extension step
+    ///        (0: no limit). The best branches according to isBetterBranch are
+    ///        kept.
+    unsigned int maxActivePatterns{0};
   };
   /// @brief Abbreviation of the seed coordinates
   enum class HitCoords : std::uint8_t {
@@ -279,11 +283,20 @@ class GlobalPatternFinder {
   ///  @return: true if the patterns overlap, false otherwise
   bool areOverlapping(const GeometryContext& gctx, const PatternStateAux& a,
                       const PatternStateAux& b) const;
-  /// @brief Compare two patterns and define which one is better.
+  /// @brief Overlap resolution: Compare two patterns and define which one is better.
   ///  @param a: first pattern
   ///  @param b: second pattern
   ///  @return: true if pattern a is better than pattern b, false otherwise
-  static bool isBetter(const PatternStateAux& a, const PatternStateAux& b);
+  bool isBetterOverlap(const PatternStateAux& a,
+                       const PatternStateAux& b) const;
+  /// @brief Ranking of the pattern branches of one seed, used by the pruning
+  ///        of branches with the same last hit and by the cap on active
+  ///        branches.
+  ///  @param a: first pattern
+  ///  @param b: second pattern
+  ///  @return: true if pattern a is ranked before pattern b
+  static bool isBetterBranch(const PatternStateAux& a,
+                             const PatternStateAux& b);
   /// @brief Count the number of good groups in a pattern
   ///  @param pat: pattern to be checked
   ///  @return: number of good groups in the pattern

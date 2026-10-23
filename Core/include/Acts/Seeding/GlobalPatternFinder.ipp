@@ -347,7 +347,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
                                    p.isOverlap) {
                                  return false;
                                }
-                               if (isBetter(pat, p)) {
+                               if (isBetterBranch(pat, p)) {
                                  ACTS_VERBOSE("extendPatterns() Pruning: "
                                               << PatternStateAux::detailed(pat)
                                               << "\nis BETTER than "
@@ -435,6 +435,22 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
     endPatterns.push_back(std::move(pat));
   }
   startPatterns.clear();
+  /// Limit the number of active branches
+  if (m_cfg.maxActivePatterns > 0u &&
+      endPatterns.size() > m_cfg.maxActivePatterns) {
+    const auto cut{std::next(endPatterns.begin(), m_cfg.maxActivePatterns)};
+    std::nth_element(endPatterns.begin(), cut, endPatterns.end(),
+                     isBetterBranch);
+    if (m_logger->level() <= Acts::Logging::Level::VERBOSE) {
+      ACTS_VERBOSE(__func__ << "() Pruning active patterns to "
+                            << m_cfg.maxActivePatterns << " of "
+                            << endPatterns.size() << " active patterns.");
+      for (const auto& pat : endPatterns) {
+        ACTS_VERBOSE(__func__ << "() \t**" << PatternStateAux::detailed(pat));
+      }
+    }
+    endPatterns.erase(cut, endPatterns.end());
+  }
 }
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
@@ -610,15 +626,6 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
 bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::insertIfBest(
     const GeometryContext& gctx, PatternStateAuxVec& patterns,
     PatternStateAux&& cand) const {
-  /// @brief Determine best pattern of two overlapping patterns
-  auto isBetterOverlap = [&](const PatternStateAux& a,
-                             const PatternStateAux& b) {
-    const int nGoodGroupDiff{countGoodGroups(a) - countGoodGroups(b)};
-    if (nGoodGroupDiff != 0) {
-      return nGoodGroupDiff > 0;
-    }
-    return isBetter(a, b);
-  };
   std::vector<std::size_t> losers{};
   for (const auto& [otherIdx, other] : Acts::enumerate(patterns)) {
     if (!areOverlapping(gctx, other, cand)) {
@@ -709,8 +716,15 @@ bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::areOverlapping(
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
-bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::isBetter(
-    const PatternStateAux& a, const PatternStateAux& b) {
+bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::isBetterOverlap(
+    const PatternStateAux& a, const PatternStateAux& b) const {
+  if (a.isOverlap != b.isOverlap) {
+    return b.isOverlap;
+  }
+  const int nGoodGroupDiff{countGoodGroups(a) - countGoodGroups(b)};
+  if (nGoodGroupDiff != 0) {
+    return nGoodGroupDiff > 0;
+  }
   const double resA{a.getMeanResidual2()};
   const double resB{b.getMeanResidual2()};
   const double resDiff{Acts::abs(resA - resB) / std::max(resA, resB)};
@@ -729,6 +743,22 @@ bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::isBetter(
     return nPrecLayDiff > 0;
   }
   return nLayerDiff > 0;
+}
+
+template <GlobPatFinderHit Hit_t, SectorType Sector_t,
+          PatternTopology<Hit_t> Topology_t>
+bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::isBetterBranch(
+    const PatternStateAux& a, const PatternStateAux& b) {
+  if (a.isOverlap != b.isOverlap) {
+    return b.isOverlap;
+  }
+  if (a.nBendingLayers() != b.nBendingLayers()) {
+    return a.nBendingLayers() > b.nBendingLayers();
+  }
+  if (a.nPrecisionLayers != b.nPrecisionLayers) {
+    return a.nPrecisionLayers > b.nPrecisionLayers;
+  }
+  return a.getMeanResidual2() < b.getMeanResidual2();
 }
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,

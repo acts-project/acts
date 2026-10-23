@@ -18,8 +18,8 @@
 #include <bitset>
 #include <compare>
 #include <cstdint>
-#include <type_traits>
 #include <format>
+#include <type_traits>
 
 /// Auxiliary concepts and data structures used by the Global Pattern Finder.
 ///
