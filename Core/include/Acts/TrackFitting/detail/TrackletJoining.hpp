@@ -32,7 +32,10 @@ namespace Acts::detail {
 /// One smoothing step from the first state of a smoothed segment onto the
 /// prior node it was predicted from, in the Rauch-Tung-Striebel gain form of
 /// the @ref Acts::GainMatrixSmoother: `G = P F^T Pp^-1`,
-/// `x' = x + G (xs - xp)`, `P' = P + G (Ps - Pp) G^T`
+/// `x' = x + G (xs - xp)`, `P' = P + G (Ps - Pp) G^T`. The gain form needs
+/// one factorization of `Pp` per segment. The modified Bryson-Frazier form
+/// would need the adjoint of the first state, which the smoother does not
+/// store and which costs the same factorization to recover.
 /// @param first The first state of the segment, smoothed
 /// @param priorMean The estimate at the prior node
 /// @param priorCov Its covariance
