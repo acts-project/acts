@@ -51,10 +51,10 @@ void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
   x[1] = 0;
   x[2] = 0;
 
-  // Y-state: z, dz/dr
+  // Y-state: z, dz/ds along the chord, the curvature being unknown yet
 
   y[0] = n2.z();
-  y[1] = (n1.z() - n2.z()) / (n1.r() - n2.r());
+  y[1] = (n1.z() - n2.z()) / std::copysign(L, n1.r() - n2.r());
 
   cx = {};
   cx[0][0] = varianceX[0];
@@ -73,11 +73,17 @@ namespace Acts::Experimental {
 GbtsTrackingFilter::GbtsTrackingFilter(
     const Config& config, const std::shared_ptr<const GbtsGeometry>& geometry,
     std::unique_ptr<const Logger> logger)
-    : m_cfg(config), m_geometry(geometry), m_logger(std::move(logger)) {}
+    : m_cfg(config), m_geometry(geometry), m_logger(std::move(logger)) {
+  const float highland = 0.0136f * Acts::UnitConstants::GeV *
+                         (1 + 0.038f * std::log(m_cfg.radLen));
+  m_scattering = highland * highland * m_cfg.radLen;
+  m_maxCurvature2 = m_cfg.maxCurvature * m_cfg.maxCurvature;
+}
 
 bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
                                 const detail::GbtsEdge& pS,
-                                detail::GbtsEdgeState& ts) const {
+                                detail::GbtsEdgeState& ts,
+                                const float bFieldInZ) const {
   if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
     ACTS_DEBUG("Negative cov_x");
   }
@@ -86,7 +92,7 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
     ACTS_DEBUG("Negative cov_y");
   }
 
-  // add ms.
+  // multiple scattering in the layer of the node left
 
   const float tau2 = ts.y[1] * ts.y[1];
   const float invSin2 = 1 + tau2;
@@ -96,18 +102,28 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
 
   const GbtsLayerType layerType1 = getLayerType(n2.layer());
 
+  // material crossed over the material at normal incidence, squared
   const float lenCorr =
       layerType1 == GbtsLayerType::Barrel ? invSin2 : invSin2 / tau2;
+  const float pathFactor = std::sqrt(lenCorr);
 
-  const float minPtFrac = std::abs(ts.x[2]) / m_cfg.maxCurvature;
+  // a curvature uncertain beyond the cut scatters like the softest track kept
+  float curvature = std::abs(ts.x[2]);
+  if (ts.cx[2][2] > m_maxCurvature2) {
+    curvature = std::max(curvature, m_cfg.maxCurvature);
+  }
 
-  const float corrMS = m_cfg.sigmaMS * minPtFrac;
+  // Highland angle squared from 1/p^2 = curvature^2 / (B^2 (1 + tau^2)),
+  // times (1 + tau^2) for its azimuthal projection in the bending plane
+  const float slope2 = 1 + ts.x[1] * ts.x[1];
+  const float theta2 = m_scattering * curvature * curvature * pathFactor /
+                       (bFieldInZ * bFieldInZ);
 
-  const float sigma2 = m_cfg.radLen * lenCorr * corrMS * corrMS;  // /invSin2
+  // into the slopes: d(dy/dx) = dphi (1 + slope^2), d(dz/ds) = dtheta (1 +
+  // tau^2)
+  ts.cx[1][1] += theta2 * slope2 * slope2;
 
-  ts.cx[1][1] += sigma2;
-
-  ts.cy[1][1] += sigma2;
+  ts.cy[1][1] += theta2 * invSin2;
 
   // extrapolation
 
@@ -128,11 +144,28 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
 
   const float A = refX - ts.refX;
   const float B = 0.5 * A * A;
-  const float dr = refY - ts.refY;
 
-  X[0] = ts.x[0] + ts.x[1] * A + ts.x[2] * B;
-  X[1] = ts.x[1] + ts.x[2] * A;
+  // along the circle: sin(phi) advances by the curvature times the step
+  const float invSlope = 1 / std::sqrt(slope2);
+  const float sinPhi0 = ts.x[1] * invSlope;
+  const float sinPhi1 = sinPhi0 + ts.x[2] * A;
+  if (std::abs(sinPhi1) < 1) {
+    const float cosPhi1 = std::sqrt(1 - sinPhi1 * sinPhi1);
+    // (cos(phi0) - cos(phi1)) / curvature without the curvature
+    X[0] = ts.x[0] + A * (sinPhi0 + sinPhi1) / (invSlope + cosPhi1);
+    X[1] = sinPhi1 / cosPhi1;
+  } else {
+    // turning back within the step: the parabola, to be rejected by the fit
+    X[0] = ts.x[0] + ts.x[1] * A + ts.x[2] * B;
+    X[1] = ts.x[1] + ts.x[2] * A;
+  }
   X[2] = ts.x[2];
+
+  // z along the arc of the circle over the chord between the nodes
+  const float chord = fastHypot(n1.x() - n2.x(), n1.y() - n2.y());
+  const float arc =
+      chord * (1 + chord * chord * ts.x[2] * ts.x[2] * (1.f / 24));
+  const float dr = std::copysign(arc, refY - ts.refY);
 
   Cx[0][0] = ts.cx[0][0] + 2 * ts.cx[0][1] * A + 2 * ts.cx[0][2] * B +
              A * A * ts.cx[1][1] + 2 * A * B * ts.cx[1][2] +

@@ -310,7 +310,7 @@ separately controls the chain-following filter of @ref gbts-extraction "seed ext
 | `sigmaX`, `sigmaY` | measurement resolution in the bending plane and along @f$z@f$ |
 | `maxDChi2X`, `maxDChi2Y` | per-step @f$\chi^2@f$ ceilings; a branch exceeding either is dropped |
 | `addHit`, `weightX`, `weightY` | the reward and the two @f$\chi^2@f$ weights in the branch score |
-| `sigmaMS`, `radLen` | multiple-scattering inflation added before each extrapolation |
+| `radLen` | material per layer behind the multiple-scattering inflation, from the momentum of the state and the field, added before each extrapolation |
 | `maxCurvature`, `maxZ0` | track-level bounds checked after each update |
 
 ## Implementation pointers {#gbts-implementation}

@@ -102,7 +102,7 @@ void GraphBasedTrackSeeder::createSeeds(
 
   std::vector<OutputSeedProperties> vOutputSeeds;
   extractSeedsFromTheGraph(nodeStorage, graph, vOutputSeeds, filter,
-                           outputFits != nullptr);
+                           options.bFieldInZ, outputFits != nullptr);
 
   ACTS_DEBUG("GBTS created " << vOutputSeeds.size() << " seeds");
   if (vOutputSeeds.empty()) {
@@ -123,7 +123,8 @@ void GraphBasedTrackSeeder::createSeeds(
 void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     const GbtsNodeStorage& nodeStorage, const GbtsGraph& graph,
     std::vector<OutputSeedProperties>& vOutputSeeds,
-    const GbtsTrackingFilter& filter, const bool withFits) const {
+    const GbtsTrackingFilter& filter, const float bFieldInZ,
+    const bool withFits) const {
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
 
   std::vector<SeedCandidateProperties> vSeedCandidates;
@@ -134,7 +135,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   // Turn the fitted path of every head edge into a seed candidate.
   for (const detail::GbtsEdgeState& rs :
-       extractBestPathPerEdge(nodeView, graph, filter)) {
+       extractBestPathPerEdge(nodeView, graph, filter, bFieldInZ)) {
     const detail::GbtsEdge& head = *rs.vs.front();
     const float seedAbsEta = std::abs(-std::log(head.p[0]));
 
@@ -213,14 +214,13 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     if (withFits) {
       // filter state at the innermost node, x' along the first edge (inwards)
-      const double slope2 = 1. + static_cast<double>(rs.x[1]) * rs.x[1];
       vSeedCandidates.back().fit = GbtsSeedFit{
           .position = Vector3(rs.refX * rs.c - rs.x[0] * rs.s,
                               rs.refX * rs.s + rs.x[0] * rs.c, rs.y[0]),
           // outwards: along -x', with the slope of the state
           .phi = std::atan2(-rs.s - rs.c * rs.x[1], -rs.c + rs.s * rs.x[1]),
           .cotTheta = rs.y[1],
-          .curvature = rs.x[2] / (slope2 * std::sqrt(slope2))};
+          .curvature = rs.x[2]};
     }
 
     vArgSort.emplace_back(origSeedQuality, seedCounter);
@@ -342,7 +342,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 std::vector<detail::GbtsEdgeState>
 GraphBasedTrackSeeder::extractBestPathPerEdge(
     const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
-    const GbtsTrackingFilter& filter) const {
+    const GbtsTrackingFilter& filter, const float bFieldInZ) const {
   const std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
   const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
   const auto maxLength = static_cast<std::uint32_t>(m_cfg.maxChainLength);
@@ -418,7 +418,8 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
           continue;
         }
         detail::GbtsEdgeState innerState = state;
-        if (filter.update(nodeView, edgeStorage[inner], innerState)) {
+        if (filter.update(nodeView, edgeStorage[inner], innerState,
+                          bFieldInZ)) {
           self(self, inner, innerState);
         }
       }
@@ -444,7 +445,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     detail::GbtsEdgeState state;
     state.initialize(headEdge, nodeView, filter.m_cfg.initialVarianceX,
                      filter.m_cfg.initialVarianceY);
-    if (!filter.update(nodeView, headEdge, state)) {
+    if (!filter.update(nodeView, headEdge, state, bFieldInZ)) {
       continue;
     }
 
