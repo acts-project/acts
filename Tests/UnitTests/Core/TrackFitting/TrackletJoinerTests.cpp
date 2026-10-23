@@ -282,8 +282,7 @@ Tracklets buildTracklets(Container& tc, const std::vector<Node>& nodes,
   return {first, shared, second, nodeOfState, unsmoothed};
 }
 
-/// Check every smoothed state of a joined track against the dense joint
-/// posterior. States listed as unsmoothed must have no smoothed component.
+/// Check one smoothed state against the dense joint posterior
 template <typename track_state_proxy_t>
 void checkStateAgainstDense(const track_state_proxy_t& ts, std::size_t node,
                             const DynamicVector& mean, const DynamicMatrix& cov,
@@ -299,6 +298,8 @@ void checkStateAgainstDense(const track_state_proxy_t& ts, std::size_t node,
   BOOST_CHECK_LT(asym.cwiseAbs().maxCoeff(), 1e-15);
 }
 
+/// Check every state of a joined track against the dense joint posterior.
+/// States listed as unsmoothed must have no smoothed component.
 void checkJoinedAgainstDense(const Container::TrackProxy& joined,
                              const std::map<std::size_t, std::size_t>& nodeOf,
                              const std::vector<std::size_t>& unsmoothed,
@@ -405,29 +406,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(PriorNodeStepEqualsSmoothingWithPriorAsState,
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(JoinInPlaceMatchesJointPosterior, smoother_t,
                               Smoothers) {
-  const auto nodes = makeModel(Variant::Base);
   Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto tracklets = buildTracklets(tc, nodes, Variant::Base);
-  const BoundMatrix secondStart = nodes[4].F;
-  const std::size_t secondInnermost = tracklets.second.tipIndex();
-
-  TrackletJoiner joiner;
-  BOOST_REQUIRE(joiner
-                    .joinInPlace(gctx, tracklets.first, tracklets.shared,
-                                 tracklets.second, getDummyLogger(),
-                                 smoother_t{})
-                    .ok());
-
-  checkJoinedAgainstDense(tracklets.first, tracklets.nodeOfState,
-                          tracklets.unsmoothed, nodes, 1e-9, nodes.size());
+  auto tracklets = joinAndCheck<smoother_t>(tc, Variant::Base);
 
   // the link: the chain runs through the shared state into the second
   // tracklet, the stitch jacobian is the inverse transport, the stem is the
   // innermost state of the second tracklet, and the forward links follow
+  const BoundMatrix secondStart = makeModel(Variant::Base)[4].F;
   BOOST_CHECK_EQUAL(tracklets.shared.previous(),
                     tracklets.second.outermostTrackState().index());
   CHECK_CLOSE_ABS(tracklets.shared.jacobian(), secondStart.inverse(), 1e-12);
-  BOOST_CHECK_EQUAL(tracklets.first.stemIndex(), secondInnermost);
+  BOOST_CHECK_EQUAL(tracklets.first.stemIndex(), tracklets.second.stemIndex());
   std::vector<std::size_t> backward;
   for (const auto& ts : tracklets.first.trackStatesReversed()) {
     backward.push_back(ts.index());

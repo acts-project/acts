@@ -589,11 +589,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               }
               auto joinedTrack = joinResult.value();
 
-              // finalize the track candidate
-
-              // the CKF already extrapolated the second pass to the perigee
-
-              // only extrapolate if we did not do it already
+              // the second pass extrapolated to the perigee unless it failed
               if (!joinedTrack.hasReferenceSurface()) {
                 auto secondExtrapolationResult =
                     Acts::extrapolateTrackToReferenceSurface(

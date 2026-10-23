@@ -14,6 +14,30 @@
 
 #include <Eigen/Cholesky>
 
+namespace {
+
+using namespace Acts;
+
+/// Inverse residual covariance and Kalman gain of a measurement state
+template <std::size_t N>
+struct MeasurementGain {
+  Matrix<N, eBoundSize> h;
+  SquareMatrix<N> sInv;
+  Matrix<eBoundSize, N> k;
+
+  template <typename track_state_proxy_t>
+  explicit MeasurementGain(const track_state_proxy_t& ts)
+      : h(ts.template projectorSubspaceHelper<N>().projector()) {
+    const BoundMatrix pp = ts.predictedCovariance();
+    const SquareMatrix<N> s =
+        h * pp * h.transpose() + ts.template calibratedCovariance<N>();
+    sInv = s.inverse();
+    k = pp * h.transpose() * sInv;
+  }
+};
+
+}  // namespace
+
 namespace Acts::detail {
 
 Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
@@ -73,17 +97,11 @@ BoundMatrix filteredSensitivity(const AnyConstTrackStateProxy& ts,
     return dp;
   }
   BoundMatrix df = dp;
-  visit_measurement(
-      ts.calibratedSize(),
-      [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
-        const auto H = ts.projectorSubspaceHelper<N>().projector();
-        const BoundMatrix pp = ts.predictedCovariance();
-        const SquareMatrix<N> s =
-            H * pp * H.transpose() + ts.calibratedCovariance<N>();
-        const Matrix<eBoundSize, N> k = pp * H.transpose() * s.inverse();
-        // Df = (I - K H) Dp
-        df = dp - k * (H * dp);
-      });
+  visit_measurement(ts.calibratedSize(),
+                    [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
+                      const MeasurementGain<N> gain(ts);
+                      df = dp - gain.k * (gain.h * dp);
+                    });
   return df;
 }
 
@@ -115,14 +133,9 @@ Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
     visit_measurement(
         ts.calibratedSize(),
         [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
-          const auto H = ts.projectorSubspaceHelper<N>().projector();
-          const BoundMatrix pp = ts.predictedCovariance();
-          const SquareMatrix<N> s =
-              H * pp * H.transpose() + ts.calibratedCovariance<N>();
-          const SquareMatrix<N> sInv = s.inverse();
-          const Matrix<eBoundSize, N> k = pp * H.transpose() * sInv;
-          psiTilde = H.transpose() * (sInv * (H * dp)) + psiHat -
-                     H.transpose() * (k.transpose() * psiHat);
+          const MeasurementGain<N> gain(ts);
+          psiTilde = gain.h.transpose() * (gain.sInv * (gain.h * dp)) + psiHat -
+                     gain.h.transpose() * (gain.k.transpose() * psiHat);
         });
   }
   psiHat = ts.jacobian().transpose() * psiTilde;

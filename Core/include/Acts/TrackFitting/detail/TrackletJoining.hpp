@@ -30,8 +30,8 @@
 namespace Acts::detail {
 
 /// One smoothing step from the first state of a smoothed segment onto the
-/// prior node it was predicted from: `G = P Fᵀ Pp⁻¹`, `x' = x + G (xs - xp)`,
-/// `P' = P + G (Ps - Pp) Gᵀ`
+/// prior node it was predicted from: `G = P F^T Pp^-1`,
+/// `x' = x + G (xs - xp)`, `P' = P + G (Ps - Pp) G^T`
 /// @param first The first state of the segment, smoothed
 /// @param priorMean The estimate at the prior node
 /// @param priorCov Its covariance
@@ -87,8 +87,8 @@ Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
                                  const SharedStateCondition& condition,
                                  const Logger& logger);
 
-/// @brief Condition the smoothed states of a segment on a new estimate of
-/// one of its states
+/// Condition the smoothed states of a segment on a new estimate of one of
+/// its states.
 ///
 /// The segment runs from @p sharedIndex to @p tipIndex in filter order and is
 /// smoothed. Each state is updated by its regression on the shared state,
@@ -210,8 +210,8 @@ Result<void> conditionSmoothedStatesOnSharedState(
   return Result<void>::success();
 }
 
-/// @brief Link a second tracklet, filtered from a state of a first tracklet,
-/// behind that state
+/// Link a second tracklet, filtered from a state of a first tracklet, behind
+/// that state.
 ///
 /// The states of the second tracklet are reversed and linked behind the shared
 /// state. With @p invertJacobians the jacobians are inverted and shifted, and
