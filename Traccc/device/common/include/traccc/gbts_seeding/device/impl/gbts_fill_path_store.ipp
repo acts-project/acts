@@ -153,14 +153,6 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
         1.0f) {
       continue;
     }
-    // prefer seeds that reach to the outer edge of the detector for better
-    // resolution at high pT
-    if (math::fabs(state1.m_Y[1]) > fit_params.zmax / fit_params.rmax) {
-      state1.m_J += fit_params.add_hit * math::fabs(node1.z) / fit_params.zmax;
-    } else {
-      const float r2_max = (node1.x) * (node1.x) + (node1.y) * (node1.y);
-      state1.m_J += fit_params.add_hit * math::sqrt(r2_max) / fit_params.rmax;
-    }
     const int qual = static_cast<int>(fit_params.qual_scale * state1.m_J);
     d_seed_proposals[path_idx] = int2{qual, static_cast<int>(path_idx)};
 
