@@ -9,6 +9,7 @@
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
+#include "ActsExamples/TrackFinding/GlobalPatternFinderAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
@@ -127,6 +128,14 @@ void addTrackFinding(py::module& mex) {
       MuonHoughSeeder, mex, "MuonHoughSeeder", inTruthSegments, inSpacePoints,
       outHoughMax, nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0,
       dumpVisualization, extendWithPhi, visualizationFunction);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      GlobalPatternFinderAlgorithm, mex, "GlobalPatternFinderAlgorithm",
+      inSpacePoints, outPatterns, trackingGeometry, useMdtHits, nResidualSigma,
+      lowConfidenceResSigma, phiTolerance, minTriggerLayers, minPrecisionLayers,
+      minPhiLayers, minStationLayers, meanNormRes2Cut, maxSeedAttempts,
+      maxMissLayersInStation, minHitDistance4Line, beamSpotRadius,
+      beamSpotLength);
 
   {
     using Alg = TrackParamsEstimationAlgorithm;

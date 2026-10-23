@@ -5,3 +5,9 @@ target_link_libraries(
     ActsUnitTestMuonHoughSeeder
     PRIVATE ActsExamplesTrackFinding ActsExamplesFramework
 )
+
+add_unittest(GlobalPatternFinderAlgorithm GlobalPatternFinderAlgorithmTests.cpp)
+target_link_libraries(
+    ActsUnitTestGlobalPatternFinderAlgorithm
+    PRIVATE ActsExamplesTrackFinding ActsExamplesFramework
+)
