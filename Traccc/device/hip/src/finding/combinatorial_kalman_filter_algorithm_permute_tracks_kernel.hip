@@ -1,0 +1,45 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Local include(s).
+#include "../utils/global_index.hpp"
+#include "../utils/hip_error_handling.hpp"
+#include "../utils/utils.hpp"
+#include "traccc/hip/finding/combinatorial_kalman_filter_algorithm.hpp"
+
+// Project include(s).
+#include "traccc/finding/device/permute_tracks.hpp"
+
+// HIP include(s).
+#include <hip/hip_runtime.h>
+
+namespace traccc::hip {
+namespace kernels {
+
+/// HIP kernel for running @c traccc::device::permute_tracks
+__global__ void permute_tracks(const device::permute_tracks_payload payload) {
+  device::permute_tracks(details::global_index1(), payload);
+}
+
+}  // namespace kernels
+
+void combinatorial_kalman_filter_algorithm::permute_tracks_kernel(
+    unsigned int n_threads,
+    const device::permute_tracks_payload& payload) const {
+  // Establish the kernel launch parameters.
+  const unsigned int deviceThreads = 256;
+  const unsigned int deviceBlocks =
+      (n_threads + deviceThreads - 1) / deviceThreads;
+
+  // Launch the kernel.
+  hipLaunchKernelGGL(kernels::permute_tracks, deviceBlocks, deviceThreads, 0,
+                     details::get_stream(stream()), payload);
+  TRACCC_HIP_ERROR_CHECK(hipGetLastError());
+}
+
+}  // namespace traccc::hip

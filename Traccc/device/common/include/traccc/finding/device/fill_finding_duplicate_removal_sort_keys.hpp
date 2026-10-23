@@ -23,9 +23,15 @@ namespace traccc::device {
  */
 struct fill_finding_duplicate_removal_sort_keys_payload {
   /**
-   * @brief View to the vector of links.
+   * @brief View to the links of all previous steps, in their final order.
    */
-  const vecmem::data::vector_view<const candidate_link> links_view;
+  const vecmem::data::vector_view<const candidate_link> prev_links_view;
+
+  /**
+   * @brief View to the find_tracks scratch links of the current step, in
+   * their uncondensed order.
+   */
+  const vecmem::data::vector_view<const candidate_link> curr_links_view;
 
   /**
    * @brief View to the parameter liveness vector.
@@ -43,15 +49,16 @@ struct fill_finding_duplicate_removal_sort_keys_payload {
   vecmem::data::vector_view<unsigned int> param_ids_view;
 
   /**
+   * @brief View to the map from condensed parameter index to the slot in
+   * @c curr_links_view.
+   */
+  vecmem::data::vector_view<const unsigned int> condensed_param_map_view;
+
+  /**
    * @brief The total number of links.
    * TODO: Do we need this?
    */
   const unsigned int n_links;
-
-  /**
-   * @brief Starting index of the links for the current step.
-   */
-  const unsigned int curr_links_idx;
 
   /**
    * @brief The total number of measurements, used to find holes.
@@ -67,12 +74,17 @@ struct fill_finding_duplicate_removal_sort_keys_payload {
 TRACCC_HOST_DEVICE inline void fill_finding_duplicate_removal_sort_keys(
     global_index_t gid,
     const fill_finding_duplicate_removal_sort_keys_payload& payload) {
-  const vecmem::device_vector<const candidate_link> links(payload.links_view);
+  const vecmem::device_vector<const candidate_link> prev_links(
+      payload.prev_links_view);
+  const vecmem::device_vector<const candidate_link> curr_links(
+      payload.curr_links_view);
   const vecmem::device_vector<const unsigned int> param_liveness(
       payload.param_liveness_view);
   vecmem::device_vector<unsigned int> link_last_measurement(
       payload.link_last_measurement_view);
   vecmem::device_vector<unsigned int> param_ids(payload.param_ids_view);
+  vecmem::device_vector<const unsigned int> condensed_param_map(
+      payload.condensed_param_map_view);
 
   /*
    * Obviously, no work is to be done if our index is greater than the
@@ -95,10 +107,10 @@ TRACCC_HOST_DEVICE inline void fill_finding_duplicate_removal_sort_keys(
      * sort key.
      */
     else {
-      candidate_link L = links.at(payload.curr_links_idx + gid);
+      candidate_link L = curr_links.at(condensed_param_map.at(gid));
 
       while (L.meas_idx >= payload.n_measurements && L.step != 0u) {
-        L = links.at(L.previous_candidate_idx);
+        L = prev_links.at(L.previous_candidate_idx);
       }
 
       link_last_measurement.at(gid) = L.meas_idx;

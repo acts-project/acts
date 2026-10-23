@@ -85,8 +85,8 @@ TRACCC_HOST_DEVICE inline void build_tracks(
        it != track.constituent_links().rend(); it++) {
     while (L.meas_idx >= n_meas && L.step != 0u) {
       if (run_mbf) {
-        accumulated_jacobian =
-            accumulated_jacobian * payload.jacobian_ptr[link_idx];
+        accumulated_jacobian = accumulated_jacobian *
+                               payload.jacobian_ptr[L.previous_candidate_idx];
       }
 
       link_idx = L.previous_candidate_idx;
@@ -109,7 +109,8 @@ TRACCC_HOST_DEVICE inline void build_tracks(
       track_state.backward_chi2() = L.chi2;
 
       const bound_track_parameters<>& predicted_params =
-          link_predicted_params.at(link_idx);
+          L.step == 0 ? seeds.at(L.seed_idx)
+                      : link_predicted_params.at(L.previous_candidate_idx);
       const bound_track_parameters<>& filtered_params =
           link_filtered_params.at(link_idx);
 
@@ -174,7 +175,7 @@ TRACCC_HOST_DEVICE inline void build_tracks(
 
       track_state.filtered_params() = filtered_params;
 
-      accumulated_jacobian = payload.jacobian_ptr[link_idx];
+      accumulated_jacobian = payload.jacobian_ptr[L.previous_candidate_idx];
 
       *it = {edm::track_constituent_link::track_state, track_state_index};
     } else {
