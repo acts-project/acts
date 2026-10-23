@@ -13,6 +13,7 @@ acts_add_library(
     src/ParticleKillAction.cpp
     src/PhysicsListFactory.cpp
     src/Geant4Manager.cpp
+    src/RunManager.cpp
 )
 
 target_compile_definitions(ActsExamplesGeant4 PUBLIC ${Geant4_DEFINITIONS})

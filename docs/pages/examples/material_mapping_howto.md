@@ -265,6 +265,17 @@ This step is independent of your surface choices — you only need to redo it if
 the detailed geometry changes, not when you retune binning. It is by far the
 slowest step, so record generously once and reuse the file.
 
+ACTS keeps one Geant4 run open between algorithm initialization and finalization.
+This builds the material/cut associations once and processes events
+through Geant4's event API, using an unmodified Geant4 installation. Event seeds
+are still set independently for each ACTS event, and event callbacks remain per
+event. Begin/end run callbacks occur once for the whole run. Geometry, materials,
+regions and cuts, including explicit energy-cut vectors, must remain fixed until
+the run is finalized; apply changes in Idle state before initializing a new run.
+Use `numThreads=1` so the run lifecycle stays on the initializing thread. ACTS
+does not provide a planned event count at run startup, so the begin-run action sees
+zero; the end-run action receives the actual processed count.
+
 ### Recording a DD4hep detector with ddsim
 
 For a DD4hep detector, the recording can also run directly in `ddsim`, on the

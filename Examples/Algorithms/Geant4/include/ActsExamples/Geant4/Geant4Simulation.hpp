@@ -48,6 +48,7 @@ struct Geant4Handle;
 
 namespace Geant4 {
 struct EventStore;
+class RunManager;
 }  // namespace Geant4
 
 /// Abstracts common Geant4 Acts algorithm behaviour.
@@ -67,7 +68,7 @@ class Geant4SimulationBase : public IAlgorithm {
     /// Detector instance to access Geant4 geometry construction.
     std::shared_ptr<Detector> detector;
 
-    /// Optional Geant4 instance overwrite.
+    /// Optional Geant4 instance overwrite using Geant4::RunManager.
     std::shared_ptr<Geant4Handle> geant4Handle;
 
     /// Cap the largest acceptable step in the propagator
@@ -81,8 +82,12 @@ class Geant4SimulationBase : public IAlgorithm {
 
   ~Geant4SimulationBase() override;
 
-  /// Initialize the algorithm
+  /// Open one Geant4 run until finalize(). Geometry, materials, regions and
+  /// cuts must remain fixed. Execute and finalize on the initializing thread.
   ProcessCode initialize() final;
+
+  /// Close the Geant4 run and invoke the end-of-run action once.
+  ProcessCode finalize() final;
 
   /// Algorithm execute method, called once per event with context
   ///
@@ -112,6 +117,9 @@ class Geant4SimulationBase : public IAlgorithm {
   G4VUserDetectorConstruction* m_detectorConstruction{};
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+
+ private:
+  Geant4::RunManager* m_persistentRun = nullptr;
 };
 
 /// Algorithm to run Geant4 simulation in the ActsExamples framework
