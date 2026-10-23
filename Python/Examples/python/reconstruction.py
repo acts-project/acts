@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Optional, Union, List
+from typing import Callable, Optional, Union, List, Tuple
 from enum import Enum
 from collections import namedtuple
 
@@ -1881,6 +1881,10 @@ def addCKFTracks(
     ckfConfig: CkfConfig = CkfConfig(),
     twoWay: bool = True,
     twoWaySmoothing: bool = True,
+    reverseSearch: bool = False,
+    reverseSearchRZBoundary: Optional[Tuple[float, float]] = None,
+    inwardOnlyRZBoundary: Optional[Tuple[float, float]] = None,
+    seedParamsEstimation: Optional[acts.examples.SeedParamsEstimator.Config] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrackSummary: bool = True,
@@ -1907,6 +1911,16 @@ def addCKFTracks(
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
         Specify as a list(TrackSelectorConfig) for eta-dependent cuts, with binning specified by absEta[1].
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
+    reverseSearch : bool, False
+        search every seed inward first, from its last space point
+    reverseSearchRZBoundary : (r, |z|), None
+        search a seed inward first if its last space point lies beyond r or |z|
+    inwardOnlyRZBoundary : (r, |z|), None
+        search a seed inward only if its last space point lies beyond r or |z|
+    seedParamsEstimation : SeedParamsEstimator.Config, None
+        estimate the initial parameters from the seeds in the track finding, on
+        the space point the search starts from, instead of using the estimate
+        of `addSeeding`. The reverse search options need it.
     writeTrackSummary : bool, True
         write tracksummary_ckf.root ntuple?
     writeTrackStates : bool, False
@@ -1950,6 +1964,17 @@ def addCKFTracks(
             absEtaEdges=[cutSets[0].absEtaMin] + [c.absEta[1] for c in tslist],
         )
 
+    reverseSearchMinR, reverseSearchMinAbsZ = reverseSearchRZBoundary or (None, None)
+    inwardOnlyMinR, inwardOnlyMinAbsZ = inwardOnlyRZBoundary or (None, None)
+    directionFromSeed = (
+        reverseSearchRZBoundary is not None or inwardOnlyRZBoundary is not None
+    )
+    if (reverseSearch or directionFromSeed) and seedParamsEstimation is None:
+        raise ValueError(
+            "The reverse search starts on the last space point of the seed, "
+            "which needs seedParamsEstimation"
+        )
+
     # Set up the track finding algorithm with CKF
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
@@ -1969,10 +1994,14 @@ def addCKFTracks(
             ]
         ),
         inputMeasurements=f"{prefix}measurement_subset",
-        inputInitialTrackParameters=f"{prefix}estimatedparameters",
+        inputInitialTrackParameters=(
+            f"{prefix}estimatedparameters" if seedParamsEstimation is None else ""
+        ),
         inputSeeds=(
             f"{prefix}estimatedseeds"
-            if ckfConfig.seedDeduplication or ckfConfig.stayOnSeed
+            if ckfConfig.seedDeduplication
+            or ckfConfig.stayOnSeed
+            or seedParamsEstimation is not None
             else ""
         ),
         outputTracks=f"{prefix}ckf_tracks",
@@ -1989,6 +2018,12 @@ def addCKFTracks(
             maxSteps=ckfConfig.maxSteps,
             twoWay=twoWay,
             twoWaySmoothing=twoWaySmoothing,
+            seedParamsEstimation=seedParamsEstimation,
+            reverseSearch=reverseSearch,
+            reverseSearchMinR=reverseSearchMinR,
+            reverseSearchMinAbsZ=reverseSearchMinAbsZ,
+            inwardOnlyMinR=inwardOnlyMinR,
+            inwardOnlyMinAbsZ=inwardOnlyMinAbsZ,
             seedDeduplication=ckfConfig.seedDeduplication,
             seedDeduplicatorCfg=ckfConfig.seedDeduplicatorConfig,
             stayOnSeed=ckfConfig.stayOnSeed,

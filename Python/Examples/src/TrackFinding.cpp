@@ -15,6 +15,7 @@
 #include "ActsExamples/TrackFinding/MeasurementFilterAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/OrthogonalTripletSeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SeedParamsEstimator.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
@@ -129,12 +130,26 @@ void addTrackFinding(py::module& mex) {
       dumpVisualization, extendWithPhi, visualizationFunction);
 
   {
+    auto e =
+        py::class_<SeedParamsEstimator, std::shared_ptr<SeedParamsEstimator>>(
+            mex, "SeedParamsEstimator");
+    auto c =
+        py::class_<SeedParamsEstimator::Config>(e, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(
+        c, trackingGeometry, magneticField, bFieldMin, spacePointSelection,
+        minTransverseDistance, geometricRefineIterations, spacePointWeight,
+        initialSigmas, initialSigmaQoverPt, initialSigmaPtRel,
+        initialVarInflation, noTimeVarInflation, particleHypothesis);
+  }
+
+  {
     using Alg = TrackParamsEstimationAlgorithm;
 
     auto [alg, c] = declareAlgorithm<Alg, IAlgorithm>(
         mex, "TrackParamsEstimationAlgorithm");
 
-    alg.def_static("inverseRadiusPowerWeight", &Alg::inverseRadiusPowerWeight,
+    alg.def_static("inverseRadiusPowerWeight",
+                   &SeedParamsEstimator::inverseRadiusPowerWeight,
                    py::arg("exponent"));
 
     ACTS_PYTHON_STRUCT(
@@ -184,9 +199,11 @@ void addTrackFinding(py::module& mex) {
         c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
         outputTracks, trackingGeometry, magneticField, findTracks,
         findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
-        twoWay, twoWaySmoothing, seedDeduplication, seedDeduplicatorCfg,
-        stayOnSeed, pixelVolumeIds, stripVolumeIds, maxPixelHoles,
-        maxStripHoles, trimTracks, recordMaterialStates, useJosephFormulation,
+        twoWay, twoWaySmoothing, seedParamsEstimation, reverseSearch,
+        reverseSearchMinR, reverseSearchMinAbsZ, inwardOnlyMinR,
+        inwardOnlyMinAbsZ, seedDeduplication, seedDeduplicatorCfg, stayOnSeed,
+        pixelVolumeIds, stripVolumeIds, maxPixelHoles, maxStripHoles,
+        trimTracks, recordMaterialStates, useJosephFormulation,
         constrainToVolumeIds, endOfWorldVolumeIds);
   }
 }
