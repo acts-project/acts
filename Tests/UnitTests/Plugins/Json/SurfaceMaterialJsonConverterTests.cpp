@@ -18,6 +18,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/MultiAxisSpec.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
@@ -32,6 +33,9 @@
 #include <vector>
 
 #include <nlohmann/json.hpp>
+
+// These tests intentionally exercise the deprecated material format.
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 using namespace Acts;
 
@@ -458,3 +462,5 @@ BOOST_AUTO_TEST_CASE(UnmappedMaterialYieldsNoMaterial) {
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
+
+ACTS_POP_IGNORE_DEPRECATED()
