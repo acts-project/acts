@@ -12,7 +12,9 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -21,6 +23,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -87,6 +90,29 @@ BOOST_AUTO_TEST_CASE(CylinderLayerProperties) {
   // auto planeSurface = pCylinderLayer->surfaceRepresentation();
   BOOST_CHECK_EQUAL(pCylinderLayer->surfaceRepresentation().name(),
                     std::string("Acts::CylinderSurface"));
+}
+
+BOOST_AUTO_TEST_CASE(CylinderLayerNearestSolution) {
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  auto sensitive = Surface::makeShared<PlaneSurface>(
+      Transform3(Translation3(10., 0., 0.)),
+      std::make_shared<const RectangleBounds>(1., 1.));
+  // the approach cylinders are at r = 9 and r = 11
+  auto layer = CylinderLayer::create(
+      Transform3::Identity(), std::make_shared<const CylinderBounds>(10., 100.),
+      std::make_unique<SurfaceArray>(sensitive), 2.);
+  const auto& approaches = layer->approachDescriptor()->containedSurfaces();
+
+  // leave through the inner cylinder: the outer one is crossed behind, out of
+  // bounds, and again behind the beam line
+  NavigationOptions<Surface> options;
+  options.resolvePassive = true;
+  options.startObject = approaches.front();
+  const auto targets = layer->compatibleSurfaces(
+      gctx, Vector3(9., 0., 95.), Vector3(-0.2, 0., -1.).normalized(), options);
+  BOOST_CHECK(std::ranges::none_of(targets, [&](const auto& target) {
+    return &target.surface() == approaches.back();
+  }));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

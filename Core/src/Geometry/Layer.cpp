@@ -19,6 +19,8 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <iterator>
 #include <vector>
 
 namespace Acts {
@@ -167,10 +169,16 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
         extendedSurface != options.extendedSurfaces.end()) {
       boundaryTolerance = extendedSurface->second;
     }
-    // the surface intersection
-    auto [intersection, intersectionIndex] =
-        surface.intersect(gctx, position, direction, boundaryTolerance)
-            .closestWithIndex();
+    // only the nearest solution counts, even out of bounds. a further one is a
+    // later pass through the surface, for a cylinder behind the beam line.
+    const MultiIntersection3D intersections =
+        surface.intersect(gctx, position, direction, boundaryTolerance);
+    const auto nearest = std::ranges::min_element(
+        intersections, {},
+        [](const auto& candidate) { return std::abs(candidate.pathLength()); });
+    const Intersection3D& intersection = *nearest;
+    const auto intersectionIndex = static_cast<IntersectionIndex>(
+        std::distance(intersections.begin(), nearest));
     NavigationTarget surfaceIntersection(intersection, intersectionIndex,
                                          surface, boundaryTolerance);
     if (intersection.isValid() &&
