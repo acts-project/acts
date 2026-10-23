@@ -10,3 +10,7 @@ implementation.
 For electrons, whose Bremsstrahlung energy loss is strongly non-Gaussian, the
 @ref Acts::GaussianSumFitter "Gaussian Sum Filter" models the track state as a
 mixture of Gaussians instead; see @ref gsf.
+
+The @ref Acts::TrackletJoiner joins a second tracklet, filtered from a state of
+a first one, so that every state holds the information of both without a new
+propagation; this is the two-way track finding.
