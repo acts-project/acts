@@ -140,14 +140,20 @@ class Impl final : public DoubletSeedFinder {
       }
     };
 
+    // the difference of a coordinate between the middle and the other space
+    // point, positive away from the middle one
+    const auto delta = [](float middle, float other) {
+      return isBottomCandidate ? middle - other : other - middle;
+    };
+
     // the number of candidates to look at; if they are sorted by radius, they
     // end at the first candidate outside the radial range
     std::size_t nCandidates = candidateSps.size();
     if constexpr (sortedByR) {
       const auto insideRadialRange = [&](const ConstSpacePointProxy& sp) {
         const float rO = sp.zr()[1];
-        return isBottomCandidate ? !(rM - rO < m_cfg.deltaRMin)
-                                 : !(rO - rM > m_cfg.deltaRMax);
+        return isBottomCandidate ? (rM - rO >= m_cfg.deltaRMin)
+                                 : (rO - rM <= m_cfg.deltaRMax);
       };
       nCandidates =
           std::ranges::partition_point(candidateSps, insideRadialRange) -
@@ -169,8 +175,8 @@ class Impl final : public DoubletSeedFinder {
       std::uint32_t nPassed = 0;
       for (std::size_t i = 0; i < blockCount; ++i) {
         const auto& zrO = zrColumn[candidateIndex(blockBegin + i)];
-        const float deltaR = isBottomCandidate ? rM - zrO[1] : zrO[1] - rM;
-        const float deltaZ = isBottomCandidate ? zM - zrO[0] : zrO[0] - zM;
+        const float deltaR = delta(rM, zrO[1]);
+        const float deltaZ = delta(zM, zrO[0]);
 
         bool outside = false;
         if constexpr (!sortedByR) {
@@ -214,8 +220,8 @@ class Impl final : public DoubletSeedFinder {
         const float varianceZO = varianceZColumn[indexO];
         const float varianceRO = varianceRColumn[indexO];
 
-        float deltaR = isBottomCandidate ? rM - rO : rO - rM;
-        float deltaZ = isBottomCandidate ? zM - zO : zO - zM;
+        float deltaR = delta(rM, rO);
+        float deltaZ = delta(zM, zO);
 
         // check the time compatibility of the two space points. the time
         // difference is corrected for the time of flight along the straight
@@ -271,9 +277,8 @@ class Impl final : public DoubletSeedFinder {
           zO = calibratedO[2];
           const float rOd = fastHypot(xO, yO);
 
-          deltaR = isBottomCandidate ? rMd - rOd : rOd - rMd;
-          deltaZ =
-              isBottomCandidate ? calibratedM[2] - zO : zO - calibratedM[2];
+          deltaR = delta(rMd, rOd);
+          deltaZ = delta(calibratedM[2], zO);
         }
 
         // if interactionPointCut is false we apply z cuts before coordinate
