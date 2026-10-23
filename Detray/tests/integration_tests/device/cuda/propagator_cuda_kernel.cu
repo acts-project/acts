@@ -75,7 +75,7 @@ void propagator_test(
     covfie::field_view<bfield_bknd_t> field_data,
     vecmem::data::vector_view<test_track>& tracks_data,
     vecmem::data::jagged_vector_view<step_record<test_algebra>>& step_data) {
-  constexpr int thread_dim = 2 * WARP_SIZE;
+  constexpr int thread_dim = 64;
   int block_dim = tracks_data.size() / thread_dim + 1;
 
   // run the test kernel

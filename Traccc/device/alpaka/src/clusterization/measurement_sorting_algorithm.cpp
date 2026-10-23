@@ -77,7 +77,7 @@ void measurement_sorting_algorithm::sorting_kernel(
     const measurement_sorting_kernel_payload& payload) const {
   const unsigned int n_measurements = payload.n_measurements;
 
-  const unsigned int num_threads = warp_size() * 8;
+  const unsigned int num_threads = 256;
   const unsigned int num_blocks =
       (n_measurements + num_threads - 1) / num_threads;
   auto workDiv = makeWorkDiv<Acc>(num_blocks, num_threads);

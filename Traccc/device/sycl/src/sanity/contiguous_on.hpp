@@ -101,7 +101,7 @@ bool is_contiguous_on(P&& projection, vecmem::memory_resource& mr,
                       const VIEW& view) {
   // This should never be a performance-critical step, so we can keep the
   // block size fixed.
-  constexpr int local_size = 512;
+  constexpr int local_size = 256;
   constexpr int local_size_2d = 16;
 
   // Grab the number of elements in our vector.

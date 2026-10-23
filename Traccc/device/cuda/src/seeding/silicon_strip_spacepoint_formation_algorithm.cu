@@ -94,7 +94,7 @@ silicon_strip_spacepoint_formation_algorithm::
 
 void silicon_strip_spacepoint_formation_algorithm::count_strip_pairs_kernel(
     const count_strip_pairs_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks =
       (payload.n_measurements + n_threads - 1) / n_threads;
   kernels::count_strip_pairs_kernel<<<n_blocks, n_threads, 0,
@@ -106,7 +106,7 @@ void silicon_strip_spacepoint_formation_algorithm::count_strip_pairs_kernel(
 
 void silicon_strip_spacepoint_formation_algorithm::find_strip_pairs_kernel(
     const find_strip_pairs_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks =
       (payload.n_measurements + n_threads - 1) / n_threads;
   kernels::find_strip_pairs_kernel<<<n_blocks, n_threads, 0,
@@ -119,7 +119,7 @@ void silicon_strip_spacepoint_formation_algorithm::find_strip_pairs_kernel(
 
 void silicon_strip_spacepoint_formation_algorithm::form_spacepoints_kernel(
     const form_spacepoints_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks = (payload.n_pairs + n_threads - 1) / n_threads;
   kernels::form_strip_spacepoints_from_pairs_kernel<<<
       n_blocks, n_threads, 0, details::get_stream(stream())>>>(
@@ -148,7 +148,7 @@ bool silicon_strip_spacepoint_formation_algorithm::input_is_sorted(
 
 void silicon_strip_spacepoint_formation_algorithm::gather_spacepoints_kernel(
     const gather_spacepoints_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks = (payload.n_pairs + n_threads - 1u) / n_threads;
   kernels::gather_strip_spacepoints_kernel<<<n_blocks, n_threads, 0,
                                              details::get_stream(stream())>>>(

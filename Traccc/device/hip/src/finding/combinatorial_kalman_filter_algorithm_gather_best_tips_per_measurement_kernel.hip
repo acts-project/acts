@@ -39,7 +39,8 @@ void combinatorial_kalman_filter_algorithm::
         unsigned int n_threads,
         const device::gather_best_tips_per_measurement_payload<default_algebra>&
             payload) const {
-  // Establish the kernel launch parameters.
+  // Establish the kernel launch parameters. Every block loops until its
+  // longest track is done, so use exactly one warp per block.
   const unsigned int deviceThreads = warp_size();
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
