@@ -438,6 +438,35 @@ def test_python_space_point_access(generic_detector_config, tmp_path):
         s.run()
 
 
+@pytest.mark.parametrize("with_cut", [False, True])
+def test_gsf_factory_preserves_positional_arguments(detector_config, with_cut):
+    from pathlib import Path
+
+    approximation = acts.examples.loadBetheHeitlerApproxFromJson(
+        str(
+            Path(__file__).resolve().parents[3]
+            / "Examples/Configs/betheHeitler_geantSim_cdf_nC6_O5.json"
+        ),
+        clamp_to_range=True,
+        no_change_limit=0.0001,
+        single_gaussian_limit=0.002,
+    )
+    kwargs = {"transverseMomentumCut": 100 * u.MeV} if with_cut else {}
+    fitter = acts.examples.makeGsfFitterFunction(
+        detector_config.trackingGeometry,
+        acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T)),
+        approximation,
+        12,
+        1e-4,
+        acts.examples.ComponentMergeMethod.maxWeight,
+        acts.examples.MixtureReductionAlgorithm.KLDistance,
+        100.0,
+        acts.logging.INFO,
+        **kwargs,
+    )
+    assert fitter is not None
+
+
 def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
     from truth_tracking_gsf import runTruthTrackingGsf
 
