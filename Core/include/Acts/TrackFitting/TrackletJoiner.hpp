@@ -51,12 +51,16 @@ namespace Acts {
 /// 3. links the second tracklet behind the shared state
 ///    (@ref linkTrackletBehind).
 ///
-/// Afterwards every state holds smoothed parameters with the information of
-/// both tracklets. The predicted and filtered history stays in two filter
-/// orders, so a later smoother over the joined chain is invalid. The track
-/// level data of the joined track is taken from the second tracklet, which
-/// holds the counts of both and, where the second pass extrapolated, the
-/// parameters at the reference surface.
+/// Afterwards every state on the chain holds smoothed parameters with the
+/// information of both tracklets. States of the first tracklet before the
+/// shared state in filter order, such as holes before the first measurement,
+/// leave the chain in the link, because the second tracklet covers that side;
+/// they are conditioned before the link and stay in the container. The
+/// predicted and filtered history stays in two filter orders, so a later
+/// smoother over the joined chain is invalid. The track level data of the
+/// joined track is taken from the second tracklet, which holds the counts of
+/// both and, where the second pass extrapolated, the parameters at the
+/// reference surface.
 struct TrackletJoiner {
   /// Configuration
   struct Config {

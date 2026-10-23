@@ -127,6 +127,13 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// two filter orders, and a smoother over the joined chain counts the
     /// first pass twice.
     bool twoWay = true;
+    /// Smooth the second pass and carry its information into the first pass
+    /// when the two passes are joined, see @ref Acts::TrackletJoiner. Off,
+    /// the passes are only linked: the first-pass states keep the first pass
+    /// only, the second-pass states hold no smoothed parameters, and only
+    /// the perigee holds every measurement once. Off is cheaper by about one
+    /// smoothing pass per track.
+    bool twoWaySmoothing = true;
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;

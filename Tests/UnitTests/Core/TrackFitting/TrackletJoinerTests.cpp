@@ -22,8 +22,10 @@
 #include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
+#include <map>
 #include <vector>
 
 #include <Eigen/Dense>
@@ -83,10 +85,22 @@ Eigen::Matrix<double, 2, kDim> projector() {
   return h;
 }
 
-/// The model: nodes 0 to 3 are the first tracklet in filter order, node 0
-/// carries the prior; nodes 4 to 6 are the second tracklet, filtered from
-/// node 0. Nodes 1 and 5 are holes.
-std::vector<Node> makeModel() {
+/// Variants of the model
+enum class Variant {
+  /// nodes 0 to 3 are the first tracklet in filter order, node 0 carries the
+  /// prior and is the shared state; nodes 4 to 6 are the second tracklet,
+  /// filtered from node 0. Nodes 1 and 5 are holes.
+  Base,
+  /// Base plus node 7, a hole after the last measurement of the first
+  /// tracklet. It has no smoothed component, as after `smoothTrack`.
+  TrailingHole,
+  /// Base plus node 7, a hole before the first measurement. It carries the
+  /// prior, node 0 is transported from it, and node 0 stays the shared state.
+  StemHole,
+};
+
+/// The model
+std::vector<Node> makeModel(Variant variant) {
   std::vector<Node> nodes(7);
   const SquareMatrix2 v = Vector2(4e-3, 9e-3).asDiagonal();
 
@@ -102,6 +116,18 @@ std::vector<Node> makeModel() {
   nodes[5] = {4, makeJacobian(-0.9), makeNoise(0.9), false, Vector2::Zero(), v};
   nodes[6] = {5,    makeJacobian(-1.3),  makeNoise(1.1),
               true, Vector2(-0.7, -0.5), v};
+
+  if (variant == Variant::TrailingHole) {
+    nodes.push_back(
+        {3, makeJacobian(0.9), makeNoise(1.3), false, Vector2::Zero(), v});
+  } else if (variant == Variant::StemHole) {
+    // the stem hole carries the prior, node 0 is transported from it
+    nodes.push_back({-1, BoundMatrix::Identity(), BoundMatrix::Zero(), false,
+                     Vector2::Zero(), v});
+    nodes[0].parent = 7;
+    nodes[0].F = makeJacobian(0.7);
+    nodes[0].Q = makeNoise(0.8);
+  }
   return nodes;
 }
 
@@ -152,9 +178,10 @@ using Container = TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
                                  detail::ValueHolder>;
 
 /// Append one filtered state to a track, the way the CKF stores it.
-void appendState(Container::TrackProxy& track, const Node& node,
-                 const BoundVector& prevMean, const BoundMatrix& prevCov) {
-  auto ts = track.appendTrackState(TrackStatePropMask::All);
+std::size_t appendState(Container::TrackProxy& track, const Node& node,
+                        const BoundVector& prevMean, const BoundMatrix& prevCov,
+                        TrackStatePropMask mask = TrackStatePropMask::All) {
+  auto ts = track.appendTrackState(mask);
   ts.jacobian() = node.F;
 
   const BoundVector predicted = node.parent < 0 ? prevMean : node.F * prevMean;
@@ -182,65 +209,136 @@ void appendState(Container::TrackProxy& track, const Node& node,
     ts.filtered() = predicted;
     ts.filteredCovariance() = predictedCov;
   }
+  return ts.index();
 }
 
 struct Tracklets {
   Container::TrackProxy first;
   Container::TrackStateProxy shared;
   Container::TrackProxy second;
+  /// node of each track state index
+  std::map<std::size_t, std::size_t> nodeOfState;
+  /// states that must stay without smoothed parameters
+  std::vector<std::size_t> unsmoothed;
 };
 
-/// Build the first tracklet, smooth it, and build the second tracklet from
-/// the smoothed shared state.
-Tracklets buildTracklets(Container& tc, const std::vector<Node>& nodes) {
+/// Build the first tracklet, smooth it from its last measurement as
+/// `smoothTrack` does, and build the second tracklet from the smoothed
+/// shared state, which is the first measurement.
+Tracklets buildTracklets(Container& tc, const std::vector<Node>& nodes,
+                         Variant variant) {
+  std::map<std::size_t, std::size_t> nodeOfState;
+  std::vector<std::size_t> unsmoothed;
+
   auto first = tc.makeTrack();
   BoundVector mean = kPriorMean;
   BoundMatrix cov = kPriorCov;
-  for (std::size_t i = 0; i < 4; ++i) {
-    appendState(first, nodes[i], mean, cov);
+  std::vector<std::size_t> firstNodes = {0, 1, 2, 3};
+  if (variant == Variant::TrailingHole) {
+    firstNodes.push_back(7);
+  } else if (variant == Variant::StemHole) {
+    firstNodes.insert(firstNodes.begin(), 7);
+  }
+  std::size_t lastMeasurement = kTrackIndexInvalid;
+  std::size_t sharedIndex = kTrackIndexInvalid;
+  for (std::size_t node : firstNodes) {
+    // a trailing hole is created without a smoothed component, as the CKF
+    // does for every state
+    const bool trailing = (variant == Variant::TrailingHole && node == 7);
+    const std::size_t index = appendState(
+        first, nodes[node], mean, cov,
+        trailing ? (TrackStatePropMask::Predicted |
+                    TrackStatePropMask::Filtered | TrackStatePropMask::Jacobian)
+                 : TrackStatePropMask::All);
+    nodeOfState[index] = node;
     auto ts = first.outermostTrackState();
     mean = ts.filtered();
     cov = ts.filteredCovariance();
+    if (nodes[node].hasMeasurement) {
+      lastMeasurement = index;
+      if (sharedIndex == kTrackIndexInvalid) {
+        sharedIndex = index;
+      }
+    }
+    if (trailing) {
+      unsmoothed.push_back(index);
+    }
   }
   first.linkForward();
   BOOST_REQUIRE(
-      MbfSmoother()(gctx, tc.trackStateContainer(), first.tipIndex()).ok());
+      MbfSmoother()(gctx, tc.trackStateContainer(), lastMeasurement).ok());
 
-  auto shared = first.innermostTrackState().value();
+  auto shared = tc.trackStateContainer().getTrackState(sharedIndex);
   BOOST_REQUIRE(shared.hasSmoothed());
+  BOOST_REQUIRE(shared.typeFlags().isMeasurement());
 
   auto second = tc.makeTrack();
   mean = shared.smoothed();
   cov = shared.smoothedCovariance();
-  for (std::size_t i = 4; i < 7; ++i) {
-    appendState(second, nodes[i], mean, cov);
+  for (std::size_t node = 4; node < 7; ++node) {
+    const std::size_t index = appendState(second, nodes[node], mean, cov);
+    nodeOfState[index] = node;
     auto ts = second.outermostTrackState();
     mean = ts.filtered();
     cov = ts.filteredCovariance();
   }
 
-  return {first, shared, second};
+  return {first, shared, second, nodeOfState, unsmoothed};
 }
 
-/// Smoothed state of every node of the joined track, keyed by the position in
-/// the chain from the tip: f3, f2, f1, f0, b1, b2, b3.
-constexpr std::array<std::size_t, 7> kNodeOfChainPosition{3, 2, 1, 0, 4, 5, 6};
+/// Check every smoothed state of a joined track against the dense joint
+/// posterior. States listed as unsmoothed must have no smoothed component.
+template <typename track_state_proxy_t>
+void checkStateAgainstDense(const track_state_proxy_t& ts, std::size_t node,
+                            const Eigen::VectorXd& mean,
+                            const Eigen::MatrixXd& cov, double tol) {
+  BOOST_REQUIRE(ts.hasSmoothed());
+  const BoundVector expMean = mean.segment<kDim>(node * kDim);
+  const BoundMatrix expCov = cov.block<kDim, kDim>(node * kDim, node * kDim);
+  CHECK_CLOSE_ABS(ts.smoothed(), expMean, tol);
+  CHECK_CLOSE_ABS(ts.smoothedCovariance(), expCov, tol);
+  // the covariance is symmetric
+  const BoundMatrix asym =
+      ts.smoothedCovariance() - ts.smoothedCovariance().transpose();
+  BOOST_CHECK_LT(asym.cwiseAbs().maxCoeff(), 1e-15);
+}
 
 void checkJoinedAgainstDense(const Container::TrackProxy& joined,
-                             const std::vector<Node>& nodes, double tol) {
+                             const std::map<std::size_t, std::size_t>& nodeOf,
+                             const std::vector<std::size_t>& unsmoothed,
+                             const std::vector<Node>& nodes, double tol,
+                             std::size_t expectedStates) {
   const auto [mean, cov] = densePosterior(nodes);
-  std::size_t pos = 0;
+  std::size_t count = 0;
   for (const auto& ts : joined.trackStatesReversed()) {
-    BOOST_REQUIRE_LT(pos, kNodeOfChainPosition.size());
-    const std::size_t node = kNodeOfChainPosition[pos];
-    BOOST_REQUIRE(ts.hasSmoothed());
-    const BoundVector expMean = mean.segment<kDim>(node * kDim);
-    const BoundMatrix expCov = cov.block<kDim, kDim>(node * kDim, node * kDim);
-    CHECK_CLOSE_ABS(ts.smoothed(), expMean, tol);
-    CHECK_CLOSE_ABS(ts.smoothedCovariance(), expCov, tol);
-    ++pos;
+    ++count;
+    if (std::find(unsmoothed.begin(), unsmoothed.end(), ts.index()) !=
+        unsmoothed.end()) {
+      BOOST_CHECK(!ts.hasSmoothed());
+      continue;
+    }
+    BOOST_REQUIRE(nodeOf.contains(ts.index()));
+    checkStateAgainstDense(ts, nodeOf.at(ts.index()), mean, cov, tol);
   }
-  BOOST_CHECK_EQUAL(pos, kNodeOfChainPosition.size());
+  BOOST_CHECK_EQUAL(count, expectedStates);
+}
+
+/// Join in place and check against the dense posterior
+template <typename smoother_t>
+Tracklets joinAndCheck(Container& tc, Variant variant) {
+  const auto nodes = makeModel(variant);
+  auto tracklets = buildTracklets(tc, nodes, variant);
+  TrackletJoiner joiner;
+  BOOST_REQUIRE(joiner
+                    .joinInPlace(gctx, tracklets.first, tracklets.shared,
+                                 tracklets.second, getDummyLogger(),
+                                 smoother_t{})
+                    .ok());
+  // states before the shared state leave the chain in the link
+  const std::size_t onChain = variant == Variant::StemHole ? 7 : nodes.size();
+  checkJoinedAgainstDense(tracklets.first, tracklets.nodeOfState,
+                          tracklets.unsmoothed, nodes, 1e-9, onChain);
+  return tracklets;
 }
 
 }  // namespace
@@ -255,7 +353,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CarriedAdjointIsPriorNodeSmoothing, smoother_t,
                               Smoothers) {
   // smoothing with a carried adjoint applied to the node before the segment
   // equals smoothing a chain that holds that node as a state
-  const auto nodes = makeModel();
+  const auto nodes = makeModel(Variant::Base);
   Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto full = tc.makeTrack();
   BoundVector mean = kPriorMean;
@@ -314,9 +412,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CarriedAdjointIsPriorNodeSmoothing, smoother_t,
 }
 
 BOOST_AUTO_TEST_CASE(CarriedAdjointAgreesBetweenSmoothers) {
-  const auto nodes = makeModel();
+  const auto nodes = makeModel(Variant::Base);
   Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto tracklets = buildTracklets(tc, nodes);
+  auto tracklets = buildTracklets(tc, nodes, Variant::Base);
   auto secondCopy = tc.makeTrack();
   secondCopy.copyFrom(tracklets.second);
 
@@ -345,9 +443,9 @@ BOOST_AUTO_TEST_CASE(CarriedAdjointAgreesBetweenSmoothers) {
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(JoinInPlaceMatchesJointPosterior, smoother_t,
                               Smoothers) {
-  const auto nodes = makeModel();
+  const auto nodes = makeModel(Variant::Base);
   Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto tracklets = buildTracklets(tc, nodes);
+  auto tracklets = buildTracklets(tc, nodes, Variant::Base);
   const BoundMatrix secondStart = nodes[4].F;
   const std::size_t secondInnermost = tracklets.second.tipIndex();
 
@@ -358,7 +456,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(JoinInPlaceMatchesJointPosterior, smoother_t,
                                  smoother_t{})
                     .ok());
 
-  checkJoinedAgainstDense(tracklets.first, nodes, 1e-9);
+  checkJoinedAgainstDense(tracklets.first, tracklets.nodeOfState,
+                          tracklets.unsmoothed, nodes, 1e-9, nodes.size());
 
   // the link: the chain runs through the shared state into the second
   // tracklet, the stitch jacobian is the inverse transport, the stem is the
@@ -382,10 +481,41 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(JoinInPlaceMatchesJointPosterior, smoother_t,
   }
 }
 
-BOOST_AUTO_TEST_CASE(JoinCopyLeavesInputsUntouched) {
-  const auto nodes = makeModel();
+BOOST_AUTO_TEST_CASE_TEMPLATE(JoinSkipsTrailingHoles, smoother_t, Smoothers) {
+  // a hole after the last measurement has no smoothed component and stays
+  // as it is; every other state matches the joint posterior
   Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto tracklets = buildTracklets(tc, nodes);
+  auto tracklets = joinAndCheck<smoother_t>(tc, Variant::TrailingHole);
+  BOOST_REQUIRE_EQUAL(tracklets.unsmoothed.size(), 1u);
+  BOOST_CHECK_EQUAL(tracklets.unsmoothed.front(), tracklets.first.tipIndex());
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(JoinSmoothsStemStatesBeforeShared, smoother_t,
+                              Smoothers) {
+  // a hole before the first measurement gets a smoothing step from the
+  // corrected shared state and matches the joint posterior; the link then
+  // takes it off the chain, because the second tracklet covers that side
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto tracklets = joinAndCheck<smoother_t>(tc, Variant::StemHole);
+  const auto nodes = makeModel(Variant::StemHole);
+  const auto [mean, cov] = densePosterior(nodes);
+  std::size_t stemIndex = kTrackIndexInvalid;
+  for (const auto& [index, node] : tracklets.nodeOfState) {
+    if (node == 7) {
+      stemIndex = index;
+    }
+  }
+  BOOST_REQUIRE_NE(stemIndex, kTrackIndexInvalid);
+  checkStateAgainstDense(tc.trackStateContainer().getTrackState(stemIndex), 7,
+                         mean, cov, 1e-9);
+  // off the chain: the shared state now links into the second tracklet
+  BOOST_CHECK_NE(tracklets.shared.previous(), stemIndex);
+}
+
+BOOST_AUTO_TEST_CASE(JoinCopyLeavesInputsUntouched) {
+  const auto nodes = makeModel(Variant::Base);
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto tracklets = buildTracklets(tc, nodes, Variant::Base);
   const BoundVector sharedBefore = tracklets.shared.smoothed();
   const std::size_t firstStates = tracklets.first.nTrackStates();
   const std::size_t secondStates = tracklets.second.nTrackStates();
@@ -396,7 +526,23 @@ BOOST_AUTO_TEST_CASE(JoinCopyLeavesInputsUntouched) {
                                 tracklets.second);
   BOOST_REQUIRE(joined.ok());
 
-  checkJoinedAgainstDense(*joined, nodes, 1e-9);
+  // the copy has new state indices: the joined chain reads the first
+  // tracklet from its tip, then the second tracklet from its start
+  std::vector<std::size_t> order;
+  for (const auto& ts : tracklets.first.trackStatesReversed()) {
+    order.push_back(tracklets.nodeOfState.at(ts.index()));
+  }
+  std::vector<std::size_t> secondOrder;
+  for (const auto& ts : tracklets.second.trackStatesReversed()) {
+    secondOrder.push_back(tracklets.nodeOfState.at(ts.index()));
+  }
+  order.insert(order.end(), secondOrder.rbegin(), secondOrder.rend());
+  std::map<std::size_t, std::size_t> nodeOfCopy;
+  std::size_t pos = 0;
+  for (const auto& ts : joined->trackStatesReversed()) {
+    nodeOfCopy[ts.index()] = order.at(pos++);
+  }
+  checkJoinedAgainstDense(*joined, nodeOfCopy, {}, nodes, 1e-9, nodes.size());
 
   CHECK_CLOSE_ABS(tracklets.shared.smoothed(), sharedBefore, 0.);
   BOOST_CHECK_EQUAL(tracklets.first.nTrackStates(), firstStates);
@@ -407,9 +553,9 @@ BOOST_AUTO_TEST_CASE(JoinCopyLeavesInputsUntouched) {
 }
 
 BOOST_AUTO_TEST_CASE(ConditioningRejectsStateOffTheChain) {
-  const auto nodes = makeModel();
+  const auto nodes = makeModel(Variant::Base);
   Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto tracklets = buildTracklets(tc, nodes);
+  auto tracklets = buildTracklets(tc, nodes, Variant::Base);
   auto res = conditionSmoothedStatesOnSharedState(
       tc.trackStateContainer(), tracklets.second.tipIndex(),
       tracklets.first.tipIndex(), tracklets.shared.smoothed(),

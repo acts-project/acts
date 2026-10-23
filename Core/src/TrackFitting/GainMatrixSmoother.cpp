@@ -96,25 +96,36 @@ Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
   return Result<void>::success();
 }
 
-SmootherAdjoint GainMatrixSmoother::calculateAdjoint(
-    AnyConstTrackStateProxy ts) const {
+Result<SmootherAdjoint> GainMatrixSmoother::calculateAdjoint(
+    AnyConstTrackStateProxy ts, const Logger& logger) const {
   const BoundMatrix predictedCovariance = ts.predictedCovariance();
   const BoundMatrix smoothedCovariance = ts.smoothedCovariance();
   const BoundMatrix jacobian = ts.jacobian();
 
-  const BoundMatrix predictedCovarianceInverse = predictedCovariance.inverse();
+  const Eigen::LDLT<BoundMatrix> predictedLdlt(predictedCovariance);
+  if (predictedLdlt.info() != Eigen::Success || !predictedLdlt.isPositive()) {
+    ACTS_VERBOSE("Predicted covariance is not positive definite:\n"
+                 << predictedCovariance);
+    return KalmanFitterError::SmoothFailed;
+  }
 
   // Lambda~ = Pp^-1 (Pp - Ps) Pp^-1, lambda~ = -Pp^-1 (xs - xp)
-  const BoundMatrix bigLambdaTilde =
-      predictedCovarianceInverse * (predictedCovariance - smoothedCovariance) *
-      predictedCovarianceInverse;
-  const BoundVector smallLambdaTilde =
-      -predictedCovarianceInverse *
-      subtractBoundParameters(ts.smoothed(), ts.predicted());
+  const BoundMatrix x =
+      predictedLdlt.solve(predictedCovariance - smoothedCovariance);
+  const BoundMatrix bigLambdaTilde = predictedLdlt.solve(x.transpose());
+  const BoundVector smallLambdaTilde = -predictedLdlt.solve(
+      subtractBoundParameters(ts.smoothed(), ts.predicted()));
 
   SmootherAdjoint adjoint;
-  adjoint.bigLambda = jacobian.transpose() * bigLambdaTilde * jacobian;
+  const BoundMatrix bigLambda =
+      jacobian.transpose() * bigLambdaTilde * jacobian;
+  adjoint.bigLambda = 0.5 * (bigLambda + bigLambda.transpose());
   adjoint.smallLambda = jacobian.transpose() * smallLambdaTilde;
+
+  if (!adjoint.bigLambda.allFinite() || !adjoint.smallLambda.allFinite()) {
+    ACTS_VERBOSE("Adjoint is not finite");
+    return KalmanFitterError::SmoothFailed;
+  }
   return adjoint;
 }
 

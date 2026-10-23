@@ -140,7 +140,11 @@ class GainMatrixSmoother {
     }
 
     if (carryOut != nullptr) {
-      *carryOut = calculateAdjoint(AnyConstTrackStateProxy{prev_ts});
+      auto adjoint = calculateAdjoint(AnyConstTrackStateProxy{prev_ts}, logger);
+      if (!adjoint.ok()) {
+        return adjoint.error();
+      }
+      *carryOut = *adjoint;
     }
 
     return Result<void>::success();
@@ -175,8 +179,12 @@ class GainMatrixSmoother {
   /// step onto that node.
   ///
   /// @param ts The last smoothed state, with predicted, smoothed and jacobian
-  /// @return The adjoint on the node the state was predicted from
-  SmootherAdjoint calculateAdjoint(AnyConstTrackStateProxy ts) const;
+  /// @param logger The logger
+  /// @return The adjoint on the node the state was predicted from, or
+  ///         @ref KalmanFitterError::SmoothFailed if the predicted covariance
+  ///         is not positive definite or the result is not finite
+  Result<SmootherAdjoint> calculateAdjoint(AnyConstTrackStateProxy ts,
+                                           const Logger& logger) const;
 };
 
 }  // namespace Acts

@@ -239,7 +239,16 @@ Result<void> conditionSmoothedStatesOnSharedState(
   const BoundMatrix sharedCov = shared.smoothedCovariance();
   const BoundVector deltaMean = subtractBoundParameters(newMean, sharedMean);
   const BoundMatrix deltaCov = newCov - sharedCov;
-  const BoundMatrix sharedCovInverse = sharedCov.inverse();
+  const Eigen::LDLT<BoundMatrix> sharedLdlt(sharedCov);
+  if (sharedLdlt.info() != Eigen::Success || !sharedLdlt.isPositive()) {
+    ACTS_DEBUG("Shared state covariance is not positive definite");
+    return KalmanFitterError::SmoothFailed;
+  }
+  // the regression is L_i = Ps_i R_i Pshared^-1; the shared inverse acts on
+  // the change only, so solve for it once
+  const BoundVector sharedDeltaMean = sharedLdlt.solve(deltaMean);
+  const BoundMatrix sharedDeltaCov =
+      sharedLdlt.solve(sharedLdlt.solve(deltaCov).transpose());
 
   // walk outward from the shared state in filter order; `indices` runs from
   // the tip to the shared state, so iterate it from the back
@@ -262,15 +271,29 @@ Result<void> conditionSmoothedStatesOnSharedState(
     const BoundMatrix smoothedCov = ts.smoothedCovariance();
 
     // transpose of the RTS gain G = Pf F^T Pp^-1 of the previous state
+    const Eigen::LDLT<BoundMatrix> predictedLdlt(predictedCov);
+    if (predictedLdlt.info() != Eigen::Success || !predictedLdlt.isPositive()) {
+      ACTS_DEBUG("Predicted covariance of state "
+                 << ts.index() << " is not positive definite");
+      return KalmanFitterError::SmoothFailed;
+    }
     const BoundMatrix gainTransposed =
-        predictedCov.inverse() * jacobian * prevFilteredCov;
+        predictedLdlt.solve(jacobian * prevFilteredCov);
     r = gainTransposed * r;
 
-    // regression of this state on the shared state
-    const BoundMatrix l = smoothedCov * r * sharedCovInverse;
+    // regression of this state on the shared state without the inverse
+    const BoundMatrix m = smoothedCov * r;
 
-    ts.smoothed() = normalizeBoundParameters(ts.smoothed() + l * deltaMean);
-    ts.smoothedCovariance() = smoothedCov + l * deltaCov * l.transpose();
+    const BoundVector mean =
+        normalizeBoundParameters(ts.smoothed() + m * sharedDeltaMean);
+    const BoundMatrix cov = smoothedCov + m * sharedDeltaCov * m.transpose();
+    if (!mean.allFinite() || !cov.allFinite()) {
+      ACTS_DEBUG("Conditioned state " << ts.index() << " is not finite");
+      return KalmanFitterError::SmoothFailed;
+    }
+    ts.smoothed() = mean;
+    // keep the covariance symmetric against rounding
+    ts.smoothedCovariance() = 0.5 * (cov + cov.transpose());
   }
 
   shared.smoothed() = newMean;

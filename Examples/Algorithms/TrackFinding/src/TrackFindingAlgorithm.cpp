@@ -261,6 +261,9 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
         "required for staying on seed.");
   }
 
+  m_trackletJoiner.config.smoothSecond = m_cfg.twoWaySmoothing;
+  m_trackletJoiner.config.conditionFirst = m_cfg.twoWaySmoothing;
+
   if (m_cfg.trackSelectorCfg.has_value()) {
     m_trackSelector = std::visit(
         [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
@@ -549,13 +552,35 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                          << iSeed << " with error" << secondResult.error());
           } else {
             auto& secondTracksForSeed = secondResult.value();
-            for (auto& secondTrack : secondTracksForSeed) {
-              // Join copies: the joiner gives every state the information of
-              // both passes, and the first pass stays untouched for the next
-              // second track.
-              auto joinResult = m_trackletJoiner.joinCopy(
-                  ctx.recoGeoContext, tracksTemp, trackCandidate,
-                  firstMeasurementConst, secondTrack, logger());
+            for (std::size_t iSecond = 0; iSecond < secondTracksForSeed.size();
+                 ++iSecond) {
+              auto& secondTrack = secondTracksForSeed[iSecond];
+              const bool lastSecond =
+                  (iSecond + 1 == secondTracksForSeed.size());
+
+              // The joiner gives every state the information of both passes.
+              // The first pass must stay untouched for the next second track,
+              // so join copies; the last second track joins in place and
+              // saves the copy of the first pass. The second track is always
+              // copied, because its states may be shared with sibling
+              // branches and the join reverses them.
+              Acts::Result<TrackContainer::TrackProxy> joinResult =
+                  [&]() -> Acts::Result<TrackContainer::TrackProxy> {
+                if (!lastSecond) {
+                  return m_trackletJoiner.joinCopy(
+                      ctx.recoGeoContext, tracksTemp, trackCandidate,
+                      firstMeasurementConst, secondTrack, logger());
+                }
+                auto secondTrackCopy = tracksTemp.makeTrack();
+                secondTrackCopy.copyFrom(secondTrack);
+                auto res = m_trackletJoiner.joinInPlace(
+                    ctx.recoGeoContext, trackCandidate, firstMeasurement,
+                    secondTrackCopy, logger());
+                if (!res.ok()) {
+                  return res.error();
+                }
+                return trackCandidate;
+              }();
               if (!joinResult.ok()) {
                 m_nFailedSmoothing++;
                 ACTS_ERROR("Joining the second pass for seed "

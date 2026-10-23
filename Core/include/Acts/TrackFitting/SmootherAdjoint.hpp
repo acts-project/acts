@@ -48,7 +48,8 @@ inline std::pair<BoundVector, BoundMatrix> applySmootherAdjoint(
   const BoundVector newMean =
       normalizeBoundParameters(mean - cov * adjoint.smallLambda);
   const BoundMatrix newCov = cov - cov * adjoint.bigLambda * cov;
-  return {newMean, newCov};
+  // keep the covariance symmetric against rounding
+  return {newMean, 0.5 * (newCov + newCov.transpose())};
 }
 
 /// @}
