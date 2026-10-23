@@ -36,10 +36,13 @@ def runMaterialMapping(
     outputMaterialTracks: str = "material_tracks",
     treeName: str = "material_tracks",
     s: Sequencer | None = None,
+    numThreads: int = 1,
 ):
     """Configure mapping and return the sequencer and algorithm.
 
     After running the sequencer, serialize the algorithm's ``material`` result.
+    The sequencer must be single-threaded; ``numThreads`` sets the number of
+    threads the mapper uses internally to map the tracks of each event.
     """
     if s is None:
         s = Sequencer(numThreads=1)
@@ -71,6 +74,7 @@ def runMaterialMapping(
     materialMapperConfig = MaterialMapper.Config()
     materialMapperConfig.assignmentFinder = materialAssinger
     materialMapperConfig.surfaceMaterialAccumulator = materialAccumulator
+    materialMapperConfig.numThreads = numThreads
     materialMapper = MaterialMapper(materialMapperConfig, loglevel)
 
     # Mapping Algorithm
@@ -126,6 +130,14 @@ if "__main__" == __name__:
     )
 
     p.add_argument(
+        "-j",
+        "--threads",
+        type=int,
+        default=1,
+        help="Number of threads used by the mapper within each event",
+    )
+
+    p.add_argument(
         "--tree-name",
         type=str,
         default="material_tracks",
@@ -159,6 +171,7 @@ if "__main__" == __name__:
         outputMaterialTracks=args.material_tracks_name,
         treeName=args.tree_name,
         s=Sequencer(events=args.events, numThreads=1),
+        numThreads=args.threads,
     )
     s.run()
     TrackingGeometryMaterialJsonConverter().toFile(
