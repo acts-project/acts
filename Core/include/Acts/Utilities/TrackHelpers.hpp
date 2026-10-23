@@ -180,9 +180,21 @@ Result<void> smoothTracks(
 /// segment without a new propagation. Conditional on the shared state the two
 /// segments are independent, so the exact update in the linear-Gaussian model
 /// is the regression of each state on the shared state:
-/// `L_i = Cov(x_i, x_s) P_s^-1`, `x_i += L_i (x_s' - x_s)`,
-/// `P_i += L_i (P_s' - P_s) L_i^T`, with the cross-covariances from the
-/// Rauch-Tung-Striebel gains of the stored filter history.
+/// `L_k = Cov(x_k, x_s) P_s^-1`, `x_k += L_k (x_s' - x_s)`,
+/// `P_k += L_k (P_s' - P_s) L_k^T`.
+///
+/// The regression is computed in the form of the modified Bryson-Frazier
+/// smoother, so no state covariance is inverted. The smoothed states are
+/// affine in the prior mean of the segment. A forward sweep carries the
+/// sensitivity of the filtered states to the prior mean,
+/// `Dp_k = F_k Df_(k-1)`, `Df_k = (I - K_k H_k) Dp_k`, and a backward sweep
+/// carries the sensitivity of the smoother adjoint,
+/// `Psi~_k = H_k^T S_k^-1 H_k Dp_k + (I - K_k H_k)^T Psi^_k`,
+/// `Psi^_(k-1) = F_k^T Psi~_k`, so that `T_k = Df_k - Pf_k Psi^_k` is the
+/// sensitivity of the smoothed state. With `Z = Pp_s Ps_s^-1`, the move of
+/// the posterior of the shared state per unit of its prior mean, the
+/// regression is `L_k = T_k Z`. Only `S_k` and the shared covariance are
+/// inverted.
 ///
 /// States before the shared state in filter order get a plain smoothing step
 /// from the corrected shared state. States after the last smoothed state, such
@@ -198,7 +210,8 @@ Result<void> smoothTracks(
 /// @param logger The logger
 ///
 /// @return Success, or @ref KalmanFitterError::SmoothFailed if the shared
-///         state is not on the chain or a state has no smoothed parameters
+///         state is not on the chain, a state lacks the needed components, or
+///         a result is not finite
 template <typename traj_t>
 Result<void> conditionSmoothedStatesOnSharedState(
     traj_t &trajectory, std::size_t sharedIndex, std::size_t tipIndex,
@@ -244,56 +257,106 @@ Result<void> conditionSmoothedStatesOnSharedState(
     ACTS_DEBUG("Shared state covariance is not positive definite");
     return KalmanFitterError::SmoothFailed;
   }
-  // the regression is L_i = Ps_i R_i Pshared^-1; the shared inverse acts on
-  // the change only, so solve for it once
-  const BoundVector sharedDeltaMean = sharedLdlt.solve(deltaMean);
-  const BoundMatrix sharedDeltaCov =
-      sharedLdlt.solve(sharedLdlt.solve(deltaCov).transpose());
+  // Z = Pp_s Ps_s^-1 turns the sensitivity to the prior mean into the
+  // regression on the smoothed shared state; it acts on the change only
+  const BoundMatrix sharedPredictedCov = shared.predictedCovariance();
+  const BoundMatrix z = sharedLdlt.solve(sharedPredictedCov).transpose();
+  const BoundVector u = z * deltaMean;
+  const BoundMatrix w = z * deltaCov * z.transpose();
 
-  // walk outward from the shared state in filter order; `indices` runs from
-  // the tip to the shared state, so iterate it from the back
-  BoundMatrix r = BoundMatrix::Identity();
-  for (std::size_t k = indices.size() - 1; k > 0; --k) {
-    auto prev = trajectory.getTrackState(indices[k]);
-    auto ts = trajectory.getTrackState(indices[k - 1]);
+  // measurement pieces of a state: the filtered sensitivity from the
+  // predicted one, and the adjoint sensitivity from the predicted one
+  auto filteredSensitivity = [](const AnyConstTrackStateProxy &ts,
+                                const BoundMatrix &dp) -> BoundMatrix {
+    if (!ts.typeFlags().isMeasurement()) {
+      return dp;
+    }
+    BoundMatrix df = dp;
+    visit_measurement(
+        ts.calibratedSize(),
+        [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
+          const auto H = ts.projectorSubspaceHelper<N>().projector();
+          const BoundMatrix pp = ts.predictedCovariance();
+          const Eigen::Matrix<double, N, N> s =
+              H * pp * H.transpose() + ts.calibratedCovariance<N>();
+          const Eigen::Matrix<double, eBoundSize, N> k =
+              pp * H.transpose() * s.inverse();
+          df = dp - k * (H * dp);
+        });
+    return df;
+  };
+  auto adjointSensitivity = [](const AnyConstTrackStateProxy &ts,
+                               const BoundMatrix &dp,
+                               const BoundMatrix &psiHat) -> BoundMatrix {
+    if (!ts.typeFlags().isMeasurement()) {
+      return psiHat;
+    }
+    BoundMatrix psiTilde = psiHat;
+    visit_measurement(
+        ts.calibratedSize(),
+        [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
+          const auto H = ts.projectorSubspaceHelper<N>().projector();
+          const BoundMatrix pp = ts.predictedCovariance();
+          const Eigen::Matrix<double, N, N> s =
+              H * pp * H.transpose() + ts.calibratedCovariance<N>();
+          const Eigen::Matrix<double, N, N> sInv = s.inverse();
+          const Eigen::Matrix<double, eBoundSize, N> k =
+              pp * H.transpose() * sInv;
+          // H^T S^-1 H Dp + (I - K H)^T Psi^
+          psiTilde = H.transpose() * (sInv * (H * dp)) + psiHat -
+                     H.transpose() * (k.transpose() * psiHat);
+        });
+    return psiTilde;
+  };
+
+  // forward sweep from the shared state to the tip: the sensitivity of the
+  // predicted and filtered states to the prior mean of the segment
+  std::vector<std::pair<BoundMatrix, BoundMatrix>> sensitivities;
+  sensitivities.resize(indices.size());
+  BoundMatrix df = BoundMatrix::Identity();
+  for (std::size_t k = indices.size(); k-- > 0;) {
+    auto ts = trajectory.getTrackState(indices[k]);
     if (!ts.hasSmoothed() || !ts.hasPredicted() || !ts.hasJacobian()) {
       ACTS_DEBUG("State " << ts.index()
                           << " lacks smoothed, predicted or jacobian");
       return KalmanFitterError::SmoothFailed;
     }
+    const bool isShared = (k + 1 == indices.size());
+    const BoundMatrix dp =
+        isShared ? BoundMatrix::Identity() : BoundMatrix(ts.jacobian() * df);
+    df = filteredSensitivity(AnyConstTrackStateProxy{ts}, dp);
+    sensitivities[k] = {dp, df};
+  }
 
-    // non-measurement states carry the prediction as filtered estimate
-    const BoundMatrix prevFilteredCov =
-        prev.hasFiltered() ? BoundMatrix(prev.filteredCovariance())
-                           : BoundMatrix(prev.predictedCovariance());
-    const BoundMatrix jacobian = ts.jacobian();
-    const BoundMatrix predictedCov = ts.predictedCovariance();
-    const BoundMatrix smoothedCov = ts.smoothedCovariance();
+  // backward sweep from the tip to the shared state: the sensitivity of the
+  // adjoint, the sensitivity of the smoothed state, and the update
+  BoundMatrix psiHat = BoundMatrix::Zero();
+  for (std::size_t k = 0; k < indices.size(); ++k) {
+    auto ts = trajectory.getTrackState(indices[k]);
+    const bool isShared = (k + 1 == indices.size());
+    const auto &[dp, dfk] = sensitivities[k];
 
-    // transpose of the RTS gain G = Pf F^T Pp^-1 of the previous state
-    const Eigen::LDLT<BoundMatrix> predictedLdlt(predictedCov);
-    if (predictedLdlt.info() != Eigen::Success || !predictedLdlt.isPositive()) {
-      ACTS_DEBUG("Predicted covariance of state "
-                 << ts.index() << " is not positive definite");
-      return KalmanFitterError::SmoothFailed;
+    if (!isShared) {
+      // non-measurement states carry the prediction as filtered estimate
+      const BoundMatrix filteredCov =
+          ts.hasFiltered() ? BoundMatrix(ts.filteredCovariance())
+                           : BoundMatrix(ts.predictedCovariance());
+      const BoundMatrix t = dfk - filteredCov * psiHat;
+
+      const BoundVector mean = normalizeBoundParameters(ts.smoothed() + t * u);
+      const BoundMatrix cov = ts.smoothedCovariance() + t * w * t.transpose();
+      if (!mean.allFinite() || !cov.allFinite()) {
+        ACTS_DEBUG("Conditioned state " << ts.index() << " is not finite");
+        return KalmanFitterError::SmoothFailed;
+      }
+      ts.smoothed() = mean;
+      // keep the covariance symmetric against rounding
+      ts.smoothedCovariance() = 0.5 * (cov + cov.transpose());
+
+      const BoundMatrix psiTilde =
+          adjointSensitivity(AnyConstTrackStateProxy{ts}, dp, psiHat);
+      psiHat = ts.jacobian().transpose() * psiTilde;
     }
-    const BoundMatrix gainTransposed =
-        predictedLdlt.solve(jacobian * prevFilteredCov);
-    r = gainTransposed * r;
-
-    // regression of this state on the shared state without the inverse
-    const BoundMatrix m = smoothedCov * r;
-
-    const BoundVector mean =
-        normalizeBoundParameters(ts.smoothed() + m * sharedDeltaMean);
-    const BoundMatrix cov = smoothedCov + m * sharedDeltaCov * m.transpose();
-    if (!mean.allFinite() || !cov.allFinite()) {
-      ACTS_DEBUG("Conditioned state " << ts.index() << " is not finite");
-      return KalmanFitterError::SmoothFailed;
-    }
-    ts.smoothed() = mean;
-    // keep the covariance symmetric against rounding
-    ts.smoothedCovariance() = 0.5 * (cov + cov.transpose());
   }
 
   shared.smoothed() = newMean;
