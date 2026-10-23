@@ -71,8 +71,7 @@ connected layers, which *eta bin* pairs are geometrically compatible with the
 allowed @f$z_0@f$ range. The result is a **bin group** list — one inner bin
 together with all outer bins it may connect to — which serves as the graph
 builder's iteration schedule, ordered so that outer bins are processed before
-the inner bins that depend on them. The @f$z_0@f$ range is widened on both ends
-by `GbtsZ0Range::z0Tolerance`.
+the inner bins that depend on them.
 
 The binning it worked out is readable back off the geometry, so a consumer that
 runs the same algorithm elsewhere does not have to recompute or pre-generate it:
@@ -158,7 +157,7 @@ A candidate pair @f$(n_1, n_2)@f$ becomes an edge if it survives, in order:
 | @f$\Delta r > @f$ `minDeltaRadius` | the two hits are radially separated enough for @f$\tau@f$ to be meaningful |
 | @f$\lvert\tau\rvert < @f$ `maxAbsTau` | within the detector's angular acceptance |
 | @f$\tau@f$ inside both nodes' windows | per-node acceptance from the ML lookup table |
-| @f$z_0@f$ inside `[minZ0, maxZ0]`, and @f$z@f$ at the outer radius inside the ROI | the pair points back to the luminous region |
+| @f$z_0@f$ inside the geometry's `GbtsZ0Range`, and @f$z@f$ at the outer radius inside the ROI | the pair points back to the luminous region |
 | @f$\lvert\kappa\rvert@f$ below an @f$\eta@f$-dependent bound | consistent with the @f$p_T@f$ threshold |
 
 with @f$\tau = \Delta z/\Delta r@f$, @f$z_0 = z_1 - r_1\tau@f$ and the curvature
@@ -278,7 +277,7 @@ The cuts that build and link the doublets live on
 | --- | --- | --- |
 | `minPt` | @ref gbts-graph | drives the curvature and @f$\phi@f$-window bounds |
 | `minDeltaRadius`, `maxAbsTau` | @ref gbts-graph | doublet acceptance |
-| `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
+| `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet, against the geometry's `GbtsZ0Range` |
 | `tauRatioCut`, `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
 | `useAdaptiveCuts`, `tauRatioCorr` | @ref gbts-graph | widen the @f$\tau@f$ tolerance when a layer is skipped |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
@@ -311,7 +310,7 @@ separately controls the chain-following filter of @ref gbts-extraction "seed ext
 | `maxDChi2X`, `maxDChi2Y` | per-step @f$\chi^2@f$ ceilings; a branch exceeding either is dropped |
 | `addHit`, `weightX`, `weightY` | the reward and the two @f$\chi^2@f$ weights in the branch score |
 | `sigmaMS`, `radLen` | multiple-scattering inflation added before each extrapolation |
-| `maxCurvature`, `maxZ0` | track-level bounds checked after each update |
+| `maxCurvature` | track-level bounds checked after each update, with @f$z_0@f$ against the geometry's `GbtsZ0Range` |
 
 ## Implementation pointers {#gbts-implementation}
 
