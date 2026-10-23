@@ -129,6 +129,13 @@ class Impl final : public DoubletSeedFinder {
     const auto zrColumn = container.zrColumn().data();
     const auto varianceZColumn = container.varianceZColumn().data();
     const auto varianceRColumn = container.varianceRColumn().data();
+    // only filled when the time cut is enabled
+    [[maybe_unused]] std::span<const float> timeColumn;
+    [[maybe_unused]] std::span<const float> varianceTColumn;
+    if constexpr (useTime) {
+      timeColumn = container.timeColumn().data();
+      varianceTColumn = container.varianceTColumn().data();
+    }
 
     // the index in the container of the k-th candidate
     const auto candidateIndex = [&](std::size_t k) -> std::size_t {
@@ -160,10 +167,11 @@ class Impl final : public DoubletSeedFinder {
           candidateSps.begin();
     }
 
-    // the candidates go through in blocks: in each block the z-r cuts are made
-    // for every candidate first, then the other cuts for those that passed
+    // the candidates go through in blocks: in each block the z-r and time cuts
+    // are made for every candidate first, then the other cuts for those that
+    // passed
     constexpr std::size_t blockSize = 256;
-    std::array<std::uint32_t, blockSize> passesZRCuts;
+    std::array<std::uint32_t, blockSize> passesZRTimeCuts;
     std::array<SpacePointIndex, blockSize> passedIndices;
 
     for (std::size_t blockBegin = 0; blockBegin < nCandidates;
@@ -171,10 +179,11 @@ class Impl final : public DoubletSeedFinder {
       const std::size_t blockCount =
           std::min(blockSize, nCandidates - blockBegin);
 
-      // the z-r cuts for every candidate of the block, one flag each
+      // the z-r and time cuts for every candidate of the block, one flag each
       std::uint32_t nPassed = 0;
       for (std::size_t i = 0; i < blockCount; ++i) {
-        const auto& zrO = zrColumn[candidateIndex(blockBegin + i)];
+        const std::size_t indexO = candidateIndex(blockBegin + i);
+        const auto& zrO = zrColumn[indexO];
         const float deltaR = outerMinusInner(rM, zrO[1]);
         const float deltaZ = outerMinusInner(zM, zrO[0]);
 
@@ -195,8 +204,21 @@ class Impl final : public DoubletSeedFinder {
                                      m_cfg.collisionRegionMin * deltaR,
                                      m_cfg.collisionRegionMax * deltaR);
 
-        passesZRCuts[i] = outside ? 0 : 1;
-        nPassed += passesZRCuts[i];
+        // check the time compatibility of the two space points. the time
+        // difference is corrected for the time of flight along the straight
+        // line between them, assuming an outgoing particle at the speed of
+        // light (which is 1 in ACTS units)
+        if constexpr (useTime) {
+          const auto& xyO = xyColumn[indexO];
+          const float distance =
+              fastHypot(xyO[0] - xM, xyO[1] - yM, zrO[0] - zM);
+          const float dt = outerMinusInner(tM, timeColumn[indexO]) - distance;
+          const float varianceDt = varianceTM + varianceTColumn[indexO];
+          outside |= dt * dt > m_cfg.timeCutNSigma2 * varianceDt;
+        }
+
+        passesZRTimeCuts[i] = outside ? 0 : 1;
+        nPassed += passesZRTimeCuts[i];
       }
 
       if (nPassed == 0) {
@@ -208,7 +230,7 @@ class Impl final : public DoubletSeedFinder {
       for (std::size_t i = 0; i < blockCount; ++i) {
         passedIndices[next] =
             static_cast<SpacePointIndex>(candidateIndex(blockBegin + i));
-        next += passesZRCuts[i];
+        next += passesZRTimeCuts[i];
       }
 
       for (const SpacePointIndex indexO :
@@ -222,27 +244,6 @@ class Impl final : public DoubletSeedFinder {
 
         float deltaR = outerMinusInner(rM, rO);
         float deltaZ = outerMinusInner(zM, zO);
-
-        // check the time compatibility of the two space points. the time
-        // difference is corrected for the time of flight along the straight
-        // line between them, assuming an outgoing particle at the speed of
-        // light (which is 1 in ACTS units). placed after the cheap range checks
-        // above to avoid the square root for candidates that are rejected
-        // anyway
-        if constexpr (useTime) {
-          const ConstSpacePointProxy otherSp = container[indexO];
-          const float distance = fastHypot(xO - xM, yO - yM, zO - zM);
-          float dt = 0;
-          if constexpr (isBottomCandidate) {
-            dt = tM - otherSp.time() - distance;
-          } else {
-            dt = otherSp.time() - tM - distance;
-          }
-          const float varianceDt = varianceTM + otherSp.varianceT();
-          if (dt * dt > m_cfg.timeCutNSigma2 * varianceDt) {
-            continue;
-          }
-        }
 
         // middle space point of this doublet, calibrated if enabled
         float xMd = xM;
