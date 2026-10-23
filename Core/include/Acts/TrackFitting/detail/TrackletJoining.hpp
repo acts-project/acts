@@ -30,7 +30,8 @@
 namespace Acts::detail {
 
 /// One smoothing step from the first state of a smoothed segment onto the
-/// prior node it was predicted from: `G = P F^T Pp^-1`,
+/// prior node it was predicted from, in the Rauch-Tung-Striebel gain form of
+/// the @ref Acts::GainMatrixSmoother: `G = P F^T Pp^-1`,
 /// `x' = x + G (xs - xp)`, `P' = P + G (Ps - Pp) G^T`
 /// @param first The first state of the segment, smoothed
 /// @param priorMean The estimate at the prior node
@@ -63,7 +64,10 @@ Result<SharedStateCondition> makeSharedStateCondition(
     const AnyConstTrackStateProxy& shared, const BoundVector& newMean,
     const BoundMatrix& newCov, const Logger& logger);
 
-/// Sensitivity of the filtered state to the prior mean, `Df = (I - K H) Dp`
+/// Sensitivity of the filtered state to the prior mean, `Df = (I - K H) Dp`.
+/// This and @ref conditionTrackState are the recursions of the modified
+/// Bryson-Frazier smoother (@ref Acts::MbfSmoother) applied to the
+/// sensitivity to the prior mean instead of to the innovations.
 /// @param ts The state
 /// @param dp The sensitivity of its predicted state
 /// @return The sensitivity of its filtered state
@@ -71,7 +75,8 @@ BoundMatrix filteredSensitivity(const AnyConstTrackStateProxy& ts,
                                 const BoundMatrix& dp);
 
 /// Condition one smoothed state and transport the adjoint sensitivity to the
-/// previous state: `T = Df - Pf Psi^`, `x += T u`, `P += T w T^T`,
+/// previous state, as the modified Bryson-Frazier smoother transports its
+/// adjoint: `T = Df - Pf Psi^`, `x += T u`, `P += T w T^T`,
 /// `Psi^ <- F^T (H^T S^-1 H Dp + (I - K H)^T Psi^)`
 /// @param ts The state
 /// @param dp The sensitivity of its predicted state
