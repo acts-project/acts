@@ -16,10 +16,10 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
-#include "Acts/TrackFitting/SmootherAdjoint.hpp"
+#include "Acts/TrackFitting/detail/SmootherAdjoint.hpp"
+#include "Acts/TrackFitting/detail/TrackletJoining.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/TrackHelpers.hpp"
 
 #include <cstddef>
 #include <optional>
@@ -30,71 +30,54 @@ namespace Acts {
 /// @addtogroup track_fitting
 /// @{
 
-/// Join a second tracklet to a first one through a shared state, and give
-/// every state the information of both.
-///
-/// The first tracklet is smoothed and holds its own measurements. The second
-/// tracklet was filtered from one state of the first, the shared state, as
-/// prior; its filtered states hold the first tracklet plus its own
-/// measurements up to each state. This is the two-way track finding, in either
-/// direction, but the operation is general.
+/// Join a second tracklet, filtered from a state of a smoothed first tracklet
+/// as prior, behind that shared state, and give every state the information
+/// of both without a new propagation. This is the two-way track finding.
 ///
 /// A smoother over the stitched chain would count the first tracklet twice.
-/// The joiner instead
+/// Instead the second tracklet is smoothed alone and its adjoint is carried
+/// onto the shared state; the change of the shared
+/// state is transported to the first tracklet by conditioning
+/// (@ref detail::conditionSmoothedStatesOnSharedState); then the chains are linked
+/// (@ref detail::linkTrackletBehind).
 ///
-/// 1. smooths the second tracklet alone and carries the adjoint onto the
-///    shared state (@ref SmootherAdjoint), which gives the shared state the
-///    information of both tracklets,
-/// 2. transports that change to every state of the first tracklet by
-///    conditioning (@ref conditionSmoothedStatesOnSharedState), which is exact
-///    in the linear-Gaussian model and needs no propagation,
-/// 3. links the second tracklet behind the shared state
-///    (@ref linkTrackletBehind).
-///
-/// Afterwards every state on the chain holds smoothed parameters with the
-/// information of both tracklets. States of the first tracklet before the
-/// shared state in filter order, such as holes before the first measurement,
-/// leave the chain in the link, because the second tracklet covers that side;
-/// they are conditioned before the link and stay in the container. The
-/// predicted and filtered history stays in two filter orders, so a later
-/// smoother over the joined chain is invalid. The track level data of the
-/// joined track is taken from the second tracklet, which holds the counts of
-/// both and, where the second pass extrapolated, the parameters at the
-/// reference surface.
-struct TrackletJoiner {
+/// Afterwards every state on the chain holds smoothed parameters with both
+/// tracklets. States of the first tracklet before the shared state leave the
+/// chain. The predicted and filtered history stays in two filter orders, so a
+/// later smoother over the joined chain is invalid. The track-level data is
+/// taken from the second tracklet.
+class TrackletJoiner {
+ public:
   /// Configuration
   struct Config {
-    /// Smooth the second tracklet and carry its information onto the shared
-    /// state
+    /// Smooth the second tracklet and update the shared state
     bool smoothSecond = true;
-    /// Transport the change of the shared state to the first tracklet
+    /// Condition the first tracklet on the updated shared state
     bool conditionFirst = true;
     /// Invert and shift the jacobians of the second tracklet in the link
     bool invertJacobians = true;
   };
-
-  /// The configuration
-  Config config;
 
   /// Default constructor
   TrackletJoiner() = default;
 
   /// Constructor
   /// @param cfg The configuration
-  explicit TrackletJoiner(const Config& cfg) : config(cfg) {}
+  explicit TrackletJoiner(const Config& cfg) : m_cfg(cfg) {}
 
-  /// Join in place. The first tracklet becomes the joined track; the second
-  /// tracklet's states move into its chain.
-  ///
-  /// The first tracklet must own its states: with several second tracklets
-  /// from one first tracklet, join copies with @ref joinCopy.
+  /// Get the configuration
+  /// @return The configuration
+  const Config& config() const { return m_cfg; }
+
+  /// Join in place: the first tracklet becomes the joined track. It must own
+  /// its states; with several second tracklets use @ref joinCopy.
   ///
   /// @tparam smoother_t The smoother for the second tracklet
   /// @tparam track_proxy_t The track proxy type
   /// @param gctx The geometry context
   /// @param first The first tracklet, smoothed
-  /// @param sharedState The state of the first tracklet the second started from
-  /// @param second The second tracklet, filtered from @p sharedState
+  /// @param sharedState The state the second tracklet started from
+  /// @param second The second tracklet
   /// @param logger The logger
   /// @param smoother The smoother
   /// @return Success or the first error
@@ -119,8 +102,8 @@ struct TrackletJoiner {
     BoundVector sharedMean = sharedState.smoothed();
     BoundMatrix sharedCov = sharedState.smoothedCovariance();
 
-    if (config.smoothSecond) {
-      SmootherAdjoint adjoint;
+    if (m_cfg.smoothSecond) {
+      detail::SmootherAdjoint adjoint;
       auto res = smoother.smooth(gctx, trajectory, second.tipIndex(),
                                  kTrackIndexInvalid, &adjoint, logger);
       if (!res.ok()) {
@@ -128,11 +111,11 @@ struct TrackletJoiner {
         return res.error();
       }
       std::tie(sharedMean, sharedCov) =
-          applySmootherAdjoint(sharedMean, sharedCov, adjoint);
+          detail::applySmootherAdjoint(sharedMean, sharedCov, adjoint);
     }
 
-    if (config.conditionFirst) {
-      auto res = conditionSmoothedStatesOnSharedState(
+    if (m_cfg.conditionFirst) {
+      auto res = detail::conditionSmoothedStatesOnSharedState(
           trajectory, sharedState.index(), first.tipIndex(), sharedMean,
           sharedCov, logger);
       if (!res.ok()) {
@@ -146,7 +129,7 @@ struct TrackletJoiner {
     }
 
     const auto tipIndex = first.tipIndex();
-    linkTrackletBehind(sharedState, second, config.invertJacobians);
+    detail::linkTrackletBehind(sharedState, second, m_cfg.invertJacobians);
     first.copyFromWithoutStates(second);
     first.tipIndex() = tipIndex;
     first.stemIndex() = second.stemIndex();
@@ -154,9 +137,8 @@ struct TrackletJoiner {
     return Result<void>::success();
   }
 
-  /// Join copies. Both tracklets are copied into @p out, the copies are
-  /// joined, and the joined copy is returned. The inputs stay unchanged, so
-  /// several second tracklets can be joined to one first tracklet.
+  /// Join copies of both tracklets in @p out and return the joined copy. The
+  /// inputs stay unchanged.
   ///
   /// @tparam smoother_t The smoother for the second tracklet
   /// @tparam track_container_t The output track container type
@@ -165,8 +147,8 @@ struct TrackletJoiner {
   /// @param gctx The geometry context
   /// @param out The container that receives the copies
   /// @param first The first tracklet, smoothed
-  /// @param sharedState The state of the first tracklet the second started from
-  /// @param second The second tracklet, filtered from @p sharedState
+  /// @param sharedState The state the second tracklet started from
+  /// @param second The second tracklet
   /// @param logger The logger
   /// @param smoother The smoother
   /// @return The joined track in @p out, or the first error
@@ -215,13 +197,17 @@ struct TrackletJoiner {
 
     auto res =
         joinInPlace(gctx, firstCopy, *sharedCopy, secondCopy, logger, smoother);
-    // the second copy is a shell now: its states live in the joined chain
+    // the second copy is a shell now, its states are in the joined chain
     out.removeTrack(secondCopy.index());
     if (!res.ok()) {
+      out.removeTrack(firstCopy.index());
       return Result<TrackProxy>::failure(res.error());
     }
     return firstCopy;
   }
+
+ private:
+  Config m_cfg;
 };
 
 /// @}

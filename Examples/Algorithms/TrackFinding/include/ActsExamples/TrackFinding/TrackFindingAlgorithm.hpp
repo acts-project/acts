@@ -115,24 +115,14 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// seed. The second pass runs inward from the innermost measurement of the
     /// first pass to the perigee, and it starts from the smoothed parameters
     /// of the first pass. The output track states are then:
-    /// The two passes are joined with the @ref Acts::TrackletJoiner: the
-    /// second pass is smoothed alone and its information is carried onto the
-    /// first measurement of the first pass and from there to every state of
-    /// the first pass, without a new propagation. Every state then holds
-    /// smoothed parameters with the information of both passes, and the
-    /// perigee estimate comes from the second pass, which holds every
-    /// measurement once.
-    ///
-    /// Do not smooth the output track. Its predicted and filtered history is
-    /// two filter orders, and a smoother over the joined chain counts the
-    /// first pass twice.
+    /// The passes are joined with the @ref Acts::TrackletJoiner, so every
+    /// state holds smoothed parameters with both passes and the perigee comes
+    /// from the second pass. Do not smooth the output track: a smoother over
+    /// the joined chain counts the first pass twice.
     bool twoWay = true;
-    /// Smooth the second pass and carry its information into the first pass
-    /// when the two passes are joined, see @ref Acts::TrackletJoiner. Off,
-    /// the passes are only linked: the first-pass states keep the first pass
-    /// only, the second-pass states hold no smoothed parameters, and only
-    /// the perigee holds every measurement once. Off is cheaper by about one
-    /// smoothing pass per track.
+    /// Smooth the second pass and condition the first pass on it in the join.
+    /// Off, the passes are only linked and only the perigee holds every
+    /// measurement once.
     bool twoWaySmoothing = true;
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.

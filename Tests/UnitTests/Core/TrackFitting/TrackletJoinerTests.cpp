@@ -17,9 +17,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
-#include "Acts/TrackFitting/SmootherAdjoint.hpp"
 #include "Acts/TrackFitting/TrackletJoiner.hpp"
-#include "Acts/Utilities/TrackHelpers.hpp"
+#include "Acts/TrackFitting/detail/SmootherAdjoint.hpp"
+#include "Acts/TrackFitting/detail/TrackletJoining.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
@@ -377,14 +377,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(CarriedAdjointIsPriorNodeSmoothing, smoother_t,
   BOOST_REQUIRE(
       MbfSmoother()(gctx, tc.trackStateContainer(), full.tipIndex()).ok());
 
-  SmootherAdjoint adjoint;
+  detail::SmootherAdjoint adjoint;
   BOOST_REQUIRE(smoother_t{}
                     .smooth(gctx, tc.trackStateContainer(), segment.tipIndex(),
                             stopIndex, &adjoint)
                     .ok());
 
   auto priorState = tc.trackStateContainer().getTrackState(priorIndex);
-  const auto [priorMean, priorCov] = applySmootherAdjoint(
+  const auto [priorMean, priorCov] = detail::applySmootherAdjoint(
       priorState.filtered(), priorState.filteredCovariance(), adjoint);
 
   // the full chain holds the prior node as state at the same position
@@ -418,8 +418,8 @@ BOOST_AUTO_TEST_CASE(CarriedAdjointAgreesBetweenSmoothers) {
   auto secondCopy = tc.makeTrack();
   secondCopy.copyFrom(tracklets.second);
 
-  SmootherAdjoint mbf;
-  SmootherAdjoint rts;
+  detail::SmootherAdjoint mbf;
+  detail::SmootherAdjoint rts;
   BOOST_REQUIRE(MbfSmoother{}
                     .smooth(gctx, tc.trackStateContainer(),
                             tracklets.second.tipIndex(), kTrackIndexInvalid,
@@ -433,9 +433,9 @@ BOOST_AUTO_TEST_CASE(CarriedAdjointAgreesBetweenSmoothers) {
   CHECK_CLOSE_ABS(mbf.bigLambda, rts.bigLambda, 1e-9);
   CHECK_CLOSE_ABS(mbf.smallLambda, rts.smallLambda, 1e-9);
 
-  const auto [meanA, covA] = applySmootherAdjoint(
+  const auto [meanA, covA] = detail::applySmootherAdjoint(
       tracklets.shared.smoothed(), tracklets.shared.smoothedCovariance(), mbf);
-  const auto [meanB, covB] = applySmootherAdjoint(
+  const auto [meanB, covB] = detail::applySmootherAdjoint(
       tracklets.shared.smoothed(), tracklets.shared.smoothedCovariance(), rts);
   CHECK_CLOSE_ABS(meanA, meanB, 1e-10);
   CHECK_CLOSE_ABS(covA, covB, 1e-10);
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(ConditioningRejectsStateOffTheChain) {
   const auto nodes = makeModel(Variant::Base);
   Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto tracklets = buildTracklets(tc, nodes, Variant::Base);
-  auto res = conditionSmoothedStatesOnSharedState(
+  auto res = detail::conditionSmoothedStatesOnSharedState(
       tc.trackStateContainer(), tracklets.second.tipIndex(),
       tracklets.first.tipIndex(), tracklets.shared.smoothed(),
       tracklets.shared.smoothedCovariance());

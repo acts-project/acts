@@ -13,7 +13,7 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
-#include "Acts/TrackFitting/SmootherAdjoint.hpp"
+#include "Acts/TrackFitting/detail/SmootherAdjoint.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -51,31 +51,24 @@ class GainMatrixSmoother {
                   logger);
   }
 
-  /// Run the Kalman smoothing for a segment of one trajectory and carry the
-  /// adjoint out.
-  ///
-  /// The walk starts at @p entryIndex and follows the previous links. With a
-  /// valid @p stopIndex it smooths that state last; otherwise it smooths to
-  /// the end of the chain. With @p carryOut the gain-matrix form of the
-  /// adjoint after the last smoothed state is transported through that
-  /// state's jacobian and returned, so it lives on the node the last state
-  /// was predicted from. Apply it with @ref applySmootherAdjoint. The carry
-  /// is the same quantity the @ref MbfSmoother returns, so the two smoothers
-  /// stay interchangeable.
+  /// Run the Kalman smoothing for a segment of one trajectory.
   ///
   /// @tparam traj_t The MultiTrajectory type
   /// @param gctx The geometry context to be used
   /// @param trajectory The trajectory to be smoothed
   /// @param entryIndex The index of state to start the smoothing
-  /// @param stopIndex The index of the last state to smooth, or
-  ///        @ref kTrackIndexInvalid for the end of the chain
-  /// @param carryOut The adjoint after the last smoothed state, or nullptr
+  /// @param stopIndex The last state to smooth, or @ref kTrackIndexInvalid
+  ///        for the end of the chain
+  /// @param carryOut If set, receives the adjoint transported through the
+  ///        jacobian of the last smoothed state, i.e. onto the node that state
+  ///        was predicted from; the same quantity the @ref MbfSmoother carries,
+  ///        see @ref detail::applySmootherAdjoint
   /// @param logger Where to write logging information to
   /// @return The status of the smoothing
   template <typename traj_t>
   Result<void> smooth(const GeometryContext& gctx, traj_t& trajectory,
                       std::size_t entryIndex, std::size_t stopIndex,
-                      SmootherAdjoint* carryOut,
+                      detail::SmootherAdjoint* carryOut,
                       const Logger& logger = getDummyLogger()) const {
     static_cast<void>(gctx);
 
@@ -169,22 +162,18 @@ class GainMatrixSmoother {
                          AnyConstTrackStateProxy prev_ts,
                          const Logger& logger) const;
 
-  /// Calculate the adjoint on the node a smoothed state was predicted from.
+ private:
+  /// Calculate the adjoint on the node a smoothed state was predicted from:
+  /// `bigLambda = F^T Pp^-1 (Pp - Ps) Pp^-1 F`,
+  /// `smallLambda = -F^T Pp^-1 (xs - xp)`.
   ///
-  /// With the predicted estimate `(xp, Pp)`, the smoothed estimate `(xs, Ps)`
-  /// and the jacobian `F` of the state, the adjoint is
-  /// `bigLambda = F^T Pp^-1 (Pp - Ps) Pp^-1 F` and
-  /// `smallLambda = -F^T Pp^-1 (xs - xp)`. Applied to the estimate of the
-  /// node with @ref applySmootherAdjoint this is the Rauch-Tung-Striebel
-  /// step onto that node.
-  ///
-  /// @param ts The last smoothed state, with predicted, smoothed and jacobian
+  /// @param ts The smoothed state, with predicted, smoothed and jacobian
   /// @param logger The logger
-  /// @return The adjoint on the node the state was predicted from, or
-  ///         @ref KalmanFitterError::SmoothFailed if the predicted covariance
-  ///         is not positive definite or the result is not finite
-  Result<SmootherAdjoint> calculateAdjoint(AnyConstTrackStateProxy ts,
-                                           const Logger& logger) const;
+  /// @return The adjoint, or @ref KalmanFitterError::SmoothFailed if the
+  ///         predicted covariance is not positive definite or the result is
+  ///         not finite
+  Result<detail::SmootherAdjoint> calculateAdjoint(AnyConstTrackStateProxy ts,
+                                                   const Logger& logger) const;
 };
 
 }  // namespace Acts

@@ -261,8 +261,10 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
         "required for staying on seed.");
   }
 
-  m_trackletJoiner.config.smoothSecond = m_cfg.twoWaySmoothing;
-  m_trackletJoiner.config.conditionFirst = m_cfg.twoWaySmoothing;
+  Acts::TrackletJoiner::Config joinerConfig;
+  joinerConfig.smoothSecond = m_cfg.twoWaySmoothing;
+  joinerConfig.conditionFirst = m_cfg.twoWaySmoothing;
+  m_trackletJoiner = Acts::TrackletJoiner(joinerConfig);
 
   if (m_cfg.trackSelectorCfg.has_value()) {
     m_trackSelector = std::visit(
@@ -558,12 +560,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               const bool lastSecond =
                   (iSecond + 1 == secondTracksForSeed.size());
 
-              // The joiner gives every state the information of both passes.
-              // The first pass must stay untouched for the next second track,
-              // so join copies; the last second track joins in place and
-              // saves the copy of the first pass. The second track is always
-              // copied, because its states may be shared with sibling
-              // branches and the join reverses them.
+              // join copies while more second tracks follow, the last one in
+              // place. the second track is always copied, because its states
+              // may be shared with sibling branches and the join reverses them
               Acts::Result<TrackContainer::TrackProxy> joinResult =
                   [&]() -> Acts::Result<TrackContainer::TrackProxy> {
                 if (!lastSecond) {
@@ -592,8 +591,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
               // finalize the track candidate
 
-              // the CKF already extrapolated the second pass to the perigee.
-              // do not smooth the joined track, see `Config::twoWay`.
+              // the CKF already extrapolated the second pass to the perigee
 
               // only extrapolate if we did not do it already
               if (!joinedTrack.hasReferenceSurface()) {

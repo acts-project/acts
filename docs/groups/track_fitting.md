@@ -12,7 +12,7 @@ For electrons, whose Bremsstrahlung energy loss is strongly non-Gaussian, the
 mixture of Gaussians instead; see @ref gsf.
 
 The smoothers (@ref Acts::MbfSmoother, @ref Acts::GainMatrixSmoother) can stop
-at a given state and carry their adjoint out (@ref Acts::SmootherAdjoint). The
-@ref Acts::TrackletJoiner uses this to join a second tracklet, filtered from a
-state of a first one, so that every state holds the information of both without
-a new propagation; this is the two-way track finding.
+at a given state and carry their adjoint out. The @ref Acts::TrackletJoiner uses
+this to join a second tracklet, filtered from a state of a first one, so that
+every state holds the information of both without a new propagation; this is
+the two-way track finding.

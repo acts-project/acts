@@ -14,34 +14,25 @@
 
 #include <utility>
 
-namespace Acts {
+namespace Acts::detail {
 
-/// @addtogroup track_fitting
-/// @{
-
-/// The information a smoother carries out of its backward walk.
-///
-/// After the walk the adjoint is transported through the jacobian of the last
-/// smoothed state, so it lives on the node that state was predicted from. For
-/// a complete track that node is the start parameters; for a track segment
-/// that was filtered from the state of another track it is that shared state.
-///
-/// The notation follows the modified Bryson-Frazier smoother: a node with the
-/// estimate `(x, P)` and no further measurements of its own is smoothed as
-/// `x' = x - P smallLambda` and `P' = P - P bigLambda P`.
+/// The adjoint a smoother carries out of its backward walk, transported onto
+/// the node the last smoothed state was predicted from. In the notation of the
+/// modified Bryson-Frazier smoother that node is smoothed as
+/// `x' = x - P smallLambda`, `P' = P - P bigLambda P`.
 struct SmootherAdjoint {
-  /// Information matrix term of the adjoint
+  /// Information matrix term
   BoundMatrix bigLambda = BoundMatrix::Zero();
-  /// Information vector term of the adjoint
+  /// Information vector term
   BoundVector smallLambda = BoundVector::Zero();
 };
 
 /// Apply a carried adjoint to the estimate of the node it was transported to.
 ///
-/// @param mean The estimate at the node before the smoothed segment
+/// @param mean The estimate at the node
 /// @param cov Its covariance
-/// @param adjoint The adjoint carried out of the segment
-/// @return The estimate at the node with the segment's measurements included
+/// @param adjoint The adjoint
+/// @return The estimate with the smoothed segment included
 inline std::pair<BoundVector, BoundMatrix> applySmootherAdjoint(
     const BoundVector& mean, const BoundMatrix& cov,
     const SmootherAdjoint& adjoint) {
@@ -52,6 +43,4 @@ inline std::pair<BoundVector, BoundMatrix> applySmootherAdjoint(
   return {newMean, 0.5 * (newCov + newCov.transpose())};
 }
 
-/// @}
-
-}  // namespace Acts
+}  // namespace Acts::detail

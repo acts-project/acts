@@ -96,7 +96,7 @@ Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
   return Result<void>::success();
 }
 
-Result<SmootherAdjoint> GainMatrixSmoother::calculateAdjoint(
+Result<detail::SmootherAdjoint> GainMatrixSmoother::calculateAdjoint(
     AnyConstTrackStateProxy ts, const Logger& logger) const {
   const BoundMatrix predictedCovariance = ts.predictedCovariance();
   const BoundMatrix smoothedCovariance = ts.smoothedCovariance();
@@ -116,7 +116,7 @@ Result<SmootherAdjoint> GainMatrixSmoother::calculateAdjoint(
   const BoundVector smallLambdaTilde = -predictedLdlt.solve(
       subtractBoundParameters(ts.smoothed(), ts.predicted()));
 
-  SmootherAdjoint adjoint;
+  detail::SmootherAdjoint adjoint;
   const BoundMatrix bigLambda =
       jacobian.transpose() * bigLambdaTilde * jacobian;
   adjoint.bigLambda = 0.5 * (bigLambda + bigLambda.transpose());

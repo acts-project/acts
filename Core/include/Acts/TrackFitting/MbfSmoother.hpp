@@ -13,7 +13,7 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
-#include "Acts/TrackFitting/SmootherAdjoint.hpp"
+#include "Acts/TrackFitting/detail/SmootherAdjoint.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -56,29 +56,22 @@ class MbfSmoother {
                   logger);
   }
 
-  /// Run the Kalman smoothing for a segment of one trajectory and carry the
-  /// adjoint out.
-  ///
-  /// The walk starts at @p entryIndex and follows the previous links. With a
-  /// valid @p stopIndex it smooths that state last; otherwise it smooths to
-  /// the end of the chain. With @p carryOut the adjoint after the last
-  /// smoothed state is transported through that state's jacobian and
-  /// returned, so it lives on the node the last state was predicted from.
-  /// Apply it with @ref applySmootherAdjoint.
+  /// Run the Kalman smoothing for a segment of one trajectory.
   ///
   /// @param[in] gctx The geometry context to be used
   /// @param[in,out] trajectory The trajectory to be smoothed
   /// @param[in] entryIndex The index of state to start the smoothing
-  /// @param[in] stopIndex The index of the last state to smooth, or
-  ///            @ref kTrackIndexInvalid for the end of the chain
-  /// @param[out] carryOut The adjoint after the last smoothed state, or
-  ///             nullptr
+  /// @param[in] stopIndex The last state to smooth, or @ref kTrackIndexInvalid
+  ///            for the end of the chain
+  /// @param[out] carryOut If set, receives the adjoint transported through the
+  ///             jacobian of the last smoothed state, i.e. onto the node that
+  ///             state was predicted from; see @ref detail::applySmootherAdjoint
   /// @param[in] logger Where to write logging information to
   /// @return Success or failure of the MBF smoothing procedure
   template <typename traj_t>
   Result<void> smooth(const GeometryContext& gctx, traj_t& trajectory,
                       std::size_t entryIndex, std::size_t stopIndex,
-                      SmootherAdjoint* carryOut,
+                      detail::SmootherAdjoint* carryOut,
                       const Logger& logger = getDummyLogger()) const {
     static_cast<void>(gctx);
     static_cast<void>(logger);
@@ -106,8 +99,7 @@ class MbfSmoother {
       reachedStop = (ts.index() == stopIndex);
       const bool last = reachedStop || !ts.hasPrevious();
 
-      // We smoothed the last state - the lambdas are only needed for the
-      // carry
+      // after the last state the lambdas are only needed for the carry
       if (last && carryOut == nullptr) {
         return false;
       }
