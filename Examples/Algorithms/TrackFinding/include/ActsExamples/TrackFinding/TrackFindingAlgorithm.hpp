@@ -16,6 +16,7 @@
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/SeedDeduplicator.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
+#include "Acts/TrackFitting/TrackletJoiner.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
@@ -114,19 +115,15 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// seed. The second pass runs inward from the innermost measurement of the
     /// first pass to the perigee, and it starts from the smoothed parameters
     /// of the first pass. The output track states are then:
-    /// - The states of the first pass hold smoothed parameters, which contain
-    ///   the information of the first pass only.
-    /// - The states of the second pass, which lie inside the innermost
-    ///   measurement of the first pass, hold no smoothed parameters. Their
-    ///   filtered parameters contain the full first pass and the second-pass
-    ///   measurements up to that state.
-    /// - Only the perigee estimate contains the information of each
-    ///   measurement exactly once.
-    ///
-    /// Do not smooth the output track. The smoother adds the first pass again
-    /// on top of the second-pass filter, which already contains it, so the
-    /// result counts the first pass twice.
+    /// The passes are joined with the @ref Acts::TrackletJoiner, so every
+    /// state holds smoothed parameters with both passes and the perigee comes
+    /// from the second pass. Do not smooth the output track: a smoother over
+    /// the joined chain counts the first pass twice.
     bool twoWay = true;
+    /// Smooth the second pass and condition the first pass on it in the join.
+    /// Off, the passes are only linked and only the perigee holds every
+    /// measurement once.
+    bool twoWaySmoothing = true;
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;
@@ -188,6 +185,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
   std::optional<Acts::TrackSelector> m_trackSelector;
+  Acts::TrackletJoiner m_trackletJoiner;
 
   ReadDataHandle<MeasurementSubset> m_inputMeasurements{this,
                                                         "InputMeasurements"};

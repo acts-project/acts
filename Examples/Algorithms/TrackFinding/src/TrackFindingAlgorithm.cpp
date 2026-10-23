@@ -261,6 +261,11 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
         "required for staying on seed.");
   }
 
+  Acts::TrackletJoiner::Config joinerConfig;
+  joinerConfig.smoothSecond = m_cfg.twoWaySmoothing;
+  joinerConfig.conditionFirst = m_cfg.twoWaySmoothing;
+  m_trackletJoiner = Acts::TrackletJoiner(joinerConfig);
+
   if (m_cfg.trackSelectorCfg.has_value()) {
     m_trackSelector = std::visit(
         [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
@@ -548,51 +553,47 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
             ACTS_WARNING("Second track finding failed for seed "
                          << iSeed << " with error" << secondResult.error());
           } else {
-            // store the original previous state and jacobian to restore them
-            auto originalFirstMeasurementPrevious = firstMeasurement.previous();
-            const Acts::BoundMatrix originalFirstMeasurementJacobian =
-                firstMeasurement.jacobian();
-
             auto& secondTracksForSeed = secondResult.value();
-            for (auto& secondTrack : secondTracksForSeed) {
-              // TODO a copy of the track should not be necessary but is the
-              //      safest way with the current EDM
-              // TODO a lightweight copy without copying all the track state
-              //      components might be a solution
-              auto secondTrackCopy = tracksTemp.makeTrack();
-              secondTrackCopy.copyFrom(secondTrack);
+            for (std::size_t iSecond = 0; iSecond < secondTracksForSeed.size();
+                 ++iSecond) {
+              auto& secondTrack = secondTracksForSeed[iSecond];
+              const bool lastSecond =
+                  (iSecond + 1 == secondTracksForSeed.size());
 
-              // Note that this is only valid if there are no branches
-              // We disallow this by breaking this look after a second track was
-              // processed
-              std::optional<Acts::BoundMatrix> stitchJacobian =
-                  secondTrackCopy.reverseTrackStates(true);
-
-              firstMeasurement.previous() =
-                  secondTrackCopy.outermostTrackState().index();
-              // transport from the second pass to the first measurement
-              if (stitchJacobian.has_value()) {
-                firstMeasurement.jacobian() = *stitchJacobian;
+              // join copies while more second tracks follow, the last one in
+              // place. the second track is always copied, because its states
+              // may be shared with sibling branches and the join reverses them
+              Acts::Result<TrackContainer::TrackProxy> joinResult =
+                  [&]() -> Acts::Result<TrackContainer::TrackProxy> {
+                if (!lastSecond) {
+                  return m_trackletJoiner.joinCopy(
+                      ctx.recoGeoContext, tracksTemp, trackCandidate,
+                      firstMeasurementConst, secondTrack, logger());
+                }
+                auto secondTrackCopy = tracksTemp.makeTrack();
+                secondTrackCopy.copyFrom(secondTrack);
+                auto res = m_trackletJoiner.joinInPlace(
+                    ctx.recoGeoContext, trackCandidate, firstMeasurement,
+                    secondTrackCopy, logger());
+                if (!res.ok()) {
+                  return res.error();
+                }
+                return trackCandidate;
+              }();
+              if (!joinResult.ok()) {
+                m_nFailedSmoothing++;
+                ACTS_ERROR("Joining the second pass for seed "
+                           << iSeed << " and track " << secondTrack.index()
+                           << " failed with error " << joinResult.error());
+                continue;
               }
+              auto joinedTrack = joinResult.value();
 
-              // Retain tip and stem index of the first track
-              auto tipIndex = trackCandidate.tipIndex();
-              auto stemIndex = trackCandidate.stemIndex();
-              trackCandidate.copyFromWithoutStates(secondTrackCopy);
-              trackCandidate.tipIndex() = tipIndex;
-              trackCandidate.stemIndex() = stemIndex;
-
-              // finalize the track candidate
-
-              // the CKF already extrapolated the second pass to the perigee,
-              // and only these parameters hold every measurement once. do not
-              // smooth the stitched track, see `Config::twoWay`.
-
-              // only extrapolate if we did not do it already
-              if (!trackCandidate.hasReferenceSurface()) {
+              // the second pass extrapolated to the perigee unless it failed
+              if (!joinedTrack.hasReferenceSurface()) {
                 auto secondExtrapolationResult =
                     Acts::extrapolateTrackToReferenceSurface(
-                        trackCandidate, *pSurface, extrapolator,
+                        joinedTrack, *pSurface, extrapolator,
                         extrapolationOptions, m_cfg.extrapolationStrategy,
                         logger());
                 if (!secondExtrapolationResult.ok()) {
@@ -605,14 +606,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 }
               }
 
-              addTrack(trackCandidate);
+              addTrack(joinedTrack);
 
               ++nSecond;
             }
-
-            // restore the original previous state and jacobian
-            firstMeasurement.previous() = originalFirstMeasurementPrevious;
-            firstMeasurement.jacobian() = originalFirstMeasurementJacobian;
           }
         }
       }
