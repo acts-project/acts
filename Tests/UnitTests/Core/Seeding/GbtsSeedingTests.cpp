@@ -54,9 +54,8 @@ constexpr float kDiscMaxR = 220.f;
 /// createLinkingScheme.py.
 constexpr float kEtaBinWidth = 0.2f;
 
-/// One layer of the toy detector. The ids follow ATLAS, which the seeder still
-/// keys on: 80000 is the innermost barrel layer (extra z0 cuts) and barrel ids
-/// 1000 apart are adjacent.
+/// One layer of the toy detector. The seeder does not read the ids: it orders
+/// the pixel barrel layers by radius.
 struct LayerSpec {
   Experimental::GbtsExperimentLayerId id{};
   GbtsLayerType type{};
@@ -154,8 +153,9 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
   std::vector<Experimental::GbtsLayerConnection> connections;
   connections.reserve(detector.links.size());
   for (const auto& [src, dst] : detector.links) {
-    connections.push_back({src, dst});
+    connections.push_back({.src = src, .dst = dst});
   }
+  Experimental::assignAdaptiveTauRatioCuts(connections, layers);
 
   return std::make_shared<Experimental::GbtsGeometry>(layers, connections,
                                                       kEtaBinWidth);
@@ -561,8 +561,8 @@ BOOST_AUTO_TEST_CASE(LayerBinningTilesTheBins) {
   BOOST_CHECK(!geometry->binGroups().empty());
   for (const Experimental::GbtsBinGroup& group : geometry->binGroups()) {
     BOOST_CHECK_LT(group.bin, geometry->numBins());
-    for (const std::uint32_t link : group.links) {
-      BOOST_CHECK_LT(link, geometry->numBins());
+    for (const Experimental::GbtsBinLink& link : group.links) {
+      BOOST_CHECK_LT(link.bin, geometry->numBins());
     }
   }
 }
@@ -772,6 +772,52 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
   // unresolved, the walk loses every seed; resolved, it loses none
   BOOST_CHECK_EQUAL(seed(kWalk, false), 0u);
   BOOST_CHECK_EQUAL(seed(kWalk, true), tracks.size());
+}
+
+BOOST_AUTO_TEST_CASE(AdaptiveTauRatioCuts) {
+  using Experimental::GbtsLayerConnection;
+
+  const auto layer = [](Experimental::GbtsExperimentLayerId id,
+                        GbtsLayerType type, GbtsLayerTechnology technology,
+                        float refCoord) {
+    Experimental::GbtsLayerDescription description;
+    description.id = id;
+    description.type = type;
+    description.technology = technology;
+    description.refCoord = refCoord;
+    return description;
+  };
+  // listed out of radial order, so the barrel order has to be derived
+  const std::vector<Experimental::GbtsLayerDescription> layers = {
+      layer(2, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 100.f),
+      layer(1, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 50.f),
+      layer(3, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 150.f),
+      layer(4, GbtsLayerType::Endcap, GbtsLayerTechnology::Pixel, 400.f),
+      layer(5, GbtsLayerType::Barrel, GbtsLayerTechnology::Strip, 400.f),
+  };
+
+  std::vector<GbtsLayerConnection> connections = {
+      {.src = 2, .dst = 1},  // adjacent
+      {.src = 3, .dst = 1},  // skips a layer
+      {.src = 4, .dst = 3},  // leaves the barrel
+      {.src = 4, .dst = 4},  // off the barrel
+      {.src = 5, .dst = 3},  // leaves the barrel onto a strip
+  };
+  const Experimental::GbtsAdaptiveTauRatioCuts cuts;
+  Experimental::assignAdaptiveTauRatioCuts(connections, layers, cuts);
+
+  const float base = cuts.tauRatioCut;
+  const float corr = cuts.tauRatioCorr;
+  const float strip = cuts.tauRatioCorrStrip;
+  const std::vector<std::pair<float, float>> expected = {
+      {base, base}, {base + corr, base + corr},          {base, base + corr},
+      {base, base}, {base + strip, base + corr + strip},
+  };
+  for (std::size_t i = 0; i < connections.size(); ++i) {
+    BOOST_CHECK_CLOSE(connections[i].tauRatioCutInner, expected[i].first, 1e-4);
+    BOOST_CHECK_CLOSE(connections[i].tauRatioCutOuter, expected[i].second,
+                      1e-4);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
