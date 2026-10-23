@@ -13,6 +13,7 @@
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
+#include <span>
 #include <vector>
 
 namespace Acts {
@@ -237,13 +238,15 @@ class TripletSeedFinder {
   /// @param tripletTopCandidates Cache for triplet top candidates
   /// @return The top doublets that can still be compatible with a subsequent
   ///   bottom doublet, see the note above
-  [[nodiscard]] virtual DoubletsForMiddleSp::Range createTripletTopCandidates(
+  [[nodiscard]] virtual std::span<const DoubletForMiddleSp>
+  createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Range topDoublets,
+      const DoubletForMiddleSp& bottomDoublet,
+      std::span<const DoubletForMiddleSp> topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;
 
-  /// Create triplets from the bottom, middle, and top space points.
+  /// Create triplets from the bottom, middle, and top space points, with the
+  /// top doublets in the order sortByCotTheta gives them.
   ///
   /// @param spacePoints Space point container
   /// @param spM Space point candidate to be used as middle SP in a seed
@@ -252,25 +255,9 @@ class TripletSeedFinder {
   /// @param tripletTopCandidates Cache for triplet top candidates
   /// @return The top doublets that can still be compatible with a subsequent
   ///   bottom doublet, see the note above
-  [[nodiscard]] virtual DoubletsForMiddleSp::Subset createTripletTopCandidates(
+  [[nodiscard]] virtual Subspan createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Subset topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const = 0;
-
-  /// Create triplets from the bottom, middle, and top space points.
-  ///
-  /// @param spacePoints Space point container
-  /// @param spM Space point candidate to be used as middle SP in a seed
-  /// @param bottomDoublet Bottom doublet to be used for triplet creation
-  /// @param topDoublets Top doublets to be used for triplet creation
-  /// @param tripletTopCandidates Cache for triplet top candidates
-  /// @return The top doublets that can still be compatible with a subsequent
-  ///   bottom doublet, see the note above
-  [[nodiscard]] virtual DoubletsForMiddleSp::Subset2 createTripletTopCandidates(
-      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Subset2 topDoublets,
+      const DoubletForMiddleSp& bottomDoublet, Subspan topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;
 };
 

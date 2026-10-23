@@ -102,11 +102,11 @@ BOOST_AUTO_TEST_CASE(DoubletStripCalibrationUsesCalibratedPositions) {
 
   const DoubletsForMiddleSp nominal = findDoublets(container, std::nullopt);
   BOOST_REQUIRE_EQUAL(nominal.size(), 1u);
-  BOOST_CHECK_CLOSE(nominal.cotTheta()[0], kDirection[2] - 0.06f, 0.1);
+  BOOST_CHECK_CLOSE(nominal[0].cotTheta, kDirection[2] - 0.06f, 0.1);
 
   const DoubletsForMiddleSp calibrated = findDoublets(container, 1.1f);
   BOOST_REQUIRE_EQUAL(calibrated.size(), 1u);
-  BOOST_CHECK_SMALL(calibrated.cotTheta()[0] - kDirection[2], 5e-3f);
+  BOOST_CHECK_SMALL(calibrated[0].cotTheta - kDirection[2], 5e-3f);
 }
 
 BOOST_AUTO_TEST_CASE(DoubletStripCalibrationRejectsMissedStrips) {

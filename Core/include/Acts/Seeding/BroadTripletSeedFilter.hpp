@@ -187,7 +187,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
 
   void filterTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomLink,
+      const DoubletForMiddleSp& bottomLink,
       const TripletTopCandidates& tripletTopCandidates) const override;
 
   void filterTripletsMiddleFixed(
