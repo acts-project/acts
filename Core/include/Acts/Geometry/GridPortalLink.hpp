@@ -471,11 +471,20 @@ class GridPortalLinkT : public GridPortalLink {
   /// @param direction The binning direction
   /// @param axes The axes for the grid
   /// @note The axes are checked for consistency with the bounds of @p surface.
+  /// @throws std::invalid_argument if an axis has an open boundary type
   GridPortalLinkT(std::shared_ptr<RegularSurface> surface,
                   AxisDirection direction, Axes&&... axes)
       : GridPortalLink(std::move(surface), direction),
         m_grid(std::tuple{std::move(axes)...}) {
     using enum AxisDirection;
+
+    // prevent open axis from having a nullptr edge from under/overflow bins 
+    for (const IAxis* axis : m_grid.axes()) {
+      if (axis->getBoundaryType() == AxisBoundaryType::Open) {
+        throw std::invalid_argument(
+            "GridPortalLink: open axis boundary type is not supported");
+      }
+    }
 
     if (const auto* cylinder =
             dynamic_cast<const CylinderSurface*>(m_surface.get())) {

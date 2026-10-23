@@ -13,11 +13,13 @@
 #include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
+#include "Acts/Geometry/PortalError.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -110,6 +112,11 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     BOOST_CHECK_THROW(GridPortalLink::make(cyl, AxisDirection::AxisRPhi,
                                            Axis{AxisBound, -180_degree * 30_mm,
                                                 180_degree * 30_mm, 10}),
+                      std::invalid_argument);
+
+    // Throws because open axis
+    BOOST_CHECK_THROW(GridPortalLink::make(cyl, AxisDirection::AxisZ,
+                                           Axis{AxisOpen, -100_mm, 100_mm, 10}),
                       std::invalid_argument);
 
     auto grid1dCylRPhi = GridPortalLink::make(
@@ -728,6 +735,34 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(ResolveVolumeAtEdge) {
+  auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                  30_mm, 100_mm);
+  auto vol1 = makeDummyVolume();
+  auto vol2 = makeDummyVolume();
+
+  auto grid = GridPortalLink::make(cyl, AxisDirection::AxisZ,
+                                   Axis{AxisBound, -100_mm, 100_mm, 2});
+  grid->grid().atLocalBins({1}) = vol1.get();
+  grid->grid().atLocalBins({2}) = vol2.get();
+
+  const double rPhi = 170_degree * 30_mm;
+  const double eps = 0.5 * s_onSurfaceTolerance;
+
+  // Outside the z edges by less than the tolerance: moved onto the boundary
+  auto upper = grid->resolveVolume(gctx, Vector2{rPhi, 100_mm + eps});
+  BOOST_REQUIRE(upper.ok());
+  BOOST_CHECK_EQUAL(upper.value(), vol2.get());
+  auto lower = grid->resolveVolume(gctx, Vector2{-rPhi, -100_mm - eps});
+  BOOST_REQUIRE(lower.ok());
+  BOOST_CHECK_EQUAL(lower.value(), vol1.get());
+
+  // Outside by more than the tolerance: error
+  auto outside = grid->resolveVolume(gctx, Vector2{rPhi, 101_mm});
+  BOOST_REQUIRE(!outside.ok());
+  BOOST_CHECK(outside.error() == PortalError::PositionOutsideLinkBounds);
+}
+
 BOOST_AUTO_TEST_SUITE_END()  // GridConstruction
 
 BOOST_AUTO_TEST_SUITE(GridMerging)
@@ -873,17 +908,15 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
     std::unique_ptr gridRightClosed =
         GridPortalLink::make(cyl2, AxisDirection::AxisZ,
                              Axis{AxisClosed, {-50_mm, -10_mm, 10_mm, 50_mm}});
-    std::unique_ptr gridRightOpen =
+    // Open axes are rejected at construction
+    BOOST_CHECK_THROW(
         GridPortalLink::make(cyl2, AxisDirection::AxisZ,
-                             Axis{AxisOpen, {-50_mm, -10_mm, 10_mm, 50_mm}});
+                             Axis{AxisOpen, {-50_mm, -10_mm, 10_mm, 50_mm}}),
+        std::invalid_argument);
 
     auto compositeLR = PortalLinkBase::merge(
         copy(gridLeft), copy(gridRightClosed), AxisDirection::AxisZ, *logger);
     BOOST_CHECK_NE(dynamic_cast<const CompositePortalLink*>(compositeLR.get()),
-                   nullptr);
-    auto compositeRL = PortalLinkBase::merge(
-        copy(gridLeft), copy(gridRightOpen), AxisDirection::AxisZ, *logger);
-    BOOST_CHECK_NE(dynamic_cast<const CompositePortalLink*>(compositeRL.get()),
                    nullptr);
   }
 }
