@@ -12,6 +12,7 @@
 #include "Acts/EventData/SeedContainer.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
@@ -52,12 +53,6 @@ constexpr float kDiscMaxR = 220.f;
 /// Eta bin width the layers are split into, as in ATLAS'
 /// createLinkingScheme.py.
 constexpr float kEtaBinWidth = 0.2f;
-
-/// Tau ratio tolerances the toy detector puts on its layer pairs, matching the
-/// constants GBTS was tuned with.
-constexpr float kTauRatioCut = 0.007f;
-constexpr float kTauRatioCorr = 0.006f;
-constexpr float kTauRatioCorrStrip = 0.03f;
 
 /// One layer of the toy detector. The ids follow ATLAS, but the seeder does not
 /// read them: it orders the pixel barrel layers by radius.
@@ -155,30 +150,12 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
     layers.push_back(layer);
   }
 
-  // the tolerances an ATLAS-like experiment would put on its own pairs: one
-  // leaving the pixel barrel scatters more, and one with a strip at either end
-  // more again, since its two doublets resolve the shared node separately
-  const auto layerOf = [&detector](Experimental::GbtsExperimentLayerId id) {
-    return *std::ranges::find(detector.layers, id, &LayerSpec::id);
-  };
-  const auto isPixelBarrel = [&](Experimental::GbtsExperimentLayerId id) {
-    const LayerSpec& layer = layerOf(id);
-    return layer.technology == GbtsLayerTechnology::Pixel &&
-           layer.type == GbtsLayerType::Barrel;
-  };
-  const auto isStrip = [&](Experimental::GbtsExperimentLayerId id) {
-    return layerOf(id).technology == GbtsLayerTechnology::Strip;
-  };
-
   std::vector<Experimental::GbtsLayerConnection> connections;
   connections.reserve(detector.links.size());
   for (const auto& [src, dst] : detector.links) {
-    const float cut =
-        kTauRatioCut +
-        ((isPixelBarrel(dst) && !isPixelBarrel(src)) ? kTauRatioCorr : 0.f) +
-        ((isStrip(src) || isStrip(dst)) ? kTauRatioCorrStrip : 0.f);
-    connections.push_back({src, dst, cut});
+    connections.push_back({.src = src, .dst = dst});
   }
+  Experimental::assignAdaptiveTauRatioCuts(connections, layers);
 
   return std::make_shared<Experimental::GbtsGeometry>(layers, connections,
                                                       kEtaBinWidth);
@@ -399,6 +376,7 @@ SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
 /// The seeder and everything it needs, for one toy detector.
 struct SeederSetup {
   Experimental::GraphBasedTrackSeeder seeder;
+  Experimental::GbtsGraphBuilder graphBuilder;
   Experimental::GbtsTrackingFilter filter;
   Experimental::GbtsRoiDescriptor roi;
   Experimental::GraphBasedTrackSeeder::Options options;
@@ -420,18 +398,22 @@ SeederSetup makeSeeder(const ToyDetector& detector,
   };
 
   Experimental::GraphBasedTrackSeeder::Config config;
-  config.minPt = 1_GeV;
-  config.minZ0 = -kBarrelHalfZ;
-  config.maxZ0 = kBarrelHalfZ;
-  config.maxOuterRadius = detector.maxOuterRadius;
   // the toy setup has no tau lookup table and no cluster widths
   config.useClusterWidthCuts = false;
-  config.calibrateStrips = calibrateStrips;
+
+  Experimental::GbtsGraphBuilder::Config graphConfig;
+  graphConfig.minPt = 1_GeV;
+  graphConfig.minZ0 = -kBarrelHalfZ;
+  graphConfig.maxZ0 = kBarrelHalfZ;
+  graphConfig.maxOuterRadius = detector.maxOuterRadius;
+  graphConfig.calibrateStrips = calibrateStrips;
 
   return SeederSetup{
       .seeder = Experimental::GraphBasedTrackSeeder(
           Experimental::GraphBasedTrackSeeder::DerivedConfig(config), geometry,
           makeLogger()),
+      .graphBuilder =
+          Experimental::GbtsGraphBuilder(graphConfig, geometry, makeLogger()),
       .filter = Experimental::GbtsTrackingFilter(
           Experimental::GbtsTrackingFilter::Config{}, geometry, makeLogger()),
       .roi = Experimental::GbtsRoiDescriptor(-4.5, 4.5, -kBarrelHalfZ,
@@ -447,8 +429,8 @@ SeedContainer runSeeding(const ToyDetector& detector,
   SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
-  setup.seeder.createSeeds(spacePoints, setup.roi, setup.filter, setup.options,
-                           seeds);
+  setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                           setup.filter, setup.options, seeds);
 
   return seeds;
 }
@@ -622,8 +604,8 @@ BOOST_AUTO_TEST_CASE(SeedsFromCallerFilledNodeStorage) {
 
   SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
-  setup.seeder.createSeeds(storage, setup.roi, setup.filter, setup.options,
-                           seeds);
+  setup.seeder.createSeeds(storage, setup.roi, setup.graphBuilder, setup.filter,
+                           setup.options, seeds);
 
   BOOST_CHECK_EQUAL(formatSeeds(seeds),
                     formatSeeds(runSeeding(detector, spacePoints)));
@@ -778,8 +760,8 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
     const SeederSetup setup = makeSeeder(detector, calibrate, /*quiet=*/true);
     SeedContainer seeds;
     seeds.assignSpacePointContainer(spacePoints);
-    setup.seeder.createSeeds(spacePoints, setup.roi, setup.filter,
-                             setup.options, seeds);
+    setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                             setup.filter, setup.options, seeds);
     return seeds.size();
   };
 

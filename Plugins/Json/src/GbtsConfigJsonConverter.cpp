@@ -54,37 +54,11 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
   bounds.maxTauNearEdge = j.at("maxTauNearEdge").get<float>();
 }
 
-void Acts::Experimental::to_json(
-    nlohmann::json& j, const GbtsLayerConnectionTool::LayerDescription& layer) {
-  j["minR"] = layer.minR;
-  j["maxR"] = layer.maxR;
-  j["minZ"] = layer.minZ;
-  j["maxZ"] = layer.maxZ;
-  j["id"] = layer.gbtsId;
-}
-
-void Acts::Experimental::from_json(
-    const nlohmann::json& j, GbtsLayerConnectionTool::LayerDescription& layer) {
-  layer.minR = j.at("minR").get<float>();
-  layer.maxR = j.at("maxR").get<float>();
-  layer.minZ = j.at("minZ").get<float>();
-  layer.maxZ = j.at("maxZ").get<float>();
-  layer.gbtsId = j.at("id").get<GbtsExperimentLayerId>();
-}
-
 std::vector<Acts::Experimental::GbtsLayerConfig>
 Acts::Experimental::readGbtsLayers(const std::filesystem::path& path) {
   return Acts::detail::readJsonFile(path)
       .at("layers")
       .get<std::vector<GbtsLayerConfig>>();
-}
-
-std::vector<Acts::Experimental::GbtsLayerConnectionTool::LayerDescription>
-Acts::Experimental::readGbtsLayerDescriptions(
-    const std::filesystem::path& path) {
-  return Acts::detail::readJsonFile(path)
-      .at("layers")
-      .get<std::vector<GbtsLayerConnectionTool::LayerDescription>>();
 }
 
 std::vector<Acts::Experimental::GbtsLayerConnection>

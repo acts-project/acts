@@ -176,8 +176,8 @@ struct GbtsEdge final {
   /// Constructor
   /// @param n1_ Inner node index
   /// @param n2_ Outer node index
-  /// @param tauRatioCut_ Cut the layer pair of this doublet carries
-  /// @param n2PixelBarrel_ Whether the outer node is on a pixel barrel layer
+  /// @param tauRatioCut_ Tau ratio cut of this doublet as an outer pair
+  /// @param n2PixelBarrel_ Whether the outer node is on the pixel barrel
   /// @param p1_ First fit parameter
   /// @param p2_ Second fit parameter
   /// @param p3_ Third fit parameter
@@ -185,8 +185,6 @@ struct GbtsEdge final {
            bool n2PixelBarrel_, float p1_, float p2_, float p3_)
       : n1{n1_},
         n2{n2_},
-        level{1},
-        next{1},
         n2PixelBarrel{n2PixelBarrel_},
         p{p1_, p2_, p3_},
         tauRatioCut{tauRatioCut_} {}
@@ -196,22 +194,15 @@ struct GbtsEdge final {
   /// Outer node of the edge
   SpacePointIndex n2{kSpacePointIndexInvalid};
 
-  std::int8_t level{-1};
-  std::int8_t next{-1};
-
   std::uint8_t nNei{0};
 
-  /// Whether the outer node is on a pixel barrel layer, the only thing the
-  /// innermost neighbour loop asks about it. Cached so that loop does not have
-  /// to chase the node's bin, and in what was padding so the edge does not
-  /// grow.
+  /// Whether the outer node is on the pixel barrel. Sits in padding.
   bool n2PixelBarrel{};
 
   std::array<float, 3> p{};
 
-  /// GbtsLayerConnection::tauRatioCut of this doublet's layer pair. Cached
-  /// next to the fit parameters so the innermost neighbour loop does not have
-  /// to chase the pair.
+  /// GbtsLayerConnection::tauRatioCutOuter of this doublet's layer pair,
+  /// cached for the neighbour loop.
   float tauRatioCut{};
 
   std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};

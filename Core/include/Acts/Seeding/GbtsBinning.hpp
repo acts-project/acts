@@ -29,13 +29,15 @@ struct GbtsLayerBinning final {
   float etaBinWidth{};
 };
 
-/// One outer eta bin reachable from an inner one, with the cut the layer pair
+/// One outer eta bin reachable from an inner one, with the cuts the layer pair
 /// they belong to carries.
 struct GbtsBinLink final {
   /// The outer eta bin.
   std::uint32_t bin{};
-  /// GbtsLayerConnection::tauRatioCut of the pair this link came from.
-  float tauRatioCut{};
+  /// GbtsLayerConnection::tauRatioCutInner of the pair this link came from.
+  float tauRatioCutInner{};
+  /// GbtsLayerConnection::tauRatioCutOuter of the pair this link came from.
+  float tauRatioCutOuter{};
 };
 
 /// The outer eta bins reachable from one inner eta bin. Groups come in the

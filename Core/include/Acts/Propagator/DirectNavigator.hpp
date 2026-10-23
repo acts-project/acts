@@ -47,19 +47,13 @@ class DirectNavigator {
     /// Constructor from geometry context
     /// @param gctx The geometry context
     explicit Options(const GeometryContext& gctx)
-        : NavigatorPlainOptions(gctx) {}
-
-    /// The surface tolerance
-    double surfaceTolerance = s_onSurfaceTolerance;
-
-    // TODO https://github.com/acts-project/acts/issues/2738
-    /// Distance limit to discard intersections "behind us"
-    /// @note this is only necessary because some surfaces have more than one
-    ///       intersection
-    double nearLimit = -100 * UnitConstants::um;
-
-    /// The far limit to resolve surfaces
-    double farLimit = std::numeric_limits<double>::max();
+        : NavigatorPlainOptions(gctx) {
+      // TODO https://github.com/acts-project/acts/issues/2738
+      // The direct navigator uses a relaxed near limit to discard
+      // intersections "behind us". This is only necessary because some
+      // surfaces have more than one intersection.
+      nearLimit = -100 * UnitConstants::um;
+    }
 
     /// The ordered sequence of surfaces to walk through
     std::vector<const Surface*> surfaceSequence;
@@ -67,7 +61,11 @@ class DirectNavigator {
     /// Set the plain navigator options
     /// @param options The plain navigator options to copy
     void setPlainOptions(const NavigatorPlainOptions& options) {
+      // Preserve the direct-navigator-specific near limit, which differs from
+      // the plain default.
+      const double keepNearLimit = nearLimit;
       static_cast<NavigatorPlainOptions&>(*this) = options;
+      nearLimit = keepNearLimit;
     }
   };
 
@@ -281,10 +279,12 @@ class DirectNavigator {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
+  /// @param curvature Current global geometric curvature (inverse length)
   ///
   /// @return The next target surface
-  NavigationTarget nextTarget(State& state, const Vector3& position,
-                              const Vector3& direction) const {
+  NavigationTarget nextTarget(
+      State& state, const Vector3& position, const Vector3& direction,
+      [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
     // Navigator target always resets the current surface
     state.currentSurface = nullptr;
 
@@ -334,10 +334,12 @@ class DirectNavigator {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
+  /// @param curvature Current global geometric curvature (inverse length)
   ///
   /// @return True if the target is valid
-  bool checkTargetValid(const State& state, const Vector3& position,
-                        const Vector3& direction) const {
+  bool checkTargetValid(
+      const State& state, const Vector3& position, const Vector3& direction,
+      [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
     static_cast<void>(state);
     static_cast<void>(position);
     static_cast<void>(direction);
@@ -353,10 +355,12 @@ class DirectNavigator {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
+  /// @param curvature Current global geometric curvature (inverse length)
   /// @param surface The surface reached
-  void handleSurfaceReached(State& state, const Vector3& position,
-                            const Vector3& direction,
-                            const Surface& surface) const {
+  void handleSurfaceReached(
+      State& state, const Vector3& position, const Vector3& direction,
+      const Surface& surface,
+      [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
     static_cast<void>(position);
     static_cast<void>(direction);
     static_cast<void>(surface);

@@ -249,6 +249,18 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
   const Acts::DynamicVector eigenVals = eigenSolver.eigenvalues();
   const Acts::DynamicMatrix eigenVecs = eigenSolver.eigenvectors();
 
+  // Gradient of the measurement chi2 at the smoothed track, -2 * g. The
+  // smoothed track is the minimum of the full chi2, so the correlation term
+  // has to cancel it: its pseudo-measurements carry the residuals rho with
+  // sum_i lambda_i rho_i v_i = -g. With zero residuals, pede's local fit would
+  // move off the smoothed track by C * g, and the alignment gradient would
+  // pick up a spurious projector -2 A^T V^-1 H C g. Whenever the smoothed
+  // track has kinks (multiple scattering absorbing a misalignment), this biases
+  // the result towards zero.
+  const Acts::DynamicVector measGradient =
+      updatedProjection.transpose() * state.measurementCovariance.inverse() *
+      state.residual;
+
   // no dependence on global parameters - these terms only enter the
   // track covariance sub-matrix of the alignment problem (bottom right
   // quadrant)
@@ -265,10 +277,12 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
     for (std::size_t iPar = 0; iPar < effectiveTrackParDim; ++iPar) {
       localDeriv[iPar] = eigenVecs(iPar, iMeas);
     }
+    const double pseudoResidual =
+        -eigenVecs.col(iMeas).dot(measGradient) / eigenVals(iMeas);
     // and write a pseudo-measurement to Mille.
     milleLocalBuf->addData(
-        // residual == 0 for pseudo-measurements
-        0,
+        // residual keeping the smoothed track at the local-fit minimum
+        pseudoResidual,
         // EV == weight = 1/sigma^2
         1. / std::sqrt(eigenVals(iMeas)),
         // local parameter indices
@@ -319,11 +333,15 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
   // The reason is that ACTS only counts surface measurements, and stores
   // the correlation information directly in the track parameter covariance.
   // MillePede considers constraints to be additional measurements.
-  // A MillePede pseudomeasurement has residual 0 and no global derivatives.
+  // A surface measurement projects onto a single track parameter. A
+  // pseudo-measurement is an eigenvector of the correlation term: it has no
+  // global derivatives, and generally several local ones. Its residual is not
+  // zero, as it keeps the smoothed track at the minimum of the local fit.
   // The same criterion sizes the matrices and fills them below.
   auto isMeasurementOnSurface = [](const Mille::MilleMeasurement& measurement) {
-    return measurement.measurement != 0 ||
-           !measurement.globalDerivatives.empty();
+    return !measurement.globalDerivatives.empty() ||
+           (measurement.localLabels.size() <= 1 &&
+            measurement.measurement != 0);
   };
   state.measurementDim = std::count_if(measurements.begin(), measurements.end(),
                                        isMeasurementOnSurface);
@@ -479,32 +497,6 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
 
   targetState = std::move(state);
   return res;
-}
-
-void dumpAsMillepedeRes(const ActsAlignment::AlignmentResult& result,
-                        std::ostream& out) {
-  for (auto [surface, index] : result.idxedAlignSurfaces) {
-    for (std::size_t i = 0; i < Acts::eAlignmentSize; ++i) {
-      std::size_t row = Acts::eAlignmentSize * index + i;
-      out << std::setw(8)
-          << row + 1
-          // column 2: parameter delta from fit
-          << "   " << std::setw(12)
-          << result.deltaAlignmentParameters(row)
-          // column 3: optional pre-sigma for parameter delta
-          << "   " << std::setw(4)
-          << 0.
-          // column 4: change of parameter delta w.r.t start value
-          << "   " << std::setw(12)
-          << result.deltaAlignmentParameters(row)
-          // column 5: uncertainty of parameter delta from the fit
-          << "   " << std::setw(12)
-          << std::sqrt(result.alignmentCovariance(row, row))
-          // column 6: count of measurements seeing this parameter.
-          // Not available in ACTS solver, write a placeholder of 99
-          << "    99 " << std::endl;
-    }
-  }
 }
 
 }  // namespace ActsPlugins::ActsToMille

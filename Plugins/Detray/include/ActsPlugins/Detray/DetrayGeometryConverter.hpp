@@ -124,7 +124,6 @@ class DetrayGeometryConverter {
 
     // ── Build detray detector from payloads ───────────────────────────────
     detray::detector_builder<metadata_t> detectorBuilder{};
-    detectorBuilder.deduplicate_material(m_cfg.deduplicateMaterial);
 
     detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
                                                           *payloads.detector);
@@ -189,8 +188,10 @@ class DetrayGeometryConverter {
     }
 
     DetrayGeometry<metadata_t> result{};
-    result.detector =
-        std::make_shared<detector_t>(detectorBuilder.build(mr, result.names));
+    detray::volume_builder_options build_opts{};
+    build_opts.deduplicate(m_cfg.deduplicateMaterial);
+    result.detector = std::make_shared<detector_t>(
+        detectorBuilder.build(mr, build_opts, result.names));
 
     return result;
   }

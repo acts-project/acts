@@ -11,8 +11,13 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointContainer.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
+#include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -31,19 +36,14 @@ namespace ActsExamples {
 
 class GraphBasedSeedingAlgorithm final : public IAlgorithm {
  public:
-  using ActsIDs = std::array<std::uint64_t, 2>;
-
-  /// One module's entry in the layer mapping file, with the geometry
-  /// index resolved from it.
-  struct GbtsIDs {
+  /// One module's entry in the layer mapping file.
+  struct GbtsLayerInfo {
     /// GBTS layer id
     Acts::Experimental::GbtsExperimentLayerId layerId{};
     /// whether the layer is a barrel or an endcap layer
     Acts::Experimental::GbtsLayerType type{};
     /// sensor technology of the layer
     Acts::Experimental::GbtsLayerTechnology technology{};
-    /// index of `layerId`, unset if the geometry has no such layer
-    std::optional<Acts::Experimental::GbtsLayerIndex> layerIndex{};
   };
 
   struct Config {
@@ -59,15 +59,30 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// seeds
     std::string outputSeeds;
 
+    /// Magnetic field, needed for `outputFreeParameters`.
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
+    /// Output free track parameters of the seeds (optional), zero for a seed
+    /// without a fit of its own.
+    std::string outputFreeParameters;
+
     /// Magnetic field in z direction
     float bFieldInZ = 2 * Acts::UnitConstants::T;
+
+    /// keeps or disregards strip layers during parsing
+    bool useStripConnections = false;
 
     /// contains all the options used to steer the algorithm
     /// includes both user options available to change in the python script and
     /// those seen just be the algorithm
     Acts::Experimental::GraphBasedTrackSeeder::Config seedFinderConfig;
 
+    /// steers the chain-following filter of seed extraction
     Acts::Experimental::GbtsTrackingFilter::Config trackingFilterConfig;
+
+    /// steers doublet creation, edge linking and chain selection. `minZ0` and
+    /// `maxZ0` are overridden from the region of interest.
+    Acts::Experimental::GbtsGraphBuilder::Config graphConfig;
 
     /// the connection table (parsed from json file) used to make geoemetry cuts
     /// be GBTS
@@ -84,17 +99,22 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// createLinkingScheme.py)
     float etaBinWidth = 0.2f;
 
-    /// Widen the tau ratio tolerance of a layer pair that steps over a layer,
-    /// or that leaves the pixel barrel. The seeder reads the resulting
-    /// per-pair tolerance and no longer derives this itself.
+    /// Widen the tau ratio cut of layer pairs by `tauRatioCuts`
     bool useAdaptiveCuts = true;
-    /// How much such a pair is widened by
-    float tauRatioCorr = 0.006f;
-    /// How much a pair with a strip layer at either end is widened by, on top
-    float tauRatioCorrStrip = 0.03f;
+    /// Tau ratio cuts assigned to the layer pairs
+    Acts::Experimental::GbtsAdaptiveTauRatioCuts tauRatioCuts;
 
     /// z0 range the eta bin table is built against
     Acts::Experimental::GbtsZ0Range gbtsZ0Range;
+
+    /// Cut the eta bins along the module tilt of inclined layers.
+    bool useLayerTilt = false;
+
+    /// the region of interest along the beam line. Overrides
+    /// `seedFinderConfig.minZ0` and `maxZ0`.
+    float collisionRegionMin = -150. * Acts::UnitConstants::mm;
+    /// See @ref collisionRegionMin
+    float collisionRegionMax = 150. * Acts::UnitConstants::mm;
 
     /// holds detector information, used to make the geometry objects used by
     /// GBTS
@@ -120,14 +140,23 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// holds all objects either used in initialise or handed out of algorithm
   Config m_cfg{};
 
+  /// the geometry information the seeding works on
+  std::shared_ptr<Acts::Experimental::GbtsGeometry> m_geometry;
+
   /// actual seed finder algorithm
   std::optional<Acts::Experimental::GraphBasedTrackSeeder> m_finder;
 
+  /// graph used in creating and extracting edges, edge connections
+  /// and valid chains
+  std::optional<Acts::Experimental::GbtsGraphBuilder> m_gbtsGraphBuilder;
+
+  /// filter used to extract seed candidates from graph
   std::optional<Acts::Experimental::GbtsTrackingFilter> m_filter;
 
   /// conversion between ACTS labelling of volume, layer and modules to that
-  /// used by GBTS
-  std::map<ActsIDs, GbtsIDs> m_actsGbtsMap;
+  /// used by GBTS: the entry of a surface is the one of its module or, without
+  /// one, the one of its whole layer
+  Acts::GeometryHierarchyMap<GbtsLayerInfo> m_actsGbtsMap;
 
   /// used to define region of interest
   std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;
@@ -142,17 +171,16 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// handle that points to container of output seeds
   WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
+  WriteDataHandle<std::vector<Acts::FreeVector>> m_outputFreeParameters{
+      this, "OutputFreeParameters"};
+
   /// make the map between ACTS geometry ID's and GBTS geometry ID's
-  std::map<ActsIDs, GbtsIDs> makeActsGbtsMap() const;
+  Acts::GeometryHierarchyMap<GbtsLayerInfo> makeActsGbtsMap() const;
 
   /// Resolve the GBTS layer index for a space point, or nullopt if it is not
   /// part of the GBTS geometry.
   std::optional<Acts::Experimental::GbtsLayerIndex> gbtsLayerIndex(
       const ConstSpacePointProxy &spacePoint) const;
-
-  /// Fill in `GbtsIDs::layerIndex` for every mapped module from the geometry.
-  /// @param geometry The geometry the indices belong to
-  void resolveLayerIndices(const Acts::Experimental::GbtsGeometry &geometry);
 
   /// Add a surface of the tracking geometry to the description of its GBTS
   /// layer: the reference coordinates are summed and the bounds extended.

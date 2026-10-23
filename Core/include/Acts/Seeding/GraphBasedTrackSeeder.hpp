@@ -15,6 +15,7 @@
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
+#include "Acts/Seeding/GbtsSeedFit.hpp"
 #include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
@@ -24,133 +25,47 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
 namespace Acts::Experimental {
+
+struct GbtsGraph;
+class GbtsGraphBuilder;
 
 /// Seed finder implementing the GBTS seeding workflow.
 class GraphBasedTrackSeeder {
  public:
   /// Configuration struct for the GBTS seeding algorithm.
   struct Config {
-    /// Enable beam spot correction.
-    bool beamSpotCorrection = false;
-
     /// Accepted tau range per cluster width bin, needed by the cluster width
     /// cuts and ignored without them.
     GbtsTauLookupTable tauLookupTable;
-
-    /// Take the strip-to-strip layer connections from the connector file
-    /// instead of the pixel-to-pixel ones. Read where the file is loaded, not
-    /// by the seeder itself.
-    bool useStripConnections = false;
     /// Enable the cluster width cuts: wide endcap rejection and tau narrowing.
     bool useClusterWidthCuts = false;
-    /// Match seeds before creating them.
-    bool matchBeforeCreate = false;
-    /// optional validation for barrel triplets
-    bool validateTriplets = true;
+    /// Maximum number of phi slices.
+    float nMaxPhiSlice = 53;  // used to calculate phi slices
+
+    // Seed extraction options
+
+    /// Longest chain of edges taken into account. Edges in longer chains take
+    /// no part in the seed extraction.
+    std::uint32_t maxChainLength = 15;
+    /// Chain length a seed candidate must reach: a triplet plus one
+    /// confirmation.
+    std::uint8_t minSeedLevel = 3;
     /// optionally add 3 sp seeds within a certain eta range
     ///
-    /// @note Worth little until `maxAbsEtaAddTriplets` is opened past
-    ///       `edgeMaskMinEta`; matters most where there are few layers.
+    /// @note Matters most where there are few layers.
     bool addTriplets = false;
-    /// Tau ratio scale the high-pT check of `validateTriplets` cuts at. The
-    /// cut on the triplet itself comes from its two layer pairs, not from here.
-    float tauRatioCut = 0.007;
-    /// Tau ratio precut threshold.
-    float tauRatioPrecut = 0.009f;
     /// the maximum allowed eta value in which
     /// three spacepoint seeds are passed through
     float maxAbsEtaAddTriplets = 1.5;
-    /// Maximum number of phi slices.
-    float nMaxPhiSlice = 53;  // used to calculate phi slices
-    /// Minimum transverse momentum.
-    float minPt = 1.0f * UnitConstants::GeV;
-    /// Fraction of `minPt` a triplet may fall to, allowing for three-point
-    /// pT resolution.
-    float tripletPtFraction = 0.8f;
-
-    // graph building options
-    /// Use eta binning from geometry structure.
-    bool useEtaBinning = true;
-    /// Apply RZ cuts on doublets.
-    bool doubletFilterRZ = true;
-    /// Maximum number of Gbts edges/doublets.
-    std::uint32_t nMaxEdges = 2000000;
-    /// Minimum delta radius between layers.
-    float minDeltaRadius = 2.0 * Acts::UnitConstants::mm;
-    /// Largest |cot(theta)| accepted for a doublet. The default corresponds to
-    /// |eta| of about 4.3, beyond the acceptance of any current tracker.
-    float maxAbsTau = 36.0f;
-    /// Maximum d0 impact parameter when validating edge connection triplet
-    float d0Max = 3.0 * UnitConstants::mm;
-    /// Maximum difference in allowed tangent between candidate edge connection
-    float cutDPhiMax = 0.012f;
-    /// Maximum allowed curvature tolerance for candidate edge connections
-    float cutDCurvMax = 0.001f;
-    /// Minimum z0 value. In pixel mode the value is picked from the RoI.
-    float minZ0 = -600;
-    /// Maximum z0 value. In pixel mode the value is picked from the RoI.
-    float maxZ0 = 600;
-
-    /// pT the default cut coefficients were tuned at; they scale by
-    /// `tuningPt / minPt`.
-    float tuningPt = 0.9f * UnitConstants::GeV;
-    /// Maximum |curvature| above `curvatureSplitAbsTau`, before that scaling.
-    float maxCurvatureHighEta = 4.75e-4f / UnitConstants::mm;
-    /// Maximum |curvature| below `curvatureSplitAbsTau`, before that scaling.
-    float maxCurvatureLowEta = 3.75e-4f / UnitConstants::mm;
-    /// |cot(theta)| separating the two curvature cuts, |eta| of about 2.1.
-    float curvatureSplitAbsTau = 4.0f;
-    /// Radial separation splitting the two phi window slopes below.
-    float phiWindowSplitDeltaRadius = 60.0f * UnitConstants::mm;
-    /// Phi window below `phiWindowSplitDeltaRadius`, as offset plus slope times
-    /// the radial separation.
-    float phiWindowNearOffset = 0.002f;
-    /// Slope of the near phi window, per unit radial separation. Scaled by
-    /// `tuningPt / minPt`.
-    float phiWindowNearSlope = 4.33e-4f / UnitConstants::mm;
-    /// Phi window above `phiWindowSplitDeltaRadius`, in the same form.
-    float phiWindowFarOffset = 0.015f;
-    /// Slope of the far phi window, per unit radial separation. Scaled by
-    /// `tuningPt / minPt`.
-    float phiWindowFarSlope = 2.2e-4f / UnitConstants::mm;
-    /// Incoming edge count below which a node is accepted without a tau match.
-    std::uint32_t matchBeforeCreateMaxEdges = 2;
-    /// Highest pixel barrel layer, counted inside out, whose nodes are cut
-    /// against the z0 histogram of their outer neighbourhood and whose
-    /// isolated nodes are skipped. Negative disables the cut.
-    std::int32_t z0HistogramMaxBarrelOrder = 0;
-    /// Highest pixel barrel layer, counted inside out, `matchBeforeCreate`
-    /// applies to when it is enabled. Negative disables it.
-    std::int32_t matchBeforeCreateMaxBarrelOrder = 1;
-    /// Half-width of the z0 window a node is matched against in the histogram.
-    float z0Resolution = 2.5f * UnitConstants::mm;
-    /// Maximum radius of pixel detector
-    float maxOuterRadius = 550.0f;
-
-    /// Resolve a doublet's strip endpoints against its own direction before
-    /// cutting on them. Nothing is written back; the correction is the pair's.
-    bool calibrateStrips = true;
-    /// How far along a strip a crossing may land and still be recovered, as a
-    /// multiple of the strip half-length, so 1 is the strip itself. The same
-    /// quantity as `TripletSeedFinder::Config::toleranceParam`.
-    float maxStripLengthFraction = 1.1f;
-
-    // Seed extraction options
-    /// Maximum number of connected-component iterations.
-    std::uint32_t ccaMaxIterations = 15;
-    /// Chain length a seed candidate must reach: a triplet plus one
-    /// confirmation.
-    std::uint32_t minSeedLevel = 3;
     /// Smallest seed size that is split into drop-out candidates.
     std::uint32_t minSplitSeedSize = 4;
     /// Largest seed size that is split.
     std::uint32_t maxSplitSeedSize = 5;
-    /// Minimum eta for edge masking.
-    float edgeMaskMinEta = 1.5;
     /// Threshold for hit sharing between seeds.
     float hitShareThreshold = 0.49;
     /// Max seed eta value considered for splitting.
@@ -218,23 +133,29 @@ class GraphBasedTrackSeeder {
   /// `localPositionY` columns.
   /// @param spacePoints Space point container
   /// @param roi Region of interest descriptor
+  /// @param graphBuilder Doublet graph builder
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(const SpacePointContainer& spacePoints,
                    const GbtsRoiDescriptor& roi,
+                   const GbtsGraphBuilder& graphBuilder,
                    const GbtsTrackingFilter& filter, const Options& options,
                    SeedContainer& outputSeeds) const;
 
   /// Create seeds from a finalized node storage in a region of interest.
   /// @param nodeStorage Finalized graph node storage
   /// @param roi Region of interest descriptor
+  /// @param graphBuilder Doublet graph builder
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
-  void createSeeds(GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
-                   const GbtsTrackingFilter& filter, const Options& options,
-                   SeedContainer& outputSeeds) const;
+  /// @param outputFits Fit of the tracking filter to each generated seed
+  void createSeeds(
+      GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
+      const GbtsGraphBuilder& graphBuilder, const GbtsTrackingFilter& filter,
+      const Options& options, SeedContainer& outputSeeds,
+      std::vector<std::optional<GbtsSeedFit>>* outputFits = nullptr) const;
 
  private:
   /// candidate seed metadata produced by the GBTS algorithm.
@@ -258,6 +179,8 @@ class GraphBasedTrackSeeder {
     std::vector<SpacePointIndex> nodes;
     /// Flag for seed splitting.
     bool forSeedSplitting{};
+    /// Fit of the tracking filter.
+    std::optional<GbtsSeedFit> fit;
   };
 
   /// Output seed metadata
@@ -271,30 +194,10 @@ class GraphBasedTrackSeeder {
     float seedQuality{};
     /// Index of spacepoints in seed.
     std::vector<std::uint32_t> spacePoints;
+    /// Fit of the tracking filter.
+    std::optional<GbtsSeedFit> fit;
   };
 
-  /// Sliding window in phi used to define range used for edge creation.
-  ///
-  /// Covers one non-empty source eta bin, whose phi-ordered node list it holds
-  /// directly so that the innermost loop does not reach through the bin.
-  struct SlidingWindow {
-    /// phi-ordered nodes of the bin, including the wrap-around duplicates
-    const std::pair<float, SpacePointIndex>* phiNodes{};
-    /// number of entries in @c phiNodes
-    std::uint32_t numPhiNodes{};
-    /// sliding window position
-    std::uint32_t firstIt{};
-    /// window half-width;
-    float deltaPhi{};
-    /// Inside-out pixel barrel ordinal of the bin's layer, -1 for the rest.
-    std::int32_t barrelOrder{-1};
-    /// Cut the layer pair this bin's doublets belong to carries
-    float tauRatioCut{};
-    /// Type of the bin's layer.
-    GbtsLayerType type{};
-    /// Technology of the bin's layer.
-    GbtsLayerTechnology technology{};
-  };
   DerivedConfig m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
@@ -304,44 +207,26 @@ class GraphBasedTrackSeeder {
 
   const Acts::Logger& logger() const { return *m_logger; }
 
-  /// Build doublet graph from nodes.
-  /// @param roi Region of interest descriptor
-  /// @param nodeStorage Data storage containing nodes
-  /// @param edgeStorage Storage for generated edges
-  /// @param options Event based options such as magnetic field strength
-  /// @return Pair of edge count and edge link count
-  std::pair<std::uint32_t, std::uint32_t> buildTheGraph(
-      const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-      std::vector<detail::GbtsEdge>& edgeStorage, const Options& options) const;
-
-  /// Run connected component analysis on the graph.
-  /// @param nEdges Number of edges in the graph
-  /// @param edgeStorage Storage containing graph edges
-  /// @return The highest chain level any edge reached
-  std::uint32_t runCCA(std::uint32_t nEdges,
-                       std::vector<detail::GbtsEdge>& edgeStorage) const;
-
   /// Extract seed candidates from the graph.
-  /// @param maxLevel Maximum level in the graph
-  /// @param nEdges Number of edges
   /// @param nodeStorage Storage containing the graph nodes
-  /// @param edgeStorage Storage containing edges
+  /// @param graph The graph
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
-  void extractSeedsFromTheGraph(std::uint32_t maxLevel, std::uint32_t nEdges,
-                                const GbtsNodeStorage& nodeStorage,
-                                std::vector<detail::GbtsEdge>& edgeStorage,
+  /// @param withFits Whether the fit of the filter to each seed is kept
+  void extractSeedsFromTheGraph(const GbtsNodeStorage& nodeStorage,
+                                const GbtsGraph& graph,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
-                                const GbtsTrackingFilter& filter) const;
+                                const GbtsTrackingFilter& filter,
+                                bool withFits) const;
 
-  /// Check to see if z0 of segment is within the expected z range of the
-  /// beamspot
-  /// @param z0BitMask Sets allowed bins of allowed z value
-  /// @param z0 Estimated z0 of segments z value at beamspot
-  /// @param z0HistoCoeff Scalfactor that converts z coodindate into bin index
-  /// @return Whether segment is within beamspot range
-  bool checkZ0BitMask(std::uint16_t z0BitMask, float z0,
-                      float z0HistoCoeff) const;
+  /// Extract the best fitted path from every edge inwards to a root edge.
+  /// @param nodeView View of the node positions and layers
+  /// @param graph The graph
+  /// @param filter Tracking filter fitting the paths
+  /// @return The fitted paths, each with its head edge first
+  std::vector<detail::GbtsEdgeState> extractBestPathPerEdge(
+      const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
+      const GbtsTrackingFilter& filter) const;
 
   /// Estimate the inverse radius of the circle through three nodes.
   /// @param nodeView View of the node positions and layers
@@ -349,19 +234,6 @@ class GraphBasedTrackSeeder {
   /// @return The estimated inverse radius
   float estimateCurvature(const detail::GbtsNodeView& nodeView,
                           const std::array<SpacePointIndex, 3>& nodes) const;
-
-  /// Check a triplet against the pT and d0 cuts.
-  /// @param nodeView View of the node positions and layers
-  /// @param candidateTriplet The three graph nodes
-  /// @param tripletMinPt Minimum transverse momentum
-  /// @param tauRatio Tau ratio of the triplet
-  /// @param tauRatioCut Tau ratio cut threshold
-  /// @param options Event based options such as magnetic field strength
-  /// @return Whether the triplet is accepted
-  bool validateTriplet(const detail::GbtsNodeView& nodeView,
-                       const std::array<SpacePointIndex, 3>& candidateTriplet,
-                       float tripletMinPt, float tauRatio, float tauRatioCut,
-                       const Options& options) const;
 };
 
 }  // namespace Acts::Experimental

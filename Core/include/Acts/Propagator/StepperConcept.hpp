@@ -34,6 +34,14 @@ concept CommonStepper = requires {
     { s.transportToCurvilinear(t) } -> std::same_as<typename Stepper::Jacobian>;
     { s.prepareCurvilinearState(t) } -> std::same_as<bool>;
 
+    // Retain field-based compatibility for custom steppers until the next
+    // breaking release; new steppers can provide curvature directly.
+    requires requires {
+      { s.curvature(t) } -> std::same_as<Result<Vector3>>;
+    } || requires(const Vector3& position) {
+      { s.getField(t, position) } -> std::same_as<Result<Vector3>>;
+    };
+
     requires requires(const typename Stepper::BoundParameters& par) {
       { s.initialize(t, par) } -> std::same_as<void>;
     };
@@ -93,6 +101,10 @@ concept SingleStepper =
     CommonStepper<Stepper, State> && requires(const Stepper& s, State& t) {
       requires BoundTrackParametersConcept<typename Stepper::BoundParameters>;
 
+      requires requires(const Vector3& position) {
+        { s.getField(t, position) } -> std::same_as<Result<Vector3>>;
+      };
+
       requires requires(const FreeVector& fv, const BoundVector& bv,
                         const BoundMatrix& bm, const Surface& sf) {
         { s.update(t, fv, bv, bm, sf) } -> std::same_as<void>;
@@ -101,7 +113,6 @@ concept SingleStepper =
       requires requires(const Vector3& v1, const Vector3& v2, double d1,
                         double d2) {
         { s.update(t, v1, v2, d1, d2) } -> std::same_as<void>;
-        { s.getField(t, v1) } -> std::same_as<Result<Vector3>>;
       };
 
       requires requires(const typename Stepper::Covariance& cov) {
