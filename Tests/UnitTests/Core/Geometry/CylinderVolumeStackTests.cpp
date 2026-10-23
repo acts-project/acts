@@ -147,7 +147,7 @@ BOOST_DATA_TEST_CASE(Baseline,
     const auto& b = volumes.at(i + 1);
 
     BOOST_CHECK_LT((base.inverse() * a->center(gctx))[eZ],
-                   (base.inverse() * b->center(gctx))[eZ]);
+                   (base.inverse()* b->center(gctx))[eZ]);
   }
 
   if (shift <= 1.0) {

@@ -347,7 +347,7 @@ auto gbts_seeding_algorithm::extract_seeds(
   });
 
   // 7. Lay out the path store, the paths of a terminus edge contiguous.
-  const unsigned int nPathsMax = nSp;
+  const unsigned int nPathsMax = cfg.max_paths_per_spacepoint * nSp;
   const unsigned int nPathsGrid = nSp / 2u;
   vecmem::data::vector_buffer<unsigned int> path_counts_buf(nConnectedEdges,
                                                             mr().main);
@@ -441,7 +441,8 @@ auto gbts_seeding_algorithm::extract_seeds(
     TRACCC_WARNING("Path store capacity ("
                    << nPathsMax << ") exceeded, "
                    << h_counters[gbts_counter::nPaths] - nPathsMax
-                   << " paths were dropped");
+                   << " paths were dropped. "
+                      "Increase max_paths_per_spacepoint");
   }
   return output_seeds;
 }

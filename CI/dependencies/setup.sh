@@ -477,7 +477,7 @@ retry_transient uv pip install --python "${venv_dir}/bin/python3" --excludes "$s
 "${venv_dir}/bin/python3" -c 'import yaml, jinja2'
 if [ "${full_install:-false}" == "true" ]; then
   retry_transient uv pip install --python "${venv_dir}/bin/python3" --excludes "$spack_python_excludes" \
-    -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt" histcmp==0.10.0 matplotlib pytest-md-report
+    -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt" histcmp==0.12.0 matplotlib pytest-md-report
 fi
 checkpoint "Python environment prepared"
 end_section

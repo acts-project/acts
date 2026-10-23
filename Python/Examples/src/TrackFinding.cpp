@@ -107,7 +107,8 @@ void addTrackFinding(py::module& mex) {
       inputSpacePoints, outputSeeds, seedFinderConfig, graphConfig,
       useStripConnections, layerMappingFile, connectorInputFile, lutInputFile,
       collisionRegionMin, collisionRegionMax, trackingGeometry, fillModuleCsv,
-      inputClusters, bFieldInZ, useLayerTilt);
+      inputClusters, bFieldInZ, useLayerTilt, magneticField,
+      outputFreeParameters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
@@ -142,7 +143,7 @@ void addTrackFinding(py::module& mex) {
         magneticField, bFieldMin, spacePointSelection, minTransverseDistance,
         geometricRefineIterations, spacePointWeight, initialSigmas,
         initialSigmaQoverPt, initialSigmaPtRel, initialVarInflation,
-        noTimeVarInflation, particleHypothesis);
+        noTimeVarInflation, particleHypothesis, inputFreeParameters);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
@@ -183,10 +184,10 @@ void addTrackFinding(py::module& mex) {
         c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
         outputTracks, trackingGeometry, magneticField, findTracks,
         findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
-        twoWay, reverseSearch, seedDeduplication, stayOnSeed, pixelVolumeIds,
-        stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
-        recordMaterialStates, useJosephFormulation, constrainToVolumeIds,
-        endOfWorldVolumeIds);
+        twoWay, seedDeduplication, seedDeduplicatorCfg, stayOnSeed,
+        pixelVolumeIds, stripVolumeIds, maxPixelHoles, maxStripHoles,
+        trimTracks, recordMaterialStates, useJosephFormulation,
+        constrainToVolumeIds, endOfWorldVolumeIds);
   }
 }
 
