@@ -113,7 +113,108 @@ def assert_root_hash(request, root_file_exp_hashes):
     return fn
 
 
+# Per-test memory, enabled with ACTS_PYTEST_MEMORY_REPORT=1 (Linux only).
+# Used to decide which tests go into the "heavy" xdist group, and to find tests
+# that leave memory behind in the (long-lived) xdist worker. For each test this
+# records the worker's RSS before and after it and the peak in between; for
+# tests that run subprocesses only a new maximum over all subprocesses so far is
+# visible, so that column is a lower bound.
+_memory_report = os.environ.get("ACTS_PYTEST_MEMORY_REPORT", "0") == "1"
+_memory_records = []
+
+
+def _read_status_mib(field):
+    with open("/proc/self/status") as fh:
+        for line in fh:
+            if line.startswith(field + ":"):
+                return int(line.split()[1]) // 1024
+    return 0
+
+
+def _children_max_rss_mib():
+    import resource
+
+    return resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss // 1024
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_protocol(item, nextitem):
+    if not _memory_report:
+        yield
+        return
+
+    with contextlib.suppress(OSError):
+        # Resets VmHWM to the current RSS
+        Path("/proc/self/clear_refs").write_text("5")
+    item._acts_rss_before_mib = _read_status_mib("VmRSS")
+    item._acts_children_max_rss_mib = _children_max_rss_mib()
+    yield
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    if _memory_report and call.when == "teardown":
+        # Attached to the report so that it reaches the xdist controller
+        children = _children_max_rss_mib()
+        if children <= getattr(item, "_acts_children_max_rss_mib", 0):
+            children = 0
+        outcome.get_result().user_properties.append(
+            (
+                "acts_memory_mib",
+                (
+                    os.environ.get("PYTEST_XDIST_WORKER", "main"),
+                    getattr(item, "_acts_rss_before_mib", 0),
+                    _read_status_mib("VmHWM"),
+                    _read_status_mib("VmRSS"),
+                    children,
+                ),
+            )
+        )
+
+
+def pytest_runtest_logreport(report):
+    if not _memory_report or report.when != "teardown":
+        return
+    for key, value in report.user_properties:
+        if key == "acts_memory_mib":
+            _memory_records.append((report.nodeid, *value))
+
+
+def _memory_summary(terminalreporter):
+    def table(title, rows):
+        terminalreporter.section(title, sep="-")
+        terminalreporter.line(
+            f"{'worker':>6} {'before':>7} {'peak':>7} {'after':>7} "
+            f"{'retain':>7} {'subproc':>7}  test"
+        )
+        for nodeid, worker, before, peak, after, children in rows:
+            terminalreporter.line(
+                f"{worker:>6} {before:7d} {peak:7d} {after:7d} "
+                f"{after - before:7d} {children:7d}  {nodeid}"
+            )
+
+    recs = _memory_records
+    table(
+        "Memory retained by the worker after each test (MiB, top 30)",
+        sorted(recs, key=lambda r: -(r[4] - r[2]))[:30],
+    )
+    table(
+        "Peak memory above the worker baseline per test (MiB, top 20)",
+        sorted(recs, key=lambda r: -max(r[3] - r[2], r[5]))[:20],
+    )
+    terminalreporter.section("Final RSS per worker (MiB)", sep="-")
+    final = {}
+    for _, worker, _, _, after, _ in recs:
+        final[worker] = after
+    for worker, after in sorted(final.items()):
+        terminalreporter.line(f"{worker:>6} {after:7d}")
+
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    if _memory_report and _memory_records:
+        _memory_summary(terminalreporter)
+
     docs_url = (
         "https://acts-project.github.io/group__python__testing.html#root_file_hashes"
     )
