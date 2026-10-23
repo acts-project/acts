@@ -19,6 +19,7 @@
 #include <compare>
 #include <cstdint>
 #include <type_traits>
+#include <format>
 
 /// Auxiliary concepts and data structures used by the Global Pattern Finder.
 ///
