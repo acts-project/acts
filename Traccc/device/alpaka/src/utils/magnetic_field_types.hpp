@@ -24,25 +24,16 @@ namespace traccc::alpaka {
 #if defined(ALPAKA_ACC_GPU_CUDA_ENABLED)
 /// Inhomogeneous B-field backend type using CUDA global memory
 template <typename scalar_t>
-using inhom_bfield_backend_t =
-    covfie::backend::affine<covfie::backend::linear<covfie::backend::clamp<
-        covfie::backend::strided<covfie::vector::vector_d<std::size_t, 3>,
-                                 covfie::backend::cuda_device_array<
-                                     covfie::vector::vector_d<scalar_t, 3>>>>>>;
+using inhom_bfield_backend_t = traccc::details::inhom_bfield_transformer_t<
+    covfie::backend::cuda_device_array<covfie::vector::vector_d<scalar_t, 3>>>;
 #elif defined(ALPAKA_ACC_GPU_HIP_ENABLED)
 template <typename scalar_t>
-using inhom_bfield_backend_t =
-    covfie::backend::affine<covfie::backend::linear<covfie::backend::clamp<
-        covfie::backend::strided<covfie::vector::vector_d<std::size_t, 3>,
-                                 covfie::backend::hip_device_array<
-                                     covfie::vector::vector_d<scalar_t, 3>>>>>>;
+using inhom_bfield_backend_t = traccc::details::inhom_bfield_transformer_t<
+    covfie::backend::hip_device_array<covfie::vector::vector_d<scalar_t, 3>>>;
 #elif defined(ALPAKA_ACC_SYCL_ENABLED)
 template <typename scalar_t>
-using inhom_bfield_backend_t =
-    covfie::backend::affine<covfie::backend::linear<covfie::backend::clamp<
-        covfie::backend::strided<covfie::vector::vector_d<std::size_t, 3>,
-                                 covfie::backend::sycl_device_array<
-                                     covfie::vector::vector_d<scalar_t, 3>>>>>>;
+using inhom_bfield_backend_t = traccc::details::inhom_bfield_transformer_t<
+    covfie::backend::sycl_device_array<covfie::vector::vector_d<scalar_t, 3>>>;
 #else
 template <typename scalar_t>
 using inhom_bfield_backend_t = traccc::host::inhom_bfield_backend_t<scalar_t>;
