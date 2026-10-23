@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/definitions/detail/macros.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
 // Vecmem include(s)
@@ -43,65 +44,91 @@ struct compact_device_vector {
 
   DETRAY_HOST_DEVICE
   reference at(size_type pos) {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
     assert(pos < size());
     return m_ptr[pos];
   }
   DETRAY_HOST_DEVICE
   const_reference at(size_type pos) const {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
     assert(pos < size());
     return m_ptr[pos];
   }
 
   DETRAY_HOST_DEVICE
   reference operator[](size_type pos) {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
     assert(pos < size());
     return m_ptr[pos];
   }
 
   DETRAY_HOST_DEVICE
   const_reference operator[](size_type pos) const {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
     assert(pos < size());
     return m_ptr[pos];
   }
 
   DETRAY_HOST_DEVICE
   reference front() {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
     assert(!empty());
     return m_ptr[0];
   }
   DETRAY_HOST_DEVICE
   const_reference front() const {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
     assert(!empty());
     return m_ptr[0];
   }
 
   DETRAY_HOST_DEVICE
   reference back() {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
     assert(!empty());
     return m_ptr[size() - 1];
   }
   DETRAY_HOST_DEVICE
   const_reference back() const {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
     assert(!empty());
     return m_ptr[size() - 1];
   }
 
   DETRAY_HOST_DEVICE
-  pointer data() { return m_ptr; }
-  DETRAY_HOST_DEVICE
-  const_pointer data() const { return m_ptr; }
+  pointer data() {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
+    return m_ptr;
+  }
 
   DETRAY_HOST_DEVICE
-  iterator begin() { return static_cast<iterator>(m_ptr); }
+  const_pointer data() const {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
+    return m_ptr;
+  }
+
   DETRAY_HOST_DEVICE
-  const_iterator begin() const { return static_cast<const_iterator>(m_ptr); }
+  iterator begin() {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
+    return static_cast<iterator>(m_ptr);
+  }
+
+  DETRAY_HOST_DEVICE
+  const_iterator begin() const {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
+    return static_cast<const_iterator>(m_ptr);
+  }
   DETRAY_HOST_DEVICE
   const_iterator cbegin() const { return begin(); }
 
   DETRAY_HOST_DEVICE
-  iterator end() { return static_cast<iterator>(m_ptr + size()); }
+  iterator end() {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
+    return static_cast<iterator>(m_ptr + size());
+  }
   DETRAY_HOST_DEVICE
   const_iterator end() const {
+    DETRAY_ASSUME_PTR_GLOBAL(m_ptr);
     return static_cast<const_iterator>(m_ptr + size());
   }
   DETRAY_HOST_DEVICE
