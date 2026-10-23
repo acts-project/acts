@@ -78,6 +78,21 @@ GbtsTrackingFilter::GbtsTrackingFilter(
 bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
                                 const detail::GbtsEdge& pS,
                                 detail::GbtsEdgeState& ts) const {
+  return updateImpl<false>(nodeView, pS, ts, nullptr);
+}
+
+bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
+                                const detail::GbtsEdge& pS,
+                                detail::GbtsEdgeState& ts,
+                                Failure& failure) const {
+  return updateImpl<true>(nodeView, pS, ts, &failure);
+}
+
+template <bool kProfile>
+bool GbtsTrackingFilter::updateImpl(const detail::GbtsNodeView& nodeView,
+                                    const detail::GbtsEdge& pS,
+                                    detail::GbtsEdgeState& ts,
+                                    Failure* failure) const {
   if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
     ACTS_DEBUG("Negative cov_x");
   }
@@ -199,6 +214,13 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   const float dchi2_y = resid_y * resid_y * Dy;
 
   if (dchi2_x > m_cfg.maxDChi2X || dchi2_y > m_cfg.maxDChi2Y) {
+    if constexpr (kProfile) {
+      *failure = dchi2_x > m_cfg.maxDChi2X
+                     ? Failure{GbtsProfiler::FilterCut::Chi2X, dchi2_x,
+                               m_cfg.maxDChi2X}
+                     : Failure{GbtsProfiler::FilterCut::Chi2Y, dchi2_y,
+                               m_cfg.maxDChi2Y};
+    }
     return false;
   }
 
@@ -214,6 +236,10 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   }
 
   if (std::abs(ts.x[2]) > m_cfg.maxCurvature) {
+    if constexpr (kProfile) {
+      *failure = {GbtsProfiler::FilterCut::Curvature, std::abs(ts.x[2]),
+                  m_cfg.maxCurvature};
+    }
     return false;
   }
 
@@ -224,6 +250,9 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   const float z0 = ts.y[0] - refY * ts.y[1];
 
   if (std::abs(z0) > m_cfg.maxZ0) {
+    if constexpr (kProfile) {
+      *failure = {GbtsProfiler::FilterCut::Z0, std::abs(z0), m_cfg.maxZ0};
+    }
     return false;
   }
 
