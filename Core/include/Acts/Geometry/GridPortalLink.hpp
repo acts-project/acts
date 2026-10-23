@@ -478,7 +478,7 @@ class GridPortalLinkT : public GridPortalLink {
         m_grid(std::tuple{std::move(axes)...}) {
     using enum AxisDirection;
 
-    // prevent open axis from having a nullptr edge from under/overflow bins 
+    // prevent open axis from having a nullptr edge from under/overflow bins
     for (const IAxis* axis : m_grid.axes()) {
       if (axis->getBoundaryType() == AxisBoundaryType::Open) {
         throw std::invalid_argument(

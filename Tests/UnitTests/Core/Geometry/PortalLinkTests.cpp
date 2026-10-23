@@ -736,8 +736,8 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
 }
 
 BOOST_AUTO_TEST_CASE(ResolveVolumeAtEdge) {
-  auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
-                                                  30_mm, 100_mm);
+  auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
+                                                  100_mm);
   auto vol1 = makeDummyVolume();
   auto vol2 = makeDummyVolume();
 
