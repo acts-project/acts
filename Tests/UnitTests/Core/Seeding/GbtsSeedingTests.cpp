@@ -774,6 +774,52 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
   BOOST_CHECK_EQUAL(seed(kWalk, true), tracks.size());
 }
 
+BOOST_AUTO_TEST_CASE(AdaptiveTauRatioCuts) {
+  using Experimental::GbtsLayerConnection;
+
+  const auto layer = [](Experimental::GbtsExperimentLayerId id,
+                        GbtsLayerType type, GbtsLayerTechnology technology,
+                        float refCoord) {
+    Experimental::GbtsLayerDescription description;
+    description.id = id;
+    description.type = type;
+    description.technology = technology;
+    description.refCoord = refCoord;
+    return description;
+  };
+  // listed out of radial order, so the barrel order has to be derived
+  const std::vector<Experimental::GbtsLayerDescription> layers = {
+      layer(2, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 100.f),
+      layer(1, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 50.f),
+      layer(3, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 150.f),
+      layer(4, GbtsLayerType::Endcap, GbtsLayerTechnology::Pixel, 400.f),
+      layer(5, GbtsLayerType::Barrel, GbtsLayerTechnology::Strip, 400.f),
+  };
+
+  std::vector<GbtsLayerConnection> connections = {
+      {.src = 2, .dst = 1},  // adjacent
+      {.src = 3, .dst = 1},  // skips a layer
+      {.src = 4, .dst = 3},  // leaves the barrel
+      {.src = 4, .dst = 4},  // off the barrel
+      {.src = 5, .dst = 3},  // leaves the barrel onto a strip
+  };
+  const Experimental::GbtsAdaptiveTauRatioCuts cuts;
+  Experimental::assignAdaptiveTauRatioCuts(connections, layers, cuts);
+
+  const float base = cuts.tauRatioCut;
+  const float corr = cuts.tauRatioCorr;
+  const float strip = cuts.tauRatioCorrStrip;
+  const std::vector<std::pair<float, float>> expected = {
+      {base, base}, {base + corr, base + corr},          {base, base + corr},
+      {base, base}, {base + strip, base + corr + strip},
+  };
+  for (std::size_t i = 0; i < connections.size(); ++i) {
+    BOOST_CHECK_CLOSE(connections[i].tauRatioCutInner, expected[i].first, 1e-4);
+    BOOST_CHECK_CLOSE(connections[i].tauRatioCutOuter, expected[i].second,
+                      1e-4);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test
