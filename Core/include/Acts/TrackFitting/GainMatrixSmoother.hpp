@@ -10,7 +10,10 @@
 
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
+#include "Acts/TrackFitting/SmootherAdjoint.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -44,6 +47,36 @@ class GainMatrixSmoother {
   Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
+    return smooth(gctx, trajectory, entryIndex, kTrackIndexInvalid, nullptr,
+                  logger);
+  }
+
+  /// Run the Kalman smoothing for a segment of one trajectory and carry the
+  /// adjoint out.
+  ///
+  /// The walk starts at @p entryIndex and follows the previous links. With a
+  /// valid @p stopIndex it smooths that state last; otherwise it smooths to
+  /// the end of the chain. With @p carryOut the gain-matrix form of the
+  /// adjoint after the last smoothed state is transported through that
+  /// state's jacobian and returned, so it lives on the node the last state
+  /// was predicted from. Apply it with @ref applySmootherAdjoint. The carry
+  /// is the same quantity the @ref MbfSmoother returns, so the two smoothers
+  /// stay interchangeable.
+  ///
+  /// @tparam traj_t The MultiTrajectory type
+  /// @param gctx The geometry context to be used
+  /// @param trajectory The trajectory to be smoothed
+  /// @param entryIndex The index of state to start the smoothing
+  /// @param stopIndex The index of the last state to smooth, or
+  ///        @ref kTrackIndexInvalid for the end of the chain
+  /// @param carryOut The adjoint after the last smoothed state, or nullptr
+  /// @param logger Where to write logging information to
+  /// @return The status of the smoothing
+  template <typename traj_t>
+  Result<void> smooth(const GeometryContext& gctx, traj_t& trajectory,
+                      std::size_t entryIndex, std::size_t stopIndex,
+                      SmootherAdjoint* carryOut,
+                      const Logger& logger = getDummyLogger()) const {
     static_cast<void>(gctx);
 
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
@@ -55,50 +88,64 @@ class GainMatrixSmoother {
     prev_ts.shareFrom(TrackStatePropMask::Filtered,
                       TrackStatePropMask::Smoothed);
 
+    bool reachedStop = (prev_ts.index() == stopIndex);
+
     // make sure there is more than one track state
-    if (!prev_ts.hasPrevious()) {
+    if (!prev_ts.hasPrevious() || reachedStop) {
       ACTS_VERBOSE("Only one track state given, smoothing terminates early");
-      return Result<void>::success();
+    } else {
+      ACTS_VERBOSE("Start smoothing from previous track state at index: "
+                   << prev_ts.previous());
+
+      // default-constructed error represents success, i.e. an invalid error
+      // code
+      std::error_code error;
+      trajectory.applyBackwards(prev_ts.previous(), [&, this](auto ts) {
+        // should have filtered and predicted, this should also include the
+        // covariances.
+        assert(ts.hasFiltered());
+        assert(ts.hasPredicted());
+
+        // previous trackstate should have smoothed and predicted
+        assert(prev_ts.hasSmoothed());
+        assert(prev_ts.hasPredicted());
+        assert(prev_ts.hasJacobian());
+
+        ACTS_VERBOSE("Calculate smoothing matrix:");
+        ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
+        ACTS_VERBOSE("Jacobian:\n" << prev_ts.jacobian());
+
+        // ensure the track state has a smoothed component
+        ts.addComponents(TrackStatePropMask::Smoothed);
+
+        if (auto res = calculate(AnyMutableTrackStateProxy{ts},
+                                 AnyConstTrackStateProxy{prev_ts}, logger);
+            !res.ok()) {
+          error = res.error();
+          return false;
+        }
+
+        prev_ts = ts;
+        reachedStop = (ts.index() == stopIndex);
+        return !reachedStop;  // continue execution
+      });
+
+      if (error) {
+        return Result<void>::failure(error);
+      }
     }
 
-    ACTS_VERBOSE("Start smoothing from previous track state at index: "
-                 << prev_ts.previous());
+    if (stopIndex != kTrackIndexInvalid && !reachedStop) {
+      return KalmanFitterError::SmoothFailed;
+    }
 
-    // default-constructed error represents success, i.e. an invalid error code
-    std::error_code error;
-    trajectory.applyBackwards(prev_ts.previous(), [&, this](auto ts) {
-      // should have filtered and predicted, this should also include the
-      // covariances.
-      assert(ts.hasFiltered());
-      assert(ts.hasPredicted());
+    if (carryOut != nullptr) {
+      *carryOut = calculateAdjoint(AnyConstTrackStateProxy{prev_ts});
+    }
 
-      // previous trackstate should have smoothed and predicted
-      assert(prev_ts.hasSmoothed());
-      assert(prev_ts.hasPredicted());
-      assert(prev_ts.hasJacobian());
-
-      ACTS_VERBOSE("Calculate smoothing matrix:");
-      ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
-      ACTS_VERBOSE("Jacobian:\n" << prev_ts.jacobian());
-
-      // ensure the track state has a smoothed component
-      ts.addComponents(TrackStatePropMask::Smoothed);
-
-      if (auto res = calculate(AnyMutableTrackStateProxy{ts},
-                               AnyConstTrackStateProxy{prev_ts}, logger);
-          !res.ok()) {
-        error = res.error();
-        return false;
-      }
-
-      prev_ts = ts;
-      return true;  // continue execution
-    });
-
-    return error ? Result<void>::failure(error) : Result<void>::success();
+    return Result<void>::success();
   }
 
-  /// Type alias for delegate to get track state parameters
   using GetParameters =
       Acts::Delegate<TrackStateTraits<kMeasurementSizeMax, false>::Parameters(
           void*)>;
@@ -117,6 +164,19 @@ class GainMatrixSmoother {
   Result<void> calculate(AnyMutableTrackStateProxy ts,
                          AnyConstTrackStateProxy prev_ts,
                          const Logger& logger) const;
+
+  /// Calculate the adjoint on the node a smoothed state was predicted from.
+  ///
+  /// With the predicted estimate `(xp, Pp)`, the smoothed estimate `(xs, Ps)`
+  /// and the jacobian `F` of the state, the adjoint is
+  /// `bigLambda = F^T Pp^-1 (Pp - Ps) Pp^-1 F` and
+  /// `smallLambda = -F^T Pp^-1 (xs - xp)`. Applied to the estimate of the
+  /// node with @ref applySmootherAdjoint this is the Rauch-Tung-Striebel
+  /// step onto that node.
+  ///
+  /// @param ts The last smoothed state, with predicted, smoothed and jacobian
+  /// @return The adjoint on the node the state was predicted from
+  SmootherAdjoint calculateAdjoint(AnyConstTrackStateProxy ts) const;
 };
 
 }  // namespace Acts

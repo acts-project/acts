@@ -96,4 +96,26 @@ Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
   return Result<void>::success();
 }
 
+SmootherAdjoint GainMatrixSmoother::calculateAdjoint(
+    AnyConstTrackStateProxy ts) const {
+  const BoundMatrix predictedCovariance = ts.predictedCovariance();
+  const BoundMatrix smoothedCovariance = ts.smoothedCovariance();
+  const BoundMatrix jacobian = ts.jacobian();
+
+  const BoundMatrix predictedCovarianceInverse = predictedCovariance.inverse();
+
+  // Lambda~ = Pp^-1 (Pp - Ps) Pp^-1, lambda~ = -Pp^-1 (xs - xp)
+  const BoundMatrix bigLambdaTilde =
+      predictedCovarianceInverse * (predictedCovariance - smoothedCovariance) *
+      predictedCovarianceInverse;
+  const BoundVector smallLambdaTilde =
+      -predictedCovarianceInverse *
+      subtractBoundParameters(ts.smoothed(), ts.predicted());
+
+  SmootherAdjoint adjoint;
+  adjoint.bigLambda = jacobian.transpose() * bigLambdaTilde * jacobian;
+  adjoint.smallLambda = jacobian.transpose() * smallLambdaTilde;
+  return adjoint;
+}
+
 }  // namespace Acts

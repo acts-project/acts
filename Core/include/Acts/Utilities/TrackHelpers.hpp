@@ -20,16 +20,19 @@
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <optional>
 #include <utility>
+#include <vector>
 
 namespace Acts {
 
@@ -165,6 +168,177 @@ Result<void> smoothTracks(
   }
 
   return result;
+}
+
+/// @brief Condition the smoothed states of a segment on a new estimate of
+/// one of its states
+///
+/// The segment runs from @p sharedIndex to @p tipIndex in filter order. Its
+/// smoothed states hold the segment's own measurements. A second segment that
+/// was filtered from the shared state as prior adds information to the shared
+/// state; this function transports that change to every state of the first
+/// segment without a new propagation. Conditional on the shared state the two
+/// segments are independent, so the exact update in the linear-Gaussian model
+/// is the regression of each state on the shared state:
+/// `L_i = Cov(x_i, x_s) P_s^-1`, `x_i += L_i (x_s' - x_s)`,
+/// `P_i += L_i (P_s' - P_s) L_i^T`, with the cross-covariances from the
+/// Rauch-Tung-Striebel gains of the stored filter history.
+///
+/// States before the shared state in filter order get a plain smoothing step
+/// from the corrected shared state. States after the last smoothed state, such
+/// as holes after the last measurement, stay as they are.
+///
+/// @tparam traj_t The MultiTrajectory type
+///
+/// @param trajectory The trajectory that holds the segment
+/// @param sharedIndex The index of the shared state
+/// @param tipIndex The index of the last state of the segment in filter order
+/// @param newMean The new estimate of the shared state
+/// @param newCov Its covariance
+/// @param logger The logger
+///
+/// @return Success, or @ref KalmanFitterError::SmoothFailed if the shared
+///         state is not on the chain or a state has no smoothed parameters
+template <typename traj_t>
+Result<void> conditionSmoothedStatesOnSharedState(
+    traj_t &trajectory, std::size_t sharedIndex, std::size_t tipIndex,
+    const BoundVector &newMean, const BoundMatrix &newCov,
+    const Logger &logger = getDummyLogger()) {
+  using TrackStateProxy = typename traj_t::TrackStateProxy;
+
+  // collect the segment from the tip down to the shared state
+  std::vector<std::size_t> indices;
+  bool found = false;
+  trajectory.applyBackwards(tipIndex, [&](TrackStateProxy ts) {
+    indices.push_back(ts.index());
+    found = (ts.index() == sharedIndex);
+    return !found;
+  });
+  if (!found) {
+    ACTS_DEBUG("Shared state " << sharedIndex << " is not on the chain of "
+                               << tipIndex);
+    return KalmanFitterError::SmoothFailed;
+  }
+
+  // states beyond the last smoothed state, such as holes after the last
+  // measurement, carry no information and stay as they are
+  std::size_t skip = 0;
+  while (skip + 1 < indices.size() &&
+         !trajectory.getTrackState(indices[skip]).hasSmoothed()) {
+    ++skip;
+  }
+  indices.erase(indices.begin(), indices.begin() + skip);
+
+  auto shared = trajectory.getTrackState(sharedIndex);
+  if (!shared.hasSmoothed()) {
+    ACTS_DEBUG("Shared state " << sharedIndex << " has no smoothed parameters");
+    return KalmanFitterError::SmoothFailed;
+  }
+
+  const BoundVector sharedMean = shared.smoothed();
+  const BoundMatrix sharedCov = shared.smoothedCovariance();
+  const BoundVector deltaMean = subtractBoundParameters(newMean, sharedMean);
+  const BoundMatrix deltaCov = newCov - sharedCov;
+  const BoundMatrix sharedCovInverse = sharedCov.inverse();
+
+  // walk outward from the shared state in filter order; `indices` runs from
+  // the tip to the shared state, so iterate it from the back
+  BoundMatrix r = BoundMatrix::Identity();
+  for (std::size_t k = indices.size() - 1; k > 0; --k) {
+    auto prev = trajectory.getTrackState(indices[k]);
+    auto ts = trajectory.getTrackState(indices[k - 1]);
+    if (!ts.hasSmoothed() || !ts.hasPredicted() || !ts.hasJacobian()) {
+      ACTS_DEBUG("State " << ts.index()
+                          << " lacks smoothed, predicted or jacobian");
+      return KalmanFitterError::SmoothFailed;
+    }
+
+    // non-measurement states carry the prediction as filtered estimate
+    const BoundMatrix prevFilteredCov =
+        prev.hasFiltered() ? BoundMatrix(prev.filteredCovariance())
+                           : BoundMatrix(prev.predictedCovariance());
+    const BoundMatrix jacobian = ts.jacobian();
+    const BoundMatrix predictedCov = ts.predictedCovariance();
+    const BoundMatrix smoothedCov = ts.smoothedCovariance();
+
+    // transpose of the RTS gain G = Pf F^T Pp^-1 of the previous state
+    const BoundMatrix gainTransposed =
+        predictedCov.inverse() * jacobian * prevFilteredCov;
+    r = gainTransposed * r;
+
+    // regression of this state on the shared state
+    const BoundMatrix l = smoothedCov * r * sharedCovInverse;
+
+    ts.smoothed() = normalizeBoundParameters(ts.smoothed() + l * deltaMean);
+    ts.smoothedCovariance() = smoothedCov + l * deltaCov * l.transpose();
+  }
+
+  shared.smoothed() = newMean;
+  shared.smoothedCovariance() = newCov;
+
+  // states before the shared state: plain smoothing from the corrected state
+  if (shared.hasPrevious()) {
+    GainMatrixSmoother smoother;
+    std::error_code error;
+    auto later = shared;
+    trajectory.applyBackwards(shared.previous(), [&](TrackStateProxy ts) {
+      ts.addComponents(TrackStatePropMask::Smoothed);
+      auto res = smoother.calculate(AnyMutableTrackStateProxy{ts},
+                                    AnyConstTrackStateProxy{later}, logger);
+      if (!res.ok()) {
+        error = res.error();
+        return false;
+      }
+      later = ts;
+      return true;
+    });
+    if (error) {
+      return Result<void>::failure(error);
+    }
+  }
+
+  return Result<void>::success();
+}
+
+/// @brief Link a second tracklet behind a state of a first tracklet
+///
+/// The second tracklet was filtered from the shared state as prior. Its
+/// states are reversed so that the chain reads from the tip of the first
+/// tracklet through the shared state into the second tracklet. With
+/// @p invertJacobians the jacobians of the second tracklet are inverted and
+/// shifted, and the transport from the second tracklet onto the shared state
+/// is stored on the shared state.
+///
+/// @tparam track_state_proxy_t The track state proxy type
+/// @tparam track_proxy_t The track proxy type
+///
+/// @param sharedState The shared state of the first tracklet
+/// @param second The second tracklet
+/// @param invertJacobians Whether to invert and shift the jacobians
+///
+/// @return The transport from the second tracklet onto the shared state, if
+///         @p invertJacobians and the second tracklet has one
+template <TrackStateProxyConcept track_state_proxy_t,
+          TrackProxyConcept track_proxy_t>
+std::optional<BoundMatrix> linkTrackletBehind(track_state_proxy_t sharedState,
+                                              track_proxy_t &second,
+                                              bool invertJacobians = true) {
+  std::optional<BoundMatrix> stitch =
+      second.reverseTrackStates(invertJacobians);
+  if (second.tipIndex() == kTrackIndexInvalid) {
+    return stitch;
+  }
+
+  auto secondTip = second.outermostTrackState();
+  sharedState.previous() = secondTip.index();
+  secondTip.template component<TrackIndexType>(detail_tp::kNextKey) =
+      sharedState.index();
+
+  if (stitch.has_value()) {
+    sharedState.jacobian() = *stitch;
+  }
+
+  return stitch;
 }
 
 /// @brief Find a track state for extrapolation
