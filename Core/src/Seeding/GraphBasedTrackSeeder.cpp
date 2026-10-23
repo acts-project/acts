@@ -16,6 +16,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <numbers>
@@ -33,10 +34,12 @@ GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
 
 GraphBasedTrackSeeder::GraphBasedTrackSeeder(
     const DerivedConfig& config, std::shared_ptr<GbtsGeometry> geometry,
-    std::unique_ptr<const Acts::Logger> logger)
+    std::unique_ptr<const Acts::Logger> logger,
+    std::shared_ptr<GbtsProfiler> profiler)
     : m_cfg(config),
       m_geometry(std::move(geometry)),
-      m_logger(std::move(logger)) {
+      m_logger(std::move(logger)),
+      m_profiler(std::move(profiler)) {
   if (m_cfg.phiSortBuckets > GbtsNodeStorage::kMaxPhiSortBuckets) {
     throw std::invalid_argument(
         "GraphBasedTrackSeeder: phiSortBuckets exceeds the maximum");
@@ -59,6 +62,7 @@ GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
   config.phiIndexMargin = m_cfg.phiIndexMargin;
   config.phiSortBuckets = m_cfg.phiSortBuckets;
   config.tauLutBinWidth = m_cfg.tauLutBinWidth;
+  config.recordRejected = m_profiler != nullptr;
 
   return GbtsNodeStorage(config, m_geometry, m_cfg.tauLookupTable);
 }
@@ -90,8 +94,19 @@ void GraphBasedTrackSeeder::createSeeds(
     std::vector<std::optional<GbtsSeedFit>>* outputFits) const {
   ACTS_DEBUG("Loaded " << nodeStorage.numberOfNodes() << " graph nodes");
 
+  // filled locally and handed over at the end, so that concurrent calls do not
+  // share it
+  std::optional<GbtsProfiler::Event> profileEvent;
+  if (m_profiler != nullptr) {
+    profileEvent.emplace();
+    profileEvent->eventNumber = options.eventNumber;
+    profileEvent->rejectedNodes = std::move(nodeStorage.m_rejectedNodes);
+  }
+  GbtsProfiler::Event* const profile =
+      profileEvent.has_value() ? &*profileEvent : nullptr;
+
   GbtsGraph graph =
-      graphBuilder.buildTheGraph(roi, nodeStorage, options.bFieldInZ);
+      graphBuilder.buildTheGraph(roi, nodeStorage, options.bFieldInZ, profile);
 
   ACTS_DEBUG("Created graph with " << graph.edgeStorage.size() << " edges and "
                                    << graph.nConnections << " edge links");
@@ -102,7 +117,7 @@ void GraphBasedTrackSeeder::createSeeds(
 
   std::vector<OutputSeedProperties> vOutputSeeds;
   extractSeedsFromTheGraph(nodeStorage, graph, vOutputSeeds, filter,
-                           outputFits != nullptr);
+                           outputFits != nullptr, profile);
 
   ACTS_DEBUG("GBTS created " << vOutputSeeds.size() << " seeds");
   if (vOutputSeeds.empty()) {
@@ -118,12 +133,17 @@ void GraphBasedTrackSeeder::createSeeds(
       outputFits->push_back(seed.fit);
     }
   }
+
+  if (profileEvent.has_value()) {
+    m_profiler->add(std::move(*profileEvent));
+  }
 }
 
 void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     const GbtsNodeStorage& nodeStorage, const GbtsGraph& graph,
     std::vector<OutputSeedProperties>& vOutputSeeds,
-    const GbtsTrackingFilter& filter, const bool withFits) const {
+    const GbtsTrackingFilter& filter, const bool withFits,
+    GbtsProfiler::Event* const profile) const {
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
 
   std::vector<SeedCandidateProperties> vSeedCandidates;
@@ -132,9 +152,22 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   std::uint32_t seedCounter = 0;
 
+  // profiling: a seed candidate and what became of it
+  const auto recordCandidate = [&](const std::vector<SpacePointIndex>& nodes,
+                                   const float quality,
+                                   const GbtsProfiler::CandidateFate fate) {
+    auto& candidate = profile->candidates.emplace_back();
+    std::ranges::transform(nodes, std::back_inserter(candidate.spacePoints),
+                           [&](const SpacePointIndex node) {
+                             return nodeStorage.spacePointIndex(node);
+                           });
+    candidate.quality = quality;
+    candidate.fate = fate;
+  };
+
   // Turn the fitted path of every head edge into a seed candidate.
   for (const detail::GbtsEdgeState& rs :
-       extractBestPathPerEdge(nodeView, graph, filter)) {
+       extractBestPathPerEdge(nodeStorage, graph, filter, profile)) {
     const detail::GbtsEdge& head = *rs.vs.front();
     const float seedAbsEta = std::abs(-std::log(head.p[0]));
 
@@ -150,6 +183,10 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     // a triplet is accepted if it makes it up to this point
     if (vN.size() < 3) {
+      if (profile != nullptr) {
+        recordCandidate(vN, -rs.j / static_cast<float>(vN.size()),
+                        GbtsProfiler::CandidateFate::TooFewSpacePoints);
+      }
       continue;
     }
 
@@ -286,6 +323,16 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   }
   vOutputSeeds.reserve(vSeedCandidates.size());
 
+  if (profile != nullptr) {
+    for (const SeedCandidateProperties& seed : vSeedCandidates) {
+      using enum GbtsProfiler::CandidateFate;
+      recordCandidate(seed.nodes, seed.seedQuality,
+                      seed.isClone            ? Clone
+                      : seed.forSeedSplitting ? Split
+                                              : Seed);
+    }
+  }
+
   // drop the clones and split seeds if need be
 
   for (const auto& args : vArgSort) {
@@ -341,8 +388,22 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
 std::vector<detail::GbtsEdgeState>
 GraphBasedTrackSeeder::extractBestPathPerEdge(
-    const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
-    const GbtsTrackingFilter& filter) const {
+    const GbtsNodeStorage& nodeStorage, const GbtsGraph& graph,
+    const GbtsTrackingFilter& filter,
+    GbtsProfiler::Event* const profile) const {
+  return profile != nullptr ? extractBestPathPerEdgeImpl<true>(
+                                  nodeStorage, graph, filter, profile)
+                            : extractBestPathPerEdgeImpl<false>(
+                                  nodeStorage, graph, filter, nullptr);
+}
+
+template <bool kProfile>
+std::vector<detail::GbtsEdgeState>
+GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
+    const GbtsNodeStorage& nodeStorage, const GbtsGraph& graph,
+    const GbtsTrackingFilter& filter,
+    GbtsProfiler::Event* const profile) const {
+  const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
   const std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
   const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
   const auto maxLength = static_cast<std::uint32_t>(m_cfg.maxChainLength);
@@ -395,6 +456,42 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   float bestQuality = 0;
   detail::GbtsEdgeState bestState;
 
+  // profiling: the head being searched from, and why the filter rejected an
+  // edge
+  std::uint32_t currentHead = 0;
+  GbtsTrackingFilter::Failure failure;
+  // the filter without the failure argument where nothing is profiled
+  const auto update = [&](const detail::GbtsEdge& edge,
+                          detail::GbtsEdgeState& state) {
+    if constexpr (kProfile) {
+      return filter.update(nodeView, edge, state, failure);
+    } else {
+      return filter.update(nodeView, edge, state);
+    }
+  };
+  [[maybe_unused]] const auto rejectEdge = [&](const std::uint32_t e,
+                                               const std::uint32_t pathLength) {
+    const detail::GbtsEdge& head = edgeStorage[currentHead];
+    const detail::GbtsEdge& edge = edgeStorage[e];
+    profile->filterRejections.push_back(
+        {.headInner = nodeStorage.spacePointIndex(head.n1),
+         .headOuter = nodeStorage.spacePointIndex(head.n2),
+         .inner = nodeStorage.spacePointIndex(edge.n1),
+         .outer = nodeStorage.spacePointIndex(edge.n2),
+         .cut = failure.cut,
+         .pathLength = pathLength,
+         .value = failure.value,
+         .threshold = failure.threshold});
+  };
+  [[maybe_unused]] const auto recordHead =
+      [&](const std::uint32_t e, const GbtsProfiler::HeadOutcome outcome) {
+        const detail::GbtsEdge& edge = edgeStorage[e];
+        profile->heads.push_back({.inner = nodeStorage.spacePointIndex(edge.n1),
+                                  .outer = nodeStorage.spacePointIndex(edge.n2),
+                                  .outcome = outcome,
+                                  .maxPathLength = edgesToRoot[e]});
+      };
+
   const auto search = [&](const auto& self, const std::uint32_t e,
                           const detail::GbtsEdgeState& state) -> void {
     path.push_back(e);
@@ -418,8 +515,10 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
           continue;
         }
         detail::GbtsEdgeState innerState = state;
-        if (filter.update(nodeView, edgeStorage[inner], innerState)) {
+        if (update(edgeStorage[inner], innerState)) {
           self(self, inner, innerState);
+        } else if constexpr (kProfile) {
+          rejectEdge(inner, static_cast<std::uint32_t>(path.size()));
         }
       }
     }
@@ -438,13 +537,24 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     }
 
     if (edgesToRoot[head] == 0 || edgesToRoot[head] < minLength) {
+      if constexpr (kProfile) {
+        recordHead(head, edgesToRoot[head] == 0
+                             ? GbtsProfiler::HeadOutcome::ChainTooLong
+                             : GbtsProfiler::HeadOutcome::ChainTooShort);
+      }
       continue;
     }
+
+    currentHead = head;
 
     detail::GbtsEdgeState state;
     state.initialize(headEdge, nodeView, filter.m_cfg.initialVarianceX,
                      filter.m_cfg.initialVarianceY);
-    if (!filter.update(nodeView, headEdge, state)) {
+    if (!update(headEdge, state)) {
+      if constexpr (kProfile) {
+        rejectEdge(head, 0);
+        recordHead(head, GbtsProfiler::HeadOutcome::FilterRejected);
+      }
       continue;
     }
 
@@ -452,7 +562,14 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     bestPath.clear();
     search(search, head, state);
     if (bestPath.empty()) {
+      if constexpr (kProfile) {
+        recordHead(head, GbtsProfiler::HeadOutcome::NoPathSurvived);
+      }
       continue;
+    }
+
+    if constexpr (kProfile) {
+      recordHead(head, GbtsProfiler::HeadOutcome::Candidate);
     }
 
     bestState.vs.clear();
