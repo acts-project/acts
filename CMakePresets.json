@@ -111,6 +111,15 @@
             }
         },
         {
+            "name": "github-ci-no-ccache",
+            "displayName": "GitHub-CI without ccache",
+            "description": "Use the GitHub CI configuration locally without ccache.",
+            "inherits": "github-ci",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER_LAUNCHER": ""
+            }
+        },
+        {
             "name": "github-ci-fpe",
             "displayName": "GitHub-CI FPE (minimal-debug RelWithDebInfo)",
             "inherits": "github-ci",
