@@ -268,7 +268,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
               Acts::Vector3 driftDir = cfg.drift(simHit.position(), rng);
               auto channelsRes = m_channelizer.channelize(
                   simHit, *surfacePtr, ctx.simGeoContext, driftDir,
-                  *cfg.segmentation, cfg.thickness);
+                  *cfg.segmentation, cfg.thickness, 0.001,
+                  m_cfg.limitCylinderPathToChord);
               if (!channelsRes.ok() || channelsRes->empty()) {
                 ACTS_DEBUG(
                     "Geometric channelization did not work, skipping this "
