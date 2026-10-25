@@ -167,8 +167,8 @@ auto triplet_seeding_algorithm::execute(
 
   // Launch the doublet counting kernel.
   count_doublets_kernel(
-      {n_spacepoints, m_data->m_finder_config, spacepoints, grid_buffer,
-       grid_prefix_sum_buffer, doublet_counter_buffer,
+      {n_spacepoints, m_data->m_finder_config, spacepoints, strip_calibrations,
+       grid_buffer, grid_prefix_sum_buffer, doublet_counter_buffer,
        globalCounter_device->m_nMidBot, globalCounter_device->m_nMidTop});
 
   // Get the number of doublets found.
@@ -207,8 +207,8 @@ auto triplet_seeding_algorithm::execute(
 
   // Launch the doublet finding kernel.
   find_doublets_kernel({n_doublets, m_data->m_finder_config, spacepoints,
-                        grid_buffer, doublet_counter_buffer, doublet_buffer_mb,
-                        doublet_buffer_mt});
+                        strip_calibrations, grid_buffer, doublet_counter_buffer,
+                        doublet_buffer_mb, doublet_buffer_mt});
 
   // Set up the triplet counter buffers
   triplet_counter_spM_collection_types::buffer triplet_counter_spM_buffer{

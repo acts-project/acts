@@ -58,6 +58,12 @@ struct seedfinder_config {
   // tolerance of the strip crossing check, as a fraction of the strip half
   // length
   float toleranceParam = 1.1f;
+  // reject strip doublets whose chord misses either strip pair, the doublet
+  // level counterpart of useStripInfo
+  bool doubletStripCalibrationCut = false;
+  // tolerance of the doublet strip crossing check, as a fraction of the strip
+  // half length
+  float doubletStripCalibrationTolerance = 2.f;
 
   // FIXME: this is not used yet
   //        float upperPtResolutionPerSeed = 20* Acts::GeV;

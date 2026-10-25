@@ -146,6 +146,9 @@ class triplet_seeding_algorithm
     const seedfinder_config& config;
     /// All spacepoints in the event
     const edm::spacepoint_collection::const_view& spacepoints;
+    /// The per spacepoint strip calibrations
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations;
     /// The populated spacepoint grid
     const traccc::details::spacepoint_grid_types::const_view& grid;
     /// A prefix sum describing the grid contents
@@ -174,6 +177,9 @@ class triplet_seeding_algorithm
     const seedfinder_config& config;
     /// All spacepoints in the event
     const edm::spacepoint_collection::const_view& spacepoints;
+    /// The per spacepoint strip calibrations
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations;
     /// The populated spacepoint grid
     const traccc::details::spacepoint_grid_types::const_view& grid;
     /// The doublet counter collection

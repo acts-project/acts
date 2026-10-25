@@ -65,6 +65,8 @@ struct count_doublets {
   ALPAKA_FN_ACC void operator()(
       TAcc const& acc, seedfinder_config config,
       const edm::spacepoint_collection::const_view spacepoints,
+      strip_spacepoint_calibration_collection_types::const_view
+          strip_calibrations,
       const traccc::details::spacepoint_grid_types::const_view sp_grid,
       const vecmem::data::vector_view<const device::prefix_sum_element_t>
           sp_prefix_sum,
@@ -72,8 +74,9 @@ struct count_doublets {
       unsigned int* nMidBot, unsigned int* nMidTop) const {
     auto const globalThreadIdx =
         ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0u];
-    device::count_doublets(globalThreadIdx, config, spacepoints, sp_grid,
-                           sp_prefix_sum, doublet_counter, *nMidBot, *nMidTop);
+    device::count_doublets(globalThreadIdx, config, spacepoints,
+                           strip_calibrations, sp_grid, sp_prefix_sum,
+                           doublet_counter, *nMidBot, *nMidTop);
   }
 };
 
@@ -83,14 +86,17 @@ struct find_doublets {
   ALPAKA_FN_ACC void operator()(
       TAcc const& acc, seedfinder_config config,
       edm::spacepoint_collection::const_view spacepoints,
+      strip_spacepoint_calibration_collection_types::const_view
+          strip_calibrations,
       traccc::details::spacepoint_grid_types::const_view sp_grid,
       device::doublet_counter_collection_types::view doublet_counter,
       device::device_doublet_collection_types::view mb_doublets,
       device::device_doublet_collection_types::view mt_doublets) const {
     auto const globalThreadIdx =
         ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0u];
-    device::find_doublets(globalThreadIdx, config, spacepoints, sp_grid,
-                          doublet_counter, mb_doublets, mt_doublets);
+    device::find_doublets(globalThreadIdx, config, spacepoints,
+                          strip_calibrations, sp_grid, doublet_counter,
+                          mb_doublets, mt_doublets);
   }
 };
 
@@ -282,8 +288,8 @@ void triplet_seeding_algorithm::count_doublets_kernel(
   ::alpaka::exec<Acc>(
       details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
       kernels::count_doublets{}, payload.config, payload.spacepoints,
-      payload.grid, payload.grid_prefix_sum, payload.doublet_counter,
-      &(payload.nMidBot), &(payload.nMidTop));
+      payload.strip_calibrations, payload.grid, payload.grid_prefix_sum,
+      payload.doublet_counter, &(payload.nMidBot), &(payload.nMidTop));
 }
 
 void triplet_seeding_algorithm::find_doublets_kernel(
@@ -294,8 +300,8 @@ void triplet_seeding_algorithm::find_doublets_kernel(
   ::alpaka::exec<Acc>(
       details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
       kernels::find_doublets{}, payload.config, payload.spacepoints,
-      payload.grid, payload.doublet_counter, payload.mb_doublets,
-      payload.mt_doublets);
+      payload.strip_calibrations, payload.grid, payload.doublet_counter,
+      payload.mb_doublets, payload.mt_doublets);
 }
 
 void triplet_seeding_algorithm::count_triplets_kernel(

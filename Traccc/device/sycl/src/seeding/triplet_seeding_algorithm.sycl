@@ -123,13 +123,15 @@ void triplet_seeding_algorithm::count_doublets_kernel(
     h.parallel_for<kernels::count_doublets>(
         details::calculate1DimNdRange(payload.n_spacepoints, warp_size() * 2),
         [config = payload.config, spacepoints = payload.spacepoints,
+         strip_calibrations = payload.strip_calibrations,
          grid = payload.grid, grid_prefix_sum = payload.grid_prefix_sum,
          doublet_counter = payload.doublet_counter,
          nMidBot = &(payload.nMidBot),
          nMidTop = &(payload.nMidTop)](::sycl::nd_item<1> item) {
           device::count_doublets(details::global_index(item), config,
-                                 spacepoints, grid, grid_prefix_sum,
-                                 doublet_counter, *nMidBot, *nMidTop);
+                                 spacepoints, strip_calibrations, grid,
+                                 grid_prefix_sum, doublet_counter, *nMidBot,
+                                 *nMidTop);
         });
   });
 }
@@ -142,12 +144,13 @@ void triplet_seeding_algorithm::find_doublets_kernel(
     h.parallel_for<kernels::find_doublets>(
         details::calculate1DimNdRange(payload.n_doublets, warp_size() * 2),
         [config = payload.config, spacepoints = payload.spacepoints,
-         grid = payload.grid, doublet_counter = payload.doublet_counter,
+         strip_calibrations = payload.strip_calibrations, grid = payload.grid,
+         doublet_counter = payload.doublet_counter,
          mb_doublets = payload.mb_doublets,
          mt_doublets = payload.mt_doublets](::sycl::nd_item<1> item) {
           device::find_doublets(details::global_index(item), config,
-                                spacepoints, grid, doublet_counter, mb_doublets,
-                                mt_doublets);
+                                spacepoints, strip_calibrations, grid,
+                                doublet_counter, mb_doublets, mt_doublets);
         });
   });
 }
