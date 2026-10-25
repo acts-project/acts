@@ -189,8 +189,20 @@ inline TRACCC_HOST_DEVICE void seed_to_bound_param_vector(
       measurements.at(spB.measurement_index_1());
   const detray::tracking_surface sf{det, meas_for_spB.surface_link()};
 
+  // The spacepoint lies between the two sides of the module. Move it along the
+  // seed direction onto the plane of the first measurement, since a normal
+  // projection is off by the side separation times the tangent of the incidence
+  // angle, which is large for displaced tracks in the barrel.
+  point3 pos = edm::get_spacepoint_global<default_algebra>(spB);
+  const vector3 normal = sf.normal({}, point2{0.f, 0.f});
+  const scalar cos_incidence = vector::dot(normal, params.dir());
+  if (math::fabs(cos_incidence) > 1e-3f) {
+    pos = pos + (vector::dot(normal, sf.center({}) - pos) / cos_incidence) *
+                    params.dir();
+  }
+
   detray::free_parameters_vector<default_algebra> free_vec;
-  free_vec.set_pos(edm::get_spacepoint_global<default_algebra>(spB));
+  free_vec.set_pos(pos);
   free_vec.set_dir(params.dir());
   free_vec.set_time(0.f);
   free_vec.set_qop(params.qop());
