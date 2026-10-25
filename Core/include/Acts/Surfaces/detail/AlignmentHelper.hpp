@@ -77,4 +77,18 @@ AlignmentMatrix compositeToComponentJacobian(
 AlignmentMatrix localFrameToAlignmentParametersJacobian(
     const Transform3& surfaceTransform);
 
+/// @brief Map path-length derivatives w.r.t. a global center shift to
+/// derivatives w.r.t. local translations along local x/y/z.
+///
+/// @param alignToPath The alignment path derivative matrix to update
+/// @param alignToPathWrtGlobalCenter Path derivative w.r.t. global center shift
+/// @param rotation Local-to-global rotation of the surface
+inline void setAlignToPathLocalCenterDerivative(
+    AlignmentToPathMatrix& alignToPath,
+    const Vector3& alignToPathWrtGlobalCenter,
+    const RotationMatrix3& rotation) {
+  alignToPath.segment<3>(eAlignmentCenter0) =
+      alignToPathWrtGlobalCenter.transpose() * rotation;
+}
+
 }  // namespace Acts::detail
