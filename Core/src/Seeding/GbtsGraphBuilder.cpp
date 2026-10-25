@@ -137,51 +137,41 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
 
 /// Check to see if z0 of segment is within the expected z range of the
 /// beamspot
+///
+/// Computed without a branch, so that the caller can fold it into one branch
+/// with its other doublet cuts.
 /// @param cfg Graph builder configuration
-/// @param z0BitMask Sets allowed bins of allowed z value
+/// @param z0BitMask Sets allowed bins of allowed z value; never empty, as the
+///                  caller skips isolated nodes
 /// @param z0 Estimated z0 of segments z value at beamspot
-/// @param z0HistoCoeff Scalfactor that converts z coodindate into bin index
+/// @param z0HistoCoeff Scale factor that converts z coordinate into bin index
 /// @return Whether segment is within beamspot range
 bool checkZ0BitMask(const GbtsGraphBuilder::Config& cfg,
                     const std::uint16_t z0BitMask, const float z0,
                     const float z0HistoCoeff) {
-  if (z0BitMask == 0) {
-    return true;
-  }
-
-  // z0 is not yet range checked here -- doubletFilterRZ runs after this -- so
-  // a bin outside the histogram is reachable and must not reach the shift.
+  // z0 is not range checked before this (doubletFilterRZ is optional and
+  // evaluated beside it), so a bin outside the histogram is reachable: it
+  // counts as unset. The shift is clamped so it stays in range; the range
+  // test decides.
   const auto isSet = [z0BitMask](const std::int32_t bin) {
-    return bin >= 0 && bin < detail::kGbtsZ0HistogramBins &&
-           ((z0BitMask >> bin) & 1) != 0;
+    const std::int32_t shift =
+        std::clamp<std::int32_t>(bin, 0, detail::kGbtsZ0HistogramBins - 1);
+    return ((static_cast<int>(bin >= 0) &
+             static_cast<int>(bin < detail::kGbtsZ0HistogramBins) &
+             (z0BitMask >> shift)) &
+            1) != 0;
   };
 
+  // the bin of z0 and either neighbour
   const float dz = z0 - cfg.minZ0;
-  const std::int32_t z0BinIndex = static_cast<std::int32_t>(z0HistoCoeff * dz);
+  const auto bin = static_cast<std::int32_t>(z0HistoCoeff * dz);
+  const auto binDown =
+      static_cast<std::int32_t>(z0HistoCoeff * (dz - cfg.z0Resolution));
+  const auto binUp =
+      static_cast<std::int32_t>(z0HistoCoeff * (dz + cfg.z0Resolution));
 
-  if (isSet(z0BinIndex)) {
-    return true;
-  }
-
-  // check adjacent bins as well
-
-  const float dzm = dz - cfg.z0Resolution;
-
-  std::int32_t nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzm);
-
-  if (nextBin != z0BinIndex && isSet(nextBin)) {
-    return true;
-  }
-
-  const float dzp = dz + cfg.z0Resolution;
-
-  nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzp);
-
-  if (nextBin != z0BinIndex && isSet(nextBin)) {
-    return true;
-  }
-
-  return false;
+  return (static_cast<int>(isSet(bin)) | static_cast<int>(isSet(binDown)) |
+          static_cast<int>(isSet(binUp))) != 0;
 }
 
 }  // namespace
@@ -337,6 +327,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       const float r1 = n1pars.r;
       const float z1 = n1pars.z;
 
+      // n1's side of the tau window, the same for every n2
+      const float maxTau1 = std::min(m_cfg.maxAbsTau, n1pars.maxTau);
+
       // the chord of a pair, which only the strip path below reads
       float x1 = 0.f;
       float y1 = 0.f;
@@ -446,49 +439,43 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
           const float dz = z2c - z1c;
           const float tau = dz / dr;
           const float ftau = std::fabs(tau);
-          if (ftau > m_cfg.maxAbsTau) {
-            continue;
-          }
-
-          if (ftau < n1pars.minTau) {
-            continue;
-          }
-          if (ftau > n1pars.maxTau) {
-            continue;
-          }
-
-          if (ftau < n2pars.minTau) {
-            continue;
-          }
-          if (ftau > n2pars.maxTau) {
+          // The doublet cuts as two branches rather than one each: which cut
+          // a pair fails depends on the data, so separate branches
+          // mispredict. Equivalent to the separate cuts for finite values
+          // (dr >= minDeltaRadius > 0 by default). First maxAbsTau and both
+          // nodes' tau windows, which also bound z0 for the casts below,
+          const float minTau = std::max(n1pars.minTau, n2pars.minTau);
+          const float maxTau = std::min(maxTau1, n2pars.maxTau);
+          const bool inTauWindow = (static_cast<int>(ftau >= minTau) &
+                                    static_cast<int>(ftau <= maxTau)) != 0;
+          if (!inTauWindow) {
             continue;
           }
 
           const float z0 = z1c - r1c * tau;
 
-          // check against a non-empty z0 histogram
-          if (useZ0Histogram &&
-              !checkZ0BitMask(m_cfg, nodeInfo, z0, z0HistoCoeff)) {
-            continue;
-          }
+          // then the z0 histogram, the r-z cuts and the curvature cut. The two
+          // flags are fixed per bin group, so their branches are predicted.
+          const bool inZ0Histogram =
+              !useZ0Histogram ||
+              checkZ0BitMask(m_cfg, nodeInfo, z0, z0HistoCoeff);
 
-          if (m_cfg.doubletFilterRZ) {
-            if (z0 < m_cfg.minZ0 || z0 > m_cfg.maxZ0) {
-              continue;
-            }
-
-            const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
-
-            if (zOuter < cutZMinU || zOuter > cutZMaxU) {
-              continue;
-            }
-          }
+          const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
+          const bool inRZ = !m_cfg.doubletFilterRZ ||
+                            (static_cast<int>(z0 >= m_cfg.minZ0) &
+                             static_cast<int>(z0 <= m_cfg.maxZ0) &
+                             static_cast<int>(zOuter >= cutZMinU) &
+                             static_cast<int>(zOuter <= cutZMaxU)) != 0;
 
           const float curv = (phi2 - phi1) / dr;
-
-          if (std::abs(curv) > (ftau < m_cfg.curvatureSplitAbsTau
+          const float curvCut = ftau < m_cfg.curvatureSplitAbsTau
                                     ? curvatureCutLowEta
-                                    : curvatureCutHighEta)) {
+                                    : curvatureCutHighEta;
+
+          const bool inCurvature = std::abs(curv) <= curvCut;
+
+          if ((static_cast<int>(inZ0Histogram) & static_cast<int>(inRZ) &
+               static_cast<int>(inCurvature)) == 0) {
             continue;
           }
 
