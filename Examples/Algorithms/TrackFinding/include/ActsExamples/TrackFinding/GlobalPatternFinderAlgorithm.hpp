@@ -26,6 +26,7 @@
 #include <compare>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -150,25 +151,6 @@ enum class LayerIndex : std::int8_t {
   LayerIndexMax
 };
 
-/// @brief Station index of a chamber
-/// @param index Station name of the chamber
-/// @return The station index, StUnknown for an undefined name
-StIndex toStationIndex(MuonSpacePoint::MuonId::StationName index);
-
-/// @brief Station layer of a station index
-/// @param index Station index of interest
-/// @return The station layer, LayerIndexMax for an unknown station
-LayerIndex toLayerIndex(StIndex index);
-
-/// @brief Returns true if the station index points to a barrel chamber
-/// @param index Station index of interest
-bool isBarrel(const StIndex index);
-
-/// @brief Returns whether a space point is a precision hit: an MDT, a
-///        micromegas or an sTGC strip measurement
-/// @param hit Space point of interest
-bool isPrecisionHit(const MuonSpacePoint& hit);
-
 /// @brief Muon space point as a hit of the global pattern finder: the space
 ///        point together with its global position, station and measurement
 ///        surface
@@ -181,10 +163,10 @@ struct HitPayload {
   ///                      point into the global frame
   /// @param measSurface Measurement surface of the space point
   explicit HitPayload(const Acts::GeometryContext& gctx,
-                      const MuonSpacePoint* sp,
-                      const MuonSpacePointBucket* parentBucket,
+                      const MuonSpacePoint& sp,
+                      const MuonSpacePointBucket& parentBucket,
                       const Acts::Transform3& localToGlobal,
-                      const Acts::Surface* measSurface);
+                      const Acts::Surface& measSurface);
   /// @brief Retrieve the space point
   const MuonSpacePoint& spacePoint() const { return *underlyingSp; }
   /// @brief Retrieve the global position
@@ -196,8 +178,13 @@ struct HitPayload {
   ///        strips; otherwise it is the sensor direction
   Acts::Experimental::detail::StripMeasurementDirections
   stripMeasurementDirections(const Acts::GeometryContext& gctx) const;
-  /// @brief Returns whether the hit is a precision hit
-  bool isPrecision() const { return isPrecisionFlag; }
+  /// @brief Returns whether the hit is a precision hit: an MDT, a micromegas
+  ///        or an sTGC strip measurement
+  bool isPrecision() const;
+  /// @brief Returns the station index of the hit's chamber
+  StIndex station() const;
+  /// @brief Returns the layer number of the hit in its chamber
+  std::uint8_t locLayer() const;
 
   /// @brief Global position
   Acts::Vector3 position{Acts::Vector3::Zero()};
@@ -209,22 +196,11 @@ struct HitPayload {
   ///         of the hit, i.e. the measuring, the sensor and the normal
   ///         direction
   const Acts::Surface* surface{nullptr};
-  /// @brief Strip angle when the strips are non-orthogonal
-  double stripAngle{0.};
-  /// @brief Station index
-  StIndex station{toStationIndex(spacePoint().id().msStation())};
-  /// @brief Layer number in the sector frame
-  std::uint8_t locLayer{
-      static_cast<std::uint8_t>(spacePoint().id().detLayer())};
-  /// @brief Is precision hit
-  bool isPrecisionFlag{isPrecisionHit(spacePoint())};
-  /// @brief Are the strips non-orthogonal
-  bool nonOrthogonalStrips{false};
-  /// @brief Equal operator: it compares the underlying hit
-  bool operator==(const HitPayload& other) const;
-  /// @brief Returns whether the two hits stem from the same measurement, which
-  ///         is weaker than the equal operator: one measurement is held by
-  ///         several space points
+  /// @brief Angle of the eta strips against the phi strips of a
+  ///        two-dimensional TGC measurement; empty if they are orthogonal
+  std::optional<double> stripAngle{};
+  /// @brief Returns whether the two hits stem from the same measurement: one
+  ///        measurement is held by several space points
   bool overlaps(const HitPayload& other) const;
 };
 static_assert(Acts::Experimental::detail::GlobPatFinderHit<HitPayload>);
@@ -234,13 +210,9 @@ static_assert(Acts::Experimental::detail::GlobPatFinderHit<HitPayload>);
 ///        the layers are ordered from the inside of the spectrometer outwards.
 class PatternTopology {
  public:
-  /// @brief Type of the index of the station layer
-  using LayerIdx = std::uint16_t;
-  /// @brief Type of the index of the group
-  using GroupIdx = std::uint8_t;
   /// @brief Number of groups in a pattern
-  static constexpr GroupIdx nGroups{
-      static_cast<GroupIdx>(Acts::toUnderlying(StIndex::StIndexMax))};
+  static constexpr std::uint8_t nGroups{
+      static_cast<std::uint8_t>(Acts::toUnderlying(StIndex::StIndexMax))};
   /// @brief Order of the layers of two hits, going from the inside of the
   ///        spectrometer outwards. Hits of one station are ordered by their
   ///        layer, hits of different stations by their station layer (inner,
@@ -258,7 +230,7 @@ class PatternTopology {
   /// @brief Group of a hit, its station index
   /// @param hit Hit of interest
   /// @return The group index of the hit
-  static GroupIdx groupIndex(const HitPayload& hit);
+  static std::uint8_t groupIndex(const HitPayload& hit);
 };
 static_assert(
     Acts::Experimental::detail::PatternTopology<PatternTopology, HitPayload>);
@@ -410,36 +382,6 @@ struct OnlyPhiHitsProvider {
 static_assert(
     Acts::Experimental::detail::OnlyPhiHitsProvider<
         OnlyPhiHitsProvider, HitPayload, PatternTopology, ExpandedSector>);
-
-/// @brief Transformation from the sector frame, in which the space points are
-///        expressed, into the global frame. The space point carries the
-///        transform of its own measurement surface into the sector frame, hence
-///        the global frame is reached as surfaceToGlobal * surfaceToSector^-1.
-/// @param gctx Geometry context
-/// @param surface Measurement surface of the space point
-/// @param sp Space point of interest
-Acts::Transform3 localToGlobalTransform(const Acts::GeometryContext& gctx,
-                                        const Acts::Surface& surface,
-                                        const MuonSpacePoint& sp);
-
-/// @brief Measurement surface of a space point, looked up by its geometry
-///        identifier. The surface defines the local axes of the hit
-/// @param trackingGeometry Geometry holding the muon measurement surfaces
-/// @param sp Space point of interest
-const Acts::Surface& measurementSurface(
-    const Acts::TrackingGeometry& trackingGeometry, const MuonSpacePoint& sp);
-
-/// @brief Transformation from the sector frame of a bucket into the global
-///        frame. The space points of a bucket are all expressed in the frame
-///        of the sector of the first one, hence the transform is determined
-///        once per bucket and shared by its hits.
-/// @param gctx Geometry context
-/// @param trackingGeometry Geometry holding the muon measurement surfaces
-/// @param bucket Bucket of interest, which must not be empty
-Acts::Transform3 bucketToGlobalTransform(
-    const Acts::GeometryContext& gctx,
-    const Acts::TrackingGeometry& trackingGeometry,
-    const MuonSpacePointBucket& bucket);
 
 /// @brief Result of the global pattern recognition: the space points forming
 ///        one pattern, grouped by station, together with the pattern's

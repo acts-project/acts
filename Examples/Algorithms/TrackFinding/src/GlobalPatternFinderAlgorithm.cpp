@@ -182,6 +182,15 @@ inline std::tuple<unsigned, SectorProjector> msSectorAndProj(
 
 namespace ActsExamples {
 
+namespace {
+
+/// @brief Transformation from the sector frame, in which the space points are
+///        expressed, into the global frame. The space point carries the
+///        transform of its own measurement surface into the sector frame, hence
+///        the global frame is reached as surfaceToGlobal * surfaceToSector^-1.
+/// @param gctx Geometry context
+/// @param surface Measurement surface of the space point
+/// @param sp Space point of interest
 Acts::Transform3 localToGlobalTransform(const Acts::GeometryContext& gctx,
                                         const Acts::Surface& surface,
                                         const MuonSpacePoint& sp) {
@@ -189,6 +198,10 @@ Acts::Transform3 localToGlobalTransform(const Acts::GeometryContext& gctx,
          sp.toSectorTransform().inverse();
 }
 
+/// @brief Measurement surface of a space point, looked up by its geometry
+///        identifier. The surface defines the local axes of the hit
+/// @param trackingGeometry Geometry holding the muon measurement surfaces
+/// @param sp Space point of interest
 const Acts::Surface& measurementSurface(
     const Acts::TrackingGeometry& trackingGeometry, const MuonSpacePoint& sp) {
   const Acts::Surface* surface{trackingGeometry.findSurface(sp.geometryId())};
@@ -200,6 +213,13 @@ const Acts::Surface& measurementSurface(
   return *surface;
 }
 
+/// @brief Transformation from the sector frame of a bucket into the global
+///        frame. The space points of a bucket are all expressed in the frame
+///        of the sector of the first one, hence the transform is determined
+///        once per bucket and shared by its hits.
+/// @param gctx Geometry context
+/// @param trackingGeometry Geometry holding the muon measurement surfaces
+/// @param bucket Bucket of interest, which must not be empty
 Acts::Transform3 bucketToGlobalTransform(
     const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometry& trackingGeometry,
@@ -209,6 +229,8 @@ Acts::Transform3 bucketToGlobalTransform(
   return localToGlobalTransform(
       gctx, measurementSurface(trackingGeometry, first), first);
 }
+
+}  // namespace
 
 ExpandedSector::ExpandedSector(const std::int8_t expSector)
     : m_sector{expSector} {}
@@ -308,7 +330,12 @@ std::ostream& ExpandedSector::toString(std::ostream& ostr) const {
   return ostr;
 }
 
-StIndex toStationIndex(MuonSpacePoint::MuonId::StationName index) {
+namespace {
+
+/// @brief Station index of a chamber
+/// @param index Station name of the chamber
+/// @return The station index, StUnknown for an undefined name
+constexpr StIndex toStationIndex(MuonSpacePoint::MuonId::StationName index) {
   using ChIndex = MuonSpacePoint::MuonId::StationName;
   switch (index) {
     case ChIndex::BIS:
@@ -341,7 +368,10 @@ StIndex toStationIndex(MuonSpacePoint::MuonId::StationName index) {
   };
   return StIndex::StUnknown;
 }
-LayerIndex toLayerIndex(StIndex index) {
+/// @brief Station layer of a station index
+/// @param index Station index of interest
+/// @return The station layer, LayerIndexMax for an unknown station
+constexpr LayerIndex toLayerIndex(StIndex index) {
   switch (index) {
     case StIndex::BI:
     case StIndex::EI:
@@ -362,7 +392,9 @@ LayerIndex toLayerIndex(StIndex index) {
   }
   return LayerIndex::LayerIndexMax;
 }
-bool isBarrel(const StIndex index) {
+/// @brief Returns true if the station index points to a barrel chamber
+/// @param index Station index of interest
+constexpr bool isBarrel(const StIndex index) {
   switch (index) {
     case StIndex::BI:
     case StIndex::BM:
@@ -374,6 +406,9 @@ bool isBarrel(const StIndex index) {
   }
 }
 
+/// @brief Returns whether a space point is a precision hit: an MDT, a
+///        micromegas or an sTGC strip measurement
+/// @param hit Space point of interest
 bool isPrecisionHit(const MuonSpacePoint& hit) {
   using enum MuonSpacePoint::MuonId::TechField;
   // Mdt & micromega measurements are precision hits. An sTgc space point is
@@ -384,7 +419,6 @@ bool isPrecisionHit(const MuonSpacePoint& hit) {
           !hit.id().measuresPhi());
 }
 
-namespace {
 /// @brief The symmetric seed station x hit station windows of every |eta| bin
 SeedSelector::Windows_t buildThetaWindows(const SeedSelector::Config& cfg) {
   struct PairWindow {
@@ -450,7 +484,7 @@ SeedSelector::SeedSelector(const Config& config)
 }
 
 bool SeedSelector::goodForSeeding(const HitPayload& hit) const {
-  const LayerIndex hitLayer{toLayerIndex(hit.station)};
+  const LayerIndex hitLayer{toLayerIndex(hit.station())};
   if (std::ranges::find(m_seedingLayers, hitLayer) == m_seedingLayers.end() ||
       (hit.spacePoint().isStraw() && !m_cfg.seedFromMdt)) {
     return false;
@@ -465,12 +499,12 @@ SeedSelector::EtaBin SeedSelector::etaBin(const HitPayload& seed) const {
 }
 const SeedSelector::Row_t& SeedSelector::thetaSearchWindow(
     const HitPayload& seed) const {
-  if (seed.station == StIndex::StUnknown) {
+  if (seed.station() == StIndex::StUnknown) {
     throw std::runtime_error(
         "SeedSelector: no theta window for a hit in an unknown station");
   }
   return m_thetaWindows[Acts::toUnderlying(etaBin(seed))]
-                       [Acts::toUnderlying(seed.station)];
+                       [Acts::toUnderlying(seed.station())];
 }
 double SeedSelector::maxThetaWindow() const {
   double maxWindow{0.};
@@ -485,31 +519,37 @@ double SeedSelector::maxThetaWindow() const {
 using MuonId = MuonSpacePoint::MuonId;
 
 HitPayload::HitPayload(const Acts::GeometryContext& gctx,
-                       const MuonSpacePoint* sp,
-                       const MuonSpacePointBucket* parentBucket,
+                       const MuonSpacePoint& sp,
+                       const MuonSpacePointBucket& parentBucket,
                        const Acts::Transform3& localToGlobal,
-                       const Acts::Surface* measSurface)
-    : position{localToGlobal * sp->localPosition()},
-      underlyingSp{sp},
-      bucket{parentBucket},
-      surface{measSurface} {
+                       const Acts::Surface& measSurface)
+    : position{localToGlobal * sp.localPosition()},
+      underlyingSp{&sp},
+      bucket{&parentBucket},
+      surface{&measSurface} {
   // Only the eta strips of two-dimensional TGC measurements can be tilted
   // against their phi strips; their sensor direction follows the tilt
-  if (!sp->id().measuresEta() || !sp->id().measuresPhi() || sp->isStraw() ||
-      sp->id().technology() != MuonId::TechField::Tgc) {
+  if (!sp.id().measuresEta() || !sp.id().measuresPhi() || sp.isStraw() ||
+      sp.id().technology() != MuonId::TechField::Tgc) {
     return;
   }
-  const auto& surfLinearTrf =
-      measSurface->localToGlobalTransform(gctx).linear();
+  const auto& surfLinearTrf = measSurface.localToGlobalTransform(gctx).linear();
   const Acts::Vector3 phiMeasDir = surfLinearTrf.col(Acts::eY);
-  const Acts::Vector3 etaMeasDir =
-      localToGlobal.rotation() * sp->toNextSensor();
+  const Acts::Vector3 etaMeasDir = localToGlobal.rotation() * sp.toNextSensor();
   const Acts::Vector3 phiSensorDir = surfLinearTrf.col(Acts::eX);
   const double c{etaMeasDir.dot(phiMeasDir)};
   if (std::abs(c) > Acts::s_epsilon) {
     stripAngle = std::atan2(etaMeasDir.dot(phiSensorDir), c);
-    nonOrthogonalStrips = true;
   }
+}
+bool HitPayload::isPrecision() const {
+  return isPrecisionHit(spacePoint());
+}
+StIndex HitPayload::station() const {
+  return toStationIndex(spacePoint().id().msStation());
+}
+std::uint8_t HitPayload::locLayer() const {
+  return spacePoint().id().detLayer();
 }
 const Acts::Vector3& HitPayload::globalPosition(
     const Acts::GeometryContext& /*gctx*/) const {
@@ -522,9 +562,9 @@ Acts::Vector3 HitPayload::globalSensorDirection(
   if (spacePoint().isStraw()) {
     return surfLinearTrf.col(Acts::eZ);
   } else {
-    if (nonOrthogonalStrips) {
-      return -std::sin(stripAngle) * surfLinearTrf.col(Acts::eY) +
-             std::cos(stripAngle) * surfLinearTrf.col(Acts::eX);
+    if (stripAngle) {
+      return -std::sin(*stripAngle) * surfLinearTrf.col(Acts::eY) +
+             std::cos(*stripAngle) * surfLinearTrf.col(Acts::eX);
     }
     return surfLinearTrf.col(Acts::eY);
   }
@@ -534,15 +574,12 @@ HitPayload::stripMeasurementDirections(
     const Acts::GeometryContext& gctx) const {
   assert(!spacePoint().isStraw());
   const auto& surfLinearTrf = surface->localToGlobalTransform(gctx).linear();
-  if (!nonOrthogonalStrips) {
+  if (!stripAngle) {
     return {surfLinearTrf.col(Acts::eX), std::nullopt};
   }
   const Acts::Vector3 etaMeasDir{
       globalSensorDirection(gctx).cross(surfLinearTrf.col(Acts::eZ))};
   return {etaMeasDir, Acts::Vector3{surfLinearTrf.col(Acts::eY)}};
-}
-bool HitPayload::operator==(const HitPayload& other) const {
-  return &spacePoint() == &other.spacePoint();
 }
 bool HitPayload::overlaps(const HitPayload& other) const {
   // A measurement enters a space point for every non-precision hit it was
@@ -561,8 +598,8 @@ std::weak_ordering PatternTopology::compareLayers(const HitPayload& hit1,
     return firstIsInner ? std::weak_ordering::less
                         : std::weak_ordering::greater;
   };
-  const StIndex st1{hit1.station};
-  const StIndex st2{hit2.station};
+  const StIndex st1{hit1.station()};
+  const StIndex st2{hit2.station()};
   if (st1 == st2) {
     const bool sameChamber{
         hit1.spacePoint().id().sameStation(hit2.spacePoint().id())};
@@ -573,13 +610,13 @@ std::weak_ordering PatternTopology::compareLayers(const HitPayload& hit1,
                                  Acts::VectorHelpers::perp(hit2.position)
                            : std::abs(hit1.position.z()) -
                                  std::abs(hit2.position.z())};
-    if ((sameChamber && hit1.locLayer == hit2.locLayer) ||
+    if ((sameChamber && hit1.locLayer() == hit2.locLayer()) ||
         std::abs(delta) <= Acts::s_epsilon) {
       return std::weak_ordering::equivalent;
     }
     // Hits in one chamber are ordered by their layer number, hits of two
     // adjacent sectors in the same station by their position
-    return sameChamber ? order(hit1.locLayer < hit2.locLayer)
+    return sameChamber ? order(hit1.locLayer() < hit2.locLayer())
                        : order(delta < 0.);
   }
   LayerIndex layer1{toLayerIndex(st1)};
@@ -624,8 +661,8 @@ std::weak_ordering PatternTopology::compareLayers(const HitPayload& hit1,
   return order(st1 == StIndex::BM);
 }
 
-PatternTopology::GroupIdx PatternTopology::groupIndex(const HitPayload& hit) {
-  return static_cast<GroupIdx>(Acts::toUnderlying(hit.station));
+std::uint8_t PatternTopology::groupIndex(const HitPayload& hit) {
+  return static_cast<std::uint8_t>(Acts::toUnderlying(hit.station()));
 }
 
 OnlyPhiHitsProvider::PhiHitsPerGroup OnlyPhiHitsProvider::getPhiOnlyHits(
@@ -646,8 +683,8 @@ OnlyPhiHitsProvider::PhiHitsPerGroup OnlyPhiHitsProvider::getPhiOnlyHits(
       for (const MuonSpacePoint& h : *bucket) {
         if (!h.id().measuresEta()) {
           phiOnlyHits[group].emplace_back(
-              gctx, &h, bucket, localToGlobal,
-              &measurementSurface(*trackingGeometry, h));
+              gctx, h, *bucket, localToGlobal,
+              measurementSurface(*trackingGeometry, h));
         }
       }
     }
@@ -795,7 +832,7 @@ SearchTreeData GlobalPatternFinderAlgorithm::constructTree(
 
       const Acts::Surface& surface{
           measurementSurface(*m_cfg.trackingGeometry, hit)};
-      hitPayloads.emplace_back(gctx, &hit, &bucket, localToGlobal, &surface);
+      hitPayloads.emplace_back(gctx, hit, bucket, localToGlobal, surface);
 
       if (logger().doPrint(Acts::Logging::VERBOSE)) {
         const HitPayload& newHit{hitPayloads.back()};
@@ -804,7 +841,7 @@ SearchTreeData GlobalPatternFinderAlgorithm::constructTree(
             << "Pos: " << Acts::toString(newHit.position) << ", SensorDir: "
             << Acts::toString(newHit.globalSensorDirection(gctx));
         if (!newHit.spacePoint().isStraw()) {
-          oss << ", orthogonalStrips: " << !newHit.nonOrthogonalStrips;
+          oss << ", orthogonalStrips: " << !newHit.stripAngle;
         }
         ACTS_VERBOSE(oss.str());
       }
@@ -871,7 +908,7 @@ MuonGlobalPattern GlobalPatternFinderAlgorithm::convertToPattern(
     const PatternResult& candidate) const {
   MuonGlobalPattern pattern{};
   // Add eta hits
-  for (PatternTopology::GroupIdx g = 0u; g < PatternTopology::nGroups; ++g) {
+  for (std::uint8_t g = 0u; g < PatternTopology::nGroups; ++g) {
     const auto& hits{candidate.hitsPerGroup[g]};
     if (hits.empty()) {
       continue;
@@ -887,7 +924,7 @@ MuonGlobalPattern GlobalPatternFinderAlgorithm::convertToPattern(
 
   // Add phi-only hits
   for (const HitPayload& hit : candidate.phiOnlyHits) {
-    pattern.hitsPerStation[Acts::toUnderlying(hit.station)].push_back(
+    pattern.hitsPerStation[Acts::toUnderlying(hit.station())].push_back(
         &hit.spacePoint());
   }
   pattern.theta = candidate.patTheta;

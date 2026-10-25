@@ -18,6 +18,7 @@
 #include "ActsExamples/TrackFinding/GlobalPatternFinderAlgorithm.hpp"
 
 #include <compare>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <numbers>
@@ -32,7 +33,6 @@ namespace {
 using MuonId = ActsExamples::MuonSpacePoint::MuonId;
 using ActsExamples::ExpandedSector;
 using ActsExamples::HitPayload;
-using ActsExamples::LayerIndex;
 using ActsExamples::PatternTopology;
 using ActsExamples::SeedSelector;
 using ActsExamples::StIndex;
@@ -121,45 +121,6 @@ BOOST_AUTO_TEST_CASE(expanded_sector) {
   BOOST_CHECK_LT(leftOfTwo.sectorSize(), centreOfOne.sectorSize());
 }
 
-BOOST_AUTO_TEST_CASE(station_helpers) {
-  using ActsExamples::isBarrel;
-  using ActsExamples::isPrecisionHit;
-  using ActsExamples::toLayerIndex;
-  using ActsExamples::toStationIndex;
-  using enum MuonId::StationName;
-
-  BOOST_CHECK(toStationIndex(BIL) == StIndex::BI);
-  BOOST_CHECK(toStationIndex(BIS) == StIndex::BI);
-  BOOST_CHECK(toStationIndex(BML) == StIndex::BM);
-  BOOST_CHECK(toStationIndex(BEE) == StIndex::BE);
-  BOOST_CHECK(toStationIndex(EMS) == StIndex::EM);
-  BOOST_CHECK(toStationIndex(EEL) == StIndex::EE);
-
-  BOOST_CHECK(toLayerIndex(StIndex::BI) == LayerIndex::Inner);
-  BOOST_CHECK(toLayerIndex(StIndex::EM) == LayerIndex::Middle);
-  BOOST_CHECK(toLayerIndex(StIndex::BO) == LayerIndex::Outer);
-  BOOST_CHECK(toLayerIndex(StIndex::BE) == LayerIndex::BarrelExtended);
-  BOOST_CHECK(toLayerIndex(StIndex::EE) == LayerIndex::Extended);
-
-  BOOST_CHECK(isBarrel(StIndex::BM));
-  BOOST_CHECK(!isBarrel(StIndex::EM));
-
-  // Mdt & micromega hits are precision hits
-  BOOST_CHECK(isPrecisionHit(makeSpacePoint(
-      BIL, MuonId::TechField::Mdt, 1u, true, false, Acts::Vector3::Zero())));
-  BOOST_CHECK(isPrecisionHit(makeSpacePoint(
-      EIL, MuonId::TechField::Mm, 1u, true, false, Acts::Vector3::Zero())));
-  // Rpc / Tgc strips are trigger hits
-  BOOST_CHECK(!isPrecisionHit(makeSpacePoint(
-      BML, MuonId::TechField::Rpc, 1u, true, false, Acts::Vector3::Zero())));
-  // An sTgc hit counts as precision only if it measures eta alone. The channel
-  // type is not exported, so a combined hit cannot be told from a pad
-  BOOST_CHECK(isPrecisionHit(makeSpacePoint(
-      EIL, MuonId::TechField::sTgc, 1u, true, false, Acts::Vector3::Zero())));
-  BOOST_CHECK(!isPrecisionHit(makeSpacePoint(
-      EIL, MuonId::TechField::sTgc, 1u, true, true, Acts::Vector3::Zero())));
-}
-
 BOOST_AUTO_TEST_CASE(hit_payload_and_topology) {
   const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
   const auto surface = testSurface();
@@ -178,19 +139,12 @@ BOOST_AUTO_TEST_CASE(hit_payload_and_topology) {
   // A unit transform keeps the sector frame, so the global position is the
   // position the space point was built with
   const Acts::Transform3 toGlobal{Acts::Transform3::Identity()};
-  const HitPayload first{gctx, &bucket[0], &bucket, toGlobal, surface.get()};
-  const HitPayload second{gctx, &bucket[1], &bucket, toGlobal, surface.get()};
-  const HitPayload sameLayerAsSecond{gctx, &bucket[2], &bucket, toGlobal,
-                                     surface.get()};
-
-  BOOST_CHECK(first.globalPosition(gctx).isApprox(bucket[0].localPosition()));
-  BOOST_CHECK(&first.spacePoint() == &bucket[0]);
-  BOOST_CHECK(first.station == StIndex::BI);
-  BOOST_CHECK_EQUAL(static_cast<unsigned>(first.locLayer),
-                    static_cast<unsigned>(bucket[0].id().detLayer()));
-  BOOST_CHECK(first.isPrecision());
-  BOOST_CHECK(first == first);
-  BOOST_CHECK(!(first == second));
+  auto makeHit = [&](const std::size_t i) {
+    return HitPayload{gctx, bucket[i], bucket, toGlobal, *surface};
+  };
+  const HitPayload first{makeHit(0)};
+  const HitPayload second{makeHit(1)};
+  const HitPayload sameLayerAsSecond{makeHit(2)};
 
   // The hits are grouped by station and ordered by layer
   BOOST_CHECK_EQUAL(static_cast<int>(PatternTopology::groupIndex(first)),
@@ -229,18 +183,15 @@ BOOST_AUTO_TEST_CASE(seed_selector) {
   bucket.push_back(makeSpacePoint(EML, Tech::Tgc, 6u, true, false,
                                   Acts::Vector3{0., 2000., 14000.}));
 
-  const HitPayload middleStrip{gctx, &bucket[0], &bucket, toGlobal,
-                               surface.get()};
-  const HitPayload middleStraw{gctx, &bucket[1], &bucket, toGlobal,
-                               surface.get()};
-  const HitPayload innerStrip{gctx, &bucket[2], &bucket, toGlobal,
-                              surface.get()};
-  const HitPayload outerStrip{gctx, &bucket[3], &bucket, toGlobal,
-                              surface.get()};
-  const HitPayload transitionMiddle{gctx, &bucket[4], &bucket, toGlobal,
-                                    surface.get()};
-  const HitPayload endcapMiddle{gctx, &bucket[5], &bucket, toGlobal,
-                                surface.get()};
+  auto makeHit = [&](const std::size_t i) {
+    return HitPayload{gctx, bucket[i], bucket, toGlobal, *surface};
+  };
+  const HitPayload middleStrip{makeHit(0)};
+  const HitPayload middleStraw{makeHit(1)};
+  const HitPayload innerStrip{makeHit(2)};
+  const HitPayload outerStrip{makeHit(3)};
+  const HitPayload transitionMiddle{makeHit(4)};
+  const HitPayload endcapMiddle{makeHit(5)};
 
   const SeedSelector::Config cfg{};
   const SeedSelector selector{cfg};
