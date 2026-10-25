@@ -165,27 +165,25 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
   Acts::AlignmentVector deltaAlignmentParam = Acts::AlignmentVector::Zero();
   for (const auto& [surface, index] : alignResult.idxedAlignSurfaces) {
     // 1. The original transform
-    const Acts::Vector3& oldCenter = surface->center(gctx);
     const Acts::Transform3& oldTransform =
         surface->localToGlobalTransform(gctx);
 
     // 2. The delta transform
     deltaAlignmentParam = alignResult.deltaAlignmentParameters.segment(
         Acts::eAlignmentSize * index, Acts::eAlignmentSize);
-    // The delta translation
-    Acts::Vector3 deltaCenter =
+    // Translation along the local x/y/z axes
+    const Acts::Vector3 deltaCenterLocal =
         deltaAlignmentParam.segment<3>(Acts::eAlignmentCenter0);
     // The delta Euler angles
     Acts::Vector3 deltaEulerAngles =
         deltaAlignmentParam.segment<3>(Acts::eAlignmentRotation0);
 
-    // 3. The new transform
-    const Acts::Vector3 newCenter = oldCenter + deltaCenter;
+    // 3. The new transform. translate() shifts in the local frame.
     Acts::Transform3 newTransform = oldTransform;
-    newTransform.translation() = newCenter;
+    newTransform.translate(deltaCenterLocal);
     // Rotation first around fixed local x, then around fixed local y, and last
     // around fixed local z, this is the same as first around local z, then
-    // around new loca y, and last around new local x below
+    // around new local y, and last around new local x below
     newTransform *=
         Acts::AngleAxis3(deltaEulerAngles(2), Acts::Vector3::UnitZ());
     newTransform *=

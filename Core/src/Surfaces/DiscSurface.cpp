@@ -306,7 +306,8 @@ MultiIntersection3D DiscSurface::intersect(
 }
 
 Matrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& gctx, const Vector3& position) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& /*direction*/) const {
   using VectorHelpers::perp;
   // The local frame transform
   const auto& sTransform = localToGlobalTransform(gctx);

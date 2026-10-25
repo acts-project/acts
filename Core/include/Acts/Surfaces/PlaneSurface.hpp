@@ -237,11 +237,13 @@ class PlaneSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position of the parameters in global
+  /// @param direction The track direction. The plane derivative does not use it.
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
   Matrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3& position) const final;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
 
   /// Merge two plane surfaces into a single one.
   /// @note The surfaces need to be *compatible*, i.e. have bounds

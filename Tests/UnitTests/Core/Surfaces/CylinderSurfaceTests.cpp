@@ -11,6 +11,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -32,9 +33,11 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
 #include <cmath>
 #include <memory>
@@ -289,29 +292,53 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
   const double radius = 1.;
   const double halfZ = 10.;
   const Translation3 translation{0., 1., 2.};
-
-  auto pTransform = Transform3(translation);
+  // Rotate by 90 degrees about global z. The cylinder axis stays global z, so
+  // the point below stays on the surface. The center columns are then the
+  // local-frame components, not the global center derivative.
+  const AngleAxis3 rotationAngle(std::numbers::pi / 2., Vector3::UnitZ());
+  Transform3 transform =
+      makeTransform3(rotationAngle.toRotationMatrix(), translation.vector());
   auto cylinderSurfaceObject =
-      Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
+      Surface::makeShared<CylinderSurface>(transform, radius, halfZ);
 
-  const auto& rotation = pTransform.rotation();
+  const auto& rotation = transform.rotation();
   // The local frame z axis
   const Vector3 localZAxis = rotation.col(2);
   // Check the local z axis is aligned to global z axis
   CHECK_CLOSE_ABS(localZAxis, Vector3(0., 0., 1.), 1e-15);
 
-  /// Define the track (global) position and direction
+  // On the cylinder, along the rotated local x axis.
   Vector3 globalPosition{0, 2, 2};
 
   // Test the derivative of bound track parameters local position w.r.t.
   // position in local 3D Cartesian coordinates
   const auto& loc3DToLocBound =
       cylinderSurfaceObject->localCartesianToBoundLocalDerivative(
-          testContext, globalPosition);
-  // Check if the result is as expected
+          testContext, globalPosition, Vector3::UnitZ());
+  // Local position is (R, 0, 0), so d(phi)/d(local) is along local y.
   Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
-  expLoc3DToLocBound << -1, 0, 0, 0, 0, 1;
+  expLoc3DToLocBound << 0, 1, 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+
+  // Local hit (1, 0, 2) and local direction (0.6, 0, 0.8). The denominator
+  // is 0.6, so the local path derivative is (1, 0, 0, 0, 2, 0) / 0.6.
+  const Vector3 hit = transform * Vector3{1., 0., 2.};
+  const Vector3 direction = rotation * Vector3{0.6, 0., 0.8};
+  const AlignmentToPathMatrix alignToPath =
+      cylinderSurfaceObject->alignmentToPathDerivative(testContext, hit,
+                                                       direction);
+  AlignmentToPathMatrix expected = AlignmentToPathMatrix::Zero();
+  expected << 1. / 0.6, 0., 0., 0., 2. / 0.6, 0.;
+  CHECK_CLOSE_ABS(alignToPath, expected, 1e-10);
+
+  // A hit off the local x axis, checked against finite differences.
+  const Vector3 skewedHit = transform * Vector3{0.6, 0.8, 1.5};
+  const Vector3 skewedDir = rotation * Vector3{0.6, 0.3, 0.2};
+  checkSurfaceDerivatives(testContext, *cylinderSurfaceObject, transform,
+                          skewedHit, skewedDir, [&](const Transform3& tf) {
+                            return Surface::makeShared<CylinderSurface>(
+                                tf, radius, halfZ);
+                          });
 }
 
 BOOST_AUTO_TEST_CASE(CylinderSurfaceBinningPosition) {

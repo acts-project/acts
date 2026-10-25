@@ -37,6 +37,7 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
 #include <cmath>
 #include <memory>
@@ -331,11 +332,19 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
 
+  // Tilt the direction off the z axis, where the bound angles are singular.
+  const Vector3 tiltedDirection = Vector3(0.25, -0.2, 0.95).normalized();
+  checkSurfaceDerivatives(
+      tgContext, *discSurfaceObject, transform, globalPosition, tiltedDirection,
+      [&](const Transform3& tf) {
+        return Surface::makeShared<DiscSurface>(tf, rMin, rMax, halfPhiSector);
+      });
+
   // (b) Test the derivative of bound track parameters local position w.r.t.
   // position in local 3D Cartesian coordinates
   const auto& loc3DToLocBound =
-      discSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
-                                                              globalPosition);
+      discSurfaceObject->localCartesianToBoundLocalDerivative(
+          tgContext, globalPosition, direction);
   // Check if the result is as expected
   Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
   expLoc3DToLocBound << 0, 1, 0, -1. / 3, 0, 0;
