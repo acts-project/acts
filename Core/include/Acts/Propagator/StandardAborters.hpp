@@ -8,13 +8,10 @@
 
 #pragma once
 
-#include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/AbortConditions.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <cmath>
-#include <cstdint>
 #include <limits>
 
 namespace Acts {
@@ -40,23 +37,7 @@ struct PathLimitReached {
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
     static_cast<void>(navigator);
-
-    // Check if the maximum allowed step size has to be updated
-    double distance =
-        std::abs(internalLimit) - std::abs(stepper.pathLength(state.stepping));
-    double tolerance = state.options.surfaceTolerance;
-    bool limitReached = (std::abs(distance) < std::abs(tolerance));
-    if (limitReached) {
-      ACTS_VERBOSE("PathLimit aborter | " << "Path limit reached at distance "
-                                          << distance);
-      return true;
-    }
-    stepper.updateStepSize(state.stepping, distance,
-                           ConstrainedStep::Type::Actor);
-    ACTS_VERBOSE("PathLimit aborter | "
-                 << "Target stepSize (path limit) updated to "
-                 << stepper.outputStepSize(state.stepping));
-    return false;
+    return detail::pathLimitReached(state, stepper, internalLimit, logger);
   }
 };
 
@@ -86,13 +67,7 @@ struct SurfaceReached {
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
                   const navigator_t& navigator, const Logger& logger) const {
-    if (surface == nullptr ||
-        navigator.currentSurface(state.navigation) != surface) {
-      return false;
-    }
-
-    ACTS_VERBOSE("SurfaceReached aborter | Target surface reached.");
-    return true;
+    return detail::surfaceReached(state, navigator, surface, logger);
   }
 };
 
@@ -112,8 +87,7 @@ struct EndOfWorldReached {
   bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
-    bool endOfWorld = navigator.endOfWorldReached(state.navigation);
-    return endOfWorld;
+    return detail::endOfWorldReached(state, navigator);
   }
 };
 
@@ -133,40 +107,7 @@ struct VolumeConstraintAborter {
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
                   const navigator_t& navigator, const Logger& logger) const {
-    const auto& constrainToVolumeIds = state.options.constrainToVolumeIds;
-    const auto& endOfWorldVolumeIds = state.options.endOfWorldVolumeIds;
-
-    if (constrainToVolumeIds.empty() && endOfWorldVolumeIds.empty()) {
-      return false;
-    }
-    const auto* currentVolume = navigator.currentVolume(state.navigation);
-
-    // We need a volume to check its ID
-    if (currentVolume == nullptr) {
-      return false;
-    }
-
-    const auto currentVolumeId =
-        static_cast<std::uint32_t>(currentVolume->geometryId().volume());
-
-    if (!constrainToVolumeIds.empty() &&
-        !rangeContainsValue(constrainToVolumeIds, currentVolumeId)) {
-      ACTS_VERBOSE(
-          "VolumeConstraintAborter aborter | Abort with volume constrain "
-          << currentVolumeId);
-      return true;
-    }
-
-    if (!endOfWorldVolumeIds.empty() &&
-        rangeContainsValue(endOfWorldVolumeIds, currentVolumeId)) {
-      ACTS_VERBOSE(
-          "VolumeConstraintAborter aborter | Abort with additional end of "
-          "world volume "
-          << currentVolumeId);
-      return true;
-    }
-
-    return false;
+    return detail::volumeConstraintReached(state, navigator, logger);
   }
 };
 
@@ -187,19 +128,7 @@ struct AnySurfaceReached {
                   const navigator_t& navigator, const Logger& logger) const {
     static_cast<void>(stepper);
     static_cast<void>(logger);
-
-    const Surface* startSurface = navigator.startSurface(state.navigation);
-    const Surface* targetSurface = navigator.targetSurface(state.navigation);
-    const Surface* currentSurface = navigator.currentSurface(state.navigation);
-
-    // `startSurface` is excluded because we want to reach a new surface
-    // `targetSurface` is excluded because another aborter should handle it
-    if (currentSurface != nullptr && currentSurface != startSurface &&
-        currentSurface != targetSurface) {
-      return true;
-    }
-
-    return false;
+    return detail::anySurfaceReached(state, navigator);
   }
 };
 

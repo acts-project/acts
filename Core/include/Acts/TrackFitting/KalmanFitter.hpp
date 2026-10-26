@@ -354,8 +354,9 @@ class KalmanFitter {
       // Initialize path limit reached aborter
       if (result.pathLimitReached.internalLimit ==
           std::numeric_limits<double>::max()) {
-        detail::setupLoopProtection(state, stepper, result.pathLimitReached,
-                                    true, logger());
+        detail::setupLoopProtection(state, stepper,
+                                    result.pathLimitReached.internalLimit, true,
+                                    logger());
       }
 
       // Update:
