@@ -8,6 +8,7 @@
 
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -15,6 +16,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <numbers>
 #include <span>
 #include <utility>
@@ -46,6 +48,14 @@ struct SlidingWindow {
   GbtsLayerType type{};
   /// Technology of the bin's layer.
   GbtsLayerTechnology technology{};
+  /// Smallest radius of the bin's nodes.
+  float minRadius{};
+  /// Largest radius of the bin's nodes.
+  float maxRadius{};
+  /// Smallest z of the bin's nodes.
+  float minZ{};
+  /// Largest z of the bin's nodes.
+  float maxZ{};
 };
 
 /// Check a triplet against the pT and d0 cuts.
@@ -315,6 +325,16 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       window.tauRatioCutOuter = link.tauRatioCutOuter;
       window.type = B2.type;
       window.technology = B2.technology;
+      window.minRadius = B2.minRadius;
+      window.maxRadius = B2.maxRadius;
+      // the bin keeps its radial extent but not its z extent
+      window.minZ = std::numeric_limits<float>::max();
+      window.maxZ = std::numeric_limits<float>::lowest();
+      for (SpacePointIndex n2Idx = B2.nodes.first; n2Idx < B2.nodes.second;
+           ++n2Idx) {
+        window.minZ = std::min(window.minZ, params[n2Idx].z);
+        window.maxZ = std::max(window.maxZ, params[n2Idx].z);
+      }
     }
 
     // in GBTSv3 the outer loop goes over n1 nodes in the Layer 1 bin
@@ -337,6 +357,42 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       const float r1 = n1pars.r;
       const float z1 = n1pars.z;
 
+      // The tau range a doublet from n1 can pass the cuts below with: n1's own
+      // |tau| window, narrowed by the z0 and zOuter cuts when doubletFilterRZ
+      // is on. A window whose bin it cannot reach is skipped whole below.
+      const float maxAbsTau1 = std::min(m_cfg.maxAbsTau, n1pars.maxTau);
+      float minReachTau = -maxAbsTau1;
+      float maxReachTau = maxAbsTau1;
+      if (m_cfg.doubletFilterRZ && r1 > 0) {
+        minReachTau = std::max(minReachTau, (z1 - m_cfg.maxZ0) / r1);
+        maxReachTau = std::min(maxReachTau, (z1 - m_cfg.minZ0) / r1);
+        const float outerDr = m_cfg.maxOuterRadius - r1;
+        if (outerDr > 0) {
+          minReachTau = std::max(minReachTau, (cutZMinU - z1) / outerDr);
+          maxReachTau = std::min(maxReachTau, (cutZMaxU - z1) / outerDr);
+        }
+      }
+
+      // Whether a pair with n2 in a window with tau in [tauLo, tauHi] could
+      // land in the window's bin, z2 - z1 being tau * dr. The float rounding
+      // of the bounds is far below the margin, which only keeps the test from
+      // skipping a pair the exact cuts below would keep.
+      constexpr float kReachMargin = 1 * UnitConstants::mm;
+      const auto binInReach = [&](const SlidingWindow& window,
+                                  const float tauLo, const float tauHi) {
+        const float drLo =
+            std::max(window.minRadius - r1, m_cfg.minDeltaRadius);
+        const float drHi = window.maxRadius - r1;
+        if (tauLo > tauHi) {
+          return false;
+        }
+        const float zLo =
+            z1 + std::min(tauLo * drLo, tauLo * drHi) - kReachMargin;
+        const float zHi =
+            z1 + std::max(tauHi * drLo, tauHi * drHi) + kReachMargin;
+        return zHi >= window.minZ && zLo <= window.maxZ;
+      };
+
       // the chord of a pair, which only the strip path below reads
       float x1 = 0.f;
       float y1 = 0.f;
@@ -354,6 +410,28 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
         const bool isPixelBarrel2 = barrelOrder2 >= 0;
 
         const bool stripPair = calibrate && (!isPixel1 || !isPixel2);
+
+        // No pair of the window is in reach: every one would fail the radius,
+        // |tau|, or z0/zOuter cuts below. A strip pair's ends move, so it is
+        // not judged here. Skipping leaves firstIt behind; the next visit
+        // catches up.
+        if (!stripPair) {
+          if (slw.maxRadius - r1 < m_cfg.minDeltaRadius) {
+            continue;
+          }
+          // n1's |tau| window leaves out (-minTau, minTau): test each sign on
+          // its own, or the gap would count as reachable
+          const bool inReach =
+              n1pars.minTau > 0
+                  ? binInReach(slw, std::max(minReachTau, n1pars.minTau),
+                               maxReachTau) ||
+                        binInReach(slw, minReachTau,
+                                   std::min(maxReachTau, -n1pars.minTau))
+                  : binInReach(slw, minReachTau, maxReachTau);
+          if (!inReach) {
+            continue;
+          }
+        }
 
         const float deltaPhi = slw.deltaPhi;
 
