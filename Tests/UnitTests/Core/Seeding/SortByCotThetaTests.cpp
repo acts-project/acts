@@ -14,7 +14,6 @@
 #include <cfenv>
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
 #include <limits>
 #include <random>
 #include <vector>
@@ -25,28 +24,31 @@ namespace ActsTests {
 
 namespace {
 
+using IndexAndCotTheta = DoubletsForMiddleSp::IndexAndCotTheta;
+
 DoubletsForMiddleSp doubletsOf(const std::vector<float>& cotThetas) {
   DoubletsForMiddleSp doublets;
   for (std::size_t k = 0; k < cotThetas.size(); ++k) {
-    doublets.push_back({static_cast<SpacePointIndex>(k), cotThetas[k], 1.f, 1.f,
-                        0.f, 0.f, 0.f, 0.f});
+    doublets.emplace_back(static_cast<SpacePointIndex>(k), cotThetas[k], 1.f,
+                          1.f, 0.f, 0.f, 0.f, 0.f);
   }
   return doublets;
 }
 
-/// Checks that @p sorted holds all doublets in the order
+/// Checks that @p sorted holds the doublets of @p range in the order
 /// std::ranges::stable_sort gives, with the sign of each cotTheta kept (which
 /// tells -0 from +0).
 void checkSorted(const std::vector<float>& cotThetas,
+                 const DoubletsForMiddleSp::IndexRange& range,
                  const std::vector<IndexAndCotTheta>& sorted) {
   std::vector<IndexAndCotTheta> expected;
-  for (std::uint32_t i = 0; i < cotThetas.size(); ++i) {
+  for (auto i = range.first; i < range.second; ++i) {
     expected.push_back({i, cotThetas[i]});
   }
   std::ranges::stable_sort(expected, {}, &IndexAndCotTheta::cotTheta);
 
-  std::vector<std::uint32_t> expectedIndices;
-  std::vector<std::uint32_t> sortedIndices;
+  std::vector<DoubletsForMiddleSp::Index> expectedIndices;
+  std::vector<DoubletsForMiddleSp::Index> sortedIndices;
   std::vector<bool> expectedSigns;
   std::vector<bool> sortedSigns;
   for (const IndexAndCotTheta& item : expected) {
@@ -64,26 +66,29 @@ void checkSorted(const std::vector<float>& cotThetas,
                                 expectedSigns.begin(), expectedSigns.end());
 }
 
-/// Sorts @p doublets into @p sorted, and checks that no floating point
-/// exception was raised: it would trap where they are enabled.
+/// Sorts @p range of @p doublets into @p sorted, and checks that no floating
+/// point exception was raised: it would trap where they are enabled.
 void sortWithoutFpe(const DoubletsForMiddleSp& doublets,
+                    const DoubletsForMiddleSp::IndexRange& range,
                     std::vector<IndexAndCotTheta>& sorted,
-                    SortStorage* storage) {
+                    DoubletsForMiddleSp::SortStorage* storage) {
   std::feclearexcept(FE_ALL_EXCEPT);
   if (storage != nullptr) {
-    sortByCotTheta(doublets, sorted, *storage);
+    doublets.sortByCotTheta(range, sorted, *storage);
   } else {
-    sortByCotTheta(doublets, sorted);
+    doublets.sortByCotTheta(range, sorted);
   }
   BOOST_CHECK(!std::fetestexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW));
 }
 
 /// Sorts all of @p cotThetas, reusing @p storage, and checks the result.
-void checkSort(const std::vector<float>& cotThetas, SortStorage& storage) {
+void checkSort(const std::vector<float>& cotThetas,
+               DoubletsForMiddleSp::SortStorage& storage) {
   const DoubletsForMiddleSp doublets = doubletsOf(cotThetas);
+  const DoubletsForMiddleSp::IndexRange range{0, doublets.size()};
   std::vector<IndexAndCotTheta> sorted;
-  sortWithoutFpe(doublets, sorted, &storage);
-  checkSorted(cotThetas, sorted);
+  sortWithoutFpe(doublets, range, sorted, &storage);
+  checkSorted(cotThetas, range, sorted);
 }
 
 std::vector<float> uniformCotThetas(std::size_t n, std::mt19937& rng) {
@@ -102,7 +107,7 @@ BOOST_AUTO_TEST_SUITE(SeedingSuite)
 BOOST_AUTO_TEST_CASE(SortByCotThetaMatchesStableSort) {
   std::mt19937 rng(42);
   // One storage for every call, of whatever size the last call left it
-  SortStorage storage;
+  DoubletsForMiddleSp::SortStorage storage;
   // Sizes on both sides of where the sort changes
   for (std::size_t n : {0,  1,  2,  3,  4,  5,  6,  7,  8,   9,    10,   15,
                         16, 17, 31, 32, 33, 40, 64, 65, 100, 1024, 3000, 33}) {
@@ -113,7 +118,7 @@ BOOST_AUTO_TEST_CASE(SortByCotThetaMatchesStableSort) {
 BOOST_AUTO_TEST_CASE(SortByCotThetaKeepsOrderOfEqualCotTheta) {
   std::mt19937 rng(7);
   std::uniform_int_distribution<int> fewValues(-3, 3);
-  SortStorage storage;
+  DoubletsForMiddleSp::SortStorage storage;
   for (std::size_t n : {5, 10, 40, 41, 500, 2000}) {
     std::vector<float> cotThetas(n);
     for (float& cotTheta : cotThetas) {
@@ -129,7 +134,7 @@ BOOST_AUTO_TEST_CASE(SortByCotThetaKeepsOrderOfEqualCotTheta) {
 }
 
 BOOST_AUTO_TEST_CASE(SortByCotThetaKeepsSignedZeros) {
-  SortStorage storage;
+  DoubletsForMiddleSp::SortStorage storage;
   for (std::size_t n : {6, 20, 200}) {
     std::vector<float> cotThetas(n);
     for (std::size_t k = 0; k < n; ++k) {
@@ -147,7 +152,7 @@ BOOST_AUTO_TEST_CASE(SortByCotThetaKeepsSignedZeros) {
 
 BOOST_AUTO_TEST_CASE(SortByCotThetaFallsBackForInfiniteCotTheta) {
   const float inf = std::numeric_limits<float>::infinity();
-  SortStorage storage;
+  DoubletsForMiddleSp::SortStorage storage;
   for (std::size_t n : {6, 20, 200, 1000}) {
     std::vector<float> cotThetas(n);
     for (std::size_t k = 0; k < n; ++k) {
@@ -162,7 +167,7 @@ BOOST_AUTO_TEST_CASE(SortByCotThetaFallsBackForInfiniteCotTheta) {
 BOOST_AUTO_TEST_CASE(SortByCotThetaFallsBackForTinyRange) {
   // Too close together to spread over buckets
   const float smallest = std::numeric_limits<float>::denorm_min();
-  SortStorage storage;
+  DoubletsForMiddleSp::SortStorage storage;
   for (std::size_t n : {6, 20, 200, 1000}) {
     std::vector<float> cotThetas(n);
     for (std::size_t k = 0; k < n; ++k) {
@@ -176,7 +181,7 @@ BOOST_AUTO_TEST_CASE(SortByCotThetaHandlesOneOutlier) {
   // Almost every doublet in one bucket
   std::mt19937 rng(11);
   std::uniform_real_distribution<float> narrow(-0.005f, 0.005f);
-  SortStorage storage;
+  DoubletsForMiddleSp::SortStorage storage;
   for (std::size_t n : {6, 20, 200, 1000}) {
     std::vector<float> cotThetas(n);
     for (float& cotTheta : cotThetas) {
@@ -187,20 +192,24 @@ BOOST_AUTO_TEST_CASE(SortByCotThetaHandlesOneOutlier) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(SortByCotThetaSortsWithBothOverloads) {
+BOOST_AUTO_TEST_CASE(SortByCotThetaSortsRangesWithBothOverloads) {
   std::mt19937 rng(5);
   for (std::size_t n : {0, 5, 30, 300}) {
-    const std::vector<float> cotThetas = uniformCotThetas(n, rng);
+    const std::vector<float> cotThetas = uniformCotThetas(n + 20, rng);
     const DoubletsForMiddleSp doublets = doubletsOf(cotThetas);
 
+    // A range that does not start at the first doublet
+    const DoubletsForMiddleSp::IndexRange range{
+        10, static_cast<DoubletsForMiddleSp::Index>(10 + n)};
+
     std::vector<IndexAndCotTheta> allocating;
-    sortWithoutFpe(doublets, allocating, nullptr);
-    checkSorted(cotThetas, allocating);
+    sortWithoutFpe(doublets, range, allocating, nullptr);
+    checkSorted(cotThetas, range, allocating);
 
     std::vector<IndexAndCotTheta> withStorage;
-    SortStorage storage;
-    sortWithoutFpe(doublets, withStorage, &storage);
-    checkSorted(cotThetas, withStorage);
+    DoubletsForMiddleSp::SortStorage storage;
+    sortWithoutFpe(doublets, range, withStorage, &storage);
+    checkSorted(cotThetas, range, withStorage);
   }
 }
 

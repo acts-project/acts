@@ -32,11 +32,11 @@ class TripletSeeder {
     DoubletsForMiddleSp topDoublets;
 
     /// Sorted container of bottom doublet indices with cotangent theta values
-    std::vector<IndexAndCotTheta> sortedBottoms;
+    std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedBottoms;
     /// Sorted container of top doublet indices with cotangent theta values
-    std::vector<IndexAndCotTheta> sortedTops;
+    std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedTops;
     /// Storage for the sorts of the bottom and the top doublets
-    SortStorage sortStorage;
+    DoubletsForMiddleSp::SortStorage sortStorage;
 
     /// Cache for triplet top candidates during seed formation
     TripletTopCandidates tripletTopCandidates;

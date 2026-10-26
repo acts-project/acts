@@ -12,9 +12,6 @@
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
 #include "Acts/Seeding/TripletSeedFinder.hpp"
 
-#include <cstddef>
-#include <span>
-
 #include <Eigen/Dense>
 
 namespace Acts {
@@ -49,8 +46,7 @@ void createAndFilterTriplets(TripletSeeder::Cache& cache,
                              DoubletCollections bottomDoublets,
                              const ConstSpacePointProxy& spM,
                              DoubletCollections topDoublets) {
-  for (std::size_t i = 0; i < bottomDoublets.size(); ++i) {
-    const DoubletForMiddleSp& bottomDoublet = bottomDoublets[i];
+  for (auto bottomDoublet : bottomDoublets) {
     if (topDoublets.empty()) {
       break;
     }
@@ -126,19 +122,19 @@ void createSeedsFromGroupsImpl(
 
   // combine doublets to triplets
   if (tripletFinder.config().sortedByCotTheta) {
-    sortByCotTheta(cache.bottomDoublets, cache.sortedBottoms,
-                   cache.sortStorage);
-    sortByCotTheta(cache.topDoublets, cache.sortedTops, cache.sortStorage);
+    cache.bottomDoublets.sortByCotTheta({0, cache.bottomDoublets.size()},
+                                        cache.sortedBottoms, cache.sortStorage);
+    cache.topDoublets.sortByCotTheta({0, cache.topDoublets.size()},
+                                     cache.sortedTops, cache.sortStorage);
 
     createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
-                            Subspan(cache.bottomDoublets, cache.sortedBottoms),
+                            cache.bottomDoublets.subset(cache.sortedBottoms),
                             middleSp,
-                            Subspan(cache.topDoublets, cache.sortedTops));
+                            cache.topDoublets.subset(cache.sortedTops));
   } else {
-    createAndFilterTriplets(
-        cache, tripletFinder, filter, spacePoints,
-        std::span<const DoubletForMiddleSp>(cache.bottomDoublets), middleSp,
-        std::span<const DoubletForMiddleSp>(cache.topDoublets));
+    createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
+                            cache.bottomDoublets.range(), middleSp,
+                            cache.topDoublets.range());
   }
 
   filter.filterTripletsMiddleFixed(spacePoints, outputSeeds);

@@ -22,19 +22,20 @@
 
 namespace Acts {
 
-void sortByCotTheta(const DoubletsForMiddleSp& doublets,
-                    std::vector<IndexAndCotTheta>& indexAndCotTheta) {
+void DoubletsForMiddleSp::sortByCotTheta(
+    const IndexRange& range,
+    std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
   SortStorage storage;
-  sortByCotTheta(doublets, indexAndCotTheta, storage);
+  sortByCotTheta(range, indexAndCotTheta, storage);
 }
 
-void sortByCotTheta(const DoubletsForMiddleSp& doublets,
-                    std::vector<IndexAndCotTheta>& indexAndCotTheta,
-                    SortStorage& storage) {
+void DoubletsForMiddleSp::sortByCotTheta(
+    const IndexRange& range, std::vector<IndexAndCotTheta>& indexAndCotTheta,
+    SortStorage& storage) const {
   indexAndCotTheta.clear();
-  indexAndCotTheta.reserve(doublets.size());
-  for (std::uint32_t i = 0; i < doublets.size(); ++i) {
-    indexAndCotTheta.push_back({i, doublets[i].cotTheta});
+  indexAndCotTheta.reserve(range.second - range.first);
+  for (Index i = range.first; i < range.second; ++i) {
+    indexAndCotTheta.emplace_back(i, m_doublets[i].cotTheta);
   }
 
   const auto cotThetaOf = [](const IndexAndCotTheta& item) {
@@ -281,8 +282,8 @@ class Impl final : public DoubletSeedFinder {
             calculateError(varianceZO, varianceRO, iDeltaR2, cotTheta);
 
         // fill output vectors
-        compatibleDoublets.push_back(
-            {indexO, cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
+        compatibleDoublets.emplace_back(indexO, cotTheta, iDeltaR, er, uT, vT,
+                                        xNewFrame, yNewFrame);
         continue;
       }
 
@@ -351,8 +352,8 @@ class Impl final : public DoubletSeedFinder {
           calculateError(varianceZO, varianceRO, iDeltaR2, cotTheta);
 
       // fill output vectors
-      compatibleDoublets.push_back(
-          {indexO, cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
+      compatibleDoublets.emplace_back(indexO, cotTheta, iDeltaR, er, uT, vT,
+                                      xNewFrame, yNewFrame);
     }
   }
 
