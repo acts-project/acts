@@ -19,9 +19,9 @@
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeDispatcher.hpp"
-#include "Acts/Utilities/Delegate.hpp" 
 
 #include <map>
 #include <memory>

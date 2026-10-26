@@ -883,7 +883,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
   };
 
   if (!accept(*m_cfg.beampipeVolume)) {
-    throw std::runtime_error("Beampipe volume is rejected by the volume filter");
+    throw std::runtime_error(
+        "Beampipe volume is rejected by the volume filter");
   }
 
   std::unordered_map<const TrackingVolume*, std::size_t> volumeIds;
@@ -901,7 +902,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
 
   geometry.apply([&](const TrackingVolume& volume) {
     if (!accept(volume)) {
-      ACTS_DEBUG("Volume " << volume.volumeName() << " rejected by user provided filter");
+      ACTS_DEBUG("Volume " << volume.volumeName()
+                           << " rejected by user provided filter");
       return;
     }
     auto& volPayload =
@@ -926,7 +928,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
   // Run again over volumes, can lookup volume index from pointer now
   geometry.apply([&](const TrackingVolume& volume) {
     if (!accept(volume)) {
-      ACTS_DEBUG("Volume " << volume.volumeName() << " rejected by user provided filter");
+      ACTS_DEBUG("Volume " << volume.volumeName()
+                           << " rejected by user provided filter");
       return;
     }
     auto& volPayload = detPayload.volumes.at(volumeIds.at(&volume));
