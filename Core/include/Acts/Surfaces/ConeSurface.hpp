@@ -103,19 +103,36 @@ class ConeSurface : public RegularSurface {
   /// @return Surface type identifier
   SurfaceType type() const override;
 
-  /// Return the measurement frame - this is needed for alignment, in particular
-  ///  for StraightLine and Perigee Surface
-  ///  - the default implementation is the RotationMatrix3 of the transform
+  /// Measurement frame (e_phi, n x e_phi, n) at @p position, with n the cone
+  /// normal.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the global position where the measurement frame is
-  /// constructed
-  /// @param direction is the momentum direction used for the measurement frame
-  /// construction
-  /// @return matrix that indicates the measurement frame
+  /// @param position is the global position where the frame is constructed
+  /// @param direction is unused
+  /// @return rotation matrix of the transverse frame
   RotationMatrix3 referenceFrame(const GeometryContext& gctx,
                                  const Vector3& position,
                                  const Vector3& direction) const final;
+
+  /// Jacobian from bound to free parameters.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
+  /// @return Jacobian from local to global
+  BoundToFreeMatrix boundToFreeJacobian(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const final;
+
+  /// Jacobian from free to bound parameters.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
+  /// @return Jacobian from global to local
+  FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const final;
 
   /// Return method for surface normal information
   ///

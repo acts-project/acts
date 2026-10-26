@@ -95,6 +95,15 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
   const Acts::Logger &logger() const { return m_logger; }
 };
 
+Blueprint &Blueprint::setVolumeLookupFactory(VolumeLookupFactory factory) {
+  m_volumeLookupFactory = std::move(factory);
+  return *this;
+}
+
+const VolumeLookupFactory &Blueprint::volumeLookupFactory() const {
+  return m_volumeLookupFactory;
+}
+
 Blueprint::Blueprint(const Config &config) : m_cfg(config) {}
 
 const std::string &Blueprint::name() const {
@@ -230,6 +239,13 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
     }
   });
 
+  if (m_volumeLookupFactory) {
+    auto lookup = m_volumeLookupFactory(gctx, *world, logger);
+    if (!lookup) {
+      throw std::invalid_argument("Volume lookup factory returned nullptr");
+    }
+    world->setVolumeLookup(std::move(lookup));
+  }
   return std::make_unique<TrackingGeometry>(
       std::shared_ptr<TrackingVolume>(std::move(world)), nullptr,
       GeometryIdentifierHook{}, logger, false);

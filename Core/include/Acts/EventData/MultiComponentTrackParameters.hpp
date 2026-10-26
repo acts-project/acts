@@ -253,6 +253,25 @@ class MultiComponentBoundTrackParameters {
     return m_particleHypothesis;
   }
 
+  /// Set the particle hypothesis.
+  /// @note The q/p parameter does not change. If the absolute charge changes,
+  ///       the absolute momentum changes too.
+  /// @param particleHypothesis The new particle hypothesis
+  void setParticleHypothesis(const ParticleHypothesis& particleHypothesis) {
+    m_particleHypothesis = particleHypothesis;
+  }
+
+  /// Copy the parameters with a different particle hypothesis.
+  /// @note The q/p parameter does not change. See setParticleHypothesis.
+  /// @param particleHypothesis The new particle hypothesis
+  /// @return Copy of the parameters with the new particle hypothesis
+  [[nodiscard]] MultiComponentBoundTrackParameters withParticleHypothesis(
+      const ParticleHypothesis& particleHypothesis) const {
+    MultiComponentBoundTrackParameters copy = *this;
+    copy.setParticleHypothesis(particleHypothesis);
+    return copy;
+  }
+
   /// Check if covariance matrices are available for the components
   /// @return True if covariance matrices are available, false otherwise
   bool hasCovariance() const { return m_hasCovariance; }

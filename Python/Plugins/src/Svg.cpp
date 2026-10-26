@@ -124,7 +124,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsSvg, svg) {
   {
     svg.def(
         "drawEtaLines",
-        [](const std::string& id, actsvg ::scalar z, actsvg::scalar r,
+        [](const std::string& id, actsvg::scalar z, actsvg::scalar r,
            const std::vector<actsvg::scalar>& etaMain,
            actsvg::scalar strokeWidthMain, unsigned int sizeMain,
            bool labelMain, const std::vector<actsvg::scalar>& etaSub,

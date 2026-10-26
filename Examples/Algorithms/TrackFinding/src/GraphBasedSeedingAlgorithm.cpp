@@ -40,6 +40,12 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // initialise the space point, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
+  m_outputFreeParameters.maybeInitialize(m_cfg.outputFreeParameters);
+  if (m_outputFreeParameters.isInitialized() &&
+      m_cfg.magneticField == nullptr) {
+    throw std::invalid_argument(
+        "The free parameters of the seeds need a magnetic field");
+  }
   m_inputClusters.initialize(m_cfg.inputClusters);
 
   // parse the mapping file and turn into map
@@ -153,8 +159,39 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // create the seeds
 
-  m_finder->createSeeds(nodeStorage, m_internalRoi.value(), *m_gbtsGraphBuilder,
-                        *m_filter, options, seeds);
+  std::vector<std::optional<Acts::Experimental::GbtsSeedFit>> fits;
+  m_finder->createSeeds(
+      nodeStorage, m_internalRoi.value(), *m_gbtsGraphBuilder, *m_filter,
+      options, seeds, m_outputFreeParameters.isInitialized() ? &fits : nullptr);
+
+  // free track parameters from the fit of the tracking filter
+  if (m_outputFreeParameters.isInitialized()) {
+    std::vector<Acts::FreeVector> freeParameters;
+    auto fieldCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
+    freeParameters.reserve(seeds.size());
+    for (std::size_t i = 0; i < seeds.size(); ++i) {
+      // zeros for a seed without a fit
+      if (!fits.at(i).has_value()) {
+        freeParameters.push_back(Acts::FreeVector::Zero());
+        continue;
+      }
+      const Acts::Experimental::GbtsSeedFit &fit = fits.at(i).value();
+      // the field halfway between the innermost and outermost space point
+      const auto outer = spacePoints[seeds.at(i).spacePointIndices().back()];
+      const Acts::Vector3 outerPosition(outer.x(), outer.y(), outer.z());
+      const Acts::Vector3 fieldPosition = 0.5 * (fit.position + outerPosition);
+      const auto field =
+          m_cfg.magneticField->getField(fieldPosition, fieldCache);
+      if (!field.ok()) {
+        ACTS_ERROR("Field lookup error: " << field.error());
+        return ProcessCode::ABORT;
+      }
+      freeParameters.push_back(
+          Acts::Experimental::freeParametersFromGbtsSeedFit(fit, *field)
+              .value_or(Acts::FreeVector::Zero()));
+    }
+    m_outputFreeParameters(ctx, std::move(freeParameters));
+  }
 
   m_outputSeeds(ctx, std::move(seeds));
 
@@ -354,12 +391,11 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   const auto &cfg1 = m_cfg.seedFinderConfig;
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
   ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
-  ACTS_DEBUG("edgeMaskMinEta: " << cfg1.edgeMaskMinEta);
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
   ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);
-  ACTS_DEBUG("ccaMaxIterations: " << cfg1.ccaMaxIterations);
+  ACTS_DEBUG("maxChainLength: " << cfg1.maxChainLength);
   ACTS_DEBUG("minSeedLevel: " << static_cast<std::uint32_t>(cfg1.minSeedLevel));
   ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
   ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);

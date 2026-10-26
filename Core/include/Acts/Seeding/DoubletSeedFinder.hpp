@@ -15,6 +15,7 @@
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <vector>
 
@@ -89,20 +90,30 @@ class DoubletsForMiddleSp {
   /// Type alias for subset of index and cotTheta pairs
   using IndexAndCotThetaSubset = std::span<const IndexAndCotTheta>;
 
-  /// Sort doublets by cotTheta within given range
+  /// Storage for sortByCotTheta, kept by the caller so that sorting does not
+  /// allocate
+  struct SortStorage {
+    /// Doublets being sorted
+    std::vector<IndexAndCotTheta> scratch;
+    /// Bucket counts and indices
+    std::vector<std::uint32_t> buckets;
+  };
+
+  /// Sort doublets by cotTheta within given range. Doublets with equal
+  /// cotTheta keep their index order.
   /// @param range Index range to sort within
   /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
   void sortByCotTheta(const IndexRange& range,
-                      std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
-    indexAndCotTheta.clear();
-    indexAndCotTheta.reserve(range.second - range.first);
-    for (Index i = range.first; i < range.second; ++i) {
-      indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
-    }
-    std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
-      return item.cotTheta;
-    });
-  }
+                      std::vector<IndexAndCotTheta>& indexAndCotTheta) const;
+
+  /// Sort doublets by cotTheta within given range, with storage the caller
+  /// keeps between calls. Doublets with equal cotTheta keep their index order.
+  /// @param range Index range to sort within
+  /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
+  /// @param storage Storage for the sort, of any content
+  void sortByCotTheta(const IndexRange& range,
+                      std::vector<IndexAndCotTheta>& indexAndCotTheta,
+                      SortStorage& storage) const;
 
   /// Proxy accessor for a single doublet entry.
   class Proxy {
