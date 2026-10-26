@@ -73,7 +73,7 @@ struct SurfaceCollector {
   /// The selector used for this surface
   Selector selector;
 
-  /// Simple result struct to be returned
+  /// Simple state struct of the actor
   /// It has all the SurfaceHit objects that
   /// are collected (and thus have been selected)
   struct this_result {
@@ -81,8 +81,8 @@ struct SurfaceCollector {
     std::vector<SurfaceHit> collected;
   };
 
-  /// Type alias for collector result type
-  using result_type = this_result;
+  /// Type alias for the collector state type
+  using state_type = this_result;
 
   /// Collector action for the ActionList of the Propagator
   /// It checks if the propagator state has a current surface,
@@ -96,13 +96,13 @@ struct SurfaceCollector {
   /// @param [in,out] state is the mutable stepper state object
   /// @param [in] stepper The stepper in use
   /// @param [in] navigator The navigator in use
-  /// @param [in,out] result is the mutable result object
+  /// @param [in,out] actorState is the mutable state of the actor
   /// @param logger a logger instance
   /// @return Result indicating success or failure
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, result_type& result,
+                   const navigator_t& navigator, state_type& actorState,
                    const Logger& logger) const {
     if (state.stage == PropagatorStage::postPropagation) {
       return {};
@@ -117,8 +117,8 @@ struct SurfaceCollector {
       surface_hit.surface = currentSurface;
       surface_hit.position = stepper.position(state.stepping);
       surface_hit.direction = stepper.direction(state.stepping);
-      // Save if in the result
-      result.collected.push_back(surface_hit);
+      // Save it in the actor state
+      actorState.collected.push_back(surface_hit);
       // Screen output
       ACTS_VERBOSE("Collect surface  " << currentSurface->geometryId());
     }
@@ -137,8 +137,8 @@ struct BoundParameterRecorder {
   /// The selector used for this surface
   Selector selector;
 
-  /// Type alias for collector result type
-  using result_type = std::vector<BoundTrackParameters>;
+  /// Type alias for the collector state type
+  using state_type = std::vector<BoundTrackParameters>;
 
   /// Collector action for the ActionList of the Propagator
   /// It checks if the propagator state has a current surface,
@@ -152,13 +152,13 @@ struct BoundParameterRecorder {
   /// @param [in,out] state is the mutable stepper state object
   /// @param [in] stepper The stepper in use
   /// @param [in] navigator The navigator in use
-  /// @param [in,out] result is the mutable result object
+  /// @param [in,out] actorState is the mutable state of the actor
   /// @param logger a logger instance
   /// @return Result indicating success or failure
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, result_type& result,
+                   const navigator_t& navigator, state_type& actorState,
                    const Logger& logger) const {
     if (state.stage == PropagatorStage::postPropagation) {
       return {};
@@ -172,7 +172,7 @@ struct BoundParameterRecorder {
       if (stepper.transportToBound(state.stepping, *currentSurface).ok()) {
         auto res = stepper.boundParameters(state.stepping, *currentSurface);
         if (res.ok()) {
-          result.emplace_back(std::move(*res));
+          actorState.emplace_back(std::move(*res));
         }
       }
 

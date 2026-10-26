@@ -158,8 +158,7 @@ class VoidNavigator {
       }
       state.additionalSurfaces.push_back({surface});
     }
-    // The target is an additional surface with the bounds check the target
-    // aborter applies
+    // The target is an additional surface without a boundary tolerance
     if (args.targetSurface != nullptr) {
       state.additionalSurfaces.push_back(
           {{args.targetSurface, BoundaryTolerance::None()}});

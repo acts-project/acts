@@ -18,15 +18,17 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/detail/AbortConditions.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -96,8 +98,8 @@ struct ReferenceTrajectoryBuilderResult {
   /// Whether the reference trajectory building is finished
   bool finished = false;
 
-  /// Path limit aborter
-  PathLimitReached pathLimitReached;
+  /// Signed path limit of the loop protection
+  double pathLimit = std::numeric_limits<double>::max();
 };
 
 /// Reference trajectory implementation.
@@ -148,11 +150,11 @@ class ReferenceTrajectoryBuilder {
 
   class Actor {
    public:
-    /// Broadcast the result_type
-    using result_type = ResultType;
+    /// Type alias for the actor state
+    using state_type = ResultType;
 
-    /// The target surface aborter
-    SurfaceReached targetReached;
+    /// The surface to stop at, or nullptr for none
+    const Surface* targetSurface = nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -163,12 +165,6 @@ class ReferenceTrajectoryBuilder {
     /// Whether to include non-linear correction during global to local
     /// transformation
     FreeToBoundCorrection freeToBoundCorrection;
-
-    /// End of world aborter
-    EndOfWorldReached endOfWorldReached;
-
-    /// Volume constraint aborter
-    VolumeConstraintAborter volumeConstraintAborter;
 
     /// The logger instance
     const Logger* actorLogger{nullptr};
@@ -189,7 +185,7 @@ class ReferenceTrajectoryBuilder {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                     const navigator_t& navigator, result_type& result,
+                     const navigator_t& navigator, state_type& result,
                      const Logger& /*logger*/) const {
       assert(result.trajectory && "No MultiTrajectory set");
 
@@ -203,10 +199,8 @@ class ReferenceTrajectoryBuilder {
                    << " momentum: "
                    << stepper.absoluteMomentum(state.stepping));
 
-      if (result.pathLimitReached.internalLimit ==
-          std::numeric_limits<double>::max()) {
-        detail::setupLoopProtection(state, stepper,
-                                    result.pathLimitReached.internalLimit, true,
+      if (result.pathLimit == std::numeric_limits<double>::max()) {
+        detail::setupLoopProtection(state, stepper, result.pathLimit, true,
                                     logger());
       }
 
@@ -223,13 +217,13 @@ class ReferenceTrajectoryBuilder {
       }
 
       const bool isEndOfWorldReached =
-          endOfWorldReached.checkAbort(state, stepper, navigator, logger());
-      const bool isVolumeConstraintReached = volumeConstraintAborter.checkAbort(
-          state, stepper, navigator, logger());
-      const bool isPathLimitReached = result.pathLimitReached.checkAbort(
-          state, stepper, navigator, logger());
+          detail::endOfWorldReached(state, navigator);
+      const bool isVolumeConstraintReached =
+          detail::volumeConstraintReached(state, navigator, logger());
+      const bool isPathLimitReached =
+          detail::pathLimitReached(state, stepper, result.pathLimit, logger());
       const bool isTargetReached =
-          targetReached.checkAbort(state, stepper, navigator, logger());
+          detail::surfaceReached(state, navigator, targetSurface, logger());
       if (isEndOfWorldReached || isVolumeConstraintReached ||
           isPathLimitReached || isTargetReached) {
         ACTS_VERBOSE(
@@ -243,15 +237,14 @@ class ReferenceTrajectoryBuilder {
           ACTS_VERBOSE("Setting parameters at target surface");
 
           auto transportRes =
-              stepper.transportToBound(state.stepping, *targetReached.surface);
+              stepper.transportToBound(state.stepping, *targetSurface);
           if (!transportRes.ok()) {
             ACTS_DEBUG("Error while transporting to the target surface: "
                        << transportRes.error() << " "
                        << transportRes.error().message());
             return transportRes.error();
           }
-          auto res =
-              stepper.boundParameters(state.stepping, *targetReached.surface);
+          auto res = stepper.boundParameters(state.stepping, *targetSurface);
           if (!res.ok()) {
             ACTS_DEBUG("Error while binding to the target surface: "
                        << res.error() << " " << res.error().message());
@@ -269,7 +262,7 @@ class ReferenceTrajectoryBuilder {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, const result_type& result,
+                    const navigator_t& /*navigator*/, const state_type& result,
                     const Logger& /*logger*/) const {
       return result.finished;
     }
@@ -280,7 +273,7 @@ class ReferenceTrajectoryBuilder {
                                propagator_state_t& state,
                                const stepper_t& stepper,
                                const navigator_t& navigator,
-                               result_type& result) const {
+                               state_type& result) const {
       auto transportRes = stepper.transportToBound(state.stepping, surface,
                                                    freeToBoundCorrection);
       if (!transportRes.ok()) {
@@ -580,7 +573,7 @@ class ReferenceTrajectoryBuilder {
   auto makePropagatorOptions(const Options& actorOptions,
                              const std::vector<const Surface*>* sSequence,
                              const Surface* targetSurface) const {
-    using Actors = ActorList<Actor>;
+    using Actors = ActorList<DefaultActor, Actor>;
     using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
     PropagatorOptions propagatorOptions(actorOptions.geoContext,
@@ -606,8 +599,8 @@ class ReferenceTrajectoryBuilder {
           *targetSurface, BoundaryTolerance::None());
     }
 
-    auto& actor = propagatorOptions.actorList.template get<Actor>();
-    actor.targetReached.surface = targetSurface;
+    auto& actor = propagatorOptions.actor.template get<Actor>();
+    actor.targetSurface = targetSurface;
     actor.multipleScattering = actorOptions.multipleScattering;
     actor.energyLoss = actorOptions.energyLoss;
     actor.freeToBoundCorrection = actorOptions.freeToBoundCorrection;
@@ -632,7 +625,7 @@ class ReferenceTrajectoryBuilder {
       return propagatorInitResult.error();
     }
 
-    auto& actorResult = propagatorState.template get<ResultType>();
+    auto& actorResult = propagatorState.actorState.template get<ResultType>();
     actorResult.trajectory = &trackContainer.trackStateContainer();
 
     auto result = m_propagator.propagate(propagatorState);

@@ -33,8 +33,8 @@ struct MaterialInteractor {
   /// Whether to add or remove noise.
   NoiseUpdateMode noiseUpdateMode = NoiseUpdateMode::addNoise;
 
-  /// Type alias for material interaction result
-  using result_type = RecordedMaterial;
+  /// Type alias for the material interaction state
+  using state_type = RecordedMaterial;
 
   /// @brief Interaction with detector material for the ActionList
   /// of the Propagator
@@ -51,13 +51,13 @@ struct MaterialInteractor {
   /// @param state is the mutable propagator state object
   /// @param stepper The stepper in use
   /// @param navigator The navigator in use
-  /// @param result is the mutable result state object
+  /// @param actorState is the mutable state of the actor
   /// @param logger a logger instance
   /// @return Result indicating success or failure of the material interaction
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, result_type& result,
+                   const navigator_t& navigator, state_type& actorState,
                    const Logger& logger) const {
     if (state.stage == PropagatorStage::postPropagation) {
       return Result<void>::success();
@@ -124,17 +124,17 @@ struct MaterialInteractor {
 
         // Record the result
         recordResult(state, stepper, navigator, slab, initialMomentum, effects,
-                     result);
+                     actorState);
       }
     }
 
     // Handle volume material
 
     // In case of Volume material update the result of the previous step
-    if (!result.materialInteractions.empty() &&
-        !result.materialInteractions.back().volume.empty() &&
-        result.materialInteractions.back().updatedVolumeStep == false) {
-      updateResult(state, stepper, result);
+    if (!actorState.materialInteractions.empty() &&
+        !actorState.materialInteractions.back().volume.empty() &&
+        actorState.materialInteractions.back().updatedVolumeStep == false) {
+      updateResult(state, stepper, actorState);
     }
 
     const TrackingVolume* volume = navigator.currentVolume(state.navigation);
@@ -150,7 +150,7 @@ struct MaterialInteractor {
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
       if (interaction.evaluateMaterialSlab(state, navigator)) {
         // Record the result
-        recordResult(interaction, result);
+        recordResult(interaction, actorState);
       }
     }
 
@@ -170,16 +170,16 @@ struct MaterialInteractor {
   /// @param [in] slab The material slab
   /// @param [in] initialMomentum Initial momentum before the interaction
   /// @param [in] effects The material effects
-  /// @param [in, out] result Result storage
+  /// @param [in, out] actorState State of the actor
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void recordResult(const propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& navigator, const MaterialSlab& slab,
                     double initialMomentum,
                     const detail::PointwiseMaterialEffects& effects,
-                    result_type& result) const {
-    result.materialInX0 += slab.thicknessInX0();
-    result.materialInL0 += slab.thicknessInL0();
+                    state_type& actorState) const {
+    actorState.materialInX0 += slab.thicknessInX0();
+    actorState.materialInL0 += slab.thicknessInL0();
 
     // Record the interaction if requested
     if (!recordInteractions) {
@@ -207,15 +207,15 @@ struct MaterialInteractor {
     mi.volume = InteractionVolume();
     mi.pathCorrection = pathCorrection;
     mi.materialSlab = slab;
-    result.materialInteractions.push_back(std::move(mi));
+    actorState.materialInteractions.push_back(std::move(mi));
   }
 
   /// @brief This function records the material effect
   ///
   /// @param [in] interaction Interaction cache container
-  /// @param [in, out] result Result storage
+  /// @param [in, out] actorState State of the actor
   void recordResult(const detail::VolumeMaterialInteraction& interaction,
-                    result_type& result) const {
+                    state_type& actorState) const {
     // Record the interaction if requested
     if (!recordInteractions) {
       return;
@@ -229,34 +229,34 @@ struct MaterialInteractor {
     mi.volume = interaction.volume;
     mi.pathCorrection = interaction.pathCorrection;
     mi.materialSlab = interaction.slab;
-    result.materialInteractions.push_back(std::move(mi));
+    actorState.materialInteractions.push_back(std::move(mi));
   }
 
   /// @brief This function update the previous material step
   ///
   /// @param [in,out] state The state object
   /// @param [in] stepper The stepper instance
-  /// @param [in, out] result Result storage
+  /// @param [in, out] actorState State of the actor
   template <typename propagator_state_t, typename stepper_t>
   void updateResult(propagator_state_t& state, const stepper_t& stepper,
-                    result_type& result) const {
+                    state_type& actorState) const {
     // Update the previous interaction if requested
     if (!recordInteractions) {
       return;
     }
 
     Vector3 shift = stepper.position(state.stepping) -
-                    result.materialInteractions.back().position;
+                    actorState.materialInteractions.back().position;
     double momentum = stepper.direction(state.stepping).norm();
-    result.materialInteractions.back().deltaP =
-        momentum - result.materialInteractions.back().direction.norm();
-    result.materialInteractions.back().materialSlab.scaleThickness(
+    actorState.materialInteractions.back().deltaP =
+        momentum - actorState.materialInteractions.back().direction.norm();
+    actorState.materialInteractions.back().materialSlab.scaleThickness(
         shift.norm());
-    result.materialInteractions.back().updatedVolumeStep = true;
-    result.materialInX0 +=
-        result.materialInteractions.back().materialSlab.thicknessInX0();
-    result.materialInL0 +=
-        result.materialInteractions.back().materialSlab.thicknessInL0();
+    actorState.materialInteractions.back().updatedVolumeStep = true;
+    actorState.materialInX0 +=
+        actorState.materialInteractions.back().materialSlab.thicknessInX0();
+    actorState.materialInL0 +=
+        actorState.materialInteractions.back().materialSlab.thicknessInL0();
   }
 };
 

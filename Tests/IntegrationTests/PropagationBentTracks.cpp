@@ -55,14 +55,17 @@ std::vector<double> xPositionsOfPassedSurfaces(Navigator::Config navCfg,
       Vector4(0.01, 0, 0, 0), dir.normalized(), 1 / 1_GeV, std::nullopt,
       ParticleHypothesis::pion());
 
-  TestPropagator::Options<ActorList<detail::SteppingLogger, EndOfWorldReached>>
-      opts(geoCtx, magCtx);
+  TestPropagator::Options<ActorList<DefaultActor, detail::SteppingLogger>> opts(
+      geoCtx, magCtx);
+  opts.stopAtEndOfWorld = true;
 
-  auto res = propagator.propagate(start, opts);
+  auto state = propagator.makeState(opts);
+  auto res = propagator.propagate(state, start);
 
   BOOST_CHECK(res.ok());
 
-  const auto &stepLog = res->get<detail::SteppingLogger::result_type>();
+  const auto &stepLog =
+      state.actorState.get<detail::SteppingLogger::state_type>();
 
   std::vector<double> xPositions;
   for (const auto &step : stepLog.steps) {

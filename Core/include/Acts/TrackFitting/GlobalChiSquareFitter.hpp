@@ -22,9 +22,9 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Interactions.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitterBackend.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitterError.hpp"
@@ -527,8 +527,8 @@ class Gx2Fitter {
   /// track.
   class Actor {
    public:
-    /// Broadcast the result_type
-    using result_type = Gx2FitterResult<traj_t>;
+    /// Type alias for the actor state
+    using state_type = Gx2FitterResult<traj_t>;
 
     /// The target surface
     const Surface* targetSurface = nullptr;
@@ -557,9 +557,6 @@ class Gx2Fitter {
 
     Gx2FitterExtensions<traj_t> extensions;
 
-    /// The Surface being
-    SurfaceReached targetReached;
-
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
@@ -584,7 +581,7 @@ class Gx2Fitter {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                     const navigator_t& navigator, result_type& result,
+                     const navigator_t& navigator, state_type& result,
                      const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
@@ -1014,8 +1011,8 @@ class Gx2Fitter {
     // Create the ActorList
     using GX2FActor = Actor;
 
-    using GX2FResult = typename GX2FActor::result_type;
-    using Actors = Acts::ActorList<GX2FActor>;
+    using GX2FResult = typename GX2FActor::state_type;
+    using Actors = Acts::ActorList<DefaultActor, GX2FActor>;
 
     using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
@@ -1066,7 +1063,7 @@ class Gx2Fitter {
         propagatorOptions.navigation.registerMeasurementSurface(*surface);
       }
 
-      auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
+      auto& gx2fActor = propagatorOptions.actor.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = false;
       gx2fActor.extensions = gx2fOptions.extensions;
@@ -1085,7 +1082,8 @@ class Gx2Fitter {
         return propagatorInitResult.error();
       }
 
-      auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
+      auto& r =
+          propagatorState.actorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trajectoryTempBackend;
 
       // Clear the track container. It could be more performant to update the
@@ -1095,19 +1093,14 @@ class Gx2Fitter {
       // Run the fitter
       auto propagationResult = m_propagator.propagate(propagatorState);
 
-      auto result =
-          m_propagator.makeResult(std::move(propagatorState), propagationResult,
-                                  propagatorOptions, false);
-
-      if (!result.ok()) {
-        ACTS_DEBUG("Propagation failed: " << result.error());
-        return result.error();
+      if (!propagationResult.ok()) {
+        ACTS_DEBUG("Propagation failed: " << propagationResult.error());
+        return propagationResult.error();
       }
 
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements
-      auto& propRes = *result;
-      GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
+      GX2FResult gx2fResult = std::move(r);
 
       auto track = trackContainerTemp.makeTrack();
       tipIndex = gx2fResult.lastMeasurementIndex;
@@ -1232,7 +1225,7 @@ class Gx2Fitter {
         propagatorOptions.navigation.registerMeasurementSurface(*surface);
       }
 
-      auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
+      auto& gx2fActor = propagatorOptions.actor.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = true;
       gx2fActor.extensions = gx2fOptions.extensions;
@@ -1251,7 +1244,8 @@ class Gx2Fitter {
         return propagatorInitResult.error();
       }
 
-      auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
+      auto& r =
+          propagatorState.actorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trajectoryTempBackend;
 
       // Clear the track container. It could be more performant to update the
@@ -1261,19 +1255,14 @@ class Gx2Fitter {
       // Run the fitter
       auto propagationResult = m_propagator.propagate(propagatorState);
 
-      auto result =
-          m_propagator.makeResult(std::move(propagatorState), propagationResult,
-                                  propagatorOptions, false);
-
-      if (!result.ok()) {
-        ACTS_DEBUG("Propagation failed: " << result.error());
-        return result.error();
+      if (!propagationResult.ok()) {
+        ACTS_DEBUG("Propagation failed: " << propagationResult.error());
+        return propagationResult.error();
       }
 
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements
-      auto& propRes = *result;
-      GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
+      GX2FResult gx2fResult = std::move(r);
 
       auto track = trackContainerTemp.makeTrack();
       tipIndex = gx2fResult.lastMeasurementIndex;
@@ -1384,7 +1373,7 @@ class Gx2Fitter {
         propagatorOptions.navigation.registerMeasurementSurface(*surface);
       }
 
-      auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
+      auto& gx2fActor = propagatorOptions.actor.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = multipleScattering;
       gx2fActor.extensions = gx2fOptions.extensions;
@@ -1403,23 +1392,19 @@ class Gx2Fitter {
         return propagatorInitResult.error();
       }
 
-      auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
+      auto& r =
+          propagatorState.actorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
       // Run the fitter
       auto propagationResult = m_propagator.propagate(propagatorState);
 
-      auto result =
-          m_propagator.makeResult(std::move(propagatorState), propagationResult,
-                                  propagatorOptions, false);
-
-      if (!result.ok()) {
-        ACTS_DEBUG("Propagation failed: " << result.error());
-        return result.error();
+      if (!propagationResult.ok()) {
+        ACTS_DEBUG("Propagation failed: " << propagationResult.error());
+        return propagationResult.error();
       }
 
-      auto& propRes = *result;
-      GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
+      GX2FResult gx2fResult = std::move(r);
 
       if (tipIndex != gx2fResult.lastMeasurementIndex) {
         ACTS_INFO("Final fit used unreachable measurements.");

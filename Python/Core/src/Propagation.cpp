@@ -98,6 +98,8 @@ void addPropagation(py::module_& m) {
         .def_readwrite("direction", &PropagatorPlainOptions::direction)
         .def_readwrite("maxSteps", &PropagatorPlainOptions::maxSteps)
         .def_readwrite("pathLimit", &PropagatorPlainOptions::pathLimit)
+        .def_readwrite("stopAtEndOfWorld",
+                       &PropagatorPlainOptions::stopAtEndOfWorld)
         .def_readwrite("loopProtection",
                        &PropagatorPlainOptions::loopProtection)
         .def_readwrite("surfaceTolerance",

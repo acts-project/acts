@@ -30,7 +30,6 @@
 
 namespace Acts {
 class Logger;
-struct EndOfWorldReached;
 }  // namespace Acts
 
 using namespace Acts;
@@ -58,7 +57,7 @@ struct StepWiseActor {
     bool finalized = false;
   };
   /// Broadcast the result type
-  using result_type = this_result;
+  using state_type = this_result;
 
   /// @brief Kalman sequence operation
   ///
@@ -73,7 +72,7 @@ struct StepWiseActor {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, result_type& result,
+                   const navigator_t& navigator, state_type& result,
                    const Logger& /*logger*/) const {
     // Listen to the surface and create bound state where necessary
     auto surface = navigator.currentSurface(state.navigation);
@@ -131,16 +130,17 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
       ParticleHypothesis::pion());
 
   // Create the ActionList and AbortList
-  using StepWiseResult = StepWiseActor::result_type;
-  using StepWiseActors = ActorList<StepWiseActor, EndOfWorldReached>;
+  using StepWiseResult = StepWiseActor::state_type;
+  using StepWiseActors = ActorList<DefaultActor, StepWiseActor>;
 
   // Create some options
   using StepWiseOptions = Propagator::Options<StepWiseActors>;
   StepWiseOptions swOptions(tgContext, mfContext);
+  swOptions.stopAtEndOfWorld = true;
 
-  using PlainActors = ActorList<EndOfWorldReached>;
-  using PlainOptions = Propagator::Options<PlainActors>;
+  using PlainOptions = Propagator::Options<>;
   PlainOptions pOptions(tgContext, mfContext);
+  pOptions.stopAtEndOfWorld = true;
 
   // Run the standard propagation
   const auto& pResult = propagator.propagate(start, pOptions).value();
@@ -148,8 +148,9 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   const auto& pJacobian = *(pResult.transportJacobian);
 
   // Run the stepwise propagation
-  const auto& swResult = propagator.propagate(start, swOptions).value();
-  auto swJacobianTest = swResult.template get<StepWiseResult>();
+  auto swState = propagator.makeState(swOptions);
+  const auto& swResult = propagator.propagate(swState, start).value();
+  auto swJacobianTest = swState.actorState.template get<StepWiseResult>();
 
   // (1) Path length test
   double accPath = 0.;

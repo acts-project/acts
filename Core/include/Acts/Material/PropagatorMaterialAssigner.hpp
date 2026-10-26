@@ -13,7 +13,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Propagator/ActorList.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -37,7 +37,7 @@ struct MaterialSurfaceIdentifier {
 
 /// An Interaction volume collector with unique counting
 struct InteractionVolumeCollector {
-  /// Simple result struct that holds the collected volumes
+  /// Simple state struct that holds the collected volumes
   ///
   /// @note the map is to avoid double counting as this is
   /// called in an action list
@@ -46,8 +46,8 @@ struct InteractionVolumeCollector {
     std::map<GeometryIdentifier, IAssignmentFinder::VolumeAssignment> collected;
   };
 
-  /// Type alias for volume collection result
-  using result_type = this_result;
+  /// Type alias for the volume collection state
+  using state_type = this_result;
 
   /// Collector action for the ActionList of the Propagator
   /// It checks if the propagator state has a current volume,
@@ -61,27 +61,28 @@ struct InteractionVolumeCollector {
   /// @param [in,out] state is the mutable stepper state object
   /// @param [in] stepper The stepper in use
   /// @param [in] navigator The navigator in use
-  /// @param [in,out] result is the mutable result object
+  /// @param [in,out] actorState is the mutable state of the actor
   /// @return Result object indicating success or failure
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, result_type& result,
+                   const navigator_t& navigator, state_type& actorState,
                    const Logger& /*logger*/) const {
     // Retrieve the current volume
     auto currentVolume = navigator.currentVolume(state.navigation);
 
     // The current volume has been assigned by the navigator
     if (currentVolume != nullptr) {
-      auto collIt = result.collected.find(currentVolume->geometryId());
+      auto collIt = actorState.collected.find(currentVolume->geometryId());
       // Check if the volume has been collected and if it has material
-      if (collIt == result.collected.end() && currentVolume->hasMaterial()) {
+      if (collIt == actorState.collected.end() &&
+          currentVolume->hasMaterial()) {
         Vector3 entryPosition = stepper.position(state.stepping);
         Vector3 exitPosition = entryPosition;
         IAssignmentFinder::VolumeAssignment vAssignment{
             InteractionVolume(currentVolume), entryPosition, exitPosition};
-        result.collected.emplace(currentVolume->geometryId(), vAssignment);
-      } else if (collIt != result.collected.end()) {
+        actorState.collected.emplace(currentVolume->geometryId(), vAssignment);
+      } else if (collIt != actorState.collected.end()) {
         // Update the exit position
         (collIt->second).exit = stepper.position(state.stepping);
       }
@@ -133,31 +134,32 @@ class PropagatorMaterialAssigner /*final*/ : public IAssignmentFinder {
         makeVector4(position, 0), direction, 1, std::nullopt,
         ParticleHypothesis::geantino());
 
-    // Prepare Action list and abort list
+    // Collect the material surfaces and volumes up to the end of the world
     using MaterialSurfaceCollector =
         SurfaceCollector<MaterialSurfaceIdentifier>;
-    using ActorList = ActorList<MaterialSurfaceCollector,
-                                InteractionVolumeCollector, EndOfWorldReached>;
+    using ActorList = ActorList<DefaultActor, MaterialSurfaceCollector,
+                                InteractionVolumeCollector>;
     using PropagatorOptions =
         typename propagator_t::template Options<ActorList>;
 
     PropagatorOptions options(gctx, mctx);
+    options.stopAtEndOfWorld = true;
 
-    const auto& result = m_propagator.propagate(start, options, false).value();
+    auto state = m_propagator.makeState(options);
+    m_propagator.propagate(state, start, nullptr, false).value();
 
     // The surface collection results
-    auto scResult =
-        result.template get<MaterialSurfaceCollector::result_type>();
-    auto mappingSurfaces = scResult.collected;
+    const auto& scResult =
+        state.actorState.template get<MaterialSurfaceCollector::state_type>();
 
-    for (auto& mSurface : mappingSurfaces) {
+    for (const auto& mSurface : scResult.collected) {
       candidates.first.push_back(IAssignmentFinder::SurfaceAssignment{
           mSurface.surface, mSurface.position, direction});
     }
 
     // The volume collection results
-    auto vcResult =
-        result.template get<InteractionVolumeCollector::result_type>();
+    const auto& vcResult =
+        state.actorState.template get<InteractionVolumeCollector::state_type>();
     for (const auto& [geoId, vIntersection] : vcResult.collected) {
       candidates.second.push_back(vIntersection);
     }
