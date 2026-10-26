@@ -171,8 +171,11 @@ class Impl final : public DoubletSeedFinder {
     // are made for every candidate first, then the other cuts for those that
     // passed
     constexpr std::size_t blockSize = 256;
-    std::uint32_t passesZRTimeCuts[blockSize];
-    SpacePointIndex passedIndices[blockSize];
+    // NOLINTBEGIN(cppcoreguidelines-pro-type-member-init)
+    // measured difference with initialization - please don't remove this without profiling
+    std::array<std::uint32_t, blockSize> passesZRTimeCuts;
+    std::array<SpacePointIndex, blockSize> passedIndices;
+    // NOLINTEND(cppcoreguidelines-pro-type-member-init)
 
     for (std::size_t blockBegin = 0; blockBegin < nCandidates;
          blockBegin += blockSize) {
