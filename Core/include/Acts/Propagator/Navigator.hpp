@@ -145,6 +145,10 @@ class Navigator final {
     /// Navigation options configuration
     Options options;
 
+    /// Latest global geometric curvature supplied at a public navigation entry
+    /// point. Forwarded to policy creation, validity, and candidate queries.
+    Vector3 curvature = Vector3::Zero();
+
     /// Management of policy state allocation and deallocation
     NavigationPolicyStateManager policyStateManager;
 
@@ -372,10 +376,12 @@ class Navigator final {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
+  /// @param curvature Current global geometric curvature (inverse length)
   ///
   /// @return The next target surface
   NavigationTarget nextTarget(State& state, const Vector3& position,
-                              const Vector3& direction) const;
+                              const Vector3& direction,
+                              const Vector3& curvature = Vector3::Zero()) const;
 
   /// @brief Check if the current target is still valid
   ///
@@ -384,10 +390,12 @@ class Navigator final {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
+  /// @param curvature Current global geometric curvature (inverse length)
   ///
   /// @return True if the target is valid
   bool checkTargetValid(State& state, const Vector3& position,
-                        const Vector3& direction) const;
+                        const Vector3& direction,
+                        const Vector3& curvature = Vector3::Zero()) const;
 
   /// @brief Handle the surface reached
   ///
@@ -396,10 +404,11 @@ class Navigator final {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
+  /// @param curvature Current global geometric curvature (inverse length)
   /// @param surface The surface reached
   void handleSurfaceReached(State& state, const Vector3& position,
-                            const Vector3& direction,
-                            const Surface& surface) const;
+                            const Vector3& direction, const Surface& surface,
+                            const Vector3& curvature = Vector3::Zero()) const;
 
  private:
   /// @brief Resolve the extended surfaces of the options
