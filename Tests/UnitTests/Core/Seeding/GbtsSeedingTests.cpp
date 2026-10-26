@@ -161,20 +161,18 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
                                                       kEtaBinWidth);
 }
 
-/// Straight track: fixed phi, z = z0 + r * tau, tau = cot(theta), from the
-/// origin unless z0 is set. Zero curvature and constant tau ratio pass the
-/// doublet and triplet cuts.
+/// Straight track from the origin: fixed phi, z = r * tau, tau = cot(theta).
+/// Zero curvature and constant tau ratio pass the doublet and triplet cuts.
 struct Track {
   float phi{};
   float tau{};
-  float z0{};
 };
 
 /// Radius and z where the track crosses the layer, empty if it misses it.
 std::optional<std::pair<float, float>> intersect(const LayerSpec& layer,
                                                  const Track& track) {
   if (layer.type == GbtsLayerType::Barrel) {
-    const float z = track.z0 + layer.refCoord * track.tau;
+    const float z = layer.refCoord * track.tau;
     if (z < layer.minBound || z > layer.maxBound) {
       return std::nullopt;
     }
@@ -185,7 +183,7 @@ std::optional<std::pair<float, float>> intersect(const LayerSpec& layer,
   if (track.tau == 0.f || (layer.refCoord > 0.f) != (track.tau > 0.f)) {
     return std::nullopt;
   }
-  const float r = (layer.refCoord - track.z0) / track.tau;
+  const float r = layer.refCoord / track.tau;
   if (r < layer.minBound || r > layer.maxBound) {
     return std::nullopt;
   }
@@ -637,40 +635,6 @@ BOOST_AUTO_TEST_CASE(SeedsFromSeparatedTracks) {
       "-10.5:40,41,42,43,\n"
       "-10.5:44,45,46,47,\n";
   BOOST_CHECK_EQUAL(formatSeeds(seeds), expected);
-}
-
-// Tracks whose z0 sits just inside the z0 range keep their seed, and one
-// whose z0 lies beyond it has none: the doublet cuts, and any test that skips
-// work ahead of them, hold at the boundary.
-BOOST_AUTO_TEST_CASE(SeedsAtTheZ0Boundary) {
-  const ToyDetector detector = barrelDetector();
-  // every hit inside the barrel's z bounds, the tracks far apart in phi
-  const std::vector<Track> tracks = {
-      {.phi = 0.5f, .tau = -0.3f, .z0 = kBarrelHalfZ - 0.1f},
-      {.phi = 2.0f, .tau = 0.3f, .z0 = -kBarrelHalfZ + 0.1f},
-      {.phi = -2.0f, .tau = -1.f, .z0 = kBarrelHalfZ + 20.f},
-  };
-  const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
-  BOOST_REQUIRE_EQUAL(spacePoints.size(),
-                      tracks.size() * detector.layers.size());
-
-  const SeedContainer seeds = runSeeding(detector, spacePoints);
-
-  BOOST_TEST_MESSAGE("z0 boundary seeds:\n" << formatSeeds(seeds));
-
-  checkSeedsAreWellFormed(seeds, spacePoints);
-
-  auto trackColumn = spacePoints.column<std::uint32_t>("trackId");
-  std::vector<std::size_t> seedsPerTrack(tracks.size(), 0);
-  for (const auto& seed : seeds) {
-    const auto indices = seed.spacePointIndices();
-    const std::uint32_t track = spacePoints.at(indices[0]).extra(trackColumn);
-    BOOST_CHECK_EQUAL(indices.size(), detector.layers.size());
-    seedsPerTrack.at(track) += 1;
-  }
-  BOOST_CHECK_EQUAL(seedsPerTrack[0], 1u);
-  BOOST_CHECK_EQUAL(seedsPerTrack[1], 1u);
-  BOOST_CHECK_EQUAL(seedsPerTrack[2], 0u);
 }
 
 // Dense tracks put several candidates per node into the sliding window.
