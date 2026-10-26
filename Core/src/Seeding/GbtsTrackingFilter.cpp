@@ -11,7 +11,6 @@
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <memory>
@@ -24,8 +23,6 @@ void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
                                        const detail::GbtsNodeView& nodeView,
                                        const std::array<float, 3>& varianceX,
                                        const std::array<float, 2>& varianceY) {
-  initialized = true;
-
   j = 0;
   vs.clear();
 
@@ -77,117 +74,6 @@ GbtsTrackingFilter::GbtsTrackingFilter(
     const Config& config, const std::shared_ptr<const GbtsGeometry>& geometry,
     std::unique_ptr<const Logger> logger)
     : m_cfg(config), m_geometry(geometry), m_logger(std::move(logger)) {}
-
-detail::GbtsEdgeState GbtsTrackingFilter::followTrack(
-    State& state, const detail::GbtsNodeView& nodeView,
-    std::vector<detail::GbtsEdge>& sb, detail::GbtsEdge& pS) const {
-  if (pS.level == -1) {
-    // already collected
-    return detail::GbtsEdgeState(false);
-  }
-
-  state.globalStateCounter = 0;
-
-  // create track state
-
-  detail::GbtsEdgeState& pInitState =
-      state.stateStore[state.globalStateCounter];
-  ++state.globalStateCounter;
-
-  pInitState.initialize(pS, nodeView, m_cfg.initialVarianceX,
-                        m_cfg.initialVarianceY);
-
-  state.stateVec.clear();
-
-  // recursive branching and propagation
-
-  propagate(state, nodeView, sb, pS, pInitState);
-
-  if (state.stateVec.empty()) {
-    return detail::GbtsEdgeState(false);
-  }
-
-  std::ranges::sort(state.stateVec, std::ranges::greater{},
-                    [](const detail::GbtsEdgeState* s) { return s->j; });
-
-  state.globalStateCounter = 0;
-
-  return *state.stateVec.front();
-}
-
-void GbtsTrackingFilter::propagate(State& state,
-                                   const detail::GbtsNodeView& nodeView,
-                                   std::vector<detail::GbtsEdge>& sb,
-                                   detail::GbtsEdge& pS,
-                                   detail::GbtsEdgeState& ts) const {
-  if (state.globalStateCounter >= detail::kGbtsMaxEdgeStates) {
-    return;
-  }
-
-  detail::GbtsEdgeState& newTs = state.stateStore[state.globalStateCounter];
-  ++state.globalStateCounter;
-  newTs = ts;
-
-  newTs.vs.push_back(&pS);
-
-  // update using n1 of the segment
-  bool accepted = update(nodeView, pS, newTs);
-
-  if (!accepted) {
-    // stop further propagation
-    return;
-  }
-
-  const std::int32_t level = pS.level;
-
-  std::vector<detail::GbtsEdge*> lCont;
-
-  // loop over the neighbours of this segment
-  for (std::uint32_t nIdx = 0; nIdx < pS.nNei; ++nIdx) {
-    const std::uint32_t nextSegmentIdx = pS.vNei[nIdx];
-
-    detail::GbtsEdge& pN = sb[nextSegmentIdx];
-
-    if (pN.level == -1) {
-      // already collected
-      continue;
-    }
-
-    if (pN.level == level - 1) {
-      lCont.push_back(&pN);
-    }
-  }
-
-  // the end of chain
-  if (lCont.empty()) {
-    // store in the vector
-    if (state.globalStateCounter < detail::kGbtsMaxEdgeStates) {
-      if (state.stateVec.empty()) {
-        // add the first segment state
-        detail::GbtsEdgeState* p = &state.stateStore[state.globalStateCounter];
-        ++state.globalStateCounter;
-        *p = newTs;
-        state.stateVec.push_back(p);
-      } else {
-        // compare with the best and add
-        const float bestSoFar = state.stateVec.front()->j;
-        if (newTs.j > bestSoFar) {
-          detail::GbtsEdgeState* p =
-              &state.stateStore[state.globalStateCounter];
-          ++state.globalStateCounter;
-          *p = newTs;
-          state.stateVec.push_back(p);
-        }
-      }
-    }
-  } else {
-    // branching
-    for (detail::GbtsEdge* sIt : lCont) {
-      // recursive call
-      propagate(state, nodeView, sb, *sIt, newTs);
-    }
-  }
-}
 
 bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
                                 const detail::GbtsEdge& pS,

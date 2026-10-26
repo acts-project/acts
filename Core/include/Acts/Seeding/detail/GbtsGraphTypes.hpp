@@ -182,20 +182,12 @@ struct GbtsEdge final {
   /// @param p3_ Third fit parameter
   GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_,
            std::int32_t n2BarrelOrder_, float p1_, float p2_, float p3_)
-      : n1{n1_},
-        n2{n2_},
-        level{1},
-        next{1},
-        p{p1_, p2_, p3_},
-        n2BarrelOrder{n2BarrelOrder_} {}
+      : n1{n1_}, n2{n2_}, p{p1_, p2_, p3_}, n2BarrelOrder{n2BarrelOrder_} {}
 
   /// Inner node of the edge
   SpacePointIndex n1{kSpacePointIndexInvalid};
   /// Outer node of the edge
   SpacePointIndex n2{kSpacePointIndexInvalid};
-
-  std::int8_t level{-1};
-  std::int8_t next{-1};
 
   std::uint8_t nNei{0};
 

@@ -30,31 +30,14 @@ struct GbtsGraph {
 
   /// Number of links between edges.
   std::uint32_t nConnections = 0;
-
-  /// Run connected component analysis on the graph, updating the edge levels.
-  /// @param maxIterations Maximum number of connected-component iterations
-  /// @return The highest chain level any edge reached
-  std::uint32_t runCCA(std::uint32_t maxIterations);
-
-  /// extract edges that start a chain
-  /// @param minSeedLevel Chain length a seed candidate must reach
-  /// @param addTriplets Accept chains one level short within
-  ///        `maxAbsEtaAddTriplets`
-  /// @param maxAbsEtaAddTriplets The maximum |eta| at which `addTriplets`
-  ///        applies
-  /// @return The edges that start chains, ordered by length of chain, empty
-  ///         if no chain reached the required level
-  std::vector<detail::GbtsEdge*> extractChainHeads(std::uint8_t minSeedLevel,
-                                                   bool addTriplets,
-                                                   float maxAbsEtaAddTriplets);
 };
 
 /// Builds the doublet graph of the GBTS workflow.
 ///
 /// Turns a finalized `GbtsNodeStorage` into a graph whose edges are doublets
 /// and whose links are the doublet pairs that a triplet cut accepted.
-/// `GraphBasedTrackSeeder` grows chain levels over those links with
-/// `GbtsGraph::runCCA` and walks the result to produce seeds.
+/// `GraphBasedTrackSeeder` follows the best fitted path along those links
+/// from every edge to produce seeds.
 ///
 /// The phi binning is the node storage's, so the sliding windows and the
 /// indexing they slide over cannot disagree.

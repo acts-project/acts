@@ -96,8 +96,7 @@ TrackingGeometry makeTrackingGeometry(const GeometryIdentifierHook& hook) {
 
   // creating a TrackingGeometry
   // -> close the geometry, this should set the GeometryIdentifier
-  TrackingGeometry tGeometry(volume, nullptr, hook);
-  return tGeometry;
+  return TrackingGeometry(volume, nullptr, hook);
 }
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)

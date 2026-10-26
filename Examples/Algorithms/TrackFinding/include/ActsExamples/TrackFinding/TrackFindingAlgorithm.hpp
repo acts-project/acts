@@ -110,11 +110,23 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Extrapolation strategy
     Acts::TrackExtrapolationStrategy extrapolationStrategy =
         Acts::TrackExtrapolationStrategy::firstOrLast;
-    /// Run finding in two directions
+    /// Run finding in two directions. The first pass runs outward from the
+    /// seed. The second pass runs inward from the innermost measurement of the
+    /// first pass to the perigee, and it starts from the smoothed parameters
+    /// of the first pass. The output track states are then:
+    /// - The states of the first pass hold smoothed parameters, which contain
+    ///   the information of the first pass only.
+    /// - The states of the second pass, which lie inside the innermost
+    ///   measurement of the first pass, hold no smoothed parameters. Their
+    ///   filtered parameters contain the full first pass and the second-pass
+    ///   measurements up to that state.
+    /// - Only the perigee estimate contains the information of each
+    ///   measurement exactly once.
+    ///
+    /// Do not smooth the output track. The smoother adds the first pass again
+    /// on top of the second-pass filter, which already contains it, so the
+    /// result counts the first pass twice.
     bool twoWay = true;
-    /// Whether to run the finding in seed parameter direction or reverse
-    /// direction
-    bool reverseSearch = false;
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;
