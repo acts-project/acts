@@ -63,4 +63,8 @@ void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
       });
 }
 
+void seed_parameter_estimation_algorithm::synchronize() const {
+  queue().synchronize();
+}
+
 }  // namespace traccc::alpaka

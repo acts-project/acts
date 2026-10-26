@@ -43,6 +43,21 @@ class measurement_sorting_algorithm
       std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
       await_function_type await_func = await_sync_event);
 
+  /// Callable operator performing the sorting, consuming the input
+  ///
+  /// Unlike the view overload, this one blocks until the device work has
+  /// finished, and then releases the input buffer.
+  ///
+  /// @param measurements The measurements to sort
+  ///
+  [[nodiscard]] output_type operator()(
+      edm::measurement_collection::buffer&& measurements) const;
+
+  /// A const buffer cannot be consumed. Without this overload, moving from
+  /// one would silently select the view overload.
+  output_type operator()(const edm::measurement_collection::buffer&&) const =
+      delete;
+
  private:
   /// Run the measurement-sorting kernels on the Alpaka queue.
   void sorting_kernel(

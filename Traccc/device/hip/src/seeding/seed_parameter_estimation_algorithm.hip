@@ -57,4 +57,8 @@ void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 }
 
+void seed_parameter_estimation_algorithm::synchronize() const {
+  stream().synchronize();
+}
+
 }  // namespace traccc::hip

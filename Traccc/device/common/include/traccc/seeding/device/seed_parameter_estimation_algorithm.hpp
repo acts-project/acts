@@ -68,7 +68,34 @@ struct seed_parameter_estimation_algorithm
       const edm::spacepoint_collection::const_view& spacepoints,
       const edm::seed_collection::const_view& seeds) const override;
 
+  /// Operator executing the algorithm, consuming the seeds.
+  ///
+  /// Unlike the view overload, this one blocks until the device work has
+  /// finished, and then releases the seed buffer.
+  ///
+  /// @param bfield The magnetic field object
+  /// @param measurements All measurements of the event
+  /// @param spacepoints All spacepoints of the event
+  /// @param seeds The reconstructed track seeds of the event
+  /// @return A vector of bound track parameters for the seeds
+  ///
+  output_type operator()(
+      const magnetic_field& bfield,
+      const edm::measurement_collection::const_view& measurements,
+      const edm::spacepoint_collection::const_view& spacepoints,
+      edm::seed_collection::buffer&& seeds) const;
+
+  /// A const buffer cannot be consumed. Without this overload, moving from
+  /// one would silently select the view overload.
+  output_type operator()(const magnetic_field&,
+                         const edm::measurement_collection::const_view&,
+                         const edm::spacepoint_collection::const_view&,
+                         const edm::seed_collection::buffer&&) const = delete;
+
  protected:
+  /// Wait for outstanding work on the algorithm stream or queue.
+  virtual void synchronize() const = 0;
+
   /// @name Function(s) to be implemented by derived classes
   /// @{
 
