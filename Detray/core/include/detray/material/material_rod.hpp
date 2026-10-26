@@ -37,6 +37,8 @@ struct material_rod {
 
   /// Equality operator
   ///
+  /// @note: @c radius_in_X0 and @c radius_in_L0 are dependent quantities
+  ///
   /// @param rhs is the right hand side to be compared to
   DETRAY_HOST_DEVICE
   constexpr bool operator==(const material_rod<scalar_type>& rhs) const {
@@ -47,10 +49,10 @@ struct material_rod {
   DETRAY_HOST_DEVICE
   constexpr explicit operator bool() const {
     if (m_radius <= std::numeric_limits<scalar_type>::epsilon() ||
-        m_material == vacuum<scalar_type>() || m_material.Z() == 0 ||
-        m_material.mass_density() == 0) {
+        m_material.state() == material_state::e_unknown || !m_material) {
       return false;
     }
+    assert(m_material != vacuum<scalar_type>());
     return true;
   }
 

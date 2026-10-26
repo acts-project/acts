@@ -122,6 +122,8 @@ class material_map_factory final : public factory_decorator<detector_t> {
   /// Clear old data
   DETRAY_HOST
   auto clear() -> void override {
+    base_factory::clear();
+
     m_links.clear();
     m_n_bins.clear();
     m_axis_spans.clear();

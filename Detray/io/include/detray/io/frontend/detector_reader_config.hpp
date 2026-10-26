@@ -72,7 +72,7 @@ struct detector_reader_config {
     for (const auto& file_name : cfg.files()) {
       out << "    -> " << file_name << "\n";
     }
-    out << "  Deduplicate data      : " << std::boolalpha << cfg.deduplicate()
+    out << "\n  Deduplicate data      : " << std::boolalpha << cfg.deduplicate()
         << std::noboolalpha << "\n";
 
     return out;
