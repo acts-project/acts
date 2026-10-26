@@ -9,10 +9,12 @@
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -28,6 +30,7 @@
 #include <cstddef>
 #include <memory>
 #include <numbers>
+#include <optional>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -512,4 +515,39 @@ Acts::Transform3 ActsPlugins::TGeoSurfaceConverter::transformFromShape(
   throw std::runtime_error(
       "Could not extract transform from TGeoShape of type " +
       std::string(tgShape.ClassName()));
+}
+
+std::optional<Acts::Volume> ActsPlugins::TGeoSurfaceConverter::cylinderVolume(
+    const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
+    double scalor) noexcept(false) {
+  const Double_t* rotation = tgMatrix.GetRotationMatrix();
+  const Double_t* translation = tgMatrix.GetTranslation();
+
+  // Try a tube-shaped conversion first: cylinderComponents only succeeds
+  // when the shape's z half-length exceeds its radial thickness (i.e.
+  // actual tube-like shapes, e.g. a support tube), and returns null bounds
+  // otherwise -- no exception, so falling through to the disc case below is
+  // safe.
+  auto [cylBounds, cylTransform, cylThickness] =
+      cylinderComponents(tgShape, rotation, translation, "XYZ", scalor);
+  if (cylBounds != nullptr) {
+    const double medR = cylBounds->get(Acts::CylinderBounds::eR);
+    return Acts::Volume(
+        cylTransform, std::make_shared<Acts::CylinderVolumeBounds>(
+                          medR - cylThickness / 2.0, medR + cylThickness / 2.0,
+                          cylBounds->get(Acts::CylinderBounds::eHalfLengthZ)));
+  }
+
+  // Not tube-shaped -- try the opposite aspect ratio (radial extent larger
+  // than z half-length, e.g. an endplate) via discComponents, which has no
+  // such aspect-ratio restriction.
+  auto [discBounds, discTransform, discThickness] =
+      discComponents(tgShape, rotation, translation, "XYZ", scalor);
+  if (discBounds == nullptr) {
+    return std::nullopt;
+  }
+  return Acts::Volume(
+      discTransform,
+      std::make_shared<Acts::CylinderVolumeBounds>(
+          discBounds->rMin(), discBounds->rMax(), discThickness / 2.0));
 }

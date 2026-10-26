@@ -643,6 +643,7 @@ class ReferenceTrajectoryBuilder {
 
     auto track = trackContainer.makeTrack();
     track.tipIndex() = actorResult.lastTrackStateIndex;
+    track.setParticleHypothesis(sParameters.particleHypothesis());
     if (actorResult.referenceParameters.has_value()) {
       const auto& params = *actorResult.referenceParameters;
       track.parameters() = params.parameters();

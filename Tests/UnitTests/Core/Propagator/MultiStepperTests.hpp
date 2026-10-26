@@ -447,6 +447,10 @@ struct MultiStepperTester {
     multi_stepper.initialize(multi_state, multi_pars);
     single_stepper.initialize(single_state, std::get<1>(multi_pars[0]));
 
+    const auto curvature = multi_stepper.curvature(multi_state);
+    BOOST_REQUIRE(curvature.ok());
+    BOOST_CHECK_SMALL(curvature->norm(), 1e-18);
+
     // Update surface status and check
     {
       auto status = multi_stepper.updateSurfaceStatus(

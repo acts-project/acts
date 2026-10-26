@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 #include "ActsPlugins/Json/JsonSurfacesReader.hpp"
@@ -35,6 +36,27 @@ using namespace Acts;
 using namespace ActsPython;
 using namespace ActsExamples;
 
+namespace {
+class MaterialMapDecorator final : public IMaterialDecorator {
+ public:
+  explicit MaterialMapDecorator(TrackingGeometryMaterial material)
+      : m_material(std::move(material)) {}
+
+  void decorate(Surface& surface) const override { m_material.apply(surface); }
+
+  void decorate(TrackingVolume& volume) const override {
+    if (!m_material.keyedSurfaces.empty() && volume.portals().empty()) {
+      throw std::invalid_argument("Stable material keys require Gen3 geometry");
+    }
+    m_material.apply(volume);
+  }
+
+ private:
+  TrackingGeometryMaterial m_material;
+};
+
+}  // namespace
+
 PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
   {
     using Converter = TrackingGeometryMaterialJsonConverter;
@@ -44,9 +66,14 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
             .def("fromFile", &Converter::fromFile, py::arg("path"));
     auto options =
         py::class_<Converter::Options>(cls, "Options").def(py::init<>());
-    ACTS_PYTHON_STRUCT(options, indentation, compressionLevel);
+    ACTS_PYTHON_STRUCT(options, indentation, compressionLevel,
+                       materialFractionBits);
     cls.def("toFile", &Converter::toFile, py::arg("material"), py::arg("path"),
             py::arg("options") = Converter::Options{});
+    py::class_<MaterialMapDecorator, IMaterialDecorator,
+               std::shared_ptr<MaterialMapDecorator>>(json,
+                                                      "MaterialMapDecorator")
+        .def(py::init<TrackingGeometryMaterial>(), py::arg("material"));
   }
 
   {

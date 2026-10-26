@@ -175,8 +175,9 @@ class VoidNavigator {
   /// @param position The current position
   /// @param direction The current direction
   /// @return The next target, or none
-  NavigationTarget nextTarget(State& state, const Vector3& position,
-                              const Vector3& direction) const {
+  NavigationTarget nextTarget(
+      State& state, const Vector3& position, const Vector3& direction,
+      const Vector3& /*curvature*/ = Vector3::Zero()) const {
     state.currentSurface = nullptr;
     return closest(state, position, direction, nullptr, false);
   }
@@ -246,16 +247,18 @@ class VoidNavigator {
   /// Checks if the current target is valid (always true for void navigator)
   /// @return Always true since the stepper re-intersects the target
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
-                        const Vector3& /*direction*/) const {
+                        const Vector3& /*direction*/,
+                        const Vector3& /*curvature*/ = Vector3::Zero()) const {
     return true;
   }
 
   /// Handles reaching an additional surface
   /// @param state The navigation state
   /// @param surface The surface reached
-  void handleSurfaceReached(State& state, const Vector3& /*position*/,
-                            const Vector3& /*direction*/,
-                            const Surface& surface) const {
+  void handleSurfaceReached(
+      State& state, const Vector3& /*position*/, const Vector3& /*direction*/,
+      const Surface& surface,
+      const Vector3& /*curvature*/ = Vector3::Zero()) const {
     handleAdditionalSurfaceReached(state, surface);
   }
 

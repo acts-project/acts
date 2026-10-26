@@ -494,6 +494,7 @@ struct GaussianSumFitter {
 
     auto track = trackContainer.makeTrack();
     track.tipIndex() = fwdGsfResult.lastMeasurementTip;
+    track.setParticleHypothesis(sParameters.particleHypothesis());
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;

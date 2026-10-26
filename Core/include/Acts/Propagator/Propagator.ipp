@@ -16,9 +16,26 @@
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
+
+template <StepperConcept S, NavigatorConcept N>
+template <typename propagator_state_t>
+Result<void> Propagator<S, N>::updateNavigationState(
+    propagator_state_t& state) const {
+  state.position = m_stepper.position(state.stepping);
+  const Vector3 tangent = m_stepper.direction(state.stepping);
+  state.direction = state.options.direction * tangent;
+  state.curvature.setZero();
+  const auto curvature = detail::getCurvature(m_stepper, state.stepping);
+  if (!curvature.ok()) {
+    return curvature.error();
+  }
+  state.curvature = *curvature;
+  return Result<void>::success();
+}
 
 template <StepperConcept S, NavigatorConcept N>
 template <typename propagator_state_t>
@@ -46,16 +63,39 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     return state.options.actorList.act(state, m_stepper, m_navigator, logger());
   }
 
+  // Pre-propagation actors may have changed momentum or direction.
+  if (auto update = updateNavigationState(state); !update.ok()) {
+    return update.error();
+  }
+
   // priming error condition
   bool terminatedNormally = false;
+
+  const auto handleSurfaceReached = [&](const Surface& surface) {
+    if constexpr (Concepts::NavigatorHandleSurfaceReachedWithCurvature<N>) {
+      m_navigator.handleSurfaceReached(state.navigation, state.position,
+                                       state.direction, surface,
+                                       state.curvature);
+    } else {
+      m_navigator.handleSurfaceReached(state.navigation, state.position,
+                                       state.direction, surface);
+    }
+  };
 
   // Returns none if an aborter stops the propagation on a surface it is on
   auto getNextTarget = [&]() -> Result<NavigationTarget> {
     for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
       const Surface* currentSurface =
           m_navigator.currentSurface(state.navigation);
-      NavigationTarget nextTarget = m_navigator.nextTarget(
-          state.navigation, state.position, state.direction);
+      NavigationTarget nextTarget = [&] {
+        if constexpr (Concepts::NavigatorNextTargetWithCurvature<N>) {
+          return m_navigator.nextTarget(state.navigation, state.position,
+                                        state.direction, state.curvature);
+        } else {
+          return m_navigator.nextTarget(state.navigation, state.position,
+                                        state.direction);
+        }
+      }();
       if (nextTarget.isNone()) {
         return NavigationTarget::None();
       }
@@ -78,8 +118,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
         ACTS_VERBOSE("Pre-step surface status is onSurface, reaching target "
                      << nextTarget.surface().geometryId() << " without a step");
         state.stage = PropagatorStage::postStep;
-        m_navigator.handleSurfaceReached(state.navigation, state.position,
-                                         state.direction, nextTarget.surface());
+        handleSurfaceReached(nextTarget.surface());
         if (Result<void> actResult = state.options.actorList.act(
                 state, m_stepper, m_navigator, logger());
             !actResult.ok()) {
@@ -90,10 +129,10 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
           terminatedNormally = true;
           return NavigationTarget::None();
         }
-        // Actors might have changed the position and direction
-        state.position = m_stepper.position(state.stepping);
-        state.direction =
-            state.options.direction * m_stepper.direction(state.stepping);
+        // Actors may have changed direction or momentum (and hence curvature).
+        if (auto update = updateNavigationState(state); !update.ok()) {
+          return update.error();
+        }
         state.stage = PropagatorStage::preStep;
         continue;
       }
@@ -160,8 +199,11 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
           state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
           logger());
       if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
-        m_navigator.handleSurfaceReached(state.navigation, state.position,
-                                         state.direction, nextTarget.surface());
+        // A portal transition can create a policy state before actors run.
+        if (auto update = updateNavigationState(state); !update.ok()) {
+          return update.error();
+        }
+        handleSurfaceReached(nextTarget.surface());
       }
       if (postStepSurfaceStatus != IntersectionStatus::reachable) {
         nextTarget = NavigationTarget::None();
@@ -182,17 +224,24 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
       break;
     }
 
-    // Update the position and direction because actors might have changed it
-    state.position = m_stepper.position(state.stepping);
-    state.direction =
-        state.options.direction * m_stepper.direction(state.stepping);
+    // Actors may have changed direction or momentum (and hence curvature).
+    if (auto update = updateNavigationState(state); !update.ok()) {
+      return update.error();
+    }
 
     // Pre-Stepping: target setting
     state.stage = PropagatorStage::preStep;
 
-    if (!nextTarget.isNone() &&
-        !m_navigator.checkTargetValid(state.navigation, state.position,
-                                      state.direction)) {
+    const auto checkTargetValid = [&] {
+      if constexpr (Concepts::NavigatorCheckTargetValidWithCurvature<N>) {
+        return m_navigator.checkTargetValid(state.navigation, state.position,
+                                            state.direction, state.curvature);
+      } else {
+        return m_navigator.checkTargetValid(state.navigation, state.position,
+                                            state.direction);
+      }
+    };
+    if (!nextTarget.isNone() && !checkTargetValid()) {
       ACTS_VERBOSE("Target is not valid anymore.");
       nextTarget = NavigationTarget::None();
     }
@@ -332,14 +381,15 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
     state.options.actorList.template get<target_aborter_t>().surface = target;
   }
 
-  state.position = m_stepper.position(state.stepping);
-  state.direction =
-      state.options.direction * m_stepper.direction(state.stepping);
+  if (auto update = updateNavigationState(state); !update.ok()) {
+    return update.error();
+  }
 
   // Navigator initialize state call
   auto navInitRes = m_navigator.initialize(
       state.navigation, {.position = state.position,
                          .direction = state.direction,
+                         .curvature = state.curvature,
                          .propagationDirection = state.options.direction,
                          .startSurface = &start.referenceSurface(),
                          .targetSurface = target});

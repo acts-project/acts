@@ -848,6 +848,7 @@ class KalmanFitter {
 
     auto track = trackContainer.makeTrack();
     track.tipIndex() = kalmanResult.lastMeasurementIndex;
+    track.setParticleHypothesis(sParameters.particleHypothesis());
     if (kalmanResult.fittedParameters) {
       const auto& params = kalmanResult.fittedParameters.value();
       track.parameters() = params.parameters();

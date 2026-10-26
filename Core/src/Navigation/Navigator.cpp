@@ -129,6 +129,7 @@ Result<void> Navigator::initialize(
   state.resetForInitialization();
 
   const Vector3& position = args.position;
+  state.curvature = args.curvature;
   const Vector3& direction = args.direction;
 
   ACTS_VERBOSE(volInfo(state) << "Initialization.");
@@ -284,7 +285,9 @@ Result<void> Navigator::initialize(
 }
 
 NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
-                                       const Vector3& direction) const {
+                                       const Vector3& direction,
+                                       const Vector3& curvature) const {
+  state.curvature = curvature;
   // Reset the current surface
   state.currentSurface = nullptr;
 
@@ -358,7 +361,9 @@ NavigationTarget Navigator::nextStagedTarget(State& state,
 }
 
 bool Navigator::checkTargetValid(State& state, const Vector3& position,
-                                 const Vector3& direction) const {
+                                 const Vector3& direction,
+                                 const Vector3& curvature) const {
+  state.curvature = curvature;
   ACTS_VERBOSE(volInfo(state) << "Entering Navigator::checkTargetValid.");
 
   if (state.navigationStage == Stage::initial) {
@@ -378,7 +383,10 @@ bool Navigator::checkTargetValid(State& state, const Vector3& position,
     ACTS_VERBOSE(volInfo(state) << "Checking policy validity for volume");
     return state.currentVolume->navigationPolicy()->isValid(
         state.options.geoContext,
-        {.position = position, .direction = direction}, policyState, logger());
+        {.position = position,
+         .direction = direction,
+         .curvature = state.curvature},
+        policyState, logger());
   }
 
   return true;
@@ -386,7 +394,10 @@ bool Navigator::checkTargetValid(State& state, const Vector3& position,
 
 void Navigator::handleSurfaceReached(State& state, const Vector3& position,
                                      const Vector3& direction,
-                                     const Surface& surface) const {
+                                     const Surface& surface,
+                                     const Vector3& curvature) const {
+  state.curvature = curvature;
+
   ACTS_VERBOSE(volInfo(state) << "Entering Navigator::handleSurfaceReached.");
 
   // Reaching an additional surface does not advance the staged navigation,
@@ -600,7 +611,10 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
     auto policyState = state.policyStateManager.currentState();
     isValid = state.currentVolume->navigationPolicy()->isValid(
         state.options.geoContext,
-        {.position = position, .direction = direction}, policyState, logger());
+        {.position = position,
+         .direction = direction,
+         .curvature = state.curvature},
+        policyState, logger());
   }
 
   ACTS_VERBOSE(volInfo(state) << "Current policy says navigation sequence is "
@@ -678,7 +692,9 @@ void Navigator::createPolicyState(State& state, const TrackingVolume& volume,
   }
 
   policy.createState(state.options.geoContext,
-                     {.position = position, .direction = direction},
+                     {.position = position,
+                      .direction = direction,
+                      .curvature = state.curvature},
                      state.policyStateManager, logger());
 }
 
@@ -695,6 +711,7 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   NavigationArguments args;
   args.position = position;
   args.direction = direction;
+  args.curvature = state.curvature;
 
   // Extended surfaces go in first, because the de-duplication in
   // NavigationStream::initialize keeps the first entry per surface

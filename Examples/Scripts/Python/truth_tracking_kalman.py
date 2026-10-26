@@ -23,6 +23,7 @@ def runTruthTrackingKalman(
     reverseFilteringCovarianceScaling=100.0,
     numParticles=1,
     linkForward: bool = False,
+    referenceSurface: acts.Surface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
     useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
 ):
@@ -181,6 +182,7 @@ def runTruthTrackingKalman(
         reverseFilteringMomThreshold,
         reverseFilteringCovarianceScaling,
         linkForward=linkForward,
+        referenceSurface=referenceSurface,
         useJosephFormulation=useJosephFormulation,
         logLevel=acts.logging.INFO,
     )
