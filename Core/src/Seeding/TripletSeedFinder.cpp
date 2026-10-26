@@ -480,20 +480,6 @@ class Impl final : public TripletSeedFinder {
     return topDoublets;
   }
 
-  template <typename TopDoublets>
-  TopDoublets createTripletTopCandidatesForBottom(
-      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const {
-    if constexpr (useStripInfo) {
-      return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                             topDoublets, tripletTopCandidates);
-    } else {
-      return createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                             topDoublets, tripletTopCandidates);
-    }
-  }
-
   template <typename DoubletCollections>
   void createTripletTopCandidatesImpl(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
@@ -509,8 +495,13 @@ class Impl final : public TripletSeedFinder {
       }
 
       tripletTopCandidates.clear();
-      topDoublets = createTripletTopCandidatesForBottom(
-          spacePoints, spM, bottomDoublet, topDoublets, tripletTopCandidates);
+      if constexpr (useStripInfo) {
+        topDoublets = createStripTripletTopCandidates(
+            spacePoints, spM, bottomDoublet, topDoublets, tripletTopCandidates);
+      } else {
+        topDoublets = createPixelTripletTopCandidates(
+            spacePoints, spM, bottomDoublet, topDoublets, tripletTopCandidates);
+      }
 
       if (tripletTopCandidates.size() > 0) {
         callback(bottomDoublet, tripletTopCandidates);
