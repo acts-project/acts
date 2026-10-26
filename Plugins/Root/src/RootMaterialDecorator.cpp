@@ -106,12 +106,7 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
       std::string zName = tdName + "/" + m_cfg.accessorConfig.zHistName;
       std::string rhoName = tdName + "/" + m_cfg.accessorConfig.rhoHistName;
 
-      // Get the histograms
-      TH1F* n = dynamic_cast<TH1F*>(m_inputFile->Get(nName.c_str()));
-      TH1F* v = dynamic_cast<TH1F*>(m_inputFile->Get(vName.c_str()));
-      TH1F* o = dynamic_cast<TH1F*>(m_inputFile->Get(oName.c_str()));
-      TH1F* min = dynamic_cast<TH1F*>(m_inputFile->Get(minName.c_str()));
-      TH1F* max = dynamic_cast<TH1F*>(m_inputFile->Get(maxName.c_str()));
+      // Get the histograms for homogeneous only
       TH1F* x0 = dynamic_cast<TH1F*>(m_inputFile->Get(x0Name.c_str()));
       TH1F* l0 = dynamic_cast<TH1F*>(m_inputFile->Get(l0Name.c_str()));
       TH1F* A = dynamic_cast<TH1F*>(m_inputFile->Get(aName.c_str()));
@@ -121,16 +116,15 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
       // Only go on when you have all the material histograms
       if ((x0 != nullptr) && (l0 != nullptr) && (A != nullptr) &&
           (Z != nullptr) && (rho != nullptr)) {
-          // Homogeneous material
-          double dx0 = x0->GetBinContent(1);
-          double dl0 = l0->GetBinContent(1);
-          double da = A->GetBinContent(1);
-          double dz = Z->GetBinContent(1);
-          double drho = rho->GetBinContent(1);
-          // Create material properties
-          const auto material =
-              Material::fromMassDensity(dx0, dl0, da, dz, drho);
-          vMaterial = std::make_shared<HomogeneousVolumeMaterial>(material);
+        // Homogeneous material
+        double dx0 = x0->GetBinContent(1);
+        double dl0 = l0->GetBinContent(1);
+        double da = A->GetBinContent(1);
+        double dz = Z->GetBinContent(1);
+        double drho = rho->GetBinContent(1);
+        // Create material properties
+        const auto material = Material::fromMassDensity(dx0, dl0, da, dz, drho);
+        vMaterial = std::make_shared<HomogeneousVolumeMaterial>(material);
       }
       ACTS_VERBOSE("Successfully read Material for : " << geoID);
 
