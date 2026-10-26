@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -71,8 +72,8 @@ struct SingleParticleSimulation {
     // propagator-related additional types
     using Actor = detail::SimulationActor<generator_t, decay_t, interactions_t,
                                           hit_surface_selector_t>;
-    using Result = typename Actor::result_type;
-    using ActorList = Acts::ActorList<Actor>;
+    using Result = typename Actor::state_type;
+    using ActorList = Acts::ActorList<Acts::DefaultActor, Actor>;
     using PropagatorOptions =
         typename propagator_t::template Options<ActorList>;
 
@@ -81,30 +82,23 @@ struct SingleParticleSimulation {
     options.stepping.maxStepSize = maxStepSize;
     options.pathLimit = pathLimit;
     // setup the interactor as part of the propagator options
-    auto &actor = options.actorList.template get<Actor>();
+    auto &actor = options.actor.template get<Actor>();
     actor.generator = &generator;
     actor.decay = decay;
     actor.interactions = interactions;
     actor.selectHitSurface = selectHitSurface;
     actor.initialParticle = particle;
 
-    if (particle.hasReferenceSurface()) {
-      auto result = propagator.propagate(
-          particle.boundParameters(geoCtx).value(), options);
-      if (!result.ok()) {
-        return result.error();
-      }
-      auto &value = result.value().template get<Result>();
-      return std::move(value);
-    }
-
+    auto state = propagator.makeState(options);
     auto result =
-        propagator.propagate(particle.curvilinearParameters(), options);
+        particle.hasReferenceSurface()
+            ? propagator.propagate(state,
+                                   particle.boundParameters(geoCtx).value())
+            : propagator.propagate(state, particle.curvilinearParameters());
     if (!result.ok()) {
       return result.error();
     }
-    auto &value = result.value().template get<Result>();
-    return std::move(value);
+    return std::move(state.actorState.template get<Result>());
   }
 };
 

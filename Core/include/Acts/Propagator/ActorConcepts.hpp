@@ -17,18 +17,36 @@
 namespace Acts {
 
 template <typename actor_t>
-concept ActorHasResult = requires { typename actor_t::result_type; };
+concept ActorHasState = requires { typename actor_t::state_type; };
 
-/// Helper struct exposing ActorHasResult as a boolean.
+/// Helper struct exposing ActorHasState as a boolean.
 template <typename actor_t>
-struct ActorHasResultStruct {
-  /// Whether the actor has a result type
-  static constexpr bool value = ActorHasResult<actor_t>;
+struct ActorHasStateStruct {
+  /// Whether the actor has a state type
+  static constexpr bool value = ActorHasState<actor_t>;
 };
+
+/// Placeholder for the state of an actor without a state type
+struct NoActorState {};
+
+namespace detail {
+template <typename actor_t>
+struct ActorStateTypeImpl {
+  using type = NoActorState;
+};
+template <ActorHasState actor_t>
+struct ActorStateTypeImpl<actor_t> {
+  using type = typename actor_t::state_type;
+};
+}  // namespace detail
+
+/// The state type of an actor, or @c NoActorState if it has none
+template <typename actor_t>
+using ActorStateType = typename detail::ActorStateTypeImpl<actor_t>::type;
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
-concept ActorHasActWithoutResult = requires(
+concept ActorHasActWithoutState = requires(
     const actor_t& a, propagator_state_t& state, const stepper_t& stepper,
     const navigator_t& navigator, Args&&... args) {
   {
@@ -38,20 +56,21 @@ concept ActorHasActWithoutResult = requires(
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
-concept ActorHasActWithResult =
-    ActorHasResult<actor_t> &&
+concept ActorHasActWithState =
+    ActorHasState<actor_t> &&
     requires(const actor_t& a, propagator_state_t& state,
              const stepper_t& stepper, const navigator_t& navigator,
-             typename actor_t::result_type& result, Args&&... args) {
+             typename actor_t::state_type& actorState, Args&&... args) {
       {
-        a.act(state, stepper, navigator, result, std::forward<Args>(args)...)
+        a.act(state, stepper, navigator, actorState,
+              std::forward<Args>(args)...)
       } -> std::same_as<Result<void>>;
     };
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
 concept ActorHasOldVoidInterface =
-    // Check without result parameter (for actors without result_type)
+    // Check without state parameter (for actors without state_type)
     requires(const actor_t& a, propagator_state_t& state,
              const stepper_t& stepper, const navigator_t& navigator,
              Args&&... args) {
@@ -59,27 +78,28 @@ concept ActorHasOldVoidInterface =
         a.act(state, stepper, navigator, std::forward<Args>(args)...)
       } -> std::same_as<void>;
     } ||
-    // Check with result parameter (for actors with result_type)
-    (ActorHasResult<actor_t> &&
+    // Check with state parameter (for actors with state_type)
+    (ActorHasState<actor_t> &&
      requires(const actor_t& a, propagator_state_t& state,
               const stepper_t& stepper, const navigator_t& navigator,
-              typename actor_t::result_type& result, Args&&... args) {
+              typename actor_t::state_type& actorState, Args&&... args) {
        {
-         a.act(state, stepper, navigator, result, std::forward<Args>(args)...)
+         a.act(state, stepper, navigator, actorState,
+               std::forward<Args>(args)...)
        } -> std::same_as<void>;
      });
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
 concept ActorHasAct =
-    ActorHasActWithoutResult<actor_t, propagator_state_t, stepper_t,
-                             navigator_t, Args...> ||
-    ActorHasActWithResult<actor_t, propagator_state_t, stepper_t, navigator_t,
-                          Args...>;
+    ActorHasActWithoutState<actor_t, propagator_state_t, stepper_t, navigator_t,
+                            Args...> ||
+    ActorHasActWithState<actor_t, propagator_state_t, stepper_t, navigator_t,
+                         Args...>;
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
-concept ActorHasAbortWithoutResult = requires(
+concept ActorHasAbortWithoutState = requires(
     const actor_t& a, propagator_state_t& state, const stepper_t& stepper,
     const navigator_t& navigator, Args&&... args) {
   {
@@ -89,13 +109,13 @@ concept ActorHasAbortWithoutResult = requires(
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
-concept ActorHasAbortWithResult =
-    ActorHasResult<actor_t> &&
+concept ActorHasAbortWithState =
+    ActorHasState<actor_t> &&
     requires(const actor_t& a, propagator_state_t& state,
              const stepper_t& stepper, const navigator_t& navigator,
-             typename actor_t::result_type& result, Args&&... args) {
+             typename actor_t::state_type& actorState, Args&&... args) {
       {
-        a.checkAbort(state, stepper, navigator, result,
+        a.checkAbort(state, stepper, navigator, actorState,
                      std::forward<Args>(args)...)
       } -> std::same_as<bool>;
     };
@@ -103,10 +123,10 @@ concept ActorHasAbortWithResult =
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
 concept ActorHasAbort =
-    ActorHasAbortWithoutResult<actor_t, propagator_state_t, stepper_t,
-                               navigator_t, Args...> ||
-    ActorHasAbortWithResult<actor_t, propagator_state_t, stepper_t, navigator_t,
-                            Args...>;
+    ActorHasAbortWithoutState<actor_t, propagator_state_t, stepper_t,
+                              navigator_t, Args...> ||
+    ActorHasAbortWithState<actor_t, propagator_state_t, stepper_t, navigator_t,
+                           Args...>;
 
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>

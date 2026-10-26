@@ -49,7 +49,7 @@ using TestSurfaceCollector = SurfaceCollector<SurfaceSelector>;
 using ParamRecorder = BoundParameterRecorder<SurfaceSelector>;
 
 std::vector<GeometryIdentifier> collectRelevantGeoIds(
-    const TestSurfaceCollector::result_type& surfaceHits) {
+    const TestSurfaceCollector::state_type& surfaceHits) {
   std::vector<GeometryIdentifier> geoIds;
   for (const auto& surfaceHit : surfaceHits.collected) {
     auto geoId = surfaceHit.surface->geometryId();
@@ -75,7 +75,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
                             const BoundTrackParameters& start,
                             const Logger& logger) {
   // Actor list
-  using ActorList = ActorList<TestSurfaceCollector, ParamRecorder>;
+  using ActorList =
+      ActorList<DefaultActor, TestSurfaceCollector, ParamRecorder>;
   using Options = typename propagator_t::template Options<ActorList>;
 
   // forward surface test
@@ -84,26 +85,29 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // get the surface collector and configure it
   auto& fwdSurfaceCollector =
-      fwdOptions.actorList.template get<TestSurfaceCollector>();
+      fwdOptions.actor.template get<TestSurfaceCollector>();
   fwdSurfaceCollector.selector.selectSensitive = true;
   fwdSurfaceCollector.selector.selectMaterial = true;
   fwdSurfaceCollector.selector.selectPassive = true;
 
-  auto& paramRecorder = fwdOptions.actorList.template get<ParamRecorder>();
+  auto& paramRecorder = fwdOptions.actor.template get<ParamRecorder>();
   paramRecorder.selector.selectSensitive = true;
   paramRecorder.selector.selectMaterial = true;
   paramRecorder.selector.selectPassive = true;
 
   ACTS_DEBUG(">>> Forward Propagation : start.");
-  auto fwdResult = prop.propagate(start, fwdOptions).value();
+  auto fwdState = prop.makeState(fwdOptions);
+  auto fwdResult = prop.propagate(fwdState, start).value();
   auto fwdSurfaceHits =
-      fwdResult.template get<TestSurfaceCollector::result_type>().collected;
+      fwdState.actorState.template get<TestSurfaceCollector::state_type>()
+          .collected;
 
-  auto fwdTrackRecords = fwdResult.template get<ParamRecorder::result_type>();
+  auto fwdTrackRecords =
+      fwdState.actorState.template get<ParamRecorder::state_type>();
 
   BOOST_CHECK_EQUAL(fwdTrackRecords.size(), fwdSurfaceHits.size());
   for (const auto& boundPars :
-       fwdResult.template get<ParamRecorder::result_type>()) {
+       fwdState.actorState.template get<ParamRecorder::state_type>()) {
     BOOST_CHECK_EQUAL(boundPars.particleHypothesis(),
                       start.particleHypothesis());
     BOOST_CHECK_EQUAL(boundPars.covariance().has_value(),
@@ -119,7 +123,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
   }
 
   auto fwdSurfaces = collectRelevantGeoIds(
-      fwdResult.template get<TestSurfaceCollector::result_type>());
+      fwdState.actorState.template get<TestSurfaceCollector::state_type>());
 
   ACTS_DEBUG(">>> Surface hits found on ...");
   for (const auto& fwdSteps : fwdSurfaces) {
@@ -134,7 +138,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // get the surface collector and configure it
   auto& bwdMSurfaceCollector =
-      bwdOptions.actorList.template get<TestSurfaceCollector>();
+      bwdOptions.actor.template get<TestSurfaceCollector>();
   bwdMSurfaceCollector.selector.selectSensitive = true;
   bwdMSurfaceCollector.selector.selectMaterial = true;
   bwdMSurfaceCollector.selector.selectPassive = true;
@@ -142,13 +146,13 @@ void runSelfConsistencyTest(const propagator_t& prop,
   const auto& startSurface = start.referenceSurface();
 
   ACTS_DEBUG(">>> Backward Propagation : start.");
-  auto bwdResult =
-      prop.propagate(*fwdResult.endParameters, startSurface, bwdOptions)
-          .value();
+  auto bwdState = prop.makeState(bwdOptions);
+  prop.propagate(bwdState, *fwdResult.endParameters, &startSurface).value();
   auto bwdSurfaceHits =
-      bwdResult.template get<TestSurfaceCollector::result_type>().collected;
+      bwdState.actorState.template get<TestSurfaceCollector::state_type>()
+          .collected;
   auto bwdSurfaces = collectRelevantGeoIds(
-      bwdResult.template get<TestSurfaceCollector::result_type>());
+      bwdState.actorState.template get<TestSurfaceCollector::state_type>());
 
   ACTS_DEBUG(">>> Surface hits found on ...");
   for (auto& bwdSteps : bwdSurfaces) {
@@ -169,7 +173,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // get the surface collector and configure it
   auto& fwdStepSurfaceCollector =
-      fwdOptions.actorList.template get<TestSurfaceCollector>();
+      fwdOptions.actor.template get<TestSurfaceCollector>();
   fwdStepSurfaceCollector.selector.selectSensitive = true;
   fwdStepSurfaceCollector.selector.selectMaterial = true;
   fwdStepSurfaceCollector.selector.selectPassive = true;
@@ -185,11 +189,13 @@ void runSelfConsistencyTest(const propagator_t& prop,
                << fwdSteps.surface->geometryId());
 
     // make a forward step
+    auto fwdStepState = prop.makeState(fwdStepOptions);
     auto fwdStep =
-        prop.propagate(sParameters, *fwdSteps.surface, fwdStepOptions).value();
+        prop.propagate(fwdStepState, sParameters, fwdSteps.surface).value();
 
     auto fwdStepSurfacesTmp = collectRelevantGeoIds(
-        fwdStep.template get<TestSurfaceCollector::result_type>());
+        fwdStepState.actorState
+            .template get<TestSurfaceCollector::state_type>());
     fwdStepSurfaces.insert(fwdStepSurfaces.end(), fwdStepSurfacesTmp.begin(),
                            fwdStepSurfacesTmp.end());
 
@@ -204,10 +210,11 @@ void runSelfConsistencyTest(const propagator_t& prop,
   ACTS_DEBUG(">>> Forward step : "
              << sParameters.referenceSurface().geometryId() << " --> "
              << dSurface.geometryId());
-  auto fwdStepFinal =
-      prop.propagate(sParameters, dSurface, fwdStepOptions).value();
+  auto fwdStepFinalState = prop.makeState(fwdStepOptions);
+  prop.propagate(fwdStepFinalState, sParameters, &dSurface).value();
   auto fwdStepSurfacesTmp = collectRelevantGeoIds(
-      fwdStepFinal.template get<TestSurfaceCollector::result_type>());
+      fwdStepFinalState.actorState
+          .template get<TestSurfaceCollector::state_type>());
   fwdStepSurfaces.insert(fwdStepSurfaces.end(), fwdStepSurfacesTmp.begin(),
                          fwdStepSurfacesTmp.end());
 
@@ -220,7 +227,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // get the surface collector and configure it
   auto& bwdStepSurfaceCollector =
-      bwdOptions.actorList.template get<TestSurfaceCollector>();
+      bwdOptions.actor.template get<TestSurfaceCollector>();
   bwdStepSurfaceCollector.selector.selectSensitive = true;
   bwdStepSurfaceCollector.selector.selectMaterial = true;
   bwdStepSurfaceCollector.selector.selectPassive = true;
@@ -235,11 +242,13 @@ void runSelfConsistencyTest(const propagator_t& prop,
                << bwdSteps.surface->geometryId());
 
     // make a forward step
+    auto bwdStepState = prop.makeState(bwdStepOptions);
     auto bwdStep =
-        prop.propagate(sParameters, *bwdSteps.surface, bwdStepOptions).value();
+        prop.propagate(bwdStepState, sParameters, bwdSteps.surface).value();
 
     auto bwdStepSurfacesTmp = collectRelevantGeoIds(
-        bwdStep.template get<TestSurfaceCollector::result_type>());
+        bwdStepState.actorState
+            .template get<TestSurfaceCollector::state_type>());
     bwdStepSurfaces.insert(bwdStepSurfaces.end(), bwdStepSurfacesTmp.begin(),
                            bwdStepSurfacesTmp.end());
 
@@ -254,10 +263,11 @@ void runSelfConsistencyTest(const propagator_t& prop,
   ACTS_DEBUG(">>> Backward step : "
              << sParameters.referenceSurface().geometryId() << " --> "
              << dSurface.geometryId());
-  auto bwdStepFinal =
-      prop.propagate(sParameters, dbSurface, bwdStepOptions).value();
+  auto bwdStepFinalState = prop.makeState(bwdStepOptions);
+  prop.propagate(bwdStepFinalState, sParameters, &dbSurface).value();
   auto bwdStepSurfacesTmp = collectRelevantGeoIds(
-      bwdStepFinal.template get<TestSurfaceCollector::result_type>());
+      bwdStepFinalState.actorState
+          .template get<TestSurfaceCollector::state_type>());
   bwdStepSurfaces.insert(bwdStepSurfaces.end(), bwdStepSurfacesTmp.begin(),
                          bwdStepSurfacesTmp.end());
 
@@ -284,7 +294,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
                         const BoundTrackParameters& start,
                         const Logger& logger) {
   // Action list and abort list
-  using ActorList = ActorList<TestSurfaceCollector>;
+  using ActorList = ActorList<DefaultActor, TestSurfaceCollector>;
 
   auto run = [&](const auto& prop) {
     using propagator_t = std::decay_t<decltype(prop)>;
@@ -297,14 +307,15 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
 
     // get the surface collector and configure it
     auto& fwdSurfaceCollector =
-        fwdOptions.actorList.template get<TestSurfaceCollector>();
+        fwdOptions.actor.template get<TestSurfaceCollector>();
     fwdSurfaceCollector.selector.selectSensitive = true;
     fwdSurfaceCollector.selector.selectMaterial = true;
     fwdSurfaceCollector.selector.selectPassive = true;
 
-    auto fwdResult = prop.propagate(start, fwdOptions).value();
+    auto fwdState = prop.makeState(fwdOptions);
+    prop.propagate(fwdState, start).value();
     auto fwdSurfaces = collectRelevantGeoIds(
-        fwdResult.template get<TestSurfaceCollector::result_type>());
+        fwdState.actorState.template get<TestSurfaceCollector::state_type>());
 
     ACTS_DEBUG(">>> Surface hits found on ...");
     for (const auto& fwdSteps : fwdSurfaces) {

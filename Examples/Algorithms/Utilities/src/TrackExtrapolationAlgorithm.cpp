@@ -16,10 +16,10 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -60,7 +60,7 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
 
   using Propagator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using Options = Propagator::Options<
-      Acts::ActorList<Acts::MaterialInteractor, Acts::EndOfWorldReached>>;
+      Acts::ActorList<Acts::DefaultActor, Acts::MaterialInteractor>>;
 
   const Propagator propagator(
       Acts::SympyStepper(m_cfg.magneticField),
@@ -69,6 +69,7 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
       logger().cloneWithSuffix("Propagator"));
 
   Options options(ctx.recoGeoContext, ctx.magFieldContext);
+  options.stopAtEndOfWorld = true;
   options.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
   options.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 

@@ -163,7 +163,7 @@ struct Fixture {
   using Generator = std::ranlux48;
   using Actor = typename ActsFatras::detail::SimulationActor<
       Generator, MockDecay, MockInteractionList, SurfaceSelector>;
-  using Result = typename Actor::result_type;
+  using Result = typename Actor::state_type;
 
   // reference information for initial particle
   Barcode pid = Barcode().withVertexPrimary(12u).withParticle(3u);

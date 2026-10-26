@@ -81,7 +81,7 @@ bool debugMode = false;
 template <typename propagator_t>
 void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
   // Action list and abort list
-  using ActorList = ActorList<MaterialInteractor>;
+  using ActorList = ActorList<DefaultActor, MaterialInteractor>;
 
   using Options = typename propagator_t::template Options<ActorList>;
   Options fwdOptions(tgContext, mfContext);
@@ -90,7 +90,7 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
 
   // get the material collector and configure it
   auto& fwdMaterialInteractor =
-      fwdOptions.actorList.template get<MaterialInteractor>();
+      fwdOptions.actor.template get<MaterialInteractor>();
   fwdMaterialInteractor.recordInteractions = true;
   fwdMaterialInteractor.energyLoss = false;
   fwdMaterialInteractor.multipleScattering = false;
@@ -99,9 +99,10 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
     std::cout << ">>> Forward Propagation : start." << std::endl;
   }
   // forward material test
-  const auto& fwdResult = prop.propagate(start, fwdOptions).value();
+  auto fwdState = prop.makeState(fwdOptions);
+  const auto& fwdResult = prop.propagate(fwdState, start).value();
   const auto& fwdMaterial =
-      fwdResult.template get<MaterialInteractor::result_type>();
+      fwdState.actorState.template get<MaterialInteractor::state_type>();
   // check that the collected material is not zero
   BOOST_CHECK_NE(fwdMaterial.materialInX0, 0.);
   BOOST_CHECK_NE(fwdMaterial.materialInL0, 0.);
@@ -134,7 +135,7 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
 
   // get the material collector and configure it
   auto& bwdMaterialInteractor =
-      bwdOptions.actorList.template get<MaterialInteractor>();
+      bwdOptions.actor.template get<MaterialInteractor>();
   bwdMaterialInteractor.recordInteractions = true;
   bwdMaterialInteractor.energyLoss = false;
   bwdMaterialInteractor.multipleScattering = false;
@@ -144,14 +145,14 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
   if (debugMode) {
     std::cout << ">>> Backward Propagation : start." << std::endl;
   }
-  const auto& bwdResult =
-      prop.propagate(*fwdResult.endParameters, startSurface, bwdOptions)
-          .value();
+  auto bwdState = prop.makeState(bwdOptions);
+  prop.propagate(bwdState, *fwdResult.endParameters, &startSurface).value();
   if (debugMode) {
     std::cout << ">>> Backward Propagation : end." << std::endl;
   }
   const auto& bwdMaterial =
-      bwdResult.template get<typename MaterialInteractor::result_type>();
+      bwdState.actorState
+          .template get<typename MaterialInteractor::state_type>();
   // check that the collected material is not zero
   BOOST_CHECK_NE(bwdMaterial.materialInX0, 0.);
   BOOST_CHECK_NE(bwdMaterial.materialInL0, 0.);
@@ -191,7 +192,7 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
 
   // get the material collector and configure it
   auto& fwdStepMaterialInteractor =
-      fwdStepOptions.actorList.template get<MaterialInteractor>();
+      fwdStepOptions.actor.template get<MaterialInteractor>();
   fwdStepMaterialInteractor.recordInteractions = true;
   fwdStepMaterialInteractor.energyLoss = false;
   fwdStepMaterialInteractor.multipleScattering = false;
@@ -220,12 +221,13 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
     }
 
     // make a forward step
+    auto fwdStepState = prop.makeState(fwdStepOptions);
     const auto& fwdStep =
-        prop.propagate(sParameters, (*fwdSteps.surface), fwdStepOptions)
-            .value();
+        prop.propagate(fwdStepState, sParameters, fwdSteps.surface).value();
 
     auto& fwdStepMaterial =
-        fwdStep.template get<typename MaterialInteractor::result_type>();
+        fwdStepState.actorState
+            .template get<typename MaterialInteractor::state_type>();
     fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
     fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
@@ -244,11 +246,12 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
               << dSurface.geometryId() << std::endl;
   }
 
-  const auto& fwdStepFinal =
-      prop.propagate(sParameters, dSurface, fwdStepOptions).value();
+  auto fwdStepFinalState = prop.makeState(fwdStepOptions);
+  prop.propagate(fwdStepFinalState, sParameters, &dSurface).value();
 
   auto& fwdStepMaterial =
-      fwdStepFinal.template get<typename MaterialInteractor::result_type>();
+      fwdStepFinalState.actorState
+          .template get<typename MaterialInteractor::state_type>();
   fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
   fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
@@ -265,7 +268,7 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
 
   // get the material collector and configure it
   auto& bwdStepMaterialInteractor =
-      bwdStepOptions.actorList.template get<MaterialInteractor>();
+      bwdStepOptions.actor.template get<MaterialInteractor>();
   bwdStepMaterialInteractor.recordInteractions = true;
   bwdStepMaterialInteractor.multipleScattering = false;
   bwdStepMaterialInteractor.energyLoss = false;
@@ -292,12 +295,13 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
                 << bwdSteps.surface->geometryId() << std::endl;
     }
     // make a forward step
+    auto bwdStepState = prop.makeState(bwdStepOptions);
     const auto& bwdStep =
-        prop.propagate(sParameters, (*bwdSteps.surface), bwdStepOptions)
-            .value();
+        prop.propagate(bwdStepState, sParameters, bwdSteps.surface).value();
 
     auto& bwdStepMaterial =
-        bwdStep.template get<typename MaterialInteractor::result_type>();
+        bwdStepState.actorState
+            .template get<typename MaterialInteractor::state_type>();
     bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
     bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
@@ -316,11 +320,12 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
               << dSurface.geometryId() << std::endl;
   }
 
-  const auto& bwdStepFinal =
-      prop.propagate(sParameters, dbSurface, bwdStepOptions).value();
+  auto bwdStepFinalState = prop.makeState(bwdStepOptions);
+  prop.propagate(bwdStepFinalState, sParameters, &dbSurface).value();
 
   auto& bwdStepMaterial =
-      bwdStepFinal.template get<typename MaterialInteractor::result_type>();
+      bwdStepFinalState.actorState
+          .template get<typename MaterialInteractor::state_type>();
   bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
   bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
@@ -331,7 +336,7 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
   // Test the material affects the covariance into the right direction
   // get the material collector and configure it
   auto& covfwdMaterialInteractor =
-      fwdOptions.actorList.template get<MaterialInteractor>();
+      fwdOptions.actor.template get<MaterialInteractor>();
   covfwdMaterialInteractor.recordInteractions = false;
   covfwdMaterialInteractor.energyLoss = true;
   covfwdMaterialInteractor.multipleScattering = true;

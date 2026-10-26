@@ -18,40 +18,45 @@ The interaction of these two components is handled by the {class}`Acts::Propagat
 Propagator<Navigator, Stepper>
 ```
 
-Additional to these mandatory components, the propagator can be equipped with **Actors** to allow for custom behaviour. These are function objects that are hooked in the propagation loop. Actors just perform some action on the propagator state (e.g. the {class}`Acts::KalmanFitter` is an actor), aborts can abort propagation (e.g., the {struct}`Acts::PathLimitReached`).
+Additional to these mandatory components, the propagator runs exactly one **actor** to allow for custom behaviour. The actor is a function object that is hooked in the propagation loop. It performs actions on the propagator state (e.g. the {class}`Acts::KalmanFitter` uses an actor), and it decides when the propagation stops.
 
-The propagator exposes its state to the actors as arguments to `act()` and `checkAbort()`. Actors must define a default-constructable `result_type`, which can be modified in each call:
+The propagator exposes its state to the actor as arguments to `act()` and `checkAbort()`. An actor can define a default-constructable `state_type`. The propagator holds one instance of it in `state.actorState` and hands it to each call:
 
 ```cpp
-template<typename propagator_state_t, typename stepper_t>
-auto operator(propagator_state_t &state, const stepper_t &stepper, result_type &result) const {
+template <typename propagator_state_t, typename stepper_t, typename navigator_t>
+Result<void> act(propagator_state_t &state, const stepper_t &stepper,
+                 const navigator_t &navigator, state_type &actorState,
+                 const Logger &logger) const {
   const auto &navigatorState = state.navigation;
   const auto &stepperState = state.stepping;
   const auto &options = state.options;
+  return Result<void>::success();
 }
 ```
 
-The result of a propagation consists of the track parameters at the endpoint of the propagation as well as the results of all actors.
+The actor is fully responsible for the end of the propagation. The free functions in `Acts/Propagator/detail/AbortConditions.hpp` check the usual conditions, for example the path limit and the target surface.
+
+The result of a propagation holds the track parameters at the endpoint of the propagation, the transport Jacobian, the number of steps, the path length and the statistics. The actor state stays in the propagator state.
 
 ## Initialization and running
 
 The {class}`Acts::Propagator` is initialized with the helper class
-{struct}`Acts::PropagatorOptions`, which is templated on the list of actors.
-This is done with the class {struct}`Acts::ActorList`
-(which are in fact small wrappers around `std::tuple`):
+{struct}`Acts::PropagatorOptions`, which is templated on the actor. If no actor is given, the propagator uses {struct}`Acts::DefaultActor`. It stops at the target surface, at the path limit (lowered by the loop protection), outside the volumes that the options allow, and, if `stopAtEndOfWorld` is set, at the end of the world.
+
+To run several actors, combine them with the composite actor {struct}`Acts::ActorList`. Add {struct}`Acts::DefaultActor` to keep its abort conditions. Put it first, so the loop protection sees the start momentum before other actors change it:
 
 ```cpp
-using MyOptions = Acts::PropagatorOptions<
-                    Acts::ActorList<MyActor1, MyActor2>
+using MyOptions = Propagator::Options<
+                    Acts::ActorList<Acts::DefaultActor, MyActor1, MyActor2>
                   >;
 ```
 
-The actors are instantiated with the options and can be accessed with the `get`-method that expects the corresponding actor type as template parameter. Besides this, the {struct}`Acts::PropagatorOptions` also contains a lot of general options like the `maxStepSize`:
+The actors of the list can be accessed with the `get`-method that expects the corresponding actor type as template parameter. Besides this, the {struct}`Acts::PropagatorOptions` also contains a lot of general options like the `maxStepSize`:
 
 ```cpp
-auto options = MyOptions();
-options.actorList.get<MyActor1>().foo = bar;
-options.maxStepSize = 100;
+auto options = MyOptions(gctx, mctx);
+options.actor.get<MyActor1>().foo = bar;
+options.stepping.maxStepSize = 100;
 ```
 
 All available options can be found in the {struct}`Acts::PropagatorPlainOptions`, from which {struct}`Acts::PropagatorOptions` inherits.
@@ -60,17 +65,16 @@ All available options can be found in the {struct}`Acts::PropagatorPlainOptions`
 The propagator also contains a loop-protection mechanism. It estimates a circle perimeter from the momentum and the magnetic field, and aborts the propagation when a certain fraction (default: 0.5) of the circle has been propagated. This behaviour can be changed in the {struct}`Acts::PropagatorOptions` via the boolean `loopProtection` and the float `loopFraction`.
 :::
 
-To run the propagation, we must call the member function `propagate(...)` with the initial track parameters and the propagator options. There are several overloads to the `propagate(...)` function, which allow further customization:
-* With/without a target surface: The overload with a target surface automatically adds an aborter for the passed `Surface` to the `ActorList`.
-* With/without a prepared result object: Without a result object, a suitable result object is default-constructed internally.
+To run the propagation, we must call the member function `propagate(...)` with the initial track parameters and the propagator options. With a target surface, the navigator steers to the surface, and {struct}`Acts::DefaultActor` stops there.
 
-The result is an instance of {class}`Acts::Result`. It contains the actual result, or an error code in case something went wrong. In the actual result, the results of the different actors can again be accessed via a `get` method:
+The result is an instance of {class}`Acts::Result`. It contains the actual result, or an error code in case something went wrong. To read the actor state after the propagation, make the propagator state yourself and propagate with it:
 
 ```cpp
-auto res = propagator.propagate(myParams, options);
+auto state = propagator.makeState(options);
+auto res = propagator.propagate(state, myParams);
 
-if( res.ok() ) {
-  res.value().get<MyActor1::result_type>();
+if (res.ok()) {
+  state.actorState.get<MyActor1::state_type>();
 }
 ```
 

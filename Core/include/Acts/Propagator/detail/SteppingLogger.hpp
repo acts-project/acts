@@ -46,12 +46,12 @@ struct Step {
 ///
 /// It simply logs the constrained step length per step
 struct SteppingLogger {
-  /// Simple result struct to be returned
+  /// Simple state struct of the actor
   struct this_result {
     std::vector<Step> steps;
   };
 
-  using result_type = this_result;
+  using state_type = this_result;
 
   /// Set the Logger to sterile
   bool sterile = false;
@@ -65,11 +65,11 @@ struct SteppingLogger {
   /// @param [in,out] state is the mutable stepper state object
   /// @param [in] stepper the stepper in use
   /// @param [in] navigator the navigator in use
-  /// @param [in,out] result is the mutable result object
+  /// @param [in,out] actorState is the mutable state of the actor
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, result_type& result,
+                   const navigator_t& navigator, state_type& actorState,
                    const Logger& /*logger*/) const {
     // Don't log if you have reached the target or are sterile
     if (sterile || state.stage == PropagatorStage::postPropagation) {
@@ -92,7 +92,7 @@ struct SteppingLogger {
       // If there's no surface but a volume, this sets the geoID
       step.geoID = navigator.currentVolume(state.navigation)->geometryId();
     }
-    result.steps.push_back(std::move(step));
+    actorState.steps.push_back(std::move(step));
     return Result<void>::success();
   }
 };
