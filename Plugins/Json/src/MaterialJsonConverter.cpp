@@ -142,10 +142,6 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
   }
   nlohmann::json jMaterial = j[Acts::jsonKey().materialkey];
   const auto type = jMaterial.value(Acts::jsonKey().typekey, std::string{});
-  if (type == "interpolated2D" || type == "interpolated3D") {
-    throw std::invalid_argument(
-        "Interpolated volume material maps are no longer supported");
-  }
   // By default no material is return.
   material = nullptr;
   if (jMaterial[Acts::jsonKey().mapkey] == false) {
@@ -175,6 +171,4 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     material = new Acts::HomogeneousVolumeMaterial(mmat[0]);
     return;
   }
-  throw std::invalid_argument(
-      "Interpolated volume material maps are no longer supported");
 }
