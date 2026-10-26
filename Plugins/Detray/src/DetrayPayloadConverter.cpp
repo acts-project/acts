@@ -878,10 +878,21 @@ DetrayPayloadConverter::convertTrackingGeometry(
   detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>&
       surfaceGrids = *payloads.surfaceGrids;
 
+  auto accept = [this](const TrackingVolume& v) {
+    return !m_cfg.volumeFilter || m_cfg.volumeFilter(v);
+  };
+
+  if (!accept(*m_cfg.beampipeVolume)) {
+    throw std::runtime_error("Beampipe volume is rejected by the volume filter");
+  }
+
   std::unordered_map<const TrackingVolume*, std::size_t> volumeIds;
 
-  auto lookup = [&volumeIds](const TrackingVolume* v) {
-    return volumeIds.at(v);
+  // Rejected volumes are not in the map => end of world
+  auto lookup = [&volumeIds](const TrackingVolume* v) -> std::size_t {
+    auto it = volumeIds.find(v);
+    return it != volumeIds.end() ? it->second
+                                 : std::numeric_limits<std::size_t>::max();
   };
 
   std::unordered_map<const TrackingVolume*,
@@ -889,6 +900,10 @@ DetrayPayloadConverter::convertTrackingGeometry(
       volumeSurfaceIndices;
 
   geometry.apply([&](const TrackingVolume& volume) {
+    if (!accept(volume)) {
+      ACTS_DEBUG("Volume " << volume.volumeName() << " rejected by user provided filter");
+      return;
+    }
     auto& volPayload =
         detPayload.volumes.emplace_back(convertVolume(gctx, volume));
     volPayload.index.link = detPayload.volumes.size() - 1;
@@ -910,6 +925,10 @@ DetrayPayloadConverter::convertTrackingGeometry(
 
   // Run again over volumes, can lookup volume index from pointer now
   geometry.apply([&](const TrackingVolume& volume) {
+    if (!accept(volume)) {
+      ACTS_DEBUG("Volume " << volume.volumeName() << " rejected by user provided filter");
+      return;
+    }
     auto& volPayload = detPayload.volumes.at(volumeIds.at(&volume));
     auto& surfaceIndices = volumeSurfaceIndices[&volume];
 

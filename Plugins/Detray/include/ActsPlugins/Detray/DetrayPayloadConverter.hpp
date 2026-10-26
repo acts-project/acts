@@ -21,6 +21,7 @@
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeDispatcher.hpp"
+#include "Acts/Utilities/Delegate.hpp" 
 
 #include <map>
 #include <memory>
@@ -204,6 +205,11 @@ class DetrayPayloadConverter {
 
     /// Detray MUST have beampipe volume at index 0
     const Acts::TrackingVolume* beampipeVolume = nullptr;
+
+    /// Optional volume selection. If set, only volumes for which this returns
+    /// true are converted. Portals leading into a rejected volume become
+    /// end-of-world portals. If empty, all volumes are converted.
+    Acts::Delegate<bool(const Acts::TrackingVolume&)> volumeFilter;
 
     /// Portal masks are clipped to the part of the portal that borders the
     /// volume they are placed in. Segments shorter than this along the
