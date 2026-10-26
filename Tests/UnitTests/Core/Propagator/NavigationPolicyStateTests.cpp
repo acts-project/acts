@@ -21,14 +21,21 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/AtlasStepper.hpp"
+#include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -482,6 +489,336 @@ BOOST_AUTO_TEST_CASE(ConeValidityPolicy_MagneticField) {
 
   // Strong field must cause more re-resolutions than weak field
   BOOST_CHECK_GT(strongReresolutions, weakReresolutions);
+}
+
+// Records all three policy entry points, including entry through portals and
+// forwarding through MultiNavigationPolicy. The synthetic construction-time
+// probes are discarded before propagation.
+struct CurvatureRecord {
+  std::string entry;
+  std::string volume;
+  NavigationArguments args;
+  double qOverP;
+};
+
+struct CurvatureRecords {
+  std::vector<CurvatureRecord> calls;
+  double qOverP = 1. / 1_GeV;
+};
+
+// Hide the curvature overloads to model an existing custom navigator.
+class LegacyNavigator : public DirectNavigator {
+ public:
+  struct Calls {
+    unsigned int next = 0;
+    unsigned int valid = 0;
+    unsigned int reached = 0;
+  };
+  std::shared_ptr<Calls> calls = std::make_shared<Calls>();
+
+  NavigationTarget nextTarget(State& state, const Vector3& position,
+                              const Vector3& direction) const {
+    ++calls->next;
+    return DirectNavigator::nextTarget(state, position, direction);
+  }
+  bool checkTargetValid(const State& state, const Vector3& position,
+                        const Vector3& direction) const {
+    ++calls->valid;
+    return DirectNavigator::checkTargetValid(state, position, direction);
+  }
+  void handleSurfaceReached(State& state, const Vector3& position,
+                            const Vector3& direction,
+                            const Surface& surface) const {
+    ++calls->reached;
+    DirectNavigator::handleSurfaceReached(state, position, direction, surface);
+  }
+};
+
+static_assert(NavigatorConcept<LegacyNavigator>);
+static_assert(NavigatorConcept<Navigator>);
+
+BOOST_AUTO_TEST_CASE(LegacyNavigatorPropagation) {
+  LegacyNavigator navigator;
+  const auto calls = navigator.calls;
+  Propagator propagator(StraightLineStepper{}, std::move(navigator));
+  const auto surface =
+      CurvilinearSurface(Vector3(0., 0., 10_mm), Vector3::UnitZ())
+          .planeSurface();
+  decltype(propagator)::Options<> options(gctx, mfContext);
+  options.navigation.surfaceSequence = {surface.get()};
+  options.stepping.maxStepSize = 1_mm;
+  options.pathLimit = 20_mm;
+  const auto start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitZ(), 1. / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+  const auto result = propagator.propagate(start, options);
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_GT(calls->next, 0u);
+  BOOST_CHECK_GT(calls->valid, 0u);
+  BOOST_CHECK_EQUAL(calls->reached, 1u);
+}
+
+class CurvatureRecordingPolicy final : public INavigationPolicy {
+ public:
+  struct State {};
+
+  CurvatureRecordingPolicy(const GeometryContext& /*gctx*/,
+                           const TrackingVolume& volume,
+                           const Logger& /*logger*/,
+                           std::shared_ptr<CurvatureRecords> records)
+      : m_volume(volume.volumeName()), m_records(std::move(records)) {}
+
+  void connect(NavigationDelegate& delegate) const override {
+    connectDefault<CurvatureRecordingPolicy>(delegate);
+  }
+
+  void createState(const GeometryContext& /*gctx*/,
+                   const NavigationArguments& args,
+                   NavigationPolicyStateManager& manager,
+                   const Logger& /*logger*/) const override {
+    record("create", args);
+    manager.pushState<State>();
+  }
+
+  bool isValid(const GeometryContext& /*gctx*/, const NavigationArguments& args,
+               NavigationPolicyState& /*state*/,
+               const Logger& /*logger*/) const override {
+    record("valid", args);
+    return true;
+  }
+
+  void initializeCandidates(const GeometryContext& /*gctx*/,
+                            const NavigationArguments& args,
+                            NavigationPolicyState& /*state*/,
+                            AppendOnlyNavigationStream& /*stream*/,
+                            const Logger& /*logger*/) const {
+    record("candidates", args);
+  }
+
+ private:
+  void record(const std::string& entry, const NavigationArguments& args) const {
+    m_records->calls.push_back({entry, m_volume, args, m_records->qOverP});
+  }
+  std::string m_volume;
+  std::shared_ptr<CurvatureRecords> m_records;
+};
+
+// Change both the momentum and the direction before the first target query,
+// then change the momentum again after the first step. Policy callbacks must
+// see the updated curvature, not a derivative cached by the previous step.
+struct ChangeCurvatureActor {
+  struct result_type {
+    bool changedAfterStep = false;
+  };
+  std::shared_ptr<CurvatureRecords> records;
+
+  template <typename PropagatorState, typename Stepper, typename Nav>
+  Result<void> act(PropagatorState& state, const Stepper& stepper,
+                   const Nav& /*navigator*/, result_type& result,
+                   const Logger& /*logger*/) const {
+    Vector3 direction = stepper.direction(state.stepping);
+    if (state.stage == PropagatorStage::prePropagation) {
+      direction = Vector3(1., 0.02, 0.01).normalized();
+    } else if (state.stage == PropagatorStage::postStep &&
+               !result.changedAfterStep) {
+      result.changedAfterStep = true;
+    } else {
+      return Result<void>::success();
+    }
+    records->qOverP *= 0.5;
+    stepper.update(state.stepping, stepper.position(state.stepping), direction,
+                   records->qOverP, stepper.time(state.stepping));
+    return Result<void>::success();
+  }
+
+  template <typename PropagatorState, typename Stepper, typename Nav>
+  bool checkAbort(PropagatorState& /*state*/, const Stepper& /*stepper*/,
+                  const Nav& /*navigator*/, result_type& /*result*/,
+                  const Logger& /*logger*/) const {
+    return false;
+  }
+};
+
+BOOST_AUTO_TEST_CASE(CurvatureReachesEveryPolicyEntryPoint) {
+  for (Direction propagationDirection :
+       {Direction::Forward(), Direction::Backward()}) {
+    for (double chargeSign : {-1., 1.}) {
+      auto records = std::make_shared<CurvatureRecords>();
+      records->qOverP = chargeSign / 1_GeV;
+      BlueprintOptions opts;
+      opts.defaultNavigationPolicyFactory =
+          NavigationPolicyFactory{}
+              .add<TryAllNavigationPolicy>()
+              .add<CurvatureRecordingPolicy>(records)
+              .asUniquePtr();
+      std::shared_ptr<const Logger> logger =
+          getDefaultLogger("CurvatureTest", Logging::WARNING);
+      std::shared_ptr<const TrackingGeometry> geometry =
+          buildBoxGeometry(opts, *logger);
+      records->calls.clear();
+      const Vector3 field(0., 0., 0.1_T);
+      Navigator navigator({.trackingGeometry = geometry}, logger);
+      Propagator propagator(
+          EigenStepper<>(std::make_shared<ConstantBField>(field)),
+          std::move(navigator), logger);
+      const auto start = BoundTrackParameters::createCurvilinear(
+          Vector4(
+              propagationDirection == Direction::Forward() ? -900_mm : 900_mm,
+              0., 0., 0.),
+          Vector3::UnitX(), records->qOverP, std::nullopt,
+          ParticleHypothesis::pion());
+      decltype(propagator)::Options<
+          ActorList<ChangeCurvatureActor, EndOfWorldReached>>
+          options(gctx, mfContext);
+      options.direction = propagationDirection;
+      options.pathLimit = 3_m;
+      options.stepping.maxStepSize = 50_mm;
+      options.actorList.get<ChangeCurvatureActor>().records = records;
+      auto result = propagator.propagate(start, options);
+      BOOST_REQUIRE(result.ok());
+      BOOST_REQUIRE(!records->calls.empty());
+      BOOST_CHECK_SMALL((records->calls.front().args.curvature -
+                         Vector3(0., -chargeSign * 0.1_T / 1_GeV, 0.))
+                            .norm(),
+                        1e-12);
+      std::size_t creates = 0, candidates = 0, valid = 0;
+      bool sawMomentumUpdate = false;
+      bool sawNewVolume = false;
+      for (const auto& call : records->calls) {
+        const Vector3 physicalDirection =
+            propagationDirection * call.args.direction;
+        const Vector3 expected = call.qOverP * physicalDirection.cross(field);
+        BOOST_CHECK_SMALL((call.args.curvature - expected).norm(), 1e-12);
+        BOOST_CHECK_SMALL(call.args.curvature.dot(call.args.direction), 1e-12);
+        if (call.entry == "create") {
+          ++creates;
+        }
+        if (call.entry == "candidates") {
+          ++candidates;
+        }
+        if (call.entry == "valid") {
+          ++valid;
+        }
+        sawMomentumUpdate |= std::abs(call.qOverP) < 0.3 / 1_GeV;
+        sawNewVolume |= call.entry == "create" &&
+                        call.volume != records->calls.front().volume;
+      }
+      BOOST_CHECK_GT(creates, 1u);
+      BOOST_CHECK_GT(candidates, 0u);
+      BOOST_CHECK_GT(valid, 0u);
+      BOOST_CHECK(sawMomentumUpdate);
+      BOOST_CHECK(sawNewVolume);
+    }
+  }
+}
+
+class FailingCurvatureField final : public MagneticFieldProvider {
+ public:
+  bool fail = true;
+  Cache makeCache(const MagneticFieldContext& /*mctx*/) const override {
+    return Cache{};
+  }
+  Result<Vector3> getField(const Vector3& /*position*/,
+                           Cache& /*cache*/) const override {
+    if (fail) {
+      return Result<Vector3>::failure(MagneticFieldError::OutOfBounds);
+    }
+    return Result<Vector3>::success(Vector3::Zero());
+  }
+};
+
+// Model a custom stepper written before the curvature accessor existed.
+class LegacyAtlasStepper : public AtlasStepper {
+ public:
+  using AtlasStepper::AtlasStepper;
+  Result<Vector3> curvature(State& state) const = delete;
+};
+static_assert(StepperConcept<LegacyAtlasStepper>);
+
+// An accessor must take precedence over the compatibility field calculation.
+class CustomCurvatureStepper : public AtlasStepper {
+ public:
+  using AtlasStepper::AtlasStepper;
+  Result<Vector3> curvature(State& /*state*/) const {
+    return Result<Vector3>::success(Vector3(0., 0.25, 0.));
+  }
+};
+static_assert(StepperConcept<CustomCurvatureStepper>);
+
+BOOST_AUTO_TEST_CASE(StepperCurvatureCompatibility) {
+  const auto start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+  const Vector3 field(0., 0., 1_T);
+  Propagator legacy{
+      LegacyAtlasStepper(std::make_shared<ConstantBField>(field))};
+  decltype(legacy)::Options<> options(gctx, mfContext);
+  auto state = legacy.makeState(options);
+  BOOST_REQUIRE(legacy.initialize(state, start, nullptr).ok());
+  BOOST_CHECK_SMALL((state.curvature - Vector3(0., -1_T / 1_GeV, 0.)).norm(),
+                    1e-18);
+
+  Propagator custom{
+      CustomCurvatureStepper(std::make_shared<FailingCurvatureField>())};
+  decltype(custom)::Options<> customOptions(gctx, mfContext);
+  customOptions.loopProtection = false;
+  auto customState = custom.makeState(customOptions);
+  BOOST_REQUIRE(custom.initialize(customState, start, nullptr).ok());
+  BOOST_CHECK_SMALL((customState.curvature - Vector3(0., 0.25, 0.)).norm(),
+                    1e-18);
+}
+
+BOOST_AUTO_TEST_CASE(CurvatureZeroCasesAndFieldErrors) {
+  const auto start = [](ParticleHypothesis particle =
+                            ParticleHypothesis::pion()) {
+    return BoundTrackParameters::createCurvilinear(
+        Vector4::Zero(), Vector3::UnitX(),
+        particle.qOverP(1_GeV, particle.absoluteCharge()), std::nullopt,
+        particle);
+  };
+  // Exercise the propagator initialization separately: neutral EigenStepper
+  // integration is not part of this test, only the supplied navigation data.
+  const auto checkZero = [&](auto stepper, ParticleHypothesis particle) {
+    Propagator propagator(std::move(stepper));
+    typename decltype(propagator)::template Options<> options(gctx, mfContext);
+    options.loopProtection = false;
+    auto state = propagator.makeState(options);
+    state.curvature = Vector3::Ones();  // Must not leak across initialization.
+    BOOST_REQUIRE(propagator.initialize(state, start(particle), nullptr).ok());
+    // Bound angle conversion can leave a roundoff-sized component transverse
+    // to a nominally parallel field.
+    BOOST_CHECK_SMALL(state.curvature.norm(), 1e-18);
+  };
+  checkZero(StraightLineStepper{}, ParticleHypothesis::pion());
+  checkZero(EigenStepper<>(std::make_shared<ConstantBField>(Vector3::Zero())),
+            ParticleHypothesis::pion());
+  checkZero(
+      EigenStepper<>(std::make_shared<ConstantBField>(Vector3(1_T, 0., 0.))),
+      ParticleHypothesis::pion());
+  checkZero(EigenStepper<>(std::make_shared<FailingCurvatureField>()),
+            ParticleHypothesis::photon().withMomentumHypothesis(1_GeV));
+
+  Propagator propagator(
+      EigenStepper<>(std::make_shared<FailingCurvatureField>()));
+  decltype(propagator)::Options<> options(gctx, mfContext);
+  auto state = propagator.makeState(options);
+  const auto result = propagator.initialize(state, start(), nullptr);
+  BOOST_REQUIRE(!result.ok());
+  BOOST_CHECK(result.error() ==
+              make_error_code(MagneticFieldError::OutOfBounds));
+
+  // A field lookup can also fail when refreshing an already initialized run.
+  auto field = std::make_shared<FailingCurvatureField>();
+  field->fail = false;
+  Propagator refreshingPropagator{EigenStepper<>(field)};
+  auto refreshingState = refreshingPropagator.makeState(options);
+  BOOST_REQUIRE(
+      refreshingPropagator.initialize(refreshingState, start(), nullptr).ok());
+  field->fail = true;
+  const auto refreshResult = refreshingPropagator.propagate(refreshingState);
+  BOOST_REQUIRE(!refreshResult.ok());
+  BOOST_CHECK(refreshResult.error() ==
+              make_error_code(MagneticFieldError::OutOfBounds));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
