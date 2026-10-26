@@ -401,7 +401,8 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
 
   // Apply the loop protection - it resets the internal path limit
   detail::setupLoopProtection(
-      state, m_stepper, state.options.actorList.template get<path_aborter_t>(),
+      state, m_stepper,
+      state.options.actorList.template get<path_aborter_t>().internalLimit,
       false, logger());
 
   return Result<void>::success();

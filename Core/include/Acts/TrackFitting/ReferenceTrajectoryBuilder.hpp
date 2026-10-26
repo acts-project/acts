@@ -205,8 +205,9 @@ class ReferenceTrajectoryBuilder {
 
       if (result.pathLimitReached.internalLimit ==
           std::numeric_limits<double>::max()) {
-        detail::setupLoopProtection(state, stepper, result.pathLimitReached,
-                                    true, logger());
+        detail::setupLoopProtection(state, stepper,
+                                    result.pathLimitReached.internalLimit, true,
+                                    logger());
       }
 
       if (const Surface* surface = navigator.currentSurface(state.navigation);
