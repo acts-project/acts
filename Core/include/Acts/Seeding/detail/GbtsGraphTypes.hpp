@@ -11,6 +11,7 @@
 #include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/GbtsTauLookupTable.hpp"
 
 #include <array>
 #include <cstdint>
@@ -20,22 +21,6 @@
 #include <vector>
 
 namespace Acts::Experimental::detail {
-
-/// Accepted |cot(theta)| range for one cluster width bin. A cluster near the
-/// module edge may be shortened, hence the second pair.
-struct GbtsTauBounds final {
-  /// Minimum accepted |cot(theta)|.
-  float minTau{};
-  /// Maximum accepted |cot(theta)|. Negative means undertrained: do not cut.
-  float maxTau{};
-  /// Minimum accepted |cot(theta)| near the module edge.
-  float minTauNearEdge{};
-  /// Maximum accepted |cot(theta)| near the module edge. Negative as above.
-  float maxTauNearEdge{};
-};
-
-/// Tau bounds per cluster width, one entry per 0.05 mm, indexed not searched.
-using GbtsTauLookupTable = std::vector<GbtsTauBounds>;
 
 /// Maximum number of neighbouring edges recorded per graph edge
 static constexpr std::uint32_t kGbtsMaxEdgeNeighbours = 6;
@@ -197,20 +182,12 @@ struct GbtsEdge final {
   /// @param p3_ Third fit parameter
   GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_,
            std::int32_t n2BarrelOrder_, float p1_, float p2_, float p3_)
-      : n1{n1_},
-        n2{n2_},
-        level{1},
-        next{1},
-        p{p1_, p2_, p3_},
-        n2BarrelOrder{n2BarrelOrder_} {}
+      : n1{n1_}, n2{n2_}, p{p1_, p2_, p3_}, n2BarrelOrder{n2BarrelOrder_} {}
 
   /// Inner node of the edge
   SpacePointIndex n1{kSpacePointIndexInvalid};
   /// Outer node of the edge
   SpacePointIndex n2{kSpacePointIndexInvalid};
-
-  std::int8_t level{-1};
-  std::int8_t next{-1};
 
   std::uint8_t nNei{0};
 

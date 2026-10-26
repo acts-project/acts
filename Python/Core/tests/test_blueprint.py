@@ -1,3 +1,5 @@
+import math
+
 import pytest
 
 import acts
@@ -10,6 +12,37 @@ bv = acts.AxisDirection
 
 gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
 logLevel = acts.logging.VERBOSE
+
+
+def test_python_sensitive_modules_in_layer_blueprint():
+    surfaces = []
+    for i in range(8):
+        phi = i * math.tau / 8
+        transform = (
+            acts.Transform3(acts.Vector3(50 * math.cos(phi), 50 * math.sin(phi), 0))
+            * acts.AngleAxis3(phi + math.pi / 2, acts.Vector3(0, 0, 1))
+            * acts.AngleAxis3(math.pi / 2, acts.Vector3(1, 0, 0))
+        )
+        surface = acts.Surface.createPlane(transform, acts.RectangleBounds(10, 20))
+        surface.assignIsSensitive(True)
+        surfaces.append(surface)
+
+    root = acts.Blueprint(envelope=acts.ExtentEnvelope(r=[1 * mm, 1 * mm]))
+    layer = root.addLayer("sensitive-barrel")
+    layer.layerType = acts.LayerBlueprintNode.LayerType.Cylinder
+    layer.surfaces = surfaces
+    layer.envelope = acts.ExtentEnvelope(r=[1 * mm, 1 * mm], z=[1 * mm, 1 * mm])
+    options = acts.BlueprintOptions()
+    options.defaultNavigationPolicyFactory = acts.NavigationPolicyFactory.make().add(
+        acts.TryAllNavigationPolicy
+    )
+    geometry = root.construct(options, gctx, level=acts.logging.WARNING)
+    visited = []
+    geometry.visitSurfaces(visited.append)
+    assert len(visited) == len(surfaces)
+    assert all(surface.isSensitive for surface in visited)
+    assert all(surface.geometryId.sensitive != 0 for surface in visited)
+    assert len({surface.geometryId.value for surface in visited}) == len(surfaces)
 
 
 def test_zdirection_container_blueprint(tmp_path):
@@ -155,3 +188,53 @@ def test_optional_material_keys(tmp_path):
     assert isinstance(
         keyed["barrel/outer"].surfaceMaterial, acts.HomogeneousSurfaceMaterial
     )
+
+
+@pytest.mark.parametrize(
+    "lookup_type", [acts.LinearVolumeLookup, acts.RzGridVolumeLookup]
+)
+@pytest.mark.parametrize("local", [False, True])
+def test_volume_lookup_factory_ownership(tmp_path, lookup_type, local):
+    import gc
+
+    root = acts.Blueprint(
+        envelope=acts.ExtentEnvelope(r=[1 * mm, 1 * mm], z=[1 * mm, 1 * mm])
+    )
+    child = root.addStaticVolume(
+        acts.Transform3.Identity(),
+        acts.CylinderVolumeBounds(0, 20 * mm, 30 * mm),
+        name="inner",
+    )
+    wrappers = []
+    calls = []
+
+    def factory(context, volume, logger):
+        config = lookup_type.Config()
+        if lookup_type is acts.LinearVolumeLookup:
+            config.warningThreshold = None
+            lookup = lookup_type(config, volume, logger)
+        else:
+            lookup = lookup_type(config, context, volume, logger)
+        wrappers.append(lookup)
+        calls.append(volume)
+        return lookup
+
+    node = child if local else root
+    node.volumeLookupFactory = factory
+    geometry = root.construct(acts.BlueprintOptions(), gctx, level=acts.logging.WARNING)
+    assert len(calls) == 1
+    # C++ now owns the lookup; dropping its Python wrapper must not destroy it.
+    wrappers.clear()
+    calls.clear()
+    del factory, node, child, root
+    gc.collect()
+    path = tmp_path / "navigation.csv"
+    acts.pseudoNavigation(geometry, gctx, path, runs=1, logLevel=acts.logging.WARNING)
+    assert len(path.read_text().splitlines()) > 1
+
+
+@pytest.mark.parametrize("threshold", [None, 0, 64])
+def test_linear_lookup_warning_threshold(threshold):
+    config = acts.LinearVolumeLookup.Config()
+    config.warningThreshold = threshold
+    assert config.warningThreshold == threshold

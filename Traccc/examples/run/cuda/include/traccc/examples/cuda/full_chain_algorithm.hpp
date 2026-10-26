@@ -39,6 +39,7 @@
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
 #include <vecmem/memory/cuda/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
+#include <vecmem/memory/synchronized_memory_resource.hpp>
 #include <vecmem/utils/cuda/async_copy.hpp>
 #include <vecmem/utils/cuda/stream_wrapper.hpp>
 
@@ -70,6 +71,64 @@ class full_chain_algorithm
 
   /// @}
 
+  /// Device data shared by all instances of the algorithm
+  ///
+  /// It must outlive every algorithm that was constructed with it.
+  ///
+  struct shared_data {
+    /// Constructor
+    ///
+    /// @param host_mr The host memory resource for the detector description
+    ///                buffer
+    /// @param det_descr The detector design description
+    /// @param det_cond The detector conditions description
+    /// @param field The magnetic field
+    /// @param detector The host detector, or @c nullptr
+    ///
+    shared_data(vecmem::memory_resource& host_mr,
+                const detector_design_description::host& det_descr,
+                const detector_conditions_description::host& det_cond,
+                const magnetic_field& field, const host_detector* detector);
+
+    /// Device memory resource
+    vecmem::cuda::device_memory_resource m_device_mr;
+
+    /// @name Memory resources shared by all instances of the algorithm
+    ///
+    /// The caching memory resources are not thread safe, so every user goes
+    /// through a @c vecmem::synchronized_memory_resource. Sharing one cache
+    /// between all instances keeps the peak memory usage of the
+    /// multi-threaded throughput test independent of the number of threads.
+    ///
+    /// @{
+
+    /// Device caching memory resource
+    mutable vecmem::binary_page_memory_resource m_cached_device_mr{m_device_mr};
+    /// Thread safe access to the cached device memory resource
+    mutable vecmem::synchronized_memory_resource m_synchronized_device_mr{
+        m_cached_device_mr};
+    /// Pinned host memory resource
+    vecmem::cuda::host_memory_resource m_pinned_host_mr;
+    /// Cached pinned host memory resource
+    mutable vecmem::binary_page_memory_resource m_cached_pinned_host_mr{
+        m_pinned_host_mr};
+    /// Thread safe access to the cached pinned host memory resource
+    mutable vecmem::synchronized_memory_resource m_synchronized_pinned_host_mr{
+        m_cached_pinned_host_mr};
+
+    /// @}
+
+    /// B field for the track finding and fitting
+    magnetic_field m_field;
+    /// Detector description buffer
+    detector_design_description::buffer m_device_det_descr;
+    /// Detector conditions description buffer
+    detector_conditions_description::buffer m_device_det_cond;
+    /// Host detector
+    const host_detector* m_detector;
+    detector_buffer m_device_detector;
+  };
+
   /// Algorithm constructor
   ///
   /// @param mr The memory resource to use for the intermediate and result
@@ -85,21 +144,8 @@ class full_chain_algorithm
       const track_params_estimation_config& track_params_estimation_config,
       const finding_algorithm::config_type& finding_config,
       const fitting_algorithm::config_type& fitting_config,
-      const detector_design_description::host& det_descr,
-      const detector_conditions_description::host& det_cond,
-      const magnetic_field& field, host_detector* detector,
-      std::unique_ptr<const traccc::Logger> logger, bool useGBTS = false,
-      await_strategy = await_strategy::sync_event);
-
-  /// Copy constructor
-  ///
-  /// An explicit copy constructor is necessary because in the MT tests
-  /// we do want to copy such objects, but a default copy-constructor can
-  /// not be generated for them.
-  ///
-  /// @param parent The parent algorithm chain to copy
-  ///
-  full_chain_algorithm(const full_chain_algorithm& parent);
+      const shared_data& data, std::unique_ptr<const traccc::Logger> logger,
+      bool useGBTS = false, await_strategy = await_strategy::sync_event);
 
   /// Algorithm destructor
   ~full_chain_algorithm();
@@ -123,39 +169,29 @@ class full_chain_algorithm
  private:
   /// Host memory resource
   vecmem::memory_resource& m_host_mr;
-  /// Pinned host memory resource
-  vecmem::cuda::host_memory_resource m_pinned_host_mr;
-  /// Cached pinned host memory resource
-  mutable vecmem::binary_page_memory_resource m_cached_pinned_host_mr;
+  /// Cached pinned host memory resource, shared by all instances
+  vecmem::memory_resource& m_cached_pinned_host_mr;
   /// (vecmem) CUDA stream to use
   vecmem::cuda::stream_wrapper m_vecmem_stream;
   /// (traccc) CUDA stream to use
   stream_wrapper m_stream;
-  /// Device memory resource
-  vecmem::cuda::device_memory_resource m_device_mr;
-  /// Device caching memory resource
-  mutable vecmem::binary_page_memory_resource m_cached_device_mr;
+  /// Device caching memory resource, shared by all instances
+  vecmem::memory_resource& m_cached_device_mr;
   /// (Asynchronous) Memory copy object
   mutable vecmem::cuda::async_copy m_copy;
   /// The function for awaiting asynchronous operations
   await_function_type m_await_function;
 
-  /// Constant B field for the (seed) track parameter estimation
-  traccc::vector3 m_field_vec;
-  /// Constant B field for the track finding and fitting
-  magnetic_field m_field;
+  /// B field for the track finding and fitting
+  const magnetic_field& m_field;
 
-  /// Detector description
-  std::reference_wrapper<const detector_design_description::host> m_det_descr;
-  std::reference_wrapper<const detector_conditions_description::host>
-      m_det_cond;
   /// Detector description buffer
-  detector_design_description::buffer m_device_det_descr;
+  const detector_design_description::buffer& m_device_det_descr;
   /// Detector conditions description buffer
-  detector_conditions_description::buffer m_device_det_cond;
+  const detector_conditions_description::buffer& m_device_det_cond;
   /// Host detector
-  host_detector* m_detector;
-  detector_buffer m_device_detector;
+  const host_detector* m_detector;
+  const detector_buffer& m_device_detector;
 
   /// @name Sub-algorithms used by this full-chain algorithm
   /// @{
@@ -182,25 +218,6 @@ class full_chain_algorithm
 
   /// @name Algorithm configurations
   /// @{
-
-  /// Configuration for clustering
-  clustering_config m_clustering_config;
-  /// Configuration for the seed finding
-  seedfinder_config m_finder_config;
-  /// Configuration for the spacepoint grid formation
-  spacepoint_grid_config m_grid_config;
-  /// Configuration for the seed filtering
-  seedfilter_config m_filter_config;
-  // Configuration for GBTS seeding
-  gbts_seedfinder_config m_gbts_config;
-
-  /// Configuration for track parameter estimation
-  track_params_estimation_config m_track_params_estimation_config;
-
-  /// Configuration for the track finding
-  finding_algorithm::config_type m_finding_config;
-  /// Configuration for the track fitting
-  fitting_algorithm::config_type m_fitting_config;
 
   bool usingGBTS;
 

@@ -22,7 +22,7 @@ namespace Acts::Experimental {
 
 GbtsNodeStorage::GbtsNodeStorage(const Config& config,
                                  std::shared_ptr<const GbtsGeometry> geometry,
-                                 detail::GbtsTauLookupTable tauLut)
+                                 GbtsTauLookupTable tauLut)
     : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_tauLut(std::move(tauLut)),
@@ -239,8 +239,7 @@ void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
     return;
   }
 
-  const detail::GbtsTauBounds& bounds =
-      m_tauLut[static_cast<std::size_t>(lutBinIdx)];
+  const GbtsTauBounds& bounds = m_tauLut[static_cast<std::size_t>(lutBinIdx)];
 
   // close to the edge the cluster may be shortened, which the lookup table
   // covers with a separate pair of bounds

@@ -782,7 +782,7 @@ class KalmanFitter {
       // Relax the bounds check, so the navigator targets a measurement
       // surface even where the track misses it
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.registerExtendedSurface(*surface);
+        propagatorOptions.navigation.registerMeasurementSurface(*surface);
       }
     } else {
       assert(sSequence != nullptr &&
@@ -842,6 +842,7 @@ class KalmanFitter {
 
     auto track = trackContainer.makeTrack();
     track.tipIndex() = kalmanResult.lastMeasurementIndex;
+    track.setParticleHypothesis(sParameters.particleHypothesis());
     if (kalmanResult.fittedParameters) {
       const auto& params = kalmanResult.fittedParameters.value();
       track.parameters() = params.parameters();

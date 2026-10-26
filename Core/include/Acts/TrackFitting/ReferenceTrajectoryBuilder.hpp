@@ -589,7 +589,7 @@ class ReferenceTrajectoryBuilder {
     if constexpr (!isDirectNavigator) {
       if (sSequence != nullptr) {
         for (const Surface* surface : *sSequence) {
-          propagatorOptions.navigation.registerExtendedSurface(*surface);
+          propagatorOptions.navigation.registerMeasurementSurface(*surface);
         }
       }
     } else {
@@ -637,6 +637,7 @@ class ReferenceTrajectoryBuilder {
 
     auto track = trackContainer.makeTrack();
     track.tipIndex() = actorResult.lastTrackStateIndex;
+    track.setParticleHypothesis(sParameters.particleHypothesis());
     if (actorResult.referenceParameters.has_value()) {
       const auto& params = *actorResult.referenceParameters;
       track.parameters() = params.parameters();

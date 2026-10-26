@@ -143,6 +143,13 @@ if(${TRACCC_BUILD_HIP} AND ${CMAKE_HIP_STANDARD} LESS 20)
     )
 endif()
 
+# If we are building with CUDA, we need to find the toolkit early because it
+# contains CCCL and Thrust.
+if(TRACCC_BUILD_CUDA)
+    enable_language(CUDA)
+    find_package(CUDAToolkit REQUIRED)
+endif()
+
 # In order to generate specializations for our kernels, we need to have both
 # a working Python interpreter, and a list of supported detectors.
 find_package(Python COMPONENTS Interpreter REQUIRED)
@@ -244,7 +251,7 @@ endif()
 
 # Set up CCCL.
 option(TRACCC_SETUP_THRUST "Set up the Thrust target(s) explicitly" TRUE)
-if(TRACCC_USE_SYSTEM_LIBS OR TRACCC_USE_SPACK_LIBS)
+if(TRACCC_USE_SYSTEM_LIBS OR TRACCC_USE_SPACK_LIBS OR CUDAToolkit_FOUND)
     set(TRACCC_USE_SYSTEM_THRUST_DEFAULT ON)
 else()
     set(TRACCC_USE_SYSTEM_THRUST_DEFAULT OFF)
@@ -257,8 +264,27 @@ option(
 unset(TRACCC_USE_SYSTEM_THRUST_DEFAULT)
 if(TRACCC_SETUP_THRUST)
     if(TRACCC_USE_SYSTEM_THRUST)
-        find_package(Thrust REQUIRED)
+        if(CUDAToolkit_FOUND)
+            find_package(
+                Thrust
+                REQUIRED
+                HINTS "${CUDAToolkit_LIBRARY_DIR}/cmake"
+            )
+        else()
+            find_package(Thrust REQUIRED)
+        endif()
     else()
+        if(CUDAToolkit_FOUND)
+            set(TRACCC_CCCL_DIAGNOSTIC WARNING)
+            if("$ENV{CI}")
+                set(TRACCC_CCCL_DIAGNOSTIC FATAL_ERROR)
+            endif()
+            message(
+                ${TRACCC_CCCL_DIAGNOSTIC}
+                "CUDA toolkit is available, but a bundled CCCL is to be used. This may lead to cross-version include path pollution and errors."
+            )
+            unset(TRACCC_CCCL_DIAGNOSTIC)
+        endif()
         add_subdirectory(extern/cccl)
     endif()
 endif()

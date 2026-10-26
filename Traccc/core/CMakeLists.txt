@@ -65,6 +65,7 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/utils/impl/detray_conversion.ipp"
   "include/traccc/utils/type_traits.hpp"
   "include/traccc/utils/memory_resource.hpp"
+  "include/traccc/utils/stream_synchronizing_allocator.hpp"
   "include/traccc/utils/seed_generator.hpp"
   "include/traccc/utils/subspace.hpp"
   "include/traccc/utils/logging.hpp"
@@ -73,8 +74,6 @@ traccc_add_library( traccc_core core TYPE SHARED
   # Clusterization algorithmic code.
   "include/traccc/clusterization/details/sparse_ccl.hpp"
   "include/traccc/clusterization/impl/sparse_ccl.ipp"
-  "include/traccc/clusterization/details/measurement_creation.hpp"
-  "include/traccc/clusterization/impl/measurement_creation.ipp"
   # Finding algorithmic code
   "include/traccc/finding/actors/ckf_aborter.hpp"
   "include/traccc/finding/actors/measurement_kalman_updater.hpp"
@@ -95,6 +94,10 @@ traccc_add_library( traccc_core core TYPE SHARED
   # Seed finding algorithmic code.
   "include/traccc/seeding/detail/lin_circle.hpp"
   "include/traccc/seeding/detail/doublet.hpp"
+  "include/traccc/seeding/strip_spacepoint_formation_data.hpp"
+  "include/traccc/seeding/detail/strip_pair.hpp"
+  "include/traccc/seeding/detail/strip_geometry.hpp"
+  "include/traccc/seeding/detail/strip_pairing.hpp"
   "include/traccc/seeding/detail/triplet.hpp"
   "include/traccc/seeding/detail/singlet.hpp"
   "include/traccc/seeding/detail/seeding_config.hpp"

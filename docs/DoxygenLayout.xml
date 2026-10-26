@@ -22,6 +22,7 @@
       <tab type="user" url="@ref building_acts" visible="yes" title="Building ACTS"/>
       <tab type="user" url="@ref howto_spack" visible="yes" title="Building with Spack"/>
       <tab type="user" url="@ref physmon" visible="yes" title="Physics performance monitoring"/>
+      <tab type="user" url="@ref python_testing" visible="yes" title="Python-based testing"/>
       <tab type="user" url="@ref root_file_hashes" visible="yes" title="ROOT file hashes"/>
     </tab>
 

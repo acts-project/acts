@@ -115,7 +115,13 @@ if(ACTS_GNN_ENABLE_TORCH)
     else()
         target_link_libraries(ActsPluginGnn PRIVATE TorchScatter::TorchScatter)
         # Should not discard TorchScatter even if its not needed at this point
-        # since we need the scatter_max operation in the torch script later
-        target_link_options(ActsPluginGnn PUBLIC "-Wl,-no-as-needed")
+        # since we need the scatter_max operation in the torch script later.
+        # --no-as-needed is a GNU ld option that Apple's linker rejects; it
+        # keeps every library on its command line anyway, so nothing is needed
+        # there.
+        target_link_options(
+            ActsPluginGnn
+            PUBLIC "$<$<NOT:$<PLATFORM_ID:Darwin>>:-Wl,-no-as-needed>"
+        )
     endif()
 endif()

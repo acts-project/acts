@@ -71,6 +71,24 @@ __global__ void gatherColsKernel(const std::size_t *indices, std::size_t nRows,
   }
 }
 
+/// Gather columns from src into dst by a device-side column index list,
+/// dst[r,k] = src[r,indices[k]]. One thread per output element, so it suits
+/// many rows with few columns (e.g. a node feature tensor), unlike
+/// gatherColsKernel.
+template <typename T>
+__global__ void gatherColsByIndexKernel(const std::size_t *indices,
+                                        std::size_t nRows, std::size_t nColsSrc,
+                                        std::size_t nColsDst, const T *src,
+                                        T *dst) {
+  const std::size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx >= nRows * nColsDst) {
+    return;
+  }
+  const std::size_t row = idx / nColsDst;
+  const std::size_t k = idx % nColsDst;
+  dst[idx] = src[row * nColsSrc + indices[k]];
+}
+
 /// Multiply each column of src with the corresponding scale value.
 /// dst[r,n] = src[r,n] * scales[n]
 /// This is one thread per element with col computed from the linear index.
@@ -214,6 +232,39 @@ Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
 }
 
 template <typename T>
+Tensor<T> cudaGatherCols(const Tensor<T> &tensor,
+                         const std::vector<std::size_t> &indices,
+                         const ExecutionContext &execContext) {
+  const auto nRows = tensor.shape()[0];
+  const auto nColsSrc = tensor.shape()[1];
+  const auto nColsDst = indices.size();
+  const auto total = nRows * nColsDst;
+  const auto stream = execContext.stream.value();
+
+  auto result = Tensor<T>::Create({nRows, nColsDst}, execContext);
+
+  if (total == 0) {
+    return result;
+  }
+
+  std::size_t *devIndices{};
+  ACTS_CUDA_CHECK(
+      cudaMallocAsync(&devIndices, nColsDst * sizeof(std::size_t), stream));
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(devIndices, indices.data(),
+                                  nColsDst * sizeof(std::size_t),
+                                  cudaMemcpyHostToDevice, stream));
+
+  dim3 blockDim = 256;
+  dim3 gridDim = (total + blockDim.x - 1) / blockDim.x;
+  gatherColsByIndexKernel<<<gridDim, blockDim, 0, stream>>>(
+      devIndices, nRows, nColsSrc, nColsDst, tensor.data(), result.data());
+  ACTS_CUDA_CHECK(cudaGetLastError());
+
+  ACTS_CUDA_CHECK(cudaFreeAsync(devIndices, stream));
+  return result;
+}
+
+template <typename T>
 Tensor<T> cudaMulPerColumn(const Tensor<T> &src, const Tensor<T> &scales,
                            const ExecutionContext &execContext) {
   const auto rows = src.shape()[0];
@@ -246,6 +297,12 @@ template Tensor<float> cudaSelectCols(const Tensor<float> &,
                                       const ExecutionContext &);
 template Tensor<std::int64_t> cudaSelectCols(const Tensor<std::int64_t> &,
                                              const Tensor<bool> &,
+                                             const ExecutionContext &);
+template Tensor<float> cudaGatherCols(const Tensor<float> &,
+                                      const std::vector<std::size_t> &,
+                                      const ExecutionContext &);
+template Tensor<std::int64_t> cudaGatherCols(const Tensor<std::int64_t> &,
+                                             const std::vector<std::size_t> &,
                                              const ExecutionContext &);
 template Tensor<float> cudaMulPerColumn(const Tensor<float> &,
                                         const Tensor<float> &,

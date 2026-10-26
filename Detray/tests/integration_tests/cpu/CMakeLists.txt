@@ -49,26 +49,26 @@ macro(detray_add_cpu_test algebra)
 endmacro()
 
 # Build the array tests.
-detray_add_cpu_test( array )
+detray_add_cpu_test(array)
 
 # Build the Eigen tests.
 if(DETRAY_EIGEN_PLUGIN)
-    detray_add_cpu_test( eigen )
+    detray_add_cpu_test(eigen)
 endif()
 
 # Build the Fastor tests.
 if(DETRAY_FASTOR_PLUGIN)
-    detray_add_cpu_test( fastor )
+    detray_add_cpu_test(fastor)
 endif()
 
 # Build the SMatrix tests.
 if(DETRAY_SMATRIX_PLUGIN)
-    detray_add_cpu_test( smatrix )
+    detray_add_cpu_test(smatrix)
 endif()
 
 # Build the Vc AoS tests.
 if(DETRAY_VC_AOS_PLUGIN)
-    detray_add_cpu_test( vc_aos )
+    detray_add_cpu_test(vc_aos)
 endif()
 
 # Detector navigation tests
