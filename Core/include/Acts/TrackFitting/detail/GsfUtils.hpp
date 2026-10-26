@@ -339,7 +339,7 @@ double applyBetheHeitler(
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
     double weightCutoff, std::vector<GsfComponent> &componentCache,
     std::size_t &nInvalidBetheHeitler, double &maxPathXOverX0,
-    const Logger &logger);
+    const Logger &logger, double transverseMomentumCut = 0.0);
 
 /// Apply the multiple scattering to the state
 template <typename propagator_state_t, typename stepper_t>

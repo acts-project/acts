@@ -127,6 +127,9 @@ struct GsfOptions {
   /// Minimum weight required to keep a component
   double weightCutoff = 1.e-4;
 
+  /// Minimum transverse momentum for components; zero disables the cut
+  double transverseMomentumCut = 0.0;
+
   /// Abort the fit if an error occurs
   bool abortOnError = false;
 

@@ -124,18 +124,19 @@ void addTrackFitting(py::module& mex) {
            std::size_t maxComponents, double weightCutoff,
            ComponentMergeMethod componentMergeMethod,
            MixtureReductionAlgorithm mixtureReductionAlgorithm,
-           double reverseFilteringCovarianceScaling, Logging::Level level) {
+           double reverseFilteringCovarianceScaling, Logging::Level level,
+           double transverseMomentumCut) {
           return makeGsfFitterFunction(
               std::move(trackingGeometry), std::move(magneticField),
               betheHeitlerApprox, maxComponents, weightCutoff,
               componentMergeMethod, mixtureReductionAlgorithm,
               reverseFilteringCovarianceScaling,
-              *getDefaultLogger("GSFFunc", level));
+              *getDefaultLogger("GSFFunc", level), transverseMomentumCut);
         },
         "trackingGeometry"_a, "magneticField"_a, "betheHeitlerApprox"_a,
         "maxComponents"_a, "weightCutoff"_a, "componentMergeMethod"_a,
         "mixtureReductionAlgorithm"_a, "reverseFilteringCovarianceScaling"_a,
-        "level"_a);
+        "level"_a, "transverseMomentumCut"_a = 0.0);
 
     mex.def(
         "makeGlobalChiSquareFitterFunction",
