@@ -121,13 +121,6 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
       // Only go on when you have all the material histograms
       if ((x0 != nullptr) && (l0 != nullptr) && (A != nullptr) &&
           (Z != nullptr) && (rho != nullptr)) {
-        // If the bin information histograms are present the material is
-        // either a 2D or a 3D grid
-        if ((n != nullptr) && (v != nullptr) && (o != nullptr) &&
-            (min != nullptr) && (max != nullptr)) {
-          throw std::invalid_argument(
-              "Interpolated volume material ROOT maps are no longer supported");
-        } else {
           // Homogeneous material
           double dx0 = x0->GetBinContent(1);
           double dl0 = l0->GetBinContent(1);
@@ -138,7 +131,6 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
           const auto material =
               Material::fromMassDensity(dx0, dl0, da, dz, drho);
           vMaterial = std::make_shared<HomogeneousVolumeMaterial>(material);
-        }
       }
       ACTS_VERBOSE("Successfully read Material for : " << geoID);
 
