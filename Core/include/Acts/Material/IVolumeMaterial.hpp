@@ -10,6 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Material/VolumeMaterialCell.hpp"
+
+#include <optional>
+#include <utility>
 
 namespace Acts {
 
@@ -21,18 +25,46 @@ class Material;
 ///
 /// Virtual base class of volume material description
 //
-/// Material associated with a Volume (homogeneous, binned, interpolated)
+/// Material associated with a volume, with constant cells for cached lookup.
 class IVolumeMaterial {
  public:
+  /// Per-propagation lookup state. A cache may be reused across providers:
+  /// changing provider invalidates the stored cell even at the same position.
+  struct Cache {
+    /// Provider that produced the cached cell
+    const IVolumeMaterial* owner = nullptr;
+    /// Last retrieved constant material cell
+    std::optional<VolumeMaterialCell> cell;
+  };
+
   /// Virtual Destructor
   virtual ~IVolumeMaterial() = default;
 
   /// Access to actual material
   ///
   /// @param position is the request position for the material call
-  /// @todo interface to change including 'cell'
   /// @return The material properties at the given position
-  virtual const Material material(const Vector3& position) const = 0;
+  virtual const Material material(const Vector3& position) const {
+    return materialCell(position).material();
+  }
+
+  /// Retrieve a constant material cell containing a global position.
+  /// @param position global lookup position
+  /// @return the cell containing the position
+  virtual VolumeMaterialCell materialCell(const Vector3& position) const = 0;
+
+  /// Retrieve material, retaining the cell until the position leaves it.
+  /// @param position global lookup position
+  /// @param cache per-propagation cache, updated on a cell or provider change
+  /// @return material valid until the next update of @p cache
+  const Material& material(const Vector3& position, Cache& cache) const {
+    if (cache.owner != this || !cache.cell || !cache.cell->isInside(position)) {
+      auto cell = materialCell(position);
+      cache.cell = std::move(cell);
+      cache.owner = this;
+    }
+    return cache.cell->material();
+  }
 
   /// @brief output stream operator
   ///

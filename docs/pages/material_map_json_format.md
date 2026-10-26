@@ -124,6 +124,30 @@ merged portal surfaces had to be dropped. Its payload is just the tag and
 `mapMaterial`; it carries no material, only the information that something was
 lost here.
 
+## Volume material payloads
+
+Volume material payloads use `homogeneous`, `proto`, or `grid` under the
+volume's `material` key.
+
+A `grid` contains a three-axis `binning` array in the same AxisSpec format as
+surface material, an optional `transform` placing the material frame in global
+coordinates, and a `storage` object. Storage has type `direct` (a `material`
+array), `indexed`, or `globally-indexed` (both an `indices` array and a
+`material` palette). These arrays include under- and overflow bins, in the
+flattened global-bin order of @ref Acts::IMultiAxis3D. Shared palettes are
+inlined when writing an individual volume payload.
+
+Grid material is constant in each material bin. The material grid can differ
+from the geometry binning. Each propagation retains a @ref Acts::VolumeMaterialCell
+and refreshes it when the lookup position leaves the cell or the material
+provider changes. The cache is used by both the material interactor and the
+dense Eigen stepper. This lookup mechanism does not constrain the integration
+step to material bin boundaries; the configured propagation step size still
+controls how finely material variations are sampled.
+
+ROOT volume material output currently supports homogeneous material only;
+use JSON for grid material.
+
 ## Stable surface assignment keys
 
 For configuration, mapping, and application, see

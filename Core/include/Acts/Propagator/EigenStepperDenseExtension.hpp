@@ -34,6 +34,8 @@ struct EigenStepperDenseExtension {
   /// Material that will be passed
   /// TODO : Might not be needed anymore
   Material material = Material::Vacuum();
+  /// Constant material cell retained across accepted steps and retries.
+  IVolumeMaterial::Cache materialCache;
   /// Derivatives dLambda''dlambda at each sub-step point
   std::array<double, 4> dLdl{};
   /// q/p at each sub-step
@@ -75,6 +77,7 @@ struct EigenStepperDenseExtension {
     requires(i >= 0 && i <= 3)
   {
     if (volumeMaterial == nullptr) {
+      materialCache = {};
       return defaultExtension.template k<i>(state, stepper, volumeMaterial,
                                             knew, bField, kQoP, h, kprev);
     }
@@ -87,7 +90,7 @@ struct EigenStepperDenseExtension {
     if constexpr (i == 0) {
       // Set up for energy loss
       Vector3 position = stepper.position(state);
-      material = volumeMaterial->material(position.template cast<double>());
+      material = volumeMaterial->material(position, materialCache);
       initialMomentum = stepper.absoluteMomentum(state);
       currentMomentum = initialMomentum;
       qop[0] = stepper.qOverP(state);
