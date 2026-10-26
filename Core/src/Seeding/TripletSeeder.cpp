@@ -104,8 +104,8 @@ void createSeedsFromGroupsImpl(
         filter.filterTripletTopCandidates(spacePoints, middleSp, bottomDoublet,
                                           candidates);
       };
-  TripletSeedFinder::CandidatesSink sink;
-  sink.connect(filterCandidates);
+  TripletSeedFinder::CandidatesCallback filterCallback;
+  filterCallback.connect(filterCandidates);
 
   // combine doublets to triplets
   if (tripletFinder.config().sortedByCotTheta) {
@@ -117,11 +117,11 @@ void createSeedsFromGroupsImpl(
     tripletFinder.createTripletTopCandidates(
         spacePoints, middleSp, cache.bottomDoublets.subset(cache.sortedBottoms),
         cache.topDoublets.subset(cache.sortedTops), cache.tripletTopCandidates,
-        sink);
+        filterCallback);
   } else {
     tripletFinder.createTripletTopCandidates(
         spacePoints, middleSp, cache.bottomDoublets.range(),
-        cache.topDoublets.range(), cache.tripletTopCandidates, sink);
+        cache.topDoublets.range(), cache.tripletTopCandidates, filterCallback);
   }
 
   filter.filterTripletsMiddleFixed(spacePoints, outputSeeds);

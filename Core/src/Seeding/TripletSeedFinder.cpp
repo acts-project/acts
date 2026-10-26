@@ -499,9 +499,8 @@ class Impl final : public TripletSeedFinder {
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       DoubletCollections bottomDoublets, DoubletCollections topDoublets,
       TripletTopCandidates& tripletTopCandidates,
-      const CandidatesSink& sink) const {
-    // The candidates are cleared for every bottom doublet and the top doublets
-    // only shrink over the loop, so this capacity covers every bottom doublet.
+      const CandidatesCallback& callback) const {
+    // Reserve enough space, in case current capacity is too little
     tripletTopCandidates.reserve(topDoublets.size());
 
     for (auto bottomDoublet : bottomDoublets) {
@@ -514,29 +513,29 @@ class Impl final : public TripletSeedFinder {
           spacePoints, spM, bottomDoublet, topDoublets, tripletTopCandidates);
 
       if (tripletTopCandidates.size() > 0) {
-        sink(bottomDoublet, tripletTopCandidates);
+        callback(bottomDoublet, tripletTopCandidates);
       }
     }
   }
 
-  void createTripletTopCandidates(const SpacePointContainer& spacePoints,
-                                  const ConstSpacePointProxy& spM,
-                                  DoubletsForMiddleSp::Range bottomDoublets,
-                                  DoubletsForMiddleSp::Range topDoublets,
-                                  TripletTopCandidates& tripletTopCandidates,
-                                  const CandidatesSink& sink) const override {
+  void createTripletTopCandidates(
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
+      DoubletsForMiddleSp::Range bottomDoublets,
+      DoubletsForMiddleSp::Range topDoublets,
+      TripletTopCandidates& tripletTopCandidates,
+      const CandidatesCallback& callback) const override {
     createTripletTopCandidatesImpl(spacePoints, spM, bottomDoublets,
-                                   topDoublets, tripletTopCandidates, sink);
+                                   topDoublets, tripletTopCandidates, callback);
   }
 
-  void createTripletTopCandidates(const SpacePointContainer& spacePoints,
-                                  const ConstSpacePointProxy& spM,
-                                  DoubletsForMiddleSp::Subset2 bottomDoublets,
-                                  DoubletsForMiddleSp::Subset2 topDoublets,
-                                  TripletTopCandidates& tripletTopCandidates,
-                                  const CandidatesSink& sink) const override {
+  void createTripletTopCandidates(
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
+      DoubletsForMiddleSp::Subset2 bottomDoublets,
+      DoubletsForMiddleSp::Subset2 topDoublets,
+      TripletTopCandidates& tripletTopCandidates,
+      const CandidatesCallback& callback) const override {
     createTripletTopCandidatesImpl(spacePoints, spM, bottomDoublets,
-                                   topDoublets, tripletTopCandidates, sink);
+                                   topDoublets, tripletTopCandidates, callback);
   }
 
  private:
