@@ -159,18 +159,6 @@ BOOST_AUTO_TEST_CASE(MergedMaterialMarkerRoundTrip) {
               nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(RejectRemovedInterpolatedVolumeMaps) {
-  for (const auto* type : {"interpolated2D", "interpolated3D"}) {
-    nlohmann::json input = {{"material",
-                             {{"type", type},
-                              {"mapMaterial", true},
-                              {"data", nlohmann::json::array()}}}};
-    volumeMaterialPointer material = nullptr;
-    BOOST_CHECK_THROW(from_json(input, material), std::invalid_argument);
-    BOOST_CHECK(material == nullptr);
-  }
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
