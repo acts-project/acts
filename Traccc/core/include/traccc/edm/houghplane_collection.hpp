@@ -65,7 +65,7 @@ template<typename T,
 using houghplane_collection =
     vecmem::edm::container<houghplane,
                            // bins of the plane
-                           vecmem::edm::type::jagged_vector<T>, // std::array<T, N_COLS * N_ROWS>>,
+                           vecmem::edm::type::jagged_vector<T>,
                            // edges (x) of the planes
                            vecmem::edm::type::scalar<std::array<scalar, N_COLS + 1>>,
                            // edges (y) of the planes

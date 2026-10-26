@@ -98,10 +98,18 @@ class hough_transform_seeding_algorithm
     /// The output hough planes
     edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
   };
+
+  struct count_maxima_payload {
+    // The hough planes
+    edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
+    // The count vector
+    vecmem::data::vector_view<unsigned int>& count_vector;
+  };
   
   virtual void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const = 0;
   virtual void precompute_spacepoint_variables_kernel(const precompute_spacepoint_variables_payload& payload) const = 0;
   virtual void fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const = 0;
+  virtual void count_maxima_kernel(const count_maxima_payload& payload) const = 0;
 
   virtual void synchronize() const = 0;
   
@@ -113,4 +121,4 @@ class hough_transform_seeding_algorithm
 #include "traccc/seeding/device/impl/define_plane_edges.ipp"
 #include "traccc/seeding/device/impl/fill_hough_plane.ipp"
 #include "traccc/seeding/device/impl/precompute_spacepoint_variables.ipp"
-
+#include "traccc/seeding/device/impl/count_maxima.ipp"

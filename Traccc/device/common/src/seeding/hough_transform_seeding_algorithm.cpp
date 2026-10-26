@@ -41,14 +41,10 @@ auto hough_transform_seeding_algorithm::operator()(
     return {};
   }
  
-  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view::size_type n_slices = m_config.wedges.size(); 
-  vecmem::vector<unsigned int> plane_sizes_host =
-        ((mr().host != nullptr) ? vecmem::vector<unsigned int>(n_slices, mr().host)
-                                : vecmem::vector<unsigned int>(n_slices));
-  for (unsigned int i = 0; i < n_slices; ++i) plane_sizes_host[i] = N_COLS * N_ROWS;
-
   // Set up the output buffer.
-  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer result(plane_sizes_host,
+  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view::size_type n_slices = m_config.wedges.size();
+  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer result(
+          std::vector<unsigned int>(n_slices, N_COLS * N_ROWS),
 		  mr().main, mr().host, 
 		  vecmem::data::buffer_type::resizable);
   copy().setup(result)->ignore();
@@ -89,10 +85,45 @@ auto hough_transform_seeding_algorithm::operator()(
 		  spacepoint_r, spacepoint_phi,
 		  result});
 
+  // Count and then find the maxima
+  vecmem::data::vector_buffer<unsigned int> maxima_sizes(n_slices, mr().main);
+  copy().setup(vecmem::ignore_event, maxima_sizes);
+  copy().memset(vecmem::ignore_event, maxima_sizes, 0);
+
+  count_maxima_kernel({result, maxima_sizes});
+  vecmem::vector<unsigned int> maxima_sizes_host = ((mr().host != nullptr)
+                ? vecmem::vector<unsigned int>(mr().host)
+                : vecmem::vector<unsigned int>());
+  copy()(maxima_sizes, maxima_sizes_host)->wait();
+
+  /*
+  std::cout << std::endl;
+  std::cout << "maxima_sizes_host size: " << maxima_sizes_host.size() << std::endl;
+  for (unsigned int i(0); i<maxima_sizes_host.size(); ++i) {
+    std::cout << "* n [" << i << "]: " << maxima_sizes_host[i] << std::endl; 
+  }
+  */
+  
+  unsigned int total_maxima = 0u;
+  for (unsigned int i(0); i<maxima_sizes_host.size(); ++i) total_maxima += maxima_sizes_host[i];
+ 
+  vecmem::data::vector_buffer<unsigned long long> maxima_global_index(total_maxima, mr().main);
+  vecmem::data::vector_buffer<scalar> maxima_x_value(total_maxima, mr().main);
+  edm::houghplane_collection<scalar, 32, 32>::buffer images(
+          std::vector<unsigned int>(total_maxima, 32 * 32),
+          mr().main, mr().host,
+          vecmem::data::buffer_type::resizable);
+
+  copy().setup(maxima_global_index)->ignore();
+  copy().setup(maxima_x_value)->ignore();
+  copy().setup(images)->ignore();
+  /*
+  get_maxima_kernel({result,
+                     maxima_global_index,
+                     maxima_x_value,
+                     images});
+  */
 /*  
-  synchronize();
-
-
   edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view host_view;
   edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer host_buffer;
   if (mr().host) {
@@ -113,7 +144,7 @@ auto hough_transform_seeding_algorithm::operator()(
       std::cout << std::endl;
   }
   std::cout << std::endl;
-
+*/
   /*
   edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_device host_device{host_view};
   for (unsigned int i = 0; i < host_device.size(); ++i) {
