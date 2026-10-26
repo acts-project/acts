@@ -21,8 +21,6 @@
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
 #include <cstddef>
-#include <stdexcept>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -141,7 +139,6 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     return;
   }
   nlohmann::json jMaterial = j[Acts::jsonKey().materialkey];
-  const auto type = jMaterial.value(Acts::jsonKey().typekey, std::string{});
   // By default no material is return.
   material = nullptr;
   if (jMaterial[Acts::jsonKey().mapkey] == false) {
