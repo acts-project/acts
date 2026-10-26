@@ -553,8 +553,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
               const float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
 
               // the looser of the cuts the two layer pairs carry
-              if (absTauRatio >
-                  std::max(slw.tauRatioCutInner, pS->tauRatioCut)) {
+              const float tauRatioCut =
+                  std::max(slw.tauRatioCutInner, pS->tauRatioCut);
+
+              if (absTauRatio > tauRatioCut) {
                 continue;  // bad match
               }
 
@@ -575,6 +577,15 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
               const float dcurv = curv2 - pS->p[1];
 
               if (dcurv < -m_cfg.cutDCurvMax || dcurv > m_cfg.cutDCurvMax) {
+                continue;
+              }
+
+              // marginal in all three at once
+              if (m_cfg.useSumRatioCut &&
+                  absTauRatio / tauRatioCut +
+                          std::abs(dPhi) / m_cfg.cutDPhiMax +
+                          std::abs(dcurv) / m_cfg.cutDCurvMax >
+                      m_cfg.sumRatioCutMax) {
                 continue;
               }
 

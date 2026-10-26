@@ -93,6 +93,15 @@ class GbtsGraphBuilder {
     /// Maximum allowed curvature tolerance for candidate edge connections.
     float cutDCurvMax = 0.001f;
 
+    /// Reject a candidate edge connection whose tau ratio, phi and curvature
+    /// differences, each divided by its own cut, add up to more than
+    /// `sumRatioCutMax`: a pair that is marginal in all three at once.
+    bool useSumRatioCut = false;
+
+    /// Threshold of the summed ratios, between 1 (any single marginal
+    /// difference rejects) and 3 (no effect beyond the individual cuts).
+    float sumRatioCutMax = 1.3f;
+
     /// Minimum z0 value. In pixel mode the value is picked from the RoI.
     float minZ0 = -600.0f;
 

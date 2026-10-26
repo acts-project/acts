@@ -72,6 +72,10 @@ class GraphBasedTrackSeeder {
     float maxSeedSplitEta = 0.6;
     /// Max allowed curvature for seed self consistency check.
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
+    /// Reject a complete chain whose fitted |curvature| times this factor
+    /// exceeds `GbtsTrackingFilter::Config::maxCurvature`: a tighter minimum
+    /// pT once the whole chain has been fitted. Zero disables it.
+    float postFitCurvatureFactor = 0.0f;
     // GbtsNodeStorage options
     /// Maximum endcap cluster width.
     float maxEndcapClusterWidth = 0.35f * Acts::UnitConstants::mm;
