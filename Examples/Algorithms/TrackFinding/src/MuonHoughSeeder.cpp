@@ -241,6 +241,9 @@ MuonHoughMaxContainer MuonHoughSeeder::extendMaximaWithPhi(
     MuonId bucketId{etaMax.hits().front()->id()};
     bucketId.setCoordFlags(false, true);
     displayMaxima(ctx, bucketId, phiMaxima, plane, axisRanges);
+    if (phiMaxima.empty()) {
+      outMaxima.emplace_back(std::move(etaMax));
+    }
   }
   return outMaxima;
 }
