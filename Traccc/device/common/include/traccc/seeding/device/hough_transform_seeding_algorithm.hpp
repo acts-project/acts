@@ -105,20 +105,33 @@ class hough_transform_seeding_algorithm
     // The count vector
     vecmem::data::vector_view<unsigned int>& count_vector;
   };
-  
+ 
+  struct find_maxima_payload {
+    // The hough planes
+    edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
+    // The global index vector
+    vecmem::data::jagged_vector_view<unsigned int>& global_index;
+    // Mutex
+    unsigned int* backup_mutex;
+  };
+ 
   virtual void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const = 0;
   virtual void precompute_spacepoint_variables_kernel(const precompute_spacepoint_variables_payload& payload) const = 0;
   virtual void fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const = 0;
   virtual void count_maxima_kernel(const count_maxima_payload& payload) const = 0;
+  virtual void find_maxima_kernel(const find_maxima_payload& payload) const = 0;
 
   virtual void synchronize() const = 0;
   
   config_type m_config;    
+  mutable vecmem::unique_alloc_ptr<unsigned int> m_backup_mutex;
   };
 
 }  // namespace traccc::device
 
+#include "traccc/seeding/device/impl/hough_seeding_utilities.ipp"
 #include "traccc/seeding/device/impl/define_plane_edges.ipp"
 #include "traccc/seeding/device/impl/fill_hough_plane.ipp"
 #include "traccc/seeding/device/impl/precompute_spacepoint_variables.ipp"
 #include "traccc/seeding/device/impl/count_maxima.ipp"
+#include "traccc/seeding/device/impl/find_maxima.ipp"

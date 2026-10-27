@@ -19,37 +19,15 @@ void count_maxima(const global_index_t globalIndex,
 
     const long long col = globalIndex % N_COLS;
     const long long row = globalIndex / N_COLS;
-    constexpr long long rows = N_ROWS;
-    constexpr long long cols = N_COLS;
 
     for (unsigned int wedge_idx(0); wedge_idx<houghplanes.size(); ++wedge_idx) {
         const auto& plane = houghplanes.plane()[wedge_idx];
         const T value = plane[globalIndex];
         if (value == 0) continue;
         
-        bool is_maximum = true;
-        for (int dy = -1; dy <= 1; ++dy) {
-            if (!is_maximum) break;
-            const long long neighbor_row = (row + dy + rows) % rows;
-
-            for (int dx = -1; dx <= 1; ++dx) {
-                const long long neighbor_col = col + dx;
-                if (neighbor_col < 0 || neighbor_col >= cols) continue;
-
-                const auto neighbor_index =
-                    static_cast<unsigned long long>(neighbor_row) * N_COLS +
-                    static_cast<unsigned long long>(neighbor_col);
-
-                if (neighbor_index == globalIndex) continue;
-                if (plane[neighbor_index] > value) {
-                    is_maximum = false;
-                    break;
-                }
-            } // loop on dx
-        } // loop on dy
-
-        // it is a local maximum
+        bool is_maximum = is_local_maximum<T, N_COLS, N_ROWS>(globalIndex, value, plane, col, row);
         if (!is_maximum) continue;
+        // it is a local maximum
         vecmem::device_atomic_ref<unsigned int> val(number_maxima[wedge_idx]);
         val.fetch_add(1u);
     } // loop on wedges

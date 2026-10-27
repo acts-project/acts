@@ -49,6 +49,7 @@ class hough_transform_seeding_algorithm	: public device::hough_transform_seeding
   void precompute_spacepoint_variables_kernel(const precompute_spacepoint_variables_payload& payload) const;
   void fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const;
   void count_maxima_kernel(const count_maxima_payload& payload) const;
+  void find_maxima_kernel(const find_maxima_payload& payload) const;
 
   /// Wait for outstanding work on the algorithm stream or queue.
   void synchronize() const override;
