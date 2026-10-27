@@ -266,15 +266,17 @@ class EigenStepper final {
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] stype The step size type to be set
   /// @param [in] logger A @c Logger instance
+  /// @param curvature Global geometric curvature for the crossing estimate
   /// @return Status of the intersection indicating whether surface was reached
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction propDir, const BoundaryTolerance& boundaryTolerance,
       double surfaceTolerance, ConstrainedStep::Type stype,
-      const Logger& logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger(),
+      const Vector3& curvature = Vector3::Zero()) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
         *this, state, surface, index, propDir, boundaryTolerance,
-        surfaceTolerance, stype, logger);
+        surfaceTolerance, stype, logger, curvature);
   }
 
   /// Update step size
