@@ -11,9 +11,11 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstring>
 #include <iterator>
+#include <limits>
 #include <optional>
 #include <stdexcept>
 #include <unordered_map>
@@ -22,32 +24,44 @@
 
 namespace Acts::Experimental::detail {
 
+float GbtsLayer::LayerPoint::eta() const {
+  const float t = z / r;
+  return -std::log(fastHypot(1, t) - t);
+}
+
+GbtsLayer::LayerPoint GbtsLayer::pointAt(const float bound) const {
+  const GbtsLayerDescription& d = m_layerDescription;
+  const float ref =
+      d.refCoord + d.slope * (bound - 0.5f * (d.minBound + d.maxBound));
+  if (d.type == GbtsLayerType::Barrel) {
+    return {ref, bound};
+  }
+  return {bound, ref};
+}
+
+float GbtsLayer::boundAt(const float eta) const {
+  const GbtsLayerDescription& d = m_layerDescription;
+  const float sh = std::sinh(eta);
+  // reference coordinate the line would have at boundary coordinate zero
+  const float ref0 = d.refCoord - d.slope * 0.5f * (d.minBound + d.maxBound);
+  if (d.type == GbtsLayerType::Barrel) {
+    // r = ref0 + slope * z and z = r * sinh(eta)
+    return ref0 * sh / (1.f - d.slope * sh);
+  }
+  // z = ref0 + slope * r and z = r * sinh(eta)
+  return ref0 / (sh - d.slope);
+}
+
 GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
                      const float etaBinWidth, const std::uint32_t bin0)
     : m_layerDescription(layerDescription) {
-  float r1{};
-  float r2{};
-  float z1{};
-  float z2{};
-  if (m_layerDescription.type == GbtsLayerType::Barrel) {
-    r1 = m_layerDescription.refCoord;
-    r2 = m_layerDescription.refCoord;
-    z1 = m_layerDescription.minBound;
-    z2 = m_layerDescription.maxBound;
-  } else if (m_layerDescription.type == GbtsLayerType::Endcap) {
-    r1 = m_layerDescription.minBound;
-    r2 = m_layerDescription.maxBound;
-    z1 = m_layerDescription.refCoord;
-    z2 = m_layerDescription.refCoord;
-  } else {
+  if (m_layerDescription.type != GbtsLayerType::Barrel &&
+      m_layerDescription.type != GbtsLayerType::Endcap) {
     throw std::runtime_error("invalid layer type");
   }
 
-  const float t1 = z1 / r1;
-  const float eta1 = -std::log(fastHypot(1, t1) - t1);
-
-  const float t2 = z2 / r2;
-  const float eta2 = -std::log(fastHypot(1, t2) - t2);
+  const float eta1 = pointAt(m_layerDescription.minBound).eta();
+  const float eta2 = pointAt(m_layerDescription.maxBound).eta();
 
   // increasing them slightly to avoid range_check exceptions
   const auto minEta = static_cast<float>(std::min(eta1, eta2) - 1e-6);
@@ -76,20 +90,11 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
   float eta = minEta + 0.5f * m_binning.etaBinWidth;
 
   for (std::uint32_t i = 0; i < numBins; ++i) {
-    float e1 = eta - 0.5f * m_binning.etaBinWidth;
-    float e2 = eta + 0.5f * m_binning.etaBinWidth;
-
-    if (m_layerDescription.type == GbtsLayerType::Barrel) {
-      m_minBinCoord.push_back(m_layerDescription.refCoord * std::sinh(e1));
-      m_maxBinCoord.push_back(m_layerDescription.refCoord * std::sinh(e2));
-    } else {
-      // for the positive endcap larger eta corresponds to smaller radius
-      if (m_layerDescription.refCoord > 0) {
-        std::swap(e1, e2);
-      }
-      m_minBinCoord.push_back(m_layerDescription.refCoord / std::sinh(e1));
-      m_maxBinCoord.push_back(m_layerDescription.refCoord / std::sinh(e2));
-    }
+    // for the positive endcap larger eta corresponds to smaller radius
+    const float c1 = boundAt(eta - 0.5f * m_binning.etaBinWidth);
+    const float c2 = boundAt(eta + 0.5f * m_binning.etaBinWidth);
+    m_minBinCoord.push_back(std::min(c1, c2));
+    m_maxBinCoord.push_back(std::max(c1, c2));
 
     eta += m_binning.etaBinWidth;
   }
@@ -98,164 +103,56 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
 bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
                                    const std::uint32_t b1,
                                    const std::uint32_t b2, const float minZ0,
-                                   const float maxZ0) const {
-  const float z1min = m_minBinCoord.at(b1);
-  const float z1max = m_maxBinCoord.at(b1);
-  const float r1 = m_layerDescription.refCoord;
+                                   const float maxZ0,
+                                   const float z0Tolerance) const {
+  const std::array<LayerPoint, 2> ends1 = {pointAt(m_minBinCoord.at(b1)),
+                                           pointAt(m_maxBinCoord.at(b1))};
+  std::array<LayerPoint, 2> ends2 = {
+      otherLayer.pointAt(otherLayer.m_minBinCoord.at(b2)),
+      otherLayer.pointAt(otherLayer.m_maxBinCoord.at(b2))};
 
-  const float tol = 5.0f;
-
-  if (m_layerDescription.type == GbtsLayerType::Barrel &&
-      otherLayer.m_layerDescription.type == GbtsLayerType::Barrel) {
-    const float minB2 = otherLayer.m_minBinCoord.at(b2);
-    const float maxB2 = otherLayer.m_maxBinCoord.at(b2);
-
-    const float r2 = otherLayer.m_layerDescription.refCoord;
-
-    // For same layer links use layer thickness
-    const float dr =
-        this == &otherLayer ? m_layerDescription.layerThickness : r2 - r1;
-    const float A = r2 / dr;
-    const float B = r1 / dr;
-
-    const float z0Min = z1min * A - maxB2 * B;
-    const float z0Max = z1max * A - minB2 * B;
-
-    if (z0Max < minZ0 - tol || z0Min > maxZ0 + tol) {
-      return false;
-    }
-
-    return true;
-  }
-
-  if (m_layerDescription.type == GbtsLayerType::Barrel &&
-      otherLayer.m_layerDescription.type == GbtsLayerType::Endcap) {
-    const float z2 = otherLayer.m_layerDescription.refCoord;
-    const float r2max = otherLayer.m_maxBinCoord.at(b2);
-    float r2min = otherLayer.m_minBinCoord.at(b2);
-
-    if (r2max <= r1) {
-      return false;
-    }
-
-    if (r2min <= r1) {
-      r2min = r1 + 1e-3f;
-    }
-
-    float z0Max = 0;
-    float z0Min = 0;
-
-    if (z2 > 0) {
-      z0Max = (z1max * r2max - z2 * r1) / (r2max - r1);
-      z0Min = (z1min * r2min - z2 * r1) / (r2min - r1);
-    } else {
-      z0Max = (z1max * r2min - z2 * r1) / (r2min - r1);
-      z0Min = (z1min * r2max - z2 * r1) / (r2max - r1);
-    }
-
-    if (z0Max < minZ0 - tol || z0Min > maxZ0 + tol) {
-      return false;
-    }
-    return true;
-  }
-
-  if (m_layerDescription.type == GbtsLayerType::Endcap &&
-      otherLayer.m_layerDescription.type == GbtsLayerType::Endcap) {
-    const float z2 = otherLayer.m_layerDescription.refCoord;
-    const float z1 = m_layerDescription.refCoord;
-    const float r2max = otherLayer.m_maxBinCoord.at(b2);
-    const float r2min = otherLayer.m_minBinCoord.at(b2);
-    const float r1max = m_maxBinCoord.at(b1);
-    const float r1min = m_minBinCoord.at(b1);
-
-    if (r1min >= r2max) {
-      return false;
-    }
-    // For same layer links use layer thickness
-    const float dz =
-        this == &otherLayer ? m_layerDescription.layerThickness : z2 - z1;
-
-    if (z2 > 0) {  // positive endcap
-
-      const float z0Max = z1 - r1min * dz / (r2max - r1min);
-
-      if (z0Max < minZ0 - tol) {
-        return false;
+  if (this == &otherLayer) {
+    // same layer link: the outer point is a layer thickness further out
+    for (LayerPoint& p : ends2) {
+      if (m_layerDescription.type == GbtsLayerType::Barrel) {
+        p.r += m_layerDescription.layerThickness;
+      } else {
+        p.z += std::copysign(m_layerDescription.layerThickness, p.z);
       }
+    }
+  }
 
-      if (r2min > r1max) {
-        const float z0Min = z1 - r1max * dz / (r2min - r1max);
+  constexpr float inf = std::numeric_limits<float>::infinity();
+  float z0Min = inf;
+  float z0Max = -inf;
+  bool outwards = false;
 
-        if (z0Min > maxZ0 + tol) {
-          return false;
+  for (const LayerPoint& p1 : ends1) {
+    for (const LayerPoint& p2 : ends2) {
+      const float dr = p2.r - p1.r;
+      const float dz = p2.z - p1.z;
+      if (dr <= 0) {
+        // pole in between: z0 diverges with the sign of z1 - z2
+        if (dz >= 0) {
+          z0Min = -inf;
         }
-      }
-    } else {  // negative endcap
-      const float z0Min = z1 - r1min * dz / (r2max - r1min);
-
-      if (z0Min > maxZ0 + tol) {
-        return false;
-      }
-
-      if (r2min > r1max) {
-        const float z0Max = z1 - r1max * dz / (r2min - r1max);
-
-        if (z0Max < minZ0 - tol) {
-          return false;
+        if (dz <= 0) {
+          z0Max = inf;
         }
+        continue;
       }
+      outwards = true;
+      const float z0 = p1.z - p1.r * dz / dr;
+      z0Min = std::min(z0Min, z0);
+      z0Max = std::max(z0Max, z0);
     }
-    return true;
   }
 
-  if (m_layerDescription.type == GbtsLayerType::Endcap &&
-      otherLayer.m_layerDescription.type == GbtsLayerType::Barrel) {
-    const float z1 = m_layerDescription.refCoord;
-    const float r1max = m_maxBinCoord.at(b1);
-    const float r1min = m_minBinCoord.at(b1);
-
-    const float z2min = otherLayer.m_minBinCoord.at(b2);
-    const float z2max = otherLayer.m_maxBinCoord.at(b2);
-    const float r2 = otherLayer.m_layerDescription.refCoord;
-
-    if (r2 < r1min) {
-      return false;
-    }
-
-    // interval 1
-
-    float z0Min = z1 - (z2max - z1) / (r2 / r1max - 1);
-    float z0Max = z1 - (z2max - z1) / (r2 / r1min - 1);
-
-    if (z0Min > z0Max) {
-      std::swap(z0Min, z0Max);
-    }
-
-    bool beyondRange = (z0Max < minZ0 - tol || z0Min > maxZ0 + tol);
-
-    if (!beyondRange) {
-      return true;
-    }
-
-    // interval 2
-
-    z0Min = z1 - (z2min - z1) / (r2 / r1max - 1);
-    z0Max = z1 - (z2min - z1) / (r2 / r1min - 1);
-
-    if (z0Min > z0Max) {
-      std::swap(z0Min, z0Max);
-    }
-
-    beyondRange = (z0Max < minZ0 - tol || z0Min > maxZ0 + tol);
-
-    if (!beyondRange) {
-      return true;
-    }
-
+  if (!outwards) {
     return false;
   }
 
-  return true;
+  return !(z0Max < minZ0 - z0Tolerance || z0Min > maxZ0 + z0Tolerance);
 }
 
 std::uint32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
@@ -284,19 +181,11 @@ namespace {
 // key: bin. value: (outgoing, incoming) bins it connects to.
 using BinConnections =
     std::unordered_map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
-                                                std::vector<std::uint32_t>>>;
-}  // namespace
+                                                std::vector<GbtsBinLink>>>;
 
-GbtsGeometry::GbtsGeometry(
-    std::span<const GbtsLayerDescription> layerDescriptions,
-    std::span<const GbtsLayerConnection> layerConnections,
-    const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
-    : m_etaBinWidth(etaBinWidth) {
-  const float minZ0 = z0Range.min;
-  const float maxZ0 = z0Range.max;
-
-  // The adaptive cuts key on where a pixel barrel layer sits radially. Derive
-  // that ordinal here so the seeder never has to read an experiment layer id.
+// Fill in the inside-out pixel barrel order where the layers leave it unset.
+std::vector<GbtsLayerDescription> orderPixelBarrel(
+    std::span<const GbtsLayerDescription> layerDescriptions) {
   std::vector<GbtsLayerDescription> layers(layerDescriptions.begin(),
                                            layerDescriptions.end());
 
@@ -325,6 +214,62 @@ GbtsGeometry::GbtsGeometry(
         "on none of them");
   }
 
+  return layers;
+}
+}  // namespace
+
+void assignAdaptiveTauRatioCuts(std::span<GbtsLayerConnection> connections,
+                                std::span<const GbtsLayerDescription> layers,
+                                const GbtsAdaptiveTauRatioCuts& cuts) {
+  std::unordered_map<GbtsExperimentLayerId, const GbtsLayerDescription*> byId;
+  const std::vector<GbtsLayerDescription> ordered = orderPixelBarrel(layers);
+  for (const GbtsLayerDescription& layer : ordered) {
+    byId.emplace(layer.id, &layer);
+  }
+  const auto find = [&](GbtsExperimentLayerId id) {
+    const auto it = byId.find(id);
+    if (it == byId.end()) {
+      throw std::invalid_argument(
+          "assignAdaptiveTauRatioCuts: connection to an unknown layer");
+    }
+    return it->second;
+  };
+
+  for (GbtsLayerConnection& connection : connections) {
+    const GbtsLayerDescription* outer = find(connection.src);
+    const GbtsLayerDescription* inner = find(connection.dst);
+
+    const bool outerInBarrel = outer->barrelOrder >= 0;
+    const bool innerInBarrel = inner->barrelOrder >= 0;
+    const bool skipsLayer = outerInBarrel && innerInBarrel &&
+                            outer->barrelOrder - inner->barrelOrder != 1;
+    const bool leavesBarrel = innerInBarrel && !outerInBarrel;
+    const float strip = (outer->technology == GbtsLayerTechnology::Strip ||
+                         inner->technology == GbtsLayerTechnology::Strip)
+                            ? cuts.tauRatioCorrStrip
+                            : 0.f;
+
+    // leaving the barrel widens only the triplet that leaves after its middle
+    connection.tauRatioCutInner =
+        cuts.tauRatioCut + (skipsLayer ? cuts.tauRatioCorr : 0.f) + strip;
+    connection.tauRatioCutOuter =
+        cuts.tauRatioCut +
+        (skipsLayer || leavesBarrel ? cuts.tauRatioCorr : 0.f) + strip;
+  }
+}
+
+GbtsGeometry::GbtsGeometry(
+    std::span<const GbtsLayerDescription> layerDescriptions,
+    std::span<const GbtsLayerConnection> layerConnections,
+    const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
+    : m_etaBinWidth(etaBinWidth) {
+  const float minZ0 = z0Range.min;
+  const float maxZ0 = z0Range.max;
+
+  // the innermost-layer cuts key on where a pixel barrel layer sits radially
+  const std::vector<GbtsLayerDescription> layers =
+      orderPixelBarrel(layerDescriptions);
+
   for (const GbtsLayerDescription& layer : layers) {
     const detail::GbtsLayer& pL = createLayer(layer, m_nEtaBins);
     m_nEtaBins += pL.binning().numBins;
@@ -338,6 +283,12 @@ GbtsGeometry::GbtsGeometry(
   std::optional<std::uint32_t> lastBin1;
 
   for (const GbtsLayerConnection& connection : layerConnections) {
+    if (connection.tauRatioCutInner < 0.f ||
+        connection.tauRatioCutOuter < 0.f) {
+      throw std::invalid_argument(
+          "GbtsGeometry: layer connection with a negative tau ratio cut");
+    }
+
     const detail::GbtsLayer* pL1 = layerById(connection.dst);  // n1
     const detail::GbtsLayer* pL2 = layerById(connection.src);  // n2
     if (pL1 == nullptr) {
@@ -356,7 +307,8 @@ GbtsGeometry::GbtsGeometry(
     for (std::uint32_t b1 = 0; b1 < nDstBins; ++b1) {
       // loop over bins in Layer 2
       for (std::uint32_t b2 = 0; b2 < nSrcBins; ++b2) {
-        if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0)) {
+        if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0,
+                                     z0Range.z0Tolerance)) {
           continue;
         }
 
@@ -366,13 +318,16 @@ GbtsGeometry::GbtsGeometry(
         binLayerMap[bin1Idx] = pL1;
         binLayerMap[bin2Idx] = pL2;
 
+        const GbtsBinLink link{bin2Idx, connection.tauRatioCutInner,
+                               connection.tauRatioCutOuter};
+
         if (bin1Idx != lastBin1) {
           // adding a new group
-          m_binGroups.push_back({bin1Idx, {bin2Idx}});
+          m_binGroups.push_back({bin1Idx, {link}});
           lastBin1 = bin1Idx;
         } else {
           // extend the last group
-          m_binGroups.back().links.push_back(bin2Idx);
+          m_binGroups.back().links.push_back(link);
         }
       }
     }
@@ -391,7 +346,7 @@ GbtsGeometry::GbtsGeometry(
     auto& bin1Links = binMap[bin1];
 
     for (const auto& bin2 : bin2s) {
-      auto& bin2Links = binMap[bin2];
+      auto& bin2Links = binMap[bin2.bin];
 
       bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
       bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
@@ -462,8 +417,8 @@ GbtsGeometry::GbtsGeometry(
       }
       auto& bin1Links = p1->second;
 
-      for (const std::uint32_t bin2Key : bin1Links.second) {
-        const auto p2 = binMap.find(bin2Key);
+      for (const GbtsBinLink& bin2Link : bin1Links.second) {
+        const auto p2 = binMap.find(bin2Link.bin);
         if (p2 == binMap.end()) {
           continue;
         }
@@ -503,10 +458,9 @@ GbtsGeometry::GbtsGeometry(
       }
 
       const auto& binLists = p->second;
-      const std::vector<std::uint32_t>& bin2List = binLists.second;
 
       // store the group
-      m_binGroups.push_back({bin1Idx, bin2List});
+      m_binGroups.push_back({bin1Idx, binLists.second});
     }
   }
 }

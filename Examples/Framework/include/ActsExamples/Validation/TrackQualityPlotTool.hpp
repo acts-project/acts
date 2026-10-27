@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <cstddef>
 #include <map>
@@ -29,9 +29,9 @@ class TrackQualityPlotTool {
   /// @brief The nested configuration struct
   struct Config {
     std::map<std::string, AxisVariant> varBinning = {
-        {"Eta", BoostRegularAxis(40, -4, 4, "reco #eta")},
-        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "reco #phi")},
-        {"Pt", BoostRegularAxis(40, 0, 100, "reco p_{T} [GeV/c]")},
+        {"Eta", BoostRegularAxis(40, -4, 4, "truth #eta")},
+        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "truth #phi")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "truth p_{T} [GeV/c]")},
         {"Num", BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 
@@ -41,13 +41,13 @@ class TrackQualityPlotTool {
   /// @param lvl Message level declaration
   TrackQualityPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief fill track quality w.r.t. fitted track parameters
+  /// @brief fill track quality w.r.t. truth particle parameters
   ///
-  /// @param fittedParameters fitted track parameters of this track
+  /// @param truthParticle the truth particle matched to this track
   /// @param completeness completeness of the track
   /// @param purity purity of the track
-  void fill(const Acts::BoundTrackParameters& fittedParameters,
-            double completeness, double purity);
+  void fill(const SimParticleState& truthParticle, double completeness,
+            double purity);
 
   /// @brief Accessor for profile histograms map (const reference)
   const std::map<std::string, ProfileHistogram1>& profiles() const {

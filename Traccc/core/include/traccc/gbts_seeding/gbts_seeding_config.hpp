@@ -280,6 +280,9 @@ struct gbts_seedfinder_config {
   // Capacity of the compacted graph per spacepoint
   // connected edges beyond it are dropped.
   unsigned int max_connected_edges_per_spacepoint = 2;
+  // Path store capacity per spacepoint
+  // paths beyond the capacity are dropped.
+  unsigned int max_paths_per_spacepoint = 2;
 };
 
 }  // namespace traccc
