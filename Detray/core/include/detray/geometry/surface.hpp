@@ -42,19 +42,27 @@ class surface {
   using kernels = detail::surface_kernels<typename detector_t::algebra_type>;
 
  public:
+  /// Algebra backend used by the detector geometry.
   using algebra_type = typename detector_t::algebra_type;
+  /// Scalar type used for geometry calculations.
   using scalar_type = dscalar<algebra_type>;
+  /// Two-dimensional local point type.
   using point2_type = dpoint2D<algebra_type>;
+  /// Three-dimensional point type.
   using point3_type = dpoint3D<algebra_type>;
+  /// Three-dimensional vector type.
   using vector3_type = dvector3D<algebra_type>;
+  /// Transform type used to place the surface.
   using transform3_type = dtransform3D<algebra_type>;
+  /// Geometry context type used for contextual transforms.
   using context = typename detector_t::geometry_context;
 
   /// Not allowed: always needs a detector and a descriptor.
   surface() = delete;
 
-  /// Constructor from detector @param det and surface descriptor
-  /// @param desc from that detector.
+  /// Construct a surface facade from its detector and descriptor.
+  /// @param det Detector that owns the surface data.
+  /// @param desc Descriptor containing the surface's links and identifier.
   DETRAY_HOST_DEVICE
   constexpr surface(const detector_t &det, const descr_t &desc)
       : m_detector{det}, m_desc{desc} {
@@ -63,19 +71,23 @@ class surface {
     assert(m_desc.transform() < det.transform_store().size());
   }
 
-  /// Constructor from detector @param det and identifier @param geo_id in
-  /// that detector.
+  /// Construct a surface facade from its detector and geometry identifier.
+  /// @param det Detector that owns the surface data.
+  /// @param geo_id Identifier of the surface in that detector.
   DETRAY_HOST_DEVICE
   constexpr surface(const detector_t &det, const geometry::identifier geo_id)
       : surface(det, det.surface(geo_id)) {}
 
-  /// Constructor from detector @param det and surface index @param sf_idx
+  /// Construct a surface facade from its detector and lookup index.
+  /// @param det Detector that owns the surface data.
+  /// @param sf_idx Index of the surface in the detector's surface lookup.
   DETRAY_HOST_DEVICE
   constexpr surface(const detector_t &det, const dindex sf_idx)
       : surface(det, det.surface(sf_idx)) {}
 
   /// Allow conversion from surface<detector_t> to surface<const detector_t>,
   /// which has no semantic difference (the detector is always const internally)
+  /// @returns An equivalent facade with a const detector type.
   template <typename detector_type = detector_t>
     requires(!std::is_const_v<detector_type>)
   // NOLINTNEXTLINE
@@ -86,6 +98,7 @@ class surface {
   /// Equality operator
   ///
   /// @param rhs is the right hand side to be compared to
+  /// @returns True when both facades refer to the same detector and descriptor.
   DETRAY_HOST_DEVICE
   constexpr auto operator==(const surface &rhs) const -> bool {
     return (&m_detector == &(rhs.m_detector) && m_desc == rhs.m_desc);
@@ -178,6 +191,7 @@ class surface {
   }
 
   /// @returns the coordinate transform matrix of the surface
+  /// @param ctx Geometry context used to resolve the transform.
   DETRAY_HOST_DEVICE
   constexpr auto transform(const context &ctx) const
       -> const transform3_type & {
@@ -185,14 +199,17 @@ class surface {
     return m_detector.transform_store().at(m_desc.transform(), ctx);
   }
 
-  /// @returns the mask volume link
+  /// @param loc_p Point in the local surface frame.
+  /// @param tol Tolerance used by the mask boundary check.
+  /// @returns True when the point lies inside the mask.
   template <concepts::point point_t = point2_type>
   DETRAY_HOST_DEVICE constexpr bool is_inside(const point_t &loc_p,
                                               const scalar_type tol) const {
     return visit_mask<typename kernels::is_inside>(loc_p, tol);
   }
 
-  /// @returns a boundary value of the surface, according to @param index
+  /// @param index Index of the requested boundary value.
+  /// @returns The selected boundary value.
   DETRAY_HOST_DEVICE
   constexpr auto boundary(std::size_t index) const {
     return visit_mask<typename kernels::get_mask_value>(index);
@@ -204,7 +221,8 @@ class surface {
     return visit_mask<typename kernels::centroid>();
   }
 
-  /// @returns the center position of the surface in global coordinates
+  /// @param ctx Geometry context used to resolve the surface transform.
+  /// @returns The center position in global coordinates.
   /// @note for shapes like the annulus this is not synonymous to the centroid
   /// but instead the focal point of the strip system
   DETRAY_HOST_DEVICE
@@ -212,8 +230,9 @@ class surface {
     return transform(ctx).translation();
   }
 
-  /// @returns the surface normal in global coordinates at a given bound/local
-  /// position @param p
+  /// @param ctx Geometry context used to resolve the surface transform.
+  /// @param p Local or bound position at which to evaluate the normal.
+  /// @returns The surface normal in global coordinates.
   template <concepts::point point_t = point2_type>
   DETRAY_HOST_DEVICE constexpr auto normal(const context &ctx,
                                            const point_t &p) const
@@ -221,15 +240,17 @@ class surface {
     return visit_mask<typename kernels::normal>(transform(ctx), p);
   }
 
-  /// @returns a pointer to the material parameters at the local position
-  /// @param loc_p
+  /// @param loc_p Local position where material parameters are queried.
+  /// @returns Pointer to the material parameters, or null when unavailable.
   DETRAY_HOST_DEVICE constexpr const material<scalar_type> *material_parameters(
       const point2_type &loc_p) const {
     return visit_material<typename kernels::get_material_params>(loc_p);
   }
 
-  /// @returns the local position to the global point @param global for
-  /// a given geometry context @param ctx and track direction @param dir
+  /// @param ctx Geometry context used to resolve the surface transform.
+  /// @param global Point in global coordinates.
+  /// @param dir Track direction used by the local coordinate frame.
+  /// @returns The point in the surface's local three-dimensional frame.
   DETRAY_HOST_DEVICE
   constexpr point3_type global_to_local(const context &ctx,
                                         const point3_type &global,
@@ -238,8 +259,10 @@ class surface {
                                                          dir);
   }
 
-  /// @returns the bound (2D) position to the global point @param global for
-  /// a given geometry context @param ctx and track direction @param dir
+  /// @param ctx Geometry context used to resolve the surface transform.
+  /// @param global Point in global coordinates.
+  /// @param dir Track direction used by the local coordinate frame.
+  /// @returns The point in the surface's two-dimensional bound frame.
   DETRAY_HOST_DEVICE
   constexpr point2_type global_to_bound(const context &ctx,
                                         const point3_type &global,
@@ -249,8 +272,10 @@ class surface {
     return {local[0], local[1]};
   }
 
-  /// @returns the global position to the given local position @param local
-  /// for a given geometry context @param ctx
+  /// @param ctx Geometry context used to resolve the surface transform.
+  /// @param local Point in the local or bound frame.
+  /// @param dir Track direction used by the local coordinate frame.
+  /// @returns The point in global coordinates.
   template <concepts::point point_t = point2_type>
   DETRAY_HOST_DEVICE constexpr point3_type local_to_global(
       const context &ctx, const point_t &local, const vector3_type &dir) const {
@@ -262,6 +287,8 @@ class surface {
   ///
   /// @tparam functor_t the prescription to be applied to the mask
   /// @tparam Args      types of additional arguments to the functor
+  /// @param args Arguments forwarded to the mask visitor.
+  /// @returns The result produced by the visitor.
   template <typename functor_t, typename... Args>
   DETRAY_HOST_DEVICE constexpr auto visit_mask(Args &&...args) const {
     assert(!m_desc.mask().is_invalid());
@@ -274,6 +301,8 @@ class surface {
   ///
   /// @tparam functor_t the prescription to be applied to the material
   /// @tparam Args      types of additional arguments to the functor
+  /// @param args Arguments forwarded to the material visitor.
+  /// @returns The result produced by the visitor.
   template <typename functor_t, typename... Args>
   DETRAY_HOST_DEVICE constexpr auto visit_material(Args &&...args) const {
     assert(has_material());

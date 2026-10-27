@@ -58,78 +58,112 @@ using std::tanh;
 
 /// Vc overloads of common math functions
 /// @{
+/// @param vec SIMD vector whose lanes are evaluated.
+/// @returns Absolute value of each lane.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) abs(T &&vec) {
   return Vc::abs(std::forward<T>(vec));
 }
 
+/// @param vec SIMD vector whose lanes are evaluated.
+/// @returns Absolute value of each lane.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) fabs(T &&vec) {
   return Vc::abs(std::forward<T>(vec));
 }
 
+/// @param vec SIMD vector whose lanes are evaluated.
+/// @returns Square root of each lane.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) sqrt(T &&vec) {
   return Vc::sqrt(std::forward<T>(vec));
 }
 
+/// @param vec SIMD vector whose lanes are evaluated.
+/// @returns Exponential of each lane.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) exp(T &&vec) {
   return Vc::exp(std::forward<T>(vec));
 }
 
+/// @param vec SIMD vector whose lanes are evaluated.
+/// @returns Natural logarithm of each lane.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) log(T &&vec) {
   return Vc::log(std::forward<T>(vec));
 }
 
+/// @param vec SIMD vector whose lanes are evaluated.
+/// @returns Sine of each lane.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) sin(T &&vec) {
   return Vc::sin(std::forward<T>(vec));
 }
 
+/// @param vec SIMD vector whose lanes are evaluated.
+/// @returns Inverse sine of each lane.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) asin(T &&vec) {
   return Vc::asin(std::forward<T>(vec));
 }
 
+/// @param vec SIMD vector whose lanes are evaluated.
+/// @returns Cosine of each lane.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) cos(T &&vec) {
   return Vc::cos(std::forward<T>(vec));
 }
 
+/// @param vec SIMD vector whose lanes are evaluated.
+/// @returns Tangent computed as sine divided by cosine for each lane.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) tan(T &&vec) {
   // It seems there is no dedicated @c Vc::tan function ?
   return Vc::sin(std::forward<T>(vec)) / Vc::cos(std::forward<T>(vec));
 }
 
+/// @param vec SIMD vector whose lanes are evaluated.
+/// @returns Inverse tangent of each lane.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) atan(T &&vec) {
   return Vc::atan(std::forward<T>(vec));
 }
 
+/// @param mag SIMD vector providing magnitudes.
+/// @param sgn SIMD vector providing signs.
+/// @returns Magnitudes with signs copied lane by lane.
 template <detray::concepts::vc_simd_vector T,
           detray::concepts::vc_simd_vector S>
 constexpr decltype(auto) copysign(T &&mag, S &&sgn) {
   return Vc::copysign(std::forward<T>(mag), std::forward<S>(sgn));
 }
 
+/// @param vec SIMD vector whose lanes are reduced.
+/// @returns The minimum lane value.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) min(T &&vec) {
   return Vc::min(std::forward<T>(vec));
 }
 
+/// @param vec SIMD vector whose lanes are reduced.
+/// @returns The maximum lane value.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) max(T &&vec) {
   return Vc::max(std::forward<T>(vec));
 }
 
+/// @param vec SIMD vector whose lane signs are inspected.
+/// @returns A mask identifying negative lanes.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) signbit(T &&vec) {
   return Vc::isnegative(std::forward<T>(vec));
 }
 
+/// Evaluate the fused multiply-add `x * y + z` lane by lane.
+/// @param x First SIMD operand.
+/// @param y Second SIMD operand.
+/// @param z Addend SIMD operand.
+/// @returns The fused multiply-add result.
 template <detray::concepts::vc_simd_vector T>
 constexpr decltype(auto) fma(T &&x, T &&y, T &&z) {
   return Vc::fma(std::forward<T>(x), std::forward<T>(y), std::forward<T>(z));

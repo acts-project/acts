@@ -28,7 +28,9 @@ namespace detray {
 template <typename shape_t>
 class unbounded {
  public:
+  /// Wrapped shape whose boundary checks always accept a point.
   using shape = shape_t;
+  /// Boundary index enum inherited from the wrapped shape.
   using boundaries = typename shape::boundaries;
 
   /// Container definition for the shape boundary values
@@ -57,10 +59,7 @@ class unbounded {
   /// @note the point is expected to be given in local coordinates by the
   /// caller.
   ///
-  /// @param bounds the boundary values for this shape
-  /// @param loc_p the point to be checked in the local coordinate system
-  ///
-  /// @return the minimum distance.
+  /// @returns The maximum scalar value because this shape has no active edge.
   template <concepts::scalar scalar_t, concepts::point point_t>
   DETRAY_HOST_DEVICE constexpr scalar_t min_dist_to_boundary(
       const bounds_type<scalar_t>& /*bounds*/, const point_t& /*loc_p*/) const {
@@ -90,6 +89,10 @@ class unbounded {
     }
   }
 
+  /// Return an inside result for a point supplied in local coordinates.
+  /// @param tol Tolerance argument retained for shape interface compatibility.
+  /// @param edge_tol Edge tolerance argument retained for interface compatibility.
+  /// @returns An inside result, including the edge flag when the result type has one.
   template <typename bounds_t, concepts::point point_t,
             concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr auto check_boundaries(
@@ -107,8 +110,7 @@ class unbounded {
 
   /// @brief Measure of the shape: Inf
   ///
-  /// @param bounds the boundary values for this shape
-  ///
+  /// @param bounds Boundary values accepted for interface compatibility.
   /// @returns Inf.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t measure(
@@ -122,8 +124,6 @@ class unbounded {
 
   /// @brief The area of a the shape
   ///
-  /// @param bounds the boundary values for this shape
-  ///
   /// @returns Inf.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t area(
@@ -133,8 +133,6 @@ class unbounded {
 
   /// @brief The volume of a the shape
   ///
-  /// @param bounds the boundary values for this shape
-  ///
   /// @returns Inf.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t volume(
@@ -143,9 +141,6 @@ class unbounded {
   }
 
   /// @brief Merge two unbounded shapes
-  ///
-  /// @param bounds the boundary values for this shape
-  /// @param o_bounds the boundary values for the other shape
   ///
   /// @returns merged bound values
   template <concepts::scalar scalar_t>
@@ -165,11 +160,10 @@ class unbounded {
   /// to behave reasonably in a BVH, but still be always intersected
   /// successfully when queried directly.
   ///
-  /// @param bounds the boundary values for this shape
-  /// @param env dynamic envelope around the shape
-  ///
   /// @returns and array of coordinates that contains the lower point (first
   /// three values) and the upper point (latter three values).
+  /// @param bounds Boundary values forwarded to the wrapped shape.
+  /// @param env Envelope forwarded to the wrapped shape.
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE inline darray<dscalar<algebra_t>, 6> local_min_bounds(
       const bounds_type<dscalar<algebra_t>>& bounds,
@@ -178,7 +172,8 @@ class unbounded {
     return shape{}.template local_min_bounds<algebra_t>(bounds, env);
   }
 
-  /// @returns the shapes centroid in local cartesian coordinates
+  /// @param bounds Boundary values forwarded to the wrapped shape.
+  /// @returns The wrapped shape's centroid in local Cartesian coordinates.
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE auto centroid(
       const bounds_type<dscalar<algebra_t>>& bounds) const {
@@ -187,8 +182,8 @@ class unbounded {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// @param bounds the boundary values for the underlying shape
-  /// @param ls is the number of line segments
+  /// @param bounds Boundary values passed to the wrapped shape.
+  /// @param n_seg Number of segments used for curved boundary tessellation.
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>
@@ -198,9 +193,6 @@ class unbounded {
   }
 
   /// @brief Check consistency of boundary values.
-  ///
-  /// @param bounds the boundary values for this shape
-  /// @param os output stream for error messages
   ///
   /// @return true if the bounds are consistent.
   template <concepts::scalar scalar_t>

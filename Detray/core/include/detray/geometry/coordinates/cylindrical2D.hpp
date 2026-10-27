@@ -18,12 +18,19 @@ namespace detray {
 /// Projection into a 2D cylindrical coordinate frame
 template <concepts::algebra algebra_t>
 struct cylindrical2D {
+  /// Algebra backend used by this coordinate frame.
   using algebra_type = algebra_t;
+  /// Scalar type associated with the algebra backend.
   using scalar_type = dscalar<algebra_t>;
+  /// Two-dimensional point type.
   using point2_type = dpoint2D<algebra_t>;
+  /// Three-dimensional point type.
   using point3_type = dpoint3D<algebra_t>;
+  /// Two-dimensional vector type.
   using vector2_type = dvector2D<algebra_t>;
+  /// Three-dimensional vector type.
   using vector3_type = dvector3D<algebra_t>;
+  /// Three-dimensional transform type.
   using transform3_type = dtransform3D<algebra_t>;
 
   /// Local point type in 2D cylindrical coordinates
@@ -31,6 +38,10 @@ struct cylindrical2D {
 
   /// This method transforms a point from a global cartesian 3D frame to a
   /// local 3D cylindrical point
+  /// Convert a point from the global frame to this local coordinate frame.
+  /// @param trf Surface transform defining the local frame in global coordinates.
+  /// @param p Point in global coordinates to transform.
+  /// @returns The point expressed in this local coordinate frame.
   DETRAY_HOST_DEVICE
   static inline point3_type global_to_local_3D(const transform3_type &trf,
                                                const point3_type &p,
@@ -43,6 +54,10 @@ struct cylindrical2D {
 
   /// This method transforms a point from a global cartesian 3D frame to a
   /// local 2D cylindrical point
+  /// Convert a point from the global frame to this local coordinate frame.
+  /// @param trf Surface transform defining the local frame in global coordinates.
+  /// @param p Point in global coordinates to transform.
+  /// @returns The point expressed in this local coordinate frame.
   DETRAY_HOST_DEVICE
   static inline loc_point global_to_local(const transform3_type &trf,
                                           const point3_type &p,
@@ -54,6 +69,9 @@ struct cylindrical2D {
 
   /// This method transform from a local 3D cylindrical point to a point in
   /// the global cartesian 3D frame
+  /// @param trf Surface transform defining the local frame in global coordinates.
+  /// @param p Point in local coordinates to transform.
+  /// @returns The point expressed in global coordinates.
   DETRAY_HOST_DEVICE static inline point3_type local_to_global(
       const transform3_type &trf, const point3_type &p) {
     const scalar_type r{p[2]};
@@ -67,6 +85,10 @@ struct cylindrical2D {
 
   /// This method transform from a local 2D cylindrical point to a point in
   /// the global cartesian 3D frame
+  /// @param trf Surface transform defining the local frame in global coordinates.
+  /// @param mask Mask providing the fixed radius used to embed the 2D point in 3D.
+  /// @param p Point in local coordinates to transform.
+  /// @returns The point expressed in global coordinates.
   template <typename mask_t>
   DETRAY_HOST_DEVICE static inline point3_type local_to_global(
       const transform3_type &trf, const mask_t &mask, const loc_point &p,
@@ -76,6 +98,10 @@ struct cylindrical2D {
   }
 
   /// @returns the normal vector in global coordinates
+  /// @param trf Surface transform defining the local frame in global coordinates.
+  /// @param p Local position at which to evaluate the normal.
+  /// @param mask Mask providing the radius needed to compute the cylindrical normal.
+  /// @returns The surface normal expressed in global coordinates.
   template <typename mask_t>
   DETRAY_HOST_DEVICE static inline vector3_type normal(
       const transform3_type &trf, const point2_type &p, const mask_t &mask) {
@@ -86,7 +112,9 @@ struct cylindrical2D {
   }
 
   /// @returns the normal vector in global coordinates given a local position
-  /// @param p
+  /// @param trf Surface transform defining the local frame in global coordinates.
+  /// @param p Local position at which to evaluate the normal.
+  /// @returns The surface normal expressed in global coordinates.
   DETRAY_HOST_DEVICE static inline vector3_type normal(
       const transform3_type &trf, const point3_type &p) {
     const scalar_type phi{p[0] / p[2]};

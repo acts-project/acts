@@ -116,7 +116,8 @@ class pick_view : public detray::ranges::view_interface<
       return value_type(*m_seq_iter, *m_range_iter);
     }
 
-    /// @returns advance this iterator state by @param j.
+    /// Advance the selected range position by `j` sequence entries.
+    /// @param j number of selected entries to advance
     DETRAY_HOST_DEVICE constexpr auto operator+=(const difference_type j)
         -> iterator &
       requires std::random_access_iterator<range_itr_t>
@@ -126,7 +127,8 @@ class pick_view : public detray::ranges::view_interface<
       return *this;
     }
 
-    /// @returns advance this iterator state by @param j.
+    /// Retreat the selected range position by `j` sequence entries.
+    /// @param j number of selected entries to retreat
     DETRAY_HOST_DEVICE constexpr auto operator-=(const difference_type j)
         -> iterator &
       requires std::random_access_iterator<range_itr_t> &&
@@ -172,7 +174,10 @@ class pick_view : public detray::ranges::view_interface<
 #endif
     }
 
-    /// @returns an iterator and index position advanced by @param j.
+    /// Advance an iterator by `j` selected entries.
+    /// @param itr iterator to advance
+    /// @param j number of selected entries to advance
+    /// @return advanced iterator
     DETRAY_HOST_DEVICE friend constexpr auto operator+(const iterator &itr,
                                                        const difference_type j)
         -> iterator
@@ -183,7 +188,10 @@ class pick_view : public detray::ranges::view_interface<
               itr.m_range_begin, seq_iter, itr.m_seq_end};
     }
 
-    /// @returns an iterator and index position advanced by @param j.
+    /// Advance an iterator by `j` selected entries.
+    /// @param j number of selected entries to advance
+    /// @param itr iterator to advance
+    /// @return advanced iterator
     DETRAY_HOST_DEVICE friend constexpr auto operator+(const difference_type j,
                                                        const iterator &itr)
         -> iterator
@@ -192,7 +200,10 @@ class pick_view : public detray::ranges::view_interface<
       return itr + j;
     }
 
-    /// @returns an iterator and index position advanced by @param j.
+    /// Retreat an iterator by `j` selected entries.
+    /// @param itr iterator to retreat
+    /// @param j number of selected entries to retreat
+    /// @return retreated iterator
     DETRAY_HOST_DEVICE friend constexpr auto operator-(const iterator &itr,
                                                        const difference_type j)
         -> iterator
@@ -223,12 +234,15 @@ class pick_view : public detray::ranges::view_interface<
   sequence_itr_t m_seq_end{};
 
  public:
+  /// Iterator yielding each selected index and its corresponding element.
   using iterator_t = iterator;
 
   /// Default constructor
   constexpr pick_view() = default;
 
-  /// Construct from a @param range that will be enumerated beginning at 0
+  /// Select elements of `range` using the indices in `seq`.
+  /// @param range range from which elements are selected
+  /// @param seq indices selecting elements from the range
   template <detray::ranges::range range_t, detray::ranges::range sequence_t>
   DETRAY_HOST_DEVICE constexpr pick_view(range_t &&range, sequence_t &&seq)
       : m_range_begin{detray::ranges::begin(std::forward<range_t>(range))},
@@ -300,6 +314,9 @@ class pick_view : public detray::ranges::view_interface<
                                         static_cast<difference_t>(last_idx)));
   }
 
+  /// Return the selected index and element at position `i`.
+  /// @param i zero-based position in the selection sequence
+  /// @return selected index paired with its referenced range element
   DETRAY_HOST_DEVICE
   constexpr auto operator[](const dindex i) const {
     index_t last_idx{
@@ -312,20 +329,28 @@ class pick_view : public detray::ranges::view_interface<
 
 namespace views {
 
+/// Range adaptor that selects indexed elements from an input range.
 template <std::input_iterator range_itr_t,
           detray::ranges::input_range sequence_t>
 struct pick : public pick_view<range_itr_t, detray::ranges::const_iterator_t<
                                                 std::decay_t<sequence_t>>> {
+  /// Iterator type used to read the selection sequence.
   using sequence_itr_t =
       detray::ranges::const_iterator_t<std::decay_t<sequence_t>>;
+  /// Base view implementation combining range and sequence iterators.
   using base_type = pick_view<range_itr_t, sequence_itr_t>;
 
   constexpr pick() = default;
 
+  /// Build an adaptor that will select the supplied indices from a later range.
+  /// @param seq sequence of indices to use
   template <detray::ranges::input_range deduced_sequence_t>
   DETRAY_HOST_DEVICE constexpr explicit pick(deduced_sequence_t &&seq)
       : m_seq(std::forward<deduced_sequence_t>(seq)) {}
 
+  /// Construct the selection view immediately from both inputs.
+  /// @param range range from which elements are selected
+  /// @param seq sequence of indices to use
   template <detray::ranges::range range_t,
             detray::ranges::input_range deduced_sequence_t>
   DETRAY_HOST_DEVICE constexpr pick(range_t &&range, deduced_sequence_t &&seq)
@@ -333,6 +358,8 @@ struct pick : public pick_view<range_itr_t, detray::ranges::const_iterator_t<
         m_seq{std::forward<deduced_sequence_t>(seq)} {}
 
   /// Call operator for range composition - move semantics
+  /// @param rng range from which elements are selected
+  /// @return view that owns the moved selection sequence
   template <detray::ranges::range range_t>
     requires(std::same_as<sequence_t, std::remove_cvref_t<sequence_t>> &&
              !std::is_pointer_v<sequence_t>)
@@ -343,6 +370,8 @@ struct pick : public pick_view<range_itr_t, detray::ranges::const_iterator_t<
   }
 
   /// Call operator for range composition
+  /// @param rng range from which elements are selected
+  /// @return view using the stored selection sequence
   template <detray::ranges::range range_t>
     requires(!std::same_as<sequence_t, std::remove_cvref_t<sequence_t>> ||
              std::is_pointer_v<sequence_t>)
@@ -353,6 +382,8 @@ struct pick : public pick_view<range_itr_t, detray::ranges::const_iterator_t<
   }
 
   /// Copy assignment operator
+  /// @param other adaptor to copy
+  /// @return reference to this adaptor
   DETRAY_HOST_DEVICE
   pick &operator=(const pick &other) {
     base_type::operator=(other);

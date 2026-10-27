@@ -24,12 +24,16 @@
 
 namespace detray {
 
-/// Defines a special telescope test detector type with only rectangle portals
-/// and one additional kind of contained module surfaces (@tparam mask_shape_t)
+/// Defines a telescope test detector with rectangle portals and one module
+/// shape.
+/// @tparam algebra_t Algebra backend used by the detector.
+/// @tparam mask_shape_t Shape of the contained module surfaces.
 template <concepts::algebra algebra_t, typename mask_shape_t = rectangle2D>
 struct telescope_metadata {
   /// Define the algebra type for the geometry and navigation
+  /// Algebra backend used by the detector geometry and scalar types.
   using algebra_type = algebra_t;
+  /// Scalar type associated with the metadata algebra.
   using scalar_t = dscalar<algebra_type>;
 
   /// Index type in the masks to find the adjacent volumes
@@ -46,6 +50,7 @@ struct telescope_metadata {
 
   /// Rectangles are needed for the portals
   using rectangle2D_t = mask<detray::rectangle2D, algebra_type, nav_link>;
+  /// Mask type describing a telescope module.
   using module_t = mask<mask_shape_t, algebra_type, nav_link>;
 
   /// Rectangles are always needed as portals (but they have the same type as
@@ -101,8 +106,10 @@ struct telescope_metadata {
 
   /// Material types (slabs for portals, rods are optional)
   using material_slab_t = material_slab<scalar_t>;
+  /// Material rod representation used by telescope supports.
   using material_rod_t = material_rod<scalar_t>;
 
+  /// Identifiers for material payload and map alternatives.
   enum class material_id : std::uint_least8_t {
     e_material_slab = 0u,
     e_raw_material = 1u,  //< used for homogeneous volume material
@@ -144,9 +151,12 @@ struct telescope_metadata {
 
   /// How to link to the entries in the data stores
   using transform_link = typename transform_store<>::single_link;
+  /// Link type for a range of telescope surface masks.
   using mask_link = typename mask_store<>::single_link;
+  /// Link type used to refer to the corresponding detector component store.
   using material_link = typename material_store<>::single_link;
   /// Surface type used for sensitives, passives and portals
+  /// Surface descriptor type combining links to its geometry components.
   using surface_type =
       surface_descriptor<mask_link, material_link, transform_link, nav_link>;
 

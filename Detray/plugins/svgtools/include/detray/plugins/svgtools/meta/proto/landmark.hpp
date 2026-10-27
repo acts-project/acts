@@ -23,8 +23,11 @@ namespace detray::svgtools::meta::proto {
 /// description of a point.
 template <concepts::point3D point3_t>
 struct landmark {
+  /// Global position represented by the landmark.
   point3_t _position{0.f, 0.f, 0.f};
+  /// Label displayed with the landmark.
   std::string _name{"unknown landmark"};
+  /// SVG marker style used to draw the point.
   actsvg::style::marker _marker{"x", 1.f};
 };
 

@@ -50,13 +50,14 @@ inline common_header_payload deserialize_json_header(
   return header;
 }
 
-/// From the list of files that are given @param files, infer the readers that
-/// are needed by peeking into the file headers
+/// Infer and register the JSON readers required by a list of input files.
 ///
-/// @tparam CAP surface grid bin capacity (@TODO make runtime)
+/// @tparam CAP Surface-grid bin capacity.
 /// @tparam DIM dimension of the surface grids, usually 2D
 /// @tparam detector_t type of the detector instance: Must match the data that
 ///                    is read from file!
+/// @param reader Component reader receiving the inferred backend readers.
+/// @param files Input files whose headers are inspected.
 template <std::size_t CAP, std::size_t DIM, class detector_t>
 inline void add_json_readers(
     io::detail::detector_components_reader<detector_t>& reader,

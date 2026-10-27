@@ -154,6 +154,7 @@ class iota_view : public detray::ranges::view_interface<iota_view<incr_t>> {
   incr_t m_end;
 
  public:
+  /// Iterator over generated values in the requested sequence.
   using iterator_t = iterator;
 
   /// Default constructor (only works if @c imrementable_t is default
@@ -162,7 +163,8 @@ class iota_view : public detray::ranges::view_interface<iota_view<incr_t>> {
     requires std::default_initializable<incr_t>
   = default;
 
-  /// Construct from an @param interval that defines start and end values.
+  /// Construct from an interval that defines start and end values.
+  /// @param interval half-open interval supplying the sequence bounds
   template <concepts::interval interval_t>
     requires(!std::same_as<interval_t, iota_view>)
   DETRAY_HOST_DEVICE constexpr explicit iota_view(interval_t &&interval)
@@ -171,13 +173,16 @@ class iota_view : public detray::ranges::view_interface<iota_view<incr_t>> {
     assert(m_start <= m_end);
   }
 
-  /// Construct from a @param start start and @param end value.
+  /// Construct a sequence from `start` up to, but excluding, `end`.
+  /// @param start first value in the sequence
+  /// @param end one-past-the-last value in the sequence
   DETRAY_HOST_DEVICE constexpr iota_view(incr_t start, incr_t end)
       : m_start{start}, m_end{end} {
     assert(m_start <= m_end);
   }
 
-  /// Construct from just a @param start value to represent a single value seq
+  /// Construct a sequence containing only `start`.
+  /// @param start sole value in the sequence
   DETRAY_HOST_DEVICE
   constexpr explicit iota_view(incr_t start)
       : m_start{start}, m_end{start + 1} {
@@ -200,22 +205,32 @@ class iota_view : public detray::ranges::view_interface<iota_view<incr_t>> {
 namespace views {
 
 /// @brief interface type to construct a @c iota_view with CTAD
+/// Range adaptor that constructs an iota view from a range, bounds, or start
+/// value.
 template <std::incrementable incr_t>
 struct iota : public detray::ranges::iota_view<incr_t> {
+  /// Base sequence view implementation.
   using base_type = detray::ranges::iota_view<incr_t>;
 
   constexpr iota()
     requires std::default_initializable<incr_t>
   = default;
 
+  /// Construct the adaptor from interval bounds.
+  /// @param interval half-open interval supplying the sequence bounds
   template <concepts::interval interval_t>
     requires(!std::same_as<interval_t, iota>)
   DETRAY_HOST_DEVICE constexpr explicit iota(interval_t &&interval)
       : base_type(std::forward<interval_t>(interval)) {}
 
+  /// Construct the adaptor from a start and one-past-the-end value.
+  /// @param start first value in the sequence
+  /// @param end one-past-the-last value in the sequence
   DETRAY_HOST_DEVICE constexpr iota(incr_t start, incr_t end)
       : base_type(start, end) {}
 
+  /// Construct the adaptor for a one-value sequence.
+  /// @param start sole value in the sequence
   DETRAY_HOST_DEVICE constexpr explicit iota(incr_t start) : base_type(start) {}
 };
 

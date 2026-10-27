@@ -35,35 +35,49 @@ DETRAY_HOST_DEVICE constexpr auto identity() {
 
 namespace traits {
 
+/// Matrix dimension traits for a transport Jacobian including gradients.
 template <typename algebra_t>
 struct dimensions<
     ::detray::detail::transport_jacobian_matrix_with_gradient<algebra_t>> {
+  /// Integer type used for matrix dimensions.
   using size_type = std::size_t;
 
+  /// Number of dimensions of this matrix.
   static constexpr size_type _dim{2};
+  /// Number of rows in the full transport matrix.
   static constexpr size_type _rows{8};
+  /// Number of columns in the full transport matrix.
   static constexpr size_type _columns{8};
 };
 
+/// Matrix dimension traits for a transport Jacobian without gradients.
 template <typename algebra_t>
 struct dimensions<
     ::detray::detail::transport_jacobian_matrix_without_gradient<algebra_t>> {
+  /// Integer type used for matrix dimensions.
   using size_type = std::size_t;
 
+  /// Number of dimensions of this matrix.
   static constexpr size_type _dim{2};
+  /// Number of rows in the full transport matrix.
   static constexpr size_type _rows{8};
+  /// Number of columns in the full transport matrix.
   static constexpr size_type _columns{8};
 };
 
+/// Matrix index type for transport Jacobians that include gradients.
 template <typename algebra_t>
 struct index<
     ::detray::detail::transport_jacobian_matrix_with_gradient<algebra_t>> {
+  /// Type used to index matrix elements.
   using type = std::size_t;
 };
 
+/// Matrix index type for transport Jacobians without gradients.
 template <typename algebra_t>
 struct index<
     ::detray::detail::transport_jacobian_matrix_without_gradient<algebra_t>> {
+  /// Type used to index matrix elements.
   using type = std::size_t;
 };
 

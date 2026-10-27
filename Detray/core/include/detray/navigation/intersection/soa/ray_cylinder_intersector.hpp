@@ -32,16 +32,22 @@ struct ray_intersector_impl<cylindrical2D<algebra_t>, algebra_t, resolve_pos> {
   /// Linear algebra types
   /// @{
   using algebra_type = algebra_t;
+  /// Scalar calculation type for the configured algebra layout.
   using scalar_type = dscalar<algebra_t>;
+  /// Three-dimensional point type used by this intersector.
   using point3_type = dpoint3D<algebra_t>;
+  /// Three-dimensional vector type used by this intersector.
   using vector3_type = dvector3D<algebra_t>;
+  /// Transform type used to place the surface.
   using transform3_type = dtransform3D<algebra_t>;
   /// @}
 
+  /// Intersection result type associated with a surface descriptor.
   template <typename surface_descr_t>
   using intersection_type =
       intersection2D<surface_descr_t, algebra_t, resolve_pos>;
 
+  /// Trajectory representation accepted by this intersector.
   template <typename other_algebra_t>
   using trajectory_type = detail::ray<other_algebra_t>;
 
@@ -53,16 +59,12 @@ struct ray_intersector_impl<cylindrical2D<algebra_t>, algebra_t, resolve_pos> {
       intersection_point<algebra_t, point3_type, intersection::contains_pos>,
       n_solutions>;
 
-  /// Operator function to find intersections between ray and planar mask
-  ///
-  /// @param ray is the input ray trajectory
-  /// @param sf the surface handle the mask is associated with
-  /// @param mask is the input mask that defines the surface extent
-  /// @param trf is the surface placement transform
-  /// @param mask_tolerance is the tolerance for mask edges
-  /// @param overstep_tol negative cutoff for the path
-  ///
-  /// @return the intersection
+  /// Find intersections of a ray with a cylindrical surface.
+  /// @param ray Straight trajectory to test.
+  /// @param trf Transform placing the cylinder in global coordinates.
+  /// @param mask Mask providing the cylinder radius.
+  /// The optional overstep argument is accepted for interface compatibility.
+  /// @returns The intersection paths and positions.
   template <typename mask_t, concepts::algebra other_algebra_t>
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
       const trajectory_type<other_algebra_t> &ray, const transform3_type &trf,
@@ -90,6 +92,9 @@ struct ray_intersector_impl<cylindrical2D<algebra_t>, algebra_t, resolve_pos> {
   /// Calculates the distance to the (two) intersection points on the
   /// cylinder in global coordinates.
   ///
+  /// @param ray Straight trajectory whose intersections are computed.
+  /// @param mask Mask providing the cylinder radius.
+  /// @param trf Transform placing the cylinder in global coordinates.
   /// @returns a quadratic equation object that contains the solution(s).
   template <typename mask_t, typename other_algebra_t>
   DETRAY_HOST_DEVICE inline auto solve_intersection(

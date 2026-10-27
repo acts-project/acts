@@ -42,19 +42,31 @@ struct hom_material_config {
 
   /// Setters
   /// @{
+  /// Set the material assigned to passive surfaces.
+  /// @param m Material parameters for passive surfaces.
+  /// @returns Reference to this configuration.
   constexpr hom_material_config &passive_material(const material<scalar_t> &m) {
     m_passive_material = m;
     return *this;
   }
+  /// Set the material assigned to sensitive surfaces.
+  /// @param m Material parameters for sensitive surfaces.
+  /// @returns Reference to this configuration.
   constexpr hom_material_config &sensitive_material(
       const material<scalar_t> &m) {
     m_sensitive_material = m;
     return *this;
   }
+  /// Set the material assigned to portal surfaces.
+  /// @param m Material parameters for portal surfaces.
+  /// @returns Reference to this configuration.
   constexpr hom_material_config &portal_material(const material<scalar_t> &m) {
     m_portal_material = m;
     return *this;
   }
+  /// Set the thickness used when creating portal material.
+  /// @param t Portal material thickness.
+  /// @returns Reference to this configuration.
   constexpr hom_material_config &thickness(const scalar_t t) {
     m_thickness = t;
     return *this;
@@ -63,15 +75,19 @@ struct hom_material_config {
 
   /// Getters
   /// @{
+  /// @returns Material assigned to passive surfaces.
   constexpr const material<scalar_t> &passive_material() const {
     return m_passive_material;
   }
+  /// @returns Material assigned to sensitive surfaces.
   constexpr const material<scalar_t> &sensitive_material() const {
     return m_sensitive_material;
   }
+  /// @returns Material assigned to portal surfaces.
   constexpr const material<scalar_t> &portal_material() const {
     return m_portal_material;
   }
+  /// @returns Thickness configured for portal material.
   constexpr scalar_t thickness() const { return m_thickness; }
   /// @}
 };
@@ -85,7 +101,9 @@ class homogeneous_material_generator final
   using scalar_t = dscalar<typename detector_t::algebra_type>;
 
  public:
-  /// Construct from configuration @param cfg
+  /// Construct a material generator around a surface factory.
+  /// @param factory Surface factory whose surfaces receive material.
+  /// @param cfg Material choices and portal thickness.
   DETRAY_HOST
   homogeneous_material_generator(
       std::unique_ptr<surface_factory_interface<detector_t>> factory,
@@ -104,6 +122,7 @@ class homogeneous_material_generator final
   /// @param transforms the transforms of the surfaces.
   /// @param masks the masks of the surfaces.
   /// @param ctx the geometry context (not needed for portals).
+  /// @returns Range of surfaces produced by the wrapped factory.
   DETRAY_HOST
   auto operator()(typename detector_t::volume_type &volume,
                   typename detector_t::surface_lookup_container &surfaces,
@@ -124,8 +143,8 @@ class homogeneous_material_generator final
   ///
   /// @param surfaces surface container of the volume builder that should get
   ///                 decorated with material.
-  /// @param material material store of the volume builder that the new
-  ///                 materials get added to.
+  /// @param materials Material store that receives the generated material.
+  /// @returns No value; material links and values are written to the supplied containers.
   DETRAY_HOST
   auto operator()(typename detector_t::surface_lookup_container &surfaces,
                   typename detector_t::material_container &materials) {

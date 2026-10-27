@@ -21,10 +21,15 @@ namespace detray::detail {
 template <concepts::algebra algebra_t>
 class ray {
  public:
+  /// Algebra backend used by the ray calculations.
   using algebra_type = algebra_t;
+  /// Scalar type used for path length.
   using scalar_type = dscalar<algebra_type>;
+  /// Three-dimensional position type.
   using point3_type = dpoint3D<algebra_type>;
+  /// Three-dimensional direction type.
   using vector3_type = dvector3D<algebra_type>;
+  /// Three-dimensional transform type associated with the algebra.
   using transform3_type = dtransform3D<algebra_type>;
 
   ray() = default;
@@ -53,23 +58,29 @@ class ray {
     assert(!track.is_invalid());
   }
 
-  /// @returns position on the ray (compatible with tracks/intersectors)
+  /// Return the ray origin.
+  /// @return global position at path length zero
   DETRAY_HOST_DEVICE const point3_type &pos() const { return _pos; }
 
-  /// @returns position on the ray parameterized by path length
+  /// Evaluate the ray at a path length.
+  /// @param s signed distance from the origin
+  /// @return global position at that distance
   DETRAY_HOST_DEVICE point3_type pos(const scalar_type s) const {
     // Direction is always normalized in the constructor
     return _pos + s * _dir;
   }
 
-  /// @param position new position on the ray
+  /// Set the ray origin.
+  /// @param pos new global origin
   DETRAY_HOST_DEVICE void set_pos(point3_type pos) { _pos = pos; }
 
-  /// @returns direction of the ray (compatible with tracks/intersectors)
+  /// Return the ray direction.
+  /// @return stored direction vector
   DETRAY_HOST_DEVICE const vector3_type &dir() const { return _dir; }
 
-  /// @returns direction of the ray parameterized by path length
-  DETRAY_HOST_DEVICE const vector3_type &dir(const scalar_type /*s*/) const {
+  /// Return the constant direction at any path length.
+  /// @return stored direction vector
+  DETRAY_HOST_DEVICE const vector3_type &dir(const scalar_type) const {
     return this->dir();
   }
 

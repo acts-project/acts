@@ -51,11 +51,13 @@ class surface_factory : public surface_factory_interface<detector_t> {
   using volume_link_collection = std::vector<std::vector<volume_link_t>>;
 
  public:
+  /// Detector type whose surface and geometry stores this factory fills.
   using detector_type = detector_t;
 
   /// shorthad for a collection of surface data that can be read by a surface
   /// factory
   using surface_data_t = surface_data<detector_t>;
+  /// Collection of input records describing surfaces to construct.
   using sf_data_collection = std::vector<surface_data_t>;
 
   /// Empty factory.
@@ -92,6 +94,7 @@ class surface_factory : public surface_factory_interface<detector_t> {
   const auto &volume_links() const { return m_volume_links; }
 
   /// Add all necessary components to the factory for a single surface
+  /// @param sf_data Surface type, links, bounds, and transform to store.
   DETRAY_HOST
   void push_back(surface_data_t &&sf_data) override {
     auto [type, vlinks, index, source, bounds, trf] =
@@ -144,7 +147,7 @@ class surface_factory : public surface_factory_interface<detector_t> {
   /// @param masks the masks of the surfaces (all of the same shape).
   /// @param ctx the geometry context.
   ///
-  /// @returns index range of inserted surfaces in @param surfaces container
+  /// @returns Index range of surfaces appended to the surfaces container.
   DETRAY_HOST
   auto operator()([[maybe_unused]] typename detector_t::volume_type &volume,
                   [[maybe_unused]]

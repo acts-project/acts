@@ -31,30 +31,39 @@ template <detray::ranges::range range_t>
 class subrange_view
     : public detray::ranges::view_interface<subrange_view<range_t>> {
  public:
+  /// Iterator type used to delimit the range.
   using iterator_t = typename detray::ranges::iterator_t<range_t>;
+  /// Iterator type used when accessing a const view.
   using const_iterator_t = typename detray::ranges::const_iterator_t<range_t>;
+  /// Difference type used for range positions.
   using difference_t = typename detray::ranges::range_difference_t<range_t>;
 
   /// Default constructor
   constexpr subrange_view() = default;
 
-  /// Construct from an @param start and @param end iterator pair.
+  /// Construct a view from its first iterator and sentinel.
+  /// @param start First iterator in the view.
+  /// @param end End iterator of the view.
   DETRAY_HOST_DEVICE constexpr subrange_view(iterator_t start, iterator_t end)
       : m_begin{start}, m_end{end} {}
 
-  /// @return start position of range.
+  /// Return the first iterator.
+  /// @returns The first iterator in the view.
   DETRAY_HOST_DEVICE
   constexpr auto begin() -> iterator_t { return m_begin; }
 
-  /// @return sentinel of the range.
+  /// Return the end iterator.
+  /// @returns The end iterator of the view.
   DETRAY_HOST_DEVICE
   constexpr auto end() -> iterator_t { return m_end; }
 
-  /// @return start position of the range - const
+  /// Return the first iterator of a const view.
+  /// @returns The const iterator at the start of the view.
   DETRAY_HOST_DEVICE
   constexpr auto begin() const -> const_iterator_t { return m_begin; }
 
-  /// @return sentinel of the range.
+  /// Return the end iterator of a const view.
+  /// @returns The const iterator at the end of the view.
   DETRAY_HOST_DEVICE
   constexpr auto end() const -> const_iterator_t { return m_end; }
 
@@ -79,31 +88,40 @@ class subrange_view
 /// @brief interface type to construct a @c subrange_view with CTAD
 template <detray::ranges::range range_t, typename index_range_t = dindex_range>
 struct subrange : public detail::subrange_view<range_t> {
+  /// Base view storing the selected iterators.
   using base_type = detray::ranges::detail::subrange_view<range_t>;
 
+  /// Iterator type of the source range.
   using iterator_t = typename detray::ranges::iterator_t<range_t>;
+  /// Difference type used for source range positions.
   using difference_t = typename detray::ranges::range_difference_t<range_t>;
 
   /// Default constructor
   constexpr subrange() = default;
 
-  /// Construct from a @param range and an index range @param pos.
+  /// Construct from two indices, storing them for later range composition.
+  /// @param start First index of the selected interval.
+  /// @param end One-past-the-end index of the selected interval.
   template <concepts::index index_t>
   DETRAY_HOST_DEVICE constexpr subrange(index_t start, index_t end)
       : m_pos{start, end} {}
 
-  /// Construct from an @param start and @param end iterator pair.
+  /// Construct from an iterator pair.
+  /// @param start First iterator of the view.
+  /// @param end End iterator of the view.
   DETRAY_HOST_DEVICE constexpr subrange(iterator_t start, iterator_t end)
       : base_type{start, end} {}
 
-  /// Construct from a @param range.
+  /// Construct a view spanning the full range.
+  /// @param range Source range whose iterators define the view.
   template <detray::ranges::range deduced_range_t>
     requires(!std::same_as<subrange, deduced_range_t>)
   DETRAY_HOST_DEVICE constexpr explicit subrange(deduced_range_t &&range)
       : base_type{detray::ranges::begin(range), detray::ranges::end(range)} {}
 
-  /// Construct from a @param range and starting position @param pos. Used
-  /// as an overload when only a single position is needed.
+  /// Construct a one-element view beginning at an index in a range.
+  /// @param range Source range.
+  /// @param pos Index of the first element in the view.
   template <detray::ranges::range deduced_range_t, concepts::index index_t>
     requires std::is_convertible_v<
         index_t, detray::ranges::range_difference_t<deduced_range_t>>
@@ -114,14 +132,18 @@ struct subrange : public detail::subrange_view<range_t> {
                       detray::ranges::begin(range),
                       static_cast<difference_t>(pos) + difference_t{1})} {}
 
-  /// Construct from a @param range and an index range @param pos.
+  /// Construct a view from a range and a half-open index interval.
+  /// @param range Source range.
+  /// @param pos Half-open interval selecting elements from the range.
   template <detray::ranges::range deduced_range_t,
             concepts::interval deduced_index_range_t>
   DETRAY_HOST_DEVICE constexpr subrange(deduced_range_t &&range,
                                         const deduced_index_range_t &pos)
       : base_type{get_itr<0>(range, pos), get_itr<1>(range, pos)} {}
 
-  /// Call operator for range composition
+  /// Apply the stored interval to a range, for use in a range pipeline.
+  /// @param range Source range to constrain.
+  /// @returns A view spanning the stored interval of the source.
   template <detray::ranges::range deduced_range_t>
   DETRAY_HOST_DEVICE constexpr auto operator()(deduced_range_t &&range) {
     return detail::subrange_view<deduced_range_t>{get_itr<0>(range, m_pos),
@@ -129,8 +151,10 @@ struct subrange : public detail::subrange_view<range_t> {
   }
 
  private:
-  /// @returns an iterator over the @param range at a position taken from
-  /// the I-th element of @param pos
+  /// Advance to the position stored in element `I` of the interval.
+  /// @param range Source range.
+  /// @param pos Interval supplying the position.
+  /// @returns The iterator at the selected position.
   template <std::size_t I, detray::ranges::range deduced_range_t,
             concepts::interval deduced_index_range_t>
   DETRAY_HOST_DEVICE constexpr auto get_itr(deduced_range_t &&range,

@@ -59,17 +59,22 @@ struct transform3 {
   /// Scalar type used by the transform
   using scalar_type = scalar_t;
 
+  /// Vector storage with `N` components in the selected array layout.
   template <std::size_t N>
   using array_type = array_t<scalar_type, N>;
 
   /// Vector and point types
   using vector2 = algebra::storage::vector<2u, scalar_type, array_t>;
+  /// Three-component vector type used for spatial quantities.
   using vector3 = algebra::storage::vector<3u, scalar_type, array_t>;
+  /// Two-dimensional point representation.
   using point2 = vector2;
+  /// Three-dimensional point representation.
   using point3 = vector3;
 
   /// 4x4 matrix type (Last row is {0, 0, 0, 1} and can be omitted)
   using matrix44 = algebra::storage::matrix<array_t, scalar_type, 3u, 4u>;
+  /// Column type used to construct the stored matrix.
   using column_t = typename matrix44::vector_type;
 
   /// Function (object) used for accessing a matrix element
@@ -84,7 +89,9 @@ struct transform3 {
   /// @name Data objects
   /// @{
 
+  /// Local-to-global transformation matrix.
   matrix44 _data;
+  /// Global-to-local transformation matrix.
   matrix44 _data_inv;
 
   /// @}
@@ -165,22 +172,32 @@ struct transform3 {
     _data_inv = invert(_data);
   }
 
-  /// Defaults
+  /// Copy an existing transform.
+  /// @param rhs Transform whose matrices are copied.
   transform3(const transform3 &rhs) = default;
   ~transform3() = default;
 
-  /// Equality operator
+  /// Compare the forward transforms.
+  /// @param rhs transform to compare with
+  /// @return whether the transforms have equal spatial mappings
   DETRAY_HOST_DEVICE
   constexpr bool operator==(const transform3 &rhs) const {
     return (_data == rhs._data);
   }
 
   /// Matrix access operator
+  /// @param row zero-based row index
+  /// @param col zero-based column index
+  /// @return element at the requested matrix position
   DETRAY_HOST_DEVICE
   constexpr const scalar_type &operator()(std::size_t row,
                                           std::size_t col) const {
     return _data[col][row];
   }
+  /// Return a writable matrix element.
+  /// @param row zero-based row index
+  /// @param col zero-based column index
+  /// @return mutable reference to the requested matrix position
   DETRAY_HOST_DEVICE
   constexpr scalar_type &operator()(std::size_t row, std::size_t col) {
     return _data[col][row];
@@ -247,7 +264,8 @@ struct transform3 {
   /// Rotate a vector into / from a frame
   ///
   /// @param m is the rotation matrix
-  /// @param v is the vector to be rotated
+  /// @param v vector to rotate
+  /// @return the rotated vector
   template <concepts::vector2D vector2_type>
   DETRAY_HOST_DEVICE constexpr auto rotate(const matrix44 &m,
                                            const vector2_type &v) const {
@@ -257,14 +275,16 @@ struct transform3 {
   /// Rotate a vector into / from a frame
   ///
   /// @param m is the rotation matrix
-  /// @param v is the vector to be rotated
+  /// @param v vector to rotate
+  /// @return the rotated vector
   template <concepts::vector3D vector3_type>
   DETRAY_HOST_DEVICE constexpr auto rotate(const matrix44 &m,
                                            const vector3_type &v) const {
     return m[e_x] * v[0] + m[e_y] * v[1] + m[e_z] * v[2];
   }
 
-  /// This method retrieves the rotation of a transform
+  /// Return the upper-left 3x3 rotation block.
+  /// @return rotation matrix
   DETRAY_HOST_DEVICE
   constexpr auto rotation() const {
     using matrix_t = algebra::storage::matrix<array_t, scalar_type, 3u, 3u>;
@@ -276,36 +296,42 @@ struct transform3 {
     return submatrix;
   }
 
-  /// This method retrieves the new x-axis
+  /// Return the local x axis in global coordinates.
+  /// @return x-axis vector
   DETRAY_HOST_DEVICE
   constexpr const auto &x() const { return _data[e_x]; }
 
-  /// This method retrieves the new y-axis
+  /// Return the local y axis in global coordinates.
+  /// @return y-axis vector
   DETRAY_HOST_DEVICE
   constexpr const auto &y() const { return _data[e_y]; }
 
-  /// This method retrieves the new z-axis
+  /// Return the local z axis in global coordinates.
+  /// @return z-axis vector
   DETRAY_HOST_DEVICE
   constexpr const auto &z() const { return _data[e_z]; }
 
-  /// This method retrieves the translation
+  /// Return the frame origin in global coordinates.
+  /// @return translation vector
   DETRAY_HOST_DEVICE
   constexpr const auto &translation() const { return _data[e_t]; }
 
-  /// This method retrieves the 4x4 matrix of a transform
+  /// Return the local-to-global transformation matrix.
+  /// @return forward transformation matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix() const { return _data; }
 
-  /// This method retrieves the 4x4 matrix of an inverse transform
+  /// Return the global-to-local transformation matrix.
+  /// @return inverse transformation matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix_inverse() const { return _data_inv; }
 
   /// This method transform from a point from the local 2D cartesian frame
   ///  to the global 3D cartesian frame
   ///
-  /// @tparam point_type 3D point
+  /// @tparam point2_type point in the local plane
   ///
-  /// @param v is the point to be transformed
+  /// @param p point in local plane coordinates
   ///
   /// @return a global point
   template <concepts::point2D point2_type>
@@ -317,9 +343,9 @@ struct transform3 {
   /// This method transform from a point from the local 3D cartesian frame
   ///  to the global 3D cartesian frame
   ///
-  /// @tparam point_type 3D point
+  /// @tparam point3_type point in local coordinates
   ///
-  /// @param v is the point to be transformed
+  /// @param p point in local coordinates
   ///
   /// @return a global point
   template <concepts::point3D point3_type>
@@ -331,9 +357,9 @@ struct transform3 {
   /// This method transform from a vector from the global 3D cartesian frame
   ///  into the local 3D cartesian frame
   ///
-  /// @tparam point_type 3D point
+  /// @tparam point3_type point in global coordinates
   ///
-  /// @param v is the point to be transformed
+  /// @param p point in global coordinates
   ///
   /// @return a local point
   template <concepts::point3D point3_type>
@@ -376,7 +402,7 @@ struct transform3 {
   ///
   /// @param v is the vector to be transformed
   ///
-  /// @return a vector in global coordinates
+  /// @return a vector in local coordinates
   template <concepts::vector3D vector3_type>
   DETRAY_HOST_DEVICE constexpr auto vector_to_local(
       const vector3_type &v) const {

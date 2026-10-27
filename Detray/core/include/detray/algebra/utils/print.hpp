@@ -19,7 +19,10 @@
 namespace detray {
 
 namespace algebra {
-/// Print a generic vector or point @param v
+/// Print a vector or point as a comma-separated sequence.
+/// @param out Stream receiving the formatted value.
+/// @param v Vector or point to print.
+/// @returns The output stream.
 template <typename vector_t>
   requires(concepts::vector<vector_t> || concepts::point<vector_t>)
 DETRAY_HOST std::ostream& operator<<(std::ostream& out, const vector_t& v) {
@@ -39,7 +42,10 @@ DETRAY_HOST std::ostream& operator<<(std::ostream& out, const vector_t& v) {
   return out;
 }
 
-/// Print a column matrix @param v
+/// Print a column matrix as a bracketed sequence of rows.
+/// @param out Stream receiving the formatted value.
+/// @param v Column matrix to print.
+/// @returns The output stream.
 template <concepts::column_matrix vector_t>
 DETRAY_HOST std::ostream& operator<<(std::ostream& out, const vector_t& v) {
   using index_t = detray::traits::index_t<vector_t>;
@@ -57,7 +63,10 @@ DETRAY_HOST std::ostream& operator<<(std::ostream& out, const vector_t& v) {
   return out;
 }
 
-/// Print a generic matrix @param m
+/// Print a matrix as rows of bracketed elements.
+/// @param out Stream receiving the formatted value.
+/// @param m Matrix to print.
+/// @returns The output stream.
 template <concepts::matrix matrix_t>
 DETRAY_HOST std::ostream& operator<<(std::ostream& out, const matrix_t& m) {
   using index_t = detray::traits::index_t<matrix_t>;
@@ -83,7 +92,10 @@ DETRAY_HOST std::ostream& operator<<(std::ostream& out, const matrix_t& m) {
   return out;
 }
 
-/// Print a 3D transform @param trf
+/// Print the matrix of a three-dimensional transform.
+/// @param out Stream receiving the formatted value.
+/// @param trf Transform to print.
+/// @returns The output stream.
 template <concepts::transform3D transform_t>
 DETRAY_HOST std::ostream& operator<<(std::ostream& out,
                                      const transform_t& trf) {

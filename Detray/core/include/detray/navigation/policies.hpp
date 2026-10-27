@@ -24,12 +24,13 @@ namespace detray {
 /// Struct that represents the most conservative navigation policy: always re-
 /// initialize the current volume
 struct always_init : public base_actor {
+  /// Stateless policy state.
   struct state {};
 
   /// Sets the navigation trust level to 'no trust'
   ///
-  /// @param pol_state not used
-  /// @param propagation state of the propagation
+  /// The policy state is unused.
+  /// @param propagation Propagation state whose navigator trust is updated.
   template <typename propagator_state_t>
   DETRAY_HOST_DEVICE inline void operator()(
       const state & /*pol_state*/, propagator_state_t &propagation) const {
@@ -40,12 +41,13 @@ struct always_init : public base_actor {
 /// During guided navigation only the next surface should be re-evaluated. This
 /// maps to the 'high trust' level in the navigator
 struct guided_navigation : public base_actor {
+  /// Stateless policy state.
   struct state {};
 
   /// Sets the navigation trust level to 'no trust'
   ///
-  /// @param pol_state not used
-  /// @param propagation state of the propagation
+  /// The policy state is unused.
+  /// @param propagation Propagation state whose navigator trust is updated.
   template <typename propagator_state_t>
   DETRAY_HOST_DEVICE inline void operator()(
       const state & /*pol_state*/, propagator_state_t &propagation) const {
@@ -59,7 +61,9 @@ struct guided_navigation : public base_actor {
 /// constraint was triggered.
 template <concepts::scalar scalar_t>
 struct stepper_default_policy : public base_actor {
+  /// Tolerance for deciding whether a step reached a constraint.
   struct state {
+    /// Margin used when comparing the step size with the active constraint.
     scalar_t tol{std::numeric_limits<scalar_t>::epsilon()};
   };
 
@@ -95,8 +99,11 @@ struct stepper_default_policy : public base_actor {
 /// the track state.
 template <concepts::scalar scalar_t>
 struct stepper_rk_policy : public base_actor {
+  /// Relative correction thresholds used to choose navigation trust.
   struct state {
+    /// Correction above which navigation falls to fair trust.
     scalar_t m_threshold_fair_trust{0.05f};
+    /// Correction above which navigation loses trust entirely.
     scalar_t m_threshold_no_trust{0.1f};
   };
 

@@ -32,6 +32,8 @@ namespace stepping {
 ///
 /// Inspectors can be plugged in to understand the current stepper state.
 struct void_inspector {
+  /// No-op inspection callback used when inspection is disabled.
+  /// @tparam state_t Stepper state type.
   template <typename state_t>
   DETRAY_HOST_DEVICE constexpr void operator()(const state_t & /*ignored*/,
                                                const char * /*ignored*/) const {
@@ -46,15 +48,23 @@ template <concepts::algebra algebra_t, typename constraint_t, typename policy_t,
           typename inspector_t = stepping::void_inspector>
 class base_stepper {
  public:
+  /// Scalar type used by the stepper.
   using scalar_type = dscalar<algebra_t>;
 
+  /// Free track parameter representation.
   using free_track_parameters_type = free_track_parameters<algebra_t>;
+  /// Bound track parameter representation.
   using bound_track_parameters_type = bound_track_parameters<algebra_t>;
+  /// Free-parameter covariance/Jacobian matrix type.
   using free_matrix_type = free_matrix<algebra_t>;
+  /// Bound-parameter covariance/Jacobian matrix type.
   using bound_matrix_type = bound_matrix<algebra_t>;
+  /// Magnetic-field type, absent for the base stepper.
   using magnetic_field_type = void;
 
+  /// Type of the configured step inspection callback.
   using inspector_type = inspector_t;
+  /// Navigation and step-constraint policy type.
   using policy_type = policy_t;
 
   /// @brief State struct holding the track
@@ -62,9 +72,11 @@ class base_stepper {
   /// @note It has to cast into a const track via the call operation.
   template <typename internal_jacobian_t = free_matrix_type>
   struct state {
+    /// Internal representation used to accumulate the transport Jacobian.
     using internal_jacobian_type = internal_jacobian_t;
 
-    /// Sets track parameters.
+    /// Initialize the stepper state from free track parameters.
+    /// @param free_params Initial free parameters.
     DETRAY_HOST_DEVICE
     explicit state(const free_track_parameters_type &free_params)
         : m_track(free_params) {
@@ -81,6 +93,10 @@ class base_stepper {
     }
 
     /// Sets track parameters from bound track parameter.
+    /// @tparam detector_t Detector owning the bound parameters' surface.
+    /// @param bound_params Initial bound parameters and covariance.
+    /// @param det Detector used to resolve the departure surface.
+    /// @param ctx Geometry context for the bound-to-free conversion.
     template <concepts::detector detector_t>
     DETRAY_HOST_DEVICE state(const bound_track_parameters_type &bound_params,
                              const detector_t &det,
@@ -114,7 +130,8 @@ class base_stepper {
     DETRAY_HOST_DEVICE
     const free_track_parameters_type &operator()() const { return m_track; }
 
-    /// Get stepping direction
+    /// Get stepping direction.
+    /// @return Forward or backward direction according to the signed step.
     DETRAY_HOST_DEVICE
     inline step::direction direction() const {
       return m_step_size >= 0.f ? step::direction::e_forward
@@ -130,7 +147,8 @@ class base_stepper {
       return m_n_total_trials;
     }
 
-    /// Set the current step size
+    /// Set the current step size.
+    /// @param step Signed step length used for the next advancement.
     DETRAY_HOST_DEVICE
     inline void set_step_size(const scalar_type step) {
       assert(math::fabs(step) >= 1e-4f * unit<scalar_type>::mm);
@@ -149,13 +167,16 @@ class base_stepper {
     DETRAY_HOST_DEVICE
     inline scalar_type abs_path_length() const { return m_abs_path_length; }
 
-    /// Add a new segment to all path lengths (forward or backward)
+    /// Add a new segment to signed and absolute path lengths.
+    /// @param seg Signed segment length.
     DETRAY_HOST_DEVICE inline void update_path_lengths(scalar_type seg) {
       m_path_length += seg;
       m_abs_path_length += math::fabs(seg);
     }
 
-    /// Set new step constraint
+    /// Set a constraint on the step size.
+    /// @tparam type Constraint category to update.
+    /// @param step_size Maximum step size imposed by the constraint.
     template <step::constraint type = step::constraint::e_actor>
     DETRAY_HOST_DEVICE inline void set_constraint(scalar_type step_size) {
       m_constraint.template set<type>(step_size);
@@ -175,7 +196,8 @@ class base_stepper {
     DETRAY_HOST_DEVICE
     const auto &particle_hypothesis() const { return m_ptc; }
 
-    /// Set new particle hypothesis
+    /// Set the particle hypothesis used for propagation.
+    /// @param ptc Particle hypothesis to use.
     DETRAY_HOST_DEVICE
     inline void set_particle(const pdg_particle<scalar_type> &ptc) {
       m_ptc = ptc;
@@ -238,7 +260,10 @@ class base_stepper {
     DETRAY_HOST
     constexpr auto &inspector() { return m_inspector; }
 
-    /// Call the stepping inspector
+    /// Call the configured inspector with the current state and step context.
+    /// @param cfg Stepping configuration supplied to the inspector.
+    /// @param message Context message describing the inspection point.
+    /// @param dist Distance associated with the current step.
     DETRAY_HOST_DEVICE
     inline void run_inspector([[maybe_unused]] const stepping::config &cfg,
                               [[maybe_unused]] const char *message,

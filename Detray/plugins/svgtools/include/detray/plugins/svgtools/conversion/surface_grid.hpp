@@ -38,6 +38,15 @@ namespace detail {
 
 /// A functor to access the bins and get the associated surface indices
 struct bin_association_getter {
+  /// Collect surface indices from neighboring bins around each grid bin.
+  /// @tparam group_t Accelerator group type.
+  /// @tparam index_t Index of the selected accelerator.
+  /// @tparam volume_t Volume descriptor type.
+  /// @param group Accelerator collection.
+  /// @param index Selected grid index.
+  /// @param vol_desc Volume owning the grid and its local surfaces.
+  /// @param search_window Number of neighboring bins to inspect per axis.
+  /// @return Surface indices associated with each grid bin.
   template <typename group_t, typename index_t, typename volume_t>
   DETRAY_HOST_DEVICE std::vector<std::vector<std::size_t>> operator()(
       [[maybe_unused]] const group_t& group,
@@ -170,9 +179,9 @@ auto surface_grid(const detector_t& detector, const dindex index,
 
 /// @brief Get the surfaces indices that are registered in the bin neighborhoods
 ///
-/// @param detector the detector
-/// @param vol the volume that holds the grid and surfaces
-/// @param offset transform a global surface index to a local one for the volume
+/// @param det Detector owning the volume and accelerator store.
+/// @param vol Volume whose neighborhood associations are queried.
+/// @param search_window Number of bins searched around each bin.
 ///
 /// @returns a vector of surface indices per neighborhood
 template <concepts::detector detector_t>

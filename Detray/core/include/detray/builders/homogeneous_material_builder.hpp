@@ -31,7 +31,9 @@ namespace detray {
 template <typename detector_t>
 class homogeneous_material_builder final : public volume_decorator<detector_t> {
  public:
+  /// Material collection identifier enum supplied by the detector.
   using material_id = typename detector_t::material::id;
+  /// Scalar type used by the detector's material definitions.
   using scalar_type = dscalar<typename detector_t::algebra_type>;
 
   static_assert(concepts::detector<detector_t>);
@@ -51,6 +53,8 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
 
   /// Overwrite, to add material in addition to surfaces (only if surfaces are
   /// present in the factory, otherwise only add material)
+  /// @param sf_factory Factory that supplies surfaces and/or material data.
+  /// @param ctx Geometry context forwarded to the decorated volume builder.
   /// @{
   DETRAY_HOST
   void add_surfaces(
@@ -88,7 +92,11 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
   }
   /// @}
 
-  /// Add the volume and the material to the detector @param det
+  /// Add material data to the detector before building the volume.
+  /// @param det Detector that receives material data.
+  /// @param opt Options controlling volume construction.
+  /// @param ctx Geometry context used by the decorated builder.
+  /// @returns Pointer to the constructed volume.
   DETRAY_HOST
   auto build(detector_t &det, const volume_builder_options &opt,
              typename detector_t::geometry_context ctx = {}) ->

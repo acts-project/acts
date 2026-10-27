@@ -23,8 +23,11 @@ namespace detray {
 template <typename shape_t, concepts::algebra algebra_t,
           bool resolve_pos = false>
 struct intersector {
+  /// Algebra policy used by the intersection calculations.
   using algebra_type = algebra_t;
+  /// Scalar type associated with the algebra policy.
   using scalar_type = dscalar<algebra_t>;
+  /// Transform type used to place surfaces in 3D.
   using transform3_type = dtransform3D<algebra_t>;
 
   /// How to intersect surfaces with rays
@@ -40,20 +43,19 @@ struct intersector {
           typename helix_intersector_type::template intersection_type<int>>);
 
   // Maximum number of solutions this intersector can produce
+  /// Largest number of solutions produced by either trajectory intersector.
   static constexpr std::uint8_t n_solutions{math::max(
       ray_intersector_type::n_solutions, helix_intersector_type::n_solutions)};
 
   // Take the helix intersector result type, as it needs more data
+  /// Common result representation, which accommodates helix error estimates.
   using result_type = typename helix_intersector_type::result_type;
 
   /// Operator function to find intersections between ray and planar mask
   ///
-  /// @param ray is the input ray trajectory
-  /// @param sf the surface handle the mask is associated with
-  /// @param mask is the input mask that defines the surface extent
-  /// @param trf is the surface placement transform
-  /// @param mask_tolerance is the tolerance for mask edges
-  /// @param overstep_tol negative cutoff for the path
+  /// @param ray Straight trajectory to test against the surface.
+  /// @param trf Transform placing the surface in global coordinates.
+  /// @param overstep_tol Minimum accepted signed path length.
   ///
   /// @return the intersection result
   /// @{
@@ -66,6 +68,12 @@ struct intersector {
         ray_intersector_type{}.point_of_intersection(ray, trf, overstep_tol));
   }
 
+  /// Intersect a ray with a cylindrical surface using its radius mask.
+  /// @param ray Straight trajectory to test.
+  /// @param trf Transform placing the surface in global coordinates.
+  /// @param mask Mask providing the cylinder radius.
+  /// @param overstep_tol Minimum accepted signed path length.
+  /// @returns The geometric intersection result.
   template <typename mask_t, typename S = shape_t>
     requires concepts::cylindrical_shape<S, algebra_type>
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
@@ -75,6 +83,10 @@ struct intersector {
         ray, trf, mask, overstep_tol));
   }
 
+  /// Intersect a helix with a planar or line surface.
+  /// @param h Helical trajectory to test.
+  /// @param trf Transform placing the surface in global coordinates.
+  /// @returns The geometric intersection result.
   template <typename S = shape_t>
     requires(!concepts::cylindrical_shape<S, algebra_type>)
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
@@ -83,6 +95,11 @@ struct intersector {
     return helix_intersector_type{}.point_of_intersection(h, trf);
   }
 
+  /// Intersect a helix with a cylindrical surface using its radius mask.
+  /// @param h Helical trajectory to test.
+  /// @param trf Transform placing the surface in global coordinates.
+  /// @param mask Mask providing the cylinder radius.
+  /// @returns The geometric intersection result.
   template <typename mask_t, typename S = shape_t>
     requires concepts::cylindrical_shape<S, algebra_type>
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
@@ -92,7 +109,14 @@ struct intersector {
   }
   /// @}
 
-  /// @returns the intersection(s) between a surface and the ray @param ray
+  /// Resolve a ray intersection against the surface mask.
+  /// @param ray Straight trajectory to test.
+  /// @param sf Surface descriptor associated with the mask.
+  /// @param mask Mask defining the surface extent.
+  /// @param trf Transform placing the surface in global coordinates.
+  /// @param cfg Tolerances and path cutoff for resolving the result.
+  /// @param external_mask_tol Additional tolerance applied at the mask boundary.
+  /// @returns The resolved intersection result or results.
   template <typename surface_descr_t, typename mask_t>
   DETRAY_HOST_DEVICE inline decltype(auto) operator()(
       const detail::ray<algebra_t> &ray, const surface_descr_t &sf,
@@ -102,7 +126,13 @@ struct intersector {
     return ray_intersector_type{}(ray, sf, mask, trf, cfg, external_mask_tol);
   }
 
-  /// @returns the intersection(s) between a surface and the helix @param h
+  /// Resolve a helix intersection against the surface mask.
+  /// @param h Helical trajectory to test.
+  /// @param sf Surface descriptor associated with the mask.
+  /// @param mask Mask defining the surface extent.
+  /// @param trf Transform placing the surface in global coordinates.
+  /// @param cfg Tolerances and path cutoff for resolving the result.
+  /// @returns The resolved intersection result or results.
   template <typename surface_descr_t, typename mask_t>
   DETRAY_HOST_DEVICE inline decltype(auto) operator()(
       const detail::helix<algebra_t> &h, const surface_descr_t &sf,

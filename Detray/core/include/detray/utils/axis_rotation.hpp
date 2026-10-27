@@ -20,9 +20,13 @@ namespace detray {
 template <concepts::algebra algebra_t>
 struct axis_rotation {
  public:
+  /// Algebra backend used for the rotation.
   using algebra_type = algebra_t;
+  /// Scalar type used for the rotation angle and matrix entries.
   using scalar_type = dscalar<algebra_t>;
+  /// Three-dimensional vector type rotated by this helper.
   using vector3_type = dvector3D<algebra_t>;
+  /// Matrix type used to represent the rotation.
   template <std::size_t ROWS, std::size_t COLS>
   using matrix_type = dmatrix<algebra_t, ROWS, COLS>;
 
@@ -45,7 +49,7 @@ struct axis_rotation {
         (1.f - cos_theta) * axis_outer;
   }
 
-  /// @param v vector to be rotated
+  /// @param v Vector to be rotated.
   /// @returns Get the counterclockwisely-rotated vector
   template <typename vector3_t>
     requires(concepts::vector3D<vector3_t> ||
@@ -64,15 +68,22 @@ struct axis_rotation {
 template <concepts::algebra algebra_t>
 struct euler_rotation {
  public:
+  /// Algebra backend used for the rotations.
   using algebra_type = algebra_t;
+  /// Scalar type used for the Euler angles.
   using scalar_type = dscalar<algebra_t>;
+  /// Three-dimensional vector type used for the axes and input.
   using vector3_type = dvector3D<algebra_t>;
 
-  // Following the z-x-z convention
+  /// Initial x axis used to construct the rotated frame.
   vector3_type x{1.0f, 0.f, 0.f};
+  /// Initial z axis used to construct the rotated frame.
   vector3_type z{0.f, 0.f, 1.f};
+  /// First rotation angle, about the initial z axis.
   scalar_type alpha{0.f};
+  /// Second rotation angle, about the rotated x axis.
   scalar_type beta{0.f};
+  /// Third rotation angle, about the twice-rotated z axis.
   scalar_type gamma{0.f};
 
   /// @returns Get the new x and z axis
@@ -91,7 +102,8 @@ struct euler_rotation {
     return std::make_pair(new_x, new_z);
   }
 
-  /// @param v vector to be rotated
+  /// Apply the z-x-z Euler rotations to a vector.
+  /// @param v0 Vector to be rotated.
   /// @returns Get the rotated vector
   DETRAY_HOST_DEVICE vector3_type operator()(const vector3_type& v0) const {
     // alpha around z axis

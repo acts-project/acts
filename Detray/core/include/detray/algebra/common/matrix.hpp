@@ -23,27 +23,32 @@ template <template <typename, std::size_t> class array_t,
           concepts::scalar scalar_t, std::size_t ROW, std::size_t COL>
 struct DETRAY_ALIGN(alignof(algebra::storage::vector<ROW, scalar_t, array_t>))
     matrix {
-  // The matrix consists of column vectors
+  /// Type of each column vector.
   using vector_type = algebra::storage::vector<ROW, scalar_t, array_t>;
-  // Value type: Can be simd types
+  /// Element type, which may itself be a SIMD value type.
   using scalar_type = scalar_t;
 
   /// Default constructor
   constexpr matrix() = default;
 
-  /// Construct from given column vectors @param v
+  /// Construct the matrix from its column vectors.
+  /// @param v Column vectors, one for each matrix column.
   template <concepts::vector... vector_t>
   DETRAY_HOST_DEVICE
     requires(sizeof...(vector_t) == COL)
   explicit matrix(vector_t &&...v) : m_storage{std::forward<vector_t>(v)...} {}
 
-  /// Subscript operator
+  /// Access a matrix column by index.
   /// @{
+  /// @param i Zero-based column index.
+  /// @returns A const reference to the column vector.
   DETRAY_HOST_DEVICE
   constexpr const vector_type &operator[](const std::size_t i) const {
     assert(i < COL);
     return m_storage[i];
   }
+  /// @param i Zero-based column index.
+  /// @returns A mutable reference to the column vector.
   DETRAY_HOST_DEVICE
   constexpr vector_type &operator[](const std::size_t i) {
     assert(i < COL);

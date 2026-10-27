@@ -23,6 +23,10 @@ namespace detray::algebra::array::storage {
 /// "Element getter", assuming a simple 2D array access
 struct element_getter {
   /// Operator getting a reference to one element of a non-const matrix
+  /// @param m Matrix to read.
+  /// @param row Zero-based row of the element.
+  /// @param col Zero-based column of the element.
+  /// @returns A mutable reference to the selected element.
   template <std::size_t ROWS, std::size_t COLS, concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
   DETRAY_HOST_DEVICE constexpr scalar_t &operator()(
@@ -34,6 +38,10 @@ struct element_getter {
   }
 
   /// Operator getting one value of a const matrix
+  /// @param m Matrix to read.
+  /// @param row Zero-based row of the element.
+  /// @param col Zero-based column of the element.
+  /// @returns The selected element by value.
   template <std::size_t ROWS, std::size_t COLS, concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
   DETRAY_HOST_DEVICE constexpr scalar_t operator()(
@@ -45,6 +53,9 @@ struct element_getter {
   }
 
   /// Operator getting a reference to one element of a non-const matrix
+  /// @param m Single-column matrix to read.
+  /// @param row Zero-based row of the element.
+  /// @returns A mutable reference to the selected element.
   template <std::size_t N, concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
   DETRAY_HOST_DEVICE constexpr scalar_t &operator()(
@@ -53,7 +64,10 @@ struct element_getter {
     return m[0][row];
   }
 
-  /// Operator getting a reference to one element of a const matrix
+  /// Operator getting one element of a const single-column matrix
+  /// @param m Single-column matrix to read.
+  /// @param row Zero-based row of the element.
+  /// @returns The selected element by value.
   template <std::size_t N, concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
   DETRAY_HOST_DEVICE constexpr scalar_t operator()(
@@ -63,6 +77,9 @@ struct element_getter {
   }
 
   /// Operator getting a reference to one element of a non-const matrix
+  /// @param m Vector to read.
+  /// @param row Zero-based index of the element.
+  /// @returns A mutable reference to the selected element.
   template <std::size_t N, concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
   DETRAY_HOST_DEVICE constexpr scalar_t &operator()(array_t<scalar_t, N> &m,
@@ -72,6 +89,9 @@ struct element_getter {
   }
 
   /// Operator getting a reference to one element of a const matrix
+  /// @param m Vector to read.
+  /// @param row Zero-based index of the element.
+  /// @returns The selected element by value.
   template <std::size_t N, concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
   DETRAY_HOST_DEVICE constexpr scalar_t operator()(
@@ -155,6 +175,10 @@ DETRAY_HOST_DEVICE decltype(auto) element(V &vector) {
 /// "Block getter", assuming a simple 2D array access
 struct block_getter {
   /// Operator producing a sub-matrix from a const matrix
+  /// @param m Source matrix.
+  /// @param row First source row of the block.
+  /// @param col First source column of the block.
+  /// @returns A copy of the requested block.
   template <std::size_t ROWS, std::size_t COLS, std::size_t oROWS,
             std::size_t oCOLS, concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
@@ -172,6 +196,10 @@ struct block_getter {
   }
 
   /// Operator producing a vector out of a const matrix
+  /// @param m Source matrix.
+  /// @param row First row of the selected segment.
+  /// @param col Column containing the segment.
+  /// @returns A copy of the selected column segment.
   template <std::size_t SIZE, std::size_t ROWS, std::size_t COLS,
             concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
@@ -190,8 +218,11 @@ struct block_getter {
     return subvector;
   }
 
-  /// Sets a matrix of dimension @tparam ROW and @tparam COL as submatrix of
-  /// @param m beginning at row @param row and column @param col
+  /// Set a rectangular block of a matrix.
+  /// @param m Matrix to update.
+  /// @param b Block values to write.
+  /// @param row First destination row.
+  /// @param col First destination column.
   template <std::size_t ROWS, std::size_t COLS, class input_matrix_type,
             concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
@@ -205,8 +236,11 @@ struct block_getter {
     }
   }
 
-  /// Sets a vector of length @tparam ROW as submatrix of
-  /// @param m beginning at row @param row and column @param col
+  /// Set a column segment of a matrix from a vector.
+  /// @param m Matrix to update.
+  /// @param b Vector values to write.
+  /// @param row First destination row.
+  /// @param col Destination column.
   template <std::size_t ROWS, concepts::scalar scalar_t,
             template <typename, std::size_t> class vector_t,
             class input_matrix_type>
@@ -221,9 +255,13 @@ struct block_getter {
 
 };  // struct block_getter
 
-/// @returns a matrix of dimension @tparam ROW and @tparam COL that contains
-/// the submatrix of @param m beginning at row @param row and column
-/// @param col
+/// Return a copy of a rectangular block of a matrix.
+/// @tparam ROWS Number of rows in the returned block.
+/// @tparam COLS Number of columns in the returned block.
+/// @param m Source matrix.
+/// @param row First source row.
+/// @param col First source column.
+/// @returns The requested submatrix.
 template <std::size_t ROWS, std::size_t COLS, class input_matrix_type>
 DETRAY_HOST_DEVICE constexpr decltype(auto) block(const input_matrix_type &m,
                                                   std::size_t row,
@@ -232,7 +270,12 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) block(const input_matrix_type &m,
   return block.template operator()<ROWS, COLS>(m, row, col);
 }
 
-/// Function extracting a vector from a matrix
+/// Extract a contiguous segment from one column of a matrix.
+/// @tparam SIZE Number of elements in the returned vector.
+/// @param m Source matrix.
+/// @param row First source row.
+/// @param col Source column.
+/// @returns The selected column segment.
 template <std::size_t SIZE, std::size_t ROWS, std::size_t COLS,
           concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
@@ -243,8 +286,13 @@ DETRAY_HOST_DEVICE constexpr array_t<scalar_t, SIZE> vector(
   return block.template vector<SIZE>(m, row, col);
 }
 
-/// Sets a matrix of dimension @tparam ROW and @tparam COL as submatrix of
-/// @param m beginning at row @param row and column @param col
+/// Write a rectangular block into a matrix.
+/// @tparam ROWS Number of rows in the block.
+/// @tparam COLS Number of columns in the block.
+/// @param m Matrix to update.
+/// @param b Block values to write.
+/// @param row First destination row.
+/// @param col First destination column.
 template <std::size_t ROWS, std::size_t COLS, class input_matrix_type,
           concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
@@ -255,8 +303,12 @@ DETRAY_HOST_DEVICE constexpr void set_block(
   block.set(m, b, row, col);
 }
 
-/// Sets a vector of length @tparam ROW as submatrix of
-/// @param m beginning at row @param row and column @param col
+/// Write a vector into a contiguous segment of one matrix column.
+/// @tparam ROWS Number of vector elements.
+/// @param m Matrix to update.
+/// @param b Vector values to write.
+/// @param row First destination row.
+/// @param col Destination column.
 template <std::size_t ROWS, concepts::scalar scalar_t,
           template <typename, std::size_t> class vector_t,
           class input_matrix_type>

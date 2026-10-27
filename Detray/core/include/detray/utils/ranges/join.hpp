@@ -42,21 +42,24 @@ template <detray::ranges::range range_t>
 struct join_view : public detray::ranges::view_interface<join_view<range_t>> {
   /// Iterator over the range of ranges
   using outer_iterator_t = detray::ranges::iterator_t<range_t>;
-  // Type of a single range
+  /// Value type yielded by the outer range.
   using outer_value_t =
       std::conditional_t<std::is_const_v<range_t>,
                          const detray::ranges::range_value_t<range_t>,
                          detray::ranges::range_value_t<range_t>>;
-  // Iterator over a single range
+  /// Iterator type used within each nested range.
   using inner_iterator_t = detray::ranges::iterator_t<outer_value_t>;
 
+  /// Iterator that walks across all nested ranges.
   using iterator_t = detray::ranges::detail::join_iterator<range_t>;
+  /// Element value type yielded by the joined view.
   using value_t = std::iter_value_t<iterator_t>;
 
   /// Default constructor
   constexpr join_view() = default;
 
-  /// Construct from a range of @param ranges.
+  /// Construct from a range whose elements are themselves ranges.
+  /// @param ranges outer range containing the nested ranges
   template <detray::ranges::range R>
     requires(!std::same_as<R, join_view>)
   DETRAY_HOST_DEVICE constexpr explicit join_view(R &&ranges)
@@ -95,8 +98,8 @@ struct join_view : public detray::ranges::view_interface<join_view<range_t>> {
   }
 
   /// Start and end position of the subranges
-  outer_iterator_t m_begin{};
-  outer_iterator_t m_end{};
+  outer_iterator_t m_begin{};  ///< Begin iterator of the outer range.
+  outer_iterator_t m_end{};    ///< End iterator of the outer range.
 };
 
 namespace views {
@@ -104,16 +107,21 @@ namespace views {
 /// @brief interface type to construct a @c join_view with CTAD
 template <detray::ranges::range range_t>
 struct join : public ranges::join_view<range_t> {
+  /// Base joined-range implementation.
   using base_type = detray::ranges::join_view<range_t>;
 
   constexpr join() = default;
 
+  /// Construct the adaptor from the outer range of nested ranges.
+  /// @param ranges range whose nested ranges will be joined
   template <detray::ranges::range deduced_range_t>
     requires(!std::same_as<deduced_range_t, join>)
   DETRAY_HOST_DEVICE constexpr explicit join(deduced_range_t &&ranges)
       : base_type(std::forward<deduced_range_t>(ranges)) {}
 
   /// Call operator for range composition
+  /// @param ranges outer range whose nested ranges will be joined
+  /// @return view that iterates over the nested ranges in sequence
   template <detray::ranges::range deduced_range_t>
   DETRAY_HOST_DEVICE constexpr auto operator()(deduced_range_t &&ranges) {
     return detray::ranges::join_view<deduced_range_t>(
@@ -121,6 +129,8 @@ struct join : public ranges::join_view<range_t> {
   }
 
   /// Copy assignment operator
+  /// @param other adaptor to copy
+  /// @return reference to this adaptor
   DETRAY_HOST_DEVICE
   join &operator=(const join &other) {
     base_type::operator=(other);
@@ -148,22 +158,31 @@ namespace detail {
 /// @tparam range_t a range that contains the ranges to be joined.
 template <detray::ranges::range range_t>
 struct join_iterator {
+  /// Iterator used to traverse the outer range of ranges.
   using outer_iterator_t =
       std::conditional_t<std::is_const_v<range_t>,
                          detray::ranges::const_iterator_t<range_t>,
                          detray::ranges::iterator_t<range_t>>;
+  /// Reference type obtained from the outer iterator.
   using outer_value_t = decltype(*std::declval<outer_iterator_t>());
+  /// Iterator used to traverse each inner range.
   using inner_iterator_t = std::conditional_t<
       std::is_same_v<outer_iterator_t,
                      detray::ranges::const_iterator_t<range_t>>,
       detray::ranges::const_iterator_t<outer_value_t>,
       detray::ranges::iterator_t<outer_value_t>>;
 
+  /// Iterator type of the current inner range.
   using iterator_t = inner_iterator_t;
+  /// Distance type of the inner iterator.
   using difference_type = std::iter_difference_t<iterator_t>;
+  /// Value yielded by dereferencing the join iterator.
   using value_type = std::iter_value_t<iterator_t>;
+  /// Pointer type associated with the inner iterator.
   using pointer = typename std::iterator_traits<iterator_t>::pointer;
+  /// Reference type yielded by the inner iterator.
   using reference = std::iter_reference_t<iterator_t>;
+  /// Iterator category supported by the inner iterator.
   using iterator_category =
       typename std::iterator_traits<iterator_t>::iterator_category;
 
@@ -182,8 +201,9 @@ struct join_iterator {
     next_inner();
   }
 
-  /// Increment current iterator and check for switch between ranges.
+  /// Increment to the next element, crossing nested-range boundaries as needed.
   /// @{
+  /// @returns A reference to this iterator after incrementing.
   DETRAY_HOST_DEVICE auto operator++() -> join_iterator & {
     ++m_inner_itr;
     next_inner();
@@ -191,6 +211,8 @@ struct join_iterator {
     return *this;
   }
 
+  /// Increment and return the iterator's previous position.
+  /// @returns A copy of the iterator before incrementing.
   DETRAY_HOST_DEVICE constexpr auto operator++(int) -> join_iterator {
     auto tmp(*this);
     ++(*this);
@@ -198,8 +220,10 @@ struct join_iterator {
   }
   /// @}
 
-  /// Decrement current iterator and check for switch between ranges.
+  /// Decrement to the previous element, crossing nested-range boundaries as
+  /// needed.
   /// @{
+  /// @returns A reference to this iterator after decrementing.
   DETRAY_HOST_DEVICE constexpr auto operator--() -> join_iterator &
     requires std::bidirectional_iterator<inner_iterator_t> &&
              std::bidirectional_iterator<outer_iterator_t>
@@ -216,6 +240,8 @@ struct join_iterator {
     return *this;
   }
 
+  /// Decrement and return the iterator's previous position.
+  /// @returns A copy of the iterator before decrementing.
   DETRAY_HOST_DEVICE constexpr auto operator--(int) -> join_iterator
     requires std::bidirectional_iterator<inner_iterator_t> &&
              std::bidirectional_iterator<outer_iterator_t>
@@ -230,7 +256,9 @@ struct join_iterator {
   DETRAY_HOST_DEVICE
   constexpr decltype(auto) operator*() const { return *m_inner_itr; }
 
-  /// @returns advance this iterator state by @param j.
+  /// Advance the joined iterator by `j` elements.
+  /// @param j number of elements to advance
+  /// @returns A reference to this iterator after advancing.
   DETRAY_HOST_DEVICE constexpr auto operator+=(const difference_type j)
       -> join_iterator &
     requires std::random_access_iterator<inner_iterator_t> &&
@@ -249,7 +277,9 @@ struct join_iterator {
     return *this;
   }
 
-  /// @returns advance this iterator state by @param j.
+  /// Retreat the joined iterator by `j` elements.
+  /// @param j number of elements to retreat
+  /// @returns A reference to this iterator after retreating.
   DETRAY_HOST_DEVICE constexpr auto operator-=(const difference_type j)
       -> join_iterator &
     requires std::random_access_iterator<inner_iterator_t> &&
@@ -259,7 +289,9 @@ struct join_iterator {
     return *this;
   }
 
-  /// @returns the value at a given position - const
+  /// Return the element at an offset from this position.
+  /// @param i zero-based offset from this iterator
+  /// @return referenced element at that position
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator[](
       const difference_type i) const
     requires std::random_access_iterator<inner_iterator_t> &&
@@ -321,7 +353,10 @@ struct join_iterator {
 #endif
   }
 
-  /// @returns an iterator advanced by @param j through the join.
+  /// Return the iterator advanced by `j` elements through the joined ranges.
+  /// @param itr iterator to advance
+  /// @param j number of elements to advance
+  /// @return advanced iterator
   DETRAY_HOST_DEVICE friend constexpr auto operator+(const join_iterator &itr,
                                                      const difference_type j)
       -> join_iterator
@@ -341,7 +376,10 @@ struct join_iterator {
     }
     return tmp;
   }
-  /// @returns an iterator advanced by @param j through the join.
+  /// Return the iterator advanced by `j` elements through the joined ranges.
+  /// @param j number of elements to advance
+  /// @param itr iterator to advance
+  /// @return advanced iterator
   DETRAY_HOST_DEVICE friend constexpr auto operator+(const difference_type j,
                                                      const join_iterator &itr)
       -> join_iterator
@@ -351,7 +389,10 @@ struct join_iterator {
     return itr + j;
   }
 
-  /// @returns an iterator advanced by @param j through the join.
+  /// Return the iterator retreated by `j` elements through the joined ranges.
+  /// @param itr iterator to retreat
+  /// @param j number of elements to retreat
+  /// @return retreated iterator
   DETRAY_HOST_DEVICE friend constexpr auto operator-(const join_iterator &itr,
                                                      const difference_type j)
       -> join_iterator

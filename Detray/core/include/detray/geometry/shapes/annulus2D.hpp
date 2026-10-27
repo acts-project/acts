@@ -51,6 +51,7 @@ class annulus2D {
   static constexpr std::string_view name = "(stereo) annulus2D";
 
   /// Names for the mask boundary values
+  /// Indices describing the entries in the shape boundary array.
   enum boundaries : unsigned int {
     e_min_r = 0u,
     e_max_r = 1u,
@@ -86,6 +87,8 @@ class annulus2D {
   }
 
   /// @returns The phi position in relative to the average phi of the annulus.
+  /// @param bounds Annulus boundary values, including its average azimuth.
+  /// @param loc_p Point in the annulus local frame.
   template <concepts::scalar scalar_t, concepts::point point_t>
   DETRAY_HOST_DEVICE inline scalar_t get_phi_rel(
       const bounds_type<scalar_t> &bounds, const point_t &loc_p) const {
@@ -94,6 +97,8 @@ class annulus2D {
   }
 
   /// @returns The squared radial position in the beam frame.
+  /// @param bounds Annulus boundaries and beam-frame center shift.
+  /// @param loc_p Point in the annulus local frame.
   template <concepts::scalar scalar_t, concepts::point point_t>
   DETRAY_HOST_DEVICE inline scalar_t get_r2_beam_frame(
       const bounds_type<scalar_t> &bounds, const point_t &loc_p) const {
@@ -117,8 +122,8 @@ class annulus2D {
   /// caller. For the annulus shape, the local coordinate system of the
   /// strips is used (focal system).
   ///
-  /// @param bounds the boundary values for this shape
-  /// @param loc_p the point to be checked in the local coordinate system
+  /// @param bounds Annulus radial and azimuthal boundary values.
+  /// @param loc_p Point in the local focal frame.
   ///
   /// @return the minimum distance.
   template <concepts::scalar scalar_t, concepts::point point_t>
@@ -149,7 +154,8 @@ class annulus2D {
   /// @param bounds the boundary values for this shape
   /// @param trf the surface transform
   /// @param glob_p the point to be checked in the global coordinate system
-  /// @param tol dynamic tolerance determined by caller
+  /// @param tol Dynamic tolerance supplied by the caller.
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::algebra algebra_t>
@@ -217,7 +223,8 @@ class annulus2D {
   ///
   /// @param bounds the boundary values for this shape
   /// @param loc_p the point to be checked in the local coordinate system
-  /// @param tol dynamic tolerance determined by caller
+  /// @param tol Dynamic tolerance supplied by the caller.
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::scalar scalar_t, concepts::point point_t>
@@ -301,7 +308,6 @@ class annulus2D {
   ///
   /// @note (not yet implemented!)
   ///
-  /// @param bounds the boundary values for this shape
   ///
   /// @returns the stereo annulus area.
   template <concepts::scalar scalar_t>
@@ -397,7 +403,7 @@ class annulus2D {
 
   /// @brief Stereo annulus corners in polar strip system.
   ///
-  /// @param bounds the boundary values for the stereo annulus
+  /// @param bounds Annulus boundary values.
   ///
   /// @note see calculation of strip lengths in
   ///       https://cds.cern.ch/record/1514636?ln=en p10-13
@@ -445,7 +451,8 @@ class annulus2D {
     return corner_pos;
   }
 
-  /// @returns the shapes centroid in local cartesian coordinates
+  /// @param bounds Boundary values used to determine the center.
+  /// @returns The centroid in local Cartesian coordinates.
   /// @note the calculated centroid position is only an approximation
   /// (centroid of the four corner points)!
   template <concepts::algebra algebra_t>
@@ -466,8 +473,8 @@ class annulus2D {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// @param bounds the boundary values for the stereo annulus
-  /// @param n_seg is the number of line segments
+  /// @param bounds Boundary values of the annulus.
+  /// @param n_seg Number of segments used to approximate each curved edge.
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>

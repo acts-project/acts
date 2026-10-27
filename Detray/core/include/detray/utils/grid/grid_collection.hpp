@@ -41,7 +41,9 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
   using multi_axis_t = typename grid_t::axes_type;
 
  public:
+  /// Non-owning grid type stored in the collection.
   using value_type = grid_t;
+  /// Index type used to address collection elements.
   using size_type = dindex;
 
   /// Backend storage type for the grid
@@ -51,6 +53,7 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
       typename multi_axis_t::edge_offset_container_type;
   /// Contains all bin edges for all axes
   using edges_container_type = typename multi_axis_t::edges_container_type;
+  /// Container type used for vectors of type `T` in this collection.
   template <typename T>
   using vector_type = typename multi_axis_t::template vector_type<T>;
 
@@ -128,7 +131,8 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
   /// Make grid collection default constructible: Empty
   grid_collection() = default;
 
-  /// Create empty grid collection from specific vecmem memory resource
+  /// Create an empty collection using a VecMem memory resource.
+  /// @param resource Resource used for the collection's backing storage.
   DETRAY_HOST
   explicit grid_collection(vecmem::memory_resource *resource)
       : m_bin_offsets(resource),
@@ -136,7 +140,11 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
         m_bin_edge_offsets(resource),
         m_bin_edges(resource) {}
 
-  /// Create grid collection from existing data - move
+  /// Construct the collection by moving in all backing storage.
+  /// @param offs Offsets delimiting each grid's bin storage.
+  /// @param bins Storage containing all bin entries.
+  /// @param edge_offs Per-grid offsets into the concatenated edge storage.
+  /// @param edges Concatenated bin-edge values.
   DETRAY_HOST_DEVICE
   grid_collection(vector_type<size_type> &&offs, bin_container_type &&bins,
                   edge_offset_container_type &&edge_offs,
@@ -146,7 +154,8 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
         m_bin_edge_offsets(std::move(edge_offs)),
         m_bin_edges(std::move(edges)) {}
 
-  /// Device-side construction from a vecmem based view type
+  /// Construct a device-side collection from a VecMem view.
+  /// @param view View over offsets, bins and axis-edge storage.
   template <concepts::device_view coll_view_t>
   DETRAY_HOST_DEVICE explicit grid_collection(coll_view_t &view)
       : m_bin_offsets(detail::get<0>(view.m_view)),
@@ -154,14 +163,17 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
         m_bin_edge_offsets(detail::get<2>(view.m_view)),
         m_bin_edges(detail::get<3>(view.m_view)) {}
 
-  /// Move constructor
+  /// Move-construct the collection and its backing storage.
+  /// @param other Collection whose storage is moved.
   DETRAY_HOST_DEVICE grid_collection(grid_collection &&other) noexcept
       : m_bin_offsets(std::move(other.m_bin_offsets)),
         m_bins(std::move(other.m_bins)),
         m_bin_edge_offsets(std::move(other.m_bin_edge_offsets)),
         m_bin_edges(std::move(other.m_bin_edges)) {}
 
-  /// Move assignment
+  /// Move-assign the collection and its backing storage.
+  /// @param other Collection whose storage is moved.
+  /// @returns A reference to this collection.
   DETRAY_HOST_DEVICE grid_collection &operator=(
       grid_collection &&other) noexcept {
     if (this != &other) {
@@ -243,7 +255,9 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
     return m_bin_edges;
   }
 
-  /// Create grid from container pointers - const
+  /// Create a grid view at the requested collection index.
+  /// @param i Zero-based index of the grid.
+  /// @returns A non-owning view of the selected grid.
   DETRAY_HOST_DEVICE
   auto operator[](const size_type i) const -> grid_t {
     const size_type axes_offset{grid_t::dim * i};
@@ -252,7 +266,9 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
                   m_bin_offsets[i]);
   }
 
-  /// Create grid from container pointers with range check
+  /// Create a grid view at the requested collection index with range checking.
+  /// @param i Zero-based index of the grid.
+  /// @returns A non-owning view of the selected grid.
   DETRAY_HOST_DEVICE
   auto at(const size_type i) const -> grid_t {
     const size_type axes_offset{grid_t::dim * i};

@@ -91,34 +91,45 @@ namespace traits {
 
 /// Make sure the simd scalar type is recognized correctly
 /// @{
+/// Scalar trait for an SoA matrix whose entries are SIMD vectors.
 template <concepts::value T, std::size_t ROWS, std::size_t COLS>
 struct scalar<algebra::storage::matrix<algebra::vc_soa::storage_type,
                                        Vc::Vector<T>, ROWS, COLS>> {
+  /// SIMD scalar type stored in each matrix entry.
   using type = Vc::Vector<T>;
 };
 
+/// Scalar trait for an SoA vector whose entries are SIMD vectors.
 template <concepts::value T, std::size_t N>
 struct scalar<
     algebra::storage::vector<N, Vc::Vector<T>, algebra::vc_soa::storage_type>> {
+  /// SIMD scalar type stored in each vector entry.
   using type = Vc::Vector<T>;
 };
 /// @}
 
 /// Get the single value type from the simd scalar type
 /// @{
+/// Value trait that unwraps the element type from a Vc vector.
 template <concepts::value T>
 struct value<Vc::Vector<T>> {
+  /// Scalar element type wrapped by the SIMD vector.
   using type = T;
 };
 /// @}
 
 // Vector and storage types are different
+/// Dimensions of SoA storage, represented as one column of `N` rows.
 template <concepts::simd_scalar T, auto N>
 struct dimensions<algebra::vc_soa::storage_type<T, N>> {
+  /// Index type used for storage dimensions.
   using index_type = algebra::vc_soa::index_type;
 
+  /// Number of logical dimensions represented by the storage.
   static constexpr index_type _dim{1};
+  /// Number of stored vector components.
   static constexpr index_type _rows{N};
+  /// Number of storage columns.
   static constexpr index_type _columns{1};
 };
 

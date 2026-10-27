@@ -47,17 +47,22 @@ constexpr inline std::size_t size{get_size<L>()};
 template <typename T, std::size_t = 0, typename = void>
 struct contains_impl : public std::false_type {};
 
+/// Continue the lookup after the current head type did not match.
 template <typename U, std::size_t I, typename T, typename... Ts>
 struct contains_impl<U, I, list<T, Ts...>>
     : public contains_impl<U, I + 1u, list<Ts...>> {};
 
+/// Report the current position when the head type matches.
 template <typename T, std::size_t I, typename... Ts>
 struct contains_impl<T, I, list<T, Ts...>> : public std::true_type {
+  /// Zero-based position of the matching type.
   static constexpr std::size_t pos{I};
 };
 
+/// Report an invalid position after reaching an empty list.
 template <typename T, std::size_t I>
 struct contains_impl<T, I, list<>> : public std::false_type {
+  /// Sentinel position used when the type is absent.
   static constexpr auto pos{std::numeric_limits<std::size_t>::max()};
 };
 
@@ -73,8 +78,10 @@ inline constexpr std::size_t position = contains_impl<T, 0u, L>::pos;
 template <typename = void>
 struct get_front {};
 
+/// Specialization returning the head type of a nonempty list.
 template <typename T, typename... Ts>
 struct get_front<list<T, Ts...>> {
+  /// First type in the list.
   using type = T;
 };
 template <typename L>
@@ -86,14 +93,18 @@ using front = typename get_front<L>::type;
 template <typename = void>
 struct get_back {};
 
+/// Specialization returning the last type of a nonempty list.
 template <typename T, typename... Ts>
 struct get_back<list<T, Ts...>> {
+  /// Last type in the list.
   using type = std::conditional_t<sizeof...(Ts) == 0, T,
                                   typename get_back<list<Ts...>>::type>;
 };
 // Base case
+/// Empty lists have no last type, represented here by `void`.
 template <>
 struct get_back<list<>> {
+  /// Type returned for an empty list.
   using type = void;
 };
 template <typename L>
@@ -105,8 +116,10 @@ using back = typename get_back<L>::type;
 template <std::size_t N, typename = void>
 struct get_at {};
 
+/// Select the type at position `N` from a nonempty list.
 template <std::size_t N, typename T, typename... Ts>
 struct get_at<N, list<T, Ts...>> {
+  /// Type at position `N`.
   using type = std::remove_cvref_t<decltype(detray::get<N>(
       std::declval<dtuple<T, Ts...>>()))>;
 };
@@ -119,8 +132,10 @@ using at = typename get_at<N, L>::type;
 template <typename N, typename = void>
 struct do_push_back {};
 
+/// Append `N` to the end of the supplied type list.
 template <typename N, typename... Ts>
 struct do_push_back<N, list<Ts...>> {
+  /// Resulting type list.
   using type = list<Ts..., N>;
 };
 template <typename L, typename N>
@@ -132,8 +147,10 @@ using push_back = typename do_push_back<N, L>::type;
 template <typename N, typename = void>
 struct do_push_front {};
 
+/// Prepend `N` to the supplied type list.
 template <typename N, typename... Ts>
 struct do_push_front<N, list<Ts...>> {
+  /// Resulting type list.
   using type = list<N, Ts...>;
 };
 template <typename L, typename N>
@@ -151,6 +168,7 @@ template <typename... Ts>
 struct is_type_list<types::list<Ts...>> : public std::true_type {};
 
 template <typename L>
+/// Whether `L` is a `types::list` specialization.
 inline constexpr bool is_type_list_v{is_type_list<L>::value};
 
 }  // namespace detail
@@ -222,13 +240,17 @@ std::string get_name(bool full = false) {
   return tokens.back();
 }
 
+/// Print a message when the type is not a type list.
 template <typename = void>
 struct print {
   print() { std::puts("Not a type_list!\n"); }
 };
 
+/// Print the types and delimiters of a type list.
 template <typename... Ts>
 struct print<list<Ts...>> {
+  /// Print one type name and recursively print the remaining names.
+  /// @param full Whether to include namespaces and template arguments.
   template <typename P = void, typename... Ps>
   void print_typeid(bool full) {
     std::printf("%s", get_name<P>(full).c_str());
@@ -240,6 +262,8 @@ struct print<list<Ts...>> {
     }
   }
 
+  /// Print the complete type list.
+  /// @param full whether to include namespaces and template arguments
   explicit print(bool full = true) {
     std::puts("type_list<");
     print_typeid<Ts...>(full);
@@ -256,7 +280,7 @@ struct print<list<Ts...>> {
 /// @tparam I the current type position during recursion in the original list
 /// @tparam Fs the types currently in the list (recursion)
 ///
-/// @param [out] list a type list of selected types from the original list
+/// @param filtered accumulator of selected types built so far
 ///
 /// @returns the filled type list
 template <typename orig_list_t, class type_selector, std::size_t I = 0u,
@@ -294,8 +318,8 @@ DETRAY_HOST_DEVICE consteval auto filtered_list(
 ///                       to a new type in a local typedef 'type'
 /// @tparam Fs the types currently in the list (recursion)
 ///
-/// @param [out] list a type list of selected types from the original list
-/// @param [out] idx_array a type list of selected types from the original list
+/// @param filtered accumulator of selected types built so far
+/// @param idx_array output array mapping original positions to filtered ones
 ///
 /// @returns the filled index array
 template <typename orig_list_t, class type_selector, std::size_t I = 0u,

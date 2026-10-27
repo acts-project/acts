@@ -40,8 +40,11 @@ class composite_actor final : public principal_actor_t {
   struct is_comp_actor : public std::true_type {};
 
   /// The composite is an actor in itself.
+  /// Principal actor implementation wrapped by this composition.
   using actor_type = principal_actor_t;
+  /// State type owned by the principal actor.
   using state = typename actor_type::state;
+  /// Result type produced by the principal actor.
   using result = typename actor_type::result;
 
   // Make sure the result type contains a status code
@@ -50,6 +53,7 @@ class composite_actor final : public principal_actor_t {
   /// Tuple of states of observing actors
   using observer_states =
       detail::tuple_cat_t<detail::state_tuple_t<observers>...>;
+  /// Tuple of references to the observing actors' states.
   using observer_state_refs =
       detail::tuple_cat_t<detail::state_ref_tuple_t<observers>...>;
 
@@ -59,10 +63,9 @@ class composite_actor final : public principal_actor_t {
   /// First runs its own implementation, then passes the updated state to its
   /// observers.
   ///
-  /// @param states the states of all actors in the chain
-  /// @param p_state the state of the propagator (stepper and navigator)
-  /// @param subject_res the result of the actor this actor observes. Uses
-  ///                      a dummy type if this is not an observing actor.
+  /// @param states States of this actor and its observers.
+  /// @param p_state Current propagation state.
+  /// @param subject_res Result from the actor observed by this composite.
   template <typename actor_states_t, typename propagator_state_t,
             typename subj_result_t = typename actor::empty_result>
   DETRAY_HOST_DEVICE void operator()(actor_states_t &states,
@@ -92,11 +95,10 @@ class composite_actor final : public principal_actor_t {
  private:
   /// Notifies the observing actors for composite and simple actor case.
   ///
-  /// @param observer one of the observers
-  /// @param states the states of all actors in the chain
-  /// @param actor_state the state of this compositions actor as the subject
-  ///                    to all of its observers
-  /// @param p_state the state of the propagator (stepper and navigator)
+  /// @param observer Observer to notify.
+  /// @param states States of this actor and all observers.
+  /// @param p_state Current propagation state.
+  /// @param res Result passed to the observer from the principal actor.
   template <concepts::actor observer_t, typename actor_states_t,
             typename propagator_state_t>
   DETRAY_HOST_DEVICE inline void notify(const observer_t &observer,
@@ -122,11 +124,10 @@ class composite_actor final : public principal_actor_t {
   ///
   /// Unrolls the observer types and runs the notification for each of them.
   ///
-  /// @param observer_list all observers of the actor
-  /// @param states the states of all actors in the chain
-  /// @param actor_state the state of this compositions actor as the subject
-  ///                    to all of its observers
-  /// @param p_state the state of the propagator (stepper and navigator)
+  /// Notify observers in declaration order.
+  /// @param states States of this actor and all observers.
+  /// @param p_state Current propagation state.
+  /// @param res Result passed from the principal actor to observers.
   template <std::size_t... indices, typename actor_states_t,
             typename propagator_state_t>
   DETRAY_HOST_DEVICE inline void notify(

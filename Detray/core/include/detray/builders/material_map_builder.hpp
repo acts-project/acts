@@ -48,9 +48,13 @@ class material_map_builder final : public volume_decorator<detector_t> {
   using material_t = typename detector_t::material;
 
  public:
+  /// Scalar type used by material map bins.
   using scalar_type = dscalar<typename detector_t::algebra_type>;
+  /// Detector type whose geometry and material stores are populated.
   using detector_type = detector_t;
+  /// Material slab type stored in each bin.
   using value_type = material_slab<scalar_type>;
+  /// Bin payload containing a local bin index and its material values.
   using bin_data_type =
       typename fill_by_bin::template bin_data<DIM, value_type>;
 
@@ -72,6 +76,8 @@ class material_map_builder final : public volume_decorator<detector_t> {
 
   /// Overwrite, to add material maps in addition to surfaces
   /// @{
+  /// @param sf_factory Factory providing surfaces and material-map data.
+  /// @param ctx Geometry context forwarded to the underlying volume builder.
   DETRAY_HOST
   void add_surfaces(
       std::shared_ptr<surface_factory_interface<detector_t>> sf_factory,
@@ -106,7 +112,11 @@ class material_map_builder final : public volume_decorator<detector_t> {
   }
   /// @}
 
-  /// Add the volume and the material maps to the detector @param det
+  /// Build the volume and attach its material maps to the detector.
+  /// @param det Detector receiving the volume and material maps.
+  /// @param opt Options controlling map construction and deduplication.
+  /// @param ctx Geometry context used for transform lookup.
+  /// @returns Pointer to the built volume.
   DETRAY_HOST
   auto build(detector_t& det, const volume_builder_options& opt,
              typename detector_t::geometry_context ctx = {}) ->
@@ -129,17 +139,18 @@ class material_map_builder final : public volume_decorator<detector_t> {
   }
 
  private:
-  /// Check whether a surface with a given index @param sf_idx should receive
-  /// material from this builder
+  /// Check whether a surface has material-map data staged in this builder.
+  /// @param sf_idx Volume-local surface index to check.
   bool surface_has_map(const dindex sf_idx) const {
     return m_bin_data.contains(sf_idx);
   }
 
-  /// Build the material grid for every surface that has material, add it to
-  /// the detector @param det and set the global surface material link.
+  /// Build a material grid for each mapped surface and set its detector link.
   ///
   /// @note The grids are built from the volume local masks in the builder,
   /// since the surfaces are not yet added to the detector
+  /// @param opt Options controlling map construction and deduplication.
+  /// @param det Detector receiving the generated material maps.
   void add_material_maps(const volume_builder_options& opt, detector_t& det) {
     DETRAY_VERBOSE_HOST("Build material maps for surfaces...");
 
@@ -208,6 +219,16 @@ namespace detail {
 /// @returns the type id and index of the material map in the store
 template <typename material_t>
 struct add_sf_material_map {
+  /// Build a material grid for a surface mask and store its link.
+  /// @param mask_coll Mask collection associated with the surface.
+  /// @param index Range of masks used to construct the surface extent.
+  /// @param mat_factory Factory that creates an empty material grid.
+  /// @param bin_data Material values indexed by local grid bin.
+  /// @param n_bins Number of bins on each grid axis.
+  /// @param axis_spans Optional coordinate spans for the map axes.
+  /// @param mat_store Material store receiving the generated map.
+  /// @param deduplicate Whether to reuse an identical map already in the store.
+  /// @returns Material identifier and index assigned to the grid.
   template <typename mask_coll_t, typename index_range_t,
             typename mat_factory_t, typename bin_data_t, std::size_t DIM,
             typename material_store_t, concepts::scalar scalar_t>

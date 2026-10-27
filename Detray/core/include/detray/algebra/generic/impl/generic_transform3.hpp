@@ -39,16 +39,24 @@ struct transform3 {
   using array_type = array_t<scalar_t, N>;
 
   // 4 x 4 Matrix (keep four rows for better alignment)
+  /// Homogeneous matrix type used to store the transform.
   using matrix44 = matrix_t<scalar_t, 4, 4>;
   static_assert(concepts::square_matrix<matrix44>);
 
+  /// Two-component vector type used for local plane coordinates.
   using vector2 = detray::traits::get_vector_t<matrix44, 2, scalar_t>;
+  /// Three-component vector type used for spatial quantities.
   using vector3 = detray::traits::get_vector_t<matrix44, 3, scalar_t>;
+  /// Two-dimensional point representation (same storage as a vector).
+  /// Two-dimensional point representation.
   using point2 = vector2;
+  /// Three-dimensional point representation (same storage as a vector).
+  /// Three-dimensional point representation.
   using point3 = vector3;
 
   /// Function (object) used for accessing a matrix element/block
   using element_getter = detray::traits::element_getter_t<matrix44>;
+  /// Accessor for the 3x3 rotation block of the homogeneous matrix.
   using block_getter = detray::traits::block_getter_t<matrix44>;
 
   /// Matrix inversion algorithm
@@ -62,8 +70,12 @@ struct transform3 {
 
   /// @name Data objects
   /// @{
-  matrix44 _data{generic::math::identity<matrix44>()};
-  matrix44 _data_inv{generic::math::identity<matrix44>()};
+  matrix44 _data{
+      generic::math::identity<matrix44>()};  ///< Local-to-global homogeneous
+                                             ///< transformation matrix.
+  matrix44 _data_inv{
+      generic::math::identity<matrix44>()};  ///< Global-to-local homogeneous
+                                             ///< transformation matrix.
 
   /// @}
 
@@ -76,6 +88,7 @@ struct transform3 {
   /// @param x the x axis of the new frame
   /// @param y the y axis of the new frame
   /// @param z the z axis of the new frame, normal vector for planes
+  /// @param get_inverse whether to compute and store the inverse matrix
   DETRAY_HOST_DEVICE
   transform3(const vector3 &t, const vector3 &x, const vector3 &y,
              const vector3 &z, bool get_inverse = true) {
@@ -106,6 +119,7 @@ struct transform3 {
   /// @param t the translation (or origin of the new frame)
   /// @param z the z axis of the new frame, normal vector for planes
   /// @param x the x axis of the new frame
+  /// @param get_inverse whether to compute and store the inverse matrix
   ///
   /// @note y will be constructed by cross product
   DETRAY_HOST_DEVICE
@@ -115,7 +129,7 @@ struct transform3 {
 
   /// Constructor with arguments: translation
   ///
-  /// @param t is the transform
+  /// @param t translation of the frame origin in global coordinates
   DETRAY_HOST_DEVICE
   explicit transform3(const vector3 &t) {
     element_getter{}(_data, 0, 0) = 1.f;
@@ -201,6 +215,8 @@ struct transform3 {
   }
 
   /// Equality operator
+  /// @param rhs transform to compare with
+  /// @return whether the forward matrices have equal spatial entries
   DETRAY_HOST_DEVICE
   constexpr bool operator==(const transform3 &rhs) const {
     for (index_t j = 0; j < 4; j++) {
@@ -219,7 +235,8 @@ struct transform3 {
   /// Rotate a vector into / from a frame
   ///
   /// @param m is the rotation matrix
-  /// @param v is the vector to be rotated
+  /// @param v vector to rotate
+  /// @return the rotated vector
   DETRAY_HOST_DEVICE
   static constexpr vector3 rotate(const matrix44 &m, const vector2 &v) {
     vector3 ret{0.f, 0.f, 0.f};
@@ -244,7 +261,8 @@ struct transform3 {
   /// Rotate a vector into / from a frame
   ///
   /// @param m is the rotation matrix
-  /// @param v is the vector to be rotated
+  /// @param v vector to rotate
+  /// @return the rotated vector
   DETRAY_HOST_DEVICE
   static constexpr vector3 rotate(const matrix44 &m, const vector3 &v) {
     vector3 ret{0.f, 0.f, 0.f};
@@ -273,50 +291,63 @@ struct transform3 {
     return ret;
   }
 
-  /// This method retrieves the rotation of a transform
+  /// Return the upper-left 3x3 rotation block.
+  /// @return rotation matrix
+  /// @return the upper-left 3x3 rotation block
   DETRAY_HOST_DEVICE
   auto constexpr rotation() const {
     return block_getter{}.template operator()<3, 3>(_data, 0, 0);
   }
 
-  /// This method retrieves x axis
+  /// Return the local x axis in global coordinates.
+  /// @return x-axis vector
+  /// @return the local x axis expressed in global coordinates
   DETRAY_HOST_DEVICE
   constexpr point3 x() const {
     return {element_getter{}(_data, 0, 0), element_getter{}(_data, 1, 0),
             element_getter{}(_data, 2, 0)};
   }
 
-  /// This method retrieves y axis
+  /// Return the local y axis in global coordinates.
+  /// @return y-axis vector
+  /// @return the local y axis expressed in global coordinates
   DETRAY_HOST_DEVICE
   constexpr point3 y() const {
     return {element_getter{}(_data, 0, 1), element_getter{}(_data, 1, 1),
             element_getter{}(_data, 2, 1)};
   }
 
-  /// This method retrieves z axis
+  /// Return the local z axis in global coordinates.
+  /// @return z-axis vector
+  /// @return the local z axis expressed in global coordinates
   DETRAY_HOST_DEVICE
   constexpr point3 z() const {
     return {element_getter{}(_data, 0, 2), element_getter{}(_data, 1, 2),
             element_getter{}(_data, 2, 2)};
   }
 
-  /// This method retrieves the translation of a transform
+  /// Return the frame origin in global coordinates.
+  /// @return translation vector
+  /// @return the frame origin in global coordinates
   DETRAY_HOST_DEVICE
   constexpr point3 translation() const {
     return {element_getter{}(_data, 0, 3), element_getter{}(_data, 1, 3),
             element_getter{}(_data, 2, 3)};
   }
 
-  /// This method retrieves the 4x4 matrix of a transform
+  /// Return the local-to-global transformation matrix.
+  /// @return the local-to-global homogeneous matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix() const { return _data; }
 
-  /// This method retrieves the 4x4 matrix of an inverse transform
+  /// Return the global-to-local transformation matrix.
+  /// @return the global-to-local homogeneous matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix_inverse() const { return _data_inv; }
 
-  /// This method transform from a point from the local 2D cartesian frame to
-  /// the global 3D cartesian frame
+  /// Transform a point from local plane coordinates to global coordinates.
+  /// @param v point in local plane coordinates
+  /// @return the point in global coordinates
   DETRAY_HOST_DEVICE constexpr point3 point_to_global(const point2 &v) const {
     const vector3 rg = rotate(_data, v);
 
@@ -325,8 +356,9 @@ struct transform3 {
             element_getter{}(rg, 2) + element_getter{}(_data, 2, 3)};
   }
 
-  /// This method transform from a point from the local 3D cartesian frame to
-  /// the global 3D cartesian frame
+  /// Transform a point from local coordinates to global coordinates.
+  /// @param v point in local coordinates
+  /// @return the point in global coordinates
   DETRAY_HOST_DEVICE constexpr point3 point_to_global(const point3 &v) const {
     const vector3 rg = rotate(_data, v);
 
@@ -335,8 +367,9 @@ struct transform3 {
             element_getter{}(rg, 2) + element_getter{}(_data, 2, 3)};
   }
 
-  /// This method transform from a vector from the global 3D cartesian frame
-  /// into the local 3D cartesian frame
+  /// Transform a global point to local coordinates.
+  /// @param v point in global coordinates
+  /// @return the point in local coordinates
   DETRAY_HOST_DEVICE constexpr point3 point_to_local(const point3 &v) const {
     const vector3 rg = rotate(_data_inv, v);
 
@@ -347,20 +380,24 @@ struct transform3 {
 
   /// This method transform from a vector from the local 2D cartesian frame to
   /// the global 3D cartesian frame
+  /// @param v vector in local plane coordinates
+  /// @return the vector in global coordinates
   DETRAY_HOST_DEVICE constexpr vector3 vector_to_global(
       const vector2 &v) const {
     return rotate(_data, v);
   }
 
-  /// This method transform from a vector from the local 3D cartesian frame to
-  /// the global 3D cartesian frame
+  /// Transform a local vector to global coordinates.
+  /// @param v vector in local coordinates
+  /// @return the vector in global coordinates
   DETRAY_HOST_DEVICE constexpr vector3 vector_to_global(
       const vector3 &v) const {
     return rotate(_data, v);
   }
 
-  /// This method transform from a vector from the global 3D cartesian frame
-  /// into the local 3D cartesian frame
+  /// Transform a global vector to local coordinates.
+  /// @param v vector in global coordinates
+  /// @return the vector in local coordinates
   DETRAY_HOST_DEVICE constexpr vector3 vector_to_local(const vector3 &v) const {
     return rotate(_data_inv, v);
   }

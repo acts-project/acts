@@ -25,10 +25,10 @@ namespace detray {
 /// types
 template <bool kSORT = false>
 struct replace {
-  /// Replace the bin content with a new entry - forwarding
+  /// Replace the bin contents with the supplied entry or entries.
   ///
   /// @param bin the bin for which to replace the content
-  /// @param content new content to be added
+  /// @param entry New content used to initialize the bin.
   template <typename bin_t, typename content_t>
   DETRAY_HOST_DEVICE void operator()(bin_t &&bin, content_t &&entry) const {
     std::forward<bin_t>(bin).init(std::forward<content_t>(entry));
@@ -48,8 +48,8 @@ template <bool kSORT = false>
 struct attach {
   /// Append a new entry to the bin - forwarding
   ///
-  /// @param bin the bin for which to replace the content
-  /// @param content new content to be added
+  /// @param bin Bin to which the entry is appended.
+  /// @param entry Entry to append.
   template <typename bin_t, typename entry_t>
   DETRAY_HOST_DEVICE void operator()(bin_t &&bin, entry_t &&entry) const {
     std::forward<bin_t>(bin).push_back(std::forward<entry_t>(entry));
@@ -70,8 +70,8 @@ template <bool kSORT = false>
 struct complete {
   /// Complete the bin content with a new entry - forwarding
   ///
-  /// @param bin the bin for which to replace the content
-  /// @param content new content to be added
+  /// @param bin Fixed-capacity bin to fill.
+  /// @param entry Entry repeated until the bin reaches capacity.
   template <typename bin_t, typename entry_t>
   DETRAY_HOST_DEVICE void operator()(bin_t &&bin, entry_t &&entry) const {
     for (dindex i{std::forward<bin_t>(bin).size()};

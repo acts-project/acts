@@ -28,32 +28,44 @@ template <typename value_t>
 class single_view
     : public detray::ranges::view_interface<single_view<value_t>> {
  public:
+  /// Pointer iterator over the single stored element.
   using iterator_t = value_t*;
 
   /// Default constructor
   constexpr single_view() = default;
 
-  /// Construct iterator from the single @param value - copy
+  /// Construct the view by copying its single element.
+  /// Store a copy of `value` as the view's only element.
+  /// @param value value to copy into the view
   DETRAY_HOST_DEVICE constexpr explicit single_view(const value_t& value)
       : m_value{value} {}
 
-  /// Construct iterator from the single @param value - move
+  /// Construct the view by moving in its single element.
+  /// Move `value` into the view's only element.
+  /// @param value value to move into the view
   DETRAY_HOST_DEVICE constexpr explicit single_view(value_t&& value)
       : m_value{std::move(value)} {}
 
-  /// Construct value in place from @param args
+  /// Construct the view's element in place.
+  /// Construct the stored value directly from its constructor arguments.
+  /// @tparam Args argument types used to construct the value
+  /// @param args arguments forwarded to the value constructor
   template <class... Args>
   DETRAY_HOST_DEVICE constexpr explicit single_view(std::in_place_t /*tag*/,
                                                     Args&&... args)
       : m_value{std::in_place, std::forward<Args>(args)...} {}
 
-  /// @return the single value
+  /// Return the single stored value by value.
+  /// @returns A copy of the stored element.
   DETRAY_HOST_DEVICE
   constexpr auto value() const -> value_t { return m_value; }
 
-  /// @return the single value
+  /// Return a const reference to the stored element.
+  /// @returns A const reference to the element.
   DETRAY_HOST_DEVICE
   constexpr auto ref() const -> const value_t& { return m_value; }
+  /// Return a mutable reference to the stored element.
+  /// @returns A mutable reference to the element.
   DETRAY_HOST_DEVICE
   constexpr auto ref() -> value_t& { return m_value; }
 
@@ -108,20 +120,28 @@ namespace views {
 /// @brief interface type to construct a @c single_view with CTAD
 template <typename value_t>
 struct single : public detray::ranges::single_view<value_t> {
+  /// Base implementation storing the single value.
   using base_type = detray::ranges::single_view<value_t>;
 
   constexpr single() = default;
 
+  /// Construct the view by copying a value.
+  /// @param value value to copy
   template <typename deduced_value_t>
     requires(!std::same_as<deduced_value_t, single>)
   DETRAY_HOST_DEVICE constexpr explicit single(const deduced_value_t& value)
       : base_type(value) {}
 
+  /// Construct the view by moving a value.
+  /// @param value value to move
   template <typename deduced_value_t>
     requires(!std::same_as<deduced_value_t, single>)
   DETRAY_HOST_DEVICE constexpr explicit single(deduced_value_t&& value)
       : base_type(std::forward<deduced_value_t>(value)) {}
 
+  /// Construct the stored value in place.
+  /// @tparam Args value constructor argument types
+  /// @param args arguments forwarded to the value constructor
   template <class... Args>
   DETRAY_HOST_DEVICE constexpr explicit single(std::in_place_t /*unused*/,
                                                Args&&... args)

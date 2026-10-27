@@ -34,16 +34,21 @@ struct cartesian_product_iterator;
 template <detray::ranges::range... range_ts>
 struct cartesian_product_view : public detray::ranges::view_interface<
                                     cartesian_product_view<range_ts...>> {
+  /// Tuple of the begin or end iterator for each input range.
   using iterator_coll_t = dtuple<detray::ranges::iterator_t<range_ts>...>;
+  /// Iterator that advances through the Cartesian product.
   using iterator_t = detray::ranges::detail::cartesian_product_iterator<
       detray::ranges::iterator_t<range_ts>...>;
+  /// Tuple of references to the current element of each input range.
   using value_type =
       dtuple<std::iter_reference_t<detray::ranges::iterator_t<range_ts>>...>;
 
   /// Default constructor
   constexpr cartesian_product_view() = default;
 
-  /// Construct from a pack of @param ranges.
+  /// Construct a product view from the supplied ranges.
+  /// @tparam deduced_range_ts input range types
+  /// @param ranges input ranges whose elements form the product
   template <detray::ranges::range... deduced_range_ts>
     requires((sizeof...(deduced_range_ts) > 1) ||
              ((!std::same_as<cartesian_product_view, deduced_range_ts>) && ...))
@@ -71,6 +76,9 @@ struct cartesian_product_view : public detray::ranges::view_interface<
   constexpr auto data() { return &(*(detray::get<0>(m_begins()))); }
 
   /// @returns product of the number elements of all ranges in the view
+  /// @tparam I index of the input range currently being counted
+  /// @param s product accumulated from ranges already visited
+  /// @return product of the input range lengths
   template <int I = static_cast<int>(sizeof...(range_ts)) - 1>
   DETRAY_HOST_DEVICE constexpr auto size(std::size_t s = 1u) const noexcept
       -> std::size_t {
@@ -97,10 +105,14 @@ namespace views {
 /// @brief interface type to construct a @c cartesian_product_view with CTAD
 template <detray::ranges::range... range_ts>
 struct cartesian_product : public ranges::cartesian_product_view<range_ts...> {
+  /// Base Cartesian-product view.
   using base_type = ranges::cartesian_product_view<range_ts...>;
 
   constexpr cartesian_product() = default;
 
+  /// Construct a Cartesian-product adaptor from the ranges to combine.
+  /// @tparam deduced_range_ts input range types
+  /// @param ranges ranges whose elements form the product
   template <detray::ranges::range... deduced_range_ts>
     requires((sizeof...(deduced_range_ts) > 1) ||
              ((!std::same_as<cartesian_product, deduced_range_ts>) && ...))
@@ -121,23 +133,33 @@ namespace detail {
 /// @brief Iterator implementation for the cartesian product view
 template <std::input_iterator... iterator_ts>
 struct cartesian_product_iterator {
+  /// Difference type used to report iterator distances.
   using difference_type = std::ptrdiff_t;
+  /// Tuple of references yielded by dereferencing the iterator.
   using value_type = std::tuple<std::iter_reference_t<iterator_ts>...>;
+  /// Pointer type corresponding to the tuple value type.
   using pointer = value_type *;
+  /// Dereference result type.
   using reference = value_type;
   // TODO: Adapt to the weakest iterator category in pack
+  /// Iterator category supported by this product iterator.
   using iterator_category = detray::ranges::bidirectional_iterator_tag;
 
   /// Default constructor required by LegacyIterator trait
   constexpr cartesian_product_iterator() = default;
 
-  /// Construct from a collection of @param begin and @param end positions
+  /// Construct from the begin and end iterator tuple for each input range.
+  /// @param begins input range start iterators
+  /// @param ends input range end iterators
   DETRAY_HOST_DEVICE
   constexpr cartesian_product_iterator(dtuple<iterator_ts...> begins,
                                        dtuple<iterator_ts...> ends)
       : m_begins(begins), m_ends(ends), m_itrs(begins) {}
 
   /// @returns true if the last range iterators are equal.
+  /// Compare the leading iterator, which identifies the product end position.
+  /// @param rhs iterator to compare against
+  /// @return whether both iterators denote the same product position
   DETRAY_HOST_DEVICE constexpr bool operator==(
       const cartesian_product_iterator &rhs) const {
     return (detray::get<0>(m_itrs) == detray::get<0>(rhs.m_itrs));
@@ -145,12 +167,15 @@ struct cartesian_product_iterator {
 
   /// Increment iterators.
   /// @{
+  /// @returns A reference to this iterator after incrementing.
   DETRAY_HOST_DEVICE constexpr auto operator++()
       -> cartesian_product_iterator & {
     unroll_increment();
     return *this;
   }
 
+  /// Advance to the next product element and return the previous iterator.
+  /// @returns A copy of the iterator before incrementing.
   DETRAY_HOST_DEVICE constexpr auto operator++(int)
       -> cartesian_product_iterator {
     auto tmp(*this);
@@ -161,12 +186,15 @@ struct cartesian_product_iterator {
 
   /// Decrement iterators.
   /// @{
+  /// @returns A reference to this iterator after decrementing.
   DETRAY_HOST_DEVICE constexpr auto operator--()
       -> cartesian_product_iterator & {
     unroll_decrement();
     return *this;
   }
 
+  /// Move to the previous product element and return the previous iterator.
+  /// @returns A copy of the iterator before decrementing.
   DETRAY_HOST_DEVICE constexpr auto operator--(int)
       -> cartesian_product_iterator {
     auto tmp(*this);

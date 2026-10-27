@@ -48,7 +48,11 @@ void report_empty(const store_t &store,
 /// A functor that checks the surface descriptor and correct volume index in
 /// every acceleration data structure for a given volume
 struct surface_checker {
-  /// Test the contained surfaces for consistency
+  /// Check a surface descriptor against detector and volume invariants.
+  /// @param sf_descr Surface descriptor being checked.
+  /// @param det Detector that owns the surface.
+  /// @param vol_idx Index of the volume expected to contain the surface.
+  /// @param names Map used to resolve volume names in diagnostics.
   template <concepts::detector detector_t>
   DETRAY_HOST_DEVICE void operator()(
       const typename detector_t::surface_type &sf_descr, const detector_t &det,
@@ -106,12 +110,11 @@ struct surface_checker {
     }
   }
 
-  /// Test whether a given surface @param check_desc is properly registered at
-  /// least once in one of the volume acceleration data structures
+  /// Check that a surface is registered in an acceleration structure.
   ///
-  /// @param ref_descr one of the surfaces in the volumes acceleration data
-  /// @param check_descr surface that we are searching for
-  /// @param success communicate success to the outside
+  /// @param ref_descr Surface descriptor encountered in the structure.
+  /// @param check_descr Surface descriptor being searched for.
+  /// @param success Set to true when the descriptors match.
   template <typename sf_descr_t, typename sf_source_descr_t>
   DETRAY_HOST_DEVICE void operator()(const sf_descr_t &ref_descr,
                                      const sf_source_descr_t &check_descr,
@@ -138,7 +141,10 @@ struct surface_checker {
 
 /// A functor that checks the material parametrization for a surface/volume
 struct material_checker {
-  /// Error message for material consistency check
+  /// Report an invalid material found during consistency checking.
+  /// @param type Name of the material collection or object type.
+  /// @param idx Index of the invalid material.
+  /// @param mat Material value that failed validation.
   template <typename material_t>
   void throw_material_error(const std::string &type, const dindex idx,
                             const material_t &mat) const {

@@ -49,10 +49,10 @@ class navigator_base {
   /// @tparam track_t type of track, needs to provide pos() and dir() methods
   ///
   /// @param track access to the track parameters
-  /// @param state the current navigation state
-  /// @param cfg the navigation configuration
-  /// @param ctx the geometry context
-  /// @param resolve_overstepping whether to check for overstepping
+  /// @param navigation State to initialize for the current track.
+  /// @param cfg Navigation tolerances and policies.
+  /// @param ctx Geometry context used to access detector placements.
+  /// @param resolve_overstepping Whether to reject intersections behind the current position.
   template <typename track_t, typename nav_state_t, typename context_t>
   DETRAY_HOST_DEVICE constexpr void init(
       const track_t &track, nav_state_t &navigation,
@@ -86,9 +86,9 @@ class navigator_base {
   /// @tparam track_t type of track, needs to provide pos() and dir() methods
   ///
   /// @param track access to the track parameters
-  /// @param state the current navigation state
-  /// @param cfg the navigation configuration
-  /// @param ctx the geometry context
+  /// @param navigation State to update after the track changes.
+  /// @param cfg Navigation tolerances and policies.
+  /// @param ctx Geometry context used to access detector placements.
   ///
   /// @returns a heartbeat to indicate if the navigation is still alive
   template <typename track_t, typename nav_state_t, typename context_t>

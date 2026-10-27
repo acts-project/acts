@@ -41,13 +41,17 @@ class detector_builder {
  public:
   // Cannot use the host::detector type, because the friendship relation with
   // the volume builders cannot be resolved through the type alias
+  /// Detector type produced from the configured metadata.
   using detector_type = detail::detector<metadata_t, host_container_types>;
+  /// Algebra backend used by the detector geometry.
   using algebra_type = typename detector_type::algebra_type;
+  /// Scalar type used for geometry values.
   using scalar_type = dscalar<algebra_type>;
 
   DETRAY_HOST detector_builder() { DETRAY_VERBOSE_HOST("New builder created"); }
 
-  /// Set the name of the detector under construction to @param det_name
+  /// Set the name of the detector under construction.
+  /// @param det_name Name to assign to the detector.
   DETRAY_HOST void set_name(std::string det_name) {
     m_detector_name = std::move(det_name);
     DETRAY_VERBOSE_HOST("Set detector name: " << m_detector_name);
@@ -56,8 +60,10 @@ class detector_builder {
   /// @returns the name of the detector under construction
   DETRAY_HOST std::string_view name() const { return m_detector_name; }
 
-  /// Add a new volume builder that will build a volume of the shape given by
-  /// @param id
+  /// Add a volume builder for the requested volume shape.
+  /// @param id Volume shape to build.
+  /// @param args Additional arguments forwarded to the volume builder.
+  /// @returns Pointer to the new volume builder.
   template <typename... Args>
   DETRAY_HOST auto new_volume(const volume_id id, Args&&... args)
       -> volume_builder_interface<detector_type>* {
@@ -75,14 +81,15 @@ class detector_builder {
     return static_cast<dindex>(m_volumes.size());
   }
 
-  /// @returns 'true' if there is a volume builder registered for
-  /// the volume with index @param volume_idx
+  /// @param volume_idx Volume index to check.
+  /// @returns True if a volume builder is registered at that index.
   DETRAY_HOST bool has_volume(const std::size_t volume_idx) const {
     return volume_idx < m_volumes.size();
   }
 
-  /// Decorate a volume builder at position @param volume_idx with more
-  /// functionality
+  /// Decorate the volume builder at an index with additional functionality.
+  /// @param volume_idx Index of the builder to decorate.
+  /// @returns Pointer to the decorated builder.
   template <class builder_t>
   DETRAY_HOST auto decorate(dindex volume_idx) -> builder_t* {
     assert(has_volume(volume_idx));
@@ -94,7 +101,9 @@ class detector_builder {
     return dynamic_cast<builder_t*>(m_volumes[volume_idx].get());
   }
 
-  /// Decorate a volume builder @param v_builder with more functionality
+  /// Decorate a volume builder with additional functionality.
+  /// @param v_builder Builder to decorate; it must belong to this detector builder.
+  /// @returns Pointer to the decorated builder.
   template <class builder_t>
   DETRAY_HOST auto decorate(
       const volume_builder_interface<detector_type>* v_builder) -> builder_t* {
@@ -103,15 +112,19 @@ class detector_builder {
     return decorate<builder_t>(v_builder->vol_index());
   }
 
-  /// Access a particular volume builder by volume index @param volume_idx
+  /// Access a volume builder by index.
+  /// @param volume_idx Index of the requested builder.
+  /// @returns Pointer to the requested builder.
   DETRAY_HOST
   auto operator[](dindex volume_idx)
       -> volume_builder_interface<detector_type>* {
     return m_volumes[volume_idx].get();
   }
 
-  /// Assembles the final detector from the volumes builders and allocates
-  /// the detector containers with the memory resource @param resource
+  /// Assemble the detector and allocate its containers from a memory resource.
+  /// @param resource Memory resource used for detector storage.
+  /// @param opt Options applied while building each volume.
+  /// @returns The completed detector.
   DETRAY_HOST
   auto build(vecmem::memory_resource& resource,
              const volume_builder_options& opt) -> detector_type {
@@ -158,8 +171,11 @@ class detector_builder {
     return det;
   }
 
-  /// Assembles the final detector and fill an externally provided name map
-  /// @param name_map
+  /// Assemble the detector and fill an externally supplied name map.
+  /// @param resource Memory resource used for detector storage.
+  /// @param opt Options applied while building each volume.
+  /// @param name_map Map to populate with detector and volume names.
+  /// @returns The completed detector.
   DETRAY_HOST
   auto build(vecmem::memory_resource& resource,
              const volume_builder_options& opt,

@@ -59,11 +59,9 @@ class material_data {
   /// Construct from all parameters:
   ///
   /// @param thickness of the material slab/rod
-  /// @param material_paramters0 x0 is the radiation length
-  /// @param material_paramters1 l0 is the nuclear interaction length
-  /// @param material_paramters2 ar is the relative atomic mass
-  /// @param material_paramters3 z is the nuclear charge number
-  /// @param material_paramters4 molarRho is the molar density
+  /// @param material_paramters Vector containing radiation length, nuclear
+  /// interaction length, relative atomic mass, charge number, and molar
+  /// density.
   /// @param state of the material (liquid, solid etc.)
   /// @param sf_idx the index of the surface this material belongs to, needs
   ///               to be passed only if a special oredering must be observed
@@ -111,11 +109,9 @@ class material_data {
   /// Append new material
   ///
   /// @param thickness of the material slab/rod
-  /// @param material_paramters0 x0 is the radiation length
-  /// @param material_paramters1 l0 is the nuclear interaction length
-  /// @param material_paramters2 ar is the relative atomic mass
-  /// @param material_paramters3 z is the nuclear charge number
-  /// @param material_paramters4 molarRho is the molar density
+  /// @param material_paramters Vector containing radiation length, nuclear
+  /// interaction length, relative atomic mass, charge number, and molar
+  /// density.
   /// @param state of the material (liquid, solid etc.)
   DETRAY_HOST
   void append(const scalar_t thickness,
@@ -182,12 +178,14 @@ class homogeneous_material_factory final
   using placeholder_factory_t = surface_factory<detector_t, unmasked<>>;
 
  public:
+  /// Scalar type used by the detector's material definitions.
   using scalar_type = dscalar<typename detector_t::algebra_type>;
 
   using base_factory::operator();
 
   /// Factory with surfaces potentially already filled or empty placeholder
   /// that will not be used.
+  /// @param sf_factory Underlying surface factory to decorate.
   DETRAY_HOST
   explicit homogeneous_material_factory(
       std::unique_ptr<surface_factory_interface<detector_t>> sf_factory =
@@ -230,7 +228,10 @@ class homogeneous_material_factory final
   }
 
   /// Add all necessary components to the factory for a single material slab
-  /// or rod (determined by the @param id)
+  /// or rod in the specified material collection.
+  /// @param id Material collection to receive the value.
+  /// @param mat_data One material and its surface association.
+  /// @param index Optional index in the material collection.
   DETRAY_HOST
   void add_material(material_id id, material_data<scalar_type> &&mat_data,
                     std::size_t index = detail::invalid_value<std::size_t>()) {
@@ -253,7 +254,9 @@ class homogeneous_material_factory final
   }
 
   /// Add all necessary components to the factory for multiple material slabs
-  /// or rods (determined by the @param id)
+  /// or rods in the specified material collection.
+  /// @param id Material collection to receive the values.
+  /// @param mat_data_vec Material records to append.
   DETRAY_HOST
   void add_material(material_id id,
                     std::vector<material_data<scalar_type>> &&mat_data_vec) {
@@ -290,8 +293,8 @@ class homogeneous_material_factory final
   ///
   /// @param surfaces surface container of the volume builder that should get
   ///                 decorated with material.
-  /// @param material material store of the volume builder that the new
-  ///                 materials get added to.
+  /// @param materials Material store that receives the material values.
+  /// @returns No value; surfaces and material storage are updated in place.
   DETRAY_HOST
   auto operator()(typename detector_t::surface_lookup_container &surfaces,
                   typename detector_t::material_container &materials) {

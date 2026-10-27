@@ -48,7 +48,7 @@ enum constraint : std::size_t {
 /// Struct that represents unconstrained stepping
 template <concepts::scalar scalar_t>
 struct unconstrained_step {
-  /// Register a new @param step_size constraint
+  /// Ignore a constraint request because this policy imposes no limits.
   template <step::constraint type>
   DETRAY_HOST_DEVICE constexpr void set(const scalar_t /*step_size*/) const {
     /*Do nothing*/
@@ -79,7 +79,9 @@ struct constrained_step {
     _constraints[type] = math::min(_constraints[type], math::fabs(step_size));
   }
 
-  /// @returns the current step size constraint for a given type or overall
+  /// Return the strictest active step-size constraint, with direction applied.
+  /// @param dir Requested stepping direction.
+  /// @return Signed maximum step size.
   template <step::constraint type = step::constraint::e_all>
   DETRAY_HOST_DEVICE scalar_t
   size(const step::direction dir = step::direction::e_forward) const {

@@ -34,6 +34,7 @@ namespace detray::axis {
 /// @brief Multi-bin: contains bin indices from multiple axes
 template <std::size_t DIM, typename index_t = dindex>
 struct multi_bin : public dmulti_index<index_t, DIM> {
+  /// Base multi-index representation.
   using base_t = dmulti_index<index_t, DIM>;
   using base_t::base_t;
 };
@@ -45,6 +46,7 @@ using bin_range = darray<int, 2>;
 /// @brief Multi-bin-range: contains bin index ranges from multiple axes
 template <std::size_t DIM>
 struct multi_bin_range : public dmulti_index<bin_range, DIM> {
+  /// Base multi-index representation for bin ranges.
   using base_t = dmulti_index<bin_range, DIM>;
   using base_t::base_t;
 };
@@ -63,11 +65,14 @@ struct single_axis {
   /// Make axis binning type accessible
   using binning_type = binning_t;
 
+  /// Scalar type used by the binning implementation.
   using scalar_type = typename binning_type::scalar_type;
 
   /// Extract container types
   /// @{
+  /// Container types used to store axis edges.
   using container_types = typename binning_type::container_types;
+  /// Container type for vectors with element type `T`.
   template <typename T>
   using vector_type = typename binning_type::template vector_type<T>;
   /// @}
@@ -81,7 +86,9 @@ struct single_axis {
   /// Parameterized constructor - empty binning
   constexpr single_axis() = default;
 
-  /// Parametrized constructor that builds the binning scheme
+  /// Construct the axis binning from its index range and edge storage.
+  /// @param indx_range Range of bins represented by the supplied edges.
+  /// @param edges Pointer to the bin-edge values.
   template <typename... Args>
   DETRAY_HOST_DEVICE single_axis(const dsized_index_range &indx_range,
                                  const vector_type<scalar_type> *edges)
@@ -119,6 +126,9 @@ struct single_axis {
   }
 
   /// @returns the width of a bin
+  /// Return the width of a bin, forwarding arguments to the binning policy.
+  /// @param args Arguments required by the binning policy.
+  /// @returns Width of the selected bin.
   template <typename... Args>
   DETRAY_HOST_DEVICE constexpr scalar_type bin_width(Args &&...args) const {
     return m_binning.bin_width(std::forward<Args>(args)...);
@@ -208,26 +218,33 @@ class multi_axis {
  public:
   /// Dimension of the local coordinate system that is spanned by the axes
   static constexpr dindex dim = sizeof...(axis_ts);
+  /// Whether the axis owns its edge and offset storage.
   static constexpr bool is_owning = ownership;
 
   /// binnings and axis bounds
   /// @{
   using binnings = types::list<typename axis_ts::binning_type...>;
+  /// Bounds policies of the constituent axes.
   using bounds = types::list<typename axis_ts::bounds_type...>;
+  /// Per-axis bin indices for a bin in this multi-axis.
   using loc_bin_index = axis::multi_bin<dim>;
   /// @}
 
   /// Projection onto local coordinate system that is spanned by the axes
   using local_frame_type = local_frame_t;
+  /// Algebra backend used by the local frame.
   using algebra_type = typename local_frame_type::algebra_type;
+  /// Point type in the local coordinate system.
   using point_type = typename local_frame_type::loc_point;
 
+  /// Scalar type used for all constituent axes.
   using scalar_type = typename detray::detail::first_t<axis_ts...>::scalar_type;
 
   /// Extract container types
   /// @{
   using container_types =
       typename detray::detail::first_t<axis_ts...>::container_types;
+  /// Vector container type used by the axis storage.
   template <typename T>
   using vector_type = typename container_types::template vector_type<T>;
   /// @}
@@ -245,12 +262,14 @@ class multi_axis {
   /// Axes boundary/bin edges storage
   /// @{
   using edge_offset_container_type = vector_type<dsized_index_range>;
+  /// Container type holding concatenated bin edges.
   using edges_container_type = vector_type<scalar_type>;
   /// @}
 
   /// Vecmem based view type
   using view_type =
       dmulti_view<dvector_view<dsized_index_range>, dvector_view<scalar_type>>;
+  /// Const VecMem view of offsets and edges.
   using const_view_type = dmulti_view<dvector_view<const dsized_index_range>,
                                       dvector_view<const scalar_type>>;
   /// Vecmem based buffer type
@@ -264,13 +283,16 @@ class multi_axis {
   /// Default constructor
   constexpr multi_axis() = default;
 
-  /// Construct containers using a specific memory resources
+  /// Construct empty edge containers using a memory resource.
+  /// @param resource Resource used for edge and offset allocations.
   template <bool owner = is_owning>
     requires owner
   DETRAY_HOST explicit multi_axis(vecmem::memory_resource &resource)
       : m_edge_offsets(&resource), m_edges(&resource) {}
 
-  /// Construct from containers - move
+  /// Construct from edge containers by moving their storage.
+  /// @param edge_offsets Per-axis ranges into the concatenated edge storage.
+  /// @param edges Concatenated edge values for all axes.
   template <bool owner = is_owning>
     requires owner
   DETRAY_HOST_DEVICE multi_axis(edge_offset_range_t &&edge_offsets,
@@ -550,6 +572,7 @@ struct multi_axis_assembler<is_owning, containers, local_frame,
                 "Number of axis bounds for this mask and given binning types "
                 "don't match!");
 
+  /// Multi-axis type assembled from the supplied bounds and binning policies.
   using type = axis::multi_axis<is_owning, local_frame,
                                 axis::single_axis<axis_bounds, binning_ts>...>;
 };

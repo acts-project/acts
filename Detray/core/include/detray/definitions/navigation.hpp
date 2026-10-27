@@ -17,11 +17,10 @@
 
 namespace detray::navigation {
 
-/// @enum NavigationDirection
-/// The navigation direction is always with respect to a given track direction
+/// Direction of navigation relative to the current track direction.
 enum class direction : std::int_least8_t { e_backward = -1, e_forward = 1 };
 
-/// @enum Navigation status flags
+/// Status flags describing the current navigation state.
 enum class status : std::int_least8_t {
   e_abort = -3,          ///< error occurred, navigation will be aborted
   e_exit = -2,           ///< navigation finished/reached the end of geometry

@@ -190,6 +190,14 @@ auto inline surface(const mask_t& m) {
 /// @brief A functor to set the proto surfaces type and bounds to be equivalent
 /// to the mask.
 struct surface_converter {
+  /// Convert one mask entry into its proto surface.
+  /// @tparam mask_group_t Group storing masks.
+  /// @tparam index_t Mask index type.
+  /// @tparam transform3_t Surface transform type.
+  /// @param mask_group Mask collection.
+  /// @param index Selected mask index.
+  /// @param transform Transform applied to the mask.
+  /// @return Proto representation of the selected mask.
   template <typename mask_group_t, concepts::index index_t,
             concepts::transform3D transform3_t>
   DETRAY_HOST inline auto operator()(const mask_group_t& mask_group,
@@ -199,6 +207,15 @@ struct surface_converter {
     return svgtools::conversion::surface(transform, mask_group[index]);
   }
 
+  /// Convert a mask selected from an indexed range into its proto surface.
+  /// @tparam mask_group_t Group storing masks.
+  /// @tparam idx_range_t Range of mask indices.
+  /// @tparam transform3_t Surface transform type.
+  /// @param mask_group Mask collection.
+  /// @param idx_range Range containing the selected mask.
+  /// @param transform Transform applied to the mask.
+  /// @param mask_idx Offset within the range.
+  /// @return Proto representation of the selected mask.
   template <typename mask_group_t, concepts::interval idx_range_t,
             concepts::transform3D transform3_t>
   DETRAY_HOST inline auto operator()(const mask_group_t& mask_group,
@@ -213,13 +230,17 @@ struct surface_converter {
 
 /// @brief Calculates the proto surface of a surface.
 ///
+/// @param context Geometry context used for surface transforms.
 /// @param d_surface The detray surface.
-/// @param context The geometry context.
+/// @param detector Detector owning the surface.
+/// @param view Projection used to convert geometry to SVG primitives.
+/// @param style Styling applied to the resulting surfaces.
+/// @param hide_material Whether material decorations are omitted.
 ///
 /// @note The transform is not taken into account for objects such as rings,
 /// cylinders etc (not implemented yet).
 ///
-/// @returns An actsvg proto surface representing the surface.
+/// @return Proto surfaces corresponding to the detector surface masks.
 template <concepts::detector detector_t, typename view_t>
 auto surface(const typename detector_t::geometry_context& context,
              const detector_t& detector,

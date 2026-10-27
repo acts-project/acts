@@ -32,10 +32,15 @@ namespace detray::detail {
 template <concepts::algebra algebra_t>
 class helix {
  public:
+  /// Algebra backend used by the helix calculations.
   using algebra_type = algebra_t;
+  /// Scalar type used for path length and field values.
   using scalar_type = dscalar<algebra_t>;
+  /// Three-dimensional position type.
   using point3_type = dpoint3D<algebra_t>;
+  /// Three-dimensional direction and field type.
   using vector3_type = dvector3D<algebra_t>;
+  /// Three-dimensional transform type associated with the algebra.
   using transform3_type = dtransform3D<algebra_t>;
 
   /// Free track parameters
@@ -44,6 +49,7 @@ class helix {
   /// 2D Matrix type
   template <std::size_t ROWS, std::size_t COLS>
   using matrix_type = dmatrix<algebra_t, ROWS, COLS>;
+  /// Matrix type for the free-parameter transport Jacobian.
   using free_matrix_t = free_matrix<algebra_t>;
 
   DETRAY_HOST_DEVICE
@@ -54,8 +60,8 @@ class helix {
   /// @param pos the the origin of the helix
   /// @param time the time parameter
   /// @param dir the initial normalized direction for the helix
-  /// @param q the charge of the particle
-  /// @param mag_field the magnetic field vector
+  /// @param qop signed inverse momentum of the particle
+  /// @param mag_field magnetic field vector at the helix origin
   DETRAY_HOST_DEVICE
   helix(const point3_type &pos, const scalar_type time, const vector3_type &dir,
         const scalar_type qop, const vector3_type &mag_field)
@@ -102,13 +108,19 @@ class helix {
     }
   }
 
+  /// Build a helix from a free track state and a uniform field vector.
+  /// @param track free track state providing position, direction, time, and q/p
+  /// @param mag_field magnetic field vector at the track position
   DETRAY_HOST_DEVICE
   helix(const free_track_parameters_type &track, const vector3_type &mag_field)
       : helix(track.pos(), track.time(), track.dir(), track.qop(), mag_field) {
     assert(!track.is_invalid());
   }
 
-  /// @TODO Add covfie field view concept
+  /// Build a helix using a field view sampled at the track position.
+  /// @param track free track state to propagate
+  /// @param mag_field field view sampled at the initial position
+  /// @note This overload accepts field views other than three-dimensional vectors.
   template <typename field_view_t>
     requires(!concepts::vector3D<field_view_t>)
   DETRAY_HOST_DEVICE helix(const free_track_parameters_type &track,
@@ -120,11 +132,15 @@ class helix {
   DETRAY_HOST_DEVICE
   scalar_type radius() const { return _R; }
 
-  /// @returns the position after propagating the path length of s
+  /// Evaluate the helix at a path length.
+  /// @param s signed path length from the initial state
+  /// @return position at that path length
   DETRAY_HOST_DEVICE
   point3_type operator()(const scalar_type s) const { return this->pos(s); }
 
-  /// @returns the position after propagating the path length of s
+  /// Evaluate the helix position at a path length.
+  /// @param s signed path length from the initial state
+  /// @return global position at that path length
   DETRAY_HOST_DEVICE
   point3_type pos(const scalar_type s) const {
     // Handle the case of pT ~ 0
@@ -140,10 +156,14 @@ class helix {
     return ret;
   }
 
+  /// Return the initial position of the helix.
+  /// @return global position at path length zero
   DETRAY_HOST_DEVICE
   point3_type pos() const { return _pos; }
 
-  /// @returns the tangential vector after propagating the path length of s
+  /// Evaluate the unit tangent direction at a path length.
+  /// @param s signed path length from the initial state
+  /// @return normalized direction at that path length
   DETRAY_HOST_DEVICE
   vector3_type dir(const scalar_type s) const {
     // Handle the case of pT ~ 0
@@ -160,22 +180,34 @@ class helix {
     return vector::normalize(ret);
   }
 
+  /// Return the initial unit tangent direction.
+  /// @return direction at path length zero
   DETRAY_HOST_DEVICE
   point3_type dir() const { return _t0; }
 
+  /// Return the time at the initial state.
+  /// @return initial particle time
   DETRAY_HOST_DEVICE
   scalar_type time() const { return _time; }
 
+  /// Return the signed inverse momentum used to define the curvature.
+  /// @return initial q/p value
   DETRAY_HOST_DEVICE
   scalar_type qop() const { return _qop; }
 
+  /// Return the magnitude of the uniform magnetic field.
+  /// @return field magnitude
   DETRAY_HOST_DEVICE
   scalar_type B() const { return _B; }
 
+  /// Return the uniform magnetic field vector.
+  /// @return field vector used for this helix
   DETRAY_HOST_DEVICE
   vector3_type b_field() const { return _B * _h0; }
 
-  /// @returns the transport jacobian after propagating the path length of s
+  /// Compute the free-parameter transport Jacobian at a path length.
+  /// @param s signed path length from the initial state
+  /// @return Jacobian mapping initial free parameters to propagated ones
   DETRAY_HOST_DEVICE
   free_matrix_t jacobian(const scalar_type s) const {
     free_matrix_t ret = matrix::zero<free_matrix_t>();

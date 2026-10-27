@@ -27,16 +27,26 @@
 
 namespace detray::actor {
 
+/// Apply energy-loss and multiple-scattering effects at material surfaces.
+/// @tparam algebra_t Algebra backend used by the track parameters.
 template <concepts::algebra algebra_t>
 struct pointwise_material_interactor : public base_actor {
+  /// Algebra backend type.
   using algebra_type = algebra_t;
+  /// Scalar type used for material calculations.
   using scalar_type = dscalar<algebra_t>;
+  /// Three-dimensional vector type.
   using vector3_type = dvector3D<algebra_t>;
+  /// Three-dimensional transform type.
   using transform3_type = dtransform3D<algebra_t>;
+  /// Material interaction calculator type.
   using interaction_type = interaction<scalar_type>;
+  /// Bound track-parameter vector type.
   using bound_param_vector_type = bound_parameters_vector<algebra_t>;
+  /// Bound covariance matrix type.
   using bound_matrix_type = bound_matrix<algebra_t>;
 
+  /// Per-surface material effects and their application settings.
   struct state {
     /// Evaluated energy loss
     scalar_type e_loss{0.f};
@@ -45,10 +55,14 @@ struct pointwise_material_interactor : public base_actor {
     /// Evaluated sigma of qoverp
     scalar_type sigma_qop{0.f};
 
+    /// Whether material contributions update the covariance.
     bool do_covariance_transport = true;
+    /// Whether mean energy loss is applied.
     bool do_energy_loss = true;
+    /// Whether multiple scattering is applied.
     bool do_multiple_scattering = true;
 
+    /// Clear accumulated material effects before processing a surface.
     DETRAY_HOST_DEVICE
     void reset() {
       e_loss = 0.f;
@@ -59,8 +73,20 @@ struct pointwise_material_interactor : public base_actor {
 
   /// Material store visitor
   struct kernel {
+    /// State type shared with the interactor.
     using state = typename pointwise_material_interactor::state;
 
+    /// Evaluate pointwise effects for a material group entry.
+    /// @tparam mat_group_t Material group type.
+    /// @tparam index_t Material index type.
+    /// @param material_group Material group being visited.
+    /// @param mat_index Index of the material entry.
+    /// @param s Interactor state receiving calculated effects.
+    /// @param ptc Particle hypothesis.
+    /// @param bound_params Track parameters at the surface.
+    /// @param cos_inc_angle Cosine of the incidence angle.
+    /// @param approach Closest approach for line-surface material.
+    /// @return True when pointwise material effects were evaluated.
     template <typename mat_group_t, typename index_t>
     DETRAY_HOST_DEVICE inline bool operator()(
         [[maybe_unused]] const mat_group_t &material_group,
@@ -135,6 +161,11 @@ struct pointwise_material_interactor : public base_actor {
     }
   };
 
+  /// Apply material effects after parameter transport reaches a surface.
+  /// @tparam propagator_state_t Propagator state type.
+  /// @param interactor_state State receiving the evaluated effects.
+  /// @param prop_state Current propagation state.
+  /// @param res Transport result containing destination parameters.
   template <typename propagator_state_t>
   DETRAY_HOST_DEVICE inline void operator()(
       state &interactor_state, propagator_state_t &prop_state,
@@ -162,10 +193,13 @@ struct pointwise_material_interactor : public base_actor {
 
   /// @brief Update the bound track parameter
   ///
+  /// @param gctx Geometry context used for surface transforms.
+  /// @param ptc Particle hypothesis used to evaluate interactions.
   /// @param[out] bound_params bound track parameter
   /// @param[out] interactor_state actor state
   /// @param[in]  nav_dir navigation direction
   /// @param[in]  sf the surface
+  /// @return Whether material effects were evaluated and applied.
   template <typename context_t, typename surface_t>
   DETRAY_HOST_DEVICE inline bool update(
       const context_t gctx, const pdg_particle<scalar_type> &ptc,
@@ -204,10 +238,8 @@ struct pointwise_material_interactor : public base_actor {
 
   /// @brief Update the q over p of bound track parameter
   ///
-  /// @param[out] vector vector of bound track parameter
-  /// @param[in]  p momentum of the track
-  /// @param[in]  q charge of the track
-  /// @param[in]  m mass of the track
+  /// @param[out] vector Bound parameter vector whose q/p is changed.
+  /// @param[in]  ptc Particle hypothesis supplying charge and mass.
   /// @param[in]  e_loss energy loss
   /// @param[in]  sign navigation direction
   DETRAY_HOST_DEVICE
@@ -243,8 +275,7 @@ struct pointwise_material_interactor : public base_actor {
   /// @brief Update the variance of q over p of bound track parameter
   ///
   /// @param[out] covariance covariance matrix of bound track parameter
-  /// @param[in]  sigma_qop variance of q over p
-  /// @param[in]  sign navigation direction
+  /// @param[in]  sigma_qop Standard deviation of q/p from energy loss.
   DETRAY_HOST_DEVICE inline void update_qop_variance(
       bound_matrix_type &covariance, const scalar_type sigma_qop) const {
     const scalar_type variance_qop{sigma_qop * sigma_qop};
@@ -266,7 +297,6 @@ struct pointwise_material_interactor : public base_actor {
   /// @param[out] covariance covariance matrix of bound track parameter
   /// @param[in]  dir direction of track
   /// @param[in]  projected_scattering_angle projected scattering angle
-  /// @param[in]  sign navigation direction
   DETRAY_HOST_DEVICE inline void update_angle_variance(
       bound_matrix_type &covariance, const vector3_type &dir,
       const scalar_type projected_scattering_angle) const {

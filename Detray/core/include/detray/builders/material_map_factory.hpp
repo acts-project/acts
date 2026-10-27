@@ -45,13 +45,16 @@ class material_map_factory final : public factory_decorator<detector_t> {
   using placeholder_factory_t = surface_factory<detector_t, unmasked<>>;
 
  public:
+  /// Scalar type used by material map values.
   using scalar_type = dscalar<typename detector_t::algebra_type>;
+  /// Material data type consumed by this factory.
   using data_type = material_data<scalar_type>;
 
   using base_factory::operator();
 
   /// Factory with surfaces potentially already filled or empty placeholder
   /// that will not be used.
+  /// @param sf_factory Underlying surface factory wrapped by this decorator.
   DETRAY_HOST
   explicit material_map_factory(
       std::unique_ptr<surface_factory_interface<detector_t>> sf_factory =
@@ -140,8 +143,10 @@ class material_map_factory final : public factory_decorator<detector_t> {
   ///
   /// @param surfaces surface container of the volume builder that should get
   ///                 decorated with material maps.
-  /// @param materials map the local bin indices and their content to a
-  ///                  volume local surface index.
+  /// @param material_map Material values keyed by volume-local surface index.
+  /// @param n_bins Number of bins on each axis for every mapped surface.
+  /// @param axis_spans Coordinate spans for each material-map axis.
+  /// @returns No value; material data is added to the output containers.
   template <typename bin_data_t, std::size_t N>
   DETRAY_HOST auto operator()(
       typename detector_t::surface_lookup_container &surfaces,

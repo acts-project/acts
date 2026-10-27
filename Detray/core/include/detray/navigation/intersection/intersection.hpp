@@ -45,6 +45,7 @@ struct intersection_point {};
 /// Result of intersector: Only contains the distance (production)
 template <concepts::algebra algebra_t, concepts::point point_t>
 struct intersection_point<algebra_t, point_t, !intersection::contains_pos> {
+  /// Scalar type used for path lengths.
   using scalar_type = dscalar<algebra_t>;
 
   /// @returns true if debug information needs to be filled
@@ -79,14 +80,22 @@ struct intersection_point<algebra_t, point_t, intersection::contains_pos>
       intersection_point<algebra_t, point_t, !intersection::contains_pos>;
 
  public:
+  /// Scalar type used for path lengths.
   using scalar_type = dscalar<algebra_t>;
+  /// Point type used to store the local intersection position.
   using point_type = point_t;
 
+  /// Construct an invalid intersection result.
   constexpr intersection_point() = default;
 
+  /// Copy the path length from a result that does not store a position.
+  /// @param ip Position-free intersection result to copy.
   DETRAY_HOST_DEVICE
   explicit constexpr intersection_point(const base_type ip) : base_type{ip} {}
 
+  /// Build a result from a path length and local intersection position.
+  /// @param p Signed path length to the intersection.
+  /// @param pnt Local intersection position.
   DETRAY_HOST_DEVICE
   constexpr intersection_point(const scalar_type p, const point_type &pnt)
       : base_type{p}, point{pnt} {}
@@ -146,29 +155,44 @@ struct intersection_point_err
   static constexpr auto inv{detail::invalid_value<dscalar<algebra_t>>()};
 
  public:
+  /// Scalar type used for path lengths and their uncertainty.
   using scalar_type = dscalar<algebra_t>;
+  /// Three-dimensional point type used by the result.
   using point3_type = dpoint3D<algebra_t>;
+  /// Two-dimensional point type used by planar intersectors.
   using point2_type = dpoint2D<algebra_t>;
+  /// Point type exposed by this result.
   using point_type = point3_type;
 
+  /// Construct an invalid result with default path and position values.
   constexpr intersection_point_err() = default;
 
+  /// Copy the position-bearing intersection result.
+  /// @param base_ip Intersection result whose data should be copied.
   DETRAY_HOST_DEVICE
   explicit constexpr intersection_point_err(const base_type &base_ip)
       : base_type{base_ip} {}
 
+  /// Preserve the path from a position-free 3D result.
+  /// @param ip Position-free 3D intersection result.
   DETRAY_HOST_DEVICE
   explicit constexpr intersection_point_err(
       const intersection_point<algebra_t, point3_type,
                                !intersection::contains_pos> &ip)
       : base_type{ip.path, point3_type{inv, inv, inv}} {}
 
+  /// Preserve the path from a position-free 2D result.
+  /// @param ip Position-free 2D intersection result.
   DETRAY_HOST_DEVICE
   explicit constexpr intersection_point_err(
       const intersection_point<algebra_t, point2_type,
                                !intersection::contains_pos> &ip)
       : base_type{ip.path, point3_type{inv, inv, inv}} {}
 
+  /// Store a path, 3D position, and path uncertainty.
+  /// @param p Signed path length to the intersection.
+  /// @param pnt Local 3D intersection position.
+  /// @param p_err Estimated uncertainty on the path length.
   DETRAY_HOST_DEVICE
   constexpr intersection_point_err(const scalar_type p, const point3_type &pnt,
                                    const scalar_type p_err)
@@ -194,20 +218,30 @@ class intersection2D {
   using vector3_type = dvector3D<algebra_t>;
 
  public:
+  /// Algebra and memory-layout policy used by this intersection.
   using algebra_type = algebra_t;
+  /// Surface descriptor associated with the intersection.
   using surface_type = surface_t;
   // This is needed for the SIMD implementation, where the boolean type that
   // results from the mask tolerance check has to match the SIMD vector type
   // on which it is used on for a masked assignment of the different status
   // codes
+  /// Storage type for status values (numeric lanes for SoA layouts).
   using status_type =
       std::conditional_t<concepts::soa<algebra_t>, T, intersection::status>;
+  /// Link type used to identify the next volume.
   using nav_link_type = typename surface_type::navigation_link;
 
   /// Default constructor
   constexpr intersection2D() = default;
 
   /// Fully parametrized constructor - contains local position
+  /// @param sf Intersected surface descriptor.
+  /// @param path Signed path length to the intersection.
+  /// @param local Local position on the surface.
+  /// @param nl Link to the volume reached through the surface.
+  /// @param status Mask-containment status of the result.
+  /// @param dir Whether the intersection lies along the track direction.
   template <bool B = has_pos>
     requires B
   DETRAY_HOST_DEVICE constexpr intersection2D(
@@ -221,6 +255,11 @@ class intersection2D {
         m_direction{dir} {}
 
   /// Fully parametrized constructor - contains no local position
+  /// @param sf Intersected surface descriptor.
+  /// @param path Signed path length to the intersection.
+  /// @param nl Link to the volume reached through the surface.
+  /// @param status Mask-containment status of the result.
+  /// @param dir Whether the intersection lies along the track direction.
   template <bool B = has_pos>
     requires(!B)
   DETRAY_HOST_DEVICE constexpr intersection2D(
@@ -289,13 +328,16 @@ class intersection2D {
   DETRAY_HOST_DEVICE
   constexpr dsimd<algebra_t, status_type> status() const { return m_status; }
 
-  /// Set the intersection status according to enum value @param s
+  /// Set the status for every lane.
+  /// @param s New status to assign.
   DETRAY_HOST_DEVICE
   constexpr void set_status(intersection::status s) {
     m_status = static_cast<status_type>(s);
   }
 
-  /// Set the intersection status according to enum value @param s
+  /// Set the status for selected lanes.
+  /// @param s New status to assign.
+  /// @param result_mask Lanes whose status should be updated.
   DETRAY_HOST_DEVICE
   constexpr void set_status_if(intersection::status s,
                                dbool<algebra_t> result_mask) {

@@ -37,8 +37,10 @@ namespace detray {
 template <class value_t, typename container_t = host_container_types>
 class brute_force_collection {
  public:
+  /// Device/host vector type used to store values.
   template <typename T>
   using vector_type = typename container_t::template vector_type<T>;
+  /// Index type used for collection sizes and volume slots.
   using size_type = dindex;
 
   /// A nested surface finder that returns all surfaces in a range (brute
@@ -46,14 +48,19 @@ class brute_force_collection {
   /// queried for the surfaces of a particular volume.
   struct brute_forcer
       : public detray::ranges::subrange<const vector_type<value_t>> {
+    /// Range base providing iteration over the selected surfaces.
     using base = detray::ranges::subrange<const vector_type<value_t>>;
+    /// Surface descriptor stored in the collection.
     using value_type = value_t;
+    /// Query value accepted by the brute-force search interface.
     using query_type = bool;
 
-    /// Default constructor
+    /// Construct an empty surface range.
     brute_forcer() = default;
 
-    /// Constructor from @param surface_range - move
+    /// Construct a range over the surfaces belonging to one volume.
+    /// @param surfaces Complete surface store.
+    /// @param range Index range delimiting this volume's surfaces.
     DETRAY_HOST_DEVICE constexpr brute_forcer(
         const vector_type<value_t>& surfaces, const dindex_range& range)
         : base(surfaces, range) {}
@@ -83,11 +90,15 @@ class brute_force_collection {
       return *this;
     }
 
-    /// @returns the surface at a given index @param i - const
+    /// Return the surface at a position in this volume's range.
+    /// @param i Position within the selected range.
+    /// @returns A copy of the selected surface descriptor.
     DETRAY_HOST_DEVICE constexpr value_t at(const dindex i) const {
       return (*this)[i];
     }
-    /// @returns the surface at a given index @param i - non-const
+    /// Return a mutable surface at a position in this volume's range.
+    /// @param i Position within the selected range.
+    /// @returns Reference to the selected surface descriptor.
     DETRAY_HOST_DEVICE constexpr value_t& at(const dindex i) {
       return (*this)[i];
     }
@@ -109,11 +120,15 @@ class brute_force_collection {
     }
   };
 
+  /// Query result representing a volume's brute-force surface range.
   using value_type = brute_forcer;
 
+  /// View type for offsets and stored surface descriptors.
   using view_type = dmulti_view<dvector_view<size_type>, dvector_view<value_t>>;
+  /// Const view type for offsets and stored surface descriptors.
   using const_view_type =
       dmulti_view<dvector_view<const size_type>, dvector_view<const value_t>>;
+  /// Buffer type used to transfer offsets and stored descriptors.
   using buffer_type =
       dmulti_buffer<dvector_buffer<size_type>, dvector_buffer<value_t>>;
 
@@ -123,7 +138,8 @@ class brute_force_collection {
     m_offsets.push_back(0u);
   };
 
-  /// Constructor from memory resource
+  /// Construct the collection using a vecmem memory resource.
+  /// @param resource Resource used to allocate offsets and surface storage.
   DETRAY_HOST
   explicit constexpr brute_force_collection(vecmem::memory_resource* resource)
       : m_offsets(resource), m_surfaces(resource) {
@@ -131,12 +147,14 @@ class brute_force_collection {
     m_offsets.push_back(0u);
   }
 
-  /// Constructor from memory resource
+  /// Construct the collection using a vecmem memory resource.
+  /// @param resource Resource used to allocate offsets and surface storage.
   DETRAY_HOST
   explicit constexpr brute_force_collection(vecmem::memory_resource& resource)
       : brute_force_collection(&resource) {}
 
-  /// Device-side construction from a vecmem based view type
+  /// Construct a device-side collection from its multi-view.
+  /// @param view View containing the offsets and surface descriptors.
   template <concepts::device_view coll_view_t>
   DETRAY_HOST_DEVICE explicit brute_force_collection(coll_view_t& view)
       : m_offsets(detail::get<0>(view.m_view)),
@@ -155,7 +173,7 @@ class brute_force_collection {
     return static_cast<dindex>(m_offsets.size()) - 1u;
   }
 
-  /// @note outside of navigation, the number of elements is unknown
+  /// @returns Whether the collection contains any per-volume surface ranges.
   DETRAY_HOST_DEVICE
   constexpr auto empty() const noexcept -> bool {
     return size() == size_type{0};
@@ -169,19 +187,24 @@ class brute_force_collection {
   DETRAY_HOST_DEVICE
   auto all() -> vector_type<value_t>& { return m_surfaces; }
 
-  /// Create brute force surface finder from surface container - const
+  /// Build a query range for one volume's surfaces.
+  /// @param i Volume index whose surface range is requested.
+  /// @returns A finder spanning the surfaces assigned to that volume.
   DETRAY_HOST_DEVICE
   auto operator[](const size_type i) const -> value_type {
     return {m_surfaces, dindex_range{m_offsets[i], m_offsets[i + 1u]}};
   }
 
-  /// Create brute force surface finder from surface container - const
+  /// Build a query range for one volume's surfaces.
+  /// @param i Volume index whose surface range is requested.
+  /// @returns A finder spanning the surfaces assigned to that volume.
   DETRAY_HOST_DEVICE
   auto operator[](const size_type i) -> value_type {
     return {m_surfaces, dindex_range{m_offsets[i], m_offsets[i + 1u]}};
   }
 
   /// Add a new surface collection
+  /// @param surfaces Surface descriptors to append as one volume's range.
   template <detray::ranges::range sf_container_t>
     requires std::is_same_v<typename sf_container_t::value_type, value_t>
   DETRAY_HOST auto push_back(const sf_container_t& surfaces) noexcept(false)
@@ -193,6 +216,8 @@ class brute_force_collection {
   }
 
   /// Remove surface from collection
+  /// @param pos Iterator to the surface descriptor to remove.
+  /// @returns Iterator following the erased descriptor.
   DETRAY_HOST auto erase(typename vector_type<value_t>::iterator pos) noexcept(
       false) {
     // Remove one element

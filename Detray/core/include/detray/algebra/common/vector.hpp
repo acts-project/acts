@@ -57,7 +57,7 @@ class DETRAY_ALIGN(
     return concepts::value<scalar_t> ? detail::nearest_power_of_two(N, 2u) : N;
   }
 
-  // Value type is a simd vector in SoA and a scalar in AoS
+  /// Scalar value type, or SIMD lane type for vectorized scalar storage.
   using scalar_type = scalar_t;
   /// Underlying data array type
   using array_type = array_t<scalar_t, simd_size()>;
@@ -70,11 +70,12 @@ class DETRAY_ALIGN(
     }
   }
 
-  /// Construct from element values @param vals .
+  /// Construct a vector from scalar elements.
   ///
   /// @{
 
-  /// Construct vector in SoA layout from simd scalars
+  /// Construct vector in SoA layout from SIMD scalar elements.
+  /// @param scals Element values, one for each logical vector component.
   template <typename... Scalars>
     requires(concepts::simd_scalar<scalar_t> && (sizeof...(Scalars) == N) &&
              ((concepts::simd_scalar<Scalars> ||
@@ -89,6 +90,9 @@ class DETRAY_ALIGN(
   /// In order to avoid uninitialized values, which deteriorate the
   /// performance in explicitly vectorized code, the underlying data array is
   /// filled with zeroes if too few arguments are given.
+  ///
+  /// @param vals Element values; any unused storage lanes are initialized to
+  /// zero where supported by the storage size.
   template <typename... Values>
     requires(!concepts::simd_scalar<scalar_t> && (sizeof...(Values) > 1) &&
              ((concepts::value<Values> ||
@@ -113,15 +117,17 @@ class DETRAY_ALIGN(
 
   /// @}
 
-  /// Construct from existing array storage @param vals
+  /// Construct from existing array storage.
   ///
   /// Implicit in both directions on purpose: together with the conversion
   /// operators below this makes the wrapper a drop-in for the array it wraps.
   /// @{
+  /// @param vals Storage array to move into the wrapper.
   DETRAY_HOST_DEVICE
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr vector(array_type &&vals) : m_data{std::move(vals)} {}
 
+  /// @param vals Storage array to copy into the wrapper.
   DETRAY_HOST_DEVICE
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr vector(const array_type &vals) : m_data{vals} {}
@@ -129,7 +135,8 @@ class DETRAY_ALIGN(
 
   /// Assignment operator from a vector with the same underlying storage.
   ///
-  /// @param lhs wrap a copy of this data.
+  /// @param lhs Vector whose storage is assigned to this object.
+  /// @returns A const reference to this vector after assignment.
   template <std::size_t M>
     requires(vector<N, scalar_t, array_t>::simd_size() ==
              vector<M, scalar_t, array_t>::simd_size())
@@ -139,30 +146,40 @@ class DETRAY_ALIGN(
     return *this;
   }
 
-  /// Conversion operator from wrapper to underlying data array.
+  /// Convert the wrapper to its underlying mutable data array.
   /// @{
+  /// @returns A mutable reference to the stored array.
   DETRAY_HOST_DEVICE
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr operator array_type &() { return m_data; }
+  /// Convert the wrapper to its underlying const data array.
+  /// @returns A const reference to the stored array.
   DETRAY_HOST_DEVICE
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr operator const array_type &() const { return m_data; }
   /// @}
 
+  /// Return the underlying storage array.
+  /// @returns A const reference to the stored array.
   DETRAY_HOST_DEVICE
   constexpr const auto &get() const { return m_data; }
 
-  /// Subscript operator[]
+  /// Access a stored component by index.
   /// @{
+  /// @param i Zero-based component index.
+  /// @returns A reference to the selected component.
   DETRAY_HOST_DEVICE
   constexpr decltype(auto) operator[](std::size_t i) { return m_data[i]; }
+  /// @param i Zero-based component index.
+  /// @returns The selected component.
   DETRAY_HOST_DEVICE
   constexpr decltype(auto) operator[](std::size_t i) const { return m_data[i]; }
   /// @}
 
-  /// Operator*=
+  /// Multiply every component by a scalar factor.
   ///
-  /// @return Vector expression/return type according to the operation.
+  /// @param factor Scalar multiplier.
+  /// @return The result of the underlying array multiplication.
   DETRAY_HOST_DEVICE
   constexpr decltype(auto) operator*=(scalar_type factor) noexcept {
     return m_data *= factor;
@@ -204,14 +221,18 @@ class DETRAY_ALIGN(
   }
   /// @}
 
-  /// Inequality operator
+  /// Compare this vector with another value for inequality.
+  /// @param rhs Value to compare against.
+  /// @returns Whether the values compare unequal.
   template <typename other_t>
   DETRAY_HOST_DEVICE constexpr bool operator!=(
       const other_t &rhs) const noexcept {
     return ((*this == rhs) == false);
   }
 
-  /// Elementwise comparison. Can result in a vector-of-masks for SoA vectors
+  /// Compare corresponding elements; SoA storage can produce a mask per lane.
+  /// @param rhs Value whose elements are compared with this vector.
+  /// @returns The per-element comparison results.
   template <typename other_t>
   DETRAY_HOST_DEVICE constexpr auto compare(const other_t &rhs) const noexcept {
     using result_t = decltype(m_data[0] == rhs[0]);
@@ -226,7 +247,7 @@ class DETRAY_ALIGN(
     return comp;
   }
 
-  /// Holds the data value for every vector element
+  /// Storage holding the value for every vector element.
   array_t<scalar_t, simd_size()> m_data;
 
  private:

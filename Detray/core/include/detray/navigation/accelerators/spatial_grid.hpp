@@ -37,13 +37,16 @@ class spatial_grid_impl : public grid_t {
   using algebra_t = typename grid_t::algebra_type;
 
  public:
+  /// Value type stored in the grid bins.
   using value_type = typename base_grid::value_type;
+  /// Coordinate type used to query bins.
   using query_type = typename base_grid::point_type;
 
   /// Find the corresponding (non-)owning grid type
   template <bool is_owning>
   using type = spatial_grid_impl<typename grid_t::template type<is_owning>>;
 
+  /// Mask type used for the grid's virtual reference surface.
   using mask_type =
       detray::mask<concentric_cylinder2D, algebra_t, std::uint8_t>;
 
@@ -54,18 +57,23 @@ class spatial_grid_impl : public grid_t {
   ///
   /// @param mask_values additional mask boundary values that cannot be
   /// inferred from the axis spans, e.g. the concentric cylinder radius
+  /// @param gr Grid whose axes and bins are moved into this accelerator.
   template <concepts::scalar... Args>
   DETRAY_HOST_DEVICE explicit constexpr spatial_grid_impl(base_grid &&gr,
                                                           Args &&...mask_values)
       : base_grid(std::move(gr)), m_mask{get_mask_from_axes(mask_values...)} {}
 
   /// Construct from existing base grid - copy
+  /// @param gr Grid whose axes and bins are copied into this accelerator.
+  /// @param mask_values Additional boundary values needed to form the reference mask.
   template <concepts::scalar... Args>
   DETRAY_HOST_DEVICE explicit constexpr spatial_grid_impl(base_grid &gr,
                                                           Args &&...mask_values)
       : base_grid(gr), m_mask{get_mask_from_axes(mask_values...)} {}
 
   /// Construct from existing base grid and mask - copy
+  /// @param gr Grid whose axes and bins are moved into this accelerator.
+  /// @param mask Reference-surface mask to retain with the grid.
   DETRAY_HOST_DEVICE constexpr spatial_grid_impl(base_grid &&gr,
                                                  const mask_type &mask)
       : base_grid(std::move(gr)), m_mask{mask} {}
@@ -73,8 +81,9 @@ class spatial_grid_impl : public grid_t {
   /// @return the mask of the (virtual) reference surface
   DETRAY_HOST_DEVICE constexpr const mask_type &mask() const { return m_mask; }
 
-  /// Set a new mask @param m
-  /// @TODO: Check against result of @c get_mask_from_axes()
+  /// Replace the mask of the virtual reference surface.
+  /// @param m New reference-surface mask.
+  /// @note The supplied mask is not checked against the grid axes.
   DETRAY_HOST_DEVICE constexpr void mask(const mask_type &m) { m_mask = m; }
 
   /// Find the value of a single bin - const
@@ -99,6 +108,8 @@ class spatial_grid_impl : public grid_t {
 
   /// Straight line intersection with the grid
   ///
+  /// @param tangential Ray tangent to the propagated track.
+  /// @param trf Transform placing the grid in global coordinates.
   /// @returns the point of intersection in grid local coordinates
   DETRAY_HOST_DEVICE query_type
   local_point_of_intersection(const detray::detail::ray<algebra_t> &tangential,
@@ -166,10 +177,10 @@ class spatial_grid_impl : public grid_t {
   ///
   /// The lookup is done with a search window around the bin
   ///
-  /// @param p is point in the local frame
-  /// @param win_size size of the binned/scalar search window
-  ///
-  /// @return the sequence of values
+  /// Return the values in bins intersecting the search window.
+  /// @param p Query position in the grid's local frame.
+  /// @param win_size Search extent around the bin containing the query.
+  /// @returns Values in the bins intersecting the search window.
   template <concepts::arithmetic window_size_t>
   DETRAY_HOST_DEVICE auto search(
       const query_type &p,
@@ -186,7 +197,13 @@ class spatial_grid_impl : public grid_t {
     return detray::views::join(std::move(search_area));
   }
 
-  /// Interface for the navigator
+  /// Search the bins near the track's projected intersection with the grid.
+  /// @param det Detector providing the volume placement.
+  /// @param volume Volume whose grid is queried.
+  /// @param track Track used to determine the query position.
+  /// @param win_size Search extent around the projected track position.
+  /// @param ctx Geometry context used to resolve the volume transform.
+  /// @returns Values in the selected neighborhood of bins.
   template <concepts::detector detector_t, typename track_t,
             concepts::arithmetic window_size_t>
   DETRAY_HOST_DEVICE auto search(
@@ -244,6 +261,13 @@ class spatial_grid_impl : public grid_t {
   mask_type m_mask{};
 };
 
+/// Spatial grid alias built from coordinate axes and a bin type.
+/// @tparam algebra_t Algebra policy used by the grid calculations.
+/// @tparam axes_t Coordinate-axis implementation.
+/// @tparam bin_t Bin storage type.
+/// @tparam serializer_t Serializer used for axis indexing.
+/// @tparam containers Container family used for storage.
+/// @tparam ownership Whether the grid owns its storage.
 template <concepts::algebra algebra_t, typename axes_t, typename bin_t,
           template <std::size_t> class serializer_t = simple_serializer,
           typename containers = host_container_types, bool ownership = true>
@@ -283,7 +307,9 @@ class grid_collection<spatial_grid_impl<grid_t>>
   using vector_t = typename base_collection::template vector_type<T>;
 
  public:
+  /// Index type used to address grid entries.
   using size_type = typename base_collection::size_type;
+  /// Accelerator view materialized from one collection entry.
   using value_type = spatial_grid_impl<grid_t>;
 
   /// Vecmem based grid collection view type
@@ -303,17 +329,21 @@ class grid_collection<spatial_grid_impl<grid_t>>
 
   /// Create empty spatial grid collection from specific vecmem memory
   /// resource
+  /// @param resource Memory resource used by the base grid data and masks.
   DETRAY_HOST
   explicit grid_collection(vecmem::memory_resource *resource)
       : base_collection(resource), m_mask_values(resource) {}
 
-  /// Create spatial grid collection from existing data - move
+  /// Create spatial grid collection by moving grid data and mask values.
+  /// @param grid_coll Collection holding the grid axes and bins.
+  /// @param mask_values Reference-mask boundary values for each grid.
   DETRAY_HOST_DEVICE
   grid_collection(base_collection &&grid_coll, vector_t<scalar_t> &&mask_values)
       : base_collection(std::move(grid_coll)),
         m_mask_values(std::move(mask_values)) {}
 
   /// Device-side construction from a vecmem based view type
+  /// @param view Device view containing the grid collection and masks.
   template <concepts::device_view coll_view_t>
   DETRAY_HOST_DEVICE explicit grid_collection(coll_view_t &view)
       : base_collection(detail::get<0>(view.m_view)),
@@ -321,11 +351,14 @@ class grid_collection<spatial_grid_impl<grid_t>>
 
   /// Move constructor
   /// @note the base class constructor only moves the base class members
+  /// @param other Collection to move from.
   DETRAY_HOST_DEVICE grid_collection(grid_collection &&other) noexcept
       : base_collection(std::move(other)),
         m_mask_values(std::move(other.m_mask_values)) {}
 
   /// Move assignment
+  /// @param other Collection to move from.
+  /// @returns Reference to this collection.
   DETRAY_HOST_DEVICE grid_collection &operator=(
       grid_collection &&other) noexcept {
     if (this != &other) {
@@ -336,6 +369,8 @@ class grid_collection<spatial_grid_impl<grid_t>>
   }
 
   /// Create spatial grid acceleration structure from underlying grid data
+  /// @param i Index of the grid to materialize.
+  /// @returns Accelerator view for the selected grid.
   DETRAY_HOST_DEVICE
   constexpr auto operator[](const size_type i) const
       -> spatial_grid_impl<grid_t> {
@@ -349,6 +384,8 @@ class grid_collection<spatial_grid_impl<grid_t>>
   }
 
   /// Create spatial grid acceleration structure from underlying grid data
+  /// @param i Index of the grid to materialize.
+  /// @returns Accelerator view for the selected grid.
   DETRAY_HOST_DEVICE
   constexpr auto at(const size_type i) const -> spatial_grid_impl<grid_t> {
     if constexpr (concepts::cylindrical<frame_t>) {

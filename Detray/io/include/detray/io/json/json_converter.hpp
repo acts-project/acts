@@ -47,7 +47,9 @@ class json_converter<detector_t, backend_t> final
   /// Set json file extension
   json_converter() : reader_interface<detector_t>(".json") {}
 
-  /// Writes the geometry to file with a given name
+  /// Read a JSON payload and populate the detector builder.
+  /// @param det_builder Builder receiving the decoded detector components.
+  /// @param file_name Path to the JSON input file.
   void read(detector_builder<typename detector_t::metadata, volume_builder>&
                 det_builder,
             const std::string& file_name) override {
@@ -81,7 +83,12 @@ class json_converter<detector_t, backend_t> final
   /// File gets created with the json file extension
   json_converter() : writer_interface<detector_t>(".json") {}
 
-  /// Writes the geometry to file with a given name
+  /// Serialize a detector payload to a JSON file.
+  /// @param det Detector to serialize.
+  /// @param names Volume names used to form the output file name and payload.
+  /// @param mode Output stream mode.
+  /// @param file_path Directory in which the JSON file is created.
+  /// @return Path to the created file.
   std::string write(const detector_t& det,
                     const typename detector_t::name_map& names,
                     const std::ios_base::openmode mode = std::ios::out |

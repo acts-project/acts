@@ -29,34 +29,35 @@ struct ray_intersector_impl;
 /// A functor to find intersections between straight line and planar surface
 template <detray::concepts::aos algebra_t, bool resolve_pos>
 struct ray_intersector_impl<cartesian2D<algebra_t>, algebra_t, resolve_pos> {
+  /// Algebra policy used by this intersector.
   using algebra_type = algebra_t;
+  /// Coordinate frame of the intersected surface.
   using frame_type = cartesian2D<algebra_t>;
+  /// Point type used for the intersection result.
   using point_type = dpoint3D<algebra_t>;
 
+  /// Intersection result type associated with a surface descriptor.
   template <typename surface_descr_t>
   using intersection_type =
       intersection2D<surface_descr_t, algebra_t, resolve_pos>;
 
+  /// Trajectory representation accepted by this intersector.
   template <typename other_algebra_t>
   using trajectory_type = detail::ray<other_algebra_t>;
 
   // Maximum number of solutions this intersector can produce
+  /// Maximum number of solutions produced by this intersector.
   static constexpr std::uint8_t n_solutions{1u};
 
   /// Always includes the intersection position, in order to resolve the mask
   using result_type =
       intersection_point<algebra_t, point_type, intersection::contains_pos>;
 
-  /// Operator function to find intersections between ray and planar mask
-  ///
-  /// @param ray is the input ray trajectory
-  /// @param sf the surface handle the mask is associated with
-  /// @param mask is the input mask that defines the surface extent
-  /// @param trf is the surface placement transform
-  /// @param mask_tolerance is the tolerance for mask edges
-  /// @param overstep_tol negative cutoff for the path
-  ///
-  /// @return the intersection
+  /// Find the intersection of a straight trajectory with the plane.
+  /// @param ray Straight trajectory to test.
+  /// @param trf Transform whose origin and z axis define the plane.
+  /// The optional overstep argument is accepted for interface compatibility.
+  /// @returns The path and global intersection point.
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
       const trajectory_type<algebra_t> &ray, const dtransform3D<algebra_t> &trf,
       const dscalar<algebra_t> /*overstep_tol*/ = 0.f) const {

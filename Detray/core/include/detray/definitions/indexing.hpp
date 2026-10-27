@@ -22,8 +22,10 @@ inline constexpr dindex dindex_invalid = detail::invalid_value<dindex>();
 
 /// Index ranges and sequences
 using dindex_range = detail::index_range<dindex>;
+/// Index range whose size is known at compile time.
 using dsized_index_range =
     detail::index_range<dindex, detail::sized_index_range>;
+/// Compile-time sequence of detector indices.
 using dindex_sequence = dvector<dindex>;
 
 /// Index that consists of multiple subindices
