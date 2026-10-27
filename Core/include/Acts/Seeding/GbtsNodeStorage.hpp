@@ -41,9 +41,6 @@ class GbtsNodeStorage final {
   struct Config;
 
  public:
-  /// Maximum `Config::phiSortBuckets`; sizes the fixed bucket array.
-  static constexpr std::uint32_t kMaxPhiSortBuckets = 31;
-
   /// Filled storage is not relocatable: the column proxies point into the
   /// space point container held by value.
   GbtsNodeStorage(const GbtsNodeStorage&) = delete;
@@ -166,8 +163,6 @@ class GbtsNodeStorage final {
     /// Multiples of `phiSliceWidth` duplicated either side of the wrap-around,
     /// so a sliding window never has to wrap.
     float phiIndexMargin = 1.5f;
-    /// Buckets used to sort a bin by phi, at most `kMaxPhiSortBuckets`.
-    std::uint32_t phiSortBuckets = 31;
     /// Cluster width covered by one bin of the tau lookup table.
     float tauLutBinWidth = 0.05f;
   };

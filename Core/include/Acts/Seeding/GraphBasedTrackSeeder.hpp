@@ -86,9 +86,6 @@ class GraphBasedTrackSeeder {
     /// Multiples of the phi slice width duplicated either side of the
     /// wrap-around, so a sliding window never has to wrap.
     float phiIndexMargin = 1.5f;
-    /// Buckets used to sort an eta bin by phi, at most
-    /// `GbtsNodeStorage::kMaxPhiSortBuckets`.
-    std::uint32_t phiSortBuckets = 31;
   };
 
   /// Derived configuration struct that contains calculated parameters based on
