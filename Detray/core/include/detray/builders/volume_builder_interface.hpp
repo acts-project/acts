@@ -225,7 +225,7 @@ class volume_decorator : public volume_builder_interface<detector_t> {
   /// @returns Pointer to the built volume.
   DETRAY_HOST
   auto build(detector_t &det, const volume_builder_options &opt,
-             typename detector_t::geometry_context = {}) ->
+             typename detector_t::geometry_context /*ctx*/ = {}) ->
       typename detector_t::volume_type * override {
     return m_builder->build(det, opt);
   }

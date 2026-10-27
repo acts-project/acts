@@ -80,7 +80,7 @@ class ray {
 
   /// Return the constant direction at any path length.
   /// @return stored direction vector
-  DETRAY_HOST_DEVICE const vector3_type &dir(const scalar_type) const {
+  DETRAY_HOST_DEVICE const vector3_type &dir(const scalar_type /*path*/) const {
     return this->dir();
   }
 
