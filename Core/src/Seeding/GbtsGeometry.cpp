@@ -181,19 +181,11 @@ namespace {
 // key: bin. value: (outgoing, incoming) bins it connects to.
 using BinConnections =
     std::unordered_map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
-                                                std::vector<std::uint32_t>>>;
-}  // namespace
+                                                std::vector<GbtsBinLink>>>;
 
-GbtsGeometry::GbtsGeometry(
-    std::span<const GbtsLayerDescription> layerDescriptions,
-    std::span<const GbtsLayerConnection> layerConnections,
-    const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
-    : m_etaBinWidth(etaBinWidth) {
-  const float minZ0 = z0Range.min;
-  const float maxZ0 = z0Range.max;
-
-  // The adaptive cuts key on where a pixel barrel layer sits radially. Derive
-  // that ordinal here so the seeder never has to read an experiment layer id.
+// Fill in the inside-out pixel barrel order where the layers leave it unset.
+std::vector<GbtsLayerDescription> orderPixelBarrel(
+    std::span<const GbtsLayerDescription> layerDescriptions) {
   std::vector<GbtsLayerDescription> layers(layerDescriptions.begin(),
                                            layerDescriptions.end());
 
@@ -222,6 +214,62 @@ GbtsGeometry::GbtsGeometry(
         "on none of them");
   }
 
+  return layers;
+}
+}  // namespace
+
+void assignAdaptiveTauRatioCuts(std::span<GbtsLayerConnection> connections,
+                                std::span<const GbtsLayerDescription> layers,
+                                const GbtsAdaptiveTauRatioCuts& cuts) {
+  std::unordered_map<GbtsExperimentLayerId, const GbtsLayerDescription*> byId;
+  const std::vector<GbtsLayerDescription> ordered = orderPixelBarrel(layers);
+  for (const GbtsLayerDescription& layer : ordered) {
+    byId.emplace(layer.id, &layer);
+  }
+  const auto find = [&](GbtsExperimentLayerId id) {
+    const auto it = byId.find(id);
+    if (it == byId.end()) {
+      throw std::invalid_argument(
+          "assignAdaptiveTauRatioCuts: connection to an unknown layer");
+    }
+    return it->second;
+  };
+
+  for (GbtsLayerConnection& connection : connections) {
+    const GbtsLayerDescription* outer = find(connection.src);
+    const GbtsLayerDescription* inner = find(connection.dst);
+
+    const bool outerInBarrel = outer->barrelOrder >= 0;
+    const bool innerInBarrel = inner->barrelOrder >= 0;
+    const bool skipsLayer = outerInBarrel && innerInBarrel &&
+                            outer->barrelOrder - inner->barrelOrder != 1;
+    const bool leavesBarrel = innerInBarrel && !outerInBarrel;
+    const float strip = (outer->technology == GbtsLayerTechnology::Strip ||
+                         inner->technology == GbtsLayerTechnology::Strip)
+                            ? cuts.tauRatioCorrStrip
+                            : 0.f;
+
+    // leaving the barrel widens only the triplet that leaves after its middle
+    connection.tauRatioCutInner =
+        cuts.tauRatioCut + (skipsLayer ? cuts.tauRatioCorr : 0.f) + strip;
+    connection.tauRatioCutOuter =
+        cuts.tauRatioCut +
+        (skipsLayer || leavesBarrel ? cuts.tauRatioCorr : 0.f) + strip;
+  }
+}
+
+GbtsGeometry::GbtsGeometry(
+    std::span<const GbtsLayerDescription> layerDescriptions,
+    std::span<const GbtsLayerConnection> layerConnections,
+    const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
+    : m_etaBinWidth(etaBinWidth) {
+  const float minZ0 = z0Range.min;
+  const float maxZ0 = z0Range.max;
+
+  // the innermost-layer cuts key on where a pixel barrel layer sits radially
+  const std::vector<GbtsLayerDescription> layers =
+      orderPixelBarrel(layerDescriptions);
+
   for (const GbtsLayerDescription& layer : layers) {
     const detail::GbtsLayer& pL = createLayer(layer, m_nEtaBins);
     m_nEtaBins += pL.binning().numBins;
@@ -235,6 +283,12 @@ GbtsGeometry::GbtsGeometry(
   std::optional<std::uint32_t> lastBin1;
 
   for (const GbtsLayerConnection& connection : layerConnections) {
+    if (connection.tauRatioCutInner < 0.f ||
+        connection.tauRatioCutOuter < 0.f) {
+      throw std::invalid_argument(
+          "GbtsGeometry: layer connection with a negative tau ratio cut");
+    }
+
     const detail::GbtsLayer* pL1 = layerById(connection.dst);  // n1
     const detail::GbtsLayer* pL2 = layerById(connection.src);  // n2
     if (pL1 == nullptr) {
@@ -264,13 +318,16 @@ GbtsGeometry::GbtsGeometry(
         binLayerMap[bin1Idx] = pL1;
         binLayerMap[bin2Idx] = pL2;
 
+        const GbtsBinLink link{bin2Idx, connection.tauRatioCutInner,
+                               connection.tauRatioCutOuter};
+
         if (bin1Idx != lastBin1) {
           // adding a new group
-          m_binGroups.push_back({bin1Idx, {bin2Idx}});
+          m_binGroups.push_back({bin1Idx, {link}});
           lastBin1 = bin1Idx;
         } else {
           // extend the last group
-          m_binGroups.back().links.push_back(bin2Idx);
+          m_binGroups.back().links.push_back(link);
         }
       }
     }
@@ -289,7 +346,7 @@ GbtsGeometry::GbtsGeometry(
     auto& bin1Links = binMap[bin1];
 
     for (const auto& bin2 : bin2s) {
-      auto& bin2Links = binMap[bin2];
+      auto& bin2Links = binMap[bin2.bin];
 
       bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
       bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
@@ -360,8 +417,8 @@ GbtsGeometry::GbtsGeometry(
       }
       auto& bin1Links = p1->second;
 
-      for (const std::uint32_t bin2Key : bin1Links.second) {
-        const auto p2 = binMap.find(bin2Key);
+      for (const GbtsBinLink& bin2Link : bin1Links.second) {
+        const auto p2 = binMap.find(bin2Link.bin);
         if (p2 == binMap.end()) {
           continue;
         }
@@ -401,10 +458,9 @@ GbtsGeometry::GbtsGeometry(
       }
 
       const auto& binLists = p->second;
-      const std::vector<std::uint32_t>& bin2List = binLists.second;
 
       // store the group
-      m_binGroups.push_back({bin1Idx, bin2List});
+      m_binGroups.push_back({bin1Idx, binLists.second});
     }
   }
 }
