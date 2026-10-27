@@ -693,7 +693,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
         << edgeStorage.size());
   }
   if (nOverflow > 0) {
-    ACTS_WARNING(
+    ACTS_DEBUG(
         nOverflow << " edge links dropped: the outer edge already held "
                   << detail::kGbtsMaxEdgeNeighbours
                   << " neighbours - possible efficiency loss");
