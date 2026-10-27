@@ -35,6 +35,10 @@ XML_PROGRAMLISTING     = NO
 ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = YES
+# Resolve declaration-generating macros from the selected checkout.
+INCLUDE_PATH           = $(DOXY_INPUT)
+EXPAND_AS_DEFINED      = DETRAY_DECLARE_MATERIAL DETRAY_DECLARE_MATERIAL_WITH_DED \
+                         DETRAY_DECLARE_PARTICLE
 WARN_IF_UNDOCUMENTED   = NO
 WARNINGS               = NO
 QUIET                  = YES

@@ -2025,7 +2025,7 @@ SEARCH_INCLUDES        = YES
 # preprocessor.
 # This tag requires that the tag SEARCH_INCLUDES is set to YES.
 
-INCLUDE_PATH           = ../Core/include
+INCLUDE_PATH           = ../Core/include ../Detray/core/include
 
 # You can use the INCLUDE_FILE_PATTERNS tag to specify one or more wildcard
 # patterns (like *.h and *.hpp) to filter out the header-files in the
@@ -2067,7 +2067,9 @@ PREDEFINED += DETRAY_HOST:= \
 # definition found in the source code.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-EXPAND_AS_DEFINED      =
+# Expand declarations so generated material and particle types are documented.
+EXPAND_AS_DEFINED      = DETRAY_DECLARE_MATERIAL DETRAY_DECLARE_MATERIAL_WITH_DED \
+                         DETRAY_DECLARE_PARTICLE
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES then doxygen's preprocessor will
 # remove all references to function-like macros that are alone on a line, have

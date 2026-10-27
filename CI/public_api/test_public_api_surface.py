@@ -227,6 +227,34 @@ struct Hidden {};
         ), changes
 
 
+def test_detray_generated_declarations_are_types():
+    if not shutil.which("doxygen"):
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        headers = Path(tmp)
+        (headers / "declarations.hpp").write_text(
+            "#define DETRAY_DECLARE_MATERIAL(NAME, VALUE) struct NAME {};\n"
+            "#define DETRAY_DECLARE_MATERIAL_WITH_DED(NAME, VALUE) struct NAME {};\n"
+            "#define DETRAY_DECLARE_PARTICLE(NAME, PDG, MASS, CHARGE) struct NAME {};\n"
+        )
+        (headers / "materials.hpp").write_text(
+            '#include "declarations.hpp"\n'
+            "namespace detray {\n"
+            "/// A predefined material.\n"
+            "DETRAY_DECLARE_MATERIAL(silicon, 14);\n"
+            "/// A material with density-effect data.\n"
+            "DETRAY_DECLARE_MATERIAL_WITH_DED(copper, 29);\n"
+            "/// A particle hypothesis.\n"
+            "DETRAY_DECLARE_PARTICLE(muon, 13, 105.66, -1);\n"
+            "}\n"
+        )
+        surface = _measure(headers)
+        assert "type detray::silicon" in surface["symbols"]
+        assert "type detray::copper" in surface["symbols"]
+        assert "type detray::muon" in surface["symbols"]
+        assert not any("DETRAY_DECLARE" in s for s in surface["callables"])
+
+
 def main() -> int:
     tests = [
         v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)
