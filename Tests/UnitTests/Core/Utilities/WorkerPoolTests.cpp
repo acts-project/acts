@@ -92,6 +92,18 @@ BOOST_AUTO_TEST_CASE(WorkerPoolNestedAndConcurrentCalls) {
   });
   BOOST_CHECK_EQUAL(nested.load(), 80u);
 
+  // Cross-pool nesting must not lose the outer pool's nesting guard, or
+  // attempt to reacquire its call mutex from either pool's loop body.
+  detail::WorkerPool other(2);
+  nested.store(0);
+  pool.parallelFor(8, [&](std::size_t) {
+    other.parallelFor(2, [&](std::size_t) {
+      pool.parallelFor(3, [&](std::size_t) { nested.fetch_add(1); });
+    });
+    pool.parallelFor(4, [&](std::size_t) { nested.fetch_add(1); });
+  });
+  BOOST_CHECK_EQUAL(nested.load(), 80u);
+
   // Calls from different threads are serialized
   std::atomic<std::size_t> total{0};
   std::vector<std::thread> callers;

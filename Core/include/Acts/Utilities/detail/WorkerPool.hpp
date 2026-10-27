@@ -22,7 +22,7 @@ namespace Acts::detail {
 /// the calling thread.
 ///
 /// Calls to @ref parallelFor from different threads are serialized. A call
-/// issued from inside a loop body of the same pool runs serially instead of
+/// issued from inside a loop body of any pool runs serially instead of
 /// dead-locking.
 class WorkerPool {
  public:

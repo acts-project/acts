@@ -79,6 +79,7 @@ class ISurfaceMaterialAccumulator {
   ///
   /// Only called by the default @ref accumulateTracks, to support
   /// implementations that override this method instead. The default throws.
+  /// @deprecated Use and override @ref accumulateTracks instead.
   ///
   /// @param state is the state of the accumulator
   /// @param gctx the geometry context

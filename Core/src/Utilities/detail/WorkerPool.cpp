@@ -45,6 +45,19 @@ struct WorkerPool::Impl {
   std::atomic<bool> failed{false};
   std::exception_ptr error;
 
+  // Also runs when constructing WorkerPool fails after starting workers.
+  // Join before any of the synchronization members are destroyed.
+  ~Impl() {
+    {
+      std::lock_guard lock(mutex);
+      stop = true;
+    }
+    wake.notify_all();
+    for (auto& thread : threads) {
+      thread.join();
+    }
+  }
+
   void work() {
     tlActivePool = this;
     while (!failed.load(std::memory_order_relaxed)) {
@@ -95,16 +108,7 @@ WorkerPool::WorkerPool(std::size_t numThreads)
   }
 }
 
-WorkerPool::~WorkerPool() {
-  {
-    std::lock_guard lock(m_impl->mutex);
-    m_impl->stop = true;
-  }
-  m_impl->wake.notify_all();
-  for (auto& thread : m_impl->threads) {
-    thread.join();
-  }
-}
+WorkerPool::~WorkerPool() = default;
 
 std::size_t WorkerPool::size() const {
   return m_impl->threads.size() + 1;
@@ -113,8 +117,9 @@ std::size_t WorkerPool::size() const {
 void WorkerPool::parallelFor(std::size_t n,
                              const std::function<void(std::size_t)>& body,
                              std::size_t grainSize) {
-  // Serial execution: no workers, trivial loop, or nested call from a body
-  if (m_impl->threads.empty() || n <= 1 || tlActivePool == m_impl.get()) {
+  // Nested calls stay on the current thread, including calls to another
+  // pool, to avoid acquiring pool locks in a cycle.
+  if (m_impl->threads.empty() || n <= 1 || tlActivePool != nullptr) {
     for (std::size_t i = 0; i < n; ++i) {
       body(i);
     }

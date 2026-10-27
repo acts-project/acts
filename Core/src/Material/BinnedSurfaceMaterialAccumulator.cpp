@@ -209,13 +209,15 @@ void Acts::BinnedSurfaceMaterialAccumulator::accumulateTracks(
     }
     offsets[slot + 1] = total;
   }
-  std::vector<Operation> operations(offsets.back());
+  // Keep the payloads in their chunks and sort only pointers to them. The
+  // chunks are no longer modified, so these pointers remain valid until
+  // accumulation has finished.
+  std::vector<const Operation*> operations(offsets.back());
   forEach(nChunks, [&](std::size_t c) {
     std::size_t* fill = &chunkCounts[c * nSlots];
     for (const auto& [slot, op] : chunkOperations[c]) {
-      operations[fill[slot]++] = op;
+      operations[fill[slot]++] = &op;
     }
-    chunkOperations[c] = {};
   });
 
   // Process the slots concurrently, the busiest ones first
@@ -245,7 +247,7 @@ void Acts::BinnedSurfaceMaterialAccumulator::accumulateTracks(
     };
     std::uint32_t currentTrack = std::numeric_limits<std::uint32_t>::max();
     for (std::size_t o = offsets[slot]; o < offsets[slot + 1]; ++o) {
-      const Operation& op = operations[o];
+      const Operation& op = *operations[o];
       if (op.track != currentTrack) {
         averageTouched();
         currentTrack = op.track;

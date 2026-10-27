@@ -70,6 +70,7 @@ class BinnedSurfaceMaterialAccumulator final
   /// @brief Accumulate the material interaction on the surface
   ///
   /// Forwards to @ref accumulateTracks with a single track.
+  /// @deprecated Use @ref accumulateTracks instead.
   ///
   /// @param state is the state of the accumulator
   /// @param gctx the geometry context
