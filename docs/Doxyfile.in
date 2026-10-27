@@ -163,6 +163,16 @@ STRIP_FROM_PATH        = ..
 
 STRIP_FROM_INC_PATH    = ../Core/include \
                          ../Fatras/include \
+                         ../Detray/core/include \
+                         ../Detray/detectors/include \
+                         ../Detray/io/include \
+                         ../Detray/plugins/svgtools/include \
+                         ../Detray/plugins/algebra/array/include \
+                         ../Detray/plugins/algebra/eigen/include \
+                         ../Detray/plugins/algebra/fastor/include \
+                         ../Detray/plugins/algebra/smatrix/include \
+                         ../Detray/plugins/algebra/vc_aos/include \
+                         ../Detray/plugins/algebra/vc_soa/include \
                          ../Plugins/DD4hep/include \
                          ../Plugins/Geant4/include \
                          ../Plugins/Json/include \
@@ -778,6 +788,16 @@ INPUT                  = index.md \
                          experimental.md \
                          ../Core/include \
                          ../Fatras/include \
+                         ../Detray/core/include \
+                         ../Detray/detectors/include \
+                         ../Detray/io/include \
+                         ../Detray/plugins/svgtools/include \
+                         ../Detray/plugins/algebra/array/include \
+                         ../Detray/plugins/algebra/eigen/include \
+                         ../Detray/plugins/algebra/fastor/include \
+                         ../Detray/plugins/algebra/smatrix/include \
+                         ../Detray/plugins/algebra/vc_aos/include \
+                         ../Detray/plugins/algebra/vc_soa/include \
                          ../Plugins/ActSVG/include \
                          ../Plugins/Covfie/include \
                          ../Plugins/DD4hep/include \
@@ -1983,7 +2003,7 @@ ENABLE_PREPROCESSING   = YES
 # The default value is: NO.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-MACRO_EXPANSION        = NO
+MACRO_EXPANSION        = YES
 
 # If the EXPAND_ONLY_PREDEF and MACRO_EXPANSION tags are both set to YES then
 # the macro expansion is limited to the macros specified with the PREDEFINED and
@@ -1991,7 +2011,7 @@ MACRO_EXPANSION        = NO
 # The default value is: NO.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-EXPAND_ONLY_PREDEF     = NO
+EXPAND_ONLY_PREDEF     = YES
 
 # If the SEARCH_INCLUDES tag is set to YES, the include files in the
 # INCLUDE_PATH will be searched if a #include is found.
@@ -2024,6 +2044,21 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED             = DOXYGEN
+# Parse shared GPU declarations without requiring CUDA/HIP compilers.
+# Do not define compiler/backend macros: this is the shared host API view.
+PREDEFINED += DETRAY_HOST:= \
+              DETRAY_DEVICE:= \
+              DETRAY_HOST_DEVICE:= \
+              DETRAY_HOST_DEVICE_DEDUCTION_GUIDE:= \
+              DETRAY_INLINE:= \
+              DETRAY_NO_INLINE:= \
+              DETRAY_NO_UNIQUE_ADDRESS:= \
+              DETRAY_GRID_CONSTANT:= \
+              DETRAY_DEVICE_CONSTANT:= \
+              DETRAY_ALIGN(x):= \
+              __host__:= \
+              __device__:= \
+              __global__:=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

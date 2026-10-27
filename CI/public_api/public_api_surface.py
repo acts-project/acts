@@ -2,9 +2,10 @@
 """Measure the ACTS public API surface from Doxygen XML.
 
 The "public API surface" is the set of *documented*, non-``detail`` /
-non-``Experimental`` entities in the ``Acts`` namespace, matching the policy in
-docs/pages/versioning.md. Doxygen parses syntactically, so this needs no
-dependency headers or compile flags -- just the ``doxygen`` binary.
+non-``Experimental`` entities in the ``Acts`` and ``detray`` namespaces.
+Internal-symbol exclusions follow docs/pages/versioning.md. Doxygen parses
+syntactically, so this needs no dependency headers or compile flags -- just
+the ``doxygen`` binary.
 
 Typical use (runs Doxygen itself, then reports):
 
@@ -33,9 +34,7 @@ from pathlib import Path
 # Absolute so it resolves regardless of the caller's working directory.
 DOXYFILE = str(Path(__file__).resolve().parent / "Doxyfile")
 
-# Plugins deliberately left out of the public-API surface metric. (The
-# top-level Detray/ and Traccc/ build-integration folders live outside Plugins/
-# and are never scanned; the Detray *plugin* under Plugins/ is in scope.)
+# Plugins deliberately left out of the public-API surface metric.
 EXCLUDED_PLUGINS: set[str] = set()
 
 
@@ -43,7 +42,7 @@ def standard_roots(under: Path) -> list[Path]:
     """Header roots whose public API we track, resolved under `under`.
 
     Core, Fatras and Alignment, plus every plugin under Plugins/. The Examples
-    tree and the top-level Detray/Traccc integration folders are not included.
+    tree and Traccc are not included. Detray library headers are included.
     """
     roots: list[Path] = []
     for rel in ("Core/include", "Fatras/include", "Alignment/include"):
@@ -59,6 +58,15 @@ def standard_roots(under: Path) -> list[Path]:
                 and (pdir / "include").is_dir()
             ):
                 roots.append(pdir / "include")
+    detray = under / "Detray"
+    for pattern in (
+        "core/include",
+        "detectors/include",
+        "io/include",
+        "plugins/*/include",
+        "plugins/algebra/*/include",
+    ):
+        roots.extend(p for p in sorted(detray.glob(pattern)) if p.is_dir())
     return roots
 
 
@@ -90,6 +98,9 @@ def module_of(location: str | None) -> str:
         i = parts.index("Plugins")
         if i + 1 < len(parts):
             return "Plugin:" + parts[i + 1]
+    if "Detray" in parts:
+        i = parts.index("Detray")
+        return "Detray/" + "/".join(parts[i + 1 : parts.index("include", i)])
     if "Fatras" in parts:
         return "Fatras"
     if "Alignment" in parts:
@@ -188,7 +199,11 @@ def parse_xml(xml_dir: Path) -> dict:
         for cd in root.findall("compounddef"):
             kind = cd.get("kind")
             name = _name(cd, "compoundname")
-            if not name.startswith("Acts") or is_internal(name):
+            if not (
+                name.startswith("Acts")
+                or name == "detray"
+                or name.startswith("detray::")
+            ) or is_internal(name):
                 continue
             loc = cd.find("location")
             locfile = loc.get("file") if loc is not None else None
@@ -309,7 +324,7 @@ def main() -> int:
         "--roots-under",
         metavar="DIR",
         help="measure the standard component set (Core, Fatras, Alignment, "
-        "and all plugins) resolved under DIR; use for another checkout",
+        "Detray, and all plugins) resolved under DIR; use for another checkout",
     )
     ap.add_argument("--xml", help="existing Doxygen XML dir to parse")
     ap.add_argument("--json", help="write report JSON here")
@@ -348,7 +363,7 @@ def main() -> int:
             parts = d.parts
             if "Plugins" in parts:
                 return "Plugin:" + parts[parts.index("Plugins") + 1]
-            for comp in ("Core", "Fatras", "Alignment"):
+            for comp in ("Core", "Fatras", "Alignment", "Detray"):
                 if comp in parts:
                     return comp
             return d.name

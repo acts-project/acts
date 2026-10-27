@@ -177,6 +177,56 @@ def test_end_to_end_fixture():
     assert not any(s == "Acts::compute(int)" for s in c["removed_signatures"]), c
 
 
+def test_detray_roots_and_gpu_api():
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        public = repo / "Detray/core/include"
+        public.mkdir(parents=True)
+        for rel in (
+            "Detray/tests/include",
+            "Detray/tutorials/include",
+            "Detray/tests/tools/include",
+            "Detray/extern/vecmem/include",
+            "Detray/plugins/algebra/array/include",
+        ):
+            (repo / rel).mkdir(parents=True)
+        roots = pas.standard_roots(repo)
+        assert set(roots) == {public, repo / "Detray/plugins/algebra/array/include"}
+        assert pas.module_of(str(public / "detray/Thing.hpp")) == "Detray/core"
+        if not shutil.which("doxygen"):
+            return
+        header = public / "Thing.hpp"
+        header.write_text("""
+namespace detray {
+/// Public device-compatible type.
+struct Thing {
+  /// A shared operation.
+  DETRAY_HOST_DEVICE int run(int value) const;
+  /// A device operation.
+  DETRAY_DEVICE int device(int value);
+  /// A host operation.
+  DETRAY_HOST int host(int value);
+};
+namespace detail {
+/// Internal type.
+struct Hidden {};
+}
+}
+""")
+        base = _measure(public)
+        assert "type detray::Thing" in base["symbols"]
+        assert "type detray::detail::Hidden" not in base["symbols"]
+        header.write_text(
+            header.read_text().replace("run(int value)", "run(double value)")
+        )
+        head = _measure(public)
+        changes = pad.classify(base, head)
+        assert "detray::Thing::run(int) const" in changes["removed_signatures"], changes
+        assert (
+            "detray::Thing::run(double) const" in changes["added_signatures"]
+        ), changes
+
+
 def main() -> int:
     tests = [
         v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)
