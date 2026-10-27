@@ -260,9 +260,7 @@ class gbts_seeding_algorithm
       vecmem::data::vector_buffer<unsigned int> node_index,
       vecmem::data::vector_buffer<float> bin_rads,
       vecmem::data::vector_buffer<unsigned int> eta_bin_offsets,
-      const unsigned int nSp,
-      vecmem::data::vector_buffer<unsigned int>& counters_buf,
-      vecmem::vector<unsigned int>& h_counters) const;
+      const unsigned int nSp, vecmem::vector<unsigned int>& h_counters) const;
 
   /// Stage 3: run the CCA, extract paths, fit and disambiguate into seeds.
   edm::seed_collection::buffer extract_seeds(
