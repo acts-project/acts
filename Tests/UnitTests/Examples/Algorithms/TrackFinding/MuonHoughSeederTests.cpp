@@ -298,9 +298,9 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_keeps_eta_seed_when_phi_search_fails) {
   etaCfg.extendWithPhi = false;
   etaCfg.outHoughMax = "EtaMaxima";
   Seeder etaSeeder{
-      etaCfg, Acts::getDefaultLogger("EtaSeederTest", Acts::Logging::ERROR)};
+      etaCfg, Acts::getDefaultLogger("EtaSeederTest", Acts::Logging::INFO)};
   Seeder extendedSeeder{
-      cfg, Acts::getDefaultLogger("ExtendedSeederTest", Acts::Logging::ERROR)};
+      cfg, Acts::getDefaultLogger("ExtendedSeederTest", Acts::Logging::INFO)};
 
   ActsExamples::WhiteBoard eventStore{};
   ActsExamples::AlgorithmContext ctx{0u, 0u, eventStore, 0u};
