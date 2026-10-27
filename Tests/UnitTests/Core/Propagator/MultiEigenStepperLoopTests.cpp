@@ -8,6 +8,7 @@
 
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 
 #include "MultiStepperTests.hpp"
 
@@ -61,6 +62,37 @@ BOOST_AUTO_TEST_CASE(test_curvilinear_state) {
 
 BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
   tester.propagator_instatiation_test_function();
+}
+
+BOOST_AUTO_TEST_CASE(component_curvature_controls_bounds) {
+  using Stepper = MultiStepperLoop<MyEigenStepper>;
+  Stepper stepper(std::make_shared<ConstantBField>(Vector3(0.005, 0., 0.)));
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const MagneticFieldContext mctx;
+  const auto start =
+      CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();
+  std::vector<std::tuple<double, BoundVector>> components(
+      2, {0.5, BoundVector::Zero()});
+  std::get<1>(components[0])[eBoundQOverP] = 1.;
+  std::get<1>(components[1])[eBoundQOverP] = 0.5;
+  MultiComponentBoundTrackParameters parameters(
+      start, components,
+      [](const auto& component) {
+        return std::tie(std::get<0>(component), std::get<1>(component));
+      },
+      ParticleHypothesis::pion());
+  auto state = stepper.makeState(Stepper::Options(gctx, mctx));
+  stepper.initialize(state, parameters);
+  const auto sensor = Surface::makeShared<PlaneSurface>(
+      Transform3(Translation3(0., 1., 20.)),
+      std::make_shared<RectangleBounds>(0.1, 0.1));
+  const auto result = stepper.updateSurfaceStatusWithCurvature(
+      state, *sensor, 0, Direction::Forward(), BoundaryTolerance::None(),
+      s_onSurfaceTolerance, ConstrainedStep::Type::Navigator);
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK(*result == IntersectionStatus::reachable);
+  BOOST_CHECK(state.components[0].status == IntersectionStatus::reachable);
+  BOOST_CHECK(state.components[1].status == IntersectionStatus::unreachable);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
