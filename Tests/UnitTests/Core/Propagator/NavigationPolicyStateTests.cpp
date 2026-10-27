@@ -24,6 +24,7 @@
 #include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
@@ -871,7 +872,7 @@ BOOST_AUTO_TEST_CASE(CurvedTargetStatusCompatibilityAndErrors) {
   stepper.initialize(state, start);
   const auto corrected = check(stepper, state);
   BOOST_REQUIRE(corrected.ok());
-  BOOST_CHECK(*corrected == IntersectionStatus::unreachable);
+  BOOST_CHECK(*corrected == IntersectionStatus::reachable);
 
   LegacySurfaceStatusStepper legacy(field);
   auto legacyState = legacy.makeState(AtlasStepper::Options(gctx, mfContext));
@@ -898,6 +899,66 @@ BOOST_AUTO_TEST_CASE(CurvedTargetStatusCompatibilityAndErrors) {
   BOOST_REQUIRE(!error.ok());
   BOOST_CHECK(error.error() ==
               make_error_code(MagneticFieldError::OutOfBounds));
+}
+
+BOOST_AUTO_TEST_CASE(CurvedSurfaceArrayPropagation) {
+  for (Direction propagationDirection :
+       {Direction::Forward(), Direction::Backward()}) {
+    for (double sign : {-1., 1.}) {
+      Blueprint root{Blueprint::Config{}};
+      auto volume = std::make_unique<TrackingVolume>(
+          Transform3::Identity(),
+          std::make_shared<CuboidVolumeBounds>(50_mm, 50_mm, 50_mm),
+          "SensorLayer");
+      const auto sensor = Surface::makeShared<PlaneSurface>(
+          Transform3(Translation3(20_mm, sign * 1_mm, 20_mm)),
+          std::make_shared<RectangleBounds>(0.05_mm, 0.05_mm));
+      sensor->assignIsSensitive(true);
+      volume->addSurface(sensor);
+      auto layer = std::make_shared<StaticBlueprintNode>(std::move(volume));
+      TryAllNavigationPolicy::Config portals;
+      portals.sensitives = false;
+      portals.passives = false;
+      SurfaceArrayNavigationPolicy::Config grid;
+      grid.layerType = SurfaceArrayNavigationPolicy::LayerType::Disc;
+      grid.bins = {1, 64};
+      grid.neighborWindow = SurfaceArray::NeighborWindow{{0, 0}, {0, 0}};
+      layer->setNavigationPolicyFactory(
+          NavigationPolicyFactory{}
+              .add<TryAllNavigationPolicy>(portals)
+              .add<SurfaceArrayNavigationPolicy>(grid)
+              .asUniquePtr());
+      root.addChild(layer);
+      BlueprintOptions blueprintOptions;
+      std::shared_ptr<const TrackingGeometry> geometry =
+          root.construct(blueprintOptions, gctx);
+      const Vector3 position(
+          20_mm, 0., propagationDirection == Direction::Forward() ? 0. : 40_mm);
+      const Vector3 tangent = Vector3::UnitZ();
+      BOOST_CHECK(!sensor
+                       ->intersect(gctx, position,
+                                   propagationDirection * tangent,
+                                   BoundaryTolerance::None())
+                       .at(0)
+                       .isValid());
+      auto field = std::make_shared<ConstantBField>(
+          Vector3(sign * 0.005 * 1_GeV / 1_mm, 0., 0.));
+      Propagator propagator{EigenStepper<>(field),
+                            Navigator({.trackingGeometry = geometry})};
+      const auto start = BoundTrackParameters::createCurvilinear(
+          Vector4(position.x(), position.y(), position.z(), 0.), tangent,
+          1. / 1_GeV, std::nullopt, ParticleHypothesis::pion());
+      decltype(propagator)::Options<ActorList<StepCollector>> options(
+          gctx, mfContext);
+      options.direction = propagationDirection;
+      options.pathLimit = 25_mm;
+      options.stepping.maxStepSize = 1_mm;
+      const auto result = propagator.propagate(start, options, false);
+      BOOST_REQUIRE(result.ok());
+      const auto& reached = result->get<StepCollector::result_type>().surfaces;
+      BOOST_CHECK(std::ranges::find(reached, sensor.get()) != reached.end());
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -13,6 +13,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/detail/CurvatureIntersection.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -84,17 +85,15 @@ IntersectionStatus updateSingleSurfaceStatus(
     const Surface& surface, std::uint8_t index, Direction direction,
     const BoundaryTolerance& boundaryTolerance, double surfaceTolerance,
     ConstrainedStep::Type stype, const Logger& logger,
-    [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) {
+    const Vector3& curvature = Vector3::Zero()) {
   ACTS_VERBOSE("Update single surface status for surface: "
                << surface.geometryId() << " index " << static_cast<int>(index));
 
-  // The curvature argument is wired for the follow-up intersection correction.
-  // Keep the existing ray estimate in this API-only change.
   auto sIntersection =
-      surface
-          .intersect(state.options.geoContext, stepper.position(state),
-                     direction * stepper.direction(state), boundaryTolerance,
-                     surfaceTolerance)
+      detail::intersectWithCurvature(
+          surface, state.options.geoContext, stepper.position(state),
+          direction * stepper.direction(state), curvature, boundaryTolerance,
+          surfaceTolerance)
           .at(index);
 
   // The intersection is on surface already

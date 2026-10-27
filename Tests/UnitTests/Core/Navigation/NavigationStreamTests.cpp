@@ -324,6 +324,46 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinderFromBoundaryInwards) {
                   s_onSurfaceTolerance);
 }
 
+BOOST_AUTO_TEST_CASE(NavigationStream_CurvedBoundsAndUpdates) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const auto sensor = Surface::makeShared<PlaneSurface>(
+      Transform3(Translation3(1., 0., 20.)),
+      std::make_shared<RectangleBounds>(0.2, 0.2));
+  NavigationStream stream;
+  const NavigationStream::QueryPoint query{Vector3::Zero(), Vector3::UnitZ(),
+                                           Vector3(0.005, 0., 0.)};
+  stream.addSurfaceCandidate(*sensor, BoundaryTolerance::None());
+  BOOST_REQUIRE(stream.initialize(gctx, query, logger()));
+  CHECK_CLOSE_ABS(stream.currentCandidate().intersection().position(),
+                  Vector3(1., 0., 20.), 1e-12);
+  BOOST_CHECK(stream.update(gctx, query, logger()));
+  // Same position and tangent but no bending: the finite sensor is missed.
+  BOOST_CHECK(
+      !stream.update(gctx, {query.position, query.direction}, logger()));
+}
+
+BOOST_AUTO_TEST_CASE(NavigationStream_CurvedOrdering) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const auto bounds = std::make_shared<RectangleBounds>(10., 10.);
+  Transform3 tilt = Transform3::Identity();
+  tilt.translation() = Vector3(0., 0., 20.);
+  tilt.linear() =
+      AngleAxis3(std::atan(0.2), Vector3::UnitY()).toRotationMatrix();
+  const auto tilted = Surface::makeShared<PlaneSurface>(tilt, bounds);
+  const auto flat = Surface::makeShared<PlaneSurface>(
+      Transform3(Translation3(0., 0., 19.9)), bounds);
+  NavigationStream stream;
+  stream.addSurfaceCandidate(*flat, BoundaryTolerance::None());
+  stream.addSurfaceCandidate(*tilted, BoundaryTolerance::None());
+  BOOST_REQUIRE(stream.initialize(
+      gctx, {Vector3::Zero(), Vector3::UnitZ(), Vector3(0.005, 0., 0.)},
+      logger()));
+  BOOST_CHECK_EQUAL(&stream.currentCandidate().surface(), tilted.get());
+  CHECK_CLOSE_ABS(stream.currentCandidate().pathLength(), 19.8, 1e-12);
+  BOOST_REQUIRE(stream.switchToNextCandidate());
+  BOOST_CHECK_EQUAL(&stream.currentCandidate().surface(), flat.get());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
