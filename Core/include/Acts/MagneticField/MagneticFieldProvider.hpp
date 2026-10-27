@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -70,6 +71,14 @@ class MagneticFieldProvider {
   /// The cache is always creaded through @ref makeCache.
   using Cache = Acts::AnyBase<sizeof(char) * 512>;
 
+  /// Magnetic field and its spatial gradient at one position
+  struct FieldAndGradient {
+    /// Magnetic field vector
+    Vector3 field = Vector3::Zero();
+    /// Spatial gradient of the field, with gradient(i, j) = dB_i / dx_j
+    SquareMatrix3 gradient = SquareMatrix3::Zero();
+  };
+
   /// Make an opaque cache for the magnetic field. Instructs the specific
   /// implementation to generate a @ref Acts::MagneticFieldProvider::Cache instance
   /// for magnetic field lookup.
@@ -87,6 +96,26 @@ class MagneticFieldProvider {
   /// @return magnetic field vector at given position
   virtual Result<Vector3> getField(const Vector3& position,
                                    Cache& cache) const = 0;
+
+  /// Check if @ref getFieldAndGradient is implemented by this provider.
+  ///
+  /// If it is false, the caller has to compute the gradient in a different
+  /// way, for example with finite differences of @ref getField.
+  ///
+  /// @return true if the provider implements the field gradient
+  virtual bool providesFieldGradient() const { return false; }
+
+  /// Retrieve the magnetic field and its spatial gradient at a given
+  /// location.
+  ///
+  /// @param [in] position global 3D position for the lookup
+  /// @param [in,out] cache Field provider specific cache object
+  ///
+  /// @return field and gradient at the given position, or
+  ///         @ref MagneticFieldError::NotImplemented if
+  ///         @ref providesFieldGradient is false
+  virtual Result<FieldAndGradient> getFieldAndGradient(const Vector3& position,
+                                                       Cache& cache) const;
 
   virtual ~MagneticFieldProvider() = default;
 };

@@ -17,7 +17,6 @@
 #include <cstdint>
 #include <numbers>
 #include <span>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -40,6 +39,9 @@ struct SlidingWindow {
   float deltaPhi{};
   /// Inside-out pixel barrel ordinal of the bin's layer, -1 for the rest.
   std::int32_t barrelOrder{-1};
+  /// Tau ratio cuts of the bin's layer pair, as inner and as outer pair
+  float tauRatioCutInner{};
+  float tauRatioCutOuter{};
   /// Type of the bin's layer.
   GbtsLayerType type{};
   /// Technology of the bin's layer.
@@ -189,19 +191,7 @@ GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
                                    std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(config),
       m_geometry(std::move(geometry)),
-      m_logger(std::move(logger)) {
-  // buildTheGraph pre-computes the loosest tau ratio threshold it can apply,
-  // which assumes the corrections only ever widen the cut.
-  if (m_cfg.tauRatioCorr < 0) {
-    throw std::invalid_argument(
-        "GbtsGraphBuilder: tauRatioCorr must not be negative");
-  }
-
-  if (m_cfg.tauRatioCorrStrip < 0) {
-    throw std::invalid_argument(
-        "GbtsGraphBuilder: tauRatioCorrStrip must not be negative");
-  }
-}
+      m_logger(std::move(logger)) {}
 
 GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                                           GbtsNodeStorage& nodeStorage,
@@ -222,16 +212,15 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
   const float curvatureCutHighEta = m_cfg.maxCurvatureHighEta * ptScale;
   const float curvatureCutLowEta = m_cfg.maxCurvatureLowEta * ptScale;
 
-  // the loosest tau ratio threshold the triplet matching can apply
-  const float maxTauRatioCut =
-      m_cfg.tauRatioCut + (m_cfg.useAdaptiveCuts ? m_cfg.tauRatioCorr : 0.0f) +
-      (nodeStorage.hasStrips() ? m_cfg.tauRatioCorrStrip : 0.0f);
-
   // the default sliding window along phi. Taken from the node storage so that
   // the windows and the phi indexing they slide over cannot disagree.
   const float deltaPhi0 = 0.5f * nodeStorage.config().phiSliceWidth;
 
   std::uint32_t nConnections = 0;
+
+  // good matches dropped because the outer edge held the maximum number of
+  // neighbours
+  std::uint32_t nOverflow = 0;
 
   // Scales the maximum number of edges by the number of space points using the
   // factor maxEdgesPerSP
@@ -298,8 +287,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
     phiSlidingWindow.clear();
 
     // loop over n2 eta-bins in L2 layers
-    for (const std::uint32_t b2Idx : bg.links) {
-      const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(b2Idx);
+    for (const GbtsBinLink& link : bg.links) {
+      const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(link.bin);
 
       if (B2.empty()) {
         continue;
@@ -326,6 +315,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       window.numPhiNodes = static_cast<std::uint32_t>(B2.phiNodes.size());
       window.deltaPhi = deltaPhi;
       window.barrelOrder = B2.barrelOrder;
+      window.tauRatioCutInner = link.tauRatioCutInner;
+      window.tauRatioCutOuter = link.tauRatioCutOuter;
       window.type = B2.type;
       window.technology = B2.technology;
     }
@@ -544,7 +535,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
             const auto outEdgeIdx =
                 static_cast<std::uint32_t>(edgeStorage.size());
 
-            edgeStorage.emplace_back(n1Idx, n2Idx, barrelOrder2, expEta, curv,
+            edgeStorage.emplace_back(n1Idx, n2Idx, slw.tauRatioCutOuter,
+                                     isPixelBarrel2, expEta, curv,
                                      phi1 + dPhi1);
 
             ++numCreatedEdges;
@@ -560,52 +552,13 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
               const float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
 
-              // rejects most candidates before the layer bookkeeping below
-              if (absTauRatio > maxTauRatioCut) {
-                continue;
+              // the looser of the cuts the two layer pairs carry
+              if (absTauRatio >
+                  std::max(slw.tauRatioCutInner, pS->tauRatioCut)) {
+                continue;  // bad match
               }
 
-              if (pS->nNei >= detail::kGbtsMaxEdgeNeighbours) {
-                continue;
-              }
-
-              const std::int32_t barrelOrder3 = pS->n2BarrelOrder;
-
-              const bool isPixelBarrel3 = barrelOrder3 >= 0;
-
-              float addTauRatioCorr = 0;
-
-              if (m_cfg.useAdaptiveCuts) {
-                if (isPixelBarrel1 && isPixelBarrel2 && isPixelBarrel3) {
-                  // three radially consecutive layers, none skipped
-                  const bool noGap = (barrelOrder2 - barrelOrder1) == 1 &&
-                                     (barrelOrder3 - barrelOrder2) == 1;
-
-                  // assume more scattering due to the layer in between
-                  if (!noGap) {
-                    addTauRatioCorr = m_cfg.tauRatioCorr;
-                  }
-                } else {
-                  bool mixedTriplet =
-                      isPixelBarrel1 && isPixelBarrel2 && !isPixelBarrel3;
-                  if (mixedTriplet) {
-                    addTauRatioCorr = m_cfg.tauRatioCorr;
-                  }
-                }
-              }
-              // The two doublets sharing a strip node resolved it separately,
-              // so a triplet through a strip may disagree on tau by more. Any
-              // of the three: the outer two carry their end's error into tau.
-              if (m_cfg.tauRatioCorrStrip > 0.f &&
-                  (!isPixel1 || !isPixel2 ||
-                   nodeView.strip(pS->n2) != nullptr)) {
-                addTauRatioCorr += m_cfg.tauRatioCorrStrip;
-              }
-
-              // bad match
-              if (absTauRatio > m_cfg.tauRatioCut + addTauRatioCorr) {
-                continue;
-              }
+              const bool isPixelBarrel3 = pS->n2PixelBarrel;
 
               float dPhi = phi2u - pS->p[2];
 
@@ -636,6 +589,13 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                                      m_cfg.tauRatioCut, bFieldInZ)) {
                   continue;
                 }
+              }
+
+              // the match is good: it is lost only if the outer edge holds
+              // the maximum number of neighbours already
+              if (pS->nNei >= detail::kGbtsMaxEdgeNeighbours) {
+                ++nOverflow;
+                continue;
               }
 
               pS->vNei[pS->nNei] = outEdgeIdx;
@@ -685,121 +645,13 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
         "Maximum number of graph edges exceeded - possible efficiency loss "
         << edgeStorage.size());
   }
+  if (nOverflow > 0) {
+    ACTS_DEBUG(nOverflow << " edge links dropped: the outer edge already held "
+                         << detail::kGbtsMaxEdgeNeighbours
+                         << " neighbours - possible efficiency loss");
+  }
   graph.nConnections = nConnections;
   return graph;
-}
-
-std::uint32_t GbtsGraph::runCCA(const std::uint32_t maxIterations) {
-  const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
-
-  std::uint32_t maxLevel = 0;
-
-  std::uint32_t iter = 0;
-
-  std::vector<detail::GbtsEdge*> vOld;
-
-  for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
-    detail::GbtsEdge* pS = &(edgeStorage[edgeIndex]);
-    if (pS->nNei == 0) {
-      continue;
-    }
-
-    // TODO: increment level for segments as they already have at least one
-    // neighbour
-    vOld.push_back(pS);
-  }
-
-  std::vector<detail::GbtsEdge*> vNew;
-  vNew.reserve(vOld.size());
-
-  // generate proposals
-  for (; iter < maxIterations; iter++) {
-    vNew.clear();
-
-    for (detail::GbtsEdge* pS : vOld) {
-      std::int32_t nextLevel = pS->level;
-
-      for (std::uint32_t nIdx = 0; nIdx < pS->nNei; ++nIdx) {
-        const std::uint32_t nextEdgeIdx = pS->vNei[nIdx];
-
-        const detail::GbtsEdge* pN = &(edgeStorage[nextEdgeIdx]);
-
-        if (pS->level == pN->level) {
-          nextLevel = pS->level + 1;
-          vNew.push_back(pS);
-          break;
-        }
-      }
-
-      // proposal
-      pS->next = static_cast<std::int8_t>(nextLevel);
-    }
-
-    // update
-
-    std::uint32_t nChanges = 0;
-
-    for (auto pS : vNew) {
-      if (pS->next != pS->level) {
-        nChanges++;
-        pS->level = pS->next;
-        // levels only grow from zero here, so the cast is safe
-        maxLevel = std::max(maxLevel, static_cast<std::uint32_t>(pS->level));
-      }
-    }
-
-    if (nChanges == 0) {
-      break;
-    }
-
-    vOld.swap(vNew);
-    vNew.clear();
-  }
-
-  return maxLevel;
-}
-
-std::vector<detail::GbtsEdge*> GbtsGraph::extractChainHeads(
-    const std::uint8_t minSeedLevel, const bool addTriplets,
-    const float maxAbsEtaAddTriplets) {
-  const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
-
-  // `addTriplets` accepts a chain one level short. Signed: an uncollected
-  // edge sits at level -1 and `minSeedLevel` may be configured to 0.
-  const std::int8_t minLevelAddTriplets =
-      static_cast<std::int8_t>(minSeedLevel - 1);
-  std::vector<detail::GbtsEdge*> vChainHeads;
-
-  vChainHeads.reserve(nEdges / 2);
-
-  for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
-    detail::GbtsEdge* pS = &edgeStorage[edgeIndex];
-
-    if (!addTriplets) {
-      if (pS->level < minSeedLevel) {
-        continue;
-      }
-    } else {  // eta-dependent cut
-      const float edgeAbsEta = std::abs(-std::log(pS->p[0]));
-
-      if (edgeAbsEta > maxAbsEtaAddTriplets) {
-        if (pS->level < minSeedLevel) {
-          continue;
-        }
-      } else {
-        if (pS->level < minLevelAddTriplets) {
-          continue;
-        }
-      }
-    }
-
-    vChainHeads.push_back(pS);
-  }
-
-  std::ranges::sort(vChainHeads, std::ranges::greater{},
-                    [](const detail::GbtsEdge* e) { return e->level; });
-
-  return vChainHeads;
 }
 
 }  // namespace Acts::Experimental
