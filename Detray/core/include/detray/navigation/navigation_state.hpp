@@ -36,17 +36,22 @@ namespace detray::navigation {
 ///
 /// Inspectors can be plugged in to understand the current navigation state.
 struct void_inspector {
+  /// Empty view accepted by the no-op inspector.
   struct void_view : public detray::detail::dbase_view {};
 
+  /// View type used by this inspector.
   using view_type = void_view;
+  /// Const view type used by this inspector.
   using const_view_type = const void_view;
 
   constexpr void_inspector() = default;
 
+  /// Construct from an unused inspector view.
   DETRAY_HOST_DEVICE
   constexpr explicit void_inspector(
       const void_view & /*ignored*/) { /*Do nothing*/ }
 
+  /// Ignore navigation state notifications.
   template <typename state_t>
   DETRAY_HOST_DEVICE constexpr void operator()(const state_t & /*ignored*/,
                                                const char * /*ignored*/) const {
@@ -92,22 +97,33 @@ class base_state : public detray::ranges::view_interface<
 
  protected:
   // Linear algebra types
+  /// Detector algebra type.
   using algebra_t = typename detector_t::algebra_type;
+  /// Scalar type associated with the detector algebra.
   using scalar_t = dscalar<algebra_t>;
+  /// Three-dimensional point type associated with the detector algebra.
   using point3_t = dpoint3D<algebra_t>;
+  /// Three-dimensional vector type associated with the detector algebra.
   using vector3_t = dvector3D<algebra_t>;
 
   // Result of a geometry object evaluation
+  /// Intersection result stored as a navigation candidate.
   using candidate_t = intersection_t;
+  /// Fixed-capacity cache of intersection candidates.
   using candidate_cache_t = darray<candidate_t, k_cache_capacity>;
+  /// Mutable iterator into the candidate cache.
   using candidate_itr_t = typename candidate_cache_t::iterator;
+  /// Const iterator into the candidate cache.
   using candidate_const_itr_t = typename candidate_cache_t::const_iterator;
+  /// Signed type used for candidate cache positions.
   using dist_t = std::int_least8_t;
 
   // Link type to the next detector volume
+  /// Type used to link to a detector volume during navigation.
   using nav_link_t = typename detector_t::surface_type::navigation_link;
 
  public:
+  /// Detector type associated with this navigation state.
   using detector_type = detector_t;
 
   /// Default constructor (needs a detector)
@@ -138,6 +154,7 @@ class base_state : public detray::ranges::view_interface<
     return itr;
   }
 
+  /// @returns beginning of the valid candidate range
   DETRAY_HOST_DEVICE
   constexpr auto cbegin() const -> candidate_const_itr_t {
     return std::as_const(*this).begin();
@@ -151,6 +168,7 @@ class base_state : public detray::ranges::view_interface<
     return itr;
   }
 
+  /// @returns end of the valid candidate range
   DETRAY_HOST_DEVICE
   constexpr auto cend() const -> candidate_const_itr_t {
     return std::as_const(*this).end();
@@ -184,6 +202,7 @@ class base_state : public detray::ranges::view_interface<
   }
 
   /// Set direction in which the navigator should search for candidates
+  /// @param dir direction in which to search
   DETRAY_HOST_DEVICE
   constexpr void set_direction(const navigation::direction dir) {
     if (m_direction != dir) {
@@ -200,6 +219,7 @@ class base_state : public detray::ranges::view_interface<
   constexpr scalar_t external_tol() const { return m_external_mask_tol; }
 
   /// Set externally provided mask tolerance according to noise prediction
+  /// @param tol tolerance applied to mask checks
   DETRAY_HOST_DEVICE
   constexpr void set_external_tol(const scalar_t tol) {
     DETRAY_VERBOSE_HOST("Setting external mask tolerance: " << tol);
@@ -230,6 +250,7 @@ class base_state : public detray::ranges::view_interface<
   /// @}
 
   /// Helper method to check the track has reached a module surface
+  /// @returns true when navigation is on an object or portal surface
   DETRAY_HOST_DEVICE
   constexpr auto is_on_surface() const -> bool {
     return (m_status == navigation::status::e_on_object ||
@@ -237,6 +258,7 @@ class base_state : public detray::ranges::view_interface<
   }
 
   /// Helper method to check the track has reached a sensitive surface
+  /// @returns true when the current object is a sensitive surface
   DETRAY_HOST_DEVICE
   constexpr auto is_on_sensitive() const -> bool {
     return (m_status == navigation::status::e_on_object) &&
@@ -244,6 +266,7 @@ class base_state : public detray::ranges::view_interface<
   }
 
   /// Helper method to check the track has reached a passive surface
+  /// @returns true when the current object is a passive surface
   DETRAY_HOST_DEVICE
   constexpr auto is_on_passive() const -> bool {
     return (m_status == navigation::status::e_on_object) &&
@@ -251,12 +274,14 @@ class base_state : public detray::ranges::view_interface<
   }
 
   /// Helper method to check the track has reached a portal surface
+  /// @returns true when navigation is on a portal
   DETRAY_HOST_DEVICE
   constexpr auto is_on_portal() const -> bool {
     return m_status == navigation::status::e_on_portal;
   }
 
   /// Helper method to check the track has encountered material
+  /// @returns true when the current surface has material
   DETRAY_HOST_DEVICE
   constexpr auto encountered_sf_material() const -> bool {
     return (cast_impl().is_on_surface()) &&
@@ -359,7 +384,7 @@ class base_state : public detray::ranges::view_interface<
            cast_impl().target().path();
   }
 
-  /// @param surface_t the surface interface type that is required
+  /// @tparam surface_t surface interface template to construct
   /// @returns current detector surface the navigator is on - const
   template <template <typename> class surface_t = tracking_surface>
   DETRAY_HOST_DEVICE constexpr auto current_surface() const {
@@ -367,21 +392,21 @@ class base_state : public detray::ranges::view_interface<
     return surface_t<detector_t>{*m_detector, current().surface()};
   }
 
-  /// @param volume_t the volume interface type that is required
+  /// @tparam volume_t volume interface template to construct
   /// @returns current detector volume of the navigation stream
   template <template <typename> class volume_t = tracking_volume>
   DETRAY_HOST_DEVICE constexpr auto current_volume() const {
     return volume_t<detector_t>{*m_detector, m_volume_index};
   }
 
-  /// @param surface_t the surface interface type that is required
+  /// @tparam surface_t surface interface template to construct
   /// @returns the next surface the navigator intends to reach
   template <template <typename> class surface_t = tracking_surface>
   DETRAY_HOST_DEVICE constexpr auto next_surface() const {
     return surface_t<detector_t>{*m_detector, cast_impl().target().surface()};
   }
 
-  /// @param volume_t the volume interface type that is required
+  /// @tparam volume_t volume interface template to construct
   /// @returns the next volume the navigator intends to reach
   template <template <typename> class volume_t = tracking_volume>
   DETRAY_HOST_DEVICE constexpr auto next_volume() const {
@@ -483,7 +508,8 @@ class base_state : public detray::ranges::view_interface<
     return m_candidates[static_cast<std::size_t>(m_last)];
   }
 
-  /// Set the next surface that we want to reach (update target)
+  /// Set the target candidate from an iterator in the candidate cache.
+  /// @param new_next iterator to the next candidate
   DETRAY_HOST_DEVICE
   constexpr void set_next(candidate_const_itr_t new_next) {
     const auto new_idx{
@@ -492,7 +518,8 @@ class base_state : public detray::ranges::view_interface<
     assert(cast_impl().next_index() <= m_last + 1);
   }
 
-  /// Updates the position of the last valid candidate
+  /// Set the last valid candidate from an iterator in the candidate cache.
+  /// @param new_last iterator to the position after the last valid candidate
   DETRAY_HOST_DEVICE
   constexpr void set_last(candidate_const_itr_t new_last) {
     const auto new_idx{
@@ -501,15 +528,16 @@ class base_state : public detray::ranges::view_interface<
     assert(m_last < static_cast<dist_t>(k_cache_capacity));
   }
 
-  /// @returns the index to the target surface
+  /// @returns index of the next candidate in the cache
   DETRAY_HOST_DEVICE
   constexpr dist_t next_index() const { return m_next; }
 
-  /// @returns the index to the target surface
+  /// @returns index of the last valid candidate in the cache
   DETRAY_HOST_DEVICE
   constexpr dist_t last_index() const { return m_last; }
 
-  /// Set the next surface that we want to reach (update target)
+  /// Set the index of the next candidate in the cache.
+  /// @param pos candidate cache position
   DETRAY_HOST_DEVICE
   constexpr void next_index(dist_t pos) {
     m_next = pos;
@@ -517,7 +545,8 @@ class base_state : public detray::ranges::view_interface<
     assert(m_next < static_cast<dist_t>(k_cache_capacity) + 1);
   }
 
-  /// Set the next surface that we want to reach (update target)
+  /// Set the index of the last valid candidate in the cache.
+  /// @param pos candidate cache position
   DETRAY_HOST_DEVICE
   constexpr void last_index(dist_t pos) {
     m_last = pos;
@@ -577,7 +606,11 @@ class base_state : public detray::ranges::view_interface<
     m_last = -1;
   }
 
-  /// Call the navigation inspector
+  /// Call the navigation inspector with a message.
+  /// @param cfg navigation configuration
+  /// @param track_pos current track position
+  /// @param track_dir current track direction
+  /// @param message diagnostic message
   DETRAY_HOST_DEVICE constexpr void run_inspector(
       [[maybe_unused]] const navigation::config &cfg,
       [[maybe_unused]] const point3_t &track_pos,
@@ -595,7 +628,13 @@ class base_state : public detray::ranges::view_interface<
                                 derived, cfg, track_pos, track_dir));
   }
 
-  /// Call the navigation inspector
+  /// Call the navigation inspector with a message generator.
+  /// @tparam debug_msg_generator_t callable type that produces diagnostic text
+  /// @param cfg navigation configuration
+  /// @param track_pos current track position
+  /// @param track_dir current track direction
+  /// @param message diagnostic message prefix
+  /// @param msg_gen callable that produces additional diagnostic text
   template <typename debug_msg_generator_t>
   DETRAY_HOST_DEVICE constexpr void run_inspector(
       [[maybe_unused]] const navigation::config &cfg,

@@ -33,28 +33,41 @@ namespace detray {
 template <typename stepper_t, typename navigator_t,
           concepts::actor_chain actor_chain_t>
 struct propagator {
+  /// Stepper implementation used to advance the track.
   using stepper_type = stepper_t;
+  /// Navigator implementation used to find geometry intersections.
   using navigator_type = navigator_t;
+  /// Chain of actors invoked during propagation.
   using actor_chain_type = actor_chain_t;
 
+  /// Detector described by the navigator.
   using detector_type = typename navigator_type::detector_type;
+  /// Algebra backend used by the detector.
   using algebra_type = typename detector_type::algebra_type;
+  /// Scalar type associated with the detector algebra.
   using scalar_type = dscalar<algebra_type>;
+  /// Intersection representation produced by the navigator.
   using intersection_type = typename navigator_type::intersection_type;
+  /// Free track parameter representation advanced by the stepper.
   using free_track_parameters_type =
       typename stepper_t::free_track_parameters_type;
+  /// Bound track parameter representation accepted by the stepper.
   using bound_track_parameters_type =
       typename stepper_t::bound_track_parameters_type;
 
+  /// Propagation and stepping configuration; lifetime must outlive this object.
   const propagation::config &m_cfg;
 
+  /// Track integration algorithm.
   stepper_t m_stepper{};
+  /// Geometry navigation algorithm.
   navigator_t m_navigator{};
 
   /// Register the actor types
   const actor_chain_type run_actors{};
 
-  /// Construct from a propagator configuration
+  /// Construct from a propagator configuration.
+  /// @param cfg Propagation configuration, retained by reference.
   DETRAY_HOST_DEVICE
   explicit constexpr propagator(const propagation::config &cfg) : m_cfg{cfg} {}
 
@@ -62,25 +75,40 @@ struct propagator {
   /// It also keeps references to the actor states.
   template <bool states_as_reference = false>
   struct state_base {
+    /// Detector associated with the navigator.
     using detector_type = typename navigator_t::detector_type;
+    /// Geometry context type for the detector.
     using context_type = typename detector_type::geometry_context;
+    /// Detector algebra backend.
     using algebra_type = typename detector_type::algebra_type;
+    /// Scalar type used by propagation state.
     using scalar_type = typename detector_type::scalar_type;
 
+    /// Stepper-owned state type.
     using stepper_state_type = typename stepper_t::state;
+    /// Navigator-owned state type.
     using navigator_state_type = typename navigator_t::state;
+    /// Actor chain associated with this propagator.
     using actor_chain_type = actor_chain_t;
 
+    /// Whether the configured stepper transports field gradients.
     static constexpr bool stepper_uses_gradient = stepper_type::uses_gradient;
 
-    /// Construct the propagation state with free parameter
+    /// Construct an owning propagation state from free parameters.
+    /// @param free_params Initial free track parameters.
+    /// @param det Detector used for navigation.
+    /// @param ctx Geometry context for detector transforms.
     DETRAY_HOST_DEVICE state_base(const free_track_parameters_type &free_params,
                                   const detector_type &det,
                                   const context_type &ctx)
       requires(!states_as_reference)
         : m_stepping(free_params), m_navigation(det), m_context(ctx) {}
 
-    /// Construct the propagation state with free parameter
+    /// Construct an owning state from free parameters and a magnetic field.
+    /// @param free_params Initial free track parameters.
+    /// @param magnetic_field Magnetic field used by the stepper.
+    /// @param det Detector used for navigation.
+    /// @param ctx Geometry context for detector transforms.
     template <typename field_t>
       requires(!states_as_reference &&
                concepts::is_field_of<stepper_type, field_t>)
@@ -92,7 +120,11 @@ struct propagator {
           m_navigation(det),
           m_context(ctx) {}
 
-    /// Construct the propagation state from the navigator state view
+    /// Construct an owning state from free parameters and a navigator view.
+    /// @param free_params Initial free track parameters.
+    /// @param det Detector used for navigation.
+    /// @param nav_view Existing navigator state view to initialize from.
+    /// @param ctx Geometry context for detector transforms.
     DETRAY_HOST_DEVICE state_base(
         const free_track_parameters_type &free_params, const detector_type &det,
         typename navigator_type::state::view_type nav_view,
@@ -102,7 +134,13 @@ struct propagator {
           m_navigation(det, nav_view),
           m_context(ctx) {}
 
-    /// Construct the propagation state from the navigator state view
+    /// Construct an owning state from free parameters, field, and navigator
+    /// view.
+    /// @param free_params Initial free track parameters.
+    /// @param magnetic_field Magnetic field used by the stepper.
+    /// @param det Detector used for navigation.
+    /// @param nav_view Existing navigator state view to initialize from.
+    /// @param ctx Geometry context for detector transforms.
     template <typename field_t>
       requires(!states_as_reference &&
                concepts::is_field_of<stepper_type, field_t>)
@@ -115,7 +153,10 @@ struct propagator {
           m_navigation(det, nav_view),
           m_context(ctx) {}
 
-    /// Construct the propagation state with bound parameter
+    /// Construct an owning state from bound parameters.
+    /// @param param Initial bound track parameters.
+    /// @param det Detector used for navigation.
+    /// @param ctx Geometry context for detector transforms.
     DETRAY_HOST_DEVICE state_base(const bound_track_parameters_type &param,
                                   const detector_type &det,
                                   const context_type &ctx = {})
@@ -124,15 +165,21 @@ struct propagator {
       m_navigation.set_volume(param.surface_link().volume());
     }
 
-    /// Construct the propagation state with propagation and navigation
-    /// state
+    /// Construct a non-owning view of existing stepper and navigator states.
+    /// @param stepping Existing stepper state.
+    /// @param navigation Existing navigator state.
+    /// @param ctx Geometry context for detector transforms.
     DETRAY_HOST_DEVICE state_base(stepper_state_type &stepping,
                                   navigator_state_type &navigation,
                                   const context_type &ctx = {})
       requires(states_as_reference)
         : m_stepping(stepping), m_navigation(navigation), m_context(ctx) {}
 
-    /// Construct the propagation state with bound parameter
+    /// Construct an owning state from bound parameters and a magnetic field.
+    /// @param param Initial bound track parameters.
+    /// @param magnetic_field Magnetic field used by the stepper.
+    /// @param det Detector used for navigation.
+    /// @param ctx Geometry context for detector transforms.
     template <typename field_t>
       requires concepts::is_field_of<stepper_type, field_t>
     DETRAY_HOST_DEVICE state_base(const bound_track_parameters_type &param,
@@ -145,8 +192,12 @@ struct propagator {
       m_navigation.set_volume(param.surface_link().volume());
     }
 
-    /// Construct the propagation state with bound parameter and
-    /// navigator state view
+    /// Construct an owning state from bound parameters and navigator view.
+    /// @param param Initial bound track parameters.
+    /// @param magnetic_field Magnetic field used by the stepper.
+    /// @param det Detector used for navigation.
+    /// @param nav_view Existing navigator state view to initialize from.
+    /// @param ctx Geometry context for detector transforms.
     template <typename field_t>
       requires concepts::is_field_of<stepper_type, field_t>
     DETRAY_HOST_DEVICE state_base(
@@ -160,45 +211,56 @@ struct propagator {
       m_navigation.set_volume(param.surface_link().volume());
     }
 
-    /// Set the particle hypothesis
+    /// Set the particle hypothesis used by the stepper.
+    /// @param ptc Particle properties, including mass and charge.
     DETRAY_HOST_DEVICE
     void set_particle(const pdg_particle<scalar_type> &ptc) {
       m_stepping.set_particle(ptc);
     }
 
-    /// @returns the propagation heartbeat
+    /// @returns Whether propagation is currently active.
     DETRAY_HOST_DEVICE
     bool is_alive() const { return m_heartbeat; }
 
-    /// @returns the propagation heartbeat
+    /// @returns Whether propagation is currently active.
     DETRAY_HOST_DEVICE
     bool heartbeat() const { return m_heartbeat; }
 
-    /// @returns the propagation heartbeat
+    /// Set whether propagation is currently active.
+    /// @param heartbeat True to continue propagation.
     DETRAY_HOST_DEVICE
     void heartbeat(bool heartbeat) { m_heartbeat = heartbeat; }
 
+    /// @returns The stepper state (read-only).
     DETRAY_HOST_DEVICE
     const stepper_state_type &stepping() const { return m_stepping; }
 
+    /// @returns The mutable stepper state.
     DETRAY_HOST_DEVICE
     stepper_state_type &stepping() { return m_stepping; }
 
+    /// @returns The navigator state (read-only).
     DETRAY_HOST_DEVICE
     const navigator_state_type &navigation() const { return m_navigation; }
 
+    /// @returns The mutable navigator state.
     DETRAY_HOST_DEVICE
     navigator_state_type &navigation() { return m_navigation; }
 
+    /// @returns The geometry context used during propagation (read-only).
     DETRAY_HOST_DEVICE
     const context_type &context() const { return m_context; }
 
+    /// @returns The mutable geometry context used during propagation.
     DETRAY_HOST_DEVICE
     context_type &context() { return m_context; }
 
+    /// @returns Whether verbose propagation diagnostics are enabled.
     DETRAY_HOST_DEVICE
     bool debug() const { return m_do_debug; }
 
+    /// Enable or disable verbose propagation diagnostics.
+    /// @param b True to enable diagnostics.
     DETRAY_HOST_DEVICE
     void debug(bool b) { m_do_debug = b; }
 
@@ -217,6 +279,7 @@ struct propagator {
     bool m_do_debug = false;
   };
 
+  /// Owning propagation state type.
   using state = state_base<false>;
 
   /// Propagate method finale: Return whether or not the propagation
@@ -238,7 +301,8 @@ struct propagator {
     return !propagation.is_alive() && propagation.navigation().is_alive();
   }
 
-  /// Revive the propagation
+  /// Revive a paused propagation.
+  /// @param propagation State to resume.
   template <bool is_owning>
   DETRAY_HOST_DEVICE inline void resume(
       state_base<is_owning> &propagation) const {
@@ -253,7 +317,7 @@ struct propagator {
   /// @param actor_state_refs tuple containing references to the actor
   /// states
   ///
-  /// @return propagation success.
+  /// @return True if propagation completed or was paused; false if aborted.
   template <typename actor_states_t, bool is_owning>
     requires(concepts::is_state_of<actor_states_t, actor_chain_type>)
   DETRAY_HOST_DEVICE bool propagate(
@@ -404,7 +468,9 @@ struct propagator {
     return finished(propagation) || is_paused(propagation);
   }
 
-  /// Overload for empty actor chain
+  /// Propagate using an empty actor chain.
+  /// @param propagation State of the propagation flow.
+  /// @return True if propagation completed or was paused; false if aborted.
   template <bool is_owning>
   DETRAY_HOST_DEVICE bool propagate(state_base<is_owning> &propagation) {
     // Will not be used
@@ -413,6 +479,9 @@ struct propagator {
     return propagate(propagation, empty_state);
   }
 
+  /// Format propagation state for diagnostic output.
+  /// @param propagation State to describe.
+  /// @return Human-readable status, navigation, and track information.
   template <bool is_owning>
   DETRAY_HOST std::string print(state_base<is_owning> &propagation) const {
     const auto &navigation = propagation.navigation();

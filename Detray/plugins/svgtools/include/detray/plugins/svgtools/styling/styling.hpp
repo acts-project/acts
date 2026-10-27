@@ -35,28 +35,44 @@ namespace detray::svgtools::styling {
 
 /// Style applied to an actsvg proto grid
 struct grid_style {
+  /// Color used to draw grid lines.
   actsvg::style::color _stroke_color{};
+  /// Width of grid lines.
   actsvg::scalar _stroke_width{};
 };
 
 /// Style applied to an actsvg proto surface_material
 struct surface_material_style {
+  /// Position of the material information annotation.
   actsvg::point2 _info_pos{};
 
+  /// Position of the material gradient.
   actsvg::point2 _gradient_pos{};
+  /// Dimensions of the material gradient box.
   std::array<actsvg::scalar, 2u> _gradient_box{};
+  /// Font used for the material gradient.
   actsvg::style::font _gradient_font{};
+  /// Label shown with the material gradient.
   actsvg::style::label _gradient_label{};
+  /// Color of the material gradient outline.
   actsvg::style::color _gradient_stroke_color{};
+  /// Width of the material gradient outline.
   actsvg::scalar _gradient_stroke_width{0.f};
+  /// Colors sampled to construct the material gradient.
   std::vector<actsvg::style::color> _gradient_color_scale{};
+  /// Number of stops generated for the material gradient.
   unsigned int _gradient_n_stops{0u};
 
+  /// Style of the grid overlaid on material surfaces.
   grid_style _grid_style{};
 };
 
 /// Style applied to an actsvg proto surface
 struct surface_style {
+  /// Construct a surface style with fill, stroke width, and material settings.
+  /// @param fill_color Fill color for the surface and its outline.
+  /// @param stroke_width Width of the surface outline.
+  /// @param mat_style Material annotation and gradient settings.
   explicit surface_style(
       const actsvg::style::color& fill_color =
           colors::tableau_colorblind10::red_tones(0.4f).front(),
@@ -70,81 +86,111 @@ struct surface_style {
     _material_style._gradient_font._size = 26u;
     _material_style._gradient_label._font._size = 26u;
   }
-  // Fill color
+  /// Surface fill color.
   actsvg::style::color _fill_color{};
 
-  // Stroke
+  /// Width of the surface outline.
   actsvg::scalar _stroke_width{10.f};
+  /// Color of the surface outline.
   actsvg::style::color _stroke_color{};
 
-  // Highlights
+  /// RGB color used to highlight the surface fill.
   std::array<int, 3> _highlight_rgb{colors::macaroni_and_cheese};
+  /// Names of surface features that should be highlighted.
   std::vector<std::string> _highlights{};
+  /// RGB color used to highlight the surface outline.
   std::array<int, 3> _highlight_stroke_rgb{};
+  /// Width of the highlighted surface outline.
   actsvg::scalar _highlight_stroke_width{};
 
+  /// Font size used for surface labels.
   unsigned int _font_size{22u};
-  // Granularity of vertex approximation of arcs
+  /// Number of segments used to approximate curved surface edges.
   unsigned int _n_segments{72u};
 
+  /// Material annotation and gradient style for the surface.
   surface_material_style _material_style{};
 };
 
 /// Style applied to an actsvg proto portal link
 struct link_style {
+  /// Size of the marker at a portal link endpoint.
   actsvg::scalar _marker_size{1.f};
 };
 
 /// Style applied to an actsvg proto portal
 struct portal_style {
+  /// Style applied to the portal surface.
   surface_style _surface_style{};
+  /// Style applied to links attached to the portal.
   link_style _link_style{};
 };
 
 /// Style applied to an actsvg proto volume
 struct volume_style {
+  /// Style for sensitive surfaces in the volume.
   surface_style _sensitive_surface_style{};
+  /// Style for passive surfaces in the volume.
   surface_style _passive_surface_style{};
+  /// Style for portals in the volume.
   portal_style _portal_style{};
+  /// Style for the volume surface grid.
   grid_style _grid_style{};
 };
 
 /// Style applied to an actsvg proto detector
 struct detector_style {
+  /// Style applied to volumes in the detector.
   volume_style _volume_style{};
+  /// Style applied to the detector grid.
   grid_style _grid_style{};
 };
 
 /// Style applied to proto eta lines
 struct eta_lines_style {
+  /// Color of the main eta lines.
   actsvg::style::color _fill_color_main{};
+  /// Color of the half eta lines.
   actsvg::style::color _fill_color_half{};
+  /// Width of the main eta lines.
   actsvg::scalar _stroke_width_main{10.f};
+  /// Width of the half eta lines.
   actsvg::scalar _stroke_width_half{10.f};
+  /// Font size of eta line labels.
   unsigned int _font_size{11u};
 };
 
 /// Style applied to a proto landmark
 struct landmark_style {
+  /// Fill color for landmark markers.
   actsvg::style::color _fill_color{};
+  /// Outline width for landmark markers.
   actsvg::scalar _stroke_width{10.f};
+  /// Size of landmark markers.
   actsvg::scalar _marker_size{10.f};
+  /// Marker glyph used to draw landmarks.
   std::string _marker_type{};
 };
 
 /// Style applied to a proto trajectory
 struct trajectory_style {
-  // Give different tracks different colors
+  /// Color used to distinguish tracks.
   actsvg::style::color _fill_color{};
+  /// Width of trajectory lines.
   actsvg::scalar _stroke_width{10.f};
 };
 
 /// Global styling options
 struct style {
+  /// Styling for detector geometry.
   detector_style _detector_style{};
+  /// Styling for eta guide lines.
   eta_lines_style _eta_lines_style{};
+  /// Styling for trajectories.
   trajectory_style _trajectory_style{};
+  /// Styling for track landmarks.
   landmark_style _landmark_style{};
+  /// Styling for intersections.
   landmark_style _intersection_style{};
 };
 
@@ -152,6 +198,7 @@ struct style {
 namespace svg_default {
 
 // Material style
+/// Default material annotation and gradient style.
 const styling::surface_material_style material_style{
     {-1000.f, 1000.f},
     {1000.f, -200.f},
@@ -166,40 +213,53 @@ const styling::surface_material_style material_style{
     {{colors::black, 1.f}, 0.4f}};
 
 // Surface styles
+/// Default style for sensitive detector surfaces.
 const styling::surface_style surface_style_sensitive{
     colors::blue_theme(0.5f).front(), 3.f, material_style};
+/// Default style for passive detector surfaces.
 const styling::surface_style surface_style_passive{
     {colors::dark_grey, 0.8f}, 3.f, material_style};
+/// Default style for portal surfaces.
 const styling::surface_style surface_style_portal{
     colors::red_theme(0.5f).front(), 3.f, material_style};
 
 // Portal style
+/// Default style for links attached to portals.
 const styling::link_style link_style{1.2f};
+/// Default portal style combining portal surfaces and links.
 const styling::portal_style portal_style{surface_style_portal, link_style};
 
 // Volume style
+/// Default style for detector and volume grids.
 const styling::grid_style grid_style{colors::red_theme(1.f).front(), 1.f};
+/// Default volume style.
 const styling::volume_style volume_style{
     surface_style_sensitive, surface_style_passive, portal_style, grid_style};
 
 // Detector style
+/// Default detector style.
 const styling::detector_style detector_style{volume_style, grid_style};
 
 // Eta lines style
+/// Default eta guide line style.
 const styling::eta_lines_style eta_lines_style{
     {colors::black, 1.f}, {colors::black, 1.f}, 1.f, 1.f, 30u};
 
 // Intersection points and track state style
+/// Default style for trajectory intersections.
 const styling::landmark_style intersection_style{
     colors::black_theme(1.f).front(), 0.8f, 5.f, "x"};
+/// Default style for trajectory landmarks.
 const styling::landmark_style landmark_style{colors::green_theme(1.f).front(),
                                              0.8f, 3.f, "o"};
 
 // Trajectory style
+/// Default trajectory style.
 const styling::trajectory_style trajectory_style{
     colors::green_theme(1.f).front(), 1.f};
 
 // Full style
+/// Complete default SVG style configuration.
 const styling::style style{detector_style, eta_lines_style, trajectory_style,
                            landmark_style, intersection_style};
 }  // namespace svg_default
@@ -208,6 +268,7 @@ const styling::style style{detector_style, eta_lines_style, trajectory_style,
 namespace tableau_colorblind {
 
 // Surface material style
+/// Material annotation and gradient style using the viridis scale.
 const styling::surface_material_style material_style{
     {-1000.f, 1000.f},
     {1000.f, -200.f},
@@ -222,28 +283,36 @@ const styling::surface_material_style material_style{
     {{colors::black, 1.f}, 0.4f}};
 
 // Surface styles
+/// Passive surface style in the Tableau colorblind palette.
 const styling::surface_style surface_style_passive{
     colors::tableau_colorblind10::grey_tones(0.8f).front(), 1.f,
     material_style};
+/// Portal surface style in the Tableau colorblind palette.
 const styling::surface_style surface_style_portal{
     colors::tableau_colorblind10::blue_tones(0.2f).front(), 1.5f,
     material_style};
+/// Sensitive surface style in the Tableau colorblind palette.
 const styling::surface_style surface_style_sensitive{
     colors::tableau_colorblind10::red_tones(0.3f).front(), 1.f, material_style};
 
 // Portal style
+/// Portal style using the Tableau portal surface and default link style.
 const styling::portal_style portal_style{surface_style_portal,
                                          svg_default::link_style};
 
 // Volume style
+/// Grid style used by the Tableau detector and volumes.
 const styling::grid_style grid_style{{colors::red, 1.f}, 0.6f};
+/// Volume style using the Tableau colorblind palette.
 const styling::volume_style volume_style{
     surface_style_sensitive, surface_style_passive, portal_style, grid_style};
 
 // Detector style
+/// Detector style using the Tableau colorblind palette.
 const styling::detector_style detector_style{volume_style, grid_style};
 
 // Full style
+/// Complete style configuration using the Tableau colorblind palette.
 const styling::style style{
     detector_style, svg_default::eta_lines_style, svg_default::trajectory_style,
     svg_default::landmark_style, svg_default::intersection_style};
