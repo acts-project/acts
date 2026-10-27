@@ -84,15 +84,14 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
 bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
                                 const detail::GbtsEdge& pS,
                                 detail::GbtsEdgeState& ts,
-                                Failure& failure) const {
+                                GbtsProfiler::FilterFailure& failure) const {
   return updateImpl<true>(nodeView, pS, ts, &failure);
 }
 
 template <bool kProfile>
-bool GbtsTrackingFilter::updateImpl(const detail::GbtsNodeView& nodeView,
-                                    const detail::GbtsEdge& pS,
-                                    detail::GbtsEdgeState& ts,
-                                    Failure* failure) const {
+bool GbtsTrackingFilter::updateImpl(
+    const detail::GbtsNodeView& nodeView, const detail::GbtsEdge& pS,
+    detail::GbtsEdgeState& ts, GbtsProfiler::FilterFailure* failure) const {
   if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
     ACTS_DEBUG("Negative cov_x");
   }
@@ -215,11 +214,11 @@ bool GbtsTrackingFilter::updateImpl(const detail::GbtsNodeView& nodeView,
 
   if (dchi2_x > m_cfg.maxDChi2X || dchi2_y > m_cfg.maxDChi2Y) {
     if constexpr (kProfile) {
-      *failure = dchi2_x > m_cfg.maxDChi2X
-                     ? Failure{GbtsProfiler::FilterCut::Chi2X, dchi2_x,
-                               m_cfg.maxDChi2X}
-                     : Failure{GbtsProfiler::FilterCut::Chi2Y, dchi2_y,
-                               m_cfg.maxDChi2Y};
+      if (dchi2_x > m_cfg.maxDChi2X) {
+        *failure = {GbtsProfiler::FilterCut::Chi2X, dchi2_x, m_cfg.maxDChi2X};
+      } else {
+        *failure = {GbtsProfiler::FilterCut::Chi2Y, dchi2_y, m_cfg.maxDChi2Y};
+      }
     }
     return false;
   }

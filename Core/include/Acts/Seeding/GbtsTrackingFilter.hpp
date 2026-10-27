@@ -92,13 +92,6 @@ class GbtsTrackingFilter final {
   /// @return Logger reference
   const Logger& logger() const { return *m_logger; }
 
-  /// Why `update` rejected an edge, for the profiler.
-  struct Failure {
-    GbtsProfiler::FilterCut cut{};
-    float value{};
-    float threshold{};
-  };
-
   /// Update edge state with edge
   /// @param nodeView View of the node positions and layers
   /// @param pS Edge to update with
@@ -114,13 +107,14 @@ class GbtsTrackingFilter final {
   /// @param failure Set to the failed cut on a rejection
   /// @return Success flag
   bool update(const detail::GbtsNodeView& nodeView, const detail::GbtsEdge& pS,
-              detail::GbtsEdgeState& ts, Failure& failure) const;
+              detail::GbtsEdgeState& ts,
+              GbtsProfiler::FilterFailure& failure) const;
 
   /// Both `update`s, with the failure reported only if not null.
   template <bool kProfile>
   bool updateImpl(const detail::GbtsNodeView& nodeView,
                   const detail::GbtsEdge& pS, detail::GbtsEdgeState& ts,
-                  Failure* failure) const;
+                  GbtsProfiler::FilterFailure* failure) const;
 
   /// Get layer type from layer index
   /// @param layerIndex Layer index

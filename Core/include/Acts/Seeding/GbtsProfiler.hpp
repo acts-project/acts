@@ -129,6 +129,23 @@ class GbtsProfiler {
     TooFewSpacePoints,
   };
 
+  /// Why a check rejected a candidate, filled in by the check for the caller
+  /// to record.
+  /// @tparam Cut The cut enumeration of the check
+  template <typename Cut>
+  struct Failure {
+    /// The cut it failed.
+    Cut cut{};
+    /// The value cut on.
+    float value{};
+    /// The threshold it failed, zero for a cut without one.
+    float threshold{};
+  };
+  /// Why the barrel triplet validation rejected a triplet.
+  using TripletFailure = Failure<TripletCut>;
+  /// Why the tracking filter rejected an edge.
+  using FilterFailure = Failure<FilterCut>;
+
   /// A rejected space point.
   struct Node {
     /// The space point.
@@ -137,6 +154,8 @@ class GbtsProfiler {
     NodeCut cut{};
     /// The value cut on, e.g. the cluster width.
     float value{};
+    /// The threshold it failed.
+    float threshold{};
   };
 
   /// An accepted doublet, i.e. a graph edge.
@@ -218,6 +237,10 @@ class GbtsProfiler {
     float value{};
     /// The threshold it failed.
     float threshold{};
+    /// The space points of the path up to and including the edge that
+    /// failed, innermost first: `inner`, `outer`, ..., `headInner`,
+    /// `headOuter`, `pathLength + 2` in all.
+    std::vector<SpacePointIndex> spacePoints;
   };
 
   /// A seed candidate, i.e. the best path from a head edge.

@@ -59,7 +59,8 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
       m_rejectedNodes.push_back(
           {.spacePoint = index,
            .cut = GbtsProfiler::NodeCut::EndcapClusterWidth,
-           .value = clusterWidth});
+           .value = clusterWidth,
+           .threshold = m_cfg.maxEndcapClusterWidth});
     }
     return std::nullopt;
   }
