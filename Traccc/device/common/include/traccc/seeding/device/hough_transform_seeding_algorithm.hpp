@@ -22,6 +22,7 @@
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/memory_resource.hpp"
 #include "traccc/utils/messaging.hpp"
+#include "traccc/device/global_index.hpp"
 
 // VecMem include(s).
 #include <vecmem/containers/data/vector_view.hpp>
@@ -101,30 +102,39 @@ class hough_transform_seeding_algorithm
 
   struct count_maxima_payload {
     // The hough planes
-    edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
+    const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
     // The count vector
     vecmem::data::vector_view<unsigned int>& count_vector;
   };
  
   struct find_maxima_payload {
     // The hough planes
-    edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
+    const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
     // The global index vector
-    vecmem::data::jagged_vector_view<unsigned int>& global_index;
-    // Mutex
-    unsigned int* backup_mutex;
+    vecmem::data::jagged_vector_view<global_index_t>& global_index;
   };
  
+  struct take_picture_payload {
+    // Number of maxima
+    unsigned int n_maxima;
+    // The hough planes
+    const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
+    // The maxima location
+    const vecmem::data::jagged_vector_view<global_index_t>& global_index;
+    // The images
+    edm::houghplane_collection<scalar, 32, 32>::view& images;
+  };
+
   virtual void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const = 0;
   virtual void precompute_spacepoint_variables_kernel(const precompute_spacepoint_variables_payload& payload) const = 0;
   virtual void fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const = 0;
   virtual void count_maxima_kernel(const count_maxima_payload& payload) const = 0;
   virtual void find_maxima_kernel(const find_maxima_payload& payload) const = 0;
+  virtual void take_picture_kernel(const take_picture_payload& payload) const = 0;
 
   virtual void synchronize() const = 0;
   
   config_type m_config;    
-  mutable vecmem::unique_alloc_ptr<unsigned int> m_backup_mutex;
   };
 
 }  // namespace traccc::device
@@ -135,3 +145,5 @@ class hough_transform_seeding_algorithm
 #include "traccc/seeding/device/impl/precompute_spacepoint_variables.ipp"
 #include "traccc/seeding/device/impl/count_maxima.ipp"
 #include "traccc/seeding/device/impl/find_maxima.ipp"
+#include "traccc/seeding/device/impl/take_pictures.ipp"
+

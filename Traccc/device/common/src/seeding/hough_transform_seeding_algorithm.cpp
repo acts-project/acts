@@ -18,12 +18,7 @@ hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
     std::unique_ptr<const Logger> logger)
     : messaging(std::move(logger)),
       algorithm_base{mr, copy},
-      m_config{config},
-      m_backup_mutex{vecmem::make_unique_alloc<unsigned int>(mr.main)} 
-{
-    // does not compile somehow
-    // copy().memset(vecmem::data::vector_view<unsigned int>{1, m_backup_mutex.get()}, 0)->wait();
-}
+      m_config{config} {}
 
 auto hough_transform_seeding_algorithm::operator()(
 		const magnetic_field& bfield,
@@ -112,14 +107,13 @@ auto hough_transform_seeding_algorithm::operator()(
   unsigned int total_maxima = 0u;
   for (unsigned int i(0); i<maxima_sizes_host.size(); ++i) total_maxima += maxima_sizes_host[i];
  
-  vecmem::data::jagged_vector_buffer<unsigned int> maxima_global_index(maxima_sizes_host,
+  vecmem::data::jagged_vector_buffer<global_index_t> maxima_global_index(maxima_sizes_host,
         mr().main, mr().host,
         vecmem::data::buffer_type::resizable);
   copy().setup(maxima_global_index)->ignore();
 
   find_maxima_kernel({result,
-                      maxima_global_index,
-                      m_backup_mutex.get()});
+                      maxima_global_index});
 
   /*
   vecmem::data::jagged_vector_view<unsigned int> host_view;
@@ -147,16 +141,21 @@ auto hough_transform_seeding_algorithm::operator()(
   // Run clustering on the images
 
   // Take the pictures from the merged maxima
-  vecmem::data::jagged_vector_buffer<scalar> maxima_x_value(maxima_sizes_host,
-        mr().main, mr().host,
-        vecmem::data::buffer_type::resizable);
+  // vecmem::data::jagged_vector_buffer<scalar> maxima_x_value(maxima_sizes_host,
+  //       mr().main, mr().host,
+  //       vecmem::data::buffer_type::resizable);
   edm::houghplane_collection<scalar, 32, 32>::buffer images(
           std::vector<unsigned int>(total_maxima, 32 * 32),
           mr().main, mr().host,
           vecmem::data::buffer_type::resizable);
 
-  copy().setup(maxima_x_value)->ignore();
+  // copy().setup(maxima_x_value)->ignore();
   copy().setup(images)->ignore();
+
+  take_picture_kernel({total_maxima,
+                       result,
+                       maxima_global_index,
+                       images});
 
 /*  
   edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view host_view;

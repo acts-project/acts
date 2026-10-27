@@ -15,12 +15,11 @@ template< typename T,
 TRACCC_HOST_DEVICE
 void find_maxima(const global_index_t globalIndex,
                  const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes_view,
-                 vecmem::data::jagged_vector_view<unsigned int>& maxima_index_view,
-                 vecmem::device_atomic_ref<std::uint32_t> backup_mutex) {
+                 vecmem::data::jagged_vector_view<global_index_t>& maxima_index_view) {
     if (globalIndex >= N_COLS * N_ROWS) return;
 
     const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device houghplanes(houghplanes_view);
-    vecmem::jagged_device_vector<unsigned int> maxima_index(maxima_index_view);
+    vecmem::jagged_device_vector<global_index_t> maxima_index(maxima_index_view);
 
     const long long col = globalIndex % N_COLS;
     const long long row = globalIndex / N_COLS;
@@ -32,12 +31,7 @@ void find_maxima(const global_index_t globalIndex,
 
         bool is_maximum = is_local_maximum<T, N_COLS, N_ROWS>(globalIndex, value, plane, col, row);
         if (!is_maximum) continue;
-        {
-            // lock
-            mutex<std::uint32_t> mutex(backup_mutex);
-            unique_lock lock(mutex, std::defer_lock);
-            maxima_index[wedge_idx].push_back(globalIndex);
-        }
+        maxima_index[wedge_idx].push_back(globalIndex);
     }    
 }
 

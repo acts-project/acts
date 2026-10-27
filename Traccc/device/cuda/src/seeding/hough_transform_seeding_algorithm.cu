@@ -12,6 +12,7 @@
 #include "../utils/magnetic_field_types.hpp"
 #include "../utils/utils.hpp"
 #include "traccc/cuda/seeding/hough_transform_seeding_algorithm.hpp"
+#include "traccc/device/global_index.hpp"
 
 namespace traccc::cuda {
 namespace kernels {
@@ -81,10 +82,19 @@ namespace kernels {
              unsigned int N_ROWS>
    __global__
    void find_maxima(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes,
-                    vecmem::data::jagged_vector_view<unsigned int>& global_indexes,
-                    unsigned int* backup_mutex_ptr) {
-      vecmem::device_atomic_ref<unsigned int> backup_mutex(*backup_mutex_ptr);
-      device::find_maxima<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, global_indexes, backup_mutex);
+                    vecmem::data::jagged_vector_view<traccc::device::global_index_t>& global_indexes) {
+      device::find_maxima<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, global_indexes);
+   }
+
+   template <typename T,
+             unsigned int N_COLS,
+             unsigned int N_ROWS>
+   __global__
+   void take_pictures(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes,
+                      const vecmem::data::jagged_vector_view<traccc::device::global_index_t>& global_indexes,
+                      const unsigned int n_maxima,
+                      edm::houghplane_collection<scalar, 32, 32>::view& images) {
+      device::take_pictures<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, global_indexes, n_maxima, images);
    }
 } // namespace kernels
 
@@ -147,7 +157,14 @@ void hough_transform_seeding_algorithm::find_maxima_kernel(const find_maxima_pay
   const unsigned int n_threads = warp_size() * 8;
   const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
   kernels::find_maxima<unsigned short, device::N_COLS, device::N_ROWS>
-        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, payload.global_index, payload.backup_mutex);
+        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, payload.global_index);
+}
+
+void hough_transform_seeding_algorithm::take_picture_kernel(const take_picture_payload& payload) const {
+   const unsigned int n_threads = warp_size() * 8;
+   const unsigned int n_blocks = (payload.n_maxima + n_threads - 1) / n_threads;
+   kernels::take_pictures<unsigned short, device::N_COLS, device::N_ROWS>
+        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, payload.global_index, payload.n_maxima, payload.images);
 }
 
 void hough_transform_seeding_algorithm::synchronize() const {
