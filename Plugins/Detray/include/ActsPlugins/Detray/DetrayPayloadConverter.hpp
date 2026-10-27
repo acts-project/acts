@@ -209,7 +209,7 @@ class DetrayPayloadConverter {
     /// Optional volume selection. If set, only volumes for which this returns
     /// true are converted. Portals leading into a rejected volume become
     /// end-of-world portals. If empty, all volumes are converted.
-    Acts::Delegate<bool(const Acts::TrackingVolume&)> volumeFilter;
+    std::function<bool(const Acts::TrackingVolume&)> volumeFilter;
 
     /// Portal masks are clipped to the part of the portal that borders the
     /// volume they are placed in. Segments shorter than this along the
