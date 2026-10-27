@@ -49,13 +49,6 @@ struct SlidingWindow {
   GbtsLayerTechnology technology{};
 };
 
-/// Why `validateTriplet` rejected a triplet, for the profiler.
-struct TripletFailure {
-  GbtsProfiler::TripletCut cut{};
-  float value{};
-  float threshold{};
-};
-
 /// Check a triplet against the pT and d0 cuts.
 /// @param cfg Graph builder configuration
 /// @param nodeView View of the node positions and layers
@@ -71,7 +64,7 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
                      const std::array<SpacePointIndex, 3>& candidateTriplet,
                      const float tripletMinPt, const float tauRatio,
                      const float tauRatioCut, const float bFieldInZ,
-                     TripletFailure* failure) {
+                     GbtsProfiler::TripletFailure* failure) {
   // conformal mapping with the center at the middle spacepoint
 
   std::array<float, 2> u{};
@@ -726,7 +719,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
                 const std::array<SpacePointIndex, 3> candidateTriplet = {
                     n1Idx, n2Idx, pS->n2};
 
-                TripletFailure failure;
+                GbtsProfiler::TripletFailure failure;
                 if (!validateTriplet(m_cfg, nodeView, candidateTriplet,
                                      tripletPtMin, absTauRatio,
                                      m_cfg.tauRatioCut, bFieldInZ,

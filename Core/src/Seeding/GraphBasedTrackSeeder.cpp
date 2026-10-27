@@ -97,13 +97,12 @@ void GraphBasedTrackSeeder::createSeeds(
   // filled locally and handed over at the end, so that concurrent calls do not
   // share it
   std::optional<GbtsProfiler::Event> profileEvent;
+  GbtsProfiler::Event* profile = nullptr;
   if (m_profiler != nullptr) {
-    profileEvent.emplace();
-    profileEvent->eventNumber = options.eventNumber;
-    profileEvent->rejectedNodes = std::move(nodeStorage.m_rejectedNodes);
+    profile = &profileEvent.emplace();
+    profile->eventNumber = options.eventNumber;
+    profile->rejectedNodes = std::move(nodeStorage.m_rejectedNodes);
   }
-  GbtsProfiler::Event* const profile =
-      profileEvent.has_value() ? &*profileEvent : nullptr;
 
   GbtsGraph graph =
       graphBuilder.buildTheGraph(roi, nodeStorage, options.bFieldInZ, profile);
@@ -134,8 +133,8 @@ void GraphBasedTrackSeeder::createSeeds(
     }
   }
 
-  if (profileEvent.has_value()) {
-    m_profiler->add(std::move(*profileEvent));
+  if (profile != nullptr) {
+    m_profiler->add(std::move(*profile));
   }
 }
 
@@ -459,7 +458,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
   // profiling: the head being searched from, and why the filter rejected an
   // edge
   std::uint32_t currentHead = 0;
-  GbtsTrackingFilter::Failure failure;
+  GbtsProfiler::FilterFailure failure;
   // the filter without the failure argument where nothing is profiled
   const auto update = [&](const detail::GbtsEdge& edge,
                           detail::GbtsEdgeState& state) {
@@ -473,15 +472,26 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
                                                const std::uint32_t pathLength) {
     const detail::GbtsEdge& head = edgeStorage[currentHead];
     const detail::GbtsEdge& edge = edgeStorage[e];
-    profile->filterRejections.push_back(
-        {.headInner = nodeStorage.spacePointIndex(head.n1),
-         .headOuter = nodeStorage.spacePointIndex(head.n2),
-         .inner = nodeStorage.spacePointIndex(edge.n1),
-         .outer = nodeStorage.spacePointIndex(edge.n2),
-         .cut = failure.cut,
-         .pathLength = pathLength,
-         .value = failure.value,
-         .threshold = failure.threshold});
+    GbtsProfiler::FilterRejection& rejection =
+        profile->filterRejections.emplace_back(GbtsProfiler::FilterRejection{
+            .headInner = nodeStorage.spacePointIndex(head.n1),
+            .headOuter = nodeStorage.spacePointIndex(head.n2),
+            .inner = nodeStorage.spacePointIndex(edge.n1),
+            .outer = nodeStorage.spacePointIndex(edge.n2),
+            .cut = failure.cut,
+            .pathLength = pathLength,
+            .value = failure.value,
+            .threshold = failure.threshold,
+            .spacePoints = {}});
+    // the failed edge, then the outer ends of the path's edges from the
+    // innermost out: each edge's inner end is the outer end of the next one in
+    rejection.spacePoints.reserve(path.size() + 2);
+    rejection.spacePoints.push_back(rejection.inner);
+    rejection.spacePoints.push_back(rejection.outer);
+    for (auto it = path.rbegin(); it != path.rend(); ++it) {
+      rejection.spacePoints.push_back(
+          nodeStorage.spacePointIndex(edgeStorage[*it].n2));
+    }
   };
   [[maybe_unused]] const auto recordHead =
       [&](const std::uint32_t e, const GbtsProfiler::HeadOutcome outcome) {

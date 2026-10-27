@@ -912,6 +912,20 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
         head.outcome == Experimental::GbtsProfiler::HeadOutcome::Candidate;
   }
 
+  // a filter rejection's chain runs from the failed edge out to its head, edge
+  // by edge
+  for (const auto& rejection : event->filterRejections) {
+    const auto& chain = rejection.spacePoints;
+    BOOST_REQUIRE_EQUAL(chain.size(), rejection.pathLength + 2u);
+    BOOST_CHECK_EQUAL(chain[0], rejection.inner);
+    BOOST_CHECK_EQUAL(chain[1], rejection.outer);
+    BOOST_CHECK_EQUAL(chain[chain.size() - 2], rejection.headInner);
+    BOOST_CHECK_EQUAL(chain.back(), rejection.headOuter);
+    for (std::size_t k = 0; k + 1 < chain.size(); ++k) {
+      BOOST_CHECK(edges.contains({chain[k], chain[k + 1]}));
+    }
+  }
+
   // the candidates are what the clone removal was given, and the output what
   // it kept
   BOOST_CHECK_EQUAL(event->candidates.size(), nCandidateHeads);
