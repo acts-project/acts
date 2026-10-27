@@ -19,6 +19,9 @@ enum class PortalError {
   // ensure all values are non-zero
   /// Position not on any of the composite child portal links
   PositionNotOnAnyChildPortalLink = 1,
+  /// Position outside the bounds of a grid portal link by more than the
+  /// tolerance
+  PositionOutsideLinkBounds = 2,
 };
 
 /// Create error code from PortalError
