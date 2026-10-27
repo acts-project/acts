@@ -31,39 +31,42 @@
 namespace ActsPlugins::TracccBoundTrackParameters {
 
 /// traccc bound track parameters with the default algebra
-using BoundTrackParameters =
+using TracccBoundTrackParameters =
     traccc::bound_track_parameters<traccc::default_algebra>;
 
 /// traccc track container with the default algebra
-using TrackContainer = traccc::edm::track_container<traccc::default_algebra>;
+using TracccTrackContainer =
+    traccc::edm::track_container<traccc::default_algebra>;
 
 /// Convert the parameter vector of traccc bound track parameters
-Acts::BoundVector convertBoundVector(const BoundTrackParameters& params);
+Acts::BoundVector convertBoundVectorFromTraccc(
+    const TracccBoundTrackParameters& params);
 
 /// Convert the covariance of traccc bound track parameters
-Acts::BoundMatrix convertBoundCovariance(const BoundTrackParameters& params);
+Acts::BoundMatrix convertBoundCovarianceFromTraccc(
+    const TracccBoundTrackParameters& params);
 
 /// Check for degenerate (all zero) traccc bound track parameters, which
 /// traccc reports for parameters that were never set
-bool isDegenerate(const BoundTrackParameters& params);
+bool isDegenerate(const TracccBoundTrackParameters& params);
 
 /// Create the source link of a measurement track state
 ///
 /// @param measurementIndex index of the measurement in the traccc
 ///        measurement collection the tracks refer to
 /// @param surface the ACTS surface of the measurement
-using SourceLinkCreator = Acts::Delegate<Acts::SourceLink(
+using TracccSourceLinkCreator = Acts::Delegate<Acts::SourceLink(
     unsigned int measurementIndex, const Acts::Surface& surface)>;
 
 /// Options for the traccc to ACTS track conversion
-struct TrackConversionOptions {
+struct TracccTrackConversionOptions {
   /// Particle hypothesis assigned to the converted tracks
   Acts::ParticleHypothesis particleHypothesis =
       Acts::ParticleHypothesis::pion();
 };
 
 /// Bookkeeping of the traccc to ACTS track conversion
-struct TrackConversionStatistics {
+struct TracccTrackConversionStatistics {
   /// Number of input traccc tracks
   std::size_t nInput = 0;
   /// Number of converted tracks
@@ -77,7 +80,7 @@ struct TrackConversionStatistics {
 };
 
 std::ostream& operator<<(std::ostream& os,
-                         const TrackConversionStatistics& stats);
+                         const TracccTrackConversionStatistics& stats);
 
 /// Find the ACTS surface of a detray surface
 ///
@@ -119,17 +122,17 @@ const Acts::Surface* findSurface(
 ///
 /// @return conversion bookkeeping
 template <typename detector_t, typename track_container_t>
-TrackConversionStatistics convertTracks(
-    const TrackContainer::const_view& tracks, const detector_t& detector,
+TracccTrackConversionStatistics convertTracksFromTraccc(
+    const TracccTrackContainer::const_view& tracks, const detector_t& detector,
     const Acts::TrackingGeometry& trackingGeometry,
-    const SourceLinkCreator& makeSourceLink, track_container_t& output,
-    const TrackConversionOptions& options = {}) {
-  const TrackContainer::const_device input(tracks);
+    const TracccSourceLinkCreator& makeSourceLink, track_container_t& output,
+    const TracccTrackConversionOptions& options = {}) {
+  const TracccTrackContainer::const_device input(tracks);
 
   constexpr auto kStateMask =
       Acts::TrackStatePropMask::Filtered | Acts::TrackStatePropMask::Smoothed;
 
-  TrackConversionStatistics stats;
+  TracccTrackConversionStatistics stats;
   stats.nInput = input.tracks.size();
 
   for (unsigned int iTrack = 0; iTrack < input.tracks.size(); ++iTrack) {
@@ -154,8 +157,8 @@ TrackConversionStatistics convertTracks(
 
     auto actsTrack = output.makeTrack();
     actsTrack.setReferenceSurface(referenceSurface->getSharedPtr());
-    actsTrack.parameters() = convertBoundVector(track.params());
-    actsTrack.covariance() = convertBoundCovariance(track.params());
+    actsTrack.parameters() = convertBoundVectorFromTraccc(track.params());
+    actsTrack.covariance() = convertBoundCovarianceFromTraccc(track.params());
     actsTrack.setParticleHypothesis(options.particleHypothesis);
 
     bool missingSurface = false;
@@ -190,11 +193,13 @@ TrackConversionStatistics convertTracks(
 
       auto actsState = actsTrack.appendTrackState(kStateMask);
       actsState.setReferenceSurface(surface->getSharedPtr());
-      actsState.filtered() = convertBoundVector(state.filtered_params());
+      actsState.filtered() =
+          convertBoundVectorFromTraccc(state.filtered_params());
       actsState.filteredCovariance() =
-          convertBoundCovariance(state.filtered_params());
-      actsState.smoothed() = convertBoundVector(smoothed);
-      actsState.smoothedCovariance() = convertBoundCovariance(smoothed);
+          convertBoundCovarianceFromTraccc(state.filtered_params());
+      actsState.smoothed() = convertBoundVectorFromTraccc(smoothed);
+      actsState.smoothedCovariance() =
+          convertBoundCovarianceFromTraccc(smoothed);
       actsState.chi2() = state.smoothed_chi2();
       actsState.typeFlags().setIsMeasurement();
       actsState.setUncalibratedSourceLink(
