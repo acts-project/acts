@@ -218,6 +218,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
   std::uint32_t nConnections = 0;
 
+  // good matches dropped because the outer edge held the maximum number of
+  // neighbours
+  std::uint32_t nOverflow = 0;
+
   // Scales the maximum number of edges by the number of space points using the
   // factor maxEdgesPerSP
   const auto maxEdges = static_cast<std::size_t>(
@@ -554,10 +558,6 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                 continue;  // bad match
               }
 
-              if (pS->nNei >= detail::kGbtsMaxEdgeNeighbours) {
-                continue;
-              }
-
               const bool isPixelBarrel3 = pS->n2PixelBarrel;
 
               float dPhi = phi2u - pS->p[2];
@@ -589,6 +589,13 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                                      m_cfg.tauRatioCut, bFieldInZ)) {
                   continue;
                 }
+              }
+
+              // the match is good: it is lost only if the outer edge holds
+              // the maximum number of neighbours already
+              if (pS->nNei >= detail::kGbtsMaxEdgeNeighbours) {
+                ++nOverflow;
+                continue;
               }
 
               pS->vNei[pS->nNei] = outEdgeIdx;
@@ -637,6 +644,11 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
     ACTS_WARNING(
         "Maximum number of graph edges exceeded - possible efficiency loss "
         << edgeStorage.size());
+  }
+  if (nOverflow > 0) {
+    ACTS_DEBUG(nOverflow << " edge links dropped: the outer edge already held "
+                         << detail::kGbtsMaxEdgeNeighbours
+                         << " neighbours - possible efficiency loss");
   }
   graph.nConnections = nConnections;
   return graph;

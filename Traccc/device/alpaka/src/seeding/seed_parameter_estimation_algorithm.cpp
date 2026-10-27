@@ -17,6 +17,9 @@
 // Project include(s).
 #include "traccc/seeding/device/estimate_track_params.hpp"
 
+// System include(s).
+#include <stdexcept>
+
 namespace traccc::alpaka {
 namespace kernels {
 
@@ -51,6 +54,11 @@ seed_parameter_estimation_algorithm::seed_parameter_estimation_algorithm(
 
 void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
     const struct estimate_seed_params_kernel_payload& payload) const {
+  if (payload.detector != nullptr) {
+    throw std::runtime_error(
+        "Detector aware seed parameter estimation is not yet implemented for "
+        "the Alpaka backend.");
+  }
   const unsigned int n_threads = warp_size() * 4;
   const unsigned int n_blocks = (payload.n_seeds + n_threads - 1) / n_threads;
   magnetic_field_visitor<bfield_type_list<scalar>>(
