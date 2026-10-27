@@ -326,7 +326,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       // the branch is unpredictable. Filter them out of the window once
       // instead. Not for the group's own bin: its nodes gain connections as
       // n1 is processed.
-      if (useZ0Histogram && b2Idx != bg.bin) {
+      if (useZ0Histogram && link.bin != bg.bin) {
         const std::size_t windowIdx = phiSlidingWindow.size() - 1;
         // growing the outer vector moves the inner ones, which keeps their
         // buffers, so earlier windows' pointers stay valid
