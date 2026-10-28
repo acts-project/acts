@@ -10,8 +10,9 @@ template <unsigned int N_COLS,
           unsigned int N_ROWS>
 TRACCC_HOST_DEVICE
 inline std::pair<unsigned int, unsigned int> get_col_row(unsigned long long global_index) {
-    return std::make_pair<unsigned int, unsigned int>(global_index / N_ROWS, 
-                                                      global_index % N_ROWS);
+    assert(global_index < N_COLS * N_ROWS);
+    return {static_cast<unsigned int>(global_index / N_ROWS),
+            static_cast<unsigned int>(global_index % N_ROWS)};
 }
 
 TRACCC_HOST_DEVICE
