@@ -206,8 +206,8 @@ class Impl final : public DoubletSeedFinder {
         const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
         // check if duplet origin on z axis within collision region
         if constexpr (symmetricCollisionRegion) {
-          outside |= std::abs(zOriginTimesDeltaR) >
-                     m_cfg.collisionRegionMax * deltaR;
+          outside |=
+              std::abs(zOriginTimesDeltaR) > m_cfg.collisionRegionMax * deltaR;
         } else {
           outside |= outsideRangeCheck(zOriginTimesDeltaR,
                                        m_cfg.collisionRegionMin * deltaR,
@@ -444,10 +444,11 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
   using StripCalibrationOptions = BooleanOptions;
   using SymmetricCollisionRegionOptions = BooleanOptions;
 
-  using DoubletOptions = boost::mp11::mp_product<
-      boost::mp11::mp_list, IsBottomCandidateOptions,
-      InteractionPointCutOptions, SortedByROptions, UseTimeOptions,
-      StripCalibrationOptions, SymmetricCollisionRegionOptions>;
+  using DoubletOptions =
+      boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
+                              InteractionPointCutOptions, SortedByROptions,
+                              UseTimeOptions, StripCalibrationOptions,
+                              SymmetricCollisionRegionOptions>;
 
   std::unique_ptr<DoubletSeedFinder> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
@@ -482,10 +483,10 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     }
 
     // create the implementation for the given configuration
-    result = std::make_unique<Impl<
-        IsBottomCandidate::value, InteractionPointCut::value, SortedByR::value,
-        UseTime::value, StripCalibration::value,
-        SymmetricCollisionRegion::value>>(config);
+    result = std::make_unique<
+        Impl<IsBottomCandidate::value, InteractionPointCut::value,
+             SortedByR::value, UseTime::value, StripCalibration::value,
+             SymmetricCollisionRegion::value>>(config);
   });
   if (result == nullptr) {
     throw std::runtime_error(
