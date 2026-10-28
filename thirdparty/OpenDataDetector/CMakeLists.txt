@@ -14,9 +14,7 @@ FetchContent_MakeAvailable(ODD)
 # Keep dependency warnings out of ACTS builds.
 target_compile_options(
     OpenDataDetector
-    PRIVATE
-        $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,AppleClang>:-w>
-        $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/w>
+    PRIVATE $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,AppleClang>:-w>
 )
 
 FetchContent_GetProperties(
