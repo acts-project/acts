@@ -111,6 +111,12 @@ class triplet_seeding_algorithm : public device::triplet_seeding_algorithm,
   ///
   void select_seeds_kernel(
       const select_seeds_kernel_payload& payload) const override;
+  /// @copydoc traccc::device::triplet_seeding_algorithm::mark_seed_weights_kernel
+  void mark_seed_weights_kernel(
+      const mark_seed_weights_kernel_payload& payload) const override;
+  /// @copydoc traccc::device::triplet_seeding_algorithm::suppress_seeds_kernel
+  void suppress_seeds_kernel(
+      const suppress_seeds_kernel_payload& payload) const override;
 
   /// @}
 
