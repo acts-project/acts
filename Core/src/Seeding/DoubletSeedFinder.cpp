@@ -39,7 +39,7 @@ void DoubletsForMiddleSp::sortByCotTheta(
   indexAndCotTheta.clear();
   indexAndCotTheta.reserve(range.second - range.first);
   for (Index i = range.first; i < range.second; ++i) {
-    indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
+    indexAndCotTheta.emplace_back(i, m_doublets[i].cotTheta);
   }
 
   const auto cotThetaOf = [](const IndexAndCotTheta& item) {
