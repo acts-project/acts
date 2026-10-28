@@ -213,9 +213,9 @@ target surface included: once no component still reports *reachable*. A
 pathology described in @cite Huth:2024 needs a guard — low-momentum components
 approaching a cylinder on a straight-line intersection can spiral indefinitely
 while always reporting *reachable*. A step limit that engages once the first
-component lands on the surface (`stepLimitAfterFirstComponentOnSurface`, default 50) forces the
-remaining stragglers to *unreachable* and removes them, after which the weights
-are renormalised:
+component lands on the surface (`stepLimitAfterFirstComponentOnSurface`,
+default 50) forces the remaining stragglers to *unreachable* and removes them,
+after which the weights are renormalised:
 
 @snippet{trimleft} MultiStepperLoop.ipp step limit
 
