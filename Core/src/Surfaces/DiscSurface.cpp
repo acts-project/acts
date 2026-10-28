@@ -271,8 +271,8 @@ MultiIntersection3D DiscSurface::intersect(
   // Get the contextual transform
   const Transform3& gctxTransform = localToGlobalTransform(gctx);
   // Use the intersection helper for planar surfaces
-  const Intersection3D intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+  const Intersection3D intersection = Acts::detail::PlanarHelper::intersect(
+      gctxTransform, position, direction, tolerance);
   IntersectionStatus status = intersection.status();
   if (status == IntersectionStatus::unreachable) {
     return MultiIntersection3D(Intersection3D::Invalid());

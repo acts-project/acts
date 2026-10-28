@@ -20,7 +20,7 @@ using namespace Acts::detail;
 using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;
 using namespace Acts::UnitLiterals;
-using namespace Acts::PlanarHelper;
+using namespace Acts::detail::PlanarHelper;
 using namespace Acts::detail::LineHelper;
 using namespace Acts::VectorHelpers;
 
@@ -1019,11 +1019,11 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
 
     std::array<std::shared_ptr<FitTestSpacePoint>, nStrips> spacePoints{};
     for (std::size_t layer = 0; layer < nStrips; ++layer) {
-      auto intersection = PlanarHelper::intersectPlane(
+      auto intersection = Acts::detail::PlanarHelper::intersectPlane(
           muonPos, muonDir, Vector3::UnitZ(), distancesZ[layer]);
       intersections[layer] = intersection.position();
       // where the hit is along the strip
-      auto alongStrip = PlanarHelper::intersectPlane(
+      auto alongStrip = Acts::detail::PlanarHelper::intersectPlane(
           intersections[layer], stripDirections[layer], Vector3::UnitX(), 0.);
 
       parameters[layer] = alongStrip.pathLength();
@@ -1038,7 +1038,7 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
     // construct the combined space points
     std::array<std::shared_ptr<FitTestSpacePoint>, nCombined> combinedPoints{};
     for (std::size_t c = 0; c < nCombined; ++c) {
-      auto intersection = PlanarHelper::intersectPlane(
+      auto intersection = Acts::detail::PlanarHelper::intersectPlane(
           muonPos, muonDir, Vector3::UnitZ(), distancesZCombined[c]);
 
       combinedPoints[c] = std::make_shared<FitTestSpacePoint>(

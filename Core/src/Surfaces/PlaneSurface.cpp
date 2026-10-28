@@ -173,8 +173,8 @@ MultiIntersection3D PlaneSurface::intersect(
   // Get the contextual transform
   const auto& gctxTransform = localToGlobalTransform(gctx);
   // Use the intersection helper for planar surfaces
-  auto intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+  auto intersection = Acts::detail::PlanarHelper::intersect(
+      gctxTransform, position, direction, tolerance);
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status() != IntersectionStatus::unreachable) {

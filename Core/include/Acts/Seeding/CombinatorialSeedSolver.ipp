@@ -172,7 +172,7 @@ std::pair<Vector3, Vector3> seedSolution(
           .normalized();
 
   // calculate the position at z=0
-  Intersection3D intersectionZ0 = PlanarHelper::intersectPlane(
+  Intersection3D intersectionZ0 = Acts::detail::PlanarHelper::intersectPlane(
       seedPosition, seedDirection, Vector3::UnitZ(), 0.0);
   Vector3 seedPositionZ0 = intersectionZ0.position();
 
@@ -250,7 +250,7 @@ std::pair<Vector3, Vector3> seedSolution(
        parameters[0] * spacePoints1D[0]->sensorDirection() - seedPosition)
           .normalized();
   // calculate the position at z=0
-  Intersection3D intersectionZ0 = PlanarHelper::intersectPlane(
+  Intersection3D intersectionZ0 = Acts::detail::PlanarHelper::intersectPlane(
       seedPosition, seedDirection, Vector3::UnitZ(), 0.0);
   Vector3 seedPositionZ0 = intersectionZ0.position();
 
