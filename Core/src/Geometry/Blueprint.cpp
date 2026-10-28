@@ -208,18 +208,6 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   ACTS_INFO(prefix() << "Building tracking geometry from blueprint tree");
 
   options.validate();
-  if (m_cfg.globalTransform) {
-    const auto &transform = *m_cfg.globalTransform;
-    if (!transform.matrix().allFinite() ||
-        !(transform.linear().transpose() * transform.linear())
-             .isApprox(RotationMatrix3::Identity()) ||
-        std::abs(transform.linear().determinant() - 1.) > 1e-12 ||
-        !transform.matrix().row(3).isApprox(
-            Vector4(0., 0., 0., 1.).transpose())) {
-      throw std::invalid_argument(
-          "Blueprint globalTransform must be a rigid transform");
-    }
-  }
 
   if (m_cfg.envelope == ExtentEnvelope::Zero()) {
     ACTS_WARNING(prefix() << "Root node is configured with zero envelope. This "
