@@ -312,10 +312,11 @@ class DoubletSeedFinder {
 
     /// Maximum absolute z distance between two doublet components
     float absDeltaZMax = std::numeric_limits<float>::infinity();
-    /// Deprecated: use absDeltaZMax. The cut is symmetric about zero, so
-    /// deltaZMin must be -deltaZMax; deltaZMax is folded into absDeltaZMax
+    /// Minimal z distance between two doublet components
+    /// @deprecated The deltaZ cut is symmetric about zero, so do not set this.
+    ///             If it is set, it must be -deltaZMax.
     float deltaZMin = -std::numeric_limits<float>::infinity();
-    /// Deprecated: use absDeltaZMax
+    /// Maximum absolute z distance between two doublet components
     float deltaZMax = std::numeric_limits<float>::infinity();
 
     /// Maximum value of impact parameter estimation of the seed candidates
