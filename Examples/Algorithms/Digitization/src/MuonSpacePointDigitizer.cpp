@@ -27,7 +27,7 @@
 
 using namespace Acts;
 using namespace detail::LineHelper;
-using namespace PlanarHelper;
+using namespace Acts::detail::PlanarHelper;
 using namespace UnitLiterals;
 
 namespace {

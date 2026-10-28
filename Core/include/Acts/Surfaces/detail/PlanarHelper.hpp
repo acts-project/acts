@@ -13,7 +13,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 /// @brief Helpers for planar surfaces that share the same maths
-namespace Acts::PlanarHelper {
+namespace Acts::detail::PlanarHelper {
 
 /// @brief Intersect a line in 3D space with a plane represented by the Hesse-Normal form
 /// @param linePos: Arbitrary point on the line to intersect
@@ -77,13 +77,6 @@ inline Intersection3D intersect(const Transform3& transform,
   return Intersection3D{(position + path * direction), path, status};
 }
 
-}  // namespace Acts::PlanarHelper
-
-namespace Acts::detail::PlanarHelper {
-
-// Retain the existing ray helper without moving its established namespace.
-using Acts::PlanarHelper::intersect;
-
 template <bool Quadratic = s_useQuadraticCurvatureCorrection>
 inline Intersection3D correctPlanarCurvatureIntersection(
     const Intersection3D& seed, const Vector3& direction,
@@ -108,8 +101,8 @@ inline Intersection3D intersect(const Transform3& transform,
                                 const Vector3& direction,
                                 const Vector3& curvature, double tolerance) {
   return correctPlanarCurvatureIntersection<Quadratic>(
-      Acts::PlanarHelper::intersect(transform, position, direction, tolerance),
-      direction, curvature, transform.matrix().block<3, 1>(0, 2));
+      intersect(transform, position, direction, tolerance), direction,
+      curvature, transform.matrix().block<3, 1>(0, 2));
 }
 
 }  // namespace Acts::detail::PlanarHelper
