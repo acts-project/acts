@@ -30,8 +30,8 @@ namespace Acts {
 /// @{
 
 /// Join a second tracklet, filtered from a state of a smoothed first tracklet
-/// as prior, behind that shared state, and give every state the information
-/// of both without a new propagation. This is the two-way track finding.
+/// as prior, behind that shared state, and combine their smoothed estimates
+/// without a new propagation. This is the two-way track finding.
 ///
 /// A smoother over the stitched chain would count the first tracklet twice.
 /// Instead the second tracklet is smoothed alone and one smoothing step

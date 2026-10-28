@@ -114,15 +114,15 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Run finding in two directions. The first pass runs outward from the
     /// seed. The second pass runs inward from the innermost measurement of the
     /// first pass to the perigee, and it starts from the smoothed parameters
-    /// of the first pass. The output track states are then:
-    /// The passes are joined with the @ref Acts::TrackletJoiner, so every
-    /// state holds smoothed parameters with both passes and the perigee comes
-    /// from the second pass. Do not smooth the output track: a smoother over
-    /// the joined chain counts the first pass twice.
+    /// of the first pass. The @ref Acts::TrackletJoiner updates the smoothed
+    /// states with both passes; unsmoothed trailing states of the first pass
+    /// stay unchanged. The perigee comes from the second pass. Do not smooth
+    /// the output track: a smoother over the joined chain counts the first
+    /// pass twice.
     bool twoWay = true;
     /// Smooth the second pass and condition the first pass on it in the join.
-    /// Off, the passes are only linked and only the perigee holds every
-    /// measurement once.
+    /// Off, the passes are only linked and their state estimates stay
+    /// unchanged.
     bool twoWaySmoothing = true;
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.

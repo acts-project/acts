@@ -12,5 +12,5 @@ For electrons, whose Bremsstrahlung energy loss is strongly non-Gaussian, the
 mixture of Gaussians instead; see @ref gsf.
 
 The @ref Acts::TrackletJoiner joins a second tracklet, filtered from a state of
-a first one, so that every state holds the information of both without a new
-propagation; this is the two-way track finding.
+a first one, and combines their smoothed estimates without a new propagation;
+this is the two-way track finding.
