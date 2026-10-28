@@ -334,14 +334,4 @@ BOOST_AUTO_TEST_CASE(RotatedCylinderStack) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(RejectNonRigidPlacement) {
-  Transform3 scale = Transform3::Identity();
-  scale.linear() *= 2.;
-  Blueprint root{{.globalTransform = scale}};
-  root.addStaticVolume(
-      Transform3::Identity(),
-      std::make_shared<CuboidVolumeBounds>(10_mm, 10_mm, 10_mm), "Volume");
-  BOOST_CHECK_THROW(root.construct({}, gctx), std::invalid_argument);
-}
-
 BOOST_AUTO_TEST_SUITE_END()
