@@ -41,10 +41,8 @@ class material_map_writer : public detail::grid_writer {
 
   /// Convert the header information into its payload
   template <class detector_t>
-  static auto header_to_payload(const detector_t& det,
-                                const std::string_view det_name) {
-    return grid_writer_t::header_to_payload(tag, det.material_store(),
-                                            det_name);
+  static auto to_header_payload(const detector_t& det) {
+    return grid_writer_t::to_header_payload(det.material_store());
   }
 
   /// Convert the material description of a detector @param det into its io

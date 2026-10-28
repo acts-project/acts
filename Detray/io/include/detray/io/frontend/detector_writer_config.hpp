@@ -23,6 +23,8 @@ struct detector_writer_config {
   std::string m_path{"./"};
   /// The output file format
   detray::io::format m_format = detray::io::format::json;
+  /// The original data source of the detector
+  std::string m_source{"unknown"};
   /// Replace files in case they already exists
   bool m_replace = false;
   /// Compactify json output, if not json format this flag does nothing
@@ -36,6 +38,7 @@ struct detector_writer_config {
   /// @{
   const std::string& path() const { return m_path; }
   detray::io::format format() const { return m_format; }
+  const std::string& source() const { return m_source; }
   bool replace_files() const { return m_replace; }
   bool compactify_json() const { return m_compact_io; }
   bool write_material() const { return m_write_material; }
@@ -50,6 +53,10 @@ struct detector_writer_config {
   }
   detector_writer_config& format(detray::io::format f) {
     m_format = f;
+    return *this;
+  }
+  detector_writer_config& source(std::string s) {
+    m_source = std::move(s);
     return *this;
   }
   detector_writer_config& replace_files(bool flag) {
@@ -76,6 +83,7 @@ struct detector_writer_config {
     out << "\nDetector writer\n"
         << "----------------------------\n"
         << "  Path                  : " << cfg.path() << "\n"
+        << "  Source                : " << cfg.source() << "\n"
         << "  Write grids           : " << std::boolalpha << cfg.write_grids()
         << "\n"
         << "  Write material        : " << cfg.write_material() << "\n";
