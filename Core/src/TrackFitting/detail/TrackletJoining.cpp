@@ -40,12 +40,27 @@ struct MeasurementGain {
 
 namespace Acts::detail {
 
+void setSmoothedWithoutSharing(AnyMutableTrackStateProxy ts, BoundVector mean,
+                               BoundMatrix cov) {
+  if (ts.hasSmoothed() &&
+      ((ts.hasFiltered() && ts.smoothed().data() == ts.filtered().data()) ||
+       (ts.hasPredicted() && ts.smoothed().data() == ts.predicted().data()))) {
+    ts.unset(TrackStatePropMask::Smoothed);
+  }
+  ts.addComponents(TrackStatePropMask::Smoothed);
+  ts.smoothed() = mean;
+  ts.smoothedCovariance() = cov;
+}
+
 Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
     const AnyConstTrackStateProxy& first, const BoundVector& priorMean,
     const BoundMatrix& priorCov, const Logger& logger) {
   const BoundMatrix predictedCov = first.predictedCovariance();
+  if (!predictedCov.allFinite()) {
+    return KalmanFitterError::SmoothFailed;
+  }
   const Eigen::LDLT<BoundMatrix> ldlt(predictedCov);
-  if (ldlt.info() != Eigen::Success || !ldlt.isPositive()) {
+  if (ldlt.info() != Eigen::Success || !(ldlt.vectorD().array() > 0).all()) {
     ACTS_DEBUG("Predicted covariance of state " << first.index()
                                                 << " is not positive definite");
     return KalmanFitterError::SmoothFailed;
@@ -72,8 +87,11 @@ Result<SharedStateCondition> makeSharedStateCondition(
     const AnyConstTrackStateProxy& shared, const BoundVector& newMean,
     const BoundMatrix& newCov, const Logger& logger) {
   const BoundMatrix smoothedCov = shared.smoothedCovariance();
+  if (!smoothedCov.allFinite()) {
+    return KalmanFitterError::SmoothFailed;
+  }
   const Eigen::LDLT<BoundMatrix> ldlt(smoothedCov);
-  if (ldlt.info() != Eigen::Success || !ldlt.isPositive()) {
+  if (ldlt.info() != Eigen::Success || !(ldlt.vectorD().array() > 0).all()) {
     ACTS_DEBUG("Shared state covariance is not positive definite");
     return KalmanFitterError::SmoothFailed;
   }
@@ -88,6 +106,10 @@ Result<SharedStateCondition> makeSharedStateCondition(
   SharedStateCondition condition;
   condition.u = z * deltaMean;
   condition.w = z * deltaCov * z.transpose();
+  if (!condition.u.allFinite() || !condition.w.allFinite()) {
+    ACTS_DEBUG("Shared state conditioning terms are not finite");
+    return KalmanFitterError::SmoothFailed;
+  }
   return condition;
 }
 
@@ -124,8 +146,7 @@ Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
     ACTS_DEBUG("Conditioned state " << ts.index() << " is not finite");
     return KalmanFitterError::SmoothFailed;
   }
-  ts.smoothed() = mean;
-  ts.smoothedCovariance() = 0.5 * (cov + cov.transpose());
+  setSmoothedWithoutSharing(ts, mean, 0.5 * (cov + cov.transpose()));
 
   // Psi~ = H^T S^-1 H Dp + (I - K H)^T Psi^, then transport to the previous
   BoundMatrix psiTilde = psiHat;

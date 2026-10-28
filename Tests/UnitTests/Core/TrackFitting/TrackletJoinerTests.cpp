@@ -15,6 +15,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/TrackFitting/TrackletJoiner.hpp"
@@ -24,6 +25,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <limits>
 #include <map>
 #include <vector>
 
@@ -94,6 +96,8 @@ enum class Variant {
   /// Base plus node 7, a hole before the first measurement. It carries the
   /// prior, node 0 is transported from it, and node 0 stays the shared state.
   StemHole,
+  /// Only node 0 belongs to the first tracklet; nodes 1 to 3 are unobserved.
+  SingleMeasurement,
 };
 
 /// The model
@@ -124,6 +128,9 @@ std::vector<Node> makeModel(Variant variant) {
     nodes[0].parent = 7;
     nodes[0].F = makeJacobian(0.7);
     nodes[0].Q = makeNoise(0.8);
+  } else if (variant == Variant::SingleMeasurement) {
+    nodes[2].hasMeasurement = false;
+    nodes[3].hasMeasurement = false;
   }
   return nodes;
 }
@@ -221,6 +228,7 @@ struct Tracklets {
 /// Build the first tracklet, smooth it from its last measurement as
 /// `smoothTrack` does, and build the second tracklet from the smoothed
 /// shared state, which is the first measurement.
+template <typename first_smoother_t = MbfSmoother>
 Tracklets buildTracklets(Container& tc, const std::vector<Node>& nodes,
                          Variant variant) {
   std::map<std::size_t, std::size_t> nodeOfState;
@@ -234,6 +242,8 @@ Tracklets buildTracklets(Container& tc, const std::vector<Node>& nodes,
     firstNodes.push_back(7);
   } else if (variant == Variant::StemHole) {
     firstNodes.insert(firstNodes.begin(), 7);
+  } else if (variant == Variant::SingleMeasurement) {
+    firstNodes = {0};
   }
   std::size_t lastMeasurement = kTrackIndexInvalid;
   std::size_t sharedIndex = kTrackIndexInvalid;
@@ -262,7 +272,7 @@ Tracklets buildTracklets(Container& tc, const std::vector<Node>& nodes,
   }
   first.linkForward();
   BOOST_REQUIRE(
-      MbfSmoother()(gctx, tc.trackStateContainer(), lastMeasurement).ok());
+      first_smoother_t{}(gctx, tc.trackStateContainer(), lastMeasurement).ok());
 
   auto shared = tc.trackStateContainer().getTrackState(sharedIndex);
   BOOST_REQUIRE(shared.hasSmoothed());
@@ -512,6 +522,110 @@ BOOST_AUTO_TEST_CASE(ConditioningRejectsStateOffTheChain) {
       tracklets.first.tipIndex(), tracklets.shared.smoothed(),
       tracklets.shared.smoothedCovariance());
   BOOST_CHECK(!res.ok());
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(ConditioningPreservesFilterHistory,
+                              first_smoother_t, Smoothers) {
+  for (const auto variant : {Variant::Base, Variant::SingleMeasurement}) {
+    const auto nodes = makeModel(variant);
+    Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+    auto t = buildTracklets<first_smoother_t>(tc, nodes, variant);
+    std::map<std::size_t, std::pair<BoundVector, BoundMatrix>> predicted;
+    std::map<std::size_t, std::pair<BoundVector, BoundMatrix>> filtered;
+    for (const auto& ts : t.first.trackStatesReversed()) {
+      predicted[ts.index()] = {ts.predicted(), ts.predictedCovariance()};
+      filtered[ts.index()] = {ts.filtered(), ts.filteredCovariance()};
+    }
+    BOOST_REQUIRE(
+        TrackletJoiner{}.joinInPlace(gctx, t.first, t.shared, t.second).ok());
+    checkJoinedAgainstDense(t.first, t.nodeOfState, {}, nodes, 1e-9,
+                            variant == Variant::Base ? 7 : 4);
+    for (const auto& [index, estimate] : filtered) {
+      auto ts = tc.trackStateContainer().getTrackState(index);
+      CHECK_CLOSE_ABS(ts.filtered(), estimate.first, 0.);
+      CHECK_CLOSE_ABS(ts.filteredCovariance(), estimate.second, 0.);
+      CHECK_CLOSE_ABS(ts.predicted(), predicted.at(index).first, 0.);
+      CHECK_CLOSE_ABS(ts.predictedCovariance(), predicted.at(index).second, 0.);
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(JoinBuildsMissingForwardLinks) {
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = buildTracklets(tc, makeModel(Variant::Base), Variant::Base);
+  // appendTrackState and the smoothers do not create forward links.
+  for (auto ts : t.first.trackStatesReversed()) {
+    ts.component<TrackIndexType>(detail_tp::kNextKey) = kTrackIndexInvalid;
+  }
+  t.first.stemIndex() = kTrackIndexInvalid;
+  BOOST_REQUIRE(
+      TrackletJoiner{}.joinInPlace(gctx, t.first, t.shared, t.second).ok());
+  std::vector<std::size_t> backward;
+  for (const auto& ts : t.first.trackStatesReversed()) {
+    backward.push_back(ts.index());
+  }
+  std::vector<std::size_t> forward;
+  for (const auto& ts : t.first.trackStates()) {
+    forward.push_back(ts.index());
+  }
+  std::ranges::reverse(backward);
+  BOOST_CHECK_EQUAL_COLLECTIONS(forward.begin(), forward.end(),
+                                backward.begin(), backward.end());
+}
+
+BOOST_AUTO_TEST_CASE(JoinEmptySecondPassKeepsStatesAndTargetEstimate) {
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = buildTracklets(tc, makeModel(Variant::Base), Variant::Base);
+  auto second = tc.makeTrack();
+  second.copyFromWithoutStates(t.first);
+  const auto target = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+  second.setReferenceSurface(target);
+  second.parameters() = kPriorMean;
+  second.covariance() = kPriorCov;
+  const auto tip = t.first.tipIndex();
+  const auto stem = t.first.stemIndex();
+  std::vector<std::pair<BoundVector, BoundMatrix>> before;
+  for (const auto& ts : t.first.trackStatesReversed()) {
+    before.emplace_back(ts.smoothed(), ts.smoothedCovariance());
+  }
+  TrackletJoiner joiner;
+  auto copy = joiner.joinCopy(gctx, tc, t.first, t.shared, second);
+  BOOST_REQUIRE(copy.ok());
+  BOOST_REQUIRE(joiner.joinInPlace(gctx, t.first, t.shared, second).ok());
+  BOOST_CHECK_EQUAL(t.first.tipIndex(), tip);
+  BOOST_CHECK_EQUAL(t.first.stemIndex(), stem);
+  for (const auto& joined : {t.first, *copy}) {
+    BOOST_CHECK_EQUAL(&joined.referenceSurface(), target.get());
+    CHECK_CLOSE_ABS(joined.parameters(), kPriorMean, 0.);
+    CHECK_CLOSE_ABS(joined.covariance(), kPriorCov, 0.);
+    BOOST_REQUIRE_EQUAL(joined.nTrackStates(), before.size());
+    std::size_t i = 0;
+    for (const auto& ts : joined.trackStatesReversed()) {
+      CHECK_CLOSE_ABS(ts.smoothed(), before[i].first, 0.);
+      CHECK_CLOSE_ABS(ts.smoothedCovariance(), before[i].second, 0.);
+      ++i;
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(RejectInvalidCovariances) {
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = buildTracklets(tc, makeModel(Variant::Base), Variant::Base);
+  for (double variance : {0., -1., std::numeric_limits<double>::quiet_NaN(),
+                          std::numeric_limits<double>::infinity()}) {
+    BoundMatrix cov = BoundMatrix::Identity();
+    cov(eBoundLoc0, eBoundLoc0) = variance;
+    t.shared.smoothedCovariance() = cov;
+    t.shared.predictedCovariance() = cov;
+    BOOST_CHECK(!detail::makeSharedStateCondition(
+                     AnyConstTrackStateProxy{t.shared}, kPriorMean, kPriorCov,
+                     getDummyLogger())
+                     .ok());
+    BOOST_CHECK(!detail::smoothPriorNode(AnyConstTrackStateProxy{t.shared},
+                                         kPriorMean, kPriorCov,
+                                         getDummyLogger())
+                     .ok());
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

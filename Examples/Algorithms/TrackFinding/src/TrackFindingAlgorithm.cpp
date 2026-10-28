@@ -509,6 +509,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
       // number of second tracks found
       std::size_t nSecond = 0;
+      bool joinedInPlace = false;
 
       // Set the seed number, this number decrease by 1 since the seed number
       // has already been updated
@@ -572,6 +573,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 }
                 auto secondTrackCopy = tracksTemp.makeTrack();
                 secondTrackCopy.copyFrom(secondTrack);
+                joinedInPlace = true;
                 auto res = m_trackletJoiner.joinInPlace(
                     ctx.recoGeoContext, trackCandidate, firstMeasurement,
                     secondTrackCopy, logger());
@@ -616,6 +618,19 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
       // if no second track was found, we will use only the first track
       if (nSecond == 0) {
+        // A failed in-place join or subsequent extrapolation may have changed
+        // the states. Rebuild the first pass before using it as a fallback.
+        if (joinedInPlace) {
+          trackCandidate.copyFrom(firstTrack);
+          auto res =
+              Acts::smoothTrack(ctx.recoGeoContext, trackCandidate, logger());
+          if (!res.ok()) {
+            m_nFailedSmoothing++;
+            ACTS_ERROR("Restoring the first pass for seed "
+                       << iSeed << " failed with error " << res.error());
+            continue;
+          }
+        }
         // restore the track to the original state
         auto tipIndex = trackCandidate.tipIndex();
         auto stemIndex = trackCandidate.stemIndex();

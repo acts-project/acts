@@ -29,6 +29,13 @@
 
 namespace Acts::detail {
 
+/// Write a smoothed estimate without changing aliased filter history.
+/// @param ts The state to update
+/// @param mean The smoothed parameters
+/// @param cov The smoothed covariance
+void setSmoothedWithoutSharing(AnyMutableTrackStateProxy ts, BoundVector mean,
+                               BoundMatrix cov);
+
 /// One smoothing step from the first state of a smoothed segment onto the
 /// prior node it was predicted from, in the Rauch-Tung-Striebel gain form of
 /// the @ref Acts::GainMatrixSmoother: `G = P F^T Pp^-1`,
@@ -62,7 +69,7 @@ struct SharedStateCondition {
 /// @param newCov Its covariance
 /// @param logger The logger
 /// @return The terms, or `KalmanFitterError::SmoothFailed` if the shared
-///         covariance is not positive definite
+///         covariance is not positive definite or the terms are not finite
 Result<SharedStateCondition> makeSharedStateCondition(
     const AnyConstTrackStateProxy& shared, const BoundVector& newMean,
     const BoundMatrix& newCov, const Logger& logger);
@@ -102,9 +109,10 @@ Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
 /// smoothed. Each state is updated by its regression on the shared state,
 /// `x_k += L_k (x_s' - x_s)`, `P_k += L_k (P_s' - P_s) L_k^T`, which is the
 /// exact linear-Gaussian update for information that enters through the
-/// shared state. `L_k` is the sensitivity of the smoothed state to the prior
-/// mean of the segment, computed in the modified Bryson-Frazier form with a
-/// forward sweep over @ref filteredSensitivity and a backward sweep over
+/// shared state. `L_k = T_k Pp_s Ps_s^-1`, where `T_k` is the sensitivity of
+/// the smoothed state to the prior mean of the segment, computed in the
+/// modified Bryson-Frazier form with a forward sweep over
+/// @ref filteredSensitivity and a backward sweep over
 /// @ref conditionTrackState.
 ///
 /// States before the shared state get a plain smoothing step from the new
@@ -192,8 +200,7 @@ Result<void> conditionSmoothedStatesOnSharedState(
     }
   }
 
-  shared.smoothed() = newMean;
-  shared.smoothedCovariance() = newCov;
+  setSmoothedWithoutSharing(AnyMutableTrackStateProxy{shared}, newMean, newCov);
 
   if (shared.hasPrevious()) {
     GainMatrixSmoother smoother;

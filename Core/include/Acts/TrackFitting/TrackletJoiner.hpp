@@ -40,11 +40,14 @@ namespace Acts {
 /// (`detail::conditionSmoothedStatesOnSharedState`); then the chains are linked
 /// (`detail::linkTrackletBehind`).
 ///
-/// Afterwards every state on the chain holds smoothed parameters with both
-/// tracklets. States of the first tracklet before the shared state leave the
-/// chain. The predicted and filtered history stays in two filter orders, so a
+/// With smoothing and conditioning enabled, the smoothed states hold both
+/// tracklets. Unsmoothed trailing states of the first tracklet stay unchanged.
+/// States of the first tracklet before the shared state leave the chain.
+/// The predicted and filtered history stays in two filter orders, so a
 /// later smoother over the joined chain is invalid. The track-level data is
 /// taken from the second tracklet.
+/// If the second tracklet has no states, only its track-level data is copied;
+/// this covers propagation to the target without another detector surface.
 class TrackletJoiner {
  public:
   /// Configuration
@@ -70,6 +73,8 @@ class TrackletJoiner {
 
   /// Join in place: the first tracklet becomes the joined track. It must own
   /// its states; with several second tracklets use @ref joinCopy.
+  /// Both tracklets must use the same trajectory and own disjoint states.
+  /// On failure, smoothed states may already have been modified.
   ///
   /// @tparam smoother_t The smoother for the second tracklet
   /// @tparam track_proxy_t The track proxy type
@@ -89,8 +94,16 @@ class TrackletJoiner {
     auto& trajectory = first.container().trackStateContainer();
 
     if (second.tipIndex() == kTrackIndexInvalid) {
-      ACTS_DEBUG("Second tracklet has no states");
-      return KalmanFitterError::SmoothFailed;
+      // An empty second pass can still carry the estimate at the target.
+      if (first.stemIndex() == kTrackIndexInvalid) {
+        first.linkForward();
+      }
+      const auto tipIndex = first.tipIndex();
+      const auto stemIndex = first.stemIndex();
+      first.copyFromWithoutStates(second);
+      first.tipIndex() = tipIndex;
+      first.stemIndex() = stemIndex;
+      return Result<void>::success();
     }
     if (!sharedState.hasSmoothed()) {
       ACTS_DEBUG("Shared state " << sharedState.index()
@@ -131,10 +144,13 @@ class TrackletJoiner {
         return res.error();
       }
     } else {
-      sharedState.smoothed() = sharedMean;
-      sharedState.smoothedCovariance() = sharedCov;
+      detail::setSmoothedWithoutSharing(AnyMutableTrackStateProxy{sharedState},
+                                        sharedMean, sharedCov);
     }
 
+    if (first.stemIndex() == kTrackIndexInvalid) {
+      first.linkForward();
+    }
     const auto tipIndex = first.tipIndex();
     detail::linkTrackletBehind(sharedState, second, m_cfg.invertJacobians);
     first.copyFromWithoutStates(second);
