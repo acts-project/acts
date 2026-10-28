@@ -20,6 +20,13 @@
 
 namespace Acts {
 
+void PortalDesignatorBlueprintNode::visitBuiltVolumes(
+    const std::function<void(Volume&)>& visitor) {
+  for (auto& child : children()) {
+    child.visitBuiltVolumes(visitor);
+  }
+}
+
 namespace detail {
 class PortalDesignatorBlueprintNodeImpl {
  public:

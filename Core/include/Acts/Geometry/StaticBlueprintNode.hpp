@@ -25,6 +25,9 @@ namespace Acts {
 ///   overwritten with the one configured on this node, regardless of content.
 class StaticBlueprintNode : public BlueprintNode {
  public:
+  /// @copydoc BlueprintNode::visitBuiltVolumes
+  void visitBuiltVolumes(const std::function<void(Volume&)>& visitor) override;
+
   /// Construct the static node from an existing volume
   /// @param volume The volume to wrap
   explicit StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume);

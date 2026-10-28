@@ -385,6 +385,14 @@ Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
 }
 
+void Surface::setTransform(const Transform3& transform) {
+  if (m_placement != nullptr) {
+    throw std::runtime_error(
+        "Surface::setTransform: Cannot overwrite an external placement");
+  }
+  m_transform = std::make_unique<Transform3>(transform);
+}
+
 void Surface::assignSurfacePlacement(const SurfacePlacementBase& placement) {
   m_placement = &placement;
   // resetting the transform as it will be handled through the detector element

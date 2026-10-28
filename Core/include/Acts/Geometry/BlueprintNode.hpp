@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
 
+#include <functional>
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -90,6 +91,8 @@ class BlueprintNode {
                         const GeometryContext& gctx,
                         const Logger& logger = Acts::getDummyLogger()) = 0;
 
+  /// An optional global placement is applied through visitBuiltVolumes after
+  /// build completes and before this phase starts.
   /// This method is called during the *connect* phase. This phase handles the
   /// creation and connection of *portals* (instances of @ref Acts::PortalLinkBase).
   /// After the build-phase has completed, the volume sizes are **final**. Each
@@ -112,6 +115,15 @@ class BlueprintNode {
   virtual PortalShellBase& connect(
       const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) = 0;
+
+  /// Visit volumes owned by this node and its children after build and before
+  /// connect. Include temporary stack and gap volumes. Existing tracking-volume
+  /// substructure is traversed by the caller, not by this method.
+  /// @param visitor Callback invoked for each built volume
+  /// @note Custom nodes must override this to support global placement. The
+  ///       default implementation throws rather than silently omitting
+  ///       geometry.
+  virtual void visitBuiltVolumes(const std::function<void(Volume&)>& visitor);
 
   /// This method is called during the *finalize* phase. This phase handles:
   ///

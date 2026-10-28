@@ -14,6 +14,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
+#include <optional>
+
 namespace Acts {
 
 class GeometryContext;
@@ -62,6 +64,15 @@ class Blueprint : public BlueprintNode {
     /// that equivalent bounds are instantiated only once & recycled
     /// across the geometry components
     bool boundDeduplication{true};
+    /// Optional rigid placement applied after sizing, before portal connection
+    /// and navigation-policy construction. Transforms are left-multiplied by
+    /// this transform, including the world. Shared objects are placed once.
+    /// External alignment placements, pre-existing portals/navigation policies/
+    /// volume lookups,
+    /// and legacy layer/volume arrays or dense volumes are unsupported and
+    /// rejected before any placement is applied. Custom nodes must implement
+    /// BlueprintNode::visitBuiltVolumes.
+    std::optional<Transform3> globalTransform;
   };
 
   /// Constructor from a config object

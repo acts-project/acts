@@ -186,6 +186,12 @@ class Surface : public virtual GeometryObject,
   /// @return the contextual transform
   const Transform3& localToGlobalTransform(const GeometryContext& gctx) const;
 
+  /// Set the transform of a surface with a fixed placement during construction.
+  /// @param transform The new local-to-global transform
+  /// @throws std::runtime_error If the surface has an external placement
+  /// @note Call before creating navigation caches or other derived geometry.
+  void setTransform(const Transform3& transform);
+
   /// Return method for the surface center
   /// @note the center is always recalculated in order to not keep a cache
   ///
