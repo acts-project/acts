@@ -29,6 +29,8 @@ namespace Acts::detail {
 /// below bound the perturbation, not its error. Neighbor coverage and policy
 /// validity remain the caller's responsibility.
 ///
+/// @tparam Quadratic Experimental local-parabola solve for comparison; the
+/// default uses the first-order correction described above
 /// @param surface Surface to intersect (correction supports plane, disc, cylinder)
 /// @param gctx Geometry context
 /// @param position Starting global position
@@ -37,11 +39,19 @@ namespace Acts::detail {
 /// @param boundaryTolerance Bounds tolerance at the corrected crossing
 /// @param tolerance On-surface tolerance
 /// @return Corrected intersections, with original ray branch indices
+// Experimental comparison mode; navigation retains the first-order default.
+// Quadratic solves the local parabola against the seed tangent plane, not the
+// full helix (nor the full curved surface for cylinders).
+template <bool Quadratic = false>
 inline MultiIntersection3D intersectWithCurvature(
     const Surface& surface, const GeometryContext& gctx,
     const Vector3& position, const Vector3& direction, const Vector3& curvature,
     const BoundaryTolerance& boundaryTolerance,
     double tolerance = s_onSurfaceTolerance) {
+  if constexpr (!Quadratic) {
+    return surface.intersect(gctx, position, direction, curvature,
+                             boundaryTolerance, tolerance);
+  }
   const auto straight = [&] {
     return surface.intersect(gctx, position, direction, boundaryTolerance,
                              tolerance);
@@ -98,11 +108,29 @@ inline MultiIntersection3D intersectWithCurvature(
     // trajectory is quadratic in path length, the intersection correction is
     // only first order in curvature; no quadratic root equation is solved.
     const Vector3 delta = (0.5 * s * s) * curvature;
-    const double ds = -normal.dot(delta) / incidence;
+    double ds = -normal.dot(delta) / incidence;
+    if constexpr (Quadratic) {
+      // Retain all terms of the local parabola in the tangent-plane equation:
+      // a*ds^2 + b*ds + c = 0, where a = n.k/2,
+      // b = n.t + 2*a*s, c = a*s^2. Select the root continuous with ds = 0
+      // as k -> 0, using the rationalized formula to avoid cancellation.
+      const double a = 0.5 * normal.dot(curvature);
+      const double b = incidence + 2. * a * s;
+      const double c = normal.dot(delta);
+      const double discriminant = b * b - 4. * a * c;
+      if (discriminant < 0. || b * incidence <= 0.) {
+        return straight().at(index);
+      }
+      ds = -2. * c / (b + std::copysign(std::sqrt(discriminant), b));
+    }
     if (!std::isfinite(ds) || std::abs(ds) > 0.2 * std::abs(s)) {
       return straight().at(index);
     }
     Vector3 crossing = seed.position() + delta + ds * direction;
+    if constexpr (Quadratic) {
+      crossing = position + (s + ds) * direction +
+                 (0.5 * (s + ds) * (s + ds)) * curvature;
+    }
     if (surface.type() == Surface::Cylinder) {
       // The correction lies on the tangent plane, which is the exact support
       // surface for planes/discs but only a local approximation for cylinders.

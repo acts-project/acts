@@ -11,7 +11,6 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/detail/CurvatureIntersection.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
@@ -63,9 +62,9 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     // new trajectory no longer reaches this candidate.
     candidate.intersection() = Intersection3D::Invalid();
     // Intersect the surface
-    auto multiIntersection = detail::intersectWithCurvature(
-        surface, gctx, position, direction, queryPoint.curvature,
-        candidate.boundaryTolerance(), onSurfaceTolerance);
+    auto multiIntersection =
+        surface.intersect(gctx, position, direction, queryPoint.curvature,
+                          candidate.boundaryTolerance(), onSurfaceTolerance);
 
     bool firstValid = multiIntersection.at(0).isValid();
     bool secondValid = multiIntersection.at(1).isValid();
@@ -149,10 +148,9 @@ bool NavigationStream::update(const GeometryContext& gctx,
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
     // (re-)Intersect the surface
-    auto multiIntersection = detail::intersectWithCurvature(
-        surface, gctx, queryPoint.position, queryPoint.direction,
-        queryPoint.curvature, candidate.boundaryTolerance(),
-        onSurfaceTolerance);
+    auto multiIntersection = surface.intersect(
+        gctx, queryPoint.position, queryPoint.direction, queryPoint.curvature,
+        candidate.boundaryTolerance(), onSurfaceTolerance);
     // Split them into valid intersections
     for (auto [intersectionIndex, intersection] :
          enumerate(multiIntersection)) {

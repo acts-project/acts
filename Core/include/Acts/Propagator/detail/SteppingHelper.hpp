@@ -13,7 +13,6 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/detail/CurvatureIntersection.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -90,10 +89,10 @@ IntersectionStatus updateSingleSurfaceStatus(
                << surface.geometryId() << " index " << static_cast<int>(index));
 
   auto sIntersection =
-      detail::intersectWithCurvature(
-          surface, state.options.geoContext, stepper.position(state),
-          direction * stepper.direction(state), curvature, boundaryTolerance,
-          surfaceTolerance)
+      surface
+          .intersect(state.options.geoContext, stepper.position(state),
+                     direction * stepper.direction(state), curvature,
+                     boundaryTolerance, surfaceTolerance)
           .at(index);
 
   // The intersection is on surface already
