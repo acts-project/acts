@@ -19,10 +19,8 @@ inline void take_the_picture(const vecmem::jagged_device_vector<unsigned short>:
     constexpr int wedge_height = 7000;
 
     assert(width > 0 && height > 0);
-
-    const unsigned int col = index / device::N_ROWS;
-    const unsigned int row = index % device::N_ROWS;
-
+    
+    const auto [col, row] = get_col_row<device::N_COLS, device::N_ROWS>(index);
     const int center_x = static_cast<int>(col);
     const int center_y = static_cast<int>(row);
 

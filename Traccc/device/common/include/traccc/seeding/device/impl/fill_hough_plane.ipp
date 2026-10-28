@@ -7,31 +7,6 @@
 
 namespace traccc::device {
 
-TRACCC_HOST_DEVICE
-inline unsigned short count_bits(unsigned long long x) {
-	unsigned short nOnes = 0;
-	for (int i(0); i<64; ++i) {
-	   if ((x & (1ULL << i)) != 0ULL) ++nOnes;
-	}
-	return nOnes;
-}
-
-TRACCC_HOST_DEVICE
-int quant(scalar min, scalar max, unsigned nSteps, scalar val) {
-  return static_cast<int>((val - min) / (max - min) * nSteps);
-}
-
-TRACCC_HOST_DEVICE
-scalar transform(const scalar qopt_value,
-                 const scalar r,
-                 const scalar phi,
-		 const scalar magnetic_field_z) {
-    const scalar d0 = 0;
-    scalar phi_value = asin(0.50f * r * magnetic_field_z * qopt_value - d0 / r) + phi;
-    ::remainderf(phi_value, 2.00f * std::numbers::pi_v<scalar>);
-    return phi_value;
-}
-
 template<typename T,
 	unsigned int N_COLS,
 	unsigned int N_ROWS>
@@ -72,84 +47,12 @@ void ranges(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device
 }
 
 
-template <typename bfield_t,
-    typename T,
-    unsigned int N_COLS,
-    unsigned int N_ROWS>
-TRACCC_HOST_DEVICE
-void fill_hough_plane_by_column(const global_index_t globalIndex,
-                const bfield_t& bfield,
-                const edm::spacepoint_collection::const_view::size_type n_spacepoints,
-                const edm::spacepoint_collection::const_view& spacepoints_view,
-                const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association_view,
-                const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id_view,
-                const vecmem::data::vector_view<scalar>& spacepoint_r_view,
-                const vecmem::data::vector_view<scalar>& spacepoint_phi_view,
-                typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes_view) {
-    typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device houghplanes(houghplanes_view);
-    if (globalIndex >= N_COLS * houghplanes.size()) return;
-    
-    unsigned long long n_col = globalIndex / houghplanes.size();
-    unsigned long long n_wedge = globalIndex % houghplanes.size();
-
-    const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
-    const vecmem::device_vector<unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);
-    const vecmem::device_vector<unsigned long long> spacepoint_detector_id(spacepoint_detector_id_view);
-    const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
-    const vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
-
-    unsigned long long column_values[N_ROWS] {};
-    unsigned long long wedge_bit = (1ULL << n_wedge);
-
-    for (unsigned int i(0); i<spacepoints.size(); ++i) {
-	    // space point is not contributing to this wedge
-	    if ((spacepoint_wedge_association[i] & wedge_bit) == 0ULL) continue;
-	    const auto covfie_field_at_sp = bfield.at(spacepoints.x()[i], spacepoints.y()[i], spacepoints.z()[i]);
-
-	    // Get the range
-	    scalar min_value_phi = transform(houghplanes.edges_x()[n_col], spacepoint_r[i], spacepoint_phi[i], covfie_field_at_sp[2]);
-            scalar max_value_phi = transform(houghplanes.edges_x()[n_col + 1], spacepoint_r[i], spacepoint_phi[i], covfie_field_at_sp[2]);
-            if (min_value_phi > max_value_phi) std::swap(min_value_phi, max_value_phi);
-
-            // out of bounds
-            if (min_value_phi < houghplanes.edges_y()[0] ||
-                max_value_phi > houghplanes.edges_y()[N_ROWS]) continue;
-	    
-            unsigned int phi_bin_min = quant(houghplanes.edges_y()[0],
-                                         houghplanes.edges_y()[N_ROWS],
-                                         N_ROWS,
-                                         min_value_phi);
-            unsigned int phi_bin_max = quant(houghplanes.edges_y()[0],
-                                         houghplanes.edges_y()[N_ROWS],
-                                         N_ROWS,
-                                         max_value_phi) + 1;
-
-            // Clamp bins
-            if (phi_bin_max > N_ROWS) phi_bin_max = N_ROWS;
-            const unsigned int diff_phi = phi_bin_max - phi_bin_min;
-
-	    if (diff_phi < N_ROWS / 2) {
-		    for (unsigned int idx(phi_bin_min); idx < phi_bin_max; ++idx) column_values[idx] |= wedge_bit;
-	    } else {
-		    for (unsigned int idx(0); idx < phi_bin_min; ++idx) column_values[idx] |= wedge_bit;
-		    for (unsigned int idx(phi_bin_max); idx < N_ROWS; ++idx) column_values[idx] |= wedge_bit;
-	    }
-    } // loop on space points
-
-    // Fill the plane
-    for (unsigned int i(0); i<N_ROWS; ++i) {
-	    unsigned short value = count_bits(column_values[i]);
-	    houghplanes.plane()[n_wedge][globalIndex + i] = value;
-    }
-}
-
-
 template<typename bfield_t,
     typename T,
     unsigned int N_COLS,
     unsigned int N_ROWS>
 TRACCC_HOST_DEVICE
-void fill_hough_plane_by_bin(const global_index_t globalIndex,
+void fill_hough_plane(const global_index_t globalIndex,
                 const bfield_t& bfield,
                 const edm::spacepoint_collection::const_view::size_type n_spacepoints,
                 const edm::spacepoint_collection::const_view& spacepoints_view,
@@ -168,8 +71,7 @@ void fill_hough_plane_by_bin(const global_index_t globalIndex,
     const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
     const vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
 
-    const unsigned int x_bin = globalIndex / N_ROWS;
-    const unsigned int y_bin  = globalIndex % N_ROWS;
+    const auto [x_bin, y_bin] = get_col_row<N_COLS, N_ROWS>(globalIndex);
 
     // given the bin, take the edges in both dimensions
     const scalar min_x = houghplanes.edges_x()[x_bin];
@@ -199,33 +101,6 @@ void fill_hough_plane_by_bin(const global_index_t globalIndex,
 	    unsigned short value = count_bits(binContents[wedge_idx]);
 	    houghplanes.plane()[wedge_idx][globalIndex] = value;
     }
-}
-
-
-template <typename bfield_t,
-    typename T,
-    unsigned int N_COLS,
-    unsigned int N_ROWS>
-TRACCC_HOST_DEVICE
-void fill_hough_plane(const global_index_t globalIndex,
-                const bfield_t& bfield,
-                const edm::spacepoint_collection::const_view::size_type n_spacepoints,
-                const edm::spacepoint_collection::const_view& spacepoints_view,
-                const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association_view,
-                const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id_view,
-                const vecmem::data::vector_view<scalar>& spacepoint_r_view,
-                const vecmem::data::vector_view<scalar>& spacepoint_phi_view,
-                typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes_view) {
-        // fill_hough_plane_by_column<bfield_t, T, N_COLS, N_ROWS>(globalIndex,
-	fill_hough_plane_by_bin<bfield_t, T, N_COLS, N_ROWS>(globalIndex,
-                        bfield,
-                        n_spacepoints,
-                        spacepoints_view,
-                        spacepoint_wedge_association_view,
-                        spacepoint_detector_id_view,
-                        spacepoint_r_view,
-                        spacepoint_phi_view,
-                        houghplanes_view);
 }
 
 } // namespace

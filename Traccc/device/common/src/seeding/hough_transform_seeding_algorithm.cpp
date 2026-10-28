@@ -157,7 +157,7 @@ auto hough_transform_seeding_algorithm::operator()(
                        maxima_global_index,
                        images});
 
-  
+ /* 
   edm::houghplane_collection<scalar, 32, 32>::const_view host_view;
   edm::houghplane_collection<scalar, 32, 32>::buffer host_buffer;
   if (mr().host) {
@@ -177,7 +177,7 @@ auto hough_transform_seeding_algorithm::operator()(
       std::cout << std::endl;
   }
   std::cout << std::endl;
-
+*/
   synchronize();
 
   // Return the result.

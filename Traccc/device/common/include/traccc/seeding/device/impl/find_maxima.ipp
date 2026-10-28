@@ -21,9 +21,7 @@ void find_maxima(const global_index_t globalIndex,
     const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device houghplanes(houghplanes_view);
     vecmem::jagged_device_vector<global_index_t> maxima_index(maxima_index_view);
 
-    const long long col = globalIndex % N_ROWS;
-    const long long row = globalIndex / N_ROWS;
-
+    const auto [col, row] = get_col_row<N_COLS, N_ROWS>(globalIndex);
     for (unsigned int wedge_idx(0); wedge_idx<houghplanes.size(); ++wedge_idx) {
         const auto& plane = houghplanes.plane()[wedge_idx];
         const T value = plane[globalIndex];

@@ -6,6 +6,39 @@
 
 namespace traccc::device {
 
+template <unsigned int N_COLS,
+          unsigned int N_ROWS>
+TRACCC_HOST_DEVICE
+inline std::pair<unsigned int, unsigned int> get_col_row(unsigned long long global_index) {
+    return std::make_pair<unsigned int, unsigned int>(global_index / N_ROWS, 
+                                                      global_index % N_ROWS);
+}
+
+TRACCC_HOST_DEVICE
+inline unsigned short count_bits(unsigned long long x) {
+    unsigned short nOnes = 0;
+    for (int i(0); i<64; ++i) {
+       if ((x & (1ULL << i)) != 0ULL) ++nOnes;
+    }
+    return nOnes;
+}
+
+TRACCC_HOST_DEVICE
+int quant(scalar min, scalar max, unsigned nSteps, scalar val) {
+  return static_cast<int>((val - min) / (max - min) * nSteps);
+}
+
+TRACCC_HOST_DEVICE
+scalar transform(const scalar qopt_value,
+                 const scalar r,
+                 const scalar phi,
+         const scalar magnetic_field_z) {
+    const scalar d0 = 0;
+    scalar phi_value = asin(0.50f * r * magnetic_field_z * qopt_value - d0 / r) + phi;
+    ::remainderf(phi_value, 2.00f * std::numbers::pi_v<scalar>);
+    return phi_value;
+}
+
 template <typename T,
     unsigned int N_COLS,
     unsigned int N_ROWS >
@@ -26,8 +59,11 @@ bool is_local_maximum(const global_index_t globalIndex,
             if (neighbor_col < 0 || neighbor_col >= cols) continue;
 
             const auto neighbor_index =
-                static_cast<unsigned long long>(neighbor_row) * N_COLS +
-                static_cast<unsigned long long>(neighbor_col);
+                static_cast<unsigned long long>(neighbor_col) * N_ROWS +
+                static_cast<unsigned long long>(neighbor_row);
+            //const auto neighbor_index =
+            //    static_cast<unsigned long long>(neighbor_row) * N_COLS +
+              //  static_cast<unsigned long long>(neighbor_col);
 
             if (neighbor_index == globalIndex) continue;
             if (plane[neighbor_index] > value) return false;
