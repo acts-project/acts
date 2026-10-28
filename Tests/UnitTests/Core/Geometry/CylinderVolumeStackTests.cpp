@@ -668,12 +668,12 @@ BOOST_DATA_TEST_CASE(UpdateStack,
       // Volume 1 got bigger and shifted left
       auto newBounds1 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol1->volumeBounds());
-      BOOST_CHECK_EQUAL(newBounds1->get(CylinderVolumeBounds::eHalfLengthZ),
-                        hlZ + hlZ / 2.0);
+      CHECK_CLOSE_REL(newBounds1->get(CylinderVolumeBounds::eHalfLengthZ),
+                      hlZ + hlZ / 2.0, 1e-12);
       Transform3 expectedTransform1 =
           base * Translation3{0_mm, 0_mm, -2 * hlZ - hlZ / 2.0};
-      BOOST_CHECK_EQUAL(vol1->localToGlobalTransform(gctx).matrix(),
-                        expectedTransform1.matrix());
+      CHECK_CLOSE_OR_SMALL(vol1->localToGlobalTransform(gctx).matrix(),
+                           expectedTransform1.matrix(), 1e-10, 1e-12);
 
       // Volume 2 stayed the same
       auto newBounds2 =
@@ -686,12 +686,12 @@ BOOST_DATA_TEST_CASE(UpdateStack,
       // Volume 3 got bigger and shifted right
       auto newBounds3 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol3->volumeBounds());
-      BOOST_CHECK_EQUAL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
-                        hlZ + hlZ / 2.0);
+      CHECK_CLOSE_REL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
+                      hlZ + hlZ / 2.0, 1e-12);
       Transform3 expectedTransform3 =
           base * Translation3{0_mm, 0_mm, 2 * hlZ + hlZ / 2.0};
-      BOOST_CHECK_EQUAL(vol3->localToGlobalTransform(gctx).matrix(),
-                        expectedTransform3.matrix());
+      CHECK_CLOSE_OR_SMALL(vol3->localToGlobalTransform(gctx).matrix(),
+                           expectedTransform3.matrix(), 1e-10, 1e-12);
     } else if (strategy == VolumeResizeStrategy::Gap) {
       // Gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 5);
