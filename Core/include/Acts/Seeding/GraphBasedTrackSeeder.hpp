@@ -15,6 +15,7 @@
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
+#include "Acts/Seeding/GbtsSeedFit.hpp"
 #include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
@@ -24,6 +25,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -47,15 +49,15 @@ class GraphBasedTrackSeeder {
 
     // Seed extraction options
 
-    /// Maximum number of connected-component iterations.
-    std::uint32_t ccaMaxIterations = 15;
+    /// Longest chain of edges taken into account. Edges in longer chains take
+    /// no part in the seed extraction.
+    std::uint32_t maxChainLength = 15;
     /// Chain length a seed candidate must reach: a triplet plus one
     /// confirmation.
     std::uint8_t minSeedLevel = 3;
     /// optionally add 3 sp seeds within a certain eta range
     ///
-    /// @note Worth little until `maxAbsEtaAddTriplets` is opened past
-    ///       `edgeMaskMinEta`; matters most where there are few layers.
+    /// @note Matters most where there are few layers.
     bool addTriplets = false;
     /// the maximum allowed eta value in which
     /// three spacepoint seeds are passed through
@@ -64,8 +66,6 @@ class GraphBasedTrackSeeder {
     std::uint32_t minSplitSeedSize = 4;
     /// Largest seed size that is split.
     std::uint32_t maxSplitSeedSize = 5;
-    /// Minimum eta for edge masking.
-    float edgeMaskMinEta = 1.5;
     /// Threshold for hit sharing between seeds.
     float hitShareThreshold = 0.49;
     /// Max seed eta value considered for splitting.
@@ -150,10 +150,12 @@ class GraphBasedTrackSeeder {
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
-  void createSeeds(GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
-                   const GbtsGraphBuilder& graphBuilder,
-                   const GbtsTrackingFilter& filter, const Options& options,
-                   SeedContainer& outputSeeds) const;
+  /// @param outputFits Fit of the tracking filter to each generated seed
+  void createSeeds(
+      GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
+      const GbtsGraphBuilder& graphBuilder, const GbtsTrackingFilter& filter,
+      const Options& options, SeedContainer& outputSeeds,
+      std::vector<std::optional<GbtsSeedFit>>* outputFits = nullptr) const;
 
  private:
   /// candidate seed metadata produced by the GBTS algorithm.
@@ -177,6 +179,8 @@ class GraphBasedTrackSeeder {
     std::vector<SpacePointIndex> nodes;
     /// Flag for seed splitting.
     bool forSeedSplitting{};
+    /// Fit of the tracking filter.
+    std::optional<GbtsSeedFit> fit;
   };
 
   /// Output seed metadata
@@ -190,6 +194,8 @@ class GraphBasedTrackSeeder {
     float seedQuality{};
     /// Index of spacepoints in seed.
     std::vector<std::uint32_t> spacePoints;
+    /// Fit of the tracking filter.
+    std::optional<GbtsSeedFit> fit;
   };
 
   DerivedConfig m_cfg;
@@ -203,13 +209,24 @@ class GraphBasedTrackSeeder {
 
   /// Extract seed candidates from the graph.
   /// @param nodeStorage Storage containing the graph nodes
-  /// @param graph The graph, after the connected component analysis
+  /// @param graph The graph
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
+  /// @param withFits Whether the fit of the filter to each seed is kept
   void extractSeedsFromTheGraph(const GbtsNodeStorage& nodeStorage,
-                                GbtsGraph& graph,
+                                const GbtsGraph& graph,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
-                                const GbtsTrackingFilter& filter) const;
+                                const GbtsTrackingFilter& filter,
+                                bool withFits) const;
+
+  /// Extract the best fitted path from every edge inwards to a root edge.
+  /// @param nodeView View of the node positions and layers
+  /// @param graph The graph
+  /// @param filter Tracking filter fitting the paths
+  /// @return The fitted paths, each with its head edge first
+  std::vector<detail::GbtsEdgeState> extractBestPathPerEdge(
+      const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
+      const GbtsTrackingFilter& filter) const;
 
   /// Estimate the inverse radius of the circle through three nodes.
   /// @param nodeView View of the node positions and layers

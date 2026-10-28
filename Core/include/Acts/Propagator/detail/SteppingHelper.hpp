@@ -8,16 +8,56 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
+#include <concepts>
 #include <limits>
 
 namespace Acts::detail {
+
+/// Calculate geometric curvature from the current state and local field.
+/// @param stepper Stepper providing position, direction, q/p and field
+/// @param state Current stepping state; its field cache may be updated
+/// @return Global curvature in inverse length, or a field lookup error
+template <typename Stepper>
+Result<Vector3> magneticCurvature(const Stepper& stepper,
+                                  typename Stepper::State& state) {
+  const double qOverP = stepper.qOverP(state);
+  // Zero q/p implies no bending and does not require a field lookup.
+  if (qOverP == 0.) {
+    return Result<Vector3>::success(Vector3::Zero());
+  }
+  const auto field = stepper.getField(state, stepper.position(state));
+  if (!field.ok()) {
+    return Result<Vector3>::failure(field.error());
+  }
+  return Result<Vector3>::success(qOverP *
+                                  stepper.direction(state).cross(*field));
+}
+
+/// Prefer a stepper's curvature accessor, with compatibility for older
+/// steppers.
+/// @param stepper Stepper to query
+/// @param state Current stepping state
+/// @return Global curvature in inverse length, or a field lookup error
+template <typename Stepper>
+Result<Vector3> getCurvature(const Stepper& stepper,
+                             typename Stepper::State& state) {
+  if constexpr (requires {
+                  { stepper.curvature(state) } -> std::same_as<Result<Vector3>>;
+                }) {
+    return stepper.curvature(state);
+  } else {
+    return magneticCurvature(stepper, state);
+  }
+}
 
 /// Update surface status - Single component
 ///

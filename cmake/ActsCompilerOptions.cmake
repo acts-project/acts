@@ -44,8 +44,8 @@ if(
     set(cxx_flags "${cxx_flags} -Wnull-dereference")
 endif()
 
-set(ACTS_CXX_STANDARD 20)
-set(ACTS_CXX_STANDARD_FEATURE cxx_std_20)
+set(ACTS_CXX_STANDARD 23)
+set(ACTS_CXX_STANDARD_FEATURE cxx_std_23)
 if(DEFINED CMAKE_CXX_STANDARD)
     if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
         set(ACTS_CXX_STANDARD ${CMAKE_CXX_STANDARD})

@@ -16,6 +16,7 @@
 #include <cmath>
 #include <limits>
 #include <numbers>
+#include <tuple>
 #include <utility>
 
 namespace Acts::Experimental {
@@ -94,18 +95,19 @@ void GbtsNodeStorage::extend(
 std::vector<std::uint32_t> GbtsNodeStorage::sortBinByPhi(
     const std::vector<std::uint32_t>& staged) const {
   const std::uint32_t nBuckets = m_cfg.phiSortBuckets;
-  std::array<std::vector<std::pair<float, std::uint32_t>>,
-             kMaxPhiSortBuckets + 1>
-      phiBuckets;
+  // Sort key (phi, z, r, staged index). Nodes with identical phi are ordered
+  // by position, so the order does not depend on the input order. Only nodes
+  // at the same position fall back to the insertion index.
+  using SortKey = std::tuple<float, float, float, std::uint32_t>;
+  std::array<std::vector<SortKey>, kMaxPhiSortBuckets + 1> phiBuckets;
 
   for (const std::uint32_t stagedIdx : staged) {
-    const float phi = m_staged[stagedIdx].phi;
+    const StagedNode& node = m_staged[stagedIdx];
     const auto bIdx = static_cast<std::uint32_t>(
-        0.5 * nBuckets * (phi / std::numbers::pi_v<float> + 1.0f));
-    phiBuckets[bIdx].emplace_back(phi, stagedIdx);
+        0.5 * nBuckets * (node.phi / std::numbers::pi_v<float> + 1.0f));
+    phiBuckets[bIdx].emplace_back(node.phi, node.z, node.r, stagedIdx);
   }
 
-  // Nodes with identical phi are ordered by insertion index.
   for (std::uint32_t bucket = 0; bucket <= nBuckets; ++bucket) {
     std::ranges::sort(phiBuckets[bucket]);
   }
@@ -113,8 +115,8 @@ std::vector<std::uint32_t> GbtsNodeStorage::sortBinByPhi(
   std::vector<std::uint32_t> sorted;
   sorted.reserve(staged.size());
   for (std::uint32_t bucket = 0; bucket <= nBuckets; ++bucket) {
-    for (const auto& [phi, stagedIdx] : phiBuckets[bucket]) {
-      sorted.push_back(stagedIdx);
+    for (const SortKey& key : phiBuckets[bucket]) {
+      sorted.push_back(std::get<3>(key));
     }
   }
 

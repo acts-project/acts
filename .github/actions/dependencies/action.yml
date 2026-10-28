@@ -15,14 +15,18 @@ inputs:
     required: false
     default: 'false'
   cxx_std:
-    description: 'C++ standard for lockfile selection (e.g. 20, 23). Defaults to 20.'
+    description: 'C++ standard for lockfile selection (e.g. 20, 23). Defaults to 23.'
     required: false
-    default: '20'
-  # The flavors are published at cxx20 only, so pairing this with cxx_std 23
-  # falls back to the C++20 stack. No job does that today; the selection logs
-  # it if one starts to.
+    default: '23'
+  # v24.5.0 publishes accelerator flavors at cxx23 only. Requests for cxx_std
+  # 20 fall back to the C++23 stack within the requested compiler and flavor;
+  # the selection logs this fallback.
   flavor:
     description: 'Accelerator flavor for lockfile selection (e.g. cuda13, rocm7). Defaults to the plain CPU stack.'
+    required: false
+    default: ''
+  destination:
+    description: 'Dependency installation directory (empty uses the CI default)'
     required: false
     default: ''
   env_file:
@@ -166,19 +170,24 @@ runs:
         FULL_INSTALL: ${{ inputs.full_install }}
         COMPILER: ${{ inputs.compiler }}
         FLAVOR: ${{ inputs.flavor }}
+        DESTINATION: ${{ inputs.destination }}
       run: |
-        args="-e $ENV_FILE"
+        args=(-e "$ENV_FILE")
         if [ "$FULL_INSTALL" == "true" ]; then
           echo "Full install"
-          args="${args} -f"
+          args+=(-f)
         fi
         if [ -n "$COMPILER" ]; then
           echo "With compiler"
-          args="${args} -c $COMPILER"
+          args+=(-c "$COMPILER")
         fi
         if [ -n "$FLAVOR" ]; then
           echo "With flavor $FLAVOR"
-          args="${args} -F $FLAVOR"
+          args+=(-F "$FLAVOR")
         fi
 
-        CI/dependencies/setup.sh $args
+        if [ -n "$DESTINATION" ]; then
+          args+=(-d "$DESTINATION")
+        fi
+
+        CI/dependencies/setup.sh "${args[@]}"

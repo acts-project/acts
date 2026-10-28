@@ -32,7 +32,7 @@ jobs:
       # The supported_python_versions.py helper is itself a uv script, so uv
       # must be available before we can use it to determine the Python floor.
       - name: Set up uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
 
       # Lowest Python version the lockfiles must install on, taken from
       # `requires-python` in pyproject.toml so it is defined in exactly one place

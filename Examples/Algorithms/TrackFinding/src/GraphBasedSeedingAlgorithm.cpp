@@ -40,6 +40,12 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // initialise the space point, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
+  m_outputFreeParameters.maybeInitialize(m_cfg.outputFreeParameters);
+  if (m_outputFreeParameters.isInitialized() &&
+      m_cfg.magneticField == nullptr) {
+    throw std::invalid_argument(
+        "The free parameters of the seeds need a magnetic field");
+  }
   m_inputClusters.initialize(m_cfg.inputClusters);
 
   // parse the mapping file and turn into map
@@ -82,6 +88,14 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // as well as a map that tracks there index in m_layerGeometry
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
+
+  Acts::Experimental::GbtsAdaptiveTauRatioCuts tauRatioCuts =
+      m_cfg.tauRatioCuts;
+  if (!m_cfg.useAdaptiveCuts) {
+    tauRatioCuts.tauRatioCorr = 0.f;
+  }
+  Acts::Experimental::assignAdaptiveTauRatioCuts(connections, layerGeometry,
+                                                 tauRatioCuts);
 
   // initialise the object that holds all the geometry information needed for
   // the algorithm
@@ -153,8 +167,39 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // create the seeds
 
-  m_finder->createSeeds(nodeStorage, m_internalRoi.value(), *m_gbtsGraphBuilder,
-                        *m_filter, options, seeds);
+  std::vector<std::optional<Acts::Experimental::GbtsSeedFit>> fits;
+  m_finder->createSeeds(
+      nodeStorage, m_internalRoi.value(), *m_gbtsGraphBuilder, *m_filter,
+      options, seeds, m_outputFreeParameters.isInitialized() ? &fits : nullptr);
+
+  // free track parameters from the fit of the tracking filter
+  if (m_outputFreeParameters.isInitialized()) {
+    std::vector<Acts::FreeVector> freeParameters;
+    auto fieldCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
+    freeParameters.reserve(seeds.size());
+    for (std::size_t i = 0; i < seeds.size(); ++i) {
+      // zeros for a seed without a fit
+      if (!fits.at(i).has_value()) {
+        freeParameters.push_back(Acts::FreeVector::Zero());
+        continue;
+      }
+      const Acts::Experimental::GbtsSeedFit &fit = fits.at(i).value();
+      // the field halfway between the innermost and outermost space point
+      const auto outer = spacePoints[seeds.at(i).spacePointIndices().back()];
+      const Acts::Vector3 outerPosition(outer.x(), outer.y(), outer.z());
+      const Acts::Vector3 fieldPosition = 0.5 * (fit.position + outerPosition);
+      const auto field =
+          m_cfg.magneticField->getField(fieldPosition, fieldCache);
+      if (!field.ok()) {
+        ACTS_ERROR("Field lookup error: " << field.error());
+        return ProcessCode::ABORT;
+      }
+      freeParameters.push_back(
+          Acts::Experimental::freeParametersFromGbtsSeedFit(fit, *field)
+              .value_or(Acts::FreeVector::Zero()));
+    }
+    m_outputFreeParameters(ctx, std::move(freeParameters));
+  }
 
   m_outputSeeds(ctx, std::move(seeds));
 
@@ -263,6 +308,18 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
     throw std::runtime_error("Invalid barrel/endcap assignment for GbtsLayer");
   }
 
+  // tilt of a plane module in r-z, along which n_r dr + n_z dz = 0
+  float slope = 0.f;
+  if (surface.type() == Acts::Surface::Plane) {
+    const Acts::Vector3 normal =
+        surface.normal(gctx, center, Acts::Vector3::UnitZ());
+    const double nr = normal.head<2>().dot(center.head<2>().normalized());
+    const double nz = normal.z();
+    slope = static_cast<float>(
+        barrelEc == Acts::Experimental::GbtsLayerType::Barrel ? -nz / nr
+                                                              : -nr / nz);
+  }
+
   const auto currentIndex =
       find_if(inputVector.begin(), inputVector.end(),
               [gbtsId](auto n) { return n.id == gbtsId; });
@@ -274,6 +331,7 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
         std::min(inputVector[index].minBound, minBound);
     inputVector[index].maxBound =
         std::max(inputVector[index].maxBound, maxBound);
+    inputVector[index].slope += slope;
     countVector[index] += 1;  // increase count at the index
 
   } else {  // end so doesn't exists
@@ -284,7 +342,8 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
                                                  .technology = find->technology,
                                                  .refCoord = rc,
                                                  .minBound = minBound,
-                                                 .maxBound = maxBound});
+                                                 .maxBound = maxBound,
+                                                 .slope = slope});
     // so the element exists and not divinding by 0
     countVector.push_back(1);
   }
@@ -318,6 +377,10 @@ GraphBasedSeedingAlgorithm::layerNumbering(
 
   for (std::size_t i = 0; i < inputVector.size(); i++) {
     inputVector[i].refCoord = inputVector[i].refCoord / countVector[i];
+    // mean module tilt; below 1e-3 it is rounding in the module placement
+    const float slope = inputVector[i].slope / countVector[i];
+    inputVector[i].slope =
+        m_cfg.useLayerTilt && std::abs(slope) >= 1e-3f ? slope : 0.f;
   }
 
   return inputVector;
@@ -336,12 +399,11 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   const auto &cfg1 = m_cfg.seedFinderConfig;
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
   ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
-  ACTS_DEBUG("edgeMaskMinEta: " << cfg1.edgeMaskMinEta);
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
   ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);
-  ACTS_DEBUG("ccaMaxIterations: " << cfg1.ccaMaxIterations);
+  ACTS_DEBUG("maxChainLength: " << cfg1.maxChainLength);
   ACTS_DEBUG("minSeedLevel: " << static_cast<std::uint32_t>(cfg1.minSeedLevel));
   ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
   ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
@@ -356,14 +418,16 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("maxEdgesPerSP: " << cfg2.maxEdgesPerSP);
   ACTS_DEBUG("minDeltaRadius: " << cfg2.minDeltaRadius);
   ACTS_DEBUG("validateTriplets: " << cfg2.validateTriplets);
-  ACTS_DEBUG("useAdaptiveCuts: " << cfg2.useAdaptiveCuts);
-  ACTS_DEBUG("tauRatioCorr: " << cfg2.tauRatioCorr);
   ACTS_DEBUG("d0Max: " << cfg2.d0Max);
   ACTS_DEBUG("cutDPhiMax: " << cfg2.cutDPhiMax);
   ACTS_DEBUG("cutDCurvMax: " << cfg2.cutDCurvMax);
   ACTS_DEBUG("minZ0: " << cfg2.minZ0);
   ACTS_DEBUG("maxZ0: " << cfg2.maxZ0);
   ACTS_DEBUG("maxOuterRadius: " << cfg2.maxOuterRadius);
+  ACTS_DEBUG("useAdaptiveCuts: " << m_cfg.useAdaptiveCuts);
+  ACTS_DEBUG("tauRatioCut: " << m_cfg.tauRatioCuts.tauRatioCut);
+  ACTS_DEBUG("tauRatioCorr: " << m_cfg.tauRatioCuts.tauRatioCorr);
+  ACTS_DEBUG("tauRatioCorrStrip: " << m_cfg.tauRatioCuts.tauRatioCorrStrip);
   ACTS_DEBUG("===== GbtsTrackFilter =====");
   const auto &cfg3 = m_cfg.trackingFilterConfig;
   ACTS_DEBUG("sigmaMS: " << cfg3.sigmaMS);

@@ -169,7 +169,7 @@ while getopts "c:t:d:e:s:F:fh" opt; do
       echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var, then versions.env)"
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
-      echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 20."
+      echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 23."
       echo "  -F <flavor>      Accelerator flavor (e.g. cuda13, rocm7). Defaults to FLAVOR env var or the host stack."
       echo "  -f               Full dependency installation. Includes Geant4 datasets and Python packages."
       echo "  -h               Show this help message"
@@ -229,7 +229,7 @@ if [ -z "${env_file:-}" ]; then
 fi
 
 if [ -z "${cxx_std:-}" ]; then
-  cxx_std="${CXXSTD:-20}"
+  cxx_std="${CXXSTD:-23}"
 fi
 
 # `host` is the plain CPU stack, published with no flavor token: pass nothing.
@@ -477,7 +477,7 @@ retry_transient uv pip install --python "${venv_dir}/bin/python3" --excludes "$s
 "${venv_dir}/bin/python3" -c 'import yaml, jinja2'
 if [ "${full_install:-false}" == "true" ]; then
   retry_transient uv pip install --python "${venv_dir}/bin/python3" --excludes "$spack_python_excludes" \
-    -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt" histcmp==0.10.0 matplotlib pytest-md-report
+    -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt" histcmp==0.12.0 matplotlib pytest-md-report
 fi
 checkpoint "Python environment prepared"
 end_section

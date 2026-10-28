@@ -104,7 +104,7 @@ with tempfile.TemporaryDirectory() as temp:
             minPt=0.5 * u.GeV,
             impactMax=3 * u.mm,
         ),
-        SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
+        SeedFinderOptionsArg(bFieldInZ=setup.bFieldInZ, beamPos=(0.0, 0.0)),
         seedingAlgorithm=SeedingAlgorithm.GridTriplet,
         initialSigmas=[
             1 * u.mm,

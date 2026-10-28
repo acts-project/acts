@@ -13,8 +13,10 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <numbers>
 #include <span>
@@ -81,12 +83,11 @@ void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
   createSeeds(nodeStorage, roi, graphBuilder, filter, options, outputSeeds);
 }
 
-void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
-                                        const GbtsRoiDescriptor& roi,
-                                        const GbtsGraphBuilder& graphBuilder,
-                                        const GbtsTrackingFilter& filter,
-                                        const Options& options,
-                                        SeedContainer& outputSeeds) const {
+void GraphBasedTrackSeeder::createSeeds(
+    GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
+    const GbtsGraphBuilder& graphBuilder, const GbtsTrackingFilter& filter,
+    const Options& options, SeedContainer& outputSeeds,
+    std::vector<std::optional<GbtsSeedFit>>* outputFits) const {
   ACTS_DEBUG("Loaded " << nodeStorage.numberOfNodes() << " graph nodes");
 
   GbtsGraph graph =
@@ -99,12 +100,9 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
     ACTS_WARNING("Missing edges or edge connections");
   }
 
-  const std::uint32_t maxLevel = graph.runCCA(m_cfg.ccaMaxIterations);
-
-  ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
-
   std::vector<OutputSeedProperties> vOutputSeeds;
-  extractSeedsFromTheGraph(nodeStorage, graph, vOutputSeeds, filter);
+  extractSeedsFromTheGraph(nodeStorage, graph, vOutputSeeds, filter,
+                           outputFits != nullptr);
 
   ACTS_DEBUG("GBTS created " << vOutputSeeds.size() << " seeds");
   if (vOutputSeeds.empty()) {
@@ -116,82 +114,33 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
     auto newSeed = outputSeeds.createSeed();
     newSeed.assignSpacePointIndices(seed.spacePoints);
     newSeed.quality() = seed.seedQuality;
+    if (outputFits != nullptr) {
+      outputFits->push_back(seed.fit);
+    }
   }
 }
 
 void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
-    const GbtsNodeStorage& nodeStorage, GbtsGraph& graph,
+    const GbtsNodeStorage& nodeStorage, const GbtsGraph& graph,
     std::vector<OutputSeedProperties>& vOutputSeeds,
-    const GbtsTrackingFilter& filter) const {
-  std::vector<detail::GbtsEdge*> vChainHeads = graph.extractChainHeads(
-      m_cfg.minSeedLevel, m_cfg.addTriplets, m_cfg.maxAbsEtaAddTriplets);
-
-  if (vChainHeads.empty()) {
-    ACTS_WARNING("No chains passed minimum edge requirement");
-    return;
-  }
-
+    const GbtsTrackingFilter& filter, const bool withFits) const {
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
-  // `addTriplets` accepts a chain one level short. Signed: an uncollected
-  // edge sits at level -1 and `minSeedLevel` may be configured to 0.
-  const std::int8_t minLevelAddTriplets =
-      static_cast<std::int8_t>(m_cfg.minSeedLevel - 1);
-
-  // backtracking
 
   std::vector<SeedCandidateProperties> vSeedCandidates;
 
-  vSeedCandidates.reserve(vChainHeads.size());
-
   std::vector<std::pair<float, std::uint32_t>> vArgSort;
-
-  vArgSort.reserve(vChainHeads.size());
 
   std::uint32_t seedCounter = 0;
 
-  GbtsTrackingFilter::State filterState{};
-
-  for (detail::GbtsEdge* pS : vChainHeads) {
-    if (pS->level == -1) {
-      continue;
-    }
-
-    detail::GbtsEdgeState rs =
-        filter.followTrack(filterState, nodeView, graph.edgeStorage, *pS);
-
-    if (!rs.initialized) {
-      continue;
-    }
-
-    const float seedAbsEta = std::abs(-std::log(pS->p[0]));
-
-    const std::uint32_t chainLength = static_cast<std::uint32_t>(rs.vs.size());
-
-    if (!m_cfg.addTriplets) {
-      if (chainLength < m_cfg.minSeedLevel) {
-        continue;
-      }
-    } else {
-      if (seedAbsEta > m_cfg.maxAbsEtaAddTriplets) {
-        if (chainLength < m_cfg.minSeedLevel) {
-          continue;
-        }
-      } else {
-        if (minLevelAddTriplets > 0 &&
-            chainLength < static_cast<std::uint32_t>(minLevelAddTriplets)) {
-          continue;
-        }
-      }
-    }
+  // Turn the fitted path of every head edge into a seed candidate.
+  for (const detail::GbtsEdgeState& rs :
+       extractBestPathPerEdge(nodeView, graph, filter)) {
+    const detail::GbtsEdge& head = *rs.vs.front();
+    const float seedAbsEta = std::abs(-std::log(head.p[0]));
 
     std::vector<SpacePointIndex> vN;
 
     for (auto sIt = rs.vs.rbegin(); sIt != rs.vs.rend(); ++sIt) {
-      if (seedAbsEta > m_cfg.edgeMaskMinEta) {
-        // mark as collected
-        (*sIt)->level = -1;
-      }
-
       if (sIt == rs.vs.rbegin()) {
         vN.push_back((*sIt)->n1);
       }
@@ -261,6 +210,18 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     }
 
     vSeedCandidates.emplace_back(origSeedQuality, false, vN, seedSplitFlag);
+
+    if (withFits) {
+      // filter state at the innermost node, x' along the first edge (inwards)
+      const double slope2 = 1. + static_cast<double>(rs.x[1]) * rs.x[1];
+      vSeedCandidates.back().fit = GbtsSeedFit{
+          .position = Vector3(rs.refX * rs.c - rs.x[0] * rs.s,
+                              rs.refX * rs.s + rs.x[0] * rs.c, rs.y[0]),
+          // outwards: along -x', with the slope of the state
+          .phi = std::atan2(-rs.s - rs.c * rs.x[1], -rs.c + rs.s * rs.x[1]),
+          .cotTheta = rs.y[1],
+          .curvature = rs.x[2] / (slope2 * std::sqrt(slope2))};
+    }
 
     vArgSort.emplace_back(origSeedQuality, seedCounter);
 
@@ -348,6 +309,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       }
 
       vOutputSeeds.emplace_back(seed.seedQuality, vSpIdx);
+      vOutputSeeds.back().fit = seed.fit;
 
       continue;
     }
@@ -375,6 +337,132 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       vOutputSeeds.emplace_back(seed.seedQuality, newSeed);
     }
   }
+}
+
+std::vector<detail::GbtsEdgeState>
+GraphBasedTrackSeeder::extractBestPathPerEdge(
+    const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
+    const GbtsTrackingFilter& filter) const {
+  const std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+  const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
+  const auto maxLength = static_cast<std::uint32_t>(m_cfg.maxChainLength);
+
+  // The level of an edge is the length of the longest chain of edges going
+  // outwards from it. `vNei` only holds edges further in, which are created
+  // later, so one pass in edge order settles it. Edges in chains longer than
+  // `maxLength` stay above it and are left out.
+  std::vector<std::uint32_t> level(nEdges, 1);
+  for (std::uint32_t e = 0; e < nEdges; ++e) {
+    const detail::GbtsEdge& edge = edgeStorage[e];
+    const std::uint32_t next = std::min(level[e] + 1, maxLength + 1);
+    for (std::uint32_t k = 0; k < edge.nNei; ++k) {
+      std::uint32_t& innerLevel = level[edge.vNei[k]];
+      innerLevel = std::max(innerLevel, next);
+    }
+  }
+
+  // The most edges on a chain from an edge inwards to a root, the edge
+  // included, stepping one level up at a time; zero for an edge left out.
+  // The edges further in come later, so one pass backwards settles it.
+  std::vector<std::uint32_t> edgesToRoot(nEdges, 0);
+  for (std::uint32_t e = nEdges; e-- > 0;) {
+    if (level[e] > maxLength) {
+      continue;
+    }
+    // A root has no settled edge further in exactly one level up: an edge
+    // further in with a longer chain outwards elsewhere does not end the chain
+    const std::uint32_t nextLevel = level[e] + 1;
+    std::uint32_t length = 1;
+    if (nextLevel <= maxLength) {
+      const detail::GbtsEdge& edge = edgeStorage[e];
+      for (std::uint32_t k = 0; k < edge.nNei; ++k) {
+        const std::uint32_t inner = edge.vNei[k];
+        if (level[inner] == nextLevel) {
+          length = std::max(length, edgesToRoot[inner] + 1);
+        }
+      }
+    }
+    edgesToRoot[e] = length;
+  }
+
+  // From every edge, search all paths inwards to a root, fitting on the way.
+  // The complete path with the best score per space point is the candidate
+  // of the edge.
+  std::vector<detail::GbtsEdgeState> candidates;
+  std::uint32_t minLength = 0;
+  std::vector<std::uint32_t> path;
+  std::vector<std::uint32_t> bestPath;
+  float bestQuality = 0;
+  detail::GbtsEdgeState bestState;
+
+  const auto search = [&](const auto& self, const std::uint32_t e,
+                          const detail::GbtsEdgeState& state) -> void {
+    path.push_back(e);
+    // every step goes one level up, so the depth is bounded by `maxLength`
+    assert(path.size() <= maxLength);
+
+    if (edgesToRoot[e] == 1) {
+      // a root completes the chain
+      const float quality = -state.j / static_cast<float>(path.size() + 1);
+      if (path.size() >= minLength && quality < bestQuality) {
+        bestQuality = quality;
+        bestState = state;
+        bestPath = path;
+      }
+    } else {
+      const detail::GbtsEdge& edge = edgeStorage[e];
+      for (std::uint32_t k = 0; k < edge.nNei; ++k) {
+        const std::uint32_t inner = edge.vNei[k];
+        if (level[inner] != level[e] + 1 ||
+            path.size() + edgesToRoot[inner] < minLength) {
+          continue;
+        }
+        detail::GbtsEdgeState innerState = state;
+        if (filter.update(nodeView, edgeStorage[inner], innerState)) {
+          self(self, inner, innerState);
+        }
+      }
+    }
+
+    path.pop_back();
+  };
+
+  for (std::uint32_t head = 0; head < nEdges; ++head) {
+    const detail::GbtsEdge& headEdge = edgeStorage[head];
+
+    // `addTriplets` accepts a path one edge short at low eta
+    minLength = m_cfg.minSeedLevel;
+    if (m_cfg.addTriplets && minLength > 0 &&
+        std::abs(-std::log(headEdge.p[0])) <= m_cfg.maxAbsEtaAddTriplets) {
+      --minLength;
+    }
+
+    if (edgesToRoot[head] == 0 || edgesToRoot[head] < minLength) {
+      continue;
+    }
+
+    detail::GbtsEdgeState state;
+    state.initialize(headEdge, nodeView, filter.m_cfg.initialVarianceX,
+                     filter.m_cfg.initialVarianceY);
+    if (!filter.update(nodeView, headEdge, state)) {
+      continue;
+    }
+
+    bestQuality = std::numeric_limits<float>::max();
+    bestPath.clear();
+    search(search, head, state);
+    if (bestPath.empty()) {
+      continue;
+    }
+
+    bestState.vs.clear();
+    for (const std::uint32_t e : bestPath) {
+      bestState.vs.push_back(&edgeStorage[e]);
+    }
+    candidates.push_back(bestState);
+  }
+
+  return candidates;
 }
 
 float GraphBasedTrackSeeder::estimateCurvature(

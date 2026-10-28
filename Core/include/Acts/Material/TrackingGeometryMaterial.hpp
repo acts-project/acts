@@ -64,6 +64,14 @@ struct TrackingGeometryMaterial {
         volumeMaterials(std::move(volumes)),
         keyedSurfaces(std::move(keyed)) {}
 
+  /// Extract material assignments without modifying the geometry or resolving
+  /// deferred binning. Existing material payloads are shared with the geometry.
+  /// @param geometry Geometry to extract material from
+  /// @param includeNonMaterial Add deferred one-bin proto grids for bare surfaces
+  /// @return Surface (including stable-key) and volume assignments
+  static TrackingGeometryMaterial fromGeometry(const TrackingGeometry& geometry,
+                                               bool includeNonMaterial = false);
+
   /// Unkeyed surface assignments indexed by geometry ID.
   SurfaceMaterialMaps surfaceMaterials{};
   /// Volume assignments indexed by geometry ID.
