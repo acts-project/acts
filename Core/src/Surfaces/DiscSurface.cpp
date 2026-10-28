@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
+#include "Acts/Surfaces/detail/CurvatureCorrection.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
@@ -273,6 +274,53 @@ MultiIntersection3D DiscSurface::intersect(
   // Use the intersection helper for planar surfaces
   const Intersection3D intersection =
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+  IntersectionStatus status = intersection.status();
+  if (status == IntersectionStatus::unreachable) {
+    return MultiIntersection3D(Intersection3D::Invalid());
+  }
+  if (m_bounds == nullptr || boundaryTolerance.isInfinite()) {
+    return MultiIntersection3D(intersection);
+  }
+  // Built-in local to global for speed reasons
+  const auto& tMatrix = gctxTransform.matrix();
+  const Vector3 fromCenter =
+      intersection.position() - tMatrix.block<3, 1>(0, 3);
+  if (m_bounds->coversFullAzimuth() && boundaryTolerance.isNone()) {
+    // avoids `atan2` in case of full phi coverage
+    const double r2 = fromCenter.squaredNorm();
+    const bool isInside =
+        (r2 >= square(m_bounds->rMin())) && (r2 <= square(m_bounds->rMax()));
+    if (!isInside) {
+      status = IntersectionStatus::unreachable;
+    }
+  } else {
+    const Vector2 localCartesian =
+        tMatrix.block<3, 2>(0, 0).transpose() * fromCenter;
+    const bool isInside =
+        insideBounds(localCartesianToPolar(localCartesian), boundaryTolerance);
+    if (!isInside) {
+      status = IntersectionStatus::unreachable;
+    }
+  }
+  return MultiIntersection3D(Intersection3D(intersection.position(),
+                                            intersection.pathLength(), status));
+}
+
+MultiIntersection3D DiscSurface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const Vector3& curvature,
+    const BoundaryTolerance& boundaryTolerance, double tolerance) const {
+  if (curvature.isZero(0.) || !curvature.allFinite()) {
+    return intersect(gctx, position, direction, boundaryTolerance, tolerance);
+  }
+  // Get the contextual transform
+  const Transform3& gctxTransform = localToGlobalTransform(gctx);
+  // Use the intersection helper for planar surfaces
+  auto intersection =
+      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+  intersection = detail::correctPlanarCurvatureIntersection(
+      intersection, direction, curvature,
+      gctxTransform.matrix().block<3, 1>(0, 2));
   IntersectionStatus status = intersection.status();
   if (status == IntersectionStatus::unreachable) {
     return MultiIntersection3D(Intersection3D::Invalid());

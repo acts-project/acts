@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
+#include "Acts/Surfaces/detail/CurvatureCorrection.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
@@ -175,6 +176,37 @@ MultiIntersection3D PlaneSurface::intersect(
   // Use the intersection helper for planar surfaces
   auto intersection =
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+  auto status = intersection.status();
+  // Evaluate boundary check if requested (and reachable)
+  if (intersection.status() != IntersectionStatus::unreachable) {
+    // Built-in local to global for speed reasons
+    const auto& tMatrix = gctxTransform.matrix();
+    // Create the reference vector in local
+    const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
+    if (!insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
+                      boundaryTolerance)) {
+      status = IntersectionStatus::unreachable;
+    }
+  }
+  return MultiIntersection3D(Intersection3D(intersection.position(),
+                                            intersection.pathLength(), status));
+}
+
+MultiIntersection3D PlaneSurface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const Vector3& curvature,
+    const BoundaryTolerance& boundaryTolerance, double tolerance) const {
+  if (curvature.isZero(0.) || !curvature.allFinite()) {
+    return intersect(gctx, position, direction, boundaryTolerance, tolerance);
+  }
+  // Get the contextual transform
+  const auto& gctxTransform = localToGlobalTransform(gctx);
+  // Use the intersection helper for planar surfaces
+  auto intersection =
+      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+  intersection = detail::correctPlanarCurvatureIntersection(
+      intersection, direction, curvature,
+      gctxTransform.matrix().block<3, 1>(0, 2));
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status() != IntersectionStatus::unreachable) {

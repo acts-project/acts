@@ -153,18 +153,25 @@ BOOST_AUTO_TEST_CASE(benchmark_curvature_intersections) {
     std::cout << "  zero curvature: "
               << microBenchmark(
                      [&] {
-                       return detail::intersectWithCurvature(
-                           surface, tgContext, origin, direction,
-                           Vector3::Zero(), bounds);
+                       return surface.intersect(tgContext, origin, direction,
+                                                Vector3::Zero(), bounds);
                      },
                      1000, 2000, std::chrono::milliseconds(200))
               << '\n';
-    std::cout << "  corrected: "
+    std::cout << "  first order: "
               << microBenchmark(
                      [&] {
-                       return detail::intersectWithCurvature(surface, tgContext,
-                                                             origin, direction,
-                                                             curvature, bounds);
+                       return surface.intersect(tgContext, origin, direction,
+                                                curvature, bounds);
+                     },
+                     1000, 2000, std::chrono::milliseconds(200))
+              << '\n';
+    std::cout << "  quadratic: "
+              << microBenchmark(
+                     [&] {
+                       return detail::intersectWithCurvature<true>(
+                           surface, tgContext, origin, direction, curvature,
+                           bounds);
                      },
                      1000, 2000, std::chrono::milliseconds(200))
               << '\n';
@@ -172,6 +179,13 @@ BOOST_AUTO_TEST_CASE(benchmark_curvature_intersections) {
   measure(*plane, Vector3::UnitZ(), Vector3(0.0005, 0., 0.));
   measure(*disc, Vector3::UnitZ(), Vector3(0.0005, 0., 0.));
   measure(*cylinder, Vector3::UnitX(), Vector3(0., 0.0005, 0.));
+  std::cout << "Oblique crossings (nonzero normal curvature):\n";
+  const Vector3 tilted = Vector3(0.3, 0., 1.).normalized();
+  const Vector3 bend = 0.0005 * Vector3(1., 0., -0.3).normalized();
+  measure(*plane, tilted, bend);
+  measure(*disc, tilted, bend);
+  measure(*cylinder, Vector3(1., 0., 0.3).normalized(),
+          0.0005 * Vector3(-0.3, 0., 1.).normalized());
 }
 
 }  // namespace ActsTests

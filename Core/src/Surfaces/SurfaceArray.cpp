@@ -13,7 +13,6 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/detail/CurvatureIntersection.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -517,9 +516,9 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
       const Vector3& direction, double tolerance,
       const Vector3& curvature = Vector3::Zero()) const {
     const Intersection3D intersection =
-        detail::intersectWithCurvature(*m_representative, gctx, position,
-                                       direction, curvature,
-                                       BoundaryTolerance::Infinite())
+        m_representative
+            ->intersect(gctx, position, direction, curvature,
+                        BoundaryTolerance::Infinite())
             .closest();
     if (!intersection.isValid() ||
         std::abs(intersection.pathLength()) > tolerance) {
