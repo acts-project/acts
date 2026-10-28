@@ -116,15 +116,6 @@ class BlueprintNode {
       const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) = 0;
 
-  /// Visit volumes owned by this node and its children after build and before
-  /// connect. Include temporary stack and gap volumes. Existing tracking-volume
-  /// substructure is traversed by the caller, not by this method.
-  /// @param visitor Callback invoked for each built volume
-  /// @note Custom nodes must override this to support global placement. The
-  ///       default implementation throws rather than silently omitting
-  ///       geometry.
-  virtual void visitBuiltVolumes(const std::function<void(Volume&)>& visitor);
-
   /// This method is called during the *finalize* phase. This phase handles:
   ///
   /// - Registering portals into their final volumes
@@ -326,6 +317,19 @@ class BlueprintNode {
   }
 
  protected:
+  /// Enumerate volumes owned by this node and its children after build and
+  /// before connect, including temporary stack and gap volumes. The callback
+  /// handles existing tracking-volume substructure.
+  /// @param visitor Callback invoked for each built volume
+  /// @note Override this for nodes that support built-volume traversal. Visit
+  ///       owned volumes and use visitBuiltChildVolumes to recurse. The default
+  ///       implementation throws to avoid silently omitting owned geometry.
+  virtual void visitBuiltVolumes(const std::function<void(Volume&)>& visitor);
+
+  /// Forward built-volume traversal to all children of this node.
+  /// @param visitor Callback invoked for each built volume
+  void visitBuiltChildVolumes(const std::function<void(Volume&)>& visitor);
+
   /// Virtual method to determine stream representation.
   /// @param os Output stream to write to
   /// @note This method is called by the stream operator.
@@ -356,6 +360,8 @@ class BlueprintNode {
   std::string indent() const;
 
  private:
+  friend class Blueprint;
+
   std::size_t m_depth{0};
   std::vector<std::shared_ptr<BlueprintNode>> m_children{};
 };
