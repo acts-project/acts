@@ -123,6 +123,19 @@ class hough_transform_seeding_algorithm
     const vecmem::data::jagged_vector_view<global_index_t>& global_index;
     // The images
     edm::houghplane_collection<scalar, 32, 32>::view& images;
+    // x value of maxima
+    vecmem::data::vector_view<scalar>& maxima_x;
+  };
+
+  struct evaluate_nn_payload {
+    // Number of images
+    unsigned int n_images;
+    // The images
+    const edm::houghplane_collection<scalar, 32, 32>::view& images;
+    // The x values
+    const vecmem::data::vector_view<scalar>& maxima_x;
+    // The NN outcome
+    vecmem::data::vector_view<unsigned int>& nn_outcome;
   };
 
   virtual void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const = 0;
@@ -131,6 +144,7 @@ class hough_transform_seeding_algorithm
   virtual void count_maxima_kernel(const count_maxima_payload& payload) const = 0;
   virtual void find_maxima_kernel(const find_maxima_payload& payload) const = 0;
   virtual void take_picture_kernel(const take_picture_payload& payload) const = 0;
+  virtual void evaluate_nn_kernel(const evaluate_nn_payload& payload) const = 0;
 
   virtual void synchronize() const = 0;
   
@@ -146,4 +160,5 @@ class hough_transform_seeding_algorithm
 #include "traccc/seeding/device/impl/count_maxima.ipp"
 #include "traccc/seeding/device/impl/find_maxima.ipp"
 #include "traccc/seeding/device/impl/take_pictures.ipp"
+#include "traccc/seeding/device/impl/evaluate_nn.ipp"
 

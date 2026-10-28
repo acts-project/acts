@@ -51,6 +51,7 @@ class hough_transform_seeding_algorithm	: public device::hough_transform_seeding
   void count_maxima_kernel(const count_maxima_payload& payload) const;
   void find_maxima_kernel(const find_maxima_payload& payload) const;
   void take_picture_kernel(const take_picture_payload& payload) const;
+  void evaluate_nn_kernel(const evaluate_nn_payload& payload) const;
 
   /// Wait for outstanding work on the algorithm stream or queue.
   void synchronize() const override;

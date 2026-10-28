@@ -141,21 +141,21 @@ auto hough_transform_seeding_algorithm::operator()(
   // Run clustering on the images
 
   // Take the pictures from the merged maxima
-  // vecmem::data::jagged_vector_buffer<scalar> maxima_x_value(maxima_sizes_host,
-  //       mr().main, mr().host,
-  //       vecmem::data::buffer_type::resizable);
   edm::houghplane_collection<scalar, 32, 32>::buffer images(
           std::vector<unsigned int>(total_maxima, 32 * 32),
           mr().main, mr().host,
           vecmem::data::buffer_type::resizable);
+  vecmem::data::vector_buffer<scalar> maxima_x_value(total_maxima, mr().main);
 
-  // copy().setup(maxima_x_value)->ignore();
+  copy().setup(vecmem::ignore_event, maxima_x_value);
+  copy().memset(vecmem::ignore_event, maxima_x_value, 0);
   copy().setup(images)->ignore();
 
   take_picture_kernel({total_maxima,
                        result,
                        maxima_global_index,
-                       images});
+                       images,
+                       maxima_x_value});
 
  /* 
   edm::houghplane_collection<scalar, 32, 32>::const_view host_view;
@@ -178,6 +178,13 @@ auto hough_transform_seeding_algorithm::operator()(
   }
   std::cout << std::endl;
 */
+
+  // Run NN
+  vecmem::data::vector_buffer<unsigned int> nn_outcome(total_maxima, mr().main);
+  copy().setup(vecmem::ignore_event, nn_outcome);
+  copy().memset(vecmem::ignore_event, nn_outcome, 0);
+
+  // no idea
   synchronize();
 
   // Return the result.
