@@ -34,6 +34,9 @@ class PortalDesignatorBlueprintNodeImpl;
 ///       tree building, but during geometry construction.
 class PortalDesignatorBlueprintNode final : public BlueprintNode {
  public:
+  /// @copydoc BlueprintNode::visitBuiltVolumes
+  void visitBuiltVolumes(const std::function<void(Volume&)>& visitor) override;
+
   /// Main constructor for the portal designator node.
   /// @param name The name of the node (for debug only)
   explicit PortalDesignatorBlueprintNode(std::string_view name);

@@ -29,6 +29,9 @@ struct GeometryIdentifierBlueprintNodeImpl;
 /// configurations can be chained using the fluent interface.
 class GeometryIdentifierBlueprintNode : public BlueprintNode {
  public:
+  /// @copydoc BlueprintNode::visitBuiltVolumes
+  void visitBuiltVolumes(const std::function<void(Volume&)>& visitor) override;
+
   /// Virtual destructor pushed to cpp file to avoid defining implementation
   /// details
   ~GeometryIdentifierBlueprintNode() override;

@@ -43,6 +43,9 @@ namespace Acts {
 ///
 class ContainerBlueprintNode : public BlueprintNode {
  public:
+  /// @copydoc BlueprintNode::visitBuiltVolumes
+  void visitBuiltVolumes(const std::function<void(Volume&)>& visitor) override;
+
   /// Main constructor for the container node.
   /// @param name The name of the node (for debug only)
   /// @param axis The stacking axis direction in local reference frame

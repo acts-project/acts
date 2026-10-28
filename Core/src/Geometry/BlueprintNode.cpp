@@ -22,6 +22,12 @@
 
 namespace Acts {
 
+void BlueprintNode::visitBuiltVolumes(
+    const std::function<void(Volume&)>& /*visitor*/) {
+  throw std::logic_error("Blueprint node does not support global placement: " +
+                         name());
+}
+
 namespace {
 bool hasDescendent(const BlueprintNode& descendent,
                    const BlueprintNode& ancestor) {

@@ -31,6 +31,9 @@ class MaterialDesignatorBlueprintNodeImpl;
 ///       tree building, but during geometry construction.
 class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
+  /// @copydoc BlueprintNode::visitBuiltVolumes
+  void visitBuiltVolumes(const std::function<void(Volume&)>& visitor) override;
+
   /// Main constructor for the material designator node.
   /// @param name The name of the node (for debug only)
   explicit MaterialDesignatorBlueprintNode(const std::string& name);
