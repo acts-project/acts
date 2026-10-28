@@ -251,6 +251,15 @@ class GbtsProfiler {
     float quality{};
     /// What became of it.
     CandidateFate fate{};
+    /// Its space points that better candidates own; it is a clone when
+    /// more than `shareThreshold` of `spacePoints` are.
+    std::uint32_t nShared{};
+    /// `hitShareThreshold`, zero for a candidate the clone removal never saw.
+    float shareThreshold{};
+    /// The candidate, by its index in `Event::candidates`, that owns most of
+    /// its shared space points (the better one on a tie), -1 if it shares
+    /// none. For a clone, the candidate it is a clone of.
+    std::int32_t sharedWith{-1};
   };
 
   /// What one `createSeeds` call recorded.

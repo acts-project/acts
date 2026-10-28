@@ -938,6 +938,27 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   }
   BOOST_CHECK_EQUAL(nOutput, seeds.size());
   BOOST_CHECK_GT(nClones, 0u);
+
+  // a clone shares more than the threshold with better candidates, the one
+  // it is a clone of among them; a kept candidate shares no more than that
+  for (const auto& candidate : event->candidates) {
+    using enum Experimental::GbtsProfiler::CandidateFate;
+    if (candidate.fate == TooFewSpacePoints) {
+      continue;
+    }
+    const float limit = candidate.shareThreshold * candidate.spacePoints.size();
+    if (candidate.fate == Clone) {
+      BOOST_CHECK_GT(candidate.nShared, limit);
+      BOOST_REQUIRE_GE(candidate.sharedWith, 0);
+      const auto& owner =
+          event->candidates.at(static_cast<std::size_t>(candidate.sharedWith));
+      BOOST_CHECK(owner.fate != TooFewSpacePoints);
+      BOOST_CHECK_LE(owner.quality, candidate.quality);
+    } else {
+      BOOST_CHECK_LE(candidate.nShared, limit);
+    }
+    BOOST_CHECK_EQUAL(candidate.nShared == 0, candidate.sharedWith < 0);
+  }
 }
 
 // The unresolved strip walk of `StripLayersNeedTheirPairResolved` loses every
