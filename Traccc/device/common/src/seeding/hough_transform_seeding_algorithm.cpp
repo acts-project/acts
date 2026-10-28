@@ -157,39 +157,26 @@ auto hough_transform_seeding_algorithm::operator()(
                        maxima_global_index,
                        images});
 
-/*  
-  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view host_view;
-  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer host_buffer;
+  
+  edm::houghplane_collection<scalar, 32, 32>::const_view host_view;
+  edm::houghplane_collection<scalar, 32, 32>::buffer host_buffer;
   if (mr().host) {
-    host_buffer = copy().to(result, *(mr().host));
+    host_buffer = copy().to(images, *(mr().host));
     host_view = host_buffer;
   } else {
-    host_view = result;
+    host_view = images;
   }
 
-  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_device host_device{host_view};
-//  std::cout << std::endl;
-  std::cout << "----------------- SLICE 13 -----------------" << std::endl;
-  for (unsigned int i(0); i<N_COLS; ++i) {
-      for (unsigned int j(0); j<N_ROWS; ++j) {
-	// if (host_device[13].plane()[i * N_ROWS + j] != 0) std::cout << "SOMETHING !!!" << std::endl;
-	std::cout << host_device[13].plane()[i * N_ROWS + j] << " ";
+  edm::houghplane_collection<scalar, 32, 32>::const_device host_device{host_view};
+  std::cout << std::endl;
+  std::cout << "----------------- IMAGE 3 -----------------" << std::endl;
+  for (unsigned int i(0); i<32; ++i) {
+      for (unsigned int j(0); j<32; ++j) {
+	    std::cout << host_device[3].plane()[i * 32 + j] << " ";
       }
       std::cout << std::endl;
   }
   std::cout << std::endl;
-*/
-  /*
-  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_device host_device{host_view};
-  for (unsigned int i = 0; i < host_device.size(); ++i) {
-    const edm::houghplane plane = host_device.at(i);
-    const auto& edges_x = plane.edges_x();
-    const auto& edges_y = plane.edges_y();
-    std::cout << "----------------" << std::endl; 
-    std::cout << "n edges x: " << edges_x.size() << ": " << edges_x[0] << " -> " << edges_x[N_COLS] << std::endl; 
-    std::cout << "n edges y: " << edges_y.size() << ": " << edges_y[0] << " -> " << edges_y[N_ROWS] << std::endl;
-  }
-*/
 
   synchronize();
 

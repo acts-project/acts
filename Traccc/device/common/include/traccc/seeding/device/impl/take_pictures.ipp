@@ -10,38 +10,39 @@
 namespace traccc::device {
 
 TRACCC_HOST_DEVICE
-inline void take_the_picture(const vecmem::device_vector<unsigned short>& wedge,
-                             vecmem::device_vector<scalar>& image,
-                             const global_index_t col,
-                             const global_index_t row,
+inline void take_the_picture(const vecmem::jagged_device_vector<unsigned short>::const_reference wedge,
+                             vecmem::jagged_device_vector<scalar>::reference image,
+                             const global_index_t index,
                              int width, 
                              int height) {
-    constexpr int side = 32;
-    constexpr int half = side / 2;
+    constexpr int wedge_width = 256;
+    constexpr int wedge_height = 7000;
 
     assert(width > 0 && height > 0);
-    global_index_t centerX = col;
-    global_index_t centerY = row;
 
-    const std::size_t matrixSize =
-        static_cast<std::size_t>(width) * height;
+    const unsigned int col = index / device::N_ROWS;
+    const unsigned int row = index % device::N_ROWS;
 
-    for (int ix = 0; ix < side; ++ix) {
-        const int x = centerX + ix - half;
+    const int center_x = static_cast<int>(col);
+    const int center_y = static_cast<int>(row);
 
-        for (int iy = 0; iy < side; ++iy) {
-            int y = (centerY + iy - half) % height;
-            if (y < 0) y += height;
+    for (int ix = 0; ix < width; ++ix) {
+        const int x = center_x + ix - width / 2;
+        if (x < 0 || x >= wedge_width) continue;
 
-            const int outputIndex = ix * side + iy;
-            if (x >= 0 && x < width) {
-                const std::size_t inputIndex =
-                    static_cast<std::size_t>(x) * height + y;
-
-                image[outputIndex] = wedge[inputIndex];
+        for (int iy = 0; iy < height; ++iy) {
+            int y = (center_y + iy - height / 2) % wedge_height;
+            if (y < 0) {
+                y += wedge_height;
             }
-        } // loop on iy
-    } // loop on ix
+
+            const std::size_t output_index =
+                static_cast<std::size_t>(ix) * height + iy;
+            const std::size_t input_index =
+                static_cast<std::size_t>(x) * wedge_height + y;
+            image[output_index] = static_cast<scalar>( wedge[input_index] ) / .1;
+        }
+    }
 }
 
 
@@ -59,7 +60,7 @@ void take_pictures(const global_index_t globalIndex,
     const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device houghplanes(houghplanes_view);
     const vecmem::jagged_device_vector<global_index_t> maxima_index(maxima_index_view);
     edm::houghplane_collection<scalar, 32, 32>::device images(images_view);
-    /*
+
     // deduce the correct index
     global_index_t current_size = globalIndex;
     global_index_t wedge_idx = 0;
@@ -73,15 +74,14 @@ void take_pictures(const global_index_t globalIndex,
         }
         current_size -= maxima_index[i].size();
     }
-
+   
     // get variables
-    const auto& plane = houghplanes[wedge_idx];
+    const auto& plane = houghplanes.plane()[wedge_idx];
     const global_index_t maxima_idx = maxima_index[wedge_idx][element_idx];
-    const global_index_t maxima_col = maxima_idx / N_COLS;
-    const global_index_t maxima_row = maxima_idx % N_COLS;
-    */
-    // auto target = images[globalIndex];
-    // take_the_picture(plane, target, maxima_col, maxima_row, 32, 32);
+    take_the_picture(plane, 
+                     images.plane()[globalIndex],
+                     maxima_idx,
+                     32, 32);
 }
 
 } // namespace

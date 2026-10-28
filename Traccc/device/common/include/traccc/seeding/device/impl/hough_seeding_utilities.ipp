@@ -13,12 +13,12 @@ TRACCC_HOST_DEVICE
 bool is_local_maximum(const global_index_t globalIndex,
                       const T value,
                       const vecmem::device_vector<const T>& plane,                      
-//const vecmem::edm::type::jagged_vector<T>& plane,
                       const long long col,
                       const long long row) {
+    if (value < 5) return false; // threshold
     static constexpr long long rows = N_ROWS;
     static constexpr long long cols = N_COLS;
-    
+     
     for (int dy = -1; dy <= 1; ++dy) {
         const long long neighbor_row = (row + dy + rows) % rows;
         for (int dx = -1; dx <= 1; ++dx) {

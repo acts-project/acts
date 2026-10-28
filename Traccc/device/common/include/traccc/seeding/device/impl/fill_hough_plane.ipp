@@ -16,8 +16,6 @@ inline unsigned short count_bits(unsigned long long x) {
 	return nOnes;
 }
 
-
-
 TRACCC_HOST_DEVICE
 int quant(scalar min, scalar max, unsigned nSteps, scalar val) {
   return static_cast<int>((val - min) / (max - min) * nSteps);
@@ -138,17 +136,9 @@ void fill_hough_plane_by_column(const global_index_t globalIndex,
 	    }
     } // loop on space points
 
-    static const std::array<unsigned short, 25> min_contributions {
-        5, 5, 5, 5, 5, 5,
-        5, 5, 5, 5, 5, 5, 5,
-        5, 5, 5, 5, 5, 5,
-        5, 5, 5, 5, 5, 5
-    };
-
     // Fill the plane
     for (unsigned int i(0); i<N_ROWS; ++i) {
 	    unsigned short value = count_bits(column_values[i]);
-	    if (value < min_contributions[n_wedge]) continue;
 	    houghplanes.plane()[n_wedge][globalIndex + i] = value;
     }
 }
@@ -178,7 +168,7 @@ void fill_hough_plane_by_bin(const global_index_t globalIndex,
     const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
     const vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
 
-    const unsigned int x_bin = globalIndex / N_COLS;
+    const unsigned int x_bin = globalIndex / N_ROWS;
     const unsigned int y_bin  = globalIndex % N_ROWS;
 
     // given the bin, take the edges in both dimensions
@@ -204,18 +194,10 @@ void fill_hough_plane_by_bin(const global_index_t globalIndex,
       }
     }
 
-    static const std::array<unsigned short, 25> min_contributions {
-        5, 5, 5, 5, 5, 5,
-        5, 5, 5, 5, 5, 5, 5,
-        5, 5, 5, 5, 5, 5,
-        5, 5, 5, 5, 5, 5
-    };
-    
     for (unsigned int wedge_idx(0); wedge_idx<25; ++wedge_idx) {
         if (binContents[wedge_idx] == 0ULL) continue;
-	unsigned short value = count_bits(binContents[wedge_idx]);
-	if (value < min_contributions[wedge_idx]) continue;
-	houghplanes.plane()[wedge_idx][globalIndex] = value;
+	    unsigned short value = count_bits(binContents[wedge_idx]);
+	    houghplanes.plane()[wedge_idx][globalIndex] = value;
     }
 }
 

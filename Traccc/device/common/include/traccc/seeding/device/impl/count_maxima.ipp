@@ -17,8 +17,8 @@ void count_maxima(const global_index_t globalIndex,
     const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device houghplanes(houghplanes_view);
     vecmem::device_vector<unsigned int> number_maxima(number_maxima_view);
 
-    const long long col = globalIndex % N_COLS;
-    const long long row = globalIndex / N_COLS;
+    const long long col = globalIndex % N_ROWS;
+    const long long row = globalIndex / N_ROWS;
 
     for (unsigned int wedge_idx(0); wedge_idx<houghplanes.size(); ++wedge_idx) {
         const auto& plane = houghplanes.plane()[wedge_idx];
