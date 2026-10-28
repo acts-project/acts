@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <functional>
 #include <limits>
 #include <optional>
 #include <unordered_map>
@@ -110,48 +109,84 @@ void Acts::BinnedSurfaceMaterialAccumulator::accumulate(
 void Acts::BinnedSurfaceMaterialAccumulator::accumulateTracks(
     ISurfaceMaterialAccumulator::State& state, const GeometryContext& /*gctx*/,
     std::span<const TrackAccumulation> tracks, detail::WorkerPool* pool) const {
-  // Run a loop on the pool, or inline without one
-  auto forEach = [pool](std::size_t n,
-                        const std::function<void(std::size_t)>& body) {
-    if (pool != nullptr) {
-      pool->parallelFor(n, body, 1);
-    } else {
-      for (std::size_t i = 0; i < n; ++i) {
-        body(i);
-      }
-    }
-  };
-  const std::size_t nThreads = pool != nullptr ? pool->size() : 1;
-
   // Cast into the right state object (guaranteed by upstream algorithm)
   State& cState = static_cast<State&>(state);
 
   // Every accumulated surface material is an independent slot, numbered in
-  // map order. The geometry ID lookup is cached in the state, the pointers
-  // are collected per call so that a copied state stays valid.
-  auto& slotIndex = cState.slotIndex;
-  const bool rebuildIndex =
-      slotIndex.size() != cState.accumulatedMaterial.size();
-  if (rebuildIndex) {
-    slotIndex.clear();
-    slotIndex.reserve(cState.accumulatedMaterial.size());
-  }
-  std::vector<AccumulatedSurfaceMaterial*> slots;
-  slots.reserve(cState.accumulatedMaterial.size());
-  for (auto& [geoID, accMaterial] : cState.accumulatedMaterial) {
-    if (rebuildIndex) {
-      slotIndex.emplace(geoID, static_cast<std::uint32_t>(slots.size()));
+  // map order. The slots are cached in the state, and rebuilt if the state
+  // was copied or its surfaces changed.
+  auto& cache = cState.slotCache;
+  if (cache.owner != &cState.accumulatedMaterial ||
+      cache.slots.size() != cState.accumulatedMaterial.size()) {
+    cache.owner = &cState.accumulatedMaterial;
+    cache.slots.clear();
+    cache.index.clear();
+    cache.slots.reserve(cState.accumulatedMaterial.size());
+    cache.index.reserve(cState.accumulatedMaterial.size());
+    for (auto& [geoID, accMaterial] : cState.accumulatedMaterial) {
+      cache.index.emplace(geoID,
+                          static_cast<std::uint32_t>(cache.slots.size()));
+      cache.slots.push_back(&accMaterial);
     }
-    slots.push_back(&accMaterial);
   }
+  const auto& slots = cache.slots;
   auto lookup = [&](const Surface& surface) {
-    auto it = slotIndex.find(surface.geometryId());
-    if (it == slotIndex.end()) {
+    auto it = cache.index.find(surface.geometryId());
+    if (it == cache.index.end()) {
       throw std::invalid_argument(
           "Surface material is not found, inconsistent configuration.");
     }
     return it->second;
   };
+
+  // Sharding only pays off with workers and enough operations: every chunk
+  // must carry at least as many operations as there are slots, so that the
+  // per-chunk slot counts below never cost more than the operations. A
+  // single chunk still accumulates the slots concurrently.
+  std::size_t nOperations = 0;
+  for (const auto& track : tracks) {
+    nOperations += track.interactions->size();
+    if (m_cfg.emptyBinCorrection) {
+      nOperations += track.surfacesWithoutAssignment->size();
+    }
+  }
+  constexpr std::size_t minOperationsPerChunk = 4096;
+  const std::size_t nSlots = slots.size();
+  const std::size_t nThreads = pool != nullptr ? pool->size() : 1;
+  const std::size_t nChunks =
+      std::min({tracks.size(), 4 * nThreads,
+                nOperations / std::max(minOperationsPerChunk, nSlots)});
+
+  if (nThreads <= 1 || nChunks == 0) {
+    // Direct accumulation, one track after the other
+    using TouchedBin = std::pair<std::uint32_t, std::array<std::size_t, 3>>;
+    std::vector<TouchedBin> touched;
+    std::vector<std::array<std::size_t, 3>> bins(1);
+    for (const auto& track : tracks) {
+      touched.clear();
+      for (const auto& mi : *track.interactions) {
+        std::uint32_t slot = lookup(*mi.surface);
+        touched.emplace_back(
+            slot, slots[slot]->accumulate(mi.intersection, mi.materialSlab,
+                                          mi.pathCorrection));
+      }
+      // Average the first touched bin of every slot
+      std::ranges::stable_sort(touched, {}, &TouchedBin::first);
+      for (std::size_t i = 0; i < touched.size(); ++i) {
+        if (i == 0 || touched[i].first != touched[i - 1].first) {
+          bins[0] = touched[i].second;
+          slots[touched[i].first]->trackAverage(bins, true);
+        }
+      }
+      // Empty bin correction
+      if (m_cfg.emptyBinCorrection) {
+        for (const auto& missed : *track.surfacesWithoutAssignment) {
+          slots[lookup(*missed.surface)]->trackAverage(missed.position, true);
+        }
+      }
+    }
+    return;
+  }
 
   // A self-contained accumulation step on one slot: the slot loop below
   // reads nothing but these, sequentially
@@ -165,37 +200,38 @@ void Acts::BinnedSurfaceMaterialAccumulator::accumulateTracks(
 
   // The tracks are split into contiguous chunks, in order. Each chunk
   // resolves the slot of its operations and counts them per slot.
-  const std::size_t nSlots = slots.size();
-  const std::size_t nChunks = std::min(tracks.size(), 4 * nThreads);
   auto chunkBegin = [&](std::size_t c) { return c * tracks.size() / nChunks; };
   std::vector<std::vector<std::pair<std::uint32_t, Operation>>> chunkOperations(
       nChunks);
   std::vector<std::size_t> chunkCounts(nChunks * nSlots, 0);
-  forEach(nChunks, [&](std::size_t c) {
-    auto& ops = chunkOperations[c];
-    std::size_t* counts = &chunkCounts[c * nSlots];
-    auto add = [&](std::size_t t, const Surface& surface,
-                   const Vector3& position, bool empty,
-                   const MaterialSlab& slab, double pathCorrection) {
-      std::uint32_t slot = lookup(surface);
-      ++counts[slot];
-      ops.emplace_back(slot, Operation{static_cast<std::uint32_t>(t), empty,
-                                       position, slab, pathCorrection});
-    };
-    for (std::size_t t = chunkBegin(c); t < chunkBegin(c + 1); ++t) {
-      const auto& track = tracks[t];
-      for (const auto& mi : *track.interactions) {
-        add(t, *mi.surface, mi.intersection, false, mi.materialSlab,
-            mi.pathCorrection);
-      }
-      if (m_cfg.emptyBinCorrection) {
-        for (const auto& missed : *track.surfacesWithoutAssignment) {
-          add(t, *missed.surface, missed.position, true,
-              MaterialSlab::Nothing(), 1.);
+  pool->parallelFor(
+      nChunks,
+      [&](std::size_t c) {
+        auto& ops = chunkOperations[c];
+        std::size_t* counts = &chunkCounts[c * nSlots];
+        auto add = [&](std::size_t t, const Surface& surface,
+                       const Vector3& position, bool empty,
+                       const MaterialSlab& slab, double pathCorrection) {
+          std::uint32_t slot = lookup(surface);
+          ++counts[slot];
+          ops.emplace_back(slot, Operation{static_cast<std::uint32_t>(t), empty,
+                                           position, slab, pathCorrection});
+        };
+        for (std::size_t t = chunkBegin(c); t < chunkBegin(c + 1); ++t) {
+          const auto& track = tracks[t];
+          for (const auto& mi : *track.interactions) {
+            add(t, *mi.surface, mi.intersection, false, mi.materialSlab,
+                mi.pathCorrection);
+          }
+          if (m_cfg.emptyBinCorrection) {
+            for (const auto& missed : *track.surfacesWithoutAssignment) {
+              add(t, *missed.surface, missed.position, true,
+                  MaterialSlab::Nothing(), 1.);
+            }
+          }
         }
-      }
-    }
-  });
+      },
+      1);
 
   // Stable counting sort by slot: per slot, the chunks are laid out in
   // order, so each slot sees its operations in the serial order
@@ -213,12 +249,15 @@ void Acts::BinnedSurfaceMaterialAccumulator::accumulateTracks(
   // chunks are no longer modified, so these pointers remain valid until
   // accumulation has finished.
   std::vector<const Operation*> operations(offsets.back());
-  forEach(nChunks, [&](std::size_t c) {
-    std::size_t* fill = &chunkCounts[c * nSlots];
-    for (const auto& [slot, op] : chunkOperations[c]) {
-      operations[fill[slot]++] = &op;
-    }
-  });
+  pool->parallelFor(
+      nChunks,
+      [&](std::size_t c) {
+        std::size_t* fill = &chunkCounts[c * nSlots];
+        for (const auto& [slot, op] : chunkOperations[c]) {
+          operations[fill[slot]++] = &op;
+        }
+      },
+      1);
 
   // Process the slots concurrently, the busiest ones first
   std::vector<std::uint32_t> active;
@@ -231,40 +270,43 @@ void Acts::BinnedSurfaceMaterialAccumulator::accumulateTracks(
     return offsets[a + 1] - offsets[a] > offsets[b + 1] - offsets[b];
   });
 
-  forEach(active.size(), [&](std::size_t i) {
-    const std::uint32_t slot = active[i];
-    AccumulatedSurfaceMaterial& accMaterial = *slots[slot];
-    // Same as the serial accumulation: only the first touched bin of a
-    // track is track-averaged, before any empty bin correction
-    std::vector<std::array<std::size_t, 3>> bins;
-    std::optional<std::array<std::size_t, 3>> touchedBin;
-    auto averageTouched = [&]() {
-      if (touchedBin.has_value()) {
-        bins.assign(1, *touchedBin);
-        accMaterial.trackAverage(bins, true);
-        touchedBin.reset();
-      }
-    };
-    std::uint32_t currentTrack = std::numeric_limits<std::uint32_t>::max();
-    for (std::size_t o = offsets[slot]; o < offsets[slot + 1]; ++o) {
-      const Operation& op = *operations[o];
-      if (op.track != currentTrack) {
-        averageTouched();
-        currentTrack = op.track;
-      }
-      if (!op.empty) {
-        auto bin =
-            accMaterial.accumulate(op.position, op.slab, op.pathCorrection);
-        if (!touchedBin.has_value()) {
-          touchedBin = bin;
+  pool->parallelFor(
+      active.size(),
+      [&](std::size_t i) {
+        const std::uint32_t slot = active[i];
+        AccumulatedSurfaceMaterial& accMaterial = *slots[slot];
+        // Same as the serial accumulation: only the first touched bin of a
+        // track is track-averaged, before any empty bin correction
+        std::vector<std::array<std::size_t, 3>> bins;
+        std::optional<std::array<std::size_t, 3>> touchedBin;
+        auto averageTouched = [&]() {
+          if (touchedBin.has_value()) {
+            bins.assign(1, *touchedBin);
+            accMaterial.trackAverage(bins, true);
+            touchedBin.reset();
+          }
+        };
+        std::uint32_t currentTrack = std::numeric_limits<std::uint32_t>::max();
+        for (std::size_t o = offsets[slot]; o < offsets[slot + 1]; ++o) {
+          const Operation& op = *operations[o];
+          if (op.track != currentTrack) {
+            averageTouched();
+            currentTrack = op.track;
+          }
+          if (!op.empty) {
+            auto bin =
+                accMaterial.accumulate(op.position, op.slab, op.pathCorrection);
+            if (!touchedBin.has_value()) {
+              touchedBin = bin;
+            }
+          } else {
+            averageTouched();
+            accMaterial.trackAverage(op.position, true);
+          }
         }
-      } else {
         averageTouched();
-        accMaterial.trackAverage(op.position, true);
-      }
-    }
-    averageTouched();
-  });
+      },
+      1);
 }
 
 std::map<Acts::GeometryIdentifier,

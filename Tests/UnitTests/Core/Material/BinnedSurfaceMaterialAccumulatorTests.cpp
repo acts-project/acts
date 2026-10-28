@@ -366,7 +366,9 @@ BOOST_AUTO_TEST_CASE(BatchAccumulationMatchesSerial) {
     std::vector<MaterialInteraction> interactions;
     std::vector<IAssignmentFinder::SurfaceAssignment> empty;
   };
-  std::vector<Track> tracks(500);
+  // Enough tracks for a single batch to exceed the sharding threshold of
+  // the accumulator (4096 operations) several times
+  std::vector<Track> tracks(4000);
   for (auto& track : tracks) {
     for (const auto& surface : surfaces) {
       const double r = surface->bounds().values()[0];
@@ -449,23 +451,27 @@ BOOST_AUTO_TEST_CASE(BatchAccumulationMatchesSerial) {
     }
     checkEqual(reference, bsma.finalizeMaterial(*deprecated, tContext));
 
-    // Batches, without pool and with pools of different size
-    for (std::size_t nThreads : {0u, 1u, 4u}) {
-      std::optional<detail::WorkerPool> pool;
-      if (nThreads > 0) {
-        pool.emplace(nThreads);
-      }
-      auto batched = bsma.createState(tContext);
-      for (std::size_t begin = 0; begin < tracks.size(); begin += 128) {
-        std::vector<ISurfaceMaterialAccumulator::TrackAccumulation> batch;
-        for (std::size_t t = begin; t < std::min(begin + 128, tracks.size());
-             ++t) {
-          batch.push_back({&tracks[t].interactions, &tracks[t].empty});
+    // Batches of different size, without pool and with pools of different
+    // size: small batches take the direct path, the full batch with workers
+    // the sharded one
+    for (std::size_t batchSize : {1u, 128u, 4000u}) {
+      for (std::size_t nThreads : {0u, 1u, 4u}) {
+        std::optional<detail::WorkerPool> pool;
+        if (nThreads > 0) {
+          pool.emplace(nThreads);
         }
-        bsma.accumulateTracks(*batched, tContext, batch,
-                              pool.has_value() ? &*pool : nullptr);
+        auto batched = bsma.createState(tContext);
+        for (std::size_t begin = 0; begin < tracks.size(); begin += batchSize) {
+          std::vector<ISurfaceMaterialAccumulator::TrackAccumulation> batch;
+          for (std::size_t t = begin;
+               t < std::min(begin + batchSize, tracks.size()); ++t) {
+            batch.push_back({&tracks[t].interactions, &tracks[t].empty});
+          }
+          bsma.accumulateTracks(*batched, tContext, batch,
+                                pool.has_value() ? &*pool : nullptr);
+        }
+        checkEqual(reference, bsma.finalizeMaterial(*batched, tContext));
       }
-      checkEqual(reference, bsma.finalizeMaterial(*batched, tContext));
     }
   }
 

@@ -77,16 +77,10 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
                                   const MagneticFieldContext& mctx,
                                   const RecordedMaterialTrack& rmTrack,
                                   const Options& options) const {
-  auto result = assignTrack(gctx, mctx, rmTrack, options);
-  // The material interactions
-  ISurfaceMaterialAccumulator::TrackAccumulation track{
-      &result.mapped.second.materialInteractions,
-      &result.surfacesWithoutAssignment};
-  m_cfg.surfaceMaterialAccumulator->accumulateTracks(
-      *state.surfaceMaterialAccumulatorState, gctx, std::span(&track, 1),
-      nullptr);
-  // Return the mapped and unmapped material
-  return {std::move(result.mapped), std::move(result.unmapped)};
+  // A batch of one track
+  const RecordedMaterialTrack* track = &rmTrack;
+  return std::move(
+      mapMaterial(state, gctx, mctx, std::span(&track, 1), options).front());
 }
 
 std::vector<std::pair<Acts::RecordedMaterialTrack, Acts::RecordedMaterialTrack>>

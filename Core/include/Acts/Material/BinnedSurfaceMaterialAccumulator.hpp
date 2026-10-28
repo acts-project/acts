@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 
 namespace Acts {
 
@@ -47,9 +48,17 @@ class BinnedSurfaceMaterialAccumulator final
     /// Validated surface identities captured by createState.
     std::optional<detail::MaterialSurfaceRegistry> materialSurfaceRegistry;
 
-    /// Cache for the batch accumulation: position of each geometry ID in
-    /// @ref accumulatedMaterial, rebuilt when the number of entries changes
-    std::unordered_map<GeometryIdentifier, std::uint32_t> slotIndex;
+    /// Lookup cache of @ref accumulateTracks, rebuilt when stale
+    struct SlotCache {
+      /// The map the cache was built for, to detect copied states
+      const void* owner = nullptr;
+      /// The accumulated materials, in map order
+      std::vector<AccumulatedSurfaceMaterial*> slots;
+      /// The position of each geometry ID in @ref slots
+      std::unordered_map<GeometryIdentifier, std::uint32_t> index;
+    };
+    /// The lookup cache
+    SlotCache slotCache;
   };
 
   /// Constructor
