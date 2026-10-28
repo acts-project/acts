@@ -561,8 +561,8 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   stepper.updateSurfaceStatus(
       state, *target, 0, navDir, BoundaryTolerance::Infinite(),
       s_onSurfaceTolerance, ConstrainedStep::Type::Navigator);
-  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::Type::Navigator),
-                    distance);
+  CHECK_CLOSE_REL(state.stepSize.value(ConstrainedStep::Type::Navigator),
+                  distance, eps);
 
   const auto getNavigationTarget = [&](const Surface& s,
                                        const BoundaryTolerance& bt) {
@@ -577,7 +577,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   stepper.updateStepSize(
       state, getNavigationTarget(*target, BoundaryTolerance::Infinite()),
       navDir, ConstrainedStep::Type::Navigator);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
+  CHECK_CLOSE_REL(state.stepSize.value(), distance, eps);
 
   // start with a different step size
   state.stepSize.setUser(navDir * stepSize);

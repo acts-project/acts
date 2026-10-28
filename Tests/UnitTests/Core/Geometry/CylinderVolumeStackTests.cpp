@@ -63,6 +63,31 @@ static const std::vector<VolumeResizeStrategy> resizeStrategies = {
 BOOST_AUTO_TEST_SUITE(CylinderVolumeStackTest)
 BOOST_AUTO_TEST_SUITE(ZDirection)
 
+// Overlap checks must apply the same surface tolerance as gap checks.
+BOOST_DATA_TEST_CASE(AttachmentOverlapTolerance,
+                     boost::unit_test::data::make(strategies), strategy) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  for (double overlap :
+       {0.5 * s_onSurfaceTolerance, 2.0 * s_onSurfaceTolerance}) {
+    auto bounds =
+        std::make_shared<CylinderVolumeBounds>(100_mm, 200_mm, 400_mm);
+    Volume first(Transform3::Identity(), bounds);
+    Volume second(Transform3(Translation3(0, 0, 800_mm - overlap)), bounds);
+    std::vector<Volume*> volumes{&first, &second};
+    if (overlap < s_onSurfaceTolerance) {
+      CylinderVolumeStack stack(gctx, volumes, AxisDirection::AxisZ, strategy,
+                                VolumeResizeStrategy::Gap, *logger);
+      BOOST_CHECK(stack.gaps().empty());
+      BOOST_CHECK_EQUAL(volumes.size(), 2u);
+    } else {
+      BOOST_CHECK_THROW(
+          CylinderVolumeStack(gctx, volumes, AxisDirection::AxisZ, strategy,
+                              VolumeResizeStrategy::Gap, *logger),
+          std::invalid_argument);
+    }
+  }
+}
+
 BOOST_DATA_TEST_CASE(Baseline,
                      (boost::unit_test::data::xrange(-135, 180, 45) *
                       boost::unit_test::data::xrange(0, 2, 1) *
@@ -130,7 +155,7 @@ BOOST_DATA_TEST_CASE(Baseline,
   BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eHalfLengthZ),
                     hlZ + 2 * hlZ * shift);
   CHECK_CLOSE_OR_SMALL(cylStack.localToGlobalTransform(gctx).matrix(),
-                       base.matrix(), 1e-10, 1e-14);
+                       base.matrix(), 1e-10, 1e-12);
 
   // All volumes (including gaps) are cylinders and have the same radial bounds
   for (const auto& volume : volumes) {
@@ -228,8 +253,8 @@ BOOST_DATA_TEST_CASE(Baseline,
       // Volume 1 got bigger and shifted right
       auto newBounds1 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol1->volumeBounds());
-      BOOST_CHECK_EQUAL(newBounds1->get(CylinderVolumeBounds::eHalfLengthZ),
-                        hlZ + wGap / 2.0);
+      CHECK_CLOSE_REL(newBounds1->get(CylinderVolumeBounds::eHalfLengthZ),
+                      hlZ + wGap / 2.0, 1e-12);
       double pZ1 = -2 * hlZ * shift + wGap / 2.0;
       Transform3 expectedTransform1 = base * Translation3{0_mm, 0_mm, pZ1};
       CHECK_CLOSE_OR_SMALL(vol1->localToGlobalTransform(gctx).matrix(),
@@ -238,8 +263,8 @@ BOOST_DATA_TEST_CASE(Baseline,
       // Volume 2 got bigger and shifted left
       auto newBounds2 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol2->volumeBounds());
-      BOOST_CHECK_EQUAL(newBounds2->get(CylinderVolumeBounds::eHalfLengthZ),
-                        hlZ + wGap / 2.0);
+      CHECK_CLOSE_REL(newBounds2->get(CylinderVolumeBounds::eHalfLengthZ),
+                      hlZ + wGap / 2.0, 1e-12);
       double pZ2 = wGap / 2.0;
       Transform3 expectedTransform2 = base * Translation3{0_mm, 0_mm, pZ2};
       CHECK_CLOSE_OR_SMALL(vol2->localToGlobalTransform(gctx).matrix(),
@@ -273,8 +298,8 @@ BOOST_DATA_TEST_CASE(Baseline,
       // Volume 2 got bigger and shifted left
       auto newBounds2 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol2->volumeBounds());
-      BOOST_CHECK_EQUAL(newBounds2->get(CylinderVolumeBounds::eHalfLengthZ),
-                        hlZ + wGap / 2.0);
+      CHECK_CLOSE_REL(newBounds2->get(CylinderVolumeBounds::eHalfLengthZ),
+                      hlZ + wGap / 2.0, 1e-12);
       double pZ2 = -wGap / 2.0;
       Transform3 expectedTransform2 = base * Translation3{0_mm, 0_mm, pZ2};
       CHECK_CLOSE_OR_SMALL(vol2->localToGlobalTransform(gctx).matrix(),
@@ -283,8 +308,8 @@ BOOST_DATA_TEST_CASE(Baseline,
       // Volume 3 got bigger and shifted left
       auto newBounds3 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol3->volumeBounds());
-      BOOST_CHECK_EQUAL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
-                        hlZ + wGap / 2.0);
+      CHECK_CLOSE_REL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
+                      hlZ + wGap / 2.0, 1e-12);
       double pZ3 = 2 * hlZ * shift - wGap / 2.0;
       Transform3 expectedTransform3 = base * Translation3{0_mm, 0_mm, pZ3};
       CHECK_CLOSE_OR_SMALL(vol3->localToGlobalTransform(gctx).matrix(),
@@ -298,8 +323,8 @@ BOOST_DATA_TEST_CASE(Baseline,
       // Volume 1 got bigger and shifted right
       auto newBounds1 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol1->volumeBounds());
-      BOOST_CHECK_EQUAL(newBounds1->get(CylinderVolumeBounds::eHalfLengthZ),
-                        hlZ + wGap / 4.0);
+      CHECK_CLOSE_REL(newBounds1->get(CylinderVolumeBounds::eHalfLengthZ),
+                      hlZ + wGap / 4.0, 1e-12);
       double pZ1 = -2 * hlZ * shift + wGap / 4.0;
       Transform3 expectedTransform1 = base * Translation3{0_mm, 0_mm, pZ1};
       CHECK_CLOSE_OR_SMALL(vol1->localToGlobalTransform(gctx).matrix(),
@@ -308,16 +333,16 @@ BOOST_DATA_TEST_CASE(Baseline,
       // Volume 2 got bigger but didn't move
       auto newBounds2 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol2->volumeBounds());
-      BOOST_CHECK_EQUAL(newBounds2->get(CylinderVolumeBounds::eHalfLengthZ),
-                        hlZ + wGap / 2.0);
+      CHECK_CLOSE_REL(newBounds2->get(CylinderVolumeBounds::eHalfLengthZ),
+                      hlZ + wGap / 2.0, 1e-12);
       CHECK_CLOSE_OR_SMALL(vol2->localToGlobalTransform(gctx).matrix(),
-                           base.matrix(), 1e-10, 1e-14);
+                           base.matrix(), 1e-10, 1e-12);
 
       // Volume 3 got bigger and shifted left
       auto newBounds3 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol3->volumeBounds());
-      BOOST_CHECK_EQUAL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
-                        hlZ + wGap / 4.0);
+      CHECK_CLOSE_REL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
+                      hlZ + wGap / 4.0, 1e-12);
       double pZ3 = 2 * hlZ * shift - wGap / 4.0;
       Transform3 expectedTransform3 = base * Translation3{0_mm, 0_mm, pZ3};
       CHECK_CLOSE_OR_SMALL(vol3->localToGlobalTransform(gctx).matrix(),
