@@ -152,17 +152,22 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   std::uint32_t seedCounter = 0;
 
   // profiling: a seed candidate and what became of it
-  const auto recordCandidate = [&](const std::vector<SpacePointIndex>& nodes,
-                                   const float quality,
-                                   const GbtsProfiler::CandidateFate fate) {
-    auto& candidate = profile->candidates.emplace_back();
-    std::ranges::transform(nodes, std::back_inserter(candidate.spacePoints),
-                           [&](const SpacePointIndex node) {
-                             return nodeStorage.spacePointIndex(node);
-                           });
-    candidate.quality = quality;
-    candidate.fate = fate;
-  };
+  const auto recordCandidate =
+      [&](const std::vector<SpacePointIndex>& nodes, const float quality,
+          const GbtsProfiler::CandidateFate fate,
+          const std::uint32_t nShared = 0, const float shareThreshold = 0.f,
+          const std::int32_t sharedWith = -1) {
+        auto& candidate = profile->candidates.emplace_back();
+        std::ranges::transform(nodes, std::back_inserter(candidate.spacePoints),
+                               [&](const SpacePointIndex node) {
+                                 return nodeStorage.spacePointIndex(node);
+                               });
+        candidate.quality = quality;
+        candidate.fate = fate;
+        candidate.nShared = nShared;
+        candidate.shareThreshold = shareThreshold;
+        candidate.sharedWith = sharedWith;
+      };
 
   // Turn the fitted path of every head edge into a seed candidate.
   for (const detail::GbtsEdgeState& rs :
@@ -293,6 +298,15 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   std::uint32_t trackIdx = 0;
 
+  // profiling: per candidate, the space points better ones own and the track
+  // id of the one owning most of them, zero for none
+  using IdCount = std::pair<std::uint32_t, std::uint32_t>;
+  std::vector<IdCount> shared;
+  std::vector<IdCount> owners;
+  if (profile != nullptr) {
+    shared.assign(vSeedCandidates.size(), {0, 0});
+  }
+
   for (const auto& args : vArgSort) {
     const auto& seed = vSeedCandidates[args.second].nodes;
 
@@ -304,6 +318,10 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     ++trackIdx;
 
+    if (profile != nullptr) {
+      owners.clear();
+    }
+
     for (const SpacePointIndex node : seed) {
       const std::uint32_t hitId = node + 1;
 
@@ -312,7 +330,27 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       // taken by a better candidate
       if (tid != trackId) {
         nOther++;
+        if (profile != nullptr) {
+          auto it = std::ranges::find(owners, tid, &IdCount::first);
+          if (it == owners.end()) {
+            owners.emplace_back(tid, 1);
+          } else {
+            ++it->second;
+          }
+        }
       }
+    }
+
+    if (profile != nullptr) {
+      std::uint32_t owner = 0;
+      std::uint32_t nOwned = 0;
+      for (const auto& [tid, n] : owners) {
+        if (n > nOwned || (n == nOwned && tid < owner)) {
+          owner = tid;
+          nOwned = n;
+        }
+      }
+      shared[args.second] = {nOther, owner};
     }
 
     if (nOther > m_cfg.hitShareThreshold * nTotal) {
@@ -323,12 +361,23 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   vOutputSeeds.reserve(vSeedCandidates.size());
 
   if (profile != nullptr) {
-    for (const SeedCandidateProperties& seed : vSeedCandidates) {
+    // the candidates go in in the order of vSeedCandidates, after the ones
+    // with too few space points; a track id is one past the position in
+    // vArgSort
+    const auto first = static_cast<std::int32_t>(profile->candidates.size());
+    for (std::size_t k = 0; k < vSeedCandidates.size(); ++k) {
+      const SeedCandidateProperties& seed = vSeedCandidates[k];
+      const auto [nShared, owner] = shared[k];
+      const std::int32_t sharedWith =
+          owner == 0
+              ? -1
+              : first + static_cast<std::int32_t>(vArgSort[owner - 1].second);
       using enum GbtsProfiler::CandidateFate;
       recordCandidate(seed.nodes, seed.seedQuality,
                       seed.isClone            ? Clone
                       : seed.forSeedSplitting ? Split
-                                              : Seed);
+                                              : Seed,
+                      nShared, m_cfg.hitShareThreshold, sharedWith);
     }
   }
 
