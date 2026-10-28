@@ -49,10 +49,11 @@ class CachedSurfacePolicy final : public INavigationPolicy {
     connectDefault<CachedSurfacePolicy>(delegate);
   }
 
-  void initializeCandidates(const GeometryContext&, const NavigationArguments&,
-                            NavigationPolicyState&,
+  void initializeCandidates(const GeometryContext& /*context*/,
+                            const NavigationArguments& /*args*/,
+                            NavigationPolicyState& /*state*/,
                             AppendOnlyNavigationStream& stream,
-                            const Logger&) const {
+                            const Logger& /*logger*/) const {
     stream.addSurfaceCandidate(*m_surface, BoundaryTolerance::None());
   }
 
@@ -128,13 +129,16 @@ BOOST_AUTO_TEST_CASE(RotatedTelescope) {
   BOOST_REQUIRE(placedVolumes.at("World")->volumeLookup() != nullptr);
   BOOST_REQUIRE(placedVolumes.at("Envelope")->volumeLookup() != nullptr);
   for (double z : {0_mm, 10_mm, 20_mm, 30_mm, 40_mm}) {
-    const auto* expected =
-        nominal->lowestTrackingVolume(gctx, Vector3{0., 0., z});
-    const auto* actual =
-        placed->lowestTrackingVolume(gctx, placement * Vector3{0., 0., z});
-    BOOST_REQUIRE(expected != nullptr);
-    BOOST_REQUIRE(actual != nullptr);
-    BOOST_CHECK_EQUAL(actual->volumeName(), expected->volumeName());
+    const auto expected =
+        nominal->resolveLowestTrackingVolume(gctx, Vector3{0., 0., z});
+    const auto actual = placed->resolveLowestTrackingVolume(
+        gctx, placement * Vector3{0., 0., z});
+    BOOST_REQUIRE(expected.ok());
+    BOOST_REQUIRE(actual.ok());
+    BOOST_REQUIRE(expected.value() != nullptr);
+    BOOST_REQUIRE(actual.value() != nullptr);
+    BOOST_CHECK_EQUAL(actual.value()->volumeName(),
+                      expected.value()->volumeName());
   }
   for (const auto& [name, reference] : referenceVolumes) {
     const auto& actual = *placedVolumes.at(name);
@@ -245,15 +249,16 @@ BOOST_AUTO_TEST_CASE(RejectExternalVolumePlacement) {
   class Placement final : public VolumePlacementBase {
    public:
     const Transform3& localToGlobalTransform(
-        const GeometryContext&) const override {
+        const GeometryContext& /*gctx*/) const override {
       return transform;
     }
     const Transform3& globalToLocalTransform(
-        const GeometryContext&) const override {
+        const GeometryContext& /*gctx*/) const override {
       return transform;
     }
-    const Transform3& portalLocalToGlobal(const GeometryContext&,
-                                          std::size_t) const override {
+    const Transform3& portalLocalToGlobal(
+        const GeometryContext& /*gctx*/,
+        std::size_t /*portalIdx*/) const override {
       throw std::logic_error(
           "Portals must not be created before placement validation");
     }

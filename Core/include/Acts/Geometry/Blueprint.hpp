@@ -72,7 +72,7 @@ class Blueprint : public BlueprintNode {
     /// and legacy layer/volume arrays or dense volumes are unsupported and
     /// rejected before any placement is applied. Custom nodes must implement
     /// @ref BlueprintNode::visitBuiltVolumes.
-    std::optional<Transform3> globalTransform;
+    std::optional<Transform3> globalTransform = std::nullopt;
   };
 
   /// Constructor from a config object
