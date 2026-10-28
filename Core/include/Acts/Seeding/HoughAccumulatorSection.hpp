@@ -371,7 +371,7 @@ void exploreHoughParametersSpace(
       newSections.push_back(thisSection.right());
     }
 
-    if (newSections.empty()){
+    if (newSections.empty()) {
       continue;
     }
 

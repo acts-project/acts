@@ -112,7 +112,8 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     ACTS_DEBUG("past deduplication " << stack1.size());
   }
 
-  // additional stack for smaller structure as HoughAccumulatorSection is no longer needed
+  // additional stack for smaller structure as HoughAccumulatorSection is no
+  // longer needed
   std::vector<SeedCandidate> stack3;
 
   // do scan in z_vertex - cot theta
@@ -133,12 +134,11 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
   // vector for selected candidates with or without second phase
   std::vector<SeedCandidate> selectedCandidates;
 
-  if (m_cfg.doSecondPhase){
+  if (m_cfg.doSecondPhase) {
     selectedCandidates = std::move(stack3);
-    }
-  else{
+  } else {
     selectedCandidates.reserve(stack1.size());
-    for (auto &section : stack1){
+    for (auto &section : stack1) {
       selectedCandidates.push_back({std::move(section.indices())});
     }
   }
@@ -246,14 +246,15 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
 
         if (section.count() < (m_cfg.noiseThreshold) &&
             !passIntersectionsCheck(section, mes, opt.lineFunctor,
-                                    cfg.threshold * (cfg.threshold - 1)/2)) {
+                                    cfg.threshold * (cfg.threshold - 1) / 2)) {
           sStat[section.divisionLevel()].discardedByCrossingCut++;
           return Discard;
         }
 
         if (section.divisionLevel() <= cfg.maxDivision - 1) {
           sStat[section.divisionLevel()].nDrilledSectionsStandard++;
-          sStat[section.divisionLevel()].drilledArea += section.xSize() * section.ySize();
+          sStat[section.divisionLevel()].drilledArea +=
+              section.xSize() * section.ySize();
           return Drill;
         }
 
@@ -262,7 +263,8 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
             section.ySize() <= cfg.qOverPtMinBinSize) {
           sStat[section.divisionLevel()].nAcceptedSections++;
           sStat[section.divisionLevel()].nAcceptedLines += section.count();
-          sStat[section.divisionLevel()].acceptedArea += section.xSize() * section.ySize();
+          sStat[section.divisionLevel()].acceptedArea +=
+              section.xSize() * section.ySize();
           return Accept;
         }
         sStat[section.divisionLevel()].drilledArea +=
@@ -284,15 +286,16 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
   ACTS_DEBUG(" [Q/pT - Phi] process stats ");
   ACTS_DEBUG("===========================================================");
   for (const auto &[div, stats] : sStat) {
-    ACTS_DEBUG("Lvl: " << div
-                       << " | Cut(Thresh): " << stats.discardedByThresholdCut
-                       << " | Cut(Cross): " << stats.discardedByCrossingCut
-                       << " | Area(Drill): " << stats.drilledArea
-                       << " | nSections(Drill_standard): " << stats.nDrilledSectionsStandard
-                       << " | nSections(Drill_extra): " << stats.nDrilledSectionsExtra
-                       << " | Area(Accept): " << stats.acceptedArea
-                       << " | nSections(Accept): " << stats.nAcceptedSections
-                       << " | nLines(Accept): " << stats.nAcceptedLines);
+    ACTS_DEBUG(
+        "Lvl: " << div << " | Cut(Thresh): " << stats.discardedByThresholdCut
+                << " | Cut(Cross): " << stats.discardedByCrossingCut
+                << " | Area(Drill): " << stats.drilledArea
+                << " | nSections(Drill_standard): "
+                << stats.nDrilledSectionsStandard
+                << " | nSections(Drill_extra): " << stats.nDrilledSectionsExtra
+                << " | Area(Accept): " << stats.acceptedArea
+                << " | nSections(Accept): " << stats.nAcceptedSections
+                << " | nLines(Accept): " << stats.nAcceptedLines);
   }
   ACTS_DEBUG("===========================================================");
 }
@@ -333,7 +336,8 @@ void AdaptiveHoughTransformSeeder::findClusters1D(
     // This allows the 1D sliding window below to identify dense line crossings
     std::sort(yVals.begin(), yVals.end());
 
-    // 1D sliding window scan: check if at least 'req_lines' fall within 'maxSpread'
+    // 1D sliding window scan: check if at least 'req_lines' fall within
+    // 'maxSpread'
     for (unsigned i = 0; i <= cnt - req_lines; ++i) {
       if (yVals[i + req_lines - 1].y - yVals[i].y <= maxSpread) {
         std::vector<unsigned> clustered_indices;
@@ -349,10 +353,12 @@ void AdaptiveHoughTransformSeeder::findClusters1D(
           }
         }
 
-        // Sort measurement indices to form a canonical key for hash deduplication
+        // Sort measurement indices to form a canonical key for hash
+        // deduplication
         std::sort(clustered_indices.begin(), clustered_indices.end());
 
-        // Insert into hash set to prevent duplicate seed candidates across check points
+        // Insert into hash set to prevent duplicate seed candidates across
+        // check points
         if (uniqueClusters.insert(clustered_indices).second) {
           output.push_back({std::move(clustered_indices)});
         }
@@ -500,10 +506,10 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
     const auto z =
         static_cast<float>(sp[1]->z() - sp[1]->r() * cotThetaEstimate);
     seed.vertexZ() = z;
-
   }
   if (skippedCandidatesCounter > 0) {
-    ACTS_VERBOSE("Diagnostic: Skipped " << skippedCandidatesCounter 
+    ACTS_VERBOSE("Diagnostic: Skipped "
+                 << skippedCandidatesCounter
                  << " invalid seed candidates (insufficient points) out of "
                  << solutions.size() << " total sections.");
   }

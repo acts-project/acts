@@ -198,8 +198,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param uniqueClusters hash set tracking already discovered index combinations
   /// @param output output vector of unique seed candidates
   void findClusters1D(
-      const std::vector<unsigned> &indices,
-      std::span<const float> checkPoints,
+      const std::vector<unsigned> &indices, std::span<const float> checkPoints,
       const std::vector<PreprocessedMeasurement> &measurements,
       const LineFunctor &lineFunctor, float maxSpread,
       std::unordered_set<std::vector<unsigned>, VectorHash> &uniqueClusters,
@@ -215,8 +214,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the input to be translated
   /// @param measurements are input measurements
   void makeSeeds(
-      SeedContainer &seeds,
-      const std::vector<SeedCandidate> &solutions,
+      SeedContainer &seeds, const std::vector<SeedCandidate> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   LineFunctor m_qOverPtPhiLineParams = [this](const PreprocessedMeasurement &m,
