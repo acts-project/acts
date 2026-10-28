@@ -36,4 +36,16 @@ target_link_libraries(
         GeoModelIO::GeoModelRead
 )
 
+if(ACTS_BUILD_PLUGIN_JSON)
+    target_link_libraries(ActsPluginGeoModel PRIVATE ActsPluginJson)
+    target_sources(
+        ActsPluginGeoModel
+        PRIVATE src/GeoModelJsonMaterialManager.cpp
+    )
+    target_compile_definitions(
+        ActsPluginGeoModel
+        PUBLIC ACTS_BUILD_PLUGIN_JSON=1
+    )
+endif()
+
 acts_compile_headers(PluginGeoModel GLOB include/**/*.hpp)
