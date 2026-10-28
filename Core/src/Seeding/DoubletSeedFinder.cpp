@@ -499,13 +499,13 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
 DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
                                                 float bFieldInZ_)
     : Config(config), bFieldInZ(bFieldInZ_) {
-  // the deprecated deltaZMin and deltaZMax, folded into absDeltaZMax
-  if (deltaZMin != -deltaZMax) {
+  // the deltaZ cut is symmetric, deltaZMin is only checked
+  if (deltaZMin != -std::numeric_limits<float>::infinity() &&
+      deltaZMin != -deltaZMax) {
     throw std::invalid_argument(
         "DoubletSeedFinder: the deltaZ cut is symmetric: deltaZMin must be "
-        "-deltaZMax (use absDeltaZMax)");
+        "-deltaZMax");
   }
-  absDeltaZMax = std::min(absDeltaZMax, deltaZMax);
 
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   const float pTPerHelixRadius = bFieldInZ;
