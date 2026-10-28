@@ -21,9 +21,7 @@ namespace Acts {
 
 void GeometryIdentifierBlueprintNode::visitBuiltVolumes(
     const std::function<void(Volume&)>& visitor) {
-  for (auto& child : children()) {
-    child.visitBuiltVolumes(visitor);
-  }
+  visitBuiltChildVolumes(visitor);
 }
 
 namespace {

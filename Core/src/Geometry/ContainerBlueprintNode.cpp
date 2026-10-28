@@ -30,9 +30,7 @@ void ContainerBlueprintNode::visitBuiltVolumes(
   for (const auto& gap : m_stack->gaps()) {
     visitor(*gap);
   }
-  for (auto& child : children()) {
-    child.visitBuiltVolumes(visitor);
-  }
+  visitBuiltChildVolumes(visitor);
 }
 
 ContainerBlueprintNode::ContainerBlueprintNode(

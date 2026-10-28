@@ -32,9 +32,7 @@ void StaticBlueprintNode::visitBuiltVolumes(
     throw std::logic_error("Cannot visit an unbuilt static blueprint node");
   }
   visitor(*m_volume);
-  for (auto& child : children()) {
-    child.visitBuiltVolumes(visitor);
-  }
+  visitBuiltChildVolumes(visitor);
 }
 
 StaticBlueprintNode::StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume)

@@ -39,6 +39,9 @@ namespace {
 // transforms. Pointer identity matters: surfaces may be shared between nodes.
 class PlacementCollector final : public TrackingGeometryMutableVisitor {
  public:
+  // Container stacks and their not-yet-connected gaps are bare Volumes.
+  // Static nodes own TrackingVolumes, which can already contain surfaces and
+  // child volumes; the blueprint-node traversal does not visit that content.
   void collect(Volume &volume) {
     if (auto *tracking = dynamic_cast<TrackingVolume *>(&volume)) {
       tracking->apply(*this);
@@ -248,6 +251,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   if (m_cfg.globalTransform) {
     PlacementCollector collector;
+    // The world is owned here, outside the blueprint subtree. Child volumes
+    // remain owned by their nodes until finalize(), so neither traversal
+    // reaches the other.
     collector.collect(*world);
     child.visitBuiltVolumes([&](Volume &volume) { collector.collect(volume); });
     collector.place(*m_cfg.globalTransform, gctx);
