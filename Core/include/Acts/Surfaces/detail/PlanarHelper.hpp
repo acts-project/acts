@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/detail/CurvatureCorrection.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 /// @brief Helpers for planar surfaces that share the same maths
@@ -77,3 +78,38 @@ inline Intersection3D intersect(const Transform3& transform,
 }
 
 }  // namespace Acts::PlanarHelper
+
+namespace Acts::detail::PlanarHelper {
+
+// Retain the existing ray helper without moving its established namespace.
+using Acts::PlanarHelper::intersect;
+
+template <bool Quadratic = s_useQuadraticCurvatureCorrection>
+inline Intersection3D correctPlanarCurvatureIntersection(
+    const Intersection3D& seed, const Vector3& direction,
+    const Vector3& curvature, const Vector3& normal) {
+  // Arrival is determined from the actual starting position, never predicted.
+  if (!seed.isValid() || seed.status() == IntersectionStatus::onSurface) {
+    return seed;
+  }
+  if (auto corrected = correctCurvatureIntersection<Quadratic>(
+          seed.pathLength(), seed.position(), direction, curvature,
+          normal.dot(direction), normal.dot(curvature), curvature.norm())) {
+    return {corrected->first, corrected->second, IntersectionStatus::reachable};
+  }
+  return seed;
+}
+
+// Intersect the supporting plane, then correct the ray seed. Physical bounds
+// remain the responsibility of PlaneSurface and DiscSurface.
+template <bool Quadratic = s_useQuadraticCurvatureCorrection>
+inline Intersection3D intersect(const Transform3& transform,
+                                const Vector3& position,
+                                const Vector3& direction,
+                                const Vector3& curvature, double tolerance) {
+  return correctPlanarCurvatureIntersection<Quadratic>(
+      Acts::PlanarHelper::intersect(transform, position, direction, tolerance),
+      direction, curvature, transform.matrix().block<3, 1>(0, 2));
+}
+
+}  // namespace Acts::detail::PlanarHelper
