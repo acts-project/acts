@@ -16,7 +16,7 @@
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
-#include "Acts/Surfaces/detail/CurvatureCorrection.hpp"
+#include "Acts/Surfaces/detail/CylinderHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
@@ -319,23 +319,14 @@ MultiIntersection3D CylinderSurface::intersect(
     return std::abs(s) < std::abs(tolerance) ? IntersectionStatus::onSurface
                                              : IntersectionStatus::reachable;
   };
-  const auto prepare =
-      [&](double s,
-          const Vector3& seed) -> std::optional<std::pair<Vector3, double>> {
-    if (status(s) == IntersectionStatus::onSurface) {
-      return std::nullopt;
-    }
-    // n = (seed.x, seed.y, 0)/R. The common 1/R cancels in ds; using
-    // the actual seed avoids cancellation from sharing expanded dot products
-    // between distant ray roots. The incidence guard is scaled by R too.
-    return detail::correctCurvatureIntersection(
-        s, seed, localDirection, localCurvature,
-        seed.head<2>().dot(localDirection.head<2>()),
-        seed.head<2>().dot(localCurvature.head<2>()), curvatureNorm, radius);
-  };
-  auto first = prepare(s1, seed1);
-  auto second = prepare(s2, seed2);
-  const auto scales = detail::cylinderProjectionScales(first, second, radius);
+  auto first = detail::CylinderHelper::correctIntersection(
+      s1, seed1, localDirection, localCurvature, curvatureNorm, radius,
+      tolerance);
+  auto second = detail::CylinderHelper::correctIntersection(
+      s2, seed2, localDirection, localCurvature, curvatureNorm, radius,
+      tolerance);
+  const auto scales =
+      detail::CylinderHelper::cylinderProjectionScales(first, second, radius);
   const auto inside = [&](const Vector3& local, bool fallback) {
     if (boundaryTolerance.isInfinite()) {
       return true;

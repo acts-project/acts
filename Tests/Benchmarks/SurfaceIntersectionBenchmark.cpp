@@ -18,7 +18,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Surfaces/detail/CurvatureIntersection.hpp"
+#include "Acts/Surfaces/detail/CurvatureCorrection.hpp"
 #include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <chrono>
@@ -129,6 +129,8 @@ BOOST_DATA_TEST_CASE(
 
 // Compare the same finite surfaces and inputs, including the zero-curvature
 // fast path. These timings exclude magnetic-field lookup and navigation work.
+// To compare correction modes, change s_useQuadraticCurvatureCorrection and
+// rebuild: both runs then measure the same production surface dispatch.
 BOOST_AUTO_TEST_CASE(benchmark_curvature_intersections) {
   const auto plane = Surface::makeShared<PlaneSurface>(
       Transform3(Translation3(0., 0., 200.)),
@@ -158,20 +160,12 @@ BOOST_AUTO_TEST_CASE(benchmark_curvature_intersections) {
                      },
                      1000, 2000, std::chrono::milliseconds(200))
               << '\n';
-    std::cout << "  first order: "
+    std::cout << (detail::s_useQuadraticCurvatureCorrection ? "  quadratic: "
+                                                            : "  first order: ")
               << microBenchmark(
                      [&] {
                        return surface.intersect(tgContext, origin, direction,
                                                 curvature, bounds);
-                     },
-                     1000, 2000, std::chrono::milliseconds(200))
-              << '\n';
-    std::cout << "  quadratic: "
-              << microBenchmark(
-                     [&] {
-                       return detail::intersectWithCurvature<true>(
-                           surface, tgContext, origin, direction, curvature,
-                           bounds);
                      },
                      1000, 2000, std::chrono::milliseconds(200))
               << '\n';

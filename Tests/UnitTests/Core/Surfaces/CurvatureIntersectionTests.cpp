@@ -14,7 +14,8 @@
 #include "Acts/Surfaces/PointSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/detail/CurvatureIntersection.hpp"
+#include "Acts/Surfaces/detail/CurvatureCorrection.hpp"
+#include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
@@ -24,6 +25,43 @@
 using namespace Acts;
 namespace ActsTests {
 const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+BOOST_AUTO_TEST_CASE(CurvatureCorrectionModes) {
+  const Vector3 direction = Vector3::UnitZ();
+  const Vector3 normal = Vector3(1., 0., 1.).normalized();
+  const double s = 100.;
+  const Vector3 seed = s * direction;
+  for (double k : {0., 0.0005, -0.0005}) {
+    const Vector3 curvature(k, 0., 0.);
+    for (double scale : {1., 100.}) {
+      const auto first = detail::correctCurvatureIntersection<false>(
+          s, seed, direction, curvature, scale * normal.dot(direction),
+          scale * normal.dot(curvature), curvature.norm(), scale);
+      const auto quadratic = detail::correctCurvatureIntersection<true>(
+          s, seed, direction, curvature, scale * normal.dot(direction),
+          scale * normal.dot(curvature), curvature.norm(), scale);
+      BOOST_REQUIRE(first);
+      BOOST_REQUIRE(quadratic);
+      CHECK_CLOSE_ABS(normal.dot(first->first - seed), 0., 1e-12);
+      CHECK_CLOSE_ABS(normal.dot(quadratic->first - seed), 0., 1e-12);
+      const double path = quadratic->second;
+      CHECK_CLOSE_ABS(quadratic->first,
+                      (path * direction + 0.5 * path * path * curvature).eval(),
+                      1e-12);
+      const auto selected = detail::correctCurvatureIntersection(
+          s, seed, direction, curvature, scale * normal.dot(direction),
+          scale * normal.dot(curvature), curvature.norm(), scale);
+      BOOST_REQUIRE(selected);
+      const auto& expected =
+          detail::s_useQuadraticCurvatureCorrection ? quadratic : first;
+      CHECK_CLOSE_ABS(selected->first, expected->first, 1e-12);
+      CHECK_CLOSE_ABS(selected->second, expected->second, 1e-12);
+    }
+  }
+  // A local parabola that turns before reaching the plane has no real root.
+  BOOST_CHECK(!detail::correctCurvatureIntersection<true>(
+      s, seed, direction, Vector3(-0.001, 0., 0.), 0.1, -0.001, 0.001));
+}
 
 // Compare against an independent constant-field circle, not the truncated
 // trajectory. The quadratic solve need not improve the missing helix terms.
@@ -38,14 +76,22 @@ BOOST_AUTO_TEST_CASE(CurvatureQuadraticComparison) {
         transform, std::make_shared<RectangleBounds>(1000., 1000.));
     for (double k : {0., 0.00025, 0.0005, -0.0005}) {
       const Vector3 curvature(k, 0., 0.);
-      const auto first = plane
-                             ->intersect(gctx, start, direction, curvature,
-                                         BoundaryTolerance::None())
-                             .at(0);
-      const auto quadratic = detail::intersectWithCurvature<true>(
-                                 *plane, gctx, start, direction, curvature,
-                                 BoundaryTolerance::None())
-                                 .at(0);
+      const auto seed = plane->intersect(gctx, start, direction).at(0);
+      const Vector3 normal = transform.linear().col(2);
+      const auto first =
+          detail::PlanarHelper::correctPlanarCurvatureIntersection<false>(
+              seed, direction, curvature, normal);
+      const auto quadratic =
+          detail::PlanarHelper::correctPlanarCurvatureIntersection<true>(
+              seed, direction, curvature, normal);
+      const auto selected = plane
+                                ->intersect(gctx, start, direction, curvature,
+                                            BoundaryTolerance::None())
+                                .at(0);
+      const auto& expected =
+          detail::s_useQuadraticCurvatureCorrection ? quadratic : first;
+      CHECK_CLOSE_ABS(selected.position(), expected.position(), 1e-10);
+      CHECK_CLOSE_ABS(selected.pathLength(), expected.pathLength(), 1e-10);
       BOOST_REQUIRE(first.isValid());
       BOOST_REQUIRE(quadratic.isValid());
       const double path = quadratic.pathLength();
@@ -53,10 +99,10 @@ BOOST_AUTO_TEST_CASE(CurvatureQuadraticComparison) {
                       (path * direction + 0.5 * path * path * curvature).eval(),
                       1e-10);
       BOOST_CHECK(plane->isOnSurface(gctx, quadratic.position(), direction));
-      const auto reverse = detail::intersectWithCurvature<true>(
-                               *plane, gctx, start, -direction, curvature,
-                               BoundaryTolerance::None())
-                               .at(0);
+      const auto reverseSeed = plane->intersect(gctx, start, -direction).at(0);
+      const auto reverse =
+          detail::PlanarHelper::correctPlanarCurvatureIntersection<true>(
+              reverseSeed, -direction, curvature, normal);
       CHECK_CLOSE_ABS(reverse.position(), quadratic.position(), 1e-10);
       CHECK_CLOSE_ABS(reverse.pathLength(), -path, 1e-10);
       const auto exact = [k](double s) -> Vector3 {
@@ -66,7 +112,6 @@ BOOST_AUTO_TEST_CASE(CurvatureQuadraticComparison) {
         return Vector3(2. * std::pow(std::sin(k * s / 2.), 2) / k, 0.,
                        std::sin(k * s) / k);
       };
-      const Vector3 normal = transform.linear().col(2);
       double lo = 0.;
       double hi = 400.;
       for (int i = 0; i < 60; ++i) {

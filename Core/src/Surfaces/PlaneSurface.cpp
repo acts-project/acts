@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
-#include "Acts/Surfaces/detail/CurvatureCorrection.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
@@ -202,11 +201,8 @@ MultiIntersection3D PlaneSurface::intersect(
   // Get the contextual transform
   const auto& gctxTransform = localToGlobalTransform(gctx);
   // Use the intersection helper for planar surfaces
-  auto intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
-  intersection = detail::correctPlanarCurvatureIntersection(
-      intersection, direction, curvature,
-      gctxTransform.matrix().block<3, 1>(0, 2));
+  auto intersection = detail::PlanarHelper::intersect(
+      gctxTransform, position, direction, curvature, tolerance);
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status() != IntersectionStatus::unreachable) {
