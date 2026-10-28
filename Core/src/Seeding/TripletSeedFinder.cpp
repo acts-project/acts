@@ -480,53 +480,110 @@ class Impl final : public TripletSeedFinder {
     return topDoublets;
   }
 
-  template <typename DoubletCollections>
-  void createTripletTopCandidatesImpl(
+  DoubletsForMiddleSp::Range createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      DoubletCollections bottomDoublets, DoubletCollections topDoublets,
-      TripletTopCandidates& tripletTopCandidates,
-      const CandidatesCallback& callback) const {
+      const DoubletsForMiddleSp::Proxy& bottomDoublet,
+      DoubletsForMiddleSp::Range topDoublets,
+      TripletTopCandidates& tripletTopCandidates) const override {
     // Reserve enough space, in case current capacity is too little
-    tripletTopCandidates.reserve(topDoublets.size());
+    tripletTopCandidates.reserve(tripletTopCandidates.size() +
+                                 topDoublets.size());
 
-    for (auto bottomDoublet : bottomDoublets) {
-      if (topDoublets.empty()) {
-        break;
-      }
-
-      tripletTopCandidates.clear();
-      if constexpr (useStripInfo) {
-        topDoublets = createStripTripletTopCandidates(
-            spacePoints, spM, bottomDoublet, topDoublets, tripletTopCandidates);
-      } else {
-        topDoublets = createPixelTripletTopCandidates(
-            spacePoints, spM, bottomDoublet, topDoublets, tripletTopCandidates);
-      }
-
-      if (tripletTopCandidates.size() > 0) {
-        callback(bottomDoublet, tripletTopCandidates);
-      }
+    if constexpr (useStripInfo) {
+      return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
+    } else {
+      return createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
     }
   }
 
-  void createTripletTopCandidates(
+  DoubletsForMiddleSp::Subset createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      DoubletsForMiddleSp::Range bottomDoublets,
-      DoubletsForMiddleSp::Range topDoublets,
-      TripletTopCandidates& tripletTopCandidates,
-      const CandidatesCallback& callback) const override {
-    createTripletTopCandidatesImpl(spacePoints, spM, bottomDoublets,
-                                   topDoublets, tripletTopCandidates, callback);
+      const DoubletsForMiddleSp::Proxy& bottomDoublet,
+      DoubletsForMiddleSp::Subset topDoublets,
+      TripletTopCandidates& tripletTopCandidates) const override {
+    // Reserve enough space, in case current capacity is too little
+    tripletTopCandidates.reserve(tripletTopCandidates.size() +
+                                 topDoublets.size());
+
+    if constexpr (useStripInfo) {
+      return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
+    } else {
+      return createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
+    }
   }
 
-  void createTripletTopCandidates(
+  DoubletsForMiddleSp::Subset2 createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      DoubletsForMiddleSp::Subset2 bottomDoublets,
+      const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Subset2 topDoublets,
-      TripletTopCandidates& tripletTopCandidates,
-      const CandidatesCallback& callback) const override {
-    createTripletTopCandidatesImpl(spacePoints, spM, bottomDoublets,
-                                   topDoublets, tripletTopCandidates, callback);
+      TripletTopCandidates& tripletTopCandidates) const override {
+    // Reserve enough space, in case current capacity is too little
+    tripletTopCandidates.reserve(tripletTopCandidates.size() +
+                                 topDoublets.size());
+
+    if constexpr (useStripInfo) {
+      return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
+    } else {
+      return createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
+    }
+  }
+
+  template <typename DoubletCollections>
+  bool createNextTripletTopCandidatesImpl(
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
+      DoubletCollections& bottomDoublets, DoubletCollections& topDoublets,
+      TripletTopCandidates& tripletTopCandidates) const {
+    // search on local copies, so that the views can stay in registers while
+    // the candidates are written
+    DoubletCollections bottoms = bottomDoublets;
+    DoubletCollections tops = topDoublets;
+    // the candidates are cleared for each bottom doublet and the top doublets
+    // only shrink, so this covers every bottom doublet searched here
+    tripletTopCandidates.reserve(tops.size());
+    bool found = false;
+    for (; !bottoms.empty() && !tops.empty(); bottoms = bottoms.subrange(1)) {
+      tripletTopCandidates.clear();
+      const auto bottomDoublet = *bottoms.begin();
+      if constexpr (useStripInfo) {
+        tops = createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                               tops, tripletTopCandidates);
+      } else {
+        tops = createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                               tops, tripletTopCandidates);
+      }
+
+      if (tripletTopCandidates.size() > 0) {
+        found = true;
+        break;
+      }
+    }
+    bottomDoublets = bottoms;
+    topDoublets = tops;
+    return found;
+  }
+
+  bool createNextTripletTopCandidates(
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
+      DoubletsForMiddleSp::Range& bottomDoublets,
+      DoubletsForMiddleSp::Range& topDoublets,
+      TripletTopCandidates& tripletTopCandidates) const override {
+    return createNextTripletTopCandidatesImpl(
+        spacePoints, spM, bottomDoublets, topDoublets, tripletTopCandidates);
+  }
+
+  bool createNextTripletTopCandidates(
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
+      DoubletsForMiddleSp::Subset2& bottomDoublets,
+      DoubletsForMiddleSp::Subset2& topDoublets,
+      TripletTopCandidates& tripletTopCandidates) const override {
+    return createNextTripletTopCandidatesImpl(
+        spacePoints, spM, bottomDoublets, topDoublets, tripletTopCandidates);
   }
 
  private:
