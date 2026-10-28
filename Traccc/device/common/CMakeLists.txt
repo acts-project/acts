@@ -71,6 +71,8 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/seeding/device/impl/update_triplet_weights.ipp"
    "include/traccc/seeding/device/select_seeds.hpp"
    "include/traccc/seeding/device/impl/select_seeds.ipp"
+   "include/traccc/seeding/device/suppress_seeds.hpp"
+   "include/traccc/seeding/device/impl/suppress_seeds.ipp"
    "include/traccc/seeding/device/triplet_seeding_algorithm.hpp"
    "src/seeding/triplet_seeding_algorithm.cpp"
    "include/traccc/seeding/device/silicon_pixel_spacepoint_formation_algorithm.hpp"

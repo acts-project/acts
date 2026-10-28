@@ -23,6 +23,8 @@ TRACCC_HOST_DEVICE
 inline void count_doublets(
     const global_index_t globalIndex, const seedfinder_config& config,
     const edm::spacepoint_collection::const_view& spacepoints_view,
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations_view,
     const traccc::details::spacepoint_grid_types::const_view& sp_view,
     const vecmem::data::vector_view<const prefix_sum_element_t>& sp_ps_view,
     doublet_counter_collection_types::view doublet_view, unsigned int& nMidBot,
@@ -43,8 +45,13 @@ inline void count_doublets(
 
   // Get the spacepoint that we're evaluating in this thread, and treat that
   // as the "middle" spacepoint.
+  const strip_spacepoint_calibration_collection_types::const_device
+      strip_calibrations(strip_calibrations_view);
+
+  const unsigned int middle_global_idx =
+      sp_grid.bin(middle_sp_idx.first).at(middle_sp_idx.second);
   const edm::spacepoint_collection::const_device::const_proxy_type middle_sp =
-      spacepoints.at(sp_grid.bin(middle_sp_idx.first).at(middle_sp_idx.second));
+      spacepoints.at(middle_global_idx);
 
   // The the IDs of the neighbouring bins along the phi and Z axes of the
   // grid.
@@ -92,6 +99,17 @@ inline void count_doublets(
         // Get the other spacepoint.
         const edm::spacepoint_collection::const_device::const_proxy_type
             other_sp = spacepoints.at(other_sp_idx);
+
+        // Reject the pair outright if its chord misses either strip pair.
+        // The && short circuits, so no calibration is read when the cut is
+        // off, and the branch is uniform across the grid.
+        if (config.doubletStripCalibrationCut &&
+            !doublet_finding_helper::isCompatibleStripDoublet(
+                middle_sp, other_sp, strip_calibrations.at(middle_global_idx),
+                strip_calibrations.at(other_sp_idx),
+                config.doubletStripCalibrationTolerance)) {
+          continue;
+        }
 
         // Check if this spacepoint is a compatible "bottom" spacepoint
         // to the thread's "middle" spacepoint.

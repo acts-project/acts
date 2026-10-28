@@ -18,6 +18,7 @@
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/seeding/detail/seeding_config.hpp"
+#include "traccc/seeding/detail/strip_spacepoint_calibration.hpp"
 #include "traccc/seeding/detail/spacepoint_grid.hpp"
 
 namespace traccc::device {
@@ -43,6 +44,8 @@ TRACCC_HOST_DEVICE
 inline void count_triplets(
     global_index_t globalIndex, const seedfinder_config& config,
     const edm::spacepoint_collection::const_view& spacepoints,
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations,
     const traccc::details::spacepoint_grid_types::const_view& sp_view,
     const doublet_counter_collection_types::const_view& dc_view,
     const device_doublet_collection_types::const_view& mid_bot_doublet_view,
