@@ -52,6 +52,8 @@ inline MultiIntersection3D intersectWithCurvature(
   if (curvature.isZero(0.) || !supported || !curvature.allFinite()) {
     return straight();
   }
+  // Use unbounded ray seeds: a ray outside the sensor bounds can bend inside.
+  // Bounds are applied only after correcting the crossing below.
   const auto seeds = surface.intersect(
       gctx, position, direction, BoundaryTolerance::Infinite(), tolerance);
   const auto correct = [&](IntersectionIndex index) -> Intersection3D {
@@ -67,9 +69,34 @@ inline MultiIntersection3D intersectWithCurvature(
     const double s = seed.pathLength();
     const Vector3 normal = surface.normal(gctx, seed.position(), direction);
     const double incidence = normal.dot(direction);
+    // Near tangency the root shift is singular, so a perturbation about the
+    // ray root is unreliable. |s|*|curvature| estimates the local tangent
+    // change; its limit and the relative path-shift limit below are heuristic
+    // guards, not bounds on the intersection error.
     if (std::abs(incidence) < 1e-6 || std::abs(s) * curvature.norm() > 0.2) {
       return straight().at(index);
     }
+    // Local trajectory model, with unit tangent t and k = d^2 x / ds^2:
+    //
+    //   x(u) ~= x0 + u*t + (u^2/2)*k.
+    //
+    // k has units of inverse length. We freeze it at the starting point; this
+    // omits its evolution along the trajectory and is not an exact helix model.
+    // Let y = x0 + s*t be the ray seed and n its surface normal. Write the
+    // corrected path as s + ds. Substitution into the local model gives
+    //
+    //   x(s + ds) = y + (s^2/2)*k + ds*t + s*ds*k + (ds^2/2)*k.
+    //
+    // For a regular (non-grazing) root, ds is first order in k. Thus s*ds*k
+    // and (ds^2/2)*k are second and third order in k, respectively, and are
+    // dropped. With Delta = (s^2/2)*k, the linearized surface equation is
+    //
+    //   n . (Delta + ds*t) = 0  =>  ds = -(n . Delta)/(n . t).
+    //
+    // We retain this first-order path shift: the corrected point is
+    // y + Delta + ds*t, and its path estimate is s + ds. Although the local
+    // trajectory is quadratic in path length, the intersection correction is
+    // only first order in curvature; no quadratic root equation is solved.
     const Vector3 delta = (0.5 * s * s) * curvature;
     const double ds = -normal.dot(delta) / incidence;
     if (!std::isfinite(ds) || std::abs(ds) > 0.2 * std::abs(s)) {
@@ -77,6 +104,11 @@ inline MultiIntersection3D intersectWithCurvature(
     }
     Vector3 crossing = seed.position() + delta + ds * direction;
     if (surface.type() == Surface::Cylinder) {
+      // The correction lies on the tangent plane, which is the exact support
+      // surface for planes/discs but only a local approximation for cylinders.
+      // Restore the cylinder radius before checking bounds. Near the seed this
+      // projection changes the point at second order in the displacement; it
+      // does not make the trajectory or path estimate second-order accurate.
       const auto& transform = surface.localToGlobalTransform(gctx);
       Vector3 local = transform.inverse() * crossing;
       const double radius = static_cast<const CylinderBounds&>(surface.bounds())
