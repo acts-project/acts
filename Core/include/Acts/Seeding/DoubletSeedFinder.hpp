@@ -310,10 +310,9 @@ class DoubletSeedFinder {
     /// Maximum radial distance between two doublet components
     float deltaRMax = 270 * UnitConstants::mm;
 
-    /// Minimal z distance between two doublet components. The cut is assumed
-    /// symmetric about zero: this must be -deltaZMax.
+    /// Minimal z distance between two doublet components
     float deltaZMin = -std::numeric_limits<float>::infinity();
-    /// Maximum absolute z distance between two doublet components
+    /// Maximum z distance between two doublet components
     float deltaZMax = std::numeric_limits<float>::infinity();
 
     /// Maximum value of impact parameter estimation of the seed candidates
@@ -328,11 +327,9 @@ class DoubletSeedFinder {
     bool useTime = false;
 
     /// Limiting location of collision region in z-axis used to check if doublet
-    /// origin is within reasonable bounds. The region is assumed symmetric
-    /// about z = 0: this must be -collisionRegionMax.
+    /// origin is within reasonable bounds
     float collisionRegionMin = -150 * UnitConstants::mm;
-    /// Half length of the collision region in z-axis, centred at z = 0, for
-    /// doublet origin checks
+    /// Maximum collision region boundary in z-axis for doublet origin checks
     float collisionRegionMax = +150 * UnitConstants::mm;
 
     /// Maximum allowed cotTheta between two space-points in doublet, used to

@@ -1446,6 +1446,7 @@ class Gx2Fitter {
     track.parameters() = params.parameters();
     track.covariance() = fullCovariancePredicted;
     track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+    track.setParticleHypothesis(sParameters.particleHypothesis());
 
     if (trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {

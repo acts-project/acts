@@ -81,7 +81,7 @@ set(ACTS_ANNOY_SOURCE
 mark_as_advanced(ACTS_ANNOY_SOURCE)
 
 set(ACTS_ODD_SOURCE
-    "GIT_REPOSITORY;https://github.com/OpenDataDetector/OpenDataDetector.git;GIT_TAG;v6.0.2"
+    "GIT_REPOSITORY;https://github.com/OpenDataDetector/OpenDataDetector.git;GIT_TAG;v6.0.3"
     CACHE STRING
     "Source to take OpenDataDetector from"
 )
