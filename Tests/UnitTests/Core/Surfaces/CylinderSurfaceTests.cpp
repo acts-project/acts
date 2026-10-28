@@ -36,6 +36,7 @@
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <array>
 #include <cmath>
 #include <memory>
 #include <numbers>
@@ -256,6 +257,135 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
   *assignedCylinderSurface = *cylinderSurfaceObject;
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedCylinderSurface == *cylinderSurfaceObject);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderSurfaceIntersectionTransforms) {
+  Transform3 translated{Translation3{17., -23., 41.}};
+  Transform3 flipped = translated;
+  flipped.linear() = Vector3(1., -1., -1.).asDiagonal();
+  const std::array<Transform3, 5> transforms{
+      Transform3::Identity(), translated,
+      translated * AngleAxis3(0.7, Vector3::UnitZ()), flipped,
+      translated * AngleAxis3(0.4, Vector3(1., 2., 3.).normalized())};
+
+  for (const auto& transform : transforms) {
+    BOOST_TEST_CONTEXT("transform: " << transform.matrix()) {
+      auto cylinder = Surface::makeShared<CylinderSurface>(transform, 5., 10.);
+      auto intersect = [&](const Vector3& position, const Vector3& direction) {
+        return cylinder->intersect(testContext, transform * position,
+                                   transform.linear() * direction,
+                                   BoundaryTolerance::None());
+      };
+
+      // Both crossings remain available, including an on-surface entry
+      // followed by the exit on the opposite side.
+      for (double startX : {-10., 0., -5.}) {
+        const auto intersections =
+            intersect(Vector3(startX, 0., 0.), Vector3::UnitX());
+        for (std::size_t i = 0; i < 2; ++i) {
+          const double hitX = i == 0 ? -5. : 5.;
+          BOOST_CHECK(intersections[i].isValid());
+          CHECK_CLOSE_ABS(intersections[i].pathLength(), hitX - startX, 1e-12);
+          CHECK_CLOSE_ABS(intersections[i].position(),
+                          transform * Vector3(hitX, 0., 0.), 1e-12);
+        }
+        if (startX == -5.) {
+          BOOST_CHECK_EQUAL(intersections[0].status(),
+                            IntersectionStatus::onSurface);
+          BOOST_CHECK_EQUAL(intersections[1].status(),
+                            IntersectionStatus::reachable);
+        }
+      }
+
+      // The farther crossing leaves the finite cylinder through its end.
+      const auto oblique =
+          intersect(Vector3(-10., 0., 0.), Vector3(0.8, 0., 0.6));
+      BOOST_CHECK(oblique[0].isValid());
+      BOOST_CHECK(!oblique[1].isValid());
+      CHECK_CLOSE_ABS(oblique[0].pathLength(), 6.25, 1e-12);
+      CHECK_CLOSE_ABS(oblique[1].pathLength(), 18.75, 1e-12);
+
+      const auto miss = intersect(Vector3(-10., 6., 0.), Vector3::UnitX());
+      BOOST_CHECK(!miss[0].isValid());
+      BOOST_CHECK(!miss[1].isValid());
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CylinderSurfaceIntersectionBoundaryTolerances) {
+  const Transform3 transform =
+      Translation3{17., -23., 41.} * AngleAxis3(0.7, Vector3::UnitZ());
+  constexpr double tolerance = 0.01;
+  auto full = Surface::makeShared<CylinderSurface>(transform, 5., 10.);
+  auto sector = Surface::makeShared<CylinderSurface>(transform, 5., 10.,
+                                                     std::numbers::pi / 4.);
+  auto intersect = [&](const CylinderSurface& cylinder, double z,
+                       const BoundaryTolerance& boundaryTolerance) {
+    return cylinder.intersect(testContext, transform * Vector3(0., 0., z),
+                              transform.linear() * Vector3::UnitX(),
+                              boundaryTolerance, tolerance);
+  };
+
+  for (double sign : {-1., 1.}) {
+    const auto within = intersect(*full, sign * (10. + 0.5 * tolerance),
+                                  BoundaryTolerance::None());
+    BOOST_CHECK(within[0].isValid());
+    BOOST_CHECK(within[1].isValid());
+
+    const double outsideZ = sign * (10. + 2. * tolerance);
+    const auto outside = intersect(*full, outsideZ, BoundaryTolerance::None());
+    BOOST_CHECK(!outside[0].isValid());
+    BOOST_CHECK(!outside[1].isValid());
+
+    // Keep both intersections away from the azimuthal seam while checking
+    // the extension of the longitudinal bounds.
+    const auto extended =
+        full->intersect(testContext, transform * Vector3(4., 0., outsideZ),
+                        transform.linear() * Vector3::UnitY(),
+                        BoundaryTolerance::AbsoluteEuclidean(0.1), tolerance);
+    BOOST_CHECK(extended[0].isValid());
+    BOOST_CHECK(extended[1].isValid());
+
+    const auto unbounded =
+        intersect(*sector, outsideZ, BoundaryTolerance::Infinite());
+    BOOST_CHECK(unbounded[0].isValid());
+    BOOST_CHECK(unbounded[1].isValid());
+  }
+
+  const auto sectorHits = intersect(*sector, 0., BoundaryTolerance::None());
+  BOOST_CHECK(!sectorHits[0].isValid());
+  BOOST_CHECK(sectorHits[1].isValid());
+  const auto extendedSector =
+      intersect(*sector, 10.05, BoundaryTolerance::AbsoluteEuclidean(0.1));
+  BOOST_CHECK(!extendedSector[0].isValid());
+  BOOST_CHECK(extendedSector[1].isValid());
+}
+
+BOOST_AUTO_TEST_CASE(CylinderSurfaceIntersectionNearlyParallel) {
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 5., 10.);
+  const Vector3 direction = Vector3(1e-10, 0., 1.).normalized();
+  const auto intersections = cylinder->intersect(
+      testContext, Vector3::Zero(), direction, BoundaryTolerance::Infinite());
+  for (std::size_t i = 0; i < 2; ++i) {
+    BOOST_CHECK(intersections[i].isValid());
+    BOOST_CHECK(std::isfinite(intersections[i].pathLength()));
+    CHECK_CLOSE_REL(intersections[i].pathLength(),
+                    (i == 0 ? -5. : 5.) / direction.x(), 1e-12);
+    CHECK_CLOSE_ABS(intersections[i].position().x(), i == 0 ? -5. : 5., 1e-12);
+  }
+
+  // A small but nonzero tilt must still use the actual cylinder axis.
+  const Transform3 tilted{AngleAxis3(1e-7, Vector3::UnitY())};
+  auto tiltedCylinder = Surface::makeShared<CylinderSurface>(tilted, 5., 10.);
+  const auto tiltedIntersections = tiltedCylinder->intersect(
+      testContext, Vector3::Zero(), tilted.linear() * direction,
+      BoundaryTolerance::Infinite());
+  for (std::size_t i = 0; i < 2; ++i) {
+    BOOST_CHECK(tiltedIntersections[i].isValid());
+    CHECK_CLOSE_REL(tiltedIntersections[i].pathLength(),
+                    intersections[i].pathLength(), 1e-10);
+  }
 }
 
 /// Unit test for testing CylinderSurface properties

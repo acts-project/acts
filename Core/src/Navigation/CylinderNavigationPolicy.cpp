@@ -257,7 +257,6 @@ void CylinderNavigationPolicy::initializeCandidates(
   };
 
   bool hitDisk = false;
-  Vector3 diskIntersection;
   double diskDistance3D = std::numeric_limits<double>::max();
   double zDisk = (dir[2] > 0) ? m_halfLengthZ : -m_halfLengthZ;
   if (std::abs(dir[2]) > s_onSurfaceTolerance) {
@@ -266,13 +265,13 @@ void CylinderNavigationPolicy::initializeCandidates(
 
     double t = (zDisk - pos[2]) / dir[2];
 
-    diskIntersection = pos + t * dir;
-    double r2 = diskIntersection[0] * diskIntersection[0] +
-                diskIntersection[1] * diskIntersection[1];
-    if (r2 < m_rMax2 && r2 > m_rMin2 &&
-        t > 0) {  // Only consider forward intersections
-      hitDisk = true;
-      diskDistance3D = t;  // Parameter t is the distance along the ray
+    if (t > 0) {  // Only consider forward intersections
+      Vector2 diskIntersection = pos.head<2>() + t * dir.head<2>();
+      double r2 = diskIntersection.squaredNorm();
+      if (r2 < m_rMax2 && r2 > m_rMin2) {
+        hitDisk = true;
+        diskDistance3D = t;
+      }
     }
   } else {
     ACTS_VERBOSE("-> Parallel to the disc, see if we're inside the disc radii");
@@ -283,37 +282,22 @@ void CylinderNavigationPolicy::initializeCandidates(
 
   bool hitInner = false;
   if (std::abs(rpos2 - m_rMin2) > s_onSurfaceTolerance) {
-    // Find point of closest approach to the origin
+    const double dirR2 = dir.head<2>().squaredNorm();
+    const double radialProjection = -pos.head<2>().dot(dir.head<2>());
 
-    Vector2 dir2 = dir.head<2>().normalized();
-    double d = -1 * pos.head<2>().dot(dir2);
-    ACTS_VERBOSE("-> d: " << d);
-
-    if (d > 0) {  // Point of closest approach is in the direction of the ray
-
-      double clippedD = d;
-      if (hitDisk) {
-        // Clip to distance of disk intersection
-        double diskIntersectionDistanceXy =
-            (diskIntersection.head<2>() - pos.head<2>()).norm();
-        clippedD = std::min(d, diskIntersectionDistanceXy);
-      }
-
-      Vector2 poc = pos.head<2>() + clippedD * dir2;
-      double r2 = poc.dot(poc);
-      hitInner = r2 < m_rMin2;
+    // The closest approach is at t = radialProjection / dirR2. A valid
+    // disc intersection is outside the inner radius, so an inner crossing
+    // can only block that disc if the closest approach is before it.
+    if (radialProjection > 0 &&
+        (!hitDisk || radialProjection < diskDistance3D * dirR2)) {
+      // The squared distance of closest approach is cross^2 / dirR2.
+      // Compare without dividing or normalizing the transverse direction.
+      // For an axis-parallel ray dirR2 is zero and this test remains false.
+      const double cross = pos[0] * dir[1] - pos[1] * dir[0];
+      hitInner = cross * cross < m_rMin2 * dirR2;
       if (hitInner) {
         add(InnerCylinder);
-        // If we hit the inner cylinder before reaching the disk intersection,
-        // we can discard the disk as we'll never reach it
-        if (hitDisk) {
-          // Calculate 3D distance to inner cylinder intersection
-          double innerDistance3D =
-              d / dir.head<2>().norm();  // Convert 2D distance to 3D parameter
-          if (innerDistance3D < diskDistance3D) {
-            hitDisk = false;
-          }
-        }
+        hitDisk = false;
       }
     }
   }

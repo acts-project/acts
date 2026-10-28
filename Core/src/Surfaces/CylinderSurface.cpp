@@ -201,19 +201,30 @@ detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
 
-  // Get the transformation matrtix
+  // Get the transformation matrix
   const auto& tMatrix = transform.matrix();
   Vector3 caxis = tMatrix.block<3, 1>(0, 2).transpose();
   Vector3 ccenter = tMatrix.block<3, 1>(0, 3).transpose();
 
-  // Check documentation for explanation
   Vector3 pc = position - ccenter;
+  // Cylindrical portals are commonly aligned with the global z-axis. In
+  // that case the quadratic only needs the transverse coordinates, also
+  // for translated cylinders and rotations about their axis. Use an exact
+  // check so that even small tilts retain the general intersection below.
+  if (caxis.x() == 0. && caxis.y() == 0. && std::abs(caxis.z()) == 1.) {
+    double a = direction.head<2>().squaredNorm();
+    double b = 2. * direction.head<2>().dot(pc.head<2>());
+    double c = pc.head<2>().squaredNorm() - R * R;
+    return detail::RealQuadraticEquation(a, b, c);
+  }
+
+  // Check documentation for explanation
   Vector3 pcXcd = pc.cross(caxis);
   Vector3 ldXcd = direction.cross(caxis);
   double a = ldXcd.dot(ldXcd);
   double b = 2. * (ldXcd.dot(pcXcd));
   double c = pcXcd.dot(pcXcd) - (R * R);
-  // And solve the qaudratic equation
+  // And solve the quadratic equation
   return detail::RealQuadraticEquation(a, b, c);
 }
 
@@ -250,8 +261,13 @@ MultiIntersection3D CylinderSurface::intersect(
       // Built-in local to global for speed reasons
       const auto& tMatrix = gctxTransform.matrix();
       // Create the reference vector in local
-      const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
-      double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
+      double cZ;
+      if (tMatrix(0, 2) == 0. && tMatrix(1, 2) == 0.) {
+        cZ = (solution.z() - tMatrix(2, 3)) * tMatrix(2, 2);
+      } else {
+        const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
+        cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
+      }
       double hZ = bounds().get(CylinderBounds::eHalfLengthZ) + tolerance;
       return std::abs(cZ) < std::abs(hZ) ? status
                                          : IntersectionStatus::unreachable;
