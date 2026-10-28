@@ -1,78 +1,130 @@
 #!/usr/bin/env python3
+"""Simulate event ranges in independent Geant4 processes, with CSV/ROOT output."""
 
-from pathlib import Path
-from multiprocessing import Pool
+import argparse
 from functools import partial
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
-# This script runs a Geant4 simulation in parallel by passing chunks of events to subprocesses.
-# This is a workaround to achieve parallel processing even though Geant4 is not thread-save
-# and thus the internal parallelism of the ACTS examples framework cannot be used.
-#
-# Note that:
-# ==========
-#
-# * This should give equivalent results to a sequential run if the RNG is initialized with
-#   the same seed in all runs
-#
-# * So far this works only for csv outputs, since they write the results in one file per event
-#   (the naming of the csv-files should be equivalent to a sequential run)
-#
-# * In principle it is not difficult to extend this for ROOT files as well. One would need to
-#   write the root-files into separate directory per chunk, and then use ROOT's hadd to combine
-#   the output files.
-#
+from acts.examples.geant4_multiprocessing import (
+    mergeGeant4RootFiles,
+    runGeant4Processes,
+)
 
 
-def runGeant4EventRange(detector, trackingGeometry, beginEvent, endEvent, outputDir):
+def runGeant4EventRange(
+    beginEvent,
+    endEvent,
+    *,
+    outputDir,
+    rootDir=None,
+    detectorFactory=None,
+    seed=42,
+    etaRange=(-2.0, 2.0),
+):
     import acts
     import acts.examples
     from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
 
-    u = acts.UnitConstants
+    if detectorFactory is None:
+        from acts.examples.odd import getOpenDataDetector
 
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    rnd = acts.examples.RandomNumbers(seed=42)
-
+        detectorFactory = getOpenDataDetector
+    # Construct all geometry and Geant4 state in this fresh process.
+    detector = detectorFactory()
+    trackingGeometry = detector.trackingGeometry()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+    rnd = acts.examples.RandomNumbers(seed=seed)
     s = acts.examples.Sequencer(
         events=endEvent - beginEvent, skip=beginEvent, numThreads=1
     )
-
-    outputDir = Path(outputDir)
+    for decorator in detector.contextDecorators():
+        s.addContextDecorator(decorator)
     addParticleGun(
         s,
-        EtaConfig(-2.0, 2.0),
+        EtaConfig(*etaRange),
         rnd=rnd,
-        outputDirCsv=outputDir / "csv",
-        outputDirRoot=None,
+        outputDirCsv=Path(outputDir) / "csv",
     )
     addGeant4(
         s,
         detector,
         trackingGeometry,
         field,
-        outputDirCsv=outputDir / "csv",
-        outputDirRoot=None,
+        outputDirCsv=Path(outputDir) / "csv",
+        outputDirRoot=(
+            Path(rootDir) / f"events_{beginEvent}_{endEvent}"
+            if rootDir is not None
+            else None
+        ),
         rnd=rnd,
     )
-
     s.run()
 
 
-if "__main__" == __name__:
-    from acts.examples.odd import getOpenDataDetector
+def runGeant4Parallel(
+    *,
+    events=100,
+    processes=8,
+    skip=0,
+    outputDir=Path.cwd(),
+    outputRoot=False,
+    detectorFactory=None,
+    seed=42,
+    etaRange=(-2.0, 2.0),
+):
+    """Create one detector/run per process; retain global event IDs and seeds."""
+    outputDir = Path(outputDir)
+    outputDir.mkdir(parents=True, exist_ok=True)
+    (outputDir / "csv").mkdir(exist_ok=True)
+    with TemporaryDirectory(prefix="geant4-workers-", dir=outputDir) as temporary:
+        ranges = runGeant4Processes(
+            partial(
+                runGeant4EventRange,
+                outputDir=outputDir,
+                rootDir=temporary if outputRoot else None,
+                detectorFactory=detectorFactory,
+                seed=seed,
+                etaRange=etaRange,
+            ),
+            events=events,
+            processes=processes,
+            skip=skip,
+        )
+        if outputRoot:
+            names = ("particles_simulation.root", "hits.root")
+            for name in names:
+                mergeGeant4RootFiles(
+                    [
+                        Path(temporary) / f"events_{begin}_{end}" / name
+                        for begin, end in ranges
+                    ],
+                    Path(temporary) / name,
+                )
+            for name in names:
+                (Path(temporary) / name).replace(outputDir / name)
 
-    detector = getOpenDataDetector()
-    trackingGeometry = detector.trackingGeometry()
-    decorators = detector.contextDecorators()
 
-    n_events = 100
-    n_jobs = 8
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-n", "--events", type=int, default=100)
+    parser.add_argument("-j", "--processes", type=int, default=8)
+    parser.add_argument("--skip", type=int, default=0)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("-o", "--output", type=Path, default=Path.cwd())
+    parser.add_argument(
+        "--root", action="store_true", help="Also write merged ROOT output"
+    )
+    args = parser.parse_args()
+    runGeant4Parallel(
+        events=args.events,
+        processes=args.processes,
+        skip=args.skip,
+        seed=args.seed,
+        outputDir=args.output,
+        outputRoot=args.root,
+    )
 
-    chunksize = n_events // (n_jobs - 1)
-    begins = range(0, n_events, chunksize)
-    ends = [min(b + chunksize, n_events) for b in begins]
 
-    outputDir = Path.cwd()
-
-    with Pool(n_jobs) as p:
-        p.starmap(partial(runGeant4EventRange, outputDir=outputDir), zip(begins, ends))
+if __name__ == "__main__":
+    main()

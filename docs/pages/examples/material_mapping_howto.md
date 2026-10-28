@@ -303,6 +303,51 @@ example, add a `HepMC3Writer` for the generated event to
 `--inputFiles` instead of the particle gun, by setting `SIM.enableGun = False`
 in a copy of the steering file.
 
+### Recording with multiple processes
+
+Use `--processes` to distribute ACTS events across independent Geant4 processes:
+
+```console
+python Examples/Scripts/Python/material_recording.py \
+    --events 1000 --tracks 100 --processes 8 --output material_geant4
+```
+
+Each worker constructs its own detector and runs a single-threaded sequencer.
+Workers receive disjoint global event ranges; `--skip` and `--seed` keep event
+numbers and per-event random seeds independent of the number of processes.
+ROOT's `hadd` must be on `PATH`. Worker files are merged in event order into
+`material_geant4.root` only after every worker succeeds. If a worker fails, the
+job fails and stops the other workers; an existing final ROOT file is preserved.
+An empty event range creates an empty output file.
+
+For Python configurations, `runMaterialRecordingParallel` takes an importable
+detector factory instead of a constructed detector. Invoke it under a main
+guard so spawned workers can import the script, with `Examples/Scripts/Python`
+on `PYTHONPATH`:
+
+```python
+from acts.examples.odd import getOpenDataDetector
+from material_recording import runMaterialRecordingParallel
+
+if __name__ == "__main__":
+    runMaterialRecordingParallel(
+        getOpenDataDetector, events=1000, processes=8,
+        outputFileBase="material_geant4",
+    )
+```
+
+The full simulation example also supports separate processes, CSV output per
+event and optional merged ROOT particle/hit files:
+
+```console
+python Examples/Scripts/Python/geant4_parallel.py \
+    --events 100 --processes 8 --root --output simulation
+```
+
+Geometry memory and initialization costs occur once per worker, so choose the
+process count to fit the detector in memory. This runs Geant4 events
+simultaneously in separate processes; each ACTS sequencer uses `numThreads=1`.
+
 ## Step 3: run the mapping
 
 ```console

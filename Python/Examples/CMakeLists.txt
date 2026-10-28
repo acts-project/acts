@@ -17,6 +17,7 @@ set(_examples_python_modules_rpath
 set(py_files
     __init__.py
     simulation.py
+    geant4_multiprocessing.py
     reconstruction.py
     itk.py
     odd.py
