@@ -52,7 +52,7 @@ class PlacementCollector final : public TrackingGeometryMutableVisitor {
 
   void visitVolume(TrackingVolume &volume) override {
     if (volume.navigationPolicy() != nullptr ||
-        volume.volumeLookup() != nullptr || volume.portals().size() != 0 ||
+        volume.volumeLookup() != nullptr || !volume.portals().empty() ||
         volume.confinedLayers() != nullptr ||
         volume.confinedVolumes() != nullptr || !volume.denseVolumes().empty()) {
       throw std::invalid_argument(
