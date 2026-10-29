@@ -535,55 +535,52 @@ class Impl final : public TripletSeedFinder {
   }
 
   template <typename DoubletCollections>
-  bool createNextTripletTopCandidatesImpl(
+  void createTripletTopCandidatesImpl(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      DoubletCollections& bottomDoublets, DoubletCollections& topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const {
-    // search on local copies, so that the views can stay in registers while
-    // the candidates are written
-    DoubletCollections bottoms = bottomDoublets;
-    DoubletCollections tops = topDoublets;
+      DoubletCollections bottomDoublets, DoubletCollections topDoublets,
+      TripletTopCandidates& tripletTopCandidates,
+      const CandidatesCallback& callback) const {
     // the candidates are cleared for each bottom doublet and the top doublets
-    // only shrink, so this covers every bottom doublet searched here
-    tripletTopCandidates.reserve(tops.size());
-    bool found = false;
-    for (; !bottoms.empty() && !tops.empty(); bottoms = bottoms.subrange(1)) {
+    // only shrink, so this covers every bottom doublet
+    tripletTopCandidates.reserve(topDoublets.size());
+    for (auto bottomDoublet : bottomDoublets) {
+      if (topDoublets.empty()) {
+        break;
+      }
+
       tripletTopCandidates.clear();
-      const auto bottomDoublet = *bottoms.begin();
       if constexpr (useStripInfo) {
-        tops = createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                               tops, tripletTopCandidates);
+        topDoublets = createStripTripletTopCandidates(
+            spacePoints, spM, bottomDoublet, topDoublets, tripletTopCandidates);
       } else {
-        tops = createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                               tops, tripletTopCandidates);
+        topDoublets = createPixelTripletTopCandidates(
+            spacePoints, spM, bottomDoublet, topDoublets, tripletTopCandidates);
       }
 
       if (tripletTopCandidates.size() > 0) {
-        found = true;
-        break;
+        callback(bottomDoublet, tripletTopCandidates);
       }
     }
-    bottomDoublets = bottoms;
-    topDoublets = tops;
-    return found;
   }
 
-  bool createNextTripletTopCandidates(
+  void createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      DoubletsForMiddleSp::Range& bottomDoublets,
-      DoubletsForMiddleSp::Range& topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const override {
-    return createNextTripletTopCandidatesImpl(
-        spacePoints, spM, bottomDoublets, topDoublets, tripletTopCandidates);
+      DoubletsForMiddleSp::Range bottomDoublets,
+      DoubletsForMiddleSp::Range topDoublets,
+      TripletTopCandidates& tripletTopCandidates,
+      const CandidatesCallback& callback) const override {
+    createTripletTopCandidatesImpl(spacePoints, spM, bottomDoublets,
+                                   topDoublets, tripletTopCandidates, callback);
   }
 
-  bool createNextTripletTopCandidates(
+  void createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      DoubletsForMiddleSp::Subset2& bottomDoublets,
-      DoubletsForMiddleSp::Subset2& topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const override {
-    return createNextTripletTopCandidatesImpl(
-        spacePoints, spM, bottomDoublets, topDoublets, tripletTopCandidates);
+      DoubletsForMiddleSp::Subset2 bottomDoublets,
+      DoubletsForMiddleSp::Subset2 topDoublets,
+      TripletTopCandidates& tripletTopCandidates,
+      const CandidatesCallback& callback) const override {
+    createTripletTopCandidatesImpl(spacePoints, spM, bottomDoublets,
+                                   topDoublets, tripletTopCandidates, callback);
   }
 
  private:
