@@ -34,8 +34,10 @@ jobs:
       - name: Determine build mode
         id: mode
         env:
-          REF: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.acts_ref }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_REF: ${{ inputs.acts_ref }}
         run: |
+          REF="${RELEASE_TAG:-$INPUT_REF}"
           if [ -n "$REF" ]; then
             echo "release=true" >> "$GITHUB_OUTPUT"
             echo "ref=$REF" >> "$GITHUB_OUTPUT"
