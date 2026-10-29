@@ -76,7 +76,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
                std::shared_ptr<MaterialMapDecorator>>(json,
                                                       "MaterialMapDecorator")
         .def(py::init<TrackingGeometryMaterial>(), py::arg("material"))
-        .def_property_readonly("materialMaps", &MaterialMapDecorator::material,
+        .def_property_readonly("material", &MaterialMapDecorator::material,
                                py::return_value_policy::reference_internal);
   }
 
