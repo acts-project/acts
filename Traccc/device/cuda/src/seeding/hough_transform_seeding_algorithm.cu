@@ -42,7 +42,7 @@ namespace kernels {
 		   vecmem::data::vector_view<scalar>& spacepoint_phi) {
       device::precompute_spacepoint_variables(details::global_index1(),
 		      measurements, n_spacepoints, spacepoints,
-		      config.interaction_center, config.interaction_window, config.eta_width,
+		      config.interaction_center, config.interaction_window, config.eta_width, config.module_veto,
 		      spacepoint_wedge_association, spacepoint_detector_id,
 		      spacepoint_r, spacepoint_phi);
    }
@@ -108,8 +108,35 @@ namespace kernels {
                     vecmem::data::vector_view<unsigned int>& nn_outcome) {
         device::evaluate_nn<T, N_COLS, N_ROWS>(details::global_index1(), n_images, images, maxima_x, nn_outcome);
     }
-} // namespace kernels
 
+   template <typename bfield_t,
+             typename T,
+             unsigned int N_COLS,
+             unsigned int N_ROWS>
+   __global__
+   void count_contributing_hits(const unsigned int n_images,
+                                const bfield_t bfield,
+                                const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_view& houghplanes,
+                                const edm::spacepoint_collection::const_view& spacepoints,
+                                const vecmem::data::vector_view<scalar>& spacepoint_r,
+                                const vecmem::data::vector_view<scalar>& spacepoint_phi,
+                                const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association,
+                                const vecmem::data::jagged_vector_view<traccc::device::global_index_t>& global_index,
+                                const vecmem::data::vector_view<unsigned int>& nn_outcome,
+                                vecmem::data::vector_view<unsigned int>& count_vector) {
+        device::count_contributing_hits<bfield_t, T, N_COLS, N_ROWS>(details::global_index1(),
+                    n_images,
+                    bfield,
+                    houghplanes,
+                    spacepoints,
+                    spacepoint_r,
+                    spacepoint_phi,
+                    spacepoint_wedge_association,
+                    global_index,
+                    nn_outcome,
+                    count_vector);
+   }
+} // namespace kernels
 
 hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
     const traccc::memory_resource& mr,
@@ -164,6 +191,7 @@ void hough_transform_seeding_algorithm::count_maxima_kernel(const count_maxima_p
   const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
   kernels::count_maxima<unsigned short, device::N_COLS, device::N_ROWS>
         <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, payload.count_vector);
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 void hough_transform_seeding_algorithm::find_maxima_kernel(const find_maxima_payload& payload) const {
@@ -171,6 +199,7 @@ void hough_transform_seeding_algorithm::find_maxima_kernel(const find_maxima_pay
   const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
   kernels::find_maxima<unsigned short, device::N_COLS, device::N_ROWS>
         <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, payload.global_index);
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 void hough_transform_seeding_algorithm::take_picture_kernel(const take_picture_payload& payload) const {
@@ -182,6 +211,7 @@ void hough_transform_seeding_algorithm::take_picture_kernel(const take_picture_p
                                                                     payload.n_maxima, 
                                                                     payload.images,
                                                                     payload.maxima_x);
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 void hough_transform_seeding_algorithm::evaluate_nn_kernel(const evaluate_nn_payload& payload) const {
@@ -192,6 +222,27 @@ void hough_transform_seeding_algorithm::evaluate_nn_kernel(const evaluate_nn_pay
                                                                     payload.images,
                                                                     payload.maxima_x,
                                                                     payload.nn_outcome);
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+}
+
+void hough_transform_seeding_algorithm::count_contributing_hits_kernel(const count_contributing_hits_payload& payload) const {
+  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
+  magnetic_field_visitor<bfield_type_list<scalar>>(
+    payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
+        kernels::count_contributing_hits<bfield_view_t, unsigned short, device::N_COLS, device::N_ROWS>
+            <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.n_images,
+                                                                    bfield,
+                                                                    payload.houghplanes,
+                                                                    payload.spacepoints,
+                                                                    payload.spacepoint_r,
+                                                                    payload.spacepoint_phi,
+                                                                    payload.spacepoint_wedge_association,
+                                                                    payload.global_index,
+                                                                    payload.nn_outcome,
+                                                                    payload.count_vector);
+  });
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 void hough_transform_seeding_algorithm::synchronize() const {

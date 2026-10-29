@@ -8,6 +8,7 @@
 
 // Local include(s).
 #include "traccc/seeding/device/hough_transform_seeding_algorithm.hpp"
+#include <bitset>
 
 namespace traccc::device {
 
@@ -77,7 +78,27 @@ auto hough_transform_seeding_algorithm::operator()(
 		  spacepoint_detector_id,
 		  spacepoint_r,
 		  spacepoint_phi});
+
+  /*
+  vecmem::vector<unsigned long long> spacepoint_detector_id_host = ((mr().host != nullptr)
+                ? vecmem::vector<unsigned long long>(mr().host)
+                : vecmem::vector<unsigned long long>());
+  copy()(spacepoint_detector_id, spacepoint_detector_id_host)->wait(); 
+
+  vecmem::vector<unsigned long long> spacepoint_wedge_association_host = ((mr().host != nullptr)
+                ? vecmem::vector<unsigned long long>(mr().host)
+                : vecmem::vector<unsigned long long>());
+  copy()(spacepoint_wedge_association, spacepoint_wedge_association_host)->wait();
   
+  assert(spacepoint_detector_id_host.size() == spacepoint_wedge_association_host.size());
+  for (unsigned int i(0); i<spacepoint_detector_id_host.size(); ++i) {
+    unsigned long long detector_id = spacepoint_detector_id_host.at(i);
+    unsigned long long wedge_association = spacepoint_wedge_association_host.at(i);
+    unsigned int n_bits = count_bits(wedge_association);
+    std::cout << "bit count: " << n_bits << " [value was " << std::bitset<64>(wedge_association) << "] (id: " << std::bitset<64>(detector_id) << ")" << std::endl;
+  }
+  */
+
   // Fill the planes with space points
   fill_hough_plane_kernel({m_config, bfield,
                   n_spacepoints, spacepoints,
@@ -184,7 +205,40 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().setup(vecmem::ignore_event, nn_outcome);
   copy().memset(vecmem::ignore_event, nn_outcome, 0);
 
-  // no idea
+  evaluate_nn_kernel({total_maxima, images, maxima_x_value, nn_outcome});
+
+
+  // Count and find the contributing hits
+  vecmem::data::vector_buffer<unsigned int> hits_sizes(total_maxima, mr().main);
+  copy().setup(vecmem::ignore_event, hits_sizes);
+  copy().memset(vecmem::ignore_event, hits_sizes, 0);
+ 
+  count_contributing_hits_kernel({total_maxima,
+                           bfield,
+                           result,
+                           spacepoints,
+                           spacepoint_r,
+                           spacepoint_phi,
+                           spacepoint_wedge_association,
+                           maxima_global_index,
+                           nn_outcome,
+                           hits_sizes});
+
+  /* 
+  vecmem::vector<unsigned int> hits_sizes_host = ((mr().host != nullptr)
+                ? vecmem::vector<unsigned int>(mr().host)
+                : vecmem::vector<unsigned int>());
+  copy()(hits_sizes, hits_sizes_host)->wait();
+
+  std::cout << std::endl;
+  std::cout << "Number of images: " << total_maxima << std::endl;
+  std::cout << "hits_sizes_host size: " << hits_sizes_host.size() << std::endl;
+  for (unsigned int i(0); i<hits_sizes_host.size(); ++i) {
+    std::cout << "* n [" << i << "]: " << hits_sizes_host[i] << std::endl; 
+  }
+  */
+  
+// no idea
   synchronize();
 
   // Return the result.

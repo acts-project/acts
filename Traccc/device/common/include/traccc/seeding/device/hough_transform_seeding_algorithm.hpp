@@ -138,6 +138,29 @@ class hough_transform_seeding_algorithm
     vecmem::data::vector_view<unsigned int>& nn_outcome;
   };
 
+  struct count_contributing_hits_payload {
+    // Number of images
+    unsigned int n_images;
+    // The magnetic field object
+    const magnetic_field& bfield;
+    // The planes
+    const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view& houghplanes;
+    // The space points
+    const edm::spacepoint_collection::const_view& spacepoints;
+    // the space point r
+    const vecmem::data::vector_view<scalar>& spacepoint_r;
+    // the space point phi
+    const vecmem::data::vector_view<scalar>& spacepoint_phi;
+    // association to wedge
+    const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association;
+    // The maxima location
+    const vecmem::data::jagged_vector_view<global_index_t>& global_index;
+    // The NN outcome
+    const vecmem::data::vector_view<unsigned int>& nn_outcome;
+    // The count vector
+    vecmem::data::vector_view<unsigned int>& count_vector;
+  };
+
   virtual void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const = 0;
   virtual void precompute_spacepoint_variables_kernel(const precompute_spacepoint_variables_payload& payload) const = 0;
   virtual void fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const = 0;
@@ -145,6 +168,7 @@ class hough_transform_seeding_algorithm
   virtual void find_maxima_kernel(const find_maxima_payload& payload) const = 0;
   virtual void take_picture_kernel(const take_picture_payload& payload) const = 0;
   virtual void evaluate_nn_kernel(const evaluate_nn_payload& payload) const = 0;
+  virtual void count_contributing_hits_kernel(const count_contributing_hits_payload& payload) const = 0;
 
   virtual void synchronize() const = 0;
   
@@ -161,4 +185,5 @@ class hough_transform_seeding_algorithm
 #include "traccc/seeding/device/impl/find_maxima.ipp"
 #include "traccc/seeding/device/impl/take_pictures.ipp"
 #include "traccc/seeding/device/impl/evaluate_nn.ipp"
+#include "traccc/seeding/device/impl/count_contributing_hits.ipp"
 

@@ -10,7 +10,7 @@ unsigned long long getId(const unsigned int index) {
    switch (index) {
 	   // negative endcap (pixels)
 	   case 3: {shift = 0; break;}
-           case 5: {shift = 1; break;}
+       case 5: {shift = 1; break;}
 	   case 7: {shift = 2; break;}
 	   case 9: {shift = 3; break;}
 	   case 11: {shift = 4; break;}
@@ -59,12 +59,13 @@ TRACCC_HOST_DEVICE
 void precompute_spacepoint_variables(const global_index_t globalIndex,
 		const edm::measurement_collection::const_view& measurements_view,
 		const edm::spacepoint_collection::const_view::size_type n_spacepoints,
-                const edm::spacepoint_collection::const_view& spacepoints_view,
+        const edm::spacepoint_collection::const_view& spacepoints_view,
 		const scalar interactionCenter,
-                const scalar interactionWindow,
-                const scalar etaWidth,
+        const scalar interactionWindow,
+        const scalar etaWidth,
+        const unsigned long long module_veto,
 		vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association_view,
-                vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id_view,
+        vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id_view,
 		vecmem::data::vector_view<scalar>& spacepoint_r_view,
 		vecmem::data::vector_view<scalar>& spacepoint_phi_view) {
    if (globalIndex >= n_spacepoints) return;
@@ -94,6 +95,19 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
    spacepoint_phi[globalIndex] = atan2f(spacepoints[globalIndex].y(), spacepoints[globalIndex].y());
    ::remainderf(spacepoint_phi[globalIndex], 2.0f * std::numbers::pi_v<scalar>);
 
+   // Retrieve the corresponding measurement index and, from it, the geo id
+   // all of this is to retrieve the volume_id and layer_id of the 
+   // space point
+   const edm::measurement_collection::const_device measurements(measurements_view);
+   const auto& meas = measurements.at(spacepoints[globalIndex].measurement_index_1());
+
+   const auto volume_id = meas.surface_link().volume();
+   const auto identifier_id = getId(volume_id);
+   spacepoint_detector_id[globalIndex] = identifier_id;
+
+   // veto layers
+   if ((identifier_id & module_veto) != 0ULL) return;
+
    // understand what wedge(s) the space points belongs to
    // wedges define eta ranges and they may overlap
    //
@@ -103,18 +117,8 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
       if (eta_at_min < wedges[wedge_idx] - etaWidth) continue;
       if (eta_at_max > wedges[wedge_idx] + etaWidth) continue;
       slice |= (1ULL << wedge_idx);
-  } // loop on wedges
-  if (slice == 0ULL) return; 
-  spacepoint_wedge_association[globalIndex] = slice;  
-
-  // Retrieve the corresponding measurement index and, from it, the geo id
-  // all of this is to retrieve the volume_id and layer_id of the 
-  // space point
-  const edm::measurement_collection::const_device measurements(measurements_view);
-  const auto& meas = measurements.at(spacepoints[globalIndex].measurement_index_1());
-
-  const auto volume_id = meas.surface_link().volume();
-  const auto identifier_id = getId(volume_id);
-  spacepoint_detector_id[globalIndex] = identifier_id;
+   } // loop on wedges
+   if (slice == 0ULL) return; 
+   spacepoint_wedge_association[globalIndex] = slice;  
 }
 } // namespace

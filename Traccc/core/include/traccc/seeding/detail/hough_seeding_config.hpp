@@ -36,6 +36,7 @@ struct hough_seeding_config {
 	5, 5, 5, 5, 5, 5,
 	5, 5, 5, 5, 5, 5
   };
+  unsigned long long module_veto = (1ULL << 7) | (1ULL << 8) | (1ULL << 9);
 };
 
 }  // namespace traccc
