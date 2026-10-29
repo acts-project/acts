@@ -57,7 +57,7 @@ def getOpenDataDetector(
     Parameters
     ----------
     materialDecorator: Material Decorator, take RootMaterialDecorator if non is given.
-      For Gen1 this is applied as-is; for Gen3, its materialMaps() are applied instead
+      For Gen1 this is applied as-is; for Gen3, its material() is applied instead
       (via Acts.TrackingGeometryMaterial.apply()), and only if a decorator is given.
     odd_dir: if not given, try to get via ODD_PATH environment variable
     logLevel: logging level
@@ -152,7 +152,7 @@ def getOpenDataDetector(
         # it has not been handed out yet, so filling in its material here is
         # safe.
         if materialDecorator is not None:
-            materialDecorator.materialMaps.apply(detector.trackingGeometry())
+            materialDecorator.material.apply(detector.trackingGeometry())
 
         return detector
     else:
