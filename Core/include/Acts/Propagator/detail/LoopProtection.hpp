@@ -16,18 +16,22 @@
 namespace Acts::detail {
 
 /// Estimate the loop protection limit
-template <typename path_aborter_t, typename propagator_state_t,
-          typename stepper_t>
+///
+/// @param [in] state The propagation state
+/// @param [in] stepper Stepper used for the propagation
+/// @param [in,out] pathLimit Signed path limit, lowered to the loop limit
+/// @param [in] releaseLimit Whether to reset the path limit first
+/// @param [in] logger A logger instance
+template <typename propagator_state_t, typename stepper_t>
 void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
-                         path_aborter_t& pathAborter, bool releaseLimit,
+                         double& pathLimit, bool releaseLimit,
                          const Logger& logger) {
   if (!state.options.loopProtection) {
     return;
   }
 
   if (releaseLimit) {
-    pathAborter.internalLimit =
-        state.options.direction * std::numeric_limits<double>::max();
+    pathLimit = state.options.direction * std::numeric_limits<double>::max();
   }
 
   // Get the field at the start position
@@ -52,15 +56,15 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
       state.options.direction * 2 * std::numbers::pi * p / B;
   // And set it as the loop limit if it overwrites the internal limit
   const double loopLimit = state.options.loopFraction * helixPath;
-  const double previousLimit = pathAborter.internalLimit;
+  const double previousLimit = pathLimit;
   if (std::abs(loopLimit) < std::abs(previousLimit)) {
-    pathAborter.internalLimit = loopLimit;
+    pathLimit = loopLimit;
 
-    ACTS_VERBOSE("Path aborter limit set to "
+    ACTS_VERBOSE("Path limit set to "
                  << loopLimit << " (full helix = " << helixPath
                  << ", previous limit = " << previousLimit << ")");
   } else {
-    ACTS_VERBOSE("Path aborter limit not updated to "
+    ACTS_VERBOSE("Path limit not updated to "
                  << loopLimit << " (full helix = " << helixPath
                  << ", previous limit = " << previousLimit << ")");
   }

@@ -78,9 +78,9 @@ auto MultiStepperLoop<S, R>::transportToBound(
   for (std::size_t i = 0; i < state.components.size(); ++i) {
     auto& cmpState = state.components[i].state;
 
-    // Force the component onto the surface. `MultiStepperSurfaceReached` can
-    // end the propagation once the mean of the components reached the surface,
-    // so a single component is not necessarily on it.
+    // Force the component onto the surface. The surface counts as reached once
+    // no component is reachable, so a single component is not necessarily on
+    // it.
     cmpState.pars.template segment<3>(eFreePos0) =
         surface
             .intersect(state.options.geoContext,

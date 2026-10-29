@@ -10,10 +10,10 @@
 
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
-#include "Acts/Propagator/MultiStepperAborters.hpp"
 #include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfError.hpp"
@@ -109,7 +109,7 @@ struct GaussianSumFitter {
 
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActorList<GsfActor>;
+      using Actors = ActorList<DefaultActor, GsfActor>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
@@ -117,15 +117,15 @@ struct GaussianSumFitter {
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
       propOptions.navigation.surfaceSequence = sSequence;
-      propOptions.actorList.template get<GsfActor>()
-          .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
+      propOptions.actor.template get<GsfActor>().m_cfg.bethe_heitler_approx =
+          m_betheHeitlerApproximation.get();
 
       return propOptions;
     };
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActorList<GsfActor>;
+      using Actors = ActorList<DefaultActor, GsfActor>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
@@ -133,8 +133,8 @@ struct GaussianSumFitter {
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
       propOptions.navigation.surfaceSequence = sSequence;
-      propOptions.actorList.template get<GsfActor>()
-          .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
+      propOptions.actor.template get<GsfActor>().m_cfg.bethe_heitler_approx =
+          m_betheHeitlerApproximation.get();
 
       return propOptions;
     };
@@ -161,12 +161,13 @@ struct GaussianSumFitter {
 
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&](const auto& opts) {
-      using Actors = ActorList<GsfActor, EndOfWorldReached>;
+      using Actors = ActorList<DefaultActor, GsfActor>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
+      propOptions.stopAtEndOfWorld = true;
 
       if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
@@ -175,20 +176,21 @@ struct GaussianSumFitter {
         }
       }
 
-      propOptions.actorList.template get<GsfActor>()
-          .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
+      propOptions.actor.template get<GsfActor>().m_cfg.bethe_heitler_approx =
+          m_betheHeitlerApproximation.get();
 
       return propOptions;
     };
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&](const auto& opts) {
-      using Actors = ActorList<GsfActor, EndOfWorldReached>;
+      using Actors = ActorList<DefaultActor, GsfActor>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
+      propOptions.stopAtEndOfWorld = true;
 
       if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
@@ -197,8 +199,8 @@ struct GaussianSumFitter {
         }
       }
 
-      propOptions.actorList.template get<GsfActor>()
-          .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
+      propOptions.actor.template get<GsfActor>().m_cfg.bethe_heitler_approx =
+          m_betheHeitlerApproximation.get();
 
       return propOptions;
     };
@@ -280,11 +282,13 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("| Gsf: Do forward propagation |");
     ACTS_VERBOSE("+-----------------------------+");
 
-    auto fwdResult = [&]() {
+    using GsfResult = typename GsfActor::state_type;
+
+    auto fwdResult = [&]() -> Result<GsfResult> {
       auto fwdPropOptions = fwdPropInitializer(options);
 
       // Catch the actor and set the measurements
-      auto& actor = fwdPropOptions.actorList.template get<GsfActor>();
+      auto& actor = fwdPropOptions.actor.template get<GsfActor>();
       actor.setOptions(options);
       actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.numberMeasurements = inputMeasurements.size();
@@ -311,35 +315,27 @@ struct GaussianSumFitter {
 
       auto state = m_propagator.makeState(fwdPropOptions);
 
-      // Type deduction for propagation result to pass on errors
-      using OptionsType = decltype(fwdPropOptions);
-      using StateType = decltype(state);
-      using PropagationResultType =
-          decltype(m_propagator.propagate(std::declval<StateType&>()));
-      using ResultType = decltype(m_propagator.makeResult(
-          std::declval<StateType&&>(), std::declval<PropagationResultType>(),
-          std::declval<const OptionsType&>(), false));
-
       auto initRes = m_propagator.initialize(state, *params, nullptr);
       if (!initRes.ok()) {
-        return ResultType::failure(initRes.error());
+        return initRes.error();
       }
 
-      auto& r = state.template get<typename GsfActor::result_type>();
+      auto& r = state.actorState.template get<GsfResult>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
       auto propagationResult = m_propagator.propagate(state);
+      if (!propagationResult.ok()) {
+        return propagationResult.error();
+      }
 
-      return m_propagator.makeResult(std::move(state), propagationResult,
-                                     fwdPropOptions, false);
+      return std::move(r);
     }();
 
     if (!fwdResult.ok()) {
       return return_error_or_abort(fwdResult.error());
     }
 
-    const auto& fwdGsfResult =
-        fwdResult->template get<typename GsfActor::result_type>();
+    const GsfResult& fwdGsfResult = *fwdResult;
 
     if (fwdGsfResult.measurementStates == 0) {
       return return_error_or_abort(GsfError::NoMeasurementStatesCreatedForward);
@@ -360,15 +356,12 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("| Gsf: Do backward propagation |");
     ACTS_VERBOSE("+------------------------------+");
 
-    auto bwdResult = [&]() {
+    using BwdResult = std::pair<GsfResult, typename propagator_t::ResultType>;
+
+    auto bwdResult = [&]() -> Result<BwdResult> {
       auto bwdPropOptions = bwdPropInitializer(options);
 
-      // Type deduction for propagation result to pass on errors
-      using OptionsType = decltype(bwdPropOptions);
-      using ResultType =
-          Result<typename propagator_t::template ResultType<OptionsType>>;
-
-      auto& actor = bwdPropOptions.actorList.template get<GsfActor>();
+      auto& actor = bwdPropOptions.actor.template get<GsfActor>();
       actor.setOptions(options);
       actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.inReversePass = true;
@@ -394,17 +387,11 @@ struct GaussianSumFitter {
           },
           sParameters.particleHypothesis());
 
-      auto state =
-          m_propagator
-              .template makeState<OptionsType, MultiStepperSurfaceReached>(
-                  bwdPropOptions);
+      auto state = m_propagator.makeState(bwdPropOptions);
 
-      auto initRes =
-          m_propagator
-              .template initialize<decltype(state), MultiStepperSurfaceReached>(
-                  state, inflatedParams, &target);
+      auto initRes = m_propagator.initialize(state, inflatedParams, &target);
       if (!initRes.ok()) {
-        return ResultType::failure(initRes.error());
+        return initRes.error();
       }
 
       assert((fwdGsfResult.lastMeasurementTip != kTrackIndexInvalid &&
@@ -415,7 +402,7 @@ struct GaussianSumFitter {
       proxy.shareFrom(TrackStatePropMask::Filtered,
                       TrackStatePropMask::Smoothed);
 
-      auto& r = state.template get<typename GsfActor::result_type>();
+      auto& r = state.actorState.template get<GsfResult>();
       r.fittedStates = &trackContainer.trackStateContainer();
       r.currentTip = fwdGsfResult.lastMeasurementTip;
       r.visitedSurfaces.push_back(&proxy.referenceSurface());
@@ -425,16 +412,20 @@ struct GaussianSumFitter {
 
       auto propagationResult = m_propagator.propagate(state);
 
-      return m_propagator.makeResult(std::move(state), propagationResult,
-                                     bwdPropOptions, true, &target);
+      auto propResult =
+          m_propagator.makeResult(state, propagationResult, true, &target);
+      if (!propResult.ok()) {
+        return propResult.error();
+      }
+
+      return BwdResult{std::move(r), std::move(*propResult)};
     }();
 
     if (!bwdResult.ok()) {
       return return_error_or_abort(bwdResult.error());
     }
 
-    auto& bwdGsfResult =
-        bwdResult->template get<typename GsfActor::result_type>();
+    auto& [bwdGsfResult, bwdPropResult] = *bwdResult;
 
     if (bwdGsfResult.measurementStates == 0) {
       return return_error_or_abort(
@@ -501,7 +492,7 @@ struct GaussianSumFitter {
     track.setParticleHypothesis(sParameters.particleHypothesis());
 
     if (options.referenceSurface) {
-      const auto& params = *bwdResult->endParameters;
+      const auto& params = *bwdPropResult.endParameters;
       const auto singleParams = params.merge(options.componentMergeMethod);
 
       track.parameters() = singleParams.parameters();

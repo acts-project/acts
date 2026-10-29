@@ -74,7 +74,7 @@ class IVolumeMaterial;
 /// Equations I, 2nd ed., Section II.4.
 ///
 /// As for @ref HelixStepper, a step to the straight-line distance of a surface
-/// can pass it, and the next step goes back. A target aborter must accept an
+/// can pass it, and the next step goes back. The navigation must accept an
 /// intersection that far behind the track.
 ///
 /// @note The order of a tableau only holds in a smooth field. An interpolated

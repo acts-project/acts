@@ -14,7 +14,7 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <random>
@@ -49,7 +49,7 @@ struct Measurements {
 
 /// Propagator action to create smeared measurements.
 struct MeasurementsCreator {
-  using result_type = Measurements;
+  using state_type = Measurements;
 
   MeasurementResolutionMap resolutions;
   std::default_random_engine* rng = nullptr;
@@ -69,7 +69,7 @@ struct MeasurementsCreator {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Acts::Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                         const navigator_t& navigator, result_type& result,
+                         const navigator_t& navigator, state_type& result,
                          const Acts::Logger& logger) const {
     using namespace Acts::UnitLiterals;
 
@@ -155,20 +155,21 @@ Measurements createMeasurements(const propagator_t& propagator,
                                 const MeasurementResolutionMap& resolutions,
                                 std::default_random_engine& rng,
                                 std::size_t sourceId = 0u) {
-  using ActorList =
-      Acts::ActorList<MeasurementsCreator, Acts::EndOfWorldReached>;
+  using ActorList = Acts::ActorList<Acts::DefaultActor, MeasurementsCreator>;
   using PropagatorOptions = typename propagator_t::template Options<ActorList>;
 
   // Set options for propagator
   PropagatorOptions options(geoCtx, magCtx);
-  auto& creator = options.actorList.template get<MeasurementsCreator>();
+  options.stopAtEndOfWorld = true;
+  auto& creator = options.actor.template get<MeasurementsCreator>();
   creator.resolutions = resolutions;
   creator.rng = &rng;
   creator.sourceId = sourceId;
 
   // Launch and collect the measurements
-  auto result = propagator.propagate(trackParameters, options).value();
-  return std::move(result.template get<Measurements>());
+  auto state = propagator.makeState(options);
+  propagator.propagate(state, trackParameters).value();
+  return std::move(state.actorState.template get<Measurements>());
 }
 
 }  // namespace ActsTests
