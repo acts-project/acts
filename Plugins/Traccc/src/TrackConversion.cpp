@@ -8,7 +8,7 @@
 
 #include "ActsPlugins/Traccc/TrackConversion.hpp"
 
-namespace ActsPlugins::TracccBoundTrackParameters {
+namespace ActsPlugins {
 
 Acts::BoundVector convertBoundVectorFromTraccc(
     const TracccBoundTrackParameters& params) {
@@ -30,7 +30,7 @@ Acts::BoundMatrix convertBoundCovarianceFromTraccc(
   return covariance;
 }
 
-bool isDegenerate(const TracccBoundTrackParameters& params) {
+bool hasZeroBoundParameters(const TracccBoundTrackParameters& params) {
   return params.bound_local()[0] == 0 && params.bound_local()[1] == 0 &&
          params.phi() == 0 && params.theta() == 0 && params.qop() == 0 &&
          params.time() == 0;
@@ -45,4 +45,4 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-}  // namespace ActsPlugins::TracccBoundTrackParameters
+}  // namespace ActsPlugins
