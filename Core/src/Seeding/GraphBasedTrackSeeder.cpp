@@ -340,15 +340,14 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   const auto maxLength = static_cast<std::uint32_t>(m_cfg.maxChainLength);
 
   // The level of an edge is the length of the longest chain of edges going
-  // outwards from it. `vNei` only holds edges further in, which are created
-  // later, so one pass in edge order settles it. Edges in chains longer than
-  // `maxLength` stay above it and are left out.
+  // outwards from it. The inner neighbours of an edge are further in, which are
+  // created later, so one pass in edge order settles it. Edges in chains longer
+  // than `maxLength` stay above it and are left out.
   std::vector<std::uint32_t> level(nEdges, 1);
   for (std::uint32_t e = 0; e < nEdges; ++e) {
-    const detail::GbtsEdge& edge = edgeStorage[e];
     const std::uint32_t next = std::min(level[e] + 1, maxLength + 1);
-    for (std::uint32_t k = 0; k < edge.nNei; ++k) {
-      std::uint32_t& innerLevel = level[edge.vNei[k]];
+    for (const std::uint32_t inner : graph.innerNeighbours(e)) {
+      std::uint32_t& innerLevel = level[inner];
       innerLevel = std::max(innerLevel, next);
     }
   }
@@ -366,9 +365,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     const std::uint32_t nextLevel = level[e] + 1;
     std::uint32_t length = 1;
     if (nextLevel <= maxLength) {
-      const detail::GbtsEdge& edge = edgeStorage[e];
-      for (std::uint32_t k = 0; k < edge.nNei; ++k) {
-        const std::uint32_t inner = edge.vNei[k];
+      for (const std::uint32_t inner : graph.innerNeighbours(e)) {
         if (level[inner] == nextLevel) {
           length = std::max(length, edgesToRoot[inner] + 1);
         }
@@ -407,9 +404,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
         bestPath = path;
       }
     } else {
-      const detail::GbtsEdge& edge = edgeStorage[e];
-      for (std::uint32_t k = 0; k < edge.nNei; ++k) {
-        const std::uint32_t inner = edge.vNei[k];
+      for (const std::uint32_t inner : graph.innerNeighbours(e)) {
         if (level[inner] != level[e] + 1 ||
             path.size() + edgesToRoot[inner] < minLength) {
           continue;

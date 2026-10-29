@@ -219,11 +219,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
   // the windows and the phi indexing they slide over cannot disagree.
   const float deltaPhi0 = 0.5f * nodeStorage.config().phiSliceWidth;
 
-  std::uint32_t nConnections = 0;
-
-  // good matches dropped because the outer edge held the maximum number of
-  // neighbours
-  std::uint32_t nOverflow = 0;
+  // (outer edge, inner edge) of every link, in the order they are made
+  std::vector<std::pair<std::uint32_t, std::uint32_t>> links;
 
   // Scales the maximum number of edges by the number of space points using the
   // factor maxEdgesPerSP
@@ -701,15 +698,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                 }
               }
 
-              // the match is good: it is lost only if the outer edge holds
-              // the maximum number of neighbours already
-              if (pS->nNei >= detail::kGbtsMaxEdgeNeighbours) {
-                ++nOverflow;
-                continue;
-              }
-
-              pS->vNei[pS->nNei] = outEdgeIdx;
-              ++pS->nNei;
+              links.emplace_back(inEdgeIdx, outEdgeIdx);
 
               isConnected = true;  // there is at least one good match
 
@@ -721,8 +710,6 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                   z0BinIndex < detail::kGbtsZ0HistogramBins) {
                 ++z0Histo[static_cast<std::size_t>(z0BinIndex)];
               }
-
-              nConnections++;
             }
           }
         }  // loop over n2 (outer) nodes inside a sliding window on n2 bin
@@ -755,12 +742,31 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
         "Maximum number of graph edges exceeded - possible efficiency loss "
         << edgeStorage.size());
   }
-  if (nOverflow > 0) {
-    ACTS_DEBUG(nOverflow << " edge links dropped: the outer edge already held "
-                         << detail::kGbtsMaxEdgeNeighbours
-                         << " neighbours - possible efficiency loss");
+
+  // the inner neighbours of each edge in one list, in the order of the links
+  const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
+
+  // count the inner neighbours of each edge
+  graph.neighbourOffsets.assign(nEdges + 1, 0);
+  for (const auto& [outer, inner] : links) {
+    graph.neighbourOffsets[outer + 1]++;
   }
-  graph.nConnections = nConnections;
+
+  // turn the counts into the position of each edge's first neighbour
+  for (std::uint32_t e = 0; e < nEdges; ++e) {
+    graph.neighbourOffsets[e + 1] += graph.neighbourOffsets[e];
+  }
+
+  // put each inner neighbour at the next free position of its edge
+  graph.neighbours.resize(links.size());
+  std::vector<std::uint32_t> nextSlot(graph.neighbourOffsets.begin(),
+                                      graph.neighbourOffsets.end() - 1);
+  for (const auto& [outer, inner] : links) {
+    graph.neighbours[nextSlot[outer]] = inner;
+    nextSlot[outer]++;
+  }
+
+  graph.nConnections = static_cast<std::uint32_t>(links.size());
   return graph;
 }
 
