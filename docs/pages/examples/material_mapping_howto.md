@@ -31,7 +31,7 @@ designated and so skips step 1:
 ```console
 python material_recording.py -n 1000 -t 1000 -o odd_material_geant4
 python material_mapping.py -n 1000000 -i odd_material_geant4.root -o odd_material
-python material_validation.py -n 1000 -t 1000 -m odd_material_map.json -o odd_material_validated -p
+python material_validation.py -n 1000 -t 1000 -m odd_material_map.json.zst -o odd_material_validated -p
 ```
 
 > [!tip]
