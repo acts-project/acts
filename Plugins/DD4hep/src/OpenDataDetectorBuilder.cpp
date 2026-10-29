@@ -134,7 +134,8 @@ void configureDiscFace(Acts::MaterialDesignatorBlueprintNode& mat, Face face,
 // strategy, so that radially or longitudinally adjacent volumes are kept
 // apart at their true nominal extents (via a genuine gap-filler volume)
 // instead of being snapped together with zero clearance.
-void setGapAttachment(const Acts::detail::ContainerNodePtr& node) {
+void setGapAttachment(
+    const std::shared_ptr<Acts::ContainerBlueprintNode>& node) {
   node->setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
   node->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
                             Acts::VolumeResizeStrategy::Gap);
@@ -151,12 +152,12 @@ dd4hep::DetElement findAssemblyOrThrow(const BlueprintBuilder& builder,
   return *assemblyElement;
 }
 
-Acts::detail::BlueprintNodePtr customizeLayer(
+std::shared_ptr<Acts::BlueprintNode> customizeLayer(
     const BlueprintBuilder& builder, const std::string& det,
     const std::regex& layerFilter, Face barrelMaterialFace,
     std::size_t barrelZBins, std::size_t endcapRBins,
     const std::optional<dd4hep::DetElement>& elem,
-    Acts::detail::LayerNodePtr layer) {
+    std::shared_ptr<Acts::LayerBlueprintNode> layer) {
   layer->setEnvelope(detail::kLayerEnvelope);
 
   const std::string elemName =
@@ -207,14 +208,14 @@ Acts::detail::BlueprintNodePtr customizeLayer(
 auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
                          std::regex layerFilter, Face barrelMaterialFace,
                          std::size_t barrelZBins, std::size_t endcapRBins) {
-  return
-      [&builder, det = std::move(det), layerFilter = std::move(layerFilter),
-       barrelMaterialFace, barrelZBins, endcapRBins](
-          const std::optional<dd4hep::DetElement>& elem,
-          Acts::detail::LayerNodePtr layer) -> Acts::detail::BlueprintNodePtr {
-        return customizeLayer(builder, det, layerFilter, barrelMaterialFace,
-                              barrelZBins, endcapRBins, elem, std::move(layer));
-      };
+  return [&builder, det = std::move(det), layerFilter = std::move(layerFilter),
+          barrelMaterialFace, barrelZBins,
+          endcapRBins](const std::optional<dd4hep::DetElement>& elem,
+                       std::shared_ptr<Acts::LayerBlueprintNode> layer)
+             -> std::shared_ptr<Acts::BlueprintNode> {
+    return customizeLayer(builder, det, layerFilter, barrelMaterialFace,
+                          barrelZBins, endcapRBins, elem, std::move(layer));
+  };
 }
 
 // Beampipe material, identical across all three construction methods.
@@ -287,8 +288,8 @@ void addPixelEndplateIfPresent(const BlueprintBuilder& builder,
 // level, since it would otherwise collide with this same designation once
 // barrel and endcaps are Z-stacked together and their touching faces get
 // fused into one portal. Shared across all three construction methods.
-Acts::detail::BlueprintNodePtr addBarrelBoundaryMaterial(
-    Acts::detail::ContainerNodePtr node) {
+std::shared_ptr<Acts::BlueprintNode> addBarrelBoundaryMaterial(
+    std::shared_ptr<Acts::ContainerBlueprintNode> node) {
   auto mat = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
       node->name() + "_boundary_mat");
   configureDiscFace(*mat, Face::NegativeDisc, kMatPhiBins,
@@ -310,7 +311,7 @@ Acts::detail::BlueprintNodePtr addBarrelBoundaryMaterial(
 // through that callback, so the material is attached to the node returned by
 // build(). Shared across all three construction methods.
 void addOuterBoundaryMaterial(Acts::ContainerBlueprintNode& outer,
-                              Acts::detail::BlueprintNodePtr node,
+                              std::shared_ptr<Acts::BlueprintNode> node,
                               const std::string& assembly, std::size_t zBins) {
   outer.addMaterial(
       assembly + "_outer_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
@@ -457,7 +458,8 @@ std::unique_ptr<Acts::TrackingGeometry> finalizeOuter(
 void addSubsystemChild(const BlueprintBuilder& builder,
                        const dd4hep::DetElement& element,
                        Acts::ContainerBlueprintNode& containerNode,
-                       Acts::detail::ContainerNodePtr node, bool isBarrel) {
+                       std::shared_ptr<Acts::ContainerBlueprintNode> node,
+                       bool isBarrel) {
   setGapAttachment(node);
   if (isBarrel) {
     containerNode.addChild(addBarrelBoundaryMaterial(std::move(node)));
@@ -534,31 +536,32 @@ void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
           .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter,
                                        barrelMaterialFace, barrelZBins,
                                        endcapRBins))
-          .onContainer([&builder](const dd4hep::DetElement& elem,
-                                  Acts::detail::ContainerNodePtr node)
-                           -> Acts::detail::BlueprintNodePtr {
-            setGapAttachment(node);
-            addPixelEndplateIfPresent(builder, elem, *node);
+          .onContainer(
+              [&builder](const dd4hep::DetElement& elem,
+                         std::shared_ptr<Acts::ContainerBlueprintNode> node)
+                  -> std::shared_ptr<Acts::BlueprintNode> {
+                setGapAttachment(node);
+                addPixelEndplateIfPresent(builder, elem, *node);
 
-            // This callback fires for every container node the barrelEndcap()
-            // builder creates: each endcap sub-container, the barrel
-            // sub-container, and the combined top-level Z-stack. Only the
-            // *barrel* sub-container (e.g. "PixelBarrel") carries
-            // negative/positive boundary material per the ODD convention; the
-            // combined top-level node must be left alone, since its own
-            // negative/positive discs get fused with its radial neighbor's
-            // cap in the outer AxisR stack, and Acts refuses to fuse two
-            // portals that both carry material. The outer cylinder face is
-            // handled separately below, on the fully Z-stacked top-level node
-            // returned by build() -- not here, since on this "Barrel"
-            // sub-container the face would later be merged with the endcaps'
-            // outer faces, which aborts construction for a face carrying
-            // material (see @ref addOuterBoundaryMaterial).
-            if (!builder.backend().nameOf(elem).ends_with("Barrel")) {
-              return node;
-            }
-            return addBarrelBoundaryMaterial(std::move(node));
-          })
+                // This callback fires for every container node the
+                // barrelEndcap() builder creates: each endcap sub-container,
+                // the barrel sub-container, and the combined top-level Z-stack.
+                // Only the *barrel* sub-container (e.g. "PixelBarrel") carries
+                // negative/positive boundary material per the ODD convention;
+                // the combined top-level node must be left alone, since its own
+                // negative/positive discs get fused with its radial neighbor's
+                // cap in the outer AxisR stack, and Acts refuses to fuse two
+                // portals that both carry material. The outer cylinder face is
+                // handled separately below, on the fully Z-stacked top-level
+                // node returned by build() -- not here, since on this "Barrel"
+                // sub-container the face would later be merged with the
+                // endcaps' outer faces, which aborts construction for a face
+                // carrying material (see @ref addOuterBoundaryMaterial).
+                if (!builder.backend().nameOf(elem).ends_with("Barrel")) {
+                  return node;
+                }
+                return addBarrelBoundaryMaterial(std::move(node));
+              })
           .build();
 
   if (!outerBoundaryZBins.has_value()) {
