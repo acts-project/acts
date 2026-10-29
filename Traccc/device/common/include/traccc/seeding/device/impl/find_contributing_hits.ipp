@@ -20,29 +20,17 @@ void find_contributing_hits(const global_index_t globalIndex,
                             const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association_view,
                             const vecmem::data::jagged_vector_view<global_index_t>& global_index_view,
                             const vecmem::data::vector_view<unsigned int>& nn_outcome_view,
-                            vecmem::data::jagged_vector_view<unsigned int>& hits_view) {
+                            vecmem::data::jagged_vector_view<global_index_t>& hits_view) {
     if (globalIndex >= n_images) return;
-
+    
     // does not pass the NN selection
     const vecmem::device_vector<unsigned int> nn_outcome(nn_outcome_view);
     if (nn_outcome[globalIndex] == 0) return;
     
     // get coordinates
     const vecmem::jagged_device_vector<global_index_t> global_index(global_index_view);
-    
-    global_index_t current_size = globalIndex;
-    global_index_t wedge_idx = 0;
-    global_index_t element_idx = 0;
-
-    for (global_index_t i(0); i<global_index.size(); ++i) {
-        if (global_index[i].size() > current_size) {
-           wedge_idx = i;
-           element_idx = current_size;
-           break;
-        }
-        current_size -= global_index[i].size();
-    }
-    
+    const auto [wedge_idx, element_idx] = get_wedge_element<global_index_t>(globalIndex, global_index);   
+ 
     const global_index_t peak_global_index = global_index[wedge_idx][element_idx];
     const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_device houghplanes(houghplanes_view);
     const auto [col, row] = get_col_row<N_COLS, N_ROWS>(peak_global_index);
@@ -58,18 +46,19 @@ void find_contributing_hits(const global_index_t globalIndex,
     const vecmem::device_vector<unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);
     const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
     const vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
-    
-    for (unsigned int i(0); i<spacepoints.size(); ++i) {
+
+    for (global_index_t i(0); i<spacepoints.size(); ++i) {
         // contributes to wedge
         if ((spacepoint_wedge_association[i] & (1ULL << wedge_idx)) == 0ULL) continue;
-        const auto covfie_field_at_sp = bfield.at(spacepoints.x()[i], spacepoints.y()[i], spacepoints.z()[i]);
 
+        const auto covfie_field_at_sp = bfield.at(spacepoints.x()[i], spacepoints.y()[i], spacepoints.z()[i]);
         scalar min_value_y = transform(min_x, spacepoint_r[i], spacepoint_phi[i], covfie_field_at_sp[2]);
         scalar max_value_y = transform(max_x, spacepoint_r[i], spacepoint_phi[i], covfie_field_at_sp[2]);
-        
+        if (min_value_y > max_value_y) std::swap(min_value_y, max_value_y);
+       
         if (min_value_y > max_y) continue;
         if (max_value_y < min_y) continue;
-        
+ 
         // add contribution
         hits[globalIndex].push_back(i);
     }

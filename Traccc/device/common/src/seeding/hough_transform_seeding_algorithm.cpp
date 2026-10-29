@@ -50,11 +50,14 @@ auto hough_transform_seeding_algorithm::operator()(
 		  vecmem::data::buffer_type::resizable);
   copy().setup(result)->ignore();
 
+  // ---------------------------------------------------
   // Fill plane edges
   // we will move to a config at a certain point and template the algorithm
   define_plane_edges_kernel({m_config, result});
   
+  // ---------------------------------------------------
   // Pre-compute some quantities
+  // ---------------------------------------------------
   // These quantities can be computed once per spacepoint
   // they do not depend on the wedge definition
   vecmem::data::vector_buffer<unsigned long long> spacepoint_wedge_association(n_spacepoints, mr().main);
@@ -79,7 +82,7 @@ auto hough_transform_seeding_algorithm::operator()(
 		  spacepoint_r,
 		  spacepoint_phi});
 
-  /*  
+   
   edm::spacepoint_collection::const_view sp_host_view;
   edm::spacepoint_collection::buffer sp_host_buffer;
   if (mr().host) {
@@ -116,19 +119,23 @@ auto hough_transform_seeding_algorithm::operator()(
     unsigned long long detector_id = spacepoint_detector_id_host.at(i);
     unsigned long long wedge_association = spacepoint_wedge_association_host.at(i);
     unsigned int n_bits = count_bits(wedge_association);
-    std::cout << "sp x=" << sp.x() << " y=" << sp.y() << " z=" << sp.z()  << " r=" << spacepoint_r_host.at(i) << " phi=" << spacepoint_phi_host.at(i)
+    std::cout << "sp " << i << " x=" << sp.x() << " y=" << sp.y() << " z=" << sp.z()  << " r=" << spacepoint_r_host.at(i) << " phi=" << spacepoint_phi_host.at(i)
               << " bit count: " << n_bits << " [value was " << std::bitset<64>(wedge_association) << "] (id: " << std::bitset<64>(detector_id) << ")" << std::endl;
   }
-  */
+  
 
+  // ---------------------------------------------------
   // Fill the planes with space points
+  // ---------------------------------------------------
   fill_hough_plane_kernel({m_config, bfield,
                   n_spacepoints, spacepoints,
                   spacepoint_wedge_association, spacepoint_detector_id,
 		  spacepoint_r, spacepoint_phi,
 		  result});
 
+  // ---------------------------------------------------
   // Count and then find the maxima
+  // ---------------------------------------------------
   vecmem::data::vector_buffer<unsigned int> maxima_sizes(n_slices, mr().main);
   copy().setup(vecmem::ignore_event, maxima_sizes);
   copy().memset(vecmem::ignore_event, maxima_sizes, 0);
@@ -152,7 +159,7 @@ auto hough_transform_seeding_algorithm::operator()(
 
 
 
-
+/*
   // planes
   edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view ht_host_view;
   edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer ht_host_buffer;
@@ -186,8 +193,7 @@ auto hough_transform_seeding_algorithm::operator()(
     for (unsigned int idx(0); idx<N_COLS * N_ROWS; ++idx) std::cout << plane[idx] << " ";
     std::cout << std::endl;
   }
-
-  throw;
+*/
 
   /*
   vecmem::data::jagged_vector_view<unsigned int> host_view;
@@ -212,9 +218,16 @@ auto hough_transform_seeding_algorithm::operator()(
   std::cout<< ">> total: " << totale_trovato << std::endl;
   */
 
-  // Run clustering on the images
 
+
+  // ---------------------------------------------------
+  // Run clustering on the maxima
+  // ---------------------------------------------------
+
+
+  // ---------------------------------------------------
   // Take the pictures from the merged maxima
+  // ---------------------------------------------------
   edm::houghplane_collection<scalar, 32, 32>::buffer images(
           std::vector<unsigned int>(total_maxima, 32 * 32),
           mr().main, mr().host,
@@ -231,7 +244,7 @@ auto hough_transform_seeding_algorithm::operator()(
                        images,
                        maxima_x_value});
 
- /* 
+  /* 
   edm::houghplane_collection<scalar, 32, 32>::const_view host_view;
   edm::houghplane_collection<scalar, 32, 32>::buffer host_buffer;
   if (mr().host) {
@@ -243,17 +256,18 @@ auto hough_transform_seeding_algorithm::operator()(
 
   edm::houghplane_collection<scalar, 32, 32>::const_device host_device{host_view};
   std::cout << std::endl;
-  std::cout << "----------------- IMAGE 3 -----------------" << std::endl;
   for (unsigned int i(0); i<32; ++i) {
-      for (unsigned int j(0); j<32; ++j) {
-	    std::cout << host_device[3].plane()[i * 32 + j] << " ";
-      }
-      std::cout << std::endl;
+    const auto& image = host_device.plane()[i];
+    std::cout << "* IMAGE " << i << ": ";
+    for (unsigned int idx(0); idx<32*32; ++idx) std::cout << image[idx] << " ";    
+    std::cout << std::endl;
   }
   std::cout << std::endl;
-*/
+  */
 
+  // ---------------------------------------------------
   // Run NN
+  // ---------------------------------------------------
   vecmem::data::vector_buffer<unsigned int> nn_outcome(total_maxima, mr().main);
   copy().setup(vecmem::ignore_event, nn_outcome);
   copy().memset(vecmem::ignore_event, nn_outcome, 0);
@@ -261,7 +275,9 @@ auto hough_transform_seeding_algorithm::operator()(
   evaluate_nn_kernel({total_maxima, images, maxima_x_value, nn_outcome});
 
 
+  // ---------------------------------------------------
   // Count and find the contributing hits
+  // ---------------------------------------------------
   vecmem::data::vector_buffer<unsigned int> hits_sizes(total_maxima, mr().main);
   copy().setup(vecmem::ignore_event, hits_sizes);
   copy().memset(vecmem::ignore_event, hits_sizes, 0);
@@ -283,7 +299,7 @@ auto hough_transform_seeding_algorithm::operator()(
                 : vecmem::vector<unsigned int>());
   copy()(hits_sizes, hits_sizes_host)->wait();
  
- /* 
+  /*  
   std::cout << std::endl;
   std::cout << "Number of images: " << total_maxima << std::endl;
   std::cout << "hits_sizes_host size: " << hits_sizes_host.size() << std::endl;
@@ -300,7 +316,7 @@ auto hough_transform_seeding_algorithm::operator()(
         vecmem::data::buffer_type::resizable);
   copy().setup(hits)->ignore();
 
-  /*
+
   find_contributing_hits_kernel({total_maxima,
                             bfield,
                             result,
@@ -311,33 +327,44 @@ auto hough_transform_seeding_algorithm::operator()(
                             maxima_global_index,
                             nn_outcome,
                             hits});
- */
-  
-/*
+
   vecmem::data::jagged_vector_view<global_index_t> hits_host_view;
   vecmem::data::jagged_vector_buffer<global_index_t> hits_host_buffer;
+
+  const auto sizes = copy().get_sizes(hits);
+  hits_host_buffer = vecmem::data::jagged_vector_buffer<global_index_t>{
+        sizes, *(mr().host)};
+
+  auto event = copy()(hits, hits_host_buffer,
+    vecmem::copy::type::device_to_host);
+  event->wait();
+
+  hits_host_view = hits_host_buffer;
+
+/*  
+vecmem::data::jagged_vector_buffer<global_index_t> hits_host_buffer;
   if (mr().host) {
     hits_host_buffer = copy().to(hits, *(mr().host));
     hits_host_view = hits_host_buffer;
   } else {
     hits_host_view = hits;
   }
+*/
 
   vecmem::jagged_device_vector<global_index_t> hits_host_device{hits_host_view};
   std::cout << "Number of collections in jagged vector: " << hits_host_device.size() << std::endl;
- */
-
-  /*
-  vecmem::jagged_device_vector<global_index_t> hits_host_device{hits_host_view};
   std::cout << "Associated hits (from " << total_maxima << " images) [size is " << hits_host_device.size() << "]:" << std::endl;
 
   for (unsigned int i(0); i<hits_host_device.size(); ++i) {
+    unsigned int n_hits = hits_sizes_host[i];
     const auto& vals = hits_host_device[i];
-    // std::cout << "* image " << i << ": ";
-    // for (const auto idx : vals) std::cout << idx << " ";
-    // std::cout << std::endl;
+    std::cout << "* image " << i << " should have " << n_hits << " entrie: ";
+    for (unsigned int j(0); j<vals.capacity(); ++j) std::cout << vals[j] << " "; 
+    std::cout << std::endl;
   }  
-*/
+  
+  throw;
+
   // no idea
   synchronize();
 

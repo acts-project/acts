@@ -9,10 +9,28 @@ namespace traccc::device {
 template <unsigned int N_COLS,
           unsigned int N_ROWS>
 TRACCC_HOST_DEVICE
-inline std::pair<unsigned int, unsigned int> get_col_row(unsigned long long global_index) {
+inline std::pair<global_index_t, global_index_t> get_col_row(const global_index_t global_index) {
     assert(global_index < N_COLS * N_ROWS);
-    return {static_cast<unsigned int>(global_index / N_ROWS),
-            static_cast<unsigned int>(global_index % N_ROWS)};
+    return {global_index / N_ROWS, global_index % N_ROWS};
+}
+
+template <typename T>
+TRACCC_HOST_DEVICE
+inline std::pair<global_index_t, global_index_t> get_wedge_element(const global_index_t global_index,
+                                                                   const vecmem::jagged_device_vector<T>& container) {
+    global_index_t current_size = global_index;
+    global_index_t wedge_idx = 0;
+    global_index_t element_idx = 0;
+
+    for (global_index_t i(0); i<container.size(); ++i) {
+        if (container[i].size() > current_size) {
+           wedge_idx = i;
+           element_idx = current_size;
+           break;
+        }
+        current_size -= container[i].size();
+    }
+    return {wedge_idx, element_idx};
 }
 
 TRACCC_HOST_DEVICE

@@ -33,13 +33,13 @@ namespace kernels {
    
    __global__
    void precompute_spacepoint_variables(const traccc::hough_seeding_config config,
-		   const edm::measurement_collection::const_view& measurements,
+		   const edm::measurement_collection::const_view measurements,
 		   const edm::spacepoint_collection::const_view::size_type n_spacepoints,
-		   const edm::spacepoint_collection::const_view& spacepoints,
-		   vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association,
-		   vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id,
-		   vecmem::data::vector_view<scalar>& spacepoint_r,
-		   vecmem::data::vector_view<scalar>& spacepoint_phi) {
+		   const edm::spacepoint_collection::const_view spacepoints,
+		   vecmem::data::vector_view<unsigned long long> spacepoint_wedge_association,
+		   vecmem::data::vector_view<unsigned long long> spacepoint_detector_id,
+		   vecmem::data::vector_view<scalar> spacepoint_r,
+		   vecmem::data::vector_view<scalar> spacepoint_phi) {
       device::precompute_spacepoint_variables(details::global_index1(),
 		      measurements, n_spacepoints, spacepoints,
 		      config.interaction_center, config.interaction_window, config.eta_width, config.module_veto,
@@ -55,12 +55,12 @@ namespace kernels {
    void fill_hough_plane(const traccc::hough_seeding_config config,
 		   const bfield_t bfield,
 		   const edm::spacepoint_collection::const_view::size_type n_spacepoints,
-		   const edm::spacepoint_collection::const_view& spacepoints,
-		   const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association,
-           const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id,
-		   vecmem::data::vector_view<scalar>& spacepoint_r,
-           vecmem::data::vector_view<scalar>& spacepoint_phi,
-		   typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes) {
+		   const edm::spacepoint_collection::const_view spacepoints,
+		   const vecmem::data::vector_view<unsigned long long> spacepoint_wedge_association,
+           const vecmem::data::vector_view<unsigned long long> spacepoint_detector_id,
+		   vecmem::data::vector_view<scalar> spacepoint_r,
+           vecmem::data::vector_view<scalar> spacepoint_phi,
+		   typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes) {
       device::fill_hough_plane<bfield_t, T, N_COLS, N_ROWS>(details::global_index1(), bfield,
 		      n_spacepoints, spacepoints,
 		      spacepoint_wedge_association, spacepoint_detector_id,
@@ -72,8 +72,8 @@ namespace kernels {
              unsigned int N_COLS,
              unsigned int N_ROWS>
    __global__
-   void count_maxima(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes,
-                     vecmem::data::vector_view<unsigned int>& count_vector) {
+   void count_maxima(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes,
+                     vecmem::data::vector_view<unsigned int> count_vector) {
       device::count_maxima<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, count_vector);
    }
 
@@ -81,8 +81,8 @@ namespace kernels {
              unsigned int N_COLS,
              unsigned int N_ROWS>
    __global__
-   void find_maxima(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes,
-                    vecmem::data::jagged_vector_view<traccc::device::global_index_t>& global_indexes) {
+   void find_maxima(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes,
+                    vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes) {
       device::find_maxima<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, global_indexes);
    }
 
@@ -90,11 +90,11 @@ namespace kernels {
              unsigned int N_COLS,
              unsigned int N_ROWS>
    __global__
-   void take_pictures(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes,
-                      const vecmem::data::jagged_vector_view<traccc::device::global_index_t>& global_indexes,
+   void take_pictures(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes,
+                      const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes,
                       const unsigned int n_maxima,
-                      edm::houghplane_collection<scalar, 32, 32>::view& images,
-                      vecmem::data::vector_view<scalar>& maxima_x) {
+                      edm::houghplane_collection<scalar, 32, 32>::view images,
+                      vecmem::data::vector_view<scalar> maxima_x) {
       device::take_pictures<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, global_indexes, n_maxima, images, maxima_x);
    }
 
@@ -103,9 +103,9 @@ namespace kernels {
              unsigned int N_ROWS>
    __global__
    void evaluate_nn(const unsigned int n_images,
-                    const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& images,
-                    const vecmem::data::vector_view<scalar>& maxima_x,
-                    vecmem::data::vector_view<unsigned int>& nn_outcome) {
+                    const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view images,
+                    const vecmem::data::vector_view<scalar> maxima_x,
+                    vecmem::data::vector_view<unsigned int> nn_outcome) {
         device::evaluate_nn<T, N_COLS, N_ROWS>(details::global_index1(), n_images, images, maxima_x, nn_outcome);
     }
 
@@ -116,14 +116,14 @@ namespace kernels {
    __global__
    void count_contributing_hits(const unsigned int n_images,
                                 const bfield_t bfield,
-                                const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_view& houghplanes,
-                                const edm::spacepoint_collection::const_view& spacepoints,
-                                const vecmem::data::vector_view<scalar>& spacepoint_r,
-                                const vecmem::data::vector_view<scalar>& spacepoint_phi,
-                                const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association,
-                                const vecmem::data::jagged_vector_view<traccc::device::global_index_t>& global_index,
-                                const vecmem::data::vector_view<unsigned int>& nn_outcome,
-                                vecmem::data::vector_view<unsigned int>& count_vector) {
+                                const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_view houghplanes,
+                                const edm::spacepoint_collection::const_view spacepoints,
+                                const vecmem::data::vector_view<scalar> spacepoint_r,
+                                const vecmem::data::vector_view<scalar> spacepoint_phi,
+                                const vecmem::data::vector_view<unsigned long long> spacepoint_wedge_association,
+                                const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_index,
+                                const vecmem::data::vector_view<unsigned int> nn_outcome,
+                                vecmem::data::vector_view<unsigned int> count_vector) {
         device::count_contributing_hits<bfield_t, T, N_COLS, N_ROWS>(details::global_index1(),
                     n_images,
                     bfield,
@@ -144,15 +144,15 @@ namespace kernels {
    __global__
    void find_contributing_hits(const unsigned int n_images,
                                 const bfield_t bfield,
-                                const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_view& houghplanes,
-                                const edm::spacepoint_collection::const_view& spacepoints,
-                                const vecmem::data::vector_view<scalar>& spacepoint_r,
-                                const vecmem::data::vector_view<scalar>& spacepoint_phi,
-                                const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association,
-                                const vecmem::data::jagged_vector_view<traccc::device::global_index_t>& global_index,
-                                const vecmem::data::vector_view<unsigned int>& nn_outcome,
-                                vecmem::data::jagged_vector_view<traccc::device::global_index_t>& hits) {
-        device::find_contributing_hits<bfield_t, T, N_COLS, N_ROWS>(details::global_index1(),
+                                const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_view houghplanes,
+                                const edm::spacepoint_collection::const_view spacepoints,
+                                const vecmem::data::vector_view<scalar> spacepoint_r,
+                                const vecmem::data::vector_view<scalar> spacepoint_phi,
+                                const vecmem::data::vector_view<unsigned long long> spacepoint_wedge_association,
+                                const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_index,
+                                const vecmem::data::vector_view<unsigned int> nn_outcome,
+                                vecmem::data::jagged_vector_view<traccc::device::global_index_t> hits) {
+      device::find_contributing_hits<bfield_t, T, N_COLS, N_ROWS>(details::global_index1(),
                     n_images,
                     bfield,
                     houghplanes,
@@ -274,7 +274,7 @@ void hough_transform_seeding_algorithm::count_contributing_hits_kernel(const cou
 }
 
 void hough_transform_seeding_algorithm::find_contributing_hits_kernel(const find_contributing_hits_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = warp_size() * 4;
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
   magnetic_field_visitor<bfield_type_list<scalar>>(
     payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {

@@ -29,19 +29,7 @@ void count_contributing_hits(const global_index_t globalIndex,
     
     // get coordinates
     const vecmem::jagged_device_vector<global_index_t> global_index(global_index_view);
-    
-    global_index_t current_size = globalIndex;
-    global_index_t wedge_idx = 0;
-    global_index_t element_idx = 0;
-
-    for (global_index_t i(0); i<global_index.size(); ++i) {
-        if (global_index[i].size() > current_size) {
-           wedge_idx = i;
-           element_idx = current_size;
-           break;
-        }
-        current_size -= global_index[i].size();
-    }
+    const auto [wedge_idx, element_idx] = get_wedge_element<global_index_t>(globalIndex, global_index);
     
     const global_index_t peak_global_index = global_index[wedge_idx][element_idx];
     const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_device houghplanes(houghplanes_view);
@@ -52,22 +40,12 @@ void count_contributing_hits(const global_index_t globalIndex,
     const scalar max_y = houghplanes.edges_y()[row + 1];
 
    
-    vecmem::device_vector<unsigned int> count_vector(count_vector_view);
-    unsigned int n_contributing_hits = 0u;
-
     const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
     const vecmem::device_vector<unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);
     const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
     const vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
-/*
-    printf("We are looking at wedge %u [element %u] from a %ux%u plane, peak is at index %u (i.e. %u, %u) -> entries %hu -> ranges x=%.4f, %.4f y=%.4f, %.4f\n", 
-            wedge_idx, element_idx,
-            N_COLS, N_ROWS, peak_global_index,
-            col, row, 
-            houghplanes.plane()[wedge_idx][peak_global_index],
-            min_x, max_x,
-            min_y, max_y);
-*/
+   
+    unsigned int n_contributing_hits = 0u; 
     for (unsigned int i(0); i<spacepoints.size(); ++i) {
         // contributes to wedge
         if ((spacepoint_wedge_association[i] & (1ULL << wedge_idx)) == 0ULL) continue;
@@ -75,7 +53,8 @@ void count_contributing_hits(const global_index_t globalIndex,
 
         scalar min_value_y = transform(min_x, spacepoint_r[i], spacepoint_phi[i], covfie_field_at_sp[2]);
         scalar max_value_y = transform(max_x, spacepoint_r[i], spacepoint_phi[i], covfie_field_at_sp[2]);
-        
+        if (min_value_y > max_value_y) std::swap(min_value_y, max_value_y);  
+      
         if (min_value_y > max_y) continue;
         if (max_value_y < min_y) continue;
         
@@ -84,6 +63,8 @@ void count_contributing_hits(const global_index_t globalIndex,
     }
 
     // insert the value
+    if (n_contributing_hits == 0) return;
+    vecmem::device_vector<unsigned int> count_vector(count_vector_view);
     count_vector[globalIndex] = n_contributing_hits;
 }
 
