@@ -92,7 +92,7 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
    scalar eta_at_min = asinhf((spacepoints[globalIndex].z() - z0_min) / spacepoint_r[globalIndex]);
    scalar eta_at_max = asinhf((spacepoints[globalIndex].z() - z0_max) / spacepoint_r[globalIndex]);
 
-   spacepoint_phi[globalIndex] = atan2f(spacepoints[globalIndex].y(), spacepoints[globalIndex].y());
+   spacepoint_phi[globalIndex] = atan2f(spacepoints[globalIndex].y(), spacepoints[globalIndex].x());
    ::remainderf(spacepoint_phi[globalIndex], 2.0f * std::numbers::pi_v<scalar>);
 
    // Retrieve the corresponding measurement index and, from it, the geo id

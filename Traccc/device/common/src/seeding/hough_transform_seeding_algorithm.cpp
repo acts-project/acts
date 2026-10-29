@@ -79,7 +79,17 @@ auto hough_transform_seeding_algorithm::operator()(
 		  spacepoint_r,
 		  spacepoint_phi});
 
-  /*
+  /*  
+  edm::spacepoint_collection::const_view sp_host_view;
+  edm::spacepoint_collection::buffer sp_host_buffer;
+  if (mr().host) {
+    sp_host_buffer = copy().to(spacepoints, *(mr().host));
+    sp_host_view = sp_host_buffer;
+  } else {
+    sp_host_view = spacepoints;
+  }
+  const edm::spacepoint_collection::const_device sp_host_device{sp_host_view};
+  
   vecmem::vector<unsigned long long> spacepoint_detector_id_host = ((mr().host != nullptr)
                 ? vecmem::vector<unsigned long long>(mr().host)
                 : vecmem::vector<unsigned long long>());
@@ -90,12 +100,24 @@ auto hough_transform_seeding_algorithm::operator()(
                 : vecmem::vector<unsigned long long>());
   copy()(spacepoint_wedge_association, spacepoint_wedge_association_host)->wait();
   
+  vecmem::vector<scalar> spacepoint_r_host = ((mr().host != nullptr)
+                ? vecmem::vector<scalar>(mr().host)
+                : vecmem::vector<scalar>());
+  copy()(spacepoint_r, spacepoint_r_host)->wait();
+
+  vecmem::vector<scalar> spacepoint_phi_host = ((mr().host != nullptr)
+                ? vecmem::vector<scalar>(mr().host)
+                : vecmem::vector<scalar>());
+  copy()(spacepoint_phi, spacepoint_phi_host)->wait();
+
   assert(spacepoint_detector_id_host.size() == spacepoint_wedge_association_host.size());
   for (unsigned int i(0); i<spacepoint_detector_id_host.size(); ++i) {
+    const auto& sp = sp_host_device.at(i);
     unsigned long long detector_id = spacepoint_detector_id_host.at(i);
     unsigned long long wedge_association = spacepoint_wedge_association_host.at(i);
     unsigned int n_bits = count_bits(wedge_association);
-    std::cout << "bit count: " << n_bits << " [value was " << std::bitset<64>(wedge_association) << "] (id: " << std::bitset<64>(detector_id) << ")" << std::endl;
+    std::cout << "sp x=" << sp.x() << " y=" << sp.y() << " z=" << sp.z()  << " r=" << spacepoint_r_host.at(i) << " phi=" << spacepoint_phi_host.at(i)
+              << " bit count: " << n_bits << " [value was " << std::bitset<64>(wedge_association) << "] (id: " << std::bitset<64>(detector_id) << ")" << std::endl;
   }
   */
 
@@ -117,17 +139,9 @@ auto hough_transform_seeding_algorithm::operator()(
                 : vecmem::vector<unsigned int>());
   copy()(maxima_sizes, maxima_sizes_host)->wait();
   
-  /*
-  std::cout << std::endl;
-  std::cout << "maxima_sizes_host size: " << maxima_sizes_host.size() << std::endl;
-  for (unsigned int i(0); i<maxima_sizes_host.size(); ++i) {
-    std::cout << "* n [" << i << "]: " << maxima_sizes_host[i] << std::endl; 
-  }
-  */
-
   unsigned int total_maxima = 0u;
   for (unsigned int i(0); i<maxima_sizes_host.size(); ++i) total_maxima += maxima_sizes_host[i];
- 
+
   vecmem::data::jagged_vector_buffer<global_index_t> maxima_global_index(maxima_sizes_host,
         mr().main, mr().host,
         vecmem::data::buffer_type::resizable);
@@ -135,6 +149,45 @@ auto hough_transform_seeding_algorithm::operator()(
 
   find_maxima_kernel({result,
                       maxima_global_index});
+
+
+
+
+  // planes
+  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view ht_host_view;
+  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer ht_host_buffer;
+  if (mr().host) {
+    ht_host_buffer = copy().to(result, *(mr().host));
+    ht_host_view = ht_host_buffer;
+  } else {
+    ht_host_view = result;
+  }
+  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::device ht_host_device(ht_host_view); 
+
+  // maxima
+  vecmem::data::jagged_vector_view<unsigned int> host_view;
+  vecmem::data::jagged_vector_buffer<unsigned int> host_buffer;
+  if (mr().host) {
+    host_buffer = copy().to(maxima_global_index, *(mr().host));
+    host_view = host_buffer;
+  } else {
+    host_view = maxima_global_index;
+  }
+  vecmem::jagged_device_vector<unsigned int> host_device{host_view};  
+
+  std::cout << std::endl;
+  for (unsigned int i(0); i<ht_host_device.size(); ++i) {
+    const auto& plane = ht_host_device.plane()[i];
+    const auto& maxima = host_device[i];
+
+    std::cout << "Slice " << i << ": maxima = ";
+    for (const auto maximum : maxima) std::cout << maximum << "  ";
+    std::cout << "values = ";
+    for (unsigned int idx(0); idx<N_COLS * N_ROWS; ++idx) std::cout << plane[idx] << " ";
+    std::cout << std::endl;
+  }
+
+  throw;
 
   /*
   vecmem::data::jagged_vector_view<unsigned int> host_view;
@@ -224,12 +277,13 @@ auto hough_transform_seeding_algorithm::operator()(
                            nn_outcome,
                            hits_sizes});
 
-  /* 
+
   vecmem::vector<unsigned int> hits_sizes_host = ((mr().host != nullptr)
                 ? vecmem::vector<unsigned int>(mr().host)
                 : vecmem::vector<unsigned int>());
   copy()(hits_sizes, hits_sizes_host)->wait();
-
+ 
+ /* 
   std::cout << std::endl;
   std::cout << "Number of images: " << total_maxima << std::endl;
   std::cout << "hits_sizes_host size: " << hits_sizes_host.size() << std::endl;
@@ -237,8 +291,54 @@ auto hough_transform_seeding_algorithm::operator()(
     std::cout << "* n [" << i << "]: " << hits_sizes_host[i] << std::endl; 
   }
   */
+
+  // unsigned int total_hits = 0u;
+  // for (unsigned int i(0); i<hits_sizes_host.size(); ++i) total_hits += hits_sizes_host[i];
+
+  vecmem::data::jagged_vector_buffer<global_index_t> hits(hits_sizes_host,
+        mr().main, mr().host,
+        vecmem::data::buffer_type::resizable);
+  copy().setup(hits)->ignore();
+
+  /*
+  find_contributing_hits_kernel({total_maxima,
+                            bfield,
+                            result,
+                            spacepoints,
+                            spacepoint_r,
+                            spacepoint_phi,
+                            spacepoint_wedge_association,
+                            maxima_global_index,
+                            nn_outcome,
+                            hits});
+ */
   
-// no idea
+/*
+  vecmem::data::jagged_vector_view<global_index_t> hits_host_view;
+  vecmem::data::jagged_vector_buffer<global_index_t> hits_host_buffer;
+  if (mr().host) {
+    hits_host_buffer = copy().to(hits, *(mr().host));
+    hits_host_view = hits_host_buffer;
+  } else {
+    hits_host_view = hits;
+  }
+
+  vecmem::jagged_device_vector<global_index_t> hits_host_device{hits_host_view};
+  std::cout << "Number of collections in jagged vector: " << hits_host_device.size() << std::endl;
+ */
+
+  /*
+  vecmem::jagged_device_vector<global_index_t> hits_host_device{hits_host_view};
+  std::cout << "Associated hits (from " << total_maxima << " images) [size is " << hits_host_device.size() << "]:" << std::endl;
+
+  for (unsigned int i(0); i<hits_host_device.size(); ++i) {
+    const auto& vals = hits_host_device[i];
+    // std::cout << "* image " << i << ": ";
+    // for (const auto idx : vals) std::cout << idx << " ";
+    // std::cout << std::endl;
+  }  
+*/
+  // no idea
   synchronize();
 
   // Return the result.
