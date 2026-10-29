@@ -8,7 +8,6 @@
 
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 
-#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -41,6 +40,12 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // initialise the space point, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
+  m_outputFreeParameters.maybeInitialize(m_cfg.outputFreeParameters);
+  if (m_outputFreeParameters.isInitialized() &&
+      m_cfg.magneticField == nullptr) {
+    throw std::invalid_argument(
+        "The free parameters of the seeds need a magnetic field");
+  }
   m_inputClusters.initialize(m_cfg.inputClusters);
 
   // parse the mapping file and turn into map
@@ -52,7 +57,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
 
   // keep the connections between layers of the seeded technology
   const Acts::Experimental::GbtsLayerTechnology seededTechnology =
-      m_cfg.seedFinderConfig.useStripConnections
+      m_cfg.useStripConnections
           ? Acts::Experimental::GbtsLayerTechnology::Strip
           : Acts::Experimental::GbtsLayerTechnology::Pixel;
   std::map<Acts::Experimental::GbtsExperimentLayerId,
@@ -84,6 +89,14 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
+  Acts::Experimental::GbtsAdaptiveTauRatioCuts tauRatioCuts =
+      m_cfg.tauRatioCuts;
+  if (!m_cfg.useAdaptiveCuts) {
+    tauRatioCuts.tauRatioCorr = 0.f;
+  }
+  Acts::Experimental::assignAdaptiveTauRatioCuts(connections, layerGeometry,
+                                                 tauRatioCuts);
+
   // initialise the object that holds all the geometry information needed for
   // the algorithm
   m_geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
@@ -93,15 +106,20 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
   // for pixel seeding, roi z bounds are used
+  m_internalRoi.emplace(-4.5, 4.5, m_cfg.collisionRegionMin,
+                        m_cfg.collisionRegionMax);
 
-  m_internalRoi.emplace(-4.5, 4.5, -150., 150.);
-  m_cfg.seedFinderConfig.maxZ0 = m_internalRoi->zMax();
-  m_cfg.seedFinderConfig.minZ0 = m_internalRoi->zMin();
+  // the RoI owns the luminous region, so it overrides what came in
+  m_cfg.graphConfig.maxZ0 = m_internalRoi->zMax();
+  m_cfg.graphConfig.minZ0 = m_internalRoi->zMin();
 
-  m_finder = Acts::Experimental::GraphBasedTrackSeeder(
-      Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
-          m_cfg.seedFinderConfig),
-      m_geometry, this->logger().cloneWithSuffix("GbtsFinder"));
+  m_gbtsGraphBuilder.emplace(
+      m_cfg.graphConfig, m_geometry,
+      this->logger().cloneWithSuffix("GbtsGraphBuilder"));
+
+  m_finder.emplace(Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
+                       m_cfg.seedFinderConfig),
+                   m_geometry, this->logger().cloneWithSuffix("GbtsFinder"));
 
   m_filter = Acts::Experimental::GbtsTrackingFilter(
       m_cfg.trackingFilterConfig, m_geometry,
@@ -149,8 +167,39 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // create the seeds
 
-  m_finder->createSeeds(nodeStorage, m_internalRoi.value(), *m_filter, options,
-                        seeds);
+  std::vector<std::optional<Acts::Experimental::GbtsSeedFit>> fits;
+  m_finder->createSeeds(
+      nodeStorage, m_internalRoi.value(), *m_gbtsGraphBuilder, *m_filter,
+      options, seeds, m_outputFreeParameters.isInitialized() ? &fits : nullptr);
+
+  // free track parameters from the fit of the tracking filter
+  if (m_outputFreeParameters.isInitialized()) {
+    std::vector<Acts::FreeVector> freeParameters;
+    auto fieldCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
+    freeParameters.reserve(seeds.size());
+    for (std::size_t i = 0; i < seeds.size(); ++i) {
+      // zeros for a seed without a fit
+      if (!fits.at(i).has_value()) {
+        freeParameters.push_back(Acts::FreeVector::Zero());
+        continue;
+      }
+      const Acts::Experimental::GbtsSeedFit &fit = fits.at(i).value();
+      // the field halfway between the innermost and outermost space point
+      const auto outer = spacePoints[seeds.at(i).spacePointIndices().back()];
+      const Acts::Vector3 outerPosition(outer.x(), outer.y(), outer.z());
+      const Acts::Vector3 fieldPosition = 0.5 * (fit.position + outerPosition);
+      const auto field =
+          m_cfg.magneticField->getField(fieldPosition, fieldCache);
+      if (!field.ok()) {
+        ACTS_ERROR("Field lookup error: " << field.error());
+        return ProcessCode::ABORT;
+      }
+      freeParameters.push_back(
+          Acts::Experimental::freeParametersFromGbtsSeedFit(fit, *field)
+              .value_or(Acts::FreeVector::Zero()));
+    }
+    m_outputFreeParameters(ctx, std::move(freeParameters));
+  }
 
   m_outputSeeds(ctx, std::move(seeds));
 
@@ -259,6 +308,18 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
     throw std::runtime_error("Invalid barrel/endcap assignment for GbtsLayer");
   }
 
+  // tilt of a plane module in r-z, along which n_r dr + n_z dz = 0
+  float slope = 0.f;
+  if (surface.type() == Acts::Surface::Plane) {
+    const Acts::Vector3 normal =
+        surface.normal(gctx, center, Acts::Vector3::UnitZ());
+    const double nr = normal.head<2>().dot(center.head<2>().normalized());
+    const double nz = normal.z();
+    slope = static_cast<float>(
+        barrelEc == Acts::Experimental::GbtsLayerType::Barrel ? -nz / nr
+                                                              : -nr / nz);
+  }
+
   const auto currentIndex =
       find_if(inputVector.begin(), inputVector.end(),
               [gbtsId](auto n) { return n.id == gbtsId; });
@@ -270,6 +331,7 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
         std::min(inputVector[index].minBound, minBound);
     inputVector[index].maxBound =
         std::max(inputVector[index].maxBound, maxBound);
+    inputVector[index].slope += slope;
     countVector[index] += 1;  // increase count at the index
 
   } else {  // end so doesn't exists
@@ -280,7 +342,8 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
                                                  .technology = find->technology,
                                                  .refCoord = rc,
                                                  .minBound = minBound,
-                                                 .maxBound = maxBound});
+                                                 .maxBound = maxBound,
+                                                 .slope = slope});
     // so the element exists and not divinding by 0
     countVector.push_back(1);
   }
@@ -314,6 +377,10 @@ GraphBasedSeedingAlgorithm::layerNumbering(
 
   for (std::size_t i = 0; i < inputVector.size(); i++) {
     inputVector[i].refCoord = inputVector[i].refCoord / countVector[i];
+    // mean module tilt; below 1e-3 it is rounding in the module placement
+    const float slope = inputVector[i].slope / countVector[i];
+    inputVector[i].slope =
+        m_cfg.useLayerTilt && std::abs(slope) >= 1e-3f ? slope : 0.f;
   }
 
   return inputVector;
@@ -325,49 +392,55 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("connectorInputFile: " << m_cfg.connectorInputFile);
   ACTS_DEBUG("lutInputFile: " << m_cfg.lutInputFile);
   ACTS_DEBUG("etaBinWidth: " << m_cfg.etaBinWidth);
+  ACTS_DEBUG("collisionRegionMin: " << m_cfg.collisionRegionMin);
+  ACTS_DEBUG("collisionRegionMax: " << m_cfg.collisionRegionMax);
+  ACTS_DEBUG("useStripConnections: " << m_cfg.useStripConnections);
   ACTS_DEBUG("===== GraphBasedTrackSeeder =====");
   const auto &cfg1 = m_cfg.seedFinderConfig;
-  ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);
-  ACTS_DEBUG("useStripConnections: " << cfg1.useStripConnections);
-  ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
-  ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
-  ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);
-  ACTS_DEBUG("tauRatioPrecut: " << cfg1.tauRatioPrecut);
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
-  ACTS_DEBUG("minPt: " << cfg1.minPt);
-  ACTS_DEBUG("useEtaBinning: " << cfg1.useEtaBinning);
-  ACTS_DEBUG("doubletFilterRZ: " << cfg1.doubletFilterRZ);
-  ACTS_DEBUG("nMaxEdges: " << cfg1.nMaxEdges);
-  ACTS_DEBUG("minDeltaRadius: " << cfg1.minDeltaRadius);
-  ACTS_DEBUG("edgeMaskMinEta: " << cfg1.edgeMaskMinEta);
+  ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
-  ACTS_DEBUG("validateTriplets: " << cfg1.validateTriplets);
-  ACTS_DEBUG("useAdaptiveCuts: " << cfg1.useAdaptiveCuts);
-  ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
-  ACTS_DEBUG("tauRatioCorr: " << cfg1.tauRatioCorr);
-  ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
-  ACTS_DEBUG("d0Max: " << cfg1.d0Max);
-  ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);
-  ACTS_DEBUG("cutDCurvMax: " << cfg1.cutDCurvMax);
-  ACTS_DEBUG("minZ0: " << cfg1.minZ0);
-  ACTS_DEBUG("maxZ0: " << cfg1.maxZ0);
-  ACTS_DEBUG("maxOuterRadius: " << cfg1.maxOuterRadius);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
   ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);
-  ACTS_DEBUG("===== GbtsTrackFilter =====");
-  const auto &cfg2 = m_cfg.trackingFilterConfig;
-  ACTS_DEBUG("sigmaMS: " << cfg2.sigmaMS);
-  ACTS_DEBUG("radLen: " << cfg2.radLen);
-  ACTS_DEBUG("sigmaX: " << cfg2.sigmaX);
-  ACTS_DEBUG("sigmaY: " << cfg2.sigmaY);
-  ACTS_DEBUG("weightX: " << cfg2.weightX);
-  ACTS_DEBUG("weightY: " << cfg2.weightY);
-  ACTS_DEBUG("maxDChi2X: " << cfg2.maxDChi2X);
-  ACTS_DEBUG("maxDChi2Y: " << cfg2.maxDChi2Y);
-  ACTS_DEBUG("addHit: " << cfg2.addHit);
-  ACTS_DEBUG("maxCurvature: " << cfg2.maxCurvature);
+  ACTS_DEBUG("maxChainLength: " << cfg1.maxChainLength);
+  ACTS_DEBUG("minSeedLevel: " << static_cast<std::uint32_t>(cfg1.minSeedLevel));
+  ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
+  ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
+  ACTS_DEBUG("=====GbtsGraphBuilder=====");
+  const auto &cfg2 = m_cfg.graphConfig;
+  ACTS_DEBUG("matchBeforeCreate: " << cfg2.matchBeforeCreate);
+  ACTS_DEBUG("tauRatioCut: " << cfg2.tauRatioCut);
+  ACTS_DEBUG("tauRatioPrecut: " << cfg2.tauRatioPrecut);
+  ACTS_DEBUG("minPt: " << cfg2.minPt);
+  ACTS_DEBUG("useEtaBinning: " << cfg2.useEtaBinning);
+  ACTS_DEBUG("doubletFilterRZ: " << cfg2.doubletFilterRZ);
+  ACTS_DEBUG("maxEdgesPerSP: " << cfg2.maxEdgesPerSP);
+  ACTS_DEBUG("minDeltaRadius: " << cfg2.minDeltaRadius);
+  ACTS_DEBUG("validateTriplets: " << cfg2.validateTriplets);
+  ACTS_DEBUG("d0Max: " << cfg2.d0Max);
+  ACTS_DEBUG("cutDPhiMax: " << cfg2.cutDPhiMax);
+  ACTS_DEBUG("cutDCurvMax: " << cfg2.cutDCurvMax);
+  ACTS_DEBUG("minZ0: " << cfg2.minZ0);
   ACTS_DEBUG("maxZ0: " << cfg2.maxZ0);
+  ACTS_DEBUG("maxOuterRadius: " << cfg2.maxOuterRadius);
+  ACTS_DEBUG("useAdaptiveCuts: " << m_cfg.useAdaptiveCuts);
+  ACTS_DEBUG("tauRatioCut: " << m_cfg.tauRatioCuts.tauRatioCut);
+  ACTS_DEBUG("tauRatioCorr: " << m_cfg.tauRatioCuts.tauRatioCorr);
+  ACTS_DEBUG("tauRatioCorrStrip: " << m_cfg.tauRatioCuts.tauRatioCorrStrip);
+  ACTS_DEBUG("===== GbtsTrackFilter =====");
+  const auto &cfg3 = m_cfg.trackingFilterConfig;
+  ACTS_DEBUG("sigmaMS: " << cfg3.sigmaMS);
+  ACTS_DEBUG("radLen: " << cfg3.radLen);
+  ACTS_DEBUG("sigmaX: " << cfg3.sigmaX);
+  ACTS_DEBUG("sigmaY: " << cfg3.sigmaY);
+  ACTS_DEBUG("weightX: " << cfg3.weightX);
+  ACTS_DEBUG("weightY: " << cfg3.weightY);
+  ACTS_DEBUG("maxDChi2X: " << cfg3.maxDChi2X);
+  ACTS_DEBUG("maxDChi2Y: " << cfg3.maxDChi2Y);
+  ACTS_DEBUG("addHit: " << cfg3.addHit);
+  ACTS_DEBUG("maxCurvature: " << cfg3.maxCurvature);
+  ACTS_DEBUG("maxZ0: " << cfg3.maxZ0);
   ACTS_DEBUG("================================");
 }
 

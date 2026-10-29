@@ -1,0 +1,3 @@
+set(unittest_extra_libraries ActsExamplesGeant4)
+
+add_unittest(Geant4SensitiveSurfaceMapper SensitiveSurfaceMapperTests.cpp)

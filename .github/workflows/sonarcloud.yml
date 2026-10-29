@@ -21,6 +21,10 @@ jobs:
     name: SonarCloud
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2604:90
+    # sourceEncoding controls file contents, not Java filesystem paths.
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
     # Only pull_request and push-to-main are handled below (PR mode / push
     # mode). Analysis also runs on merge_group, which matches neither, so
     # skip the job outright instead of paying for checkout+deps to do nothing.
@@ -31,6 +35,11 @@ jobs:
         (github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main')
       )
     steps:
+      - name: Verify UTF-8 filesystem locale
+        run: |
+          locale
+          test "$(locale charmap)" = UTF-8
+
       - name: Install APT packages
         run: |
           apt-get update
@@ -48,6 +57,9 @@ jobs:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
+          # Keep the view outside the checkout so Git indexing does not traverse
+          # dependency files. Remap the build's include paths below.
+          destination: /opt/acts-dependencies
 
       - name: 'Download artifact'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -75,6 +87,27 @@ jobs:
 
       - name: Unzip coverage build
         run: unzip coverage-build.zip -d build
+
+      - name: Remap dependency paths in compilation database
+        shell: python
+        run: |
+          import json
+          import os
+          from pathlib import Path
+
+          old = os.environ["GITHUB_WORKSPACE"] + "/dependencies/"
+          new = "/opt/acts-dependencies/"
+          database = Path("build/compile_commands.json")
+          entries = json.loads(database.read_text())
+          # Handle both command strings and argument arrays without executing
+          # any commands from the downloaded artifact.
+          for entry in entries:
+              for key, value in entry.items():
+                  if isinstance(value, str):
+                      entry[key] = value.replace(old, new)
+                  elif key == "arguments":
+                      entry[key] = [arg.replace(old, new) for arg in value]
+          database.write_text(json.dumps(entries))
 
       - name: Unzip PR metadata
         if: github.event.workflow_run.event == 'pull_request'
@@ -174,7 +207,7 @@ jobs:
           git status
 
       - name: Run sonar-scanner (PR mode)
-        uses: SonarSource/sonarqube-scan-action@ba9859eae8dd6bd29e412f25ddbbef3d032000f4 # v8.2.2
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
         if: github.event.workflow_run.event == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -190,7 +223,7 @@ jobs:
             --define sonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
 
       - name: Run sonar-scanner (push mode)
-        uses: SonarSource/sonarqube-scan-action@ba9859eae8dd6bd29e412f25ddbbef3d032000f4 # v8.2.2
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
         if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

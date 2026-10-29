@@ -32,6 +32,32 @@ namespace Acts {
 using VectorHelpers::perp;
 using VectorHelpers::phi;
 
+namespace {
+/// Local azimuth and the bound axes at a cone position, in the global frame.
+/// radial = (cos phi, sin phi, 0), phiAxis = (-sin phi, cos phi, 0) and
+/// axis = ez. referenceFrame is (phiAxis, n x phiAxis, n). The bound z
+/// derivative tan(alpha)*radial - phi*tan(alpha)*phiAxis + axis is not that
+/// second column, so boundToFreeJacobian replaces it and freeToBoundJacobian
+/// replaces both loc rows.
+struct ConeBoundAxes {
+  double localPhi;
+  Vector3 radial;
+  Vector3 phiAxis;
+  Vector3 axis;
+};
+
+ConeBoundAxes coneBoundAxes(const Transform3& toGlobal,
+                            const Vector3& position) {
+  const Vector3 localPosition = toGlobal.inverse() * position;
+  const double localPhi = phi(localPosition);
+  const double cosPhi = std::cos(localPhi);
+  const double sinPhi = std::sin(localPhi);
+  const auto& rotation = toGlobal.rotation();
+  return {localPhi, rotation * Vector3(cosPhi, sinPhi, 0.),
+          rotation * Vector3(-sinPhi, cosPhi, 0.), rotation.col(2)};
+}
+}  // namespace
+
 ConeSurface::ConeSurface(const ConeSurface& other)
     : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
@@ -91,22 +117,55 @@ Vector3 ConeSurface::rotSymmetryAxis(const GeometryContext& gctx) const {
 RotationMatrix3 ConeSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& /*direction*/) const {
-  RotationMatrix3 mFrame;
-  // construct the measurement frame
-  // measured Y is the local z axis
-  Vector3 measY = rotSymmetryAxis(gctx);
-  // measured z is the position transverse normalized
-  Vector3 measDepth = Vector3(position.x(), position.y(), 0.).normalized();
-  // measured X is what comoes out of it
-  Vector3 measX(measY.cross(measDepth).normalized());
-  // the columnes
-  mFrame.col(0) = measX;
-  mFrame.col(1) = measY;
-  mFrame.col(2) = measDepth;
-  // return the rotation matrix
-  //!< @todo fold in alpha
-  // return it
-  return mFrame;
+  // Columns are (e_phi, n x e_phi, n). The normal is what the base
+  // freeToPathDerivative projects onto.
+  const Vector3 n = normal(gctx, position);
+  const Transform3& toGlobal = localToGlobalTransform(gctx);
+  const double localPhi = phi(toGlobal.inverse() * position);
+  const Vector3 phiAxis = toGlobal.rotation() *
+                          Vector3(-std::sin(localPhi), std::cos(localPhi), 0.);
+  RotationMatrix3 frame;
+  frame.col(0) = phiAxis;
+  frame.col(1) = n.cross(phiAxis);
+  frame.col(2) = n;
+  return frame;
+}
+
+BoundToFreeMatrix ConeSurface::boundToFreeJacobian(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+
+  // referenceFrame supplies e_phi as the loc0 column. Replace loc1.
+  BoundToFreeMatrix jacToGlobal =
+      Surface::boundToFreeJacobian(gctx, position, direction);
+
+  const ConeBoundAxes axes =
+      coneBoundAxes(localToGlobalTransform(gctx), position);
+  const double tanAlpha = bounds().tanAlpha();
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundLoc1) =
+      tanAlpha * axes.radial - axes.localPhi * tanAlpha * axes.phiAxis +
+      axes.axis;
+  return jacToGlobal;
+}
+
+FreeToBoundMatrix ConeSurface::freeToBoundJacobian(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+
+  FreeToBoundMatrix jacToLocal =
+      Surface::freeToBoundJacobian(gctx, position, direction);
+
+  // On the surface R/r = 1, so the (rphi, z) rows are e_phi + phi*tan(alpha)*ez
+  // and ez.
+  const ConeBoundAxes axes =
+      coneBoundAxes(localToGlobalTransform(gctx), position);
+  const double tanAlpha = bounds().tanAlpha();
+  jacToLocal.block<1, 3>(eBoundLoc0, eFreePos0) =
+      (axes.phiAxis + axes.localPhi * tanAlpha * axes.axis).transpose();
+  jacToLocal.block<1, 3>(eBoundLoc1, eFreePos0) = axes.axis.transpose();
+  return jacToLocal;
 }
 
 Vector3 ConeSurface::localToGlobal(const GeometryContext& gctx,
@@ -133,18 +192,7 @@ Result<Vector2> ConeSurface::globalToLocal(const GeometryContext& gctx,
 double ConeSurface::pathCorrection(const GeometryContext& gctx,
                                    const Vector3& position,
                                    const Vector3& direction) const {
-  // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
-  Vector3 posLocal = localToGlobalTransform(gctx).inverse() * position;
-  double phi = VectorHelpers::phi(posLocal);
-  double sgn = -std::copysign(1., posLocal.z());
-  double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
-  double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
-  Vector3 normalC(std::cos(phi) * cosAlpha, std::sin(phi) * cosAlpha,
-                  sgn * sinAlpha);
-  normalC = localToGlobalTransform(gctx).linear() * normalC;
-  // Back to the global frame
-  double cAlpha = normalC.dot(direction);
-  return std::abs(1. / cAlpha);
+  return std::abs(1. / normal(gctx, position).dot(direction));
 }
 
 std::string ConeSurface::name() const {
@@ -165,11 +213,16 @@ Vector3 ConeSurface::normal(const GeometryContext& gctx,
 
 Vector3 ConeSurface::normal(const GeometryContext& gctx,
                             const Vector3& position) const {
-  // get it into the cylinder frame if needed
-  // @todo respect opening angle
-  Vector3 pos3D = localToGlobalTransform(gctx).inverse() * position;
-  pos3D.z() = 0;
-  return pos3D.normalized();
+  // (cos phi cos alpha, sin phi cos alpha, -sign(z) sin alpha)
+  const Transform3& toGlobal = localToGlobalTransform(gctx);
+  const Vector3 localPosition = toGlobal.inverse() * position;
+  const double localPhi = phi(localPosition);
+  const double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
+  const double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
+  const double sgn = -std::copysign(1., localPosition.z());
+  const Vector3 localNormal(std::cos(localPhi) * cosAlpha,
+                            std::sin(localPhi) * cosAlpha, sgn * sinAlpha);
+  return toGlobal.linear() * localNormal;
 }
 
 const ConeBounds& ConeSurface::bounds() const {
@@ -302,7 +355,7 @@ MultiIntersection3D ConeSurface::intersect(
   }
 
   // Check the validity of the second solution
-  Vector3 solution2 = position + qe.first * direction;
+  Vector3 solution2 = position + qe.second * direction;
   IntersectionStatus status2 = std::abs(qe.second) < std::abs(tolerance)
                                    ? IntersectionStatus::onSurface
                                    : IntersectionStatus::reachable;
@@ -311,10 +364,9 @@ MultiIntersection3D ConeSurface::intersect(
     status2 = IntersectionStatus::unreachable;
   }
 
-  const auto& tf = localToGlobalTransform(gctx);
-  // Set the intersection
-  Intersection3D first(tf * solution1, qe.first, status1);
-  Intersection3D second(tf * solution2, qe.second, status2);
+  // solution1/2 are already in the global frame.
+  Intersection3D first(solution1, qe.first, status1);
+  Intersection3D second(solution2, qe.second, status2);
   // Order based on path length
   if (first.pathLength() <= second.pathLength()) {
     return MultiIntersection3D(first, second);

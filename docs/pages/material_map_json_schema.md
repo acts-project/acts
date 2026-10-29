@@ -3,7 +3,7 @@
 Version 1 stores **surface material**. @ref Acts::TrackingGeometryMaterialJsonConverter
 reads and writes JSON or CBOR, optionally compressed with zstd. `toJson`/`fromJson`
 convert documents; `toFile`/`fromFile` handle files. @ref Acts::TrackingGeometryMaterialJsonConverter::Options "Options" controls indentation
-and compression level. Applying material to geometry is a separate operation:
+compression level and optional material quantization. Applying material to geometry is a separate operation:
 
 @snippet{trimleft} examples/material_map_json.cpp Read and write material map
 
@@ -15,6 +15,46 @@ under `share/Acts/schema`. It defines fields, variants and numeric bounds.
 Examples in `docs/examples/material-map-v1/` cover homogeneous material
 (`minimal.json`), mapped surfaces (`surfaces.json`) and mapping templates
 (`templates.json`). Their relative `$schema` references support editor validation.
+
+@ref Acts::TrackingGeometryMaterial::fromGeometry extracts assignments without
+modifying the geometry or resolving deferred binning. `includeNonMaterial=True`
+adds deferred one-bin proto grids for bare surfaces. Pass the result directly to
+@ref Acts::TrackingGeometryMaterialJsonConverter::toFile; volume assignments are
+preserved during extraction but rejected by the version 1 converter.
+After running the Python mapping example, `mapping.material` holds the finalized
+assignments for serialization in the same way.
+
+`acts.IMaterialDecorator.fromFile` supports both formats. The new converter rejects
+legacy input with an error pointing to `ActsMaterialMapMigrate`.
+
+The JSON plugin also installs `ActsMaterialMapMigrate` in `bin` to migrate
+files written by the legacy material converter or ROOT material writer:
+
+```sh
+ActsMaterialMapMigrate old-material.json material.json
+ActsMaterialMapMigrate material.root material.json.zst
+ActsMaterialMapMigrate old-material.json.zst material.cbor.zst \
+    --material-fraction-bits 16 --compression-level 19
+```
+
+ROOT inputs are selected by the `.root` extension and require a build with
+`ACTS_BUILD_PLUGIN_ROOT=ON`. They use the default ROOT material tree/folder names.
+ROOT migration preserves the assignments reconstructed by
+@ref ActsPlugins::RootMaterialDecorator; stable keys, mapping settings and
+independent electron-density/excitation-energy overrides are not stored by that
+format. Files with volume material are rejected, as are ROOT files containing
+no recognized material maps.
+
+For JSON/CBOR, input encoding is detected from its contents. The output extension selects
+JSON or CBOR, with optional zstd compression. Defaults preserve full float32
+precision, use four-space indentation and zstd level 9. `--indentation` changes
+text indentation; `--help` lists all options. Volume material causes migration
+to fail because version 1 only supports surfaces. The tool preserves material
+assignments and stable keys supported by the legacy reader; unrelated geometry
+annotations in decorated legacy files are not part of the new material format.
+Migration uses the legacy reader's semantics, including its default split factors
+(the legacy format does not store them) and normalization of single-bin axes;
+it cannot recover settings already lost by the legacy format.
 
 @include examples/material-map-v1/minimal.json
 
@@ -77,6 +117,19 @@ and interaction lengths; numeric NaN and infinities are outside the format.
 Slabs retain thickness, including for vacuum. Surface settings preserve mapping
 type (`default`, `pre`, `post`, `sensor`) and split factor in [0,1]. Proto materials
 require split factor 1.
+
+## Optional quantization
+
+@ref Acts::TrackingGeometryMaterialJsonConverter::Options::materialFractionBits
+controls the retained float32 fraction bits (0–23); the default 23 leaves values
+unchanged. Lower values improve compression by rounding built-in material
+properties and slab thickness to fewer bits. Rounding uses nearest, ties to even,
+with relative error at most `2^(-bits-1)` for normal values. Zeros, subnormals,
+infinities and values that would overflow are preserved.
+
+Geometry, axes, settings and custom payloads are unchanged. Quantization applies
+to canonical output units and does not change the schema or reader. It is
+available through `toJson` and `toFile`, including the Python options.
 
 ## Axes and storage
 
