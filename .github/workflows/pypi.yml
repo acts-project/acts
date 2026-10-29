@@ -1,11 +1,13 @@
 name: PyPI
 
 # Nightly builds on schedule, but uploading to test PyPI requires a manual
-# trigger (test PyPI storage is limited); release builds and their uploads
-# are triggered manually via workflow_dispatch
+# trigger (test PyPI storage is limited); release builds are uploaded when a
+# GitHub release is published, or manually via workflow_dispatch
 on:
   schedule:
     - cron: '5 3 * * *'
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       acts_ref:
@@ -25,23 +27,50 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     permissions: {}
-    if: github.repository == 'acts-project/acts' || github.event_name != 'schedule'
+    if: github.repository == 'acts-project/acts' || github.event_name == 'workflow_dispatch'
+    outputs:
+      release: ${{ steps.mode.outputs.release }}
     steps:
+      - name: Determine build mode
+        id: mode
+        env:
+          REF: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.acts_ref }}
+        run: |
+          if [ -n "$REF" ]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set build version
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
+        if: steps.mode.outputs.release != 'true'
         run: echo "dev$(date +%Y%m%d%H%M%S)" > build_version.txt
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
+        if: steps.mode.outputs.release != 'true'
         with:
           name: build-version
           path: build_version.txt
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.inputs.acts_ref || 'main' }}
+          ref: ${{ steps.mode.outputs.ref }}
           path: acts
           persist-credentials: false
+
+      # The wheel version comes from version_number, so it must match the tag
+      - name: Check version matches release tag
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="v$(cat acts/version_number)"
+          if [ "$version" != "$TAG" ]; then
+            echo "::error::version_number ($version) does not match release tag ($TAG)"
+            exit 1
+          fi
 
       - name: Package source as tarball
         run: tar czf acts-source.tar.gz acts/
@@ -87,17 +116,20 @@ jobs:
         run: tar xzf acts-source.tar.gz
 
       - name: Download build version
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
+        if: needs.prepare.outputs.release != 'true'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: build-version
 
       - name: print build version
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
+        if: needs.prepare.outputs.release != 'true'
         run: cat build_version.txt
 
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          # this workflow publishes release artifacts, so avoid cache poisoning
+          enable-cache: false
 
       - name: Determine CIBW_BUILD
         id: cibw
@@ -135,7 +167,7 @@ jobs:
           python-version: "3.13"
 
       - name: Patch version to dev version
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
+        if: needs.prepare.outputs.release != 'true'
         run: |
           PATCHED_VERSION="$(cat acts/version_number).$(cat build_version.txt)"
           echo "Patch to version $PATCHED_VERSION"
@@ -177,8 +209,8 @@ jobs:
         verbose: true
 
   upload_pypi:
-    needs: build_wheels
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.acts_ref != ''
+    needs: [prepare, build_wheels]
+    if: needs.prepare.outputs.release == 'true'
     environment:
       name: pypi
       url: https://pypi.org/project/pyacts
