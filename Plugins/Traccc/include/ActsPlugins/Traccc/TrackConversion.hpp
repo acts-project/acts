@@ -28,7 +28,7 @@
 #include <traccc/edm/track_fit_outcome.hpp>
 #include <traccc/edm/track_parameters.hpp>
 
-namespace ActsPlugins::TracccBoundTrackParameters {
+namespace ActsPlugins {
 
 /// traccc bound track parameters with the default algebra
 using TracccBoundTrackParameters =
@@ -48,7 +48,7 @@ Acts::BoundMatrix convertBoundCovarianceFromTraccc(
 
 /// Check for degenerate (all zero) traccc bound track parameters, which
 /// traccc reports for parameters that were never set
-bool isDegenerate(const TracccBoundTrackParameters& params);
+bool hasZeroBoundParameters(const TracccBoundTrackParameters& params);
 
 /// Create the source link of a measurement track state
 ///
@@ -93,7 +93,7 @@ std::ostream& operator<<(std::ostream& os,
 ///
 /// @return the surface or nullptr if it can not be found
 template <typename detector_t>
-const Acts::Surface* findSurface(
+const Acts::Surface* findSurfaceFromDetray(
     const detector_t& detector, const Acts::TrackingGeometry& trackingGeometry,
     const detray::geometry::identifier& surfaceLink) {
   if (surfaceLink.is_invalid()) {
@@ -141,13 +141,13 @@ TracccTrackConversionStatistics convertTracksFromTraccc(
       ++stats.nFailedFit;
       continue;
     }
-    if (isDegenerate(track.params())) {
+    if (hasZeroBoundParameters(track.params())) {
       ++stats.nDegenerate;
       continue;
     }
 
-    const Acts::Surface* referenceSurface =
-        findSurface(detector, trackingGeometry, track.params().surface_link());
+    const Acts::Surface* referenceSurface = findSurfaceFromDetray(
+        detector, trackingGeometry, track.params().surface_link());
     if (referenceSurface == nullptr) {
       ++stats.nMissingSurface;
       throw std::runtime_error(
@@ -169,8 +169,8 @@ TracccTrackConversionStatistics convertTracksFromTraccc(
       }
       const auto state = input.states.at(link.index);
       const auto& smoothed = state.smoothed_params();
-      const Acts::Surface* surface =
-          findSurface(detector, trackingGeometry, smoothed.surface_link());
+      const Acts::Surface* surface = findSurfaceFromDetray(
+          detector, trackingGeometry, smoothed.surface_link());
       if (surface == nullptr) {
         missingSurface = true;
         throw std::runtime_error(
@@ -186,7 +186,7 @@ TracccTrackConversionStatistics convertTracksFromTraccc(
         continue;
       }
 
-      if (isDegenerate(smoothed)) {
+      if (hasZeroBoundParameters(smoothed)) {
         degenerate = true;
         break;
       }
@@ -221,4 +221,4 @@ TracccTrackConversionStatistics convertTracksFromTraccc(
   return stats;
 }
 
-}  // namespace ActsPlugins::TracccBoundTrackParameters
+}  // namespace ActsPlugins
