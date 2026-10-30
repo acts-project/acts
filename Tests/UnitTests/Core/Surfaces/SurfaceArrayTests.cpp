@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -432,6 +433,62 @@ BOOST_AUTO_TEST_CASE(SurfaceArrayToStreamPreservesStreamState) {
   BOOST_CHECK_EQUAL(stream.precision(), precision);
   BOOST_CHECK_EQUAL(stream.width(), width);
   BOOST_CHECK_EQUAL(stream.fill(), fill);
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceArray_CurvedDiscLookup) {
+  const auto representative = Surface::makeShared<DiscSurface>(
+      Transform3(Translation3(0., 0., 20.)), 19., 22.);
+  const auto sensor = Surface::makeShared<PlaneSurface>(
+      Transform3(Translation3(20., 1., 20.)),
+      std::make_shared<RectangleBounds>(0.05, 0.05));
+  const Axis<AxisType::Equidistant, AxisBoundaryType::Bound> radius(19., 22.,
+                                                                    12);
+  const Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
+      -std::numbers::pi, std::numbers::pi, 720);
+  const SurfaceArray array(tgContext, {sensor}, representative, 0.01,
+                           {radius, phiAxis}, {{0, 0}, {0, 0}});
+  const Vector3 position(20., 0., 0.);
+  BOOST_CHECK(array.neighbors(tgContext, position, Vector3::UnitZ()).empty());
+  const auto corrected = array.neighbors(tgContext, position, Vector3::UnitZ(),
+                                         Vector3(0., 0.005, 0.));
+  BOOST_REQUIRE_EQUAL(corrected.size(), 1u);
+  BOOST_CHECK_EQUAL(corrected.front(), sensor.get());
+  NavigationStream stream;
+  stream.addSurfaceCandidate(*corrected.front(), BoundaryTolerance::None());
+  BOOST_REQUIRE(stream.initialize(
+      tgContext, {position, Vector3::UnitZ(), Vector3(0., 0.005, 0.)},
+      getDummyLogger()));
+  BOOST_CHECK_EQUAL(&stream.currentCandidate().surface(), sensor.get());
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceArray_CurvedCylinderLookup) {
+  const auto representative =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20., 2.);
+  const double phi = std::atan2(0.5 * 19. * 19. * 0.005, 20.);
+  const Vector3 center(20. * std::cos(phi), 20. * std::sin(phi), 0.);
+  Transform3 transform = Transform3::Identity();
+  transform.translation() = center;
+  transform.linear().col(0) = Vector3(-std::sin(phi), std::cos(phi), 0.);
+  transform.linear().col(1) = Vector3::UnitZ();
+  transform.linear().col(2) = center.normalized();
+  const auto sensor = Surface::makeShared<PlaneSurface>(
+      transform, std::make_shared<RectangleBounds>(0.03, 0.1));
+  const Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
+      -std::numbers::pi, std::numbers::pi, 720);
+  const Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-2., 2., 4);
+  const SurfaceArray array(tgContext, {sensor}, representative, 0.01,
+                           {phiAxis, zAxis}, {{0, 0}, {0, 0}});
+  const Vector3 position(1., 0., 0.);
+  BOOST_CHECK(array.neighbors(tgContext, position, Vector3::UnitX()).empty());
+  const auto corrected = array.neighbors(tgContext, position, Vector3::UnitX(),
+                                         Vector3(0., 0.005, 0.));
+  BOOST_REQUIRE_EQUAL(corrected.size(), 1u);
+  BOOST_CHECK_EQUAL(corrected.front(), sensor.get());
+  NavigationStream stream;
+  stream.addSurfaceCandidate(*corrected.front(), BoundaryTolerance::None());
+  BOOST_REQUIRE(stream.initialize(
+      tgContext, {position, Vector3::UnitX(), Vector3(0., 0.005, 0.)},
+      getDummyLogger()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -235,6 +235,13 @@ double Surface::distanceToBoundary(const Vector2& lposition) const {
   return bounds().distance(lposition);
 }
 
+MultiIntersection3D Surface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const Vector3& /*curvature*/,
+    const BoundaryTolerance& boundaryTolerance, double tolerance) const {
+  return intersect(gctx, position, direction, boundaryTolerance, tolerance);
+}
+
 bool Surface::insideBounds(const Vector2& lposition,
                            const BoundaryTolerance& boundaryTolerance) const {
   return bounds().inside(lposition, boundaryTolerance);

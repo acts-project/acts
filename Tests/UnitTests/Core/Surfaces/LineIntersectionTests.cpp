@@ -24,7 +24,7 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 BOOST_AUTO_TEST_CASE(checkPlaneIsection) {
-  using namespace PlanarHelper;
+  using namespace Acts::detail::PlanarHelper;
 
   const Vector3 pointInPlane{561., 0., 0.};
   const Vector3 planeNormal{Vector3::UnitX()};

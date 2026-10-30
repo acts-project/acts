@@ -18,8 +18,10 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/detail/CurvatureCorrection.hpp"
 #include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
+#include <chrono>
 #include <cmath>
 #include <numbers>
 #include <random>
@@ -123,6 +125,61 @@ BOOST_DATA_TEST_CASE(
                                                 theta + std::numbers::pi)
               << std::endl;
   }
+}
+
+// Compare the same finite surfaces and inputs, including the zero-curvature
+// fast path. These timings exclude magnetic-field lookup and navigation work.
+// To compare correction modes, change s_useQuadraticCurvatureCorrection and
+// rebuild: both runs then measure the same production surface dispatch.
+BOOST_AUTO_TEST_CASE(benchmark_curvature_intersections) {
+  const auto plane = Surface::makeShared<PlaneSurface>(
+      Transform3(Translation3(0., 0., 200.)),
+      std::make_shared<RectangleBounds>(100., 100.));
+  const auto disc = Surface::makeShared<DiscSurface>(
+      Transform3(Translation3(0., 0., 200.)),
+      std::make_shared<RadialBounds>(0., 100.));
+  const auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 200., 100.);
+  const auto measure = [&](const Surface& surface, const Vector3& direction,
+                           const Vector3& curvature) {
+    const auto bounds = BoundaryTolerance::None();
+    std::cout << "surface=" << surface.name() << '\n';
+    std::cout << "  ray: "
+              << microBenchmark(
+                     [&] {
+                       return surface.intersect(tgContext, origin, direction,
+                                                bounds);
+                     },
+                     1000, 2000, std::chrono::milliseconds(200))
+              << '\n';
+    std::cout << "  zero curvature: "
+              << microBenchmark(
+                     [&] {
+                       return surface.intersect(tgContext, origin, direction,
+                                                Vector3::Zero(), bounds);
+                     },
+                     1000, 2000, std::chrono::milliseconds(200))
+              << '\n';
+    std::cout << (detail::s_useQuadraticCurvatureCorrection ? "  quadratic: "
+                                                            : "  first order: ")
+              << microBenchmark(
+                     [&] {
+                       return surface.intersect(tgContext, origin, direction,
+                                                curvature, bounds);
+                     },
+                     1000, 2000, std::chrono::milliseconds(200))
+              << '\n';
+  };
+  measure(*plane, Vector3::UnitZ(), Vector3(0.0005, 0., 0.));
+  measure(*disc, Vector3::UnitZ(), Vector3(0.0005, 0., 0.));
+  measure(*cylinder, Vector3::UnitX(), Vector3(0., 0.0005, 0.));
+  std::cout << "Oblique crossings (nonzero normal curvature):\n";
+  const Vector3 tilted = Vector3(0.3, 0., 1.).normalized();
+  const Vector3 bend = 0.0005 * Vector3(1., 0., -0.3).normalized();
+  measure(*plane, tilted, bend);
+  measure(*disc, tilted, bend);
+  measure(*cylinder, Vector3(1., 0., 0.3).normalized(),
+          0.0005 * Vector3(-0.3, 0., 1.).normalized());
 }
 
 }  // namespace ActsTests

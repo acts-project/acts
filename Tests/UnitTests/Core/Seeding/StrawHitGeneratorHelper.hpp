@@ -27,7 +27,7 @@ using namespace Acts::VectorHelpers;
 using namespace Acts::Experimental::detail;
 using namespace Acts::Experimental;
 using namespace Acts::detail::LineHelper;
-using namespace Acts::PlanarHelper;
+using namespace Acts::detail::PlanarHelper;
 
 using RandomEngine = std::mt19937;
 

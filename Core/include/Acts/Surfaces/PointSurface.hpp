@@ -86,6 +86,8 @@ class PointSurface : public Surface {
                const Transform3& shift);
 
  public:
+  using Surface::intersect;
+
   /// Copy constructor
   ///
   /// @param other The source surface for copying

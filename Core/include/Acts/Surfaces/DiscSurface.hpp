@@ -327,6 +327,14 @@ class DiscSurface : public RegularSurface {
           BoundaryTolerance::Infinite(),
       double tolerance = s_onSurfaceTolerance) const final;
 
+  /// @copydoc Surface::intersect(const GeometryContext&, const Vector3&, const Vector3&, const Vector3&, const BoundaryTolerance&, double) const
+  MultiIntersection3D intersect(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const Vector3& curvature,
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
+      double tolerance = s_onSurfaceTolerance) const final;
+
   /// Return properly formatted class name for screen output
   /// @return String representation of the class name
   std::string name() const override;

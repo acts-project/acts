@@ -166,15 +166,13 @@ double PlaneSurface::pathCorrection(const GeometryContext& gctx,
   return 1. / std::abs(normal(gctx).dot(direction));
 }
 
-MultiIntersection3D PlaneSurface::intersect(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    double tolerance) const {
-  // Get the contextual transform
-  const auto& gctxTransform = localToGlobalTransform(gctx);
-  // Use the intersection helper for planar surfaces
-  auto intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+namespace {
+
+// Apply identical physical bounds to ray and curvature-corrected predictions.
+inline MultiIntersection3D boundedIntersection(
+    const PlaneSurface& surface, const Transform3& gctxTransform,
+    const Intersection3D& intersection,
+    const BoundaryTolerance& boundaryTolerance) {
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status() != IntersectionStatus::unreachable) {
@@ -182,13 +180,44 @@ MultiIntersection3D PlaneSurface::intersect(
     const auto& tMatrix = gctxTransform.matrix();
     // Create the reference vector in local
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
-    if (!insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
-                      boundaryTolerance)) {
+    if (!surface.insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
+                              boundaryTolerance)) {
       status = IntersectionStatus::unreachable;
     }
   }
   return MultiIntersection3D(Intersection3D(intersection.position(),
                                             intersection.pathLength(), status));
+}
+
+}  // namespace
+
+MultiIntersection3D PlaneSurface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
+    double tolerance) const {
+  // Get the contextual transform
+  const auto& gctxTransform = localToGlobalTransform(gctx);
+  // Use the intersection helper for planar surfaces
+  auto intersection = Acts::detail::PlanarHelper::intersect(
+      gctxTransform, position, direction, tolerance);
+  return boundedIntersection(*this, gctxTransform, intersection,
+                             boundaryTolerance);
+}
+
+MultiIntersection3D PlaneSurface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const Vector3& curvature,
+    const BoundaryTolerance& boundaryTolerance, double tolerance) const {
+  if (curvature.isZero(0.) || !curvature.allFinite()) {
+    return intersect(gctx, position, direction, boundaryTolerance, tolerance);
+  }
+  // Get the contextual transform
+  const auto& gctxTransform = localToGlobalTransform(gctx);
+  // Use the intersection helper for planar surfaces
+  auto intersection = detail::PlanarHelper::intersect(
+      gctxTransform, position, direction, curvature, tolerance);
+  return boundedIntersection(*this, gctxTransform, intersection,
+                             boundaryTolerance);
 }
 
 Matrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
