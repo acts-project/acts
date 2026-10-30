@@ -51,6 +51,9 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Input free track parameters per seed, used instead of the fit to the
     /// space points (optional).
     std::optional<std::string> inputFreeParameters;
+    /// Give the parameters on the surface of the last space point of the seed
+    /// instead of the first, for a track finder that starts there.
+    bool parametersOnLastSpacePoint = false;
   };
 
   /// Construct the track parameters making algorithm.

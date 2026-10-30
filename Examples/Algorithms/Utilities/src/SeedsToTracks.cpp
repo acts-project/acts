@@ -51,14 +51,28 @@ ProcessCode SeedsToTracks::execute(const AlgorithmContext& ctx) const {
 
     auto track = tracks.makeTrack();
     std::uint32_t nMeasurements = 0;
+    bool parametersAttached = false;
 
     for (const auto& sp : seed.spacePoints()) {
       for (const auto& sourceLink : sp.sourceLinks()) {
+        const Acts::Surface* surface = nullptr;
+        if (m_cfg.trackingGeometry != nullptr) {
+          const Acts::GeometryIdentifier geoId =
+              sourceLink.get<IndexSourceLink>().geometryId();
+          surface = m_cfg.trackingGeometry->findSurface(geoId);
+          if (surface == nullptr) {
+            std::ostringstream oss;
+            oss << "No surface found for source-link geometry id " << geoId;
+            throw std::runtime_error(oss.str());
+          }
+        }
+
         // `TrackParamsEstimationAlgorithm` expresses the estimate on the
-        // bottom space point's surface, which is the first one here
-        const bool attachParameters = hasTrackParameters &&
-                                      nMeasurements == 0 &&
-                                      m_cfg.trackingGeometry != nullptr;
+        // surface of one of the seed's space points, once
+        const bool attachParameters =
+            hasTrackParameters && !parametersAttached && surface != nullptr &&
+            surface == &trackParameters->at(i).referenceSurface();
+        parametersAttached = parametersAttached || attachParameters;
 
         auto trackStateProxy = track.appendTrackState(
             attachParameters ? Acts::TrackStatePropMask::Predicted
@@ -67,16 +81,7 @@ ProcessCode SeedsToTracks::execute(const AlgorithmContext& ctx) const {
         trackStateProxy.setUncalibratedSourceLink(Acts::SourceLink(sourceLink));
         ++nMeasurements;
 
-        if (m_cfg.trackingGeometry != nullptr) {
-          const Acts::GeometryIdentifier geoId =
-              sourceLink.get<IndexSourceLink>().geometryId();
-          const Acts::Surface* surface =
-              m_cfg.trackingGeometry->findSurface(geoId);
-          if (surface == nullptr) {
-            std::ostringstream oss;
-            oss << "No surface found for source-link geometry id " << geoId;
-            throw std::runtime_error(oss.str());
-          }
+        if (surface != nullptr) {
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
         }
 

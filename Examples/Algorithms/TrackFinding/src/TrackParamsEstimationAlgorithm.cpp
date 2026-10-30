@@ -121,7 +121,9 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
             ctx.recoGeoContext, ctx.magFieldContext, cache, seed, hypothesis,
             inputFreeParameters != nullptr ? &inputFreeParameters->at(iseed)
                                            : nullptr,
-            SeedParamsEstimator::Anchor::First);
+            m_cfg.parametersOnLastSpacePoint
+                ? SeedParamsEstimator::Anchor::Last
+                : SeedParamsEstimator::Anchor::First);
     if (!estimate.ok()) {
       using enum SeedParamsEstimator::Failure;
       switch (estimate.error()) {

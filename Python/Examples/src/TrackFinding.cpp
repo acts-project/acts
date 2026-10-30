@@ -158,7 +158,8 @@ void addTrackFinding(py::module& mex) {
         magneticField, bFieldMin, spacePointSelection, minTransverseDistance,
         geometricRefineIterations, spacePointWeight, initialSigmas,
         initialSigmaQoverPt, initialSigmaPtRel, initialVarInflation,
-        noTimeVarInflation, particleHypothesis, inputFreeParameters);
+        noTimeVarInflation, particleHypothesis, inputFreeParameters,
+        parametersOnLastSpacePoint);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
