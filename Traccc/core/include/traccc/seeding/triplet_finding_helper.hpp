@@ -199,8 +199,6 @@ inline bool TRACCC_HOST_DEVICE triplet_finding_helper::isCompatibleStrip(
     const strip_spacepoint_calibration& calT, const lin_circle& lt,
     const seedfinder_config& config, scalar& curvature,
     scalar& impact_parameter) {
-  using vector3_t = std::array<scalar, 3>;
-
   // protects against division by 0
   const scalar dU0 = lt.U() - ctx.Ub0;
   if (dU0 == 0.f) {
@@ -212,11 +210,11 @@ inline bool TRACCC_HOST_DEVICE triplet_finding_helper::isCompatibleStrip(
 
   // The middle strip check is scale-invariant, so cosTheta is used as the
   // z-component instead of cosTheta * sqrt(1 + A0^2)
-  const vector3_t directionMiddle = {
+  const vector3 directionMiddle = {
       ctx.rotationTermsUVtoXY[0] - ctx.rotationTermsUVtoXY[1] * A0,
       ctx.rotationTermsUVtoXY[0] * A0 + ctx.rotationTermsUVtoXY[1],
       ctx.cosTheta};
-  vector3_t rMTransf{};
+  point3 rMTransf{};
   if (!calibrate_strip_spacepoint(directionMiddle, calM, rMTransf,
                                   config.toleranceParam)) {
     return false;
@@ -227,11 +225,11 @@ inline bool TRACCC_HOST_DEVICE triplet_finding_helper::isCompatibleStrip(
   const scalar B0 = 2.f * (ctx.Vb0 - A0 * ctx.Ub0);
   const scalar Cb = 1.f - B0 * ctx.yB0;
   const scalar Sb = A0 + B0 * ctx.xB0;
-  const vector3_t directionBottom = {
+  const vector3 directionBottom = {
       ctx.rotationTermsUVtoXY[0] * Cb - ctx.rotationTermsUVtoXY[1] * Sb,
       ctx.rotationTermsUVtoXY[0] * Sb + ctx.rotationTermsUVtoXY[1] * Cb,
       zDirectionMiddle};
-  vector3_t rBTransf{};
+  point3 rBTransf{};
   if (!calibrate_strip_spacepoint(directionBottom, calB, rBTransf,
                                   config.toleranceParam)) {
     return false;
@@ -242,11 +240,11 @@ inline bool TRACCC_HOST_DEVICE triplet_finding_helper::isCompatibleStrip(
   const scalar yT0 = lt.V() / (lt.iDeltaR() * lt.iDeltaR());
   const scalar Ct = 1.f - B0 * yT0;
   const scalar St = A0 + B0 * xT0;
-  const vector3_t directionTop = {
+  const vector3 directionTop = {
       ctx.rotationTermsUVtoXY[0] * Ct - ctx.rotationTermsUVtoXY[1] * St,
       ctx.rotationTermsUVtoXY[0] * St + ctx.rotationTermsUVtoXY[1] * Ct,
       zDirectionMiddle};
-  vector3_t rTTransf{};
+  point3 rTTransf{};
   if (!calibrate_strip_spacepoint(directionTop, calT, rTTransf,
                                   config.toleranceParam)) {
     return false;
@@ -330,6 +328,57 @@ inline bool TRACCC_HOST_DEVICE triplet_finding_helper::isCompatibleStrip(
   }
 
   return true;
+}
+
+/// Make the triplet compatibility check for the top candidates of one
+/// middle-bottom doublet
+///
+/// The check is chosen at compile time, so that the strip aware one, and the
+/// doublet quantities it needs, only exist in code that uses them.
+///
+/// @tparam use_strip_info whether to apply the strip aware check
+/// @param spM is the middle spacepoint
+/// @param lb is transformed coordinate of middle-bottom doublet
+/// @param strip_calibrations are the strip calibrations of all spacepoints,
+///        only read by the strip aware check
+/// @param spM_idx is the index of the middle spacepoint
+/// @param spB_idx is the index of the bottom spacepoint
+/// @param config is configuration parameter
+/// @param iSinTheta2 is the inverse of sin^2(theta) of the middle-bottom
+///        doublet
+/// @param scatteringInRegion2 is the scattering term for the lower pT cut
+///
+/// @return a callable taking the top spacepoint index, the transformed
+///         coordinate of the middle-top doublet, and the curvature and impact
+///         parameter outputs
+template <bool use_strip_info, typename T>
+TRACCC_HOST_DEVICE inline auto make_triplet_compatibility_check(
+    const edm::spacepoint<T>& spM, const lin_circle& lb,
+    const strip_spacepoint_calibration_collection_types::const_device&
+        strip_calibrations,
+    const unsigned int spM_idx, const unsigned int spB_idx,
+    const seedfinder_config& config, const scalar iSinTheta2,
+    const scalar scatteringInRegion2) {
+  if constexpr (use_strip_info) {
+    return [ctx = strip_triplet_context(spM, lb, config, iSinTheta2,
+                                        scatteringInRegion2),
+            &calM = strip_calibrations.at(spM_idx),
+            &calB = strip_calibrations.at(spB_idx), &strip_calibrations,
+            &config](const unsigned int spT_idx, const lin_circle& lt,
+                     scalar& curvature, scalar& impact_parameter) {
+      return triplet_finding_helper::isCompatibleStrip(
+          ctx, calM, calB, strip_calibrations.at(spT_idx), lt, config,
+          curvature, impact_parameter);
+    };
+  } else {
+    return [&spM, &lb, &config, iSinTheta2, scatteringInRegion2](
+               const unsigned int, const lin_circle& lt, scalar& curvature,
+               scalar& impact_parameter) {
+      return triplet_finding_helper::isCompatible(
+          spM, lb, lt, config, iSinTheta2, scatteringInRegion2, curvature,
+          impact_parameter);
+    };
+  }
 }
 
 }  // namespace traccc
