@@ -36,19 +36,24 @@ class material_map_reader {
   using material_reader_t = homogeneous_material_reader;
 
  public:
+  /// Dimension of the material-grid bin index.
   static constexpr std::size_t dim{DIM()};
 
   /// Payload type that the reader processes
   using payload_type =
       detector_grids_payload<surface_material_payload, io::material_id>;
 
+  /// Multi-axis bin index type used by material grids.
   using bin_index_type = axis::multi_bin<dim>;
 
   /// Tag the reader as "material_maps"
   static constexpr std::string_view tag = "material_maps";
 
-  /// Convert the material grids @param grids_data from their IO
+  /// Convert the material grids @p grids_data from their IO
   /// payload
+  /// @tparam detector_t Detector type being constructed.
+  /// @param det_builder Builder receiving the material grids.
+  /// @param grids_data Serialized material-grid payload, consumed by the reader.
   template <concepts::detector detector_t>
   static void from_payload(detector_builder<typename detector_t::metadata,
                                             volume_builder> &det_builder,

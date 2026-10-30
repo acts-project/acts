@@ -56,7 +56,10 @@ class geometry_reader {
   /// Payload type that the reader processes
   using payload_type = detector_payload;
 
-  /// Convert a detector @param det from its io payload @param det_data
+  /// Populate the detector builder from a serialized geometry payload.
+  /// @tparam detector_t Detector type being constructed.
+  /// @param det_builder Builder receiving volumes, surfaces, and links.
+  /// @param det_data Geometry payload to decode.
   template <class detector_t>
   static void from_payload(detector_builder<typename detector_t::metadata,
                                             volume_builder>& det_builder,
@@ -185,8 +188,10 @@ class geometry_reader {
     return dtransform3D<algebra_t>{t, x, y, z};
   }
 
+  /// Build surface-factory data from a serialized surface entry.
+  /// @tparam detector_t Detector type being constructed.
+  /// @param sf_data Serialized surface data, including masks and transform.
   /// @returns surface data for a surface factory from a surface io payload
-  /// @param trf_data
   template <class detector_t>
   static surface_data<detector_t> from_payload(const surface_payload& sf_data) {
     using nav_link_t = typename detector_t::surface_type::navigation_link;

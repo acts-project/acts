@@ -27,7 +27,9 @@ namespace detray::algebra::fastor::math {
 // Note that for all `Fastor::AbstractTensors`, the `N` template parameters
 // refers to the number of dimensions, not the number of elements.
 
-/// This method retrieves phi from a vector @param v
+/// This method retrieves phi from a vector @p a
+/// @param a Input vector.
+/// @returns The angle in the transverse plane, computed with `atan2`.
 template <typename Derived, auto N>
 DETRAY_HOST_DEVICE constexpr auto phi(
     const Fastor::AbstractTensor<Derived, N> &a) {
@@ -44,7 +46,8 @@ DETRAY_HOST_DEVICE constexpr auto phi(
 
 /// This method retrieves theta from a vector, vector base with rows >= 3
 ///
-/// @param v the input vector
+/// @param a Input vector.
+/// @returns The angle from the positive z axis.
 template <typename Derived, auto N>
 DETRAY_HOST constexpr auto theta(
     const Fastor::AbstractTensor<Derived, N> &a) noexcept {
@@ -61,7 +64,8 @@ DETRAY_HOST constexpr auto theta(
 
 /// This method retrieves the perpendicular magnitude of a vector with rows >= 2
 ///
-/// @param v the input vector
+/// @param a Input vector.
+/// @returns The transverse magnitude.
 template <typename Derived, auto N>
 DETRAY_HOST constexpr auto perp(
     const Fastor::AbstractTensor<Derived, N> &a) noexcept {
@@ -80,6 +84,7 @@ DETRAY_HOST constexpr auto perp(
 /// This method retrieves the norm of a vector, no dimension restriction
 ///
 /// @param v the input vector
+/// @returns The Euclidean norm.
 template <typename Derived, auto N>
 DETRAY_HOST constexpr auto norm(const Fastor::AbstractTensor<Derived, N> &v) {
   return Fastor::norm(v);
@@ -88,7 +93,8 @@ DETRAY_HOST constexpr auto norm(const Fastor::AbstractTensor<Derived, N> &v) {
 /// This method retrieves the pseudo-rapidity from a vector or vector base with
 /// rows >= 3
 ///
-/// @param v the input vector
+/// @param a Input vector.
+/// @returns The pseudorapidity computed from the longitudinal component.
 template <typename Derived, auto N>
 DETRAY_HOST constexpr auto eta(
     const Fastor::AbstractTensor<Derived, N> &a) noexcept {

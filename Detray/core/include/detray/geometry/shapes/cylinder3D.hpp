@@ -34,6 +34,7 @@ class cylinder3D {
   /// The name for this shape
   static constexpr std::string_view name = "cylinder3D";
 
+  /// Indices describing the entries in the shape boundary array.
   enum boundaries : unsigned int {
     e_min_r = 0u,
     e_min_phi = 1u,
@@ -202,6 +203,7 @@ class cylinder3D {
             r_bound,  r_bound,  bounds[e_max_z] + env};
   }
 
+  /// @param bounds Boundary values used to determine the center.
   /// @returns the shapes centroid in local cartesian coordinates
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE dpoint3D<algebra_t> centroid(
@@ -213,8 +215,8 @@ class cylinder3D {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// @param bounds the boundary values for the cylinder
-  /// @param n_seg is the number of line segments
+  /// Boundary values define the vertices in the local frame.
+  /// The optional segment count controls tessellation of the curved boundary.
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>

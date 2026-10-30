@@ -36,6 +36,7 @@ class ring2D {
   /// The name for this shape
   static constexpr std::string_view name = "ring2D";
 
+  /// Indices describing the entries in the shape boundary array.
   enum boundaries : unsigned int {
     e_inner_r = 0u,
     e_outer_r = 1u,
@@ -190,8 +191,8 @@ class ring2D {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// @param bounds the boundary values for the stereo annulus
-  /// @param n_seg is the number of line segments
+  /// Boundary values define the vertices in the local frame.
+  /// The optional segment count controls tessellation of the curved boundary.
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>

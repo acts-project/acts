@@ -48,6 +48,7 @@ class uniform_track_generator
   using vector3_t = dvector3D<algebra_t>;
 
  public:
+  /// Track type produced by the generator.
   using track_type = track_t;
 
   /// Configure how tracks are generated
@@ -64,6 +65,11 @@ class uniform_track_generator
 
     constexpr iterator() = default;
 
+    /// Construct an iterator at the given angle indices.
+    /// @param rand_gen Random number generator shared with the view.
+    /// @param cfg Track generation configuration.
+    /// @param iph Initial phi index.
+    /// @param ith Initial theta index.
     DETRAY_HOST_DEVICE
     constexpr iterator(std::shared_ptr<generator_t> rand_gen, configuration cfg,
                        std::size_t iph = 1u, std::size_t ith = 0u)
@@ -82,6 +88,7 @@ class uniform_track_generator
           i_theta{ith} {}
 
     /// @returns whether we reached end of angle space
+    /// @param rhs Iterator to compare with.
     DETRAY_HOST_DEVICE
     constexpr bool operator==(const iterator& rhs) const {
       return rhs.i_phi == i_phi && rhs.i_theta == i_theta;
@@ -90,6 +97,7 @@ class uniform_track_generator
     /// Iterate through angle space according to given step sizes.
     ///
     /// @returns the generator at its next position.
+    /// @return This iterator after incrementing.
     DETRAY_HOST_DEVICE
     constexpr auto operator++() -> iterator& {
       // Check theta range according to step size
@@ -122,6 +130,7 @@ class uniform_track_generator
     }
 
     /// @returns the generator at its next position (postfix)
+    /// @return Iterator at the previous position.
     DETRAY_HOST_DEVICE
     constexpr auto operator++(int) -> iterator& {
       auto tmp(*this);
@@ -130,6 +139,7 @@ class uniform_track_generator
     }
 
     /// @returns a track instance from generated momentum direction
+    /// @return A generated track instance.
     DETRAY_HOST_DEVICE
     track_t operator*() const {
       if (!m_rnd_numbers) {
@@ -186,7 +196,9 @@ class uniform_track_generator
     std::size_t i_theta{0u};
 
    private:
-    /// @returns the theta angle for a given @param eta value
+    /// @returns the theta angle for a given @p eta value
+    /// @param eta Pseudorapidity value.
+    /// @return Corresponding polar angle.
     DETRAY_HOST_DEVICE
     scalar_t get_theta(const scalar_t eta) {
       return 2.f * math::atan(math::exp(-eta));
@@ -198,12 +210,14 @@ class uniform_track_generator
   configuration m_cfg{};
 
  public:
+  /// Iterator type used to enumerate generated tracks.
   using iterator_t = iterator;
 
   /// Default constructor
   constexpr uniform_track_generator() = default;
 
-  /// Construct from external configuration @param cfg
+  /// Construct from external configuration @p cfg.
+  /// @param cfg Track generation configuration.
   DETRAY_HOST_DEVICE
   explicit constexpr uniform_track_generator(configuration cfg)
       : m_gen{std::make_shared<generator_t>(cfg.seed())}, m_cfg{cfg} {}
@@ -230,11 +244,14 @@ class uniform_track_generator
   }
 
   /// Move constructor
+  /// @param other Generator to move from.
   DETRAY_HOST_DEVICE
   uniform_track_generator(uniform_track_generator&& other) noexcept
       : m_gen(std::move(other.m_gen)), m_cfg(std::move(other.m_cfg)) {}
 
   /// Copy assignment operator
+  /// @param other Generator to copy from.
+  /// @return This generator after assignment.
   DETRAY_HOST_DEVICE
   constexpr uniform_track_generator& operator=(
       const uniform_track_generator& other) {
@@ -244,21 +261,25 @@ class uniform_track_generator
   }
 
   /// Access the configuration
+  /// @return Mutable track generation configuration.
   DETRAY_HOST_DEVICE
   constexpr configuration& config() { return m_cfg; }
 
   /// @returns the generator in initial state: Default values reflect the
   /// first phi angle iteration.
+  /// @return Iterator at the beginning of the generated tracks.
   DETRAY_HOST_DEVICE
   constexpr auto begin() noexcept -> iterator { return {m_gen, m_cfg, 1u, 0u}; }
 
   /// @returns the generator in end state
+  /// @return Iterator past the final generated track.
   DETRAY_HOST_DEVICE
   constexpr auto end() noexcept -> iterator {
     return {m_gen, m_cfg, 1u, m_cfg.theta_steps()};
   }
 
   /// @returns the number of tracks that will be generated
+  /// @return Number of tracks configured for generation.
   DETRAY_HOST_DEVICE
   constexpr auto size() const noexcept -> std::size_t {
     return m_cfg.phi_steps() * m_cfg.theta_steps();

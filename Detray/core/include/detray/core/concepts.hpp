@@ -91,7 +91,7 @@ concept detector = requires(const D& d) {
     d.volume(std::string_view(), typename D::name_map())
   } -> std::same_as<const typename D::volume_type&>;
 
-  /// @TODO: Not yet implemented correctly
+  /// @todo: Not yet implemented correctly
   /*{
     d.volume(typename D::point3_type())
   } -> std::same_as<const typename D::volume_type&>;*/

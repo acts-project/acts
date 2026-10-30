@@ -20,10 +20,13 @@
 
 namespace detray {
 
+/// Generates a random direction after multiple scattering.
 template <concepts::algebra algebra_t>
 struct scattering_helper {
  public:
+  /// Scalar type used for angles.
   using scalar_type = dscalar<algebra_t>;
+  /// 3D vector type used for directions.
   using vector3_type = dvector3D<algebra_t>;
 
   /// @brief Operator to scatter the direction with scattering angle

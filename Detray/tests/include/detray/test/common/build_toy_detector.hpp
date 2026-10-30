@@ -113,9 +113,9 @@ struct toy_det_config {
   unsigned int m_n_edc_layers{3u};
   /// Total outer radius of the pixel subdetector
   scalar_t m_outer_radius{180.f * unit<scalar_t>::mm};
-  // Radius of the innermost volume that contains the beampipe
+  /// Radius of the innermost volume that contains the beampipe
   scalar_t m_beampipe_volume_radius{25.f * unit<scalar_t>::mm};
-  // Envelope around the modules used by the cylinder portal generator
+  /// Envelope around the modules used by the cylinder portal generator
   scalar_t m_portal_envelope{2.f * unit<scalar_t>::mm};
   /// Configuration for the homogeneous material generator
   hom_material_config<scalar_t> m_material_config{};
@@ -161,62 +161,105 @@ struct toy_det_config {
 
   /// Setters
   /// @{
+  /// @brief Set the number of barrel layers.
+  /// @param n number of layers
+  /// @return reference to the updated configuration
   constexpr toy_det_config &n_brl_layers(const unsigned int n) {
     m_n_brl_layers = n;
     return *this;
   }
+  /// @brief Set the n edc layers.
+  /// @param n number of layers
+  /// @return reference to the updated configuration
   constexpr toy_det_config &n_edc_layers(const unsigned int n) {
     m_n_edc_layers = n;
     return *this;
   }
+  /// @brief Set the envelope.
+  /// @param env portal envelope
+  /// @return reference to the updated configuration
   constexpr toy_det_config &envelope(const scalar_t env) {
     m_portal_envelope = env;
     return *this;
   }
+  /// @brief Set the use grids.
+  /// @param b whether to enable the option
+  /// @return reference to the updated configuration
   constexpr toy_det_config &use_grids(const bool b) {
     m_use_grids = b;
     return *this;
   }
+  /// @brief Set the use homogeneous material.
+  /// @param b whether to enable the option
+  /// @return reference to the updated configuration
   constexpr toy_det_config &use_homogeneous_material(const bool b) {
     m_use_homogeneous_material = b;
     return *this;
   }
+  /// @brief Set the use material maps.
+  /// @param b whether to enable the option
+  /// @return reference to the updated configuration
   constexpr toy_det_config &use_material_maps(const bool b) {
     m_use_material_maps = b;
     return *this;
   }
+  /// @brief Set the cyl map bins.
+  /// @param n_phi number of bins in phi
+  /// @param n_z number of bins in z
+  /// @return reference to the updated configuration
   constexpr toy_det_config &cyl_map_bins(const std::size_t n_phi,
                                          const std::size_t n_z) {
     m_cyl_map_cfg.n_bins = {n_phi, n_z};
     return *this;
   }
+  /// @brief Set the disc map bins.
+  /// @param n_r number of bins in radius
+  /// @param n_phi number of bins in phi
+  /// @return reference to the updated configuration
   constexpr toy_det_config &disc_map_bins(const std::size_t n_r,
                                           const std::size_t n_phi) {
     m_disc_map_cfg.n_bins = {n_r, n_phi};
     return *this;
   }
+  /// @brief Set the material map min thickness.
+  /// @param t material thickness
+  /// @return reference to the updated configuration
   constexpr toy_det_config &material_map_min_thickness(const scalar_t t) {
     assert(t > 0.f);
     m_cyl_map_cfg.thickness = t;
     m_disc_map_cfg.thickness = t;
     return *this;
   }
+  /// @brief Set the beampipe mat thickness.
+  /// @param t material thickness
+  /// @return reference to the updated configuration
   constexpr toy_det_config &beampipe_mat_thickness(const scalar_t t) {
     assert(t > 0.f);
     m_beampipe_mat_thickness = t;
     return *this;
   }
+  /// @brief Set the module mat thickness.
+  /// @param t material thickness
+  /// @return reference to the updated configuration
   constexpr toy_det_config &module_mat_thickness(const scalar_t t) {
     assert(t > 0.f);
     m_module_mat_thickness = t;
     return *this;
   }
+  /// @brief Set the mapped material.
+  /// @param mat material value
+  /// @return reference to the updated configuration
   constexpr toy_det_config &mapped_material(const material<scalar_t> &mat) {
     m_cyl_map_cfg.mapped_material = mat;
     m_disc_map_cfg.mapped_material = mat;
     return *this;
   }
+  /// @brief Return the builder options.
+  /// @return configured builder options
   volume_builder_options builder_options() { return m_builder_opts; }
+  /// @brief Set the do check.
+  /// @param check whether to run the consistency check
+  /// @return reference to the updated configuration
   constexpr toy_det_config &do_check(const bool check) {
     m_do_check = check;
     return *this;
@@ -225,68 +268,130 @@ struct toy_det_config {
 
   /// Getters
   /// @{
+  /// @brief Return the number of barrel layers.
+  /// @return configured number of barrel layers
   constexpr unsigned int n_brl_layers() const { return m_n_brl_layers; }
+  /// @brief Return the n edc layers.
+  /// @return configured n edc layers
   constexpr unsigned int n_edc_layers() const { return m_n_edc_layers; }
+  /// @brief Return the outer radius.
+  /// @return configured outer radius
   constexpr const auto &outer_radius() const { return m_outer_radius; }
+  /// @brief Return the envelope.
+  /// @return configured envelope
   constexpr scalar_t envelope() const { return m_portal_envelope; }
+  /// @brief Return the beampipe vol radius.
+  /// @return configured beampipe vol radius
   constexpr scalar_t beampipe_vol_radius() const {
     return m_beampipe_volume_radius;
   }
+  /// @brief Return the material config.
+  /// @return configured material config
   constexpr auto &material_config() { return m_material_config; }
+  /// @brief Return the material configuration.
+  /// @return const material configuration
   constexpr const auto &material_config() const { return m_material_config; }
+  /// @brief Return the use grids.
+  /// @return configured use grids
   constexpr bool use_grids() const { return m_use_grids; }
+  /// @brief Return the use homogeneous material.
+  /// @return configured use homogeneous material
   constexpr bool use_homogeneous_material() const {
     return m_use_homogeneous_material;
   }
+  /// @brief Return the use material maps.
+  /// @return configured use material maps
   constexpr bool use_material_maps() const { return m_use_material_maps; }
+  /// @brief Return the beampipe material map.
+  /// @return configured beampipe material map
   constexpr auto &beampipe_material_map() { return m_beampipe_map_cfg; }
+  /// @brief Return the beampipe material map configuration.
+  /// @return const beampipe material map configuration
   constexpr const auto &beampipe_material_map() const {
     return m_beampipe_map_cfg;
   }
+  /// @brief Return the cyl material map.
+  /// @return configured cyl material map
   constexpr const auto &cyl_material_map() const { return m_cyl_map_cfg; }
+  /// @brief Return the mutable cylinder material map configuration.
+  /// @return cylinder material map configuration
   constexpr auto &cyl_material_map() { return m_cyl_map_cfg; }
+  /// @brief Return the disc material map.
+  /// @return configured disc material map
   constexpr const auto &disc_material_map() const { return m_disc_map_cfg; }
+  /// @brief Return the mutable disc material map configuration.
+  /// @return disc material map configuration
   constexpr auto &disc_material_map() { return m_disc_map_cfg; }
+  /// @brief Return the cyl map bins.
+  /// @return configured cyl map bins
   constexpr const darray<std::size_t, 2> &cyl_map_bins() const {
     return m_cyl_map_cfg.n_bins;
   }
+  /// @brief Return the disc map bins.
+  /// @return configured disc map bins
   constexpr const darray<std::size_t, 2> &disc_map_bins() const {
     return m_disc_map_cfg.n_bins;
   }
+  /// @brief Return the material map min thickness.
+  /// @return configured material map min thickness
   constexpr scalar_t material_map_min_thickness() const {
     assert(m_cyl_map_cfg.thickness == m_disc_map_cfg.thickness);
     return m_cyl_map_cfg.thickness;
   }
+  /// @brief Return the beampipe mat thickness.
+  /// @return configured beampipe mat thickness
   constexpr scalar_t beampipe_mat_thickness() const {
     return m_beampipe_mat_thickness;
   }
+  /// @brief Return the module mat thickness.
+  /// @return configured module mat thickness
   constexpr scalar_t module_mat_thickness() const {
     return m_module_mat_thickness;
   }
+  /// @brief Return the barrel mat generator.
+  /// @return configured barrel mat generator
   auto barrel_mat_generator() const { return m_cyl_map_cfg.mat_generator; }
+  /// @brief Return the edc mat generator.
+  /// @return configured edc mat generator
   auto edc_mat_generator() const { return m_disc_map_cfg.mat_generator; }
+  /// @brief Return the mapped material.
+  /// @return configured mapped material
   constexpr material<scalar_t> mapped_material() const {
     assert(m_cyl_map_cfg.mapped_material == m_disc_map_cfg.mapped_material);
     return m_cyl_map_cfg.mapped_material;
   }
+  /// @brief Return the barrel layer radii.
+  /// @return configured barrel layer radii
   constexpr const auto &barrel_layer_radii() const {
     return m_barrel_layer_radii;
   }
+  /// @brief Return the endcap layer positions.
+  /// @return configured endcap layer positions
   constexpr const auto &endcap_layer_positions() const {
     return m_endcap_layer_positions;
   }
+  /// @brief Return the barrel layer binning.
+  /// @return configured barrel layer binning
   constexpr const auto &barrel_layer_binning() const {
     return m_barrel_binning;
   }
+  /// @brief Return the barrel config.
+  /// @return configured barrel config
   constexpr barrel_generator_config<scalar_t> &barrel_config() {
     return m_barrel_factory_cfg;
   }
+  /// @brief Return the endcap config.
+  /// @return configured endcap config
   constexpr endcap_generator_config<scalar_t> &endcap_config() {
     return m_endcap_factory_cfg;
   }
+  /// @brief Return the builder options.
+  /// @return configured builder options
   const volume_builder_options &builder_options() const {
     return m_builder_opts;
   }
+  /// @brief Return the do check.
+  /// @return configured do check
   constexpr bool do_check() const { return m_do_check; }
   /// @}
 
@@ -331,10 +436,12 @@ struct toy_det_config {
 
 namespace detail {
 
-// Helper type, used to define the r- or z-extent of detector volumes
+/// Helper type, used to define the r- or z-extent of detector volumes
 template <concepts::scalar scalar_t>
 struct extent2D {
+  /// Lower extent value
   scalar_t lower;
+  /// Upper extent value
   scalar_t upper;
 };
 
@@ -441,15 +548,14 @@ std::shared_ptr<surface_factory_interface<detector_t>> decorate_material(
 ///
 /// @param v_builder the volume builder to add the portals to
 /// @param cfg config for the toy detector
-/// @param vol_z half length of the cylinder
-/// @param h_z half length of the cylinder
+/// @param lower_z lower z coordinate of the cylinder
+/// @param upper_z upper z coordinate of the cylinder
 /// @param inner_r inner volume radius
 /// @param outer_r outer volume radius
 /// @param link_north portal volume link of the outer cylinder
 /// @param link_south portal volume link of the inner cylinder
 /// @param link_east portal volume link of the left disc
 /// @param link_west portal volume link of the right disc
-/// @param add_material decorate material maps to portals
 template <concepts::detector detector_t>
 void add_cylinder_portals(volume_builder_interface<detector_t> *v_builder,
                           toy_det_config<typename detector_t::scalar_type> &cfg,
@@ -964,10 +1070,12 @@ inline auto add_endcap_detector(
 /// Helper method for creating the portals of one of endcap sections of the
 /// beampipe volume.
 ///
-/// @param beampipe_builder volume builder for the beampipe volume
 /// @param cfg config for the toy detector
-/// @param neg_edc_lay_sizes indices and z-extent of the endcap volumes of one
-///                          detector side (positive or negative)
+/// @param det_builder detector builder receiving the portals
+/// @param beampipe_idx index of the beampipe volume
+/// @param edc_vol_extents indices and z-extent of the endcap volumes of one
+///                         detector side (positive or negative)
+/// @param brl_vol_extents indices and z-extent of the barrel volumes
 template <typename detector_builder_t, typename vol_extent_data_t>
 inline void add_connector_portals(
     detector_builder_t &det_builder,
@@ -1152,8 +1260,7 @@ inline void add_beampipe_portals(
 ///
 /// @param beampipe_builder volume builder for the beampipe volume
 /// @param cfg config for the toy detector
-/// @param neg_edc_lay_sizes indices and z-extent of the endcap volumes of one
-///                          detector side (positive or negative)
+/// @param edc_lay_sizes indices and z-extent of the endcap layers
 template <concepts::detector detector_t, typename layer_size_cont_t>
 inline void add_beampipe_portals(
     volume_builder_interface<detector_t> *beampipe_builder,

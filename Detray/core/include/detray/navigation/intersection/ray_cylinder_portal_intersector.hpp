@@ -34,20 +34,27 @@ struct ray_intersector_impl;
 template <detray::concepts::aos algebra_t, bool resolve_pos>
 struct ray_intersector_impl<concentric_cylindrical2D<algebra_t>, algebra_t,
                             resolve_pos> {
+  /// Algebra policy used by this intersector.
   using algebra_type = algebra_t;
+  /// Coordinate frame of the intersected surface.
   using frame_type = concentric_cylindrical2D<algebra_t>;
+  /// Point type used for the intersection result.
   using point_type = dpoint2D<algebra_t>;
 
+  /// Intersection result type associated with a surface descriptor.
   template <typename surface_descr_t>
   using intersection_type =
       intersection2D<surface_descr_t, algebra_t, resolve_pos>;
 
+  /// Trajectory representation accepted by this intersector.
   template <typename other_algebra_t>
   using trajectory_type = detail::ray<other_algebra_t>;
 
   // Maximum number of solutions this intersector can produce
+  /// Maximum number of solutions produced by this intersector.
   static constexpr std::uint8_t n_solutions{1u};
 
+  /// Result type returned by the geometric intersection calculation.
   using result_type =
       intersection_point<algebra_t, point_type, intersection::contains_pos>;
 
@@ -59,9 +66,7 @@ struct ray_intersector_impl<concentric_cylindrical2D<algebra_t>, algebra_t,
   /// shifted or rotated. Solve: perp(ro + t * rd) = r_cyl
   ///
   /// @param ray is the input ray trajectory
-  /// @param sf the surface handle the mask is associated with
-  /// @param trf is the surface placement transform
-  /// @param mask_tolerance is the tolerance for mask edges
+  /// @param mask Mask providing the cylinder radius.
   /// @param overstep_tol negative cutoff for the path
   ///
   /// @return the closest intersection

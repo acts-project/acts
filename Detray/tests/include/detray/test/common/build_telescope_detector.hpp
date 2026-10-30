@@ -42,9 +42,12 @@ namespace detray {
 template <concepts::algebra algebra_t, typename mask_shape_t = rectangle2D,
           template <typename> class trajectory_t = detail::ray>
 struct tel_det_config {
+  /// Scalar type used by this configuration
   using scalar_t = dscalar<algebra_t>;
 
   /// Construct from existing mask
+  /// @param m mask to use for the detector surfaces
+  /// @param t trajectory used to position the surfaces
   explicit tel_det_config(const mask<mask_shape_t, algebra_t> &m,
                           const trajectory_t<algebra_t> &t = {})
       : m_mask(m), m_trajectory(t) {
@@ -56,11 +59,14 @@ struct tel_det_config {
   }
 
   /// Construct from from mask parameter vector
+  /// @param params parameters defining the surface mask
+  /// @param t trajectory used to position the surfaces
   explicit tel_det_config(const std::vector<scalar_t> &params,
                           const trajectory_t<algebra_t> &t = {})
       : tel_det_config(mask<mask_shape_t, algebra_t>{params, 0u}, t) {}
 
   /// Construct from mask parameters (except volume link, which is not needed)
+  /// @param args mask boundary parameters
   template <typename... Args>
     requires(std::is_same_v<Args, scalar_t> && ...)
   explicit tel_det_config(Args &&...args)
@@ -91,49 +97,81 @@ struct tel_det_config {
 
   /// Setters
   /// @{
+  /// @brief Set the module mask.
+  /// @param m mask for the detector surfaces
+  /// @return reference to the updated configuration
   constexpr tel_det_config &module_mask(
       const mask<mask_shape_t, algebra_t> &m) {
     m_mask = m;
     return *this;
   }
+  /// @brief Set the n surfaces.
+  /// @param n number of layers
+  /// @return reference to the updated configuration
   constexpr tel_det_config &n_surfaces(const unsigned int n) {
     m_n_surfaces = n;
     return *this;
   }
+  /// @brief Set the length.
+  /// @param l detector length
+  /// @return reference to the updated configuration
   constexpr tel_det_config &length(const scalar_t l) {
     assert((l > 0.f) && "Telescope detector length must be greater than zero");
     m_length = l;
     return *this;
   }
+  /// @brief Set the positions.
+  /// @param dists distances of the surfaces
+  /// @return reference to the updated configuration
   constexpr tel_det_config &positions(const std::vector<scalar_t> &dists) {
     m_positions.clear();
     std::ranges::copy_if(dists, std::back_inserter(m_positions),
                          [](scalar_t d) { return (d >= 0.f); });
     return *this;
   }
+  /// @brief Set the module material.
+  /// @param mat material value
+  /// @return reference to the updated configuration
   constexpr tel_det_config &module_material(const material<scalar_t> &mat) {
     m_material_config.sensitive_material(mat);
     return *this;
   }
+  /// @brief Set the volume material.
+  /// @param mat material value
+  /// @return reference to the updated configuration
   constexpr tel_det_config &volume_material(const material<scalar_t> &mat) {
     m_volume_material = mat;
     return *this;
   }
+  /// @brief Set the mat thickness.
+  /// @param t thickness of the material slabs
+  /// @return reference to the updated configuration
   constexpr tel_det_config &mat_thickness(const scalar_t t) {
     assert(t >= 0.f && "Material thickness must be non-negative");
     m_material_config.thickness(t);
     return *this;
   }
+  /// @brief Set the pilot track.
+  /// @param traj pilot trajectory
+  /// @return reference to the updated configuration
   constexpr tel_det_config &pilot_track(const trajectory_t<algebra_t> &traj) {
     m_trajectory = traj;
     return *this;
   }
+  /// @brief Set the envelope.
+  /// @param e portal envelope
+  /// @return reference to the updated configuration
   constexpr tel_det_config &envelope(const scalar_t e) {
     assert(e > 0.f && "Portal envelope must be greater than zero");
     m_envelope = e;
     return *this;
   }
+  /// @brief Return the builder options.
+  /// @return configured builder options
   volume_builder_options &builder_options() { return m_builder_opts; }
+  /// @brief Set the do check.
+  /// @param check whether to run the consistency check
+  /// @return reference to the updated configuration
   tel_det_config &do_check(const bool check) {
     m_do_check = check;
     return *this;
@@ -142,28 +180,54 @@ struct tel_det_config {
 
   /// Getters
   /// @{
+  /// @brief Return the module mask.
+  /// @return configured module mask
   constexpr const mask<mask_shape_t, algebra_t> &module_mask() const {
     return m_mask;
   }
+  /// @brief Return the n surfaces.
+  /// @return configured n surfaces
   constexpr unsigned int n_surfaces() const { return m_n_surfaces; }
+  /// @brief Return the length.
+  /// @return configured length
   constexpr scalar_t length() const { return m_length; }
+  /// @brief Return the positions.
+  /// @return configured positions
   const std::vector<scalar_t> &positions() const { return m_positions; }
+  /// @brief Return the material config.
+  /// @return configured material config
   constexpr const auto &material_config() const { return m_material_config; }
+  /// @brief Return the material configuration.
+  /// @return mutable material configuration
   constexpr auto &material_config() { return m_material_config; }
+  /// @brief Return the module material.
+  /// @return configured module material
   constexpr const material<scalar_t> &module_material() const {
     return m_material_config.sensitive_material();
   }
+  /// @brief Return the volume material.
+  /// @return configured volume material
   constexpr const material<scalar_t> &volume_material() const {
     return m_volume_material;
   }
+  /// @brief Return the mat thickness.
+  /// @return configured mat thickness
   constexpr scalar_t mat_thickness() const {
     return m_material_config.thickness();
   }
+  /// @brief Return the pilot track.
+  /// @return configured pilot track
   const trajectory_t<algebra_t> &pilot_track() const { return m_trajectory; }
+  /// @brief Return the envelope.
+  /// @return configured envelope
   constexpr scalar_t envelope() const { return m_envelope; }
+  /// @brief Return the builder options.
+  /// @return configured builder options
   const volume_builder_options &builder_options() const {
     return m_builder_opts;
   }
+  /// @brief Return the do check.
+  /// @return configured do check
   bool do_check() const { return m_do_check; }
   /// @}
 };

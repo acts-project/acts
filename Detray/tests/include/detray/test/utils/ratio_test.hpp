@@ -61,7 +61,9 @@ inline std::vector<point3> generate_regular_points<cuboid3D>(
 }
 
 /// This method creates a number of regular spaced points in 3D cartesian
-/// coordinates positioned on a cylinder surface of radius @param r
+/// coordinates positioned on a cylinder surface with radius given by world[0].
+/// @param n_points Number of points to generate.
+/// @param world Cylinder radius and half-length parameters.
 template <>
 inline std::vector<point3> generate_regular_points<cylinder2D>(
     const std::size_t n_points, const std::vector<scalar> &world) {

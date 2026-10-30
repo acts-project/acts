@@ -28,7 +28,7 @@ struct replace {
   /// Replace the bin content with a new entry - forwarding
   ///
   /// @param bin the bin for which to replace the content
-  /// @param content new content to be added
+  /// @param entry new content to be added
   template <typename bin_t, typename content_t>
   DETRAY_HOST_DEVICE void operator()(bin_t &&bin, content_t &&entry) const {
     std::forward<bin_t>(bin).init(std::forward<content_t>(entry));
@@ -49,7 +49,7 @@ struct attach {
   /// Append a new entry to the bin - forwarding
   ///
   /// @param bin the bin for which to replace the content
-  /// @param content new content to be added
+  /// @param entry Entry to append.
   template <typename bin_t, typename entry_t>
   DETRAY_HOST_DEVICE void operator()(bin_t &&bin, entry_t &&entry) const {
     std::forward<bin_t>(bin).push_back(std::forward<entry_t>(entry));
@@ -71,7 +71,7 @@ struct complete {
   /// Complete the bin content with a new entry - forwarding
   ///
   /// @param bin the bin for which to replace the content
-  /// @param content new content to be added
+  /// @param entry Entry repeated until the bin reaches capacity.
   template <typename bin_t, typename entry_t>
   DETRAY_HOST_DEVICE void operator()(bin_t &&bin, entry_t &&entry) const {
     for (dindex i{std::forward<bin_t>(bin).size()};

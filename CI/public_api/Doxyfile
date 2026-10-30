@@ -33,10 +33,32 @@ XML_PROGRAMLISTING     = NO
 
 # --- parsing ---
 ENABLE_PREPROCESSING   = YES
-MACRO_EXPANSION        = NO
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+# Resolve declaration-generating macros from the selected checkout.
+INCLUDE_PATH           = $(DOXY_INPUT)
+EXPAND_AS_DEFINED      = DETRAY_DECLARE_MATERIAL DETRAY_DECLARE_MATERIAL_WITH_DED \
+                         DETRAY_DECLARE_PARTICLE
 WARN_IF_UNDOCUMENTED   = NO
 WARNINGS               = NO
 QUIET                  = YES
 
 # Caller sets DOXY_OUT to control where XML lands (defaults to CWD otherwise).
 OUTPUT_DIRECTORY       = $(DOXY_OUT)
+
+# Parse shared GPU declarations without requiring CUDA/HIP compilers.
+# Do not define compiler/backend macros: this is the shared host API view.
+PREDEFINED += DOXYGEN \
+              DETRAY_HOST:= \
+              DETRAY_DEVICE:= \
+              DETRAY_HOST_DEVICE:= \
+              DETRAY_HOST_DEVICE_DEDUCTION_GUIDE:= \
+              DETRAY_INLINE:= \
+              DETRAY_NO_INLINE:= \
+              DETRAY_NO_UNIQUE_ADDRESS:= \
+              DETRAY_GRID_CONSTANT:= \
+              DETRAY_DEVICE_CONSTANT:= \
+              DETRAY_ALIGN(x):= \
+              __host__:= \
+              __device__:= \
+              __global__:=

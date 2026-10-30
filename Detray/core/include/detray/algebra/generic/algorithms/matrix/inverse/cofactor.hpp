@@ -25,18 +25,26 @@ namespace adjoint {
 /// "Adjoint getter", assuming a N X N matrix
 template <concepts::square_matrix matrix_t>
 struct cofactor {
+  /// Index type used to traverse matrix rows and columns.
   using index_type = detray::traits::index_t<matrix_t>;
 
+  /// Return the adjugate of a square matrix.
+  /// @param m Matrix whose adjugate is calculated.
+  /// @returns The transposed cofactor matrix.
   DETRAY_HOST_DEVICE constexpr matrix_t operator()(const matrix_t &m) const {
     return adjoint_getter_helper<detray::traits::max_rank<matrix_t>>()(m);
   }
 
+  /// Helper that computes the adjugate for a fixed matrix rank.
   template <index_type N>
   struct adjoint_getter_helper;
 
+  /// Adjugate specialization for a one-element matrix.
   template <index_type N>
     requires(N == 1)
   struct adjoint_getter_helper<N> {
+    /// Return the one-element identity matrix, the adjugate in rank one.
+    /// @returns The one-element identity matrix.
     DETRAY_HOST_DEVICE constexpr matrix_t operator()(
         const matrix_t & /*m*/) const {
       using element_getter_t = detray::traits::element_getter_t<matrix_t>;
@@ -49,11 +57,16 @@ struct cofactor {
     }
   };
 
+  /// Adjugate specialization that forms and transposes the cofactor matrix.
   template <index_type N>
     requires(N != 1)
   struct adjoint_getter_helper<N> {
+    /// Determinant implementation used to evaluate each minor.
     using determinant_getter = determinant::cofactor<matrix_t>;
 
+    /// Form the adjugate by computing signed minors and transposing them.
+    /// @param m Matrix whose adjugate is calculated.
+    /// @returns The transposed cofactor matrix.
     DETRAY_HOST_DEVICE constexpr matrix_t operator()(const matrix_t &m) const {
       using index_t = detray::traits::index_t<matrix_t>;
       using element_getter_t = detray::traits::element_getter_t<matrix_t>;
@@ -96,14 +109,21 @@ namespace inverse {
 /// "inverse getter", assuming a N X N matrix
 template <concepts::square_matrix matrix_t>
 struct cofactor {
+  /// Scalar type of matrix elements.
   using scalar_t = detray::traits::value_t<matrix_t>;
+  /// Index type used to traverse matrix rows and columns.
   using index_t = detray::traits::index_t<matrix_t>;
 
   /// Function (object) used for accessing a matrix element
   using element_getter_t = detray::traits::element_getter_t<matrix_t>;
+  /// Cofactor-expansion determinant implementation.
   using determinant_getter = determinant::cofactor<matrix_t>;
+  /// Adjugate implementation used in the inverse formula.
   using adjoint_getter = adjoint::cofactor<matrix_t>;
 
+  /// Invert a nonsingular square matrix.
+  /// @param m Matrix to invert.
+  /// @returns The inverse matrix; a singular input triggers an assertion.
   DETRAY_HOST_DEVICE constexpr matrix_t operator()(const matrix_t &m) const {
     constexpr element_getter_t elem{};
     constexpr index_t N{detray::traits::max_rank<matrix_t>};

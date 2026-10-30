@@ -25,18 +25,28 @@ struct array {
   /// Define scalar type
   using value_type = V;
 
+  /// SIMD scalar wrapper used by this scalar array backend.
   template <concepts::element T>
   using simd = T;
 
+  /// Boolean value type for predicates in this backend.
   using boolean = bool;
+  /// Scalar element type.
   using scalar = value_type;
+  /// Index type used to access fixed-size arrays and matrices.
   using index_type = algebra::array::index_type;
+  /// Three-dimensional rigid transform type.
   using transform3D = algebra::array::transform3<value_type>;
+  /// Two-dimensional point type.
   using point2D = algebra::array::point2<value_type>;
+  /// Three-dimensional point type.
   using point3D = algebra::array::point3<value_type>;
+  /// Two-dimensional vector type.
   using vector2D = algebra::array::vector2<value_type>;
+  /// Three-dimensional vector type.
   using vector3D = algebra::array::vector3<value_type>;
 
+  /// Fixed-size matrix type with the requested dimensions.
   template <std::size_t ROWS, std::size_t COLS>
   using matrix = algebra::array::matrix_type<value_type, ROWS, COLS>;
 };
@@ -45,8 +55,20 @@ struct array {
 /// @name Operators on @c algebra::array::storage_type
 /// @{
 
+/// Multiply an array-backed vector by a scalar.
+/// @param a Vector to scale.
+/// @param s Scalar multiplier.
+/// @returns The scaled vector expression.
 using algebra::array::operator*;
+/// Subtract array-backed vectors component-wise.
+/// @param a Left-hand vector.
+/// @param b Right-hand vector.
+/// @returns The component-wise difference.
 using algebra::array::operator-;
+/// Add array-backed vectors component-wise.
+/// @param a Left-hand vector.
+/// @param b Right-hand vector.
+/// @returns The component-wise sum.
 using algebra::array::operator+;
 
 /// @}
@@ -90,17 +112,23 @@ using algebra::array::theta;
 namespace algebra::generic {
 
 // Determinant algorithms
+/// Choose the backend-specific determinant implementation for 4x4 matrices.
 template <concepts::scalar T, auto ROWS, auto COLS>
 struct determinant_selector<4, array::matrix_type<T, ROWS, COLS>,
                             array::element_getter> {
+  /// Closed-form determinant implementation selected for 4x4 arrays.
+  /// Selected algorithm type.
   using type =
       matrix::determinant::hard_coded<array::matrix_type<T, ROWS, COLS>>;
 };
 
 // Inversion algorithms
+/// Choose the backend-specific inverse implementation for 4x4 matrices.
 template <concepts::scalar T, auto ROWS, auto COLS>
 struct inversion_selector<4, array::matrix_type<T, ROWS, COLS>,
                           array::element_getter> {
+  /// Closed-form inverse implementation selected for 4x4 arrays.
+  /// Selected algorithm type.
   using type = matrix::inverse::hard_coded<array::matrix_type<T, ROWS, COLS>>;
 };
 

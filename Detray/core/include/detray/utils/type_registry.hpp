@@ -46,13 +46,17 @@ class registry {
 
   /// @returns whether a given index/identifier can be mapped to a type.
   /// @{
+  /// Check whether an index corresponds to a registered type.
   /// @param type_idx the type index to be checked
+  /// @return whether the index is in range
   DETRAY_HOST_DEVICE static constexpr bool is_valid(
       const std::size_t type_idx) {
     return type_idx < n_types;
   }
 
+  /// Check whether an identifier corresponds to a registered type.
   /// @param type_id the type identifier to be checked
+  /// @return whether the identifier is in range
   template <typename id_t = id>
     requires(!std::convertible_to<id_t, std::size_t>)
   DETRAY_HOST_DEVICE static constexpr bool is_valid(const id_t type_id) {
@@ -115,13 +119,17 @@ class mapped_registry : public registry_t {
   /// @returns whether a given index/identifier can be mapped to a filtered
   /// type.
   /// @{
+  /// Check whether a filtered index is in the mapped registry.
   /// @param filtered_type_idx the filtered type index to be checked
+  /// @return whether the index is valid
   DETRAY_HOST_DEVICE static constexpr bool is_valid(
       const std::size_t filtered_type_idx) {
     return filtered_type_idx < n_types;
   }
 
+  /// Check whether an original ID selects a type retained by the mapping.
   /// @param orig_id the original type identifier (ID) to be checked
+  /// @return whether the identifier maps to a selected type
   template <typename id_t = id>
     requires(!std::convertible_to<id_t, std::size_t>)
   DETRAY_HOST_DEVICE static constexpr bool is_valid(const id_t orig_id) {
@@ -140,6 +148,8 @@ class mapped_registry : public registry_t {
         detray::types::list{});
   }
 
+  /// Return the filtered position corresponding to an original position.
+  /// @param orig_idx position in the original registry
   /// @returns the filtered type index corresponding to the original type
   /// index
   DETRAY_HOST_DEVICE
@@ -147,6 +157,8 @@ class mapped_registry : public registry_t {
     return index_map_v<orig_types, type_selector_t>[orig_idx];
   }
 
+  /// Return the filtered position corresponding to an original ID.
+  /// @param orig_id identifier in the original registry
   /// @returns the filtered type index corresponding to the original type ID
   DETRAY_HOST_DEVICE
   static constexpr std::size_t mapped_index(const id orig_id) {
@@ -154,7 +166,8 @@ class mapped_registry : public registry_t {
         orig_id)];
   }
 
-  /// @returns the original indexd given the new @param pos in the type list
+  /// @param pos position in the filtered type list
+  /// @returns the original indexd given the new @p pos in the type list
   DETRAY_HOST_DEVICE
   static constexpr std::size_t original_index(const std::size_t pos) {
     std::size_t j{0u};
@@ -168,7 +181,8 @@ class mapped_registry : public registry_t {
     return detray::detail::invalid_value<std::size_t>();
   }
 
-  /// @returns the original id given the new @param pos in the type list
+  /// @param pos position in the filtered type list
+  /// @returns the original id given the new @p pos in the type list
   DETRAY_HOST_DEVICE
   static constexpr id original_id(const std::size_t pos) {
     return static_cast<id>(original_index(pos));
@@ -210,20 +224,28 @@ template <typename T, std::size_t I, concepts::type_id ID, typename... Ts>
 struct contains_impl<T, I, registry<ID, Ts...>>
     : public contains_impl<T, I, typename registry<ID, Ts...>::type_list> {};
 
+/// Search a mapped registry and translate original positions to filtered
+/// positions where applicable.
 template <typename T, std::size_t I, typename R, class S>
 struct contains_impl<T, I, mapped_registry<R, S>> {
   // Figure out which type list to check
   // (use original list if 'T' is from there, otherwise try filtered list)
+  /// Original registry's ordered type list.
   using orig_list_t = typename mapped_registry<R, S>::orig_types;
+  /// Filtered registry's ordered type list.
   using filt_list_t = typename mapped_registry<R, S>::type_list;
+  /// List in which `T` is looked up.
   using type_list_t =
       std::conditional_t<contains<orig_list_t, T>, orig_list_t, filt_list_t>;
 
+  /// Lookup result in the chosen list.
   using base_t = contains_impl<T, I, type_list_t>;
 
+  /// Whether `T` occurs in the selected list.
   static constexpr bool value = base_t::value;
 
   // Depending on which type list the type belongs to, map the index
+  /// Position of `T` in the filtered list when it came from the original list.
   static constexpr std::size_t mapped_idx =
       std::same_as<type_list_t, orig_list_t>
           ? mapped_registry<R, S>::mapped_index(base_t::pos)
@@ -231,6 +253,7 @@ struct contains_impl<T, I, mapped_registry<R, S>> {
 
   // The type is not contained in 'type_list', the position will be invalid:
   // Do not pass that to the range-checked array of the filtered indices
+  /// Position reported by this trait, or `std::size_t`'s maximum when absent.
   static constexpr std::size_t pos =
       !base_t::value ? std::numeric_limits<std::size_t>::max() : mapped_idx;
 };
@@ -239,18 +262,22 @@ struct contains_impl<T, I, mapped_registry<R, S>> {
 /// Specialization of the type list @c size trait
 /// @see detray/utils/type_list.hpp
 /// @{
+/// Select a type by position from an unfiltered registry.
 template <std::size_t N, concepts::type_id ID, typename... Ts>
 struct get_at<N, registry<ID, Ts...>> {
   static_assert(registry<ID, Ts...>::is_valid(N),
                 "Index out of range in type registry 'at'");
+  /// Type at position `N` in the registry.
   using type =
       typename get_at<N, typename registry<ID, Ts...>::type_list>::type;
 };
 
+/// Select a type by position from a mapped registry.
 template <std::size_t N, typename R, class S>
 struct get_at<N, mapped_registry<R, S>> {
   static_assert(mapped_registry<R, S>::is_valid(N),
                 "Index out of range in mapped type registry 'at'");
+  /// Type at filtered position `N` in the mapped registry.
   using type =
       typename get_at<N, typename mapped_registry<R, S>::type_list>::type;
 };
@@ -264,8 +291,10 @@ struct get_at<N, mapped_registry<R, S>> {
 template <typename = void, typename = void>
 struct get_id {};
 
+/// Resolve a registered type to its identifier in the original registry.
 template <typename T, concepts::type_id ID, typename... Ts>
 struct get_id<T, registry<ID, Ts...>> {
+  /// Identifier value assigned to `T` by its position in the registry.
   static constexpr ID value =
       static_cast<ID>(position<typename registry<ID, Ts...>::type_list, T>);
 
@@ -275,13 +304,19 @@ struct get_id<T, registry<ID, Ts...>> {
                 "Unmatched type ID in type registry 'id'");
 };
 
+/// Resolve a type to its identifier, accepting either original or filtered
+/// types for a mapped registry.
 template <typename T, typename R, class S>
 struct get_id<T, mapped_registry<R, S>> {
   // Figure out which type list to check
   // (use original list if 'T' is from there, otherwise try filtered list)
+  /// Mapped registry being queried.
   using mapped_reg_t = mapped_registry<R, S>;
+  /// Type list before applying the selector.
   using orig_list_t = typename mapped_reg_t::orig_types;
+  /// Type list after applying the selector.
   using filt_list_t = typename mapped_reg_t::type_list;
+  /// List used to resolve `T`, chosen from the original or filtered list.
   using type_list_t =
       std::conditional_t<contains<orig_list_t, T>, orig_list_t, filt_list_t>;
 
@@ -290,7 +325,9 @@ struct get_id<T, mapped_registry<R, S>> {
                      contains<filt_list_t, T>),
                 "Unknown type in 'get id' for mapped type registry");
 
+  /// Identifier type shared with the original registry.
   using id_t = typename mapped_reg_t::id;
+  /// Identifier of `T` in the original registry.
   static constexpr id_t value =
       contains<orig_list_t, T>
           ? static_cast<id_t>(position<orig_list_t, T>)
@@ -306,20 +343,24 @@ inline constexpr R::id id{get_id<T, R>::value};
 template <std::size_t I, typename = void>
 struct get_type {};
 
+/// Resolve an identifier value to its registered type.
 template <std::size_t I, typename ID, typename... Ts>
 struct get_type<I, registry<ID, Ts...>> {
   static_assert(registry<ID, Ts...>::is_valid(I),
                 "Unmatched type ID in type registry 'get'");
 
+  /// Type registered under identifier value `I`.
   using type = at<registry<ID, Ts...>, I>;
 };
 
+/// Resolve an original identifier value through a mapped registry.
 template <std::size_t I, typename R, class S>
 struct get_type<I, mapped_registry<R, S>> {
   static_assert(
       mapped_registry<R, S>::is_valid(mapped_registry<R, S>::mapped_index(I)),
       "Unmatched type ID in mapped type registry 'get'");
 
+  /// Type selected by original identifier value `I`.
   using type =
       at<mapped_registry<R, S>, mapped_registry<R, S>::mapped_index(I)>;
 };
@@ -333,41 +374,50 @@ using get = typename get_type<static_cast<std::size_t>(I), R>::type;
 template <std::size_t I, typename = void>
 struct cast_impl_id {};
 
+/// Cast an in-range index to the registry's identifier type.
 template <std::size_t I, typename ID, typename... Ts>
 struct cast_impl_id<I, registry<ID, Ts...>> {
   static_assert(registry<ID, Ts...>::is_valid(I),
                 "Cannot cast to ID: Invalid index for type registry");
 
+  /// Identifier corresponding to the compile-time index.
   static constexpr ID value = static_cast<ID>(I);
 };
 
+/// Cast an in-range index to the identifier type of a mapped registry.
 template <std::size_t I, typename R, class S>
 struct cast_impl_id<I, mapped_registry<R, S>> {
   static_assert(
       mapped_registry<R, S>::is_valid(mapped_registry<R, S>::mapped_index(I)),
       "Cannot cast to ID: Invalid index for ,apped type registry");
 
+  /// Identifier type of the original registry.
   using ID = typename mapped_registry<R, S>::id;
+  /// Identifier corresponding to the compile-time mapped index.
   static constexpr ID value = static_cast<ID>(I);
 };
 
 template <std::size_t I, typename = void>
 struct cast_impl_idx {};
 
+/// Cast an in-range index to the same index for an unfiltered registry.
 template <std::size_t I, typename ID, typename... Ts>
 struct cast_impl_idx<I, registry<ID, Ts...>> {
   static_assert(registry<ID, Ts...>::is_valid(I),
                 "Cannot cast to index: Invalid index for type registry");
 
+  /// Registry index corresponding to the compile-time index.
   static constexpr std::size_t value = I;
 };
 
+/// Translate an original index to its mapped-registry index.
 template <std::size_t I, typename R, class S>
 struct cast_impl_idx<I, mapped_registry<R, S>> {
   static_assert(
       mapped_registry<R, S>::is_valid(mapped_registry<R, S>::mapped_index(I)),
       "Cannot cast to index: Invalid index for ,apped type registry");
 
+  /// Filtered index corresponding to the original index.
   static constexpr std::size_t value = mapped_registry<R, S>::mapped_index(I);
 };
 
@@ -382,13 +432,17 @@ inline constexpr std::size_t index_cast =
 /// @}
 
 /// Variadic unrolling of the tuple that calls a functor on the element that
-/// corresponds to @param idx.
+/// corresponds to @p idx.
 ///
 /// @tparam functor_t functor that will be called on the element.
 /// @tparam Args argument types for the functor
 /// @tparam current_idx Current index into the container tuple. Is converted
 ///         to an id_t and tested against the given id.
 /// @tparam remaining_idcs te remaining tuple indices to be tested.
+/// @param idx index to dispatch to
+/// @param args arguments forwarded to the functor
+/// @return the functor result, with a common result type across registered
+/// types
 ///
 /// @see https://godbolt.org/z/qd6xns7KG
 template <concepts::type_registry registry_t, typename functor_t,
@@ -437,11 +491,13 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) visit_helper(
   }
 }
 
-/// Visits a tuple element according to its @param idx and calls
-/// @tparam functor_t with the arguments @param args on it.
+/// Visits a tuple element according to its @p idx and calls
+/// @p functor_t with the arguments @p args on it.
 ///
 /// @returns the functor result (this is necessarily always of the same
 /// type, regardless the input tuple element type).
+/// @param idx zero-based registry index to visit
+/// @param args arguments forwarded to the functor
 template <concepts::type_registry registry_t, typename functor_t,
           typename... Args>
 DETRAY_HOST_DEVICE constexpr decltype(auto) visit(const std::size_t idx,
@@ -451,11 +507,13 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) visit(const std::size_t idx,
       std::forward<Args>(args)...);
 }
 
-/// Visits a tuple element according to its type_id @param id and calls
-/// @tparam functor_t with the arguments @param args on it.
+/// Visits a tuple element according to its type_id @p type_id and calls
+/// @p functor_t with the arguments @p args on it.
 ///
 /// @returns the functor result (this is necessarily always of the same
 /// type, regardless the input tuple element type).
+/// @param type_id identifier of the registered type to visit
+/// @param args arguments forwarded to the functor
 template <concepts::type_registry registry_t, typename functor_t,
           typename... Args>
 DETRAY_HOST_DEVICE constexpr decltype(auto) visit(

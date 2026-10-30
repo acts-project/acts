@@ -22,14 +22,19 @@ namespace detray::algebra::generic::matrix::inverse {
 /// "inverse getter", assuming a N X N matrix
 template <concepts::square_matrix matrix_t>
 struct hard_coded {
+  /// Matrix element type.
   using scalar_t = detray::traits::value_t<matrix_t>;
+  /// Matrix index type.
   using index_t = detray::traits::index_t<matrix_t>;
 
   /// Function (object) used for accessing a matrix element
   using element_getter_t = detray::traits::element_getter_t<matrix_t>;
+  /// Direct determinant implementation used to normalize the 4 by 4 inverse.
   using determinant_getter = determinant::hard_coded<matrix_t>;
 
-  // 2 X 2 matrix inverse
+  /// 2 X 2 matrix inverse
+  /// @param m Nonsingular matrix to invert.
+  /// @returns The inverse matrix.
   template <typename M = matrix_t>
     requires(detray::traits::max_rank<M> == 2)
   DETRAY_HOST_DEVICE constexpr matrix_t operator()(const matrix_t &m) const {
@@ -46,7 +51,9 @@ struct hard_coded {
     return ret;
   }
 
-  // 4 X 4 matrix inverse
+  /// 4 X 4 matrix inverse
+  /// @param m Nonsingular matrix to invert.
+  /// @returns The inverse matrix.
   template <typename M = matrix_t>
     requires(detray::traits::max_rank<M> == 4)
   DETRAY_HOST_DEVICE constexpr matrix_t operator()(const matrix_t &m) const {

@@ -24,31 +24,49 @@ namespace detray::io::csv {
 
 /// Type to read the data of free track parameters
 struct free_track_parameters {
+  /// Index of the track owning this state.
   unsigned int track_id = 0;
+  /// Global x coordinate of the track position.
   double x = 0.;
+  /// Global y coordinate of the track position.
   double y = 0.;
+  /// Global z coordinate of the track position.
   double z = 0.;
+  /// Track time.
   double t = 0.;
+  /// x component of the momentum vector.
   double px = 0.;
+  /// y component of the momentum vector.
   double py = 0.;
+  /// z component of the momentum vector.
   double pz = 0.;
+  /// Particle charge.
   double q = 0.;
 
+  /// Define CSV column order for the free-state fields below.
   DETRAY_DFE_NAMEDTUPLE(free_track_parameters, track_id, x, y, z, t, px, py, pz,
                         q);
 };
 
 /// Type to read the data of bound track parameters
-/// @TODO: Implement readers and writers
+/// @todo Implement readers and writers
 struct bound_track_parameters {
+  /// Index of the track owning this state.
   unsigned int track_id = 0;
+  /// First local bound coordinate.
   double l0 = 0.;
+  /// Second local bound coordinate.
   double l1 = 0.;
+  /// Azimuth angle of the track direction.
   double phi = 0.;
+  /// Polar angle of the track direction.
   double theta = 0.;
+  /// Signed inverse momentum.
   double qop = 0.;
+  /// Track time.
   double t = 0.;
 
+  /// Define CSV column order for the bound-state fields below.
   DETRAY_DFE_NAMEDTUPLE(bound_track_parameters, track_id, l0, l1, phi, theta,
                         qop, t);
 };

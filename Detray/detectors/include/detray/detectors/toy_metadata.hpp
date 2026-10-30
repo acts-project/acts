@@ -28,23 +28,33 @@
 
 namespace detray {
 
+/// Detector-specific aliases and storage policy for toy geometry.
 template <concepts::algebra algebra_t>
 struct toy_metadata {
+  /// Algebra backend used by this detector metadata.
   using algebra_type = algebra_t;
+  /// Scalar type associated with the selected algebra backend.
   using scalar_t = dscalar<algebra_type>;
 
+  /// Link type used to refer to the corresponding detector component store.
   using nav_link = std::uint_least16_t;
 
   template <template <typename...> class vector_t = dvector>
+  /// Store type holding the corresponding detector component collection.
   using transform_store =
       single_store<dtransform3D<algebra_type>, vector_t, geometry_context>;
 
+  /// Type alias used by this detector metadata configuration.
   using rectangle2D_t = mask<detray::rectangle2D, algebra_type, nav_link>;
+  /// Type alias used by this detector metadata configuration.
   using trapezoid2D_t = mask<detray::trapezoid2D, algebra_type, nav_link>;
+  /// Type alias used by this detector metadata configuration.
   using concentric_cylinder2D_t =
       mask<detray::concentric_cylinder2D, algebra_type, nav_link>;
+  /// Type alias used by this detector metadata configuration.
   using ring2D_t = mask<detray::ring2D, algebra_type, nav_link>;
 
+  /// Identifiers for the supported surface masks.
   enum class mask_id : std::uint_least8_t {
     e_rectangle2D = 0u,
     e_trapezoid2D = 1u,
@@ -74,17 +84,22 @@ struct toy_metadata {
   };
 
   template <template <typename...> class vector_t = dvector>
+  /// Store type holding the corresponding detector component collection.
   using mask_store = regular_multi_store<mask_id, empty_context, dtuple,
                                          vector_t, rectangle2D_t, trapezoid2D_t,
                                          concentric_cylinder2D_t, ring2D_t>;
 
   template <typename container_t>
+  /// Material map type associated with this surface shape.
   using concentric_cylinder2D_map_t =
       material_map<algebra_type, detray::concentric_cylinder2D, container_t>;
   template <typename container_t>
+  /// Material map type associated with this surface shape.
   using ring2D_map_t = material_map<algebra_type, detray::ring2D, container_t>;
+  /// Material representation used by this detector metadata.
   using material_slab_t = material_slab<scalar_t>;
 
+  /// Identifiers for material payload and map alternatives.
   enum class material_id : std::uint_least8_t {
     e_concentric_cylinder2D_map = 0u,
     e_ring2D_map = 1u,
@@ -114,41 +129,52 @@ struct toy_metadata {
   };
 
   template <typename container_t = host_container_types>
+  /// Store type holding the corresponding detector component collection.
   using material_store =
       multi_store<material_id, empty_context, dtuple,
                   grid_collection<concentric_cylinder2D_map_t<container_t>>,
                   grid_collection<ring2D_map_t<container_t>>,
                   typename container_t::template vector_type<material_slab_t>>;
 
+  /// Link type used to refer to the corresponding detector component store.
   using transform_link = typename transform_store<>::single_link;
+  /// Link type used to refer to the corresponding detector component store.
   using mask_link = typename mask_store<>::range_link;
+  /// Link type used to refer to the corresponding detector component store.
   using material_link = typename material_store<>::single_link;
+  /// Surface descriptor type combining links to its geometry components.
   using surface_type =
       surface_descriptor<mask_link, material_link, transform_link, nav_link>;
 
   template <typename axes_t, typename bin_entry_t, typename container_t>
+  /// Grid type used to index the corresponding detector components.
   using static_simple_grid_t =
       spatial_grid<algebra_type, axes_t,
                    detray::bins::static_array<bin_entry_t, 1>,
                    detray::simple_serializer, container_t, false>;
 
   template <typename container_t>
+  /// Grid type used to index the corresponding detector components.
   using surface_concentric_cylinder2D_grid_t =
       static_simple_grid_t<axes<detray::concentric_cylinder2D>, surface_type,
                            container_t>;
   template <typename container_t>
+  /// Grid type used to index the corresponding detector components.
   using surface_ring2D_grid_t =
       static_simple_grid_t<axes<detray::ring2D>, surface_type, container_t>;
 
   template <typename axes_t, typename bin_entry_t, typename container_t>
+  /// Grid type used to index the corresponding detector components.
   using single_simple_grid_t =
       spatial_grid<algebra_type, axes_t, detray::bins::single<bin_entry_t>,
                    detray::simple_serializer, container_t, false>;
 
   template <typename container_t>
+  /// Grid type used to index the corresponding detector components.
   using volume_cylinder3D_grid_t =
       single_simple_grid_t<axes<detray::cylinder3D>, dindex, container_t>;
 
+  /// Identifiers for navigation accelerator alternatives.
   enum class accel_id : std::uint_least8_t {
     e_surface_brute_force = 0u,
     e_surface_concentric_cylinder2D_grid = 1u,
@@ -180,6 +206,7 @@ struct toy_metadata {
   };
 
   template <typename container_t = host_container_types>
+  /// Store type holding the corresponding detector component collection.
   using accelerator_store = multi_store<
       accel_id, empty_context, dtuple,
       brute_force_collection<surface_type, container_t>,
@@ -187,6 +214,7 @@ struct toy_metadata {
       grid_collection<surface_ring2D_grid_t<container_t>>,
       grid_collection<volume_cylinder3D_grid_t<container_t>>>;
 
+  /// Categories used to distinguish detector geometry objects.
   enum geo_objects : std::uint_least8_t {
     e_passive = 0u,
     e_portal = 0u,
@@ -217,6 +245,7 @@ struct toy_metadata {
     return os;
   };
 
+  /// Link type used to refer to the corresponding detector component store.
   using object_link_type =
       dmulti_index<dtyped_index<accel_id, dindex>, geo_objects::e_size>;
 };

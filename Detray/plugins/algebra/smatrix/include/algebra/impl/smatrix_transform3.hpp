@@ -39,8 +39,11 @@ struct transform3 {
 
   /// Vector and point types
   using vector2 = array_type<2>;
+  /// Three-component vector type used for spatial quantities.
   using vector3 = array_type<3>;
+  /// Two-dimensional point representation.
   using point2 = vector2;
+  /// Three-dimensional point representation.
   using point3 = vector3;
 
   /// 4x4 matrix type
@@ -55,8 +58,11 @@ struct transform3 {
   /// @name Data objects
   /// @{
 
-  matrix44 _data = ROOT::Math::SMatrixIdentity();
-  matrix44 _data_inv = ROOT::Math::SMatrixIdentity();
+  matrix44 _data = ROOT::Math::SMatrixIdentity();  ///< Local-to-global
+                                                   ///< transformation matrix.
+  matrix44 _data_inv =
+      ROOT::Math::SMatrixIdentity();  ///< Global-to-local transformation
+                                      ///< matrix.
 
   /// @}
 
@@ -66,6 +72,7 @@ struct transform3 {
   ///  @param x the x axis of the new frame
   ///  @param y the y axis of the new frame
   ///  @param z the z axis of the new frame, normal vector for planes
+  ///  @param get_inverse whether to compute and store the inverse
   DETRAY_HOST_DEVICE
   transform3(const vector3 &t, const vector3 &x, const vector3 &y,
              const vector3 &z, bool get_inverse = true) {
@@ -94,6 +101,7 @@ struct transform3 {
   /// @param t the translation (or origin of the new frame)
   /// @param z the z axis of the new frame, normal vector for planes
   /// @param x the x axis of the new frame
+  /// @param get_inverse whether to compute and store the inverse
   DETRAY_HOST
   transform3(const vector3 &t, const vector3 &z, const vector3 &x,
              bool get_inverse = true)
@@ -173,49 +181,62 @@ struct transform3 {
 
   /// Default constructors
   transform3() = default;
+  /// Copy a transform and its cached inverse.
+  /// @param rhs transform to copy
   transform3(const transform3 &rhs) = default;
   ~transform3() = default;
 
   /// Equality operator
+  /// @param rhs transform to compare with
+  /// @return whether the transforms have equal spatial mappings
   DETRAY_HOST
   constexpr bool operator==(const transform3 &rhs) const {
     return _data == rhs._data;
   }
 
   /// This method retrieves the rotation of a transform
+  /// @return rotation matrix
   DETRAY_HOST
   constexpr auto rotation() const {
     return (_data.template Sub<ROOT::Math::SMatrix<scalar_type, 3, 3> >(0, 0));
   }
 
   /// This method retrieves x axis
+  /// @return x-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 x() const { return (_data.template SubCol<vector3>(0, 0)); }
 
   /// This method retrieves y axis
+  /// @return y-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 y() const { return (_data.template SubCol<vector3>(1, 0)); }
 
   /// This method retrieves z axis
+  /// @return z-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 z() const { return (_data.template SubCol<vector3>(2, 0)); }
 
   /// This method retrieves the translation of a transform
+  /// @return translation vector
   DETRAY_HOST
   constexpr vector3 translation() const {
     return (_data.template SubCol<vector3>(3, 0));
   }
 
   /// This method retrieves the 4x4 matrix of a transform
+  /// @return forward transformation matrix
   DETRAY_HOST
   constexpr matrix44 matrix() const { return _data; }
 
   /// This method retrieves the 4x4 matrix of an inverse transform
+  /// @return inverse transformation matrix
   DETRAY_HOST
   constexpr matrix44 matrix_inverse() const { return _data_inv; }
 
   /// This method transform from a point from the local 3D cartesian frame to
   /// the global 3D cartesian frame
+  /// @param v point in local coordinates
+  /// @return point in global coordinates
   DETRAY_HOST
   constexpr point3 point_to_global(const point2 &v) const {
     ROOT::Math::SVector<scalar_type, 4> vector_4;
@@ -227,6 +248,8 @@ struct transform3 {
 
   /// This method transform from a point from the local 3D cartesian frame to
   /// the global 3D cartesian frame
+  /// @param v point in local coordinates
+  /// @return point in global coordinates
   DETRAY_HOST
   constexpr point3 point_to_global(const point3 &v) const {
     ROOT::Math::SVector<scalar_type, 4> vector_4;
@@ -236,8 +259,9 @@ struct transform3 {
         .template Sub<point3>(0);
   }
 
-  /// This method transform from a vector from the global 3D cartesian frame
-  /// into the local 3D cartesian frame
+  /// Transform a global point to local coordinates.
+  /// @param v point in global coordinates
+  /// @return point in local coordinates
   DETRAY_HOST
   constexpr point3 point_to_local(const point3 &v) const {
     ROOT::Math::SVector<scalar_type, 4> vector_4;
@@ -249,6 +273,8 @@ struct transform3 {
 
   /// This method transform from a vector from the local 2D cartesian frame to
   /// the global 3D cartesian frame
+  /// @param v vector in local plane coordinates
+  /// @return vector in global coordinates
   DETRAY_HOST
   constexpr point3 vector_to_global(const vector2 &v) const {
     ROOT::Math::SVector<scalar_type, 4> vector_4;
@@ -259,6 +285,8 @@ struct transform3 {
 
   /// This method transform from a vector from the local 3D cartesian frame to
   /// the global 3D cartesian frame
+  /// @param v vector in local coordinates
+  /// @return vector in global coordinates
   DETRAY_HOST
   constexpr point3 vector_to_global(const vector3 &v) const {
     ROOT::Math::SVector<scalar_type, 4> vector_4;
@@ -269,6 +297,8 @@ struct transform3 {
 
   /// This method transform from a vector from the global 3D cartesian frame
   /// into the local 3D cartesian frame
+  /// @param v vector in global coordinates
+  /// @return vector in local coordinates
   DETRAY_HOST
   constexpr point3 vector_to_local(const vector3 &v) const {
     ROOT::Math::SVector<scalar_type, 4> vector_4;

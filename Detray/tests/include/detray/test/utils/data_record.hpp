@@ -29,10 +29,15 @@ struct intersection_record {
   using value_t = dvalue<typename detector_t::algebra_type>;
 
  public:
+  /// Algebra type used to store values in double precision.
   using algebra_type = dalgebra<typename detector_t::algebra_type, double>;
+  /// Scalar type used by this record.
   using scalar_type = dscalar<algebra_type>;
+  /// 3D point type used to store positions.
   using point3_type = dpoint3D<algebra_type>;
+  /// 3D vector type used to store directions.
   using vector3_type = dvector3D<algebra_type>;
+  /// Intersection result type stored by this record.
   using intersection_type = intersection2D<typename detector_t::surface_type,
                                            typename detector_t::algebra_type,
                                            intersection::contains_pos>;
@@ -41,6 +46,12 @@ struct intersection_record {
 
   /// The particle charge is not known in the navigation, but might be
   /// provided in a different context
+  /// @param position Global intersection position.
+  /// @param direction Track direction at the intersection.
+  /// @param intr Intersection result.
+  /// @param q Particle charge.
+  /// @param p Momentum magnitude.
+  /// @param v_idx Index of the volume containing the intersection.
   DETRAY_HOST_DEVICE
   constexpr intersection_record(
       const typename detector_t::point3_type& position,
@@ -58,24 +69,38 @@ struct intersection_record {
 
   /// Getters
   /// @{
+  /// Get the intersection position.
+  /// @return The position, cast to the requested value type.
   template <concepts::value V = value_t>
   DETRAY_HOST_DEVICE auto position() const {
     return algebra::cast_to<V>(m_pos);
   }
+  /// Get the track direction.
+  /// @return The direction, cast to the requested value type.
   template <concepts::value V = value_t>
   DETRAY_HOST_DEVICE auto direction() const {
     return algebra::cast_to<V>(m_dir);
   }
+  /// Get the intersection result.
+  /// @return The intersection result.
   DETRAY_HOST_DEVICE
   const intersection_type& intersection() const { return m_intersection; }
+  /// Get the mutable intersection result.
+  /// @return Mutable reference to the intersection result.
   DETRAY_HOST_DEVICE
   intersection_type& intersection() { return m_intersection; }
+  /// Get the containing volume index.
+  /// @return Volume index.
   DETRAY_HOST_DEVICE
   dindex volume() const { return m_vol_idx; }
+  /// Get the particle charge.
+  /// @return Charge, cast to the requested value type.
   template <concepts::value V = value_t>
   DETRAY_HOST_DEVICE auto charge() const {
     return algebra::cast_to<V>(m_charge);
   }
+  /// Get the momentum magnitude.
+  /// @return Momentum magnitude, cast to the requested value type.
   template <concepts::value V = value_t>
   DETRAY_HOST_DEVICE auto p() const {
     return algebra::cast_to<V>(m_p_mag);
@@ -94,23 +119,35 @@ struct intersection_record {
 
   /// Setters
   /// @{
+  /// Set the intersection position.
+  /// @param position New global position.
   template <concepts::point3D point_t>
   DETRAY_HOST_DEVICE void position(const point_t& position) {
     m_pos = algebra::cast_to<double>(position);
   }
+  /// Set the track direction.
+  /// @param dir New track direction.
   template <concepts::vector3D vector_t>
   DETRAY_HOST_DEVICE void direction(const vector_t& dir) {
     m_dir = algebra::cast_to<double>(dir);
   }
+  /// Set the intersection result.
+  /// @param intr New intersection result.
   DETRAY_HOST_DEVICE
   void intersection(const intersection_type& intr) { m_intersection = intr; }
+  /// Set the containing volume index.
+  /// @param vol_idx New volume index.
   DETRAY_HOST_DEVICE
   void volume(dindex vol_idx) { m_vol_idx = vol_idx; }
 
+  /// Set the particle charge.
+  /// @param q New charge value.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE void charge(const scalar_t q) {
     m_charge = algebra::cast_to<double>(q);
   }
+  /// Set the momentum magnitude.
+  /// @param p New momentum magnitude.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE void p(const scalar_t p) {
     m_p_mag = algebra::cast_to<double>(p);
@@ -135,48 +172,79 @@ struct intersection_record {
 /// Data for a single step
 template <concepts::algebra algebra_t>
 struct step_record {
+  /// Algebra type used to store values in double precision.
   using algebra_type = dalgebra<algebra_t, double>;
+  /// Value type associated with the algebra.
   using value_t = dvalue<algebra_t>;
+  /// Scalar type used by the record.
   using scalar_type = dscalar<algebra_t>;
+  /// 3D vector type used by the record.
   using vector3_type = dvector3D<algebra_t>;
+  /// Free track parameter type stored by the record.
   using track_param_type = free_track_parameters<algebra_t>;
+  /// Bound track parameter type stored by the record.
   using bound_param_type = bound_track_parameters<algebra_t>;
+  /// Free track matrix type stored by the record.
   using free_matrix_type = free_matrix<algebra_t>;
 
+  /// Step size at this step.
   scalar_type m_step_size{0.};
+  /// Accumulated path length at this step.
   scalar_type m_path_length{0.};
+  /// Number of propagation trials.
   std::size_t m_n_total_trials{0u};
+  /// Navigation direction.
   navigation::direction m_nav_dir = navigation::direction::e_forward;
+  /// Geometry identifier of the current surface.
   geometry::identifier m_identifier{};
+  /// Free track parameters at this step.
   track_param_type m_free_params{};
+  /// Bound track parameters at this step.
   bound_param_type m_bound_params{};
+  /// Transport Jacobian at this step.
   free_matrix_type m_jacobian{};
 
   /// Getters
   /// @{
+  /// Get the step size.
+  /// @return Step size.
   template <concepts::value V = value_t>
   DETRAY_HOST_DEVICE scalar_type step_size() const {
     return algebra::cast_to<V>(m_step_size);
   }
+  /// Get the accumulated path length.
+  /// @return Accumulated path length.
   template <concepts::value V = value_t>
   DETRAY_HOST_DEVICE scalar_type path_length() const {
     return algebra::cast_to<V>(m_path_length);
   }
+  /// Get the number of propagation trials.
+  /// @return Number of trials.
   DETRAY_HOST_DEVICE std::size_t n_trials() const { return m_n_total_trials; }
+  /// Get the navigation direction.
+  /// @return Navigation direction.
   DETRAY_HOST_DEVICE navigation::direction nav_direction() const {
     return m_nav_dir;
   }
+  /// Get the geometry identifier.
+  /// @return Geometry identifier.
   DETRAY_HOST_DEVICE geometry::identifier identifier() const {
     return m_identifier;
   }
+  /// Get the free track parameters.
+  /// @return Free track parameters.
   template <concepts::value V = value_t>
   DETRAY_HOST_DEVICE track_param_type free_param() const {
     return algebra::cast_to<V>(m_free_params);
   }
+  /// Get the bound track parameters.
+  /// @return Bound track parameters.
   template <concepts::value V = value_t>
   DETRAY_HOST_DEVICE bound_param_type bound_param() const {
     return algebra::cast_to<V>(m_bound_params);
   }
+  /// Get the transport Jacobian.
+  /// @return Transport Jacobian.
   template <concepts::value V = value_t>
   DETRAY_HOST_DEVICE free_matrix_type jacobian() const {
     return algebra::cast_to<V>(m_jacobian);
@@ -185,29 +253,45 @@ struct step_record {
 
   /// Setters
   /// @{
+  /// Set the step size.
+  /// @param step_size New step size.
   DETRAY_HOST_DEVICE void step_size(const scalar_type step_size) {
     m_step_size = algebra::cast_to<double>(step_size);
   }
+  /// Set the accumulated path length.
+  /// @param path_length New path length.
   DETRAY_HOST_DEVICE void path_length(const scalar_type path_length) {
     m_path_length = algebra::cast_to<double>(path_length);
   }
+  /// Set the number of propagation trials.
+  /// @param n_trial New number of trials.
   DETRAY_HOST_DEVICE void n_trials(const std::size_t n_trial) {
     m_n_total_trials = n_trial;
   }
+  /// Set the navigation direction.
+  /// @param nav_dir New navigation direction.
   DETRAY_HOST_DEVICE void nav_direction(const navigation::direction nav_dir) {
     m_nav_dir = nav_dir;
   }
+  /// Set the geometry identifier.
+  /// @param geo_id New geometry identifier.
   DETRAY_HOST_DEVICE void identifier(const geometry::identifier geo_id) {
     m_identifier = geo_id;
   }
+  /// Set the free track parameters.
+  /// @param param New free track parameters.
   template <typename free_param_t>
   DETRAY_HOST_DEVICE void free_param(const free_param_t& param) {
     m_free_params = algebra::cast_to<double>(param);
   }
+  /// Set the bound track parameters.
+  /// @param param New bound track parameters.
   template <typename bound_param_t>
   DETRAY_HOST_DEVICE void bound_param(const bound_param_t& param) {
     m_bound_params = algebra::cast_to<double>(param);
   }
+  /// Set the transport Jacobian.
+  /// @param jac New Jacobian.
   template <typename jacobian_t>
   DETRAY_HOST_DEVICE void jacobian(const jacobian_t& jac) {
     m_jacobian = algebra::cast_to<double>(jac);
@@ -232,13 +316,21 @@ struct material_record {
 /// Data for a single step
 template <concepts::detector detector_t>
 struct propagation_record {
+  /// Detector algebra type.
   using algebra_type = typename detector_t::algebra_type;
+  /// Value type associated with the detector algebra.
   using value_type = dvalue<algebra_type>;
+  /// Scalar type associated with the detector algebra.
   using scalar_type = dscalar<algebra_type>;
+  /// Type storing the propagation step data.
   using step_record_type = step_record<algebra_type>;
+  /// Free track parameter type.
   using free_param_type = typename step_record_type::track_param_type;
+  /// Bound track parameter type.
   using bound_param_type = typename step_record_type::bound_param_type;
+  /// Free track matrix type.
   using free_matrix_type = typename step_record_type::free_matrix_type;
+  /// Intersection type associated with the detector.
   using intersection_type = intersection_record<detector_t>::intersection_type;
 
   /// @returns the free track parameters
@@ -309,7 +401,9 @@ struct propagation_record {
   intersection_type& intersection() {
     return m_intersection_record.intersection();
   }
-  /// Set the new intersection data @param intr
+  /// Set the new intersection data.
+  /// Set the intersection result.
+  /// @param intr New intersection result.
   DETRAY_HOST_DEVICE
   void intersection(const intersection_type& intr) {
     m_intersection_record.intersection(intr);

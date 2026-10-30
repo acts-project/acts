@@ -34,9 +34,10 @@ class quadratic_equation<scalar_t> {
  public:
   quadratic_equation() = delete;
 
-  /// Solve the quadratic equation with the coefficients @param a, @param b
-  /// and @param c
-  ///
+  /// Solve the equation `a*x^2 + b*x + c = 0` for arithmetic coefficients.
+  /// @param a Quadratic coefficient.
+  /// @param b Linear coefficient.
+  /// @param c Constant coefficient.
   /// @param tolerance threshold to compare the discrimant against to decide
   ///                  if we have two separate solutions.
   DETRAY_HOST_DEVICE
@@ -76,8 +77,11 @@ class quadratic_equation<scalar_t> {
 
   /// Getters for the solution(s)
   /// @{
+  /// @returns Number of real solutions found.
   constexpr int solutions() const { return m_solutions; }
+  /// @returns Smaller solution; undefined when there are no solutions.
   constexpr scalar_t smaller() const { return m_values[0]; }
+  /// @returns Larger solution; undefined unless there are two solutions.
   constexpr scalar_t larger() const { return m_values[1]; }
   /// @}
 
@@ -100,6 +104,11 @@ class quadratic_equation<scalar_t> {
  public:
   quadratic_equation() = delete;
 
+  /// Solve the equation `a*x^2 + b*x + c = 0` for SIMD coefficients.
+  /// @param a Quadratic coefficient for each lane.
+  /// @param b Linear coefficient for each lane.
+  /// @param c Constant coefficient for each lane.
+  /// @param tolerance Threshold used to classify the discriminant per lane.
   DETRAY_HOST_DEVICE
   constexpr quadratic_equation(const scalar_t &a, const scalar_t &b,
                                const scalar_t &c,
@@ -162,8 +171,11 @@ class quadratic_equation<scalar_t> {
 
   /// Getters for the solution(s)
   /// @{
+  /// @returns Number of real solutions in each lane.
   constexpr const auto &solutions() const { return m_solutions; }
+  /// @returns Smaller solution in each lane.
   constexpr const scalar_t &smaller() const { return m_values[0]; }
+  /// @returns Larger solution in each lane; undefined unless there are two.
   constexpr const scalar_t &larger() const { return m_values[1]; }
   /// @}
 

@@ -43,8 +43,11 @@ class homogeneous_material_reader {
   /// Payload type that the reader processes
   using payload_type = detector_homogeneous_material_payload;
 
-  /// Convert the detector material @param det_mat_data from its IO
+  /// Convert the detector material @p det_mat_data from its IO
   /// payload
+  /// @tparam detector_t Detector type being constructed.
+  /// @param det_builder Builder receiving material stores and links.
+  /// @param det_mat_data Serialized homogeneous material payload.
   template <class detector_t>
   static void from_payload(detector_builder<typename detector_t::metadata,
                                             volume_builder>& det_builder,

@@ -177,6 +177,116 @@ def test_end_to_end_fixture():
     assert not any(s == "Acts::compute(int)" for s in c["removed_signatures"]), c
 
 
+def test_detray_roots_and_gpu_api():
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        public = repo / "Detray/core/include"
+        public.mkdir(parents=True)
+        for rel in (
+            "Detray/tests/include",
+            "Detray/tutorials/include",
+            "Detray/extern/vecmem/include",
+            "Detray/plugins/algebra/array/include",
+        ):
+            (repo / rel).mkdir(parents=True)
+        roots = pas.standard_roots(repo)
+        assert set(roots) == {public, repo / "Detray/plugins/algebra/array/include"}
+        assert pas.module_of(str(public / "detray/Thing.hpp")) == "Detray/core"
+        if not shutil.which("doxygen"):
+            return
+        header = public / "Thing.hpp"
+        header.write_text("""
+namespace detray {
+/// Public device-compatible type.
+struct Thing {
+  /// A shared operation.
+  DETRAY_HOST_DEVICE int run(int value) const;
+  /// A device operation.
+  DETRAY_DEVICE int device(int value);
+  /// A host operation.
+  DETRAY_HOST int host(int value);
+};
+namespace detail {
+/// Internal type.
+struct Hidden {};
+}
+}
+""")
+        base = _measure(public)
+        assert "type detray::Thing" in base["symbols"]
+        assert "type detray::detail::Hidden" not in base["symbols"]
+        header.write_text(
+            header.read_text().replace("run(int value)", "run(double value)")
+        )
+        head = _measure(public)
+        changes = pad.classify(base, head)
+        assert "detray::Thing::run(int) const" in changes["removed_signatures"], changes
+        assert (
+            "detray::Thing::run(double) const" in changes["added_signatures"]
+        ), changes
+
+
+def test_detray_validation_roots():
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        included = {
+            "Detray/tests/include/detray/test/common",
+            "Detray/tests/include/detray/test/utils",
+            "Detray/tests/include/detray/test/validation",
+            "Detray/tests/tools/include",
+        }
+        excluded = {
+            "Detray/tests/include/detray/test/framework",
+            "Detray/tests/include/detray/test/cpu",
+            "Detray/tests/include/detray/test/device",
+            "Detray/tests/unit_tests",
+            "Detray/tests/integration_tests",
+            "Detray/tests/benchmarks/include",
+            "Detray/tests/tools/src",
+        }
+        for rel in included | excluded:
+            (repo / rel).mkdir(parents=True)
+        config = (
+            repo / "Detray/tests/include/detray/test/framework/test_configuration.hpp"
+        )
+        config.touch()
+        roots = pas.standard_roots(repo)
+        assert set(roots) == {repo / rel for rel in included} | {config}
+        assert pas.module_of(str(config)) == "Detray/tests"
+        assert (
+            pas.module_of(str(repo / "Detray/tests/tools/include/detray/options/x.hpp"))
+            == "Detray/tests/tools"
+        )
+
+
+def test_detray_generated_declarations_are_types():
+    if not shutil.which("doxygen"):
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        headers = Path(tmp)
+        (headers / "declarations.hpp").write_text(
+            "#define DETRAY_DECLARE_MATERIAL(NAME, VALUE) struct NAME {};\n"
+            "#define DETRAY_DECLARE_MATERIAL_WITH_DED(NAME, VALUE) struct NAME {};\n"
+            "#define DETRAY_DECLARE_PARTICLE(NAME, PDG, MASS, CHARGE) struct NAME {};\n"
+        )
+        (headers / "materials.hpp").write_text(
+            '#include "declarations.hpp"\n'
+            "namespace detray {\n"
+            "/// A predefined material.\n"
+            "DETRAY_DECLARE_MATERIAL(silicon, 14);\n"
+            "/// A material with density-effect data.\n"
+            "DETRAY_DECLARE_MATERIAL_WITH_DED(copper, 29);\n"
+            "/// A particle hypothesis.\n"
+            "DETRAY_DECLARE_PARTICLE(muon, 13, 105.66, -1);\n"
+            "}\n"
+        )
+        surface = _measure(headers)
+        assert "type detray::silicon" in surface["symbols"]
+        assert "type detray::copper" in surface["symbols"]
+        assert "type detray::muon" in surface["symbols"]
+        assert not any("DETRAY_DECLARE" in s for s in surface["callables"])
+
+
 def main() -> int:
     tests = [
         v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)

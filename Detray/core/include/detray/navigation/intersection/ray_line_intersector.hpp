@@ -28,32 +28,33 @@ struct ray_intersector_impl;
 /// A functor to find intersections between trajectory and line mask
 template <detray::concepts::aos algebra_t, bool resolve_pos>
 struct ray_intersector_impl<line2D<algebra_t>, algebra_t, resolve_pos> {
+  /// Algebra policy used by the geometric calculation.
   using algebra_type = algebra_t;
+  /// Coordinate frame of the line mask.
   using frame_type = line2D<algebra_t>;
+  /// Three-dimensional point type used for the closest-approach result.
   using point_type = dpoint3D<algebra_t>;
 
+  /// Intersection result type associated with a surface descriptor.
   template <typename surface_descr_t>
   using intersection_type =
       intersection2D<surface_descr_t, algebra_t, resolve_pos>;
 
+  /// Ray trajectory type accepted by this intersector.
   template <typename other_algebra_t>
   using trajectory_type = detail::ray<other_algebra_t>;
 
-  // Maximum number of solutions this intersector can produce
+  /// Maximum number of solutions this intersector can produce
   static constexpr std::uint8_t n_solutions{1u};
 
+  /// Result containing the path and closest-approach point.
   using result_type =
       intersection_point<algebra_t, point_type, intersection::contains_pos>;
 
   /// Operator function to find intersections between ray and line mask
   ///
   /// @param ray is the input ray trajectory
-  /// @param sf the surface handle the mask is associated with
-  /// @param mask is the input mask that defines the surface extent
   /// @param trf is the surface placement transform
-  /// @param mask_tolerance is the tolerance for mask edges
-  /// @param overstep_tol negative cutoff for the path
-  //
   /// @return the intersection
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
       const trajectory_type<algebra_t> &ray, const dtransform3D<algebra_t> &trf,

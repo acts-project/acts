@@ -20,16 +20,22 @@
 
 namespace detray {
 
+/// Six-component parameter vector expressed in global Cartesian coordinates.
 template <concepts::algebra algebra_t>
 struct free_parameters_vector {
   /// @name Type definitions for the struct
   /// @{
+  /** Algebra backend used for the vector operations. */
   using algebra_type = algebra_t;
+  /// Scalar type used by the stored parameters.
   using scalar_type = dscalar<algebra_t>;
+  /// Three-dimensional type for global positions.
   using point3_type = dpoint3D<algebra_t>;
+  /// Three-dimensional type for directions and momentum.
   using vector3_type = dvector3D<algebra_t>;
 
   // Shorthand vector type related to free track parameters.
+  /// Fixed-size vector storing the free parameters.
   using vector_type = free_vector<algebra_t>;
 
   /// @}
@@ -38,6 +44,7 @@ struct free_parameters_vector {
   free_parameters_vector() = default;
 
   /// Construct from a 6-dim vector of parameters
+  /// @param vec vector containing the free parameters in canonical order
   DETRAY_HOST_DEVICE
   explicit free_parameters_vector(const vector_type& vec) : m_vector(vec) {
     assert(!this->is_invalid());
@@ -63,7 +70,9 @@ struct free_parameters_vector {
     assert(!this->is_invalid());
   }
 
-  /// @param rhs is the left hand side params for comparison
+  /// Compare all free parameters within scalar precision.
+  /// @param rhs parameter vector to compare with this vector
+  /// @return whether every component agrees within machine precision
   DETRAY_HOST_DEVICE
   bool operator==(const free_parameters_vector& rhs) const {
     for (unsigned int i = 0u; i < e_free_size; i++) {
@@ -77,12 +86,16 @@ struct free_parameters_vector {
   }
 
   /// Convenience access to the track parameters - const
+  /// @param i index in the free parameter vector
+  /// @return the selected parameter value
   DETRAY_HOST_DEVICE
   scalar_type operator[](std::size_t i) const {
     return getter::element(m_vector, static_cast<unsigned int>(i), 0u);
   }
 
   /// Convenience access to the track parameters - non-const
+  /// @param i index in the free parameter vector
+  /// @return a reference to the selected parameter
   DETRAY_HOST_DEVICE
   decltype(auto) operator[](std::size_t i) {
     return getter::element(m_vector, static_cast<unsigned int>(i), 0u);
@@ -101,6 +114,7 @@ struct free_parameters_vector {
   }
 
   /// Set the global track position
+  /// @param pos new global position
   DETRAY_HOST_DEVICE
   void set_pos(const vector3_type& pos) {
     assert(math::isfinite(pos[0]));
@@ -118,6 +132,7 @@ struct free_parameters_vector {
   }
 
   /// Set the global track direction
+  /// @param dir new unit direction vector
   /// @note Must be normalized!
   DETRAY_HOST_DEVICE
   void set_dir(const vector3_type& dir) {
@@ -136,6 +151,7 @@ struct free_parameters_vector {
   }
 
   /// Set the time
+  /// @param t time value
   DETRAY_HOST_DEVICE
   void set_time(const scalar_type t) {
     assert(math::isfinite(t));
@@ -149,6 +165,7 @@ struct free_parameters_vector {
   }
 
   /// Set the q/p value
+  /// @param qop signed charge divided by momentum
   DETRAY_HOST_DEVICE
   void set_qop(const scalar_type qop) {
     assert(math::isfinite(qop));
@@ -170,6 +187,7 @@ struct free_parameters_vector {
     return getter::element(m_vector, e_free_qoverp, 0u) / dir[2];
   }
 
+  /// @param q particle charge
   /// @returns the absolute momentum
   DETRAY_HOST_DEVICE
   scalar_type p(const scalar_type q) const {
@@ -178,10 +196,12 @@ struct free_parameters_vector {
     return q / qop();
   }
 
+  /// @param q particle charge
   /// @returns the global momentum 3-vector
   DETRAY_HOST_DEVICE
   vector3_type mom(const scalar_type q) const { return p(q) * dir(); }
 
+  /// @param q particle charge
   /// @returns the transverse momentum
   DETRAY_HOST_DEVICE
   scalar_type pT(const scalar_type q) const {
@@ -190,6 +210,7 @@ struct free_parameters_vector {
     return math::fabs(q / this->qop() * vector::perp(this->dir()));
   }
 
+  /// @param q particle charge
   /// @returns the absolute momentum z-component
   DETRAY_HOST_DEVICE
   scalar_type pz(const scalar_type q) const {

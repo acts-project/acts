@@ -16,19 +16,25 @@
 
 namespace detray::algebra::generic::matrix::determinant {
 
-/// "Partial Pivot LU Decomposition", assuming a N X N matrix
+/// Compute a determinant from an LU decomposition with partial pivoting.
 template <concepts::square_matrix matrix_t>
 struct partial_pivot_lud {
+  /// Matrix element type.
   using scalar_t = detray::traits::value_t<matrix_t>;
+  /// Matrix index type.
   using index_t = detray::traits::index_t<matrix_t>;
 
   /// Function (object) used for accessing a matrix element
   using element_getter_t = detray::traits::element_getter_t<matrix_t>;
 
+  /// LU decomposition implementation used to factor the matrix.
   using decomposition_t =
       typename algebra::generic::matrix::decomposition::partial_pivot_lud<
           matrix_t>;
 
+  /// Compute the determinant as the signed product of LU diagonal entries.
+  /// @param m Square matrix whose determinant is calculated.
+  /// @returns The determinant.
   DETRAY_HOST_DEVICE constexpr scalar_t operator()(const matrix_t& m) const {
     constexpr element_getter_t elem{};
     constexpr index_t N{detray::traits::max_rank<matrix_t>};

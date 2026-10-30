@@ -25,12 +25,17 @@
 
 namespace detray {
 
+/// Surface descriptor used for geometry supplied outside the detector store.
+/// It bundles placement, mask, material, and detector identifiers.
 template <typename algebra_t, typename shape_t, typename material_t,
           typename nav_link_t>
 class external_surface {
  public:
+  /// Transform type describing the surface placement.
   using transform3_type = dtransform3D<algebra_t>;
+  /// Mask type describing the surface shape and extent.
   using mask_type = detray::mask<shape_t, algebra_t, nav_link_t>;
+  /// Material representation attached to this surface.
   using material_type = material_t;
   /// Link type of the mask to a volume.
   using navigation_link = nav_link_t;
@@ -73,12 +78,14 @@ class external_surface {
   /// Equality operator
   ///
   /// @param rhs is the right hand side to be compared to
+  /// @returns Whether both descriptors have the same barcode.
   DETRAY_HOST_DEVICE
   constexpr auto operator==(const external_surface& rhs) const -> bool {
     return (m_barcode == rhs.m_barcode);
   }
 
   /// Sets a new surface barcode
+  /// @param bcd Identifier to assign to this surface.
   DETRAY_HOST_DEVICE
   auto set_barcode(const geometry::identifier bcd) -> void { m_barcode = bcd; }
 
@@ -97,6 +104,7 @@ class external_surface {
   explicit operator geometry::identifier() const { return m_barcode; }
 
   /// Sets a new surface id (portal/passive/sensitive)
+  /// @param new_id Classification to assign to the surface.
   DETRAY_HOST_DEVICE
   auto set_id(const surface_id new_id) -> void { m_barcode.set_id(new_id); }
 
@@ -105,6 +113,7 @@ class external_surface {
   constexpr auto id() const -> surface_id { return m_barcode.id(); }
 
   /// Sets a new volume link (index in volume collection of detector)
+  /// @param new_idx Index of the owning or linked volume.
   DETRAY_HOST_DEVICE
   auto set_volume(const dindex new_idx) -> void {
     m_barcode.set_volume(new_idx);
@@ -115,6 +124,7 @@ class external_surface {
   constexpr auto volume() const -> dindex { return m_barcode.volume(); }
 
   /// Sets a new surface index (index in surface collection of surface store)
+  /// @param new_idx Index of the surface in its collection.
   DETRAY_HOST_DEVICE
   auto set_index(const dindex new_idx) -> void { m_barcode.set_index(new_idx); }
 
@@ -124,7 +134,7 @@ class external_surface {
 
   /// Update the transform index
   ///
-  /// @param offset update the position when move into new collection
+  /// @param trf New surface placement transform.
   DETRAY_HOST_DEVICE
   void set_transform(const transform3_type& trf) { m_transform = trf; }
 
@@ -136,7 +146,7 @@ class external_surface {
 
   /// Update the mask link
   ///
-  /// @param offset update the position when move into new collection
+  /// @param m New surface mask.
   DETRAY_HOST_DEVICE
   void set_mask(const mask_type m) { m_mask = m; }
 
@@ -151,6 +161,7 @@ class external_surface {
   void set_material(const material_type& offset) { m_material.shift(offset); }
 
   /// Access to the material
+  /// @returns Reference to the attached material.
   DETRAY_HOST_DEVICE
   constexpr auto material() -> material_type& { return m_material; }
 
