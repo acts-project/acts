@@ -15,9 +15,11 @@
 
 namespace Acts::Experimental {
 
-/// Fit of the GBTS tracking filter to a seed, at its innermost space point.
+/// Fit of the GBTS tracking filter to a seed, at its innermost space point,
+/// or at its outermost one with `GraphBasedTrackSeeder::Config::
+/// seedFitAtOutermost`.
 struct GbtsSeedFit final {
-  /// Position at the innermost space point.
+  /// Position at the space point.
   Vector3 position{Vector3::Zero()};
   /// Azimuthal angle of the direction.
   double phi{0};

@@ -321,6 +321,7 @@ def addSeeding(
     paramEstimationRefineIterations: Optional[int] = None,
     paramEstimationWeight: Optional[Callable] = None,
     gbtsSeedParameters: bool = False,
+    gbtsSeedFitAtOutermost: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     trackParameterPerformance: bool = False,
@@ -392,6 +393,9 @@ def addSeeding(
     gbtsSeedParameters : bool
         GBTS seeding: use the fit of the GBTS tracking filter as the track
         parameter estimate, instead of a fit to the space points (default)
+    gbtsSeedFitAtOutermost : bool, False
+        GBTS seeding: give the fit of the tracking filter at the outermost
+        space point of the seed instead of the innermost
     outputDirRoot : Path|str, path, None
         the output folder for ROOT output, None triggers no output
     trackParameterPerformance : bool, False
@@ -500,6 +504,7 @@ def addSeeding(
                     f"{prefix}seedfreeparameters" if gbtsSeedParameters else None
                 ),
                 magneticField=field if gbtsSeedParameters else None,
+                seedFitAtOutermost=gbtsSeedFitAtOutermost,
             )
         elif seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
             logger.info("Using Hashing seeding")
@@ -1498,6 +1503,7 @@ def addGbtsSeeding(
     outputSeeds: str = "seeds",
     outputFreeParameters: Optional[str] = None,
     magneticField: Optional[acts.MagneticFieldProvider] = None,
+    seedFitAtOutermost: bool = False,
 ):
     """Gbts seeding"""
 
@@ -1508,6 +1514,8 @@ def addGbtsSeeding(
     seedFinderConfig = gbtsConfigArg.seederConfig
     if seedFinderConfig is None:
         seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
+    if seedFitAtOutermost:
+        seedFinderConfig.seedFitAtOutermost = True
 
     graphConfig = gbtsConfigArg.graphConfig
     if graphConfig is None:

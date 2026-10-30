@@ -90,7 +90,7 @@ void addTrackFinding(py::module& mex) {
         py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, nMaxPhiSlice, minSeedLevel, addTriplets,
                        maxAbsEtaAddTriplets, maxSeedSplitEta,
-                       postFitCurvatureFactor);
+                       postFitCurvatureFactor, seedFitAtOutermost);
     patchKwargsConstructor(c);
   }
 

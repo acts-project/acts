@@ -30,6 +30,17 @@ struct GbtsEdgeState final {
                   const std::array<float, 3>& varianceX,
                   const std::array<float, 2>& varianceY);
 
+  /// Initialize at a node, with the frame along the line to another node
+  /// @param from Node the state starts at
+  /// @param to Node the frame points to
+  /// @param nodeView View of the node positions and layers
+  /// @param varianceX Initial variance of the transverse state
+  /// @param varianceY Initial variance of the longitudinal state
+  void initialize(SpacePointIndex from, SpacePointIndex to,
+                  const GbtsNodeView& nodeView,
+                  const std::array<float, 3>& varianceX,
+                  const std::array<float, 2>& varianceY);
+
   /// Score for comparison
   float j{};
 

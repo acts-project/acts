@@ -15,6 +15,8 @@
 #include <cmath>
 #include <memory>
 #include <numbers>
+#include <optional>
+#include <span>
 #include <utility>
 
 namespace Acts::Experimental::detail {
@@ -23,13 +25,20 @@ void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
                                        const detail::GbtsNodeView& nodeView,
                                        const std::array<float, 3>& varianceX,
                                        const std::array<float, 2>& varianceY) {
+  // n2->n1
+  initialize(pS.n2, pS.n1, nodeView, varianceX, varianceY);
+}
+
+void detail::GbtsEdgeState::initialize(const SpacePointIndex from,
+                                       const SpacePointIndex to,
+                                       const detail::GbtsNodeView& nodeView,
+                                       const std::array<float, 3>& varianceX,
+                                       const std::array<float, 2>& varianceY) {
   j = 0;
   vs.clear();
 
-  // n2->n1
-
-  const detail::GbtsNodeProxy n1 = nodeView[pS.n1];
-  const detail::GbtsNodeProxy n2 = nodeView[pS.n2];
+  const detail::GbtsNodeProxy n1 = nodeView[to];
+  const detail::GbtsNodeProxy n2 = nodeView[from];
 
   const float dx = n1.x() - n2.x();
   const float dy = n1.y() - n2.y();
@@ -78,6 +87,37 @@ GbtsTrackingFilter::GbtsTrackingFilter(
 bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
                                 const detail::GbtsEdge& pS,
                                 detail::GbtsEdgeState& ts) const {
+  return update(nodeView, pS.n1, pS.n2, ts, true);
+}
+
+std::optional<detail::GbtsEdgeState> GbtsTrackingFilter::refit(
+    const detail::GbtsNodeView& nodeView,
+    std::span<const SpacePointIndex> nodes) const {
+  if (nodes.size() < 2) {
+    return std::nullopt;
+  }
+
+  detail::GbtsEdgeState ts;
+  ts.initialize(nodes[0], nodes[1], nodeView, m_cfg.initialVarianceX,
+                m_cfg.initialVarianceY);
+  for (std::size_t k = 1; k < nodes.size(); ++k) {
+    update(nodeView, nodes[k], nodes[k - 1], ts, false);
+  }
+
+  const bool finite = std::isfinite(ts.x[0]) && std::isfinite(ts.x[1]) &&
+                      std::isfinite(ts.x[2]) && std::isfinite(ts.y[0]) &&
+                      std::isfinite(ts.y[1]);
+  if (!finite) {
+    return std::nullopt;
+  }
+  return ts;
+}
+
+bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
+                                const SpacePointIndex measured,
+                                const SpacePointIndex previous,
+                                detail::GbtsEdgeState& ts,
+                                const bool applyCuts) const {
   if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
     ACTS_DEBUG("Negative cov_x");
   }
@@ -91,8 +131,8 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   const float tau2 = ts.y[1] * ts.y[1];
   const float invSin2 = 1 + tau2;
 
-  const detail::GbtsNodeProxy n1 = nodeView[pS.n1];
-  const detail::GbtsNodeProxy n2 = nodeView[pS.n2];
+  const detail::GbtsNodeProxy n1 = nodeView[measured];
+  const detail::GbtsNodeProxy n2 = nodeView[previous];
 
   const GbtsLayerType layerType1 = getLayerType(n2.layer());
 
@@ -198,7 +238,7 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   const float dchi2_x = resid_x * resid_x * Dx;
   const float dchi2_y = resid_y * resid_y * Dy;
 
-  if (dchi2_x > m_cfg.maxDChi2X || dchi2_y > m_cfg.maxDChi2Y) {
+  if (applyCuts && (dchi2_x > m_cfg.maxDChi2X || dchi2_y > m_cfg.maxDChi2Y)) {
     return false;
   }
 
@@ -213,7 +253,7 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
     ts.x[i] = X[i] + Kx[i] * resid_x;
   }
 
-  if (std::abs(ts.x[2]) > m_cfg.maxCurvature) {
+  if (applyCuts && std::abs(ts.x[2]) > m_cfg.maxCurvature) {
     return false;
   }
 
@@ -223,7 +263,7 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
 
   const float z0 = ts.y[0] - refY * ts.y[1];
 
-  if (std::abs(z0) > m_cfg.maxZ0) {
+  if (applyCuts && std::abs(z0) > m_cfg.maxZ0) {
     return false;
   }
 
