@@ -113,13 +113,13 @@ class SeedParamsEstimator {
     /// The magnetic field cache
     Acts::MagneticFieldProvider::Cache field;
     /// The space points of the seed from the outer end
-    std::vector<SpacePointIndex> candidates;
+    std::vector<SpacePointIndex> candidates{};
     /// The selected triplet
     std::array<SpacePointIndex, 3> triplet{};
     /// The positions of the selected space points
-    std::vector<Acts::Vector3> positions;
+    std::vector<Acts::Vector3> positions{};
     /// The weights of the selected space points
-    std::vector<double> weights;
+    std::vector<double> weights{};
   };
 
   /// @param cfg the configuration
