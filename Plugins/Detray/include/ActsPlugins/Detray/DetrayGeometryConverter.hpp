@@ -129,6 +129,11 @@ class DetrayGeometryConverter {
     ACTS_DEBUG("Mapped " << result.surfaceIds.size()
                          << " sensitive surfaces between ACTS and detray");
 
+    // detray assigns the surface identifiers during the build
+    result.surfaceIds = DetraySurfaceIdMap::fromDetector(*result.detector);
+    ACTS_DEBUG("Mapped " << result.surfaceIds.size()
+                         << " sensitive surfaces between ACTS and detray");
+
     return result;
   }
 
