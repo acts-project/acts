@@ -21,6 +21,22 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
     const Acts::MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& /*fieldCache*/) const {
+  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx, mctx);
+}
+
+Acts::Result<Acts::LinearizedTrack>
+Acts::NumericalTrackLinearizer::linearizeTrackWithField(
+    const BoundTrackParameters& params, double linPointTime,
+    const Surface& perigeeSurface, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx, MagneticFieldQuery& /*field*/) const {
+  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx, mctx);
+}
+
+Acts::Result<Acts::LinearizedTrack>
+Acts::NumericalTrackLinearizer::linearizeTrackImpl(
+    const BoundTrackParameters& params, double linPointTime,
+    const Surface& perigeeSurface, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx) const {
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
 

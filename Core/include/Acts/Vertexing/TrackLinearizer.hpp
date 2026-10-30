@@ -19,6 +19,7 @@ namespace Acts {
 
 struct LinearizedTrack;
 class Surface;
+class MagneticFieldQuery;
 
 /// @typedef TrackLinearizer
 /// A delegate for linearizing a track at a given point in time and surface.
@@ -28,5 +29,12 @@ using TrackLinearizer = Delegate<Result<LinearizedTrack>(
     const Surface& perigeeSurface, const GeometryContext& gctx,
     const MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& fieldCache)>;
+
+/// Linearizer using a caller-owned field query. The query must not be retained.
+/// Propagation uses mctx and its own independent field cache.
+using FieldTrackLinearizer = Delegate<Result<LinearizedTrack>(
+    const BoundTrackParameters& params, double linPointTime,
+    const Surface& perigeeSurface, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx, MagneticFieldQuery& field)>;
 
 }  // namespace Acts

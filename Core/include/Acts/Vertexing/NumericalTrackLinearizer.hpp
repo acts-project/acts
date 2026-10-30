@@ -18,6 +18,8 @@
 
 namespace Acts {
 
+class MagneticFieldQuery;
+
 /// @class NumericalTrackLinearizer
 /// Linearizes the track parameters at the PCA to a user-provided
 /// point (linPoint). The track parameters are written as a function
@@ -113,7 +115,25 @@ class NumericalTrackLinearizer {
       const Acts::MagneticFieldContext& mctx,
       MagneticFieldProvider::Cache& /*fieldCache*/) const;
 
+  /// Linearize using propagation; no separate field lookup is needed.
+  /// @param params Parameters to linearize
+  /// @param linPointTime Time of the linearization point
+  /// @param perigeeSurface Surface defining the linearization point
+  /// @param gctx Geometry context
+  /// @param mctx Field context for propagation
+  /// @param field Unused field query, for compatibility with FieldTrackLinearizer
+  /// @return Linearized track or a propagation error
+  Result<LinearizedTrack> linearizeTrackWithField(
+      const BoundTrackParameters& params, double linPointTime,
+      const Surface& perigeeSurface, const GeometryContext& gctx,
+      const MagneticFieldContext& mctx, MagneticFieldQuery& field) const;
+
  private:
+  Result<LinearizedTrack> linearizeTrackImpl(
+      const BoundTrackParameters& params, double linPointTime,
+      const Surface& perigeeSurface, const GeometryContext& gctx,
+      const MagneticFieldContext& mctx) const;
+
   const Config m_cfg;
 
   std::unique_ptr<const Logger> m_logger;
