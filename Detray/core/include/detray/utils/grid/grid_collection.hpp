@@ -131,7 +131,7 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
   /// Make grid collection default constructible: Empty
   grid_collection() = default;
 
-  /// Create an empty collection using a VecMem memory resource.
+  /// Create empty grid collection from specific vecmem memory resource
   /// @param resource Resource used for the collection's backing storage.
   DETRAY_HOST
   explicit grid_collection(vecmem::memory_resource *resource)
@@ -140,7 +140,7 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
         m_bin_edge_offsets(resource),
         m_bin_edges(resource) {}
 
-  /// Construct the collection by moving in all backing storage.
+  /// Create grid collection from existing data - move
   /// @param offs Offsets delimiting each grid's bin storage.
   /// @param bins Storage containing all bin entries.
   /// @param edge_offs Per-grid offsets into the concatenated edge storage.
@@ -154,7 +154,7 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
         m_bin_edge_offsets(std::move(edge_offs)),
         m_bin_edges(std::move(edges)) {}
 
-  /// Construct a device-side collection from a VecMem view.
+  /// Device-side construction from a vecmem based view type
   /// @param view View over offsets, bins and axis-edge storage.
   template <concepts::device_view coll_view_t>
   DETRAY_HOST_DEVICE explicit grid_collection(coll_view_t &view)
@@ -163,7 +163,7 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
         m_bin_edge_offsets(detail::get<2>(view.m_view)),
         m_bin_edges(detail::get<3>(view.m_view)) {}
 
-  /// Move-construct the collection and its backing storage.
+  /// Move constructor
   /// @param other Collection whose storage is moved.
   DETRAY_HOST_DEVICE grid_collection(grid_collection &&other) noexcept
       : m_bin_offsets(std::move(other.m_bin_offsets)),
@@ -171,7 +171,7 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
         m_bin_edge_offsets(std::move(other.m_bin_edge_offsets)),
         m_bin_edges(std::move(other.m_bin_edges)) {}
 
-  /// Move-assign the collection and its backing storage.
+  /// Move assignment
   /// @param other Collection whose storage is moved.
   /// @returns A reference to this collection.
   DETRAY_HOST_DEVICE grid_collection &operator=(
@@ -255,7 +255,7 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
     return m_bin_edges;
   }
 
-  /// Create a grid view at the requested collection index.
+  /// Create grid from container pointers - const
   /// @param i Zero-based index of the grid.
   /// @returns A non-owning view of the selected grid.
   DETRAY_HOST_DEVICE
@@ -266,7 +266,7 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
                   m_bin_offsets[i]);
   }
 
-  /// Create a grid view at the requested collection index with range checking.
+  /// Create grid from container pointers with range check
   /// @param i Zero-based index of the grid.
   /// @returns A non-owning view of the selected grid.
   DETRAY_HOST_DEVICE

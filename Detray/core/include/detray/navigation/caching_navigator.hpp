@@ -241,7 +241,7 @@ class caching_navigator
   /// @tparam track_t type of track, needs to provide pos() and dir() methods
   ///
   /// @param track access to the track parameters
-  /// @param navigation Navigation state whose candidate cache is updated.
+  /// @param navigation the current navigation state
   /// @param cfg the navigation configuration
   /// @param ctx the geometry context
   template <typename track_t>

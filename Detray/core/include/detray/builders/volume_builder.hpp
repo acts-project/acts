@@ -75,7 +75,7 @@ class volume_builder : public volume_builder_interface<detector_t> {
   DETRAY_HOST
   bool has_accel() const override { return m_has_accel; }
 
-  /// Set the name of the volume under construction.
+  /// Sets the name @p volume_name for the volume
   /// @param volume_name Name to assign to the volume.
   DETRAY_HOST void set_name(std::string volume_name) override {
     m_volume_name = std::move(volume_name);
@@ -91,22 +91,22 @@ class volume_builder : public volume_builder_interface<detector_t> {
     return m_volume_name;
   }
 
-  /// Access the volume descriptor under construction.
+  /// Access to the volume under construction - const
   /// @returns Const reference to the volume descriptor.
   DETRAY_HOST
   auto operator()() const -> const typename detector_t::volume_type& override {
     return m_volume;
   }
 
-  /// Access the mutable volume descriptor under construction.
+  /// Access to the volume under construction - non-const
   /// @returns Mutable reference to the volume descriptor.
   DETRAY_HOST
   auto operator()() -> typename detector_t::volume_type& override {
     return m_volume;
   }
 
-  /// Build the volume, its surfaces, and portals, then add them to the
-  /// detector.
+  /// Build the volume with internal surfaces and portals and add it to the
+  /// detector instance @p det
   /// @param det Detector that receives the built geometry.
   /// @param opt Options controlling volume construction.
   /// @param ctx Geometry context used when storing transforms.
@@ -150,15 +150,16 @@ class volume_builder : public volume_builder_interface<detector_t> {
     m_trf = trf;
   }
 
-  /// Set the volume placement using a translation and identity rotation.
-  /// @param t Translation of the volume in global coordinates.
+  /// Constructs a placement transform with identity rotation and translation
+  /// @param t for the volume
   DETRAY_HOST
   void add_volume_placement(
       const typename detector_t::point3_type& t) override {
     m_trf = typename detector_t::transform3_type{t};
   }
 
-  /// Set the volume placement using its local x/z axes and translation.
+  /// Constructs a placement transform from axes @p x and @p z
+  /// and the translation @p t for the volume
   /// @param t Translation of the volume in global coordinates.
   /// @param x Local x axis in global coordinates.
   /// @param z Local z axis in global coordinates.
@@ -200,8 +201,8 @@ class volume_builder : public volume_builder_interface<detector_t> {
   /// to the global detector data stores and updates all links.
   ///
   /// @param opt Options controlling deduplication and geometry storage.
-  /// @param ctx Geometry context for transform storage.
-  /// @param det Detector receiving the volume's data.
+  /// @param ctx is the geometry_context of the call
+  /// @param det is the detector instance that the volume should be added to
   ///
   /// @note can throw an exception if input data is inconsistent
   template <geo_obj_ids surface_id = static_cast<geo_obj_ids>(0)>

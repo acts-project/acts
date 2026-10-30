@@ -55,7 +55,7 @@ struct static_join_view
   /// Default constructor
   constexpr static_join_view() = default;
 
-  /// Construct from the input ranges, retaining their iterators.
+  /// Construct from a pack of @p ranges.
   /// @tparam ranges_t types of the input ranges
   /// @param ranges ranges to join in sequence
   template <detray::ranges::range... ranges_t>
@@ -65,7 +65,7 @@ struct static_join_view
       : m_begins{detray::ranges::begin(std::forward<ranges_t>(ranges))...},
         m_ends{detray::ranges::end(std::forward<ranges_t>(ranges))...} {}
 
-  /// Construct from const input ranges, retaining their iterators.
+  /// Construct from a pack of @p ranges - const
   /// @tparam ranges_t types of the input ranges
   /// @param ranges ranges to join in sequence
   template <detray::ranges::range... ranges_t>
@@ -178,7 +178,7 @@ struct static_join_iterator {
   /// Default constructor required by LegacyIterator trait
   constexpr static_join_iterator() = default;
 
-  /// Construct from the begin and end iterators for all input ranges.
+  /// Construct from a collection of @p begins and @p ends positions
   /// @param begins begin iterators in joined order
   /// @param ends end iterators in joined order
   DETRAY_HOST_DEVICE
@@ -186,7 +186,7 @@ struct static_join_iterator {
                                  const iterator_coll_t &ends)
       : m_begins(&begins), m_ends(&ends), m_iter{(*m_begins)[0]} {}
 
-  /// Construct at a specific range index and iterator position.
+  /// Fully parametrized construction
   /// @param begins begin iterators in joined order
   /// @param ends end iterators in joined order
   /// @param current current iterator in the selected range
@@ -197,7 +197,7 @@ struct static_join_iterator {
                                  iterator_t current, const std::size_t i)
       : m_begins(&begins), m_ends(&ends), m_iter{current}, m_idx{i} {}
 
-  /// Advance to the next element, switching ranges at their boundaries.
+  /// Increment current iterator and check for switch between ranges.
   /// @{
   /// @returns A reference to this iterator after incrementing.
   DETRAY_HOST_DEVICE constexpr auto operator++() -> static_join_iterator & {
@@ -221,7 +221,7 @@ struct static_join_iterator {
   }
   /// @}
 
-  /// Retreat to the previous element, switching ranges at their boundaries.
+  /// Decrement current iterator and check for switch between ranges.
   /// @{
   /// @returns A reference to this iterator after decrementing.
   DETRAY_HOST_DEVICE constexpr auto operator--() -> static_join_iterator &
@@ -287,7 +287,7 @@ struct static_join_iterator {
 
   /// Return the element at an offset from this position.
   /// @param i zero-based offset from this iterator
-  /// @return referenced element at that position
+  /// @returns the value at a given position - const
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator[](
       const difference_type i) const
     requires std::random_access_iterator<iterator_t>

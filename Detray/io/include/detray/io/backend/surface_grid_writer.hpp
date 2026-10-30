@@ -36,7 +36,7 @@ class surface_grid_writer : public detail::grid_writer {
   /// Same constructors for this class as for base_type
   using base_type::base_type;
 
-  /// Build the surface-grid header from the detector accelerator store.
+  /// Convert the header information into its payload
   /// @tparam detector_t Detector type to serialize.
   /// @param det Detector whose surface grids are written.
   /// @param det_name Name recorded in the serialized header.
@@ -48,7 +48,8 @@ class surface_grid_writer : public detail::grid_writer {
                                             det_name);
   }
 
-  /// Convert detector surface grids into their serialized payload.
+  /// Convert the grid collections of a detector @p det into their io
+  /// payload
   /// @tparam detector_t Detector type to serialize.
   /// @param det Detector whose acceleration structures are serialized.
   /// @return Payload containing the surface-grid entries.

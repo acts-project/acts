@@ -53,9 +53,9 @@ struct intersector {
 
   /// Operator function to find intersections between ray and planar mask
   ///
-  /// @param ray Straight trajectory to test against the surface.
-  /// @param trf Transform placing the surface in global coordinates.
-  /// @param overstep_tol Minimum accepted signed path length.
+  /// @param ray is the input ray trajectory
+  /// @param trf is the surface placement transform
+  /// @param overstep_tol negative cutoff for the path
   ///
   /// @return the intersection result
   /// @{
@@ -116,7 +116,7 @@ struct intersector {
   /// @param trf Transform placing the surface in global coordinates.
   /// @param cfg Tolerances and path cutoff for resolving the result.
   /// @param external_mask_tol Additional tolerance applied at the mask boundary.
-  /// @returns The resolved intersection result or results.
+  /// @returns the intersection(s) between a surface and the ray @p ray
   template <typename surface_descr_t, typename mask_t>
   DETRAY_HOST_DEVICE inline decltype(auto) operator()(
       const detail::ray<algebra_t> &ray, const surface_descr_t &sf,
@@ -132,7 +132,7 @@ struct intersector {
   /// @param mask Mask defining the surface extent.
   /// @param trf Transform placing the surface in global coordinates.
   /// @param cfg Tolerances and path cutoff for resolving the result.
-  /// @returns The resolved intersection result or results.
+  /// @returns the intersection(s) between a surface and the helix @p h
   template <typename surface_descr_t, typename mask_t>
   DETRAY_HOST_DEVICE inline decltype(auto) operator()(
       const detail::helix<algebra_t> &h, const surface_descr_t &sf,

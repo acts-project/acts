@@ -177,7 +177,7 @@ struct transform3 {
   transform3(const transform3 &rhs) = default;
   ~transform3() = default;
 
-  /// Compare the forward transforms.
+  /// Equality operator
   /// @param rhs transform to compare with
   /// @return whether the transforms have equal spatial mappings
   DETRAY_HOST_DEVICE
@@ -264,7 +264,7 @@ struct transform3 {
   /// Rotate a vector into / from a frame
   ///
   /// @param m is the rotation matrix
-  /// @param v vector to rotate
+  /// @param v is the vector to be rotated
   /// @return the rotated vector
   template <concepts::vector2D vector2_type>
   DETRAY_HOST_DEVICE constexpr auto rotate(const matrix44 &m,
@@ -275,7 +275,7 @@ struct transform3 {
   /// Rotate a vector into / from a frame
   ///
   /// @param m is the rotation matrix
-  /// @param v vector to rotate
+  /// @param v is the vector to be rotated
   /// @return the rotated vector
   template <concepts::vector3D vector3_type>
   DETRAY_HOST_DEVICE constexpr auto rotate(const matrix44 &m,
@@ -283,7 +283,7 @@ struct transform3 {
     return m[e_x] * v[0] + m[e_y] * v[1] + m[e_z] * v[2];
   }
 
-  /// Return the upper-left 3x3 rotation block.
+  /// This method retrieves the rotation of a transform
   /// @return rotation matrix
   DETRAY_HOST_DEVICE
   constexpr auto rotation() const {
@@ -296,32 +296,32 @@ struct transform3 {
     return submatrix;
   }
 
-  /// Return the local x axis in global coordinates.
+  /// This method retrieves the new x-axis
   /// @return x-axis vector
   DETRAY_HOST_DEVICE
   constexpr const auto &x() const { return _data[e_x]; }
 
-  /// Return the local y axis in global coordinates.
+  /// This method retrieves the new y-axis
   /// @return y-axis vector
   DETRAY_HOST_DEVICE
   constexpr const auto &y() const { return _data[e_y]; }
 
-  /// Return the local z axis in global coordinates.
+  /// This method retrieves the new z-axis
   /// @return z-axis vector
   DETRAY_HOST_DEVICE
   constexpr const auto &z() const { return _data[e_z]; }
 
-  /// Return the frame origin in global coordinates.
+  /// This method retrieves the translation
   /// @return translation vector
   DETRAY_HOST_DEVICE
   constexpr const auto &translation() const { return _data[e_t]; }
 
-  /// Return the local-to-global transformation matrix.
+  /// This method retrieves the 4x4 matrix of a transform
   /// @return forward transformation matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix() const { return _data; }
 
-  /// Return the global-to-local transformation matrix.
+  /// This method retrieves the 4x4 matrix of an inverse transform
   /// @return inverse transformation matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix_inverse() const { return _data_inv; }
@@ -331,7 +331,7 @@ struct transform3 {
   ///
   /// @tparam point2_type point in the local plane
   ///
-  /// @param p point in local plane coordinates
+  /// @param p is the point to be transformed
   ///
   /// @return a global point
   template <concepts::point2D point2_type>
@@ -345,7 +345,7 @@ struct transform3 {
   ///
   /// @tparam point3_type point in local coordinates
   ///
-  /// @param p point in local coordinates
+  /// @param p is the point to be transformed
   ///
   /// @return a global point
   template <concepts::point3D point3_type>
@@ -359,7 +359,7 @@ struct transform3 {
   ///
   /// @tparam point3_type point in global coordinates
   ///
-  /// @param p point in global coordinates
+  /// @param p is the point to be transformed
   ///
   /// @return a local point
   template <concepts::point3D point3_type>

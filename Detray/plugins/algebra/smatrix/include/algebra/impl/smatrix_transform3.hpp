@@ -179,14 +179,14 @@ struct transform3 {
     // error from ROOT in this place...
   }
 
-  /// Default constructor creates an identity transform.
+  /// Default constructors
   transform3() = default;
   /// Copy a transform and its cached inverse.
   /// @param rhs transform to copy
   transform3(const transform3 &rhs) = default;
   ~transform3() = default;
 
-  /// Compare the forward transforms.
+  /// Equality operator
   /// @param rhs transform to compare with
   /// @return whether the transforms have equal spatial mappings
   DETRAY_HOST
@@ -194,46 +194,47 @@ struct transform3 {
     return _data == rhs._data;
   }
 
-  /// Return the upper-left 3x3 rotation block.
+  /// This method retrieves the rotation of a transform
   /// @return rotation matrix
   DETRAY_HOST
   constexpr auto rotation() const {
     return (_data.template Sub<ROOT::Math::SMatrix<scalar_type, 3, 3> >(0, 0));
   }
 
-  /// Return the local x axis in global coordinates.
+  /// This method retrieves x axis
   /// @return x-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 x() const { return (_data.template SubCol<vector3>(0, 0)); }
 
-  /// Return the local y axis in global coordinates.
+  /// This method retrieves y axis
   /// @return y-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 y() const { return (_data.template SubCol<vector3>(1, 0)); }
 
-  /// Return the local z axis in global coordinates.
+  /// This method retrieves z axis
   /// @return z-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 z() const { return (_data.template SubCol<vector3>(2, 0)); }
 
-  /// Return the frame origin in global coordinates.
+  /// This method retrieves the translation of a transform
   /// @return translation vector
   DETRAY_HOST
   constexpr vector3 translation() const {
     return (_data.template SubCol<vector3>(3, 0));
   }
 
-  /// Return the local-to-global transformation matrix.
+  /// This method retrieves the 4x4 matrix of a transform
   /// @return forward transformation matrix
   DETRAY_HOST
   constexpr matrix44 matrix() const { return _data; }
 
-  /// Return the global-to-local transformation matrix.
+  /// This method retrieves the 4x4 matrix of an inverse transform
   /// @return inverse transformation matrix
   DETRAY_HOST
   constexpr matrix44 matrix_inverse() const { return _data_inv; }
 
-  /// Transform a point from local coordinates to global coordinates.
+  /// This method transform from a point from the local 3D cartesian frame to
+  /// the global 3D cartesian frame
   /// @param v point in local coordinates
   /// @return point in global coordinates
   DETRAY_HOST
@@ -245,7 +246,8 @@ struct transform3 {
         .template Sub<point3>(0);
   }
 
-  /// Transform a point from local coordinates to global coordinates.
+  /// This method transform from a point from the local 3D cartesian frame to
+  /// the global 3D cartesian frame
   /// @param v point in local coordinates
   /// @return point in global coordinates
   DETRAY_HOST
@@ -269,7 +271,8 @@ struct transform3 {
         .template Sub<point3>(0);
   }
 
-  /// Transform a vector from local plane coordinates to global coordinates.
+  /// This method transform from a vector from the local 2D cartesian frame to
+  /// the global 3D cartesian frame
   /// @param v vector in local plane coordinates
   /// @return vector in global coordinates
   DETRAY_HOST
@@ -280,7 +283,8 @@ struct transform3 {
         .template Sub<point3>(0);
   }
 
-  /// Transform a local vector to global coordinates.
+  /// This method transform from a vector from the local 3D cartesian frame to
+  /// the global 3D cartesian frame
   /// @param v vector in local coordinates
   /// @return vector in global coordinates
   DETRAY_HOST
@@ -291,7 +295,8 @@ struct transform3 {
         .template Sub<point3>(0);
   }
 
-  /// Transform a global vector to local coordinates.
+  /// This method transform from a vector from the global 3D cartesian frame
+  /// into the local 3D cartesian frame
   /// @param v vector in global coordinates
   /// @return vector in local coordinates
   DETRAY_HOST

@@ -198,7 +198,7 @@ class cylinder_portal_generator final
     scalar_t upper_z{0.f};
   };
 
-  /// Construct a portal generator from its fitting and link configuration.
+  /// Construct from configuration @p cfg
   /// @param cfg Configuration for bounds, envelope, and adjacent volumes.
   DETRAY_HOST
   explicit cylinder_portal_generator(
@@ -221,7 +221,7 @@ class cylinder_portal_generator final
   auto push_back(std::vector<surface_data<detector_t>> && /*unused*/)
       -> void override { /*Do nothing*/ }
 
-  /// @brief Access the volume boundaries after fitting.
+  /// @brief Access the volume boundaries after fitting
   /// @returns Fitted inner and outer radii and axial limits.
   const boundaries &volume_boundaries() const { return m_boundaries; }
 

@@ -38,7 +38,7 @@ class geometry_writer {
   /// Payload type that the reader processes
   using payload_type = detector_payload;
 
-  /// Build the geometry header payload from detector counts and its name.
+  /// Convert the header information into its payload
   /// @tparam detector_t Detector type to serialize.
   /// @param det Detector providing the volume and surface collections.
   /// @param det_name Name recorded in the serialized header.
@@ -58,7 +58,7 @@ class geometry_writer {
     return header_data;
   }
 
-  /// Convert all detector volumes and surfaces to the geometry payload.
+  /// Convert a detector @p det into its io payload
   /// @tparam detector_t Detector type to serialize.
   /// @param det Detector whose geometry is serialized.
   /// @param names Optional volume names indexed by volume index.
@@ -80,7 +80,7 @@ class geometry_writer {
     return det_data;
   }
 
-  /// Convert a surface transform to its IO representation.
+  /// Convert a surface transform @p trf into its io payload
   /// @tparam detector_t Detector type supplying the transform type.
   /// @param trf Transform to serialize.
   /// @return Translation and rotation payload.
@@ -100,7 +100,7 @@ class geometry_writer {
     return trf_data;
   }
 
-  /// Convert a surface mask to its IO representation.
+  /// Convert a surface mask @p m into its io payload
   /// @tparam mask_t Mask type to serialize.
   /// @param m Mask whose shape, link, and boundaries are recorded.
   /// @return Mask payload.
@@ -120,7 +120,7 @@ class geometry_writer {
     return mask_data;
   }
 
-  /// Convert a detector surface descriptor to its IO representation.
+  /// Convert a detector surface @p sf into its io payload
   /// @tparam detector_t Detector type owning the surface.
   /// @param sf Surface descriptor to serialize.
   /// @param sf_idx Surface position within its volume collection.

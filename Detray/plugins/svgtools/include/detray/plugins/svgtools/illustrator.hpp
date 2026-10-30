@@ -82,53 +82,53 @@ class illustrator {
   /// @returns the detector and volume names
   const typename detector_t::name_map& names() { return _name_map; }
 
-  /// Access the illustrator style.
+  /// Access the illustrator style
   /// @return mutable style settings used by the illustrator
   styling::style& style() { return _style; }
 
-  /// Configure whether information boxes are displayed.
+  /// Toggle info boxes
   /// @param toggle true to show information boxes
   void show_info(bool toggle = true) {
     DETRAY_VERBOSE_HOST("Show info: " << std::boolalpha << toggle
                                       << std::noboolalpha);
     _show_info = toggle;
   }
-  /// Configure whether eta lines are hidden in the r-z view.
+  /// Toggle eta lines in detector rz-view
   /// @param toggle true to hide eta lines
   void hide_eta_lines(bool toggle = true) {
     DETRAY_VERBOSE_HOST("Hide eta lines: " << std::boolalpha << toggle
                                            << std::noboolalpha);
     _hide_eta_lines = toggle;
   }
-  /// Configure whether to hide or show surface grids.
+  /// Toggle surface grids
   /// @param toggle true enables the named display option
   void hide_grids(bool toggle = true) {
     DETRAY_VERBOSE_HOST("Hide surface grids: " << std::boolalpha << toggle
                                                << std::noboolalpha);
     _hide_grids = toggle;
   }
-  /// Configure whether surface material is hidden.
+  /// Toggle surface material
   /// @param toggle true to hide material overlays
   void hide_material(bool toggle = true) {
     DETRAY_VERBOSE_HOST("Hide material: " << std::boolalpha << toggle
                                           << std::noboolalpha);
     _hide_material = toggle;
   }
-  /// Configure whether to hide or show portal surfaces.
+  /// Toggle portal surfaces
   /// @param toggle true enables the named display option
   void hide_portals(bool toggle = true) {
     DETRAY_VERBOSE_HOST("Hide portal surfaces: " << std::boolalpha << toggle
                                                  << std::noboolalpha);
     _hide_portals = toggle;
   }
-  /// Configure whether to hide or show passive surfaces.
+  /// Toggle passive surfaces
   /// @param toggle true enables the named display option
   void hide_passives(bool toggle = true) {
     DETRAY_VERBOSE_HOST("Hide passive surfaces: " << std::boolalpha << toggle
                                                   << std::noboolalpha);
     _hide_passives = toggle;
   }
-  /// Set the neighboring grid-bin window used for the grid display.
+  /// Neighborhood search window for the grid display
   /// @param window number of neighboring bins to include on each axis
   void search_window(std::array<dindex, 2> window) {
     DETRAY_VERBOSE_HOST("Search window for grids: [" << window.at(0) << ", "
@@ -471,7 +471,8 @@ class illustrator {
   /// @brief Converts a detray detector to an svg.
   ///
   /// @param view the display view.
-  /// @param gctx geometry context for aligned transforms
+  /// @param gctx the geometry context.
+  ///
   /// @param r_length radial extent used for eta-line overlays
   /// @param z_length longitudinal extent used for eta-line overlays
   /// @return SVG object representing the detector.
@@ -538,7 +539,8 @@ class illustrator {
   /// @param dir the direction of the trajectory.
   /// @param view the display view.
   /// @param highlight_idx inclusive range of highlighted intersection indices
-  /// @param gctx geometry context for surface transforms
+  /// @param gctx the geometry context.
+  ///
   /// @return SVG object representing the intersection record.
   template <typename view_t, typename intersection_t>
   inline auto draw_intersections(
@@ -581,7 +583,7 @@ class illustrator {
   /// @param prefix the id of the svg object.
   /// @param points ordered positions making up the trajectory
   /// @param view the display view.
-  /// @return SVG object representing the trajectory.
+  /// @return actsvg::svg::object of the trajectory.
   template <typename view_t, typename point3_container>
   inline auto draw_trajectory(const std::string& prefix,
                               const point3_container& points,
@@ -602,7 +604,8 @@ class illustrator {
   /// @param view the display view.
   /// @param max_path the maximal path length from trajectory origin.
   /// @param highlight_idx inclusive range of highlighted intersection indices
-  /// @param gctx geometry context for surface transforms
+  /// @param gctx the geometry context.
+  ///
   /// @return SVG object representing the trajectory and intersections
   template <typename view_t, class trajectory_t, typename intersection_t>
   inline auto draw_intersections_and_trajectory(

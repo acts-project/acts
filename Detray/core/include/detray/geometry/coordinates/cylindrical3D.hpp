@@ -36,8 +36,8 @@ struct cylindrical3D {
   /// Local point type in 3D cylindrical coordinates
   using loc_point = point3_type;
 
-  /// Convert a global Cartesian point to cylindrical coordinates in the
-  /// surface frame.
+  /// This method transforms a point from a global cartesian 3D frame to a
+  /// local 3D cylindrical point
   /// @param trf Surface transform defining the local frame in global coordinates.
   /// @param p Point in global coordinates to transform.
   /// @param dir Direction passed to the coordinate conversion; some frames ignore it.
@@ -49,8 +49,8 @@ struct cylindrical3D {
     return cylindrical3D<algebra_t>::global_to_local(trf, p, dir);
   }
 
-  /// Convert a global Cartesian point to cylindrical coordinates in the
-  /// surface frame.
+  /// This method transforms a point from a global cartesian 3D frame to a
+  /// local 3D cylindrical point
   /// @param trf Surface transform defining the local frame in global coordinates.
   /// @param p Point in global coordinates to transform.
   /// @returns The point expressed in this local coordinate frame.
@@ -62,8 +62,8 @@ struct cylindrical3D {
     return {vector::perp(local3), vector::phi(local3), local3[2]};
   }
 
-  /// Convert cylindrical coordinates in the surface frame to a global
-  /// Cartesian point.
+  /// This method transforms from a local 3D cylindrical point to a point in
+  /// the global cartesian 3D frame
   /// @param trf Surface transform defining the local frame in global coordinates.
   /// @param p Local cylindrical coordinates (radius, azimuth, and z).
   /// @returns The point expressed in global coordinates.
@@ -75,7 +75,8 @@ struct cylindrical3D {
     return trf.point_to_global(point3_type{x, y, p[2]});
   }
 
-  /// Apply the mask-aware coordinate conversion for a local point.
+  /// This method transforms from a local 3D cylindrical point to a point in
+  /// the global cartesian 3D frame
   /// @param trf Surface transform defining the local frame in global coordinates.
   /// @param p Local cylindrical coordinates.
   /// The mask and direction arguments are accepted to match the generic frame
@@ -91,7 +92,7 @@ struct cylindrical3D {
   /// Evaluate the surface normal at a local cylindrical position.
   /// @param trf Surface transform defining the local frame in global coordinates.
   /// @param p Local position where the normal is evaluated.
-  /// @returns The surface normal expressed in global coordinates.
+  /// @returns the normal vector in global coordinates given a local position
   DETRAY_HOST_DEVICE static inline vector3_type normal(
       const transform3_type &trf, const point3_type &p) {
     // normal vector in global coordinate

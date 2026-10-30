@@ -92,7 +92,7 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
   }
   /// @}
 
-  /// Add material data to the detector before building the volume.
+  /// Add the volume and the material to the detector @p det
   /// @param det Detector that receives material data.
   /// @param opt Options controlling volume construction.
   /// @param ctx Geometry context used by the decorated builder.

@@ -47,7 +47,7 @@ class registry {
   /// @returns whether a given index/identifier can be mapped to a type.
   /// @{
   /// Check whether an index corresponds to a registered type.
-  /// @param type_idx index to check
+  /// @param type_idx the type index to be checked
   /// @return whether the index is in range
   DETRAY_HOST_DEVICE static constexpr bool is_valid(
       const std::size_t type_idx) {
@@ -55,7 +55,7 @@ class registry {
   }
 
   /// Check whether an identifier corresponds to a registered type.
-  /// @param type_id identifier to check
+  /// @param type_id the type identifier to be checked
   /// @return whether the identifier is in range
   template <typename id_t = id>
     requires(!std::convertible_to<id_t, std::size_t>)
@@ -120,7 +120,7 @@ class mapped_registry : public registry_t {
   /// type.
   /// @{
   /// Check whether a filtered index is in the mapped registry.
-  /// @param filtered_type_idx filtered index to check
+  /// @param filtered_type_idx the filtered type index to be checked
   /// @return whether the index is valid
   DETRAY_HOST_DEVICE static constexpr bool is_valid(
       const std::size_t filtered_type_idx) {
@@ -128,7 +128,7 @@ class mapped_registry : public registry_t {
   }
 
   /// Check whether an original ID selects a type retained by the mapping.
-  /// @param orig_id original type identifier to check
+  /// @param orig_id the original type identifier (ID) to be checked
   /// @return whether the identifier maps to a selected type
   template <typename id_t = id>
     requires(!std::convertible_to<id_t, std::size_t>)
@@ -150,7 +150,8 @@ class mapped_registry : public registry_t {
 
   /// Return the filtered position corresponding to an original position.
   /// @param orig_idx position in the original registry
-  /// @return position in the filtered registry
+  /// @returns the filtered type index corresponding to the original type
+  /// index
   DETRAY_HOST_DEVICE
   static constexpr std::size_t mapped_index(const std::size_t orig_idx) {
     return index_map_v<orig_types, type_selector_t>[orig_idx];
@@ -158,7 +159,7 @@ class mapped_registry : public registry_t {
 
   /// Return the filtered position corresponding to an original ID.
   /// @param orig_id identifier in the original registry
-  /// @return position in the filtered registry
+  /// @returns the filtered type index corresponding to the original type ID
   DETRAY_HOST_DEVICE
   static constexpr std::size_t mapped_index(const id orig_id) {
     return index_map_v<orig_types, type_selector_t>[static_cast<std::size_t>(
@@ -166,8 +167,7 @@ class mapped_registry : public registry_t {
   }
 
   /// @param pos position in the filtered type list
-  /// @return corresponding position in the original type list, or the invalid
-  /// value if no entry matches
+  /// @returns the original indexd given the new @p pos in the type list
   DETRAY_HOST_DEVICE
   static constexpr std::size_t original_index(const std::size_t pos) {
     std::size_t j{0u};
@@ -182,7 +182,7 @@ class mapped_registry : public registry_t {
   }
 
   /// @param pos position in the filtered type list
-  /// @return identifier of the corresponding original type
+  /// @returns the original id given the new @p pos in the type list
   DETRAY_HOST_DEVICE
   static constexpr id original_id(const std::size_t pos) {
     return static_cast<id>(original_index(pos));
@@ -431,7 +431,8 @@ inline constexpr std::size_t index_cast =
 
 /// @}
 
-/// Variadic unrolling that calls a functor on the element at `idx`.
+/// Variadic unrolling of the tuple that calls a functor on the element that
+/// corresponds to @p idx.
 ///
 /// @tparam functor_t functor that will be called on the element.
 /// @tparam Args argument types for the functor
@@ -490,7 +491,8 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) visit_helper(
   }
 }
 
-/// Visit the tuple element at `idx` and invoke `functor_t` with `args`.
+/// Visits a tuple element according to its @p idx and calls
+/// @p functor_t with the arguments @p args on it.
 ///
 /// @returns the functor result (this is necessarily always of the same
 /// type, regardless the input tuple element type).
@@ -505,8 +507,8 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) visit(const std::size_t idx,
       std::forward<Args>(args)...);
 }
 
-/// Visit the tuple element identified by `type_id` and invoke `functor_t` with
-/// `args`.
+/// Visits a tuple element according to its type_id @p type_id and calls
+/// @p functor_t with the arguments @p args on it.
 ///
 /// @returns the functor result (this is necessarily always of the same
 /// type, regardless the input tuple element type).

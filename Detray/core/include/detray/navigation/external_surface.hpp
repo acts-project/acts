@@ -132,7 +132,8 @@ class external_surface {
   DETRAY_HOST_DEVICE
   constexpr auto index() const -> dindex { return m_barcode.index(); }
 
-  /// Replace the transform that places this surface.
+  /// Update the transform index
+  ///
   /// @param trf New surface placement transform.
   DETRAY_HOST_DEVICE
   void set_transform(const transform3_type& trf) { m_transform = trf; }
@@ -143,7 +144,8 @@ class external_surface {
     return m_transform;
   }
 
-  /// Replace the mask describing the surface shape and extent.
+  /// Update the mask link
+  ///
   /// @param m New surface mask.
   DETRAY_HOST_DEVICE
   void set_mask(const mask_type m) { m_mask = m; }
@@ -158,7 +160,7 @@ class external_surface {
   DETRAY_HOST_DEVICE
   void set_material(const material_type& offset) { m_material.shift(offset); }
 
-  /// Access the mutable material attached to this surface.
+  /// Access to the material
   /// @returns Reference to the attached material.
   DETRAY_HOST_DEVICE
   constexpr auto material() -> material_type& { return m_material; }

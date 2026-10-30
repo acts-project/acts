@@ -53,11 +53,11 @@ struct ray_intersector_impl<cartesian2D<algebra_t>, algebra_t, resolve_pos> {
   using result_type =
       intersection_point<algebra_t, point_type, intersection::contains_pos>;
 
-  /// Find the intersection of a straight trajectory with the plane.
-  /// @param ray Straight trajectory to test.
-  /// @param trf Transform whose origin and z axis define the plane.
-  /// The optional overstep argument is accepted for interface compatibility.
-  /// @returns The path and global intersection point.
+  /// Operator function to find intersections between ray and planar mask
+  ///
+  /// @param ray is the input ray trajectory
+  /// @param trf is the surface placement transform
+  /// @return the intersection
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
       const trajectory_type<algebra_t> &ray, const dtransform3D<algebra_t> &trf,
       const dscalar<algebra_t> /*overstep_tol*/ = 0.f) const {

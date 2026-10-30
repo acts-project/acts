@@ -101,7 +101,7 @@ class homogeneous_material_generator final
   using scalar_t = dscalar<typename detector_t::algebra_type>;
 
  public:
-  /// Construct a material generator around a surface factory.
+  /// Construct from configuration @p cfg
   /// @param factory Surface factory whose surfaces receive material.
   /// @param cfg Material choices and portal thickness.
   DETRAY_HOST
@@ -143,7 +143,8 @@ class homogeneous_material_generator final
   ///
   /// @param surfaces surface container of the volume builder that should get
   ///                 decorated with material.
-  /// @param materials Material store that receives the generated material.
+  /// @param materials material store of the volume builder that the new
+  ///                 materials get added to.
   /// @returns No value; material links and values are written to the supplied containers.
   DETRAY_HOST
   auto operator()(typename detector_t::surface_lookup_container &surfaces,

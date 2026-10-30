@@ -50,7 +50,8 @@ inline common_header_payload deserialize_json_header(
   return header;
 }
 
-/// Infer and register the JSON readers required by a list of input files.
+/// From the list of files that are given @p files, infer the readers that
+/// are needed by peeking into the file headers
 ///
 /// @tparam CAP Surface-grid bin capacity.
 /// @tparam DIM dimension of the surface grids, usually 2D

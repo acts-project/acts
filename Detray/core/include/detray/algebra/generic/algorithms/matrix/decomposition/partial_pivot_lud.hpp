@@ -18,7 +18,7 @@
 
 namespace detray::algebra::generic::matrix::decomposition {
 
-/// Compute an LU decomposition with partial pivoting for a square matrix.
+/// "Partial Pivot LU Decomposition", assuming a N X N matrix
 template <concepts::matrix matrix_t>
 struct partial_pivot_lud {
   /// Matrix element type.
@@ -31,14 +31,14 @@ struct partial_pivot_lud {
   /// Result of LU decomposition for a matrix of rank `N`.
   template <index_t N>
   struct lud {
-    /// Combined lower and upper triangular factors; the unit diagonal of L is
-    /// implicit.
+    /// LU decomposition matrix, equal to (L - I) + U, where the diagonal
+    /// components of L is always 1
     matrix_t lu;
 
-    /// Row permutation induced by pivoting.
+    /// Permutation vector
     vector_t P;
 
-    /// Pivot count used to determine the permutation sign.
+    /// Number of pivots
     int n_pivot = 0;
   };
 

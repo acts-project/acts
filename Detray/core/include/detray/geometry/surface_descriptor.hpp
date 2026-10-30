@@ -36,7 +36,7 @@ class surface_descriptor {
  public:
   /// Link type of the mask to a volume.
   using navigation_link = navigation_link_t;
-  /// Link type used to locate the surface transform.
+  /// Broadcast the type of links
   using transform_link = transform_link_t;
   /// might be a single mask, a range of masks or a multiindex in the future
   using mask_link = mask_link_t;

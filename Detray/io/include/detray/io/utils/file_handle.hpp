@@ -54,7 +54,7 @@ class file_handle final {
                         std::filesystem::path{file_name}.stem(),
                     std::filesystem::path{file_name}.extension(), mode) {}
 
-  /// Open a file from a stem and extension.
+  /// File gets created with a @p name and @p extension
   /// @param name file path without its extension
   /// @param extension file extension, including its leading dot
   /// @param mode stream open mode

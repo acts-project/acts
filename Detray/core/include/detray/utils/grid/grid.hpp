@@ -37,7 +37,7 @@ template <typename axes_t, typename bin_t,
           template <std::size_t> class serializer_t = simple_serializer>
 class grid_impl {
  public:
-  /// Number of axes in the grid.
+  /// Grid dimension
   static constexpr unsigned int dim = axes_t::dim;
 
   /// Single value in a bin entry
@@ -93,14 +93,13 @@ class grid_impl {
   /// Make grid default constructible: Empty grid with empty axis
   grid_impl() = default;
 
-  /// Create empty grid and axes using a VecMem memory resource.
+  /// Create empty grid with empty axes from specific vecmem memory resource
   /// @param resource Resource used for bin and axis allocations.
   DETRAY_HOST
   explicit grid_impl(vecmem::memory_resource &resource)
       : m_bins(resource), m_axes(resource) {}
 
-  /// Create a grid by moving in its bin storage and axes.
-  ///
+  /// Create grid with well defined @p axes and @p bin_data - move
   /// @param bin_data Bin storage for the grid.
   /// @param axes Axis definitions for the grid.
   DETRAY_HOST_DEVICE
@@ -150,7 +149,7 @@ class grid_impl {
             const dindex offset = 0u)
       : m_bins(*bin_data_ptr, offset, axes.nbins()), m_axes(std::move(axes)) {}
 
-  /// Construct a device-side grid from a VecMem view.
+  /// Device-side construction from a vecmem based view type
   /// @param view View containing the bin and axis data.
   template <concepts::device_view grid_view_t>
   DETRAY_HOST_DEVICE explicit grid_impl(grid_view_t &view)
@@ -216,14 +215,14 @@ class grid_impl {
 
   /// Convert a flattened bin index to per-axis bin indices.
   /// @param gid Flattened index of the bin.
-  /// @returns The corresponding per-axis indices.
+  /// @returns a local multi-bin index from a global bin index @p gid
   constexpr auto deserialize(const glob_bin_index gid) const -> loc_bin_index {
     return serializer()(axes(), gid);
   }
 
   /// Convert per-axis bin indices to a flattened bin index.
   /// @param mbin Per-axis indices of the bin.
-  /// @returns The corresponding flattened index.
+  /// @returns a global bin index from a local bin index @p mbin
   constexpr auto serialize(const loc_bin_index &mbin) const -> glob_bin_index {
     return serializer()(axes(), mbin);
   }
@@ -278,7 +277,7 @@ class grid_impl {
   }
 
   /// Access a bin using one index per axis.
-  /// @param indices Per-axis indices identifying the bin.
+  /// @param indices the single indices corresponding to a multi_bin
   /// @returns An iterable view of the bin contents.
   template <concepts::index... I>
     requires(sizeof...(I) == dim)
@@ -287,8 +286,9 @@ class grid_impl {
   }
   /// @}
 
-  /// Access a single entry in a bin using either flattened or per-axis bin
-  /// indices, together with the entry's index within that bin.
+  /// Access a single entry in a bin from the global bin index, as well as
+  /// the index of the entry in the bin.
+  ///
   /// @{
   /// @param gbin Flattened index of the bin.
   /// @param idx Index of the entry within that bin.
@@ -326,7 +326,7 @@ class grid_impl {
   /// @returns a view over the flattened bin content by joining the bin ranges
   DETRAY_HOST_DEVICE auto all() const { return detray::views::join(bins()); }
 
-  /// Populate a bin with one value using the selected populator.
+  /// Poupulate a bin with a single one of its corresponding values @p v
   /// @{
   /// @param mbin the multi bin index to be populated
   /// @param v Value to insert into the bin.

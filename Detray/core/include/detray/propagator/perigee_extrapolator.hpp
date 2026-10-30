@@ -82,7 +82,7 @@ class perigee_extrapolator {
   /// Propagation state returned by this extrapolator.
   using state = typename propagator_type::state;
 
-  /// Construct from a propagation configuration.
+  /// Construct from a propagator configuration
   /// @param cfg Configuration passed to the underlying propagator.
   DETRAY_HOST_DEVICE
   explicit constexpr perigee_extrapolator(const propagation::config &cfg)
@@ -90,8 +90,8 @@ class perigee_extrapolator {
 
   /// Create the propagation state for the extrapolator
   ///
-  /// @param track Initial free or bound track parameters.
-  /// @param det Detector used for geometry and navigation.
+  /// @param track the free track parameters (initial state)
+  /// @param det the detector
   ///
   /// @returns the propagation state.
   template <typename track_t>
@@ -112,12 +112,13 @@ class perigee_extrapolator {
     return m_propagator.finished(propagation);
   }
 
-  /// Propagate to the perigee and return the resulting bound parameters.
+  /// Propagate method: Coordinates the calls of the stepper, navigator and
+  /// all registered actors.
   ///
-  /// @param propagation State of the propagation flow.
-  /// @param actor_state_refs References to the configured actor states.
+  /// @param propagation the state of a propagation flow
+  /// @param actor_state_refs tule containing references to the actor states
   ///
-  /// @return Bound track parameters at the perigee surface.
+  /// @returns propagation success.
   DETRAY_HOST_DEVICE auto extrapolate(
       state &propagation,
       typename actor_chain_type::state_ref_tuple actor_state_refs =
@@ -132,7 +133,7 @@ class perigee_extrapolator {
         m_perigee_surface.transform(), propagation.stepping()());
   }
 
-  /// Extrapolate to the perigee when no actor state tuple is required.
+  /// Overload for empty actor chain
   /// @param propagation State of the propagation flow.
   /// @return Bound track parameters at the perigee surface.
   DETRAY_HOST_DEVICE auto extrapolate(state &propagation) {

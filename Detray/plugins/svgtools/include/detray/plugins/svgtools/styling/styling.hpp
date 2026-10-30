@@ -86,7 +86,7 @@ struct surface_style {
     _material_style._gradient_font._size = 26u;
     _material_style._gradient_label._font._size = 26u;
   }
-  /// Surface fill color.
+  /// Fill color
   actsvg::style::color _fill_color{};
 
   /// Width of the surface outline.
@@ -94,7 +94,7 @@ struct surface_style {
   /// Color of the surface outline.
   actsvg::style::color _stroke_color{};
 
-  /// RGB color used to highlight the surface fill.
+  /// Highlights
   std::array<int, 3> _highlight_rgb{colors::macaroni_and_cheese};
   /// Names of surface features that should be highlighted.
   std::vector<std::string> _highlights{};
@@ -105,7 +105,7 @@ struct surface_style {
 
   /// Font size used for surface labels.
   unsigned int _font_size{22u};
-  /// Number of segments used to approximate curved surface edges.
+  /// Granularity of vertex approximation of arcs
   unsigned int _n_segments{72u};
 
   /// Material annotation and gradient style for the surface.
@@ -174,7 +174,7 @@ struct landmark_style {
 
 /// Style applied to a proto trajectory
 struct trajectory_style {
-  /// Color used to distinguish tracks.
+  /// Give different tracks different colors
   actsvg::style::color _fill_color{};
   /// Width of trajectory lines.
   actsvg::scalar _stroke_width{10.f};

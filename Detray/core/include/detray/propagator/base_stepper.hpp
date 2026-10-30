@@ -75,7 +75,7 @@ class base_stepper {
     /// Internal representation used to accumulate the transport Jacobian.
     using internal_jacobian_type = internal_jacobian_t;
 
-    /// Initialize the stepper state from free track parameters.
+    /// Sets track parameters.
     /// @param free_params Initial free parameters.
     DETRAY_HOST_DEVICE
     explicit state(const free_track_parameters_type &free_params)
@@ -130,7 +130,7 @@ class base_stepper {
     DETRAY_HOST_DEVICE
     const free_track_parameters_type &operator()() const { return m_track; }
 
-    /// Get stepping direction.
+    /// Get stepping direction
     /// @return Forward or backward direction according to the signed step.
     DETRAY_HOST_DEVICE
     inline step::direction direction() const {
@@ -147,7 +147,7 @@ class base_stepper {
       return m_n_total_trials;
     }
 
-    /// Set the current step size.
+    /// Set the current step size
     /// @param step Signed step length used for the next advancement.
     DETRAY_HOST_DEVICE
     inline void set_step_size(const scalar_type step) {
@@ -167,14 +167,14 @@ class base_stepper {
     DETRAY_HOST_DEVICE
     inline scalar_type abs_path_length() const { return m_abs_path_length; }
 
-    /// Add a new segment to signed and absolute path lengths.
+    /// Add a new segment to all path lengths (forward or backward)
     /// @param seg Signed segment length.
     DETRAY_HOST_DEVICE inline void update_path_lengths(scalar_type seg) {
       m_path_length += seg;
       m_abs_path_length += math::fabs(seg);
     }
 
-    /// Set a constraint on the step size.
+    /// Set new step constraint
     /// @tparam type Constraint category to update.
     /// @param step_size Maximum step size imposed by the constraint.
     template <step::constraint type = step::constraint::e_actor>
@@ -196,7 +196,7 @@ class base_stepper {
     DETRAY_HOST_DEVICE
     const auto &particle_hypothesis() const { return m_ptc; }
 
-    /// Set the particle hypothesis used for propagation.
+    /// Set new particle hypothesis
     /// @param ptc Particle hypothesis to use.
     DETRAY_HOST_DEVICE
     inline void set_particle(const pdg_particle<scalar_type> &ptc) {
@@ -260,7 +260,7 @@ class base_stepper {
     DETRAY_HOST
     constexpr auto &inspector() { return m_inspector; }
 
-    /// Call the configured inspector with the current state and step context.
+    /// Call the stepping inspector
     /// @param cfg Stepping configuration supplied to the inspector.
     /// @param message Context message describing the inspection point.
     /// @param dist Distance associated with the current step.

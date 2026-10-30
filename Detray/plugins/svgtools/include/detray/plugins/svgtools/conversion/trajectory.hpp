@@ -37,7 +37,7 @@ inline auto trajectory(const std::vector<point3_t>& points,
 }
 
 /// @param traj the trajectory
-/// @param path_length Length of the sampled path.
+/// @param path_length the length of the path
 /// @param step_size the step size, ie., ds
 /// @param style the style settings
 ///
@@ -58,7 +58,7 @@ inline auto trajectory(const trajectory_t<algebra_t>& traj,
 }
 
 /// @param traj the trajectory
-/// @param path_length Length of the ray segment to draw.
+/// @param path_length the length of the path
 /// @param style the style settings
 ///
 /// @returns The proto trajectory of a ray.

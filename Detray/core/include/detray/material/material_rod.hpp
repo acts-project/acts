@@ -21,7 +21,7 @@
 
 namespace detray {
 
-/// Cylindrical material rod attached to a line-like surface mask.
+/// Rod structure to be mapped on the line mask
 template <concepts::scalar scalar_t>
 struct material_rod {
   /// Scalar type used for rod dimensions and material properties.
@@ -40,15 +40,16 @@ struct material_rod {
         m_radius_in_X0(radius / material.X0()),
         m_radius_in_L0(radius / material.L0()) {}
 
-  /// Compare the rod material and radius.
-  /// @param rhs rod to compare with this value
+  /// Equality operator
+  ///
+  /// @param rhs is the right hand side to be compared to
   /// @return whether material and radius match
   DETRAY_HOST_DEVICE
   constexpr bool operator==(const material_rod<scalar_type>& rhs) const {
     return (m_material == rhs.get_material() && m_radius == rhs.radius());
   }
 
-  /// Test whether the rod represents non-vacuum material with positive radius.
+  /// Boolean operator
   /// @return true when the rod contributes material
   DETRAY_HOST_DEVICE
   constexpr explicit operator bool() const {
@@ -60,23 +61,23 @@ struct material_rod {
     return true;
   }
 
-  /// Return the material properties assigned to the rod.
+  /// Access the (average) material parameters.
   /// @return rod material
   DETRAY_HOST_DEVICE
   constexpr const material_type& get_material() const { return m_material; }
 
   /// Return the rod radius.
-  /// @return radius in length units
+  /// @returns the radius
   DETRAY_HOST_DEVICE
   constexpr scalar_type radius() const { return m_radius; }
 
   /// Return the rod radius.
-  /// @return radius in length units (alias function to keep interfaces homogeneous)
+  /// @returns the radius (alias function to keep interfaces homogeneous)
   DETRAY_HOST_DEVICE
   constexpr scalar_type thickness() const { return m_radius; }
 
   /// Compute the path length through the rod for a track crossing.
-  /// @return path length inside the rod
+  /// @returns the path segment through the material
   ///
   /// @param cos_inc_angle cosine of the track incidence angle
   /// @param approach the closes approach of the track to the wire
@@ -94,7 +95,7 @@ struct material_rod {
   }
 
   /// Compute the path length through the rod for a track crossing.
-  /// @return path length inside the rod in X0
+  /// @returns the path segment through the material in X0
   ///
   /// @param cos_inc_angle cosine of the track incidence angle
   /// @param approach the closes approach of the track to the wire
@@ -104,7 +105,7 @@ struct material_rod {
   }
 
   /// Compute the path length through the rod for a track crossing.
-  /// @return path length inside the rod in L0
+  /// @returns the path segment through the material in L0
   ///
   /// @param cos_inc_angle cosine of the track incidence angle
   /// @param approach the closes approach of the track to the wire

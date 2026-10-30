@@ -40,7 +40,7 @@ class identifier {
   /// Bit encoder used to read and update the packed fields.
   using encoder = detail::bit_encoder<value_t>;
 
-  /// Construct from a packed identifier value.
+  /// Construct from an already encoded value.
   /// @param encoded Value containing the encoded geometry fields.
   DETRAY_HOST_DEVICE
   constexpr explicit identifier(value_t encoded) : m_value(encoded) {}
@@ -87,7 +87,7 @@ class identifier {
         encoder::template get_bits<k_extra_mask>(m_value));
   }
 
-  /// Set the volume index and return this identifier for chaining.
+  /// Set the volume index.
   /// @param volume Volume index to encode.
   /// @returns Reference to this identifier.
   DETRAY_HOST_DEVICE
@@ -96,7 +96,7 @@ class identifier {
     return *this;
   }
 
-  /// Set the surface category and return this identifier for chaining.
+  /// Set the surface id.
   /// @param id Surface category to encode.
   /// @returns Reference to this identifier.
   DETRAY_HOST_DEVICE
@@ -107,7 +107,7 @@ class identifier {
     return *this;
   }
 
-  /// Set the surface index and return this identifier for chaining.
+  /// Set the surface index.
   /// @param index Surface index to encode.
   /// @returns Reference to this identifier.
   DETRAY_HOST_DEVICE
@@ -116,7 +116,7 @@ class identifier {
     return *this;
   }
 
-  /// Set the transform index and return this identifier for chaining.
+  /// Set the transform index.
   /// @param index Transform index to encode.
   /// @returns Reference to this identifier.
   DETRAY_HOST_DEVICE
@@ -125,7 +125,7 @@ class identifier {
     return *this;
   }
 
-  /// Set the extra tag bits and return this identifier for chaining.
+  /// Set the extra identifier.
   /// @param extra Extra tag value to encode.
   /// @returns Reference to this identifier.
   DETRAY_HOST_DEVICE
@@ -134,7 +134,7 @@ class identifier {
     return *this;
   }
 
-  /// Check whether the required geometry fields mark this identifier invalid.
+  /// Check whether the identifier is valid to use.
   /// @note The extra bits are allowed to be invalid and will not be checked
   /// @returns True when a required field has its invalid sentinel value.
   DETRAY_HOST_DEVICE

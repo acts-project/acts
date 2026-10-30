@@ -55,7 +55,7 @@ class brute_force_collection {
     /// Query value accepted by the brute-force search interface.
     using query_type = bool;
 
-    /// Construct an empty surface range.
+    /// Default constructor
     brute_forcer() = default;
 
     /// Construct a range over the surfaces belonging to one volume.
@@ -92,13 +92,13 @@ class brute_force_collection {
 
     /// Return the surface at a position in this volume's range.
     /// @param i Position within the selected range.
-    /// @returns A copy of the selected surface descriptor.
+    /// @returns the surface at a given index @p i - const
     DETRAY_HOST_DEVICE constexpr value_t at(const dindex i) const {
       return (*this)[i];
     }
     /// Return a mutable surface at a position in this volume's range.
     /// @param i Position within the selected range.
-    /// @returns Reference to the selected surface descriptor.
+    /// @returns the surface at a given index @p i - non-const
     DETRAY_HOST_DEVICE constexpr value_t& at(const dindex i) {
       return (*this)[i];
     }
@@ -138,7 +138,7 @@ class brute_force_collection {
     m_offsets.push_back(0u);
   };
 
-  /// Construct the collection using a vecmem memory resource.
+  /// Constructor from memory resource
   /// @param resource Resource used to allocate offsets and surface storage.
   DETRAY_HOST
   explicit constexpr brute_force_collection(vecmem::memory_resource* resource)
@@ -147,13 +147,13 @@ class brute_force_collection {
     m_offsets.push_back(0u);
   }
 
-  /// Construct the collection using a vecmem memory resource.
+  /// Constructor from memory resource
   /// @param resource Resource used to allocate offsets and surface storage.
   DETRAY_HOST
   explicit constexpr brute_force_collection(vecmem::memory_resource& resource)
       : brute_force_collection(&resource) {}
 
-  /// Construct a device-side collection from its multi-view.
+  /// Device-side construction from a vecmem based view type
   /// @param view View containing the offsets and surface descriptors.
   template <concepts::device_view coll_view_t>
   DETRAY_HOST_DEVICE explicit brute_force_collection(coll_view_t& view)
@@ -187,7 +187,7 @@ class brute_force_collection {
   DETRAY_HOST_DEVICE
   auto all() -> vector_type<value_t>& { return m_surfaces; }
 
-  /// Build a query range for one volume's surfaces.
+  /// Create brute force surface finder from surface container - const
   /// @param i Volume index whose surface range is requested.
   /// @returns A finder spanning the surfaces assigned to that volume.
   DETRAY_HOST_DEVICE
@@ -195,7 +195,7 @@ class brute_force_collection {
     return {m_surfaces, dindex_range{m_offsets[i], m_offsets[i + 1u]}};
   }
 
-  /// Build a query range for one volume's surfaces.
+  /// Create brute force surface finder from surface container - const
   /// @param i Volume index whose surface range is requested.
   /// @returns A finder spanning the surfaces assigned to that volume.
   DETRAY_HOST_DEVICE

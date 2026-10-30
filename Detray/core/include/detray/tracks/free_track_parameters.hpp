@@ -43,7 +43,7 @@ struct free_parameters_vector {
   /// Default constructor
   free_parameters_vector() = default;
 
-  /// Construct from a 6-dim vector of parameters.
+  /// Construct from a 6-dim vector of parameters
   /// @param vec vector containing the free parameters in canonical order
   DETRAY_HOST_DEVICE
   explicit free_parameters_vector(const vector_type& vec) : m_vector(vec) {
@@ -85,7 +85,7 @@ struct free_parameters_vector {
     return true;
   }
 
-  /// Read a parameter by its canonical index.
+  /// Convenience access to the track parameters - const
   /// @param i index in the free parameter vector
   /// @return the selected parameter value
   DETRAY_HOST_DEVICE
@@ -93,7 +93,7 @@ struct free_parameters_vector {
     return getter::element(m_vector, static_cast<unsigned int>(i), 0u);
   }
 
-  /// Access a parameter by its canonical index for modification.
+  /// Convenience access to the track parameters - non-const
   /// @param i index in the free parameter vector
   /// @return a reference to the selected parameter
   DETRAY_HOST_DEVICE
@@ -113,7 +113,7 @@ struct free_parameters_vector {
             getter::element(m_vector, e_free_pos2, 0u)};
   }
 
-  /// Set the global position.
+  /// Set the global track position
   /// @param pos new global position
   DETRAY_HOST_DEVICE
   void set_pos(const vector3_type& pos) {
@@ -131,7 +131,7 @@ struct free_parameters_vector {
             getter::element(m_vector, e_free_dir2, 0u)};
   }
 
-  /// Set the normalized global direction.
+  /// Set the global track direction
   /// @param dir new unit direction vector
   /// @note Must be normalized!
   DETRAY_HOST_DEVICE
@@ -150,7 +150,7 @@ struct free_parameters_vector {
     return getter::element(m_vector, e_free_time, 0u);
   }
 
-  /// Set the particle time.
+  /// Set the time
   /// @param t time value
   DETRAY_HOST_DEVICE
   void set_time(const scalar_type t) {
@@ -164,7 +164,7 @@ struct free_parameters_vector {
     return getter::element(m_vector, e_free_qoverp, 0u);
   }
 
-  /// Set signed inverse momentum.
+  /// Set the q/p value
   /// @param qop signed charge divided by momentum
   DETRAY_HOST_DEVICE
   void set_qop(const scalar_type qop) {
@@ -188,7 +188,7 @@ struct free_parameters_vector {
   }
 
   /// @param q particle charge
-  /// @return the absolute momentum inferred from q/p
+  /// @returns the absolute momentum
   DETRAY_HOST_DEVICE
   scalar_type p(const scalar_type q) const {
     assert(qop() != 0.f);
@@ -197,12 +197,12 @@ struct free_parameters_vector {
   }
 
   /// @param q particle charge
-  /// @return momentum vector aligned with the stored direction
+  /// @returns the global momentum 3-vector
   DETRAY_HOST_DEVICE
   vector3_type mom(const scalar_type q) const { return p(q) * dir(); }
 
   /// @param q particle charge
-  /// @return magnitude of the momentum component transverse to z
+  /// @returns the transverse momentum
   DETRAY_HOST_DEVICE
   scalar_type pT(const scalar_type q) const {
     assert(this->qop() != 0.f);
@@ -211,7 +211,7 @@ struct free_parameters_vector {
   }
 
   /// @param q particle charge
-  /// @return magnitude of the momentum component along z
+  /// @returns the absolute momentum z-component
   DETRAY_HOST_DEVICE
   scalar_type pz(const scalar_type q) const {
     assert(this->qop() != 0.f);

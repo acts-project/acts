@@ -19,7 +19,7 @@
 namespace detray {
 
 namespace algebra {
-/// Print a vector or point as a comma-separated sequence.
+/// Print a generic vector or point @p v
 /// @param out Stream receiving the formatted value.
 /// @param v Vector or point to print.
 /// @returns The output stream.
@@ -42,7 +42,7 @@ DETRAY_HOST std::ostream& operator<<(std::ostream& out, const vector_t& v) {
   return out;
 }
 
-/// Print a column matrix as a bracketed sequence of rows.
+/// Print a column matrix @p v
 /// @param out Stream receiving the formatted value.
 /// @param v Column matrix to print.
 /// @returns The output stream.
@@ -63,7 +63,7 @@ DETRAY_HOST std::ostream& operator<<(std::ostream& out, const vector_t& v) {
   return out;
 }
 
-/// Print a matrix as rows of bracketed elements.
+/// Print a generic matrix @p m
 /// @param out Stream receiving the formatted value.
 /// @param m Matrix to print.
 /// @returns The output stream.
@@ -92,7 +92,7 @@ DETRAY_HOST std::ostream& operator<<(std::ostream& out, const matrix_t& m) {
   return out;
 }
 
-/// Print the matrix of a three-dimensional transform.
+/// Print a 3D transform @p trf
 /// @param out Stream receiving the formatted value.
 /// @param trf Transform to print.
 /// @returns The output stream.

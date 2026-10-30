@@ -184,7 +184,7 @@ class material_map_generator final : public factory_decorator<detector_t> {
   using scalar_t = dscalar<typename detector_t::algebra_type>;
 
  public:
-  /// Construct a generator from a surface factory and map configuration.
+  /// Construct from configuration @p cfg
   /// @param factory Surface factory whose surfaces receive material maps.
   /// @param cfg Binning and material variation settings.
   DETRAY_HOST

@@ -178,9 +178,10 @@ class spatial_grid_impl : public grid_t {
   /// The lookup is done with a search window around the bin
   ///
   /// Return the values in bins intersecting the search window.
-  /// @param p Query position in the grid's local frame.
-  /// @param win_size Search extent around the bin containing the query.
-  /// @returns Values in the bins intersecting the search window.
+  /// @param p is point in the local frame
+  /// @param win_size size of the binned/scalar search window
+  ///
+  /// @return the sequence of values
   template <concepts::arithmetic window_size_t>
   DETRAY_HOST_DEVICE auto search(
       const query_type &p,
@@ -197,7 +198,7 @@ class spatial_grid_impl : public grid_t {
     return detray::views::join(std::move(search_area));
   }
 
-  /// Search the bins near the track's projected intersection with the grid.
+  /// Interface for the navigator
   /// @param det Detector providing the volume placement.
   /// @param volume Volume whose grid is queried.
   /// @param track Track used to determine the query position.
@@ -334,7 +335,7 @@ class grid_collection<spatial_grid_impl<grid_t>>
   explicit grid_collection(vecmem::memory_resource *resource)
       : base_collection(resource), m_mask_values(resource) {}
 
-  /// Create spatial grid collection by moving grid data and mask values.
+  /// Create spatial grid collection from existing data - move
   /// @param grid_coll Collection holding the grid axes and bins.
   /// @param mask_values Reference-mask boundary values for each grid.
   DETRAY_HOST_DEVICE

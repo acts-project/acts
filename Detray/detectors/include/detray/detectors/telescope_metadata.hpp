@@ -24,8 +24,8 @@
 
 namespace detray {
 
-/// Defines a telescope test detector with rectangle portals and one module
-/// shape.
+/// Defines a special telescope test detector type with only rectangle portals
+/// and one additional kind of contained module surfaces (@p mask_shape_t)
 /// @tparam algebra_t Algebra backend used by the detector.
 /// @tparam mask_shape_t Shape of the contained module surfaces.
 template <concepts::algebra algebra_t, typename mask_shape_t = rectangle2D>

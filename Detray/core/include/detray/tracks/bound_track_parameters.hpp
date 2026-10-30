@@ -44,10 +44,10 @@ struct bound_parameters_vector {
 
   /// @}
 
-  /// Default constructor creates a zero-initialized parameter vector.
+  /// Default constructor
   bound_parameters_vector() = default;
 
-  /// Construct from a 6-dim vector of parameters.
+  /// Construct from a 6-dim vector of parameters
   /// @param vec vector containing the bound parameters in canonical order
   DETRAY_HOST_DEVICE
   explicit bound_parameters_vector(const vector_type& vec) : m_vector(vec) {
@@ -92,7 +92,7 @@ struct bound_parameters_vector {
     return true;
   }
 
-  /// Read a parameter by its canonical index.
+  /// Convenience access to the track parameters - const
   /// @param i index in the bound parameter vector
   /// @return the selected parameter value
   DETRAY_HOST_DEVICE
@@ -100,7 +100,7 @@ struct bound_parameters_vector {
     return getter::element(m_vector, static_cast<unsigned int>(i), 0u);
   }
 
-  /// Access a parameter by its canonical index for modification.
+  /// Convenience access to the track parameters - non-const
   /// @param i index in the bound parameter vector
   /// @return a reference to the selected parameter
   DETRAY_HOST_DEVICE
@@ -108,17 +108,17 @@ struct bound_parameters_vector {
     return getter::element(m_vector, static_cast<unsigned int>(i), 0u);
   }
 
-  /// Return the underlying six-component vector.
+  /// Access the track parameters as a 6-dim vector - const
   /// @return a const reference to the stored vector
   DETRAY_HOST_DEVICE
   const vector_type& vector() const { return m_vector; }
 
-  /// Return the underlying six-component vector for modification.
+  /// Access the track parameters as a 6-dim vector - non-const
   /// @return a reference to the stored vector
   DETRAY_HOST_DEVICE
   vector_type& vector() { return m_vector; }
 
-  /// Replace all six bound parameters.
+  /// Set the underlying vector
   /// @param v new parameter vector
   /// @param skip_check bypass the validity assertion when true
   DETRAY_HOST_DEVICE
@@ -135,7 +135,7 @@ struct bound_parameters_vector {
             getter::element(m_vector, e_bound_loc1, 0u)};
   }
 
-  /// Set both local coordinates on the associated surface.
+  /// Set the bound local position
   /// @param pos new local position
   DETRAY_HOST_DEVICE
   void set_bound_local(const point2_type& pos) {
@@ -148,7 +148,7 @@ struct bound_parameters_vector {
   DETRAY_HOST_DEVICE
   scalar_type phi() const { return getter::element(m_vector, e_bound_phi, 0u); }
 
-  /// Set the azimuthal direction angle.
+  /// Set the global phi angle
   /// @param phi azimuth in radians
   DETRAY_HOST_DEVICE
   void set_phi(const scalar_type phi) {
@@ -162,7 +162,7 @@ struct bound_parameters_vector {
     return getter::element(m_vector, e_bound_theta, 0u);
   }
 
-  /// Set the polar direction angle.
+  /// Set the global theta angle
   /// @param theta polar angle in radians
   DETRAY_HOST_DEVICE
   void set_theta(const scalar_type theta) {
@@ -188,7 +188,7 @@ struct bound_parameters_vector {
     return getter::element(m_vector, e_bound_time, 0u);
   }
 
-  /// Set the particle time.
+  /// Set the time
   /// @param t time value
   DETRAY_HOST_DEVICE
   void set_time(const scalar_type t) {
@@ -202,7 +202,7 @@ struct bound_parameters_vector {
     return getter::element(m_vector, e_bound_qoverp, 0u);
   }
 
-  /// Set signed inverse momentum.
+  /// Set the q/p value
   /// @param qop signed charge divided by momentum
   DETRAY_HOST_DEVICE
   void set_qop(const scalar_type qop) {
@@ -229,7 +229,7 @@ struct bound_parameters_vector {
   }
 
   /// @param q particle charge
-  /// @return the absolute momentum inferred from q/p
+  /// @returns the absolute momentum
   DETRAY_HOST_DEVICE
   scalar_type p(const scalar_type q) const {
     assert(qop() != 0.f);
@@ -238,12 +238,12 @@ struct bound_parameters_vector {
   }
 
   /// @param q particle charge
-  /// @return momentum vector aligned with the stored direction
+  /// @returns the global momentum 3-vector
   DETRAY_HOST_DEVICE
   vector3_type mom(const scalar_type q) const { return p(q) * dir(); }
 
   /// @param q particle charge
-  /// @return magnitude of the momentum component transverse to z
+  /// @returns the transverse momentum
   DETRAY_HOST_DEVICE
   scalar_type pT(const scalar_type q) const {
     assert(qop() != 0.f);
@@ -252,7 +252,7 @@ struct bound_parameters_vector {
   }
 
   /// @param q particle charge
-  /// @return magnitude of the momentum component along z
+  /// @returns the absolute momentum z-component
   DETRAY_HOST_DEVICE
   scalar_type pz(const scalar_type q) const {
     assert(qop() != 0.f);
@@ -291,7 +291,8 @@ struct bound_parameters_vector {
   vector_type m_vector = matrix::zero<vector_type>();
 };
 
-/// Bound parameters together with their covariance and associated surface link.
+/// Combine the bound track parameter vector with the covariance and associated
+/// surface
 template <concepts::algebra algebra_t>
 struct bound_track_parameters : public bound_parameters_vector<algebra_t> {
   /// Base parameter-vector type inherited by this track state.
@@ -362,12 +363,12 @@ struct bound_track_parameters : public bound_parameters_vector<algebra_t> {
   DETRAY_HOST_DEVICE
   const geometry::identifier& surface_link() const { return m_identifier; }
 
-  /// Change the surface associated with this state.
+  /// Set the identifier of the associated surface
   /// @param link identifier of the new associated surface
   DETRAY_HOST_DEVICE
   void set_surface_link(geometry::identifier link) { m_identifier = link; }
 
-  /// Replace the six bound parameter values.
+  /// Set the track parameter vector
   /// @param v new bound parameter vector
   /// @param skip_check bypass the validity assertion when true
   DETRAY_HOST_DEVICE
@@ -384,7 +385,7 @@ struct bound_track_parameters : public bound_parameters_vector<algebra_t> {
   DETRAY_HOST_DEVICE
   const covariance_type& covariance() const { return m_covariance; }
 
-  /// Replace the covariance matrix.
+  /// Set the track parameter covariance
   /// @param c covariance in the bound parameter basis
   DETRAY_HOST_DEVICE
   void set_covariance(const covariance_type& c) { m_covariance = c; }

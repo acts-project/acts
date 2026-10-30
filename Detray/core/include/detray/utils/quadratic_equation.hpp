@@ -38,8 +38,8 @@ class quadratic_equation<scalar_t> {
   /// @param a Quadratic coefficient.
   /// @param b Linear coefficient.
   /// @param c Constant coefficient.
-  /// @param tolerance Threshold used to distinguish repeated roots from two
-  /// separate roots.
+  /// @param tolerance threshold to compare the discrimant against to decide
+  ///                  if we have two separate solutions.
   DETRAY_HOST_DEVICE
   constexpr quadratic_equation(
       const scalar_t a, const scalar_t b, const scalar_t c,

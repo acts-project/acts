@@ -25,10 +25,10 @@ namespace detray {
 /// types
 template <bool kSORT = false>
 struct replace {
-  /// Replace the bin contents with the supplied entry or entries.
+  /// Replace the bin content with a new entry - forwarding
   ///
   /// @param bin the bin for which to replace the content
-  /// @param entry New content used to initialize the bin.
+  /// @param entry new content to be added
   template <typename bin_t, typename content_t>
   DETRAY_HOST_DEVICE void operator()(bin_t &&bin, content_t &&entry) const {
     std::forward<bin_t>(bin).init(std::forward<content_t>(entry));
@@ -48,7 +48,7 @@ template <bool kSORT = false>
 struct attach {
   /// Append a new entry to the bin - forwarding
   ///
-  /// @param bin Bin to which the entry is appended.
+  /// @param bin the bin for which to replace the content
   /// @param entry Entry to append.
   template <typename bin_t, typename entry_t>
   DETRAY_HOST_DEVICE void operator()(bin_t &&bin, entry_t &&entry) const {
@@ -70,7 +70,7 @@ template <bool kSORT = false>
 struct complete {
   /// Complete the bin content with a new entry - forwarding
   ///
-  /// @param bin Fixed-capacity bin to fill.
+  /// @param bin the bin for which to replace the content
   /// @param entry Entry repeated until the bin reaches capacity.
   template <typename bin_t, typename entry_t>
   DETRAY_HOST_DEVICE void operator()(bin_t &&bin, entry_t &&entry) const {

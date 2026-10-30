@@ -31,8 +31,7 @@ struct string_view_concat2 {
   }
 };
 
-/// Split `input` at each occurrence of `delim`, preserving empty tokens.
-///
+/// Split string @p input at every occurrence of @p delim
 /// @param input string to split
 /// @param delim character that separates tokens
 inline dvector<std::string> split_at_delim(const std::string &input,

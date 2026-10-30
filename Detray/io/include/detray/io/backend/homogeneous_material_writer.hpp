@@ -37,7 +37,7 @@ class homogeneous_material_writer {
   /// Payload type that the reader processes
   using payload_type = detector_homogeneous_material_payload;
 
-  /// Build the homogeneous-material header from material-store contents.
+  /// Convert the header information into its payload
   /// @tparam detector_t Detector type to serialize.
   /// @param det Detector providing the material store and surface links.
   /// @param det_name Name recorded in the serialized header.
@@ -91,7 +91,8 @@ class homogeneous_material_writer {
     return header_data;
   }
 
-  /// Convert all homogeneous surface material in a detector to payload form.
+  /// Convert the material description of a detector @p det into its io
+  /// payload
   /// @tparam detector_t Detector type to serialize.
   /// @param det Detector whose material descriptions are serialized.
   /// @return Payload containing the material entries grouped by volume.
@@ -108,7 +109,8 @@ class homogeneous_material_writer {
     return dm_data;
   }
 
-  /// Convert homogeneous material attached to one volume into payload form.
+  /// Convert the material description of a volume @p vol_desc into its
+  /// io payload
   /// @tparam detector_t Detector type to serialize.
   /// @param vol_desc Volume descriptor whose surfaces are inspected.
   /// @param det Detector providing material data and surface descriptors.
@@ -169,7 +171,7 @@ class homogeneous_material_writer {
     return mv_data;
   }
 
-  /// Convert material properties to their serialized parameter array.
+  /// Convert surface material @p mat into its io payload
   /// @tparam material_t Material parameter type.
   /// @param mat Material properties to serialize.
   /// @return Payload containing the material parameters.

@@ -180,7 +180,7 @@ struct get_algebra<A> {
   using matrix = typename A::template matrix<ROWS, COLS>;
 };
 
-/// Expose an algebra after replacing the value type of an algebra template.
+/// Switch the value type of an existing algebra definition
 template <template <typename> class A, typename W, typename V>
   requires(!std::is_same_v<typename A<V>::point3D, void> &&
            !std::is_same_v<typename A<W>::point3D, void>)
@@ -267,7 +267,7 @@ using get_matrix_t = typename traits::get_algebra<A, T>::template matrix<R, C>;
 
 }  // namespace detray
 
-/// Define type trait specializations for an algebra implementation.
+/// Default type trait specializations
 /// @{
 #define DETRAY_ALGEBRA_DEFINE_TYPE_TRAITS(A)                            \
                                                                         \

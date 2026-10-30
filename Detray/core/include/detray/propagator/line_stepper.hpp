@@ -103,13 +103,13 @@ class line_stepper final
     }
   };
 
-  /// Advance the track by the navigator's straight-line distance.
+  /// Take a step, regulared by a constrained step
   ///
   /// @param dist_to_next The straight line distance to the next surface
   /// @param stepping The state object of a stepper
   /// @param cfg The stepping configuration
   ///
-  /// @return Whether propagation should remain active.
+  /// @returns returning the heartbeat, indicating if the stepping is alive
   DETRAY_HOST_DEVICE bool step(
       const scalar_type dist_to_next, state& stepping,
       const stepping::config& cfg, const bool /*unused*/ = true,

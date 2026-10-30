@@ -46,19 +46,18 @@ struct ray_intersector_impl<line2D<algebra_t>, algebra_t, resolve_pos> {
   template <typename other_algebra_t>
   using trajectory_type = detail::ray<other_algebra_t>;
 
-  /// This closest-approach calculation produces one solution.
+  /// Maximum number of solutions this intersector can produce
   static constexpr std::uint8_t n_solutions{1u};
 
   /// Always includes the intersection position, in order to resolve the mask
   using result_type =
       intersection_point<algebra_t, point3_type, intersection::contains_pos>;
 
-  /// Find the point of closest approach between a ray and the line axis.
-  /// @param ray Ray trajectory to compare with the line.
-  /// @param trf Transform whose z axis and translation define the line.
-  /// The overstep tolerance argument is accepted for interface compatibility
-  /// but is unused by the closest-approach calculation.
-  /// @returns The path and global point of closest approach.
+  /// Operator function to find intersections between ray and planar mask
+  ///
+  /// @param ray is the input ray trajectory
+  /// @param trf is the surface placement transform
+  /// @return the intersection
   template <concepts::algebra other_algebra_t>
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
       const trajectory_type<other_algebra_t> &ray, const transform3_type &trf,

@@ -30,7 +30,7 @@ struct always_init : public base_actor {
   /// Sets the navigation trust level to 'no trust'
   ///
   /// The policy state is unused.
-  /// @param propagation Propagation state whose navigator trust is updated.
+  /// @param propagation state of the propagation
   template <typename propagator_state_t>
   DETRAY_HOST_DEVICE inline void operator()(
       const state & /*pol_state*/, propagator_state_t &propagation) const {
@@ -47,7 +47,7 @@ struct guided_navigation : public base_actor {
   /// Sets the navigation trust level to 'no trust'
   ///
   /// The policy state is unused.
-  /// @param propagation Propagation state whose navigator trust is updated.
+  /// @param propagation state of the propagation
   template <typename propagator_state_t>
   DETRAY_HOST_DEVICE inline void operator()(
       const state & /*pol_state*/, propagator_state_t &propagation) const {

@@ -64,7 +64,7 @@ struct element_getter {
     return m[0][row];
   }
 
-  /// Operator getting one element of a const single-column matrix
+  /// Operator getting a reference to one element of a const matrix
   /// @param m Single-column matrix to read.
   /// @param row Zero-based row of the element.
   /// @returns The selected element by value.
@@ -218,7 +218,8 @@ struct block_getter {
     return subvector;
   }
 
-  /// Set a rectangular block of a matrix.
+  /// Sets a matrix of dimension @p ROWS and @p COLS as submatrix of
+  /// @p m beginning at row @p row and column @p col
   /// @param m Matrix to update.
   /// @param b Block values to write.
   /// @param row First destination row.
@@ -236,7 +237,8 @@ struct block_getter {
     }
   }
 
-  /// Set a column segment of a matrix from a vector.
+  /// Sets a vector of length @p ROWS as submatrix of
+  /// @p m beginning at row @p row and column @p col
   /// @param m Matrix to update.
   /// @param b Vector values to write.
   /// @param row First destination row.
@@ -261,7 +263,9 @@ struct block_getter {
 /// @param m Source matrix.
 /// @param row First source row.
 /// @param col First source column.
-/// @returns The requested submatrix.
+/// @returns a matrix of dimension @p ROWS and @p COLS that contains
+/// the submatrix of @p m beginning at row @p row and column
+/// @p col
 template <std::size_t ROWS, std::size_t COLS, class input_matrix_type>
 DETRAY_HOST_DEVICE constexpr decltype(auto) block(const input_matrix_type &m,
                                                   std::size_t row,
@@ -270,7 +274,7 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) block(const input_matrix_type &m,
   return block.template operator()<ROWS, COLS>(m, row, col);
 }
 
-/// Extract a contiguous segment from one column of a matrix.
+/// Function extracting a vector from a matrix
 /// @tparam SIZE Number of elements in the returned vector.
 /// @param m Source matrix.
 /// @param row First source row.
@@ -286,7 +290,8 @@ DETRAY_HOST_DEVICE constexpr array_t<scalar_t, SIZE> vector(
   return block.template vector<SIZE>(m, row, col);
 }
 
-/// Write a rectangular block into a matrix.
+/// Sets a matrix of dimension @p ROWS and @p COLS as submatrix of
+/// @p m beginning at row @p row and column @p col
 /// @tparam ROWS Number of rows in the block.
 /// @tparam COLS Number of columns in the block.
 /// @param m Matrix to update.
@@ -303,7 +308,8 @@ DETRAY_HOST_DEVICE constexpr void set_block(
   block.set(m, b, row, col);
 }
 
-/// Write a vector into a contiguous segment of one matrix column.
+/// Sets a vector of length @p ROWS as submatrix of
+/// @p m beginning at row @p row and column @p col
 /// @tparam ROWS Number of vector elements.
 /// @param m Matrix to update.
 /// @param b Vector values to write.

@@ -101,7 +101,7 @@ struct concentric_cylindrical2D {
     return {math::cos(p[0]), math::sin(p[0]), static_cast<scalar_type>(0)};
   }
 
-  /// @returns the normal vector given a local position.
+  /// @returns the normal vector given a local position @p p
   /// @param p Local position at which to evaluate the normal.
   /// @returns The surface normal expressed in global coordinates.
   DETRAY_HOST_DEVICE static inline vector3_type normal(

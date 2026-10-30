@@ -18,7 +18,7 @@
 
 namespace detray::algebra::generic::matrix::determinant {
 
-/// Evaluate determinants with direct formulas for supported matrix ranks.
+/// "Determinant getter", assuming a N X N matrix
 template <concepts::square_matrix matrix_t>
 struct hard_coded {
   /// Matrix element type.
@@ -29,7 +29,7 @@ struct hard_coded {
   /// Function (object) used for accessing a matrix element
   using element_getter_t = detray::traits::element_getter_t<matrix_t>;
 
-  /// Evaluate the determinant of a 2 by 2 matrix.
+  /// 2 X 2 matrix determinant
   /// @param m Matrix whose determinant is calculated.
   /// @returns The determinant.
   template <typename M = matrix_t>
@@ -40,7 +40,7 @@ struct hard_coded {
     return elem(m, 0, 0) * elem(m, 1, 1) - elem(m, 0, 1) * elem(m, 1, 0);
   }
 
-  /// Evaluate the determinant of a 4 by 4 matrix.
+  /// 4 X 4 matrix determinant
   /// @param m Matrix whose determinant is calculated.
   /// @returns The determinant.
   template <typename M = matrix_t>

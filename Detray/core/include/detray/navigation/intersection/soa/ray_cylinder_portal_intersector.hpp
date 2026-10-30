@@ -65,13 +65,13 @@ struct ray_intersector_impl<concentric_cylindrical2D<algebra_t>, algebra_t,
   using result_type =
       intersection_point<algebra_t, point2_type, intersection::contains_pos>;
 
-  /// Find the nearest intersection of a ray with the concentric cylinder.
-  /// The cylinder is centered on the z axis, so its placement transform is
-  /// unused.
-  /// @param ray Straight trajectory to test.
-  /// @param mask Mask providing the cylinder radius.
-  /// @param overstep_tol Minimum accepted signed path length.
-  /// @returns The nearest path and intersection position.
+  /// Operator function to find intersections between ray and planar mask
+  ///
+  /// @param ray is the input ray trajectory
+  /// @param mask is the input mask that defines the surface extent
+  /// @param overstep_tol negative cutoff for the path
+  ///
+  /// @return the intersection
   template <typename mask_t, concepts::algebra other_algebra_t>
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
       const trajectory_type<other_algebra_t> &ray,

@@ -177,7 +177,7 @@ class pick_view : public detray::ranges::view_interface<
     /// Advance an iterator by `j` selected entries.
     /// @param itr iterator to advance
     /// @param j number of selected entries to advance
-    /// @return advanced iterator
+    /// @returns an iterator and index position advanced by @p j.
     DETRAY_HOST_DEVICE friend constexpr auto operator+(const iterator &itr,
                                                        const difference_type j)
         -> iterator
@@ -191,7 +191,7 @@ class pick_view : public detray::ranges::view_interface<
     /// Advance an iterator by `j` selected entries.
     /// @param j number of selected entries to advance
     /// @param itr iterator to advance
-    /// @return advanced iterator
+    /// @returns an iterator and index position advanced by @p j.
     DETRAY_HOST_DEVICE friend constexpr auto operator+(const difference_type j,
                                                        const iterator &itr)
         -> iterator

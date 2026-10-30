@@ -24,9 +24,10 @@ namespace detail {
 
 /// A functor that retrieves an acceleration struct and prints it
 struct accelerator_printer {
-  /// Print the acceleration structure selected from a collection.
-  /// @param accel_coll Collection of acceleration structures.
-  /// @param idx Index of the structure to print.
+  /// Print an acceleration structure
+  ///
+  /// @param accel_coll collection of acceleration structs
+  /// @param idx the specific grid to be checked
   /// @param os Stream receiving the output.
   template <typename accel_coll_t, typename index_t>
   DETRAY_HOST void operator()(const accel_coll_t &accel_coll, const index_t idx,
@@ -37,9 +38,10 @@ struct accelerator_printer {
 
 /// A functor that retrieves material and prints it
 struct material_printer {
-  /// Print the material entry selected from a collection.
-  /// @param material_coll Collection of material entries.
-  /// @param idx Index of the material to print.
+  /// Print material
+  ///
+  /// @param material_coll collection of material
+  /// @param idx the specific grid to be checked
   /// @param os Stream receiving the output.
   template <typename material_coll_t, typename index_t>
   DETRAY_HOST void operator()(const material_coll_t &material_coll,
@@ -50,7 +52,7 @@ struct material_printer {
 
 }  // namespace detail
 
-/// Print volumes, acceleration structures, surfaces and attached materials.
+/// Print basic information about the detector @p det
 /// @param det Detector to describe.
 /// @param names Optional map used to resolve detector names.
 /// @returns A formatted description of the detector.

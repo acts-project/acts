@@ -87,12 +87,12 @@ struct momentum_aborter : public base_actor {
     DETRAY_HOST_DEVICE
     constexpr scalar_t pT_limit() const { return m_min_pT; }
 
-    /// Set the minimum absolute momentum.
+    /// Set the momentum limit to @p p
     /// @param p momentum threshold
     DETRAY_HOST_DEVICE
     constexpr void min_p(const scalar_t p) { m_min_p = p; }
 
-    /// Set the minimum transverse momentum.
+    /// Set the transverse momentum limit to @p pT
     /// @param pT transverse momentum threshold
     DETRAY_HOST_DEVICE
     constexpr void min_pT(const scalar_t pT) { m_min_pT = pT; }

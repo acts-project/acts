@@ -81,7 +81,7 @@ struct constrained_step {
 
   /// Return the strictest active step-size constraint, with direction applied.
   /// @param dir Requested stepping direction.
-  /// @return Signed maximum step size.
+  /// @returns the current step size constraint for a given type or overall
   template <step::constraint type = step::constraint::e_all>
   DETRAY_HOST_DEVICE scalar_t
   size(const step::direction dir = step::direction::e_forward) const {

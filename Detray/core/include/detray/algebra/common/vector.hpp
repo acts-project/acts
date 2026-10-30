@@ -57,7 +57,7 @@ class DETRAY_ALIGN(
     return concepts::value<scalar_t> ? detail::nearest_power_of_two(N, 2u) : N;
   }
 
-  /// Scalar value type, or SIMD lane type for vectorized scalar storage.
+  /// Value type is a simd vector in SoA and a scalar in AoS
   using scalar_type = scalar_t;
   /// Underlying data array type
   using array_type = array_t<scalar_t, simd_size()>;
@@ -70,11 +70,11 @@ class DETRAY_ALIGN(
     }
   }
 
-  /// Construct a vector from scalar elements.
+  /// Construct from element values @p vals .
   ///
   /// @{
 
-  /// Construct vector in SoA layout from SIMD scalar elements.
+  /// Construct vector in SoA layout from simd scalars
   /// @param scals Element values, one for each logical vector component.
   template <typename... Scalars>
     requires(concepts::simd_scalar<scalar_t> && (sizeof...(Scalars) == N) &&
@@ -117,7 +117,7 @@ class DETRAY_ALIGN(
 
   /// @}
 
-  /// Construct from existing array storage.
+  /// Construct from existing array storage @p vals
   ///
   /// Implicit in both directions on purpose: together with the conversion
   /// operators below this makes the wrapper a drop-in for the array it wraps.
@@ -135,7 +135,7 @@ class DETRAY_ALIGN(
 
   /// Assignment operator from a vector with the same underlying storage.
   ///
-  /// @param lhs Vector whose storage is assigned to this object.
+  /// @param lhs wrap a copy of this data.
   /// @returns A const reference to this vector after assignment.
   template <std::size_t M>
     requires(vector<N, scalar_t, array_t>::simd_size() ==
@@ -146,7 +146,7 @@ class DETRAY_ALIGN(
     return *this;
   }
 
-  /// Convert the wrapper to its underlying mutable data array.
+  /// Conversion operator from wrapper to underlying data array.
   /// @{
   /// @returns A mutable reference to the stored array.
   DETRAY_HOST_DEVICE
@@ -164,7 +164,7 @@ class DETRAY_ALIGN(
   DETRAY_HOST_DEVICE
   constexpr const auto &get() const { return m_data; }
 
-  /// Access a stored component by index.
+  /// Subscript operator[]
   /// @{
   /// @param i Zero-based component index.
   /// @returns A reference to the selected component.
@@ -176,10 +176,10 @@ class DETRAY_ALIGN(
   constexpr decltype(auto) operator[](std::size_t i) const { return m_data[i]; }
   /// @}
 
-  /// Multiply every component by a scalar factor.
+  /// Operator*=
   ///
   /// @param factor Scalar multiplier.
-  /// @return The result of the underlying array multiplication.
+  /// @return Vector expression/return type according to the operation.
   DETRAY_HOST_DEVICE
   constexpr decltype(auto) operator*=(scalar_type factor) noexcept {
     return m_data *= factor;
@@ -221,7 +221,7 @@ class DETRAY_ALIGN(
   }
   /// @}
 
-  /// Compare this vector with another value for inequality.
+  /// Inequality operator
   /// @param rhs Value to compare against.
   /// @returns Whether the values compare unequal.
   template <typename other_t>
@@ -230,7 +230,7 @@ class DETRAY_ALIGN(
     return ((*this == rhs) == false);
   }
 
-  /// Compare corresponding elements; SoA storage can produce a mask per lane.
+  /// Elementwise comparison. Can result in a vector-of-masks for SoA vectors
   /// @param rhs Value whose elements are compared with this vector.
   /// @returns The per-element comparison results.
   template <typename other_t>
@@ -247,7 +247,7 @@ class DETRAY_ALIGN(
     return comp;
   }
 
-  /// Storage holding the value for every vector element.
+  /// Holds the data value for every vector element
   array_t<scalar_t, simd_size()> m_data;
 
  private:

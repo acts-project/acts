@@ -20,7 +20,7 @@
 
 namespace detray {
 
-/// Slab material attached to a planar or cylindrical surface mask.
+/// Slab structure to be mapped on the mask (plane, cylinder)
 template <concepts::scalar scalar_t>
 struct material_slab {
   /// Scalar type used for thickness and material properties.
@@ -30,25 +30,25 @@ struct material_slab {
 
   constexpr material_slab() = default;
 
-  /// Construct a slab from a material and its thickness.
-  /// @param material bulk or mixture material in the slab
-  /// @param thickness geometric thickness of the slab
+  /// Constructor
+  /// @param material is the elemental or mixture material
+  /// @param thickness is the thickness of the slab
   constexpr material_slab(const material_type& material, scalar_type thickness)
       : m_material(material),
         m_thickness(thickness),
         m_thickness_in_X0(thickness / material.X0()),
         m_thickness_in_L0(thickness / material.L0()) {}
 
-  /// Compare the slab material and thickness.
-  /// @param rhs slab to compare with this value
+  /// Equality operator
+  ///
+  /// @param rhs is the right hand side to be compared to
   /// @return whether material and thickness match
   DETRAY_HOST_DEVICE
   constexpr bool operator==(const material_slab& rhs) const {
     return (m_material == rhs.get_material() && m_thickness == rhs.thickness());
   }
 
-  /// Test whether the slab represents non-vacuum material with positive
-  /// thickness.
+  /// Boolean operator
   /// @return true when the slab contributes material
   DETRAY_HOST_DEVICE
   constexpr explicit operator bool() const {
@@ -61,25 +61,25 @@ struct material_slab {
     return true;
   }
 
-  /// Return the material properties assigned to the slab.
+  /// Access the (average) material parameters.
   /// @return slab material
   DETRAY_HOST_DEVICE
   constexpr const material_type& get_material() const { return m_material; }
-  /// Return the geometric slab thickness.
+  /// Return the thickness.
   /// @return thickness in length units
   DETRAY_HOST_DEVICE
   constexpr scalar_type thickness() const { return m_thickness; }
-  /// Return thickness divided by the radiation length.
+  /// Return the radiation length fraction.
   /// @return fraction of one radiation length
   DETRAY_HOST_DEVICE
   constexpr scalar_type thickness_in_X0() const { return m_thickness_in_X0; }
-  /// Return thickness divided by the nuclear interaction length.
+  /// Return the nuclear interaction length fraction.
   /// @return fraction of one nuclear interaction length
   DETRAY_HOST_DEVICE
   constexpr scalar_type thickness_in_L0() const { return m_thickness_in_L0; }
 
   /// Compute the path length through the slab at an incidence angle.
-  /// @return path length through the slab
+  /// @returns the path segment through the material
   ///
   /// @param cos_inc_angle cosine of the track incidence angle
   DETRAY_HOST_DEVICE constexpr scalar_type path_segment(
@@ -89,7 +89,7 @@ struct material_slab {
   }
 
   /// Compute the path length through the slab at an incidence angle.
-  /// @return path length through the slab in X0
+  /// @returns the path segment through the material in X0
   ///
   /// @param cos_inc_angle cosine of the track incidence angle
   DETRAY_HOST_DEVICE constexpr scalar_type path_segment_in_X0(
@@ -99,7 +99,7 @@ struct material_slab {
   }
 
   /// Compute the path length through the slab at an incidence angle.
-  /// @return path length through the slab in L0
+  /// @returns the path segment through the material in L0
   ///
   /// @param cos_inc_angle cosine of the track incidence angle
   DETRAY_HOST_DEVICE constexpr scalar_type path_segment_in_L0(

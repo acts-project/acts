@@ -51,7 +51,6 @@ class annulus2D {
   static constexpr std::string_view name = "(stereo) annulus2D";
 
   /// Names for the mask boundary values
-  /// Indices describing the entries in the shape boundary array.
   enum boundaries : unsigned int {
     e_min_r = 0u,
     e_max_r = 1u,
@@ -122,8 +121,8 @@ class annulus2D {
   /// caller. For the annulus shape, the local coordinate system of the
   /// strips is used (focal system).
   ///
-  /// @param bounds Annulus radial and azimuthal boundary values.
-  /// @param loc_p Point in the local focal frame.
+  /// @param bounds the boundary values for this shape
+  /// @param loc_p the point to be checked in the local coordinate system
   ///
   /// @return the minimum distance.
   template <concepts::scalar scalar_t, concepts::point point_t>
@@ -154,7 +153,7 @@ class annulus2D {
   /// @param bounds the boundary values for this shape
   /// @param trf the surface transform
   /// @param glob_p the point to be checked in the global coordinate system
-  /// @param tol Dynamic tolerance supplied by the caller.
+  /// @param tol dynamic tolerance determined by caller
   /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
@@ -223,7 +222,7 @@ class annulus2D {
   ///
   /// @param bounds the boundary values for this shape
   /// @param loc_p the point to be checked in the local coordinate system
-  /// @param tol Dynamic tolerance supplied by the caller.
+  /// @param tol dynamic tolerance determined by caller
   /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
@@ -403,7 +402,7 @@ class annulus2D {
 
   /// @brief Stereo annulus corners in polar strip system.
   ///
-  /// @param bounds Annulus boundary values.
+  /// @param bounds the boundary values for the stereo annulus
   ///
   /// @note see calculation of strip lengths in
   ///       https://cds.cern.ch/record/1514636?ln=en p10-13
@@ -452,7 +451,7 @@ class annulus2D {
   }
 
   /// @param bounds Boundary values used to determine the center.
-  /// @returns The centroid in local Cartesian coordinates.
+  /// @returns the shapes centroid in local cartesian coordinates
   /// @note the calculated centroid position is only an approximation
   /// (centroid of the four corner points)!
   template <concepts::algebra algebra_t>
@@ -473,8 +472,8 @@ class annulus2D {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// @param bounds Boundary values of the annulus.
-  /// @param n_seg Number of segments used to approximate each curved edge.
+  /// @param bounds the boundary values for the stereo annulus
+  /// @param n_seg is the number of line segments
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>

@@ -95,14 +95,13 @@ class rk_stepper final
     vector3_type b_middle{0.f, 0.f, 0.f};
     /// Magnetic field at the final integration stage.
     vector3_type b_last{0.f, 0.f, 0.f};
-    /// Tangential directions at the four stages, @f$\mathbf{t}=d\mathbf{r}/ds@f$.
+    /// t = tangential direction = dr/ds
     darray<vector3_type, 4u> t;
-    /// Charge-over-momentum values at the four stages.
+    /// q/p
     darray<scalar_type, 4u> qop;
-    /// Direction derivatives at the four stages,
-    /// @f$d\mathbf{t}/ds = d^2\mathbf{r}/ds^2 = (q/p)(\mathbf{t} \times \mathbf{B})@f$.
+    /// dt/ds = d^2r/ds^2 = q/p ( t X B )
     darray<vector3_type, 4u> dtds;
-    /// Charge-over-momentum derivatives at the four stages.
+    /// d(q/p)/ds
     darray<scalar_type, 4u> dqopds;
   };
 
@@ -139,7 +138,7 @@ class rk_stepper final
     DETRAY_HOST_DEVICE
     const magnetic_field_type& field() const { return m_magnetic_field; }
 
-    /// Set the step size to use on the next integration step.
+    /// Set the next step size
     /// @param step Signed next step size.
     DETRAY_HOST_DEVICE
     inline void set_next_step_size(const scalar_type step) {
@@ -151,7 +150,7 @@ class rk_stepper final
     DETRAY_HOST_DEVICE
     inline scalar_type next_step_size() const { return m_next_step_size; }
 
-    /// Evaluate the direction derivative, @f$d\mathbf{t}/ds@f$.
+    /// Evaluate dtds, where t is the unit tangential direction
     /// @return Direction derivative at the current track state.
     DETRAY_HOST_DEVICE
     vector3_type dtds() const {
@@ -175,13 +174,12 @@ class rk_stepper final
       return m_dtds_3;
     }
 
-    /// Store the direction derivative for the current step.
+    /// Set dtds, where t is the unit tangential direction
     /// @param v Direction derivative.
     DETRAY_HOST_DEVICE
     void dtds(const vector3_type& v) { m_dtds_3 = v; }
 
-    /// Evaluate the charge-over-momentum derivative using the current track
-    /// value.
+    /// Evaluate d(qop)/ds
     /// @param vol_mat_ptr Material in the current volume, or null in vacuum.
     /// @return Derivative of charge-over-momentum with path length.
     DETRAY_HOST_DEVICE
@@ -230,11 +228,11 @@ class rk_stepper final
       return qop * qop * qop * E * stopping_power / (q * q);
     }
 
-    /// Store the charge-over-momentum derivative for the current step.
+    /// Set d(qop)/ds
     /// @param s Derivative value.
     DETRAY_HOST_DEVICE void dqopds(const scalar_type& s) { m_dqopds_3 = s; }
 
-    /// Evaluate the derivative of @f$d(q/p)/ds@f$ with respect to @f$q/p@f$.
+    /// Evaluate d(d(qop)/ds)dqop
     /// @param qop Charge-over-momentum at which to evaluate.
     /// @param vol_mat_ptr Material in the current volume, or null in vacuum.
     /// @return Derivative of the charge-over-momentum derivative.
@@ -276,7 +274,7 @@ class rk_stepper final
       return dqopds * (1.f / qop * (3.f - p2 / E2) + 1.f / g * dgdqop);
     }
 
-    /// Call the configured inspector and emit optional state diagnostics.
+    /// Call the stepping inspector
     /// @param cfg Stepping configuration.
     /// @param message Diagnostic label.
     /// @param dist Distance to the next surface.
@@ -315,7 +313,7 @@ class rk_stepper final
   /// @param dist_to_next The straight line distance to the next surface
   /// @param stepping The state object of a stepper
   /// @param cfg The stepping configuration
-  /// @param do_reset Whether to reset the RKN step size to the distance to next.
+  /// @param do_reset whether to reset the RKN step size to "dist to next"
   /// @param vol_mat_ptr Material in the current volume, or null in vacuum.
   ///
   /// @return returning the heartbeat, indicating if the stepping is alive
@@ -572,7 +570,7 @@ class rk_stepper final
     return true;
   }
 
-  /// Evaluate charge-over-momentum derivatives for an RK stage.
+  /// evaluate dqopds for a given step size and material
   /// @param stepping State being integrated.
   /// @param i RK stage index.
   /// @param h Stage step offset.
@@ -614,7 +612,7 @@ class rk_stepper final
     }
   }
 
-  /// Evaluate direction derivatives for an RK stage.
+  /// Evaluate dtds for Runge-Kutta stepping
   /// @param stepping State being integrated.
   /// @param b_field Magnetic field at this stage.
   /// @param i RK stage index.
@@ -685,7 +683,7 @@ class rk_stepper final
     stepping.update_path_lengths(h);
   }
 
-  /// Update the transport Jacobian for the completed free-propagation step.
+  /// Update the jacobian transport from free propagation
   /// @param stepping State whose Jacobian is updated.
   /// @param cfg Stepping configuration controlling gradient terms.
   /// @param sd Evaluated RK stage data.

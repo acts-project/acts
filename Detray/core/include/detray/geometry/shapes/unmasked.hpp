@@ -53,7 +53,7 @@ class unmasked {
   /// @note the point is expected to be given in local coordinates by the
   /// caller.
   ///
-  /// @returns The maximum scalar value because this shape has no boundary.
+  /// @return the minimum distance.
   template <concepts::scalar scalar_t, concepts::point point_t>
   DETRAY_HOST_DEVICE inline scalar_t min_dist_to_boundary(
       const bounds_type<scalar_t>& /*bounds*/, const point_t& /*loc_p*/) const {
@@ -151,7 +151,7 @@ class unmasked {
     return {-inv, -inv, -inv, inv, inv, inv};
   }
 
-  /// @returns The origin in global Cartesian coordinates.
+  /// @returns the shapes centroid in global cartesian coordinates
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE dpoint3D<algebra_t> centroid(
       const bounds_type<dscalar<algebra_t>>& /*unused*/) const {
@@ -160,7 +160,7 @@ class unmasked {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// @param bounds Placeholder boundary array; it does not affect the result.
+  /// @param bounds the boundary values
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>

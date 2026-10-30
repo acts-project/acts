@@ -163,7 +163,7 @@ class iota_view : public detray::ranges::view_interface<iota_view<incr_t>> {
     requires std::default_initializable<incr_t>
   = default;
 
-  /// Construct from an interval that defines start and end values.
+  /// Construct from an @p interval that defines start and end values.
   /// @param interval half-open interval supplying the sequence bounds
   template <concepts::interval interval_t>
     requires(!std::same_as<interval_t, iota_view>)
@@ -173,7 +173,7 @@ class iota_view : public detray::ranges::view_interface<iota_view<incr_t>> {
     assert(m_start <= m_end);
   }
 
-  /// Construct a sequence from `start` up to, but excluding, `end`.
+  /// Construct from a @p start start and @p end value.
   /// @param start first value in the sequence
   /// @param end one-past-the-last value in the sequence
   DETRAY_HOST_DEVICE constexpr iota_view(incr_t start, incr_t end)
@@ -181,7 +181,7 @@ class iota_view : public detray::ranges::view_interface<iota_view<incr_t>> {
     assert(m_start <= m_end);
   }
 
-  /// Construct a sequence containing only `start`.
+  /// Construct from just a @p start value to represent a single value seq
   /// @param start sole value in the sequence
   DETRAY_HOST_DEVICE
   constexpr explicit iota_view(incr_t start)

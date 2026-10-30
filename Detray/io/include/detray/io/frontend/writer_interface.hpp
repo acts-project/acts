@@ -26,7 +26,7 @@ class writer_interface {
   /// All writers must define a file extension
   writer_interface() = delete;
 
-  /// Write files with the given extension.
+  /// File gets created with a fixed @p ext
   /// @param ext file extension handled by this writer
   explicit writer_interface(const std::string& ext) : m_file_extension{ext} {}
 

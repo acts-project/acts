@@ -235,7 +235,7 @@ struct transform3 {
   /// Rotate a vector into / from a frame
   ///
   /// @param m is the rotation matrix
-  /// @param v vector to rotate
+  /// @param v is the vector to be rotated
   /// @return the rotated vector
   DETRAY_HOST_DEVICE
   static constexpr vector3 rotate(const matrix44 &m, const vector2 &v) {
@@ -261,7 +261,7 @@ struct transform3 {
   /// Rotate a vector into / from a frame
   ///
   /// @param m is the rotation matrix
-  /// @param v vector to rotate
+  /// @param v is the vector to be rotated
   /// @return the rotated vector
   DETRAY_HOST_DEVICE
   static constexpr vector3 rotate(const matrix44 &m, const vector3 &v) {
@@ -291,61 +291,57 @@ struct transform3 {
     return ret;
   }
 
-  /// Return the upper-left 3x3 rotation block.
+  /// This method retrieves the rotation of a transform
   /// @return rotation matrix
-  /// @return the upper-left 3x3 rotation block
   DETRAY_HOST_DEVICE
   auto constexpr rotation() const {
     return block_getter{}.template operator()<3, 3>(_data, 0, 0);
   }
 
-  /// Return the local x axis in global coordinates.
+  /// This method retrieves x axis
   /// @return x-axis vector
-  /// @return the local x axis expressed in global coordinates
   DETRAY_HOST_DEVICE
   constexpr point3 x() const {
     return {element_getter{}(_data, 0, 0), element_getter{}(_data, 1, 0),
             element_getter{}(_data, 2, 0)};
   }
 
-  /// Return the local y axis in global coordinates.
+  /// This method retrieves y axis
   /// @return y-axis vector
-  /// @return the local y axis expressed in global coordinates
   DETRAY_HOST_DEVICE
   constexpr point3 y() const {
     return {element_getter{}(_data, 0, 1), element_getter{}(_data, 1, 1),
             element_getter{}(_data, 2, 1)};
   }
 
-  /// Return the local z axis in global coordinates.
+  /// This method retrieves z axis
   /// @return z-axis vector
-  /// @return the local z axis expressed in global coordinates
   DETRAY_HOST_DEVICE
   constexpr point3 z() const {
     return {element_getter{}(_data, 0, 2), element_getter{}(_data, 1, 2),
             element_getter{}(_data, 2, 2)};
   }
 
-  /// Return the frame origin in global coordinates.
+  /// This method retrieves the translation of a transform
   /// @return translation vector
-  /// @return the frame origin in global coordinates
   DETRAY_HOST_DEVICE
   constexpr point3 translation() const {
     return {element_getter{}(_data, 0, 3), element_getter{}(_data, 1, 3),
             element_getter{}(_data, 2, 3)};
   }
 
-  /// Return the local-to-global transformation matrix.
+  /// This method retrieves the 4x4 matrix of a transform
   /// @return the local-to-global homogeneous matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix() const { return _data; }
 
-  /// Return the global-to-local transformation matrix.
+  /// This method retrieves the 4x4 matrix of an inverse transform
   /// @return the global-to-local homogeneous matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix_inverse() const { return _data_inv; }
 
-  /// Transform a point from local plane coordinates to global coordinates.
+  /// This method transform from a point from the local 2D cartesian frame to
+  /// the global 3D cartesian frame
   /// @param v point in local plane coordinates
   /// @return the point in global coordinates
   DETRAY_HOST_DEVICE constexpr point3 point_to_global(const point2 &v) const {
@@ -356,7 +352,8 @@ struct transform3 {
             element_getter{}(rg, 2) + element_getter{}(_data, 2, 3)};
   }
 
-  /// Transform a point from local coordinates to global coordinates.
+  /// This method transform from a point from the local 3D cartesian frame to
+  /// the global 3D cartesian frame
   /// @param v point in local coordinates
   /// @return the point in global coordinates
   DETRAY_HOST_DEVICE constexpr point3 point_to_global(const point3 &v) const {
@@ -387,7 +384,8 @@ struct transform3 {
     return rotate(_data, v);
   }
 
-  /// Transform a local vector to global coordinates.
+  /// This method transform from a vector from the local 3D cartesian frame to
+  /// the global 3D cartesian frame
   /// @param v vector in local coordinates
   /// @return the vector in global coordinates
   DETRAY_HOST_DEVICE constexpr vector3 vector_to_global(
@@ -395,7 +393,8 @@ struct transform3 {
     return rotate(_data, v);
   }
 
-  /// Transform a global vector to local coordinates.
+  /// This method transform from a vector from the global 3D cartesian frame
+  /// into the local 3D cartesian frame
   /// @param v vector in global coordinates
   /// @return the vector in local coordinates
   DETRAY_HOST_DEVICE constexpr vector3 vector_to_local(const vector3 &v) const {

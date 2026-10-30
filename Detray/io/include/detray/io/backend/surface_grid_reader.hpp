@@ -42,7 +42,8 @@ class surface_grid_reader
   /// Same constructors for this class as for base_type
   using base_type::base_type;
 
-  /// Populate the detector builder with surface grids from a payload.
+  /// Convert the detector grids @p grids_data from their IO
+  /// payload
   /// @tparam detector_t Detector type being constructed.
   /// @param det_builder Builder receiving the acceleration structures.
   /// @param grids_data Serialized surface-grid payload.

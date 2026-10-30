@@ -61,7 +61,7 @@ class helix {
   /// @param time the time parameter
   /// @param dir the initial normalized direction for the helix
   /// @param qop signed inverse momentum of the particle
-  /// @param mag_field magnetic field vector at the helix origin
+  /// @param mag_field the magnetic field vector
   DETRAY_HOST_DEVICE
   helix(const point3_type &pos, const scalar_type time, const vector3_type &dir,
         const scalar_type qop, const vector3_type &mag_field)
@@ -134,13 +134,13 @@ class helix {
 
   /// Evaluate the helix at a path length.
   /// @param s signed path length from the initial state
-  /// @return position at that path length
+  /// @returns the position after propagating the path length of s
   DETRAY_HOST_DEVICE
   point3_type operator()(const scalar_type s) const { return this->pos(s); }
 
   /// Evaluate the helix position at a path length.
   /// @param s signed path length from the initial state
-  /// @return global position at that path length
+  /// @returns the position after propagating the path length of s
   DETRAY_HOST_DEVICE
   point3_type pos(const scalar_type s) const {
     // Handle the case of pT ~ 0
@@ -163,7 +163,7 @@ class helix {
 
   /// Evaluate the unit tangent direction at a path length.
   /// @param s signed path length from the initial state
-  /// @return normalized direction at that path length
+  /// @returns the tangential vector after propagating the path length of s
   DETRAY_HOST_DEVICE
   vector3_type dir(const scalar_type s) const {
     // Handle the case of pT ~ 0
@@ -207,7 +207,7 @@ class helix {
 
   /// Compute the free-parameter transport Jacobian at a path length.
   /// @param s signed path length from the initial state
-  /// @return Jacobian mapping initial free parameters to propagated ones
+  /// @returns the transport jacobian after propagating the path length of s
   DETRAY_HOST_DEVICE
   free_matrix_t jacobian(const scalar_type s) const {
     free_matrix_t ret = matrix::zero<free_matrix_t>();

@@ -33,7 +33,7 @@ struct surface_sequencer : public base_actor {
     /// Device vector storing the encountered surface sequence.
     using sequence_type = vecmem::device_vector<sf_descriptor_t>;
 
-    /// Construct state with a preallocated surface sequence buffer.
+    /// Constructor with the vector of track states
     /// @param seq buffer used to store encountered surfaces
     DETRAY_HOST_DEVICE
     explicit state(sequence_type seq) : m_sequence(seq) {}
@@ -44,7 +44,7 @@ struct surface_sequencer : public base_actor {
     /// @returns true if the internal buffer has reached its capacity
     DETRAY_HOST_DEVICE bool overflow() const { return m_overflow; }
 
-    /// Configure whether only material-bearing surfaces are collected.
+    /// Configure whether to collect only material surfaces
     /// @param material_only true to skip sensitive surfaces without material
     DETRAY_HOST_DEVICE void collect_only_material_surfaces(bool material_only) {
       m_collect_only_material_surfaces = material_only;
@@ -72,7 +72,8 @@ struct surface_sequencer : public base_actor {
     bool m_collect_only_material_surfaces = false;
   };
 
-  /// Record detector surfaces when they are sensitive or carry material.
+  /// Record detector surfaces in sequence if they are sensitive or
+  /// have material
   /// @tparam propagator_state_t propagation state providing navigation data
   /// @param actor_state sequence buffer and collection options
   /// @param propagation current navigation and stepping state

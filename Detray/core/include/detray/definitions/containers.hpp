@@ -45,8 +45,7 @@ template <class... types>
 /// Tuple type used by detray storage and dispatch.
 using dtuple = detray::tuple<types...>;
 
-/// Bundle the vector, tuple, and array templates used by a detector container
-/// policy.
+/// @brief Bundle container type definitions
 template <template <typename...> class vector_t = dvector>
 struct container_types {
   template <typename T>
@@ -62,7 +61,7 @@ struct container_types {
   using array_type = darray<T, kDIM>;
 };
 
-/// Bundle container templates whose stored element types are const-qualified.
+/// @brief Bundle container type definitions
 template <template <typename...> class vector_t = dvector>
 struct const_container_types {
   template <typename T>

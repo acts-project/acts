@@ -21,36 +21,36 @@ namespace detray {
 
 /// Map volume indices to volume names and vice versa
 struct name_map {
-  /// Sets the detector name.
+  /// @brief set the name of the detector
   /// @param name Name to assign to the detector.
   DETRAY_HOST void set_detector_name(const std::string_view name) {
     detector_name = name;
   }
 
-  /// @returns The detector name.
+  /// @returns the name of the detector
   DETRAY_HOST const std::string& get_detector_name() const {
     return detector_name;
   }
 
-  /// @returns Whether the volume name mappings are empty.
+  /// @returns whether the name map is empty
   DETRAY_HOST bool empty() const {
     assert(index_to_name.size() == name_to_index.size());
     return index_to_name.empty();
   }
 
   /// @param idx Volume index to look up.
-  /// @returns Whether a mapping exists for the volume index.
+  /// @returns whether the name map contains a given volume index
   DETRAY_HOST bool contains(dindex idx) const {
     return index_to_name.contains(idx);
   }
 
   /// @param name Volume name to look up.
-  /// @returns Whether a mapping exists for the volume name.
+  /// @returns whether the name map contains a given volume name
   DETRAY_HOST bool contains(std::string_view name) const {
     return name_to_index.contains(name);
   }
 
-  /// Inserts an index-to-name and name-to-index mapping if absent.
+  /// @brief emplace a new index <-> name mapping
   /// @param idx Volume index.
   /// @param name Volume name to copy into the map.
   DETRAY_HOST void emplace(dindex idx, const std::string& name) {
@@ -60,26 +60,26 @@ struct name_map {
 
   /// Returns the name associated with a volume index.
   /// @param idx Volume index to look up.
-  /// @returns The mapped volume name.
+  /// @returns the name of a volume given the volume index @p idx - const
   DETRAY_HOST decltype(auto) at(dindex idx) const {
     return index_to_name.at(idx);
   }
 
   /// Returns the name associated with a volume index.
   /// @param idx Volume index to look up.
-  /// @returns The mapped volume name.
+  /// @returns the name of a volume given the volume index @p idx
   DETRAY_HOST decltype(auto) at(dindex idx) { return index_to_name.at(idx); }
 
   /// Returns the index associated with a volume name.
   /// @param name Volume name to look up.
-  /// @returns The mapped volume index.
+  /// @returns the index of a volume given the volume name @p name
   DETRAY_HOST decltype(auto) at(const std::string& name) const {
     return name_to_index.at(name);
   }
 
   /// Returns the index associated with a volume name.
   /// @param name Volume name to look up.
-  /// @returns The mapped volume index.
+  /// @returns the index of a volume given the volume name @p name
   DETRAY_HOST decltype(auto) at(const std::string_view name) const {
     return name_to_index.at(name);
   }

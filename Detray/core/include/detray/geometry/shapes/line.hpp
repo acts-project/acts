@@ -336,9 +336,9 @@ class line {
   }
 };
 
-/// Radial cross-section with a boundary check in polar coordinates.
+/// Radial crossection, boundary check in polar coordinates
 using line_circular = line<false>;
-/// Square cross-section with a boundary check in Cartesian coordinates.
+/// Square crossection, boundary check in cartesian coordinates
 using line_square = line<true>;
 
 }  // namespace detray

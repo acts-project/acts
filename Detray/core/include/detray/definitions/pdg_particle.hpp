@@ -58,8 +58,7 @@ struct pdg_particle {
   scalar_type m_charge;
 };
 
-/// Conjugate a charged particle hypothesis, leaving neutral hypotheses
-/// unchanged.
+/// Apply the charge conjugation operator to a particle hypothesis @p ptc
 /// @param ptc Particle hypothesis to conjugate.
 /// @returns Hypothesis with reversed charge and PDG sign for charged particles.
 template <concepts::scalar scalar_t>
@@ -74,14 +73,14 @@ DETRAY_HOST_DEVICE constexpr pdg_particle<scalar_t> charge_conjugation(
 /// Select the hypothesis matching the sign of the track charge over momentum.
 /// @param ptc Initial particle hypothesis.
 /// @param params Track parameters providing charge over momentum.
-/// @returns Original or charge-conjugate hypothesis, according to the track.
+/// @returns an updated particle hypothesis according to the track qop
 template <concepts::scalar scalar_t, typename track_t>
 DETRAY_HOST_DEVICE constexpr pdg_particle<scalar_t> update_particle_hypothesis(
     const pdg_particle<scalar_t>& ptc, const track_t& params) {
   return (ptc.charge() * params.qop() > 0.f) ? ptc : charge_conjugation(ptc);
 }
 
-/// Declare a particle type with fixed PDG number, mass, and charge.
+/// Macro for declaring the particle
 /// @param PARTICLE_NAME Generated particle type name.
 /// @param PDG_NUM Signed PDG identifier.
 /// @param MASS Particle mass in internal units.

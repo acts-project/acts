@@ -27,7 +27,7 @@ namespace detray::algebra::fastor::math {
 // Note that for all `Fastor::AbstractTensors`, the `N` template parameters
 // refers to the number of dimensions, not the number of elements.
 
-/// Retrieve the azimuthal angle of a vector.
+/// This method retrieves phi from a vector @p a
 /// @param a Input vector.
 /// @returns The angle in the transverse plane, computed with `atan2`.
 template <typename Derived, auto N>
@@ -44,7 +44,8 @@ DETRAY_HOST_DEVICE constexpr auto phi(
   return algebra::math::atan2(v[1], v[0]);
 }
 
-/// Retrieve the polar angle of a vector with at least three components.
+/// This method retrieves theta from a vector, vector base with rows >= 3
+///
 /// @param a Input vector.
 /// @returns The angle from the positive z axis.
 template <typename Derived, auto N>
@@ -61,7 +62,8 @@ DETRAY_HOST constexpr auto theta(
   return algebra::math::atan2(Fastor::norm(v(Fastor::fseq<0, 2>())), v[2]);
 }
 
-/// Retrieve the magnitude of a vector's first two components.
+/// This method retrieves the perpendicular magnitude of a vector with rows >= 2
+///
 /// @param a Input vector.
 /// @returns The transverse magnitude.
 template <typename Derived, auto N>
@@ -79,15 +81,18 @@ DETRAY_HOST constexpr auto perp(
       Fastor::inner(v(Fastor::fseq<0, 2>()), v(Fastor::fseq<0, 2>())));
 }
 
-/// Retrieve the norm of a vector, with no dimension restriction.
-/// @param v Input vector.
+/// This method retrieves the norm of a vector, no dimension restriction
+///
+/// @param v the input vector
 /// @returns The Euclidean norm.
 template <typename Derived, auto N>
 DETRAY_HOST constexpr auto norm(const Fastor::AbstractTensor<Derived, N> &v) {
   return Fastor::norm(v);
 }
 
-/// Retrieve the pseudorapidity of a vector with at least three components.
+/// This method retrieves the pseudo-rapidity from a vector or vector base with
+/// rows >= 3
+///
 /// @param a Input vector.
 /// @returns The pseudorapidity computed from the longitudinal component.
 template <typename Derived, auto N>

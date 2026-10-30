@@ -66,7 +66,7 @@ struct propagator {
   /// Register the actor types
   const actor_chain_type run_actors{};
 
-  /// Construct from a propagator configuration.
+  /// Construct from a propagator configuration
   /// @param cfg Propagation configuration, retained by reference.
   DETRAY_HOST_DEVICE
   explicit constexpr propagator(const propagation::config &cfg) : m_cfg{cfg} {}
@@ -94,7 +94,7 @@ struct propagator {
     /// Whether the configured stepper transports field gradients.
     static constexpr bool stepper_uses_gradient = stepper_type::uses_gradient;
 
-    /// Construct an owning propagation state from free parameters.
+    /// Construct the propagation state with free parameter
     /// @param free_params Initial free track parameters.
     /// @param det Detector used for navigation.
     /// @param ctx Geometry context for detector transforms.
@@ -104,7 +104,7 @@ struct propagator {
       requires(!states_as_reference)
         : m_stepping(free_params), m_navigation(det), m_context(ctx) {}
 
-    /// Construct an owning state from free parameters and a magnetic field.
+    /// Construct the propagation state with free parameter
     /// @param free_params Initial free track parameters.
     /// @param magnetic_field Magnetic field used by the stepper.
     /// @param det Detector used for navigation.
@@ -120,7 +120,7 @@ struct propagator {
           m_navigation(det),
           m_context(ctx) {}
 
-    /// Construct an owning state from free parameters and a navigator view.
+    /// Construct the propagation state from the navigator state view
     /// @param free_params Initial free track parameters.
     /// @param det Detector used for navigation.
     /// @param nav_view Existing navigator state view to initialize from.
@@ -134,8 +134,7 @@ struct propagator {
           m_navigation(det, nav_view),
           m_context(ctx) {}
 
-    /// Construct an owning state from free parameters, field, and navigator
-    /// view.
+    /// Construct the propagation state from the navigator state view
     /// @param free_params Initial free track parameters.
     /// @param magnetic_field Magnetic field used by the stepper.
     /// @param det Detector used for navigation.
@@ -153,7 +152,7 @@ struct propagator {
           m_navigation(det, nav_view),
           m_context(ctx) {}
 
-    /// Construct an owning state from bound parameters.
+    /// Construct the propagation state with bound parameter
     /// @param param Initial bound track parameters.
     /// @param det Detector used for navigation.
     /// @param ctx Geometry context for detector transforms.
@@ -165,7 +164,8 @@ struct propagator {
       m_navigation.set_volume(param.surface_link().volume());
     }
 
-    /// Construct a non-owning view of existing stepper and navigator states.
+    /// Construct the propagation state with propagation and navigation
+    /// state
     /// @param stepping Existing stepper state.
     /// @param navigation Existing navigator state.
     /// @param ctx Geometry context for detector transforms.
@@ -175,7 +175,7 @@ struct propagator {
       requires(states_as_reference)
         : m_stepping(stepping), m_navigation(navigation), m_context(ctx) {}
 
-    /// Construct an owning state from bound parameters and a magnetic field.
+    /// Construct the propagation state with bound parameter
     /// @param param Initial bound track parameters.
     /// @param magnetic_field Magnetic field used by the stepper.
     /// @param det Detector used for navigation.
@@ -192,7 +192,8 @@ struct propagator {
       m_navigation.set_volume(param.surface_link().volume());
     }
 
-    /// Construct an owning state from bound parameters and navigator view.
+    /// Construct the propagation state with bound parameter and
+    /// navigator state view
     /// @param param Initial bound track parameters.
     /// @param magnetic_field Magnetic field used by the stepper.
     /// @param det Detector used for navigation.
@@ -211,18 +212,18 @@ struct propagator {
       m_navigation.set_volume(param.surface_link().volume());
     }
 
-    /// Set the particle hypothesis used by the stepper.
+    /// Set the particle hypothesis
     /// @param ptc Particle properties, including mass and charge.
     DETRAY_HOST_DEVICE
     void set_particle(const pdg_particle<scalar_type> &ptc) {
       m_stepping.set_particle(ptc);
     }
 
-    /// @returns Whether propagation is currently active.
+    /// @returns the propagation heartbeat
     DETRAY_HOST_DEVICE
     bool is_alive() const { return m_heartbeat; }
 
-    /// @returns Whether propagation is currently active.
+    /// @returns the propagation heartbeat
     DETRAY_HOST_DEVICE
     bool heartbeat() const { return m_heartbeat; }
 
@@ -301,7 +302,7 @@ struct propagator {
     return !propagation.is_alive() && propagation.navigation().is_alive();
   }
 
-  /// Revive a paused propagation.
+  /// Revive the propagation
   /// @param propagation State to resume.
   template <bool is_owning>
   DETRAY_HOST_DEVICE inline void resume(
@@ -317,7 +318,7 @@ struct propagator {
   /// @param actor_state_refs tuple containing references to the actor
   /// states
   ///
-  /// @return True if propagation completed or was paused; false if aborted.
+  /// @return propagation success.
   template <typename actor_states_t, bool is_owning>
     requires(concepts::is_state_of<actor_states_t, actor_chain_type>)
   DETRAY_HOST_DEVICE bool propagate(
@@ -468,7 +469,7 @@ struct propagator {
     return finished(propagation) || is_paused(propagation);
   }
 
-  /// Propagate using an empty actor chain.
+  /// Overload for empty actor chain
   /// @param propagation State of the propagation flow.
   /// @return True if propagation completed or was paused; false if aborted.
   template <bool is_owning>

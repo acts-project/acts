@@ -92,7 +92,7 @@ class volume_graph {
     /// edges that belong to it (mask link of every surface in the volume).
     /// One mask link is a half edge in the graph.
     struct node {
-      /// Construct a node from a detector volume and its surfaces.
+      /// Constructor from a detectors volume and surface collections
       /// @param volume detector volume represented by this node
       explicit node(const tracking_volume<detector_t> &volume)
           : m_idx(volume.index()) {
@@ -134,13 +134,14 @@ class volume_graph {
       /// No default construction because of reference member
       iterator() = delete;
 
-      /// Construct from a volume iterator and its detector.
+      /// Constructor from an iterator on the detector volume container
+      /// and a reference to its surface container.
       /// @param vol_itr iterator into the detector volume container
       /// @param det detector used to build graph nodes
       iterator(volume_iter &&vol_itr, const detector_t &det)
           : m_vol_itr(std::move(vol_itr)), m_det(det) {}
 
-      /// Compare positions in the underlying volume container.
+      /// Equality operator
       /// @param rhs iterator to compare with
       /// @returns true when both iterators refer to the same volume position
       bool operator==(const iterator &rhs) const {
@@ -150,21 +151,21 @@ class volume_graph {
       /// Dereference operator @returns a graph node
       node operator*() { return node({m_det, m_vol_itr->index()}); }
 
-      /// Advance to the next volume.
+      /// Prefix increment. No postfix increment implemented
       /// @returns this iterator after advancing
       iterator &operator++() {
         ++m_vol_itr;
         return *this;
       }
 
-      /// Move to the previous volume.
+      /// Prefix decrement. No postfix decrement implemented
       /// @returns this iterator after moving
       iterator &operator--() {
         --m_vol_itr;
         return *this;
       }
 
-      /// Advance by an offset.
+      /// Advances iterator by @p j
       /// @param j offset by which to advance
       /// @returns this iterator after advancing
       constexpr auto operator+=(const difference_type j) -> iterator & {
@@ -172,7 +173,7 @@ class volume_graph {
         return *this;
       }
 
-      /// Move backwards by an offset.
+      /// Advances iterator by - @p j
       /// @param j offset by which to move backwards
       /// @returns this iterator after moving
       constexpr auto operator-=(const difference_type j) -> iterator & {
@@ -211,7 +212,7 @@ class volume_graph {
     /// No default constructor (holds member reference)
     node_generator() = delete;
 
-    /// Construct a node view from the volume container and detector.
+    /// Constructor from a detector containers
     /// @param volumes detector volume container
     /// @param det detector used to construct nodes
     node_generator(const volume_container_t &volumes, const detector_t &det)
@@ -298,7 +299,7 @@ class volume_graph {
     /// No default constructor (holds member reference)
     edge_generator() = delete;
 
-    /// Construct edges from the detector mask store.
+    /// Constructor from the detector masks store.
     /// @param masks detector mask container
     /// @param volume_id source volume index
     /// @param mask_link link identifying the mask range to visit
@@ -318,7 +319,7 @@ class volume_graph {
     /// Rebuild edges for a new volume and mask link.
     /// @param volume_id source volume index
     /// @param mask_link link identifying the mask range to visit
-    /// @returns this generator after rebuilding its edge collection
+    /// @return updated version of @c edge_generator
     edge_generator &operator()(dindex volume_id, const mask_link_t mask_link) {
       _volume_id = volume_id;
       _mask_link = mask_link;
@@ -368,7 +369,7 @@ class volume_graph {
   /// @return node collection - const access. */
   const auto &nodes() const { return _nodes; }
 
-  /// @returns number of surfaces/portals associated with the volume
+  /// @return number of surfaces/portals in the geometry */
   /// @param volume_id index of the volume whose half-edges are counted
   dindex n_edges(dindex volume_id) const {
     const node_type n = _nodes[volume_id];

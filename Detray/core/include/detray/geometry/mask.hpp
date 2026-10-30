@@ -45,7 +45,7 @@ template <typename shape_t, concepts::algebra algebra_t,
   requires concepts::shape<shape_t, algebra_t>
 class mask {
  public:
-  /// Linear algebra backend used by the shape and coordinate operations.
+  /// Linear algebra types
   using algebra_type = algebra_t;
   /// Scalar type used for boundary values.
   using scalar_type = dscalar<algebra_t>;
@@ -100,7 +100,7 @@ class mask {
 
   /// Assignment operator from an array, convenience function
   ///
-  /// @param rhs Boundary values to assign.
+  /// @param rhs is the right hand side object
   /// @returns Reference to this mask after assignment.
   DETRAY_HOST
   auto operator=(const mask_values& rhs) -> mask<shape_t, algebra_t, links_t>& {
@@ -118,7 +118,7 @@ class mask {
   /// Subscript operator - non-const
   ///
   /// @param value_index Index of the boundary value to access.
-  /// @returns Mutable reference to the selected boundary value.
+  /// @returns the reference to the member variable
   DETRAY_HOST_DEVICE
   constexpr auto operator[](const std::size_t value_index) -> scalar_type& {
     return _values[value_index];
@@ -127,7 +127,7 @@ class mask {
   /// Subscript operator - const
   ///
   /// @param value_index Index of the boundary value to access.
-  /// @returns Copy of the selected boundary value.
+  /// @returns a copy of the member variable
   DETRAY_HOST_DEVICE
   constexpr auto operator[](const std::size_t value_index) const
       -> scalar_type {
@@ -146,7 +146,7 @@ class mask {
   /// @param trf Transform from the local surface frame to global coordinates.
   /// @param glob_p Global point to project into the local frame.
   /// @param glob_dir Direction associated with the global point.
-  /// @returns The point in the surface's local three-dimensional frame.
+  /// @returns the global point projected onto the surface (3D)
   DETRAY_HOST_DEVICE constexpr static auto to_local_frame3D(
       const transform3_type& trf, const point3_type& glob_p,
       const point3_type& glob_dir = {}) -> point3_type {
@@ -156,7 +156,7 @@ class mask {
   /// @param trf Transform from the local surface frame to global coordinates.
   /// @param glob_p Global point to project into the local frame.
   /// @param glob_dir Direction associated with the global point.
-  /// @returns The point in the surface's local two-dimensional frame.
+  /// @returns the global point projected onto the surface (2D)
   DETRAY_HOST_DEVICE constexpr static auto to_local_frame(
       const transform3_type& trf, const point3_type& glob_p,
       const point3_type& glob_dir = {}) -> point2_type {
@@ -165,7 +165,7 @@ class mask {
 
   /// @param trf Transform from the local surface frame to global coordinates.
   /// @param loc Point in the local three-dimensional frame.
-  /// @returns The point in global coordinates.
+  /// @returns the global point for a 3D local position on the surface
   DETRAY_HOST_DEVICE constexpr static auto to_global_frame(
       const transform3_type& trf, const point3_type& loc) -> point3_type {
     return get_local_frame().local_to_global(trf, loc);
@@ -174,7 +174,7 @@ class mask {
   /// @param trf Transform from the local surface frame to global coordinates.
   /// @param loc Point in the local two-dimensional frame.
   /// @param dir Direction used to resolve the three-dimensional point.
-  /// @returns The point in global coordinates.
+  /// @returns the global point for a 2D local position on the surface
   DETRAY_HOST_DEVICE constexpr auto to_global_frame(
       const transform3_type& trf, const point2_type& loc,
       const vector3_type& dir) const -> point3_type {
@@ -344,7 +344,7 @@ class mask {
   }
 
   /// @param os Stream that receives consistency diagnostics.
-  /// @returns True when the underlying shape accepts the boundary values.
+  /// @returns true if the mask boundary values are consistent
   DETRAY_HOST
   constexpr bool self_check(std::ostream& os) const {
     const bool result = get_shape().check_consistency(_values, os);

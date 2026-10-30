@@ -44,7 +44,8 @@ class bit_encoder {
   ///
   /// @tparam mask nonzero bit mask selecting the field
   /// @param v encoded value to inspect
-  /// @return selected field shifted down to bit zero
+  /// @returns the masked bits from the encoded value as value of the same
+  /// type.
   template <value_t mask>
     requires(mask != static_cast<value_t>(0))
   DETRAY_HOST_DEVICE static constexpr value_t get_bits(
@@ -53,8 +54,7 @@ class bit_encoder {
     return (v & mask) >> extract_shift(mask);
   }
 
-  /// Replace the field selected by `mask` with `id` in an encoded value.
-  ///
+  /// Set the masked bits to id in the encoded value.
   /// @tparam mask nonzero bit mask selecting the field
   /// @param v encoded value to update
   /// @param id field value to encode

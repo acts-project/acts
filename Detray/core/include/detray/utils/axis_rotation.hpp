@@ -49,7 +49,7 @@ struct axis_rotation {
         (1.f - cos_theta) * axis_outer;
   }
 
-  /// @param v Vector to be rotated.
+  /// @param v vector to be rotated
   /// @returns Get the counterclockwisely-rotated vector
   template <typename vector3_t>
     requires(concepts::vector3D<vector3_t> ||
@@ -75,7 +75,7 @@ struct euler_rotation {
   /// Three-dimensional vector type used for the axes and input.
   using vector3_type = dvector3D<algebra_t>;
 
-  /// Initial x axis used to construct the rotated frame.
+  /// Following the z-x-z convention
   vector3_type x{1.0f, 0.f, 0.f};
   /// Initial z axis used to construct the rotated frame.
   vector3_type z{0.f, 0.f, 1.f};
@@ -103,7 +103,7 @@ struct euler_rotation {
   }
 
   /// Apply the z-x-z Euler rotations to a vector.
-  /// @param v0 Vector to be rotated.
+  /// @param v0 vector to be rotated
   /// @returns Get the rotated vector
   DETRAY_HOST_DEVICE vector3_type operator()(const vector3_type& v0) const {
     // alpha around z axis

@@ -50,7 +50,7 @@ class axis_aligned_bounding_volume {
   /// Default constructor builds an infinite box
   constexpr axis_aligned_bounding_volume() = default;
 
-  /// Construct the volume from shape boundary values.
+  /// Constructor from mask boundary values
   /// @param box_id Identifier associated with the volume.
   /// @param args Shape boundary values forwarded to the mask constructor.
   template <typename... Args>
@@ -58,7 +58,7 @@ class axis_aligned_bounding_volume {
       std::size_t box_id, Args&&... args)
       : m_mask(box_id, std::forward<Args>(args)...) {}
 
-  /// Construct a cuboid bounding volume around a surface mask.
+  /// Construct around an arbitrary surface @p mask
   /// @param mask Surface mask whose local bounds define this volume.
   /// @param box_id Identifier associated with the volume.
   /// @param envelope Expansion applied to the surface bounds.
@@ -71,7 +71,7 @@ class axis_aligned_bounding_volume {
     assert(envelope >= std::numeric_limits<scalar_t>::epsilon());
   }
 
-  /// Construct from a vector of shape boundary values.
+  /// Construct from mask boundary vector
   /// @param values Boundary values expected by the shape mask.
   /// @param box_id Identifier associated with the volume.
   DETRAY_HOST axis_aligned_bounding_volume(const std::vector<scalar_t>& values,
@@ -134,12 +134,12 @@ class axis_aligned_bounding_volume {
   }
 
   /// Return the volume identifier.
-  /// @returns Identifier associated with the volume.
+  /// @returns the bounds of the box, depending on its shape
   DETRAY_HOST_DEVICE
   constexpr auto id() const -> std::size_t { return m_mask.volume_link(); }
 
   /// Return the shape mask storing this volume's bounds.
-  /// @returns A const reference to the mask.
+  /// @returns the bounds of the box, depending on its shape
   DETRAY_HOST_DEVICE
   constexpr auto bounds() const -> const mask<shape, algebra_t, std::size_t>& {
     return m_mask;
@@ -181,7 +181,8 @@ class axis_aligned_bounding_volume {
   }
   /// Transform the local minimum bounds into global Cartesian coordinates.
   /// @param trf Transform from the volume's local frame to global coordinates.
-  /// @returns The transformed minimum-bound point.
+  /// @returns the minimum bounds of the volume in global cartesian
+  /// coordinates
   template <concepts::transform3D transform3_t>
   DETRAY_HOST_DEVICE constexpr auto glob_min(const transform3_t& trf) const ->
       typename transform3_t::point3 {
@@ -203,7 +204,8 @@ class axis_aligned_bounding_volume {
 
   /// Transform the local maximum bounds into global Cartesian coordinates.
   /// @param trf Transform from the volume's local frame to global coordinates.
-  /// @returns The transformed maximum-bound point.
+  /// @returns the maximum bounds of the volume in global cartesian
+  /// coordinates
   template <concepts::transform3D transform3_t>
   DETRAY_HOST_DEVICE constexpr auto glob_max(const transform3_t& trf) const ->
       typename transform3_t::point3 {
@@ -324,7 +326,7 @@ class axis_aligned_bounding_volume {
     return m_mask.is_inside(loc_p, t);
   }
 
-  /// Intersect the box with a ray.
+  /// Intersect the box with a ray
   /// @param ray Ray expressed in the volume's coordinate frame.
   /// @param t Tolerance used by the intersection test.
   /// @returns Whether the ray intersects the box.

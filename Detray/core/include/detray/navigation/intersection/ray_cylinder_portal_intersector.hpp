@@ -58,13 +58,18 @@ struct ray_intersector_impl<concentric_cylindrical2D<algebra_t>, algebra_t,
   using result_type =
       intersection_point<algebra_t, point_type, intersection::contains_pos>;
 
-  /// Find the nearest intersection of a ray with the concentric cylinder.
-  /// The cylinder is centered on the z axis, so its placement transform is
-  /// unused.
-  /// @param ray Straight trajectory to test.
+  /// Operator function to find intersections between ray and cylinder mask
+  ///
+  /// Intersecting the cylinder from the inside yields one intersection
+  /// along the direction of the track and one behind it. These intersections
+  /// can be calculated in a simplified way, since the cylinder cannot be
+  /// shifted or rotated. Solve: perp(ro + t * rd) = r_cyl
+  ///
+  /// @param ray is the input ray trajectory
   /// @param mask Mask providing the cylinder radius.
-  /// @param overstep_tol Minimum accepted signed path length.
-  /// @returns The nearest path and intersection position.
+  /// @param overstep_tol negative cutoff for the path
+  ///
+  /// @return the closest intersection
   template <typename mask_t>
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
       const trajectory_type<algebra_t> &ray,

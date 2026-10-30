@@ -48,7 +48,7 @@ class homogeneous_volume_material_builder final
   DETRAY_HOST
   void set_material(material<scalar_type> mat) { m_volume_material = mat; }
 
-  /// Build the volume and attach its homogeneous volume material.
+  /// Add the volume and the material to the detector @p det
   /// @param det Detector that receives the volume and material.
   /// @param opt Options controlling volume construction.
   /// @param ctx Geometry context used by the decorated builder.

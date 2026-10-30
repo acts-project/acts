@@ -46,7 +46,7 @@ struct cartesian_product_view : public detray::ranges::view_interface<
   /// Default constructor
   constexpr cartesian_product_view() = default;
 
-  /// Construct a product view from the supplied ranges.
+  /// Construct from a pack of @p ranges.
   /// @tparam deduced_range_ts input range types
   /// @param ranges input ranges whose elements form the product
   template <detray::ranges::range... deduced_range_ts>
@@ -148,7 +148,7 @@ struct cartesian_product_iterator {
   /// Default constructor required by LegacyIterator trait
   constexpr cartesian_product_iterator() = default;
 
-  /// Construct from the begin and end iterator tuple for each input range.
+  /// Construct from a collection of @p begins and @p ends positions
   /// @param begins input range start iterators
   /// @param ends input range end iterators
   DETRAY_HOST_DEVICE

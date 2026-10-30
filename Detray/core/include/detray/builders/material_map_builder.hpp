@@ -112,7 +112,7 @@ class material_map_builder final : public volume_decorator<detector_t> {
   }
   /// @}
 
-  /// Build the volume and attach its material maps to the detector.
+  /// Add the volume and the material maps to the detector @p det
   /// @param det Detector receiving the volume and material maps.
   /// @param opt Options controlling map construction and deduplication.
   /// @param ctx Geometry context used for transform lookup.
@@ -139,13 +139,15 @@ class material_map_builder final : public volume_decorator<detector_t> {
   }
 
  private:
-  /// Check whether a surface has material-map data staged in this builder.
+  /// Check whether a surface with a given index @p sf_idx should receive
+  /// material from this builder
   /// @param sf_idx Volume-local surface index to check.
   bool surface_has_map(const dindex sf_idx) const {
     return m_bin_data.contains(sf_idx);
   }
 
-  /// Build a material grid for each mapped surface and set its detector link.
+  /// Build the material grid for every surface that has material, add it to
+  /// the detector @p det and set the global surface material link.
   ///
   /// @note The grids are built from the volume local masks in the builder,
   /// since the surfaces are not yet added to the detector

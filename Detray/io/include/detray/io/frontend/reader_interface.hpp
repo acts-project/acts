@@ -26,7 +26,7 @@ class reader_interface {
   /// All readers must define a file extension
   reader_interface() = delete;
 
-  /// Accept files with the given extension.
+  /// Only accept files with a fixed @p ext
   /// @param ext file extension handled by this reader
   explicit reader_interface(const std::string& ext) : m_file_extension{ext} {}
 

@@ -34,7 +34,7 @@ struct volume_builder_options {
   /// detector
   bool m_sort{true};
 
-  /// Returns whether global deduplication is enabled.
+  /// Getters
   /// @returns The deduplication setting.
   /// @{
   constexpr bool deduplicate() const { return m_deduplicate; }
@@ -43,7 +43,7 @@ struct volume_builder_options {
   constexpr bool sort() const { return m_sort; }
   /// @}
 
-  /// Sets whether global deduplication is enabled.
+  /// Setters
   /// @param toggle New deduplication setting.
   /// @returns This options object.
   /// @{
@@ -80,16 +80,16 @@ class volume_builder_interface {
   DETRAY_HOST
   virtual auto vol_index() const -> dindex = 0;
 
-  /// Toggles whether sensitive surfaces are added to the brute force method.
+  /// Toggles whether sensitive surfaces are added to the brute force method
   /// @param toggle Whether to add sensitive surfaces to the brute force method.
   DETRAY_HOST
   virtual void has_accel(bool toggle) = 0;
 
-  /// @returns Whether sensitive surfaces are added to the brute force method.
+  /// @returns whether sensitive surfaces are added to the brute force method
   DETRAY_HOST
   virtual bool has_accel() const = 0;
 
-  /// Sets the name for the volume.
+  /// Sets the name @p volume_name for the volume
   /// @param volume_name Name to assign to the volume.
   DETRAY_HOST
   virtual void set_name(std::string volume_name) = 0;
@@ -99,7 +99,7 @@ class volume_builder_interface {
   virtual std::string_view name() = 0;
 
   /// Returns const access to the volume being built.
-  /// @returns The volume being built.
+  /// @returns reading access to the volume
   DETRAY_HOST
   virtual auto operator()() const -> const
       typename detector_t::volume_type & = 0;
@@ -108,7 +108,7 @@ class volume_builder_interface {
   DETRAY_HOST
   virtual auto operator()() -> typename detector_t::volume_type & = 0;
 
-  /// Adds a volume and all of its contents to a detector.
+  /// @brief Adds a volume and all of its contents to a detector
   /// @param det Detector receiving the volume.
   /// @param opt Options controlling deduplication and sorting.
   /// @param ctx Geometry context used while building.
@@ -118,18 +118,20 @@ class volume_builder_interface {
                      typename detector_t::geometry_context ctx = {}) ->
       typename detector_t::volume_type * = 0;
 
-  /// Adds a transform for the volume placement.
+  /// @brief Add the transform for the volume placement - copy
   /// @param trf Transform to copy into the placement.
   DETRAY_HOST
   virtual void add_volume_placement(
       const dtransform3D<algebra_type> &trf = {}) = 0;
 
-  /// Adds a volume placement using a translation and identity rotation.
+  /// @brief Add the transform for the volume placement from the translation
+  /// @p t. The rotation will be the identity matrix.
   /// @param t Translation of the volume placement.
   DETRAY_HOST
   virtual void add_volume_placement(const dpoint3D<algebra_type> &t) = 0;
 
-  /// Adds a volume placement using a translation and its x- and z-axes.
+  /// @brief Add the transform for the volume placement from the translation
+  /// @p t , the new x- and z-axis (@p x, @p z).
   /// @param t Translation of the volume placement.
   /// @param x New x-axis of the placement.
   /// @param z New z-axis of the placement.
@@ -138,7 +140,7 @@ class volume_builder_interface {
                                     const dvector3D<algebra_type> &x,
                                     const dvector3D<algebra_type> &z) = 0;
 
-  /// Adds surfaces to the volume through a surface factory.
+  /// @brief Add surfaces to the volume
   /// @param sf_factory Factory that supplies surfaces for the volume.
   /// @param ctx Geometry context used while adding surfaces.
   DETRAY_HOST
@@ -147,7 +149,7 @@ class volume_builder_interface {
       typename detector_t::geometry_context ctx = {}) = 0;
 
  protected:
-  /// Returns mutable access to the builder's surface lookup container.
+  /// Access to builder data
   /// @returns The surface lookup container.
   /// @{
   virtual typename detector_t::surface_lookup_container &surfaces() = 0;
@@ -160,7 +162,7 @@ class volume_builder_interface {
   /// @}
 };
 
-/// Decorator that forwards volume-building operations to an underlying builder.
+/// @brief Decorator for the volume builder.
 ///
 /// Can be volume builders that introduce special sorting/memory layout, or
 /// accelerator builders, like the grid builder.
@@ -269,7 +271,7 @@ class volume_decorator : public volume_builder_interface<detector_t> {
   }
 
  protected:
-  /// Access to the underlying builder and its data.
+  /// Access to underlying builder
   /// @{
   /// Returns a pointer to the wrapped builder.
   /// @returns Pointer to the wrapped builder.

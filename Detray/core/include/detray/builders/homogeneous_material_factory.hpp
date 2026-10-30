@@ -228,7 +228,7 @@ class homogeneous_material_factory final
   }
 
   /// Add all necessary components to the factory for a single material slab
-  /// or rod in the specified material collection.
+  /// or rod (determined by the @p id)
   /// @param id Material collection to receive the value.
   /// @param mat_data One material and its surface association.
   /// @param index Optional index in the material collection.
@@ -254,7 +254,7 @@ class homogeneous_material_factory final
   }
 
   /// Add all necessary components to the factory for multiple material slabs
-  /// or rods in the specified material collection.
+  /// or rods (determined by the @p id)
   /// @param id Material collection to receive the values.
   /// @param mat_data_vec Material records to append.
   DETRAY_HOST
@@ -293,7 +293,8 @@ class homogeneous_material_factory final
   ///
   /// @param surfaces surface container of the volume builder that should get
   ///                 decorated with material.
-  /// @param materials Material store that receives the material values.
+  /// @param materials material store of the volume builder that the new
+  ///                 materials get added to.
   /// @returns No value; surfaces and material storage are updated in place.
   DETRAY_HOST
   auto operator()(typename detector_t::surface_lookup_container &surfaces,

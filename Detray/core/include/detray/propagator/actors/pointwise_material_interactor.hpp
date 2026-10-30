@@ -238,7 +238,7 @@ struct pointwise_material_interactor : public base_actor {
 
   /// @brief Update the q over p of bound track parameter
   ///
-  /// @param[out] vector Bound parameter vector whose q/p is changed.
+  /// @param[out] vector vector of bound track parameter
   /// @param[in]  ptc Particle hypothesis supplying charge and mass.
   /// @param[in]  e_loss energy loss
   /// @param[in]  sign navigation direction
@@ -275,7 +275,7 @@ struct pointwise_material_interactor : public base_actor {
   /// @brief Update the variance of q over p of bound track parameter
   ///
   /// @param[out] covariance covariance matrix of bound track parameter
-  /// @param[in]  sigma_qop Standard deviation of q/p from energy loss.
+  /// @param[in]  sigma_qop variance of q over p
   DETRAY_HOST_DEVICE inline void update_qop_variance(
       bound_matrix_type &covariance, const scalar_type sigma_qop) const {
     const scalar_type variance_qop{sigma_qop * sigma_qop};

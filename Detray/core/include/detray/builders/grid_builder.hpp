@@ -72,7 +72,7 @@ class grid_builder : public volume_decorator<detector_t> {
     }
   }
 
-  /// Choose whether passive surfaces should be added to the grid.
+  /// Should the passive surfaces be added to the grid ?
   /// @param is_add_passive True to include passive surfaces.
   void set_add_passives(bool is_add_passive = false) {
     m_add_passives = is_add_passive;
@@ -130,7 +130,7 @@ class grid_builder : public volume_decorator<detector_t> {
                         << m_grid.axes());
   }
 
-  /// Initialize an empty grid from axis spans and bin counts.
+  /// Build the empty grid from axis parameters
   /// @param spans Coordinate span for each grid axis.
   /// @param n_bins Number of bins on each axis.
   /// @param bin_capacities Optional capacities for local bins.
@@ -190,7 +190,7 @@ class grid_builder : public volume_decorator<detector_t> {
     bin_filler(m_grid, vol, surfaces, transforms, masks, ctx, args...);
   }
 
-  /// Add the grid accelerator to the detector volume.
+  /// Add the volume and the grid to the detector @p det
   /// @param det Detector receiving the grid.
   /// @param opt Options controlling volume construction.
   /// @param ctx Geometry context used for transform lookup.

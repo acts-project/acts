@@ -19,7 +19,7 @@
 
 namespace detray {
 
-/// Sort a range sequentially on the host or device.
+/// @brief sequential (single thread) sort function
 /// @tparam rand_iter_t random-access iterator over the elements to sort
 /// @tparam sentinel_t sentinel marking the end of the range
 /// @param first iterator to the first element
@@ -35,7 +35,7 @@ DETRAY_HOST_DEVICE inline void sequential_sort(rand_iter_t first,
 #endif
 }
 
-/// Find the first element satisfying a predicate.
+/// @brief find_if implementation for host/device (single thread)
 /// @tparam rand_iter_t random-access iterator over the elements
 /// @tparam sentinel_t sentinel marking the end of the range
 /// @tparam Predicate callable returning true for a matching element
@@ -56,7 +56,7 @@ DETRAY_HOST_DEVICE inline auto find_if(rand_iter_t first, sentinel_t last,
   return last;
 }
 
-/// Find the first element that is not less than a value in a sorted range.
+/// @brief lower_bound implementation for host/device
 /// @tparam forw_iter_t forward iterator over the sorted elements
 /// @tparam sentinel_t sentinel marking the end of the range
 /// @tparam Value type of the lookup value
@@ -75,7 +75,7 @@ DETRAY_HOST_DEVICE inline auto lower_bound(forw_iter_t first, sentinel_t last,
 #endif
 }
 
-/// Find the first element greater than a value in a sorted range.
+/// @brief upper_bound implementation for host/device
 /// @tparam forw_iter_t forward iterator over the sorted elements
 /// @tparam sentinel_t sentinel marking the end of the range
 /// @tparam Value type of the lookup value

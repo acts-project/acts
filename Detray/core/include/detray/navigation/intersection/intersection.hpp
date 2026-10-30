@@ -328,14 +328,14 @@ class intersection2D {
   DETRAY_HOST_DEVICE
   constexpr dsimd<algebra_t, status_type> status() const { return m_status; }
 
-  /// Set the status for every lane.
+  /// Set the intersection status according to enum value @p s
   /// @param s New status to assign.
   DETRAY_HOST_DEVICE
   constexpr void set_status(intersection::status s) {
     m_status = static_cast<status_type>(s);
   }
 
-  /// Set the status for selected lanes.
+  /// Set the intersection status according to enum value @p s
   /// @param s New status to assign.
   /// @param result_mask Lanes whose status should be updated.
   DETRAY_HOST_DEVICE

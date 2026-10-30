@@ -180,7 +180,7 @@ auto surface_grid(const detector_t& detector, const dindex index,
 /// @brief Get the surfaces indices that are registered in the bin neighborhoods
 ///
 /// @param det Detector owning the volume and accelerator store.
-/// @param vol Volume whose neighborhood associations are queried.
+/// @param vol the volume that holds the grid and surfaces
 /// @param search_window Number of bins searched around each bin.
 ///
 /// @returns a vector of surface indices per neighborhood

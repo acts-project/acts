@@ -59,23 +59,23 @@ class ray {
   }
 
   /// Return the ray origin.
-  /// @return global position at path length zero
+  /// @returns position on the ray (compatible with tracks/intersectors)
   DETRAY_HOST_DEVICE const point3_type &pos() const { return _pos; }
 
   /// Evaluate the ray at a path length.
   /// @param s signed distance from the origin
-  /// @return global position at that distance
+  /// @returns position on the ray parameterized by path length
   DETRAY_HOST_DEVICE point3_type pos(const scalar_type s) const {
     // Direction is always normalized in the constructor
     return _pos + s * _dir;
   }
 
   /// Set the ray origin.
-  /// @param pos new global origin
+  /// @param pos new position on the ray
   DETRAY_HOST_DEVICE void set_pos(point3_type pos) { _pos = pos; }
 
   /// Return the ray direction.
-  /// @return stored direction vector
+  /// @returns direction of the ray (compatible with tracks/intersectors)
   DETRAY_HOST_DEVICE const vector3_type &dir() const { return _dir; }
 
   /// Return the constant direction at any path length.

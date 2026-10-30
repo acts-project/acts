@@ -168,7 +168,7 @@ class enumerate_view : public detray::ranges::view_interface<
     /// Return an iterator advanced by `j` positions.
     /// @param itr iterator to advance
     /// @param j number of positions to advance
-    /// @return advanced iterator and matching index
+    /// @returns an iterator and index, position advanced by @p j.
     DETRAY_HOST_DEVICE friend constexpr auto operator+(const iterator &itr,
                                                        const difference_type j)
         -> iterator
@@ -180,7 +180,7 @@ class enumerate_view : public detray::ranges::view_interface<
     /// Return an iterator advanced by `j` positions.
     /// @param j number of positions to advance
     /// @param itr iterator to advance
-    /// @return advanced iterator and matching index
+    /// @returns an iterator and index, position advanced by @p j.
     DETRAY_HOST_DEVICE friend constexpr auto operator+(const difference_type j,
                                                        const iterator &itr)
         -> iterator
@@ -227,7 +227,7 @@ class enumerate_view : public detray::ranges::view_interface<
   /// constructible)
   constexpr enumerate_view() = default;
 
-  /// Enumerate `rng` beginning at zero.
+  /// Construct from a @p rng that will be enumerated beginning at 0
   /// @param rng range to enumerate
   template <detray::ranges::range range_t>
     requires(!std::same_as<range_t, enumerate_view>)
@@ -304,7 +304,7 @@ struct enumerate : public enumerate_view<range_itr_t, incr_t> {
             detray::detail::get<0>(vol.full_range())) {}
   /// @}
 
-  /// Apply this adaptor to a range in a view pipeline.
+  /// Call operator for range composition
   /// @param rng range to enumerate
   /// @return an enumerate view using this adaptor's starting index
   template <detray::ranges::range range_t>

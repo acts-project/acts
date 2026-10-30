@@ -147,7 +147,7 @@ class surface_factory : public surface_factory_interface<detector_t> {
   /// @param masks the masks of the surfaces (all of the same shape).
   /// @param ctx the geometry context.
   ///
-  /// @returns Index range of surfaces appended to the surfaces container.
+  /// @returns index range of inserted surfaces in @p surfaces container
   DETRAY_HOST
   auto operator()([[maybe_unused]] typename detector_t::volume_type &volume,
                   [[maybe_unused]]

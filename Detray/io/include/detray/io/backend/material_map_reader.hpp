@@ -49,7 +49,8 @@ class material_map_reader {
   /// Tag the reader as "material_maps"
   static constexpr std::string_view tag = "material_maps";
 
-  /// Populate the detector builder with material grids from a payload.
+  /// Convert the material grids @p grids_data from their IO
+  /// payload
   /// @tparam detector_t Detector type being constructed.
   /// @param det_builder Builder receiving the material grids.
   /// @param grids_data Serialized material-grid payload, consumed by the reader.

@@ -52,7 +52,7 @@ class tracking_volume {
   using context_t = typename detector_t::geometry_context;
 
  public:
-  /// Name lookup table used when printing geometry objects.
+  /// In case the geometry needs to be printed
   using name_map = detray::name_map;
   /// Object identifier enum used by the volume descriptor's accelerator links.
   using object_id = descr_t::object_id;
@@ -400,7 +400,7 @@ class tracking_volume {
   }
 
   /// @param names Optional detector volume names indexed by volume index.
-  /// @returns The volume name, or an index-based fallback when names are absent.
+  /// @returns the volume name (add an offset for the detector name).
   DETRAY_HOST_DEVICE
   auto name(const name_map &names) const -> std::string {
     return names.empty() ? "volume " + std::to_string(m_desc.index())

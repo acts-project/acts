@@ -59,7 +59,7 @@ class unbounded {
   /// @note the point is expected to be given in local coordinates by the
   /// caller.
   ///
-  /// @returns The maximum scalar value because this shape has no active edge.
+  /// @return the minimum distance.
   template <concepts::scalar scalar_t, concepts::point point_t>
   DETRAY_HOST_DEVICE constexpr scalar_t min_dist_to_boundary(
       const bounds_type<scalar_t>& /*bounds*/, const point_t& /*loc_p*/) const {
@@ -110,7 +110,8 @@ class unbounded {
 
   /// @brief Measure of the shape: Inf
   ///
-  /// @param bounds Boundary values accepted for interface compatibility.
+  /// @param bounds the boundary values for this shape
+  ///
   /// @returns Inf.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t measure(
@@ -173,7 +174,7 @@ class unbounded {
   }
 
   /// @param bounds Boundary values forwarded to the wrapped shape.
-  /// @returns The wrapped shape's centroid in local Cartesian coordinates.
+  /// @returns the shapes centroid in local cartesian coordinates
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE auto centroid(
       const bounds_type<dscalar<algebra_t>>& bounds) const {
@@ -182,7 +183,7 @@ class unbounded {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// @param bounds Boundary values passed to the wrapped shape.
+  /// @param bounds the boundary values for the underlying shape
   /// @param n_seg Number of segments used for curved boundary tessellation.
   ///
   /// @return a generated list of vertices

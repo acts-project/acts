@@ -62,7 +62,7 @@ class surface {
 
   /// Construct a surface facade from its detector and descriptor.
   /// @param det Detector that owns the surface data.
-  /// @param desc Descriptor containing the surface's links and identifier.
+  /// @param desc from that detector.
   DETRAY_HOST_DEVICE
   constexpr surface(const detector_t &det, const descr_t &desc)
       : m_detector{det}, m_desc{desc} {
@@ -71,14 +71,15 @@ class surface {
     assert(m_desc.transform() < det.transform_store().size());
   }
 
-  /// Construct a surface facade from its detector and geometry identifier.
+  /// Constructor from detector @p det and identifier @p geo_id in
+  /// that detector.
   /// @param det Detector that owns the surface data.
   /// @param geo_id Identifier of the surface in that detector.
   DETRAY_HOST_DEVICE
   constexpr surface(const detector_t &det, const geometry::identifier geo_id)
       : surface(det, det.surface(geo_id)) {}
 
-  /// Construct a surface facade from its detector and lookup index.
+  /// Constructor from detector @p det and surface index @p sf_idx
   /// @param det Detector that owns the surface data.
   /// @param sf_idx Index of the surface in the detector's surface lookup.
   DETRAY_HOST_DEVICE
@@ -201,7 +202,7 @@ class surface {
 
   /// @param loc_p Point in the local surface frame.
   /// @param tol Tolerance used by the mask boundary check.
-  /// @returns True when the point lies inside the mask.
+  /// @returns the mask volume link
   template <concepts::point point_t = point2_type>
   DETRAY_HOST_DEVICE constexpr bool is_inside(const point_t &loc_p,
                                               const scalar_type tol) const {
@@ -209,7 +210,7 @@ class surface {
   }
 
   /// @param index Index of the requested boundary value.
-  /// @returns The selected boundary value.
+  /// @returns a boundary value of the surface, according to @p index
   DETRAY_HOST_DEVICE
   constexpr auto boundary(std::size_t index) const {
     return visit_mask<typename kernels::get_mask_value>(index);
@@ -222,7 +223,7 @@ class surface {
   }
 
   /// @param ctx Geometry context used to resolve the surface transform.
-  /// @returns The center position in global coordinates.
+  /// @returns the center position of the surface in global coordinates
   /// @note for shapes like the annulus this is not synonymous to the centroid
   /// but instead the focal point of the strip system
   DETRAY_HOST_DEVICE
@@ -232,7 +233,8 @@ class surface {
 
   /// @param ctx Geometry context used to resolve the surface transform.
   /// @param p Local or bound position at which to evaluate the normal.
-  /// @returns The surface normal in global coordinates.
+  /// @returns the surface normal in global coordinates at a given bound/local
+  /// position @p p
   template <concepts::point point_t = point2_type>
   DETRAY_HOST_DEVICE constexpr auto normal(const context &ctx,
                                            const point_t &p) const
@@ -241,7 +243,7 @@ class surface {
   }
 
   /// @param loc_p Local position where material parameters are queried.
-  /// @returns Pointer to the material parameters, or null when unavailable.
+  /// @returns a pointer to the material parameters at the local position
   DETRAY_HOST_DEVICE constexpr const material<scalar_type> *material_parameters(
       const point2_type &loc_p) const {
     return visit_material<typename kernels::get_material_params>(loc_p);
@@ -250,7 +252,8 @@ class surface {
   /// @param ctx Geometry context used to resolve the surface transform.
   /// @param global Point in global coordinates.
   /// @param dir Track direction used by the local coordinate frame.
-  /// @returns The point in the surface's local three-dimensional frame.
+  /// @returns the local position to the global point @p global for
+  /// a given geometry context @p ctx and track direction @p dir
   DETRAY_HOST_DEVICE
   constexpr point3_type global_to_local(const context &ctx,
                                         const point3_type &global,
@@ -262,7 +265,8 @@ class surface {
   /// @param ctx Geometry context used to resolve the surface transform.
   /// @param global Point in global coordinates.
   /// @param dir Track direction used by the local coordinate frame.
-  /// @returns The point in the surface's two-dimensional bound frame.
+  /// @returns the bound (2D) position to the global point @p global for
+  /// a given geometry context @p ctx and track direction @p dir
   DETRAY_HOST_DEVICE
   constexpr point2_type global_to_bound(const context &ctx,
                                         const point3_type &global,
@@ -275,7 +279,8 @@ class surface {
   /// @param ctx Geometry context used to resolve the surface transform.
   /// @param local Point in the local or bound frame.
   /// @param dir Track direction used by the local coordinate frame.
-  /// @returns The point in global coordinates.
+  /// @returns the global position to the given local position @p local
+  /// for a given geometry context @p ctx
   template <concepts::point point_t = point2_type>
   DETRAY_HOST_DEVICE constexpr point3_type local_to_global(
       const context &ctx, const point_t &local, const vector3_type &dir) const {

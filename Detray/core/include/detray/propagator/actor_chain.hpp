@@ -37,18 +37,18 @@ class actor_chain {
   /// Types of the actors that are registered in the chain
   using actor_tuple = dtuple<actors_t...>;
 
-  /// Tuple of actor states, including states owned by nested observers.
+  /// Tuple of actor states (including states of observing actors, if present)
   using state_tuple =
       detail::unique_t<detail::tuple_cat_t<detail::state_tuple_t<actors_t>...>>;
 
-  /// Tuple of references to the actor states used by the propagator.
+  /// Tuple of state references that is used in the propagator
   using state_ref_tuple = detail::unique_t<
       detail::tuple_cat_t<detail::state_ref_tuple_t<actors_t>...>>;
 
   /// Call all actors in the chain.
   ///
-  /// @param states Tuple containing the states of the actors.
-  /// @param p_state Current propagation state.
+  /// @param states the states of the actors.
+  /// @param p_state the propagation state.
   template <typename actor_states_t, typename propagator_state_t>
   DETRAY_HOST_DEVICE void operator()(actor_states_t &states,
                                      propagator_state_t &p_state) const {
@@ -76,7 +76,7 @@ class actor_chain {
 
   /// Create references to each actor state in the tuple.
   /// @param t Tuple of actor states.
-  /// @return Tuple containing references to the actor states.
+  /// @returns a tuple of reference for every state in the tuple @p t
   DETRAY_HOST_DEVICE static constexpr state_ref_tuple setup_actor_states(
       state_tuple &t) {
     return setup_actor_states(

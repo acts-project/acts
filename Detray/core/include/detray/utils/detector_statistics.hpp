@@ -59,7 +59,7 @@ DETRAY_HOST_DEVICE inline std::size_t n_passives(const detector_t& det) {
 /// @tparam I current compile-time collection index
 /// @param store store whose collections are inspected
 /// @param n running count accumulated by recursive calls
-/// @return total number of grid objects in the store
+/// @returns the total number of grids in a detector store @p store
 template <std::size_t I = 0u, typename store_t>
 DETRAY_HOST_DEVICE inline std::size_t n_grids(const store_t& store,
                                               std::size_t n = 0u) {

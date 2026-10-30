@@ -181,7 +181,7 @@ struct transform3 {
   transform3(const transform3 &rhs) = default;
   ~transform3() = default;
 
-  /// Compare the forward transforms.
+  /// Equality operator
   /// @param rhs transform to compare with
   /// @return whether the transforms have equal spatial mappings
   DETRAY_HOST_DEVICE
@@ -192,7 +192,7 @@ struct transform3 {
   /// Rotate a vector into / from a frame
   ///
   /// @param m is the rotation matrix
-  /// @param v vector to rotate
+  /// @param v is the vector to be rotated
   /// @return the rotated vector
   template <typename derived_type>
     requires(Eigen::MatrixBase<derived_type>::RowsAtCompileTime == 2 &&
@@ -206,7 +206,7 @@ struct transform3 {
   /// Rotate a vector into / from a frame
   ///
   /// @param m is the rotation matrix
-  /// @param v vector to rotate
+  /// @param v is the vector to be rotated
   /// @return the rotated vector
   template <typename derived_type>
     requires(Eigen::MatrixBase<derived_type>::RowsAtCompileTime == 3 &&
@@ -217,54 +217,55 @@ struct transform3 {
     return m.matrix().template block<3, 3>(0, 0) * v;
   }
 
-  /// Return the upper-left 3x3 rotation block.
+  /// This method retrieves the rotation of a transform
   /// @return rotation matrix
   DETRAY_HOST_DEVICE
   constexpr auto rotation() const {
     return _data.matrix().template block<3, 3>(0, 0);
   }
 
-  /// Return the local x axis in global coordinates.
+  /// This method retrieves x axis
   /// @return x-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 x() const {
     return _data.matrix().template block<3, 1>(0, 0);
   }
 
-  /// Return the local y axis in global coordinates.
+  /// This method retrieves y axis
   /// @return y-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 y() const {
     return _data.matrix().template block<3, 1>(0, 1);
   }
 
-  /// Return the local z axis in global coordinates.
+  /// This method retrieves z axis
   /// @return z-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 z() const {
     return _data.matrix().template block<3, 1>(0, 2);
   }
 
-  /// Return the frame origin in global coordinates.
+  /// This method retrieves the translation of a transform
   /// @return translation vector
   DETRAY_HOST_DEVICE
   constexpr point3 translation() const {
     return _data.matrix().template block<3, 1>(0, 3);
   }
 
-  /// Return the local-to-global transformation matrix.
+  /// This method retrieves the 4x4 matrix of a transform
   /// @return forward transformation matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix() const { return _data.matrix(); }
 
-  /// Return the global-to-local transformation matrix.
+  /// This method retrieves the 4x4 matrix of an inverse transform
   /// @return inverse transformation matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix_inverse() const {
     return _data_inv.matrix();
   }
 
-  /// Transform a point from local plane coordinates to global coordinates.
+  /// This method transform from a point from the local 2D cartesian frame to
+  /// the global 3D cartesian frame
   /// @param v point in local plane coordinates
   /// @return point in global coordinates
   template <typename derived_type>
@@ -276,7 +277,8 @@ struct transform3 {
             _data.matrix().template block<3, 1>(0, 3));
   }
 
-  /// Transform a point from local coordinates to global coordinates.
+  /// This method transform from a point from the local 3D cartesian frame to
+  /// the global 3D cartesian frame
   /// @param v point in local coordinates
   /// @return point in global coordinates
   template <typename derived_type>
@@ -287,7 +289,8 @@ struct transform3 {
     return (_data * v);
   }
 
-  /// Transform a global vector to local coordinates.
+  /// This method transform from a vector from the global 3D cartesian frame
+  /// into the local 3D cartesian frame
   /// @param v vector in global coordinates
   /// @return vector in local coordinates
   template <typename derived_type>
@@ -298,7 +301,8 @@ struct transform3 {
     return (_data_inv * v);
   }
 
-  /// Transform a local vector to global coordinates.
+  /// This method transform from a vector from the local 3D cartesian frame to
+  /// the global 3D cartesian frame
   /// @param v vector in local coordinates
   /// @return vector in global coordinates
   template <typename derived_type>
@@ -309,7 +313,8 @@ struct transform3 {
     return (_data.linear().matrix().template block<3, 2>(0, 0) * v);
   }
 
-  /// Transform a local vector to global coordinates.
+  /// This method transform from a vector from the local 3D cartesian frame to
+  /// the global 3D cartesian frame
   /// @param v vector in local coordinates
   /// @return vector in global coordinates
   template <typename derived_type>
@@ -320,7 +325,8 @@ struct transform3 {
     return (_data.linear() * v);
   }
 
-  /// Transform a global vector to local coordinates.
+  /// This method transform from a vector from the global 3D cartesian frame
+  /// into the local 3D cartesian frame
   /// @param v vector in global coordinates
   /// @return vector in local coordinates
   template <typename derived_type>

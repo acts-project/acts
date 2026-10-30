@@ -50,7 +50,7 @@ class detector_builder {
 
   DETRAY_HOST detector_builder() { DETRAY_VERBOSE_HOST("New builder created"); }
 
-  /// Set the name of the detector under construction.
+  /// Set the name of the detector under construction to @p det_name
   /// @param det_name Name to assign to the detector.
   DETRAY_HOST void set_name(std::string det_name) {
     m_detector_name = std::move(det_name);
@@ -60,7 +60,8 @@ class detector_builder {
   /// @returns the name of the detector under construction
   DETRAY_HOST std::string_view name() const { return m_detector_name; }
 
-  /// Add a volume builder for the requested volume shape.
+  /// Add a new volume builder that will build a volume of the shape given by
+  /// @p id
   /// @param id Volume shape to build.
   /// @param args Additional arguments forwarded to the volume builder.
   /// @returns Pointer to the new volume builder.
@@ -82,12 +83,14 @@ class detector_builder {
   }
 
   /// @param volume_idx Volume index to check.
-  /// @returns True if a volume builder is registered at that index.
+  /// @returns 'true' if there is a volume builder registered for
+  /// the volume with index @p volume_idx
   DETRAY_HOST bool has_volume(const std::size_t volume_idx) const {
     return volume_idx < m_volumes.size();
   }
 
-  /// Decorate the volume builder at an index with additional functionality.
+  /// Decorate a volume builder at position @p volume_idx with more
+  /// functionality
   /// @param volume_idx Index of the builder to decorate.
   /// @returns Pointer to the decorated builder.
   template <class builder_t>
@@ -101,7 +104,7 @@ class detector_builder {
     return dynamic_cast<builder_t*>(m_volumes[volume_idx].get());
   }
 
-  /// Decorate a volume builder with additional functionality.
+  /// Decorate a volume builder @p v_builder with more functionality
   /// @param v_builder Builder to decorate; it must belong to this detector builder.
   /// @returns Pointer to the decorated builder.
   template <class builder_t>
@@ -112,7 +115,7 @@ class detector_builder {
     return decorate<builder_t>(v_builder->vol_index());
   }
 
-  /// Access a volume builder by index.
+  /// Access a particular volume builder by volume index @p volume_idx
   /// @param volume_idx Index of the requested builder.
   /// @returns Pointer to the requested builder.
   DETRAY_HOST
@@ -121,7 +124,8 @@ class detector_builder {
     return m_volumes[volume_idx].get();
   }
 
-  /// Assemble the detector and allocate its containers from a memory resource.
+  /// Assembles the final detector from the volumes builders and allocates
+  /// the detector containers with the memory resource @p resource
   /// @param resource Memory resource used for detector storage.
   /// @param opt Options applied while building each volume.
   /// @returns The completed detector.
@@ -171,7 +175,8 @@ class detector_builder {
     return det;
   }
 
-  /// Assemble the detector and fill an externally supplied name map.
+  /// Assembles the final detector and fill an externally provided name map
+  /// @p name_map
   /// @param resource Memory resource used for detector storage.
   /// @param opt Options applied while building each volume.
   /// @param name_map Map to populate with detector and volume names.

@@ -58,10 +58,10 @@ struct intersector_base : public intersector_t {
   using trajectory_type =
       typename intersector_t::template trajectory_type<other_algebra_t>;
 
-  /// Maximum number of intersection solutions returned by the intersector.
+  /// Maximum number of solutions this intersector can produce
   static constexpr std::uint8_t n_solutions{intersector_t::n_solutions};
 
-  /// Underlying geometric result retained before mask resolution.
+  /// Always includes the intersection position, in order to resolve the mask
   using result_type = typename intersector_t::result_type;
 
   /// Operator function to find intersections between trajectory and a surface

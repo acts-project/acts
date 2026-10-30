@@ -86,7 +86,7 @@ struct single_axis {
   /// Parameterized constructor - empty binning
   constexpr single_axis() = default;
 
-  /// Construct the axis binning from its index range and edge storage.
+  /// Parametrized constructor that builds the binning scheme
   /// @param indx_range Range of bins represented by the supplied edges.
   /// @param edges Pointer to the bin-edge values.
   template <typename... Args>
@@ -283,14 +283,14 @@ class multi_axis {
   /// Default constructor
   constexpr multi_axis() = default;
 
-  /// Construct empty edge containers using a memory resource.
+  /// Construct containers using a specific memory resources
   /// @param resource Resource used for edge and offset allocations.
   template <bool owner = is_owning>
     requires owner
   DETRAY_HOST explicit multi_axis(vecmem::memory_resource &resource)
       : m_edge_offsets(&resource), m_edges(&resource) {}
 
-  /// Construct from edge containers by moving their storage.
+  /// Construct from containers - move
   /// @param edge_offsets Per-axis ranges into the concatenated edge storage.
   /// @param edges Concatenated edge values for all axes.
   template <bool owner = is_owning>

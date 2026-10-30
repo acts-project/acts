@@ -18,7 +18,7 @@
 
 namespace detray::algebra::generic::matrix::determinant {
 
-/// Compute a square-matrix determinant by cofactor expansion.
+/// "Determinant getter", assuming a N X N matrix
 template <concepts::square_matrix matrix_t>
 struct cofactor {
   /// Scalar type of the determinant.

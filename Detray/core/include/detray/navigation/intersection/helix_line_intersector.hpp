@@ -153,11 +153,11 @@ struct helix_intersector_impl<line2D<algebra_t>, algebra_t> {
 
   /// Tolerance for convergence
   scalar_t convergence_tolerance{1.f * unit<scalar_t>::um};
-  /// Maximum iterations used to find a valid root.
+  /// Guard against infinite loops
   std::size_t max_n_tries{1000u};
-  /// Maximum path length searched before rejecting an intersection.
+  /// Early exit, if the intersection is too far away
   scalar_t max_path{5.f * unit<scalar_t>::m};
-  /// Enable safeguarded root finding with bisection steps.
+  /// Complement the Newton algorithm with Bisection steps
   bool run_rtsafe{true};
 };
 

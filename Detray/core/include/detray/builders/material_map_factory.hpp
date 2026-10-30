@@ -143,7 +143,8 @@ class material_map_factory final : public factory_decorator<detector_t> {
   ///
   /// @param surfaces surface container of the volume builder that should get
   ///                 decorated with material maps.
-  /// @param material_map Material values keyed by volume-local surface index.
+  /// @param material_map map the local bin indices and their content to a
+  ///                  volume local surface index.
   /// @param n_bins Number of bins on each axis for every mapped surface.
   /// @param axis_spans Coordinate spans for each material-map axis.
   /// @returns No value; material data is added to the output containers.

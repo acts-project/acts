@@ -153,7 +153,7 @@ class direct_navigator {
              (!is_forward() && m_next_external != -1);
     }
 
-    /// Return the next target surface in the configured sequence.
+    /// Advance the iterator
     /// @returns The surface currently selected as the next target.
     DETRAY_HOST_DEVICE
     constexpr surface_type next_external() {
@@ -225,7 +225,7 @@ class direct_navigator {
     dist_t m_next_external{0};
   };
 
-  /// Initialize the direct navigation flow on the first or last surface.
+  /// Initialize the direct navigation flow on the first/last external surface
   /// @param track Track whose intersections will be evaluated.
   /// @param navigation State to initialize.
   /// @param cfg Navigation tolerances and policies.

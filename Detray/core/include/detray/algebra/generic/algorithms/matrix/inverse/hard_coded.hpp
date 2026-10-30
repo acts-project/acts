@@ -19,7 +19,7 @@
 
 namespace detray::algebra::generic::matrix::inverse {
 
-/// Invert matrices of supported ranks using direct formulas.
+/// "inverse getter", assuming a N X N matrix
 template <concepts::square_matrix matrix_t>
 struct hard_coded {
   /// Matrix element type.
@@ -32,7 +32,7 @@ struct hard_coded {
   /// Direct determinant implementation used to normalize the 4 by 4 inverse.
   using determinant_getter = determinant::hard_coded<matrix_t>;
 
-  /// Invert a 2 by 2 matrix.
+  /// 2 X 2 matrix inverse
   /// @param m Nonsingular matrix to invert.
   /// @returns The inverse matrix.
   template <typename M = matrix_t>
@@ -51,7 +51,7 @@ struct hard_coded {
     return ret;
   }
 
-  /// Invert a 4 by 4 matrix.
+  /// 4 X 4 matrix inverse
   /// @param m Nonsingular matrix to invert.
   /// @returns The inverse matrix.
   template <typename M = matrix_t>

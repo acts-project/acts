@@ -75,7 +75,7 @@ class tracking_surface : public geometry::surface<const det_t> {
 
   /// @param ctx Geometry context for resolving the surface transform.
   /// @param free_vec Track parameters in global coordinates.
-  /// @returns Track parameters in the surface's bound representation.
+  /// @returns the track parametrization projected onto the surface (bound)
   DETRAY_HOST_DEVICE
   constexpr auto free_to_bound_vector(
       const context &ctx, const free_param_vector_type &free_vec) const {
@@ -85,7 +85,7 @@ class tracking_surface : public geometry::surface<const det_t> {
 
   /// @param ctx Geometry context for resolving the surface transform.
   /// @param bound_vec Track parameters in the surface's bound representation.
-  /// @returns Track parameters in global coordinates.
+  /// @returns the global track parametrization from a bound representation
   DETRAY_HOST_DEVICE
   constexpr auto bound_to_free_vector(
       const context &ctx, const bound_param_vector_type &bound_vec) const {
@@ -95,7 +95,7 @@ class tracking_surface : public geometry::surface<const det_t> {
 
   /// @param ctx Geometry context for resolving the surface transform.
   /// @param free_vec Track parameters in global coordinates.
-  /// @returns Jacobian from free to bound track parameters.
+  /// @returns the jacobian to go from a free to a bound track parametrization
   DETRAY_HOST_DEVICE
   constexpr auto free_to_bound_jacobian(
       const context &ctx, const free_param_vector_type &free_vec) const {
@@ -105,7 +105,7 @@ class tracking_surface : public geometry::surface<const det_t> {
 
   /// @param ctx Geometry context for resolving the surface transform.
   /// @param bound_vec Track parameters in the surface's bound representation.
-  /// @returns Jacobian from bound to free track parameters.
+  /// @returns the jacobian to go from a bound to a free track parametrization
   DETRAY_HOST_DEVICE
   constexpr auto bound_to_free_jacobian(
       const context &ctx, const bound_param_vector_type &bound_vec) const {
@@ -118,7 +118,7 @@ class tracking_surface : public geometry::surface<const det_t> {
   /// @param dir Particle direction in global coordinates.
   /// @param dtds Derivative of direction with respect to path length.
   /// @param dqopds Derivative of q/p with respect to path length.
-  /// @returns Correction factor for the path length at the surface.
+  /// @returns the path correction term
   DETRAY_HOST_DEVICE
   constexpr auto path_correction(const context &ctx, const vector3_type &pos,
                                  const vector3_type &dir,
@@ -132,7 +132,7 @@ class tracking_surface : public geometry::surface<const det_t> {
   /// @param pos Particle position in global coordinates.
   /// @param dir Particle direction in global coordinates.
   /// @param dtds Derivative of direction with respect to path length.
-  /// @returns Derivative of the free parameters with respect to path length.
+  /// @returns the free to path derivative
   DETRAY_HOST_DEVICE
   constexpr auto free_to_path_derivative(const context &ctx,
                                          const vector3_type &pos,

@@ -42,12 +42,12 @@ template <detray::ranges::range range_t>
 struct join_view : public detray::ranges::view_interface<join_view<range_t>> {
   /// Iterator over the range of ranges
   using outer_iterator_t = detray::ranges::iterator_t<range_t>;
-  /// Value type yielded by the outer range.
+  /// Type of a single range
   using outer_value_t =
       std::conditional_t<std::is_const_v<range_t>,
                          const detray::ranges::range_value_t<range_t>,
                          detray::ranges::range_value_t<range_t>>;
-  /// Iterator type used within each nested range.
+  /// Iterator over a single range
   using inner_iterator_t = detray::ranges::iterator_t<outer_value_t>;
 
   /// Iterator that walks across all nested ranges.
@@ -58,7 +58,7 @@ struct join_view : public detray::ranges::view_interface<join_view<range_t>> {
   /// Default constructor
   constexpr join_view() = default;
 
-  /// Construct from a range whose elements are themselves ranges.
+  /// Construct from a range of @p ranges.
   /// @param ranges outer range containing the nested ranges
   template <detray::ranges::range R>
     requires(!std::same_as<R, join_view>)
@@ -201,7 +201,7 @@ struct join_iterator {
     next_inner();
   }
 
-  /// Increment to the next element, crossing nested-range boundaries as needed.
+  /// Increment current iterator and check for switch between ranges.
   /// @{
   /// @returns A reference to this iterator after incrementing.
   DETRAY_HOST_DEVICE auto operator++() -> join_iterator & {
@@ -220,8 +220,7 @@ struct join_iterator {
   }
   /// @}
 
-  /// Decrement to the previous element, crossing nested-range boundaries as
-  /// needed.
+  /// Decrement current iterator and check for switch between ranges.
   /// @{
   /// @returns A reference to this iterator after decrementing.
   DETRAY_HOST_DEVICE constexpr auto operator--() -> join_iterator &
@@ -291,7 +290,7 @@ struct join_iterator {
 
   /// Return the element at an offset from this position.
   /// @param i zero-based offset from this iterator
-  /// @return referenced element at that position
+  /// @returns the value at a given position - const
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator[](
       const difference_type i) const
     requires std::random_access_iterator<inner_iterator_t> &&
@@ -356,7 +355,7 @@ struct join_iterator {
   /// Return the iterator advanced by `j` elements through the joined ranges.
   /// @param itr iterator to advance
   /// @param j number of elements to advance
-  /// @return advanced iterator
+  /// @returns an iterator advanced by @p j through the join.
   DETRAY_HOST_DEVICE friend constexpr auto operator+(const join_iterator &itr,
                                                      const difference_type j)
       -> join_iterator
@@ -379,7 +378,7 @@ struct join_iterator {
   /// Return the iterator advanced by `j` elements through the joined ranges.
   /// @param j number of elements to advance
   /// @param itr iterator to advance
-  /// @return advanced iterator
+  /// @returns an iterator advanced by @p j through the join.
   DETRAY_HOST_DEVICE friend constexpr auto operator+(const difference_type j,
                                                      const join_iterator &itr)
       -> join_iterator

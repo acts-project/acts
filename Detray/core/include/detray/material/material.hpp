@@ -41,7 +41,7 @@ struct material {
 
   constexpr material() = default;
 
-  /// Construct from bulk material properties.
+  /// Construct from material parameters
   /// @param x0 radiation length
   /// @param l0 nuclear interaction length
   /// @param ar relative atomic mass
@@ -61,7 +61,7 @@ struct material {
     m_molar_rho = mass_to_molar_density(ar, mass_rho);
   }
 
-  /// Construct from bulk material properties and density-effect parameters.
+  /// Construct from material parameters with density effect data
   /// @param x0 radiation length
   /// @param l0 nuclear interaction length
   /// @param ar relative atomic mass
@@ -94,8 +94,9 @@ struct material {
     m_molar_rho = mass_to_molar_density(ar, mass_rho);
   }
 
-  /// Compare the material properties used for equality.
-  /// @param rhs material to compare with this value
+  /// Equality operator
+  ///
+  /// @param rhs is the right hand side to be compared to
   /// @return whether radiation length, interaction length, atomic mass, and charge agree
   DETRAY_HOST_DEVICE
   constexpr bool operator==(const material<scalar_type> &rhs) const {
@@ -103,8 +104,9 @@ struct material {
             m_z == rhs.Z());
   }
 
-  /// Compare the material properties used for equality.
-  /// @param rhs material to compare with this value
+  /// Equality operator
+  ///
+  /// @param rhs is the right hand side to be compared to
   /// @return whether radiation length, interaction length, atomic mass, and charge agree
   DETRAY_HOST_DEVICE
   constexpr bool operator!=(const material<scalar_type> &rhs) const {
@@ -278,7 +280,7 @@ struct material {
   bool m_has_density_effect_data = false;
 };
 
-/// Declare a predefined material type from its bulk properties.
+/// Macro for declaring the predefined materials (w/o Density effect data)
 /// @param MATERIAL_NAME generated material type name
 /// @param X0 radiation length
 /// @param L0 nuclear interaction length
@@ -296,7 +298,8 @@ struct material {
     constexpr MATERIAL_NAME() : base_type(X0, L0, Ar, Z, Rho, State) {}   \
   }
 
-/// Declare a predefined material type with density-effect parameters.
+/// !EXPERIMENTAL!
+/// Macro for declaring the predefined materials (with Density effect data)
 /// @param MATERIAL_NAME generated material type name
 /// @param X0 radiation length
 /// @param L0 nuclear interaction length

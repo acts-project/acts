@@ -22,7 +22,7 @@ namespace detray::algebra::generic::matrix {
 
 namespace adjoint {
 
-/// Compute a matrix adjugate using cofactor expansion.
+/// "Adjoint getter", assuming a N X N matrix
 template <concepts::square_matrix matrix_t>
 struct cofactor {
   /// Index type used to traverse matrix rows and columns.
@@ -106,7 +106,7 @@ struct cofactor {
 
 namespace inverse {
 
-/// Compute the inverse of a square matrix using its adjugate and determinant.
+/// "inverse getter", assuming a N X N matrix
 template <concepts::square_matrix matrix_t>
 struct cofactor {
   /// Scalar type of matrix elements.

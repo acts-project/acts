@@ -80,7 +80,7 @@ class ring2D {
   /// @param bounds the boundary values for this shape
   /// @param trf the surface transform
   /// @param glob_p the point to be checked in the global coordinate system
-  /// @param tol Dynamic tolerance supplied by the caller.
+  /// @param tol dynamic tolerance determined by caller
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::algebra algebra_t>
@@ -108,7 +108,7 @@ class ring2D {
   ///
   /// @param bounds the boundary values for this shape
   /// @param loc_p the point to be checked in the local coordinate system
-  /// @param tol Dynamic tolerance supplied by the caller.
+  /// @param tol dynamic tolerance determined by caller
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::scalar scalar_t, concepts::point point_t>

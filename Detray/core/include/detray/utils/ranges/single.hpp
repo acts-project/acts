@@ -46,8 +46,7 @@ class single_view
   DETRAY_HOST_DEVICE constexpr explicit single_view(value_t&& value)
       : m_value{std::move(value)} {}
 
-  /// Construct the view's element in place.
-  /// Construct the stored value directly from its constructor arguments.
+  /// Construct value in place from @p args
   /// @tparam Args argument types used to construct the value
   /// @param args arguments forwarded to the value constructor
   template <class... Args>
@@ -56,12 +55,12 @@ class single_view
       : m_value{std::in_place, std::forward<Args>(args)...} {}
 
   /// Return the single stored value by value.
-  /// @returns A copy of the stored element.
+  /// @return the single value
   DETRAY_HOST_DEVICE
   constexpr auto value() const -> value_t { return m_value; }
 
   /// Return a const reference to the stored element.
-  /// @returns A const reference to the element.
+  /// @return the single value
   DETRAY_HOST_DEVICE
   constexpr auto ref() const -> const value_t& { return m_value; }
   /// Return a mutable reference to the stored element.

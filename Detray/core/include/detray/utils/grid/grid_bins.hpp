@@ -39,7 +39,7 @@ class single : public detray::ranges::single_view<entry_t> {
   DETRAY_HOST_DEVICE
   constexpr dindex capacity() noexcept { return 1u; }
 
-  /// Adds or replaces the bin's single entry.
+  /// Add a new entry to the bin
   /// @param entry Value to store.
   template <typename E = entry_t>
   DETRAY_HOST_DEVICE constexpr void push_back(E&& entry) noexcept {
@@ -97,7 +97,7 @@ class static_array
   static_array& operator=(const static_array& other) noexcept = default;
 
   /// Returns an iterator to the first valid entry.
-  /// @returns Iterator to the first valid entry.
+  /// @returns view iterator over bin content in start or end position
   /// @{
   DETRAY_HOST_DEVICE bin_iterator_t begin() {
     return detray::ranges::begin(m_content);
@@ -131,7 +131,7 @@ class static_array
     return static_cast<dindex>(m_content.size());
   }
 
-  /// Adds an entry to the bin's storage.
+  /// Add a new entry to the bin
   /// @param entry Value to append. The caller must ensure capacity is available.
   template <typename E = entry_t>
   DETRAY_HOST_DEVICE constexpr void push_back(E&& entry) noexcept {
@@ -139,7 +139,7 @@ class static_array
     ++m_size;
   }
 
-  /// Initializes the bin with at most one entry.
+  /// Initialize with a single entry filled
   /// @param entry Initial value; the invalid sentinel leaves the bin empty.
   ///
   /// @returns Access to the initialized bin
@@ -163,7 +163,7 @@ class static_array
     return *this;
   }
 
-  /// Initializes the bin from a complete fixed-size content array.
+  /// Initialize from an entire bin content @p content.
   /// @param content Array containing the bin contents; invalid sentinels are
   /// excluded from the resulting size.
   ///
@@ -264,7 +264,7 @@ class dynamic_array
   }
 
   /// Returns an iterator to the first entry in this bin.
-  /// @returns Iterator to the first entry.
+  /// @returns view iterator over bin content in start or end position
   /// @{
   DETRAY_HOST_DEVICE auto begin() {
     return const_cast<entry_type*>(m_global_storage);
@@ -295,7 +295,7 @@ class dynamic_array
   DETRAY_HOST_DEVICE
   constexpr dindex capacity() const noexcept { return m_capacity; }
 
-  /// Adds an entry when this bin has remaining capacity.
+  /// Add a new entry to the bin
   /// @param entry Value to append.
   /// @note This does not check the state of the container it points to!!!
   template <typename E = entry_type>
@@ -337,7 +337,7 @@ class dynamic_array
     return *this;
   }
 
-  /// Initializes this bin from a complete external content range.
+  /// Initialize from an entire bin content @p content.
   /// @param content Storage indexed from zero with at least capacity entries;
   /// invalid sentinels are excluded from the resulting size.
   ///

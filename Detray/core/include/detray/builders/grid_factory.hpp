@@ -72,7 +72,7 @@ class grid_factory {
 
   grid_factory() = default;
 
-  /// Construct a factory using the detector's memory resource.
+  /// Takes the resource of the detector to allocate memory correctly
   /// @param resource Resource used to allocate grid storage.
   explicit grid_factory(vecmem::memory_resource &resource)
       : m_resource(&resource) {}
@@ -544,7 +544,9 @@ class grid_factory {
   ///              ignored.
   /// @param n_bins the number of bins for regular axes, otherwise ignored
   /// @param bin_capacities Optional capacities for local bins.
-  /// @param ax_bin_edges Explicit edges for irregular axes; ignored for regular axes.
+  /// @param ax_bin_edges the explicit bin edges for irregular axes
+  ///                     (lower bin edges + the the upper edge of the
+  ///                     last bin), otherwise ignored.
   /// @returns A grid with initialized axes and empty bins.
   template <concepts::coordinate_frame grid_frame_t, typename... bound_ts,
             typename... binning_ts>
@@ -567,7 +569,7 @@ class grid_factory {
     return new_grid<grid_t>(spans, n_bins, bin_capacities, ax_bin_edges);
   }
 
-  /// Helper to build a grid from shape, binning, and bounds types.
+  /// Helper to build grid from shape plus binning and bounds types
   /// @param spans Axis spans used by regular axes.
   /// @param n_bins Bin counts used by regular axes.
   /// @param bin_capacities Optional capacities for local bins.
@@ -590,7 +592,8 @@ class grid_factory {
         spans, n_bins, bin_capacities, ax_bin_edges, bounds, binnings);
   }
 
-  /// Build a grid from a mask using the concrete grid type's axis settings.
+  /// Helper overload for grid builder: Build from mask and resolve bounds
+  /// and binnings from concrete grid type
   /// @param m Mask defining the grid extent.
   /// @param n_bins Number of bins on each axis.
   /// @param bin_capacities Optional capacities for local bins.
@@ -610,7 +613,8 @@ class grid_factory {
                     typename grid_t::axes_type::binnings{});
   }
 
-  /// Build a grid from a mask and explicit axis-bound and binning types.
+  /// Helper overload for grid builder: Build from mask and resolve bounds
+  /// and binnings
   /// @param m Mask defining the grid extent.
   /// @param n_bins Number of bins on each axis.
   /// @param bin_capacities Optional capacities for local bins.
@@ -742,7 +746,7 @@ class grid_factory {
   vecmem::memory_resource *m_resource{};
 };
 
-/// Infer the factory type needed to construct the specified grid type.
+/// Infer a grid factory type from an already completely assembled grid type
 template <concepts::grid grid_t>
 using grid_factory_type =
     grid_factory<typename grid_t::bin_type,

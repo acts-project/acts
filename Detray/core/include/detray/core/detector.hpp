@@ -199,7 +199,7 @@ class detector {
   detector &operator=(detector &&other) noexcept = default;
 
   /// Default construction
-  /// @param resource memory resource used to allocate the detector stores
+  /// @param resource memory resource for the allocation of members
   DETRAY_HOST
   explicit detector(vecmem::memory_resource &resource)
       : _volumes(&resource),
@@ -209,7 +209,7 @@ class detector {
         _materials(resource),
         _accelerators(resource) {}
 
-  /// Construct a detector view over existing component data.
+  /// Constructor from detector data view
   /// @tparam detector_view_t device-compatible detector view type
   /// @param det_data view containing the detector component stores
   template <concepts::device_view detector_view_t>
@@ -224,7 +224,7 @@ class detector {
 
   /// Return the detector name from the supplied name map.
   /// @param names map containing the detector name
-  /// @return detector name string
+  /// @returns a string that contains the detector name
   std::string name(const name_map &names) const {
     return names.get_detector_name();
   }
@@ -237,7 +237,7 @@ class detector {
 
   /// Return a volume by its stored index.
   /// @param volume_index index in the volume container
-  /// @return selected volume descriptor
+  /// @returns the volume by @p volume_index - const access
   DETRAY_HOST_DEVICE
   inline const auto &volume(dindex volume_index) const {
     return _volumes[volume_index];
@@ -246,7 +246,7 @@ class detector {
   /// Return a volume by its registered name.
   /// @param volume_name registered volume name
   /// @param names map used to resolve volume names
-  /// @return selected volume descriptor
+  /// @returns the volume by @p volume_name - const access
   DETRAY_HOST
   inline const auto &volume(const std::string_view volume_name,
                             const name_map &names) const {
@@ -255,7 +255,7 @@ class detector {
 
   /// Find the volume containing a global point.
   /// @param p global Cartesian position to locate
-  /// @return descriptor of the containing volume
+  /// @return the volume by global cartesian @p p - const access
   DETRAY_HOST_DEVICE
   inline const auto &volume(const point3_type &p) const {
     // Allow to call the volume search data structure
@@ -289,7 +289,8 @@ class detector {
 
   /// Find a surface using an index, identifier, or source-link query.
   /// @param q query forwarded to the surface lookup
-  /// @return the matching surface or lookup result
+  /// @returns a surface using a query object @p q. This can be an index,
+  /// a identifier or a source link searcher (see @c surface_lookup class)
   template <typename query_t>
   DETRAY_HOST_DEVICE constexpr decltype(auto) surface(query_t &&q) const {
     return _surfaces.search(std::forward<query_t>(q));

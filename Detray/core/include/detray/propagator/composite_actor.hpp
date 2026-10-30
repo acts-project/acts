@@ -63,9 +63,10 @@ class composite_actor final : public principal_actor_t {
   /// First runs its own implementation, then passes the updated state to its
   /// observers.
   ///
-  /// @param states States of this actor and its observers.
-  /// @param p_state Current propagation state.
-  /// @param subject_res Result from the actor observed by this composite.
+  /// @param states the states of all actors in the chain
+  /// @param p_state the state of the propagator (stepper and navigator)
+  /// @param subject_res the result of the actor this actor observes. Uses
+  ///                      a dummy type if this is not an observing actor.
   template <typename actor_states_t, typename propagator_state_t,
             typename subj_result_t = typename actor::empty_result>
   DETRAY_HOST_DEVICE void operator()(actor_states_t &states,
@@ -95,9 +96,9 @@ class composite_actor final : public principal_actor_t {
  private:
   /// Notifies the observing actors for composite and simple actor case.
   ///
-  /// @param observer Observer to notify.
-  /// @param states States of this actor and all observers.
-  /// @param p_state Current propagation state.
+  /// @param observer one of the observers
+  /// @param states the states of all actors in the chain
+  /// @param p_state the state of the propagator (stepper and navigator)
   /// @param res Result passed to the observer from the principal actor.
   template <concepts::actor observer_t, typename actor_states_t,
             typename propagator_state_t>
@@ -125,8 +126,8 @@ class composite_actor final : public principal_actor_t {
   /// Unrolls the observer types and runs the notification for each of them.
   ///
   /// Notify observers in declaration order.
-  /// @param states States of this actor and all observers.
-  /// @param p_state Current propagation state.
+  /// @param states the states of all actors in the chain
+  /// @param p_state the state of the propagator (stepper and navigator)
   /// @param res Result passed from the principal actor to observers.
   template <std::size_t... indices, typename actor_states_t,
             typename propagator_state_t>
