@@ -77,6 +77,7 @@ inline Intersection3D intersect(const Transform3& transform,
   return Intersection3D{(position + path * direction), path, status};
 }
 
+/// Correct a valid ray seed while preserving observed arrival and fallback.
 template <bool Quadratic = s_useQuadraticCurvatureCorrection>
 inline Intersection3D correctPlanarCurvatureIntersection(
     const Intersection3D& seed, const Vector3& direction,
@@ -88,13 +89,14 @@ inline Intersection3D correctPlanarCurvatureIntersection(
   if (auto corrected = correctCurvatureIntersection<Quadratic>(
           seed.pathLength(), seed.position(), direction, curvature,
           normal.dot(direction), normal.dot(curvature), curvature.norm())) {
-    return {corrected->first, corrected->second, IntersectionStatus::reachable};
+    return {corrected->position, corrected->pathLength,
+            IntersectionStatus::reachable};
   }
   return seed;
 }
 
-// Intersect the supporting plane, then correct the ray seed. Physical bounds
-// remain the responsibility of PlaneSurface and DiscSurface.
+/// Intersect the supporting plane, then correct the ray seed. Physical bounds
+/// remain the responsibility of PlaneSurface and DiscSurface.
 template <bool Quadratic = s_useQuadraticCurvatureCorrection>
 inline Intersection3D intersect(const Transform3& transform,
                                 const Vector3& position,
