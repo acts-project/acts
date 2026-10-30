@@ -83,8 +83,13 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     double theta = perigeeParams(BoundIndices::eBoundTheta);
     double qOvP = perigeeParams(BoundIndices::eBoundQOverP);
 
-    paramVec << globalCoords, globalTime, phi, theta, qOvP;
-    pca << globalCoords, globalTime;
+    paramVec.head<3>() = globalCoords;
+    paramVec[eLinTime] = globalTime;
+    paramVec[eLinPhi] = phi;
+    paramVec[eLinTheta] = theta;
+    paramVec[eLinQOverP] = qOvP;
+    pca.head<3>() = globalCoords;
+    pca[eTime] = globalTime;
     momentumAtPCA << phi, theta, qOvP;
   }
 
