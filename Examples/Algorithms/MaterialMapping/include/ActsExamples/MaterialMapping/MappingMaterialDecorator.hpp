@@ -14,17 +14,11 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/TrackingGeometryMaterial.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <algorithm>
 #include <map>
-#include <numbers>
 
 // Convenience shorthand
 
@@ -156,96 +150,20 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   std::shared_ptr<const Acts::ISurfaceMaterial> binnedSurfaceMaterial(
       const std::shared_ptr<const Acts::Surface>& surface) const {
     auto bin = m_binningMap.find(surface->geometryId().value());
-    Acts::BinUtility bUtility;
     if (bin == m_binningMap.end()) {
       ACTS_ERROR("No corresponding binning in the map to surface "
                  << surface->geometryId());
-    } else {
-      auto binning = bin->second;
-      // Check which type of bounds is associated to the surface
-      const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
-      const Acts::RadialBounds* radialBounds =
-          dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
-      const Acts::CylinderBounds* cylinderBounds =
-          dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
-      const Acts::AnnulusBounds* annulusBounds =
-          dynamic_cast<const Acts::AnnulusBounds*>(&surfaceBounds);
-      const Acts::RectangleBounds* rectangleBounds =
-          dynamic_cast<const Acts::RectangleBounds*>(&surfaceBounds);
-      const Acts::TrapezoidBounds* trapezoidBounds =
-          dynamic_cast<const Acts::TrapezoidBounds*>(&surfaceBounds);
-
-      if (radialBounds != nullptr) {
-        bUtility += Acts::BinUtility(
-            binning.first,
-            radialBounds->get(Acts::RadialBounds::eAveragePhi) -
-                radialBounds->get(Acts::RadialBounds::eHalfPhiSector),
-            radialBounds->get(Acts::RadialBounds::eAveragePhi) +
-                radialBounds->get(Acts::RadialBounds::eHalfPhiSector),
-            (radialBounds->get(Acts::RadialBounds::eHalfPhiSector) -
-             std::numbers::pi) < Acts::s_epsilon
-                ? Acts::closed
-                : Acts::open,
-            Acts::AxisDirection::AxisPhi);
-        bUtility += Acts::BinUtility(binning.second,
-                                     static_cast<float>(radialBounds->rMin()),
-                                     static_cast<float>(radialBounds->rMax()),
-                                     Acts::open, Acts::AxisDirection::AxisR);
-      }
-      if (cylinderBounds != nullptr) {
-        bUtility += Acts::BinUtility(
-            binning.first,
-            cylinderBounds->get(Acts::CylinderBounds::eAveragePhi) -
-                cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector),
-            cylinderBounds->get(Acts::CylinderBounds::eAveragePhi) +
-                cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector),
-            (cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector) -
-             std::numbers::pi) < Acts::s_epsilon
-                ? Acts::closed
-                : Acts::open,
-            Acts::AxisDirection::AxisPhi);
-        bUtility += Acts::BinUtility(
-            binning.second,
-            -1 * cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ),
-            cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ), Acts::open,
-            Acts::AxisDirection::AxisZ);
-      }
-      if (annulusBounds != nullptr) {
-        bUtility += Acts::BinUtility(
-            binning.first, annulusBounds->get(Acts::AnnulusBounds::eMinPhiRel),
-            annulusBounds->get(Acts::AnnulusBounds::eMaxPhiRel), Acts::open,
-            Acts::AxisDirection::AxisPhi);
-        bUtility += Acts::BinUtility(binning.second,
-                                     static_cast<float>(annulusBounds->rMin()),
-                                     static_cast<float>(annulusBounds->rMax()),
-                                     Acts::open, Acts::AxisDirection::AxisR);
-      }
-      if (rectangleBounds != nullptr) {
-        bUtility += Acts::BinUtility(
-            binning.first, rectangleBounds->get(Acts::RectangleBounds::eMinX),
-            rectangleBounds->get(Acts::RectangleBounds::eMaxX), Acts::open,
-            Acts::AxisDirection::AxisX);
-        bUtility += Acts::BinUtility(
-            binning.second, rectangleBounds->get(Acts::RectangleBounds::eMinY),
-            rectangleBounds->get(Acts::RectangleBounds::eMaxY), Acts::open,
-            Acts::AxisDirection::AxisY);
-      }
-      if (trapezoidBounds != nullptr) {
-        double halfLengthX = std::max(
-            trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXnegY),
-            trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXposY));
-        bUtility += Acts::BinUtility(binning.first,
-                                     static_cast<float>(-1 * halfLengthX),
-                                     static_cast<float>(halfLengthX),
-                                     Acts::open, Acts::AxisDirection::AxisX);
-        bUtility += Acts::BinUtility(
-            binning.second,
-            -1 * trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
-            trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
-            Acts::open, Acts::AxisDirection::AxisY);
-      }
+      return std::make_shared<Acts::ProtoSurfaceMaterial>();
     }
-    return std::make_shared<Acts::ProtoSurfaceMaterial>(bUtility);
+    const auto& [first, second] = bin->second;
+    const auto directions = surface->localAxes();
+    // The legacy map stores disc bin counts in (phi, r) order.
+    const bool disc = surface->type() == Acts::Surface::Disc;
+    return std::make_shared<Acts::ProtoSurfaceMaterial>(
+        Acts::MultiAxisSpec2D({Acts::AxisSpec::DeferredEquidistant(
+                                   disc ? second : first, directions[0]),
+                               Acts::AxisSpec::DeferredEquidistant(
+                                   disc ? first : second, directions[1])}));
   }
 
   /// Readonly access to the BinningMap
