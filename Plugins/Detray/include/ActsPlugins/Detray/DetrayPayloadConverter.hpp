@@ -205,6 +205,14 @@ class DetrayPayloadConverter {
     /// Detray MUST have beampipe volume at index 0
     const Acts::TrackingVolume* beampipeVolume = nullptr;
 
+    /// Optional replacement world in the input tracking geometry. Convert this
+    /// volume and its complete subtree, including gap volumes. Only links from
+    /// this volume to volumes outside the subtree become end-of-world links;
+    /// links from descendants to excluded volumes are errors. The beampipe must
+    /// belong to the subtree. The input geometry and its portals are not
+    /// modified. If null, convert the complete tracking geometry.
+    const Acts::TrackingVolume* replacementWorld = nullptr;
+
     /// Portal masks are clipped to the part of the portal that borders the
     /// volume they are placed in. Segments shorter than this along the
     /// portal binning direction are considered numerical noise and are

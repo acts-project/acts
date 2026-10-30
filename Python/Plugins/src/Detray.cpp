@@ -93,6 +93,16 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
                  const Acts::TrackingVolume* volume) {
                 cfg.beampipeVolume = volume;
               },
+              py::return_value_policy::reference)
+          .def_property(
+              "replacementWorld",
+              [](const DetrayPayloadConverter::Config& cfg) {
+                return cfg.replacementWorld;
+              },
+              [](DetrayPayloadConverter::Config& cfg,
+                 const Acts::TrackingVolume* volume) {
+                cfg.replacementWorld = volume;
+              },
               py::return_value_policy::reference);
 
   py::enum_<DetrayPayloadConverter::Config::SensitiveStrategy>(
