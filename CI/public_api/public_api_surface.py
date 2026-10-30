@@ -42,7 +42,8 @@ def standard_roots(under: Path) -> list[Path]:
     """Header roots whose public API we track, resolved under `under`.
 
     Core, Fatras and Alignment, plus every plugin under Plugins/. The Examples
-    tree and Traccc are not included. Detray library headers are included.
+    tree and Traccc are not included. Detray library and reusable validation
+    headers are included; test fixtures and executables are not.
     """
     roots: list[Path] = []
     for rel in ("Core/include", "Fatras/include", "Alignment/include"):
@@ -65,8 +66,16 @@ def standard_roots(under: Path) -> list[Path]:
         "io/include",
         "plugins/*/include",
         "plugins/algebra/*/include",
+        "tests/include/detray/test/common",
+        "tests/include/detray/test/utils",
+        "tests/include/detray/test/validation",
+        "tests/tools/include",
     ):
         roots.extend(p for p in sorted(detray.glob(pattern)) if p.is_dir())
+    # Validation configurations inherit this shared type from the test framework.
+    config = detray / "tests/include/detray/test/framework/test_configuration.hpp"
+    if config.is_file():
+        roots.append(config)
     return roots
 
 

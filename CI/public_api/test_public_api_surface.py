@@ -185,7 +185,6 @@ def test_detray_roots_and_gpu_api():
         for rel in (
             "Detray/tests/include",
             "Detray/tutorials/include",
-            "Detray/tests/tools/include",
             "Detray/extern/vecmem/include",
             "Detray/plugins/algebra/array/include",
         ):
@@ -225,6 +224,39 @@ struct Hidden {};
         assert (
             "detray::Thing::run(double) const" in changes["added_signatures"]
         ), changes
+
+
+def test_detray_validation_roots():
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        included = {
+            "Detray/tests/include/detray/test/common",
+            "Detray/tests/include/detray/test/utils",
+            "Detray/tests/include/detray/test/validation",
+            "Detray/tests/tools/include",
+        }
+        excluded = {
+            "Detray/tests/include/detray/test/framework",
+            "Detray/tests/include/detray/test/cpu",
+            "Detray/tests/include/detray/test/device",
+            "Detray/tests/unit_tests",
+            "Detray/tests/integration_tests",
+            "Detray/tests/benchmarks/include",
+            "Detray/tests/tools/src",
+        }
+        for rel in included | excluded:
+            (repo / rel).mkdir(parents=True)
+        config = (
+            repo / "Detray/tests/include/detray/test/framework/test_configuration.hpp"
+        )
+        config.touch()
+        roots = pas.standard_roots(repo)
+        assert set(roots) == {repo / rel for rel in included} | {config}
+        assert pas.module_of(str(config)) == "Detray/tests"
+        assert (
+            pas.module_of(str(repo / "Detray/tests/tools/include/detray/options/x.hpp"))
+            == "Detray/tests/tools"
+        )
 
 
 def test_detray_generated_declarations_are_types():

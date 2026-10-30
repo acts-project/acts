@@ -166,6 +166,8 @@ STRIP_FROM_INC_PATH    = ../Core/include \
                          ../Detray/core/include \
                          ../Detray/detectors/include \
                          ../Detray/io/include \
+                         ../Detray/tests/include \
+                         ../Detray/tests/tools/include \
                          ../Detray/plugins/svgtools/include \
                          ../Detray/plugins/algebra/array/include \
                          ../Detray/plugins/algebra/eigen/include \
@@ -791,6 +793,11 @@ INPUT                  = index.md \
                          ../Detray/core/include \
                          ../Detray/detectors/include \
                          ../Detray/io/include \
+                         ../Detray/tests/include/detray/test/common \
+                         ../Detray/tests/include/detray/test/utils \
+                         ../Detray/tests/include/detray/test/validation \
+                         ../Detray/tests/include/detray/test/framework/test_configuration.hpp \
+                         ../Detray/tests/tools/include \
                          ../Detray/plugins/svgtools/include \
                          ../Detray/plugins/algebra/array/include \
                          ../Detray/plugins/algebra/eigen/include \
