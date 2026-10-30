@@ -11,8 +11,12 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
+
+#include <stdexcept>
+#include <utility>
 
 namespace {
 
@@ -56,10 +60,60 @@ struct BilloirVertex {
 
 }  // namespace
 
+Acts::FullBilloirVertexFitter::FullBilloirVertexFitter(
+    const Config& cfg, std::unique_ptr<const Logger> logger)
+    : m_cfg(cfg), m_logger(std::move(logger)) {
+  if (!m_cfg.extractParameters.connected()) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: "
+        "No function to extract parameters "
+        "provided.");
+  }
+
+  if (!m_cfg.trackLinearizer.connected() &&
+      !m_cfg.fieldTrackLinearizer.connected()) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: "
+        "No track linearizer provided.");
+  }
+}
+
+Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
+    const VertexFitInput& input, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx, MagneticFieldQuery& field) const {
+  if (!m_cfg.fieldTrackLinearizer.connected()) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: Config::fieldTrackLinearizer is required to "
+        "use this fitter through the IVertexFitter interface.");
+  }
+  VertexingOptions options =
+      input.constraint ? VertexingOptions(gctx, mctx, *input.constraint)
+                       : VertexingOptions(gctx, mctx);
+  return fitImpl(input.tracks, options, nullptr, &field, input.seedPosition);
+}
+
+const Acts::Logger& Acts::FullBilloirVertexFitter::logger() const {
+  return *m_logger;
+}
+
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     const std::vector<InputTrack>& paramVector,
     const VertexingOptions& vertexingOptions,
     MagneticFieldProvider::Cache& fieldCache) const {
+  if (!m_cfg.trackLinearizer.connected()) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: Config::trackLinearizer is required for the "
+        "legacy cache-taking fit overload.");
+  }
+  return fitImpl(paramVector, vertexingOptions, &fieldCache, nullptr,
+                 vertexingOptions.constraint.fullPosition());
+}
+
+Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitImpl(
+    std::span<const InputTrack> paramVector,
+    const VertexingOptions& vertexingOptions,
+    MagneticFieldProvider::Cache* fieldCache, MagneticFieldQuery* field,
+    const Vector4& seedPosition) const {
   unsigned int nTracks = paramVector.size();
   double chi2 = std::numeric_limits<double>::max();
 
@@ -91,7 +145,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
   std::vector<BilloirTrack> billoirTracks;
   std::vector<Vector3> trackMomenta;
   // Initial guess of the 4D vertex position
-  Vector4 linPoint = vertexingOptions.constraint.fullPosition();
+  Vector4 linPoint = seedPosition;
   Vertex fittedVertex;
 
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
@@ -111,10 +165,15 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
 
       const auto& trackParams = m_cfg.extractParameters(trackContainer);
 
-      auto result =
-          m_cfg.trackLinearizer(trackParams, linPoint[3], *perigeeSurface,
-                                vertexingOptions.geoContext,
-                                vertexingOptions.magFieldContext, fieldCache);
+      auto result = field != nullptr
+                        ? m_cfg.fieldTrackLinearizer(
+                              trackParams, linPoint[3], *perigeeSurface,
+                              vertexingOptions.geoContext,
+                              vertexingOptions.magFieldContext, *field)
+                        : m_cfg.trackLinearizer(
+                              trackParams, linPoint[3], *perigeeSurface,
+                              vertexingOptions.geoContext,
+                              vertexingOptions.magFieldContext, *fieldCache);
       if (!result.ok()) {
         return result.error();
       }

@@ -9,7 +9,24 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
+
+namespace {
+
+Acts::Result<Acts::Vertex> fitVertex(
+    const Acts::FullBilloirVertexFitter& fitter,
+    const std::vector<Acts::InputTrack>& tracks,
+    const Acts::VertexingOptions& options,
+    Acts::MagneticFieldProvider::Cache& fieldCache) {
+  // Preserve existing finder configurations and reuse the finder state's cache.
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  auto result = fitter.fit(tracks, options, fieldCache);
+  ACTS_POP_IGNORE_DEPRECATED()
+  return result;
+}
+
+}  // namespace
 
 Acts::IterativeVertexFinder::IterativeVertexFinder(
     Config cfg, std::unique_ptr<const Logger> logger)
@@ -91,16 +108,16 @@ auto Acts::IterativeVertexFinder::find(
     Vertex currentSplitVertex;
 
     if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
-      auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                              state.fieldCache);
+      auto fitResult = fitVertex(m_cfg.vertexFitter, tracksToFit,
+                                 vertexingOptions, state.fieldCache);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
         return fitResult.error();
       }
     } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
-      auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                              state.fieldCache);
+      auto fitResult = fitVertex(m_cfg.vertexFitter, tracksToFit,
+                                 vertexingOptions, state.fieldCache);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
@@ -108,8 +125,8 @@ auto Acts::IterativeVertexFinder::find(
       }
     }
     if (m_cfg.createSplitVertices && tracksToFitSplitVertex.size() > 1) {
-      auto fitResult = m_cfg.vertexFitter.fit(
-          tracksToFitSplitVertex, vertexingOptions, state.fieldCache);
+      auto fitResult = fitVertex(m_cfg.vertexFitter, tracksToFitSplitVertex,
+                                 vertexingOptions, state.fieldCache);
       if (fitResult.ok()) {
         currentSplitVertex = std::move(*fitResult);
       } else {
@@ -526,16 +543,16 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
   // later
   currentVertex = Vertex();
   if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
-    auto fitResult =
-        m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions, state.fieldCache);
+    auto fitResult = fitVertex(m_cfg.vertexFitter, tracksToFit,
+                               vertexingOptions, state.fieldCache);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {
       return Result<bool>::success(false);
     }
   } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
-    auto fitResult =
-        m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions, state.fieldCache);
+    auto fitResult = fitVertex(m_cfg.vertexFitter, tracksToFit,
+                               vertexingOptions, state.fieldCache);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {
