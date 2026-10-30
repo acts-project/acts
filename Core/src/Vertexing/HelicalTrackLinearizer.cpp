@@ -8,6 +8,7 @@
 
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -19,6 +20,25 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
     const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
     const Acts::MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& fieldCache) const {
+  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx, mctx,
+                            &fieldCache, nullptr);
+}
+
+Acts::Result<Acts::LinearizedTrack>
+Acts::HelicalTrackLinearizer::linearizeTrackWithField(
+    const BoundTrackParameters& params, double linPointTime,
+    const Surface& perigeeSurface, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx, MagneticFieldQuery& field) const {
+  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx, mctx,
+                            nullptr, &field);
+}
+
+Acts::Result<Acts::LinearizedTrack>
+Acts::HelicalTrackLinearizer::linearizeTrackImpl(
+    const BoundTrackParameters& params, double linPointTime,
+    const Surface& perigeeSurface, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx, MagneticFieldProvider::Cache* fieldCache,
+    MagneticFieldQuery* fieldQuery) const {
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
 
@@ -97,7 +117,10 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   double absoluteCharge = params.particleHypothesis().absoluteCharge();
 
   // get the z-component of the B-field at the PCA
-  auto field = m_cfg.bField->getField(VectorHelpers::position(pca), fieldCache);
+  auto field =
+      fieldQuery != nullptr
+          ? fieldQuery->getField(VectorHelpers::position(pca))
+          : m_cfg.bField->getField(VectorHelpers::position(pca), *fieldCache);
   if (!field.ok()) {
     return field.error();
   }
