@@ -111,11 +111,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
             py::return_value_policy::reference_internal)
         .def_property_readonly(
             "children",
-            static_cast<
-                const std::vector<std::shared_ptr<AlignableStructure>>& (
-                    AlignableStructure::*)() const>(
-                &AlignableStructure::children),
-            py::return_value_policy::reference_internal)
+            [](const AlignableStructure& s) {
+              const auto children = s.children();
+              return std::vector<std::shared_ptr<AlignableStructure>>(
+                  children.begin(), children.end());
+            })
         .def_property(
             "alignmentMask",
             [](const AlignableStructure& s) { return s.alignmentMask(); },
