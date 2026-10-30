@@ -113,11 +113,10 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
       const float corr = static_cast<float>((curv < less_scattering_curv) +
                                             (curv < much_less_scattering_curv));
       const float high_pT_factor = 1.0f - high_pT_correction * corr;
-      deta_max *= high_pT_factor;
-      float eta_correction_factor = 1 -
+      const float eta_correction_factor = 1 -
                                     eta_correction * (eta < eta_low_threshold) +
                                     eta_correction * (eta > eta_high_threshold);
-      deta_max *= eta_correction_factor;
+      deta_max *= high_pT_factor * eta_correction_factor;
       const float deta_cut_ratio =
           math::fabs(eta2 - params2.first.x) / deta_max;
       if (deta_cut_ratio > 1.0f) {  // bad match
