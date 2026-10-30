@@ -15,6 +15,7 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/HoughAccumulatorSection.hpp"
+#include "Acts/Utilities/HashCombine.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
@@ -25,6 +26,7 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -42,7 +44,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     float phiWrap =
         0.1f;  // wrap size around angle domain limits (min pT dependent)
-    float qOverPtMin = 0.9f;  // min q/pt, -1/1 GeV
+    float qOverPtMin = 1.1f;  // min q/pt, -1/1 GeV
 
     float qOverPtMinBinSize = 0.01f;  // minimal size of pT bin that the
                                       // algorithm should not go beyond (in GeV)
@@ -57,7 +59,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     float cotThetaMinBinSize = 0.1f;  // minimal size of cot(theta) bin that
                                       // the algorithm should not go beyond
     unsigned threshold =
-        4;  // number of lines passing section for it to be still considered
+        3;  // number of lines passing section for it to be still considered
     unsigned noiseThreshold = 12;  // number of lines passing section at the
                                    // final split to consider it noise
 
@@ -65,11 +67,29 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                                 // find less solutions
     bool deduplicate = true;    // when adding solutions try avoiding duplicates
 
+    unsigned maxDivision = 6;  // Level of maximal standard section division
+
     double inverseA =
         1.0 / 3.0e-4;  // Assume B = 2T constant. Can apply corrections to
                        // this with fieldCorrection function
                        // This 3e-4 comes from the 2T field when converted to
                        // units of GeV / (c*mm*e)
+  };
+
+  /// @brief Lightweight representation of a seed candidate holding measurement indices
+  struct SeedCandidate {
+    std::vector<unsigned> indices;
+  };
+
+  /// @brief Hash functor using hashMixAndCombine utility to enable O(1) deduplication
+  struct VectorHash {
+    std::size_t operator()(const std::vector<unsigned> &v) const {
+      std::size_t seed = v.size();
+      for (unsigned idx : v) {
+        seed = Acts::hashMixAndCombine(seed, idx);
+      }
+      return static_cast<std::size_t>(seed);
+    }
   };
 
   // information that is needed for each measurement
@@ -159,17 +179,30 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
-  /// @brief process sections on the stack
-  /// and qualifying them for further division, discarding them or moving to
-  /// solutions vector
-  /// the search happens in q/pt - phi space
-  /// @param sections is the stack of sectoins to consider
-  /// @param solutions is the output set of sections
+  /// @brief process sections on the stack in z - cot(theta) space
+  /// @param input is the stack of sections to consider
+  /// @param output is the output set of seed candidates
   /// @param measurements are input measurements
   void processStackZCotTheta(
       std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
-      std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
+      std::vector<SeedCandidate> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
+
+  /// @brief Evaluates lines at discrete check points and extracts 1D clusters
+  /// using a sliding window approach.
+  /// @param indices measurement indices present in the current section
+  /// @param checkPoints discrete coordinates along the primary axis to evaluate
+  /// @param measurements global collection of preprocessed measurements
+  /// @param lineFunctor functor evaluating the secondary coordinate for a given primary coordinate
+  /// @param maxSpread maximum allowed spread along the secondary axis to form a cluster
+  /// @param uniqueClusters hash set tracking already discovered index combinations
+  /// @param output output vector of unique seed candidates
+  void findClusters1D(
+      const std::vector<unsigned> &indices, std::span<const float> checkPoints,
+      const std::vector<PreprocessedMeasurement> &measurements,
+      const LineFunctor &lineFunctor, float maxSpread,
+      std::unordered_set<std::vector<unsigned>, VectorHash> &uniqueClusters,
+      std::vector<SeedCandidate> &output) const;
 
   void processStackZCotThetaSplit(
       std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
@@ -181,8 +214,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the input to be translated
   /// @param measurements are input measurements
   void makeSeeds(
-      SeedContainer &seeds,
-      const std::vector<Acts::Experimental::HoughAccumulatorSection> &solutions,
+      SeedContainer &seeds, const std::vector<SeedCandidate> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   LineFunctor m_qOverPtPhiLineParams = [this](const PreprocessedMeasurement &m,
