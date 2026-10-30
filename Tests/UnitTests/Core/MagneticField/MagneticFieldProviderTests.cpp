@@ -13,6 +13,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 
 using namespace Acts;
@@ -113,3 +114,62 @@ BOOST_AUTO_TEST_CASE(FieldGradientConstant) {
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActssTests
+
+namespace {
+class CountingField final : public Acts::MagneticFieldProvider {
+ public:
+  struct LookupCache {
+    const CountingField* owner;
+    int lookups = 0;
+  };
+  mutable int cacheCreations = 0;
+
+  Cache makeCache(const Acts::MagneticFieldContext& /*mctx*/) const override {
+    ++cacheCreations;
+    return Cache(std::in_place_type<LookupCache>, this, 0);
+  }
+
+  Acts::Result<Acts::Vector3> getField(const Acts::Vector3& position,
+                                       Cache& cache) const override {
+    auto& state = cache.as<LookupCache>();
+    BOOST_CHECK(state.owner == this);
+    if (position.x() < 0.) {
+      return Acts::Result<Acts::Vector3>::failure(
+          Acts::MagneticFieldError::OutOfBounds);
+    }
+    return Acts::Result<Acts::Vector3>::success(
+        Acts::Vector3(0., 0., ++state.lookups));
+  }
+};
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(FieldQueryOwnsAndReusesCache) {
+  auto provider = std::make_shared<CountingField>();
+  Acts::MagneticFieldContext context;
+  Acts::MagneticFieldQuery first(provider, context);
+  BOOST_CHECK_EQUAL(provider->cacheCreations, 1);
+  for (int i = 1; i <= 3; ++i) {
+    auto result = first.getField(Acts::Vector3::Zero());
+    BOOST_REQUIRE(result.ok());
+    BOOST_CHECK_EQUAL(result->z(), i);
+  }
+  BOOST_CHECK_EQUAL(provider->cacheCreations, 1);
+
+  // A second operation has independent cache state, even with one provider.
+  Acts::MagneticFieldQuery second(provider, context);
+  BOOST_CHECK_EQUAL(provider->cacheCreations, 2);
+  auto result = second.getField(Acts::Vector3::Zero());
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(result->z(), 1.);
+  auto error = first.getField(Acts::Vector3(-1., 0., 0.));
+  BOOST_REQUIRE(!error.ok());
+  BOOST_CHECK(error.error() == Acts::MagneticFieldError::OutOfBounds);
+
+  // A query retains its provider even if the caller releases its ownership.
+  std::weak_ptr<const Acts::MagneticFieldProvider> weak = provider;
+  provider.reset();
+  BOOST_CHECK(!weak.expired());
+  BOOST_CHECK(first.getField(Acts::Vector3::Zero()).ok());
+  BOOST_CHECK_THROW(Acts::MagneticFieldQuery(nullptr, context),
+                    std::invalid_argument);
+}
