@@ -23,6 +23,8 @@ namespace detray {
 
 /// Adds a few surfaces to the detector for testing the builder code on
 /// non-empty detectors
+/// @param d Detector to populate.
+/// @param ctx Geometry context used while building the surfaces.
 template <concepts::detector detector_t>
 void prefill_detector(detector_t& d,
                       typename detector_t::geometry_context ctx) {

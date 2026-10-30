@@ -28,6 +28,7 @@ namespace detray {
 /// Configuration for the random track generator
 template <concepts::scalar scalar_t>
 struct random_track_generator_config {
+  /// Random engine seed type
   using seed_t = std::uint64_t;
 
   /// Gaussian vertex smearing
@@ -42,6 +43,7 @@ struct random_track_generator_config {
   /// Range for phi [-pi, pi) and theta [0, pi)
   darray<scalar_t, 2> m_phi_range{-constant<scalar_t>::pi,
                                   constant<scalar_t>::pi};
+  /// Polar angle range
   darray<scalar_t, 2> m_theta_range{0.f, constant<scalar_t>::pi};
 
   /// Momentum range
@@ -52,6 +54,7 @@ struct random_track_generator_config {
 
   /// Track origin
   darray<scalar_t, 3> m_origin{0.f, 0.f, 0.f};
+  /// Vertex smearing standard deviations
   darray<scalar_t, 3> m_origin_stddev{0.f, 0.f, 0.f};
 
   /// Randomly flip the charge sign?
@@ -59,23 +62,33 @@ struct random_track_generator_config {
 
   /// Time parameter and charge of the track
   scalar_t m_time{0.f * unit<scalar_t>::us};
+  /// Track charge
   scalar_t m_charge{-1.f * unit<scalar_t>::e};
 
   /// Setters
   /// @{
+  /// @param s random engine seed
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& seed(const seed_t s) {
     m_seed = s;
     return *this;
   }
+  /// @param b whether Gaussian vertex smearing is enabled
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& do_vertex_smearing(bool b) {
     m_do_vtx_smearing = b;
     return *this;
   }
+  /// @param n number of tracks to generate
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& n_tracks(std::size_t n) {
     assert(n > 0);
     m_n_tracks = n;
     return *this;
   }
+  /// @param low lower bound of the azimuthal angle range
+  /// @param high upper bound of the azimuthal angle range
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& phi_range(
       const scalar_t low, const scalar_t high) {
     auto min_phi{
@@ -88,12 +101,17 @@ struct random_track_generator_config {
     m_phi_range = {min_phi, max_phi};
     return *this;
   }
+  /// @param r azimuthal angle range
+  /// @return this configuration
   template <typename o_scalar_t>
   DETRAY_HOST_DEVICE random_track_generator_config& phi_range(
       darray<o_scalar_t, 2> r) {
     phi_range(static_cast<o_scalar_t>(r[0]), static_cast<o_scalar_t>(r[1]));
     return *this;
   }
+  /// @param low lower bound of the polar angle range
+  /// @param high upper bound of the polar angle range
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& theta_range(scalar_t low,
                                                                 scalar_t high) {
     auto min_theta{std::clamp(low, scalar_t{0.f}, constant<scalar_t>::pi)};
@@ -104,12 +122,17 @@ struct random_track_generator_config {
     m_theta_range = {min_theta, max_theta};
     return *this;
   }
+  /// @param r polar angle range
+  /// @return this configuration
   template <typename o_scalar_t>
   DETRAY_HOST_DEVICE random_track_generator_config& theta_range(
       darray<o_scalar_t, 2> r) {
     theta_range(static_cast<o_scalar_t>(r[0]), static_cast<o_scalar_t>(r[1]));
     return *this;
   }
+  /// @param low lower bound of the pseudorapidity range
+  /// @param high upper bound of the pseudorapidity range
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& eta_range(scalar_t low,
                                                               scalar_t high) {
     // This value is more or less random
@@ -126,12 +149,17 @@ struct random_track_generator_config {
     theta_range(get_theta(max_eta), get_theta(min_eta));
     return *this;
   }
+  /// @param r pseudorapidity range
+  /// @return this configuration
   template <typename o_scalar_t>
   DETRAY_HOST_DEVICE random_track_generator_config& eta_range(
       darray<o_scalar_t, 2> r) {
     eta_range(static_cast<o_scalar_t>(r[0]), static_cast<o_scalar_t>(r[1]));
     return *this;
   }
+  /// @param low lower bound of the momentum range
+  /// @param high upper bound of the momentum range
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& mom_range(scalar_t low,
                                                               scalar_t high) {
     m_is_pT = false;
@@ -140,12 +168,17 @@ struct random_track_generator_config {
     m_mom_range = {low, high};
     return *this;
   }
+  /// @param r momentum range
+  /// @return this configuration
   template <typename o_scalar_t>
   DETRAY_HOST_DEVICE random_track_generator_config& mom_range(
       darray<o_scalar_t, 2> r) {
     mom_range(static_cast<o_scalar_t>(r[0]), static_cast<o_scalar_t>(r[1]));
     return *this;
   }
+  /// @param low lower bound of the transverse momentum range
+  /// @param high upper bound of the transverse momentum range
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& pT_range(scalar_t low,
                                                              scalar_t high) {
     m_is_pT = true;
@@ -154,52 +187,76 @@ struct random_track_generator_config {
     m_mom_range = {low, high};
     return *this;
   }
+  /// @param r transverse momentum range
+  /// @return this configuration
   template <typename o_scalar_t>
   DETRAY_HOST_DEVICE random_track_generator_config& pT_range(
       darray<o_scalar_t, 2> r) {
     pT_range(static_cast<o_scalar_t>(r[0]), static_cast<o_scalar_t>(r[1]));
     return *this;
   }
+  /// @param p total momentum magnitude
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& p_tot(scalar_t p) {
     mom_range(p, p);
     return *this;
   }
+  /// @param p transverse momentum magnitude
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& p_T(scalar_t p) {
     pT_range(p, p);
     return *this;
   }
+  /// @param x x component of the track origin
+  /// @param y y component of the track origin
+  /// @param z z component of the track origin
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& origin(const scalar_t x,
                                                            const scalar_t y,
                                                            const scalar_t z) {
     m_origin = {x, y, z};
     return *this;
   }
+  /// @param ori track origin
+  /// @return this configuration
   template <concepts::point3D point3_t>
   DETRAY_HOST_DEVICE random_track_generator_config& origin(
       const point3_t& ori) {
     return origin(ori[0], ori[1], ori[2]);
   }
+  /// @param x x component of the vertex smearing standard deviations
+  /// @param y y component of the vertex smearing standard deviations
+  /// @param z z component of the vertex smearing standard deviations
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& origin_stddev(
       const scalar_t x, const scalar_t y, const scalar_t z) {
     m_do_vtx_smearing = true;
     m_origin_stddev = {x, y, z};
     return *this;
   }
+  /// @param stddev vertex smearing standard deviations
+  /// @return this configuration
   template <concepts::point3D point3_t>
   DETRAY_HOST_DEVICE random_track_generator_config& origin_stddev(
       point3_t stddev) {
     return origin_stddev(stddev[0], stddev[1], stddev[2]);
   }
+  /// @param rc whether to randomize the charge sign
+  /// @return this configuration
   DETRAY_HOST_DEVICE
   random_track_generator_config& randomize_charge(bool rc) {
     m_randomize_charge = rc;
     return *this;
   }
+  /// @param t track time
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& time(scalar_t t) {
     assert(t >= 0.f);
     m_time = t;
     return *this;
   }
+  /// @param q track charge
+  /// @return this configuration
   DETRAY_HOST_DEVICE random_track_generator_config& charge(scalar_t q) {
     m_charge = q;
     return *this;
@@ -208,35 +265,50 @@ struct random_track_generator_config {
 
   /// Getters
   /// @{
+  /// @return random engine seed
   DETRAY_HOST_DEVICE constexpr seed_t seed() const { return m_seed; }
+  /// @return whether Gaussian vertex smearing is enabled
   DETRAY_HOST_DEVICE constexpr bool do_vertex_smearing() const {
     return m_do_vtx_smearing;
   }
+  /// @return number of tracks to generate
   DETRAY_HOST_DEVICE constexpr std::size_t n_tracks() const {
     return m_n_tracks;
   }
+  /// @return azimuthal angle range
   DETRAY_HOST_DEVICE constexpr const darray<scalar_t, 2>& phi_range() const {
     return m_phi_range;
   }
+  /// @return polar angle range
   DETRAY_HOST_DEVICE constexpr const darray<scalar_t, 2>& theta_range() const {
     return m_theta_range;
   }
+  /// @return momentum range
   DETRAY_HOST_DEVICE constexpr const darray<scalar_t, 2>& mom_range() const {
     return m_mom_range;
   }
+  /// @return track origin
   DETRAY_HOST_DEVICE constexpr const auto& origin() const { return m_origin; }
+  /// @return vertex smearing standard deviations
   DETRAY_HOST_DEVICE constexpr const auto& origin_stddev() const {
     return m_origin_stddev;
   }
+  /// @return whether momentum is interpreted as transverse momentum
   DETRAY_HOST_DEVICE constexpr bool is_pT() const { return m_is_pT; }
+  /// @return whether to randomize the charge sign
   DETRAY_HOST_DEVICE constexpr bool randomize_charge() const {
     return m_randomize_charge;
   }
+  /// @return track time
   DETRAY_HOST_DEVICE constexpr scalar_t time() const { return m_time; }
+  /// @return track charge
   DETRAY_HOST_DEVICE constexpr scalar_t charge() const { return m_charge; }
   /// @}
 
   /// Print the random track generator configuration
+  /// @param out output stream
+  /// @param cfg configuration to print
+  /// @return the output stream
   DETRAY_HOST
   friend std::ostream& operator<<(std::ostream& out,
                                   const random_track_generator_config& cfg) {

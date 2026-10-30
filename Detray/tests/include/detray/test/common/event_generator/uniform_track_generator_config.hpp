@@ -26,6 +26,7 @@ namespace detray {
 /// Configuration for the uniform track generator
 template <concepts::scalar scalar_t>
 struct uniform_track_generator_config {
+  /// Random engine seed type
   using seed_t = std::uint64_t;
 
   /// Monte-Carlo seed
@@ -37,11 +38,14 @@ struct uniform_track_generator_config {
 
   /// Range for phi [-pi, pi) and theta [0, pi)
   darray<scalar_t, 2> m_phi_range{-constant<scalar_t>::pi, k_max_pi};
+  /// Polar angle range
   darray<scalar_t, 2> m_theta_range{0.f, k_max_pi};
+  /// Pseudorapidity range
   darray<scalar_t, 2> m_eta_range{-5.f, 5.f};
 
   /// Angular step size
   std::size_t m_phi_steps{50u};
+  /// Number of polar angle or pseudorapidity steps
   std::size_t m_theta_steps{50u};
 
   /// Do uniform eta steps instead of uniform theta steps
@@ -62,14 +66,20 @@ struct uniform_track_generator_config {
 
   /// Time parameter and charge of the track
   scalar_t m_time{0.f * unit<scalar_t>::us};
+  /// Track charge
   scalar_t m_charge{-1.f * unit<scalar_t>::e};
 
   /// Setters
   /// @{
+  /// @param s random engine seed
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& seed(const seed_t s) {
     m_seed = s;
     return *this;
   }
+  /// @param low lower bound of the azimuthal angle range
+  /// @param high upper bound of the azimuthal angle range
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& phi_range(scalar_t low,
                                                                scalar_t high) {
     auto min_phi{std::clamp(low, -constant<scalar_t>::pi, k_max_pi)};
@@ -80,12 +90,17 @@ struct uniform_track_generator_config {
     m_phi_range = {min_phi, max_phi};
     return *this;
   }
+  /// @param r azimuthal angle range
+  /// @return this configuration
   template <typename o_scalar_t>
   DETRAY_HOST_DEVICE uniform_track_generator_config& phi_range(
       darray<o_scalar_t, 2> r) {
     phi_range(static_cast<o_scalar_t>(r[0]), static_cast<o_scalar_t>(r[1]));
     return *this;
   }
+  /// @param low lower bound of the polar angle range
+  /// @param high upper bound of the polar angle range
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& theta_range(
       scalar_t low, scalar_t high) {
     auto min_theta{std::clamp(low, scalar_t{0.f}, k_max_pi)};
@@ -97,12 +112,17 @@ struct uniform_track_generator_config {
     m_uniform_eta = false;
     return *this;
   }
+  /// @param r polar angle range
+  /// @return this configuration
   template <typename o_scalar_t>
   DETRAY_HOST_DEVICE uniform_track_generator_config& theta_range(
       darray<o_scalar_t, 2> r) {
     theta_range(static_cast<o_scalar_t>(r[0]), static_cast<o_scalar_t>(r[1]));
     return *this;
   }
+  /// @param low lower bound of the pseudorapidity range
+  /// @param high upper bound of the pseudorapidity range
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& eta_range(scalar_t low,
                                                                scalar_t high) {
     // This value is more or less random
@@ -116,17 +136,23 @@ struct uniform_track_generator_config {
     m_uniform_eta = true;
     return *this;
   }
+  /// @param r pseudorapidity range
+  /// @return this configuration
   template <typename o_scalar_t>
   DETRAY_HOST_DEVICE uniform_track_generator_config& eta_range(
       darray<o_scalar_t, 2> r) {
     eta_range(static_cast<o_scalar_t>(r[0]), static_cast<o_scalar_t>(r[1]));
     return *this;
   }
+  /// @param n number of azimuthal steps
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& phi_steps(std::size_t n) {
     assert(n > 0);
     m_phi_steps = n;
     return *this;
   }
+  /// @param n number of polar angle steps
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& theta_steps(
       std::size_t n) {
     assert(n > 0);
@@ -134,48 +160,68 @@ struct uniform_track_generator_config {
     m_uniform_eta = false;
     return *this;
   }
+  /// @param n number of pseudorapidity steps
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& eta_steps(std::size_t n) {
     assert(n > 0);
     m_theta_steps = n;
     m_uniform_eta = true;
     return *this;
   }
+  /// @param b whether to step uniformly in pseudorapidity
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& uniform_eta(bool b) {
     m_uniform_eta = b;
     return *this;
   }
+  /// @param x x component of the track origin
+  /// @param y y component of the track origin
+  /// @param z z component of the track origin
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& origin(const scalar_t x,
                                                             const scalar_t y,
                                                             const scalar_t z) {
     m_origin = {x, y, z};
     return *this;
   }
+  /// @param ori track origin
+  /// @return this configuration
   template <concepts::point3D point3_t>
   DETRAY_HOST_DEVICE uniform_track_generator_config& origin(
       const point3_t& ori) {
     return origin(ori[0], ori[1], ori[2]);
   }
+  /// @param p total momentum magnitude
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& p_tot(scalar_t p) {
     assert(p > 0.f);
     m_is_pT = false;
     m_p_mag = p;
     return *this;
   }
+  /// @param p transverse momentum magnitude
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& p_T(scalar_t p) {
     assert(p > 0.f);
     m_is_pT = true;
     m_p_mag = p;
     return *this;
   }
+  /// @param rc whether to randomize the charge sign
+  /// @return this configuration
   DETRAY_HOST_DEVICE
   uniform_track_generator_config& randomize_charge(bool rc) {
     m_randomize_charge = rc;
     return *this;
   }
+  /// @param t track time
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& time(scalar_t t) {
     m_time = t;
     return *this;
   }
+  /// @param q track charge
+  /// @return this configuration
   DETRAY_HOST_DEVICE uniform_track_generator_config& charge(scalar_t q) {
     m_charge = q;
     return *this;
@@ -184,44 +230,62 @@ struct uniform_track_generator_config {
 
   /// Getters
   /// @{
+  /// @return random engine seed
   DETRAY_HOST_DEVICE constexpr seed_t seed() const { return m_seed; }
+  /// @return number of tracks to generate
   DETRAY_HOST_DEVICE constexpr std::size_t n_tracks() const {
     return phi_steps() * theta_steps();
   }
+  /// @return azimuthal angle range
   DETRAY_HOST_DEVICE constexpr darray<scalar_t, 2> phi_range() const {
     return m_phi_range;
   }
+  /// @return polar angle range
   DETRAY_HOST_DEVICE constexpr darray<scalar_t, 2> theta_range() const {
     return m_theta_range;
   }
+  /// @return pseudorapidity range
   DETRAY_HOST_DEVICE constexpr darray<scalar_t, 2> eta_range() const {
     return m_eta_range;
   }
+  /// @return momentum range
   DETRAY_HOST_DEVICE constexpr darray<scalar_t, 2> mom_range() const {
     return {m_p_mag, m_p_mag};
   }
+  /// @return number of azimuthal steps
   DETRAY_HOST_DEVICE constexpr std::size_t phi_steps() const {
     return m_phi_steps;
   }
+  /// @return number of polar angle steps
   DETRAY_HOST_DEVICE constexpr std::size_t theta_steps() const {
     return m_theta_steps;
   }
+  /// @return number of pseudorapidity steps
   DETRAY_HOST_DEVICE constexpr std::size_t eta_steps() const {
     return m_theta_steps;
   }
+  /// @return whether to step uniformly in pseudorapidity
   DETRAY_HOST_DEVICE constexpr bool uniform_eta() const {
     return m_uniform_eta;
   }
+  /// @return track origin
   DETRAY_HOST_DEVICE constexpr const auto& origin() const { return m_origin; }
+  /// @return whether momentum is interpreted as transverse momentum
   DETRAY_HOST_DEVICE constexpr bool is_pT() const { return m_is_pT; }
+  /// @return whether to randomize the charge sign
   DETRAY_HOST_DEVICE constexpr bool randomize_charge() const {
     return m_randomize_charge;
   }
+  /// @return track time
   DETRAY_HOST_DEVICE constexpr scalar_t time() const { return m_time; }
+  /// @return track charge
   DETRAY_HOST_DEVICE constexpr scalar_t charge() const { return m_charge; }
   /// @}
 
   /// Print the uniform track generator configuration
+  /// @param out output stream
+  /// @param cfg configuration to print
+  /// @return the output stream
   DETRAY_HOST
   friend std::ostream& operator<<(std::ostream& out,
                                   const uniform_track_generator_config& cfg) {
