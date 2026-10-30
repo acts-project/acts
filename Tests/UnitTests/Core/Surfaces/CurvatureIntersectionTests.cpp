@@ -42,10 +42,10 @@ BOOST_AUTO_TEST_CASE(CurvatureCorrectionModes) {
           scale * normal.dot(curvature), curvature.norm(), scale);
       BOOST_REQUIRE(first);
       BOOST_REQUIRE(quadratic);
-      CHECK_CLOSE_ABS(normal.dot(first->first - seed), 0., 1e-12);
-      CHECK_CLOSE_ABS(normal.dot(quadratic->first - seed), 0., 1e-12);
-      const double path = quadratic->second;
-      CHECK_CLOSE_ABS(quadratic->first,
+      CHECK_CLOSE_ABS(normal.dot(first->position - seed), 0., 1e-12);
+      CHECK_CLOSE_ABS(normal.dot(quadratic->position - seed), 0., 1e-12);
+      const double path = quadratic->pathLength;
+      CHECK_CLOSE_ABS(quadratic->position,
                       (path * direction + 0.5 * path * path * curvature).eval(),
                       1e-12);
       const auto selected = detail::correctCurvatureIntersection(
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(CurvatureCorrectionModes) {
       BOOST_REQUIRE(selected);
       const auto& expected =
           detail::s_useQuadraticCurvatureCorrection ? quadratic : first;
-      CHECK_CLOSE_ABS(selected->first, expected->first, 1e-12);
-      CHECK_CLOSE_ABS(selected->second, expected->second, 1e-12);
+      CHECK_CLOSE_ABS(selected->position, expected->position, 1e-12);
+      CHECK_CLOSE_ABS(selected->pathLength, expected->pathLength, 1e-12);
     }
   }
   // A local parabola that turns before reaching the plane has no real root.

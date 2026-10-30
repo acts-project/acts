@@ -352,14 +352,14 @@ MultiIntersection3D CylinderSurface::intersect(
         boundaryTolerance);
   };
   const auto finish = [&](double s, const Vector3& seed,
-                          std::optional<std::pair<Vector3, double>>& corrected,
+                          std::optional<detail::CurvatureCorrection>& corrected,
                           double scale) {
     if (corrected && scale > 0. && std::isfinite(scale)) {
-      corrected->first.head<2>() *= scale;
-      const Vector3 global = transform * corrected->first;
+      corrected->position.head<2>() *= scale;
+      const Vector3 global = transform * corrected->position;
       if (global.allFinite()) {
-        return Intersection3D(global, corrected->second,
-                              inside(corrected->first, false)
+        return Intersection3D(global, corrected->pathLength,
+                              inside(corrected->position, false)
                                   ? IntersectionStatus::reachable
                                   : IntersectionStatus::unreachable);
       }

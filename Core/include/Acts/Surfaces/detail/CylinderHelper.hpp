@@ -12,9 +12,9 @@
 
 namespace Acts::detail::CylinderHelper {
 
-// Inputs are in the cylinder's local frame. Preserve arrival at the actual
-// starting position; only predicted crossings receive a correction.
-inline std::optional<std::pair<Vector3, double>> correctIntersection(
+/// Inputs are in the cylinder's local frame. Preserve arrival at the actual
+/// starting position; only predicted crossings receive a correction.
+inline std::optional<CurvatureCorrection> correctIntersection(
     double s, const Vector3& seed, const Vector3& direction,
     const Vector3& curvature, double curvatureNorm, double radius,
     double tolerance) {
@@ -29,24 +29,25 @@ inline std::optional<std::pair<Vector3, double>> correctIntersection(
       seed.head<2>().dot(curvature.head<2>()), curvatureNorm, radius);
 }
 
-// Keep projection policy internal: subsequent numerical optimizations can
-// replace this implementation without changing Surface or navigation APIs.
-// Corrected cylinder points lie on the seed's tangent plane. Radially project
-// them back onto the cylinder, leaving z and the estimated path unchanged.
-// This does not make the trajectory approximation second-order accurate.
+/// Keep projection policy internal: subsequent numerical optimizations can
+/// replace this implementation without changing Surface or navigation APIs.
+/// Corrected cylinder points lie on the seed's tangent plane. Radially project
+/// them back onto the cylinder, leaving z and the estimated path unchanged.
+/// This does not make the trajectory approximation second-order accurate.
 struct CylinderProjectionScales {
   double first = 0.;
   double second = 0.;
 };
 
+/// Exact paired radial scales; zero marks an invalid projection.
 inline CylinderProjectionScales cylinderProjectionScales(
-    const std::optional<std::pair<Vector3, double>>& first,
-    const std::optional<std::pair<Vector3, double>>& second, double radius) {
+    const std::optional<CurvatureCorrection>& first,
+    const std::optional<CurvatureCorrection>& second, double radius) {
   // Calculate both independent lengths before dividing. This allows the
   // compiler to overlap the two exact projections, without SIMD or an
   // approximate reciprocal square root. Zero marks a failed projection.
-  const double r1 = first ? first->first.head<2>().norm() : 0.;
-  const double r2 = second ? second->first.head<2>().norm() : 0.;
+  const double r1 = first ? first->position.head<2>().norm() : 0.;
+  const double r2 = second ? second->position.head<2>().norm() : 0.;
   return {r1 > 0. && std::isfinite(r1) ? radius / r1 : 0.,
           r2 > 0. && std::isfinite(r2) ? radius / r2 : 0.};
 }
