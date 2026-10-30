@@ -8,6 +8,7 @@ target_sources(
         BinnedSurfaceMaterial.cpp
         BinnedSurfaceMaterialAccumulator.cpp
         GridSurfaceMaterial.cpp
+        GridSurfaceMaterialAccumulator.cpp
         HomogeneousSurfaceMaterial.cpp
         HomogeneousVolumeMaterial.cpp
         Interactions.cpp

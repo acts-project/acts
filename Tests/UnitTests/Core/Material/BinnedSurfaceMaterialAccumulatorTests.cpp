@@ -86,12 +86,11 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   surfaces[0u]->assignSurfaceMaterial(
       std::make_shared<HomogeneousSurfaceMaterial>(mp, 1.));
 
-  // Second surface is binned Phi / Z
-  BinUtility sb1(4, -std::numbers::pi, std::numbers::pi, closed,
-                 AxisDirection::AxisPhi);
-  sb1 += BinUtility(2, -100., 100., open, AxisDirection::AxisZ);
+  // Second surface is binned RPhi / Z
   surfaces[1u]->assignSurfaceMaterial(
-      std::make_shared<ProtoSurfaceMaterial>(sb1));
+      std::make_shared<ProtoSurfaceMaterial>(MultiAxisSpec2D(
+          {AxisSpec::DeferredEquidistant(4, AxisDirection::AxisRPhi),
+           AxisSpec::DeferredEquidistant(2, AxisDirection::AxisZ)})));
 
   // Third is binned
   std::vector<MaterialSlab> mps = {mp, mp, mp};
@@ -233,14 +232,13 @@ BOOST_AUTO_TEST_CASE(ProtoGridResolutionTest) {
 
   // Cylinder: deferred equidistant binning in (rphi, z), given in swapped
   // order to exercise the direction based re-ordering
-  surfaces[0u]->assignSurfaceMaterial(
-      std::make_shared<ProtoGridSurfaceMaterial>(
-          MultiAxisSpec2D({AxisSpec::DeferredEquidistant(10, AxisZ),
-                           AxisSpec::DeferredEquidistant(4, AxisRPhi)})));
+  surfaces[0u]->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
+      MultiAxisSpec2D({AxisSpec::DeferredEquidistant(10, AxisZ),
+                       AxisSpec::DeferredEquidistant(4, AxisRPhi)})));
 
   // Disc: deferred variable binning in r, deferred equidistant binning in phi
   surfaces[1u]->assignSurfaceMaterial(
-      std::make_shared<ProtoGridSurfaceMaterial>(MultiAxisSpec2D(
+      std::make_shared<ProtoSurfaceMaterial>(MultiAxisSpec2D(
           {AxisSpec::DeferredVariable({0., 0.2, 1.}, std::nullopt, AxisR),
            AxisSpec::DeferredEquidistant(8, AxisPhi)})));
 
