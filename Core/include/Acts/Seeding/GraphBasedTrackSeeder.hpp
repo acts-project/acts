@@ -74,7 +74,7 @@ class GraphBasedTrackSeeder {
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
     /// Reject a complete chain whose fitted |curvature| times this factor
     /// exceeds `GbtsTrackingFilter::Config::maxCurvature`: a tighter minimum
-    /// pT once the whole chain has been fitted. Zero disables it.
+    /// pT once the whole chain has been fitted. Values below 1 does nothing.
     float postFitCurvatureFactor = 0.0f;
     // GbtsNodeStorage options
     /// Maximum endcap cluster width.
