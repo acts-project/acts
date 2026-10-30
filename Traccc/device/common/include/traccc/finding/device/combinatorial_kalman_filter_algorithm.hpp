@@ -19,6 +19,7 @@
 #include "traccc/finding/device/find_tracks_payload.hpp"
 #include "traccc/finding/device/gather_best_tips_per_measurement.hpp"
 #include "traccc/finding/device/gather_measurement_votes.hpp"
+#include "traccc/finding/device/permute_tracks.hpp"
 #include "traccc/finding/device/progressive_kalman_filter.hpp"
 #include "traccc/finding/device/propagate_to_next_surface.hpp"
 #include "traccc/finding/device/remove_duplicates.hpp"
@@ -207,6 +208,15 @@ class combinatorial_kalman_filter_algorithm
   virtual void sort_param_ids_by_keys(
       vecmem::data::vector_view<device::sort_key>& keys,
       vecmem::data::vector_view<unsigned int>& param_ids) const = 0;
+
+  /// Launch the @c permute_tracks kernel
+  ///
+  /// @param n_threads The number of threads to launch the kernel with
+  /// @param payload The payload for the kernel
+  ///
+  virtual void permute_tracks_kernel(
+      unsigned int n_threads,
+      const device::permute_tracks_payload& payload) const = 0;
 
   /// Launch the @c propagate_to_next_surface kernel
   ///

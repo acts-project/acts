@@ -74,6 +74,8 @@ traccc_add_library( traccc_cuda cuda TYPE SHARED
   "src/finding/kernels/gather_best_tips_per_measurement.cu"
   "src/finding/kernels/gather_measurement_votes.cu"
   "src/finding/kernels/update_tip_length_buffer.cu"
+  "src/finding/kernels/permute_tracks.cuh"
+  "src/finding/kernels/permute_tracks.cu"
   "src/finding/kernels/progressive_kalman_filter.hpp"
   "src/finding/kernels/propagate_to_next_surface.hpp"
   # Ambiguity resolution
