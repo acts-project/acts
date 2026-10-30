@@ -414,6 +414,14 @@ auto gbts_seeding_algorithm::extract_seeds(
   edm::seed_collection::buffer output_seeds(
       2 * nPathsMax, mr().main, vecmem::data::buffer_type::resizable);
   copy().setup(vecmem::ignore_event, output_seeds);
+  
+	vecmem::data::vector_buffer<unsigned long long int> seed_bids_buf;
+	if(cfg.gbts_convert_seeds_params.do_seed_sorting) { 
+		std::cout << "hello " << 2*nPathsMax << std::endl;
+		seed_bids_buf = vecmem::data::vector_buffer<unsigned long long int>(2*nPathsMax, mr().main, vecmem::data::buffer_type::resizable);
+		copy().setup(vecmem::ignore_event, seed_bids_buf);
+		copy().memset(vecmem::ignore_event, seed_bids_buf, 0);
+	}
 
   gbts_bid_seeds_for_hits_kernel({
       .nPathsMax = nPathsMax,
@@ -430,6 +438,7 @@ auto gbts_seeding_algorithm::extract_seeds(
       .nPathsMax = nPathsMax,
       .nPathsGrid = nPathsGrid,
       .path_count = path_count,
+			.seed_bids = seed_bids_buf,
       .seed_proposals = seed_proposals_buf,
       .seed_ambiguity = seed_ambiguity_buf,
       .path_store = path_store_buf,
