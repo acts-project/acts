@@ -219,6 +219,7 @@
                 "ACTS_GNN_ENABLE_TORCH": "ON",
                 "ACTS_GNN_ENABLE_ONNX": "ON",
                 "ACTS_ENABLE_CUDA": "ON",
+                "VECMEM_BUILD_CUDA_LIBRARY": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "ON",
                 "ACTS_BUILD_INTEGRATIONTESTS": "OFF",
                 "ACTS_BUILD_CORE_UNITTESTS": "OFF",
