@@ -897,6 +897,9 @@ DetrayPayloadConverter::convertTrackingGeometry(
       volumeSurfaceIndices;
 
   world->apply([&](const TrackingVolume& volume) {
+    if (!m_cfg.includeWorld && &volume == world) {
+      return;
+    }
     auto& volPayload =
         detPayload.volumes.emplace_back(convertVolume(gctx, volume));
     volPayload.index.link = detPayload.volumes.size() - 1;
@@ -916,13 +919,19 @@ DetrayPayloadConverter::convertTrackingGeometry(
     }
   });
 
+  if (volumeIds.empty()) {
+    throw std::invalid_argument("Selected world has no volumes to convert");
+  }
   if (!volumeIds.contains(m_cfg.beampipeVolume)) {
     throw std::invalid_argument(
-        "Beampipe volume is not part of the selected world subtree");
+        "Beampipe volume is not part of the converted volumes");
   }
 
   // Run again over volumes, can lookup volume index from pointer now
   world->apply([&](const TrackingVolume& volume) {
+    if (!m_cfg.includeWorld && &volume == world) {
+      return;
+    }
     auto& volPayload = detPayload.volumes.at(volumeIds.at(&volume));
     auto& surfaceIndices = volumeSurfaceIndices[&volume];
 
@@ -930,7 +939,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
       if (auto it = volumeIds.find(target); it != volumeIds.end()) {
         return it->second;
       }
-      if (m_cfg.replacementWorld != nullptr && &volume == world) {
+      if ((!m_cfg.includeWorld && target == world) ||
+          (m_cfg.replacementWorld != nullptr && &volume == world)) {
         return detray::io::mask_payload::end_of_world;
       }
       throw std::runtime_error("Portal from volume " + volume.volumeName() +

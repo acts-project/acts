@@ -1044,7 +1044,63 @@ BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
   auto det = builder.build(mr, detray::volume_builder_options{});
   detray::detail::check_consistency(det);
 
+  cfg.includeWorld = false;
+  auto withoutWorld = convert();
+  BOOST_REQUIRE_EQUAL(withoutWorld.detector->volumes.size(), 2u);
+  BOOST_CHECK_EQUAL(withoutWorld.detector->volumes.front().name, "BeamPipe");
+  // Every retained surface keeps its masks; only the envelope destination
+  // changes. Compare by name because removing the world renumbers volumes.
+  for (const auto& volume : withoutWorld.detector->volumes) {
+    auto original = std::ranges::find(selected.detector->volumes, volume.name,
+                                      &detray::io::volume_payload::name);
+    BOOST_REQUIRE(original != selected.detector->volumes.end());
+    BOOST_REQUIRE_EQUAL(volume.surfaces.size(), original->surfaces.size());
+    for (std::size_t i = 0; i < volume.surfaces.size(); ++i) {
+      const auto& masks = volume.surfaces.at(i).masks;
+      const auto& originalMasks = original->surfaces.at(i).masks;
+      BOOST_REQUIRE_EQUAL(masks.size(), originalMasks.size());
+      for (std::size_t j = 0; j < masks.size(); ++j) {
+        BOOST_CHECK(masks[j].boundaries == originalMasks[j].boundaries);
+        const auto& target =
+            selected.detector->volumes.at(originalMasks[j].volume_link.link)
+                .name;
+        if (target == "Envelope") {
+          BOOST_CHECK_EQUAL(masks[j].volume_link.link,
+                            detray::io::mask_payload::end_of_world);
+        } else {
+          BOOST_REQUIRE_LT(masks[j].volume_link.link,
+                           withoutWorld.detector->volumes.size());
+          BOOST_CHECK_EQUAL(
+              withoutWorld.detector->volumes.at(masks[j].volume_link.link).name,
+              target);
+        }
+      }
+    }
+  }
+  detray::detector_builder<detector_t::metadata> withoutWorldBuilder{};
+  detray::io::geometry_reader::from_payload<detector_t>(withoutWorldBuilder,
+                                                        *withoutWorld.detector);
+  auto withoutWorldDetector =
+      withoutWorldBuilder.build(mr, detray::volume_builder_options{});
+  detray::detail::check_consistency(withoutWorldDetector);
+
+  const auto* beampipe = cfg.beampipeVolume;
+  cfg.beampipeVolume = cfg.replacementWorld;
+  BOOST_CHECK_THROW(convert(), std::invalid_argument);
+  cfg.beampipeVolume = beampipe;
+  cfg.replacementWorld = beampipe;
+  BOOST_CHECK_THROW(convert(), std::invalid_argument);
+
+  // Omitting the original world also works without a replacement pointer.
+  cfg.replacementWorld = nullptr;
+  auto withoutOriginalWorld = convert();
+  BOOST_REQUIRE_EQUAL(withoutOriginalWorld.detector->volumes.size(), 3u);
+  BOOST_CHECK(std::ranges::none_of(
+      withoutOriginalWorld.detector->volumes,
+      [](const auto& volume) { return volume.name == "World"; }));
+
   // Conversion must not disconnect shared portals in the original geometry.
+  cfg.includeWorld = true;
   cfg.replacementWorld = nullptr;
   auto full = convert();
   BOOST_REQUIRE_EQUAL(full.detector->volumes.size(), 4u);
@@ -1091,6 +1147,8 @@ BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
                         surface, *geometry->highestTrackingVolume()));
     volume.addPortal(portal);
   });
+  BOOST_CHECK_THROW(convert(), std::runtime_error);
+  cfg.includeWorld = false;
   BOOST_CHECK_THROW(convert(), std::runtime_error);
 }
 

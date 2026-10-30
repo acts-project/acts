@@ -81,6 +81,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
           .def(py::init<>())
           .def_readwrite("sensitiveStrategy",
                          &DetrayPayloadConverter::Config::sensitiveStrategy)
+          .def_readwrite("includeWorld",
+                         &DetrayPayloadConverter::Config::includeWorld)
           .def_readwrite(
               "portalSegmentTolerance",
               &DetrayPayloadConverter::Config::portalSegmentTolerance)
