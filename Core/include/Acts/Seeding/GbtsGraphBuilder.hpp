@@ -12,6 +12,7 @@
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
+#include "Acts/Seeding/GbtsProfiler.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -179,11 +180,21 @@ class GbtsGraphBuilder {
   /// @param roi Region of interest descriptor
   /// @param nodeStorage Data storage containing nodes
   /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
+  /// @param profile Records the doublets and triplets accepted and rejected,
+  ///                if not null
   /// @return The graph, with its edges and their link counts
   GbtsGraph buildTheGraph(const GbtsRoiDescriptor& roi,
-                          GbtsNodeStorage& nodeStorage, float bFieldInZ) const;
+                          GbtsNodeStorage& nodeStorage, float bFieldInZ,
+                          GbtsProfiler::Event* profile = nullptr) const;
 
  private:
+  /// `buildTheGraph`, compiled with and without the profiling so that the
+  /// graph costs nothing extra without a profiler.
+  template <bool kProfile>
+  GbtsGraph buildTheGraphImpl(const GbtsRoiDescriptor& roi,
+                              GbtsNodeStorage& nodeStorage, float bFieldInZ,
+                              GbtsProfiler::Event* profile) const;
+
   Config m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;

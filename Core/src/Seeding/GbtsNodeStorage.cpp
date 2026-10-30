@@ -55,6 +55,13 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
   if (m_cfg.useClusterWidthCuts && description.type == GbtsLayerType::Endcap &&
       description.technology == GbtsLayerTechnology::Pixel &&
       clusterWidth > m_cfg.maxEndcapClusterWidth) {
+    if (m_cfg.recordRejected) {
+      m_rejectedNodes.push_back(
+          {.spacePoint = index,
+           .cut = GbtsProfiler::NodeCut::EndcapClusterWidth,
+           .value = clusterWidth,
+           .threshold = m_cfg.maxEndcapClusterWidth});
+    }
     return std::nullopt;
   }
 
