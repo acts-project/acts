@@ -78,6 +78,16 @@ Acts::FullBilloirVertexFitter::FullBilloirVertexFitter(
   }
 }
 
+Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
+    const VertexFitInput& input, const GeometryContext& gctx,
+    MagneticFieldQuery& field) const {
+  VertexingOptions options =
+      input.constraint
+          ? VertexingOptions(gctx, field.context(), *input.constraint)
+          : VertexingOptions(gctx, field.context());
+  return fitImpl(input.tracks, options, field, input.seedPosition);
+}
+
 const Acts::Logger& Acts::FullBilloirVertexFitter::logger() const {
   return *m_logger;
 }
@@ -85,6 +95,14 @@ const Acts::Logger& Acts::FullBilloirVertexFitter::logger() const {
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     const std::vector<InputTrack>& paramVector,
     const VertexingOptions& vertexingOptions, MagneticFieldQuery& field) const {
+  return fitImpl(paramVector, vertexingOptions, field,
+                 vertexingOptions.constraint.fullPosition());
+}
+
+Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitImpl(
+    std::span<const InputTrack> paramVector,
+    const VertexingOptions& vertexingOptions, MagneticFieldQuery& field,
+    const Vector4& seedPosition) const {
   unsigned int nTracks = paramVector.size();
   double chi2 = std::numeric_limits<double>::max();
 
@@ -116,7 +134,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
   std::vector<BilloirTrack> billoirTracks;
   std::vector<Vector3> trackMomenta;
   // Initial guess of the 4D vertex position
-  Vector4 linPoint = vertexingOptions.constraint.fullPosition();
+  Vector4 linPoint = seedPosition;
   Vertex fittedVertex;
 
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
