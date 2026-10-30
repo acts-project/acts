@@ -15,6 +15,7 @@
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 
 #include <memory>
+#include <span>
 #include <unordered_map>
 #include <vector>
 
@@ -71,8 +72,8 @@ class AlignableStructure {
   SurfaceRange surfaces() const { return SurfaceRange{m_surfaces}; }
 
   /// @brief Access the list of child structures
-  /// @return A vector of shared pointers to child structures
-  const std::vector<std::shared_ptr<AlignableStructure>>& children() const {
+  /// @return A read-only view of the shared pointers to child structures
+  std::span<const std::shared_ptr<AlignableStructure>> children() const {
     return m_children;
   }
 
