@@ -6,42 +6,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import detray
-
-from detray.detectors import metadata, metadata_generator
-from detray.detectors import Shape
-from detray.detectors import add_silicon_tracker_defaults
-
 import argparse
-import logging
-import sys
 
-# --------------------------------------------------------------------------
-# Generate the Open Data Detector metadata type
-# --------------------------------------------------------------------------
-
-""" Add all types needed to describe the ACTS Open Data Detector (ODD) """
-
-
-def add_odd_types(md: metadata):
-    logger = logging.getLogger(__name__)
-    logger.info("Define types required by the ACTS Open Data Detector (ODD):")
-
-    # Add default types for silicon trackers (cylindrical detector shape)
-    add_silicon_tracker_defaults(
-        metadata=md, use_homogeneous_mat=True, use_mat_maps=True, add_trapezoid=True
-    )
-
-    # Add passive material surfaces (intersectable for cosmics)
-    # md.add_passive(Shape.CYLINDER2D)
-    # md.add_passive(Shape.RING)
-
-    logger.info("Done")
+import detray
+from detray.detectors import metadata, metadata_generator
+from detray.detectors.configurations.odd import add_odd_types
 
 
 def __main__():
     # Commandline options
-    parser = argparse.ArgumentParser(prog=sys.argv[0])
+    parser = argparse.ArgumentParser()
     detray.detectors.add_logging_options(parser)
     detray.detectors.add_io_options(parser)
 
@@ -54,7 +28,9 @@ def __main__():
     add_odd_types(md)
 
     # Dump the metadata to header file
-    metadata_generator(md, output=args.output, format_header=args.format)
+    metadata_generator(
+        md, output=args.output, format_header=args.format, output_file=args.output_file
+    )
 
 
 if __name__ == "__main__":
