@@ -473,9 +473,9 @@ option(
     ${DETRAY_USE_SYSTEM_LIBS}
 )
 if(DETRAY_SETUP_COVFIE)
-    set(DETRAY_COVFIE_VERSION 0.15.4)
+    set(DETRAY_COVFIE_VERSION 0.16.0)
     set(DETRAY_COVFIE_DIGEST
-        80de9b43644c59d8239fb8cc184c6276
+        6f645c2e5cc7e0587d801aff0c6fc75b
         CACHE STRING
         "MD5 digest of the downloaded zip"
     )

@@ -13,7 +13,7 @@ set(ACTS_VECMEM_SOURCE
 mark_as_advanced(ACTS_VECMEM_SOURCE)
 
 set(ACTS_COVFIE_SOURCE
-    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=6eff65e05118d3007c689e3529a62bb1674348ac1b0f0f32afd953c62d1b8890"
+    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=f1491b85c5e8ed9535e4b99adb85661512964132baf6dc9b9a9af10e4b625cb3"
     CACHE STRING
     "Source to take COVFIE from"
 )
