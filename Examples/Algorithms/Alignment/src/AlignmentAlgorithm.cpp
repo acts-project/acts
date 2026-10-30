@@ -11,11 +11,14 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "ActsAlignment/Kernel/AlignmentMask.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+
+#include <map>
 
 namespace ActsExamples {
 
@@ -45,6 +48,9 @@ AlignmentAlgorithm::AlignmentAlgorithm(
 }
 
 ProcessCode AlignmentAlgorithm::execute(const AlgorithmContext& ctx) const {
+  // TODO: Collect tracks across events and run one iterative alignment in
+  // finalize(), instead of aligning on a single event here.
+
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
@@ -112,10 +118,16 @@ ProcessCode AlignmentAlgorithm::execute(const AlgorithmContext& ctx) const {
       Acts::PropagatorPlainOptions(ctx.recoGeoContext, ctx.magFieldContext),
       &(*pSurface));
 
-  // Set the alignment options
+  // Set the alignment options. Config masks use the AlignmentMask bit layout.
+  std::map<unsigned int, ActsAlignment::AlignmentMask> iterationState;
+  for (const auto& [iteration, mask] : m_cfg.iterationState) {
+    iterationState.emplace(
+        iteration, static_cast<ActsAlignment::AlignmentMask>(mask.to_ulong()));
+  }
   ActsAlignment::AlignmentOptions<TrackFitterOptions> alignOptions(
       kfOptions, m_cfg.alignedTransformUpdater, m_cfg.alignedDetElements,
-      m_cfg.chi2ONdfCutOff, m_cfg.deltaChi2ONdfCutOff, m_cfg.maxNumIterations);
+      m_cfg.chi2ONdfCutOff, m_cfg.deltaChi2ONdfCutOff, m_cfg.maxNumIterations,
+      iterationState);
 
   ACTS_DEBUG("Invoke track-based alignment with " << numTracksUsed
                                                   << " input tracks");
@@ -129,6 +141,8 @@ ProcessCode AlignmentAlgorithm::execute(const AlgorithmContext& ctx) const {
   } else {
     ACTS_WARNING("Alignment failed with " << result.error());
   }
+
+  // TODO: Write the alignment result with ActsAlignment::dumpResultAsMP2.
 
   // add alignment parameters to event store
   m_outputAlignmentParameters(ctx, std::move(alignedParameters));

@@ -280,8 +280,8 @@ class LineSurface : public Surface {
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
-  /// local frame origin in global 3D Cartesian coordinates and its rotation
-  /// represented with extrinsic Euler angles)
+  /// translations along the local x/y/z axes and rotations represented with
+  /// extrinsic Euler angles around the local x/y/z axes)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
@@ -293,15 +293,18 @@ class LineSurface : public Surface {
       const Vector3& direction) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
-  /// position in local 3D Cartesian coordinates
+  /// position in local 3D Cartesian coordinates. The bound coordinates of a
+  /// line are measured in the direction-dependent measurement frame.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position of the parameters in global
+  /// @param direction The track direction, which sets the measurement frame
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
   Matrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3& position) const final;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
 
   /// Get the line direction in global coordinates
   /// @param gctx The geometry context

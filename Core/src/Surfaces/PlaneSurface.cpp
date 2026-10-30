@@ -192,7 +192,8 @@ MultiIntersection3D PlaneSurface::intersect(
 }
 
 Matrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& /*gctx*/, const Vector3& /*position*/) const {
+    const GeometryContext& /*gctx*/, const Vector3& /*position*/,
+    const Vector3& /*direction*/) const {
   const Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Identity();
   return loc3DToLocBound;
 }

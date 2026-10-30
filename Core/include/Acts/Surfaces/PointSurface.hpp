@@ -248,8 +248,9 @@ class PointSurface : public Surface {
                                       unsigned int quarterSegments) const final;
 
   /// Calculate the derivative of path length at the point-of-closest-approach
-  /// w.r.t. alignment parameters of the surface. Only the center (translation)
-  /// contributes; a point has no orientation so the rotation block is zero.
+  /// w.r.t. alignment parameters of the surface. Only translations along the
+  /// local x/y/z axes contribute; a point has no orientation so the rotation
+  /// block is zero.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
@@ -264,12 +265,28 @@ class PointSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position of the parameters in global
+  /// @param direction The track direction, which defines the measurement frame
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
   Matrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3& position) const final;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
 
  protected:
+  /// Calculate the derivative of bound track parameters w.r.t. alignment
+  /// parameters without path correction. The rotation block is zero, because
+  /// rotating the surface does not move the point and the measurement frame
+  /// depends only on the track direction.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
+  /// @return Derivative of bound track parameters w.r.t. local frame alignment
+  /// parameters without path correction
+  AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
+
   std::shared_ptr<const PointBounds>
       m_bounds;  ///< bounds (shared, may be null)
 
