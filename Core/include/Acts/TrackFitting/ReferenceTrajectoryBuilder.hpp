@@ -152,7 +152,7 @@ class ReferenceTrajectoryBuilder {
     using result_type = ResultType;
 
     /// The target surface aborter
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+    SurfaceReached targetReached;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -205,8 +205,9 @@ class ReferenceTrajectoryBuilder {
 
       if (result.pathLimitReached.internalLimit ==
           std::numeric_limits<double>::max()) {
-        detail::setupLoopProtection(state, stepper, result.pathLimitReached,
-                                    true, logger());
+        detail::setupLoopProtection(state, stepper,
+                                    result.pathLimitReached.internalLimit, true,
+                                    logger());
       }
 
       if (const Surface* surface = navigator.currentSurface(state.navigation);
@@ -597,6 +598,12 @@ class ReferenceTrajectoryBuilder {
              "DirectNavigator requires a surface sequence for "
              "ReferenceTrajectory");
       propagatorOptions.navigation.surfaceSequence = *sSequence;
+    }
+
+    // The navigator stops on the target surface as the current surface
+    if (targetSurface != nullptr) {
+      propagatorOptions.navigation.registerAdditionalSurface(
+          *targetSurface, BoundaryTolerance::None());
     }
 
     auto& actor = propagatorOptions.actorList.template get<Actor>();

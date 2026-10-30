@@ -68,8 +68,25 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     return update.error();
   }
 
+  // priming error condition
+  bool terminatedNormally = false;
+
+  const auto handleSurfaceReached = [&](const Surface& surface) {
+    if constexpr (Concepts::NavigatorHandleSurfaceReachedWithCurvature<N>) {
+      m_navigator.handleSurfaceReached(state.navigation, state.position,
+                                       state.direction, surface,
+                                       state.curvature);
+    } else {
+      m_navigator.handleSurfaceReached(state.navigation, state.position,
+                                       state.direction, surface);
+    }
+  };
+
+  // Returns none if an aborter stops the propagation on a surface it is on
   auto getNextTarget = [&]() -> Result<NavigationTarget> {
     for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
+      const Surface* currentSurface =
+          m_navigator.currentSurface(state.navigation);
       NavigationTarget nextTarget = [&] {
         if constexpr (Concepts::NavigatorNextTargetWithCurvature<N>) {
           return m_navigator.nextTarget(state.navigation, state.position,
@@ -88,12 +105,35 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
           state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
           logger());
       if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
-        // This indicates a geometry overlap which is not handled by the
-        // navigator, so we skip this target.
-        // This can also happen in a well-behaved geometry with external
-        // surfaces.
-        ACTS_VERBOSE("Pre-step surface status is onSurface, skipping target "
-                     << nextTarget.surface().geometryId());
+        // The actors handled the current surface already
+        if (&nextTarget.surface() == currentSurface) {
+          ACTS_VERBOSE(
+              "Pre-step surface status is onSurface, skipping "
+              "current surface "
+              << currentSurface->geometryId());
+          continue;
+        }
+        // The propagation is on the target already, e.g. at a geometry overlap
+        // or at the start. Reach it with a step of zero length.
+        ACTS_VERBOSE("Pre-step surface status is onSurface, reaching target "
+                     << nextTarget.surface().geometryId() << " without a step");
+        state.stage = PropagatorStage::postStep;
+        handleSurfaceReached(nextTarget.surface());
+        if (Result<void> actResult = state.options.actorList.act(
+                state, m_stepper, m_navigator, logger());
+            !actResult.ok()) {
+          return actResult.error();
+        }
+        if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
+                                               logger())) {
+          terminatedNormally = true;
+          return NavigationTarget::None();
+        }
+        // Actors may have changed direction or momentum (and hence curvature).
+        if (auto update = updateNavigationState(state); !update.ok()) {
+          return update.error();
+        }
+        state.stage = PropagatorStage::preStep;
         continue;
       }
       if (preStepSurfaceStatus == IntersectionStatus::reachable) {
@@ -106,9 +146,6 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     return Result<NavigationTarget>::failure(
         PropagatorError::NextTargetLimitReached);
   };
-
-  // priming error condition
-  bool terminatedNormally = false;
 
   // Pre-Stepping: target setting
   state.stage = PropagatorStage::preStep;
@@ -125,7 +162,8 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
   ACTS_VERBOSE("Starting stepping loop.");
 
   // Stepping loop
-  for (; state.steps < state.options.maxSteps; ++state.steps) {
+  for (; !terminatedNormally && state.steps < state.options.maxSteps;
+       ++state.steps) {
     // Perform a step
     Result<double> res =
         m_stepper.step(state.stepping, state.options.direction,
@@ -165,15 +203,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
         if (auto update = updateNavigationState(state); !update.ok()) {
           return update.error();
         }
-        if constexpr (Concepts::NavigatorHandleSurfaceReachedWithCurvature<N>) {
-          m_navigator.handleSurfaceReached(
-              state.navigation, state.position, state.direction,
-              nextTarget.surface(), state.curvature);
-        } else {
-          m_navigator.handleSurfaceReached(state.navigation, state.position,
-                                           state.direction,
-                                           nextTarget.surface());
-        }
+        handleSurfaceReached(nextTarget.surface());
       }
       if (postStepSurfaceStatus != IntersectionStatus::reachable) {
         nextTarget = NavigationTarget::None();
@@ -227,6 +257,9 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
                    << nextTargetResult.error() << ": "
                    << nextTargetResult.error().message());
         return nextTargetResult.error();
+      }
+      if (terminatedNormally) {
+        break;
       }
       nextTarget = *nextTargetResult;
     }
@@ -368,7 +401,8 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
 
   // Apply the loop protection - it resets the internal path limit
   detail::setupLoopProtection(
-      state, m_stepper, state.options.actorList.template get<path_aborter_t>(),
+      state, m_stepper,
+      state.options.actorList.template get<path_aborter_t>().internalLimit,
       false, logger());
 
   return Result<void>::success();
@@ -457,25 +491,10 @@ detail::BasePropagatorHelper<derived_t>::propagateToSurface(
 
   DerivedOptions derivedOptions(options);
 
-  // dummy initialization
   Result<DerivedResult> res =
-      Result<DerivedResult>::failure(PropagatorError::Failure);
-
-  // Due to the geometry of the perigee and point surfaces (their intersection
-  // is a point of closest approach, which can sit behind the current step) the
-  // overstepping tolerance is sometimes not met.
-  if (target.type() == Surface::SurfaceType::Perigee ||
-      target.type() == Surface::SurfaceType::Point) {
-    res = static_cast<const derived_t*>(this)
-              ->template propagate<DerivedOptions, ForcedSurfaceReached,
-                                   PathLimitReached>(start, target,
-                                                     derivedOptions);
-  } else {
-    res = static_cast<const derived_t*>(this)
-              ->template propagate<DerivedOptions, SurfaceReached,
-                                   PathLimitReached>(start, target,
-                                                     derivedOptions);
-  }
+      static_cast<const derived_t*>(this)
+          ->template propagate<DerivedOptions, SurfaceReached,
+                               PathLimitReached>(start, target, derivedOptions);
 
   if (!res.ok()) {
     return res.error();

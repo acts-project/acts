@@ -41,16 +41,6 @@ constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
 constexpr auto epsCov = 0.025;
 
-// A step to the straight-line distance of a surface passes a surface
-// perpendicular to the track by about |(q/p) T x B|^2 h^3 / 3, which is up to
-// about 2 mm for these datasets. The next step goes back, so accept
-// intersections that far behind the track. Only for planes and discs: they
-// have one intersection, while the target cylinder can have its second
-// intersection within 1 cm behind the track.
-struct TargetReached : public SurfaceReached {
-  TargetReached() : SurfaceReached(-1_cm) {}
-};
-
 const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 
@@ -95,8 +85,7 @@ BOOST_DATA_TEST_CASE(
   runToSurfaceComparisonTest(
       helixPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      DiscSurfaceBuilder(), epsPos, epsTime, epsDir, epsMom, epsCov,
-      TargetReached());
+      DiscSurfaceBuilder(), epsPos, epsTime, epsDir, epsMom, epsCov);
 }
 
 BOOST_DATA_TEST_CASE(ToPlane,
@@ -107,8 +96,7 @@ BOOST_DATA_TEST_CASE(ToPlane,
   runToSurfaceComparisonTest(
       helixPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      PlaneSurfaceBuilder(), epsPos, epsTime, epsDir, epsMom, epsCov,
-      TargetReached());
+      PlaneSurfaceBuilder(), epsPos, epsTime, epsDir, epsMom, epsCov);
 }
 
 BOOST_DATA_TEST_CASE(ToStrawAlongZ,
