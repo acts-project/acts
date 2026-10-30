@@ -184,6 +184,21 @@ class hough_transform_seeding_algorithm
     vecmem::data::jagged_vector_view<global_index_t>& hits;
   };
 
+  struct make_seeds_payload {
+    // Number of images
+    unsigned int n_images;
+    // The space points
+    const edm::spacepoint_collection::const_view& spacepoints;
+    // The space point r
+    const vecmem::data::vector_view<scalar>& spacepoint_r;
+    // The NN outcome
+    const vecmem::data::vector_view<unsigned int>& nn_outcome;
+    // The hits
+    const vecmem::data::jagged_vector_view<global_index_t>& hits;
+    // Cot-Theta matrix for filtering
+    vecmem::data::jagged_vector_view<scalar>& cot_theta_matrix;
+  };
+
   virtual void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const = 0;
   virtual void precompute_spacepoint_variables_kernel(const precompute_spacepoint_variables_payload& payload) const = 0;
   virtual void fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const = 0;
@@ -193,6 +208,7 @@ class hough_transform_seeding_algorithm
   virtual void evaluate_nn_kernel(const evaluate_nn_payload& payload) const = 0;
   virtual void count_contributing_hits_kernel(const count_contributing_hits_payload& payload) const = 0;
   virtual void find_contributing_hits_kernel(const find_contributing_hits_payload& payload) const = 0;
+  virtual void make_seeds_kernel(const make_seeds_payload& payload) const = 0;
 
   virtual void synchronize() const = 0;
   
@@ -211,4 +227,5 @@ class hough_transform_seeding_algorithm
 #include "traccc/seeding/device/impl/evaluate_nn.ipp"
 #include "traccc/seeding/device/impl/count_contributing_hits.ipp"
 #include "traccc/seeding/device/impl/find_contributing_hits.ipp"
+#include "traccc/seeding/device/impl/make_seeds.ipp"
 

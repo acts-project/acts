@@ -82,7 +82,6 @@ auto hough_transform_seeding_algorithm::operator()(
 		  spacepoint_r,
 		  spacepoint_phi});
 
-   
   edm::spacepoint_collection::const_view sp_host_view;
   edm::spacepoint_collection::buffer sp_host_buffer;
   if (mr().host) {
@@ -122,7 +121,6 @@ auto hough_transform_seeding_algorithm::operator()(
     std::cout << "sp " << i << " x=" << sp.x() << " y=" << sp.y() << " z=" << sp.z()  << " r=" << spacepoint_r_host.at(i) << " phi=" << spacepoint_phi_host.at(i)
               << " bit count: " << n_bits << " [value was " << std::bitset<64>(wedge_association) << "] (id: " << std::bitset<64>(detector_id) << ")" << std::endl;
   }
-  
 
   // ---------------------------------------------------
   // Fill the planes with space points
@@ -328,9 +326,11 @@ auto hough_transform_seeding_algorithm::operator()(
                             nn_outcome,
                             hits});
 
+  synchronize();
+
   vecmem::data::jagged_vector_view<global_index_t> hits_host_view;
   vecmem::data::jagged_vector_buffer<global_index_t> hits_host_buffer;
-
+  /*
   const auto sizes = copy().get_sizes(hits);
   hits_host_buffer = vecmem::data::jagged_vector_buffer<global_index_t>{
         sizes, *(mr().host)};
@@ -340,16 +340,16 @@ auto hough_transform_seeding_algorithm::operator()(
   event->wait();
 
   hits_host_view = hits_host_buffer;
+*/
 
-/*  
-vecmem::data::jagged_vector_buffer<global_index_t> hits_host_buffer;
   if (mr().host) {
     hits_host_buffer = copy().to(hits, *(mr().host));
     hits_host_view = hits_host_buffer;
   } else {
     hits_host_view = hits;
   }
-*/
+
+
 
   vecmem::jagged_device_vector<global_index_t> hits_host_device{hits_host_view};
   std::cout << "Number of collections in jagged vector: " << hits_host_device.size() << std::endl;
@@ -363,10 +363,49 @@ vecmem::data::jagged_vector_buffer<global_index_t> hits_host_buffer;
     std::cout << std::endl;
   }  
   
-  throw;
+
+  // Make the seeds
+  std::vector<unsigned int> matrices_sizes(hits_sizes_host.size());
+  std::transform(hits_sizes_host.begin(), hits_sizes_host.end(), matrices_sizes.begin(),
+               [](unsigned int x) { return x * x; });
+
+  vecmem::data::jagged_vector_buffer<scalar> matrices(matrices_sizes,
+        mr().main, mr().host,
+        vecmem::data::buffer_type::resizable);
+  copy().setup(matrices)->ignore();
+
+  make_seeds_kernel({total_maxima,
+                     spacepoints,
+                     spacepoint_r,
+                     nn_outcome,
+                     hits,
+                     matrices});
+
+  synchronize();
+
+  vecmem::data::jagged_vector_view<scalar> matrices_host_view;
+  vecmem::data::jagged_vector_buffer<scalar> matrices_host_buffer;
+  
+  if (mr().host) {
+    matrices_host_buffer = copy().to(matrices, *(mr().host));
+    matrices_host_view = matrices_host_buffer;
+  } else {
+    matrices_host_view = matrices;
+  }
+
+  vecmem::jagged_device_vector<scalar> matrices_host_device{matrices_host_view};
+
+  for (unsigned int i(0); i<matrices_host_device.size(); ++i) {
+    std::cout << "matrix " << i << ": ";
+    for (unsigned int j(0); j<matrices_sizes[i]; ++j) std::cout << matrices_host_device[i][j] << " ";
+    std::cout << std::endl;
+  };
+
 
   // no idea
   synchronize();
+
+  throw;
 
   // Return the result.
   return result;
