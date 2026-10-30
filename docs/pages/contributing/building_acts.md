@@ -466,9 +466,13 @@ ODD, toy and wire-chamber generators. `DETRAY_GENERATE_METADATA` selects which
 headers the build consumes; pregeneration runs all five so the archive does not
 depend on that selection. Traccc requests the ITk metadata header.
 
-The metadata scripts accept an exact output filename, with formatting disabled
-for codegen, while retaining their existing `--output` directory interface.
-Their source Python package is installed through the manifest's existing `with`
+The single `Detray/detectors/python/generate_metadata.py` script accepts an exact
+output filename, with formatting disabled for codegen, or an `--output` directory.
+The manifest selects its configuration with `"arguments": ["--detector", "itk.add_itk_types"]`;
+both CMake and pregeneration append these arguments after the output path.
+The callable is resolved inside `detray.detectors.configurations`, with the
+module name determining the detector name.
+Its source Python package is installed through the manifest's existing `with`
 mechanism; no configured bindings or shell wrapper are needed. Detector definitions live together in `Detray/python/detray/detectors/configurations`;
 the package source dependencies trigger incremental regeneration.
 Adding another metadata generator requires a manifest entry. Missing prebuilts

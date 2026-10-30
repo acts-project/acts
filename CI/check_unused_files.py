@@ -92,7 +92,6 @@ EXCLUDE_FILES = (
     "Detray/python/detray/detectors/impl/type_helpers.py",
     # Python uv files
     "Detray/codegen/detray-sympy/uv.lock",
-    "Detray/python/uv.lock",
     # Generated PyPI readme, checked by Python/Examples/tests/test_pypi_readme.py
     "CI/pypi_readme.md",
     # TODO: remove after file is gone
