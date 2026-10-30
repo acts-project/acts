@@ -43,6 +43,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -159,6 +160,12 @@ class BranchStopper {
   struct BranchState {
     std::size_t nPixelHoles = 0;
     std::size_t nStripHoles = 0;
+    // holes and outliers behind the last measurement. they end the pass, and
+    // the trimming removes them unless a measurement follows
+    std::size_t nTrailingHoles = 0;
+    std::size_t nTrailingOutliers = 0;
+    std::size_t nTrailingPixelHoles = 0;
+    std::size_t nTrailingStripHoles = 0;
   };
 
   static constexpr Acts::ProxyAccessor<BranchState> branchStateAccessor =
@@ -168,6 +175,22 @@ class BranchStopper {
 
   explicit BranchStopper(const TrackFindingAlgorithm::Config& config)
       : m_cfg(config) {}
+
+  // the next pass extends the track at the start of the previous one, so the
+  // holes and outliers behind its last measurement stay at the end, where the
+  // trimming removes them
+  void startNextPass(TrackContainer::TrackProxy track) const {
+    if (!m_cfg.trimTracks) {
+      return;
+    }
+    auto& branchState = branchStateAccessor(track);
+    track.nHoles() -= branchState.nTrailingHoles;
+    track.nOutliers() -= branchState.nTrailingOutliers;
+    branchState.nPixelHoles -= branchState.nTrailingPixelHoles;
+    branchState.nStripHoles -= branchState.nTrailingStripHoles;
+    branchState = BranchState{.nPixelHoles = branchState.nPixelHoles,
+                              .nStripHoles = branchState.nStripHoles};
+  }
 
   BranchStopperResult operator()(
       const TrackContainer::TrackProxy& track,
@@ -195,22 +218,32 @@ class BranchStopper {
       return BranchStopperResult::StopAndDrop;
     }
 
-    bool tooManyHolesPS = false;
-    if (!(m_cfg.pixelVolumeIds.empty() && m_cfg.stripVolumeIds.empty())) {
-      auto& branchState = branchStateAccessor(track);
-      // count both holes and outliers as holes for pixel/strip counts
-      if (trackState.typeFlags().isHole() ||
-          trackState.typeFlags().isOutlier()) {
-        auto volumeId = trackState.referenceSurface().geometryId().volume();
-        if (Acts::rangeContainsValue(m_cfg.pixelVolumeIds, volumeId)) {
-          ++branchState.nPixelHoles;
-        } else if (Acts::rangeContainsValue(m_cfg.stripVolumeIds, volumeId)) {
-          ++branchState.nStripHoles;
-        }
+    auto& branchState = branchStateAccessor(track);
+    const auto flags = trackState.typeFlags();
+    if (flags.isHole() || flags.isOutlier()) {
+      if (flags.isHole()) {
+        ++branchState.nTrailingHoles;
+      } else {
+        ++branchState.nTrailingOutliers;
       }
-      tooManyHolesPS = branchState.nPixelHoles > m_cfg.maxPixelHoles ||
-                       branchState.nStripHoles > m_cfg.maxStripHoles;
+      // count both holes and outliers as holes for pixel/strip counts
+      auto volumeId = trackState.referenceSurface().geometryId().volume();
+      if (Acts::rangeContainsValue(m_cfg.pixelVolumeIds, volumeId)) {
+        ++branchState.nPixelHoles;
+        ++branchState.nTrailingPixelHoles;
+      } else if (Acts::rangeContainsValue(m_cfg.stripVolumeIds, volumeId)) {
+        ++branchState.nStripHoles;
+        ++branchState.nTrailingStripHoles;
+      }
+    } else if (flags.isMeasurement()) {
+      branchState.nTrailingHoles = 0;
+      branchState.nTrailingOutliers = 0;
+      branchState.nTrailingPixelHoles = 0;
+      branchState.nTrailingStripHoles = 0;
     }
+
+    const bool tooManyHolesPS = branchState.nPixelHoles > m_cfg.maxPixelHoles ||
+                                branchState.nStripHoles > m_cfg.maxStripHoles;
 
     bool enoughMeasurements =
         track.nMeasurements() >= singleConfig->minMeasurements;
@@ -242,12 +275,24 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
-  if (m_cfg.inputInitialTrackParameters.empty()) {
-    throw std::invalid_argument(
-        "Missing initial track parameters input collection");
-  }
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing tracks output collection");
+  }
+
+  if (m_cfg.inputInitialTrackParameters.empty()) {
+    if (m_cfg.inputSeeds.empty()) {
+      throw std::invalid_argument(
+          "Missing initial track parameters or seeds input collection");
+    }
+    SeedParamsEstimator::Config estimatorCfg = m_cfg.seedParamsEstimation;
+    if (estimatorCfg.trackingGeometry == nullptr) {
+      estimatorCfg.trackingGeometry = m_cfg.trackingGeometry;
+    }
+    if (estimatorCfg.magneticField == nullptr) {
+      estimatorCfg.magneticField = m_cfg.magneticField;
+    }
+    m_seedParamsEstimator.emplace(estimatorCfg,
+                                  this->logger().cloneWithSuffix("Estimator"));
   }
 
   if (m_cfg.seedDeduplication && m_cfg.inputSeeds.empty()) {
@@ -259,6 +304,15 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
     throw std::invalid_argument(
         "Missing seeds input collection. This is "
         "required for staying on seed.");
+  }
+  const bool directionFromSeed = std::isfinite(m_cfg.reverseSearchMinR) ||
+                                 std::isfinite(m_cfg.reverseSearchMinAbsZ) ||
+                                 std::isfinite(m_cfg.inwardOnlyMinR) ||
+                                 std::isfinite(m_cfg.inwardOnlyMinAbsZ);
+  if (directionFromSeed && m_cfg.inputSeeds.empty()) {
+    throw std::invalid_argument(
+        "Missing seeds input collection. This is "
+        "required for the search direction per seed.");
   }
 
   Acts::TrackletJoiner::Config joinerConfig;
@@ -276,7 +330,8 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
   }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
+  m_inputInitialTrackParameters.maybeInitialize(
+      m_cfg.inputInitialTrackParameters);
   m_inputSeeds.maybeInitialize(m_cfg.inputSeeds);
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
@@ -284,16 +339,27 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
 ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
-  const auto& initialParameters = m_inputInitialTrackParameters(ctx);
+  const TrackParametersContainer* initialParameters = nullptr;
   const SeedContainer* seeds = nullptr;
 
+  if (m_inputInitialTrackParameters.isInitialized()) {
+    initialParameters = &m_inputInitialTrackParameters(ctx);
+  }
   if (m_inputSeeds.isInitialized()) {
     seeds = &m_inputSeeds(ctx);
 
-    if (initialParameters.size() != seeds->size()) {
+    if (initialParameters != nullptr &&
+        initialParameters->size() != seeds->size()) {
       ACTS_ERROR("Number of initial parameters and seeds do not match. "
-                 << initialParameters.size() << " != " << seeds->size());
+                 << initialParameters->size() << " != " << seeds->size());
     }
+  }
+  const std::size_t nSeeds =
+      initialParameters != nullptr ? initialParameters->size() : seeds->size();
+
+  std::optional<SeedParamsEstimator::Cache> estimatorCache;
+  if (m_seedParamsEstimator.has_value()) {
+    estimatorCache = m_seedParamsEstimator->makeCache(ctx.magFieldContext);
   }
 
   // Construct a perigee surface as the target surface
@@ -334,38 +400,37 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           &trackStateCreator);
   extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
 
-  Acts::PropagatorPlainOptions firstPropOptions(ctx.recoGeoContext,
-                                                ctx.magFieldContext);
-  firstPropOptions.maxSteps = m_cfg.maxSteps;
-  firstPropOptions.direction = Acts::Direction::Forward();
-  firstPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
-  firstPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
-
-  Acts::PropagatorPlainOptions secondPropOptions(ctx.recoGeoContext,
-                                                 ctx.magFieldContext);
-  secondPropOptions.maxSteps = m_cfg.maxSteps;
-  secondPropOptions.direction = firstPropOptions.direction.invert();
-  secondPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
-  secondPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
-
-  // Set the CombinatorialKalmanFilter options
-  TrackFinderOptions firstOptions(ctx.recoGeoContext, ctx.magFieldContext,
-                                  ctx.calibContext, extensions,
-                                  firstPropOptions);
-
-  firstOptions.targetSurface = nullptr;
-  firstOptions.recordMaterialStates = m_cfg.recordMaterialStates;
-  firstOptions.betheHeitlerApprox =
+  const auto betheHeitlerApprox =
       std::make_shared<Acts::PolynomialBetheHeitlerApprox>(
           Acts::makeDefaultBetheHeitlerApprox());
 
-  TrackFinderOptions secondOptions(ctx.recoGeoContext, ctx.magFieldContext,
-                                   ctx.calibContext, extensions,
-                                   secondPropOptions);
-  secondOptions.targetSurface = pSurface.get();
-  secondOptions.skipPrePropagationUpdate = true;
-  secondOptions.recordMaterialStates = m_cfg.recordMaterialStates;
-  secondOptions.betheHeitlerApprox = firstOptions.betheHeitlerApprox;
+  auto makeOptions = [&](Acts::Direction direction, bool toPerigee,
+                         bool secondPass) {
+    Acts::PropagatorPlainOptions propOptions(ctx.recoGeoContext,
+                                             ctx.magFieldContext);
+    propOptions.maxSteps = m_cfg.maxSteps;
+    propOptions.direction = direction;
+    propOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
+    propOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
+
+    TrackFinderOptions options(ctx.recoGeoContext, ctx.magFieldContext,
+                               ctx.calibContext, extensions, propOptions);
+    // an inward pass ends at the perigee, or it would cross the beam line
+    options.targetSurface = toPerigee ? pSurface.get() : nullptr;
+    options.skipPrePropagationUpdate = secondPass;
+    options.recordMaterialStates = m_cfg.recordMaterialStates;
+    options.betheHeitlerApprox = betheHeitlerApprox;
+    return options;
+  };
+
+  const TrackFinderOptions outwardFirstOptions =
+      makeOptions(Acts::Direction::Forward(), false, false);
+  const TrackFinderOptions inwardSecondOptions =
+      makeOptions(Acts::Direction::Backward(), true, true);
+  const TrackFinderOptions inwardFirstOptions =
+      makeOptions(Acts::Direction::Backward(), true, false);
+  const TrackFinderOptions outwardSecondOptions =
+      makeOptions(Acts::Direction::Forward(), false, true);
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using ExtrapolatorOptions = Extrapolator::template Options<
@@ -383,8 +448,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   extrapolationOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
   // Perform the track finding for all initial parameters
-  ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
-                                          << " seeds.");
+  ACTS_DEBUG("Invoke track finding with " << nSeeds << " seeds.");
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
@@ -441,11 +505,27 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     destProxy.copyFrom(track);
   };
 
-  for (std::size_t iSeed = 0; iSeed < initialParameters.size(); ++iSeed) {
+  for (std::size_t iSeed = 0; iSeed < nSeeds; ++iSeed) {
     m_nTotalSeeds++;
+
+    bool reverse = m_cfg.reverseSearch;
+    bool inwardOnly = false;
 
     if (seeds != nullptr) {
       const ConstSeedProxy seed = seeds->at(iSeed);
+
+      // the outer end of the seed tells how much of the detector is left
+      const ConstSpacePointProxy lastSp =
+          seeds->spacePointContainer().at(seed.spacePointIndices().back());
+      const double lastR = std::hypot(lastSp.x(), lastSp.y());
+      const double lastAbsZ = std::abs(lastSp.z());
+      if (lastR > m_cfg.inwardOnlyMinR || lastAbsZ > m_cfg.inwardOnlyMinAbsZ) {
+        reverse = true;
+        inwardOnly = true;
+      } else if (lastR > m_cfg.reverseSearchMinR ||
+                 lastAbsZ > m_cfg.reverseSearchMinAbsZ) {
+        reverse = true;
+      }
 
       if (m_cfg.seedDeduplication) {
         // skip the seed if one accepted track holds enough of its
@@ -466,8 +546,38 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // Clear trackContainerTemp and trackStateContainerTemp
     tracksTemp.clear();
 
+    const bool twoWay = m_cfg.twoWay && !inwardOnly;
+    if (reverse) {
+      ++m_nReverseSeeds;
+    }
+    if (inwardOnly) {
+      ++m_nInwardOnlySeeds;
+    }
+
+    const TrackFinderOptions& firstOptions =
+        reverse ? inwardFirstOptions : outwardFirstOptions;
+    const TrackFinderOptions& secondOptions =
+        reverse ? outwardSecondOptions : inwardSecondOptions;
+
+    // the estimate lies on the space point the first pass starts from
+    std::optional<TrackParameters> estimatedParameters;
+    if (initialParameters == nullptr) {
+      auto estimate = m_seedParamsEstimator->estimate(
+          ctx.recoGeoContext, ctx.magFieldContext, *estimatorCache,
+          seeds->at(iSeed), m_seedParamsEstimator->config().particleHypothesis,
+          nullptr,
+          reverse ? SeedParamsEstimator::Anchor::Last
+                  : SeedParamsEstimator::Anchor::First);
+      if (!estimate.ok()) {
+        m_nFailedEstimates++;
+        ACTS_DEBUG("No parameter estimate for seed " << iSeed);
+        continue;
+      }
+      estimatedParameters = *estimate;
+    }
     const Acts::BoundTrackParameters& firstInitialParameters =
-        initialParameters.at(iSeed);
+        initialParameters != nullptr ? initialParameters->at(iSeed)
+                                     : *estimatedParameters;
     ACTS_VERBOSE("Processing seed " << iSeed << " with initial parameters "
                                     << firstInitialParameters);
 
@@ -516,7 +626,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       // has already been updated
       seedNumber(trackCandidate) = nSeed - 1;
 
-      if (m_cfg.twoWay) {
+      if (twoWay) {
         std::optional<Acts::VectorMultiTrajectory::TrackStateProxy>
             firstMeasurementOpt;
         for (auto trackState : trackCandidate.trackStatesReversed()) {
@@ -548,6 +658,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
           auto secondRootBranch = tracksTemp.makeTrack();
           secondRootBranch.copyFromWithoutStates(trackCandidate);
+          branchStopper.startNextPass(secondRootBranch);
+          // the perigee of an inward first pass holds the first pass only
+          if (reverse) {
+            secondRootBranch.setReferenceSurface(nullptr);
+          }
           auto secondResult = findTracks(secondInitialParameters, secondOptions,
                                          tracksTemp, secondRootBranch);
 
@@ -593,7 +708,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               }
               auto joinedTrack = joinResult.value();
 
-              // the second pass extrapolated to the perigee unless it failed
+              // the joined chain starts at the start of the first pass, so
+              // put the innermost state first as in the forward search
+              if (reverse) {
+                joinedTrack.reverseTrackStates(true);
+              }
+
+              // an inward second pass extrapolated to the perigee unless it
+              // failed
               if (!joinedTrack.hasReferenceSurface()) {
                 auto secondExtrapolationResult =
                     Acts::extrapolateTrackToReferenceSurface(
@@ -640,17 +762,25 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
         trackCandidate.tipIndex() = tipIndex;
         trackCandidate.stemIndex() = stemIndex;
 
-        auto firstExtrapolationResult =
-            Acts::extrapolateTrackToReferenceSurface(
-                trackCandidate, *pSurface, extrapolator, extrapolationOptions,
-                m_cfg.extrapolationStrategy, logger());
-        if (!firstExtrapolationResult.ok()) {
-          m_nFailedExtrapolation++;
-          ACTS_ERROR("Extrapolation for seed "
-                     << iSeed << " and track " << firstTrack.index()
-                     << " failed with error "
-                     << firstExtrapolationResult.error());
-          continue;
+        if (reverse) {
+          trackCandidate.reverseTrackStates(true);
+        }
+
+        // an inward first pass that reached the perigee holds every
+        // measurement there
+        if (!trackCandidate.hasReferenceSurface()) {
+          auto firstExtrapolationResult =
+              Acts::extrapolateTrackToReferenceSurface(
+                  trackCandidate, *pSurface, extrapolator, extrapolationOptions,
+                  m_cfg.extrapolationStrategy, logger());
+          if (!firstExtrapolationResult.ok()) {
+            m_nFailedExtrapolation++;
+            ACTS_ERROR("Extrapolation for seed "
+                       << iSeed << " and track " << firstTrack.index()
+                       << " failed with error "
+                       << firstExtrapolationResult.error());
+            continue;
+          }
         }
 
         addTrack(trackCandidate);
@@ -690,6 +820,7 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   ACTS_INFO("- total seeds: " << m_nTotalSeeds);
   ACTS_INFO("- deduplicated seeds: " << m_nDeduplicatedSeeds);
   ACTS_INFO("- failed seeds: " << m_nFailedSeeds);
+  ACTS_INFO("- failed parameter estimates: " << m_nFailedEstimates);
   ACTS_INFO("- failed smoothing: " << m_nFailedSmoothing);
   ACTS_INFO("- failed extrapolation: " << m_nFailedExtrapolation);
   ACTS_INFO("- failure ratio seeds: " << static_cast<double>(m_nFailedSeeds) /
@@ -698,6 +829,8 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   ACTS_INFO("- selected tracks: " << m_nSelectedTracks);
   ACTS_INFO("- stopped branches: " << m_nStoppedBranches);
   ACTS_INFO("- skipped second pass: " << m_nSkippedSecondPass);
+  ACTS_INFO("- reverse search seeds: " << m_nReverseSeeds);
+  ACTS_INFO("- inward only seeds: " << m_nInwardOnlySeeds);
 
   auto memoryStatistics =
       m_memoryStatistics.combine([](const auto& a, const auto& b) {
