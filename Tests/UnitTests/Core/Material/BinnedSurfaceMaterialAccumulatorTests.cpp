@@ -442,6 +442,26 @@ BOOST_AUTO_TEST_CASE(BatchAccumulationMatchesSerial) {
     }
     checkEqual(reference, bsma.finalizeMaterial(*single, tContext));
 
+    // A state copied halfway (after its lookup cache was built) continues
+    // independently of the original
+    {
+      using State = BinnedSurfaceMaterialAccumulator::State;
+      auto original = bsma.createState(tContext);
+      std::unique_ptr<State> copy;
+      for (std::size_t t = 0; t < tracks.size(); ++t) {
+        if (t == tracks.size() / 2) {
+          copy = std::make_unique<State>(static_cast<State&>(*original));
+        }
+        accumulateTrack(bsma, *original, tracks[t].interactions,
+                        tracks[t].empty);
+        if (copy != nullptr) {
+          accumulateTrack(bsma, *copy, tracks[t].interactions, tracks[t].empty);
+        }
+      }
+      checkEqual(reference, bsma.finalizeMaterial(*original, tContext));
+      checkEqual(reference, bsma.finalizeMaterial(*copy, tContext));
+    }
+
     // The deprecated single-track method
     auto deprecated = bsma.createState(tContext);
     for (const auto& track : tracks) {

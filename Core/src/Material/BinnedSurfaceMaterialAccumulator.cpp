@@ -22,8 +22,46 @@
 #include <algorithm>
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <unordered_map>
+#include <vector>
+
+struct Acts::detail::MaterialSlotCache::Impl {
+  /// The accumulated materials, in map order
+  std::vector<AccumulatedSurfaceMaterial*> slots;
+  /// The position of each geometry ID in `slots`
+  std::unordered_map<GeometryIdentifier, std::uint32_t> index;
+};
+
+Acts::detail::MaterialSlotCache::MaterialSlotCache() = default;
+
+Acts::detail::MaterialSlotCache::MaterialSlotCache(
+    const MaterialSlotCache& /*other*/) {}
+
+Acts::detail::MaterialSlotCache::MaterialSlotCache(
+    MaterialSlotCache&& /*other*/) noexcept {}
+
+Acts::detail::MaterialSlotCache& Acts::detail::MaterialSlotCache::operator=(
+    const MaterialSlotCache& /*other*/) {
+  m_impl.reset();
+  return *this;
+}
+
+Acts::detail::MaterialSlotCache& Acts::detail::MaterialSlotCache::operator=(
+    MaterialSlotCache&& /*other*/) noexcept {
+  m_impl.reset();
+  return *this;
+}
+
+Acts::detail::MaterialSlotCache::~MaterialSlotCache() = default;
+
+Acts::detail::MaterialSlotCache::Impl& Acts::detail::MaterialSlotCache::impl() {
+  if (m_impl == nullptr) {
+    m_impl = std::make_unique<Impl>();
+  }
+  return *m_impl;
+}
 
 Acts::BinnedSurfaceMaterialAccumulator::BinnedSurfaceMaterialAccumulator(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
@@ -113,12 +151,10 @@ void Acts::BinnedSurfaceMaterialAccumulator::accumulateTracks(
   State& cState = static_cast<State&>(state);
 
   // Every accumulated surface material is an independent slot, numbered in
-  // map order. The slots are cached in the state, and rebuilt if the state
-  // was copied or its surfaces changed.
-  auto& cache = cState.slotCache;
-  if (cache.owner != &cState.accumulatedMaterial ||
-      cache.slots.size() != cState.accumulatedMaterial.size()) {
-    cache.owner = &cState.accumulatedMaterial;
+  // map order. The slots are cached in the state, and rebuilt when the
+  // surfaces changed. A copied state starts out with an empty cache.
+  auto& cache = cState.slotCache.impl();
+  if (cache.slots.size() != cState.accumulatedMaterial.size()) {
     cache.slots.clear();
     cache.index.clear();
     cache.slots.reserve(cState.accumulatedMaterial.size());

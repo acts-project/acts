@@ -14,12 +14,36 @@
 #include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <cstdint>
+#include <memory>
 #include <optional>
-#include <unordered_map>
-#include <vector>
 
 namespace Acts {
+
+namespace detail {
+
+/// Opaque lookup cache of @ref BinnedSurfaceMaterialAccumulator, defined in
+/// its implementation. Copies and moves start out empty.
+class MaterialSlotCache {
+ public:
+  MaterialSlotCache();
+  MaterialSlotCache(const MaterialSlotCache& other);
+  MaterialSlotCache(MaterialSlotCache&& other) noexcept;
+  MaterialSlotCache& operator=(const MaterialSlotCache& other);
+  MaterialSlotCache& operator=(MaterialSlotCache&& other) noexcept;
+  ~MaterialSlotCache();
+
+  /// The cache content, only defined in the implementation
+  struct Impl;
+
+  /// Access the cache content, created on first use
+  /// @return the cache content
+  Impl& impl();
+
+ private:
+  std::unique_ptr<Impl> m_impl;
+};
+
+}  // namespace detail
 
 /// @brief The binned surface material accumulator
 ///
@@ -48,17 +72,8 @@ class BinnedSurfaceMaterialAccumulator final
     /// Validated surface identities captured by createState.
     std::optional<detail::MaterialSurfaceRegistry> materialSurfaceRegistry;
 
-    /// Lookup cache of @ref accumulateTracks, rebuilt when stale
-    struct SlotCache {
-      /// The map the cache was built for, to detect copied states
-      const void* owner = nullptr;
-      /// The accumulated materials, in map order
-      std::vector<AccumulatedSurfaceMaterial*> slots;
-      /// The position of each geometry ID in @ref slots
-      std::unordered_map<GeometryIdentifier, std::uint32_t> index;
-    };
-    /// The lookup cache
-    SlotCache slotCache;
+    /// Lookup cache of @ref accumulateTracks, private to the accumulator
+    detail::MaterialSlotCache slotCache;
   };
 
   /// Constructor

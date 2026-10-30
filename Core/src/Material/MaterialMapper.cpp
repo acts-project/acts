@@ -35,15 +35,29 @@ std::unique_ptr<Acts::MaterialMapper::State> Acts::MaterialMapper::createState(
   return state;
 }
 
-Acts::MaterialMapper::TrackAssignment Acts::MaterialMapper::assignTrack(
-    const GeometryContext& gctx, const MagneticFieldContext& mctx,
-    const RecordedMaterialTrack& rmTrack, const Options& options) const {
+namespace {
+
+/// The result of the assignment of a single track
+struct TrackAssignment {
+  Acts::RecordedMaterialTrack mapped;
+  Acts::RecordedMaterialTrack unmapped;
+  std::vector<Acts::IAssignmentFinder::SurfaceAssignment>
+      surfacesWithoutAssignment;
+};
+
+/// Assign the material of a single track, without accumulation
+TrackAssignment assignTrack(const Acts::MaterialMapper::Config& cfg,
+                            const Acts::GeometryContext& gctx,
+                            const Acts::MagneticFieldContext& mctx,
+                            const Acts::RecordedMaterialTrack& rmTrack,
+                            const Acts::MaterialMapper::Options& options) {
+  using namespace Acts;
   // The recorded material track
   const auto& [starDir, recordedMaterial] = rmTrack;
   const auto& [position, direction] = starDir;
   auto [surfaceAssignments, volumeAssignments] =
-      m_cfg.assignmentFinder->assignmentCandidates(gctx, mctx, position,
-                                                   direction);
+      cfg.assignmentFinder->assignmentCandidates(gctx, mctx, position,
+                                                 direction);
 
   // The mapped and unmapped material
   TrackAssignment result{{starDir, {}}, {starDir, {}}, {}};
@@ -72,6 +86,8 @@ Acts::MaterialMapper::TrackAssignment Acts::MaterialMapper::assignTrack(
   return result;
 }
 
+}  // namespace
+
 std::pair<Acts::RecordedMaterialTrack, Acts::RecordedMaterialTrack>
 Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
                                   const MagneticFieldContext& mctx,
@@ -91,7 +107,7 @@ Acts::MaterialMapper::mapMaterial(
   // The assignment of the tracks is independent: run it concurrently
   std::vector<TrackAssignment> assignments(rmTracks.size());
   auto assign = [&](std::size_t i) {
-    assignments[i] = assignTrack(gctx, mctx, *rmTracks[i], options);
+    assignments[i] = assignTrack(m_cfg, gctx, mctx, *rmTracks[i], options);
   };
   if (m_pool != nullptr) {
     m_pool->parallelFor(rmTracks.size(), assign);

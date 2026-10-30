@@ -123,19 +123,6 @@ class MaterialMapper {
   /// The configuration
   Config m_cfg;
 
-  /// The result of the assignment of a single track
-  struct TrackAssignment {
-    RecordedMaterialTrack mapped;
-    RecordedMaterialTrack unmapped;
-    std::vector<IAssignmentFinder::SurfaceAssignment> surfacesWithoutAssignment;
-  };
-
-  /// Assign the material of a single track, without accumulation
-  TrackAssignment assignTrack(const GeometryContext& gctx,
-                              const MagneticFieldContext& mctx,
-                              const RecordedMaterialTrack& rmTrack,
-                              const Options& options) const;
-
   /// The logger
   std::unique_ptr<const Logger> m_logger;
 
