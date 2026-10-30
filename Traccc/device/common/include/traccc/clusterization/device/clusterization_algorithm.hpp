@@ -178,11 +178,6 @@ class clusterization_algorithm
 
   /// Main CCL kernel launcher
   ///
-  /// If the configuration enables cell sorting, implementations must not
-  /// return until the kernel has finished executing: the sorted cell
-  /// collection and the permutation map are destroyed soon after this call
-  /// returns.
-  ///
   /// @param payload The payload containing all necessary data for the kernel
   ///
   virtual void ccl_kernel(const ccl_kernel_payload& payload) const = 0;

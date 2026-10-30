@@ -191,8 +191,10 @@ clusterization_algorithm::execute_impl(
     // Run the cluster data reification kernel.
     cluster_maker_kernel(num_cells, disjoint_set, *cluster_data,
                          permutation_map_buffer);
+  }
 
-    // Complete cluster data reification before releasing its input buffers.
+  // Kernels must finish before the temporary buffers are released.
+  if (keep_disjoint_set || m_config.sort_cells) {
     synchronize();
   }
 

@@ -85,52 +85,49 @@ void clusterization_algorithm::ccl_kernel(
   const ::sycl::nd_range cclKernelRange(
       ::sycl::range<1>(num_blocks * payload.config.threads_per_partition),
       ::sycl::range<1>(payload.config.threads_per_partition));
-  details::get_queue(queue())
-      .submit([&](::sycl::handler& h) {
-        // Allocate shared memory for the kernel.
-        vecmem::sycl::local_accessor<unsigned int> shared_uint(2, h);
-        vecmem::sycl::local_accessor<device::details::index_t> shared_idx(
-            2 * payload.config.max_partition_size(), h);
+  details::get_queue(queue()).submit([&](::sycl::handler& h) {
+    // Allocate shared memory for the kernel.
+    vecmem::sycl::local_accessor<unsigned int> shared_uint(2, h);
+    vecmem::sycl::local_accessor<device::details::index_t> shared_idx(
+        2 * payload.config.max_partition_size(), h);
 
-        // Launch the kernel.
-        h.parallel_for<kernels::ccl_kernel>(
-            cclKernelRange,
-            [shared_uint, shared_idx, cells = payload.cells,
-             det_descr = payload.det_descr, det_cond = payload.det_cond,
-             measurements = payload.measurements, f_backup = payload.f_backup,
-             gf_backup = payload.gf_backup, adjc_backup = payload.adjc_backup,
-             adjv_backup = payload.adjv_backup,
-             backup_mutex = payload.backup_mutex, config = payload.config,
-             disjoint_set = payload.disjoint_set,
-             cluster_sizes = payload.cluster_sizes](::sycl::nd_item<1> item) {
-              // Construct more readable variable names.
-              using vector_size_t = vecmem::data::vector_view<
-                  device::details::index_t>::size_type;
-              vecmem::data::vector_view<device::details::index_t> f_view{
-                  static_cast<vector_size_t>(config.max_partition_size()),
-                  &shared_idx[0]};
-              vecmem::data::vector_view<device::details::index_t> gf_view{
-                  static_cast<vector_size_t>(config.max_partition_size()),
-                  &shared_idx[config.max_partition_size()]};
-              unsigned int& partition_start = shared_uint[0];
-              unsigned int& partition_end = shared_uint[1];
+    // Launch the kernel.
+    h.parallel_for<kernels::ccl_kernel>(
+        cclKernelRange,
+        [shared_uint, shared_idx, cells = payload.cells,
+         det_descr = payload.det_descr, det_cond = payload.det_cond,
+         measurements = payload.measurements, f_backup = payload.f_backup,
+         gf_backup = payload.gf_backup, adjc_backup = payload.adjc_backup,
+         adjv_backup = payload.adjv_backup, backup_mutex = payload.backup_mutex,
+         config = payload.config, disjoint_set = payload.disjoint_set,
+         cluster_sizes = payload.cluster_sizes](::sycl::nd_item<1> item) {
+          // Construct more readable variable names.
+          using vector_size_t =
+              vecmem::data::vector_view<device::details::index_t>::size_type;
+          vecmem::data::vector_view<device::details::index_t> f_view{
+              static_cast<vector_size_t>(config.max_partition_size()),
+              &shared_idx[0]};
+          vecmem::data::vector_view<device::details::index_t> gf_view{
+              static_cast<vector_size_t>(config.max_partition_size()),
+              &shared_idx[config.max_partition_size()]};
+          unsigned int& partition_start = shared_uint[0];
+          unsigned int& partition_end = shared_uint[1];
 
-              // Mutex for scratch space
-              vecmem::device_atomic_ref<unsigned int> mutex(*backup_mutex);
+          // Mutex for scratch space
+          vecmem::device_atomic_ref<unsigned int> mutex(*backup_mutex);
 
-              // Barrier used in the algorithm.
-              const details::barrier barrier{item};
-              const details::thread_id thread_id{item};
+          // Barrier used in the algorithm.
+          const details::barrier barrier{item};
+          const details::thread_id thread_id{item};
 
-              // Run the algorithm for this thread.
-              device::ccl_kernel(config, thread_id, cells, det_descr, det_cond,
-                                 partition_start, partition_end, f_view,
-                                 gf_view, f_backup, gf_backup, adjc_backup,
-                                 adjv_backup, mutex, disjoint_set,
-                                 cluster_sizes, barrier, measurements);
-            });
-      })
-      .wait_and_throw();
+          // Run the algorithm for this thread.
+          device::ccl_kernel(config, thread_id, cells, det_descr, det_cond,
+                             partition_start, partition_end, f_view, gf_view,
+                             f_backup, gf_backup, adjc_backup, adjv_backup,
+                             mutex, disjoint_set, cluster_sizes, barrier,
+                             measurements);
+        });
+  });
 }
 
 void clusterization_algorithm::cluster_maker_kernel(
