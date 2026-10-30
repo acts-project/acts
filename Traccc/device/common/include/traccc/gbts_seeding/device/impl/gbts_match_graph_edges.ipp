@@ -52,6 +52,12 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
       payload.gbts_match_graph_edges_params.much_less_scattering_curv;
   const float high_pT_correction =
       payload.gbts_match_graph_edges_params.high_pT_correction;
+  const float eta_correction =
+      payload.gbts_match_graph_edges_params.eta_correction;
+  const float eta_low_threshold =
+      payload.gbts_match_graph_edges_params.eta_low_threshold;
+  const float eta_high_threshold =
+      payload.gbts_match_graph_edges_params.eta_high_threshold;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -103,24 +109,29 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
       float deta_max =
           cut_deta_max + deta_inflation * (params2.second || params1.second);
       const float curv = 0.5f * math::fabs(curv2 + params2.first.y);
+      const float eta = 0.5f * math::fabs(eta2 + params2.first.x);
       const float corr = static_cast<float>((curv < less_scattering_curv) +
                                             (curv < much_less_scattering_curv));
-      deta_max *= 1.0f - high_pT_correction * corr;
+      const float high_pT_factor = 1.0f - high_pT_correction * corr;
+      const float eta_correction_factor = 1 -
+                                    eta_correction * (eta < eta_low_threshold) +
+                                    eta_correction * (eta > eta_high_threshold);
+      deta_max *= high_pT_factor * eta_correction_factor;
       const float deta_cut_ratio =
           math::fabs(eta2 - params2.first.x) / deta_max;
       if (deta_cut_ratio > 1.0f) {  // bad match
         continue;
       }
-
+      const float dphi_max = cut_dphi_max * eta_correction_factor;
       const float dPhi_cut_ratio =
           math::fabs(traccc::detail::wrap_phi(Phi2 - params2.first.w)) /
-          cut_dphi_max;
+          dphi_max;
       if (dPhi_cut_ratio > 1.0f) {
         continue;
       }
-
+      const float dcurv_max = cut_dcurv_max * eta_correction_factor;
       const float dcurv_cut_ratio =
-          math::fabs(curv2 - params2.first.y) / cut_dcurv_max;
+          math::fabs(curv2 - params2.first.y) / dcurv_max;
       if (dcurv_cut_ratio > 1.0f) {
         continue;
       }
