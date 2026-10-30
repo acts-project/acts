@@ -98,8 +98,4 @@ void measurement_sorting_algorithm::sorting_kernel(
                       vecmem::get_data(payload.indices));
 }
 
-void measurement_sorting_algorithm::synchronize() const {
-  queue().synchronize();
-}
-
 }  // namespace traccc::alpaka

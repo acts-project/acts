@@ -81,8 +81,4 @@ void measurement_sorting_algorithm::sorting_kernel(
   });
 }
 
-void measurement_sorting_algorithm::synchronize() const {
-  details::get_queue(queue()).wait_and_throw();
-}
-
 }  // namespace traccc::sycl
