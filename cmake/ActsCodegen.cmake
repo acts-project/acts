@@ -25,10 +25,8 @@ get_filename_component(
 )
 set(ACTS_CODEGEN_SOURCE_ROOT "${_acts_codegen_source_root}" CACHE INTERNAL "")
 
-# The manifest is the single source of truth for what gets generated: this
-# module drives acts_code_generation from it, and CI/pregenerate_codegen.py
-# produces files from the same list, so neither side can invent a unit or a
-# location the other does not know about.
+# The manifest describes shipped generated files for both this module and
+# CI/pregenerate_codegen.py. External configurations may supply their own UNIT.
 file(
     READ
     "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
@@ -209,8 +207,14 @@ function(_acts_codegen_ensure_runtime)
 endfunction()
 
 function(acts_code_generation)
-    set(oneValueArgs ADD_TO_TARGET KEY RESULT_INCLUDE_DIR RESULT_OUTPUT)
-    cmake_parse_arguments(PARSE_ARGV 0 ARGS "" "${oneValueArgs}" "")
+    set(oneValueArgs
+        ADD_TO_TARGET
+        KEY
+        UNIT
+        RESULT_INCLUDE_DIR
+        RESULT_OUTPUT
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 ARGS "" "${oneValueArgs}" "DEPENDS")
 
     if(NOT DEFINED ARGS_KEY)
         message(SEND_ERROR "acts_code_generation: no KEY specified")
@@ -218,10 +222,8 @@ function(acts_code_generation)
     endif()
     set(_key "${ARGS_KEY}")
 
-    # Everything about a generated file other than which target consumes it
-    # comes from the manifest, so that this build and whoever pre-generates the
-    # code cannot end up with different ideas about what is generated or where
-    # it goes.
+    # Shipped files use the manifest. UNIT accepts an external configuration
+    # with the same schema; DEPENDS tracks its additional local input files.
     acts_codegen_manifest(_manifest)
     string(
         JSON
@@ -231,7 +233,14 @@ function(acts_code_generation)
         units
         "${_key}"
     )
-    if(_unit_error)
+    # External configurations can supply a unit without changing the shipped
+    # manifest. They must use their own key, never override a shipped output.
+    if(DEFINED ARGS_UNIT)
+        if(NOT _unit_error)
+            message(FATAL_ERROR "Cannot override manifest unit '${_key}'")
+        endif()
+        set(_unit "${ARGS_UNIT}")
+    elseif(_unit_error)
         message(
             SEND_ERROR
             "acts_code_generation: '${_key}' is not in ${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json. "
@@ -332,6 +341,7 @@ function(acts_code_generation)
 
         set(_depends
             "${ARGS_PYTHON}"
+            ${ARGS_DEPENDS}
             "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
         )
         set(_with_args "")
