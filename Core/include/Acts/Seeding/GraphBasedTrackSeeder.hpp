@@ -72,6 +72,11 @@ class GraphBasedTrackSeeder {
     float maxSeedSplitEta = 0.6;
     /// Max allowed curvature for seed self consistency check.
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
+    /// Give the seed fit at the outermost space point instead of the innermost.
+    /// The tracking filter then fits the seed again from the inside out. A
+    /// track finder that starts there and runs inwards picks the inner hits
+    /// itself, where the density is highest. Split seeds get a fit too.
+    bool seedFitAtOutermost = false;
     // GbtsNodeStorage options
     /// Maximum endcap cluster width.
     float maxEndcapClusterWidth = 0.35f * Acts::UnitConstants::mm;

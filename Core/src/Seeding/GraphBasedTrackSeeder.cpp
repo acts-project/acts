@@ -26,6 +26,29 @@
 
 namespace Acts::Experimental {
 
+namespace {
+
+/// Seed fit from a filter state at its last node.
+/// @param state Filter state
+/// @param outwards Whether the frame points outwards, along the track
+GbtsSeedFit seedFitFromState(const detail::GbtsEdgeState& state,
+                             const bool outwards) {
+  const double slope2 = 1. + static_cast<double>(state.x[1]) * state.x[1];
+  // the track runs along x' outwards and against it inwards
+  const float sign = outwards ? 1.f : -1.f;
+  return GbtsSeedFit{
+      .position =
+          Vector3(state.refX * state.c - state.x[0] * state.s,
+                  state.refX * state.s + state.x[0] * state.c, state.y[0]),
+      .phi = std::atan2(sign * (state.s + state.c * state.x[1]),
+                        sign * (state.c - state.s * state.x[1])),
+      .cotTheta = state.y[1],
+      // clockwise along the track, the sign of the charge in a positive field
+      .curvature = -sign * state.x[2] / (slope2 * std::sqrt(slope2))};
+}
+
+}  // namespace
+
 GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
     : Config(config) {
   phiSliceWidth = 2 * std::numbers::pi_v<float> / config.nMaxPhiSlice;
@@ -211,16 +234,9 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     vSeedCandidates.emplace_back(origSeedQuality, false, vN, seedSplitFlag);
 
-    if (withFits) {
+    if (withFits && !m_cfg.seedFitAtOutermost) {
       // filter state at the innermost node, x' along the first edge (inwards)
-      const double slope2 = 1. + static_cast<double>(rs.x[1]) * rs.x[1];
-      vSeedCandidates.back().fit = GbtsSeedFit{
-          .position = Vector3(rs.refX * rs.c - rs.x[0] * rs.s,
-                              rs.refX * rs.s + rs.x[0] * rs.c, rs.y[0]),
-          // outwards: along -x', with the slope of the state
-          .phi = std::atan2(-rs.s - rs.c * rs.x[1], -rs.c + rs.s * rs.x[1]),
-          .cotTheta = rs.y[1],
-          .curvature = rs.x[2] / (slope2 * std::sqrt(slope2))};
+      vSeedCandidates.back().fit = seedFitFromState(rs, false);
     }
 
     vArgSort.emplace_back(origSeedQuality, seedCounter);
@@ -286,6 +302,17 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   }
   vOutputSeeds.reserve(vSeedCandidates.size());
 
+  // refit from the inside out, the nodes are ordered by radius
+  const auto outwardFit = [&](std::span<const SpacePointIndex> nodes)
+      -> std::optional<GbtsSeedFit> {
+    const std::optional<detail::GbtsEdgeState> state =
+        filter.refit(nodeView, nodes);
+    if (!state.has_value()) {
+      return std::nullopt;
+    }
+    return seedFitFromState(*state, true);
+  };
+
   // drop the clones and split seeds if need be
 
   for (const auto& args : vArgSort) {
@@ -309,7 +336,8 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       }
 
       vOutputSeeds.emplace_back(seed.seedQuality, vSpIdx);
-      vOutputSeeds.back().fit = seed.fit;
+      vOutputSeeds.back().fit =
+          m_cfg.seedFitAtOutermost && withFits ? outwardFit(vN) : seed.fit;
 
       continue;
     }
@@ -323,8 +351,10 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     for (const auto& skipIdx : indices2drop) {
       std::vector<std::uint32_t> newSeed;
+      std::vector<SpacePointIndex> newNodes;
 
       newSeed.reserve(seedSize - 1);
+      newNodes.reserve(seedSize - 1);
 
       for (std::uint32_t k = 0; k < seedSize; k++) {
         if (k == skipIdx) {
@@ -332,9 +362,13 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
         }
 
         newSeed.emplace_back(nodeStorage.spacePointIndex(vN[k]));
+        newNodes.emplace_back(vN[k]);
       }
 
       vOutputSeeds.emplace_back(seed.seedQuality, newSeed);
+      if (m_cfg.seedFitAtOutermost && withFits) {
+        vOutputSeeds.back().fit = outwardFit(newNodes);
+      }
     }
   }
 }
