@@ -23,7 +23,7 @@
 
 #include <cstddef>
 #include <optional>
-#include <system_error>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -129,10 +129,12 @@ Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
 ///         state is not on the chain, a state lacks components, or a result
 ///         is not finite
 template <typename traj_t>
-Result<void> conditionSmoothedStatesOnSharedState(
-    traj_t& trajectory, std::size_t sharedIndex, std::size_t tipIndex,
-    const BoundVector& newMean, const BoundMatrix& newCov,
-    const Logger& logger = getDummyLogger()) {
+Result<void> conditionSmoothedStatesOnSharedState(traj_t& trajectory,
+                                                  std::size_t sharedIndex,
+                                                  std::size_t tipIndex,
+                                                  const BoundVector& newMean,
+                                                  const BoundMatrix& newCov,
+                                                  const Logger& logger) {
   using TrackStateProxy = typename traj_t::TrackStateProxy;
 
   // collect the segment from the tip down to the shared state
@@ -174,7 +176,8 @@ Result<void> conditionSmoothedStatesOnSharedState(
   std::vector<std::pair<BoundMatrix, BoundMatrix>> sensitivities(
       indices.size());
   BoundMatrix df = BoundMatrix::Identity();
-  for (std::size_t k = indices.size(); k-- > 0;) {
+  for (std::size_t k :
+       std::views::iota(std::size_t{0}, indices.size()) | std::views::reverse) {
     auto ts = trajectory.getTrackState(indices[k]);
     if (!ts.hasSmoothed() || !ts.hasPredicted() || !ts.hasJacobian()) {
       ACTS_DEBUG("State " << ts.index()
@@ -204,22 +207,20 @@ Result<void> conditionSmoothedStatesOnSharedState(
 
   if (shared.hasPrevious()) {
     GainMatrixSmoother smoother;
-    std::error_code error;
+    Result<void> result = Result<void>::success();
     auto later = shared;
     trajectory.applyBackwards(shared.previous(), [&](TrackStateProxy ts) {
       ts.addComponents(TrackStatePropMask::Smoothed);
       auto res = smoother.calculate(AnyMutableTrackStateProxy{ts},
                                     AnyConstTrackStateProxy{later}, logger);
       if (!res.ok()) {
-        error = res.error();
+        result = res;
         return false;
       }
       later = ts;
       return true;
     });
-    if (error) {
-      return Result<void>::failure(error);
-    }
+    return result;
   }
 
   return Result<void>::success();
@@ -242,7 +243,7 @@ template <TrackStateProxyConcept track_state_proxy_t,
           TrackProxyConcept track_proxy_t>
 std::optional<BoundMatrix> linkTrackletBehind(track_state_proxy_t sharedState,
                                               track_proxy_t& second,
-                                              bool invertJacobians = true) {
+                                              bool invertJacobians) {
   std::optional<BoundMatrix> stitch =
       second.reverseTrackStates(invertJacobians);
   if (second.tipIndex() == kTrackIndexInvalid) {

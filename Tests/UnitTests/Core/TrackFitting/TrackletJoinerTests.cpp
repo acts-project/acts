@@ -338,8 +338,7 @@ Tracklets joinAndCheck(Container& tc, Variant variant) {
   TrackletJoiner joiner;
   BOOST_REQUIRE(joiner
                     .joinInPlace(gctx, tracklets.first, tracklets.shared,
-                                 tracklets.second, getDummyLogger(),
-                                 smoother_t{})
+                                 tracklets.second, smoother_t{})
                     .ok());
   // states before the shared state leave the chain in the link
   const std::size_t onChain = variant == Variant::StemHole ? 7 : nodes.size();
@@ -520,7 +519,7 @@ BOOST_AUTO_TEST_CASE(ConditioningRejectsStateOffTheChain) {
   auto res = detail::conditionSmoothedStatesOnSharedState(
       tc.trackStateContainer(), tracklets.second.tipIndex(),
       tracklets.first.tipIndex(), tracklets.shared.smoothed(),
-      tracklets.shared.smoothedCovariance());
+      tracklets.shared.smoothedCovariance(), getDummyLogger());
   BOOST_CHECK(!res.ok());
 }
 

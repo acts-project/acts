@@ -264,7 +264,8 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
   Acts::TrackletJoiner::Config joinerConfig;
   joinerConfig.smoothSecond = m_cfg.twoWaySmoothing;
   joinerConfig.conditionFirst = m_cfg.twoWaySmoothing;
-  m_trackletJoiner = Acts::TrackletJoiner(joinerConfig);
+  m_trackletJoiner = Acts::TrackletJoiner(
+      joinerConfig, this->logger().clone("TrackletJoiner"));
 
   if (m_cfg.trackSelectorCfg.has_value()) {
     m_trackSelector = std::visit(
@@ -569,14 +570,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 if (!lastSecond) {
                   return m_trackletJoiner.joinCopy(
                       ctx.recoGeoContext, tracksTemp, trackCandidate,
-                      firstMeasurementConst, secondTrack, logger());
+                      firstMeasurementConst, secondTrack);
                 }
                 auto secondTrackCopy = tracksTemp.makeTrack();
                 secondTrackCopy.copyFrom(secondTrack);
                 joinedInPlace = true;
                 auto res = m_trackletJoiner.joinInPlace(
                     ctx.recoGeoContext, trackCandidate, firstMeasurement,
-                    secondTrackCopy, logger());
+                    secondTrackCopy);
                 if (!res.ok()) {
                   return res.error();
                 }
@@ -586,7 +587,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 m_nFailedSmoothing++;
                 ACTS_ERROR("Joining the second pass for seed "
                            << iSeed << " and track " << secondTrack.index()
-                           << " failed with error " << joinResult.error());
+                           << " failed with error "
+                           << joinResult.error().message());
                 continue;
               }
               auto joinedTrack = joinResult.value();
