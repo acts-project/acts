@@ -62,6 +62,10 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
+    /// Give the parameters on the surface of the last space point of the seed
+    /// instead of the first, for a track finder that starts there.
+    bool parametersOnLastSpacePoint = false;
   };
 
   /// Construct the track parameters making algorithm.

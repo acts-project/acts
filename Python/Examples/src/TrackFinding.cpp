@@ -152,7 +152,7 @@ void addTrackFinding(py::module& mex) {
       inputSeeds, inputProtoTracks, inputParticleHypotheses,
       outputTrackParameters, outputSeeds, outputProtoTracks,
       inputFreeParameters, seedParamsEstimation, trackingGeometry,
-      magneticField);
+      magneticField, parametersOnLastSpacePoint);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsLookupEstimation, mex, "TrackParamsLookupEstimation",
