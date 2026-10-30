@@ -23,18 +23,19 @@ namespace ActsAlignment {
 ///
 /// AlignmentHierarchy builds a detector-element → owning-structure lookup at
 /// construction and exposes it for later steps of the alignment pipeline
-/// (validation, structure-level derivative accumulation). It does not own the
-/// structures; the caller retains ownership.
+/// (validation, structure-level derivative accumulation). It shares ownership
+/// of the supplied structures, which retain shared ownership of their children.
+/// The lookup stores non-owning pointers to these structures.
 ///
 /// @par Multi-level alignment
-/// The hierarchy is rebuilt on every call to @c Alignment::align(), so
-/// iterative multi-level alignment (strip system → endcap → disk → module,
-/// one level active per call, cycling until convergence) is supported out of
-/// the box. Each surface is mapped to its immediate owning structure; at most
-/// one level of the hierarchy should have floating DoFs per @c align() call.
+/// The hierarchy is rebuilt on every call to @c Alignment::align(). It traverses
+/// nested structures and maps each surface to its immediate owning structure.
+/// This currently provides validation and ownership metadata only. Solving
+/// structure-level parameters, including iterating over one hierarchy level at
+/// a time, still requires chain-rule derivatives and solver integration.
 /// Simultaneous fitting of DoFs at multiple levels in a single call would
-/// require extending the lookup to return the full ancestor chain and
-/// accumulating chain-rule Jacobians at each level — this is not implemented.
+/// additionally require the full ancestor chain and Jacobian accumulation at
+/// each level.
 class AlignmentHierarchy {
  public:
   /// @brief Outcome of validate()
