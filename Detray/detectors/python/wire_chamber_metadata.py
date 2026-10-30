@@ -6,36 +6,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import detray
-
-from detray.detectors import metadata, metadata_generator
-from detray.detectors import Shape
-from detray.detectors import add_wire_chamber_defaults
-
 import argparse
-import logging
-import sys
 
-# --------------------------------------------------------------------------
-# Generate the wire chamber metadata type
-# --------------------------------------------------------------------------
-
-""" Add all types needed to describe the wire chamber test detector """
-
-
-def add_wire_chamber_types(md: metadata):
-    logger = logging.getLogger(__name__)
-    logger.info("Define types required by the wire chamber detector:")
-
-    # Add default types for wire chambers
-    add_wire_chamber_defaults(md, use_mat_maps=True, use_homogeneous_mat=True)
-
-    logger.info("Done")
+import detray
+from detray.detectors import metadata, metadata_generator
+from detray.detectors.configurations.wire_chamber import add_wire_chamber_types
 
 
 def __main__():
     # Commandline options
-    parser = argparse.ArgumentParser(prog=sys.argv[0])
+    parser = argparse.ArgumentParser()
     detray.detectors.add_logging_options(parser)
     detray.detectors.add_io_options(parser)
 
@@ -48,7 +28,9 @@ def __main__():
     add_wire_chamber_types(md)
 
     # Dump the metadata to header file
-    metadata_generator(md, output=args.output, format_header=args.format)
+    metadata_generator(
+        md, output=args.output, format_header=args.format, output_file=args.output_file
+    )
 
 
 if __name__ == "__main__":

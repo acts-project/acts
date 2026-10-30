@@ -461,6 +461,20 @@ produces the same files from it ahead of time, so the two cannot disagree about
 what exists or where it goes. Adding a generator means adding it to the manifest;
 `acts_code_generation` refuses a key that is not listed there.
 
+Detray detector metadata is covered too: the manifest lists the default, ITk,
+ODD, toy and wire-chamber generators. `DETRAY_GENERATE_METADATA` selects which
+headers the build consumes; pregeneration runs all five so the archive does not
+depend on that selection. Traccc requests the ITk metadata header.
+
+The metadata scripts accept an exact output filename, with formatting disabled
+for codegen, while retaining their existing `--output` directory interface.
+Their source Python package is installed through the manifest's existing `with`
+mechanism; no configured bindings or shell wrapper are needed. Detector definitions live together in `Detray/python/detray/detectors/configurations`;
+the package source dependencies trigger incremental regeneration.
+Adding another metadata generator requires a manifest entry. Missing prebuilts
+use the normal codegen runtime, or fail with `ACTS_CODEGEN_REQUIRE_PREBUILT=ON`.
+Traccc's CUDA kernel instantiations remain CMake `configure_file` substitutions.
+
 Pre-generating the code needs `uv` and nothing else — no CMake, no compiler, and
 none of the C++ dependencies a real ACTS configure requires:
 

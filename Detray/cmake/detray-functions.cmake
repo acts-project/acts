@@ -242,7 +242,7 @@ function(detray_add_flag name value)
     set(${name} "${${name}} ${value}" PARENT_SCOPE)
 endfunction(detray_add_flag)
 
-# Generate a single detray sympy codegen header via acts_code_generation and
+# Generate a single detray header via acts_code_generation and
 # install it alongside the other detray headers. What is generated and where it
 # ends up is described in the ACTS codegen manifest; only the key is given here.
 #

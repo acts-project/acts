@@ -30,8 +30,17 @@ set(ACTS_CODEGEN_SOURCE_ROOT "${_acts_codegen_source_root}" CACHE INTERNAL "")
 # produces files from the same list, so neither side can invent a unit or a
 # location the other does not know about.
 file(
-    READ "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
+    READ
+    "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
     _acts_codegen_manifest
+)
+
+set_property(
+    DIRECTORY
+    APPEND
+    PROPERTY
+        CMAKE_CONFIGURE_DEPENDS
+            "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
 )
 
 # A global property rather than a cache entry: cache values must not contain
@@ -187,7 +196,8 @@ function(_acts_codegen_ensure_runtime)
         # Finally, we write the path found in the outside virtual env into the
         # new virtual env as described in the StackOverflow answer.
         file(
-            WRITE "${_python_nested_package_dir}/_base_packages.pth"
+            WRITE
+            "${_python_nested_package_dir}/_base_packages.pth"
             ${_python_package_dir}
         )
 
@@ -214,7 +224,8 @@ function(acts_code_generation)
     # it goes.
     acts_codegen_manifest(_manifest)
     string(
-        JSON _unit
+        JSON
+        _unit
         ERROR_VARIABLE _unit_error
         GET "${_manifest}"
         units
@@ -301,7 +312,10 @@ function(acts_code_generation)
             set(_arg_isolated "--isolated")
         endif()
 
-        set(_depends "${ARGS_PYTHON}")
+        set(_depends
+            "${ARGS_PYTHON}"
+            "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
+        )
         set(_with_args "")
         foreach(_requirement ${ARGS_WITH_REQUIREMENTS})
             list(APPEND _depends ${_requirement})
@@ -311,12 +325,21 @@ function(acts_code_generation)
         foreach(_requirement ${ARGS_WITH})
             list(APPEND _with_args "--with;${_requirement}")
             if(IS_DIRECTORY ${_requirement})
-                if(NOT ACTS_USE_SYSTEM_LIBS)
-                    file(GLOB_RECURSE _depends_py ${_requirement}/*)
-                    list(APPEND _depends ${_depends_py})
-                else()
+                file(
+                    GLOB_RECURSE _depends_py
+                    CONFIGURE_DEPENDS
+                    "${_requirement}/*.py"
+                )
+                list(
+                    APPEND
+                    _depends
+                    ${_depends_py}
+                    "${_requirement}/pyproject.toml"
+                )
+                if(ACTS_USE_SYSTEM_LIBS)
                     # If we are not using uv, then we use pip to install the
                     # package into the virtual environment in the build directory.
+                    # Editable installs let regenerated headers see source edits.
                     # The --no-build-isolation flag ensures that we don't
                     # automatically download setuptools. The --no-index flag
                     # ensures that nothing can be downloaded ever, and the
@@ -325,8 +348,8 @@ function(acts_code_generation)
                     execute_process(
                         COMMAND
                             ${CMAKE_BINARY_DIR}/codegen_venv/bin/python -m pip
-                            install --no-build-isolation --no-index --no-deps
-                            ${_requirement}
+                            install --no-build-isolation --no-index
+                            --no-deps --editable ${_requirement}
                         OUTPUT_QUIET
                     )
                 endif()

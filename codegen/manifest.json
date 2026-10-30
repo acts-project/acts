@@ -111,6 +111,56 @@
             ],
             "isolated": true,
             "python_version": "3.13"
+        },
+        "Detray/detectors/detray/detectors/default_metadata.hpp": {
+            "script": "Detray/detectors/python/default_metadata.py",
+            "output": "detray/detectors/default_metadata.hpp",
+            "with_requirements": [],
+            "with": [
+                "Detray/python"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
+        },
+        "Detray/detectors/detray/detectors/itk_metadata.hpp": {
+            "script": "Detray/detectors/python/itk_metadata.py",
+            "output": "detray/detectors/itk_metadata.hpp",
+            "with_requirements": [],
+            "with": [
+                "Detray/python"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
+        },
+        "Detray/detectors/detray/detectors/odd_metadata.hpp": {
+            "script": "Detray/detectors/python/odd_metadata.py",
+            "output": "detray/detectors/odd_metadata.hpp",
+            "with_requirements": [],
+            "with": [
+                "Detray/python"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
+        },
+        "Detray/detectors/detray/detectors/toy_metadata.hpp": {
+            "script": "Detray/detectors/python/toy_metadata.py",
+            "output": "detray/detectors/toy_metadata.hpp",
+            "with_requirements": [],
+            "with": [
+                "Detray/python"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
+        },
+        "Detray/detectors/detray/detectors/wire_chamber_metadata.hpp": {
+            "script": "Detray/detectors/python/wire_chamber_metadata.py",
+            "output": "detray/detectors/wire_chamber_metadata.hpp",
+            "with_requirements": [],
+            "with": [
+                "Detray/python"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
         }
     }
 }
