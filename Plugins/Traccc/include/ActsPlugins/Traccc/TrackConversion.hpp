@@ -46,9 +46,11 @@ Acts::BoundVector convertBoundVectorFromTraccc(
 Acts::BoundMatrix convertBoundCovarianceFromTraccc(
     const TracccBoundTrackParameters& params);
 
+namespace ActsPlugins::detail {
 /// Check for degenerate (all zero) traccc bound track parameters, which
 /// traccc reports for parameters that were never set
 bool hasZeroBoundParameters(const TracccBoundTrackParameters& params);
+}  // namespace ActsPlugins::detail
 
 /// Create the source link of a measurement track state
 ///
@@ -141,7 +143,7 @@ TracccTrackConversionStatistics convertTracksFromTraccc(
       ++stats.nFailedFit;
       continue;
     }
-    if (hasZeroBoundParameters(track.params())) {
+    if (detail::hasZeroBoundParameters(track.params())) {
       ++stats.nDegenerate;
       continue;
     }
@@ -186,7 +188,7 @@ TracccTrackConversionStatistics convertTracksFromTraccc(
         continue;
       }
 
-      if (hasZeroBoundParameters(smoothed)) {
+      if (detail::hasZeroBoundParameters(smoothed)) {
         degenerate = true;
         break;
       }

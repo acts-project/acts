@@ -30,7 +30,8 @@ Acts::BoundMatrix convertBoundCovarianceFromTraccc(
   return covariance;
 }
 
-bool hasZeroBoundParameters(const TracccBoundTrackParameters& params) {
+bool ActsPlugins::detail::hasZeroBoundParameters(
+    const TracccBoundTrackParameters& params) {
   return params.bound_local()[0] == 0 && params.bound_local()[1] == 0 &&
          params.phi() == 0 && params.theta() == 0 && params.qop() == 0 &&
          params.time() == 0;
