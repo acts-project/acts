@@ -336,15 +336,16 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(const GeometryContext& gctx,
 
     overlapPrint(AxisDirection::AxisZ, a, b, logger);
 
-    if (a.maxZ() > b.minZ()) {
+    // Transform roundoff can make touching volumes appear to overlap.
+    constexpr auto tolerance = s_onSurfaceTolerance;
+    if (a.maxZ() - b.minZ() > tolerance) {
       ACTS_ERROR(" -> Overlap in z");
       throw std::invalid_argument("Volumes overlap in z");
     } else {
       ACTS_VERBOSE(" -> No overlap");
     }
 
-    constexpr auto tolerance = s_onSurfaceTolerance;
-    if (std::abs(a.maxZ() - b.minZ()) < tolerance) {
+    if (std::abs(a.maxZ() - b.minZ()) <= tolerance) {
       ACTS_VERBOSE("No gap between volumes, no attachment needed");
     } else {
       double gapWidth = b.minZ() - a.maxZ();

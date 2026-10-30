@@ -81,6 +81,19 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
                        reflectedParams.parameters(), eps, eps);
   CHECK_CLOSE_OR_SMALL(reflectedParams.reflect().parameters(),
                        params.parameters(), eps, eps);
+
+  // particle hypothesis
+  const auto newHypothesis = ParticleHypothesis::electron();
+  const BoundTrackParameters withHypothesis =
+      params.withParticleHypothesis(newHypothesis);
+  BOOST_CHECK(withHypothesis.particleHypothesis() == newHypothesis);
+  BOOST_CHECK(withHypothesis.parameters() == params.parameters());
+  BOOST_CHECK(withHypothesis.covariance() == params.covariance());
+  BOOST_CHECK_EQUAL(&withHypothesis.referenceSurface(),
+                    &params.referenceSurface());
+  BoundTrackParameters setHypothesis = params;
+  setHypothesis.setParticleHypothesis(newHypothesis);
+  BOOST_CHECK(setHypothesis == withHypothesis);
 }
 
 void runTest(const std::shared_ptr<const Surface>& surface, double l0,

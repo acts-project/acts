@@ -554,8 +554,12 @@ void addEventData(py::module_& m) {
                                  -> std::shared_ptr<const Surface> {
                                return self.referenceSurface().getSharedPtr();
                              })
-      .def_property_readonly("particleHypothesis",
-                             &BoundTrackParameters::particleHypothesis)
+      .def_property("particleHypothesis",
+                    &BoundTrackParameters::particleHypothesis,
+                    &BoundTrackParameters::setParticleHypothesis)
+      .def("withParticleHypothesis",
+           &BoundTrackParameters::withParticleHypothesis,
+           py::arg("particleHypothesis"))
       .def_property_readonly("position", &BoundTrackParameters::position)
       .def_property_readonly("momentum", &BoundTrackParameters::momentum)
       .def_property_readonly("transverseMomentum",

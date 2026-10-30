@@ -25,6 +25,10 @@ inputs:
     description: 'Accelerator flavor for lockfile selection (e.g. cuda13, rocm7). Defaults to the plain CPU stack.'
     required: false
     default: ''
+  destination:
+    description: 'Dependency installation directory (empty uses the CI default)'
+    required: false
+    default: ''
   env_file:
     description: 'Where to generate the environment file'
     required: true
@@ -166,19 +170,24 @@ runs:
         FULL_INSTALL: ${{ inputs.full_install }}
         COMPILER: ${{ inputs.compiler }}
         FLAVOR: ${{ inputs.flavor }}
+        DESTINATION: ${{ inputs.destination }}
       run: |
-        args="-e $ENV_FILE"
+        args=(-e "$ENV_FILE")
         if [ "$FULL_INSTALL" == "true" ]; then
           echo "Full install"
-          args="${args} -f"
+          args+=(-f)
         fi
         if [ -n "$COMPILER" ]; then
           echo "With compiler"
-          args="${args} -c $COMPILER"
+          args+=(-c "$COMPILER")
         fi
         if [ -n "$FLAVOR" ]; then
           echo "With flavor $FLAVOR"
-          args="${args} -F $FLAVOR"
+          args+=(-F "$FLAVOR")
         fi
 
-        CI/dependencies/setup.sh $args
+        if [ -n "$DESTINATION" ]; then
+          args+=(-d "$DESTINATION")
+        fi
+
+        CI/dependencies/setup.sh "${args[@]}"

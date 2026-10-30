@@ -293,6 +293,13 @@ BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
                   .has_value());
 }
 
+BOOST_AUTO_TEST_CASE(OutputTrackParticleHypothesis) {
+  auto multi_pars = makeParameters();
+  auto options = makeDefaultGsfOptions();
+
+  tester.test_ParticleHypothesis(gsfZero, options, multi_pars, rng);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
