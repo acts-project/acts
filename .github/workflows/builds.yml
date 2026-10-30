@@ -205,15 +205,28 @@ jobs:
 
       - name: Python level tests
         shell: bash
+        timeout-minutes: 20
         env:
           PYTEST_MD_REPORT: true
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
           PYTEST_ADDOPTS: "-rs --durations=10"
+          # Per-test peak memory summary, see Python/Examples/tests/conftest.py
+          ACTS_PYTEST_MEMORY_REPORT: 1
         run: |
           source .env
           source build/this_acts_withdeps.sh
-          pytest -rfExw -k "not gnn" -v
+          nproc; grep -E 'MemTotal|MemAvailable|SwapTotal' /proc/meminfo
+          # Sample used memory (MiB) to measure the effect of parallel workers
+          (while sleep 10; do awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{print int((t-a)/1024)}' /proc/meminfo; done > mem.log) &
+          trap 'echo "Peak used memory: $(sort -n mem.log | tail -1) MiB"' EXIT
+          # loadgroup keeps the xdist_group("heavy") tests on one worker so the
+          # memory-hungry ones never run at the same time. A crashed worker
+          # fails the run: replacing it has been seen to hang the session.
+          # Two workers only: with FPE monitoring on, resolving masked FPE
+          # stack traces loads the (RelWithDebInfo) debug info into each
+          # worker, several GB that is never freed, so three do not fit.
+          pytest -rfExw -k "not gnn" -v -n 3 --dist loadgroup --max-worker-restart 0
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
@@ -1043,6 +1056,10 @@ jobs:
       - name: Python level tests
         if: matrix.tests
         shell: bash
+        timeout-minutes: 25
+        env:
+          # Per-test peak memory summary, see Python/Examples/tests/conftest.py
+          ACTS_PYTEST_MEMORY_REPORT: 1
         run: |
           source "${LCG_VIEW}/setup.sh"
           source build/this_acts_withdeps.sh
@@ -1052,7 +1069,14 @@ jobs:
           uv pip install --no-build --require-hashes --python .venv/bin/python -r Python/Examples/tests/requirements.txt
           # plotting tests with mplhep fail because an ancient mplhep version in
           # LCG overrides the mplhep version in our venv
-          .venv/bin/python -m pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
+          nproc; grep -E 'MemTotal|MemAvailable|SwapTotal' /proc/meminfo
+          # Sample used memory (MiB) to measure the effect of parallel workers
+          (while sleep 10; do awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{print int((t-a)/1024)}' /proc/meminfo; done > mem.log) &
+          trap 'echo "Peak used memory: $(sort -n mem.log | tail -1) MiB"' EXIT
+          # loadgroup keeps the xdist_group("heavy") tests on one worker so the
+          # memory-hungry ones never run at the same time. A crashed worker
+          # fails the run: replacing it has been seen to hang the session.
+          .venv/bin/python -m pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n 3 --dist loadgroup --max-worker-restart 0
 
   # This moving nightly view is independent of PR changes. Keep it separate
   # from the release-view matrix so it can run only on main without referring
