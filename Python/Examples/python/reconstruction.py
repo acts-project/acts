@@ -115,8 +115,11 @@ SeedingAlgorithmConfigArg = namedtuple(
         "zBinNeighborsBottom",
         "numPhiNeighbors",
         "useExtraCuts",
+        "inputVertices",
+        "vertexZNSigma",
+        "vertexZMargin",
     ],
-    defaults=[None] * 5,
+    defaults=[None] * 8,
 )
 
 TrackSelectorConfig = namedtuple(
@@ -294,6 +297,7 @@ def addSeeding(
     seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
+    houghVertexFinding: bool = False,
     houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
     adaptiveHoughTransformConfig: Optional[
         acts.examples.AdaptiveHoughTransformSeeder.Config
@@ -355,8 +359,18 @@ def addSeeding(
     spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, maxPhiBins, impactMax)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
-    seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, useExtraCuts)
-                                Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
+    seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, useExtraCuts, inputVertices, vertexZNSigma, vertexZMargin)
+                                inputVertices, vertexZNSigma, vertexZMargin configure the vertex-z constraint of SeedingAlgorithm.GridTriplet.
+                                Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp
+    houghVertexFinding : bool, False
+        run the Hough vertex finder on the space points before the seeding and
+        reject doublets that do not point to the found vertex. Only supported for
+        SeedingAlgorithm.GridTriplet. The vertex is written to
+        seedingAlgorithmConfigArg.inputVertices (default "{prefix}fittedHoughVertices").
+        The Hough vertex has no covariance, so the z-window is given by
+        seedingAlgorithmConfigArg.vertexZMargin, which defaults to 10 mm here.
+        Intended for events with a single high-multiplicity collision (e.g.
+        heavy-ion); with pile-up, tracks from the other vertices are lost.
     hashingTrainingConfigArg : HashingTrainingConfigArg(annoySeed, f)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp
     hashingAlgorithmConfigArg : HashingAlgorithmConfigArg(bucketSize, zBins, phiBins)
@@ -399,6 +413,11 @@ def addSeeding(
 
     logLevel = acts.examples.defaultLogging(s, logLevel)()
     logger = acts.getDefaultLogger("addSeeding", logLevel)
+
+    if houghVertexFinding and seedingAlgorithm != SeedingAlgorithm.GridTriplet:
+        raise ValueError(
+            "houghVertexFinding is only supported for SeedingAlgorithm.GridTriplet"
+        )
 
     # Create starting parameters from either particle smearing or combined seed
     # finding and track parameters estimation
@@ -503,6 +522,23 @@ def addSeeding(
             )
         elif seedingAlgorithm == SeedingAlgorithm.GridTriplet:
             logger.info("Using grid triplet seeding")
+            inputVertices = seedingAlgorithmConfigArg.inputVertices
+            vertexZMargin = seedingAlgorithmConfigArg.vertexZMargin
+            if houghVertexFinding:
+                if inputVertices is None:
+                    inputVertices = f"{prefix}fittedHoughVertices"
+                if vertexZMargin is None:
+                    vertexZMargin = 10 * u.mm
+                logger.info(
+                    f"Constraining seeds to the Hough vertex within {vertexZMargin} mm"
+                )
+                addHoughVertexFinding(
+                    s,
+                    outputDirRoot=outputDirRoot,
+                    logLevel=logLevel,
+                    inputSpacePoints=spacePoints,
+                    outputVertices=inputVertices,
+                )
             seeds = addGridTripletSeeding(
                 s,
                 spacePoints,
@@ -513,6 +549,9 @@ def addSeeding(
                 spacePointGridConfigArg,
                 logLevel,
                 outputSeeds=f"{prefix}seeds",
+                inputVertices=inputVertices,
+                vertexZNSigma=seedingAlgorithmConfigArg.vertexZNSigma,
+                vertexZMargin=vertexZMargin,
             )
         elif seedingAlgorithm == SeedingAlgorithm.OrthogonalTriplet:
             logger.info("Using orthogonal triplet seeding")
@@ -1025,9 +1064,9 @@ def addGridTripletSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg,
     logLevel: acts.logging.Level = None,
     outputSeeds: str = "seeds",
-    inputVertices: str = "",
-    vertexZNSigma: float = 3.0,
-    vertexZMargin: float = 0.0,
+    inputVertices: Optional[str] = None,
+    vertexZNSigma: Optional[float] = None,
+    vertexZMargin: Optional[float] = None,
 ):
     """adds grid triplet seeding
     For parameters description see addSeeding
@@ -1038,10 +1077,10 @@ def addGridTripletSeeding(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
-        inputVertices=inputVertices,
-        vertexZNSigma=vertexZNSigma,
-        vertexZMargin=vertexZMargin,
         **acts.examples.defaultKWArgs(
+            inputVertices=inputVertices,
+            vertexZNSigma=vertexZNSigma,
+            vertexZMargin=vertexZMargin,
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
             minPt=seedFinderConfigArg.minPt,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
