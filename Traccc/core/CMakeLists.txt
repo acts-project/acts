@@ -47,6 +47,7 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/edm/track_collection.hpp"
   "include/traccc/edm/impl/track_collection.ipp"
   "include/traccc/edm/track_container.hpp"
+  "include/traccc/edm/houghplane_collection.hpp"
   # Magnetic field description.
   "include/traccc/bfield/magnetic_field_types.hpp"
   "include/traccc/bfield/magnetic_field.hpp"
@@ -106,6 +107,7 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/seeding/triplet_finding_helper.hpp"
   "include/traccc/seeding/detail/spacepoint_formation.hpp"
   "include/traccc/seeding/impl/spacepoint_formation.ipp"
+  "include/traccc/seeding/detail/hough_seeding_config.hpp"
   #gbts seed finding config
   "include/traccc/gbts_seeding/gbts_seeding_config.hpp"
   "src/gbts_seeding/gbts_seeding_config.cpp"

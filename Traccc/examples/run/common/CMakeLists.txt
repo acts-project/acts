@@ -20,6 +20,8 @@ traccc_add_library(traccc_examples_common examples_common TYPE SHARED
    "include/traccc/examples/throughput_st.hpp"
    "include/traccc/examples/impl/throughput_mt.ipp"
    "include/traccc/examples/impl/throughput_st.ipp"
+   "include/traccc/examples/hough_transform_seeding_cuda.hpp"
+   "include/traccc/examples/impl/hough_transform_seeding_cuda.ipp"
 )
 target_link_libraries(
     traccc_examples_common
