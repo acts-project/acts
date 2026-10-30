@@ -14,8 +14,8 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
@@ -53,10 +53,11 @@ struct HierarchyValidationTestTrack {
 struct DummyFitter {
   template <typename it_t, typename start_parameters_t, typename fit_options_t,
             typename track_container_t>
-  Acts::Result<HierarchyValidationTestTrack> fit(it_t /*begin*/, it_t /*end*/,
-                                                 const start_parameters_t&,
-                                                 const fit_options_t&,
-                                                 track_container_t&) const {
+  Acts::Result<HierarchyValidationTestTrack> fit(
+      it_t /*begin*/, it_t /*end*/,
+      const start_parameters_t& /*startParameters*/,
+      const fit_options_t& /*fitOptions*/,
+      track_container_t& /*tracks*/) const {
     return Acts::Result<HierarchyValidationTestTrack>::success(
         HierarchyValidationTestTrack{});
   }
@@ -64,112 +65,33 @@ struct DummyFitter {
 
 }  // namespace
 
-BOOST_AUTO_TEST_CASE(HierarchyValidation) {
-  const auto geoCtx = Acts::GeometryContext::dangerouslyDefaultConstruct();
-
-  // 1. Create 3 detector elements
-  auto el1 = makeDummyElement(Acts::Translation3(0, 0, 10_mm) *
-                              Acts::Transform3::Identity());
-  auto el2 = makeDummyElement(Acts::Translation3(0, 0, 20_mm) *
-                              Acts::Transform3::Identity());
-  auto el3 = makeDummyElement(Acts::Translation3(0, 0, 30_mm) *
-                              Acts::Transform3::Identity());
-
-  std::vector<Acts::SurfacePlacementBase*> elements = {el1.get(), el2.get(),
-                                                       el3.get()};
-
-  // 2. Setup structures
+BOOST_AUTO_TEST_CASE(AlignmentRejectsOverlappingStructures) {
+  auto element = makeDummyElement(Acts::Transform3::Identity());
   auto struct1 = std::make_shared<ActsAlignment::AlignableStructure>(
       Acts::GeometryIdentifier().withVolume(1));
   auto struct2 = std::make_shared<ActsAlignment::AlignableStructure>(
       Acts::GeometryIdentifier().withVolume(2));
+  struct1->addSurface(element->surface().getSharedPtr());
+  struct2->addSurface(element->surface().getSharedPtr());
 
-  // Dummy alignment options
-  DummyFitter fitter;
-  ActsAlignment::Alignment alignEngine(std::move(fitter));
+  // Suppress the expected error log for this negative test only. This works
+  // with both disabled and enabled log-failure thresholds, without changing
+  // the global threshold used by other tests.
+  ActsAlignment::Alignment alignEngine(DummyFitter{},
+                                       Acts::getDummyLogger().clone());
 
-  ActsAlignment::AlignedTransformUpdater voidUpdater =
-      [](Acts::SurfacePlacementBase*, const Acts::GeometryContext&,
-         const Acts::Transform3&) { return true; };
-
-  DummyFitOptions kfOptions;
-  kfOptions.geoContext = geoCtx;
-
-  // --- Test Case 1: Mixed mode ---
-  // Only el1 and el2 are in structures. el3 floats as a standalone module.
-  // Mixed mode is allowed: the hierarchy check must not flag this.
-  struct1->addSurface(el1->surface().getSharedPtr());
-  struct2->addSurface(el2->surface().getSharedPtr());
-
+  // Validation must reject the hierarchy even with no solver iterations.
+  // Empty trajectories are never passed to the numerical solve.
   ActsAlignment::AlignmentOptions<DummyFitOptions> options(
-      kfOptions, voidUpdater, elements, 0.5, {5, 0.01}, 5, {},
+      DummyFitOptions{}, {}, {element.get()}, 0.5, {5, 0.01}, 0, {},
       {struct1, struct2});
+  const std::vector<std::vector<Acts::SourceLink>> trajs;
+  const std::vector<Acts::BoundTrackParameters> params;
 
-  // Create dummy collections for the align call
-  std::vector<std::vector<Acts::SourceLink>> trajs;
-  std::vector<Acts::BoundTrackParameters> params;
-
-  auto res1 = alignEngine.align(trajs, params, options);
-  if (!res1.ok()) {
-    BOOST_CHECK_NE(res1.error(),
-                   ActsAlignment::AlignmentError::HierarchyValidationFailure);
-  }
-
-  // --- Test Case 2: Overlap detection ---
-  // Add el1 to struct2 as well, so el1 is now in both struct1 and struct2.
-  struct2->addSurface(el1->surface().getSharedPtr());
-
-  ActsAlignment::AlignmentOptions<DummyFitOptions> options2(
-      kfOptions, voidUpdater, elements, 0.5, {5, 0.01}, 5, {},
-      {struct1, struct2});
-  auto res2 = alignEngine.align(trajs, params, options2);
-  BOOST_CHECK(!res2.ok());
-  BOOST_CHECK_EQUAL(res2.error(),
+  const auto result = alignEngine.align(trajs, params, options);
+  BOOST_REQUIRE(!result.ok());
+  BOOST_CHECK_EQUAL(result.error(),
                     ActsAlignment::AlignmentError::HierarchyValidationFailure);
-
-  // --- Test Case 3: Correct assignment ---
-  // Clear and re-assign correctly
-  auto structA = std::make_shared<ActsAlignment::AlignableStructure>(
-      Acts::GeometryIdentifier().withVolume(10));
-  auto structB = std::make_shared<ActsAlignment::AlignableStructure>(
-      Acts::GeometryIdentifier().withVolume(20));
-
-  structA->addSurface(el1->surface().getSharedPtr());
-  structA->addSurface(el2->surface().getSharedPtr());
-  structB->addSurface(el3->surface().getSharedPtr());
-
-  ActsAlignment::AlignmentOptions<DummyFitOptions> options3(
-      kfOptions, voidUpdater, elements, 0.5, {5, 0.01}, 5, {},
-      {structA, structB});
-
-  auto res3 = alignEngine.align(trajs, params, options3);
-  // It will likely fail with something else because we have 0 tracks,
-  // but it should PASS the hierarchy check.
-  if (!res3.ok()) {
-    BOOST_CHECK_NE(res3.error(),
-                   ActsAlignment::AlignmentError::HierarchyValidationFailure);
-  }
-
-  // --- Test Case 4: Mask conflict across levels ---
-  // NOTE: detectMaskConflicts() is currently stubbed (returns empty) because a
-  // correct conflict check requires the chain-rule Jacobian to compare DoFs
-  // across coordinate frames. This test only verifies that the configuration
-  // does not crash; it does NOT expect rejection until the check is
-  // implemented.
-  auto structC = std::make_shared<ActsAlignment::AlignableStructure>(
-      Acts::GeometryIdentifier().withVolume(30));
-  structC->addSurface(el1->surface().getSharedPtr());
-  structC->addSurface(el2->surface().getSharedPtr());
-  structC->addSurface(el3->surface().getSharedPtr());
-  structC->alignmentMask() = ActsAlignment::AlignmentMask::Center0;
-
-  ActsAlignment::AlignmentOptions<DummyFitOptions> options4(
-      kfOptions, voidUpdater, elements, 0.5, {5, 0.01}, 5, {}, {structC});
-  auto res4 = alignEngine.align(trajs, params, options4);
-  if (!res4.ok()) {
-    BOOST_CHECK_NE(res4.error(),
-                   ActsAlignment::AlignmentError::HierarchyValidationFailure);
-  }
 }
 
 BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
@@ -214,7 +136,7 @@ BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
     ActsAlignment::AlignmentHierarchy hierarchy({structA, structB});
     const auto result = hierarchy.validate();
     BOOST_CHECK(!result.ok());
-    BOOST_CHECK_EQUAL(result.overlapping.size(), 1u);
+    BOOST_REQUIRE_EQUAL(result.overlapping.size(), 1u);
     BOOST_CHECK_EQUAL(result.overlapping.front(), &el1->surface());
   }
 
@@ -223,6 +145,46 @@ BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
     ActsAlignment::AlignmentHierarchy hierarchy({});
     BOOST_CHECK(hierarchy.validate().ok());
     BOOST_CHECK_EQUAL(hierarchy.structureFor(*el1), nullptr);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(NestedHierarchyRegistration) {
+  auto el1 = makeDummyElement(Acts::Translation3(0, 0, 10_mm) *
+                              Acts::Transform3::Identity());
+  auto el2 = makeDummyElement(Acts::Translation3(0, 0, 20_mm) *
+                              Acts::Transform3::Identity());
+  auto el3 = makeDummyElement(Acts::Translation3(0, 0, 30_mm) *
+                              Acts::Transform3::Identity());
+  auto parent = std::make_shared<ActsAlignment::AlignableStructure>(
+      Acts::GeometryIdentifier().withVolume(1));
+  auto child = std::make_shared<ActsAlignment::AlignableStructure>(
+      Acts::GeometryIdentifier().withVolume(2));
+  auto grandchild = std::make_shared<ActsAlignment::AlignableStructure>(
+      Acts::GeometryIdentifier().withVolume(3));
+  parent->addSurface(el1->surface().getSharedPtr());
+  child->addSurface(el2->surface().getSharedPtr());
+  grandchild->addSurface(el3->surface().getSharedPtr());
+  parent->addChild(child);
+  child->addChild(grandchild);
+
+  // Register only the root. Descendants must be visited recursively, and
+  // each surface must retain its immediate owner instead of the root.
+  {
+    ActsAlignment::AlignmentHierarchy hierarchy({parent});
+    BOOST_CHECK(hierarchy.validate().ok());
+    BOOST_CHECK_EQUAL(hierarchy.structureFor(el1->surface()), parent.get());
+    BOOST_CHECK_EQUAL(hierarchy.structureFor(el2->surface()), child.get());
+    BOOST_CHECK_EQUAL(hierarchy.structureFor(el3->surface()), grandchild.get());
+  }
+
+  // Duplicate ownership must also be detected across hierarchy levels.
+  grandchild->addSurface(el1->surface().getSharedPtr());
+  {
+    ActsAlignment::AlignmentHierarchy hierarchy({parent});
+    const auto result = hierarchy.validate();
+    BOOST_CHECK(!result.ok());
+    BOOST_REQUIRE_EQUAL(result.overlapping.size(), 1u);
+    BOOST_CHECK_EQUAL(result.overlapping.front(), &el1->surface());
   }
 }
 
