@@ -98,8 +98,8 @@ class GbtsGraphBuilder {
     /// `sumRatioCutMax`: a pair that is marginal in all three at once.
     bool useSumRatioCut = false;
 
-    /// Threshold of the summed ratios, between 1 (any single marginal
-    /// difference rejects) and 3 (no effect beyond the individual cuts).
+    /// Threshold of the summed ratios, between 1 (only one difference
+    /// can use its full cut) and 3 (no effect beyond the individual cuts).
     float sumRatioCutMax = 1.3f;
 
     /// Minimum z0 value. In pixel mode the value is picked from the RoI.
