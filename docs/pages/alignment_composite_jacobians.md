@@ -30,31 +30,6 @@ of a structure are the sum of this product over all its sensors on the track.
 
 ## ACTS alignment parameter convention
 
-The derivation depends on exactly what the ACTS surface alignment parameters
-mean. This was checked in the code rather than assumed:
-
-- `Acts::AlignmentIndices` (`Core/include/Acts/Definitions/Alignment.hpp`):
-  `eAlignmentCenter0..2` are the "center of geometry object in global 3D
-  cartesian coordinates", and `eAlignmentRotation0..2` are the "rotation angle
-  around local x/y/z axis".
-- `Surface::alignmentToBoundDerivativeWithoutCorrection`
-  (`Core/src/Surfaces/Surface.cpp`) builds the translation block of
-  @f$\partial(\text{local 3D position})/\partial\mathbf{a}@f$ from
-  @f$-\hat{x}_\mathrm{local}^T, -\hat{y}_\mathrm{local}^T, -\hat{z}_\mathrm{local}^T@f$
-  expressed in global coordinates. The translations are therefore **global**
-  shifts of the surface center.
-- The rotation block uses @f$(\mathbf{p} - \mathbf{c})@f$, the position relative
-  to the surface center, so the rotation pivot is the surface center, i.e. the
-  origin of its local frame.
-- `detail::rotationToLocalAxesDerivative`
-  (`Core/src/Surfaces/detail/AlignmentHelper.cpp`) documents the rotated frame
-  as `compositeRotation * deltaRotation`, with @f$\Delta R@f$ built from small
-  rotations about the **local** x, y, z axes. At first order
-  @f$\Delta R = 1 + [\boldsymbol{\omega}]_\times@f$ with the standard
-  cross-product matrix, so a local rotation vector @f$\boldsymbol{\omega}_l@f$
-  corresponds to the global rotation vector
-  @f$\boldsymbol{\omega}_g = R\,\boldsymbol{\omega}_l@f$.
-
 In short, **current ACTS surface alignment parameters are mixed**: global-frame
 translations of the center, and local-frame rotations about the center.
 
@@ -175,13 +150,6 @@ local frame.
 
 When ACTS moves to local-frame parameters, the adapter becomes the identity and
 the composite Jacobian is used unchanged.
-
-The alternative of carrying two composite Jacobians, one per convention, was
-rejected. The structure-level maths is identical in both conventions; only the
-interpretation of the sensor derivatives changes. With two versions, every
-alignment parameter, every solver result and every correction applied back to
-the geometry would have two possible meanings, and mixing them up gives silent
-sign or frame errors.
 
 ## Implementation
 
