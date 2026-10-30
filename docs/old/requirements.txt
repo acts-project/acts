@@ -18,7 +18,7 @@ babel==2.18.0
     # via sphinx
 breathe==5.1.0
     # via -r docs/old/requirements.in
-certifi==2026.7.22
+certifi==2026.10.23
     # via requests
 cffi==2.1.1 ; platform_python_implementation != 'PyPy'
     # via cryptography
@@ -80,9 +80,9 @@ propcache==0.5.4
     #   yarl
 pycparser==3.11 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
-pydantic==2.14.0
+pydantic==2.14.1
     # via -r docs/old/requirements.in
-pydantic-core==2.50.0
+pydantic-core==2.50.1
     # via pydantic
 pygments==2.21.0
     # via
@@ -121,7 +121,7 @@ sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-jquery==4.1
     # via sphinx-rtd-theme
-sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-jsmath==2.0.0
     # via sphinx
 sphinxcontrib-qthelp==2.0.0
     # via sphinx
