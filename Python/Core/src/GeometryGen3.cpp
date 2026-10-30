@@ -290,7 +290,7 @@ void addGeometryGen3(py::module_& m) {
 
   {
     auto c = py::class_<Blueprint::Config>(rootNode, "Config").def(py::init());
-    ACTS_PYTHON_STRUCT(c, envelope);
+    ACTS_PYTHON_STRUCT(c, envelope, globalTransform);
   }
 
   auto addContextManagerProtocol = []<typename class_>(class_& cls) {

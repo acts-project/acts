@@ -28,6 +28,11 @@
 
 namespace Acts {
 
+void MaterialDesignatorBlueprintNode::visitBuiltVolumes(
+    const std::function<void(Volume&)>& visitor) {
+  visitBuiltChildVolumes(visitor);
+}
+
 namespace detail {
 class MaterialDesignatorBlueprintNodeImpl {
  public:

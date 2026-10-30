@@ -21,6 +21,18 @@
 
 namespace Acts {
 
+void ContainerBlueprintNode::visitBuiltVolumes(
+    const std::function<void(Volume&)>& visitor) {
+  if (!m_stack) {
+    throw std::logic_error("Cannot visit an unbuilt container blueprint node");
+  }
+  visitor(*m_stack);
+  for (const auto& gap : m_stack->gaps()) {
+    visitor(*gap);
+  }
+  visitBuiltChildVolumes(visitor);
+}
+
 ContainerBlueprintNode::ContainerBlueprintNode(
     const std::string& name, AxisDirection axis,
     VolumeAttachmentStrategy attachmentStrategy,

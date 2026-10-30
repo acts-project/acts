@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
 
+#include <functional>
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -90,6 +91,8 @@ class BlueprintNode {
                         const GeometryContext& gctx,
                         const Logger& logger = Acts::getDummyLogger()) = 0;
 
+  /// An optional global placement is applied through visitBuiltVolumes after
+  /// build completes and before this phase starts.
   /// This method is called during the *connect* phase. This phase handles the
   /// creation and connection of *portals* (instances of @ref Acts::PortalLinkBase).
   /// After the build-phase has completed, the volume sizes are **final**. Each
@@ -314,6 +317,19 @@ class BlueprintNode {
   }
 
  protected:
+  /// Enumerate volumes owned by this node and its children after build and
+  /// before connect, including temporary stack and gap volumes. The callback
+  /// handles existing tracking-volume substructure.
+  /// @param visitor Callback invoked for each built volume
+  /// @note Override this for nodes that support built-volume traversal. Visit
+  ///       owned volumes and use visitBuiltChildVolumes to recurse. The default
+  ///       implementation throws to avoid silently omitting owned geometry.
+  virtual void visitBuiltVolumes(const std::function<void(Volume&)>& visitor);
+
+  /// Forward built-volume traversal to all children of this node.
+  /// @param visitor Callback invoked for each built volume
+  void visitBuiltChildVolumes(const std::function<void(Volume&)>& visitor);
+
   /// Virtual method to determine stream representation.
   /// @param os Output stream to write to
   /// @note This method is called by the stream operator.
@@ -344,6 +360,8 @@ class BlueprintNode {
   std::string indent() const;
 
  private:
+  friend class Blueprint;
+
   std::size_t m_depth{0};
   std::vector<std::shared_ptr<BlueprintNode>> m_children{};
 };

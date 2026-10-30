@@ -97,6 +97,10 @@ class PortalDesignatorBlueprintNode final : public BlueprintNode {
   PortalDesignatorBlueprintNode& tagFace(CuboidVolumeBounds::Face face,
                                          const std::string& label);
 
+ protected:
+  /// @copydoc BlueprintNode::visitBuiltVolumes
+  void visitBuiltVolumes(const std::function<void(Volume&)>& visitor) override;
+
  private:
   /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
