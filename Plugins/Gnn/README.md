@@ -43,6 +43,21 @@ The Examples of this plugin provide a python-script using the python-bindings to
 
 In order that python can find the `acts.examples` module, set up your `PYTHONPATH` with `source <build>/python/setup.sh`.
 
+## Devices
+
+The device passed to `GnnPipeline::run` decides where the pipeline tensors live, and is either `Device::Cpu()` or `Device::Cuda(index)`. By default every stage runs its model there too.
+
+The Torch stages accept a separate `modelDevice` in their configuration, which pins the model to a device of its own while the tensors stay where the pipeline put them. Besides CPU and CUDA this can be `Device::Mps()`, which runs the model on the Apple GPU through Torch's Metal backend; the inputs are moved there and the results are copied back to the host. MPS is not available for the pipeline tensors themselves, so it is only valid as a `modelDevice`.
+
+```python
+acts.examples.gnn.TorchEdgeClassifier.Config(
+    modelPath="...",
+    modelDevice=acts.gnn.Device.Mps(),
+)
+```
+
+Requesting a backend the Torch build does not provide fails when the stage is constructed.
+
 ## Required files
 
 The track finding module requires some ONNX-files or TorchScript-files that describe the used neural networks. These files are currently not provided within the ACTS repository.
