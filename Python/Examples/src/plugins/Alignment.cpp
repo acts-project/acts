@@ -12,7 +12,6 @@
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
-
 #include "ActsExamples/DetectorCommons/AlignmentDecorator.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentGenerator.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
