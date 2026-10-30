@@ -189,10 +189,6 @@ class clusterization_algorithm
 
   /// Cluster data reification kernel launcher
   ///
-  /// Implementations must not return until the kernel has finished
-  /// executing: the disjoint set and permutation map buffers are destroyed
-  /// soon after this call returns.
-  ///
   /// @param num_cells    Number of cells in the event
   /// @param disjoint_set Buffer for the disjoint set data structure
   /// @param cluster_data The cluster collection to fill
