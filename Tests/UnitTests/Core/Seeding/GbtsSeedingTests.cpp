@@ -15,6 +15,7 @@
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
+#include "Acts/Seeding/GbtsSeedFit.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 
@@ -281,6 +282,68 @@ SpacePointContainer makeSpacePoints(const ToyDetector& detector,
   return container;
 }
 
+/// A helix from the origin in a field along z.
+struct HelixTrack {
+  float phi{};
+  float tau{};
+  /// Transverse radius, in mm.
+  float radius{};
+  float charge{};
+
+  /// Turning angle at a transverse distance r from the origin.
+  float turningAngle(float r) const {
+    return 2.f * std::asin(r / (2.f * radius));
+  }
+  /// Point at a transverse distance r from the origin.
+  std::array<float, 3> position(float r) const {
+    const float alpha = turningAngle(r);
+    // a positive charge turns clockwise in a positive field
+    const float centerX = charge * radius * std::sin(phi);
+    const float centerY = -charge * radius * std::cos(phi);
+    const float angle = phi - charge * alpha;
+    return {centerX - charge * radius * std::sin(angle),
+            centerY + charge * radius * std::cos(angle), tau * radius * alpha};
+  }
+  /// Azimuth of the direction at a transverse distance r from the origin.
+  float direction(float r) const { return phi - charge * turningAngle(r); }
+};
+
+/// One hit per barrel layer per helix, in the layout of makeSpacePoints.
+SpacePointContainer makeHelixSpacePoints(
+    const ToyDetector& detector, const std::vector<HelixTrack>& tracks) {
+  SpacePointContainer container(SpacePointColumns::CopiedFromIndex |
+                                SpacePointColumns::X | SpacePointColumns::Y |
+                                SpacePointColumns::Z | SpacePointColumns::R |
+                                SpacePointColumns::Phi);
+
+  auto layerColumn =
+      container.createColumn<Experimental::GbtsLayerIndex>("gbtsLayerIndex");
+  auto clusterWidthColumn = container.createColumn<float>("clusterWidth");
+  auto localPositionColumn = container.createColumn<float>("localPositionY");
+  auto trackColumn = container.createColumn<std::uint32_t>("trackId");
+
+  for (std::size_t track = 0; track < tracks.size(); ++track) {
+    for (std::size_t layer = 0; layer < detector.layers.size(); ++layer) {
+      const float r = detector.layers[layer].refCoord;
+      const std::array<float, 3> point = tracks[track].position(r);
+
+      auto sp = container.createSpacePoint();
+      sp.x() = point[0];
+      sp.y() = point[1];
+      sp.z() = point[2];
+      sp.r() = r;
+      sp.phi() = std::atan2(point[1], point[0]);
+      sp.copiedFromIndex() = sp.index();
+      sp.extra(layerColumn) = static_cast<Experimental::GbtsLayerIndex>(layer);
+      sp.extra(clusterWidthColumn) = 0.f;
+      sp.extra(localPositionColumn) = 0.f;
+      sp.extra(trackColumn) = static_cast<std::uint32_t>(track);
+    }
+  }
+
+  return container;
+}
+
 /// A strip module of the toy barrel, roughly the ITk strip barrel.
 constexpr float kStereoAngle = 26e-3f;
 constexpr float kModuleGap = 2.f;
@@ -387,9 +450,11 @@ struct SeederSetup {
 /// @param quiet mute the loggers, for a case that drives the graph empty on
 ///              purpose: the log failure threshold makes the warning that says
 ///              so an error, and a level above it cannot be asked for either
+/// @param seedFitAtOutermost give the seed fit at the outermost space point
 SeederSetup makeSeeder(const ToyDetector& detector,
                        const bool calibrateStrips = true,
-                       const bool quiet = false) {
+                       const bool quiet = false,
+                       const bool seedFitAtOutermost = false) {
   auto geometry = makeGeometry(detector);
 
   const auto makeLogger = [quiet]() -> std::unique_ptr<const Logger> {
@@ -400,6 +465,7 @@ SeederSetup makeSeeder(const ToyDetector& detector,
   Experimental::GraphBasedTrackSeeder::Config config;
   // the toy setup has no tau lookup table and no cluster widths
   config.useClusterWidthCuts = false;
+  config.seedFitAtOutermost = seedFitAtOutermost;
 
   Experimental::GbtsGraphBuilder::Config graphConfig;
   graphConfig.minPt = 1_GeV;
@@ -772,6 +838,71 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
   // unresolved, the walk loses every seed; resolved, it loses none
   BOOST_CHECK_EQUAL(seed(kWalk, false), 0u);
   BOOST_CHECK_EQUAL(seed(kWalk, true), tracks.size());
+}
+
+// The seed fit describes the helix at the innermost or the outermost space
+// point, with the sign of the charge, for both charges.
+BOOST_AUTO_TEST_CASE(SeedFitAtEitherEnd) {
+  const ToyDetector detector = barrelDetector();
+  // 2 GeV in 2 T
+  const float radius = 2.f / (0.299792458f * 2.f) * 1_m;
+  std::vector<HelixTrack> tracks;
+  for (std::size_t i = 0; i < 8; ++i) {
+    tracks.push_back({.phi = -2.8f + 0.7f * i,
+                      .tau = -0.5f + 0.125f * i,
+                      .radius = radius,
+                      .charge = i % 2 == 0 ? 1.f : -1.f});
+  }
+  const SpacePointContainer spacePoints =
+      makeHelixSpacePoints(detector, tracks);
+  auto trackColumn = spacePoints.column<std::uint32_t>("trackId");
+
+  for (const bool outermost : {false, true}) {
+    BOOST_TEST_CONTEXT("outermost " << outermost) {
+      const SeederSetup setup = makeSeeder(detector, true, false, outermost);
+
+      Experimental::GbtsNodeStorage storage = setup.seeder.makeNodeStorage();
+      auto layerColumn =
+          spacePoints.column<Experimental::GbtsLayerIndex>("gbtsLayerIndex");
+      for (const auto& sp : spacePoints) {
+        storage.insert(sp.index(), sp.x(), sp.y(), sp.z(), sp.r(), sp.phi(),
+                       sp.extra(layerColumn));
+      }
+      storage.finalize();
+
+      SeedContainer seeds;
+      seeds.assignSpacePointContainer(spacePoints);
+      std::vector<std::optional<Experimental::GbtsSeedFit>> fits;
+      setup.seeder.createSeeds(storage, setup.roi, setup.graphBuilder,
+                               setup.filter, setup.options, seeds, &fits);
+
+      BOOST_REQUIRE_EQUAL(seeds.size(), tracks.size());
+      BOOST_REQUIRE_EQUAL(fits.size(), seeds.size());
+      for (std::size_t i = 0; i < seeds.size(); ++i) {
+        const auto indices = seeds.at(i).spacePointIndices();
+        const auto sp =
+            spacePoints.at(outermost ? indices.back() : indices.front());
+        const HelixTrack& track = tracks.at(sp.extra(trackColumn));
+
+        BOOST_REQUIRE(fits[i].has_value());
+        const Experimental::GbtsSeedFit& fit = *fits[i];
+        BOOST_CHECK_SMALL(
+            (fit.position - Vector3(sp.x(), sp.y(), sp.z())).norm(), 0.05);
+        BOOST_CHECK_SMALL(std::remainder(fit.phi - track.direction(sp.r()),
+                                         2 * std::numbers::pi),
+                          1e-3);
+        BOOST_CHECK_CLOSE(fit.cotTheta, track.tau, 0.5);
+        BOOST_CHECK_CLOSE(fit.curvature * track.radius, track.charge, 5.);
+
+        const std::optional<FreeVector> params =
+            Experimental::freeParametersFromGbtsSeedFit(fit,
+                                                        Vector3(0, 0, 2_T));
+        BOOST_REQUIRE(params.has_value());
+        BOOST_CHECK_EQUAL(std::signbit((*params)[eFreeQOverP]),
+                          track.charge < 0);
+      }
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
