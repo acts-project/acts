@@ -9,15 +9,18 @@
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/VertexFitInput.hpp"
 #include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 
@@ -43,7 +46,6 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
   using PropagatorOptions = Propagator::Options<>;
   using Linearizer = Acts::HelicalTrackLinearizer;
   using VertexFitter = Acts::FullBilloirVertexFitter;
-  using VertexFitterOptions = Acts::VertexingOptions;
 
   // Set up SympyStepper
   Acts::SympyStepper stepper(m_cfg.bField);
@@ -54,19 +56,19 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   // Setup the linearizer
   Linearizer::Config ltConfig;
-  ltConfig.bField = m_cfg.bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
 
   PropagatorOptions propagatorOpts(ctx.recoGeoContext, ctx.magFieldContext);
+  Acts::MagneticFieldQuery fieldQuery(m_cfg.bField, ctx.magFieldContext);
+
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters
       .connect<&Acts::InputTrack::extractParameters>();
-  vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
-      &linearizer);
+  vertexFitterCfg.fieldTrackLinearizer
+      .connect<&Linearizer::linearizeTrackWithField>(&linearizer);
   VertexFitter vertexFitter(vertexFitterCfg);
-  auto fieldCache = m_cfg.bField->makeCache(ctx.magFieldContext);
 
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
@@ -102,9 +104,10 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     if (!m_cfg.doConstrainedFit) {
-      VertexFitterOptions vfOptions(ctx.recoGeoContext, ctx.magFieldContext);
-
-      auto fitRes = vertexFitter.fit(inputTracks, vfOptions, fieldCache);
+      Acts::VertexFitInput input{inputTracks, Acts::Vector4::Zero(),
+                                 std::nullopt};
+      auto fitRes = vertexFitter.fit(input, ctx.recoGeoContext,
+                                     ctx.magFieldContext, fieldQuery);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
@@ -117,11 +120,10 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
       theConstraint.setFullCovariance(m_cfg.constraintCov);
       theConstraint.setFullPosition(m_cfg.constraintPos);
 
-      // Vertex fitter options
-      VertexFitterOptions vfOptionsConstr(ctx.recoGeoContext,
-                                          ctx.magFieldContext, theConstraint);
-
-      auto fitRes = vertexFitter.fit(inputTracks, vfOptionsConstr, fieldCache);
+      Acts::VertexFitInput input{inputTracks, theConstraint.fullPosition(),
+                                 theConstraint};
+      auto fitRes = vertexFitter.fit(input, ctx.recoGeoContext,
+                                     ctx.magFieldContext, fieldQuery);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {

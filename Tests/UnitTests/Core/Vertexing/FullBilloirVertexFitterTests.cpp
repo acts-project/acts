@@ -16,13 +16,16 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -104,6 +107,36 @@ BOOST_AUTO_TEST_SUITE(VertexingSuite)
 /// @brief Unit test for FullBilloirVertexFitter
 /// with default input track type (= BoundTrackParameters)
 ///
+// Count only the PCA lookup cache; propagation uses the underlying provider
+// independently, so its own cache construction cannot mask a fitter regression.
+class CountingLookupField final : public MagneticFieldProvider {
+ public:
+  explicit CountingLookupField(
+      std::shared_ptr<const MagneticFieldProvider> field)
+      : m_field(std::move(field)) {}
+
+  Cache makeCache(const MagneticFieldContext& mctx) const override {
+    ++cacheCreations;
+    return m_field->makeCache(mctx);
+  }
+
+  Result<Vector3> getField(const Vector3& position,
+                           Cache& cache) const override {
+    ++lookups;
+    if (failLookups) {
+      return Result<Vector3>::failure(MagneticFieldError::OutOfBounds);
+    }
+    return m_field->getField(position, cache);
+  }
+
+  mutable int cacheCreations = 0;
+  mutable int lookups = 0;
+  bool failLookups = false;
+
+ private:
+  std::shared_ptr<const MagneticFieldProvider> m_field;
+};
+
 BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   // Set up RNG
   int seed = 31415;
@@ -142,8 +175,18 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
   vertexFitterCfg.trackLinearizer
       .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
+  // Intentionally leave the new linearizer's legacy provider at NullBField.
+  // The query-taking path must use the supplied query instead.
+  auto queryLinearizerConfig = ltConfig;
+  queryLinearizerConfig.bField = std::make_shared<NullBField>();
+  HelicalTrackLinearizer queryLinearizer(queryLinearizerConfig);
+  vertexFitterCfg.fieldTrackLinearizer
+      .connect<&HelicalTrackLinearizer::linearizeTrackWithField>(
+          &queryLinearizer);
   VertexFitter billoirFitter(vertexFitterCfg);
   auto fieldCache = bField->makeCache(magFieldContext);
+  auto lookupField = std::make_shared<CountingLookupField>(bField);
+  MagneticFieldQuery fieldQuery(lookupField, magFieldContext);
   // Vertexing options for default tracks
   VertexingOptions vfOptions(geoContext, magFieldContext);
   VertexingOptions vfOptionsConstr(geoContext, magFieldContext, constraint);
@@ -171,8 +214,11 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     const std::vector<InputTrack> emptyVectorInput;
 
     // Without constraint
+    // Exercise the deprecated overload for compatibility.
+    ACTS_PUSH_IGNORE_DEPRECATED()
     Vertex fittedVertex =
         billoirFitter.fit(emptyVectorInput, vfOptions, fieldCache).value();
+    ACTS_POP_IGNORE_DEPRECATED()
 
     Vector3 origin(0., 0., 0.);
     SquareMatrix4 zeroMat = SquareMatrix4::Zero();
@@ -180,9 +226,12 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
 
     // With constraint
+    // Exercise the deprecated overload for compatibility.
+    ACTS_PUSH_IGNORE_DEPRECATED()
     fittedVertex =
         billoirFitter.fit(emptyVectorInput, vfOptionsConstr, fieldCache)
             .value();
+    ACTS_POP_IGNORE_DEPRECATED()
 
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
     BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
@@ -257,7 +306,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     auto fit = [&trueVertex, &nTracks, &fieldCache](const auto& fitter,
                                                     const auto& trksPtr,
                                                     const auto& vfOpts) {
+      // Exercise the deprecated overload for compatibility.
+      ACTS_PUSH_IGNORE_DEPRECATED()
       auto fittedVertex = fitter.fit(trksPtr, vfOpts, fieldCache).value();
+      ACTS_POP_IGNORE_DEPRECATED()
       if (!fittedVertex.tracks().empty()) {
         CHECK_CLOSE_ABS(fittedVertex.position(), trueVertex.head(3), 1_mm);
         auto tracksAtVtx = fittedVertex.tracks();
@@ -288,6 +340,73 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
         "Testing FullBilloirVertexFitter with custom tracks (with vertex "
         "constraint).") {
       fit(customBilloirFitter, customInputTracks, customVfOptionsConstr);
+    }
+    BOOST_TEST_CONTEXT(
+        "Testing FullBilloirVertexFitter through the IVertexFitter "
+        "interface.") {
+      auto interfaceConfig = vertexFitterCfg;
+      interfaceConfig.trackLinearizer.disconnect();
+      VertexFitter interfaceFitter(interfaceConfig);
+      const IVertexFitter& iface = interfaceFitter;
+      VertexFitInput input{inputTracks, Vector4::Zero(), std::nullopt};
+      BOOST_CHECK_THROW(
+          static_cast<void>(
+              static_cast<const IVertexFitter&>(customBilloirFitter)
+                  .fit(input, geoContext, magFieldContext, fieldQuery)),
+          std::invalid_argument);
+
+      // Both unconstrained and constrained fits agree with the direct API.
+      for (const auto* options : {&vfOptions, &vfOptionsConstr}) {
+        input.seedPosition = options->constraint.fullPosition();
+        input.constraint = options->useConstraintInFit
+                               ? std::optional<Vertex>(options->constraint)
+                               : std::nullopt;
+        auto result = iface.fit(input, geoContext, magFieldContext, fieldQuery);
+        // Exercise the deprecated overload for compatibility.
+        ACTS_PUSH_IGNORE_DEPRECATED()
+        auto direct = billoirFitter.fit(inputTracks, *options, fieldCache);
+        ACTS_POP_IGNORE_DEPRECATED()
+        BOOST_REQUIRE(result.ok());
+        BOOST_REQUIRE(direct.ok());
+        CHECK_CLOSE_ABS(result->fullPosition(), direct->fullPosition(), 1e-9);
+        CHECK_CLOSE_ABS(result->fullCovariance(), direct->fullCovariance(),
+                        1e-9);
+        BOOST_CHECK_EQUAL(result->tracks().size(), inputTracks.size());
+      }
+
+      // A constraint must not replace an explicitly supplied seed.
+      std::optional<Vector4> firstLinearizationPoint;
+      auto recordLinearization =
+          [&](const BoundTrackParameters& params, double time,
+              const Surface& surface, const GeometryContext& gctx,
+              const MagneticFieldContext& mctx, MagneticFieldQuery& field) {
+            if (!firstLinearizationPoint) {
+              Vector4 point;
+              point.head<3>() = surface.center(gctx);
+              point[3] = time;
+              firstLinearizationPoint = point;
+            }
+            return queryLinearizer.linearizeTrackWithField(
+                params, time, surface, gctx, mctx, field);
+          };
+      auto seedConfig = vertexFitterCfg;
+      seedConfig.fieldTrackLinearizer.connect(recordLinearization);
+      VertexFitter seedFitter(seedConfig);
+      input.seedPosition = input.constraint->fullPosition();
+      input.seedPosition[0] += 0.1;
+      input.seedPosition[3] += 0.1;
+      auto seeded =
+          seedFitter.fit(input, geoContext, magFieldContext, fieldQuery);
+      BOOST_REQUIRE(seeded.ok());
+      BOOST_REQUIRE(firstLinearizationPoint.has_value());
+      CHECK_CLOSE_ABS(*firstLinearizationPoint, input.seedPosition, 1e-12);
+      BOOST_CHECK_EQUAL(lookupField->cacheCreations, 1);
+      BOOST_CHECK_GT(lookupField->lookups, 0);
+      lookupField->failLookups = true;
+      auto failed = iface.fit(input, geoContext, magFieldContext, fieldQuery);
+      BOOST_REQUIRE(!failed.ok());
+      BOOST_CHECK(failed.error() == MagneticFieldError::OutOfBounds);
+      lookupField->failLookups = false;
     }
   }
 }
