@@ -1,4 +1,4 @@
-"""Check manifest metadata generation preserves the existing detector scripts."""
+"""Check metadata output interfaces and deterministic generation."""
 
 import json
 import os
@@ -18,15 +18,16 @@ ENTRIES = [
 ]
 
 
-@pytest.mark.parametrize("entry", ENTRIES, ids=lambda entry: Path(entry["script"]).stem)
-def test_metadata_matches_existing_script(tmp_path, entry):
-    generator = Path(entry["script"]).stem
+@pytest.mark.parametrize("entry", ENTRIES, ids=lambda entry: entry["arguments"][-1])
+def test_metadata_output_interfaces_match(tmp_path, entry):
+    detector = Path(entry["output"]).stem.removesuffix("_metadata")
     original = tmp_path / "original"
     original.mkdir()
     subprocess.run(
         [
             sys.executable,
-            str(ROOT / f"Detray/detectors/python/{generator}.py"),
+            str(ROOT / entry["script"]),
+            *entry["arguments"],
             "--no-format",
             "--output",
             str(original),
@@ -42,7 +43,7 @@ def test_metadata_matches_existing_script(tmp_path, entry):
     # detector script's implicit <detector>_metadata.hpp name.
     output = tmp_path / "generated" / "renamed.hpp"
     subprocess.run(
-        [sys.executable, str(ROOT / entry["script"]), str(output)],
+        [sys.executable, str(ROOT / entry["script"]), str(output), *entry["arguments"]],
         cwd=tmp_path,
         env={
             **os.environ,
@@ -51,4 +52,4 @@ def test_metadata_matches_existing_script(tmp_path, entry):
         },
         check=True,
     )
-    assert output.read_bytes() == (original / f"{generator}.hpp").read_bytes()
+    assert output.read_bytes() == (original / f"{detector}_metadata.hpp").read_bytes()

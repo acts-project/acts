@@ -11,6 +11,7 @@
         "All paths are relative to the ACTS source root.",
         "",
         "  script            generator to run; it is passed the output path as argv[1]",
+        "  arguments         optional script arguments appended after the output path",
         "  output            path the compiler includes, relative to the generated",
         "                    include root added to the consuming target",
         "  with_requirements requirement files to install before running the script",
@@ -113,54 +114,74 @@
             "python_version": "3.13"
         },
         "Detray/detectors/detray/detectors/default_metadata.hpp": {
-            "script": "Detray/detectors/python/default_metadata.py",
+            "script": "Detray/detectors/python/generate_metadata.py",
             "output": "detray/detectors/default_metadata.hpp",
             "with_requirements": [],
             "with": [
                 "Detray/python"
             ],
             "isolated": true,
-            "python_version": "3.13"
+            "python_version": "3.13",
+            "arguments": [
+                "--detector",
+                "default.add_default_types"
+            ]
         },
         "Detray/detectors/detray/detectors/itk_metadata.hpp": {
-            "script": "Detray/detectors/python/itk_metadata.py",
+            "script": "Detray/detectors/python/generate_metadata.py",
             "output": "detray/detectors/itk_metadata.hpp",
             "with_requirements": [],
             "with": [
                 "Detray/python"
             ],
             "isolated": true,
-            "python_version": "3.13"
+            "python_version": "3.13",
+            "arguments": [
+                "--detector",
+                "itk.add_itk_types"
+            ]
         },
         "Detray/detectors/detray/detectors/odd_metadata.hpp": {
-            "script": "Detray/detectors/python/odd_metadata.py",
+            "script": "Detray/detectors/python/generate_metadata.py",
             "output": "detray/detectors/odd_metadata.hpp",
             "with_requirements": [],
             "with": [
                 "Detray/python"
             ],
             "isolated": true,
-            "python_version": "3.13"
+            "python_version": "3.13",
+            "arguments": [
+                "--detector",
+                "odd.add_odd_types"
+            ]
         },
         "Detray/detectors/detray/detectors/toy_metadata.hpp": {
-            "script": "Detray/detectors/python/toy_metadata.py",
+            "script": "Detray/detectors/python/generate_metadata.py",
             "output": "detray/detectors/toy_metadata.hpp",
             "with_requirements": [],
             "with": [
                 "Detray/python"
             ],
             "isolated": true,
-            "python_version": "3.13"
+            "python_version": "3.13",
+            "arguments": [
+                "--detector",
+                "toy.add_toy_types"
+            ]
         },
         "Detray/detectors/detray/detectors/wire_chamber_metadata.hpp": {
-            "script": "Detray/detectors/python/wire_chamber_metadata.py",
+            "script": "Detray/detectors/python/generate_metadata.py",
             "output": "detray/detectors/wire_chamber_metadata.hpp",
             "with_requirements": [],
             "with": [
                 "Detray/python"
             ],
             "isolated": true,
-            "python_version": "3.13"
+            "python_version": "3.13",
+            "arguments": [
+                "--detector",
+                "wire_chamber.add_wire_chamber_types"
+            ]
         }
     }
 }

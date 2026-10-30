@@ -258,6 +258,24 @@ function(acts_code_generation)
     )
     _acts_codegen_manifest_paths(ARGS_WITH "${_unit}" with)
 
+    # Pass optional manifest arguments after the output path, matching the
+    # standalone pregeneration runner.
+    set(_script_arguments "")
+    string(
+        JSON
+        _argument_count
+        ERROR_VARIABLE _no_arguments
+        LENGTH "${_unit}"
+        arguments
+    )
+    if(NOT _no_arguments AND _argument_count GREATER 0)
+        math(EXPR _argument_last "${_argument_count} - 1")
+        foreach(_i RANGE ${_argument_last})
+            string(JSON _argument GET "${_unit}" arguments ${_i})
+            list(APPEND _script_arguments "${_argument}")
+        endforeach()
+    endif()
+
     get_filename_component(_output_name ${ARGS_OUTPUT} NAME)
 
     string(SHA1 _output_hash ${_output_name})
@@ -348,8 +366,8 @@ function(acts_code_generation)
                     execute_process(
                         COMMAND
                             ${CMAKE_BINARY_DIR}/codegen_venv/bin/python -m pip
-                            install --no-build-isolation --no-index
-                            --no-deps --editable ${_requirement}
+                            install --no-build-isolation --no-index --no-deps
+                            --editable ${_requirement}
                         OUTPUT_QUIET
                     )
                 endif()
@@ -379,6 +397,7 @@ function(acts_code_generation)
                     ${_uv_environment} ${uv_exe} run --quiet --python
                     ${ARGS_PYTHON_VERSION} --no-project ${_arg_isolated}
                     ${_with_args} ${ARGS_PYTHON} ${_output_file}
+                    ${_script_arguments}
                 DEPENDS ${_depends}
                 COMMENT "Generating ${ARGS_OUTPUT}"
                 VERBATIM
@@ -390,7 +409,7 @@ function(acts_code_generation)
                 OUTPUT ${_output_file}
                 COMMAND
                     ${CMAKE_BINARY_DIR}/codegen_venv/bin/python ${ARGS_PYTHON}
-                    ${_output_file}
+                    ${_output_file} ${_script_arguments}
                 DEPENDS ${_depends}
                 COMMENT "Generating ${ARGS_OUTPUT}"
                 VERBATIM

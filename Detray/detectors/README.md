@@ -1,9 +1,18 @@
-## Generating custom Detector Metadata
+## Generating Detector Metadata
 
-The scripts in the `python` folder use the tools in the detray python detector package to define various detector metadata headers in the `include` folder. A new generator file can be added here to the `python` folder, which will then be used during the cmake configuration step to generate the required detector metadata header for compilation of custom detector types (add `-DDETRAY_GENERATE_METADATA="my_metadata.py"` to the cmake setup)
+`python/generate_metadata.py` generates metadata for the detector configurations
+in `../python/detray/detectors/configurations`. Select the required headers during
+CMake configuration, for example `-DDETRAY_GENERATE_METADATA="odd_metadata"`.
+The common codegen manifest supplies the detector argument and supports prebuilt
+headers.
 
-To run any of the scripts manually, use the following:
+To generate a header manually:
+
 ```shell
 source path-to-detray-build/python/setup.sh
-python3 detray/detectors/python/odd_metadata.py
+python3 detray/detectors/python/generate_metadata.py odd_metadata.hpp --detector odd.add_odd_types
 ```
+
+To add a detector, define its configuration function in the package and reference
+it as `module.function` in the codegen manifest. The module name determines the
+detector name; no generator registry needs updating.
