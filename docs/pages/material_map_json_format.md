@@ -124,15 +124,6 @@ merged portal surfaces had to be dropped. Its payload is just the tag and
 `mapMaterial`; it carries no material, only the information that something was
 lost here.
 
-## Volume material payloads
-
-Volume material entries are written by a separate, older converter and use
-their own tags: `homogeneous` (a single @ref Acts::Material parameter vector
-under `data`, as in the example above), `proto` (a `binUtility` only), and
-`interpolated2D` / `interpolated3D` (a `binUtility` plus one parameter vector
-per bin). The tags overlap with the surface ones by accident; the two lists
-live under different top level keys and are never mixed.
-
 ## Stable surface assignment keys
 
 For configuration, mapping, and application, see

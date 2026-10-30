@@ -12,8 +12,6 @@
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Material/InterpolatedMaterialMap.hpp"
-#include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -23,8 +21,6 @@
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
 #include <cstddef>
-#include <functional>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -136,52 +132,6 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
     j[Acts::jsonKey().materialkey] = jMaterial;
     return;
   }
-  // Only option remaining: material map
-  auto bvMaterial2D = dynamic_cast<const Acts::InterpolatedMaterialMap<
-      Acts::MaterialMapLookup<Acts::MaterialGrid2D>>*>(material);
-  // Now check if we have a 2D map
-  if (bvMaterial2D != nullptr) {
-    // type is binned
-    jMaterial[Acts::jsonKey().typekey] = "interpolated2D";
-    jMaterial[Acts::jsonKey().mapkey] = true;
-    bUtility = &(bvMaterial2D->binUtility());
-    // convert the data
-    nlohmann::json mmat = nlohmann::json::array();
-    Acts::MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
-    for (std::size_t bin = 0; bin < grid.size(); bin++) {
-      nlohmann::json jmat(Material(grid.at(bin)));
-      mmat.push_back(jmat);
-    }
-    jMaterial[Acts::jsonKey().datakey] = std::move(mmat);
-    // Write the bin utility
-    nlohmann::json jBin(*bUtility);
-    jMaterial[Acts::jsonKey().binkey] = jBin;
-    j[Acts::jsonKey().materialkey] = jMaterial;
-    return;
-  }
-  // Only option remaining: material map
-  auto bvMaterial3D = dynamic_cast<const Acts::InterpolatedMaterialMap<
-      Acts::MaterialMapLookup<Acts::MaterialGrid3D>>*>(material);
-  // Now check if we have a 3D map
-  if (bvMaterial3D != nullptr) {
-    // type is binned
-    jMaterial[Acts::jsonKey().typekey] = "interpolated3D";
-    jMaterial[Acts::jsonKey().mapkey] = true;
-    bUtility = &(bvMaterial3D->binUtility());
-    // convert the data
-    nlohmann::json mmat = nlohmann::json::array();
-    Acts::MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
-    for (std::size_t bin = 0; bin < grid.size(); bin++) {
-      nlohmann::json jmat(Material(grid.at(bin)));
-      mmat.push_back(jmat);
-    }
-    jMaterial[Acts::jsonKey().datakey] = std::move(mmat);
-    // Write the bin utility
-    nlohmann::json jBin(*bUtility);
-    jMaterial[Acts::jsonKey().binkey] = jBin;
-    j[Acts::jsonKey().materialkey] = jMaterial;
-    return;
-  }
 }
 
 void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
@@ -216,55 +166,6 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
   }
   if (mmat.size() == 1) {
     material = new Acts::HomogeneousVolumeMaterial(mmat[0]);
-    return;
-  }
-  if (bUtility.dimensions() == 2) {
-    std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
-    Acts::Grid2D grid = createGrid2D(bUtility, transfoGlobalToLocal);
-
-    Acts::Grid2D::point_t min = grid.multiAxis().getMinPoint();
-    Acts::Grid2D::point_t max = grid.multiAxis().getMaxPoint();
-    Acts::Grid2D::index_t nBins = grid.multiAxis().getNBins();
-
-    Acts::EAxis axis1(min[0], max[0], nBins[0]);
-    Acts::EAxis axis2(min[1], max[1], nBins[1]);
-
-    // Build the grid and fill it with data
-    Acts::MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
-
-    for (std::size_t bin = 0; bin < mmat.size(); bin++) {
-      mGrid.at(bin) = mmat[bin].parameters();
-    }
-    Acts::MaterialMapLookup<Acts::MaterialGrid2D> matMap(transfoGlobalToLocal,
-                                                         mGrid);
-    material = new Acts::InterpolatedMaterialMap<
-        Acts::MaterialMapLookup<Acts::MaterialGrid2D>>(std::move(matMap),
-                                                       bUtility);
-    return;
-  }
-  if (bUtility.dimensions() == 3) {
-    std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
-    Acts::Grid3D grid = createGrid3D(bUtility, transfoGlobalToLocal);
-
-    Acts::Grid3D::point_t min = grid.multiAxis().getMinPoint();
-    Acts::Grid3D::point_t max = grid.multiAxis().getMaxPoint();
-    Acts::Grid3D::index_t nBins = grid.multiAxis().getNBins();
-
-    Acts::EAxis axis1(min[0], max[0], nBins[0]);
-    Acts::EAxis axis2(min[1], max[1], nBins[1]);
-    Acts::EAxis axis3(min[2], max[2], nBins[2]);
-
-    // Build the grid and fill it with data
-    Acts::MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
-
-    for (std::size_t bin = 0; bin < mmat.size(); bin++) {
-      mGrid.at(bin) = mmat[bin].parameters();
-    }
-    Acts::MaterialMapLookup<Acts::MaterialGrid3D> matMap(transfoGlobalToLocal,
-                                                         mGrid);
-    material = new Acts::InterpolatedMaterialMap<
-        Acts::MaterialMapLookup<Acts::MaterialGrid3D>>(std::move(matMap),
-                                                       bUtility);
     return;
   }
 }

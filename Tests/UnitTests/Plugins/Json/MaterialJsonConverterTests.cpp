@@ -15,10 +15,12 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
+#include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
 
 #include <memory>
 #include <numbers>
+#include <stdexcept>
 #include <variant>
 #include <vector>
 
