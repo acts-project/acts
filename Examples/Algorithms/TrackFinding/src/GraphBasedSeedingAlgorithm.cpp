@@ -185,9 +185,11 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
       }
       const Acts::Experimental::GbtsSeedFit &fit = fits.at(i).value();
       // the field halfway between the innermost and outermost space point
+      const auto inner = spacePoints[seeds.at(i).spacePointIndices().front()];
       const auto outer = spacePoints[seeds.at(i).spacePointIndices().back()];
-      const Acts::Vector3 outerPosition(outer.x(), outer.y(), outer.z());
-      const Acts::Vector3 fieldPosition = 0.5 * (fit.position + outerPosition);
+      const Acts::Vector3 fieldPosition =
+          0.5 * Acts::Vector3(inner.x() + outer.x(), inner.y() + outer.y(),
+                              inner.z() + outer.z());
       const auto field =
           m_cfg.magneticField->getField(fieldPosition, fieldCache);
       if (!field.ok()) {

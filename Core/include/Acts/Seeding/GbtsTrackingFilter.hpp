@@ -16,6 +16,8 @@
 #include <array>
 #include <cstdint>
 #include <memory>
+#include <optional>
+#include <span>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -98,6 +100,28 @@ class GbtsTrackingFilter final {
   /// @return Success flag
   bool update(const detail::GbtsNodeView& nodeView, const detail::GbtsEdge& pS,
               detail::GbtsEdgeState& ts) const;
+
+  /// Update edge state with a node
+  /// @param nodeView View of the node positions and layers
+  /// @param measured Node to update with
+  /// @param previous Node of the last update, where the scattering is added
+  /// @param ts Edge state to update
+  /// @param applyCuts Whether a failed cut rejects the update
+  /// @return Success flag, always true without the cuts
+  bool update(const detail::GbtsNodeView& nodeView, SpacePointIndex measured,
+              SpacePointIndex previous, detail::GbtsEdgeState& ts,
+              bool applyCuts) const;
+
+  /// Fit nodes in the given order, without the cuts.
+  ///
+  /// The frame is along the line from the first to the second node, so the
+  /// state ends at the last node.
+  /// @param nodeView View of the node positions and layers
+  /// @param nodes Nodes in fit order, at least two
+  /// @return Fitted state at the last node, or nothing if it is not finite
+  std::optional<detail::GbtsEdgeState> refit(
+      const detail::GbtsNodeView& nodeView,
+      std::span<const SpacePointIndex> nodes) const;
 
   /// Get layer type from layer index
   /// @param layerIndex Layer index
