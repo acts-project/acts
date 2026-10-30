@@ -10,13 +10,40 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
-#include "Acts/Material/interface/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <memory>
 #include <optional>
 
 namespace Acts {
+
+namespace detail {
+
+/// Opaque lookup cache of @ref BinnedSurfaceMaterialAccumulator, defined in
+/// its implementation. Copies and moves start out empty.
+class MaterialSlotCache {
+ public:
+  MaterialSlotCache();
+  MaterialSlotCache(const MaterialSlotCache& other);
+  MaterialSlotCache(MaterialSlotCache&& other) noexcept;
+  MaterialSlotCache& operator=(const MaterialSlotCache& other);
+  MaterialSlotCache& operator=(MaterialSlotCache&& other) noexcept;
+  ~MaterialSlotCache();
+
+  /// The cache content, only defined in the implementation
+  struct Impl;
+
+  /// Access the cache content, created on first use
+  /// @return the cache content
+  Impl& impl();
+
+ private:
+  std::unique_ptr<Impl> m_impl;
+};
+
+}  // namespace detail
 
 /// @brief The binned surface material accumulator
 ///
@@ -44,6 +71,9 @@ class BinnedSurfaceMaterialAccumulator final
 
     /// Validated surface identities captured by createState.
     std::optional<detail::MaterialSurfaceRegistry> materialSurfaceRegistry;
+
+    /// Lookup cache of @ref accumulateTracks, private to the accumulator
+    detail::MaterialSlotCache slotCache;
   };
 
   /// Constructor
@@ -63,17 +93,34 @@ class BinnedSurfaceMaterialAccumulator final
 
   /// @brief Accumulate the material interaction on the surface
   ///
+  /// Forwards to @ref accumulateTracks with a single track.
+  /// @deprecated Use @ref accumulateTracks instead.
+  ///
   /// @param state is the state of the accumulator
-  /// @param gctx is the geometry context
+  /// @param gctx the geometry context
   /// @param interactions is the material interactions, with assigned surfaces
   /// @param surfacesWithoutAssignment are the surfaces without assignment
-  ///
-  /// @note this the track average over the binned material
+  [[deprecated("Use BinnedSurfaceMaterialAccumulator::accumulateTracks")]]
   void accumulate(ISurfaceMaterialAccumulator::State& state,
                   const GeometryContext& gctx,
                   const std::vector<MaterialInteraction>& interactions,
                   const std::vector<IAssignmentFinder::SurfaceAssignment>&
                       surfacesWithoutAssignment) const override;
+
+  /// @brief Accumulate the material of a batch of tracks
+  ///
+  /// The accumulation is sharded by surface: every surface processes its
+  /// share of the batch in track order, so the result does not depend on
+  /// the worker pool, and the surfaces can be processed concurrently.
+  ///
+  /// @param state is the state of the accumulator
+  /// @param gctx the geometry context
+  /// @param tracks the per-track accumulation inputs, in mapping order
+  /// @param pool optional worker pool, nullptr means serial execution
+  void accumulateTracks(ISurfaceMaterialAccumulator::State& state,
+                        const GeometryContext& gctx,
+                        std::span<const TrackAccumulation> tracks,
+                        detail::WorkerPool* pool) const override;
 
   /// Finalize the surface material maps
   ///

@@ -14,6 +14,7 @@
 
 #include <stdexcept>
 #include <unordered_map>
+#include <vector>
 
 namespace ActsExamples {
 
@@ -27,7 +28,9 @@ MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
 
   ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                        "This algorithm requires inter-event information, "
-                           << "run in single-threaded mode!");
+                           << "run in single-threaded mode! Use the "
+                           << "numThreads option of the material mapper to "
+                           << "map the tracks of each event concurrently.");
 
   if (m_cfg.materialMapper == nullptr) {
     throw std::invalid_argument("Missing material mapper");
@@ -54,8 +57,7 @@ const Acts::TrackingGeometryMaterial& MaterialMapping::material() const {
 
 ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
   // Take the collection from the EventStore: input collection
-  std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
-      mtrackCollection = m_inputMaterialTracks(context);
+  const auto& mtrackCollection = m_inputMaterialTracks(context);
 
   // Write the output collections to the Event store : mapped and unmapped
   std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
@@ -64,15 +66,26 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
   std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
       unmappedTrackCollection;
 
+  // Map the whole event as one batch, which allows the mapper to process
+  // the tracks concurrently
+  std::vector<std::size_t> trackIds;
+  std::vector<const Acts::RecordedMaterialTrack*> tracks;
+  trackIds.reserve(mtrackCollection.size());
+  tracks.reserve(mtrackCollection.size());
   for (const auto& [idTrack, mTrack] : mtrackCollection) {
-    auto [mapped, unmapped] = m_cfg.materialMapper->mapMaterial(
-        *m_mappingState, context.recoGeoContext, context.magFieldContext,
-        mTrack);
+    trackIds.push_back(idTrack);
+    tracks.push_back(&mTrack);
+  }
 
-    mappedTrackCollection.try_emplace(mappedTrackCollection.end(), idTrack,
-                                      mapped);
-    unmappedTrackCollection.try_emplace(unmappedTrackCollection.end(), idTrack,
-                                        unmapped);
+  auto results = m_cfg.materialMapper->mapMaterial(
+      *m_mappingState, context.recoGeoContext, context.magFieldContext, tracks);
+
+  for (std::size_t i = 0; i < results.size(); ++i) {
+    auto& [mapped, unmapped] = results[i];
+    mappedTrackCollection.try_emplace(mappedTrackCollection.end(), trackIds[i],
+                                      std::move(mapped));
+    unmappedTrackCollection.try_emplace(unmappedTrackCollection.end(),
+                                        trackIds[i], std::move(unmapped));
   }
 
   // Write the mapped and unmapped material tracks to the output
