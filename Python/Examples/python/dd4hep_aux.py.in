@@ -1,0 +1,2 @@
+# Register TGeoAxes before DD4hep detector-element factories pass it through Python.
+from acts import tgeo
