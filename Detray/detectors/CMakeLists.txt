@@ -42,12 +42,7 @@ if(TARGET detray_detectors_HEADERS)
     )
 endif()
 
-# Generated metadata shares the manifest, dependency tracking and prebuilt
-# lookup used by the propagator headers. The selected scripts must be registered
-# in codegen/manifest.json so release archives can cover them too.
+# Shipped names use the manifest; external files reuse the same generator.
 foreach(GENERATOR IN LISTS DETRAY_GENERATE_METADATA)
-    detray_add_codegen_header(
-        TARGET detray_detectors
-        KEY "Detray/detectors/detray/detectors/${GENERATOR}.hpp"
-    )
+    detray_add_metadata_header(detray_detectors "${GENERATOR}")
 endforeach()
