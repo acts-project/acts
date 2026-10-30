@@ -11,6 +11,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -25,6 +27,7 @@
 #include <cmath>
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -125,6 +128,99 @@ BOOST_AUTO_TEST_CASE(SegmentizerPolarRadial) {
   sSegment =
       cl.segments(geoCtx, *radialDisc, *segmentation, {sPositionS, sPositionE});
   BOOST_CHECK_EQUAL(sSegment.size(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(SegmentizerCylinderPhiSeam) {
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+
+  const double radius = 5.;
+  const double halfZ = 10.;
+  const double halfRPhi = std::numbers::pi * radius;
+  auto cylinder = Surface::makeShared<CylinderSurface>(
+      Transform3::Identity(), std::make_shared<CylinderBounds>(radius, halfZ));
+
+  // Unrolled (rPhi, z) readout frame, closed in rPhi
+  const std::size_t nRPhi = 100;
+  const auto segmentation = IMultiAxis::create(
+      *IAxis::createEquidistant(AxisBoundaryType::Closed, -halfRPhi, halfRPhi,
+                                nRPhi, AxisDirection::AxisRPhi),
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -halfZ, halfZ, 20,
+                                AxisDirection::AxisZ));
+  const auto openSegmentation = IMultiAxis::create(
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -halfRPhi, halfRPhi,
+                                nRPhi, AxisDirection::AxisRPhi),
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -halfZ, halfZ, 20,
+                                AxisDirection::AxisZ));
+
+  Segmentizer cl;
+
+  auto totalPath = [](const auto& segments) {
+    double path = 0.;
+    for (const auto& s : segments) {
+      path += s.activation;
+    }
+    return path;
+  };
+
+  // Test: away from the seam, the closed axis behaves like an open one
+  Vector2 aStart(0.1, 0.3);
+  Vector2 aEnd(1.4, 0.9);
+  auto aSegments =
+      cl.segments(geoCtx, *cylinder, *segmentation, {aStart, aEnd});
+  auto aOpenSegments =
+      cl.segments(geoCtx, *cylinder, *openSegmentation, {aStart, aEnd});
+  BOOST_REQUIRE_EQUAL(aSegments.size(), aOpenSegments.size());
+  for (std::size_t i = 0; i < aSegments.size(); ++i) {
+    BOOST_CHECK_EQUAL(aSegments[i].bin[0], aOpenSegments[i].bin[0]);
+    BOOST_CHECK_EQUAL(aSegments[i].bin[1], aOpenSegments[i].bin[1]);
+    BOOST_CHECK_EQUAL(aSegments[i].activation, aOpenSegments[i].activation);
+  }
+
+  // Test: crossing the seam at +pi R in rPhi gives two channels, not the ring
+  Vector2 sStart(halfRPhi - 0.05, 0.3);
+  Vector2 sEnd(halfRPhi + 0.05, 0.3);
+  auto sSegments =
+      cl.segments(geoCtx, *cylinder, *segmentation, {sStart, sEnd});
+  BOOST_REQUIRE_EQUAL(sSegments.size(), 2);
+  BOOST_CHECK_EQUAL(sSegments[0].bin[0], nRPhi - 1);
+  BOOST_CHECK_EQUAL(sSegments[1].bin[0], 0);
+  BOOST_CHECK_CLOSE(totalPath(sSegments), 0.1, 1e-6);
+
+  // Test: the same in the other direction
+  auto rSegments =
+      cl.segments(geoCtx, *cylinder, *segmentation, {sEnd, sStart});
+  BOOST_REQUIRE_EQUAL(rSegments.size(), 2);
+  BOOST_CHECK_EQUAL(rSegments[0].bin[0], 0);
+  BOOST_CHECK_EQUAL(rSegments[1].bin[0], nRPhi - 1);
+
+  // Test: crossing the seam at -pi R in rPhi
+  Vector2 nStart(-halfRPhi + 0.05, 0.3);
+  Vector2 nEnd(-halfRPhi - 0.05, 0.3);
+  auto nSegments =
+      cl.segments(geoCtx, *cylinder, *segmentation, {nStart, nEnd});
+  BOOST_REQUIRE_EQUAL(nSegments.size(), 2);
+  BOOST_CHECK_EQUAL(nSegments[0].bin[0], 0);
+  BOOST_CHECK_EQUAL(nSegments[1].bin[0], nRPhi - 1);
+
+  // Test: an inclined segment across the seam is channelised like the same
+  // segment rotated by half a turn, with the rPhi bins shifted by nRPhi / 2
+  Vector2 iStart(halfRPhi - 0.83, -0.47);
+  Vector2 iEnd(halfRPhi + 0.61, 1.38);
+  Vector2 shift(halfRPhi, 0.);
+  auto iSegments =
+      cl.segments(geoCtx, *cylinder, *segmentation, {iStart, iEnd});
+  auto iShiftedSegments = cl.segments(geoCtx, *cylinder, *segmentation,
+                                      {iStart - shift, iEnd - shift});
+  BOOST_REQUIRE_EQUAL(iSegments.size(), iShiftedSegments.size());
+  BOOST_CHECK_LT(iSegments.size(), 15u);
+  for (std::size_t i = 0; i < iSegments.size(); ++i) {
+    BOOST_CHECK_EQUAL(iSegments[i].bin[0],
+                      (iShiftedSegments[i].bin[0] + nRPhi / 2) % nRPhi);
+    BOOST_CHECK_EQUAL(iSegments[i].bin[1], iShiftedSegments[i].bin[1]);
+    BOOST_CHECK_CLOSE(iSegments[i].activation, iShiftedSegments[i].activation,
+                      1e-6);
+  }
+  BOOST_CHECK_CLOSE(totalPath(iSegments), (iEnd - iStart).norm(), 1e-6);
 }
 
 /// Unit test for testing the Segmentizer
