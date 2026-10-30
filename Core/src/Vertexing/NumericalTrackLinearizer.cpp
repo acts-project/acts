@@ -59,6 +59,10 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   // Covariance and weight matrix at the PCA to the reference point
   BoundMatrix parCovarianceAtPCA = endParams.covariance().value();
   BoundMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+  // The parameter weight without time, used by vertex fits that do not fit
+  // time. It is not a block of the full weight, so it is inverted separately.
+  LinearizedTrack::WeightWithoutTime weightAtPCAWithoutTime =
+      parCovarianceAtPCA.block<eBoundSize - 1, eBoundSize - 1>(0, 0).inverse();
 
   // Vector containing the track parameters at the PCA
   // Note that we parametrize the track using the following parameters:
@@ -169,6 +173,6 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   linPoint[3] = linPointTime;
 
   return LinearizedTrack(perigeeParams, parCovarianceAtPCA, weightAtPCA,
-                         linPoint, positionJacobian, momentumJacobian, pca,
-                         momentumAtPCA, constTerm);
+                         weightAtPCAWithoutTime, linPoint, positionJacobian,
+                         momentumJacobian, pca, momentumAtPCA, constTerm);
 }

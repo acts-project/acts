@@ -163,35 +163,39 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     trkAtVtx.linearizedState = linTrack;
     trkAtVtx.isLinearized = true;
 
-    // Create a vertex
+    // Create a vertex position
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
-    Vertex vtx(vtxPos);
-    vtx.setFullCovariance(SquareMatrix4::Identity() * 0.01);
 
-    // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexUpdater::updateVertexWithTrack(vtx, trkAtVtx, 3);
+    // Fit the spatial vertex coordinates (3) or also time (4)
+    for (unsigned int nDimVertex : {3u, 4u}) {
+      Vertex vtx(vtxPos);
+      vtx.setFullCovariance(SquareMatrix4::Identity() * 0.01);
 
-    if (debug) {
-      std::cout << "Old vertex position: " << vtxPos << std::endl;
-      std::cout << "New vertex position: " << vtx.position() << std::endl;
+      // Update trkAtVertex with assumption of originating from vtx
+      KalmanVertexUpdater::updateVertexWithTrack(vtx, trkAtVtx, nDimVertex);
+
+      if (debug) {
+        std::cout << "Old vertex position: " << vtxPos << std::endl;
+        std::cout << "New vertex position: " << vtx.position() << std::endl;
+      }
+
+      double oldDistance = vtxPos.norm();
+      double newDistance = vtx.position().norm();
+
+      if (debug) {
+        std::cout << "Old distance: " << oldDistance << std::endl;
+        std::cout << "New distance: " << newDistance << std::endl;
+      }
+
+      // After update, vertex should be closer to the track
+      BOOST_CHECK_LT(newDistance, oldDistance);
+
+      // Note: KalmanVertexUpdater updates the vertex w.r.t. the
+      // newly given track, but does NOT add the track to the
+      // TrackAtVertex list. Has to be done manually after calling
+      // the update method.
+      BOOST_CHECK(vtx.tracks().empty());
     }
-
-    double oldDistance = vtxPos.norm();
-    double newDistance = vtx.position().norm();
-
-    if (debug) {
-      std::cout << "Old distance: " << oldDistance << std::endl;
-      std::cout << "New distance: " << newDistance << std::endl;
-    }
-
-    // After update, vertex should be closer to the track
-    BOOST_CHECK_LT(newDistance, oldDistance);
-
-    // Note: KalmanVertexUpdater updates the vertex w.r.t. the
-    // newly given track, but does NOT add the track to the
-    // TrackAtVertex list. Has to be done manually after calling
-    // the update method.
-    BOOST_CHECK(vtx.tracks().empty());
 
   }  // end for loop
 
@@ -281,43 +285,48 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
                             fieldCache)
             .value();
 
-    // Create TrackAtVertex
-    TrackAtVertex trkAtVtx(0., params, InputTrack{&params});
-
-    // Set linearized state of trackAtVertex
-    trkAtVtx.linearizedState = linTrack;
-    trkAtVtx.isLinearized = true;
-
-    // Copy parameters for later comparison of old and new version
-    auto fittedParamsCopy = trkAtVtx.fittedParams;
-
-    // Create a vertex
+    // Create a vertex position
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
-    Vertex vtx(vtxPos);
 
-    // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexUpdater::updateTrackWithVertex(trkAtVtx, vtx, 3);
+    // Fit the spatial vertex coordinates (3) or also time (4)
+    for (unsigned int nDimVertex : {3u, 4u}) {
+      // Create TrackAtVertex
+      TrackAtVertex trkAtVtx(0., params, InputTrack{&params});
 
-    // The old distance
-    double oldDistance =
-        ip3dEst.calculateDistance(geoContext, fittedParamsCopy, vtxPos, state)
-            .value();
+      // Set linearized state of trackAtVertex
+      trkAtVtx.linearizedState = linTrack;
+      trkAtVtx.isLinearized = true;
 
-    // The new distance after update
-    double newDistance =
-        ip3dEst
-            .calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos, state)
-            .value();
-    if (debug) {
-      std::cout << "Old distance: " << oldDistance << std::endl;
-      std::cout << "New distance: " << newDistance << std::endl;
+      // Copy parameters for later comparison of old and new version
+      auto fittedParamsCopy = trkAtVtx.fittedParams;
+
+      Vertex vtx(vtxPos);
+
+      // Update trkAtVertex with assumption of originating from vtx
+      KalmanVertexUpdater::updateTrackWithVertex(trkAtVtx, vtx, nDimVertex);
+
+      // The old distance
+      double oldDistance =
+          ip3dEst.calculateDistance(geoContext, fittedParamsCopy, vtxPos, state)
+              .value();
+
+      // The new distance after update
+      double newDistance =
+          ip3dEst
+              .calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos,
+                                 state)
+              .value();
+      if (debug) {
+        std::cout << "Old distance: " << oldDistance << std::endl;
+        std::cout << "New distance: " << newDistance << std::endl;
+      }
+
+      // Parameters should have changed
+      BOOST_CHECK_NE(fittedParamsCopy, trkAtVtx.fittedParams);
+
+      // After update, track should be closer to the vertex
+      BOOST_CHECK_LT(newDistance, oldDistance);
     }
-
-    // Parameters should have changed
-    BOOST_CHECK_NE(fittedParamsCopy, trkAtVtx.fittedParams);
-
-    // After update, track should be closer to the vertex
-    BOOST_CHECK_LT(newDistance, oldDistance);
 
   }  // end for loop
 
