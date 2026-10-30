@@ -40,6 +40,8 @@ class NavigationStream {
     Vector3 position = Vector3::Zero();
     /// The direction of the query point
     Vector3 direction = Vector3::Zero();
+    /// Global geometric curvature used for local crossing estimates
+    Vector3 curvature = Vector3::Zero();
   };
 
   /// Switch to next next candidate
