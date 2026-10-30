@@ -329,6 +329,14 @@ def odd_detector_gen3():
 
 
 @pytest.fixture
+def odd_detector_gen1():
+    """The shared session-lifetime default-configuration Gen1 ODD."""
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep not set up")
+    return _shared_detector("odd-gen1", lambda: getOpenDataDetector(gen3=False))
+
+
+@pytest.fixture
 def generic_detector_config():
     """Detector config for the generic detector only."""
     return _get_generic_detector_config(_srcdir())

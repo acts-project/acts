@@ -89,6 +89,14 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
+  Acts::Experimental::GbtsAdaptiveTauRatioCuts tauRatioCuts =
+      m_cfg.tauRatioCuts;
+  if (!m_cfg.useAdaptiveCuts) {
+    tauRatioCuts.tauRatioCorr = 0.f;
+  }
+  Acts::Experimental::assignAdaptiveTauRatioCuts(connections, layerGeometry,
+                                                 tauRatioCuts);
+
   // the collision region is the one z0 window of the seeding
   const Acts::Experimental::GbtsZ0Range z0Range{
       .min = m_cfg.collisionRegionMin, .max = m_cfg.collisionRegionMax};
@@ -409,12 +417,14 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("maxEdgesPerSP: " << cfg2.maxEdgesPerSP);
   ACTS_DEBUG("minDeltaRadius: " << cfg2.minDeltaRadius);
   ACTS_DEBUG("validateTriplets: " << cfg2.validateTriplets);
-  ACTS_DEBUG("useAdaptiveCuts: " << cfg2.useAdaptiveCuts);
-  ACTS_DEBUG("tauRatioCorr: " << cfg2.tauRatioCorr);
   ACTS_DEBUG("d0Max: " << cfg2.d0Max);
   ACTS_DEBUG("cutDPhiMax: " << cfg2.cutDPhiMax);
   ACTS_DEBUG("cutDCurvMax: " << cfg2.cutDCurvMax);
   ACTS_DEBUG("maxOuterRadius: " << cfg2.maxOuterRadius);
+  ACTS_DEBUG("useAdaptiveCuts: " << m_cfg.useAdaptiveCuts);
+  ACTS_DEBUG("tauRatioCut: " << m_cfg.tauRatioCuts.tauRatioCut);
+  ACTS_DEBUG("tauRatioCorr: " << m_cfg.tauRatioCuts.tauRatioCorr);
+  ACTS_DEBUG("tauRatioCorrStrip: " << m_cfg.tauRatioCuts.tauRatioCorrStrip);
   ACTS_DEBUG("===== GbtsTrackFilter =====");
   const auto &cfg3 = m_cfg.trackingFilterConfig;
   ACTS_DEBUG("sigmaMS: " << cfg3.sigmaMS);

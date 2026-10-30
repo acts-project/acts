@@ -17,6 +17,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
+#include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -96,6 +97,11 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// Eta bin width the layers are split into (0.2 in ATLAS'
     /// createLinkingScheme.py)
     float etaBinWidth = 0.2f;
+
+    /// Widen the tau ratio cut of layer pairs by `tauRatioCuts`
+    bool useAdaptiveCuts = true;
+    /// Tau ratio cuts assigned to the layer pairs
+    Acts::Experimental::GbtsAdaptiveTauRatioCuts tauRatioCuts;
 
     /// Cut the eta bins along the module tilt of inclined layers.
     bool useLayerTilt = false;
