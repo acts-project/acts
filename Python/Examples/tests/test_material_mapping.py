@@ -230,7 +230,9 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash, odd_de
     s = Sequencer(events=10, numThreads=1)
 
     with getOpenDataDetector(
-        materialDecorator=acts.IMaterialDecorator.fromFile(map_file_json)
+        materialDecorator=acts.json.MaterialMapDecorator(
+            acts.json.TrackingGeometryMaterialJsonConverter().fromFile(map_file_json)
+        )
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()

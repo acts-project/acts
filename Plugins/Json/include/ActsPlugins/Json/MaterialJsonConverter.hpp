@@ -34,51 +34,83 @@ using surfaceMaterialPointer = const Acts::ISurfaceMaterial*;
 /// Convert Material to JSON
 /// @param j Destination JSON object
 /// @param t Source Material to convert
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+[[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
 void to_json(nlohmann::json& j, const Material& t);
 
 /// Convert JSON to Material
 /// @param j Source JSON object
 /// @param t Destination Material to populate
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+[[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
 void from_json(const nlohmann::json& j, Material& t);
 
 /// Convert MaterialSlab to JSON
 /// @param j Destination JSON object
 /// @param t Source MaterialSlab to convert
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+[[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
 void to_json(nlohmann::json& j, const MaterialSlab& t);
 
 /// Convert JSON to MaterialSlab
 /// @param j Source JSON object
 /// @param t Destination MaterialSlab to populate
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+[[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
 void from_json(const nlohmann::json& j, MaterialSlab& t);
 
 /// Convert JSON to MaterialSlabMatrix
 /// @param j Source JSON object
 /// @param t Destination MaterialSlabMatrix to populate
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+[[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
 void from_json(const nlohmann::json& j, MaterialSlabMatrix& t);
 
 /// Convert volumeMaterialPointer to JSON
 /// @param j Destination JSON object
 /// @param material Source volumeMaterialPointer to convert
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+[[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
 void to_json(nlohmann::json& j, const volumeMaterialPointer& material);
 
 /// Convert JSON to volumeMaterialPointer
 /// @param j Source JSON object
 /// @param material Destination volumeMaterialPointer to populate
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+[[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
 void from_json(const nlohmann::json& j, volumeMaterialPointer& material);
 
 /// Convert surfaceMaterialPointer to JSON
 /// @param j Destination JSON object
 /// @param material Source surfaceMaterialPointer to convert
-/// @deprecated Use SurfaceMaterialJsonConverter::toJson instead
-[[deprecated("use SurfaceMaterialJsonConverter")]]
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+[[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
 void to_json(nlohmann::json& j, const surfaceMaterialPointer& material);
 
 /// Convert JSON to surfaceMaterialPointer
 /// @param j Source JSON object
 /// @param material Destination surfaceMaterialPointer to populate
 /// @note the caller takes ownership of the returned raw pointer
-/// @deprecated Use SurfaceMaterialJsonConverter::fromJson instead
-[[deprecated("use SurfaceMaterialJsonConverter")]]
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+[[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
 void from_json(const nlohmann::json& j, surfaceMaterialPointer& material);
 
 /// JSON serialization mapping for MappingType enum

@@ -13,6 +13,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
@@ -23,6 +24,9 @@
 #include <vector>
 
 #include <nlohmann/json.hpp>
+
+// These tests intentionally exercise the deprecated material format.
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 using namespace Acts;
 
@@ -160,3 +164,5 @@ BOOST_AUTO_TEST_CASE(MergedMaterialMarkerRoundTrip) {
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
+
+ACTS_POP_IGNORE_DEPRECATED()

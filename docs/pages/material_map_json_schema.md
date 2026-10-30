@@ -24,7 +24,8 @@ preserved during extraction but rejected by the version 1 converter.
 After running the Python mapping example, `mapping.material` holds the finalized
 assignments for serialization in the same way.
 
-`acts.IMaterialDecorator.fromFile` supports both formats. The new converter rejects
+`acts.IMaterialDecorator.fromFile` is deprecated. Load versioned maps explicitly
+and apply them to the geometry; use a format-specific reader for legacy files. The new converter rejects
 legacy input with an error pointing to `ActsMaterialMapMigrate`.
 
 The JSON plugin also installs `ActsMaterialMapMigrate` in `bin` to migrate
@@ -190,4 +191,8 @@ the factor and decoding multiplies by it.
 Legacy conversion follows decode → @ref Acts::TrackingGeometryMaterial "TrackingGeometryMaterial" → new encode.
 It cannot recover information already lost by the legacy reader or format,
 such as omitted settings, guard cells, store sharing or independent material
-properties. Existing legacy converters retain their behavior.
+properties. Existing legacy converters are deprecated and retain their behavior with
+deprecation warnings.
+
+The mapping algorithm's `materialWriters` option is deprecated. Serialize
+`mapping.material` after the sequencer finishes instead.
