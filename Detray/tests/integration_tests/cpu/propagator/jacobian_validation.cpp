@@ -22,8 +22,6 @@
 #include "detray/test/common/build_telescope_detector.hpp"
 #include "detray/test/common/track_generators.hpp"
 #include "detray/test/framework/types.hpp"
-#include "detray/test/utils/inspectors.hpp"
-#include "detray/test/utils/statistics.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -31,17 +29,14 @@
 // GTest include(s)
 #include <gtest/gtest.h>
 
-// Boost
-#include "detray/options/boost_program_options.hpp"
-
 // System include(s).
 #include <algorithm>
-#include <filesystem>
-#include <fstream>
-#include <iomanip>
 #include <iostream>
+#include <optional>
+#include <random>
+#include <string>
+#include <tuple>
 
-namespace po = boost::program_options;
 using namespace detray;
 
 // Type declarations
@@ -55,6 +50,13 @@ using bound_covariance_type =
     bound_track_parameters<test_algebra>::covariance_type;
 template <std::size_t ROWS, std::size_t COLS>
 using matrix_type = dmatrix<test_algebra, ROWS, COLS>;
+
+constexpr bool is_float = std::is_same_v<scalar, float>;
+
+/// Test configuration
+enum class field_type { e_const, e_inhom, e_inhom_material };
+enum class surface_type { e_rect, e_wire };
+using test_param = std::tuple<field_type, surface_type, navigation::direction>;
 
 namespace {
 
@@ -72,6 +74,32 @@ constexpr const unsigned int Nt = 100u;
 const std::array<scalar, 5u> safe{5.0f, 5.0f, 5.0f, 5.0f, 5.0f};
 const std::array<scalar, 5u> con{1.1f, 1.1f, 1.1f, 1.1f, 1.1f};
 constexpr const scalar big = std::numeric_limits<scalar>::max();
+
+// Tolerances for the propagation
+constexpr const scalar rk_tol_reference = 1e-4f * unit<scalar>::mm;
+constexpr const scalar rk_tol_displaced = 1e-6f * unit<scalar>::mm;
+constexpr const scalar on_surface_tol = 1e-3f * unit<scalar>::mm;
+constexpr const scalar helix_tol = 1e-3f * unit<scalar>::mm;
+
+// Number of tracks per configuration
+constexpr const std::size_t n_tracks = 50u;
+
+// Jacobian comparison: an element is accepted if it agrees relatively to
+// jac_rtol, or if its absolute error moves the destination parameter i by less
+// than resolution[i] under a one-sigma shift spread[j] of the departure
+// parameter j. The absolute floor keeps elements that are zero or tiny in one
+// of the two evaluations from being skipped or compared with an undefined
+// relative error.
+constexpr const scalar jac_rtol = is_float ? 1e-2f : 1e-3f;
+const std::array<scalar, 5u> resolution{10.f * unit<scalar>::um,
+                                        10.f * unit<scalar>::um, 1e-5f, 1e-5f,
+                                        1e-5f /* relative to |qop| */};
+const std::array<scalar, 5u> spread{
+    1.f * unit<scalar>::mm, 1.f * unit<scalar>::mm, 1.f * unit<scalar>::mrad,
+    1.f * unit<scalar>::mrad, 1e-2f /* relative to |qop| */};
+
+// Covariance comparison, relative to sqrt(C_ii C_jj)
+constexpr const scalar cov_rtol = is_float ? 2e-2f : 2e-3f;
 
 std::random_device rd;
 // For detector generation
@@ -167,7 +195,6 @@ struct ridders_derivative {
       for (unsigned int j = 0; j < 5u; j++) {
         Arr[j][q][p] = (Arr[j][q - 1][p] * fac[i] - Arr[j][q - 1][p - 1]) /
                        (fac[i] - 1.0f);
-        fac[i] = con2 * fac[i];
 
         errt[j] = math::max(math::fabs(Arr[j][q][p] - Arr[j][q - 1][p]),
                             math::fabs(Arr[j][q][p] - Arr[j][q - 1][p - 1]));
@@ -189,6 +216,7 @@ struct ridders_derivative {
           }
         }
       }
+      fac[i] = con2 * fac[i];
     }
 
     for (unsigned int j = 0; j < 5u; j++) {
@@ -228,20 +256,6 @@ void wrap_angles(const bound_param_vector_type& ref_vector,
   }
 
   target_vector.set_phi(new_tphi);
-}
-
-scalar get_relative_difference(scalar ref_val, scalar num_val) {
-  scalar rel_diff{0.f};
-
-  // If the evaluated jacovian or numerical differentiation is too small set the
-  // relative difference to zero
-  if (ref_val == 0.f || num_val == 0.f) {
-    rel_diff = 0.f;
-  } else {
-    rel_diff = std::abs(ref_val - num_val) / std::abs(num_val);
-  }
-
-  return rel_diff;
 }
 
 // Get random initial covariance
@@ -287,27 +301,6 @@ bound_covariance_type get_random_initial_covariance(const scalar ini_qop) {
   }
 
   return ini_cov;
-}
-
-// Input covariance should be the diagonal matrix
-auto get_smeared_bound_vector(const bound_covariance_type& ini_cov,
-                              const bound_param_vector_type& ini_vec) {
-  using bound_vector_type = bound_vector<test_algebra>;
-
-  // Do the Cholesky Decomposition
-  const bound_covariance_type L = matrix::cholesky_decomposition(ini_cov);
-
-  // Vecor with random elements from a normal distribution
-  auto k = matrix::zero<bound_vector_type>();
-  std::normal_distribution<scalar> normal_dist(0.f, 1.f);
-  for (unsigned int i = 0u; i < 5u; i++) {
-    // Smear the value
-    getter::element(k, i, 0) = normal_dist(mt2);
-  }
-
-  const bound_vector_type new_vec = ini_vec.vector() + L * k;
-
-  return bound_param_vector_type{new_vec};
 }
 
 template <concepts::detector detector_t,
@@ -372,12 +365,15 @@ struct bound_getter : public base_actor {
   using free_track_parameters_type = free_track_parameters<algebra_t>;
 
   struct state {
+    unsigned int m_departure_idx{0u};
+    unsigned int m_destination_idx{1u};
+    bool m_reached_departure{false};
+    bool m_reached_destination{false};
     scalar m_min_path_length{detray::detail::invalid_value<scalar>()};
     scalar m_path_length{0.f};
     scalar m_abs_path_length{0.f};
     bound_track_parameters_type m_param_departure{};
     bound_track_parameters_type m_param_destination{};
-    typename bound_track_parameters_type::covariance_type m_jacobi{};
     scalar m_avg_step_size{0.f};
     std::size_t step_count{0u};
     std::size_t track_ID{0u};
@@ -411,26 +407,31 @@ struct bound_getter : public base_actor {
     }
 
     if ((navigation.is_on_sensitive() || navigation.is_on_passive()) &&
-        navigation.geometry_identifier().index() == 0u) {
+        navigation.geometry_identifier().index() ==
+            actor_state.m_departure_idx &&
+        !actor_state.m_reached_departure) {
       actor_state.m_param_departure = res.destination_params();
+      actor_state.m_reached_departure = true;
     }
-    // Get the bound track parameters and jacobian at the destination
-    // surface
+    // Get the bound track parameters at the destination surface. The full
+    // Jacobian is not recomputed here: by the time an observer runs, the
+    // parameter updater has already reset the transport Jacobian. It is
+    // instead accumulated by the updater itself through its Jacobian pointer.
     else if ((navigation.is_on_sensitive() || navigation.is_on_passive()) &&
-             navigation.geometry_identifier().index() == 1u) {
+             navigation.geometry_identifier().index() ==
+                 actor_state.m_destination_idx &&
+             actor_state.m_reached_departure) {
       actor_state.m_path_length = stepping.path_length();
       actor_state.m_abs_path_length = stepping.abs_path_length();
       actor_state.m_param_destination = res.destination_params();
-      actor_state.m_jacobi =
-          actor::parameter_transporter<algebra_t>().get_full_jacobian(
-              propagation, actor_state.m_param_departure);
+      actor_state.m_reached_destination = true;
 
       // Stop navigation if the destination surface is found
       navigation.exit();
       propagation.heartbeat(false);
     }
 
-    if (stepping.path_length() > actor_state.m_min_path_length) {
+    if (math::fabs(stepping.path_length()) > actor_state.m_min_path_length) {
       propagation.navigation().set_no_trust();
     }
 
@@ -445,8 +446,9 @@ bound_getter<test_algebra>::state evaluate_bound_param(
     const bound_track_parameters<test_algebra>& initial_param,
     const typename propagator_t::detector_type& det, const field_t& field,
     const scalar overstep_tolerance, const scalar path_tolerance,
-    const scalar rk_tolerance, const scalar constraint_step,
-    bool use_field_gradient, bool do_covariance_transport, bool do_inspect) {
+    const scalar rk_tolerance, const navigation::direction dir,
+    bool use_field_gradient, bool do_covariance_transport, bool do_inspect,
+    bound_covariance_type* full_jacobian = nullptr) {
   // Propagator is built from the stepper and navigator
   propagation::config cfg{};
   cfg.navigation.intersection.overstep_tolerance =
@@ -460,12 +462,17 @@ bound_getter<test_algebra>::state evaluate_bound_param(
   cfg.stepping.do_covariance_transport = do_covariance_transport;
   propagator_t p(cfg);
 
-  // Actor states
-  actor::parameter_updater_state<test_algebra> updater_state{cfg,
-                                                             initial_param};
+  // Actor states. The full Jacobian is accumulated by the updater through the
+  // same pointer mechanism that downstream clients use.
+  actor::parameter_updater_state<test_algebra> updater_state{cfg, initial_param,
+                                                             full_jacobian};
   bound_getter<test_algebra>::state bound_getter_state{};
   bound_getter_state.track_ID = trk_count;
   bound_getter_state.m_min_path_length = detector_length * 0.75f;
+  bound_getter_state.m_departure_idx =
+      (dir == navigation::direction::e_forward) ? 0u : 1u;
+  bound_getter_state.m_destination_idx =
+      1u - bound_getter_state.m_departure_idx;
   auto actor_states = detray::tie(updater_state, bound_getter_state);
 
   // Init propagator states for the reference track
@@ -475,9 +482,7 @@ bound_getter<test_algebra>::state evaluate_bound_param(
   // Run the propagation for the reference track
   state.set_particle(ptc);
   state.debug(do_inspect);
-  state.stepping()
-      .template set_constraint<detray::step::constraint::e_accuracy>(
-          static_cast<float>(constraint_step));
+  state.navigation().set_direction(dir);
 
   p.propagate(state, actor_states);
 
@@ -491,8 +496,8 @@ bound_param_vector_type get_displaced_bound_vector(
     const typename propagator_t::detector_type& det,
     const scalar detector_length, const field_t& field,
     const scalar overstep_tolerance, const scalar path_tolerance,
-    const scalar rk_tolerance, const scalar constraint_step,
-    const unsigned int target_index, const scalar displacement) {
+    const scalar rk_tolerance, const navigation::direction dir,
+    const unsigned int target_index, const scalar displacement, bool& ok) {
   propagation::config cfg{};
   cfg.navigation.intersection.overstep_tolerance =
       static_cast<float>(overstep_tolerance);
@@ -500,6 +505,7 @@ bound_param_vector_type get_displaced_bound_vector(
       static_cast<float>(path_tolerance);
   cfg.navigation.estimate_scattering_noise = false;
   cfg.stepping.rk_error_tol = static_cast<float>(rk_tolerance);
+  cfg.stepping.use_eloss_gradient = true;
   cfg.stepping.do_covariance_transport = false;
 
   // Propagator is built from the stepper and navigator
@@ -516,15 +522,18 @@ bound_param_vector_type get_displaced_bound_vector(
   bound_getter<test_algebra>::state bound_getter_state{};
   bound_getter_state.track_ID = trk_count;
   bound_getter_state.m_min_path_length = detector_length * 0.75f;
+  bound_getter_state.m_departure_idx =
+      (dir == navigation::direction::e_forward) ? 0u : 1u;
+  bound_getter_state.m_destination_idx =
+      1u - bound_getter_state.m_departure_idx;
 
   auto actor_states = detray::tie(updater_state, bound_getter_state);
   dstate.set_particle(ptc);
-  dstate.stepping()
-      .template set_constraint<detray::step::constraint::e_accuracy>(
-          constraint_step);
+  dstate.navigation().set_direction(dir);
 
   p.propagate(dstate, actor_states);
 
+  ok = ok && bound_getter_state.m_reached_destination;
   bound_param_vector_type new_vec = bound_getter_state.m_param_destination;
 
   // phi needs to be wrapped w.r.t. phi of the reference vector
@@ -541,12 +550,13 @@ bound_track_parameters<test_algebra>::covariance_type directly_differentiate(
     const typename propagator_t::detector_type& det,
     const scalar detector_length, const field_t& field,
     const scalar overstep_tolerance, const scalar path_tolerance,
-    const scalar rk_tolerance, const scalar constraint_step,
+    const scalar rk_tolerance, const navigation::direction dir,
     const std::array<scalar, 5u> hs,
     std::array<unsigned int, 5u>& num_iterations,
-    std::array<bool, 25>& convergence) {
+    std::array<bool, 25>& convergence, bool& ok) {
   // Return Jacobian
-  bound_covariance_type differentiated_jacobian;
+  bound_covariance_type differentiated_jacobian =
+      matrix::identity<bound_covariance_type>();
 
   for (unsigned int i = 0u; i < 5u; i++) {
     scalar delta = hs[i];
@@ -554,10 +564,10 @@ bound_track_parameters<test_algebra>::covariance_type directly_differentiate(
 
     const auto vec1 = get_displaced_bound_vector<propagator_t, field_t>(
         trk_count, ref_param, det, detector_length, field, overstep_tolerance,
-        path_tolerance, rk_tolerance, constraint_step, i, 1.f * delta);
+        path_tolerance, rk_tolerance, dir, i, 1.f * delta, ok);
     const auto vec2 = get_displaced_bound_vector<propagator_t, field_t>(
         trk_count, ref_param, det, detector_length, field, overstep_tolerance,
-        path_tolerance, rk_tolerance, constraint_step, i, -1.f * delta);
+        path_tolerance, rk_tolerance, dir, i, -1.f * delta, ok);
 
     ridders_derivative ridder;
     ridder.initialize(vec1, vec2, delta);
@@ -567,10 +577,10 @@ bound_track_parameters<test_algebra>::covariance_type directly_differentiate(
 
       const auto nvec1 = get_displaced_bound_vector<propagator_t, field_t>(
           trk_count, ref_param, det, detector_length, field, overstep_tolerance,
-          path_tolerance, rk_tolerance, constraint_step, i, 1.f * delta);
+          path_tolerance, rk_tolerance, dir, i, 1.f * delta, ok);
       const auto nvec2 = get_displaced_bound_vector<propagator_t, field_t>(
           trk_count, ref_param, det, detector_length, field, overstep_tolerance,
-          path_tolerance, rk_tolerance, constraint_step, i, -1.f * delta);
+          path_tolerance, rk_tolerance, dir, i, -1.f * delta, ok);
 
       ridder.run(nvec1, nvec2, delta, p, i, differentiated_jacobian);
 
@@ -631,1290 +641,288 @@ bound_track_parameters<test_algebra> get_initial_parameter(
       tracking_surface{det, departure_sf}.free_to_bound_vector({}, free_par);
 
   bound_track_parameters<test_algebra> ret;
-  ret.set_surface_link(geometry::identifier{0u});
+  ret.set_surface_link(departure_sf.identifier());
   ret.set_parameter_vector(bound_vec);
 
   return ret;
 }
 
-template <typename propagator_t, typename field_t>
-void evaluate_jacobian_difference(
-    const std::size_t trk_count, const std::array<scalar, 3u>& euler_angles_I,
-    const std::array<scalar, 3u>& euler_angles_F,
-    const typename propagator_t::detector_type& det,
-    const scalar detector_length,
-    const bound_track_parameters<test_algebra>& track, const field_t& field,
-    const scalar overstep_tolerance, const scalar path_tolerance,
-    const scalar rk_tolerance, const scalar rk_tolerance_dis,
-    const scalar constraint_step, const std::array<scalar, 5u>& hs,
-    std::ofstream& file, scalar& ref_rel_diff, bool use_field_gradient,
-    bool do_inspect, const bool use_precal_values = false,
-    [[maybe_unused]] bound_covariance_type precal_diff_jacobi = {},
-    [[maybe_unused]] std::array<unsigned int, 5u> precal_num_iterations = {},
-    [[maybe_unused]] std::array<bool, 25u> precal_convergence = {}) {
-  const auto phi0 = track.phi();
-  const auto theta0 = track.theta();
-  (void)phi0;
-  (void)theta0;
-
-  auto bound_getter = evaluate_bound_param<propagator_t, field_t>(
-      trk_count, detector_length, track, det, field, overstep_tolerance,
-      path_tolerance, rk_tolerance, constraint_step, use_field_gradient, true,
-      do_inspect);
-
-  const auto reference_param = bound_getter.m_param_departure;
-  const auto final_param = bound_getter.m_param_destination;
-
-  // Sanity check
-  ASSERT_EQ(reference_param.surface_link().index(), 0u)
-      << " Initial surface not found " << std::endl
-      << " log10(RK tolerance): " << math::log10(rk_tolerance)
-      << " Path length [mm]: " << bound_getter.m_path_length
-      << " Average step size [mm]: " << bound_getter.m_avg_step_size
-      << " Phi: " << reference_param.phi()
-      << " Theta: " << reference_param.theta()
-      << " Mom [GeV/c]: " << reference_param.p(ptc.charge());
-  ASSERT_EQ(final_param.surface_link().index(), 1u)
-      << " Final surface not found " << std::endl
-      << " log10(RK tolerance): " << math::log10(rk_tolerance)
-      << " Path length [mm]: " << bound_getter.m_path_length
-      << " Average step size [mm]: " << bound_getter.m_avg_step_size
-      << " Phi: " << reference_param.phi()
-      << " Theta: " << reference_param.theta()
-      << " Mom [GeV/c]: " << reference_param.p(ptc.charge());
-  ASSERT_TRUE(detector_length > 0.f);
-  ASSERT_GE(bound_getter.m_path_length, 0.5f * detector_length);
-  ASSERT_LE(bound_getter.m_path_length, 1.5f * detector_length);
-  ASSERT_LE(bound_getter.m_path_length, max_detector_length + 200.f);
-  ASSERT_GE(bound_getter.m_abs_path_length, bound_getter.m_path_length);
-
-  const auto reference_jacobian = bound_getter.m_jacobi;
-
-  file << trk_count << ",";
-
-  file << euler_angles_I[0u] << "," << euler_angles_I[1u] << ","
-       << euler_angles_I[2u] << ",";
-  file << euler_angles_F[0u] << "," << euler_angles_F[1u] << ","
-       << euler_angles_F[2u] << ",";
-
-  file << reference_param.bound_local()[0] << ","
-       << reference_param.bound_local()[1] << "," << reference_param.phi()
-       << "," << reference_param.theta() << "," << reference_param.qop() << ",";
-
-  file << final_param.bound_local()[0] << "," << final_param.bound_local()[1]
-       << "," << final_param.phi() << "," << final_param.theta() << ","
-       << final_param.qop() << ",";
-
-  bound_covariance_type differentiated_jacobian{};
-  std::array<unsigned int, 5u> num_iterations{};
-  std::array<bool, 25u> convergence{};
-
-  if (use_precal_values) {
-    differentiated_jacobian = precal_diff_jacobi;
-    num_iterations = precal_num_iterations;
-    convergence = precal_convergence;
-  } else {
-    differentiated_jacobian = directly_differentiate<propagator_t, field_t>(
-        trk_count, reference_param, det, detector_length, field,
-        overstep_tolerance, path_tolerance, rk_tolerance_dis, constraint_step,
-        hs, num_iterations, convergence);
+/// Tolerance for element (i, j) of the Jacobian
+scalar jacobian_tolerance(const unsigned int i, const unsigned int j,
+                          const scalar numerical, const scalar qop) {
+  scalar res_i = resolution[i];
+  scalar spread_j = spread[j];
+  if (i == e_bound_qoverp) {
+    res_i *= math::fabs(qop);
   }
-
-  bool total_convergence = (std::ranges::count(convergence, false) == 0);
-
-  // Ridders number of iterations
-  for (unsigned int i = 0; i < 5u; i++) {
-    file << num_iterations[i] << ",";
+  if (j == e_bound_qoverp) {
+    spread_j *= math::fabs(qop);
   }
-
-  // Convergence
-  file << total_convergence << ",";
-  for (unsigned int i = 0; i < 25u; i++) {
-    file << convergence[i] << ",";
-  }
-
-  // Reference track
-  for (unsigned int i = 0; i < 5u; i++) {
-    for (unsigned int j = 0; j < 5u; j++) {
-      file << getter::element(reference_jacobian, i, j) << ",";
-    }
-  }
-
-  // Numerical evaluation
-  for (unsigned int i = 0; i < 5u; i++) {
-    for (unsigned int j = 0; j < 5u; j++) {
-      file << getter::element(differentiated_jacobian, i, j) << ",";
-    }
-  }
-
-  // Difference between evaluation and direct jacobian
-  for (unsigned int i = 0; i < 5u; i++) {
-    for (unsigned int j = 0; j < 5u; j++) {
-      const scalar ref_val = getter::element(reference_jacobian, i, j);
-      const scalar num_val = getter::element(differentiated_jacobian, i, j);
-      const scalar rel_diff = get_relative_difference(ref_val, num_val);
-
-      file << rel_diff << ",";
-
-      // We return dqopdqop for test
-      if (i == 4 && j == 4) {
-        ref_rel_diff = rel_diff;
-      }
-    }
-  }
-
-  // Path length
-  file << bound_getter.m_path_length << ",";
-
-  // Absolute path length
-  file << bound_getter.m_abs_path_length << ",";
-
-  // The number of steps made
-  file << bound_getter.step_count << ",";
-
-  // Average step size
-  file << bound_getter.m_avg_step_size << ",";
-
-  // Log10(RK tolerance)
-  file << math::log10(rk_tolerance) << ",";
-
-  // Log10(on surface tolerance)
-  file << math::log10(path_tolerance) << ",";
-
-  // Overstep tolerance
-  file << overstep_tolerance << ",";
-
-  // Detector length
-  file << detector_length;
-
-  file << std::endl;
+  return jac_rtol * math::fabs(numerical) + res_i / spread_j;
 }
 
-template <typename propagator_t, typename field_t>
-void evaluate_covariance_transport(
-    const std::size_t trk_count, const std::array<scalar, 3u>& euler_angles_I,
-    const std::array<scalar, 3u>& euler_angles_F,
-    const typename propagator_t::detector_type& det,
-    const scalar detector_length,
-    const bound_track_parameters<test_algebra>& track, const field_t& field,
-    const scalar overstep_tolerance, const scalar path_tolerance,
-    const scalar rk_tolerance, const scalar rk_tolerance_dis,
-    const scalar constraint_step, std::ofstream& file,
-    bool use_field_gradient) {
-  // Copy track
-  auto track_copy = track;
-
-  // Make initial covariance
-  const bound_covariance_type ini_cov =
-      get_random_initial_covariance(track_copy.qop());
-
-  track_copy.set_covariance(ini_cov);
-
-  auto bound_getter = evaluate_bound_param<propagator_t, field_t>(
-      trk_count, detector_length, track_copy, det, field, overstep_tolerance,
-      path_tolerance, rk_tolerance, constraint_step, use_field_gradient, true,
-      false);
-
-  const auto reference_param = bound_getter.m_param_departure;
-  const auto final_param = bound_getter.m_param_destination;
-  const auto fin_cov = final_param.covariance();
-
-  // Sanity check
-  ASSERT_EQ(reference_param.surface_link().index(), 0u)
-      << " Initial surface not found " << std::endl
-      << " log10(RK tolerance): " << math::log10(rk_tolerance)
-      << " Path length [mm]: " << bound_getter.m_path_length
-      << " Average step size [mm]: " << bound_getter.m_avg_step_size
-      << " Phi: " << reference_param.phi()
-      << " Theta: " << reference_param.theta()
-      << " Mom [GeV/c]: " << reference_param.p(ptc.charge());
-  ASSERT_EQ(final_param.surface_link().index(), 1u)
-      << " Final surface not found " << std::endl
-      << " log10(RK tolerance): " << math::log10(rk_tolerance)
-      << " Path length [mm]: " << bound_getter.m_path_length
-      << " Average step size [mm]: " << bound_getter.m_avg_step_size
-      << " Phi: " << reference_param.phi()
-      << " Theta: " << reference_param.theta()
-      << " Mom [GeV/c]: " << reference_param.p(ptc.charge());
-  ASSERT_TRUE(detector_length > 0.f);
-  ASSERT_GE(bound_getter.m_path_length, 0.5f * detector_length);
-  ASSERT_LE(bound_getter.m_path_length, 1.5f * detector_length);
-  ASSERT_LE(bound_getter.m_path_length, max_detector_length + 200.f);
-  ASSERT_GE(bound_getter.m_abs_path_length, bound_getter.m_path_length);
-
-  // Get smeared initial bound vector
-  const bound_param_vector_type smeared_ini_vec =
-      get_smeared_bound_vector(ini_cov, reference_param);
-
-  // Make smeared bound track parameter
-  auto smeared_track = track_copy;
-  smeared_track.set_parameter_vector(smeared_ini_vec);
-
-  auto smeared_bound_getter = evaluate_bound_param<propagator_t, field_t>(
-      trk_count, detector_length, smeared_track, det, field, overstep_tolerance,
-      path_tolerance, rk_tolerance_dis, constraint_step, use_field_gradient,
-      false, false);
-
-  // Get smeared final bound vector
-  bound_param_vector_type smeared_fin_vec =
-      smeared_bound_getter.m_param_destination;
-
-  // phi needs to be wrapped w.r.t. phi of the reference vector
-  wrap_angles(final_param, smeared_fin_vec);
-
-  // Get pull values
-  std::array<scalar, 5u> pulls{};
-
-  bound_vector<test_algebra> diff{};
-  for (unsigned int i = 0u; i < 5u; i++) {
-    getter::element(diff, i, 0u) = smeared_fin_vec[i] - final_param[i];
-    pulls[i] = getter::element(diff, i, 0u) /
-               math::sqrt(getter::element(fin_cov, i, i));
-  }
-
-  // Get Chi2
-  const matrix_type<1u, 1u> chi2 =
-      matrix::transpose(diff) * matrix::inverse(fin_cov) * diff;
-  const scalar chi2_val = getter::element(chi2, 0u, 0u);
-
-  file << trk_count << ",";
-
-  file << euler_angles_I[0u] << "," << euler_angles_I[1u] << ","
-       << euler_angles_I[2u] << ",";
-  file << euler_angles_F[0u] << "," << euler_angles_F[1u] << ","
-       << euler_angles_F[2u] << ",";
-
-  // File writing
-  file << reference_param[e_bound_loc0] << "," << reference_param[e_bound_loc1]
-       << "," << reference_param[e_bound_phi] << ","
-       << reference_param[e_bound_theta] << ","
-       << reference_param[e_bound_qoverp] << ",";
-
-  for (unsigned int i = 0; i < 5u; i++) {
-    for (unsigned int j = 0; j < 5u; j++) {
-      file << getter::element(ini_cov, i, j) << ",";
-    }
-  }
-
-  file << final_param[e_bound_loc0] << "," << final_param[e_bound_loc1] << ","
-       << final_param[e_bound_phi] << "," << final_param[e_bound_theta] << ","
-       << final_param[e_bound_qoverp] << ",";
-
-  for (unsigned int i = 0; i < 5u; i++) {
-    for (unsigned int j = 0; j < 5u; j++) {
-      file << getter::element(fin_cov, i, j) << ",";
-    }
-  }
-
-  file << smeared_ini_vec[e_bound_loc0] << "," << smeared_ini_vec[e_bound_loc1]
-       << "," << smeared_ini_vec[e_bound_phi] << ","
-       << smeared_ini_vec[e_bound_theta] << ","
-       << smeared_ini_vec[e_bound_qoverp] << ",";
-
-  file << smeared_fin_vec[e_bound_loc0] << "," << smeared_fin_vec[e_bound_loc1]
-       << "," << smeared_fin_vec[e_bound_phi] << ","
-       << smeared_fin_vec[e_bound_theta] << ","
-       << smeared_fin_vec[e_bound_qoverp] << ",";
-
-  file << pulls[0] << "," << pulls[1] << "," << pulls[2] << "," << pulls[3]
-       << "," << pulls[4] << ",";
-
-  file << chi2_val << ",";
-
-  // Path length
-  file << bound_getter.m_path_length << ",";
-
-  // Absolute path length
-  file << bound_getter.m_abs_path_length << ",";
-
-  // The number of steps made
-  file << bound_getter.step_count << ",";
-
-  // Average step size
-  file << bound_getter.m_avg_step_size << ",";
-
-  // Log10(RK tolerance)
-  file << math::log10(rk_tolerance) << ",";
-
-  // Log10(on surface tolerance)
-  file << math::log10(path_tolerance) << ",";
-
-  // Overstep tolerance
-  file << overstep_tolerance << ",";
-
-  // Detector length
-  file << detector_length;
-
-  file << std::endl;
+const char* param_name(const unsigned int i) {
+  constexpr std::array<const char*, 6u> names{"l0",    "l1",  "phi",
+                                              "theta", "qop", "t"};
+  return names[i];
 }
 
-template <concepts::detector detector_t,
-          typename detector_t::metadata::mask_id mask_id>
-bound_param_vector_type get_displaced_bound_vector_helix(
-    const bound_track_parameters<test_algebra>& track, const vector3& field,
-    unsigned int target_index, scalar displacement, const detector_t& det,
-    const scalar helix_tolerance) {
-  const auto& departure_sf = det.surface(0u);
+/// Validate the bound-to-bound Jacobian and the covariance transport of the
+/// propagator against central finite differences (Ridders' method) of the
+/// propagation map between the two surfaces of a randomly tilted telescope.
+class JacobianValidation : public ::testing::TestWithParam<test_param> {};
 
-  const auto& destination_sf = det.surface(1u);
-  const auto& trf_link = destination_sf.transform();
-  const auto& destination_trf = det.transform_store().at(trf_link);
-  const auto& mask_link = destination_sf.mask();
-  const auto& destination_mask =
-      det.mask_store().template get<mask_id>().at(mask_link.index());
+TEST_P(JacobianValidation, propagator) {
+  const auto [field_cfg, surface_cfg, dir] = GetParam();
 
-  bound_param_vector_type dvec = track;
-  dvec[target_index] += displacement;
-  const auto free_vec =
-      tracking_surface{det, departure_sf}.bound_to_free_vector({}, dvec);
-  detail::helix<test_algebra> hlx(free_vec, field);
-
-  using mask_t = types::get<typename detector_t::masks, mask_id>;
-  helix_intersector<typename mask_t::shape, test_algebra> hlx_is{};
-  hlx_is.run_rtsafe = false;
-  hlx_is.convergence_tolerance = helix_tolerance;
-  auto sfi =
-      hlx_is(hlx, destination_sf, destination_mask, destination_trf, 0.f);
-  const auto path_length = sfi.path();
-  const auto pos = hlx(path_length);
-  const auto dir = hlx.dir(path_length);
-
-  const free_track_parameters<test_algebra> new_free_par(pos, 0, dir,
-                                                         hlx.qop());
-  auto new_bound_vec =
-      tracking_surface{det, destination_sf}.free_to_bound_vector({},
-                                                                 new_free_par);
-
-  // phi needs to be wrapped w.r.t. phi of the reference vector
-  wrap_angles(dvec, new_bound_vec);
-
-  return new_bound_vec;
-}
-
-template <concepts::detector detector_t,
-          typename detector_t::metadata::mask_id mask_id>
-void evaluate_jacobian_difference_helix(
-    const std::size_t trk_count, const std::array<scalar, 3u> euler_angles_I,
-    const std::array<scalar, 3u> euler_angles_F, const detector_t& det,
-    const scalar detector_length,
-    const bound_track_parameters<test_algebra>& track, const vector3& field,
-    const std::array<scalar, 5u> hs, std::ofstream& file,
-    const scalar helix_tolerance) {
-  const auto phi0 = track.phi();
-  const auto theta0 = track.theta();
-  (void)phi0;
-  (void)theta0;
-
-  // Get bound to free Jacobi
-  const auto& departure_sf = det.surface(0u);
-  const auto bound_to_free_jacobi =
-      tracking_surface{det, departure_sf}.bound_to_free_jacobian({}, track);
-
-  // Get fre vector
-  const auto free_vec =
-      tracking_surface{det, departure_sf}.bound_to_free_vector({}, track);
-
-  // Helix from the departure surface
-  detail::helix<test_algebra> hlx(free_vec, field);
-
-  const auto& destination_sf = det.surface(1u);
-  const auto& trf_link = destination_sf.transform();
-  const auto& destination_trf = det.transform_store().at(trf_link);
-  const auto& mask_link = destination_sf.mask();
-  const auto& destination_mask =
-      det.mask_store().template get<mask_id>().at(mask_link.index());
-
-  using mask_t = types::get<typename detector_t::masks, mask_id>;
-  helix_intersector<typename mask_t::shape, test_algebra> hlx_is{};
-  hlx_is.run_rtsafe = false;
-  hlx_is.convergence_tolerance = helix_tolerance;
-
-  auto sfi =
-      hlx_is(hlx, destination_sf, destination_mask, destination_trf, 0.f);
-
-  EXPECT_TRUE(sfi.is_inside())
-      << " Final surface not found" << std::endl
-      << " log10(Helix tolerance): " << math::log10(helix_tolerance)
-      << " Phi: " << track.phi() << " Theta: " << track.theta()
-      << " Mom [GeV/c]: " << track.p(ptc.charge());
-
-  const auto path_length = sfi.path();
-
-  // Get transport Jacobi
-  const auto transport_jacobi = hlx.jacobian(path_length);
-
-  const auto pos = hlx(path_length);
-  const auto dir = hlx.dir(path_length);
-  const auto qop = hlx.qop();
-
-  // Get correction term
-  const auto correction_term =
-      matrix::identity<free_matrix<test_algebra>>() +
-      tracking_surface{det, destination_sf}.path_correction(
-          {}, pos, dir, qop * vector::cross(dir, field), 0.f);
-
-  const free_track_parameters<test_algebra> free_par(pos, 0.f, dir, qop);
-
-  // Get free to bound Jacobi
-  const auto free_to_bound_jacobi =
-      tracking_surface{det, destination_sf}.free_to_bound_jacobian({},
-                                                                   free_par);
-
-  // Get full Jacobi
-  const auto reference_jacobian = free_to_bound_jacobi * correction_term *
-                                  transport_jacobi * bound_to_free_jacobi;
-
-  // Get bound vector
-  const auto bound_vec =
-      tracking_surface{det, destination_sf}.free_to_bound_vector({}, free_par);
-
-  /******************************
-   *  Numerical differentiation
-   * ****************************/
-
-  bound_covariance_type differentiated_jacobian{};
-  std::array<unsigned int, 5u> num_iterations{};
-  std::array<bool, 25u> convergence{};
-
-  for (unsigned int i = 0u; i < 5u; i++) {
-    scalar delta = hs[i];
-
-    preprocess_delta(i, delta, track);
-
-    const auto vec1 = get_displaced_bound_vector_helix<detector_t, mask_id>(
-        track, field, i, 1.f * delta, det, helix_tolerance);
-    const auto vec2 = get_displaced_bound_vector_helix<detector_t, mask_id>(
-        track, field, i, -1.f * delta, det, helix_tolerance);
-
-    ridders_derivative ridder;
-    ridder.initialize(vec1, vec2, delta);
-
-    for (unsigned int p = 1u; p < Nt; p++) {
-      delta /= con[i];
-
-      const auto nvec1 = get_displaced_bound_vector_helix<detector_t, mask_id>(
-          track, field, i, 1.f * delta, det, helix_tolerance);
-      const auto nvec2 = get_displaced_bound_vector_helix<detector_t, mask_id>(
-          track, field, i, -1.f * delta, det, helix_tolerance);
-
-      ridder.run(nvec1, nvec2, delta, p, i, differentiated_jacobian);
-
-      if (ridder.finished()) {
-        num_iterations[i] = p;
-        break;
-      }
-    }
-
-    for (std::size_t j = 0u; j < 5u; j++) {
-      convergence[i + j * 5] = ridder.complete[j];
-    }
+  // The inhomogeneous field map is read from the environment, as in the
+  // other detray tests
+  if (field_cfg != field_type::e_const &&
+      std::getenv("DETRAY_BFIELD_FILE") == nullptr) {
+    GTEST_SKIP() << "DETRAY_BFIELD_FILE is not set";
   }
 
-  bool total_convergence = (std::ranges::count(convergence, false) == 0);
-
-  file << trk_count << ",";
-
-  file << euler_angles_I[0u] << "," << euler_angles_I[1u] << ","
-       << euler_angles_I[2u] << ",";
-  file << euler_angles_F[0u] << "," << euler_angles_F[1u] << ","
-       << euler_angles_F[2u] << ",";
-
-  file << track.bound_local()[0] << "," << track.bound_local()[1] << ","
-       << track.phi() << "," << track.theta() << "," << track.qop() << ",";
-
-  file << bound_vec[e_bound_loc0] << "," << bound_vec[e_bound_loc1] << ","
-       << bound_vec.phi() << "," << bound_vec.theta() << "," << bound_vec.qop()
-       << ",";
-
-  // Ridders number of iterations
-  for (unsigned int i = 0; i < 5u; i++) {
-    file << num_iterations[i] << ",";
-  }
-
-  // Convergence
-  file << total_convergence << ",";
-  for (unsigned int i = 0; i < 25u; i++) {
-    file << convergence[i] << ",";
-  }
-
-  // Reference track
-  for (unsigned int i = 0; i < 5u; i++) {
-    for (unsigned int j = 0; j < 5u; j++) {
-      file << getter::element(reference_jacobian, i, j) << ",";
-    }
-  }
-
-  // Numerical evaluation
-  for (unsigned int i = 0; i < 5u; i++) {
-    for (unsigned int j = 0; j < 5u; j++) {
-      file << getter::element(differentiated_jacobian, i, j) << ",";
-    }
-  }
-
-  // Difference between evaluation and direct jacobian
-  for (unsigned int i = 0; i < 5u; i++) {
-    for (unsigned int j = 0; j < 5u; j++) {
-      const scalar ref_val = getter::element(reference_jacobian, i, j);
-      const scalar num_val = getter::element(differentiated_jacobian, i, j);
-      const scalar rel_diff = get_relative_difference(ref_val, num_val);
-      file << rel_diff << ",";
-    }
-  }
-
-  // Path length
-  file << path_length << ",";
-
-  // Absolute Path length (Not supported for helix)
-  file << 0 << ",";
-
-  // Average step size (Doesn't exist for helix intersection)
-  file << 0 << ",";
-
-  // The number of steps made (Doesn't exist for helix intersection)
-  file << 0 << ",";
-
-  // Log10(RK tolerance) (Doesn't exist for helix intersection)
-  file << 0 << ",";
-
-  // Log10(helix intersection tolerance)
-  file << math::log10(helix_tolerance) << ",";
-
-  // Overstep tolerance (Doesn't exist for helix intersection)
-  file << 0 << ",";
-
-  // Detector length
-  file << detector_length;
-
-  file << std::endl;
-}
-
-void setup_csv_header_jacobian(std::ofstream& file) {
-  file << std::fixed << std::showpoint;
-  file << std::setprecision(32);
-
-  // Track ID
-  file << "track_ID,";
-
-  // Euler angles
-  file << "alpha_I,beta_I,gamma_I,";
-  file << "alpha_F,beta_F,gamma_F,";
-
-  // Initial Parameter at the departure surface
-  file << "l0_I,l1_I,phi_I,theta_I,qop_I,";
-
-  // Final Parameter at the destination surface
-  file << "l0_F,l1_F,phi_F,theta_F,qop_F,";
-
-  // Number of iterations to complete the numerical differentiation
-  file << "num_iterations_l0,"
-       << "num_iterations_l1,"
-       << "num_iterations_phi,"
-       << "num_iterations_theta,"
-       << "num_iterations_qop,";
-
-  // Convergence
-  file << "total_convergence,";
-  file << "dl0dl0_C,dl0dl1_C,dl0dphi_C,dl0dtheta_C,dl0dqop_C,";
-  file << "dl1dl0_C,dl1dl1_C,dl1dphi_C,dl1dtheta_C,dl1dqop_C,";
-  file << "dphidl0_C,dphidl1_C,dphidphi_C,dphidtheta_C,dphidqop_C,";
-  file << "dthetadl0_C,dthetadl1_C,dthetadphi_C,dthetadtheta_C,"
-          "dthetadqop_C,";
-  file << "dqopdl0_C,dqopdl1_C,dqopdphi_C,dqopdtheta_C,dqopdqop_C,";
-
-  // Evaluation
-  file << "dl0dl0_E,dl0dl1_E,dl0dphi_E,dl0dtheta_E,dl0dqop_E,";
-  file << "dl1dl0_E,dl1dl1_E,dl1dphi_E,dl1dtheta_E,dl1dqop_E,";
-  file << "dphidl0_E,dphidl1_E,dphidphi_E,dphidtheta_E,dphidqop_E,";
-  file << "dthetadl0_E,dthetadl1_E,dthetadphi_E,dthetadtheta_E,"
-          "dthetadqop_E,";
-  file << "dqopdl0_E,dqopdl1_E,dqopdphi_E,dqopdtheta_E,dqopdqop_E,";
-
-  // Numerical Differentiation
-  file << "dl0dl0_D,dl0dl1_D,dl0dphi_D,dl0dtheta_D,dl0dqop_D,";
-  file << "dl1dl0_D,dl1dl1_D,dl1dphi_D,dl1dtheta_D,dl1dqop_D,";
-  file << "dphidl0_D,dphidl1_D,dphidphi_D,dphidtheta_D,dphidqop_D,";
-  file << "dthetadl0_D,dthetadl1_D,dthetadphi_D,dthetadtheta_D,"
-          "dthetadqop_D,";
-  file << "dqopdl0_D,dqopdl1_D,dqopdphi_D,dqopdtheta_D,dqopdqop_D,";
-
-  // Relative Difference between Evaluation and Numerical Differentiation
-  file << "dl0dl0_R,dl0dl1_R,dl0dphi_R,dl0dtheta_R,dl0dqop_R,";
-  file << "dl1dl0_R,dl1dl1_R,dl1dphi_R,dl1dtheta_R,dl1dqop_R,";
-  file << "dphidl0_R,dphidl1_R,dphidphi_R,dphidtheta_R,dphidqop_R,";
-  file << "dthetadl0_R,dthetadl1_R,dthetadphi_R,dthetadtheta_R,"
-          "dthetadqop_R,";
-  file << "dqopdl0_R,dqopdl1_R,dqopdphi_R,dqopdtheta_R,dqopdqop_R,";
-
-  // Path length [mm]
-  file << "path_length,";
-
-  // Absolute path length [mm]
-  file << "abs_path_length,";
-
-  // The number of steps made
-  file << "n_steps,";
-
-  // Average step size [mm]
-  file << "average_step_size,";
-
-  // RK Tolerances [mm]
-  file << "log10_rk_tolerance,";
-
-  // Intersection tolerance [mm]
-  file << "log10_intersection_tolerance,";
-
-  // Overstep tolerance [mm]
-  file << "overstep_tolerance,";
-
-  // Detector length [mm]
-  file << "detector_length";
-
-  file << std::endl;
-}
-
-void setup_csv_header_covariance(std::ofstream& file) {
-  file << std::fixed << std::showpoint;
-  file << std::setprecision(32);
-
-  // Track ID
-  file << "track_ID,";
-
-  // Euler angles
-  file << "alpha_I,beta_I,gamma_I,";
-  file << "alpha_F,beta_F,gamma_F,";
-
-  // Initial parameters (vector + covariance) of reference track
-  file << "l0_I,l1_I,phi_I,theta_I,qop_I,";
-  file << "l0l0_I,l0l1_I,l0phi_I,l0theta_I,l0qop_I,";
-  file << "l1l0_I,l1l1_I,l1phi_I,l1theta_I,l1qop_I,";
-  file << "phil0_I,phil1_I,phiphi_I,phitheta_I,phiqop_I,";
-  file << "thetal0_I,thetal1_I,thetaphi_I,thetatheta_I,thetaqop_I,";
-  file << "qopl0_I,qopl1_I,qopphi_I,qoptheta_I,qopqop_I,";
-
-  // Final parameters (vector + covariance) of reference track
-  file << "l0_F,l1_F,phi_F,theta_F,qop_F,";
-  file << "l0l0_F,l0l1_F,l0phi_F,l0theta_F,l0qop_F,";
-  file << "l1l0_F,l1l1_F,l1phi_F,l1theta_F,l1qop_F,";
-  file << "phil0_F,phil1_F,phiphi_F,phitheta_F,phiqop_F,";
-  file << "thetal0_F,thetal1_F,thetaphi_F,thetatheta_F,thetaqop_F,";
-  file << "qopl0_F,qopl1_F,qopphi_F,qoptheta_F,qopqop_F,";
-
-  // Initial parameter (vector only) of smeared track
-  file << "l0_IS,l1_IS,phi_IS,theta_IS,qop_IS,";
-
-  // Final parameter (vector only) of smeared track
-  file << "l0_FS,l1_FS,phi_FS,theta_FS,qop_FS,";
-
-  // Pull values
-  file << "pull_l0,pull_l1,pull_phi,pull_theta,pull_qop,";
-
-  // Chi2
-  file << "chi2,";
-
-  // Path length [mm]
-  file << "path_length,";
-
-  // Absolute path length [mm]
-  file << "abs_path_length,";
-
-  // The number of steps made
-  file << "n_steps,";
-
-  // Average step size [mm]
-  file << "average_step_size,";
-
-  // Tolerances [mm]
-  file << "log10_rk_tolerance,";
-
-  // Intersection tolerance [mm]
-  file << "log10_intersection_tolerance,";
-
-  // Overstep tolerance [mm]
-  file << "overstep_tolerance,";
-
-  // Detector length [mm]
-  file << "detector_length";
-
-  file << std::endl;
-}
-
-int main(int argc, char** argv) {
-  // Options parsing
-  po::options_description desc("\ndetray jacobian validation options");
-  desc.add_options()("help", "produce help message");
-  desc.add_options()("output-directory",
-                     po::value<std::string>()->default_value(""),
-                     "Output directory");
-  desc.add_options()("n-tracks", po::value<std::size_t>()->default_value(100u),
-                     "Number of tracks for generator");
-  desc.add_options()("n-skips", po::value<std::size_t>()->default_value(0u),
-                     "Number of skipped indices");
-  desc.add_options()("skip-rect", po::value<bool>()->default_value(false),
-                     "Skip rectangular telescope");
-  desc.add_options()("skip-wire", po::value<bool>()->default_value(false),
-                     "Skip wire telescope");
-  desc.add_options()("log10-rk-tolerance-jac-mm",
-                     po::value<scalar>()->default_value(-4.f),
-                     "Set log10(rk_tolerance_jac_in_mm)");
-  desc.add_options()("log10-rk-tolerance-dis-mm",
-                     po::value<scalar>()->default_value(-6.f),
-                     "Set log10(rk_tolerance_dis_in_mm)");
-  desc.add_options()("log10-rk-tolerance-cov-mm",
-                     po::value<scalar>()->default_value(-4.f),
-                     "Set log10(rk_tolerance_cov_in_mm)");
-  desc.add_options()("log10-helix-tolerance-mm",
-                     po::value<scalar>()->default_value(-3.f),
-                     "Set log10(helix_tolerance_in_mm)");
-  desc.add_options()("overstep-tolerance-mm",
-                     po::value<scalar>()->default_value(-1000.f),
-                     "Set the overstep tolerance in mm unit");
-  desc.add_options()("log10-on-surface-tolerance-mm",
-                     po::value<scalar>()->default_value(-3.f),
-                     "Set log10(path_tolerance_in_mm)");
-  desc.add_options()("rk-tolerance-iterate-mode",
-                     po::value<bool>()->default_value(true),
-                     "Iterate over the rk tolerances");
-  desc.add_options()("log10-min-rk-tolerance-mm",
-                     po::value<scalar>()->default_value(-6.f),
-                     "Set log10(min_rk_tolerance_in_mm)");
-  desc.add_options()("log10-max-rk-tolerance-mm",
-                     po::value<scalar>()->default_value(2.f),
-                     "Set log10(max_rk_tolerance_in_mm)");
-  desc.add_options()("mc-seed", po::value<std::size_t>()->default_value(0u),
-                     "Monte-Carlo seed");
-  desc.add_options()("verbose-level", po::value<int>()->default_value(1),
-                     "Verbose level");
-
-  po::variables_map vm;
-  po::store(parse_command_line(argc, argv, desc,
-                               po::command_line_style::unix_style ^
-                                   po::command_line_style::allow_short),
-            vm);
-  po::notify(vm);
-
-  // Help message
-  if (vm.count("help") != 0u) {
-    std::clog << desc << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  const std::string output_directory = vm["output-directory"].as<std::string>();
-  std::size_t n_tracks = vm["n-tracks"].as<std::size_t>();
-  std::size_t n_skips = vm["n-skips"].as<std::size_t>();
-  const bool skip_rect = vm["skip-rect"].as<bool>();
-  const bool skip_wire = vm["skip-wire"].as<bool>();
-  const scalar rk_power_jac = vm["log10-rk-tolerance-jac-mm"].as<scalar>();
-  const scalar rk_tol_jac = std::pow(10.f, rk_power_jac) * unit<scalar>::mm;
-  const scalar rk_power_dis = vm["log10-rk-tolerance-dis-mm"].as<scalar>();
-  const scalar rk_tol_dis = std::pow(10.f, rk_power_dis) * unit<scalar>::mm;
-  const scalar rk_power_cov = vm["log10-rk-tolerance-cov-mm"].as<scalar>();
-  const scalar rk_tol_cov = std::pow(10.f, rk_power_cov) * unit<scalar>::mm;
-  const scalar helix_power = vm["log10-helix-tolerance-mm"].as<scalar>();
-  const scalar helix_tol = std::pow(10.f, helix_power) * unit<scalar>::mm;
-  const scalar on_surface_power =
-      vm["log10-on-surface-tolerance-mm"].as<scalar>() * unit<scalar>::mm;
-  const scalar on_surface_tol = math::pow(10.f, on_surface_power);
-  const bool rk_tolerance_iterate_mode =
-      vm["rk-tolerance-iterate-mode"].as<bool>();
-  const scalar log10_min_rk_tolerance =
-      vm["log10-min-rk-tolerance-mm"].as<scalar>() * unit<scalar>::mm;
-  const scalar log10_max_rk_tolerance =
-      vm["log10-max-rk-tolerance-mm"].as<scalar>() * unit<scalar>::mm;
-  const std::size_t mc_seed = vm["mc-seed"].as<std::size_t>();
-  const int verbose_lvl = vm["verbose-level"].as<int>();
-
-  std::vector<scalar> log10_tols;
-  scalar r = log10_min_rk_tolerance;
-  while (r <= log10_max_rk_tolerance + 1e-3f) {
-    log10_tols.push_back(r);
-    r = r + 2.f;
-  }
-
-  // Set seed for random generator
-  mt1.seed(mc_seed);
-
-  // Volume material
-  const material<scalar> volume_mat = detray::cesium_iodide_with_ded<scalar>();
-
-  std::string path;
-  // Create output directory
-  if (output_directory.empty()) {
-    path = "";
-  } else {
-    std::filesystem::create_directories(output_directory);
-    path = output_directory + "/";
-  }
-
-  // Output Csv file
-  std::ofstream helix_rect_file;
-  std::ofstream const_rect_file;
-  std::ofstream inhom_rect_file;
-  std::ofstream inhom_rect_material_file;
-  std::ofstream helix_wire_file;
-  std::ofstream const_wire_file;
-  std::ofstream inhom_wire_file;
-  std::ofstream inhom_wire_material_file;
-  helix_rect_file.open(path + "helix_rect.csv");
-  const_rect_file.open(path + "const_rect.csv");
-  inhom_rect_file.open(path + "inhom_rect.csv");
-  inhom_rect_material_file.open(path + "inhom_rect_material.csv");
-  helix_wire_file.open(path + "helix_wire.csv");
-  const_wire_file.open(path + "const_wire.csv");
-  inhom_wire_file.open(path + "inhom_wire.csv");
-  inhom_wire_material_file.open(path + "inhom_wire_material.csv");
-
-  setup_csv_header_jacobian(helix_rect_file);
-  setup_csv_header_jacobian(const_rect_file);
-  setup_csv_header_jacobian(inhom_rect_file);
-  setup_csv_header_jacobian(inhom_rect_material_file);
-  setup_csv_header_jacobian(helix_wire_file);
-  setup_csv_header_jacobian(const_wire_file);
-  setup_csv_header_jacobian(inhom_wire_file);
-  setup_csv_header_jacobian(inhom_wire_material_file);
-
-  std::ofstream rect_cov_transport_file;
-  rect_cov_transport_file.open(path + "rect_cov_transport.csv");
-  setup_csv_header_covariance(rect_cov_transport_file);
-
-  std::ofstream wire_cov_transport_file;
-  wire_cov_transport_file.open(path + "wire_cov_transport.csv");
-  setup_csv_header_covariance(wire_cov_transport_file);
-
-  // Output Csv file (RK tolerance iteration mode)
-  std::vector<std::ofstream> rect_files(log10_tols.size());
-  std::vector<std::ofstream> wire_files(log10_tols.size());
-
-  if (rk_tolerance_iterate_mode) {
-    for (std::size_t i = 0u; i < log10_tols.size(); i++) {
-      const std::string rect_name =
-          "inhom_rect_material_" +
-          std::to_string(static_cast<int>(log10_tols[i])) + ".csv";
-      const std::string wire_name =
-          "inhom_wire_material_" +
-          std::to_string(static_cast<int>(log10_tols[i])) + ".csv";
-      rect_files[i].open(path + rect_name);
-      wire_files[i].open(path + wire_name);
-
-      setup_csv_header_jacobian(rect_files[i]);
-      setup_csv_header_jacobian(wire_files[i]);
-    }
-  }
-
-  // Memory resource
   vecmem::host_memory_resource host_mr;
 
-  // Filter out the google test flags
-  ::testing::InitGoogleTest(&argc, argv);
+  // Deterministic per configuration
+  const std::size_t mc_seed =
+      42u + 8u * static_cast<std::size_t>(field_cfg) +
+      2u * static_cast<std::size_t>(surface_cfg) +
+      static_cast<std::size_t>(dir == navigation::direction::e_backward);
+  mt1.seed(mc_seed);
+  mt2.seed(mc_seed);
 
-  // Detector types
-  using rectangle_telescope =
-      host::detector<telescope_metadata<test_algebra, rect_type>>;
-  using wire_telescope =
-      host::detector<telescope_metadata<test_algebra, wire_type>>;
-  using track_type = free_track_parameters<test_algebra>;
+  // Fields
+  const auto const_field = create_const_field<scalar>(B_z);
+  std::optional<bfield::inhom_field_t<scalar>> inhom_field;
+  if (field_cfg != field_type::e_const) {
+    inhom_field = create_inhom_field<scalar>();
+  }
 
-  // Constant magnetic field type
-  using const_bfield_t = bfield::const_field_t<scalar>;
+  // Volume material
+  material<scalar> volume_mat = vacuum<scalar>{};
+  if (field_cfg == field_type::e_inhom_material) {
+    volume_mat = cesium_iodide_with_ded<scalar>{};
+  }
 
-  // Magnetic field map using nearest neighbor interpolation
-  using inhom_bfield_t = bfield::inhom_field_t<scalar>;
-
-  const const_bfield_t const_bfield = create_const_field<scalar>(B_z);
-  const inhom_bfield_t inhom_bfield = create_inhom_field<scalar>();
-
-  // Actor chain type
-  using actor_chain_t = actor_chain<
-      actor::parameter_updater<test_algebra, bound_getter<test_algebra>>>;
-
-  // Iterate over reference (pilot) tracks for a rectangular telescope
-  // geometry and Jacobian calculation
+  // Track generator: random direction and momentum from the origin
   using uniform_gen_t =
       detail::random_numbers<scalar, std::uniform_real_distribution<scalar>>;
-  using trk_generator_t = random_track_generator<track_type, uniform_gen_t>;
+  using trk_generator_t =
+      random_track_generator<free_track_parameters<test_algebra>,
+                             uniform_gen_t>;
   trk_generator_t::configuration trk_gen_cfg{};
   trk_gen_cfg.seed(mc_seed);
-  trk_gen_cfg.n_tracks(n_tracks + n_skips);
+  trk_gen_cfg.n_tracks(n_tracks);
   trk_gen_cfg.phi_range(-constant<scalar>::pi, constant<scalar>::pi);
   trk_gen_cfg.theta_range(0.f, constant<scalar>::pi);
   trk_gen_cfg.mom_range(min_mom, max_mom);
   trk_gen_cfg.origin(0.f, 0.f, 0.f);
   trk_gen_cfg.origin_stddev(0.f, 0.f, 0.f);
 
-  // Vectors for dqopdqop relative difference
-  std::vector<std::vector<scalar>> dqopdqop_rel_diffs_rect(log10_tols.size());
-  std::vector<std::vector<scalar>> dqopdqop_rel_diffs_wire(log10_tols.size());
+  // Runs one configuration for a given surface shape
+  auto run = [&]<typename shape_t, typename field_t>(const field_t& field) {
+    using detector_t =
+        host::detector<telescope_metadata<test_algebra, shape_t>>;
+    using navigator_t = caching_navigator<detector_t>;
+    using stepper_t =
+        rk_stepper<typename field_t::view_t, test_algebra,
+                   constrained_step<scalar>, stepper_default_policy<scalar>>;
+    using actor_chain_t = actor_chain<
+        actor::parameter_updater<test_algebra, bound_getter<test_algebra>>>;
+    using propagator_t = propagator<stepper_t, navigator_t, actor_chain_t>;
 
-  bool do_inspect = false;
-  if (verbose_lvl >= 4) {
-    do_inspect = true;
-  }
+    constexpr bool is_wire = std::is_same_v<shape_t, wire_type>;
+    constexpr auto mask_id = is_wire ? detector_t::masks::id::e_drift_cell
+                                     : detector_t::masks::id::e_rectangle2D;
+    const std::array<scalar, 5u>& hs = is_wire ? h_sizes_wire : h_sizes_rect;
 
-  // Navigator types
-  using rect_navigator_t = caching_navigator<rectangle_telescope>;
-  using wire_navigator_t = caching_navigator<wire_telescope>;
+    std::size_t n_checked_elements{0u};
+    std::size_t n_unconverged_elements{0u};
+    std::size_t track_count{0u};
 
-  // Stepper types
-  using const_field_stepper_t =
-      rk_stepper<const_bfield_t::view_t, test_algebra, constrained_step<scalar>,
-                 stepper_default_policy<scalar>>;
-  using inhom_field_stepper_t =
-      rk_stepper<inhom_bfield_t::view_t, test_algebra, constrained_step<scalar>,
-                 stepper_default_policy<scalar>>;
+    for (const auto track : trk_generator_t{trk_gen_cfg}) {
+      const std::size_t track_id = track_count++;
+      SCOPED_TRACE("track " + std::to_string(track_id));
 
-  // Make four propagators for each case
-  using const_field_rect_propagator_t =
-      propagator<const_field_stepper_t, rect_navigator_t, actor_chain_t>;
-  using inhom_field_rect_propagator_t =
-      propagator<inhom_field_stepper_t, rect_navigator_t, actor_chain_t>;
+      // Pilot track
+      detail::helix<test_algebra> helix_bz(track, B_z);
 
-  using const_field_wire_propagator_t =
-      propagator<const_field_stepper_t, wire_navigator_t, actor_chain_t>;
-  using inhom_field_wire_propagator_t =
-      propagator<inhom_field_stepper_t, wire_navigator_t, actor_chain_t>;
+      // Make a telescope geometry around the pilot track
+      const scalar detector_length = rand_length(mt1);
 
-  std::size_t track_count = 0u;
+      mask<shape_t, test_algebra> m{0u, detector_length * mask_scaler,
+                                    detector_length * mask_scaler};
 
-  for (const auto track : trk_generator_t{trk_gen_cfg}) {
-    mt2.seed(track_count);
+      // Adjust overstep tolerance
+      const scalar overstep_tol =
+          -math::min(1000.f * unit<scalar>::mm, detector_length * 0.5f);
 
-    // Pilot track
-    detail::helix<test_algebra> helix_bz(track, B_z);
+      tel_det_config<test_algebra, shape_t, detail::helix> tel_cfg{m, helix_bz};
+      tel_cfg.envelope(envelope_size);
+      tel_cfg.module_material(vacuum<scalar>{});
+      tel_cfg.mat_thickness(0.f);
+      tel_cfg.n_surfaces(2u);
+      tel_cfg.length(detector_length);
+      tel_cfg.volume_material(volume_mat);
+      tel_cfg.do_check(false);
 
-    // Make a telescope geometry with rectagular surface
-    const scalar detector_length = rand_length(mt1);
-    const scalar constraint_step_size = detector_length * 1.25f;
+      auto alphaI = rand_alpha(mt1);
+      auto alphaF = rand_alpha(mt1);
+      auto betaF = math::acos(rand_cosbeta(mt1));
+      if (rand_bool(mt1) == 0) {
+        betaF = -betaF;
+      }
+      auto gammaF = rand_gamma(mt1);
 
-    mask<rect_type, test_algebra> rect{0u, detector_length * mask_scaler,
-                                       detector_length * mask_scaler};
-    mask<wire_type, test_algebra> wire{0u, detector_length * mask_scaler,
-                                       detector_length * mask_scaler};
+      auto [det, names] =
+          build_telescope_detector<test_algebra>(host_mr, tel_cfg);
+      tilt_surface<detector_t, mask_id>(det, 0u, helix_bz.dir(0.f), alphaI, 0.f,
+                                        0.f);
+      tilt_surface<detector_t, mask_id>(det, 1u, helix_bz.dir(detector_length),
+                                        alphaF, betaF, gammaF);
 
-    // Adjust overstep tolerance
-    scalar overstep_tol =
-        vm["overstep-tolerance-mm"].as<scalar>() * unit<scalar>::mm;
-    overstep_tol = -math::min(math::fabs(overstep_tol), detector_length * 0.5f);
+      // Start parameters on surface 0; for the backward direction, first go
+      // forward to surface 1 and start from there
+      bound_track_parameters<test_algebra> start =
+          get_initial_parameter<detector_t, mask_id>(det, track, B_z,
+                                                     helix_tol);
 
-    tel_det_config<test_algebra, rect_type, detail::helix> rectangle_cfg{
-        rect, helix_bz};
-    rectangle_cfg.envelope(envelope_size);
-    rectangle_cfg.module_material(vacuum<scalar>{});
-    rectangle_cfg.mat_thickness(0.f);
-    rectangle_cfg.n_surfaces(2u);
-    rectangle_cfg.length(detector_length);
-    rectangle_cfg.volume_material(vacuum<scalar>{});
-    rectangle_cfg.do_check(false);
+      if (dir == navigation::direction::e_backward) {
+        const auto fw = evaluate_bound_param<propagator_t, field_t>(
+            track_id, detector_length, start, det, field, overstep_tol,
+            on_surface_tol, rk_tol_displaced, navigation::direction::e_forward,
+            false, false, false);
+        ASSERT_TRUE(fw.m_reached_destination)
+            << "Forward pass to surface 1 failed";
+        start = fw.m_param_destination;
+      }
+      start.set_covariance(get_random_initial_covariance(start.qop()));
 
-    auto alphaI = rand_alpha(mt1);
-    auto alphaF = rand_alpha(mt1);
-    auto betaF = math::acos(rand_cosbeta(mt1));
-    if (rand_bool(mt1) == 0) {
-      betaF = -betaF;
-    }
-    auto gammaF = rand_gamma(mt1);
+      // Reference propagation with covariance transport and full Jacobian
+      bound_covariance_type J = matrix::identity<bound_covariance_type>();
+      const auto ref = evaluate_bound_param<propagator_t, field_t>(
+          track_id, detector_length, start, det, field, overstep_tol,
+          on_surface_tol, rk_tol_reference, dir, false, true, false, &J);
+      ASSERT_TRUE(ref.m_reached_destination)
+          << "Reference propagation did not reach the destination";
+      ASSERT_GE(math::fabs(ref.m_path_length), 0.5f * detector_length);
+      ASSERT_LE(math::fabs(ref.m_path_length), 1.5f * detector_length);
 
-    std::array<scalar, 3u> euler_angles_I{alphaI, 0.f, 0.f};
-    std::array<scalar, 3u> euler_angles_F{alphaF, betaF, gammaF};
+      // Finite differences of the same map, without covariance transport
+      std::array<unsigned int, 5u> num_iterations{};
+      std::array<bool, 25u> convergence{};
+      bool fd_ok{true};
+      const bound_covariance_type J_fd =
+          directly_differentiate<propagator_t, field_t>(
+              track_id, ref.m_param_departure, det, detector_length, field,
+              overstep_tol, on_surface_tol, rk_tol_displaced, dir, hs,
+              num_iterations, convergence, fd_ok);
+      ASSERT_TRUE(fd_ok)
+          << "A displaced propagation did not reach the destination";
 
-    // Without volume material
-    auto [rect_det, rect_names] =
-        build_telescope_detector<test_algebra>(host_mr, rectangle_cfg);
-    const auto [euler_rect_initial, shift_rect_initial] =
-        tilt_surface<decltype(rect_det),
-                     decltype(rect_det)::masks::id::e_rectangle2D>(
-            rect_det, 0u, helix_bz.dir(0.f), alphaI, 0.f, 0.f);
-    const auto [euler_rect_final, shift_rect_final] =
-        tilt_surface<decltype(rect_det),
-                     decltype(rect_det)::masks::id::e_rectangle2D>(
-            rect_det, 1u, helix_bz.dir(detector_length), alphaF, betaF, gammaF);
+      const scalar qop = ref.m_param_departure.qop();
 
-    // With volume material
-    rectangle_cfg.volume_material(volume_mat);
-    auto [rect_det_w_mat, rect_names2] =
-        build_telescope_detector<test_algebra>(host_mr, rectangle_cfg);
-    [[maybe_unused]] const auto [euler_rect_initial2, shift_rect_initial2] =
-        tilt_surface<decltype(rect_det_w_mat),
-                     decltype(rect_det_w_mat)::masks::id::e_rectangle2D>(
-            rect_det_w_mat, 0u, helix_bz.dir(0.f), alphaI, 0.f, 0.f);
-    [[maybe_unused]] const auto [euler_rect_final2, shift_rect_final2] =
-        tilt_surface<decltype(rect_det_w_mat),
-                     decltype(rect_det_w_mat)::masks::id::e_rectangle2D>(
-            rect_det_w_mat, 1u, helix_bz.dir(detector_length), alphaF, betaF,
-            gammaF);
+      // Time is not propagated: its row and column must be trivial
+      for (unsigned int k = 0u; k < 5u; k++) {
+        EXPECT_EQ(getter::element(J, k, e_bound_time), 0.f) << param_name(k);
+        EXPECT_EQ(getter::element(J, e_bound_time, k), 0.f) << param_name(k);
+      }
+      EXPECT_EQ(getter::element(J, e_bound_time, e_bound_time), 1.f);
 
-    // Make a telescope geometry with wire surface
-    tel_det_config<test_algebra, wire_type, detail::helix> wire_cfg{wire,
-                                                                    helix_bz};
-    wire_cfg.envelope(envelope_size);
-    wire_cfg.module_material(vacuum<scalar>{});
-    wire_cfg.mat_thickness(0.f);
-    wire_cfg.n_surfaces(2u);
-    wire_cfg.length(detector_length);
-    wire_cfg.volume_material(vacuum<scalar>{});
-    wire_cfg.do_check(false);
-
-    // Without volume material
-    auto [wire_det, wire_names] =
-        build_telescope_detector<test_algebra>(host_mr, wire_cfg);
-    const auto [euler_wire_initial, shift_wire_initial] =
-        tilt_surface<decltype(wire_det),
-                     decltype(wire_det)::masks::id::e_drift_cell>(
-            wire_det, 0u, helix_bz.dir(0.f), alphaI, 0.f, 0.f);
-    const auto [euler_wire_final, shift_wire_final] =
-        tilt_surface<decltype(wire_det),
-                     decltype(wire_det)::masks::id::e_drift_cell>(
-            wire_det, 1u, helix_bz.dir(detector_length), alphaF, betaF, gammaF);
-
-    // With volume material
-    wire_cfg.volume_material(volume_mat);
-    auto [wire_det_w_mat, wire_names2] =
-        build_telescope_detector<test_algebra>(host_mr, wire_cfg);
-    [[maybe_unused]] const auto [euler_wire_initial2, shift_wire_initial2] =
-        tilt_surface<decltype(wire_det_w_mat),
-                     decltype(wire_det_w_mat)::masks::id::e_drift_cell>(
-            wire_det_w_mat, 0u, helix_bz.dir(0.f), alphaI, 0.f, 0.f);
-    [[maybe_unused]] const auto [euler_wire_final2, shift_wire_final2] =
-        tilt_surface<decltype(wire_det_w_mat),
-                     decltype(wire_det_w_mat)::masks::id::e_drift_cell>(
-            wire_det_w_mat, 1u, helix_bz.dir(detector_length), alphaF, betaF,
-            gammaF);
-
-    // This IF block should locate after `tilt_surface()` calls for
-    // debugging purpose
-    if (track_count + 1 <= n_skips) {
-      track_count++;
-      continue;
-    }
-
-    track_count++;
-
-    if (verbose_lvl >= 1) {
-      std::clog << "[Event Property]" << std::endl;
-      std::clog << "Track ID: " << track_count
-                << "  Number of processed tracks per thread: "
-                << track_count - n_skips << std::endl;
-    }
-    if (verbose_lvl >= 2) {
-      std::clog << "[Detector Property]" << std::endl;
-      std::clog << "Path length for the final surface: " << detector_length
-                << std::endl;
-      std::clog << "Rect initial surface rotation: ("
-                << euler_rect_initial.alpha << " " << euler_rect_initial.beta
-                << " " << euler_rect_initial.gamma << ")" << std::endl;
-      std::clog << "Rect initial surface shift: (" << shift_rect_initial[0u]
-                << " " << shift_rect_initial[1u] << " "
-                << shift_rect_initial[2u] << ")" << std::endl;
-      std::clog << "Rect final surface rotation: (" << euler_rect_final.alpha
-                << " " << euler_rect_final.beta << " " << euler_rect_final.gamma
-                << ")" << std::endl;
-      std::clog << "Rect final surface shift: (" << shift_rect_final[0u] << " "
-                << shift_rect_final[1u] << " " << shift_rect_final[2u] << ")"
-                << std::endl;
-      std::clog << "Wire initial surface rotation: ("
-                << euler_wire_initial.alpha << " " << euler_wire_initial.beta
-                << " " << euler_wire_initial.gamma << ")" << std::endl;
-      std::clog << "Wire initial surface shift: (" << shift_wire_initial[0u]
-                << " " << shift_wire_initial[1u] << " "
-                << shift_wire_initial[2u] << ")" << std::endl;
-      std::clog << "Wire final surface rotation: (" << euler_wire_final.alpha
-                << " " << euler_wire_final.beta << " " << euler_wire_final.gamma
-                << ")" << std::endl;
-      std::clog << "Wire final surface shift: (" << shift_wire_final[0u] << " "
-                << shift_wire_final[1u] << " " << shift_wire_final[2u] << ")"
-                << std::endl;
-    }
-    if (verbose_lvl >= 3) {
-      std::clog << "[Track Property]" << std::endl;
-      std::clog << "Phi: " << vector::phi(track.dir()) << std::endl;
-      std::clog << "Theta: " << vector::theta(track.dir()) << std::endl;
-      std::clog << "Mom: " << track.p(ptc.charge()) << std::endl;
-    }
-
-    /**********************************
-     * Rectangular telescope geometry
-     **********************************/
-
-    if (verbose_lvl >= 3 && !skip_rect) {
-      std::clog << "Simulating rectangular telescope..." << std::endl;
-    }
-
-    // Get initial parameter
-    const auto rect_bparam =
-        get_initial_parameter<decltype(rect_det),
-                              decltype(rect_det)::masks::id::e_rectangle2D>(
-            rect_det, track, B_z, helix_tol);
-
-    if (!skip_rect) {
-      auto ref_rel_diff{std::numeric_limits<scalar>::max()};
-
-      if (rk_tolerance_iterate_mode) {
-        std::array<unsigned int, 5u> num_iterations{};
-        std::array<bool, 25u> convergence{};
-        auto differentiated_jacobian =
-            directly_differentiate<inhom_field_rect_propagator_t>(
-                track_count, rect_bparam, rect_det_w_mat, detector_length,
-                inhom_bfield, overstep_tol, on_surface_tol, rk_tol_dis,
-                constraint_step_size, h_sizes_rect, num_iterations,
-                convergence);
-
-        for (std::size_t i = 0u; i < log10_tols.size(); i++) {
-          // Rectangle Inhomogeneous field with Material
-          evaluate_jacobian_difference<inhom_field_rect_propagator_t>(
-              track_count, euler_angles_I, euler_angles_F, rect_det_w_mat,
-              detector_length, rect_bparam, inhom_bfield, overstep_tol,
-              on_surface_tol, std::pow(10.f, log10_tols[i]), rk_tol_dis,
-              constraint_step_size, h_sizes_rect, rect_files[i], ref_rel_diff,
-              true, do_inspect, true, differentiated_jacobian, num_iterations,
-              convergence);
-
-          dqopdqop_rel_diffs_rect[i].push_back(ref_rel_diff);
+      // All 25 elements of the 5x5 block (convergence is stored row-major as
+      // convergence[i + j * 5] for d(param_j)/d(param_i))
+      for (unsigned int j = 0u; j < 5u; j++) {
+        for (unsigned int i = 0u; i < 5u; i++) {
+          if (!convergence[i + j * 5u]) {
+            n_unconverged_elements++;
+            continue;
+          }
+          n_checked_elements++;
+          const scalar num = getter::element(J_fd, j, i);
+          const scalar ana = getter::element(J, j, i);
+          EXPECT_NEAR(ana, num, jacobian_tolerance(j, i, num, qop))
+              << "d" << param_name(j) << "/d" << param_name(i) << " (path "
+              << ref.m_path_length << " mm, qop " << qop << ")";
         }
-      } else if (!rk_tolerance_iterate_mode) {
-        // For helix
-        evaluate_jacobian_difference_helix<
-            decltype(rect_det), decltype(rect_det)::masks::id::e_rectangle2D>(
-            track_count, euler_angles_I, euler_angles_F, rect_det,
-            detector_length, rect_bparam, B_z, h_sizes_rect, helix_rect_file,
-            helix_tol);
+      }
 
-        // Rect Const field
-        evaluate_jacobian_difference<const_field_rect_propagator_t>(
-            track_count, euler_angles_I, euler_angles_F, rect_det,
-            detector_length, rect_bparam, const_bfield, overstep_tol,
-            on_surface_tol, rk_tol_jac, rk_tol_dis, constraint_step_size,
-            h_sizes_rect, const_rect_file, ref_rel_diff, true, false);
+      // Transported covariance against J_fd C J_fd^T. The finite-difference
+      // Jacobian is 5x5; the time row and column are the identity.
+      bound_covariance_type J6 = J_fd;
+      for (unsigned int k = 0u; k < 5u; k++) {
+        getter::element(J6, k, e_bound_time) = 0.f;
+        getter::element(J6, e_bound_time, k) = 0.f;
+      }
+      getter::element(J6, e_bound_time, e_bound_time) = 1.f;
 
-        // Rect Inhomogeneous field
-        evaluate_jacobian_difference<inhom_field_rect_propagator_t>(
-            track_count, euler_angles_I, euler_angles_F, rect_det,
-            detector_length, rect_bparam, inhom_bfield, overstep_tol,
-            on_surface_tol, rk_tol_jac, rk_tol_dis, constraint_step_size,
-            h_sizes_rect, inhom_rect_file, ref_rel_diff, true, false);
+      const bound_covariance_type& C0 = start.covariance();
+      const bound_covariance_type C_fd = J6 * C0 * matrix::transpose(J6);
+      const bound_covariance_type& C = ref.m_param_destination.covariance();
 
-        // Rectangle Inhomogeneous field with Material
-        evaluate_jacobian_difference<inhom_field_rect_propagator_t>(
-            track_count, euler_angles_I, euler_angles_F, rect_det_w_mat,
-            detector_length, rect_bparam, inhom_bfield, overstep_tol,
-            on_surface_tol, rk_tol_jac, rk_tol_dis, constraint_step_size,
-            h_sizes_rect, inhom_rect_material_file, ref_rel_diff, true, false);
+      for (unsigned int i = 0u; i < e_bound_size; i++) {
+        for (unsigned int j = 0u; j < e_bound_size; j++) {
+          const scalar scale = math::sqrt(getter::element(C_fd, i, i) *
+                                          getter::element(C_fd, j, j));
+          EXPECT_NEAR(getter::element(C, i, j), getter::element(C_fd, i, j),
+                      cov_rtol * scale)
+              << "C(" << param_name(i) << "," << param_name(j) << ")";
+        }
+      }
 
-        // Rectangle Inhomogeneous field with Material (Covariance
-        // transport)
-        evaluate_covariance_transport<inhom_field_rect_propagator_t>(
-            track_count, euler_angles_I, euler_angles_F, rect_det_w_mat,
-            detector_length, rect_bparam, inhom_bfield, overstep_tol,
-            on_surface_tol, rk_tol_cov, rk_tol_dis, constraint_step_size,
-            rect_cov_transport_file, true);
+      // The transported covariance must be symmetric to rounding
+      for (unsigned int i = 0u; i < e_bound_size; i++) {
+        for (unsigned int j = 0u; j < i; j++) {
+          const scalar scale =
+              math::sqrt(getter::element(C, i, i) * getter::element(C, j, j));
+          EXPECT_NEAR(getter::element(C, i, j), getter::element(C, j, i),
+                      1e-5f * scale)
+              << "asymmetry in C(" << param_name(i) << "," << param_name(j)
+              << ")";
+        }
       }
     }
 
-    /**********************************
-     * Wire telescope geometry
-     **********************************/
+    // The differentiation must converge for essentially all elements
+    EXPECT_EQ(track_count, n_tracks);
+    EXPECT_LE(n_unconverged_elements,
+              (n_checked_elements + n_unconverged_elements) / 50u)
+        << "Too many non-converged finite differences";
+  };
 
-    if (verbose_lvl >= 3 && !skip_wire) {
-      std::clog << "Simulating wire telescope..." << std::endl;
+  auto dispatch_field = [&]<typename shape_t>() {
+    if (field_cfg == field_type::e_const) {
+      run.template operator()<shape_t>(const_field);
+    } else {
+      run.template operator()<shape_t>(*inhom_field);
     }
+  };
 
-    // Get initial parameter
-    const auto wire_bparam =
-        get_initial_parameter<decltype(wire_det),
-                              decltype(wire_det)::masks::id::e_drift_cell>(
-            wire_det, track, B_z, helix_tol);
-
-    if (!skip_wire) {
-      auto ref_rel_diff{std::numeric_limits<scalar>::max()};
-
-      if (rk_tolerance_iterate_mode) {
-        std::array<unsigned int, 5u> num_iterations{};
-        std::array<bool, 25u> convergence{};
-        auto differentiated_jacobian =
-            directly_differentiate<inhom_field_wire_propagator_t>(
-                track_count, wire_bparam, wire_det_w_mat, detector_length,
-                inhom_bfield, overstep_tol, on_surface_tol, rk_tol_dis,
-                constraint_step_size, h_sizes_wire, num_iterations,
-                convergence);
-
-        for (std::size_t i = 0u; i < log10_tols.size(); i++) {
-          // Wire Inhomogeneous field with Material
-          evaluate_jacobian_difference<inhom_field_wire_propagator_t>(
-              track_count, euler_angles_I, euler_angles_F, wire_det_w_mat,
-              detector_length, wire_bparam, inhom_bfield, overstep_tol,
-              on_surface_tol, std::pow(10.f, log10_tols[i]), rk_tol_dis,
-              constraint_step_size, h_sizes_wire, wire_files[i], ref_rel_diff,
-              true, do_inspect, true, differentiated_jacobian, num_iterations,
-              convergence);
-
-          dqopdqop_rel_diffs_wire[i].push_back(ref_rel_diff);
-        }
-      } else if (!rk_tolerance_iterate_mode) {
-        // For helix
-        evaluate_jacobian_difference_helix<
-            decltype(wire_det), decltype(wire_det)::masks::id::e_drift_cell>(
-            track_count, euler_angles_I, euler_angles_F, wire_det,
-            detector_length, wire_bparam, B_z, h_sizes_wire, helix_wire_file,
-            helix_tol);
-
-        // Wire Const field
-        evaluate_jacobian_difference<const_field_wire_propagator_t>(
-            track_count, euler_angles_I, euler_angles_F, wire_det,
-            detector_length, wire_bparam, const_bfield, overstep_tol,
-            on_surface_tol, rk_tol_jac, rk_tol_dis, constraint_step_size,
-            h_sizes_wire, const_wire_file, ref_rel_diff, true, false);
-
-        // Wire Inhomogeneous field
-        evaluate_jacobian_difference<inhom_field_wire_propagator_t>(
-            track_count, euler_angles_I, euler_angles_F, wire_det,
-            detector_length, wire_bparam, inhom_bfield, overstep_tol,
-            on_surface_tol, rk_tol_jac, rk_tol_dis, constraint_step_size,
-            h_sizes_wire, inhom_wire_file, ref_rel_diff, true, false);
-
-        // Wire Inhomogeneous field with Material
-        evaluate_jacobian_difference<inhom_field_wire_propagator_t>(
-            track_count, euler_angles_I, euler_angles_F, wire_det_w_mat,
-            detector_length, wire_bparam, inhom_bfield, overstep_tol,
-            on_surface_tol, rk_tol_jac, rk_tol_dis, constraint_step_size,
-            h_sizes_wire, inhom_wire_material_file, ref_rel_diff, true, false);
-
-        // Wire Inhomogeneous field with Material (Covariance transport)
-        evaluate_covariance_transport<inhom_field_wire_propagator_t>(
-            track_count, euler_angles_I, euler_angles_F, wire_det_w_mat,
-            detector_length, wire_bparam, inhom_bfield, overstep_tol,
-            on_surface_tol, rk_tol_cov, rk_tol_dis, constraint_step_size,
-            wire_cov_transport_file, true);
-      }
-    }
-  }
-
-  if (rk_tolerance_iterate_mode) {
-    for (std::size_t i = 0u; i < log10_tols.size(); i++) {
-      EXPECT_EQ(dqopdqop_rel_diffs_rect[i].size(), n_tracks);
-      EXPECT_EQ(dqopdqop_rel_diffs_wire[i].size(), n_tracks);
-
-      EXPECT_GE(statistics::mean(dqopdqop_rel_diffs_rect[i]), 1e-12f);
-      EXPECT_LE(statistics::mean(dqopdqop_rel_diffs_rect[i]), 1e-2f);
-      EXPECT_GE(statistics::mean(dqopdqop_rel_diffs_wire[i]), 1e-12f);
-      EXPECT_LE(statistics::mean(dqopdqop_rel_diffs_wire[i]), 1e-2f);
-    }
-  }
-
-  // Close files
-  helix_rect_file.close();
-  const_rect_file.close();
-  inhom_rect_file.close();
-  inhom_rect_material_file.close();
-
-  helix_wire_file.close();
-  const_wire_file.close();
-  inhom_wire_file.close();
-  inhom_wire_material_file.close();
-
-  rect_cov_transport_file.close();
-  wire_cov_transport_file.close();
-
-  if (rk_tolerance_iterate_mode) {
-    for (std::size_t i = 0u; i < log10_tols.size(); i++) {
-      rect_files[i].close();
-      wire_files[i].close();
-    }
+  if (surface_cfg == surface_type::e_rect) {
+    dispatch_field.template operator()<rect_type>();
+  } else {
+    dispatch_field.template operator()<wire_type>();
   }
 }
+
+std::string test_name(const ::testing::TestParamInfo<test_param>& info) {
+  const field_type f = std::get<0>(info.param);
+  const surface_type sf = std::get<1>(info.param);
+  const navigation::direction d = std::get<2>(info.param);
+  std::string name = (f == field_type::e_const)   ? "const_field"
+                     : (f == field_type::e_inhom) ? "inhom_field"
+                                                  : "inhom_field_material";
+  name += (sf == surface_type::e_rect) ? "_rect" : "_wire";
+  name += (d == navigation::direction::e_forward) ? "_forward" : "_backward";
+  return name;
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    detray_propagator, JacobianValidation,
+    ::testing::Combine(
+        ::testing::Values(field_type::e_const, field_type::e_inhom,
+                          field_type::e_inhom_material),
+        ::testing::Values(surface_type::e_rect, surface_type::e_wire),
+        ::testing::Values(navigation::direction::e_forward,
+                          navigation::direction::e_backward)),
+    test_name);
