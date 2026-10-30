@@ -908,8 +908,9 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   std::size_t nCandidateHeads = 0;
   for (const auto& head : event->heads) {
     BOOST_CHECK(edges.contains({head.inner, head.outer}));
-    nCandidateHeads +=
-        head.outcome == Experimental::GbtsProfiler::HeadOutcome::Candidate;
+    if (head.outcome == Experimental::GbtsProfiler::HeadOutcome::Candidate) {
+      ++nCandidateHeads;
+    }
   }
 
   // a filter rejection's chain runs from the failed edge out to its head, edge
@@ -934,7 +935,9 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   for (const auto& candidate : event->candidates) {
     using enum Experimental::GbtsProfiler::CandidateFate;
     nOutput += candidate.fate == Seed ? 1 : candidate.fate == Split ? 2 : 0;
-    nClones += candidate.fate == Clone;
+    if (candidate.fate == Clone) {
+      ++nClones;
+    }
   }
   BOOST_CHECK_EQUAL(nOutput, seeds.size());
   BOOST_CHECK_GT(nClones, 0u);
