@@ -14,6 +14,7 @@ if(ACTS_BUILD_PLUGIN_ROOT)
     add_unittest(FastStrawLineFitTests FastStrawLineFitTests.cpp)
     add_unittest(StrawLineFitterTest StrawLineFitterTest.cpp)
     add_unittest(StrawLineSeederTest StrawLineSeederTest.cpp)
+    add_unittest(GlobalPatternFinderTest GlobalPatternFinderTest.cpp)
 
     target_link_libraries(
         ActsUnitTestFastStrawLineFitTests
@@ -26,6 +27,10 @@ if(ACTS_BUILD_PLUGIN_ROOT)
     target_link_libraries(
         ActsUnitTestStrawLineSeederTest
         PRIVATE ROOT::Tree ROOT::RIO
+    )
+    target_link_libraries(
+        ActsUnitTestGlobalPatternFinderTest
+        PRIVATE ROOT::Tree ROOT::RIO ROOT::Hist
     )
 
     set_tests_properties(StrawLineFitterTest PROPERTIES LABELS "slow")
