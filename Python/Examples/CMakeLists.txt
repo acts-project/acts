@@ -307,7 +307,11 @@ add_examples_binding_if(
 
 add_examples_binding_if(
     NAME Traccc
-    LINK_LIBRARIES Acts::ExamplesTraccc
+    LINK_LIBRARIES
+        Acts::ExamplesTraccc
+        Acts::PluginDetray
+        Acts::PluginCovfie
+        traccc::io
     FLAG ACTS_BUILD_PLUGIN_TRACCC
     PLUGIN_IMPORT FALSE
 )

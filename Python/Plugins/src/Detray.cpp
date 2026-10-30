@@ -10,6 +10,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
+#include "ActsPlugins/Detray/DetraySurfaceIdMap.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -129,9 +130,16 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
 
   using DetrayGeometryODD =
       DetrayGeometryConverter::DetrayGeometry<DetrayMetaDataODD>;
+  py::class_<DetraySurfaceIdMap, std::shared_ptr<DetraySurfaceIdMap>>(
+      detray, "DetraySurfaceIdMap")
+      .def("toDetray", &DetraySurfaceIdMap::toDetray, "id"_a)
+      .def("fromDetray", &DetraySurfaceIdMap::fromDetray, "detrayId"_a)
+      .def("__len__", &DetraySurfaceIdMap::size);
+
   py::class_<DetrayGeometryODD>(geometryConverter, "DetrayGeometry")
       .def_readonly("detector", &DetrayGeometryODD::detector)
-      .def_readonly("names", &DetrayGeometryODD::names);
+      .def_readonly("names", &DetrayGeometryODD::names)
+      .def_readonly("surfaceIds", &DetrayGeometryODD::surfaceIds);
 
   geometryConverter
       .def(py::init([](DetrayGeometryConverter::Config config,

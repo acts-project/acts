@@ -1,6 +1,10 @@
 # Backend agnostic traccc example code. The backend specific implementations
 # are provided by the backend libraries below.
-acts_add_library(ExamplesTraccc src/TracccDetector.cpp)
+acts_add_library(
+    ExamplesTraccc
+    src/TracccDetector.cpp
+    src/TracccMagneticField.cpp
+)
 
 target_include_directories(
     ActsExamplesTraccc
@@ -9,8 +13,12 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesTraccc
-    PUBLIC Acts::Core Acts::ExamplesFramework traccc::core vecmem::core
-    PRIVATE traccc::io
+    PUBLIC
+        Acts::Core
+        Acts::ExamplesFramework
+        Acts::PluginDetray
+        traccc::core
+        vecmem::core
 )
 
 acts_compile_headers(ExamplesTraccc GLOB "include/**/*.hpp")

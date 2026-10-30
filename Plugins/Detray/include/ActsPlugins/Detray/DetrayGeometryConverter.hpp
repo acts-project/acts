@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
+#include "ActsPlugins/Detray/DetraySurfaceIdMap.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -65,7 +66,7 @@ class DetrayGeometryConverter {
   /// @brief Combined result of a geometry conversion
   ///
   /// Bundles the built detray detector together with the detray volume/surface
-  /// name map.
+  /// name map and the map between ACTS and detray surface identifiers.
   /// @tparam metadata_t the detector metadata type
   template <detray::concepts::metadata metadata_t>
   struct DetrayGeometry {
@@ -74,6 +75,9 @@ class DetrayGeometryConverter {
 
     /// The detray volume and surface name map
     detray::name_map names;
+
+    /// The map between ACTS and detray identifiers of the sensitive surfaces
+    DetraySurfaceIdMap surfaceIds;
   };
 
   /// Constructor
@@ -105,7 +109,8 @@ class DetrayGeometryConverter {
   /// 2. It builds a detray detector from the converted payloads using the
   ///    detray::detector_builder.
   ///
-  /// @return The built detray detector together with its name map.
+  /// @return The built detray detector together with its name map and the
+  ///         ACTS <-> detray surface identifier map.
   template <detray::concepts::metadata metadata_t>
   DetrayGeometry<metadata_t> convert(
       vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
@@ -192,6 +197,11 @@ class DetrayGeometryConverter {
     build_opts.deduplicate(m_cfg.deduplicateMaterial);
     result.detector = std::make_shared<detector_t>(
         detectorBuilder.build(mr, build_opts, result.names));
+
+    // detray assigns the surface identifiers during the build
+    result.surfaceIds = DetraySurfaceIdMap::fromDetector(*result.detector);
+    ACTS_DEBUG("Mapped " << result.surfaceIds.size()
+                         << " sensitive surfaces between ACTS and detray");
 
     return result;
   }

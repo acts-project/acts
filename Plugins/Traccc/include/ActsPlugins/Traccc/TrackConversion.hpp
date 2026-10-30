@@ -143,7 +143,7 @@ TracccTrackConversionStatistics convertTracksFromTraccc(
       ++stats.nFailedFit;
       continue;
     }
-    if (detail::hasZeroBoundParameters(track.params())) {
+    if (ActsPlugins::detail::hasZeroBoundParameters(track.params())) {
       ++stats.nDegenerate;
       continue;
     }
@@ -188,7 +188,7 @@ TracccTrackConversionStatistics convertTracksFromTraccc(
         continue;
       }
 
-      if (detail::hasZeroBoundParameters(smoothed)) {
+      if (ActsPlugins::detail::hasZeroBoundParameters(smoothed)) {
         degenerate = true;
         break;
       }
