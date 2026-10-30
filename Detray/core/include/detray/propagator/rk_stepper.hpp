@@ -321,10 +321,6 @@ class rk_stepper final
     DETRAY_VERBOSE_HOST_DEVICE("Distance to nex: %f mm", dist_to_next);
     DETRAY_VERBOSE_HOST_DEVICE("Initial stepsize: %f mm", stepping.step_size());
 
-    // Don't allow too small stepsizes, unless the navigation needs it
-    const scalar_type min_stepsize{
-        math::min(math::fabs(stepping.step_size()),
-                  static_cast<scalar_type>(cfg.min_stepsize))};
     const point3_type pos = stepping().pos();
 
     intermediate_state sd{};
@@ -432,38 +428,9 @@ class rk_stepper final
 
     scalar_type error{1e20f};
 
-    // If the estimated error is larger than the tolerance with an
-    // additional margin, reduce the step size and try again
-    const auto n_trials{cfg.max_rk_updates};
-    for (unsigned int i = 0u; i < n_trials; i++) {
-      stepping.count_trials();
-
-      error = math::max(estimate_error(stepping.step_size()),
-                        static_cast<scalar_type>(1e-20));
-
-      DETRAY_DEBUG_HOST_DEVICE("-> Integration error: %f", error);
-      assert(math::isfinite(error));
-
-      // Error is small enough
-      // ---> break and advance track
-      if (error <= 4.f * cfg.rk_error_tol) {
-        break;
-      }
-      // Error estimate is too big
-      // ---> Make step size smaller and estimate error again
-      else {
-        stepping.set_step_size(stepping.step_size() * step_size_scaling(error));
-
-        // Run inspection while the stepsize is getting adjusted
-        stepping.run_inspector(cfg, "Adjust stepsize: ", dist_to_next, i,
-                               step_size_scaling(error));
-      }
-    }
-
-    stepping.dtds(sd.dtds[3u]);
-    stepping.dqopds(sd.dqopds[3u]);
-
-    // Check constraints
+    // Apply an upper limit to the step size. The trial loop below only ever
+    // lowers the step size, so there is no risk of that pumping the step size
+    // up over this limit.
     if (const scalar_type max_step =
             stepping.constraints().template size<>(stepping.direction());
         math::fabs(stepping.step_size()) > math::fabs(max_step)) {
@@ -473,11 +440,63 @@ class rk_stepper final
       stepping.set_step_size(max_step);
     }
 
-    // Adjust the min step size
-    if (math::fabs(stepping.step_size()) < min_stepsize) {
-      stepping.set_step_size(
-          math::copysign(min_stepsize, stepping.step_size()));
+    // Don't allow too small stepsizes, unless the navigation needs it
+    const scalar_type min_stepsize{
+        math::min(math::fabs(stepping.step_size()),
+                  static_cast<scalar_type>(cfg.min_stepsize))};
+
+    bool sd_in_sync = false;
+
+    // If the estimated error is larger than the tolerance with an
+    // additional margin, reduce the step size and try again
+    const auto n_trials{cfg.max_rk_updates};
+    for (unsigned int i = 0u; i < n_trials; i++) {
+      stepping.count_trials();
+
+      error = math::max(estimate_error(stepping.step_size()),
+                        static_cast<scalar_type>(1e-20));
+      sd_in_sync = true;
+
+      DETRAY_DEBUG_HOST_DEVICE("-> Integration error: %f", error);
+      assert(math::isfinite(error));
+
+      // Error is small enough
+      // ---> break and advance track
+      if (error <= 4.f * cfg.rk_error_tol) {
+        break;
+      }
+      // Error estimate is too big, and we cannot go smaller
+      // ---> break, don't waste more steps
+      else if (math::fabs(stepping.step_size()) == min_stepsize) {
+        break;
+      }
+      // Error estimate is too big
+      // ---> Make step size smaller and estimate error again
+      else {
+        const scalar_type scaling_factor = step_size_scaling(error);
+        assert(scaling_factor <= scalar_type{1.f});
+        scalar_type new_step_size = stepping.step_size() * scaling_factor;
+
+        if (math::fabs(new_step_size) < min_stepsize) {
+          new_step_size = math::copysign(min_stepsize, new_step_size);
+        }
+
+        stepping.set_step_size(new_step_size);
+        sd_in_sync = false;
+
+        // Run inspection while the stepsize is getting adjusted
+        stepping.run_inspector(cfg, "Adjust stepsize: ", dist_to_next, i,
+                               scaling_factor);
+      }
     }
+
+    if (!sd_in_sync) [[unlikely]] {
+      error = math::max(estimate_error(stepping.step_size()),
+                        static_cast<scalar_type>(1e-20));
+    }
+
+    stepping.dtds(sd.dtds[3u]);
+    stepping.dqopds(sd.dqopds[3u]);
 
     DETRAY_VERBOSE_HOST_DEVICE("Take step: %f mm", stepping.step_size());
 
