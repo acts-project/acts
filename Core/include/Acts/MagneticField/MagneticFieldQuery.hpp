@@ -30,8 +30,14 @@ class MagneticFieldQuery {
 
   MagneticFieldQuery(const MagneticFieldQuery&) = delete;
   MagneticFieldQuery& operator=(const MagneticFieldQuery&) = delete;
-  MagneticFieldQuery(MagneticFieldQuery&&) = default;
-  MagneticFieldQuery& operator=(MagneticFieldQuery&&) = default;
+  /// Move the provider and its cache from another query.
+  /// @param other Query to move from
+  MagneticFieldQuery(MagneticFieldQuery&& other) = default;
+
+  /// Replace this query by moving another query's provider and cache.
+  /// @param other Query to move from
+  /// @return This query
+  MagneticFieldQuery& operator=(MagneticFieldQuery&& other) = default;
 
   /// Query the field, updating the private provider-specific cache.
   /// @param position Global position of the lookup
