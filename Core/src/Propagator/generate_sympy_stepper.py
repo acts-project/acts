@@ -63,6 +63,26 @@ dEds1 = Symbol("dEds1", real=True)
 dEds2 = Symbol("dEds2", real=True)
 dEds3 = Symbol("dEds3", real=True)
 dEds4 = Symbol("dEds4", real=True)
+loss_samples = (dEds1, dEds2, dEds3, dEds4)
+loss_gradients = sym.symbols("dGdqop1:5", real=True)
+
+
+def stage_jacobian(expr, variables, stage_qop, stage):
+    """Differentiate a stage, including its stopping-power dependence on q/p.
+
+    Field and spatial material gradients remain outside this approximation.
+    The loss samples are independent symbols in the value expressions, but
+    their q/p derivatives are supplied by the material model at each stage.
+    """
+    result = expr.jacobian(variables)
+    loss = loss_samples[stage]
+    if expr.has(loss):
+        result += (
+            expr.diff(loss)
+            * loss_gradients[stage]
+            * Matrix([stage_qop]).jacobian(variables)
+        )
+    return result
 
 
 def dtime_dqop(dtds):
@@ -149,19 +169,18 @@ def rk4_subexpr(eom, x, y, ydot, h):
         "new_ydot", ydot + h / 6 * (k1.name + 2 * (k2.name + k3.name) + k4.name)
     )
 
-    dk1_dstate = name_expr("dk1_dstate", k1.expr.jacobian([y, ydot]))
-    dk2_dstate = name_expr(
-        "dk2_dstate",
-        k2.expr.jacobian([y, ydot]) + k2.expr.jacobian(k1.name) * dk1_dstate.name,
-    )
-    dk3_dstate = name_expr(
-        "dk3_dstate",
-        k3.expr.jacobian([y, ydot]) + k3.expr.jacobian(k2.name) * dk2_dstate.name,
-    )
-    dk4_dstate = name_expr(
-        "dk4_dstate",
-        k4.expr.jacobian([y, ydot]) + k4.expr.jacobian(k3.name) * dk3_dstate.name,
-    )
+    ks = (k1, k2, k3, k4)
+    stage_states = (ydot, ydot2.expr, ydot3.expr, ydot4.expr)
+    dks = []
+    for i, k in enumerate(ks):
+        stage_qop = stage_states[i][4, 0]
+        derivative = stage_jacobian(k.expr, [y, ydot], stage_qop, i)
+        if i:
+            derivative += (
+                stage_jacobian(k.expr, ks[i - 1].name, stage_qop, i) * dks[-1].name
+            )
+        dks.append(name_expr(f"dk{i + 1}_dstate", derivative))
+    dk1_dstate, dk2_dstate, dk3_dstate, dk4_dstate = dks
 
     dy_dstate = name_expr(
         "dy_dstate",
@@ -606,10 +625,14 @@ def propagate_tangent(
     """
     ks = step.ks
     ts = []
+    stage_states = (ydot, step.ydot2.expr, step.ydot3.expr, step.ydot4.expr)
     for i in range(4):
-        contrib = ks[i].expr.jacobian([y, ydot]) * u
+        stage_qop = stage_states[i][4, 0]
+        contrib = stage_jacobian(ks[i].expr, [y, ydot], stage_qop, i) * u
         if i > 0:
-            contrib = contrib + ks[i].expr.jacobian(ks[i - 1].name) * ts[i - 1]
+            contrib += (
+                stage_jacobian(ks[i].expr, ks[i - 1].name, stage_qop, i) * ts[i - 1]
+            )
         ts.append(explicit(deriv.add(f"{tag}k{i + 1}", contrib).name))
 
     def combine(out):
@@ -681,7 +704,7 @@ def rk4_dense_derivation() -> DenseDerivation:
     path_derivatives.expr[0:3, 0] = new_dir.name.as_explicit()
     path_derivatives.expr[3, 0] = new_ydot.name[3, 0]
     path_derivatives.expr[4:7, 0] = k4.name[0:3, 0].as_explicit()
-    path_derivatives.expr[7, 0] = new_ydot.name[4, 0]
+    path_derivatives.expr[7, 0] = k4.name[4, 0]
 
     # Transport the bound-to-free jacobian the way the vacuum kernel does:
     # push each live column through the same Runge-Kutta recursion as the
@@ -917,13 +940,15 @@ def print_rk4_dense(
 
     fn_name = {"jac": "rk4_dense_jac", "nojac": "rk4_dense_nojac"}[mode]
     jac_params = ", std::span<T, 8> path_derivatives, std::span<T> M" if jac else ""
+    gradient_template = ", typename GetGGradient" if jac else ""
+    gradient_param = ", GetGGradient getGGradient" if jac else ""
     lines.append(
-        "template <typename T, typename GetB, typename GetG>\n"
+        f"template <typename T, typename GetB, typename GetG{gradient_template}>\n"
         f"inline __attribute__((always_inline)) {STATUS_TYPE} {fn_name}("
         "std::span<const T, 3> pos,"
         " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
         " const T charge, const T p_abs, std::span<const T, 3> B1, GetB getB,"
-        " GetG getG, T& err, const T errTol, std::error_code& fieldErr,"
+        f" GetG getG{gradient_param}, T& err, const T errTol, std::error_code& fieldErr,"
         " std::span<T, 3> new_pos, T& new_time,"
         " std::span<T, 3> new_dir, T& new_qop, std::span<T, 3> new_B"
         f"{jac_params}) {{"
@@ -933,6 +958,15 @@ def print_rk4_dense(
         lines.append(f"  assert(M.size() == {_B2F.size});")
 
     lines.append("  const auto dEds1 = getG(pos, qop);")
+    if jac:
+        lines.append("  const auto dGdqop1 = getGGradient(pos, qop);")
+
+    def sample_loss(stage, position, momentum):
+        args = f"std::span<const T, 3>({position}), {momentum}"
+        result = f"const auto dEds{stage} = getG({args});"
+        if jac:
+            result += f"\nconst auto dGdqop{stage} = getGGradient({args});"
+        return result
 
     def pre_expr_hook(var):
         if str(var) == "pos2":
@@ -951,11 +985,11 @@ def print_rk4_dense(
         if str(var) == "pos3":
             return _sample_field(3)
         if str(var) == "qop2":
-            return "const auto dEds2 = getG(std::span<const T, 3>(pos2), qop2);"
+            return sample_loss(2, "pos2", "qop2")
         if str(var) == "qop3":
-            return "const auto dEds3 = getG(std::span<const T, 3>(pos2), qop3);"
+            return sample_loss(3, "pos2", "qop3")
         if str(var) == "qop4":
-            return "const auto dEds4 = getG(std::span<const T, 3>(pos3), qop4);"
+            return sample_loss(4, "pos3", "qop4")
         if str(var) == "err":
             return f"if (err > errTol) {{\n  return {STATUS_TYPE}::Rejected;\n}}"
         if str(var) == "new_M":
@@ -1118,7 +1152,7 @@ def sample_point(seed: int = SAMPLE_SEED) -> dict:
     for vec in (position, direction, B1, B2, B3):
         for i in range(3):
             point[vec[i]] = r()
-    for gi in (dEds1, dEds2, dEds3, dEds4):
+    for gi in (*loss_samples, *loss_gradients):
         point[gi] = r()
     point[Symbol("dtds", real=True, positive=True)] = sym.Rational(
         u**2 + v**2, 2 * u * v

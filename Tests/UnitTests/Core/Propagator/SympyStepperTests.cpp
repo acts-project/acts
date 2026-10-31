@@ -638,6 +638,150 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_dense_zero_field_accuracy) {
   }
 }
 
+/// Stopping power depends on q/p at every RK stage. Check the transported
+/// derivative against finite differences of the actual trajectory.
+BOOST_AUTO_TEST_CASE(sympy_stepper_dense_stopping_power_gradient) {
+  SympyStepper stepper(std::make_shared<ConstantBField>(Vector3::Zero()));
+  const auto particle = ParticleHypothesis::muon();
+  const HomogeneousVolumeMaterial iron(makeIron());
+  for (bool mean : {false, true}) {
+    const auto run = [&](double qop, bool gradient) {
+      SympyStepper::Options options(tgContext, mfContext);
+      options.initialStepSize = 10_mm;
+      options.maxStepSize = 10_mm;
+      options.dense.meanEnergyLoss = mean;
+      options.dense.includeGradient = gradient;
+      auto state = stepper.makeState(options);
+      stepper.initialize(state, BoundTrackParameters::createCurvilinear(
+                                    Vector4::Zero(), Vector3::UnitX(), qop,
+                                    Covariance::Identity(), particle));
+      while (state.pathAccumulated < 1_m - 1e-9) {
+        state.stepSize.setUser(std::min(10_mm, 1_m - state.pathAccumulated));
+        BOOST_REQUIRE(stepper.step(state, Direction::Forward(), &iron).ok());
+      }
+      return state;
+    };
+    for (double charge : {-1., 1.}) {
+      const double qop = charge / 10_GeV;
+      const double delta = std::abs(qop) * 1e-3;
+      const auto central = run(qop, true);
+      const auto plus = run(qop + delta, true);
+      const auto minus = run(qop - delta, true);
+      const FreeVector numerical = (plus.pars - minus.pars) / (2 * delta);
+      auto jacobian = central.jacToGlobal;
+      detail::sympy::fromScaledBoundToFree(jacobian, stepper.qOverP(central));
+      CHECK_CLOSE_REL(jacobian(eFreeQOverP, eBoundQOverP),
+                      numerical[eFreeQOverP], 1e-4);
+      CHECK_CLOSE_REL(jacobian(eFreeTime, eBoundQOverP), numerical[eFreeTime],
+                      1e-4);
+      const auto frozen = run(qop, false);
+      CHECK_CLOSE_ABS(frozen.pars, central.pars, 1e-12);
+      BOOST_CHECK_GT(std::abs(frozen.jacToGlobal(eFreeQOverP, eBoundQOverP) -
+                              jacobian(eFreeQOverP, eBoundQOverP)),
+                     1e-3);
+    }
+  }
+}
+
+/// The variational flow needs the jump in crossing time at each discontinuous
+/// stopping-power boundary, including when a trajectory is reversed.
+BOOST_AUTO_TEST_CASE(sympy_stepper_dense_stopping_power_thresholds) {
+  const auto particle = ParticleHypothesis::muon();
+  const HomogeneousVolumeMaterial iron(makeIron());
+  for (double field : {0., 2_T}) {
+    SympyStepper stepper(
+        std::make_shared<ConstantBField>(Vector3(0, 0, field)));
+    for (bool mean : {false, true}) {
+      for (auto propagation : {Direction::Forward(), Direction::Backward()}) {
+        const auto run = [&](double qop) {
+          SympyStepper::Options options(tgContext, mfContext);
+          options.initialStepSize = 10_mm;
+          options.maxStepSize = 10_mm;
+          options.stepTolerance = 1e-9;
+          options.dense.meanEnergyLoss = mean;
+          auto state = stepper.makeState(options);
+          stepper.initialize(state, BoundTrackParameters::createCurvilinear(
+                                        Vector4::Zero(), Vector3::UnitX(), qop,
+                                        Covariance::Identity(), particle));
+          while (std::abs(state.pathAccumulated) < 1_m - 1e-9) {
+            state.stepSize.setUser(
+                std::min(10_mm, 1_m - std::abs(state.pathAccumulated)));
+            BOOST_REQUIRE(stepper.step(state, propagation, &iron).ok());
+          }
+          return state;
+        };
+        const bool forward = propagation == Direction::Forward();
+        for (double p : {forward ? 2_GeV : 0.8_GeV, forward ? 8.5_GeV : 7.5_GeV,
+                         forward ? 1000.5_GeV : 999.5_GeV}) {
+          for (double charge : {-1., 1.}) {
+            const double qop = charge / p;
+            const double delta = std::abs(qop) * (p < 100_GeV ? 1e-3 : 1e-4);
+            const auto central = run(qop);
+            const auto plus = run(qop + delta);
+            const auto minus = run(qop - delta);
+            const FreeVector numerical = (plus.pars - minus.pars) / (2 * delta);
+            auto jacobian = central.jacToGlobal;
+            detail::sympy::fromScaledBoundToFree(jacobian,
+                                                 stepper.qOverP(central));
+            // For the autonomous q/p equation q' = f(q), the exact fixed-path
+            // derivative is f(q_final)/f(q_initial), also across these jumps.
+            const auto flow = [&](double qp) {
+              const double momentum = std::abs(charge / qp);
+              const double loss =
+                  mean ? computeEnergyLossMean(MaterialSlab(makeIron(), 1_mm),
+                                               eMuon, particle.mass(), qp, 1.)
+                       : computeEnergyLossMode(MaterialSlab(makeIron(), 1_mm),
+                                               eMuon, particle.mass(), qp, 1.);
+              return qp * std::hypot(momentum, particle.mass()) * loss /
+                     (momentum * momentum);
+            };
+            CHECK_CLOSE_REL(jacobian(eFreeQOverP, eBoundQOverP),
+                            flow(stepper.qOverP(central)) / flow(qop), 2e-5);
+            CHECK_CLOSE_REL(jacobian(eFreeQOverP, eBoundQOverP),
+                            numerical[eFreeQOverP], 3e-4);
+            if (p < 100_GeV) {
+              CHECK_CLOSE_REL(jacobian(eFreeTime, eBoundQOverP),
+                              numerical[eFreeTime], 3e-4);
+            }
+            if (field != 0.) {
+              CHECK_CLOSE_REL(jacobian(eFreePos1, eBoundQOverP),
+                              numerical[eFreePos1], 3e-4);
+              CHECK_CLOSE_REL(jacobian(eFreeDir1, eBoundQOverP),
+                              numerical[eFreeDir1], 3e-4);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/// The surface correction needs d(q/p)/ds, not the endpoint q/p.
+BOOST_AUTO_TEST_CASE(sympy_stepper_dense_path_derivative) {
+  SympyStepper stepper(std::make_shared<ConstantBField>(Vector3::Zero()));
+  const auto particle = ParticleHypothesis::muon();
+  for (const Material& material : {Material::Vacuum(), makeIron()}) {
+    const HomogeneousVolumeMaterial volume(material);
+    for (double charge : {-1., 1.}) {
+      SympyStepper::Options options(tgContext, mfContext);
+      options.initialStepSize = 1_mm;
+      options.maxStepSize = 1_mm;
+      auto state = stepper.makeState(options);
+      stepper.initialize(state,
+                         BoundTrackParameters::createCurvilinear(
+                             Vector4::Zero(), Vector3::UnitX(), charge / 10_GeV,
+                             Covariance::Identity(), particle));
+      BOOST_REQUIRE(stepper.step(state, Direction::Forward(), &volume).ok());
+      const double p = stepper.absoluteMomentum(state);
+      const double mass = particle.mass();
+      const double loss = computeEnergyLossMean(
+          MaterialSlab(material, 1_mm), eMuon, mass, stepper.qOverP(state), 1.);
+      const double expected = charge * std::hypot(p, mass) * loss / (p * p * p);
+      CHECK_CLOSE_ABS(state.derivative[eFreeQOverP], expected, 1e-11);
+    }
+  }
+}
+
 /// The dense and the vacuum kernel transport the jacobian independently.
 /// Driving the dense kernel with vacuum material makes the two comparable.
 BOOST_AUTO_TEST_CASE(sympy_stepper_dense_kernel_matches_vacuum_kernel) {
