@@ -22,6 +22,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -583,6 +584,58 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_dense_energy_loss_reverses) {
   CHECK_SMALL(state.pathAccumulated, 1e-9);
   // the residual is RK truncation error; the sign bug would be percents
   CHECK_CLOSE_REL(stepper.qOverP(state), qop0, 1e-7);
+}
+
+/// Energy loss must constrain the step even when there is no magnetic bend.
+/// Integrate energy independently, rather than comparing two q/p steppers.
+BOOST_AUTO_TEST_CASE(sympy_stepper_dense_zero_field_accuracy) {
+  SympyStepper stepper(std::make_shared<ConstantBField>(Vector3::Zero()));
+  const auto particle = ParticleHypothesis::muon();
+  const double mass = particle.mass();
+  const Material material = makeIron();
+  const HomogeneousVolumeMaterial volume(material);
+  const MaterialSlab slab(material, 1_mm);
+  const double initialP = 2_GeV;
+  const double length = 1_m;
+  const auto energySlope = [&](double energy) {
+    const double p = std::sqrt(energy * energy - mass * mass);
+    return -computeEnergyLossMean(slab, eMuon, mass, 1. / p, 1.);
+  };
+  double energy = std::hypot(initialP, mass);
+  constexpr double referenceStep = 0.01_mm;
+  for (int i = 0; i < 100000; ++i) {
+    const double a = energySlope(energy);
+    const double b = energySlope(energy + referenceStep * a / 2);
+    const double c = energySlope(energy + referenceStep * b / 2);
+    const double d = energySlope(energy + referenceStep * c);
+    energy += referenceStep * (a + 2 * b + 2 * c + d) / 6;
+  }
+  const double referenceP = std::sqrt(energy * energy - mass * mass);
+
+  for (double charge : {-1., 1.}) {
+    for (bool withCovariance : {false, true}) {
+      SympyStepper::Options options(tgContext, mfContext);
+      options.initialStepSize = length;
+      options.maxStepSize = length;
+      options.stepTolerance = 1e-6;
+      auto state = stepper.makeState(options);
+      std::optional<Covariance> cov;
+      if (withCovariance) {
+        cov = Covariance::Identity();
+      }
+      stepper.initialize(state, BoundTrackParameters::createCurvilinear(
+                                    Vector4::Zero(), Vector3::UnitX(),
+                                    charge / initialP, cov, particle));
+      while (state.pathAccumulated < length - 1e-9) {
+        BOOST_REQUIRE_LT(state.nSteps, 10000u);
+        state.stepSize.setUser(length - state.pathAccumulated);
+        BOOST_REQUIRE(stepper.step(state, Direction::Forward(), &volume).ok());
+      }
+      BOOST_CHECK_GT(state.statistics.nRejectedSteps, 0u);
+      CHECK_CLOSE_ABS(state.pathAccumulated, length, 1e-9);
+      CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), referenceP, 0.01_MeV);
+    }
+  }
 }
 
 /// The dense and the vacuum kernel transport the jacobian independently.
