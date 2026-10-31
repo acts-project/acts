@@ -17,10 +17,12 @@
 
 namespace traccc::device {
 
-TRACCC_HOST_DEVICE
-inline void count_triplets(
+template <bool use_strip_info>
+TRACCC_HOST_DEVICE inline void count_triplets(
     const global_index_t globalIndex, const seedfinder_config& config,
     const edm::spacepoint_collection::const_view& spacepoints_view,
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations_view,
     const traccc::details::spacepoint_grid_types::const_view& sp_view,
     const doublet_counter_collection_types::const_view& dc_view,
     const device_doublet_collection_types::const_view& mid_bot_doublet_view,
@@ -46,6 +48,8 @@ inline void count_triplets(
 
   // Create device copy of input parameters
   const edm::spacepoint_collection::const_device spacepoints{spacepoints_view};
+  const strip_spacepoint_calibration_collection_types::const_device
+      strip_calibrations{strip_calibrations_view};
   const device_doublet_collection_types::const_device mid_top_doublet_device(
       mid_top_doublet_view);
   const doublet_counter_collection_types::const_device dc_device(dc_view);
@@ -62,12 +66,14 @@ inline void count_triplets(
 
   // middle spacepoint
   const sp_location spM_loc = doublet_counts.m_spM;
+  const unsigned int spM_idx = sp_device.bin(spM_loc.bin_idx)[spM_loc.sp_idx];
   const edm::spacepoint_collection::const_device::const_proxy_type spM =
-      spacepoints.at(sp_device.bin(spM_loc.bin_idx)[spM_loc.sp_idx]);
+      spacepoints.at(spM_idx);
   const sp_location spB_loc = mid_bot.sp2;
   // bottom spacepoint
+  const unsigned int spB_idx = sp_device.bin(spB_loc.bin_idx)[spB_loc.sp_idx];
   const edm::spacepoint_collection::const_device::const_proxy_type spB =
-      spacepoints.at(sp_device.bin(spB_loc.bin_idx)[spB_loc.sp_idx]);
+      spacepoints.at(spB_idx);
 
   // Apply the conformal transformation to middle-bot doublet
   traccc::lin_circle lb = doublet_finding_helper::transform_coordinates<
@@ -92,6 +98,11 @@ inline void count_triplets(
   // number of triplets per middle-bot doublet
   unsigned int num_triplets_per_mb = 0;
 
+  // Triplet compatibility check, chosen at compile time
+  const auto is_compatible = make_triplet_compatibility_check<use_strip_info>(
+      spM, lb, strip_calibrations, spM_idx, spB_idx, config, iSinTheta2,
+      scatteringInRegion2);
+
   // iterate over mid-top doublets
   for (unsigned int i = mt_start_idx; i < mt_end_idx; ++i) {
     const traccc::sp_location spT_loc = mid_top_doublet_device[i].sp2;
@@ -102,17 +113,14 @@ inline void count_triplets(
     assert(spT_loc.bin_idx != std::numeric_limits<unsigned int>::max() &&
            spT_loc.sp_idx != std::numeric_limits<unsigned int>::max());
 
-    const edm::spacepoint_collection::const_device::const_proxy_type spT =
-        spacepoints.at(sp_device.bin(spT_loc.bin_idx)[spT_loc.sp_idx]);
+    const unsigned int spT_idx = sp_device.bin(spT_loc.bin_idx)[spT_loc.sp_idx];
 
     // Apply the conformal transformation to middle-top doublet
-    traccc::lin_circle lt = doublet_finding_helper::transform_coordinates<
-        traccc::details::spacepoint_type::top>(spM, spT);
+    const traccc::lin_circle lt = doublet_finding_helper::transform_coordinates<
+        traccc::details::spacepoint_type::top>(spM, spacepoints.at(spT_idx));
 
     // Check if mid-bot and mid-top doublets can form a triplet
-    if (triplet_finding_helper::isCompatible(spM, lb, lt, config, iSinTheta2,
-                                             scatteringInRegion2, curvature,
-                                             impact_parameter)) {
+    if (is_compatible(spT_idx, lt, curvature, impact_parameter)) {
       num_triplets_per_mb++;
     }
   }
