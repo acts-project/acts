@@ -59,7 +59,7 @@ struct RelativisticQuantities {
 
 /// Compute q/p derivative of beta².
 inline float deriveBeta2(float qOverP, const RelativisticQuantities& rq) {
-  return -2 / (qOverP * rq.gamma * rq.gamma);
+  return -2 * rq.beta2 / (qOverP * rq.gamma * rq.gamma);
 }
 
 /// Compute the 2 * mass * (beta * gamma)² mass term.
@@ -92,7 +92,7 @@ inline float logDeriveWMax(float mass, float qOverP,
   const float a = std::abs(qOverP / std::sqrt(rq.q2OverBeta2));
   // (m² + me²) / me = me (1 + (m/me)²)
   const float b = Me * (1.0f + (mass / Me) * (mass / Me));
-  return -2 * (a * b - 2 + rq.beta2) / (qOverP * (a * b + 2));
+  return -2 * (a * b + 2 - rq.beta2) / (qOverP * (a * b + 2));
 }
 
 /// Compute epsilon energy pre-factor for RPP2018 eq. 33.11.
@@ -270,12 +270,12 @@ float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
   const float t = computeMassTerm(Me, rq);
   // original equation is of the form
   //
-  //     eps * (log(t/I) - log(eps/I) - 0.2 - beta² - delta)
-  //     = eps * (log(t) - log(eps) - 2*log(I) - 0.2 - beta² - delta)
+  //     eps * (log(t/I) + log(eps/I) + 0.2 - beta² - delta)
+  //     = eps * (log(t) + log(eps) - 2*log(I) + 0.2 - beta² - delta)
   //
   // with the resulting derivative as
   //
-  //     d(eps) * (log(t/I) - log(eps/I) - 0.2 - beta² - delta)
+  //     d(eps) * (log(t/I) + log(eps/I) + 0.2 - beta² - delta)
   //     + eps * (d(t)/t + d(eps)/eps - d(beta²) - 2*d(delta/2))
   //
   // where we can use d(eps) = eps * (d(eps)/eps) for further simplification.
@@ -283,7 +283,7 @@ float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
   const float derDHalf = deriveDeltaHalf(qOverP, rq);
   const float logDerT = logDeriveMassTerm(qOverP);
   const float derBeta2 = deriveBeta2(qOverP, rq);
-  const float rel = logDerEps * (std::log(t / I) + std::log(eps / I) - 0.2f -
+  const float rel = logDerEps * (std::log(t / I) + std::log(eps / I) + 0.2f -
                                  rq.beta2 - 2 * dhalf) +
                     logDerT + logDerEps - derBeta2 - 2 * derDHalf;
   return eps * rel;
