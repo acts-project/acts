@@ -11,6 +11,7 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Material/detail/EnergyLossConstants.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <cassert>
@@ -120,7 +121,7 @@ inline float computeDeltaHalf(float meanExcitationEnergy,
                               const RelativisticQuantities& rq) {
   // Uses RPP2018 eq. 33.6 which is only valid for high energies.
   // only relevant for very high ernergies; use arbitrary cutoff
-  if (rq.betaGamma < 10.0f) {
+  if (rq.betaGamma < Acts::detail::BetheDensityEffectBetaGammaThreshold) {
     return 0.0f;
   }
   // pre-factor according to RPP2019 table 33.1
@@ -137,7 +138,9 @@ inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
   //     log(beta*gamma) + log(eplasma/I) - 1/2
   // which the resulting derivative as
   //     d(beta*gamma)/(beta*gamma)
-  return (rq.betaGamma < 10.0f) ? 0.0f : (-1.0f / qOverP);
+  return (rq.betaGamma < Acts::detail::BetheDensityEffectBetaGammaThreshold)
+             ? 0.0f
+             : (-1.0f / qOverP);
 }
 
 /// Convert Landau full-width-half-maximum to an equivalent Gaussian sigma,
@@ -307,14 +310,14 @@ float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
 float Acts::computeEnergyLossLandauFwhm(const MaterialSlab& slab, float m,
                                         float qOverP, float absQ) {
   const RelativisticQuantities rq{m, qOverP, absQ};
-  return detail::computeEnergyLossLandauFwhm(slab, rq);
+  return ::detail::computeEnergyLossLandauFwhm(slab, rq);
 }
 
 float Acts::computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab,
                                                float m, float qOverP,
                                                float absQ) {
   const RelativisticQuantities rq{m, qOverP, absQ};
-  const float fwhm = detail::computeEnergyLossLandauFwhm(slab, rq);
+  const float fwhm = ::detail::computeEnergyLossLandauFwhm(slab, rq);
   const float sigmaE = convertLandauFwhmToGaussianSigma(fwhm);
   //  var(q/p) = (d(q/p)/dE)² * var(E)
   // d(q/p)/dE = d/dE (q/sqrt(E²-m²))
@@ -348,7 +351,8 @@ inline float deriveBremsstrahlungLossMeanE(float mass) {
 /// factored out and the coefficients must be scaled to the native units such
 /// that the evaluated expansion with terms E^n has dimension energy in
 /// native units.
-constexpr float MuonHighLowThreshold = 1_TeV;
+constexpr float MuonHighLowThreshold =
+    Acts::detail::MuonRadiativeHighEnergyThreshold;
 // [low0 / X0] = MeV / mm -> [low0] = MeV
 constexpr double MuonLow0 = -0.5345_MeV;
 // [low1 * E / X0] = MeV / mm -> [low1] = 1
@@ -405,7 +409,8 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab,
 
   // muon- or muon+
   // TODO magic number 8_GeV
-  if ((absPdg == PdgParticle::eMuon) && (energy > 8_GeV)) {
+  if ((absPdg == PdgParticle::eMuon) &&
+      (energy > detail::MuonRadiativeLowEnergyThreshold)) {
     dEdx += computeMuonDirectPairPhotoNuclearLossMean(energy);
   }
   // scale from energy loss per unit radiation length to total energy
@@ -435,7 +440,8 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
 
   // muon- or muon+
   // TODO magic number 8_GeV
-  if ((absPdg == PdgParticle::eMuon) && (8_GeV < energy)) {
+  if ((absPdg == PdgParticle::eMuon) &&
+      (detail::MuonRadiativeLowEnergyThreshold < energy)) {
     derE += deriveMuonDirectPairPhotoNuclearLossMeanE(energy);
   }
   // compute derivative w/ respect to q/p by using the chain rule
