@@ -81,6 +81,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
           .def(py::init<>())
           .def_readwrite("sensitiveStrategy",
                          &DetrayPayloadConverter::Config::sensitiveStrategy)
+          .def_readwrite("includeWorld",
+                         &DetrayPayloadConverter::Config::includeWorld)
           .def_readwrite(
               "portalSegmentTolerance",
               &DetrayPayloadConverter::Config::portalSegmentTolerance)
@@ -92,6 +94,16 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
               [](DetrayPayloadConverter::Config& cfg,
                  const Acts::TrackingVolume* volume) {
                 cfg.beampipeVolume = volume;
+              },
+              py::return_value_policy::reference)
+          .def_property(
+              "replacementWorld",
+              [](const DetrayPayloadConverter::Config& cfg) {
+                return cfg.replacementWorld;
+              },
+              [](DetrayPayloadConverter::Config& cfg,
+                 const Acts::TrackingVolume* volume) {
+                cfg.replacementWorld = volume;
               },
               py::return_value_policy::reference);
 

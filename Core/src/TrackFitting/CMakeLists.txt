@@ -15,6 +15,7 @@ target_sources(
         detail/Gx2fCovarianceParams.cpp
         detail/Gx2fDeltaParams.cpp
         detail/Gx2fSumsBackend.cpp
+        detail/TrackletJoining.cpp
 )
 
 foreach(DIM RANGE 1 6)

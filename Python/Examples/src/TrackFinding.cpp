@@ -88,7 +88,7 @@ void addTrackFinding(py::module& mex) {
     auto c =
         py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, nMaxPhiSlice, minSeedLevel, addTriplets,
-                       maxAbsEtaAddTriplets);
+                       maxAbsEtaAddTriplets, postFitCurvatureFactor);
     patchKwargsConstructor(c);
   }
 
@@ -97,18 +97,18 @@ void addTrackFinding(py::module& mex) {
     auto c =
         py::class_<Config>(mex, "GbtsGraphBuilderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, maxEdgesPerSP, minDeltaRadius, doubletFilterRZ,
-                       matchBeforeCreate, validateTriplets, useAdaptiveCuts,
-                       calibrateStrips, maxOuterRadius);
+                       matchBeforeCreate, validateTriplets, calibrateStrips,
+                       maxOuterRadius, useSumRatioCut, sumRatioCutMax);
     patchKwargsConstructor(c);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
       inputSpacePoints, outputSeeds, seedFinderConfig, graphConfig,
-      useStripConnections, layerMappingFile, connectorInputFile, lutInputFile,
-      collisionRegionMin, collisionRegionMax, trackingGeometry, fillModuleCsv,
-      inputClusters, bFieldInZ, useLayerTilt, magneticField,
-      outputFreeParameters);
+      useStripConnections, useAdaptiveCuts, layerMappingFile,
+      connectorInputFile, lutInputFile, collisionRegionMin, collisionRegionMax,
+      trackingGeometry, fillModuleCsv, inputClusters, bFieldInZ, useLayerTilt,
+      magneticField, outputFreeParameters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
@@ -184,9 +184,9 @@ void addTrackFinding(py::module& mex) {
         c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
         outputTracks, trackingGeometry, magneticField, findTracks,
         findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
-        twoWay, seedDeduplication, seedDeduplicatorCfg, stayOnSeed,
-        pixelVolumeIds, stripVolumeIds, maxPixelHoles, maxStripHoles,
-        trimTracks, recordMaterialStates, useJosephFormulation,
+        twoWay, twoWaySmoothing, seedDeduplication, seedDeduplicatorCfg,
+        stayOnSeed, pixelVolumeIds, stripVolumeIds, maxPixelHoles,
+        maxStripHoles, trimTracks, recordMaterialStates, useJosephFormulation,
         constrainToVolumeIds, endOfWorldVolumeIds);
   }
 }
