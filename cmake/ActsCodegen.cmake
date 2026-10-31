@@ -25,13 +25,20 @@ get_filename_component(
 )
 set(ACTS_CODEGEN_SOURCE_ROOT "${_acts_codegen_source_root}" CACHE INTERNAL "")
 
-# The manifest is the single source of truth for what gets generated: this
-# module drives acts_code_generation from it, and CI/pregenerate_codegen.py
-# produces files from the same list, so neither side can invent a unit or a
-# location the other does not know about.
+# The manifest describes shipped generated files for both this module and
+# CI/pregenerate_codegen.py. External configurations may supply their own UNIT.
 file(
-    READ "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
+    READ
+    "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
     _acts_codegen_manifest
+)
+
+set_property(
+    DIRECTORY
+    APPEND
+    PROPERTY
+        CMAKE_CONFIGURE_DEPENDS
+            "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
 )
 
 # A global property rather than a cache entry: cache values must not contain
@@ -187,7 +194,8 @@ function(_acts_codegen_ensure_runtime)
         # Finally, we write the path found in the outside virtual env into the
         # new virtual env as described in the StackOverflow answer.
         file(
-            WRITE "${_python_nested_package_dir}/_base_packages.pth"
+            WRITE
+            "${_python_nested_package_dir}/_base_packages.pth"
             ${_python_package_dir}
         )
 
@@ -199,8 +207,14 @@ function(_acts_codegen_ensure_runtime)
 endfunction()
 
 function(acts_code_generation)
-    set(oneValueArgs ADD_TO_TARGET KEY RESULT_INCLUDE_DIR RESULT_OUTPUT)
-    cmake_parse_arguments(PARSE_ARGV 0 ARGS "" "${oneValueArgs}" "")
+    set(oneValueArgs
+        ADD_TO_TARGET
+        KEY
+        UNIT
+        RESULT_INCLUDE_DIR
+        RESULT_OUTPUT
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 ARGS "" "${oneValueArgs}" "DEPENDS")
 
     if(NOT DEFINED ARGS_KEY)
         message(SEND_ERROR "acts_code_generation: no KEY specified")
@@ -208,19 +222,25 @@ function(acts_code_generation)
     endif()
     set(_key "${ARGS_KEY}")
 
-    # Everything about a generated file other than which target consumes it
-    # comes from the manifest, so that this build and whoever pre-generates the
-    # code cannot end up with different ideas about what is generated or where
-    # it goes.
+    # Shipped files use the manifest. UNIT accepts an external configuration
+    # with the same schema; DEPENDS tracks its additional local input files.
     acts_codegen_manifest(_manifest)
     string(
-        JSON _unit
+        JSON
+        _unit
         ERROR_VARIABLE _unit_error
         GET "${_manifest}"
         units
         "${_key}"
     )
-    if(_unit_error)
+    # External configurations can supply a unit without changing the shipped
+    # manifest. They must use their own key, never override a shipped output.
+    if(DEFINED ARGS_UNIT)
+        if(NOT _unit_error)
+            message(FATAL_ERROR "Cannot override manifest unit '${_key}'")
+        endif()
+        set(_unit "${ARGS_UNIT}")
+    elseif(_unit_error)
         message(
             SEND_ERROR
             "acts_code_generation: '${_key}' is not in ${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json. "
@@ -246,6 +266,24 @@ function(acts_code_generation)
         with_requirements
     )
     _acts_codegen_manifest_paths(ARGS_WITH "${_unit}" with)
+
+    # Pass optional manifest arguments after the output path, matching the
+    # standalone pregeneration runner.
+    set(_script_arguments "")
+    string(
+        JSON
+        _argument_count
+        ERROR_VARIABLE _no_arguments
+        LENGTH "${_unit}"
+        arguments
+    )
+    if(NOT _no_arguments AND _argument_count GREATER 0)
+        math(EXPR _argument_last "${_argument_count} - 1")
+        foreach(_i RANGE ${_argument_last})
+            string(JSON _argument GET "${_unit}" arguments ${_i})
+            list(APPEND _script_arguments "${_argument}")
+        endforeach()
+    endif()
 
     get_filename_component(_output_name ${ARGS_OUTPUT} NAME)
 
@@ -301,7 +339,11 @@ function(acts_code_generation)
             set(_arg_isolated "--isolated")
         endif()
 
-        set(_depends "${ARGS_PYTHON}")
+        set(_depends
+            "${ARGS_PYTHON}"
+            ${ARGS_DEPENDS}
+            "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
+        )
         set(_with_args "")
         foreach(_requirement ${ARGS_WITH_REQUIREMENTS})
             list(APPEND _depends ${_requirement})
@@ -311,12 +353,21 @@ function(acts_code_generation)
         foreach(_requirement ${ARGS_WITH})
             list(APPEND _with_args "--with;${_requirement}")
             if(IS_DIRECTORY ${_requirement})
-                if(NOT ACTS_USE_SYSTEM_LIBS)
-                    file(GLOB_RECURSE _depends_py ${_requirement}/*)
-                    list(APPEND _depends ${_depends_py})
-                else()
+                file(
+                    GLOB_RECURSE _depends_py
+                    CONFIGURE_DEPENDS
+                    "${_requirement}/*.py"
+                )
+                list(
+                    APPEND
+                    _depends
+                    ${_depends_py}
+                    "${_requirement}/pyproject.toml"
+                )
+                if(ACTS_USE_SYSTEM_LIBS)
                     # If we are not using uv, then we use pip to install the
                     # package into the virtual environment in the build directory.
+                    # Editable installs let regenerated headers see source edits.
                     # The --no-build-isolation flag ensures that we don't
                     # automatically download setuptools. The --no-index flag
                     # ensures that nothing can be downloaded ever, and the
@@ -326,7 +377,7 @@ function(acts_code_generation)
                         COMMAND
                             ${CMAKE_BINARY_DIR}/codegen_venv/bin/python -m pip
                             install --no-build-isolation --no-index --no-deps
-                            ${_requirement}
+                            --editable ${_requirement}
                         OUTPUT_QUIET
                     )
                 endif()
@@ -356,6 +407,7 @@ function(acts_code_generation)
                     ${_uv_environment} ${uv_exe} run --quiet --python
                     ${ARGS_PYTHON_VERSION} --no-project ${_arg_isolated}
                     ${_with_args} ${ARGS_PYTHON} ${_output_file}
+                    ${_script_arguments}
                 DEPENDS ${_depends}
                 COMMENT "Generating ${ARGS_OUTPUT}"
                 VERBATIM
@@ -367,7 +419,7 @@ function(acts_code_generation)
                 OUTPUT ${_output_file}
                 COMMAND
                     ${CMAKE_BINARY_DIR}/codegen_venv/bin/python ${ARGS_PYTHON}
-                    ${_output_file}
+                    ${_output_file} ${_script_arguments}
                 DEPENDS ${_depends}
                 COMMENT "Generating ${ARGS_OUTPUT}"
                 VERBATIM

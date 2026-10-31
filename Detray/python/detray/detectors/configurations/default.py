@@ -6,9 +6,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import detray
-
-from detray.detectors import metadata, metadata_generator
+from detray.detectors import metadata
 from detray.detectors import Type, Algebra, Shape, Material, Accelerator
 from detray.detectors import (
     add_silicon_tracker_defaults,
@@ -17,32 +15,16 @@ from detray.detectors import (
     add_wire_chamber_defaults,
 )
 
-from itk_metadata import add_itk_types
-from odd_metadata import add_odd_types
+from .itk import add_itk_types
+from .odd import add_odd_types
 
-import argparse
 import logging
-import sys
-
-# --------------------------------------------------------------------------
-# Generate the default metadata type (can represent all detectors)
-# --------------------------------------------------------------------------
 
 
-def __main__():
-    # Commandline options
-    parser = argparse.ArgumentParser(prog=sys.argv[0])
-    detray.detectors.add_logging_options(parser)
-    detray.detectors.add_io_options(parser)
-
-    args = parser.parse_args()
-    detray.detectors.parse_logging_options(args)
-    detray.detectors.parse_io_options(args)
-
+def add_default_types(md: metadata):
     logger = logging.getLogger(__name__)
 
     # Collect the types required for a detector that can hold all detector types
-    md = metadata("default")
 
     # Specify a particular algebra plugin (otherwise left as template param.)
     # md.set_algebra_plugin(Algebra.ARRAY, Type.SINGLE)
@@ -86,10 +68,3 @@ def __main__():
     )
     md.set_default_accel_struct(Accelerator.BRUTE_FORCE, "portal")
     md.set_default_accel_struct(Accelerator.CYLINDER_GRID3D, "volume")
-
-    # Dump the metadata to header file
-    metadata_generator(md, output=args.output, format_header=args.format)
-
-
-if __name__ == "__main__":
-    __main__()

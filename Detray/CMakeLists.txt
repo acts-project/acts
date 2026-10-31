@@ -77,7 +77,7 @@ option(DETRAY_BUILD_CLI_TOOLS "Build the command line tools of Detray" OFF)
 set(DETRAY_GENERATE_METADATA
     ""
     CACHE STRING
-    "Semicolon-separated list of metadata generator scripts to run in this build"
+    "Semicolon-separated metadata names or /path/to/detector.py:function selectors"
 )
 
 # Device compilation

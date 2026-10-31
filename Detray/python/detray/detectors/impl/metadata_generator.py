@@ -25,6 +25,7 @@ import itertools
 import logging
 import numbers
 import os
+from pathlib import Path
 from typing import Optional
 import subprocess
 
@@ -32,7 +33,6 @@ import subprocess
 
 
 class metadata:
-
     def __init__(
         self,
         detector_name,
@@ -179,7 +179,6 @@ class metadata:
         grid_bin: GridBin = GridBin.DYNAMIC,
         grid_serializer: GridSerializer = GridSerializer.SIMPLE,
     ):
-
         # Update accelerator type with specific configuration
         if "grid" in accel.specifier:
             accel.param["bin"] = grid_bin
@@ -260,12 +259,12 @@ class metadata:
 
 
 class metadata_generator:
-
     def __init__(
         self,
         md: metadata,
         output=None,
         format_header=True,
+        output_file=None,
     ):
         # Internal state during header generation
         self.out_dir = (
@@ -273,6 +272,7 @@ class metadata_generator:
             if output is None
             else output
         )
+        self.output_file = output_file
         self.file = None
         self.logger = logging.getLogger(__name__)
         self.format_header = format_header
@@ -304,7 +304,10 @@ class metadata_generator:
     ):
         # Shortened naming convention
         det_name = md.det_name.replace("_detector", "")
-        filename = f"{os.path.abspath(src_dir)}/{det_name}_metadata.hpp"
+        filename = (
+            self.output_file or f"{os.path.abspath(src_dir)}/{det_name}_metadata.hpp"
+        )
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
         self.logger.debug(f'Open "{filename}"')
         self.file = open(filename, "w+")
 
@@ -467,13 +470,16 @@ class metadata_generator:
         # Add the corresponding includes
         root_dir = '#include "detray'
         shape_names.discard(None)
-        [self.__put(f'{root_dir}/geometry/shapes/{n}.hpp"\n') for n in shape_names]
+        [
+            self.__put(f'{root_dir}/geometry/shapes/{n}.hpp"\n')
+            for n in sorted(shape_names)
+        ]
 
-        [self.__put(f'{root_dir}/material/{n}.hpp"\n') for n in mat_names]
+        [self.__put(f'{root_dir}/material/{n}.hpp"\n') for n in sorted(mat_names)]
 
         [
             self.__put(f'{root_dir}/navigation/accelerators/{n}.hpp"\n')
-            for n in accel_names
+            for n in sorted(accel_names)
         ]
 
     # Add some mandatory local typedefs of the metadata class
@@ -532,7 +538,6 @@ template <template <typename...> class vector_t = dvector>\n\
 
         self.indent = self.indent + 1
         for i, values in itertools.chain(items.items(), extra_items.items()):
-
             value = ""
             item = ""
             sub_specifier = ""
@@ -742,7 +747,6 @@ template <template <typename...> class vector_t = dvector>\n\
         type_specifier = f"{self.__name_from_specifier(acc.specifier)}_t"
 
         if type_specifier.endswith("grid_t"):
-
             # Assemble the spatial grid type
 
             # Grid shape
@@ -823,7 +827,6 @@ template <template <typename...> class vector_t = dvector>\n\
         # Resolve same accelerator with different type_ids
         tmp_specifiers = {}
         for obj_type, acc, type_id, value_type in unique_accel:
-
             is_valid_id = type_id >= 0
             next_auto_id = (
                 0
@@ -915,7 +918,6 @@ template <template <typename...> class vector_t = dvector>\n\
     # that are distinguishable to the volume: use enum values to link a
     # geometry object type category to the corresponding accel. struct
     def __declare_geometry_objects(self, md: metadata):
-
         # Helper to determine if an accel. struct is one of the defaults
         def is_default_accel(value_type, accel):
             is_surface_default = (
@@ -986,19 +988,21 @@ template <template <typename...> class vector_t = dvector>\n\
 
         # Check duplicate sets (make the set hashable by converting to tuple)
         counted_dict = Counter(
-            [tuple(s) for (s, type_id) in accel_to_types_merged.values()]
+            [tuple(sorted(s)) for (s, type_id) in accel_to_types_merged.values()]
         )
         duplicates = {
             key: (value, type_id)
             for key, (value, type_id) in accel_to_types_merged.items()
-            if counted_dict[tuple(value)] > 1
+            if counted_dict[tuple(sorted(value))] > 1
         }
 
         # Get the list of keys for every duplicate
         flipped_duplicates = {}
         for key, value in duplicates.items():
             obj_set, type_id = value
-            flipped_duplicates.setdefault((tuple(obj_set), type_id), []).append(key)
+            flipped_duplicates.setdefault((tuple(sorted(obj_set)), type_id), []).append(
+                key
+            )
 
         # Find best representative key for the duplicates and remove the others
         removal_keys = []
@@ -1035,7 +1039,7 @@ template <template <typename...> class vector_t = dvector>\n\
         def add_link(key, new_objects):
             new_link_types = [
                 l
-                for l in new_objects
+                for l in sorted(new_objects)
                 if l not in itertools.chain(*accel_link_types.values())
             ]
 

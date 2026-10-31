@@ -242,9 +242,10 @@ function(detray_add_flag name value)
     set(${name} "${${name}} ${value}" PARENT_SCOPE)
 endfunction(detray_add_flag)
 
-# Generate a single detray sympy codegen header via acts_code_generation and
+# Generate a single detray header via acts_code_generation and
 # install it alongside the other detray headers. What is generated and where it
-# ends up is described in the ACTS codegen manifest; only the key is given here.
+# ends up is described in the ACTS codegen manifest. External configurations
+# may pass UNIT and DEPENDS through to acts_code_generation.
 #
 # Usage: detray_add_codegen_header(
 #            TARGET detray_core
@@ -252,8 +253,8 @@ endfunction(detray_add_flag)
 #        )
 #
 function(detray_add_codegen_header)
-    set(oneValueArgs TARGET KEY)
-    cmake_parse_arguments(ARG "" "${oneValueArgs}" "" ${ARGN})
+    set(oneValueArgs TARGET KEY UNIT)
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "" "${oneValueArgs}" "DEPENDS")
 
     if(NOT ARG_TARGET OR NOT ARG_KEY)
         message(
@@ -262,7 +263,13 @@ function(detray_add_codegen_header)
         )
     endif()
 
+    set(_custom_unit "")
+    if(DEFINED ARG_UNIT)
+        list(APPEND _custom_unit UNIT "${ARG_UNIT}")
+    endif()
     acts_code_generation(
+        ${_custom_unit}
+        DEPENDS ${ARG_DEPENDS}
         ADD_TO_TARGET ${ARG_TARGET}
         KEY ${ARG_KEY}
         RESULT_INCLUDE_DIR _gen_root
@@ -275,3 +282,50 @@ function(detray_add_codegen_header)
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${_output_subdir}
     )
 endfunction(detray_add_codegen_header)
+
+# Accept shipped metadata names or /path/to/detector.py:configure.
+function(detray_add_metadata_header target configuration)
+    if(NOT configuration MATCHES "^(.+\\.py):([A-Za-z_][A-Za-z0-9_]*)$")
+        detray_add_codegen_header(
+            TARGET ${target}
+            KEY "Detray/detectors/detray/detectors/${configuration}.hpp"
+        )
+        return()
+    endif()
+
+    get_filename_component(_file "${CMAKE_MATCH_1}" ABSOLUTE)
+    set(_function "${CMAKE_MATCH_2}")
+    get_filename_component(_name "${_file}" NAME_WE)
+    if(NOT _name MATCHES "^[A-Za-z_][A-Za-z0-9_]*$")
+        message(
+            FATAL_ERROR
+            "Metadata configuration filename must be a Python identifier: ${_file}"
+        )
+    endif()
+    # Reuse the runtime and package settings of the shipped metadata generator.
+    acts_codegen_manifest(_manifest)
+    string(
+        JSON
+        _unit
+        GET "${_manifest}"
+        units
+        "Detray/detectors/detray/detectors/default_metadata.hpp"
+    )
+    string(
+        JSON
+        _unit
+        SET "${_unit}"
+        output
+        "\"detray/detectors/${_name}_metadata.hpp\""
+    )
+    # JSON-escape external paths before putting them in the argument array.
+    string(REPLACE "\\" "\\\\" _selector "${_file}:${_function}")
+    string(REPLACE "\"" "\\\"" _selector "${_selector}")
+    string(JSON _unit SET "${_unit}" arguments 1 "\"${_selector}\"")
+    detray_add_codegen_header(
+        TARGET ${target}
+        KEY "Detray/detectors/detray/detectors/${_name}_metadata.hpp"
+        UNIT "${_unit}"
+        DEPENDS "${_file}"
+    )
+endfunction()

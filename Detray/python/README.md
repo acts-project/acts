@@ -12,15 +12,23 @@ The detector metadata is a C++ `struct` used by the detray core library as a tem
 
 with the `algebra_t` defined according to the linear algebra backend to be used, for instance the `detray::array<float>` plugin.
 
-A generic metadata type (the default metadata) exists, which comprises most of the geometry modelling capabilities detray has to offer, however, at the expense of increased build times and likely higher runtime of subsequent track reconstruction pipelines. A custom metadata can be defined by providing a python script that configures the detray metadata code generator,
-which can be invoked during the configuration stage of the cmake build:
+A generic metadata type (the default metadata) can represent all supported
+detectors, at the expense of increased build times and potentially slower
+reconstruction. Detector-specific configurations live in
+`detray/detectors/configurations` within this Python package.
+
+Select metadata headers through CMake, for example:
+
 ```shell
-cmake -S detray -B detray-build -DDETRAY_METADATA_GENERATOR=path/to/custom_metadata.py
+cmake -S detray -B detray-build -DDETRAY_GENERATE_METADATA=odd_metadata
 ```
-The resulting metadata header, ready to be used in downstream projects, will be available in the `detray/detectors` folder. Example metadata generation scripts, for instance for the ACTS Open Data Detector (ODD detector mentioned above), can be found in the `detray/detectors/python/` folder. They can be invoked manually by:
+
+The codegen manifest invokes the common generator with the selected detector
+configuration, or supplies a prebuilt header. To generate a header manually:
+
 ```shell
 source detray-build/python/setup.sh
-python3 detray/detectors/python/odd_metadata.py
+python3 detray/detectors/python/generate_metadata.py odd_metadata.hpp --detector odd.add_odd_types
 ```
 
 ### Metadata Configuration Manual

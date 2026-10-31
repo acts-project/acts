@@ -67,6 +67,8 @@ def generate(key: str, unit: dict, output_dir: Path, uv: str) -> tuple[str, str]
         command += ["--with", str(SOURCE_ROOT / package)]
     command += [str(SOURCE_ROOT / unit["script"]), str(destination)]
 
+    command += unit.get("arguments", [])
+
     # The CMake path scrubs the environment before invoking uv, because a
     # configure can happen inside an LCG/Spack shell whose PYTHONPATH,
     # VIRTUAL_ENV etc. would otherwise leak into the generator. This script only
