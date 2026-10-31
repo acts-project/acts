@@ -10,9 +10,10 @@
 # component under the given name. All additional arguments to the second
 # function are treated as a boolean expression that determines whether the
 # subdirectory should be added and the component registered. The list of
-# components is stored in the global `_components` variable. If
-# components are added from a subdirectory, this variable must be propagated to
-# the global scope using the following helper macro:
+# components is stored in the global `_components` variable, and all components,
+# including the ones that are not built, in `_known_components`. If components
+# are added from a subdirectory, these variables must be propagated to the
+# global scope using the following helper macro:
 #
 #     propagate_components_to_parent()
 #
@@ -26,6 +27,7 @@
 # determines whether the subdirectory should be added.
 
 set(_components)
+set(_known_components)
 
 # add an optional directory and register its name as a component
 function(add_component_if path name)
@@ -35,6 +37,8 @@ function(add_component_if path name)
         ${PROJECT_SOURCE_DIR}
         "${CMAKE_CURRENT_SOURCE_DIR}/${path}"
     )
+    list(APPEND _known_components "${name}")
+    set(_known_components "${_known_components}" PARENT_SCOPE)
     if(${ARGN})
         list(APPEND _components "${name}")
         # propagate variable outside function scope
@@ -54,6 +58,7 @@ endmacro()
 # propagate the list of components to the parent scope
 macro(propagate_components_to_parent)
     set(_components "${_components}" PARENT_SCOPE)
+    set(_known_components "${_known_components}" PARENT_SCOPE)
 endmacro()
 
 # add an optional subdirectory that is **not** registered as a component
