@@ -20,7 +20,15 @@ cmake_policy(VERSION 3.10...@CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@)
 
 @PACKAGE_INIT@
 
-set(Acts_COMPONENTS @_components@)
+# Components can be installed separately from this file, e.g. when a package
+# manager ships plugins in their own packages. Advertise the known components
+# whose targets are installed, in the order they were registered.
+set(Acts_COMPONENTS)
+foreach(_component @_known_components@)
+    if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/Acts${_component}Targets.cmake")
+        list(APPEND Acts_COMPONENTS ${_component})
+    endif()
+endforeach()
 set(Acts_COMMIT_HASH "@_acts_commit_hash@")
 set(Acts_COMMIT_HASH_SHORT "@_acts_commit_hash_short@")
 set(ACTS_GEOMETRY_MODULE_ABI_TAG "@ACTS_GEOMETRY_MODULE_ABI_TAG@")
