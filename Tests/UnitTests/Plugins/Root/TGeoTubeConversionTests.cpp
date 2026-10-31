@@ -12,12 +12,14 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+#include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -250,6 +252,71 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
                                                       *gGeoIdentity, naxes, 1),
                       std::invalid_argument);
   }
+}
+
+/// @brief Unit test to convert a TGeoTube into a StrawSurface
+///
+/// * Only full tubes are converted, the line follows the tube axis
+BOOST_AUTO_TEST_CASE(TGeoTube_to_StrawSurface) {
+  double rmin = 0.98;
+  double rmax = 1.;
+  double hz = 200.;
+
+  new TGeoManager("straw", "straw");
+  TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
+  TGeoMedium *med = new TGeoMedium("MED", 1, mat);
+  TGeoVolume *top = gGeoManager->MakeBox("TOP", med, 300, 300, 300);
+  gGeoManager->SetTopVolume(top);
+  TGeoVolume *vol = gGeoManager->MakeTube("Straw", med, rmin, rmax, hz);
+  TGeoVolume *vols =
+      gGeoManager->MakeTubs("StrawSeg", med, rmin, rmax, hz, 45., -45.);
+  TGeoVolume *box = gGeoManager->MakeBox("Box", med, 1., 1., 1.);
+  // A stereo straw: axis in the x-y plane, tilted by 5 degrees from x
+  auto *rotation = new TGeoRotation("stereo");
+  rotation->SetAngles(95., 90., 0.);
+  auto *placement = new TGeoCombiTrans(1., 2., 3., rotation);
+  top->AddNode(vol, 1, placement);
+  gGeoManager->CloseGeometry();
+
+  const double scalor = 10.;
+  auto [bounds, transform, thickness] = TGeoSurfaceConverter::lineComponents(
+      *vol->GetShape(), placement->GetRotationMatrix(),
+      placement->GetTranslation(), scalor);
+  BOOST_REQUIRE_NE(bounds, nullptr);
+  CHECK_CLOSE_ABS(bounds->get(LineBounds::eR), scalor * rmax, s_epsilon);
+  CHECK_CLOSE_ABS(bounds->get(LineBounds::eHalfLengthZ), scalor * hz,
+                  s_epsilon);
+  CHECK_CLOSE_ABS(thickness, scalor * (rmax - rmin), 1e-9);
+  CHECK_CLOSE_ABS(transform.translation(), Vector3(10., 20., 30.), s_epsilon);
+
+  // The line direction is the tube axis in the global frame
+  const Double_t localAxis[3] = {0., 0., 1.};
+  Double_t globalAxis[3];
+  placement->LocalToMasterVect(localAxis, globalAxis);
+  CHECK_CLOSE_ABS(transform.rotation().col(2),
+                  Vector3(globalAxis[0], globalAxis[1], globalAxis[2]),
+                  s_epsilon);
+  CHECK_CLOSE_ABS(std::abs(transform.rotation().col(2).x()),
+                  std::cos(5. * std::numbers::pi / 180.), s_epsilon);
+
+  // Tube segments and other shapes are not lines
+  BOOST_CHECK_EQUAL(std::get<0>(TGeoSurfaceConverter::lineComponents(
+                        *vols->GetShape(), placement->GetRotationMatrix(),
+                        placement->GetTranslation(), scalor)),
+                    nullptr);
+  BOOST_CHECK_EQUAL(std::get<0>(TGeoSurfaceConverter::lineComponents(
+                        *box->GetShape(), placement->GetRotationMatrix(),
+                        placement->GetTranslation(), scalor)),
+                    nullptr);
+
+  // A detector element built from the components carries a straw surface
+  const TGeoNode *node = top->GetNode(0);
+  TGeoDetectorElement element(42, *node, transform, bounds, thickness);
+  BOOST_CHECK_EQUAL(element.surface().type(), Surface::Straw);
+  BOOST_CHECK_EQUAL(element.surface().surfacePlacement(), &element);
+  CHECK_CLOSE_ABS(element.thickness(), scalor * (rmax - rmin), 1e-9);
+  CHECK_CLOSE_ABS(element.surface().center(tgContext), Vector3(10., 20., 30.),
+                  s_epsilon);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
