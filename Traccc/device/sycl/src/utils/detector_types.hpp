@@ -22,7 +22,6 @@ struct default_detector_kernel_tag {};
 struct toy_detector_kernel_tag {};
 struct telescope_detector_kernel_tag {};
 struct odd_detector_kernel_tag {};
-struct itk_detector_kernel_tag {};
 
 template <typename T>
 struct detector_tag_selector {};
@@ -47,10 +46,18 @@ struct detector_tag_selector<traccc::odd_detector> {
   using type = odd_detector_kernel_tag;
 };
 
-template <>
-struct detector_tag_selector<traccc::itk_detector> {
-  using type = itk_detector_kernel_tag;
-};
+/// Kernel tags for all generated detector types
+/// (see traccc::generated_detector_type_list)
+// clang-format off
+#define TRACCC_SYCL_GENERATED_DETECTOR_TAG(NAME)            \
+  struct NAME##_detector_kernel_tag {};                     \
+  template <>                                               \
+  struct detector_tag_selector<traccc::NAME##_detector> {   \
+    using type = NAME##_detector_kernel_tag;                \
+  };
+DETRAY_FOR_EACH_GENERATED_METADATA(TRACCC_SYCL_GENERATED_DETECTOR_TAG)
+#undef TRACCC_SYCL_GENERATED_DETECTOR_TAG
+// clang-format on
 
 template <typename T>
 using detector_tag_selector_t = typename detector_tag_selector<T>::type;

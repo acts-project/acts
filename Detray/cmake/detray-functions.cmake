@@ -292,6 +292,7 @@ function(detray_add_metadata_header target configuration)
             TARGET ${target}
             KEY "Detray/detectors/detray/detectors/${configuration}_metadata.hpp"
         )
+        set_property(TARGET ${target} APPEND PROPERTY DETRAY_METADATA_NAMES "${configuration}")
         return()
     endif()
 
@@ -305,6 +306,7 @@ function(detray_add_metadata_header target configuration)
             "Metadata configuration filename must be a Python identifier: ${_file}"
         )
     endif()
+    set_property(TARGET ${target} APPEND PROPERTY DETRAY_METADATA_NAMES "${_name}")
     # Reuse the runtime and package settings of the shipped metadata generator.
     acts_codegen_manifest(_manifest)
     string(

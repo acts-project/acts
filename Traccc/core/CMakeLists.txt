@@ -123,6 +123,34 @@ target_link_libraries(
         Acts::Core
 )
 
+# Check that the metadata of each requested "<name>_detector" type is available:
+# Either as a static detray header or generated via DETRAY_GENERATE_METADATA.
+# The check is only possible if detray is built as part of this project.
+if(DEFINED detray_SOURCE_DIR)
+    get_target_property(_traccc_metadata detray_detectors DETRAY_METADATA_NAMES)
+    foreach(_traccc_det ${TRACCC_SUPPORTED_DETECTORS})
+        if(NOT _traccc_det MATCHES "^(.+)_detector$")
+            continue()
+        endif()
+        set(_traccc_name "${CMAKE_MATCH_1}")
+        set(_traccc_md "${_traccc_name}_metadata")
+        if(
+            NOT EXISTS
+                "${detray_SOURCE_DIR}/detectors/include/detray/detectors/${_traccc_md}.hpp"
+            AND NOT "${_traccc_name}" IN_LIST _traccc_metadata
+        )
+            message(
+                FATAL_ERROR
+                "Detector type '${_traccc_det}' is in "
+                "TRACCC_SUPPORTED_DETECTORS, but its metadata is not "
+                "generated. Add '${_traccc_md}' to DETRAY_GENERATE_METADATA."
+            )
+        endif()
+    endforeach()
+    unset(_traccc_det)
+    unset(_traccc_md)
+endif()
+
 string(REPLACE ";" ", " TRACCC_DETECTOR_TYPES "${TRACCC_SUPPORTED_DETECTORS}")
 message(STATUS "Building with detector types: ${TRACCC_DETECTOR_TYPES}")
 configure_file(

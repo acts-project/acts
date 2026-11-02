@@ -9,17 +9,26 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
+
+// Detray include(s).
+#include <detray/utils/tuple_helpers.hpp>
 
 // VecMem include(s).
 #include <vecmem/memory/memory_resource.hpp>
 
 // System include(s).
 #include <string_view>
+#include <tuple>
 
 namespace traccc::io {
 
-/// Construct a "default" / ODD detector geometry from a set of input files
+/// All detector types that @c read_detector can construct
+using readable_detector_type_list =
+    generated_detector_type_list;
+
+/// Construct a detector geometry from a set of input files
 ///
 /// It is mostly just a wrapper around Detray's more generic
 /// @c detray::io::read_detector_json code.
