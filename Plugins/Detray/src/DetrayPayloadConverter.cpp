@@ -34,7 +34,6 @@
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
 #include <algorithm>
-#include <limits>
 #include <optional>
 #include <set>
 
@@ -584,7 +583,7 @@ void DetrayPayloadConverter::handlePortal(
 
   auto linkOf = [&](const PortalSegment& segment) -> std::size_t {
     return segment.volume != nullptr ? volumeLookup(segment.volume)
-                                     : std::numeric_limits<std::size_t>::max();
+                                     : detray::io::mask_payload::end_of_world;
   };
 
   if (direction == AxisDirection::AxisZ || direction == AxisDirection::AxisR) {
@@ -861,6 +860,19 @@ DetrayPayloadConverter::convertTrackingGeometry(
         "beampip volume where it expects it");
   }
 
+  const TrackingVolume* world = geometry.highestTrackingVolume();
+  if (m_cfg.replacementWorld != nullptr) {
+    bool found = false;
+    geometry.apply([&](const TrackingVolume& volume) {
+      found |= &volume == m_cfg.replacementWorld;
+    });
+    if (!found) {
+      throw std::invalid_argument(
+          "Replacement world is not part of the input tracking geometry");
+    }
+    world = m_cfg.replacementWorld;
+  }
+
   Payloads payloads;
   payloads.detector = std::make_unique<detray::io::detector_payload>();
   detray::io::detector_payload& detPayload = *payloads.detector;
@@ -880,15 +892,14 @@ DetrayPayloadConverter::convertTrackingGeometry(
 
   std::unordered_map<const TrackingVolume*, std::size_t> volumeIds;
 
-  auto lookup = [&volumeIds](const TrackingVolume* v) {
-    return volumeIds.at(v);
-  };
-
   std::unordered_map<const TrackingVolume*,
                      std::unordered_map<const Surface*, std::size_t>>
       volumeSurfaceIndices;
 
-  geometry.apply([&](const TrackingVolume& volume) {
+  world->apply([&](const TrackingVolume& volume) {
+    if (!m_cfg.includeWorld && &volume == world) {
+      return;
+    }
     auto& volPayload =
         detPayload.volumes.emplace_back(convertVolume(gctx, volume));
     volPayload.index.link = detPayload.volumes.size() - 1;
@@ -908,10 +919,33 @@ DetrayPayloadConverter::convertTrackingGeometry(
     }
   });
 
+  if (volumeIds.empty()) {
+    throw std::invalid_argument("Selected world has no volumes to convert");
+  }
+  if (!volumeIds.contains(m_cfg.beampipeVolume)) {
+    throw std::invalid_argument(
+        "Beampipe volume is not part of the converted volumes");
+  }
+
   // Run again over volumes, can lookup volume index from pointer now
-  geometry.apply([&](const TrackingVolume& volume) {
+  world->apply([&](const TrackingVolume& volume) {
+    if (!m_cfg.includeWorld && &volume == world) {
+      return;
+    }
     auto& volPayload = detPayload.volumes.at(volumeIds.at(&volume));
     auto& surfaceIndices = volumeSurfaceIndices[&volume];
+
+    auto lookup = [&](const TrackingVolume* target) -> std::size_t {
+      if (auto it = volumeIds.find(target); it != volumeIds.end()) {
+        return it->second;
+      }
+      if ((!m_cfg.includeWorld && target == world) ||
+          (m_cfg.replacementWorld != nullptr && &volume == world)) {
+        return detray::io::mask_payload::end_of_world;
+      }
+      throw std::runtime_error("Portal from volume " + volume.volumeName() +
+                               " leads outside the selected world subtree");
+    };
 
     for (const auto& portal : volume.portals()) {
       handlePortal(gctx, volume, volPayload, lookup, surfaceIndices, portal);
