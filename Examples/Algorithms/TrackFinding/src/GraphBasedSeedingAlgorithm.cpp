@@ -14,7 +14,6 @@
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsTauLookupTable.hpp"
-#include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -52,36 +51,31 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   m_actsGbtsMap = makeActsGbtsMap();
 
   // read which layers may be connected
-  auto connections =
-      Acts::Experimental::readGbtsConnections(m_cfg.connectorInputFile);
+  auto connections = Acts::readGbtsConnections(m_cfg.connectorInputFile);
 
   // keep the connections between layers of the seeded technology
-  const Acts::Experimental::GbtsLayerTechnology seededTechnology =
-      m_cfg.useStripConnections
-          ? Acts::Experimental::GbtsLayerTechnology::Strip
-          : Acts::Experimental::GbtsLayerTechnology::Pixel;
-  std::map<Acts::Experimental::GbtsExperimentLayerId,
-           Acts::Experimental::GbtsLayerTechnology>
+  const Acts::GbtsLayerTechnology seededTechnology =
+      m_cfg.useStripConnections ? Acts::GbtsLayerTechnology::Strip
+                                : Acts::GbtsLayerTechnology::Pixel;
+  std::map<Acts::GbtsExperimentLayerId, Acts::GbtsLayerTechnology>
       layerTechnology;
   for (const GbtsLayerInfo &layerInfo : m_actsGbtsMap) {
     layerTechnology.emplace(layerInfo.layerId, layerInfo.technology);
   }
-  const auto isSeededTechnology =
-      [&](Acts::Experimental::GbtsExperimentLayerId id) {
-        const auto technology = layerTechnology.find(id);
-        return technology != layerTechnology.end() &&
-               technology->second == seededTechnology;
-      };
-  std::erase_if(connections,
-                [&](const Acts::Experimental::GbtsLayerConnection &connection) {
-                  return !isSeededTechnology(connection.src) ||
-                         !isSeededTechnology(connection.dst);
-                });
+  const auto isSeededTechnology = [&](Acts::GbtsExperimentLayerId id) {
+    const auto technology = layerTechnology.find(id);
+    return technology != layerTechnology.end() &&
+           technology->second == seededTechnology;
+  };
+  std::erase_if(connections, [&](const Acts::GbtsLayerConnection &connection) {
+    return !isSeededTechnology(connection.src) ||
+           !isSeededTechnology(connection.dst);
+  });
 
   // the cluster width cuts are the only user of the tau lookup table
   if (m_cfg.seedFinderConfig.useClusterWidthCuts) {
     m_cfg.seedFinderConfig.tauLookupTable =
-        Acts::Experimental::readGbtsTauLookupTable(m_cfg.lutInputFile);
+        Acts::readGbtsTauLookupTable(m_cfg.lutInputFile);
   }
 
   // create the TrigInDetSiLayers (Logical Layers),
@@ -89,17 +83,15 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
-  Acts::Experimental::GbtsAdaptiveTauRatioCuts tauRatioCuts =
-      m_cfg.tauRatioCuts;
+  Acts::GbtsAdaptiveTauRatioCuts tauRatioCuts = m_cfg.tauRatioCuts;
   if (!m_cfg.useAdaptiveCuts) {
     tauRatioCuts.tauRatioCorr = 0.f;
   }
-  Acts::Experimental::assignAdaptiveTauRatioCuts(connections, layerGeometry,
-                                                 tauRatioCuts);
+  Acts::assignAdaptiveTauRatioCuts(connections, layerGeometry, tauRatioCuts);
 
   // initialise the object that holds all the geometry information needed for
   // the algorithm
-  m_geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
+  m_geometry = std::make_shared<Acts::GbtsGeometry>(
       layerGeometry, connections, m_cfg.etaBinWidth, m_cfg.gbtsZ0Range,
       this->logger());
 
@@ -110,20 +102,11 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
                         m_cfg.collisionRegionMax);
 
   // the RoI owns the luminous region, so it overrides what came in
-  m_cfg.graphConfig.maxZ0 = m_internalRoi->zMax();
-  m_cfg.graphConfig.minZ0 = m_internalRoi->zMin();
+  m_cfg.seedFinderConfig.graph.maxZ0 = m_internalRoi->zMax();
+  m_cfg.seedFinderConfig.graph.minZ0 = m_internalRoi->zMin();
 
-  m_gbtsGraphBuilder.emplace(
-      m_cfg.graphConfig, m_geometry,
-      this->logger().cloneWithSuffix("GbtsGraphBuilder"));
-
-  m_finder.emplace(Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
-                       m_cfg.seedFinderConfig),
-                   m_geometry, this->logger().cloneWithSuffix("GbtsFinder"));
-
-  m_filter = Acts::Experimental::GbtsTrackingFilter(
-      m_cfg.trackingFilterConfig, m_geometry,
-      this->logger().cloneWithSuffix("GbtsFilter"));
+  m_finder.emplace(m_cfg.seedFinderConfig, m_geometry,
+                   this->logger().cloneWithSuffix("GbtsFinder"));
 
   printConfig();
 }
@@ -133,18 +116,18 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // initialise input space points from handle and define new container
   const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
-  const Acts::Experimental::GraphBasedTrackSeeder::Options options{
-      .bFieldInZ = m_cfg.bFieldInZ};
+  const Acts::GraphBasedTrackSeeder::Options options{.bFieldInZ =
+                                                         m_cfg.bFieldInZ};
 
   // The node storage is filled straight from the input space points. It takes
   // plain scalars, so no intermediate space point container is needed and the
   // seeds come back indexed into the input container directly.
-  Acts::Experimental::GbtsNodeStorage nodeStorage = m_finder->makeNodeStorage();
+  Acts::GbtsNodeStorage nodeStorage = m_finder->makeNodeStorage();
 
   std::uint32_t nUnmapped = 0;
 
   for (const auto &spacePoint : spacePoints) {
-    const std::optional<Acts::Experimental::GbtsLayerIndex> layerIndex =
+    const std::optional<Acts::GbtsLayerIndex> layerIndex =
         gbtsLayerIndex(spacePoint);
     if (!layerIndex.has_value()) {
       ++nUnmapped;
@@ -167,10 +150,10 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // create the seeds
 
-  std::vector<std::optional<Acts::Experimental::GbtsSeedFit>> fits;
+  std::vector<std::optional<Acts::GbtsSeedFit>> fits;
   m_finder->createSeeds(
-      nodeStorage, m_internalRoi.value(), *m_gbtsGraphBuilder, *m_filter,
-      options, seeds, m_outputFreeParameters.isInitialized() ? &fits : nullptr);
+      nodeStorage, m_internalRoi.value(), options, seeds,
+      m_outputFreeParameters.isInitialized() ? &fits : nullptr);
 
   // free track parameters from the fit of the tracking filter
   if (m_outputFreeParameters.isInitialized()) {
@@ -183,7 +166,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
         freeParameters.push_back(Acts::FreeVector::Zero());
         continue;
       }
-      const Acts::Experimental::GbtsSeedFit &fit = fits.at(i).value();
+      const Acts::GbtsSeedFit &fit = fits.at(i).value();
       // the field halfway between the innermost and outermost space point
       const auto outer = spacePoints[seeds.at(i).spacePointIndices().back()];
       const Acts::Vector3 outerPosition(outer.x(), outer.y(), outer.z());
@@ -194,9 +177,8 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
         ACTS_ERROR("Field lookup error: " << field.error());
         return ProcessCode::ABORT;
       }
-      freeParameters.push_back(
-          Acts::Experimental::freeParametersFromGbtsSeedFit(fit, *field)
-              .value_or(Acts::FreeVector::Zero()));
+      freeParameters.push_back(Acts::freeParametersFromGbtsSeedFit(fit, *field)
+                                   .value_or(Acts::FreeVector::Zero()));
     }
     m_outputFreeParameters(ctx, std::move(freeParameters));
   }
@@ -212,8 +194,8 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
       actsToGbtsMap;
 
   // one entry per surface of a layer, sensitive 0 for a whole geometry layer
-  for (const Acts::Experimental::GbtsLayerConfig &layer :
-       Acts::Experimental::readGbtsLayers(m_cfg.layerMappingFile)) {
+  for (const Acts::GbtsLayerConfig &layer :
+       Acts::readGbtsLayers(m_cfg.layerMappingFile)) {
     for (const Acts::GeometryIdentifier &surface : layer.surfaces) {
       const GbtsLayerInfo layerInfo{.layerId = layer.id,
                                     .type = layer.type,
@@ -225,8 +207,7 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
   return Acts::GeometryHierarchyMap<GbtsLayerInfo>(std::move(actsToGbtsMap));
 }
 
-std::optional<Acts::Experimental::GbtsLayerIndex>
-GraphBasedSeedingAlgorithm::gbtsLayerIndex(
+std::optional<Acts::GbtsLayerIndex> GraphBasedSeedingAlgorithm::gbtsLayerIndex(
     const ConstSpacePointProxy &spacePoint) const {
   const auto &sourceLink = spacePoint.sourceLinks();
 
@@ -255,7 +236,7 @@ GraphBasedSeedingAlgorithm::gbtsLayerIndex(
 
 void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
     const Acts::Surface &surface, const Acts::GeometryContext &gctx,
-    std::vector<Acts::Experimental::GbtsLayerDescription> &inputVector,
+    std::vector<Acts::GbtsLayerDescription> &inputVector,
     std::vector<std::size_t> &countVector) const {
   Acts::GeometryIdentifier geoId = surface.geometryId();
   auto actsVolId = geoId.volume();
@@ -283,19 +264,19 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
     return;  // skip this surface
   }
 
-  const Acts::Experimental::GbtsExperimentLayerId gbtsId = find->layerId;
+  const Acts::GbtsExperimentLayerId gbtsId = find->layerId;
 
   // a variable that says if barrrel, 0 = barrel
-  Acts::Experimental::GbtsLayerType barrelEc = find->type;
+  Acts::GbtsLayerType barrelEc = find->type;
 
-  if (barrelEc == Acts::Experimental::GbtsLayerType::Barrel) {
+  if (barrelEc == Acts::GbtsLayerType::Barrel) {
     rc = Acts::fastHypot(center.x(), center.y());  // barrel center in r
     // bounds of z
     for (const Acts::Vector3 &corner : corners) {
       minBound = std::min(minBound, static_cast<float>(corner.z()));
       maxBound = std::max(maxBound, static_cast<float>(corner.z()));
     }
-  } else if (barrelEc == Acts::Experimental::GbtsLayerType::Endcap) {
+  } else if (barrelEc == Acts::GbtsLayerType::Endcap) {
     rc = center.z();  // not barrel center in Z
     // bounds of r
     for (const Acts::Vector3 &corner : corners) {
@@ -316,8 +297,7 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
     const double nr = normal.head<2>().dot(center.head<2>().normalized());
     const double nz = normal.z();
     slope = static_cast<float>(
-        barrelEc == Acts::Experimental::GbtsLayerType::Barrel ? -nz / nr
-                                                              : -nr / nz);
+        barrelEc == Acts::GbtsLayerType::Barrel ? -nz / nr : -nr / nz);
   }
 
   const auto currentIndex =
@@ -337,13 +317,13 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
   } else {  // end so doesn't exists
     // make new if one with Gbts ID doesn't exist:
     inputVector.push_back(
-        Acts::Experimental::GbtsLayerDescription{.id = gbtsId,
-                                                 .type = barrelEc,
-                                                 .technology = find->technology,
-                                                 .refCoord = rc,
-                                                 .minBound = minBound,
-                                                 .maxBound = maxBound,
-                                                 .slope = slope});
+        Acts::GbtsLayerDescription{.id = gbtsId,
+                                   .type = barrelEc,
+                                   .technology = find->technology,
+                                   .refCoord = rc,
+                                   .minBound = minBound,
+                                   .maxBound = maxBound,
+                                   .slope = slope});
     // so the element exists and not divinding by 0
     countVector.push_back(1);
   }
@@ -364,10 +344,10 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
   }
 }
 
-std::vector<Acts::Experimental::GbtsLayerDescription>
+std::vector<Acts::GbtsLayerDescription>
 GraphBasedSeedingAlgorithm::layerNumbering(
     const Acts::GeometryContext &gctx) const {
-  std::vector<Acts::Experimental::GbtsLayerDescription> inputVector;
+  std::vector<Acts::GbtsLayerDescription> inputVector;
   std::vector<std::size_t> countVector;
 
   m_cfg.trackingGeometry->visitSurfaces(
@@ -408,7 +388,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
   ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
   ACTS_DEBUG("=====GbtsGraphBuilder=====");
-  const auto &cfg2 = m_cfg.graphConfig;
+  const auto &cfg2 = m_cfg.seedFinderConfig.graph;
   ACTS_DEBUG("matchBeforeCreate: " << cfg2.matchBeforeCreate);
   ACTS_DEBUG("tauRatioCut: " << cfg2.tauRatioCut);
   ACTS_DEBUG("tauRatioPrecut: " << cfg2.tauRatioPrecut);
@@ -429,7 +409,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("tauRatioCorr: " << m_cfg.tauRatioCuts.tauRatioCorr);
   ACTS_DEBUG("tauRatioCorrStrip: " << m_cfg.tauRatioCuts.tauRatioCorrStrip);
   ACTS_DEBUG("===== GbtsTrackFilter =====");
-  const auto &cfg3 = m_cfg.trackingFilterConfig;
+  const auto &cfg3 = m_cfg.seedFinderConfig.filter;
   ACTS_DEBUG("sigmaMS: " << cfg3.sigmaMS);
   ACTS_DEBUG("radLen: " << cfg3.radLen);
   ACTS_DEBUG("sigmaX: " << cfg3.sigmaX);

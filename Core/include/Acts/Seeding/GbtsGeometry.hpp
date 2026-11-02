@@ -12,23 +12,23 @@
 #include "Acts/Seeding/GbtsBinning.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
-#include "Acts/Seeding/detail/GbtsLayer.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
 #include <cstdint>
-#include <map>
+#include <memory>
 #include <optional>
 #include <span>
-#include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
-class GbtsNodeStorage;
-class GbtsTrackingFilter;
+namespace detail {
+class GbtsGeometryImpl;
+}
 class GraphBasedTrackSeeder;
 
 /// z0 range two eta bins must share a trajectory within, which fixes the bin
-/// table. A separate cut from `GraphBasedTrackSeeder::Config::minZ0`.
+/// table. A separate cut from `GraphBasedTrackSeeder::GraphConfig::minZ0`.
 struct GbtsZ0Range final {
   /// Minimum z0.
   float min = -168.0f * UnitConstants::mm;
@@ -39,6 +39,7 @@ struct GbtsZ0Range final {
 };
 
 /// Geometry helper built from layers and connectors.
+/// Copies share immutable geometry data.
 class GbtsGeometry final {
  public:
   /// Constructor
@@ -54,11 +55,11 @@ class GbtsGeometry final {
 
   /// Get the number of layers the geometry was built from
   /// @return The layer count
-  std::size_t numLayers() const { return m_layers.size(); }
+  std::size_t numLayers() const;
 
   /// Get the number of eta bins across all layers
   /// @return The bin count
-  std::uint32_t numBins() const { return m_nEtaBins; }
+  std::uint32_t numBins() const;
 
   /// Resolve a layer id into the index GbtsNodeStorage::insert takes.
   /// @param id Layer id, as the layer descriptions carry it
@@ -68,55 +69,20 @@ class GbtsGeometry final {
   /// Get the description a layer was built from
   /// @param idx Layer index
   /// @return Reference to the layer description
-  const GbtsLayerDescription& layerDescription(GbtsLayerIndex idx) const {
-    return layerByIndex(idx).layerDescription();
-  }
+  const GbtsLayerDescription& layerDescription(GbtsLayerIndex idx) const;
 
   /// Get the eta binning the geometry gave a layer
   /// @param idx Layer index
   /// @return Reference to the layer's binning
-  const GbtsLayerBinning& layerBinning(GbtsLayerIndex idx) const {
-    return layerByIndex(idx).binning();
-  }
+  const GbtsLayerBinning& layerBinning(GbtsLayerIndex idx) const;
 
   /// Get the eta bin pairs the graph is built over, in build order
   /// @return The bin groups
-  std::span<const GbtsBinGroup> binGroups() const { return m_binGroups; }
+  std::span<const GbtsBinGroup> binGroups() const;
 
  private:
-  // The layer object is shared only with the classes that build the graph.
-  friend class GbtsNodeStorage;
-  friend class GbtsTrackingFilter;
   friend class GraphBasedTrackSeeder;
-
-  /// Get layer by ID
-  /// @param id Layer ID
-  /// @return Pointer to layer or nullptr
-  const detail::GbtsLayer* layerById(GbtsExperimentLayerId id) const;
-
-  /// Get layer by index
-  /// @param idx Layer index
-  /// @return Reference to layer
-  const detail::GbtsLayer& layerByIndex(GbtsLayerIndex idx) const;
-
-  /// @param layerDescription Layer description for the layer
-  /// @param bin0 Starting bin index
-  /// @return Reference to the newly added layer
-  const detail::GbtsLayer& createLayer(
-      const GbtsLayerDescription& layerDescription, std::uint32_t bin0);
-
-  /// Eta bin width
-  float m_etaBinWidth{};
-
-  /// Layer array
-  std::vector<detail::GbtsLayer> m_layers;
-  /// Layer per user ID map
-  std::map<GbtsExperimentLayerId, GbtsLayerIndex> m_layerFromUserIdMap;
-  /// Number of eta bins
-  std::uint32_t m_nEtaBins{};
-
-  /// Bin groups
-  std::vector<GbtsBinGroup> m_binGroups;
+  std::shared_ptr<const detail::GbtsGeometryImpl> m_impl;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

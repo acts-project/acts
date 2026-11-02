@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/GbtsTrackingFilter.hpp"
+#include "GbtsTrackingFilter.hpp"
 
-#include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <array>
@@ -17,7 +16,9 @@
 #include <numbers>
 #include <utility>
 
-namespace Acts::Experimental::detail {
+#include "GbtsGeometryImpl.hpp"
+
+namespace Acts::detail {
 
 void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
                                        const detail::GbtsNodeView& nodeView,
@@ -66,12 +67,13 @@ void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
   cy[1][1] = varianceY[1];
 }
 
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts::detail
 
-namespace Acts::Experimental {
+namespace Acts::detail {
 
 GbtsTrackingFilter::GbtsTrackingFilter(
-    const Config& config, const std::shared_ptr<const GbtsGeometry>& geometry,
+    const Config& config,
+    const std::shared_ptr<const GbtsGeometryImpl>& geometry,
     std::unique_ptr<const Logger> logger)
     : m_cfg(config), m_geometry(geometry), m_logger(std::move(logger)) {}
 
@@ -248,4 +250,4 @@ GbtsLayerType GbtsTrackingFilter::getLayerType(
   return m_geometry->layerDescription(layerIndex).type;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts::detail

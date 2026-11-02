@@ -60,22 +60,20 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
   }
 
   // the layers and the surfaces they are made of
-  const auto layers = Acts::Experimental::readGbtsLayers(m_cfg.geometryFileDir);
-  std::vector<Acts::GeometryHierarchyMap<
-      Acts::Experimental::GbtsExperimentLayerId>::InputElement>
+  const auto layers = Acts::readGbtsLayers(m_cfg.geometryFileDir);
+  std::vector<
+      Acts::GeometryHierarchyMap<Acts::GbtsExperimentLayerId>::InputElement>
       surfaceLayers;
   for (const auto& layer : layers) {
     for (const Acts::GeometryIdentifier& surface : layer.surfaces) {
       surfaceLayers.emplace_back(surface, layer.id);
     }
   }
-  m_surfaceLayers =
-      Acts::GeometryHierarchyMap<Acts::Experimental::GbtsExperimentLayerId>(
-          std::move(surfaceLayers));
+  m_surfaceLayers = Acts::GeometryHierarchyMap<Acts::GbtsExperimentLayerId>(
+      std::move(surfaceLayers));
 
   // the sensitive surfaces of every layer
-  std::map<Acts::Experimental::GbtsExperimentLayerId,
-           std::vector<const Acts::Surface*>>
+  std::map<Acts::GbtsExperimentLayerId, std::vector<const Acts::Surface*>>
       layerSurfaces;
   m_cfg.trackingGeometry->visitSurfaces([&](const Acts::Surface* surface) {
     // the entry of the module or, without one, the one of its whole layer
@@ -125,12 +123,12 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
 ProcessCode GbtsTrainingAlgorithm::finalize() {
   const auto layerTable = m_layerConnectionTool->createConnectionTable();
 
-  std::vector<Acts::Experimental::GbtsLayerConnection> connections;
+  std::vector<Acts::GbtsLayerConnection> connections;
   for (const auto& layerPair : layerTable) {
     // swap order as we want outward -> inward ordering
     connections.push_back({.src = layerPair.second, .dst = layerPair.first});
   }
-  Acts::Experimental::writeGbtsConnections(m_cfg.outputFileDir, connections);
+  Acts::writeGbtsConnections(m_cfg.outputFileDir, connections);
 
   return ProcessCode::SUCCESS;
 }
@@ -154,8 +152,7 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
                  << " measurements for particle " << particle);
 
     // the time and the GBTS layer of every hit on one of the layers
-    std::vector<std::pair<double, Acts::Experimental::GbtsExperimentLayerId>>
-        hits;
+    std::vector<std::pair<double, Acts::GbtsExperimentLayerId>> hits;
 
     hits.reserve(measurements.size());
 
@@ -196,7 +193,7 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // the layers in the order the particle passed them
     std::ranges::sort(hits, {}, [](const auto& hit) { return hit.first; });
 
-    std::vector<Acts::Experimental::GbtsExperimentLayerId> layers;
+    std::vector<Acts::GbtsExperimentLayerId> layers;
 
     layers.reserve(hits.size());
 

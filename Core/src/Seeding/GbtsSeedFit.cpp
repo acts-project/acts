@@ -12,7 +12,7 @@
 
 #include <cmath>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 std::optional<FreeVector> freeParametersFromGbtsSeedFit(const GbtsSeedFit& fit,
                                                         const Vector3& bField) {
@@ -35,4 +35,4 @@ std::optional<FreeVector> freeParametersFromGbtsSeedFit(const GbtsSeedFit& fit,
   return params;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

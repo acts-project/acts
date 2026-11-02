@@ -8,7 +8,6 @@
 
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
 
-#include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -19,11 +18,14 @@
 #include <tuple>
 #include <utility>
 
-namespace Acts::Experimental {
+#include "GbtsGeometryImpl.hpp"
+#include "GbtsNodeStorageImpl.hpp"
 
-GbtsNodeStorage::GbtsNodeStorage(const Config& config,
-                                 std::shared_ptr<const GbtsGeometry> geometry,
-                                 GbtsTauLookupTable tauLut)
+namespace Acts::detail {
+
+GbtsNodeStorageImpl::GbtsNodeStorageImpl(
+    const Config& config, std::shared_ptr<const GbtsGeometryImpl> geometry,
+    GbtsTauLookupTable tauLut)
     : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_tauLut(std::move(tauLut)),
@@ -33,7 +35,7 @@ GbtsNodeStorage::GbtsNodeStorage(const Config& config,
   m_stagedPerBin.resize(m_geometry->numBins());
 }
 
-std::optional<std::uint32_t> GbtsNodeStorage::insert(
+std::optional<std::uint32_t> GbtsNodeStorageImpl::insert(
     const SpacePointIndex index, const float x, const float y, const float z,
     const GbtsLayerIndex layerIndex, const float clusterWidth,
     const float localPositionY) {
@@ -43,7 +45,7 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
                 localPositionY);
 }
 
-std::optional<std::uint32_t> GbtsNodeStorage::insert(
+std::optional<std::uint32_t> GbtsNodeStorageImpl::insert(
     const SpacePointIndex index, const float x, const float y, const float z,
     const float r, const float phi, const GbtsLayerIndex layerIndex,
     const float clusterWidth, const float localPositionY,
@@ -79,7 +81,7 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
   return bin;
 }
 
-void GbtsNodeStorage::extend(
+void GbtsNodeStorageImpl::extend(
     const SpacePointContainer& spacePoints,
     const ConstSpacePointColumnProxy<GbtsLayerIndex>& layerColumn,
     const ConstSpacePointColumnProxy<float>& clusterWidthColumn,
@@ -92,7 +94,7 @@ void GbtsNodeStorage::extend(
   }
 }
 
-std::vector<std::uint32_t> GbtsNodeStorage::sortBinByPhi(
+std::vector<std::uint32_t> GbtsNodeStorageImpl::sortBinByPhi(
     const std::vector<std::uint32_t>& staged) const {
   const std::uint32_t nBuckets = m_cfg.phiSortBuckets;
   // Sort key (phi, z, r, staged index). Nodes with identical phi are ordered
@@ -123,7 +125,7 @@ std::vector<std::uint32_t> GbtsNodeStorage::sortBinByPhi(
   return sorted;
 }
 
-void GbtsNodeStorage::finalize() {
+void GbtsNodeStorageImpl::finalize() {
   const auto nNodes = static_cast<std::uint32_t>(m_staged.size());
 
   m_nodes.reserve(nNodes);
@@ -218,8 +220,8 @@ void GbtsNodeStorage::finalize() {
   m_stagedPerBin.shrink_to_fit();
 }
 
-void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
-                                   detail::GbtsNodeParams& params) const {
+void GbtsNodeStorageImpl::applyTauCuts(const StagedNode& staged,
+                                       detail::GbtsNodeParams& params) const {
   const GbtsLayerDescription& description =
       m_geometry->layerDescription(staged.layer);
 
@@ -258,7 +260,7 @@ void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
   }
 }
 
-void GbtsNodeStorage::generatePhiIndexing(const float dphi) {
+void GbtsNodeStorageImpl::generatePhiIndexing(const float dphi) {
   const std::span<const detail::GbtsNodeParams> params = m_paramsColumn->data();
 
   for (detail::GbtsEtaBinInfo& bin : m_etaBins) {
@@ -291,4 +293,46 @@ void GbtsNodeStorage::generatePhiIndexing(const float dphi) {
   }
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts::detail
+
+namespace Acts {
+GbtsNodeStorage::GbtsNodeStorage(
+    std::unique_ptr<detail::GbtsNodeStorageImpl> impl)
+    : m_impl(std::move(impl)) {}
+GbtsNodeStorage::~GbtsNodeStorage() = default;
+GbtsNodeStorage::GbtsNodeStorage(GbtsNodeStorage&&) noexcept = default;
+GbtsNodeStorage& GbtsNodeStorage::operator=(GbtsNodeStorage&&) noexcept =
+    default;
+std::optional<std::uint32_t> GbtsNodeStorage::insert(SpacePointIndex index,
+                                                     float x, float y, float z,
+                                                     GbtsLayerIndex layer,
+                                                     float width,
+                                                     float localY) {
+  return m_impl->insert(index, x, y, z, layer, width, localY);
+}
+std::optional<std::uint32_t> GbtsNodeStorage::insert(
+    SpacePointIndex index, float x, float y, float z, float r, float phi,
+    GbtsLayerIndex layer, float width, float localY,
+    const OuterStripSpacePointCalibrationDetails* strip) {
+  return m_impl->insert(index, x, y, z, r, phi, layer, width, localY, strip);
+}
+void GbtsNodeStorage::extend(
+    const SpacePointContainer& points,
+    const ConstSpacePointColumnProxy<GbtsLayerIndex>& layers,
+    const ConstSpacePointColumnProxy<float>& widths,
+    const ConstSpacePointColumnProxy<float>& localY) {
+  m_impl->extend(points, layers, widths, localY);
+}
+void GbtsNodeStorage::finalize() {
+  m_impl->finalize();
+}
+std::uint32_t GbtsNodeStorage::numberOfNodes() const {
+  return m_impl->numberOfNodes();
+}
+SpacePointIndex GbtsNodeStorage::spacePointIndex(SpacePointIndex node) const {
+  return m_impl->spacePointIndex(node);
+}
+bool GbtsNodeStorage::hasStrips() const {
+  return m_impl->hasStrips();
+}
+}  // namespace Acts

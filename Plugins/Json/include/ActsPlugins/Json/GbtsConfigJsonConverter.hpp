@@ -19,7 +19,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// @addtogroup json_plugin
 /// @{
@@ -87,4 +87,4 @@ GbtsTauLookupTable readGbtsTauLookupTable(const std::filesystem::path& path);
 
 /// @}
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

@@ -3,10 +3,51 @@
 @brief Seeding by building and filtering a graph of hit doublets
 
 > [!tip]
-> This page documents @ref Acts::Experimental::GraphBasedTrackSeeder "GBTS" as
+> This page documents @ref Acts::GraphBasedTrackSeeder "GBTS" as
 > implemented in ACTS today. GBTS is an alternative to the classical
 > triplet-based @ref seeding, not a layer on top of it — the two are independent
 > entry points producing the same @ref Acts::SeedContainer.
+
+## Public API and ownership
+
+GBTS lives in `Acts`. `GraphBasedTrackSeeder` owns graph construction and path
+filtering behind an opaque implementation. Configure them through `Config::graph`
+and `Config::filter`; callers do not construct a graph builder or tracking filter.
+Derived values are computed by the constructor.
+
+```cpp
+Acts::GraphBasedTrackSeeder::Config config;
+config.graph.minPt = 1.0 * Acts::UnitConstants::GeV;
+Acts::GraphBasedTrackSeeder seeder(config, geometry);
+auto nodes = seeder.makeNodeStorage();
+// Insert points using the dense layer indices supplied by geometry.
+nodes.insert(index, x, y, z, layerIndex);
+nodes.finalize();
+seeder.createSeeds(nodes, roi, options, seeds);
+```
+
+`GbtsGeometry` shares immutable geometry data. `GbtsNodeStorage` owns one input
+collection and its mutable graph bookkeeping. Seeder and storage handles are
+movable, but not copyable; moving storage preserves its internal column addresses.
+A seeder can serve concurrent calls with separate node storage and output
+containers. Storage retains its geometry independently of the creating seeder.
+Use storage from the same seeder configuration and geometry when creating seeds.
+
+To migrate from `Acts::Experimental`, remove that namespace qualifier, pass
+`Config` directly instead of `DerivedConfig`, move the old builder/filter settings
+into `config.graph`/`config.filter`, and remove the builder/filter arguments from
+`createSeeds`. The geometry binning interchange types remain available for GPU
+consumers. Graph nodes, edges, filter states and implementation classes are not
+installed public headers.
+
+In the examples/Python API, replace `graphConfig` with
+`seedFinderConfig.graph`, `trackingFilterConfig` with
+`seedFinderConfig.filter`, and `GbtsGraphBuilderConfig` with `GbtsGraphConfig`.
+
+Future diagnostic recording can live in the private implementations, including
+node insertion, with a separate opt-in diagnostics interface. Neither event IDs
+nor profiler ownership belong to the normal seeding options. No profiling API is
+introduced here.
 
 ## Why a graph?
 
@@ -39,7 +80,7 @@ GBTS does not use the ACTS tracking geometry. It works on its own lightweight
 description: a flat list of `GbtsLayer` logical layers, each subdivided into
 **eta bins**.
 
-@ref Acts::Experimental::GbtsLayerDescription gives a layer its ID, its type
+@ref Acts::GbtsLayerDescription gives a layer its ID, its type
 (barrel or endcap), its sensor technology and its extent. For a barrel layer
 `refCoord` is the radius and the bounds are in @f$z@f$; for an endcap it is the
 other way round. The ID is the caller's own numbering, and the algorithm never
@@ -54,7 +95,7 @@ A pixel barrel layer carries one more field, `barrelOrder`: the position of the
 layer in the inside-out ordering of the pixel barrel. Every other layer keeps
 the default `-1`, so the sign of the field also says whether a layer is a pixel
 barrel layer. If the caller leaves the field unset,
-@ref Acts::Experimental::GbtsGeometry sorts the pixel barrel layers by
+@ref Acts::GbtsGeometry sorts the pixel barrel layers by
 `refCoord` and fills it in. Set it on every pixel barrel layer or on none of
 them, because the constructor rejects a partial ordering.
 
@@ -64,8 +105,8 @@ The @f$\tau@f$ ratio tolerance comes from the layer pairs instead, see below.
 GBTS therefore runs on any layer numbering.
 
 Which layer pairs may be joined by an edge is a list of
-@ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
-destination (inner) layer. @ref Acts::Experimental::GbtsGeometry combines the
+@ref Acts::GbtsLayerConnection, each naming a source (outer) and a
+destination (inner) layer. @ref Acts::GbtsGeometry combines the
 layer descriptions with those connections and precomputes, for every pair of
 connected layers, which *eta bin* pairs are geometrically compatible with the
 allowed @f$z_0@f$ range. The result is a **bin group** list — one inner bin
@@ -76,16 +117,16 @@ by `GbtsZ0Range::z0Tolerance`.
 
 The binning it worked out is readable back off the geometry, so a consumer that
 runs the same algorithm elsewhere does not have to recompute or pre-generate it:
-@ref Acts::Experimental::GbtsGeometry::layerBinning gives a layer's
-@ref Acts::Experimental::GbtsLayerBinning, the eta bins it owns in the global
-numbering, and @ref Acts::Experimental::GbtsGeometry::binGroups the schedule
+@ref Acts::GbtsGeometry::layerBinning gives a layer's
+@ref Acts::GbtsLayerBinning, the eta bins it owns in the global
+numbering, and @ref Acts::GbtsGeometry::binGroups the schedule
 itself. Eta bins are numbered globally and a layer's are contiguous, so the
 layers tile the numbering in order. This is what the GPU implementation is
 configured from.
 
 > [!note]
 > The connections are trained offline rather than written by hand.
-> @ref Acts::Experimental::GbtsLayerConnectionTool accumulates layer-pair
+> @ref Acts::GbtsLayerConnectionTool accumulates layer-pair
 > statistics from simulated tracks; the
 > `Examples/Scripts/Python/gbts_layer_connection_training_itk.py` and
 > `gbts_layer_connection_training_odd.py` scripts drive it for the ITk and the
@@ -95,7 +136,7 @@ configured from.
 
 ## Graph nodes {#gbts-nodes}
 
-@ref Acts::Experimental::GbtsNodeStorage holds the graph nodes. Space points are
+@ref Acts::GbtsNodeStorage holds the graph nodes. Space points are
 fed in one at a time through `insert`, which takes **plain scalars** rather than
 an ACTS container:
 
@@ -112,10 +153,10 @@ Two different layer numbers meet here, and they are separate types:
 | Type | What it is |
 | --- | --- |
 | `GbtsExperimentLayerId` | the layer id the experiment assign. Sparse and structured -- the layer descriptions and connections are written in terms of it. The algorithm treats it as an opaque key. |
-| `GbtsLayerIndex` | where that layer sits in one @ref Acts::Experimental::GbtsGeometry, dense from zero. It indexes the geometry, and it is what a node carries. |
+| `GbtsLayerIndex` | where that layer sits in one @ref Acts::GbtsGeometry, dense from zero. It indexes the geometry, and it is what a node carries. |
 
 `insert` takes the **index**, because it is on the per-space-point path.
-@ref Acts::Experimental::GbtsGeometry::layerIndex hands it out. It is the
+@ref Acts::GbtsGeometry::layerIndex hands it out. It is the
 geometry's own numbering and is not derivable from the id.
 
 `insert` assigns the node to an eta bin via `GbtsLayer::getEtaBin` and buffers
@@ -128,19 +169,19 @@ The per-node data the graph builder reads lives in dynamic columns on that same
 container. It is packed rather than split into one array per field, because the
 innermost loop reads all of it together:
 
-@snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts node params
+@snippet{trimleft} src/Seeding/GbtsGraphTypes.hpp gbts node params
 
 @f$\tau = \cot\theta@f$. The infinite defaults disable the @f$\tau@f$ cut
 entirely; only the optional machine-learning lookup table narrows them (see
 @ref gbts-ml). Alongside it sits the bookkeeping the graph builder writes:
 
-@snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts node edge info
+@snippet{trimleft} src/Seeding/GbtsGraphTypes.hpp gbts node edge info
 
 Each eta bin carries its node range plus the @f$\phi@f$ index used by the sliding
 window. The @f$\phi@f$ index duplicates entries shifted by @f$\pm 2\pi@f$ near the
 wrap-around, so the window never has to handle wrapping:
 
-@snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts eta bin info
+@snippet{trimleft} src/Seeding/GbtsGraphTypes.hpp gbts eta bin info
 
 ## Building the graph {#gbts-graph}
 
@@ -166,7 +207,7 @@ proxy @f$\kappa = (\phi_2-\phi_1)/\Delta r@f$.
 
 Surviving pairs are appended to a flat edge array:
 
-@snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts edge
+@snippet{trimleft} src/Seeding/GbtsGraphTypes.hpp gbts edge
 
 The three fit parameters `p` are @f$\{\exp(-\eta),\ \kappa,\ \phi_1 + \kappa
 r_1\}@f$.
@@ -179,15 +220,15 @@ whenever the implied triplet is consistent: the @f$\tau@f$ ratio, the @f$\phi@f$
 continuation and the curvature difference must all agree within tolerance. The
 @f$\tau@f$ ratio tolerance comes from the layer pairs: a triplet is held to
 the looser of `tauRatioCutInner` of its inner pair and `tauRatioCutOuter` of
-its outer pair, see @ref Acts::Experimental::GbtsLayerConnection.
-@ref Acts::Experimental::assignAdaptiveTauRatioCuts fills them from the
+its outer pair, see @ref Acts::GbtsLayerConnection.
+@ref Acts::assignAdaptiveTauRatioCuts fills them from the
 layers: wider for a pair that skips a pixel barrel layer or, as the outer
 pair, leaves the pixel barrel, and wider again for a pair with a strip layer.
 With `useSumRatioCut` the three differences, each divided by its own cut, may
 not add up to more than `sumRatioCutMax`, which rejects a pair that is marginal
 in all three at once. For
 pixel-barrel triplets an optional
-@ref Acts::Experimental::GraphBasedTrackSeeder "validateTriplets" step also fits
+@ref Acts::GraphBasedTrackSeeder "validateTriplets" step also fits
 a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$. Each
 edge stores up to `kGbtsMaxEdgeNeighbours` (6) such neighbours.
 
@@ -225,7 +266,7 @@ Every edge yields at most one seed candidate: the best fitted path from it
 inwards to a root, each step going to an edge one level up, i.e. along the
 longest chain outwards of that root. The paths are found by a depth first
 search from every edge, fitted on the way by
-@ref Acts::Experimental::GbtsTrackingFilter, and edges and branches that cannot
+the internal tracking filter, and edges and branches that cannot
 reach a root far enough in are skipped. Nothing depends on the order the edges
 are visited in. This is the seed extraction of the traccc GPU GBTS.
 
@@ -279,9 +320,9 @@ the angle. Wide clusters in the pixel endcap are dropped entirely
 ## Configuration {#gbts-configuration}
 
 The cuts that build and link the doublets live on
-@ref Acts::Experimental::GbtsGraphBuilder "GbtsGraphBuilder::Config", which
-`GraphBasedSeedingAlgorithm` takes as `graphConfig` and exposes to Python as
-`GbtsGraphBuilderConfig`:
+@ref Acts::GraphBasedTrackSeeder::GraphConfig, which
+`GraphBasedSeedingAlgorithm` takes as `seedFinderConfig.graph` and exposes to
+Python as `GbtsGraphConfig`:
 
 | Option | Stage | Effect |
 | --- | --- | --- |
@@ -290,12 +331,12 @@ The cuts that build and link the doublets live on
 | `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
 | `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
 | `useSumRatioCut`, `sumRatioCutMax` | @ref gbts-graph | bound on the summed linking tolerances, against pairs marginal in all three |
-| `tauRatioCut` | @ref gbts-graph | @f$\tau@f$ scale of the `validateTriplets` high-pT check. The linking cut comes from @ref Acts::Experimental::GbtsLayerConnection |
+| `tauRatioCut` | @ref gbts-graph | @f$\tau@f$ scale of the `validateTriplets` high-pT check. The linking cut comes from @ref Acts::GbtsLayerConnection |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
 | `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
 | `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
-The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
+The rest are on @ref Acts::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
 
 | Option | Stage | Effect |
 | --- | --- | --- |
@@ -313,8 +354,8 @@ The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackS
 connector file instead of the pixel ones, is read where the file is loaded and
 so sits on `GraphBasedSeedingAlgorithm::Config` itself.
 
-@ref Acts::Experimental::GbtsTrackingFilter "GbtsTrackingFilter::Config"
-separately controls the chain-following filter of @ref gbts-extraction "seed extraction":
+@ref Acts::GraphBasedTrackSeeder::FilterConfig
+in `Config::filter` controls the chain-following filter of @ref gbts-extraction "seed extraction":
 
 | Option | Effect |
 | --- | --- |
@@ -326,17 +367,17 @@ separately controls the chain-following filter of @ref gbts-extraction "seed ext
 
 ## Implementation pointers {#gbts-implementation}
 
-- Seeder and configuration: @ref Acts::Experimental::GraphBasedTrackSeeder.
-- Node storage: @ref Acts::Experimental::GbtsNodeStorage. The graph EDM it
+- Seeder and configuration: @ref Acts::GraphBasedTrackSeeder.
+- Node storage: @ref Acts::GbtsNodeStorage. The graph EDM it
   holds - `GbtsNodeParams`, `GbtsNodeEdgeInfo`, `GbtsEtaBinInfo`, `GbtsEdge` -
-  is internal and lives in `Acts/Seeding/detail/GbtsGraphTypes.hpp`.
-- Geometry: @ref Acts::Experimental::GbtsGeometry,
-  @ref Acts::Experimental::GbtsLayerConnection, the binning it hands back in
+  is internal and lives in `Core/src/Seeding/GbtsGraphTypes.hpp`.
+- Geometry: @ref Acts::GbtsGeometry,
+  @ref Acts::GbtsLayerConnection, the binning it hands back in
   `Acts/Seeding/GbtsBinning.hpp`, and the internal `GbtsLayer`.
-- Chain following: @ref Acts::Experimental::GbtsTrackingFilter and its internal
+- Chain following: the internal tracking filter and its
   `GbtsEdgeState`.
-- Region of interest: @ref Acts::Experimental::GbtsRoiDescriptor.
-- Connection-table training: @ref Acts::Experimental::GbtsLayerConnectionTool.
+- Region of interest: @ref Acts::GbtsRoiDescriptor.
+- Connection-table training: @ref Acts::GbtsLayerConnectionTool.
 - Examples integration: `ActsExamples::GraphBasedSeedingAlgorithm`, driven from
   `Examples/Scripts/Python/full_chain_itk_Gbts.py`.
 

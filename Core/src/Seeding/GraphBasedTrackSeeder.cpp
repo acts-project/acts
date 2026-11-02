@@ -8,9 +8,6 @@
 
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 
-#include "Acts/Seeding/GbtsGraphBuilder.hpp"
-#include "Acts/Seeding/GbtsTrackingFilter.hpp"
-
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -24,20 +21,26 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Experimental {
+#include "GbtsGraphBuilder.hpp"
+#include "GbtsSeederImpl.hpp"
+#include "GbtsTrackingFilter.hpp"
 
-GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
+namespace Acts::detail {
+
+GbtsSeederImpl::DerivedConfig::DerivedConfig(const Config& config)
     : Config(config) {
   phiSliceWidth = 2 * std::numbers::pi_v<float> / config.nMaxPhiSlice;
 }
 
-GraphBasedTrackSeeder::GraphBasedTrackSeeder(
-    const DerivedConfig& config, std::shared_ptr<GbtsGeometry> geometry,
-    std::unique_ptr<const Acts::Logger> logger)
-    : m_cfg(config),
+GbtsSeederImpl::GbtsSeederImpl(const DerivedConfig& config,
+                               std::shared_ptr<const GbtsGeometryImpl> geometry,
+                               std::unique_ptr<const Acts::Logger> logger)
+    : m_graphBuilder(config.graph, geometry, logger->cloneWithSuffix("Graph")),
+      m_filter(config.filter, geometry, logger->cloneWithSuffix("Filter")),
+      m_cfg(config),
       m_geometry(std::move(geometry)),
       m_logger(std::move(logger)) {
-  if (m_cfg.phiSortBuckets > GbtsNodeStorage::kMaxPhiSortBuckets) {
+  if (m_cfg.phiSortBuckets > GbtsNodeStorageImpl::kMaxPhiSortBuckets) {
     throw std::invalid_argument(
         "GraphBasedTrackSeeder: phiSortBuckets exceeds the maximum");
   }
@@ -49,8 +52,8 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
   }
 }
 
-GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
-  GbtsNodeStorage::Config config;
+std::unique_ptr<GbtsNodeStorageImpl> GbtsSeederImpl::makeNodeStorage() const {
+  GbtsNodeStorageImpl::Config config;
   config.useClusterWidthCuts = m_cfg.useClusterWidthCuts;
   config.maxEndcapClusterWidth = m_cfg.maxEndcapClusterWidth;
   config.moduleHalfLengthY = m_cfg.moduleHalfLengthY;
@@ -60,38 +63,36 @@ GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
   config.phiSortBuckets = m_cfg.phiSortBuckets;
   config.tauLutBinWidth = m_cfg.tauLutBinWidth;
 
-  return GbtsNodeStorage(config, m_geometry, m_cfg.tauLookupTable);
+  return std::make_unique<GbtsNodeStorageImpl>(config, m_geometry,
+                                               m_cfg.tauLookupTable);
 }
 
-void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
-                                        const GbtsRoiDescriptor& roi,
-                                        const GbtsGraphBuilder& graphBuilder,
-                                        const GbtsTrackingFilter& filter,
-                                        const Options& options,
-                                        SeedContainer& outputSeeds) const {
-  GbtsNodeStorage nodeStorage = makeNodeStorage();
+void GbtsSeederImpl::createSeeds(const SpacePointContainer& spacePoints,
+                                 const GbtsRoiDescriptor& roi,
+                                 const Options& options,
+                                 SeedContainer& outputSeeds) const {
+  auto nodeStorage = makeNodeStorage();
 
   const auto layerColumn = spacePoints.column<GbtsLayerIndex>("gbtsLayerIndex");
   const auto clusterWidthColumn = spacePoints.column<float>("clusterWidth");
   const auto localPositionColumn = spacePoints.column<float>("localPositionY");
 
-  nodeStorage.extend(spacePoints, layerColumn, clusterWidthColumn,
-                     localPositionColumn);
+  nodeStorage->extend(spacePoints, layerColumn, clusterWidthColumn,
+                      localPositionColumn);
 
-  nodeStorage.finalize();
+  nodeStorage->finalize();
 
-  createSeeds(nodeStorage, roi, graphBuilder, filter, options, outputSeeds);
+  createSeeds(*nodeStorage, roi, options, outputSeeds);
 }
 
-void GraphBasedTrackSeeder::createSeeds(
-    GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
-    const GbtsGraphBuilder& graphBuilder, const GbtsTrackingFilter& filter,
+void GbtsSeederImpl::createSeeds(
+    GbtsNodeStorageImpl& nodeStorage, const GbtsRoiDescriptor& roi,
     const Options& options, SeedContainer& outputSeeds,
     std::vector<std::optional<GbtsSeedFit>>* outputFits) const {
   ACTS_DEBUG("Loaded " << nodeStorage.numberOfNodes() << " graph nodes");
 
   GbtsGraph graph =
-      graphBuilder.buildTheGraph(roi, nodeStorage, options.bFieldInZ);
+      m_graphBuilder.buildTheGraph(roi, nodeStorage, options.bFieldInZ);
 
   ACTS_DEBUG("Created graph with " << graph.edgeStorage.size() << " edges and "
                                    << graph.nConnections << " edge links");
@@ -101,7 +102,7 @@ void GraphBasedTrackSeeder::createSeeds(
   }
 
   std::vector<OutputSeedProperties> vOutputSeeds;
-  extractSeedsFromTheGraph(nodeStorage, graph, vOutputSeeds, filter,
+  extractSeedsFromTheGraph(nodeStorage, graph, vOutputSeeds, m_filter,
                            outputFits != nullptr);
 
   ACTS_DEBUG("GBTS created " << vOutputSeeds.size() << " seeds");
@@ -120,8 +121,8 @@ void GraphBasedTrackSeeder::createSeeds(
   }
 }
 
-void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
-    const GbtsNodeStorage& nodeStorage, const GbtsGraph& graph,
+void GbtsSeederImpl::extractSeedsFromTheGraph(
+    const GbtsNodeStorageImpl& nodeStorage, const GbtsGraph& graph,
     std::vector<OutputSeedProperties>& vOutputSeeds,
     const GbtsTrackingFilter& filter, const bool withFits) const {
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
@@ -339,8 +340,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   }
 }
 
-std::vector<detail::GbtsEdgeState>
-GraphBasedTrackSeeder::extractBestPathPerEdge(
+std::vector<detail::GbtsEdgeState> GbtsSeederImpl::extractBestPathPerEdge(
     const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
     const GbtsTrackingFilter& filter) const {
   const std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
@@ -470,7 +470,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   return candidates;
 }
 
-float GraphBasedTrackSeeder::estimateCurvature(
+float GbtsSeederImpl::estimateCurvature(
     const detail::GbtsNodeView& nodeView,
     const std::array<SpacePointIndex, 3>& nodes) const {
   // conformal mapping with the center at the last spacepoint
@@ -520,4 +520,33 @@ float GraphBasedTrackSeeder::estimateCurvature(
   return B / std::sqrt(1 + A * A);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts::detail
+
+namespace Acts {
+GraphBasedTrackSeeder::GraphBasedTrackSeeder(
+    const Config& config, std::shared_ptr<const GbtsGeometry> geometry,
+    std::unique_ptr<const Logger> logger)
+    : m_impl(std::make_unique<detail::GbtsSeederImpl>(
+          detail::GbtsSeederImpl::DerivedConfig(config), geometry->m_impl,
+          std::move(logger))) {}
+GraphBasedTrackSeeder::~GraphBasedTrackSeeder() = default;
+GraphBasedTrackSeeder::GraphBasedTrackSeeder(GraphBasedTrackSeeder&&) noexcept =
+    default;
+GraphBasedTrackSeeder& GraphBasedTrackSeeder::operator=(
+    GraphBasedTrackSeeder&&) noexcept = default;
+GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
+  return GbtsNodeStorage(m_impl->makeNodeStorage());
+}
+void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& points,
+                                        const GbtsRoiDescriptor& roi,
+                                        const Options& options,
+                                        SeedContainer& seeds) const {
+  m_impl->createSeeds(points, roi, options, seeds);
+}
+void GraphBasedTrackSeeder::createSeeds(
+    GbtsNodeStorage& nodes, const GbtsRoiDescriptor& roi,
+    const Options& options, SeedContainer& seeds,
+    std::vector<std::optional<GbtsSeedFit>>* fits) const {
+  m_impl->createSeeds(*nodes.m_impl, roi, options, seeds, fits);
+}
+}  // namespace Acts

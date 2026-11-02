@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
-
 #include <array>
 #include <cstdint>
 #include <vector>
 
-namespace Acts::Experimental::detail {
+#include "GbtsGraphTypes.hpp"
+
+namespace Acts::detail {
 
 /// Per-edge tracking state used by the GBTS filter.
 struct GbtsEdgeState final {
@@ -45,4 +45,4 @@ struct GbtsEdgeState final {
   float s{};
 };
 
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts::detail
