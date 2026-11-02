@@ -411,8 +411,8 @@ auto gbts_seeding_algorithm::extract_seeds(
   });
 
   // 9. Bid for the hits and convert the winners to 3sp seeds.
-  
-	gbts_bid_seeds_for_hits_kernel({
+
+  gbts_bid_seeds_for_hits_kernel({
       .nPathsMax = nPathsMax,
       .nPathsGrid = nPathsGrid,
       .path_count = path_count,
@@ -422,52 +422,54 @@ auto gbts_seeding_algorithm::extract_seeds(
       .seed_ambiguity = seed_ambiguity_buf,
       .hit_bids = hit_bids_buf,
   });
- 
-	edm::seed_collection::buffer output_seeds; 
-	vecmem::data::vector_buffer<unsigned long long int> seed_bids_buf;
-	if(cfg.gbts_convert_seeds_params.do_seed_sorting) { 
-		seed_bids_buf = vecmem::data::vector_buffer<unsigned long long int>(2*nPathsMax, mr().main, vecmem::data::buffer_type::resizable);
-		copy().setup(vecmem::ignore_event, seed_bids_buf);
-		copy().memset(vecmem::ignore_event, seed_bids_buf, 0);
-		gbts_sort_seeds_kernel({
-			.nPathsMax = nPathsMax,
-      .nPathsGrid = nPathsGrid,
-			.now_sorted = false,
-      .path_count = path_count,
-      .seed_bids = seed_bids_buf,
-      .seed_proposals = seed_proposals_buf,
-      .seed_ambiguity = seed_ambiguity_buf,
-      .path_store = path_store_buf,
-      .output_edge_nodes = output_edge_nodes,
-      .reducedSP = reducedSP,
-      .output_seeds = output_seeds,
-      .hit_bids = hit_bids_buf,
-      .gbts_convert_seeds_params = cfg.gbts_convert_seeds_params,
-		});	
-		unsigned int nSeeds = 0;
-		if (mr().host) {
-			vecmem::async_size size = copy().get_size(seed_bids_buf, *(mr().host));
-			// Block or suspend execution until the size is available.
-			await(size);
-			nSeeds = size.unsafe_get();
-		} else {
-			nSeeds = copy().get_size(seed_bids_buf);
-		}	
-		output_seeds = edm::seed_collection::buffer(nSeeds, mr().main);
-		copy().setup(vecmem::ignore_event, output_seeds);
-	}
-	else {
-		output_seeds = edm::seed_collection::buffer(
-				2 * nPathsMax, mr().main, vecmem::data::buffer_type::resizable);
-		copy().setup(vecmem::ignore_event, output_seeds);
-	}
+
+  edm::seed_collection::buffer output_seeds;
+  vecmem::data::vector_buffer<unsigned long long int> seed_bids_buf;
+  if (cfg.gbts_convert_seeds_params.do_seed_sorting) {
+    seed_bids_buf = vecmem::data::vector_buffer<unsigned long long int>(
+        2 * nPathsMax, mr().main, vecmem::data::buffer_type::resizable);
+    copy().setup(vecmem::ignore_event, seed_bids_buf);
+    // this counts the number of (split) seeds, filling seed bids instead of the
+    // output seed container
+    gbts_convert_seeds_kernel({
+        .nPathsMax = nPathsMax,
+        .nPathsGrid = nPathsGrid,
+        .now_sorted = false,
+        .path_count = path_count,
+        .seed_bids = seed_bids_buf,
+        .seed_proposals = seed_proposals_buf,
+        .seed_ambiguity = seed_ambiguity_buf,
+        .path_store = path_store_buf,
+        .output_edge_nodes = output_edge_nodes,
+        .reducedSP = reducedSP,
+        .output_seeds = output_seeds,
+        .hit_bids = hit_bids_buf,
+        .gbts_convert_seeds_params = cfg.gbts_convert_seeds_params,
+    });
+    unsigned int nSeeds = 0;
+    if (mr().host) {
+      vecmem::async_size size = copy().get_size(seed_bids_buf, *(mr().host));
+      // Block or suspend execution until the size is available.
+      await(size);
+      nSeeds = size.unsafe_get();
+    } else {
+      nSeeds = copy().get_size(seed_bids_buf);
+    }
+    output_seeds = edm::seed_collection::buffer(nSeeds, mr().main);
+    copy().setup(vecmem::ignore_event, output_seeds);
+    gbts_sort_seeds_kernel(seed_bids_buf, nSeeds);
+  } else {
+    output_seeds = edm::seed_collection::buffer(
+        2 * nPathsMax, mr().main, vecmem::data::buffer_type::resizable);
+    copy().setup(vecmem::ignore_event, output_seeds);
+  }
 
   gbts_convert_seeds_kernel({
       .nPathsMax = nPathsMax,
       .nPathsGrid = nPathsGrid,
-			.now_sorted = cfg.gbts_convert_seeds_params.do_seed_sorting,
+      .now_sorted = cfg.gbts_convert_seeds_params.do_seed_sorting,
       .path_count = path_count,
-			.seed_bids = seed_bids_buf,
+      .seed_bids = seed_bids_buf,
       .seed_proposals = seed_proposals_buf,
       .seed_ambiguity = seed_ambiguity_buf,
       .path_store = path_store_buf,
