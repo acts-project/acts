@@ -122,7 +122,7 @@ class hough_transform_seeding_algorithm
     // The maxima location
     const vecmem::data::jagged_vector_view<global_index_t>& global_index;
     // The images
-    edm::houghplane_collection<scalar, 32, 32>::view& images;
+    vecmem::data::jagged_vector_view<scalar>& images;
     // x value of maxima
     vecmem::data::vector_view<scalar>& maxima_x;
   };
@@ -131,7 +131,7 @@ class hough_transform_seeding_algorithm
     // Number of images
     unsigned int n_images;
     // The images
-    const edm::houghplane_collection<scalar, 32, 32>::view& images;
+    const vecmem::data::jagged_vector_view<scalar>& images;
     // The x values
     const vecmem::data::vector_view<scalar>& maxima_x;
     // The NN outcome

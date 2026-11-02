@@ -93,20 +93,17 @@ namespace kernels {
    void take_pictures(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes,
                       const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes,
                       const unsigned int n_maxima,
-                      edm::houghplane_collection<scalar, 32, 32>::view images,
+                      vecmem::data::jagged_vector_view<scalar>& images,
                       vecmem::data::vector_view<scalar> maxima_x) {
       device::take_pictures<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, global_indexes, n_maxima, images, maxima_x);
    }
 
-   template <typename T,
-             unsigned int N_COLS,
-             unsigned int N_ROWS>
    __global__
    void evaluate_nn(const unsigned int n_images,
-                    const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view images,
+                    const vecmem::data::jagged_vector_view<scalar> images,
                     const vecmem::data::vector_view<scalar> maxima_x,
                     vecmem::data::vector_view<unsigned int> nn_outcome) {
-        device::evaluate_nn<T, N_COLS, N_ROWS>(details::global_index1(), n_images, images, maxima_x, nn_outcome);
+        device::evaluate_nn(details::global_index1(), n_images, images, maxima_x, nn_outcome);
     }
 
    template <typename bfield_t,
@@ -258,7 +255,7 @@ void hough_transform_seeding_algorithm::take_picture_kernel(const take_picture_p
 void hough_transform_seeding_algorithm::evaluate_nn_kernel(const evaluate_nn_payload& payload) const {
   const unsigned int n_threads = warp_size() * 8;
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
-  kernels::evaluate_nn<scalar, 32, 32>
+  kernels::evaluate_nn
         <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.n_images,
                                                                     payload.images,
                                                                     payload.maxima_x,

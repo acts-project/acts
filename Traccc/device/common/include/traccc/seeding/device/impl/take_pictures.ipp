@@ -52,34 +52,23 @@ void take_pictures(const global_index_t globalIndex,
                    const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes_view,
                    const vecmem::data::jagged_vector_view<global_index_t>& maxima_index_view,
                    const unsigned int n_maxima,
-                   edm::houghplane_collection<scalar, 32, 32>::view& images_view,
+                   vecmem::data::jagged_vector_view<scalar>& images_view,
                    vecmem::data::vector_view<scalar>& maxima_x_view) {
     if (globalIndex >= n_maxima) return;
 
     const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device houghplanes(houghplanes_view);
     const vecmem::jagged_device_vector<global_index_t> maxima_index(maxima_index_view);
-    edm::houghplane_collection<scalar, 32, 32>::device images(images_view);
+    vecmem::jagged_device_vector<scalar> images(images_view);
     vecmem::device_vector<scalar> maxima_x(maxima_x_view);
 
     // deduce the correct index
-    global_index_t current_size = globalIndex;
-    global_index_t wedge_idx = 0;
-    global_index_t element_idx = 0;
-
-    for (global_index_t i(0); i<maxima_index.size(); ++i) {
-        if (maxima_index[i].size() > current_size) {
-           wedge_idx = i;
-           element_idx = current_size;
-           break;
-        }
-        current_size -= maxima_index[i].size();
-    }
+    const auto [wedge_idx, element_idx] = get_wedge_element<global_index_t>(globalIndex, maxima_index);    
    
     // get variables
     const auto& plane = houghplanes.plane()[wedge_idx];
     const global_index_t maxima_idx = maxima_index[wedge_idx][element_idx];
     take_the_picture(plane, 
-                     images.plane()[globalIndex],
+                     images[globalIndex],
                      maxima_idx,
                      32, 32);
 
