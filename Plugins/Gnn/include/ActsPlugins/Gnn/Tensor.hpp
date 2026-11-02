@@ -24,6 +24,9 @@
 #include <string>
 #include <vector>
 
+#include <vecmem/memory/memory_resource.hpp>
+#include <vecmem/utils/copy.hpp>
+
 /// Forward declare cuda stream, to be able to use the header without cuda
 struct CUstream_st;
 using cudaStream_t = CUstream_st *;
@@ -84,6 +87,11 @@ struct ExecutionContext {
   Device device{Device::Type::eCPU};
   /// CUDA stream for asynchronous execution
   std::optional<cudaStream_t> stream;
+  /// Device memory resource of the CUDA stages. Memory is released while
+  /// work on the stream may still use it, so it must be stream-ordered.
+  vecmem::memory_resource *memoryResource = nullptr;
+  /// vecmem copy object for the stream
+  const vecmem::copy *copy = nullptr;
 };
 
 /// @cond

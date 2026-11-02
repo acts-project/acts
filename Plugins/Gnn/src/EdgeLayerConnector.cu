@@ -8,10 +8,13 @@
 
 #include "ActsPlugins/Gnn/EdgeLayerConnector.hpp"
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/DeviceMemory.cuh"
 
 #include <MMG/CUDA_edge_layer_connector>
 #include <thrust/copy.h>
 #include <thrust/execution_policy.h>
+#include <vecmem/containers/data/vector_view.hpp>
+#include <vecmem/utils/copy.hpp>
 
 using namespace Acts;
 
@@ -25,7 +28,8 @@ std::vector<std::vector<int>> EdgeLayerConnector::operator()(
   const auto numEdges = static_cast<int>(tensors.edgeIndex.shape().at(1));
   const auto numSpacepoints = static_cast<int>(spacepointIDs.size());
 
-  auto stream = execContext.stream.value();
+  detail::DeviceMemory mem(execContext);
+  auto stream = mem.stream();
 
   // Convert std::int64_t edge indices to int using Tensor for memory management
   auto srcInt64Ptr = tensors.edgeIndex.data();
@@ -36,18 +40,20 @@ std::vector<std::vector<int>> EdgeLayerConnector::operator()(
   auto edgeTgt =
       Tensor<int>::Create({1, static_cast<std::size_t>(numEdges)}, execContext);
 
-  thrust::copy(thrust::cuda::par.on(stream), srcInt64Ptr,
-               srcInt64Ptr + numEdges, edgeSrc.data());
-  thrust::copy(thrust::cuda::par.on(stream), tgtInt64Ptr,
-               tgtInt64Ptr + numEdges, edgeTgt.data());
+  thrust::copy(mem.policy(), srcInt64Ptr, srcInt64Ptr + numEdges,
+               edgeSrc.data());
+  thrust::copy(mem.policy(), tgtInt64Ptr, tgtInt64Ptr + numEdges,
+               edgeTgt.data());
 
   // Copy spacepoint IDs to GPU
   auto spacepointIDsTensor =
       Tensor<int>::Create({1, spacepointIDs.size()}, execContext);
-  ACTS_CUDA_CHECK(cudaMemcpyAsync(
-      spacepointIDsTensor.data(), spacepointIDs.data(),
-      spacepointIDs.size() * sizeof(int), cudaMemcpyHostToDevice, stream));
-  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
+  mem.copy()(vecmem::get_data(spacepointIDs),
+             vecmem::data::vector_view<int>(
+                 static_cast<unsigned int>(spacepointIDs.size()),
+                 spacepointIDsTensor.data()),
+             vecmem::copy::type::host_to_device)
+      ->wait();
 
   ACTS_DEBUG("Setup graph...");
   CUDA_graph<float> graph(spacepointIDsTensor.data(), numSpacepoints,
@@ -77,16 +83,18 @@ std::vector<std::vector<int>> EdgeLayerConnector::operator()(
                                  << tracksSize << ", nbTracks: " << nbTracks);
 
   std::vector<int> nbHits(nbTracks);
-  ACTS_CUDA_CHECK(
-      cudaMemcpyAsync(nbHits.data(), connector.cuda_tracks()->nb_hits(),
-                      nbTracks * sizeof(int), cudaMemcpyDeviceToHost, stream));
+  mem.copy()(vecmem::data::vector_view<const int>(
+                 static_cast<unsigned int>(nbTracks),
+                 connector.cuda_tracks()->nb_hits()),
+             vecmem::get_data(nbHits), vecmem::copy::type::device_to_host)
+      ->wait();
 
   std::vector<int> flatHits(tracksSize);
-  ACTS_CUDA_CHECK(cudaMemcpyAsync(
-      flatHits.data(), connector.cuda_tracks()->hits(),
-      tracksSize * sizeof(int), cudaMemcpyDeviceToHost, stream));
-
-  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
+  mem.copy()(vecmem::data::vector_view<const int>(
+                 static_cast<unsigned int>(tracksSize),
+                 connector.cuda_tracks()->hits()),
+             vecmem::get_data(flatHits), vecmem::copy::type::device_to_host)
+      ->wait();
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   std::vector<std::vector<int>> trackCandidates;
