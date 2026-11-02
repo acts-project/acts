@@ -32,6 +32,14 @@ struct Tracklet {
   int size;
 };
 
+template<typename T>
+TRACCC_HOST_DEVICE inline void set_seed(traccc::edm::seed<T> seed, const int bottom, const int middle, const int top, const float quality) {
+	seed.bottom_index() = bottom;
+	seed.middle_index() = middle;
+	seed.top_index() = top;
+	seed.quality() = quality;
+}
+
 TRACCC_HOST_DEVICE inline traccc::float2 gbts_estimate_seed_params(
     const std::array<traccc::float4, 3>& sps) {
   float u[2], v[2];
@@ -112,14 +120,12 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
 		if(payload.gbts_convert_seeds_params.do_seed_sorting && payload.now_sorted) {
 			// if sorted the dropout logic has allready been run so take the dropout index from the saved bid
 			unsigned long long int bid = d_seed_bids.at(prop_idx);
-			printf(" bida %llu %i>|", bid, prop_idx);
 			if(bid == 0) {
 				// rejcted seed or empty slot
 				continue;
 			}
 			prop = {bid >> 32, bid & 0xFFFFFFFF};	
 			dropout_index = prop.x & 0x3;
-			if(dropout_index > 2) printf("BADBAD %i", dropout_index);
 		}
 		else {
 			prop = d_seed_proposals[prop_idx];
@@ -195,13 +201,17 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
 			if(payload.gbts_convert_seeds_params.do_seed_sorting && !payload.now_sorted) {
 				dropout_index = 0;
 				d_seed_bids.push_back(seed_bid + (dropout_index << 32));
-				printf(" IN: bid %llu prop %i %i ", seed_bid + (dropout_index << 32), prop_idx, dropout_index); 
+			}
+			else if(payload.gbts_convert_seeds_params.do_seed_sorting) {
+				auto out = seeds_device.at(prop_idx);
+				detail::set_seed(out, seed.nodes[seed.size - 1],
+																seed.nodes[(seed.size - 1) / 2 + 1], seed.nodes[0],
+																quality);
 			}
 			else {
-				printf(" OUT: bid %llu prop %i %i ",seed_bid+ (dropout_index << 32) , prop_idx, dropout_index); 
 				seeds_device.push_back({seed.nodes[seed.size - 1],
-																seed.nodes[(seed.size - 1) / 2 + 1],
-																seed.nodes[0], quality});
+															 seed.nodes[(seed.size - 1) / 2 + 1], seed.nodes[0],
+                               quality});
 			}
     }
     // include 2nd order if it consistent with 1 and 3 or only 1 and 3 are
@@ -211,10 +221,16 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
 				dropout_index = 1;
 				d_seed_bids.push_back(seed_bid + (dropout_index << 32));	
 			}
+			else if(payload.gbts_convert_seeds_params.do_seed_sorting) {
+				auto out = seeds_device.at(prop_idx);
+				detail::set_seed(out, seed.nodes[seed.size - 1],
+																seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
+																quality);
+			}
 			else {
 				seeds_device.push_back({seed.nodes[seed.size - 1],
-																seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
-																quality});
+															 seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
+                               quality});
 			}
     }
     // include 3rd order if it is consistent with 1 and 2 or only 1 and 2
@@ -225,10 +241,16 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
 				dropout_index = 2;
 				d_seed_bids.push_back(seed_bid + (dropout_index << 32));	
 			}
+			else if(payload.gbts_convert_seeds_params.do_seed_sorting) {
+				auto out = seeds_device.at(prop_idx);
+				detail::set_seed(out, seed.nodes[seed.size - 2],
+																seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
+																quality);
+			}
 			else {
 				seeds_device.push_back({seed.nodes[seed.size - 2],
-																seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
-																quality});
+															 seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
+                               quality});
 			}
 		}
   }
