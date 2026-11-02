@@ -344,6 +344,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
            ++n2Idx) {
         window.minZ = std::min(window.minZ, params[n2Idx].z);
         window.maxZ = std::max(window.maxZ, params[n2Idx].z);
+      }
 
       // Isolated n2 nodes are skipped below for every n1 of this group, and
       // the branch is unpredictable. Filter them out of the window once
