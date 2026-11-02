@@ -25,6 +25,13 @@
 #
 # where all additional arguments are again treated as a boolean expression that
 # determines whether the subdirectory should be added.
+#
+# The external packages a component needs when it is used from an installation
+# are declared from within the component directory with
+#
+#     add_component_dependencies(<NAME> <PACKAGE>...)
+#
+# and are found again at the version used for the build.
 
 set(_components)
 set(_known_components)
@@ -54,6 +61,16 @@ endfunction()
 macro(add_component path name)
     add_component_if(${path} ${name} TRUE)
 endmacro()
+
+# record the external packages a component needs, to be written to its
+# dependency file together with the versions found at build time
+function(add_component_dependencies name)
+    set_property(
+        GLOBAL
+        APPEND
+        PROPERTY ACTS_COMPONENT_DEPENDENCIES_${name} ${ARGN}
+    )
+endfunction()
 
 # propagate the list of components to the parent scope
 macro(propagate_components_to_parent)

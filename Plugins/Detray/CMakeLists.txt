@@ -27,3 +27,5 @@ target_link_libraries(
 )
 
 acts_compile_headers(PluginDetray GLOB include/**/*.hpp)
+
+add_component_dependencies(PluginDetray vecmem covfie actsvg detray)

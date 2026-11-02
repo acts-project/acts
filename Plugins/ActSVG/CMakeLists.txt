@@ -21,3 +21,5 @@ target_link_libraries(
 )
 
 acts_compile_headers(PluginActSVG GLOB include/**/*.hpp)
+
+add_component_dependencies(PluginActSVG actsvg)
