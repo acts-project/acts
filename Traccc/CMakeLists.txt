@@ -150,9 +150,6 @@ if(TRACCC_BUILD_CUDA)
     find_package(CUDAToolkit REQUIRED)
 endif()
 
-# In order to generate specializations for our kernels, we need to have both
-# a working Python interpreter, and a list of supported detectors.
-find_package(Python COMPONENTS Interpreter REQUIRED)
 # The detector types supported by this build of traccc.
 set(TRACCC_SUPPORTED_DETECTORS
     "default_detector;odd_detector;telescope_detector"

@@ -253,6 +253,10 @@ GenericRungeKuttaStepper::transportToBound(
 
 Result<FieldAndGradient> GenericRungeKuttaStepper::getFieldAndGradient(
     State& state, const Vector3& pos, bool withGradient) const {
+  if (withGradient && m_bField->providesFieldGradient()) {
+    return m_bField->getFieldAndGradient(pos, state.fieldCache);
+  }
+
   FieldAndGradient result;
   Result<Vector3> field = getField(state, pos);
   if (!field.ok()) {

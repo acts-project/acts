@@ -75,10 +75,11 @@ struct SurfaceArray::ISurfaceGridLookup {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Lookup position
   /// @param direction Lookup direction
+  /// @param curvature Global geometric curvature for the lookup crossing
   /// @return A span of surface pointers
   virtual std::span<const Surface* const> neighbors(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction) const = 0;
+      const Vector3& direction, const Vector3& curvature) const = 0;
 
   /// Returns the total size of the grid (including under/overflow bins)
   /// @return Size of the grid data structure
@@ -154,7 +155,8 @@ struct SingleElementLookupImpl final : SurfaceArray::ISurfaceGridLookup {
 
   std::span<const Surface* const> neighbors(
       const GeometryContext& /*gctx*/, const Vector3& /*position*/,
-      const Vector3& /*direction*/) const override {
+      const Vector3& /*direction*/,
+      const Vector3& /*curvature*/) const override {
     return m_element;
   }
 
@@ -507,11 +509,12 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
     return {local[0] / m_gridScale, local[1]};
   }
 
-  /// Where a ray meets the representative surface, in both frames.
-  std::optional<Crossing> findCrossing(const GeometryContext& gctx,
-                                       const Vector3& position,
-                                       const Vector3& direction,
-                                       double tolerance) const {
+  /// Estimated trajectory crossing of the representative surface, in both
+  /// frames.
+  std::optional<Crossing> findCrossing(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, double tolerance,
+      [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
     const Intersection3D intersection =
         m_representative
             ->intersect(gctx, position, direction,
@@ -735,9 +738,10 @@ struct SurfaceGridLookupImpl final : SurfaceGridLookupBase {
 
   std::span<const Surface* const> neighbors(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction) const override {
-    const std::optional<Crossing> crossing = findCrossing(
-        gctx, position, direction, std::numeric_limits<double>::infinity());
+      const Vector3& direction, const Vector3& curvature) const override {
+    const std::optional<Crossing> crossing =
+        findCrossing(gctx, position, direction,
+                     std::numeric_limits<double>::infinity(), curvature);
     if (!crossing.has_value()) {
       return {};
     }
@@ -926,8 +930,8 @@ std::span<const Surface* const> SurfaceArray::neighbors(
 
 std::span<const Surface* const> SurfaceArray::neighbors(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction) const {
-  return m_gridLookup->neighbors(gctx, position, direction);
+    const Vector3& direction, const Vector3& curvature) const {
+  return m_gridLookup->neighbors(gctx, position, direction, curvature);
 }
 
 std::size_t SurfaceArray::size() const {
