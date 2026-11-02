@@ -49,6 +49,7 @@ set(DETRAY_GENERATED_METADATA_DIR
 )
 set(OUTPUT_DIR "${DETRAY_GENERATED_METADATA_DIR}/detray/detectors")
 file(MAKE_DIRECTORY ${OUTPUT_DIR})
+message(STATUS "Detector metadata header location: ${OUTPUT_DIR}")
 
 # Set up how clients should find the generated headers.
 target_include_directories(
@@ -103,7 +104,7 @@ if(NOT "${DETRAY_GENERATE_METADATA}" STREQUAL "")
         add_dependencies(detray_detectors ${GENERATOR}_generation)
 
         # Register the header in the aggregate header, e.g.
-        # "itk_metadata" -> DETRAY_HAS_ITK_METADATA and X(itk)
+        # "<name>_metadata" -> DETRAY_HAS_<name>_METADATA and X(name)
         string(MAKE_C_IDENTIFIER "${GENERATOR}" _detray_md_macro)
         string(TOUPPER "${_detray_md_macro}" _detray_md_macro)
         string(
@@ -127,7 +128,10 @@ if(NOT "${DETRAY_GENERATE_METADATA}" STREQUAL "")
                 APPEND DETRAY_GENERATED_METADATA_CONTENT
                 "#include \"detray/detectors/${GENERATOR}.hpp\"\n"
             )
-            string(APPEND DETRAY_GENERATED_METADATA_LIST " X(${_detray_md_name})")
+            string(
+                APPEND DETRAY_GENERATED_METADATA_LIST
+                " X(${_detray_md_name})"
+            )
             unset(_detray_md_name)
         endif()
         unset(_detray_md_macro)

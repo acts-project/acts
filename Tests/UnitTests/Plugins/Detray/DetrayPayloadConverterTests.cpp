@@ -773,10 +773,13 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
 
   // Write payloads to JSON directly
 
+  using detector_t =
+      detray::host::detector<detray::default_metadata<detray::array<double>>>;
   {
     detray::io::geo_header_payload header_data;
-    header_data.common = detray::io::detail::basic_converter::to_payload(
-        payloads.names.at(0), detray::io::geometry_writer::tag);
+    header_data.common =
+        detray::io::detail::basic_converter::to_payload<detector_t>(
+            payloads.names.at(0), detray::io::geometry_writer::tag);
     header_data.sub_header.emplace();
     auto& geo_sub_header = header_data.sub_header.value();
     geo_sub_header.n_volumes = detector.volumes.size();
@@ -795,8 +798,9 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
 
   {
     detray::io::homogeneous_material_header_payload header_data;
-    header_data.common = detray::io::detail::basic_converter::to_payload(
-        payloads.names.at(0), detray::io::homogeneous_material_writer::tag);
+    header_data.common =
+        detray::io::detail::basic_converter::to_payload<detector_t>(
+            payloads.names.at(0), detray::io::homogeneous_material_writer::tag);
     header_data.sub_header.emplace();
     header_data.sub_header->n_rods = 0;
     header_data.sub_header->n_slabs = 0;
@@ -817,9 +821,6 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   }
 
   // Payloads DONE, let's actually build a detray detector from them.
-
-  using detector_t =
-      detray::host::detector<detray::default_metadata<detray::array<double>>>;
 
   // build detector
   detray::detector_builder<detector_t::metadata> detectorBuilder{};

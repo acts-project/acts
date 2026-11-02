@@ -12,8 +12,13 @@
 #include "traccc/io/data_format.hpp"
 
 // Project include(s).
+#include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/detector_conditions_description.hpp"
 #include "traccc/geometry/detector_design_description.hpp"
+#include "traccc/geometry/host_detector.hpp"
+
+// Detray include(s).
+#include <detray/utils/tuple_helpers.hpp>
 
 // System include(s).
 #include <cstdint>
@@ -21,6 +26,11 @@
 #include <string_view>
 
 namespace traccc::io {
+
+/// All detector types that @c read_detector can construct
+using readable_detector_type_list =
+    detray::detail::tuple_cat_t<std::tuple<default_detector, odd_detector>,
+                                generated_detector_type_list>;
 
 /// Populate a @c traccc::detector_design_description object from text files.
 ///

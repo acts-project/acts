@@ -149,6 +149,7 @@ void read_detector_description(detector_design_description::host& det_desc,
       read_digitization_config(digitization_file, digitization_format);
   const conditions_config cond =
       read_conditions_config(conditions_file, conditions_format);
+
   // Fill the detector description with the correct type of geometry file.
   switch (geometry_format) {
     case data_format::json:

@@ -47,6 +47,8 @@ struct common_header_payload {
   std::string tag{};
   /// Date of file creation
   std::string date{};
+  /// Detector metadata type
+  std::string metadata{};
 };
 
 /// @brief a payload for common and extra information

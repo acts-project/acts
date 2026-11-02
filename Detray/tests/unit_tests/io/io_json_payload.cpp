@@ -22,6 +22,7 @@ GTEST_TEST(io, json_header_payload) {
   detray::io::header_payload<bool> h;
   h.common.version = "v0.0.1";
   h.common.detector = "test_detector";
+  h.common.metadata = "test_metatata";
   h.common.tag = "test_file";
   h.common.date = "01.01.2023";
 
@@ -34,6 +35,7 @@ GTEST_TEST(io, json_header_payload) {
   EXPECT_EQ(h.common.detector, ph.common.detector);
   EXPECT_EQ(h.common.tag, ph.common.tag);
   EXPECT_EQ(h.common.date, ph.common.date);
+  EXPECT_EQ(h.common.metadata, ph.common.metadata);
 }
 
 /// This tests the json io for a single index link

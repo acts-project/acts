@@ -44,7 +44,8 @@ class geometry_writer {
                                               const std::string_view det_name) {
     geo_header_payload header_data;
 
-    header_data.common = detail::basic_converter::to_payload(det_name, tag);
+    header_data.common =
+        detail::basic_converter::to_payload<detector_t>(det_name, tag);
 
     header_data.sub_header.emplace();
     auto& geo_sub_header = header_data.sub_header.value();

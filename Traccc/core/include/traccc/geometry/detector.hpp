@@ -90,6 +90,13 @@ using generated_detector_type_list = detray::detail::tuple_cat_t<
     std::tuple<> DETRAY_FOR_EACH_GENERATED_METADATA(
         TRACCC_GENERATED_DETECTOR_TUPLE)>;
 #undef TRACCC_GENERATED_DETECTOR_TUPLE
+
+#define TRACCC_GENERATED_METADATA_TUPLE(NAME) , std::tuple<detray::NAME##_metadata<traccc::default_algebra>>
+/// List of all generated detector types (can be empty)
+using generated_metadata_list = detray::detail::tuple_cat_t<
+    std::tuple<> DETRAY_FOR_EACH_GENERATED_METADATA(
+        TRACCC_GENERATED_METADATA_TUPLE)>;
+#undef TRACCC_GENERATED_METADATA_TUPLE
 // clang-format on
 /// @}
 
