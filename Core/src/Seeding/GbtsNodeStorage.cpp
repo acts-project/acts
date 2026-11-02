@@ -121,9 +121,8 @@ std::vector<std::uint32_t> GbtsNodeStorage::sortBinByPhi(
     return std::tie(nodeA.z, nodeA.r) < std::tie(nodeB.z, nodeB.r);
   };
 
-  constexpr std::size_t kQuadraticLinearCrossover = 32;
   PhiSortBuckets phiBuckets;
-  Acts::detail::sortByKey<kQuadraticLinearCrossover>(
+  Acts::detail::sortByKey<Config::phiSortQuadraticLinearCrossover>(
       std::span(items), phiBuckets, phiOf, byPosition);
 
   const auto order = items | std::views::keys;
