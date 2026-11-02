@@ -209,7 +209,7 @@ struct gbts_fit_segments_params {
 // Seed ambiguity / dropout parameters for device::gbts_convert_seeds
 struct gbts_convert_seeds_params {
   /// if to do seed sorting (use if track following makes order dependent cuts)
-  bool do_seed_sorting = true;
+  bool do_seed_sorting = false;
   // sample multiple triplets when forming seeds to hedge against outliers.
   bool use_dropout = true;
   // Curvature thresholds (1/m) for the dropout logic.

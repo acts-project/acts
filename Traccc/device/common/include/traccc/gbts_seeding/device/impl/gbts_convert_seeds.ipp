@@ -32,12 +32,14 @@ struct Tracklet {
   int size;
 };
 
-template<typename T>
-TRACCC_HOST_DEVICE inline void set_seed(traccc::edm::seed<T> seed, const int bottom, const int middle, const int top, const float quality) {
-	seed.bottom_index() = bottom;
-	seed.middle_index() = middle;
-	seed.top_index() = top;
-	seed.quality() = quality;
+template <typename T>
+TRACCC_HOST_DEVICE inline void set_seed(traccc::edm::seed<T> seed,
+                                        const int bottom, const int middle,
+                                        const int top, const float quality) {
+  seed.bottom_index() = bottom;
+  seed.middle_index() = middle;
+  seed.top_index() = top;
+  seed.quality() = quality;
 }
 
 TRACCC_HOST_DEVICE inline traccc::float2 gbts_estimate_seed_params(
@@ -83,8 +85,7 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
   edm::seed_collection::device seeds_device(payload.output_seeds);
   const vecmem::device_vector<const int2> d_seed_proposals(
       payload.seed_proposals);
-  vecmem::device_vector<long long unsigned int> d_seed_bids(
-      payload.seed_bids);
+  vecmem::device_vector<long long unsigned int> d_seed_bids(payload.seed_bids);
   const vecmem::device_vector<const char> d_seed_ambiguity(
       payload.seed_ambiguity);
   const vecmem::device_vector<const int2> d_path_store(payload.path_store);
@@ -105,154 +106,156 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
   const unsigned int blockDimX = thread_id.getBlockDimX();
   const unsigned int gridDimX = thread_id.getGridDimX();
 
-  const unsigned int path_count =
-      vecmem::device_vector<const unsigned int>(payload.path_count)[0];
+  // Loop over nPaths clamped to nMaxPaths when converting paths into seeds or
+  // seed_bids, nSeeds if filling the seed container from sorted bids
+  const unsigned int path_count = math::min(
+      payload.nPathsMax,
+      vecmem::device_vector<const unsigned int>(payload.path_count)[0]);
   const unsigned int nPaths =
-      (path_count < payload.nPathsMax) ? path_count : payload.nPathsMax;
-	
-	for (unsigned int prop_idx = globalIdx; prop_idx < nPaths;
+      (payload.gbts_convert_seeds_params.do_seed_sorting && payload.now_sorted)
+          ? d_seed_bids.size()
+          : path_count;
+
+  for (unsigned int prop_idx = globalIdx; prop_idx < nPaths;
        prop_idx += blockDimX * gridDimX) {
+    int2 prop;
+    char diff_code = -1;
+    bool force_dropout = false;
+    unsigned long long int dropout_index = -1;
+    if (payload.gbts_convert_seeds_params.do_seed_sorting &&
+        payload.now_sorted) {
+      // if sorted the dropout logic has already been run so take the dropout
+      // index from the saved bid
+      unsigned long long int bid = d_seed_bids.at(prop_idx);
+      prop = {bid >> 32, bid & 0xFFFFFFFF};
+      dropout_index = prop.x & 0x3;
+    } else {
+      prop = d_seed_proposals[prop_idx];
+      diff_code = 0;
+      if (prop.y < 0) {
+        continue;
+      }
+      if (d_seed_ambiguity[prop_idx] == -2) {
+        continue;
+      }
+    }
+    char best_for_hit = 0;
+    detail::Tracklet seed;
+    seed.size = 0;
+    int2 path = int2{0, prop.y};
+    while (path.y >= 0) {
+      path = d_path_store[static_cast<unsigned int>(path.y)];
+      seed.nodes[seed.size++] =
+          d_output_edge_nodes[static_cast<unsigned int>(path.x)].x;
+      best_for_hit +=
+          (prop_idx == (d_hit_bids[seed.nodes[seed.size - 1]] & 0xFFFFFFFFLL));
+    }
+    seed.nodes[seed.size++] =
+        d_output_edge_nodes[static_cast<unsigned int>(path.x)].y;
+    best_for_hit +=
+        (prop_idx == (d_hit_bids[seed.nodes[seed.size - 1]] & 0xFFFFFFFFLL));
 
-		int2 prop; 
-		char diff_code = -1;
-		bool force_dropout = false;
-		unsigned long long int dropout_index = -1;
-		if(payload.gbts_convert_seeds_params.do_seed_sorting && payload.now_sorted) {
-			// if sorted the dropout logic has allready been run so take the dropout index from the saved bid
-			unsigned long long int bid = d_seed_bids.at(prop_idx);
-			if(bid == 0) {
-				// rejcted seed or empty slot
-				continue;
-			}
-			prop = {bid >> 32, bid & 0xFFFFFFFF};	
-			dropout_index = prop.x & 0x3;
-		}
-		else {
-			prop = d_seed_proposals[prop_idx];
-			diff_code = 0;
-			if (prop.y < 0) {
-				continue;
-			}
-			if (d_seed_ambiguity[prop_idx] == -2) {
-				continue;
-			}
-		}
-		char best_for_hit = 0;
-		detail::Tracklet seed;
-		seed.size = 0;
-		int2 path = int2{0, prop.y};
-		while (path.y >= 0) {
-			path = d_path_store[static_cast<unsigned int>(path.y)];
-			seed.nodes[seed.size++] =
-					d_output_edge_nodes[static_cast<unsigned int>(path.x)].x;
-			best_for_hit +=
-					(prop_idx == (d_hit_bids[seed.nodes[seed.size - 1]] & 0xFFFFFFFFLL));
-		}
-		seed.nodes[seed.size++] =
-				d_output_edge_nodes[static_cast<unsigned int>(path.x)].y;
-		best_for_hit +=
-				(prop_idx == (d_hit_bids[seed.nodes[seed.size - 1]] & 0xFFFFFFFFLL));
-
-		if (best_for_hit < best_hit_frac * static_cast<float>(seed.size) && !(payload.gbts_convert_seeds_params.do_seed_sorting && payload.now_sorted)) {
-			continue;
-		}
-		if (use_dropout && !(payload.gbts_convert_seeds_params.do_seed_sorting && payload.now_sorted)) {
-			std::array<traccc::float4, 3> sps = {
-					d_sp_params[seed.nodes[seed.size - 1]],
-					d_sp_params[seed.nodes[(seed.size - 1) / 2 + 1]],
-					d_sp_params[seed.nodes[0]]};
-			const traccc::float2 curv_cot_1 = detail::gbts_estimate_seed_params(sps);
-			sps[1] = d_sp_params[seed.nodes[(seed.size - 1) / 2]];
-			const traccc::float2 curv_cot_2 = detail::gbts_estimate_seed_params(sps);
-			sps[0] = d_sp_params[seed.nodes[seed.size - 2]];
-			const traccc::float2 curv_cot_3 = detail::gbts_estimate_seed_params(sps);
-			if ((best_for_hit < seed.size - 1) &
-					(fabsf(curv_cot_1.y + curv_cot_2.y +
-								 curv_cot_3.y) <  // Checking against the average
-																	// cot(theta) of the three tracklets
-					 3.0f * tight_bid_cot_threshold) &
-					(seed.size < 5)) {  // Don't apply dropout to seeds of length 5
-															// or more. To avoid dropping good seeds.
-				continue;
-			}
-			std::array<float, 3> diff = {fabsf(curv_cot_1.x - curv_cot_2.x),
-																	 fabsf(curv_cot_2.x - curv_cot_3.x),
-																	 fabsf(curv_cot_1.x - curv_cot_3.x)};
-			diff_code = static_cast<char>(4 * (diff[0] < dcurv_cut_m) +
-																		2 * (diff[1] < dcurv_cut_m) +
-																		(diff[2] < dcurv_cut_m));
-			force_dropout = fabsf(curv_cot_1.x + curv_cot_2.x + curv_cot_3.x) <
-										3.0f * force_dropout_max_curv_m;
-			force_dropout |= (fabsf(curv_cot_1.y + curv_cot_2.y + curv_cot_3.y) <
-												3.0f * tight_bid_cot_threshold) &
-											 (diff_code == 0);
-		}
-		float quality = static_cast<float>(prop.x);
+    if (best_for_hit < best_hit_frac * static_cast<float>(seed.size) &&
+        !(payload.gbts_convert_seeds_params.do_seed_sorting &&
+          payload.now_sorted)) {
+      continue;
+    }
+    if (use_dropout && !(payload.gbts_convert_seeds_params.do_seed_sorting &&
+                         payload.now_sorted)) {
+      std::array<traccc::float4, 3> sps = {
+          d_sp_params[seed.nodes[seed.size - 1]],
+          d_sp_params[seed.nodes[(seed.size - 1) / 2 + 1]],
+          d_sp_params[seed.nodes[0]]};
+      const traccc::float2 curv_cot_1 = detail::gbts_estimate_seed_params(sps);
+      sps[1] = d_sp_params[seed.nodes[(seed.size - 1) / 2]];
+      const traccc::float2 curv_cot_2 = detail::gbts_estimate_seed_params(sps);
+      sps[0] = d_sp_params[seed.nodes[seed.size - 2]];
+      const traccc::float2 curv_cot_3 = detail::gbts_estimate_seed_params(sps);
+      if ((best_for_hit < seed.size - 1) &
+          (fabsf(curv_cot_1.y + curv_cot_2.y +
+                 curv_cot_3.y) <  // Checking against the average
+                                  // cot(theta) of the three tracklets
+           3.0f * tight_bid_cot_threshold) &
+          (seed.size < 5)) {  // Don't apply dropout to seeds of length 5
+                              // or more. To avoid dropping good seeds.
+        continue;
+      }
+      std::array<float, 3> diff = {fabsf(curv_cot_1.x - curv_cot_2.x),
+                                   fabsf(curv_cot_2.x - curv_cot_3.x),
+                                   fabsf(curv_cot_1.x - curv_cot_3.x)};
+      diff_code = static_cast<char>(4 * (diff[0] < dcurv_cut_m) +
+                                    2 * (diff[1] < dcurv_cut_m) +
+                                    (diff[2] < dcurv_cut_m));
+      force_dropout = fabsf(curv_cot_1.x + curv_cot_2.x + curv_cot_3.x) <
+                      3.0f * force_dropout_max_curv_m;
+      force_dropout |= (fabsf(curv_cot_1.y + curv_cot_2.y + curv_cot_3.y) <
+                        3.0f * tight_bid_cot_threshold) &
+                       (diff_code == 0);
+    }
+    float quality = static_cast<float>(prop.x);
     unsigned long long int seed_bid =
         (static_cast<unsigned long long int>(prop.x) << 32) |
         static_cast<unsigned long long int>(prop.y);
-		// zero out the last two bits of quality for the dropout index
-		seed_bid &= 0xFFFFFFFCFFFFFFFF;
-		// use one seed from a consistent pair/set + the inconsistent one
+    // zero out the last two bits of quality for the dropout index
+    seed_bid &= 0xFFFFFFFCFFFFFFFF;
+    // use one seed from a consistent pair/set + the inconsistent one
     // sample spacepoints from tracklet to create seeds
     // include 1st order unless either 2 or 3 are consistent with the other
     // and 1
-    if (((diff_code != 3) & (diff_code != 6)) | force_dropout | dropout_index == 0) {
-			if(payload.gbts_convert_seeds_params.do_seed_sorting && !payload.now_sorted) {
-				dropout_index = 0;
-				d_seed_bids.push_back(seed_bid + (dropout_index << 32));
-			}
-			else if(payload.gbts_convert_seeds_params.do_seed_sorting) {
-				auto out = seeds_device.at(prop_idx);
-				detail::set_seed(out, seed.nodes[seed.size - 1],
-																seed.nodes[(seed.size - 1) / 2 + 1], seed.nodes[0],
-																quality);
-			}
-			else {
-				seeds_device.push_back({seed.nodes[seed.size - 1],
-															 seed.nodes[(seed.size - 1) / 2 + 1], seed.nodes[0],
-                               quality});
-			}
+    if (((diff_code != 3) & (diff_code != 6)) | force_dropout |
+        dropout_index == 0) {
+      if (payload.gbts_convert_seeds_params.do_seed_sorting &&
+          !payload.now_sorted) {
+        dropout_index = 0;
+        d_seed_bids.push_back(seed_bid + (dropout_index << 32));
+      } else if (payload.gbts_convert_seeds_params.do_seed_sorting) {
+        auto out = seeds_device.at(prop_idx);
+        detail::set_seed(out, seed.nodes[seed.size - 1],
+                         seed.nodes[(seed.size - 1) / 2 + 1], seed.nodes[0],
+                         quality);
+      } else {
+        seeds_device.push_back({seed.nodes[seed.size - 1],
+                                seed.nodes[(seed.size - 1) / 2 + 1],
+                                seed.nodes[0], quality});
+      }
     }
     // include 2nd order if it consistent with 1 and 3 or only 1 and 3 are
     // consistent
     if ((diff_code == 1) | (diff_code == 6) | dropout_index == 1) {
-      if(payload.gbts_convert_seeds_params.do_seed_sorting && !payload.now_sorted) {
-				dropout_index = 1;
-				d_seed_bids.push_back(seed_bid + (dropout_index << 32));	
-			}
-			else if(payload.gbts_convert_seeds_params.do_seed_sorting) {
-				auto out = seeds_device.at(prop_idx);
-				detail::set_seed(out, seed.nodes[seed.size - 1],
-																seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
-																quality);
-			}
-			else {
-				seeds_device.push_back({seed.nodes[seed.size - 1],
-															 seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
-                               quality});
-			}
+      if (payload.gbts_convert_seeds_params.do_seed_sorting &&
+          !payload.now_sorted) {
+        dropout_index = 1;
+        d_seed_bids.push_back(seed_bid + (dropout_index << 32));
+      } else if (payload.gbts_convert_seeds_params.do_seed_sorting) {
+        auto out = seeds_device.at(prop_idx);
+        detail::set_seed(out, seed.nodes[seed.size - 1],
+                         seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
+                         quality);
+      } else {
+        seeds_device.push_back({seed.nodes[seed.size - 1],
+                                seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
+                                quality});
+      }
     }
     // include 3rd order if it is consistent with 1 and 2 or only 1 and 2
     // are consistent or if only 2 and 3 are consistent
-    if ((diff_code == 2) | (diff_code == 3) | (diff_code == 4) |
-        force_dropout | dropout_index == 2) {
-      if(payload.gbts_convert_seeds_params.do_seed_sorting && !payload.now_sorted) {
-				dropout_index = 2;
-				d_seed_bids.push_back(seed_bid + (dropout_index << 32));	
-			}
-			else if(payload.gbts_convert_seeds_params.do_seed_sorting) {
-				auto out = seeds_device.at(prop_idx);
-				detail::set_seed(out, seed.nodes[seed.size - 2],
-																seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
-																quality);
-			}
-			else {
-				seeds_device.push_back({seed.nodes[seed.size - 2],
-															 seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
-                               quality});
-			}
-		}
+    if ((diff_code == 2) | (diff_code == 3) | (diff_code == 4) | force_dropout |
+        dropout_index == 2) {
+      if (payload.gbts_convert_seeds_params.do_seed_sorting &&
+          !payload.now_sorted) {
+        dropout_index = 2;
+        d_seed_bids.push_back(seed_bid + (dropout_index << 32));
+      } else if (payload.gbts_convert_seeds_params.do_seed_sorting) {
+        auto out = seeds_device.at(prop_idx);
+        detail::set_seed(out, seed.nodes[seed.size - 2],
+                         seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
+                         quality);
+      } else {
+        seeds_device.push_back({seed.nodes[seed.size - 2],
+                                seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
+                                quality});
+      }
+    }
   }
 }
 
