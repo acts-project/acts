@@ -89,6 +89,14 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
+  Acts::Experimental::GbtsAdaptiveTauRatioCuts tauRatioCuts =
+      m_cfg.tauRatioCuts;
+  if (!m_cfg.useAdaptiveCuts) {
+    tauRatioCuts.tauRatioCorr = 0.f;
+  }
+  Acts::Experimental::assignAdaptiveTauRatioCuts(connections, layerGeometry,
+                                                 tauRatioCuts);
+
   // initialise the object that holds all the geometry information needed for
   // the algorithm
   m_geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
@@ -391,12 +399,11 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   const auto &cfg1 = m_cfg.seedFinderConfig;
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
   ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
-  ACTS_DEBUG("edgeMaskMinEta: " << cfg1.edgeMaskMinEta);
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
   ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);
-  ACTS_DEBUG("ccaMaxIterations: " << cfg1.ccaMaxIterations);
+  ACTS_DEBUG("maxChainLength: " << cfg1.maxChainLength);
   ACTS_DEBUG("minSeedLevel: " << static_cast<std::uint32_t>(cfg1.minSeedLevel));
   ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
   ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
@@ -411,14 +418,16 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("maxEdgesPerSP: " << cfg2.maxEdgesPerSP);
   ACTS_DEBUG("minDeltaRadius: " << cfg2.minDeltaRadius);
   ACTS_DEBUG("validateTriplets: " << cfg2.validateTriplets);
-  ACTS_DEBUG("useAdaptiveCuts: " << cfg2.useAdaptiveCuts);
-  ACTS_DEBUG("tauRatioCorr: " << cfg2.tauRatioCorr);
   ACTS_DEBUG("d0Max: " << cfg2.d0Max);
   ACTS_DEBUG("cutDPhiMax: " << cfg2.cutDPhiMax);
   ACTS_DEBUG("cutDCurvMax: " << cfg2.cutDCurvMax);
   ACTS_DEBUG("minZ0: " << cfg2.minZ0);
   ACTS_DEBUG("maxZ0: " << cfg2.maxZ0);
   ACTS_DEBUG("maxOuterRadius: " << cfg2.maxOuterRadius);
+  ACTS_DEBUG("useAdaptiveCuts: " << m_cfg.useAdaptiveCuts);
+  ACTS_DEBUG("tauRatioCut: " << m_cfg.tauRatioCuts.tauRatioCut);
+  ACTS_DEBUG("tauRatioCorr: " << m_cfg.tauRatioCuts.tauRatioCorr);
+  ACTS_DEBUG("tauRatioCorrStrip: " << m_cfg.tauRatioCuts.tauRatioCorrStrip);
   ACTS_DEBUG("===== GbtsTrackFilter =====");
   const auto &cfg3 = m_cfg.trackingFilterConfig;
   ACTS_DEBUG("sigmaMS: " << cfg3.sigmaMS);

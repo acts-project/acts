@@ -30,31 +30,14 @@ struct GbtsGraph {
 
   /// Number of links between edges.
   std::uint32_t nConnections = 0;
-
-  /// Run connected component analysis on the graph, updating the edge levels.
-  /// @param maxIterations Maximum number of connected-component iterations
-  /// @return The highest chain level any edge reached
-  std::uint32_t runCCA(std::uint32_t maxIterations);
-
-  /// extract edges that start a chain
-  /// @param minSeedLevel Chain length a seed candidate must reach
-  /// @param addTriplets Accept chains one level short within
-  ///        `maxAbsEtaAddTriplets`
-  /// @param maxAbsEtaAddTriplets The maximum |eta| at which `addTriplets`
-  ///        applies
-  /// @return The edges that start chains, ordered by length of chain, empty
-  ///         if no chain reached the required level
-  std::vector<detail::GbtsEdge*> extractChainHeads(std::uint8_t minSeedLevel,
-                                                   bool addTriplets,
-                                                   float maxAbsEtaAddTriplets);
 };
 
 /// Builds the doublet graph of the GBTS workflow.
 ///
 /// Turns a finalized `GbtsNodeStorage` into a graph whose edges are doublets
 /// and whose links are the doublet pairs that a triplet cut accepted.
-/// `GraphBasedTrackSeeder` grows chain levels over those links with
-/// `GbtsGraph::runCCA` and walks the result to produce seeds.
+/// `GraphBasedTrackSeeder` follows the best fitted path along those links
+/// from every edge to produce seeds.
 ///
 /// The phi binning is the node storage's, so the sliding windows and the
 /// indexing they slide over cannot disagree.
@@ -68,24 +51,12 @@ class GbtsGraphBuilder {
     /// Optional validation for barrel triplets.
     bool validateTriplets = true;
 
-    /// Widens allowed variation in tau ratio if a layer is missed in edge
-    /// connecting.
-    bool useAdaptiveCuts = true;
-
-    /// Tau ratio cut threshold.
+    /// Tau ratio scale of the `validateTriplets` high-pT check. The linking cut
+    /// comes from the layer pairs, see `GbtsLayerConnection`.
     float tauRatioCut = 0.007f;
 
     /// Tau ratio precut threshold.
     float tauRatioPrecut = 0.009f;
-
-    /// Correction applied to tau acceptance if a layer is missed during edge
-    /// connecting.
-    float tauRatioCorr = 0.006f;
-
-    /// The same for a triplet any of whose three nodes a strip module made,
-    /// whose two doublets resolved the shared node's along-strip coordinate
-    /// separately. Reaches nothing without a strip in the triplet.
-    float tauRatioCorrStrip = 0.03f;
 
     /// Minimum transverse momentum.
     float minPt = 1.0f * Acts::UnitConstants::GeV;
@@ -121,6 +92,15 @@ class GbtsGraphBuilder {
 
     /// Maximum allowed curvature tolerance for candidate edge connections.
     float cutDCurvMax = 0.001f;
+
+    /// Reject a candidate edge connection whose tau ratio, phi and curvature
+    /// differences, each divided by its own cut, add up to more than
+    /// `sumRatioCutMax`: a pair that is marginal in all three at once.
+    bool useSumRatioCut = false;
+
+    /// Threshold of the summed ratios, between 1 (only one difference
+    /// can use its full cut) and 3 (no effect beyond the individual cuts).
+    float sumRatioCutMax = 1.3f;
 
     /// Minimum z0 value. In pixel mode the value is picked from the RoI.
     float minZ0 = -600.0f;

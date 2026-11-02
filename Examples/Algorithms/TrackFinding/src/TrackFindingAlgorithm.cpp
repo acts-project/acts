@@ -261,6 +261,12 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
         "required for staying on seed.");
   }
 
+  Acts::TrackletJoiner::Config joinerConfig;
+  joinerConfig.smoothSecond = m_cfg.twoWaySmoothing;
+  joinerConfig.conditionFirst = m_cfg.twoWaySmoothing;
+  m_trackletJoiner = Acts::TrackletJoiner(
+      joinerConfig, this->logger().clone("TrackletJoiner"));
+
   if (m_cfg.trackSelectorCfg.has_value()) {
     m_trackSelector = std::visit(
         [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
@@ -331,8 +337,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   Acts::PropagatorPlainOptions firstPropOptions(ctx.recoGeoContext,
                                                 ctx.magFieldContext);
   firstPropOptions.maxSteps = m_cfg.maxSteps;
-  firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward()
-                                                   : Acts::Direction::Forward();
+  firstPropOptions.direction = Acts::Direction::Forward();
   firstPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
   firstPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
@@ -348,7 +353,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                   ctx.calibContext, extensions,
                                   firstPropOptions);
 
-  firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
+  firstOptions.targetSurface = nullptr;
   firstOptions.recordMaterialStates = m_cfg.recordMaterialStates;
   firstOptions.betheHeitlerApprox =
       std::make_shared<Acts::PolynomialBetheHeitlerApprox>(
@@ -357,7 +362,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   TrackFinderOptions secondOptions(ctx.recoGeoContext, ctx.magFieldContext,
                                    ctx.calibContext, extensions,
                                    secondPropOptions);
-  secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
+  secondOptions.targetSurface = pSurface.get();
   secondOptions.skipPrePropagationUpdate = true;
   secondOptions.recordMaterialStates = m_cfg.recordMaterialStates;
   secondOptions.betheHeitlerApprox = firstOptions.betheHeitlerApprox;
@@ -505,6 +510,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
       // number of second tracks found
       std::size_t nSecond = 0;
+      bool joinedInPlace = false;
 
       // Set the seed number, this number decrease by 1 since the seed number
       // has already been updated
@@ -549,72 +555,49 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
             ACTS_WARNING("Second track finding failed for seed "
                          << iSeed << " with error" << secondResult.error());
           } else {
-            // store the original previous state and jacobian to restore them
-            auto originalFirstMeasurementPrevious = firstMeasurement.previous();
-            const Acts::BoundMatrix originalFirstMeasurementJacobian =
-                firstMeasurement.jacobian();
-
             auto& secondTracksForSeed = secondResult.value();
-            for (auto& secondTrack : secondTracksForSeed) {
-              // TODO a copy of the track should not be necessary but is the
-              //      safest way with the current EDM
-              // TODO a lightweight copy without copying all the track state
-              //      components might be a solution
-              auto secondTrackCopy = tracksTemp.makeTrack();
-              secondTrackCopy.copyFrom(secondTrack);
+            for (std::size_t iSecond = 0; iSecond < secondTracksForSeed.size();
+                 ++iSecond) {
+              auto& secondTrack = secondTracksForSeed[iSecond];
+              const bool lastSecond =
+                  (iSecond + 1 == secondTracksForSeed.size());
 
-              // Note that this is only valid if there are no branches
-              // We disallow this by breaking this look after a second track was
-              // processed
-              std::optional<Acts::BoundMatrix> stitchJacobian =
-                  secondTrackCopy.reverseTrackStates(true);
-
-              firstMeasurement.previous() =
-                  secondTrackCopy.outermostTrackState().index();
-              // transport from the second pass to the first measurement
-              if (stitchJacobian.has_value()) {
-                firstMeasurement.jacobian() = *stitchJacobian;
-              }
-
-              // Retain tip and stem index of the first track
-              auto tipIndex = trackCandidate.tipIndex();
-              auto stemIndex = trackCandidate.stemIndex();
-              trackCandidate.copyFromWithoutStates(secondTrackCopy);
-              trackCandidate.tipIndex() = tipIndex;
-              trackCandidate.stemIndex() = stemIndex;
-
-              // finalize the track candidate
-
-              bool doExtrapolate = true;
-
-              if (!m_cfg.reverseSearch) {
-                // these parameters are already extrapolated by the CKF and have
-                // the optimal resolution. note that we did not smooth all the
-                // states.
-
-                // only extrapolate if we did not do it already
-                doExtrapolate = !trackCandidate.hasReferenceSurface();
-              } else {
-                // smooth the full track and extrapolate to the reference
-
-                auto secondSmoothingResult = Acts::smoothTrack(
-                    ctx.recoGeoContext, trackCandidate, logger());
-                if (!secondSmoothingResult.ok()) {
-                  m_nFailedSmoothing++;
-                  ACTS_ERROR("Second smoothing for seed "
-                             << iSeed << " and track " << secondTrack.index()
-                             << " failed with error "
-                             << secondSmoothingResult.error());
-                  continue;
+              // join copies while more second tracks follow, the last one in
+              // place. the second track is always copied, because its states
+              // may be shared with sibling branches and the join reverses them
+              Acts::Result<TrackContainer::TrackProxy> joinResult =
+                  [&]() -> Acts::Result<TrackContainer::TrackProxy> {
+                if (!lastSecond) {
+                  return m_trackletJoiner.joinCopy(
+                      ctx.recoGeoContext, tracksTemp, trackCandidate,
+                      firstMeasurementConst, secondTrack);
                 }
-
-                trackCandidate.reverseTrackStates(true);
+                auto secondTrackCopy = tracksTemp.makeTrack();
+                secondTrackCopy.copyFrom(secondTrack);
+                joinedInPlace = true;
+                auto res = m_trackletJoiner.joinInPlace(
+                    ctx.recoGeoContext, trackCandidate, firstMeasurement,
+                    secondTrackCopy);
+                if (!res.ok()) {
+                  return res.error();
+                }
+                return trackCandidate;
+              }();
+              if (!joinResult.ok()) {
+                m_nFailedSmoothing++;
+                ACTS_ERROR("Joining the second pass for seed "
+                           << iSeed << " and track " << secondTrack.index()
+                           << " failed with error "
+                           << joinResult.error().message());
+                continue;
               }
+              auto joinedTrack = joinResult.value();
 
-              if (doExtrapolate) {
+              // the second pass extrapolated to the perigee unless it failed
+              if (!joinedTrack.hasReferenceSurface()) {
                 auto secondExtrapolationResult =
                     Acts::extrapolateTrackToReferenceSurface(
-                        trackCandidate, *pSurface, extrapolator,
+                        joinedTrack, *pSurface, extrapolator,
                         extrapolationOptions, m_cfg.extrapolationStrategy,
                         logger());
                 if (!secondExtrapolationResult.ok()) {
@@ -627,20 +610,29 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 }
               }
 
-              addTrack(trackCandidate);
+              addTrack(joinedTrack);
 
               ++nSecond;
             }
-
-            // restore the original previous state and jacobian
-            firstMeasurement.previous() = originalFirstMeasurementPrevious;
-            firstMeasurement.jacobian() = originalFirstMeasurementJacobian;
           }
         }
       }
 
       // if no second track was found, we will use only the first track
       if (nSecond == 0) {
+        // A failed in-place join or subsequent extrapolation may have changed
+        // the states. Rebuild the first pass before using it as a fallback.
+        if (joinedInPlace) {
+          trackCandidate.copyFrom(firstTrack);
+          auto res =
+              Acts::smoothTrack(ctx.recoGeoContext, trackCandidate, logger());
+          if (!res.ok()) {
+            m_nFailedSmoothing++;
+            ACTS_ERROR("Restoring the first pass for seed "
+                       << iSeed << " failed with error " << res.error());
+            continue;
+          }
+        }
         // restore the track to the original state
         auto tipIndex = trackCandidate.tipIndex();
         auto stemIndex = trackCandidate.stemIndex();

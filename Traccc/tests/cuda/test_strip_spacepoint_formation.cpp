@@ -49,8 +49,16 @@ class CUDAStripSpacepointFormation : public ::testing::Test {
     for (unsigned int i = 0; i < 3; ++i) {
       detray::geometry::identifier link{0u};
       link.set_index(i);
-      measurements.push_back(
-          {{0.f, 0.f}, {0.f, 0.f}, 1u, 0.f, 0.f, 0u, link, {1u, 0u}, i});
+      measurements.push_back({{0.f, 0.f},
+                              {0.f, 0.f},
+                              1u,
+                              0.f,
+                              0.f,
+                              0u,
+                              link,
+                              {1u, 0u},
+                              i,
+                              {0.f, 0.f}});
       strip_measurement_surface_info info{};
       info.surface_link = link.value();
       info.origin = {100.f, 0.f, 0.f};
@@ -287,7 +295,8 @@ TEST_F(CUDAStripSpacepointFormation, multiple_blocks_and_repeated_calls) {
          0u,
          detray::geometry::identifier{surfaces[surface].surface_link},
          {1u, 0u},
-         i});
+         i,
+         {0.f, 0.f}});
   }
   for (unsigned int repeat = 0; repeat < 3; ++repeat) {
     auto output = run();

@@ -75,6 +75,18 @@ void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
                        reflectedParams.parameters(), eps, eps);
   CHECK_CLOSE_OR_SMALL(reflectedParams.reflect().parameters(),
                        params.parameters(), eps, eps);
+
+  // particle hypothesis
+  const auto newHypothesis = ParticleHypothesis::electron();
+  const FreeTrackParameters withHypothesis =
+      params.withParticleHypothesis(newHypothesis);
+  BOOST_CHECK(withHypothesis.particleHypothesis() == newHypothesis);
+  BOOST_CHECK(withHypothesis.parameters() == params.parameters());
+  BOOST_CHECK(withHypothesis.covariance() == params.covariance());
+  FreeTrackParameters setHypothesis = params;
+  setHypothesis.setParticleHypothesis(newHypothesis);
+  BOOST_CHECK(setHypothesis.particleHypothesis() == newHypothesis);
+  BOOST_CHECK(setHypothesis.parameters() == params.parameters());
 }
 
 }  // namespace

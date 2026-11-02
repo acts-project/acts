@@ -10,12 +10,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsPlugins/Root/TGeoAxes.hpp"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
+#include <optional>
 #include <tuple>
 
 #include "RtypesCore.h"
@@ -109,6 +111,22 @@ struct TGeoSurfaceConverter {
   /// @throws std::runtime_error if the shape cannot be converted
   static Acts::Transform3 transformFromShape(
       const TGeoShape& tgShape, const TGeoMatrix& tgMatrix, TGeoAxes axes,
+      double scalor = 10.) noexcept(false);
+
+  /// Convert a tube- or disc-like TGeoShape into a cylindrical volume
+  ///
+  /// Tube-like shapes (z half-length larger than the radial thickness, e.g. a
+  /// support tube) become a cylinder shell, disc-like shapes (e.g. an
+  /// endplate) an annular disc, both keeping the shape's own inner and outer
+  /// radius.
+  ///
+  /// @param tgShape The TGeoShape
+  /// @param tgMatrix The matrix representing the global transform
+  /// @param scalor The unit scalor between TGeo and Acts
+  /// @return The volume, or std::nullopt if the shape is neither tube- nor
+  ///         disc-like
+  static std::optional<Acts::Volume> cylinderVolume(
+      const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
       double scalor = 10.) noexcept(false);
 
   /// Translate TGeo degree [0, 360) to radian

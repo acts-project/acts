@@ -16,6 +16,7 @@
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/SeedDeduplicator.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
+#include "Acts/TrackFitting/TrackletJoiner.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
@@ -110,11 +111,19 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Extrapolation strategy
     Acts::TrackExtrapolationStrategy extrapolationStrategy =
         Acts::TrackExtrapolationStrategy::firstOrLast;
-    /// Run finding in two directions
+    /// Run finding in two directions. The first pass runs outward from the
+    /// seed. The second pass runs inward from the innermost measurement of the
+    /// first pass to the perigee, and it starts from the smoothed parameters
+    /// of the first pass. The @ref Acts::TrackletJoiner updates the smoothed
+    /// states with both passes; unsmoothed trailing states of the first pass
+    /// stay unchanged. The perigee comes from the second pass. Do not smooth
+    /// the output track: a smoother over the joined chain counts the first
+    /// pass twice.
     bool twoWay = true;
-    /// Whether to run the finding in seed parameter direction or reverse
-    /// direction
-    bool reverseSearch = false;
+    /// Smooth the second pass and condition the first pass on it in the join.
+    /// Off, the passes are only linked and their state estimates stay
+    /// unchanged.
+    bool twoWaySmoothing = true;
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;
@@ -176,6 +185,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
   std::optional<Acts::TrackSelector> m_trackSelector;
+  Acts::TrackletJoiner m_trackletJoiner;
 
   ReadDataHandle<MeasurementSubset> m_inputMeasurements{this,
                                                         "InputMeasurements"};

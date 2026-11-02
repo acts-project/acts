@@ -136,12 +136,15 @@ struct mask_payload {
   /// Shape identifier for a surface mask.
   using mask_shape = io::shape_id;
 
-  /// Shape identifier for a surface mask.
+  /// Portal destination marking the end of the world in an I/O payload.
+  static constexpr std::size_t end_of_world =
+      detray::detail::invalid_value<std::size_t>();
+
   /// Shape used to interpret the boundary values.
   mask_shape shape{mask_shape::unknown};
   /// Sensitive/passive surface: Mother volume index, Portal: Volume the
-  /// portal leads into
-  single_link_payload volume_link{};
+  /// portal leads into, or @c end_of_world when leaving the detector.
+  single_link_payload volume_link{end_of_world};
   /// Boundary values according to @c boundaries enum of the shape in @c shape
   std::vector<io::scalar> boundaries{};
 };
