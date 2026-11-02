@@ -88,8 +88,8 @@ class LineSurface : public Surface {
   ///
   /// @param other is the source surface dor copying
   /// @return Reference to this LineSurface after assignment
-  // TODO: remove this copy-assignment operator; copy surfaces via
-  // Surface::makeShared<T>(other) instead (SonarCloud cpp:S3624).
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<T>(other)` instead.
   [[deprecated(
       "Surface copy-assignment is deprecated and will be removed; copy via "
       "Surface::makeShared<T>(other) instead.")]]

@@ -88,8 +88,8 @@ class ConeSurface : public RegularSurface {
   ///
   /// @param other is the source surface for the assignment
   /// @return Reference to this ConeSurface after assignment
-  // TODO: remove this copy-assignment operator; copy surfaces via
-  // Surface::makeShared<ConeSurface>(other) instead (SonarCloud cpp:S3624).
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<ConeSurface>(other)` instead.
   [[deprecated(
       "Surface copy-assignment is deprecated and will be removed; copy via "
       "Surface::makeShared<ConeSurface>(other) instead.")]]

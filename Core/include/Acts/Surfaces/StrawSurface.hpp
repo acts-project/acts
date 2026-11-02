@@ -43,8 +43,12 @@ class StrawSurface : public LineSurface {
   StrawSurface(const StrawSurface& other) = default;
 
  public:
-  // TODO: remove this copy-assignment operator; copy surfaces via
-  // Surface::makeShared<StrawSurface>(other) instead (SonarCloud cpp:S3624).
+  /// Assignment operator
+  ///
+  /// @param other The source surface for the assignment
+  /// @return Reference to this StrawSurface after assignment
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<StrawSurface>(other)` instead.
   [[deprecated(
       "Surface copy-assignment is deprecated and will be removed; copy via "
       "Surface::makeShared<StrawSurface>(other) instead.")]]

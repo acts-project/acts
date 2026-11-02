@@ -117,8 +117,8 @@ class DiscSurface : public RegularSurface {
   ///
   /// @param other The source sourface for the assignment
   /// @return Reference to this DiscSurface after assignment
-  // TODO: remove this copy-assignment operator; copy surfaces via
-  // Surface::makeShared<DiscSurface>(other) instead (SonarCloud cpp:S3624).
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<DiscSurface>(other)` instead.
   [[deprecated(
       "Surface copy-assignment is deprecated and will be removed; copy via "
       "Surface::makeShared<DiscSurface>(other) instead.")]]

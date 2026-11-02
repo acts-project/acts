@@ -61,8 +61,8 @@ class PerigeeSurface : public LineSurface {
   ///
   /// @param other is the source surface to be assigned
   /// @return Reference to this surface for assignment chaining
-  // TODO: remove this copy-assignment operator; copy surfaces via
-  // Surface::makeShared<PerigeeSurface>(other) instead (SonarCloud cpp:S3624).
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<PerigeeSurface>(other)` instead.
   [[deprecated(
       "Surface copy-assignment is deprecated and will be removed; copy via "
       "Surface::makeShared<PerigeeSurface>(other) instead.")]]
