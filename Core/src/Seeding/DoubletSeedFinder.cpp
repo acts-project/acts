@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <span>
 #include <stdexcept>
@@ -57,7 +58,7 @@ void DoubletsForMiddleSp::sortByCotTheta(
 namespace {
 
 template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR,
-          bool experimentCuts, bool useTime, bool stripCalibration>
+          bool useTime, bool stripCalibration, bool symmetricCollisionRegion>
 class Impl final : public DoubletSeedFinder {
  public:
   explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
@@ -196,7 +197,7 @@ class Impl final : public DoubletSeedFinder {
           outside = outsideRangeCheck(deltaR, m_cfg.deltaRMin, m_cfg.deltaRMax);
         }
 
-        outside |= outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax);
+        outside |= std::abs(deltaZ) > m_cfg.absDeltaZMax;
 
         // the longitudinal impact parameter zOrigin is defined as (zM - rM *
         // cotTheta) where cotTheta is the ratio Z/R (forward angle) of space
@@ -204,9 +205,14 @@ class Impl final : public DoubletSeedFinder {
         // multiply collisionRegion by deltaR to avoid divisions
         const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
         // check if duplet origin on z axis within collision region
-        outside |= outsideRangeCheck(zOriginTimesDeltaR,
-                                     m_cfg.collisionRegionMin * deltaR,
-                                     m_cfg.collisionRegionMax * deltaR);
+        if constexpr (symmetricCollisionRegion) {
+          outside |=
+              std::abs(zOriginTimesDeltaR) > m_cfg.collisionRegionMax * deltaR;
+        } else {
+          outside |= outsideRangeCheck(zOriginTimesDeltaR,
+                                       m_cfg.collisionRegionMin * deltaR,
+                                       m_cfg.collisionRegionMax * deltaR);
+        }
 
         // check the time compatibility of the two space points. the time
         // difference is corrected for the time of flight along the straight
@@ -294,8 +300,7 @@ class Impl final : public DoubletSeedFinder {
           // check if duplet cotTheta is within the region of interest
           // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
           // cotThetaMax by deltaR to avoid division
-          if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                                m_cfg.cotThetaMax * deltaR)) {
+          if (std::abs(deltaZ) > m_cfg.cotThetaMax * deltaR) {
             continue;
           }
 
@@ -321,11 +326,10 @@ class Impl final : public DoubletSeedFinder {
           // here, in the interactionPointCut == false branch, not only in the
           // branch below -- otherwise the cut would silently never run when the
           // IP cut is disabled)
-          if constexpr (experimentCuts) {
-            if (!m_cfg.experimentCuts(middleSp, container[indexO], cotTheta,
-                                      isBottomCandidate)) {
-              continue;
-            }
+          if (m_cfg.experimentCuts.connected() &&
+              !m_cfg.experimentCuts(middleSp, container[indexO], cotTheta,
+                                    isBottomCandidate)) {
+            continue;
           }
 
           const float er =
@@ -382,8 +386,7 @@ class Impl final : public DoubletSeedFinder {
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                              m_cfg.cotThetaMax * deltaR)) {
+        if (std::abs(deltaZ) > m_cfg.cotThetaMax * deltaR) {
           continue;
         }
 
@@ -391,11 +394,10 @@ class Impl final : public DoubletSeedFinder {
         const float cotTheta = deltaZ * iDeltaR;
 
         // discard doublets based on experiment specific cuts
-        if constexpr (experimentCuts) {
-          if (!m_cfg.experimentCuts(middleSp, container[indexO], cotTheta,
-                                    isBottomCandidate)) {
-            continue;
-          }
+        if (m_cfg.experimentCuts.connected() &&
+            !m_cfg.experimentCuts(middleSp, container[indexO], cotTheta,
+                                  isBottomCandidate)) {
+          continue;
         }
 
         const float er =
@@ -438,15 +440,15 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
   using IsBottomCandidateOptions = BooleanOptions;
   using InteractionPointCutOptions = BooleanOptions;
   using SortedByROptions = BooleanOptions;
-  using ExperimentCutsOptions = BooleanOptions;
   using UseTimeOptions = BooleanOptions;
   using StripCalibrationOptions = BooleanOptions;
+  using SymmetricCollisionRegionOptions = BooleanOptions;
 
   using DoubletOptions =
       boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
                               InteractionPointCutOptions, SortedByROptions,
-                              ExperimentCutsOptions, UseTimeOptions,
-                              StripCalibrationOptions>;
+                              UseTimeOptions, StripCalibrationOptions,
+                              SymmetricCollisionRegionOptions>;
 
   std::unique_ptr<DoubletSeedFinder> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
@@ -455,9 +457,9 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     using IsBottomCandidate = boost::mp11::mp_at_c<OptionType, 0>;
     using InteractionPointCut = boost::mp11::mp_at_c<OptionType, 1>;
     using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
-    using ExperimentCuts = boost::mp11::mp_at_c<OptionType, 3>;
-    using UseTime = boost::mp11::mp_at_c<OptionType, 4>;
-    using StripCalibration = boost::mp11::mp_at_c<OptionType, 5>;
+    using UseTime = boost::mp11::mp_at_c<OptionType, 3>;
+    using StripCalibration = boost::mp11::mp_at_c<OptionType, 4>;
+    using SymmetricCollisionRegion = boost::mp11::mp_at_c<OptionType, 5>;
 
     const bool configIsBottomCandidate =
         config.candidateDirection == Direction::Backward();
@@ -465,10 +467,11 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     if (configIsBottomCandidate != IsBottomCandidate::value ||
         config.interactionPointCut != InteractionPointCut::value ||
         config.spacePointsSortedByRadius != SortedByR::value ||
-        config.experimentCuts.connected() != ExperimentCuts::value ||
         config.useTime != UseTime::value ||
         config.stripCalibrationTolerance.has_value() !=
-            StripCalibration::value) {
+            StripCalibration::value ||
+        (config.collisionRegionMin == -config.collisionRegionMax) !=
+            SymmetricCollisionRegion::value) {
       return;  // skip if the configuration does not match
     }
 
@@ -480,10 +483,10 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     }
 
     // create the implementation for the given configuration
-    result = std::make_unique<Impl<
-        IsBottomCandidate::value, InteractionPointCut::value, SortedByR::value,
-        ExperimentCuts::value, UseTime::value, StripCalibration::value>>(
-        config);
+    result = std::make_unique<
+        Impl<IsBottomCandidate::value, InteractionPointCut::value,
+             SortedByR::value, UseTime::value, StripCalibration::value,
+             SymmetricCollisionRegion::value>>(config);
   });
   if (result == nullptr) {
     throw std::runtime_error(
@@ -496,6 +499,14 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
 DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
                                                 float bFieldInZ_)
     : Config(config), bFieldInZ(bFieldInZ_) {
+  // the deltaZ cut is symmetric, deltaZMin is only checked
+  if (deltaZMin != -std::numeric_limits<float>::infinity() &&
+      deltaZMin != -deltaZMax) {
+    throw std::invalid_argument(
+        "DoubletSeedFinder: the deltaZ cut is symmetric: deltaZMin must be "
+        "-deltaZMax");
+  }
+
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   const float pTPerHelixRadius = bFieldInZ;
   minHelixDiameter2 = square(minPt * 2 / pTPerHelixRadius) * helixCutTolerance;

@@ -30,8 +30,8 @@ inline constexpr unsigned int gbts_run_cca_max_sweeps =
 struct gbts_run_cca_iteration_payload {
   /// Number of edges in the compacted graph
   unsigned int nConnectedEdges;
-  /// Maximum number of neighbours retained per edge
-  unsigned int max_num_neighbours;
+  /// Capacity of the compacted graph, the column stride of output_graph
+  unsigned int nConnectedEdgesMax;
   /// Compacted graph from gbts_compress_graph
   vecmem::data::vector_view<const unsigned int> output_graph;
   /// Number of neighbours per compacted edge

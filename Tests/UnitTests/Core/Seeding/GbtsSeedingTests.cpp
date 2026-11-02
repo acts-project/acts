@@ -611,6 +611,37 @@ BOOST_AUTO_TEST_CASE(SeedsFromCallerFilledNodeStorage) {
                     formatSeeds(runSeeding(detector, spacePoints)));
 }
 
+// Nodes with identical phi are ordered by position, so the node order does not
+// depend on the order in which the caller inserts them.
+BOOST_AUTO_TEST_CASE(NodeOrderIgnoresInsertionOrderAtEqualPhi) {
+  const ToyDetector detector = barrelDetector();
+  const SeederSetup setup = makeSeeder(detector);
+
+  const float r = detector.layers.front().refCoord;
+  const float phi = 0.25f;
+  const std::array<float, 4> zs = {1.f, -2.f, 3.f, 0.5f};
+
+  const auto nodeOrder = [&](bool reversed) {
+    Experimental::GbtsNodeStorage storage = setup.seeder.makeNodeStorage();
+    for (std::size_t k = 0; k < zs.size(); ++k) {
+      const std::size_t i = reversed ? zs.size() - 1 - k : k;
+      storage.insert(static_cast<SpacePointIndex>(i), r * std::cos(phi),
+                     r * std::sin(phi), zs[i], r, phi, 0);
+    }
+    storage.finalize();
+
+    std::vector<SpacePointIndex> order;
+    for (std::uint32_t node = 0; node < storage.numberOfNodes(); ++node) {
+      order.push_back(storage.spacePointIndex(node));
+    }
+    return order;
+  };
+
+  const std::vector<SpacePointIndex> forward = nodeOrder(false);
+  BOOST_CHECK_EQUAL(forward.size(), zs.size());
+  BOOST_CHECK(forward == nodeOrder(true));
+}
+
 // One seed per track, all four hits, in radial order.
 BOOST_AUTO_TEST_CASE(SeedsFromSeparatedTracks) {
   const ToyDetector detector = barrelDetector();

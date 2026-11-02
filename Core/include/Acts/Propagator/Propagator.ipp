@@ -82,11 +82,16 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
       if (nextTarget.isNone()) {
         return NavigationTarget::None();
       }
-      IntersectionStatus preStepSurfaceStatus = m_stepper.updateSurfaceStatus(
-          state.stepping, nextTarget.surface(), nextTarget.intersectionIndex(),
-          state.options.direction, nextTarget.boundaryTolerance(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+      const auto preStepSurfaceResult =
+          detail::updateSurfaceStatusWithCurvature(
+              m_stepper, state.stepping, nextTarget.surface(),
+              nextTarget.intersectionIndex(), state.options.direction,
+              nextTarget.boundaryTolerance(), state.options.surfaceTolerance,
+              ConstrainedStep::Type::Navigator, logger());
+      if (!preStepSurfaceResult.ok()) {
+        return preStepSurfaceResult.error();
+      }
+      const IntersectionStatus preStepSurfaceStatus = *preStepSurfaceResult;
       if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
         // This indicates a geometry overlap which is not handled by the
         // navigator, so we skip this target.
@@ -155,11 +160,16 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     state.stage = PropagatorStage::postStep;
 
     if (!nextTarget.isNone()) {
-      IntersectionStatus postStepSurfaceStatus = m_stepper.updateSurfaceStatus(
-          state.stepping, nextTarget.surface(), nextTarget.intersectionIndex(),
-          state.options.direction, nextTarget.boundaryTolerance(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+      const auto postStepSurfaceResult =
+          detail::updateSurfaceStatusWithCurvature(
+              m_stepper, state.stepping, nextTarget.surface(),
+              nextTarget.intersectionIndex(), state.options.direction,
+              nextTarget.boundaryTolerance(), state.options.surfaceTolerance,
+              ConstrainedStep::Type::Navigator, logger());
+      if (!postStepSurfaceResult.ok()) {
+        return postStepSurfaceResult.error();
+      }
+      const IntersectionStatus postStepSurfaceStatus = *postStepSurfaceResult;
       if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
         // A portal transition can create a policy state before actors run.
         if (auto update = updateNavigationState(state); !update.ok()) {

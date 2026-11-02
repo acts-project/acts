@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <numbers>
@@ -31,7 +32,8 @@ namespace {
 /// Covers one non-empty source eta bin, whose phi-ordered node list it holds
 /// directly so that the innermost loop does not reach through the bin.
 struct SlidingWindow {
-  /// phi-ordered nodes of the bin, including the wrap-around duplicates
+  /// phi-ordered nodes of the bin (only its connected ones where the z0
+  /// histogram applies), including the wrap-around duplicates
   const std::pair<float, SpacePointIndex>* phiNodes{};
   /// number of entries in @c phiNodes
   std::uint32_t numPhiNodes{};
@@ -228,6 +230,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
   std::uint32_t nConnections = 0;
 
+  // good matches dropped because the outer edge held the maximum number of
+  // neighbours
+  std::uint32_t nOverflow = 0;
+
   // Scales the maximum number of edges by the number of space points using the
   // factor maxEdgesPerSP
   const auto maxEdges = static_cast<std::size_t>(
@@ -247,6 +253,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
   // reused across bin groups so that the windows are allocated once
   std::vector<SlidingWindow> phiSlidingWindow;
+
+  // per window: the connected nodes of its bin, where useZ0Histogram filters
+  // them; reused across bin groups as the windows are
+  std::vector<std::vector<std::pair<float, SpacePointIndex>>> connectedPhiNodes;
 
   const bool calibrate = m_cfg.calibrateStrips && nodeStorage.hasStrips();
 
@@ -334,6 +344,28 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
            ++n2Idx) {
         window.minZ = std::min(window.minZ, params[n2Idx].z);
         window.maxZ = std::max(window.maxZ, params[n2Idx].z);
+
+      // Isolated n2 nodes are skipped below for every n1 of this group, and
+      // the branch is unpredictable. Filter them out of the window once
+      // instead. Not for the group's own bin: its nodes gain connections as
+      // n1 is processed.
+      if (useZ0Histogram && link.bin != bg.bin) {
+        const std::size_t windowIdx = phiSlidingWindow.size() - 1;
+        // growing the outer vector moves the inner ones, which keeps their
+        // buffers, so earlier windows' pointers stay valid
+        if (connectedPhiNodes.size() <= windowIdx) {
+          connectedPhiNodes.resize(windowIdx + 1);
+        }
+        std::vector<std::pair<float, SpacePointIndex>>& connected =
+            connectedPhiNodes[windowIdx];
+        connected.clear();
+        for (const auto& phiNode : B2.phiNodes) {
+          if (edgeInfo[phiNode.second].isConnected != 0) {
+            connected.push_back(phiNode);
+          }
+        }
+        window.phiNodes = connected.data();
+        window.numPhiNodes = static_cast<std::uint32_t>(connected.size());
       }
     }
 
@@ -461,7 +493,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
           const std::uint16_t nodeInfo = n2Info.isConnected;
 
-          // skip isolated nodes as their incoming edges lead to nowhere
+          // skip isolated nodes as their incoming edges lead to nowhere; only
+          // the group's own bin can still hold them here
           if (useZ0Histogram && (nodeInfo == 0)) {
             continue;
           }
@@ -627,13 +660,11 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
               const float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
 
               // the looser of the cuts the two layer pairs carry
-              if (absTauRatio >
-                  std::max(slw.tauRatioCutInner, pS->tauRatioCut)) {
-                continue;  // bad match
-              }
+              const float tauRatioCut =
+                  std::max(slw.tauRatioCutInner, pS->tauRatioCut);
 
-              if (pS->nNei >= detail::kGbtsMaxEdgeNeighbours) {
-                continue;
+              if (absTauRatio > tauRatioCut) {
+                continue;  // bad match
               }
 
               const bool isPixelBarrel3 = pS->n2PixelBarrel;
@@ -656,6 +687,15 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                 continue;
               }
 
+              // marginal in all three at once
+              if (m_cfg.useSumRatioCut &&
+                  absTauRatio / tauRatioCut +
+                          std::abs(dPhi) / m_cfg.cutDPhiMax +
+                          std::abs(dcurv) / m_cfg.cutDCurvMax >
+                      m_cfg.sumRatioCutMax) {
+                continue;
+              }
+
               // final check: cuts on pT and d0
               if (m_cfg.validateTriplets && isPixelBarrel1 && isPixelBarrel2 &&
                   isPixelBarrel3) {
@@ -667,6 +707,13 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                                      m_cfg.tauRatioCut, bFieldInZ)) {
                   continue;
                 }
+              }
+
+              // the match is good: it is lost only if the outer edge holds
+              // the maximum number of neighbours already
+              if (pS->nNei >= detail::kGbtsMaxEdgeNeighbours) {
+                ++nOverflow;
+                continue;
               }
 
               pS->vNei[pS->nNei] = outEdgeIdx;
@@ -715,6 +762,11 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
     ACTS_WARNING(
         "Maximum number of graph edges exceeded - possible efficiency loss "
         << edgeStorage.size());
+  }
+  if (nOverflow > 0) {
+    ACTS_DEBUG(nOverflow << " edge links dropped: the outer edge already held "
+                         << detail::kGbtsMaxEdgeNeighbours
+                         << " neighbours - possible efficiency loss");
   }
   graph.nConnections = nConnections;
   return graph;

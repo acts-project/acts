@@ -36,6 +36,7 @@
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -818,6 +819,84 @@ BOOST_AUTO_TEST_CASE(CurvatureZeroCasesAndFieldErrors) {
   const auto refreshResult = refreshingPropagator.propagate(refreshingState);
   BOOST_REQUIRE(!refreshResult.ok());
   BOOST_CHECK(refreshResult.error() ==
+              make_error_code(MagneticFieldError::OutOfBounds));
+}
+
+// Custom steppers with the original surface-status signature remain usable.
+class LegacySurfaceStatusStepper : public AtlasStepper {
+ public:
+  using AtlasStepper::AtlasStepper;
+  IntersectionStatus updateSurfaceStatus(
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction direction, const BoundaryTolerance& bounds, double tolerance,
+      ConstrainedStep::Type type, const Logger& logger) const {
+    return AtlasStepper::updateSurfaceStatus(state, surface, index, direction,
+                                             bounds, tolerance, type, logger);
+  }
+};
+static_assert(StepperConcept<LegacySurfaceStatusStepper>);
+
+// Observe the dispatched curvature while deliberately retaining a ray check.
+class SurfaceStatusCurvatureRecorder : public AtlasStepper {
+ public:
+  using AtlasStepper::AtlasStepper;
+  mutable Vector3 receivedCurvature = Vector3::Zero();
+  IntersectionStatus updateSurfaceStatus(
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction direction, const BoundaryTolerance& bounds, double tolerance,
+      ConstrainedStep::Type type, const Logger& logger,
+      const Vector3& curvature) const {
+    receivedCurvature = curvature;
+    return AtlasStepper::updateSurfaceStatus(state, surface, index, direction,
+                                             bounds, tolerance, type, logger);
+  }
+};
+
+BOOST_AUTO_TEST_CASE(CurvedTargetStatusCompatibilityAndErrors) {
+  const auto start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitZ(), 1. / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+  const auto target = Surface::makeShared<PlaneSurface>(
+      Transform3(Translation3(0., 1., 20.)),
+      std::make_shared<RectangleBounds>(0.1, 0.1));
+  const auto check = [&](const auto& stepper, auto& state) {
+    return detail::updateSurfaceStatusWithCurvature(
+        stepper, state, *target, 0, Direction::Forward(),
+        BoundaryTolerance::None(), s_onSurfaceTolerance,
+        ConstrainedStep::Type::Navigator, getDummyLogger());
+  };
+  const auto field = std::make_shared<ConstantBField>(Vector3(0.005, 0., 0.));
+  EigenStepper<> stepper(field);
+  auto state = stepper.makeState(EigenStepper<>::Options(gctx, mfContext));
+  stepper.initialize(state, start);
+  const auto corrected = check(stepper, state);
+  BOOST_REQUIRE(corrected.ok());
+  BOOST_CHECK(*corrected == IntersectionStatus::unreachable);
+
+  LegacySurfaceStatusStepper legacy(field);
+  auto legacyState = legacy.makeState(AtlasStepper::Options(gctx, mfContext));
+  legacy.initialize(legacyState, start);
+  const auto original = check(legacy, legacyState);
+  BOOST_REQUIRE(original.ok());
+  BOOST_CHECK(*original == IntersectionStatus::unreachable);
+
+  SurfaceStatusCurvatureRecorder recorder(field);
+  auto recordingState =
+      recorder.makeState(AtlasStepper::Options(gctx, mfContext));
+  recorder.initialize(recordingState, start);
+  const auto recorded = check(recorder, recordingState);
+  BOOST_REQUIRE(recorded.ok());
+  BOOST_CHECK(*recorded == IntersectionStatus::unreachable);
+  BOOST_CHECK_SMALL(
+      (recorder.receivedCurvature - Vector3(0., 0.005, 0.)).norm(), 1e-12);
+
+  EigenStepper<> failing(std::make_shared<FailingCurvatureField>());
+  auto failingState =
+      failing.makeState(EigenStepper<>::Options(gctx, mfContext));
+  failing.initialize(failingState, start);
+  const auto error = check(failing, failingState);
+  BOOST_REQUIRE(!error.ok());
+  BOOST_CHECK(error.error() ==
               make_error_code(MagneticFieldError::OutOfBounds));
 }
 

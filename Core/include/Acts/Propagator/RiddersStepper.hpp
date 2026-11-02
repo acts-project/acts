@@ -372,14 +372,55 @@ class RiddersStepper final {
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
       double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
+    return updateSurfaceStatusImpl<false>(state, surface, index, navDir,
+                                          boundaryTolerance, surfaceTolerance,
+                                          stype, logger)
+        .value();
+  }
+
+  /// @copydoc updateSurfaceStatus
+  /// Query each component's curvature for the surface-status update.
+  Result<IntersectionStatus> updateSurfaceStatusWithCurvature(
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction navDir, const BoundaryTolerance& boundaryTolerance,
+      double surfaceTolerance, ConstrainedStep::Type stype,
+      const Logger& logger = getDummyLogger()) const {
+    return updateSurfaceStatusImpl<true>(state, surface, index, navDir,
+                                         boundaryTolerance, surfaceTolerance,
+                                         stype, logger);
+  }
+
+ private:
+  template <bool correctCurvature>
+  Result<IntersectionStatus> updateSurfaceStatusImpl(
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction navDir, const BoundaryTolerance& boundaryTolerance,
+      double surfaceTolerance, ConstrainedStep::Type stype,
+      const Logger& logger = getDummyLogger()) const {
     state.lastSurfaceTolerance = surfaceTolerance;
     state.lastStepConstraintType = stype;
 
-    IntersectionStatus overallStatus = m_stepperImpl.updateSurfaceStatus(
-        state.primaryStepperState, surface, index, navDir, boundaryTolerance,
-        surfaceTolerance, stype, logger);
+    const auto update =
+        [&](auto& componentState,
+            const BoundaryTolerance& bounds) -> Result<IntersectionStatus> {
+      if constexpr (correctCurvature) {
+        return detail::updateSurfaceStatusWithCurvature(
+            m_stepperImpl, componentState, surface, index, navDir, bounds,
+            surfaceTolerance, stype, logger);
+      } else {
+        return Result<IntersectionStatus>::success(
+            m_stepperImpl.updateSurfaceStatus(componentState, surface, index,
+                                              navDir, bounds, surfaceTolerance,
+                                              stype, logger));
+      }
+    };
+    const auto primary = update(state.primaryStepperState, boundaryTolerance);
+    if (!primary.ok()) {
+      return primary.error();
+    }
+    IntersectionStatus overallStatus = *primary;
     if (overallStatus == IntersectionStatus::unreachable) {
-      return overallStatus;
+      return Result<IntersectionStatus>::success(overallStatus);
     }
 
     const auto combine = [](const IntersectionStatus a,
@@ -395,15 +436,17 @@ class RiddersStepper final {
     };
 
     for (auto& secondaryState : state.secondaryStepperStates) {
-      const IntersectionStatus status = m_stepperImpl.updateSurfaceStatus(
-          secondaryState, surface, index, navDir, BoundaryTolerance::Infinite(),
-          surfaceTolerance, stype, logger);
-      overallStatus = combine(overallStatus, status);
+      const auto status = update(secondaryState, BoundaryTolerance::Infinite());
+      if (!status.ok()) {
+        return status.error();
+      }
+      overallStatus = combine(overallStatus, *status);
     }
 
-    return overallStatus;
+    return Result<IntersectionStatus>::success(overallStatus);
   }
 
+ public:
   /// Update the step size based on the given navigation target, direction, and
   /// constrained step type
   /// @param state the state of the RiddersStepper
