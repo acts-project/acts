@@ -148,12 +148,9 @@ ProcessCode ActsSolverFromMille::finalize() {
   }
 
   if (!m_cfg.outFile.empty()) {
-    std::ofstream resFile;
-    resFile.open(m_cfg.outFile);
     // also write in a text file format that can be parsed consistently with
     // Millepede output
-    ActsPlugins::ActsToMille::dumpAsMillepedeRes(alignResult, resFile);
-    resFile.close();
+    ActsAlignment::dumpResultAsMP2(alignResult, m_cfg.outFile);
   }
 
   return ProcessCode::SUCCESS;

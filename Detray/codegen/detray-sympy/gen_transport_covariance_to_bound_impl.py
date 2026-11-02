@@ -14,9 +14,10 @@ if __name__ == "__main__":
     C = sympy.MatrixSymbol("C", 6, 6).as_explicit().as_mutable()
 
     J_full = sympy.MatrixSymbol("J_full", 6, 6).as_explicit().as_mutable()
+    # Only the time column is trivial. The q/p row is not: energy loss in
+    # volume material couples q/p to the other parameters.
     tmp = sympy.eye(6)
-    tmp[0:4, 0:5] = J_full[0:4, 0:5]
-    tmp[5:6, 0:5] = J_full[5:6, 0:5]
+    tmp[0:6, 0:5] = J_full[0:6, 0:5]
     J_full = tmp
 
     input_name_exprs = [name_expr("C", C), name_expr("J_full", J_full)]

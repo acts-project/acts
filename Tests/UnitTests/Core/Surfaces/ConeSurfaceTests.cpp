@@ -12,6 +12,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -28,6 +29,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
@@ -116,19 +118,32 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
       coneSurfaceObject->referencePosition(tgContext, AxisDirection::AxisPhi),
       referencePosition, 1e-6);
 
-  /// Test referenceFrame
+  /// Test referenceFrame: (e_phi, n x e_phi, n) with the cone normal
   Vector3 globalPosition{2., 2., 2.};
   Vector3 momentum{1.e6, 1.e6, 1.e6};
-  double rootHalf = std::sqrt(0.5);
+  const Vector3 frameLocal = globalPosition - Vector3(0., 1., 2.);
+  const double framePhi = std::atan2(frameLocal.y(), frameLocal.x());
+  const double cosAlpha = std::cos(alpha);
+  const double sinAlpha = std::sin(alpha);
+  const double frameSgn = -std::copysign(1., frameLocal.z());
+  const Vector3 frameNormal{std::cos(framePhi) * cosAlpha,
+                            std::sin(framePhi) * cosAlpha, frameSgn * sinAlpha};
+  const Vector3 framePhiAxis{-std::sin(framePhi), std::cos(framePhi), 0.};
   RotationMatrix3 expectedFrame;
-  expectedFrame << -rootHalf, 0., rootHalf, rootHalf, 0., rootHalf, 0., 1., 0.;
+  expectedFrame.col(0) = framePhiAxis;
+  expectedFrame.col(1) = frameNormal.cross(framePhiAxis);
+  expectedFrame.col(2) = frameNormal;
   CHECK_CLOSE_OR_SMALL(
       coneSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),
       expectedFrame, 1e-6, 1e-9);
 
-  /// Test normal, given 3D position
+  /// Test normal, given 3D position. Local position of the origin is (0, -1,
+  /// -2).
   Vector3 origin{0., 0., 0.};
-  Vector3 normal3D = {0., -1., 0.};
+  const double originPhi = std::atan2(-1., 0.);
+  const double originSgn = -std::copysign(1., -2.);
+  Vector3 normal3D{std::cos(originPhi) * cosAlpha,
+                   std::sin(originPhi) * cosAlpha, originSgn * sinAlpha};
   CHECK_CLOSE_ABS(coneSurfaceObject->normal(tgContext, origin), normal3D, 1e-6);
 
   /// Test normal given 2D rphi position
@@ -293,6 +308,108 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
   Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
   expLoc3DToLocBound << -1, 0, std::numbers::pi / 2. * std::tan(alpha), 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(ConeSurfaceJacobianRoundTrip) {
+  const double alpha = std::numbers::pi / 8.;
+  const AngleAxis3 rotationAngle(std::numbers::pi / 2., Vector3::UnitZ());
+  const Transform3 transform =
+      makeTransform3(rotationAngle.toRotationMatrix(), Vector3(0., 1., 2.));
+  auto cone = Surface::makeShared<ConeSurface>(transform, alpha, false);
+
+  // Nonzero local phi, so d(global)/dz carries the phi*tan(alpha) term, on a
+  // cone rotated away from the global axes.
+  const double z = 1.7;
+  const double localPhi = 0.6;
+  const double radius = z * std::tan(alpha);
+  const Vector2 local(radius * localPhi, z);
+  const Vector3 direction = Vector3(0.25, -0.4, 0.88).normalized();
+  const Vector3 position = cone->localToGlobal(tgContext, local, direction);
+
+  const FreeToBoundMatrix freeToBound =
+      cone->freeToBoundJacobian(tgContext, position, direction);
+  const BoundToFreeMatrix boundToFree =
+      cone->boundToFreeJacobian(tgContext, position, direction);
+  CHECK_CLOSE_ABS(freeToBound * boundToFree, SquareMatrix<6>::Identity(),
+                  1e-10);
+
+  constexpr double step = 1e-6;
+  const Vector3 du =
+      (cone->localToGlobal(tgContext, local + Vector2(step, 0.), direction) -
+       cone->localToGlobal(tgContext, local - Vector2(step, 0.), direction)) /
+      (2. * step);
+  const Vector3 dv =
+      (cone->localToGlobal(tgContext, local + Vector2(0., step), direction) -
+       cone->localToGlobal(tgContext, local - Vector2(0., step), direction)) /
+      (2. * step);
+  const Vector3 loc0Column = boundToFree.block<3, 1>(eFreePos0, eBoundLoc0);
+  const Vector3 loc1Column = boundToFree.block<3, 1>(eFreePos0, eBoundLoc1);
+  CHECK_CLOSE_ABS(loc0Column, du, 1e-8);
+  CHECK_CLOSE_ABS(loc1Column, dv, 1e-8);
+}
+
+/// Full free-to-bound transport: perturb, intersect, globalToLocal.
+/// f2b * b2f == 1 does not see a wrong path derivative.
+BOOST_AUTO_TEST_CASE(ConeSurfaceFreeToBoundTransport) {
+  const double alpha = std::numbers::pi / 8.;
+  const AngleAxis3 tilt(0.4, Vector3::UnitX());
+  const AngleAxis3 yaw(std::numbers::pi / 2., Vector3::UnitZ());
+  const Transform3 transform =
+      makeTransform3((tilt * yaw).toRotationMatrix(), Vector3(0., 1., 2.));
+  auto cone = Surface::makeShared<ConeSurface>(transform, alpha, false);
+
+  const double z = 1.7;
+  const double localPhi = 0.6;
+  const double radius = z * std::tan(alpha);
+  const Vector2 local(radius * localPhi, z);
+  const Vector3 direction = Vector3(0.25, -0.4, 0.88).normalized();
+  const Vector3 position = cone->localToGlobal(tgContext, local, direction);
+
+  const Vector3 surfaceNormal = cone->normal(tgContext, position);
+  const RotationMatrix3 frame =
+      cone->referenceFrame(tgContext, position, direction);
+  CHECK_CLOSE_ABS(frame.col(2), surfaceNormal, 1e-12);
+  CHECK_CLOSE_ABS(frame.col(1), surfaceNormal.cross(frame.col(0)), 1e-12);
+
+  auto boundLocal = [&](const Vector3& pos, const Vector3& dir) {
+    const auto hit = cone->intersect(tgContext, pos, dir).closest();
+    BOOST_REQUIRE(hit.isValid());
+    const auto onCone = cone->globalToLocal(tgContext, hit.position(), dir);
+    BOOST_REQUIRE(onCone.ok());
+    return onCone.value();
+  };
+
+  const FreeToBoundMatrix freeToBound =
+      cone->freeToBoundJacobian(tgContext, position, direction);
+  const FreeToPathMatrix freeToPath =
+      cone->freeToPathDerivative(tgContext, position, direction);
+  // Straight-line correction: the intersection moves along the direction.
+  FreeVector correction = FreeVector::Zero();
+  correction.segment<3>(eFreePos0) = direction;
+  const FreeToBoundMatrix transport =
+      freeToBound * (FreeMatrix::Identity() + correction * freeToPath);
+
+  constexpr double step = 1e-6;
+  for (int k = 0; k < 3; ++k) {
+    Vector3 pp = position;
+    Vector3 pm = position;
+    pp[k] += step;
+    pm[k] -= step;
+    const Vector2 numeric =
+        (boundLocal(pp, direction) - boundLocal(pm, direction)) / (2. * step);
+    const Vector2 analytic = transport.block<2, 1>(eBoundLoc0, eFreePos0 + k);
+    CHECK_CLOSE_ABS(numeric, analytic, 1e-6);
+  }
+  for (int k = 0; k < 3; ++k) {
+    Vector3 dp = direction;
+    Vector3 dm = direction;
+    dp[k] += step;
+    dm[k] -= step;
+    const Vector2 numeric =
+        (boundLocal(position, dp) - boundLocal(position, dm)) / (2. * step);
+    const Vector2 analytic = transport.block<2, 1>(eBoundLoc0, eFreeDir0 + k);
+    CHECK_CLOSE_ABS(numeric, analytic, 1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(ConeSurfaceMaterialAssignment) {

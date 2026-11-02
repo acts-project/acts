@@ -51,9 +51,14 @@ def getOpenDataDetector(
     buildMuonSystem=False,
 ):
     """This function sets up the open data detector. Requires DD4hep.
+    The DD4hep magnetic field is available as ``detector.field``. Keep the
+    detector alive while using the field.
+
     Parameters
     ----------
-    materialDecorator: Material Decorator, take RootMaterialDecorator if non is given
+    materialDecorator: Material Decorator, take RootMaterialDecorator if non is given.
+      For Gen1 this is applied as-is; for Gen3, its material() is applied instead
+      (via Acts.TrackingGeometryMaterial.apply()), and only if a decorator is given.
     odd_dir: if not given, try to get via ODD_PATH environment variable
     logLevel: logging level
     constructionMethod: Gen3 conversion method enum value of
@@ -86,6 +91,8 @@ def getOpenDataDetector(
     if buildMuonSystem:
         xml_files.append(odd_xml_dir / "OpenDataDetectorMuonSystem.xml")
 
+    xml_files.append(odd_xml_dir / "OpenDataDetectorField.xml")
+
     for xml_file in xml_files:
         if not xml_file.exists():
             raise RuntimeError(f"OpenDataDetector XML not found at {xml_file}")
@@ -117,9 +124,6 @@ def getOpenDataDetector(
             )
             raise RuntimeError(msg)
 
-    if materialDecorator is None:
-        materialDecorator = _defaultMaterialDecorator(odd_dir, customLogLevel)
-
     if gen3:
         if misaligned:
             raise ValueError("Gen3 ODD currently does not support misalignment")
@@ -140,8 +144,21 @@ def getOpenDataDetector(
                 config=oddConfig, gctx=gctx
             )
 
+        # No default material map for Gen3: the shipped ODD map is keyed by
+        # Gen1 geometry identifiers. Only an explicitly given decorator is
+        # applied, via Acts::TrackingGeometryMaterial::apply() rather than the
+        # (Gen1-oriented) IMaterialDecorator::decorate() path, once geometry
+        # identifiers are assigned. The geometry is const on the C++ side, but
+        # it has not been handed out yet, so filling in its material here is
+        # safe.
+        if materialDecorator is not None:
+            materialDecorator.material.apply(detector.trackingGeometry())
+
         return detector
     else:
+        if materialDecorator is None:
+            materialDecorator = _defaultMaterialDecorator(odd_dir, customLogLevel)
+
         volumeRadiusCutsMap = {
             28: [850.0],  # LStrip negative z
             30: [850.0],  # LStrip positive z
@@ -182,4 +199,5 @@ def getOpenDataDetector(
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
+
         return detector

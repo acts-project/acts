@@ -20,7 +20,10 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
+#include "Acts/Geometry/LinearVolumeLookup.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/RzGridVolumeLookup.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
@@ -52,8 +55,10 @@
 #include <functional>
 #include <memory>
 #include <numbers>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -435,8 +440,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   // -----------------------------------------------------
   // Compare propagation
   Navigator::Config sourceNavCfg;
-  sourceNavCfg.trackingGeometry =
-      std::make_shared<TrackingGeometry>(*sourceGeometry);
+  sourceNavCfg.trackingGeometry = sourceGeometry;
   sourceNavCfg.resolveSensitive = true;
   sourceNavCfg.resolveMaterial = true;
   sourceNavCfg.resolvePassive = false;
@@ -448,8 +452,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   auto sourceRes = sourcePropagator.propagate(start, options).value();
 
   Navigator::Config decodedNavCfg;
-  decodedNavCfg.trackingGeometry =
-      std::make_shared<TrackingGeometry>(*decodedGeometry);
+  decodedNavCfg.trackingGeometry = decodedGeometry;
   decodedNavCfg.resolveSensitive = true;
   decodedNavCfg.resolveMaterial = true;
   decodedNavCfg.resolvePassive = false;
@@ -756,12 +759,15 @@ BOOST_AUTO_TEST_CASE(SurfaceArrayNavigationPolicyRoundTrip) {
                                            .bins = {12, 3}});
   nlohmann::json jDefault = conv.navigationPolicyToJson(defaultPolicy);
   BOOST_CHECK(!jDefault.contains("neighborWindow"));
+  // Older files omit the bin count factor and must retain its default.
+  jDefault.erase("numberOfBinsFactor");
   auto defaultPtr =
       conv.navigationPolicyFromJson(tContext, jDefault, *tVolume, *tLogger);
   auto& defaultRestored =
       dynamic_cast<SurfaceArrayNavigationPolicy&>(*defaultPtr);
   BOOST_CHECK(!defaultRestored.config().neighborWindow.has_value());
   BOOST_CHECK_EQUAL(defaultRestored.config().overfill, 0);
+  BOOST_CHECK_EQUAL(defaultRestored.config().numberOfBinsFactor, 1.0);
 
   // A configured window and overfill survive the round trip
   SurfaceArrayNavigationPolicy policy(
@@ -787,6 +793,287 @@ BOOST_AUTO_TEST_CASE(SurfaceArrayNavigationPolicyRoundTrip) {
   const auto window = restored.surfaceArray().neighborWindow();
   BOOST_CHECK_EQUAL(window.max[0], 1);
   BOOST_CHECK_EQUAL(window.max[1], 8);
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceArrayNavigationPolicyAutoBinsRoundTrip) {
+  auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+  auto tLogger =
+      Acts::getDefaultLogger("SurfaceArrayNavigationJsonTest", Logging::INFO);
+  auto tVolume = makeSurfaceArrayVolume();
+  TrackingGeometryJsonConverter conv;
+
+  SurfaceArrayNavigationPolicy policy(
+      tContext, *tVolume, *tLogger,
+      SurfaceArrayNavigationPolicy::Config{
+          .layerType = SurfaceArrayNavigationPolicy::LayerType::Cylinder,
+          .bins = {0, 0},
+          .numberOfBinsFactor = 5.0});
+  const auto encoded = conv.navigationPolicyToJson(policy);
+  BOOST_CHECK_EQUAL(encoded.value("numberOfBinsFactor", 1.0), 5.0);
+  auto restoredPtr =
+      conv.navigationPolicyFromJson(tContext, encoded, *tVolume, *tLogger);
+  const auto& restored =
+      dynamic_cast<const SurfaceArrayNavigationPolicy&>(*restoredPtr);
+  BOOST_CHECK_EQUAL(restored.config().numberOfBinsFactor, 5.0);
+
+  const auto& originalArray = policy.surfaceArray();
+  const auto& restoredArray = restored.surfaceArray();
+  const auto originalAxes = originalArray.getAxes();
+  const auto restoredAxes = restoredArray.getAxes();
+  BOOST_REQUIRE_EQUAL(originalAxes.size(), 2);
+  BOOST_REQUIRE_EQUAL(restoredAxes.size(), originalAxes.size());
+  BOOST_CHECK_EQUAL(originalAxes[0]->getNBins(), 60);
+  BOOST_CHECK_EQUAL(originalAxes[1]->getNBins(), 15);
+  for (std::size_t axis = 0; axis < originalAxes.size(); ++axis) {
+    BOOST_CHECK_EQUAL(restoredAxes[axis]->getNBins(),
+                      originalAxes[axis]->getNBins());
+  }
+
+  // Rebuilding from the serialized config must preserve the bin assignments.
+  BOOST_REQUIRE_EQUAL(restoredArray.size(), originalArray.size());
+  for (std::size_t bin = 0; bin < originalArray.size(); ++bin) {
+    const auto originalSurfaces = originalArray.at(bin);
+    const auto restoredSurfaces = restoredArray.at(bin);
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        originalSurfaces.begin(), originalSurfaces.end(),
+        restoredSurfaces.begin(), restoredSurfaces.end());
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(VolumeLookupJsonSuite)
+
+BOOST_AUTO_TEST_CASE(VolumeLookupRoundTrip) {
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  auto world = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(0., 100., 100.), "world");
+  world->assignGeometryId(GeometryIdentifier{}.withVolume(1));
+  for (int i = 0; i < 12; ++i) {
+    auto child = std::make_unique<TrackingVolume>(
+        Transform3::Identity(),
+        std::make_shared<CylinderVolumeBounds>(i * 4., i * 4. + 6., 20.),
+        "shell");
+    child->assignGeometryId(GeometryIdentifier{}.withVolume(i + 2));
+    world->addVolume(std::move(child));
+  }
+  auto surface = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(100., 100.));
+  surface->assignGeometryId(GeometryIdentifier{}.withVolume(1).withBoundary(1));
+  world->addPortal(std::make_shared<Portal>(
+      Direction::AlongNormal(),
+      std::make_unique<TrivialPortalLink>(surface, *world)));
+  world->apply([&](TrackingVolume& volume) {
+    volume.setNavigationPolicy(std::make_unique<TryAllNavigationPolicy>(
+        gctx, volume, getDummyLogger()));
+  });
+  TrackingGeometryJsonConverter converter;
+  auto geometry = std::make_shared<TrackingGeometry>(
+      world, nullptr, GeometryIdentifierHook{}, getDummyLogger(), false);
+  auto legacy = converter.toJson(gctx, *geometry);
+  BOOST_CHECK(!legacy.contains("volume_lookup"));
+  auto legacyGeometry = converter.fromJson(gctx, legacy);
+  BOOST_CHECK(legacyGeometry->highestTrackingVolume()->volumeLookup() ==
+              nullptr);
+  auto& mixedChild = world->volumes().at(0);
+  RzGridVolumeLookup::Config childConfig;
+  childConfig.maxGridCells = 23;
+  mixedChild.setVolumeLookup(
+      std::make_unique<RzGridVolumeLookup>(gctx, mixedChild, childConfig));
+  {
+    RzGridVolumeLookup::Config cfg;
+    cfg.maxTolerance = 0.02;
+    cfg.fallbackWarningFraction = 0.75;
+    {
+      cfg.maxGridCells = 20000;
+    }
+    geometry->highestTrackingVolume()->setVolumeLookup(
+        std::make_unique<RzGridVolumeLookup>(gctx, *world, cfg));
+    auto encoded = converter.toJson(gctx, *geometry);
+    auto decoded = converter.fromJson(gctx, encoded);
+    auto* childPolicy = dynamic_cast<const RzGridVolumeLookup*>(
+        decoded->highestTrackingVolume()->volumes().at(0).volumeLookup());
+    BOOST_REQUIRE(childPolicy != nullptr);
+    BOOST_CHECK_EQUAL(childPolicy->config().maxGridCells, 23);
+    auto volumeOnly = converter.trackingVolumeFromJson(gctx, encoded);
+    BOOST_CHECK(dynamic_cast<const RzGridVolumeLookup*>(
+                    volumeOnly->volumes().at(0).volumeLookup()) != nullptr);
+    auto* policy = dynamic_cast<const RzGridVolumeLookup*>(
+        decoded->highestTrackingVolume()->volumeLookup());
+    BOOST_REQUIRE(policy != nullptr);
+    BOOST_CHECK_EQUAL(policy->config().maxTolerance, cfg.maxTolerance);
+    BOOST_CHECK_EQUAL(policy->config().fallbackWarningFraction,
+                      cfg.fallbackWarningFraction);
+    {
+      BOOST_CHECK_EQUAL(policy->config().maxGridCells, cfg.maxGridCells);
+      BOOST_CHECK(
+          !encoded["volumes"][0]["volume_lookup"].contains("leaf_size"));
+      BOOST_CHECK(
+          !encoded["volumes"][0]["volume_lookup"].contains("max_depth"));
+    }
+    // Reconstructed assignments must point to the newly loaded volumes.
+    geometry->highestTrackingVolume()->setVolumeLookup(nullptr);
+    BOOST_CHECK(!converter.toJson(gctx, *geometry)["volumes"][0].contains(
+        "volume_lookup"));
+    for (double r : {0., 4., 5., 9.5, 40., 60., 101.}) {
+      const Vector3 p(r, 0., 0.);
+      const auto* actual = *decoded->resolveLowestTrackingVolume(gctx, p);
+      const auto* expected =
+          *legacyGeometry->resolveLowestTrackingVolume(gctx, p);
+      if (expected == nullptr) {
+        BOOST_CHECK(actual == nullptr);
+      } else {
+        BOOST_REQUIRE(actual != nullptr);
+        BOOST_CHECK(actual->geometryId() == expected->geometryId());
+        BOOST_CHECK(actual != expected);
+      }
+    }
+    auto unknown = encoded;
+    unknown["volumes"][0]["volume_lookup"]["kind"] = "Unknown";
+    BOOST_CHECK_THROW(converter.fromJson(gctx, unknown), std::invalid_argument);
+    // Only the policy kind is required; settings default independently.
+    auto defaults = encoded;
+    defaults["volumes"][0]["volume_lookup"] = {{"kind", "RzGrid"}};
+    auto defaultGeometry = converter.fromJson(gctx, defaults);
+    const auto* defaultPolicy = dynamic_cast<const RzGridVolumeLookup*>(
+        defaultGeometry->highestTrackingVolume()->volumeLookup());
+    BOOST_REQUIRE(defaultPolicy != nullptr);
+    const RzGridVolumeLookup::Config expectedDefaults;
+    BOOST_CHECK_EQUAL(defaultPolicy->config().maxTolerance,
+                      expectedDefaults.maxTolerance);
+    BOOST_CHECK_EQUAL(defaultPolicy->config().fallbackWarningFraction,
+                      expectedDefaults.fallbackWarningFraction);
+    BOOST_CHECK_EQUAL(defaultPolicy->config().maxGridCells,
+                      expectedDefaults.maxGridCells);
+    defaults["volumes"][0]["volume_lookup"] = {{"kind", "Linear"}};
+    defaultGeometry = converter.fromJson(gctx, defaults);
+    BOOST_CHECK(dynamic_cast<const LinearVolumeLookup*>(
+                    defaultGeometry->highestTrackingVolume()->volumeLookup())
+                    ->config()
+                    .warningThreshold ==
+                LinearVolumeLookup::Config{}.warningThreshold);
+    for (const char* kind : {"RzGrid", "Linear"}) {
+      const char* key = std::string_view(kind) == "RzGrid"
+                            ? "max_grid_cells"
+                            : "warning_threshold";
+      for (const nlohmann::json& invalid :
+           {nlohmann::json(-1), nlohmann::json(1.5), nlohmann::json("12")}) {
+        defaults["volumes"][0]["volume_lookup"] = {{"kind", kind},
+                                                   {key, invalid}};
+        BOOST_CHECK_THROW(converter.fromJson(gctx, defaults),
+                          std::invalid_argument);
+      }
+    }
+    // A geometry-wide recipe is not part of the format.
+    auto topLevelOnly = legacy;
+    topLevelOnly["volume_lookup"] = {{"kind", "RzGrid"}};
+    BOOST_CHECK(converter.fromJson(gctx, topLevelOnly)
+                    ->highestTrackingVolume()
+                    ->volumeLookup() == nullptr);
+    {
+      encoded["volumes"][0]["volume_lookup"]["max_grid_cells"] = -1;
+    }
+    BOOST_CHECK_THROW(converter.fromJson(gctx, encoded), std::invalid_argument);
+  }
+  geometry->highestTrackingVolume()->setVolumeLookup(
+      std::make_unique<LinearVolumeLookup>(
+          *world, LinearVolumeLookup::Config{std::nullopt}, getDummyLogger()));
+  auto linearRecipe = converter.toJson(gctx, *geometry);
+  BOOST_CHECK_EQUAL(
+      linearRecipe["volumes"][0]["volume_lookup"]["kind"].get<std::string>(),
+      "Linear");
+  BOOST_CHECK(linearRecipe["volumes"][0]["volume_lookup"]["warning_threshold"]
+                  .is_null());
+  auto restoredLinear = converter.fromJson(gctx, linearRecipe);
+  auto* linearPolicy = dynamic_cast<const LinearVolumeLookup*>(
+      restoredLinear->highestTrackingVolume()->volumeLookup());
+  BOOST_REQUIRE(linearPolicy != nullptr);
+  BOOST_CHECK(!linearPolicy->config().warningThreshold.has_value());
+  // Zero is a real threshold and emits a warning for this nonempty subtree.
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  Logging::ScopedFailureThreshold threshold{Logging::ERROR};
+#endif
+  linearRecipe["volumes"][0]["volume_lookup"]["warning_threshold"] = 0;
+  restoredLinear = converter.fromJson(gctx, linearRecipe);
+  linearPolicy = dynamic_cast<const LinearVolumeLookup*>(
+      restoredLinear->highestTrackingVolume()->volumeLookup());
+  BOOST_REQUIRE(linearPolicy != nullptr);
+  BOOST_REQUIRE(linearPolicy->config().warningThreshold.has_value());
+  BOOST_CHECK_EQUAL(*linearPolicy->config().warningThreshold, 0);
+  class CustomLookup : public IVolumeLookup {
+    const TrackingVolume* findLowest(const GeometryContext& /*gctx*/,
+                                     const Vector3& /*position*/,
+                                     double /*tolerance*/) const override {
+      return nullptr;
+    }
+  };
+  geometry->highestTrackingVolume()->setVolumeLookup(
+      std::make_unique<CustomLookup>());
+  BOOST_CHECK_THROW(converter.toJson(gctx, *geometry), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(ExplicitDefaultLinearBoundaryRoundTrip) {
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  Blueprint blueprint{Blueprint::Config{}};
+  auto region =
+      std::make_shared<StaticBlueprintNode>(std::make_unique<TrackingVolume>(
+          Transform3::Identity(),
+          std::make_shared<CylinderVolumeBounds>(0., 50., 50.), "region"));
+  region->addChild(
+      std::make_shared<StaticBlueprintNode>(std::make_unique<TrackingVolume>(
+          Transform3::Identity(),
+          std::make_shared<CylinderVolumeBounds>(10., 20., 20.), "leaf")));
+  region->setVolumeLookupFactory([](const GeometryContext&,
+                                    const TrackingVolume& volume,
+                                    const Logger& logger) {
+    return std::make_unique<LinearVolumeLookup>(
+        volume, LinearVolumeLookup::Config{}, logger);
+  });
+  blueprint.addChild(region);
+  blueprint.setVolumeLookupFactory([](const GeometryContext& context,
+                                      const TrackingVolume& volume,
+                                      const Logger& logger) {
+    RzGridVolumeLookup::Config config;
+    config.maxGridCells = 9;  // One regular cell plus under-/overflow slots.
+    return std::make_unique<RzGridVolumeLookup>(context, volume, config,
+                                                logger);
+  });
+  auto geometry = blueprint.construct(BlueprintOptions{}, gctx);
+  std::ostringstream output;
+  TrackingGeometryJsonConverter converter(
+      TrackingGeometryJsonConverter::Config::defaultConfig(),
+      getDefaultLogger("LookupJsonTest", Logging::WARNING, &output));
+  auto encoded = converter.toJson(gctx, *geometry);
+  bool linearRecorded = false;
+  for (const auto& volume : encoded.at("volumes")) {
+    if (volume.at("name") == "region") {
+      BOOST_CHECK_EQUAL(
+          volume.at("volume_lookup").at("kind").get<std::string>(), "Linear");
+      BOOST_CHECK_EQUAL(
+          volume.at("volume_lookup").at("warning_threshold").get<std::size_t>(),
+          64);
+      linearRecorded = true;
+    }
+  }
+  BOOST_CHECK(linearRecorded);
+  auto decoded = converter.fromJson(gctx, encoded);
+  // If the parent were built before the explicit linear boundary, it would
+  // index the leaf too and exceed the one-cell cap, producing a warning.
+  BOOST_CHECK(output.str().empty());
+  auto& decodedRegion = decoded->highestTrackingVolume()->volumes().at(0);
+  BOOST_CHECK(dynamic_cast<const LinearVolumeLookup*>(
+                  decodedRegion.volumeLookup()) != nullptr);
+  BOOST_CHECK(decodedRegion.volumes().at(0).volumeLookup() == nullptr);
+  BOOST_CHECK(*decoded->resolveLowestTrackingVolume(gctx, {15., 0., 0.}) ==
+              &decodedRegion.volumes().at(0));
+  decodedRegion.setVolumeLookup(nullptr);
+  auto reset = converter.toJson(gctx, *decoded);
+  for (const auto& volume : reset.at("volumes")) {
+    if (volume.at("name") == "region") {
+      BOOST_CHECK(!volume.contains("volume_lookup"));
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

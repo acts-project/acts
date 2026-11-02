@@ -119,7 +119,7 @@ def run_ckf_tracking(label, seeding):
                 minPt=0.5 * u.GeV,
                 impactMax=3 * u.mm,
             ),
-            SeedFinderOptionsArg(bFieldInZ=2 * u.T),
+            SeedFinderOptionsArg(bFieldInZ=setup.bFieldInZ),
             seedingAlgorithm=seeding,
             paramEstimationSpacePoints=(
                 acts.examples.SeedSpacePointSelection.SpreadTriplet

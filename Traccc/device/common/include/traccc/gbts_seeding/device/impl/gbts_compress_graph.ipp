@@ -58,10 +58,6 @@ TRACCC_HOST_DEVICE inline void gbts_compress_graph(
       continue;
     }
 
-    // Row-major output graph: each edge owns a contiguous block of
-    // nMaxNei ints ([nei0..neiN-1]).
-    const unsigned int pos = payload.nMaxNei * newIdx;
-
     const uint2 edge_nodes = d_edge_nodes[globalIndex];
     d_output_edge_nodes[newIdx] =
         uint2{d_orig_node_index[edge_nodes.x], d_orig_node_index[edge_nodes.y]};
@@ -77,7 +73,8 @@ TRACCC_HOST_DEVICE inline void gbts_compress_graph(
       if (nei >= payload.nConnectedEdgesMax) {
         continue;
       }
-      d_output_graph[pos + kept] = nei;
+      // Column-major output graph: neighbour k of the edge is in column k.
+      d_output_graph[kept * payload.nConnectedEdgesMax + newIdx] = nei;
       ++kept;
     }
     d_output_num_neighbours[newIdx] = static_cast<unsigned char>(kept);

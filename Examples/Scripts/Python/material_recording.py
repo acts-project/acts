@@ -134,12 +134,22 @@ def main():
         default="material_geant4",
         help="Output file stem (without extension)",
     )
+    p.add_argument(
+        "--gen1",
+        action="store_true",
+        help="Record onto the Gen1 (Layer-based) geometry instead of Gen3 "
+        "(default).",
+    )
 
     args = p.parse_args()
+    gen3 = not args.gen1
 
     detector = None
     if args.input == "":
-        detector = getOpenDataDetector()
+        # Gen1 has no calorimeter catch-all surface, so its material would
+        # otherwise be misattributed to the nearest tracker surface; Gen3
+        # has a dedicated collector, so its calorimeter can stay enabled.
+        detector = getOpenDataDetector(gen3=gen3, buildCalorimeter=gen3)
     elif args.input.endswith(".gdml"):
         detector = acts.examples.geant4.GdmlDetector(path=args.input)
     elif args.input.endswith(".sqlite") or args.input.endswith(".db"):

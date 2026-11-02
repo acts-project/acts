@@ -1,0 +1,11 @@
+# No checks: this report only compares the two fitting algorithms visually.
+[checks."*"]
+
+# Case-sensitive globs against histogram keys; tags may overlap.
+[report.tags]
+"Track summary" = ["*nStates*", "*nMeasurements*", "*nHoles*", "*nOutliers*", "*nSharedHits*", "*nMajorityHits*"]
+"Residuals" = ["res_*", "resmean_*", "reswidth_*", "trk_res*", "resX", "resY", "resZ", "resT", "resSeed*"]
+"Pulls" = ["pull*", "trk_pull*"]
+"Resolution" = ["reswidth_*", "pullwidth_*"]
+"Bias" = ["resmean_*", "pullmean_*"]
+"Kinematics" = ["p", "pt", "p[xyz]", "eta", "phi", "m", "q", "*_vs_pT*", "*_vs_eta*", "*_vs_phi*"]

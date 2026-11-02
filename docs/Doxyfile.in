@@ -773,6 +773,7 @@ WARN_LOGFILE           =
 
 INPUT                  = index.md \
                          groups \
+                         @DOXYGEN_NOTEBOOK_DIR@ \
                          pages \
                          namespaces.dox \
                          experimental.md \
@@ -898,7 +899,8 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = figures
+IMAGE_PATH             = figures \
+                         @DOXYGEN_NOTEBOOK_DIR@
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
