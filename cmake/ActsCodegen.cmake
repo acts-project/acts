@@ -28,8 +28,7 @@ set(ACTS_CODEGEN_SOURCE_ROOT "${_acts_codegen_source_root}" CACHE INTERNAL "")
 # The manifest describes shipped generated files for both this module and
 # CI/pregenerate_codegen.py. External configurations may supply their own UNIT.
 file(
-    READ
-    "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
+    READ "${ACTS_CODEGEN_SOURCE_ROOT}/codegen/manifest.json"
     _acts_codegen_manifest
 )
 
@@ -194,8 +193,7 @@ function(_acts_codegen_ensure_runtime)
         # Finally, we write the path found in the outside virtual env into the
         # new virtual env as described in the StackOverflow answer.
         file(
-            WRITE
-            "${_python_nested_package_dir}/_base_packages.pth"
+            WRITE "${_python_nested_package_dir}/_base_packages.pth"
             ${_python_package_dir}
         )
 
@@ -226,8 +224,7 @@ function(acts_code_generation)
     # with the same schema; DEPENDS tracks its additional local input files.
     acts_codegen_manifest(_manifest)
     string(
-        JSON
-        _unit
+        JSON _unit
         ERROR_VARIABLE _unit_error
         GET "${_manifest}"
         units
@@ -271,8 +268,7 @@ function(acts_code_generation)
     # standalone pregeneration runner.
     set(_script_arguments "")
     string(
-        JSON
-        _argument_count
+        JSON _argument_count
         ERROR_VARIABLE _no_arguments
         LENGTH "${_unit}"
         arguments
@@ -359,8 +355,7 @@ function(acts_code_generation)
                     "${_requirement}/*.py"
                 )
                 list(
-                    APPEND
-                    _depends
+                    APPEND _depends
                     ${_depends_py}
                     "${_requirement}/pyproject.toml"
                 )

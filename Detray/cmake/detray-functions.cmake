@@ -305,15 +305,13 @@ function(detray_add_metadata_header target configuration)
     # Reuse the runtime and package settings of the shipped metadata generator.
     acts_codegen_manifest(_manifest)
     string(
-        JSON
-        _unit
+        JSON _unit
         GET "${_manifest}"
         units
         "Detray/detectors/detray/detectors/default_metadata.hpp"
     )
     string(
-        JSON
-        _unit
+        JSON _unit
         SET "${_unit}"
         output
         "\"detray/detectors/${_name}_metadata.hpp\""
