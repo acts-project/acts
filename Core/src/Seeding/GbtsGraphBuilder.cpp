@@ -405,6 +405,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       constexpr float kReachMargin = 1 * UnitConstants::mm;
       const auto binInReach = [&](const SlidingWindow& window,
                                   const float tauLo, const float tauHi) {
+        // drHi >= minDeltaRadius: a window whose bin lies wholly within
+        // minDeltaRadius of n1 is skipped before this is called
         const float drLo =
             std::max(window.minRadius - r1, m_cfg.minDeltaRadius);
         const float drHi = window.maxRadius - r1;
