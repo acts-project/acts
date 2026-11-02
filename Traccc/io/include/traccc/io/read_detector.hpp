@@ -12,9 +12,6 @@
 #include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
 
-// Detray include(s).
-#include <detray/utils/tuple_helpers.hpp>
-
 // VecMem include(s).
 #include <vecmem/memory/memory_resource.hpp>
 
@@ -23,10 +20,6 @@
 #include <tuple>
 
 namespace traccc::io {
-
-/// All detector types that @c read_detector can construct
-using readable_detector_type_list =
-    generated_detector_type_list;
 
 /// Construct a detector geometry from a set of input files
 ///

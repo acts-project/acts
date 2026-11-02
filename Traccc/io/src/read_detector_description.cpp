@@ -126,7 +126,7 @@ void read_json_dd(traccc::detector_design_description::host& det_desc,
   vecmem::host_memory_resource mr;
 
   traccc::host_detector detector;
-  traccc::io::read_detector(detector, mr, geometry_file);
+  traccc::io::read_detector(detector, mr, geometry_file, "", "", false);
   traccc::host_detector_visitor<traccc::io::readable_detector_type_list>(
       detector, [&](const auto& concrete_detector) {
         read_json_dd_impl(det_desc, det_cond, concrete_detector, digi, cond);
@@ -151,6 +151,7 @@ void read_detector_description(detector_design_description::host& det_desc,
       read_digitization_config(digitization_file, digitization_format);
   const conditions_config cond =
       read_conditions_config(conditions_file, conditions_format);
+
   // Fill the detector description with the correct type of geometry file.
   switch (geometry_format) {
     case data_format::json:
