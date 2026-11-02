@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <numbers>
 #include <span>
@@ -29,7 +30,8 @@ namespace {
 /// Covers one non-empty source eta bin, whose phi-ordered node list it holds
 /// directly so that the innermost loop does not reach through the bin.
 struct SlidingWindow {
-  /// phi-ordered nodes of the bin, including the wrap-around duplicates
+  /// phi-ordered nodes of the bin (only its connected ones where the z0
+  /// histogram applies), including the wrap-around duplicates
   const std::pair<float, SpacePointIndex>* phiNodes{};
   /// number of entries in @c phiNodes
   std::uint32_t numPhiNodes{};
@@ -242,6 +244,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
   // reused across bin groups so that the windows are allocated once
   std::vector<SlidingWindow> phiSlidingWindow;
 
+  // per window: the connected nodes of its bin, where useZ0Histogram filters
+  // them; reused across bin groups as the windows are
+  std::vector<std::vector<std::pair<float, SpacePointIndex>>> connectedPhiNodes;
+
   const bool calibrate = m_cfg.calibrateStrips && nodeStorage.hasStrips();
 
   // Put a strip node back where a direction says it crossed. Both ends, since
@@ -319,6 +325,29 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       window.tauRatioCutOuter = link.tauRatioCutOuter;
       window.type = B2.type;
       window.technology = B2.technology;
+
+      // Isolated n2 nodes are skipped below for every n1 of this group, and
+      // the branch is unpredictable. Filter them out of the window once
+      // instead. Not for the group's own bin: its nodes gain connections as
+      // n1 is processed.
+      if (useZ0Histogram && link.bin != bg.bin) {
+        const std::size_t windowIdx = phiSlidingWindow.size() - 1;
+        // growing the outer vector moves the inner ones, which keeps their
+        // buffers, so earlier windows' pointers stay valid
+        if (connectedPhiNodes.size() <= windowIdx) {
+          connectedPhiNodes.resize(windowIdx + 1);
+        }
+        std::vector<std::pair<float, SpacePointIndex>>& connected =
+            connectedPhiNodes[windowIdx];
+        connected.clear();
+        for (const auto& phiNode : B2.phiNodes) {
+          if (edgeInfo[phiNode.second].isConnected != 0) {
+            connected.push_back(phiNode);
+          }
+        }
+        window.phiNodes = connected.data();
+        window.numPhiNodes = static_cast<std::uint32_t>(connected.size());
+      }
     }
 
     // in GBTSv3 the outer loop goes over n1 nodes in the Layer 1 bin
@@ -387,7 +416,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
           const std::uint16_t nodeInfo = n2Info.isConnected;
 
-          // skip isolated nodes as their incoming edges lead to nowhere
+          // skip isolated nodes as their incoming edges lead to nowhere; only
+          // the group's own bin can still hold them here
           if (useZ0Histogram && (nodeInfo == 0)) {
             continue;
           }
