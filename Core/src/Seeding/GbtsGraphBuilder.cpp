@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -405,8 +406,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       constexpr float kReachMargin = 1 * UnitConstants::mm;
       const auto binInReach = [&](const SlidingWindow& window,
                                   const float tauLo, const float tauHi) {
-        // drHi >= minDeltaRadius: a window whose bin lies wholly within
-        // minDeltaRadius of n1 is skipped before this is called
+        // dr >= minDeltaRadius > 0 here (a window whose bin lies wholly within
+        // minDeltaRadius of n1 is skipped before this is called), so tau * dr
+        // grows with tau and the corners below bound it
+        assert(m_cfg.minDeltaRadius > 0);
         const float drLo =
             std::max(window.minRadius - r1, m_cfg.minDeltaRadius);
         const float drHi = window.maxRadius - r1;
