@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -14,7 +15,7 @@ ENTRIES = [
     for entry in json.loads((ROOT / "codegen/manifest.json").read_text())[
         "units"
     ].values()
-    if entry["script"].startswith("Detray/detectors/python/")
+    if entry["script"] == "Detray/detectors/codegen/generate_metadata.py"
 ]
 
 
@@ -34,7 +35,7 @@ def test_metadata_output_interfaces_match(tmp_path, entry):
         ],
         env={
             **os.environ,
-            "PYTHONPATH": str(ROOT / "Detray/python"),
+            "PYTHONPATH": str(ROOT / "Detray/detectors/codegen"),
             "PYTHONHASHSEED": "0",
         },
         check=True,
@@ -47,7 +48,7 @@ def test_metadata_output_interfaces_match(tmp_path, entry):
         cwd=tmp_path,
         env={
             **os.environ,
-            "PYTHONPATH": str(ROOT / "Detray/python"),
+            "PYTHONPATH": str(ROOT / "Detray/detectors/codegen"),
             "PYTHONHASHSEED": "1",
         },
         check=True,
@@ -57,23 +58,23 @@ def test_metadata_output_interfaces_match(tmp_path, entry):
 
 @pytest.mark.parametrize("function", ["configure", "missing"])
 def test_external_metadata(tmp_path, function):
-    configuration = tmp_path / "custom.py"
+    configuration = tmp_path / "custom_detector.py"
     configuration.write_text(
-        "from detray.detectors.configurations.toy import add_toy_types\n"
+        "from detray_metadata.configurations import toy_detector\n"
         "def configure(md):\n"
-        "    add_toy_types(md)\n"
+        "    toy_detector.configure(md)\n"
     )
     output = tmp_path / "custom_metadata.hpp"
     result = subprocess.run(
         [
             sys.executable,
-            str(ROOT / "Detray/detectors/python/generate_metadata.py"),
+            str(ROOT / "Detray/detectors/codegen/generate_metadata.py"),
             str(output),
             "--detector",
             f"{configuration}:{function}",
         ],
         cwd=tmp_path,
-        env={**os.environ, "PYTHONPATH": str(ROOT / "Detray/python")},
+        env={**os.environ, "PYTHONPATH": str(ROOT / "Detray/detectors/codegen")},
         capture_output=True,
         text=True,
     )
@@ -82,4 +83,22 @@ def test_external_metadata(tmp_path, function):
         assert "Invalid detector configuration" in result.stderr
     else:
         assert result.returncode == 0, result.stderr
-        assert "custom_metadata" in output.read_text()
+        assert "struct custom_metadata" in output.read_text()
+
+
+def test_shipped_configurations_match_manifest():
+    """Every packaged configuration has a manifest unit and is always generated."""
+    configurations = ROOT / "Detray/detectors/codegen/detray_metadata/configurations"
+    names = sorted(
+        path.stem.removesuffix("_detector")
+        for path in configurations.glob("*_detector.py")
+    )
+    assert sorted(entry["arguments"][-1] for entry in ENTRIES) == names
+    for entry in ENTRIES:
+        assert (
+            entry["output"] == f"detray/detectors/{entry['arguments'][-1]}_metadata.hpp"
+        )
+    cmake = (ROOT / "Detray/detectors/CMakeLists.txt").read_text()
+    shipped = re.search(r"set\(_detray_shipped_metadata\s+([^)]*)\)", cmake)
+    assert shipped is not None
+    assert sorted(shipped.group(1).split()) == names

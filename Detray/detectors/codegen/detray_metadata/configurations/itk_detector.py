@@ -6,16 +6,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from detray.detectors import metadata
-from detray.detectors import Shape
-from detray.detectors import (
+from detray_metadata import metadata
+from detray_metadata import Shape
+from detray_metadata import (
     add_silicon_tracker_defaults,
 )
 
 import logging
 
 
-def add_itk_types(md: metadata):
+def configure(md: metadata):
     logger = logging.getLogger(__name__)
     logger.info("Define types required by the ATLAS Inner Tracker (ITk):")
 

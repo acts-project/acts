@@ -25,6 +25,7 @@ import itertools
 import logging
 import numbers
 import os
+import re
 from pathlib import Path
 from typing import Optional
 import subprocess
@@ -267,11 +268,7 @@ class metadata_generator:
         output_file=None,
     ):
         # Internal state during header generation
-        self.out_dir = (
-            "../Detray/detectors/include/detray/detectors/"
-            if output is None
-            else output
-        )
+        self.out_dir = os.getcwd() if output is None else output
         self.output_file = output_file
         self.file = None
         self.logger = logging.getLogger(__name__)
@@ -299,16 +296,13 @@ class metadata_generator:
         self.__generate(md, self.out_dir)
 
     # Write the given metadata to file
-    def __generate(
-        self, md: metadata, src_dir="../Detray/detectors/include/detray/detectors/"
-    ):
-        # Shortened naming convention
-        det_name = md.det_name.replace("_detector", "")
+    def __generate(self, md: metadata, src_dir):
         filename = (
-            self.output_file or f"{os.path.abspath(src_dir)}/{det_name}_metadata.hpp"
+            self.output_file or f"{os.path.abspath(src_dir)}/{md.det_name}_metadata.hpp"
         )
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
         self.logger.debug(f'Open "{filename}"')
+        self.det_name = md.det_name
         self.file = open(filename, "w+")
 
         self.logger.info("Generating metadata...")
@@ -1132,6 +1126,12 @@ template <template <typename...> class vector_t = dvector>\n\
         self.__put("};\n\n} // namespace detray\n")
         self.file.close()
 
+        # Document the generated declarations
+        with open(self.file.name) as header:
+            text = header.read()
+        with open(self.file.name, "w") as header:
+            header.write(_add_doc_comments(text, self.det_name))
+
         self.logger.debug("Wrote file to disk")
 
         # Run code formatting
@@ -1152,3 +1152,84 @@ template <template <typename...> class vector_t = dvector>\n\
             except Exception as e:
                 logging.error(f"Unexpected error for clang-format: {e}")
                 raise
+
+
+# Doxygen comments for the generated declarations, keyed by declaration name
+_ENUM_DOCS = {
+    "mask_id": "Identifiers for the supported surface masks.",
+    "material_id": "Identifiers for material payload and map alternatives.",
+    "accel_id": "Identifiers for navigation accelerator alternatives.",
+    "geo_objects": "Categories used to distinguish detector geometry objects.",
+}
+
+_LINK_TYPES = (
+    "nav_link",
+    "transform_link",
+    "mask_link",
+    "material_link",
+    "object_link_type",
+)
+
+_MATERIAL_TYPES = ("material_slab_t", "material_rod_t", "raw_material_t")
+
+
+def _using_doc(name):
+    if name == "algebra_type":
+        return "Algebra backend used by this detector metadata."
+    if name == "scalar_t":
+        return "Scalar type associated with the selected algebra backend."
+    if name in _LINK_TYPES:
+        return "Link type used to refer to the corresponding detector component store."
+    if name == "surface_type":
+        return "Surface descriptor type combining links to its geometry components."
+    if name.endswith("_store"):
+        return "Store type holding the corresponding detector component collection."
+    if name.endswith("_map_t"):
+        return "Material map type associated with this surface shape."
+    if name.endswith("_grid_t"):
+        return "Grid type used to index the corresponding detector components."
+    if name in _MATERIAL_TYPES:
+        return "Material representation used by this detector metadata."
+    return "Type alias used by this detector metadata configuration."
+
+
+def _struct_doc(det_name):
+    if det_name == "default":
+        return [
+            "Type and storage policy used to assemble a detector from geometry and",
+            "material components.",
+        ]
+    name = det_name.replace("_", " ")
+    return [f"Detector-specific aliases and storage policy for {name} geometry."]
+
+
+def _add_doc_comments(text, det_name):
+    """Put a Doxygen comment in front of every generated declaration."""
+    using_re = re.compile(r"^(\s*)using (\w+)\b")
+    enum_re = re.compile(r"^(\s*)enum (?:class )?(\w+)\b")
+    struct_re = re.compile(rf"^(\s*)struct {re.escape(det_name)}_metadata\b")
+
+    lines = text.split("\n")
+    result = []
+    for line in lines:
+        docs = []
+        indent = ""
+        is_struct = False
+        if match := using_re.match(line):
+            indent, name = match.groups()
+            docs = [_using_doc(name)]
+        elif (match := enum_re.match(line)) and match.group(2) in _ENUM_DOCS:
+            indent, name = match.groups()
+            docs = [_ENUM_DOCS[name]]
+        elif match := struct_re.match(line):
+            indent = match.group(1)
+            docs = _struct_doc(det_name)
+            is_struct = True
+        if docs:
+            # Struct comments go in front of the template parameter list
+            position = len(result)
+            if is_struct and result and result[-1].lstrip().startswith("template"):
+                position -= 1
+            result[position:position] = [f"{indent}/// {doc}" for doc in docs]
+        result.append(line)
+    return "\n".join(result)

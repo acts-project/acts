@@ -283,12 +283,14 @@ function(detray_add_codegen_header)
     )
 endfunction(detray_add_codegen_header)
 
-# Accept shipped metadata names or /path/to/detector.py:configure.
+# Generate the metadata header for a shipped detector name (e.g. "odd") or an
+# external configuration given as /path/to/<name>_detector.py:configure. Both
+# produce detray/detectors/<name>_metadata.hpp.
 function(detray_add_metadata_header target configuration)
     if(NOT configuration MATCHES "^(.+\\.py):([A-Za-z_][A-Za-z0-9_]*)$")
         detray_add_codegen_header(
             TARGET ${target}
-            KEY "Detray/detectors/detray/detectors/${configuration}.hpp"
+            KEY "Detray/detectors/detray/detectors/${configuration}_metadata.hpp"
         )
         return()
     endif()
@@ -296,6 +298,7 @@ function(detray_add_metadata_header target configuration)
     get_filename_component(_file "${CMAKE_MATCH_1}" ABSOLUTE)
     set(_function "${CMAKE_MATCH_2}")
     get_filename_component(_name "${_file}" NAME_WE)
+    string(REGEX REPLACE "_detector$" "" _name "${_name}")
     if(NOT _name MATCHES "^[A-Za-z_][A-Za-z0-9_]*$")
         message(
             FATAL_ERROR

@@ -114,73 +114,73 @@
             "python_version": "3.13"
         },
         "Detray/detectors/detray/detectors/default_metadata.hpp": {
-            "script": "Detray/detectors/python/generate_metadata.py",
+            "script": "Detray/detectors/codegen/generate_metadata.py",
             "output": "detray/detectors/default_metadata.hpp",
             "with_requirements": [],
             "with": [
-                "Detray/python"
+                "Detray/detectors/codegen"
             ],
             "isolated": true,
             "python_version": "3.13",
             "arguments": [
                 "--detector",
-                "default.add_default_types"
+                "default"
             ]
         },
         "Detray/detectors/detray/detectors/itk_metadata.hpp": {
-            "script": "Detray/detectors/python/generate_metadata.py",
+            "script": "Detray/detectors/codegen/generate_metadata.py",
             "output": "detray/detectors/itk_metadata.hpp",
             "with_requirements": [],
             "with": [
-                "Detray/python"
+                "Detray/detectors/codegen"
             ],
             "isolated": true,
             "python_version": "3.13",
             "arguments": [
                 "--detector",
-                "itk.add_itk_types"
+                "itk"
             ]
         },
         "Detray/detectors/detray/detectors/odd_metadata.hpp": {
-            "script": "Detray/detectors/python/generate_metadata.py",
+            "script": "Detray/detectors/codegen/generate_metadata.py",
             "output": "detray/detectors/odd_metadata.hpp",
             "with_requirements": [],
             "with": [
-                "Detray/python"
+                "Detray/detectors/codegen"
             ],
             "isolated": true,
             "python_version": "3.13",
             "arguments": [
                 "--detector",
-                "odd.add_odd_types"
+                "odd"
             ]
         },
         "Detray/detectors/detray/detectors/toy_metadata.hpp": {
-            "script": "Detray/detectors/python/generate_metadata.py",
+            "script": "Detray/detectors/codegen/generate_metadata.py",
             "output": "detray/detectors/toy_metadata.hpp",
             "with_requirements": [],
             "with": [
-                "Detray/python"
+                "Detray/detectors/codegen"
             ],
             "isolated": true,
             "python_version": "3.13",
             "arguments": [
                 "--detector",
-                "toy.add_toy_types"
+                "toy"
             ]
         },
         "Detray/detectors/detray/detectors/wire_chamber_metadata.hpp": {
-            "script": "Detray/detectors/python/generate_metadata.py",
+            "script": "Detray/detectors/codegen/generate_metadata.py",
             "output": "detray/detectors/wire_chamber_metadata.hpp",
             "with_requirements": [],
             "with": [
-                "Detray/python"
+                "Detray/detectors/codegen"
             ],
             "isolated": true,
             "python_version": "3.13",
             "arguments": [
                 "--detector",
-                "wire_chamber.add_wire_chamber_types"
+                "wire_chamber"
             ]
         }
     }

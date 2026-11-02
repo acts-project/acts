@@ -77,11 +77,11 @@ set_property(
     PROPERTY STRINGS "NONE" "WARNING" "INFO" "VERBOSE" "DEBUG"
 )
 option(DETRAY_BUILD_CLI_TOOLS "Build the command line tools of Detray" OFF)
-# Which detector metadata headers to generate during the build
+# Additional detector metadata headers to generate; shipped ones always are
 set(DETRAY_GENERATE_METADATA
     ""
     CACHE STRING
-    "Semicolon-separated metadata names or /path/to/detector.py:function selectors"
+    "Semicolon-separated external /path/to/<name>_detector.py:configure selectors"
 )
 
 # Device compilation

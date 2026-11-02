@@ -6,22 +6,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from detray.detectors import metadata
-from detray.detectors import Type, Algebra, Shape, Material, Accelerator
-from detray.detectors import (
+from detray_metadata import metadata
+from detray_metadata import Type, Algebra, Shape, Material, Accelerator
+from detray_metadata import (
     add_silicon_tracker_defaults,
     add_calorimeter_defaults,
     add_telescope_detector_defaults,
     add_wire_chamber_defaults,
 )
 
-from .itk import add_itk_types
-from .odd import add_odd_types
+from .itk_detector import configure as configure_itk
+from .odd_detector import configure as configure_odd
 
 import logging
 
 
-def add_default_types(md: metadata):
+def configure(md: metadata):
     logger = logging.getLogger(__name__)
 
     # Collect the types required for a detector that can hold all detector types
@@ -38,8 +38,8 @@ def add_default_types(md: metadata):
     )
 
     # Make sure all detectors can be represented by this metadata
-    add_odd_types(md)
-    add_itk_types(md)
+    configure_odd(md)
+    configure_itk(md)
 
     # Extra passive surface shapes (cylinder with two intersection solutions)
     md.add_passive(Shape.CYLINDER2D)

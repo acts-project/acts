@@ -6,14 +6,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from detray.detectors import metadata
-from detray.detectors import Shape, Accelerator, GridBin, GridSerializer
-from detray.detectors import add_silicon_tracker_defaults
+from detray_metadata import metadata
+from detray_metadata import Shape, Accelerator, GridBin, GridSerializer
+from detray_metadata import add_silicon_tracker_defaults
 
 import logging
 
 
-def add_toy_types(md: metadata):
+def configure(md: metadata):
     logger = logging.getLogger(__name__)
     logger.info("Define types required by the toy detector:")
 

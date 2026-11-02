@@ -42,7 +42,32 @@ if(TARGET detray_detectors_HEADERS)
     )
 endif()
 
-# Shipped names use the manifest; external files reuse the same generator.
-foreach(GENERATOR IN LISTS DETRAY_GENERATE_METADATA)
-    detray_add_metadata_header(detray_detectors "${GENERATOR}")
+# Generate the metadata headers. Only hand-written headers (telescope) live in
+# the source tree; the shipped detector configurations in
+# codegen/detray_metadata/configurations are always generated.
+set(_detray_shipped_metadata
+    default
+    itk
+    odd
+    toy
+    wire_chamber
+)
+foreach(_name IN LISTS _detray_shipped_metadata)
+    detray_add_metadata_header(detray_detectors "${_name}")
 endforeach()
+
+# DETRAY_GENERATE_METADATA only adds external configurations.
+foreach(_configuration IN LISTS DETRAY_GENERATE_METADATA)
+    string(REGEX REPLACE "_metadata$" "" _name "${_configuration}")
+    if(_name IN_LIST _detray_shipped_metadata)
+        message(
+            DEPRECATION
+            "DETRAY_GENERATE_METADATA: '${_configuration}' is always generated, "
+            "remove it from the list"
+        )
+        continue()
+    endif()
+    detray_add_metadata_header(detray_detectors "${_configuration}")
+endforeach()
+
+unset(_detray_shipped_metadata)
