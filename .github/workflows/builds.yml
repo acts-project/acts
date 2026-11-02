@@ -933,13 +933,6 @@ jobs:
             view: LCG_109
             tests: true
 
-          - tag: 109_alma9_clang19
-            platform: el9
-            compiler: clang19
-            repo: sft.cern.ch
-            view: LCG_109
-            tests: true
-
           - tag: 110_alma9_gcc16
             platform: el9
             compiler: gcc16
