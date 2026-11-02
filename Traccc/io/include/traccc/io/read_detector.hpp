@@ -9,20 +9,35 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
+
+// Detray include(s).
+#include <detray/utils/tuple_helpers.hpp>
 
 // VecMem include(s).
 #include <vecmem/memory/memory_resource.hpp>
 
 // System include(s).
 #include <string_view>
+#include <tuple>
 
 namespace traccc::io {
 
-/// Construct a "default" / ODD detector geometry from a set of input files
+/// All detector types that @c read_detector can construct
+using readable_detector_type_list =
+    detray::detail::tuple_cat_t<std::tuple<default_detector, odd_detector>,
+                                generated_detector_type_list>;
+
+/// Construct a detector geometry from a set of input files
 ///
 /// It is mostly just a wrapper around Detray's more generic
-/// @c detray::io::read_detector code.
+/// @c detray::io::read_detector code. The detector type is selected by the
+/// detector name in the geometry file header:
+/// - "Cylindrical detector from DD4hep blueprint": @c odd_detector
+/// - "<name>" or "<name>_detector": the generated detector type
+///   @c <name>_detector (see @c generated_detector_type_list)
+/// - any other name: @c default_detector
 ///
 /// @param detector The detector object to be set up
 /// @param mr The memory resource to be used by the detector object

@@ -125,22 +125,11 @@ void read_json_dd(traccc::detector_design_description::host& det_desc,
   traccc::host_detector detector;
   traccc::io::read_detector(detector, mr, geometry_file);
 
-  // TODO: Implement detector visitor!
-  // Peek at the header to determine the kind of detector that is needed
-  const auto header = detray::io::detail::deserialize_json_header(
-      traccc::io::get_absolute_path(geometry_file));
-
-  if (header.detector == "Cylindrical detector from DD4hep blueprint") {
-    read_json_dd_impl<traccc::odd_detector>(det_desc, det_cond, detector, digi,
-                                            cond);
-  } else if (header.detector == "detray_detector") {
-    read_json_dd_impl<traccc::itk_detector>(det_desc, det_cond, detector, digi,
-                                            cond);
-  } else {
-    // TODO: Warning here
-    read_json_dd_impl<traccc::default_detector>(det_desc, det_cond, detector,
-                                                digi, cond);
-  }
+  // Fill the description for the detector type that was constructed
+  traccc::host_detector_visitor<traccc::io::readable_detector_type_list>(
+      detector, [&]<typename detector_t>(const detector_t&) {
+        read_json_dd_impl<detector_t>(det_desc, det_cond, detector, digi, cond);
+      });
 }
 
 }  // namespace

@@ -19,6 +19,8 @@
 
 // System include(s).
 #include <string>
+#include <string_view>
+#include <tuple>
 
 namespace {
 
@@ -46,6 +48,39 @@ void read_detector(traccc::host_detector& detector, vecmem::memory_resource& mr,
   detector.set<detector_t>(std::move(det.first));
 }
 
+/// Check if a detector name matches "<name>" or "<name>_detector"
+///
+/// @param detector_name the detector name from the geometry file header
+/// @param name the name of a generated detector type
+///
+/// @returns @c true if the names match
+[[maybe_unused]] bool matches_detector_name(
+    const std::string_view detector_name, const std::string_view name) {
+  return (detector_name == name) ||
+         (detector_name == std::string(name) + "_detector");
+}
+
+/// Construct the generated detector type that matches a detector name
+///
+/// @tparam detector_ts the generated detector types to check
+///
+/// @param detector_name the detector name from the geometry file header
+/// @param args the arguments for @c read_detector
+///
+/// @returns @c true if a matching detector type was found and constructed
+/// (always @c false if no detector type is generated)
+template <typename... detector_ts, typename... arg_ts>
+bool read_generated_detector(
+    std::tuple<detector_ts...>*,
+    [[maybe_unused]] const std::string_view detector_name,
+    [[maybe_unused]] arg_ts&&... args) {
+  // Read the first matching detector type
+  return ((matches_detector_name(
+               detector_name, traccc::generated_detector_name<detector_ts>) &&
+           (::read_detector<detector_ts>(args...), true)) ||
+          ...);
+}
+
 }  // namespace
 
 namespace traccc::io {
@@ -62,10 +97,10 @@ void read_detector(host_detector& detector, vecmem::memory_resource& mr,
   if (header.detector == "Cylindrical detector from DD4hep blueprint") {
     ::read_detector<traccc::odd_detector>(detector, mr, geometry_file,
                                           material_file, grid_file);
-  } else if (header.detector == "detray_detector") {
-    ::read_detector<traccc::itk_detector>(detector, mr, geometry_file,
-                                          material_file, grid_file);
-  } else {
+  } else if (!::read_generated_detector(
+                 static_cast<generated_detector_type_list*>(nullptr),
+                 header.detector, detector, mr, geometry_file, material_file,
+                 grid_file)) {
     // TODO: Warning here
     ::read_detector<traccc::default_detector>(detector, mr, geometry_file,
                                               material_file, grid_file);
