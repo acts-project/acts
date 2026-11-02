@@ -60,6 +60,13 @@ and to all member surfaces before the next linearisation. The frame provider is
 a read interface; it does not implement these updates or mutate nominal geometry.
 Contextual conditions storage remains outside the Alignment library.
 
+For the planned iterative solver, providers seed working frames once per
+alignment call. The solver will update those working frames together with the
+member transforms; it must not reset them by rereading a fixed initial provider
+at each iteration. Final frames must be made available to seed a later alignment
+call. This working-state and update mechanism is not implemented by the frame
+API.
+
 ## Metadata-only structures and Python
 
 The existing constructor `AlignableStructure(id)` remains available for hierarchy
