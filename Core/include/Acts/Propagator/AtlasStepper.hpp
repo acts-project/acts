@@ -471,15 +471,17 @@ class AtlasStepper {
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] stype The step size type to be set
   /// @param [in] logger Logger instance to use
+  /// @param curvature Global geometric curvature for the crossing estimate
   /// @return IntersectionStatus indicating how the surface was encountered
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
       double surfaceTolerance, ConstrainedStep::Type stype,
-      const Logger& logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger(),
+      const Vector3& curvature = Vector3::Zero()) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(
         *this, state, surface, index, navDir, boundaryTolerance,
-        surfaceTolerance, stype, logger);
+        surfaceTolerance, stype, logger, curvature);
   }
 
   /// Update step size

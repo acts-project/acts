@@ -404,7 +404,12 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     if (edgesToRoot[e] == 1) {
       // a root completes the chain
       const float quality = -state.j / static_cast<float>(path.size() + 1);
-      if (path.size() >= minLength && quality < bestQuality) {
+      const bool maxCurvatureCut =
+          m_cfg.postFitCurvatureFactor > 0 &&
+          std::abs(state.x[2]) * m_cfg.postFitCurvatureFactor >
+              filter.m_cfg.maxCurvature;
+      if (!maxCurvatureCut && path.size() >= minLength &&
+          quality < bestQuality) {
         bestQuality = quality;
         bestState = state;
         bestPath = path;
