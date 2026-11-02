@@ -42,27 +42,6 @@ class SeedContainer {
   /// Constructs and empty seed container.
   SeedContainer() noexcept;
 
-  /// Constructs a copy of the given seed container.
-  /// @param other The seed container to copy.
-  SeedContainer(const SeedContainer &other) noexcept;
-
-  /// Move constructs a seed container.
-  /// @param other The seed container to move.
-  SeedContainer(SeedContainer &&other) noexcept;
-
-  /// Detructs the seed container.
-  ~SeedContainer() noexcept = default;
-
-  /// Assignment operator for copying a seed container.
-  /// @param other The seed container to copy.
-  /// @return A reference to this seed container.
-  SeedContainer &operator=(const SeedContainer &other) noexcept;
-
-  /// Move assignment operator for a seed container.
-  /// @param other The seed container to move.
-  /// @return A reference to this seed container.
-  SeedContainer &operator=(SeedContainer &&other) noexcept;
-
   /// Returns the size of the seed container, i.e., the number of seeds
   /// contained in it.
   /// @return The number of seeds in the container.
