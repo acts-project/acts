@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
+#include <system_error>
 #include <utility>
 
 namespace Acts {
@@ -31,7 +32,15 @@ namespace Acts {
 ///
 /// This implements not a single smoothing step, but the full backwards
 /// smoothing procedure for a filtered, forward trajectory using the stored
-/// linearization.
+/// linearization. Coordinate residuals and covariance canonicalization use
+/// each state's surface parametrization and the supplied geometry context.
+/// If no reference surface is attached (e.g. in standalone test states), the
+/// interpretation is canonical global spherical. This is independent of the
+/// state's position or proximity to the beam. No near-axis cutoff is applied;
+/// covariance canonicalization is undefined exactly at theta = 0 or pi.
+/// Traversal runs backwards from entryIndex. On failure, states later along
+/// forward propagation may already have smoothed results; earlier states are
+/// not visited.
 ///
 /// See
 /// [Wikipedia](https://en.wikipedia.org/wiki/Kalman_filter#Modified_Bryson%E2%80%93Frazier_smoother)
@@ -49,7 +58,6 @@ class MbfSmoother {
   Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
-    static_cast<void>(gctx);
     static_cast<void>(logger);
 
     using TrackStateProxy = typename traj_t::TrackStateProxy;
@@ -61,53 +69,68 @@ class MbfSmoother {
     BoundMatrix bigLambdaHat = BoundMatrix::Zero();
     BoundVector smallLambdaHat = BoundVector::Zero();
 
+    std::error_code error;
     trajectory.applyBackwards(startTs.index(), [&](TrackStateProxy ts) {
       // ensure the track state has a smoothed component
       ts.addComponents(TrackStatePropMask::Smoothed);
 
       AnyMutableTrackStateProxy internalTrackState(ts);
 
-      // Smoothe the current state
-      calculateSmoothed(internalTrackState, bigLambdaHat, smallLambdaHat);
+      // Smooth the current state before transporting backward information.
+      const auto smoothed = calculateSmoothed(gctx, internalTrackState,
+                                              bigLambdaHat, smallLambdaHat);
+      if (!smoothed.ok()) {
+        error = smoothed.error();
+        return false;
+      }
 
       // We smoothed the last state - no need to update the lambdas
       if (!ts.hasPrevious()) {
-        return;
+        return false;
       }
 
       // Update the lambdas depending on the type of track state
+      auto transported = Result<void>::success();
       if (ts.typeFlags().isMeasurement()) {
-        visitMeasurement(AnyConstTrackStateProxy{ts}, bigLambdaHat,
-                         smallLambdaHat);
+        transported = visitMeasurement(gctx, AnyConstTrackStateProxy{ts},
+                                       bigLambdaHat, smallLambdaHat);
       } else {
-        visitNonMeasurement(std::as_const(ts).jacobian(), bigLambdaHat,
-                            smallLambdaHat);
+        transported = visitNonMeasurement(std::as_const(ts).jacobian(),
+                                          bigLambdaHat, smallLambdaHat);
       }
+      if (!transported.ok()) {
+        error = transported.error();
+        return false;
+      }
+      return true;
     });
 
-    return Result<void>::success();
+    return error ? Result<void>::failure(error) : Result<void>::success();
   }
 
  private:
   /// Calculate the smoothed parameters and covariance.
-  void calculateSmoothed(AnyMutableTrackStateProxy& ts,
-                         const BoundMatrix& bigLambdaHat,
-                         const BoundVector& smallLambdaHat) const;
+  Result<void> calculateSmoothed(const GeometryContext& gctx,
+                                 AnyMutableTrackStateProxy& ts,
+                                 const BoundMatrix& bigLambdaHat,
+                                 const BoundVector& smallLambdaHat) const;
 
   /// Visit a non-measurement track state and update the lambdas.
-  void visitNonMeasurement(
+  Result<void> visitNonMeasurement(
       const AnyConstTrackStateProxy::ConstCovarianceMap& jacobian,
       BoundMatrix& bigLambdaHat, BoundVector& smallLambdaHat) const;
 
   /// Visit a measurement track state and update the lambdas.
-  void visitMeasurement(const AnyConstTrackStateProxy& ts,
-                        BoundMatrix& bigLambdaHat,
-                        BoundVector& smallLambdaHat) const;
+  Result<void> visitMeasurement(const GeometryContext& gctx,
+                                const AnyConstTrackStateProxy& ts,
+                                BoundMatrix& bigLambdaHat,
+                                BoundVector& smallLambdaHat) const;
 
   template <std::size_t N>
-  void visitMeasurementImpl(const AnyConstTrackStateProxy& ts,
-                            BoundMatrix& bigLambdaHat,
-                            BoundVector& smallLambdaHat) const;
+  Result<void> visitMeasurementImpl(const GeometryContext& gctx,
+                                    const AnyConstTrackStateProxy& ts,
+                                    BoundMatrix& bigLambdaHat,
+                                    BoundVector& smallLambdaHat) const;
 };
 
 }  // namespace Acts
