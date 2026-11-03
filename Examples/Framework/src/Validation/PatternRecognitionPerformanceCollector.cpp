@@ -210,8 +210,8 @@ void PatternRecognitionPerformanceCollector::fill(
           if (!flags.isMeasurement() && !flags.isOutlier()) {
             continue;
           }
-          const auto* link =
-              state.getUncalibratedSourceLink().getPtr<IndexSourceLink>();
+          const auto sourceLink = state.getUncalibratedSourceLink();
+          const auto* link = sourceLink.getPtr<IndexSourceLink>();
           if (link == nullptr) {
             throw std::invalid_argument(
                 "Regional track quality requires IndexSourceLink measurements");

@@ -5,6 +5,8 @@ import pytest
 import acts
 import acts.examples as ex
 
+pytestmark = pytest.mark.pypi
+
 
 def run_regional_quality(tmp_path, regions, root=False, outlier=False):
     class Source(ex.IAlgorithm):
