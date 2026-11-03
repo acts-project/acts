@@ -32,8 +32,8 @@ namespace ActsPlugins {
 /// detray portals.
 class DetraySurfaceIdMap {
  public:
-  /// Type of a detray surface identifier (the detray barcode value)
-  using DetrayId = std::uint64_t;
+  /// Type of a detray surface identifier (the detray geometry identifier)
+  using DetrayId = detray::geometry::identifier::value_t;
 
   /// Build the map from the sensitive surfaces of a detray detector
   /// @tparam detector_t the detray detector type
