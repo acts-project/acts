@@ -13,7 +13,7 @@
 #include "detray/geometry/shapes.hpp"
 
 // Detray IO include(s)
-#include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/json/detector_writer.hpp"
 
 // Detray test include(s)
 #include "detray/options/detector_io_options.hpp"
@@ -57,7 +57,7 @@ void write_telecope(const po::variables_map &vm,
       build_telescope_detector<algebra_t>(host_mr, tel_cfg);
 
   // Write to file
-  detray::io::write_detector(tel_det, tel_names, writer_cfg);
+  detray::io::write_detector_json(tel_det, tel_names, writer_cfg);
 }
 
 /// Generate and write a telescope detector, given the commandline variables
@@ -142,6 +142,7 @@ int main(int argc, char **argv) {
   writer_cfg.format(detray::io::format::json).replace_files(false);
   // Default output path
   writer_cfg.path("./telescope_detector/");
+  writer_cfg.source("Detray test detector");
 
   // Parse options
   po::variables_map vm =

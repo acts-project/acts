@@ -10,10 +10,10 @@
 #include "detray/core/detector.hpp"
 
 // Detray IO include(s)
-#include "detray/io/frontend/detector_reader.hpp"
 #include "detray/io/frontend/detector_reader_config.hpp"
-#include "detray/io/frontend/detector_writer.hpp"
 #include "detray/io/frontend/detector_writer_config.hpp"
+#include "detray/io/json/detector_reader.hpp"
+#include "detray/io/json/detector_writer.hpp"
 
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
@@ -58,7 +58,7 @@ std::string to_string(const T &obj) {
 /// the returned detector object.
 std::pair<py::object, detray::name_map> read_detector(
     std::shared_ptr<vecmem::memory_resource> mr, const reader_config_t &cfg) {
-  auto [det, names] = detray::io::read_detector<detector_t>(*mr, cfg);
+  auto [det, names] = detray::io::read_detector_json<detector_t>(*mr, cfg);
 
   py::object detector = py::cast(std::move(det));
   py::detail::keep_alive_impl(detector, py::cast(std::move(mr)));
@@ -129,7 +129,9 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
   m.def(
       "writeDetector",
       [](toy_detector_t &det, const typename toy_detector_t::name_map &names,
-         writer_config_t &cfg) { detray::io::write_detector(det, names, cfg); },
+         writer_config_t &cfg) {
+        detray::io::write_detector_json(det, names, cfg);
+      },
       py::arg("detector"), py::arg("names"), py::arg("config"),
       "Write a detector to file as configured by a DetectorWriterConfig. The "
       "config is modified in place if the detector carries no material");

@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s)
-#include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/json/detector_writer.hpp"
 
 // Detray test include(s)
 #include "detray/test/common/build_toy_detector.hpp"
@@ -32,11 +32,12 @@ int main() {
   //     - replace the files if called multiple times
   auto writer_cfg = detray::io::detector_writer_config{}
                         .format(detray::io::format::json)
+                        .source("detray tutorial")
                         .replace_files(true);
 
   std::clog << writer_cfg << std::endl;
 
   // Takes the detector 'det', a volume name map (only entry here the
   // detector name) and the writer config
-  detray::io::write_detector(det, names, writer_cfg);
+  detray::io::write_detector_json(det, names, writer_cfg);
 }

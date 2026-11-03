@@ -16,8 +16,8 @@
 // Detray IO include(s)
 #include "detray/io/backend/geometry_reader.hpp"
 #include "detray/io/backend/geometry_writer.hpp"
-#include "detray/io/frontend/detector_reader.hpp"
-#include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/json/detector_reader.hpp"
+#include "detray/io/json/detector_writer.hpp"
 #include "detray/io/json/json_converter.hpp"
 
 // Detray test include(s)
@@ -94,10 +94,11 @@ auto test_detector_json_io(
     vecmem::host_memory_resource& host_mr) {
   auto writer_cfg = io::detector_writer_config{}
                         .format(io::format::json)
+                        .source("detray integration test")
                         .replace_files(true)
                         .write_grids(true)
                         .write_material(true);
-  io::write_detector(det, names, writer_cfg);
+  io::write_detector_json(det, names, writer_cfg);
 
   // Read the detector back in
   io::detector_reader_config reader_cfg{};
@@ -106,11 +107,12 @@ auto test_detector_json_io(
     reader_cfg.add_file(name);
   }
 
-  auto [det2, names2] = io::read_detector<detector_t, CAP>(host_mr, reader_cfg);
+  auto [det2, names2] =
+      io::read_detector_json<detector_t, CAP>(host_mr, reader_cfg);
 
   // Write the result to a different set of files
   writer_cfg.replace_files(false);
-  io::write_detector(det2, names2, writer_cfg);
+  io::write_detector_json(det2, names2, writer_cfg);
 
   // Compare writing round-trip
   std::string geometry_file{names.get_detector_name() + "_geometry_2.json"};
@@ -202,20 +204,28 @@ GTEST_TEST(io, json_toy_geometry) {
   auto [toy_det, names] = build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
   // Write the detector
-  io::json_converter<detector_t, io::geometry_writer> geo_writer;
-  auto file_name = geo_writer.write(
-      toy_det, names, std::ios::out | std::ios::binary | std::ios::trunc);
+  io::detector_payload out_payload{};
+  out_payload.detector_name = toy_det.name(names);
+  io::geometry_writer<detector_t>{}.to_payload(toy_det, names, out_payload);
+  io::detail::basic_converter::fill_header_payload(out_payload,
+                                                   "detray integration test");
 
-  // Empty volume name map to be filled
-  typename detector_t::name_map volume_name_map{};
-  volume_name_map.set_detector_name("toy_detector");
+  const auto file_name =
+      io::json_output_converter{}
+          .write_to_file(out_payload, "./",
+                         std::ios::out | std::ios::binary | std::ios::trunc)
+          .front();
 
   // Read the detector back in
+  io::detector_payload payload{};
+  io::json_input_converter{}.add_to_payload(file_name, payload);
+
   detector_builder<metadata_t> toy_builder;
-  io::json_converter<detector_t, io::geometry_reader> geo_reader;
+  io::geometry_reader<detector_t>{}.from_payload(toy_builder, payload);
+
+  names.clear_names();
   volume_builder_options builder_opts{};
-  geo_reader.read(toy_builder, file_name);
-  auto det = toy_builder.build(host_mr, builder_opts, volume_name_map);
+  auto det = toy_builder.build(host_mr, builder_opts, names);
 
   // @TODO: Will only work again after IO can perform data deduplication
   // EXPECT_TRUE(toy_detector_test(det, volume_name_map));
@@ -223,11 +233,10 @@ GTEST_TEST(io, json_toy_geometry) {
   // Read the toy detector into the default detector type
   using default_metadata_t = test::default_metadata;
   detector_builder<default_metadata_t> comp_builder;
-  io::json_converter<host::detector<default_metadata_t>, io::geometry_reader>
-      comp_geo_reader;
-  comp_geo_reader.read(comp_builder, file_name);
-  volume_name_map.clear_names();
-  auto comp_det = comp_builder.build(host_mr, builder_opts, volume_name_map);
+  io::geometry_reader<host::detector<default_metadata_t>>{}.from_payload(
+      comp_builder, payload);
+  names.clear_names();
+  auto comp_det = comp_builder.build(host_mr, builder_opts, names);
 
   using mask_id = host::detector<default_metadata_t>::masks::id;
   const auto& masks = comp_det.mask_store();

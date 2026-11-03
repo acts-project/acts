@@ -155,10 +155,11 @@ void KalmanFittingMomentumResolutionTests::SetUp() {
   // Write detector file
   auto writer_cfg = detray::io::detector_writer_config{}
                         .format(detray::io::format::json)
+                        .source("Traccc tests")
                         .replace_files(true)
                         .write_material(true)
                         .path(std::get<0>(GetParam()));
-  detray::io::write_detector(det, name_map, writer_cfg);
+  detray::io::write_detector_json(det, name_map, writer_cfg);
 }
 
 }  // namespace traccc
