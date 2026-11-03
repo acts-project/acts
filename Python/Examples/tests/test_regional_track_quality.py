@@ -73,14 +73,14 @@ def run_regional_quality(tmp_path, regions, root=False, outlier=False):
                 if outlier and number == 0:
                     track.nOutliers = 1
                     state = track.appendTrackState()
-                    state.typeFlags.setIsOutlier()
+                    state.typeFlags.isOutlier = True
                     state.uncalibratedSourceLink = ex.IndexSourceLink(
                         measurements[5].geometryId,
                         5,
                     ).toSourceLink()
                     track.nHoles = 1
                     state = track.appendTrackState()
-                    state.typeFlags.setIsHole()
+                    state.typeFlags.isHole = True
             values = (
                 tracks.makeConst(),
                 measurements,
