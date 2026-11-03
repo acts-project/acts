@@ -432,7 +432,8 @@ class CombinatorialKalmanFilter {
             currentBranch.parameters() = boundParams.parameters();
             currentBranch.covariance() = *boundParams.covariance();
           } else {
-            const auto singleParams = boundParams.merge(brem.mergeMethod);
+            const auto singleParams =
+                boundParams.merge(state.options.geoContext, brem.mergeMethod);
             currentBranch.parameters() = singleParams.parameters();
             currentBranch.covariance() = *singleParams.covariance();
           }
@@ -681,7 +682,8 @@ class CombinatorialKalmanFilter {
           if (!res.ok()) {
             return res.error();
           }
-          const auto singleParams = res->merge(brem.mergeMethod);
+          const auto singleParams =
+              res->merge(state.options.geoContext, brem.mergeMethod);
           return Result<SingleBoundState>::success(
               {singleParams, jacobian, stepper.pathLength(state.stepping)});
         }
@@ -1066,7 +1068,8 @@ class CombinatorialKalmanFilter {
           const auto finalCmpNumber =
               std::min(static_cast<std::size_t>(stepper.maxComponents),
                        brem.maxComponents);
-          extensions.mixtureReducer(*brem.componentCache, finalCmpNumber,
+          extensions.mixtureReducer(state.options.geoContext,
+                                    *brem.componentCache, finalCmpNumber,
                                     surface);
 
           detail::Gsf::removeLowWeightComponents(*brem.componentCache,
@@ -1165,14 +1168,14 @@ class CombinatorialKalmanFilter {
                                       });
 
         const auto [prtMean, prtCov] = detail::Gsf::mergeGaussianMixture(
-            temporaryStates.tips,
+            state.geoContext, temporaryStates.tips,
             PrtProjector{temporaryStates.traj, temporaryStates.weights},
             surface, brem.mergeMethod);
         trackState.predicted() = prtMean;
         trackState.predictedCovariance() = prtCov;
 
         const auto [fltMean, fltCov] = detail::Gsf::mergeGaussianMixture(
-            temporaryStates.tips,
+            state.geoContext, temporaryStates.tips,
             FltProjector{temporaryStates.traj, temporaryStates.weights},
             surface, brem.mergeMethod);
         trackState.filtered() = fltMean;

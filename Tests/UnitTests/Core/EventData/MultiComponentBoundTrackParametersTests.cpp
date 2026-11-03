@@ -18,13 +18,16 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 
+#include <cmath>
 #include <initializer_list>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <tuple>
 #include <vector>
 
 using namespace Acts;
+const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 static const auto particleHypothesis = ParticleHypothesis::pion();
 
@@ -100,7 +103,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
       return result;
     }();
     const auto multi_pars_as_single =
-        multi_pars.merge(ComponentMergeMethod::eMean);
+        multi_pars.merge(gctx, ComponentMergeMethod::eMean);
 
     BOOST_CHECK_EQUAL(multi_pars_as_single.absoluteMomentum(),
                       single_pars.absoluteMomentum());
@@ -130,6 +133,46 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     }
   }
 }
+BOOST_AUTO_TEST_CASE(MergeAcrossPhiSeamWithAndWithoutCovariance) {
+  const auto surface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity());
+  BoundVector left = BoundVector::Zero();
+  left[eBoundLoc0] = -.3;
+  left[eBoundDir0] = std::numbers::pi - .1;
+  left[eBoundDir1] = 1.;
+  left[eBoundQOverP] = .1;
+  BoundVector right = left;
+  right[eBoundLoc0] = .3;
+  right[eBoundDir0] = -std::numbers::pi + .1;
+  const BoundMatrix componentCovariance = .04 * BoundMatrix::Identity();
+
+  for (bool withCovariance : {false, true}) {
+    MultiComponentBoundTrackParameters mixture(surface, withCovariance,
+                                               particleHypothesis);
+    const std::optional<BoundMatrix> covariance =
+        withCovariance ? std::optional{componentCovariance} : std::nullopt;
+    mixture.pushComponent(.5, left, covariance);
+    mixture.pushComponent(.5, right, covariance);
+    const auto merged = mixture.merge(gctx, ComponentMergeMethod::eMean);
+    BOOST_CHECK_SMALL(
+        std::abs(merged.parameters()[eBoundDir0]) - std::numbers::pi, 1e-12);
+    BOOST_CHECK_SMALL(merged.parameters()[eBoundLoc0], 1e-12);
+    BOOST_CHECK_EQUAL(merged.covariance().has_value(), withCovariance);
+    if (withCovariance) {
+      BOOST_CHECK_SMALL((*merged.covariance())(eBoundDir0, eBoundDir0) - .05,
+                        1e-12);
+      BOOST_CHECK_SMALL((*merged.covariance())(eBoundLoc0, eBoundDir0) - .03,
+                        1e-12);
+    }
+
+    mixture.clear();
+    mixture.pushComponent(.25, left, covariance);
+    mixture.pushComponent(.75, right, covariance);
+    const auto mode = mixture.merge(gctx, ComponentMergeMethod::eMaxWeight);
+    BOOST_CHECK(mode.parameters().isApprox(right, 1e-12));
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

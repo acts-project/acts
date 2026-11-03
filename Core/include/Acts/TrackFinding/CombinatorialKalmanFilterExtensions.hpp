@@ -101,7 +101,8 @@ struct CombinatorialKalmanFilterExtensions {
 
   /// Type alias for component reducer delegate function
   using ComponentReducer =
-      Delegate<void(std::vector<GsfComponent>&, std::size_t, const Surface&)>;
+      Delegate<void(const GeometryContext&, std::vector<GsfComponent>&,
+                    std::size_t, const Surface&)>;
 
   /// Takes a vector of components and reduces its number
   ComponentReducer mixtureReducer;

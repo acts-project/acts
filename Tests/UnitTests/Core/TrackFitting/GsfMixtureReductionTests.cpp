@@ -29,6 +29,8 @@
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
+const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+
 namespace {
 
 std::tuple<BoundVector, double> computeMeanAndSumOfWeights(
@@ -42,7 +44,7 @@ std::tuple<BoundVector, double> computeMeanAndSumOfWeights(
       [](auto sum, const auto &cmp) { return sum + cmp.weight; });
 
   BoundVector mean;
-  detail::Gsf::angleDescriptionSwitch(surface, [&](const auto &desc) {
+  detail::Gsf::angleDescriptionSwitch(gctx, surface, [&](const auto &desc) {
     auto [meanTmp, cov] = detail::Gsf::mergeGaussianMixtureMeanCov(
         cmps,
         [](const auto &c) {
@@ -197,7 +199,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   BOOST_CHECK_CLOSE(sumOfWeights0, 1.0, 1.e-8);
 
   // Reduce by factor of 2 and check if weights and QoP are correct
-  reduceMixtureWithKLDistance(cmps, 2, *surface);
+  reduceMixtureWithKLDistance(gctx, cmps, 2, *surface);
 
   BOOST_CHECK_EQUAL(cmps.size(), 2);
 
@@ -213,7 +215,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   BOOST_CHECK_CLOSE(sumOfWeights1, 1.0, 1.e-8);
 
   // Reduce by factor of 2 and check if weights and QoP are correct
-  reduceMixtureWithKLDistance(cmps, 1, *surface);
+  reduceMixtureWithKLDistance(gctx, cmps, 1, *surface);
 
   BOOST_CHECK_EQUAL(cmps.size(), 1);
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 2.5_GeV, 1.e-8);
@@ -234,7 +236,7 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
     cmps.push_back(a);
   }
 
-  reduceMixtureLargestWeights(cmps, 2, *dummy);
+  reduceMixtureLargestWeights(gctx, cmps, 2, *dummy);
 
   BOOST_CHECK_EQUAL(cmps.size(), 2);
   std::ranges::sort(cmps, {}, [](const auto &c) { return c.weight; });
@@ -280,8 +282,8 @@ BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
     std::vector<GsfComponent> cmpsOptimized = cmps;
     std::vector<GsfComponent> cmpsNaive = cmps;
 
-    reduceMixtureWithKLDistance(cmpsOptimized, targetSize, *surface);
-    reduceMixtureWithKLDistanceNaive(cmpsNaive, targetSize, *surface);
+    reduceMixtureWithKLDistance(gctx, cmpsOptimized, targetSize, *surface);
+    reduceMixtureWithKLDistanceNaive(gctx, cmpsNaive, targetSize, *surface);
     BOOST_CHECK_EQUAL(cmpsNaive.size(), targetSize);
 
     testReductionEquivalence(cmpsNaive, cmpsOptimized);
@@ -311,10 +313,10 @@ BOOST_AUTO_TEST_CASE(test_exact_tie_breaking) {
   }
 
   std::vector<GsfComponent> cmpsNaive = cmps;
-  reduceMixtureWithKLDistanceNaive(cmpsNaive, 1, *surface);
+  reduceMixtureWithKLDistanceNaive(gctx, cmpsNaive, 1, *surface);
 
   std::vector<GsfComponent> cmpsOptimized = cmps;
-  reduceMixtureWithKLDistance(cmpsOptimized, 1, *surface);
+  reduceMixtureWithKLDistance(gctx, cmpsOptimized, 1, *surface);
 
   testReductionEquivalence(cmpsNaive, cmpsOptimized);
 }
@@ -360,8 +362,8 @@ BOOST_AUTO_TEST_CASE(test_naive_vs_optimized_stress) {
       std::vector<GsfComponent> cmpsOptimized = cmps;
       std::vector<GsfComponent> cmpsNaive = cmps;
 
-      reduceMixtureWithKLDistance(cmpsOptimized, targetSize, *surface);
-      reduceMixtureWithKLDistanceNaive(cmpsNaive, targetSize, *surface);
+      reduceMixtureWithKLDistance(gctx, cmpsOptimized, targetSize, *surface);
+      reduceMixtureWithKLDistanceNaive(gctx, cmpsNaive, targetSize, *surface);
       BOOST_REQUIRE_EQUAL(cmpsNaive.size(), targetSize);
 
       testReductionEquivalence(cmpsNaive, cmpsOptimized);

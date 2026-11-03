@@ -283,9 +283,14 @@ class MultiComponentBoundTrackParameters {
 
   /// Merge component mixture into a single set of parameters using the
   /// specified method.
+  /// Multiple-component merging currently supports global-spherical
+  /// coordinates.
+  /// @param gctx Geometry context used to select the bound parametrization
   /// @param method Method to use for merging the components into a single set of parameters
   /// @return Single component bound track parameters representing the mixture
-  BoundTrackParameters merge(ComponentMergeMethod method) const;
+  /// @throws std::system_error if the bound parametrization is unsupported
+  BoundTrackParameters merge(const GeometryContext& gctx,
+                             ComponentMergeMethod method) const;
 
   /// Clear all components from the multi-component parameters
   void clear();

@@ -17,7 +17,7 @@
 namespace Acts {
 
 BoundTrackParameters MultiComponentBoundTrackParameters::merge(
-    const ComponentMergeMethod method) const {
+    const GeometryContext& gctx, const ComponentMergeMethod method) const {
   if (empty()) {
     throw std::logic_error(
         "Cannot merge MultiComponentBoundTrackParameters with zero components");
@@ -32,7 +32,7 @@ BoundTrackParameters MultiComponentBoundTrackParameters::merge(
 
   if (!hasCovariance()) {
     const BoundVector singleParams = detail::Gsf::mergeGaussianMixtureParams(
-        std::views::iota(std::size_t{0}, size()),
+        gctx, std::views::iota(std::size_t{0}, size()),
         [this](const std::size_t i) -> std::tuple<double, const BoundVector&> {
           return {m_weights[i], m_parameters[i]};
         },
@@ -42,7 +42,7 @@ BoundTrackParameters MultiComponentBoundTrackParameters::merge(
   }
 
   const auto [singleParams, singleCov] = detail::Gsf::mergeGaussianMixture(
-      std::views::iota(std::size_t{0}, size()),
+      gctx, std::views::iota(std::size_t{0}, size()),
       [this](const std::size_t i)
           -> std::tuple<double, const BoundVector&, const BoundMatrix&> {
         return {m_weights[i], m_parameters[i], m_covariances[i]};

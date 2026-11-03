@@ -63,7 +63,8 @@ inline const Surface* voidSurfaceAccessor(const SourceLink& /*sourceLink*/) {
 }
 
 template <typename component_t>
-void voidComponentReducer(std::vector<component_t>& /*components*/,
+void voidComponentReducer(const GeometryContext& /*gctx*/,
+                          std::vector<component_t>& /*components*/,
                           std::size_t /*n*/, const Surface& /*surface*/) {
   throw std::runtime_error{"voidComponentReducer should not ever execute"};
 }

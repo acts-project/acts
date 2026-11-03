@@ -70,7 +70,8 @@ struct GsfExtensions {
   /// Type alias for component reducer delegate function
   //! [mixture reducer]
   using ComponentReducer =
-      Delegate<void(std::vector<GsfComponent> &, std::size_t, const Surface &)>;
+      Delegate<void(const GeometryContext &, std::vector<GsfComponent> &,
+                    std::size_t, const Surface &)>;
   //! [mixture reducer]
 
   /// The Calibrator is a dedicated calibration algorithm that allows

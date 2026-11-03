@@ -649,7 +649,8 @@ struct MultiStepperTester {
     auto res = multi_stepper.boundParameters(multi_state, *surface);
     BOOST_REQUIRE(res.ok());
 
-    const auto single_bound_pars = res->merge(ComponentMergeMethod::eMean);
+    const auto single_bound_pars =
+        res->merge(geoCtx, ComponentMergeMethod::eMean);
 
     // all components are equal, so the jacobian is the one of a single state
     SingleStepper single_stepper(defaultBField);
@@ -701,7 +702,8 @@ struct MultiStepperTester {
     multi_stepper.initialize(multi_state, multi_pars);
 
     const auto curv_pars = multi_stepper.curvilinearParameters(multi_state);
-    const auto single_curv_pars = curv_pars.merge(ComponentMergeMethod::eMean);
+    const auto single_curv_pars =
+        curv_pars.merge(geoCtx, ComponentMergeMethod::eMean);
 
     BOOST_CHECK(single_curv_pars.fourPosition(geoCtx).isApprox(
         check_pars.fourPosition(geoCtx), 1.e-8));
