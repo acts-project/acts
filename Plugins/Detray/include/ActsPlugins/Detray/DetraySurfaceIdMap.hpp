@@ -35,23 +35,23 @@ class DetraySurfaceIdMap {
   /// Type of a detray surface identifier (the detray geometry identifier)
   using DetrayId = detray::geometry::identifier::value_t;
 
+  /// Create an empty map
+  DetraySurfaceIdMap() = default;
+
   /// Build the map from the sensitive surfaces of a detray detector
   /// @tparam detector_t the detray detector type
   /// @param detector the detray detector converted from ACTS
-  /// @return the identifier map
   /// @throws std::invalid_argument if two sensitive surfaces share an ACTS
   ///         or a detray identifier
   template <detray::concepts::detector detector_t>
-  static DetraySurfaceIdMap fromDetector(const detector_t& detector) {
-    DetraySurfaceIdMap map;
+  explicit DetraySurfaceIdMap(const detector_t& detector) {
     for (const auto& surface : detector.surfaces()) {
       if (!surface.is_sensitive()) {
         continue;
       }
-      map.insert(surface.identifier().value(),
-                 Acts::GeometryIdentifier(surface.source));
+      insert(surface.identifier().value(),
+             Acts::GeometryIdentifier(surface.source));
     }
-    return map;
   }
 
   /// Add one surface to the map

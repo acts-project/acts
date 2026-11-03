@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceIdMapFromConversion) {
   BOOST_CHECK_EQUAL(nActsSensitive, map.size());
 
   // Building the map from the detector directly gives the same result
-  const auto rebuilt = DetraySurfaceIdMap::fromDetector(detector);
+  const DetraySurfaceIdMap rebuilt(detector);
   BOOST_CHECK_EQUAL(rebuilt.size(), map.size());
 }
 
