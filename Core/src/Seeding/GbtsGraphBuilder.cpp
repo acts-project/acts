@@ -76,7 +76,7 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
                      const std::array<SpacePointIndex, 3>& candidateTriplet,
                      const float tripletMinPt, const float tauRatio,
                      const float tauRatioCut, const float bFieldInZ,
-                     GbtsProfiler::TripletFailure* failure) {
+                     detail::GbtsTripletFailure* failure) {
   // conformal mapping with the center at the middle spacepoint
 
   std::array<float, 2> u{};
@@ -116,7 +116,7 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
 
   if (du == 0.0) {
     if (failure != nullptr) {
-      *failure = {GbtsProfiler::TripletCut::ValidationDegenerate, 0.f, 0.f};
+      *failure = {detail::GbtsTripletCut::ValidationDegenerate, 0.f, 0.f};
     }
     return false;
   }
@@ -129,7 +129,7 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
 
   if (std::abs(d0) > cfg.d0Max) {
     if (failure != nullptr) {
-      *failure = {GbtsProfiler::TripletCut::ValidationD0, std::abs(d0),
+      *failure = {detail::GbtsTripletCut::ValidationD0, std::abs(d0),
                   cfg.d0Max};
     }
     return false;
@@ -144,7 +144,7 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
 
     if (pT < tripletMinPt) {
       if (failure != nullptr) {
-        *failure = {GbtsProfiler::TripletCut::ValidationPt, pT, tripletMinPt};
+        *failure = {detail::GbtsTripletCut::ValidationPt, pT, tripletMinPt};
       }
       return false;
     }
@@ -153,7 +153,7 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
 
       if (tauRatio > 0.9f * tauRatioCut) {
         if (failure != nullptr) {
-          *failure = {GbtsProfiler::TripletCut::ValidationHighPtTauRatio,
+          *failure = {detail::GbtsTripletCut::ValidationHighPtTauRatio,
                       tauRatio, 0.9f * tauRatioCut};
         }
         return false;
@@ -294,8 +294,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
   };
 
   // profiling: a doublet or triplet some cut rejected, by the caller's indices
-  using DoubletCut = GbtsProfiler::DoubletCut;
-  using TripletCut = GbtsProfiler::TripletCut;
+  using DoubletCut = detail::GbtsDoubletCut;
+  using TripletCut = detail::GbtsTripletCut;
   [[maybe_unused]] const auto rejectDoublet =
       [&](const SpacePointIndex inner, const SpacePointIndex outer,
           const DoubletCut cut, const float value = 0.f,
@@ -832,7 +832,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
                 const std::array<SpacePointIndex, 3> candidateTriplet = {
                     n1Idx, n2Idx, pS->n2};
 
-                GbtsProfiler::TripletFailure failure;
+                detail::GbtsTripletFailure failure;
                 if (!validateTriplet(m_cfg, nodeView, candidateTriplet,
                                      tripletPtMin, absTauRatio,
                                      m_cfg.tauRatioCut, bFieldInZ,

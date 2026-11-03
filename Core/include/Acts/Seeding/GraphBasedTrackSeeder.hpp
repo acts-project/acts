@@ -127,10 +127,6 @@ class GraphBasedTrackSeeder {
                                                    Acts::Logging::Level::INFO),
                         std::shared_ptr<GbtsProfiler> profiler = nullptr);
 
-  /// The profiler handed in at construction.
-  /// @return The profiler, or null if there is none
-  const std::shared_ptr<GbtsProfiler>& profiler() const { return m_profiler; }
-
   /// Create an empty node storage matching this seeder's configuration.
   ///
   /// Fill it through GbtsNodeStorage::insert, then call

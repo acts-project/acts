@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Seeding/detail/GbtsProfilerTypes.hpp"
 
 #include <cstdint>
 #include <mutex>
@@ -19,6 +20,8 @@
 #include <vector>
 
 namespace Acts::Experimental {
+
+class GraphBasedTrackSeeder;
 
 /// Records what the GBTS cuts let through and what they reject, for studies of
 /// where seeds are lost.
@@ -33,136 +36,19 @@ namespace Acts::Experimental {
 /// cuts are applied. A pair or triplet that is never formed, because it falls
 /// outside the phi window or the layer connections, does not appear at all.
 ///
+/// What a record failed, or became of it, is a label to read with `name`. The
+/// labels' types are not part of the interface, nor are their values stable.
+///
 /// One busy event records on the order of ten million rejections, so a caller
 /// processing many events should take each event out once it is done with it.
 class GbtsProfiler {
  public:
-  /// Node cuts, applied when a space point is inserted.
-  enum class NodeCut : std::uint8_t {
-    /// Pixel endcap cluster wider than `maxEndcapClusterWidth`.
-    EndcapClusterWidth,
-  };
-
-  /// Doublet cuts, applied by `GbtsGraphBuilder` to the pairs in a phi window.
-  enum class DoubletCut : std::uint8_t {
-    /// The outer node has no outgoing link to cut its z0 against.
-    IsolatedOuterNode,
-    /// The radial separation is below `minDeltaRadius`.
-    MinDeltaRadius,
-    /// The pair's direction does not cross one of its strips.
-    StripCrossing,
-    /// |cot(theta)| above `maxAbsTau`.
-    MaxAbsTau,
-    /// Outside the inner node's cluster width tau window.
-    InnerTauWindow,
-    /// Outside the outer node's cluster width tau window.
-    OuterTauWindow,
-    /// z0 not in the outer node's z0 histogram.
-    Z0Histogram,
-    /// z0 outside [`minZ0`, `maxZ0`].
-    Z0Range,
-    /// z at `maxOuterRadius` outside the RoI.
-    ZAtOuterRadius,
-    /// |curvature| above the curvature cut.
-    Curvature,
-    /// No incoming edge of the outer node matched in tau.
-    MatchBeforeCreate,
-    /// The edge storage was full.
-    EdgeLimit,
-  };
-
-  /// Link cuts, applied by `GbtsGraphBuilder` to a new edge and an incoming
-  /// edge of its outer node.
-  enum class TripletCut : std::uint8_t {
-    /// |tau ratio| above the looser of the two layer pairs' tau ratio cuts.
-    TauRatio,
-    /// |dPhi| above `cutDPhiMax`.
-    DeltaPhi,
-    /// |dCurvature| above `cutDCurvMax`.
-    DeltaCurvature,
-    /// The tau ratio, dPhi and dCurvature, each divided by its cut, add up to
-    /// more than `sumRatioCutMax`.
-    SumRatio,
-    /// The barrel triplet validation could not fit the three points.
-    ValidationDegenerate,
-    /// The barrel triplet validation found |d0| above `d0Max`.
-    ValidationD0,
-    /// The barrel triplet validation found pT below its minimum.
-    ValidationPt,
-    /// The barrel triplet validation found a high pT triplet with a loose tau
-    /// ratio.
-    ValidationHighPtTauRatio,
-    /// Passed every cut, but the outer edge already has
-    /// `kGbtsMaxEdgeNeighbours` links.
-    NeighbourLimit,
-  };
-
-  /// Tracking filter cuts, applied while a path is extended by one edge, and
-  /// the post-fit cut on the complete chain.
-  enum class FilterCut : std::uint8_t {
-    /// chi2 in the transverse plane above `maxDChi2X`.
-    Chi2X,
-    /// chi2 in r-z above `maxDChi2Y`.
-    Chi2Y,
-    /// |curvature| of the updated state above `maxCurvature`.
-    Curvature,
-    /// |z0| of the updated state above `maxZ0`.
-    Z0,
-    /// |curvature| of a complete chain times `postFitCurvatureFactor` above
-    /// `maxCurvature`.
-    PostFitCurvature,
-  };
-
-  /// What became of an edge as the head of a path.
-  enum class HeadOutcome : std::uint8_t {
-    /// Its best path is a seed candidate.
-    Candidate,
-    /// It lies in a chain longer than `maxChainLength`.
-    ChainTooLong,
-    /// The longest path from it is shorter than the minimum seed length.
-    ChainTooShort,
-    /// The tracking filter rejected the edge itself.
-    FilterRejected,
-    /// The tracking filter cut every path from it short of the minimum, or the
-    /// post-fit curvature cut rejected those that got there.
-    NoPathSurvived,
-  };
-
-  /// What became of a seed candidate.
-  enum class CandidateFate : std::uint8_t {
-    /// Output as a seed.
-    Seed,
-    /// Output as two seeds, each dropping one space point.
-    Split,
-    /// Removed as a clone of a better candidate.
-    Clone,
-    /// Dropped for having fewer than three space points.
-    TooFewSpacePoints,
-  };
-
-  /// Why a check rejected a candidate, filled in by the check for the caller
-  /// to record.
-  /// @tparam Cut The cut enumeration of the check
-  template <typename Cut>
-  struct Failure {
-    /// The cut it failed.
-    Cut cut{};
-    /// The value cut on.
-    float value{};
-    /// The threshold it failed, zero for a cut without one.
-    float threshold{};
-  };
-  /// Why the barrel triplet validation rejected a triplet.
-  using TripletFailure = Failure<TripletCut>;
-  /// Why the tracking filter rejected an edge.
-  using FilterFailure = Failure<FilterCut>;
-
   /// A rejected space point.
   struct Node {
     /// The space point.
     SpacePointIndex spacePoint{};
     /// The cut it failed.
-    NodeCut cut{};
+    detail::GbtsNodeCut cut{};
     /// The value cut on, e.g. the cluster width.
     float value{};
     /// The threshold it failed.
@@ -184,8 +70,8 @@ class GbtsProfiler {
     /// The outer space point.
     SpacePointIndex outer{};
     /// The cut it failed.
-    DoubletCut cut{};
-    /// The value cut on, e.g. the curvature for `DoubletCut::Curvature`.
+    detail::GbtsDoubletCut cut{};
+    /// The value cut on, e.g. the curvature for the `Curvature` cut.
     float value{};
     /// The threshold it failed, zero for a cut without one.
     float threshold{};
@@ -210,8 +96,8 @@ class GbtsProfiler {
     /// The outer space point.
     SpacePointIndex outer{};
     /// The cut it failed.
-    TripletCut cut{};
-    /// The value cut on, e.g. |tau ratio| for `TripletCut::TauRatio`.
+    detail::GbtsTripletCut cut{};
+    /// The value cut on, e.g. |tau ratio| for the `TauRatio` cut.
     float value{};
     /// The threshold it failed, zero for a cut without one.
     float threshold{};
@@ -224,7 +110,7 @@ class GbtsProfiler {
     /// The outer space point of the edge.
     SpacePointIndex outer{};
     /// What became of it.
-    HeadOutcome outcome{};
+    detail::GbtsHeadOutcome outcome{};
     /// Edges on the longest path from it inwards, itself included.
     std::uint32_t maxPathLength{};
   };
@@ -243,7 +129,7 @@ class GbtsProfiler {
     /// The outer space point of that edge.
     SpacePointIndex outer{};
     /// The cut it failed.
-    FilterCut cut{};
+    detail::GbtsFilterCut cut{};
     /// Edges on the path before the failed one.
     std::uint32_t pathLength{};
     /// The value cut on.
@@ -263,7 +149,7 @@ class GbtsProfiler {
     /// The quality the clone removal ranks by, lower is better.
     float quality{};
     /// What became of it.
-    CandidateFate fate{};
+    detail::GbtsCandidateFate fate{};
     /// Its space points that better candidates own; it is a clone when
     /// more than `shareThreshold` of `spacePoints` are.
     std::uint32_t nShared{};
@@ -306,10 +192,6 @@ class GbtsProfiler {
   /// @param eventNumber The event number
   void setEventNumber(std::uint64_t eventNumber);
 
-  /// Add an event under the calling thread's event number. Thread safe.
-  /// @param event The event to add
-  void add(Event&& event);
-
   /// Take an event out. Thread safe.
   /// @param eventNumber Event number it was recorded with
   /// @return The event, or nothing if no event has that number. Of several
@@ -322,24 +204,43 @@ class GbtsProfiler {
 
   /// @param cut The cut
   /// @return Its name
-  static std::string_view name(NodeCut cut);
+  static std::string_view name(detail::GbtsNodeCut cut);
   /// @param cut The cut
   /// @return Its name
-  static std::string_view name(DoubletCut cut);
+  static std::string_view name(detail::GbtsDoubletCut cut);
   /// @param cut The cut
   /// @return Its name
-  static std::string_view name(TripletCut cut);
+  static std::string_view name(detail::GbtsTripletCut cut);
   /// @param cut The cut
   /// @return Its name
-  static std::string_view name(FilterCut cut);
+  static std::string_view name(detail::GbtsFilterCut cut);
   /// @param outcome The outcome
   /// @return Its name
-  static std::string_view name(HeadOutcome outcome);
+  static std::string_view name(detail::GbtsHeadOutcome outcome);
   /// @param fate The fate
   /// @return Its name
-  static std::string_view name(CandidateFate fate);
+  static std::string_view name(detail::GbtsCandidateFate fate);
+
+  /// @return The name of every node cut
+  static std::vector<std::string_view> nodeCutNames();
+  /// @return The name of every doublet cut
+  static std::vector<std::string_view> doubletCutNames();
+  /// @return The name of every triplet cut
+  static std::vector<std::string_view> tripletCutNames();
+  /// @return The name of every tracking filter cut
+  static std::vector<std::string_view> filterCutNames();
+  /// @return The name of every path head outcome
+  static std::vector<std::string_view> headOutcomeNames();
+  /// @return The name of every candidate fate
+  static std::vector<std::string_view> candidateFateNames();
 
  private:
+  friend class GraphBasedTrackSeeder;
+
+  /// Add an event under the calling thread's event number. Thread safe.
+  /// @param event The event to add
+  void add(Event&& event);
+
   std::mutex m_mutex;
   std::vector<Event> m_events;
   std::unordered_map<std::thread::id, std::uint64_t> m_eventNumbers;

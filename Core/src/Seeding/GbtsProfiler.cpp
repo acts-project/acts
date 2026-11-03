@@ -13,6 +13,22 @@
 
 namespace Acts::Experimental {
 
+namespace {
+
+/// The names of a label type in the order of its values: the first value
+/// without a name is past the last.
+template <typename Label>
+std::vector<std::string_view> allNames() {
+  std::vector<std::string_view> names;
+  for (std::uint8_t value = 0;
+       GbtsProfiler::name(static_cast<Label>(value)) != "Unknown"; ++value) {
+    names.push_back(GbtsProfiler::name(static_cast<Label>(value)));
+  }
+  return names;
+}
+
+}  // namespace
+
 void GbtsProfiler::setEventNumber(const std::uint64_t eventNumber) {
   const std::scoped_lock lock(m_mutex);
   m_eventNumbers[std::this_thread::get_id()] = eventNumber;
@@ -41,112 +57,136 @@ std::vector<GbtsProfiler::Event> GbtsProfiler::takeAll() {
   return std::exchange(m_events, {});
 }
 
-std::string_view GbtsProfiler::name(const NodeCut cut) {
+std::string_view GbtsProfiler::name(const detail::GbtsNodeCut cut) {
   switch (cut) {
-    case NodeCut::EndcapClusterWidth:
+    case detail::GbtsNodeCut::EndcapClusterWidth:
       return "EndcapClusterWidth";
   }
   return "Unknown";
 }
 
-std::string_view GbtsProfiler::name(const DoubletCut cut) {
+std::string_view GbtsProfiler::name(const detail::GbtsDoubletCut cut) {
   switch (cut) {
-    case DoubletCut::IsolatedOuterNode:
+    case detail::GbtsDoubletCut::IsolatedOuterNode:
       return "IsolatedOuterNode";
-    case DoubletCut::MinDeltaRadius:
+    case detail::GbtsDoubletCut::MinDeltaRadius:
       return "MinDeltaRadius";
-    case DoubletCut::StripCrossing:
+    case detail::GbtsDoubletCut::StripCrossing:
       return "StripCrossing";
-    case DoubletCut::MaxAbsTau:
+    case detail::GbtsDoubletCut::MaxAbsTau:
       return "MaxAbsTau";
-    case DoubletCut::InnerTauWindow:
+    case detail::GbtsDoubletCut::InnerTauWindow:
       return "InnerTauWindow";
-    case DoubletCut::OuterTauWindow:
+    case detail::GbtsDoubletCut::OuterTauWindow:
       return "OuterTauWindow";
-    case DoubletCut::Z0Histogram:
+    case detail::GbtsDoubletCut::Z0Histogram:
       return "Z0Histogram";
-    case DoubletCut::Z0Range:
+    case detail::GbtsDoubletCut::Z0Range:
       return "Z0Range";
-    case DoubletCut::ZAtOuterRadius:
+    case detail::GbtsDoubletCut::ZAtOuterRadius:
       return "ZAtOuterRadius";
-    case DoubletCut::Curvature:
+    case detail::GbtsDoubletCut::Curvature:
       return "Curvature";
-    case DoubletCut::MatchBeforeCreate:
+    case detail::GbtsDoubletCut::MatchBeforeCreate:
       return "MatchBeforeCreate";
-    case DoubletCut::EdgeLimit:
+    case detail::GbtsDoubletCut::EdgeLimit:
       return "EdgeLimit";
   }
   return "Unknown";
 }
 
-std::string_view GbtsProfiler::name(const TripletCut cut) {
+std::string_view GbtsProfiler::name(const detail::GbtsTripletCut cut) {
   switch (cut) {
-    case TripletCut::TauRatio:
+    case detail::GbtsTripletCut::TauRatio:
       return "TauRatio";
-    case TripletCut::DeltaPhi:
+    case detail::GbtsTripletCut::DeltaPhi:
       return "DeltaPhi";
-    case TripletCut::DeltaCurvature:
+    case detail::GbtsTripletCut::DeltaCurvature:
       return "DeltaCurvature";
-    case TripletCut::SumRatio:
+    case detail::GbtsTripletCut::SumRatio:
       return "SumRatio";
-    case TripletCut::ValidationDegenerate:
+    case detail::GbtsTripletCut::ValidationDegenerate:
       return "ValidationDegenerate";
-    case TripletCut::ValidationD0:
+    case detail::GbtsTripletCut::ValidationD0:
       return "ValidationD0";
-    case TripletCut::ValidationPt:
+    case detail::GbtsTripletCut::ValidationPt:
       return "ValidationPt";
-    case TripletCut::ValidationHighPtTauRatio:
+    case detail::GbtsTripletCut::ValidationHighPtTauRatio:
       return "ValidationHighPtTauRatio";
-    case TripletCut::NeighbourLimit:
+    case detail::GbtsTripletCut::NeighbourLimit:
       return "NeighbourLimit";
   }
   return "Unknown";
 }
 
-std::string_view GbtsProfiler::name(const FilterCut cut) {
+std::string_view GbtsProfiler::name(const detail::GbtsFilterCut cut) {
   switch (cut) {
-    case FilterCut::Chi2X:
+    case detail::GbtsFilterCut::Chi2X:
       return "Chi2X";
-    case FilterCut::Chi2Y:
+    case detail::GbtsFilterCut::Chi2Y:
       return "Chi2Y";
-    case FilterCut::Curvature:
+    case detail::GbtsFilterCut::Curvature:
       return "Curvature";
-    case FilterCut::Z0:
+    case detail::GbtsFilterCut::Z0:
       return "Z0";
-    case FilterCut::PostFitCurvature:
+    case detail::GbtsFilterCut::PostFitCurvature:
       return "PostFitCurvature";
   }
   return "Unknown";
 }
 
-std::string_view GbtsProfiler::name(const HeadOutcome outcome) {
+std::string_view GbtsProfiler::name(const detail::GbtsHeadOutcome outcome) {
   switch (outcome) {
-    case HeadOutcome::Candidate:
+    case detail::GbtsHeadOutcome::Candidate:
       return "Candidate";
-    case HeadOutcome::ChainTooLong:
+    case detail::GbtsHeadOutcome::ChainTooLong:
       return "ChainTooLong";
-    case HeadOutcome::ChainTooShort:
+    case detail::GbtsHeadOutcome::ChainTooShort:
       return "ChainTooShort";
-    case HeadOutcome::FilterRejected:
+    case detail::GbtsHeadOutcome::FilterRejected:
       return "FilterRejected";
-    case HeadOutcome::NoPathSurvived:
+    case detail::GbtsHeadOutcome::NoPathSurvived:
       return "NoPathSurvived";
   }
   return "Unknown";
 }
 
-std::string_view GbtsProfiler::name(const CandidateFate fate) {
+std::string_view GbtsProfiler::name(const detail::GbtsCandidateFate fate) {
   switch (fate) {
-    case CandidateFate::Seed:
+    case detail::GbtsCandidateFate::Seed:
       return "Seed";
-    case CandidateFate::Split:
+    case detail::GbtsCandidateFate::Split:
       return "Split";
-    case CandidateFate::Clone:
+    case detail::GbtsCandidateFate::Clone:
       return "Clone";
-    case CandidateFate::TooFewSpacePoints:
+    case detail::GbtsCandidateFate::TooFewSpacePoints:
       return "TooFewSpacePoints";
   }
   return "Unknown";
+}
+
+std::vector<std::string_view> GbtsProfiler::nodeCutNames() {
+  return allNames<detail::GbtsNodeCut>();
+}
+
+std::vector<std::string_view> GbtsProfiler::doubletCutNames() {
+  return allNames<detail::GbtsDoubletCut>();
+}
+
+std::vector<std::string_view> GbtsProfiler::tripletCutNames() {
+  return allNames<detail::GbtsTripletCut>();
+}
+
+std::vector<std::string_view> GbtsProfiler::filterCutNames() {
+  return allNames<detail::GbtsFilterCut>();
+}
+
+std::vector<std::string_view> GbtsProfiler::headOutcomeNames() {
+  return allNames<detail::GbtsHeadOutcome>();
+}
+
+std::vector<std::string_view> GbtsProfiler::candidateFateNames() {
+  return allNames<detail::GbtsCandidateFate>();
 }
 
 }  // namespace Acts::Experimental

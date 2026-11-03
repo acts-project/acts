@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
-#include "Acts/Seeding/GbtsProfiler.hpp"
 #include "Acts/Seeding/detail/GbtsFilterTypes.hpp"
+#include "Acts/Seeding/detail/GbtsProfilerTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -108,13 +108,13 @@ class GbtsTrackingFilter final {
   /// @return Success flag
   bool update(const detail::GbtsNodeView& nodeView, const detail::GbtsEdge& pS,
               detail::GbtsEdgeState& ts,
-              GbtsProfiler::FilterFailure& failure) const;
+              detail::GbtsFilterFailure& failure) const;
 
   /// Both `update`s, with the failure reported only if not null.
   template <bool kProfile>
   bool updateImpl(const detail::GbtsNodeView& nodeView,
                   const detail::GbtsEdge& pS, detail::GbtsEdgeState& ts,
-                  GbtsProfiler::FilterFailure* failure) const;
+                  detail::GbtsFilterFailure* failure) const;
 
   /// Get layer type from layer index
   /// @param layerIndex Layer index

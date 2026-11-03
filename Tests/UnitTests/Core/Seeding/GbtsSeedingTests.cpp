@@ -18,6 +18,7 @@
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
+#include "Acts/Seeding/detail/GbtsProfilerTypes.hpp"
 
 #include <algorithm>
 #include <array>
@@ -30,6 +31,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -918,7 +920,7 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   std::size_t nCandidateHeads = 0;
   for (const auto& head : event->heads) {
     BOOST_CHECK(edges.contains({head.inner, head.outer}));
-    if (head.outcome == Experimental::GbtsProfiler::HeadOutcome::Candidate) {
+    if (head.outcome == Experimental::detail::GbtsHeadOutcome::Candidate) {
       ++nCandidateHeads;
     }
   }
@@ -943,7 +945,7 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   std::size_t nOutput = 0;
   std::size_t nClones = 0;
   for (const auto& candidate : event->candidates) {
-    using enum Experimental::GbtsProfiler::CandidateFate;
+    using enum Experimental::detail::GbtsCandidateFate;
     nOutput += candidate.fate == Seed ? 1 : candidate.fate == Split ? 2 : 0;
     if (candidate.fate == Clone) {
       ++nClones;
@@ -955,7 +957,7 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   // a clone shares more than the threshold with better candidates, the one
   // it is a clone of among them; a kept candidate shares no more than that
   for (const auto& candidate : event->candidates) {
-    using enum Experimental::GbtsProfiler::CandidateFate;
+    using enum Experimental::detail::GbtsCandidateFate;
     if (candidate.fate == TooFewSpacePoints) {
       continue;
     }
@@ -1018,8 +1020,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheCutThatRejects) {
       continue;
     }
     ++nTrueTriplets;
-    BOOST_CHECK(triplet.cut ==
-                Experimental::GbtsProfiler::TripletCut::TauRatio);
+    BOOST_CHECK(triplet.cut == Experimental::detail::GbtsTripletCut::TauRatio);
     BOOST_CHECK_GT(triplet.value, triplet.threshold);
   }
   BOOST_CHECK_EQUAL(nTrueTriplets, tracks.size());
@@ -1031,7 +1032,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheCutThatRejects) {
     }
     ++nTrueDoublets;
     BOOST_CHECK(doublet.cut ==
-                Experimental::GbtsProfiler::DoubletCut::IsolatedOuterNode);
+                Experimental::detail::GbtsDoubletCut::IsolatedOuterNode);
   }
   BOOST_CHECK_EQUAL(nTrueDoublets, tracks.size());
   BOOST_CHECK_EQUAL(event.edges.size(), 2 * tracks.size());
@@ -1040,7 +1041,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheCutThatRejects) {
   BOOST_CHECK(!event.heads.empty());
   for (const auto& head : event.heads) {
     BOOST_CHECK(head.outcome ==
-                Experimental::GbtsProfiler::HeadOutcome::ChainTooShort);
+                Experimental::detail::GbtsHeadOutcome::ChainTooShort);
   }
   BOOST_CHECK(event.candidates.empty());
 }
@@ -1048,22 +1049,64 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheCutThatRejects) {
 // Threads processing different events share a profiler without taking each
 // other's event numbers.
 BOOST_AUTO_TEST_CASE(ProfilerKeepsAnEventNumberPerThread) {
-  Experimental::GbtsProfiler profiler;
-  profiler.setEventNumber(1);
+  const ToyDetector detector = barrelDetector();
+  const std::vector<Track> tracks = makeSparseTracks();
+  const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
 
-  std::thread other([&profiler]() {
-    profiler.setEventNumber(2);
-    profiler.add(Experimental::GbtsProfiler::Event{});
+  auto profiler = std::make_shared<Experimental::GbtsProfiler>();
+  const SeederSetup setup = makeSeeder(detector, true, false, profiler);
+  const auto runEvent = [&]() {
+    SeedContainer seeds;
+    seeds.assignSpacePointContainer(spacePoints);
+    setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                             setup.filter, setup.options, seeds);
+  };
+
+  profiler->setEventNumber(1);
+  std::thread other([&]() {
+    profiler->setEventNumber(2);
+    runEvent();
   });
   other.join();
-  profiler.add(Experimental::GbtsProfiler::Event{});
+  runEvent();
 
   // added last, so this is the first thread's number surviving the other's
   const std::vector<Experimental::GbtsProfiler::Event> events =
-      profiler.takeAll();
+      profiler->takeAll();
   BOOST_REQUIRE_EQUAL(events.size(), 2u);
   BOOST_CHECK_EQUAL(events[0].eventNumber, 2u);
   BOOST_CHECK_EQUAL(events[1].eventNumber, 1u);
+}
+
+// The name lists hold every label, including the first and last of each type,
+// in the order of the labels' values.
+BOOST_AUTO_TEST_CASE(ProfilerListsTheLabelNames) {
+  using Profiler = Experimental::GbtsProfiler;
+  namespace detail = Experimental::detail;
+
+  const auto check = [](const std::vector<std::string_view>& names,
+                        const std::string_view first,
+                        const std::string_view last, const auto lastLabel) {
+    BOOST_REQUIRE(!names.empty());
+    BOOST_CHECK_EQUAL(names.front(), first);
+    BOOST_CHECK_EQUAL(names.back(), last);
+    BOOST_CHECK_EQUAL(names.size(), static_cast<std::size_t>(lastLabel) + 1u);
+    BOOST_CHECK_EQUAL(Profiler::name(lastLabel), last);
+    BOOST_CHECK(std::ranges::find(names, "Unknown") == names.end());
+  };
+
+  check(Profiler::nodeCutNames(), "EndcapClusterWidth", "EndcapClusterWidth",
+        detail::GbtsNodeCut::EndcapClusterWidth);
+  check(Profiler::doubletCutNames(), "IsolatedOuterNode", "EdgeLimit",
+        detail::GbtsDoubletCut::EdgeLimit);
+  check(Profiler::tripletCutNames(), "TauRatio", "NeighbourLimit",
+        detail::GbtsTripletCut::NeighbourLimit);
+  check(Profiler::filterCutNames(), "Chi2X", "PostFitCurvature",
+        detail::GbtsFilterCut::PostFitCurvature);
+  check(Profiler::headOutcomeNames(), "Candidate", "NoPathSurvived",
+        detail::GbtsHeadOutcome::NoPathSurvived);
+  check(Profiler::candidateFateNames(), "Seed", "TooFewSpacePoints",
+        detail::GbtsCandidateFate::TooFewSpacePoints);
 }
 
 // At a threshold of zero the sum of ratios rejects what the separate cuts let
@@ -1087,7 +1130,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheSumRatioCut) {
 
   std::size_t nRejected = 0;
   for (const auto& triplet : events.front().rejectedTriplets) {
-    if (triplet.cut != Experimental::GbtsProfiler::TripletCut::SumRatio) {
+    if (triplet.cut != Experimental::detail::GbtsTripletCut::SumRatio) {
       continue;
     }
     ++nRejected;
@@ -1126,7 +1169,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsThePostFitCurvatureCut) {
   std::size_t nRejected = 0;
   for (const auto& rejection : event.filterRejections) {
     if (rejection.cut !=
-        Experimental::GbtsProfiler::FilterCut::PostFitCurvature) {
+        Experimental::detail::GbtsFilterCut::PostFitCurvature) {
       continue;
     }
     ++nRejected;
@@ -1144,8 +1187,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsThePostFitCurvatureCut) {
 
   std::size_t nNoPathSurvived = 0;
   for (const auto& head : event.heads) {
-    if (head.outcome ==
-        Experimental::GbtsProfiler::HeadOutcome::NoPathSurvived) {
+    if (head.outcome == Experimental::detail::GbtsHeadOutcome::NoPathSurvived) {
       ++nNoPathSurvived;
     }
   }
