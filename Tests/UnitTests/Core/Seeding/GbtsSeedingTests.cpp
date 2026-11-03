@@ -390,10 +390,14 @@ struct SeederSetup {
 ///              purpose: the log failure threshold makes the warning that says
 ///              so an error, and a level above it cannot be asked for either
 /// @param profiler handed to the seeder, if not null
+/// @param sumRatioCutMax turns the sum of ratios linking cut on at this value
+/// @param postFitCurvatureFactor the seeder's post-fit curvature factor
 SeederSetup makeSeeder(
     const ToyDetector& detector, const bool calibrateStrips = true,
     const bool quiet = false,
-    std::shared_ptr<Experimental::GbtsProfiler> profiler = nullptr) {
+    std::shared_ptr<Experimental::GbtsProfiler> profiler = nullptr,
+    const std::optional<float> sumRatioCutMax = std::nullopt,
+    const float postFitCurvatureFactor = 0.f) {
   auto geometry = makeGeometry(detector);
 
   const auto makeLogger = [quiet]() -> std::unique_ptr<const Logger> {
@@ -404,6 +408,7 @@ SeederSetup makeSeeder(
   Experimental::GraphBasedTrackSeeder::Config config;
   // the toy setup has no tau lookup table and no cluster widths
   config.useClusterWidthCuts = false;
+  config.postFitCurvatureFactor = postFitCurvatureFactor;
 
   Experimental::GbtsGraphBuilder::Config graphConfig;
   graphConfig.minPt = 1_GeV;
@@ -411,6 +416,10 @@ SeederSetup makeSeeder(
   graphConfig.maxZ0 = kBarrelHalfZ;
   graphConfig.maxOuterRadius = detector.maxOuterRadius;
   graphConfig.calibrateStrips = calibrateStrips;
+  if (sumRatioCutMax.has_value()) {
+    graphConfig.useSumRatioCut = true;
+    graphConfig.sumRatioCutMax = *sumRatioCutMax;
+  }
 
   return SeederSetup{
       .seeder = Experimental::GraphBasedTrackSeeder(
@@ -1033,6 +1042,92 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheCutThatRejects) {
                 Experimental::GbtsProfiler::HeadOutcome::ChainTooShort);
   }
   BOOST_CHECK(event.candidates.empty());
+}
+
+// At a threshold of zero the sum of ratios rejects what the separate cuts let
+// through, so that is what the profiler must name.
+BOOST_AUTO_TEST_CASE(ProfilerRecordsTheSumRatioCut) {
+  const ToyDetector detector = barrelDetector();
+  const std::vector<Track> tracks = makeDenseTracks();
+  const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
+
+  auto profiler = std::make_shared<Experimental::GbtsProfiler>();
+  const SeederSetup setup =
+      makeSeeder(detector, /*calibrateStrips=*/true, /*quiet=*/true, profiler,
+                 /*sumRatioCutMax=*/0.f);
+  SeedContainer seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+  setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                           setup.filter, setup.options, seeds);
+
+  std::vector<Experimental::GbtsProfiler::Event> events = profiler->takeAll();
+  BOOST_REQUIRE_EQUAL(events.size(), 1u);
+
+  std::size_t nRejected = 0;
+  for (const auto& triplet : events.front().rejectedTriplets) {
+    if (triplet.cut != Experimental::GbtsProfiler::TripletCut::SumRatio) {
+      continue;
+    }
+    ++nRejected;
+    BOOST_CHECK_GT(triplet.value, 0.f);
+    BOOST_CHECK_EQUAL(triplet.threshold, 0.f);
+  }
+  BOOST_CHECK_GT(nRejected, 0u);
+}
+
+// A factor this large rejects a complete chain, recorded with the space points
+// of the whole chain, for any curvature its fit finds. The toy tracks are
+// straight, so a few fits find exactly zero, which no factor rejects: seeds are
+// lost, but not all of them.
+BOOST_AUTO_TEST_CASE(ProfilerRecordsThePostFitCurvatureCut) {
+  const ToyDetector detector = barrelDetector();
+  const std::vector<Track> tracks = makeDenseTracks();
+  const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
+
+  auto profiler = std::make_shared<Experimental::GbtsProfiler>();
+  const SeederSetup setup =
+      makeSeeder(detector, /*calibrateStrips=*/true, /*quiet=*/true, profiler,
+                 /*sumRatioCutMax=*/std::nullopt,
+                 /*postFitCurvatureFactor=*/1e12f);
+  SeedContainer seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+  setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                           setup.filter, setup.options, seeds);
+  BOOST_CHECK_LT(seeds.size(), runSeeding(detector, spacePoints).size());
+
+  std::vector<Experimental::GbtsProfiler::Event> events = profiler->takeAll();
+  BOOST_REQUIRE_EQUAL(events.size(), 1u);
+  const Experimental::GbtsProfiler::Event& event = events.front();
+
+  const float maxCurvature =
+      Experimental::GbtsTrackingFilter::Config{}.maxCurvature;
+  std::size_t nRejected = 0;
+  for (const auto& rejection : event.filterRejections) {
+    if (rejection.cut !=
+        Experimental::GbtsProfiler::FilterCut::PostFitCurvature) {
+      continue;
+    }
+    ++nRejected;
+    BOOST_CHECK_GT(rejection.value, rejection.threshold);
+    BOOST_CHECK_EQUAL(rejection.threshold, maxCurvature);
+
+    const auto& chain = rejection.spacePoints;
+    BOOST_REQUIRE_EQUAL(chain.size(), rejection.pathLength + 2u);
+    BOOST_CHECK_EQUAL(chain[0], rejection.inner);
+    BOOST_CHECK_EQUAL(chain[1], rejection.outer);
+    BOOST_CHECK_EQUAL(chain[chain.size() - 2], rejection.headInner);
+    BOOST_CHECK_EQUAL(chain.back(), rejection.headOuter);
+  }
+  BOOST_CHECK_GT(nRejected, 0u);
+
+  std::size_t nNoPathSurvived = 0;
+  for (const auto& head : event.heads) {
+    if (head.outcome ==
+        Experimental::GbtsProfiler::HeadOutcome::NoPathSurvived) {
+      ++nNoPathSurvived;
+    }
+  }
+  BOOST_CHECK_GT(nNoPathSurvived, 0u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

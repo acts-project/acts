@@ -77,6 +77,9 @@ class GbtsProfiler {
     DeltaPhi,
     /// |dCurvature| above `cutDCurvMax`.
     DeltaCurvature,
+    /// The tau ratio, dPhi and dCurvature, each divided by its cut, add up to
+    /// more than `sumRatioCutMax`.
+    SumRatio,
     /// The barrel triplet validation could not fit the three points.
     ValidationDegenerate,
     /// The barrel triplet validation found |d0| above `d0Max`.
@@ -91,7 +94,8 @@ class GbtsProfiler {
     NeighbourLimit,
   };
 
-  /// Tracking filter cuts, applied while a path is extended by one edge.
+  /// Tracking filter cuts, applied while a path is extended by one edge, and
+  /// the post-fit cut on the complete chain.
   enum class FilterCut : std::uint8_t {
     /// chi2 in the transverse plane above `maxDChi2X`.
     Chi2X,
@@ -101,6 +105,9 @@ class GbtsProfiler {
     Curvature,
     /// |z0| of the updated state above `maxZ0`.
     Z0,
+    /// |curvature| of a complete chain times `postFitCurvatureFactor` above
+    /// `maxCurvature`.
+    PostFitCurvature,
   };
 
   /// What became of an edge as the head of a path.
@@ -113,7 +120,8 @@ class GbtsProfiler {
     ChainTooShort,
     /// The tracking filter rejected the edge itself.
     FilterRejected,
-    /// The tracking filter cut every path from it short of the minimum.
+    /// The tracking filter cut every path from it short of the minimum, or the
+    /// post-fit curvature cut rejected those that got there.
     NoPathSurvived,
   };
 
@@ -218,7 +226,9 @@ class GbtsProfiler {
     std::uint32_t maxPathLength{};
   };
 
-  /// A path the tracking filter cut short.
+  /// A path the tracking filter cut short, or a complete chain the post-fit
+  /// curvature cut rejected, whose innermost edge then counts as the failed
+  /// one.
   struct FilterRejection {
     /// The inner space point of the head edge the path started from.
     SpacePointIndex headInner{};

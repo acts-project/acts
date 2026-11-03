@@ -813,12 +813,17 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
               }
 
               // marginal in all three at once
-              if (m_cfg.useSumRatioCut &&
-                  absTauRatio / tauRatioCut +
-                          std::abs(dPhi) / m_cfg.cutDPhiMax +
-                          std::abs(dcurv) / m_cfg.cutDCurvMax >
-                      m_cfg.sumRatioCutMax) {
-                continue;
+              if (m_cfg.useSumRatioCut) {
+                const float sumRatio = absTauRatio / tauRatioCut +
+                                       std::abs(dPhi) / m_cfg.cutDPhiMax +
+                                       std::abs(dcurv) / m_cfg.cutDCurvMax;
+                if (sumRatio > m_cfg.sumRatioCutMax) {
+                  if constexpr (kProfile) {
+                    rejectTriplet(n1Idx, n2Idx, pS->n2, TripletCut::SumRatio,
+                                  sumRatio, m_cfg.sumRatioCutMax);
+                  }
+                  continue;
+                }
               }
 
               // final check: cuts on pT and d0

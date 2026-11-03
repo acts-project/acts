@@ -81,6 +81,8 @@ std::string_view GbtsProfiler::name(const TripletCut cut) {
       return "DeltaPhi";
     case TripletCut::DeltaCurvature:
       return "DeltaCurvature";
+    case TripletCut::SumRatio:
+      return "SumRatio";
     case TripletCut::ValidationDegenerate:
       return "ValidationDegenerate";
     case TripletCut::ValidationD0:
@@ -105,6 +107,8 @@ std::string_view GbtsProfiler::name(const FilterCut cut) {
       return "Curvature";
     case FilterCut::Z0:
       return "Z0";
+    case FilterCut::PostFitCurvature:
+      return "PostFitCurvature";
   }
   return "Unknown";
 }

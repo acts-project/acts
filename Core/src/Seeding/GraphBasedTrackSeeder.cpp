@@ -564,8 +564,18 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
           m_cfg.postFitCurvatureFactor > 0 &&
           std::abs(state.x[2]) * m_cfg.postFitCurvatureFactor >
               filter.m_cfg.maxCurvature;
-      if (!maxCurvatureCut && path.size() >= minLength &&
-          quality < bestQuality) {
+      if (maxCurvatureCut) {
+        if constexpr (kProfile) {
+          // recorded like an edge that failed to extend the path, which does
+          // not hold that edge yet
+          failure = {GbtsProfiler::FilterCut::PostFitCurvature,
+                     std::abs(state.x[2]) * m_cfg.postFitCurvatureFactor,
+                     filter.m_cfg.maxCurvature};
+          path.pop_back();
+          rejectEdge(e, static_cast<std::uint32_t>(path.size()));
+          path.push_back(e);
+        }
+      } else if (path.size() >= minLength && quality < bestQuality) {
         bestQuality = quality;
         bestState = state;
         bestPath = path;
