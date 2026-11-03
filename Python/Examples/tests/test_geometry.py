@@ -129,8 +129,8 @@ def test_geometry_visitor(trk_geo):
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
-def test_odd_gen1(odd_detector):
-    trackingGeometry = odd_detector.trackingGeometry()
+def test_odd_gen1(odd_detector_gen1):
+    trackingGeometry = odd_detector_gen1.trackingGeometry()
 
     visitor = CountingVisitor()
     trackingGeometry.apply(visitor)
