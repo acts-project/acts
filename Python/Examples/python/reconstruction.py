@@ -255,6 +255,12 @@ HashingAlgorithmConfigArg = namedtuple(
     defaults=[None] * 3,
 )
 
+GbtsConfigArg = namedtuple(
+    "GbtsConfig",
+    ["seederConfig", "graphConfig", "useAdaptiveCuts"],
+    defaults=[None] * 3,
+)
+
 
 class VertexFinder(Enum):
     Truth = (1,)
@@ -272,6 +278,7 @@ class VertexFinder(Enum):
     seedingAlgorithmConfigArg=SeedingAlgorithmConfigArg,
     hashingTrainingConfigArg=HashingTrainingConfigArg,
     hashingAlgorithmConfigArg=HashingAlgorithmConfigArg,
+    gbtsConfigArg=GbtsConfigArg,
     logLevel=acts.logging.Level,
 )
 def addSeeding(
@@ -304,6 +311,7 @@ def addSeeding(
     hashingAlgorithmConfigArg: Optional[
         HashingAlgorithmConfigArg
     ] = HashingAlgorithmConfigArg(),
+    gbtsConfigArg: GbtsConfigArg = GbtsConfigArg(),
     particleHypothesis: Optional[
         acts.ParticleHypothesis
     ] = acts.ParticleHypothesis.pion,
@@ -361,6 +369,10 @@ def addSeeding(
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp
     hashingAlgorithmConfigArg : HashingAlgorithmConfigArg(bucketSize, zBins, phiBins)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp
+    gbtsConfigArg : GbtsConfigArg(seederConfig, graphConfig, useAdaptiveCuts)
+                                A given config is used as is, otherwise the default one, the graphConfig with minPt from seedFinderConfigArg.
+                                Defaults specified in Core/include/Acts/Seeding/GraphBasedTrackSeeder.hpp, GbtsGraphBuilder.hpp and
+                                Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp
     particleHypothesis : Optional[acts.ParticleHypothesis]
         The hypothesis used for track finding. Defaults to pion.
     inputParticles : str, "particles"
@@ -482,6 +494,7 @@ def addSeeding(
                 layerMappingConfigFile,
                 connectorInputConfigFile,
                 lutInputConfigFile,
+                gbtsConfigArg,
                 outputSeeds=f"{prefix}seeds",
                 outputFreeParameters=(
                     f"{prefix}seedfreeparameters" if gbtsSeedParameters else None
@@ -1477,6 +1490,7 @@ def addGbtsSeeding(
     layerMappingConfigFile: Union[Path, str] = None,
     connectorInputConfigFile: Union[Path, str] = None,
     lutInputConfigFile: Optional[Union[Path, str]] = None,
+    gbtsConfigArg: GbtsConfigArg = GbtsConfigArg(),
     outputSeeds: str = "seeds",
     outputFreeParameters: Optional[str] = None,
     magneticField: Optional[acts.MagneticFieldProvider] = None,
@@ -1487,13 +1501,17 @@ def addGbtsSeeding(
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     connectorInputFileStr = str(connectorInputConfigFile)
     lutInputConfigFileStr = str(lutInputConfigFile)
-    seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
+    seedFinderConfig = gbtsConfigArg.seederConfig
+    if seedFinderConfig is None:
+        seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
 
-    graphConfig = acts.examples.GbtsGraphBuilderConfig(
-        **acts.examples.defaultKWArgs(
-            minPt=seedFinderConfigArg.minPt,
-        ),
-    )
+    graphConfig = gbtsConfigArg.graphConfig
+    if graphConfig is None:
+        graphConfig = acts.examples.GbtsGraphBuilderConfig(
+            **acts.examples.defaultKWArgs(
+                minPt=seedFinderConfigArg.minPt,
+            ),
+        )
 
     seedingAlg = acts.examples.GraphBasedSeedingAlgorithm(
         level=logLevel,
@@ -1509,6 +1527,7 @@ def addGbtsSeeding(
         inputClusters="clusters",
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+            useAdaptiveCuts=gbtsConfigArg.useAdaptiveCuts,
             outputFreeParameters=outputFreeParameters,
             magneticField=magneticField,
         ),
