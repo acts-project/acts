@@ -1,10 +1,18 @@
 target_sources(
     ActsCore
     PRIVATE
+        ButcherTableau.cpp
         EigenStepperError.cpp
+        GenericRungeKuttaStepper.cpp
+        HelixStepper.cpp
         MultiStepperError.cpp
         NavigatorError.cpp
+        NavigatorOptions.cpp
         SympyStepper.cpp
+        detail/SympyStepVacuumJac.cpp
+        detail/SympyStepVacuumNoJac.cpp
+        detail/SympyStepDenseJac.cpp
+        detail/SympyStepDenseNoJac.cpp
         NavigationTarget.cpp
         PropagatorError.cpp
         StraightLineStepper.cpp
@@ -14,7 +22,6 @@ target_sources(
         detail/JacobianEngine.cpp
         detail/SympyCovarianceEngine.cpp
         detail/SympyJacobianEngine.cpp
-        detail/SympyStepperDenseStep.cpp
 )
 
 include(ActsCodegen)

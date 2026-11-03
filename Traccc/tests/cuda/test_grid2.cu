@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "../../device/cuda/src/utils/cuda_error_handling.hpp"
 
@@ -219,7 +220,7 @@ __global__ void grid_attach_assign_test_kernel(
 
   auto pts = g2_device.bin(threadIdx.x, threadIdx.y);
 
-  for (std::size_t i = 0u; i < pts.size(); i++) {
+  for (unsigned int i = 0u; i < pts.size(); i++) {
     pts[i] = {static_cast<scalar>(i), static_cast<scalar>(i + 1u),
               static_cast<scalar>(i + 2u)};
   }

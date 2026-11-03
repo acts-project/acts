@@ -13,12 +13,6 @@ include(CMakeFindDependencyMacro)
 find_dependency(Boost COMPONENTS program_options)
 
 # Generate test detectors
-detray_add_executable(generate_toy_detector
-                      "generate_toy_detector.cpp"
-                      LINK_LIBRARIES Boost::program_options detray::tools
-                      detray::io detray::test_common detray::test_utils detray::core_array
-)
-
 detray_add_executable(generate_wire_chamber
                       "generate_wire_chamber.cpp"
                       LINK_LIBRARIES Boost::program_options detray::tools
@@ -50,24 +44,24 @@ if(DETRAY_BUILD_BENCHMARKS)
     endmacro()
 
     # Build the array benchmark.
-    detray_add_propagation_benchmark( array benchmark )
-    detray_add_propagation_benchmark( array scaling )
+    detray_add_propagation_benchmark(array benchmark)
+    detray_add_propagation_benchmark(array scaling)
 
     # Build the Eigen benchmark executable.
     if(DETRAY_EIGEN_PLUGIN)
-        detray_add_propagation_benchmark( eigen benchmark )
-        detray_add_propagation_benchmark( eigen scaling )
+        detray_add_propagation_benchmark(eigen benchmark)
+        detray_add_propagation_benchmark(eigen scaling)
     endif()
 
     # Build the SMatrix benchmark executable.
     if(DETRAY_SMATRIX_PLUGIN)
-        detray_add_propagation_benchmark( smatrix benchmark )
-        detray_add_propagation_benchmark( smatrix scaling )
+        detray_add_propagation_benchmark(smatrix benchmark)
+        detray_add_propagation_benchmark(smatrix scaling)
     endif()
 
     # Build the Vc benchmark executable.
     if(DETRAY_VC_AOS_PLUGIN)
-        detray_add_propagation_benchmark( vc_aos benchmark )
-        detray_add_propagation_benchmark( vc_aos scaling )
+        detray_add_propagation_benchmark(vc_aos benchmark)
+        detray_add_propagation_benchmark(vc_aos scaling)
     endif()
 endif()

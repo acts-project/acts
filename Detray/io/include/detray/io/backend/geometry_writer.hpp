@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/indexing.hpp"
 #include "detray/geometry/mask.hpp"
 #include "detray/geometry/surface.hpp"
@@ -38,7 +39,7 @@ class geometry_writer {
   using payload_type = detector_payload;
 
   /// Convert the header information into its payload
-  template <typename detector_t>
+  template <detray::concepts::detector detector_t>
   static geo_header_payload header_to_payload(const detector_t& det,
                                               const std::string_view det_name) {
     geo_header_payload header_data;
@@ -54,7 +55,7 @@ class geometry_writer {
   }
 
   /// Convert a detector @param det into its io payload
-  template <typename detector_t>
+  template <detray::concepts::detector detector_t>
   static payload_type to_payload(const detector_t& det,
                                  const typename detector_t::name_map& names) {
     payload_type det_data;
@@ -72,7 +73,7 @@ class geometry_writer {
   }
 
   /// Convert a surface transform @param trf into its io payload
-  template <typename detector_t>
+  template <detray::concepts::detector detector_t>
   static transform_payload to_payload(
       const typename detector_t::transform3_type& trf) {
     transform_payload trf_data;
@@ -106,7 +107,7 @@ class geometry_writer {
   }
 
   /// Convert a detector surface @param sf into its io payload
-  template <typename detector_t>
+  template <detray::concepts::detector detector_t>
   static surface_payload to_payload(const geometry::surface<detector_t>& sf,
                                     std::size_t sf_idx) {
     using algebra_t = typename detector_t::algebra_type;
@@ -127,7 +128,7 @@ class geometry_writer {
   }
 
   /// Convert a detector portal @param sf into its io payload
-  template <typename detector_t>
+  template <detray::concepts::detector detector_t>
   static volume_payload to_payload(
       const typename detector_t::volume_type& vol_desc, const detector_t& det,
       const std::string_view name) {

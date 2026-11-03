@@ -132,6 +132,7 @@ def test_root_reader_interface(reader_name, conf_const, tmp_path):
 @pytest.mark.root
 @pytest.mark.odd
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.xdist_group("heavy")
 def test_root_material_track_reader(material_recording):
     from acts.examples.root import RootMaterialTrackReader
 

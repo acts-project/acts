@@ -9,17 +9,18 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/detail/container_buffers.hpp"
 
 namespace detray::detail {
 
 /// Creates detector view using "static" detector components and
 /// a "misaligned" transform store
-template <typename host_detector_type>
-typename host_detector_type::view_type misaligned_detector_view(
-    typename host_detector_type::buffer_type& det_buffer,
+template <detray::concepts::detector host_detector_type>
+typename host_detector_type::const_view_type misaligned_detector_view(
+    const typename host_detector_type::buffer_type& det_buffer,
     typename host_detector_type::transform_container::buffer_type& trf_buffer) {
-  typename host_detector_type::view_type detview{
+  typename host_detector_type::const_view_type detview{
       detray::get_data(detray::detail::get<0>(det_buffer.m_buffer)),  // volumes
       detray::get_data(
           detray::detail::get<1>(det_buffer.m_buffer)),  // surfaces

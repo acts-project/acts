@@ -78,19 +78,6 @@ class GbtsTrackingFilter final {
   // Only the seeder walks the edge graph.
   friend class GraphBasedTrackSeeder;
 
-  using State = detail::GbtsFilterState;
-
-  /// Follow track starting from edge
-  /// @param state Tracking filter state
-  /// @param nodeView View of the node positions and layers
-  /// @param sb Edge storage
-  /// @param pS Starting edge
-  /// @return Final edge state after following the track
-  detail::GbtsEdgeState followTrack(State& state,
-                                    const detail::GbtsNodeView& nodeView,
-                                    std::vector<detail::GbtsEdge>& sb,
-                                    detail::GbtsEdge& pS) const;
-
   /// Configuration for the tracking filter.
   Config m_cfg{};
 
@@ -104,16 +91,6 @@ class GbtsTrackingFilter final {
   /// @return Logger reference
   const Logger& logger() const { return *m_logger; }
 
-  /// Propagate edge state
-  /// @param state Tracking filter state
-  /// @param nodeView View of the node positions and layers
-  /// @param sb Edge storage
-  /// @param pS Edge to propagate from
-  /// @param ts Edge state to update
-  void propagate(State& state, const detail::GbtsNodeView& nodeView,
-                 std::vector<detail::GbtsEdge>& sb, detail::GbtsEdge& pS,
-                 detail::GbtsEdgeState& ts) const;
-
   /// Update edge state with edge
   /// @param nodeView View of the node positions and layers
   /// @param pS Edge to update with
@@ -125,7 +102,7 @@ class GbtsTrackingFilter final {
   /// Get layer type from layer index
   /// @param layerIndex Layer index
   /// @return Layer type
-  GbtsLayerType getLayerType(std::uint32_t layerIndex) const;
+  GbtsLayerType getLayerType(GbtsLayerIndex layerIndex) const;
 };
 
 }  // namespace Acts::Experimental

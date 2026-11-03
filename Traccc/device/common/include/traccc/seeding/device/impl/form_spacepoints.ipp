@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -18,9 +19,10 @@
 
 namespace traccc::device {
 
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 TRACCC_HOST_DEVICE inline void form_spacepoints(
-    const global_index_t globalIndex, typename detector_t::view det_view,
+    const global_index_t globalIndex,
+    const detray::detector_view_t<detector_t> det_view,
     const edm::measurement_collection::const_view& measurements_view,
     const vecmem::data::vector_view<const unsigned int>& spacepoint_index_view,
     edm::spacepoint_collection::view spacepoints_view) {
@@ -36,7 +38,7 @@ TRACCC_HOST_DEVICE inline void form_spacepoints(
   }
 
   // Create the tracking geometry
-  typename detector_t::device det(det_view);
+  typename detray::detector_device_t<detector_t> det(det_view);
 
   // Set up the output container(s).
   edm::spacepoint_collection::device spacepoints(spacepoints_view);

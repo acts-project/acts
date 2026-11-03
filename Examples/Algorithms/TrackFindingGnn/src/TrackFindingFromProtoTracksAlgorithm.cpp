@@ -113,7 +113,7 @@ ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
   extensions.updater.connect<&GainMatrixUpdater::operator()<
       typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
   extensions.createTrackStates
-      .template connect<&TrackStateCreatorType ::createTrackStates>(
+      .template connect<&TrackStateCreatorType::createTrackStates>(
           &trackStateCreator);
 
   // Set the CombinatorialKalmanFilter options

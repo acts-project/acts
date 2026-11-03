@@ -1,6 +1,12 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * This file includes code from the ROOT (https://github.com/root-project/root)
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+/** This file includes code from the ROOT (https://github.com/root-project/root)
  * and Cephes Library (http://www.netlib.org/cephes)
  *
  * ROOT is licensed under the GNU Lesser General Public License v2.1
@@ -13,6 +19,9 @@
 #include "traccc/definitions/common.hpp"
 #include "traccc/definitions/math.hpp"
 #include "traccc/definitions/qualifiers.hpp"
+
+// System include(s).
+#include <limits>
 
 namespace traccc {
 
@@ -79,7 +88,8 @@ struct log_gamma {
   }
 
   static constexpr scalar_t kMAXLGM = static_cast<scalar_t>(2.556348e305);
-  static constexpr scalar_t kMACHEP = 1.11022302462515654042363166809e-16f;
+  static constexpr scalar_t kMACHEP = std::numeric_limits<scalar_t>::epsilon();
+  static constexpr unsigned int kMaxIterations = 1000u;
   static constexpr scalar_t kMAXLOG = 709.782712893383973096206318587f;
   static constexpr scalar_t kBig = 4.503599627370496e15f;
   static constexpr scalar_t kBiginv = 2.22044604925031308085e-16f;
@@ -205,11 +215,13 @@ TRACCC_HOST_DEVICE inline scalar_t igam_impl(const scalar_t a,
   c = 1.0f;
   ans = 1.0f;
 
+  unsigned int n_iter = 0u;
   do {
     r += 1.0f;
     c *= x / r;
     ans += c;
-  } while (c / ans > log_gamma<scalar_t>::kMACHEP);
+  } while (c / ans > log_gamma<scalar_t>::kMACHEP &&
+           ++n_iter < log_gamma<scalar_t>::kMaxIterations);
 
   return (ans * ax / a);
 }
@@ -255,6 +267,7 @@ TRACCC_HOST_DEVICE inline scalar_t igamc_impl(const scalar_t a,
   qkm1 = z * x;
   ans = pkm1 / qkm1;
 
+  unsigned int n_iter = 0u;
   do {
     c += 1.0f;
     y += 1.0f;
@@ -279,7 +292,8 @@ TRACCC_HOST_DEVICE inline scalar_t igamc_impl(const scalar_t a,
       qkm2 *= log_gamma<scalar_t>::kBiginv;
       qkm1 *= log_gamma<scalar_t>::kBiginv;
     }
-  } while (t > log_gamma<scalar_t>::kMACHEP);
+  } while (t > log_gamma<scalar_t>::kMACHEP &&
+           ++n_iter < log_gamma<scalar_t>::kMaxIterations);
 
   return (ans * ax);
 }

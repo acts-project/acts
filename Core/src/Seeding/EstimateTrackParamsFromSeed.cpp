@@ -10,9 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Seeding/TrackParamsEstimationError.hpp"
 #include "Acts/Seeding/detail/CircleFit.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -53,10 +55,8 @@ Transform3 estimationFrameLocalToGlobal(const Vector3& sp0, const Vector3& sp1,
   rotation.col(0) = newXAxis;
   rotation.col(1) = newYAxis;
   rotation.col(2) = newZAxis;
-  // The center of the new frame is at the bottom space point
-  const Translation3 translation(sp0);
-  // The transform which constructs the new frame
-  return translation * rotation;
+  // The new frame, centered at the bottom space point
+  return makeTransform3(rotation, sp0);
 }
 
 double computeDzDs(double A, double B, const Vector3& local0,
@@ -122,13 +122,6 @@ Vector3 computeLocalTangent(const ConformalMappingResult& cm,
 }  // namespace
 
 }  // namespace Acts
-
-Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
-                                                   const Vector3& sp1,
-                                                   const Vector3& sp2,
-                                                   const Vector3& bField) {
-  return estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
-}
 
 Acts::FreeVector Acts::estimateTrackParamsFromSeed(
     const Vector3& sp0, const double t0, const Vector3& sp1, const Vector3& sp2,

@@ -39,6 +39,20 @@ class NullBField final : public MagneticFieldProvider {
     return Result<Vector3>::success(Vector3::Zero());
   }
 
+  /// @copydoc MagneticFieldProvider::providesFieldGradient() const
+  bool providesFieldGradient() const override { return true; }
+
+  /// @copydoc MagneticFieldProvider::getFieldAndGradient(const Vector3&,MagneticFieldProvider::Cache&) const
+  ///
+  /// @note The field and its gradient are zero.
+  Result<FieldAndGradient> getFieldAndGradient(
+      const Vector3& position,
+      MagneticFieldProvider::Cache& cache) const override {
+    static_cast<void>(position);
+    static_cast<void>(cache);
+    return Result<FieldAndGradient>::success({});
+  }
+
   /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&) const
   Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override {

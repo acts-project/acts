@@ -47,3 +47,5 @@ add_unittest(Portal PortalTests.cpp)
 add_unittest(ReferenceGenerators ReferenceGeneratorsTests.cpp)
 add_unittest(DiamondVolumeBounds DiamondVolumeBoundsTests.cpp)
 add_unittest(DiamondPortalShell DiamondPortalShellTests.cpp)
+
+add_unittest(VolumeLookup VolumeLookupTests.cpp)

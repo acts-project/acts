@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/tracks/tracks.hpp"
 #include "detray/utils/logging.hpp"
@@ -37,22 +38,19 @@ namespace detray::test {
 struct run_material_validation {
   static constexpr std::string_view name{"cpu"};
 
-  template <typename detector_t>
+  template <concepts::detector detector_t>
   auto operator()(
       vecmem::memory_resource *host_mr, vecmem::memory_resource * /*mr*/,
       const detector_t &det, const propagation::config &cfg,
       const dvector<free_track_parameters<typename detector_t::algebra_type>>
           &tracks,
       const std::vector<std::size_t> & /*mask*/ = {}) {
-    using scalar_t = dscalar<typename detector_t::algebra_type>;
-
     typename detector_t::geometry_context gctx{};
 
-    dvector<material_validator::track_material<scalar_t>> track_mat_vec{
-        host_mr};
+    dvector<material_validator::track_material> track_mat_vec{host_mr};
     track_mat_vec.reserve(tracks.size());
 
-    dvector<dvector<material_record<scalar_t>>> mat_steps_vec{host_mr};
+    dvector<dvector<material_record>> mat_steps_vec{host_mr};
     mat_steps_vec.reserve(tracks.size());
 
     for (const auto &[i, track] : detray::views::enumerate(tracks)) {
@@ -76,12 +74,12 @@ struct run_material_validation {
 /// @brief Test class that runs the material validation for a given detector.
 ///
 /// @note The lifetime of the detector needs to be guaranteed outside this class
-template <typename detector_t, typename material_validator_t>
+template <concepts::detector detector_t, typename material_validator_t>
 class material_validation_impl : public test::fixture_base<> {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
   using free_track_parameters_t = free_track_parameters<algebra_t>;
-  using track_material_t = material_validator::track_material<scalar_t>;
+  using track_material_t = material_validator::track_material;
 
  public:
   using fixture_type = test::fixture_base<>;
@@ -156,15 +154,15 @@ class material_validation_impl : public test::fixture_base<> {
       const track_material_t &truth_mat = truth_track_mat[i];
       const track_material_t &recorded_mat = track_mat_vec[i];
 
-      auto get_rel_error = [](const scalar_t truth, const scalar_t rec) {
-        constexpr scalar_t e{std::numeric_limits<scalar_t>::epsilon()};
+      auto get_rel_error = [](const double truth, const double rec) {
+        constexpr scalar_t e{std::numeric_limits<double>::epsilon()};
 
         if (truth <= e && rec <= e) {
           // No material for this ray => valid
-          return scalar_t{0.f};
+          return double{0.f};
         } else if (truth <= e) {
           // Material found where none should be
-          return detail::invalid_value<scalar_t>();
+          return detail::invalid_value<double>();
         } else {
           return math::fabs(truth - rec) / truth;
         }
@@ -220,7 +218,7 @@ class material_validation_impl : public test::fixture_base<> {
   std::shared_ptr<test::whiteboard> m_whiteboard{nullptr};
 };
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using material_validation =
     material_validation_impl<detector_t, run_material_validation>;
 

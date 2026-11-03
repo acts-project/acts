@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/geometry.hpp"
 #include "detray/geometry/identifier.hpp"
 #include "detray/io/csv/dfe.hpp"
@@ -49,7 +50,7 @@ struct intersection2D {
 
 /// Read intersections from csv file
 /// @returns vector of intersections
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 inline auto read_intersection2D(const std::string &file_name) {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;

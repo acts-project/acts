@@ -3,6 +3,35 @@ import pytest
 import acts
 
 
+@pytest.mark.parametrize(
+    "surface",
+    [
+        acts.Surface.createPlane(
+            acts.Transform3.Identity(), acts.RectangleBounds(10.0, 5.0)
+        ),
+        acts.Surface.createDisc(
+            acts.Transform3.Identity(), acts.RadialBounds(10.0, 20.0)
+        ),
+        acts.Surface.createCylinder(
+            acts.Transform3.Identity(), acts.CylinderBounds(20.0, 50.0)
+        ),
+    ],
+)
+def test_surface_sensitivity_is_independent_of_identifier(surface):
+    assert surface.isSensitive is False
+    identifier = acts.GeometryIdentifier(sensitive=7)
+    surface.assignGeometryId(identifier)
+    assert surface.isSensitive is False
+
+    surface.assignIsSensitive(isSensitive=True)
+    assert surface.isSensitive is True
+    assert surface.geometryId == identifier
+
+    surface.assignIsSensitive(False)
+    assert surface.isSensitive is False
+    assert surface.geometryId == identifier
+
+
 def test_surface_bounds_base_api():
     bounds = acts.RectangleBounds(10.0, 5.0)
 
@@ -50,7 +79,7 @@ def test_bound_value_enums_exposed():
 @pytest.mark.parametrize(
     "bounds, expected_size",
     [
-        (acts.CylinderBounds(10.0, 20.0), 6),
+        (acts.CylinderBounds(10.0, 20.0), 4),
         (acts.AnnulusBounds(10.0, 20.0, -0.2, 0.2), 7),
         (acts.RadialBounds(10.0, 20.0), 4),
         (acts.LineBounds(1.0, 100.0), 2),
@@ -79,12 +108,6 @@ def test_surface_bounds_get_method():
     )
     assert cylinder.get(acts.CylinderBoundsValue.AveragePhi) == pytest.approx(
         cylinder.values()[3]
-    )
-    assert cylinder.get(acts.CylinderBoundsValue.BevelMinZ) == pytest.approx(
-        cylinder.values()[4]
-    )
-    assert cylinder.get(acts.CylinderBoundsValue.BevelMaxZ) == pytest.approx(
-        cylinder.values()[5]
     )
 
     annulus = acts.AnnulusBounds(10.0, 20.0, -0.2, 0.2)

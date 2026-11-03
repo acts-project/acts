@@ -85,11 +85,15 @@ def _patchKwargsConstructor(
     cls.__init__ = _make_config_constructor(cls, proc)
 
 
-def _patch_config(m):
+def _patch_config(m, itemsToKWargsFor=["Config"]):
     for name, cls in inspect.getmembers(m, inspect.isclass):
-        if name == "Config":
+        if name in itemsToKWargsFor:
             _patchKwargsConstructor(cls)
 
-        if hasattr(cls, "Config"):
-            cls.__init__ = _make_config_adapter(cls.__init__)
-            _patchKwargsConstructor(cls.Config)
+        for thing in itemsToKWargsFor:
+            if hasattr(cls, thing):
+                # specifically for the magic "config"
+                # member, patch the init method
+                if thing == "Config":
+                    cls.__init__ = _make_config_adapter(cls.__init__)
+                _patchKwargsConstructor(getattr(cls, thing))

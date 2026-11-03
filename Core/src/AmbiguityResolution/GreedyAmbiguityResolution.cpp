@@ -21,9 +21,13 @@ static void removeTrack(GreedyAmbiguityResolution::State& state,
   for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
     state.tracksPerMeasurement[iMeasurement].erase(iTrack);
 
+    // If only one track per measurement is left, it is no longer shared
     if (state.tracksPerMeasurement[iMeasurement].size() == 1) {
       auto jTrack = *state.tracksPerMeasurement[iMeasurement].begin();
-      --state.sharedMeasurementsPerTrack[jTrack];
+      // Check if jTrack's measurement is split; if yes, it was never shared
+      if (!state.splitMeasurementsPerTrack[jTrack].contains(iMeasurement)) {
+        --state.sharedMeasurementsPerTrack[jTrack];
+      }
     }
   }
 
@@ -82,7 +86,7 @@ void GreedyAmbiguityResolution::resolve(State& state) const {
     ACTS_VERBOSE(
         "maximum shared measurements "
         << state.sharedMeasurementsPerTrack[maximumSharedMeasurements]);
-    if (state.sharedMeasurementsPerTrack[maximumSharedMeasurements] <
+    if (state.sharedMeasurementsPerTrack[maximumSharedMeasurements] <=
         m_cfg.maximumSharedHits) {
       break;
     }

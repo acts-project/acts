@@ -26,9 +26,9 @@ namespace detray::tutorial {
 
 /// @brief Generates a sequence of square surfaces for the tutorial detector
 class square_surface_generator final
-    : public surface_factory_interface<detector<tutorial::my_metadata>> {
+    : public surface_factory_interface<host::detector<tutorial::my_metadata>> {
  public:
-  using detector_t = detector<tutorial::my_metadata>;
+  using detector_t = host::detector<tutorial::my_metadata>;
   using scalar_t = dscalar<typename detector_t::algebra_type>;
 
   /// Generate @param n square surfaces with half length @param hl .

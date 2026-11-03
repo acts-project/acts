@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/material/concepts.hpp"
 #include "detray/material/detail/material_accessor.hpp"
@@ -35,22 +36,21 @@
 
 namespace detray::material_validator {
 
-/// @brief Record the material budget per thickness or pathlength
-template <concepts::scalar scalar_t>
+/// @brief Record the total material budget per track
 struct track_material {
   /// Phi and eta values of the track for which the material was recorded
   /// @{
-  scalar_t phi{detail::invalid_value<scalar_t>()};
-  scalar_t eta{detail::invalid_value<scalar_t>()};
+  double phi{detail::invalid_value<double>()};
+  double eta{detail::invalid_value<double>()};
   /// @}
   /// Accumulated radiation length per pathlength through the material
-  scalar_t sX0{0.f};
+  double sX0{0.f};
   /// Accumulated radiation length per thickness
-  scalar_t tX0{0.f};
+  double tX0{0.f};
   /// Accumulated interaction length per pathlength through the material
-  scalar_t sL0{0.f};
+  double sL0{0.f};
   /// Accumulated interaction length per thickness
-  scalar_t tL0{0.f};
+  double tL0{0.f};
 };
 
 /// @brief Functor to retrieve the material parameters for a given local
@@ -65,7 +65,7 @@ struct get_material_record {
       [[maybe_unused]] const scalar_t cos_inc_angle) const {
     using material_t = typename mat_group_t::value_type;
 
-    constexpr auto inv{detail::invalid_value<scalar_t>()};
+    constexpr auto inv{detail::invalid_value<double>()};
     constexpr geometry::identifier inv_sf{};
 
     // Access homogeneous surface material or material maps
@@ -75,19 +75,18 @@ struct get_material_record {
 
       // Empty material can occur in material maps, skip it
       if (!mat) {
-        // Set the pathlength and thickness to zero so that they
-        // are not counted
-        return material_record<scalar_t>{inv_sf, 0.f, 0.f, inv, inv};
+        // Set the pathlength and thickness to zero so that they are not counted
+        return material_record{inv_sf, 0.f, 0.f, inv, inv};
       }
 
-      const scalar_t seg{mat.path_segment(cos_inc_angle, loc[0])};
-      const scalar_t t{mat.thickness()};
-      const scalar_t mat_X0{mat.get_material().X0()};
-      const scalar_t mat_L0{mat.get_material().L0()};
+      const double seg{mat.path_segment(cos_inc_angle, loc[0])};
+      const double t{mat.thickness()};
+      const double mat_X0{mat.get_material().X0()};
+      const double mat_L0{mat.get_material().L0()};
 
-      return material_record<scalar_t>{inv_sf, seg, t, mat_X0, mat_L0};
+      return material_record{inv_sf, seg, t, mat_X0, mat_L0};
     } else {
-      return material_record<scalar_t>{inv_sf, inv, inv, inv, inv};
+      return material_record{inv_sf, 0., 0., inv, inv};
     }
   }
 };
@@ -97,10 +96,10 @@ struct get_material_record {
 ///
 /// The material is scaled with either the slab thickness or pathlength through
 /// the material.
-template <concepts::scalar scalar_t, template <typename...> class vector_t>
+template <template <typename...> class vector_t>
 struct material_tracer : public detray::base_actor {
-  using track_material_type = track_material<scalar_t>;
-  using material_record_type = material_record<scalar_t>;
+  using track_material_type = track_material;
+  using material_record_type = material_record;
 
   struct state {
     friend struct material_tracer;
@@ -209,7 +208,7 @@ struct material_tracer : public detray::base_actor {
   }
 
   /// Record the data for a material step
-  template <typename detector_t>
+  template <concepts::detector detector_t>
   DETRAY_HOST_DEVICE inline auto record_mat_step(
       state &tracer, const typename detector_t::geometry_context &gctx,
       const tracking_surface<detector_t> sf,
@@ -219,28 +218,28 @@ struct material_tracer : public detray::base_actor {
     const auto mat_params = sf.template visit_material<get_material_record>(
         loc_pos, cos_angle(gctx, sf, glob_dir, loc_pos));
 
-    const scalar_t seg{mat_params.path};
-    const scalar_t t{mat_params.thickness};
-    const scalar_t mx0{mat_params.mat_X0};
-    const scalar_t ml0{mat_params.mat_L0};
+    const double seg{mat_params.path};
+    const double t{mat_params.thickness};
+    const double mx0{mat_params.mat_X0};
+    const double ml0{mat_params.mat_L0};
 
     // Fill the material record
-    if (mx0 > 0.f) {
+    if (mx0 > 0.) {
       tracer.m_track_material.sX0 += seg / mx0;
       tracer.m_track_material.tX0 += t / mx0;
     }
-    if (ml0 > 0.f) {
+    if (ml0 > 0.) {
       tracer.m_track_material.sL0 += seg / ml0;
       tracer.m_track_material.tL0 += t / ml0;
     }
-    if (t > 0.f) {
+    if (t > 0.) {
       tracer.m_mat_steps.push_back({sf.identifier(), seg, t, mx0, ml0});
     }
   }
 };
 
 /// Run the propagation and record test data along the way
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline auto record_material(
     const typename detector_t::geometry_context /*gctx*/,
     vecmem::memory_resource *host_mr, const detector_t &det,
@@ -253,8 +252,7 @@ inline auto record_material(
   using navigator_t = caching_navigator<detector_t>;
 
   // Propagator with pathlimit aborter
-  using material_tracer_t =
-      material_validator::material_tracer<scalar_t, vecmem::vector>;
+  using material_tracer_t = material_validator::material_tracer<vecmem::vector>;
   using pathlimit_aborter_t = actor::pathlimit_aborter<scalar_t>;
   using parameter_updater_t =
       actor::parameter_updater<algebra_t,
@@ -269,7 +267,7 @@ inline auto record_material(
   // Build actor and propagator states
   typename pathlimit_aborter_t::state pathlimit_aborter_state{
       cfg.stepping.path_limit};
-  actor::parameter_updater_state<algebra_t> updater_state{cfg};
+  actor::parameter_updater_state<algebra_t> updater_state{cfg, track};
   typename actor::pointwise_material_interactor<algebra_t>::state
       interactor_state{};
   typename material_tracer_t::state mat_tracer_state{*host_mr};
@@ -299,12 +297,9 @@ inline auto record_material(
 ///
 /// @returns if the traces contains matching material steps and if matching
 /// traces contain the same total material
-template <concepts::scalar scalar_t>
 inline auto compare_traces(
-    const dvector<material_record<scalar_t>> &reference,
-    const track_material<scalar_t> &ref_record,
-    const dvector<material_record<scalar_t>> &mat_trace,
-    const track_material<scalar_t> &mat_record,
+    const dvector<material_record> &reference, const track_material &ref_record,
+    const dvector<material_record> &mat_trace, const track_material &mat_record,
     std::size_t trk_i = detail::invalid_value<std::size_t>(),
     const double rel_tol = 0.01, const bool verbose = true) {
   // Material traces contain records of different surfaces/material
@@ -368,19 +363,16 @@ inline auto compare_traces(
         is_bad_comp = true;
         debug_msg << "-> On surface: " << reference[j].geo_id << ":"
                   << std::endl;
-        debug_msg << "-> Mat. path: " << mat_trace[j].path / unit<scalar_t>::mm
+        debug_msg << "-> Mat. path: " << mat_trace[j].path / unit<double>::mm
                   << " mm, mat. path ref.: "
-                  << reference[j].path / unit<scalar_t>::mm << " mm"
-                  << std::endl;
+                  << reference[j].path / unit<double>::mm << " mm" << std::endl;
       }
     }
   }
 
   // Compare the total accumulated material along the track
-  const double ref_mat_X0{static_cast<double>(ref_record.sX0)};
-  const double mat_X0{static_cast<double>(mat_record.sX0)};
-  const double rel_error{(ref_mat_X0 - mat_X0) / ref_mat_X0};
-  const bool small_mat{ref_mat_X0 < rel_tol && mat_X0 < rel_tol};
+  const double rel_error{(ref_record.sX0 - mat_record.sX0) / ref_record.sX0};
+  const bool small_mat{ref_record.sX0 < rel_tol && mat_record.sX0 < rel_tol};
 
   // If almost no material was collected, the relative error can be
   // large, but also has little consequence for tracking
@@ -403,9 +395,8 @@ inline auto compare_traces(
 
 /// Write the accumulated material of a track from @param mat_records to a csv
 /// file to the path @param mat_file_name
-template <concepts::scalar scalar_t>
-auto write_material(const std::string &mat_file_name,
-                    const dvector<track_material<scalar_t>> &mat_records) {
+inline auto write_material(const std::string &mat_file_name,
+                           const dvector<track_material> &mat_records) {
   const auto file_path = std::filesystem::path{mat_file_name};
   assert(file_path.extension() == ".csv");
 

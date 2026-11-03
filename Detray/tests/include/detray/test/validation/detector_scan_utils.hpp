@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/utils/logging.hpp"
 #include "detray/utils/ranges.hpp"
 
@@ -43,7 +44,7 @@ namespace detray::detector_scanner {
 /// ACTS geometries can produce multiple overlapping portals, since some portals
 /// are larger than the volumes they belong to. This leads to duplicate
 /// intersections in the traces.
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline dindex_range overlaps_removal(
     dvector<intersection_record<detector_t>> &intersection_records,
     const float tol = 1e-4f * unit<float>::mm) {
@@ -59,7 +60,7 @@ inline dindex_range overlaps_removal(
 
     // This record and the following are overlapping: Count until we reach
     // the end of the overlapping surfaces or end of trace
-    if (math::fabs(next_rec.intersection.path() - rec.intersection.path()) <
+    if (math::fabs(next_rec.intersection().path() - rec.intersection().path()) <
             tol &&
         i != (n_rec - 2u)) {
       ++n_eq_intrs;
@@ -74,19 +75,19 @@ inline dindex_range overlaps_removal(
     if (n_eq_intrs == 2u) {
       // Two overlapping portals form a valid, connected volume boundary
       if (const auto &prev_rec = intersection_records.at(i - 1u);
-          !(rec.intersection.surface().is_portal() &&
-            prev_rec.intersection.surface().is_portal())) {
-        auto prev_sf_desc = prev_rec.intersection.surface();
-        auto sf_desc = rec.intersection.surface();
+          !(rec.intersection().surface().is_portal() &&
+            prev_rec.intersection().surface().is_portal())) {
+        auto prev_sf_desc = prev_rec.intersection().surface();
+        auto sf_desc = rec.intersection().surface();
 
         // Other types of surfaces must not overlap!
         std::stringstream err_stream;
         err_stream << "The following surfaces overlap at\n"
                    << "POS:\n"
-                   << "glob: " << prev_rec.pos
-                   << ", loc: " << prev_rec.intersection.local()
-                   << "\nvs.\nglob: " << rec.pos
-                   << ", loc: " << rec.intersection.local() << std::endl;
+                   << "glob: " << prev_rec.template position<double>()
+                   << ", loc: " << prev_rec.intersection().local()
+                   << "\nvs.\nglob: " << rec.template position<double>()
+                   << ", loc: " << rec.intersection().local() << std::endl;
         err_stream << "SURFACES:\n -> " << prev_sf_desc << std::endl;
         err_stream << " -> " << sf_desc << std::endl;
 
@@ -111,7 +112,7 @@ inline dindex_range overlaps_removal(
 
     bool is_all_portals{true};
     for (std::size_t j = first; j <= last; ++j) {
-      const auto &intr = intersection_records.at(j).intersection;
+      const auto &intr = intersection_records.at(j).intersection();
       if (!intr.surface().is_portal()) {
         is_all_portals = false;
       }
@@ -145,10 +146,10 @@ inline dindex_range overlaps_removal(
       // Remove elements indiceated by ordered map with higher index first
       for (const auto &[v_link, idx] : pt_buckets | std::views::reverse) {
         // All these portals link against the exit portal
-        assert(v_link == exit_rec.vol_idx);
+        assert(v_link == exit_rec.volume());
 
         auto test_elem = std::next(itr, static_cast<int>(idx));
-        if (exit_rec.intersection.volume_link() != test_elem->vol_idx) {
+        if (exit_rec.intersection().volume_link() != test_elem->volume()) {
           intersection_records.erase(test_elem);
         }
       }
@@ -326,7 +327,7 @@ inline bool check_connectivity(
 ///
 /// @return a set of volume connections that were found by portal intersection
 ///         of a ray.
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline auto trace_intersections(
     const dvector<intersection_record<detector_t>> &intersection_records,
     dindex start_volume = 0u) {
@@ -349,26 +350,28 @@ inline auto trace_intersections(
     /// getter
     /// @{
     inline bool is_invalid() const {
-      return entry.intersection.surface().identifier().is_invalid();
+      return entry.intersection().surface().identifier().is_invalid();
     }
     inline auto surface_idx() const {
-      return entry.intersection.surface().index();
+      return entry.intersection().surface().index();
     }
     inline auto surface_volume_idx() const {
-      return entry.intersection.surface().volume();
+      return entry.intersection().surface().volume();
     }
-    inline auto &inters() const { return entry.intersection; }
-    inline auto volume_idx() const { return entry.vol_idx; }
-    inline auto volume_link() const { return entry.intersection.volume_link(); }
-    inline auto dist() const { return entry.intersection.path(); }
+    inline auto &inters() const { return entry.intersection(); }
+    inline auto volume_idx() const { return entry.volume(); }
+    inline auto volume_link() const {
+      return entry.intersection().volume_link();
+    }
+    inline auto dist() const { return entry.intersection().path(); }
     inline bool is_portal() const {
-      return entry.intersection.surface().is_portal();
+      return entry.intersection().surface().is_portal();
     }
     inline bool is_sensitive() const {
-      return entry.intersection.surface().is_sensitive();
+      return entry.intersection().surface().is_sensitive();
     }
     inline bool is_passive() const {
-      return entry.intersection.surface().is_passive();
+      return entry.intersection().surface().is_passive();
     }
     /// @}
   };
@@ -681,7 +684,7 @@ inline auto build_adjacency(
 /// @param[out] obj_hashes objects in a volume that were already visisted
 ///
 /// @return true if the checks were successful
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline bool check_trace(
     const dvector<intersection_record<detector_t>> &intersection_trace,
     const dindex start_index, dvector<dindex> &adj_mat_scan,
@@ -723,7 +726,7 @@ inline bool check_trace(
 /// @param svg_style svgtools style for the detector display
 /// @param i_track index of the test track
 /// @param n_track total number of test tracks
-template <typename detector_t, typename trajectory_t>
+template <concepts::detector detector_t, typename trajectory_t>
 inline void display_error(
     const typename detector_t::geometry_context gctx, const detector_t &det,
     const typename detector_t::name_map &vol_names,
@@ -764,7 +767,7 @@ inline void display_error(
 }
 
 /// Print an intersection trace
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline std::string print_trace(
     const dvector<intersection_record<detector_t>> &truth_trace,
     std::size_t n) {
@@ -774,16 +777,16 @@ inline std::string print_trace(
   for (const auto &[idx, record] : detray::views::enumerate(truth_trace)) {
     out_stream << "\nRecord " << idx << std::endl;
 
-    out_stream << " -> volume " << record.vol_idx << std::endl;
+    out_stream << " -> volume " << record.volume() << std::endl;
 
-    const auto pos = record.pos;
-    const auto dir = record.dir;
+    const auto pos = record.template position<double>();
+    const auto dir = record.template direction<double>();
     out_stream << " -> track pos: [" << pos[0] << ", " << pos[1] << ", "
                << pos[2] << std::endl;
     out_stream << " -> track dir: [" << dir[0] << ", " << dir[1] << ", "
                << dir[2] << std::endl;
 
-    out_stream << " -> intersection " << record.intersection << std::endl;
+    out_stream << " -> intersection " << record.intersection() << std::endl;
   }
 
   return out_stream.str();

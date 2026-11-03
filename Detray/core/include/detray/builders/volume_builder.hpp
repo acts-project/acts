@@ -34,6 +34,8 @@ struct mask_index_update;
 /// @brief Provides basic functionality to build detector volumes
 template <typename detector_t>
 class volume_builder : public volume_builder_interface<detector_t> {
+  static_assert(concepts::detector<detector_t>);
+
  public:
   using scalar_t = dscalar<typename detector_t::algebra_type>;
   using volume_type = typename detector_t::volume_type;
@@ -99,7 +101,8 @@ class volume_builder : public volume_builder_interface<detector_t> {
   /// Build the volume with internal surfaces and portals and add it to the
   /// detector instance @param det
   DETRAY_HOST
-  auto build(detector_t& det, typename detector_t::geometry_context ctx = {}) ->
+  auto build(detector_t& det, const volume_builder_options& opt,
+             typename detector_t::geometry_context ctx = {}) ->
       typename detector_t::volume_type* override {
     DETRAY_VERBOSE_HOST("Build surfaces...");
 
@@ -114,7 +117,7 @@ class volume_builder : public volume_builder_interface<detector_t> {
     det._transforms.push_back(m_trf);
 
     // Add all data from the builder to the detector containers
-    add_to_detector(ctx, det);
+    add_to_detector(opt, ctx, det);
 
     // Reset after the data was added to the detector
     m_surfaces.clear();
@@ -187,8 +190,14 @@ class volume_builder : public volume_builder_interface<detector_t> {
   /// @note can throw an exception if input data is inconsistent
   template <geo_obj_ids surface_id = static_cast<geo_obj_ids>(0)>
   DETRAY_HOST auto add_to_detector(
+      const volume_builder_options& opt,
       const typename detector_t::geometry_context ctx,
       detector_t& det) noexcept(false) -> void {
+    if (opt.deduplicate()) {
+      DETRAY_WARN_HOST(m_volume_name
+                       << ": Geometry data deduplication not yet implemented");
+    }
+
     // Append transforms
     const auto trf_offset = det.transform_store().size(ctx);
     det._transforms.append(std::move(m_transforms), ctx);

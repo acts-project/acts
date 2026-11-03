@@ -127,7 +127,7 @@ struct static_join : public ranges::static_join_view<I, range_itr_t> {
 
 // deduction guides
 template <detray::ranges::range... ranges_t>
-DETRAY_HOST_DEVICE static_join(ranges_t &&...ranges)
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE static_join(ranges_t &&...ranges)
     -> static_join<sizeof...(ranges_t),
                    typename detray::ranges::iterator_t<detray::detail::first_t<
                        std::remove_reference_t<ranges_t>...>>>;

@@ -8,7 +8,7 @@ This module contains the tools to generate the detector metadata headers used to
 
 The detector metadata is a C++ `struct` used by the detray core library as a template parameter to gather the compile-time information on the capabilities of the detector modelling, for example:
 
-`using odd_detector_t = detray::detector<detray::odd_metadata<algebra_t>>`,
+`using odd_detector_t = detray::host::detector<detray::odd_metadata<algebra_t>>`,
 
 with the `algebra_t` defined according to the linear algebra backend to be used, for instance the `detray::array<float>` plugin.
 

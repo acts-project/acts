@@ -2,7 +2,8 @@
 set -e
 set -u
 
-_spack_version=${SPACK_VERSION:-develop}
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+_spack_version=${SPACK_VERSION:-$(sed -n 's/^SPACK_VERSION=//p' "${SCRIPT_DIR}/versions.env")}
 
 _spack_folder=$1
 

@@ -16,13 +16,18 @@
 #include <cmath>
 #include <limits>
 #include <numbers>
+#include <ranges>
+#include <span>
+#include <tuple>
 #include <utility>
+
+#include "detail/SortByKey.hpp"
 
 namespace Acts::Experimental {
 
 GbtsNodeStorage::GbtsNodeStorage(const Config& config,
                                  std::shared_ptr<const GbtsGeometry> geometry,
-                                 detail::GbtsTauLookupTable tauLut)
+                                 GbtsTauLookupTable tauLut)
     : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_tauLut(std::move(tauLut)),
@@ -34,7 +39,7 @@ GbtsNodeStorage::GbtsNodeStorage(const Config& config,
 
 std::optional<std::uint32_t> GbtsNodeStorage::insert(
     const SpacePointIndex index, const float x, const float y, const float z,
-    const std::uint32_t layerIndex, const float clusterWidth,
+    const GbtsLayerIndex layerIndex, const float clusterWidth,
     const float localPositionY) {
   const float r = fastHypot(x, y);
   const float phi = std::atan2(y, x);
@@ -44,7 +49,7 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
 
 std::optional<std::uint32_t> GbtsNodeStorage::insert(
     const SpacePointIndex index, const float x, const float y, const float z,
-    const float r, const float phi, const std::uint32_t layerIndex,
+    const float r, const float phi, const GbtsLayerIndex layerIndex,
     const float clusterWidth, const float localPositionY,
     const OuterStripSpacePointCalibrationDetails* strip) {
   const detail::GbtsLayer& layer = m_geometry->layerByIndex(layerIndex);
@@ -57,12 +62,7 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
     return std::nullopt;
   }
 
-  const std::int32_t binIndex = layer.getEtaBin(z, r);
-  if (binIndex == -1) {
-    return std::nullopt;
-  }
-
-  const auto bin = static_cast<std::uint32_t>(binIndex);
+  const std::uint32_t bin = layer.getEtaBin(z, r);
 
   std::uint32_t stripIndex = detail::kNoStrip;
   // A strip pair on a pixel layer is never read: the seeder takes the strip
@@ -78,14 +78,14 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
 
   m_stagedPerBin.at(bin).push_back(static_cast<std::uint32_t>(m_staged.size()));
   m_staged.emplace_back(index, x, y, z, r, phi, clusterWidth, localPositionY,
-                        static_cast<std::uint16_t>(layerIndex), stripIndex);
+                        layerIndex, stripIndex);
 
   return bin;
 }
 
 void GbtsNodeStorage::extend(
     const SpacePointContainer& spacePoints,
-    const ConstSpacePointColumnProxy<std::uint32_t>& layerColumn,
+    const ConstSpacePointColumnProxy<GbtsLayerIndex>& layerColumn,
     const ConstSpacePointColumnProxy<float>& clusterWidthColumn,
     const ConstSpacePointColumnProxy<float>& localPositionYColumn) {
   const bool strips =
@@ -98,32 +98,36 @@ void GbtsNodeStorage::extend(
 
 std::vector<std::uint32_t> GbtsNodeStorage::sortBinByPhi(
     const std::vector<std::uint32_t>& staged) const {
-  const std::uint32_t nBuckets = m_cfg.phiSortBuckets;
-  std::array<std::vector<std::pair<float, std::uint32_t>>,
-             kMaxPhiSortBuckets + 1>
-      phiBuckets;
+  using Item = std::pair<std::uint32_t, float>;
+  struct PhiSortBuckets {
+    std::vector<Item> scratch;
+    std::vector<std::uint32_t> buckets;
+  };
 
+  std::vector<Item> items;
+  items.reserve(staged.size());
   for (const std::uint32_t stagedIdx : staged) {
-    const float phi = m_staged[stagedIdx].phi;
-    const auto bIdx = static_cast<std::uint32_t>(
-        0.5 * nBuckets * (phi / std::numbers::pi_v<float> + 1.0f));
-    phiBuckets[bIdx].emplace_back(phi, stagedIdx);
+    items.emplace_back(stagedIdx, m_staged[stagedIdx].phi);
   }
 
-  // Nodes with identical phi are ordered by insertion index.
-  for (std::uint32_t bucket = 0; bucket <= nBuckets; ++bucket) {
-    std::ranges::sort(phiBuckets[bucket]);
-  }
+  // Sort by phi. Nodes with the same phi are ordered by z, then r, so the
+  // result does not depend on the order the space points were inserted in.
+  // Nodes at the same position stay in insertion order, as the sort is
+  // stable.
+  const auto phiOf = [](const Item& item) { return item.second; };
+  const auto byPosition = [this](const Item& a, const Item& b) {
+    const StagedNode& nodeA = m_staged[a.first];
+    const StagedNode& nodeB = m_staged[b.first];
+    return std::tie(nodeA.z, nodeA.r) < std::tie(nodeB.z, nodeB.r);
+  };
 
-  std::vector<std::uint32_t> sorted;
-  sorted.reserve(staged.size());
-  for (std::uint32_t bucket = 0; bucket <= nBuckets; ++bucket) {
-    for (const auto& [phi, stagedIdx] : phiBuckets[bucket]) {
-      sorted.push_back(stagedIdx);
-    }
-  }
+  constexpr std::size_t kQuadraticLinearCrossover = 32;
+  PhiSortBuckets phiBuckets;
+  Acts::detail::sortByKey<kQuadraticLinearCrossover>(
+      std::span(items), phiBuckets, phiOf, byPosition);
 
-  return sorted;
+  const auto order = items | std::views::keys;
+  return {order.begin(), order.end()};
 }
 
 void GbtsNodeStorage::finalize() {
@@ -170,8 +174,8 @@ void GbtsNodeStorage::finalize() {
     binInfo.maxRadius = maxRadius;
     // every node in a bin is on the same layer, so any of them will do
     const GbtsLayerDescription& description =
-        m_geometry->layerDescriptionByIndex(m_staged[staged.front()].layer);
-    binInfo.layerId = static_cast<std::uint32_t>(description.id);
+        m_geometry->layerDescription(m_staged[staged.front()].layer);
+    binInfo.barrelOrder = description.barrelOrder;
     binInfo.type = description.type;
     binInfo.technology = description.technology;
   }
@@ -224,7 +228,7 @@ void GbtsNodeStorage::finalize() {
 void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
                                    detail::GbtsNodeParams& params) const {
   const GbtsLayerDescription& description =
-      m_geometry->layerDescriptionByIndex(staged.layer);
+      m_geometry->layerDescription(staged.layer);
 
   // the table is trained on pixel barrel clusters
   if (description.technology != GbtsLayerTechnology::Pixel ||
@@ -244,7 +248,7 @@ void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
     return;
   }
 
-  const detail::GbtsTauBounds& bounds = m_tauLut[lutBinIdx];
+  const GbtsTauBounds& bounds = m_tauLut[static_cast<std::size_t>(lutBinIdx)];
 
   // close to the edge the cluster may be shortened, which the lookup table
   // covers with a separate pair of bounds

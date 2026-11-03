@@ -106,7 +106,8 @@ struct pointer : public detray::ranges::pointer_view<const value_t> {
 // deduction guides
 
 template <typename deduced_value_t>
-DETRAY_HOST_DEVICE pointer(deduced_value_t&) -> pointer<deduced_value_t>;
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE pointer(deduced_value_t&)
+    -> pointer<deduced_value_t>;
 
 }  // namespace views
 

@@ -94,3 +94,6 @@ else()
         "DD4hep libraries not found, DD4hep tests will not be built."
     )
 endif()
+
+set(unittest_extra_libraries Acts::PluginDD4hep)
+add_unittest(DD4hepMaterialHelpers DD4hepMaterialHelpersTests.cpp)

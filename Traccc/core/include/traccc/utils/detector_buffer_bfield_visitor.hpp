@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -20,9 +21,10 @@ auto detector_buffer_magnetic_field_visitor(
       bfield, [&detector_buffer,
                &callable]<typename bfield_t>(const bfield_t& concrete_bfield) {
         return detector_buffer_visitor<detector_list_t>(
-            detector_buffer,
-            [&concrete_bfield, &callable]<typename detector_t>(
-                const detector_t::view& concrete_detector_view) {
+            detector_buffer, [&concrete_bfield,
+                              &callable]<detray::concepts::detector detector_t>(
+                                 const detray::detector_view_t<detector_t>&
+                                     concrete_detector_view) {
               return callable.template operator()<detector_t>(
                   concrete_detector_view, concrete_bfield);
             });

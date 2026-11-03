@@ -61,6 +61,11 @@ option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 set(ACTS_CODEGEN_PREBUILT_DIR "" CACHE PATH "Directory holding pre-generated code; a generated file found there is used verbatim instead of being regenerated. Defaults to prebuilt-codegen/ next to this file when it exists, which is what release source archives ship")
 option(ACTS_CODEGEN_REQUIRE_PREBUILT "Fail the configure step instead of running the code generators when pre-generated code is missing" OFF)
 # external library options
+set(ACTS_USE_ZSTD "AUTO" CACHE STRING "zstd support: AUTO (use if available), ALWAYS (required), NEVER (disabled)")
+set_property(CACHE ACTS_USE_ZSTD PROPERTY STRINGS AUTO ALWAYS NEVER)
+if(NOT ACTS_USE_ZSTD MATCHES "^(AUTO|ALWAYS|NEVER)$")
+    message(FATAL_ERROR "ACTS_USE_ZSTD must be AUTO, ALWAYS, or NEVER (got '${ACTS_USE_ZSTD}')")
+endif()
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
@@ -196,8 +201,6 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_PYTHIA8
     OR
-    ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
-    OR
     ACTS_BUILD_EXAMPLES_ROOT
     OR
     ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING
@@ -310,17 +313,7 @@ if(PROJECT_IS_TOP_LEVEL)
 endif()
 
 # This needs to happen before we set up any targets
-if(ACTS_FORCE_ASSERTIONS)
-    message(
-        STATUS
-        "Injecting headers to force assertions. This can have side-effects, USE WITH CAUTION!"
-    )
-    include_directories(
-        BEFORE
-        SYSTEM
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/assert_include
-    )
-endif()
+include(ActsForceAssertions)
 
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
@@ -330,16 +323,20 @@ set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
 set(_acts_edm4hep_version 1.0)
-set(_acts_edm4hep_fallback_version 0.10.5)
-set(_acts_eigen3_version 3.4.0)
+# 0.99 is the first release providing the TrackerHit interface, the CovMatrix
+# types (edm4hep::TrackState::covMatrix), Track::Nholes and the
+# edm4hep::TrackParams enum, all of which the EDM4hep plugin relies on.
+set(_acts_edm4hep_fallback_version 0.99)
+set(_acts_eigen3_version 5.0.1) # used when building Eigen from source
+set(_acts_eigen3_min_version 3.4.0) # minimum version accepted for a system Eigen3
 set(_acts_podio_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
 set(_acts_hepmc3_version 3.2.4)
 set(_acts_nlohmanjson_version 3.11.3)
 set(_acts_gbl_version 04.00.05)
-set(_acts_mille_version 01.00.05)
-set(_acts_mp2_version 05.01.05)
+set(_acts_mille_version 01.01.02)
+set(_acts_mp2_version 05.01.06)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_geomodel_version 6.8.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
@@ -347,8 +344,8 @@ set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
 set(_acts_traccc_version 1.4.0)
-set(_acts_covfie_version 0.15.2)
-set(_acts_vecmem_version 1.27.0)
+set(_acts_covfie_version 0.16.0)
+set(_acts_vecmem_version 1.28.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
 set(_acts_arrow_version 21.0.0)
@@ -363,21 +360,26 @@ include(ActsExternSources)
 if(ACTS_SETUP_BOOST)
     # Enable both program_options and unit_test_framework to reduce complexity
     # Also Cuda tests seem to use program_options
+    set(_acts_boost_components)
     if(
         ACTS_BUILD_ANALYSIS_APPS
         OR ACTS_BUILD_UNITTESTS
         OR ACTS_BUILD_INTEGRATIONTESTS
         OR ACTS_BUILD_BENCHMARKS
     )
-        find_package(
-            Boost
-            ${_acts_boost_version}
-            REQUIRED
-            COMPONENTS program_options unit_test_framework
-        )
-    else()
-        find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+        list(APPEND _acts_boost_components program_options unit_test_framework)
     endif()
+
+    # Only the Mille plugin needs process/filesystem, and neither is part of
+    # every Boost installation (Boost.Process is a compiled library since Boost
+    # 1.88). The plugin reports if the one it needs is missing.
+    find_package(
+        Boost
+        ${_acts_boost_version}
+        REQUIRED
+        COMPONENTS ${_acts_boost_components}
+        OPTIONAL_COMPONENTS process filesystem
+    )
 
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
         set(_boost_version_severity WARNING)
@@ -396,10 +398,10 @@ if(ACTS_SETUP_EIGEN3)
         find_package(Eigen3 REQUIRED CONFIG)
 
         if(DEFINED Eigen3_VERSION)
-            if(Eigen3_VERSION VERSION_LESS _acts_eigen3_version)
+            if(Eigen3_VERSION VERSION_LESS _acts_eigen3_min_version)
                 message(
                     FATAL_ERROR
-                    "Eigen3 ${Eigen3_VERSION} is too old (need >= 3.4.0)"
+                    "Eigen3 ${Eigen3_VERSION} is too old (need >= ${_acts_eigen3_min_version})"
                 )
             endif()
             if(Eigen3_VERSION VERSION_GREATER_EQUAL 6.0.0)
@@ -724,13 +726,6 @@ if(ACTS_BUILD_TRACCC)
     option(TRACCC_BUILD_TESTING "" FALSE)
     option(TRACCC_BUILD_EXAMPLES "" FALSE)
     option(TRACCC_BUILD_BENCHMARKS "" FALSE)
-
-    find_package(TBB ${_acts_tbb_version} CONFIG)
-    if(NOT TBB_FOUND)
-        set(TRACCC_SETUP_TBB TRUE CACHE BOOL "")
-    else()
-        set(TRACCC_SETUP_TBB FALSE CACHE BOOL "")
-    endif()
 
     add_subdirectory(Traccc)
 endif()

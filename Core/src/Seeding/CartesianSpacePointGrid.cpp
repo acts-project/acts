@@ -44,8 +44,8 @@ CartesianSpacePointGrid::CartesianSpacePointGrid(
 
   GridType grid(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
-  initializeGrid(std::move(grid), m_cfg.bottomBinFinder.value(),
-                 m_cfg.topBinFinder.value(), m_cfg.navigation);
+  initializeGrid(std::move(grid), m_cfg.bottomBinFinder, m_cfg.topBinFinder,
+                 m_cfg.navigation);
   m_sortCoordGetter = [c = m_cfg.sortingCoord, d = m_cfg.sortingDirection](
                           const ConstSpacePointProxy& p) {
     return d * p.xyz()[c];

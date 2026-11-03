@@ -28,6 +28,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -228,7 +229,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
      Rotation:             colX = (1.000000, 0.000000, 0.000000)\n\
                            colY = (0.000000, 1.000000, 0.000000)\n\
                            colZ = (0.000000, 0.000000, 1.000000)\n\
-     Bounds  : Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, averagePhi, bevelMinZ, bevelMaxZ) = (1.0000000, 10.0000000, 3.1415927, 0.0000000, 0.0000000, 0.0000000)";
+     Bounds  : Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, averagePhi) = (1.0000000, 10.0000000, 3.1415927, 0.0000000)";
   dumpOutput << cylinderSurfaceObject->toStream(testContext);
   BOOST_CHECK(dumpOutput.is_equal(expected));
 }
@@ -253,7 +254,11 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
   /// Test assignment
   auto assignedCylinderSurface =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 6.6, 5.4);
+  // TODO: surface copy-assignment is deprecated; switch to a makeShared copy
+  // when it is removed (SonarCloud cpp:S3624).
+  ACTS_PUSH_IGNORE_DEPRECATED()
   *assignedCylinderSurface = *cylinderSurfaceObject;
+  ACTS_POP_IGNORE_DEPRECATED()
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedCylinderSurface == *cylinderSurfaceObject);
 }
@@ -407,21 +412,6 @@ BOOST_DATA_TEST_CASE(IncompatibleZDirection,
       base * Translation3{Vector3::UnitZ() * 200_mm}, 35_mm, 100_mm);
   BOOST_CHECK_THROW(
       cyl->mergedWith(*cyl3, Acts::AxisDirection::AxisZ, false, *logger),
-      SurfaceMergingException);
-
-  // Cylinder with bevel
-  auto cyl4 = Surface::makeShared<CylinderSurface>(
-      base * Translation3{Vector3::UnitZ() * 200_mm}, 30_mm, 100_mm,
-      std::numbers::pi, 0, std::numbers::pi / 8.);
-  BOOST_CHECK_THROW(
-      cyl->mergedWith(*cyl4, Acts::AxisDirection::AxisZ, false, *logger),
-      SurfaceMergingException);
-
-  auto cyl5 = Surface::makeShared<CylinderSurface>(
-      base * Translation3{Vector3::UnitZ() * 200_mm}, 30_mm, 100_mm,
-      std::numbers::pi, 0, 0, std::numbers::pi / 8.);
-  BOOST_CHECK_THROW(
-      cyl->mergedWith(*cyl5, Acts::AxisDirection::AxisZ, false, *logger),
       SurfaceMergingException);
 
   // Cylinder with overlap in z

@@ -12,19 +12,30 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
+#include "Acts/Navigation/FrustumNavigationPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <cmath>
+#include <numbers>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -293,59 +304,6 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
   BOOST_CHECK_EQUAL(cPolicy.value, 44);
 }
 
-// Factory function returning a concrete policy by value. This exercises the
-// deprecated `add` overload, which is kept working for backwards compatibility.
-CPolicySpecialized<int> makeCPolicyByValue(const GeometryContext& /*gctx*/,
-                                           const TrackingVolume& volume,
-                                           const Logger& /*logger*/,
-                                           IsolatedConfig config) {
-  CPolicySpecialized<int>::Config config2{.value = config.value};
-  return CPolicySpecialized<int>(volume, config2);
-}
-
-BOOST_AUTO_TEST_CASE(IsolatedFactoryByValueDeprecated) {
-  TrackingVolume volume{
-      Transform3::Identity(),
-      std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 310_mm),
-      "PixelLayer3"};
-
-  IsolatedConfig config{.value = 44};
-
-  // The by-value factory function form is deprecated in favor of returning a
-  // unique_ptr, but must keep working. Suppress the deprecation warning here so
-  // this coverage does not break `-Werror` builds.
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  auto factory =
-      NavigationPolicyFactory{}.add<APolicy>().add(makeCPolicyByValue, config);
-  ACTS_POP_IGNORE_DEPRECATED()
-
-  auto policyBase = factory(gctx, volume, *logger);
-  auto& policy = dynamic_cast<MultiNavigationPolicy&>(*policyBase);
-
-  NavigationDelegate delegate;
-  policyBase->connect(delegate);
-
-  NavigationStream main;
-  AppendOnlyNavigationStream stream{main};
-  NavigationArguments args{.position = Vector3::Zero(),
-                           .direction = Vector3::Zero()};
-  NavigationPolicyStateManager stateManager;
-  stateManager.pushState<MultiNavigationPolicy::State>();
-  policy.createState(gctx, args, stateManager, *logger);
-  auto policyState = stateManager.currentState();
-  delegate(gctx, args, policyState, stream, *logger);
-
-  BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
-
-  const auto& policyA = dynamic_cast<const APolicy&>(*policy.policies()[0]);
-  const auto& cPolicy =
-      dynamic_cast<const CPolicySpecialized<int>&>(*policy.policies()[1]);
-
-  BOOST_CHECK(policyA.executed);
-  BOOST_CHECK(cPolicy.executed);
-  BOOST_CHECK_EQUAL(cPolicy.value, 44);
-}
-
 namespace {
 
 std::vector<const Portal*> getTruth(const Vector3& position,
@@ -365,7 +323,7 @@ std::vector<const Portal*> getTruth(const Vector3& position,
   tryAll.createState(gctx, args, stateManager, logger);
   auto policyState = stateManager.currentState();
   tryAll.initializeCandidates(gctx, args, policyState, stream, logger);
-  main.initialize(gctx, {gpos, gdir}, BoundaryTolerance::None());
+  main.initialize(gctx, {gpos, gdir}, logger());
   std::vector<const Portal*> portals;
   for (auto& candidate : main.candidates()) {
     if (!candidate.intersection().isValid()) {
@@ -817,6 +775,14 @@ BOOST_DATA_TEST_CASE(
   Vector3 target{r * std::cos(phiTarget), r * std::sin(phiTarget), zTarget};
   Vector3 direction = (target - position).normalized();
 
+  // At the inner boundary the chord points into the hole, outside this
+  // volume. Reflect its radial component so both boundaries test a ray
+  // entering the shell, where this volume's navigation policy applies.
+  if (r == cylBounds->get(CylinderVolumeBounds::eMinR)) {
+    Vector3 radial{std::cos(phiPos), std::sin(phiPos), 0.};
+    direction -= 2. * direction.dot(radial) * radial;
+  }
+
   auto exp =
       getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
@@ -878,6 +844,118 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyZeroInnerRadiusTest) {
     BOOST_CHECK_THROW(CylinderNavigationPolicy(gctx, *cylVolume, *logger),
                       std::invalid_argument);
   }
+}
+
+BOOST_AUTO_TEST_CASE(FrustumNavigationPolicyTest) {
+  // Test the frustum navigation policy with a simple geometry
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {50_mm, 50_mm};
+  cfg.envelope[AxisDirection::AxisY] = {50_mm, 50_mm};
+  cfg.envelope[AxisDirection::AxisX] = {50_mm, 50_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+  auto& cub = root->addCuboidContainer("Container", AxisDirection::AxisZ);
+  auto cubBounds = std::make_shared<CuboidVolumeBounds>(20_mm, 20_mm, 20_mm);
+  auto childCub = std::make_unique<TrackingVolume>(Transform3::Identity(),
+                                                   cubBounds, "child");
+  Acts::Experimental::FrustumNavigationPolicy::Config frustumConfig{2};
+  Acts::GeometryIdentifier id = Acts::GeometryIdentifier().withVolume(1);
+  childCub->assignGeometryId(id);
+  auto cubNode =
+      std::make_shared<Acts::StaticBlueprintNode>(std::move(childCub));
+  int chamberId = 1;
+  auto childBounds = std::make_shared<CuboidVolumeBounds>(5_mm, 5_mm, 5_mm);
+  std::vector<std::shared_ptr<Acts::StaticBlueprintNode>> nodes;
+  for (int x = -3; x < 4; x += 2) {
+    for (int y = -3; y < 4; y += 2) {
+      for (int z = -3; z < 4; z += 2) {
+        auto childVol = std::make_unique<TrackingVolume>(
+            Transform3::Identity() *
+                Translation3{Vector3{x * 5_mm, y * 5_mm, z * 5_mm}},
+            childBounds,
+            "child_" + std::to_string(x) + "_" + std::to_string(y) + "_" +
+                std::to_string(z));
+        Acts::GeometryIdentifier chId = id.withLayer(chamberId++);
+        childVol->assignGeometryId(chId);
+        auto staticNode =
+            std::make_shared<Acts::StaticBlueprintNode>(std::move(childVol));
+        nodes.push_back(std::move(staticNode));
+        cubNode->addChild(nodes.back());
+      }
+    }
+  }
+  std::shared_ptr<Acts::NavigationPolicyFactory> factory =
+      std::make_shared<Acts::NavigationPolicyFactory>(
+          Acts::NavigationPolicyFactory{}
+              .add<Acts::Experimental::FrustumNavigationPolicy>(frustumConfig));
+  cubNode->setNavigationPolicyFactory(factory);
+  cub.addChild(cubNode);
+  auto tGeometry = root->construct({}, gctx, *logger);
+  const TrackingVolume* vol = tGeometry->findVolume(id);
+  NavigationStream main;
+  AppendOnlyNavigationStream stream{main};
+  NavigationArguments args{.position = Vector3{1, 1, 1},
+                           .direction = Vector3{1, 1, 1}};
+  NavigationPolicyStateManager stateManager;
+  std::unique_ptr<Acts::Experimental::FrustumNavigationPolicy> frustumPolicy =
+      std::make_unique<Acts::Experimental::FrustumNavigationPolicy>(
+          gctx, *vol, *logger, frustumConfig);
+  frustumPolicy->createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  frustumPolicy->initializeCandidates(gctx, args, policyState, stream, *logger);
+  main.initialize(gctx, {Vector3{1, 1, 1}, Vector3{1, 1, 1}}, *logger);
+  BOOST_CHECK_EQUAL(main.candidates().size(), 10);
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceArrayPolicyNeighborWindowTest) {
+  // A barrel layer with 12 modules in phi and 3 modules in z at r = 30 mm
+  auto cylBounds = std::make_shared<CylinderVolumeBounds>(20_mm, 40_mm, 100_mm);
+  auto cylVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(), cylBounds, "SurfaceArrayVolume");
+
+  auto moduleBounds = std::make_shared<RectangleBounds>(8_mm, 30_mm);
+  for (int iphi = 0; iphi < 12; ++iphi) {
+    const double phi = (iphi + 0.5) * 2 * std::numbers::pi / 12;
+    // The module normal points along r, the local y axis along z
+    RotationMatrix3 rotation;
+    rotation.col(0) = Vector3{-std::sin(phi), std::cos(phi), 0};
+    rotation.col(1) = Vector3::UnitZ();
+    rotation.col(2) = Vector3{std::cos(phi), std::sin(phi), 0};
+    for (int iz = -1; iz <= 1; ++iz) {
+      Transform3 transform = Transform3::Identity();
+      transform.linear() = rotation;
+      transform.translation() =
+          Vector3{30_mm * std::cos(phi), 30_mm * std::sin(phi), iz * 60_mm};
+      auto surface = Surface::makeShared<PlaneSurface>(transform, moduleBounds);
+      surface->assignIsSensitive(true);
+      cylVolume->addSurface(surface);
+    }
+  }
+
+  using enum SurfaceArrayNavigationPolicy::LayerType;
+
+  // Without a configured window, the policy uses the creator default
+  SurfaceArrayNavigationPolicy defaultPolicy(
+      gctx, *cylVolume, *logger,
+      SurfaceArrayNavigationPolicy::Config{.layerType = Cylinder,
+                                           .bins = {0, 0}});
+  const auto defaultWindow = defaultPolicy.surfaceArray().neighborWindow();
+  BOOST_CHECK_EQUAL(defaultWindow.max[0], 1);
+  BOOST_CHECK_EQUAL(defaultWindow.max[1], 2);
+
+  // A configured window reaches the surface array
+  SurfaceArrayNavigationPolicy windowPolicy(
+      gctx, *cylVolume, *logger,
+      SurfaceArrayNavigationPolicy::Config{
+          .layerType = Cylinder,
+          .bins = {0, 0},
+          .numberOfBinsFactor = 5.0,
+          .neighborWindow = SurfaceArray::NeighborWindow{{0, 1}, {1, 8}},
+          .overfill = 1});
+  const auto window = windowPolicy.surfaceArray().neighborWindow();
+  BOOST_CHECK_EQUAL(window.min[0], 0);
+  BOOST_CHECK_EQUAL(window.min[1], 1);
+  BOOST_CHECK_EQUAL(window.max[0], 1);
+  BOOST_CHECK_EQUAL(window.max[1], 8);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

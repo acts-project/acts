@@ -376,9 +376,8 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsSetValues) {
   BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfPhiSector),
                     std::numbers::pi / 2.);
 
-  for (auto bValue :
-       {CylinderVolumeBounds::eAveragePhi, CylinderVolumeBounds::eBevelMaxZ,
-        CylinderVolumeBounds::eBevelMinZ}) {
+  {
+    const auto bValue = CylinderVolumeBounds::eAveragePhi;
     BOOST_CHECK_THROW(cyl.set(bValue, -1.5 * std::numbers::pi),
                       std::invalid_argument);
     BOOST_CHECK_EQUAL(cyl.get(bValue), 0);
@@ -418,8 +417,6 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsSetValues) {
   BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfPhiSector),
                     std::numbers::pi);
   BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eAveragePhi), 0);
-  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eBevelMinZ), 0);
-  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eBevelMaxZ), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

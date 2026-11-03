@@ -12,6 +12,6 @@ if(DETRAY_BUILD_HOST)
 endif()
 
 # Set up all of the "device" tutorials.
-if(DETRAY_BUILD_CUDA OR DETRAY_BUILD_SYCL)
+if(DETRAY_BUILD_CUDA)
     add_subdirectory(device)
 endif()

@@ -23,6 +23,7 @@ from acts.examples.reconstruction import (
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
+    GbtsConfigArg,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -119,11 +120,11 @@ def run_ckf_tracking(label, seeding):
                 minPt=0.5 * u.GeV,
                 impactMax=3 * u.mm,
             ),
-            SeedFinderOptionsArg(bFieldInZ=2 * u.T),
+            SeedFinderOptionsArg(bFieldInZ=setup.bFieldInZ),
             seedingAlgorithm=seeding,
             paramEstimationSpacePoints=(
                 acts.examples.SeedSpacePointSelection.SpreadTriplet
-                if seeding == SeedingAlgorithm.TruthEstimated
+                if seeding in [SeedingAlgorithm.TruthEstimated, SeedingAlgorithm.Gbts]
                 else None
             ),
             initialSigmas=[
@@ -138,6 +139,19 @@ def run_ckf_tracking(label, seeding):
             initialSigmaPtRel=0.1,
             initialVarInflation=[1.0] * 6,
             geoSelectionConfigFile=setup.geoSel,
+            layerMappingConfigFile=setup.gbtsLayerMap,  # only used by SeedingAlgorithm.Gbts
+            connectorInputConfigFile=setup.gbtsConnectionTable,  # only used by SeedingAlgorithm.Gbts
+            gbtsConfigArg=GbtsConfigArg(  # only used by SeedingAlgorithm.Gbts
+                seederConfig=acts.examples.GraphBasedSeedingConfig(
+                    minSeedLevel=2,
+                ),
+                graphConfig=acts.examples.GbtsGraphBuilderConfig(
+                    minPt=0.9 * u.GeV,
+                    z0HistogramMaxBarrelOrder=-1,
+                ),
+                useAdaptiveCuts=False,
+            ),
+            gbtsSeedParameters=True,  # only used by SeedingAlgorithm.Gbts
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
         )
@@ -187,5 +201,6 @@ for label, seeding in [
     ("truth_estimated", SeedingAlgorithm.TruthEstimated),
     ("seeded", SeedingAlgorithm.GridTriplet),
     ("orthogonal", SeedingAlgorithm.OrthogonalTriplet),
+    ("gbts", SeedingAlgorithm.Gbts),
 ]:
     run_ckf_tracking(label, seeding)

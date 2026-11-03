@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -15,7 +16,6 @@
 
 // VecMem include(s).
 #include <vecmem/containers/device_vector.hpp>
-#include <vecmem/memory/device_atomic_ref.hpp>
 
 // Detray include(s).
 #include <detray/geometry/identifier.hpp>
@@ -50,6 +50,8 @@ inline constexpr unsigned long long int gbts_sort_key_index_mask =
 /// Largest number of eta bins the key's eta field can hold
 inline constexpr unsigned int gbts_sort_key_max_eta_bins =
     1u << gbts_sort_key_eta_bits;
+/// Key of a rejected spacepoint, sorted after every node
+inline constexpr unsigned long long int gbts_sort_key_rejected = ~0ull;
 
 template <concepts::thread_id1 thread_id_t>
 TRACCC_HOST_DEVICE inline void gbts_bin_spacepoints(
@@ -69,8 +71,6 @@ TRACCC_HOST_DEVICE inline void gbts_bin_spacepoints(
       payload.layer_geo);
 
   vecmem::device_vector<float4> reducedSP(payload.reducedSP);
-  vecmem::device_vector<unsigned int> d_eta_node_counter(
-      payload.eta_node_counter);
   vecmem::device_vector<unsigned long long int> d_sort_keys(payload.sort_keys);
   vecmem::device_vector<unsigned int> d_sort_values(payload.sort_values);
 
@@ -81,13 +81,16 @@ TRACCC_HOST_DEVICE inline void gbts_bin_spacepoints(
   for (unsigned int globalIndex = globalIdx; globalIndex < payload.nSp;
        globalIndex += blockDimX * gridDimX) {
     // --- Stage 1: layer assignment -----------
+    d_sort_keys[globalIndex] = gbts_sort_key_rejected;
+    d_sort_values[globalIndex] = globalIndex;
     const auto spacepoint = spacepoints.at(globalIndex);
     const auto measurement = measurements.at(spacepoint.measurement_index_1());
 
     const detray::geometry::identifier geo_id = measurement.surface_link();
     const unsigned int volume = geo_id.volume();
-    const short begin_or_bin =
-        (volume < payload.volumeMapSize) ? volumeToLayerMap[volume] : SHRT_MAX;
+    const short begin_or_bin = (volume < payload.volumeMapSize)
+                                   ? volumeToLayerMap[volume]
+                                   : static_cast<short>(SHRT_MAX);
 
     if (begin_or_bin == SHRT_MAX) {
       reducedSP[globalIndex].w = -CHAR_MAX - 1;
@@ -148,25 +151,19 @@ TRACCC_HOST_DEVICE inline void gbts_bin_spacepoints(
                                     static_cast<float>(num_eta_bins - 1u))));
       eta_index = bin0 + binIdx;
     }
-    vecmem::device_atomic_ref<unsigned int>(d_eta_node_counter[eta_index])
-        .fetch_add(1u);
 
     // --- Stage 3: node_sort_key_write -----------
     // Here we concatenate the eta bin, phi bits, and the spacepoint index
     // into a single 64-bit integer. Which is then used to sort the nodes in the
     // next stage.
     const float Phi = math::atan2(pos[1], pos[0]);
-    const unsigned int slot = vecmem::device_atomic_ref<unsigned int>(
-                                  d_eta_node_counter[payload.nEtaBins])
-                                  .fetch_add(1u);
-    d_sort_keys[slot] =
+    d_sort_keys[globalIndex] =
         (static_cast<unsigned long long int>(eta_index)
          << gbts_sort_key_eta_shift) |
         (static_cast<unsigned long long int>(float_ordered_bits(Phi))
          << gbts_sort_key_phi_shift) |
         (static_cast<unsigned long long int>(globalIndex) &
          gbts_sort_key_index_mask);
-    d_sort_values[slot] = globalIndex;
   }
 }
 

@@ -1218,6 +1218,44 @@ BOOST_AUTO_TEST_CASE(ostream_operator) {
   BOOST_CHECK(ss.str() == "AABB(ctr=(0.5, 0.5) vmin=(-1, -1) vmax=(2, 2))");
 }
 
+BOOST_AUTO_TEST_CASE(octree_intersection_traversal) {
+  struct Entity {
+    std::size_t id;
+  };
+
+  using Box = AxisAlignedBoundingBox<Entity, double, 3>;
+  const Box::Size size(Vector3::Constant(1.));
+
+  std::array<Entity, 4> entities{{{0}, {1}, {2}, {3}}};
+  std::vector<std::unique_ptr<Box>> boxes;
+  boxes.push_back(
+      std::make_unique<Box>(&entities[0], Vector3{0., 0., 0.}, size));
+  boxes.push_back(
+      std::make_unique<Box>(&entities[1], Vector3{4., 0., 0.}, size));
+  boxes.push_back(
+      std::make_unique<Box>(&entities[2], Vector3{0., 4., 0.}, size));
+  boxes.push_back(
+      std::make_unique<Box>(&entities[3], Vector3{0., 0., 4.}, size));
+
+  std::vector<Box*> primitives;
+  std::ranges::transform(boxes, std::back_inserter(primitives),
+                         [](const auto& box) { return box.get(); });
+
+  const Box* root = BoundingBoxHierarchy::makeOctree(boxes, primitives);
+  const Ray<double, 3> ray(Vector3{-2., 0., 0.}, Vector3::UnitX());
+
+  std::vector<std::size_t> visited;
+  BoundingBoxHierarchy::visitIntersecting(
+      ray, root, [&](const Entity& entity) { visited.push_back(entity.id); });
+  BOOST_CHECK(visited == std::vector<std::size_t>({0, 1}));
+
+  bool called = false;
+  BoundingBoxHierarchy::visitIntersecting(
+      ray, static_cast<const Box*>(nullptr),
+      [&](const Entity&) { called = true; });
+  BOOST_CHECK(!called);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

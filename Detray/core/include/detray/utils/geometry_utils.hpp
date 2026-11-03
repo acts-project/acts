@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/math.hpp"
 #include "detray/geometry/surface.hpp"
@@ -23,7 +24,7 @@ namespace detray {
 /// @param loc the local/bound position on the surface
 ///
 /// @returns the cosine of the incidence angle given a local/bound position
-template <typename detector_t, concepts::point point_t>
+template <concepts::detector detector_t, concepts::point point_t>
 DETRAY_HOST_DEVICE constexpr dscalar<typename detector_t::algebra_type>
 cos_angle(const typename detector_t::geometry_context &ctx,
           geometry::surface<detector_t> sf,

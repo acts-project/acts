@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2022-2025 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # CMake include(s).
 cmake_minimum_required(VERSION 3.25)
@@ -22,7 +24,7 @@ set(TRACCC_ALPAKA_SOURCE
 )
 
 set(TRACCC_ALPAKA_PATCH
-    ""
+    "PATCH_COMMAND;patch;-p1;-i;${CMAKE_CURRENT_SOURCE_DIR}/alpaka-2.0.0-sycl-enqueue-forward.patch"
     CACHE STRING
     "Patch(es) for alpaka, when built as part of this project"
 )

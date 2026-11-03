@@ -76,8 +76,8 @@ struct step_tracer : public base_actor {
     // update the bound track parameters
     if (!tracer_state.m_steps.empty() &&
         navigation.geometry_identifier() ==
-            tracer_state.m_steps.back().identifier) {
-      tracer_state.m_steps.back().bound_params = res.destination_params();
+            tracer_state.m_steps.back().identifier()) {
+      tracer_state.m_steps.back().bound_param() = res.destination_params();
     } else {
       tracer_state.m_steps.push_back(
           collect_data(prop_state, res.destination_params()));

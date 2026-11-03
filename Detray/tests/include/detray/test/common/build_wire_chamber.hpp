@@ -49,6 +49,9 @@ struct wire_chamber_config {
   wire_layer_generator_config<scalar_t> m_wire_factory_cfg{};
   /// Configuration for the homogeneous material generator
   hom_material_config<scalar_t> m_material_config{};
+  /// Volume builder configuration
+  volume_builder_options m_builder_opts{.m_deduplicate = false,
+                                        .m_sort = false};
   /// Do a full detector consistency check after building
   bool m_do_check{true};
 
@@ -82,6 +85,7 @@ struct wire_chamber_config {
     m_wire_mat = m;
     return *this;
   }
+  volume_builder_options builder_options() { return m_builder_opts; }
   constexpr wire_chamber_config &do_check(const bool check) {
     m_do_check = check;
     return *this;
@@ -113,6 +117,9 @@ struct wire_chamber_config {
   }
   constexpr auto &material_config() { return m_material_config; }
   constexpr const auto &material_config() const { return m_material_config; }
+  const volume_builder_options &builder_options() const {
+    return m_builder_opts;
+  }
   constexpr bool do_check() const { return m_do_check; }
   /// @}
 
@@ -310,7 +317,7 @@ inline auto build_wire_chamber(
 
   // Build and return the detector and fill name map
   typename detector_t::name_map name_map{};
-  auto det = det_builder.build(resource, name_map);
+  auto det = det_builder.build(resource, cfg.builder_options(), name_map);
 
   if (cfg.do_check()) {
     const bool verbose_check{false};

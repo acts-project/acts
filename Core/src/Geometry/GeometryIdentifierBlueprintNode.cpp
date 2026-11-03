@@ -80,17 +80,20 @@ struct IncrementLayerConfiguration : public Configuration {
 };
 
 struct FixedVolumeConfiguration : public Configuration {
-  explicit FixedVolumeConfiguration(GeometryIdentifier::Value volumeId)
-      : m_volumeId(volumeId) {
-    m_name = "GeoIdFixVol(vol=" + std::to_string(m_volumeId) + ")";
+  explicit FixedVolumeConfiguration(GeometryIdentifier::Value volumeId,
+                                    bool recursive)
+      : m_volumeId(volumeId), m_recursive(recursive) {
+    m_name = std::string{m_recursive ? "GeoIdFixVol(vol="
+                                     : "GeoIdFixDirectChildVol(vol="} +
+             std::to_string(m_volumeId) + ")";
   }
 
   void apply(const std::string& prefix, TrackingVolume& volume,
              const Logger& logger) override {
     ACTS_DEBUG(prefix << "~> Setting volume ID to " << m_volumeId
                       << " for volume " << volume.volumeName()
-                      << " and all descendents");
-    volume.apply([&](TrackingVolume& v) {
+                      << (m_recursive ? " and all descendants" : ""));
+    auto assign = [&](TrackingVolume& v) {
       if (v.geometryId().volume() != 0) {
         ACTS_ERROR("Volume " << v.volumeName() << " already has volume ID "
                              << v.geometryId().volume()
@@ -100,13 +103,19 @@ struct FixedVolumeConfiguration : public Configuration {
       ACTS_DEBUG(prefix << "~> Setting volume ID to " << m_volumeId
                         << " for volume " << v.volumeName());
       v.assignGeometryId(v.geometryId().withVolume(m_volumeId));
-    });
+    };
+    if (m_recursive) {
+      volume.apply(assign);
+    } else {
+      assign(volume);
+    }
   }
 
   const std::string& name() const override { return m_name; }
 
  private:
   GeometryIdentifier::Value m_volumeId;
+  bool m_recursive;
   std::string m_name;
 };
 
@@ -221,7 +230,14 @@ GeometryIdentifierBlueprintNode::incrementLayerIds(
 GeometryIdentifierBlueprintNode&
 GeometryIdentifierBlueprintNode::setAllVolumeIdsTo(
     GeometryIdentifier::Value volumeId) {
-  m_impl->add(std::make_unique<FixedVolumeConfiguration>(volumeId));
+  m_impl->add(std::make_unique<FixedVolumeConfiguration>(volumeId, true));
+  return *this;
+}
+
+GeometryIdentifierBlueprintNode&
+GeometryIdentifierBlueprintNode::setDirectChildVolumeIdTo(
+    GeometryIdentifier::Value volumeId) {
+  m_impl->add(std::make_unique<FixedVolumeConfiguration>(volumeId, false));
   return *this;
 }
 

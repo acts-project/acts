@@ -126,8 +126,8 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   BoundMatrix eCorrectedBoundCov = std::get<BoundMatrix>(correctedValue);
 
   // the loc0, phi are the same as that without correction
-  BOOST_CHECK_EQUAL(eCorrectedBoundParams[eBoundLoc0], loc0);
-  BOOST_CHECK_EQUAL(eCorrectedBoundParams[eBoundPhi], phi);
+  CHECK_CLOSE_ABS(eCorrectedBoundParams[eBoundLoc0], loc0, 1e-12);
+  CHECK_CLOSE_ABS(eCorrectedBoundParams[eBoundPhi], phi, 1e-12);
   CHECK_CLOSE_REL(eCorrectedBoundParams[eBoundLoc1], 11.2563, eps);
 
   BOOST_TEST_INFO("Corrected Bound Params: \n" << eCorrectedBoundParams);

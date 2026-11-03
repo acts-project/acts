@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -67,7 +68,7 @@ bool TRACCC_HOST_DEVICE triplet_finding_helper::isCompatible(
     dCotThetaMinusError2 = deltaCotTheta2 + error2 -
                            static_cast<scalar>(2.) * deltaCotTheta * error;
     // avoid taking root of scatteringInRegion
-    // if left side of ">" is positive, both sides of unequality can be
+    // if left side of ">" is positive, both sides of inequality can be
     // squared
     // (scattering is always positive)
     if (dCotThetaMinusError2 > scatteringInRegion2) {

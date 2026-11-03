@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2024-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Enable the HIP language.
 enable_language(HIP)
@@ -36,6 +38,8 @@ traccc_add_test(
     hip
     # Define the sources for the test.
     test_cca.cpp
+    test_ckf_combinatorics_telescope.cpp
+    test_ckf_toy_detector.cpp
     test_spacepoint_formation.cpp
     LINK_LIBRARIES
     GTest::gtest_main
@@ -45,6 +49,7 @@ traccc_add_test(
     traccc::device_common
     traccc::hip_utils
     traccc::hip
+    traccc::performance
     traccc_tests_common
     traccc_test_hip_device
 )

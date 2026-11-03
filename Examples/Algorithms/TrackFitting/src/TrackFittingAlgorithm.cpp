@@ -85,9 +85,9 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     return ProcessCode::ABORT;
   }
 
-  // Construct a perigee surface as the target surface
-  auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-      Acts::Vector3{0., 0., 0.});
+  // Construct a surface of chosen type as the target surface (default is
+  // perigee)
+  auto pSurface = m_cfg.referenceSurface;
 
   // Measurement calibrator must be instantiated here, because we need the
   // measurements to construct it. The other extensions are hold by the
@@ -172,7 +172,16 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
   }
 
-  ACTS_DEBUG("Fitted tracks: " << trackContainer->size());
+  std::size_t nTracks = trackContainer->size();
+  std::size_t nMeasurements = 0;
+  for (const auto& track : tracks) {
+    nMeasurements += track.nMeasurements();
+  }
+  m_nFittedTracks += nTracks;
+  m_nTotalMeasurements += nMeasurements;
+  ++m_nEvents;
+
+  ACTS_DEBUG("Fitted tracks: " << nTracks);
 
   if (m_cfg.linkForward) {
     for (auto track : tracks) {
@@ -193,6 +202,23 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
           std::move(*trackStateContainer))};
 
   m_outputTracks(ctx, std::move(constTracks));
+  return ProcessCode::SUCCESS;
+}
+
+ProcessCode TrackFittingAlgorithm::finalize() {
+  std::size_t nTracks = m_nFittedTracks.load();
+  std::size_t nEvents = m_nEvents.load();
+
+  ACTS_INFO("Fitted " << nTracks << " tracks in " << nEvents << " events");
+  if (nEvents > 0) {
+    ACTS_INFO("  Average tracks/event : " << static_cast<double>(nTracks) /
+                                                 static_cast<double>(nEvents));
+  }
+  if (nTracks > 0) {
+    ACTS_INFO("  Average measurements/track : "
+              << static_cast<double>(m_nTotalMeasurements.load()) /
+                     static_cast<double>(nTracks));
+  }
   return ProcessCode::SUCCESS;
 }
 

@@ -9,9 +9,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/PadBlueprintNode.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -19,6 +24,8 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -28,17 +35,27 @@
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Zip.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <array>
+#include <filesystem>
+#include <limits>
+#include <map>
 #include <memory>
 #include <numbers>
 #include <set>
 
+#include <detray/builders/detail/material_deduplication.hpp>
+#include <detray/geometry/shapes/concentric_cylinder2D.hpp>
+#include <detray/geometry/shapes/ring2D.hpp>
 #include <detray/io/backend/geometry_reader.hpp>
 #include <detray/io/backend/geometry_writer.hpp>
 #include <detray/io/backend/homogeneous_material_reader.hpp>
@@ -46,13 +63,17 @@
 #include <detray/io/backend/material_map_reader.hpp>
 #include <detray/io/backend/surface_grid_reader.hpp>
 #include <detray/io/frontend/definitions.hpp>
+#include <detray/io/frontend/detector_reader.hpp>
+#include <detray/io/frontend/detector_reader_config.hpp>
 #include <detray/io/frontend/detector_writer.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
 #include <detray/io/frontend/payloads.hpp>
 #include <detray/io/json/json_io.hpp>
+#include <detray/material/detail/material_accessor.hpp>
 #include <detray/plugins/svgtools/illustrator.hpp>
 #include <detray/plugins/svgtools/writer.hpp>
 #include <detray/utils/consistency_checker.hpp>
+#include <detray/utils/detector_statistics.hpp>
 #include <detray/utils/grid/concepts.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -66,6 +87,74 @@ using namespace Acts;
 using namespace ActsPlugins;
 
 namespace ActsTests {
+
+namespace {
+
+/// Visitor that returns the surface material slab at a local position
+template <typename scalar_t>
+struct GetMaterialSlab {
+  template <typename mat_coll_t, typename index_t, typename point_t>
+  auto operator()(const mat_coll_t& matColl, const index_t idx,
+                  const point_t& locPos) const
+      -> detray::material_slab<scalar_t> {
+    using material_t = typename mat_coll_t::value_type;
+
+    if constexpr (detray::concepts::material_map<material_t>) {
+      return detray::detail::material_accessor::get(
+          matColl, idx, typename material_t::point_type{locPos[0], locPos[1]});
+    } else if constexpr (std::same_as<material_t,
+                                      detray::material_slab<scalar_t>>) {
+      return matColl[idx];
+    } else {
+      return {};
+    }
+  }
+};
+
+/// @returns the total number of surface material entries in @p det
+template <typename detector_t>
+std::size_t nMaterialEntries(const detector_t& det) {
+  return detray::n_material_slabs(det) + detray::n_material_rods(det) +
+         detray::n_material_maps(det);
+}
+
+/// Check that every surface of @p det sees the same material as in @p refDet
+template <typename detector_t>
+void checkSameSurfaceMaterial(const detector_t& refDet, const detector_t& det) {
+  using scalar_t = typename detector_t::scalar_type;
+  using point2_t = typename detector_t::point2_type;
+
+  BOOST_REQUIRE_EQUAL(refDet.surfaces().size(), det.surfaces().size());
+
+  const std::array<point2_t, 5> locPositions{
+      point2_t{0., 0.}, point2_t{-1., 5.}, point2_t{0.5, -120.},
+      point2_t{45., 2.5}, point2_t{-3., 300.}};
+
+  for (std::size_t i = 0; i < det.surfaces().size(); ++i) {
+    const auto& refDesc = refDet.surfaces()[static_cast<detray::dindex>(i)];
+    const auto& desc = det.surfaces()[static_cast<detray::dindex>(i)];
+
+    BOOST_REQUIRE_EQUAL(refDesc.has_material(), desc.has_material());
+    if (!desc.has_material()) {
+      continue;
+    }
+    BOOST_CHECK(refDesc.material().id() == desc.material().id());
+
+    for (const auto& locPos : locPositions) {
+      const auto refSlab =
+          refDet.material_store().template visit<GetMaterialSlab<scalar_t>>(
+              refDesc.material(), locPos);
+      const auto slab =
+          det.material_store().template visit<GetMaterialSlab<scalar_t>>(
+              desc.material(), locPos);
+
+      BOOST_CHECK_MESSAGE(detray::detail::is_identical(refSlab, slab),
+                          "Material differs on surface " << i);
+    }
+  }
+}
+
+}  // namespace
 
 BOOST_AUTO_TEST_SUITE(DetrayConversion)
 
@@ -531,7 +620,7 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
 //
 // }  // namespace detail
 //
-// template <typename detector_t>
+// template <concepts::detector detector_t>
 // inline std::string print_detector(
 //     const detector_t& det, const typename detector_t::name_map& names = {}) {
 //   // Gathers navigation information across navigator update calls
@@ -730,7 +819,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   // Payloads DONE, let's actually build a detray detector from them.
 
   using detector_t =
-      detray::detector<detray::default_metadata<detray::array<double>>>;
+      detray::host::detector<detray::default_metadata<detray::array<double>>>;
 
   // build detector
   detray::detector_builder<detector_t::metadata> detectorBuilder{};
@@ -749,7 +838,8 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
                                   std::integral_constant<std::size_t, 2>>::
       from_payload<detector_t>(detectorBuilder, surfaceGrids);
 
-  detector_t detrayDetector(detectorBuilder.build(mr));
+  detray::volume_builder_options builder_opts{};
+  detector_t detrayDetector(detectorBuilder.build(mr, builder_opts));
 
   // Checks and print
   detray::detail::check_consistency(detrayDetector);
@@ -793,6 +883,492 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   //           << std::endl;
 
   detray::io::write_detector(detrayDetector, detrayNames, writer_cfg);
+}
+
+BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
+  using detector_t =
+      detray::host::detector<detray::default_metadata<detray::array<double>>>;
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+  CylindricalTrackingGeometry cGeometry(gctx, true);
+  std::shared_ptr<const TrackingGeometry> tGeometry =
+      cGeometry(*getDefaultLogger("Geo", Logging::INFO));
+
+  DetrayPayloadConverter::Config payloadCfg;
+  tGeometry->apply([&payloadCfg](const TrackingVolume& volume) {
+    if (volume.volumeName() == "Beampipe") {
+      payloadCfg.beampipeVolume = &volume;
+    }
+  });
+
+  DetrayGeometryConverter::Config cfg;
+  cfg.payloadConverter = std::make_shared<DetrayPayloadConverter>(
+      payloadCfg, getDefaultLogger("PayloadCnv", Logging::INFO));
+  // On by default
+  BOOST_CHECK(cfg.deduplicateMaterial);
+
+  vecmem::host_memory_resource mr;
+
+  auto convert = [&](bool deduplicate) {
+    auto converterCfg = cfg;
+    converterCfg.deduplicateMaterial = deduplicate;
+    DetrayGeometryConverter converter(
+        converterCfg, getDefaultLogger("GeoCnv", Logging::INFO));
+    return converter.convert<detector_t::metadata>(mr, gctx, tGeometry);
+  };
+
+  auto reference = convert(false);
+  auto deduplicated = convert(true);
+
+  const detector_t& refDet = *reference.detector;
+  detector_t& det = *deduplicated.detector;
+
+  BOOST_CHECK(detray::detail::check_consistency(refDet));
+  BOOST_CHECK(detray::detail::check_consistency(det));
+
+  // Same geometry
+  BOOST_CHECK_EQUAL(refDet.volumes().size(), det.volumes().size());
+  BOOST_CHECK_EQUAL(refDet.surfaces().size(), det.surfaces().size());
+
+  // Without deduplication, there is one material entry per surface
+  std::size_t nSurfacesWithMaterial = 0;
+  for (const auto& sfDesc : refDet.surfaces()) {
+    nSurfacesWithMaterial += sfDesc.has_material() ? 1u : 0u;
+  }
+  BOOST_CHECK_GT(nSurfacesWithMaterial, 0u);
+  BOOST_CHECK_EQUAL(nMaterialEntries(refDet), nSurfacesWithMaterial);
+
+  // Portals shared between volumes share their material
+  BOOST_TEST_MESSAGE("Material slabs: " << detray::n_material_slabs(refDet)
+                                        << " -> "
+                                        << detray::n_material_slabs(det));
+  BOOST_TEST_MESSAGE("Material maps: " << detray::n_material_maps(refDet)
+                                       << " -> "
+                                       << detray::n_material_maps(det));
+  BOOST_CHECK_LT(nMaterialEntries(det), nMaterialEntries(refDet));
+  BOOST_CHECK_LE(detray::n_material_slabs(det),
+                 detray::n_material_slabs(refDet));
+  BOOST_CHECK_LE(detray::n_material_maps(det), detray::n_material_maps(refDet));
+
+  // ... but every surface still sees the same material
+  checkSameSurfaceMaterial(refDet, det);
+
+  // The deduplicated detector writes one material entry per surface again,
+  // which can be read back without deduplication
+  const std::filesystem::path outDir{"detray_material_deduplication"};
+  std::filesystem::remove_all(outDir);
+
+  auto writerCfg = detray::io::detector_writer_config{}
+                       .format(detray::io::format::json)
+                       .path(outDir.string())
+                       .replace_files(true)
+                       .write_grids(true)
+                       .write_material(true);
+  detray::io::write_detector(det, deduplicated.names, writerCfg);
+
+  detray::io::detector_reader_config readerCfg{};
+  readerCfg.do_check(true).deduplicate(false);
+  for (const auto& entry : std::filesystem::directory_iterator(outDir)) {
+    readerCfg.add_file(entry.path().string());
+  }
+  BOOST_CHECK_GE(readerCfg.files().size(), 3u);
+
+  const auto [readDet, readNames] =
+      detray::io::read_detector<detector_t>(mr, readerCfg);
+
+  BOOST_CHECK_EQUAL(nMaterialEntries(readDet), nMaterialEntries(refDet));
+  checkSameSurfaceMaterial(det, readDet);
+}
+
+BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  Blueprint::Config bpCfg;
+  bpCfg.envelope[AxisDirection::AxisZ] = {20., 20.};
+  bpCfg.envelope[AxisDirection::AxisR] = {0., 20.};
+  Blueprint root{bpCfg};
+  auto envelope = std::make_shared<PadBlueprintNode>(
+      "Envelope", ExtentEnvelope{{.z = {10., 10.}, .r = {0., 10.}}});
+  root.addChild(envelope);
+  envelope->addCylinderContainer(
+      "Inner", AxisDirection::AxisR, [](auto& inner) {
+        inner.addStaticVolume(
+            Transform3::Identity(),
+            std::make_shared<CylinderVolumeBounds>(0., 10., 50.), "BeamPipe");
+        inner.addStaticVolume(
+            Transform3::Identity(),
+            std::make_shared<CylinderVolumeBounds>(10., 20., 50.), "Tracker");
+      });
+  auto geometry = root.construct({}, gctx, *logger);
+  DetrayPayloadConverter::Config cfg;
+  cfg.beampipeVolume = geometry->findVolumeByName("BeamPipe");
+  cfg.replacementWorld = geometry->findVolumeByName("Envelope");
+  BOOST_REQUIRE(cfg.beampipeVolume != nullptr);
+  BOOST_REQUIRE(cfg.replacementWorld != nullptr);
+
+  auto convert = [&]() {
+    return DetrayPayloadConverter{cfg}.convertTrackingGeometry(gctx, *geometry);
+  };
+  auto selected = convert();
+  BOOST_REQUIRE_EQUAL(selected.detector->volumes.size(), 3u);
+  BOOST_CHECK_EQUAL(selected.detector->volumes.front().name, "BeamPipe");
+  std::set<std::pair<std::string, std::string>> links;
+  std::size_t exits = 0;
+  for (const auto& volume : selected.detector->volumes) {
+    for (const auto& surface : volume.surfaces) {
+      for (const auto& mask : surface.masks) {
+        auto target = mask.volume_link.link;
+        if (target == detray::io::mask_payload::end_of_world) {
+          ++exits;
+          BOOST_CHECK_EQUAL(volume.name, "Envelope");
+        } else {
+          BOOST_REQUIRE_LT(target, selected.detector->volumes.size());
+          links.emplace(volume.name,
+                        selected.detector->volumes.at(target).name);
+        }
+      }
+    }
+  }
+  BOOST_CHECK_GT(exits, 0u);
+  BOOST_CHECK(links.contains({"BeamPipe", "Tracker"}));
+  BOOST_CHECK(links.contains({"Tracker", "BeamPipe"}));
+  BOOST_CHECK(links.contains({"Tracker", "Envelope"}));
+  BOOST_CHECK(links.contains({"Envelope", "Tracker"}));
+
+  using detector_t =
+      detray::host::detector<detray::default_metadata<detray::array<double>>>;
+  detray::detector_builder<detector_t::metadata> builder{};
+  detray::io::geometry_reader::from_payload<detector_t>(builder,
+                                                        *selected.detector);
+  vecmem::host_memory_resource mr;
+  auto det = builder.build(mr, detray::volume_builder_options{});
+  detray::detail::check_consistency(det);
+
+  cfg.includeWorld = false;
+  auto withoutWorld = convert();
+  BOOST_REQUIRE_EQUAL(withoutWorld.detector->volumes.size(), 2u);
+  BOOST_CHECK_EQUAL(withoutWorld.detector->volumes.front().name, "BeamPipe");
+  // Every retained surface keeps its masks; only the envelope destination
+  // changes. Compare by name because removing the world renumbers volumes.
+  for (const auto& volume : withoutWorld.detector->volumes) {
+    auto original = std::ranges::find(selected.detector->volumes, volume.name,
+                                      &detray::io::volume_payload::name);
+    BOOST_REQUIRE(original != selected.detector->volumes.end());
+    BOOST_REQUIRE_EQUAL(volume.surfaces.size(), original->surfaces.size());
+    for (std::size_t i = 0; i < volume.surfaces.size(); ++i) {
+      const auto& masks = volume.surfaces.at(i).masks;
+      const auto& originalMasks = original->surfaces.at(i).masks;
+      BOOST_REQUIRE_EQUAL(masks.size(), originalMasks.size());
+      for (std::size_t j = 0; j < masks.size(); ++j) {
+        BOOST_CHECK(masks[j].boundaries == originalMasks[j].boundaries);
+        const auto& target =
+            selected.detector->volumes.at(originalMasks[j].volume_link.link)
+                .name;
+        if (target == "Envelope") {
+          BOOST_CHECK_EQUAL(masks[j].volume_link.link,
+                            detray::io::mask_payload::end_of_world);
+        } else {
+          BOOST_REQUIRE_LT(masks[j].volume_link.link,
+                           withoutWorld.detector->volumes.size());
+          BOOST_CHECK_EQUAL(
+              withoutWorld.detector->volumes.at(masks[j].volume_link.link).name,
+              target);
+        }
+      }
+    }
+  }
+  detray::detector_builder<detector_t::metadata> withoutWorldBuilder{};
+  detray::io::geometry_reader::from_payload<detector_t>(withoutWorldBuilder,
+                                                        *withoutWorld.detector);
+  auto withoutWorldDetector =
+      withoutWorldBuilder.build(mr, detray::volume_builder_options{});
+  detray::detail::check_consistency(withoutWorldDetector);
+
+  const auto* beampipe = cfg.beampipeVolume;
+  cfg.beampipeVolume = cfg.replacementWorld;
+  BOOST_CHECK_THROW(convert(), std::invalid_argument);
+  cfg.beampipeVolume = beampipe;
+  cfg.replacementWorld = beampipe;
+  BOOST_CHECK_THROW(convert(), std::invalid_argument);
+
+  // Omitting the original world also works without a replacement pointer.
+  cfg.replacementWorld = nullptr;
+  auto withoutOriginalWorld = convert();
+  BOOST_REQUIRE_EQUAL(withoutOriginalWorld.detector->volumes.size(), 3u);
+  BOOST_CHECK(std::ranges::none_of(
+      withoutOriginalWorld.detector->volumes,
+      [](const auto& volume) { return volume.name == "World"; }));
+
+  // Conversion must not disconnect shared portals in the original geometry.
+  cfg.includeWorld = true;
+  cfg.replacementWorld = nullptr;
+  auto full = convert();
+  BOOST_REQUIRE_EQUAL(full.detector->volumes.size(), 4u);
+  bool stillConnected = false;
+  for (const auto& volume : full.detector->volumes) {
+    if (volume.name != "Envelope") {
+      continue;
+    }
+    for (const auto& surface : volume.surfaces) {
+      for (const auto& mask : surface.masks) {
+        BOOST_REQUIRE_LT(mask.volume_link.link, full.detector->volumes.size());
+        stillConnected |=
+            full.detector->volumes.at(mask.volume_link.link).name == "World";
+      }
+    }
+  }
+  BOOST_CHECK(stillConnected);
+
+  // Selecting the original world is equivalent to the default conversion.
+  cfg.replacementWorld = geometry->highestTrackingVolume();
+  auto explicitWorld = convert();
+  BOOST_CHECK_EQUAL(explicitWorld.detector->volumes.size(),
+                    full.detector->volumes.size());
+
+  cfg.replacementWorld = geometry->findVolumeByName("Tracker");
+  BOOST_CHECK_THROW(convert(), std::invalid_argument);
+  TrackingVolume unrelated(Transform3::Identity(),
+                           std::make_shared<CylinderVolumeBounds>(0., 1., 1.));
+  cfg.replacementWorld = &unrelated;
+  BOOST_CHECK_THROW(convert(), std::invalid_argument);
+
+  // A malformed internal link must not silently turn into a world exit.
+  cfg.replacementWorld = geometry->findVolumeByName("Envelope");
+  auto surface = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(1., 1.));
+  geometry->apply([&](TrackingVolume& volume) {
+    if (&volume != cfg.beampipeVolume) {
+      return;
+    }
+    auto portal =
+        std::make_shared<Portal>(Direction::AlongNormal(), surface, volume);
+    portal->setLink(gctx, Direction::OppositeNormal(),
+                    std::make_unique<TrivialPortalLink>(
+                        surface, *geometry->highestTrackingVolume()));
+    volume.addPortal(portal);
+  });
+  BOOST_CHECK_THROW(convert(), std::runtime_error);
+  cfg.includeWorld = false;
+  BOOST_CHECK_THROW(convert(), std::runtime_error);
+}
+
+// Stack of z-segmented layers in r, with the segment boundaries chosen such
+// that the fused cylinder portals between the layers cover all cases:
+//   L0 | L1: one volume against three          (L0 is the whole face)
+//   L1 | L2: staggered splits at +-100 and 0    (no piece contains another)
+//   L2 | L3: nested splits at 0 and -150, 0, 150
+// Every detray portal mask has to stay within the volume it is placed in,
+// and lead to the volume on the other side of that part of the portal.
+BOOST_AUTO_TEST_CASE(DetrayPortalSegmentation) {
+  using namespace UnitLiterals;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+  const double halfZ = 300_mm;
+  // Split points in z for each layer, the outer edges are +-halfZ
+  const std::vector<std::vector<double>> splits = {
+      {}, {-100_mm, 100_mm}, {0_mm}, {-150_mm, 0_mm, 150_mm}};
+
+  // Expected z extent and r range of every volume, by name
+  struct Extent {
+    double rMin, rMax, zMin, zMax;
+  };
+  std::map<std::string, Extent> extents;
+
+  Blueprint::Config bpCfg;
+  bpCfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  bpCfg.envelope[AxisDirection::AxisR] = {0_mm, 20_mm};
+  Blueprint root{bpCfg};
+
+  auto addLayer = [&](auto& parent, std::size_t l) {
+    const double rMin = l * 100_mm;
+    const double rMax = (l + 1) * 100_mm;
+    parent.addCylinderContainer(
+        "L" + std::to_string(l), AxisDirection::AxisZ, [&](auto& layer) {
+          std::vector<double> edges{-halfZ};
+          edges.insert(edges.end(), splits[l].begin(), splits[l].end());
+          edges.push_back(halfZ);
+          for (std::size_t i = 0; i + 1 < edges.size(); ++i) {
+            const std::string name =
+                "L" + std::to_string(l) + "_" + std::to_string(i);
+            extents[name] = {rMin, rMax, edges[i], edges[i + 1]};
+            layer.addStaticVolume(
+                Transform3{Translation3{
+                    Vector3{0, 0, 0.5 * (edges[i] + edges[i + 1])}}},
+                std::make_shared<CylinderVolumeBounds>(
+                    rMin, rMax, 0.5 * (edges[i + 1] - edges[i])),
+                name);
+          }
+        });
+  };
+
+  // Material on the portal between L0 and L1, which every L1 volume only
+  // sees a clipped part of
+  auto portalMaterial = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab{makeBeryllium(), 1_mm});
+
+  root.addCylinderContainer("Layers", AxisDirection::AxisR, [&](auto& layers) {
+    layers.addMaterial("L0_Mat", [&](auto& mat) {
+      mat.configureFace(CylinderVolumeBounds::Face::OuterCylinder,
+                        portalMaterial);
+      addLayer(mat, 0);
+    });
+    for (std::size_t l = 1; l < splits.size(); ++l) {
+      addLayer(layers, l);
+    }
+  });
+
+  auto tGeometry = root.construct({}, gctx, *logger);
+
+  DetrayPayloadConverter::Config cfg;
+  tGeometry->apply([&cfg](const TrackingVolume& volume) {
+    if (volume.volumeName() == "L0_0") {
+      cfg.beampipeVolume = &volume;
+    }
+  });
+  BOOST_REQUIRE_NE(cfg.beampipeVolume, nullptr);
+
+  DetrayPayloadConverter converter(cfg, getDefaultLogger("Cnv", Logging::INFO));
+  auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
+  const auto& detector = *payloads.detector;
+
+  std::map<std::size_t, std::string> names;
+  for (const auto& volume : detector.volumes) {
+    names[volume.index.link] = volume.name;
+  }
+
+  // Masks (as [min, max] -> target name) of the portal of @p volume at the
+  // cylinder radius @p r
+  using MaskList = std::vector<std::tuple<double, double, std::string>>;
+  auto cylinderMasks = [&](const std::string& volume, double r) {
+    MaskList result;
+    auto volIt = std::ranges::find(detector.volumes, volume,
+                                   &detray::io::volume_payload::name);
+    BOOST_REQUIRE(volIt != detector.volumes.end());
+    for (const auto& srf : volIt->surfaces) {
+      for (const auto& mask : srf.masks) {
+        using enum detray::concentric_cylinder2D::boundaries;
+        if (srf.type != detray::surface_id::e_portal ||
+            mask.shape != detray::io::shape_id::portal_cylinder2 ||
+            std::abs(mask.boundaries.at(e_r) - r) > 1e-6) {
+          continue;
+        }
+        const double z = srf.transform.tr.at(2);
+        result.emplace_back(z + mask.boundaries.at(e_lower_z),
+                            z + mask.boundaries.at(e_upper_z),
+                            names.at(mask.volume_link.link));
+      }
+    }
+    std::ranges::sort(result);
+    return result;
+  };
+
+  auto checkMasks = [](const MaskList& actual, const MaskList& expected) {
+    BOOST_REQUIRE_EQUAL(actual.size(), expected.size());
+    for (const auto& [a, e] : zip(actual, expected)) {
+      CHECK_CLOSE_ABS(std::get<0>(a), std::get<0>(e), 1e-6);
+      CHECK_CLOSE_ABS(std::get<1>(a), std::get<1>(e), 1e-6);
+      BOOST_CHECK_EQUAL(std::get<2>(a), std::get<2>(e));
+    }
+  };
+
+  // One volume against three: the small volumes each get exactly their own
+  // part of the face, the big volume gets one mask per neighbour
+  checkMasks(cylinderMasks("L1_1", 100_mm), {{-100_mm, 100_mm, "L0_0"}});
+  checkMasks(cylinderMasks("L0_0", 100_mm), {{-300_mm, -100_mm, "L1_0"},
+                                             {-100_mm, 100_mm, "L1_1"},
+                                             {100_mm, 300_mm, "L1_2"}});
+
+  // Staggered: the overlaps are clipped from both sides
+  checkMasks(cylinderMasks("L1_1", 200_mm),
+             {{-100_mm, 0_mm, "L2_0"}, {0_mm, 100_mm, "L2_1"}});
+  checkMasks(cylinderMasks("L2_0", 200_mm),
+             {{-300_mm, -100_mm, "L1_0"}, {-100_mm, 0_mm, "L1_1"}});
+
+  // Nested: only the pieces bordering the volume, unchanged
+  checkMasks(cylinderMasks("L2_0", 300_mm),
+             {{-300_mm, -150_mm, "L3_0"}, {-150_mm, 0_mm, "L3_1"}});
+  checkMasks(cylinderMasks("L3_1", 300_mm), {{-150_mm, 0_mm, "L2_0"}});
+
+  // The portal material ends up on the portal surface of every volume
+  // bordering the L0 | L1 portal, and only there
+  BOOST_REQUIRE_NE(payloads.homogeneousMaterial, nullptr);
+  std::set<std::string> withMaterial;
+  for (const auto& hMat : payloads.homogeneousMaterial->volumes) {
+    const auto& volume = detector.volumes.at(hMat.volume_link.link);
+    for (const auto& slab : hMat.surface_mat) {
+      const auto& srf = volume.surfaces.at(slab.surface.link);
+      BOOST_CHECK(srf.type == detray::surface_id::e_portal);
+      BOOST_CHECK(srf.masks.at(0).shape ==
+                  detray::io::shape_id::portal_cylinder2);
+      using enum detray::concentric_cylinder2D::boundaries;
+      CHECK_CLOSE_ABS(srf.masks.at(0).boundaries.at(e_r), 100_mm, 1e-6);
+      CHECK_CLOSE_ABS(slab.thickness, 1_mm, 1e-6);
+      withMaterial.insert(volume.name);
+    }
+  }
+  BOOST_CHECK(withMaterial ==
+              std::set<std::string>({"L0_0", "L1_0", "L1_1", "L1_2"}));
+
+  // No portal mask of any layer volume leaves its volume
+  for (const auto& volume : detector.volumes) {
+    auto extentIt = extents.find(volume.name);
+    if (extentIt == extents.end()) {
+      continue;
+    }
+    const Extent& ext = extentIt->second;
+    for (const auto& srf : volume.surfaces) {
+      if (srf.type != detray::surface_id::e_portal) {
+        continue;
+      }
+      for (const auto& mask : srf.masks) {
+        if (mask.shape == detray::io::shape_id::portal_cylinder2) {
+          using enum detray::concentric_cylinder2D::boundaries;
+          const double z = srf.transform.tr.at(2);
+          BOOST_CHECK_GE(z + mask.boundaries.at(e_lower_z), ext.zMin - 1e-6);
+          BOOST_CHECK_LE(z + mask.boundaries.at(e_upper_z), ext.zMax + 1e-6);
+        } else if (mask.shape == detray::io::shape_id::ring2) {
+          using enum detray::ring2D::boundaries;
+          BOOST_CHECK_GE(mask.boundaries.at(e_inner_r), ext.rMin - 1e-6);
+          BOOST_CHECK_LE(mask.boundaries.at(e_outer_r), ext.rMax + 1e-6);
+        }
+      }
+    }
+  }
+
+  // The payload has to build into a consistent detray detector
+  using detector_t =
+      detray::host::detector<detray::default_metadata<detray::array<double>>>;
+  detray::detector_builder<detector_t::metadata> detectorBuilder{};
+  detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
+                                                        detector);
+  detray::io::homogeneous_material_reader::from_payload<detector_t>(
+      detectorBuilder, *payloads.homogeneousMaterial);
+  vecmem::host_memory_resource mr;
+  detray::volume_builder_options builder_opts{};
+  detector_t detrayDetector(detectorBuilder.build(mr, builder_opts));
+  detray::detail::check_consistency(detrayDetector);
+
+  // Promote a leaf whose outer portal has three different neighbours. All
+  // segments become exits, with the original clipping and material preserved.
+  cfg.replacementWorld = cfg.beampipeVolume;
+  auto isolated =
+      DetrayPayloadConverter{cfg}.convertTrackingGeometry(gctx, *tGeometry);
+  BOOST_REQUIRE_EQUAL(isolated.detector->volumes.size(), 1u);
+  const auto& isolatedVolume = isolated.detector->volumes.front();
+  BOOST_CHECK_EQUAL(isolatedVolume.name, "L0_0");
+  std::size_t outerMasks = 0;
+  for (const auto& surface : isolatedVolume.surfaces) {
+    for (const auto& mask : surface.masks) {
+      BOOST_CHECK_EQUAL(mask.volume_link.link,
+                        detray::io::mask_payload::end_of_world);
+      if (mask.shape == detray::io::shape_id::portal_cylinder2) {
+        ++outerMasks;
+      }
+    }
+  }
+  BOOST_CHECK_EQUAL(outerMasks, 3u);
+  BOOST_REQUIRE(isolated.homogeneousMaterial != nullptr);
+  BOOST_CHECK_EQUAL(isolated.homogeneousMaterial->volumes.size(), 1u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

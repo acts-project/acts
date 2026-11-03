@@ -13,6 +13,7 @@
 #include "detray/builders/homogeneous_material_factory.hpp"
 #include "detray/builders/surface_factory.hpp"
 #include "detray/builders/volume_builder.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/indexing.hpp"
 #include "detray/geometry/mask.hpp"
 #include "detray/geometry/shapes.hpp"
@@ -22,7 +23,7 @@ namespace detray {
 
 /// Adds a few surfaces to the detector for testing the builder code on
 /// non-empty detectors
-template <typename detector_t>
+template <concepts::detector detector_t>
 void prefill_detector(detector_t& d,
                       typename detector_t::geometry_context ctx) {
   using algebra_t = typename detector_t::algebra_type;
@@ -89,7 +90,8 @@ void prefill_detector(detector_t& d,
   v_mat_builder.add_surfaces(annulus_factory, ctx);
   v_mat_builder.add_surfaces(trapezoid_factory, ctx);
 
-  v_mat_builder.build(d);
+  const volume_builder_options builder_opts{};
+  v_mat_builder.build(d, builder_opts);
 }
 
 }  // namespace detray

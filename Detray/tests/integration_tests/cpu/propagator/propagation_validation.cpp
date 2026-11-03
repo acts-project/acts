@@ -43,7 +43,7 @@ class PropagationValidation
           std::tuple<scalar, unsigned int, float, float>> {};
 
 TEST_P(PropagationValidation, forward_backward) {
-  using detector_t = detector<toy_metadata<test_algebra>>;
+  using detector_t = host::detector<toy_metadata<test_algebra>>;
   using algebra_t = detector_t::algebra_type;
   using bfield_t = bfield::const_field_t<scalar>;
   using track_t = free_track_parameters<algebra_t>;
@@ -99,15 +99,18 @@ TEST_P(PropagationValidation, forward_backward) {
   for (auto track : generator_t{trk_gen_cfg}) {
     assert(track.qop() != 0.f);
     tracks.push_back(track);
+    // Adapt to particle/antiparticle randomization in track generator
+    const scalar p{
+        track.p(math::copysign(test_cfg.particle.charge(), track.qop()))};
 
     detail::helix<algebra_t> h{track, B};
-    intersection_trace_t intersection_trace = detector_scanner::run<helix_scan>(
-        gctx, det, h, truth_mask_tol, track.p(test_cfg.particle.charge()));
+    intersection_trace_t intersection_trace =
+        detector_scanner::run<helix_scan>(gctx, det, h, truth_mask_tol, p);
 
     // Only keep the sensitive surfaces
     intersection_trace_t module_trace{};
     for (const data_record_t& rec : intersection_trace) {
-      if (rec.intersection.surface().is_sensitive()) {
+      if (rec.intersection().surface().is_sensitive()) {
         module_trace.push_back(rec);
       }
     }

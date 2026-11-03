@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -16,8 +17,8 @@ namespace traccc::io::csv {
 
 /// Type to read information into about Fatras hits
 struct hit {
-  uint64_t particle_id = 0;
-  uint64_t geometry_id = 0;
+  std::uint64_t particle_id = 0;
+  std::uint64_t geometry_id = 0;
   float tx = 0;
   float ty = 0;
   float tz = 0;
@@ -30,7 +31,7 @@ struct hit {
   float deltapy = 0;
   float deltapz = 0;
   float deltae = 0;
-  uint64_t index = 0;
+  std::uint64_t index = 0;
 
   DFE_NAMEDTUPLE(hit, particle_id, geometry_id, tx, ty, tz, tt, tpx, tpy, tpz,
                  te, deltapx, deltapy, deltapz, deltae, index);

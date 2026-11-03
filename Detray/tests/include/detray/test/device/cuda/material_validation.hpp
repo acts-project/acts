@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/tracks/tracks.hpp"
 
@@ -33,22 +34,20 @@ namespace detray::cuda {
 /// @param[in] cfg the propagation configuration
 /// @param[in] tracks_view the initial track parameter of every test track
 /// @param[out] track_mat_view the accumulated material per track
-template <typename detector_t>
+template <concepts::detector detector_t>
 void material_validation_device(
     typename detector_t::view_type det_view, const propagation::config &cfg,
     vecmem::data::vector_view<
         free_track_parameters<typename detector_t::algebra_type>> &tracks_view,
-    vecmem::data::vector_view<
-        material_validator::track_material<typename detector_t::scalar_type>>
+    vecmem::data::vector_view<material_validator::track_material>
         &track_mat_view,
-    vecmem::data::jagged_vector_view<
-        material_record<typename detector_t::scalar_type>> &mat_steps_view);
+    vecmem::data::jagged_vector_view<material_record> &mat_steps_view);
 
 /// Prepare data for device material trace run
 struct run_material_validation {
   static constexpr std::string_view name = "cuda";
 
-  template <typename detector_t>
+  template <concepts::detector detector_t>
   auto operator()(
       vecmem::memory_resource *host_mr, vecmem::memory_resource *dev_mr,
       const detector_t &det, const propagation::config &cfg,
@@ -56,16 +55,15 @@ struct run_material_validation {
           free_track_parameters<typename detector_t::algebra_type>> &tracks,
       const std::vector<std::size_t> &capacities) {
     using algebra_t = typename detector_t::algebra_type;
-    using scalar_t = dscalar<algebra_t>;
     using track_t = free_track_parameters<algebra_t>;
-    using material_record_t = material_record<scalar_t>;
-    using track_material_t = material_validator::track_material<scalar_t>;
+    using material_record_t = material_record;
+    using track_material_t = material_validator::track_material;
 
     // Helper object for performing memory copies (to CUDA devices)
     vecmem::cuda::copy cuda_cpy;
 
     // Copy the detector to device and get its view
-    auto det_buffer = detray::get_buffer(det, *dev_mr, cuda_cpy);
+    const auto det_buffer = detray::get_buffer(det, *dev_mr, cuda_cpy);
     auto det_view = detray::get_data(det_buffer);
 
     // Move the track parameters to device
@@ -101,7 +99,7 @@ struct run_material_validation {
   }
 };
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using material_validation = detray::test::material_validation_impl<
     detector_t, detray::cuda::run_material_validation>;
 

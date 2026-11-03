@@ -8,6 +8,7 @@
 
 #include "ActsExamples/AlignmentMillePede/ActsSolverFromMille.hpp"
 #include "ActsExamples/AlignmentMillePede/MillePedeAlignmentSandbox.hpp"
+#include "ActsExamples/AlignmentMillePede/MillePedeSolverAlgorithm.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -28,4 +29,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignmentMillePede, m) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsSolverFromMille, m, "ActsSolverFromMille",
                                 milleInput, trackingGeometry, magneticField,
                                 fixModules, outFile);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(MillePedeSolverAlgorithm, m,
+                                "MillePedeSolverAlgorithm", solverConfig,
+                                steeringConfig);
 }

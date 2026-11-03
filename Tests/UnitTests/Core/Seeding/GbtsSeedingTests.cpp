@@ -12,6 +12,7 @@
 #include "Acts/EventData/SeedContainer.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
@@ -53,11 +54,10 @@ constexpr float kDiscMaxR = 220.f;
 /// createLinkingScheme.py.
 constexpr float kEtaBinWidth = 0.2f;
 
-/// One layer of the toy detector. The ids follow ATLAS, which the seeder still
-/// keys on: 80000 is the innermost barrel layer (extra z0 cuts) and barrel ids
-/// 1000 apart are adjacent.
+/// One layer of the toy detector. The seeder does not read the ids: it orders
+/// the pixel barrel layers by radius.
 struct LayerSpec {
-  std::int32_t id{};
+  Experimental::GbtsExperimentLayerId id{};
   GbtsLayerType type{};
   GbtsLayerTechnology technology{GbtsLayerTechnology::Pixel};
   /// r for a barrel layer, z for an endcap disc.
@@ -67,7 +67,8 @@ struct LayerSpec {
   float maxBound{};
 };
 
-constexpr LayerSpec barrelLayer(std::int32_t id, float radius) {
+constexpr LayerSpec barrelLayer(Experimental::GbtsExperimentLayerId id,
+                                float radius) {
   return {.id = id,
           .type = GbtsLayerType::Barrel,
           .refCoord = radius,
@@ -75,7 +76,7 @@ constexpr LayerSpec barrelLayer(std::int32_t id, float radius) {
           .maxBound = kBarrelHalfZ};
 }
 
-constexpr LayerSpec discLayer(std::int32_t id, float z) {
+constexpr LayerSpec discLayer(Experimental::GbtsExperimentLayerId id, float z) {
   return {.id = id,
           .type = GbtsLayerType::Endcap,
           .refCoord = z,
@@ -86,7 +87,9 @@ constexpr LayerSpec discLayer(std::int32_t id, float z) {
 /// Layers plus the connector links between them, outer (src) to inner (dst).
 struct ToyDetector {
   std::vector<LayerSpec> layers;
-  std::vector<std::pair<std::int32_t, std::int32_t>> links;
+  std::vector<std::pair<Experimental::GbtsExperimentLayerId,
+                        Experimental::GbtsExperimentLayerId>>
+      links;
   /// Outer radius bound used by the doublet rz filter.
   float maxOuterRadius{};
 };
@@ -106,18 +109,20 @@ ToyDetector forwardDetector() {
   ToyDetector detector = barrelDetector();
   detector.maxOuterRadius = 300.f;
 
-  for (const std::int32_t idBase : {90000, 70000}) {
+  for (const Experimental::GbtsExperimentLayerId idBase : {90000u, 70000u}) {
     const float sign = idBase == 90000 ? 1.f : -1.f;
-    std::int32_t previousId = 0;
+    Experimental::GbtsExperimentLayerId previousId = 0;
 
     for (std::size_t i = 0; i < discZ.size(); ++i) {
-      const std::int32_t id = idBase + 1000 * static_cast<std::int32_t>(i);
+      const Experimental::GbtsExperimentLayerId id =
+          idBase + 1000 * static_cast<Experimental::GbtsExperimentLayerId>(i);
       detector.layers.push_back(discLayer(id, sign * discZ[i]));
 
       if (i == 0) {
         // a track reaching the first disc still has hits in one of these
         // barrel layers, never in 83000
-        for (const std::int32_t innerId : {80000, 81000, 82000}) {
+        for (const Experimental::GbtsExperimentLayerId innerId :
+             {80000u, 81000u, 82000u}) {
           detector.links.emplace_back(id, innerId);
         }
       } else {
@@ -148,9 +153,9 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
   std::vector<Experimental::GbtsLayerConnection> connections;
   connections.reserve(detector.links.size());
   for (const auto& [src, dst] : detector.links) {
-    connections.push_back(
-        {static_cast<std::uint32_t>(src), static_cast<std::uint32_t>(dst)});
+    connections.push_back({.src = src, .dst = dst});
   }
+  Experimental::assignAdaptiveTauRatioCuts(connections, layers);
 
   return std::make_shared<Experimental::GbtsGeometry>(layers, connections,
                                                       kEtaBinWidth);
@@ -241,12 +246,14 @@ SpacePointContainer makeSpacePoints(const ToyDetector& detector,
                                 SpacePointColumns::Z | SpacePointColumns::R |
                                 SpacePointColumns::Phi);
 
-  auto layerColumn = container.createColumn<std::uint32_t>("layerId");
+  auto layerColumn =
+      container.createColumn<Experimental::GbtsLayerIndex>("gbtsLayerIndex");
   auto clusterWidthColumn = container.createColumn<float>("clusterWidth");
   auto localPositionColumn = container.createColumn<float>("localPositionY");
   auto trackColumn = container.createColumn<std::uint32_t>("trackId");
 
-  container.reserve(tracks.size() * detector.layers.size());
+  container.reserve(
+      static_cast<std::uint32_t>(tracks.size() * detector.layers.size()));
 
   for (std::size_t track = 0; track < tracks.size(); ++track) {
     for (std::size_t layer = 0; layer < detector.layers.size(); ++layer) {
@@ -264,7 +271,7 @@ SpacePointContainer makeSpacePoints(const ToyDetector& detector,
       sp.phi() = tracks[track].phi;
       sp.copiedFromIndex() = sp.index();
       // the dense layer index, not the GBTS layer id
-      sp.extra(layerColumn) = static_cast<std::uint32_t>(layer);
+      sp.extra(layerColumn) = static_cast<Experimental::GbtsLayerIndex>(layer);
       sp.extra(clusterWidthColumn) = 0.f;
       sp.extra(localPositionColumn) = 0.f;
       sp.extra(trackColumn) = static_cast<std::uint32_t>(track);
@@ -294,12 +301,14 @@ SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
       SpacePointColumns::Y | SpacePointColumns::Z | SpacePointColumns::R |
       SpacePointColumns::Phi | SpacePointColumns::StripCalibrationDetails);
 
-  auto layerColumn = container.createColumn<std::uint32_t>("layerId");
+  auto layerColumn =
+      container.createColumn<Experimental::GbtsLayerIndex>("gbtsLayerIndex");
   auto clusterWidthColumn = container.createColumn<float>("clusterWidth");
   auto localPositionColumn = container.createColumn<float>("localPositionY");
   auto trackColumn = container.createColumn<std::uint32_t>("trackId");
 
-  container.reserve(tracks.size() * detector.layers.size());
+  container.reserve(
+      static_cast<std::uint32_t>(tracks.size() * detector.layers.size()));
 
   for (std::size_t track = 0; track < tracks.size(); ++track) {
     const float cosPhi = std::cos(tracks[track].phi);
@@ -325,7 +334,7 @@ SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
       sp.phi() = tracks[track].phi;
       sp.copiedFromIndex() = sp.index();
       // the dense layer index, not the GBTS layer id
-      sp.extra(layerColumn) = static_cast<std::uint32_t>(layer);
+      sp.extra(layerColumn) = static_cast<Experimental::GbtsLayerIndex>(layer);
       sp.extra(clusterWidthColumn) = 0.f;
       sp.extra(localPositionColumn) = 0.f;
       sp.extra(trackColumn) = static_cast<std::uint32_t>(track);
@@ -338,18 +347,18 @@ SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
       const std::array<float, 3> across{sinPhi, -cosPhi, 0.f};
       const float half = 0.5f * kStereoAngle;
       OuterStripSpacePointCalibrationDetails details{};
-      for (int side = 0; side < 2; ++side) {
+      for (std::size_t side = 0; side < 2; ++side) {
         const float sign = side == 0 ? -1.f : 1.f;
         const std::array<float, 3> axis{sign * std::sin(half) * across[0],
                                         sign * std::sin(half) * across[1],
                                         std::cos(half)};
         std::array<float, 3>& halfVector =
             side == 0 ? details.innerHalfVector : details.outerHalfVector;
-        for (int i = 0; i < 3; ++i) {
+        for (std::size_t i = 0; i < 3; ++i) {
           halfVector[i] = axis[i] * kStripHalfLength;
         }
         if (side == 1) {
-          for (int i = 0; i < 3; ++i) {
+          for (std::size_t i = 0; i < 3; ++i) {
             // the crossing sits at the centre of its strip
             details.outerCenter[i] =
                 point[i] + 0.5f * kModuleGap * direction[i];
@@ -367,6 +376,7 @@ SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
 /// The seeder and everything it needs, for one toy detector.
 struct SeederSetup {
   Experimental::GraphBasedTrackSeeder seeder;
+  Experimental::GbtsGraphBuilder graphBuilder;
   Experimental::GbtsTrackingFilter filter;
   Experimental::GbtsRoiDescriptor roi;
   Experimental::GraphBasedTrackSeeder::Options options;
@@ -388,23 +398,27 @@ SeederSetup makeSeeder(const ToyDetector& detector,
   };
 
   Experimental::GraphBasedTrackSeeder::Config config;
-  config.minPt = 1_GeV;
-  config.minZ0 = -kBarrelHalfZ;
-  config.maxZ0 = kBarrelHalfZ;
-  config.maxOuterRadius = detector.maxOuterRadius;
   // the toy setup has no tau lookup table and no cluster widths
   config.useClusterWidthCuts = false;
-  config.calibrateStrips = calibrateStrips;
+
+  Experimental::GbtsGraphBuilder::Config graphConfig;
+  graphConfig.minPt = 1_GeV;
+  graphConfig.minZ0 = -kBarrelHalfZ;
+  graphConfig.maxZ0 = kBarrelHalfZ;
+  graphConfig.maxOuterRadius = detector.maxOuterRadius;
+  graphConfig.calibrateStrips = calibrateStrips;
 
   return SeederSetup{
       .seeder = Experimental::GraphBasedTrackSeeder(
           Experimental::GraphBasedTrackSeeder::DerivedConfig(config), geometry,
           makeLogger()),
+      .graphBuilder =
+          Experimental::GbtsGraphBuilder(graphConfig, geometry, makeLogger()),
       .filter = Experimental::GbtsTrackingFilter(
           Experimental::GbtsTrackingFilter::Config{}, geometry, makeLogger()),
       .roi = Experimental::GbtsRoiDescriptor(-4.5, 4.5, -kBarrelHalfZ,
                                              kBarrelHalfZ),
-      .options = Experimental::GraphBasedTrackSeeder::Options(2_T),
+      .options = Experimental::GraphBasedTrackSeeder::Options{.bFieldInZ = 2_T},
   };
 }
 
@@ -415,8 +429,8 @@ SeedContainer runSeeding(const ToyDetector& detector,
   SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
-  setup.seeder.createSeeds(spacePoints, setup.roi, setup.filter, setup.options,
-                           seeds);
+  setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                           setup.filter, setup.options, seeds);
 
   return seeds;
 }
@@ -514,10 +528,42 @@ BOOST_AUTO_TEST_CASE(BarrelInputIsWellFormed) {
 
   BOOST_CHECK_EQUAL(spacePoints.size(), tracks.size() * detector.layers.size());
 
-  auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
+  auto layerColumn =
+      spacePoints.column<Experimental::GbtsLayerIndex>("gbtsLayerIndex");
   for (const auto& sp : spacePoints) {
     BOOST_CHECK_LT(sp.extra(layerColumn), detector.layers.size());
     BOOST_CHECK_LE(std::abs(sp.z()), kBarrelHalfZ);
+  }
+}
+
+// The binning the geometry hands out is what an external consumer flattens
+// into a device array, so it has to tile the bin numbering exactly.
+BOOST_AUTO_TEST_CASE(LayerBinningTilesTheBins) {
+  const ToyDetector detector = barrelDetector();
+  const auto geometry = makeGeometry(detector);
+
+  BOOST_REQUIRE_EQUAL(geometry->numLayers(), detector.layers.size());
+
+  std::uint32_t nextBin = 0;
+  for (Experimental::GbtsLayerIndex i = 0; i < geometry->numLayers(); ++i) {
+    const Experimental::GbtsLayerBinning& binning = geometry->layerBinning(i);
+
+    BOOST_CHECK_GE(binning.numBins, 1u);
+    BOOST_CHECK_GT(binning.etaBinWidth, 0.f);
+    // contiguous, in layer order, with no gap or overlap
+    BOOST_CHECK_EQUAL(binning.firstBin, nextBin);
+    nextBin += binning.numBins;
+
+    BOOST_CHECK_EQUAL(geometry->layerDescription(i).id, detector.layers[i].id);
+  }
+  BOOST_CHECK_EQUAL(nextBin, geometry->numBins());
+
+  BOOST_CHECK(!geometry->binGroups().empty());
+  for (const Experimental::GbtsBinGroup& group : geometry->binGroups()) {
+    BOOST_CHECK_LT(group.bin, geometry->numBins());
+    for (const Experimental::GbtsBinLink& link : group.links) {
+      BOOST_CHECK_LT(link.bin, geometry->numBins());
+    }
   }
 }
 
@@ -534,7 +580,8 @@ BOOST_AUTO_TEST_CASE(SeedsFromCallerFilledNodeStorage) {
 
   // r and phi as stored, so both paths see the same numbers - deriving them
   // from x and y instead costs the last bits and the seed quality with it
-  auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
+  auto layerColumn =
+      spacePoints.column<Experimental::GbtsLayerIndex>("gbtsLayerIndex");
   for (const auto& sp : spacePoints) {
     const std::optional<std::uint32_t> bin =
         storage.insert(sp.index(), sp.x(), sp.y(), sp.z(), sp.r(), sp.phi(),
@@ -557,11 +604,42 @@ BOOST_AUTO_TEST_CASE(SeedsFromCallerFilledNodeStorage) {
 
   SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
-  setup.seeder.createSeeds(storage, setup.roi, setup.filter, setup.options,
-                           seeds);
+  setup.seeder.createSeeds(storage, setup.roi, setup.graphBuilder, setup.filter,
+                           setup.options, seeds);
 
   BOOST_CHECK_EQUAL(formatSeeds(seeds),
                     formatSeeds(runSeeding(detector, spacePoints)));
+}
+
+// Nodes with identical phi are ordered by position, so the node order does not
+// depend on the order in which the caller inserts them.
+BOOST_AUTO_TEST_CASE(NodeOrderIgnoresInsertionOrderAtEqualPhi) {
+  const ToyDetector detector = barrelDetector();
+  const SeederSetup setup = makeSeeder(detector);
+
+  const float r = detector.layers.front().refCoord;
+  const float phi = 0.25f;
+  const std::array<float, 4> zs = {1.f, -2.f, 3.f, 0.5f};
+
+  const auto nodeOrder = [&](bool reversed) {
+    Experimental::GbtsNodeStorage storage = setup.seeder.makeNodeStorage();
+    for (std::size_t k = 0; k < zs.size(); ++k) {
+      const std::size_t i = reversed ? zs.size() - 1 - k : k;
+      storage.insert(static_cast<SpacePointIndex>(i), r * std::cos(phi),
+                     r * std::sin(phi), zs[i], r, phi, 0);
+    }
+    storage.finalize();
+
+    std::vector<SpacePointIndex> order;
+    for (std::uint32_t node = 0; node < storage.numberOfNodes(); ++node) {
+      order.push_back(storage.spacePointIndex(node));
+    }
+    return order;
+  };
+
+  const std::vector<SpacePointIndex> forward = nodeOrder(false);
+  BOOST_CHECK_EQUAL(forward.size(), zs.size());
+  BOOST_CHECK(forward == nodeOrder(true));
 }
 
 // One seed per track, all four hits, in radial order.
@@ -617,7 +695,8 @@ BOOST_AUTO_TEST_CASE(ForwardInputIsWellFormed) {
     BOOST_CHECK_GE(count, 4u);
   }
 
-  auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
+  auto layerColumn =
+      spacePoints.column<Experimental::GbtsLayerIndex>("gbtsLayerIndex");
   auto trackColumn = spacePoints.column<std::uint32_t>("trackId");
 
   std::vector<bool> hasBarrel(tracks.size(), false);
@@ -712,8 +791,8 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
     const SeederSetup setup = makeSeeder(detector, calibrate, /*quiet=*/true);
     SeedContainer seeds;
     seeds.assignSpacePointContainer(spacePoints);
-    setup.seeder.createSeeds(spacePoints, setup.roi, setup.filter,
-                             setup.options, seeds);
+    setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                             setup.filter, setup.options, seeds);
     return seeds.size();
   };
 
@@ -724,6 +803,52 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
   // unresolved, the walk loses every seed; resolved, it loses none
   BOOST_CHECK_EQUAL(seed(kWalk, false), 0u);
   BOOST_CHECK_EQUAL(seed(kWalk, true), tracks.size());
+}
+
+BOOST_AUTO_TEST_CASE(AdaptiveTauRatioCuts) {
+  using Experimental::GbtsLayerConnection;
+
+  const auto layer = [](Experimental::GbtsExperimentLayerId id,
+                        GbtsLayerType type, GbtsLayerTechnology technology,
+                        float refCoord) {
+    Experimental::GbtsLayerDescription description;
+    description.id = id;
+    description.type = type;
+    description.technology = technology;
+    description.refCoord = refCoord;
+    return description;
+  };
+  // listed out of radial order, so the barrel order has to be derived
+  const std::vector<Experimental::GbtsLayerDescription> layers = {
+      layer(2, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 100.f),
+      layer(1, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 50.f),
+      layer(3, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 150.f),
+      layer(4, GbtsLayerType::Endcap, GbtsLayerTechnology::Pixel, 400.f),
+      layer(5, GbtsLayerType::Barrel, GbtsLayerTechnology::Strip, 400.f),
+  };
+
+  std::vector<GbtsLayerConnection> connections = {
+      {.src = 2, .dst = 1},  // adjacent
+      {.src = 3, .dst = 1},  // skips a layer
+      {.src = 4, .dst = 3},  // leaves the barrel
+      {.src = 4, .dst = 4},  // off the barrel
+      {.src = 5, .dst = 3},  // leaves the barrel onto a strip
+  };
+  const Experimental::GbtsAdaptiveTauRatioCuts cuts;
+  Experimental::assignAdaptiveTauRatioCuts(connections, layers, cuts);
+
+  const float base = cuts.tauRatioCut;
+  const float corr = cuts.tauRatioCorr;
+  const float strip = cuts.tauRatioCorrStrip;
+  const std::vector<std::pair<float, float>> expected = {
+      {base, base}, {base + corr, base + corr},          {base, base + corr},
+      {base, base}, {base + strip, base + corr + strip},
+  };
+  for (std::size_t i = 0; i < connections.size(); ++i) {
+    BOOST_CHECK_CLOSE(connections[i].tauRatioCutInner, expected[i].first, 1e-4);
+    BOOST_CHECK_CLOSE(connections[i].tauRatioCutOuter, expected[i].second,
+                      1e-4);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

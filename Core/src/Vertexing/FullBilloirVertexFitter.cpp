@@ -11,8 +11,12 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
+
+#include <stdexcept>
+#include <utility>
 
 namespace {
 
@@ -55,6 +59,27 @@ struct BilloirVertex {
 };
 
 }  // namespace
+
+Acts::FullBilloirVertexFitter::FullBilloirVertexFitter(
+    const Config& cfg, std::unique_ptr<const Logger> logger)
+    : m_cfg(cfg), m_logger(std::move(logger)) {
+  if (!m_cfg.extractParameters.connected()) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: "
+        "No function to extract parameters "
+        "provided.");
+  }
+
+  if (!m_cfg.trackLinearizer.connected()) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: "
+        "No track linearizer provided.");
+  }
+}
+
+const Acts::Logger& Acts::FullBilloirVertexFitter::logger() const {
+  return *m_logger;
+}
 
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     const std::vector<InputTrack>& paramVector,

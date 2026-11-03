@@ -231,4 +231,96 @@ TEST_F(detray_algebra, global_transformations) {
   ASSERT_NEAR(lvectorB[2], lvectorC[2], this->tolerance());
 }
 
+// This tests that vectors and points are rotated into the direction that is
+// expected, which a round trip through the inverse transform does not catch
+TEST_F(detray_algebra, transform_directions) {
+  // Preparation work
+  vector3 z = detray::vector::normalize(vector3{3.f, 2.f, 1.f});
+  vector3 x = detray::vector::normalize(vector3{2.f, -3.f, 0.f});
+  vector3 y = detray::vector::cross(z, x);
+  point3 t = {2.f, 3.f, 4.f};
+  transform3 trf(t, z, x);
+
+  // The unit vectors of the local frame have to come out along the axes that
+  // the transform was built from
+  vector3 gx = trf.vector_to_global(vector3{1.f, 0.f, 0.f});
+  ASSERT_NEAR(gx[0], x[0], this->tolerance());
+  ASSERT_NEAR(gx[1], x[1], this->tolerance());
+  ASSERT_NEAR(gx[2], x[2], this->tolerance());
+
+  vector3 gy = trf.vector_to_global(vector3{0.f, 1.f, 0.f});
+  ASSERT_NEAR(gy[0], y[0], this->tolerance());
+  ASSERT_NEAR(gy[1], y[1], this->tolerance());
+  ASSERT_NEAR(gy[2], y[2], this->tolerance());
+
+  vector3 gz = trf.vector_to_global(vector3{0.f, 0.f, 1.f});
+  ASSERT_NEAR(gz[0], z[0], this->tolerance());
+  ASSERT_NEAR(gz[1], z[1], this->tolerance());
+  ASSERT_NEAR(gz[2], z[2], this->tolerance());
+
+  // ...and the other way around, the axes have to come back as the unit
+  // vectors of the local frame
+  vector3 lx = trf.vector_to_local(x);
+  ASSERT_NEAR(lx[0], 1.f, this->tolerance());
+  ASSERT_NEAR(lx[1], 0.f, this->tolerance());
+  ASSERT_NEAR(lx[2], 0.f, this->tolerance());
+
+  vector3 ly = trf.vector_to_local(y);
+  ASSERT_NEAR(ly[0], 0.f, this->tolerance());
+  ASSERT_NEAR(ly[1], 1.f, this->tolerance());
+  ASSERT_NEAR(ly[2], 0.f, this->tolerance());
+
+  vector3 lz = trf.vector_to_local(z);
+  ASSERT_NEAR(lz[0], 0.f, this->tolerance());
+  ASSERT_NEAR(lz[1], 0.f, this->tolerance());
+  ASSERT_NEAR(lz[2], 1.f, this->tolerance());
+
+  // A point on the local x axis has to land on the frame origin, shifted along
+  // the global direction of that axis
+  point3 gpoint = trf.point_to_global(point3{1.f, 0.f, 0.f});
+  ASSERT_NEAR(gpoint[0], t[0] + x[0], this->tolerance());
+  ASSERT_NEAR(gpoint[1], t[1] + x[1], this->tolerance());
+  ASSERT_NEAR(gpoint[2], t[2] + x[2], this->tolerance());
+
+  // The translation itself has to be the origin of the local frame
+  point3 lorigin = trf.point_to_local(t);
+  ASSERT_NEAR(lorigin[0], 0.f, this->tolerance());
+  ASSERT_NEAR(lorigin[1], 0.f, this->tolerance());
+  ASSERT_NEAR(lorigin[2], 0.f, this->tolerance());
+}
+
+// This tests a rotation whose result can be checked by hand: a frame whose
+// local x axis points along the global y axis is a rotation of 90 degrees
+// around the global z axis
+TEST_F(detray_algebra, rotation_by_ninety_degrees) {
+  vector3 z = {0.f, 0.f, 1.f};
+  vector3 x = {0.f, 1.f, 0.f};
+  point3 t = {0.f, 0.f, 0.f};
+  transform3 trf(t, z, x);
+
+  // Local x goes to global y
+  vector3 gx = trf.vector_to_global(vector3{1.f, 0.f, 0.f});
+  ASSERT_NEAR(gx[0], 0.f, this->tolerance());
+  ASSERT_NEAR(gx[1], 1.f, this->tolerance());
+  ASSERT_NEAR(gx[2], 0.f, this->tolerance());
+
+  // Local y goes to minus global x
+  vector3 gy = trf.vector_to_global(vector3{0.f, 1.f, 0.f});
+  ASSERT_NEAR(gy[0], -1.f, this->tolerance());
+  ASSERT_NEAR(gy[1], 0.f, this->tolerance());
+  ASSERT_NEAR(gy[2], 0.f, this->tolerance());
+
+  // The rotation axis stays where it is
+  vector3 gz = trf.vector_to_global(vector3{0.f, 0.f, 1.f});
+  ASSERT_NEAR(gz[0], 0.f, this->tolerance());
+  ASSERT_NEAR(gz[1], 0.f, this->tolerance());
+  ASSERT_NEAR(gz[2], 1.f, this->tolerance());
+
+  // A vector that is not along an axis, (1, 2, 3) -> (-2, 1, 3)
+  vector3 gv = trf.vector_to_global(vector3{1.f, 2.f, 3.f});
+  ASSERT_NEAR(gv[0], -2.f, this->tolerance());
+  ASSERT_NEAR(gv[1], 1.f, this->tolerance());
+  ASSERT_NEAR(gv[2], 3.f, this->tolerance());
+}
+
 }  // namespace detray::test

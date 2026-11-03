@@ -11,8 +11,13 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointContainer.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
+#include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -21,7 +26,9 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -29,8 +36,15 @@ namespace ActsExamples {
 
 class GraphBasedSeedingAlgorithm final : public IAlgorithm {
  public:
-  using ActsIDs = std::array<std::uint64_t, 2>;
-  using GbtsIDs = std::array<std::uint32_t, 3>;
+  /// One module's entry in the layer mapping file.
+  struct GbtsLayerInfo {
+    /// GBTS layer id
+    Acts::Experimental::GbtsExperimentLayerId layerId{};
+    /// whether the layer is a barrel or an endcap layer
+    Acts::Experimental::GbtsLayerType type{};
+    /// sensor technology of the layer
+    Acts::Experimental::GbtsLayerTechnology technology{};
+  };
 
   struct Config {
     /// this is used to initialise the handle that points to the container of
@@ -45,29 +59,62 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// seeds
     std::string outputSeeds;
 
+    /// Magnetic field, needed for `outputFreeParameters`.
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
+    /// Output free track parameters of the seeds (optional), zero for a seed
+    /// without a fit of its own.
+    std::string outputFreeParameters;
+
     /// Magnetic field in z direction
     float bFieldInZ = 2 * Acts::UnitConstants::T;
+
+    /// keeps or disregards strip layers during parsing
+    bool useStripConnections = false;
 
     /// contains all the options used to steer the algorithm
     /// includes both user options available to change in the python script and
     /// those seen just be the algorithm
     Acts::Experimental::GraphBasedTrackSeeder::Config seedFinderConfig;
 
+    /// steers the chain-following filter of seed extraction
     Acts::Experimental::GbtsTrackingFilter::Config trackingFilterConfig;
 
-    /// the connection table (parsed from csv file) used to make geoemetry cuts
+    /// steers doublet creation, edge linking and chain selection. `minZ0` and
+    /// `maxZ0` are overridden from the region of interest.
+    Acts::Experimental::GbtsGraphBuilder::Config graphConfig;
+
+    /// the connection table (parsed from json file) used to make geoemetry cuts
     /// be GBTS
     std::string layerMappingFile;
 
-    /// the ATLAS connector file listing which layers may be connected
+    /// the json connector file listing which layers may be connected
     std::string connectorInputFile;
 
-    /// Eta bin width the layers are split into (0 takes the value the
-    /// connector file carries, 0.2 in ATLAS' createLinkingScheme.py)
-    float etaBinWidthOverride = 0.0f;
+    /// the ATLAS lookup table of tau bounds per cluster width, needed by the
+    /// cluster width cuts
+    std::filesystem::path lutInputFile;
+
+    /// Eta bin width the layers are split into (0.2 in ATLAS'
+    /// createLinkingScheme.py)
+    float etaBinWidth = 0.2f;
+
+    /// Widen the tau ratio cut of layer pairs by `tauRatioCuts`
+    bool useAdaptiveCuts = true;
+    /// Tau ratio cuts assigned to the layer pairs
+    Acts::Experimental::GbtsAdaptiveTauRatioCuts tauRatioCuts;
 
     /// z0 range the eta bin table is built against
     Acts::Experimental::GbtsZ0Range gbtsZ0Range;
+
+    /// Cut the eta bins along the module tilt of inclined layers.
+    bool useLayerTilt = false;
+
+    /// the region of interest along the beam line. Overrides
+    /// `seedFinderConfig.minZ0` and `maxZ0`.
+    float collisionRegionMin = -150. * Acts::UnitConstants::mm;
+    /// See @ref collisionRegionMin
+    float collisionRegionMax = 150. * Acts::UnitConstants::mm;
 
     /// holds detector information, used to make the geometry objects used by
     /// GBTS
@@ -93,17 +140,23 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// holds all objects either used in initialise or handed out of algorithm
   Config m_cfg{};
 
+  /// the geometry information the seeding works on
+  std::shared_ptr<Acts::Experimental::GbtsGeometry> m_geometry;
+
   /// actual seed finder algorithm
   std::optional<Acts::Experimental::GraphBasedTrackSeeder> m_finder;
 
+  /// graph used in creating and extracting edges, edge connections
+  /// and valid chains
+  std::optional<Acts::Experimental::GbtsGraphBuilder> m_gbtsGraphBuilder;
+
+  /// filter used to extract seed candidates from graph
   std::optional<Acts::Experimental::GbtsTrackingFilter> m_filter;
 
   /// conversion between ACTS labelling of volume, layer and modules to that
-  /// used by GBTS
-  std::map<ActsIDs, GbtsIDs> m_actsGbtsMap;
-
-  /// used to assign LayerIds to the GbtsActsMap
-  std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
+  /// used by GBTS: the entry of a surface is the one of its module or, without
+  /// one, the one of its whole layer
+  Acts::GeometryHierarchyMap<GbtsLayerInfo> m_actsGbtsMap;
 
   /// used to define region of interest
   std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;
@@ -118,18 +171,32 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// handle that points to container of output seeds
   WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
-  /// make the map between ACTS geometry ID's and GBTS geometry ID's
-  std::map<ActsIDs, GbtsIDs> makeActsGbtsMap() const;
+  WriteDataHandle<std::vector<Acts::FreeVector>> m_outputFreeParameters{
+      this, "OutputFreeParameters"};
 
-  /// Resolve the dense GBTS layer index for a space point, or nullopt if it is
-  /// not part of the GBTS geometry.
-  std::optional<std::uint32_t> gbtsLayerIndex(
+  /// make the map between ACTS geometry ID's and GBTS geometry ID's
+  Acts::GeometryHierarchyMap<GbtsLayerInfo> makeActsGbtsMap() const;
+
+  /// Resolve the GBTS layer index for a space point, or nullopt if it is not
+  /// part of the GBTS geometry.
+  std::optional<Acts::Experimental::GbtsLayerIndex> gbtsLayerIndex(
       const ConstSpacePointProxy &spacePoint) const;
+
+  /// Add a surface of the tracking geometry to the description of its GBTS
+  /// layer: the reference coordinates are summed and the bounds extended.
+  /// @param surface The surface to add
+  /// @param gctx The geometry context
+  /// @param inputVector The layer descriptions, one per GBTS layer seen so far
+  /// @param countVector The number of surfaces added to each layer description
+  void addSurfaceToGbtsLayers(
+      const Acts::Surface &surface, const Acts::GeometryContext &gctx,
+      std::vector<Acts::Experimental::GbtsLayerDescription> &inputVector,
+      std::vector<std::size_t> &countVector) const;
 
   /// makes the geometry objects used by GBTS that correspond to the objects in
   /// the connection table for ease these are sometimes called "logical layers"
   std::vector<Acts::Experimental::GbtsLayerDescription> layerNumbering(
-      const Acts::GeometryContext &gctx);
+      const Acts::GeometryContext &gctx) const;
 
   void printConfig() const;
 };

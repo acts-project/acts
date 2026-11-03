@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2022 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -25,7 +26,7 @@ namespace traccc {
 /// Container base class for describing objects in a given event
 ///
 /// This is the generic container of the code, holding all relevant
-/// information about objcts in a given event.
+/// information about objects in a given event.
 ///
 /// It can be instantiated with different vector types, to be able to use
 /// the same container type in both host and device code.

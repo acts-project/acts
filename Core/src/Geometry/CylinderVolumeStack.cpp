@@ -139,7 +139,7 @@ void CylinderVolumeStack::initializeOuterVolume(
           "have CylinderVolumeBounds"};
     }
 
-    checkNoPhiOrBevel(*cylinderBounds, logger);
+    checkNoPhiSector(*cylinderBounds, logger);
 
     volumeTuples.emplace_back(gctx, *volume, m_groupTransform);
   }
@@ -336,15 +336,16 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(const GeometryContext& gctx,
 
     overlapPrint(AxisDirection::AxisZ, a, b, logger);
 
-    if (a.maxZ() > b.minZ()) {
+    // Transform roundoff can make touching volumes appear to overlap.
+    constexpr auto tolerance = s_onSurfaceTolerance;
+    if (a.maxZ() - b.minZ() > tolerance) {
       ACTS_ERROR(" -> Overlap in z");
       throw std::invalid_argument("Volumes overlap in z");
     } else {
       ACTS_VERBOSE(" -> No overlap");
     }
 
-    constexpr auto tolerance = s_onSurfaceTolerance;
-    if (std::abs(a.maxZ() - b.minZ()) < tolerance) {
+    if (std::abs(a.maxZ() - b.minZ()) <= tolerance) {
       ACTS_VERBOSE("No gap between volumes, no attachment needed");
     } else {
       double gapWidth = b.minZ() - a.maxZ();
@@ -698,7 +699,7 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
     checkVolumeAlignment(volTemp, logger);
   }
 
-  checkNoPhiOrBevel(*cylBounds, logger);
+  checkNoPhiSector(*cylBounds, logger);
 
   const double newMinR = newVolume.minR();
   const double newMaxR = newVolume.maxR();
@@ -1045,8 +1046,8 @@ void CylinderVolumeStack::update(const GeometryContext& gctx,
   m_groupTransform = localToGlobalTransform(gctx);
 }
 
-void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
-                                            const Logger& logger) {
+void CylinderVolumeStack::checkNoPhiSector(const CylinderVolumeBounds& bounds,
+                                           const Logger& logger) {
   if (bounds.get(CylinderVolumeBounds::eHalfPhiSector) != std::numbers::pi) {
     ACTS_ERROR(
         "CylinderVolumeStack requires all volumes to have a full "
@@ -1061,24 +1062,6 @@ void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
         "phi of 0");
     throw std::invalid_argument(
         "CylinderVolumeStack requires all volumes to have an average phi of "
-        "0");
-  }
-
-  if (bounds.get(CylinderVolumeBounds::eBevelMinZ) != 0.0) {
-    ACTS_ERROR(
-        "CylinderVolumeStack requires all volumes to have a bevel angle of "
-        "0");
-    throw std::invalid_argument(
-        "CylinderVolumeStack requires all volumes to have a bevel angle of "
-        "0");
-  }
-
-  if (bounds.get(CylinderVolumeBounds::eBevelMaxZ) != 0.0) {
-    ACTS_ERROR(
-        "CylinderVolumeStack requires all volumes to have a bevel angle of "
-        "0");
-    throw std::invalid_argument(
-        "CylinderVolumeStack requires all volumes to have a bevel angle of "
         "0");
   }
 }

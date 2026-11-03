@@ -9,12 +9,15 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 
-#include <cassert>
+#include <utility>
+
+namespace Acts {
+class Surface;
+class TrackingGeometry;
+}  // namespace Acts
 
 namespace ActsExamples {
 
@@ -64,10 +67,9 @@ class IndexSourceLink final {
 struct IndexSourceLinkSurfaceAccessor {
   const Acts::TrackingGeometry& geometry;
 
-  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-    const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
-    return geometry.findSurface(indexSourceLink.geometryId());
-  }
+  // Out of line so this header does not need the TrackingGeometry/Surface
+  // definitions, which are expensive to compile and not needed by most users.
+  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const;
 };
 
 /// Accessor for the above source link container
@@ -80,11 +82,7 @@ struct IndexSourceLinkAccessor : GeometryIdMultisetAccessor<IndexSourceLink> {
   using Iterator = Acts::SourceLinkAdapterIterator<BaseIterator>;
 
   // get the range of elements with requested geoId
-  std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
-    assert(container != nullptr);
-    auto [begin, end] = container->equal_range(surface.geometryId());
-    return {Iterator{begin}, Iterator{end}};
-  }
+  std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const;
 };
 
 }  // namespace ActsExamples

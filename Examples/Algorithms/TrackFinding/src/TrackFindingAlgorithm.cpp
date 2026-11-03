@@ -26,6 +26,7 @@
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFinding/SeedDeduplicator.hpp"
 #include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -47,7 +48,6 @@
 #include <optional>
 #include <ostream>
 #include <stdexcept>
-#include <unordered_map>
 #include <utility>
 
 namespace ActsExamples {
@@ -107,80 +107,49 @@ class MeasurementSelector {
   }
 };
 
-/// Flags the seeds whose measurements are a subset of an already found track.
+/// Count the measured local position coordinates of a measurement.
+Acts::SeedDeduplicator::Weight localPositionDimension(
+    const MeasurementContainer::ConstVariableProxy& measurement) {
+  Acts::SeedDeduplicator::Weight dimension = 0;
+  for (const auto index : measurement.subspaceIndexVector()) {
+    if (index == Acts::eBoundLoc0 || index == Acts::eBoundLoc1) {
+      ++dimension;
+    }
+  }
+  return dimension;
+}
+
+/// Collect the measurement keys of all space points of a seed.
+void collectSeedKeys(
+    const ConstSeedProxy& seed,
+    std::vector<Acts::SeedDeduplicator::MeasurementKey>& measKeys) {
+  measKeys.clear();
+  for (const SpacePointIndex spIndex : seed.spacePointIndices()) {
+    const ConstSpacePointProxy sp =
+        seed.container().spacePointContainer().at(spIndex);
+    for (const Acts::SourceLink& sourceLink : sp.sourceLinks()) {
+      measKeys.push_back(sourceLink.get<IndexSourceLink>().index());
+    }
+  }
+}
+
+/// Collect the measurement keys of a track.
 ///
-/// In case of strip seeds only the first source link of the pair is used.
-class SeedCoverage {
- public:
-  /// Index the seeds by their measurements.
-  ///
-  /// @param seeds The seeds to index.
-  void index(const SeedContainer& seeds) {
-    m_seedSize.assign(seeds.size(), 0);
-    m_covered.assign(seeds.size(), false);
-    m_counts.assign(seeds.size(), 0);
-
-    for (std::size_t iSeed = 0; iSeed < seeds.size(); ++iSeed) {
-      const ConstSeedProxy seed = seeds.at(iSeed);
-      for (const SpacePointIndex spIndex : seed.spacePointIndices()) {
-        const ConstSpacePointProxy sp = seeds.spacePointContainer().at(spIndex);
-        if (sp.sourceLinks().empty()) {
-          continue;
-        }
-        const Index measurement =
-            sp.sourceLinks().front().get<IndexSourceLink>().index();
-        m_measurementToSeeds[measurement].push_back(iSeed);
-        ++m_seedSize[iSeed];
-      }
+/// Outliers count as shared measurements. This is a choice: a seed
+/// measurement that the track rejected as an outlier can still make the seed a
+/// duplicate.
+void collectTrackKeys(
+    const TrackProxy& track,
+    std::vector<Acts::SeedDeduplicator::MeasurementKey>& measKeys) {
+  measKeys.clear();
+  for (const auto& trackState : track.trackStatesReversed()) {
+    if (!trackState.hasUncalibratedSourceLink()) {
+      continue;
     }
+    measKeys.push_back(
+        trackState.getUncalibratedSourceLink().get<IndexSourceLink>().index());
   }
-
-  /// Flag every seed whose measurements the track covers.
-  ///
-  /// @param track The track that was found.
-  void addCoverageFrom(const TrackProxy& track) {
-    for (const auto& trackState : track.trackStatesReversed()) {
-      if (!trackState.hasUncalibratedSourceLink()) {
-        continue;
-      }
-      const Index measurement =
-          trackState.getUncalibratedSourceLink().get<IndexSourceLink>().index();
-      const auto it = m_measurementToSeeds.find(measurement);
-      if (it == m_measurementToSeeds.end()) {
-        continue;
-      }
-      for (const std::size_t iSeed : it->second) {
-        if (m_counts[iSeed] == 0) {
-          m_touched.push_back(iSeed);
-        }
-        ++m_counts[iSeed];
-        if (m_counts[iSeed] >= m_seedSize[iSeed]) {
-          m_covered[iSeed] = true;
-        }
-      }
-    }
-
-    for (const std::size_t iSeed : m_touched) {
-      m_counts[iSeed] = 0;
-    }
-    m_touched.clear();
-  }
-
-  /// Whether a previously found track covers the seed.
-  ///
-  /// @param iSeed The index of the seed.
-  /// @return True if the seed is covered.
-  bool isCovered(std::size_t iSeed) const { return m_covered.at(iSeed); }
-
- private:
-  std::unordered_map<Index, std::vector<std::size_t>> m_measurementToSeeds;
-  std::vector<std::uint32_t> m_seedSize;
-  std::vector<bool> m_covered;
-
-  /// per track scratch, reset through `m_touched`
-  std::vector<std::uint32_t> m_counts;
-  std::vector<std::size_t> m_touched;
-};
+}
 
 class BranchStopper {
  public:
@@ -292,6 +261,12 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
         "required for staying on seed.");
   }
 
+  Acts::TrackletJoiner::Config joinerConfig;
+  joinerConfig.smoothSecond = m_cfg.twoWaySmoothing;
+  joinerConfig.conditionFirst = m_cfg.twoWaySmoothing;
+  m_trackletJoiner = Acts::TrackletJoiner(
+      joinerConfig, this->logger().clone("TrackletJoiner"));
+
   if (m_cfg.trackSelectorCfg.has_value()) {
     m_trackSelector = std::visit(
         [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
@@ -355,15 +330,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
   extensions.createTrackStates
-      .template connect<&TrackStateCreatorType ::createTrackStates>(
+      .template connect<&TrackStateCreatorType::createTrackStates>(
           &trackStateCreator);
   extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
 
   Acts::PropagatorPlainOptions firstPropOptions(ctx.recoGeoContext,
                                                 ctx.magFieldContext);
   firstPropOptions.maxSteps = m_cfg.maxSteps;
-  firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward()
-                                                   : Acts::Direction::Forward();
+  firstPropOptions.direction = Acts::Direction::Forward();
   firstPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
   firstPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
@@ -379,25 +353,19 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                   ctx.calibContext, extensions,
                                   firstPropOptions);
 
-  firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
+  firstOptions.targetSurface = nullptr;
   firstOptions.recordMaterialStates = m_cfg.recordMaterialStates;
   firstOptions.betheHeitlerApprox =
-      std::make_shared<Acts::AtlasBetheHeitlerApprox>(
+      std::make_shared<Acts::PolynomialBetheHeitlerApprox>(
           Acts::makeDefaultBetheHeitlerApprox());
 
   TrackFinderOptions secondOptions(ctx.recoGeoContext, ctx.magFieldContext,
                                    ctx.calibContext, extensions,
                                    secondPropOptions);
-  secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
+  secondOptions.targetSurface = pSurface.get();
   secondOptions.skipPrePropagationUpdate = true;
   secondOptions.recordMaterialStates = m_cfg.recordMaterialStates;
   secondOptions.betheHeitlerApprox = firstOptions.betheHeitlerApprox;
-
-  // the brem finder cannot skip material states, so it gets its own options
-  TrackFinderOptions firstBremOptions = firstOptions;
-  firstBremOptions.recordMaterialStates = true;
-  TrackFinderOptions secondBremOptions = secondOptions;
-  secondBremOptions.recordMaterialStates = true;
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using ExtrapolatorOptions = Extrapolator::template Options<
@@ -438,8 +406,15 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   unsigned int nSeed = 0;
 
-  // A map indicating whether a seed has been discovered already
-  SeedCoverage seedCoverage;
+  Acts::SeedDeduplicator seedDeduplicator(m_cfg.seedDeduplicatorCfg);
+  if (m_cfg.seedDeduplication) {
+    seedDeduplicator.reset(measurements.size());
+    // a pixel and a strip space point both count 2
+    for (Index i = 0; i < measurements.size(); ++i) {
+      seedDeduplicator.setWeight(i, localPositionDimension(measurements.at(i)));
+    }
+  }
+  std::vector<Acts::SeedDeduplicator::MeasurementKey> measKeys;
 
   auto addTrack = [&](const TrackProxy& track) {
     ++m_nFoundTracks;
@@ -454,8 +429,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       return;
     }
 
-    // flag seeds which are covered by the track
-    seedCoverage.addCoverageFrom(track);
+    if (m_cfg.seedDeduplication) {
+      collectTrackKeys(track, measKeys);
+      seedDeduplicator.addTrack(measKeys);
+    }
 
     ++m_nSelectedTracks;
 
@@ -464,11 +441,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     destProxy.copyFrom(track);
   };
 
-  if (seeds != nullptr && m_cfg.seedDeduplication) {
-    // Index the seeds for deduplication
-    seedCoverage.index(*seeds);
-  }
-
   for (std::size_t iSeed = 0; iSeed < initialParameters.size(); ++iSeed) {
     m_nTotalSeeds++;
 
@@ -476,8 +448,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       const ConstSeedProxy seed = seeds->at(iSeed);
 
       if (m_cfg.seedDeduplication) {
-        // check if an already found track covers the seed
-        if (seedCoverage.isCovered(iSeed)) {
+        // skip the seed if one accepted track holds enough of its
+        // measurements
+        collectSeedKeys(seed, measKeys);
+        if (seedDeduplicator.isDuplicate(measKeys)) {
           m_nDeduplicatedSeeds++;
           ACTS_VERBOSE("Skipping seed " << iSeed << " due to deduplication.");
           continue;
@@ -502,13 +476,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                              Acts::ParticleHypothesis::electron();
     const TrackFinderFunction& findTracks =
         useBrem ? *m_cfg.findTracksBrem : *m_cfg.findTracks;
-    const TrackFinderOptions& firstFindOptions =
-        useBrem ? firstBremOptions : firstOptions;
-    const TrackFinderOptions& secondFindOptions =
-        useBrem ? secondBremOptions : secondOptions;
 
     auto firstRootBranch = tracksTemp.makeTrack();
-    auto firstResult = findTracks(firstInitialParameters, firstFindOptions,
+    auto firstResult = findTracks(firstInitialParameters, firstOptions,
                                   tracksTemp, firstRootBranch);
     nSeed++;
 
@@ -540,6 +510,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
       // number of second tracks found
       std::size_t nSecond = 0;
+      bool joinedInPlace = false;
 
       // Set the seed number, this number decrease by 1 since the seed number
       // has already been updated
@@ -577,73 +548,56 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
           auto secondRootBranch = tracksTemp.makeTrack();
           secondRootBranch.copyFromWithoutStates(trackCandidate);
-          auto secondResult =
-              findTracks(secondInitialParameters, secondFindOptions, tracksTemp,
-                         secondRootBranch);
+          auto secondResult = findTracks(secondInitialParameters, secondOptions,
+                                         tracksTemp, secondRootBranch);
 
           if (!secondResult.ok()) {
             ACTS_WARNING("Second track finding failed for seed "
                          << iSeed << " with error" << secondResult.error());
           } else {
-            // store the original previous state to restore it later
-            auto originalFirstMeasurementPrevious = firstMeasurement.previous();
-
             auto& secondTracksForSeed = secondResult.value();
-            for (auto& secondTrack : secondTracksForSeed) {
-              // TODO a copy of the track should not be necessary but is the
-              //      safest way with the current EDM
-              // TODO a lightweight copy without copying all the track state
-              //      components might be a solution
-              auto secondTrackCopy = tracksTemp.makeTrack();
-              secondTrackCopy.copyFrom(secondTrack);
+            for (std::size_t iSecond = 0; iSecond < secondTracksForSeed.size();
+                 ++iSecond) {
+              auto& secondTrack = secondTracksForSeed[iSecond];
+              const bool lastSecond =
+                  (iSecond + 1 == secondTracksForSeed.size());
 
-              // Note that this is only valid if there are no branches
-              // We disallow this by breaking this look after a second track was
-              // processed
-              secondTrackCopy.reverseTrackStates(true);
-
-              firstMeasurement.previous() =
-                  secondTrackCopy.outermostTrackState().index();
-
-              // Retain tip and stem index of the first track
-              auto tipIndex = trackCandidate.tipIndex();
-              auto stemIndex = trackCandidate.stemIndex();
-              trackCandidate.copyFromWithoutStates(secondTrackCopy);
-              trackCandidate.tipIndex() = tipIndex;
-              trackCandidate.stemIndex() = stemIndex;
-
-              // finalize the track candidate
-
-              bool doExtrapolate = true;
-
-              if (!m_cfg.reverseSearch) {
-                // these parameters are already extrapolated by the CKF and have
-                // the optimal resolution. note that we did not smooth all the
-                // states.
-
-                // only extrapolate if we did not do it already
-                doExtrapolate = !trackCandidate.hasReferenceSurface();
-              } else {
-                // smooth the full track and extrapolate to the reference
-
-                auto secondSmoothingResult = Acts::smoothTrack(
-                    ctx.recoGeoContext, trackCandidate, logger());
-                if (!secondSmoothingResult.ok()) {
-                  m_nFailedSmoothing++;
-                  ACTS_ERROR("Second smoothing for seed "
-                             << iSeed << " and track " << secondTrack.index()
-                             << " failed with error "
-                             << secondSmoothingResult.error());
-                  continue;
+              // join copies while more second tracks follow, the last one in
+              // place. the second track is always copied, because its states
+              // may be shared with sibling branches and the join reverses them
+              Acts::Result<TrackContainer::TrackProxy> joinResult =
+                  [&]() -> Acts::Result<TrackContainer::TrackProxy> {
+                if (!lastSecond) {
+                  return m_trackletJoiner.joinCopy(
+                      ctx.recoGeoContext, tracksTemp, trackCandidate,
+                      firstMeasurementConst, secondTrack);
                 }
-
-                trackCandidate.reverseTrackStates(true);
+                auto secondTrackCopy = tracksTemp.makeTrack();
+                secondTrackCopy.copyFrom(secondTrack);
+                joinedInPlace = true;
+                auto res = m_trackletJoiner.joinInPlace(
+                    ctx.recoGeoContext, trackCandidate, firstMeasurement,
+                    secondTrackCopy);
+                if (!res.ok()) {
+                  return res.error();
+                }
+                return trackCandidate;
+              }();
+              if (!joinResult.ok()) {
+                m_nFailedSmoothing++;
+                ACTS_ERROR("Joining the second pass for seed "
+                           << iSeed << " and track " << secondTrack.index()
+                           << " failed with error "
+                           << joinResult.error().message());
+                continue;
               }
+              auto joinedTrack = joinResult.value();
 
-              if (doExtrapolate) {
+              // the second pass extrapolated to the perigee unless it failed
+              if (!joinedTrack.hasReferenceSurface()) {
                 auto secondExtrapolationResult =
                     Acts::extrapolateTrackToReferenceSurface(
-                        trackCandidate, *pSurface, extrapolator,
+                        joinedTrack, *pSurface, extrapolator,
                         extrapolationOptions, m_cfg.extrapolationStrategy,
                         logger());
                 if (!secondExtrapolationResult.ok()) {
@@ -656,19 +610,29 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 }
               }
 
-              addTrack(trackCandidate);
+              addTrack(joinedTrack);
 
               ++nSecond;
             }
-
-            // restore the original previous state
-            firstMeasurement.previous() = originalFirstMeasurementPrevious;
           }
         }
       }
 
       // if no second track was found, we will use only the first track
       if (nSecond == 0) {
+        // A failed in-place join or subsequent extrapolation may have changed
+        // the states. Rebuild the first pass before using it as a fallback.
+        if (joinedInPlace) {
+          trackCandidate.copyFrom(firstTrack);
+          auto res =
+              Acts::smoothTrack(ctx.recoGeoContext, trackCandidate, logger());
+          if (!res.ok()) {
+            m_nFailedSmoothing++;
+            ACTS_ERROR("Restoring the first pass for seed "
+                       << iSeed << " failed with error " << res.error());
+            continue;
+          }
+        }
         // restore the track to the original state
         auto tipIndex = trackCandidate.tipIndex();
         auto stemIndex = trackCandidate.stemIndex();

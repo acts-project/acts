@@ -41,6 +41,7 @@ SeedFinderConfigArg = namedtuple(
         "impactMax",
         "deltaPhiMax",
         "interactionPointCut",
+        "deltaZMin",
         "deltaZMax",
         "maxPtScattering",
         "zBinEdges",
@@ -53,6 +54,12 @@ SeedFinderConfigArg = namedtuple(
         "forwardSeedConfirmationRange",
         "rMinMiddle",
         "rMaxMiddle",
+        "helixCutTolerance",
+        "toleranceParam",
+        "useTimeDoubletCut",
+        "doubletTimeCutNSigma",
+        "useTimeTripletCut",
+        "tripletTimeChi2Max",
         "deltaR",  # (min,max)
         "deltaRBottomSP",  # (min,max)
         "deltaRTopSP",  # (min,max)
@@ -61,7 +68,7 @@ SeedFinderConfigArg = namedtuple(
         "r",  # (min,max)
         "z",  # (min,max)
     ],
-    defaults=[None] * 20 + [(None, None)] * 7,
+    defaults=[None] * 27 + [(None, None)] * 7,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -81,8 +88,9 @@ SeedFilterConfigArg = namedtuple(
         "maxQualitySeedsPerSpMConf",
         "useDeltaRorTopRadius",
         "deltaRMin",
+        "deltaInvHelixDiameter",
     ],
-    defaults=[None] * 11,
+    defaults=[None] * 12,
 )
 
 SpacePointGridConfigArg = namedtuple(
@@ -182,6 +190,7 @@ CkfConfig = namedtuple(
         "useJosephFormulation",
         "constrainToVolumes",
         "endOfWorldVolumes",
+        "seedDeduplicatorConfig",
     ],
     defaults=[
         15.0,
@@ -197,6 +206,7 @@ CkfConfig = namedtuple(
         None,
         None,
         False,
+        None,
         None,
         None,
     ],
@@ -245,6 +255,12 @@ HashingAlgorithmConfigArg = namedtuple(
     defaults=[None] * 3,
 )
 
+GbtsConfigArg = namedtuple(
+    "GbtsConfig",
+    ["seederConfig", "graphConfig", "useAdaptiveCuts"],
+    defaults=[None] * 3,
+)
+
 
 class VertexFinder(Enum):
     Truth = (1,)
@@ -262,6 +278,7 @@ class VertexFinder(Enum):
     seedingAlgorithmConfigArg=SeedingAlgorithmConfigArg,
     hashingTrainingConfigArg=HashingTrainingConfigArg,
     hashingAlgorithmConfigArg=HashingAlgorithmConfigArg,
+    gbtsConfigArg=GbtsConfigArg,
     logLevel=acts.logging.Level,
 )
 def addSeeding(
@@ -294,6 +311,7 @@ def addSeeding(
     hashingAlgorithmConfigArg: Optional[
         HashingAlgorithmConfigArg
     ] = HashingAlgorithmConfigArg(),
+    gbtsConfigArg: GbtsConfigArg = GbtsConfigArg(),
     particleHypothesis: Optional[
         acts.ParticleHypothesis
     ] = acts.ParticleHypothesis.pion,
@@ -302,6 +320,7 @@ def addSeeding(
     paramEstimationSpacePoints: Optional[acts.examples.SeedSpacePointSelection] = None,
     paramEstimationRefineIterations: Optional[int] = None,
     paramEstimationWeight: Optional[Callable] = None,
+    gbtsSeedParameters: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     trackParameterPerformance: bool = False,
@@ -333,12 +352,13 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackParameterSmearing.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z)
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMin, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, rMinMiddle, rMaxMiddle, helixCutTolerance, toleranceParam, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z)
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z.
+        deltaZMin defaults to -deltaZMax when only deltaZMax is set, for the triplet seeding algorithms (GridTriplet, OrthogonalTriplet).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
-    seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
+    seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius, deltaInvHelixDiameter)
                                 Defaults specified in Core/include/Acts/Seeding/SeedFilterConfig.hpp
     spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, maxPhiBins, impactMax)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
@@ -349,6 +369,10 @@ def addSeeding(
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp
     hashingAlgorithmConfigArg : HashingAlgorithmConfigArg(bucketSize, zBins, phiBins)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp
+    gbtsConfigArg : GbtsConfigArg(seederConfig, graphConfig, useAdaptiveCuts)
+                                A given config is used as is, otherwise the default one, the graphConfig with minPt from seedFinderConfigArg.
+                                Defaults specified in Core/include/Acts/Seeding/GraphBasedTrackSeeder.hpp, GbtsGraphBuilder.hpp and
+                                Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp
     particleHypothesis : Optional[acts.ParticleHypothesis]
         The hypothesis used for track finding. Defaults to pion.
     inputParticles : str, "particles"
@@ -365,6 +389,9 @@ def addSeeding(
         relative weight of a space point in the fit, requires
         `SeedSpacePointSelection.All`, see
         `TrackParamsEstimationAlgorithm.inverseRadiusPowerWeight`
+    gbtsSeedParameters : bool
+        GBTS seeding: use the fit of the GBTS tracking filter as the track
+        parameter estimate, instead of a fit to the space points (default)
     outputDirRoot : Path|str, path, None
         the output folder for ROOT output, None triggers no output
     trackParameterPerformance : bool, False
@@ -461,11 +488,18 @@ def addSeeding(
                 s,
                 spacePoints,
                 seedFinderConfigArg,
+                seedFinderOptionsArg,
                 trackingGeometry,
                 logLevel,
                 layerMappingConfigFile,
                 connectorInputConfigFile,
                 lutInputConfigFile,
+                gbtsConfigArg,
+                outputSeeds=f"{prefix}seeds",
+                outputFreeParameters=(
+                    f"{prefix}seedfreeparameters" if gbtsSeedParameters else None
+                ),
+                magneticField=field if gbtsSeedParameters else None,
             )
         elif seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
             logger.info("Using Hashing seeding")
@@ -548,6 +582,11 @@ def addSeeding(
                 spacePointSelection=paramEstimationSpacePoints,
                 geometricRefineIterations=paramEstimationRefineIterations,
                 spacePointWeight=paramEstimationWeight,
+                inputFreeParameters=(
+                    f"{prefix}seedfreeparameters"
+                    if gbtsSeedParameters and seedingAlgorithm == SeedingAlgorithm.Gbts
+                    else None
+                ),
                 initialSigmas=initialSigmas,
                 initialSigmaQoverPt=initialSigmaQoverPt,
                 initialSigmaPtRel=initialSigmaPtRel,
@@ -654,25 +693,17 @@ def addSeeding(
 
 def addGbtsTraining(
     s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
     selectedParticles: str = "particles_selected",
-    geometryFile: str = "gbts_layer_geometry.txt",
-    outputConnectionTable: str = "layer_connection_table.txt",
+    geometryFile: str = "gbts_layers.json",
+    outputConnectionTable: str = "layer_connection_table.json",
     probThreshold: float = -1.0,
-    zMinTol: float = 0.2340,
-    zMaxTol: float = 0.2340,
-    rMinTol: float = 2.5337,
-    rMaxTol: float = 2.5337,
     doSymmetrization: bool = False,
-    useOldFormatting: bool = False,
     logLevel: acts.logging.Level = None,
 ):
     logLevel = acts.examples.defaultLogging(s, logLevel)()
 
     gbtsLayerConnectionToolConfig = acts.examples.GbtsLayerConnectionToolConfig(
-        zMinTol=zMinTol,
-        zMaxTol=zMaxTol,
-        rMinTol=rMinTol,
-        rMaxTol=rMaxTol,
         probThreshold=probThreshold,
         doSymmetrization=doSymmetrization,
     )
@@ -686,8 +717,8 @@ def addGbtsTraining(
         inputMeasurementSimHitsMap="measurement_simhits_map",
         gbtsLayerConnectionToolConfig=gbtsLayerConnectionToolConfig,
         geometryFileDir=str(geometryFile),
+        trackingGeometry=trackingGeometry,
         outputFileDir=str(outputConnectionTable),
-        useOldFormatting=useOldFormatting,
     )
 
     s.addAlgorithm(alg)
@@ -1058,7 +1089,11 @@ def addGridTripletSeeding(
             phiMax=spacePointGridConfigArg.phi[1],
             phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
             maxPhiBins=spacePointGridConfigArg.maxPhiBins,
-            zBinEdges=spacePointGridConfigArg.zBinEdges,
+            zBinEdges=(
+                spacePointGridConfigArg.zBinEdges
+                if spacePointGridConfigArg.zBinEdges is not None
+                else seedFinderConfigArg.zBinEdges
+            ),
             zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
             rMinMiddle=seedFinderConfigArg.rMinMiddle,
             rMaxMiddle=seedFinderConfigArg.rMaxMiddle,
@@ -1066,16 +1101,28 @@ def addGridTripletSeeding(
             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
             deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
             deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
-            deltaZMin=None,
-            deltaZMax=None,
+            # deltaZ is a signed doublet cut (DoubletSeedFinder.cpp); deltaZMax
+            # alone historically meant "maximum |deltaZ|", so when deltaZMin is
+            # not given explicitly it defaults to -deltaZMax rather than the
+            # C++ default of -inf, to keep the cut symmetric.
+            deltaZMin=(
+                seedFinderConfigArg.deltaZMin
+                if seedFinderConfigArg.deltaZMin is not None
+                else (
+                    -seedFinderConfigArg.deltaZMax
+                    if seedFinderConfigArg.deltaZMax is not None
+                    else None
+                )
+            ),
+            deltaZMax=seedFinderConfigArg.deltaZMax,
             interactionPointCut=seedFinderConfigArg.interactionPointCut,
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
-            helixCutTolerance=None,
+            helixCutTolerance=seedFinderConfigArg.helixCutTolerance,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
             radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
-            toleranceParam=None,
-            deltaInvHelixDiameter=None,
+            toleranceParam=seedFinderConfigArg.toleranceParam,
+            deltaInvHelixDiameter=seedFilterConfigArg.deltaInvHelixDiameter,
             compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
             impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
             zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
@@ -1089,7 +1136,14 @@ def addGridTripletSeeding(
             maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
             maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
             useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+            useTimeDoubletCut=seedFinderConfigArg.useTimeDoubletCut,
+            doubletTimeCutNSigma=seedFinderConfigArg.doubletTimeCutNSigma,
+            useTimeTripletCut=seedFinderConfigArg.useTimeTripletCut,
+            tripletTimeChi2Max=seedFinderConfigArg.tripletTimeChi2Max,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
+            numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
+            zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
+            zBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom,
         ),
     )
     sequence.addAlgorithm(seedingAlg)
@@ -1150,26 +1204,36 @@ def addOrthogonalTripletSeeding(
             zMax=seedFinderConfigArg.z[1],
             phiMin=spacePointGridConfigArg.phi[0],
             phiMax=spacePointGridConfigArg.phi[1],
-            phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
-            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
-            zBinEdges=spacePointGridConfigArg.zBinEdges,
-            zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
+            # Note: OrthogonalTripletSeedingAlgorithm is KD-tree based and has
+            # no grid/bin-finder config (no phiBinDeflectionCoverage,
+            # maxPhiBins, zBinEdges, zBinsCustomLooping, zBinNeighborsTop/
+            # Bottom, numPhiNeighbors); do not forward those here.
             rMinMiddle=seedFinderConfigArg.rMinMiddle,
             rMaxMiddle=seedFinderConfigArg.rMaxMiddle,
             useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
             deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
             deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
-            deltaZMin=None,
-            deltaZMax=None,
+            # See addGridTripletSeeding for why deltaZMin falls back to
+            # -deltaZMax rather than the C++ default.
+            deltaZMin=(
+                seedFinderConfigArg.deltaZMin
+                if seedFinderConfigArg.deltaZMin is not None
+                else (
+                    -seedFinderConfigArg.deltaZMax
+                    if seedFinderConfigArg.deltaZMax is not None
+                    else None
+                )
+            ),
+            deltaZMax=seedFinderConfigArg.deltaZMax,
             interactionPointCut=seedFinderConfigArg.interactionPointCut,
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
-            helixCutTolerance=None,
+            helixCutTolerance=seedFinderConfigArg.helixCutTolerance,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
             radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
-            toleranceParam=None,
-            deltaInvHelixDiameter=None,
+            toleranceParam=seedFinderConfigArg.toleranceParam,
+            deltaInvHelixDiameter=seedFilterConfigArg.deltaInvHelixDiameter,
             compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
             impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
             zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
@@ -1420,11 +1484,16 @@ def addGbtsSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedFinderConfigArg: SeedFinderConfigArg,
+    seedFinderOptionsArg: SeedFinderOptionsArg,
     trackingGeometry: acts.TrackingGeometry,
     logLevel: acts.logging.Level = None,
     layerMappingConfigFile: Union[Path, str] = None,
     connectorInputConfigFile: Union[Path, str] = None,
     lutInputConfigFile: Optional[Union[Path, str]] = None,
+    gbtsConfigArg: GbtsConfigArg = GbtsConfigArg(),
+    outputSeeds: str = "seeds",
+    outputFreeParameters: Optional[str] = None,
+    magneticField: Optional[acts.MagneticFieldProvider] = None,
 ):
     """Gbts seeding"""
 
@@ -1432,23 +1501,36 @@ def addGbtsSeeding(
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     connectorInputFileStr = str(connectorInputConfigFile)
     lutInputConfigFileStr = str(lutInputConfigFile)
-    seedFinderConfig = acts.examples.GraphBasedSeedingConfig(
-        **acts.examples.defaultKWArgs(
-            minPt=seedFinderConfigArg.minPt,
-            lutInputFile=lutInputConfigFileStr,
-        ),
-    )
+    seedFinderConfig = gbtsConfigArg.seederConfig
+    if seedFinderConfig is None:
+        seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
+
+    graphConfig = gbtsConfigArg.graphConfig
+    if graphConfig is None:
+        graphConfig = acts.examples.GbtsGraphBuilderConfig(
+            **acts.examples.defaultKWArgs(
+                minPt=seedFinderConfigArg.minPt,
+            ),
+        )
 
     seedingAlg = acts.examples.GraphBasedSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=spacePoints,
-        outputSeeds="seeds",
+        outputSeeds=outputSeeds,
         seedFinderConfig=seedFinderConfig,
+        graphConfig=graphConfig,
         layerMappingFile=layerMappingFile,
         connectorInputFile=connectorInputFileStr,
+        lutInputFile=lutInputConfigFileStr,
         trackingGeometry=trackingGeometry,
         fillModuleCsv=False,
         inputClusters="clusters",
+        **acts.examples.defaultKWArgs(
+            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+            useAdaptiveCuts=gbtsConfigArg.useAdaptiveCuts,
+            outputFreeParameters=outputFreeParameters,
+            magneticField=magneticField,
+        ),
     )
 
     sequence.addAlgorithm(seedingAlg)
@@ -1670,6 +1752,7 @@ def addKalmanTracks(
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     linkForward: bool = False,
+    referenceSurface: acts.Surface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
     useJosephFormulation: bool = False,
     useReferenceTrajectory: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1713,6 +1796,7 @@ def addKalmanTracks(
         fit=fitFunction,
         calibrator=calibrator,
         linkForward=linkForward,
+        referenceSurface=referenceSurface,
     )
     s.addAlgorithm(fitAlg)
     s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
@@ -1815,7 +1899,7 @@ def addCKFTracks(
     ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
     twoWay: bool = True,
-    reverseSearch: bool = False,
+    twoWaySmoothing: bool = True,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrackSummary: bool = True,
@@ -1923,8 +2007,9 @@ def addCKFTracks(
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
             twoWay=twoWay,
-            reverseSearch=reverseSearch,
+            twoWaySmoothing=twoWaySmoothing,
             seedDeduplication=ckfConfig.seedDeduplication,
+            seedDeduplicatorCfg=ckfConfig.seedDeduplicatorConfig,
             stayOnSeed=ckfConfig.stayOnSeed,
             pixelVolumeIds=ckfConfig.pixelVolumes,
             stripVolumeIds=ckfConfig.stripVolumes,
@@ -1943,7 +2028,7 @@ def addCKFTracks(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=trackFinder.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching=f"{prefix}ckf_track_particle_matching",
         outputParticleTrackMatching=f"{prefix}ckf_particle_track_matching",
@@ -2267,7 +2352,7 @@ def addGnn(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=convAlg.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gnn_track_particle_matching",
         outputParticleTrackMatching="gnn_particle_track_matching",
@@ -2545,6 +2630,9 @@ def addVertexFitting(
     spatialBinExtent: Optional[float] = None,
     temporalBinExtent: Optional[float] = None,
     simultaneousSeeds: Optional[int] = None,
+    tracksMaxZinterval: Optional[float] = None,
+    spatialWindow: Optional[List[float]] = None,
+    temporalWindow: Optional[List[float]] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     writeTrackInfo: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -2657,6 +2745,9 @@ def addVertexFitting(
                 spatialBinExtent=spatialBinExtent,
                 temporalBinExtent=temporalBinExtent,
                 simultaneousSeeds=simultaneousSeeds,
+                tracksMaxZinterval=tracksMaxZinterval,
+                temporalWindow=temporalWindow,
+                spatialWindow=spatialWindow,
             ),
         )
         s.addAlgorithm(findVertices)

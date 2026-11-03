@@ -14,12 +14,14 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -38,6 +40,7 @@
 #include <iterator>
 #include <memory>
 #include <numbers>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -183,7 +186,7 @@ struct SurfaceArrayCreatorFixture {
   std::pair<SrfVec, std::vector<std::pair<const Surface*, const Surface*>>>
   makeBarrelStagger(int nPhi, int nZ, double shift = 0,
                     double incl = std::numbers::pi / 9., double w = 2,
-                    double h = 1.5) {
+                    double h = 1.5, double stagger = 0.1) {
     double z0 = -(nZ - 1) * w;
     SrfVec res;
     std::vector<std::pair<const Surface*, const Surface*>> pairs;
@@ -208,7 +211,7 @@ struct SurfaceArrayCreatorFixture {
 
         Vector3 nrm = srfA->normal(tgContext);
         Transform3 transB = trans;
-        transB.pretranslate(nrm * 0.1);
+        transB.pretranslate(nrm * stagger);
         std::shared_ptr<Surface> srfB =
             Surface::makeShared<PlaneSurface>(transB, bounds);
 
@@ -480,6 +483,77 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_phiAxisAlignsModuleCentres,
   }
 }
 
+// The lookup sits where the track crosses the representative cylinder, the
+// module it hits at a different radius, so a shallow track needs a window wider
+// than one bin, and wider still the finer the grid.
+BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_neighborWindowFollowsCrossingAngle,
+                        SurfaceArrayCreatorFixture) {
+  constexpr int nPhi = 30;
+  constexpr int nZ = 20;
+  // 2 mm of radial stagger, so a shallow track travels along the layer between
+  // the representative surface and the module it hits
+  auto [surfaces, pairs] =
+      makeBarrelStagger(nPhi, nZ, 0., std::numbers::pi / 9., 2., 1.5, 2.);
+  auto surfacesRaw = unpackSmartPointers(surfaces);
+  ProtoLayer protoLayer(tgContext, surfacesRaw);
+
+  // the cylinder grid is binned (phi, z)
+  const auto missedHits = [&](SurfaceArray::NeighborWindow neighborWindow) {
+    // refined in z, where a bin is now much shorter than the displacement
+    const SurfaceArray surfaceArray = m_SAC.surfaceArrayOnCylinder(
+        tgContext, surfaces, nPhi, 6 * nZ, protoLayer, Transform3::Identity(),
+        neighborWindow);
+
+    std::size_t missed = 0;
+    for (const double eta : {0., 0.5, 1., 1.25, 1.5}) {
+      const double theta = 2 * std::atan(std::exp(-eta));
+      for (std::size_t i = 0; i < 128; ++i) {
+        const double rayPhi =
+            2 * std::numbers::pi * static_cast<double>(i) / 128.;
+        const Vector3 direction(std::sin(theta) * std::cos(rayPhi),
+                                std::sin(theta) * std::sin(rayPhi),
+                                std::cos(theta));
+
+        std::vector<const Surface*> crossed;
+        for (const Surface* surface : surfacesRaw) {
+          const Intersection3D intersection =
+              surface
+                  ->intersect(tgContext, Vector3::Zero(), direction,
+                              BoundaryTolerance::None())
+                  .closest();
+          if (intersection.isValid() && intersection.pathLength() > 0) {
+            crossed.push_back(surface);
+          }
+        }
+        if (crossed.empty()) {
+          continue;
+        }
+
+        // the navigator looks the layer up at the representative surface,
+        // not at a module
+        const Intersection3D approach =
+            surfaceArray.surfaceRepresentation()
+                ->intersect(tgContext, Vector3::Zero(), direction,
+                            BoundaryTolerance::Infinite())
+                .closestForward();
+        const auto found =
+            surfaceArray.neighbors(tgContext, approach.position(), direction);
+
+        for (const Surface* surface : crossed) {
+          if (std::ranges::find(found, surface) == found.end()) {
+            ++missed;
+          }
+        }
+      }
+    }
+    return missed;
+  };
+
+  BOOST_CHECK_EQUAL(missedHits({{0, 0}, {1, 2}}), 0u);
+  // the fixed one-bin window this replaces cannot reach that far
+  BOOST_CHECK_GT(missedHits({{0, 0}, {1, 1}}), 0u);
+}
+
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
                         SurfaceArrayCreatorFixture) {
   // single element in z
@@ -587,6 +661,19 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_zAxisInRepresentativeFrame,
     occupiedZBins.insert(axes.at(1)->getBin(local.z()));
   }
   BOOST_CHECK_EQUAL(occupiedZBins.size(), nZ);
+
+  // The layer creator forwards overfill to the array, including at() contents.
+  const auto expandedLayer = layerCreator.cylinderLayer(
+      tgContext, surfaces, nPhi, nZ, pl, Transform3::Identity(), nullptr,
+      {{0, 0}, {0, 0}}, 1);
+  const SurfaceArray* expanded = expandedLayer->surfaceArray();
+  BOOST_REQUIRE(expanded != nullptr);
+  for (std::size_t phiBin = 1; phiBin <= nPhi; ++phiBin) {
+    for (std::size_t zBin = 1; zBin <= nZ; ++zBin) {
+      BOOST_CHECK(std::ranges::equal(expanded->neighbors({phiBin, zBin}, 0),
+                                     sa->neighbors({phiBin, zBin}, 1)));
+    }
+  }
 }
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
@@ -632,6 +719,57 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
 // the lowest number of surfaces should be used for the bin count or
 // as basis for the variable edge procedure
 // double filling will make sure no surfaces are dropped
+// Every point on a module has to be reachable from the bin it falls into, not
+// only the bins whose centre lands on the module.
+BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_discFillCoversModuleFootprint,
+                        SurfaceArrayCreatorFixture) {
+  constexpr std::size_t nPhi = 24;
+  constexpr double rMin = 30.;
+  constexpr double rMax = 100.;
+  constexpr double z = 500.;
+
+  // One ring of rectangular modules spanning a wide range in r, so the angular
+  // width of a module grows towards the inner radius
+  SrfVec surfaces;
+  const double halfPhi = std::numbers::pi / nPhi;
+  auto bounds = std::make_shared<const RectangleBounds>(
+      rMax * std::tan(halfPhi), 0.5 * (rMax - rMin));
+  for (std::size_t ip = 0; ip < nPhi; ++ip) {
+    const double phiPos = 2 * std::numbers::pi * ip / nPhi;
+    Transform3 trans = Transform3::Identity();
+    trans *= AngleAxis3(phiPos, Vector3::UnitZ());
+    trans *= Translation3(0.5 * (rMin + rMax), 0., z);
+    // local x across phi, local y along r
+    trans *= AngleAxis3(std::numbers::pi / 2., Vector3::UnitZ());
+    surfaces.push_back(Surface::makeShared<PlaneSurface>(trans, bounds));
+  }
+  auto surfacesRaw = unpackSmartPointers(surfaces);
+  ProtoLayer pl(tgContext, surfacesRaw);
+  pl.envelope[AxisDirection::AxisZ] = {1., 1.};
+
+  // one r bin per ring and a phi grid fine enough that a module spans several
+  // bins
+  SurfaceArray sa = m_SAC.surfaceArrayOnDisc(tgContext, surfaces, 1, 4 * nPhi,
+                                             pl, Transform3::Identity());
+
+  std::size_t unreachable = 0;
+  for (const auto& surface : surfaces) {
+    const auto* planar = dynamic_cast<const PlanarBounds*>(&surface->bounds());
+    BOOST_REQUIRE(planar != nullptr);
+    for (const Vector2& local : planar->vertices(1)) {
+      // pull the sample just inside the module
+      const Vector2 inside = local * 0.98;
+      const Vector3 global =
+          surface->localToGlobal(tgContext, inside, Vector3::UnitZ());
+      const auto content = sa.at(tgContext, global, Vector3::UnitZ());
+      if (std::ranges::find(content, surface.get()) == content.end()) {
+        ++unreachable;
+      }
+    }
+  }
+  BOOST_CHECK_EQUAL(unreachable, 0u);
+}
+
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_dependentBinCounts,
                         SurfaceArrayCreatorFixture) {
   auto ringA = fullPhiTestSurfacesEC(10, 0, 0, 10, 2, 3);
@@ -683,7 +821,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
     Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
     auto binContent = sa.at(tgContext, ctr, ctr.normalized());
 
-    BOOST_CHECK(binContent.size() <= 2u);
+    // the bin a surface's own centre falls into has to hold it
+    BOOST_CHECK(std::ranges::find(binContent, srf.get()) != binContent.end());
   }
 }
 
@@ -712,7 +851,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning_newFactory,
   for (const auto& srf : brl) {
     Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
     auto binContent = sa.at(tgContext, ctr, ctr.normalized());
-    BOOST_CHECK(binContent.size() <= 2u);
+    // the bin a surface's own centre falls into has to hold it
+    BOOST_CHECK(std::ranges::find(binContent, srf.get()) != binContent.end());
   }
 }
 
@@ -751,13 +891,12 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
     Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
     auto binContent = sa.at(tgContext, ctr, ctr.normalized());
-    // the grid is aligned to the module centres, so the centre's bin holds
-    // exactly that module's stagger pair
-    BOOST_CHECK_EQUAL(binContent.size(), 2u);
     std::set<const Surface*> act(binContent.begin(), binContent.end());
 
+    // the bin the module centre falls into holds that module's stagger pair,
+    // plus every neighbour whose footprint reaches into the same bin
     std::set<const Surface*> exp({A, B});
-    BOOST_CHECK(act == exp);
+    BOOST_CHECK(std::ranges::includes(act, exp));
   }
 
   // VARIABLE
@@ -811,7 +950,6 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
       Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
       auto binContent = sa2.at(tgContext, ctr, ctr.normalized());
-      BOOST_CHECK_EQUAL(binContent.size(), 4u);
       std::set<const Surface*> act(binContent.begin(), binContent.end());
 
       std::set<const Surface*> exp({A, B});

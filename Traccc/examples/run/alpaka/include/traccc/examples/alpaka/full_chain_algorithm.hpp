@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,6 +13,7 @@
 #include "traccc/alpaka/clusterization/measurement_sorting_algorithm.hpp"
 #include "traccc/alpaka/finding/combinatorial_kalman_filter_algorithm.hpp"
 #include "traccc/alpaka/fitting/kalman_fitting_algorithm.hpp"
+#include "traccc/alpaka/gbts_seeding/gbts_seeding_algorithm.hpp"
 #include "traccc/alpaka/seeding/seed_parameter_estimation_algorithm.hpp"
 #include "traccc/alpaka/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
 #include "traccc/alpaka/seeding/triplet_seeding_algorithm.hpp"
@@ -23,6 +25,7 @@
 #include "traccc/edm/track_collection.hpp"
 #include "traccc/edm/track_parameters.hpp"
 #include "traccc/fitting/kalman_filter/kalman_fitter.hpp"
+#include "traccc/gbts_seeding/gbts_seeding_config.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/geometry/detector_conditions_description.hpp"
@@ -31,8 +34,9 @@
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/messaging.hpp"
 #include "traccc/utils/propagation.hpp"
-// GBTS include for placeholder input (not implemented)
-#include "traccc/gbts_seeding/gbts_seeding_config.hpp"
+
+// Local includes(s).
+#include "traccc/examples/await_strategy.hpp"
 
 // VecMem include(s).
 #include <vecmem/containers/vector.hpp>
@@ -69,6 +73,41 @@ class full_chain_algorithm
 
   /// @}
 
+  /// Device data shared by all instances of the algorithm
+  ///
+  /// It must outlive every algorithm that was constructed with it.
+  ///
+  struct shared_data {
+    /// Constructor
+    ///
+    /// @param host_mr The host memory resource for the detector description
+    ///                buffer
+    /// @param det_descr The detector design description
+    /// @param det_cond The detector conditions description
+    /// @param field The magnetic field
+    /// @param detector The host detector, or @c nullptr
+    ///
+    shared_data(vecmem::memory_resource& host_mr,
+                const detector_design_description::host& det_descr,
+                const detector_conditions_description::host& det_cond,
+                const magnetic_field& field, const host_detector* detector);
+
+    /// Alpaka Queue
+    traccc::alpaka::queue m_queue;
+    /// Alpaka Vecmem objects, to get the memory resources
+    traccc::alpaka::vecmem_objects m_vecmem_objects;
+    /// B field for the track finding and fitting
+    magnetic_field m_field;
+    /// Detector description buffer
+    detector_design_description::buffer m_device_det_descr;
+    /// Detector conditions buffer
+    detector_conditions_description::buffer m_device_det_cond;
+    /// Host detector
+    const host_detector* m_detector;
+    /// Buffer holding the detector's payload on the device
+    detector_buffer m_device_detector;
+  };
+
   /// Algorithm constructor
   ///
   /// @param mr The memory resource to use for the intermediate and result
@@ -84,20 +123,9 @@ class full_chain_algorithm
       const track_params_estimation_config& track_params_estimation_config,
       const finding_algorithm::config_type& finding_config,
       const fitting_algorithm::config_type& fitting_config,
-      const detector_design_description::host& det_descr,
-      const detector_conditions_description::host& det_cond,
-      const magnetic_field& field, host_detector* detector,
-      std::unique_ptr<const traccc::Logger> logger, bool useGBTS = false);
-
-  /// Copy constructor
-  ///
-  /// An explicit copy constructor is necessary because in the MT tests
-  /// we do want to copy such objects, but a default copy-constructor can
-  /// not be generated for them.
-  ///
-  /// @param parent The parent algorithm chain to copy
-  ///
-  full_chain_algorithm(const full_chain_algorithm& parent);
+      const shared_data& data, std::unique_ptr<const traccc::Logger> logger,
+      bool useGBTS = false,
+      await_strategy await_mode = await_strategy::sync_event);
 
   /// Algorithm destructor
   ~full_chain_algorithm();
@@ -130,26 +158,22 @@ class full_chain_algorithm
   mutable ::vecmem::binary_page_memory_resource m_cached_pinned_host_mr;
   /// Device caching memory resource
   mutable ::vecmem::binary_page_memory_resource m_cached_device_mr;
+  /// The function for awaiting asynchronous operations
+  await_function_type m_await_function;
 
-  /// Constant B field for the (seed) track parameter estimation
-  traccc::vector3 m_field_vec;
-  /// Constant B field for the track finding and fitting
-  magnetic_field m_field;
+  /// B field for the track finding and fitting
+  const magnetic_field& m_field;
 
-  /// Detector description
-  std::reference_wrapper<const detector_design_description::host> m_det_descr;
   /// Detector description buffer
-  detector_design_description::buffer m_device_det_descr;
+  const detector_design_description::buffer& m_device_det_descr;
 
-  std::reference_wrapper<const detector_conditions_description::host>
-      m_det_cond;
   /// Detector conditions buffer
-  detector_conditions_description::buffer m_device_det_cond;
+  const detector_conditions_description::buffer& m_device_det_cond;
 
   /// Host detector
-  host_detector* m_detector;
+  const host_detector* m_detector;
   /// Buffer holding the detector's payload on the device
-  detector_buffer m_device_detector;
+  const detector_buffer& m_device_detector;
 
   /// @name Sub-algorithms used by this full-chain algorithm
   /// @{
@@ -162,6 +186,8 @@ class full_chain_algorithm
   spacepoint_formation_algorithm m_spacepoint_formation;
   /// Seeding algorithm
   triplet_seeding_algorithm m_seeding;
+  /// Seeding with GBTS algorithm
+  gbts_seeding_algorithm m_gbts_seeding;
   /// Track parameter estimation algorithm
   seed_parameter_estimation_algorithm m_track_parameter_estimation;
 
@@ -174,24 +200,6 @@ class full_chain_algorithm
 
   /// @name Algorithm configurations
   /// @{
-
-  /// Configuration for clustering
-  clustering_config m_clustering_config;
-  /// Configuration for the seed finding
-  seedfinder_config m_finder_config;
-  /// Configuration for the spacepoint grid formation
-  spacepoint_grid_config m_grid_config;
-  /// Configuration for the seed filtering
-  seedfilter_config m_filter_config;
-  /// placeholder GBTS config
-  [[maybe_unused]] gbts_seedfinder_config m_gbts_config;
-  /// Configuration for track parameter estimation
-  track_params_estimation_config m_track_params_estimation_config;
-
-  /// Configuration for the track finding
-  finding_algorithm::config_type m_finding_config;
-  /// Configuration for the track fitting
-  fitting_algorithm::config_type m_fitting_config;
 
   bool usingGBTS;
 
