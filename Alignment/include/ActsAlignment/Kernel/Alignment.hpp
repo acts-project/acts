@@ -191,7 +191,8 @@ struct Alignment {
   ///
   /// @result The alignment state for a single track
   template <typename source_link_t, typename fit_options_t>
-  Acts::Result<detail::TrackAlignmentState> evaluateTrackAlignmentState(
+  Acts::Result<ActsAlignment::detail::TrackAlignmentState>
+  evaluateTrackAlignmentState(
       const Acts::GeometryContext& gctx,
       const std::vector<source_link_t>& sourceLinks,
       const Acts::BoundTrackParameters& sParameters,
