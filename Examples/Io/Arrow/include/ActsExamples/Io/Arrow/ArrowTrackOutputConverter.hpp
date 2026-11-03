@@ -27,8 +27,8 @@ namespace ActsExamples {
 ///
 /// The output table has one row per event with list-valued columns for the
 /// perigee parameters (d0, z0, phi, theta, qop), the majority truth particle
-/// id, the per-track measurement (hit) indices, and a running track index.
-/// The @c ParquetWriter stamps the @c event_id column.
+/// id, the per-track measurement indices, the per-track sim-hit indices, and
+/// a running track index. The @c ParquetWriter stamps the @c event_id column.
 class ACTS_ARROW_EXPORT ArrowTrackOutputConverter final
     : public ArrowOutputConverter {
  public:
@@ -43,11 +43,9 @@ class ACTS_ARROW_EXPORT ArrowTrackOutputConverter final
     /// the @c ArrowParticleOutputConverter consumes for that table — leaving
     /// it empty disables index resolution and forces the unmatched sentinel.
     std::string inputParticles;
-    /// Optional measurement → sim-hit map. When set, each track-state's
-    /// measurement index is translated to one or more sim-hit indices (the
-    /// row indices of the corresponding hits parquet table); without it,
-    /// @c hit_ids is left empty so consumers don't mistake measurement
-    /// indices for sim-hit indices.
+    /// Optional measurement → sim-hit map. When set, @c hit_ids holds the
+    /// row indices of the hits parquet table; without it that column is null.
+    /// @c measurement_ids is written either way.
     std::string inputMeasurementSimHitsMap;
     /// Output whiteboard key for the resulting @c arrow::Table.
     std::string outputTable = "tracks";

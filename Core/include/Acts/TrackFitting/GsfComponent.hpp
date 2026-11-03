@@ -13,6 +13,7 @@
 namespace Acts {
 
 /// Encapsulates a component of a Gaussian mixture as used by the GSF
+//! [gsf component]
 struct GsfComponent {
   /// Weight of this component in the Gaussian mixture
   double weight = 0;
@@ -21,5 +22,6 @@ struct GsfComponent {
   /// Covariance matrix for the bound track parameters
   BoundMatrix boundCov = BoundMatrix::Zero();
 };
+//! [gsf component]
 
 }  // namespace Acts

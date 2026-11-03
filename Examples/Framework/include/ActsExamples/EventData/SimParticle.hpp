@@ -21,6 +21,27 @@ using SimBarcodeContainer = ::boost::container::flat_set<SimBarcode>;
 
 using SimParticleState = ::ActsFatras::Particle;
 
+/// Encodes hadron heavy-flavour origin classification
+/// the enum values correspond to the quark flavour numbering scheme (from PDG)
+enum class HeavyFlavourOrigin : std::uint8_t {
+  /// None: no heavy-flavour origin, depending on the criterion regulated
+  ///       by the searchUpToHeavyFlavourQuark flag
+  None = 0,
+  /// Charm: decay product of a charmed hadron, or particle originate
+  ///        in the fragmentation of a charm quark depending
+  ///        on the searchUpToHeavyFlavourQuark flag
+  Charm = 4,
+  /// Bottom: decay product of a bottomed hadron (it can also be B->D->X),
+  ///         or particle originate in the fragmentation of a bottom quark
+  ///         depending on the searchUpToHeavyFlavourQuark flag
+  Bottom = 5
+};
+
+/// Print heavy-flavour origin outcome to output stream
+/// @param os Output stream
+/// @param outcome Heavy-flavour origin outcome to print
+/// @return Output stream
+std::ostream& operator<<(std::ostream& os, HeavyFlavourOrigin outcome);
 class SimParticle final {
  public:
   /// Construct a default particle with invalid identity.
@@ -111,6 +132,17 @@ class SimParticle final {
     finalState().setParentParticleId(parentId);
     return *this;
   }
+  /// Original particle index (to match HepMC).
+  SimParticle& setOrigParticleIdx(std::uint32_t idx) {
+    initialState().setOrigParticleIdx(idx);
+    finalState().setOrigParticleIdx(idx);
+    return *this;
+  }
+  /// Particle heavy-flavour origin (0->none, 4->charm, 5->beauty)
+  SimParticle& setHeavyFlavourOrigin(HeavyFlavourOrigin origin) {
+    m_hfOrigin = origin;
+    return *this;
+  }
 
   /// Particle identifier within an event.
   SimBarcode particleId() const { return initialState().particleId(); }
@@ -118,6 +150,12 @@ class SimParticle final {
   SimBarcode parentParticleId() const {
     return initialState().parentParticleId();
   }
+  /// Original particle index (to match HepMC)
+  std::uint32_t origParticleIdx() const {
+    return initialState().origParticleIdx();
+  }
+  /// Particle heavy-flavour origin (0->none, 4->charm, 5->beauty)
+  HeavyFlavourOrigin heavyFlavourOrigin() const { return m_hfOrigin; }
   /// Which type of process generated this particle.
   ActsFatras::GenerationProcess process() const {
     return initialState().process();
@@ -191,6 +229,8 @@ class SimParticle final {
  private:
   SimParticleState m_initial;
   SimParticleState m_final;
+  /// particle origin (0->none, 4->charm, 5->beauty)
+  HeavyFlavourOrigin m_hfOrigin = HeavyFlavourOrigin::None;
 };
 
 std::ostream& operator<<(std::ostream& os, const SimParticle& particle);

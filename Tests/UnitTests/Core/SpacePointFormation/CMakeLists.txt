@@ -1,0 +1,2 @@
+add_unittest(PixelSpacePointBuilder PixelSpacePointBuilderTests.cpp)
+add_unittest(StripSpacePointBuilder StripSpacePointBuilderTests.cpp)

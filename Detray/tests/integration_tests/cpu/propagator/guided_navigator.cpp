@@ -59,7 +59,7 @@ GTEST_TEST(detray_navigation, guided_navigator) {
       intersection2D<typename detector_t::surface_type, test_algebra,
                      intersection::contains_pos>;
   using object_tracer_t =
-      object_tracer<intersection_t, dvector, status::e_on_portal,
+      object_tracer<detector_t, dvector, status::e_on_portal,
                     status::e_on_object>;
   using inspector_t = aggregate_inspector<object_tracer_t, print_inspector>;
   using b_field_t = bfield::const_field_t<scalar>;
@@ -108,7 +108,7 @@ GTEST_TEST(detray_navigation, guided_navigator) {
   EXPECT_EQ(obj_tracer.object_trace.size(), sf_sequence.size())
       << debug_printer.to_string();
   for (std::size_t i = 0u; i < sf_sequence.size(); ++i) {
-    const auto &candidate = obj_tracer[i].intersection;
+    const auto &candidate = obj_tracer[i].intersection();
     auto geo_id = geometry::identifier{};
     geo_id.set_volume(0u).set_index(sf_sequence[i]);
     // The first transform in the detector belongs to the volume

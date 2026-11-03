@@ -99,9 +99,7 @@ def main():
 
         if args.input != "":
             print(">>> Reading tracking geometry from", args.input)
-            trackingGeometry = converter.fromJson(
-                gContext, Path(args.input).read_text()
-            )
+            trackingGeometry = converter.fromFile(gContext, Path(args.input))
             print(">>> Read tracking geometry from", args.input)
 
         if args.output_json:

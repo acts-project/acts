@@ -52,7 +52,7 @@ TEST_P(PropagatorWithRkStepperDirectNavigatorToyDetector, direct_navigator) {
       uniform_track_generator<free_track_parameters<test_algebra>>;
 
   // Toy detector
-  using detector_t = detector<test::toy_metadata>;
+  using detector_t = host::detector<test::toy_metadata>;
   using surface_t = typename detector_t::surface_type;
 
   // Runge-Kutta propagation
@@ -106,12 +106,13 @@ TEST_P(PropagatorWithRkStepperDirectNavigatorToyDetector, direct_navigator) {
   // Iterate through uniformly distributed momentum directions
   for (auto track : generator_t{trk_gen_cfg}) {
     // Build actor states: the helix inspector can be shared
-    actor::parameter_updater_state<test_algebra> updater_state{cfg};
-    actor::parameter_updater_state<test_algebra> fw_updater_state{cfg};
-    actor::parameter_updater_state<test_algebra> bw_updater_state{cfg};
+    actor::parameter_updater_state<test_algebra> updater_state{cfg, track};
+    actor::parameter_updater_state<test_algebra> fw_updater_state{cfg, track};
+    actor::parameter_updater_state<test_algebra> bw_updater_state{cfg, track};
 
     actor::pointwise_material_interactor<test_algebra>::state
         interactor_state{};
+
     vecmem::data::vector_buffer<surface_t> seqs_buffer{
         100u, host_mr, vecmem::data::buffer_type::resizable};
     vecmem::data::vector_buffer<surface_t> seqs_forward_buffer{
@@ -234,7 +235,7 @@ TEST_P(PropagatorWithRkStepperDirectNavigatorWireChamber, direct_navigator) {
       uniform_track_generator<free_track_parameters<test_algebra>>;
 
   // Toy detector
-  using detector_t = detector<test::wire_chamber_metadata>;
+  using detector_t = host::detector<test::wire_chamber_metadata>;
   using surface_t = typename detector_t::surface_type;
 
   // Default navigator for comparison
@@ -284,9 +285,10 @@ TEST_P(PropagatorWithRkStepperDirectNavigatorWireChamber, direct_navigator) {
   // Iterate through uniformly distributed momentum directions
   for (auto track : generator_t{trk_gen_cfg}) {
     // Build actor states: the helix inspector can be shared
-    actor::parameter_updater_state<test_algebra> updater_state{cfg};
-    actor::parameter_updater_state<test_algebra> fw_updater_state{cfg};
-    actor::parameter_updater_state<test_algebra> bw_updater_state{cfg};
+    actor::parameter_updater_state<test_algebra> updater_state{cfg, track};
+    actor::parameter_updater_state<test_algebra> fw_updater_state{cfg, track};
+    actor::parameter_updater_state<test_algebra> bw_updater_state{cfg, track};
+
     actor::pointwise_material_interactor<test_algebra>::state
         interactor_state{};
 

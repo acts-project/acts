@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // CUDA Library include(s).
 #include "../sanity/contiguous_on.cuh"
@@ -19,11 +20,13 @@
 #include "traccc/utils/projections.hpp"
 #include "traccc/utils/relations.hpp"
 
-// Vecmem include(s).
+// System include(s).
 #include <cstring>
 #include <limits>
 
+// Vecmem include(s).
 #include <vecmem/containers/device_vector.hpp>
+#include <vecmem/utils/abstract_event.hpp>
 #include <vecmem/utils/copy.hpp>
 
 namespace traccc::cuda {
@@ -31,9 +34,9 @@ namespace traccc::cuda {
 clusterization_algorithm::clusterization_algorithm(
     const traccc::memory_resource& mr, const vecmem::copy& copy,
     const stream_wrapper& str, const config_type& config,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::clusterization_algorithm(mr, copy, config, std::move(logger)),
-      cuda::algorithm_base(str) {}
+      cuda::algorithm_base(str, std::move(await_func)) {}
 
 bool clusterization_algorithm::input_is_contiguous(
     const edm::silicon_cell_collection::const_view& cells) const {

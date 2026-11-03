@@ -26,7 +26,7 @@ class ISurfaceMaterial;
 ///
 /// @ingroup material_mapping
 ///
-/// This class is used by the SurfaceMaterialMapper in order to
+/// This class is used by the BinnedSurfaceMaterialAccumulator in order to
 /// accumulate/collect material information during the mapping process.
 ///
 /// It performs event- and run-average when called, and returns

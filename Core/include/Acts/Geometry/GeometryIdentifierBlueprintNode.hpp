@@ -20,8 +20,6 @@ class TrackingVolume;
 class PortalShellBase;
 class Volume;
 
-namespace Experimental {
-
 struct GeometryIdentifierBlueprintNodeImpl;
 
 /// @brief Blueprint node for configuring and applying geometry identifiers to volumes
@@ -89,6 +87,15 @@ class GeometryIdentifierBlueprintNode : public BlueprintNode {
   GeometryIdentifierBlueprintNode& setAllVolumeIdsTo(
       GeometryIdentifier::Value volumeId);
 
+  /// @brief Set the volume ID of direct child volumes without changing descendants
+  /// @param volumeId The volume ID to set
+  /// @return Reference to this node for method chaining
+  /// @note Applies to each volume added to the parent by the child node during
+  /// finalization. Other geometry ID components are preserved.
+  /// @note Will throw if a direct child volume already has a volume ID assigned
+  GeometryIdentifierBlueprintNode& setDirectChildVolumeIdTo(
+      GeometryIdentifier::Value volumeId);
+
   /// Predicate function to compare two @ref Acts::TrackingVolume with each other to determine their *closure order*.
   using CompareVolumes =
       std::function<bool(const TrackingVolume&, const TrackingVolume&)>;
@@ -107,5 +114,15 @@ class GeometryIdentifierBlueprintNode : public BlueprintNode {
   std::unique_ptr<GeometryIdentifierBlueprintNodeImpl> m_impl;
 };
 
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::GeometryIdentifierBlueprintNode
+///             instead. This alias is kept for backward compatibility and will
+///             be removed.
+using GeometryIdentifierBlueprintNode
+    [[deprecated("Acts::Experimental::GeometryIdentifierBlueprintNode moved to "
+                 "Acts::GeometryIdentifierBlueprintNode")]] =
+        Acts::GeometryIdentifierBlueprintNode;
 }  // namespace Experimental
+
 }  // namespace Acts

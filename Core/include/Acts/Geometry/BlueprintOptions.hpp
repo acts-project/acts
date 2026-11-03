@@ -12,7 +12,7 @@
 
 #include <memory>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// Options controlling blueprint navigation policies.
 struct BlueprintOptions {
@@ -36,4 +36,13 @@ struct BlueprintOptions {
   makeDefaultNavigationPolicyFactory();
 };
 
-}  // namespace Acts::Experimental
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::BlueprintOptions instead. This alias
+///             is provided for backward compatibility and will be removed.
+using BlueprintOptions [[deprecated(
+    "Acts::Experimental::BlueprintOptions moved to Acts::BlueprintOptions")]] =
+    Acts::BlueprintOptions;
+}  // namespace Experimental
+
+}  // namespace Acts

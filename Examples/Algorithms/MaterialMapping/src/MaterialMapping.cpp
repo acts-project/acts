@@ -14,6 +14,7 @@
 
 #include <stdexcept>
 #include <unordered_map>
+#include <vector>
 
 namespace ActsExamples {
 
@@ -27,7 +28,9 @@ MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
 
   ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                        "This algorithm requires inter-event information, "
-                           << "run in single-threaded mode!");
+                           << "run in single-threaded mode! Use the "
+                           << "numThreads option of the material mapper to "
+                           << "map the tracks of each event concurrently.");
 
   if (m_cfg.materialMapper == nullptr) {
     throw std::invalid_argument("Missing material mapper");
@@ -36,19 +39,27 @@ MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
   m_mappingState = m_cfg.materialMapper->createState(m_cfg.geoContext);
 }
 
-MaterialMapping::~MaterialMapping() {
-  Acts::TrackingGeometryMaterial detectorMaterial =
+ProcessCode MaterialMapping::finalize() {
+  m_material =
       m_cfg.materialMapper->finalizeMaps(*m_mappingState, m_cfg.geoContext);
-  // Loop over the available writers and write the maps
-  for (auto& imw : m_cfg.materialWriters) {
-    imw->writeMaterial(detectorMaterial);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  for (auto& writer : m_cfg.materialWriters) {
+    writer->writeMaterial(*m_material);
   }
+  ACTS_POP_IGNORE_DEPRECATED()
+  return ProcessCode::SUCCESS;
+}
+
+const Acts::TrackingGeometryMaterial& MaterialMapping::material() const {
+  if (!m_material) {
+    throw std::logic_error("Material maps are available after finalization");
+  }
+  return *m_material;
 }
 
 ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
   // Take the collection from the EventStore: input collection
-  std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
-      mtrackCollection = m_inputMaterialTracks(context);
+  const auto& mtrackCollection = m_inputMaterialTracks(context);
 
   // Write the output collections to the Event store : mapped and unmapped
   std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
@@ -57,14 +68,26 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
   std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
       unmappedTrackCollection;
 
+  // Map the whole event as one batch, which allows the mapper to process
+  // the tracks concurrently
+  std::vector<std::size_t> trackIds;
+  std::vector<const Acts::RecordedMaterialTrack*> tracks;
+  trackIds.reserve(mtrackCollection.size());
+  tracks.reserve(mtrackCollection.size());
   for (const auto& [idTrack, mTrack] : mtrackCollection) {
-    auto [mapped, unmapped] = m_cfg.materialMapper->mapMaterial(
-        *m_mappingState, context.geoContext, context.magFieldContext, mTrack);
+    trackIds.push_back(idTrack);
+    tracks.push_back(&mTrack);
+  }
 
-    mappedTrackCollection.try_emplace(mappedTrackCollection.end(), idTrack,
-                                      mapped);
-    unmappedTrackCollection.try_emplace(unmappedTrackCollection.end(), idTrack,
-                                        unmapped);
+  auto results = m_cfg.materialMapper->mapMaterial(
+      *m_mappingState, context.recoGeoContext, context.magFieldContext, tracks);
+
+  for (std::size_t i = 0; i < results.size(); ++i) {
+    auto& [mapped, unmapped] = results[i];
+    mappedTrackCollection.try_emplace(mappedTrackCollection.end(), trackIds[i],
+                                      std::move(mapped));
+    unmappedTrackCollection.try_emplace(unmappedTrackCollection.end(),
+                                        trackIds[i], std::move(unmapped));
   }
 
   // Write the mapped and unmapped material tracks to the output

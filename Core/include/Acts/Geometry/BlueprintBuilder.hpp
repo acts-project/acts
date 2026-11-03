@@ -14,6 +14,8 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -32,7 +34,7 @@
 #include <variant>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace detail {
 
@@ -171,6 +173,20 @@ concept HasLayerNameMember =
       { layerSpec.layerName.has_value() } -> std::convertible_to<bool>;
     };
 
+/// @brief Optional backend capability to describe a passive (non-sensitive)
+/// element as a volume.
+///
+/// Backends that satisfy this concept enable
+/// @ref BlueprintBuilder::makePassiveElement, which wraps the returned volume
+/// into a @ref StaticBlueprintNode. The backend only has to translate its
+/// native shape description into placement and bounds; tracking volume and
+/// node creation are generic.
+template <typename BackendT>
+concept HasPassiveVolume =
+    requires(const BackendT& backend, const typename BackendT::Element& elem) {
+      { backend.passiveVolume(elem) } -> std::same_as<Volume>;
+    };
+
 /// @brief Optional backend capability for barrel/endcap assembly discovery.
 template <typename BackendT>
 concept HasBarrelEndcapClassifier = requires(
@@ -249,7 +265,7 @@ class ElementLayerAssembler {
   /// The associated @ref BlueprintBuilder type.
   using Builder = BlueprintBuilder<BackendT>;
   /// Distinguishes barrel (Cylinder) from endcap (Disc) layer geometry.
-  using LayerType = Acts::Experimental::LayerBlueprintNode::LayerType;
+  using LayerType = Acts::LayerBlueprintNode::LayerType;
   /// Backend detector element handle type.
   using Element = typename BackendT::Element;
   /// Backend layer-specification type.
@@ -408,12 +424,13 @@ class ElementLayerAssembler {
                                              std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
-      m_onLayer = [customizer = std::move(customizer)](
-                      const std::optional<Element>& layerElement,
-                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
-        customizer(layerElement, *layer);
-        return layer;
-      };
+      m_onLayer =
+          [customizer = std::move(customizer)](
+              const std::optional<Element>& layerElement,
+              const std::shared_ptr<LayerBlueprintNode>& layer) mutable {
+            customizer(layerElement, *layer);
+            return layer;
+          };
     }
     return std::move(*this);
   }
@@ -440,15 +457,14 @@ class ElementLayerAssembler {
   ///         container name is resolvable, or if the container yields no
   ///         matching elements and @p emptyOk is `false`.
   /// @return Shared pointer to the fully assembled container node.
-  [[nodiscard]] std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>
-  build() const;
+  [[nodiscard]] std::shared_ptr<Acts::ContainerBlueprintNode> build() const;
 
   /// @brief Build the container node and attach it as a child of @p node.
   ///
   /// Equivalent to `node.addChild(build())`.
   /// @param node Blueprint node that will receive the built container as a
   ///             child.
-  void addTo(Acts::Experimental::BlueprintNode& node) const&&;
+  void addTo(Acts::BlueprintNode& node) const&&;
 
  private:
   friend class BlueprintBuilder<BackendT>;
@@ -603,12 +619,13 @@ class SensorLayerAssembler {
                                              std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
-      m_onLayer = [customizer = std::move(customizer)](
-                      const std::optional<Element>& elem,
-                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
-        customizer(elem, *layer);
-        return layer;
-      };
+      m_onLayer =
+          [customizer = std::move(customizer)](
+              const std::optional<Element>& elem,
+              const std::shared_ptr<LayerBlueprintNode>& layer) mutable {
+            customizer(elem, *layer);
+            return layer;
+          };
     }
     return std::move(*this);
   }
@@ -752,12 +769,13 @@ class SensorLayer {
                                              std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
-      m_onLayer = [customizer = std::move(customizer)](
-                      const std::optional<Element>& elem,
-                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
-        customizer(elem, *layer);
-        return layer;
-      };
+      m_onLayer =
+          [customizer = std::move(customizer)](
+              const std::optional<Element>& elem,
+              const std::shared_ptr<LayerBlueprintNode>& layer) mutable {
+            customizer(elem, *layer);
+            return layer;
+          };
     }
     return std::move(*this);
   }
@@ -829,8 +847,7 @@ class BarrelEndcapAssembler {
       std::conditional_t<detail::HasAxisDefinition<BackendT>,
                          typename BackendT::AxisDefinition, std::monostate>;
   /// The @ref ElementLayerAssembler specialisation for this backend.
-  using ElementLayerAssembler =
-      ::Acts::Experimental::ElementLayerAssembler<BackendT>;
+  using ElementLayerAssembler = ::Acts::ElementLayerAssembler<BackendT>;
   /// Callback type that can replace or wrap a created container node.
   using ContainerCustomizer = detail::ContainerCustomizer<Element>;
 
@@ -878,12 +895,13 @@ class BarrelEndcapAssembler {
                                              std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
-      m_onLayer = [customizer = std::move(customizer)](
-                      const std::optional<Element>& elem,
-                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
-        customizer(elem, *layer);
-        return layer;
-      };
+      m_onLayer =
+          [customizer = std::move(customizer)](
+              const std::optional<Element>& elem,
+              const std::shared_ptr<LayerBlueprintNode>& layer) mutable {
+            customizer(elem, *layer);
+            return layer;
+          };
     }
     return std::move(*this);
   }
@@ -910,7 +928,7 @@ class BarrelEndcapAssembler {
       m_onContainer =
           [customizer = std::move(customizer)](
               const Element& elem,
-              std::shared_ptr<ContainerBlueprintNode> node) mutable {
+              const std::shared_ptr<ContainerBlueprintNode>& node) mutable {
             customizer(elem, *node);
             return node;
           };
@@ -957,7 +975,7 @@ class BarrelEndcapAssembler {
  private:
   typename ElementLayerAssembler::LayerCustomizer m_onLayer;
   ContainerCustomizer m_onContainer =
-      [](const Element&, std::shared_ptr<ContainerBlueprintNode> node) {
+      [](const Element&, const std::shared_ptr<ContainerBlueprintNode>& node) {
         return node;
       };
 
@@ -980,7 +998,9 @@ class BarrelEndcapAssembler {
 /// - @ref BlueprintBuilder::layerFromSensors() returns a @ref SensorLayer for
 ///   building a single layer directly from sensor elements,
 /// - @ref BlueprintBuilder::barrelEndcap() returns a
-///   @ref BarrelEndcapAssembler for combined barrel+endcap sub-detectors.
+///   @ref BarrelEndcapAssembler for combined barrel+endcap sub-detectors,
+/// - @ref BlueprintBuilder::makePassiveElement() creates a plain volume for a
+///   passive (non-sensitive) element that carries material.
 ///
 /// It also exposes helpers for traversing and querying the detector element
 /// hierarchy, which are used internally by the assembler classes.
@@ -1012,16 +1032,13 @@ class BlueprintBuilder {
       std::conditional_t<detail::HasAxisDefinition<Backend>,
                          typename Backend::AxisDefinition, std::monostate>;
   /// The @ref ElementLayerAssembler specialisation for this backend.
-  using ElementLayerAssembler =
-      ::Acts::Experimental::ElementLayerAssembler<Backend>;
+  using ElementLayerAssembler = ::Acts::ElementLayerAssembler<Backend>;
   /// The @ref SensorLayerAssembler specialisation for this backend.
-  using SensorLayerAssembler =
-      ::Acts::Experimental::SensorLayerAssembler<Backend>;
+  using SensorLayerAssembler = ::Acts::SensorLayerAssembler<Backend>;
   /// The @ref SensorLayer specialisation for this backend.
-  using SensorLayer = ::Acts::Experimental::SensorLayer<Backend>;
+  using SensorLayer = ::Acts::SensorLayer<Backend>;
   /// The @ref BarrelEndcapAssembler specialisation for this backend.
-  using BarrelEndcapAssembler =
-      ::Acts::Experimental::BarrelEndcapAssembler<Backend>;
+  using BarrelEndcapAssembler = ::Acts::BarrelEndcapAssembler<Backend>;
 
   /// @brief Construct a `BlueprintBuilder` from a backend configuration.
   ///
@@ -1166,6 +1183,22 @@ class BlueprintBuilder {
   std::vector<Element> findEndcapElements(const Element& assembly) const
     requires(detail::HasBarrelEndcapClassifier<Backend>);
 
+  /// @brief Create a @ref StaticBlueprintNode for a passive detector element.
+  ///
+  /// Use for elements that carry material but have no sensitive surfaces of
+  /// their own (e.g. support tubes or endplates). The backend describes the
+  /// element as a @ref Volume via `passiveVolume()`; this method turns it into
+  /// a tracking volume node, which can then be wrapped in
+  /// @ref BlueprintNode::addMaterial like any other node.
+  /// @param element    Passive detector element.
+  /// @param volumeName Name of the created volume. Defaults to the element's
+  ///                   own name; pass an explicit, unique name if the
+  ///                   element's name is shared by several instances.
+  /// @return Shared pointer to the created @ref StaticBlueprintNode.
+  std::shared_ptr<StaticBlueprintNode> makePassiveElement(
+      const Element& element, const std::string& volumeName = "") const
+    requires(detail::HasPassiveVolume<Backend>);
+
   /// @brief Return the logger associated with this builder.
   /// @return Reference to the logger instance.
   const Acts::Logger& logger() const;
@@ -1187,4 +1220,41 @@ class BlueprintBuilder {
   Backend m_backend;
 };
 
-}  // namespace Acts::Experimental
+namespace Experimental {
+/// @deprecated The blueprint builder moved out of the `Acts::Experimental`
+///             namespace. Use the un-namespaced `Acts::` templates instead.
+///             These aliases are kept for backward compatibility and will be
+///             removed.
+template <Acts::detail::BlueprintBackend BackendT>
+using ElementLayerAssembler
+    [[deprecated("Acts::Experimental::ElementLayerAssembler moved to "
+                 "Acts::ElementLayerAssembler")]] =
+        Acts::ElementLayerAssembler<BackendT>;
+/// @deprecated Acts::Experimental::SensorLayerAssembler moved to
+///             Acts::SensorLayerAssembler.
+template <Acts::detail::BlueprintBackend BackendT>
+using SensorLayerAssembler
+    [[deprecated("Acts::Experimental::SensorLayerAssembler moved to "
+                 "Acts::SensorLayerAssembler")]] =
+        Acts::SensorLayerAssembler<BackendT>;
+/// @deprecated Acts::Experimental::SensorLayer moved to Acts::SensorLayer.
+template <Acts::detail::BlueprintBackend BackendT>
+using SensorLayer [[deprecated(
+    "Acts::Experimental::SensorLayer moved to Acts::SensorLayer")]] =
+    Acts::SensorLayer<BackendT>;
+/// @deprecated Acts::Experimental::BarrelEndcapAssembler moved to
+///             Acts::BarrelEndcapAssembler.
+template <Acts::detail::BlueprintBackend BackendT>
+using BarrelEndcapAssembler
+    [[deprecated("Acts::Experimental::BarrelEndcapAssembler moved to "
+                 "Acts::BarrelEndcapAssembler")]] =
+        Acts::BarrelEndcapAssembler<BackendT>;
+/// @deprecated Acts::Experimental::BlueprintBuilder moved to
+///             Acts::BlueprintBuilder.
+template <Acts::detail::BlueprintBackend BackendT>
+using BlueprintBuilder [[deprecated(
+    "Acts::Experimental::BlueprintBuilder moved to Acts::BlueprintBuilder")]] =
+    Acts::BlueprintBuilder<BackendT>;
+}  // namespace Experimental
+
+}  // namespace Acts

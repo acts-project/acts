@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
+#include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -103,29 +104,32 @@ class VoidNavigator {
   /// Initializes the void navigator (always succeeds and does nothing)
   /// @return Always successful result since no initialization is needed
   [[nodiscard]] Result<void> initialize(
-      State& /*state*/, const Vector3& /*position*/,
-      const Vector3& /*direction*/, Direction /*propagationDirection*/) const {
+      State& /*state*/, const NavigatorInitializeArguments& /*args*/) const {
     return Result<void>::success();
   }
 
   /// Returns the next navigation target (always None for void navigator)
   /// @return NavigationTarget::None() since there are no targets in void space
-  NavigationTarget nextTarget(State& /*state*/, const Vector3& /*position*/,
-                              const Vector3& /*direction*/) const {
+  NavigationTarget nextTarget(
+      State& /*state*/, const Vector3& /*position*/,
+      const Vector3& /*direction*/,
+      const Vector3& /*curvature*/ = Vector3::Zero()) const {
     return NavigationTarget::None();
   }
 
   /// Checks if the current target is valid (always true for void navigator)
   /// @return Always true since there are no targets to invalidate
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
-                        const Vector3& /*direction*/) const {
+                        const Vector3& /*direction*/,
+                        const Vector3& /*curvature*/ = Vector3::Zero()) const {
     return true;
   }
 
   /// Handles reaching a surface (does nothing for void navigator)
-  void handleSurfaceReached(State& /*state*/, const Vector3& /*position*/,
-                            const Vector3& /*direction*/,
-                            const Surface& /*surface*/) const {
+  void handleSurfaceReached(
+      State& /*state*/, const Vector3& /*position*/,
+      const Vector3& /*direction*/, const Surface& /*surface*/,
+      const Vector3& /*curvature*/ = Vector3::Zero()) const {
     return;
   }
 };

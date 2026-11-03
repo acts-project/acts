@@ -59,6 +59,8 @@ DETRAY_HOST_DEVICE inline bool expand_bracket(const scalar_t a,
   scalar_t f_u{f(upper)};
   std::size_t n_tries{0u};
 
+  DETRAY_DEBUG_HOST("Initial bracket: [" << lower << ", " << upper << "]");
+
   /// Check if the bracket has become invalid
   const auto check_bracket = [a, b, &bracket](std::size_t n, scalar_t fl,
                                               scalar_t fu, scalar_t l,
@@ -68,8 +70,8 @@ DETRAY_HOST_DEVICE inline bool expand_bracket(const scalar_t a,
       DETRAY_VERBOSE_HOST("Could not bracket a root (a="
                           << l << ", b=" << u << ", f(a)=" << fl
                           << ", f(b)=" << fu
-                          << ", root might not exist). Running "
-                             "Newton-Raphson without bisection.");
+                          << ", root might not exist). Running Newton-Raphson "
+                             "without bisection.");
       // Reset value
       bracket = {a, b};
       return false;
@@ -124,6 +126,8 @@ DETRAY_HOST_DEVICE inline std::pair<scalar_t, scalar_t> newton_raphson(
   constexpr scalar_t inv{detail::invalid_value<scalar_t>()};
   constexpr scalar_t epsilon{std::numeric_limits<scalar_t>::epsilon()};
 
+  DETRAY_DEBUG_HOST("Initial path estimate: s=" << s << "mm");
+
   if (math::fabs(s) >= max_path) {
     DETRAY_VERBOSE_HOST("Initial path estimate outside search area: s=" << s);
   }
@@ -141,14 +145,14 @@ DETRAY_HOST_DEVICE inline std::pair<scalar_t, scalar_t> newton_raphson(
   while (math::fabs(s - s_prev) > convergence_tolerance) {
     // Root already found?
     if (math::fabs(f_s) < convergence_tolerance) {
+      DETRAY_DEBUG_HOST("Found: s = " << s << "mm, err = " << epsilon << "mm");
       return std::make_pair(s, epsilon);
     }
 
     // No intersection can be found if dividing by zero
     if (math::fabs(df_s) == 0.f) {
-      DETRAY_VERBOSE_HOST(
-          "Newton step encountered invalid derivative "
-          "- skipping");
+      DETRAY_ERROR_HOST(
+          "Newton step encountered invalid derivative - skipping");
       return std::make_pair(inv, inv);
     }
 
@@ -169,6 +173,8 @@ DETRAY_HOST_DEVICE inline std::pair<scalar_t, scalar_t> newton_raphson(
     }
   }
   // Final pathlengt to root and latest step size
+  DETRAY_DEBUG_HOST("Found: s = " << s << "mm, err = " << math::fabs(s - s_prev)
+                                  << "mm");
   return std::make_pair(s, math::fabs(s - s_prev));
 }
 
@@ -192,6 +198,8 @@ DETRAY_HOST_DEVICE inline std::pair<scalar_t, scalar_t> newton_raphson_safe(
   constexpr scalar_t inv{detail::invalid_value<scalar_t>()};
   constexpr scalar_t epsilon{std::numeric_limits<scalar_t>::epsilon()};
 
+  DETRAY_DEBUG_HOST("Initial path estimate: s=" << s << "mm");
+
   // Evaluate the test function at point 'x'
   auto f = [&evaluate_func](const scalar_t x) {
     auto [f_x, df_x] = evaluate_func(x);
@@ -200,11 +208,12 @@ DETRAY_HOST_DEVICE inline std::pair<scalar_t, scalar_t> newton_raphson_safe(
   };
 
   if (math::fabs(s) >= max_path) {
-    DETRAY_VERBOSE_HOST("Initial path estimate outside search area: s=" << s);
+    DETRAY_VERBOSE_HOST(
+        "Initial path estimate outside search area: s=" << s << "mm");
   }
   if (math::fabs(s) >= inv) {
     const std::string err_msg{"Initial path estimate invalid"};
-    DETRAY_ERROR_HOST(err_msg);
+    DETRAY_FATAL_HOST(err_msg);
     throw std::invalid_argument(err_msg);
   }
 
@@ -250,9 +259,11 @@ DETRAY_HOST_DEVICE inline std::pair<scalar_t, scalar_t> newton_raphson_safe(
 
     // Root already found?
     if (math::fabs(f_a) < convergence_tolerance) {
+      DETRAY_DEBUG_HOST("Found: s = " << a << "mm, err = " << epsilon << "mm");
       return std::make_pair(a, epsilon);
     }
     if (math::fabs(f_b) < convergence_tolerance) {
+      DETRAY_DEBUG_HOST("Found: s = " << b << "mm, err = " << epsilon << "mm");
       return std::make_pair(b, epsilon);
     }
 
@@ -268,6 +279,8 @@ DETRAY_HOST_DEVICE inline std::pair<scalar_t, scalar_t> newton_raphson_safe(
   std::size_t n_tries{0u};
   auto [f_s, df_s] = evaluate_func(s);
   if (math::fabs(f_s) < convergence_tolerance) {
+    DETRAY_DEBUG_HOST(
+        "Found: s = " << s << "mm, err = " << convergence_tolerance << "mm");
     return std::make_pair(s, epsilon);
   }
   if (math::signbit(f_s)) {
@@ -359,6 +372,8 @@ DETRAY_HOST_DEVICE inline std::pair<scalar_t, scalar_t> newton_raphson_safe(
     }
   }
   // Final pathlengt to root and latest step size
+  DETRAY_DEBUG_HOST("Found: s = " << s << "mm, err = " << math::fabs(s - s_prev)
+                                  << "mm");
   return std::make_pair(s, math::fabs(s - s_prev));
 }
 
@@ -415,6 +430,17 @@ DETRAY_HOST_DEVICE constexpr void resolve_mask(
     // Not a valid intersection
     is.set_status(intersection::status::e_outside);
   }
+
+  std::string intr_status{"unknown"};
+  if (is.is_inside()) {
+    intr_status = "inside";
+  } else if (is.is_edge()) {
+    intr_status = "edge";
+  } else {
+    intr_status = "outside";
+  }
+
+  DETRAY_DEBUG_HOST("Intersection status: " << intr_status);
 }
 
 }  // namespace detray

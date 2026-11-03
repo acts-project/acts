@@ -9,23 +9,30 @@
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
-#include <algorithm>
+#include <array>
 #include <cmath>
-#include <iostream>
+#include <memory>
+#include <numbers>
+#include <utility>
 
-namespace Acts::Experimental {
+namespace Acts::Experimental::detail {
 
-void GbtsEdgeState::initialize(const GbtsEdge& pS) {
-  initialized = true;
-
+void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
+                                       const detail::GbtsNodeView& nodeView,
+                                       const std::array<float, 3>& varianceX,
+                                       const std::array<float, 2>& varianceY) {
   j = 0;
   vs.clear();
 
   // n2->n1
 
-  const float dx = pS.n1->x - pS.n2->x;
-  const float dy = pS.n1->y - pS.n2->y;
+  const detail::GbtsNodeProxy n1 = nodeView[pS.n1];
+  const detail::GbtsNodeProxy n2 = nodeView[pS.n2];
+
+  const float dx = n1.x() - n2.x();
+  const float dy = n1.y() - n2.y();
   const float L = std::sqrt(dx * dx + dy * dy);
 
   s = dy / L;
@@ -35,146 +42,48 @@ void GbtsEdgeState::initialize(const GbtsEdge& pS) {
   //  x' =  x*c + y*s
   //  y' = -x*s + y*c
 
-  refY = pS.n2->r;
-  refX = pS.n2->x * c + pS.n2->y * s;
+  refY = n2.r();
+  refX = n2.x() * c + n2.y() * s;
 
   // X-state: y, dy/dx, d2y/dx2
 
-  x[0] = -pS.n2->x * s + pS.n2->y * c;
+  x[0] = -n2.x() * s + n2.y() * c;
   x[1] = 0;
   x[2] = 0;
 
   // Y-state: z, dz/dr
 
-  y[0] = pS.n2->z;
-  y[1] = (pS.n1->z - pS.n2->z) / (pS.n1->r - pS.n2->r);
+  y[0] = n2.z();
+  y[1] = (n1.z() - n2.z()) / (n1.r() - n2.r());
 
   cx = {};
-  cx[0][0] = 0.25f;
-  cx[1][1] = 0.001f;
-  cx[2][2] = 0.001f;
+  cx[0][0] = varianceX[0];
+  cx[1][1] = varianceX[1];
+  cx[2][2] = varianceX[2];
 
   cy = {};
-  cy[0][0] = 1.5f;
-  cy[1][1] = 0.001f;
+  cy[0][0] = varianceY[0];
+  cy[1][1] = varianceY[1];
 }
+
+}  // namespace Acts::Experimental::detail
+
+namespace Acts::Experimental {
 
 GbtsTrackingFilter::GbtsTrackingFilter(
-    const Config& config, const std::shared_ptr<const GbtsGeometry>& geometry)
-    : m_cfg(config), m_geometry(geometry) {}
+    const Config& config, const std::shared_ptr<const GbtsGeometry>& geometry,
+    std::unique_ptr<const Logger> logger)
+    : m_cfg(config), m_geometry(geometry), m_logger(std::move(logger)) {}
 
-GbtsEdgeState GbtsTrackingFilter::followTrack(State& state,
-                                              std::vector<GbtsEdge>& sb,
-                                              GbtsEdge& pS) const {
-  if (pS.level == -1) {
-    // already collected
-    return GbtsEdgeState(false);
-  }
-
-  state.globalStateCounter = 0;
-
-  // create track state
-
-  GbtsEdgeState& pInitState = state.stateStore[state.globalStateCounter];
-  ++state.globalStateCounter;
-
-  pInitState.initialize(pS);
-
-  state.stateVec.clear();
-
-  // recursive branching and propagation
-
-  propagate(state, sb, pS, pInitState);
-
-  if (state.stateVec.empty()) {
-    return GbtsEdgeState(false);
-  }
-
-  std::ranges::sort(state.stateVec, std::ranges::greater{},
-                    [](const GbtsEdgeState* s) { return s->j; });
-
-  state.globalStateCounter = 0;
-
-  return *state.stateVec.front();
-}
-
-void GbtsTrackingFilter::propagate(State& state, std::vector<GbtsEdge>& sb,
-                                   GbtsEdge& pS, GbtsEdgeState& ts) const {
-  if (state.globalStateCounter >= GbtsMaxEdgeState) {
-    return;
-  }
-
-  GbtsEdgeState& newTs = state.stateStore[state.globalStateCounter];
-  ++state.globalStateCounter;
-  newTs = ts;
-
-  newTs.vs.push_back(&pS);
-
-  // update using n1 of the segment
-  bool accepted = update(pS, newTs);
-
-  if (!accepted) {
-    // stop further propagation
-    return;
-  }
-
-  const std::int32_t level = pS.level;
-
-  std::vector<GbtsEdge*> lCont;
-
-  // loop over the neighbours of this segment
-  for (std::uint32_t nIdx = 0; nIdx < pS.nNei; ++nIdx) {
-    const std::uint32_t nextSegmentIdx = pS.vNei[nIdx];
-
-    GbtsEdge& pN = sb[nextSegmentIdx];
-
-    if (pN.level == -1) {
-      // already collected
-      continue;
-    }
-
-    if (pN.level == level - 1) {
-      lCont.push_back(&pN);
-    }
-  }
-
-  // the end of chain
-  if (lCont.empty()) {
-    // store in the vector
-    if (state.globalStateCounter < GbtsMaxEdgeState) {
-      if (state.stateVec.empty()) {
-        // add the first segment state
-        GbtsEdgeState* p = &state.stateStore[state.globalStateCounter];
-        ++state.globalStateCounter;
-        *p = newTs;
-        state.stateVec.push_back(p);
-      } else {
-        // compare with the best and add
-        const float bestSoFar = state.stateVec.front()->j;
-        if (newTs.j > bestSoFar) {
-          GbtsEdgeState* p = &state.stateStore[state.globalStateCounter];
-          ++state.globalStateCounter;
-          *p = newTs;
-          state.stateVec.push_back(p);
-        }
-      }
-    }
-  } else {
-    // branching
-    for (GbtsEdge* sIt : lCont) {
-      // recursive call
-      propagate(state, sb, *sIt, newTs);
-    }
-  }
-}
-
-bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
+bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
+                                const detail::GbtsEdge& pS,
+                                detail::GbtsEdgeState& ts) const {
   if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
-    std::cout << "Negative cov_x" << std::endl;
+    ACTS_DEBUG("Negative cov_x");
   }
 
   if (ts.cy[1][1] < 0 || ts.cy[0][0] < 0) {
-    std::cout << "Negative cov_y" << std::endl;
+    ACTS_DEBUG("Negative cov_y");
   }
 
   // add ms.
@@ -182,7 +91,10 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
   const float tau2 = ts.y[1] * ts.y[1];
   const float invSin2 = 1 + tau2;
 
-  const GbtsLayerType layerType1 = getLayerType(pS.n2->layer);
+  const detail::GbtsNodeProxy n1 = nodeView[pS.n1];
+  const detail::GbtsNodeProxy n2 = nodeView[pS.n2];
+
+  const GbtsLayerType layerType1 = getLayerType(n2.layer());
 
   const float lenCorr =
       layerType1 == GbtsLayerType::Barrel ? invSin2 : invSin2 / tau2;
@@ -204,10 +116,10 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
   std::array<std::array<float, 3>, 3> Cx{};
   std::array<std::array<float, 2>, 2> Cy{};
 
-  const float x = pS.n1->x;
-  const float y = pS.n1->y;
-  const float z = pS.n1->z;
-  const float r = pS.n1->r;
+  const float x = n1.x();
+  const float y = n1.y();
+  const float z = n1.z();
+  const float r = n1.r();
 
   const float refX = x * ts.c + y * ts.s;
   const float mx = -x * ts.s + y * ts.c;  // measured X[0]
@@ -252,21 +164,36 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
 
   float sigma_rz = 0;
 
-  const GbtsLayerType type = getLayerType(pS.n1->layer);
+  const GbtsLayerType type = getLayerType(n1.layer());
+
+  // Across the strips a pair is sharper than a pixel, along them far worse:
+  // the crossing is unconstrained over the strip, a half length over sqrt(3)
+  // off its half vector -- the outer strip's, a stereo angle from the inner.
+  float sigmaX = m_cfg.sigmaX;
+  float sigmaY = m_cfg.sigmaY;
+  if (const auto* strip = nodeView.strip(n1.index()); strip != nullptr) {
+    constexpr float invSqrt3 = std::numbers::inv_sqrt3_v<float>;
+    const std::array<float, 3>& half = strip->outerHalfVector;
+    // the walk is along the strip, so project its reach onto the fit's axes
+    const float alongX = -half[0] * ts.s + half[1] * ts.c;
+    sigmaX = fastHypot(m_cfg.sigmaXStrip, alongX * invSqrt3);
+    sigmaY = (type == GbtsLayerType::Barrel ? std::abs(half[2])
+                                            : fastHypot(half[0], half[1])) *
+             invSqrt3;
+  }
 
   if (type == GbtsLayerType::Barrel) {
-    // barrel TODO: split into barrel Pixel and barrel SCT
-    sigma_rz = m_cfg.sigmaY * m_cfg.sigmaY;
+    sigma_rz = sigmaY * sigmaY;
   } else if (type == GbtsLayerType::Endcap) {
-    sigma_rz = m_cfg.sigmaY * ts.y[1];
+    sigma_rz = sigmaY * ts.y[1];
     sigma_rz = sigma_rz * sigma_rz;
   } else {
     throw std::runtime_error("invalid layer type");
   }
 
-  const float Dx = 1.0 / (Cx[0][0] + m_cfg.sigmaX * m_cfg.sigmaX);
+  const float Dx = 1.0f / (Cx[0][0] + sigmaX * sigmaX);
 
-  const float Dy = 1.0 / (Cy[0][0] + sigma_rz);
+  const float Dy = 1.0f / (Cy[0][0] + sigma_rz);
 
   const float dchi2_x = resid_x * resid_x * Dx;
   const float dchi2_y = resid_y * resid_y * Dy;
@@ -317,8 +244,8 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
 }
 
 GbtsLayerType GbtsTrackingFilter::getLayerType(
-    const std::uint32_t layerIndex) const {
-  return m_geometry->layerByIndex(layerIndex).layerDescription().type;
+    const GbtsLayerIndex layerIndex) const {
+  return m_geometry->layerDescription(layerIndex).type;
 }
 
 }  // namespace Acts::Experimental

@@ -61,56 +61,49 @@ function(detray_add_library fullname basename)
     )
 endfunction(detray_add_library)
 
-# Helper function testing the detray public headers.
+# Helper function to set up a target that compiles detray's headers one-by-one.
 #
-# It can be used to test that public headers would include everything
-# that they need to work, and that the CMake library targets would take
-# care of declaring all of their dependencies correctly for the public
-# headers to work.
+# It replaces the per-header `main()` executables detray used to build: this
+# also covers the `detail/` headers, produces one library per component rather
+# than one executable per header, and gives tools like clangd the compiler
+# flags for every header.
 #
-# Usage: detray_test_public_headers( detray_core
-#                                    include/header1.hpp ... )
+# The generated targets are EXCLUDE_FROM_ALL. `detray_headers` depends on all
+# of them, so `cmake --build . --target detray_headers` compiles every header.
 #
-function(detray_test_public_headers library)
-    # If testing is not turned on, don't do anything.
-    if((NOT BUILD_TESTING) OR (NOT DETRAY_BUILD_TESTING))
+# This is a thin wrapper around ACTS' `acts_compile_headers`, which the
+# top-level CMakeLists.txt makes available in a standalone detray build too.
+#
+# Note that the detray headers only compile when an algebra plugin is present,
+# so `link` should name one of the algebra-specific targets (e.g.
+# `detray::core_array`) rather than the plugin-less `detray::core`. A `link`
+# that does not exist -- a disabled algebra plugin -- is skipped.
+#
+# Usage: detray_compile_headers( core_array detray::core_array
+#                                include/detray/*.hpp ... )
+#
+function(detray_compile_headers name link)
+    if(NOT TARGET ${link})
         return()
     endif()
 
-    # All arguments are treated as header file names.
-    foreach(_headerName ${ARGN})
-        # Make the header filename into a "string".
-        string(REPLACE "/" "_" _headerNormName "${_headerName}")
-        string(REPLACE "." "_" _headerNormName "${_headerNormName}")
+    acts_compile_headers(
+        ${name}
+        NAME detray_${name}_HEADERS
+        LINK ${link}
+        GLOB ${ARGN}
+    )
 
-        # Write a small source file that would test that the public
-        # header can be used as-is.
-        set(_testFileName
-            "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/test_${library}_${_headerNormName}.cpp"
-        )
-        if(NOT EXISTS "${_testFileName}")
-            file(
-                WRITE "${_testFileName}"
-                "#include \"${_headerName}\"\n"
-                "int main() { return 0; }"
-            )
-        endif()
+    # acts_compile_headers is a no-op when header compilation is turned off.
+    if(NOT TARGET detray_${name}_HEADERS)
+        return()
+    endif()
 
-        # Set up an executable that would build it. But hide it, don't put it
-        # into ${CMAKE_BINARY_DIR}/bin.
-        add_executable("test_${library}_${_headerNormName}" "${_testFileName}")
-        target_link_libraries(
-            "test_${library}_${_headerNormName}"
-            PRIVATE ${library}
-        )
-        set_target_properties(
-            "test_${library}_${_headerNormName}"
-            PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY
-                    "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
-        )
-    endforeach()
-endfunction(detray_test_public_headers)
+    if(NOT TARGET detray_headers)
+        add_custom_target(detray_headers)
+    endif()
+    add_dependencies(detray_headers detray_${name}_HEADERS)
+endfunction(detray_compile_headers)
 
 # Helper function for setting up the detray executables.
 #
@@ -250,52 +243,35 @@ function(detray_add_flag name value)
 endfunction(detray_add_flag)
 
 # Generate a single detray sympy codegen header via acts_code_generation and
-# install it alongside the other detray headers.
+# install it alongside the other detray headers. What is generated and where it
+# ends up is described in the ACTS codegen manifest; only the key is given here.
 #
 # Usage: detray_add_codegen_header(
 #            TARGET detray_core
-#            CODEGEN_DIR ${detray_codegen_dir}
-#            ACTS_CODEGEN_PKG ${acts_codegen_pkg}
-#            SCRIPT gen_full_jacobian.py
-#            OUTPUT detray/propagator/detail/codegen/full_jacobian.hpp
+#            KEY Detray/core/detray/propagator/detail/codegen/full_jacobian.hpp
 #        )
 #
 function(detray_add_codegen_header)
-    set(oneValueArgs
-        TARGET
-        CODEGEN_DIR
-        ACTS_CODEGEN_PKG
-        SCRIPT
-        OUTPUT
-    )
+    set(oneValueArgs TARGET KEY)
     cmake_parse_arguments(ARG "" "${oneValueArgs}" "" ${ARGN})
 
-    if(
-        NOT ARG_TARGET
-        OR NOT ARG_SCRIPT
-        OR NOT ARG_OUTPUT
-        OR NOT ARG_CODEGEN_DIR
-        OR NOT ARG_ACTS_CODEGEN_PKG
-    )
+    if(NOT ARG_TARGET OR NOT ARG_KEY)
         message(
             FATAL_ERROR
-            "detray_add_codegen_header: TARGET, CODEGEN_DIR, ACTS_CODEGEN_PKG, SCRIPT and OUTPUT are required"
+            "detray_add_codegen_header: TARGET and KEY are required"
         )
     endif()
 
     acts_code_generation(
         ADD_TO_TARGET ${ARG_TARGET}
-        PYTHON ${ARG_CODEGEN_DIR}/${ARG_SCRIPT}
-        WITH_REQUIREMENTS ${ARG_ACTS_CODEGEN_PKG}/requirements.txt
-        WITH ${ARG_ACTS_CODEGEN_PKG}
-        ISOLATED
-        OUTPUT ${ARG_OUTPUT}
+        KEY ${ARG_KEY}
         RESULT_INCLUDE_DIR _gen_root
+        RESULT_OUTPUT _output
     )
 
-    get_filename_component(_output_subdir ${ARG_OUTPUT} DIRECTORY)
+    get_filename_component(_output_subdir ${_output} DIRECTORY)
     install(
-        FILES ${_gen_root}/${ARG_OUTPUT}
+        FILES ${_gen_root}/${_output}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${_output_subdir}
     )
 endfunction(detray_add_codegen_header)

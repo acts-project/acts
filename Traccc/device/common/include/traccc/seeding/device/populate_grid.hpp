@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -31,7 +32,7 @@ TRACCC_HOST_DEVICE
 inline void populate_grid(
     global_index_t globalIndex, const seedfinder_config& config,
     const edm::spacepoint_collection::const_view& spacepoints,
-    details::spacepoint_grid_types::view grid,
+    traccc::details::spacepoint_grid_types::view grid,
     vecmem::data::vector_view<prefix_sum_element_t> grid_prefix_sum);
 
 }  // namespace traccc::device

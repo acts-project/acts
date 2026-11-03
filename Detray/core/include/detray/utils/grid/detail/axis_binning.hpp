@@ -19,6 +19,7 @@
 // System include(s).
 #include <cstddef>
 #include <iterator>
+#include <limits>
 
 namespace detray::axis {
 

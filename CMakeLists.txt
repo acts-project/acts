@@ -57,7 +57,15 @@ endif()
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
+# code generation related options
+set(ACTS_CODEGEN_PREBUILT_DIR "" CACHE PATH "Directory holding pre-generated code; a generated file found there is used verbatim instead of being regenerated. Defaults to prebuilt-codegen/ next to this file when it exists, which is what release source archives ship")
+option(ACTS_CODEGEN_REQUIRE_PREBUILT "Fail the configure step instead of running the code generators when pre-generated code is missing" OFF)
 # external library options
+set(ACTS_USE_ZSTD "AUTO" CACHE STRING "zstd support: AUTO (use if available), ALWAYS (required), NEVER (disabled)")
+set_property(CACHE ACTS_USE_ZSTD PROPERTY STRINGS AUTO ALWAYS NEVER)
+if(NOT ACTS_USE_ZSTD MATCHES "^(AUTO|ALWAYS|NEVER)$")
+    message(FATAL_ERROR "ACTS_USE_ZSTD must be AUTO, ALWAYS, or NEVER (got '${ACTS_USE_ZSTD}')")
+endif()
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
@@ -91,7 +99,7 @@ option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
-option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/Traccc plugins" OFF)
+option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/Traccc/CudaMuonSegmentFitting plugins" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
 option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
@@ -127,17 +135,19 @@ option(ACTS_BUILD_EXAMPLES_PARQUET "Build Arrow/Parquet-based code in the exampl
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" OFF)
+option(ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING "Build CUDA muon segment fitting example" OFF)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
+option(ACTS_BUILD_CORE_UNITTESTS "Build Core unit tests" ON) # only relevant if ACTS_BUILD_UNITTESTS is ON
 if(ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES)
   set(_default_examples_unit_tests ON)
 else()
   set(_default_examples_unit_tests OFF)
 endif()
-option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
+option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build Examples unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
@@ -150,9 +160,21 @@ option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" O
 set(ACTS_GPERF_INSTALL_DIR "" CACHE STRING "Hint to help find gperf if profiling is enabled")
 
 option(ACTS_ENABLE_LOG_FAILURE_THRESHOLD "Enable failing on log messages with level above certain threshold" OFF)
-set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown. If ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set and this is unset, this will enable a runtime check of the log level.")
 option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # gersemi: on
+
+# Removed option: warn and drop it from the cache. Setting it used to imply
+# ACTS_ENABLE_LOG_FAILURE_THRESHOLD, so ignoring it silently would leave a
+# downstream that set only this one with no threshold at all.
+if(DEFINED ACTS_LOG_FAILURE_THRESHOLD)
+    message(
+        WARNING
+        "ACTS_LOG_FAILURE_THRESHOLD was removed. Set "
+        "ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON and pass the level in the "
+        "ACTS_LOG_FAILURE_THRESHOLD environment variable instead."
+    )
+    unset(ACTS_LOG_FAILURE_THRESHOLD CACHE)
+endif()
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
@@ -179,9 +201,9 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_PYTHIA8
     OR
-    ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
-    OR
     ACTS_BUILD_EXAMPLES_ROOT
+    OR
+    ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING
 )
 # core plugins might be required by examples or depend on each other
 set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_ODD)
@@ -191,6 +213,7 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_EDM4HEP
 )
+set_option_if(ACTS_ENABLE_CUDA ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING)
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_PLUGIN_ARROW ACTS_BUILD_EXAMPLES_PARQUET)
@@ -225,10 +248,12 @@ set_option_if(
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 set_option_if(ACTS_BUILD_TRACCC ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_TRACCC)
+# Required for traccc
 set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
-set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
 set_option_if(ACTS_SETUP_COVFIE ACTS_SETUP_DETRAY)
+# Required for detray
+set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
+set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_SETUP_DETRAY)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -288,36 +313,30 @@ if(PROJECT_IS_TOP_LEVEL)
 endif()
 
 # This needs to happen before we set up any targets
-if(ACTS_FORCE_ASSERTIONS)
-    message(
-        STATUS
-        "Injecting headers to force assertions. This can have side-effects, USE WITH CAUTION!"
-    )
-    include_directories(
-        BEFORE
-        SYSTEM
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/assert_include
-    )
-endif()
+include(ActsForceAssertions)
 
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_actsvg_version 0.4.56)
+set(_acts_actsvg_version 0.4.57)
 set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
 set(_acts_edm4hep_version 1.0)
-set(_acts_edm4hep_fallback_version 0.10.5)
-set(_acts_eigen3_version 3.4.0)
+# 0.99 is the first release providing the TrackerHit interface, the CovMatrix
+# types (edm4hep::TrackState::covMatrix), Track::Nholes and the
+# edm4hep::TrackParams enum, all of which the EDM4hep plugin relies on.
+set(_acts_edm4hep_fallback_version 0.99)
+set(_acts_eigen3_version 5.0.1) # used when building Eigen from source
+set(_acts_eigen3_min_version 3.4.0) # minimum version accepted for a system Eigen3
 set(_acts_podio_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
 set(_acts_hepmc3_version 3.2.4)
 set(_acts_nlohmanjson_version 3.11.3)
 set(_acts_gbl_version 04.00.05)
-set(_acts_mille_version 01.00.05)
-set(_acts_mp2_version 05.01.05)
+set(_acts_mille_version 01.01.02)
+set(_acts_mp2_version 05.01.06)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_geomodel_version 6.8.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
@@ -325,8 +344,8 @@ set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
 set(_acts_traccc_version 1.4.0)
-set(_acts_covfie_version 0.15.2)
-set(_acts_vecmem_version 1.25.0)
+set(_acts_covfie_version 0.16.0)
+set(_acts_vecmem_version 1.28.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
 set(_acts_arrow_version 21.0.0)
@@ -341,21 +360,26 @@ include(ActsExternSources)
 if(ACTS_SETUP_BOOST)
     # Enable both program_options and unit_test_framework to reduce complexity
     # Also Cuda tests seem to use program_options
+    set(_acts_boost_components)
     if(
         ACTS_BUILD_ANALYSIS_APPS
         OR ACTS_BUILD_UNITTESTS
         OR ACTS_BUILD_INTEGRATIONTESTS
         OR ACTS_BUILD_BENCHMARKS
     )
-        find_package(
-            Boost
-            ${_acts_boost_version}
-            REQUIRED
-            COMPONENTS program_options unit_test_framework
-        )
-    else()
-        find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+        list(APPEND _acts_boost_components program_options unit_test_framework)
     endif()
+
+    # Only the Mille plugin needs process/filesystem, and neither is part of
+    # every Boost installation (Boost.Process is a compiled library since Boost
+    # 1.88). The plugin reports if the one it needs is missing.
+    find_package(
+        Boost
+        ${_acts_boost_version}
+        REQUIRED
+        COMPONENTS ${_acts_boost_components}
+        OPTIONAL_COMPONENTS process filesystem
+    )
 
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
         set(_boost_version_severity WARNING)
@@ -374,10 +398,10 @@ if(ACTS_SETUP_EIGEN3)
         find_package(Eigen3 REQUIRED CONFIG)
 
         if(DEFINED Eigen3_VERSION)
-            if(Eigen3_VERSION VERSION_LESS _acts_eigen3_version)
+            if(Eigen3_VERSION VERSION_LESS _acts_eigen3_min_version)
                 message(
                     FATAL_ERROR
-                    "Eigen3 ${Eigen3_VERSION} is too old (need >= 3.4.0)"
+                    "Eigen3 ${Eigen3_VERSION} is too old (need >= ${_acts_eigen3_min_version})"
                 )
             endif()
             if(Eigen3_VERSION VERSION_GREATER_EQUAL 6.0.0)
@@ -438,6 +462,18 @@ endmacro()
 # find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
+
+# nlohmann_json has to be resolved before any other package, because its config
+# file defines a non-namespaced `nlohmann_json` compatibility target whenever it
+# is searched for without a version. That target clashes with the one the
+# bundled build creates, so we have to claim the name first.
+if(ACTS_BUILD_PLUGIN_JSON)
+    if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
+        find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/nlohmann_json)
+    endif()
+endif()
 if(ACTS_BUILD_PYTHON_BINDINGS)
     find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
     if(ACTS_USE_SYSTEM_PYBIND11)
@@ -471,13 +507,6 @@ if(ACTS_BUILD_PLUGIN_DD4HEP)
         CONFIG
         COMPONENTS DDCore DDDetectors
     )
-endif()
-if(ACTS_BUILD_PLUGIN_JSON)
-    if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
-        find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
-    else()
-        add_subdirectory(thirdparty/nlohmann_json)
-    endif()
 endif()
 if(ACTS_BUILD_PLUGIN_GBL)
     if(ACTS_USE_SYSTEM_GBL)
@@ -542,14 +571,23 @@ if(ACTS_BUILD_ANALYSIS_APPS)
         COMPONENTS Geom Graf
     )
 endif()
+if(ACTS_ENABLE_CUDA)
+    find_package(CUDAToolkit REQUIRED)
+    enable_cuda()
+    message(STATUS "Build ACTS with CUDA")
+endif()
 if(ACTS_BUILD_PLUGIN_GNN)
     if(ACTS_ENABLE_CUDA)
-        find_package(CUDAToolkit REQUIRED)
-        enable_cuda()
         message(STATUS "Build GNN plugin with CUDA")
     else()
         message(STATUS "Build GNN plugin for CPU only")
     endif()
+    # FRNN and ModuleMapGraph are built from vendored upstream sources, which
+    # are not ours to keep warning-clean. A normal variable, so it shadows the
+    # cache entry for the subdirectories added below and is restored before any
+    # ACTS target follows.
+    set(_acts_gnn_warning_as_error "${CMAKE_COMPILE_WARNING_AS_ERROR}")
+    set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
     if(ACTS_GNN_ENABLE_TORCH)
         find_package(Torch REQUIRED)
         if(ACTS_ENABLE_CUDA)
@@ -563,6 +601,7 @@ if(ACTS_BUILD_PLUGIN_GNN)
             add_subdirectory(thirdparty/ModuleMapGraph)
         endif()
     endif()
+    set(CMAKE_COMPILE_WARNING_AS_ERROR "${_acts_gnn_warning_as_error}")
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_GNN_ENABLE_ONNX)
     find_package(onnxruntime ${_acts_onnxruntime_version} MODULE REQUIRED)
@@ -630,15 +669,35 @@ endif()
 if(ACTS_SETUP_DETRAY)
     # HACK: Temporary logic (aka technical debt) to make the detray component
     # work in traccc.
+
+    # Let ACTS set up all of the dependencies
     option(DETRAY_SETUP_VECMEM "" FALSE)
     option(DETRAY_SETUP_NLOHMANN "" FALSE)
     option(DETRAY_SETUP_EIGEN3 "" FALSE)
     option(DETRAY_SETUP_ACTSVG "" FALSE)
     option(DETRAY_SETUP_COVFIE "" FALSE)
     option(DETRAY_SETUP_PYBIND11 "" FALSE)
-    option(DETRAY_SVG_DISPLAY "" TRUE)
+
+    # Enable optional components depending on ACTS configuration
+    set_option_if(DETRAY_BUILD_CUDA ACTS_ENABLE_CUDA)
+    set_option_if(DETRAY_BUILD_UNIT_TESTS ACTS_BUILD_UNITTESTS)
+    set_option_if(DETRAY_BUILD_INTEGRATION_TESTS ACTS_BUILD_INTEGRATIONTESTS)
+    set_option_if(DETRAY_BUILD_BENCHMARKS ACTS_BUILD_BENCHMARKS)
+    set_option_if(DETRAY_BUILD_TUTORIALS ACTS_BUILD_EXAMPLES)
+    set_option_if(DETRAY_SVG_DISPLAY ACTS_BUILD_PLUGIN_ACTSVG)
+
+    # Enable dependencies of ACTS Detray plugin unit tests
+    set_option_if(DETRAY_BUILD_TEST_UTILS ACTS_BUILD_EXAMPLES_UNITTESTS)
+
     if(ACTS_BUILD_TRACCC)
-        option(DETRAY_BUILD_TEST_UTILS "" TRUE)
+        # Some detray validation tools are used in optional traccc libraries
+        set_option_if(
+            DETRAY_BUILD_VALIDATION_TOOLS
+            TRACCC_BUILD_PERFORMANCE
+            OR
+            TRACCC_BUILD_TESTING
+        )
+
         set(DETRAY_GENERATE_METADATA
             "itk_metadata"
             CACHE STRING
@@ -667,13 +726,6 @@ if(ACTS_BUILD_TRACCC)
     option(TRACCC_BUILD_TESTING "" FALSE)
     option(TRACCC_BUILD_EXAMPLES "" FALSE)
     option(TRACCC_BUILD_BENCHMARKS "" FALSE)
-
-    find_package(TBB ${_acts_tbb_version} CONFIG)
-    if(NOT TBB_FOUND)
-        set(TRACCC_SETUP_TBB TRUE CACHE BOOL "")
-    else()
-        set(TRACCC_SETUP_TBB FALSE CACHE BOOL "")
-    endif()
 
     add_subdirectory(Traccc)
 endif()

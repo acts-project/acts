@@ -62,7 +62,8 @@ tel_det_config tel_cfg{ann2};
 
 /// Test the writing of a telescope detector geometry to json
 GTEST_TEST(io, json_telescope_geometry_writer) {
-  using detector_t = detector<telescope_metadata<test_algebra, annulus2D>>;
+  using detector_t =
+      host::detector<telescope_metadata<test_algebra, annulus2D>>;
 
   // Telescope detector
   vecmem::host_memory_resource host_mr;
@@ -75,7 +76,8 @@ GTEST_TEST(io, json_telescope_geometry_writer) {
 
 /// Test the writing of the toy detector material to json
 GTEST_TEST(io, json_telescope_material_writer) {
-  using detector_t = detector<telescope_metadata<test_algebra, annulus2D>>;
+  using detector_t =
+      host::detector<telescope_metadata<test_algebra, annulus2D>>;
 
   // Telescope detector
   vecmem::host_memory_resource host_mr;
@@ -89,7 +91,7 @@ GTEST_TEST(io, json_telescope_material_writer) {
 
 /// Test the writing of the toy detector grids to json
 GTEST_TEST(io, json_toy_material_maps_writer) {
-  using detector_t = detector<test::toy_metadata>;
+  using detector_t = host::detector<test::toy_metadata>;
 
   // Toy detector
   vecmem::host_memory_resource host_mr;
@@ -104,7 +106,7 @@ GTEST_TEST(io, json_toy_material_maps_writer) {
 
 /// Test the writing of the toy detector grids to json
 GTEST_TEST(io, json_toy_grid_writer) {
-  using detector_t = detector<test::toy_metadata>;
+  using detector_t = host::detector<test::toy_metadata>;
 
   // Toy detector
   vecmem::host_memory_resource host_mr;

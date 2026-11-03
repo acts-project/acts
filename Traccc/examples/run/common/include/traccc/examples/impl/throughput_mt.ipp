@@ -1,13 +1,15 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 // Local include(s).
+#include "traccc/examples/await_strategy.hpp"
 #include "traccc/examples/make_magnetic_field.hpp"
 
 // Project include(s)
@@ -46,6 +48,7 @@
 #include <vecmem/memory/host_memory_resource.hpp>
 
 // TBB include(s).
+#include <tbb/concurrent_queue.h>
 #include <tbb/global_control.h>
 #include <tbb/parallel_for.h>
 #include <tbb/task_arena.h>
@@ -67,7 +70,8 @@
 namespace traccc {
 
 template <typename FULL_CHAIN_ALG>
-int throughput_mt(std::string_view description, int argc, char* argv[]) {
+int throughput_mt(std::string_view description, int argc, char* argv[],
+                  vecmem::memory_resource* host_mr) {
   std::unique_ptr<const traccc::Logger> prelogger = traccc::getDefaultLogger(
       "ThroughputExample", traccc::Logging::Level::INFO);
 
@@ -100,11 +104,13 @@ int throughput_mt(std::string_view description, int argc, char* argv[]) {
   performance::timing_info times;
 
   // Memory resource to use in the test.
-  vecmem::host_memory_resource host_mr;
+  vecmem::host_memory_resource unpinned_host_mr;
+  vecmem::memory_resource& input_host_mr =
+      *(host_mr == nullptr ? &unpinned_host_mr : host_mr);
 
   // Construct the detector description object.
-  traccc::detector_design_description::host det_descr{host_mr};
-  traccc::detector_conditions_description::host det_cond{host_mr};
+  traccc::detector_design_description::host det_descr{input_host_mr};
+  traccc::detector_conditions_description::host det_cond{input_host_mr};
   traccc::io::read_detector_description(
       det_descr, det_cond, detector_opts.detector_file,
       detector_opts.digitization_file, detector_opts.conditions_file,
@@ -112,15 +118,15 @@ int throughput_mt(std::string_view description, int argc, char* argv[]) {
 
   // Construct a Detray detector object, if supported by the configuration.
   traccc::host_detector detector;
-  traccc::io::read_detector(detector, host_mr, detector_opts.detector_file,
-                            detector_opts.material_file,
-                            detector_opts.grid_file);
+  traccc::io::read_detector(
+      detector, input_host_mr, detector_opts.detector_file,
+      detector_opts.material_file, detector_opts.grid_file);
 
   // Construct the magnetic field object.
   const auto field = details::make_magnetic_field(bfield_opts);
 
   // Read in all input events into memory.
-  vecmem::vector<edm::silicon_cell_collection::host> input{&host_mr};
+  vecmem::vector<edm::silicon_cell_collection::host> input{&unpinned_host_mr};
   {
     performance::timer t{"File reading", times};
     // Set up the container for the input events.
@@ -128,7 +134,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[]) {
     const std::size_t first_event = input_opts.skip;
     const std::size_t last_event = input_opts.skip + input_opts.events;
     for (std::size_t i = first_event; i < last_event; ++i) {
-      input.emplace_back(host_mr);
+      input.emplace_back(input_host_mr);
     }
     // Read the input cells into memory in parallel.
     tbb::parallel_for(tbb::blocked_range<std::size_t>{first_event, last_event},
@@ -166,31 +172,51 @@ int throughput_mt(std::string_view description, int argc, char* argv[]) {
       fitting_opts);
   fitting_cfg.propagation = propagation_config;
 
-  // Set up the full-chain algorithm(s). One for each thread.
-  std::vector<FULL_CHAIN_ALG> algs;
-  algs.reserve(threading_opts.threads + 1);
-  for (std::size_t i = 0; i < threading_opts.threads + 1; ++i) {
-    algs.push_back({host_mr, clustering_cfg, seedfinder_config,
-                    spacepoint_grid_config, seedfilter_config, gbts_config,
-                    track_params_estimation_config, finding_cfg, fitting_cfg,
-                    det_descr, det_cond, field, &detector, logger().clone(),
-                    seeding_gbts_opts.useGBTS});
+  // Determine the await strategy to use.
+  await_strategy await_mode = await_strategy::sync_event;
+  if (threading_opts.await_mode == opts::threading::await_strategy::callback) {
+    await_mode = await_strategy::callback;
+  }
+
+  // Set up the data shared by all full-chain algorithms.
+  const typename FULL_CHAIN_ALG::shared_data shared_data{
+      unpinned_host_mr, det_descr, det_cond, field, &detector};
+
+  // Set up the full-chain algorithm(s). One for each concurrent event slot.
+  std::vector<std::unique_ptr<FULL_CHAIN_ALG>> algs;
+  algs.reserve(threading_opts.concurrent_slots);
+  for (std::size_t i = 0; i < threading_opts.concurrent_slots; ++i) {
+    algs.emplace_back(std::make_unique<FULL_CHAIN_ALG>(
+        unpinned_host_mr, clustering_cfg, seedfinder_config,
+        spacepoint_grid_config, seedfilter_config, gbts_config,
+        track_params_estimation_config, finding_cfg, fitting_cfg, shared_data,
+        logger().clone(), seeding_gbts_opts.useGBTS, await_mode));
+  }
+
+  // Set up and populate a queue with concurrent slot indices.
+  tbb::concurrent_bounded_queue<std::size_t> concurrent_slots;
+  concurrent_slots.set_capacity(
+      static_cast<typename decltype(concurrent_slots)::size_type>(
+          threading_opts.concurrent_slots));
+  for (std::size_t i = 0; i < threading_opts.concurrent_slots; ++i) {
+    concurrent_slots.push(i);
   }
 
   // Set up a lambda that calls the correct function on the algorithms.
-  std::function<std::size_t(int, const edm::silicon_cell_collection::host&)>
+  std::function<std::size_t(std::size_t,
+                            const edm::silicon_cell_collection::host&)>
       process_event;
   if (throughput_opts.reco_stage == opts::throughput::stage::seeding) {
     process_event =
-        [&](int thread,
+        [&](std::size_t slot,
             const edm::silicon_cell_collection::host& cells) -> std::size_t {
-      return algs.at(static_cast<std::size_t>(thread)).seeding(cells).size();
+      return algs.at(slot)->seeding(cells).size();
     };
   } else if (throughput_opts.reco_stage == opts::throughput::stage::full) {
     process_event =
-        [&](int thread,
+        [&](std::size_t slot,
             const edm::silicon_cell_collection::host& cells) -> std::size_t {
-      return algs.at(static_cast<std::size_t>(thread))(cells).size();
+      return (*algs.at(slot))(cells).size();
     };
   } else {
     throw std::invalid_argument("Unknown reconstruction stage");
@@ -236,12 +262,15 @@ int throughput_mt(std::string_view description, int argc, char* argv[]) {
                                      : static_cast<std::size_t>(std::rand())) %
                                 input_opts.events;
 
+      // Get a free concurrent slot.
+      std::size_t slot = std::numeric_limits<std::size_t>::max();
+      concurrent_slots.pop(slot);
       // Launch the processing of the event.
-      arena.execute([&, event]() {
-        group.run([&, event]() {
-          rec_track_params.fetch_add(process_event(
-              tbb::this_task_arena::current_thread_index(), input[event]));
+      arena.execute([&, event, slot]() {
+        group.run([&, event, slot]() {
+          rec_track_params.fetch_add(process_event(slot, input[event]));
           progress_bar.tick();
+          concurrent_slots.push(slot);
         });
       });
     }
@@ -273,12 +302,15 @@ int throughput_mt(std::string_view description, int argc, char* argv[]) {
                                      : static_cast<std::size_t>(std::rand())) %
                                 input_opts.events;
 
+      // Get a free concurrent slot.
+      std::size_t slot = std::numeric_limits<std::size_t>::max();
+      concurrent_slots.pop(slot);
       // Launch the processing of the event.
-      arena.execute([&, event]() {
-        group.run([&, event]() {
-          rec_track_params.fetch_add(process_event(
-              tbb::this_task_arena::current_thread_index(), input[event]));
+      arena.execute([&, event, slot]() {
+        group.run([&, event, slot]() {
+          rec_track_params.fetch_add(process_event(slot, input[event]));
           progress_bar.tick();
+          concurrent_slots.push(slot);
         });
       });
     }

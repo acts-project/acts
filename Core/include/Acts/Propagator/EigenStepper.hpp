@@ -23,6 +23,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <stdexcept>
 #include <type_traits>
 
 namespace Acts {
@@ -50,8 +51,6 @@ class EigenStepper final {
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
-  /// Bound state tuple containing parameters, Jacobian, and path length
-  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// Configuration for the Eigen stepper.
   struct Config {
@@ -97,14 +96,9 @@ class EigenStepper final {
     /// Particle hypothesis
     ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
-    /// Covariance matrix (and indicator)
-    /// associated with the initial error on track parameters
-    bool covTransport = false;
-    /// Covariance matrix for track parameter uncertainties
-    Covariance cov = Covariance::Zero();
-
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
+    /// Covariance matrix for track parameter uncertainties, set if the
+    /// covariance is transported
+    std::optional<Covariance> cov;
 
     /// Jacobian from local to the global frame
     BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
@@ -120,9 +114,6 @@ class EigenStepper final {
 
     /// Total number of performed steps
     std::size_t nSteps = 0;
-
-    /// Totoal number of attempted steps
-    std::size_t nStepTrials = 0;
 
     /// Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
@@ -192,6 +183,14 @@ class EigenStepper final {
   Result<Vector3> getField(State& state, const Vector3& pos) const {
     // get the field from the cell
     return m_bField->getField(pos, state.fieldCache);
+  }
+
+  /// Current global geometric curvature d(direction)/ds in inverse length.
+  /// Unchanged under propagation reversal; reflects current momentum and field.
+  /// @param state Stepping state; the field cache may be updated
+  /// @return Curvature vector, or a field lookup error
+  Result<Vector3> curvature(State& state) const {
+    return detail::magneticCurvature(*this, state);
   }
 
   /// Global particle position accessor
@@ -267,15 +266,17 @@ class EigenStepper final {
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] stype The step size type to be set
   /// @param [in] logger A @c Logger instance
+  /// @param curvature Global geometric curvature for the crossing estimate
   /// @return Status of the intersection indicating whether surface was reached
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction propDir, const BoundaryTolerance& boundaryTolerance,
       double surfaceTolerance, ConstrainedStep::Type stype,
-      const Logger& logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger(),
+      const Vector3& curvature = Vector3::Zero()) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
         *this, state, surface, index, propDir, boundaryTolerance,
-        surfaceTolerance, stype, logger);
+        surfaceTolerance, stype, logger, curvature);
   }
 
   /// Update step size
@@ -332,28 +333,76 @@ class EigenStepper final {
     return state.stepSize.toString();
   }
 
-  /// Create and return the bound state at the current position
+  /// Get the step size constraints
   ///
-  /// @brief This transports (if necessary) the covariance
-  /// to the surface and creates a bound state. It does not check
-  /// if the transported state is at the surface, this needs to
-  /// be guaranteed by the propagator
-  ///
-  /// @param [in] state State that will be presented as @c BoundState
-  /// @param [in] surface The surface to which we bind the state
-  /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
-  ///
-  /// @return A bound state:
-  ///   - the parameters at the surface
-  ///   - the stepwise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(
-      State& state, const Surface& surface, bool transportCov = true,
-      const FreeToBoundCorrection& freeToBoundCorrection =
-          FreeToBoundCorrection(false)) const;
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The step size constraints
+  const ConstrainedStep& stepSize(const State& state) const {
+    return state.stepSize;
+  }
 
-  /// @brief If necessary fill additional members needed for curvilinearState
+  /// Get the stepper statistics
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The statistics since the last initialization
+  const StepperStatistics& statistics(const State& state) const {
+    return state.statistics;
+  }
+
+  /// Get the path length
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The path length since the last initialization
+  double pathLength(const State& state) const { return state.pathAccumulated; }
+
+  /// Check if the state carries a covariance
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return True if the covariance is transported
+  bool hasCovariance(const State& state) const { return state.cov.has_value(); }
+
+  /// Get the covariance at the anchor
+  ///
+  /// The anchor is the frame of the last initialization, transport or update.
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The covariance at the anchor, or no value if the state does not
+  ///         carry a covariance
+  const std::optional<Covariance>& covariance(const State& state) const {
+    return state.cov;
+  }
+
+  /// Set the covariance at the anchor
+  ///
+  /// The state must already carry a covariance, because the stepper only
+  /// transports the Jacobian while it has one.
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param [in] covariance The new covariance at the anchor
+  /// @throws std::logic_error if the state does not carry a covariance
+  void setCovariance(State& state, const Covariance& covariance) const {
+    if (!state.cov.has_value()) {
+      throw std::logic_error(
+          "Cannot set the covariance of a state without a covariance");
+    }
+    state.cov = covariance;
+  }
+
+  /// Get the bound parameters at the current position
+  ///
+  /// The parameters carry the covariance at the anchor if the state has one.
+  ///
+  /// @note It does not check if the state is on @p surface or anchored on it
+  ///
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @param [in] surface The surface of the parameters
+  /// @return The bound parameters, or a failure if the position cannot be
+  ///         expressed on @p surface
+  Result<BoundParameters> boundParameters(const State& state,
+                                          const Surface& surface) const;
+
+  /// @brief If necessary fill additional members needed for
+  /// transportToCurvilinear
   ///
   /// Compute path length derivatives in case they have not been computed
   /// yet, which is the case if no step has been executed yet.
@@ -362,26 +411,23 @@ class EigenStepper final {
   /// @return true if nothing is missing after this call, false otherwise.
   bool prepareCurvilinearState(State& state) const;
 
-  /// Create and return a curvilinear state at the current position
+  /// Get the curvilinear parameters at the current position
   ///
-  /// @brief This transports (if necessary) the covariance
-  /// to the current position and creates a curvilinear state.
+  /// The parameters carry the covariance at the anchor if the state has one.
   ///
-  /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] transportCov Flag steering covariance transport
-  ///
-  /// @return A curvilinear state:
-  ///   - the curvilinear parameters at given position
-  ///   - the stepweise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  BoundState curvilinearState(State& state, bool transportCov = true) const;
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @return The curvilinear parameters
+  BoundParameters curvilinearParameters(const State& state) const;
 
   /// Method to update a stepper state to the some parameters
+  ///
+  /// This anchors the state on @p surface.
   ///
   /// @param [in,out] state State object that will be updated
   /// @param [in] freeParams Free parameters that will be written into @p state
   /// @param [in] boundParams Corresponding bound parameters used to update jacToGlobal in @p state
   /// @param [in] covariance The covariance that will be written into @p state
+  ///                        if the state carries a covariance
   /// @param [in] surface The surface used to update the jacToGlobal
   void update(State& state, const FreeVector& freeParams,
               const BoundVector& boundParams, const Covariance& covariance,
@@ -397,24 +443,27 @@ class EigenStepper final {
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
               double qOverP, double time) const;
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state
+  /// Transport the covariance to the curvilinear frame at the current position
+  ///
+  /// This anchors the state on the curvilinear frame. Without a covariance
+  /// the state does not change.
   ///
   /// @param [in,out] state State of the stepper
-  void transportCovarianceToCurvilinear(State& state) const;
+  /// @return The jacobian from the previous anchor to the curvilinear frame
+  Jacobian transportToCurvilinear(State& state) const;
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current position,
-  /// or direction of the state
+  /// Transport the covariance to a surface at the current position
   ///
-  /// @tparam surface_t the Surface type
+  /// This anchors the state on @p surface. Without a covariance the state
+  /// does not change. The state must be on @p surface, and it stays unchanged
+  /// if it is not.
   ///
   /// @param [in,out] state State of the stepper
-  /// @param [in] surface is the surface to which the covariance is forwarded to
+  /// @param [in] surface The surface to transport the covariance to
   /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
-  /// @note no check is done if the position is actually on the surface
-  void transportCovarianceToBound(
+  /// @return The jacobian from the previous anchor to @p surface, or a failure
+  ///         if the state is not on @p surface
+  Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;

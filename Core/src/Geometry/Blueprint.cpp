@@ -30,7 +30,7 @@ const std::string s_rootName = "Root";
 const std::string s_worldName = "World";
 }  // namespace
 
-namespace Acts::Experimental {
+namespace Acts {
 
 ///@class BlueprintVisitor
 /// A class for visiting blueprint hierarchy and apply the geometry identifiers
@@ -95,6 +95,15 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
   const Acts::Logger &logger() const { return m_logger; }
 };
 
+Blueprint &Blueprint::setVolumeLookupFactory(VolumeLookupFactory factory) {
+  m_volumeLookupFactory = std::move(factory);
+  return *this;
+}
+
+const VolumeLookupFactory &Blueprint::volumeLookupFactory() const {
+  return m_volumeLookupFactory;
+}
+
 Blueprint::Blueprint(const Config &config) : m_cfg(config) {}
 
 const std::string &Blueprint::name() const {
@@ -158,8 +167,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   // minus registering itself with a parent (the world *is* the parent).
   const Volume &top = child.build(options, gctx, logger);
 
-  std::unique_ptr<TrackingVolume> world =
-      PadBlueprintNode::padded(gctx, top, m_cfg.envelope, s_worldName, logger);
+  std::unique_ptr<TrackingVolume> world = PadBlueprintNode::padded(
+      gctx, top, m_cfg.envelope, s_worldName, std::nullopt,
+      PadBlueprintNode::Centering::Centered, logger);
 
   ACTS_DEBUG(prefix() << "New root volume bounds are: "
                       << world->volumeBounds());
@@ -218,9 +228,27 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   Acts::detail::AlignablePortalVisitor alignPortals{gctx, logger};
   world->apply(alignPortals);
 
+  // All navigation policies are attached at this point: initialize each one's
+  // statelessness cache (probing whether it pushes only default states) so the
+  // navigator can skip the per-volume-entry state creation for volumes with
+  // stateless policies.
+  world->apply([&](TrackingVolume &volume) {
+    if (INavigationPolicy *policy = volume.navigationPolicy();
+        policy != nullptr) {
+      policy->initializeStatelessCache(gctx, logger);
+    }
+  });
+
+  if (m_volumeLookupFactory) {
+    auto lookup = m_volumeLookupFactory(gctx, *world, logger);
+    if (!lookup) {
+      throw std::invalid_argument("Volume lookup factory returned nullptr");
+    }
+    world->setVolumeLookup(std::move(lookup));
+  }
   return std::make_unique<TrackingGeometry>(
       std::shared_ptr<TrackingVolume>(std::move(world)), nullptr,
       GeometryIdentifierHook{}, logger, false);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

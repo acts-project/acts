@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/detail/QuaternionFromTwoVectors.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <array>
@@ -90,11 +91,9 @@ std::vector<OrientedSurface> GenericCuboidVolumeBounds::orientedSurfaces(
     // Volume local to surface local
     Transform3 vol2srf;
 
-    // GCC13+ Complains about maybe uninitialized memory inside Eigen's SVD code
-    // This warning is ignored in this compilation unit by using the pragma at
-    // the top of this file.
-    vol2srf = (Eigen::Quaternion<Transform3::Scalar>().setFromTwoVectors(
-        normal, Vector3::UnitZ()));
+    // The quaternion is computed out-of-line (see QuaternionFromTwoVectors.hpp)
+    // so the expensive Eigen JacobiSVD is not instantiated in this TU.
+    vol2srf = detail::quaternionFromTwoVectors(normal, Vector3::UnitZ());
 
     vol2srf = vol2srf * Translation3(-ctrd);
 

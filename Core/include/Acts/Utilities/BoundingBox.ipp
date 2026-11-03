@@ -49,8 +49,8 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::AxisAlignedBoundingBox(
     }
   }
 
-  m_left_child = boxes.front();
-  m_right_child = boxes.back();
+  m_leftChild = boxes.front();
+  m_rightChild = boxes.back();
   m_skip = nullptr;
 
   std::tie(m_vmin, m_vmax) = wrap(boxes, envelope);
@@ -194,15 +194,15 @@ void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::setSkip(
   // set next on this
   m_skip = skip;
   // find last child and set its skip
-  if (m_right_child != nullptr) {
-    m_right_child->setSkip(skip);
+  if (m_rightChild != nullptr) {
+    m_rightChild->setSkip(skip);
   }
 }
 
 template <typename entity_t, typename value_t, std::size_t DIM>
 const Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>*
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::getLeftChild() const {
-  return m_left_child;
+  return m_leftChild;
 }
 
 template <typename entity_t, typename value_t, std::size_t DIM>
@@ -446,63 +446,87 @@ std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
   return os;
 }
 
+template <typename object_t, typename box_t, typename visitor_t>
+void Acts::BoundingBoxHierarchy::visitIntersecting(const object_t& object,
+                                                   const box_t* root,
+                                                   visitor_t&& visitor) {
+  const box_t* node = root;
+  while (node != nullptr) {
+    if (!node->intersect(object)) {
+      node = node->getSkip();
+      continue;
+    }
+
+    if (!node->hasEntity()) {
+      node = node->getLeftChild();
+      continue;
+    }
+
+    std::invoke(std::forward<visitor_t>(visitor), *node->entity());
+    node = node->getSkip();
+  }
+}
+
+namespace Acts::BoundingBoxHierarchy::detail {
+
 template <typename box_t>
-box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
-                    std::size_t max_depth,
-                    typename box_t::vertex_array_type envelope,
-                    const std::vector<box_t*>& lprims, std::size_t depth) {
+box_t* octreeInner(std::vector<std::unique_ptr<box_t>>& store,
+                   std::size_t maxDepth,
+                   typename box_t::vertex_array_type envelope,
+                   const std::vector<box_t*>& localPrimitives,
+                   std::size_t depth) {
   using VertexType = typename box_t::VertexType;
 
-  assert(!lprims.empty());
-  if (lprims.size() == 1) {
+  assert(!localPrimitives.empty());
+  if (localPrimitives.size() == 1) {
     // just return
-    return lprims.front();
+    return localPrimitives.front();
   }
 
-  if (depth >= max_depth) {
+  if (depth >= maxDepth) {
     // just wrap them all up
-    auto bb = std::make_unique<box_t>(lprims, envelope);
+    auto bb = std::make_unique<box_t>(localPrimitives, envelope);
     store.push_back(std::move(bb));
     return store.back().get();
   }
 
   std::array<std::vector<box_t*>, 8> octants;
   // calc center of boxes
-  const auto [vmin, vmax] = box_t::wrap(lprims);
-  VertexType glob_ctr = (vmin + vmax) / 2.;
+  const auto [vmin, vmax] = box_t::wrap(localPrimitives);
+  VertexType globalCenter = (vmin + vmax) / 2.;
 
-  for (auto* box : lprims) {
-    VertexType ctr = box->center() - glob_ctr;
-    if (ctr.x() < 0 && ctr.y() < 0 && ctr.z() < 0) {
+  for (auto* box : localPrimitives) {
+    VertexType center = box->center() - globalCenter;
+    if (center.x() < 0 && center.y() < 0 && center.z() < 0) {
       octants[0].push_back(box);
       continue;
     }
-    if (ctr.x() > 0 && ctr.y() < 0 && ctr.z() < 0) {
+    if (center.x() > 0 && center.y() < 0 && center.z() < 0) {
       octants[1].push_back(box);
       continue;
     }
-    if (ctr.x() < 0 && ctr.y() > 0 && ctr.z() < 0) {
+    if (center.x() < 0 && center.y() > 0 && center.z() < 0) {
       octants[2].push_back(box);
       continue;
     }
-    if (ctr.x() > 0 && ctr.y() > 0 && ctr.z() < 0) {
+    if (center.x() > 0 && center.y() > 0 && center.z() < 0) {
       octants[3].push_back(box);
       continue;
     }
 
-    if (ctr.x() < 0 && ctr.y() < 0 && ctr.z() > 0) {
+    if (center.x() < 0 && center.y() < 0 && center.z() > 0) {
       octants[4].push_back(box);
       continue;
     }
-    if (ctr.x() > 0 && ctr.y() < 0 && ctr.z() > 0) {
+    if (center.x() > 0 && center.y() < 0 && center.z() > 0) {
       octants[5].push_back(box);
       continue;
     }
-    if (ctr.x() < 0 && ctr.y() > 0 && ctr.z() > 0) {
+    if (center.x() < 0 && center.y() > 0 && center.z() > 0) {
       octants[6].push_back(box);
       continue;
     }
-    if (ctr.x() > 0 && ctr.y() > 0 && ctr.z() > 0) {
+    if (center.x() > 0 && center.y() > 0 && center.z() > 0) {
       octants[7].push_back(box);
       continue;
     }
@@ -511,46 +535,55 @@ box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
     octants[0].push_back(box);
   }
 
-  std::vector<box_t*> sub_octs;
-  for (const auto& sub_prims : octants) {
-    if (sub_prims.size() <= 8) {
-      if (sub_prims.empty()) {
+  std::vector<box_t*> subOctants;
+  for (const auto& subPrimitives : octants) {
+    if (subPrimitives.size() <= 8) {
+      if (subPrimitives.empty()) {
         // done
-      } else if (sub_prims.size() == 1) {
-        sub_octs.push_back(sub_prims.front());
+      } else if (subPrimitives.size() == 1) {
+        subOctants.push_back(subPrimitives.front());
       } else {
-        store.push_back(std::make_unique<box_t>(sub_prims, envelope));
-        sub_octs.push_back(store.back().get());
+        store.push_back(std::make_unique<box_t>(subPrimitives, envelope));
+        subOctants.push_back(store.back().get());
       }
     } else {
       // recurse
-      sub_octs.push_back(
-          octree_inner(store, max_depth, envelope, sub_prims, depth + 1));
+      subOctants.push_back(
+          octreeInner(store, maxDepth, envelope, subPrimitives, depth + 1));
     }
   }
 
-  if (sub_octs.size() == 1) {
-    return sub_octs.front();
+  if (subOctants.size() == 1) {
+    return subOctants.front();
   }
 
-  auto bb = std::make_unique<box_t>(sub_octs, envelope);
+  auto bb = std::make_unique<box_t>(subOctants, envelope);
   store.push_back(std::move(bb));
   return store.back().get();
 }
 
+}  // namespace Acts::BoundingBoxHierarchy::detail
+
 template <typename box_t>
-box_t* Acts::make_octree(std::vector<std::unique_ptr<box_t>>& store,
-                         const std::vector<box_t*>& prims,
-                         std::size_t max_depth,
-                         typename box_t::value_type envelope1) {
+box_t* Acts::BoundingBoxHierarchy::makeOctree(
+    std::vector<std::unique_ptr<box_t>>& store,
+    const std::vector<box_t*>& prims, std::size_t maxDepth,
+    typename box_t::value_type envelopeValue) {
   static_assert(box_t::dim == 3, "Octree can only be created in 3D");
 
   using vertex_array_type = typename box_t::vertex_array_type;
 
-  vertex_array_type envelope(vertex_array_type::Constant(envelope1));
+  vertex_array_type envelope(vertex_array_type::Constant(envelopeValue));
 
-  box_t* top = octree_inner(store, max_depth, envelope, prims, 0);
+  box_t* top = detail::octreeInner(store, maxDepth, envelope, prims, 0);
   return top;
+}
+
+template <typename box_t>
+box_t* Acts::make_octree(std::vector<std::unique_ptr<box_t>>& store,
+                         const std::vector<box_t*>& prims, std::size_t maxDepth,
+                         typename box_t::value_type envelope) {
+  return BoundingBoxHierarchy::makeOctree(store, prims, maxDepth, envelope);
 }
 
 template <typename T, typename U, std::size_t V>

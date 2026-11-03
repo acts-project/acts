@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -34,7 +35,8 @@ TRACCC_HOST_DEVICE inline void fill_finding_propagation_sort_keys(
    */
   keys_device.at(globalIndex) =
       device::get_sort_key(params.at(globalIndex)) +
-      (param_liveness.at(globalIndex) == 0u ? 10000.0f : 0);
+      (param_liveness.at(globalIndex) == 0u ? device::dead_track_sort_key_offset
+                                            : 0.f);
   ids_device.at(globalIndex) = globalIndex;
 }
 

@@ -93,7 +93,7 @@ Not complete yet
 :::{doxygenclass} Acts::TryAllNavigationPolicy
 :::
 
-:::{doxygenclass} Acts::Experimental::MultiLayerNavigationPolicy
+:::{doxygenclass} Acts::MultiLayerNavigationPolicy
 :::
 
 :::{doxygenclass} Acts::CylinderNavigationPolicy

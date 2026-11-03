@@ -1,12 +1,17 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2021-2024 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 enable_language(CUDA)
 
 include(traccc-compiler-options-cuda)
+
+# Check that ACTS_FORCE_ASSERTIONS works for device code
+acts_add_assertion_tests(CUDA)
 
 find_package(CUDAToolkit REQUIRED)
 
@@ -76,3 +81,14 @@ if(
         PROPERTIES CUDA_SEPARABLE_COMPILATION ON
     )
 endif()
+
+# Focused Strip SP tests can be built/run without the full CUDA test executable.
+traccc_add_test(
+    cuda_strip_spacepoint
+    test_strip_spacepoint_formation.cpp
+    LINK_LIBRARIES
+    CUDA::cudart GTest::gtest vecmem::cuda
+    traccc::core traccc::device_common traccc::cuda_utils traccc::cuda
+    traccc_tests_cuda_main traccc_tests_common
+    detray::core detray::io detray::test_common
+)

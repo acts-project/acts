@@ -1,14 +1,15 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 // Local include(s).
-#include "traccc/hip/utils/stream.hpp"
+#include "traccc/hip/utils/stream_wrapper.hpp"
 
 // HIP include(s).
 #include <hip/hip_runtime_api.h>
@@ -34,7 +35,7 @@ int get_device();
 unsigned int get_warp_size(int device);
 
 /// Get concrete @c hipStream_t object out of our wrapper
-hipStream_t get_stream(const stream& str);
+hipStream_t get_stream(const stream_wrapper& str);
 
 /// Class with RAII mechanism for selecting a HIP device.
 ///
@@ -62,7 +63,7 @@ class select_device {
   /// selected before constructing this object.
   ~select_device();
 
-  /// Return the identifier for the device being seleced
+  /// Return the identifier for the device being selected
   int device() const;
 
  private:

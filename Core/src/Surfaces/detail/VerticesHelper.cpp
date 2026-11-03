@@ -148,7 +148,7 @@ Vector2 detail::VerticesHelper::computeClosestPointOnPolygon(
 
   // calculate the closest position on the segment between `ll0` and `ll1` to
   // the point as measured by the metric induced by the metric matrix
-  auto closestOnSegment = [&](auto&& ll0, auto&& ll1) {
+  auto closestOnSegment = [&](const auto& ll0, const auto& ll1) {
     // normal vector and position of the closest point along the normal
     auto n = ll1 - ll0;
     auto n_transformed = metric * n;

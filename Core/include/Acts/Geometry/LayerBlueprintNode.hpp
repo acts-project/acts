@@ -10,11 +10,12 @@
 
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Utilities/OstreamFormatter.hpp"
 
 #include <memory>
 #include <ostream>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace detail {
 struct LayerBlueprintNodeImpl;
@@ -24,7 +25,7 @@ struct LayerBlueprintNodeImpl;
 /// surfaces.
 /// @note This implementation is **preliminary** and will likely change
 ///       in the future.
-/// It defers most of the functionality to @ref Acts::Experimental::StaticBlueprintNode,
+/// It defers most of the functionality to @ref Acts::StaticBlueprintNode,
 /// after the initial volume creation is completed.
 ///
 /// The layer volume is created to wrap around the surfaces registered with
@@ -66,7 +67,7 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
   /// @param logger Logger for debug output
   /// @return Reference to constructed Volume
   /// @note At least one surfaces needs to be registered via
-  ///       @ref Acts::Experimental::LayerBlueprintNode::setSurfaces before
+  ///       @ref Acts::LayerBlueprintNode::setSurfaces before
   ///       geometry construction.
   Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
@@ -151,8 +152,14 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
     return os;
   }
 
+  /// Pass the shared ownership of a geometry placement towards the tracking
+  /// volume later constructed by the node
+  /// @param placement Pointer to the placement to be managed by the
+  ///                   tracking volume
+  void retainPlacement(TrackingVolume::PlacementOwnPtr placement);
+
  private:
-  /// @copydoc Acts::Experimental::BlueprintNode::addToGraphviz
+  /// @copydoc Acts::BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
 
   /// Helper method that performs the volume creation from the configured
@@ -168,4 +175,14 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
   std::unique_ptr<detail::LayerBlueprintNodeImpl> m_impl;
 };
 
-}  // namespace Acts::Experimental
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::LayerBlueprintNode instead. This alias
+///             is kept for backward compatibility and will be removed.
+using LayerBlueprintNode
+    [[deprecated("Acts::Experimental::LayerBlueprintNode moved to "
+                 "Acts::LayerBlueprintNode")]] = Acts::LayerBlueprintNode;
+}  // namespace Experimental
+}  // namespace Acts
+
+ACTS_OSTREAM_FORMATTER(Acts::LayerBlueprintNode::LayerType);

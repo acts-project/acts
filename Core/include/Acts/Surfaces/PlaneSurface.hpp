@@ -73,10 +73,17 @@ class PlaneSurface : public RegularSurface {
                         std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
+  ~PlaneSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other The source PlaneSurface for assignment
   /// @return Reference to this PlaneSurface after assignment
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<PlaneSurface>(other)` instead.
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<PlaneSurface>(other) instead.")]]
   PlaneSurface& operator=(const PlaneSurface& other);
 
   // Use overloads from `RegularSurface`

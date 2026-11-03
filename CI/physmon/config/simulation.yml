@@ -78,3 +78,5 @@ exclude:
   - particle
   - generation
   - sub_particle
+  - orig_part_idx
+  - hf_origin

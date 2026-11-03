@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -59,7 +60,7 @@ class fitting_performance_writer : public messaging {
   /// @param measurements All reconstructed measurements
   /// @param det detector object
   /// @param evt_map event map to find the truth values
-  template <typename detector_t>
+  template <detray::concepts::detector detector_t>
   void write(const edm::track_collection<
                  traccc::default_algebra>::host::proxy_type track,
              const edm::track_state_collection<traccc::default_algebra>::host&

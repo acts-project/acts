@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -176,6 +177,21 @@ class measurement : public BASE {
   TRACCC_HOST_DEVICE
   const auto& cluster_index() const { return BASE::template get<8>(); }
 
+  /// Charge-weighted variance of the cell positions in the cluster that the
+  /// measurement was created from (non-const)
+  ///
+  /// @return A (non-const) vector of 1D/2D variances
+  ///
+  TRACCC_HOST_DEVICE
+  auto& charge_variance() { return BASE::template get<9>(); }
+  /// Charge-weighted variance of the cell positions in the cluster that the
+  /// measurement was created from (const)
+  ///
+  /// @return A (const) vector of 1D/2D variances
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& charge_variance() const { return BASE::template get<9>(); }
+
   /// @}
 
   /// @name Utility functions
@@ -224,6 +240,10 @@ class measurement : public BASE {
     for (unsigned int i = 1u; i < m.dimensions(); ++i) {
       os << ", " << m.local_variance()[i];
     }
+    os << "]\n -> charge var  = [" << m.charge_variance()[0];
+    for (unsigned int i = 1u; i < m.dimensions(); ++i) {
+      os << ", " << m.charge_variance()[i];
+    }
     os << "]" << std::endl;
 
     os << " -> t           = " << m.time() * traccc::unit<float>::s << "s"
@@ -256,7 +276,9 @@ using measurement_collection = vecmem::edm::container<
     // subspace
     vecmem::edm::type::vector<std::array<std::uint8_t, 2u>>,
     // cluster_index
-    vecmem::edm::type::vector<unsigned int>>;
+    vecmem::edm::type::vector<unsigned int>,
+    // charge_variance
+    vecmem::edm::type::vector<std::array<float, 2u>>>;
 
 }  // namespace traccc::edm
 

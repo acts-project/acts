@@ -16,35 +16,15 @@
 #include "detray/tracks/bound_track_parameters.hpp"
 #include "detray/tracks/free_track_parameters.hpp"
 
-namespace detray {
+// Test include(s)
+#include "detray/test/utils/data_record.hpp"
 
-namespace detail {
-/// Data for a single step
-template <concepts::algebra algebra_t>
-struct step_data {
-  using scalar_type = dscalar<algebra_t>;
-  using vector3_type = dvector3D<algebra_t>;
-  using track_param_type = free_track_parameters<algebra_t>;
-  using bound_param_type = bound_track_parameters<algebra_t>;
-  using free_matrix_type = free_matrix<algebra_t>;
-
-  scalar_type step_size{0.f};
-  scalar_type path_length{0.f};
-  std::size_t n_total_trials{0u};
-  navigation::direction nav_dir = navigation::direction::e_forward;
-  geometry::identifier identifier{};
-  track_param_type track_params{};
-  bound_param_type bound_params{};
-  free_matrix_type jacobian{};
-};
-}  // namespace detail
-
-namespace actor {
+namespace detray::actor {
 
 /// Collect information at every step
 template <concepts::algebra algebra_t, template <typename...> class vector_t>
 struct step_tracer : public base_actor {
-  using step_data_t = detail::step_data<algebra_t>;
+  using step_data_t = step_record<algebra_t>;
 
   /// Actor state that collects the data
   struct state {
@@ -96,8 +76,8 @@ struct step_tracer : public base_actor {
     // update the bound track parameters
     if (!tracer_state.m_steps.empty() &&
         navigation.geometry_identifier() ==
-            tracer_state.m_steps.back().identifier) {
-      tracer_state.m_steps.back().bound_params = res.destination_params();
+            tracer_state.m_steps.back().identifier()) {
+      tracer_state.m_steps.back().bound_param() = res.destination_params();
     } else {
       tracer_state.m_steps.push_back(
           collect_data(prop_state, res.destination_params()));
@@ -128,6 +108,4 @@ struct step_tracer : public base_actor {
   }
 };
 
-}  // namespace actor
-
-}  // namespace detray
+}  // namespace detray::actor

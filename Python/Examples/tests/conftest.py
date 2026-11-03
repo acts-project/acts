@@ -1,3 +1,4 @@
+import contextlib
 import multiprocessing
 from pathlib import Path
 import sys
@@ -5,7 +6,6 @@ import os
 import tempfile
 import shutil
 from typing import Dict
-import warnings
 import pytest_check as check
 from collections import namedtuple
 import filelock
@@ -22,7 +22,7 @@ import pytest
 
 import acts
 import acts.examples
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import addParticleGun, EtaConfig, ParticleConfig
 
 try:
@@ -52,11 +52,12 @@ hash_assertion_failures = []
 
 def _parse_hash_file(file: Path) -> Dict[str, str]:
     res = {}
-    for line in file.open():
-        if line.strip() == "" or line.strip().startswith("#"):
-            continue
-        key, h = line.strip().split(":", 1)
-        res[key.strip()] = h.strip()
+    with file.open() as f:
+        for line in f:
+            if line.strip() == "" or line.strip().startswith("#"):
+                continue
+            key, h = line.strip().split(":", 1)
+            res[key.strip()] = h.strip()
     return res
 
 
@@ -94,10 +95,11 @@ def assert_root_hash(request, root_file_exp_hashes):
         gkey = f"{request.node.name}__{key}"
         act_hash = helpers.hash_root.hash_root_file(file)
         if not gkey in root_file_exp_hashes:
-            warnings.warn(
-                f'Hash lookup key "{key}" not found for test "{request.node.name}"'
+            check.equal(
+                act_hash,
+                "[MISSING]",
+                msg=f'Hash lookup key "{key}" not found for test "{request.node.name}"',
             )
-            check.equal(act_hash, "[MISSING]")
             exc = RootHashAssertionError(file, gkey, "[MISSING]", act_hash)
             hash_assertion_failures.append(exc)
 
@@ -111,8 +113,111 @@ def assert_root_hash(request, root_file_exp_hashes):
     return fn
 
 
+# Per-test memory, enabled with ACTS_PYTEST_MEMORY_REPORT=1 (Linux only).
+# Used to decide which tests go into the "heavy" xdist group, and to find tests
+# that leave memory behind in the (long-lived) xdist worker. For each test this
+# records the worker's RSS before and after it and the peak in between; for
+# tests that run subprocesses only a new maximum over all subprocesses so far is
+# visible, so that column is a lower bound.
+_memory_report = os.environ.get("ACTS_PYTEST_MEMORY_REPORT", "0") == "1"
+_memory_records = []
+
+
+def _read_status_mib(field):
+    with open("/proc/self/status") as fh:
+        for line in fh:
+            if line.startswith(field + ":"):
+                return int(line.split()[1]) // 1024
+    return 0
+
+
+def _children_max_rss_mib():
+    import resource
+
+    return resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss // 1024
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_protocol(item, nextitem):
+    if not _memory_report:
+        yield
+        return
+
+    with contextlib.suppress(OSError):
+        # Resets VmHWM to the current RSS
+        Path("/proc/self/clear_refs").write_text("5")
+    item._acts_rss_before_mib = _read_status_mib("VmRSS")
+    item._acts_children_max_rss_mib = _children_max_rss_mib()
+    yield
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    if _memory_report and call.when == "teardown":
+        # Attached to the report so that it reaches the xdist controller
+        children = _children_max_rss_mib()
+        if children <= getattr(item, "_acts_children_max_rss_mib", 0):
+            children = 0
+        outcome.get_result().user_properties.append(
+            (
+                "acts_memory_mib",
+                (
+                    os.environ.get("PYTEST_XDIST_WORKER", "main"),
+                    getattr(item, "_acts_rss_before_mib", 0),
+                    _read_status_mib("VmHWM"),
+                    _read_status_mib("VmRSS"),
+                    children,
+                ),
+            )
+        )
+
+
+def pytest_runtest_logreport(report):
+    if not _memory_report or report.when != "teardown":
+        return
+    for key, value in report.user_properties:
+        if key == "acts_memory_mib":
+            _memory_records.append((report.nodeid, *value))
+
+
+def _memory_summary(terminalreporter):
+    def table(title, rows):
+        terminalreporter.section(title, sep="-")
+        terminalreporter.line(
+            f"{'worker':>6} {'before':>7} {'peak':>7} {'after':>7} "
+            f"{'retain':>7} {'subproc':>7}  test"
+        )
+        for nodeid, worker, before, peak, after, children in rows:
+            terminalreporter.line(
+                f"{worker:>6} {before:7d} {peak:7d} {after:7d} "
+                f"{after - before:7d} {children:7d}  {nodeid}"
+            )
+
+    recs = _memory_records
+    table(
+        "Memory retained by the worker after each test (MiB, top 30)",
+        sorted(recs, key=lambda r: -(r[4] - r[2]))[:30],
+    )
+    table(
+        "Peak memory above the worker baseline per test (MiB, top 20)",
+        sorted(recs, key=lambda r: -max(r[3] - r[2], r[5]))[:20],
+    )
+    terminalreporter.section("Final RSS per worker (MiB)", sep="-")
+    final = {}
+    for _, worker, _, _, after, _ in recs:
+        final[worker] = after
+    for worker, after in sorted(final.items()):
+        terminalreporter.line(f"{worker:>6} {after:7d}")
+
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
-    docs_url = "https://acts.readthedocs.io/en/latest/examples/python_bindings.html#root-file-hash-regression-checks"
+    if _memory_report and _memory_records:
+        _memory_summary(terminalreporter)
+
+    docs_url = (
+        "https://acts-project.github.io/group__python__testing.html#root_file_hashes"
+    )
     if len(hash_assertion_failures) > 0:
         terminalreporter.ensure_newline()
         terminalreporter.section(
@@ -230,6 +335,10 @@ def trk_geo():
 DetectorConfig = namedtuple(
     "DetectorConfig",
     [
+        # Tests use this only to scope teardown (``with cfg.detector:``). The
+        # detectors below are shared for the whole session, so nothing should
+        # release them -- this is a no-op context manager and the real detector
+        # is kept alive in _detector_config_cache.
         "detector",
         "trackingGeometry",
         "decorators",
@@ -240,12 +349,37 @@ DetectorConfig = namedtuple(
 )
 
 
+_shared_detectors = {}
+
+
+def _shared_detector(key: str, factory):
+    """Build a detector once and reuse it for the rest of the session.
+
+    Constructing the ODD takes ~1s and permanently retains ~16MB: the Acts
+    detector elements are installed as extensions on the dd4hep DetElements
+    (see DD4hepLayerBuilder::createSensitiveSurface) and so outlive the
+    TrackingGeometry they were built for. The suite asks for a detector dozens
+    of times, which is where a large part of the pytest process footprint comes
+    from.
+
+    Sharing is safe: TrackingGeometry is handed out as
+    ``shared_ptr<const TrackingGeometry>`` and neither GenericDetector nor the
+    DD4hep detectors populate any context decorators. Note this also means one
+    dd4hep detector still backs exactly one TrackingGeometry, which the
+    DetElement extension mechanism requires -- it has a single slot per element
+    and throws on a second conversion.
+    """
+    if key not in _shared_detectors:
+        _shared_detectors[key] = factory()
+    return _shared_detectors[key]
+
+
 def _get_generic_detector_config(srcdir: Path) -> DetectorConfig:
-    detector = acts.examples.GenericDetector()
+    detector = _shared_detector("generic", acts.examples.GenericDetector)
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
     return DetectorConfig(
-        detector,
+        contextlib.nullcontext(),
         trackingGeometry,
         decorators,
         geometrySelection=(srcdir / "Examples/Configs/generic-seeding-config.json"),
@@ -258,15 +392,11 @@ def _get_odd_detector_config(srcdir: Path) -> DetectorConfig:
     if not helpers.dd4hepEnabled:
         pytest.skip("DD4hep not set up")
 
-    odd_dir = getOpenDataDetectorDirectory()
-    matDeco = acts.IMaterialDecorator.fromFile(
-        odd_dir / "data/odd-material-maps.root", level=acts.logging.INFO
-    )
-    detector = getOpenDataDetector(matDeco)
+    detector = _shared_detector("odd", getOpenDataDetector)
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
     return DetectorConfig(
-        detector,
+        contextlib.nullcontext(),
         trackingGeometry,
         decorators,
         digiConfigFile=(srcdir / "Examples/Configs/odd-digi-smearing-config.json"),
@@ -277,6 +407,34 @@ def _get_odd_detector_config(srcdir: Path) -> DetectorConfig:
 
 def _srcdir() -> Path:
     return Path(__file__).resolve().parent.parent.parent.parent
+
+
+@pytest.fixture
+def odd_detector():
+    """The shared session-lifetime default-configuration ODD (requires DD4hep).
+
+    Prefer this over calling getOpenDataDetector() in a test. Do not use it as
+    a context manager -- it is shared, so nothing may release it.
+    """
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep not set up")
+    return _shared_detector("odd", getOpenDataDetector)
+
+
+@pytest.fixture
+def odd_detector_gen3():
+    """The shared session-lifetime default-configuration Gen3 ODD."""
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep not set up")
+    return _shared_detector("odd-gen3", lambda: getOpenDataDetector(gen3=True))
+
+
+@pytest.fixture
+def odd_detector_gen1():
+    """The shared session-lifetime default-configuration Gen1 ODD."""
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep not set up")
+    return _shared_detector("odd-gen1", lambda: getOpenDataDetector(gen3=False))
 
 
 @pytest.fixture
@@ -417,15 +575,25 @@ def material_recording_session(tmp_path_factory):
     with filelock.FileLock(str(d) + ".lock"):
 
         if not d.exists():
-            d.mkdir()
+            # Record into a scratch directory and only move it into place once
+            # the child has succeeded. `d` lives above the per-run basetemp and
+            # so outlives the session: publishing it up front means a failed
+            # recording leaves an empty directory that every later run happily
+            # reuses, turning a setup error into confusing assertion failures.
+            staging = d.with_name(d.name + f".incomplete.{os.getpid()}")
+            shutil.rmtree(staging, ignore_errors=True)
+            staging.mkdir(parents=True)
 
             # explicitly ask for "spawn" as CI failures were observed with "fork"
             spawn_context = multiprocessing.get_context("spawn")
-            p = spawn_context.Process(target=_do_material_recording, args=(d,))
+            p = spawn_context.Process(target=_do_material_recording, args=(staging,))
             p.start()
             p.join()
             if p.exitcode != 0:
+                shutil.rmtree(staging, ignore_errors=True)
                 raise RuntimeError("Failure to execute material recording")
+
+            staging.rename(d)
 
         return Path(d)
 

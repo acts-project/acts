@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/options/track_gbts_seeding.hpp"
@@ -32,12 +33,7 @@ track_gbts_seeding::track_gbts_seeding() : interface("GBTS Options") {
   // set CLI tunings for graph building
   m_desc.add_options()(
       "min_pt", po::value(&min_pt)->default_value(min_pt),
-      "min_pt to scale other cuts by with refrence to 900 MeV [MeV]");
-  m_desc.add_options()("max_edges_factor",
-                       po::value(&gbts_config.max_edges_factor)
-                           ->default_value(gbts_config.max_edges_factor),
-                       "number of edges allocated for per node ");
-
+      "min_pt to scale other cuts by with reference to 900 MeV [MeV]");
   m_desc.add_options()(
       "min_delta_phi",
       po::value(&gbts_config.gbts_dphi_window_params.min_delta_phi)
@@ -61,10 +57,17 @@ track_gbts_seeding::track_gbts_seeding() : interface("GBTS Options") {
               gbts_config.gbts_dphi_window_params.dphi_coeff_low_dr),
       "dphi_coeff_low_dr for the sliding window");
   m_desc.add_options()(
-      "max_Kappa",
-      po::value(&gbts_config.gbts_make_graph_edges_params.max_Kappa)
-          ->default_value(gbts_config.gbts_make_graph_edges_params.max_Kappa),
-      "max curvature for an edge + origin triplet [1/mm]");
+      "max_Kappa_high_tau",
+      po::value(&gbts_config.gbts_make_graph_edges_params.max_Kappa_high_tau)
+          ->default_value(
+              gbts_config.gbts_make_graph_edges_params.max_Kappa_high_tau),
+      "max curvature for an edge + origin triplet [1/mm] at high tau");
+  m_desc.add_options()(
+      "max_Kappa_low_tau",
+      po::value(&gbts_config.gbts_make_graph_edges_params.max_Kappa_low_tau)
+          ->default_value(
+              gbts_config.gbts_make_graph_edges_params.max_Kappa_low_tau),
+      "max curvature for an edge + origin triplet [1/mm] at low tau");
 
   m_desc.add_options()(
       "min_z0",
@@ -96,15 +99,31 @@ track_gbts_seeding::track_gbts_seeding() : interface("GBTS Options") {
               gbts_config.gbts_match_graph_edges_params.cut_dcurv_max),
       "cut_dcurv_max for edge matching [1/mm]");
   m_desc.add_options()(
-      "cut_tau_ratio_max",
-      po::value(&gbts_config.gbts_match_graph_edges_params.cut_tau_ratio_max)
+      "cut_deta_max",
+      po::value(&gbts_config.gbts_match_graph_edges_params.cut_deta_max)
           ->default_value(
-              gbts_config.gbts_match_graph_edges_params.cut_tau_ratio_max),
-      "cut_tau_ratio_max for edge matching");
+              gbts_config.gbts_match_graph_edges_params.cut_deta_max),
+      "cut_deta_max for edge matching");
   m_desc.add_options()("max_num_neighbours",
                        po::value(&gbts_config.max_num_neighbours)
                            ->default_value(gbts_config.max_num_neighbours),
                        "max connected neighbours for each edge");
+  m_desc.add_options()(
+      "max_edges_per_spacepoint",
+      po::value(&gbts_config.max_edges_per_spacepoint)
+          ->default_value(gbts_config.max_edges_per_spacepoint),
+      "edge buffer capacity per spacepoint (edges beyond it are dropped)");
+  m_desc.add_options()(
+      "max_connected_edges_per_spacepoint",
+      po::value(&gbts_config.max_connected_edges_per_spacepoint)
+          ->default_value(gbts_config.max_connected_edges_per_spacepoint),
+      "compacted graph capacity per spacepoint (connected edges beyond it "
+      "are dropped)");
+  m_desc.add_options()(
+      "max_paths_per_spacepoint",
+      po::value(&gbts_config.max_paths_per_spacepoint)
+          ->default_value(gbts_config.max_paths_per_spacepoint),
+      "path store capacity per spacepoint (paths beyond it are dropped)");
   // set CLI tuning for seed extraction kalman filter
   m_desc.add_options()(
       "sigmaMS",
@@ -159,7 +178,7 @@ void track_gbts_seeding::read(const boost::program_options::variables_map&) {
     return;
   }
   // config info from file
-  std::vector<std::pair<uint64_t, int16_t>> geoidBinning;
+  std::vector<std::pair<std::uint64_t, std::int16_t>> geoidBinning;
   std::vector<std::pair<unsigned int, std::vector<unsigned int>>> binTables;
   traccc::device::gbts_layerInfo layerInfo;
 
@@ -174,7 +193,7 @@ void track_gbts_seeding::read(const boost::program_options::variables_map&) {
   geoidBinningFile >> nGeoIDs;
   geoidBinning.reserve(nGeoIDs);
 
-  std::pair<uint64_t, int16_t> geoidLayerPair;
+  std::pair<std::uint64_t, std::int16_t> geoidLayerPair;
   for (; nGeoIDs > 0u; --nGeoIDs) {
     geoidBinningFile >> geoidLayerPair.first;
     geoidBinningFile >> geoidLayerPair.second;
@@ -233,8 +252,6 @@ std::unique_ptr<configuration_printable> track_gbts_seeding::as_printable()
       "gbts config directory ", config_dir));
   // Graph building flags
   cat->add_child(std::make_unique<configuration_kv_pair>(
-      "max edges factor ", std::format("{}", gbts_config.max_edges_factor)));
-  cat->add_child(std::make_unique<configuration_kv_pair>(
       "min_delta_phi ",
       std::format("{:.5f} ",
                   gbts_config.gbts_dphi_window_params.min_delta_phi)));
@@ -250,9 +267,14 @@ std::unique_ptr<configuration_printable> track_gbts_seeding::as_printable()
       std::format("{:.5f} ",
                   gbts_config.gbts_dphi_window_params.dphi_coeff_low_dr)));
   cat->add_child(std::make_unique<configuration_kv_pair>(
-      "max_Kappa ",
+      "max_Kappa_high_tau ",
+      std::format(
+          "{:.5f} ",
+          gbts_config.gbts_make_graph_edges_params.max_Kappa_high_tau)));
+  cat->add_child(std::make_unique<configuration_kv_pair>(
+      "max_Kappa_low_tau ",
       std::format("{:.5f} ",
-                  gbts_config.gbts_make_graph_edges_params.max_Kappa)));
+                  gbts_config.gbts_make_graph_edges_params.max_Kappa_low_tau)));
   cat->add_child(std::make_unique<configuration_kv_pair>(
       "min_z0 ",
       std::format("{:.5f} ", gbts_config.gbts_make_graph_edges_params.min_z0)));
@@ -265,20 +287,25 @@ std::unique_ptr<configuration_printable> track_gbts_seeding::as_printable()
                   gbts_config.gbts_make_graph_edges_params.maxOuterRadius)));
 
   cat->add_child(std::make_unique<configuration_kv_pair>(
-      "edge matching dphi max ",
+      "edge matching delta phi max ",
       std::format("{:.5f} ",
                   gbts_config.gbts_match_graph_edges_params.cut_dphi_max)));
   cat->add_child(std::make_unique<configuration_kv_pair>(
-      "edge matching dcurv max ",
+      "edge matching delta curv max ",
       std::format("{:.5f} ",
                   gbts_config.gbts_match_graph_edges_params.cut_dcurv_max)));
   cat->add_child(std::make_unique<configuration_kv_pair>(
-      "edge matching tau ratio max ",
-      std::format(
-          "{:.5f} ",
-          gbts_config.gbts_match_graph_edges_params.cut_tau_ratio_max)));
+      "edge matching delta eta max ",
+      std::format("{:.5f} ",
+                  gbts_config.gbts_match_graph_edges_params.cut_deta_max)));
   cat->add_child(std::make_unique<configuration_kv_pair>(
       "max neighbours ", std::format("{} ", gbts_config.max_num_neighbours)));
+  cat->add_child(std::make_unique<configuration_kv_pair>(
+      "max edges per spacepoint ",
+      std::format("{} ", gbts_config.max_edges_per_spacepoint)));
+  cat->add_child(std::make_unique<configuration_kv_pair>(
+      "max connected edges per spacepoint ",
+      std::format("{} ", gbts_config.max_connected_edges_per_spacepoint)));
   // Seed extraction flags
   cat->add_child(std::make_unique<configuration_kv_pair>(
       "sigmaMS ",

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -459,6 +460,7 @@ RootAthenaDumpReader::readMeasurements(
     ACTS_VERBOSE("Add measurement with index " << measIndex);
     imIdxMap.emplace(im, measIndex);
     createMeasurement(measurements, geoId, digiPars);
+    cluster.geometryId = geoId;
     clusters.push_back(cluster);
 
     if (!m_cfg.noTruth) {
@@ -766,7 +768,7 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
     }
 
     auto [clusters, measurements, candidateMeasPartMap, imIdxMap] =
-        readMeasurements(candidateParticles, ctx.geoContext);
+        readMeasurements(candidateParticles, ctx.simGeoContext);
     optImIdxMap.emplace(std::move(imIdxMap));
 
     m_outputClusters(ctx, std::move(clusters));

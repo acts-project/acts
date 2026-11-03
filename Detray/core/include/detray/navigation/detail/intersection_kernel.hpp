@@ -69,7 +69,7 @@ struct intersection_initialize {
     typename decltype(intersector)::result_type result{};
 
     if constexpr (concepts::cylindrical<mask_t>) {
-      std::size_t mask_idx{detail::invalid_value<std::size_t>()};
+      dindex mask_idx{detail::invalid_value<dindex>()};
       if constexpr (concepts::interval<mask_range_t>) {
         mask_idx = mask_range.lower();
       } else {
@@ -101,42 +101,33 @@ struct intersection_initialize {
       }
     }
 
-    // Resolve the masks that belong to the surface
-    for (const auto &mask : detray::ranges::subrange(mask_group, mask_range)) {
-      intersection_t is{};
+    for (std::size_t i = 0u; i < n_sol; ++i) {
+      // Resolve the masks that belong to the surface
+      for (const auto &mask :
+           detray::ranges::subrange(mask_group, mask_range)) {
+        intersection_t is{};
 
-      // Build the resulting intersecion(s) from the intersection point
-      if constexpr (n_sol > 1) {
-        std::uint8_t n_found{0u};
-
-        for (std::size_t i = 0u; i < n_sol; ++i) {
+        // Build the resulting intersection(s) from the intersection point
+        if constexpr (n_sol > 1) {
           resolve_mask(is, traj, result[i], sf_desc, mask, ctf, cfg,
                        external_mask_tolerance);
-
-          if (is.is_probably_inside()) {
-            insert_sorted(is, is_container);
-            ++n_found;
-          }
-          if (n_found == n_sol) {
-            return;
-          }
+        } else {
+          resolve_mask(is, traj, result, sf_desc, mask, ctf, cfg,
+                       external_mask_tolerance);
         }
-      } else {
-        resolve_mask(is, traj, result, sf_desc, mask, ctf, cfg,
-                     external_mask_tolerance);
 
         if (is.is_probably_inside()) {
           insert_sorted(is, is_container);
-          return;
+          break;
         }
       }
     }
   }
 
-  template <typename intersection_t>
+  template <typename intersection_t, typename... allocator_t>
   DETRAY_HOST_DEVICE void insert_sorted(
       const intersection_t &sfi,
-      std::vector<intersection_t> &intersections) const {
+      std::vector<intersection_t, allocator_t...> &intersections) const {
     auto itr_pos =
         detray::upper_bound(intersections.cbegin(), intersections.cend(), sfi);
 
@@ -207,7 +198,7 @@ struct intersection_update {
     typename decltype(intersector)::result_type result{};
 
     if constexpr (concepts::cylindrical<mask_t>) {
-      std::size_t mask_idx{detail::invalid_value<std::size_t>()};
+      dindex mask_idx{detail::invalid_value<dindex>()};
       if constexpr (concepts::interval<mask_range_t>) {
         mask_idx = mask_range.lower();
       } else {

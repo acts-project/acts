@@ -1,10 +1,10 @@
-/**
- * traccc library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -145,7 +145,8 @@ bool is_contiguous_on(P&& projection, vecmem::memory_resource& mr,
 
   typename vecmem::data::vector_view<projection_t>::size_type host_iout_size =
       copy.get_size(iout);
-  uint32_t grid_size_rd = (host_iout_size + local_size_2d - 1) / local_size_2d;
+  std::uint32_t grid_size_rd =
+      (host_iout_size + local_size_2d - 1) / local_size_2d;
   ::sycl::nd_range<2> all_unique_range{
       ::sycl::range<2>(grid_size_rd * local_size_2d,
                        grid_size_rd * local_size_2d),

@@ -1,13 +1,15 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 // Local include(s).
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 
 // Project include(s)
@@ -16,6 +18,7 @@
 #include "traccc/edm/seed_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/edm/track_parameters.hpp"
+#include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/seeding/detail/track_params_estimation_config.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/memory_resource.hpp"
@@ -34,7 +37,8 @@ struct seed_parameter_estimation_algorithm
           const edm::spacepoint_collection::const_view&,
           const edm::seed_collection::const_view&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Constructor for the seed parameter estimation algorithm
   ///
@@ -65,6 +69,22 @@ struct seed_parameter_estimation_algorithm
       const edm::spacepoint_collection::const_view& spacepoints,
       const edm::seed_collection::const_view& seeds) const override;
 
+  /// Operator executing the algorithm, for spacepoints made of one or two
+  /// measurements.
+  ///
+  /// @param det The detector object
+  /// @param bfield The magnetic field object
+  /// @param measurements All measurements of the event
+  /// @param spacepoints All spacepoints of the event
+  /// @param seeds The reconstructed track seeds of the event
+  /// @return A vector of bound track parameters for the seeds
+  ///
+  output_type operator()(
+      const detector_buffer& det, const magnetic_field& bfield,
+      const edm::measurement_collection::const_view& measurements,
+      const edm::spacepoint_collection::const_view& spacepoints,
+      const edm::seed_collection::const_view& seeds) const;
+
  protected:
   /// @name Function(s) to be implemented by derived classes
   /// @{
@@ -73,6 +93,9 @@ struct seed_parameter_estimation_algorithm
   struct estimate_seed_params_kernel_payload {
     /// The number of seeds
     edm::seed_collection::const_view::size_type n_seeds;
+    /// The detector object, may be null for spacepoints made of a single
+    /// measurement
+    const detector_buffer* detector;
     /// The track parameter estimation configuration
     const track_params_estimation_config& config;
     /// The magnetic field object
@@ -97,6 +120,13 @@ struct seed_parameter_estimation_algorithm
   /// @}
 
  private:
+  /// Common implementation of the operators
+  output_type execute(
+      const detector_buffer* det, const magnetic_field& bfield,
+      const edm::measurement_collection::const_view& measurements,
+      const edm::spacepoint_collection::const_view& spacepoints,
+      const edm::seed_collection::const_view& seeds) const;
+
   /// Internal data type
   struct data;
   /// Pointer to internal data

@@ -34,7 +34,6 @@ detray_add_tutorial( propagation_cuda
    "propagation.cpp"
    "propagation.hpp"
    "propagation_kernel.cu"
-   LINK_LIBRARIES CUDA::cudart vecmem::cuda detray::core_array covfie::core covfie::cuda
-                  detray::tutorial detray::test_common detray::test_cuda
+   LINK_LIBRARIES CUDA::cudart vecmem::cuda detray::core_array covfie::core covfie::cuda detray::test_common_cuda detray::tutorial
 )
 target_compile_definitions(detray_tutorial_propagation_cuda PRIVATE array=array)

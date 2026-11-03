@@ -329,6 +329,45 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(ts.hasJacobian());
   }
 
+  void testAddTrackStateComponentsAfterShareAndUnset() {
+    using PM = TrackStatePropMask;
+
+    trajectory_t t = m_factory.create();
+
+    // adding a component which is only shared must not replace the shared
+    // storage
+    {
+      auto ts = t.makeTrackState(PM::Predicted);
+      ts.predicted() = BoundVector::Constant(42);
+      ts.shareFrom(PM::Predicted, PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+
+      ts.addComponents(PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+      BOOST_CHECK_EQUAL(ts.filtered(), BoundVector::Constant(42));
+      // still the same storage
+      ts.predicted() = BoundVector::Constant(11);
+      BOOST_CHECK_EQUAL(ts.filtered(), BoundVector::Constant(11));
+    }
+
+    // adding a component which was unset must allocate it again
+    {
+      auto ts = t.makeTrackState(PM::Predicted | PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+
+      ts.unset(PM::Filtered);
+      BOOST_CHECK(!ts.hasFiltered());
+
+      ts.addComponents(PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+
+      ts.filtered() = BoundVector::Constant(7);
+      ts.predicted() = BoundVector::Constant(3);
+      // the two must not alias
+      BOOST_CHECK_EQUAL(ts.filtered(), BoundVector::Constant(7));
+    }
+  }
+
   void testTrackStateProxyCrossTalk(std::default_random_engine& rng) {
     TestTrackState pc(rng, 2u);
 

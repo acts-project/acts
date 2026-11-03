@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/alpaka/clusterization/measurement_sorting_algorithm.hpp"
@@ -11,16 +12,38 @@
 #include "../utils/get_queue.hpp"
 #include "../utils/parallel_algorithms.hpp"
 #include "../utils/thread_id.hpp"
+#include "../utils/utils.hpp"
 
 // Project include(s).
-#include "traccc/clusterization/device/geo_id_based_sorter.hpp"
-#include "traccc/clusterization/device/sorting_index_filler.hpp"
+#include "traccc/clusterization/device/measurement_sorting.hpp"
+
+// VecMem include(s).
+#include <vecmem/containers/data/vector_buffer.hpp>
 
 // System include(s).
 #include <memory_resource>
 
 namespace traccc::alpaka {
 namespace kernels {
+
+/// Kernel wrapping @c traccc::device::fill_measurement_sort_keys
+struct fill_measurement_sort_keys {
+  /// @param[in]  acc               Alpaka accelerator object
+  /// @param[in]  measurements_view View of the unsorted measurements
+  /// @param[out] keys_view         View of the sorting keys
+  /// @param[out] indices_view      View of the measurement indices
+  ///
+  template <typename TAcc>
+  ALPAKA_FN_ACC void operator()(
+      TAcc const& acc,
+      const edm::measurement_collection::const_view measurements_view,
+      vecmem::data::vector_view<device::measurement_sort_key_t> keys_view,
+      vecmem::data::vector_view<unsigned int> indices_view) const {
+    device::fill_measurement_sort_keys(
+        details::thread_id1{acc}.getGlobalThreadId(), measurements_view,
+        keys_view, indices_view);
+  }
+};  // struct fill_measurement_sort_keys
 
 /// Kernel filling the output buffer with sorted measurements.
 struct fill_sorted_measurements {
@@ -35,75 +58,48 @@ struct fill_sorted_measurements {
       edm::measurement_collection::view output_view,
       const vecmem::data::vector_view<const unsigned int> sorted_indices_view)
       const {
-    // Create the device objects.
-    const edm::measurement_collection::const_device input{input_view};
-    edm::measurement_collection::device output{output_view};
-    const vecmem::device_vector<const unsigned int> sorted_indices{
-        sorted_indices_view};
-
-    // Stop early if we can.
-    const unsigned int index = details::thread_id1{acc}.getGlobalThreadId();
-    if (index >= input.size()) {
-      return;
-    }
-
-    // Copy one measurement into the correct position.
-    output.at(index) = input.at(sorted_indices.at(index));
+    device::fill_sorted_measurements(
+        details::thread_id1{acc}.getGlobalThreadId(), input_view, output_view,
+        sorted_indices_view);
   }
 };  // struct fill_sorted_measurements
 
 }  // namespace kernels
 
 measurement_sorting_algorithm::measurement_sorting_algorithm(
-    const traccc::memory_resource& mr, const vecmem::copy& copy, queue& q,
-    std::unique_ptr<const Logger> logger)
-    : messaging(std::move(logger)), m_mr{mr}, m_copy{copy}, m_queue{q} {}
+    const traccc::memory_resource& mr, const vecmem::copy& copy,
+    alpaka::queue& q, std::unique_ptr<const Logger> logger,
+    await_function_type await_func)
+    : device::measurement_sorting_algorithm(mr, copy, std::move(logger)),
+      alpaka::algorithm_base(q, std::move(await_func)) {}
 
-measurement_sorting_algorithm::output_type
-measurement_sorting_algorithm::operator()(
-    const edm::measurement_collection::const_view& measurements_view) const {
-  // Exit early if there are no measurements.
-  if (measurements_view.capacity() == 0) {
-    return {};
-  }
+void measurement_sorting_algorithm::sorting_kernel(
+    const measurement_sorting_kernel_payload& payload) const {
+  const unsigned int n_measurements = payload.n_measurements;
 
-  // Get a convenience variable for the queue that we'll be using.
-  auto queue = details::get_queue(m_queue);
+  const unsigned int num_threads = warp_size() * 8;
+  const unsigned int num_blocks =
+      (n_measurements + num_threads - 1) / num_threads;
+  auto workDiv = makeWorkDiv<Acc>(num_blocks, num_threads);
 
-  // Create a device container on top of the view.
-  const edm::measurement_collection::const_device measurements{
-      measurements_view};
+  // Sort the indices by the sorting keys, with a radix sort.
+  ::alpaka::exec<Acc>(details::get_queue(queue()), workDiv,
+                      kernels::fill_measurement_sort_keys{},
+                      payload.measurements, vecmem::get_data(payload.keys),
+                      vecmem::get_data(payload.indices));
+  details::sort_by_key(queue(), mr(), payload.keys.ptr(),
+                       payload.keys.ptr() + n_measurements,
+                       payload.indices.ptr());
 
-  // Create a vector of measurement indices, which would be sorted.
-  vecmem::data::vector_buffer<unsigned int> indices(
-      measurements_view.capacity(), m_mr.main);
-  m_copy.get().setup(indices)->wait();
-  details::for_each(queue, m_mr, indices.ptr(),
-                    indices.ptr() + indices.capacity(),
-                    device::sorting_index_filler{indices});
+  // Fill the output with the sorted measurements.
+  ::alpaka::exec<Acc>(details::get_queue(queue()), workDiv,
+                      kernels::fill_sorted_measurements{}, payload.measurements,
+                      vecmem::get_data(payload.output),
+                      vecmem::get_data(payload.indices));
+}
 
-  // Sort the indices according to the surface identifiers of the
-  // measurements.
-  details::sort(queue, m_mr, indices.ptr(), indices.ptr() + indices.capacity(),
-                device::geo_id_based_sorter{measurements.surface_link()});
-
-  // Create the output buffer.
-  output_type result{measurements_view.capacity(), m_mr.main,
-                     vecmem::data::buffer_type::resizable};
-  m_copy.get().setup(result)->ignore();
-  m_copy.get()(measurements_view.size(), result.size())->ignore();
-
-  // Fill it with the sorted measurements.
-  static constexpr unsigned int BLOCK_SIZE = 256;
-  const unsigned int n_blocks =
-      (measurements_view.capacity() + BLOCK_SIZE - 1) / BLOCK_SIZE;
-  auto workDiv = makeWorkDiv<Acc>(n_blocks, BLOCK_SIZE);
-  ::alpaka::exec<Acc>(queue, workDiv, kernels::fill_sorted_measurements{},
-                      measurements_view, vecmem::get_data(result),
-                      vecmem::get_data(indices));
-
-  // Return the sorted buffer.
-  return result;
+void measurement_sorting_algorithm::synchronize() const {
+  queue().synchronize();
 }
 
 }  // namespace traccc::alpaka

@@ -30,7 +30,6 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
 )
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -135,12 +134,9 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 @pytest.mark.odd
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.xdist_group("heavy")
 def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
-
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
 
     csv = tmp_path / "csv"
     csv.mkdir()
@@ -544,8 +540,10 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 
     csv_dir = tmp_path / "csv"
     root_file = tmp_path / "measurements.root"
+    cluster_file = tmp_path / "clusters.root"
 
     assert not root_file.exists()
+    assert not cluster_file.exists()
     assert not csv_dir.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -556,12 +554,14 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
     s.run()
 
     assert root_file.exists()
+    assert cluster_file.exists()
     assert csv_dir.exists()
 
     assert len(list(csv_dir.iterdir())) == 3 * s.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
 
     assert_root_hash(root_file.name, root_file)
+    assert_root_hash(cluster_file.name, cluster_file)
 
 
 @pytest.mark.parametrize(
@@ -634,8 +634,10 @@ def test_digitization_example_input(
 
     csv_dir = tmp_path / "csv"
     root_file = tmp_path / "measurements.root"
+    cluster_file = tmp_path / "clusters.root"
 
     assert not root_file.exists()
+    assert not cluster_file.exists()
     assert not csv_dir.exists()
 
     assert_root_hash(
@@ -657,12 +659,14 @@ def test_digitization_example_input(
     s.run()
 
     assert root_file.exists()
+    assert cluster_file.exists()
     assert csv_dir.exists()
 
     assert len(list(csv_dir.iterdir())) == 3 * pgs.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
 
     assert_root_hash(root_file.name, root_file)
+    assert_root_hash(cluster_file.name, cluster_file)
 
 
 def test_digitization_config_example(trk_geo, tmp_path):
@@ -798,8 +802,68 @@ def test_pypi_finding_fitting_demo(tmp_path, generic_detector_config):
         )
         s.run()
 
-        assert len(perfWriterFinder.histograms()) > 0, "no finder histograms produced"
-        assert len(perfWriterFitter.histograms()) > 0, "no fitter histograms produced"
+        finderHistograms = perfWriterFinder.histograms()
+        fitterHistograms = perfWriterFitter.histograms()
+
+        assert len(finderHistograms) == 79
+        assert len(fitterHistograms) == 236
+
+        expectedKeys = {
+            "nStates_vs_eta",
+            "pixel_nStates_vs_eta",
+            "sstrip_nStates_vs_eta",
+            "lstrip_nStates_vs_eta",
+        }
+        assert expectedKeys <= set(finderHistograms), (
+            f"missing per-subdetector histograms: "
+            f"{expectedKeys - set(finderHistograms)}"
+        )
+
+        finderStats = perfWriterFinder.stats()
+        expectedStatsKeys = {
+            "nTotalTracks",
+            "nTotalMatchedTracks",
+            "nTotalFakeTracks",
+            "nTotalDuplicateTracks",
+            "nTotalUnmatchedTracks",
+            "nTotalTracksMissingRefSurface",
+            "nTotalMeasurements",
+            "nTotalOutliers",
+            "nTotalHoles",
+            "nTotalSharedHits",
+            "nTotalParticles",
+            "nTotalMatchedParticles",
+            "nTotalDuplicateParticles",
+            "nTotalFakeParticles",
+            "nTotalQualityTracks",
+            "efficiencyTracks",
+            "fakeRatioTracks",
+            "duplicateRatioTracks",
+            "efficiencyParticles",
+            "fakeRatioParticles",
+            "duplicateRatioParticles",
+            "meanCompleteness",
+            "meanPurity",
+            "subDetectors",
+        }
+        assert expectedStatsKeys <= set(
+            finderStats
+        ), f"missing stats keys: {expectedStatsKeys - set(finderStats)}"
+        assert finderStats["nTotalTracks"] > 0
+
+        expectedSubDetectorKeys = {
+            "nTrackStates",
+            "nMeasurements",
+            "nOutliers",
+            "nHoles",
+            "nSharedHits",
+        }
+        assert set(finderStats["subDetectors"]) == {"pixel", "sstrip", "lstrip"}
+        for name, sub in finderStats["subDetectors"].items():
+            assert expectedSubDetectorKeys <= set(sub), (
+                f"missing stats keys for {name}: "
+                f"{expectedSubDetectorKeys - set(sub)}"
+            )
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
@@ -807,10 +871,6 @@ def test_pypi_finding_fitting_demo(tmp_path, generic_detector_config):
 @pytest.mark.slow
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -839,12 +899,9 @@ def test_full_chain_odd_example(tmp_path):
     not dd4hepEnabled or not geant4Enabled, reason="DD4hep and/or Geant4 not set up"
 )
 @pytest.mark.slow
+@pytest.mark.xdist_group("heavy")
 def test_full_chain_odd_example_pythia_geant4(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -895,10 +952,6 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     root_file = "performance_finding_ambiML.root"
     output_dir = "odd_output"
     assert not (tmp_path / root_file).exists()
-
-    # just to make sure it can build the odd
-    with getOpenDataDetector():
-        pass
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -957,6 +1010,37 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
         assert_root_hash(fn, fp)
 
 
+def assert_gnn_output(output_dir: Path):
+    """Smoke check for the ROOT files written by the GNN chain.
+
+    Deliberately not a hash comparison. The GPU CI pool is heterogeneous, and
+    the ONNX backend is not bit-stable across GPU architectures: Ampere runs
+    GEMMs in TF32 by default while Turing has no TF32 at all, so a reference
+    hash recorded on one card does not hold on the other.
+
+    Both files are opened and both ntuple trees are looked up, so a chain that
+    crashed or a writer that produced nothing still fails here. The entry
+    counts are printed but not asserted on: the metric learning chain currently
+    finds no tracks at all (acts-project/acts#5911), and the reference hashes
+    this replaces pinned exactly that empty output. Assert on the counts again
+    once that is fixed.
+    """
+    import uproot
+
+    perf_file = output_dir / "performance_finding_gnn.root"
+    ntuple_file = output_dir / "ntuple_finding_gnn.root"
+
+    for f in (perf_file, ntuple_file):
+        assert f.exists(), f"{f} was not written"
+
+    with uproot.open(perf_file) as rf:
+        assert len(rf.keys()) > 0, f"{perf_file} has no content"
+
+    with uproot.open(ntuple_file) as rf:
+        for tree in ("track_finder_tracks", "track_finder_particles"):
+            print(f"{ntuple_file.name}:{tree} has {rf[tree].num_entries} entries")
+
+
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
 def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardware):
@@ -1003,11 +1087,9 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardwar
             print(e.output.decode("utf-8"))
         raise
 
+    assert_gnn_output(tmp_path)
     for f in root_files:
-        rfp = tmp_path / f
-        assert rfp.exists()
-
-        assert_root_hash(f, rfp)
+        assert_root_hash(f, tmp_path / f)
 
 
 @pytest.mark.odd
@@ -1126,13 +1208,11 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
         )
 
     # Verify output
-    output_file = tmp_path / "performance_finding_gnn.root"
-    assert output_file.exists()
-    assert_root_hash("performance_finding_gnn.root", output_file)
-
-    output_file = tmp_path / "ntuple_finding_gnn.root"
-    assert output_file.exists()
-    assert_root_hash("ntuple_finding_gnn.root", output_file)
+    assert_gnn_output(tmp_path)
+    assert_root_hash("ntuple_finding_gnn.root", tmp_path / "ntuple_finding_gnn.root")
+    assert_root_hash(
+        "performance_finding_gnn.root", tmp_path / "performance_finding_gnn.root"
+    )
 
 
 @pytest.mark.odd
@@ -1275,6 +1355,7 @@ def test_strip_space_points(detector_config, field, tmp_path, assert_root_hash):
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
 @pytest.mark.slow
+@pytest.mark.xdist_group("heavy")
 def test_geomodel_G4(tmp_path):
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -1295,7 +1376,40 @@ def test_geomodel_G4(tmp_path):
         str(mockup_det),
         "--outDir",
         str(out_dir),
+        # The script defaults to 100 events, which made this the slowest and
+        # most memory-hungry test; only the output is checked here.
+        "--nEvents",
+        "5",
     ]
     subprocess.check_call(args)
 
     assert (out_dir / "obj").exists()
+
+
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
+@pytest.mark.slow
+@pytest.mark.xdist_group("heavy")
+def test_geomodel_G4_propagation(tmp_path):
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "propagate_mockup.py"
+    )
+    assert script.exists()
+    mockup_det = "Muon"
+    out_dir = tmp_path / "geomodel_g4_muon_propagation"
+    out_dir.mkdir()
+    args = [
+        "python3",
+        str(script),
+        "--mockupDetector",
+        str(mockup_det),
+        "--outDir",
+        str(out_dir),
+    ]
+    subprocess.check_call(args)
+
+    assert out_dir.exists()

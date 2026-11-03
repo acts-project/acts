@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,19 +18,29 @@
 #include "traccc/geometry/detector_conditions_description.hpp"
 #include "traccc/geometry/detector_design_description.hpp"
 
+// VecMem include(s).
+#include <vecmem/containers/data/vector_view.hpp>
+
 namespace traccc::device {
 
 /// Function for creating 3D spacepoints out of 2D measurements
 ///
-/// @param[in] globalIndex          The index for the current thread
-/// @param[in] det_view             A view type object of detector
-/// @param[in] measurements_view    Collection of measurements
-/// @param[out] spacepoints_view    Collection of spacepoints
+/// The prefix sum of the flags that @c traccc::device::count_spacepoints makes
+/// gives every measurement the index of its spacepoint. Because that index does
+/// not depend on the thread order, the output is deterministic.
 ///
-template <typename detector_t>
+/// @param[in] globalIndex           The index for the current thread
+/// @param[in] det_view              A view type object of detector
+/// @param[in] measurements_view     Collection of measurements
+/// @param[in] spacepoint_index_view The prefix sum of the spacepoint flags
+/// @param[out] spacepoints_view     Collection of spacepoints
+///
+template <detray::concepts::detector detector_t>
 TRACCC_HOST_DEVICE inline void form_spacepoints(
-    global_index_t globalIndex, typename detector_t::view det_view,
+    global_index_t globalIndex,
+    const detray::detector_view_t<detector_t> det_view,
     const edm::measurement_collection::const_view& measurements_view,
+    const vecmem::data::vector_view<const unsigned int>& spacepoint_index_view,
     edm::spacepoint_collection::view spacepoints_view);
 
 }  // namespace traccc::device

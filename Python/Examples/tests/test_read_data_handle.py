@@ -101,9 +101,12 @@ def test_wrong_key_raises():
         wb = acts.examples.WhiteBoard(acts.logging.WARNING)
         inspector.particles(wb)
 
-    with acts.logging.ScopedFailureThreshold(acts.logging.FATAL), pytest.raises(
-        RuntimeError,
-        match="Sequence configuration error: Missing data handle for key 'wrong_key'",
+    with (
+        acts.logging.ScopedFailureThreshold(acts.logging.FATAL),
+        pytest.raises(
+            RuntimeError,
+            match="Sequence configuration error: Missing data handle for key 'wrong_key'",
+        ),
     ):
         s.addAlgorithm(inspector)
 

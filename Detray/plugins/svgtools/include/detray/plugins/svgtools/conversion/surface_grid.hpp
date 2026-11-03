@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/builders/detail/radius_getter.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/definitions/grid_axis.hpp"
 #include "detray/definitions/units.hpp"
@@ -26,6 +27,7 @@
 
 // System include(s)
 #include <algorithm>
+#include <array>
 #include <optional>
 #include <string>
 #include <vector>
@@ -92,21 +94,7 @@ struct bin_association_getter {
 
           // Get all the bin entries and calculate the loc index
           std::vector<std::size_t> entries;
-
-          DETRAY_DEBUG_HOST("-> Bin association: ");
-          if constexpr (is_cyl) {
-            DETRAY_DEBUG_HOST("--> Bin idx ["
-                              << j << ", " << i
-                              << "], Bin center: " << bin_center);
-          } else {
-            DETRAY_DEBUG_HOST("--> Bin idx ["
-                              << i << ", " << j
-                              << "], Bin center: " << bin_center);
-          }
           for (const auto& sf_desc : grid.search(bin_center, search_window)) {
-            DETRAY_DEBUG_HOST(
-                "--> Surface: " << vol_desc.to_local_sf_index(sf_desc.index()));
-
             // actsvg expects the sensitive surfaces to be numbered
             // starting from zero (per volume)
             entries.push_back(vol_desc.to_local_sf_index(sf_desc.index()));
@@ -138,7 +126,7 @@ struct bin_association_getter {
 /// @param style the style settings
 ///
 /// @returns a proto grid
-template <typename detector_t, typename view_t>
+template <concepts::detector detector_t, typename view_t>
 auto surface_grid(const detector_t& detector, const dindex index,
                   const view_t& view,
                   const styling::grid_style& style =
@@ -187,7 +175,7 @@ auto surface_grid(const detector_t& detector, const dindex index,
 /// @param offset transform a global surface index to a local one for the volume
 ///
 /// @returns a vector of surface indices per neighborhood
-template <typename detector_t>
+template <concepts::detector detector_t>
 std::vector<std::vector<std::size_t>> get_bin_association(
     const detector_t& det, const detray::tracking_volume<detector_t>& vol,
     const std::array<dindex, 2>& search_window = {2u, 2u}) {

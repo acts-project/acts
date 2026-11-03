@@ -103,6 +103,8 @@ concept MutableMultiTrajectoryBackend =
 
       { v.addTrackState_impl() } -> std::same_as<TrackIndexType>;
 
+      { v.addTrackStateComponents_impl(istate, mask) };
+
       { v.shareFrom_impl(istate, istate, mask, mask) };
 
       { v.unset_impl(mask, istate) };

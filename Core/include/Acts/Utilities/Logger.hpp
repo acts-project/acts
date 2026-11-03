@@ -208,28 +208,20 @@ inline std::string_view levelName(Level level) {
 /// specific circumstances. To solve this, ACTS implements an optional log
 /// *threshold* mechanism.
 ///
-/// The threshold mechanism is steered via two CMake options:
-/// `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` and `ACTS_LOG_FAILURE_THRESHOLD`.
-/// Depending on their configuration, the logging can operate in three modes:
+/// The threshold mechanism is steered via the CMake option
+/// `ACTS_ENABLE_LOG_FAILURE_THRESHOLD`, so the logging operates in one of two
+/// modes:
 ///
 /// 1. **No log failure threshold** exists, log levels are informative only.
-/// This is
-///    the default behavior.
-/// 2. A **compile-time log failure threshold** is set. If
-///    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` and
-///    `ACTS_LOG_FAILURE_THRESHOLD=<LEVEL>` are set, the logger code will
-///    compile in a fixed check if the log level of a particular message exceeds
-///    `<LEVEL>`.
-///    If that is the case, an exception of type @ref Acts::Logging::ThresholdFailure is
-///    thrown.
-/// 3. A **runtime log failure threshold** is set. If only
-///    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` and no fixed threshold level is
-///    set, the logger code will compile in a check of a global runtime
-///    threshold variable.
-///
-/// @note If only `ACTS_LOG_FAILURE_THRESHOLD` is set,
-/// `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` will be set automatically, i.e. a
-/// compile-time threshold will be set.
+///    This is the default behavior.
+/// 2. A **runtime log failure threshold** is available. With
+///    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` the logger code compiles in a
+///    check against a global threshold variable, seeded from the
+///    `ACTS_LOG_FAILURE_THRESHOLD` environment variable and settable with
+///    @ref Acts::Logging::setFailureThreshold. A message at or above it raises
+///    @ref Acts::Logging::ThresholdFailure after it has been emitted. The
+///    threshold defaults to @ref Acts::Logging::Level::MAX, so an enabled build
+///    with no threshold set behaves like a disabled one.
 ///
 /// @{
 
@@ -239,23 +231,15 @@ inline std::string_view levelName(Level level) {
 /// All messages with a debug level equal or higher than the return value of
 /// this function will cause an exception to be thrown after log emission.
 ///
-/// @note Depending on preprocessor settings @c ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-///       and @c ACTS_LOG_FAILURE_THRESHOLD, this operations is either constexpr
-///       or a runtime operation.
+/// @note Depending on the preprocessor setting @c ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+///       this operation is either constexpr or a runtime operation.
 /// @return The log level threshold for failure
 Level getFailureThreshold();
 
 #else
 
 #ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-#ifdef ACTS_LOG_FAILURE_THRESHOLD
-// We have a fixed compile time log failure threshold
-constexpr Level getFailureThreshold() {
-  return Level::ACTS_LOG_FAILURE_THRESHOLD;
-}
-#else
 Level getFailureThreshold();
-#endif
 #else
 constexpr Level getFailureThreshold() {
   // Default "NO" failure threshold
@@ -274,9 +258,8 @@ constexpr Level getFailureThreshold() {
 ///          this function is  **not threadsafe**. The intention is that this
 ///          level is set once, before multi-threaded execution begins, and then
 ///          not modified before the end of the job.
-/// @note This function is only available if @c ACTS_LOG_FAILURE_THRESHOLD is
-///       unset, i.e. no compile-time threshold is used. Otherwise an
-///       exception is thrown.
+/// @note This function is only available if @c ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+///       is set. Otherwise an exception is thrown.
 /// @param level Log level above which exceptions will be thrown
 void setFailureThreshold(Level level);
 
@@ -463,8 +446,8 @@ class NamedOutputDecorator final : public OutputDecorator {
   /// delegates the flushing of the whole message to its wrapped object.
   void flush(const Level& lvl, const std::string& input) override {
     std::ostringstream os;
-    os << std::left << std::setw(m_maxWidth) << m_name.substr(0, m_maxWidth - 3)
-       << input;
+    os << std::left << std::setw(static_cast<int>(m_maxWidth))
+       << m_name.substr(0, m_maxWidth - 3) << input;
     OutputDecorator::flush(lvl, os.str());
   }
 

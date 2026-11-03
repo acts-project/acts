@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintBuilder.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Root/TGeoAxes.hpp"
 #include "ActsPlugins/Root/TGeoDetectorElement.hpp"
@@ -144,6 +145,17 @@ class TGeoBlueprintBuilderBackend {
   std::optional<Acts::Transform3> lookupLayerTransform(
       const Element& element, const LayerSpec& layerSpec) const;
 
+  /// Describe a passive element as a cylindrical volume.
+  ///
+  /// Tube-like shapes (z half-length larger than the radial thickness, e.g. a
+  /// support tube) become a cylinder shell, disc-like shapes (e.g. an
+  /// endplate) an annular disc. Used by
+  /// @ref Acts::BlueprintBuilder::makePassiveElement.
+  /// @param element Element describing the passive tube or disc.
+  /// @throws std::runtime_error if the shape is neither tube- nor disc-like.
+  /// @return Volume with the element's placement and cylinder volume bounds.
+  Acts::Volume passiveVolume(const Element& element) const;
+
   /// Access the world/root element of the configured TGeo tree.
   /// @return Root element of the geometry hierarchy.
   Element world() const;
@@ -196,21 +208,19 @@ class TGeoBlueprintBuilderBackend {
 };
 
 /// Blueprint builder specialization for the TGeo backend.
-using BlueprintBuilder =
-    Acts::Experimental::BlueprintBuilder<TGeoBlueprintBuilderBackend>;
+using BlueprintBuilder = Acts::BlueprintBuilder<TGeoBlueprintBuilderBackend>;
 /// Element-layer assembler specialization for the TGeo backend.
 using ElementLayerAssembler =
-    Acts::Experimental::ElementLayerAssembler<TGeoBlueprintBuilderBackend>;
+    Acts::ElementLayerAssembler<TGeoBlueprintBuilderBackend>;
 /// Sensor-layer assembler specialization for the TGeo backend.
 using SensorLayerAssembler =
-    Acts::Experimental::SensorLayerAssembler<TGeoBlueprintBuilderBackend>;
+    Acts::SensorLayerAssembler<TGeoBlueprintBuilderBackend>;
 /// Sensor-layer alias for the TGeo backend.
-using SensorLayer =
-    Acts::Experimental::SensorLayer<TGeoBlueprintBuilderBackend>;
+using SensorLayer = Acts::SensorLayer<TGeoBlueprintBuilderBackend>;
 
 }  // namespace ActsPlugins
 
-namespace Acts::Experimental {
+namespace Acts {
 extern template class BlueprintBuilder<
     ActsPlugins::TGeoBlueprintBuilderBackend>;
 extern template class ElementLayerAssembler<
@@ -218,4 +228,4 @@ extern template class ElementLayerAssembler<
 extern template class SensorLayerAssembler<
     ActsPlugins::TGeoBlueprintBuilderBackend>;
 extern template class SensorLayer<ActsPlugins::TGeoBlueprintBuilderBackend>;
-}  // namespace Acts::Experimental
+}  // namespace Acts

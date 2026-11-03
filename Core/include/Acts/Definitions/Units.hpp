@@ -178,12 +178,12 @@ constexpr double mol = 1.0;
 ///        UnitConstants for details.
 namespace UnitLiterals {
 // define user literal functions for the given unit constant
-#define ACTS_DEFINE_UNIT_LITERAL(name)                       \
-  constexpr double operator""_##name(long double x) {        \
-    return ::Acts::UnitConstants::name * x;                  \
-  }                                                          \
-  constexpr double operator""_##name(unsigned long long x) { \
-    return ::Acts::UnitConstants::name * x;                  \
+#define ACTS_DEFINE_UNIT_LITERAL(name)                           \
+  constexpr double operator""_##name(long double x) {            \
+    return static_cast<double>(::Acts::UnitConstants::name * x); \
+  }                                                              \
+  constexpr double operator""_##name(unsigned long long x) {     \
+    return ::Acts::UnitConstants::name * static_cast<double>(x); \
   }
 ACTS_DEFINE_UNIT_LITERAL(fm)
 ACTS_DEFINE_UNIT_LITERAL(pm)
@@ -239,6 +239,8 @@ constexpr double c = 1.0;
 /// Computed from CODATA 2018 constants to double precision.
 constexpr double hbar =
     6.582119569509066e-25 * UnitConstants::GeV * UnitConstants::s;
+/// Avogadro constant
+constexpr double kAvogadro = 6.02214076e23 / UnitConstants::mol;
 }  // namespace PhysicalConstants
 
 }  // namespace Acts

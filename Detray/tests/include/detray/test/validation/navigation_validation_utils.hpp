@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/track_parametrization.hpp"
 #include "detray/geometry/identifier.hpp"
 #include "detray/geometry/surface.hpp"
@@ -132,8 +133,8 @@ struct track_statistics {
 };
 
 /// Run the propagation and record test data along the way
-template <typename stepper_t, typename... actor_ts, typename detector_t,
-          typename bfield_t = empty_bfield>
+template <typename stepper_t, typename... actor_ts,
+          concepts::detector detector_t, typename bfield_t = empty_bfield>
 inline auto record_propagation(
     const typename detector_t::geometry_context ctx,
     vecmem::memory_resource *host_mr, const detector_t &det,
@@ -153,7 +154,7 @@ inline auto record_propagation(
 
   /// Inspector that records all encountered surfaces
   using object_tracer_t =
-      navigation::object_tracer<intersection_t, dvector,
+      navigation::object_tracer<detector_t, dvector,
                                 navigation::status::e_on_object,
                                 navigation::status::e_on_portal>;
   /// Inspector that prints the navigator state from within the
@@ -171,8 +172,7 @@ inline auto record_propagation(
   // Propagator with pathlimit aborter and validation actors
   using step_tracer_t = actor::step_tracer<algebra_t, dvector>;
   using pathlimit_aborter_t = actor::pathlimit_aborter<scalar_t>;
-  using material_tracer_t =
-      material_validator::material_tracer<scalar_t, dvector>;
+  using material_tracer_t = material_validator::material_tracer<dvector>;
 
   using state_ref_tuple_t = typename actor_chain<actor_ts...>::state_ref_tuple;
   using actor_chain_t = actor_chain<pathlimit_aborter_t, actor_ts...,
@@ -359,7 +359,7 @@ inline auto record_propagation(
 
   return std::make_tuple(success, std::move(obj_tracer),
                          std::move(step_tracer_state).release_step_data(),
-                         std::move(mat_tracer_state).release_material_record(),
+                         std::move(mat_tracer_state).release_track_material(),
                          std::move(mat_tracer_state).release_material_steps(),
                          std::move(nav_printer), std::move(step_printer));
 }
@@ -379,16 +379,16 @@ inline auto record_propagation(
 ///
 /// @returns the counts on missed and additional surfaces, matching errors,
 /// as well as the collections of the intersections that did not match
-template <typename truth_trace_t, typename recorded_trace_t, typename traj_t,
+template <concepts::detector detector_t, typename traj_t,
           concepts::algebra algebra_t>
 auto compare_traces(
     const detray::test::navigation_validation_config<algebra_t> &cfg,
-    truth_trace_t &truth_trace, recorded_trace_t &recorded_trace,
+    dvector<intersection_record<detector_t>> &truth_trace,
+    dvector<intersection_record<detector_t>> &recorded_trace,
     const traj_t &traj, std::size_t trk_no,
     std::fstream *debug_file = nullptr) {
-  using nav_record_t = typename recorded_trace_t::value_type;
-  using truth_record_t = typename truth_trace_t::value_type;
-  using intersection_t = typename truth_record_t::intersection_type;
+  using data_record_t = intersection_record<detector_t>;
+  using intersection_t = typename data_record_t::intersection_type;
 
   // Current number of entries to compare (may become more if both traces
   // missed several surfaces)
@@ -423,14 +423,14 @@ auto compare_traces(
 
     if (next_idx < truth_trace.size() && next_idx < recorded_trace.size()) {
       const auto &current_nav_inters =
-          recorded_trace.at(idx_j).intersection.surface().identifier();
+          recorded_trace.at(idx_j).intersection().surface().identifier();
       const auto &current_truth_inters =
-          truth_trace.at(idx_j).intersection.surface().identifier();
+          truth_trace.at(idx_j).intersection().surface().identifier();
 
       const auto &next_nav_inters =
-          recorded_trace.at(next_idx).intersection.surface().identifier();
+          recorded_trace.at(next_idx).intersection().surface().identifier();
       const auto &next_truth_inters =
-          truth_trace.at(next_idx).intersection.surface().identifier();
+          truth_trace.at(next_idx).intersection().surface().identifier();
 
       return ((current_nav_inters == next_truth_inters) &&
               (next_nav_inters == current_truth_inters));
@@ -451,13 +451,13 @@ auto compare_traces(
     const bool nav_has_next = (idx < recorded_trace.size());
     detray::geometry::identifier nav_inters{};
     if (nav_has_next) {
-      nav_inters = recorded_trace.at(idx).intersection.surface().identifier();
+      nav_inters = recorded_trace.at(idx).intersection().surface().identifier();
     }
 
     const bool truth_has_next = (idx < truth_trace.size());
     detray::geometry::identifier truth_inters{};
     if (truth_has_next) {
-      truth_inters = truth_trace.at(idx).intersection.surface().identifier();
+      truth_inters = truth_trace.at(idx).intersection().surface().identifier();
     }
 
     // Check if size of traces is still in sync and records match
@@ -505,9 +505,10 @@ auto compare_traces(
       // Compare two traces and insert dummy records for any skipped cand.
       auto compare_and_equalize =
           [&i, &handle_counting_error, &is_swapped_surfaces, &count_one_missed,
-           &missed_intersections]<typename trace_t, typename other_trace_t>(
-              trace_t &trace, typename trace_t::iterator last_missed_itr,
-              other_trace_t &other_trace, surface_stats &missed_stats,
+           &missed_intersections](
+              dvector<data_record_t> &trace,
+              typename dvector<data_record_t>::iterator last_missed_itr,
+              dvector<data_record_t> &other_trace, surface_stats &missed_stats,
               long int &missed_pt, long int &missed_sn, long int &missed_ps) {
             // The navigator missed a(multiple) surface(s)
             auto first_missed = std::begin(trace) + i;
@@ -518,7 +519,7 @@ auto compare_traces(
             // records until traces align again
             for (long j = i; j < i + n_check; ++j) {
               const auto &sfi =
-                  trace.at(static_cast<std::size_t>(j)).intersection;
+                  trace.at(static_cast<std::size_t>(j)).intersection();
 
               // Portals may be swapped and wrongfully included in the
               // range of missed surfaces - skip them
@@ -529,8 +530,7 @@ auto compare_traces(
               // Record the missed intersections for later analysis
               missed_intersections.push_back(sfi);
               // Insert dummy record to match the truth trace size
-              using record_t = typename other_trace_t::value_type;
-              other_trace.insert(other_trace.begin() + i, record_t{});
+              other_trace.insert(other_trace.begin() + i, data_record_t{});
 
               // Count this missed intersection depending on sf. type
               const bool valid{missed_stats.count(sfi.surface())};
@@ -557,13 +557,13 @@ auto compare_traces(
       // If the current nav_inters can be found on the truth trace at a
       // later place, the navigator potentially missed the surfaces that
       // lie in between (except for swapped portals)
-      auto search_nav_on_truth = [nav_inters](const truth_record_t &tr) {
-        return tr.intersection.surface().identifier() == nav_inters;
+      auto search_nav_on_truth = [nav_inters](const data_record_t &tr) {
+        return tr.intersection().surface().identifier() == nav_inters;
       };
       // As above, but this time check if the navigator found additional
       // surfaces
-      auto search_truth_on_nav = [truth_inters](const nav_record_t &nr) {
-        return nr.intersection.surface().identifier() == truth_inters;
+      auto search_truth_on_nav = [truth_inters](const data_record_t &nr) {
+        return nr.intersection().surface().identifier() == truth_inters;
       };
 
       // Check if the portal order is swapped or the surface appears
@@ -572,8 +572,8 @@ auto compare_traces(
       if (is_swapped_surfaces(i)) {
         // Was not wrong after all
         matching_traces = true;
-        if (!recorded_trace.at(idx).intersection.surface().is_portal() ||
-            !truth_trace.at(idx).intersection.surface().is_portal()) {
+        if (!recorded_trace.at(idx).intersection().surface().is_portal() ||
+            !truth_trace.at(idx).intersection().surface().is_portal()) {
           DETRAY_WARN_HOST(
               "Track " << trk_no << ", inters. " << idx
                        << ": Surfaces are swapped in trace, "
@@ -603,7 +603,7 @@ auto compare_traces(
         // The nav_inters could not be found on the truth trace, because
         // the truth trace does not have anymore records left to check:
         // The surface was missed on the truth side
-        truth_trace.push_back(truth_record_t{});
+        truth_trace.push_back(data_record_t{});
 
         const bool valid{missed_stats_tr.count(nav_inters)};
         handle_counting_error(valid);
@@ -616,7 +616,7 @@ auto compare_traces(
         // The truth_inters could not be found on the recorded trace,
         // because the recorded trace does not have any records left
         // to check: The surface was missed by the navigator
-        recorded_trace.push_back(nav_record_t{});
+        recorded_trace.push_back(data_record_t{});
 
         const bool valid{missed_stats_nav.count(truth_inters)};
         handle_counting_error(valid);
@@ -701,15 +701,15 @@ auto compare_traces(
     debug_stream << "   -------Intersection ( " << intr_idx << " )\n";
     if (intr_idx < truth_trace.size()) {
       debug_stream << std::setw(20) << "\n   Reference: "
-                   << truth_trace.at(intr_idx).intersection << ", vol id: "
-                   << truth_trace.at(intr_idx).intersection.surface().volume()
+                   << truth_trace.at(intr_idx).intersection() << ", vol id: "
+                   << truth_trace.at(intr_idx).intersection().surface().volume()
                    << std::endl;
     } else {
       debug_stream << "\n   Reference: -" << std::endl;
     }
     if (intr_idx < recorded_trace.size()) {
       debug_stream << std::setw(20) << "\n   Detray navigator: "
-                   << recorded_trace.at(intr_idx).intersection << std::endl
+                   << recorded_trace.at(intr_idx).intersection() << std::endl
                    << std::endl;
     } else {
       debug_stream << "\n   Detray navigator: -\n" << std::endl;
@@ -791,8 +791,8 @@ auto compare_traces(
     std::size_t n_miss_truth{0u};
     std::size_t n_miss_nav{0u};
     for (std::size_t i = 0u; i < truth_trace.size(); ++i) {
-      const auto truth_desc{truth_trace.at(i).intersection.surface()};
-      const auto nav_desc{recorded_trace.at(i).intersection.surface()};
+      const auto truth_desc{truth_trace.at(i).intersection().surface()};
+      const auto nav_desc{recorded_trace.at(i).intersection().surface()};
 
       if (truth_desc.identifier().is_invalid()) {
         n_miss_truth++;
@@ -864,10 +864,12 @@ auto compare_traces(
 
 /// Write the track positions of a trace @param intersection_traces to a csv
 /// file to the path @param track_param_file_name
-template <typename record_t>
+template <concepts::detector detector_t, typename allocator_t>
 auto write_tracks(const std::string &track_param_file_name,
-                  const dvector<dvector<record_t>> &intersection_traces) {
-  using algebra_t = typename record_t::algebra_type;
+                  const std::vector<dvector<intersection_record<detector_t>>,
+                                    allocator_t> &intersection_traces) {
+  using algebra_t = typename detector_t::algebra_type;
+  using value_t = dvalue<algebra_t>;
   using scalar_t = dscalar<algebra_t>;
   using track_param_t = free_track_parameters<algebra_t>;
 
@@ -878,10 +880,8 @@ auto write_tracks(const std::string &track_param_file_name,
     track_params.back().reserve(trace.size());
 
     for (const auto &record : trace) {
-      track_params.back().emplace_back(
-          record.charge,
-          track_param_t{record.pos, 0.f, record.p_mag * record.dir,
-                        record.charge});
+      track_params.back().emplace_back(record.template charge<value_t>(),
+                                       record.track_param());
     }
   }
 
@@ -891,7 +891,8 @@ auto write_tracks(const std::string &track_param_file_name,
 
 /// Write the distance between the intersection and the surface boundaries in
 /// @param missed_intersections to a csv file at the path @param file_name
-template <typename detector_t, typename track_t, typename intersection_t>
+template <concepts::detector detector_t, typename track_t,
+          typename intersection_t>
 auto write_dist_to_boundary(
     const detector_t &det, const typename detector_t::name_map &names,
     const std::string &file_name,
@@ -1047,8 +1048,8 @@ inline auto print_efficiency(std::size_t n_tracks,
 /// encountered surfaces, stats of missed surfaces for navigation, stats of
 /// missed surfaces for truth traces, recorded step traces, recorded material
 /// traces and integrated material
-template <typename stepper_t, typename... actor_ts, typename detector_t,
-          typename field_view_t, typename intersection_t,
+template <typename stepper_t, typename... actor_ts,
+          concepts::detector detector_t, typename field_view_t,
           concepts::algebra algebra_t>
 auto compare_to_navigation(
     const detray::test::navigation_validation_config<algebra_t> &cfg,
@@ -1057,13 +1058,10 @@ auto compare_to_navigation(
     const typename detector_t::geometry_context ctx,
     const std::optional<field_view_t> field_view,
     const propagation::config &prop_cfg,
-    std::vector<dvector<navigation::detail::candidate_record<intersection_t>>>
-        &truth_traces,
+    std::vector<dvector<intersection_record<detector_t>>> &truth_traces,
     const std::vector<free_track_parameters<algebra_t>> &tracks,
     dvector<typename actor_chain<actor_ts...>::state_ref_tuple> state_tuples = {
         {}}) {
-  using scalar_t = dscalar<algebra_t>;
-
   assert(truth_traces.size() == tracks.size());
   assert(!state_tuples.empty());
 
@@ -1090,13 +1088,12 @@ auto compare_to_navigation(
   surface_stats n_miss_truth{};
 
   // Collect step and material traces for all tracks
-  std::vector<dvector<detail::step_data<algebra_t>>> step_traces{};
-  std::vector<material_validator::material_record<scalar_t>> mat_records{};
-  std::vector<dvector<material_validator::material_params<scalar_t>>>
-      mat_traces{};
+  std::vector<dvector<step_record<algebra_t>>> step_traces{};
+  std::vector<dvector<material_record>> mat_steps{};
+  std::vector<material_validator::track_material> track_mat_vec{};
 
-  mat_records.reserve(n_samples);
-  mat_traces.reserve(n_samples);
+  mat_steps.reserve(n_samples);
+  track_mat_vec.reserve(n_samples);
   step_traces.reserve(n_samples);
 
   // Run the navigation on every truth trace
@@ -1111,7 +1108,7 @@ auto compare_to_navigation(
     DETRAY_VERBOSE_HOST("Track " << i << ":");
 
     // Record the propagation through the geometry
-    auto [success, obj_tracer, step_trace, mat_record, mat_trace, nav_printer,
+    auto [success, obj_tracer, step_trace, track_mat, mat_trace, nav_printer,
           step_printer] =
         record_propagation<stepper_t, actor_ts...>(
             ctx, &host_mr, det, prop_cfg, track, cfg.ptc_hypothesis(),
@@ -1132,19 +1129,16 @@ auto compare_to_navigation(
 
     // Save material for later comparison
     step_traces.push_back(std::move(step_trace));
-    mat_records.push_back(std::move(mat_record));
-    mat_traces.push_back(mat_trace);
+    mat_steps.push_back(std::move(mat_trace));
+    track_mat_vec.push_back(track_mat);
 
     // Compare to truth trace
-    using obj_tracer_t = decltype(obj_tracer);
-    using record_t = typename obj_tracer_t::candidate_record_t;
-
-    detray::dvector<record_t> recorded_trace{};
+    detray::dvector<intersection_record<detector_t>> recorded_trace{};
     recorded_trace.reserve(obj_tracer.trace().size());
     // Get only the sensitive surfaces
     if (cfg.collect_sensitives_only()) {
       for (const auto &rec : obj_tracer.trace()) {
-        if (rec.intersection.surface().is_sensitive()) {
+        if (rec.intersection().surface().is_sensitive()) {
           recorded_trace.push_back(rec);
         }
       }
@@ -1205,7 +1199,7 @@ auto compare_to_navigation(
 
     // Count the number of surfaces per type in all traces
     for (std::size_t j = 0; j < truth_trace.size(); ++j) {
-      n_surfaces.count(truth_trace[j].intersection.surface(), cfg.verbose());
+      n_surfaces.count(truth_trace[j].intersection().surface(), cfg.verbose());
     }
 
     // Did the navigation miss a sensitive surface? => count a hole
@@ -1287,8 +1281,8 @@ auto compare_to_navigation(
             << ")" << std::endl;
   std::clog << "\n-----------------------------------" << std::endl;
 
-  return std::tuple{trk_stats,   n_surfaces, n_miss_nav, n_miss_truth,
-                    step_traces, mat_traces, mat_records};
+  return std::tuple{trk_stats,   n_surfaces,    n_miss_nav, n_miss_truth,
+                    step_traces, track_mat_vec, mat_steps};
 }
 
 }  // namespace detray::navigation_validator

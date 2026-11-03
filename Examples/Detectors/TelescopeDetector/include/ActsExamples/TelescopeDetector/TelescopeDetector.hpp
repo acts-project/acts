@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 
@@ -31,15 +32,29 @@ class TelescopeDetector : public Detector {
     std::array<double, 2> bounds{{25, 100}};
     double thickness{80 * Acts::UnitConstants::um};
     int surfaceType{0};
-    int binValue{2};
+    int rotDirection{2};
+    std::array<double, 2> envelope_x{{200, 200}};
+    std::array<double, 2> envelope_y{{200, 200}};
+    std::array<double, 2> envelope_z{{200, 200}};
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
     Acts::Logging::Level logLevel{Acts::Logging::WARNING};
+    bool gen3{false};
   };
 
   explicit TelescopeDetector(const Config& cfg);
 
   std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
       const Geant4ConstructionOptions& options) const override;
+
+  /// Get a correctly oriented plane surface for use as a reference surface,
+  /// matching the detector's stacking direction (rotDirection).
+  ///
+  /// @param position the 3D position where the reference surface should sit
+  /// @param halfX half-length of the reference surface in its local x
+  /// @param halfY half-length of the reference surface in its local y
+  /// @return A PlaneSurface oriented consistently with the telescope's rotDirection
+  std::shared_ptr<Acts::PlaneSurface> getReferenceSurface(
+      const Acts::Vector3& position, double halfX, double halfY) const;
 
  protected:
   struct NoBuildTag {};

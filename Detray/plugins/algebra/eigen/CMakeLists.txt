@@ -25,6 +25,10 @@ target_compile_definitions(
         DETRAY_ALGEBRA_EIGEN
 )
 
-detray_test_public_headers( detray_algebra_eigen
-   "algebra/eigen.hpp"
+# Compile all headers one-by-one.
+detray_compile_headers(
+    algebra_eigen
+    detray::algebra_eigen
+    "include/algebra/*.hpp"
+    "include/algebra/**/*.hpp"
 )

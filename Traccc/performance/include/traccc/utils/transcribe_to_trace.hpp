@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -25,14 +26,8 @@
 
 namespace traccc::propagation_validator {
 
-template <typename detector_t>
-using intersection_type =
-    detray::intersection2D<typename detector_t::surface_type,
-                           typename detector_t::algebra_type, true>;
-
-template <typename detector_t>
-using candidate_type =
-    detray::navigation::detail::candidate_record<intersection_type<detector_t>>;
+template <detray::concepts::detector detector_t>
+using candidate_type = detray::intersection_record<detector_t>;
 
 /// Transcribe the hits for a particle to a candidate trace for the detray
 /// propagation validation tools
@@ -44,7 +39,7 @@ using candidate_type =
 /// @param n_hits_for_particle expected number of hits for the particle
 ///
 /// @returns a vector of intersection candidate records
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 auto transcribe_to_trace(const typename detector_t::geometry_context ctx,
                          const detector_t& det,
                          const traccc::io::csv::particle& ptc,
@@ -88,7 +83,7 @@ auto transcribe_to_trace(const typename detector_t::geometry_context ctx,
   // Sort records by intersection distance to origin of the trajectory
   auto sort_by_path = [&](const candidate_type<detector_t>& a,
                           const candidate_type<detector_t>& b) -> bool {
-    return (a.intersection < b.intersection);
+    return (a.intersection() < b.intersection());
   };
 
   std::ranges::stable_sort(candidates, sort_by_path);
@@ -106,7 +101,7 @@ auto transcribe_to_trace(const typename detector_t::geometry_context ctx,
 /// @param n_meas_for_particle expected number of ,easurements for the particle
 ///
 /// @returns a vector of intersection candidate records
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 auto transcribe_to_trace(
     const typename detector_t::geometry_context ctx, const detector_t& det,
     const traccc::particle& ptc,
@@ -154,7 +149,7 @@ auto transcribe_to_trace(
   // Sort records by intersection distance to origin of the trajectory
   auto sort_by_path = [&](const candidate_type<detector_t>& a,
                           const candidate_type<detector_t>& b) -> bool {
-    return (a.intersection < b.intersection);
+    return (a.intersection() < b.intersection());
   };
 
   std::ranges::stable_sort(candidates, sort_by_path);

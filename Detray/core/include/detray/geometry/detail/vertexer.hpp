@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/containers.hpp"
 #include "detray/definitions/math.hpp"
@@ -27,7 +28,7 @@ struct vertexer;
 /// @param n_seg the number of segments used along arcs
 ///
 /// @returns a vector of vetices (3D points)
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST constexpr auto get_global_vertices(
     const typename detector_t::geometry_context &ctx,
     geometry::surface<detector_t> sf, const dindex n_seg) {

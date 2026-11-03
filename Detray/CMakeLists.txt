@@ -55,6 +55,10 @@ set(DETRAY_PYTHON_INSTALL_DIR "python/detray")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(detray-functions)
 
+# Honour ACTS_FORCE_ASSERTIONS in standalone builds inside the ACTS tree. When
+# detray is built via add_subdirectory from ACTS this is a no-op.
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsForceAssertions.cmake)
+
 #
 # Define build options
 #
@@ -91,8 +95,6 @@ option(
     ${CMAKE_CUDA_COMPILER}
 )
 
-option(DETRAY_BUILD_SYCL "Build the SYCL sources included in detray" OFF)
-
 # Check if HIP is available
 option(DETRAY_BUILD_HIP "Build the HIP sources included in detray" OFF)
 
@@ -100,13 +102,13 @@ cmake_dependent_option(
     DETRAY_BUILD_HOST
     "Build the host sources included in detray"
     ON
-    "DETRAY_BUILD_CUDA OR DETRAY_BUILD_SYCL OR DETRAY_BUILD_HIP"
+    "DETRAY_BUILD_CUDA OR DETRAY_BUILD_HIP"
     ON
 )
 
 # Plugins / Algebra backends
 option(DETRAY_SVG_DISPLAY "Build ActSVG display module" OFF)
-option(DETRAY_ARRAY_PLUGIN "Build Eigen math plugin" ON)
+option(DETRAY_ARRAY_PLUGIN "Build std::array math plugin" ON)
 option(DETRAY_EIGEN_PLUGIN "Build Eigen math plugin" OFF)
 option(DETRAY_FASTOR_PLUGIN "Build Fastor math plugin" OFF)
 option(DETRAY_SMATRIX_PLUGIN "Build ROOT/SMatrix math plugin" OFF)
@@ -117,6 +119,11 @@ option(DETRAY_VC_SOA_PLUGIN "Build Vc based SoA math plugin" OFF)
 option(
     DETRAY_BUILD_PYTHON_BINDINGS
     "Build python bindings for all enabled components"
+    OFF
+)
+option(
+    DETRAY_GENERATE_PYTHON_STUBS
+    "Generate Python stub files (.pyi) using pybind11-stubgen"
     OFF
 )
 
@@ -164,13 +171,6 @@ if(${DETRAY_BUILD_CUDA} AND ${CMAKE_CUDA_STANDARD} LESS 20)
     )
 endif()
 
-if(${DETRAY_BUILD_SYCL} AND ${CMAKE_SYCL_STANDARD} LESS 20)
-    message(
-        SEND_ERROR
-        "CMAKE_SYCL_STANDARD=${CMAKE_SYCL_STANDARD}, but detray requires C++>=20"
-    )
-endif()
-
 if(${DETRAY_BUILD_HIP} AND ${CMAKE_HIP_STANDARD} LESS 20)
     message(
         SEND_ERROR
@@ -178,18 +178,20 @@ if(${DETRAY_BUILD_HIP} AND ${CMAKE_HIP_STANDARD} LESS 20)
     )
 endif()
 
-# Disable the [[no_unique_address]] annotation if we are on CUDA>=13.0.
-# TODO: Update this statement once a fix in CUDA is available.
+# Disable the [[no_unique_address]] annotation if we are on CUDA>=13.0 but <13.2.
 set(DETRAY_INTERNAL_USE_NO_UNIQUE_ADDRESS_ANNOTATION ON)
 
 if(DETRAY_BUILD_CUDA)
     # Figure out the version of CUDA being used.
     find_package(CUDAToolkit REQUIRED)
 
-    if(CUDAToolkit_VERSION_MAJOR GREATER_EQUAL 13)
+    if(
+        CUDAToolkit_VERSION VERSION_GREATER_EQUAL "13.0"
+        AND CUDAToolkit_VERSION VERSION_LESS "13.2"
+    )
         message(
             STATUS
-            "Disabling [[no_unique_address]] annotation due to CUDA incompatibility"
+            "Disabling [[no_unique_address]] annotation due to a bug in CUDA 13.0:13.1"
         )
         set(DETRAY_INTERNAL_USE_NO_UNIQUE_ADDRESS_ANNOTATION OFF)
     endif()
@@ -204,6 +206,17 @@ endif()
 # Alias flag to enable tests in detray (pulls in google test and triggers the build of executables that depend on it)
 if(BUILD_TESTING AND (DETRAY_BUILD_UNITTESTS OR DETRAY_BUILD_INTEGRATIONTESTS))
     set(DETRAY_BUILD_TESTING ON)
+endif()
+
+# detray_compile_headers() delegates to ACTS' acts_compile_headers(), which is
+# already defined when detray is built via add_subdirectory from ACTS. When
+# detray is configured standalone inside the ACTS tree, pull the module in by
+# relative path, as the codegen setup does. ACTS gates the header targets on an
+# option a standalone build does not have, so tie them to detray's own testing
+# switch there -- that is what used to guard the per-header executables.
+if(NOT COMMAND acts_compile_headers)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsFunctions.cmake)
+    set(ACTS_COMPILE_HEADERS ${DETRAY_BUILD_TESTING})
 endif()
 
 # Validation utilities are needed for integration tests and tutorials
@@ -242,9 +255,9 @@ option(
     ${DETRAY_USE_SYSTEM_LIBS}
 )
 if(DETRAY_SETUP_VECMEM)
-    set(DETRAY_VECMEM_VERSION 1.23.0)
+    set(DETRAY_VECMEM_VERSION 1.28.0)
     set(DETRAY_VECMEM_DIGEST
-        c4b87f88856b5273b89373d880bdc0fd
+        054e3f8407fe710dae9f0c47d8089c0d
         CACHE STRING
         "MD5 digest of the downloaded zip"
     )
@@ -464,9 +477,9 @@ option(
     ${DETRAY_USE_SYSTEM_LIBS}
 )
 if(DETRAY_SETUP_COVFIE)
-    set(DETRAY_COVFIE_VERSION 0.15.4)
+    set(DETRAY_COVFIE_VERSION 0.16.0)
     set(DETRAY_COVFIE_DIGEST
-        80de9b43644c59d8239fb8cc184c6276
+        6f645c2e5cc7e0587d801aff0c6fc75b
         CACHE STRING
         "MD5 digest of the downloaded zip"
     )

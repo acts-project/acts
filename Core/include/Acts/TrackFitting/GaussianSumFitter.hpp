@@ -116,7 +116,7 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.navigation.externalSurfaces = sSequence;
+      propOptions.navigation.surfaceSequence = sSequence;
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
 
@@ -132,7 +132,7 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.navigation.externalSurfaces = sSequence;
+      propOptions.navigation.surfaceSequence = sSequence;
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
 
@@ -168,9 +168,9 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      if (options.useExternalSurfaces) {
+      if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.appendExternalSurface(
+          propOptions.navigation.registerMeasurementSurface(
               *options.extensions.surfaceAccessor(*it));
         }
       }
@@ -190,9 +190,9 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      if (options.useExternalSurfaces) {
+      if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.appendExternalSurface(
+          propOptions.navigation.registerMeasurementSurface(
               *options.extensions.surfaceAccessor(*it));
         }
       }
@@ -320,7 +320,7 @@ struct GaussianSumFitter {
           std::declval<StateType&&>(), std::declval<PropagationResultType>(),
           std::declval<const OptionsType&>(), false));
 
-      auto initRes = m_propagator.initialize(state, *params);
+      auto initRes = m_propagator.initialize(state, *params, nullptr);
       if (!initRes.ok()) {
         return ResultType::failure(initRes.error());
       }
@@ -375,6 +375,10 @@ struct GaussianSumFitter {
       actor.m_cfg.logger = m_actorLogger.get();
 
       bwdPropOptions.direction = gsfBackward;
+      // The backward pass retraces the forward path. The loop protection limit
+      // would be derived from the momentum at the end of the track, which for
+      // electrons after bremsstrahlung is far too low to get back.
+      bwdPropOptions.loopProtection = false;
 
       const Surface& target = options.referenceSurface
                                   ? *options.referenceSurface
@@ -397,9 +401,12 @@ struct GaussianSumFitter {
       auto state =
           m_propagator
               .template makeState<OptionsType, MultiStepperSurfaceReached>(
-                  target, bwdPropOptions);
+                  bwdPropOptions);
 
-      auto initRes = m_propagator.initialize(state, inflatedParams);
+      auto initRes =
+          m_propagator
+              .template initialize<decltype(state), MultiStepperSurfaceReached>(
+                  state, inflatedParams, &target);
       if (!initRes.ok()) {
         return ResultType::failure(initRes.error());
       }
@@ -473,8 +480,7 @@ struct GaussianSumFitter {
       ACTS_DEBUG("Fwd and bwd measurement states do not match");
     }
 
-    // Go through the states and assign outliers / unset smoothed if surface not
-    // passed in backward pass
+    // Assign outliers to states whose surface the backward pass did not reach
     const auto& foundBwd = bwdGsfResult.surfacesVisitedBwdAgain;
     std::size_t measurementStatesFinal = 0;
 
@@ -484,7 +490,6 @@ struct GaussianSumFitter {
           rangeContainsValue(foundBwd, &state.referenceSurface());
       if (!found && state.typeFlags().isMeasurement()) {
         state.typeFlags().setIsOutlier();
-        state.unset(TrackStatePropMask::Smoothed);
       }
 
       measurementStatesFinal +=
@@ -497,6 +502,7 @@ struct GaussianSumFitter {
 
     auto track = trackContainer.makeTrack();
     track.tipIndex() = fwdGsfResult.lastMeasurementTip;
+    track.setParticleHypothesis(sParameters.particleHypothesis());
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;

@@ -467,9 +467,8 @@ void HoughTransformSeeder::addSpacePoints(const AlgorithmContext& ctx) const {
       indices.push_back(islink.index());
     }
 
-    auto meas =
-        std::shared_ptr<HoughMeasurementStruct>(new HoughMeasurementStruct(
-            hitlayer.value(), phi, r, z, indices, HoughHitType::SP));
+    auto meas = std::make_shared<HoughMeasurementStruct>(
+        hitlayer.value(), phi, r, z, indices, HoughHitType::SP);
     houghMeasurementStructs.push_back(meas);
   }
 }
@@ -521,7 +520,7 @@ void HoughTransformSeeder::addMeasurements(const AlgorithmContext& ctx) const {
         // transform local position to global coordinates
         Acts::Vector3 globalFakeMom(1, 1, 1);
         Acts::Vector3 globalPos =
-            surface->localToGlobal(ctx.geoContext, localPos, globalFakeMom);
+            surface->localToGlobal(ctx.recoGeoContext, localPos, globalFakeMom);
         double r = globalPos.head<2>().norm();
         double phi = std::atan2(globalPos[Acts::ePos1], globalPos[Acts::ePos0]);
         double z = globalPos[Acts::ePos2];
@@ -529,9 +528,8 @@ void HoughTransformSeeder::addMeasurements(const AlgorithmContext& ctx) const {
         if (hitlayer.ok()) {
           std::vector<Index> index;
           index.push_back(sourceLink.index());
-          auto houghMeas = std::shared_ptr<HoughMeasurementStruct>(
-              new HoughMeasurementStruct(hitlayer.value(), phi, r, z, index,
-                                         HoughHitType::MEASUREMENT));
+          auto houghMeas = std::make_shared<HoughMeasurementStruct>(
+              hitlayer.value(), phi, r, z, index, HoughHitType::MEASUREMENT);
           houghMeasurementStructs.push_back(houghMeas);
         }
       }

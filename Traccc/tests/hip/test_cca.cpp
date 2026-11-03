@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <functional>
 
@@ -17,7 +18,7 @@
 #include "traccc/clusterization/device/tags.hpp"
 #include "traccc/geometry/detector_design_description.hpp"
 #include "traccc/hip/clusterization/clusterization_algorithm.hpp"
-#include "traccc/hip/utils/stream.hpp"
+#include "traccc/hip/utils/stream_wrapper.hpp"
 
 namespace {
 vecmem::host_memory_resource host_mr;
@@ -32,7 +33,8 @@ cca_function_t get_f_with(traccc::clustering_config cfg) {
     std::map<traccc::geometry_id, traccc::edm::measurement_collection::host>
         geom_to_meas_map;
 
-    traccc::hip::stream stream;
+    vecmem::hip::stream_wrapper vecmem_stream;
+    traccc::hip::stream_wrapper stream{vecmem_stream.stream()};
     vecmem::hip::device_memory_resource device_mr;
     vecmem::hip::async_copy copy{stream.hipStream()};
 
@@ -60,10 +62,9 @@ cca_function_t get_f_with(traccc::clustering_config cfg) {
         static_cast<traccc::detector_conditions_description::buffer::size_type>(
             det_cond.size()),
         device_mr};
-    copy.setup(det_cond_buffer)->ignore();
-    copy(vecmem::get_data(det_cond), det_cond_buffer,
-         vecmem::copy::type::host_to_device)
-        ->ignore();
+    copy.setup(vecmem::ignore_event, det_cond_buffer);
+    copy(vecmem::ignore_event, vecmem::get_data(det_cond), det_cond_buffer,
+         vecmem::copy::type::host_to_device);
     traccc::edm::silicon_cell_collection::buffer cells_buffer{
         static_cast<traccc::edm::silicon_cell_collection::buffer::size_type>(
             cells.size()),

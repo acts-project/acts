@@ -73,7 +73,7 @@ using cylinder3D_grid = grid<test_algebra, axes<cylinder3D, bounds::e_open>,
                              simple_serializer, containers, !is_owning>;
 
 using n_own_host_grid3_array = cylinder3D_grid<host_container_types>;
-using n_own_device_grid3_array = cylinder3D_grid<device_container_types>;
+using n_own_device_grid3_array = cylinder3D_grid<const_device_container_types>;
 
 /// test function for replace populator
 void grid_replace_test(host_grid3_single::view_type grid_view,

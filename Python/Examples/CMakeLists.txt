@@ -3,13 +3,27 @@ file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 set(_examples_python_install_dir "${_acts_python_install_dir}/examples")
+# The examples modules are installed below the core python modules, so derive
+# their origin-relative rpath from the actual install locations.
+file(
+    RELATIVE_PATH
+    _examples_to_libdir
+    "${CMAKE_INSTALL_PREFIX}/${_examples_python_install_dir}"
+    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+)
+set(_examples_python_modules_rpath
+    "${_acts_rpath_origin}/${_examples_to_libdir}"
+)
 set(py_files
     __init__.py
     simulation.py
     reconstruction.py
     itk.py
     odd.py
+    dataset.py
     uproot.py
+    visualization.py
+    scipy.py
 )
 
 # Macro to add example bindings conditionally
@@ -58,9 +72,7 @@ macro(add_examples_binding_if)
 
         set_target_properties(
             ${_target}
-            PROPERTIES
-                INSTALL_RPATH
-                    "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
+            PROPERTIES INSTALL_RPATH "${_examples_python_modules_rpath}"
         )
         set_target_properties(
             ${_target}
@@ -116,6 +128,10 @@ target_sources(
     PRIVATE
         src/Framework.cpp
         src/EventData.cpp
+        src/EventDataMeasurements.cpp
+        src/EventDataTrackContainers.cpp
+        src/EventDataTracks.cpp
+        src/EventDataTrackStates.cpp
         src/ExampleAlgorithms.cpp
         src/Generators.cpp
         src/AmbiguityResolution.cpp
@@ -140,12 +156,15 @@ install(
     DESTINATION ${_examples_python_install_dir}
 )
 
-acts_pybind_generate_stubs(acts.examples ActsExamplesPythonBindings ActsPythonBindings)
+acts_pybind_generate_stubs(
+    acts.examples
+    ActsExamplesPythonBindings
+    ActsPythonBindings
+)
 
 set_target_properties(
     ActsExamplesPythonBindings
-    PROPERTIES
-        INSTALL_RPATH "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
+    PROPERTIES INSTALL_RPATH "${_examples_python_modules_rpath}"
 )
 set_target_properties(
     ActsExamplesPythonBindings
@@ -294,8 +313,7 @@ install(
 )
 set_target_properties(
     ActsExamplesPythonBindingsHepMC3
-    PROPERTIES
-        INSTALL_RPATH "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
+    PROPERTIES INSTALL_RPATH "${_examples_python_modules_rpath}"
 )
 set_target_properties(
     ActsExamplesPythonBindingsHepMC3

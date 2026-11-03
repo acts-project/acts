@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/options/accelerator.hpp"
@@ -16,9 +17,6 @@
 namespace traccc::opts {
 
 accelerator::accelerator() : interface("Accelerator Options") {
-  m_desc.add_options()("compare-with-cpu",
-                       boost::program_options::bool_switch(&compare_with_cpu),
-                       "Compare accelerator output with that of the CPU");
   m_desc.add_options()(
       "use-gpu-texture-memory",
       boost::program_options::bool_switch(&use_gpu_texture_memory),
@@ -28,8 +26,6 @@ accelerator::accelerator() : interface("Accelerator Options") {
 std::unique_ptr<configuration_printable> accelerator::as_printable() const {
   auto cat = std::make_unique<configuration_category>(m_description);
 
-  cat->add_child(std::make_unique<configuration_kv_pair>(
-      "Compare with CPU output", std::format("{}", compare_with_cpu)));
   cat->add_child(std::make_unique<configuration_kv_pair>(
       "Use GPU texture memory", std::format("{}", use_gpu_texture_memory)));
 

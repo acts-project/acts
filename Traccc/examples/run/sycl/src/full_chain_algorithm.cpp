@@ -1,17 +1,33 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/examples/sycl/full_chain_algorithm.hpp"
+
+#include "traccc/examples/sycl/tbb_await.hpp"
 
 // Project include(s).
 #include "traccc/sycl/utils/make_magnetic_field.hpp"
 
 namespace traccc::sycl {
+
+namespace {
+await_function_type get_await_function(await_strategy await_mode) {
+  switch (await_mode) {
+    case await_strategy::sync_event:
+      return await_sync_event;
+    case await_strategy::callback:
+      return tbb_await_callback;
+    default:
+      throw std::invalid_argument("Unknown await strategy");
+  }
+}
+}  // namespace
 namespace details {
 
 struct full_chain_algorithm_data {
@@ -23,32 +39,14 @@ struct full_chain_algorithm_data {
 
 }  // namespace details
 
-full_chain_algorithm::full_chain_algorithm(
+full_chain_algorithm::shared_data::shared_data(
     vecmem::memory_resource& host_mr,
-    const clustering_config& clustering_config,
-    const seedfinder_config& finder_config,
-    const spacepoint_grid_config& grid_config,
-    const seedfilter_config& filter_config,
-    const gbts_seedfinder_config& gbts_config,
-    const track_params_estimation_config& track_params_estimation_config,
-    const finding_algorithm::config_type& finding_config,
-    const fitting_algorithm::config_type& fitting_config,
     const detector_design_description::host& det_descr,
     const detector_conditions_description::host& det_cond,
-    const magnetic_field& field, host_detector* detector,
-    std::unique_ptr<const traccc::Logger> log, bool useGBTS)
-    : messaging(log->clone()),
-      m_data(std::make_unique<details::full_chain_algorithm_data>()),
-      m_host_mr(host_mr),
-      m_pinned_host_mr(m_data->m_queue),
-      m_cached_pinned_host_mr(m_pinned_host_mr),
+    const magnetic_field& field, const host_detector* detector)
+    : m_data(std::make_unique<details::full_chain_algorithm_data>()),
       m_device_mr{m_data->m_queue},
-      m_cached_device_mr{m_device_mr},
-      m_copy{m_data->m_queue},
-      m_field_vec{0.f, 0.f, finder_config.bFieldInZ},
       m_field{sycl::make_magnetic_field(field, m_data->m_queue_wrapper)},
-      m_det_descr(det_descr),
-      m_det_cond(det_cond),
       m_device_det_descr(
           [&]() {
             // number of elements in the detector design description
@@ -64,169 +62,103 @@ full_chain_algorithm::full_chain_algorithm(
             }
             return sizes;
           }(),
-          m_cached_device_mr, &m_cached_pinned_host_mr,
-          vecmem::data::buffer_type::resizable),
+          m_device_mr, &host_mr, vecmem::data::buffer_type::resizable),
       m_device_det_cond(
           static_cast<detector_conditions_description::buffer::size_type>(
-              m_det_cond.get().size()),
-          m_cached_device_mr),
+              det_cond.size()),
+          m_device_mr),
       m_detector(detector),
-      m_device_detector{},
+      m_device_detector{} {
+  // Copy the detector (description) to the device.
+  vecmem::sycl::async_copy copy{m_data->m_queue};
+  copy.setup(m_device_det_descr)->wait();
+  copy(vecmem::get_data(det_descr), m_device_det_descr)->wait();
+  copy(vecmem::get_data(det_cond), m_device_det_cond)->wait();
+  if (m_detector != nullptr) {
+    m_device_detector =
+        traccc::buffer_from_host_detector(*m_detector, m_device_mr, copy);
+  }
+}
+
+full_chain_algorithm::shared_data::~shared_data() = default;
+
+full_chain_algorithm::full_chain_algorithm(
+    vecmem::memory_resource& host_mr,
+    const clustering_config& clustering_config,
+    const seedfinder_config& finder_config,
+    const spacepoint_grid_config& grid_config,
+    const seedfilter_config& filter_config,
+    const gbts_seedfinder_config& gbts_config,
+    const track_params_estimation_config& track_params_estimation_config,
+    const finding_algorithm::config_type& finding_config,
+    const fitting_algorithm::config_type& fitting_config,
+    const shared_data& data, std::unique_ptr<const traccc::Logger> log,
+    bool useGBTS, await_strategy await_mode)
+    : messaging(log->clone()),
+      m_data(std::make_unique<details::full_chain_algorithm_data>()),
+      m_host_mr(host_mr),
+      m_pinned_host_mr(m_data->m_queue),
+      m_cached_pinned_host_mr(m_pinned_host_mr),
+      m_device_mr{m_data->m_queue},
+      m_cached_device_mr{m_device_mr},
+      m_copy{m_data->m_queue},
+      m_await_function{get_await_function(await_mode)},
+      m_field{data.m_field},
+      m_device_det_descr(data.m_device_det_descr),
+      m_device_det_cond(data.m_device_det_cond),
+      m_detector(data.m_detector),
+      m_device_detector{data.m_device_detector},
       m_clusterization{{m_cached_device_mr, &m_cached_pinned_host_mr},
                        m_copy,
                        m_data->m_queue_wrapper,
                        clustering_config,
-                       log->clone("ClusteringAlg")},
+                       log->clone("ClusteringAlg"),
+                       m_await_function},
       m_measurement_sorting({m_cached_device_mr, &m_cached_pinned_host_mr},
                             m_copy, m_data->m_queue_wrapper,
-                            log->clone("MeasSortingAlg")),
+                            log->clone("MeasSortingAlg"), m_await_function),
       m_spacepoint_formation{{m_cached_device_mr, &m_cached_pinned_host_mr},
                              m_copy,
                              m_data->m_queue_wrapper,
-                             log->clone("SpFormationAlg")},
+                             log->clone("SpFormationAlg"),
+                             m_await_function},
       m_seeding{finder_config,
                 grid_config,
                 filter_config,
                 {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_copy,
                 m_data->m_queue_wrapper,
-                log->clone("SeedingAlg")},
+                log->clone("SeedingAlg"),
+                m_await_function},
       m_gbts_seeding{gbts_config,
                      {m_cached_device_mr, &m_cached_pinned_host_mr},
                      m_copy,
                      m_data->m_queue_wrapper,
-                     log->clone("GbtsAlg")},
+                     log->clone("GbtsAlg"),
+                     m_await_function},
       m_track_parameter_estimation{
           track_params_estimation_config,
           {m_cached_device_mr, &m_cached_pinned_host_mr},
           m_copy,
           m_data->m_queue_wrapper,
-          log->clone("TrackParEstAlg")},
+          log->clone("TrackParEstAlg"),
+          m_await_function},
       m_finding{finding_config,
                 {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_copy,
                 m_data->m_queue_wrapper,
-                log->clone("TrackFindingAlg")},
+                log->clone("TrackFindingAlg"),
+                nullptr,
+                m_await_function},
       m_fitting{fitting_config,
                 {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_copy,
                 m_data->m_queue_wrapper,
-                log->clone("TrackFittingAlg")},
-      m_clustering_config(clustering_config),
-      m_finder_config(finder_config),
-      m_grid_config(grid_config),
-      m_filter_config(filter_config),
-      m_gbts_config(gbts_config),
-      m_track_params_estimation_config(track_params_estimation_config),
-      m_finding_config(finding_config),
-      m_fitting_config(fitting_config),
+                log->clone("TrackFittingAlg"),
+                m_await_function},
       usingGBTS(useGBTS) {
   // Tell the user what device is being used.
   TRACCC_INFO("Using SYCL device: " << m_data->m_queue.device_name());
-
-  // Copy the detector (description) to the device.
-  m_copy.setup(m_device_det_descr)->wait();
-  m_copy(vecmem::get_data(m_det_descr.get()), m_device_det_descr)->wait();
-  m_copy(vecmem::get_data(m_det_cond.get()), m_device_det_cond)->wait();
-  if (m_detector != nullptr) {
-    m_device_detector =
-        traccc::buffer_from_host_detector(*m_detector, m_device_mr, m_copy);
-  }
-}
-
-full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
-    : messaging(parent.logger().clone()),
-      m_data(std::make_unique<details::full_chain_algorithm_data>()),
-      m_host_mr(parent.m_host_mr),
-      m_pinned_host_mr(m_data->m_queue),
-      m_cached_pinned_host_mr(m_pinned_host_mr),
-      m_device_mr{m_data->m_queue},
-      m_cached_device_mr{m_device_mr},
-      m_copy{m_data->m_queue},
-      m_field_vec{parent.m_field_vec},
-      m_field{parent.m_field},
-      m_det_descr(parent.m_det_descr),
-      m_det_cond(parent.m_det_cond),
-      m_device_det_descr(
-          [&]() {
-            // number of elements in the detector design description
-            std::vector<unsigned int> sizes(parent.m_det_descr.get().size());
-            for (std::size_t i = 0; i < parent.m_det_descr.get().size(); ++i) {
-              auto this_design = parent.m_det_descr.get().at(i);
-              // now for each element, set the size to the largest size of
-              // that element across all modules
-              sizes[i] = std::max(static_cast<unsigned int>(
-                                      ((this_design.bin_edges_x()).size())),
-                                  static_cast<unsigned int>(
-                                      ((this_design.bin_edges_y()).size())));
-            }
-            return sizes;
-          }(),
-          m_cached_device_mr, &m_cached_pinned_host_mr,
-          vecmem::data::buffer_type::resizable),
-      m_device_det_cond(
-          static_cast<detector_conditions_description::buffer::size_type>(
-              m_det_cond.get().size()),
-          m_cached_device_mr),
-      m_detector(parent.m_detector),
-      m_device_detector{},
-      m_clusterization{{m_cached_device_mr, &m_cached_pinned_host_mr},
-                       m_copy,
-                       m_data->m_queue_wrapper,
-                       parent.m_clustering_config,
-                       parent.logger().clone("ClusteringAlg")},
-      m_measurement_sorting({m_cached_device_mr, &m_cached_pinned_host_mr},
-                            m_copy, m_data->m_queue_wrapper,
-                            parent.logger().clone("MeasSortingAlg")),
-      m_spacepoint_formation{{m_cached_device_mr, &m_cached_pinned_host_mr},
-                             m_copy,
-                             m_data->m_queue_wrapper,
-                             parent.logger().clone("SpFormationAlg")},
-      m_seeding{parent.m_finder_config,
-                parent.m_grid_config,
-                parent.m_filter_config,
-                {m_cached_device_mr, &m_cached_pinned_host_mr},
-                m_copy,
-                m_data->m_queue_wrapper,
-                parent.logger().clone("SeedingAlg")},
-      m_gbts_seeding{parent.m_gbts_config,
-                     {m_cached_device_mr, &m_cached_pinned_host_mr},
-                     m_copy,
-                     m_data->m_queue_wrapper,
-                     parent.logger().clone("GbtsAlg")},
-      m_track_parameter_estimation{
-          parent.m_track_params_estimation_config,
-          {m_cached_device_mr, &m_cached_pinned_host_mr},
-          m_copy,
-          m_data->m_queue_wrapper,
-          parent.logger().clone("TrackParEstAlg")},
-      m_finding{parent.m_finding_config,
-                {m_cached_device_mr, &m_cached_pinned_host_mr},
-                m_copy,
-                m_data->m_queue_wrapper,
-                parent.logger().clone("FindingAlg")},
-      m_fitting{parent.m_fitting_config,
-                {m_cached_device_mr, &m_cached_pinned_host_mr},
-                m_copy,
-                m_data->m_queue_wrapper,
-                parent.logger().clone("FittingAlg")},
-      m_clustering_config(parent.m_clustering_config),
-      m_finder_config(parent.m_finder_config),
-      m_grid_config(parent.m_grid_config),
-      m_filter_config(parent.m_filter_config),
-      m_gbts_config(parent.m_gbts_config),
-      m_track_params_estimation_config(parent.m_track_params_estimation_config),
-      m_finding_config(parent.m_finding_config),
-      m_fitting_config(parent.m_fitting_config),
-      usingGBTS(parent.usingGBTS) {
-  // Copy the detector (description) to the device.
-  m_copy.setup(m_device_det_descr)->wait();
-  m_copy(vecmem::get_data(m_det_descr.get()), m_device_det_descr)->wait();
-  m_copy(vecmem::get_data(m_det_cond.get()), m_device_det_cond)->wait();
-  if (m_detector != nullptr) {
-    m_device_detector =
-        traccc::buffer_from_host_detector(*m_detector, m_device_mr, m_copy);
-  }
 }
 
 full_chain_algorithm::~full_chain_algorithm() = default;

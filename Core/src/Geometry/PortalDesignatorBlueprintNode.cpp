@@ -18,7 +18,7 @@
 
 #include "./PortalDesignator.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace detail {
 class PortalDesignatorBlueprintNodeImpl {
@@ -155,4 +155,4 @@ PortalDesignatorBlueprintNode::impl() const {
 
 PortalDesignatorBlueprintNode::~PortalDesignatorBlueprintNode() = default;
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

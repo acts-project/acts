@@ -238,7 +238,7 @@ solenoidFieldMap(const std::pair<double, double>& rLim,
         grid.atLocalBins(index) = Grid_t::value_type(0, 0);
       } else {
         // regular bin, get lower left boundary
-        Grid_t::point_t lowerLeft = grid.lowerLeftBinEdge(index);
+        Grid_t::point_t lowerLeft = grid.multiAxis().getLowerLeftBinEdge(index);
         // do lookup
         Vector2 B = field.getField(Vector2(lowerLeft[0], lowerLeft[1]));
         grid.atLocalBins(index) = B;
@@ -335,7 +335,8 @@ toroidFieldMapCyl(
             ip == nBinsP + 1 || iz == nBinsZ + 1) {
           grid.atLocalBins(index) = Grid_t::value_type(0.0, 0.0, 0.0);
         } else {
-          const Grid_t::point_t ll = grid.lowerLeftBinEdge(index);  // (r,phi,z)
+          const Grid_t::point_t ll =
+              grid.multiAxis().getLowerLeftBinEdge(index);  // (r,phi,z)
           const double r = ll[0];
           const double phi = ll[1];
           const double z = ll[2];
@@ -427,7 +428,8 @@ toroidFieldMapXYZ(
             iy == nBinsY + 1 || iz == nBinsZ + 1) {
           grid.atLocalBins(index) = Grid_t::value_type(0.0, 0.0, 0.0);
         } else {
-          const Grid_t::point_t ll = grid.lowerLeftBinEdge(index);
+          const Grid_t::point_t ll =
+              grid.multiAxis().getLowerLeftBinEdge(index);
           const double x = ll[0];
           const double y = ll[1];
           const double z = ll[2];

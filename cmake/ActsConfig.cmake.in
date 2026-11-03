@@ -11,6 +11,13 @@
 #   - Acts_COMMIT_HASH
 #   - Acts_COMMIT_HASH_SHORT
 
+# This file uses `if(... IN_LIST ...)`, which needs policy CMP0057 set to NEW.
+# find_package gives this file its own policy scope, inherited from the calling
+# project, so a client with an older cmake_minimum_required would otherwise fail
+# here. The upper bound keeps the policy version at the CMake that generated the
+# config, matching the Acts*Targets.cmake files included below.
+cmake_policy(VERSION 3.10...@CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@)
+
 @PACKAGE_INIT@
 
 set(Acts_COMPONENTS @_components@)
@@ -63,6 +70,7 @@ list(
 # `find_dependency` is a wrapper around `find_package` that automatically
 # handles QUIET and REQUIRED parameters.
 include(CMakeFindDependencyMacro)
+find_dependency(Threads)
 find_dependency(Boost @Boost_VERSION_STRING@ CONFIG EXACT)
 if(@ACTS_USE_SYSTEM_EIGEN3@)
     find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
@@ -114,6 +122,14 @@ endif()
 
 if(PluginCovfie IN_LIST Acts_COMPONENTS)
     find_dependency(covfie @covfie_VERSION@ CONFIG EXACT)
+endif()
+
+# PluginTraccc: traccc is not looked up here. Its package configuration
+# itself depends on Acts (and on Thrust), so the plugin links traccc privately
+# and users of the plugin have to find and link traccc themselves.
+if(PluginTraccc IN_LIST Acts_COMPONENTS)
+    find_dependency(vecmem @vecmem_VERSION@ CONFIG EXACT)
+    find_dependency(detray @detray_VERSION@ CONFIG EXACT)
 endif()
 
 # load **all** available components. we can not just include the requested

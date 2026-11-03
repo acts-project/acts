@@ -102,11 +102,11 @@ struct MeasurementsCreator {
     Acts::BoundVector parameters = Acts::BoundVector::Zero();
     parameters[Acts::eBoundLoc0] = loc[Acts::eBoundLoc0];
     parameters[Acts::eBoundLoc1] = loc[Acts::eBoundLoc1];
-    const auto& direction = stepper.position(state.stepping);
+    const Acts::Vector3 direction = stepper.direction(state.stepping);
     parameters[Acts::eBoundPhi] = Acts::VectorHelpers::phi(direction);
     parameters[Acts::eBoundTheta] = Acts::VectorHelpers::theta(direction);
-    parameters[Acts::eBoundQOverP] = state.stepping.pars[Acts::eFreeQOverP];
-    parameters[Acts::eBoundTime] = state.stepping.pars[Acts::eFreeTime];
+    parameters[Acts::eBoundQOverP] = stepper.qOverP(state.stepping);
+    parameters[Acts::eBoundTime] = stepper.time(state.stepping);
     result.truthParameters.push_back(std::move(parameters));
 
     std::normal_distribution<double> normalDist(0., 1.);

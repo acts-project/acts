@@ -11,6 +11,7 @@
 // Project include(s)
 #include "detray/definitions/containers.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
+#include "detray/utils/grid/axis.hpp"
 #include "detray/utils/grid/concepts.hpp"
 #include "detray/utils/grid/detail/axis_bounds.hpp"
 #include "detray/utils/ranges.hpp"

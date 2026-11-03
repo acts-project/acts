@@ -22,6 +22,7 @@
 
 // System include(s)
 #include <memory>
+#include <stdexcept>
 #include <string_view>
 #include <vector>
 

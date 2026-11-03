@@ -16,7 +16,7 @@
 
 #include <memory>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 void BlueprintOptions::validate() const {
   if (!defaultNavigationPolicyFactory) {
@@ -43,4 +43,4 @@ BlueprintOptions::makeDefaultNavigationPolicyFactory() {
       .asUniquePtr();
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

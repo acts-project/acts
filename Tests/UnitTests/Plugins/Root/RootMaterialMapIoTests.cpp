@@ -23,6 +23,8 @@
 #include <vector>
 
 #include "TFile.h"
+#include "TMemFile.h"
+#include "TTree.h"
 
 using namespace Acts;
 using namespace ActsPlugins;
@@ -83,6 +85,41 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(RootSuite)
 
+BOOST_AUTO_TEST_CASE(HomogeneousGeometryIdBranchTypes) {
+  // Native std::int64_t uses long on Linux and long long on macOS. ROOT encodes
+  // these as different branch types; both must preserve every ID bit.
+  const auto id =
+      GeometryIdentifier().withVolume(201).withSensitive(257).withExtra(3);
+  auto check = [&](auto value) {
+    using Value = decltype(value);
+    value = static_cast<Value>(id.value());
+    TMemFile file("geometry-id.root", "RECREATE");
+    TTree tree("HomogeneousMaterial", "material");
+    tree.Branch("hGeoId", &value);
+    float thickness = 0.25f;
+    float x0 = 93.7f;
+    float l0 = 465.2f;
+    float a = 28.0855f;
+    float z = 14.f;
+    float rho = 0.00233f;
+    tree.Branch("t", &thickness);
+    tree.Branch("x0", &x0);
+    tree.Branch("l0", &l0);
+    tree.Branch("A", &a);
+    tree.Branch("Z", &z);
+    tree.Branch("rho", &rho);
+    tree.Fill();
+    tree.Write();
+    tree.ResetBranchAddresses();
+    RootMaterialMapIo accessor(RootMaterialMapIo::Config{});
+    const auto maps = accessor.read(file, RootMaterialMapIo::Options{});
+    BOOST_REQUIRE_EQUAL(maps.surfaceMaterials.size(), 1);
+    BOOST_CHECK(maps.surfaceMaterials.contains(id));
+  };
+  check(Long_t{});
+  check(Long64_t{});
+}
+
 BOOST_AUTO_TEST_CASE(RootMaterialMapIoHomogeneousReadWrite) {
   auto surfaceMaterials = createHomogeneousSurfaceMaterial();
 
@@ -107,7 +144,9 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoHomogeneousReadWrite) {
   auto iFile = TFile::Open("RootMaterialMapIoHomogeneousTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
 
-  auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile, options);
+  auto mapsRead = accessor.read(*iFile, options);
+  const auto& surfaceMapsRead = mapsRead.surfaceMaterials;
+  const auto& volumeMapsRead = mapsRead.volumeMaterials;
   BOOST_REQUIRE_EQUAL(surfaceMapsRead.size(), surfaceMaterials.size());
   BOOST_REQUIRE_EQUAL(volumeMapsRead.size(), 0);
 
@@ -150,7 +189,9 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoBinnedReadWrite) {
   // Let's read it back
   auto iFile = TFile::Open("RootMaterialMapIoBinnedTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
-  auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile, options);
+  auto mapsRead = accessor.read(*iFile, options);
+  const auto& surfaceMapsRead = mapsRead.surfaceMaterials;
+  const auto& volumeMapsRead = mapsRead.volumeMaterials;
   BOOST_REQUIRE_EQUAL(surfaceMapsRead.size(), surfaceMaterials.size());
   BOOST_REQUIRE_EQUAL(volumeMapsRead.size(), 0);
 
@@ -217,8 +258,9 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoBinnedReadWrite) {
   // Let's read it back
   iFile = TFile::Open("RootMaterialMapIoBinnedIndexedTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
-  auto [surfaceMapsIndexedRead, volumeMapsIndexedRead] =
-      accessorIndexed.read(*iFile, optionsIndexed);
+  auto mapsIndexedRead = accessorIndexed.read(*iFile, optionsIndexed);
+  const auto& surfaceMapsIndexedRead = mapsIndexedRead.surfaceMaterials;
+  const auto& volumeMapsIndexedRead = mapsIndexedRead.volumeMaterials;
   BOOST_REQUIRE_EQUAL(surfaceMapsIndexedRead.size(), surfaceMaterials.size());
   BOOST_REQUIRE_EQUAL(volumeMapsIndexedRead.size(), 0);
 

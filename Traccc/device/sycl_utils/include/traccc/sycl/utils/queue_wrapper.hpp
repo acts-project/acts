@@ -1,11 +1,14 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include <functional>
 
 namespace traccc::sycl {
 
@@ -36,6 +39,11 @@ class queue_wrapper {
   void* queue();
   /// Access a typeless pointer to the managed @c sycl::queue object
   const void* queue() const;
+
+  /// Wait for all queued tasks and report asynchronous errors
+  void synchronize() const;
+
+  void enqueue_callback(std::function<void()> func) const;
 
  private:
   /// Bare pointer to the wrapped @c sycl::queue object

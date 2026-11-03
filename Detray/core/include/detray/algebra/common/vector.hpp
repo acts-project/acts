@@ -80,6 +80,9 @@ class DETRAY_ALIGN(
              ((concepts::simd_scalar<Scalars> ||
                std::convertible_to<Scalars, scalar_t>) &&
               ...))
+  // Element-wise construction, not a conversion: the requires-clause pins the
+  // argument count to N.
+  // NOLINTNEXTLINE(google-explicit-constructor)
   DETRAY_HOST_DEVICE constexpr vector(Scalars &&...scals)
       : m_data{std::forward<Scalars>(scals)...} {}
 
@@ -91,6 +94,7 @@ class DETRAY_ALIGN(
              ((concepts::value<Values> ||
                std::convertible_to<Values, scalar_t>) &&
               ...))
+  // NOLINTNEXTLINE(google-explicit-constructor)
   DETRAY_HOST_DEVICE constexpr vector(Values &&...vals) {
     static_assert(sizeof...(Values) <= N);
 
@@ -110,11 +114,16 @@ class DETRAY_ALIGN(
   /// @}
 
   /// Construct from existing array storage @param vals
+  ///
+  /// Implicit in both directions on purpose: together with the conversion
+  /// operators below this makes the wrapper a drop-in for the array it wraps.
   /// @{
   DETRAY_HOST_DEVICE
+  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr vector(array_type &&vals) : m_data{std::move(vals)} {}
 
   DETRAY_HOST_DEVICE
+  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr vector(const array_type &vals) : m_data{vals} {}
   /// @}
 
@@ -133,8 +142,10 @@ class DETRAY_ALIGN(
   /// Conversion operator from wrapper to underlying data array.
   /// @{
   DETRAY_HOST_DEVICE
+  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr operator array_type &() { return m_data; }
   DETRAY_HOST_DEVICE
+  // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr operator const array_type &() const { return m_data; }
   /// @}
 
@@ -222,7 +233,7 @@ class DETRAY_ALIGN(
   /// Sets the trailing uninitialized values to zero.
   template <std::size_t... Is>
   DETRAY_HOST_DEVICE constexpr void zero_fill(
-      std::index_sequence<Is...>) noexcept {
+      std::index_sequence<Is...> /*unused*/) noexcept {
     ((m_data[simd_size() - sizeof...(Is) + Is] = static_cast<scalar_t>(0)),
      ...);
   }

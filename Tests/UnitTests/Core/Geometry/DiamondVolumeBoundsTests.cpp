@@ -59,8 +59,7 @@ BOOST_AUTO_TEST_CASE(DiamondVolumeBoundsCreation) {
       "TestDiamondVolume");
 
   Acts::ObjVisualization3D helper;
-  trackingVolume->visualize(helper, gctx, {.visible = true}, {.visible = true},
-                            {.visible = true});
+  trackingVolume->visualize(helper, gctx);
   helper.write(trackingVolume->volumeName() + ".obj");
 }
 BOOST_AUTO_TEST_CASE(DiamondVolumeBoundsInside) {

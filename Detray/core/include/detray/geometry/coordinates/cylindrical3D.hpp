@@ -22,6 +22,7 @@ struct cylindrical3D {
   using scalar_type = dscalar<algebra_t>;
   using point2_type = dpoint2D<algebra_t>;
   using point3_type = dpoint3D<algebra_t>;
+  using vector2_type = dvector2D<algebra_t>;
   using vector3_type = dvector3D<algebra_t>;
   using transform3_type = dtransform3D<algebra_t>;
 
@@ -70,10 +71,8 @@ struct cylindrical3D {
   /// @param p
   DETRAY_HOST_DEVICE static inline vector3_type normal(
       const transform3_type &trf, const point3_type &p) {
-    const vector3_type local_normal{math::cos(p[1]), math::sin(p[1]), 0.f};
-
     // normal vector in global coordinate
-    return trf.vector_to_global(local_normal);
+    return trf.vector_to_global(vector2_type{math::cos(p[1]), math::sin(p[1])});
   }
 
 };  // struct cylindrical3D

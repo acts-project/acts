@@ -23,6 +23,7 @@ ActsPlugins::RootMeasurementIo::RootMeasurementIo(const Config& config)
 
 void ActsPlugins::RootMeasurementIo::connectForWrite(TTree& measurementTree) {
   measurementTree.Branch("event_nr", &m_measurementPayload.eventNr);
+  measurementTree.Branch("measurement_id", &m_measurementPayload.measurementID);
   measurementTree.Branch("volume_id", &m_measurementPayload.volumeID);
   measurementTree.Branch("layer_id", &m_measurementPayload.layerID);
   measurementTree.Branch("surface_id", &m_measurementPayload.surfaceID);
@@ -35,22 +36,6 @@ void ActsPlugins::RootMeasurementIo::connectForWrite(TTree& measurementTree) {
   for (auto ib : m_cfg.recoIndices) {
     measurementTree.Branch(("var_" + bNames[ib]).c_str(),
                            &m_measurementPayload.varBound[ib]);
-  }
-
-  measurementTree.Branch("rec_gx", &m_measurementPayload.recGx);
-  measurementTree.Branch("rec_gy", &m_measurementPayload.recGy);
-  measurementTree.Branch("rec_gz", &m_measurementPayload.recGz);
-
-  measurementTree.Branch("clus_size", &m_clusterPayload.nch);
-  measurementTree.Branch("channel_value", &m_clusterPayload.chValue);
-  // Both are allocated, but only relevant ones are set
-  for (auto ib : m_cfg.clusterIndices) {
-    if (static_cast<unsigned int>(ib) < 2) {
-      measurementTree.Branch(("channel_" + bNames[ib]).c_str(),
-                             &m_clusterPayload.chId[ib]);
-      measurementTree.Branch(("clus_size_" + bNames[ib]).c_str(),
-                             &m_clusterPayload.clusterSize[ib]);
-    }
   }
 
   for (unsigned int ib = 0; ib < eBoundSize; ++ib) {
@@ -77,8 +62,9 @@ void ActsPlugins::RootMeasurementIo::connectForWrite(TTree& measurementTree) {
 }
 
 void ActsPlugins::RootMeasurementIo::fillIdentification(
-    int evnt, const GeometryIdentifier& geoId) {
+    int evnt, std::uint64_t measurementId, const GeometryIdentifier& geoId) {
   m_measurementPayload.eventNr = evnt;
+  m_measurementPayload.measurementID = measurementId;
   m_measurementPayload.volumeID = static_cast<int>(geoId.volume());
   m_measurementPayload.layerID = static_cast<int>(geoId.layer());
   m_measurementPayload.surfaceID = static_cast<int>(geoId.sensitive());
@@ -125,30 +111,6 @@ void ActsPlugins::RootMeasurementIo::fillBoundMeasurement(
   }
 }
 
-void ActsPlugins::RootMeasurementIo::fillGlobalPosition(const Vector3& pos) {
-  m_measurementPayload.recGx = pos.x();
-  m_measurementPayload.recGy = pos.y();
-  m_measurementPayload.recGz = pos.z();
-}
-
-void ActsPlugins::RootMeasurementIo::fillCluster(
-    const std::vector<std::tuple<int, int, float>>& channels) {
-  m_clusterPayload.nch = static_cast<int>(channels.size());
-  if (m_clusterPayload.nch == 0) {
-    return;
-  }
-  for (auto [ch0, ch1, chv] : channels) {
-    m_clusterPayload.chId[0].push_back(ch0);
-    m_clusterPayload.chId[1].push_back(ch1);
-    m_clusterPayload.chValue.push_back(chv);
-  }
-  // Calculate cluster size in 0 and 1 direction
-  auto [min0, max0] = std::ranges::minmax_element(m_clusterPayload.chId[0]);
-  auto [min1, max1] = std::ranges::minmax_element(m_clusterPayload.chId[1]);
-  m_clusterPayload.clusterSize[0] = (*max0 - *min0 + 1);
-  m_clusterPayload.clusterSize[1] = (*max1 - *min1 + 1);
-}
-
 void ActsPlugins::RootMeasurementIo::clear() {
   for (unsigned int ib = 0; ib < eBoundSize; ++ib) {
     m_measurementPayload.trueBound[ib] =
@@ -158,19 +120,9 @@ void ActsPlugins::RootMeasurementIo::clear() {
     m_measurementPayload.residual[ib] = std::numeric_limits<float>::quiet_NaN();
     m_measurementPayload.pull[ib] = std::numeric_limits<float>::quiet_NaN();
   }
-  m_measurementPayload.recGx = std::numeric_limits<float>::quiet_NaN();
-  m_measurementPayload.recGy = std::numeric_limits<float>::quiet_NaN();
-  m_measurementPayload.recGz = std::numeric_limits<float>::quiet_NaN();
   m_measurementPayload.trueGx = std::numeric_limits<float>::quiet_NaN();
   m_measurementPayload.trueGy = std::numeric_limits<float>::quiet_NaN();
   m_measurementPayload.trueGz = std::numeric_limits<float>::quiet_NaN();
   m_measurementPayload.incidentPhi = std::numeric_limits<float>::quiet_NaN();
   m_measurementPayload.incidentTheta = std::numeric_limits<float>::quiet_NaN();
-
-  m_clusterPayload.nch = 0;
-  m_clusterPayload.clusterSize[0] = 0;
-  m_clusterPayload.clusterSize[1] = 0;
-  m_clusterPayload.chId[0].clear();
-  m_clusterPayload.chId[1].clear();
-  m_clusterPayload.chValue.clear();
 }

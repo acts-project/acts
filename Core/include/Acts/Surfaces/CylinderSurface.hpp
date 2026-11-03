@@ -51,11 +51,8 @@ class CylinderSurface : public RegularSurface {
   /// @param halfz The half length in z
   /// @param halfphi The half opening angle
   /// @param avphi The phi value from which the opening angle spans (both sides)
-  /// @param bevelMinZ (optional) The bevel on the negative z side
-  /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
   CylinderSurface(const Transform3& transform, double radius, double halfz,
-                  double halfphi = std::numbers::pi, double avphi = 0.,
-                  double bevelMinZ = 0., double bevelMaxZ = 0.);
+                  double halfphi = std::numbers::pi, double avphi = 0.);
 
   /// Constructor from Transform3 and CylinderBounds arguments
   ///
@@ -91,10 +88,17 @@ class CylinderSurface : public RegularSurface {
                   const Transform3& shift);
 
  public:
+  ~CylinderSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other is the source cylinder for the copy
   /// @return Reference to this CylinderSurface after assignment
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<CylinderSurface>(other)` instead.
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<CylinderSurface>(other) instead.")]]
   CylinderSurface& operator=(const CylinderSurface& other);
 
   /// The binning position method - is overloaded for r-type binning

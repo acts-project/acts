@@ -34,17 +34,6 @@ namespace Acts {
 /// opening angle @f$ 2\cdot\phi_{half}@f$
 /// around an average @f$ \phi @f$ angle @f$ \phi_{ave} @f$.
 ///
-/// CylinderBounds also supports beveled sides defined by an angle.
-/// Different angles can be defined on both sides of the cylinder.
-/// A positive angle is defined as "extruding" from the defined Zlength,
-/// while a negative angle is "intruding" on the Zlength.
-/// +    -            -   +
-/// ________________________
-/// \  |  /          \  |  /
-///  \ | /            \ | /
-///   \|/______________\|/
-///     2 * ZhalfLength
-///
 class CylinderBounds : public SurfaceBounds {
  public:
   /// @enum BoundValues
@@ -54,9 +43,7 @@ class CylinderBounds : public SurfaceBounds {
     eHalfLengthZ = 1,
     eHalfPhiSector = 2,
     eAveragePhi = 3,
-    eBevelMinZ = 4,
-    eBevelMaxZ = 5,
-    eSize = 6
+    eSize = 4
   };
 
   /// Constructor - full cylinder
@@ -65,13 +52,11 @@ class CylinderBounds : public SurfaceBounds {
   /// @param halfZ The half length in z
   /// @param halfPhi The half opening angle
   /// @param avgPhi (optional) The phi value from which the opening angle spans
-  /// @param bevelMinZ (optional) The bevel on the negative z side
-  /// @param bevelMaxZ (optional) The bevel on the positive z side
   CylinderBounds(double r, double halfZ, double halfPhi = std::numbers::pi,
-                 double avgPhi = 0., double bevelMinZ = 0.,
-                 double bevelMaxZ = 0.) noexcept(false)
-      : m_values({r, halfZ, halfPhi, avgPhi, bevelMinZ, bevelMaxZ}),
-        m_closed(std::abs(halfPhi - std::numbers::pi) < s_epsilon) {
+                 double avgPhi = 0.) noexcept(false)
+      : m_values({r, halfZ, halfPhi, avgPhi}),
+        m_closed(std::abs(halfPhi - std::numbers::pi) <
+                 s_fullAzimuthTolerance) {
     checkConsistency();
   }
 
@@ -81,7 +66,7 @@ class CylinderBounds : public SurfaceBounds {
       false)
       : m_values(values),
         m_closed(std::abs(values[eHalfPhiSector] - std::numbers::pi) <
-                 s_epsilon) {
+                 s_fullAzimuthTolerance) {
     checkConsistency();
   }
 

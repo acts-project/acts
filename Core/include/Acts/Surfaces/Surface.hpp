@@ -117,6 +117,19 @@ class Surface : public virtual GeometryObject,
   explicit Surface(const GeometryContext& gctx, const Surface& other,
                    const Transform3& shift) noexcept;
 
+  /// Assignment operator
+  /// @note copy construction invalidates the association
+  /// to detector element and layer
+  ///
+  /// @param other Source surface for the assignment
+  /// @return Reference to this surface after assignment
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<T>(other)` instead.
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<T>(other) instead.")]]
+  Surface& operator=(const Surface& other) noexcept = default;
+
  public:
   ~Surface() noexcept override;
 
@@ -151,14 +164,6 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return The shared pointer
   std::shared_ptr<const Surface> getSharedPtr() const;
-
-  /// Assignment operator
-  /// @note copy construction invalidates the association
-  /// to detector element and layer
-  ///
-  /// @param other Source surface for the assignment
-  /// @return Reference to this surface after assignment
-  Surface& operator=(const Surface& other) noexcept = default;
 
   /// Comparison (equality) operator
   /// The strategy for comparison is
@@ -208,6 +213,10 @@ class Surface : public virtual GeometryObject,
   /// Return method for SurfaceBounds
   /// @return SurfaceBounds by reference
   virtual const SurfaceBounds& bounds() const = 0;
+
+  /// Local axes of the surface
+  /// @return An array of local axes directions
+  virtual std::array<AxisDirection, 2> localAxes() const = 0;
 
   /// Return the associated surface placement if there is any
   /// @return Pointer to the surface placement, can be nullptr
@@ -564,10 +573,6 @@ class Surface : public virtual GeometryObject,
   /// @return Reference to the output stream for chaining
   virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
                                      std::ostream& sl) const;
-
-  /// Local axes of the surface
-  /// @return An array of local axes directions
-  virtual std::array<AxisDirection, 2> localAxes() const = 0;
 
   /// Transform surface local coordinates to material local coordinates
   /// @param surfaceLocal The local coordinates on the surface

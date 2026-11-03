@@ -1,12 +1,19 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/seeding/device/silicon_pixel_spacepoint_formation_algorithm.hpp"
+
+// VecMem include(s).
+#include <vecmem/containers/data/vector_buffer.hpp>
+
+// System include(s).
+#include <vector>
 
 namespace traccc::device {
 
@@ -24,9 +31,9 @@ auto silicon_pixel_spacepoint_formation_algorithm::operator()(
   edm::measurement_collection::const_view::size_type n_measurements = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(measurements, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_measurements = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_measurements = size.unsafe_get();
   } else {
     n_measurements = copy().get_size(measurements);
   }
@@ -36,13 +43,44 @@ auto silicon_pixel_spacepoint_formation_algorithm::operator()(
     return {};
   }
 
+  // Flag every measurement that a spacepoint is made out of, and turn those
+  // flags into a prefix sum. The prefix sum gives every measurement the index
+  // of its spacepoint, which makes the output independent of the thread order.
+  vecmem::data::vector_buffer<unsigned int> spacepoint_flags(n_measurements,
+                                                             mr().main);
+  copy().setup(vecmem::ignore_event, spacepoint_flags);
+  vecmem::data::vector_view<unsigned int> spacepoint_flags_view(
+      spacepoint_flags);
+  count_spacepoints_kernel(
+      {n_measurements, measurements, spacepoint_flags_view});
+  scan_spacepoint_flags(spacepoint_flags_view);
+
+  // The scan is inclusive, so its last element is the number of spacepoints.
+  // We need that number on the host to size the output buffer, so we have to
+  // wait for the scan here.
+  assert(mr().host != nullptr);
+  vecmem::vector<unsigned int> n_spacepoints_host(mr().host);
+  // TODO: Yield during this asynchronous copy.
+  copy()(vecmem::data::vector_view<const unsigned int>(
+             1u, spacepoint_flags_view.ptr() + n_measurements - 1u),
+         n_spacepoints_host)
+      ->wait();
+  const unsigned int n_spacepoints = n_spacepoints_host.at(0);
+
+  // If no measurement produces a spacepoint, return right away.
+  if (n_spacepoints == 0) {
+    return {};
+  }
+
   // Create the result buffer.
-  edm::spacepoint_collection::buffer spacepoints(
-      n_measurements, mr().main, vecmem::data::buffer_type::resizable);
-  copy().setup(spacepoints)->ignore();
+  edm::spacepoint_collection::buffer spacepoints(n_spacepoints, mr().main);
+  copy().setup(vecmem::ignore_event, spacepoints);
 
   // Launch the spacepoint formation kernel.
-  form_spacepoints_kernel({n_measurements, det, measurements, spacepoints});
+  const vecmem::data::vector_view<const unsigned int> spacepoint_index_view(
+      spacepoint_flags_view);
+  form_spacepoints_kernel(
+      {n_measurements, det, measurements, spacepoint_index_view, spacepoints});
 
   // Return the reconstructed spacepoints.
   return spacepoints;

@@ -14,7 +14,7 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// A navigation policy that uses grid based navigation for indexed surfaces
 /// Navigate through a multilayer structure by creating an artificial path on
@@ -33,16 +33,21 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   struct Config {
     /// The binning expansion for grid neighbor lookups
     std::vector<std::size_t> binExpansion = {0u, 0u};
+
+    /// The shifts of the center of the surfaces per layer in case of staggering
+    /// It is used to correct for the bin register
+    std::vector<double> layerOffsets;
   };
 
   /// Main constructor, which expects the grid and will fill it with the
   /// surfaces from the volume passed
   /// @note Expects that the grid is defined but not filled - it will be filled here with the surfaces assigned to the @p volume
+  /// @note This policy generates a path along the direction of the layers which is assumed to be the second axis on the grid
   /// @param gctx The geometrycontext object
   /// @param volume The tracking volume holding the surfaces that will be the indexed objects
   /// @param config The configuration of the Navigation Policy
   /// @param logger A logging instance
-  /// @param grid The grid that will be filled with the surfaces
+  /// @param grid The grid that will be filled with the surfaces. The first axis is along the layer and the second axis points from one layer to the next one
   explicit MultiLayerNavigationPolicy(const GeometryContext& gctx,
                                       const TrackingVolume& volume,
                                       const Logger& logger,
@@ -70,29 +75,44 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   /// Generate a path in the multilayer
   /// @param startPosition The starting position of the path (in local frame)
   /// @param direction The direction of the path (in local frame)
+  /// @param logger The logger
   /// @return A vector of positions along the path
   std::vector<Vector2> generatePath(const Vector3& startPosition,
-                                    const Vector3& direction) const;
+                                    const Vector3& direction,
+                                    const Logger& logger) const;
 
-  /// @brief Give const access to the indexed grid
+  /// Give const access to the indexed grid
   /// @return The indexed grid
   const IndexedUpdatorType& indexedGrid() const { return m_indexedGrid; }
 
-  /// @brief Access the configuration
+  /// Access the configuration
   /// @return The configuration
   const Config& config() const { return m_config; }
 
  private:
-  // The tracking volume
+  /// The tracking volume
   const TrackingVolume& m_volume;
 
-  // The grid that holds the indexed surfaces
+  /// The grid that holds the indexed surfaces
   IndexedUpdatorType m_indexedGrid;
 
-  // The navigation configuration
+  std::vector<double> m_shifts{};
+
+  /// The navigation configuration
   Config m_config;
 };
 
 static_assert(NavigationPolicyConcept<MultiLayerNavigationPolicy>);
 
-}  // namespace Acts::Experimental
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::MultiLayerNavigationPolicy instead.
+///             This alias is kept for backward compatibility and will be
+///             removed.
+using MultiLayerNavigationPolicy
+    [[deprecated("Acts::Experimental::MultiLayerNavigationPolicy moved to "
+                 "Acts::MultiLayerNavigationPolicy")]] =
+        Acts::MultiLayerNavigationPolicy;
+}  // namespace Experimental
+
+}  // namespace Acts

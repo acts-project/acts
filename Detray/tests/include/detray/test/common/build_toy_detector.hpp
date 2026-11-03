@@ -18,6 +18,7 @@
 #include "detray/builders/material_map_generator.hpp"
 #include "detray/builders/surface_factory.hpp"
 #include "detray/builders/volume_builder.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/indexing.hpp"
@@ -118,6 +119,10 @@ struct toy_det_config {
   scalar_t m_portal_envelope{2.f * unit<scalar_t>::mm};
   /// Configuration for the homogeneous material generator
   hom_material_config<scalar_t> m_material_config{};
+  /// Build spatial grid acceleration structures (otherwise brute force search)
+  bool m_use_grids{true};
+  /// Put homogeneneous material on the sensitive surfaces
+  bool m_use_homogeneous_material{true};
   /// Put material maps on portals or use homogeneous material on modules
   bool m_use_material_maps{false};
   /// Configuration for the material map generator (beampipe)
@@ -148,6 +153,9 @@ struct toy_det_config {
   barrel_generator_config<scalar_t> m_barrel_factory_cfg{};
   /// Config for the module generation (endcaps)
   endcap_generator_config<scalar_t> m_endcap_factory_cfg{};
+  /// Volume builder configuration
+  volume_builder_options m_builder_opts{.m_deduplicate = false,
+                                        .m_sort = false};
   /// Run detector consistency check after reading
   bool m_do_check{true};
 
@@ -163,6 +171,14 @@ struct toy_det_config {
   }
   constexpr toy_det_config &envelope(const scalar_t env) {
     m_portal_envelope = env;
+    return *this;
+  }
+  constexpr toy_det_config &use_grids(const bool b) {
+    m_use_grids = b;
+    return *this;
+  }
+  constexpr toy_det_config &use_homogeneous_material(const bool b) {
+    m_use_homogeneous_material = b;
     return *this;
   }
   constexpr toy_det_config &use_material_maps(const bool b) {
@@ -200,6 +216,7 @@ struct toy_det_config {
     m_disc_map_cfg.mapped_material = mat;
     return *this;
   }
+  volume_builder_options builder_options() { return m_builder_opts; }
   constexpr toy_det_config &do_check(const bool check) {
     m_do_check = check;
     return *this;
@@ -217,6 +234,10 @@ struct toy_det_config {
   }
   constexpr auto &material_config() { return m_material_config; }
   constexpr const auto &material_config() const { return m_material_config; }
+  constexpr bool use_grids() const { return m_use_grids; }
+  constexpr bool use_homogeneous_material() const {
+    return m_use_homogeneous_material;
+  }
   constexpr bool use_material_maps() const { return m_use_material_maps; }
   constexpr auto &beampipe_material_map() { return m_beampipe_map_cfg; }
   constexpr const auto &beampipe_material_map() const {
@@ -263,6 +284,9 @@ struct toy_det_config {
   constexpr endcap_generator_config<scalar_t> &endcap_config() {
     return m_endcap_factory_cfg;
   }
+  const volume_builder_options &builder_options() const {
+    return m_builder_opts;
+  }
   constexpr bool do_check() const { return m_do_check; }
   /// @}
 
@@ -291,12 +315,14 @@ struct toy_det_config {
           << cfg.disc_material_map().thickness / detray::unit<scalar_t>::mm
           << " [mm]\n"
           << "    -> Material         : " << cfg.mapped_material() << "\n";
-    } else {
+    } else if (cfg.use_homogeneous_material()) {
       out << "  Homogeneous material \n"
           << "    -> Thickness        : "
           << cfg.module_mat_thickness() / detray::unit<scalar_t>::mm
           << " [mm]\n"
           << "    -> Material         : " << silicon_tml<scalar_t>() << "\n";
+    } else {
+      out << "  No material\n";
     }
 
     return out;
@@ -319,7 +345,8 @@ struct extent2D {
 /// @param v_builder the builder of the volume that should be decorated
 ///
 /// @returns the decorated volume builder and surface factory
-template <typename detector_builder_t, typename detector_t, typename config_t>
+template <typename detector_builder_t, concepts::detector detector_t,
+          typename config_t>
 volume_builder_interface<detector_t> *decorate_material(
     config_t &cfg, detector_builder_t &det_builder,
     volume_builder_interface<detector_t> *v_builder) {
@@ -336,7 +363,7 @@ volume_builder_interface<detector_t> *decorate_material(
     vm_builder =
         det_builder.template decorate<material_map_builder<detector_t>>(
             v_builder);
-  } else {
+  } else if (cfg.use_homogeneous_material()) {
     // Build the volume with a homogeneous material description
     vm_builder =
         det_builder.template decorate<homogeneous_material_builder<detector_t>>(
@@ -350,7 +377,7 @@ volume_builder_interface<detector_t> *decorate_material(
   return vm_builder;
 }
 
-/// Helper method to decorate a surface factory with material
+/// Helper method to decorate a surface factory with material generators
 ///
 /// @param cfg config for the toy detector
 /// @param sf_factory surface factory that should be decorated with material
@@ -358,7 +385,7 @@ volume_builder_interface<detector_t> *decorate_material(
 ///                          of this factory (assumes no material maps are used)
 ///
 /// @returns the decorated volume builder and surface factory
-template <typename detector_t>
+template <concepts::detector detector_t>
 std::shared_ptr<surface_factory_interface<detector_t>> decorate_material(
     toy_det_config<typename detector_t::scalar_type> &cfg,
     std::unique_ptr<surface_factory_interface<detector_t>> sf_factory,
@@ -397,7 +424,7 @@ std::shared_ptr<surface_factory_interface<detector_t>> decorate_material(
 
     return mat_generator;
 
-  } else if (!cfg.use_material_maps() && is_module_factory) {
+  } else if (cfg.use_homogeneous_material() && is_module_factory) {
     // How to generate the specific material for every surface
     auto mat_generator =
         std::make_shared<homogeneous_material_generator<detector_t>>(
@@ -410,7 +437,7 @@ std::shared_ptr<surface_factory_interface<detector_t>> decorate_material(
   }
 }
 
-/// Add the cylinder and disc portals for a volume from explicit parameters
+/// Add the portals for a cylinder volume from explicit parameters
 ///
 /// @param v_builder the volume builder to add the portals to
 /// @param cfg config for the toy detector
@@ -423,7 +450,7 @@ std::shared_ptr<surface_factory_interface<detector_t>> decorate_material(
 /// @param link_east portal volume link of the left disc
 /// @param link_west portal volume link of the right disc
 /// @param add_material decorate material maps to portals
-template <typename detector_t>
+template <concepts::detector detector_t>
 void add_cylinder_portals(volume_builder_interface<detector_t> *v_builder,
                           toy_det_config<typename detector_t::scalar_type> &cfg,
                           const typename detector_t::scalar_type lower_z,
@@ -571,7 +598,7 @@ inline void add_disc_grid(
 /// @param[in] cfg config for the toy detector
 /// @param[in] sf_factory (material) factory to get the cylinder extent from
 /// @param[out] vol_bounds boundary struct
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline void get_volume_extent(
     toy_det_config<typename detector_t::scalar_type> &cfg,
     const std::shared_ptr<surface_factory_interface<detector_t>> &sf_factory,
@@ -729,8 +756,10 @@ inline auto add_barrel_detector(
 
       vm_builder->set_name("barrel_" + std::to_string(vol_idx));
 
-      // Add a cylinder grid to every barrel module layer
-      add_cylinder_grid(det_builder, cfg, vol_idx);
+      if (cfg.use_grids()) {
+        // Add a cylinder grid to every barrel module layer
+        add_cylinder_grid(det_builder, cfg, vol_idx);
+      }
     }
   }
 
@@ -923,8 +952,10 @@ inline auto add_endcap_detector(
 
       vm_builder->set_name("endcap_" + std::to_string(vol_idx));
 
-      // Add a disc grid to every endcap module layer
-      add_disc_grid(det_builder, cfg, vol_idx);
+      if (cfg.use_grids()) {
+        // Add a disc grid to every endcap module layer
+        add_disc_grid(det_builder, cfg, vol_idx);
+      }
     }
   }
   return volume_sizes;
@@ -1045,7 +1076,7 @@ inline void add_connector_portals(
 ///
 /// @param beampipe_builder volume builder for the beampipe volume
 /// @param cfg config for the toy detector
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline void add_beampipe_portals(
     volume_builder_interface<detector_t> *beampipe_builder,
     toy_det_config<typename detector_t::scalar_type> &cfg) {
@@ -1123,7 +1154,7 @@ inline void add_beampipe_portals(
 /// @param cfg config for the toy detector
 /// @param neg_edc_lay_sizes indices and z-extent of the endcap volumes of one
 ///                          detector side (positive or negative)
-template <typename detector_t, typename layer_size_cont_t>
+template <concepts::detector detector_t, typename layer_size_cont_t>
 inline void add_beampipe_portals(
     volume_builder_interface<detector_t> *beampipe_builder,
     toy_det_config<typename detector_t::scalar_type> &cfg,
@@ -1308,7 +1339,7 @@ inline auto build_toy_detector(vecmem::memory_resource &resource,
 
   // Build and return the detector and fill the name map
   typename detector_t::name_map name_map{};
-  auto det = det_builder.build(resource, name_map);
+  auto det = det_builder.build(resource, cfg.builder_options(), name_map);
 
   if (cfg.do_check()) {
     const bool verbose_check{false};

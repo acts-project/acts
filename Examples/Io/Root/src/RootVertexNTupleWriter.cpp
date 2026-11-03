@@ -648,13 +648,13 @@ void RootVertexNTupleWriter::writeTrackInfo(
 
     Acts::Intersection3D intersection =
         perigeeSurface
-            ->intersect(ctx.geoContext, params.position(ctx.geoContext),
+            ->intersect(ctx.recoGeoContext, params.position(ctx.recoGeoContext),
                         params.direction(), Acts::BoundaryTolerance::Infinite())
             .closest();
 
     // Setting the geometry/magnetic field context for the event
     using PropagatorOptions = Propagator::Options<>;
-    PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+    PropagatorOptions pOptions(ctx.recoGeoContext, ctx.magFieldContext);
     pOptions.direction =
         Acts::Direction::fromScalarZeroAsPositive(intersection.pathLength());
 

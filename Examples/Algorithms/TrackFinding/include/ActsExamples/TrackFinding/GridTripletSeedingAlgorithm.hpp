@@ -12,14 +12,15 @@
 #include "Acts/Seeding/CylindricalSpacePointGrid.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/TripletSeeder.hpp"
-#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -89,9 +90,9 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// numPhiNeighbors (in the configuration of the BinFinders) is configured
     /// to return 1 neighbor on either side of the current phi-bin (and you want
     /// to cover the full phi-range of minPT), leave this at 1.
-    int phiBinDeflectionCoverage = 1;
+    std::uint32_t phiBinDeflectionCoverage = 1;
     /// maximum number of phi bins
-    int maxPhiBins = 10000;
+    std::uint32_t maxPhiBins = 10000;
 
     /// vector containing the map of z bins in the top and bottom layers
     std::vector<std::pair<int, int>> zBinNeighborsTop;
@@ -183,11 +184,11 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// Maximum number (minus one) of accepted seeds per middle space-point
     /// In dense environments many seeds may be found per middle space-point
     /// Only seeds with the highest weight will be kept if this limit is reached
-    unsigned int maxSeedsPerSpM = 5;
+    std::uint32_t maxSeedsPerSpM = 5;
     /// Maximum limit to number of compatible space-point used in score
     /// calculation. We increase by c1 the weight calculation for each
     /// compatible space-point until we reach compatSeedLimit
-    std::size_t compatSeedLimit = 2;
+    std::uint32_t compatSeedLimit = 2;
 
     /// Increment in seed weight if the number of compatible seeds is larger
     /// than numSeedIncrement, this is used in case of high occupancy scenarios
@@ -223,11 +224,43 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// compatible SPs
     bool useDeltaRinsteadOfTopRadius = false;
 
+    // time
+
+    /// Enable the cut on the time compatibility of the two space points of a
+    /// doublet, in both the bottom and the top doublet finder. Requires the
+    /// input space points to carry time and time variance.
+    bool useTimeDoubletCut = false;
+    /// Maximum allowed difference of the times of the two space points of a
+    /// doublet, corrected for the time of flight between them, in units of
+    /// their combined time resolution. Only used when `useTimeDoubletCut` is
+    /// enabled.
+    float doubletTimeCutNSigma = 5;
+    /// Enable the cut on the time compatibility of the three space points of a
+    /// triplet. Requires the input space points to carry time and time
+    /// variance.
+    bool useTimeTripletCut = false;
+    /// Maximum allowed chi2 of the three times of a triplet, transported to the
+    /// middle space point, with respect to their weighted mean. Only used when
+    /// `useTimeTripletCut` is enabled.
+    float tripletTimeChi2Max = 15;
+
     // other
 
     /// Connect custom selections on the space points or to the doublet
     /// compatibility
     bool useExtraCuts = false;
+
+    /// Optional: reconstructed vertices used to constrain the seed z-origin.
+    /// When set, a doublet is rejected unless its z-origin falls inside at
+    /// least one per-vertex window [z - k*sigma_z - margin, z + k*sigma_z +
+    /// margin]. Empty string disables the constraint (default seeding
+    /// behaviour). Especially useful for A-A events, i.e. few vertices with
+    /// high mult.
+    std::string inputVertices;
+    /// Half-width of each per-vertex z-window, in units of sigma_z.
+    double vertexZNSigma = 3.0;
+    /// Extra absolute margin added to each per-vertex z-window [mm].
+    double vertexZMargin = 0.0;
   };
 
   /// Construct the seeding algorithm.
@@ -250,16 +283,15 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   Config m_cfg;
   Acts::CylindricalSpacePointGrid::Config m_gridConfig;
 
-  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
-  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
   Acts::BroadTripletSeedFilter::Config m_filterConfig;
   std::unique_ptr<const Acts::Logger> m_filterLogger;
-  std::optional<Acts::TripletSeeder> m_seedFinder;
+  Acts::TripletSeeder m_seedFinder;
 
   Acts::Delegate<bool(const ConstSpacePointProxy&)> m_spacePointSelector;
 
   ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
                                                          "InputSpacePoints"};
+  ReadDataHandle<VertexContainer> m_inputVertices{this, "InputVertices"};
   WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   /// Get the proper radius validity range given a middle space point candidate.

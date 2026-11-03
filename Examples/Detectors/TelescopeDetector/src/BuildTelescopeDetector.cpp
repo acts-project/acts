@@ -29,6 +29,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <algorithm>
@@ -44,7 +45,7 @@ ActsExamples::buildTelescopeDetector(
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
     double thickness, TelescopeSurfaceType surfaceType,
-    Acts::AxisDirection binValue) {
+    Acts::AxisDirection rotDirection) {
   using namespace Acts::UnitLiterals;
 
   // The rectangle bounds for plane surface
@@ -65,11 +66,11 @@ ActsExamples::buildTelescopeDetector(
   // This assumes the direction is AxisX, AxisY or AxisZ. No reset is necessary
   // in case of AxisZ
   Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Identity();
-  if (binValue == Acts::AxisDirection::AxisX) {
+  if (rotDirection == Acts::AxisDirection::AxisX) {
     rotation.col(0) = Acts::Vector3(0, 0, -1);
     rotation.col(1) = Acts::Vector3(0, 1, 0);
     rotation.col(2) = Acts::Vector3(1, 0, 0);
-  } else if (binValue == Acts::AxisDirection::AxisY) {
+  } else if (rotDirection == Acts::AxisDirection::AxisY) {
     rotation.col(0) = Acts::Vector3(1, 0, 0);
     rotation.col(1) = Acts::Vector3(0, 0, -1);
     rotation.col(2) = Acts::Vector3(0, 1, 0);
@@ -83,7 +84,7 @@ ActsExamples::buildTelescopeDetector(
     Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
     // The entire transformation (the coordinate system, whose center is defined
     // by trans, will be rotated as well)
-    Acts::Transform3 trafo(rotation * trans);
+    Acts::Transform3 trafo(Acts::makeTransform3(rotation) * trans);
 
     // rotate around local z axis by stereo angle
     auto stereo = stereoAngles[i];
@@ -129,7 +130,7 @@ ActsExamples::buildTelescopeDetector(
   // The volume transform
   Acts::Translation3 transVol(offsets[0], offsets[1],
                               (positions.front() + positions.back()) * 0.5);
-  Acts::Transform3 trafoVol(rotation * transVol);
+  Acts::Transform3 trafoVol(Acts::makeTransform3(rotation) * transVol);
 
   // The volume bounds is set to be a bit larger than either cubic with planes
   // or cylinder with discs
@@ -155,7 +156,7 @@ ActsExamples::buildTelescopeDetector(
   Acts::GeometryContext genGctx{gctx};
   std::unique_ptr<const Acts::LayerArray> layArr(layArrCreator.layerArray(
       genGctx, layVec, positions.front() - 2._mm, positions.back() + 2._mm,
-      Acts::BinningType::arbitrary, binValue));
+      Acts::BinningType::arbitrary, rotDirection));
 
   // Build the tracking volume
   auto trackVolume = std::make_shared<Acts::TrackingVolume>(

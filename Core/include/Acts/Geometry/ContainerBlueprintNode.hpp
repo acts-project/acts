@@ -22,7 +22,7 @@
 
 #include <map>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// @class ContainerBlueprintNode
 ///
@@ -78,8 +78,7 @@ class ContainerBlueprintNode : public BlueprintNode {
   /// @param gctx The geometry context (nominal usually)
   /// @param logger The logger to use
   /// @return The combined VolumeStack
-  Volume& build(const Experimental::BlueprintOptions& options,
-                const GeometryContext& gctx,
+  Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
   /// This participates in the construction of the geometry via the blueprint
@@ -94,9 +93,8 @@ class ContainerBlueprintNode : public BlueprintNode {
   /// @param gctx The geometry context (nominal usually)
   /// @param parent The parent volume
   /// @param logger The logger to use
-  void finalize(const Experimental::BlueprintOptions& options,
-                const GeometryContext& gctx, TrackingVolume& parent,
-                const Logger& logger) override;
+  void finalize(const BlueprintOptions& options, const GeometryContext& gctx,
+                TrackingVolume& parent, const Logger& logger) override;
 
   /// Setter for the stacking direction
   /// @param direction The stacking direction
@@ -186,10 +184,11 @@ class ContainerBlueprintNode : public BlueprintNode {
   /// @param logger The logger to use
   /// @return A vector of shells in the same order as m_childVolumes
   template <typename BaseShell, typename SingleShell>
-  std::vector<BaseShell*> collectChildShells(
-      const Experimental::BlueprintOptions& options,
-      const GeometryContext& gctx, VolumeStack& stack,
-      const std::string& prefix, const Logger& logger);
+  std::vector<BaseShell*> collectChildShells(const BlueprintOptions& options,
+                                             const GeometryContext& gctx,
+                                             VolumeStack& stack,
+                                             const std::string& prefix,
+                                             const Logger& logger);
 
   /// Implementation of the connect method for container nodes
   ///
@@ -210,7 +209,7 @@ class ContainerBlueprintNode : public BlueprintNode {
   /// @param logger The logger to use
   /// @return The merged stack shell
   template <typename BaseShell, typename SingleShell, typename ShellStack>
-  PortalShellBase& connectImpl(const Experimental::BlueprintOptions& options,
+  PortalShellBase& connectImpl(const BlueprintOptions& options,
                                const GeometryContext& gctx, VolumeStack* stack,
                                const std::string& prefix, const Logger& logger);
 
@@ -264,8 +263,7 @@ class CylinderContainerBlueprintNode final : public ContainerBlueprintNode {
   /// @param logger The logger to use
   /// @return The combined StackPortalShell (cuboid or cylinder)
   PortalShellBase& connect(
-      const Experimental::BlueprintOptions& options,
-      const GeometryContext& gctx,
+      const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
   std::unique_ptr<VolumeStack> makeStack(const GeometryContext& gctx,
@@ -299,8 +297,7 @@ class CuboidContainerBlueprintNode final : public ContainerBlueprintNode {
   /// @param logger The logger to use
   /// @return The combined StackPortalShell (cuboid or cylinder)
   PortalShellBase& connect(
-      const Experimental::BlueprintOptions& options,
-      const GeometryContext& gctx,
+      const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
   std::unique_ptr<VolumeStack> makeStack(const GeometryContext& gctx,
@@ -313,4 +310,26 @@ class CuboidContainerBlueprintNode final : public ContainerBlueprintNode {
   const std::string& typeName() const override;
 };
 
-}  // namespace Acts::Experimental
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use the un-namespaced `Acts::` types instead. These
+///             aliases are kept for backward compatibility and will be removed.
+using ContainerBlueprintNode
+    [[deprecated("Acts::Experimental::ContainerBlueprintNode moved to "
+                 "Acts::ContainerBlueprintNode")]] =
+        Acts::ContainerBlueprintNode;
+/// @deprecated Acts::Experimental::CylinderContainerBlueprintNode moved to
+///             Acts::CylinderContainerBlueprintNode.
+using CylinderContainerBlueprintNode
+    [[deprecated("Acts::Experimental::CylinderContainerBlueprintNode moved to "
+                 "Acts::CylinderContainerBlueprintNode")]] =
+        Acts::CylinderContainerBlueprintNode;
+/// @deprecated Acts::Experimental::CuboidContainerBlueprintNode moved to
+///             Acts::CuboidContainerBlueprintNode.
+using CuboidContainerBlueprintNode
+    [[deprecated("Acts::Experimental::CuboidContainerBlueprintNode moved to "
+                 "Acts::CuboidContainerBlueprintNode")]] =
+        Acts::CuboidContainerBlueprintNode;
+}  // namespace Experimental
+
+}  // namespace Acts

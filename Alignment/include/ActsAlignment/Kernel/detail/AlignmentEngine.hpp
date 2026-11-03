@@ -14,9 +14,15 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 
 #include <unordered_map>
+#include <vector>
+
+namespace ActsAlignment {
+struct AlignmentResult;
+}  // namespace ActsAlignment
 
 namespace ActsAlignment::detail {
 
@@ -81,35 +87,30 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
 /// Updates in-place the chi2 and the matrix/vector forming the final
 /// equation.
 /// @param [in,out] alignState: TrackAlignmentState to modify (in-place).
-inline void finaliseTrackAlignState(TrackAlignmentState& alignState) {
-  // Calculate the chi2 and chi2 derivatives based on the alignment matrixs
-  alignState.chi2 = alignState.residual.transpose() *
-                    alignState.measurementCovariance.inverse() *
-                    alignState.residual;
-  alignState.alignmentToChi2Derivative =
-      Acts::DynamicVector::Zero(alignState.alignmentDof);
-  alignState.alignmentToChi2SecondDerivative = Acts::DynamicMatrix::Zero(
-      alignState.alignmentDof, alignState.alignmentDof);
-  // The covariance of residual
-  alignState.residualCovariance = Acts::DynamicMatrix::Zero(
-      alignState.measurementDim, alignState.measurementDim);
-  alignState.residualCovariance = alignState.measurementCovariance -
-                                  alignState.projectionMatrix *
-                                      alignState.trackParametersCovariance *
-                                      alignState.projectionMatrix.transpose();
+///
+/// @note This operates purely on the (dynamically sized) matrices already
+/// stored in @p alignState and does not depend on the track/trajectory type.
+/// It is deliberately defined out-of-line (in AlignmentEngine.cpp) so its
+/// Eigen expression templates are instantiated once in the Acts alignment
+/// library instead of in every translation unit that instantiates
+/// @c trackAlignmentState.
+void finaliseTrackAlignState(TrackAlignmentState& alignState);
 
-  alignState.alignmentToChi2Derivative =
-      2 * alignState.alignmentToResidualDerivative.transpose() *
-      alignState.measurementCovariance.inverse() *
-      alignState.residualCovariance *
-      alignState.measurementCovariance.inverse() * alignState.residual;
-  alignState.alignmentToChi2SecondDerivative =
-      2 * alignState.alignmentToResidualDerivative.transpose() *
-      alignState.measurementCovariance.inverse() *
-      alignState.residualCovariance *
-      alignState.measurementCovariance.inverse() *
-      alignState.alignmentToResidualDerivative;
-}
+/// @brief Assemble the summed chi2 derivatives from the per-track alignment
+/// states and solve for the alignment parameter delta.
+///
+/// @param trackAlignmentStates the per-track alignment states
+/// @param [in,out] alignResult the alignment result to fill
+/// @param logger the logger to use
+///
+/// @note This operates purely on the (dynamically sized) matrices in the
+/// inputs and does not depend on the fitter/track type. It is defined
+/// out-of-line (in AlignmentEngine.cpp) so its Eigen algebra (matrix inverse,
+/// full-pivot LU solve) is instantiated once in the Acts alignment library
+/// rather than for every @c Alignment<fitter_t> specialization.
+void solveAlignmentParameters(
+    const std::vector<TrackAlignmentState>& trackAlignmentStates,
+    AlignmentResult& alignResult, const Acts::Logger& logger);
 
 ///
 /// Calculate the first and second derivative of chi2 w.r.t. alignment

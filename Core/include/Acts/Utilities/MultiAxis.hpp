@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IMultiAxis.hpp"
 
@@ -42,6 +43,8 @@ class MultiAxis : public IMultiAxisXD<sizeof...(Axes)> {
   using LocalBins = typename Base::LocalBins;
   /// Statically sized point holding one coordinate per axis
   using Point = typename Base::Point;
+  /// Point holding one coordinate per axis as an Eigen (algebra) vector
+  using VectorPoint = Vector<DIM>;
 
   /// Tuple type holding the concrete axes
   using AxesTuple = std::tuple<Axes...>;
@@ -95,6 +98,15 @@ class MultiAxis : public IMultiAxisXD<sizeof...(Axes)> {
     return detail::MultiAxisHelper::isInside(point, m_axes);
   }
 
+  /// Check whether a point lies inside the grid limits
+  /// @tparam Derived Eigen expression type of the point (e.g. @c VectorPoint)
+  /// @param point coordinates to check, one per axis
+  /// @return @c true if the point is within range along every axis
+  template <typename Derived>
+  bool isInside(const Eigen::MatrixBase<Derived>& point) const {
+    return detail::MultiAxisHelper::isInside(point.derived(), m_axes);
+  }
+
   /// @copydoc IMultiAxisXD::getLowerLeftBinEdge(const LocalBins&) const
   Point getLowerLeftBinEdge(const LocalBins& localBins) const final {
     return detail::MultiAxisHelper::getLowerLeftBinEdge(localBins, m_axes);
@@ -120,6 +132,32 @@ class MultiAxis : public IMultiAxisXD<sizeof...(Axes)> {
     return getGlobalBinFromLocalBins(getLocalBinsFromPoint(point));
   }
 
+  /// Determine the flattened global bin index for a given point
+  /// @tparam Derived Eigen expression type of the point (e.g. @c VectorPoint)
+  /// @param point coordinates to look up, one per axis
+  /// @return global bin index of the bin containing the point
+  template <typename Derived>
+  GlobalBin getGlobalBinFromPoint(
+      const Eigen::MatrixBase<Derived>& point) const {
+    return getGlobalBinFromLocalBins(getLocalBinsFromPoint(point));
+  }
+
+  /// Determine the flattened global bin index of the bin with the lower left
+  /// edge closest to the given point for each axis
+  /// @param point coordinates to look up, one per axis
+  /// @return global bin index of the bin
+  GlobalBin getGlobalBinFromLowerLeftEdge(const Point& point) const {
+    return getGlobalBinFromLocalBins(getLocalBinsFromLowerLeftEdge(point));
+  }
+
+  /// @copydoc getGlobalBinFromLowerLeftEdge(const Point&) const
+  /// @tparam Derived Eigen expression type of the point (e.g. @c VectorPoint)
+  template <typename Derived>
+  GlobalBin getGlobalBinFromLowerLeftEdge(
+      const Eigen::MatrixBase<Derived>& point) const {
+    return getGlobalBinFromLocalBins(getLocalBinsFromLowerLeftEdge(point));
+  }
+
   /// @copydoc IMultiAxisXD::getGlobalBinFromLocalBins(const LocalBins&) const
   GlobalBin getGlobalBinFromLocalBins(const LocalBins& localBins) const final {
     return detail::MultiAxisHelper::getGlobalBinFromLocalBins(localBins,
@@ -131,14 +169,34 @@ class MultiAxis : public IMultiAxisXD<sizeof...(Axes)> {
     return detail::MultiAxisHelper::getLocalBinsFromPoint(point, m_axes);
   }
 
+  /// Determine the multi-index of local bin indices for a given point
+  /// @tparam Derived Eigen expression type of the point (e.g. @c VectorPoint)
+  /// @param point coordinates to look up, one per axis
+  /// @return local bin indices along each axis (may be under-/overflow bins)
+  template <typename Derived>
+  LocalBins getLocalBinsFromPoint(
+      const Eigen::MatrixBase<Derived>& point) const {
+    return detail::MultiAxisHelper::getLocalBinsFromPoint(point.derived(),
+                                                          m_axes);
+  }
+
   /// Determine the multi-index of local bin indices for a given point, where
   /// the point is interpreted as being shifted by half a bin width along each
   /// axis.
   /// @param point coordinates to look up, one per axis
   /// @return local bin indices along each axis (may be under-/overflow bins)
   LocalBins getLocalBinsFromLowerLeftEdge(const Point& point) const {
+    return detail::MultiAxisHelper::getLocalBinsFromLowerLeftEdge(point,
+                                                                  m_axes);
+  }
+
+  /// @copydoc getLocalBinsFromLowerLeftEdge(const Point&) const
+  /// @tparam Derived Eigen expression type of the point (e.g. @c VectorPoint)
+  template <typename Derived>
+  LocalBins getLocalBinsFromLowerLeftEdge(
+      const Eigen::MatrixBase<Derived>& point) const {
     return detail::MultiAxisHelper::getLocalBinsFromLowerLeftEdge(
-        point, m_axes.getAxesTuple());
+        point.derived(), m_axes);
   }
 
   /// @copydoc IMultiAxisXD::getLocalBinsFromGlobalBin(GlobalBin) const
@@ -178,6 +236,16 @@ class MultiAxis : public IMultiAxisXD<sizeof...(Axes)> {
   /// @copydoc IMultiAxisXD::getClosestPointsIndices(const Point&) const
   detail::FlatNeighborHoodIndices<DIM> getClosestPointsIndices(
       const Point& point) const override {
+    return getNeighborHoodIndices(getLocalBinsFromPoint(point), {0, 1});
+  }
+
+  /// Get the global bin indices of the grid points closest to the given point
+  /// @tparam Derived Eigen expression type of the point (e.g. @c VectorPoint)
+  /// @param point coordinates to look up, one per axis
+  /// @return sorted collection of global bin indices of the closest grid points
+  template <typename Derived>
+  detail::FlatNeighborHoodIndices<DIM> getClosestPointsIndices(
+      const Eigen::MatrixBase<Derived>& point) const {
     return getNeighborHoodIndices(getLocalBinsFromPoint(point), {0, 1});
   }
 

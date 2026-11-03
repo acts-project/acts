@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2023-2024 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # CMake include(s).
 cmake_minimum_required(VERSION 3.25)
@@ -11,9 +13,12 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Fetching covfie as part of the traccc project")
 
+# Disregard the global C++ flags, to avoid any unhelpful warnings.
+set(CMAKE_CXX_FLAGS)
+
 # Declare where to get covfie from.
 set(TRACCC_COVFIE_SOURCE
-    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v0.15.4.tar.gz;URL_MD5;80de9b43644c59d8239fb8cc184c6276"
+    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v0.16.0.tar.gz;URL_MD5;6f645c2e5cc7e0587d801aff0c6fc75b"
     CACHE STRING
     "Source for covfie, when built as part of this project"
 )

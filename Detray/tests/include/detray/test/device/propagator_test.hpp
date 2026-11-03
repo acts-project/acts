@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/units.hpp"
 #include "detray/navigation/caching_navigator.hpp"
@@ -51,12 +52,12 @@ using free_matrix_t = free_matrix<test_algebra>;
 constexpr std::size_t cache_size{navigation::default_cache_size};
 
 // Navigator
-template <typename detector_t, typename inspector_t>
+template <concepts::detector detector_t, typename inspector_t>
 using navigator_w_insp_t =
     caching_navigator<detector_t, cache_size, inspector_t>;
-template <typename detector_t>
+template <concepts::detector detector_t>
 using navigator_t = navigator_w_insp_t<detector_t, navigation::void_inspector>;
-template <typename detector_t>
+template <concepts::detector detector_t>
 using intersection_t = typename navigator_t<detector_t>::intersection_type;
 
 // Stepper
@@ -117,7 +118,7 @@ inline auto run_propagation_host(vecmem::memory_resource *mr,
                                  const propagation::config &cfg,
                                  const covfie::field<bfield_bknd_t> &field,
                                  const vecmem::vector<test_track> &tracks)
-    -> vecmem::jagged_vector<detail::step_data<test_algebra>> {
+    -> vecmem::jagged_vector<step_record<test_algebra>> {
   // Construct propagator from stepper and navigator
   using host_stepper_t =
       rk_stepper_t<typename covfie::field<bfield_bknd_t>::view_t>;
@@ -129,14 +130,14 @@ inline auto run_propagation_host(vecmem::memory_resource *mr,
   propagator_host_t p{cfg};
 
   // Create vector for track recording
-  vecmem::jagged_vector<detail::step_data<test_algebra>> host_steps(mr);
+  vecmem::jagged_vector<step_record<test_algebra>> host_steps(mr);
 
   for (const auto &trk : tracks) {
     // Create the propagator state
     step_tracer_host_t::state tracer_state{*mr};
     typename pathlimit_aborter_t::state pathlimit_state{
         cfg.stepping.path_limit};
-    actor::parameter_updater_state<test_algebra> updater_state{cfg};
+    actor::parameter_updater_state<test_algebra> updater_state{cfg, trk};
     actor::pointwise_material_interactor<test_algebra>::state
         interactor_state{};
 
@@ -167,35 +168,35 @@ inline auto run_propagation_host(vecmem::memory_resource *mr,
 
 /// Compare the results between host and device propagation
 inline void compare_propagation_results(
-    const vecmem::jagged_vector<detail::step_data<test_algebra>> &host_steps,
-    const vecmem::jagged_vector<detail::step_data<test_algebra>>
-        &device_steps) {
+    const vecmem::jagged_vector<step_record<test_algebra>> &host_steps,
+    const vecmem::jagged_vector<step_record<test_algebra>> &device_steps) {
   // Make sure the same number of tracks were tested on both backends
   ASSERT_EQ(host_steps.size(), device_steps.size());
 
   // Compare the positions and pathlengths
   for (unsigned int i = 0u; i < host_steps.size(); i++) {
-    EXPECT_TRUE(host_steps[i].size() > 0u)
+    EXPECT_TRUE(host_steps.at(i).size() > 0u)
         << "No surfaces forund on track " << i;
 
     // Recorded as many positions as path lengths
-    EXPECT_EQ(host_steps[i].size(), device_steps[i].size());
+    EXPECT_EQ(host_steps.at(i).size(), device_steps.at(i).size());
 
     for (unsigned int j = 0u;
-         j < math::min(host_steps[i].size(), device_steps[i].size()); j++) {
+         j < math::min(host_steps.at(i).size(), device_steps.at(i).size());
+         j++) {
       // Compare recorded path lengths along track
-      const auto &host_step = host_steps[i][j];
-      const auto &device_step = device_steps[i][j];
+      const auto &host_step = host_steps.at(i).at(j);
+      const auto &device_step = device_steps.at(i).at(j);
 
-      EXPECT_NEAR(host_step.path_length, device_step.path_length,
-                  host_step.path_length * is_close)
+      EXPECT_NEAR(host_step.path_length(), device_step.path_length(),
+                  host_step.path_length() * is_close)
           << "ERROR: Path length at track " << i << " step " << j << std::endl;
 
       // Compare recorded positions along track
-      const point3 &host_pos = host_step.track_params.pos();
-      const point3 &device_pos = device_step.track_params.pos();
+      const point3 &host_pos = host_step.free_param().pos();
+      const point3 &device_pos = device_step.free_param().pos();
 
-      auto relative_error = static_cast<point3>(1.f / host_step.path_length *
+      auto relative_error = static_cast<point3>(1.f / host_step.path_length() *
                                                 (host_pos - device_pos));
 
       EXPECT_NEAR(vector::norm(relative_error), 0.f, is_close)
@@ -205,8 +206,8 @@ inline void compare_propagation_results(
           << device_pos[2] << "] (device)" << std::endl;
 
       // Compare the Jacobians
-      const free_matrix_t &host_J = host_step.jacobian;
-      const free_matrix_t &device_J = device_step.jacobian;
+      const free_matrix_t &host_J = host_step.jacobian();
+      const free_matrix_t &device_J = device_step.jacobian();
 
       for (std::size_t row = 0u; row < e_free_size; row++) {
         for (std::size_t col = 0u; col < e_free_size; col++) {
@@ -214,7 +215,7 @@ inline void compare_propagation_results(
 
           scalar device_val = getter::element(device_J, row, col);
 
-          ASSERT_NEAR((host_val - device_val) / host_step.path_length, 0.f,
+          ASSERT_NEAR((host_val - device_val) / host_step.path_length(), 0.f,
                       is_close)
               << "ERROR: matrix element mismatch at row " << row << ", col "
               << col << std::endl;

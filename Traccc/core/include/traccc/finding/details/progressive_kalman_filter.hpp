@@ -1,9 +1,11 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 // Project include(s).
@@ -15,7 +17,6 @@
 #include "traccc/finding/finding_config.hpp"
 #include "traccc/finding/measurement_selector.hpp"
 #include "traccc/finding/track_state_candidate.hpp"
-#include "traccc/sanity/contiguous_on.hpp"
 #include "traccc/utils/logging.hpp"
 #include "traccc/utils/particle.hpp"
 #include "traccc/utils/prob.hpp"
@@ -48,7 +49,7 @@ namespace traccc::details {
 ///
 /// @return A struct that contains information about the found track
 ///
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 TRACCC_HOST_DEVICE inline track_stats<typename detector_t::scalar_type>
 progressive_kalman_filter(
     const detector_t& det, const bfield_t& field,
@@ -71,9 +72,7 @@ progressive_kalman_filter(
       measurements_view};
 
   // Create detray propagator
-  auto prop_cfg{cfg.propagation};
-  prop_cfg.navigation.estimate_scattering_noise = false;
-  propagator_t propagator(prop_cfg);
+  propagator_t propagator(cfg.propagation);
 
   TRACCC_INFO_HOST("Seed: " << seed_idx);
   // Add the information also to the clog stream
@@ -107,7 +106,7 @@ progressive_kalman_filter(
       momentum_aborter_state{};
   // Track parameter transporter
   typename detray::actor::parameter_updater_state<algebra_t> updater_state{
-      prop_cfg, seed};
+      cfg.propagation, seed};
   // Material interactor
   typename detray::actor::pointwise_material_interactor<algebra_t>::state
       interactor_state;

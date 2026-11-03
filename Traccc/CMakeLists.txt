@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2021-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Set up the project.
 cmake_minimum_required(VERSION 3.25)
@@ -70,6 +72,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(traccc-functions)
 
+# Honour ACTS_FORCE_ASSERTIONS in standalone builds inside the ACTS tree. When
+# traccc is built via add_subdirectory from ACTS this is a no-op.
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsForceAssertions.cmake)
+
 # Temporary setting for the traccc::scalar type, until it can be removed.
 set(TRACCC_CUSTOM_SCALARTYPE
     "float"
@@ -91,7 +97,12 @@ option(
     "Build the traccc::cuda_utils library"
     ${TRACCC_BUILD_CUDA}
 )
-option(TRACCC_BUILD_HIP "Build the HIP sources included in traccc" FALSE)
+option(TRACCC_BUILD_HIP "Build the traccc::hip library" FALSE)
+option(
+    TRACCC_BUILD_HIP_UTILS
+    "Build the traccc::hip_utils library"
+    ${TRACCC_BUILD_HIP}
+)
 option(TRACCC_BUILD_SYCL "Build the traccc::sycl library" FALSE)
 option(
     TRACCC_BUILD_SYCL_UTILS
@@ -136,9 +147,13 @@ if(${TRACCC_BUILD_HIP} AND ${CMAKE_HIP_STANDARD} LESS 20)
     )
 endif()
 
-# In order to generate specializations for our kernels, we need to have both
-# a working Python interpreter, and a list of supported detectors.
-find_package(Python COMPONENTS Interpreter REQUIRED)
+# If we are building with CUDA, we need to find the toolkit early because it
+# contains CCCL and Thrust.
+if(TRACCC_BUILD_CUDA)
+    enable_language(CUDA)
+    find_package(CUDAToolkit REQUIRED)
+endif()
+
 # The detector types supported by this build of traccc.
 set(TRACCC_SUPPORTED_DETECTORS
     "default_detector;odd_detector;telescope_detector"
@@ -237,7 +252,7 @@ endif()
 
 # Set up CCCL.
 option(TRACCC_SETUP_THRUST "Set up the Thrust target(s) explicitly" TRUE)
-if(TRACCC_USE_SYSTEM_LIBS OR TRACCC_USE_SPACK_LIBS)
+if(TRACCC_USE_SYSTEM_LIBS OR TRACCC_USE_SPACK_LIBS OR CUDAToolkit_FOUND)
     set(TRACCC_USE_SYSTEM_THRUST_DEFAULT ON)
 else()
     set(TRACCC_USE_SYSTEM_THRUST_DEFAULT OFF)
@@ -250,8 +265,27 @@ option(
 unset(TRACCC_USE_SYSTEM_THRUST_DEFAULT)
 if(TRACCC_SETUP_THRUST)
     if(TRACCC_USE_SYSTEM_THRUST)
-        find_package(Thrust REQUIRED)
+        if(CUDAToolkit_FOUND)
+            find_package(
+                Thrust
+                REQUIRED
+                HINTS "${CUDAToolkit_LIBRARY_DIR}/cmake"
+            )
+        else()
+            find_package(Thrust REQUIRED)
+        endif()
     else()
+        if(CUDAToolkit_FOUND)
+            set(TRACCC_CCCL_DIAGNOSTIC WARNING)
+            if("$ENV{CI}")
+                set(TRACCC_CCCL_DIAGNOSTIC FATAL_ERROR)
+            endif()
+            message(
+                ${TRACCC_CCCL_DIAGNOSTIC}
+                "CUDA toolkit is available, but a bundled CCCL is to be used. This may lead to cross-version include path pollution and errors."
+            )
+            unset(TRACCC_CCCL_DIAGNOSTIC)
+        endif()
         add_subdirectory(extern/cccl)
     endif()
 endif()
@@ -320,7 +354,9 @@ if(TRACCC_SETUP_DPL)
     # compile flags that OneDPL sets.
     set_target_properties(
         oneDPL
-        PROPERTIES INTERFACE_COMPILE_OPTIONS "" INTERFACE_LINK_LIBRARIES ""
+        PROPERTIES
+            INTERFACE_COMPILE_OPTIONS ""
+            INTERFACE_LINK_LIBRARIES TBB::tbb
     )
 endif()
 
@@ -350,6 +386,19 @@ if(TRACCC_SETUP_ALPAKA)
         add_subdirectory(extern/alpaka)
     endif()
 endif()
+# Alpaka drops members under NDEBUG that its (now forced) asserts still use.
+if(ACTS_FORCE_ASSERTIONS AND TARGET alpaka::alpaka)
+    get_target_property(_alpaka_target alpaka::alpaka ALIASED_TARGET)
+    if(NOT _alpaka_target)
+        set(_alpaka_target alpaka::alpaka)
+    endif()
+    set_property(
+        TARGET ${_alpaka_target}
+        APPEND
+        PROPERTY INTERFACE_COMPILE_OPTIONS -UNDEBUG
+    )
+    unset(_alpaka_target)
+endif()
 
 # Set up covfie.
 option(TRACCC_SETUP_COVFIE "Set up the covfie target(s) explicitly" TRUE)
@@ -366,26 +415,12 @@ if(TRACCC_SETUP_COVFIE)
     endif()
 endif()
 
-# Set up Acts.
+# Set up Acts. Acts (and, transitively, Detray) is colocated in-tree and is the
+# single source of truth, so it is always built from that source rather than
+# picked up from an external installation.
 option(TRACCC_SETUP_ACTS "Set up the Acts target(s) explicitly" TRUE)
-if(TRACCC_USE_SYSTEM_LIBS OR TRACCC_USE_SPACK_LIBS)
-    set(TRACCC_USE_SYSTEM_ACTS_DEFAULT ON)
-else()
-    set(TRACCC_USE_SYSTEM_ACTS_DEFAULT OFF)
-endif()
-option(
-    TRACCC_USE_SYSTEM_ACTS
-    "Pick up an existing installation of Acts from the build environment"
-    ${TRACCC_USE_SYSTEM_ACTS_DEFAULT}
-)
-unset(TRACCC_USE_SYSTEM_ACTS_DEFAULT)
 if(TRACCC_SETUP_ACTS)
-    if(TRACCC_USE_SYSTEM_ACTS)
-        find_package(Acts REQUIRED COMPONENTS PluginJson)
-        find_package(detray REQUIRED)
-    else()
-        add_subdirectory(extern/acts)
-    endif()
+    add_subdirectory(extern/acts)
 endif()
 
 # Set up GoogleTest.
@@ -431,6 +466,9 @@ if(TRACCC_BUILD_CUDA_UTILS)
 endif()
 if(TRACCC_BUILD_CUDA)
     add_subdirectory(device/cuda)
+endif()
+if(TRACCC_BUILD_HIP_UTILS)
+    add_subdirectory(device/hip_utils)
 endif()
 if(TRACCC_BUILD_HIP)
     add_subdirectory(device/hip)

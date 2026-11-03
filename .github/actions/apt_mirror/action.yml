@@ -1,0 +1,24 @@
+name: 'Apt mirror'
+description: 'Point apt at a runner-local Ubuntu mirror, when the fleet names one'
+
+# Wraps CI/dependencies/apt_mirror.sh so a job can apply the mirror *before* its
+# own apt-get, rather than only getting it as a side effect of the dependencies
+# action (which cannot run until spack is set up, several minutes in).
+#
+# Deliberately has no inputs and no conditions to get right at the call site: the
+# script is a no-op unless the fleet exported HUSK_UBUNTU_APT_MIRROR *and* the
+# image is actually Ubuntu, so calling it unconditionally on any job is safe.
+# That matters because the mirror is Ubuntu-specific — see the script for why a
+# Debian image must not be redirected to it.
+#
+# Requires the repository to be checked out first.
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Apply apt mirror
+      # Not Linux means no apt, and the script would exit immediately anyway;
+      # skipping keeps the macOS job logs free of a meaningless step.
+      if: runner.os == 'Linux'
+      shell: bash
+      run: CI/dependencies/apt_mirror.sh

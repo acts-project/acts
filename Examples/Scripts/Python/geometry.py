@@ -6,7 +6,10 @@ from pathlib import Path
 
 import acts
 import acts.examples
-from acts.json import MaterialMapJsonConverter, TrackingGeometryJsonConverter
+from acts.json import (
+    TrackingGeometryJsonConverter,
+    TrackingGeometryMaterialJsonConverter,
+)
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
     WhiteBoard,
@@ -18,8 +21,6 @@ from acts.examples import (
 
 from acts.examples.json import (
     JsonSurfacesWriter,
-    JsonMaterialWriter,
-    JsonFormat,
 )
 
 
@@ -28,8 +29,11 @@ def runGeometry(
     decorators,
     outputDir: Path,
     events=1,
+    pyVisProjection="xy",
     outputObj=True,
+    outputPy=False,
     outputCsv=True,
+    outputMaterialMap=True,
     outputSurfacesJson=True,
     serializeGeometryJson=False,
 ):
@@ -46,8 +50,8 @@ def runGeometry(
                 raise RuntimeError("Failed to decorate event context")
 
         if outputCsv:
-            # if not os.path.isdir(outputDir / "csv"):
-            #    os.makedirs(outputDir / "csv")
+            if not os.path.isdir(outputDir / "csv"):
+                os.makedirs(outputDir / "csv")
             writer = CsvTrackingGeometryWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
@@ -56,16 +60,20 @@ def runGeometry(
             )
             writer.write(context)
 
-        if outputObj:
+        # The obj and material map outputs go to a single, event-independent
+        # file each, so writing them once (on the first event) is enough --
+        # every further event would only overwrite the same file.
+        if outputObj and ievt == 0:
             vis = acts.ObjVisualization3D()
-            trackingGeometry.visualize(
-                vis,
-                context.geoContext,
-                portalViewConfig=acts.ViewConfig(visible=False),
-                sensitiveViewConfig=acts.ViewConfig(visible=True),
-                viewConfig=acts.ViewConfig(visible=False),
-            )
+            trackingGeometry.visualize(vis, context.recoGeoContext)
             vis.write(outputDir / "obj" / "geometry.obj")
+        if outputPy:
+            from acts.examples.visualization import PyVisualization2D
+
+            vis = PyVisualization2D()
+            trackingGeometry.visualize(vis, context.recoGeoContext)
+
+            vis.plot(projection=pyVisProjection, filename="geometry.pdf")
 
         if outputSurfacesJson:
             # if not os.path.isdir(outputDir / "json"):
@@ -79,28 +87,17 @@ def runGeometry(
             )
             writer.write(context)
 
-            jmConverterCfg = MaterialMapJsonConverter.Config(
-                processSensitives=True,
-                processApproaches=True,
-                processRepresenting=True,
-                processBoundaries=True,
-                processVolumes=True,
-                processNonMaterial=True,
-                context=context.geoContext,
-            )
-
-            jmw = JsonMaterialWriter(
-                level=acts.logging.VERBOSE,
-                converterCfg=jmConverterCfg,
-                fileName=str(outputDir / "geometry-map"),
-                writeFormat=JsonFormat.Json,
-            )
-
-            jmw.write(trackingGeometry)
+            if outputMaterialMap and ievt == 0:
+                material = acts.TrackingGeometryMaterial.fromGeometry(
+                    trackingGeometry, includeNonMaterial=True
+                )
+                TrackingGeometryMaterialJsonConverter().toFile(
+                    material, outputDir / "geometry-map.json"
+                )
 
         if serializeGeometryJson:
             converter = TrackingGeometryJsonConverter(level=acts.logging.INFO)
-            jsonStr = converter.toJson(context.geoContext, trackingGeometry)
+            jsonStr = converter.toJson(context.recoGeoContext, trackingGeometry)
             outPath = outputDir / "json" / "tracking-geometry.json"
             outPath.write_text(jsonStr)
 
@@ -111,8 +108,7 @@ if "__main__" == __name__:
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
-    runGeometry(trackingGeometry, decorators, outputDir=Path.cwd())
-
+    runGeometry(trackingGeometry, decorators, pyVisProjection="rz")
     # Uncomment if you want to create the geometry id mapping for DD4hep
     # dd4hepIdGeoIdMap = acts.examples.dd4hep.createDD4hepIdGeoIdMap(trackingGeometry)
     # dd4hepIdGeoIdValueMap = {}

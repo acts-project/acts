@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Material/IAssignmentFinder.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Material/interface/IAssignmentFinder.hpp"
 
 #include <array>
 #include <functional>
@@ -24,6 +24,13 @@ namespace Acts {
 
 class Surface;
 
+/// @brief Assignment of recorded material interactions to assignment candidates
+///
+/// This turns the candidates found by an @ref Acts::IAssignmentFinder into the
+/// final per-surface assignments, applying global and local vetoes and optional
+/// re-assignments along the way.
+///
+/// @ingroup material_mapping
 namespace MaterialInteractionAssignment {
 
 /// The result struct of the assignment run

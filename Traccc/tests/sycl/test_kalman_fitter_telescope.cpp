@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s).
 #include "traccc/bfield/construct_const_bfield.hpp"
@@ -94,7 +95,7 @@ TEST_P(KalmanFittingTelescopeTests, Run) {
       detray::io::read_detector<host_detector_type>(shared_mr, reader_cfg);
 
   traccc::host_detector polymorphic_detector;
-  polymorphic_detector.set<detector_traits>(std::move(host_det));
+  polymorphic_detector.set<host_detector_type>(std::move(host_det));
 
   const auto field = traccc::construct_const_bfield(std::get<13>(GetParam()));
 
@@ -132,7 +133,7 @@ TEST_P(KalmanFittingTelescopeTests, Run) {
   std::filesystem::create_directories(full_path);
   auto sim = traccc::simulator<host_detector_type, b_field_t, generator_type,
                                writer_type>(
-      ptc, n_events, polymorphic_detector.as<detector_traits>(),
+      ptc, n_events, polymorphic_detector.as<host_detector_type>(),
       field.as_field<traccc::const_bfield_backend_t<traccc::scalar>>(),
       std::move(generator), std::move(smearer_writer_cfg), full_path);
   sim.run();
@@ -145,7 +146,7 @@ TEST_P(KalmanFittingTelescopeTests, Run) {
 
   // Seed generator
   seed_generator<host_detector_type> sg(
-      polymorphic_detector.as<detector_traits>(), seed_cfg);
+      polymorphic_detector.as<host_detector_type>(), seed_cfg);
 
   // Fitting algorithm object
   typename traccc::sycl::kalman_fitting_algorithm::config_type fit_cfg;
@@ -214,7 +215,8 @@ TEST_P(KalmanFittingTelescopeTests, Run) {
 
       fit_performance_writer.write(
           track_states_sycl.tracks.at(i_trk), track_states_sycl.states,
-          measurements, polymorphic_detector.as<detector_traits>(), evt_data);
+          measurements, polymorphic_detector.as<host_detector_type>(),
+          evt_data);
     }
   }
 

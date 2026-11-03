@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/seeding/device/triplet_seeding_algorithm.hpp"
@@ -33,8 +34,8 @@ struct triplet_seeding_algorithm::data {
   /// @}
 
   /// Axes for the internal spacepoint grid
-  std::pair<details::spacepoint_grid_types::host::axis_p0_type,
-            details::spacepoint_grid_types::host::axis_p1_type>
+  std::pair<traccc::details::spacepoint_grid_types::host::axis_p0_type,
+            traccc::details::spacepoint_grid_types::host::axis_p1_type>
       m_axes;
 
 };  // struct triplet_seeding_algorithm::data
@@ -62,9 +63,9 @@ auto triplet_seeding_algorithm::operator()(
   edm::spacepoint_collection::const_view::size_type n_spacepoints = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(spacepoints, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_spacepoints = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_spacepoints = size.unsafe_get();
   } else {
     n_spacepoints = copy().get_size(spacepoints);
   }
@@ -80,8 +81,8 @@ auto triplet_seeding_algorithm::operator()(
       m_data->m_axes.first.n_bins * m_data->m_axes.second.n_bins;
   vecmem::data::vector_buffer<unsigned int> grid_capacities_buffer(grid_bins,
                                                                    mr().main);
-  copy().setup(grid_capacities_buffer)->ignore();
-  copy().memset(grid_capacities_buffer, 0)->ignore();
+  copy().setup(vecmem::ignore_event, grid_capacities_buffer);
+  copy().memset(vecmem::ignore_event, grid_capacities_buffer, 0);
 
   // Launch the grid capacity counting kernel.
   count_grid_capacities_kernel({n_spacepoints, m_data->m_finder_config,
@@ -95,15 +96,15 @@ auto triplet_seeding_algorithm::operator()(
 
   // Create the spacepoint grid buffer and a prefix sum buffer that describes
   // it. (The latter is needed for the next few steps.)
-  details::spacepoint_grid_types::buffer grid_buffer(
+  traccc::details::spacepoint_grid_types::buffer grid_buffer(
       m_data->m_axes.first, m_data->m_axes.second,
-      std::vector<std::size_t>(grid_capacities_host.begin(),
-                               grid_capacities_host.end()),
+      std::vector<unsigned int>(grid_capacities_host.begin(),
+                                grid_capacities_host.end()),
       mr().main, mr().host, vecmem::data::buffer_type::resizable);
-  copy().setup(grid_buffer._buffer)->ignore();
+  copy().setup(vecmem::ignore_event, grid_buffer._buffer);
   vecmem::data::vector_buffer<prefix_sum_element_t> grid_prefix_sum_buffer(
       n_spacepoints, mr().main, vecmem::data::buffer_type::resizable);
-  copy().setup(grid_prefix_sum_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, grid_prefix_sum_buffer);
 
   // Launch the grid population kernel.
   populate_grid_kernel({n_spacepoints, m_data->m_finder_config, spacepoints,
@@ -114,9 +115,9 @@ auto triplet_seeding_algorithm::operator()(
   if (mr().host) {
     vecmem::async_size size =
         copy().get_size(grid_prefix_sum_buffer, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_spacepoints = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_spacepoints = size.unsafe_get();
   } else {
     n_spacepoints = copy().get_size(grid_prefix_sum_buffer);
   }
@@ -124,17 +125,16 @@ auto triplet_seeding_algorithm::operator()(
   // Set up the doublet counter buffer.
   device::doublet_counter_collection_types::buffer doublet_counter_buffer{
       n_spacepoints, mr().main, vecmem::data::buffer_type::resizable};
-  copy().setup(doublet_counter_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, doublet_counter_buffer);
 
   // Set up a global counter used in the seeding kernels.
   vecmem::unique_alloc_ptr<device::seeding_global_counter>
       globalCounter_device =
           vecmem::make_unique_alloc<device::seeding_global_counter>(mr().main);
-  copy()
-      .memset(vecmem::data::vector_view<device::seeding_global_counter>(
-                  1u, globalCounter_device.get()),
-              0)
-      ->ignore();
+  copy().memset(vecmem::ignore_event,
+                vecmem::data::vector_view<device::seeding_global_counter>(
+                    1u, globalCounter_device.get()),
+                0);
 
   // Launch the doublet counting kernel.
   count_doublets_kernel(
@@ -147,9 +147,9 @@ auto triplet_seeding_algorithm::operator()(
   if (mr().host) {
     vecmem::async_size size =
         copy().get_size(doublet_counter_buffer, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_doublets = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_doublets = size.unsafe_get();
   } else {
     n_doublets = copy().get_size(doublet_counter_buffer);
   }
@@ -171,10 +171,10 @@ auto triplet_seeding_algorithm::operator()(
   // Set up the doublet buffers.
   device_doublet_collection_types::buffer doublet_buffer_mb{
       globalCounter_host->m_nMidBot, mr().main};
-  copy().setup(doublet_buffer_mb)->ignore();
+  copy().setup(vecmem::ignore_event, doublet_buffer_mb);
   device_doublet_collection_types::buffer doublet_buffer_mt{
       globalCounter_host->m_nMidTop, mr().main};
-  copy().setup(doublet_buffer_mt)->ignore();
+  copy().setup(vecmem::ignore_event, doublet_buffer_mt);
 
   // Launch the doublet finding kernel.
   find_doublets_kernel({n_doublets, m_data->m_finder_config, spacepoints,
@@ -184,12 +184,12 @@ auto triplet_seeding_algorithm::operator()(
   // Set up the triplet counter buffers
   triplet_counter_spM_collection_types::buffer triplet_counter_spM_buffer{
       n_doublets, mr().main};
-  copy().setup(triplet_counter_spM_buffer)->ignore();
-  copy().memset(triplet_counter_spM_buffer, 0)->ignore();
+  copy().setup(vecmem::ignore_event, triplet_counter_spM_buffer);
+  copy().memset(vecmem::ignore_event, triplet_counter_spM_buffer, 0);
   triplet_counter_collection_types::buffer triplet_counter_midBot_buffer{
       globalCounter_host->m_nMidBot, mr().main,
       vecmem::data::buffer_type::resizable};
-  copy().setup(triplet_counter_midBot_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, triplet_counter_midBot_buffer);
 
   // Launch the triplet counting kernel.
   count_triplets_kernel({globalCounter_host->m_nMidBot, m_data->m_finder_config,
@@ -207,9 +207,9 @@ auto triplet_seeding_algorithm::operator()(
   if (mr().host) {
     vecmem::async_size size =
         copy().get_size(triplet_counter_midBot_buffer, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_midBotTriplets = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_midBotTriplets = size.unsafe_get();
   } else {
     n_midBotTriplets = copy().get_size(triplet_counter_midBot_buffer);
   }
@@ -227,7 +227,7 @@ auto triplet_seeding_algorithm::operator()(
   // Set up the triplet buffer.
   device_triplet_collection_types::buffer triplet_buffer{
       globalCounter_host->m_nTriplets, mr().main};
-  copy().setup(triplet_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, triplet_buffer);
 
   // Launch the triplet finding kernel.
   find_triplets_kernel({n_midBotTriplets, m_data->m_finder_config,
@@ -245,13 +245,16 @@ auto triplet_seeding_algorithm::operator()(
   edm::seed_collection::buffer seed_buffer(
       globalCounter_host->m_nTriplets, mr().main,
       vecmem::data::buffer_type::resizable);
-  copy().setup(seed_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, seed_buffer);
 
   // Launch the seed selecting/filling kernel.
   select_seeds_kernel(
       {n_doublets, m_data->m_finder_config, m_data->m_filter_config,
        spacepoints, grid_buffer, triplet_counter_spM_buffer,
        triplet_counter_midBot_buffer, triplet_buffer, seed_buffer});
+
+  // Complete seed selection before releasing its intermediate buffers.
+  synchronize();
 
   // Return the seed buffer.
   return seed_buffer;

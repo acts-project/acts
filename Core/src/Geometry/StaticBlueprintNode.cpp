@@ -14,7 +14,17 @@
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
+
+StaticBlueprintNode& StaticBlueprintNode::setVolumeLookupFactory(
+    VolumeLookupFactory factory) {
+  m_volumeLookupFactory = std::move(factory);
+  return *this;
+}
+
+const VolumeLookupFactory& StaticBlueprintNode::volumeLookupFactory() const {
+  return m_volumeLookupFactory;
+}
 
 StaticBlueprintNode::StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume)
     : m_volume(std::move(volume)) {}
@@ -95,6 +105,14 @@ void StaticBlueprintNode::finalize(const BlueprintOptions& options,
   }
   m_volume->setNavigationPolicy(policyFactory->build(gctx, *m_volume, logger));
 
+  if (m_volumeLookupFactory) {
+    auto lookup = m_volumeLookupFactory(gctx, *m_volume, logger);
+    if (!lookup) {
+      throw std::invalid_argument("Volume lookup factory returned nullptr");
+    }
+    m_volume->setVolumeLookup(std::move(lookup));
+  }
+
   ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
                       << ") to parent volume (" << parent.volumeName() << ")");
   parent.addVolume(std::move(m_volume));
@@ -156,4 +174,4 @@ void StaticBlueprintNode::addToGraphviz(std::ostream& os) const {
   BlueprintNode::addToGraphviz(os);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

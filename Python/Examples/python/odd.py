@@ -16,6 +16,29 @@ def getOpenDataDetectorDirectory():
     return odd_dir
 
 
+_defaultMaterialDecoratorCache = {}
+
+
+def _defaultMaterialDecorator(odd_dir: Path, customLogLevel):
+    """Default ODD material decorator, memoized per material map file.
+
+    Building one costs ~50MB that is not released when the decorator (or the
+    detector it decorated) goes away, so a process that constructs the ODD a
+    few dozen times -- the python test suite -- pays that every time. The
+    decorator is only read from during decoration, so one instance can back
+    any number of detectors.
+    """
+    import acts.root
+
+    fileName = str(odd_dir / "data/odd-material-maps.root")
+    if fileName not in _defaultMaterialDecoratorCache:
+        _defaultMaterialDecoratorCache[fileName] = acts.root.RootMaterialDecorator(
+            fileName=fileName,
+            level=customLogLevel(minLevel=acts.logging.WARNING),
+        )
+    return _defaultMaterialDecoratorCache[fileName]
+
+
 def getOpenDataDetector(
     materialDecorator=None,
     misaligned=False,
@@ -23,16 +46,27 @@ def getOpenDataDetector(
     logLevel=acts.logging.INFO,
     gen3=False,
     constructionMethod=None,
+    buildTracker=True,
+    buildCalorimeter=True,
+    buildMuonSystem=False,
 ):
     """This function sets up the open data detector. Requires DD4hep.
+    The DD4hep magnetic field is available as ``detector.field``. Keep the
+    detector alive while using the field.
+
     Parameters
     ----------
-    materialDecorator: Material Decorator, take RootMaterialDecorator if non is given
+    materialDecorator: Material Decorator, take RootMaterialDecorator if non is given.
+      For Gen1 this is applied as-is; for Gen3, its material() is applied instead
+      (via Acts.TrackingGeometryMaterial.apply()), and only if a decorator is given.
     odd_dir: if not given, try to get via ODD_PATH environment variable
     logLevel: logging level
     constructionMethod: Gen3 conversion method enum value of
       OpenDataDetector.Config.ConstructionMethod
       use `ConstructionMethod.TGeo` for the TGeo-backed Gen3 path
+    buildTracker: build the silicon tracker (beam pipe, pixels, strips, solenoid)
+    buildCalorimeter: build the calorimeter, added in ODD v6
+    buildMuonSystem: build the muon system, added in ODD v6
     """
     import acts.examples.dd4hep
 
@@ -43,9 +77,26 @@ def getOpenDataDetector(
     if not odd_dir.exists():
         raise RuntimeError(f"OpenDataDetector not found at {odd_dir}")
 
-    odd_xml = odd_dir / "xml" / "OpenDataDetector.xml"
-    if not odd_xml.exists():
-        raise RuntimeError(f"OpenDataDetector.xml not found at {odd_xml}")
+    # ODD v6 splits the detector into composable XML files. The shared
+    # definitions are always needed; the subsystems are opt-out. Only the
+    # tracker contributes to the ACTS tracking geometry, so simulation-only
+    # workflows can drop the calorimeter and muon system to avoid paying for
+    # geometry that is subsequently discarded.
+    odd_xml_dir = odd_dir / "xml"
+    xml_files = [odd_xml_dir / "OpenDataDetectorDefs.xml"]
+    if buildTracker:
+        xml_files.append(odd_xml_dir / "OpenDataDetectorTracker.xml")
+    if buildCalorimeter:
+        xml_files.append(odd_xml_dir / "OpenDataDetectorCalorimeter.xml")
+    if buildMuonSystem:
+        xml_files.append(odd_xml_dir / "OpenDataDetectorMuonSystem.xml")
+
+    xml_files.append(odd_xml_dir / "OpenDataDetectorField.xml")
+
+    for xml_file in xml_files:
+        if not xml_file.exists():
+            raise RuntimeError(f"OpenDataDetector XML not found at {xml_file}")
+    xml_files = [str(xml_file) for xml_file in xml_files]
 
     env_vars = []
     map_name = "libOpenDataDetector.components"
@@ -73,22 +124,12 @@ def getOpenDataDetector(
             )
             raise RuntimeError(msg)
 
-    if materialDecorator is None:
-        import acts.root
-
-        materialDecorator = acts.root.RootMaterialDecorator(
-            fileName=str(odd_dir / "data/odd-material-maps.root"),
-            level=customLogLevel(minLevel=acts.logging.WARNING),
-        )
-
     if gen3:
         if misaligned:
-            raise InvalidArgumentError(
-                "Gen3 ODD currently does not support misalignment"
-            )
+            raise ValueError("Gen3 ODD currently does not support misalignment")
 
         oddConfig = acts.examples.dd4hep.OpenDataDetector.Config(
-            xmlFileNames=[str(odd_xml)],
+            xmlFileNames=xml_files,
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
@@ -103,8 +144,21 @@ def getOpenDataDetector(
                 config=oddConfig, gctx=gctx
             )
 
+        # No default material map for Gen3: the shipped ODD map is keyed by
+        # Gen1 geometry identifiers. Only an explicitly given decorator is
+        # applied, via Acts::TrackingGeometryMaterial::apply() rather than the
+        # (Gen1-oriented) IMaterialDecorator::decorate() path, once geometry
+        # identifiers are assigned. The geometry is const on the C++ side, but
+        # it has not been handed out yet, so filling in its material here is
+        # safe.
+        if materialDecorator is not None:
+            materialDecorator.material.apply(detector.trackingGeometry())
+
         return detector
     else:
+        if materialDecorator is None:
+            materialDecorator = _defaultMaterialDecorator(odd_dir, customLogLevel)
+
         volumeRadiusCutsMap = {
             28: [850.0],  # LStrip negative z
             30: [850.0],  # LStrip positive z
@@ -129,7 +183,7 @@ def getOpenDataDetector(
             return geoid
 
         dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
-            xmlFileNames=[str(odd_xml)],
+            xmlFileNames=xml_files,
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
@@ -145,4 +199,5 @@ def getOpenDataDetector(
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
+
         return detector

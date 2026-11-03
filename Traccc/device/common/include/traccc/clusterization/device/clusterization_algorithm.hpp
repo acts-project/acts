@@ -1,15 +1,17 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 // Local include(s).
 #include "traccc/clusterization/device/ccl_kernel_definitions.hpp"
 #include "traccc/clusterization/device/tags.hpp"
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 
 // Project include(s).
@@ -25,6 +27,7 @@
 
 // VecMem include(s).
 #include <vecmem/memory/unique_ptr.hpp>
+#include <vecmem/utils/abstract_event.hpp>
 #include <vecmem/utils/copy.hpp>
 
 // System include(s).
@@ -58,7 +61,8 @@ class clusterization_algorithm
           const detector_conditions_description::const_view&,
           clustering_keep_disjoint_set&&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Configuration type
   using config_type = clustering_config;

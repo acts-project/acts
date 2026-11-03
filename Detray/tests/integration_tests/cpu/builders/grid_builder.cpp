@@ -37,7 +37,7 @@ using scalar = test::scalar;
 using point3 = test::point3;
 using vector3 = test::vector3;
 
-using detector_t = detector<test::toy_metadata>;
+using detector_t = host::detector<test::toy_metadata>;
 
 }  // anonymous namespace
 
@@ -137,7 +137,8 @@ GTEST_TEST(detray_builders, decorator_grid_builder) {
   EXPECT_EQ(cyl_axis_z.label(), label::e_cyl_z);
   EXPECT_EQ(cyl_axis_z.nbins(), 4u);
 
-  gbuilder.build(d);
+  const volume_builder_options builder_opts{};
+  gbuilder.build(d, builder_opts);
 
   //
   // check results

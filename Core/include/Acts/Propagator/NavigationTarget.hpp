@@ -283,13 +283,20 @@ class NavigationTarget {
   /// Default constructor creating a none target
   constexpr NavigationTarget() = default;
 
-  /// @brief print method
-  /// @param ostr: Stream to which the object is printed
+  /// Print method
+  /// @param ostr Stream to which the object is printed
   void print(std::ostream& ostr) const;
 };
 
 static_assert(std::is_trivially_copy_constructible_v<NavigationTarget>);
 static_assert(std::is_trivially_move_constructible_v<NavigationTarget>);
 static_assert(std::is_trivially_move_assignable_v<NavigationTarget>);
+
+/// Print a list of navigation targets, one target per line
+/// @param ostr Stream to which the targets are printed
+/// @param candidates The targets to print
+/// @return The stream
+std::ostream& operator<<(std::ostream& ostr,
+                         std::span<const NavigationTarget> candidates);
 
 }  // namespace Acts

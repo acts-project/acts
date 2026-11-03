@@ -10,11 +10,12 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Seeding/BinnedGroup.hpp"
+#include "Acts/Seeding/detail/SpacePointGridBase.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
+#include <cstdint>
 #include <numbers>
 #include <vector>
 
@@ -25,25 +26,23 @@ namespace Acts {
 /// The grid is defined in cylindrical coordinates (phi, z, r) and allows for
 /// efficient access to space points based on their azimuthal angle,
 /// z-coordinate, and radial distance.
-class CylindricalSpacePointGrid {
+class CylindricalSpacePointGrid
+    : public detail::SpacePointGridBase<
+          CylindricalSpacePointGrid,
+          Grid<std::vector<std::uint32_t>,
+               Axis<AxisType::Equidistant, AxisBoundaryType::Closed>,
+               Axis<AxisType::Variable, AxisBoundaryType::Open>,
+               Axis<AxisType::Variable, AxisBoundaryType::Open>>> {
  public:
-  /// Space point index type used in the grid.
-  using SpacePointIndex = std::uint32_t;
-  /// Type alias for bin container holding space point indices
-  using BinType = std::vector<SpacePointIndex>;
-  /// Type alias for phi axis with equidistant binning and closed boundaries
-  using PhiAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
-  /// Type alias for z axis with variable binning and open boundaries
-  using ZAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
-  /// Type alias for r axis with variable binning and open boundaries
-  using RAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
-  /// Cylindrical space point grid type, which is a grid over `BinType` with
-  /// axes defined by `PhiAxisType`, `ZAxisType`, and `RAxisType`.
-  /// The grid is a 3D grid with the axes representing azimuthal angle (phi),
-  /// z-coordinate, and radial distance (r).
-  using GridType = Grid<BinType, PhiAxisType, ZAxisType, RAxisType>;
-  /// Type alias for binned group over the cylindrical grid
-  using BinnedGroupType = BinnedGroup<GridType>;
+  /// Type alias for the CRTP base class
+  using GridBase =
+      detail::SpacePointGridBase<CylindricalSpacePointGrid, GridType>;
+  /// Type alias for the phi axis (equidistant binning, closed boundaries)
+  using PhiAxisType = GridBase::AxisTypeAt<0>;
+  /// Type alias for the z axis (variable binning, open boundaries)
+  using ZAxisType = GridBase::AxisTypeAt<1>;
+  /// Type alias for the r axis (variable binning, open boundaries)
+  using RAxisType = GridBase::AxisTypeAt<2>;
 
   /// Configuration parameters for the cylindrical space point grid.
   struct Config {
@@ -80,9 +79,9 @@ class CylindricalSpacePointGrid {
     /// numPhiNeighbors (in the configuration of the BinFinders) is configured
     /// to return 1 neighbor on either side of the current phi-bin (and you want
     /// to cover the full phi-range of minPT), leave this at 1.
-    int phiBinDeflectionCoverage = 1;
+    std::uint32_t phiBinDeflectionCoverage = 1;
     /// maximum number of phi bins
-    int maxPhiBins = 10000;
+    std::uint32_t maxPhiBins = 10000;
     /// enable non equidistant binning in z
     std::vector<float> zBinEdges{};
     /// enable non equidistant binning in r
@@ -91,12 +90,14 @@ class CylindricalSpacePointGrid {
     /// magnetic field
     float bFieldInZ = 0 * UnitConstants::T;
 
-    /// bin finder for bottom space points
-    std::optional<GridBinFinder<3ul>> bottomBinFinder;
-    /// bin finder for top space points
-    std::optional<GridBinFinder<3ul>> topBinFinder;
+    /// bin finder for bottom space points. Defaults to the neighbouring bins
+    /// in phi and z, and the same bin in r.
+    GridBinFinder<GridType::DIM> bottomBinFinder{1, 1, 0};
+    /// bin finder for top space points. Defaults to the neighbouring bins in
+    /// phi and z, and the same bin in r.
+    GridBinFinder<GridType::DIM> topBinFinder{1, 1, 0};
     /// navigation structure for the grid
-    std::array<std::vector<std::size_t>, 3ul> navigation;
+    std::array<std::vector<std::size_t>, GridType::DIM> navigation;
   };
 
   /// Construct a cylindrical space point grid with the given configuration and
@@ -108,21 +109,7 @@ class CylindricalSpacePointGrid {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("CylindricalSpacePointGrid", Logging::Level::INFO));
 
-  /// Clear the grid and drop all state. The object will behave like a newly
-  /// constructed one.
-  void clear();
-
-  /// Get the bin index for a space point given its azimuthal angle, radial
-  /// distance, and z-coordinate.
-  /// @param position The position of the space point in (phi, z, r) coordinates
-  /// @return The index of the bin in which the space point is located, or
-  ///         `std::nullopt` if the space point is outside the grid bounds.
-  std::optional<std::size_t> binIndex(const Vector3& position) const {
-    if (!grid().isInside(position)) {
-      return std::nullopt;
-    }
-    return grid().globalBinFromPosition(position);
-  }
+  using GridBase::binIndex;
   /// Get the bin index for a space point given its azimuthal angle, radial
   /// distance, and z-coordinate.
   /// @param phi The azimuthal angle of the space point in radians
@@ -134,6 +121,7 @@ class CylindricalSpacePointGrid {
     return binIndex(Vector3(phi, z, r));
   }
 
+  using GridBase::insert;
   /// Insert a space point into the grid.
   /// @param index The index of the space point to insert
   /// @param phi The azimuthal angle of the space point in radians
@@ -142,7 +130,9 @@ class CylindricalSpacePointGrid {
   /// @return The index of the bin in which the space point was inserted, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
   std::optional<std::size_t> insert(SpacePointIndex index, float phi, float z,
-                                    float r);
+                                    float r) {
+    return insert(index, Vector3(phi, z, r));
+  }
   /// Insert a space point into the grid.
   /// @param sp The space point to insert
   /// @return The index of the bin in which the space point was inserted, or
@@ -150,10 +140,6 @@ class CylindricalSpacePointGrid {
   std::optional<std::size_t> insert(const ConstSpacePointProxy& sp) {
     return insert(sp.index(), sp.phi(), sp.z(), sp.r());
   }
-
-  /// Fill the grid with space points from the container.
-  /// @param spacePoints The space point container to fill the grid with
-  void extend(const SpacePointContainer::ConstRange& spacePoints);
 
   /// Sort the bins in the grid by the space point radius, which is required by
   /// some algorithms that operate on the grid.
@@ -168,45 +154,8 @@ class CylindricalSpacePointGrid {
   Range1D<float> computeRadiusRange(
       const SpacePointContainer& spacePoints) const;
 
-  /// Mutable bin access by index.
-  /// @param index The index of the bin to access
-  /// @return Mutable reference to the bin at the specified index
-  BinType& at(std::size_t index) { return grid().at(index); }
-  /// Const bin access by index.
-  /// @param index The index of the bin to access
-  /// @return Const reference to the bin at the specified index
-  const BinType& at(std::size_t index) const { return grid().at(index); }
-
-  /// Mutable grid access.
-  /// @return Mutable reference to the grid
-  GridType& grid() { return *m_grid; }
-  /// Const grid access.
-  /// @return Const reference to the grid
-  const GridType& grid() const { return *m_grid; }
-
-  /// Access to the binned group.
-  /// @return Reference to the binned group
-  const BinnedGroupType& binnedGroup() const { return *m_binnedGroup; }
-
-  /// Get the number of space points in the grid.
-  /// @return The number of space points in the grid
-  std::size_t numberOfSpacePoints() const { return m_counter; }
-
-  /// Get the number of bins in the grid.
-  /// @return The number of bins in the grid
-  std::size_t numberOfBins() const { return grid().size(); }
-
  private:
   Config m_cfg;
-
-  std::unique_ptr<const Logger> m_logger;
-
-  GridType* m_grid{};
-  std::optional<BinnedGroupType> m_binnedGroup;
-
-  std::size_t m_counter{};
-
-  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts

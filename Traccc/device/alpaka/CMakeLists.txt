@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2023-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Project include(s).
 include(traccc-alpaka-functions)
@@ -28,7 +30,13 @@ if(alpaka_ACC_GPU_CUDA_ENABLE)
     )
 elseif(alpaka_ACC_GPU_HIP_ENABLE)
     find_package(HIPToolkit REQUIRED)
-    list(APPEND PRIVATE_LIBRARIES HIP::hiprt vecmem::hip covfie::hip)
+    list(
+        APPEND PRIVATE_LIBRARIES
+        HIP::hiprt
+        vecmem::hip
+        traccc::hip_utils
+        covfie::hip
+    )
 elseif(alpaka_ACC_SYCL_ENABLE)
     include(traccc-compiler-options-sycl)
     list(APPEND PRIVATE_LIBRARIES vecmem::sycl traccc::sycl_utils covfie::sycl)
@@ -38,6 +46,8 @@ traccc_add_alpaka_library( traccc_alpaka alpaka TYPE SHARED
   # Utility definitions.
   "include/traccc/alpaka/utils/algorithm_base.hpp"
   "src/utils/algorithm_base.cpp"
+  "include/traccc/alpaka/utils/await.hpp"
+  "src/utils/await.cpp"
   "include/traccc/alpaka/utils/get_device_info.hpp"
   "include/traccc/alpaka/utils/make_magnetic_field.hpp"
   "src/utils/make_magnetic_field.cpp"

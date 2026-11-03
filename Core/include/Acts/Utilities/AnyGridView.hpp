@@ -95,6 +95,8 @@ class AnyGridView {
   /// @brief Get the center position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The center position of the bin
+  /// @deprecated Use view.multiAxisAny().getBinCenterAny(indices) instead
+  [[deprecated("Use view.multiAxisAny().getBinCenterAny(indices) instead")]]
   AnyPointType binCenter(const IGrid::AnyIndexType& indices) const {
     return multiAxisAny().getBinCenterAny(indices);
   }
@@ -102,6 +104,10 @@ class AnyGridView {
   /// @brief Get the lower left edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The lower left edge position of the bin
+  /// @deprecated Use view.multiAxisAny().getLowerLeftBinEdgeAny(indices)
+  ///             instead
+  [[deprecated(
+      "Use view.multiAxisAny().getLowerLeftBinEdgeAny(indices) instead")]]
   AnyPointType lowerLeftBinEdge(const IGrid::AnyIndexType& indices) const {
     return multiAxisAny().getLowerLeftBinEdgeAny(indices);
   }
@@ -109,13 +115,21 @@ class AnyGridView {
   /// @brief Get the upper right edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The upper right edge position of the bin
+  /// @deprecated Use view.multiAxisAny().getUpperRightBinEdgeAny(indices)
+  ///             instead
+  [[deprecated(
+      "Use view.multiAxisAny().getUpperRightBinEdgeAny(indices) instead")]]
   AnyPointType upperRightBinEdge(const IGrid::AnyIndexType& indices) const {
     return multiAxisAny().getUpperRightBinEdgeAny(indices);
   }
 
   /// @brief Get the number of bins along each axis
   /// @return Vector containing the number of bins for each axis
-  AnyIndexType numLocalBins() const { return multiAxisAny().getNBinsAny(); }
+  /// @deprecated Use view.multiAxisAny().getNBinsAny() instead
+  [[deprecated("Use view.multiAxisAny().getNBinsAny() instead")]]
+  AnyIndexType numLocalBins() const {
+    return multiAxisAny().getNBinsAny();
+  }
 
  private:
   /// @brief Check if the grid's value type matches the template parameter T
@@ -196,6 +210,8 @@ class AnyGridConstView {
   /// @brief Get the center position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The center position of the bin
+  /// @deprecated Use view.multiAxisAny().getBinCenterAny(indices) instead
+  [[deprecated("Use view.multiAxisAny().getBinCenterAny(indices) instead")]]
   AnyPointType binCenter(const IGrid::AnyIndexType& indices) const {
     return multiAxisAny().getBinCenterAny(indices);
   }
@@ -203,6 +219,10 @@ class AnyGridConstView {
   /// @brief Get the lower left edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The lower left edge position of the bin
+  /// @deprecated Use view.multiAxisAny().getLowerLeftBinEdgeAny(indices)
+  ///             instead
+  [[deprecated(
+      "Use view.multiAxisAny().getLowerLeftBinEdgeAny(indices) instead")]]
   AnyPointType lowerLeftBinEdge(const IGrid::AnyIndexType& indices) const {
     return multiAxisAny().getLowerLeftBinEdgeAny(indices);
   }
@@ -210,13 +230,21 @@ class AnyGridConstView {
   /// @brief Get the upper right edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The upper right edge position of the bin
+  /// @deprecated Use view.multiAxisAny().getUpperRightBinEdgeAny(indices)
+  ///             instead
+  [[deprecated(
+      "Use view.multiAxisAny().getUpperRightBinEdgeAny(indices) instead")]]
   AnyPointType upperRightBinEdge(const IGrid::AnyIndexType& indices) const {
     return multiAxisAny().getUpperRightBinEdgeAny(indices);
   }
 
   /// @brief Get the number of bins along each axis
   /// @return Vector containing the number of bins for each axis
-  AnyIndexType numLocalBins() const { return multiAxisAny().getNBinsAny(); }
+  /// @deprecated Use view.multiAxisAny().getNBinsAny() instead
+  [[deprecated("Use view.multiAxisAny().getNBinsAny() instead")]]
+  AnyIndexType numLocalBins() const {
+    return multiAxisAny().getNBinsAny();
+  }
 
  private:
   /// @brief Check if the grid's value type matches the template parameter T

@@ -25,6 +25,7 @@ class IAssignmentFinder;
 ///
 /// It does uses a material assigner that can be either done using the
 /// propagator or a more sinmple trial and error intersection;
+/// @ingroup material_mapping
 class MaterialValidator {
  public:
   /// Nested configuration struct

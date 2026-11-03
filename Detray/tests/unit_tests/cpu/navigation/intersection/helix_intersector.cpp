@@ -386,3 +386,45 @@ GTEST_TEST(detray_intersection, helix_line_intersector) {
   EXPECT_TRUE(is.is_inside());
   EXPECT_FALSE(is.is_along());
 }
+
+// A plane parallel to B can miss the entire transverse helix circle. Test
+// both charges and scalar types, together with nearby intersecting planes.
+GTEST_TEST(detray_intersection, helix_plane_parallel_field_bounds) {
+  const auto check = []<typename value_t>() {
+    using algebra_t = test::algebra_type<value_t>;
+    using vec_t = dvector3D<algebra_t>;
+    using trf_t = dtransform3D<algebra_t>;
+    using helix_type = detail::helix<algebra_t>;
+    const vec_t origin{10.f, -20.f, 30.f};
+    const vec_t field{0.f, 0.f, 1.f * unit<value_t>::T};
+    const vec_t dir{1.f, 0.f, 0.f};
+    const helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> solver;
+    for (value_t charge : {value_t{-1}, value_t{1}}) {
+      const helix_type h{origin, 0.f, dir, charge, field};
+      const value_t radius = h.radius();
+      const value_t turn = -charge;
+      // The circle spans y = origin.y to origin.y + 2 * turn * radius.
+      for (value_t offset : {value_t{-0.1f}, value_t{2.1f}}) {
+        const vec_t center = origin + vec_t{0.f, turn * offset * radius, 0.f};
+        const trf_t plane{center, vec_t{0.f, 1.f, 0.f}, vec_t{1.f, 0.f, 0.f}};
+        EXPECT_EQ(solver.point_of_intersection(h, plane).path,
+                  detail::invalid_value<value_t>());
+      }
+      // An ordinary crossing must still be solved by the existing algorithm.
+      const value_t path_length = radius / 2.f;
+      const trf_t crossing{h.pos(path_length), vec_t{0.f, 1.f, 0.f},
+                           vec_t{1.f, 0.f, 0.f}};
+      EXPECT_NEAR(solver.point_of_intersection(h, crossing).path, path_length,
+                  value_t{0.01f});
+      // A plane perpendicular to B uses the general solver as before.
+      const helix_type pitched{
+          origin, 0.f, vector::normalize(vec_t{1.f, 0.f, 1.f}), charge, field};
+      const trf_t endcap{pitched.pos(value_t{100}), vec_t{0.f, 0.f, 1.f},
+                         vec_t{1.f, 0.f, 0.f}};
+      EXPECT_NEAR(solver.point_of_intersection(pitched, endcap).path, 100.f,
+                  value_t{0.01f});
+    }
+  };
+  check.template operator()<float>();
+  check.template operator()<double>();
+}

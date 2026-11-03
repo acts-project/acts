@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/tracking_volume.hpp"
 #include "detray/plugins/svgtools/conversion/volume.hpp"
 #include "detray/plugins/svgtools/styling/styling.hpp"
@@ -28,7 +29,7 @@ namespace detray::svgtools::conversion {
 /// @param hide_grids whether to display the volume surface grids.
 ///
 /// @returns An actsvg proto detector representing
-template <typename detector_t, typename view_t>
+template <concepts::detector detector_t, typename view_t>
 auto detector(const typename detector_t::geometry_context& context,
               const detector_t& detector, const view_t& view,
               const styling::detector_style& style =

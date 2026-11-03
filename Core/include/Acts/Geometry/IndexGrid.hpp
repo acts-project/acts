@@ -143,7 +143,7 @@ std::set<typename grid_type::index_t> localIndices(
   }
   // Bin range bounding box - estimated from the query points
   for (const auto& q : queries) {
-    auto qbin = grid.localBinsFromPosition(q);
+    auto qbin = grid.multiAxis().getLocalBinsFromPoint(q);
     for (std::size_t ib = 0; ib < grid_type::DIM; ++ib) {
       auto iqb = qbin[ib];
       binRanges[ib][0u] = std::min(iqb, binRanges[ib][0u]);

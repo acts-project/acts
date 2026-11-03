@@ -13,10 +13,15 @@ def hash_root_file(
         return acts.examples.root.hashRootFile(path, ordering_invariant)
 
     import uproot
+
+    with uproot.open(path) as rf:
+        return _hash_root_file_uproot(rf, ordering_invariant)
+
+
+def _hash_root_file_uproot(rf, ordering_invariant: bool) -> str:
+    import uproot
     import numpy as np
     import awkward as ak
-
-    rf = uproot.open(path)
 
     gh = hashlib.sha256()
 

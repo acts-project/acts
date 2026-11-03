@@ -57,7 +57,7 @@ FitterTester tester;
 GsfExtensions<VectorMultiTrajectory> getExtensions() {
   GsfExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
-      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+      .connect<&testSourceLinkCalibratorStrict<VectorMultiTrajectory>>();
   extensions.updater
       .connect<&GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);
@@ -207,6 +207,62 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
                                     false, false);
 }
 
+// Smoothed parameters must be present on exactly the measurement states
+BOOST_AUTO_TEST_CASE(SmoothedParametersOnMeasurementStates) {
+  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+
+  auto multi_pars = makeParameters();
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         multi_pars, tester.resolutions, rng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  auto options = makeDefaultGsfOptions();
+
+  auto res = gsfZero.fit(sourceLinks.begin(), sourceLinks.end(), multi_pars,
+                         options, tracks);
+  BOOST_REQUIRE(res.ok());
+
+  std::size_t nMeasurementStates = 0;
+  for (const auto ts : res->trackStatesReversed()) {
+    if (!ts.typeFlags().isMeasurement()) {
+      BOOST_CHECK(!ts.hasSmoothed());
+      continue;
+    }
+
+    ++nMeasurementStates;
+
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK(ts.smoothed().allFinite());
+    BOOST_CHECK(ts.smoothedCovariance().allFinite());
+    // the best available parameters must be the smoothed ones
+    BOOST_CHECK_EQUAL(ts.parameters().data(), ts.smoothed().data());
+  }
+
+  BOOST_CHECK_EQUAL(nMeasurementStates, sourceLinks.size());
+}
+
+// Every state carries the jacobian of the segment that ends at it
+BOOST_AUTO_TEST_CASE(JacobianOnAllStates) {
+  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+
+  auto multi_pars = makeParameters();
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         multi_pars, tester.resolutions, rng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  auto options = makeDefaultGsfOptions();
+
+  auto res = gsfZero.fit(sourceLinks.begin(), sourceLinks.end(), multi_pars,
+                         options, tracks);
+  BOOST_REQUIRE(res.ok());
+
+  for (const auto ts : res->trackStatesReversed()) {
+    BOOST_REQUIRE(ts.hasJacobian());
+    BOOST_CHECK(ts.jacobian().allFinite());
+    BOOST_CHECK_NE(ts.jacobian().determinant(), 0.);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
   TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
   using namespace GsfConstants;
@@ -235,6 +291,13 @@ BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
   BOOST_CHECK(res->template component<FinalMultiComponentState>(
                      kFinalMultiComponentStateColumn)
                   .has_value());
+}
+
+BOOST_AUTO_TEST_CASE(OutputTrackParticleHypothesis) {
+  auto multi_pars = makeParameters();
+  auto options = makeDefaultGsfOptions();
+
+  tester.test_ParticleHypothesis(gsfZero, options, multi_pars, rng);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

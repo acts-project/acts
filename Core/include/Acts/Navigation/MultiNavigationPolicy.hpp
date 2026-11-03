@@ -55,12 +55,14 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   void visit(const std::function<void(const INavigationPolicy&)>& visitor)
       const override;
 
-  /// State structure for MultiNavigationPolicy
-  /// Holds the states for all contained child policies
-  struct State {
-    /// Vector of navigation policy states, one for each child policy
-    std::vector<NavigationPolicyState> policyStates;
-  };
+  /// Marker state for MultiNavigationPolicy.
+  ///
+  /// Carries no data: the child policy states live contiguously on the manager
+  /// stack directly below this one and are addressed by count (which always
+  /// equals the number of contained policies). This marker is pushed instead of
+  /// the default @c EmptyState only when at least one child has a real state, so
+  /// that the navigator knows isValid() must be consulted for this volume.
+  struct State {};
 
   /// Check if all child policies are in a valid state
   /// @param gctx The geometry context

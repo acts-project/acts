@@ -33,10 +33,14 @@ def test_inhomogeneous_field_conversion():
     bc = acts.MagneticFieldContext()
     fc = af.makeCache(bc)
 
+    # The residual below is dominated by covfie's float32 storage, not by the
+    # sampling pitch: 20^3 and 100^3 grids both land at ~0.0043. Sampling the
+    # solenoid is the expensive part (elliptic integrals per point), so keep
+    # the grid small.
     cf = covfie.makeCovfieField(
         af,
         fc,
-        [100, 100, 100],
+        [30, 30, 30],
         acts.Vector3(-15000, -15000, -15000),
         acts.Vector3(15000, 15000, 15000),
     )
