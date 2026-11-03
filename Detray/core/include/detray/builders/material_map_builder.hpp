@@ -243,18 +243,22 @@ struct add_sf_material_map {
 
     // No material maps for line surfaces
     if constexpr (!concepts::line_object<mask_t> && mask_t::shape::dim == DIM) {
+      // The surface mask is needed if there is an axis without an explicit span
+      const bool has_all_axis_spans{std::ranges::none_of(
+          axis_spans, [](const auto& span) { return span.empty(); })};
+
       // Make sure masks exist in the underlying volume builder and can be
       // properly accessed
-      if (mask_coll.empty() && axis_spans.empty()) {
+      if (mask_coll.empty() && !has_all_axis_spans) {
         std::string err{
             "No masks in volume builder: Cannot construct material map"};
         DETRAY_FATAL_HOST(err);
         throw std::invalid_argument(err);
       }
 
-      // Map a grid onto the surface mask if no concrete axis spans are given
+      // Map a grid onto the surface mask if not all axis spans are given
       mask_t sf_mask = {};
-      if (axis_spans.empty()) {
+      if (!has_all_axis_spans) {
         if constexpr (concepts::interval<index_range_t>) {
           // Find the true surface extent over all masks
           sf_mask = mask_coll.at(index.lower());

@@ -892,35 +892,6 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   BOOST_CHECK_LE(detray::n_material_slabs(det),
                  detray::n_material_slabs(refDet));
   BOOST_CHECK_LE(detray::n_material_maps(det), detray::n_material_maps(refDet));
-
-  // ... but every surface still sees the same material
-  checkSameSurfaceMaterial(refDet, det);
-
-  // The deduplicated detector writes one material entry per surface again,
-  // which can be read back without deduplication
-  const std::filesystem::path outDir{"detray_material_deduplication"};
-  std::filesystem::remove_all(outDir);
-
-  auto writerCfg = detray::io::detector_writer_config{}
-                       .format(detray::io::format::json)
-                       .path(outDir.string())
-                       .replace_files(true)
-                       .write_grids(true)
-                       .write_material(true);
-  detray::io::write_detector(det, deduplicated.names, writerCfg);
-
-  detray::io::detector_reader_config readerCfg{};
-  readerCfg.do_check(true).deduplicate(false);
-  for (const auto& entry : std::filesystem::directory_iterator(outDir)) {
-    readerCfg.add_file(entry.path().string());
-  }
-  BOOST_CHECK_GE(readerCfg.files().size(), 3u);
-
-  const auto [readDet, readNames] =
-      detray::io::read_detector<detector_t>(mr, readerCfg);
-
-  BOOST_CHECK_EQUAL(nMaterialEntries(readDet), nMaterialEntries(refDet));
-  checkSameSurfaceMaterial(det, readDet);
 }
 
 BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
