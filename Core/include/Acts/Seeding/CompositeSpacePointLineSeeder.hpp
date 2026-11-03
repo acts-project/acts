@@ -266,9 +266,9 @@ class CompositeSpacePointLineSeeder {
   /// @param ambi Left right ambiguity of the bottom & top hit
   /// @return Tangent line parameters
   template <CompositeSpacePoint Sp_t>
-  static TwoCircleTangentPars constructTangentLine(const Sp_t& topHit,
-                                                   const Sp_t& bottomHit,
-                                                   const TangentAmbi ambi);
+  static TwoCircleTangentPars constructTangenSeed(const Sp_t& topHit,
+                                                  const Sp_t& bottomHit,
+                                                  const TangentAmbi ambi);
   /// Creates the direction vector from the reference hit used to
   /// construct the tangent seed and the result on theta
   /// @param refHit Reference hit to define the local axes (Bottom hit)
@@ -276,6 +276,13 @@ class CompositeSpacePointLineSeeder {
   /// @return Direction vector
   template <CompositeSpacePoint Spt_t>
   static Vector makeDirection(const Spt_t& refHit, const double tanAngle);
+  /// Creates the pair of intercept and direction vector representing the line
+  /// @param refHit Reference hit to define the local axes (Bottom hit)
+  /// @param seed Seed from which the intercept shall be made
+  /// @return Intercept vector at z=0
+  template <CompositeSpacePoint Spt_t>
+  static Line_t makeLineFromSeed(const Spt_t& refHit,
+                                 const TwoCircleTangentPars& seed);
 
  private:
   /// Cache object of a constructed & valid seed solution.
