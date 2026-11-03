@@ -35,6 +35,53 @@ for the Python writers and the
 [truth-tracking Kalman example](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_kalman.py)
 for ROOT output.
 
+## Regional matching quality
+
+Both pattern-recognition writers can resolve purity and completeness by named
+geometry regions. Set `inputMeasurements` to the **complete** measurement collection
+indexed by the truth associations and track source links, and configure
+`trackQualityGeometrySelections`:
+
+```python
+cfg.inputMeasurements = "measurements"
+cfg.trackQualityGeometrySelections = {
+    "pixel": [acts.GeometryIdentifier(volume=10)],
+    "strip": [acts.GeometryIdentifier(volume=20), acts.GeometryIdentifier(volume=30)],
+    "pixel_layer": [acts.GeometryIdentifier(volume=10, layer=2)],
+}
+```
+
+The identifiers above are illustrative; use the identifiers of your geometry.
+Selections use the same hierarchical matching as the track-parameter collector's
+`geometrySelection`: a volume includes its layers and sensors; a layer includes
+its sensors. An empty selection includes all measurements. Regions may overlap;
+each is evaluated independently. Region names must be non-empty and prefix the
+output names, for example `pixel_completeness_vs_pT` and `pixel_purity_vs_eta`.
+The existing `subDetectorTrackSummaryVolumes` remains a separate configuration
+for measurement, hole and outlier counts.
+
+These profiles keep the **global** track-to-particle match, including duplicates;
+there is no regional rematching or additional quality cut. Fakes and unassociated
+tracks do not contribute. For each region:
+
+- Completeness is the number of shared, non-outlier measurements divided by the
+  matched particle's measurements in that region.
+- Purity uses the same numerator divided by the track's measurements plus
+  outliers in that region, consistent with the global quality profiles.
+
+The geometry comes from measurement indices (`IndexSourceLink`), so unfitted
+tracks do not need reference surfaces. Holes do not contribute to either ratio.
+Profiles use the matched particle's **truth** pT, eta and phi, and the binning of
+`trackQualityPlotToolConfig`. If a denominator is zero, that metric is undefined
+and is excluded from its profile. A defined ratio with no shared hits is filled
+with zero. Completeness and purity can therefore have different entry counts.
+
+Python `.stats()["regionalQuality"][name]` exposes `nCompleteness`, `nPurity`,
+`nUndefinedCompleteness`, `nUndefinedPurity`, `meanCompleteness` and `meanPurity`.
+An undefined mean is NaN. ROOT writes the same quantities with a `name_` prefix.
+An empty region map disables this diagnostic and requires no new input collection;
+the global histograms and matching statistics are unchanged.
+
 ## Resolution fit backend
 
 The track-parameter writers fit residual and pull distributions to extract mean and width

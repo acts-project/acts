@@ -525,7 +525,8 @@ void addFramework(py::module& mex) {
 
     py::class_<TrackQualityPlotTool::Config>(mex, "TrackQualityPlotToolConfig")
         .def(py::init<>())
-        .def_readwrite("varBinning", &TrackQualityPlotTool::Config::varBinning);
+        .def_readwrite("varBinning", &TrackQualityPlotTool::Config::varBinning)
+        .def_readwrite("prefix", &TrackQualityPlotTool::Config::prefix);
 
     py::class_<TrackSummaryPlotTool::Config>(mex, "TrackSummaryPlotToolConfig")
         .def(py::init<>())

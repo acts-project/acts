@@ -278,7 +278,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         inputParticleMeasurementsMap, label, filePath, fileMode,
         effPlotToolConfig, fakePlotToolConfig, duplicationPlotToolConfig,
         trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
-        subDetectorTrackSummaryVolumes, writeMatchingDetails);
+        subDetectorTrackSummaryVolumes, writeMatchingDetails, inputMeasurements,
+        trackQualityGeometrySelections);
   }
 
   // Calibration

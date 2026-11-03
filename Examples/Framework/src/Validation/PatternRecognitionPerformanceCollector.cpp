@@ -14,6 +14,8 @@
 
 #include <format>
 #include <optional>
+#include <stdexcept>
+#include <unordered_set>
 #include <utility>
 
 namespace ActsExamples {
@@ -48,6 +50,28 @@ PatternRecognitionPerformanceCollector::PatternRecognitionPerformanceCollector(
         std::piecewise_construct, std::forward_as_tuple(key),
         std::forward_as_tuple(subConfig, m_logger->level()));
   }
+  for (const auto& [name, selection] : m_cfg.trackQualityGeometrySelections) {
+    if (name.empty()) {
+      throw std::invalid_argument(
+          "Track quality geometry selection name is empty");
+    }
+    if (name == m_cfg.trackQualityPlotToolConfig.prefix) {
+      throw std::invalid_argument(
+          "Regional and global quality histogram prefixes collide");
+    }
+    std::vector<Acts::GeometryHierarchyMap<unsigned int>::InputElement>
+        elements;
+    for (const auto& geoId : selection) {
+      elements.emplace_back(geoId, 0u);
+    }
+    m_qualityGeometrySelections.emplace(name, std::move(elements));
+    auto config = m_cfg.trackQualityPlotToolConfig;
+    config.prefix = name;
+    m_regionalQualityTools.emplace(
+        std::piecewise_construct, std::forward_as_tuple(name),
+        std::forward_as_tuple(config, m_logger->level()));
+    m_stats.regionalQuality.emplace(name, RegionalQualityStats{});
+  }
 }
 
 void PatternRecognitionPerformanceCollector::fill(
@@ -55,7 +79,11 @@ void PatternRecognitionPerformanceCollector::fill(
     const SimParticleContainer& particles,
     const TrackParticleMatching& trackParticleMatching,
     const ParticleTrackMatching& particleTrackMatching,
-    const InverseMultimap<SimBarcode>& particleMeasurementsMap) {
+    const InverseMultimap<SimBarcode>& particleMeasurementsMap,
+    const MeasurementContainer* measurementContainer) {
+  if (!m_qualityGeometrySelections.empty() && measurementContainer == nullptr) {
+    throw std::invalid_argument("Regional track quality requires measurements");
+  }
   std::string labelPlural = std::format("{}s", m_cfg.label);
 
   std::size_t unmatched = 0;
@@ -163,6 +191,62 @@ void PatternRecognitionPerformanceCollector::fill(
 
       m_trackQualityPlotTool.fill(matchedParticle->initialState(), completeness,
                                   purity);
+
+      for (const auto& [name, selection] : m_qualityGeometrySelections) {
+        auto inRegion = [&](Index index) {
+          const auto geoId = measurementContainer->at(index).geometryId();
+          return selection.empty() || selection.find(geoId) != selection.end();
+        };
+        std::unordered_multiset<Index> truthHits;
+        for (auto it = measurements.first; it != measurements.second; ++it) {
+          if (inRegion(it->second)) {
+            truthHits.insert(it->second);
+          }
+        }
+        std::size_t nReco = 0;
+        std::size_t nShared = 0;
+        for (const auto& state : track.trackStatesReversed()) {
+          const auto flags = state.typeFlags();
+          if (!flags.isMeasurement() && !flags.isOutlier()) {
+            continue;
+          }
+          const auto* link =
+              state.getUncalibratedSourceLink().getPtr<IndexSourceLink>();
+          if (link == nullptr) {
+            throw std::invalid_argument(
+                "Regional track quality requires IndexSourceLink measurements");
+          }
+          if (!inRegion(link->index())) {
+            continue;
+          }
+          nReco += static_cast<std::size_t>(flags.isMeasurement()) +
+                   static_cast<std::size_t>(flags.isOutlier());
+          if (flags.isMeasurement() && !flags.isOutlier()) {
+            nShared += truthHits.count(link->index());
+          }
+        }
+        auto& stats = m_stats.regionalQuality.at(name);
+        std::optional<double> regionalCompleteness;
+        std::optional<double> regionalPurity;
+        if (!truthHits.empty()) {
+          regionalCompleteness =
+              static_cast<double>(nShared) / truthHits.size();
+          ++stats.nCompleteness;
+          stats.sumCompleteness += *regionalCompleteness;
+        } else {
+          ++stats.nUndefinedCompleteness;
+        }
+        if (nReco > 0) {
+          regionalPurity = static_cast<double>(nShared) / nReco;
+          ++stats.nPurity;
+          stats.sumPurity += *regionalPurity;
+        } else {
+          ++stats.nUndefinedPurity;
+        }
+        m_regionalQualityTools.at(name).fill(matchedParticle->initialState(),
+                                             regionalCompleteness,
+                                             regionalPurity);
+      }
     }
   }
 

@@ -49,7 +49,8 @@ RootPatternRecognitionPerformanceWriter::
               m_cfg.label, m_cfg.effPlotToolConfig, m_cfg.fakePlotToolConfig,
               m_cfg.duplicationPlotToolConfig, m_cfg.trackSummaryPlotToolConfig,
               m_cfg.trackQualityPlotToolConfig,
-              m_cfg.subDetectorTrackSummaryVolumes},
+              m_cfg.subDetectorTrackSummaryVolumes,
+              m_cfg.trackQualityGeometrySelections},
           logger().clone()) {
   // tracks collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
@@ -72,6 +73,12 @@ RootPatternRecognitionPerformanceWriter::
   m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
   m_inputParticleTrackMatching.initialize(m_cfg.inputParticleTrackMatching);
   m_inputParticleMeasurementsMap.initialize(m_cfg.inputParticleMeasurementsMap);
+  if (!m_cfg.trackQualityGeometrySelections.empty() &&
+      m_cfg.inputMeasurements.empty()) {
+    throw std::invalid_argument(
+        "Regional track quality requires inputMeasurements");
+  }
+  m_inputMeasurements.maybeInitialize(m_cfg.inputMeasurements);
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -212,6 +219,21 @@ ProcessCode RootPatternRecognitionPerformanceWriter::finalize() {
     writeCount(s.nTotalDuplicateParticles, "nTotalDuplicateParticles");
     writeCount(s.nTotalFakeParticles, "nTotalFakeParticles");
     writeCount(s.nTotalQualityTracks, "nTotalQualityTracks");
+    for (const auto& [name, tool] : m_collector.regionalQualityTools()) {
+      for (const auto& [key, profile] : tool.profiles()) {
+        toRoot(profile)->Write();
+      }
+      const auto& quality = s.regionalQuality.at(name);
+      writeCount(quality.nCompleteness, name + "_nCompleteness");
+      writeCount(quality.nPurity, name + "_nPurity");
+      writeCount(quality.nUndefinedCompleteness,
+                 name + "_nUndefinedCompleteness");
+      writeCount(quality.nUndefinedPurity, name + "_nUndefinedPurity");
+      writeFloat(static_cast<float>(quality.meanCompleteness()),
+                 (name + "_meanCompleteness").c_str());
+      writeFloat(static_cast<float>(quality.meanPurity()),
+                 (name + "_meanPurity").c_str());
+    }
 
     for (const auto& [key, sub] : s.subDetectors) {
       writeCount(sub.nTrackStates, key + "_nTrackStates");
@@ -244,8 +266,10 @@ ProcessCode RootPatternRecognitionPerformanceWriter::writeT(
   // Exclusive access to the histograms while filling
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  m_collector.fill(ctx.recoGeoContext, tracks, particles, trackParticleMatching,
-                   particleTrackMatching, particleMeasurementsMap);
+  m_collector.fill(
+      ctx.recoGeoContext, tracks, particles, trackParticleMatching,
+      particleTrackMatching, particleMeasurementsMap,
+      m_cfg.inputMeasurements.empty() ? nullptr : &m_inputMeasurements(ctx));
 
   // Write additional matching details to TTree
   if (m_cfg.writeMatchingDetails && m_matchingTree != nullptr) {

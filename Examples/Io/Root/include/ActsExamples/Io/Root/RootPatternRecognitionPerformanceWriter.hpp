@@ -75,6 +75,12 @@ class RootPatternRecognitionPerformanceWriter final
 
     /// Write additional matching details to a TTree
     bool writeMatchingDetails = false;
+
+    /// Complete measurement collection, required for regional quality.
+    std::string inputMeasurements;
+    /// Named hierarchical geometry selections; see collector configuration.
+    std::map<std::string, std::vector<Acts::GeometryIdentifier>>
+        trackQualityGeometrySelections;
   };
 
   /// Construct from configuration and log level.
@@ -117,6 +123,8 @@ class RootPatternRecognitionPerformanceWriter final
       this, "InputParticleTrackMatching"};
   ReadDataHandle<ParticleMeasurementsMap> m_inputParticleMeasurementsMap{
       this, "InputParticleMeasurementsMap"};
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
 };
 
 }  // namespace ActsExamples
