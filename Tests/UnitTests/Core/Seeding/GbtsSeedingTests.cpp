@@ -30,6 +30,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -872,8 +873,8 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
 
   auto profiler = std::make_shared<Experimental::GbtsProfiler>();
-  SeederSetup setup = makeSeeder(detector, true, false, profiler);
-  setup.options.eventNumber = 42;
+  const SeederSetup setup = makeSeeder(detector, true, false, profiler);
+  profiler->setEventNumber(42);
 
   SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
@@ -1042,6 +1043,27 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheCutThatRejects) {
                 Experimental::GbtsProfiler::HeadOutcome::ChainTooShort);
   }
   BOOST_CHECK(event.candidates.empty());
+}
+
+// Threads processing different events share a profiler without taking each
+// other's event numbers.
+BOOST_AUTO_TEST_CASE(ProfilerKeepsAnEventNumberPerThread) {
+  Experimental::GbtsProfiler profiler;
+  profiler.setEventNumber(1);
+
+  std::thread other([&profiler]() {
+    profiler.setEventNumber(2);
+    profiler.add(Experimental::GbtsProfiler::Event{});
+  });
+  other.join();
+  profiler.add(Experimental::GbtsProfiler::Event{});
+
+  // added last, so this is the first thread's number surviving the other's
+  const std::vector<Experimental::GbtsProfiler::Event> events =
+      profiler.takeAll();
+  BOOST_REQUIRE_EQUAL(events.size(), 2u);
+  BOOST_CHECK_EQUAL(events[0].eventNumber, 2u);
+  BOOST_CHECK_EQUAL(events[1].eventNumber, 1u);
 }
 
 // At a threshold of zero the sum of ratios rejects what the separate cuts let

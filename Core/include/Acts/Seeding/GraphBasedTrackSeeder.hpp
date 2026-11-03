@@ -113,8 +113,6 @@ class GraphBasedTrackSeeder {
     /// Magnetic field in z
     /// units of GeV/(e*mm).
     float bFieldInZ{};
-    /// Event number the profiler records the call under, if there is one.
-    std::uint64_t eventNumber{};
   };
 
   /// @param config Configuration for the seed finder

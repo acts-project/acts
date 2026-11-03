@@ -100,7 +100,6 @@ void GraphBasedTrackSeeder::createSeeds(
   GbtsProfiler::Event* profile = nullptr;
   if (m_profiler != nullptr) {
     profile = &profileEvent.emplace();
-    profile->eventNumber = options.eventNumber;
     profile->rejectedNodes = std::move(nodeStorage.m_rejectedNodes);
   }
 

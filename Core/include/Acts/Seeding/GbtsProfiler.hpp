@@ -14,6 +14,8 @@
 #include <mutex>
 #include <optional>
 #include <string_view>
+#include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -22,8 +24,9 @@ namespace Acts::Experimental {
 /// where seeds are lost.
 ///
 /// Handed to `GraphBasedTrackSeeder` at construction. Every `createSeeds` call
-/// then adds one `Event`, which the caller takes back out by event number or
-/// all at once. A space point is always identified by the index the caller
+/// then adds one `Event`, under the number the calling thread last gave
+/// `setEventNumber`, which the caller takes back out by that number or all at
+/// once. A space point is always identified by the index the caller
 /// inserted it with, so the records can be matched to truth afterwards.
 ///
 /// Each candidate is recorded once, at the first cut it fails, in the order the
@@ -274,7 +277,8 @@ class GbtsProfiler {
 
   /// What one `createSeeds` call recorded.
   struct Event {
-    /// Event number passed in `GraphBasedTrackSeeder::Options`.
+    /// The number the thread that added it last gave `setEventNumber`, zero if
+    /// it gave none.
     std::uint64_t eventNumber{};
     /// Space points the node storage rejected.
     std::vector<Node> rejectedNodes;
@@ -295,7 +299,14 @@ class GbtsProfiler {
     std::vector<Candidate> candidates;
   };
 
-  /// Add an event. Thread safe.
+  /// Set the event number the calling thread's events are recorded under, until
+  /// it sets another. Call it before each `createSeeds` call, on the same
+  /// thread. Each thread keeps its own number, so that threads processing
+  /// different events can share a profiler. Thread safe.
+  /// @param eventNumber The event number
+  void setEventNumber(std::uint64_t eventNumber);
+
+  /// Add an event under the calling thread's event number. Thread safe.
   /// @param event The event to add
   void add(Event&& event);
 
@@ -331,6 +342,7 @@ class GbtsProfiler {
  private:
   std::mutex m_mutex;
   std::vector<Event> m_events;
+  std::unordered_map<std::thread::id, std::uint64_t> m_eventNumbers;
 };
 
 }  // namespace Acts::Experimental

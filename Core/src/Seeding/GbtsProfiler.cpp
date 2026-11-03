@@ -13,8 +13,14 @@
 
 namespace Acts::Experimental {
 
+void GbtsProfiler::setEventNumber(const std::uint64_t eventNumber) {
+  const std::scoped_lock lock(m_mutex);
+  m_eventNumbers[std::this_thread::get_id()] = eventNumber;
+}
+
 void GbtsProfiler::add(Event&& event) {
   const std::scoped_lock lock(m_mutex);
+  event.eventNumber = m_eventNumbers[std::this_thread::get_id()];
   m_events.push_back(std::move(event));
 }
 
