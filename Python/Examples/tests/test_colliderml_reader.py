@@ -77,8 +77,9 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
         ctx = None
     else:
         odd_dir = acts.examples.odd.getOpenDataDetectorDirectory()
-        matDeco = acts.IMaterialDecorator.fromFile(
-            odd_dir / "data/odd-material-maps.root", level=acts.logging.WARNING
+        matDeco = acts.root.RootMaterialDecorator(
+            fileName=str(odd_dir / "data/odd-material-maps.root"),
+            level=acts.logging.WARNING,
         )
         detector = getOpenDataDetector(matDeco)
         trackingGeometry = detector.trackingGeometry()

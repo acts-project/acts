@@ -58,8 +58,25 @@ G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
   const G4double layerHalfY = m_cfg.bounds[1] * mm;
   const G4double layerHalfZ = m_cfg.thickness * 0.5 * mm;
 
-  const G4double envHalfX = layerHalfX + margin;
-  const G4double envHalfY = layerHalfY + margin;
+  const G4double baseHalfX = m_cfg.bounds[0] * mm;
+  const G4double baseHalfY = m_cfg.bounds[1] * mm;
+
+  // Account for stereo rotation: the rotated rectangle's axis-aligned
+  // bounding box is larger than the unrotated one, so size the shared
+  // layer box for the WORST CASE across all layers.
+  G4double layerHalfX_env = baseHalfX;
+  G4double layerHalfY_env = baseHalfY;
+  for (const auto& stereo : m_cfg.stereos) {
+    const G4double c = std::abs(std::cos(stereo));
+    const G4double s = std::abs(std::sin(stereo));
+    const G4double rotatedHalfX = baseHalfX * c + baseHalfY * s;
+    const G4double rotatedHalfY = baseHalfX * s + baseHalfY * c;
+    layerHalfX_env = std::max(layerHalfX_env, rotatedHalfX);
+    layerHalfY_env = std::max(layerHalfY_env, rotatedHalfY);
+  }
+
+  const G4double envHalfX = layerHalfX_env + margin;
+  const G4double envHalfY = layerHalfY_env + margin;
   const G4double envHalfZ = stackLength * 0.5 + layerHalfZ + margin;
 
   // Get nist material manager
@@ -147,8 +164,12 @@ G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
                                                     "Layer Logic");  // its name
 
   for (std::size_t i = 0; i < m_cfg.positions.size(); ++i) {
+    auto* layerRotation = new G4RotationMatrix();
+    // Rotate the sensor around its local z-axis by the stereo angle
+    layerRotation->rotateZ(m_cfg.stereos[i]);
+
     new G4PVPlacement(
-        nullptr,  // no rotation
+        layerRotation,                                               // rotation
         G4ThreeVector(0, 0, m_cfg.positions[i] * mm - stackCenter),  // position
         "Layer #" + std::to_string(i) + " Phys",                     // its name
         logicLayer,             // its logical volume

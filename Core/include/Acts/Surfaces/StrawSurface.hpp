@@ -38,7 +38,22 @@ class StrawSurface : public LineSurface {
   using LineSurface::LineSurface;
   /// @endcond
 
+  /// Copy constructor
+  /// @param other The source surface for the copy
+  StrawSurface(const StrawSurface& other) = default;
+
  public:
+  /// Assignment operator
+  ///
+  /// @param other The source surface for the assignment
+  /// @return Reference to this StrawSurface after assignment
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<StrawSurface>(other)` instead.
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<StrawSurface>(other) instead.")]]
+  StrawSurface& operator=(const StrawSurface& other);
+
   /// Return the surface type
   /// @return Surface type identifier for straw surfaces
   SurfaceType type() const final { return Surface::Straw; }

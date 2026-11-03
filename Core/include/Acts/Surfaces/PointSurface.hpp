@@ -143,6 +143,19 @@ class PointSurface : public Surface {
                                         const Vector3& position,
                                         const Vector3& direction) const final;
 
+  /// Jacobian from free to bound parameters.
+  ///
+  /// The measurement frame rotates with the track direction, so the loc rows
+  /// have a direction block as well as the position block.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
+  /// @return Jacobian from global to local
+  FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const final;
+
   /// Calculate the derivative of path length at the point-of-closest-approach
   /// w.r.t. free parameters.
   ///

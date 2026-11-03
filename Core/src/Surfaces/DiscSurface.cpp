@@ -23,6 +23,7 @@
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -70,7 +71,9 @@ DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
 
 DiscSurface& DiscSurface::operator=(const DiscSurface& other) {
   if (this != &other) {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     Surface::operator=(other);
+    ACTS_POP_IGNORE_DEPRECATED()
     m_bounds = other.m_bounds;
   }
   return *this;

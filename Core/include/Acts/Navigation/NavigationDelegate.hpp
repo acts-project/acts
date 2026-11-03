@@ -28,6 +28,12 @@ struct NavigationArguments {
   /// Direction vector for navigation propagation
   Vector3 direction{};
 
+  /// Local geometric curvature d(direction)/ds in global coordinates, in
+  /// inverse length units. Perpendicular to the unit tangent, with magnitude
+  /// 1/R for the local curvature radius. Unchanged by reversing propagation
+  /// direction. Zero denotes straight motion.
+  Vector3 curvature = Vector3::Zero();
+
   /// Boundary tolerance for surface intersection calculations
   BoundaryTolerance tolerance = BoundaryTolerance::None();
 };

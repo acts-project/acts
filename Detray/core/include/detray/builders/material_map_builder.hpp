@@ -106,27 +106,16 @@ class material_map_builder final : public volume_decorator<detector_t> {
   }
   /// @}
 
-  /// Toggles whether material maps that are identical to a map already
-  /// present in the detector are shared instead of being copied
-  DETRAY_HOST
-  void deduplicate_material(bool toggle) override {
-    m_deduplicate = toggle;
-    volume_decorator<detector_t>::deduplicate_material(toggle);
-  }
-
-  /// @returns whether identical material maps are shared between surfaces
-  DETRAY_HOST
-  bool deduplicate_material() const { return m_deduplicate; }
-
   /// Add the volume and the material maps to the detector @param det
   DETRAY_HOST
-  auto build(detector_t& det, typename detector_t::geometry_context ctx = {}) ->
+  auto build(detector_t& det, const volume_builder_options& opt,
+             typename detector_t::geometry_context ctx = {}) ->
       typename detector_t::volume_type* override {
     DETRAY_VERBOSE_HOST("Build material maps...");
 
     // Ensure the material links are correct BEFORE the surfaces are built
     // and potentially added to an acceleration data structure
-    add_material_maps(det);
+    add_material_maps(opt, det);
 
     DETRAY_DEBUG_HOST(
         "-> Let underlying builders construct the volume using correct "
@@ -136,7 +125,7 @@ class material_map_builder final : public volume_decorator<detector_t> {
         "Successfully built material maps for volume: " << this->name());
 
     // Construct the surfaces and give the volume to the next decorator
-    return volume_decorator<detector_t>::build(det, ctx);
+    return volume_decorator<detector_t>::build(det, opt, ctx);
   }
 
  private:
@@ -151,7 +140,7 @@ class material_map_builder final : public volume_decorator<detector_t> {
   ///
   /// @note The grids are built from the volume local masks in the builder,
   /// since the surfaces are not yet added to the detector
-  void add_material_maps(detector_t& det) {
+  void add_material_maps(const volume_builder_options& opt, detector_t& det) {
     DETRAY_VERBOSE_HOST("Build material maps for surfaces...");
 
     // The total number of surfaces that will be built by this builder
@@ -179,7 +168,8 @@ class material_map_builder final : public volume_decorator<detector_t> {
       auto [mat_id, mat_idx] =
           this->masks().template visit<detail::add_sf_material_map<material_t>>(
               sf_desc.mask(), m_factory, m_bin_data.at(sf_idx),
-              m_n_bins.at(sf_idx), axis_spans, det._materials, m_deduplicate);
+              m_n_bins.at(sf_idx), axis_spans, det._materials,
+              opt.deduplicate());
 
       // Make sure the material type was set correctly by the factory
       if (mat_id != sf_desc.material().id() || mat_idx == dindex_invalid) {
@@ -198,8 +188,6 @@ class material_map_builder final : public volume_decorator<detector_t> {
     }
   }
 
-  /// Whether to share identical material maps between surfaces
-  bool m_deduplicate{false};
   /// The surface this material map belongs to (index is volume local)
   std::map<dindex, std::vector<bin_data_type>> m_bin_data;
   /// Number of bins for the material grid axes

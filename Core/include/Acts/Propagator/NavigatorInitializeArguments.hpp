@@ -25,6 +25,8 @@ struct NavigatorInitializeArguments {
   Vector3 position{};
   /// Direction the navigation run starts with
   Vector3 direction{};
+  /// Initial global geometric curvature, see NavigationArguments::curvature.
+  Vector3 curvature = Vector3::Zero();
   /// Direction of the propagation along the trajectory
   Direction propagationDirection = Direction::Forward();
 

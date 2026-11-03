@@ -60,11 +60,4 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
         idxedAlignSurfaces,
     const Acts::Logger& logger);
 
-/// Writes an alignment outcome into a text file in the format
-/// used by Millepede. Allows the constants to be processed
-/// in the same visualisation code use for MP-II results,
-/// or to be read back as initial values for a fit with MP-II
-void dumpAsMillepedeRes(const ActsAlignment::AlignmentResult& result,
-                        std::ostream& out);
-
 }  // namespace ActsPlugins::ActsToMille

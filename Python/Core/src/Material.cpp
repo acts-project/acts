@@ -74,6 +74,8 @@ void addMaterial(py::module_& m) {
         .def_readwrite("material", &KeyedSurfaceMaterial::material);
     py::class_<TrackingGeometryMaterial>(m, "TrackingGeometryMaterial")
         .def(py::init<>())
+        .def_static("fromGeometry", &TrackingGeometryMaterial::fromGeometry,
+                    py::arg("geometry"), py::arg("includeNonMaterial") = false)
         .def_property("description", &TrackingGeometryMaterial::description,
                       &TrackingGeometryMaterial::setDescription)
         .def_readwrite("surfaceMaterials",
@@ -143,7 +145,18 @@ void addMaterial(py::module_& m) {
                     }),
                 py::arg("config"), py::arg("level"))
             .def("createState", &BinnedSurfaceMaterialAccumulator::createState)
-            .def("accumulate", &BinnedSurfaceMaterialAccumulator::accumulate)
+            .def("accumulate",
+                 [](const BinnedSurfaceMaterialAccumulator& self,
+                    ISurfaceMaterialAccumulator::State& state,
+                    const GeometryContext& gctx,
+                    const std::vector<MaterialInteraction>& interactions,
+                    const std::vector<IAssignmentFinder::SurfaceAssignment>&
+                        surfacesWithoutAssignment) {
+                   ISurfaceMaterialAccumulator::TrackAccumulation track{
+                       &interactions, &surfacesWithoutAssignment};
+                   self.accumulateTracks(state, gctx, std::span(&track, 1),
+                                         nullptr);
+                 })
             .def("finalizeMaterial",
                  &BinnedSurfaceMaterialAccumulator::finalizeMaterial)
             .def("finalizeMaps",
@@ -166,7 +179,8 @@ void addMaterial(py::module_& m) {
                        py::arg("config"), py::arg("level"));
 
     auto c = py::class_<MaterialMapper::Config>(mm, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, assignmentFinder, surfaceMaterialAccumulator);
+    ACTS_PYTHON_STRUCT(c, assignmentFinder, surfaceMaterialAccumulator,
+                       numThreads);
   }
 
   {

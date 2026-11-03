@@ -9,6 +9,7 @@
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Mille/MillePedeError.hpp"
 #include "ActsPlugins/Mille/MillePedeSolver.hpp"
 
@@ -18,23 +19,23 @@ BOOST_AUTO_TEST_SUITE(MillePedeSolverBuiltin)
 
 /// run the built-in silicon alignment test
 BOOST_AUTO_TEST_CASE(BuiltInSiTracker) {
-  MillePedeSolver::Config testSolverCfg;
+  MillePedeSolverConfig testSolverCfg;
   // this tells the solver we do not use a steering file
   testSolverCfg.steeringFile = "";
   testSolverCfg.workDir = "mpTest";
   testSolverCfg.redirectStdout = "mpStdout.txt";
   // this triggers the built-in test case
   testSolverCfg.extraOpts = {" -t=BRLF"};
-
-  MillePedeSolver solver;
-  auto res = solver.solve(testSolverCfg);
+  auto logger =
+      Acts::getDefaultLogger("MillePedeSolverBuiltin", Acts::Logging::INFO);
+  auto res = runMillePedeSolver(testSolverCfg, *logger);
   // this one should be ok!
   BOOST_CHECK(res.ok());
   // the internal exit code should be zero
   BOOST_CHECK_EQUAL(res->exitCode, 0);
   // and the zero exit code should resolve to a "nominal exit"
   BOOST_CHECK_EQUAL(static_cast<int>(res->exitStatus),
-                    static_cast<int>(MillePedeSolver::ExitStatus::NominalExit));
+                    static_cast<int>(MillePedeExitStatus::NominalExit));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

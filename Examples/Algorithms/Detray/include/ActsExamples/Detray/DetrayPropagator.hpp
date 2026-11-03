@@ -127,7 +127,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
       using DIntersection =
           detray::intersection2D<typename detector_t::surface_type, DAlgebra>;
       using DMaterialTracer =
-          detray::material_validator::material_tracer<float, vecmem::vector>;
+          detray::material_validator::material_tracer<vecmem::vector>;
       using DObjectTracer = detray::navigation::object_tracer<
           detector_t, detray::dvector, detray::navigation::status::e_on_object,
           detray::navigation::status::e_on_portal>;
@@ -191,15 +191,15 @@ class DetrayConcretePropagator : public PropagatorInterface {
     // Translate the objects into the steps
     for (const auto& object : objectTracer.object_trace) {
       // Get the position of the object
-      const auto& dposition = object.pos;
-      const auto& sfDesription = object.intersection.surface();
+      const auto& dposition = object.template position<double>();
+      const auto& sfDesription = object.intersection().surface();
       const auto sf = detray::tracking_surface{*m_detrayGeometry, sfDesription};
       Acts::GeometryIdentifier geoID(sf.source());
       // Create a step from the object
       Acts::detail::Step step;
       step.position = Acts::Vector3(dposition[0], dposition[1], dposition[2]);
       step.geoID = geoID;
-      step.navDir = object.intersection.is_along()
+      step.navDir = object.intersection().is_along()
                         ? Acts::Direction::Forward()
                         : Acts::Direction::Backward();
       summary.steps.emplace_back(step);

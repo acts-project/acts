@@ -139,28 +139,55 @@ using block_getter_t = typename block_getter<M>::type;
 
 /// The algebra types
 /// @{
-template <typename T>
+template <typename A, typename = void>
 struct get_algebra {};
 
-template <typename T>
-  requires(!std::is_same_v<typename T::point3D, void>)
-struct get_algebra<T> {
+template <typename A>
+  requires(!std::is_same_v<typename A::point3D, void>)
+struct get_algebra<A> {
+  using algebra_type = A;
+
   template <typename U>
-  using simd = typename T::template simd<U>;
-  using index_type = typename T::index_type;
-  using boolean = typename T::boolean;
-  using value = typename T::value_type;
-  using scalar = typename T::scalar;
-  using point2D = typename T::point2D;
-  using point3D = typename T::point3D;
-  using vector2D = typename T::vector2D;
-  using vector3D = typename T::vector3D;
-  using transform3D = typename T::transform3D;
+  using simd = typename A::template simd<U>;
+  using index_type = typename A::index_type;
+  using boolean = typename A::boolean;
+  using value = typename A::value_type;
+  using scalar = typename A::scalar;
+  using point2D = typename A::point2D;
+  using point3D = typename A::point3D;
+  using vector2D = typename A::vector2D;
+  using vector3D = typename A::vector3D;
+  using transform3D = typename A::transform3D;
   template <std::size_t ROWS, std::size_t COLS>
-  using matrix = typename T::template matrix<ROWS, COLS>;
+  using matrix = typename A::template matrix<ROWS, COLS>;
+};
+
+// Switch the value type of an existing algebra definition
+template <template <typename> class A, typename W, typename V>
+  requires(!std::is_same_v<typename A<V>::point3D, void> &&
+           !std::is_same_v<typename A<W>::point3D, void>)
+struct get_algebra<A<V>, W> {
+  using algebra_type = A<W>;
+
+  template <typename U>
+  using simd = typename A<W>::template simd<U>;
+  using index_type = typename A<W>::index_type;
+  using boolean = typename A<W>::boolean;
+  using value = typename A<W>::value_type;
+  using scalar = typename A<W>::scalar;
+  using point2D = typename A<W>::point2D;
+  using point3D = typename A<W>::point3D;
+  using vector2D = typename A<W>::vector2D;
+  using vector3D = typename A<W>::vector3D;
+  using transform3D = typename A<W>::transform3D;
+  template <std::size_t ROWS, std::size_t COLS>
+  using matrix = typename A<W>::template matrix<ROWS, COLS>;
 };
 
 }  // namespace traits
+
+template <typename A, typename T>
+using get_algebra_t = typename traits::get_algebra<A, T>::algebra_type;
 
 template <typename A>
 using get_value_t = typename traits::get_algebra<A>::value;
@@ -174,26 +201,26 @@ using get_simd_t = typename traits::get_algebra<A>::template simd<T>;
 template <typename A>
 using get_index_t = typename traits::get_algebra<A>::index_type;
 
-template <typename A>
-using get_scalar_t = typename traits::get_algebra<A>::scalar;
+template <typename A, typename T = get_value_t<A>>
+using get_scalar_t = typename traits::get_algebra<A, T>::scalar;
 
-template <typename A>
-using get_point2D_t = typename traits::get_algebra<A>::point2D;
+template <typename A, typename T = get_value_t<A>>
+using get_point2D_t = typename traits::get_algebra<A, T>::point2D;
 
-template <typename A>
-using get_point3D_t = typename traits::get_algebra<A>::point3D;
+template <typename A, typename T = get_value_t<A>>
+using get_point3D_t = typename traits::get_algebra<A, T>::point3D;
 
-template <typename A>
-using get_vector2D_t = typename traits::get_algebra<A>::vector2D;
+template <typename A, typename T = get_value_t<A>>
+using get_vector2D_t = typename traits::get_algebra<A, T>::vector2D;
 
-template <typename A>
-using get_vector3D_t = typename traits::get_algebra<A>::vector3D;
+template <typename A, typename T = get_value_t<A>>
+using get_vector3D_t = typename traits::get_algebra<A, T>::vector3D;
 
-template <typename A>
-using get_transform3D_t = typename traits::get_algebra<A>::transform3D;
+template <typename A, typename T = get_value_t<A>>
+using get_transform3D_t = typename traits::get_algebra<A, T>::transform3D;
 
-template <typename A, std::size_t R, std::size_t C>
-using get_matrix_t = typename traits::get_algebra<A>::template matrix<R, C>;
+template <typename A, std::size_t R, std::size_t C, typename T = get_value_t<A>>
+using get_matrix_t = typename traits::get_algebra<A, T>::template matrix<R, C>;
 /// @}
 
 }  // namespace detray

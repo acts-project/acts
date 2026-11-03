@@ -205,6 +205,7 @@ GTEST_TEST(detray_builders, volume_builder) {
   using namespace detray;
 
   vecmem::host_memory_resource host_mr;
+  const volume_builder_options builder_opts{};
 
   using metadata_t = test::default_metadata;
   using detector_t = host::detector<metadata_t>;
@@ -222,7 +223,7 @@ GTEST_TEST(detray_builders, volume_builder) {
 
   volume_builder<detector_t> vbuilder{volume_id::e_cylinder};
   vbuilder.add_surfaces(sf_factory);
-  vbuilder.build(d);
+  vbuilder.build(d, builder_opts);
 
   const auto& vol = d.volumes().back();
 

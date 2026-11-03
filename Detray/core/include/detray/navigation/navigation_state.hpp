@@ -309,7 +309,7 @@ class base_state : public detray::ranges::view_interface<
   /// @returns current/previous object that was reached - const
   DETRAY_HOST_DEVICE
   constexpr auto current() const -> const candidate_t & {
-    assert(cast_impl().is_on_surface());
+    assert(cast_impl().is_on_surface() || cast_impl().finished());
     assert(m_next > 0);
     return m_candidates[static_cast<std::size_t>(m_next - 1)];
   }
@@ -363,7 +363,7 @@ class base_state : public detray::ranges::view_interface<
   /// @returns current detector surface the navigator is on - const
   template <template <typename> class surface_t = tracking_surface>
   DETRAY_HOST_DEVICE constexpr auto current_surface() const {
-    assert(cast_impl().is_on_surface());
+    assert(cast_impl().is_on_surface() || cast_impl().finished());
     return surface_t<detector_t>{*m_detector, current().surface()};
   }
 
@@ -540,7 +540,7 @@ class base_state : public detray::ranges::view_interface<
   /// @returns current/previous object that was reached
   DETRAY_HOST_DEVICE
   constexpr auto current() -> candidate_t & {
-    assert(cast_impl().is_on_surface());
+    assert(cast_impl().is_on_surface() || cast_impl().finished());
     assert(m_next > 0);
     return m_candidates[static_cast<std::size_t>(m_next - 1)];
   }

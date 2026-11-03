@@ -64,7 +64,6 @@ void RootMaterialWriter::writeMaterial(
   // Change to the output file
   m_outputFile->cd();
 
-  const auto& surfaceMaps = detMaterial.surfaceMaterials;
   const auto& volumeMaps = detMaterial.volumeMaterials;
   if (!detMaterial.keyedSurfaces.empty()) {
     throw std::invalid_argument(
@@ -75,10 +74,7 @@ void RootMaterialWriter::writeMaterial(
   ActsPlugins::RootMaterialMapIo accessor(m_cfg.accessorConfig,
                                           m_logger->clone("RootMaterialMapIo"));
 
-  for (const auto& [geoId, sMap] : surfaceMaps) {
-    // Get the Surface material
-    accessor.write(*m_outputFile, geoId, *sMap, m_cfg.accessorOptions);
-  }
+  accessor.write(*m_outputFile, detMaterial, m_cfg.accessorOptions);
 
   // Write the volume material maps
   for (auto& [key, value] : volumeMaps) {

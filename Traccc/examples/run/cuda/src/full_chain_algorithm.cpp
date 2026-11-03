@@ -93,12 +93,10 @@ full_chain_algorithm::full_chain_algorithm(
     bool useGBTS, await_strategy await_mode)
     : messaging(logger->clone()),
       m_host_mr(host_mr),
-      m_pinned_host_mr(),
-      m_cached_pinned_host_mr(m_pinned_host_mr),
+      m_cached_pinned_host_mr(data.m_synchronized_pinned_host_mr),
       m_vecmem_stream{},
       m_stream{m_vecmem_stream.stream()},
-      m_device_mr(),
-      m_cached_device_mr(m_device_mr),
+      m_cached_device_mr(data.m_synchronized_device_mr),
       m_copy(m_stream.cudaStream()),
       m_await_function(get_await_function(await_mode)),
       m_field(data.m_field),
@@ -110,9 +108,9 @@ full_chain_algorithm::full_chain_algorithm(
                        m_stream, clustering_config,
                        logger->cloneWithSuffix("ClusteringAlg"),
                        m_await_function),
-      m_measurement_sorting({m_cached_device_mr, &m_cached_pinned_host_mr},
-                            m_copy, m_stream,
-                            logger->cloneWithSuffix("MeasSortingAlg")),
+      m_measurement_sorting(
+          {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy, m_stream,
+          logger->cloneWithSuffix("MeasSortingAlg"), m_await_function),
       m_spacepoint_formation(
           {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy, m_stream,
           logger->cloneWithSuffix("SpFormationAlg"), m_await_function),
@@ -151,7 +149,7 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
-  m_copy(vecmem::get_data(cells), cells_buffer)->ignore();
+  m_copy(vecmem::ignore_event, vecmem::get_data(cells), cells_buffer);
 
   // Run the clusterization (asynchronously).
   const auto unsorted_measurements =
@@ -205,7 +203,7 @@ bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
-  m_copy(vecmem::get_data(cells), cells_buffer)->ignore();
+  m_copy(vecmem::ignore_event, vecmem::get_data(cells), cells_buffer);
 
   // Run the clusterization (asynchronously).
   const auto unsorted_measurements =

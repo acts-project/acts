@@ -375,6 +375,10 @@ struct GaussianSumFitter {
       actor.m_cfg.logger = m_actorLogger.get();
 
       bwdPropOptions.direction = gsfBackward;
+      // The backward pass retraces the forward path. The loop protection limit
+      // would be derived from the momentum at the end of the track, which for
+      // electrons after bremsstrahlung is far too low to get back.
+      bwdPropOptions.loopProtection = false;
 
       const Surface& target = options.referenceSurface
                                   ? *options.referenceSurface
@@ -498,6 +502,7 @@ struct GaussianSumFitter {
 
     auto track = trackContainer.makeTrack();
     track.tipIndex() = fwdGsfResult.lastMeasurementTip;
+    track.setParticleHypothesis(sParameters.particleHypothesis());
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;

@@ -32,6 +32,10 @@ class MillePedeErrorCategory : public std::error_category {
       case InvalidSolution:
         return "The solver encountered a serious error and found no valid "
                "solution";
+      case SolutionNotReadable:
+        return "The solution was not readable";
+      case UnableToWriteSteering:
+        return "The steering file could not be generated";
       default:
         return "unknown";
     }

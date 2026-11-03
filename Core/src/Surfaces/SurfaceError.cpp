@@ -24,6 +24,8 @@ class PortalErrorCategory : public std::error_category {
     switch (static_cast<PortalError>(c)) {
       case PortalError::PositionNotOnAnyChildPortalLink:
         return "Position not on any of the composite child portal links";
+      case PortalError::PositionOutsideLinkBounds:
+        return "Position outside the bounds of the grid portal link";
       default:
         return "unknown";
     }

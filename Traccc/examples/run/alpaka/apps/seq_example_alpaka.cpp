@@ -100,10 +100,9 @@ int seq_run(const traccc::opts::detector& detector_opts,
       static_cast<traccc::detector_conditions_description::buffer::size_type>(
           host_det_cond.size()),
       device_mr};
-  copy.setup(device_det_cond)->ignore();
-  copy(vecmem::get_data(host_det_cond), device_det_cond,
-       vecmem::copy::type::host_to_device)
-      ->ignore();
+  copy.setup(vecmem::ignore_event, device_det_cond);
+  copy(vecmem::ignore_event, vecmem::get_data(host_det_cond), device_det_cond,
+       vecmem::copy::type::host_to_device);
 
   // Construct a Detray detector object, if supported by the configuration.
   traccc::host_detector host_det;

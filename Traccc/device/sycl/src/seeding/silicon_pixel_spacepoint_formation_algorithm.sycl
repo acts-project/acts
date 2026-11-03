@@ -74,11 +74,11 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
         // Put the detector view into device memory.
         vecmem::data::vector_buffer<detray::detector_view_t<detector_t>>
             device_det(1u, mr().main);
-        copy().setup(device_det)->ignore();
-        copy()(vecmem::data::vector_view<
+        copy().setup(vecmem::ignore_event, device_det);
+        copy()(vecmem::ignore_event,
+               vecmem::data::vector_view<
                    const detray::detector_view_t<detector_t>>(1u, &det),
-               device_det)
-            ->ignore();
+               device_det);
 
         // Launch the kernel. The base class destroys the prefix sum buffer,
         // and this function destroys the detector view buffer, right after

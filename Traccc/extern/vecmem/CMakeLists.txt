@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS)
 
 # Declare where to get VecMem from.
 set(TRACCC_VECMEM_SOURCE
-    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v1.27.0.tar.gz;URL_MD5;30ef85b2a9326c08d291f4fea949e097"
+    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v1.28.0.tar.gz;URL_MD5;054e3f8407fe710dae9f0c47d8089c0d"
     CACHE STRING
     "Source for VecMem, when built as part of this project"
 )

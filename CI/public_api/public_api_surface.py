@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import glob
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -142,7 +143,32 @@ def _norm_type(el) -> str:
     return _sanitize(" ".join("".join(el.itertext()).split()))
 
 
-def callable_forms(md, qualname: str) -> dict[str, str]:
+def _scoped_type(el, qualname: str, type_names: set[str]) -> str:
+    """Resolve documented type names in the callable's enclosing C++ scopes.
+
+    Doxygen can emit declarations and out-of-line definitions separately, with
+    different qualification and defaults. Canonicalizing their types lets the
+    declaration's shorter callable forms cover both spellings. Unknown names
+    remain unchanged; never discard namespace prefixes indiscriminately.
+    """
+    scopes = qualname.split("::")[:-1]
+
+    def resolve(match):
+        name = match.group()
+        if name.startswith("::"):
+            return name[2:] if name[2:] in type_names else name
+        for depth in range(len(scopes), -1, -1):
+            candidate = "::".join([*scopes[:depth], name])
+            if candidate in type_names:
+                return candidate
+        return name
+
+    return re.sub(r"(?:::)?[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*", resolve, _norm_type(el))
+
+
+def callable_forms(
+    md, qualname: str, type_names: set[str] | None = None
+) -> dict[str, str]:
     """Expand a function memberdef into its source-callable signatures.
 
     A parameter with a default value makes shorter calls valid too, so
@@ -152,14 +178,16 @@ def callable_forms(md, qualname: str) -> dict[str, str]:
     one) shows up as a removed form. Maps form-key -> return type.
     """
     params = md.findall("param")
-    types = [_norm_type(p.find("type")) for p in params]
+    types = [
+        _scoped_type(p.find("type"), qualname, type_names or set()) for p in params
+    ]
     has_default = [p.find("defval") is not None for p in params]
     required = len(types)
     for i, d in enumerate(has_default):
         if d:
             required = i
             break
-    ret = _norm_type(md.find("type"))
+    ret = _scoped_type(md.find("type"), qualname, type_names or set())
     const = " const" if md.get("const") == "yes" else ""
     forms = {}
     for m in range(required, len(types) + 1):
@@ -177,6 +205,7 @@ def parse_xml(xml_dir: Path) -> dict:
     fields: dict[str, str] = {}  # public data member Class::name -> type
     methods = 0
 
+    roots = []
     for f in glob.glob(str(xml_dir / "*.xml")):
         base = os.path.basename(f)
         if base in ("index.xml", "Doxyfile.xml"):
@@ -185,6 +214,21 @@ def parse_xml(xml_dir: Path) -> dict:
             root = ET.parse(f).getroot()
         except ET.ParseError:
             continue
+        roots.append(root)
+
+    # Collect types first so resolution does not depend on XML file order.
+    known_types = set()
+    for root in roots:
+        for cd in root.findall("compounddef"):
+            scope = _name(cd, "compoundname")
+            if cd.get("kind") in ("class", "struct", "union"):
+                known_types.add(scope.split("<")[0])
+            if cd.get("kind") in ("class", "struct", "union", "namespace"):
+                for md in cd.findall("sectiondef/memberdef"):
+                    if md.get("kind") in ("enum", "typedef"):
+                        known_types.add(f"{scope}::{_name(md, 'name')}")
+
+    for root in roots:
         for cd in root.findall("compounddef"):
             kind = cd.get("kind")
             name = _name(cd, "compoundname")
@@ -207,7 +251,9 @@ def parse_xml(xml_dir: Path) -> dict:
                     if md.get("kind") == "function":
                         methods += 1
                         callables.update(
-                            callable_forms(md, f"{bare}::{_name(md, 'name')}")
+                            callable_forms(
+                                md, f"{bare}::{_name(md, 'name')}", known_types
+                            )
                         )
                     elif md.get("kind") == "variable":
                         mname = _name(md, "name")
@@ -235,7 +281,7 @@ def parse_xml(xml_dir: Path) -> dict:
                     counts[bucket] += 1
                     symbols.add(f"{bucket} {full}")
                     if mk == "function":
-                        callables.update(callable_forms(md, full))
+                        callables.update(callable_forms(md, full, known_types))
                     mloc = md.find("location")
                     per_module[
                         module_of(mloc.get("file") if mloc is not None else None)

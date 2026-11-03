@@ -55,6 +55,10 @@ set(DETRAY_PYTHON_INSTALL_DIR "python/detray")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(detray-functions)
 
+# Honour ACTS_FORCE_ASSERTIONS in standalone builds inside the ACTS tree. When
+# detray is built via add_subdirectory from ACTS this is a no-op.
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsForceAssertions.cmake)
+
 #
 # Define build options
 #
@@ -104,7 +108,7 @@ cmake_dependent_option(
 
 # Plugins / Algebra backends
 option(DETRAY_SVG_DISPLAY "Build ActSVG display module" OFF)
-option(DETRAY_ARRAY_PLUGIN "Build Eigen math plugin" ON)
+option(DETRAY_ARRAY_PLUGIN "Build std::array math plugin" ON)
 option(DETRAY_EIGEN_PLUGIN "Build Eigen math plugin" OFF)
 option(DETRAY_FASTOR_PLUGIN "Build Fastor math plugin" OFF)
 option(DETRAY_SMATRIX_PLUGIN "Build ROOT/SMatrix math plugin" OFF)
@@ -251,9 +255,9 @@ option(
     ${DETRAY_USE_SYSTEM_LIBS}
 )
 if(DETRAY_SETUP_VECMEM)
-    set(DETRAY_VECMEM_VERSION 1.27.0)
+    set(DETRAY_VECMEM_VERSION 1.28.0)
     set(DETRAY_VECMEM_DIGEST
-        30ef85b2a9326c08d291f4fea949e097
+        054e3f8407fe710dae9f0c47d8089c0d
         CACHE STRING
         "MD5 digest of the downloaded zip"
     )
@@ -473,9 +477,9 @@ option(
     ${DETRAY_USE_SYSTEM_LIBS}
 )
 if(DETRAY_SETUP_COVFIE)
-    set(DETRAY_COVFIE_VERSION 0.15.4)
+    set(DETRAY_COVFIE_VERSION 0.16.0)
     set(DETRAY_COVFIE_DIGEST
-        80de9b43644c59d8239fb8cc184c6276
+        6f645c2e5cc7e0587d801aff0c6fc75b
         CACHE STRING
         "MD5 digest of the downloaded zip"
     )

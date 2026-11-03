@@ -85,6 +85,8 @@ GTEST_TEST(detray_builders, decorator_material_map_builder) {
   vecmem::host_memory_resource host_mr;
   detector_t d(host_mr);
   auto geo_ctx = typename detector_t::geometry_context{};
+  volume_builder_options builder_opts{};
+  builder_opts.deduplicate(false);
 
   auto vbuilder =
       std::make_unique<volume_builder<detector_t>>(volume_id::e_cylinder);
@@ -167,7 +169,7 @@ GTEST_TEST(detray_builders, decorator_material_map_builder) {
   mat_builder.add_surfaces(mat_cyl_factory, geo_ctx);
 
   // Add the volume to the detector
-  mat_builder.build(d);
+  mat_builder.build(d, builder_opts);
 
   //
   // check results

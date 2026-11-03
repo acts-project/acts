@@ -80,8 +80,8 @@ kalman_fitting_algorithm::output_type kalman_fitting_algorithm::operator()(
        vecmem::data::buffer_type::resizable},
       {n_states, mr().main, vecmem::data::buffer_type::resizable},
       input_tracks.measurements};
-  copy().setup(output_tracks.tracks)->ignore();
-  copy().setup(output_tracks.states)->ignore();
+  copy().setup(vecmem::ignore_event, output_tracks.tracks);
+  copy().setup(vecmem::ignore_event, output_tracks.states);
 
   // Create the order to fit the tracks in.
   vecmem::data::vector_buffer<device::sort_key> track_sort_keys(n_tracks,
