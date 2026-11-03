@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/GbtsGeometry.hpp"
-
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
@@ -22,7 +20,9 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Experimental::detail {
+#include "GbtsGeometryImpl.hpp"
+
+namespace Acts::detail {
 
 float GbtsLayer::LayerPoint::eta() const {
   const float t = z / r;
@@ -173,9 +173,9 @@ std::uint32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
   return m_binning.firstBin + idx;
 }
 
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts::detail
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 // key: bin. value: (outgoing, incoming) bins it connects to.
@@ -210,7 +210,8 @@ std::vector<GbtsLayerDescription> orderPixelBarrel(
     }
   } else if (numOrdered != std::ssize(pixelBarrel)) {
     throw std::invalid_argument(
-        "GbtsGeometry: barrelOrder must be set on every pixel barrel layer or "
+        "GbtsGeometryImpl: barrelOrder must be set on every pixel barrel layer "
+        "or "
         "on none of them");
   }
 
@@ -258,7 +259,11 @@ void assignAdaptiveTauRatioCuts(std::span<GbtsLayerConnection> connections,
   }
 }
 
-GbtsGeometry::GbtsGeometry(
+}  // namespace Acts
+
+namespace Acts::detail {
+
+GbtsGeometryImpl::GbtsGeometryImpl(
     std::span<const GbtsLayerDescription> layerDescriptions,
     std::span<const GbtsLayerConnection> layerConnections,
     const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
@@ -286,7 +291,7 @@ GbtsGeometry::GbtsGeometry(
     if (connection.tauRatioCutInner < 0.f ||
         connection.tauRatioCutOuter < 0.f) {
       throw std::invalid_argument(
-          "GbtsGeometry: layer connection with a negative tau ratio cut");
+          "GbtsGeometryImpl: layer connection with a negative tau ratio cut");
     }
 
     const detail::GbtsLayer* pL1 = layerById(connection.dst);  // n1
@@ -465,7 +470,7 @@ GbtsGeometry::GbtsGeometry(
   }
 }
 
-std::optional<GbtsLayerIndex> GbtsGeometry::layerIndex(
+std::optional<GbtsLayerIndex> GbtsGeometryImpl::layerIndex(
     GbtsExperimentLayerId id) const {
   if (const auto it = m_layerFromUserIdMap.find(id);
       it != m_layerFromUserIdMap.end()) {
@@ -474,7 +479,7 @@ std::optional<GbtsLayerIndex> GbtsGeometry::layerIndex(
   return std::nullopt;
 }
 
-const detail::GbtsLayer* GbtsGeometry::layerById(
+const detail::GbtsLayer* GbtsGeometryImpl::layerById(
     GbtsExperimentLayerId id) const {
   if (const auto it = m_layerFromUserIdMap.find(id);
       it != m_layerFromUserIdMap.end()) {
@@ -483,11 +488,12 @@ const detail::GbtsLayer* GbtsGeometry::layerById(
   return nullptr;
 }
 
-const detail::GbtsLayer& GbtsGeometry::layerByIndex(GbtsLayerIndex idx) const {
+const detail::GbtsLayer& GbtsGeometryImpl::layerByIndex(
+    GbtsLayerIndex idx) const {
   return m_layers.at(idx);
 }
 
-const detail::GbtsLayer& GbtsGeometry::createLayer(
+const detail::GbtsLayer& GbtsGeometryImpl::createLayer(
     const GbtsLayerDescription& layerDescription, std::uint32_t bin0) {
   const auto layerIndex = static_cast<GbtsLayerIndex>(m_layers.size());
   detail::GbtsLayer& ref =
@@ -496,4 +502,33 @@ const detail::GbtsLayer& GbtsGeometry::createLayer(
   return ref;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts::detail
+
+namespace Acts {
+GbtsGeometry::GbtsGeometry(std::span<const GbtsLayerDescription> layers,
+                           std::span<const GbtsLayerConnection> connections,
+                           float etaBinWidth, const GbtsZ0Range& z0Range,
+                           const Logger& logger)
+    : m_impl(std::make_shared<const detail::GbtsGeometryImpl>(
+          layers, connections, etaBinWidth, z0Range, logger)) {}
+std::size_t GbtsGeometry::numLayers() const {
+  return m_impl->numLayers();
+}
+std::uint32_t GbtsGeometry::numBins() const {
+  return m_impl->numBins();
+}
+std::optional<GbtsLayerIndex> GbtsGeometry::layerIndex(
+    GbtsExperimentLayerId id) const {
+  return m_impl->layerIndex(id);
+}
+const GbtsLayerDescription& GbtsGeometry::layerDescription(
+    GbtsLayerIndex idx) const {
+  return m_impl->layerDescription(idx);
+}
+const GbtsLayerBinning& GbtsGeometry::layerBinning(GbtsLayerIndex idx) const {
+  return m_impl->layerBinning(idx);
+}
+std::span<const GbtsBinGroup> GbtsGeometry::binGroups() const {
+  return m_impl->binGroups();
+}
+}  // namespace Acts

@@ -19,7 +19,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// Builds the GBTS layer connection table from observed track hits.
 class GbtsLayerConnectionTool {
@@ -114,4 +114,4 @@ class GbtsLayerConnectionTool {
   std::uint32_t m_totalTracks = 0;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

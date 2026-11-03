@@ -10,7 +10,7 @@
 
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// Accepted |cot(theta)| range for one cluster width bin. A cluster near the
 /// module edge may be shortened, hence the second pair.
@@ -28,4 +28,4 @@ struct GbtsTauBounds final {
 /// Tau bounds per cluster width, one entry per 0.05 mm, indexed not searched.
 using GbtsTauLookupTable = std::vector<GbtsTauBounds>;
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

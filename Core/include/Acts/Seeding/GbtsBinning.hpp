@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// The eta binning `GbtsGeometry` gave one layer. Eta bins are numbered
 /// globally across the geometry and a layer's are contiguous, so the layer owns
@@ -49,4 +49,4 @@ struct GbtsBinGroup final {
   std::vector<GbtsBinLink> links;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

@@ -13,7 +13,7 @@
 
 #include <optional>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// Fit of the GBTS tracking filter to a seed, at its innermost space point.
 struct GbtsSeedFit final {
@@ -38,4 +38,4 @@ struct GbtsSeedFit final {
 std::optional<FreeVector> freeParametersFromGbtsSeedFit(const GbtsSeedFit& fit,
                                                         const Vector3& bField);
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

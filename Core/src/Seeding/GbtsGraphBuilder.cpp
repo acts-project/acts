@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/GbtsGraphBuilder.hpp"
+#include "GbtsGraphBuilder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts::detail {
 
 namespace {
 
@@ -189,15 +189,15 @@ bool checkZ0BitMask(const GbtsGraphBuilder::Config& cfg,
 
 }  // namespace
 
-GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
-                                   std::shared_ptr<const GbtsGeometry> geometry,
-                                   std::unique_ptr<const Acts::Logger> logger)
+GbtsGraphBuilder::GbtsGraphBuilder(
+    const Config& config, std::shared_ptr<const GbtsGeometryImpl> geometry,
+    std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_logger(std::move(logger)) {}
 
 GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
-                                          GbtsNodeStorage& nodeStorage,
+                                          GbtsNodeStorageImpl& nodeStorage,
                                           const float bFieldInZ) const {
   GbtsGraph graph;
   std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
@@ -764,4 +764,4 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
   return graph;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts::detail

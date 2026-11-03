@@ -8,7 +8,7 @@
 
 #pragma once
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// GBTS region of interest, as the eta and z bounds the seeder cuts on.
 ///
@@ -45,4 +45,4 @@ class GbtsRoiDescriptor {
   float m_dzdrMax{};  //!<  dz/dr at the front of the RoI
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

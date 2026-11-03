@@ -40,7 +40,7 @@ void addTruthTracking(py::module& mex) {
                                 inputMeasurements, inputSimHits,
                                 inputMeasurementSimHitsMap, outputProtoTracks);
   {
-    using Config = Acts::Experimental::GbtsLayerConnectionTool::Config;
+    using Config = Acts::GbtsLayerConnectionTool::Config;
 
     auto c = py::class_<Config>(mex, "GbtsLayerConnectionToolConfig")
                  .def(py::init<>());

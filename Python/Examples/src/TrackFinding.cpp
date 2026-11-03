@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
@@ -84,31 +83,40 @@ void addTrackFinding(py::module& mex) {
       useDeltaRinsteadOfTopRadius, useExtraCuts);
 
   {
-    using Config = Acts::Experimental::GraphBasedTrackSeeder::Config;
-    auto c =
-        py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, nMaxPhiSlice, minSeedLevel, addTriplets,
-                       maxAbsEtaAddTriplets, postFitCurvatureFactor);
-    patchKwargsConstructor(c);
-  }
-
-  {
-    using Config = Acts::Experimental::GbtsGraphBuilder::Config;
-    auto c =
-        py::class_<Config>(mex, "GbtsGraphBuilderConfig").def(py::init<>());
+    using Config = Acts::GraphBasedTrackSeeder::GraphConfig;
+    auto c = py::class_<Config>(mex, "GbtsGraphConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, maxEdgesPerSP, minDeltaRadius, doubletFilterRZ,
                        matchBeforeCreate, validateTriplets, calibrateStrips,
                        maxOuterRadius, useSumRatioCut, sumRatioCutMax);
     patchKwargsConstructor(c);
   }
 
+  {
+    using Config = Acts::GraphBasedTrackSeeder::FilterConfig;
+    auto c = py::class_<Config>(mex, "GbtsFilterConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, sigmaMS, radLen, sigmaX, sigmaY, sigmaXStrip, weightX,
+                       weightY, maxDChi2X, maxDChi2Y, addHit, maxCurvature,
+                       maxZ0, initialVarianceX, initialVarianceY);
+    patchKwargsConstructor(c);
+  }
+
+  {
+    using Config = Acts::GraphBasedTrackSeeder::Config;
+    auto c =
+        py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, graph, filter, nMaxPhiSlice, minSeedLevel,
+                       addTriplets, maxAbsEtaAddTriplets,
+                       postFitCurvatureFactor);
+    patchKwargsConstructor(c);
+  }
+
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
-      inputSpacePoints, outputSeeds, seedFinderConfig, graphConfig,
-      useStripConnections, useAdaptiveCuts, layerMappingFile,
-      connectorInputFile, lutInputFile, collisionRegionMin, collisionRegionMax,
-      trackingGeometry, fillModuleCsv, inputClusters, bFieldInZ, useLayerTilt,
-      magneticField, outputFreeParameters);
+      inputSpacePoints, outputSeeds, seedFinderConfig, useStripConnections,
+      useAdaptiveCuts, layerMappingFile, connectorInputFile, lutInputFile,
+      collisionRegionMin, collisionRegionMax, trackingGeometry, fillModuleCsv,
+      inputClusters, bFieldInZ, useLayerTilt, magneticField,
+      outputFreeParameters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,

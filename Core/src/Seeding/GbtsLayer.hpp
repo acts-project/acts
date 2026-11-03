@@ -14,9 +14,9 @@
 #include <cstdint>
 #include <vector>
 
-namespace Acts::Experimental::detail {
+namespace Acts::detail {
 
-/// Layer helper with eta-bin access, built and owned by GbtsGeometry.
+/// Layer helper with eta-bin access, built and owned by GbtsGeometryImpl.
 class GbtsLayer final {
  public:
   /// @param layerDescription Layer description for the layer
@@ -74,4 +74,4 @@ class GbtsLayer final {
   std::vector<float> m_maxBinCoord;
 };
 
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts::detail

@@ -12,7 +12,7 @@
 
 #include <span>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// A pair of layers the seeder may build a graph edge between. Edges are made
 /// outside-in, so a hit on @c src is the outer end of the doublet and a hit on
@@ -53,4 +53,4 @@ void assignAdaptiveTauRatioCuts(std::span<GbtsLayerConnection> connections,
                                 std::span<const GbtsLayerDescription> layers,
                                 const GbtsAdaptiveTauRatioCuts& cuts = {});
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

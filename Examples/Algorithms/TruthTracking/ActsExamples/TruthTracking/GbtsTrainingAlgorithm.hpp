@@ -43,8 +43,7 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
     /// The input measurement-sim hits map collection.
     std::string inputMeasurementSimHitsMap;
     /// The layer connection tool config
-    Acts::Experimental::GbtsLayerConnectionTool::Config
-        gbtsLayerConnectionToolConfig;
+    Acts::GbtsLayerConnectionTool::Config gbtsLayerConnectionToolConfig;
     /// geometry file used for creating layers
     std::string geometryFileDir{};
     /// detector the layers are made of, their r and z extent is taken from
@@ -92,11 +91,9 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
   mutable std::mutex m_gbtsLayerConnectionToolMutex;
   /// GBTS layer of every surface of the layer file: the layer of a surface is
   /// the one of its module or, without one, the one of its whole layer
-  Acts::GeometryHierarchyMap<Acts::Experimental::GbtsExperimentLayerId>
-      m_surfaceLayers;
+  Acts::GeometryHierarchyMap<Acts::GbtsExperimentLayerId> m_surfaceLayers;
   /// layer connection tool from core
-  mutable std::optional<Acts::Experimental::GbtsLayerConnectionTool>
-      m_layerConnectionTool;
+  mutable std::optional<Acts::GbtsLayerConnectionTool> m_layerConnectionTool;
 };
 
 }  // namespace ActsExamples

@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Experimental::detail {
+namespace Acts::detail {
 
 /// Maximum number of neighbouring edges recorded per graph edge
 static constexpr std::uint32_t kGbtsMaxEdgeNeighbours = 6;
@@ -209,4 +209,4 @@ struct GbtsEdge final {
 };
 //! [gbts edge]
 
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts::detail

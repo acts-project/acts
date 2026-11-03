@@ -1489,7 +1489,7 @@ def addGbtsSeeding(
     lutInputConfigFileStr = str(lutInputConfigFile)
     seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
 
-    graphConfig = acts.examples.GbtsGraphBuilderConfig(
+    seedFinderConfig.graph = acts.examples.GbtsGraphConfig(
         **acts.examples.defaultKWArgs(
             minPt=seedFinderConfigArg.minPt,
         ),
@@ -1500,7 +1500,6 @@ def addGbtsSeeding(
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
         seedFinderConfig=seedFinderConfig,
-        graphConfig=graphConfig,
         layerMappingFile=layerMappingFile,
         connectorInputFile=connectorInputFileStr,
         lutInputFile=lutInputConfigFileStr,

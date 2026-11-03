@@ -11,7 +11,7 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 GbtsLayerConnectionTool::GbtsLayerConnectionTool(
     const Config& config, std::unique_ptr<const Logger> logger)
@@ -170,4 +170,4 @@ std::optional<GbtsExperimentLayerId> GbtsLayerConnectionTool::oppositeSideLayer(
   return std::nullopt;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

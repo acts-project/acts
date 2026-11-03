@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
-#include "Acts/Seeding/detail/GbtsFilterTypes.hpp"
+#include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -18,71 +18,36 @@
 #include <memory>
 #include <vector>
 
-namespace Acts::Experimental {
+#include "GbtsFilterTypes.hpp"
 
-class GbtsGeometry;
-class GraphBasedTrackSeeder;
+namespace Acts::detail {
+
+class GbtsGeometryImpl;
+class GbtsSeederImpl;
 
 /// Tracking filter operating on the GBTS edge graph.
 class GbtsTrackingFilter final {
  public:
   /// Configuration for the tracking filter.
-  struct Config {
-    /// Multiple scattering sigma (for 900 MeV track at eta=0).
-    float sigmaMS = 0.016;
-    /// Radiation length fraction per layer (2.5% per layer).
-    float radLen = 0.025;
-
-    /// Measurement uncertainty in x direction.
-    float sigmaX = 0.08 * Acts::UnitConstants::mm;
-    /// Measurement uncertainty in y direction.
-    float sigmaY = 0.25 * Acts::UnitConstants::mm;
-
-    /// Across the strips only. The along-strip resolution is not configured:
-    /// it is derived per node from the node's own strip. See `update`.
-    float sigmaXStrip = 0.03 * Acts::UnitConstants::mm;
-
-    /// Measurement weight in x direction.
-    float weightX = 0.5;
-    /// Measurement weight in y direction.
-    float weightY = 0.5;
-
-    /// Maximum delta chi2 in x direction.
-    float maxDChi2X = 5.0;
-    /// Maximum delta chi2 in y direction.
-    float maxDChi2Y = 6.0;
-
-    /// Chi2 penalty for adding a hit.
-    float addHit = 14.0;
-
-    /// Maximum track curvature.
-    float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
-    /// Maximum longitudinal impact parameter.
-    float maxZ0 = 170.0 * Acts::UnitConstants::mm;
-
-    /// Initial variance of the transverse state (y, dy/dx, d2y/dx2).
-    std::array<float, 3> initialVarianceX = {0.25f, 0.001f, 0.001f};
-    /// Initial variance of the longitudinal state (z, dz/dr).
-    std::array<float, 2> initialVarianceY = {1.5f, 0.001f};
-  };
+  using Config = Acts::GraphBasedTrackSeeder::FilterConfig;
 
   /// @param config Configuration for seed finder
   /// @param geometry GBTS geometry for layer information
   /// @param logger Logging instance
   GbtsTrackingFilter(const Config& config,
-                     const std::shared_ptr<const GbtsGeometry>& geometry,
+                     const std::shared_ptr<const GbtsGeometryImpl>& geometry,
                      std::unique_ptr<const Logger> logger = getDefaultLogger(
                          "GbtsTrackingFilter", Logging::Level::INFO));
 
  private:
   // Only the seeder walks the edge graph.
-  friend class GraphBasedTrackSeeder;
+  friend class GbtsSeederImpl;
 
   /// Configuration for the tracking filter.
   Config m_cfg{};
 
   /// GBTS geometry for layer information
-  std::shared_ptr<const GbtsGeometry> m_geometry;
+  std::shared_ptr<const GbtsGeometryImpl> m_geometry;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -105,4 +70,4 @@ class GbtsTrackingFilter final {
   GbtsLayerType getLayerType(GbtsLayerIndex layerIndex) const;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts::detail

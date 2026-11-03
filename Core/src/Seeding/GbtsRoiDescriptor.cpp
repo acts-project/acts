@@ -10,7 +10,7 @@
 
 #include <cmath>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 GbtsRoiDescriptor::GbtsRoiDescriptor(double etaMin, double etaMax, double zMin,
                                      double zMax)
@@ -20,4 +20,4 @@ GbtsRoiDescriptor::GbtsRoiDescriptor(double etaMin, double etaMax, double zMin,
   m_dzdrMax = std::sinh(etaMax);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

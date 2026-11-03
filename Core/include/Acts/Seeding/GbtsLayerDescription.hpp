@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// Layer id as the experiment numbers it (80000, 81000, ...). Sparse, and an
 /// index into nothing.
@@ -67,4 +67,4 @@ struct GbtsLayerConfig final {
   std::vector<GeometryIdentifier> surfaces;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
