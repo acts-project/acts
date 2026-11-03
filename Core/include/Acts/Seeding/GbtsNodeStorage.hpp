@@ -13,6 +13,7 @@
 #include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/GbtsProfiler.hpp"
 #include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 
@@ -170,6 +171,8 @@ class GbtsNodeStorage final {
     std::uint32_t phiSortBuckets = 31;
     /// Cluster width covered by one bin of the tau lookup table.
     float tauLutBinWidth = 0.05f;
+    /// Keep the rejected nodes for the profiler.
+    bool recordRejected = false;
   };
 
   /// @param config Node loading configuration
@@ -289,6 +292,9 @@ class GbtsNodeStorage final {
   std::vector<StagedNode> m_staged;
   /// Staged node indices per eta bin.
   std::vector<std::vector<std::uint32_t>> m_stagedPerBin;
+
+  /// Nodes `insert` rejected, kept only with `Config::recordRejected`.
+  std::vector<GbtsProfiler::Node> m_rejectedNodes;
 };
 
 }  // namespace Acts::Experimental
