@@ -16,6 +16,7 @@
 #include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Material/MaterialInteractionError.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -129,9 +130,74 @@ PointwiseMaterialEffects computeMaterialEffects(
 /// @param scatteringVariance Projected physical scattering variance
 /// @pre Direction is normalized; scattering variance is finite and nonnegative.
 /// @return Direction noise block, or a singular-direction error
-Result<Matrix<2, 2>> scatteringNoise(
+inline Result<Matrix<2, 2>> scatteringNoise(
     const BoundParametrization& parametrization, const Vector3& direction,
-    double scatteringVariance);
+    double scatteringVariance) {
+  assert(direction.allFinite() &&
+         std::abs(direction.squaredNorm() - 1.) < 1e-6);
+  assert(std::isfinite(scatteringVariance) && scatteringVariance >= 0.);
+  if (scatteringVariance == 0.) {
+    return Result<Matrix<2, 2>>::success(Matrix<2, 2>::Zero());
+  }
+  if (parametrization.isGlobalSpherical()) {
+    const double transverseSquared = direction.head<2>().squaredNorm();
+    if (transverseSquared == 0.) {
+      return Result<Matrix<2, 2>>::failure(
+          BoundParametrizationError::SingularDirection);
+    }
+    const double variance0 = scatteringVariance / transverseSquared;
+    if (!std::isfinite(variance0)) {
+      return Result<Matrix<2, 2>>::failure(
+          BoundParametrizationError::SingularDirection);
+    }
+    const Vector2 variances(variance0, scatteringVariance);
+    return Result<Matrix<2, 2>>::success(Matrix<2, 2>(variances.asDiagonal()));
+  }
+  const auto jacobian =
+      parametrization.directionCoordinatesJacobianFromUnitDirection(direction,
+                                                                    0.);
+  if (!jacobian.ok()) {
+    return Result<Matrix<2, 2>>::failure(jacobian.error());
+  }
+  // The encoding derivative already includes the tangent projection I - d*d^T.
+  return Result<Matrix<2, 2>>::success(scatteringVariance * (*jacobian) *
+                                       jacobian->transpose());
+}
+
+/// Internal checked subtraction; see updateMaterialCovariance for the contract.
+/// @param covariance Covariance, modified only on success
+/// @param directionNoise Direction noise to subtract
+/// @param varianceQoverP Q/p variance to subtract
+/// @return Success or InvalidCovarianceAfterNoiseRemoval
+Result<void> removeMaterialCovarianceNoise(BoundMatrix& covariance,
+                                           const Matrix<2, 2>& directionNoise,
+                                           double varianceQoverP);
+
+/// Add or remove material noise in the current bound covariance basis.
+/// Removal checks the whole covariance, including correlations outside the
+/// direction block. It does not clamp variances or partially remove noise.
+/// @param covariance Covariance, modified only on success
+/// @param directionNoise Symmetric positive-semidefinite direction noise block
+/// @param varianceQoverP Nonnegative q/p variance increment
+/// @param mode Whether to add or remove noise
+/// @pre Inputs are finite; covariance is symmetric and positive semidefinite.
+/// @return Success or InvalidCovarianceAfterNoiseRemoval. The removal check
+/// uses diagonal scaling and a relative eigenvalue tolerance of 64 machine
+/// epsilons.
+inline Result<void> updateMaterialCovariance(BoundMatrix& covariance,
+                                             const Matrix<2, 2>& directionNoise,
+                                             double varianceQoverP,
+                                             NoiseUpdateMode mode) {
+  assert(covariance.allFinite() && directionNoise.allFinite());
+  assert(std::isfinite(varianceQoverP) && varianceQoverP >= 0.);
+  if (mode == NoiseUpdateMode::addNoise) {
+    covariance.block<2, 2>(eBoundDir0, eBoundDir0) += directionNoise;
+    covariance(eBoundQOverP, eBoundQOverP) += varianceQoverP;
+    return Result<void>::success();
+  }
+  return removeMaterialCovarianceNoise(covariance, directionNoise,
+                                       varianceQoverP);
+}
 
 /// Global angular variances for legacy material diagnostics.
 /// @param direction Global unit direction
@@ -222,35 +288,24 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
   const double nextQOverP =
       particleHypothesis.qOverP(nextP, std::copysign(absQ, qOverP));
 
+  // Validate noise removal before committing either momentum or covariance.
+  auto covariance = stepper.covariance(state.stepping);
+  if (covariance.has_value()) {
+    const auto updateResult = updateMaterialCovariance(
+        *covariance, *noise, effects.varianceQoverP, noiseUpdateMode);
+    if (!updateResult.ok()) {
+      return updateResult.error();
+    }
+  }
+
   // update track parameters
   stepper.update(state.stepping, position, direction, nextQOverP, time);
   //! [energy loss update]
 
-  if (!stepper.hasCovariance(state.stepping)) {
-    return effects;
-  }
-
-  // Convenience method to update a variance given a change and noise update
-  // mode
-  const auto updateVariance = [](double variance, double change,
-                                 NoiseUpdateMode updateMode) {
-    // Add/Subtract the change
-    // Protect the variance against becoming negative
-    return std::max(0.,
-                    variance + std::copysign(change, toUnderlying(updateMode)));
-  };
-
-  // update covariance matrix
   //! [covariance update]
-  BoundMatrix covariance = *stepper.covariance(state.stepping);
-  covariance(eBoundDir0, eBoundDir0) = updateVariance(
-      covariance(eBoundDir0, eBoundDir0), (*noise)(0, 0), noiseUpdateMode);
-  covariance(eBoundDir1, eBoundDir1) = updateVariance(
-      covariance(eBoundDir1, eBoundDir1), (*noise)(1, 1), noiseUpdateMode);
-  covariance(eBoundQOverP, eBoundQOverP) =
-      updateVariance(covariance(eBoundQOverP, eBoundQOverP),
-                     effects.varianceQoverP, noiseUpdateMode);
-  stepper.setCovariance(state.stepping, covariance);
+  if (covariance.has_value()) {
+    stepper.setCovariance(state.stepping, *covariance);
+  }
   //! [covariance update]
 
   return effects;

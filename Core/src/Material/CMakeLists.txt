@@ -15,6 +15,7 @@ target_sources(
         ISurfaceMaterial.cpp
         Material.cpp
         MaterialInteractionAssignment.cpp
+        MaterialInteractionError.cpp
         MaterialMapper.cpp
         MaterialSurfaceRegistry.cpp
         MaterialSlab.cpp
