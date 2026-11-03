@@ -17,7 +17,6 @@
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -166,9 +165,6 @@ class GbtsNodeStorage final {
     float phiIndexMargin = 1.5f;
     /// Cluster width covered by one bin of the tau lookup table.
     float tauLutBinWidth = 0.05f;
-    /// Up to how many nodes the phi sort uses a quadratic sort. Known at
-    /// compile time, as it sizes the sort's fixed arrays.
-    static constexpr std::size_t phiSortQuadraticLinearCrossover = 32;
   };
 
   /// @param config Node loading configuration
