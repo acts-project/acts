@@ -102,3 +102,24 @@ def test_shipped_configurations_match_manifest():
     shipped = re.search(r"set\(_detray_shipped_metadata\s+([^)]*)\)", cmake)
     assert shipped is not None
     assert sorted(shipped.group(1).split()) == names
+
+
+def test_traccc_itk_metadata_is_external(tmp_path):
+    """traccc's ITk configuration is not shipped but generates as external."""
+    assert (
+        "Detray/detectors/detray/detectors/itk_metadata.hpp"
+        not in json.loads((ROOT / "codegen/manifest.json").read_text())["units"]
+    )
+    output = tmp_path / "itk_metadata.hpp"
+    subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "Detray/detectors/codegen/generate_metadata.py"),
+            str(output),
+            "--detector",
+            f"{ROOT / 'Traccc/metadata/itk_detector.py'}:configure",
+        ],
+        env={**os.environ, "PYTHONPATH": str(ROOT / "Detray/detectors/codegen")},
+        check=True,
+    )
+    assert "struct itk_metadata" in output.read_text()
