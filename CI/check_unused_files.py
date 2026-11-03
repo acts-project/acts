@@ -16,7 +16,9 @@ EXCLUDE_PATHS = (
     "Detray/detectors",
     # CLI tools
     "Detray/tests/tools",
-    "Detray/python/Core/tests",
+    "Detray/python/Io/tests",
+    "Detray/python/Tests/tests",
+    "Detray/python/Plugins/tests",
     # TODO: Remove the traccc part.
     "Traccc",
     "git",
@@ -74,6 +76,10 @@ EXCLUDE_FILES = (
     "SNIPPETS.md",
     "tex-mml-chtml.js",
     "tgeo_aux.py.in",
+    # Pytest collects these examples; Doxygen includes the group by ID.
+    "docs/examples/test_generic.py",
+    "docs/examples/test_performance_and_plotting.py",
+    "docs/groups/python/performance_and_plotting.md",
     "todo.md",
     # Detray python tests for auto-generated code
     "Detray/codegen/detray-sympy/tests/test_assumptions_D.py",
@@ -87,6 +93,8 @@ EXCLUDE_FILES = (
     # Python uv files
     "Detray/codegen/detray-sympy/uv.lock",
     "Detray/python/detray/uv.lock",
+    # Generated PyPI readme, checked by Python/Examples/tests/test_pypi_readme.py
+    "CI/pypi_readme.md",
     # TODO: remove after file is gone
     "Core/include/Acts/Utilities/ProtoAxisHelpers.hpp",
 )
@@ -153,11 +161,12 @@ def filter_paths(names, root, exclude_paths=(), exclude_files=()):
 
 
 def file_can_be_removed(searchstring, scope):
-    cmd = "grep -IR '" + searchstring + "' " + " ".join(scope)
-
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    output, _ = p.communicate()
-    return output == b""
+    # Only existence matters: stop at the first match instead of scanning the
+    # entire tree and collecting every matching line for each candidate.
+    result = subprocess.run(["grep", "-IRq", "--", searchstring, *scope])
+    if result.returncode not in (0, 1):
+        result.check_returncode()
+    return result.returncode == 1
 
 
 def count_files(path="."):

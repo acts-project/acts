@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s).
 #include "traccc/definitions/primitives.hpp"
@@ -19,7 +20,7 @@
 
 using namespace traccc;
 
-// Test gamma function for pvalue evaulation
+// Test gamma function for pvalue evaluation
 TEST(pvalue, compare_with_root) {
   // zero chisquare -> pvalue = 1
   EXPECT_FLOAT_EQ(prob(0.f, 0.1f), 1.f);

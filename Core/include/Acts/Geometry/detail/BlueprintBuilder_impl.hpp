@@ -14,6 +14,7 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintBuilder.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/FunctionComposition.hpp"
 
 namespace Acts {
@@ -418,6 +419,9 @@ SensorLayerAssembler<BackendT>::build() const {
     }
     LayerSpec layerSpec = m_layerSpec;
     layerSpec.layerName = group.key;
+    if (m_containerName.has_value()) {
+      layerSpec.layerName = m_containerName.value() + "|" + group.key;
+    }
     auto layer = m_builder->makeLayer(std::span<const Element>{group.sensors},
                                       layerSpec);
     layer->setLayerType(m_layerType.value());
@@ -691,6 +695,18 @@ BlueprintBuilder<BackendT>::barrelEndcap() const
   requires(detail::HasBarrelEndcapClassifier<BackendT>)
 {
   return BarrelEndcapAssembler(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+std::shared_ptr<StaticBlueprintNode>
+BlueprintBuilder<BackendT>::makePassiveElement(
+    const Element& element, const std::string& volumeName) const
+  requires(detail::HasPassiveVolume<BackendT>)
+{
+  const std::string name =
+      volumeName.empty() ? m_backend.nameOf(element) : volumeName;
+  return std::make_shared<StaticBlueprintNode>(
+      std::make_unique<TrackingVolume>(m_backend.passiveVolume(element), name));
 }
 
 template <detail::BlueprintBackend BackendT>

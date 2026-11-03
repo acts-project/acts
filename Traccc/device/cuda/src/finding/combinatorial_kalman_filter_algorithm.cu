@@ -1,15 +1,18 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../sanity/contiguous_on.cuh"
+#include "../sanity/ordered_on.cuh"
 #include "../utils/magnetic_field_types.hpp"
 #include "./kernels/build_tracks.cuh"
 #include "./kernels/condense_tracks.cuh"
+#include "./kernels/create_device_detector.cuh"
 #include "./kernels/fill_finding_duplicate_removal_sort_keys.cuh"
 #include "./kernels/fill_finding_propagation_sort_keys.cuh"
 #include "./kernels/find_tracks.cuh"
@@ -29,20 +32,33 @@
 #include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/utils/detector_buffer_bfield_visitor.hpp"
 
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
+
 // Thrust include(s).
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
 #include <thrust/sort.h>
+
+// System include(s).
+#include <type_traits>
+#include <utility>
 
 namespace traccc::cuda {
 
 bool combinatorial_kalman_filter_algorithm::input_is_valid(
     const edm::measurement_collection::const_view& measurements) const {
   static constexpr std::size_t GEOMID_INDEX = 6u;
+  // The measurements must be grouped by surface, and also sorted by it for
+  // the CKF to find the measurement ranges of each surface.
   return is_contiguous_on<
-      vecmem::device_vector<const detray::geometry::identifier>>(
-      device::identity_projector{}, mr().main, copy(), stream(),
-      measurements.template get<GEOMID_INDEX>());
+             vecmem::device_vector<const detray::geometry::identifier>>(
+             device::identity_projector{}, mr().main, copy(), stream(),
+             measurements.template get<GEOMID_INDEX>()) &&
+         is_ordered_on<
+             vecmem::device_vector<const detray::geometry::identifier>>(
+             device::geo_id_order_relation{}, mr().main, copy(), stream(),
+             measurements.template get<GEOMID_INDEX>());
 }
 
 vecmem::data::vector_buffer<edm::measurement_collection::const_view::size_type>
@@ -51,16 +67,16 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
     const edm::measurement_collection::const_view::size_type n_measurements,
     const edm::measurement_collection::const_view& measurements) const {
   return detector_buffer_visitor<detector_type_list>(
-      det, [&]<typename detector_traits_t>(
-               const typename detector_traits_t::view& det) {
+      det, [&]<detray::concepts::detector detector_t>(
+               const detray::detector_view_t<detector_t>& det) {
         // Construct an appropriate device detector object.
-        typename detector_traits_t::device device_det{det};
+        detray::detector_device_t<detector_t> device_det{det};
 
         // Create the result buffer.
         vecmem::data::vector_buffer<
             edm::measurement_collection::const_view::size_type>
             result{device_det.surfaces().size(), mr().main};
-        copy().setup(result)->ignore();
+        copy().setup(vecmem::ignore_event, result);
 
         // Create a measurement device object for convenience.
         const edm::measurement_collection::const_device measurements_device{
@@ -69,7 +85,7 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
         // Fill it with Thrust's help.
         thrust::upper_bound(
             thrust::cuda::par_nosync(
-                std::pmr::polymorphic_allocator(&(mr().main)))
+                stream_synchronizing_allocator(mr().main, stream()))
                 .on(details::get_stream(stream())),
             measurements_device.surface_link().begin(),
             // We have to use this ugly form here, because if the
@@ -98,10 +114,10 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
   detector_buffer_magnetic_field_visitor<detector_type_list,
                                          cuda::bfield_type_list<scalar>>(
       detector, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view& det,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>& det,
           const bfield_view_t& bfield) {
-        using detector_t = typename detector_traits_t::device;
+        using detector_device_t = detray::detector_device_t<detector_t>;
         using surface_t = typename detector_t::surface_type;
 
         // If the Kalman smoother should be run, obtain the real allocation
@@ -112,8 +128,8 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
                   .as<vecmem::data::jagged_vector_buffer<surface_t>>();
         }
 
-        progressive_kalman_filter<
-            traccc::details::pkf_propagator_t<detector_t, bfield_view_t>>(
+        progressive_kalman_filter<traccc::details::pkf_propagator_t<
+            detector_device_t, bfield_view_t>>(
             deviceBlocks, deviceThreads, 0u, details::get_stream(stream()),
             config, det, bfield, sf_sequences, payload);
       });
@@ -131,13 +147,15 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
       (n_threads + deviceThreads - 1) / deviceThreads;
   const std::size_t deviceSharedMem =
       deviceThreads * sizeof(unsigned long long int) +
-      2 * deviceThreads * sizeof(std::pair<unsigned int, unsigned int>);
+      2 * deviceThreads * sizeof(std::pair<unsigned int, unsigned int>) +
+      deviceThreads * config.max_num_branches_per_surface *
+          sizeof(std::pair<traccc::scalar, unsigned int>);
 
   // Launch the kernel for the appropriate detector type.
   detector_buffer_visitor<detector_type_list>(
-      detector, [&]<typename detector_traits_t>(
-                    const typename detector_traits_t::view& det) {
-        find_tracks<typename detector_traits_t::device>(
+      detector, [&]<detray::concepts::detector detector_t>(
+                    const detray::detector_view_t<detector_t>& det) {
+        find_tracks<detray::detector_device_t<detector_t>>(
             deviceBlocks, deviceThreads, deviceSharedMem,
             details::get_stream(stream()), config, det, payload);
       });
@@ -156,7 +174,8 @@ void combinatorial_kalman_filter_algorithm::condense_tracks_kernel(
       out_params_per_in_param_vector(out_params_per_in_param);
   vecmem::device_vector<unsigned int> params_index_vector(params_index);
   thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(
+          stream_synchronizing_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       out_params_per_in_param_vector.begin(),
       out_params_per_in_param_vector.end(), params_index_vector.begin());
@@ -196,7 +215,8 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_last_measurement(
   assert(link_last_measurement.size_ptr() == nullptr);
   assert(param_ids.size_ptr() == nullptr);
   thrust::sort_by_key(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(
+          stream_synchronizing_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       link_last_measurement.ptr(),
       link_last_measurement.ptr() + link_last_measurement.capacity(),
@@ -240,15 +260,17 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_keys(
   assert(keys.capacity() == param_ids.capacity());
   assert(keys.size_ptr() == nullptr);
   assert(param_ids.size_ptr() == nullptr);
-  thrust::sort_by_key(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream())),
-      keys.ptr(), keys.ptr() + keys.capacity(), param_ids.ptr());
+  thrust::sort_by_key(thrust::cuda::par_nosync(
+                          stream_synchronizing_allocator(mr().main, stream()))
+                          .on(details::get_stream(stream())),
+                      keys.ptr(), keys.ptr() + keys.capacity(),
+                      param_ids.ptr());
 }
 
 void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
     unsigned int n_threads, const finding_config& config,
-    const detector_buffer& detector, const magnetic_field& field,
+    const detector_buffer& detector, const move_only_any& device_detector,
+    const magnetic_field& field,
     const device::propagate_to_next_surface_payload& payload) const {
   // Establish the kernel launch parameters.
   const unsigned int deviceThreads = warp_size() * 4;
@@ -259,15 +281,21 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
   detector_buffer_magnetic_field_visitor<detector_type_list,
                                          cuda::bfield_type_list<scalar>>(
       detector, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view& det,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>&,
           const bfield_view_t& bfield) {
+        using detector_device_t = detray::detector_device_t<detector_t>;
+
+        const vecmem::data::vector_buffer<detector_device_t>&
+            device_detector_buffer =
+                device_detector
+                    .as<vecmem::data::vector_buffer<detector_device_t>>();
+
         propagate_to_next_surface<
-            traccc::details::ckf_propagator_t<
-                typename detector_traits_t::device, bfield_view_t>,
+            traccc::details::ckf_propagator_t<detector_device_t, bfield_view_t>,
             bfield_view_t>(deviceBlocks, deviceThreads, 0u,
-                           details::get_stream(stream()), config, det, bfield,
-                           payload);
+                           details::get_stream(stream()), config,
+                           device_detector_buffer.ptr(), bfield, payload);
       });
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
@@ -331,6 +359,32 @@ void combinatorial_kalman_filter_algorithm::build_tracks_kernel(
                           details::get_stream(stream())>>>(run_mbf_smoother,
                                                            calib_cfg, payload);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+}
+
+move_only_any combinatorial_kalman_filter_algorithm::create_device_detector(
+    const detector_buffer& det) const {
+  return detector_buffer_visitor<detector_type_list>(
+      det, [&]<detray::concepts::detector detector_t>(
+               const detray::detector_view_t<detector_t>& det_view) {
+        using detector_device_t = detray::detector_device_t<detector_t>;
+
+        static_assert(
+            std::is_trivially_destructible_v<detector_device_t>,
+            "the detector is placement-constructed and never destroyed, so it "
+            "must not need a destructor");
+
+        vecmem::data::vector_buffer<detector_device_t> device_detector_buffer(
+            1, mr().main);
+        traccc::cuda::create_device_detector<detector_device_t>(
+            details::get_stream(stream()), det_view,
+            device_detector_buffer.ptr());
+        TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+        return move_only_any{std::move(device_detector_buffer)};
+      });
+}
+
+void combinatorial_kalman_filter_algorithm::synchronize() const {
+  stream().synchronize();
 }
 
 }  // namespace traccc::cuda

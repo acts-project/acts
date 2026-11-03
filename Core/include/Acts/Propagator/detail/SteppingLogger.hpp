@@ -78,11 +78,11 @@ struct SteppingLogger {
 
     // Record the propagation state
     Step step;
-    step.stepSize = state.stepping.stepSize;
+    step.stepSize = stepper.stepSize(state.stepping);
     step.navDir = state.options.direction;
     step.position = stepper.position(state.stepping);
     step.momentum = stepper.momentum(state.stepping);
-    step.nTotalTrials = state.stepping.nStepTrials;
+    step.nTotalTrials = stepper.statistics(state.stepping).nAttemptedSteps;
 
     // Record the information about the surface
     if (navigator.currentSurface(state.navigation) != nullptr) {

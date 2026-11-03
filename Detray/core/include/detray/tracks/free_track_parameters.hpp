@@ -15,6 +15,7 @@
 #include "detray/definitions/track_parametrization.hpp"
 
 // System include(s)
+#include <limits>
 #include <ostream>
 
 namespace detray {
@@ -86,6 +87,10 @@ struct free_parameters_vector {
   decltype(auto) operator[](std::size_t i) {
     return getter::element(m_vector, static_cast<unsigned int>(i), 0u);
   }
+
+  /// @returns the track parameters as an algebra vector
+  DETRAY_HOST_DEVICE
+  const vector_type& vector() const { return m_vector; }
 
   /// @returns the global track position
   DETRAY_HOST_DEVICE
@@ -221,5 +226,23 @@ struct free_parameters_vector {
 /// The free track parameters consist only of the parameter vector
 template <concepts::algebra algebra_t>
 using free_track_parameters = free_parameters_vector<algebra_t>;
+
+namespace algebra {
+
+/// Cast free track parameters @param param to the precision given by @tparam value_t
+template <concepts::value value_t, concepts::algebra algebra_t>
+DETRAY_HOST_DEVICE constexpr decltype(auto) cast_to(
+    const free_track_parameters<algebra_t>& param) {
+  using new_algebra_t = dalgebra<algebra_t, value_t>;
+
+  if constexpr (std::same_as<new_algebra_t, algebra_t>) {
+    return param;
+  } else {
+    return free_track_parameters<new_algebra_t>{
+        ::detray::algebra::cast_to<value_t>(param.vector())};
+  }
+}
+
+}  // namespace algebra
 
 }  // namespace detray

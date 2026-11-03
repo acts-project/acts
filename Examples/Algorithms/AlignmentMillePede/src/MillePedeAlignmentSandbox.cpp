@@ -8,7 +8,6 @@
 
 #include "ActsExamples/AlignmentMillePede/MillePedeAlignmentSandbox.hpp"
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -17,6 +16,7 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -117,14 +117,6 @@ ProcessCode MillePedeAlignmentSandbox::execute(
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& tracks = m_inputTracks(ctx);
 
-  // Dirty hack: Overwrite the geometry context to remove knowledge
-  // of injected alignment shift.
-  // Detector will look misaligned and the injected correction can be fitted
-  // out.
-  // TODO: Replace if an appropriate non-hacky tool becomes available.
-  Acts::GeometryContext dummyGeoCtx =
-      Acts::GeometryContext::dangerouslyDefaultConstruct();
-
   // Pile of boilerplate code to get the Kalman fitter for the
   // alignment module ready to go
   IndexSourceLinkSurfaceAccessor slack{*m_trackingGeometry};
@@ -145,8 +137,8 @@ ProcessCode MillePedeAlignmentSandbox::execute(
       .connect<&ActsExamples::IndexSourceLinkSurfaceAccessor::operator()>(
           &slack);
   TrackFitterOptions kfOptions(
-      dummyGeoCtx, ctx.magFieldContext, ctx.calibContext, extensions,
-      Acts::PropagatorPlainOptions(dummyGeoCtx, ctx.magFieldContext),
+      ctx.recoGeoContext, ctx.magFieldContext, ctx.calibContext, extensions,
+      Acts::PropagatorPlainOptions(ctx.recoGeoContext, ctx.magFieldContext),
       m_firstSurf);
 
   // loop over tracks in the event
@@ -172,14 +164,17 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     trackSourceLinks.clear();
     trackSourceLinks.reserve(track.nTrackStates());
     for (const auto& state : track.trackStates()) {
-      trackSourceLinks.push_back(state.getUncalibratedSourceLink());
+      if (state.hasUncalibratedSourceLink()) {
+        trackSourceLinks.push_back(state.getUncalibratedSourceLink());
+      }
     }
 
     // get the TrackAlignmentState using the existing
     // alignment class. This will compute the needed
     // residuals and derivatives.
+    kfOptions.referenceSurface = &refPar.referenceSurface();
     auto aliStates = m_align->evaluateTrackAlignmentState(
-        dummyGeoCtx, trackSourceLinks, refPar, kfOptions,
+        ctx.recoGeoContext, trackSourceLinks, refPar, kfOptions,
         m_indexedAlignSurfaces,
         ActsAlignment::AlignmentMask::All  // use this to restrict alignment
                                            // degrees of freedom if desired
@@ -188,8 +183,8 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     // and, if successful, dump the information into our Mille record.
     if (aliStates.ok()) {
       const ActsAlignment::detail::TrackAlignmentState& state = *aliStates;
-      ActsPlugins::ActsToMille::dumpToMille(state, *m_milleOut,
-                                            m_cfg.discardUnconstrainedTrackPar);
+      ActsPlugins::ActsToMille::dumpToMille(
+          state, *m_milleOut, m_cfg.discardUnconstrainedTrackPar, logger());
       if (needInternalSolving()) {
         std::lock_guard g(m_mx_addState);
         m_alignmentStates.push_back(state);
@@ -259,12 +254,9 @@ ProcessCode MillePedeAlignmentSandbox::solveInternal() {
                   << std::sqrt(alignResult.alignmentCovariance(row, row)));
       }
     }
-    std::ofstream resFile;
-    resFile.open(m_cfg.outFileInternalSolving);
     // also write in a text file format that can be parsed consistently with
     // Millepede output
-    ActsPlugins::ActsToMille::dumpAsMillepedeRes(alignResult, resFile);
-    resFile.close();
+    ActsAlignment::dumpResultAsMP2(alignResult, m_cfg.outFileInternalSolving);
   }
 
   if (!m_cfg.outFileDecomposition.empty()) {

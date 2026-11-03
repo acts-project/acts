@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/builders/detail/radius_getter.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/utils/grid/concepts.hpp"
 
@@ -35,7 +36,7 @@ namespace detray::svgtools::conversion {
 /// @param style the style settings
 ///
 /// @returns a proto grid
-template <typename detector_t, typename view_t>
+template <concepts::detector detector_t, typename view_t>
 auto material_grid(const detector_t& detector, const dindex index,
                    const view_t& view,
                    const styling::grid_style& style =
@@ -137,7 +138,7 @@ struct material_converter {
 /// @param context The geometry context.
 ///
 /// @returns An actsvg proto surface material the material map.
-template <typename detector_t, typename view_t>
+template <concepts::detector detector_t, typename view_t>
 auto surface_material(const detector_t& detector,
                       const detray::geometry::surface<detector_t>& d_surface,
                       const view_t& view,

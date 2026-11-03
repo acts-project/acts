@@ -12,6 +12,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
@@ -436,6 +437,9 @@ BOOST_AUTO_TEST_CASE(BinningData_from_ProtoAxis) {
   using enum AxisDirection;
   using enum AxisBoundaryType;
 
+  // The DirectedProtoAxis based constructor is deprecated but still covered
+  ACTS_PUSH_IGNORE_DEPRECATED()
+
   // Bound, equidistant axis
   DirectedProtoAxis epab(AxisX, Bound, 0.0, 1.0, 10);
   BinningData bEpab(epab);
@@ -462,6 +466,8 @@ BOOST_AUTO_TEST_CASE(BinningData_from_ProtoAxis) {
   BOOST_CHECK_EQUAL(bVpab.bins(), std::size_t{2});
   BOOST_CHECK(bVpab.option == open);
   BOOST_CHECK(bVpab.type == arbitrary);
+
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 BOOST_AUTO_TEST_CASE(BinningData_from_IAxis) {

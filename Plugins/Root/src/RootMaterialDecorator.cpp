@@ -66,10 +66,9 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
 
   ActsPlugins::RootMaterialMapIo accessor(m_cfg.accessorConfig,
                                           m_logger->clone("RootMaterialMapIo"));
-  auto [surfaceMaps, volumeMaps] =
-      accessor.read(*m_inputFile, m_cfg.accessorOptions);
+  auto maps = accessor.read(*m_inputFile, m_cfg.accessorOptions);
 
-  m_surfaceMaterialMap = std::move(surfaceMaps);
+  m_surfaceMaterialMap = std::move(maps.surfaceMaterials);
 
   // Get the list of keys from the file
   TList* tlist = m_inputFile->GetListOfKeys();

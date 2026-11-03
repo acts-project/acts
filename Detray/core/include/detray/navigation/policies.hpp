@@ -17,6 +17,7 @@
 
 // system includes
 #include <climits>
+#include <limits>
 
 namespace detray {
 

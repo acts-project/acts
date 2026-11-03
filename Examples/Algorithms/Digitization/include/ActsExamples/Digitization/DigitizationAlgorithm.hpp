@@ -78,6 +78,11 @@ class DigitizationAlgorithm final : public IAlgorithm {
     /// Table 35.10)
     /// @NOTE The default is set to 0 because this works only well with Geant4
     double minEnergyDeposit = 0.0;  // 1000 * 3.65 * Acts::UnitConstants::eV;
+    /// On cylinder surfaces, limit the geometric path of a hit to the longest
+    /// straight chord through the curved layer, 2 sqrt(2 R thickness).
+    /// Otherwise an (almost) tangential hit direction gives a path of
+    /// thickness / |cos(incidence)|, possibly many times around the cylinder.
+    bool limitCylinderPathToChord = false;
     /// The digitizers per GeometryIdentifiers
     Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 
@@ -102,6 +107,19 @@ class DigitizationAlgorithm final : public IAlgorithm {
   /// Get const access to the config
   const Config& config() const { return m_cfg; }
 
+  // Nested smearer struct that holds geometric digitizer and smearing
+  /// Support up to 4 dimensions.
+  template <std::size_t kSmearDIM>
+  struct CombinedDigitizer {
+    GeometricConfig geometric;
+    ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> smearing;
+  };
+
+  // Support max 4 digitization dimensions - either digital or smeared
+  using Digitizer = std::variant<CombinedDigitizer<0>, CombinedDigitizer<1>,
+                                 CombinedDigitizer<2>, CombinedDigitizer<3>,
+                                 CombinedDigitizer<4>>;
+
  private:
   /// Helper method for creating digitized parameters from clusters
   ///
@@ -115,19 +133,6 @@ class DigitizationAlgorithm final : public IAlgorithm {
       const GeometricConfig& geoCfg,
       const std::vector<ActsFatras::Segmentizer::ChannelSegment>& channels,
       RandomEngine& rng) const;
-
-  /// Nested smearer struct that holds geometric digitizer and smearing
-  /// Support up to 4 dimensions.
-  template <std::size_t kSmearDIM>
-  struct CombinedDigitizer {
-    GeometricConfig geometric;
-    ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> smearing;
-  };
-
-  // Support max 4 digitization dimensions - either digital or smeared
-  using Digitizer = std::variant<CombinedDigitizer<0>, CombinedDigitizer<1>,
-                                 CombinedDigitizer<2>, CombinedDigitizer<3>,
-                                 CombinedDigitizer<4>>;
 
   /// Configuration of the Algorithm
   Config m_cfg;

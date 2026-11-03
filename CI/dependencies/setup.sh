@@ -7,6 +7,11 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 export SPACK_COLOR=always
 
+# Default for a version pin, from the single source of truth next to this script
+function pinned_version() {
+    sed -n "s/^$1=//p" "${SCRIPT_DIR}/versions.env"
+}
+
 function start_section() {
     local section_name="$1"
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
@@ -63,6 +68,13 @@ TRANSIENT_ERROR_PATTERNS=(
   "toomanyrequests"
   "Too Many Requests"
   "rate limit"
+  # GitHub sheds anonymous load with "GitHub is temporarily limiting some
+  # unauthenticated downloads to protect the stability of the platform. Please
+  # retry later or authenticate." github_auth.sh keeps us off that quota, but
+  # the message is explicitly a "try again" and must not be a hard failure.
+  "temporarily limiting"
+  "unauthenticated download"
+  "Please retry later"
   "HTTP Error 429"
   "HTTP Error 5[0-9][0-9]"
   "50[0-9] (Internal Server Error|Bad Gateway|Service Unavailable|Gateway Time-out)"
@@ -127,10 +139,13 @@ function retry_transient() {
 }
 
 # Parse command line arguments
-while getopts "c:t:d:e:s:fh" opt; do
+while getopts "c:t:d:e:s:F:fh" opt; do
   case ${opt} in
     c )
       compiler=$OPTARG
+      ;;
+    F )
+      flavor=$OPTARG
       ;;
     t )
       tag=$OPTARG
@@ -151,10 +166,11 @@ while getopts "c:t:d:e:s:fh" opt; do
       echo "Usage: $0 [-c compiler] [-t tag] [-d destination] -e env_file [-h]"
       echo "Options:"
       echo "  -c <compiler>    Specify compiler (defaults to CXX env var)"
-      echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var)"
+      echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var, then versions.env)"
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
-      echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 20."
+      echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 23."
+      echo "  -F <flavor>      Accelerator flavor (e.g. cuda13, rocm7). Defaults to FLAVOR env var or the host stack."
       echo "  -f               Full dependency installation. Includes Geant4 datasets and Python packages."
       echo "  -h               Show this help message"
       exit 0
@@ -189,9 +205,9 @@ if [ -z "${compiler:-}" ]; then
 fi
 
 if [ -z "${tag:-}" ]; then
-  tag="${DEPENDENCY_TAG:-}"
+  tag="${DEPENDENCY_TAG:-$(pinned_version DEPENDENCY_TAG)}"
   if [ -z "${tag:-}" ]; then
-    echo "No tag specified via -t or DEPENDENCY_TAG environment variable"
+    echo "No tag specified via -t, DEPENDENCY_TAG or ${SCRIPT_DIR}/versions.env"
     exit 1
   fi
 fi
@@ -213,7 +229,15 @@ if [ -z "${env_file:-}" ]; then
 fi
 
 if [ -z "${cxx_std:-}" ]; then
-  cxx_std="${CXXSTD:-20}"
+  cxx_std="${CXXSTD:-23}"
+fi
+
+# `host` is the plain CPU stack, published with no flavor token: pass nothing.
+if [ -z "${flavor:-}" ]; then
+  flavor="${FLAVOR:-}"
+fi
+if [ "${flavor}" == "host" ]; then
+  flavor=""
 fi
 
 checkpoint "Create environment file $(realpath "$env_file")"
@@ -233,16 +257,27 @@ function set_env {
 
 checkpoint "Starting setup script"
 
+mkdir -p "${destination}"
+# Spack resolves a relative view root against the environment directory, not
+# the cwd, so a relative -d would materialize the view under
+# ${destination}/env/${destination}/view once the root below is written into
+# the manifest. Pin it here so everything derived from it is absolute.
+destination="$(cd "${destination}" && pwd)"
+
 echo "Install tag: $tag"
 echo "Install destination: $destination"
-
-mkdir -p "${destination}"
 
 if [ -n "${GITLAB_CI:-}" ]; then
     _spack_folder=${CI_PROJECT_DIR}/spack
 else
     _spack_folder=${PWD}/spack
 fi
+
+start_section "Authenticate github.com fetches"
+# Before anything reaches github.com: setup_spack.sh clones spack itself, and
+# the builtin package repo is fetched right after it.
+"${SCRIPT_DIR}/github_auth.sh"
+end_section
 
 start_section "Install spack if not already installed"
 if ! command -v spack &> /dev/null; then
@@ -251,7 +286,7 @@ if ! command -v spack &> /dev/null; then
 fi
 checkpoint "Spack install complete"
 
-_spack_repo_version=${SPACK_REPO_VERSION:-develop}
+_spack_repo_version=${SPACK_REPO_VERSION:-$(pinned_version SPACK_REPO_VERSION)}
 _spack_repo_directory="$(realpath "$(spack location --repo builtin)/../../../")"
 
 echo "Ensure builtin repo is synced to commit ${_spack_repo_version}"
@@ -336,6 +371,10 @@ if [ "${compiler}" != "default" ]; then
     cmd+=("--compiler-binary" "${compiler}")
 fi
 
+if [ -n "${flavor}" ]; then
+    cmd+=("--flavor" "${flavor}")
+fi
+
 "${cmd[@]}"
 
 checkpoint "Lock file prepared"
@@ -346,6 +385,37 @@ end_section
 
 start_section "Create spack environment"
 spack env create -d "${env_dir}" "${lock_file_path}" --with-view "$view_dir"
+# ci-dependencies' own spack.yaml excludes libiconv from its view (see its
+# commit a025501f) because the view's GNU libiconv exports libiconv*, not
+# iconv*, and on macOS DYLD_LIBRARY_PATH outranks a binary's absolute install
+# name -- so it hijacks cmake/ctest/cpack/ccmake, which are built against
+# /usr/lib/libiconv, away from it. That exclude lives in the manifest, not
+# the lockfile, so creating the env straight from spack.lock above loses it
+# regardless of DEPENDENCY_TAG. Re-apply it to the locally generated
+# manifest before the view gets populated below, rather than unsetting
+# DYLD_LIBRARY_PATH for every command: dd4hep's own plugin lookup reads that
+# variable directly (not through dlopen's OS-level resolution), so it still
+# needs the view on it.
+#
+# The colon-path form (`config add view:default:exclude:[libiconv]`) can't
+# do this: view's schema default is a bare bool, and config add errors
+# trying to assign into that regardless of view's current form. `-f <file>`
+# merges a real YAML document instead and does the right thing (verified:
+# installing a spec with this in place drops it from the view while leaving
+# it installed). `-f -` silently no-ops rather than reading stdin, so this
+# needs a real file. `root` has to be repeated here: the view descriptor
+# schema marks it required, so a document carrying only `exclude` is
+# rejected outright.
+view_exclude_config="$(mktemp)"
+cat > "$view_exclude_config" <<YAML
+view:
+  default:
+    root: ${view_dir}
+    exclude:
+    - libiconv
+YAML
+spack -e "${env_dir}" config add -f "$view_exclude_config"
+rm -f "$view_exclude_config"
 checkpoint "Spack environment created"
 spack -e "${env_dir}" spec -l
 checkpoint "Spack spec complete"
@@ -364,41 +434,73 @@ retry_transient spack -e "${env_dir}" install --fail-fast --use-buildcache only 
 checkpoint "Spack install complete"
 end_section
 
+start_section "Ensure uv is available"
+if ! command -v uv &> /dev/null ; then
+  echo "uv not found, installing uv"
+  curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="${destination}/uv" sh
+  export PATH="${destination}/uv:${PATH}"
+  checkpoint "uv installation complete"
+fi
+end_section
+
 start_section "Patch up Geant4 data directory"
 if [ "${full_install:-false}" == "true" ]; then
-  if ! which uv &> /dev/null ; then
-    echo "uv not found, installing uv"
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    UV_EXE="/root/.local/bin/uv"
-    checkpoint "uv installation complete"
-  else
-    UV_EXE=$(which uv)
-  fi
-  $UV_EXE run "$SCRIPT_DIR/download_geant4_datasets.py" -j8 --config "${view_dir}/bin/geant4-config"
+  uv run "$SCRIPT_DIR/download_geant4_datasets.py" -j8 --config "${view_dir}/bin/geant4-config"
   checkpoint "Geant4 datasets download complete"
 fi
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
-# Prepare the folder for G4 data, and symlink it to where G4 will look for it
-mkdir -p "${geant4_dir}/share/Geant4"
-ln -s "${geant4_dir}/share/Geant4/data" "${view_dir}/share/Geant4/data"
+# Prepare the folder for G4 data, and symlink it to where G4 will look for it.
+# `data` itself, not just its parent: geant4.sh does `cd .../share/Geant4/data`
+# and only the full_install path above creates it. Without it the ln below has
+# no existing directory to resolve onto and writes a symlink at the target's own
+# path -- a self-reference that makes every later cd fail with ELOOP.
+mkdir -p "${geant4_dir}/share/Geant4/data"
+[ -e "${view_dir}/share/Geant4/data" ] ||
+  ln -s "${geant4_dir}/share/Geant4/data" "${view_dir}/share/Geant4/data"
 end_section
 
 start_section "Prepare python environment"
 "${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
-retry_transient "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
+# uv does not reuse packages inherited through --system-site-packages. Exclude
+# distributions visible to the target venv so it cannot shadow the native stack
+# (in particular numpy) with PyPI wheels. Inspect the venv, not the view: Python
+# can resolve the view's symlinked interpreter to a different base prefix when
+# creating a venv, so packages visible in the view may not be inherited.
+# Inherited versions take precedence over the test requirements. Keep this list
+# for later installs in jobs that source the generated environment file.
+spack_python_excludes="${venv_dir}/spack-python-excludes.txt"
+"${venv_dir}/bin/python3" -I -c '
+from importlib.metadata import distributions
+print("\n".join(sorted({dist.metadata["Name"] for dist in distributions()})))
+' > "$spack_python_excludes"
+retry_transient uv pip install --python "${venv_dir}/bin/python3" --excludes "$spack_python_excludes" pyyaml jinja2
+"${venv_dir}/bin/python3" -c 'import yaml, jinja2'
 if [ "${full_install:-false}" == "true" ]; then
-  retry_transient "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt"
-  retry_transient "${venv_dir}/bin/python3" -m pip install histcmp==0.10.0 matplotlib
-  retry_transient "${venv_dir}/bin/python3" -m pip install pytest-md-report
+  retry_transient uv pip install --python "${venv_dir}/bin/python3" --excludes "$spack_python_excludes" \
+    -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt" histcmp==0.12.0 matplotlib pytest-md-report
 fi
 checkpoint "Python environment prepared"
 end_section
 
 start_section "Set environment variables"
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
-set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"
-set_env DYLD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"
-set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
+set_env ACTS_SPACK_PYTHON_EXCLUDES "$spack_python_excludes"
+# lib64 carries CUDA's own libraries (e.g. cusparse): the view merges
+# packages' lib64/ trees there rather than into lib/, and prebuilt binaries
+# that dlopen them at runtime (rather than being linked with a baked RPATH)
+# need it on the search path too.
+set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib64:${view_dir}/lib/root"
+set_env DYLD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib64:${view_dir}/lib/root"
+# CCCL's CMake configs (Thrust, CUB, libcudacxx) sit under
+# targets/<arch>-linux/lib/cmake, which CMake does not search below a prefix,
+# so find_package(Thrust) misses them. The glob is a no-op without a flavor.
+cmake_prefix_path="${venv_dir}:${view_dir}"
+for cuda_cmake_dir in "${view_dir}"/targets/*/lib/cmake; do
+  if [ -d "${cuda_cmake_dir}" ]; then
+    cmake_prefix_path="${cmake_prefix_path}:${cuda_cmake_dir}"
+  fi
+done
+set_env CMAKE_PREFIX_PATH "${cmake_prefix_path}"
 set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"
 # cleanup setup-python mess

@@ -12,7 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/interface/IAssignmentFinder.hpp"
+#include "Acts/Material/IAssignmentFinder.hpp"
 
 #include <utility>
 #include <vector>
@@ -30,6 +30,8 @@ namespace Acts {
 /// for candidate inclusion.
 ///
 /// In a large-n material interaction scenario, this is not the most efficient
+///
+/// @ingroup material_mapping
 class IntersectionMaterialAssigner final : public IAssignmentFinder {
  public:
   /// @brief Nested configuration struct

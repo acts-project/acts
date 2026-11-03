@@ -78,12 +78,12 @@ GTEST_TEST(detray_simulation, detector_scanner) {
 
     // Should have encountered the same number of tracks (vulnerable to
     // floating point errors)
-    EXPECT_EQ(expected[n_tracks].size(), intersection_trace.size())
+    EXPECT_EQ(expected.at(n_tracks).size(), intersection_trace.size())
         << "track: " << n_tracks << "\n"
         << test_helix;
 
     // Feedback if not the same number of intersections was found
-    const std::size_t n_ray_inters{expected[n_tracks].size()};
+    const std::size_t n_ray_inters{expected.at(n_tracks).size()};
     const std::size_t n_helix_inters{intersection_trace.size()};
     EXPECT_EQ(n_ray_inters, n_helix_inters)
         << "track: " << n_tracks << "\n"
@@ -92,22 +92,24 @@ GTEST_TEST(detray_simulation, detector_scanner) {
 
     // Check every single recorded intersection
     for (std::size_t i = 0u; i < std::min(n_ray_inters, n_helix_inters); ++i) {
-      if (expected[n_tracks][i].vol_idx != intersection_trace[i].vol_idx) {
+      if (expected.at(n_tracks).at(i).volume() !=
+          intersection_trace.at(i).volume()) {
         // Intersection record at portal bound might be flipped
         // (the portals overlap completely)
-        if (expected[n_tracks][i].vol_idx ==
-                intersection_trace[i + 1u].vol_idx &&
-            expected[n_tracks][i + 1u].vol_idx ==
-                intersection_trace[i].vol_idx) {
+        if (expected.at(n_tracks).at(i).volume() ==
+                intersection_trace.at(i + 1u).volume() &&
+            expected.at(n_tracks).at(i + 1u).volume() ==
+                intersection_trace.at(i).volume()) {
           // Have already checked the next record
           ++i;
           continue;
         }
       }
-      EXPECT_EQ(expected[n_tracks][i].vol_idx, intersection_trace[i].vol_idx)
+      EXPECT_EQ(expected.at(n_tracks).at(i).volume(),
+                intersection_trace.at(i).volume())
           << "track: " << n_tracks << ", intersection: " << i
-          << "\n - ray: " << expected[n_tracks][i].intersection
-          << "\n - helix: " << intersection_trace[i].intersection;
+          << "\n - ray: " << expected.at(n_tracks).at(i).intersection()
+          << "\n - helix: " << intersection_trace.at(i).intersection();
     }
 
     ++n_tracks;

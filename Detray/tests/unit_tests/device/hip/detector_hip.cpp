@@ -32,7 +32,7 @@ TEST(detector_hip, detector) {
   // create toy geometry
   auto [toy_det, names] = build_toy_detector<test::algebra>(mng_mr);
 
-  auto ctx0 = typename detector_host_t::geometry_context();
+  auto ctx0 = typename host_detector_t::geometry_context();
 
   // host objects
   auto& volumes_host = toy_det.volumes();

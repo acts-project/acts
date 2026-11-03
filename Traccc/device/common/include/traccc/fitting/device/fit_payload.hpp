@@ -1,14 +1,18 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 // Project include(s).
 #include "traccc/edm/track_container.hpp"
+
+// Detray include(s)
+#include <detray/core/concepts.hpp>
 
 // VecMem include(s).
 #include <vecmem/containers/data/jagged_vector_view.hpp>
@@ -36,12 +40,13 @@ struct fit_payload {
 };
 
 /// (Templated) Payload for the fitting function(s)
-template <typename detector_t, typename bfield_t, typename surface_t>
+template <detray::concepts::device_view detector_view_t, typename bfield_t,
+          typename surface_t>
 struct fit_tpayload {
   /**
    * @brief View object to the detector description
    */
-  detector_t det;
+  detector_view_t det;
 
   /**
    * @brief View object to the magnetic field description
@@ -49,7 +54,7 @@ struct fit_tpayload {
   bfield_t field;
 
   /**
-   * @brief View object to the output geometry identifer sequence
+   * @brief View object to the output geometry identifier sequence
    */
   vecmem::data::jagged_vector_view<surface_t> surfaces;
 };

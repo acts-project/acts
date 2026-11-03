@@ -42,7 +42,8 @@ void addDetector(py::module& mex) {
   {
     py::class_<Detector, std::shared_ptr<Detector>>(mex, "DetectorBase")
         .def("nominalGeometryContext", &Detector::nominalGeometryContext)
-        .def("trackingGeometry", &Detector::trackingGeometry)
+        .def("trackingGeometry", &Detector::trackingGeometry,
+             py::keep_alive<0, 1>())
         .def("contextDecorators", &Detector::contextDecorators)
         .def("__enter__",
              [](const std::shared_ptr<Detector>& self) { return self; })
@@ -84,12 +85,15 @@ void addDetector(py::module& mex) {
     auto d =
         py::class_<TelescopeDetector, Detector,
                    std::shared_ptr<TelescopeDetector>>(mex, "TelescopeDetector")
-            .def(py::init<const TelescopeDetector::Config&>());
+            .def(py::init<const TelescopeDetector::Config&>())
+            .def("getReferenceSurface", &TelescopeDetector::getReferenceSurface,
+                 py::arg("position"), py::arg("halfX"), py::arg("halfY"));
 
     auto c =
         py::class_<TelescopeDetector::Config>(d, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, positions, stereos, offsets, bounds, thickness,
-                       surfaceType, binValue, materialDecorator, logLevel);
+                       surfaceType, rotDirection, envelope_x, envelope_y,
+                       envelope_z, materialDecorator, logLevel, gen3);
   }
 }
 

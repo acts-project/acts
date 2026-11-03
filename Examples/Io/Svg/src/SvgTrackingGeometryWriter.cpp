@@ -15,7 +15,8 @@ namespace ActsExamples {
 
 SvgTrackingGeometryWriter::SvgTrackingGeometryWriter(
     const SvgTrackingGeometryWriter::Config& config, Acts::Logging::Level level)
-    : m_logger{Acts::getDefaultLogger(name(), level)}, m_cfg(config) {}
+    : m_logger{Acts::getDefaultLogger("SvgTrackingGeometryWriter", level)},
+      m_cfg(config) {}
 
 std::string SvgTrackingGeometryWriter::name() const {
   return "SvgTrackingGeometryWriter";
@@ -28,7 +29,7 @@ ProcessCode SvgTrackingGeometryWriter::write(
   m_writeMutex.lock();
 
   auto geometrySheets = ActsPlugins::Svg::TrackingGeometryConverter::convert(
-      context.geoContext, tGeometry, m_cfg.converterOptions);
+      context.recoGeoContext, tGeometry, m_cfg.converterOptions);
 
   // Write them out
   for (const auto& sheet : geometrySheets) {

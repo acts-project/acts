@@ -39,6 +39,9 @@
 
 namespace detray {
 
+template <typename A, typename T>
+using dalgebra = get_algebra_t<A, T>;
+
 template <typename A>
 using dvalue = get_value_t<A>;
 
@@ -51,25 +54,25 @@ using dsimd = get_simd_t<A, T>;
 template <typename A>
 using dindex_type = get_index_t<A>;
 
-template <typename A>
-using dscalar = get_scalar_t<A>;
+template <typename A, typename T = dvalue<A>>
+using dscalar = get_scalar_t<A, T>;
 
-template <typename A>
-using dpoint2D = get_point2D_t<A>;
+template <typename A, typename T = dvalue<A>>
+using dpoint2D = get_point2D_t<A, T>;
 
-template <typename A>
-using dpoint3D = get_point3D_t<A>;
+template <typename A, typename T = dvalue<A>>
+using dpoint3D = get_point3D_t<A, T>;
 
-template <typename A>
-using dvector2D = get_vector2D_t<A>;
+template <typename A, typename T = dvalue<A>>
+using dvector2D = get_vector2D_t<A, T>;
 
-template <typename A>
-using dvector3D = get_vector3D_t<A>;
+template <typename A, typename T = dvalue<A>>
+using dvector3D = get_vector3D_t<A, T>;
 
-template <typename A>
-using dtransform3D = get_transform3D_t<A>;
+template <typename A, typename T = dvalue<A>>
+using dtransform3D = get_transform3D_t<A, T>;
 
-template <typename A, std::size_t R, std::size_t C>
-using dmatrix = get_matrix_t<A, R, C>;
+template <typename A, std::size_t R, std::size_t C, typename T = dvalue<A>>
+using dmatrix = get_matrix_t<A, R, C, T>;
 
 }  // namespace detray

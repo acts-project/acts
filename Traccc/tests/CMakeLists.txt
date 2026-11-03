@@ -1,11 +1,16 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2021-2024 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Project include(s).
 include(traccc-compiler-options-cpp)
+
+# Check that ACTS_FORCE_ASSERTIONS works
+acts_add_assertion_tests()
 
 # Set up a common library, shared by all of the tests.
 add_library(
@@ -16,15 +21,11 @@ add_library(
     "common/tests/data_test.hpp"
     "common/tests/kalman_fitting_momentum_resolution_test.hpp"
     "common/tests/kalman_fitting_test.hpp"
-    "common/tests/triplet_fitting_test.hpp"
     "common/tests/kalman_fitting_telescope_test.hpp"
-    "common/tests/triplet_fitting_telescope_test.hpp"
     "common/tests/kalman_fitting_toy_detector_test.hpp"
-    "common/tests/kalman_fitting_wire_chamber_test.hpp"
     "common/tests/kalman_fitting_momentum_resolution_test.cpp"
     "common/tests/kalman_fitting_test.cpp"
     "common/tests/test_detectors.hpp"
-    "common/tests/triplet_fitting_test.cpp"
 )
 target_include_directories(
     traccc_tests_common
@@ -57,7 +58,6 @@ endif()
 
 # Add all of the test subdirectories.
 add_subdirectory(core)
-add_subdirectory(cpu)
 add_subdirectory(io)
 
 if(TRACCC_BUILD_EXAMPLES)

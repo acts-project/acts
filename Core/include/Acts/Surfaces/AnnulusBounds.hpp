@@ -115,8 +115,8 @@ class AnnulusBounds : public DiscBounds {
   /// Returns true for full phi coverage
   /// @return True if the annulus covers the full azimuthal range, false otherwise
   bool coversFullAzimuth() const final {
-    return (std::abs((get(eMinPhiRel) - get(eMaxPhiRel)) - std::numbers::pi) <
-            s_onSurfaceTolerance);
+    return std::abs((get(eMaxPhiRel) - get(eMinPhiRel)) -
+                    2 * std::numbers::pi) < s_fullAzimuthTolerance;
   }
 
   /// Checks if this is inside the radial coverage

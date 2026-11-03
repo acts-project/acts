@@ -1,0 +1,39 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Project include(s).
+#include "traccc/sycl/utils/queue_wrapper.hpp"
+
+// SYCL include(s).
+#include <sycl/sycl.hpp>
+namespace traccc::sycl {
+
+queue_wrapper::queue_wrapper(void* queue) : m_queue(queue) {}
+
+void* queue_wrapper::queue() {
+  return m_queue;
+}
+
+const void* queue_wrapper::queue() const {
+  return m_queue;
+}
+
+void queue_wrapper::synchronize() const {
+  assert(m_queue != nullptr);
+  static_cast<::sycl::queue*>(m_queue)->wait_and_throw();
+}
+
+void queue_wrapper::enqueue_callback(std::function<void()> func) const {
+  assert(m_queue != nullptr);
+
+  auto& sycl_queue = *(reinterpret_cast<::sycl::queue*>(m_queue));
+  sycl_queue.submit([func = std::move(func)](::sycl::handler& cgh) {
+    cgh.host_task([func = std::move(func)]() { func(); });
+  });
+}
+}  // namespace traccc::sycl

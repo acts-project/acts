@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "ActsAlignment/Kernel/Alignment.hpp"
+
 #include "ActsExamples/DetectorCommons/AlignmentDecorator.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentGenerator.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
@@ -32,10 +34,15 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
             .def("decorate", &AlignmentDecorator::decorate)
             .def("name", &AlignmentDecorator::name);
 
+    py::enum_<AlignmentDecorator::Target>(ad, "Target")
+        .value("eSim", AlignmentDecorator::Target::eSim)
+        .value("eReco", AlignmentDecorator::Target::eReco)
+        .value("eBoth", AlignmentDecorator::Target::eBoth);
+
     auto c =
         py::class_<AlignmentDecorator::Config>(ad, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, iovStores, nominalStore, garbageCollection,
+    ACTS_PYTHON_STRUCT(c, target, iovStores, nominalStore, garbageCollection,
                        gcInterval, iovGenerators);
   }
 

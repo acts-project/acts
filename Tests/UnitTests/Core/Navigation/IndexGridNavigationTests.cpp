@@ -27,6 +27,7 @@
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 
 #include <memory>
 #include <numbers>
@@ -231,8 +232,7 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   surfaceRotation.col(1) = surfaceLocalY;
   surfaceRotation.col(2) = surfaceLocalZ;
   // Get the surfaceTransform
-  auto surfaceTransform =
-      Transform3(Translation3(surfaceCenter) * surfaceRotation);
+  auto surfaceTransform = makeTransform3(surfaceRotation, surfaceCenter);
 
   auto planeSurface = Surface::makeShared<PlaneSurface>(
       surfaceTransform, std::make_shared<RectangleBounds>(2., 3.));

@@ -14,11 +14,12 @@
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
+#include "Acts/EventData/TrackProxyCommon.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -27,6 +28,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <optional>
 #include <utility>
 
 namespace Acts {
@@ -186,15 +188,21 @@ findTrackStateForExtrapolation(
                                              Logging::INFO)) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
-  auto intersect = [&](const TrackStateProxy &state) -> Intersection3D {
-    assert(state.hasSmoothed() || state.hasFiltered());
-
-    FreeVector freeVector;
-    if (state.hasSmoothed()) {
-      freeVector = MultiTrajectoryHelpers::freeSmoothed(geoContext, state);
-    } else {
-      freeVector = MultiTrajectoryHelpers::freeFiltered(geoContext, state);
+  // Intersect the reference surface with the trajectory at a track state.
+  // Returns `std::nullopt` if the state carries no parameters at all and can
+  // therefore not be started from; an invalid intersection means the state has
+  // parameters but does not reach the reference surface.
+  auto intersect =
+      [&](const TrackStateProxy &state) -> std::optional<Intersection3D> {
+    if (!state.hasSmoothed() && !state.hasFiltered() && !state.hasPredicted()) {
+      return std::nullopt;
     }
+
+    // `parameters` picks smoothed over filtered over predicted, which is what
+    // `TrackProxy::createParametersFromState` starts the propagation from. The
+    // distance has to be measured on the same parameters.
+    const FreeVector freeVector = transformBoundToFreeParameters(
+        state.referenceSurface(), geoContext, state.parameters());
 
     return referenceSurface
         .intersect(geoContext, freeVector.template segment<3>(eFreePos0),
@@ -213,15 +221,20 @@ findTrackStateForExtrapolation(
         return first.error();
       }
 
-      Intersection3D intersection = intersect(*first);
-      if (!intersection.isValid()) {
+      std::optional<Intersection3D> intersection = intersect(*first);
+      if (!intersection.has_value()) {
+        ACTS_DEBUG("first track state carries no parameters");
+        return Result<std::pair<TrackStateProxy, double>>::failure(
+            TrackExtrapolationError::CompatibleTrackStateNotFound);
+      }
+      if (!intersection->isValid()) {
         ACTS_DEBUG("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
       }
 
-      ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::pair(*first, intersection.pathLength());
+      ACTS_VERBOSE("found intersection at " << intersection->pathLength());
+      return std::pair(*first, intersection->pathLength());
     }
 
     case TrackExtrapolationStrategy::last: {
@@ -233,15 +246,20 @@ findTrackStateForExtrapolation(
         return last.error();
       }
 
-      Intersection3D intersection = intersect(*last);
-      if (!intersection.isValid()) {
+      std::optional<Intersection3D> intersection = intersect(*last);
+      if (!intersection.has_value()) {
+        ACTS_DEBUG("last track state carries no parameters");
+        return Result<std::pair<TrackStateProxy, double>>::failure(
+            TrackExtrapolationError::CompatibleTrackStateNotFound);
+      }
+      if (!intersection->isValid()) {
         ACTS_DEBUG("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
       }
 
-      ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::pair(*last, intersection.pathLength());
+      ACTS_VERBOSE("found intersection at " << intersection->pathLength());
+      return std::pair(*last, intersection->pathLength());
     }
 
     case TrackExtrapolationStrategy::firstOrLast: {
@@ -259,8 +277,23 @@ findTrackStateForExtrapolation(
         return last.error();
       }
 
-      Intersection3D intersectionFirst = intersect(*first);
-      Intersection3D intersectionLast = intersect(*last);
+      std::optional<Intersection3D> intersectionFirstOpt = intersect(*first);
+      std::optional<Intersection3D> intersectionLastOpt = intersect(*last);
+
+      if (!intersectionFirstOpt.has_value() &&
+          !intersectionLastOpt.has_value()) {
+        ACTS_DEBUG("neither first nor last track state carries parameters");
+        return Result<std::pair<TrackStateProxy, double>>::failure(
+            TrackExtrapolationError::CompatibleTrackStateNotFound);
+      }
+
+      // an end without parameters cannot be started from, so it loses the
+      // comparison below through the infinite path length of an invalid
+      // intersection
+      Intersection3D intersectionFirst =
+          intersectionFirstOpt.value_or(Intersection3D::Invalid());
+      Intersection3D intersectionLast =
+          intersectionLastOpt.value_or(Intersection3D::Invalid());
 
       double absDistanceFirst = std::abs(intersectionFirst.pathLength());
       double absDistanceLast = std::abs(intersectionLast.pathLength());
@@ -397,6 +430,9 @@ void calculateTrackQuantities(track_proxy_t track)
   track.nSharedHits() = 0;
   track.nOutliers() = 0;
 
+  // The split hit column is optional, so only count if the track has it
+  unsigned int nSplitHits = 0;
+
   for (const auto &trackState : track.trackStatesReversed()) {
     ConstTrackStateTypeMap typeFlags = trackState.typeFlags();
 
@@ -408,9 +444,18 @@ void calculateTrackQuantities(track_proxy_t track)
       if (typeFlags.isSharedHit()) {
         track.nSharedHits()++;
       }
+      if (typeFlags.isSplitHit()) {
+        nSplitHits++;
+      }
       track.nMeasurements()++;
       track.chi2() += trackState.chi2();
       track.nDoF() += trackState.calibratedSize();
+    }
+  }
+
+  if constexpr (requires { track.nSplitHits(); }) {
+    if (track.hasColumn(detail_tp::kSplitHitsKey)) {
+      track.nSplitHits() = nSplitHits;
     }
   }
 }

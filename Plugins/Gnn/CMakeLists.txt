@@ -1,5 +1,6 @@
 acts_add_library(
     PluginGnn
+    src/CudaUnavailable.cpp
     src/GnnPipeline.cpp
     src/Stages.cpp
     src/Tensor.cpp
@@ -36,6 +37,14 @@ if(ACTS_GNN_ENABLE_TORCH)
             src/TorchMetricLearning.cpp
             src/buildEdges.cpp
     )
+    # FRNN edge building is CUDA-only. One of the two definitions of
+    # detail::buildEdgesFRNN is always linked, so buildEdges.cpp can call it
+    # unconditionally.
+    if(ACTS_ENABLE_CUDA)
+        target_sources(ActsPluginGnn PRIVATE src/buildEdgesFRNN.cpp)
+    else()
+        target_sources(ActsPluginGnn PRIVATE src/buildEdgesFRNNNoCuda.cpp)
+    endif()
 endif()
 
 if(ACTS_GNN_ENABLE_TENSORRT)
@@ -79,11 +88,16 @@ if(ACTS_ENABLE_CUDA)
         ActsPluginGnn
         PRIVATE
             src/CudaTrackBuilding.cu
+            src/DWalkTrackBuilding.cu
             src/JunctionRemoval.cu
             src/Tensor.cu
             src/Stages.cu
     )
 else()
+    # The other half of DeviceOps.hpp: every device entry point, defined to
+    # throw. Host code calls them unconditionally and dispatches on the runtime
+    # device, so nothing above needs a preprocessor branch.
+    target_sources(ActsPluginGnn PRIVATE src/DeviceOpsNoCuda.cpp)
 endif()
 
 if(ACTS_GNN_ENABLE_TORCH)
@@ -101,7 +115,13 @@ if(ACTS_GNN_ENABLE_TORCH)
     else()
         target_link_libraries(ActsPluginGnn PRIVATE TorchScatter::TorchScatter)
         # Should not discard TorchScatter even if its not needed at this point
-        # since we need the scatter_max operation in the torch script later
-        target_link_options(ActsPluginGnn PUBLIC "-Wl,-no-as-needed")
+        # since we need the scatter_max operation in the torch script later.
+        # --no-as-needed is a GNU ld option that Apple's linker rejects; it
+        # keeps every library on its command line anyway, so nothing is needed
+        # there.
+        target_link_options(
+            ActsPluginGnn
+            PUBLIC "$<$<NOT:$<PLATFORM_ID:Darwin>>:-Wl,-no-as-needed>"
+        )
     endif()
 endif()

@@ -1,5 +1,6 @@
 import os
 import multiprocessing
+import sys
 from pathlib import Path
 import math
 import tempfile
@@ -392,8 +393,11 @@ def test_edm4hep_tracks_writer(tmp_path):
                 r = math.sqrt(rp.x**2 + rp.y**2)
                 assert r > 25
 
-            assert locs[0] == cppyy.gbl.edm4hep.TrackState.AtLastHit
-            assert locs[-1] == cppyy.gbl.edm4hep.TrackState.AtFirstHit
+            # Track states are written following the EDM4hep/LCIO convention:
+            # the AtIP state first (skipped above), then the measurement states
+            # ordered inside-out.
+            assert locs[0] == cppyy.gbl.edm4hep.TrackState.AtFirstHit
+            assert locs[-1] == cppyy.gbl.edm4hep.TrackState.AtLastHit
 
             assert perigee is not None
             rp = perigee.referencePoint
@@ -462,15 +466,29 @@ def ddsim_input_session(tmp_path_factory):
 
             # explicitly ask for "spawn" as CI failures were observed with "fork"
             spawn_context = multiprocessing.get_context("spawn")
-            p = spawn_context.Process(
-                target=generate_input_test_edm4hep_simhit_reader,
-                args=(odd_xml_file, staging, particle_type),
-            )
-            p.start()
-            p.join()
-            if p.exitcode != 0:
+            # ddsim has been seen to abort with "free(): invalid pointer" when
+            # closing its output file after all events were simulated
+            # (podio::ROOTWriter::finish, LCG_109), so give it a second try.
+            attempts = 2
+            for attempt in range(1, attempts + 1):
+                p = spawn_context.Process(
+                    target=generate_input_test_edm4hep_simhit_reader,
+                    args=(odd_xml_file, staging, particle_type),
+                )
+                p.start()
+                p.join()
+                if p.exitcode == 0:
+                    break
                 staging.unlink(missing_ok=True)
-                raise RuntimeError("ddsim process failed")
+                if attempt == attempts:
+                    raise RuntimeError(
+                        f"ddsim process failed {attempts} times "
+                        f"(last exit code {p.exitcode})"
+                    )
+                print(
+                    f"ddsim process failed with exit code {p.exitcode}, retrying",
+                    file=sys.stderr,
+                )
 
             assert staging.exists()
             staging.rename(output_file)
@@ -490,6 +508,7 @@ def ddsim_input(ddsim_input_session, tmp_path):
 @pytest.mark.slow
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+@pytest.mark.xdist_group("heavy")
 def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input, odd_detector):
     detector = odd_detector
     from acts.examples.edm4hep import EDM4hepSimInputConverter
@@ -824,6 +843,7 @@ def test_edm4hep_podio_track_output_converter(tmp_path, odd_detector):
 
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+@pytest.mark.xdist_group("heavy")
 def test_edm4hep_reader(ddsim_input):
     from acts.examples.edm4hep import PodioReader
 
@@ -844,6 +864,7 @@ def test_edm4hep_reader(ddsim_input):
 
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+@pytest.mark.xdist_group("heavy")
 def test_edm4hep_writer_copy(ddsim_input, tmp_path):
     from acts.examples.edm4hep import PodioWriter, PodioReader
 
@@ -891,6 +912,8 @@ def test_edm4hep_writer_copy(ddsim_input, tmp_path):
                 "ECalEndcapCollection",
                 "HCalBarrelCollection",
                 "ECalBarrelCollection",
+                "MuonBarrelHits",
+                "MuonEndcapHits",
             ]
         ),
     )

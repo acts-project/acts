@@ -7,6 +7,21 @@ updates:
       day: "sunday"
       time: "01:23"
       timezone: "Europe/Zurich"
+    # Batch bumps into a single PR instead of one per action. Majors are kept
+    # separate so a breaking bump can't block the routine ones.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      github-actions-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+    # Wait 7 days after a release before proposing it.
     cooldown:
       default-days: 7
     # Don't auto-rebase open PRs when main moves: rebases re-trigger CI and
@@ -20,6 +35,18 @@ updates:
       day: "sunday"
       time: "01:23"
       timezone: "Europe/Zurich"
+    groups:
+      pre-commit:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      pre-commit-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
     cooldown:
       default-days: 7
     rebase-strategy: "disabled"

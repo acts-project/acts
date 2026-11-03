@@ -9,8 +9,13 @@
 #include "ActsPlugins/Json/ProtoAxisJsonConverter.hpp"
 
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
+
+// Unlike the declarations, the definitions of the deprecated converters do not
+// carry the deprecation attribute themselves, so they need the suppression
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 nlohmann::json Acts::ProtoAxisJsonConverter::toJson(const Acts::ProtoAxis& pa) {
   nlohmann::json j;
@@ -49,3 +54,5 @@ Acts::ProtoAxis Acts::ProtoAxisJsonConverter::fromJson(
   }
   return ProtoAxis(axisBoundaryType, binEdges);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()

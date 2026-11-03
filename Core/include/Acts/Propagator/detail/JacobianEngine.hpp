@@ -181,12 +181,13 @@ FreeToBoundMatrix freeToCurvilinearTransportJacobian(
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 ///        parametrisation to free parameters
 /// @param [in] freeParameters Free, nominal parametrisation
-Result<void> reinitializeJacobians(const GeometryContext& geoContext,
-                                   const Surface& surface,
-                                   FreeMatrix& freeTransportJacobian,
-                                   FreeVector& freeToPathDerivatives,
-                                   BoundToFreeMatrix& boundToFreeJacobian,
-                                   const FreeVector& freeParameters);
+/// @note The free parameters must be on @p surface
+void reinitializeJacobians(const GeometryContext& geoContext,
+                           const Surface& surface,
+                           FreeMatrix& freeTransportJacobian,
+                           FreeVector& freeToPathDerivatives,
+                           BoundToFreeMatrix& boundToFreeJacobian,
+                           const FreeVector& freeParameters);
 
 /// @brief This function reinitialises the state members required for the
 ///        covariance transport for curvilinear surfaces
@@ -206,6 +207,32 @@ Result<void> reinitializeJacobians(const GeometryContext& geoContext,
 /// @param [in] direction Normalised direction vector
 void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
                            FreeVector& freeToPathDerivatives,
+                           BoundToFreeMatrix& boundToFreeJacobian,
+                           const Vector3& direction);
+
+/// @brief Overload for steppers that transport the bound-to-free jacobian
+///        itself and so have no free-to-free transport to reset.
+///
+/// @param [in] geoContext The geometry context
+/// @param [in] surface The reference surface of the local parametrisation
+/// @param [out] freeToPathDerivatives Path length derivatives
+/// @param [out] boundToFreeJacobian Jacobian from the local parametrisation
+///        to free parameters
+/// @param [in] freeParameters Free, nominal parametrisation
+/// @note The free parameters must be on @p surface
+void reinitializeJacobians(const GeometryContext& geoContext,
+                           const Surface& surface,
+                           FreeVector& freeToPathDerivatives,
+                           BoundToFreeMatrix& boundToFreeJacobian,
+                           const FreeVector& freeParameters);
+
+/// @brief Curvilinear overload of the above
+///
+/// @param [out] freeToPathDerivatives Path length derivatives
+/// @param [out] boundToFreeJacobian Jacobian from the local parametrisation
+///        to free parameters
+/// @param [in] direction Normalised direction vector
+void reinitializeJacobians(FreeVector& freeToPathDerivatives,
                            BoundToFreeMatrix& boundToFreeJacobian,
                            const Vector3& direction);
 

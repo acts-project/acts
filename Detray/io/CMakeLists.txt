@@ -44,14 +44,14 @@ target_link_libraries(
 )
 
 # Set up libraries using particular algebra plugins.
-detray_add_library( detray_io_array io_array )
+detray_add_library(detray_io_array io_array)
 target_link_libraries(
     detray_io_array
     INTERFACE detray::io detray::algebra_array
 )
 
 if(DETRAY_EIGEN_PLUGIN)
-    detray_add_library( detray_io_eigen io_eigen )
+    detray_add_library(detray_io_eigen io_eigen)
     target_link_libraries(
         detray_io_eigen
         INTERFACE detray::io detray::algebra_eigen
@@ -59,7 +59,7 @@ if(DETRAY_EIGEN_PLUGIN)
 endif()
 
 if(DETRAY_SMATRIX_PLUGIN)
-    detray_add_library( detray_io_smatrix io_smatrix )
+    detray_add_library(detray_io_smatrix io_smatrix)
     target_link_libraries(
         detray_io_smatrix
         INTERFACE detray::io detray::algebra_smatrix
@@ -67,7 +67,7 @@ if(DETRAY_SMATRIX_PLUGIN)
 endif()
 
 if(DETRAY_VC_AOS_PLUGIN)
-    detray_add_library( detray_io_vc_aos io_vc_aos )
+    detray_add_library(detray_io_vc_aos io_vc_aos)
     target_link_libraries(
         detray_io_vc_aos
         INTERFACE detray::io detray::algebra_vc_aos
@@ -85,47 +85,14 @@ detray_add_library( detray_csv_io csv_io
 )
 target_link_libraries(detray_csv_io INTERFACE detray::io_utils)
 
-# Test the public headers of the detray I/O libraries.
-if(BUILD_TESTING AND DETRAY_BUILD_TESTING)
-    string(
-        REPLACE "include/"
-        ""
-        _detray_io_utils_public_headers
-        "${_detray_io_utils_public_headers}"
-    )
-
-    string(
-        REPLACE "include/"
-        ""
-        _detray_io_public_headers
-        "${_detray_io_public_headers}"
-    )
-    detray_test_public_headers(detray_io_array
-      ${_detray_io_public_headers}
-    )
-    if(DETRAY_EIGEN_PLUGIN)
-        detray_test_public_headers(detray_io_eigen
-         ${_detray_io_public_headers}
-        )
-    endif()
-    if(DETRAY_SMATRIX_PLUGIN)
-        detray_test_public_headers(detray_io_smatrix
-         ${_detray_io_public_headers}
-        )
-    endif()
-    if(DETRAY_VC_AOS_PLUGIN)
-        detray_test_public_headers(detray_io_vc_aos
-         ${_detray_io_public_headers}
-        )
-    endif()
-
-    string(
-        REPLACE "include/"
-        ""
-        _detray_csv_io_public_headers
-        "${_detray_csv_io_public_headers}"
-    )
-endif()
+# Compile all headers (including the ones under detail/) one-by-one, against
+# std::array only, for the reason given in core/CMakeLists.txt.
+detray_compile_headers(
+    io_array
+    detray::io_array
+    "include/detray/io/*.hpp"
+    "include/detray/io/**/*.hpp"
+)
 
 # Clean up.
 unset(_detray_io_public_headers)

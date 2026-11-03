@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s).
 #include "tests/cca_test.hpp"
@@ -73,23 +74,25 @@ TEST(SYCLClustering, SingleModule) {
 
   edm::measurement_collection::host references{shared_mr};
   references.push_back({{2.5f, 2.5f},
-                        {0.75f, 0.0833333f},
+                        {0.0833333f, 0.0833333f},
                         2u,
                         0.f,
                         0.f,
                         0u,
                         detray::geometry::identifier{0u},
                         {1u, 1u},
-                        0u});
+                        0u,
+                        {0.666667f, 0.f}});
   references.push_back({{6.5f, 5.5f},
-                        {0.483333f, 0.483333f},
+                        {0.0833333f, 0.0833333f},
                         2u,
                         0.f,
                         0.f,
                         0u,
                         detray::geometry::identifier{0u},
                         {1u, 1u},
-                        1u});
+                        1u,
+                        {0.4f, 0.4f}});
 
   for (unsigned int i = 0; i < measurements.size(); ++i) {
     const auto test = measurements.at(i);

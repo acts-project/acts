@@ -18,9 +18,12 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
 #include <format>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <variant>
 
@@ -48,11 +51,19 @@ class ProtoDesignator {
   using Face = face_enum_t;
   using ShellType = shell_type_t;
 
-  ProtoDesignator(Face face, const DirectedProtoAxis& loc0,
-                  const DirectedProtoAxis& loc1, const std::string& prefix) {
-    validateAxes(face, loc0, loc1, prefix);
+  ProtoDesignator(Face face, const AxisSpec& loc0, const AxisSpec& loc1,
+                  const std::string& prefix,
+                  std::optional<std::string> materialKey) {
+    if (materialKey && materialKey->empty()) {
+      throw std::invalid_argument(prefix + "Material key must not be empty");
+    }
+    auto [expected0, expected1] = expectedDirections(face, prefix);
     validateDuplicate(face, prefix);
-    m_binning.emplace_back(face, loc0, loc1);
+    m_binning.emplace_back(
+        face,
+        MultiAxisSpec2D({validateAxis(loc0, expected0, face, prefix),
+                         validateAxis(loc1, expected1, face, prefix)}),
+        std::move(materialKey));
   }
 
   std::string label() const {
@@ -71,41 +82,47 @@ class ProtoDesignator {
 
     ACTS_DEBUG(prefix << "Binning is set to compatible type");
 
-    for (const auto& [face, loc0, loc1] : m_binning) {
+    for (const auto& [face, binning, key] : m_binning) {
       auto* portal = concreteShell->portal(face).get();
       if (portal == nullptr) {
         ACTS_ERROR(prefix << "Portal is nullptr");
         throw std::runtime_error("Portal is nullptr");
       }
 
-      ACTS_DEBUG(prefix << "Assigning material with binning: " << loc0 << ", "
-                        << loc1 << " to face " << face);
+      ACTS_DEBUG(prefix << "Assigning material with binning: " << binning
+                        << " to face " << face);
 
       portal->surface().assignSurfaceMaterial(
-          std::make_shared<ProtoGridSurfaceMaterial>(std::vector{loc0, loc1}));
+          std::make_shared<ProtoGridSurfaceMaterial>(
+              binning, MappingType::Default, key));
     }
   }
 
   void graphvizLabel(std::ostream& os) const {
     os << "<br/><i>" << portalShellShapeName(typeid(ShellType))
        << " Binning</i>";
-    for (const auto& [face, loc0, loc1] : m_binning) {
+    for (const auto& [face, binning, key] : m_binning) {
       os << "<br/> at: " << face;
-      os << ": " << loc0.getAxisDirection() << "=" << loc0.getAxis().getNBins();
-      os << ", " << loc1.getAxisDirection() << "=" << loc1.getAxis().getNBins();
+      for (std::size_t i = 0; i < binning.size(); ++i) {
+        const AxisSpec& axisSpec = binning.axisSpec(i);
+        os << (i == 0 ? ": " : ", ") << *axisSpec.direction() << "="
+           << axisSpec.nBins();
+      }
     }
   }
 
   ProtoDesignator merged(const ProtoDesignator& other) const {
+    for (const auto& entry : other.m_binning) {
+      validateDuplicate(std::get<0>(entry), "MaterialDesignator: ");
+    }
     ProtoDesignator result = *this;
     std::ranges::copy(other.m_binning, std::back_inserter(result.m_binning));
     return result;
   }
 
  private:
-  void validateAxes(Face face, const DirectedProtoAxis& loc0,
-                    const DirectedProtoAxis& loc1,
-                    const std::string& prefix) const {
+  std::pair<AxisDirection, AxisDirection> expectedDirections(
+      Face face, const std::string& prefix) const {
     using enum AxisDirection;
 
     if constexpr (std::is_same_v<ShellType, CylinderPortalShell>) {
@@ -113,20 +130,10 @@ class ProtoDesignator {
       switch (face) {
         case NegativeDisc:
         case PositiveDisc:
-          if (loc0.getAxisDirection() != AxisR ||
-              loc1.getAxisDirection() != AxisPhi) {
-            throw std::invalid_argument(prefix +
-                                        "Disc faces must use (r, phi) binning");
-          }
-          break;
+          return {AxisR, AxisPhi};
         case OuterCylinder:
         case InnerCylinder:
-          if (loc0.getAxisDirection() != AxisRPhi ||
-              loc1.getAxisDirection() != AxisZ) {
-            throw std::invalid_argument(
-                prefix + "Cylinder faces must use (rphi, z) binning");
-          }
-          break;
+          return {AxisRPhi, AxisZ};
         case NegativePhiPlane:
         case PositivePhiPlane:
           throw std::invalid_argument(prefix +
@@ -135,17 +142,33 @@ class ProtoDesignator {
           throw std::invalid_argument(prefix + "Unknown face type");
       }
     } else if constexpr (std::is_same_v<ShellType, CuboidPortalShell>) {
-      if (loc0.getAxisDirection() != AxisX ||
-          loc1.getAxisDirection() != AxisY) {
-        throw std::invalid_argument(prefix +
-                                    "Cuboid faces must use (x, y) binning");
-      }
+      return {AxisX, AxisY};
     } else {
       static_assert(std::is_same_v<ShellType, void>, "Unknown shell type");
     }
   }
 
-  void validateDuplicate(Face face, const std::string& prefix) {
+  AxisSpec validateAxis(const AxisSpec& axisSpec, AxisDirection expected,
+                        Face face, const std::string& prefix) const {
+    // A spec equals its own deferred counterpart exactly when it fixes
+    // nothing but the binning structure
+    if (axisSpec.toDeferred() != axisSpec) {
+      throw std::invalid_argument(
+          prefix +
+          "Material binning must leave range and boundary type to the "
+          "surface, they are determined from its bounds");
+    }
+    if (axisSpec.direction().has_value() && axisSpec.direction() != expected) {
+      std::stringstream ss;
+      ss << prefix << "Face " << face << " must be binned along "
+         << axisDirectionName(expected) << ", got "
+         << axisDirectionName(*axisSpec.direction());
+      throw std::invalid_argument(ss.str());
+    }
+    return axisSpec.withDirection(expected);
+  }
+
+  void validateDuplicate(Face face, const std::string& prefix) const {
     if (std::ranges::find_if(m_binning, [&](const auto& bin) {
           return std::get<0>(bin) == face;
         }) != m_binning.end()) {
@@ -155,7 +178,8 @@ class ProtoDesignator {
     }
   }
 
-  std::vector<std::tuple<Face, DirectedProtoAxis, DirectedProtoAxis>> m_binning;
+  std::vector<std::tuple<Face, MultiAxisSpec2D, std::optional<std::string>>>
+      m_binning;
 };
 
 using CylinderProtoDesignator =

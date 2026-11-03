@@ -169,9 +169,14 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
   const auto& atPerigee = myTrack.parameters();
   const auto& atIp3d = trackAtIP3d.parameters();
 
-  // all parameters except the helix invariants theta, q/p should be changed
-  BOOST_CHECK_NE(atPerigee[eBoundLoc0], atIp3d[eBoundLoc0]);
-  BOOST_CHECK_NE(atPerigee[eBoundLoc1], atIp3d[eBoundLoc1]);
+  // all parameters except the helix invariants theta, q/p should be changed.
+  // Exception: for a transverse track (theta = 90 deg) the 2D and 3D PCA
+  // coincide and the point surface measurement frame aligns with the perigee
+  // frame, so the local position is unchanged.
+  if (theta != 90_degree) {
+    BOOST_CHECK_NE(atPerigee[eBoundLoc0], atIp3d[eBoundLoc0]);
+    BOOST_CHECK_NE(atPerigee[eBoundLoc1], atIp3d[eBoundLoc1]);
+  }
   // BOOST_CHECK_NE(atPerigee[eBoundTime], atIp3d[eBoundTime]);
   // BOOST_CHECK_NE(atPerigee[eBoundPhi], atIp3d[eBoundPhi]);
   CHECK_CLOSE_ABS(atPerigee[eBoundTheta], atIp3d[eBoundTheta], 0.01_mrad);

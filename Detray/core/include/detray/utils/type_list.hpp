@@ -14,6 +14,8 @@
 #include "detray/utils/type_traits.hpp"
 
 // System include(s)
+#include <array>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <type_traits>

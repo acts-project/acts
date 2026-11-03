@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/clusterization/device/clusterization_algorithm.hpp"
@@ -87,10 +88,10 @@ clusterization_algorithm::execute_impl(
   // Get the number of cells, in an asynchronous way if possible.
   edm::silicon_cell_collection::const_view::size_type num_cells = 0u;
   if (mr().host) {
-    const vecmem::async_size size = copy().get_size(cells, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    num_cells = size.get();
+    vecmem::async_size size = copy().get_size(cells, *(mr().host));
+    // Block or suspend execution until the size is available.
+    await(size);
+    num_cells = size.unsafe_get();
   } else {
     num_cells = copy().get_size(cells);
   }
@@ -108,7 +109,7 @@ clusterization_algorithm::execute_impl(
   // Create the result object, overestimating the number of measurements.
   edm::measurement_collection::buffer measurements{
       num_cells, mr().main, vecmem::data::buffer_type::resizable};
-  copy().setup(measurements)->ignore();
+  copy().setup(vecmem::ignore_event, measurements);
 
   // Ensure that the chosen maximum cell count is compatible with the maximum
   // stack size.
@@ -129,13 +130,13 @@ clusterization_algorithm::execute_impl(
 
   if (m_config.sort_cells) {
     sorted_cells = edm::silicon_cell_collection::buffer(num_cells, mr().main);
-    copy().setup(*sorted_cells)->ignore();
+    copy().setup(vecmem::ignore_event, *sorted_cells);
     // The permutation map contents are only needed to reify the cluster
     // data, but the buffer is allocated unconditionally because
     // implementations may use it as scratch space while sorting.
     permutation_map_buffer =
         vecmem::data::vector_buffer<unsigned int>(num_cells, mr().main);
-    copy().setup(permutation_map_buffer)->ignore();
+    copy().setup(vecmem::ignore_event, permutation_map_buffer);
 
     sort_cells_kernel(num_cells, cells, *sorted_cells, permutation_map_buffer,
                       keep_disjoint_set);
@@ -165,11 +166,10 @@ clusterization_algorithm::execute_impl(
     // if possible.
     edm::measurement_collection::buffer::size_type num_measurements = 0u;
     if (mr().host) {
-      const vecmem::async_size size =
-          copy().get_size(measurements, *(mr().host));
-      // Here we could give control back to the caller, once our code
-      // allows for it. (coroutines...)
-      num_measurements = size.get();
+      vecmem::async_size size = copy().get_size(measurements, *(mr().host));
+      // Block or suspend execution until the size is available.
+      await(size);
+      num_measurements = size.unsafe_get();
     } else {
       num_measurements = copy().get_size(measurements);
     }
@@ -186,7 +186,7 @@ clusterization_algorithm::execute_impl(
     // Create the result cluster collection.
     cluster_data.emplace(cluster_sizes_host, mr().main, mr().host,
                          vecmem::data::buffer_type::resizable);
-    copy().setup(*cluster_data)->ignore();
+    copy().setup(vecmem::ignore_event, *cluster_data);
 
     // Run the cluster data reification kernel.
     cluster_maker_kernel(num_cells, disjoint_set, *cluster_data,

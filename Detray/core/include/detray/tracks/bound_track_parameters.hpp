@@ -18,6 +18,7 @@
 #include "detray/geometry/identifier.hpp"
 
 // System include(s)
+#include <limits>
 #include <ostream>
 
 namespace detray {
@@ -378,5 +379,39 @@ struct bound_track_parameters : public bound_parameters_vector<algebra_t> {
   /// Identifier of the surface the track parameters are associated with
   geometry::identifier m_identifier{};
 };
+
+namespace algebra {
+
+/// Cast a bound track parameters vector @param param to the precision given by @tparam value_t
+template <concepts::value value_t, concepts::algebra algebra_t>
+DETRAY_HOST_DEVICE constexpr decltype(auto) cast_to(
+    const bound_parameters_vector<algebra_t>& param_vec) {
+  using new_algebra_t = dalgebra<algebra_t, value_t>;
+
+  if constexpr (std::same_as<new_algebra_t, algebra_t>) {
+    return param_vec;
+  } else {
+    return bound_parameters_vector<new_algebra_t>{
+        ::detray::algebra::cast_to<value_t>(param_vec.to_vector())};
+  }
+}
+
+/// Cast bound track parameters @param param to the precision given by @tparam value_t
+template <concepts::value value_t, concepts::algebra algebra_t>
+DETRAY_HOST_DEVICE constexpr decltype(auto) cast_to(
+    const bound_track_parameters<algebra_t>& param) {
+  using new_algebra_t = dalgebra<algebra_t, value_t>;
+
+  if constexpr (std::same_as<new_algebra_t, algebra_t>) {
+    return param;
+  } else {
+    const bound_parameters_vector<algebra_t>& param_vec = param;
+    return bound_track_parameters<new_algebra_t>{
+        param.surface_link(), ::detray::algebra::cast_to<value_t>(param_vec),
+        ::detray::algebra::cast_to<value_t>(param.covariance())};
+  }
+}
+
+}  // namespace algebra
 
 }  // namespace detray

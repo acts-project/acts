@@ -4,12 +4,8 @@ import argparse
 
 import acts
 
-from acts.examples import (
-    CsvMuonSpacePointReader,
-    CsvMuonSegmentReader,
-    MuonHoughSeeder,
-    RootMuonSpacePointReader,
-)
+from acts.examples import CsvMuonSpacePointReader, CsvMuonSegmentReader
+from acts.examples.ActsExamplesPythonBindingsRoot import RootMuonSpacePointReader
 
 u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
@@ -20,18 +16,21 @@ def runHoughFromRoot(inFile: str, nEvents: int):
         events=nEvents, numThreads=1, logLevel=acts.logging.VERBOSE
     )
 
-    # Read input space points from input csv files
+    readerCfg = RootMuonSpacePointReader.Config()
+    readerCfg.filePath = inFile
+    readerCfg.outputSpacePoints = "MuonSpacePoints"
+    readerCfg.treeName = "MuonSpacePoints"
+
     evReader = RootMuonSpacePointReader(
-        filePath=inFile,
-        outputSpacePoints="MuonSpacePoints",
-        level=acts.logging.VERBOSE,
+        readerCfg,
+        acts.logging.Level.VERBOSE,
     )
     s.addReader(evReader)
 
     s.run()
 
 
-def runHoughFromCsv(inDir: str, nEvents: int):
+def runHoughFromCsv(inDir: str, nEvents: int, etaOnly: bool):
     # create temporary file with pixel SPs and run the seeding
 
     s = acts.examples.Sequencer(
@@ -61,6 +60,7 @@ def runHoughFromCsv(inDir: str, nEvents: int):
         inSpacePoints=evReader.config.outputSpacePoints,
         inTruthSegments=truthReader.config.outputSegments,
         outHoughMax="MuonHoughSeeds",
+        extendWithPhi=not etaOnly,
         level=acts.logging.VERBOSE,
     )
 
@@ -83,9 +83,14 @@ if "__main__" == __name__:
         help="Flag toggling that the input is a CSV directory",
     )
     p.add_argument("--nEvents", default=100, help="Number of events to run", type=int)
+    p.add_argument(
+        "--eta-only",
+        action="store_true",
+        help="return Eta Hough maxima without applying the phi extension",
+    )
 
     args = p.parse_args()
     if args.isCSV:
-        runHoughFromCsv(inFile=args.input, nEvents=args.nEvents)
+        runHoughFromCsv(inDir=args.input, nEvents=args.nEvents, etaOnly=args.eta_only)
     else:
         runHoughFromRoot(args.input, nEvents=args.nEvents)

@@ -16,6 +16,24 @@ diagnostics histograms created by these programs. If the comparisons indicate
 that the histogram contents changed meaningfully, the job will fail and report
 this on a pull request.
 
+## Histogram comparison configuration
+
+Histcmp uses the TOML files in `CI/physmon/config`. `standard.toml` preserves
+histcmp's default checks for comparisons without a workflow-specific config;
+`default.toml` and the track-fitting configs specify the existing physmon
+thresholds and exceptions. Use `disabled = true` to disable an inherited check.
+`info_only.toml` defines no checks for the visual GX2F/KF comparison.
+
+The `[report.tags]` tables group histograms in the HTML reports by physics
+quantity or diagnostic, such as efficiency, fakes, residuals, pulls, resolution,
+and bias. Patterns are case-sensitive shell globs matched against the full
+histogram key, and a histogram can have multiple tags. For example,
+`pullwidth_d0_vs_eta` belongs to Pulls, Resolution, and Kinematics. Update the
+relevant tag tables when adding new histogram families.
+
+The YAML files in the same directory configure `generic_plotter.py` binning
+and derived histograms; they are separate from the histcmp configuration.
+
 ## How do I investigate a physmon failure?
 
 The physmon CI job attaches its results as an artifact to the CI run (also for successful runs)

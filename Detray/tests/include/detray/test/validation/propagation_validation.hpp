@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/core/concepts.hpp"
 #include "detray/navigation/intersection/intersection.hpp"
 #include "detray/propagator/rk_stepper.hpp"
 #include "detray/utils/logging.hpp"
@@ -55,7 +56,7 @@ struct propagation_validation_config {
 /// @param truth_traces_fw the reference data for each encountered module
 ///
 /// @returns whether the validation was successful
-template <typename detector_t, typename bfield_view_t>
+template <concepts::detector detector_t, typename bfield_view_t>
 bool propagation_validation(
     const detector_t& det, const typename detector_t::name_map& names,
     const std::optional<bfield_view_t>& bfield,

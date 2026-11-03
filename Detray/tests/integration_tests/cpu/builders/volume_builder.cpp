@@ -11,6 +11,7 @@
 
 #include "detray/builders/cuboid_portal_generator.hpp"
 #include "detray/builders/surface_factory.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/definitions/indexing.hpp"
 #include "detray/geometry/mask.hpp"
@@ -32,8 +33,8 @@ using scalar = detray::test::scalar;
 using point3 = detray::test::point3;
 
 /// Check volume links for a collection of masks in a given detector
-template <typename detector_t,
-          typename detector_t::surface_type::mask_link::id_type mask_id>
+template <detray::concepts::detector detector_t,
+          typename detector_t::masks::id mask_id>
 inline void check_mask(const detector_t& d,
                        const std::vector<detray::dindex>& vol_links) {
   for (const auto [idx, mask] :
@@ -50,7 +51,7 @@ GTEST_TEST(detray_builders, tracking_volume_construction) {
   using namespace detray;
 
   using metadata_t = test::default_metadata;
-  using detector_t = detector<metadata_t>;
+  using detector_t = host::detector<metadata_t>;
   using transform3 = typename detector_t::transform3_type;
   using geo_obj_id = typename detector_t::geo_obj_ids;
   using mask_id = typename detector_t::masks::id;
@@ -69,6 +70,8 @@ GTEST_TEST(detray_builders, tracking_volume_construction) {
   vecmem::host_memory_resource host_mr;
   detector_t d(host_mr);
   auto geo_ctx = typename detector_t::geometry_context{};
+  volume_builder_options builder_opts{};
+
   // ensure there is a data offset that needs to be handled correctly
   prefill_detector(d, geo_ctx);
   const dindex first_trf{d.transform_store().size()};
@@ -196,7 +199,7 @@ GTEST_TEST(detray_builders, tracking_volume_construction) {
   //
   // Adds all surfaces to the detector
   //
-  vbuilder.build(d);
+  vbuilder.build(d, builder_opts);
 
   //
   // check results

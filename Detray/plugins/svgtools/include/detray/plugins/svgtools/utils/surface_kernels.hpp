@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/builders/detail/radius_getter.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/units.hpp"
 #include "detray/geometry/mask.hpp"
@@ -145,9 +146,9 @@ struct link_start_getter {
 /// arrow.
 struct link_end_getter {
  public:
-  template <typename mask_group_t, concepts::index index_t, typename detector_t,
-            concepts::point3D point3_t, concepts::vector3D vector3_t,
-            concepts::scalar scalar_t>
+  template <typename mask_group_t, concepts::index index_t,
+            concepts::detector detector_t, concepts::point3D point3_t,
+            concepts::vector3D vector3_t, concepts::scalar scalar_t>
   DETRAY_HOST inline vector3_t operator()(
       const mask_group_t& mask_group, const index_t& index,
       const detector_t& detector,
@@ -161,7 +162,7 @@ struct link_end_getter {
   }
 
   template <typename mask_group_t, concepts::interval idx_range_t,
-            typename detector_t, concepts::point3D point3_t,
+            concepts::detector detector_t, concepts::point3D point3_t,
             concepts::vector3D vector3_t, concepts::scalar scalar_t>
   DETRAY_HOST inline vector3_t operator()(
       const mask_group_t& mask_group, const idx_range_t& idx_range,
@@ -178,8 +179,8 @@ struct link_end_getter {
 
  private:
   /// @brief Calculates the direction of the link for remaining shapes.
-  template <typename detector_t, typename mask_t, concepts::point3D point3_t,
-            concepts::vector3D vector3_t>
+  template <concepts::detector detector_t, typename mask_t,
+            concepts::point3D point3_t, concepts::vector3D vector3_t>
   inline vector3_t link_dir(const mask_t& /*mask*/,
                             const detector_t& /*detector*/,
                             const detray::tracking_volume<detector_t>& volume,
@@ -195,7 +196,7 @@ struct link_end_getter {
   }
 
   /// @brief Calculates the direction of the link for cylinders (2D)
-  template <typename detector_t, concepts::point3D point3_t,
+  template <concepts::detector detector_t, concepts::point3D point3_t,
             concepts::vector3D vector3_t, typename shape_t>
     requires std::is_same_v<shape_t, cylinder2D> ||
              std::is_same_v<shape_t, concentric_cylinder2D>

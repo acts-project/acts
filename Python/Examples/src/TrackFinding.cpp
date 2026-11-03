@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
@@ -27,6 +28,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 
@@ -43,7 +45,8 @@ void addTrackFinding(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(SpacePointMaker, mex, "SpacePointMaker",
                                 inputMeasurements, outputSpacePoints,
                                 trackingGeometry, geometrySelection,
-                                stripGeometrySelection);
+                                stripGeometrySelection, stripVertex,
+                                stripLengthTolerance, stripLengthGapTolerance);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GridTripletSeedingAlgorithm, mex, "GridTripletSeedingAlgorithm",
@@ -60,7 +63,9 @@ void addTrackFinding(py::module& mex) {
       zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit, seedWeightIncrement,
       numSeedIncrement, seedConfirmation, centralSeedConfirmationRange,
       forwardSeedConfirmationRange, maxSeedsPerSpMConf,
-      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts);
+      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useTimeDoubletCut,
+      doubletTimeCutNSigma, useTimeTripletCut, tripletTimeChi2Max, useExtraCuts,
+      inputVertices, vertexZNSigma, vertexZMargin);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       OrthogonalTripletSeedingAlgorithm, mex,
@@ -82,15 +87,28 @@ void addTrackFinding(py::module& mex) {
     using Config = Acts::Experimental::GraphBasedTrackSeeder::Config;
     auto c =
         py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, connectorInputFile, nMaxPhiSlice,
-                       lutInputFile);
+    ACTS_PYTHON_STRUCT(c, nMaxPhiSlice, minSeedLevel, addTriplets,
+                       maxAbsEtaAddTriplets, postFitCurvatureFactor);
     patchKwargsConstructor(c);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(GraphBasedSeedingAlgorithm, mex,
-                                "GraphBasedSeedingAlgorithm", inputSpacePoints,
-                                outputSeeds, seedFinderConfig, layerMappingFile,
-                                trackingGeometry, fillModuleCsv, inputClusters);
+  {
+    using Config = Acts::Experimental::GbtsGraphBuilder::Config;
+    auto c =
+        py::class_<Config>(mex, "GbtsGraphBuilderConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, minPt, maxEdgesPerSP, minDeltaRadius, doubletFilterRZ,
+                       matchBeforeCreate, validateTriplets, calibrateStrips,
+                       maxOuterRadius, useSumRatioCut, sumRatioCutMax);
+    patchKwargsConstructor(c);
+  }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
+      inputSpacePoints, outputSeeds, seedFinderConfig, graphConfig,
+      useStripConnections, useAdaptiveCuts, layerMappingFile,
+      connectorInputFile, lutInputFile, collisionRegionMin, collisionRegionMax,
+      trackingGeometry, fillModuleCsv, inputClusters, bFieldInZ, useLayerTilt,
+      magneticField, outputFreeParameters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
@@ -105,18 +123,28 @@ void addTrackFinding(py::module& mex) {
       inverseA, doSecondPhase, zRange, cotThetaRange, cotThetaMinBinSize,
       zMinBinSize);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(MuonHoughSeeder, mex, "MuonHoughSeeder",
-                                inTruthSegments, inSpacePoints, outHoughMax,
-                                nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0,
-                                dumpVisualization, visualizationFunction);
-
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      TrackParamsEstimationAlgorithm, mex, "TrackParamsEstimationAlgorithm",
-      inputSeeds, inputProtoTracks, inputParticleHypotheses,
-      outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialSigmaQoverPt,
-      initialSigmaPtRel, initialVarInflation, noTimeVarInflation,
-      particleHypothesis);
+      MuonHoughSeeder, mex, "MuonHoughSeeder", inTruthSegments, inSpacePoints,
+      outHoughMax, nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0,
+      dumpVisualization, extendWithPhi, visualizationFunction);
+
+  {
+    using Alg = TrackParamsEstimationAlgorithm;
+
+    auto [alg, c] = declareAlgorithm<Alg, IAlgorithm>(
+        mex, "TrackParamsEstimationAlgorithm");
+
+    alg.def_static("inverseRadiusPowerWeight", &Alg::inverseRadiusPowerWeight,
+                   py::arg("exponent"));
+
+    ACTS_PYTHON_STRUCT(
+        c, inputSeeds, inputProtoTracks, inputParticleHypotheses,
+        outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
+        magneticField, bFieldMin, spacePointSelection, minTransverseDistance,
+        geometricRefineIterations, spacePointWeight, initialSigmas,
+        initialSigmaQoverPt, initialSigmaPtRel, initialVarInflation,
+        noTimeVarInflation, particleHypothesis, inputFreeParameters);
+  }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsLookupEstimation, mex, "TrackParamsLookupEstimation",
@@ -156,9 +184,10 @@ void addTrackFinding(py::module& mex) {
         c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
         outputTracks, trackingGeometry, magneticField, findTracks,
         findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
-        twoWay, reverseSearch, seedDeduplication, stayOnSeed, pixelVolumeIds,
-        stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
-        useJosephFormulation, constrainToVolumeIds, endOfWorldVolumeIds);
+        twoWay, twoWaySmoothing, seedDeduplication, seedDeduplicatorCfg,
+        stayOnSeed, pixelVolumeIds, stripVolumeIds, maxPixelHoles,
+        maxStripHoles, trimTracks, recordMaterialStates, useJosephFormulation,
+        constrainToVolumeIds, endOfWorldVolumeIds);
   }
 }
 

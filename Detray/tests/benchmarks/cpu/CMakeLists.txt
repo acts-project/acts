@@ -12,9 +12,6 @@ message(STATUS "Building detray host benchmarks")
 option(DETRAY_BENCHMARK_MULTITHREAD "Enable multithreaded benchmarks" OFF)
 option(DETRAY_BENCHMARK_PRINTOUTS "Enable printouts in the benchmarks" OFF)
 
-# Look for openMP, which is used for the CPU propagation benchmark
-find_package(OpenMP)
-
 # Macro setting up the CPU benchmarks for a specific algebra plugin.
 macro(detray_add_cpu_benchmark algebra)
     message(STATUS "Building 'detray::benchmark_cpu_${algebra}' component")
@@ -72,36 +69,29 @@ macro(detray_add_cpu_benchmark algebra)
         detray_benchmark_cpu_propagation_${algebra}
         PRIVATE "-march=native" "-ftree-vectorize"
     )
-
-    if(OpenMP_CXX_FOUND)
-        target_link_libraries(
-            detray_benchmark_cpu_propagation_${algebra}
-            PRIVATE OpenMP::OpenMP_CXX
-        )
-    endif()
 endmacro()
 
 # Build the array benchmark.
-detray_add_cpu_benchmark( array )
+detray_add_cpu_benchmark(array)
 
 # Build the Eigen benchmark executable.
 if(DETRAY_EIGEN_PLUGIN)
-    detray_add_cpu_benchmark( eigen )
+    detray_add_cpu_benchmark(eigen)
 endif()
 
 # Build the Fastor benchmark executable.
 if(DETRAY_FASTOR_PLUGIN)
-    detray_add_cpu_benchmark( fastor )
+    detray_add_cpu_benchmark(fastor)
 endif()
 
 # Build the SMatrix benchmark executable.
 if(DETRAY_SMATRIX_PLUGIN)
-    detray_add_cpu_benchmark( smatrix )
+    detray_add_cpu_benchmark(smatrix)
 endif()
 
 # Build the Vc benchmark executable.
 if(DETRAY_VC_AOS_PLUGIN)
-    detray_add_cpu_benchmark( vc_aos )
+    detray_add_cpu_benchmark(vc_aos)
 
     target_compile_options(
         detray_benchmark_cpu_linear_algebra_vc_aos
@@ -164,7 +154,7 @@ if(DETRAY_VC_SOA_PLUGIN)
         endif()
     endmacro()
 
-    detray_add_soa_benchmark( array )
+    detray_add_soa_benchmark(array)
     # detray_add_soa_benchmark( eigen )
     # detray_add_soa_benchmark( vc_aos )
 endif()

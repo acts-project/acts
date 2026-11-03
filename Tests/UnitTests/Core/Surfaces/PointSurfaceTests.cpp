@@ -239,6 +239,29 @@ BOOST_AUTO_TEST_CASE(PointSurfaceBoundToFreeJacobian) {
   }
 }
 
+/// freeToBound * boundToFree is the identity at nonzero local coordinates, on
+/// the global-Z branch and on the global-X fallback near |cos theta| ~ 1.
+BOOST_AUTO_TEST_CASE(PointSurfaceJacobianRoundTrip) {
+  auto surface = Surface::makeShared<PointSurface>(Vector3(1., -2., 0.5));
+
+  auto check = [&](double phi, double theta, const Vector2& local) {
+    const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
+    const Vector3 pos = surface->localToGlobal(tgContext, local, dir);
+    const FreeToBoundMatrix freeToBound =
+        surface->freeToBoundJacobian(tgContext, pos, dir);
+    const BoundToFreeMatrix boundToFree =
+        surface->boundToFreeJacobian(tgContext, pos, dir);
+    CHECK_CLOSE_ABS(freeToBound * boundToFree, SquareMatrix<6>::Identity(),
+                    1e-10);
+  };
+
+  // Same nonzero local as the finite-difference test above (global-Z branch).
+  check(0.6, std::numbers::pi / 3., Vector2(0.7, -0.4));
+  // Global-X fallback: |cos theta| above the curvilinear projection tolerance.
+  check(0.6, 1e-3, Vector2(0.7, -0.4));
+  check(1.2, std::numbers::pi - 1e-3, Vector2(-0.3, 0.8));
+}
+
 /// freeToPathDerivative validated against finite differences
 BOOST_AUTO_TEST_CASE(PointSurfaceFreeToPathDerivative) {
   Vector3 center{1., -2., 0.5};

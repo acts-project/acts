@@ -82,7 +82,7 @@ TEST_P(CudaPropConstBFieldCpy, propagator) {
   // Create the toy geometry
   auto [det, names] = build_toy_detector<test_algebra>(host_mr);
 
-  auto det_buff = detray::get_buffer(det, dev_mr, cuda_cpy);
+  const auto det_buff = detray::get_buffer(det, dev_mr, cuda_cpy);
 
   run_propagation_test<bfield::const_bknd_t<scalar>>(
       &mng_mr, det, cfg, detray::get_data(det_buff), std::move(field));
@@ -174,7 +174,7 @@ TEST(CudaPropagatorValidation9, inhomogeneous_bfield_cpy) {
   // Create the toy geometry with inhomogeneous bfield from file
   auto [det, names] = build_toy_detector<test_algebra>(host_mr);
 
-  auto det_buff = detray::get_buffer(det, dev_mr, cuda_cpy);
+  const auto det_buff = detray::get_buffer(det, dev_mr, cuda_cpy);
 
   run_propagation_test<bfield::cuda::inhom_bknd_t<scalar>>(
       &mng_mr, det, cfg, detray::get_data(det_buff), std::move(field));

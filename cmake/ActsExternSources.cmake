@@ -1,19 +1,19 @@
 set(ACTS_ACTSVG_SOURCE
-    "URL;https://github.com/acts-project/actsvg/archive/refs/tags/v${_acts_actsvg_version}.tar.gz;URL_HASH;SHA256=75944cbc4444d3099764f19f6fa5fbf9f2b81e3ac776b5874746add74a7cd0f8"
+    "URL;https://github.com/acts-project/actsvg/archive/refs/tags/v${_acts_actsvg_version}.tar.gz;URL_HASH;SHA256=0f428fba284abbed60614633a68ea2e7e490bedf8f7ec9b2f3cb7c14caa70107"
     CACHE STRING
     "Source to take ACTSVG from"
 )
 mark_as_advanced(ACTS_ACTSVG_SOURCE)
 
 set(ACTS_VECMEM_SOURCE
-    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=a1dd195e154ed23a0e50c52e22fb9f986fc65cd99860020fc47a292f597fa88d"
+    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=19edde5fdb4ffa8716e5c947ac16b925c15a824c05bac21eece6813ea37f6adc"
     CACHE STRING
     "Source to take VECMEM from"
 )
 mark_as_advanced(ACTS_VECMEM_SOURCE)
 
 set(ACTS_COVFIE_SOURCE
-    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=6eff65e05118d3007c689e3529a62bb1674348ac1b0f0f32afd953c62d1b8890"
+    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=f1491b85c5e8ed9535e4b99adb85661512964132baf6dc9b9a9af10e4b625cb3"
     CACHE STRING
     "Source to take COVFIE from"
 )
@@ -36,7 +36,7 @@ mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
 # translate version string to the historical Mille release naming convention
 string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
 set(ACTS_MILLE_SOURCE
-    "URL;https://github.com/millepede-project/mille/archive/refs/tags/V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=2dec8402201938c7b2d7680db30aff19fd06dd06a420dbde45f57de2ce50d2ff"
+    "URL;https://github.com/millepede-project/mille/archive/refs/tags/V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=b765224b516d2c1840c84905b9df697858564b5851fd6926b8fe1d2d8a063505"
     CACHE STRING
     "Source to take Mille from"
 )
@@ -53,14 +53,14 @@ mark_as_advanced(ACTS_GBL_SOURCE)
 # translate version string to the historical Millepede release naming convention
 string(REPLACE "." "-" _acts_mp2_release_string ${_acts_mp2_version})
 set(ACTS_MP2_SOURCE
-    "URL;https://github.com/millepede-project/millepede-ii/archive/refs/tags/V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=037bbfcd3aca2d6497a5609f35bc4a96258d285290996468241dcedd9aa9d172"
+    "URL;https://github.com/millepede-project/millepede-ii/archive/refs/tags/V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=d9570fbdb0fce44a12c6bf5db41e8c734777acf2019f7d8381fb9ad55e2da1de"
     CACHE STRING
     "Source to take Millepede-II from"
 )
 mark_as_advanced(ACTS_MP2_SOURCE)
 
 set(ACTS_EIGEN3_SOURCE
-    "URL;https://gitlab.com/libeigen/eigen/-/archive/${_acts_eigen3_version}/${_acts_eigen3_version}.tar.gz;URL_HASH;SHA256=ba6ef66ba2d319e0a871a267889411c550d4bdf5bc7c62f86c60276913f3f4ba"
+    "URL;https://gitlab.com/libeigen/eigen/-/archive/${_acts_eigen3_version}/${_acts_eigen3_version}.tar.gz;URL_HASH;SHA256=f3e578e5028dac65f437a412570c6c9d192b3e1f4a48c7820f40cb7ad0524d34"
     CACHE STRING
     "Source to take eigen3 from"
 )
@@ -81,7 +81,7 @@ set(ACTS_ANNOY_SOURCE
 mark_as_advanced(ACTS_ANNOY_SOURCE)
 
 set(ACTS_ODD_SOURCE
-    "GIT_REPOSITORY;https://github.com/OpenDataDetector/OpenDataDetector.git;GIT_TAG;v4.0.4"
+    "GIT_REPOSITORY;https://github.com/OpenDataDetector/OpenDataDetector.git;GIT_TAG;v6.0.3"
     CACHE STRING
     "Source to take OpenDataDetector from"
 )

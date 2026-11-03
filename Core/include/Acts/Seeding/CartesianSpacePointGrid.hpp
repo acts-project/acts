@@ -17,6 +17,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
+#include <cstdint>
 #include <functional>
 #include <vector>
 
@@ -46,30 +47,32 @@ class CartesianSpacePointGrid
   /// Configuration parameters for the cartesian space point grid.
   struct Config {
     /// number of bins in the x-coordinate
-    int nXbins = 10;
+    std::uint32_t nXbins = 10;
     /// minimum x-coordinate of space points used in the seeding
     float xMin = -600 * UnitConstants::mm;
     /// maximum x-coordinate of space points used in the seeding
     float xMax = 600 * UnitConstants::mm;
     /// number of bins in the y-coordinate
-    int nYbins = 6;
+    std::uint32_t nYbins = 6;
     /// minimum y-coordinate of space points used in the seeding
     float yMin = -600 * UnitConstants::mm;
     /// maximum y-coordinate of space points used in the seeding
     float yMax = 600 * UnitConstants::mm;
     /// number of bins in the z-coordinate
-    int nZbins = 10;
+    std::uint32_t nZbins = 10;
     /// minimum z coordinate ofspace points used in the seeding
     float zMin = -2700 * UnitConstants::mm;
     /// maximum z coordinate ofspace points used in the seeding
     float zMax = 2700 * UnitConstants::mm;
 
-    /// bin finder for bottom space points
-    std::optional<GridBinFinder<3ul>> bottomBinFinder;
-    /// bin finder for top space points
-    std::optional<GridBinFinder<3ul>> topBinFinder;
+    /// bin finder for bottom space points. Defaults to the neighbouring bins
+    /// on all three axes.
+    GridBinFinder<GridType::DIM> bottomBinFinder{1, 1, 1};
+    /// bin finder for top space points. Defaults to the neighbouring bins on
+    /// all three axes.
+    GridBinFinder<GridType::DIM> topBinFinder{1, 1, 1};
     /// navigation structure for the grid
-    std::array<std::vector<std::size_t>, 3ul> navigation;
+    std::array<std::vector<std::size_t>, GridType::DIM> navigation;
 
     /// coordinate to sort the space points by
     Acts::CoordinateIndices sortingCoord = Acts::CoordinateIndices::eY;
@@ -123,11 +126,13 @@ class CartesianSpacePointGrid
   /// @param spacePoints The space point container to sort the bins by the configured coordinate
   void sortBinsByCoord(const SpacePointContainer& spacePoints);
 
-  /// Compute the range of the sorting coordinates in the grid. This requires
-  /// the grid to be filled with space points and sorted by coordinate. The
-  /// sorting can be done with the `sortBinsByCoord` method.
+  /// Compute the range of the sort keys in the grid. The key is the sorting
+  /// coordinate multiplied by `sortingDirection`, so for a negative sorting
+  /// direction the range is the negated coordinate range. This requires the
+  /// grid to be filled with space points and sorted by coordinate. The sorting
+  /// can be done with the `sortBinsByCoord` method.
   /// @param spacePoints The space point container to compute the coordinate range
-  /// @return The range of sorting-coordinate values in the grid
+  /// @return The range of sort keys in the grid
   Range1D<float> computeCoordRange(
       const SpacePointContainer& spacePoints) const;
 

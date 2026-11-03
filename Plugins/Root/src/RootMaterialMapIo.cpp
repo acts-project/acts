@@ -16,10 +16,13 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <stdexcept>
+
 #include <TFile.h>
 #include <TH1I.h>
 #include <TH2F.h>
 #include <TKey.h>
+#include <TLeaf.h>
 #include <TList.h>
 #include <TObject.h>
 #include <TTree.h>
@@ -141,7 +144,11 @@ void RootMaterialMapIo::write(TFile& rFile, const GeometryIdentifier& geoID,
 void RootMaterialMapIo::write(TFile& rFile,
                               const TrackingGeometryMaterial& detectorMaterial,
                               const Options& options) {
-  const auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
+  const auto& surfaceMaterials = detectorMaterial.surfaceMaterials;
+  if (!detectorMaterial.keyedSurfaces.empty()) {
+    throw std::invalid_argument(
+        "ROOT material output does not support stable keys; use JSON");
+  }
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     write(rFile, geoID, *sMaterial, options);
   }
@@ -168,9 +175,6 @@ void RootMaterialMapIo::connectForWrite(TTree& rTree,
 
 void RootMaterialMapIo::connectForRead(TTree& rTree,
                                        MaterialTreePayload& treePayload) {
-  if (&treePayload == &m_homogenousMaterialTreePayload) {
-    rTree.SetBranchAddress("hGeoId", &treePayload.hGeoId);
-  }
   rTree.SetBranchAddress(m_cfg.thicknessHistName.c_str(), &treePayload.ht);
   rTree.SetBranchAddress(m_cfg.x0HistName.c_str(), &treePayload.hX0);
   rTree.SetBranchAddress(m_cfg.l0HistName.c_str(), &treePayload.hL0);
@@ -261,7 +265,7 @@ TrackingGeometryMaterial RootMaterialMapIo::read(TFile& rFile,
                                                  const Options& options) {
   TrackingGeometryMaterial detectorMaterial;
 
-  auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
+  auto& surfaceMaterials = detectorMaterial.surfaceMaterials;
 
   auto homogeneousMaterialTree = dynamic_cast<TTree*>(
       rFile.Get(options.homogeneousMaterialTreeName.c_str()));
@@ -269,9 +273,17 @@ TrackingGeometryMaterial RootMaterialMapIo::read(TFile& rFile,
   // Read homogeneous material tree
   if (homogeneousMaterialTree != nullptr) {
     connectForRead(*homogeneousMaterialTree, m_homogenousMaterialTreePayload);
+    const auto* geometryIdLeaf = homogeneousMaterialTree->GetLeaf("hGeoId");
+    if (geometryIdLeaf == nullptr) {
+      throw std::invalid_argument(
+          "Homogeneous material tree is missing hGeoId");
+    }
     for (int i = 0; i < homogeneousMaterialTree->GetEntries(); ++i) {
       homogeneousMaterialTree->GetEntry(i);
-      GeometryIdentifier geoID(m_homogenousMaterialTreePayload.hGeoId);
+      // ROOT distinguishes Long_t and Long64_t, while std::int64_t's underlying
+      // type varies by platform. Read either leaf without a floating-point
+      // conversion, which would lose geometry identifier bits.
+      GeometryIdentifier geoID(geometryIdLeaf->GetValueLong64());
       MaterialSlab materialSlab(
           Material::fromMassDensity(m_homogenousMaterialTreePayload.hX0,
                                     m_homogenousMaterialTreePayload.hL0,

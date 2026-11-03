@@ -51,7 +51,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsRoot, root) {
                    std::shared_ptr<RootMaterialDecorator>>(
             root, "RootMaterialDecorator")
             .def(py::init<RootMaterialDecorator::Config, Logging::Level>(),
-                 py::arg("config"), py::arg("level"));
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("materialMaps",
+                                   &RootMaterialDecorator::materialMaps);
 
     using Config = RootMaterialDecorator::Config;
     auto c = py::class_<Config>(rmd, "Config").def(py::init<>());
@@ -63,7 +65,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsRoot, root) {
     root.def(
         "MagneticFieldMapXyz",
         [](const std::string& filename, const std::string& tree,
-           double lengthUnit, double BFieldUnit, bool firstOctant) {
+           double lengthUnit, double bFieldUnit, bool firstOctant) {
           const std::filesystem::path file = filename;
 
           auto mapBins = [](std::array<std::size_t, 3> bins,
@@ -74,7 +76,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsRoot, root) {
 
           if (file.extension() == ".root") {
             auto map = makeMagneticFieldMapXyzFromRoot(
-                std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
+                std::move(mapBins), file.native(), tree, lengthUnit, bFieldUnit,
                 firstOctant);
             return std::make_shared<decltype(map)>(std::move(map));
           } else {
@@ -84,13 +86,13 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsRoot, root) {
         },
         py::arg("file"), py::arg("tree") = "bField",
         py::arg("lengthUnit") = UnitConstants::mm,
-        py::arg("BFieldUnit") = UnitConstants::T,
+        py::arg("bFieldUnit") = UnitConstants::T,
         py::arg("firstOctant") = false);
 
     root.def(
         "MagneticFieldMapRz",
         [](const std::string& filename, const std::string& tree,
-           double lengthUnit, double BFieldUnit, bool firstQuadrant) {
+           double lengthUnit, double bFieldUnit, bool firstQuadrant) {
           const std::filesystem::path file = filename;
 
           auto mapBins = [](std::array<std::size_t, 2> bins,
@@ -100,7 +102,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsRoot, root) {
 
           if (file.extension() == ".root") {
             auto map = makeMagneticFieldMapRzFromRoot(
-                std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
+                std::move(mapBins), file.native(), tree, lengthUnit, bFieldUnit,
                 firstQuadrant);
             return std::make_shared<decltype(map)>(std::move(map));
           } else {
@@ -110,7 +112,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsRoot, root) {
         },
         py::arg("file"), py::arg("tree") = "bField",
         py::arg("lengthUnit") = UnitConstants::mm,
-        py::arg("BFieldUnit") = UnitConstants::T,
+        py::arg("bFieldUnit") = UnitConstants::T,
         py::arg("firstQuadrant") = false);
   }
 }

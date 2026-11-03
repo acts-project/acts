@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/utils/event_data.hpp"
@@ -138,8 +139,8 @@ void event_data::setup_csv(bool use_acts_geom_source, const host_detector* det,
   std::map<geometry_id, geometry_id> acts_to_detray_id;
   if (use_acts_geom_source) {
     host_detector_visitor<detector_type_list>(
-        *det, [&acts_to_detray_id]<typename detector_traits_t>(
-                  const typename detector_traits_t::host& d) {
+        *det, [&acts_to_detray_id]<detray::concepts::detector detector_t>(
+                  const detector_t& d) {
           for (const auto& surface_desc : d.surfaces()) {
             acts_to_detray_id[surface_desc.source] =
                 surface_desc.identifier().value();
@@ -317,7 +318,7 @@ void event_data::fill_cca_result(
   }
 
   for (auto const& [ms, cluster] : found_meas_to_cluster_map) {
-    std::map<uint64_t, std::size_t> meas_counts;
+    std::map<std::uint64_t, std::size_t> meas_counts;
 
     // Cells from CCL
     for (const auto& cell1 : cluster) {

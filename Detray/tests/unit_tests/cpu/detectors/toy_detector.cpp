@@ -6,6 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+// Project include(s)
+#include "detray/utils/consistency_checker.hpp"
+
 // Detray test include(s)
 #include "detray/test/common/build_toy_detector.hpp"
 #include "detray/test/cpu/toy_detector_test.hpp"
@@ -37,4 +40,12 @@ GTEST_TEST(detray_detectors, toy_detector) {
       build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
   EXPECT_TRUE(toy_detector_test(toy_det2, names2));
+
+  // Device detector type
+  auto det_view = detray::get_data(toy_det2);
+  device::detector<toy_metadata<test::algebra>> toy_det_dev(det_view);
+
+  detray::detail::check_consistency(toy_det_dev, true, names2);
+
+  EXPECT_TRUE(toy_detector_test(toy_det_dev, names2));
 }

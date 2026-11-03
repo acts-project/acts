@@ -111,10 +111,17 @@ class DiscSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
+  ~DiscSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other The source sourface for the assignment
   /// @return Reference to this DiscSurface after assignment
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<DiscSurface>(other)` instead.
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<DiscSurface>(other) instead.")]]
   DiscSurface& operator=(const DiscSurface& other);
 
   /// Return the surface type

@@ -42,9 +42,10 @@ struct transform3 {
   using matrix44 = matrix_t<scalar_t, 4, 4>;
   static_assert(concepts::square_matrix<matrix44>);
 
+  using vector2 = detray::traits::get_vector_t<matrix44, 2, scalar_t>;
   using vector3 = detray::traits::get_vector_t<matrix44, 3, scalar_t>;
+  using point2 = vector2;
   using point3 = vector3;
-  using point2 = detray::traits::get_vector_t<matrix44, 2, scalar_t>;
 
   /// Function (object) used for accessing a matrix element/block
   using element_getter = detray::traits::element_getter_t<matrix44>;
@@ -220,6 +221,31 @@ struct transform3 {
   /// @param m is the rotation matrix
   /// @param v is the vector to be rotated
   DETRAY_HOST_DEVICE
+  static constexpr vector3 rotate(const matrix44 &m, const vector2 &v) {
+    vector3 ret{0.f, 0.f, 0.f};
+
+    element_getter{}(ret, 0) +=
+        element_getter{}(m, 0, 0) * element_getter{}(v, 0);
+    element_getter{}(ret, 1) +=
+        element_getter{}(m, 1, 0) * element_getter{}(v, 0);
+    element_getter{}(ret, 2) +=
+        element_getter{}(m, 2, 0) * element_getter{}(v, 0);
+
+    element_getter{}(ret, 0) +=
+        element_getter{}(m, 0, 1) * element_getter{}(v, 1);
+    element_getter{}(ret, 1) +=
+        element_getter{}(m, 1, 1) * element_getter{}(v, 1);
+    element_getter{}(ret, 2) +=
+        element_getter{}(m, 2, 1) * element_getter{}(v, 1);
+
+    return ret;
+  }
+
+  /// Rotate a vector into / from a frame
+  ///
+  /// @param m is the rotation matrix
+  /// @param v is the vector to be rotated
+  DETRAY_HOST_DEVICE
   static constexpr vector3 rotate(const matrix44 &m, const vector3 &v) {
     vector3 ret{0.f, 0.f, 0.f};
 
@@ -289,6 +315,16 @@ struct transform3 {
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix_inverse() const { return _data_inv; }
 
+  /// This method transform from a point from the local 2D cartesian frame to
+  /// the global 3D cartesian frame
+  DETRAY_HOST_DEVICE constexpr point3 point_to_global(const point2 &v) const {
+    const vector3 rg = rotate(_data, v);
+
+    return {element_getter{}(rg, 0) + element_getter{}(_data, 0, 3),
+            element_getter{}(rg, 1) + element_getter{}(_data, 1, 3),
+            element_getter{}(rg, 2) + element_getter{}(_data, 2, 3)};
+  }
+
   /// This method transform from a point from the local 3D cartesian frame to
   /// the global 3D cartesian frame
   DETRAY_HOST_DEVICE constexpr point3 point_to_global(const point3 &v) const {
@@ -307,6 +343,13 @@ struct transform3 {
     return {element_getter{}(rg, 0) + element_getter{}(_data_inv, 0, 3),
             element_getter{}(rg, 1) + element_getter{}(_data_inv, 1, 3),
             element_getter{}(rg, 2) + element_getter{}(_data_inv, 2, 3)};
+  }
+
+  /// This method transform from a vector from the local 2D cartesian frame to
+  /// the global 3D cartesian frame
+  DETRAY_HOST_DEVICE constexpr vector3 vector_to_global(
+      const vector2 &v) const {
+    return rotate(_data, v);
   }
 
   /// This method transform from a vector from the local 3D cartesian frame to

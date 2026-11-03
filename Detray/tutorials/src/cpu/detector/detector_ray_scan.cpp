@@ -39,7 +39,7 @@ constexpr std::size_t root_hash = 11359580520962287982ul;
 int main() {
   using algebra_t = detray::tutorial::algebra_t;
   using scalar = detray::tutorial::scalar;
-  using detector_t = detray::detector<detray::toy_metadata<algebra_t>>;
+  using detector_t = detray::host::detector<detray::toy_metadata<algebra_t>>;
 
   // Can also be performed with helices
   using ray_t = detray::detail::ray<algebra_t>;

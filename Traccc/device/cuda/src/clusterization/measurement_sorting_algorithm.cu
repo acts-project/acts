@@ -1,113 +1,91 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Library include(s).
 #include "../utils/cuda_error_handling.hpp"
-#include "../utils/thread_id.hpp"
+#include "../utils/global_index.hpp"
 #include "../utils/utils.hpp"
 #include "traccc/cuda/clusterization/measurement_sorting_algorithm.hpp"
 
 // Project include(s).
-#include "traccc/clusterization/device/geo_id_based_sorter.hpp"
-#include "traccc/clusterization/device/sorting_index_filler.hpp"
+#include "traccc/clusterization/device/measurement_sorting.hpp"
 
 // VecMem include(s).
 #include <vecmem/containers/data/vector_buffer.hpp>
+#include <vecmem/utils/copy.hpp>
+
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
 
 // Thrust include(s).
-#include <thrust/for_each.h>
+#include <thrust/execution_policy.h>
 #include <thrust/sort.h>
-
-// System include(s).
-#include <memory_resource>
 
 namespace traccc::cuda {
 namespace kernels {
 
-/// Kernel filling the output buffer with sorted measurements.
-///
-/// @param[in] input_view View of the input measurements
-/// @param[out] output_view View of the output measurements
-/// @param[in] sorted_indices_view View of the sorted measurement indices
-///
+/// Kernel wrapping @c traccc::device::fill_measurement_sort_keys
+__global__ void fill_measurement_sort_keys(
+    const edm::measurement_collection::const_view measurements_view,
+    vecmem::data::vector_view<device::measurement_sort_key_t> keys_view,
+    vecmem::data::vector_view<unsigned int> indices_view) {
+  device::fill_measurement_sort_keys(
+      details::global_index1(), measurements_view, keys_view, indices_view);
+}
+
+/// Kernel wrapping @c traccc::device::fill_sorted_measurements
 __global__ void fill_sorted_measurements(
     const edm::measurement_collection::const_view input_view,
     edm::measurement_collection::view output_view,
     const vecmem::data::vector_view<const unsigned int> sorted_indices_view) {
-  // Create the device objects.
-  const edm::measurement_collection::const_device input{input_view};
-  edm::measurement_collection::device output{output_view};
-  const vecmem::device_vector<const unsigned int> sorted_indices{
-      sorted_indices_view};
-
-  // Stop early if we can.
-  const unsigned int index = details::thread_id1{}.getGlobalThreadId();
-  if (index >= input.size()) {
-    return;
-  }
-
-  // Copy one measurement into the correct position.
-  output.at(index) = input.at(sorted_indices.at(index));
+  device::fill_sorted_measurements(details::global_index1(), input_view,
+                                   output_view, sorted_indices_view);
 }
 
 }  // namespace kernels
 
 measurement_sorting_algorithm::measurement_sorting_algorithm(
     const traccc::memory_resource& mr, const vecmem::copy& copy,
-    const stream_wrapper& str, std::unique_ptr<const Logger> logger)
-    : messaging(std::move(logger)), m_mr{mr}, m_copy{copy}, m_stream{str} {}
+    const stream_wrapper& str, std::unique_ptr<const Logger> logger,
+    await_function_type await_func)
+    : device::measurement_sorting_algorithm(mr, copy, std::move(logger)),
+      cuda::algorithm_base(str, std::move(await_func)) {}
 
-measurement_sorting_algorithm::output_type
-measurement_sorting_algorithm::operator()(
-    const edm::measurement_collection::const_view& measurements_view) const {
-  // Exit early if there are no measurements.
-  if (measurements_view.capacity() == 0) {
-    return {};
-  }
-
+void measurement_sorting_algorithm::sorting_kernel(
+    const measurement_sorting_kernel_payload& payload) const {
+  const unsigned int n_measurements = payload.n_measurements;
   // Get a convenience variable for the stream that we'll be using.
-  cudaStream_t stream = details::get_stream(m_stream);
+  cudaStream_t str = details::get_stream(stream());
   // Set up the Thrust execution policy.
-  auto policy =
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(m_mr.main)))
-          .on(stream);
+  auto policy = thrust::cuda::par_nosync(
+                    stream_synchronizing_allocator(mr().main, stream()))
+                    .on(str);
 
-  // Create a device container on top of the view.
-  const edm::measurement_collection::const_device measurements{
-      measurements_view};
+  const unsigned int num_threads = warp_size() * 8;
+  const unsigned int num_blocks =
+      (n_measurements + num_threads - 1) / num_threads;
 
-  // Create a vector of measurement indices, which would be sorted.
-  vecmem::data::vector_buffer<unsigned int> indices(
-      measurements_view.capacity(), m_mr.main);
-  m_copy.get().setup(indices)->ignore();
-  thrust::for_each(policy, indices.ptr(), indices.ptr() + indices.capacity(),
-                   device::sorting_index_filler{indices});
-
-  // Sort the indices according to the surface identifiers of the
-  // measurements.
-  thrust::sort(policy, indices.ptr(), indices.ptr() + indices.capacity(),
-               device::geo_id_based_sorter{measurements.surface_link()});
-
-  // Create the output buffer.
-  output_type result{measurements_view.capacity(), m_mr.main,
-                     vecmem::data::buffer_type::resizable};
-  m_copy.get().setup(result)->ignore();
-  m_copy.get()(measurements_view.size(), result.size())->ignore();
-
-  // Fill it with the sorted measurements.
-  static constexpr unsigned int BLOCK_SIZE = 256;
-  const unsigned int n_blocks =
-      (measurements_view.capacity() + BLOCK_SIZE - 1) / BLOCK_SIZE;
-  kernels::fill_sorted_measurements<<<n_blocks, BLOCK_SIZE, 0, stream>>>(
-      measurements_view, result, indices);
+  // Sort the indices by the sorting keys, with a radix sort.
+  kernels::fill_measurement_sort_keys<<<num_blocks, num_threads, 0, str>>>(
+      payload.measurements, payload.keys, payload.indices);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+  thrust::sort_by_key(policy, payload.keys.ptr(),
+                      payload.keys.ptr() + n_measurements,
+                      payload.indices.ptr());
 
-  // Return the sorted buffer.
-  return result;
+  // Fill the output with the sorted measurements.
+  kernels::fill_sorted_measurements<<<num_blocks, num_threads, 0, str>>>(
+      payload.measurements, payload.output, payload.indices);
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+}
+
+void measurement_sorting_algorithm::synchronize() const {
+  stream().synchronize();
 }
 
 }  // namespace traccc::cuda

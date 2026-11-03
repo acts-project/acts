@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/definitions/pdg_particle.hpp"
 #include "detray/propagator/line_stepper.hpp"
@@ -48,7 +49,7 @@ namespace detray::cuda {
 /// @param[in] truth_intersection_traces_view vecemem view of the truth data
 /// @param[out] recorded_intersections_view vecemem view of the intersections
 ///                                         recorded by the navigator
-template <typename bfield_t, typename detector_t>
+template <typename bfield_t, concepts::detector detector_t>
 void navigation_validation_device(
     typename detector_t::view_type det_view, const propagation::config &cfg,
     pdg_particle<typename detector_t::scalar_type> ptc_hypo,
@@ -57,14 +58,12 @@ void navigation_validation_device(
         &truth_intersection_traces_view,
     vecmem::data::jagged_vector_view<intersection_record<detector_t>>
         &recorded_intersections_view,
-    vecmem::data::vector_view<
-        material_validator::track_material<typename detector_t::scalar_type>>
+    vecmem::data::vector_view<material_validator::track_material>
         &track_mat_view,
-    vecmem::data::jagged_vector_view<
-        material_record<typename detector_t::scalar_type>> &mat_steps_view);
+    vecmem::data::jagged_vector_view<material_record> &mat_steps_view);
 
 /// Prepare data for device navigation run
-template <typename bfield_t, typename detector_t>
+template <typename bfield_t, concepts::detector detector_t>
 inline auto run_navigation_validation(
     vecmem::memory_resource *host_mr, vecmem::memory_resource *dev_mr,
     const detector_t &det, const propagation::config &cfg,
@@ -72,15 +71,14 @@ inline auto run_navigation_validation(
     bfield_t field_data,
     const std::vector<dvector<intersection_record<detector_t>>>
         &truth_intersection_traces) {
-  using scalar_t = dscalar<typename detector_t::algebra_type>;
-  using material_record_t = material_record<scalar_t>;
-  using track_material_t = material_validator::track_material<scalar_t>;
+  using material_record_t = material_record;
+  using track_material_t = material_validator::track_material;
 
   // Helper object for performing memory copies (to CUDA devices)
   vecmem::cuda::copy cuda_cpy;
 
   // Copy the detector to device and get its view
-  auto det_buffer = detray::get_buffer(det, *dev_mr, cuda_cpy);
+  const auto det_buffer = detray::get_buffer(det, *dev_mr, cuda_cpy);
   auto det_view = detray::get_data(det_buffer);
 
   // Move truth intersection traces data to device
@@ -144,7 +142,7 @@ inline auto run_navigation_validation(
 /// on device.
 ///
 /// @note The lifetime of the detector needs to be guaranteed outside this class
-template <typename detector_t, template <typename> class scan_type>
+template <concepts::detector detector_t, template <typename> class scan_type>
 class navigation_validation : public test::fixture_base<> {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
@@ -298,7 +296,7 @@ class navigation_validation : public test::fixture_base<> {
       const auto &trck_param = start.track_param();
       trajectory_type test_traj = get_parametrized_trajectory(trck_param);
 
-      const scalar q = start.charge;
+      const scalar q = start.template charge<>();
       const scalar pT{q == 0.f ? 1.f * unit<scalar>::GeV : trck_param.pT(q)};
       const scalar p{q == 0.f ? 1.f * unit<scalar>::GeV : trck_param.p(q)};
 
@@ -323,8 +321,8 @@ class navigation_validation : public test::fixture_base<> {
       } else {
         // Adjust the track charge, which is unknown to the navigation
         for (auto &record : recorded_trace) {
-          record.charge = q;
-          record.p_mag = p;
+          record.charge(q);
+          record.p(p);
         }
 
         // Compare truth and recorded data elementwise
@@ -361,8 +359,8 @@ class navigation_validation : public test::fixture_base<> {
       navigation_validator::surface_stats n_truth{};
       navigation_validator::surface_stats n_nav{};
       for (std::size_t j = 0; j < truth_trace.size(); ++j) {
-        const auto truth_desc = truth_trace[j].intersection.surface();
-        const auto rec_desc = recorded_trace[j].intersection.surface();
+        const auto truth_desc = truth_trace.at(j).intersection().surface();
+        const auto rec_desc = recorded_trace.at(j).intersection().surface();
 
         // Exclude dummy records for missing surfaces
         if (!truth_desc.identifier().is_invalid()) {
@@ -467,11 +465,11 @@ class navigation_validation : public test::fixture_base<> {
   std::shared_ptr<test::whiteboard> m_whiteboard{nullptr};
 };
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using straight_line_navigation =
     detray::cuda::navigation_validation<detector_t, detray::ray_scan>;
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using helix_navigation =
     detray::cuda::navigation_validation<detector_t, detray::helix_scan>;
 

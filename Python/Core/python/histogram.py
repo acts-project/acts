@@ -76,12 +76,15 @@ def _patch_histogram_types(m):
             for i in range(self.rank)
         ]
 
-    # BoostHistogram -> bh.Histogram with Double storage
+    # BoostHistogram -> bh.Histogram with Weight storage (value + variance
+    # per bin, matching the weighted-sum accumulator used on the C++ side)
     def _boost_hist_to_bh(self):
         import boost_histogram as bh
 
-        h = bh.Histogram(*_bh_axes(bh, self), storage=bh.storage.Double())
-        h.view(flow=False)[:] = self.values()
+        h = bh.Histogram(*_bh_axes(bh, self), storage=bh.storage.Weight())
+        view = h.view(flow=False)
+        view["value"] = self.values()
+        view["variance"] = self.errors() ** 2
         return h
 
     m.BoostHistogram._to_boost_histogram_ = _boost_hist_to_bh

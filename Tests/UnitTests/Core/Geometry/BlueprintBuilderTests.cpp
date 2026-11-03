@@ -10,11 +10,22 @@
 
 #include "Acts/Geometry/BlueprintBuilder.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/Volume.hpp"
+#include "Acts/Geometry/detail/BlueprintBuilder_impl.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <optional>
+#include <span>
+#include <string>
+#include <string_view>
+#include <vector>
 
 using namespace Acts;
 using Acts::detail::OnContainerMutatesContainer;
@@ -87,12 +98,133 @@ static_assert(OnContainerMutatesContainer<Element, decltype(mutateContainer)>,
 static_assert(!OnContainerReturnsNode<Element, decltype(mutateContainer)>,
               "void-returning callback must not match the node-returning form");
 
+// A minimal backend satisfying detail::BlueprintBackend plus the barrel/endcap
+// classifier, so the assemblers' member templates can be instantiated. The
+// plugins instantiate the assemblers with `template class`, which does not
+// cover member templates such as `onLayer`, leaving the in-place customizer
+// adapters below uncompiled anywhere else in the tree.
+struct StubBackend {
+  using Element = int;
+
+  struct AxisDefinition {};
+
+  struct LayerSpec {
+    std::optional<std::string> layerName;
+    std::optional<AxisDefinition> axes;
+    std::optional<AxisDefinition> layerAxes;
+  };
+
+  struct Config {};
+
+  static constexpr std::string_view kIdentifier = "Stub";
+
+  StubBackend(const Config& /*cfg*/, const Logger& /*logger*/) {}
+
+  detail::SurfaceVector makeSurfaces(std::span<const Element> /*sensitives*/,
+                                     const LayerSpec& /*layerSpec*/) const {
+    return {};
+  }
+
+  Element world() const { return 0; }
+  std::string nameOf(const Element& /*element*/) const { return {}; }
+  std::vector<Element> children(const Element& /*element*/) const { return {}; }
+  Element parent(const Element& /*element*/) const { return 0; }
+  bool isSensitive(const Element& /*element*/) const { return false; }
+
+  bool isBarrel(const Element& /*element*/) const { return false; }
+  bool isEndcap(const Element& /*element*/) const { return false; }
+  bool isTracker(const Element& /*element*/) const { return false; }
+};
+
+// Same backend, extended with a passive-volume description: a cylinder shell
+// whose radius is the element value, shifted along z by the element value.
+struct PassiveStubBackend : StubBackend {
+  using StubBackend::StubBackend;
+
+  std::string nameOf(const Element& element) const {
+    return "passive" + std::to_string(element);
+  }
+
+  Volume passiveVolume(const Element& element) const {
+    const double r = static_cast<double>(element);
+    return Volume(Transform3{Translation3(0., 0., r)},
+                  std::make_shared<CylinderVolumeBounds>(r, r + 1., 10.));
+  }
+};
+
+static_assert(detail::BlueprintBackend<StubBackend>);
+static_assert(detail::HasAxisDefinition<StubBackend>);
+static_assert(detail::HasBarrelEndcapClassifier<StubBackend>);
+static_assert(!detail::HasPassiveVolume<StubBackend>);
+static_assert(detail::BlueprintBackend<PassiveStubBackend>);
+static_assert(detail::HasPassiveVolume<PassiveStubBackend>);
+
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(CustomizerReturnTypeBackwardCompatibility) {
   // The substantive checks are the static_asserts above; this case ensures the
   // translation unit is exercised by the test runner.
   BOOST_CHECK(true);
+}
+
+// Instantiates every `onLayer`/`onContainer` overload with both accepted
+// callback shapes. The node-returning form stores the callback directly; the
+// void-returning form is wrapped in an adapter lambda, which is what this
+// exercises. Nothing is built -- instantiation is the assertion.
+BOOST_AUTO_TEST_CASE(CustomizerInstantiation) {
+  using Element = StubBackend::Element;
+
+  auto returnsNode = [](const std::optional<Element>&,
+                        std::shared_ptr<LayerBlueprintNode> layer) {
+    return layer;
+  };
+  auto mutatesLayer = [](const std::optional<Element>&, LayerBlueprintNode&) {};
+  auto returnsContainer = [](const Element&,
+                             std::shared_ptr<ContainerBlueprintNode> node) {
+    return node;
+  };
+  auto mutatesContainer = [](const Element&, ContainerBlueprintNode&) {};
+
+  BlueprintBuilder<StubBackend> builder{StubBackend::Config{}};
+
+  static_cast<void>(builder.layers().onLayer(returnsNode));
+  static_cast<void>(builder.layers().onLayer(mutatesLayer));
+
+  static_cast<void>(builder.layersFromSensors().onLayer(returnsNode));
+  static_cast<void>(builder.layersFromSensors().onLayer(mutatesLayer));
+
+  static_cast<void>(builder.layerFromSensors().onLayer(returnsNode));
+  static_cast<void>(builder.layerFromSensors().onLayer(mutatesLayer));
+
+  static_cast<void>(builder.barrelEndcap().onLayer(returnsNode));
+  static_cast<void>(builder.barrelEndcap().onLayer(mutatesLayer));
+  static_cast<void>(builder.barrelEndcap().onContainer(returnsContainer));
+  static_cast<void>(builder.barrelEndcap().onContainer(mutatesContainer));
+
+  BOOST_CHECK(true);
+}
+
+BOOST_AUTO_TEST_CASE(PassiveElement) {
+  BlueprintBuilder<PassiveStubBackend> builder{PassiveStubBackend::Config{}};
+
+  // Default name comes from the backend, the shape is used as reported.
+  auto node = builder.makePassiveElement(100);
+  BOOST_REQUIRE(node != nullptr);
+  BOOST_CHECK_EQUAL(node->name(), "passive100");
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const Volume& volume = node->build(BlueprintOptions{}, gctx);
+  const auto* bounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&volume.volumeBounds());
+  BOOST_REQUIRE(bounds != nullptr);
+  BOOST_CHECK_EQUAL(bounds->get(CylinderVolumeBounds::eMinR), 100.);
+  BOOST_CHECK_EQUAL(bounds->get(CylinderVolumeBounds::eMaxR), 101.);
+  BOOST_CHECK_EQUAL(volume.localToGlobalTransform(gctx).translation().z(),
+                    100.);
+
+  // An explicit name overrides the element's own name.
+  auto named = builder.makePassiveElement(100, "Support");
+  BOOST_CHECK_EQUAL(named->name(), "Support");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
 
   // Read a toy detector
   using metadata_t = detray::tutorial::toy_metadata;
-  using detector_t = detray::detector<metadata_t>;
+  using detector_t = detray::host::detector<metadata_t>;
 
   // Create an empty detector to be filled
   vecmem::host_memory_resource host_mr;

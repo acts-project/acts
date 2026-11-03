@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2020-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -33,7 +34,7 @@ namespace traccc {
  *
  * @tparam value_t the type of a single stored object
  *
- * @note bare_value and store_value are identicial in this case
+ * @note bare_value and store_value are identical in this case
  **/
 template <template <typename...> class vector_t = vecmem::vector,
           template <typename...> class jagged_vector_t = vecmem::jagged_vector,
@@ -199,7 +200,7 @@ struct complete_populator {
  * @tparam kSORT the sorting directive
  * @tparam value_t the type of a single stored object
  *
- * @note bare_value and store_value are identicial in this case
+ * @note bare_value and store_value are identical in this case
  **/
 template <template <typename...> class vector_t = vecmem::vector,
           template <typename...> class jagged_vector_t = vecmem::jagged_vector,

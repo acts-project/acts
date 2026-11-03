@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -81,15 +82,14 @@ struct propagate_to_next_surface_payload {
 ///
 /// @param[in] globalIndex        The index of the current thread
 /// @param[in] cfg                Track finding config object
-/// @param[in] det_data           View object to the tracking detector
-///                               description
+/// @param[in] det_data_ptr       Pointer to the tracking detector description
 /// @param[in] field_data         View object to the magnetic field
-/// @param[inout] payload      The function call payload
+/// @param[in,out] payload      The function call payload
 ///
 template <typename propagator_t, typename bfield_t>
 TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
     global_index_t globalIndex, const finding_config& cfg,
-    const typename propagator_t::detector_type::const_view_type& det_data,
+    const typename propagator_t::detector_type* const det_data_ptr,
     const bfield_t& field_data,
     const propagate_to_next_surface_payload& payload);
 

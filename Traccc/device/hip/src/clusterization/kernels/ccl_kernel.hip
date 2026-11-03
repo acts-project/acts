@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../../utils/barrier.hpp"
@@ -29,8 +30,7 @@ __global__ void ccl_kernel(
     unsigned int* backup_mutex_ptr,
     vecmem::data::vector_view<unsigned int> disjoint_set_view,
     vecmem::data::vector_view<unsigned int> cluster_size_view) {
-  __shared__ std::size_t partition_start, partition_end;
-  __shared__ std::size_t outi;
+  __shared__ unsigned int partition_start, partition_end;
   extern __shared__ device::details::index_t shared_v[];
   vecmem::device_atomic_ref<unsigned int> backup_mutex(*backup_mutex_ptr);
 
@@ -46,7 +46,7 @@ __global__ void ccl_kernel(
   const details::thread_id1 thread_id;
 
   device::ccl_kernel(cfg, thread_id, cells_view, det_desc_view, det_cond_view,
-                     partition_start, partition_end, outi, f_view, gf_view,
+                     partition_start, partition_end, f_view, gf_view,
                      f_backup_view, gf_backup_view, adjc_backup_view,
                      adjv_backup_view, backup_mutex, disjoint_set_view,
                      cluster_size_view, barry_r, measurements_view);

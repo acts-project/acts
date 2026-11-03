@@ -55,10 +55,17 @@ class PerigeeSurface : public LineSurface {
                  const Transform3& shift);
 
  public:
+  ~PerigeeSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other is the source surface to be assigned
   /// @return Reference to this surface for assignment chaining
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<PerigeeSurface>(other)` instead.
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<PerigeeSurface>(other) instead.")]]
   PerigeeSurface& operator=(const PerigeeSurface& other);
 
   /// Return the surface type

@@ -302,7 +302,8 @@ class helix {
 
 template <concepts::algebra algebra_t, typename field_view_t>
   requires(!concepts::vector3D<field_view_t>)
-DETRAY_HOST_DEVICE helix(const free_track_parameters<algebra_t> &,
-                         const field_view_t) -> helix<algebra_t>;
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE helix(
+    const free_track_parameters<algebra_t> &, const field_view_t)
+    -> helix<algebra_t>;
 
 }  // namespace detray::detail

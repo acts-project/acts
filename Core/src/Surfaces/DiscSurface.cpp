@@ -22,6 +22,8 @@
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -69,7 +71,9 @@ DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
 
 DiscSurface& DiscSurface::operator=(const DiscSurface& other) {
   if (this != &other) {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     Surface::operator=(other);
+    ACTS_POP_IGNORE_DEPRECATED()
     m_bounds = other.m_bounds;
   }
   return *this;
@@ -92,7 +96,7 @@ Result<Vector2> DiscSurface::globalToLocal(const GeometryContext& gctx,
                                            const Vector3& position,
                                            double tolerance) const {
   // transport it to the globalframe
-  Vector3 loc3Dframe = (localToGlobalTransform(gctx).inverse()) * position;
+  Vector3 loc3Dframe = localToGlobalTransform(gctx).inverse() * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
@@ -128,7 +132,7 @@ Vector3 DiscSurface::localCartesianToGlobal(const GeometryContext& gctx,
 Vector2 DiscSurface::globalToLocalCartesian(const GeometryContext& gctx,
                                             const Vector3& position,
                                             double /*direction*/) const {
-  Vector3 loc3Dframe = (localToGlobalTransform(gctx).inverse()) * position;
+  Vector3 loc3Dframe = localToGlobalTransform(gctx).inverse() * position;
   return Vector2(loc3Dframe.x(), loc3Dframe.y());
 }
 
@@ -307,15 +311,14 @@ MultiIntersection3D DiscSurface::intersect(
 Matrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
-  using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = localToGlobalTransform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
-  const double lphi = phi(localPos);
-  const double lcphi = std::cos(lphi);
-  const double lsphi = std::sin(lphi);
+  // the normalised coordinates are already cos and sin of the local azimuth
+  const double lcphi = localPos.x() / lr;
+  const double lsphi = localPos.y() / lr;
   Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
   loc3DToLocBound << lcphi, lsphi, 0, -lsphi / lr, lcphi / lr, 0;
 

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic warning "-Wmaybe-uninitialized"
@@ -30,13 +31,22 @@
 #include "traccc/finding/device/progressive_kalman_filter.hpp"
 #include "traccc/finding/device/propagate_to_next_surface.hpp"
 #include "traccc/finding/device/remove_duplicates.hpp"
+#include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/utils/detector_buffer_bfield_visitor.hpp"
+
+// Detray include(s)
+#include <detray/core/concepts.hpp>
+
+// System include(s).
+#include <new>
+#include <type_traits>
+#include <utility>
 
 namespace traccc::alpaka {
 namespace kernels {
 
 /// Alpaka kernel functor for @c traccc::device::find_tracks
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 struct find_tracks {
   template <typename TAcc>
   ALPAKA_FN_ACC void operator()(
@@ -58,13 +68,18 @@ struct find_tracks {
     std::pair<unsigned int, unsigned int>* shared_candidates =
         reinterpret_cast<std::pair<unsigned int, unsigned int>*>(
             &shared_insertion_mutex[blockDimX]);
+    std::pair<traccc::scalar, unsigned int>* shared_best_candidates =
+        reinterpret_cast<std::pair<traccc::scalar, unsigned int>*>(
+            &shared_candidates[2 * blockDimX]);
 
     device::find_tracks<detector_t>(
         thread_id, barrier, cfg, *det_data, payload,
-        {.shared_num_out_params = shared_num_out_params,
-         .shared_insertion_mutex = shared_insertion_mutex,
-         .shared_candidates = shared_candidates,
-         .shared_candidates_size = shared_candidates_size});
+        device::find_tracks_shared_payload{
+            .shared_num_out_params = shared_num_out_params,
+            .shared_insertion_mutex = shared_insertion_mutex,
+            .shared_candidates = shared_candidates,
+            .shared_candidates_size = shared_candidates_size,
+            .shared_best_candidates = shared_best_candidates});
   }
 };
 
@@ -138,19 +153,35 @@ struct progressive_kalman_filter {
   }
 };
 
+/// Alpaka kernel functor that constructs the device detector in place
+///
+/// The detector is built once into global memory rather than in every thread,
+/// so that the propagation kernels only carry a pointer to it.
+template <detray::concepts::detector detector_t>
+struct create_device_detector {
+  template <typename TAcc>
+  ALPAKA_FN_ACC void operator()(TAcc const& acc,
+                                typename detector_t::const_view_type in,
+                                detector_t* out) const {
+    if (::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0] == 0u) {
+      new (out) detector_t(in);
+    }
+  }
+};
+
 /// Alpaka kernel functor for @c traccc::device::propagate_to_next_surface
 template <typename propagator_t, typename bfield_t>
 struct propagate_to_next_surface {
   template <typename TAcc>
   ALPAKA_FN_ACC void operator()(
       TAcc const& acc, const finding_config& cfg,
-      const typename propagator_t::detector_type::const_view_type* det_data,
+      const typename propagator_t::detector_type* det_data_ptr,
       const bfield_t& field_data,
       const device::propagate_to_next_surface_payload& payload) const {
     device::global_index_t globalThreadIdx =
         ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0];
     device::propagate_to_next_surface<propagator_t, bfield_t>(
-        globalThreadIdx, cfg, *det_data, field_data, payload);
+        globalThreadIdx, cfg, det_data_ptr, field_data, payload);
   }
 };
 
@@ -212,10 +243,11 @@ combinatorial_kalman_filter_algorithm::combinatorial_kalman_filter_algorithm(
     const config_type& config, const traccc::memory_resource& mr,
     const vecmem::copy& copy, alpaka::queue& q,
     std::unique_ptr<const Logger> logger,
-    std::unique_ptr<traccc::alpaka::kalman_fitting_algorithm> kf_fitter)
+    std::unique_ptr<traccc::alpaka::kalman_fitting_algorithm> kf_fitter,
+    await_function_type await_func)
     : device::combinatorial_kalman_filter_algorithm(
           config, mr, copy, std::move(logger), std::move(kf_fitter)),
-      alpaka::algorithm_base(q) {}
+      alpaka::algorithm_base(q, std::move(await_func)) {}
 
 bool combinatorial_kalman_filter_algorithm::input_is_valid(
     const edm::measurement_collection::const_view&) const {
@@ -229,16 +261,16 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
     const edm::measurement_collection::const_view::size_type n_measurements,
     const edm::measurement_collection::const_view& measurements) const {
   return detector_buffer_visitor<detector_type_list>(
-      detector, [&]<typename detector_traits_t>(
-                    const typename detector_traits_t::view& det) {
+      detector, [&]<detray::concepts::detector detector_t>(
+                    const detray::detector_view_t<detector_t>& det) {
         // Construct an appropriate device detector object.
-        typename detector_traits_t::device device_det{det};
+        detray::detector_device_t<detector_t> device_det{det};
 
         // Create the result buffer.
         vecmem::data::vector_buffer<
             edm::measurement_collection::const_view::size_type>
             result{device_det.surfaces().size(), mr().main};
-        copy().setup(result)->ignore();
+        copy().setup(vecmem::ignore_event, result);
 
         // Create a measurement device object for convenience.
         const edm::measurement_collection::const_device measurements_device{
@@ -246,8 +278,7 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
 
         // Fill it with Thrust's help.
         details::upper_bound(
-            details::get_queue(queue()), mr(),
-            measurements_device.surface_link().begin(),
+            queue(), mr(), measurements_device.surface_link().begin(),
             // We have to use this ugly form here, because if the
             // measurement collection is resizable (which it often
             // is), the end() function cannot be used in host code.
@@ -275,17 +306,17 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
   detector_buffer_magnetic_field_visitor<detector_type_list,
                                          alpaka::bfield_type_list<scalar>>(
       detector, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view& det,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>& det,
           const bfield_view_t& bfield) {
-        using detector_t = typename detector_traits_t::device;
+        using detector_device_t = detray::detector_device_t<detector_t>;
         using surface_t = typename detector_t::surface_type;
 
         // Copy the detector data to device memory.
-        vecmem::data::vector_buffer<typename detector_traits_t::view>
+        vecmem::data::vector_buffer<detray::detector_view_t<detector_t>>
             device_det(1u, mr().main);
-        copy().setup(device_det)->ignore();
-        copy()({1u, &det}, device_det)->ignore();
+        copy().setup(vecmem::ignore_event, device_det);
+        copy()(vecmem::ignore_event, {1u, &det}, device_det);
 
         // If the Kalman smoother should be run, obtain the real allocation
         vecmem::data::jagged_vector_view<surface_t> sf_sequences;
@@ -301,7 +332,8 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
             details::get_queue(queue()),
             makeWorkDiv<Acc>(deviceBlocks, deviceThreads),
             kernels::progressive_kalman_filter<
-                traccc::details::ckf_propagator_t<detector_t, bfield_view_t>>{},
+                traccc::details::ckf_propagator_t<detector_device_t,
+                                                  bfield_view_t>>{},
             config, device_det.ptr(), bfield, sf_sequences, payload);
       });
 }
@@ -317,20 +349,20 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
 
   // Launch the kernel for the appropriate detector type.
   detector_buffer_visitor<detector_type_list>(
-      detector, [&]<typename detector_traits_t>(
-                    const typename detector_traits_t::view& det) {
+      detector, [&]<detray::concepts::detector detector_t>(
+                    const detray::detector_view_t<detector_t>& det) {
         // Copy the detector data to device memory.
-        vecmem::data::vector_buffer<typename detector_traits_t::view>
+        vecmem::data::vector_buffer<detray::detector_view_t<detector_t>>
             device_det(1u, mr().main);
-        copy().setup(device_det)->ignore();
-        copy()({1u, &det}, device_det)->ignore();
+        copy().setup(vecmem::ignore_event, device_det);
+        copy()(vecmem::ignore_event, {1u, &det}, device_det);
 
         // Submit the kernel to the queue.
         ::alpaka::exec<Acc>(
             details::get_queue(queue()),
             makeWorkDiv<Acc>(deviceBlocks, deviceThreads),
-            kernels::find_tracks<typename detector_traits_t::device>{}, config,
-            device_det.ptr(), payload);
+            kernels::find_tracks<detray::detector_device_t<detector_t>>{},
+            config, device_det.ptr(), payload);
       });
 }
 
@@ -345,9 +377,9 @@ void combinatorial_kalman_filter_algorithm::condense_tracks_kernel(
   const vecmem::device_vector<const unsigned int>
       out_params_per_in_param_vector(out_params_per_in_param);
   vecmem::device_vector<unsigned int> params_index_vector(params_index);
-  details::inclusive_scan(
-      details::get_queue(queue()), mr(), out_params_per_in_param_vector.begin(),
-      out_params_per_in_param_vector.end(), params_index_vector.begin());
+  details::inclusive_scan(queue(), mr(), out_params_per_in_param_vector.begin(),
+                          out_params_per_in_param_vector.end(),
+                          params_index_vector.begin());
 
   // Establish the kernel launch parameters.
   const unsigned int deviceThreads = warp_size() * 8;
@@ -385,7 +417,7 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_last_measurement(
   assert(link_last_measurement.size_ptr() == nullptr);
   assert(param_ids.size_ptr() == nullptr);
   details::sort_by_key(
-      details::get_queue(queue()), mr(), link_last_measurement.ptr(),
+      queue(), mr(), link_last_measurement.ptr(),
       link_last_measurement.ptr() + link_last_measurement.capacity(),
       param_ids.ptr());
 }
@@ -426,13 +458,14 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_keys(
   assert(keys.capacity() == param_ids.capacity());
   assert(keys.size_ptr() == nullptr);
   assert(param_ids.size_ptr() == nullptr);
-  details::sort_by_key(details::get_queue(queue()), mr(), keys.ptr(),
-                       keys.ptr() + keys.capacity(), param_ids.ptr());
+  details::sort_by_key(queue(), mr(), keys.ptr(), keys.ptr() + keys.capacity(),
+                       param_ids.ptr());
 }
 
 void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
     unsigned int n_threads, const finding_config& config,
-    const detector_buffer& detector, const magnetic_field& field,
+    const detector_buffer& detector, const move_only_any& device_detector,
+    const magnetic_field& field,
     const device::propagate_to_next_surface_payload& payload) const {
   // Establish the kernel launch parameters.
   const unsigned int deviceThreads = warp_size() * 4;
@@ -443,14 +476,18 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
   detector_buffer_magnetic_field_visitor<detector_type_list,
                                          alpaka::bfield_type_list<scalar>>(
       detector, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view& det,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>&,
           const bfield_view_t& bfield) {
-        // Copy the detector data to device memory.
-        vecmem::data::vector_buffer<typename detector_traits_t::view>
-            device_det(1u, mr().main);
-        copy().setup(device_det)->ignore();
-        copy()({1u, &det}, device_det)->ignore();
+        using detector_device_t = detray::detector_device_t<detector_t>;
+
+        // The detector was already built in global memory by
+        // create_device_detector, which dispatched over the same detector
+        // type list, so this is the type it stored there.
+        const vecmem::data::vector_buffer<detector_device_t>&
+            device_detector_buffer =
+                device_detector
+                    .as<vecmem::data::vector_buffer<detector_device_t>>();
 
         // Launch the kernel to propagate all active tracks to the next
         // surface.
@@ -458,10 +495,33 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
             details::get_queue(queue()),
             makeWorkDiv<Acc>(deviceBlocks, deviceThreads),
             kernels::propagate_to_next_surface<
-                traccc::details::ckf_propagator_t<
-                    typename detector_traits_t::device, bfield_view_t>,
+                traccc::details::ckf_propagator_t<detector_device_t,
+                                                  bfield_view_t>,
                 bfield_view_t>{},
-            config, device_det.ptr(), bfield, payload);
+            config, device_detector_buffer.ptr(), bfield, payload);
+      });
+}
+
+move_only_any combinatorial_kalman_filter_algorithm::create_device_detector(
+    const detector_buffer& det) const {
+  return detector_buffer_visitor<detector_type_list>(
+      det, [&]<detray::concepts::detector detector_t>(
+               const detray::detector_view_t<detector_t>& det_view) {
+        using device_detector_t = detray::detector_device_t<detector_t>;
+
+        static_assert(
+            std::is_trivially_destructible_v<device_detector_t>,
+            "the detector is placement-constructed and never destroyed, so it "
+            "must not need a destructor");
+
+        vecmem::data::vector_buffer<device_detector_t> buffer(1u, mr().main);
+
+        ::alpaka::exec<Acc>(
+            details::get_queue(queue()), makeWorkDiv<Acc>(1u, 1u),
+            kernels::create_device_detector<device_detector_t>{}, det_view,
+            buffer.ptr());
+
+        return move_only_any{std::move(buffer)};
       });
 }
 
@@ -525,25 +585,32 @@ void combinatorial_kalman_filter_algorithm::build_tracks_kernel(
                       payload);
 }
 
+void combinatorial_kalman_filter_algorithm::synchronize() const {
+  queue().synchronize();
+}
+
 }  // namespace traccc::alpaka
 
 namespace alpaka::trait {
 
 /// Specify how much dynamic shared memory is needed for the
 /// @c traccc::alpaka::details::kernels::find_tracks kernel.
-template <typename TAcc, typename detector_t>
+template <typename TAcc, detray::concepts::detector detector_t>
 struct BlockSharedMemDynSizeBytes<
     traccc::alpaka::kernels::find_tracks<detector_t>, TAcc> {
   template <typename TVec, typename... TArgs>
   ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(
       traccc::alpaka::kernels::find_tracks<detector_t> const& /* kernel */,
       TVec const& blockThreadExtent, TVec const& /* threadElemExtent */,
-      TArgs const&... /* args */
+      traccc::finding_config const& cfg, TArgs const&... /* args */
       ) -> std::size_t {
     return static_cast<std::size_t>(blockThreadExtent.prod()) *
                sizeof(unsigned long long int) +
            2 * static_cast<std::size_t>(blockThreadExtent.prod()) *
-               sizeof(std::pair<unsigned int, unsigned int>);
+               sizeof(std::pair<unsigned int, unsigned int>) +
+           static_cast<std::size_t>(blockThreadExtent.prod()) *
+               cfg.max_num_branches_per_surface *
+               sizeof(std::pair<traccc::scalar, unsigned int>);
   }
 };
 

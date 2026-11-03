@@ -42,16 +42,31 @@ function(acts_add_library library_name)
     endif()
 endfunction()
 
-# This function adds a helper target called ${target}_HEADERS which has
+# This function adds a helper target called Acts${target}_HEADERS which has
 # generated source files that include each hedaer that was given one-by-one.
 # The generated target links against the one given in `target` and therefore
 # has access to all includes.
 # The generated target is not included in the default build, and is only meant
 # to help tools like clangd discover compiler flags.
+#
+# By default the helper target is named `Acts${target}_HEADERS` and links
+# against `Acts::${target}`. Projects that do not follow the Acts naming
+# convention (e.g. the in-tree detray) can override both with `NAME` and
+# `LINK`:
+#
+#   acts_compile_headers(
+#       core
+#       NAME detray_core_HEADERS
+#       LINK detray::core_array
+#       GLOB include/detray/**/*.hpp
+#   )
+#
+# Headers matching any of the regular expressions given with `EXCLUDE` are
+# skipped, e.g. deprecated forwarding headers that emit a warning.
 function(acts_compile_headers target)
     set(options "")
-    set(oneValueArgs "")
-    set(multiValueArgs GLOB)
+    set(oneValueArgs NAME LINK)
+    set(multiValueArgs GLOB EXCLUDE)
     cmake_parse_arguments(
         PARSE_ARGV 0
         ARGS
@@ -62,6 +77,13 @@ function(acts_compile_headers target)
 
     if(NOT ACTS_COMPILE_HEADERS)
         return()
+    endif()
+
+    if(NOT ARGS_NAME)
+        set(ARGS_NAME "Acts${target}_HEADERS")
+    endif()
+    if(NOT ARGS_LINK)
+        set(ARGS_LINK "Acts::${target}")
     endif()
 
     if(NOT "${ARGS_GLOB}" STREQUAL "")
@@ -76,6 +98,10 @@ function(acts_compile_headers target)
             ${ARGS_GLOB}
         )
     endif()
+
+    foreach(_exclude ${ARGS_EXCLUDE})
+        list(FILTER _headers EXCLUDE REGEX "${_exclude}")
+    endforeach()
 
     if("${_headers}" STREQUAL "")
         message(SEND_ERROR "No headers specified")
@@ -113,10 +139,10 @@ function(acts_compile_headers target)
         list(APPEND _sources "${_temporary_path}")
     endforeach()
 
-    if(NOT TARGET Acts${target}_HEADERS)
-        add_library(Acts${target}_HEADERS SHARED EXCLUDE_FROM_ALL ${_sources})
-        target_link_libraries(Acts${target}_HEADERS PRIVATE Acts::${target})
+    if(NOT TARGET ${ARGS_NAME})
+        add_library(${ARGS_NAME} SHARED EXCLUDE_FROM_ALL ${_sources})
+        target_link_libraries(${ARGS_NAME} PRIVATE ${ARGS_LINK})
     else()
-        target_sources(Acts${target}_HEADERS PRIVATE ${_sources})
+        target_sources(${ARGS_NAME} PRIVATE ${_sources})
     endif()
 endfunction()

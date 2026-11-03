@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,7 +14,11 @@
 #include "traccc/finding/device/find_tracks_payload.hpp"
 
 // Project include(s).
+#include "traccc/definitions/primitives.hpp"
 #include "traccc/finding/finding_config.hpp"
+
+// Detray include(s)
+#include <detray/core/concepts.hpp>
 
 // System include(s).
 #include <cstdint>
@@ -37,7 +42,7 @@ struct find_tracks_shared_payload {
   unsigned long long int* shared_insertion_mutex;
 
   /**
-   * @brief Shared-memory vector of measurement candidats with ID and
+   * @brief Shared-memory vector of measurement candidates with ID and
    * original track parameter identifier
    *
    * @note Length is always twice the block size
@@ -49,6 +54,20 @@ struct find_tracks_shared_payload {
    * \ref shared_candidates
    */
   unsigned int& shared_candidates_size;
+
+  /**
+   * @brief Shared-memory array holding, for each input parameter handled by
+   * this block, the predicted chi2 and the measurement index of the best
+   * candidates selected for it so far.
+   *
+   * This is the entire state of the best-of-N selection: every other field
+   * of a @c candidate_link is a property of the input parameter, so the
+   * links themselves are only built once the selection has settled.
+   *
+   * @note Length is the block size times
+   *       @c finding_config::max_num_branches_per_surface.
+   */
+  std::pair<traccc::scalar, unsigned int>* shared_best_candidates;
 };
 
 /// Function for combinatorial finding.
@@ -60,11 +79,11 @@ struct find_tracks_shared_payload {
 /// @param[in] cfg                Track finding config object
 /// @param[in] det_data           View object to the tracking detector
 ///                               description
-/// @param[inout] payload         The global memory payload
-/// @param[inout] shared_payload  The shared memory payload
+/// @param[in,out] payload         The global memory payload
+/// @param[in,out] shared_payload  The shared memory payload
 ///
-template <typename detector_t, concepts::thread_id1 thread_id_t,
-          concepts::barrier barrier_t>
+template <detray::concepts::detector detector_t,
+          concepts::thread_id1 thread_id_t, concepts::barrier barrier_t>
 TRACCC_HOST_DEVICE inline void find_tracks(
     const thread_id_t& thread_id, const barrier_t& barrier,
     const finding_config& cfg, typename detector_t::const_view_type det_data,

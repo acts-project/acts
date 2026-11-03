@@ -1,0 +1,25 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Local include(s).
+#include "traccc/examples/throughput_st.hpp"
+
+#include "traccc/examples/hip/full_chain_algorithm.hpp"
+
+// VecMem include(s).
+#include <vecmem/memory/hip/host_memory_resource.hpp>
+
+int main(int argc, char* argv[]) {
+  // We use a pinned HIP host memory resource to allocate memory for the
+  // cell inputs in order to speed up the memory copies.
+  vecmem::hip::host_memory_resource pinned_host_mr;
+
+  // Execute the throughput test.
+  return traccc::throughput_st<traccc::hip::full_chain_algorithm>(
+      "Single-threaded HIP GPU throughput tests", argc, argv, &pinned_host_mr);
+}

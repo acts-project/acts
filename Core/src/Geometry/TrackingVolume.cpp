@@ -34,6 +34,8 @@
 
 #include <boost/container/small_vector.hpp>
 
+#include "VolumeLookupImpl.hpp"
+
 namespace Acts {
 
 TrackingVolume::TrackingVolume(
@@ -83,36 +85,17 @@ TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) noexcept = default;
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& position,
     const double tol) const {
-  if (!inside(gctx, position, tol)) {
-    return nullptr;
-  }
+  return m_volumeLookup ? m_volumeLookup->findLowest(gctx, position, tol)
+                        : detail::linearVolumeScan(*this, gctx, position, tol);
+}
 
-  // confined static volumes - highest hierarchy
-  if (m_confinedVolumes) {
-    const TrackingVolume* volume = m_confinedVolumes->object(position).get();
-    if (volume != nullptr) {
-      return volume->lowestTrackingVolume(gctx, position, tol);
-    }
-  }
+void TrackingVolume::setVolumeLookup(
+    std::unique_ptr<const IVolumeLookup> lookup) {
+  m_volumeLookup = std::move(lookup);
+}
 
-  // search for dense volumes
-  if (!m_confinedDenseVolumes.empty()) {
-    for (auto& denseVolume : m_confinedDenseVolumes) {
-      if (denseVolume->inside(gctx, position, tol)) {
-        return denseVolume.get();
-      }
-    }
-  }
-
-  // @TODO: Abstract this into an accelerateable structure
-  for (const auto& volume : volumes()) {
-    if (volume.inside(gctx, position, tol)) {
-      return volume.lowestTrackingVolume(gctx, position, tol);
-    }
-  }
-
-  // there is no lower sub structure
-  return this;
+const IVolumeLookup* TrackingVolume::volumeLookup() const {
+  return m_volumeLookup.get();
 }
 
 const TrackingVolumeBoundaries& TrackingVolume::boundarySurfaces() const {
@@ -570,6 +553,11 @@ TrackingVolume& TrackingVolume::addVolume(
   return *m_volumes.back();
 }
 
+std::span<const TrackingVolume::PlacementOwnPtr> TrackingVolume::placements()
+    const {
+  return m_placements;
+}
+
 TrackingVolume::PortalRange TrackingVolume::portals() const {
   return PortalRange{m_portals};
 }
@@ -605,28 +593,44 @@ void TrackingVolume::visualize(IVisualization3D& helper,
                                const ViewConfig& viewConfig,
                                const ViewConfig& portalViewConfig,
                                const ViewConfig& sensitiveViewConfig) const {
+  visualize(helper, gctx, [&](const GeometryObject& geoObj) {
+    if (geoObj.geometryId().boundary() != 0) {
+      return portalViewConfig;
+    }
+    if (geoObj.geometryId().sensitive() != 0) {
+      return sensitiveViewConfig;
+    }
+    return viewConfig;
+  });
+}
+
+void TrackingVolume::visualize(IVisualization3D& helper,
+                               const GeometryContext& gctx,
+                               const ViewConfigFunc& viewConfigFactory) const {
   helper.object(volumeName());
-  if (viewConfig.visible) {
+  {
+    auto viewConfig = viewConfigFactory(*this);
     Volume::visualize(helper, gctx, viewConfig);
   }
 
-  if (sensitiveViewConfig.visible && !surfaces().empty()) {
+  if (!surfaces().empty()) {
     helper.object(volumeName() + "_sensitives");
     for (const auto& surface : surfaces()) {
-      surface.visualize(helper, gctx, sensitiveViewConfig);
+      auto viewConfig = viewConfigFactory(surface);
+      surface.visualize(helper, gctx, viewConfig);
     }
   }
 
-  if (portalViewConfig.visible) {
+  if (!portals().empty()) {
     helper.object(volumeName() + "_portals");
     for (const auto& portal : portals()) {
-      portal.surface().visualize(helper, gctx, portalViewConfig);
+      auto viewConfig = viewConfigFactory(portal.surface());
+      portal.surface().visualize(helper, gctx, viewConfig);
     }
   }
 
   for (const auto& child : volumes()) {
-    child.visualize(helper, gctx, viewConfig, portalViewConfig,
-                    sensitiveViewConfig);
+    child.visualize(helper, gctx, viewConfigFactory);
   }
 }
 

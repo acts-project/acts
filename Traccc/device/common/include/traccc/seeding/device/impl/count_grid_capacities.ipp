@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -18,8 +19,8 @@ namespace traccc::device {
 TRACCC_HOST_DEVICE
 inline void count_grid_capacities(
     const global_index_t globalIndex, const seedfinder_config& config,
-    const details::spacepoint_grid_types::host::axis_p0_type& phi_axis,
-    const details::spacepoint_grid_types::host::axis_p1_type& z_axis,
+    const traccc::details::spacepoint_grid_types::host::axis_p0_type& phi_axis,
+    const traccc::details::spacepoint_grid_types::host::axis_p1_type& z_axis,
     const edm::spacepoint_collection::const_view& spacepoints_view,
     vecmem::data::vector_view<unsigned int> grid_capacities_view) {
   // Check if anything needs to be done.

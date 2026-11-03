@@ -15,7 +15,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <span>
 #include <vector>
 
 namespace ActsFatras {
@@ -42,6 +41,51 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
   Bin2D bstart = {0, 0};
   Bin2D bend = {0, 0};
 
+  // On a cylinder with a closed rPhi axis the unrolled coordinate is periodic:
+  // near the phi = +-pi seam the segment end points can lie outside
+  // [min, max). getBin() wraps each end point on its own, so the segment would
+  // be stepped the long way round, over the whole circumference. Instead the
+  // axis-0 bins are counted on the unwrapped axis (in-range bin plus nBins per
+  // period) and only wrapped back into range when a channel is emitted.
+  const bool periodic0 =
+      surface.type() == Acts::Surface::SurfaceType::Cylinder &&
+      axis0.getBoundaryType() == Acts::AxisBoundaryType::Closed;
+  const auto nBins0 = static_cast<long long>(axis0.getNBins());
+  const double period0 = axis0.getMax() - axis0.getMin();
+  // Zero-based, unwrapped axis-0 bin of a position on the periodic axis
+  auto unwrappedBin0 = [&](double x) -> long long {
+    auto nPeriods =
+        static_cast<long long>(std::floor((x - axis0.getMin()) / period0));
+    double xr = x - nPeriods * period0;
+    if (xr >= axis0.getMax()) {
+      xr -= period0;
+      ++nPeriods;
+    } else if (xr < axis0.getMin()) {
+      xr += period0;
+      --nPeriods;
+    }
+    auto ib = static_cast<long long>(axis0.getBin(xr)) - 1;
+    // getBin() wraps on a closed axis: a value within rounding of max can come
+    // back as the first bin
+    if (ib == 0 && xr > axis0.getBinUpperBound(1)) {
+      ib = nBins0 - 1;
+    }
+    return ib + nPeriods * nBins0;
+  };
+  // Number of whole periods below a zero-based, unwrapped axis-0 bin
+  auto periodsOf0 = [&](long long ib) -> long long {
+    return (ib >= 0 ? ib : ib - nBins0 + 1) / nBins0;
+  };
+  // In-range bin of a zero-based, unwrapped axis-0 bin
+  auto wrapBin0 = [&](long long ib) -> unsigned int {
+    return static_cast<unsigned int>(ib - periodsOf0(ib) * nBins0);
+  };
+  long long ustart0 = 0;
+  long long uend0 = 0;
+
+  // Index convention: getBinEdges()[i] == getBinLowerBound(i + 1), and the bin
+  // indices here are zero-based (getBin() is one-based, hence the -1 above), so
+  // ib <= nBins - 1 and getBinLowerBound(ib + 1) is always in range.
   if (surface.type() == Acts::Surface::SurfaceType::Plane ||
       surface.type() == Acts::Surface::SurfaceType::Cylinder) {
     // For Plane the local frame is Cartesian (x, y); for Cylinder it is the
@@ -52,20 +96,44 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
               static_cast<unsigned int>(axis1.getBin(start[1]) - 1)};
     bend = {static_cast<unsigned int>(axis0.getBin(end[0]) - 1),
             static_cast<unsigned int>(axis1.getBin(end[1]) - 1)};
+    if (periodic0) {
+      ustart0 = unwrappedBin0(start[0]);
+      uend0 = unwrappedBin0(end[0]);
+      bstart[0] = wrapBin0(ustart0);
+      bend[0] = wrapBin0(uend0);
+      // Fast single channel exit
+      if (ustart0 == uend0 && bstart[1] == bend[1]) {
+        return {ChannelSegment(bstart, {start, end}, segment2d.norm())};
+      }
+    }
     // Fast single channel exit
-    if (bstart == bend) {
+    if (!periodic0 && bstart == bend) {
       return {ChannelSegment(bstart, {start, end}, segment2d.norm())};
     }
-    // The lines channel segment lines along x
-    if (bstart[0] != bend[0]) {
+    // The lines channel segment lines along x, on the unwrapped periodic axis
+    if (periodic0 && ustart0 != uend0) {
       const double k = segment2d.y() / segment2d.x();
       const double d = start.y() - k * start.x();
 
-      const std::vector<double> xboundaries = axis0.getBinEdges();
-      const std::span<const double> xbbounds(
-          xboundaries.begin() + std::min(bstart[0], bend[0]) + 1,
-          xboundaries.begin() + std::max(bstart[0], bend[0]) + 1);
-      for (const double x : xbbounds) {
+      const long long xlo = std::min(ustart0, uend0);
+      const long long xhi = std::max(ustart0, uend0);
+      for (long long ib = xlo + 1; ib <= xhi; ++ib) {
+        const long long nPeriods = periodsOf0(ib);
+        const double x = axis0.getBinLowerBound(ib - nPeriods * nBins0 + 1) +
+                         nPeriods * period0;
+        cSteps.push_back(ChannelStep{
+            {(ustart0 < uend0 ? 1 : -1), 0}, {x, k * x + d}, start});
+      }
+    }
+    // The lines channel segment lines along x
+    if (!periodic0 && bstart[0] != bend[0]) {
+      const double k = segment2d.y() / segment2d.x();
+      const double d = start.y() - k * start.x();
+
+      const unsigned int xlo = std::min(bstart[0], bend[0]);
+      const unsigned int xhi = std::max(bstart[0], bend[0]);
+      for (unsigned int ib = xlo + 1; ib <= xhi; ++ib) {
+        const double x = axis0.getBinLowerBound(ib + 1);
         cSteps.push_back(ChannelStep{
             {(bstart[0] < bend[0] ? 1 : -1), 0}, {x, k * x + d}, start});
       }
@@ -74,11 +142,10 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
     if (bstart[1] != bend[1]) {
       const double k = segment2d.x() / segment2d.y();
       const double d = start.x() - k * start.y();
-      const std::vector<double> yboundaries = axis1.getBinEdges();
-      const std::span<const double> ybbounds(
-          yboundaries.begin() + std::min(bstart[1], bend[1]) + 1,
-          yboundaries.begin() + std::max(bstart[1], bend[1]) + 1);
-      for (const double y : ybbounds) {
+      const unsigned int ylo = std::min(bstart[1], bend[1]);
+      const unsigned int yhi = std::max(bstart[1], bend[1]);
+      for (unsigned int ib = ylo + 1; ib <= yhi; ++ib) {
+        const double y = axis1.getBinLowerBound(ib + 1);
         cSteps.push_back(ChannelStep{
             {0, (bstart[1] < bend[1] ? 1 : -1)}, {k * y + d, y}, start});
       }
@@ -106,11 +173,10 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
 
     // The radial boundaries
     if (bstart[0] != bend[0]) {
-      const std::vector<double> rboundaries = axis0.getBinEdges();
-      const std::span<const double> rbbounds(
-          rboundaries.begin() + std::min(bstart[0], bend[0]) + 1,
-          rboundaries.begin() + std::max(bstart[0], bend[0]) + 1);
-      for (const double r : rbbounds) {
+      const unsigned int rlo = std::min(bstart[0], bend[0]);
+      const unsigned int rhi = std::max(bstart[0], bend[0]);
+      for (unsigned int ib = rlo + 1; ib <= rhi; ++ib) {
+        const double r = axis0.getBinLowerBound(ib + 1);
         const auto radIntersection =
             Acts::detail::IntersectionHelper2D::intersectCircleSegment(
                 r, std::min(phistart, phiend), std::max(phistart, phiend),
@@ -125,12 +191,10 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
       const double referenceR =
           surface.referencePositionValue(geoCtx, Acts::AxisDirection::AxisR);
       const Acts::Vector2 origin = {0., 0.};
-      const std::vector<double> phiboundaries = axis1.getBinEdges();
-      const std::span<const double> phibbounds(
-          phiboundaries.begin() + std::min(bstart[1], bend[1]) + 1,
-          phiboundaries.begin() + std::max(bstart[1], bend[1]) + 1);
-
-      for (const double phi : phibbounds) {
+      const unsigned int philo = std::min(bstart[1], bend[1]);
+      const unsigned int phihi = std::max(bstart[1], bend[1]);
+      for (unsigned int ib = philo + 1; ib <= phihi; ++ib) {
+        const double phi = axis1.getBinLowerBound(ib + 1);
         Acts::Vector2 philine(referenceR * std::cos(phi),
                               referenceR * std::sin(phi));
         const auto phiIntersection =
@@ -153,12 +217,17 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
   cSegments.reserve(cSteps.size());
 
   Bin2D currentBin = {bstart[0], bstart[1]};
+  long long currentBin0 = ustart0;  // unwrapped, periodic axis only
   BinDelta2D lastDelta = {0, 0};
   Acts::Vector2 lastIntersect = start;
   double lastPath = 0.;
   for (auto& cStep : cSteps) {
     currentBin[0] += lastDelta[0];
     currentBin[1] += lastDelta[1];
+    if (periodic0) {
+      currentBin0 += lastDelta[0];
+      currentBin[0] = wrapBin0(currentBin0);
+    }
     double path = cStep.path - lastPath;
     cSegments.push_back(
         ChannelSegment(currentBin, {lastIntersect, cStep.intersect}, path));

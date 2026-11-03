@@ -18,6 +18,7 @@
 #include <array>
 
 #include <covfie/core/field.hpp>
+#include <detray/core/concepts.hpp>
 #include <detray/navigation/caching_navigator.hpp>
 #include <detray/propagator/actor_chain.hpp>
 #include <detray/propagator/propagation_config.hpp>
@@ -29,8 +30,8 @@
 
 namespace ActsExamples {
 
-template <typename stepper_t, typename detector_t, typename field_t,
-          bool kSTERILE>
+template <typename stepper_t, detray::concepts::detector detector_t,
+          typename field_t, bool kSTERILE>
 class DetrayConcretePropagator : public PropagatorInterface {
  public:
   /// Create a DetrayConcretePropagator - this is for testing purposes only,
@@ -70,7 +71,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
       const Acts::Logger& logger,
       const Acts::BoundTrackParameters& startParameters) const final {
     // Get the geometry context form the algorithm context
-    const auto& geoContext = context.geoContext;
+    const auto& geoContext = context.recoGeoContext;
     // Get the track information
     const Acts::Vector3 position = startParameters.position(geoContext);
     const Acts::Vector3 direction = startParameters.momentum().normalized();
@@ -126,7 +127,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
       using DIntersection =
           detray::intersection2D<typename detector_t::surface_type, DAlgebra>;
       using DMaterialTracer =
-          detray::material_validator::material_tracer<float, vecmem::vector>;
+          detray::material_validator::material_tracer<vecmem::vector>;
       using DObjectTracer = detray::navigation::object_tracer<
           detector_t, detray::dvector, detray::navigation::status::e_on_object,
           detray::navigation::status::e_on_portal>;
@@ -190,15 +191,15 @@ class DetrayConcretePropagator : public PropagatorInterface {
     // Translate the objects into the steps
     for (const auto& object : objectTracer.object_trace) {
       // Get the position of the object
-      const auto& dposition = object.pos;
-      const auto& sfDesription = object.intersection.surface();
+      const auto& dposition = object.template position<double>();
+      const auto& sfDesription = object.intersection().surface();
       const auto sf = detray::tracking_surface{*m_detrayGeometry, sfDesription};
       Acts::GeometryIdentifier geoID(sf.source());
       // Create a step from the object
       Acts::detail::Step step;
       step.position = Acts::Vector3(dposition[0], dposition[1], dposition[2]);
       step.geoID = geoID;
-      step.navDir = object.intersection.is_along()
+      step.navDir = object.intersection().is_along()
                         ? Acts::Direction::Forward()
                         : Acts::Direction::Backward();
       summary.steps.emplace_back(step);
@@ -226,11 +227,13 @@ class DetrayConcretePropagator : public PropagatorInterface {
   const Acts::Logger& logger() const { return *m_logger; }
 };
 
-template <typename stepper_t, typename detector_t, typename field_t = bool>
+template <typename stepper_t, detray::concepts::detector detector_t,
+          typename field_t = bool>
 using DetraySterilePropagator =
     DetrayConcretePropagator<stepper_t, detector_t, field_t, true>;
 
-template <typename stepper_t, typename detector_t, typename field_t = bool>
+template <typename stepper_t, detray::concepts::detector detector_t,
+          typename field_t = bool>
 using DetrayPropagator =
     DetrayConcretePropagator<stepper_t, detector_t, field_t, false>;
 

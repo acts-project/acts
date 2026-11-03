@@ -66,7 +66,8 @@ template <typename mask_shape_t, typename value_t>
 void write_telecope(const po::variables_map &vm,
                     io::detector_writer_config &writer_cfg,
                     std::vector<value_t> &mask_params) {
-  using detector_t = detector<telescope_metadata<test::algebra, mask_shape_t>>;
+  using detector_t =
+      host::detector<telescope_metadata<test::algebra, mask_shape_t>>;
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
   using vector3_t = dvector3D<algebra_t>;

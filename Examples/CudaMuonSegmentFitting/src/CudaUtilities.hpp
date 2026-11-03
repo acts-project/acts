@@ -8,7 +8,10 @@
 
 #pragma once
 
+#include <cstddef>
 #include <sstream>
+#include <stdexcept>
+#include <vector>
 
 #include <cuda_runtime_api.h>
 
@@ -45,31 +48,35 @@ void allocateDeviceColumn(T*& deviceColumn, std::size_t size) {
 template <typename T>
 void freeDeviceColumn(T*& deviceColumn) noexcept {
   if (deviceColumn != nullptr) {
-    ACTS_CUDA_CHECK(cudaFree(deviceColumn));
+    // Cleanup is used by noexcept destructors and therefore cannot report a
+    // cudaFree failure by throwing.
+    (void)cudaFree(deviceColumn);
     deviceColumn = nullptr;
   }
 }
 
 template <typename T>
-void copyColumnToDevice(T* deviceColumn, const std::vector<T>& hostColumn) {
+void copyColumnToDevice(T* deviceColumn, const std::vector<T>& hostColumn,
+                        cudaStream_t stream) {
   if (hostColumn.empty()) {
     return;
   }
 
-  ACTS_CUDA_CHECK(cudaMemcpy(deviceColumn, hostColumn.data(),
-                             hostColumn.size() * sizeof(T),
-                             cudaMemcpyHostToDevice));
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(deviceColumn, hostColumn.data(),
+                                  hostColumn.size() * sizeof(T),
+                                  cudaMemcpyHostToDevice, stream));
 }
 
 template <typename T>
-void copyColumnToHost(std::vector<T>& hostColumn, const T* deviceColumn) {
+void copyColumnToHost(std::vector<T>& hostColumn, const T* deviceColumn,
+                      cudaStream_t stream) {
   if (hostColumn.empty() || deviceColumn == nullptr) {
     return;
   }
 
-  ACTS_CUDA_CHECK(cudaMemcpy(hostColumn.data(), deviceColumn,
-                             hostColumn.size() * sizeof(T),
-                             cudaMemcpyDeviceToHost));
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(hostColumn.data(), deviceColumn,
+                                  hostColumn.size() * sizeof(T),
+                                  cudaMemcpyDeviceToHost, stream));
 }
 
 }  // namespace ActsExamples

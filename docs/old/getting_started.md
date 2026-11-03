@@ -126,7 +126,7 @@ and they contain all the dependencies required to build ACTS.
 
 .. note::
    Most containers are only build for the `x86_64` platform. If you are on an
-   `aarch64` (such as a recent Mac), you'll need to use the `ubuntu2404`
+   `aarch64` (such as a recent Mac), you'll need to use the `ubuntu2604`
    container, which is built for `aarch64` and `x86_64`!
 
 Furthermore, we are also testing on, but do not provide the corresponding containers:
@@ -146,13 +146,13 @@ available tags, e.g. for the `ubuntu2004` image, you can use the following
 command:
 
 ```console
-docker search --list-tags ghcr.io/acts-project/ubuntu2404
+docker search --list-tags ghcr.io/acts-project/ubuntu2604
 ```
 
-The following command then downloads a stable tag of the `ubuntu2404` image:
+The following command then downloads a stable tag of the `ubuntu2604` image:
 
 ```console
-docker pull ghcr.io/acts-project/ubuntu2404:87
+docker pull ghcr.io/acts-project/ubuntu2604:90
 ```
 
 This should print the image id as part of the output. You can also find out the

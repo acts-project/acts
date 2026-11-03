@@ -1,0 +1,58 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
+
+// Local include(s).
+#include "../utils/utils.hpp"
+#include "traccc/hip/finding/combinatorial_kalman_filter_algorithm.hpp"
+
+// (Roc)Thrust include(s).
+#include <thrust/execution_policy.h>
+#include <thrust/sort.h>
+
+// HIP include(s).
+#include <hip/hip_runtime.h>
+
+// System include(s).
+#include <cassert>
+
+namespace traccc::hip {
+
+void combinatorial_kalman_filter_algorithm::sort_param_ids_by_last_measurement(
+    vecmem::data::vector_view<unsigned int>& link_last_measurement,
+    vecmem::data::vector_view<unsigned int>& param_ids) const {
+  assert(link_last_measurement.capacity() == param_ids.capacity());
+  assert(link_last_measurement.size_ptr() == nullptr);
+  assert(param_ids.size_ptr() == nullptr);
+
+  // Get a convenience variable for the stream that we'll be using.
+  hipStream_t str = details::get_stream(stream());
+
+// Set up the Thrust execution policy. Unfortunately this has to be done in
+// a backend specify way. :-(
+#if defined(__HIP_PLATFORM_AMD__)
+  auto policy = thrust::hip::par_nosync(
+                    stream_synchronizing_allocator(mr().main, stream()))
+                    .on(str);
+#elif defined(__HIP_PLATFORM_NVIDIA__)
+  auto policy = thrust::cuda::par_nosync(
+                    stream_synchronizing_allocator(mr().main, stream()))
+                    .on(str);
+#else
+#error "Unrecognised HIP platform."
+#endif
+
+  thrust::sort_by_key(
+      policy, link_last_measurement.ptr(),
+      link_last_measurement.ptr() + link_last_measurement.capacity(),
+      param_ids.ptr());
+}
+
+}  // namespace traccc::hip

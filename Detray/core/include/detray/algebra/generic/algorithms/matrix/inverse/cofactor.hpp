@@ -15,6 +15,7 @@
 #include "detray/definitions/detail/qualifiers.hpp"
 
 // System include(s)
+#include <cassert>
 #include <type_traits>
 
 namespace detray::algebra::generic::matrix {

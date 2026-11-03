@@ -13,7 +13,9 @@
 #include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <array>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -92,6 +94,17 @@ BOOST_AUTO_TEST_CASE(TransformRoundTripTests) {
   from_json(fullIn, test);
 
   BOOST_CHECK(test.isApprox(reference));
+}
+
+BOOST_AUTO_TEST_CASE(TransformNonOrthogonalRotation) {
+  // json is an external source, so a scaled rotation has to be rejected
+  nlohmann::json jTransform;
+  jTransform["translation"] = std::array<double, 3>{0., 0., 0.};
+  jTransform["rotation"] =
+      std::array<double, 9>{2., 0., 0., 0., 1., 0., 0., 0., 1.};
+
+  Transform3 test = Transform3::Identity();
+  BOOST_CHECK_THROW(from_json(jTransform, test), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(TransformNullIdentity) {

@@ -22,7 +22,6 @@ add_library(
     detray_test_cuda
     STATIC
     "algebra_test_suite.cuh"
-    "bfield.hpp"
     "cuda_test_fixture.hpp"
     "execute_cuda_test.cuh"
     "material_validation.hpp"

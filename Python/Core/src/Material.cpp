@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/BinnedSurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
@@ -16,8 +17,6 @@
 #include "Acts/Material/MaterialValidator.hpp"
 #include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Material/SurfaceMaterialMapper.hpp"
-#include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -47,11 +46,14 @@ void addMaterial(py::module_& m) {
 
     py::class_<ProtoGridSurfaceMaterial, ISurfaceMaterial,
                std::shared_ptr<ProtoGridSurfaceMaterial>>(
-        m, "ProtoGridSurfaceMaterial");
+        m, "ProtoGridSurfaceMaterial")
+        .def_property_readonly("materialKey",
+                               &ProtoGridSurfaceMaterial::materialKey);
 
     py::class_<ProtoSurfaceMaterial, ISurfaceMaterial,
-               std::shared_ptr<ProtoSurfaceMaterial>>(m,
-                                                      "ProtoSurfaceMaterial");
+               std::shared_ptr<ProtoSurfaceMaterial>>(m, "ProtoSurfaceMaterial")
+        .def_property_readonly("materialKey",
+                               &ProtoSurfaceMaterial::materialKey);
 
     py::class_<HomogeneousSurfaceMaterial, ISurfaceMaterial,
                std::shared_ptr<HomogeneousSurfaceMaterial>>(
@@ -63,6 +65,29 @@ void addMaterial(py::module_& m) {
 
     py::class_<IVolumeMaterial, std::shared_ptr<IVolumeMaterial>>(
         m, "IVolumeMaterial");
+  }
+
+  {
+    py::class_<KeyedSurfaceMaterial>(m, "KeyedSurfaceMaterial")
+        .def(py::init<>())
+        .def_readwrite("geometryId", &KeyedSurfaceMaterial::geometryId)
+        .def_readwrite("material", &KeyedSurfaceMaterial::material);
+    py::class_<TrackingGeometryMaterial>(m, "TrackingGeometryMaterial")
+        .def(py::init<>())
+        .def_static("fromGeometry", &TrackingGeometryMaterial::fromGeometry,
+                    py::arg("geometry"), py::arg("includeNonMaterial") = false)
+        .def_property("description", &TrackingGeometryMaterial::description,
+                      &TrackingGeometryMaterial::setDescription)
+        .def_readwrite("surfaceMaterials",
+                       &TrackingGeometryMaterial::surfaceMaterials)
+        .def_readwrite("volumeMaterials",
+                       &TrackingGeometryMaterial::volumeMaterials)
+        .def_readwrite("keyedSurfaces",
+                       &TrackingGeometryMaterial::keyedSurfaces)
+        .def("apply",
+             py::overload_cast<TrackingGeometry&>(
+                 &TrackingGeometryMaterial::apply, py::const_),
+             py::arg("geometry"));
   }
 
   {
@@ -120,9 +145,22 @@ void addMaterial(py::module_& m) {
                     }),
                 py::arg("config"), py::arg("level"))
             .def("createState", &BinnedSurfaceMaterialAccumulator::createState)
-            .def("accumulate", &BinnedSurfaceMaterialAccumulator::accumulate)
+            .def("accumulate",
+                 [](const BinnedSurfaceMaterialAccumulator& self,
+                    ISurfaceMaterialAccumulator::State& state,
+                    const GeometryContext& gctx,
+                    const std::vector<MaterialInteraction>& interactions,
+                    const std::vector<IAssignmentFinder::SurfaceAssignment>&
+                        surfacesWithoutAssignment) {
+                   ISurfaceMaterialAccumulator::TrackAccumulation track{
+                       &interactions, &surfacesWithoutAssignment};
+                   self.accumulateTracks(state, gctx, std::span(&track, 1),
+                                         nullptr);
+                 })
             .def("finalizeMaterial",
-                 &BinnedSurfaceMaterialAccumulator::finalizeMaterial);
+                 &BinnedSurfaceMaterialAccumulator::finalizeMaterial)
+            .def("finalizeMaps",
+                 &BinnedSurfaceMaterialAccumulator::finalizeMaps);
 
     auto c =
         py::class_<BinnedSurfaceMaterialAccumulator::Config>(bsma, "Config")
@@ -141,7 +179,8 @@ void addMaterial(py::module_& m) {
                        py::arg("config"), py::arg("level"));
 
     auto c = py::class_<MaterialMapper::Config>(mm, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, assignmentFinder, surfaceMaterialAccumulator);
+    ACTS_PYTHON_STRUCT(c, assignmentFinder, surfaceMaterialAccumulator,
+                       numThreads);
   }
 
   {

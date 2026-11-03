@@ -53,12 +53,11 @@ struct transform3 {
   template <int N>
   using array_type = eigen::array<scalar_type, N>;
 
-  /// 3-element "vector" type
+  /// Vector and point types
+  using vector2 = array_type<2>;
   using vector3 = array_type<3>;
-  /// Point in 3D space
+  using point2 = vector2;
   using point3 = vector3;
-  /// Point in 2D space
-  using point2 = array_type<2>;
 
   /// 4x4 matrix type
   using matrix44 =
@@ -185,6 +184,19 @@ struct transform3 {
   /// @param m is the rotation matrix
   /// @param v is the vector to be rotated
   template <typename derived_type>
+    requires(Eigen::MatrixBase<derived_type>::RowsAtCompileTime == 2 &&
+             Eigen::MatrixBase<derived_type>::ColsAtCompileTime == 1)
+  DETRAY_HOST_DEVICE static constexpr auto rotate(
+      const Eigen::Transform<scalar_type, 3, Eigen::Affine> &m,
+      const Eigen::MatrixBase<derived_type> &v) {
+    return m.matrix().template block<3, 2>(0, 0) * v;
+  }
+
+  /// Rotate a vector into / from a frame
+  ///
+  /// @param m is the rotation matrix
+  /// @param v is the vector to be rotated
+  template <typename derived_type>
     requires(Eigen::MatrixBase<derived_type>::RowsAtCompileTime == 3 &&
              Eigen::MatrixBase<derived_type>::ColsAtCompileTime == 1)
   DETRAY_HOST_DEVICE static constexpr auto rotate(
@@ -233,6 +245,17 @@ struct transform3 {
     return _data_inv.matrix();
   }
 
+  /// This method transform from a point from the local 2D cartesian frame to
+  /// the global 3D cartesian frame
+  template <typename derived_type>
+    requires(Eigen::MatrixBase<derived_type>::RowsAtCompileTime == 2 &&
+             Eigen::MatrixBase<derived_type>::ColsAtCompileTime == 1)
+  DETRAY_HOST_DEVICE constexpr auto point_to_global(
+      const Eigen::MatrixBase<derived_type> &v) const {
+    return (_data.matrix().template block<3, 2>(0, 0) * v +
+            _data.matrix().template block<3, 1>(0, 3));
+  }
+
   /// This method transform from a point from the local 3D cartesian frame to
   /// the global 3D cartesian frame
   template <typename derived_type>
@@ -251,6 +274,16 @@ struct transform3 {
   DETRAY_HOST_DEVICE constexpr auto point_to_local(
       const Eigen::MatrixBase<derived_type> &v) const {
     return (_data_inv * v);
+  }
+
+  /// This method transform from a vector from the local 3D cartesian frame to
+  /// the global 3D cartesian frame
+  template <typename derived_type>
+    requires(Eigen::MatrixBase<derived_type>::RowsAtCompileTime == 2 &&
+             Eigen::MatrixBase<derived_type>::ColsAtCompileTime == 1)
+  DETRAY_HOST_DEVICE constexpr auto vector_to_global(
+      const Eigen::MatrixBase<derived_type> &v) const {
+    return (_data.linear().matrix().template block<3, 2>(0, 0) * v);
   }
 
   /// This method transform from a vector from the local 3D cartesian frame to

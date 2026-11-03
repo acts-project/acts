@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -71,7 +72,7 @@ class KalmanFittingTelescopeTests
       const edm::track_collection<default_algebra>::host::const_proxy_type&
           track,
       const edm::track_state_collection<default_algebra>::host&) const {
-    // The nubmer of track states is supposed be equal to the number
+    // The number of track states is supposed be equal to the number
     // of planes
     ASSERT_EQ(track.constituent_links().size(), std::get<11>(GetParam()));
   }
