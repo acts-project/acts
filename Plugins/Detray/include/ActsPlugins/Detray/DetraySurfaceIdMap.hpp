@@ -62,6 +62,9 @@ class DetraySurfaceIdMap {
   ///         share an ACTS or a detray identifier
   explicit DetraySurfaceIdMap(std::span<const Entry> entries);
 
+  /// Create an empty map
+  DetraySurfaceIdMap() = default;
+
   /// Build the map from the sensitive surfaces of a detray detector
   /// @tparam detector_t the detray detector type
   /// @param detector the detray detector converted from ACTS
