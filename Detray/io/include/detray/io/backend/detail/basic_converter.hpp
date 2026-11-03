@@ -64,4 +64,90 @@ inline tagged_header_payload to_header_payload(const std::string_view det_name,
   return header_data;
 }
 
+/// @returns the geometry header data, generated from the geometry payload
+/// @param geo_data
+inline geometry_header_payload to_header_payload(
+    const detector_geometry_payload& geo_data) {
+  geometry_header_payload header_data;
+
+  header_data.n_volumes = geo_data.volumes.size();
+  for (const auto& vol_data : geo_data.volumes) {
+    header_data.n_surfaces += vol_data.surfaces.size();
+  }
+
+  return header_data;
+}
+
+/// @returns the homogeneous material header data, generated from the
+/// homogeneous material payload @param mat_data
+inline homogeneous_material_header_payload to_header_payload(
+    const detector_homogeneous_material_payload& mat_data) {
+  using material_id_t = surface_material_payload::mat_type;
+
+  homogeneous_material_header_payload header_data;
+
+  // Every surface material payload belongs to exactly one surface
+  for (const auto& mv_data : mat_data.volumes) {
+    for (const auto& mslp : mv_data.surface_mat) {
+      if (mslp.type == material_id_t::slab) {
+        ++header_data.n_slabs;
+      } else if (mslp.type == material_id_t::rod) {
+        ++header_data.n_rods;
+      }
+    }
+  }
+  header_data.n_slab_surfaces = header_data.n_slabs;
+  header_data.n_rod_surfaces = header_data.n_rods;
+
+  return header_data;
+}
+
+/// @returns the grid header data, generated from the grid collection payload
+/// @param grids_data
+template <typename content_t, typename grid_id_t>
+inline grid_header_payload to_header_payload(
+    const detector_grids_payload<content_t, grid_id_t>& grids_data) {
+  grid_header_payload header_data;
+
+  for (const auto& [vol_idx, grids] : grids_data.grids) {
+    header_data.n_grids += grids.size();
+  }
+
+  return header_data;
+}
+
+/// Fill the header of the detector payload @param payload: Generate the
+/// common information and the sub-headers from the contained payload data
+///
+/// @param source the original data source of the detector. Does not
+///               overwrite a known source, if it is 'unknown'
+inline void fill_header_payload(detector_payload& payload,
+                                const std::string_view source) {
+  header_payload& header = payload.header;
+
+  header.version = io::detail::get_detray_version();
+  header.date = io::detail::get_current_date();
+  if (header.metadata.empty()) {
+    header.metadata = "unknown";
+  }
+  if (header.source.empty() || source != "unknown") {
+    header.source = source;
+  }
+
+  header.geometry = to_header_payload(payload.geometry);
+  if (payload.volume_grids.has_value()) {
+    header.volume_grids = to_header_payload(*payload.volume_grids);
+  }
+  if (payload.surface_grids.has_value()) {
+    header.surface_grids = to_header_payload(*payload.surface_grids);
+  }
+  if (payload.homogeneous_material.has_value()) {
+    header.homogeneous_material =
+        to_header_payload(*payload.homogeneous_material);
+  }
+  if (payload.material_maps.has_value()) {
+    header.material_maps = to_header_payload(*payload.material_maps);
+  }
+}
+
 }  // namespace detray::io::detail::basic_converter

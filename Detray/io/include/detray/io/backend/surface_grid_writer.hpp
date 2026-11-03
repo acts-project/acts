@@ -22,13 +22,14 @@ namespace detray::io {
 /// @brief Surface grid writer backend
 ///
 /// Fills a surface @c detector_grids_payload from a @c detector instance
-class surface_grid_writer : public detail::grid_writer {
-  using base_type = detail::grid_writer;
+template <detray::concepts::detector detector_t>
+class surface_grid_writer final : public detail::grid_writer<detector_t> {
+  using base_type = detail::grid_writer<detector_t>;
   using grid_writer_t = base_type;
 
  public:
   /// Tag the writer as "surface_grids"
-  static constexpr std::string_view tag = "surface_grids";
+  static constexpr std::string_view s_tag = "surface_grids";
 
   /// Payload type that the reader processes
   using payload_type = detector_grids_payload<std::size_t, io::accel_id>;
@@ -36,16 +37,20 @@ class surface_grid_writer : public detail::grid_writer {
   /// Same constructors for this class as for base_type
   using base_type::base_type;
 
-  /// Convert the header information into its payload
-  template <detray::concepts::detector detector_t>
-  static auto to_header_payload(const detector_t& det) {
-    return grid_writer_t::to_header_payload(det.accelerator_store());
+  /// @returns the tag of the writer: "surface_grids"
+  std::string_view tag() const override { return s_tag; }
+
+  /// Convert the surface grids of the detector @param det into the respective
+  /// payload of @param det_data
+  void to_payload(const detector_t& det,
+                  const typename detector_t::name_map& names,
+                  detector_payload& det_data) const override {
+    det_data.surface_grids = to_payload_impl(det, names);
   }
 
   /// Convert the grid collections of a detector @param det into their io
   /// payload
-  template <detray::concepts::detector detector_t>
-  static payload_type to_payload(
+  static payload_type to_payload_impl(
       const detector_t& det, const typename detector_t::name_map& /*unused*/) {
     using surface_desc_t = typename detector_t::surface_type;
 
@@ -71,9 +76,9 @@ class surface_grid_writer : public detail::grid_writer {
         }
 
         // Generate the payload
-        grid_writer_t::to_payload(det.accelerator_store(), acc_link,
-                                  vol_desc.index(), vol_desc.index(),
-                                  grids_data, sf_converter);
+        grid_writer_t::to_payload_impl(det.accelerator_store(), acc_link,
+                                       vol_desc.index(), vol_desc.index(),
+                                       grids_data, sf_converter);
       }
     }
 

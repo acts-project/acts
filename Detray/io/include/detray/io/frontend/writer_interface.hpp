@@ -9,44 +9,112 @@
 #pragma once
 
 // Project include(s)
-#include "detray/builders/detector_builder.hpp"
 #include "detray/core/concepts.hpp"
+#include "detray/io/frontend/definitions.hpp"
+#include "detray/io/frontend/payloads.hpp"
+#include "detray/utils/logging.hpp"
 
 // System include(s)
+#include <any>
 #include <filesystem>
 #include <ios>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace detray::io {
 
 /// @brief Abstract base class for detray detector component writers
+///
+/// Interface for component writers from a detector to a @c detector_payload
+///
+/// @tparam detector_t the detector type that is converted
 template <detray::concepts::detector detector_t>
 class writer_interface {
  public:
-  /// All writers must define a file extension
-  writer_interface() = delete;
-
-  /// File gets created with a fixed @param extension
-  explicit writer_interface(const std::string& ext) : m_file_extension{ext} {}
-
   /// Default destructor
   virtual ~writer_interface() = default;
 
-  /// @returns the file extension
-  const std::string& file_extension() const { return m_file_extension; }
+  /// Returns the string tag that describes the type of writer, which is also
+  /// present in data file headers to match the IO data
+  virtual std::string_view tag() const = 0;
 
-  /// Writes the respective detector component to file. Since the detector
-  /// does not provide the volume names, the name map is also passed.
+  /// Writes the respective detector component to its payload. Since the
+  /// detector does not provide the volume names, the name map is also passed.
+  virtual void to_payload(const detector_t&,
+                          const typename detector_t::name_map&,
+                          detector_payload&) const = 0;
+};
+
+/// @brief Abstract base class for detray detector payload output converters
+class output_converter_interface {
+ public:
+  /// Default destructor
+  virtual ~output_converter_interface() = default;
+
+  /// Writes the detector payload to an output data sink.
+  virtual void from_payload(const detector_payload&, const std::any&) = 0;
+};
+
+/// @brief Abstract base class for detray detector payload file writers
+class output_file_converter_interface : public output_converter_interface {
+ public:
+  /// Constructor setting the output format @param f and file extension
+  /// @param ext
+  output_file_converter_interface(const io::format f, const std::string& ext)
+      : m_format{f}, m_file_extension{ext} {};
+
+  /// @returns the output file format
+  io::format format() const { return m_format; }
+
+  /// @returns the file extension
+  std::string_view file_extension() const { return m_file_extension; }
+
+  /// @returns the mode in which the output files are opened
+  std::ios_base::openmode open_mode() const { return m_mode; }
+
+  /// Set the mode @param mode in which the output files are opened
+  void open_mode(const std::ios_base::openmode mode) { m_mode = mode; }
+
+  /// Writes the detector components in the payload to files.
+  ///
   /// @note The existence of the file path has to be guaranteed by the caller
-  virtual std::string write(const detector_t&,
-                            const typename detector_t::name_map&,
-                            const std::string&, const std::ios_base::openmode,
-                            const std::filesystem::path&) = 0;
+  ///
+  /// @returns the names of the files that were written
+  virtual std::vector<std::string> write_to_file(
+      const detector_payload&, const std::filesystem::path&,
+      const std::ios_base::openmode) = 0;
+
+  /// Writes the detector components in the payload to files in the output
+  /// directory that is passed in @param output_data
+  void from_payload(const detector_payload& payload,
+                    const std::any& output_data) override {
+    write_to_file(payload, get_file_path(output_data), m_mode);
+  };
 
  private:
+  /// @returns the output path that was passed as type-erased @param out_data
+  std::filesystem::path get_file_path(const std::any& output_data) {
+    std::filesystem::path file_path{"./"};
+    try {
+      file_path = std::any_cast<std::filesystem::path>(output_data);
+    } catch (const std::bad_any_cast& e) {
+      DETRAY_FATAL_HOST(
+          "Unknown output data type in "
+          << m_file_extension
+          << " file converter! Should be 'std::filesystem::path'");
+      throw;
+    }
+
+    return file_path;
+  }
+
+  /// Output file format of the respective writer
+  io::format m_format;
   /// Extension that matches the file format of the respective writer
   std::string m_file_extension;
+  /// How to open the output files
+  std::ios_base::openmode m_mode{std::ios_base::out | std::ios_base::binary};
 };
 
 }  // namespace detray::io

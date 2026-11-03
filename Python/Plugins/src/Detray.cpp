@@ -18,9 +18,9 @@
 
 #include <detray/detectors/odd_metadata.hpp>
 #include <detray/io/frontend/detector_reader_config.hpp>
-#include <detray/io/frontend/detector_writer.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
 #include <detray/io/json/detector_reader.hpp>
+#include <detray/io/json/detector_writer.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -56,7 +56,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
                             .path(fname)
                             .source(source)
                             .replace_files(true);
-             detray::io::write_detector(self, names, cfg);
+             detray::io::write_detector_json(self, names, cfg);
            });
 
   detray.def(

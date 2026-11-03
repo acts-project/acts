@@ -13,7 +13,7 @@
 #include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/backend/detail/type_info.hpp"
 #include "detray/io/frontend/payloads.hpp"
-#include "detray/utils/detector_statistics.hpp"
+#include "detray/io/frontend/writer_interface.hpp"
 #include "detray/utils/grid/concepts.hpp"
 #include "detray/utils/grid/grid.hpp"
 #include "detray/utils/type_list.hpp"
@@ -30,17 +30,10 @@
 namespace detray::io::detail {
 
 /// @brief Grid writer backend utility
-class grid_writer {
- public:
-  /// Convert the header information into its payload
-  template <typename grid_store_t>
-  static grid_header_payload to_header_payload(const grid_store_t& store) {
-    grid_header_payload header_data;
-    header_data.n_grids = detray::n_grids(store);
-
-    return header_data;
-  }
-
+///
+/// @tparam detector_t the detector type that is converted
+template <detray::concepts::detector detector_t>
+class grid_writer : public writer_interface<detector_t> {
  protected:
   /// Convert a grid from a collection into its payload
   ///
@@ -54,7 +47,7 @@ class grid_writer {
   /// respective IO payload (of type @tparam content_t)
   template <typename store_t, typename content_t, typename grid_id_t,
             typename converter_t>
-  static void to_payload(
+  static void to_payload_impl(
       const store_t& store, typename store_t::single_link grid_link,
       dindex vol_idx, dindex owner_idx,
       detector_grids_payload<content_t, grid_id_t>& grids_data,
@@ -68,7 +61,7 @@ class grid_writer {
   /// into its io payload, using @param converter for the bin content
   template <typename content_t, typename value_t, typename grid_id_t,
             class grid_t>
-  static grid_payload<content_t, grid_id_t> to_payload(
+  static grid_payload<content_t, grid_id_t> to_payload_impl(
       std::size_t owner_index, grid_id_t type, const std::size_t idx,
       const grid_t& gr,
       const std::function<content_t(const value_t&)>& converter) {
@@ -83,7 +76,8 @@ class grid_writer {
     grid_data.grid_link = detail::basic_converter::to_payload(type, idx);
 
     // Convert the multi-axis into single axis payloads
-    const darray<axis_payload, grid_t::dim> axes_data = to_payload(gr.axes());
+    const darray<axis_payload, grid_t::dim> axes_data =
+        to_payload_impl(gr.axes());
 
     grid_data.axes.resize(axes_data.size());
     std::ranges::copy(axes_data, std::begin(grid_data.axes));
@@ -92,7 +86,7 @@ class grid_writer {
     for (unsigned int gid = 0u; gid < gr.nbins(); ++gid) {
       // Get the local bin indices and convert the bin into its payload
       grid_bin_payload binp =
-          to_payload(gr.deserialize(gid), gr.bin(gid), converter);
+          to_payload_impl(gr.deserialize(gid), gr.bin(gid), converter);
       grid_data.bins.push_back(std::move(binp));
     }
 
@@ -101,18 +95,18 @@ class grid_writer {
 
   /// Convert a multi-axis @param axes into its io payload
   template <bool ownership, typename local_frame_t, typename... axis_ts>
-  static auto to_payload(
+  static auto to_payload_impl(
       const axis::multi_axis<ownership, local_frame_t, axis_ts...>& axes) {
     // Convert every single axis and construct array from their payloads
     darray<axis_payload, sizeof...(axis_ts)> axes_data{
-        to_payload(axes.template get_axis<axis_ts>())...};
+        to_payload_impl(axes.template get_axis<axis_ts>())...};
 
     return axes_data;
   }
 
   /// Convert a single axis @param axis into its io payload
   template <typename bounds_t, typename binning_t>
-  static axis_payload to_payload(
+  static axis_payload to_payload_impl(
       const axis::single_axis<bounds_t, binning_t>& axis) {
     axis_payload axis_data;
 
@@ -135,7 +129,7 @@ class grid_writer {
   /// Convert a multi-bin @param mbin into its io payload
   template <typename content_t, typename value_t, std::size_t DIM,
             typename content_range_t>
-  static grid_bin_payload<content_t> to_payload(
+  static grid_bin_payload<content_t> to_payload_impl(
       const axis::multi_bin<DIM> mbin, const content_range_t& content,
       const std::function<content_t(const value_t&)>& converter) {
     grid_bin_payload<content_t> bin_data;
@@ -175,9 +169,10 @@ class grid_writer {
       constexpr bool is_convertible{std::invocable<converter_t, value_t>};
 
       if constexpr (detray::concepts::grid<coll_value_t> && is_convertible) {
-        auto gr_pyload = to_payload<content_t, value_t>(
-            owner_idx, io::detail::get_id<coll_value_t>(), index, coll[index],
-            converter);
+        auto gr_pyload =
+            grid_writer::template to_payload_impl<content_t, value_t>(
+                owner_idx, io::detail::get_id<coll_value_t>(), index,
+                coll[index], converter);
 
         auto& grids_map = grids_data.grids;
         auto search = grids_map.find(vol_idx);
