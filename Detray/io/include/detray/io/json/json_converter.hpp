@@ -10,8 +10,8 @@
 
 // Project include(s)
 #include "detray/builders/detector_builder.hpp"
-#include "detray/io/backend/concepts.hpp"
 #include "detray/io/backend/detail/basic_converter.hpp"
+#include "detray/io/frontend/definitions.hpp"
 #include "detray/io/frontend/reader_interface.hpp"
 #include "detray/io/frontend/writer_interface.hpp"
 #include "detray/io/json/json.hpp"
@@ -23,7 +23,10 @@
 #include <iomanip>
 #include <ios>
 #include <iostream>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace detray::io {
 
@@ -53,12 +56,15 @@ class json_input_converter final : public input_file_converter_interface {
     const tagged_header_payload header = in_json["header"]["common"];
     // If not already done, add common header information to detector payload
     if (payload.header.version.empty()) {
-      payload.detector_name = header.detector;
       payload.header = header;
     }
 
-    if (header.version < io::detail::minimal_io_version) {
-      DETRAY_WARN_HOST("File was generated with a different detray version");
+    if (header.version != io::detail::get_detray_version()) {
+      DETRAY_WARN_HOST(
+          " --> \'" << header.tag
+                    << "\' file was generated with a different version (file: "
+                    << header.version << " vs. current: "
+                    << io::detail::get_detray_version() << ")");
     }
 
     nlohmann::json& json_payload = in_json["data"];
@@ -79,41 +85,29 @@ class json_input_converter final : public input_file_converter_interface {
   }
 };
 
-/// @brief Class that adds converts io payloads to json and back
-template <class detector_t, class backend_t>
-class json_converter {};
-
-/// @brief Class that adds json functionality to backend writer types.
+/// @brief Class that converts a detector payload to json and writes it to
+/// file (single component per file)
 ///
-/// Assemble the json writers from the backend writer types, which serialize a
-/// detector into the io payloads, and this class, which does the file
-/// handling and provides the json stream. It also includes the respective
-/// @c to_json and @c from_json functions for the payloads ("json_serializers").
+/// This class writes every sub-payload of the detector payload that contains
+/// data into a separate json file, together with the respective file header.
 ///
-/// @note The resulting writer types will fulfill @c writer_interface
-template <class detector_t, class backend_t>
-  requires concepts::writer_backend<detector_t, backend_t>
-class json_converter<detector_t, backend_t> final
-    : public writer_interface<detector_t> {
-  using io_backend = backend_t;
-
+/// @note The class fulfills the @c output_file_converter_interface and
+/// can be added to the @c detector_components_output_converter
+class json_output_converter final : public output_file_converter_interface {
  public:
-  /// File gets created with the json file extension
-  json_converter() : writer_interface<detector_t>(".json") {}
+  /// Set json file format and extension
+  json_output_converter()
+      : output_file_converter_interface(io::format::json, ".json") {}
 
-  /// Writes the geometry to file with a given name
-  /// @param det Detector to serialize.
-  /// @param names Volume names used to form the output file name and payload.
-  /// @param source the detector source description
-  /// @param mode Output stream mode.
+  /// Writes the payload data to file with a given name
+  /// @param payload the input payload to convert.
   /// @param file_path Directory in which the JSON file is created.
-  /// @return Path to the created file.
-  std::string write(const detector_t& det,
-                    const typename detector_t::name_map& names,
-                    const std::string& source,
-                    const std::ios_base::openmode mode = std::ios::out |
-                                                         std::ios::binary,
-                    const std::filesystem::path& file_path = {"./"}) override {
+  /// @param mode Output stream mode.
+  /// @returns the names of the files that were written
+  std::vector<std::string> write_to_file(
+      const detector_payload& payload, const std::filesystem::path& file_path,
+      const std::ios_base::openmode mode = std::ios::out |
+                                           std::ios::binary) override {
     // Assert output stream
     assert(((mode == std::ios_base::out) ||
             (mode == (std::ios_base::out | std::ios_base::binary)) ||
@@ -122,27 +116,82 @@ class json_converter<detector_t, backend_t> final
                       std::ios_base::binary))) &&
            "Illegal file mode for json writer");
 
-    std::string det_name = det.name(names);
+    const header_payload& header = payload.header;
+    tagged_header_payload tagged_header(
+        static_cast<const common_header_payload&>(header));
+
+    // Write every detector component that contains data
+    std::vector<std::string> file_names{};
+    if (!payload.geometry.volumes.empty()) {
+      tagged_header.tag = "geometry";
+      file_names.push_back(write_component(tagged_header, header.geometry,
+                                           payload.geometry, file_path, mode));
+    }
+    if (payload.homogeneous_material.has_value()) {
+      tagged_header.tag = "homogeneous_material";
+      file_names.push_back(
+          write_component(tagged_header, header.homogeneous_material,
+                          *payload.homogeneous_material, file_path, mode));
+    }
+    if (payload.material_maps.has_value()) {
+      tagged_header.tag = "material_maps";
+      file_names.push_back(write_component(tagged_header, header.material_maps,
+                                           *payload.material_maps, file_path,
+                                           mode));
+    }
+    if (payload.surface_grids.has_value()) {
+      tagged_header.tag = "surface_grids";
+      file_names.push_back(write_component(tagged_header, header.surface_grids,
+                                           *payload.surface_grids, file_path,
+                                           mode));
+    }
+
+    return file_names;
+  }
+
+ private:
+  /// Write a single detector component to a json file
+  /// @tparam sub_header_t the type of specialized header for the component
+  /// @tparam data_t the component payload type
+  /// @param header the common header information with subheader tag
+  /// @param sub_header the component header. It is generated from data,
+  ///                   if it is missing
+  /// @param data the component payload data
+  /// @param file_path the directory in which to write the file
+  /// @param mode the mode in which the file is opened
+  ///
+  /// @returns the name of the file that was written
+  template <typename sub_header_t, typename data_t>
+  std::string write_component(const tagged_header_payload& header,
+                              const std::optional<sub_header_t>& sub_header,
+                              const data_t& data,
+                              const std::filesystem::path& file_path,
+                              const std::ios_base::openmode mode) const {
+    if (!sub_header.has_value()) {
+      std::stringstream err_str{};
+      err_str << "Sub header '" << header.tag << "' does not contain any data.";
+      DETRAY_FATAL_HOST(err_str.str());
+      throw std::invalid_argument(err_str.str());
+    }
+
+    // Write the header and the detector data into the json stream by using
+    // the conversion functions defined in "detray/io/json/json_io.hpp"
+    nlohmann::ordered_json out_json;
+    // Write header information in this order, so that nothing get overwritten
+    out_json["header"] = *sub_header;
+    out_json["header"]["common"] = header;
+    out_json["data"] = data;
 
     // Create a new file
-    std::string file_stem{det_name + "_" + std::string(io_backend::tag)};
-    io::file_handle file{file_path / file_stem, this->file_extension(), mode};
+    const std::string file_stem{header.detector + "_" +
+                                std::string(header.tag)};
+    const std::string file_ext{file_extension()};
+    io::file_handle file{file_path / file_stem, file_ext, mode};
 
-    // Write some general information
-    nlohmann::ordered_json out_json;
-    out_json["header"] = io_backend::to_header_payload(det);
-    out_json["header"]["common"] =
-        io::detail::basic_converter::to_tagged_header_payload<detector_t>(
-            det_name, std::string(io_backend::tag), source);
-
-    // Write the detector data into the json stream by using the
-    // conversion functions defined in "detray/io/json/json_io.hpp"
-    out_json["data"] = io_backend::to_payload(det, names);
-
-    // Write to file
+    // Write json stream to file
     *file << std::setw(4) << out_json << std::endl;
 
-    return file_stem + this->file_extension();
+    return file_stem + file_ext;
   }
 };
 

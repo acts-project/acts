@@ -130,7 +130,7 @@ void read_json_dd(traccc::detector_design_description::host& det_desc,
   detray::io::convert_json_to_payload(
       payload, {traccc::io::get_absolute_path(geometry_file)});
 
-  const std::string_view det_name{payload.detector_name};
+  const std::string_view det_name{payload.header.detector};
   const std::string_view metadata{payload.header.metadata};
   if (metadata == "odd_metadata" ||
       det_name == "Cylindrical detector from DD4hep blueprint") {

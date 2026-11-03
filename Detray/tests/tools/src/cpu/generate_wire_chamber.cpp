@@ -12,7 +12,7 @@
 #include "detray/geometry/shapes/line.hpp"
 
 // Detray IO include(s)
-#include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/json/detector_writer.hpp"
 
 // Detray test include(s)
 #include "detray/options/detector_io_options.hpp"
@@ -45,7 +45,7 @@ void write_wire_chamber(int argc, char **argv,
 
   auto [wire_chamber, names] =
       build_wire_chamber<test::algebra>(*host_mr, wire_cfg);
-  detray::io::write_detector(wire_chamber, names, writer_cfg);
+  detray::io::write_detector_json(wire_chamber, names, writer_cfg);
 }
 
 }  // namespace detray::detail

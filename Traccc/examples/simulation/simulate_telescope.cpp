@@ -148,7 +148,7 @@ int simulate(const traccc::opts::generation& generation_opts,
                         .format(detray::io::format::json)
                         .source("Traccc simulation detector")
                         .replace_files(true);
-  detray::io::write_detector(det, name_map, writer_cfg);
+  detray::io::write_detector_json(det, name_map, writer_cfg);
 
   return 1;
 }
