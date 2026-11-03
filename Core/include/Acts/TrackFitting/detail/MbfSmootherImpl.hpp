@@ -9,14 +9,16 @@
 #pragma once
 
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 
 namespace Acts {
 
 template <std::size_t N>
-void MbfSmoother::visitMeasurementImpl(const AnyConstTrackStateProxy& ts,
-                                       BoundMatrix& bigLambdaHat,
-                                       BoundVector& smallLambdaHat) const {
+Result<void> MbfSmoother::visitMeasurementImpl(
+    const GeometryContext& gctx, const AnyConstTrackStateProxy& ts,
+    BoundMatrix& bigLambdaHat, BoundVector& smallLambdaHat) const {
   const auto F = ts.jacobian();
 
   const auto subspaceHelper = ts.projectorSubspaceHelper<N>();
@@ -45,16 +47,46 @@ void MbfSmoother::visitMeasurementImpl(const AnyConstTrackStateProxy& ts,
   // TODO K could be cached by the filter step
   const KalmanGainMatrix K = (predictedCovariance * H.transpose() * SInv);
 
-  const Acts::BoundMatrix CHat = (Acts::BoundMatrix::Identity() - K * H);
-  const Eigen::Matrix<double, N, 1> y = (calibrated - H * ts.predicted());
+  if (!K.allFinite()) {
+    return KalmanFitterError::SmoothFailed;
+  }
+  const auto parametrization =
+      ts.hasReferenceSurface()
+          ? ts.referenceSurface().boundParametrization(gctx)
+          : BoundParametrization::globalSpherical();
+  const auto indices = ts.projectorSubspaceIndices<N>();
+  BoundVector measured = ts.predicted();
+  for (std::size_t i = 0; i < N; ++i) {
+    measured[indices[i]] = calibrated[i];
+  }
+  const Vector<N> y = H * parametrization.difference(measured, ts.predicted());
+  const BoundVector updated = ts.predicted() + K * y;
+  if (!updated.allFinite()) {
+    return KalmanFitterError::SmoothFailed;
+  }
+  const auto canonicalization =
+      parametrization.canonicalizationJacobian(updated);
+  if (!canonicalization.ok()) {
+    return canonicalization.error();
+  }
+  // Backward information is expressed in the canonical filtered basis.
+  // Include the forward filter's basis change when mapping it to prediction.
+  const BoundMatrix CHat =
+      (*canonicalization) * (BoundMatrix::Identity() - K * H);
 
   const Acts::BoundMatrix bigLambdaTilde =
       (H.transpose() * SInv * H + CHat.transpose() * bigLambdaHat * CHat);
   const Eigen::Matrix<double, eBoundSize, 1> smallLambdaTilde =
       (-H.transpose() * SInv * y + CHat.transpose() * smallLambdaHat);
 
+  // These recursion variables are local to the traversal and discarded on
+  // failure, so they need no transactional copies.
   bigLambdaHat = F.transpose() * bigLambdaTilde * F;
   smallLambdaHat = F.transpose() * smallLambdaTilde;
+  if (!bigLambdaHat.allFinite() || !smallLambdaHat.allFinite()) {
+    return KalmanFitterError::SmoothFailed;
+  }
+  return Result<void>::success();
 }
 
 }  // namespace Acts

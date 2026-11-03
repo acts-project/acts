@@ -13,8 +13,9 @@
 // clang-format off
 namespace Acts {
 
-template void
-MbfSmoother::visitMeasurementImpl<@DIM@>(const AnyConstTrackStateProxy& ts,
+template Result<void>
+MbfSmoother::visitMeasurementImpl<@DIM@>(const GeometryContext& gctx,
+                                         const AnyConstTrackStateProxy& ts,
                                          BoundMatrix& bigLambdaHat,
                                          BoundVector& smallLambdaHat) const;
 

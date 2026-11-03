@@ -191,6 +191,15 @@ exact pole returns a failed Result. The updater preserves filtered values,
 covariance and chi2 on failure; the smoother preserves the failing state's
 values, but later states may already have been smoothed.
 
+@ref Acts::MbfSmoother also uses surface-resolved residuals and canonicalizes
+smoothed parameters and covariance together. Its backward information recursion
+includes the forward update's canonicalization Jacobian, since backward
+information is expressed in the filtered basis while measurement residuals and
+the transport Jacobian use the predicted basis. Singular canonicalization and
+nonfinite recursion results stop smoothing with an error. States already
+processed may retain their smoothed results; earlier states are not visited.
+The supported interpretation remains canonical global spherical coordinates.
+
 Other fitting and mixture operations and specialized
 propagation algorithms still assume the canonical spherical coordinates.
 The neutral index names alone do not make those operations chart-independent.
