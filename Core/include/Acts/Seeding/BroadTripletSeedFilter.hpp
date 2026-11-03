@@ -154,7 +154,9 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// their space points.
     /// @note The index is the space point index, not the seed index. The
     /// vector is sized to the number of space points on first use per event.
-    std::vector<float> bestSeedQuality;
+    /// @note Kept under its previous name so that `.at(index)` lookups in
+    /// downstream code keep working with the vector.
+    std::vector<float> bestSeedQualityMap;
   };
 
   /// Cache for intermediate results to avoid reallocations. No information is

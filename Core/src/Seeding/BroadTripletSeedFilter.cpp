@@ -36,6 +36,16 @@ void setBestSeedQuality(std::vector<float>& bestSeedQuality,
   }
 }
 
+/// Sizes the best seed quality to the number of space points on first use per
+/// event. Space points that have not been part of a seed yet hold lowest(),
+/// which is what the previous map returned for a missing entry.
+void sizeBestSeedQuality(std::vector<float>& bestSeedQuality,
+                         std::size_t nSpacePoints) {
+  if (bestSeedQuality.size() < nSpacePoints) {
+    bestSeedQuality.resize(nSpacePoints, std::numeric_limits<float>::lowest());
+  }
+}
+
 }  // namespace
 
 BroadTripletSeedFilter::BroadTripletSeedFilter(const Config& config,
@@ -92,13 +102,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
     const DoubletsForMiddleSp::Proxy& bottomLink,
     const TripletTopCandidates& tripletTopCandidates) const {
-  // The best-seed-quality vector is indexed directly by space point index, so
-  // size it to the number of space points on first use for this event. State is
-  // constructed per event, so an empty vector means we have not sized it yet.
-  if (state().bestSeedQuality.empty()) {
-    state().bestSeedQuality.assign(spacePoints.size(),
-                                   std::numeric_limits<float>::lowest());
-  }
+  sizeBestSeedQuality(state().bestSeedQualityMap, spacePoints.size());
   auto spB = spacePoints[bottomLink.spacePointIndex()];
   auto bottomSp = spB.index();
   auto middleSp = spM.index();
@@ -277,9 +281,12 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
-      if (weight < getBestSeedQuality(state().bestSeedQuality, spB.index()) &&
-          weight < getBestSeedQuality(state().bestSeedQuality, spM.index()) &&
-          weight < getBestSeedQuality(state().bestSeedQuality, spT.index())) {
+      if (weight <
+              getBestSeedQuality(state().bestSeedQualityMap, spB.index()) &&
+          weight <
+              getBestSeedQuality(state().bestSeedQualityMap, spM.index()) &&
+          weight <
+              getBestSeedQuality(state().bestSeedQualityMap, spT.index())) {
         continue;
       }
 
@@ -323,13 +330,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 void BroadTripletSeedFilter::filterTripletsMiddleFixed(
     const SpacePointContainer& spacePoints,
     SeedContainer& outputCollection) const {
-  // The best-seed-quality vector is indexed directly by space point index, so
-  // size it to the number of space points on first use for this event. State is
-  // constructed per event, so an empty vector means we have not sized it yet.
-  if (state().bestSeedQuality.empty()) {
-    state().bestSeedQuality.assign(spacePoints.size(),
-                                   std::numeric_limits<float>::lowest());
-  }
+  sizeBestSeedQuality(state().bestSeedQualityMap, spacePoints.size());
   const std::size_t numQualitySeeds =
       state().candidatesCollector.nHighQualityCandidates();
 
@@ -368,17 +369,17 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
         continue;
       }
       if (bestSeedQuality <
-              getBestSeedQuality(state().bestSeedQuality, triplet[0]) &&
+              getBestSeedQuality(state().bestSeedQualityMap, triplet[0]) &&
           bestSeedQuality <
-              getBestSeedQuality(state().bestSeedQuality, triplet[1]) &&
+              getBestSeedQuality(state().bestSeedQualityMap, triplet[1]) &&
           bestSeedQuality <
-              getBestSeedQuality(state().bestSeedQuality, triplet[2])) {
+              getBestSeedQuality(state().bestSeedQualityMap, triplet[2])) {
         continue;
       }
     }
 
     // set quality of seed components
-    setBestSeedQuality(state().bestSeedQuality, triplet[0], triplet[1],
+    setBestSeedQuality(state().bestSeedQualityMap, triplet[0], triplet[1],
                        triplet[2], bestSeedQuality);
 
     ACTS_VERBOSE("Adding seed: original indices=["
