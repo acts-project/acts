@@ -88,7 +88,8 @@ void addTrackFinding(py::module& mex) {
     auto c =
         py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, nMaxPhiSlice, minSeedLevel, addTriplets,
-                       maxAbsEtaAddTriplets, postFitCurvatureFactor);
+                       maxAbsEtaAddTriplets, maxSeedSplitEta,
+                       postFitCurvatureFactor);
     patchKwargsConstructor(c);
   }
 
@@ -98,7 +99,8 @@ void addTrackFinding(py::module& mex) {
         py::class_<Config>(mex, "GbtsGraphBuilderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, maxEdgesPerSP, minDeltaRadius, doubletFilterRZ,
                        matchBeforeCreate, validateTriplets, calibrateStrips,
-                       maxOuterRadius, useSumRatioCut, sumRatioCutMax);
+                       maxOuterRadius, z0HistogramMaxBarrelOrder,
+                       useSumRatioCut, sumRatioCutMax);
     patchKwargsConstructor(c);
   }
 

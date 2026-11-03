@@ -15,6 +15,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <limits>
 #include <numeric>
 #include <span>
@@ -222,6 +223,38 @@ void sortByKey(std::span<item_t> items, storage_t& storage,
   } else {
     bucketSortByKey<kQuadraticLinearCrossover>(items, storage, keyOf, minKey,
                                                maxKey);
+  }
+}
+
+/// Sorts @p items stably by key, and the items with equal keys by
+/// @p orderOfEqualKeys. With float keys equal keys are rare, so this costs
+/// little more than the sort by key.
+///
+/// @tparam kQuadraticLinearCrossover Up to how many items a quadratic sort is
+///         used: the rank sort for the whole list, the insertion pass for one
+///         bucket
+/// @param items The items to sort
+/// @param storage Kept between calls: `scratch`, a vector of items, and
+///        `buckets`, a vector of std::uint32_t, both of any content
+/// @param keyOf Returns the key of an item
+/// @param orderOfEqualKeys Whether the first of two items with equal keys goes
+///        before the second, a strict weak order; it is called only on items
+///        with equal keys
+template <std::size_t kQuadraticLinearCrossover, typename item_t,
+          typename storage_t, typename key_of_t, typename order_t>
+void sortByKey(std::span<item_t> items, storage_t& storage,
+               const key_of_t& keyOf, const order_t& orderOfEqualKeys) {
+  sortByKey<kQuadraticLinearCrossover>(items, storage, keyOf);
+
+  for (auto first = items.begin(); first != items.end();) {
+    const auto key = keyOf(*first);
+    const auto last =
+        std::find_if(std::next(first), items.end(),
+                     [&](const item_t& item) { return keyOf(item) != key; });
+    if (std::distance(first, last) > 1) {
+      std::stable_sort(first, last, orderOfEqualKeys);
+    }
+    first = last;
   }
 }
 

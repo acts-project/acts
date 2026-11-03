@@ -23,13 +23,15 @@ def test_material_root(conf_const):
 
 def test_json_material_decorator():
     config = MaterialMapJsonConverter.Config()
-    deco = JsonMaterialDecorator(
-        rConfig=config,
-        jFileName=str(
-            getOpenDataDetectorDirectory() / "config/odd-material-mapping-config.json"
-        ),
-        level=acts.logging.WARNING,
-    )
+    with pytest.warns(DeprecationWarning, match="Legacy JSON material APIs"):
+        deco = JsonMaterialDecorator(
+            rConfig=config,
+            jFileName=str(
+                getOpenDataDetectorDirectory()
+                / "config/odd-material-mapping-config.json"
+            ),
+            level=acts.logging.WARNING,
+        )
 
 
 def test_material_map_export(tmp_path):
@@ -83,3 +85,12 @@ def test_root_material_write_assignments(tmp_path):
         tree = root["HomogeneousMaterial"]
         assert tree["hGeoId"].array(library="np").tolist() == [(1 << 56) | (256 << 8)]
         assert tree["t"].array(library="np").tolist() == pytest.approx([0.15])
+
+
+def test_legacy_material_writer_warning(tmp_path):
+    from acts.examples.json import JsonMaterialWriter
+
+    with pytest.warns(DeprecationWarning, match="JsonMaterialWriter is deprecated"):
+        JsonMaterialWriter(
+            fileName=str(tmp_path / "legacy"), level=acts.logging.WARNING
+        )

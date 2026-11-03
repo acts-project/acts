@@ -37,11 +37,6 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
     : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_logger(std::move(logger)) {
-  if (m_cfg.phiSortBuckets > GbtsNodeStorage::kMaxPhiSortBuckets) {
-    throw std::invalid_argument(
-        "GraphBasedTrackSeeder: phiSortBuckets exceeds the maximum");
-  }
-
   if (m_cfg.useClusterWidthCuts && m_cfg.tauLookupTable.empty()) {
     throw std::invalid_argument(
         "GraphBasedTrackSeeder: the cluster width cuts need a tau lookup "
@@ -57,7 +52,6 @@ GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
   config.moduleEdgeTolerance = m_cfg.moduleEdgeTolerance;
   config.phiSliceWidth = m_cfg.phiSliceWidth;
   config.phiIndexMargin = m_cfg.phiIndexMargin;
-  config.phiSortBuckets = m_cfg.phiSortBuckets;
   config.tauLutBinWidth = m_cfg.tauLutBinWidth;
 
   return GbtsNodeStorage(config, m_geometry, m_cfg.tauLookupTable);

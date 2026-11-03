@@ -18,6 +18,7 @@
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Json/GeometryJsonKeys.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
@@ -27,6 +28,9 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
+// Legacy implementations intentionally call the deprecated material APIs.
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 void Acts::to_json(nlohmann::json& j, const Material& t) {
   if (t.isVacuum()) {
@@ -268,3 +272,5 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     return;
   }
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
