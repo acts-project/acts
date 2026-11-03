@@ -150,6 +150,19 @@ value-only normalization/update helpers do not transform a separate covariance.
 For an update with covariance, use `canonicalize(parameters + delta, covariance)`
 with the covariance in the uncanonicalized updated basis.
 
+@ref Acts::Experimental::ReferenceTrajectoryBuilder::filter uses each surface's
+parametrization to form the filtered correction relative to the original
+reference prediction. Transported predictions are canonicalized together with
+their covariance; the stored transport Jacobian is transformed into that same
+prediction basis for smoothing. Phi wrapping therefore does not introduce a
+spurious full-turn correction into subsequent transport. Undefined
+canonicalization at an exact pole returns an error before replacing that
+prediction. Earlier states may already have been filtered.
+The filter consumes the stored reference predictions, so rebuild the reference
+trajectory before filtering again. It remains a local linear approximation:
+large direction changes require rebuilding the reference transport Jacobians.
+Only canonical global-spherical coordinates are currently supported.
+
 Pointwise material physics computes a projected scattering variance independently
 of the direction coordinates. A separate mapping produces the direction-noise
 block, with a direct diagonal calculation for the canonical spherical convention.
