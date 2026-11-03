@@ -53,6 +53,65 @@ def test_callable_forms_const_qualifier():
     assert "Acts::C::size() const" in pas.callable_forms(md, "Acts::C::size")
 
 
+def test_qualified_definition_preserves_defaulted_declaration():
+    # Model Doxygen emitting the header declaration and .ipp definition as
+    # separate memberdefs, with the default only attached to the declaration.
+    def member(mask, hierarchy=False, default=False):
+        extra = (
+            "<param><type>const ActsAlignment::Hierarchy *</type>"
+            + ("<defval>nullptr</defval>" if default else "")
+            + "</param>"
+            if hierarchy
+            else ""
+        )
+        return (
+            '<memberdef kind="function" prot="public" const="yes">'
+            "<type>void</type><name>evaluate</name>"
+            f"<param><type>const {mask} &amp;</type></param>{extra}</memberdef>"
+        )
+
+    def snapshot(members):
+        xml = (
+            '<doxygen><compounddef kind="namespace">'
+            "<compoundname>ActsAlignment</compoundname><sectiondef>"
+            '<memberdef kind="enum"><name>Mask</name></memberdef>'
+            "</sectiondef></compounddef>"
+            '<compounddef kind="struct">'
+            "<compoundname>ActsAlignment::Hierarchy</compoundname></compounddef>"
+            '<compounddef kind="class">'
+            "<compoundname>ActsAlignment::Alignment</compoundname>"
+            f"<sectiondef>{members}</sectiondef></compounddef></doxygen>"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "fixture.xml").write_text(xml)
+            return pas.parse_xml(Path(tmp))
+
+    base = snapshot(member("Mask") + member("ActsAlignment::Mask"))
+    head = snapshot(member("Mask", True, True) + member("ActsAlignment::Mask", True))
+    c = pad.classify(base, head)
+    assert not c["has_breaking"], c
+    assert len(c["added_signatures"]) == 1, c
+    # Without the default the old call really does break.
+    required = snapshot(member("Mask", True) + member("ActsAlignment::Mask", True))
+    assert pad.classify(base, required)["has_breaking"]
+
+
+def test_scoped_type_preserves_distinct_namespaces():
+    names = {"Acts::Mask", "Acts::Nested::Mask", "ActsOther::Mask"}
+
+    def normalize(text):
+        return pas._scoped_type(
+            ET.fromstring(f"<type>{text}</type>"),
+            "Acts::Nested::Engine::evaluate",
+            names,
+        )
+
+    assert normalize("const Mask *") == "const Acts::Nested::Mask *"
+    assert normalize("const Acts::Mask *") == "const Acts::Mask *"
+    assert normalize("const ActsOther::Mask *") == "const ActsOther::Mask *"
+    assert normalize("Unknown") == "Unknown"
+
+
 def test_module_of_components():
     assert pas.module_of("/w/Core/include/Acts/Surfaces/Plane.hpp") == "Core/Surfaces"
     assert (
@@ -173,6 +232,12 @@ def test_end_to_end_fixture():
         s.startswith("Acts::Demo::oldFn(double)") for s in c["removed_signatures"]
     ), c
     assert any("Acts::Demo::tolerance" in s for s in c["field_type_changes"]), c
+    # Out-of-line template definition with qualified parameter names.
+    assert not any("ActsAlignment::" in s for s in c["breaking"]), c
+    assert (
+        "ActsAlignment::Alignment::evaluate(const ActsAlignment::Mask &) const"
+        in head["callables"]
+    ), head["callables"]
     # compute(int) must survive (defaulted arg) -> not a removal
     assert not any(s == "Acts::compute(int)" for s in c["removed_signatures"]), c
 
