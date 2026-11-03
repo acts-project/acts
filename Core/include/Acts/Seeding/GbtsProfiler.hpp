@@ -12,8 +12,8 @@
 #include "Acts/Seeding/detail/GbtsProfilerTypes.hpp"
 
 #include <cstdint>
+#include <memory>
 #include <mutex>
-#include <optional>
 #include <string_view>
 #include <thread>
 #include <unordered_map>
@@ -28,8 +28,8 @@ class GraphBasedTrackSeeder;
 ///
 /// Handed to `GraphBasedTrackSeeder` at construction. Every `createSeeds` call
 /// then adds one `Event`, under the number the calling thread last gave
-/// `setEventNumber`, which the caller takes back out by that number or all at
-/// once. A space point is always identified by the index the caller
+/// `setEventNumber`, which the caller takes back out, read only, by that number
+/// or all at once. A space point is always identified by the index the caller
 /// inserted it with, so the records can be matched to truth afterwards.
 ///
 /// Each candidate is recorded once, at the first cut it fails, in the order the
@@ -194,13 +194,13 @@ class GbtsProfiler {
 
   /// Take an event out. Thread safe.
   /// @param eventNumber Event number it was recorded with
-  /// @return The event, or nothing if no event has that number. Of several
-  ///         with the same number, the one added first.
-  std::optional<Event> take(std::uint64_t eventNumber);
+  /// @return The event, or null if no event has that number. Of several with
+  ///         the same number, the one added first.
+  std::unique_ptr<const Event> take(std::uint64_t eventNumber);
 
   /// Take every event out. Thread safe.
   /// @return The events, in the order they were added
-  std::vector<Event> takeAll();
+  std::vector<std::unique_ptr<const Event>> takeAll();
 
   /// @param cut The cut
   /// @return Its name

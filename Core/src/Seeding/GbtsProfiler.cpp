@@ -9,6 +9,7 @@
 #include "Acts/Seeding/GbtsProfiler.hpp"
 
 #include <algorithm>
+#include <memory>
 #include <utility>
 
 namespace Acts::Experimental {
@@ -40,21 +41,28 @@ void GbtsProfiler::add(Event&& event) {
   m_events.push_back(std::move(event));
 }
 
-std::optional<GbtsProfiler::Event> GbtsProfiler::take(
+std::unique_ptr<const GbtsProfiler::Event> GbtsProfiler::take(
     const std::uint64_t eventNumber) {
   const std::scoped_lock lock(m_mutex);
   const auto it = std::ranges::find(m_events, eventNumber, &Event::eventNumber);
   if (it == m_events.end()) {
-    return std::nullopt;
+    return nullptr;
   }
-  Event event = std::move(*it);
+  auto event = std::make_unique<const Event>(std::move(*it));
   m_events.erase(it);
   return event;
 }
 
-std::vector<GbtsProfiler::Event> GbtsProfiler::takeAll() {
+std::vector<std::unique_ptr<const GbtsProfiler::Event>>
+GbtsProfiler::takeAll() {
   const std::scoped_lock lock(m_mutex);
-  return std::exchange(m_events, {});
+  std::vector<std::unique_ptr<const Event>> events;
+  events.reserve(m_events.size());
+  for (Event& event : m_events) {
+    events.push_back(std::make_unique<const Event>(std::move(event)));
+  }
+  m_events.clear();
+  return events;
 }
 
 std::string_view GbtsProfiler::name(const detail::GbtsNodeCut cut) {

@@ -33,6 +33,7 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -886,9 +887,14 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   BOOST_CHECK_EQUAL(formatSeeds(seeds),
                     formatSeeds(runSeeding(detector, spacePoints)));
 
-  BOOST_CHECK(!profiler->take(41).has_value());
-  std::optional<Experimental::GbtsProfiler::Event> event = profiler->take(42);
-  BOOST_REQUIRE(event.has_value());
+  BOOST_CHECK(profiler->take(41) == nullptr);
+  const std::unique_ptr<const Experimental::GbtsProfiler::Event> event =
+      profiler->take(42);
+  BOOST_REQUIRE(event != nullptr);
+  // a caller reads an event, down to the fields of its records
+  static_assert(
+      std::is_same_v<decltype((event->rejectedDoublets.front().value)),
+                     const float&>);
   BOOST_CHECK(profiler->takeAll().empty());
   BOOST_CHECK_EQUAL(event->eventNumber, 42u);
 
@@ -1000,9 +1006,9 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheCutThatRejects) {
                            setup.filter, setup.options, seeds);
   BOOST_CHECK_EQUAL(seeds.size(), 0u);
 
-  std::vector<Experimental::GbtsProfiler::Event> events = profiler->takeAll();
+  const auto events = profiler->takeAll();
   BOOST_REQUIRE_EQUAL(events.size(), 1u);
-  const Experimental::GbtsProfiler::Event& event = events.front();
+  const Experimental::GbtsProfiler::Event& event = *events.front();
 
   auto trackColumn = spacePoints.column<std::uint32_t>("trackId");
   const auto track = [&](const SpacePointIndex index) {
@@ -1071,11 +1077,10 @@ BOOST_AUTO_TEST_CASE(ProfilerKeepsAnEventNumberPerThread) {
   runEvent();
 
   // added last, so this is the first thread's number surviving the other's
-  const std::vector<Experimental::GbtsProfiler::Event> events =
-      profiler->takeAll();
+  const auto events = profiler->takeAll();
   BOOST_REQUIRE_EQUAL(events.size(), 2u);
-  BOOST_CHECK_EQUAL(events[0].eventNumber, 2u);
-  BOOST_CHECK_EQUAL(events[1].eventNumber, 1u);
+  BOOST_CHECK_EQUAL(events[0]->eventNumber, 2u);
+  BOOST_CHECK_EQUAL(events[1]->eventNumber, 1u);
 }
 
 // The name lists hold every label, including the first and last of each type,
@@ -1125,11 +1130,11 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheSumRatioCut) {
   setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
                            setup.filter, setup.options, seeds);
 
-  std::vector<Experimental::GbtsProfiler::Event> events = profiler->takeAll();
+  const auto events = profiler->takeAll();
   BOOST_REQUIRE_EQUAL(events.size(), 1u);
 
   std::size_t nRejected = 0;
-  for (const auto& triplet : events.front().rejectedTriplets) {
+  for (const auto& triplet : events.front()->rejectedTriplets) {
     if (triplet.cut != Experimental::detail::GbtsTripletCut::SumRatio) {
       continue;
     }
@@ -1160,9 +1165,9 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsThePostFitCurvatureCut) {
                            setup.filter, setup.options, seeds);
   BOOST_CHECK_LT(seeds.size(), runSeeding(detector, spacePoints).size());
 
-  std::vector<Experimental::GbtsProfiler::Event> events = profiler->takeAll();
+  const auto events = profiler->takeAll();
   BOOST_REQUIRE_EQUAL(events.size(), 1u);
-  const Experimental::GbtsProfiler::Event& event = events.front();
+  const Experimental::GbtsProfiler::Event& event = *events.front();
 
   const float maxCurvature =
       Experimental::GbtsTrackingFilter::Config{}.maxCurvature;
