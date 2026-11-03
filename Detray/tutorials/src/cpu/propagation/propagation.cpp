@@ -34,7 +34,7 @@
 int main() {
   // Toy detector
   using metadata_t = detray::tutorial::toy_metadata;
-  using toy_detector_t = detray::detector<metadata_t>;
+  using toy_detector_t = detray::host::detector<metadata_t>;
 
   using algebra_t = metadata_t::algebra_type;
   using scalar = detray::tutorial::scalar;
@@ -100,7 +100,8 @@ int main() {
     // Prepare actor states
     detray::actor::pathlimit_aborter<scalar>::state aborter_state{
         5.f * detray::unit<scalar>::m};
-    detray::actor::parameter_updater_state<algebra_t> updater_state{prop_cfg};
+    detray::actor::parameter_updater_state<algebra_t> updater_state{prop_cfg,
+                                                                    track};
     detray::actor::pointwise_material_interactor<algebra_t>::state
         interactor_state{};
 

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -106,6 +107,9 @@ class triplet_seeding_algorithm : public device::triplet_seeding_algorithm,
   ///
   void select_seeds_kernel(
       const select_seeds_kernel_payload& payload) const override;
+
+  /// Wait for outstanding work on the algorithm stream or queue.
+  void synchronize() const override;
 
 };  // class triplet_seeding_algorithm
 

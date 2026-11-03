@@ -15,6 +15,8 @@
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <cstdint>
+#include <limits>
+#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -88,20 +90,30 @@ class DoubletsForMiddleSp {
   /// Type alias for subset of index and cotTheta pairs
   using IndexAndCotThetaSubset = std::span<const IndexAndCotTheta>;
 
-  /// Sort doublets by cotTheta within given range
+  /// Storage for sortByCotTheta, kept by the caller so that sorting does not
+  /// allocate
+  struct SortStorage {
+    /// Doublets being sorted
+    std::vector<IndexAndCotTheta> scratch;
+    /// Bucket counts and indices
+    std::vector<std::uint32_t> buckets;
+  };
+
+  /// Sort doublets by cotTheta within given range. Doublets with equal
+  /// cotTheta keep their index order.
   /// @param range Index range to sort within
   /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
   void sortByCotTheta(const IndexRange& range,
-                      std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
-    indexAndCotTheta.clear();
-    indexAndCotTheta.reserve(range.second - range.first);
-    for (Index i = range.first; i < range.second; ++i) {
-      indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
-    }
-    std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
-      return item.cotTheta;
-    });
-  }
+                      std::vector<IndexAndCotTheta>& indexAndCotTheta) const;
+
+  /// Sort doublets by cotTheta within given range, with storage the caller
+  /// keeps between calls. Doublets with equal cotTheta keep their index order.
+  /// @param range Index range to sort within
+  /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
+  /// @param storage Storage for the sort, of any content
+  void sortByCotTheta(const IndexRange& range,
+                      std::vector<IndexAndCotTheta>& indexAndCotTheta,
+                      SortStorage& storage) const;
 
   /// Proxy accessor for a single doublet entry.
   class Proxy {
@@ -298,9 +310,13 @@ class DoubletSeedFinder {
     /// Maximum radial distance between two doublet components
     float deltaRMax = 270 * UnitConstants::mm;
 
+    /// Maximum absolute z distance between two doublet components
+    float absDeltaZMax = std::numeric_limits<float>::infinity();
     /// Minimal z distance between two doublet components
+    /// @deprecated The deltaZ cut is symmetric about zero, so do not set this.
+    ///             If it is set, it must be -deltaZMax.
     float deltaZMin = -std::numeric_limits<float>::infinity();
-    /// Maximum z distance between two doublet components
+    /// Maximum absolute z distance between two doublet components
     float deltaZMax = std::numeric_limits<float>::infinity();
 
     /// Maximum value of impact parameter estimation of the seed candidates
@@ -309,9 +325,15 @@ class DoubletSeedFinder {
     /// Enable cut on the compatibility between interaction point and doublet,
     /// this is an useful approximation to speed up the seeding
     bool interactionPointCut = false;
+    /// Enable the cut on the time compatibility
+    /// The space point container has to provide the
+    /// `SpacePointColumns::Time` and `SpacePointColumns::VarianceT` columns
+    bool useTime = false;
 
     /// Limiting location of collision region in z-axis used to check if doublet
-    /// origin is within reasonable bounds
+    /// origin is within reasonable bounds. A flag is used to check if this is
+    /// symmetric about z = 0 and will then use that assumption to simplify
+    /// some calculations
     float collisionRegionMin = -150 * UnitConstants::mm;
     /// Maximum collision region boundary in z-axis for doublet origin checks
     float collisionRegionMax = +150 * UnitConstants::mm;
@@ -329,6 +351,16 @@ class DoubletSeedFinder {
     /// Parameter which can loosen the tolerance of the track seed to form a
     /// helix. This is useful for e.g. misaligned seeding.
     float helixCutTolerance = 1;
+    /// Maximum allowed difference of the times of the two space points,
+    /// corrected for the time of flight between them, in units of their
+    /// combined time resolution. Only used when `useTime` is enabled.
+    float timeCutNSigma = 5;
+
+    /// If set, calibrate both strip space points against their chord after the
+    /// z origin cut, with this tolerance in strip half lengths. The following
+    /// cuts and the doublet use the calibrated positions.
+    /// Requires `SpacePointColumns::StripCalibrationDetails`.
+    std::optional<float> stripCalibrationTolerance;
 
     /// Type alias for delegate to apply experiment specific cuts during doublet
     /// finding
@@ -353,6 +385,9 @@ class DoubletSeedFinder {
     /// Squared minimum helix diameter derived from magnetic field and minimum
     /// pT
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
+    /// Squared time cut in units of sigma, allowing the cut to be applied on
+    /// the combined time variance
+    float timeCutNSigma2 = std::numeric_limits<float>::quiet_NaN();
   };
 
   /// Computes additional quantities from the middle space point which can be

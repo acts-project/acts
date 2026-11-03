@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../utils/global_index.hpp"
@@ -42,8 +43,8 @@ void kalman_fitting_algorithm::fit_backward_kernel(
   return detector_buffer_magnetic_field_visitor<detector_type_list,
                                                 hip::bfield_type_list<scalar>>(
       payload.detector, payload.field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view&, const bfield_view_t&) {
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>&, const bfield_view_t&) {
         // Get the number of tracks.
         const unsigned int n_tracks = payload.payload.tracks.tracks.capacity();
         assert(n_tracks == copy().get_size(payload.payload.tracks.tracks));
@@ -53,9 +54,8 @@ void kalman_fitting_algorithm::fit_backward_kernel(
         const unsigned int nBlocks = (n_tracks + nThreads - 1) / nThreads;
 
         // Fitter type to use.
-        using fitter_t =
-            traccc::details::kalman_fitter_t<typename detector_traits_t::device,
-                                             bfield_view_t>;
+        using fitter_t = traccc::details::kalman_fitter_t<
+            detray::detector_device_t<detector_t>, bfield_view_t>;
 
         // Run the track fitting
         hipLaunchKernelGGL(kernels::fit_backward<fitter_t>, nBlocks, nThreads,

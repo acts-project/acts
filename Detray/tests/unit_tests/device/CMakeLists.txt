@@ -13,7 +13,3 @@ endif()
 if(DETRAY_BUILD_HIP)
     add_subdirectory(hip)
 endif()
-
-if(DETRAY_BUILD_SYCL)
-    add_subdirectory(sycl)
-endif()

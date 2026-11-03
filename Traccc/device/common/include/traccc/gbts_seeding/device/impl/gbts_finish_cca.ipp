@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -23,13 +24,14 @@ TRACCC_HOST_DEVICE inline void gbts_finish_cca(
     const thread_id_t& thread_id, const gbts_finish_cca_payload& payload) {
   const vecmem::device_vector<const unsigned int> d_output_graph(
       payload.output_graph);
+  const vecmem::device_vector<const unsigned char> d_output_num_neighbours(
+      payload.output_num_neighbours);
   const vecmem::device_vector<const unsigned char> d_levels(payload.levels);
   vecmem::device_vector<int2> d_outgoing_paths(payload.outgoing_paths);
   vecmem::device_vector<unsigned char> d_has_parent(payload.has_parent);
 
-  // Row-major output graph: each edge owns [node1, node2, nNei, nei0..].
-  const unsigned int edge_size =
-      gbts_consts::nei_start + payload.max_num_neighbours;
+  // Column-major output graph: neighbour k of an edge is in column k.
+  const unsigned int nei_stride = payload.nConnectedEdgesMax;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -44,10 +46,13 @@ TRACCC_HOST_DEVICE inline void gbts_finish_cca(
       d_outgoing_paths[globalIndex] = int2{0, -1};
       continue;
     }
-    const unsigned int edge_pos = edge_size * globalIndex;
-    const unsigned int nNei = d_output_graph[edge_pos + gbts_consts::nNei];
+    const unsigned int nNei = d_output_num_neighbours[globalIndex];
     for (unsigned int k = 0u; k < nNei; ++k) {
-      d_has_parent[d_output_graph[edge_pos + gbts_consts::nei_start + k]] = 1u;
+      const unsigned int child = d_output_graph[k * nei_stride + globalIndex];
+      // a child further down belongs to a longer path and stays a root
+      if (d_levels[child] + 1u == level) {
+        d_has_parent[child] = 1u;
+      }
     }
     d_outgoing_paths[globalIndex].y =
         static_cast<int>(level >= payload.minLevel) - 1;

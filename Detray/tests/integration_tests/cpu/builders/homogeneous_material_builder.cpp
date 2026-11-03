@@ -39,7 +39,7 @@ using scalar = test::scalar;
 using point3 = test::point3;
 
 using metadata_t = test::default_metadata;
-using detector_t = detector<metadata_t>;
+using detector_t = host::detector<metadata_t>;
 
 constexpr scalar tol{std::numeric_limits<scalar>::epsilon()};
 
@@ -62,6 +62,8 @@ GTEST_TEST(detray_builders, decorator_homogeneous_material_builder) {
   vecmem::host_memory_resource host_mr;
   detector_t d(host_mr);
   auto geo_ctx = typename detector_t::geometry_context{};
+  volume_builder_options builder_opts{};
+  builder_opts.deduplicate(false);
 
   auto vbuilder =
       std::make_unique<volume_builder<detector_t>>(volume_id::e_cylinder);
@@ -142,7 +144,7 @@ GTEST_TEST(detray_builders, decorator_homogeneous_material_builder) {
   mat_builder.add_surfaces(mat_cyl_factory, geo_ctx);
 
   // Add the volume to the detector
-  mat_builder.build(d);
+  mat_builder.build(d, builder_opts);
 
   //
   // check results
@@ -190,6 +192,7 @@ GTEST_TEST(detray_builders, homogeneous_material_on_sparse_surfaces) {
   vecmem::host_memory_resource host_mr;
   detector_t d(host_mr);
   auto geo_ctx = typename detector_t::geometry_context{};
+  const volume_builder_options builder_opts{};
 
   // Build a dummy volume first, so that the volume under test starts neither
   // at surface nor at material index zero of the detector containers: the
@@ -220,7 +223,7 @@ GTEST_TEST(detray_builders, homogeneous_material_on_sparse_surfaces) {
         {3.f * unit<scalar>::mm, tungsten<scalar>(), n_dummy_surfaces - 1u});
     dummy_mat_builder.add_surfaces(dummy_mat_factory, geo_ctx);
 
-    dummy_mat_builder.build(d);
+    dummy_mat_builder.build(d, builder_opts);
   }
 
   auto vbuilder =
@@ -252,7 +255,7 @@ GTEST_TEST(detray_builders, homogeneous_material_on_sparse_surfaces) {
                             {2.f * unit<scalar>::mm, tungsten<scalar>(), 4u});
   mat_builder.add_surfaces(mat_factory, geo_ctx);
 
-  mat_builder.build(d);
+  mat_builder.build(d, builder_opts);
 
   // One slab per material entry: the gaps must not be padded with filler
   EXPECT_EQ(d.volumes().size(), 2u);
@@ -312,6 +315,7 @@ GTEST_TEST(detray_builders, detector_builder_with_material) {
   // detector builder
   detector_builder<typename detector_t::metadata> det_builder{};
   auto geo_ctx = typename detector_t::geometry_context{};
+  const volume_builder_options builder_opts{};
 
   // Vanilla volume builder
   auto vbuilder = det_builder.new_volume(volume_id::e_cuboid);
@@ -371,7 +375,7 @@ GTEST_TEST(detray_builders, detector_builder_with_material) {
   // build the detector
   //
   vecmem::host_memory_resource host_mr;
-  const detector_t d = det_builder.build(host_mr);
+  const detector_t d = det_builder.build(host_mr, builder_opts);
   const auto vol = tracking_volume{d, 0u};
 
   // check the results

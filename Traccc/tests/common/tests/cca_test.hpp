@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -213,10 +214,10 @@ class ConnectedComponentAnalysisTests
       const auto match = meas.at(meas_idx);
       EXPECT_NEAR(match.local_position()[0], io_truth.channel0, tol);
       EXPECT_NEAR(match.local_position()[1], io_truth.channel1, tol);
-      EXPECT_NEAR(match.local_variance()[0],
-                  io_truth.variance0 + var_adjustment, tol);
-      EXPECT_NEAR(match.local_variance()[1],
-                  io_truth.variance1 + var_adjustment, tol);
+      EXPECT_NEAR(match.local_variance()[0], var_adjustment, tol);
+      EXPECT_NEAR(match.local_variance()[1], var_adjustment, tol);
+      EXPECT_NEAR(match.charge_variance()[0], io_truth.variance0, tol);
+      EXPECT_NEAR(match.charge_variance()[1], io_truth.variance1, tol);
 
       ++total_truth;
     }

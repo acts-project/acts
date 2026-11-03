@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2021-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Enable CUDA as a language.
 enable_language(CUDA)
@@ -42,6 +44,8 @@ traccc_add_library( traccc_cuda cuda TYPE SHARED
   "src/seeding/triplet_seeding_algorithm.cu"
   "include/traccc/cuda/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
   "src/seeding/silicon_pixel_spacepoint_formation_algorithm.cu"
+  "include/traccc/cuda/seeding/silicon_strip_spacepoint_formation_algorithm.hpp"
+  "src/seeding/silicon_strip_spacepoint_formation_algorithm.cu"
   #GBTS seed finding code
   "include/traccc/cuda/gbts_seeding/gbts_seeding_algorithm.hpp"
   "src/gbts_seeding/gbts_seeding_algorithm.cu"

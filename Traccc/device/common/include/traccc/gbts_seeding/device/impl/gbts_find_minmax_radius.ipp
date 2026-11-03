@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -21,8 +22,8 @@ template <concepts::thread_id1 thread_id_t>
 TRACCC_HOST_DEVICE inline void gbts_find_minmax_radius(
     const thread_id_t& thread_id,
     const gbts_find_minmax_radius_payload& payload) {
-  const vecmem::device_vector<const unsigned int> d_eta_bin_views(
-      payload.eta_bin_views);
+  const vecmem::device_vector<const unsigned int> d_eta_bin_offsets(
+      payload.eta_bin_offsets);
   const vecmem::device_vector<const float4> d_node_params(payload.node_params);
   vecmem::device_vector<float> d_bin_rads(payload.bin_rads);
 
@@ -32,8 +33,8 @@ TRACCC_HOST_DEVICE inline void gbts_find_minmax_radius(
 
   for (unsigned int globalIndex = globalIdx; globalIndex < payload.nEtaBins;
        globalIndex += blockDimX * gridDimX) {
-    const unsigned int node_start = d_eta_bin_views[2u * globalIndex];
-    const unsigned int node_end = d_eta_bin_views[2u * globalIndex + 1u];
+    const unsigned int node_start = d_eta_bin_offsets[globalIndex];
+    const unsigned int node_end = d_eta_bin_offsets[globalIndex + 1u];
 
     float min_r = 1e8f;
     float max_r = -1e8f;

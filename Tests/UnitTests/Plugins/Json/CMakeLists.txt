@@ -26,3 +26,15 @@ add_unittest(VolumeBoundsJsonConverter VolumeBoundsJsonConverterTests.cpp)
 add_unittest(TrackParametersJsonConverter TrackParametersJsonConverterTests.cpp)
 add_unittest(JsonSurfacesReader JsonSurfacesReaderTests.cpp)
 add_unittest(TrackingGeometryJsonConverter TrackingGeometryJsonConverterTests.cpp)
+
+add_unittest(
+    TrackingGeometryMaterialJsonConverter
+    TrackingGeometryMaterialJsonConverterTests.cpp
+    "${PROJECT_SOURCE_DIR}/docs/examples/material-map-v1"
+)
+
+add_dependencies(
+    ActsUnitTestTrackingGeometryMaterialJsonConverter
+    ActsMaterialMapMigrate
+)
+add_test(NAME MaterialMapMigrateHelp COMMAND ActsMaterialMapMigrate --help)

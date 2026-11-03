@@ -9,6 +9,7 @@
 #pragma once
 
 #include <any>
+#include <type_traits>
 
 namespace Acts {
 

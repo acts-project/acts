@@ -21,10 +21,6 @@ struct GbtsEdgeState final {
  public:
   GbtsEdgeState() = default;
 
-  /// Constructor with initialization flag
-  /// @param f Initialization flag
-  explicit GbtsEdgeState(bool f) : initialized(f) {}
-
   /// Initialize from edge
   /// @param pS Edge to initialize from
   /// @param nodeView View of the node positions and layers
@@ -34,12 +30,10 @@ struct GbtsEdgeState final {
                   const std::array<float, 3>& varianceX,
                   const std::array<float, 2>& varianceY);
 
-  bool initialized{false};
-
   /// Score for comparison
   float j{};
 
-  std::vector<GbtsEdge*> vs;
+  std::vector<const GbtsEdge*> vs;
 
   std::array<float, 3> x{};
   std::array<float, 2> y{};
@@ -49,18 +43,6 @@ struct GbtsEdgeState final {
   float refY{};
   float c{};
   float s{};
-};
-
-/// Maximum number of edge states
-static constexpr std::uint32_t kGbtsMaxEdgeStates = 2500;
-
-/// State for the tracking filter, containing edge states and a global counter.
-struct GbtsFilterState final {
-  std::vector<GbtsEdgeState*> stateVec;
-
-  std::array<GbtsEdgeState, kGbtsMaxEdgeStates> stateStore{};
-
-  std::uint32_t globalStateCounter{0};
 };
 
 }  // namespace Acts::Experimental::detail

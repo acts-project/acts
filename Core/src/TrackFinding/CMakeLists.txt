@@ -4,4 +4,5 @@ target_sources(
         CombinatorialKalmanFilterError.cpp
         MeasurementSelector.cpp
         AmbiguityTrackClustering.cpp
+        SeedDeduplicator.cpp
 )

@@ -82,6 +82,12 @@ parser.add_argument(
     default=4,
 )
 parser.add_argument(
+    "--gun-particle-type",
+    help="Particle type of the particle gun; options: muon(default), electron, pion, kaon, proton",
+    type=str,
+    default="muon",
+)
+parser.add_argument(
     "--gun-multiplicity",
     help="Multiplicity (no. of vertices) of the particle gun",
     type=int,
@@ -198,12 +204,12 @@ oddDigiConfig = (
 oddGbtsLayerMap = (
     args.gbts_layer_map
     if args.gbts_layer_map
-    else actsDir / "Examples/Configs/odd-gbts-layer-map.txt"
+    else actsDir / "Examples/Configs/odd-gbts-layer-map.json"
 )
 oddGbtsConnectionTable = (
     args.gbts_connection_table
     if args.gbts_connection_table
-    else actsDir / "Examples/Configs/odd-gbts-connection-table.txt"
+    else actsDir / "Examples/Configs/odd-gbts-connection-table.json"
 )
 
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
@@ -272,6 +278,13 @@ if args.edm4hep:
     )
 else:
     if not args.ttbar:
+        particleType = {
+            "muon": acts.PdgParticle.eMuon,
+            "electron": acts.PdgParticle.eElectron,
+            "pion": acts.PdgParticle.ePionPlus,
+            "kaon": acts.PdgParticle.eKaonPlus,
+            "proton": acts.PdgParticle.eProton,
+        }[args.gun_particle_type]
         addParticleGun(
             s,
             MomentumConfig(
@@ -281,9 +294,7 @@ else:
             ),
             EtaConfig(args.gun_eta_range[0], args.gun_eta_range[1]),
             PhiConfig(0.0, 360.0 * u.degree),
-            ParticleConfig(
-                args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
-            ),
+            ParticleConfig(args.gun_particles, particleType, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(

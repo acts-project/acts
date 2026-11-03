@@ -82,7 +82,7 @@ class _SyntheticTrackAlgorithm(acts.examples.IAlgorithm):
             track.nMeasurements = 1
 
             state = track.appendTrackState()
-            state.typeFlags.isMeasurement = True
+            state.typeFlags.setIsMeasurement()
             state.uncalibratedSourceLink = acts.examples.IndexSourceLink(
                 geoId, hitIndex
             ).toSourceLink()

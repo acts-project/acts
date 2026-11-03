@@ -172,9 +172,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                           expBoundParams[eBoundLoc0], 1e-5);
           CHECK_CLOSE_ABS(estBoundParams[eBoundLoc1],
                           expBoundParams[eBoundLoc1], 1e-5);
-          // @todo Understand why the estimated phi has a limited precision
           CHECK_CLOSE_ABS(estBoundParams[eBoundPhi], expBoundParams[eBoundPhi],
-                          1e-1);
+                          1e-3);
           CHECK_CLOSE_ABS(estBoundParams[eBoundTheta],
                           expBoundParams[eBoundTheta], 1e-2);
           CHECK_CLOSE_ABS(estBoundParams[eBoundQOverP],
@@ -295,7 +294,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_vs_truth) {
           CHECK_CLOSE_ABS(estBoundParams[eBoundLoc1],
                           expBoundParams[eBoundLoc1], 1e-4);
           CHECK_CLOSE_ABS(estBoundParams[eBoundPhi], expBoundParams[eBoundPhi],
-                          1e-1);
+                          1e-3);
           CHECK_CLOSE_ABS(estBoundParams[eBoundTheta],
                           expBoundParams[eBoundTheta], 1e-2);
           CHECK_CLOSE_ABS(estBoundParams[eBoundQOverP],

@@ -72,26 +72,26 @@ macro(detray_add_cpu_benchmark algebra)
 endmacro()
 
 # Build the array benchmark.
-detray_add_cpu_benchmark( array )
+detray_add_cpu_benchmark(array)
 
 # Build the Eigen benchmark executable.
 if(DETRAY_EIGEN_PLUGIN)
-    detray_add_cpu_benchmark( eigen )
+    detray_add_cpu_benchmark(eigen)
 endif()
 
 # Build the Fastor benchmark executable.
 if(DETRAY_FASTOR_PLUGIN)
-    detray_add_cpu_benchmark( fastor )
+    detray_add_cpu_benchmark(fastor)
 endif()
 
 # Build the SMatrix benchmark executable.
 if(DETRAY_SMATRIX_PLUGIN)
-    detray_add_cpu_benchmark( smatrix )
+    detray_add_cpu_benchmark(smatrix)
 endif()
 
 # Build the Vc benchmark executable.
 if(DETRAY_VC_AOS_PLUGIN)
-    detray_add_cpu_benchmark( vc_aos )
+    detray_add_cpu_benchmark(vc_aos)
 
     target_compile_options(
         detray_benchmark_cpu_linear_algebra_vc_aos
@@ -154,7 +154,7 @@ if(DETRAY_VC_SOA_PLUGIN)
         endif()
     endmacro()
 
-    detray_add_soa_benchmark( array )
+    detray_add_soa_benchmark(array)
     # detray_add_soa_benchmark( eigen )
     # detray_add_soa_benchmark( vc_aos )
 endif()

@@ -29,7 +29,6 @@ from acts.examples import (
     GenericDetector,
 )
 from acts.examples.json import (
-    JsonMaterialWriter,
     JsonFormat,
 )
 
@@ -178,7 +177,6 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
 
     config = RootMeasurementWriter.Config(
         inputMeasurements=digiAlg.config.outputMeasurements,
-        inputClusters=digiAlg.config.outputClusters,
         inputSimHits=simAlg.config.outputSimHits,
         inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         filePath=str(out),
@@ -189,6 +187,29 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
 
     assert out.exists()
     assert out.stat().st_size > 40000
+    assert_root_hash(out.name, out)
+
+
+@pytest.mark.root
+def test_root_clusters_writer(tmp_path, fatras, assert_root_hash):
+    from acts.examples.root import RootClusterWriter
+
+    s = Sequencer(numThreads=1, events=10)
+    evGen, simAlg, digiAlg = fatras(s)
+
+    out = tmp_path / "clusters.root"
+
+    assert not out.exists()
+
+    config = RootClusterWriter.Config(
+        inputClusters=digiAlg.config.outputClusters,
+        filePath=str(out),
+    )
+    s.addWriter(RootClusterWriter(level=acts.logging.INFO, config=config))
+    s.run()
+
+    assert out.exists()
+    assert out.stat().st_size > 10000
     assert_root_hash(out.name, out)
 
 
@@ -314,6 +335,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
         "RootTrackParameterWriter",
         "RootMaterialTrackWriter",
         "RootMeasurementWriter",
+        "RootClusterWriter",
         "RootMaterialWriter",
         "RootSimHitWriter",
         "RootTrackStatesWriter",
@@ -452,13 +474,12 @@ def test_json_material_writer(tmp_path, fmt):
 
     assert not out.exists()
 
-    jmw = JsonMaterialWriter(
-        level=acts.logging.WARNING, fileName=str(out.with_suffix("")), writeFormat=fmt
-    )
-    assert not out.exists()
-    jmw.write(trackingGeometry)
+    from acts.json import TrackingGeometryMaterialJsonConverter
 
-    assert out.stat().st_size > 1000
+    material = acts.TrackingGeometryMaterial.fromGeometry(trackingGeometry)
+    converter = TrackingGeometryMaterialJsonConverter()
+    converter.toFile(material, out)
+    converter.fromFile(out)
 
 
 @pytest.mark.csv

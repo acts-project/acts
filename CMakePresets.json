@@ -6,7 +6,7 @@
             "hidden": true,
             "generator": "Ninja",
             "cacheVariables": {
-                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_STANDARD": "23",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "OFF",
@@ -111,6 +111,15 @@
             }
         },
         {
+            "name": "github-ci-no-ccache",
+            "displayName": "GitHub-CI without ccache",
+            "description": "Use the GitHub CI configuration locally without ccache.",
+            "inherits": "github-ci",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER_LAUNCHER": ""
+            }
+        },
+        {
             "name": "github-ci-fpe",
             "displayName": "GitHub-CI FPE (minimal-debug RelWithDebInfo)",
             "inherits": "github-ci",
@@ -123,11 +132,11 @@
         {
             "name": "github-ci-coverage",
             "displayName": "GitHub-CI Coverage",
-            "description": "Coverage build for the build_debug job. Carries no debug info: gcovr/gcov read .gcno and .gcda, never DWARF, so -g would only inflate the ccache footprint. Set the debug level through CMAKE_CXX_FLAGS_DEBUG rather than CMAKE_CXX_FLAGS, or the per-config flags will silently override it. Examples and the vendored Detray/Traccc trees are not built at all: nothing here executes them, and CI/test_coverage.py filters them out of the report, so instrumenting them only produces .gcno with no matching .gcda, which gcovr then counts as uncovered. Note that ACTS_BUILD_PLUGIN_TRACCC=OFF also drops Plugins/Detray and Plugins/Covfie, whose coverage was previously reported; that loss is accepted deliberately in exchange for the build time and cache savings. The ACTS_BUILD_EXAMPLES_* entries below are NOT redundant with ACTS_BUILD_EXAMPLES=OFF: CMakeLists.txt forces ACTS_BUILD_EXAMPLES back on if any single component flag is set, via a normal variable that shadows the cache entry, so every component ci-common turns on must be listed here or Examples comes back.",
+            "description": "Coverage build for the build_debug job. Carries no debug info: gcovr/gcov read .gcno and .gcda, never DWARF, so -g would only inflate the ccache footprint. Set the debug level through CMAKE_CXX_FLAGS_DEBUG rather than CMAKE_CXX_FLAGS, or the per-config flags will silently override it. Examples and the vendored Detray/Traccc trees are not built at all: nothing here executes them, and CI/test_coverage.py filters them out of the report, so instrumenting them only produces .gcno with no matching .gcda, which gcovr then counts as uncovered. Note that ACTS_BUILD_PLUGIN_TRACCC=OFF also drops Plugins/Detray and Plugins/Covfie, whose coverage was previously reported; that loss is accepted deliberately in exchange for the build time and cache savings. -fprofile-update=atomic keeps the gcov counters consistent when Core code runs on several threads (e.g. the material mapping WorkerPool tests); with the default non-atomic updates, racing increments yield negative hit counts that make gcovr abort. The ACTS_BUILD_EXAMPLES_* entries below are NOT redundant with ACTS_BUILD_EXAMPLES=OFF: CMakeLists.txt forces ACTS_BUILD_EXAMPLES back on if any single component flag is set, via a normal variable that shadows the cache entry, so every component ci-common turns on must be listed here or Examples comes back.",
             "inherits": "github-ci",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_FLAGS": "-Werror --coverage",
+                "CMAKE_CXX_FLAGS": "-Werror --coverage -fprofile-update=atomic",
                 "CMAKE_CXX_FLAGS_DEBUG": "-O0 -g0",
                 "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_PYTHON_BINDINGS": "OFF",
@@ -151,7 +160,6 @@
             "displayName": "GitHub-CI CUDA muon segment fitting",
             "inherits": "ci-common",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "CMAKE_CUDA_ARCHITECTURES": "75;86",
                 "ACTS_ENABLE_CUDA": "ON",
                 "ACTS_BUILD_EXAMPLES": "ON",
@@ -198,6 +206,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
+                "CMAKE_CUDA_STANDARD": "23",
                 "CMAKE_CUDA_ARCHITECTURES": "75;86",
                 "TORCH_CUDA_ARCH_LIST": "7.5;8.6",
                 "ACTS_FORCE_ASSERTIONS": "ON",
@@ -224,10 +233,11 @@
             "displayName": "GitHub-CI Tensorrt",
             "generator": "Ninja",
             "cacheVariables": {
-                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_STANDARD": "23",
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "CMAKE_CUDA_ARCHITECTURES": "75;86",
+                "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_BUILD_PLUGIN_FPEMON": "ON",
                 "ACTS_BUILD_PLUGIN_GNN": "ON",
                 "ACTS_GNN_ENABLE_TORCH": "OFF",
@@ -246,13 +256,13 @@
             "displayName": "Python wheel",
             "generator": "Ninja",
             "cacheVariables": {
-                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_STANDARD": "23",
                 "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
                 "CMAKE_CXX_SCAN_FOR_MODULES": "OFF",
                 "CMAKE_FIND_FRAMEWORK": "LAST",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "CMAKE_BUILD_TYPE": "Release",
-                "ACTS_FORCE_ASSERTIONS": "ON",
+                "ACTS_FORCE_ASSERTIONS": "OFF",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_PYTHON_WHEEL": "ON",
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",

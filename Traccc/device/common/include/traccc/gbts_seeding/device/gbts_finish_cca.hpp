@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -22,12 +23,14 @@ namespace traccc::device {
 struct gbts_finish_cca_payload {
   /// Number of edges in the compacted graph
   unsigned int nConnectedEdges;
-  /// Maximum number of neighbours retained per edge
-  unsigned int max_num_neighbours;
+  /// Capacity of the compacted graph, the column stride of output_graph
+  unsigned int nConnectedEdgesMax;
   /// Minimum level (path length in edges) of a seed root
   unsigned char minLevel;
   /// Compacted graph from gbts_compress_graph
   vecmem::data::vector_view<const unsigned int> output_graph;
+  /// Number of neighbours per compacted edge
+  vecmem::data::vector_view<const unsigned char> output_num_neighbours;
   /// Per-edge level from gbts_run_cca_iteration
   vecmem::data::vector_view<const unsigned char> levels;
   /// In/out: per-edge (subtree path count, terminus flag: 0 = seed root
@@ -40,9 +43,10 @@ struct gbts_finish_cca_payload {
 /// @brief Write the parent marks and terminus flags of the settled edges.
 ///
 /// Run once after the sweeps of gbts_run_cca_iteration. Every settled edge
-/// marks its neighbours as having a parent and gets its terminus flag from
-/// its level. An edge whose longest path exceeds max_seed_candidate_length
-/// edges is not a root and marks nobody, which truncates the path.
+/// marks its neighbours one level below it as having a parent, so a neighbour
+/// further below stays a root, and gets its terminus flag from its level. An
+/// edge whose longest path exceeds max_seed_candidate_length edges is not a
+/// root and marks nobody, which truncates the path.
 ///
 /// @param[in] thread_id Thread identifier for the kernel launch
 /// @param[in] payload   The global memory payload

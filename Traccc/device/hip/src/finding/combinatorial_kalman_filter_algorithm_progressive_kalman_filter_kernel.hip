@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../utils/global_index.hpp"
@@ -58,13 +59,13 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
   detector_buffer_magnetic_field_visitor<detector_type_list,
                                          hip::bfield_type_list<scalar>>(
       detector, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view& det,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>& det,
           const bfield_view_t& bfield) {
-        using detector_t = typename detector_traits_t::device;
-        using surface_t = typename detector_t::surface_type;
+        using detector_device_t = detray::detector_device_t<detector_t>;
+        using surface_t = typename detector_device_t::surface_type;
         using propagator_t =
-            traccc::details::pkf_propagator_t<detector_t, bfield_view_t>;
+            traccc::details::pkf_propagator_t<detector_device_t, bfield_view_t>;
 
         // If the Kalman smoother should be run, obtain the real allocation
         vecmem::data::jagged_vector_view<surface_t> sf_sequences;

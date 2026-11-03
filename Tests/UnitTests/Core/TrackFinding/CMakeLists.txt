@@ -1,3 +1,5 @@
+add_unittest(MeasurementSelector MeasurementSelectorTests.cpp)
 add_unittest(CombinatorialKalmanFilter CombinatorialKalmanFilterTests.cpp)
 add_unittest(TrackSelector TrackSelectorTests.cpp)
 add_unittest(TrackParamsLookupAccumulator TrackParamsLookupAccumulatorTests.cpp)
+add_unittest(SeedDeduplicator SeedDeduplicatorTests.cpp)

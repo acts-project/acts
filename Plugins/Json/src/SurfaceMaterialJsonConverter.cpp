@@ -15,6 +15,7 @@
 #include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsPlugins/Json/AxisSpecJsonConverter.hpp"
@@ -32,6 +33,9 @@
 #include <utility>
 #include <variant>
 #include <vector>
+
+// Legacy implementations intentionally call the deprecated material APIs.
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace {
 
@@ -102,6 +106,9 @@ nlohmann::json protoToJson(const ProtoSurfaceMaterial& material,
       break;
     }
   }
+  if (material.materialKey()) {
+    jMaterial["material_key"] = *material.materialKey();
+  }
   jMaterial[jsonKey().binkey] = nlohmann::json(bUtility);
   return jMaterial;
 }
@@ -112,15 +119,28 @@ nlohmann::json protoGridToJson(const ProtoGridSurfaceMaterial& material,
   jMaterial[jsonKey().typekey] = kProtoGridTag;
   jMaterial[jsonKey().maptype] = nlohmann::json(material.mappingType());
   jMaterial[jsonKey().mapkey] = true;
+  if (material.materialKey()) {
+    jMaterial["material_key"] = *material.materialKey();
+  }
   jMaterial["axis_specs"] =
       MultiAxisSpecJsonConverter::toJson(material.binning());
   return jMaterial;
 }
 
-nlohmann::json mergedMarkerToJson(const MergedMaterialMarker& /*material*/,
+nlohmann::json mergedMarkerToJson(const MergedMaterialMarker& material,
                                   EncodeContext& /*ctx*/) {
   nlohmann::json jMaterial;
   jMaterial[jsonKey().typekey] = kMergedMarkerTag;
+  if (!material.origins().empty()) {
+    jMaterial["origins"] = nlohmann::json::array();
+    for (const auto& origin : material.origins()) {
+      nlohmann::json entry{{"geometry_id", origin.geometryId.value()}};
+      if (origin.materialKey) {
+        entry["material_key"] = *origin.materialKey;
+      }
+      jMaterial["origins"].push_back(std::move(entry));
+    }
+  }
   // Flag as "mapped" so the reader does not discard it
   jMaterial[jsonKey().mapkey] = true;
   return jMaterial;
@@ -258,7 +278,10 @@ std::unique_ptr<const ISurfaceMaterial> protoFromJson(
     from_json(jMaterial.at(jsonKey().binkey), bUtility);
   }
   return std::make_unique<const ProtoSurfaceMaterial>(
-      bUtility, readMappingType(jMaterial));
+      bUtility, readMappingType(jMaterial),
+      jMaterial.contains("material_key")
+          ? std::make_optional(jMaterial.at("material_key").get<std::string>())
+          : std::nullopt);
 }
 
 std::unique_ptr<const ISurfaceMaterial> protoGridFromJson(
@@ -273,12 +296,30 @@ std::unique_ptr<const ISurfaceMaterial> protoGridFromJson(
   MultiAxisSpec2D spec2D{
       std::array<AxisSpec, 2u>{spec.axisSpec(0u), spec.axisSpec(1u)}};
   return std::make_unique<const ProtoGridSurfaceMaterial>(
-      spec2D, readMappingType(jMaterial));
+      spec2D, readMappingType(jMaterial),
+      jMaterial.contains("material_key")
+          ? std::make_optional(jMaterial.at("material_key").get<std::string>())
+          : std::nullopt);
 }
 
 std::unique_ptr<const ISurfaceMaterial> mergedMarkerFromJson(
-    const nlohmann::json& /*jMaterial*/, const DecodeContext& /*ctx*/) {
-  return std::make_unique<const MergedMaterialMarker>();
+    const nlohmann::json& jMaterial, const DecodeContext& /*ctx*/) {
+  std::vector<MergedMaterialMarker::Origin> origins;
+  if (jMaterial.contains("origins")) {
+    for (const auto& entry : jMaterial.at("origins")) {
+      std::optional<std::string> key;
+      if (entry.contains("material_key")) {
+        key = entry.at("material_key").get<std::string>();
+        if (key->empty()) {
+          throw std::invalid_argument("Empty material key in merge provenance");
+        }
+      }
+      origins.emplace_back(
+          GeometryIdentifier(entry.at("geometry_id").get<std::uint64_t>()),
+          std::move(key));
+    }
+  }
+  return std::make_unique<MergedMaterialMarker>(std::move(origins));
 }
 
 /// Read the 2D grid payload in column major order, i.e. [i0][i1], from the
@@ -412,3 +453,5 @@ Acts::SurfaceMaterialJsonConverter::fromJson(const nlohmann::json& jMaterial,
   return config.decoder(jMaterial,
                         context != nullptr ? *context : emptyContext);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()

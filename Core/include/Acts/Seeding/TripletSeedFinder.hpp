@@ -11,6 +11,7 @@
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <vector>
@@ -144,6 +145,15 @@ class TripletSeedFinder {
     /// Whether the input doublets are sorted by cotTheta
     bool sortedByCotTheta = true;
 
+    /// Enable the cut on the time compatibility of the three space points of a
+    /// triplet. The space point container has to provide the
+    /// `SpacePointColumns::Time` and `SpacePointColumns::VarianceT` columns.
+    /// When disabled, no time related code is generated at all.
+    ///
+    /// Declared here so that it fits into the padding after the booleans above
+    /// and does not change the layout of this struct.
+    bool useTime = false;
+
     /// Minimum transverse momentum (pT) used to check the r-z slope
     /// compatibility of triplets with maximum multiple scattering effect
     /// (produced by the minimum allowed pT particle) + a certain uncertainty
@@ -173,6 +183,11 @@ class TripletSeedFinder {
     /// coordinate transformation. Only active when both `useStripInfo` and
     /// `sortedByCotTheta` are true. Set to infinity (default) to disable.
     float cotThetaDiffMax = std::numeric_limits<float>::infinity();
+
+    /// Maximum allowed chi2 of the three times of the triplet, transported to
+    /// the middle space point, with respect to their inverse variance weighted
+    /// mean. Only used when `useTime` is enabled.
+    float timeChi2Max = 15;
   };
 
   /// Derived configuration for the triplet seed finder using a magnetic field.
@@ -258,6 +273,43 @@ class TripletSeedFinder {
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Subset2 topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;
+
+  /// Called with a bottom doublet and its triplet top candidates.
+  using CandidatesCallback =
+      Delegate<void(const DoubletsForMiddleSp::Proxy& /*bottomDoublet*/,
+                    const TripletTopCandidates& /*candidates*/)>;
+
+  /// Create triplets from the bottom, middle, and top space points.
+  ///
+  /// @param spacePoints Space point container
+  /// @param spM Space point candidate to be used as middle SP in a seed
+  /// @param bottomDoublets Bottom doublets to be used for triplet creation
+  /// @param topDoublets Top doublets to be used for triplet creation
+  /// @param tripletTopCandidates Cache for triplet top candidates
+  /// @param callback Called with each bottom doublet that has triplet top
+  ///   candidates
+  virtual void createTripletTopCandidates(
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
+      DoubletsForMiddleSp::Range bottomDoublets,
+      DoubletsForMiddleSp::Range topDoublets,
+      TripletTopCandidates& tripletTopCandidates,
+      const CandidatesCallback& callback) const = 0;
+
+  /// Create triplets from the bottom, middle, and top space points.
+  ///
+  /// @param spacePoints Space point container
+  /// @param spM Space point candidate to be used as middle SP in a seed
+  /// @param bottomDoublets Bottom doublets to be used for triplet creation
+  /// @param topDoublets Top doublets to be used for triplet creation
+  /// @param tripletTopCandidates Cache for triplet top candidates
+  /// @param callback Called with each bottom doublet that has triplet top
+  ///   candidates
+  virtual void createTripletTopCandidates(
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
+      DoubletsForMiddleSp::Subset2 bottomDoublets,
+      DoubletsForMiddleSp::Subset2 topDoublets,
+      TripletTopCandidates& tripletTopCandidates,
+      const CandidatesCallback& callback) const = 0;
 };
 
 }  // namespace Acts

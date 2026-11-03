@@ -1,8 +1,12 @@
 #!/bin/bash
 #
-# (c) 2023-2025 CERN for the benefit of the ACTS project
+# This file is part of the ACTS project.
 #
-# Mozilla Public License Version 2.0
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
 # Script generating TGZ/MD5 files that could then be uploaded to the ACTS web
 # service.

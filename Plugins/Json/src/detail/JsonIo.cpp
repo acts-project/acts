@@ -63,7 +63,9 @@ std::vector<std::byte> compressZstd(std::span<const std::byte> data,
   static_cast<void>(level);
   throw std::runtime_error(
       "zstd compressed output was requested, but ACTS was built without zstd "
-      "support. Reconfigure with zstd available to write compressed files.");
+      "support. Reconfigure with -DACTS_USE_ZSTD=ALWAYS and zstd available to "
+      "write "
+      "compressed files.");
 #endif
 }
 
@@ -97,7 +99,8 @@ std::vector<std::byte> decompressZstd(std::span<const std::byte> data,
   static_cast<void>(data);
   throw std::runtime_error(std::format(
       "'{}' is zstd compressed, but ACTS was built without zstd support. "
-      "Reconfigure with zstd available to read this file.",
+      "Reconfigure with -DACTS_USE_ZSTD=ALWAYS and zstd available to read this "
+      "file.",
       origin.string()));
 #endif
 }

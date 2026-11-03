@@ -88,6 +88,11 @@ class LineSurface : public Surface {
   ///
   /// @param other is the source surface dor copying
   /// @return Reference to this LineSurface after assignment
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<T>(other)` instead.
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<T>(other) instead.")]]
   LineSurface& operator=(const LineSurface& other);
 
   Vector3 normal(const GeometryContext& gctx, const Vector3& pos,

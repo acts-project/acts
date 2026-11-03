@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../utils/cuda_error_handling.hpp"
@@ -13,6 +14,7 @@
 #include "traccc/cuda/seeding/seed_parameter_estimation_algorithm.hpp"
 
 // Project include(s).
+#include "traccc/geometry/detector.hpp"
 #include "traccc/seeding/device/estimate_track_params.hpp"
 
 namespace traccc::cuda {
@@ -28,6 +30,22 @@ __global__ void estimate_track_params(
     bound_track_parameters_collection_types::view params_view) {
   device::estimate_track_params(details::global_index1(), config, measurements,
                                 spacepoints, seeds, bfield, params_view);
+}
+
+/// CUDA kernel for running @c traccc::device::estimate_track_params with a
+/// detector
+template <detray::concepts::detector detector_t, typename bfield_t>
+__global__ void estimate_track_params_with_detector(
+    const track_params_estimation_config config,
+    detray::detector_view_t<detector_t> det_view,
+    edm::measurement_collection::const_view measurements,
+    edm::spacepoint_collection::const_view spacepoints,
+    edm::seed_collection::const_view seeds, const bfield_t bfield,
+    bound_track_parameters_collection_types::view params_view) {
+  const detray::detector_device_t<detector_t> det{det_view};
+  device::estimate_track_params(details::global_index1(), config, det,
+                                measurements, spacepoints, seeds, bfield,
+                                params_view);
 }
 
 }  // namespace kernels
@@ -47,10 +65,23 @@ void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
   const unsigned int n_blocks = (payload.n_seeds + n_threads - 1) / n_threads;
   magnetic_field_visitor<bfield_type_list<scalar>>(
       payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
-        kernels::estimate_track_params<<<n_blocks, n_threads, 0,
-                                         details::get_stream(stream())>>>(
-            payload.config, payload.measurements, payload.spacepoints,
-            payload.seeds, bfield, payload.params);
+        if (payload.detector == nullptr) {
+          kernels::estimate_track_params<<<n_blocks, n_threads, 0,
+                                           details::get_stream(stream())>>>(
+              payload.config, payload.measurements, payload.spacepoints,
+              payload.seeds, bfield, payload.params);
+        } else {
+          detector_buffer_visitor<detector_type_list>(
+              *(payload.detector),
+              [&]<detray::concepts::detector detector_t>(
+                  const detray::detector_view_t<detector_t>& det) {
+                kernels::estimate_track_params_with_detector<detector_t>
+                    <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
+                        payload.config, det, payload.measurements,
+                        payload.spacepoints, payload.seeds, bfield,
+                        payload.params);
+              });
+        }
       });
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }

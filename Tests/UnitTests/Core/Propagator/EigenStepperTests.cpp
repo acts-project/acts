@@ -53,6 +53,7 @@
 #include <memory>
 #include <numbers>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -178,10 +179,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
-  BOOST_CHECK(!esState.covTransport);
-  BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
+  BOOST_CHECK(!esState.cov.has_value());
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
+  BOOST_CHECK_THROW(es.setCovariance(esState, Covariance::Identity()),
+                    std::logic_error);
 
   // Test without charge and covariance matrix
   BoundTrackParameters ncp = BoundTrackParameters::createCurvilinear(
@@ -198,8 +200,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
                                                 ParticleHypothesis::pion0());
   es.initialize(esState, ncp);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK(esState.covTransport);
-  BOOST_CHECK_EQUAL(esState.cov, cov);
+  BOOST_CHECK(esState.cov.has_value());
+  BOOST_CHECK_EQUAL(*esState.cov, cov);
+
+  es.setCovariance(esState, 2. * cov);
+  BOOST_CHECK_EQUAL(*esState.cov, 2. * cov);
 }
 
 /// These tests are aiming to test the functions of the EigenStepper
@@ -252,17 +257,17 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
   // Test the curvilinear state construction
-  auto curvState = es.curvilinearState(esState);
-  auto curvPars = std::get<0>(curvState);
+  const BoundMatrix curvJacobian = es.transportToCurvilinear(esState);
+  auto curvPars = es.curvilinearParameters(esState);
   CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), eps);
   CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 10e-6);
   CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), eps);
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), eps);
   BOOST_CHECK(curvPars.covariance().has_value());
   BOOST_CHECK_NE(*curvPars.covariance(), cov);
-  CHECK_CLOSE_COVARIANCE(std::get<1>(curvState),
-                         BoundMatrix(BoundMatrix::Identity()), eps);
-  CHECK_CLOSE_ABS(std::get<2>(curvState), 0., eps);
+  CHECK_CLOSE_COVARIANCE(curvJacobian, BoundMatrix(BoundMatrix::Identity()),
+                         eps);
+  CHECK_CLOSE_ABS(es.pathLength(esState), 0., eps);
 
   // Test the update method
   Vector3 newPos(2., 4., 8.);
@@ -278,18 +283,16 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // The covariance transport
   esState.cov = cov;
-  es.transportCovarianceToCurvilinear(esState);
-  BOOST_CHECK_NE(esState.cov, cov);
+  es.transportToCurvilinear(esState);
+  BOOST_CHECK_NE(*esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Perform a step without and with covariance transport
-  esState.cov = cov;
-
-  esState.covTransport = false;
+  esState.cov.reset();
   es.step(esState, navDir, nullptr).value();
-  CHECK_CLOSE_COVARIANCE(esState.cov, cov, eps);
+  BOOST_CHECK(!esState.cov.has_value());
   BOOST_CHECK_NE(es.position(esState).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(esState), newMom.normalized());
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
@@ -297,9 +300,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
 
-  esState.covTransport = true;
+  esState.cov = cov;
   es.step(esState, navDir, nullptr).value();
-  CHECK_CLOSE_COVARIANCE(esState.cov, cov, eps);
+  CHECK_CLOSE_COVARIANCE(*esState.cov, cov, eps);
   BOOST_CHECK_NE(es.position(esState).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(esState), newMom.normalized());
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
@@ -327,9 +330,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     std::decay_t<decltype(state)> copy = es.makeState(esOptions);
     es.initialize(copy, cp);
     copy.pars = state.pars;
-    copy.covTransport = state.covTransport;
     copy.cov = state.cov;
-    copy.jacobian = state.jacobian;
     copy.jacToGlobal = state.jacToGlobal;
     copy.jacTransport = state.jacTransport;
     copy.derivative = state.derivative;
@@ -357,8 +358,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, esState.jacToGlobal);
   BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
-  BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
+  BOOST_CHECK(esStateCopy.cov.has_value());
+  BOOST_CHECK_EQUAL(*esStateCopy.cov, cov2);
   BOOST_CHECK_EQUAL(es.position(esStateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
@@ -413,21 +414,22 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
   // Test the bound state construction
-  auto boundState = es.boundState(esState, *plane).value();
-  auto boundPars = std::get<0>(boundState);
+  const BoundMatrix boundJacobian =
+      es.transportToBound(esState, *plane).value();
+  auto boundPars = es.boundParameters(esState, *plane).value();
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), eps);
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-7);
   CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), eps);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), eps);
   BOOST_CHECK(boundPars.covariance().has_value());
   BOOST_CHECK_NE(*boundPars.covariance(), cov);
-  CHECK_CLOSE_COVARIANCE(std::get<1>(boundState),
-                         BoundMatrix(BoundMatrix::Identity()), eps);
-  CHECK_CLOSE_ABS(std::get<2>(boundState), 0., eps);
+  CHECK_CLOSE_COVARIANCE(boundJacobian, BoundMatrix(BoundMatrix::Identity()),
+                         eps);
+  CHECK_CLOSE_ABS(es.pathLength(esState), 0., eps);
 
   // Transport the covariance in the context of a surface
-  BOOST_CHECK(es.transportCovarianceToBound(esState, *plane).ok());
-  BOOST_CHECK_NE(esState.cov, cov);
+  BOOST_CHECK(es.transportToBound(esState, *plane).ok());
+  BOOST_CHECK_NE(*esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
@@ -443,7 +445,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_REL(es.absoluteMomentum(esState), absMom, eps);
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
   CHECK_CLOSE_OR_SMALL(es.time(esState), time, eps, eps);
-  CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
+  CHECK_CLOSE_COVARIANCE(*esState.cov, Covariance(2. * cov), eps);
 
   // Test a case where no step size adjustment is required
   esState.options.stepTolerance = 2. * 4.4258e+09;

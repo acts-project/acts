@@ -1,4 +1,8 @@
-@page material_map_json_format Material map JSON format
+@page material_map_json_format Legacy material map JSON format
+
+The API documented here is deprecated and retains its legacy behavior. New code
+should use @ref Acts::TrackingGeometryMaterialJsonConverter and the separate
+@ref material_map_json_schema format.
 
 A material map is the file the material mapping writes and the
 @ref Acts::JsonMaterialDecorator "JsonMaterialDecorator" reads back to attach
@@ -132,3 +136,42 @@ under `data`, as in the example above), `proto` (a `binUtility` only), and
 `interpolated2D` / `interpolated3D` (a `binUtility` plus one parameter vector
 per bin). The tags overlap with the surface ones by accident; the two lists
 live under different top level keys and are never mixed.
+
+## Stable surface assignment keys
+
+For configuration, mapping, and application, see
+@ref material_mapping_stable_keys in the material-mapping guide.
+
+Maps with keyed assignments add a `KeyedSurfaces` section:
+
+```json
+{
+  "KeyedSurfaces": [
+    {
+      "key": "tracker/barrel/outer",
+      "geometry_id": 123,
+      "material": { "type": "homogeneous", "mapMaterial": true, "data": [[{ "material": null, "thickness": 0.0 }]] }
+    }
+  ]
+}
+```
+
+The array is alongside the existing `Surfaces` and `Volumes` sections, without
+a separate version header. Keyed assignments appear only in `KeyedSurfaces`;
+they are not also emitted in `Surfaces`. The `geometry_id` recorded during
+mapping is diagnostic only. Each entry contains the key, geometry ID, and
+material payload. The material payload uses
+@ref Acts::SurfaceMaterialJsonConverter. Keyed entries use an array so duplicate keys
+can be detected before insertion. Distinct keys may have the same recorded
+ID, allowing maps from independent geometry builds to be combined. Combining
+maps must reject duplicate keys rather than overwrite them.
+
+Standalone proto-material payloads store the optional key as `material_key`.
+
+Merge markers retain an `origins` array containing the original `geometry_id`
+and, when present, `material_key`. Repeated merges flatten the original inputs
+into this array. Geometry IDs may be zero if the merge preceded ID assignment.
+The marker remains an error sentinel, never a valid material-map assignment.
+
+The ROOT material writers currently reject keyed assignments; use JSON or
+CBOR to preserve the keys. ID-only JSON maps retain their existing format.

@@ -47,11 +47,26 @@ class GbtsLayer final {
   /// @param b2 Second bin index
   /// @param minZ0 Minimum z0 coordinate
   /// @param maxZ0 Maximum z0 coordinate
+  /// @param z0Tolerance Margin added to the z0 range
   /// @return True if bins are compatible
   bool checkCompatibility(const GbtsLayer& otherLayer, std::uint32_t b1,
-                          std::uint32_t b2, float minZ0, float maxZ0) const;
+                          std::uint32_t b2, float minZ0, float maxZ0,
+                          float z0Tolerance) const;
 
  private:
+  struct LayerPoint final {
+    float r{};
+    float z{};
+
+    float eta() const;
+  };
+
+  /// Point on the layer line at a boundary coordinate
+  LayerPoint pointAt(float bound) const;
+
+  /// Boundary coordinate where the layer line reaches an eta value
+  float boundAt(float eta) const;
+
   GbtsLayerDescription m_layerDescription;
   GbtsLayerBinning m_binning;
 

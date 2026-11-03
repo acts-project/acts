@@ -40,7 +40,7 @@ namespace {
 
 using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
 using algebra_t = detray::array<scalar_t>;
-using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
+using detector_t = detray::host::detector<detray::default_metadata<algebra_t>>;
 using geometry_context_t = detector_t::geometry_context;
 using style_t = detray::svgtools::styling::style;
 using illustrator_t = detray::svgtools::illustrator<detector_t>;

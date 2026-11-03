@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2022-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Project include(s).
 include(traccc-compiler-options-cpp)
@@ -33,10 +35,12 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/clusterization/device/aggregate_cluster.hpp"
    "include/traccc/clusterization/device/impl/aggregate_cluster.ipp"
    "include/traccc/clusterization/device/measurement_sorting.hpp"
+   "include/traccc/clusterization/device/measurement_sorting_algorithm.hpp"
    "include/traccc/clusterization/device/ccl_kernel_definitions.hpp"
    "include/traccc/clusterization/device/ccl_kernel.hpp"
    "include/traccc/clusterization/device/clusterization_algorithm.hpp"
    "src/clusterization/clusterization_algorithm.cpp"
+   "src/clusterization/measurement_sorting_algorithm.cpp"
    # Spacepoint binning function(s).
    "include/traccc/seeding/device/count_grid_capacities.hpp"
    "include/traccc/seeding/device/impl/count_grid_capacities.ipp"
@@ -47,6 +51,12 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/seeding/device/impl/count_spacepoints.ipp"
    "include/traccc/seeding/device/form_spacepoints.hpp"
    "include/traccc/seeding/device/impl/form_spacepoints.ipp"
+   "include/traccc/seeding/device/form_strip_spacepoints_from_pairs.hpp"
+   "include/traccc/seeding/device/impl/form_strip_spacepoints_from_pairs.ipp"
+   "include/traccc/seeding/device/count_strip_pairs.hpp"
+   "include/traccc/seeding/device/impl/count_strip_pairs.ipp"
+   "include/traccc/seeding/device/find_strip_pairs.hpp"
+   "include/traccc/seeding/device/impl/find_strip_pairs.ipp"
    "include/traccc/seeding/device/count_doublets.hpp"
    "include/traccc/seeding/device/impl/count_doublets.ipp"
    "include/traccc/seeding/device/find_doublets.hpp"
@@ -65,6 +75,8 @@ traccc_add_library( traccc_device_common device_common
    "src/seeding/triplet_seeding_algorithm.cpp"
    "include/traccc/seeding/device/silicon_pixel_spacepoint_formation_algorithm.hpp"
    "src/seeding/silicon_pixel_spacepoint_formation_algorithm.cpp"
+   "include/traccc/seeding/device/silicon_strip_spacepoint_formation_algorithm.hpp"
+   "src/seeding/silicon_strip_spacepoint_formation_algorithm.cpp"
    "include/traccc/seeding/device/seed_parameter_estimation_algorithm.hpp"
    "src/seeding/seed_parameter_estimation_algorithm.cpp"
    # GBTS seed finding code.
@@ -74,14 +86,16 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/gbts_seeding/device/impl/gbts_sort_nodes.ipp"
    "include/traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
    "include/traccc/gbts_seeding/device/impl/gbts_find_minmax_radius.ipp"
-   "include/traccc/gbts_seeding/device/gbts_make_graph_edges.hpp"
-   "include/traccc/gbts_seeding/device/impl/gbts_make_graph_edges.ipp"
-   "include/traccc/gbts_seeding/device/gbts_link_graph_edges.hpp"
-   "include/traccc/gbts_seeding/device/impl/gbts_link_graph_edges.ipp"
+   "include/traccc/gbts_seeding/device/gbts_build_edge_work_list.hpp"
+   "include/traccc/gbts_seeding/device/impl/gbts_build_edge_work_list.ipp"
+   "include/traccc/gbts_seeding/device/details/gbts_graph_edges_helpers.hpp"
+   "include/traccc/gbts_seeding/device/impl/gbts_graph_edges_helpers.ipp"
+   "include/traccc/gbts_seeding/device/gbts_count_graph_edges.hpp"
+   "include/traccc/gbts_seeding/device/impl/gbts_count_graph_edges.ipp"
+   "include/traccc/gbts_seeding/device/gbts_fill_graph_edges.hpp"
+   "include/traccc/gbts_seeding/device/impl/gbts_fill_graph_edges.ipp"
    "include/traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
    "include/traccc/gbts_seeding/device/impl/gbts_match_graph_edges.ipp"
-   "include/traccc/gbts_seeding/device/gbts_reindex_edges.hpp"
-   "include/traccc/gbts_seeding/device/impl/gbts_reindex_edges.ipp"
    "include/traccc/gbts_seeding/device/gbts_compress_graph.hpp"
    "include/traccc/gbts_seeding/device/impl/gbts_compress_graph.ipp"
    "include/traccc/gbts_seeding/device/gbts_run_cca_iteration.hpp"

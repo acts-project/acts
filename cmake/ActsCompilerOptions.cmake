@@ -13,11 +13,6 @@ set(cxx_flags
     "-Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast -Woverloaded-virtual"
 )
 
-# Add assertions to standard libraries
-if(ACTS_FORCE_ASSERTIONS)
-    set(cxx_flags "${cxx_flags} -D_GLIBCXX_ASSERTIONS -D_LIBCPP_DEBUG")
-endif()
-
 # This adds some useful conversion checks like float-to-bool, float-to-int, etc.
 # However, at the moment this is only added to clang builds, since GCC's -Wfloat-conversion
 # is much more aggressive and also triggers on e.g., double-to-float
@@ -44,8 +39,8 @@ if(
     set(cxx_flags "${cxx_flags} -Wnull-dereference")
 endif()
 
-set(ACTS_CXX_STANDARD 20)
-set(ACTS_CXX_STANDARD_FEATURE cxx_std_20)
+set(ACTS_CXX_STANDARD 23)
+set(ACTS_CXX_STANDARD_FEATURE cxx_std_23)
 if(DEFINED CMAKE_CXX_STANDARD)
     if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
         set(ACTS_CXX_STANDARD ${CMAKE_CXX_STANDARD})

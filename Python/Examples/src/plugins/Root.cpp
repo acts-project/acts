@@ -11,6 +11,7 @@
 #include "ActsExamples/Io/Root/RootAthenaDumpWriter.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
+#include "ActsExamples/Io/Root/RootClusterWriter.hpp"
 #include "ActsExamples/Io/Root/RootFileHasher.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
@@ -19,7 +20,6 @@
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointWriter.hpp"
-#include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootPatternRecognitionPerformanceWriter.hpp"
@@ -180,9 +180,21 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
       auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
-      ACTS_PYTHON_STRUCT(c, inputMeasurements, inputClusters, inputSimHits,
+      ACTS_PYTHON_STRUCT(c, inputMeasurements, inputSimHits,
                          inputMeasurementSimHitsMap, filePath, fileMode,
                          surfaceByIdentifier);
+    }
+
+    {
+      using Writer = RootClusterWriter;
+      auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
+                   root, "RootClusterWriter")
+                   .def(py::init<const Writer::Config&, Logging::Level>(),
+                        py::arg("config"), py::arg("level"));
+
+      auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
+
+      ACTS_PYTHON_STRUCT(c, inputClusters, filePath, fileMode, treeName);
     }
 
     {
@@ -207,6 +219,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
               root, "RootMaterialWriter")
               .def(py::init<const Writer::Config&, Logging::Level>(),
                    py::arg("config"), py::arg("level"))
+              .def("writeMaterial", &Writer::writeMaterial, py::arg("material"))
               .def("write",
                    py::overload_cast<const TrackingGeometry&>(&Writer::write));
 
@@ -266,13 +279,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         effPlotToolConfig, fakePlotToolConfig, duplicationPlotToolConfig,
         trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
         subDetectorTrackSummaryVolumes, writeMatchingDetails);
-
-    ACTS_PYTHON_DECLARE_WRITER(RootNuclearInteractionParametersWriter, root,
-                               "RootNuclearInteractionParametersWriter",
-                               inputSimulationProcesses, filePath, fileMode,
-                               interactionProbabilityBins, momentumBins,
-                               invariantMassBins, multiplicityMax,
-                               writeOptionalHistograms, nSimulatedEvents);
   }
 
   // Calibration

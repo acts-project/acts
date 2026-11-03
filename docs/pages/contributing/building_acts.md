@@ -14,6 +14,9 @@ cmake -B <build> -S <source>
 cmake --build <build>
 ```
 
+The default C++ standard is C++23. To build in the supported C++20 mode,
+configure with `-DCMAKE_CXX_STANDARD=20` and use dependencies built for C++20.
+
 For a full list of dependencies, including specific versions, see the
 [Prerequisites](#prerequisites) section below. Build options to activate
 additional components are described in the [Build options](#build-options)
@@ -231,7 +234,54 @@ source files or documentation.
 
 [doxygen]: https://doxygen.nl/
 
+# Documenting a code generator {#codegen-notebooks}
+
+Parts of ACTS are C++ headers derived symbolically with sympy and printed at
+build time (see @ref source-package for the mechanics). What such a generator
+does is rarely obvious from its source, so there is a way to write one that
+documents itself.
+
+A generator can be written in [jupytext](https://jupytext.readthedocs.io/)'s
+`percent` format: ordinary Python with `# %%` cell markers, which the build runs
+as a script and a notebook viewer (JupyterLab, or VS Code with the jupytext
+extension) opens as a notebook. Prose, the symbolic expressions and the
+generated code then live in one file that cannot drift out of date, because it
+is the file the build runs.
+
+`Core/src/Propagator/detail/generate_sympy_jac.py` is written this way; the
+result is @ref codegen_sympy_jac. Such a notebook has to work in both roles, so
+it takes the output path from `argv[1]` as any generator does, and detects the
+notebook case (`"ipykernel" in sys.modules`) to show its results instead of
+writing them.
+
+Registering one with the documentation is a line in `docs/CMakeLists.txt`:
+
+```cmake
+acts_render_notebook(
+    SOURCE ${PROJECT_SOURCE_DIR}/path/to/generator.py
+    PAGE_ID some_page_id
+)
+```
+
+The docs build then executes it with `docs/render_notebook.py` and turns the
+result into a doxygen page labelled `some_page_id`, so other pages can point at
+it with `@ref`. Note that the notebook is executed, so anything it prints or
+leaves as a cell's last expression ends up on the page.
+
 # Build options {#build-options}
+
+Optional zstd compression is controlled by the global string setting
+`ACTS_USE_ZSTD`:
+
+- `AUTO` (default): enable compression if zstd is found; otherwise continue without it.
+- `ALWAYS`: require zstd, failing configuration if it is unavailable.
+- `NEVER`: disable compression and skip zstd discovery, even if it is installed.
+
+For reproducible builds, select `-DACTS_USE_ZSTD=ALWAYS` or `-DACTS_USE_ZSTD=NEVER`
+explicitly. Currently, zstd is used by the JSON plugin when
+`ACTS_BUILD_PLUGIN_JSON` is enabled.
+Uncompressed JSON and CBOR remain available in all modes; reading or writing
+compressed files requires zstd support.
 
 CMake options can be set by adding `-D<OPTION>=<VALUE>` to the configuration
 command. The following command would e.g. enable the unit tests
@@ -253,6 +303,7 @@ components.
 | ACTS_FORCE_ASSERTIONS                         | Force assertions regardless of build<br>type<br> type: `bool`, default: `OFF`                                                                                                                                                                                               |
 | ACTS_CODEGEN_PREBUILT_DIR                     | Directory holding pre-generated code; a<br>generated file found there is used<br>verbatim instead of being regenerated.<br>Defaults to prebuilt-codegen/ next to<br>this file when it exists, which is what<br>release source archives ship<br> type: `path`, default: `""` |
 | ACTS_CODEGEN_REQUIRE_PREBUILT                 | Fail the configure step instead of<br>running the code generators when pre-<br>generated code is missing<br> type: `bool`, default: `OFF`                                                                                                                                   |
+| ACTS_USE_ZSTD                                 | zstd support: AUTO (use if available),<br>ALWAYS (required), NEVER (disabled)<br> type: `string`, default: `AUTO`                                                                                                                                                           |
 | ACTS_USE_SYSTEM_LIBS                          | Use system libraries by default<br> type: `bool`, default: `OFF`                                                                                                                                                                                                            |
 | ACTS_USE_SYSTEM_ACTSVG                        | Use the ActSVG system library<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                                                      |
 | ACTS_USE_SYSTEM_COVFIE                        | Use a system-provided covfie<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                                       |
@@ -336,6 +387,16 @@ list of presets contains:
   necessary for running the ODD full chain examples with Fatras. It
   sets the cpp standard to 20, the generator to ninja and enables ccache.
 - `perf` is similar to `dev` but tweaked for performance measurements.
+- `github-ci` reproduces the GitHub CI configuration and enables ccache.
+- `github-ci-no-ccache` inherits the same configuration but clears the C++
+  compiler launcher, so it can be used locally without installing ccache:
+
+  ```console
+  cmake --preset github-ci-no-ccache -B build
+  ```
+
+  All other CI dependencies are still required. The `dev`, `perf`,
+  `devcontainer`, and `github-ci` presets continue to enable ccache by default.
 
 In addition to the ACTS-specific options, many generic options are available
 that modify various aspects of the build. The following options are some of the

@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   //
   // Telescope detector configuration
   //
-  using tel_detector_t = detector<test::default_telescope_metadata>;
+  using tel_detector_t = host::detector<test::default_telescope_metadata>;
   using scalar = typename tel_detector_t::scalar_type;
 
   /// Set a consistent minimum step size across all tests

@@ -16,9 +16,26 @@
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
+
+template <StepperConcept S, NavigatorConcept N>
+template <typename propagator_state_t>
+Result<void> Propagator<S, N>::updateNavigationState(
+    propagator_state_t& state) const {
+  state.position = m_stepper.position(state.stepping);
+  const Vector3 tangent = m_stepper.direction(state.stepping);
+  state.direction = state.options.direction * tangent;
+  state.curvature.setZero();
+  const auto curvature = detail::getCurvature(m_stepper, state.stepping);
+  if (!curvature.ok()) {
+    return curvature.error();
+  }
+  state.curvature = *curvature;
+  return Result<void>::success();
+}
 
 template <StepperConcept S, NavigatorConcept N>
 template <typename propagator_state_t>
@@ -46,18 +63,35 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     return state.options.actorList.act(state, m_stepper, m_navigator, logger());
   }
 
+  // Pre-propagation actors may have changed momentum or direction.
+  if (auto update = updateNavigationState(state); !update.ok()) {
+    return update.error();
+  }
+
   auto getNextTarget = [&]() -> Result<NavigationTarget> {
     for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
-      NavigationTarget nextTarget = m_navigator.nextTarget(
-          state.navigation, state.position, state.direction);
+      NavigationTarget nextTarget = [&] {
+        if constexpr (Concepts::NavigatorNextTargetWithCurvature<N>) {
+          return m_navigator.nextTarget(state.navigation, state.position,
+                                        state.direction, state.curvature);
+        } else {
+          return m_navigator.nextTarget(state.navigation, state.position,
+                                        state.direction);
+        }
+      }();
       if (nextTarget.isNone()) {
         return NavigationTarget::None();
       }
-      IntersectionStatus preStepSurfaceStatus = m_stepper.updateSurfaceStatus(
-          state.stepping, nextTarget.surface(), nextTarget.intersectionIndex(),
-          state.options.direction, nextTarget.boundaryTolerance(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+      const auto preStepSurfaceResult =
+          detail::updateSurfaceStatusWithCurvature(
+              m_stepper, state.stepping, nextTarget.surface(),
+              nextTarget.intersectionIndex(), state.options.direction,
+              nextTarget.boundaryTolerance(), state.options.surfaceTolerance,
+              ConstrainedStep::Type::Navigator, logger());
+      if (!preStepSurfaceResult.ok()) {
+        return preStepSurfaceResult.error();
+      }
+      const IntersectionStatus preStepSurfaceStatus = *preStepSurfaceResult;
       if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
         // This indicates a geometry overlap which is not handled by the
         // navigator, so we skip this target.
@@ -126,14 +160,30 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     state.stage = PropagatorStage::postStep;
 
     if (!nextTarget.isNone()) {
-      IntersectionStatus postStepSurfaceStatus = m_stepper.updateSurfaceStatus(
-          state.stepping, nextTarget.surface(), nextTarget.intersectionIndex(),
-          state.options.direction, nextTarget.boundaryTolerance(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+      const auto postStepSurfaceResult =
+          detail::updateSurfaceStatusWithCurvature(
+              m_stepper, state.stepping, nextTarget.surface(),
+              nextTarget.intersectionIndex(), state.options.direction,
+              nextTarget.boundaryTolerance(), state.options.surfaceTolerance,
+              ConstrainedStep::Type::Navigator, logger());
+      if (!postStepSurfaceResult.ok()) {
+        return postStepSurfaceResult.error();
+      }
+      const IntersectionStatus postStepSurfaceStatus = *postStepSurfaceResult;
       if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
-        m_navigator.handleSurfaceReached(state.navigation, state.position,
-                                         state.direction, nextTarget.surface());
+        // A portal transition can create a policy state before actors run.
+        if (auto update = updateNavigationState(state); !update.ok()) {
+          return update.error();
+        }
+        if constexpr (Concepts::NavigatorHandleSurfaceReachedWithCurvature<N>) {
+          m_navigator.handleSurfaceReached(
+              state.navigation, state.position, state.direction,
+              nextTarget.surface(), state.curvature);
+        } else {
+          m_navigator.handleSurfaceReached(state.navigation, state.position,
+                                           state.direction,
+                                           nextTarget.surface());
+        }
       }
       if (postStepSurfaceStatus != IntersectionStatus::reachable) {
         nextTarget = NavigationTarget::None();
@@ -154,17 +204,24 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
       break;
     }
 
-    // Update the position and direction because actors might have changed it
-    state.position = m_stepper.position(state.stepping);
-    state.direction =
-        state.options.direction * m_stepper.direction(state.stepping);
+    // Actors may have changed direction or momentum (and hence curvature).
+    if (auto update = updateNavigationState(state); !update.ok()) {
+      return update.error();
+    }
 
     // Pre-Stepping: target setting
     state.stage = PropagatorStage::preStep;
 
-    if (!nextTarget.isNone() &&
-        !m_navigator.checkTargetValid(state.navigation, state.position,
-                                      state.direction)) {
+    const auto checkTargetValid = [&] {
+      if constexpr (Concepts::NavigatorCheckTargetValidWithCurvature<N>) {
+        return m_navigator.checkTargetValid(state.navigation, state.position,
+                                            state.direction, state.curvature);
+      } else {
+        return m_navigator.checkTargetValid(state.navigation, state.position,
+                                            state.direction);
+      }
+    };
+    if (!nextTarget.isNone() && !checkTargetValid()) {
       ACTS_VERBOSE("Target is not valid anymore.");
       nextTarget = NavigationTarget::None();
     }
@@ -301,14 +358,15 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
     state.options.actorList.template get<target_aborter_t>().surface = target;
   }
 
-  state.position = m_stepper.position(state.stepping);
-  state.direction =
-      state.options.direction * m_stepper.direction(state.stepping);
+  if (auto update = updateNavigationState(state); !update.ok()) {
+    return update.error();
+  }
 
   // Navigator initialize state call
   auto navInitRes = m_navigator.initialize(
       state.navigation, {.position = state.position,
                          .direction = state.direction,
+                         .curvature = state.curvature,
                          .propagationDirection = state.options.direction,
                          .startSurface = &start.referenceSurface(),
                          .targetSurface = target});
@@ -353,26 +411,32 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
 
     if (target != nullptr) {
       // We are at a surface, so we need to compute the bound state
-      const auto boundState = m_stepper.boundState(state.stepping, *target);
-      if (!boundState.ok()) {
-        ACTS_DEBUG("Failed to get bound state at current surface: "
-                   << boundState.error() << ": "
-                   << boundState.error().message());
-        return boundState.error();
+      const auto jacobian = m_stepper.transportToBound(state.stepping, *target);
+      if (!jacobian.ok()) {
+        ACTS_DEBUG("Failed to transport to current surface: "
+                   << jacobian.error() << ": " << jacobian.error().message());
+        return jacobian.error();
       }
-      result.endParameters = std::get<0>(*boundState);
-      if (state.stepping.covTransport) {
-        result.transportJacobian = std::get<1>(*boundState);
+      auto parameters = m_stepper.boundParameters(state.stepping, *target);
+      if (!parameters.ok()) {
+        ACTS_DEBUG("Failed to get bound parameters at current surface: "
+                   << parameters.error() << ": "
+                   << parameters.error().message());
+        return parameters.error();
+      }
+      result.endParameters = std::move(*parameters);
+      if (m_stepper.hasCovariance(state.stepping)) {
+        result.transportJacobian = *jacobian;
       }
     } else {
       if (!m_stepper.prepareCurvilinearState(state.stepping)) {
         ACTS_DEBUG("Failed to prepare curvilinear state.");
         return PropagatorError::Failure;
       }
-      const auto curvState = m_stepper.curvilinearState(state.stepping);
-      result.endParameters = std::get<0>(curvState);
-      if (state.stepping.covTransport) {
-        result.transportJacobian = std::get<1>(curvState);
+      const auto jacobian = m_stepper.transportToCurvilinear(state.stepping);
+      result.endParameters = m_stepper.curvilinearParameters(state.stepping);
+      if (m_stepper.hasCovariance(state.stepping)) {
+        result.transportJacobian = jacobian;
       }
     }
   }
@@ -389,7 +453,7 @@ void Propagator<S, N>::moveStateToResult(propagator_state_t& state,
   result.steps = state.steps;
   result.pathLength = state.pathLength;
 
-  result.statistics.stepping = state.stepping.statistics;
+  result.statistics.stepping = m_stepper.statistics(state.stepping);
   result.statistics.navigation = state.navigation.statistics;
 }
 

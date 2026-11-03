@@ -1,5 +1,6 @@
 acts_add_library(
     ExamplesIoRoot
+    src/RootClusterWriter.cpp
     src/RootMeasurementWriter.cpp
     src/RootMaterialWriter.cpp
     src/RootMaterialTrackReader.cpp
@@ -23,8 +24,6 @@ acts_add_library(
     src/RootVertexWriter.cpp
     src/RootAthenaDumpReader.cpp
     src/RootAthenaDumpWriter.cpp
-    src/RootNuclearInteractionParametersWriter.cpp
-    src/detail/NuclearInteractionParametrisation.cpp
     src/RootPatternRecognitionPerformanceWriter.cpp
     src/RootTrackFinderNTupleWriter.cpp
     src/RootTrackParameterPerformanceWriter.cpp
@@ -52,8 +51,8 @@ target_link_libraries(
 )
 
 # RootFileHasher prefers Boost.Hash2 (SHA-256), which is available from Boost
-# 1.86 onwards. On older Boost it falls back to ROOT's TMD5 (MD5).
-if(Boost_VERSION VERSION_GREATER_EQUAL "1.86.0")
+# 1.88 onwards. On older Boost it falls back to ROOT's TMD5 (MD5).
+if(Boost_VERSION VERSION_GREATER_EQUAL "1.88.0")
     target_compile_definitions(
         ActsExamplesIoRoot
         PRIVATE ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2
@@ -62,7 +61,7 @@ if(Boost_VERSION VERSION_GREATER_EQUAL "1.86.0")
 else()
     message(
         WARNING
-        "Boost ${Boost_VERSION} < 1.86.0: RootFileHasher falls back to MD5 (ROOT TMD5) instead of SHA-256 (Boost.Hash2)."
+        "Boost ${Boost_VERSION} < 1.88.0: RootFileHasher falls back to MD5 (ROOT TMD5) instead of SHA-256 (Boost.Hash2)."
     )
 endif()
 

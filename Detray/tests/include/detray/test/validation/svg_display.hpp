@@ -38,10 +38,10 @@ std::unordered_set<dindex> get_volume_indices(
   std::unordered_set<dindex> volumes{};
   volumes.reserve(intersection_record.size());
   for (const auto &single_ir : intersection_record) {
-    if (single_ir.intersection.surface().identifier().is_invalid()) {
+    if (single_ir.intersection().surface().identifier().is_invalid()) {
       continue;
     }
-    volumes.insert(single_ir.vol_idx);
+    volumes.insert(single_ir.volume());
   }
 
   return volumes;
@@ -99,10 +99,10 @@ auto transcribe_intersections(
   intersections.reserve(intersection_trace.size());
   for (auto &ir : intersection_trace) {
     // Dummy record
-    if (ir.intersection.surface().identifier().is_invalid()) {
+    if (ir.intersection().surface().identifier().is_invalid()) {
       continue;
     }
-    intersections.push_back(ir.intersection);
+    intersections.push_back(ir.intersection());
   }
 
   return intersections;

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -29,10 +30,12 @@ inline constexpr unsigned int gbts_run_cca_max_sweeps =
 struct gbts_run_cca_iteration_payload {
   /// Number of edges in the compacted graph
   unsigned int nConnectedEdges;
-  /// Maximum number of neighbours retained per edge
-  unsigned int max_num_neighbours;
+  /// Capacity of the compacted graph, the column stride of output_graph
+  unsigned int nConnectedEdgesMax;
   /// Compacted graph from gbts_compress_graph
   vecmem::data::vector_view<const unsigned int> output_graph;
+  /// Number of neighbours per compacted edge
+  vecmem::data::vector_view<const unsigned char> output_num_neighbours;
   /// In/out: per-edge level, the longest path from the edge in edges,
   /// initialised to 1
   vecmem::data::vector_view<unsigned char> levels;

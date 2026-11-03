@@ -28,8 +28,7 @@ concurrency:
   # unrestricted push triggers could.)
   cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
-# ccache is saved from `main` only: a PR-written cache is readable by that PR
-# alone, but still evicts `main`'s entries from the shared 10 GB.
+# Compiler caches use CERN S3 snapshots; only main publishes.
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
@@ -37,8 +36,7 @@ env:
   # skips Examples plus the vendored Detray/Traccc trees. Watch `ccache -s`:
   # if the cache runs at ~100% of this it is evicting mid-build and the hit
   # rate collapses, which is what a too-small ceiling looks like.
-  CCACHE_MAXSIZE: 1G
-  CCACHE_KEY_SUFFIX: r2
+  CCACHE_MAXSIZE: 4G
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
 # NOTE this only builds core unittests to reduce the output size. if we
@@ -59,6 +57,8 @@ permissions:
 
 jobs:
   build_debug:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     # Pull-through cache, as for the husk jobs in builds.yml.
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
@@ -95,19 +95,17 @@ jobs:
 
       - name: Persist PR metadata
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: PR_metadata
           path: PR_metadata.json
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore ccache snapshot
+        uses: ./.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/analysis/build_debug/${{ runner.os }}-${{ runner.arch }}/v1/
 
       - name: Configure
         run: >
@@ -116,16 +114,28 @@ jobs:
           cmake -B build -S . --preset=github-ci-coverage
       - name: Build
         run: cmake --build build
-      - name: ccache stats
-        run: ccache -s
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
 
       # Before the tests: a failure there shouldn't cost us the objects.
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
+      - name: Clean ccache before publication
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/analysis/build_debug/${{ runner.os }}-${{ runner.arch }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       - name: Unit tests
         run: >
@@ -141,7 +151,7 @@ jobs:
         run: |
           uv run --no-project --no-build CI/test_coverage.py build --filter
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: coverage-build
@@ -149,7 +159,7 @@ jobs:
             build/compile_commands.json
             build/coverage/cov.xml
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         id: artifact-upload-step
         with:
@@ -188,7 +198,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: git fetch origin "$BASE_REF"
 
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
 
       - name: Install clang-tidy
         run: |
@@ -230,7 +240,7 @@ jobs:
 
       - name: Upload fixes
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: clang-tidy-fixes
           path: fixes.yml

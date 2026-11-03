@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -29,6 +30,10 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
   vecmem::device_vector<int2> d_path_store(payload.path_store);
   const vecmem::device_vector<const unsigned int> d_output_graph(
       payload.output_graph);
+  const vecmem::device_vector<const uint2> d_output_edge_nodes(
+      payload.output_edge_nodes);
+  const vecmem::device_vector<const unsigned char> d_output_num_neighbours(
+      payload.output_num_neighbours);
   const vecmem::device_vector<const unsigned char> d_levels(payload.levels);
   const vecmem::device_vector<const int2> d_outgoing_paths(
       payload.outgoing_paths);
@@ -40,10 +45,8 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
   const vecmem::device_vector<const float4> d_sp_reduced(payload.reducedSP);
   const gbts_fit_segments_params& fit_params = payload.gbts_fit_segments_params;
 
-  // Row-major output graph: each edge owns a contiguous block of
-  // nei_start + max_num_neighbours ints ([node1, node2, nNei, nei0..]).
-  const unsigned int edge_size =
-      gbts_consts::nei_start + payload.max_num_neighbours;
+  // Column-major output graph: neighbour k of an edge is in column k.
+  const unsigned int nei_stride = payload.nConnectedEdgesMax;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -75,14 +78,12 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
     chain[0] = root;
     while (offset > 0u) {
       --offset;
-      const unsigned int edge_pos = edge_size * cur_edge;
-      const unsigned int nNei = d_output_graph[edge_pos + gbts_consts::nNei];
+      const unsigned int nNei = d_output_num_neighbours[cur_edge];
       const unsigned char level = d_levels[cur_edge];
       unsigned int acc = 0u;
       bool found = false;
       for (unsigned int k = 0u; k < nNei; ++k) {
-        const unsigned int child =
-            d_output_graph[edge_pos + gbts_consts::nei_start + k];
+        const unsigned int child = d_output_graph[k * nei_stride + cur_edge];
         if (level != d_levels[child] + 1u) {
           continue;
         }
@@ -116,15 +117,12 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
     bool toggle = false;
     details::edgeState state1;
     details::edgeState state2;
-    const unsigned int leaf_pos = edge_size * chain[depth - 1u];
-    const unsigned int nodeidx1 = d_output_graph[leaf_pos + gbts_consts::node1];
-    const traccc::float4 node1 = d_sp_reduced[nodeidx1];
-    const unsigned int nodeidx2 = d_output_graph[leaf_pos + gbts_consts::node2];
-    traccc::float4 node2 = d_sp_reduced[nodeidx2];
+    const uint2 leaf_nodes = d_output_edge_nodes[chain[depth - 1u]];
+    const traccc::float4 node1 = d_sp_reduced[leaf_nodes.x];
+    traccc::float4 node2 = d_sp_reduced[leaf_nodes.y];
     state1.initialize(node2, node1);
     for (unsigned int i = depth - 1u; i > 0u; --i) {
-      const unsigned int nodeidx =
-          d_output_graph[edge_size * chain[i - 1u] + gbts_consts::node2];
+      const unsigned int nodeidx = d_output_edge_nodes[chain[i - 1u]].y;
       node2 = d_sp_reduced[nodeidx];
       if (toggle) {
         if (!details::gbts_kalman_update(&state1, &state2, node2, fit_params,
@@ -142,20 +140,16 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
     if (length < payload.minLevel) {
       continue;
     }
+    // If the seed in an odd length set the state1 to be the final state
+    if (toggle) {
+      state1 = state2;
+    }
     // state1 is the final state
     //  can cut more strongly now the fit is done
     if (math::fabs(state1.m_X[2]) * fit_params.final_curv_cut_tighten *
             fit_params.inv_max_curvature >
         1.0f) {
       continue;
-    }
-    // prefer seeds that reach to the outer edge of the detector for better
-    // resolution at high pT
-    if (math::fabs(state1.m_Y[1]) > fit_params.zmax / fit_params.rmax) {
-      state1.m_J += fit_params.add_hit * math::fabs(node1.z) / fit_params.zmax;
-    } else {
-      const float r2_max = (node1.x) * (node1.x) + (node1.y) * (node1.y);
-      state1.m_J += fit_params.add_hit * math::sqrt(r2_max) / fit_params.rmax;
     }
     const int qual = static_cast<int>(fit_params.qual_scale * state1.m_J);
     d_seed_proposals[path_idx] = int2{qual, static_cast<int>(path_idx)};

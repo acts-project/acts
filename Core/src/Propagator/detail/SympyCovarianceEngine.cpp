@@ -39,84 +39,7 @@ void applyBoundCovarianceTransport(const BoundMatrix& jacobian,
 
 }  // namespace
 
-/// Some type defs
-using Jacobian = BoundMatrix;
-using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-
-Result<BoundState> sympy::boundState(
-    const GeometryContext& geoContext, const Surface& surface,
-    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
-    const std::optional<FreeMatrix>& additionalFreeCovariance,
-    FreeVector& freeParameters, const ParticleHypothesis& particleHypothesis,
-    bool covTransport, double accumulatedPath,
-    const FreeToBoundCorrection& freeToBoundCorrection) {
-  // Create the bound parameters
-  Result<BoundVector> bv =
-      transformFreeToBoundParameters(freeParameters, surface, geoContext);
-  if (!bv.ok()) {
-    return bv.error();
-  }
-
-  // Covariance transport
-  std::optional<BoundMatrix> cov = std::nullopt;
-  if (covTransport) {
-    // Calculate the jacobian and transport the covarianceMatrix to final local.
-    // Then reinitialize the transportJacobian, derivatives and the
-    // boundToFreeJacobian
-    Result<void> transportRes = transportCovarianceToBound(
-        geoContext, surface, boundCovariance, fullTransportJacobian,
-        freeToPathDerivatives, boundToFreeJacobian, additionalFreeCovariance,
-        freeParameters, freeToBoundCorrection);
-    if (!transportRes.ok()) {
-      return transportRes.error();
-    }
-    cov = boundCovariance;
-  }
-
-  // Create the bound state
-  return std::make_tuple(
-      BoundTrackParameters(surface.getSharedPtr(), *bv, std::move(cov),
-                           particleHypothesis),
-      fullTransportJacobian, accumulatedPath);
-}
-
-BoundState sympy::curvilinearState(
-    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
-    const std::optional<FreeMatrix>& additionalFreeCovariance,
-    const FreeVector& freeParameters,
-    const ParticleHypothesis& particleHypothesis, bool covTransport,
-    double accumulatedPath) {
-  const Vector3& direction = freeParameters.segment<3>(eFreeDir0);
-
-  // Covariance transport
-  std::optional<BoundMatrix> cov = std::nullopt;
-  if (covTransport) {
-    // Calculate the jacobian and transport the covarianceMatrix to final local.
-    // Then reinitialize the transportJacobian, derivatives and the
-    // boundToFreeJacobian
-    transportCovarianceToCurvilinear(boundCovariance, fullTransportJacobian,
-                                     freeToPathDerivatives, boundToFreeJacobian,
-                                     additionalFreeCovariance, direction);
-    cov = boundCovariance;
-  }
-
-  // Create the curvilinear parameters
-  Vector4 pos4 = Vector4::Zero();
-  pos4[ePos0] = freeParameters[eFreePos0];
-  pos4[ePos1] = freeParameters[eFreePos1];
-  pos4[ePos2] = freeParameters[eFreePos2];
-  pos4[eTime] = freeParameters[eFreeTime];
-  BoundTrackParameters curvilinearParams =
-      BoundTrackParameters::createCurvilinear(
-          pos4, direction, freeParameters[eFreeQOverP], std::move(cov),
-          particleHypothesis);
-  // Create the curvilinear state
-  return {std::move(curvilinearParams), fullTransportJacobian, accumulatedPath};
-}
-
-Result<void> sympy::transportCovarianceToBound(
+void sympy::transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
@@ -172,8 +95,8 @@ Result<void> sympy::transportCovarianceToBound(
   // Reinitialize jacobian components:
   // ->The derivatives are reinitialized to Zero
   // ->The boundToFreeJacobian is initialized to that at the current surface
-  return reinitializeJacobians(geoContext, surface, freeToPathDerivatives,
-                               boundToFreeJacobian, freeParameters);
+  reinitializeJacobians(geoContext, surface, freeToPathDerivatives,
+                        boundToFreeJacobian, freeParameters);
 }
 
 void sympy::transportCovarianceToCurvilinear(

@@ -79,6 +79,10 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
       "MuonEnvelope", cacheShape(toyBox),
       MaterialManager::getManager()->getMaterial("special::Ether")));
 
+  if (m_cfg.buildBarrel) {
+    buildBarrel(muonEnvelope);
+  }
+
   /// Construct the endcaps
   if (m_cfg.buildEndcaps) {
     const double midWheelZ = barrelZ + 0.5 * m_stationHeightEndcap;
@@ -95,6 +99,7 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
     assembleSmallWheel(muonEnvelope, innerWheelR, innerWheelZ);
     assembleSmallWheel(muonEnvelope, innerWheelR, -innerWheelZ);
   }
+
   const unsigned nChambers =
       2 * m_cfg.nSectors * m_cfg.nEtaStations *
       static_cast<unsigned>(MuonLayer::nLayers);  // barrel part
@@ -188,6 +193,7 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
 }
 void GeoMuonMockupExperiment::buildBarrel(const PVLink& muonEnvelope) {
   if (!m_cfg.buildBarrel) {
+    ACTS_DEBUG("Barrel not configured to be built");
     return;
   }
   unsigned absorberCounter{0};

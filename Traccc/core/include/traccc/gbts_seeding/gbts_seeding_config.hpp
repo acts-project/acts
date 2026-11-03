@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -43,13 +44,11 @@ struct gbts_layerInfo {
   }
 };
 
-// Named indices into the flat device counter buffer, mirroring the layout in
-// traccc/gbts_changes. One memset zeros all of them.
+// Named indices into the host counter vector, mirroring the layout in
+// traccc/gbts_changes.
 enum gbts_counter : unsigned int {
-  nEdges,           // edges created by gbts_make_graph_edges
-  nConnections,     // edge-to-edge connections from gbts_match_graph_edges
-  nConnectedEdges,  // edges kept after gbts_reindex_edges
-  nEdgesLeft,       // edges remaining for CCA (kept for reference parity)
+  nEdgesTotal,      // edges found by gbts_count_graph_edges (uncapped)
+  nConnectedEdges,  // edges kept after the edge matching re-index
   nPaths,           // paths in the path store (uncapped)
   nCounters         // total number of counters
 };
@@ -59,13 +58,9 @@ struct gbts_consts {
   // are truncated at their inner end. It also bounds the CCA sweeps.
   static constexpr unsigned short max_seed_candidate_length = 15;
   static constexpr unsigned short node_buffer_length = 128;
-
-  // Per-edge offsets into the row-major output graph
-  // (each edge occupies edge_size = nei_start + max_num_neighbours ints).
-  static constexpr unsigned char node1 = 0;
-  static constexpr unsigned char node2 = 1;
-  static constexpr unsigned char nNei = 2;
-  static constexpr unsigned char nei_start = 3;
+  // Inner-bin nodes per graph-making work item. The count and fill kernels
+  // run one thread per inner node, so this is also their block size.
+  static constexpr unsigned int edge_chunk_size = 128;
 };
 
 }  // namespace traccc::device
@@ -101,7 +96,7 @@ struct gbts_sort_nodes_params {
   unsigned int tauLutSize = 0;
 };
 
-// Geometric / kinematic edge-making cuts for device::gbts_make_graph_edges.
+// Geometric / kinematic edge cuts of the graph making.
 struct gbts_make_graph_edges_params {
   // Two nodes must be radially separated to form an edge:
   // dr >= minDeltaRadius (mm)
@@ -146,12 +141,16 @@ struct gbts_match_graph_edges_params {
   // deta_max *= 1.0f-high_pT_correction*((curv < less_scattering_curv) + (curv
   // < much_less_scattering_curv))
   float high_pT_correction = 0.2f;
+  // tighten cuts a low eta and loosen at high eta to account for material
+  float eta_correction = 0.2f;
+  float eta_low_threshold = 1.6f;
+  float eta_high_threshold = 2.7f;
   // cut on dphi/dphi_max + dcurv/dcurv_max + deta/deta_max
   float cut_ratio_sum_max = 1.3f;
 };
 
-// Host-side dphi window used to compute bin_pair_dphi before launching
-// device::gbts_make_graph_edges.
+// Delta-phi window of a bin pair, computed on the device from the radial
+// separation of the bins.
 struct gbts_dphi_window_params {
   // deltaPhi = min_delta_phi + dphi_coeff * maxDeltaR, where maxDeltaR is the
   // maximum radial separation of the pair of nodes.
@@ -203,9 +202,6 @@ struct gbts_fit_segments_params {
   float inv_max_curvature = 900.0f;
   // factor to tighen inv_max_curvature when cutting after the fit is complete
   float final_curv_cut_tighten = 1.5f;
-  // detector r and z bounds, used in seed quality calculation
-  float rmax = 350.0f;
-  float zmax = 3000.0f;
 
   // max_z0 is used from the graph_making to insure concistency
 };
@@ -272,9 +268,6 @@ struct gbts_seedfinder_config {
   // calculated from input layerInfo (geometry)
   unsigned int n_eta_bins = 0;
 
-  // Phi bin width
-  unsigned int n_phi_bins = 128;
-
   // graph making maximums: max neighbours kept per edge.
   unsigned int max_num_neighbours = 10;
 
@@ -282,8 +275,15 @@ struct gbts_seedfinder_config {
   //   nSP_seed = minLevel + 1
   unsigned char minLevel = 3;
 
-  // nMaxEdges = max_edges_factor * nNodes  (fixed buffer size).
-  unsigned int max_edges_factor = 10;
+  // Edge buffer capacity per spacepoint.
+  // edges beyond the capacity are dropped.
+  unsigned int max_edges_per_spacepoint = 32;
+  // Capacity of the compacted graph per spacepoint
+  // connected edges beyond it are dropped.
+  unsigned int max_connected_edges_per_spacepoint = 2;
+  // Path store capacity per spacepoint
+  // paths beyond the capacity are dropped.
+  unsigned int max_paths_per_spacepoint = 2;
 };
 
 }  // namespace traccc

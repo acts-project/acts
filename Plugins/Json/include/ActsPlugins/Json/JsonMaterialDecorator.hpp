@@ -8,16 +8,14 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
-
-#include <fstream>
-#include <map>
-#include <mutex>
 
 // Convenience shorthand
 
@@ -30,7 +28,14 @@ namespace Acts {
 ///
 /// This reads in material maps for surfaces and volumes
 /// from a json file
-class JsonMaterialDecorator : public IMaterialDecorator {
+///
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+class [[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
+JsonMaterialDecorator : public IMaterialDecorator {
+  // Deprecated adapters retain the deprecated converter in their API.
+  ACTS_PUSH_IGNORE_DEPRECATED()
  public:
   /// Constructor with configuration
   /// @param rConfig the configuration for the material map reader
@@ -39,6 +44,12 @@ class JsonMaterialDecorator : public IMaterialDecorator {
   JsonMaterialDecorator(const MaterialMapJsonConverter::Config& rConfig,
                         const std::string& jFileName,
                         Acts::Logging::Level level);
+
+  /// Parsed, format-independent maps for applying to a completed geometry.
+  /// @return Material maps read from the input file
+  const TrackingGeometryMaterial& materialMaps() const {
+    return m_materialMaps;
+  }
 
   /// Decorate a surface
   ///
@@ -52,12 +63,12 @@ class JsonMaterialDecorator : public IMaterialDecorator {
 
  private:
   MaterialMapJsonConverter::Config m_readerConfig;
-  SurfaceMaterialMaps m_surfaceMaterialMap;
-  VolumeMaterialMaps m_volumeMaterialMap;
+  TrackingGeometryMaterial m_materialMaps;
 
   std::unique_ptr<const Logger> m_logger;
 
   const Logger& logger() const { return *m_logger; }
+  ACTS_POP_IGNORE_DEPRECATED()
 };
 
 /// @}

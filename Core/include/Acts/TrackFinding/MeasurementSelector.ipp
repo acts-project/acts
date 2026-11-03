@@ -10,6 +10,8 @@
 
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 
+#include <cmath>
+
 namespace Acts {
 
 template <typename traj_t>
@@ -70,6 +72,17 @@ MeasurementSelector::select(
         trackState.projectorSubspaceIndices(), trackState.calibratedSize());
     trackState.chi2() = chi2;
 
+    // A diverging fit can inflate the predicted covariance until inverting it
+    // overflows, making the chi2 non-finite. Such a candidate has to be
+    // rejected explicitly: every comparison against NaN is false, so it would
+    // otherwise pass the chi2 cut below while leaving minIndex unset, and it
+    // would make the comparator of the sort below inconsistent.
+    if (!std::isfinite(chi2)) {
+      ACTS_VERBOSE("Non-finite chi2 " << chi2 << " on surface " << geoID
+                                      << ", rejecting measurement candidate");
+      continue;
+    }
+
     if (chi2 < minChi2) {
       minChi2 = chi2;
       minIndex = i;
@@ -91,7 +104,8 @@ MeasurementSelector::select(
 
   // Handle if there are no measurements below the chi2 cut off
   if (passedCandidates == 0ul) {
-    if (minChi2 < cuts.chi2Outlier) {
+    // minIndex stays unset if every candidate was rejected above.
+    if (minIndex < candidates.size() && minChi2 < cuts.chi2Outlier) {
       ACTS_VERBOSE(
           "No measurement candidate. Return an outlier measurement chi2="
           << minChi2);

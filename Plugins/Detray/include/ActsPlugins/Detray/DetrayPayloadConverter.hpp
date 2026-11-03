@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -204,6 +205,29 @@ class DetrayPayloadConverter {
     /// Detray MUST have beampipe volume at index 0
     const Acts::TrackingVolume* beampipeVolume = nullptr;
 
+    /// Optional replacement world in the input tracking geometry. By default,
+    /// convert this volume and its complete subtree, including gap volumes.
+    /// See @ref includeWorld to omit the selected world itself. Only links from
+    /// this volume to volumes outside the subtree become end-of-world links;
+    /// links from descendants to excluded volumes are errors. The beampipe must
+    /// belong to the subtree. The input geometry and its portals are not
+    /// modified. If null, convert the complete tracking geometry.
+    const Acts::TrackingVolume* replacementWorld = nullptr;
+
+    /// Include the selected world (replacementWorld, or the input world if
+    /// null) in the converted detector. If false, convert only its descendants
+    /// and make links targeting the omitted world end-of-world links. This
+    /// removes its padding, surfaces and material, and stops tracks on entry
+    /// into its space. The selected world must have descendants and must not
+    /// be the configured beampipe.
+    bool includeWorld = true;
+
+    /// Portal masks are clipped to the part of the portal that borders the
+    /// volume they are placed in. Segments shorter than this along the
+    /// portal binning direction are considered numerical noise and are
+    /// absorbed into their neighbour, as are gaps between segments.
+    double portalSegmentTolerance = 1 * Acts::UnitConstants::um;
+
     /// Type dispatcher for converting navigation policies
     Acts::TypeDispatcher<Acts::INavigationPolicy,
                          std::optional<DetraySurfaceGrid>(
@@ -302,19 +326,6 @@ class DetrayPayloadConverter {
                   detray::io::volume_payload& volPayload) const;
 
  private:
-  void handlePortalLink(
-      const Acts::GeometryContext& gctx, const Acts::TrackingVolume& volume,
-      detray::io::volume_payload& volPayload,
-      const std ::function<std::size_t(const Acts::TrackingVolume*)>&
-          volumeLookup,
-      std::unordered_map<const Acts::Surface*, std::size_t>& surfaceIndices,
-      const Acts::PortalLinkBase& link) const;
-
-  void makeEndOfWorld(
-      const Acts::GeometryContext& gctx, detray::io::volume_payload& volPayload,
-      std::unordered_map<const Acts::Surface*, std::size_t>& surfaceIndices,
-      const Acts::Surface& surface) const;
-
   void handlePortal(
       const Acts::GeometryContext& gctx, const Acts::TrackingVolume& volume,
       detray::io::volume_payload& volPayload,

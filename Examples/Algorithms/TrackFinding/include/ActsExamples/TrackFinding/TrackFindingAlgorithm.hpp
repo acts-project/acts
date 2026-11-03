@@ -14,7 +14,9 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
+#include "Acts/TrackFinding/SeedDeduplicator.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
+#include "Acts/TrackFitting/TrackletJoiner.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
@@ -109,14 +111,25 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Extrapolation strategy
     Acts::TrackExtrapolationStrategy extrapolationStrategy =
         Acts::TrackExtrapolationStrategy::firstOrLast;
-    /// Run finding in two directions
+    /// Run finding in two directions. The first pass runs outward from the
+    /// seed. The second pass runs inward from the innermost measurement of the
+    /// first pass to the perigee, and it starts from the smoothed parameters
+    /// of the first pass. The @ref Acts::TrackletJoiner updates the smoothed
+    /// states with both passes; unsmoothed trailing states of the first pass
+    /// stay unchanged. The perigee comes from the second pass. Do not smooth
+    /// the output track: a smoother over the joined chain counts the first
+    /// pass twice.
     bool twoWay = true;
-    /// Whether to run the finding in seed parameter direction or reverse
-    /// direction
-    bool reverseSearch = false;
+    /// Smooth the second pass and condition the first pass on it in the join.
+    /// Off, the passes are only linked and their state estimates stay
+    /// unchanged.
+    bool twoWaySmoothing = true;
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;
+    /// Seed deduplication threshold, counted in measured local position
+    /// coordinates. A pixel and a strip space point both count 2.
+    Acts::SeedDeduplicator::Config seedDeduplicatorCfg;
     /// Whether to stick on the seed measurements during track finding.
     /// This is only available if `inputSeeds` is set.
     bool stayOnSeed = false;
@@ -126,8 +139,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool trimTracks = true;
     /// Whether to record track states on material-only surfaces. Disabling this
     /// is faster but leaves those surfaces out of the track, which a refit with
-    /// the `DirectNavigator` needs. Not applied to the bremsstrahlung finder,
-    /// which does not support it.
+    /// the `DirectNavigator` needs.
     bool recordMaterialStates = true;
 
     /// Whether to use the Joseph formulation for the Kalman filter update. This
@@ -173,6 +185,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
   std::optional<Acts::TrackSelector> m_trackSelector;
+  Acts::TrackletJoiner m_trackletJoiner;
 
   ReadDataHandle<MeasurementSubset> m_inputMeasurements{this,
                                                         "InputMeasurements"};

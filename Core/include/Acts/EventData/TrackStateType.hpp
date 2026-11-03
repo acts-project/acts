@@ -41,7 +41,9 @@ enum class TrackStateFlag {
   HasMaterial = 4,
   /// Indicates that the track state has a shared hit measurement.
   IsSharedHit = 5,
-  /// Indicates that the track state has a split hit measurement.
+  /// Indicates that the track state has a split hit measurement. The cluster
+  /// splitting decided that more than one particle created the measurement, so
+  /// more than one track may use it. Excludes `IsSharedHit`.
   IsSplitHit = 6,
   /// Indicates that the track state has no expected hit.
   HasNoExpectedHit = 7,
@@ -55,6 +57,10 @@ enum class TrackStateFlag {
 template <typename Derived, bool ReadOnly>
 class TrackStateTypeBase {
  public:
+  /// Whether this flag view is read-only. Named IsReadOnly, not ReadOnly, to
+  /// avoid shadowing the template parameter in its own initializer.
+  static constexpr bool IsReadOnly = ReadOnly;
+
   /// Type alias for underlying raw data type
   using raw_type = std::uint64_t;
   /// Number of bits available in the raw storage type
@@ -212,6 +218,8 @@ class TrackStateTypeBase {
     if (value) {
       setUnchecked(HasMeasurement, false);
       setUnchecked(IsOutlier, false);
+      setUnchecked(IsSharedHit, false);
+      setUnchecked(IsSplitHit, false);
       setUnchecked(HasNoExpectedHit, false);
     }
     setUnchecked(IsHole, value);
@@ -220,6 +228,7 @@ class TrackStateTypeBase {
   }
 
   /// Sets the track state to be a shared hit
+  /// @note A shared hit is not a split hit, so this clears the split flag
   /// @param value the value to set
   /// @return self-reference for chaining
   Derived& setIsSharedHit(bool value = true)
@@ -227,6 +236,7 @@ class TrackStateTypeBase {
   {
     if (value) {
       setUnchecked(HasMeasurement, true);
+      setUnchecked(IsSplitHit, false);
       setUnchecked(HasNoExpectedHit, false);
     }
     setUnchecked(IsSharedHit, value);
@@ -235,6 +245,7 @@ class TrackStateTypeBase {
   }
 
   /// Sets the track state to be a split hit
+  /// @note A split hit is not a shared hit, so this clears the shared flag
   /// @param value the value to set
   /// @return self-reference for chaining
   Derived& setIsSplitHit(bool value = true)
@@ -242,6 +253,7 @@ class TrackStateTypeBase {
   {
     if (value) {
       setUnchecked(HasMeasurement, true);
+      setUnchecked(IsSharedHit, false);
       setUnchecked(HasNoExpectedHit, false);
     }
     setUnchecked(IsSplitHit, value);
@@ -361,6 +373,9 @@ class TrackStateTypeBase {
         "TrackStateType - Hole and Measurement cannot be set simultaneously");
     assert(!(test(IsOutlier) && !test(HasMeasurement)) &&
            "TrackStateType - Outlier flag requires Measurement flag to be set");
+    assert(!(test(IsSharedHit) && test(IsSplitHit)) &&
+           "TrackStateType - SharedHit and SplitHit cannot be set "
+           "simultaneously");
   }
 };
 

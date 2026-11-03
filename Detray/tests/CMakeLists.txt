@@ -147,10 +147,13 @@ endif()
 
 # Build test executables
 if(DETRAY_BUILD_TESTING)
+    # Check that ACTS_FORCE_ASSERTIONS works
+    acts_add_assertion_tests()
+
     # Build host and device specific test code
     add_subdirectory(include/detray/test/cpu)
 
-    if(DETRAY_BUILD_CUDA OR DETRAY_BUILD_HIP OR DETRAY_BUILD_SYCL)
+    if(DETRAY_BUILD_CUDA OR DETRAY_BUILD_HIP)
         add_subdirectory(include/detray/test/device)
     endif()
 

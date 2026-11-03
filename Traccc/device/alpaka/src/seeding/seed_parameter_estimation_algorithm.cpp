@@ -1,9 +1,11 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 //
 // Local include(s).
 #include "traccc/alpaka/seeding/seed_parameter_estimation_algorithm.hpp"
@@ -14,6 +16,9 @@
 
 // Project include(s).
 #include "traccc/seeding/device/estimate_track_params.hpp"
+
+// System include(s).
+#include <stdexcept>
 
 namespace traccc::alpaka {
 namespace kernels {
@@ -49,6 +54,11 @@ seed_parameter_estimation_algorithm::seed_parameter_estimation_algorithm(
 
 void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
     const struct estimate_seed_params_kernel_payload& payload) const {
+  if (payload.detector != nullptr) {
+    throw std::runtime_error(
+        "Detector aware seed parameter estimation is not yet implemented for "
+        "the Alpaka backend.");
+  }
   const unsigned int n_threads = warp_size() * 4;
   const unsigned int n_blocks = (payload.n_seeds + n_threads - 1) / n_threads;
   magnetic_field_visitor<bfield_type_list<scalar>>(

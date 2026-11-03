@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2025-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Enable HIP as a language.
 enable_language(HIP)
@@ -39,6 +41,9 @@ add_library(
     "src/seeding/triplet_seeding_algorithm.hip"
     "include/traccc/hip/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
     "src/seeding/silicon_pixel_spacepoint_formation_algorithm.hip"
+    # GBTS seed finding code.
+    "include/traccc/hip/gbts_seeding/gbts_seeding_algorithm.hpp"
+    "src/gbts_seeding/gbts_seeding_algorithm.hip"
     # Track finding code.
     "include/traccc/hip/finding/combinatorial_kalman_filter_algorithm.hpp"
     "src/finding/combinatorial_kalman_filter_algorithm_build_measurement_ranges_buffer.hip"

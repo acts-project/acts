@@ -20,6 +20,7 @@
 #include <vecmem/memory/memory_resource.hpp>
 
 // System include(s)
+#include <ios>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -38,7 +39,9 @@ template <concepts::metadata metadata_t,
           template <typename...> class volume_data_t = std::vector>
 class detector_builder {
  public:
-  using detector_type = detector<metadata_t, host_container_types>;
+  // Cannot use the host::detector type, because the friendship relation with
+  // the volume builders cannot be resolved through the type alias
+  using detector_type = detail::detector<metadata_t, host_container_types>;
   using algebra_type = typename detector_type::algebra_type;
   using scalar_type = dscalar<algebra_type>;
 
@@ -110,7 +113,8 @@ class detector_builder {
   /// Assembles the final detector from the volumes builders and allocates
   /// the detector containers with the memory resource @param resource
   DETRAY_HOST
-  auto build(vecmem::memory_resource& resource) -> detector_type {
+  auto build(vecmem::memory_resource& resource,
+             const volume_builder_options& opt) -> detector_type {
     DETRAY_INFO_HOST("Building detector: \"" << name() << "\"... ");
     DETRAY_INFO_HOST("-> type: " << DETRAY_TYPENAME(metadata_t));
 
@@ -121,7 +125,7 @@ class detector_builder {
     DETRAY_VERBOSE_HOST("Start building the volumes...");
     for (auto& vol_builder : m_volumes) {
       DETRAY_VERBOSE_HOST("-> Build: " << vol_builder->name());
-      vol_builder->build(det);
+      vol_builder->build(det, opt);
     }
 
     // TODO: Make fully generic for more volume accelerator types
@@ -158,6 +162,7 @@ class detector_builder {
   /// @param name_map
   DETRAY_HOST
   auto build(vecmem::memory_resource& resource,
+             const volume_builder_options& opt,
              typename detector_type::name_map& name_map) -> detector_type {
     DETRAY_VERBOSE_HOST("detray: filling names for detector " << name());
 
@@ -171,7 +176,7 @@ class detector_builder {
                        std::string{vol_builder->name()});
     }
 
-    return build(resource);
+    return build(resource, opt);
   }
 
  private:

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -129,6 +130,48 @@ struct measurement_selector {
     TRACCC_DEBUG_HOST("--> Measurement covariance (uncalibrated):\n" << V);
 
     return V;
+  }
+
+  /// Set the position covariance of the seed track parameters from the seed
+  /// measurement
+  ///
+  /// Only the coordinates measured by the measurement are set, the
+  /// covariance of an unmeasured coordinate keeps its value from the seed
+  ///
+  /// @param cov the covariance of the seed track parameters
+  /// @param measurement the seed measurement
+  /// @param cfg how to apply calibrations
+  ///
+  template <detray::concepts::algebra algebra_t, typename measurement_backend_t>
+  TRACCC_HOST_DEVICE static void set_seed_measurement_covariance(
+      detray::bound_matrix<algebra_t>& cov,
+      const edm::measurement<measurement_backend_t>& measurement,
+      const config& cfg) {
+    const auto V =
+        calibrated_measurement_covariance<algebra_t, 2>(measurement, cfg);
+    const auto subs = measurement.subspace();
+    const auto meas0 = static_cast<unsigned int>(subs[0]);
+    // WARNING: This code relies on the fact that the subspace always
+    // permutes loc0 and loc1.
+    assert(meas0 == e_bound_loc0 || meas0 == e_bound_loc1);
+    if (meas0 == e_bound_loc0) {
+      getter::element(cov, e_bound_loc0, e_bound_loc0) =
+          getter::element(V, 0, 0);
+    } else {
+      getter::element(cov, e_bound_loc1, e_bound_loc1) =
+          getter::element(V, 0, 0);
+    }
+    if (measurement.dimensions() == 2u) {
+      const auto meas1 = static_cast<unsigned int>(subs[1]);
+      assert(meas1 == e_bound_loc0 || meas1 == e_bound_loc1);
+      if (meas1 == e_bound_loc0) {
+        getter::element(cov, e_bound_loc0, e_bound_loc0) =
+            getter::element(V, 1, 1);
+      } else {
+        getter::element(cov, e_bound_loc1, e_bound_loc1) =
+            getter::element(V, 1, 1);
+      }
+    }
   }
 
   /// Calculate the predicted chi2

@@ -45,7 +45,7 @@ ActsExamples::buildTelescopeDetector(
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
     double thickness, TelescopeSurfaceType surfaceType,
-    Acts::AxisDirection binValue) {
+    Acts::AxisDirection rotDirection) {
   using namespace Acts::UnitLiterals;
 
   // The rectangle bounds for plane surface
@@ -66,11 +66,11 @@ ActsExamples::buildTelescopeDetector(
   // This assumes the direction is AxisX, AxisY or AxisZ. No reset is necessary
   // in case of AxisZ
   Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Identity();
-  if (binValue == Acts::AxisDirection::AxisX) {
+  if (rotDirection == Acts::AxisDirection::AxisX) {
     rotation.col(0) = Acts::Vector3(0, 0, -1);
     rotation.col(1) = Acts::Vector3(0, 1, 0);
     rotation.col(2) = Acts::Vector3(1, 0, 0);
-  } else if (binValue == Acts::AxisDirection::AxisY) {
+  } else if (rotDirection == Acts::AxisDirection::AxisY) {
     rotation.col(0) = Acts::Vector3(1, 0, 0);
     rotation.col(1) = Acts::Vector3(0, 0, -1);
     rotation.col(2) = Acts::Vector3(0, 1, 0);
@@ -156,7 +156,7 @@ ActsExamples::buildTelescopeDetector(
   Acts::GeometryContext genGctx{gctx};
   std::unique_ptr<const Acts::LayerArray> layArr(layArrCreator.layerArray(
       genGctx, layVec, positions.front() - 2._mm, positions.back() + 2._mm,
-      Acts::BinningType::arbitrary, binValue));
+      Acts::BinningType::arbitrary, rotDirection));
 
   // Build the tracking volume
   auto trackVolume = std::make_shared<Acts::TrackingVolume>(

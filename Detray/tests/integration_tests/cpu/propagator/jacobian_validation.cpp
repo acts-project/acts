@@ -227,7 +227,8 @@ void wrap_angles(const bound_param_vector_type& ref_vector,
     }
   }
 
-  target_vector.set_phi(new_tphi);
+  // Unwrapped phi can leave [-pi, pi], which set_phi() rejects
+  target_vector[e_bound_phi] = new_tphi;
 }
 
 scalar get_relative_difference(scalar ref_val, scalar num_val) {
@@ -633,6 +634,8 @@ bound_track_parameters<test_algebra> get_initial_parameter(
   bound_track_parameters<test_algebra> ret;
   ret.set_surface_link(geometry::identifier{0u});
   ret.set_parameter_vector(bound_vec);
+  // Placeholder: a zero covariance marks the parameters as invalid
+  ret.set_covariance(matrix::identity<bound_covariance_type>());
 
   return ret;
 }
@@ -1508,8 +1511,9 @@ int main(int argc, char** argv) {
 
   // Detector types
   using rectangle_telescope =
-      detector<telescope_metadata<test_algebra, rect_type>>;
-  using wire_telescope = detector<telescope_metadata<test_algebra, wire_type>>;
+      host::detector<telescope_metadata<test_algebra, rect_type>>;
+  using wire_telescope =
+      host::detector<telescope_metadata<test_algebra, wire_type>>;
   using track_type = free_track_parameters<test_algebra>;
 
   // Constant magnetic field type
