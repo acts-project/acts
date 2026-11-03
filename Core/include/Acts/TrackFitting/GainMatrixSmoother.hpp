@@ -25,7 +25,11 @@ namespace Acts {
 ///
 /// This implements not a single smoothing step, but the full backwards
 /// smoothing procedure for a filtered, forward trajectory using the stored
-/// linearization.
+/// linearization. Residuals use the next state's parametrization; corrections
+/// and covariance canonicalization use the current state's parametrization.
+/// States without a surface use the canonical global-spherical interpretation.
+/// Failure preserves the current state's stored values; later states may
+/// already have been smoothed.
 /// @ingroup track_fitting
 class GainMatrixSmoother {
  public:
@@ -44,8 +48,6 @@ class GainMatrixSmoother {
   Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
-    static_cast<void>(gctx);
-
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
 
     // For the last state: smoothed is filtered - also: switch to next
@@ -84,7 +86,7 @@ class GainMatrixSmoother {
       // ensure the track state has a smoothed component
       ts.addComponents(TrackStatePropMask::Smoothed);
 
-      if (auto res = calculate(AnyMutableTrackStateProxy{ts},
+      if (auto res = calculate(gctx, AnyMutableTrackStateProxy{ts},
                                AnyConstTrackStateProxy{prev_ts}, logger);
           !res.ok()) {
         error = res.error();
@@ -110,11 +112,13 @@ class GainMatrixSmoother {
   /// Calculate smoothed parameters for a single track state using gain matrix
   /// formalism.
   ///
+  /// @param gctx Geometry context for source and destination interpretation
   /// @param ts Current track state to be smoothed
-  /// @param prev_ts Previous track state (in forward direction)
+  /// @param prev_ts Next track state in forward propagation (already smoothed)
   /// @param logger Logger for verbose output
   /// @return Success or failure of the smoothing calculation
-  Result<void> calculate(AnyMutableTrackStateProxy ts,
+  Result<void> calculate(const GeometryContext& gctx,
+                         AnyMutableTrackStateProxy ts,
                          AnyConstTrackStateProxy prev_ts,
                          const Logger& logger) const;
 };
