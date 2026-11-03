@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cmath>
+#include <optional>
 #include <utility>
 
 namespace Acts {
@@ -106,8 +107,9 @@ void Acts::EventDataView3D::drawTrack(IVisualization3D& helper,
       helper.line(*previouspos, currentpos);
     }
     previouspos = currentpos;
-    first = false;
   }
 
-  helper.line(*previouspos, tglobpos);
+  if (previouspos.has_value()) {
+    helper.line(*previouspos, tglobpos);
+  }
 }
