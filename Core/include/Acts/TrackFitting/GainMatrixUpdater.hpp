@@ -18,6 +18,10 @@
 namespace Acts {
 
 /// Kalman update step using the gain matrix formalism.
+/// Uses the reference surface's bound parametrization for coordinate residuals
+/// and canonicalizes parameters and covariance together. States without a
+/// reference surface retain the canonical global-spherical interpretation.
+/// A failed update leaves filtered values, covariance and chi2 unchanged.
 /// @ingroup track_fitting
 class GainMatrixUpdater {
  public:
@@ -31,12 +35,13 @@ class GainMatrixUpdater {
 
   /// Run the Kalman update step for a single trajectory state.
   ///
-  /// @tparam kMeasurementSizeMax
+  /// @tparam traj_t Trajectory type
+  /// @param[in] gctx Geometry context for bound-coordinate interpretation
   /// @param[in,out] trackState The track state
   /// @param[in] logger Where to write logging information to
   /// @return Success or failure of the update procedure
   template <typename traj_t>
-  Result<void> operator()(const GeometryContext& /*gctx*/,
+  Result<void> operator()(const GeometryContext& gctx,
                           typename traj_t::TrackStateProxy trackState,
                           const Logger& logger = getDummyLogger()) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
@@ -61,17 +66,20 @@ class GainMatrixUpdater {
     // auto filtered = trackState.filtered();
     // auto filteredCovariance = trackState.filteredCovariance();
 
-    return visitMeasurement(AnyMutableTrackStateProxy{trackState}, logger);
+    return visitMeasurement(gctx, AnyMutableTrackStateProxy{trackState},
+                            logger);
   }
 
  private:
   bool m_useJosephFormulation = false;
 
-  Result<void> visitMeasurement(AnyMutableTrackStateProxy trackState,
+  Result<void> visitMeasurement(const GeometryContext& gctx,
+                                AnyMutableTrackStateProxy trackState,
                                 const Logger& logger) const;
 
   template <std::size_t N>
-  Result<void> visitMeasurementImpl(AnyMutableTrackStateProxy trackState,
+  Result<void> visitMeasurementImpl(const GeometryContext& gctx,
+                                    AnyMutableTrackStateProxy trackState,
                                     const Logger& logger) const;
 };
 

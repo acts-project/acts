@@ -175,7 +175,23 @@ legacy diagonal update and includes material-physics and noise-mapping work. Leg
 @ref Acts::MaterialInteraction::sigmaTheta2 remain global angular diagnostics;
 nonzero scattering at a global pole has infinite phi variance.
 
-Angular normalization, periodic residuals, material updates, and specialized
+@ref Acts::GainMatrixUpdater resolves the bound parametrization from the track
+state's reference surface and the supplied geometry context. It forms the
+measurement innovation using coordinate differences and evaluates chi2 in the
+original measurement basis. Parameters and covariance are canonicalized together,
+so folding theta also changes its covariance cross terms. Both the standard
+and Joseph covariance updates use this transformation.
+
+@ref Acts::GainMatrixSmoother uses the destination state's parametrization for
+the smoothed-minus-predicted residual and the source state's parametrization
+for the corrected values and covariance. Its single-step `calculate` API now
+requires a geometry context. States without a reference surface retain the
+canonical global-spherical interpretation. Undefined canonicalization at an
+exact pole returns a failed Result. The updater preserves filtered values,
+covariance and chi2 on failure; the smoother preserves the failing state's
+values, but later states may already have been smoothed.
+
+Other fitting and mixture operations and specialized
 propagation algorithms still assume the canonical spherical coordinates.
 The neutral index names alone do not make those operations chart-independent.
 Custom coordinate ordering through `ACTS_PARAMETER_DEFINITIONS_HEADER` has been
