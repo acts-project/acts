@@ -10,7 +10,6 @@
 
 // Project include(s)
 #include "detray/io/frontend/payloads.hpp"
-#include "detray/io/json/detail/json_algebra_io.hpp"
 #include "detray/io/json/detail/json_common_io.hpp"
 #include "detray/io/json/detail/json_grids_io.hpp"
 #include "detray/io/json/json.hpp"
@@ -38,6 +37,16 @@ inline void from_json(const nlohmann::ordered_json& j,
     h.n_volumes = j["volume_count"];
     h.n_surfaces = j["surface_count"];
   }
+}
+
+inline void to_json(nlohmann::ordered_json& j, const transform_payload& t) {
+  j["translation"] = t.tr;
+  j["rotation"] = t.rot;
+}
+
+inline void from_json(const nlohmann::ordered_json& j, transform_payload& t) {
+  t.tr = j["translation"];
+  t.rot = j["rotation"];
 }
 
 inline void to_json(nlohmann::ordered_json& j, const mask_payload& m) {

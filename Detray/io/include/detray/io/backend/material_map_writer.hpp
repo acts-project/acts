@@ -20,17 +20,28 @@
 
 namespace detray::io {
 
+/// Convert the header information into its payload
+/// @param maps_data The input material maps payload.
+/// @return Header payload describing the material grids.
+inline grid_header_payload to_header_payload(
+    const detector_grids_payload<surface_material_payload, io::material_id>&
+        maps_data) {
+  // Take the header conversion implementation from the grid writer
+  return detray::io::detail::to_header_payload(maps_data);
+}
+
 /// @brief Material maps writer backend
 ///
 /// Fills a material @c detector_grids_payload from a @c detector instance
-class material_map_writer : public detail::grid_writer {
-  using base_type = detail::grid_writer;
+template <detray::concepts::detector detector_t>
+class material_map_writer final : public detail::grid_writer<detector_t> {
+  using base_type = detail::grid_writer<detector_t>;
   using grid_writer_t = base_type;
-  using mat_writer_t = homogeneous_material_writer;
+  using mat_writer_t = homogeneous_material_writer<detector_t>;
 
  public:
   /// Tag the writer as "material_map"
-  static constexpr std::string_view tag = "material_maps";
+  static constexpr std::string_view s_tag = "material_maps";
 
   /// Payload type that the reader processes
   using payload_type =
@@ -39,13 +50,17 @@ class material_map_writer : public detail::grid_writer {
   /// Same constructors for this class as for base_type
   using base_type::base_type;
 
-  /// Convert the header information into its payload
-  /// @tparam detector_t Detector type to serialize.
-  /// @param det Detector whose material grids are written.
-  /// @return Header payload describing the material grids.
-  template <class detector_t>
-  static auto to_header_payload(const detector_t& det) {
-    return grid_writer_t::to_header_payload(det.material_store());
+  /// @returns the tag of the writer: "material_maps"
+  std::string_view tag() const override { return s_tag; }
+
+  /// Convert the material maps of the detector
+  /// @param det Detector whose material maps are serialized.
+  /// @param names Optional volume names indexed by volume index.
+  /// @param det_data Payload to which the serialized data is added.
+  void to_payload(const detector_t& det,
+                  const typename detector_t::name_map& names,
+                  detector_payload& det_data) const override {
+    det_data.material_maps = to_payload_impl(det, names);
   }
 
   /// Convert the material description of a detector @p det into its io
@@ -53,8 +68,7 @@ class material_map_writer : public detail::grid_writer {
   /// @tparam detector_t Detector type to serialize.
   /// @param det Detector whose material maps are serialized.
   /// @return Payload containing material-grid entries grouped by volume.
-  template <class detector_t>
-  static payload_type to_payload(
+  static payload_type to_payload_impl(
       const detector_t& det, const typename detector_t::name_map& /*unused*/) {
     using algebra_t = typename detector_t::algebra_type;
     using material_t = material_slab<typename detector_t::scalar_type>;
@@ -93,13 +107,14 @@ class material_map_writer : public detail::grid_writer {
 
         // How to convert a material slab in the grid
         auto mat_converter = [&sf_desc](const material_t& mat) {
-          return mat_writer_t::to_payload<algebra_t>(mat, sf_desc.index());
+          return mat_writer_t::template to_payload_impl<algebra_t>(
+              mat, sf_desc.index());
         };
 
         // Generate the payload
-        grid_writer_t::to_payload(det.material_store(), mat_link,
-                                  vol_desc.index(), sf_desc.index() - offset,
-                                  grids_data, mat_converter);
+        grid_writer_t::to_payload_impl(
+            det.material_store(), mat_link, vol_desc.index(),
+            sf_desc.index() - offset, grids_data, mat_converter);
       }
     }
 

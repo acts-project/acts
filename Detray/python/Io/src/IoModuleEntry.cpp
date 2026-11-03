@@ -11,9 +11,9 @@
 
 // Detray IO include(s)
 #include "detray/io/frontend/detector_reader_config.hpp"
-#include "detray/io/frontend/detector_writer.hpp"
 #include "detray/io/frontend/detector_writer_config.hpp"
 #include "detray/io/json/detector_reader.hpp"
+#include "detray/io/json/detector_writer.hpp"
 
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
@@ -129,7 +129,9 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
   m.def(
       "writeDetector",
       [](toy_detector_t &det, const typename toy_detector_t::name_map &names,
-         writer_config_t &cfg) { detray::io::write_detector(det, names, cfg); },
+         writer_config_t &cfg) {
+        detray::io::write_detector_json(det, names, cfg);
+      },
       py::arg("detector"), py::arg("names"), py::arg("config"),
       "Write a detector to file as configured by a DetectorWriterConfig. The "
       "config is modified in place if the detector carries no material");

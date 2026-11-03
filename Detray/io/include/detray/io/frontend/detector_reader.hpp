@@ -157,6 +157,8 @@ template <class detector_t, std::size_t GCAP = 0u, std::size_t GDIM = 2u,
 auto read_detector(vecmem::memory_resource& resc,
                    const detray::io::detector_reader_config& cfg,
                    detray::io::detector_payload& payload) noexcept(false) {
+  DETRAY_INFO_HOST("Reading detray detector...");
+
   // Convert the input file data and add it to the detector payload object
   if constexpr (sizeof...(input_converter_ts) > 0) {
     // File list may be empty, in this case this call will do nothing
@@ -193,6 +195,8 @@ auto read_detector(vecmem::memory_resource& resc,
   }
 
   DETRAY_DEBUG_HOST("\n" << detray::utils::print_detector(det, names));
+  DETRAY_INFO_HOST("Done reading: " << det.name(names) << " (Source: "
+                                    << payload.header.source << ")");
 
   return std::make_pair(std::move(det), std::move(names));
 }

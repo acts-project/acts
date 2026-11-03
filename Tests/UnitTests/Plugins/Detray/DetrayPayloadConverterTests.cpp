@@ -53,25 +53,21 @@
 #include <numbers>
 #include <set>
 
-#include <detray/io/backend/geometry_writer.hpp>
-#include <detray/io/backend/homogeneous_material_writer.hpp>
+#include <detray/geometry/tracking_volume.hpp>
 #include <detray/io/frontend/definitions.hpp>
 #include <detray/io/frontend/detector_reader.hpp>
 #include <detray/io/frontend/detector_reader_config.hpp>
-#include <detray/io/frontend/detector_writer.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
 #include <detray/io/frontend/payloads.hpp>
 #include <detray/io/json/detector_reader.hpp>
-#include <detray/io/json/json_io.hpp>
+#include <detray/io/json/detector_writer.hpp>
 #include <detray/material/detail/material_accessor.hpp>
 #include <detray/plugins/svgtools/illustrator.hpp>
 #include <detray/plugins/svgtools/writer.hpp>
-#include <detray/utils/grid/concepts.hpp>
-#include <nlohmann/json_fwd.hpp>
+#include <detray/utils/detector_statistics.hpp>
+#include <detray/utils/print_detector.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
-
-#include "detray/geometry/tracking_volume.hpp"
 
 auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO);
 
@@ -573,90 +569,6 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
   }
 }
 
-// namespace {
-//
-// namespace detail {
-//
-// /// A functor that retrieves an acceleration struct and prints it
-// struct accelerator_printer {
-//   /// Print an acceleration structure
-//   ///
-//   /// @param accel_coll collection of acceleration structs
-//   /// @param idx the specific grid to be checked
-//   /// @param id type id of the material grid collection
-//   template <typename accel_coll_t, typename index_t>
-//   DETRAY_HOST void operator()(const accel_coll_t& accel_coll, const index_t
-//   idx,
-//                               std::stringstream& os) const {
-//     // os << accel_coll[idx];
-//   }
-// };
-//
-// /// A functor that retrieves material and prints it
-// struct material_printer {
-//   /// Print material
-//   ///
-//   /// @param material_coll collection of material
-//   /// @param idx the specific grid to be checked
-//   /// @param id type id of the material grid collection
-//   template <typename material_coll_t, typename index_t>
-//   DETRAY_HOST void operator()(const material_coll_t& material_coll,
-//                               const index_t idx, std::stringstream& os) const
-//                               {
-//     if constexpr (!detray::concepts::grid<
-//                       typename material_coll_t::value_type>) {
-//       os << material_coll[idx];
-//     }
-//   }
-// };
-//
-// }  // namespace detail
-//
-// template <concepts::detector detector_t>
-// inline std::string print_detector(
-//     const detector_t& det, const typename detector_t::name_map& names = {}) {
-//   // Gathers navigation information across navigator update calls
-//   std::stringstream debug_stream{};
-//
-//   debug_stream << std::left << "[>] Detector " << det.name(names) << " has "
-//                << det.volumes().size() << " volumes." << std::endl;
-//
-//   for (const auto [i, v_desc] : detray::views::enumerate(det.volumes())) {
-//     detray::tracking_volume v{det, v_desc};
-//
-//     debug_stream << "[>>] Volume " << v.name(names) << std::endl;
-//     debug_stream << v << std::endl;
-//
-//     debug_stream << "[>>>] Acceleration Structures:" << std::endl;
-//     const auto acc_link = v_desc.accel_link();
-//     for (std::size_t j = 0u; j < acc_link.size(); ++j) {
-//       // An acceleration data structure link was set, but is invalid
-//       if (!acc_link[j].is_invalid_id() && !acc_link[j].is_invalid_index()) {
-//         debug_stream << j << ":" << std::endl;
-//         det.accelerator_store().template visit<detail::accelerator_printer>(
-//             acc_link[j], debug_stream);
-//       }
-//     }
-//
-//     debug_stream << "[>>>] Surfaces:" << std::endl;
-//     for (const auto sf_desc : v.template surfaces<>()) {
-//       detray::geometry::surface sf{det, sf_desc};
-//       debug_stream << sf << std::endl;
-//
-//       // Check the surface material, if present
-//       if (sf.has_material()) {
-//         debug_stream << "[>>>>] Surface material:" << std::endl;
-//         sf.template visit_material<detail::material_printer>(debug_stream);
-//       }
-//     }
-//
-//     debug_stream << std::endl;
-//   }
-//
-//   return debug_stream.str();
-// }
-// }  // namespace
-
 BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   auto geoLogger = getDefaultLogger("Geo", Logging::VERBOSE);
@@ -684,9 +596,13 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   DetrayPayloadConverter converter(cfg, std::move(logger));
   auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
 
-  BOOST_CHECK(payloads.material_maps.has_value());
-  BOOST_CHECK(payloads.homogeneous_material.has_value());
-  BOOST_CHECK(payloads.surface_grids.has_value());
+  BOOST_REQUIRE(payloads.material_maps.has_value());
+  BOOST_REQUIRE(payloads.homogeneous_material.has_value());
+  BOOST_REQUIRE(payloads.surface_grids.has_value());
+  BOOST_CHECK(payloads.geometry.is_valid());
+  BOOST_CHECK(payloads.material_maps->is_valid());
+  BOOST_CHECK(payloads.homogeneous_material->is_valid());
+  BOOST_CHECK(payloads.surface_grids->is_valid());
 
   const auto& detector = payloads.geometry;
   const auto& homogeneousMaterial = *payloads.homogeneous_material;
@@ -737,7 +653,6 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   }
 
   BOOST_CHECK_EQUAL(materialGrids.grids.size(), 2);
-
   BOOST_CHECK_EQUAL(surfaceGrids.grids.size(), 4);
 
   // Empirical binning config from construction
@@ -768,89 +683,84 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   using detector_t =
       detray::host::detector<detray::default_metadata<detray::array<double>>>;
 
-  {
-    detray::io::tagged_header_payload tagged_header_data =
-        detray::io::detail::basic_converter::to_tagged_header_payload<
-            detector_t>(payloads.detector_name,
-                        detray::io::geometry_writer::tag, "ACTS unit test");
+  auto directWriterCfg = detray::io::detector_writer_config{}
+                             .format(detray::io::format::json)
+                             .path("./direct_payload_json")
+                             .source("ACTS unit test")
+                             .replace_files(true);
+  detray::io::convert_payload_to_json(payloads, directWriterCfg);
 
-    detray::io::geometry_header_payload sub_header_data{};
-    sub_header_data.n_volumes = detector.volumes.size();
-    sub_header_data.n_surfaces = 0;
-    for (const auto& volume : detector.volumes) {
-      sub_header_data.n_surfaces += volume.surfaces.size();
-    }
+  // Check the file headers generated during the conversion
+  const detray::io::header_payload& header = payloads.header;
 
-    nlohmann::ordered_json out_json;
-    out_json["header"] = sub_header_data;
-    out_json["header"]["common"] = tagged_header_data;
-    out_json["data"] = detector;
-
-    std::ofstream ofs{"Detector_geometry_direct.json"};
-    ofs << out_json.dump(2) << std::endl;
+  // Geometry
+  BOOST_CHECK_EQUAL(header.source, "ACTS unit test");
+  BOOST_REQUIRE(header.geometry.has_value());
+  BOOST_CHECK_EQUAL(header.geometry->n_volumes, detector.volumes.size());
+  std::size_t nSurfaces = 0;
+  for (const auto& volume : detector.volumes) {
+    nSurfaces += volume.surfaces.size();
   }
+  BOOST_CHECK_EQUAL(header.geometry->n_surfaces, nSurfaces);
 
-  {
-    detray::io::tagged_header_payload tagged_header_data =
-        detray::io::detail::basic_converter::to_tagged_header_payload<
-            detector_t>(payloads.detector_name,
-                        detray::io::homogeneous_material_writer::tag,
-                        "ACTS unit test");
-
-    detray::io::homogeneous_material_header_payload sub_header_data;
-    sub_header_data.n_rods = 0;
-    sub_header_data.n_slabs = 0;
-
-    for (const auto& hVol : homogeneousMaterial.volumes) {
-      if (!hVol.surface_mat.empty()) {
-        sub_header_data.n_rods += hVol.surface_mat.size();
-      }
-      sub_header_data.n_slabs += hVol.surface_mat.size();
-    }
-
-    nlohmann::ordered_json out_json;
-    out_json["header"] = sub_header_data;
-    out_json["header"]["common"] = tagged_header_data;
-    out_json["data"] = homogeneousMaterial;
-
-    std::ofstream ofs{"Detector_homogeneous_material_direct.json"};
-    ofs << out_json.dump(2) << std::endl;
+  // Material
+  BOOST_REQUIRE(header.homogeneous_material.has_value());
+  std::size_t nSlabs = 0;
+  for (const auto& hVol : homogeneousMaterial.volumes) {
+    nSlabs += hVol.surface_mat.size();
   }
+  BOOST_CHECK_EQUAL(header.homogeneous_material->n_slabs +
+                        header.homogeneous_material->n_rods,
+                    nSlabs);
+
+  BOOST_REQUIRE(header.material_maps.has_value());
+
+  // Grids
+  BOOST_REQUIRE(header.surface_grids.has_value());
+  BOOST_CHECK_EQUAL(header.surface_grids->n_grids, 4);
 
   // Payloads DONE, let's actually build a detray detector from them.
-  auto readerCfg = detray::io::detector_reader_config{}.verbose_check(true);
+  auto readerCfg =
+      detray::io::detector_reader_config{}.deduplicate(false).verbose_check(
+          true);
   const auto [detrayDetector, detrayNames] =
       detray::io::read_detector<detector_t>(mr, readerCfg, payloads);
 
-  detray::svgtools::illustrator illustrator(detrayDetector, detrayNames);
-  illustrator.hide_eta_lines(true);
-  illustrator.show_info(true);
-
-  const auto svg_zr = illustrator.draw_detector(actsvg::views::z_r{});
-  actsvg::style::stroke stroke_black = actsvg::style::stroke();
-  auto zr_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
-                                        stroke_black, "z", "r");
-  detray::svgtools::write_svg(
-      "test_svgtools_detector_zr",
-      std::initializer_list<actsvg::svg::object>{zr_axis, svg_zr});
-
-  const auto svg_xy = illustrator.draw_detector(actsvg::views::x_y{});
-  auto xy_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
-                                        stroke_black, "x", "y");
-  detray::svgtools::write_svg("test_svgtools_detector_xy", {
-                                                               xy_axis,
-                                                               svg_xy,
-                                                           });
-
-  auto writer_cfg = detray::io::detector_writer_config{}
-                        .format(detray::io::format::json)
-                        .source("ACTS unit test")
-                        .replace_files(true);
+  // Check some detector statistics
+  BOOST_CHECK_EQUAL(detray::n_surfaces(detrayDetector), nSurfaces);
+  BOOST_CHECK_EQUAL(detray::n_surface_grids(detrayDetector),
+                    header.surface_grids->n_grids);
+  BOOST_CHECK_EQUAL(detray::n_material_maps(detrayDetector),
+                    header.material_maps->n_grids);
+  BOOST_CHECK_EQUAL(detray::n_material_slabs(detrayDetector), nSlabs);
+  BOOST_CHECK_EQUAL(detray::n_material_rods(detrayDetector), 0u);
 
   // std::cout << detray::utils::print_detector(detrayDetector, detrayNames)
   //           << std::endl;
 
-  detray::io::write_detector(detrayDetector, detrayNames, writer_cfg);
+  // Write the detector to SVG
+  detray::svgtools::illustrator illustrator(detrayDetector, detrayNames);
+  illustrator.hide_eta_lines(true);
+  illustrator.show_info(true);
+
+  actsvg::style::stroke stroke_black = actsvg::style::stroke();
+  auto xy_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
+                                        stroke_black, "x", "y");
+
+  auto zr_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
+                                        stroke_black, "z", "r");
+
+  // Draw two detector views
+  const auto svg_zr = illustrator.draw_detector(actsvg::views::z_r{});
+  const auto svg_xy = illustrator.draw_detector(actsvg::views::x_y{});
+
+  // Write to file
+  detray::svgtools::write_svg(
+      "test_svgtools_detector_xy",
+      std::initializer_list<actsvg::svg::object>{xy_axis, svg_xy});
+  detray::svgtools::write_svg(
+      "test_svgtools_detector_zr",
+      std::initializer_list<actsvg::svg::object>{zr_axis, svg_zr});
 }
 
 BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
@@ -934,7 +844,7 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
                        .replace_files(true)
                        .write_grids(true)
                        .write_material(true);
-  detray::io::write_detector(det, deduplicated.names, writerCfg);
+  detray::io::write_detector_json(det, deduplicated.names, writerCfg);
 
   detray::io::detector_reader_config readerCfg{};
   readerCfg.do_check(true).deduplicate(false);

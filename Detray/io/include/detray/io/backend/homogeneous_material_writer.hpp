@@ -16,6 +16,7 @@
 #include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/backend/detail/type_info.hpp"
 #include "detray/io/frontend/payloads.hpp"
+#include "detray/io/frontend/writer_interface.hpp"
 #include "detray/material/concepts.hpp"
 #include "detray/material/material_rod.hpp"
 #include "detray/material/material_slab.hpp"
@@ -26,79 +27,68 @@
 
 namespace detray::io {
 
+/// Generate the material header data
+/// @param mat_data the input homogeneous material payload
+/// @returns the homogeneous material header data
+inline homogeneous_material_header_payload to_header_payload(
+    const detector_homogeneous_material_payload& mat_data) {
+  using material_id_t = surface_material_payload::mat_type;
+
+  homogeneous_material_header_payload header_data;
+
+  // Every surface material payload belongs to exactly one surface
+  for (const auto& mv_data : mat_data.volumes) {
+    for (const auto& mslp : mv_data.surface_mat) {
+      if (mslp.type == material_id_t::slab) {
+        ++header_data.n_slabs;
+      } else if (mslp.type == material_id_t::rod) {
+        ++header_data.n_rods;
+      }
+    }
+  }
+  header_data.n_slab_surfaces = header_data.n_slabs;
+  header_data.n_rod_surfaces = header_data.n_rods;
+
+  return header_data;
+}
+
 /// @brief Homogeneous material writer backend
 ///
 /// Fills a @c detector_homogeneous_material_payload from a @c detector instance
-class homogeneous_material_writer {
+template <detray::concepts::detector detector_t>
+class homogeneous_material_writer final : public writer_interface<detector_t> {
  public:
   /// Tag the writer as "homogeneous_material"
-  static constexpr std::string_view tag = "homogeneous_material";
+  static constexpr std::string_view s_tag = "homogeneous_material";
 
-  /// Payload type that the reader processes
+  /// Payload type that the writer processes
   using payload_type = detector_homogeneous_material_payload;
 
-  /// Convert the header information into its payload
-  /// @tparam detector_t Detector type to serialize.
-  /// @param det Detector providing the material store and surface links.
-  /// @return Header payload with counts for slabs, rods, and their surfaces.
-  template <class detector_t>
-  static homogeneous_material_header_payload to_header_payload(
-      const detector_t& det) {
-    homogeneous_material_header_payload header_data;
+  /// @returns the tag of the writer: "homogeneous_material"
+  std::string_view tag() const override { return s_tag; }
 
-    using algebra_t = typename detector_t::algebra_type;
-    using material_id_t = surface_material_payload::mat_type;
-
-    auto count_surface_with_material_type = [&det](material_id_t target_type) {
-      std::size_t count{0u};
-      for (const auto& [sf_idx, sf_desc] :
-           detray::views::enumerate(det.surfaces())) {
-        const auto sf = geometry::surface{det, sf_desc};
-
-        if (surface_material_payload mslp =
-                sf.has_material() ? sf.template visit_material<
-                                        get_material_payload<algebra_t>>(sf_idx)
-                                  : surface_material_payload{};
-            mslp.type == target_type) {
-          count++;
-        }
-      }
-
-      return count;
-    };
-
-    const auto& materials = det.material_store();
-
-    if constexpr (detray::concepts::has_material_slabs<detector_t>) {
-      header_data.n_slabs =
-          materials.template size<detector_t::material::id::e_material_slab>();
-      header_data.n_slab_surfaces =
-          count_surface_with_material_type(material_id_t::slab);
-    }
-    header_data.n_rods = 0u;
-    if constexpr (detray::concepts::has_material_rods<detector_t>) {
-      header_data.n_rods =
-          materials.template size<detector_t::material::id::e_material_rod>();
-      header_data.n_rod_surfaces =
-          count_surface_with_material_type(material_id_t::rod);
-    }
-
-    return header_data;
+  /// Convert the material description of a detector @p det into its io
+  /// payload
+  /// @param det Detector whose material is serialized.
+  /// @param names Optional volume names indexed by volume index.
+  /// @param det_data Payload to which the serialized data is added.
+  void to_payload(const detector_t& det,
+                  const typename detector_t::name_map& names,
+                  detector_payload& det_data) const override {
+    det_data.homogeneous_material = to_payload_impl(det, names);
   }
 
   /// Convert the material description of a detector @p det into its io
   /// payload
-  /// @tparam detector_t Detector type to serialize.
   /// @param det Detector whose material descriptions are serialized.
   /// @return Payload containing the material entries grouped by volume.
-  template <class detector_t>
-  static payload_type to_payload(
+  static payload_type to_payload_impl(
       const detector_t& det, const typename detector_t::name_map& /*unused*/) {
     payload_type dm_data;
     dm_data.volumes.reserve(det.volumes().size());
 
     for (const auto& vol : det.volumes()) {
-      dm_data.volumes.push_back(to_payload(vol, det));
+      dm_data.volumes.push_back(to_payload_impl(vol, det));
     }
 
     return dm_data;
@@ -106,12 +96,10 @@ class homogeneous_material_writer {
 
   /// Convert the material description of a volume @p vol_desc into its
   /// io payload
-  /// @tparam detector_t Detector type to serialize.
   /// @param vol_desc Volume descriptor whose surfaces are inspected.
   /// @param det Detector providing material data and surface descriptors.
   /// @return Material payload for the volume.
-  template <class detector_t>
-  static material_volume_payload to_payload(
+  static material_volume_payload to_payload_impl(
       const typename detector_t::volume_type& vol_desc, const detector_t& det) {
     using material_type = surface_material_payload::mat_type;
 
@@ -171,7 +159,7 @@ class homogeneous_material_writer {
   /// @param mat Material properties to serialize.
   /// @return Payload containing the material parameters.
   template <detray::concepts::material_params material_t>
-  static material_param_payload to_payload(const material_t& mat) {
+  static material_param_payload to_payload_impl(const material_t& mat) {
     material_param_payload mat_data;
 
     mat_data.params = {mat.X0(),
@@ -192,14 +180,14 @@ class homogeneous_material_writer {
   /// @return Payload linking the surface to its material.
   template <detray::concepts::algebra algebra_t,
             detray::concepts::homogeneous_material material_t>
-  static surface_material_payload to_payload(const material_t& mat,
-                                             std::size_t sf_idx) {
+  static surface_material_payload to_payload_impl(const material_t& mat,
+                                                  std::size_t sf_idx) {
     surface_material_payload mat_data;
 
     mat_data.type = io::detail::get_id<algebra_t, material_t>();
     mat_data.surface = detail::basic_converter::to_payload(sf_idx);
     mat_data.thickness = mat.thickness();
-    mat_data.mat = to_payload(mat.get_material());
+    mat_data.mat = to_payload_impl(mat.get_material());
 
     return mat_data;
   }
@@ -216,7 +204,7 @@ class homogeneous_material_writer {
 
       if constexpr (detray::concepts::material_slab<material_t> ||
                     detray::concepts::material_rod<material_t>) {
-        return homogeneous_material_writer::to_payload<algebra_t>(
+        return homogeneous_material_writer::template to_payload_impl<algebra_t>(
             material_group[index], sf_index);
       } else {
         return surface_material_payload{};
