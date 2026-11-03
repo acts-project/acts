@@ -49,6 +49,8 @@
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
+const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+
 // A Multivariate distribution object working in the same way as the
 // distributions in the standard library
 template <typename T, int D>
@@ -234,7 +236,7 @@ void test_surface(const Surface &surface, const LocPosArray &loc_pos,
       }
 
       const auto [mean_approx, cov_approx] = detail::Gsf::mergeGaussianMixture(
-          cmps, surface, ComponentMergeMethod::eMean);
+          gctx, cmps, surface, ComponentMergeMethod::eMean);
 
       const auto mean_ref = meanFromFree(cmps, surface);
 
@@ -267,7 +269,7 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   const auto boundCov_data = boundCov(samples, mean_data);
 
   const auto [mean_test, boundCov_test] = detail::Gsf::mergeGaussianMixture(
-      cmps, *surface, ComponentMergeMethod::eMean);
+      gctx, cmps, *surface, ComponentMergeMethod::eMean);
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);

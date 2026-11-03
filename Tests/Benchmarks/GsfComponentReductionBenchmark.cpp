@@ -22,13 +22,14 @@ constexpr std::size_t nComponents = 72;  // 12 max components GSF, 6 material
 template <typename Fun>
 void test(const std::vector<std::vector<GsfComponent>> &inputData,
           const Acts::Surface &surface, Fun &&fun) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   auto num_runs = 1000;
   auto res = microBenchmark(
       [&](const std::vector<GsfComponent> &input) {
         // Avoid reallocation cost every iteration
         static std::vector<GsfComponent> inputCopy(nComponents);
         inputCopy = input;
-        fun(inputCopy, 12, surface);
+        fun(gctx, inputCopy, 12, surface);
         assumeRead(inputCopy);
       },
       inputData, num_runs);

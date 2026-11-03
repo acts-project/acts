@@ -24,6 +24,8 @@ enum class GsfError {
   NoMeasurementStatesCreatedBackward,
   /// No measurement states in the final trajectory
   NoMeasurementStatesCreatedFinal,
+  /// Mixture merging requires canonical global-spherical bound coordinates
+  UnsupportedBoundParametrization,
 };
 
 /// Create error code from @ref GsfError

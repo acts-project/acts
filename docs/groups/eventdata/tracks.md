@@ -163,6 +163,24 @@ trajectory before filtering again. It remains a local linear approximation:
 large direction changes require rebuilding the reference transport Jacobians.
 Only canonical global-spherical coordinates are currently supported.
 
+Mixture merging remains explicitly canonical-only. GSF, bremsstrahlung CKF,
+@ref Acts::MultiComponentBoundTrackParameters::merge and the KL-distance reducers
+pass the geometry context through to the surface's bound parametrization.
+The existing circular global-phi mean, linear theta mean, periodic local
+coordinates on discs/cylinders, and mixture covariance calculation are unchanged.
+Selecting the largest-weight component also retains the existing mean-based
+mixture covariance. Weight-only pruning and q/p-only KL distances do not interpret
+direction coordinates.
+
+The circular-mean implementation checks for global-spherical support before
+interpreting the direction slots. An unsupported parametrization throws a
+`std::system_error` with @ref Acts::GsfError::UnsupportedBoundParametrization and
+the surface identifier; it is not converted into a rejected component. No
+alternative parametrization is selectable yet, so that rejection path awaits
+validation when one is introduced. Custom mixture-reducer callbacks now take
+`const GeometryContext&` as their first argument; parameter merging takes
+`merge(gctx, method)`.
+
 Pointwise material physics computes a projected scattering variance independently
 of the direction coordinates. A separate mapping produces the direction-noise
 block, with a direct diagonal calculation for the canonical spherical convention.
