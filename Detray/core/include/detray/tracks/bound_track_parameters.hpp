@@ -267,7 +267,8 @@ struct bound_parameters_vector {
 /// Combine the bound track parameter vector with the covariance and associated
 /// surface
 template <concepts::algebra algebra_t>
-struct bound_track_parameters : public bound_parameters_vector<algebra_t> {
+struct alignas(16) bound_track_parameters
+    : public bound_parameters_vector<algebra_t> {
   using base_type = bound_parameters_vector<algebra_t>;
 
   /// @name Type definitions for the struct
