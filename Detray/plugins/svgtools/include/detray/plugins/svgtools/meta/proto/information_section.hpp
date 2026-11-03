@@ -25,9 +25,13 @@ namespace detray::svgtools::meta::proto {
 /// a intersection record description.
 template <concepts::point3D point3_t>
 struct information_section {
+  /// Text lines displayed in the information section.
   std::vector<std::string> _info{};
+  /// Heading displayed above the information lines.
   std::string _title{};
+  /// RGB color for the section text.
   std::array<int, 3> _color{};
+  /// Anchor position of the section in the view.
   point3_t _position{};
 };
 

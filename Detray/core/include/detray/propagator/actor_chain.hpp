@@ -37,11 +37,11 @@ class actor_chain {
   /// Types of the actors that are registered in the chain
   using actor_tuple = dtuple<actors_t...>;
 
-  // Tuple of actor states (including states of observing actors, if present)
+  /// Tuple of actor states (including states of observing actors, if present)
   using state_tuple =
       detail::unique_t<detail::tuple_cat_t<detail::state_tuple_t<actors_t>...>>;
 
-  // Tuple of state references that is used in the propagator
+  /// Tuple of state references that is used in the propagator
   using state_ref_tuple = detail::unique_t<
       detail::tuple_cat_t<detail::state_ref_tuple_t<actors_t>...>>;
 
@@ -74,7 +74,9 @@ class actor_chain {
     }
   }
 
-  /// @returns a tuple of reference for every state in the tuple @param t
+  /// Create references to each actor state in the tuple.
+  /// @param t Tuple of actor states.
+  /// @returns a tuple of reference for every state in the tuple @p t
   DETRAY_HOST_DEVICE static constexpr state_ref_tuple setup_actor_states(
       state_tuple &t) {
     return setup_actor_states(
@@ -132,8 +134,11 @@ class actor_chain {
 template <>
 class actor_chain<> {
  public:
+  /// Empty tuple representing the actor list.
   using actor_tuple = dtuple<>;
+  /// Empty tuple representing actor state storage.
   using state_tuple = dtuple<>;
+  /// Empty tuple representing actor state references.
   using state_ref_tuple = dtuple<>;
 
   /// Empty states replaces a real actor states container
@@ -141,8 +146,7 @@ class actor_chain<> {
 
   /// Call to actors does nothing.
   ///
-  /// @param states the states of the actors.
-  /// @param p_state the propagation state.
+  /// Accept the actor-chain interface without changing propagation state.
   template <typename actor_states_t, typename propagator_state_t>
   DETRAY_HOST_DEVICE constexpr void operator()(
       actor_states_t & /*states*/, propagator_state_t & /*p_state*/) const {

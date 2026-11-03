@@ -31,18 +31,24 @@
 
 namespace detray {
 
+/// Navigator that visits an externally supplied sequence of surfaces in order.
+/// @tparam detector_t Detector providing the geometry and algebra types.
+/// @tparam surface_sequence_t Optional range type for the ordered surfaces.
 template <concepts::detector detector_t, typename surface_sequence_t = void>
 class direct_navigator {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
 
  public:
+  /// Detector whose surfaces are navigated.
   using detector_type = detector_t;
+  /// Geometry context expected by the detector.
   using context_type = detector_type::geometry_context;
 
   // Use an external surface sequence type (rather than a single surface type),
   // perigee/external surface flows instantiate direct_navigator with
   // single_view-like range wrappers.
+  /// Range containing the surfaces visited by this navigator.
   using surface_sequence_type = std::conditional_t<
       std::same_as<surface_sequence_t, void>,
       vecmem::device_vector<typename detector_t::surface_type>,
@@ -51,11 +57,15 @@ class direct_navigator {
   static_assert(detray::ranges::range<surface_sequence_type>,
                 "Surface sequence must be iterable");
 
+  /// Descriptor type stored in the surface sequence.
   using surface_type = detray::ranges::range_value_t<surface_sequence_type>;
+  /// Intersection record stored in the navigation state.
   using intersection_type =
       intersection2D<surface_type, algebra_t, !intersection::contains_pos>;
+  /// Inspector policy used by the direct navigation flow.
   using inspector_type = navigation::void_inspector;
 
+  /// Mutable state for traversing the external surface sequence.
   class state
       : public navigation::base_state<state, detector_type, 2u, inspector_type,
                                       intersection_type> {
@@ -72,13 +82,17 @@ class direct_navigator {
     using dist_t = std::int_least16_t;
 
    public:
+    /// Candidate value type stored in the base navigation state.
     using value_type = intersection_type;
+    /// Range type retained by the navigation state.
     using sequence_type = surface_sequence_type;
 
+    /// View used to access the sequence during navigation.
     using view_type =
         std::conditional_t<std::same_as<surface_sequence_t, void>,
                            detail::get_view_t<surface_sequence_type>,
                            surface_sequence_type>;
+    /// Const view type corresponding to the configured sequence type.
     using const_view_type =
         std::conditional_t<std::same_as<surface_sequence_t, void>,
                            detail::get_view_t<const surface_sequence_type>,
@@ -86,6 +100,8 @@ class direct_navigator {
 
     /// Constructor using the detector and an externally provided sequence
     /// of detector surfaces
+    /// @param det Detector whose geometry is navigated.
+    /// @param sequence Ordered surface view for the navigation flow.
     DETRAY_HOST_DEVICE constexpr state(const detector_t &det,
                                        const view_type &sequence)
         : base_type(det), m_sequence(sequence) {
@@ -123,6 +139,7 @@ class direct_navigator {
     }
 
     /// Set direction in which the navigator should search for candidates
+    /// @param dir Direction in which the sequence is traversed.
     DETRAY_HOST_DEVICE
     constexpr void set_direction(const navigation::direction dir) {
       base_type::set_direction(dir);
@@ -137,6 +154,7 @@ class direct_navigator {
     }
 
     /// Advance the iterator
+    /// @returns The surface currently selected as the next target.
     DETRAY_HOST_DEVICE
     constexpr surface_type next_external() {
       assert(has_next_external());
@@ -208,6 +226,10 @@ class direct_navigator {
   };
 
   /// Initialize the direct navigation flow on the first/last external surface
+  /// @param track Track whose intersections will be evaluated.
+  /// @param navigation State to initialize.
+  /// @param cfg Navigation tolerances and policies.
+  /// @param ctx Detector geometry context.
   template <typename track_t>
   DETRAY_HOST_DEVICE inline void init(const track_t &track, state &navigation,
                                       const navigation::config &cfg,
@@ -226,6 +248,11 @@ class direct_navigator {
 
   /// Update the navigation status on the current next external and switch
   /// to the following external surface if the current one was reached
+  /// @param track Track whose intersections will be evaluated.
+  /// @param navigation State to update.
+  /// @param cfg Navigation tolerances and policies.
+  /// @param ctx Detector geometry context.
+  /// @returns Whether the current surface was reached and advancement occurred.
   template <typename track_t>
   DETRAY_HOST_DEVICE inline bool update(const track_t &track, state &navigation,
                                         const navigation::config &cfg,

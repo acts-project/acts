@@ -28,6 +28,7 @@ namespace detray::algebra {
 /// @param a first value
 /// @param b second value
 /// @param rel_error maximal relative error
+/// @param max_error Absolute tolerance used near zero.
 ///
 /// @returns true if the two values are approximaterly equal
 template <concepts::scalar scalar_t, concepts::value value_t>
@@ -61,6 +62,7 @@ DETRAY_HOST_DEVICE constexpr auto approx_equal(
 /// @param v1 first vector
 /// @param v2 second vector
 /// @param rel_error maximal relative error
+/// @param max_error Absolute tolerance used near zero.
 ///
 /// @returns true if the two vectors are approximaterly equal
 template <typename vector1_t, typename vector2_t>
@@ -99,6 +101,7 @@ DETRAY_HOST_DEVICE constexpr auto approx_equal(
 /// @param v1 first column matrix
 /// @param v2 second column matrix
 /// @param rel_error maximal relative error
+/// @param max_error Absolute tolerance used near zero.
 ///
 /// @returns true if the two column matrices are approximaterly equal
 template <concepts::column_matrix vector1_t, concepts::column_matrix vector2_t>
@@ -134,6 +137,7 @@ DETRAY_HOST_DEVICE constexpr auto approx_equal(
 /// @param m1 first matrix
 /// @param m2 second matrix
 /// @param rel_error maximal relative error
+/// @param max_error Absolute tolerance used near zero.
 ///
 /// @returns true if the two matrices are approximaterly equal
 template <concepts::matrix matrix1_t, concepts::matrix matrix2_t>
@@ -173,6 +177,7 @@ DETRAY_HOST_DEVICE constexpr auto approx_equal(
 /// @param trf1 first transform
 /// @param trf2 second transform
 /// @param rel_error maximal relative error
+/// @param max_error Absolute tolerance used near zero.
 ///
 /// @returns true if the two transforms are approximaterly equal
 template <concepts::transform3D transform_t>
