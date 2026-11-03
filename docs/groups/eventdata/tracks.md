@@ -160,8 +160,17 @@ Generic material interaction uses the curvilinear interpretation. KF and GSF
 use the bound surface interpretation. CKF retains the curvilinear interpretation
 for material-only transport until rebinding or a filtered-state update changes
 the anchor. The material helper neither selects an interpretation nor performs
-an additional covariance transport. Noise removal
-retains the existing diagonal-clamping behavior. Legacy
+an additional covariance transport. Noise addition updates the full direction block and q/p variance directly.
+Noise removal subtracts the requested increment in full and checks the complete
+covariance, including correlations with other coordinates. An invalid result
+returns @ref Acts::MaterialInteractionError::InvalidCovarianceAfterNoiseRemoval
+without changing momentum or covariance; no variances are clamped. Only removal
+checks positivity: an unscaled in-place Cholesky factorization of a scratch matrix handles
+positive-definite results first. Difficult cases retain the diagonally scaled
+Cholesky check and eigenvalue fallback using a relative tolerance of
+64 machine epsilons for semidefinite boundaries. Addition stays inline.
+The `ActsBenchmarkMaterialCovariance` target compares these paths with the
+legacy diagonal update and includes material-physics and noise-mapping work. Legacy
 @ref Acts::MaterialInteraction::sigmaPhi2 and
 @ref Acts::MaterialInteraction::sigmaTheta2 remain global angular diagnostics;
 nonzero scattering at a global pole has infinite phi variance.

@@ -16,6 +16,7 @@ target_sources(
         Material.cpp
         MaterialGridHelper.cpp
         MaterialInteractionAssignment.cpp
+        MaterialInteractionError.cpp
         MaterialMapUtils.cpp
         MaterialMapper.cpp
         MaterialSurfaceRegistry.cpp
