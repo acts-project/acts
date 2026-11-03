@@ -70,6 +70,7 @@ list(
 # `find_dependency` is a wrapper around `find_package` that automatically
 # handles QUIET and REQUIRED parameters.
 include(CMakeFindDependencyMacro)
+find_dependency(Threads)
 find_dependency(Boost @Boost_VERSION_STRING@ CONFIG EXACT)
 if(@ACTS_USE_SYSTEM_EIGEN3@)
     find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)

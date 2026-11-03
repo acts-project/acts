@@ -29,6 +29,9 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(ActsCore PUBLIC Boost::boost Eigen3::Eigen)
+
+find_package(Threads REQUIRED)
+target_link_libraries(ActsCore PRIVATE Threads::Threads)
 if(CMAKE_DL_LIBS)
     target_link_libraries(ActsCore PRIVATE ${CMAKE_DL_LIBS})
 endif()
@@ -161,4 +164,9 @@ add_subdirectory(src/Vertexing)
 add_subdirectory(src/Visualization)
 add_subdirectory(src/AmbiguityResolution)
 
-acts_compile_headers(Core GLOB include/Acts/**/*.hpp)
+acts_compile_headers(
+    Core
+    GLOB include/Acts/**/*.hpp
+    # deprecated forwarding headers, which emit a warning
+    EXCLUDE "include/Acts/Material/interface/"
+)
