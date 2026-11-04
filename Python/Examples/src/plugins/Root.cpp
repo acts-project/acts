@@ -279,7 +279,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         effPlotToolConfig, fakePlotToolConfig, duplicationPlotToolConfig,
         trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
         subDetectorTrackSummaryVolumes, writeMatchingDetails, inputMeasurements,
-        trackQualityGeometrySelections);
+        writeRegionalTrackQuality);
   }
 
   // Calibration

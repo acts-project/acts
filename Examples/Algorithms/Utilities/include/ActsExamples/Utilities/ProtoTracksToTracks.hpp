@@ -14,6 +14,10 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+namespace Acts {
+class TrackingGeometry;
+}
+
 namespace ActsExamples {
 
 class ProtoTracksToTracks final : public IAlgorithm {
@@ -27,6 +31,8 @@ class ProtoTracksToTracks final : public IAlgorithm {
     std::string inputMeasurements;
     /// Output tracks.
     std::string outputTracks = "tracks-from-protoTracks";
+    /// Optional. Source of the track-state reference surfaces.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Construct the algorithm.

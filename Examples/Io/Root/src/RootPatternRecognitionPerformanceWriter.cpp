@@ -50,7 +50,7 @@ RootPatternRecognitionPerformanceWriter::
               m_cfg.duplicationPlotToolConfig, m_cfg.trackSummaryPlotToolConfig,
               m_cfg.trackQualityPlotToolConfig,
               m_cfg.subDetectorTrackSummaryVolumes,
-              m_cfg.trackQualityGeometrySelections},
+              m_cfg.writeRegionalTrackQuality},
           logger().clone()) {
   // tracks collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
@@ -73,8 +73,7 @@ RootPatternRecognitionPerformanceWriter::
   m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
   m_inputParticleTrackMatching.initialize(m_cfg.inputParticleTrackMatching);
   m_inputParticleMeasurementsMap.initialize(m_cfg.inputParticleMeasurementsMap);
-  if (!m_cfg.trackQualityGeometrySelections.empty() &&
-      m_cfg.inputMeasurements.empty()) {
+  if (m_cfg.writeRegionalTrackQuality && m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument(
         "Regional track quality requires inputMeasurements");
   }

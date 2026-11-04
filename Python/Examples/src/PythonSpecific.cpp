@@ -80,9 +80,8 @@ class PythonPatternRecognitionPerformanceWriter final
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
     /// Complete measurement collection, required for regional quality.
     std::string inputMeasurements;
-    /// Named hierarchical geometry selections for matching-quality profiles.
-    std::map<std::string, std::vector<Acts::GeometryIdentifier>>
-        trackQualityGeometrySelections;
+    /// Enable regional quality using subDetectorTrackSummaryVolumes.
+    bool writeRegionalTrackQuality = false;
   };
 
   PythonPatternRecognitionPerformanceWriter(Config cfg,
@@ -97,7 +96,7 @@ class PythonPatternRecognitionPerformanceWriter final
                 m_cfg.trackSummaryPlotToolConfig,
                 m_cfg.trackQualityPlotToolConfig,
                 m_cfg.subDetectorTrackSummaryVolumes,
-                m_cfg.trackQualityGeometrySelections},
+                m_cfg.writeRegionalTrackQuality},
             logger().clone()) {
     if (m_cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
@@ -117,8 +116,7 @@ class PythonPatternRecognitionPerformanceWriter final
     m_inputParticleTrackMatching.initialize(m_cfg.inputParticleTrackMatching);
     m_inputParticleMeasurementsMap.initialize(
         m_cfg.inputParticleMeasurementsMap);
-    if (!m_cfg.trackQualityGeometrySelections.empty() &&
-        m_cfg.inputMeasurements.empty()) {
+    if (m_cfg.writeRegionalTrackQuality && m_cfg.inputMeasurements.empty()) {
       throw std::invalid_argument(
           "Regional track quality requires inputMeasurements");
     }
@@ -462,7 +460,7 @@ void addPythonSpecific(py::module_& mex) {
                        fakePlotToolConfig, duplicationPlotToolConfig,
                        trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
                        subDetectorTrackSummaryVolumes, inputMeasurements,
-                       trackQualityGeometrySelections);
+                       writeRegionalTrackQuality);
   }
 
   {

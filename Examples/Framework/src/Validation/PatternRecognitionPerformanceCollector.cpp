@@ -50,7 +50,10 @@ PatternRecognitionPerformanceCollector::PatternRecognitionPerformanceCollector(
         std::piecewise_construct, std::forward_as_tuple(key),
         std::forward_as_tuple(subConfig, m_logger->level()));
   }
-  for (const auto& [name, selection] : m_cfg.trackQualityGeometrySelections) {
+  for (const auto& [name, volumes] : m_cfg.subDetectorTrackSummaryVolumes) {
+    if (!m_cfg.writeRegionalTrackQuality) {
+      continue;
+    }
     if (name.empty()) {
       throw std::invalid_argument(
           "Track quality geometry selection name is empty");
@@ -59,12 +62,6 @@ PatternRecognitionPerformanceCollector::PatternRecognitionPerformanceCollector(
       throw std::invalid_argument(
           "Regional and global quality histogram prefixes collide");
     }
-    std::vector<Acts::GeometryHierarchyMap<unsigned int>::InputElement>
-        elements;
-    for (const auto& geoId : selection) {
-      elements.emplace_back(geoId, 0u);
-    }
-    m_qualityGeometrySelections.emplace(name, std::move(elements));
     auto config = m_cfg.trackQualityPlotToolConfig;
     config.prefix = name;
     m_regionalQualityTools.emplace(
@@ -81,13 +78,14 @@ void PatternRecognitionPerformanceCollector::fill(
     const ParticleTrackMatching& particleTrackMatching,
     const InverseMultimap<SimBarcode>& particleMeasurementsMap,
     const MeasurementContainer* measurementContainer) {
-  if (!m_qualityGeometrySelections.empty() && measurementContainer == nullptr) {
+  if (!m_regionalQualityTools.empty() && measurementContainer == nullptr) {
     throw std::invalid_argument("Regional track quality requires measurements");
   }
   std::string labelPlural = std::format("{}s", m_cfg.label);
 
   std::size_t unmatched = 0;
   std::size_t missingRefSurface = 0;
+  std::size_t missingStateSurfaces = 0;
 
   for (const auto& track : tracks) {
     m_stats.nTotalTracks++;
@@ -192,10 +190,20 @@ void PatternRecognitionPerformanceCollector::fill(
       m_trackQualityPlotTool.fill(matchedParticle->initialState(), completeness,
                                   purity);
 
-      for (const auto& [name, selection] : m_qualityGeometrySelections) {
+      if (!m_regionalQualityTools.empty()) {
+        for (const auto& state : track.trackStatesReversed()) {
+          if ((state.typeFlags().isMeasurement() ||
+               state.typeFlags().isOutlier()) &&
+              !state.hasReferenceSurface()) {
+            ++missingStateSurfaces;
+          }
+        }
+      }
+      for (const auto& [name, tool] : m_regionalQualityTools) {
+        const auto& volumes = m_cfg.subDetectorTrackSummaryVolumes.at(name);
         auto inRegion = [&](Index index) {
-          const auto geoId = measurementContainer->at(index).geometryId();
-          return selection.empty() || selection.find(geoId) != selection.end();
+          return volumes.contains(
+              measurementContainer->at(index).geometryId().volume());
         };
         std::unordered_multiset<Index> truthHits;
         for (auto it = measurements.first; it != measurements.second; ++it) {
@@ -210,14 +218,16 @@ void PatternRecognitionPerformanceCollector::fill(
           if (!flags.isMeasurement() && !flags.isOutlier()) {
             continue;
           }
+          if (!state.hasReferenceSurface() ||
+              !volumes.contains(
+                  state.referenceSurface().geometryId().volume())) {
+            continue;
+          }
           const auto sourceLink = state.getUncalibratedSourceLink();
           const auto* link = sourceLink.getPtr<IndexSourceLink>();
           if (link == nullptr) {
             throw std::invalid_argument(
                 "Regional track quality requires IndexSourceLink measurements");
-          }
-          if (!inRegion(link->index())) {
-            continue;
           }
           nReco += static_cast<std::size_t>(flags.isMeasurement()) +
                    static_cast<std::size_t>(flags.isOutlier());
@@ -250,6 +260,13 @@ void PatternRecognitionPerformanceCollector::fill(
     }
   }
 
+  if (missingStateSurfaces > 0) {
+    ACTS_WARNING("Skipped "
+                 << missingStateSurfaces
+                 << " measurement/outlier states without reference surfaces in "
+                    "regional track quality; "
+                    "regional purity and completeness may be biased");
+  }
   if (unmatched > 0) {
     ACTS_VERBOSE("No matching information found for " << unmatched << " "
                                                       << labelPlural);

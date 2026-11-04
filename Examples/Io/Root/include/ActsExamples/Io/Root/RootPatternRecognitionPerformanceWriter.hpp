@@ -78,9 +78,8 @@ class RootPatternRecognitionPerformanceWriter final
 
     /// Complete measurement collection, required for regional quality.
     std::string inputMeasurements;
-    /// Named hierarchical geometry selections; see collector configuration.
-    std::map<std::string, std::vector<Acts::GeometryIdentifier>>
-        trackQualityGeometrySelections;
+    /// Enable regional quality using subDetectorTrackSummaryVolumes.
+    bool writeRegionalTrackQuality = false;
   };
 
   /// Construct from configuration and log level.

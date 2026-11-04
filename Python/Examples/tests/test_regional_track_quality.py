@@ -1,6 +1,7 @@
 import math
 
 import pytest
+from helpers import failure_threshold
 
 import acts
 import acts.examples as ex
@@ -8,7 +9,9 @@ import acts.examples as ex
 pytestmark = pytest.mark.pypi
 
 
-def run_regional_quality(tmp_path, regions, root=False, outlier=False):
+def run_regional_quality(
+    tmp_path, regions, root=False, outlier=False, surfaces=True, surface_volume=None
+):
     class Source(ex.IAlgorithm):
         def __init__(self):
             super().__init__("Source", acts.logging.WARNING)
@@ -66,6 +69,14 @@ def run_regional_quality(tmp_path, regions, root=False, outlier=False):
                 for index in indices:
                     state = track.appendTrackState()
                     state.typeFlags.setIsMeasurement()
+                    if surfaces:
+                        surface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0))
+                        surface.assignGeometryId(
+                            measurements[index].geometryId
+                            if surface_volume is None
+                            else acts.GeometryIdentifier(volume=surface_volume)
+                        )
+                        state.referenceSurface = surface
                     state.uncalibratedSourceLink = ex.IndexSourceLink(
                         measurements[index].geometryId,
                         index,
@@ -74,6 +85,9 @@ def run_regional_quality(tmp_path, regions, root=False, outlier=False):
                     track.nOutliers = 1
                     state = track.appendTrackState()
                     state.typeFlags.isOutlier = True
+                    surface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0))
+                    surface.assignGeometryId(measurements[5].geometryId)
+                    state.referenceSurface = surface
                     state.uncalibratedSourceLink = ex.IndexSourceLink(
                         measurements[5].geometryId,
                         5,
@@ -117,7 +131,9 @@ def run_regional_quality(tmp_path, regions, root=False, outlier=False):
     baseline = ex.PythonPatternRecognitionPerformanceWriter(**kwargs)
     if regions is not None:
         kwargs.update(
-            inputMeasurements="measurements", trackQualityGeometrySelections=regions
+            inputMeasurements="measurements",
+            subDetectorTrackSummaryVolumes=regions,
+            writeRegionalTrackQuality=True,
         )
     writer = ex.PythonPatternRecognitionPerformanceWriter(**kwargs)
     s.addWriter(baseline)
@@ -154,30 +170,26 @@ def test_disabled_regional_quality_preserves_outputs(tmp_path):
 def test_regional_quality_preserves_global_matches_and_empty_denominators(tmp_path):
     bh = pytest.importorskip("boost_histogram")
     regions = {
-        "pixel": [acts.GeometryIdentifier(volume=10)],
-        "strip": [acts.GeometryIdentifier(volume=20)],
-        "contamination": [acts.GeometryIdentifier(volume=30)],
-        "empty": [acts.GeometryIdentifier(volume=99)],
-        "layer": [acts.GeometryIdentifier(volume=10, layer=2)],
-        "sensor": [acts.GeometryIdentifier(volume=10, layer=4, sensitive=1)],
-        "overlap": [
-            acts.GeometryIdentifier(volume=10),
-            acts.GeometryIdentifier(volume=10, layer=2),
-        ],
-        "all": [acts.GeometryIdentifier()],
+        "pixel": {10},
+        "strip": {20},
+        "contamination": {30},
+        "empty": {99},
+        "empty_selection": set(),
+        "overlap": {10, 20},
+        "all": {10, 20, 30, 40},
     }
     baseline, writer = run_regional_quality(tmp_path, regions)
     for key, value in baseline.stats().items():
-        assert writer.stats()[key] == value
+        if key != "subDetectors":
+            assert writer.stats()[key] == value
     assert writer.stats()["nTotalQualityTracks"] == 2
     expected = {
         "pixel": ((2, 0.875), (2, 1)),
         "strip": ((2, 0.25), (1, 1)),
         "contamination": ((0, None), (1, 0)),
         "empty": ((0, None), (0, None)),
-        "layer": ((2, 1), (2, 1)),
-        "sensor": ((2, 0.75), (2, 1)),
-        "overlap": ((2, 0.875), (2, 1)),
+        "empty_selection": ((0, None), (0, None)),
+        "overlap": ((2, 2 / 3), (2, 1)),
         "all": ((2, 2 / 3), (2, 0.9)),
     }
     for region, values in expected.items():
@@ -203,9 +215,7 @@ def test_regional_quality_preserves_global_matches_and_empty_denominators(tmp_pa
 def test_regional_quality_root_python_parity(tmp_path):
     bh = pytest.importorskip("boost_histogram")
     ROOT = pytest.importorskip("ROOT")
-    _, writer = run_regional_quality(
-        tmp_path, {"pixel": [acts.GeometryIdentifier(volume=10)]}, root=True
-    )
+    _, writer = run_regional_quality(tmp_path, {"pixel": {10}}, root=True)
     with ROOT.TFile.Open(str(tmp_path / "regional.root")) as file:
         for metric in ("purity", "completeness"):
             key = f"pixel_{metric}_vs_pT"
@@ -228,16 +238,15 @@ def test_regional_quality_requires_measurement_geometry():
             inputTrackParticleMatching="tmatch",
             inputParticleTrackMatching="pmatch",
             inputParticleMeasurementsMap="p2m",
-            trackQualityGeometrySelections={
-                "pixel": [acts.GeometryIdentifier(volume=10)]
-            },
+            writeRegionalTrackQuality=True,
+            subDetectorTrackSummaryVolumes={"pixel": {10}},
         )
 
 
 def test_regional_outliers_follow_global_quality_semantics(tmp_path):
     baseline, writer = run_regional_quality(
         tmp_path,
-        {"all": [], "strip": [acts.GeometryIdentifier(volume=20)]},
+        {"all": {10, 20, 30, 40}, "strip": {20}},
         outlier=True,
     )
     global_stats = baseline.stats()
@@ -249,3 +258,43 @@ def test_regional_outliers_follow_global_quality_semantics(tmp_path):
     assert regions["strip"]["meanCompleteness"] == pytest.approx(0.25)
     assert regions["strip"]["meanPurity"] == pytest.approx(0.5)
     assert regions["strip"]["nUndefinedPurity"] == 1
+
+
+def test_regional_quality_warns_and_skips_missing_state_surfaces(tmp_path, capfd):
+    with failure_threshold(acts.logging.ERROR):
+        baseline, writer = run_regional_quality(
+            tmp_path, {"pixel": {10}, "strip": {20}}, surfaces=False
+        )
+    region = writer.stats()["regionalQuality"]["pixel"]
+    assert region["meanCompleteness"] == 0
+    assert region["nUndefinedPurity"] == 2
+    assert writer.stats()["meanCompleteness"] == baseline.stats()["meanCompleteness"]
+    output = capfd.readouterr()
+    assert (output.out + output.err).count("Skipped 9 measurement/outlier states") == 1
+
+
+def test_regional_quality_uses_state_surfaces_for_reconstructed_hits(tmp_path):
+    _, writer = run_regional_quality(
+        tmp_path, {"pixel": {10}, "other": {99}}, surface_volume=99
+    )
+    regions = writer.stats()["regionalQuality"]
+    assert regions["pixel"]["meanCompleteness"] == 0
+    assert regions["pixel"]["nUndefinedPurity"] == 2
+    assert regions["other"]["meanPurity"] == 0
+    assert regions["other"]["nUndefinedCompleteness"] == 2
+    summaries = writer.stats()["subDetectors"]
+    assert summaries["pixel"]["nMeasurements"] == 0
+    assert summaries["other"]["nMeasurements"] == 13
+
+
+def test_summary_volumes_do_not_require_regional_quality_input():
+    writer = ex.PythonPatternRecognitionPerformanceWriter(
+        level=acts.logging.WARNING,
+        inputTracks="tracks",
+        inputParticles="particles",
+        inputTrackParticleMatching="tmatch",
+        inputParticleTrackMatching="pmatch",
+        inputParticleMeasurementsMap="p2m",
+        subDetectorTrackSummaryVolumes={"pixel": {10}},
+    )
+    assert writer.config.writeRegionalTrackQuality is False

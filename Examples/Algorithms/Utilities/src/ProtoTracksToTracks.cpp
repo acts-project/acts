@@ -9,11 +9,13 @@
 #include "ActsExamples/Utilities/ProtoTracksToTracks.hpp"
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 
 #include <algorithm>
 #include <limits>
+#include <sstream>
 
 namespace ActsExamples {
 
@@ -72,6 +74,17 @@ ProcessCode ProtoTracksToTracks::execute(const AlgorithmContext& ctx) const {
           track.appendTrackState(Acts::TrackStatePropMask::None);
       trackStateProxy.typeFlags().setIsMeasurement();
       trackStateProxy.setUncalibratedSourceLink(Acts::SourceLink(sourceLink));
+      if (m_cfg.trackingGeometry != nullptr) {
+        const auto* surface =
+            m_cfg.trackingGeometry->findSurface(measurement.geometryId());
+        if (surface == nullptr) {
+          std::ostringstream message;
+          message << "No surface found for measurement geometry id "
+                  << measurement.geometryId();
+          throw std::runtime_error(message.str());
+        }
+        trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+      }
     }
 
     track.nMeasurements() = static_cast<std::uint32_t>(protoTrack.size());

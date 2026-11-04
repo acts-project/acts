@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -50,12 +49,10 @@ class PatternRecognitionPerformanceCollector {
     /// The value is the set of geometry volume IDs to include.
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
 
-    /// Named geometry selections for purity/completeness of globally matched
-    /// tracks, including duplicates. Each selection uses GeometryHierarchyMap
-    /// matching (volume, layer or sensor); an empty selection includes all
-    /// hits. Names prefix the quality histograms and must be non-empty.
-    std::map<std::string, std::vector<Acts::GeometryIdentifier>>
-        trackQualityGeometrySelections;
+    /// Enable purity/completeness for subDetectorTrackSummaryVolumes.
+    /// Uses globally matched tracks, including duplicates. Region names must
+    /// be non-empty; empty volume sets select no hits.
+    bool writeRegionalTrackQuality = false;
   };
 
   PatternRecognitionPerformanceCollector(
@@ -190,8 +187,6 @@ class PatternRecognitionPerformanceCollector {
   TrackSummaryPlotTool m_trackSummaryPlotTool;
   std::map<std::string, TrackSummaryPlotTool> m_subDetectorSummaryTools;
   TrackQualityPlotTool m_trackQualityPlotTool;
-  std::map<std::string, Acts::GeometryHierarchyMap<unsigned int>>
-      m_qualityGeometrySelections;
   std::map<std::string, TrackQualityPlotTool> m_regionalQualityTools;
 
   Stats m_stats;
