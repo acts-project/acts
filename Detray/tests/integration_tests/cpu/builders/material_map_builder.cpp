@@ -53,11 +53,12 @@ constexpr dindex n_volumes{3u};
 /// @{
 // Material map: identical in all volumes
 constexpr dindex shared_map_sf{0u};
+constexpr dindex shared_map_same_vol_sf{1u};
 // Material map: identical in all volumes, but on a smaller surface. The grid
 // extent is given by the axis spans, so this surface shares the map as well
-constexpr dindex shared_map_small_sf{1u};
+constexpr dindex shared_map_small_sf{2u};
 // Material map: different in every volume
-constexpr dindex unique_map_sf{2u};
+constexpr dindex unique_map_sf{3u};
 /// @}
 
 /// Add generate input material for material maps
@@ -118,18 +119,26 @@ detector_t build_detector(vecmem::memory_resource &mr,
     add_material_data(map_factory, mat_id::e_rectangle2D_map, shared_map_sf,
                       1.f * unit<scalar>::mm, silicon<scalar>());
 
-    // Different surface extent than the first surface
+    // Same map on an equivalent surface in the same volume
     map_factory->push_back({surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, 10.f}), vol_link,
+                            std::vector<scalar>{10.f, 10.f}});
+    add_material_data(map_factory, mat_id::e_rectangle2D_map,
+                      shared_map_same_vol_sf, 1.f * unit<scalar>::mm,
+                      silicon<scalar>());
+
+    // Different surface extent than the first surface, same bin content
+    map_factory->push_back({surface_id::e_sensitive,
+                            transform3(point3{0.f, 0.f, 20.f}), vol_link,
                             std::vector<scalar>{6.f, 4.f}});
     add_material_data(map_factory, mat_id::e_rectangle2D_map,
                       shared_map_small_sf, 1.f * unit<scalar>::mm,
                       silicon<scalar>());
 
-    map_factory->push_back({surface_id::e_sensitive,
-                            transform3(point3{0.f, 0.f, 20.f}), vol_link,
-                            std::vector<scalar>{10.f, 10.f}});
     // Scale material thickness with volume index to make it unique
+    map_factory->push_back({surface_id::e_sensitive,
+                            transform3(point3{0.f, 0.f, 30.f}), vol_link,
+                            std::vector<scalar>{10.f, 10.f}});
     add_material_data(map_factory, mat_id::e_rectangle2D_map, unique_map_sf,
                       (1.f + static_cast<scalar>(v_idx)) * unit<scalar>::mm,
                       gold<scalar>());
@@ -382,19 +391,21 @@ GTEST_TEST(detray_builders, material_map_deduplication) {
   // Without deduplication: One material entry per surface
   const auto &ref_store = ref_det.material_store();
   const auto &maps = ref_store.template get<mat_id::e_rectangle2D_map>();
-  ASSERT_EQ(maps.size(), 3u * n_volumes);
+  ASSERT_EQ(maps.size(), 4u * n_volumes);
 
   // The map content is identical for the first two map surfaces
-  EXPECT_TRUE(maps[0] == maps[0]);
-  EXPECT_TRUE(maps[0] == maps[1]);
-  EXPECT_TRUE(maps[0] == maps[3]);
+  ASSERT_TRUE(maps[0] == maps[0]);
+  ASSERT_TRUE(maps[0] == maps[1]);
+  // First maps of consecutive volumes
+  ASSERT_TRUE(maps[0] == maps[4]);
   // Unique map in the first and second volume
-  EXPECT_FALSE(maps[0] == maps[2]);
-  EXPECT_FALSE(maps[2] == maps[5]);
+  ASSERT_FALSE(maps[0] == maps[2]);
+  ASSERT_FALSE(maps[2] == maps[5]);
 
-  // With deduplication: The shared material is only present once
+  // With deduplication: One unique map per volume + 2 shared maps that exist
+  // only once in the store
   const auto &store = det.material_store();
-  EXPECT_EQ(store.template size<mat_id::e_rectangle2D_map>(), 1u + n_volumes);
+  EXPECT_EQ(store.template size<mat_id::e_rectangle2D_map>(), 2u + n_volumes);
 
   // Check the material links
   std::set<dindex> ref_map_links;
@@ -413,20 +424,28 @@ GTEST_TEST(detray_builders, material_map_deduplication) {
     }
 
     // Shared material links to the first map
-    for (dindex sf_idx : {shared_map_sf, shared_map_small_sf}) {
+    for (dindex sf_idx : {shared_map_sf, shared_map_same_vol_sf}) {
       const auto sf_desc = det.surface(vol_desc.to_global_sf_index(sf_idx));
       const auto link = sf_desc.material();
       EXPECT_EQ(link.id(), mat_id::e_rectangle2D_map);
       EXPECT_EQ(link.index(), 0u);
     }
 
-    const auto sf_desc =
-        det.surface(vol_desc.to_global_sf_index(unique_map_sf));
-    const auto link = sf_desc.material();
+    // Second deduplicated map
+    auto sf_desc =
+        det.surface(vol_desc.to_global_sf_index(shared_map_small_sf));
+    auto link = sf_desc.material();
+    EXPECT_EQ(link.id(), mat_id::e_rectangle2D_map);
+    EXPECT_EQ(link.index(), 1u);
+
+    // Surface with unique map
+    sf_desc = det.surface(vol_desc.to_global_sf_index(unique_map_sf));
+    link = sf_desc.material();
     EXPECT_EQ(link.id(), mat_id::e_rectangle2D_map);
     EXPECT_TRUE(unique_map_links.insert(link.index()).second);
   }
   EXPECT_FALSE(unique_map_links.contains(0u));
+  EXPECT_FALSE(unique_map_links.contains(1u));
 
   // The material lookups are unchanged on every surface
   const std::array<point2, 5> loc_points{point2{0.f, 0.f}, point2{-9.f, -9.f},
@@ -457,6 +476,6 @@ GTEST_TEST(detray_builders, material_map_deduplication) {
       ++n_checked;
     }
   }
-  // Have 3 material surfaces per volume
-  EXPECT_EQ(n_checked, 3u * loc_points.size() * n_volumes);
+  // Have 4 material surfaces per volume
+  EXPECT_EQ(n_checked, 4u * loc_points.size() * n_volumes);
 }
