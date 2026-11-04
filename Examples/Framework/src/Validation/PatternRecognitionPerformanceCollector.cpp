@@ -201,13 +201,10 @@ void PatternRecognitionPerformanceCollector::fill(
       }
       for (const auto& [name, tool] : m_regionalQualityTools) {
         const auto& volumes = m_cfg.subDetectorTrackSummaryVolumes.at(name);
-        auto inRegion = [&](Index index) {
-          return volumes.contains(
-              measurementContainer->at(index).geometryId().volume());
-        };
         std::unordered_multiset<Index> truthHits;
         for (auto it = measurements.first; it != measurements.second; ++it) {
-          if (inRegion(it->second)) {
+          if (volumes.contains(
+                  measurementContainer->at(it->second).geometryId().volume())) {
             truthHits.insert(it->second);
           }
         }
