@@ -28,17 +28,13 @@ struct RegionalHitCounts {
   std::size_t nShared = 0;
 };
 
-struct RegionalQualityCounts {
-  std::map<std::string, RegionalHitCounts> regions;
-  std::size_t nMissingSurfaces = 0;
-};
-
-RegionalQualityCounts countRegionalHits(
+std::map<std::string, RegionalHitCounts> countRegionalHits(
     const ConstTrackContainer::ConstTrackProxy& track, SimBarcode particleId,
     const InverseMultimap<SimBarcode>& particleMeasurementsMap,
     const MeasurementContainer& measurements,
-    const std::map<std::string, std::set<int>>& regionVolumes) {
-  RegionalQualityCounts result;
+    const std::map<std::string, std::set<int>>& regionVolumes,
+    std::size_t& missingStateSurfaces) {
+  std::map<std::string, RegionalHitCounts> result;
   std::map<std::string, std::unordered_multiset<Index>> truthHits;
   const auto particleHits = particleMeasurementsMap.equal_range(particleId);
   for (const auto& [name, volumes] : regionVolumes) {
@@ -48,7 +44,7 @@ RegionalQualityCounts countRegionalHits(
         selectedHits.insert(it->second);
       }
     }
-    result.regions[name].nTruth = selectedHits.size();
+    result[name].nTruth = selectedHits.size();
   }
 
   for (const auto& state : track.trackStatesReversed()) {
@@ -57,7 +53,7 @@ RegionalQualityCounts countRegionalHits(
       continue;
     }
     if (!state.hasReferenceSurface()) {
-      ++result.nMissingSurfaces;
+      ++missingStateSurfaces;
       continue;
     }
     const auto volume = state.referenceSurface().geometryId().volume();
@@ -71,7 +67,7 @@ RegionalQualityCounts countRegionalHits(
         const auto sourceLink = state.getUncalibratedSourceLink();
         measurementIndex = sourceLink.get<IndexSourceLink>().index();
       }
-      auto& counts = result.regions.at(name);
+      auto& counts = result.at(name);
       counts.nReco += static_cast<std::size_t>(flags.isMeasurement()) +
                       static_cast<std::size_t>(flags.isOutlier());
       if (flags.isMeasurement() && !flags.isOutlier()) {
@@ -275,9 +271,9 @@ void PatternRecognitionPerformanceCollector::fill(
       }
       const auto regionalCounts = countRegionalHits(
           track, matchedParticle->particleId(), particleMeasurementsMap,
-          *measurementContainer, m_cfg.subDetectorTrackSummaryVolumes);
-      missingStateSurfaces += regionalCounts.nMissingSurfaces;
-      for (const auto& [name, counts] : regionalCounts.regions) {
+          *measurementContainer, m_cfg.subDetectorTrackSummaryVolumes,
+          missingStateSurfaces);
+      for (const auto& [name, counts] : regionalCounts) {
         std::optional<double> regionalCompleteness;
         if (counts.nTruth > 0) {
           regionalCompleteness =
