@@ -236,6 +236,20 @@ def parse_xml(xml_dir: Path) -> dict:
             continue
         roots.append(root)
 
+    # Doxygen can emit private nested compounds even with EXTRACT_PRIVATE=NO.
+    # Their struct members still have prot="public", so member access alone
+    # does not establish whether they belong to the public API. Collect both
+    # forms of type access metadata before visiting any members.
+    private_types = set()
+    for root in roots:
+        for cd in root.findall("compounddef"):
+            if cd.get("prot") == "private":
+                private_types.add(_name(cd, "compoundname"))
+            for inner in cd.findall("innerclass"):
+                if inner.get("prot") == "private":
+                    private_types.add(_sanitize(inner.text or ""))
+    private_types.discard("")
+
     # Collect types first so resolution does not depend on XML file order.
     known_types = set()
     for root in roots:
@@ -252,6 +266,9 @@ def parse_xml(xml_dir: Path) -> dict:
         for cd in root.findall("compounddef"):
             kind = cd.get("kind")
             name = _name(cd, "compoundname")
+            # Public descendants of a private type are private as well.
+            if any(name == t or name.startswith(t + "::") for t in private_types):
+                continue
             if not (
                 name.startswith("Acts")
                 or name == "detray"
