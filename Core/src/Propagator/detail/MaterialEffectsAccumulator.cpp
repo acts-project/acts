@@ -11,10 +11,39 @@
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-#include <algorithm>
 #include <cmath>
 
 namespace Acts::detail {
+
+namespace {
+
+/// Remove `material` with the thickness `-substep` from the end of
+/// `accumulated`. `combine` is additive in thickness, x/X0, l/L0 and molar
+/// amount, so a negative thickness removes exactly what a positive one adds.
+/// If `material` does not match what was accumulated, e.g. for binned volume
+/// material, the subtraction can leave no or negative matter. Then remove the
+/// average material instead.
+MaterialSlab removeMaterial(const MaterialSlab& accumulated,
+                            const Material& material, double substep) {
+  const double thickness =
+      static_cast<double>(accumulated.thickness()) + substep;
+  if (thickness <= 0) {
+    return MaterialSlab::Nothing();
+  }
+
+  // The check is on X0 and L0, because `MaterialSlab` sets x/X0 to zero for a
+  // non-positive X0.
+  const MaterialSlab combined =
+      MaterialSlab::combine(accumulated, material, substep);
+  if (!combined.isVacuum() && combined.material().X0() > 0 &&
+      combined.material().L0() > 0) {
+    return combined;
+  }
+
+  return MaterialSlab(accumulated.material(), static_cast<float>(thickness));
+}
+
+}  // namespace
 
 void MaterialEffectsAccumulator::initialize(
     double maxXOverX0Step, const ParticleHypothesis& particleHypothesis,
@@ -66,25 +95,10 @@ void MaterialEffectsAccumulator::accumulate(const Material& material,
     const double theta0in = computeMultipleScatteringTheta0(
         m_accumulatedMaterial, absPdg, mass, qOverPmean, absQ);
 
-    if (substep >= 0) {
-      m_accumulatedMaterial =
-          MaterialSlab::combine(m_accumulatedMaterial, material, substep);
-    } else {
-      // Approximation: remove the average material, not `material`. The
-      // relative error in x/X0 is about |pathLength| over the path in matter,
-      // which is negligible for an overstep correction.
-      // The exact solution inverts `MaterialSlab::combine`: subtract the
-      // additive quantities of `material` (thickness, x/X0, l/L0, molar
-      // amount) from the accumulated slab.
-      // This needs a new helper, because `combine` takes no negative
-      // thickness, and the subtraction of float averages cancels badly when
-      // little material remains.
-      m_accumulatedMaterial =
-          MaterialSlab(m_accumulatedMaterial.material(),
-                       std::max(m_accumulatedMaterial.thickness() +
-                                    static_cast<float>(substep),
-                                0.f));
-    }
+    m_accumulatedMaterial =
+        substep >= 0
+            ? MaterialSlab::combine(m_accumulatedMaterial, material, substep)
+            : removeMaterial(m_accumulatedMaterial, material, substep);
 
     const double theta0out = computeMultipleScatteringTheta0(
         m_accumulatedMaterial, absPdg, mass, qOverPmean, absQ);

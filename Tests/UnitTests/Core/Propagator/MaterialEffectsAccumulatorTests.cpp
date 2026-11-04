@@ -16,6 +16,8 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <utility>
+
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
@@ -74,6 +76,59 @@ BOOST_AUTO_TEST_CASE(MaterialEffectsAccumulatorStepBackBeyondStart) {
       accumulator.accumulate(makeSilicon(), -2_mm, qOverP, qOverP));
   BOOST_CHECK(accumulator.isVacuum());
   BOOST_CHECK(!accumulator.computeAdditionalFreeCovariance(direction));
+}
+
+void checkSameCovariance(detail::MaterialEffectsAccumulator& overstep,
+                         detail::MaterialEffectsAccumulator& direct) {
+  const auto overstepCov = overstep.computeAdditionalFreeCovariance(direction);
+  const auto directCov = direct.computeAdditionalFreeCovariance(direction);
+  BOOST_REQUIRE(overstepCov.has_value());
+  BOOST_REQUIRE(directCov.has_value());
+  for (const auto [i, j] :
+       {std::pair{eFreeDir0, eFreeDir0}, std::pair{eFreePos0, eFreePos0},
+        std::pair{eFreePos0, eFreeDir0}, std::pair{eFreeQOverP, eFreeQOverP}}) {
+    CHECK_CLOSE_REL((*overstepCov)(i, j), (*directCov)(i, j), 1e-3);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(MaterialEffectsAccumulatorStepBackDenseOverstep) {
+  // Overstep from a light into a dense material, then step back. The step back
+  // has to remove the dense material, not the average one.
+  auto overstep = makeAccumulator();
+  overstep.accumulate(makeLiquidArgon(), 100_mm, qOverP, qOverP);
+  overstep.accumulate(makeIron(), 1_mm, qOverP, qOverP);
+  overstep.accumulate(makeIron(), -1_mm, qOverP, qOverP);
+
+  auto direct = makeAccumulator();
+  direct.accumulate(makeLiquidArgon(), 100_mm, qOverP, qOverP);
+
+  checkSameCovariance(overstep, direct);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialEffectsAccumulatorStepBackVacuum) {
+  // Stepping back through vacuum must not remove any material.
+  auto overstep = makeAccumulator();
+  overstep.accumulate(makeSilicon(), 10_mm, qOverP, qOverP);
+  overstep.accumulate(Material::Vacuum(), 5_mm, qOverP, qOverP);
+  overstep.accumulate(Material::Vacuum(), -5_mm, qOverP, qOverP);
+
+  auto direct = makeAccumulator();
+  direct.accumulate(makeSilicon(), 10_mm, qOverP, qOverP);
+
+  checkSameCovariance(overstep, direct);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialEffectsAccumulatorStepBackMismatchedMaterial) {
+  // The step back claims more matter than was accumulated, e.g. for binned
+  // volume material sampled at a different position. The result must stay
+  // finite.
+  auto accumulator = makeAccumulator();
+  accumulator.accumulate(makeLiquidArgon(), 10_mm, qOverP, qOverP);
+  BOOST_REQUIRE_NO_THROW(
+      accumulator.accumulate(makeIron(), -5_mm, qOverP, qOverP));
+  const auto cov = accumulator.computeAdditionalFreeCovariance(direction);
+  BOOST_REQUIRE(cov.has_value());
+  BOOST_CHECK(cov->allFinite());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
