@@ -172,7 +172,8 @@ jobs:
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
-    needs: [linux_ubuntu]
+    needs: [linux_ubuntu, changes]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     env:
       # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: source
       # locations resolve, so the test_fpe.py masking tests run instead of being
@@ -237,7 +238,8 @@ jobs:
       # GHCR reads are rate limited hard enough to break the job.
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
-    needs: [linux_ubuntu]
+    needs: [linux_ubuntu, changes]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     env:
       # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: the
       # full reconstruction must stay FPE-clean (auto-loaded source masks
@@ -425,6 +427,7 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
+      acts: ${{ steps.filter.outputs.acts }}
       gnn: ${{ steps.filter.outputs.gnn }}
       cuda_muon: ${{ steps.filter.outputs.cuda_muon }}
     steps:
@@ -436,6 +439,12 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           filters: |
+            acts:
+              # Defer selected ACTS checks for Detray-only PRs to the merge queue.
+              # Any change outside Detray still requires these checks on the PR.
+              - '!Detray/**'
+              # The root presets include this file, even for ACTS builds.
+              - 'Detray/CMakePresets.json'
             gnn:
               # What the presets compile
               - 'Core/**'
@@ -910,6 +919,8 @@ jobs:
   # fail on a missing /cvmfs.
   # ─────────────────────────────────────────────────────────────────────
   lcg:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     name: lcg_${{ matrix.tag }}
@@ -1391,6 +1402,8 @@ jobs:
         run: ctest --test-dir build-downstream --output-on-failure
 
   external_eic-shell:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: ubuntu-latest
@@ -1556,6 +1569,8 @@ jobs:
   # Sources the key4hep nightly view straight out of the job container: the
   # `cvmfs` label binds the repositories in, so nothing has to mount them.
   external_key4hep-nightlies:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
@@ -1690,6 +1705,8 @@ jobs:
 
 
   linux_ubuntu_python_wheel:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.acts == 'true'
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: ubuntu-latest
