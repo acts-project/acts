@@ -20,6 +20,86 @@
 
 namespace ActsExamples {
 
+namespace {
+
+struct RegionalHitCounts {
+  std::size_t nTruth = 0;
+  std::size_t nReco = 0;
+  std::size_t nShared = 0;
+};
+
+struct RegionalQualityCounts {
+  std::map<std::string, RegionalHitCounts> regions;
+  std::size_t nMissingSurfaces = 0;
+};
+
+RegionalQualityCounts countRegionalHits(
+    const ConstTrackContainer::ConstTrackProxy& track, SimBarcode particleId,
+    const InverseMultimap<SimBarcode>& particleMeasurementsMap,
+    const MeasurementContainer& measurements,
+    const std::map<std::string, std::set<int>>& regionVolumes) {
+  RegionalQualityCounts result;
+  std::map<std::string, std::unordered_multiset<Index>> truthHits;
+  const auto particleHits = particleMeasurementsMap.equal_range(particleId);
+  for (const auto& [name, volumes] : regionVolumes) {
+    auto& selectedHits = truthHits[name];
+    for (auto it = particleHits.first; it != particleHits.second; ++it) {
+      if (volumes.contains(measurements.at(it->second).geometryId().volume())) {
+        selectedHits.insert(it->second);
+      }
+    }
+    result.regions[name].nTruth = selectedHits.size();
+  }
+
+  for (const auto& state : track.trackStatesReversed()) {
+    const auto flags = state.typeFlags();
+    if (!flags.isMeasurement() && !flags.isOutlier()) {
+      continue;
+    }
+    if (!state.hasReferenceSurface()) {
+      ++result.nMissingSurfaces;
+      continue;
+    }
+    const auto volume = state.referenceSurface().geometryId().volume();
+    // Resolve the source link once, only if a region selects this state.
+    std::optional<Index> measurementIndex;
+    for (const auto& [name, volumes] : regionVolumes) {
+      if (!volumes.contains(volume)) {
+        continue;
+      }
+      if (!measurementIndex.has_value()) {
+        const auto sourceLink = state.getUncalibratedSourceLink();
+        measurementIndex = sourceLink.get<IndexSourceLink>().index();
+      }
+      auto& counts = result.regions.at(name);
+      counts.nReco += static_cast<std::size_t>(flags.isMeasurement()) +
+                      static_cast<std::size_t>(flags.isOutlier());
+      if (flags.isMeasurement() && !flags.isOutlier()) {
+        counts.nShared += truthHits.at(name).count(*measurementIndex);
+      }
+    }
+  }
+  return result;
+}
+
+}  // namespace
+
+void PatternRecognitionPerformanceCollector::RegionalQualityStats::add(
+    std::optional<double> completeness, std::optional<double> purity) {
+  if (completeness.has_value()) {
+    ++nCompleteness;
+    sumCompleteness += *completeness;
+  } else {
+    ++nUndefinedCompleteness;
+  }
+  if (purity.has_value()) {
+    ++nPurity;
+    sumPurity += *purity;
+  } else {
+    ++nUndefinedPurity;
+  }
+}
+
 PatternRecognitionPerformanceCollector::PatternRecognitionPerformanceCollector(
     Config cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(std::move(cfg)),
@@ -190,67 +270,25 @@ void PatternRecognitionPerformanceCollector::fill(
       m_trackQualityPlotTool.fill(matchedParticle->initialState(), completeness,
                                   purity);
 
-      struct RegionalCounts {
-        std::unordered_multiset<Index> truthHits;
-        std::size_t nReco = 0;
-        std::size_t nShared = 0;
-      };
-      std::map<std::string, RegionalCounts> regionalCounts;
-      for (const auto& [name, tool] : m_regionalQualityTools) {
-        const auto& volumes = m_cfg.subDetectorTrackSummaryVolumes.at(name);
-        auto& counts = regionalCounts[name];
-        for (auto it = measurements.first; it != measurements.second; ++it) {
-          if (volumes.contains(
-                  measurementContainer->at(it->second).geometryId().volume())) {
-            counts.truthHits.insert(it->second);
-          }
-        }
+      if (m_regionalQualityTools.empty()) {
+        continue;
       }
-      if (!regionalCounts.empty()) {
-        for (const auto& state : track.trackStatesReversed()) {
-          const auto flags = state.typeFlags();
-          if (!flags.isMeasurement() && !flags.isOutlier()) {
-            continue;
-          }
-          if (!state.hasReferenceSurface()) {
-            ++missingStateSurfaces;
-            continue;
-          }
-          const auto volume = state.referenceSurface().geometryId().volume();
-          for (auto& [name, counts] : regionalCounts) {
-            if (!m_cfg.subDetectorTrackSummaryVolumes.at(name).contains(
-                    volume)) {
-              continue;
-            }
-            const auto sourceLink = state.getUncalibratedSourceLink();
-            const auto& link = sourceLink.get<IndexSourceLink>();
-            counts.nReco += static_cast<std::size_t>(flags.isMeasurement()) +
-                            static_cast<std::size_t>(flags.isOutlier());
-            if (flags.isMeasurement() && !flags.isOutlier()) {
-              counts.nShared += counts.truthHits.count(link.index());
-            }
-          }
-        }
-      }
-      for (const auto& [name, counts] : regionalCounts) {
-        auto& stats = m_stats.regionalQuality.at(name);
+      const auto regionalCounts = countRegionalHits(
+          track, matchedParticle->particleId(), particleMeasurementsMap,
+          *measurementContainer, m_cfg.subDetectorTrackSummaryVolumes);
+      missingStateSurfaces += regionalCounts.nMissingSurfaces;
+      for (const auto& [name, counts] : regionalCounts.regions) {
         std::optional<double> regionalCompleteness;
-        std::optional<double> regionalPurity;
-        if (!counts.truthHits.empty()) {
+        if (counts.nTruth > 0) {
           regionalCompleteness =
-              static_cast<double>(counts.nShared) / counts.truthHits.size();
-          ++stats.nCompleteness;
-          stats.sumCompleteness += *regionalCompleteness;
-        } else {
-          ++stats.nUndefinedCompleteness;
+              static_cast<double>(counts.nShared) / counts.nTruth;
         }
+        std::optional<double> regionalPurity;
         if (counts.nReco > 0) {
           regionalPurity = static_cast<double>(counts.nShared) / counts.nReco;
-          ++stats.nPurity;
-          stats.sumPurity += *regionalPurity;
-        } else {
-          ++stats.nUndefinedPurity;
         }
+        m_stats.regionalQuality.at(name).add(regionalCompleteness,
+                                             regionalPurity);
         m_regionalQualityTools.at(name).fill(matchedParticle->initialState(),
                                              regionalCompleteness,
                                              regionalPurity);

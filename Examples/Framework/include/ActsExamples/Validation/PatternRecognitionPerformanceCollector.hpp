@@ -24,6 +24,7 @@
 #include <cstddef>
 #include <limits>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -80,6 +81,9 @@ class PatternRecognitionPerformanceCollector {
     std::size_t nUndefinedPurity = 0;
     double sumCompleteness = 0;
     double sumPurity = 0;
+
+    /// Accumulate one track's independently defined quality values.
+    void add(std::optional<double> completeness, std::optional<double> purity);
 
     /// Mean over tracks with at least one truth measurement in the region.
     double meanCompleteness() const {
