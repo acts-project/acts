@@ -348,7 +348,7 @@ def addSeeding(
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackParameterSmearing.hpp
     initialSigmas : list
         Sets the initial covariance matrix diagonal. This is ignored in case of TruthSmearing.
-        Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
+        Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedParamsEstimator.hpp
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackParameterSmearing.hpp
@@ -388,7 +388,7 @@ def addSeeding(
     paramEstimationWeight : Callable, None
         relative weight of a space point in the fit, requires
         `SeedSpacePointSelection.All`, see
-        `TrackParamsEstimationAlgorithm.inverseRadiusPowerWeight`
+        `SeedParamsEstimator.inverseRadiusPowerWeight`
     gbtsSeedParameters : bool
         GBTS seeding: use the fit of the GBTS tracking filter as the track
         parameter estimate, instead of a fit to the space points (default)
@@ -570,6 +570,18 @@ def addSeeding(
             outputSeeds=f"{prefix}estimatedseeds",
             trackingGeometry=trackingGeometry,
             magneticField=field,
+            seedParamsEstimation=acts.examples.SeedParamsEstimator.Config(
+                **acts.examples.defaultKWArgs(
+                    spacePointSelection=paramEstimationSpacePoints,
+                    geometricRefineIterations=paramEstimationRefineIterations,
+                    spacePointWeight=paramEstimationWeight,
+                    initialSigmas=initialSigmas,
+                    initialSigmaQoverPt=initialSigmaQoverPt,
+                    initialSigmaPtRel=initialSigmaPtRel,
+                    initialVarInflation=initialVarInflation,
+                    particleHypothesis=particleHypothesis,
+                )
+            ),
             **acts.examples.defaultKWArgs(
                 # a seed without an estimate drops its proto track too, so the
                 # truth fitters keep a parameter set per proto track
@@ -579,19 +591,11 @@ def addSeeding(
                     if unestimatedProtoTracks is not None
                     else None
                 ),
-                spacePointSelection=paramEstimationSpacePoints,
-                geometricRefineIterations=paramEstimationRefineIterations,
-                spacePointWeight=paramEstimationWeight,
                 inputFreeParameters=(
                     f"{prefix}seedfreeparameters"
                     if gbtsSeedParameters and seedingAlgorithm == SeedingAlgorithm.Gbts
                     else None
                 ),
-                initialSigmas=initialSigmas,
-                initialSigmaQoverPt=initialSigmaQoverPt,
-                initialSigmaPtRel=initialSigmaPtRel,
-                initialVarInflation=initialVarInflation,
-                particleHypothesis=particleHypothesis,
             ),
         )
         s.addAlgorithm(parEstimateAlg)

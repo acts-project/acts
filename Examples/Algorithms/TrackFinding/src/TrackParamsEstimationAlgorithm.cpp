@@ -26,7 +26,19 @@ TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : IAlgorithm("TrackParamsEstimationAlgorithm", std::move(logger)),
       m_cfg(cfg),
-      m_estimator(m_cfg, this->logger().clone()) {
+      m_estimator(
+          [&]() {
+            SeedParamsEstimator::Config estimatorCfg =
+                m_cfg.seedParamsEstimation;
+            if (estimatorCfg.trackingGeometry == nullptr) {
+              estimatorCfg.trackingGeometry = m_cfg.trackingGeometry;
+            }
+            if (estimatorCfg.magneticField == nullptr) {
+              estimatorCfg.magneticField = m_cfg.magneticField;
+            }
+            return estimatorCfg;
+          }(),
+          this->logger().clone()) {
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds input collection");
   }
@@ -113,8 +125,9 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     }
 
     const Acts::ParticleHypothesis hypothesis =
-        inputParticleHypotheses != nullptr ? inputParticleHypotheses->at(iseed)
-                                           : m_cfg.particleHypothesis;
+        inputParticleHypotheses != nullptr
+            ? inputParticleHypotheses->at(iseed)
+            : m_estimator.config().particleHypothesis;
 
     const Acts::Result<TrackParameters, SeedParamsEstimator::Failure> estimate =
         m_estimator.estimate(

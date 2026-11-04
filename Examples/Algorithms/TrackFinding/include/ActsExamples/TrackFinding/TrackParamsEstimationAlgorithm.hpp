@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
@@ -31,7 +33,7 @@ namespace ActsExamples {
 /// tracks are written back out filtered the same way.
 class TrackParamsEstimationAlgorithm final : public IAlgorithm {
  public:
-  struct Config : SeedParamsEstimator::Config {
+  struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
     /// Input proto tracks (optional).
@@ -51,6 +53,15 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Input free track parameters per seed, used instead of the fit to the
     /// space points (optional).
     std::optional<std::string> inputFreeParameters;
+
+    /// The estimate of the parameters from the seeds. An unset geometry or
+    /// field is taken from this config.
+    SeedParamsEstimator::Config seedParamsEstimation;
+
+    /// Tracking geometry for surface lookup.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+    /// Magnetic field variant.
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
   };
 
   /// Construct the track parameters making algorithm.

@@ -135,6 +135,9 @@ void addTrackFinding(py::module& mex) {
     auto e =
         py::class_<SeedParamsEstimator, std::shared_ptr<SeedParamsEstimator>>(
             mex, "SeedParamsEstimator");
+    e.def_static("inverseRadiusPowerWeight",
+                 &SeedParamsEstimator::inverseRadiusPowerWeight,
+                 py::arg("exponent"));
     auto c =
         py::class_<SeedParamsEstimator::Config>(e, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(
@@ -144,24 +147,12 @@ void addTrackFinding(py::module& mex) {
         initialVarInflation, noTimeVarInflation, particleHypothesis);
   }
 
-  {
-    using Alg = TrackParamsEstimationAlgorithm;
-
-    auto [alg, c] = declareAlgorithm<Alg, IAlgorithm>(
-        mex, "TrackParamsEstimationAlgorithm");
-
-    alg.def_static("inverseRadiusPowerWeight",
-                   &SeedParamsEstimator::inverseRadiusPowerWeight,
-                   py::arg("exponent"));
-
-    ACTS_PYTHON_STRUCT(
-        c, inputSeeds, inputProtoTracks, inputParticleHypotheses,
-        outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-        magneticField, bFieldMin, spacePointSelection, minTransverseDistance,
-        geometricRefineIterations, spacePointWeight, initialSigmas,
-        initialSigmaQoverPt, initialSigmaPtRel, initialVarInflation,
-        noTimeVarInflation, particleHypothesis, inputFreeParameters);
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      TrackParamsEstimationAlgorithm, mex, "TrackParamsEstimationAlgorithm",
+      inputSeeds, inputProtoTracks, inputParticleHypotheses,
+      outputTrackParameters, outputSeeds, outputProtoTracks,
+      inputFreeParameters, seedParamsEstimation, trackingGeometry,
+      magneticField);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsLookupEstimation, mex, "TrackParamsLookupEstimation",

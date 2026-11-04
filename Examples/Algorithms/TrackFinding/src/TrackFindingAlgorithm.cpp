@@ -352,6 +352,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
         initialParameters->size() != seeds->size()) {
       ACTS_ERROR("Number of initial parameters and seeds do not match. "
                  << initialParameters->size() << " != " << seeds->size());
+      return ProcessCode::ABORT;
     }
   }
   const std::size_t nSeeds =
