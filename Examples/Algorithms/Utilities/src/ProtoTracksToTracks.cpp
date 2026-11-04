@@ -14,8 +14,8 @@
 #include "ActsExamples/EventData/Track.hpp"
 
 #include <algorithm>
+#include <format>
 #include <limits>
-#include <sstream>
 
 namespace ActsExamples {
 
@@ -78,10 +78,9 @@ ProcessCode ProtoTracksToTracks::execute(const AlgorithmContext& ctx) const {
         const auto* surface =
             m_cfg.trackingGeometry->findSurface(measurement.geometryId());
         if (surface == nullptr) {
-          std::ostringstream message;
-          message << "No surface found for measurement geometry id "
-                  << measurement.geometryId();
-          throw std::runtime_error(message.str());
+          throw std::runtime_error(
+              std::format("No surface found for measurement geometry id {}",
+                          measurement.geometryId()));
         }
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
       }
