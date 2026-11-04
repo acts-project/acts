@@ -23,10 +23,12 @@
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <numbers>
+#include <utility>
 #include <vector>
 
 // the measurement selector is deprecated in favour of TrackStateCreatorBase
@@ -77,7 +79,95 @@ VectorMultiTrajectory::TrackStateProxy addCandidate(
   return ts;
 }
 
+/// Adds a track state candidate on @p surface with a measurement of dimension
+/// @p dim and the chi2 @p chi2 with respect to the prediction.
+template <std::size_t dim>
+VectorMultiTrajectory::TrackStateProxy addCandidateWithChi2(
+    VectorMultiTrajectory& traj, const std::shared_ptr<Surface>& surface,
+    double chi2) {
+  auto ts = traj.makeTrackState(TrackStatePropMask::All);
+  ts.setReferenceSurface(surface);
+
+  ts.predicted() = BoundVector::Zero();
+  ts.predicted()[eBoundTheta] = std::numbers::pi / 2.;
+  // The predicted covariance in the measurement subspace is zero, so the chi2
+  // is the squared residual
+  ts.predictedCovariance() = BoundMatrix::Zero();
+
+  ts.allocateCalibrated(dim);
+  ts.template calibrated<dim>() = Vector<dim>::Zero();
+  ts.template calibrated<dim>()[0] = std::sqrt(chi2);
+  ts.template calibratedCovariance<dim>() = SquareMatrix<dim>::Identity();
+  std::array<std::uint8_t, dim> indices{};
+  for (std::size_t i = 0; i < dim; ++i) {
+    indices[i] = static_cast<std::uint8_t>(i);
+  }
+  ts.setProjectorSubspaceIndices(indices);
+  return ts;
+}
+
+/// Run the selector on a single candidate and return the number of selected
+/// candidates and whether it is an outlier.
+template <std::size_t dim>
+std::pair<std::ptrdiff_t, bool> selectSingle(
+    const MeasurementSelector& selector, double chi2) {
+  auto logger = getDefaultLogger("MeasurementSelector", Logging::INFO);
+  auto surface = makeSurface();
+
+  VectorMultiTrajectory traj;
+  std::vector<VectorMultiTrajectory::TrackStateProxy> candidates{
+      addCandidateWithChi2<dim>(traj, surface, chi2)};
+
+  bool isOutlier = false;
+  auto result =
+      selector.select<VectorMultiTrajectory>(candidates, isOutlier, *logger);
+  BOOST_REQUIRE(result.ok());
+  auto [begin, end] = *result;
+  return {end - begin, isOutlier};
+}
+
 }  // namespace
+
+/// Without the per dimension flag every dimension uses the same chi2 cut.
+BOOST_AUTO_TEST_CASE(Chi2CutSameForAllDimensions) {
+  MeasurementSelectorCuts cuts;
+  cuts.chi2CutOff = {15};
+  cuts.chi2CutOffOutlier = {25};
+  MeasurementSelector selector{cuts};
+
+  BOOST_CHECK_EQUAL(selectSingle<1>(selector, 14.9).first, 1);
+  BOOST_CHECK(!selectSingle<1>(selector, 14.9).second);
+  BOOST_CHECK(selectSingle<1>(selector, 15.1).second);
+  BOOST_CHECK(selectSingle<2>(selector, 15.1).second);
+  BOOST_CHECK(selectSingle<3>(selector, 15.1).second);
+  BOOST_CHECK_EQUAL(selectSingle<3>(selector, 25.1).first, 0);
+}
+
+/// With the per dimension flag the cuts are the 1D cuts for 1D measurements and
+/// the chi2 values with the same p-value for higher dimensions.
+BOOST_AUTO_TEST_CASE(Chi2CutPerDimension) {
+  MeasurementSelectorCuts cuts;
+  cuts.chi2CutOff = {15};
+  cuts.chi2CutOffOutlier = {25};
+  cuts.chi2CutPerDimension = true;
+  MeasurementSelector selector{cuts};
+
+  // Same p-value as chi2 = 15 (25) for one degree of freedom
+  constexpr double cut2D = 18.28;
+  constexpr double cut3D = 20.96;
+  constexpr double outlier3D = 31.81;
+
+  BOOST_CHECK(!selectSingle<1>(selector, 14.9).second);
+  BOOST_CHECK(selectSingle<1>(selector, 15.1).second);
+
+  BOOST_CHECK(!selectSingle<2>(selector, cut2D - 0.1).second);
+  BOOST_CHECK(selectSingle<2>(selector, cut2D + 0.1).second);
+
+  BOOST_CHECK(!selectSingle<3>(selector, cut3D - 0.1).second);
+  BOOST_CHECK(selectSingle<3>(selector, cut3D + 0.1).second);
+  BOOST_CHECK_EQUAL(selectSingle<3>(selector, outlier3D - 0.1).first, 1);
+  BOOST_CHECK_EQUAL(selectSingle<3>(selector, outlier3D + 0.1).first, 0);
+}
 
 /// Every comparison against NaN is false, so a candidate with a non-finite
 /// chi2 used to leave minIndex unset while still being counted as passing the

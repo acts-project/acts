@@ -15,12 +15,16 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <numbers>
 #include <span>
 #include <stdexcept>
+
+#include <boost/math/distributions/chi_squared.hpp>
 
 namespace Acts {
 
@@ -51,6 +55,36 @@ MeasurementSelector::MeasurementSelector(const Config& config) {
   m_config = InternalConfig(std::move(tmp));
 }
 
+namespace {
+
+/// Convert the chi2 cut @p cut1D for one-dimensional measurements to the cut
+/// with the same p-value for each measurement dimension. Without
+/// @p perDimension every dimension uses @p cut1D.
+std::array<double, kMeasurementSizeMax + 1> convertChi2Cut(double cut1D,
+                                                           bool perDimension) {
+  std::array<double, kMeasurementSizeMax + 1> result{};
+  result.fill(cut1D);
+  if (!perDimension || !std::isfinite(cut1D) ||
+      cut1D == std::numeric_limits<double>::max() || cut1D <= 0) {
+    return result;
+  }
+
+  const double pValue = boost::math::cdf(boost::math::complement(
+      boost::math::chi_squared_distribution<>(1), cut1D));
+  // A cut far in the tail has no representable p-value, so it stays as it is
+  if (!(pValue > std::numeric_limits<double>::min())) {
+    return result;
+  }
+  for (std::size_t dim = 2; dim < result.size(); ++dim) {
+    result[dim] = boost::math::quantile(boost::math::complement(
+        boost::math::chi_squared_distribution<>(static_cast<double>(dim)),
+        pValue));
+  }
+  return result;
+}
+
+}  // namespace
+
 MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
     const MeasurementSelectorCuts& config) {
   InternalCutBins cutBins;
@@ -74,8 +108,11 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
     cuts.maxTheta = getEtaOrInf(config.etaBins, bin);
     cuts.maxNumMeasurements =
         getBinOrBackOrMax(config.numMeasurementsCutOff, bin);
-    cuts.maxChi2Measurement = getBinOrBackOrMax(config.chi2CutOff, bin);
-    cuts.maxChi2Outlier = getBinOrBackOrMax(config.chi2CutOffOutlier, bin);
+    cuts.maxChi2Measurement = convertChi2Cut(
+        getBinOrBackOrMax(config.chi2CutOff, bin), config.chi2CutPerDimension);
+    cuts.maxChi2Outlier =
+        convertChi2Cut(getBinOrBackOrMax(config.chi2CutOffOutlier, bin),
+                       config.chi2CutPerDimension);
     cutBins.push_back(cuts);
   }
 

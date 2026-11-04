@@ -58,7 +58,9 @@ void addTrackFinding(py::module_& m) {
         .def_readwrite("chi2CutOffOutlier",
                        &Acts::MeasurementSelectorCuts::chi2CutOffOutlier)
         .def_readwrite("numMeasurementsCutOff",
-                       &Acts::MeasurementSelectorCuts::numMeasurementsCutOff);
+                       &Acts::MeasurementSelectorCuts::numMeasurementsCutOff)
+        .def_readwrite("chi2CutPerDimension",
+                       &Acts::MeasurementSelectorCuts::chi2CutPerDimension);
 
     auto ms = py::class_<Acts::MeasurementSelector>(m, "MeasurementSelector");
     auto c = py::class_<Acts::MeasurementSelector::Config>(ms, "Config")

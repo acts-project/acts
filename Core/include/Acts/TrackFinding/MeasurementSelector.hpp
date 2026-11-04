@@ -19,6 +19,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <limits>
@@ -49,6 +50,11 @@ struct [[deprecated(
   std::vector<std::size_t> numMeasurementsCutOff{1};
   /// Maximum local chi2 contribution to classify as outlier.
   std::vector<double> chi2CutOffOutlier{};
+  /// If true, the chi2 cuts are the cuts for one-dimensional measurements. A
+  /// measurement of dimension D uses the chi2 value with the same p-value for D
+  /// degrees of freedom, so that every dimension has the same rejection
+  /// probability.
+  bool chi2CutPerDimension = false;
 };
 
 /// @brief Measurement selection struct selecting those measurements compatible
@@ -108,19 +114,22 @@ class [[deprecated(
          bool& isOutlier, const Logger& logger) const;
 
  private:
+  /// Chi2 cut for each measurement dimension, index 0 is not used
+  using Chi2CutPerDimension = std::array<double, kMeasurementSizeMax + 1>;
+
   struct InternalCutBin {
     double maxTheta{};
     std::size_t maxNumMeasurements{};
-    double maxChi2Measurement{};
-    double maxChi2Outlier{};
+    Chi2CutPerDimension maxChi2Measurement{};
+    Chi2CutPerDimension maxChi2Outlier{};
   };
   using InternalCutBins = std::vector<InternalCutBin>;
   using InternalConfig = Acts::GeometryHierarchyMap<InternalCutBins>;
 
   struct Cuts {
     std::size_t numMeasurements{};
-    double chi2Measurement{};
-    double chi2Outlier{};
+    Chi2CutPerDimension chi2Measurement{};
+    Chi2CutPerDimension chi2Outlier{};
   };
 
   static InternalCutBins convertCutBins(const MeasurementSelectorCuts& config);
