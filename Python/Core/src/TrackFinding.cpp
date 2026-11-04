@@ -9,6 +9,7 @@
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/SeedDeduplicator.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -25,6 +26,9 @@ namespace ActsPython {
 /// @param m The module to add the bindings to
 void addTrackFinding(py::module_& m) {
   {
+    // the measurement selector is deprecated but still bound so that
+    // downstream clients configuring one keep working
+    ACTS_PUSH_IGNORE_DEPRECATED()
     auto constructor =
         [](const std::vector<std::pair<
                Acts::GeometryIdentifier,
@@ -62,6 +66,7 @@ void addTrackFinding(py::module_& m) {
                       std::vector<std::pair<Acts::GeometryIdentifier,
                                             Acts::MeasurementSelectorCuts>>>())
                  .def(py::init(constructor));
+    ACTS_POP_IGNORE_DEPRECATED()
   }
   {
     using EtaBinnedConfig = TrackSelector::EtaBinnedConfig;
