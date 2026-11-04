@@ -192,14 +192,16 @@ void addTrackFinding(py::module& mex) {
                                                       "TrackStateSelectionCuts")
         .def(py::init<>())
         .def(py::init([](double chi2CutOffMeasurement, double chi2CutOffOutlier,
-                         std::size_t maxBranchesPerSurface) {
+                         std::size_t maxBranchesPerSurface,
+                         bool chi2CutPerDimension) {
                return ActsExamples::TrackStateSelectionCuts{
                    chi2CutOffMeasurement, chi2CutOffOutlier,
-                   maxBranchesPerSurface};
+                   maxBranchesPerSurface, chi2CutPerDimension};
              }),
              py::arg("chi2CutOffMeasurement") = 15.,
              py::arg("chi2CutOffOutlier") = 25.,
-             py::arg("maxBranchesPerSurface") = 1)
+             py::arg("maxBranchesPerSurface") = 1,
+             py::arg("chi2CutPerDimension") = false)
         .def_readwrite(
             "chi2CutOffMeasurement",
             &ActsExamples::TrackStateSelectionCuts::chi2CutOffMeasurement)
@@ -208,18 +210,21 @@ void addTrackFinding(py::module& mex) {
             &ActsExamples::TrackStateSelectionCuts::chi2CutOffOutlier)
         .def_readwrite(
             "maxBranchesPerSurface",
-            &ActsExamples::TrackStateSelectionCuts::maxBranchesPerSurface);
+            &ActsExamples::TrackStateSelectionCuts::maxBranchesPerSurface)
+        .def_readwrite(
+            "chi2CutPerDimension",
+            &ActsExamples::TrackStateSelectionCuts::chi2CutPerDimension);
 
     ACTS_PYTHON_STRUCT(
         c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
         outputTracks, trackingGeometry, magneticField, findTracks,
-        findTracksBrem, trackStateSelection, trackSelectorCfg, maxSteps,
-        twoWay, twoWaySmoothing, seedParamsEstimation, reverseSearch,
-        reverseSearchMinR, reverseSearchMinAbsZ, inwardOnlyMinR,
-        inwardOnlyMinAbsZ, seedDeduplication, seedDeduplicatorCfg, stayOnSeed,
-        pixelVolumeIds, stripVolumeIds, maxPixelHoles, maxStripHoles,
-        trimTracks, recordMaterialStates, useJosephFormulation,
-        constrainToVolumeIds, endOfWorldVolumeIds);
+        findTracksBrem, trackStateSelection, trackSelectorCfg, maxSteps, twoWay,
+        twoWaySmoothing, seedParamsEstimation, reverseSearch, reverseSearchMinR,
+        reverseSearchMinAbsZ, inwardOnlyMinR, inwardOnlyMinAbsZ,
+        seedDeduplication, seedDeduplicatorCfg, stayOnSeed, pixelVolumeIds,
+        stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
+        recordMaterialStates, useJosephFormulation, constrainToVolumeIds,
+        endOfWorldVolumeIds);
   }
 }
 

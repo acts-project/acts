@@ -2,6 +2,7 @@ target_sources(
     ActsCore
     PRIVATE
         CombinatorialKalmanFilterError.cpp
+        Chi2Cuts.cpp
         MeasurementSelector.cpp
         AmbiguityTrackClustering.cpp
         SeedDeduplicator.cpp

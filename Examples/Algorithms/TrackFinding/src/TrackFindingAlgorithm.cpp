@@ -371,7 +371,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   TrackStateCreator trackStateCreator;
   trackStateCreator.measurements = &measurements;
-  trackStateCreator.cuts = m_cfg.trackStateSelection;
+  trackStateCreator.setCuts(m_cfg.trackStateSelection);
 
   Extensions extensions;
   extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<

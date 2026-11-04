@@ -191,6 +191,7 @@ CkfConfig = namedtuple(
         "constrainToVolumes",
         "endOfWorldVolumes",
         "seedDeduplicatorConfig",
+        "chi2CutPerDimension",
     ],
     defaults=[
         15.0,
@@ -209,6 +210,7 @@ CkfConfig = namedtuple(
         None,
         None,
         None,
+        False,
     ],
 )
 
@@ -2007,6 +2009,7 @@ def addCKFTracks(
             chi2CutOffMeasurement=ckfConfig.chi2CutOffMeasurement,
             chi2CutOffOutlier=ckfConfig.chi2CutOffOutlier,
             maxBranchesPerSurface=ckfConfig.numMeasurementsCutOff,
+            chi2CutPerDimension=ckfConfig.chi2CutPerDimension,
         ),
         inputMeasurements=f"{prefix}measurement_subset",
         inputInitialTrackParameters=(

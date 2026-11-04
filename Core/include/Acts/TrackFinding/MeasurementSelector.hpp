@@ -14,12 +14,12 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/TrackFinding/Chi2Cuts.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <array>
 #include <cassert>
 #include <cstddef>
 #include <limits>
@@ -114,9 +114,6 @@ class [[deprecated(
          bool& isOutlier, const Logger& logger) const;
 
  private:
-  /// Chi2 cut for each measurement dimension, index 0 is not used
-  using Chi2CutPerDimension = std::array<double, kMeasurementSizeMax + 1>;
-
   struct InternalCutBin {
     double maxTheta{};
     std::size_t maxNumMeasurements{};

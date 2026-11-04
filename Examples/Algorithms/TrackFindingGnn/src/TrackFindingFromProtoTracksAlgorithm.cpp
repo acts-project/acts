@@ -103,7 +103,7 @@ ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
   ProtoTrackStateCreator trackStateCreator;
   trackStateCreator.loggerPtr = logger().clone("TrackStateCreator");
   trackStateCreator.measurements = &measurements;
-  trackStateCreator.cuts = m_cfg.trackStateSelection;
+  trackStateCreator.setCuts(m_cfg.trackStateSelection);
 
   CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
   extensions.updater.connect<&GainMatrixUpdater::operator()<

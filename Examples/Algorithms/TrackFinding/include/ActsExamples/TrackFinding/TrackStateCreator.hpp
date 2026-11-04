@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/TrackFinding/Chi2Cuts.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/TrackFinding/TrackStateCreatorBase.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -34,6 +35,10 @@ struct TrackStateSelectionCuts {
   double chi2CutOffOutlier = 25;
   /// Maximum number of branches created on a single surface
   std::size_t maxBranchesPerSurface = 1;
+  /// If true, the chi2 cuts are the cuts for 1D measurements. A measurement of
+  /// dimension D uses the chi2 value with the same p-value for D degrees of
+  /// freedom.
+  bool chi2CutPerDimension = false;
 };
 
 /// Creates track states directly from the measurement container, i.e. without
@@ -55,8 +60,27 @@ class TrackStateCreatorBase
   /// Type alias for the per surface state object
   using State = typename Base::State;
 
+  TrackStateCreatorBase() { setCuts(TrackStateSelectionCuts{}); }
+
+  /// Set the selection cuts.
+  ///
+  /// @param cuts the selection cuts
+  void setCuts(const TrackStateSelectionCuts& cuts) {
+    m_cuts = cuts;
+    if (cuts.chi2CutPerDimension) {
+      m_chi2CutMeasurement =
+          Acts::chi2CutsWithSameProbability(cuts.chi2CutOffMeasurement);
+      m_chi2CutOutlier =
+          Acts::chi2CutsWithSameProbability(cuts.chi2CutOffOutlier);
+    } else {
+      m_chi2CutMeasurement.fill(cuts.chi2CutOffMeasurement);
+      m_chi2CutOutlier.fill(cuts.chi2CutOffOutlier);
+    }
+  }
+
   /// The selection cuts
-  TrackStateSelectionCuts cuts;
+  /// @return the selection cuts
+  const TrackStateSelectionCuts& cuts() const { return m_cuts; }
 
   /// The uncalibrated source link of a measurement.
   ///
@@ -116,7 +140,7 @@ class TrackStateCreatorBase
                                         candidates_t& candidates) const {
     const Acts::Logger& logger = *state.logger;
 
-    if (cuts.maxBranchesPerSurface == 0ul) {
+    if (m_cuts.maxBranchesPerSurface == 0ul) {
       return Acts::CombinatorialKalmanFilterError::MeasurementSelectionFailed;
     }
 
@@ -140,10 +164,13 @@ class TrackStateCreatorBase
     // candidates at the front which do satisfy it.
     double minChi2 = std::numeric_limits<double>::max();
     std::size_t minIndex = std::numeric_limits<std::size_t>::max();
+    std::size_t minDimension = 0ul;
     std::size_t passedCandidates = 0ul;
     for (std::size_t i = 0ul; i < candidates.size(); ++i) {
-      const double chi2 = derived().calculatePredictedChi2(
-          state, derived().calibrate(state, candidates[i].measurement));
+      const auto calibrated =
+          derived().calibrate(state, candidates[i].measurement);
+      const double chi2 = derived().calculatePredictedChi2(state, calibrated);
+      const std::size_t dimension = calibrated.size();
       candidates[i].chi2 = chi2;
 
       // A diverging prediction can give a non-finite chi2. Every comparison
@@ -158,9 +185,10 @@ class TrackStateCreatorBase
       if (chi2 < minChi2) {
         minChi2 = chi2;
         minIndex = i;
+        minDimension = dimension;
       }
 
-      if (chi2 >= cuts.chi2CutOffMeasurement) {
+      if (chi2 >= m_chi2CutMeasurement[dimension]) {
         continue;
       }
 
@@ -175,7 +203,8 @@ class TrackStateCreatorBase
 
     if (passedCandidates == 0ul) {
       // minIndex stays unset if every candidate is rejected above
-      if (minIndex < candidates.size() && minChi2 < cuts.chi2CutOffOutlier) {
+      if (minIndex < candidates.size() &&
+          minChi2 < m_chi2CutOutlier[minDimension]) {
         ACTS_VERBOSE(
             "No measurement candidate. Create an outlier measurement chi2="
             << minChi2);
@@ -200,10 +229,10 @@ class TrackStateCreatorBase
 
     ACTS_VERBOSE("Number of selected measurements: "
                  << passedCandidates
-                 << ", max: " << cuts.maxBranchesPerSurface);
+                 << ", max: " << m_cuts.maxBranchesPerSurface);
 
-    candidates.erase(candidates.begin() +
-                         std::min(cuts.maxBranchesPerSurface, passedCandidates),
+    candidates.erase(candidates.begin() + std::min(m_cuts.maxBranchesPerSurface,
+                                                   passedCandidates),
                      candidates.end());
     return Acts::Result<void>::success();
   }
@@ -213,6 +242,11 @@ class TrackStateCreatorBase
   using Base::derived;
 
  private:
+  TrackStateSelectionCuts m_cuts;
+  /// The chi2 cuts for each measurement dimension
+  Acts::Chi2CutPerDimension m_chi2CutMeasurement{};
+  Acts::Chi2CutPerDimension m_chi2CutOutlier{};
+
   /// Reduce the candidates to the single one at @p index.
   template <typename candidates_t>
   static void keepOnly(candidates_t& candidates, std::size_t index) {

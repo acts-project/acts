@@ -23,10 +23,13 @@
 #include "ActsExamples/TrackFinding/TrackStateCreator.hpp"
 
 #include <array>
+#include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <ranges>
+#include <utility>
 #include <vector>
 
 using namespace Acts;
@@ -36,22 +39,37 @@ namespace ActsTests {
 
 namespace {
 
-/// The calibrated form of a 1D measurement on `eBoundLoc0` with unit variance
+/// The calibrated form of a measurement of dimension `dim` with unit variance.
+/// Only the first coordinate differs from the prediction.
+template <std::size_t dim>
 struct CalibratedMeasurement {
-  Vector<1> params;
-  SquareMatrix<1> cov{SquareMatrix<1>::Identity()};
-  std::array<std::uint8_t, 1> indices{eBoundLoc0};
+  Vector<dim> params;
+  SquareMatrix<dim> cov{SquareMatrix<dim>::Identity()};
+  std::array<std::uint8_t, dim> indices = [] {
+    std::array<std::uint8_t, dim> result{};
+    for (std::size_t i = 0; i < dim; ++i) {
+      result[i] = static_cast<std::uint8_t>(i);
+    }
+    return result;
+  }();
 
-  static constexpr std::size_t size() { return 1; }
-  const std::array<std::uint8_t, 1>& subspaceIndices() const { return indices; }
-  const Vector<1>& parameters() const { return params; }
-  const SquareMatrix<1>& covariance() const { return cov; }
+  static constexpr std::size_t size() { return dim; }
+  const std::array<std::uint8_t, dim>& subspaceIndices() const {
+    return indices;
+  }
+  const Vector<dim>& parameters() const { return params; }
+  const SquareMatrix<dim>& covariance() const { return cov; }
 };
 
-/// Creator over a flat list of loc0 values, one measurement per entry
+/// Creator over a flat list of loc0 values, one measurement of dimension `dim`
+/// per entry
+template <std::size_t dim>
 class TestCreator final
-    : public ActsExamples::TrackStateCreatorBase<TestCreator> {
+    : public ActsExamples::TrackStateCreatorBase<TestCreator<dim>> {
  public:
+  using State =
+      typename ActsExamples::TrackStateCreatorBase<TestCreator<dim>>::State;
+
   std::vector<double> values;
   std::vector<IndexSourceLink> sourceLinks;
 
@@ -67,12 +85,16 @@ class TestCreator final
     return std::ranges::subrange(sourceLinks.begin(), sourceLinks.end());
   }
 
-  CalibratedMeasurement calibrate(const State& /*state*/,
-                                  const IndexSourceLink& measurement) const {
-    return CalibratedMeasurement{Vector<1>{values.at(measurement.index())}};
+  CalibratedMeasurement<dim> calibrate(
+      const State& /*state*/, const IndexSourceLink& measurement) const {
+    CalibratedMeasurement<dim> result;
+    result.params = Vector<dim>::Zero();
+    result.params[0] = values.at(measurement.index());
+    return result;
   }
 };
 
+template <std::size_t dim = 1>
 struct Fixture {
   GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   CalibrationContext cctx;
@@ -83,10 +105,11 @@ struct Fixture {
       CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();
 
   VectorMultiTrajectory trajectory;
-  TestCreator creator;
+  TestCreator<dim> creator;
+  TrackStateSelectionCuts cuts;
 
-  /// Predicted loc0 = 0 with unit variance, so the chi2 of a measurement at
-  /// `value` is `value^2 / 2`
+  /// Predicted parameters at zero with unit variance, so the chi2 of a
+  /// measurement at `value` is `value^2 / 2`
   CkfTypes::BoundState boundState{
       BoundTrackParameters(surface, BoundVector::Zero(),
                            BoundMatrix(BoundMatrix::Identity()),
@@ -94,6 +117,7 @@ struct Fixture {
       BoundMatrix::Identity(), 1.5};
 
   auto run() {
+    creator.setCuts(cuts);
     return creator.createTrackStates(gctx, cctx, *surface, boundState,
                                      kTrackIndexInvalid, trajectory, *logger);
   }
@@ -107,9 +131,9 @@ BOOST_AUTO_TEST_SUITE(ExamplesTrackStateCreatorSuite)
 
 /// A single candidate with a non-finite chi2 must not be selected
 BOOST_AUTO_TEST_CASE(NonFiniteChi2IsRejected) {
-  Fixture f;
+  Fixture<> f;
   f.creator.setValues({kNaN});
-  f.creator.cuts.chi2CutOffOutlier = std::numeric_limits<double>::infinity();
+  f.cuts.chi2CutOffOutlier = std::numeric_limits<double>::infinity();
 
   auto result = f.run();
 
@@ -120,9 +144,9 @@ BOOST_AUTO_TEST_CASE(NonFiniteChi2IsRejected) {
 /// A finite candidate must be selected next to a non-finite one, and a
 /// candidate above the measurement cut must stay an outlier
 BOOST_AUTO_TEST_CASE(FiniteChi2SelectedAlongsideNonFinite) {
-  Fixture f;
-  f.creator.cuts.chi2CutOffMeasurement = 15;
-  f.creator.cuts.chi2CutOffOutlier = 25;
+  Fixture<> f;
+  f.cuts.chi2CutOffMeasurement = 15;
+  f.cuts.chi2CutOffOutlier = 25;
 
   // chi2 = 2
   f.creator.setValues({kNaN, 2.});
@@ -145,15 +169,57 @@ BOOST_AUTO_TEST_CASE(FiniteChi2SelectedAlongsideNonFinite) {
 
 /// No branch allowed on a surface is a configuration error
 BOOST_AUTO_TEST_CASE(ZeroBranchesFails) {
-  Fixture f;
+  Fixture<> f;
   f.creator.setValues({0.});
-  f.creator.cuts.maxBranchesPerSurface = 0;
+  f.cuts.maxBranchesPerSurface = 0;
 
   auto result = f.run();
 
   BOOST_REQUIRE(!result.ok());
   BOOST_CHECK_EQUAL(result.error(),
                     CombinatorialKalmanFilterError::MeasurementSelectionFailed);
+}
+
+/// Selection of one measurement with the given chi2: (selected, isOutlier)
+template <std::size_t dim>
+std::pair<bool, bool> selectWithChi2(double chi2, bool perDimension) {
+  Fixture<dim> f;
+  f.cuts.chi2CutOffMeasurement = 15;
+  f.cuts.chi2CutOffOutlier = 25;
+  f.cuts.chi2CutPerDimension = perDimension;
+  // chi2 = value^2 / 2
+  f.creator.setValues({std::sqrt(2 * chi2)});
+
+  auto result = f.run();
+  BOOST_REQUIRE(result.ok());
+  if (result->empty()) {
+    return {false, false};
+  }
+  const auto trackState = f.trajectory.getTrackState(result->front());
+  return {true, trackState.typeFlags().isOutlier()};
+}
+
+/// Without the flag every measurement dimension uses the same cuts
+BOOST_AUTO_TEST_CASE(Chi2CutSameForAllDimensions) {
+  BOOST_CHECK(selectWithChi2<1>(14.9, false) == std::pair(true, false));
+  BOOST_CHECK(selectWithChi2<3>(15.1, false) == std::pair(true, true));
+  BOOST_CHECK(selectWithChi2<3>(25.1, false) == std::pair(false, false));
+}
+
+/// With the flag the cuts are the 1D cuts for 1D measurements and the chi2
+/// values with the same p-value for higher dimensions: 18.28 / 28.74 for 2D
+/// and 20.96 / 31.81 for 3D
+BOOST_AUTO_TEST_CASE(Chi2CutPerDimension) {
+  BOOST_CHECK(selectWithChi2<1>(14.9, true) == std::pair(true, false));
+  BOOST_CHECK(selectWithChi2<1>(15.1, true) == std::pair(true, true));
+
+  BOOST_CHECK(selectWithChi2<2>(18.2, true) == std::pair(true, false));
+  BOOST_CHECK(selectWithChi2<2>(18.4, true) == std::pair(true, true));
+
+  BOOST_CHECK(selectWithChi2<3>(20.9, true) == std::pair(true, false));
+  BOOST_CHECK(selectWithChi2<3>(21.0, true) == std::pair(true, true));
+  BOOST_CHECK(selectWithChi2<3>(31.7, true) == std::pair(true, true));
+  BOOST_CHECK(selectWithChi2<3>(31.9, true) == std::pair(false, false));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

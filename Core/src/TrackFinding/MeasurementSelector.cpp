@@ -13,18 +13,15 @@
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/TrackFinding/Chi2Cuts.hpp"
 
 #include <algorithm>
-#include <array>
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <numbers>
 #include <span>
 #include <stdexcept>
-
-#include <boost/math/distributions/chi_squared.hpp>
 
 namespace Acts {
 
@@ -57,29 +54,12 @@ MeasurementSelector::MeasurementSelector(const Config& config) {
 
 namespace {
 
-/// Convert the chi2 cut @p cut1D for one-dimensional measurements to the cut
-/// with the same p-value for each measurement dimension. Without
-/// @p perDimension every dimension uses @p cut1D.
-std::array<double, kMeasurementSizeMax + 1> convertChi2Cut(double cut1D,
-                                                           bool perDimension) {
-  std::array<double, kMeasurementSizeMax + 1> result{};
-  result.fill(cut1D);
-  if (!perDimension || !std::isfinite(cut1D) ||
-      cut1D == std::numeric_limits<double>::max() || cut1D <= 0) {
-    return result;
+Chi2CutPerDimension convertChi2Cut(double cut, bool perDimension) {
+  if (perDimension) {
+    return chi2CutsWithSameProbability(cut);
   }
-
-  const double pValue = boost::math::cdf(boost::math::complement(
-      boost::math::chi_squared_distribution<>(1), cut1D));
-  // A cut far in the tail has no representable p-value, so it stays as it is
-  if (!(pValue > std::numeric_limits<double>::min())) {
-    return result;
-  }
-  for (std::size_t dim = 2; dim < result.size(); ++dim) {
-    result[dim] = boost::math::quantile(boost::math::complement(
-        boost::math::chi_squared_distribution<>(static_cast<double>(dim)),
-        pValue));
-  }
+  Chi2CutPerDimension result{};
+  result.fill(cut);
   return result;
 }
 
