@@ -181,6 +181,24 @@ validation when one is introduced. Custom mixture-reducer callbacks now take
 `const GeometryContext&` as their first argument; parameter merging takes
 `merge(gctx, method)`.
 
+@ref Acts::Experimental::Gx2Fitter explicitly requires canonical
+global-spherical bound coordinates. It checks the initial state and each bound
+state it creates for measurements, valid scattering material, or stored holes.
+Surfaces merely traversed without creating a bound state are not checked.
+Standalone equation assembly checks the stored states it consumes as well.
+Unsupported interpretation throws `std::system_error` with
+@ref Acts::Experimental::GlobalChiSquareFitterError::UnsupportedBoundParametrization
+and the surface identifier; it is not treated as a missing measurement.
+Only canonical coordinates exist today, so unsupported-state tests remain deferred.
+
+GX2F measurement residuals use the surface parametrization before projection
+into the measurement basis. Its scattering model remains canonical-specific:
+linear phi/theta kicks, inverse phi variance weighted by `sin(theta)^2`, and explicit
+phi/theta derivative columns are a coupled model. These operations and the
+raw fit-parameter updates have not been generalized or given covariance-aware
+branch changes. Supporting alternative coordinates requires
+updating that model consistently, rather than just replacing its angle addition.
+
 Pointwise material physics computes a projected scattering variance independently
 of the direction coordinates. A separate mapping produces the direction-noise
 block, with a direct diagonal calculation for the canonical spherical convention.

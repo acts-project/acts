@@ -24,10 +24,20 @@
 #include <unordered_map>
 #include <vector>
 
+namespace Acts {
+class Surface;
+}  // namespace Acts
+
 namespace Acts::Experimental {
 
 /// @addtogroup track_fitting
 /// @{
+
+namespace detail {
+/// Report an unsupported GX2F bound parametrization.
+/// @param surface Surface anchoring the unsupported state
+[[noreturn]] void throwUnsupportedGx2fParametrization(const Surface& surface);
+}  // namespace detail
 
 namespace Gx2fConstants {
 constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
@@ -198,8 +208,7 @@ struct Gx2fSystem {
 /// @param extendedSystem All parameters of the current equation system to update.
 /// @param jacobianFromStart The Jacobian matrix from the start to the current state.
 /// @param covarianceMeasurement The covariance matrix of the measurement.
-/// @param predicted The predicted state vector based on the track state.
-/// @param measurement The measurement vector.
+/// @param residual Measurement-minus-prediction residual in the measurement basis.
 /// @param projector The projection matrix.
 /// @param logger A logger instance.
 ///
@@ -209,8 +218,8 @@ struct Gx2fSystem {
 void addMeasurementToGx2fSumsBackend(
     Gx2fSystem& extendedSystem,
     const std::vector<BoundMatrix>& jacobianFromStart,
-    const Eigen::MatrixXd& covarianceMeasurement, const BoundVector& predicted,
-    const Eigen::VectorXd& measurement, const Eigen::MatrixXd& projector,
+    const Eigen::MatrixXd& covarianceMeasurement,
+    const Eigen::VectorXd& residual, const Eigen::MatrixXd& projector,
     const Logger& logger);
 
 /// @brief Solve the gx2f system to get the delta parameters for the update
