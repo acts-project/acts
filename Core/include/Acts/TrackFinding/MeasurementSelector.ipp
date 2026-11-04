@@ -89,7 +89,7 @@ MeasurementSelector::select(
     }
 
     // only consider track states which pass the chi2 cut
-    if (chi2 >= cuts.chi2Measurement) {
+    if (chi2 >= cuts.chi2Measurement[trackState.calibratedSize()]) {
       continue;
     }
 
@@ -105,7 +105,8 @@ MeasurementSelector::select(
   // Handle if there are no measurements below the chi2 cut off
   if (passedCandidates == 0ul) {
     // minIndex stays unset if every candidate was rejected above.
-    if (minIndex < candidates.size() && minChi2 < cuts.chi2Outlier) {
+    if (minIndex < candidates.size() &&
+        minChi2 < cuts.chi2Outlier[candidates[minIndex].calibratedSize()]) {
       ACTS_VERBOSE(
           "No measurement candidate. Return an outlier measurement chi2="
           << minChi2);
