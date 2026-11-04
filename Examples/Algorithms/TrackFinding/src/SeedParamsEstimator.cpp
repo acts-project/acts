@@ -90,11 +90,7 @@ Acts::Result<Acts::BoundVector> transportToSurface(
 SeedParamsEstimator::SpacePointWeight
 SeedParamsEstimator::inverseRadiusPowerWeight(double exponent) {
   return [exponent](const Acts::Vector3& position) {
-    const double r = Acts::VectorHelpers::perp(position);
-    if (r <= 0) {
-      return 1.;
-    }
-    return std::pow(r, -exponent);
+    return std::pow(Acts::VectorHelpers::perp(position), -exponent);
   };
 }
 
