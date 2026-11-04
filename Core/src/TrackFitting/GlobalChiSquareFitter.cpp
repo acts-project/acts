@@ -10,6 +10,19 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 
+#include <format>
+#include <system_error>
+
+void Acts::Experimental::detail::throwUnsupportedGx2fParametrization(
+    const Surface& surface) {
+  throw std::system_error(
+      make_error_code(
+          GlobalChiSquareFitterError::UnsupportedBoundParametrization),
+      std::format("GlobalChiSquareFitter requires global-spherical bound "
+                  "coordinates on surface {}",
+                  surface.geometryId()));
+}
+
 void Acts::Experimental::updateGx2fParams(
     BoundTrackParameters& params, const Eigen::VectorXd& deltaParamsExtended,
     const std::size_t nMaterialSurfaces,
@@ -54,8 +67,8 @@ void Acts::Experimental::updateGx2fCovarianceParams(
 void Acts::Experimental::addMeasurementToGx2fSumsBackend(
     Gx2fSystem& extendedSystem,
     const std::vector<BoundMatrix>& jacobianFromStart,
-    const Eigen::MatrixXd& covarianceMeasurement, const BoundVector& predicted,
-    const Eigen::VectorXd& measurement, const Eigen::MatrixXd& projector,
+    const Eigen::MatrixXd& covarianceMeasurement,
+    const Eigen::VectorXd& residual, const Eigen::MatrixXd& projector,
     const Logger& logger) {
   // First, w try to invert the covariance matrix. If the inversion fails, we
   // can already abort.
@@ -95,10 +108,6 @@ void Acts::Experimental::addMeasurementToGx2fSumsBackend(
 
   const Eigen::MatrixXd projJacobian = projector * extendedJacobian;
 
-  const Eigen::VectorXd projPredicted = projector * predicted;
-
-  const Eigen::VectorXd residual = measurement - projPredicted;
-
   // Finally contribute to chi2sum, aMatrix, and bVector
   extendedSystem.chi2() +=
       (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
@@ -114,15 +123,12 @@ void Acts::Experimental::addMeasurementToGx2fSumsBackend(
 
   ACTS_VERBOSE(
       "Contributions in addMeasurementToGx2fSums:\n"
-      << "    predicted:   " << predicted.transpose() << "\n"
-      << "    measurement: " << measurement.transpose() << "\n"
       << "    covarianceMeasurement:\n"
       << covarianceMeasurement << "\n"
       << "    projector:\n"
       << projector.eval() << "\n"
       << "    projJacobian:\n"
       << projJacobian.eval() << "\n"
-      << "    projPredicted: " << (projPredicted.transpose()).eval() << "\n"
       << "    residual: " << (residual.transpose()).eval() << "\n"
       << "    extendedJacobian:\n"
       << extendedJacobian << "\n"

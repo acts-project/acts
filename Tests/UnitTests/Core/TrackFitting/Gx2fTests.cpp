@@ -1200,6 +1200,36 @@ BOOST_AUTO_TEST_CASE(Material) {
 
   ACTS_INFO("*** Test: Material -- Finish");
 }
+BOOST_AUTO_TEST_CASE(AngularMeasurementResidualUsesCanonicalParametrization) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  VectorMultiTrajectory trajectory;
+  auto state = trajectory.makeTrackState(TrackStatePropMask::All);
+  state.setReferenceSurface(
+      Surface::makeShared<PlaneSurface>(Transform3::Identity()));
+  state.smoothed() << 2., 0., std::numbers::pi - .1, 1., .1, 0.;
+  state.allocateCalibrated(2);
+  // Deliberately use a different measurement ordering from the bound vector.
+  state.setProjectorSubspaceIndices(std::array{eBoundDir0, eBoundLoc0});
+  state.calibrated<2>() << -std::numbers::pi + .1, 2.5;
+  state.calibratedCovariance<2>() << .25, 0., 0., 1.;
+  const std::vector<BoundMatrix> jacobians{BoundMatrix::Identity()};
+  Gx2fSystem system(eBoundSize);
+  addMeasurementToGx2fSums<2>(gctx, system, jacobians, state, *gx2fLogger);
+  BOOST_CHECK_SMALL(system.chi2() - .41, 1e-12);
+  BOOST_CHECK_SMALL(system.bVector()[eBoundDir0] - .8, 1e-12);
+  BOOST_CHECK_SMALL(system.bVector()[eBoundLoc0] - .5, 1e-12);
+  BOOST_CHECK_SMALL(system.aMatrix()(eBoundDir0, eBoundDir0) - 4., 1e-12);
+  BOOST_CHECK_SMALL(system.aMatrix()(eBoundLoc0, eBoundLoc0) - 1., 1e-12);
+
+  // A local position residual must not acquire angular periodicity.
+  state.calibrated<2>()[1] += 2. * std::numbers::pi;
+  Gx2fSystem shifted(eBoundSize);
+  addMeasurementToGx2fSums<2>(gctx, shifted, jacobians, state, *gx2fLogger);
+  BOOST_CHECK_SMALL(
+      shifted.bVector()[eBoundLoc0] - (.5 + 2. * std::numbers::pi), 1e-12);
+  BOOST_CHECK_SMALL(shifted.bVector()[eBoundDir0] - .8, 1e-12);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

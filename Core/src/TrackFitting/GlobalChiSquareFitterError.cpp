@@ -32,6 +32,9 @@ class GlobalChiSquareFitterErrorCategory : public std::error_category {
         return "Gx2f: Not enough measurements.";
       case GlobalChiSquareFitterError::UpdatePushedToNewVolume:
         return "Gx2f: Update pushed the parameters to a new volume.";
+      case GlobalChiSquareFitterError::UnsupportedBoundParametrization:
+        return "Gx2f: Unsupported bound parametrization; global-spherical "
+               "coordinates are required.";
       default:
         return "unknown";
     }
