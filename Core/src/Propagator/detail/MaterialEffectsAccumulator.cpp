@@ -70,8 +70,15 @@ void MaterialEffectsAccumulator::accumulate(const Material& material,
       m_accumulatedMaterial =
           MaterialSlab::combine(m_accumulatedMaterial, material, substep);
     } else {
-      // The average material cannot be split again, so keep it and shorten
-      // the path
+      // Approximation: remove the average material, not `material`. The
+      // relative error in x/X0 is about |pathLength| over the path in matter,
+      // which is negligible for an overstep correction.
+      // The exact solution inverts `MaterialSlab::combine`: subtract the
+      // additive quantities of `material` (thickness, x/X0, l/L0, molar
+      // amount) from the accumulated slab.
+      // This needs a new helper, because `combine` takes no negative
+      // thickness, and the subtraction of float averages cancels badly when
+      // little material remains.
       m_accumulatedMaterial =
           MaterialSlab(m_accumulatedMaterial.material(),
                        std::max(m_accumulatedMaterial.thickness() +
