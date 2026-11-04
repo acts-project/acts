@@ -84,7 +84,7 @@ void checkSameCovariance(detail::MaterialEffectsAccumulator& overstep,
   const auto directCov = direct.computeAdditionalFreeCovariance(direction);
   BOOST_REQUIRE(overstepCov.has_value());
   BOOST_REQUIRE(directCov.has_value());
-  for (const auto [i, j] :
+  for (const auto& [i, j] :
        {std::pair{eFreeDir0, eFreeDir0}, std::pair{eFreePos0, eFreePos0},
         std::pair{eFreePos0, eFreeDir0}, std::pair{eFreeQOverP, eFreeQOverP}}) {
     CHECK_CLOSE_REL((*overstepCov)(i, j), (*directCov)(i, j), 1e-3);
