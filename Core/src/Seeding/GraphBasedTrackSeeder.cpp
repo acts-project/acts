@@ -19,6 +19,7 @@
 #include <limits>
 #include <memory>
 #include <numbers>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <utility>
@@ -127,19 +128,16 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   std::uint32_t seedCounter = 0;
 
   // Turn the fitted path of every head edge into a seed candidate.
-  for (const detail::GbtsEdgeState& rs :
+  for (const auto& [rs, edges] :
        extractBestPathPerEdge(nodeView, graph, filter)) {
-    const detail::GbtsEdge& head = *rs.vs.front();
+    const detail::GbtsEdge& head = graph.edgeStorage[edges.front()];
     const float seedAbsEta = std::abs(-std::log(head.p[0]));
 
     std::vector<SpacePointIndex> vN;
-
-    for (auto sIt = rs.vs.rbegin(); sIt != rs.vs.rend(); ++sIt) {
-      if (sIt == rs.vs.rbegin()) {
-        vN.push_back((*sIt)->n1);
-      }
-
-      vN.push_back((*sIt)->n2);
+    vN.reserve(edges.size() + 1);
+    vN.push_back(graph.edgeStorage[edges.back()].n1);
+    for (const std::uint32_t e : edges | std::views::reverse) {
+      vN.push_back(graph.edgeStorage[e].n2);
     }
 
     // a triplet is accepted if it makes it up to this point
@@ -333,7 +331,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   }
 }
 
-std::vector<detail::GbtsEdgeState>
+std::vector<GraphBasedTrackSeeder::FittedPath>
 GraphBasedTrackSeeder::extractBestPathPerEdge(
     const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
     const GbtsTrackingFilter& filter) const {
@@ -382,7 +380,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   // From every edge, search all paths inwards to a root, fitting on the way.
   // The complete path with the best score per space point is the candidate
   // of the edge.
-  std::vector<detail::GbtsEdgeState> candidates;
+  std::vector<FittedPath> candidates;
   std::uint32_t minLength = 0;
   std::vector<std::uint32_t> path;
   std::vector<std::uint32_t> bestPath;
@@ -454,11 +452,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
       continue;
     }
 
-    bestState.vs.clear();
-    for (const std::uint32_t e : bestPath) {
-      bestState.vs.push_back(&edgeStorage[e]);
-    }
-    candidates.push_back(bestState);
+    candidates.push_back({bestState, bestPath});
   }
 
   return candidates;
