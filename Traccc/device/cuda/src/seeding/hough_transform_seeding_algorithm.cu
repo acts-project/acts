@@ -93,7 +93,7 @@ namespace kernels {
    void take_pictures(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes,
                       const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes,
                       const unsigned int n_maxima,
-                      vecmem::data::jagged_vector_view<scalar>& images,
+                      vecmem::data::jagged_vector_view<scalar> images,
                       vecmem::data::vector_view<scalar> maxima_x) {
       device::take_pictures<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, global_indexes, n_maxima, images, maxima_x);
    }
@@ -168,7 +168,7 @@ namespace kernels {
                   const vecmem::data::vector_view<scalar> spacepoint_r,
                   const vecmem::data::vector_view<unsigned int> nn_outcome,
                   const vecmem::data::jagged_vector_view<traccc::device::global_index_t> hits,
-                  vecmem::data::jagged_vector_view<scalar>& cot_theta_matrix) {
+                  vecmem::data::jagged_vector_view<scalar> cot_theta_matrix) {
         device::make_seeds(details::global_index1(), n_images,
                            spacepoints, spacepoint_r,
                            nn_outcome, hits,
