@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/TrackFinding/TrackStateCreatorBase.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -16,6 +17,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <utility>
@@ -114,6 +116,10 @@ class TrackStateCreatorBase
                                         candidates_t& candidates) const {
     const Acts::Logger& logger = *state.logger;
 
+    if (cuts.maxBranchesPerSurface == 0ul) {
+      return Acts::CombinatorialKalmanFilterError::MeasurementSelectionFailed;
+    }
+
     if (derived().hasMeasurementPreselection(state)) {
       for (const IndexSourceLink& measurement : range) {
         if (derived().preselectMeasurement(state, measurement)) {
@@ -140,6 +146,15 @@ class TrackStateCreatorBase
           state, derived().calibrate(state, candidates[i].measurement));
       candidates[i].chi2 = chi2;
 
+      // A diverging prediction can give a non-finite chi2. Every comparison
+      // with NaN is false, so such a candidate would pass the cut without
+      // becoming the minimum, and would break the sort below.
+      if (!std::isfinite(chi2)) {
+        ACTS_VERBOSE("Non-finite chi2 " << chi2
+                                        << ", rejecting measurement candidate");
+        continue;
+      }
+
       if (chi2 < minChi2) {
         minChi2 = chi2;
         minIndex = i;
@@ -159,7 +174,8 @@ class TrackStateCreatorBase
     }
 
     if (passedCandidates == 0ul) {
-      if (minChi2 < cuts.chi2CutOffOutlier) {
+      // minIndex stays unset if every candidate is rejected above
+      if (minIndex < candidates.size() && minChi2 < cuts.chi2CutOffOutlier) {
         ACTS_VERBOSE(
             "No measurement candidate. Create an outlier measurement chi2="
             << minChi2);
