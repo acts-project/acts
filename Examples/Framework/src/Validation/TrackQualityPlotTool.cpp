@@ -60,12 +60,6 @@ TrackQualityPlotTool::TrackQualityPlotTool(const Config& cfg,
 }
 
 void TrackQualityPlotTool::fill(const SimParticleState& truthParticle,
-                                double completeness, double purity) {
-  fill(truthParticle, std::optional<double>(completeness),
-       std::optional<double>(purity));
-}
-
-void TrackQualityPlotTool::fill(const SimParticleState& truthParticle,
                                 std::optional<double> completeness,
                                 std::optional<double> purity) {
   const auto direction = truthParticle.direction();

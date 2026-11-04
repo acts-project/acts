@@ -44,14 +44,6 @@ class TrackQualityPlotTool {
   /// @param lvl Message level declaration
   TrackQualityPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief fill track quality w.r.t. truth particle parameters
-  ///
-  /// @param truthParticle the truth particle matched to this track
-  /// @param completeness completeness of the track
-  /// @param purity purity of the track
-  void fill(const SimParticleState& truthParticle, double completeness,
-            double purity);
-
   /// Fill independently defined metrics; absent values do not enter profiles.
   /// @param truthParticle the globally matched truth particle
   /// @param completeness regional completeness, absent for no truth hits
