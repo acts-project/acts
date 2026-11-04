@@ -159,6 +159,12 @@ class BranchStopper {
   struct BranchState {
     std::size_t nPixelHoles = 0;
     std::size_t nStripHoles = 0;
+    // holes and outliers behind the last measurement. they end the pass, and
+    // the trimming removes them unless a measurement follows
+    std::size_t nTrailingHoles = 0;
+    std::size_t nTrailingOutliers = 0;
+    std::size_t nTrailingPixelHoles = 0;
+    std::size_t nTrailingStripHoles = 0;
   };
 
   static constexpr Acts::ProxyAccessor<BranchState> branchStateAccessor =
@@ -168,6 +174,23 @@ class BranchStopper {
 
   explicit BranchStopper(const TrackFindingAlgorithm::Config& config)
       : m_cfg(config) {}
+
+  // the second pass extends the track at the start of the first one, so the
+  // holes and outliers behind the last measurement of the first pass stay at
+  // the end, where the trimming removes them. without this, the second pass
+  // starts with the hole count that stopped the first pass
+  void startNextPass(TrackContainer::TrackProxy track) const {
+    if (!m_cfg.trimTracks) {
+      return;
+    }
+    auto& branchState = branchStateAccessor(track);
+    track.nHoles() -= branchState.nTrailingHoles;
+    track.nOutliers() -= branchState.nTrailingOutliers;
+    branchState.nPixelHoles -= branchState.nTrailingPixelHoles;
+    branchState.nStripHoles -= branchState.nTrailingStripHoles;
+    branchState = BranchState{.nPixelHoles = branchState.nPixelHoles,
+                              .nStripHoles = branchState.nStripHoles};
+  }
 
   BranchStopperResult operator()(
       const TrackContainer::TrackProxy& track,
@@ -195,22 +218,32 @@ class BranchStopper {
       return BranchStopperResult::StopAndDrop;
     }
 
-    bool tooManyHolesPS = false;
-    if (!(m_cfg.pixelVolumeIds.empty() && m_cfg.stripVolumeIds.empty())) {
-      auto& branchState = branchStateAccessor(track);
-      // count both holes and outliers as holes for pixel/strip counts
-      if (trackState.typeFlags().isHole() ||
-          trackState.typeFlags().isOutlier()) {
-        auto volumeId = trackState.referenceSurface().geometryId().volume();
-        if (Acts::rangeContainsValue(m_cfg.pixelVolumeIds, volumeId)) {
-          ++branchState.nPixelHoles;
-        } else if (Acts::rangeContainsValue(m_cfg.stripVolumeIds, volumeId)) {
-          ++branchState.nStripHoles;
-        }
+    auto& branchState = branchStateAccessor(track);
+    const auto flags = trackState.typeFlags();
+    if (flags.isHole() || flags.isOutlier()) {
+      if (flags.isHole()) {
+        ++branchState.nTrailingHoles;
+      } else {
+        ++branchState.nTrailingOutliers;
       }
-      tooManyHolesPS = branchState.nPixelHoles > m_cfg.maxPixelHoles ||
-                       branchState.nStripHoles > m_cfg.maxStripHoles;
+      // count both holes and outliers as holes for pixel/strip counts
+      auto volumeId = trackState.referenceSurface().geometryId().volume();
+      if (Acts::rangeContainsValue(m_cfg.pixelVolumeIds, volumeId)) {
+        ++branchState.nPixelHoles;
+        ++branchState.nTrailingPixelHoles;
+      } else if (Acts::rangeContainsValue(m_cfg.stripVolumeIds, volumeId)) {
+        ++branchState.nStripHoles;
+        ++branchState.nTrailingStripHoles;
+      }
+    } else if (flags.isMeasurement()) {
+      branchState.nTrailingHoles = 0;
+      branchState.nTrailingOutliers = 0;
+      branchState.nTrailingPixelHoles = 0;
+      branchState.nTrailingStripHoles = 0;
     }
+
+    const bool tooManyHolesPS = branchState.nPixelHoles > m_cfg.maxPixelHoles ||
+                                branchState.nStripHoles > m_cfg.maxStripHoles;
 
     bool enoughMeasurements =
         track.nMeasurements() >= singleConfig->minMeasurements;
@@ -548,6 +581,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
           auto secondRootBranch = tracksTemp.makeTrack();
           secondRootBranch.copyFromWithoutStates(trackCandidate);
+          branchStopper.startNextPass(secondRootBranch);
           auto secondResult = findTracks(secondInitialParameters, secondOptions,
                                          tracksTemp, secondRootBranch);
 
