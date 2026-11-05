@@ -35,15 +35,15 @@ void ranges(const typename edm::houghplane_collection<T>::device& container,
         
         unsigned int phi_bin_min = quant(edges_y[0], 
                                          edges_y[n_rows],
-                                         N_ROWS, 
+                                         n_rows, 
                                          min_value_phi);
         unsigned int phi_bin_max = quant(edges_y[0], 
                                          edges_y[n_rows],
-                                         N_ROWS, 
+                                         n_rows, 
                                          max_value_phi) + 1;
         
         // Clamp bins
-        if (phi_bin_max > device::N_ROWS) phi_bin_max = n_rows;
+        if (phi_bin_max > n_rows) phi_bin_max = n_rows;
         min_ranges[i] = phi_bin_min;
         max_ranges[i] = phi_bin_max;
     }
