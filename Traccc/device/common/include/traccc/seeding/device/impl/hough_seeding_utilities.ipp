@@ -35,12 +35,16 @@ inline std::pair<global_index_t, global_index_t> get_wedge_element(const global_
 }
 
 TRACCC_HOST_DEVICE
-inline unsigned short count_bits(const unsigned long long x) {
-    unsigned short nOnes = 0;
-    for (int i(0); i<64; ++i) {
-       if ((x & (1ULL << i)) != 0ULL) ++nOnes;
-    }
-    return nOnes;
+inline unsigned short count_bits(unsigned long long x) {
+    x -= (x >> 1) & 0x5555555555555555ULL;
+
+    x = (x & 0x3333333333333333ULL)
+      + ((x >> 2) & 0x3333333333333333ULL);
+
+    x = (x + (x >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
+
+    return static_cast<unsigned short>(
+        (x * 0x0101010101010101ULL) >> 56);
 }
 
 TRACCC_HOST_DEVICE
