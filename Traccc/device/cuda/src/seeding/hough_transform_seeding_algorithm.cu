@@ -100,6 +100,7 @@ namespace kernels {
              unsigned int N_ROWS>
    __global__
    void take_pictures(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes,
+                      const vecmem::data::vector_view<scalar> edges_x,
                       const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes,
                       const unsigned int n_maxima,
                       vecmem::data::jagged_vector_view<scalar> images,
@@ -107,7 +108,8 @@ namespace kernels {
       device::take_pictures<T, N_COLS, N_ROWS>(blockIdx.x,
             threadIdx.y, // cols
             threadIdx.x, // rows
-            houghplanes, global_indexes, n_maxima, images, maxima_x);
+            houghplanes, edges_x,
+            global_indexes, n_maxima, images, maxima_x);
    }
 
    __global__
@@ -268,7 +270,8 @@ void hough_transform_seeding_algorithm::take_picture_kernel(const take_picture_p
    const dim3 n_threads(32, 32);
    const unsigned int n_blocks = payload.n_maxima;
    kernels::take_pictures<unsigned short, device::N_COLS, device::N_ROWS>
-        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, 
+        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes,
+                                                                    payload.edges_x,
                                                                     payload.global_index, 
                                                                     payload.n_maxima, 
                                                                     payload.images,

@@ -48,6 +48,7 @@ void take_pictures(const global_index_t globalIndex,
                    const global_index_t colIndex,
                    const global_index_t rowIndex,
                    const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes_view,
+                   const vecmem::data::vector_view<scalar>& edges_x_view,
                    const vecmem::data::jagged_vector_view<global_index_t>& maxima_index_view,
                    const unsigned int n_maxima,
                    vecmem::data::jagged_vector_view<scalar>& images_view,
@@ -72,8 +73,8 @@ void take_pictures(const global_index_t globalIndex,
                      rowIndex);
 
     if (colIndex == 0 && rowIndex == 0) {
+        vecmem::device_vector<scalar> edges_x(edges_x_view);
         vecmem::device_vector<scalar> maxima_x(maxima_x_view);
-        const auto& edges_x = houghplanes.edges_x();
         const auto [col, _] = get_col_row<N_COLS, N_ROWS>(maxima_idx);
         maxima_x[globalIndex] = 0.50f * (edges_x[col] + edges_x[col + 1]);
     }

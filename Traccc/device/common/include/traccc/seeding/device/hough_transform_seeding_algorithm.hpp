@@ -124,6 +124,8 @@ class hough_transform_seeding_algorithm
     unsigned int n_maxima;
     // The hough planes
     const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
+    // The edges X
+    const vecmem::data::vector_view<scalar>& edges_x;
     // The maxima location
     const vecmem::data::jagged_vector_view<global_index_t>& global_index;
     // The images

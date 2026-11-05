@@ -44,18 +44,6 @@ class houghplane : public BASE {
   TRACCC_HOST_DEVICE
   const auto& plane() const { return BASE::template get<0>(); }
 
-  TRACCC_HOST_DEVICE
-  auto& edges_x() { return BASE::template get<1>(); }
-
-  TRACCC_HOST_DEVICE
-  const auto& edges_x() const { return BASE::template get<1>(); }
-
-  TRACCC_HOST_DEVICE
-  auto& edges_y() { return BASE::template get<2>(); }
-  
-  TRACCC_HOST_DEVICE
-  const auto& edges_y() const { return BASE::template get<2>(); }
-
 };
  
 /// SoA container describing reconstructed hough planes
@@ -65,11 +53,7 @@ template<typename T,
 using houghplane_collection =
     vecmem::edm::container<houghplane,
                            // bins of the plane
-                           vecmem::edm::type::jagged_vector<T>,
-                           // edges (x) of the planes
-                           vecmem::edm::type::scalar<std::array<scalar, N_COLS + 1>>,
-                           // edges (y) of the planes
-                           vecmem::edm::type::scalar<std::array<scalar, N_ROWS + 1>>>;
+                           vecmem::edm::type::jagged_vector<T>>;
 
 }  // namespace traccc::edm
 
