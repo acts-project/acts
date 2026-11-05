@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
@@ -21,9 +22,12 @@
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include <cstddef>
+#include <limits>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace ActsExamples {
 
@@ -45,6 +49,11 @@ class PatternRecognitionPerformanceCollector {
     /// Optional per-subdetector track summary plots, keyed by name.
     /// The value is the set of geometry volume IDs to include.
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
+
+    /// Enable purity/completeness for subDetectorTrackSummaryVolumes.
+    /// Uses globally matched tracks, including duplicates. Region names must
+    /// be non-empty; empty volume sets select no hits.
+    bool writeRegionalTrackQuality = false;
   };
 
   PatternRecognitionPerformanceCollector(
@@ -53,12 +62,40 @@ class PatternRecognitionPerformanceCollector {
   /// Fill histograms for one event.
   ///
   /// @note The caller must ensure exclusive access (e.g. hold a mutex).
+  /// Regional quality requires the full measurement collection indexed by
+  /// particleMeasurementsMap and the tracks' IndexSourceLinks.
   void fill(const Acts::GeometryContext& geoContext,
             const ConstTrackContainer& tracks,
             const SimParticleContainer& particles,
             const TrackParticleMatching& trackParticleMatching,
             const ParticleTrackMatching& particleTrackMatching,
-            const InverseMultimap<SimBarcode>& particleMeasurementsMap);
+            const InverseMultimap<SimBarcode>& particleMeasurementsMap,
+            const MeasurementContainer* measurements = nullptr);
+
+  /// Quality statistics for globally matched tracks in one geometry selection.
+  /// Undefined ratios are counted separately, not filled with zero.
+  struct RegionalQualityStats {
+    std::size_t nCompleteness = 0;
+    std::size_t nPurity = 0;
+    std::size_t nUndefinedCompleteness = 0;
+    std::size_t nUndefinedPurity = 0;
+    double sumCompleteness = 0;
+    double sumPurity = 0;
+
+    /// Accumulate one track's independently defined quality values.
+    void add(std::optional<double> completeness, std::optional<double> purity);
+
+    /// Mean over tracks with at least one truth measurement in the region.
+    double meanCompleteness() const {
+      return nCompleteness > 0 ? sumCompleteness / nCompleteness
+                               : std::numeric_limits<double>::quiet_NaN();
+    }
+    /// Mean over tracks with at least one measurement or outlier in the region.
+    double meanPurity() const {
+      return nPurity > 0 ? sumPurity / nPurity
+                         : std::numeric_limits<double>::quiet_NaN();
+    }
+  };
 
   /// Integrated track-state counts within one sub-detector.
   struct SubDetectorStats {
@@ -98,6 +135,9 @@ class PatternRecognitionPerformanceCollector {
     /// Sum of purity over @c nTotalQualityTracks tracks.
     double sumPurity = 0;
 
+    /// Regional quality counts and means, keyed by geometry-selection name.
+    std::map<std::string, RegionalQualityStats> regionalQuality;
+
     /// Mean completeness across all tracks with a computed completeness.
     double meanCompleteness() const {
       return nTotalQualityTracks > 0 ? sumCompleteness / nTotalQualityTracks
@@ -132,6 +172,11 @@ class PatternRecognitionPerformanceCollector {
   const TrackQualityPlotTool& trackQualityPlotTool() const {
     return m_trackQualityPlotTool;
   }
+  /// Quality tools keyed by geometry-selection name.
+  const std::map<std::string, TrackQualityPlotTool>& regionalQualityTools()
+      const {
+    return m_regionalQualityTools;
+  }
   /// @}
 
  private:
@@ -146,6 +191,7 @@ class PatternRecognitionPerformanceCollector {
   TrackSummaryPlotTool m_trackSummaryPlotTool;
   std::map<std::string, TrackSummaryPlotTool> m_subDetectorSummaryTools;
   TrackQualityPlotTool m_trackQualityPlotTool;
+  std::map<std::string, TrackQualityPlotTool> m_regionalQualityTools;
 
   Stats m_stats;
 };

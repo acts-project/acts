@@ -78,6 +78,10 @@ class PythonPatternRecognitionPerformanceWriter final
     TrackQualityPlotTool::Config trackQualityPlotToolConfig;
     /// Optional per-subdetector track summary plots.
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
+    /// Complete measurement collection, required for regional quality.
+    std::string inputMeasurements;
+    /// Enable regional quality using subDetectorTrackSummaryVolumes.
+    bool writeRegionalTrackQuality = false;
   };
 
   PythonPatternRecognitionPerformanceWriter(Config cfg,
@@ -91,7 +95,8 @@ class PythonPatternRecognitionPerformanceWriter final
                 m_cfg.duplicationPlotToolConfig,
                 m_cfg.trackSummaryPlotToolConfig,
                 m_cfg.trackQualityPlotToolConfig,
-                m_cfg.subDetectorTrackSummaryVolumes},
+                m_cfg.subDetectorTrackSummaryVolumes,
+                m_cfg.writeRegionalTrackQuality},
             logger().clone()) {
     if (m_cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
@@ -111,6 +116,11 @@ class PythonPatternRecognitionPerformanceWriter final
     m_inputParticleTrackMatching.initialize(m_cfg.inputParticleTrackMatching);
     m_inputParticleMeasurementsMap.initialize(
         m_cfg.inputParticleMeasurementsMap);
+    if (m_cfg.writeRegionalTrackQuality && m_cfg.inputMeasurements.empty()) {
+      throw std::invalid_argument(
+          "Regional track quality requires inputMeasurements");
+    }
+    m_inputMeasurements.maybeInitialize(m_cfg.inputMeasurements);
   }
 
   ProcessCode finalize() override {
@@ -162,7 +172,12 @@ class PythonPatternRecognitionPerformanceWriter final
     }
 
     for (const auto& [name, prof] : coll.trackQualityPlotTool().profiles()) {
-      insertUniqueHistogram(d, name, prof);
+      insertUniqueHistogram(d, prof.name(), prof);
+    }
+    for (const auto& [key, tool] : coll.regionalQualityTools()) {
+      for (const auto& [name, prof] : tool.profiles()) {
+        insertUniqueHistogram(d, prof.name(), prof);
+      }
     }
 
     return d;
@@ -215,6 +230,20 @@ class PythonPatternRecognitionPerformanceWriter final
       subDetectors[py::str(key)] = sd;
     }
     d["subDetectors"] = subDetectors;
+    if (!s.regionalQuality.empty()) {
+      py::dict regions;
+      for (const auto& [key, quality] : s.regionalQuality) {
+        py::dict region;
+        region["nCompleteness"] = quality.nCompleteness;
+        region["nPurity"] = quality.nPurity;
+        region["nUndefinedCompleteness"] = quality.nUndefinedCompleteness;
+        region["nUndefinedPurity"] = quality.nUndefinedPurity;
+        region["meanCompleteness"] = quality.meanCompleteness();
+        region["meanPurity"] = quality.meanPurity();
+        regions[py::str(key)] = region;
+      }
+      d["regionalQuality"] = regions;
+    }
 
     return d;
   }
@@ -228,9 +257,10 @@ class PythonPatternRecognitionPerformanceWriter final
     const auto& particleMeasurementsMap = m_inputParticleMeasurementsMap(ctx);
 
     std::lock_guard<std::mutex> lock(m_writeMutex);
-    m_collector.fill(ctx.recoGeoContext, tracks, particles,
-                     trackParticleMatching, particleTrackMatching,
-                     particleMeasurementsMap);
+    m_collector.fill(
+        ctx.recoGeoContext, tracks, particles, trackParticleMatching,
+        particleTrackMatching, particleMeasurementsMap,
+        m_cfg.inputMeasurements.empty() ? nullptr : &m_inputMeasurements(ctx));
     return ProcessCode::SUCCESS;
   }
 
@@ -245,6 +275,8 @@ class PythonPatternRecognitionPerformanceWriter final
       this, "InputParticleTrackMatching"};
   ReadDataHandle<InverseMultimap<SimBarcode>> m_inputParticleMeasurementsMap{
       this, "InputParticleMeasurementsMap"};
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
 };
 
 }  // namespace
@@ -427,7 +459,8 @@ void addPythonSpecific(py::module_& mex) {
                        inputParticleMeasurementsMap, label, effPlotToolConfig,
                        fakePlotToolConfig, duplicationPlotToolConfig,
                        trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
-                       subDetectorTrackSummaryVolumes);
+                       subDetectorTrackSummaryVolumes, inputMeasurements,
+                       writeRegionalTrackQuality);
   }
 
   {

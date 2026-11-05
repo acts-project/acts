@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace ActsExamples {
@@ -33,6 +34,8 @@ class TrackQualityPlotTool {
         {"Phi", BoostRegularAxis(100, -3.15, 3.15, "truth #phi")},
         {"Pt", BoostRegularAxis(40, 0, 100, "truth p_{T} [GeV/c]")},
         {"Num", BoostRegularAxis(30, -0.5, 29.5, "N")}};
+    /// Optional histogram-name prefix, followed by an underscore.
+    std::string prefix;
   };
 
   /// Constructor
@@ -41,13 +44,12 @@ class TrackQualityPlotTool {
   /// @param lvl Message level declaration
   TrackQualityPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief fill track quality w.r.t. truth particle parameters
-  ///
-  /// @param truthParticle the truth particle matched to this track
-  /// @param completeness completeness of the track
-  /// @param purity purity of the track
-  void fill(const SimParticleState& truthParticle, double completeness,
-            double purity);
+  /// Fill independently defined metrics; absent values do not enter profiles.
+  /// @param truthParticle the globally matched truth particle
+  /// @param completeness regional completeness, absent for no truth hits
+  /// @param purity regional purity, absent for no track measurements/outliers
+  void fill(const SimParticleState& truthParticle,
+            std::optional<double> completeness, std::optional<double> purity);
 
   /// @brief Accessor for profile histograms map (const reference)
   const std::map<std::string, ProfileHistogram1>& profiles() const {

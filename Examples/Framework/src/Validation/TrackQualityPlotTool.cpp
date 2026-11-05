@@ -27,7 +27,8 @@ ProfileHistogram1 makeProfile(const TrackQualityPlotTool::Config& cfg,
   const auto& yAxis = cfg.varBinning.at("Num");
   Acts::Range1D<double> yRange{yAxis.bin(0).lower(),
                                yAxis.bin(yAxis.size() - 1).upper()};
-  return ProfileHistogram1(name, title, {ax}, sampleTitle, yRange);
+  const auto fullName = cfg.prefix.empty() ? name : cfg.prefix + "_" + name;
+  return ProfileHistogram1(fullName, title, {ax}, sampleTitle, yRange);
 }
 
 }  // namespace
@@ -59,19 +60,23 @@ TrackQualityPlotTool::TrackQualityPlotTool(const Config& cfg,
 }
 
 void TrackQualityPlotTool::fill(const SimParticleState& truthParticle,
-                                double completeness, double purity) {
+                                std::optional<double> completeness,
+                                std::optional<double> purity) {
   const auto direction = truthParticle.direction();
   const double truth_phi = phi(direction);
   const double truth_eta = eta(direction);
   const double truth_pT = truthParticle.transverseMomentum();
 
-  m_profiles.at("completeness_vs_pT").fill({truth_pT}, completeness);
-  m_profiles.at("completeness_vs_eta").fill({truth_eta}, completeness);
-  m_profiles.at("completeness_vs_phi").fill({truth_phi}, completeness);
-
-  m_profiles.at("purity_vs_pT").fill({truth_pT}, purity);
-  m_profiles.at("purity_vs_eta").fill({truth_eta}, purity);
-  m_profiles.at("purity_vs_phi").fill({truth_phi}, purity);
+  if (completeness.has_value()) {
+    m_profiles.at("completeness_vs_pT").fill({truth_pT}, *completeness);
+    m_profiles.at("completeness_vs_eta").fill({truth_eta}, *completeness);
+    m_profiles.at("completeness_vs_phi").fill({truth_phi}, *completeness);
+  }
+  if (purity.has_value()) {
+    m_profiles.at("purity_vs_pT").fill({truth_pT}, *purity);
+    m_profiles.at("purity_vs_eta").fill({truth_eta}, *purity);
+    m_profiles.at("purity_vs_phi").fill({truth_phi}, *purity);
+  }
 }
 
 }  // namespace ActsExamples

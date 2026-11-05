@@ -35,6 +35,14 @@ for the Python writers and the
 [truth-tracking Kalman example](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_kalman.py)
 for ROOT output.
 
+## Regional matching quality
+
+Both pattern-recognition writers support regional purity/completeness via
+`writeRegionalTrackQuality=True`, `subDetectorTrackSummaryVolumes` and the complete `inputMeasurements` collection.
+Profiles retain global truth matching and omit ratios with zero denominators.
+Track states need reference surfaces; pass `trackingGeometry` to `ProtoTracksToTracks` to attach them.
+States missing surfaces are skipped with a warning.
+
 ## Resolution fit backend
 
 The track-parameter writers fit residual and pull distributions to extract mean and width

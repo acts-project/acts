@@ -66,9 +66,9 @@ void addUtilities(py::module& mex) {
       inputMeasurementParticleMap, outputMeasurementParticleMap,
       geometrySelection);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ProtoTracksToTracks, mex, "ProtoTracksToTracks",
-                                inputMeasurements, inputProtoTracks,
-                                inputTrackParameters, outputTracks);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ProtoTracksToTracks, mex, "ProtoTracksToTracks", inputMeasurements,
+      inputProtoTracks, inputTrackParameters, outputTracks, trackingGeometry);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ProtoTracksToParameters, mex, "ProtoTracksToParameters", inputProtoTracks,
