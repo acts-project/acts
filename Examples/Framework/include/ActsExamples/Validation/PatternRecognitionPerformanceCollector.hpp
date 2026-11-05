@@ -52,10 +52,6 @@ class PatternRecognitionPerformanceCollector {
 
   /// Fill histograms for one event.
   ///
-  /// Fake-ratio plots include every track with a reference surface in the
-  /// denominator, including tracks absent from @p trackParticleMatching.
-  /// Only tracks classified as Fake contribute to the numerator.
-  ///
   /// @note The caller must ensure exclusive access (e.g. hold a mutex).
   void fill(const Acts::GeometryContext& geoContext,
             const ConstTrackContainer& tracks,
