@@ -121,8 +121,10 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
   }
 
  private:
-  /// Deduplicate the material of type @tparam mat_id against the material in
-  /// the detector @param det
+  /// Add material of type @tparam mat_id to a detector
+  ///
+  /// @param det the detector
+  /// @param opt volume builder options
   template <material_id mat_id>
   DETRAY_HOST void add_material(detector_t &det,
                                 const volume_builder_options &opt) {
@@ -151,7 +153,7 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
 
         // Test only against the material that is already in the detector
         // Any duplication within the new data will be resolved the same way
-        for (dindex i = 0u; i < offset; ++i) {
+        for (dindex i = 0u; i < coll_size; ++i) {
           if (mat == det_coll.at(i)) {
             DETRAY_DEBUG_HOST("Found identical material grid at index "
                               << i << ". Deduplicating...");

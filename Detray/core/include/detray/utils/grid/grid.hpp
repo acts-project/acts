@@ -112,25 +112,21 @@ class grid_impl {
   /// @param axes Axis definitions to view.
   /// @param offset Offset of this grid's bins in the container.
   /// @{
-  /// const
   DETRAY_HOST_DEVICE
   grid_impl(typename bin_storage::const_pointer_type const bin_data_ptr,
             const axes_type &axes, const dindex offset = 0)
       : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
 
-  /// non-const
   DETRAY_HOST_DEVICE
   grid_impl(typename bin_storage::pointer_type const bin_data_ptr,
             axes_type &axes, const dindex offset = 0u)
       : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
 
-  /// const
   DETRAY_HOST_DEVICE
   grid_impl(typename bin_storage::const_pointer_type const bin_data_ptr,
             axes_type &&axes, const dindex offset = 0)
       : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(std::move(axes)) {}
 
-  /// non-const
   DETRAY_HOST_DEVICE
   grid_impl(typename bin_storage::pointer_type const bin_data_ptr,
             axes_type &&axes, const dindex offset = 0u)
