@@ -361,7 +361,13 @@ class TrackContainer {
   constexpr T& component(IndexType itrack)
     requires(!ReadOnly)
   {
-    return *std::any_cast<T*>(container().component_impl(key, itrack));
+    if constexpr (requires {
+                    container().template componentTyped_impl<T>(key, itrack);
+                  }) {
+      return container().template componentTyped_impl<T>(key, itrack);
+    } else {
+      return *std::any_cast<T*>(container().component_impl(key, itrack));
+    }
   }
 
   /// @brief Get mutable reference to track component using runtime key
@@ -373,7 +379,13 @@ class TrackContainer {
   constexpr T& component(HashedString key, IndexType itrack)
     requires(!ReadOnly)
   {
-    return *std::any_cast<T*>(container().component_impl(key, itrack));
+    if constexpr (requires {
+                    container().template componentTyped_impl<T>(key, itrack);
+                  }) {
+      return container().template componentTyped_impl<T>(key, itrack);
+    } else {
+      return *std::any_cast<T*>(container().component_impl(key, itrack));
+    }
   }
 
   /// @brief Get const reference to track component using compile-time key
@@ -383,7 +395,13 @@ class TrackContainer {
   /// @return Const reference to the component of type T
   template <typename T, HashedString key>
   constexpr const T& component(IndexType itrack) const {
-    return *std::any_cast<const T*>(container().component_impl(key, itrack));
+    if constexpr (requires {
+                    container().template componentTyped_impl<T>(key, itrack);
+                  }) {
+      return container().template componentTyped_impl<T>(key, itrack);
+    } else {
+      return *std::any_cast<const T*>(container().component_impl(key, itrack));
+    }
   }
 
   /// @brief Get const reference to track component using runtime key
@@ -393,7 +411,13 @@ class TrackContainer {
   /// @return Const reference to the component of type T
   template <typename T>
   constexpr const T& component(HashedString key, IndexType itrack) const {
-    return *std::any_cast<const T*>(container().component_impl(key, itrack));
+    if constexpr (requires {
+                    container().template componentTyped_impl<T>(key, itrack);
+                  }) {
+      return container().template componentTyped_impl<T>(key, itrack);
+    } else {
+      return *std::any_cast<const T*>(container().component_impl(key, itrack));
+    }
   }
 
   /// Get mutable parameters for a track
