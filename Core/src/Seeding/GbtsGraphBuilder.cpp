@@ -187,6 +187,32 @@ bool checkZ0BitMask(const GbtsGraphBuilder::Config& cfg,
           static_cast<int>(isSet(binUp))) != 0;
 }
 
+/// A window's pairs that pass the doublet cuts: their positions in the
+/// window, the ends the cuts were made on, and the tau and curvature they gave.
+/// The scan writes every pair and keeps it by advancing its count, so the
+/// buffers hold a slot for each pair of the window.
+struct KeptContainer {
+  /// Make room for a window of @p size pairs; the buffers never shrink.
+  void ensureSize(const std::size_t size) {
+    if (phiIdx.size() >= size) {
+      return;
+    }
+    phiIdx.resize(size);
+    r1.resize(size);
+    z1.resize(size);
+    r2.resize(size);
+    tau.resize(size);
+    curv.resize(size);
+  }
+
+  std::vector<std::uint32_t> phiIdx;
+  std::vector<float> r1;
+  std::vector<float> z1;
+  std::vector<float> r2;
+  std::vector<float> tau;
+  std::vector<float> curv;
+};
+
 }  // namespace
 
 GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
@@ -245,15 +271,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
   // reused across bin groups so that the windows are allocated once
   std::vector<SlidingWindow> phiSlidingWindow;
 
-  // a window's pairs that pass the doublet cuts: their positions in the
-  // window, the ends the cuts were made on, and the tau and curvature they
-  // gave
-  std::vector<std::uint32_t> keptPhiIdx;
-  std::vector<float> keptR1;
-  std::vector<float> keptZ1;
-  std::vector<float> keptR2;
-  std::vector<float> keptTau;
-  std::vector<float> keptCurv;
+  KeptContainer kept;
 
   // per window: the connected nodes of its bin, where useZ0Histogram filters
   // them; reused across bin groups as the windows are
@@ -327,14 +345,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
         }
       }
 
-      if (keptPhiIdx.size() < B2.phiNodes.size()) {
-        keptPhiIdx.resize(B2.phiNodes.size());
-        keptR1.resize(B2.phiNodes.size());
-        keptZ1.resize(B2.phiNodes.size());
-        keptR2.resize(B2.phiNodes.size());
-        keptTau.resize(B2.phiNodes.size());
-        keptCurv.resize(B2.phiNodes.size());
-      }
+      kept.ensureSize(B2.phiNodes.size());
 
       SlidingWindow& window = phiSlidingWindow.emplace_back();
       window.phiNodes = B2.phiNodes.data();
@@ -615,19 +626,19 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
           const float curv = (phi2 - phi1) / dr;
 
           // written for every pair, kept by advancing numKept
-          keptPhiIdx[numKept] = n2PhiIdx;
-          keptR1[numKept] = r1c;
-          keptZ1[numKept] = z1c;
-          keptR2[numKept] = r2c;
-          keptTau[numKept] = tau;
-          keptCurv[numKept] = curv;
+          kept.phiIdx[numKept] = n2PhiIdx;
+          kept.r1[numKept] = r1c;
+          kept.z1[numKept] = z1c;
+          kept.r2[numKept] = r2c;
+          kept.tau[numKept] = tau;
+          kept.curv[numKept] = curv;
           numKept += static_cast<std::uint32_t>(
               passesDoubletCuts(n2pars, nodeInfo, r1c, z1c, tau, curv));
         }
 
         // the inner loop over the n2 nodes kept
         for (std::uint32_t i = 0; i < numKept; ++i) {
-          const std::uint32_t n2PhiIdx = keptPhiIdx[i];
+          const std::uint32_t n2PhiIdx = kept.phiIdx[i];
           const float phi2 = slw.phiNodes[n2PhiIdx].first;
 
           const SpacePointIndex n2Idx = slw.phiNodes[n2PhiIdx].second;
@@ -639,11 +650,11 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
           const std::uint32_t n2LastEdge = n2FirstEdge + n2NumEdges;
 
           // the ends, tau and curvature as the scan made them
-          const float r1c = keptR1[i];
-          const float z1c = keptZ1[i];
-          const float r2c = keptR2[i];
-          const float tau = keptTau[i];
-          const float curv = keptCurv[i];
+          const float r1c = kept.r1[i];
+          const float z1c = kept.z1[i];
+          const float r2c = kept.r2[i];
+          const float tau = kept.tau[i];
+          const float curv = kept.curv[i];
 
           const float z0 = z1c - r1c * tau;
 
