@@ -26,6 +26,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace ActsTests {
@@ -258,6 +260,87 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity_phi_disabled) {
                      << foundTanBeta << " " << foundInterceptY
                      << " truth: " << trueTanTheta << " " << trueInterceptY);
   BOOST_CHECK(foundExpectedMaximum);
+}
+
+BOOST_AUTO_TEST_CASE(muon_hough_seeder_keeps_eta_seed_when_phi_search_fails) {
+  using Seeder = ActsExamples::MuonHoughSeeder;
+
+  auto spacePoints = makeDriftCircleSpacePoints(true);
+  // The two Phi hits have the same z but separated x coordinates. Their
+  // Hough bands never overlap, so two input hits cannot form a Phi peak.
+  spacePoints.front().back().defineCoordinates(
+      Acts::Vector3{Acts::UnitConstants::m, 0.0, 0.0}, Acts::Vector3::UnitX(),
+      Acts::Vector3::UnitY());
+
+  Seeder::Config cfg{};
+  cfg.inSpacePoints = "MuonSpacePoints";
+  cfg.inTruthSegments = "TruthSegments";
+  cfg.outHoughMax = "ExtendedMaxima";
+  cfg.nBinsTanTheta = 1000;
+  cfg.nBinsY0 = 1000;
+  cfg.dumpVisualization = true;
+
+  std::size_t phiSearches = 0u;
+  cfg.visualizationFunction =
+      [&phiSearches](
+          const std::string&, const Seeder::MuonId& bucketId,
+          const Seeder::MaximumVec_t& maxima, const Seeder::HoughPlane_t& plane,
+          const Seeder::AxisRange_t&, const ActsExamples::MuonSegmentContainer&,
+          const Acts::Logger&) {
+        if (bucketId.measuresPhi()) {
+          ++phiSearches;
+          BOOST_CHECK_EQUAL(plane.maxHits(), 1.0f);
+          BOOST_CHECK(maxima.empty());
+        }
+      };
+
+  auto etaCfg = cfg;
+  etaCfg.extendWithPhi = false;
+  etaCfg.outHoughMax = "EtaMaxima";
+  Seeder etaSeeder{
+      etaCfg, Acts::getDefaultLogger("EtaSeederTest", Acts::Logging::INFO)};
+  Seeder extendedSeeder{
+      cfg, Acts::getDefaultLogger("ExtendedSeederTest", Acts::Logging::INFO)};
+
+  ActsExamples::WhiteBoard eventStore{};
+  ActsExamples::AlgorithmContext ctx{0u, 0u, eventStore, 0u};
+  ActsExamples::WriteDataHandle<ActsExamples::MuonSpacePointContainer>
+      inputHandle{&etaSeeder, "TestInputSpacePoints"};
+  inputHandle.initialize(cfg.inSpacePoints);
+  inputHandle(ctx, std::move(spacePoints));
+  ActsExamples::WriteDataHandle<ActsExamples::MuonSegmentContainer> truthHandle{
+      &etaSeeder, "TestInputTruthSegments"};
+  truthHandle.initialize(cfg.inTruthSegments);
+  truthHandle(ctx, ActsExamples::MuonSegmentContainer{});
+
+  BOOST_REQUIRE(etaSeeder.execute(ctx) == ActsExamples::ProcessCode::SUCCESS);
+  ActsExamples::ReadDataHandle<ActsExamples::MuonHoughMaxContainer> etaHandle{
+      &etaSeeder, "TestEtaMaxima"};
+  etaHandle.initialize(etaCfg.outHoughMax);
+  const auto& etaMaxima = etaHandle(ctx);
+  BOOST_REQUIRE(!etaMaxima.empty());
+
+  BOOST_REQUIRE(extendedSeeder.execute(ctx) ==
+                ActsExamples::ProcessCode::SUCCESS);
+  ActsExamples::ReadDataHandle<ActsExamples::MuonHoughMaxContainer>
+      extendedHandle{&extendedSeeder, "TestExtendedMaxima"};
+  extendedHandle.initialize(cfg.outHoughMax);
+  const auto& extendedMaxima = extendedHandle(ctx);
+
+  BOOST_REQUIRE_EQUAL(phiSearches, etaMaxima.size());
+  BOOST_REQUIRE_EQUAL(extendedMaxima.size(), etaMaxima.size());
+  for (std::size_t i = 0u; i < etaMaxima.size(); ++i) {
+    const auto& eta = etaMaxima[i];
+    const auto& extended = extendedMaxima[i];
+    BOOST_CHECK_EQUAL(extended.tanBeta(), eta.tanBeta());
+    BOOST_CHECK_EQUAL(extended.interceptY(), eta.interceptY());
+    BOOST_CHECK_EQUAL(extended.tanAlpha(), 0.0);
+    BOOST_CHECK_EQUAL(extended.interceptX(), 0.0);
+    for (const auto* hit : eta.hits()) {
+      BOOST_CHECK(std::find(extended.hits().begin(), extended.hits().end(),
+                            hit) != extended.hits().end());
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

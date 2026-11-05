@@ -34,8 +34,8 @@ template <typename T, typename... Ts>
 struct tuple<T, Ts...> {
   // Deliberately not value-initializing: that would require every element to
   // be default constructible, which is not a requirement of this tuple type.
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
   /// Default construct the recursive tuple node when all elements allow it.
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
   constexpr tuple() = default;
 
   /// Copy construct this tuple when every element is copy constructible.
