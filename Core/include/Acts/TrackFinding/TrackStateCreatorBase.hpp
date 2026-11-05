@@ -48,12 +48,14 @@ template <typename T>
 using MeasurementCovarianceType =
     std::decay_t<decltype(std::declval<const T&>().covariance())>;
 
-/// Requirements on a calibrated measurement expressed in a subspace of a
+/// Requirements on a calibrated measurement in a subspace of the bound
 /// parameter space.
 ///
-/// This is the contract between a track finder and whatever the client uses to
-/// represent a calibrated measurement. It is deliberately minimal so that
-/// existing measurement proxies satisfy it without a copy.
+/// The track state creator uses such a value as is: it computes the chi2 from
+/// it and writes it to the calibrated slot of the track state. The concept only
+/// checks the shape, so it cannot tell a calibrated measurement from an
+/// uncalibrated one. Calibration is the responsibility of `calibrate` in the
+/// derived creator.
 ///
 /// The dimension may be known at compile time or only at runtime, see
 /// @c StaticCalibratedMeasurementConcept.
@@ -63,8 +65,8 @@ template <typename T>
 concept CalibratedMeasurementConcept = requires(const T& measurement) {
   /// The measurement dimension
   { measurement.size() } -> std::integral;
-  /// The parameters of the parameter space the measurement constrains,
-  /// exactly `size()` of them
+  /// The bound parameters the measurement constrains, exactly `size()` of
+  /// them
   { measurement.subspaceIndices() } -> std::ranges::sized_range;
   /// The measured values
   { measurement.parameters() };

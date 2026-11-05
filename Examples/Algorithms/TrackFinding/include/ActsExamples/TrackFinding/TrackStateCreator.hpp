@@ -25,8 +25,8 @@
 
 namespace ActsExamples {
 
-// The creators below hand the measurement proxies to track finding as
-// calibrated measurements, so they have to satisfy the contract it expects.
+// The Examples apply no calibration, so the creators below use the measurement
+// proxies from the container as the calibrated measurements.
 static_assert(Acts::detail::CalibratedMeasurementConcept<
               ConstVariableBoundMeasurementProxy>);
 static_assert(Acts::detail::StaticCalibratedMeasurementConcept<
