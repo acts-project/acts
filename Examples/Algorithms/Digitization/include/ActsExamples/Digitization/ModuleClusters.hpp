@@ -11,6 +11,7 @@
 #include "Acts/Clusterization/Clusterization.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/IMultiAxis.hpp"
+#include "ActsExamples/Digitization/ChargeQuantizationConfig.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -63,14 +64,19 @@ class ModuleClusters {
   /// @param nsigma compatibility window (in sigma) for merging non-geometric
   ///        parameters
   /// @param commonCorner whether cells touching only at a corner are connected
+  /// @param chargeQuantization readout after same-channel summation (default off)
+  /// @pre Readout settings are validated; enabled quantization requires merging.
+  /// DigitizationAlgorithm enforces these requirements before construction.
   ModuleClusters(std::shared_ptr<const Acts::IMultiAxis> segmentation,
                  std::vector<Acts::BoundIndices> geoIndices, bool merge,
-                 double nsigma, bool commonCorner)
+                 double nsigma, bool commonCorner,
+                 ChargeQuantizationConfig chargeQuantization = {})
       : m_segmentation(std::move(segmentation)),
         m_geoIndices(std::move(geoIndices)),
         m_merge(merge),
         m_nsigma(nsigma),
-        m_commonCorner(commonCorner) {}
+        m_commonCorner(commonCorner),
+        m_chargeQuantization(chargeQuantization) {}
 
   /// Add a digitized measurement to the module.
   ///
@@ -103,6 +109,9 @@ class ModuleClusters {
   double m_nsigma;
   /// Whether cells touching only at a corner are considered connected.
   bool m_commonCorner;
+
+  /// Native activations stay intact until squash(); readout defaults to off.
+  ChargeQuantizationConfig m_chargeQuantization;
 
   /// Collect the unique cells, summing the activation of duplicates.
   ///

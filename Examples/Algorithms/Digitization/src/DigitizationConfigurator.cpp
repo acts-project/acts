@@ -66,7 +66,8 @@ bool digiConfigMaybeEqual(DigiComponentsConfig &a, DigiComponentsConfig &b) {
   return (ag.indices == bg.indices &&
           segmentationMaybeEqual(ag.segmentation, bg.segmentation) &&
           ag.thickness == bg.thickness && ag.threshold == bg.threshold &&
-          ag.digital == bg.digital);
+          ag.digital == bg.digital &&
+          ag.chargeQuantization == bg.chargeQuantization);
 }
 
 }  // namespace
@@ -96,6 +97,8 @@ void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
         dInputConfig->geometricDigiConfig.chargeSmearer;
     dOutputConfig.geometricDigiConfig.digital =
         dInputConfig->geometricDigiConfig.digital;
+    dOutputConfig.geometricDigiConfig.chargeQuantization =
+        dInputConfig->geometricDigiConfig.chargeQuantization;
 
     const Acts::SurfaceBounds &sBounds = surface->bounds();
     const std::vector<double> boundValues = sBounds.values();

@@ -202,6 +202,64 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(ChargeQuantizationConfigRoundTrip) {
+  GeometricConfig native;
+  native.indices = {eBoundLoc0, eBoundLoc1};
+  native.segmentation = IMultiAxis::create(
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -1., 1., 20,
+                                AxisDirection::AxisX),
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -1., 1., 20,
+                                AxisDirection::AxisY));
+  nlohmann::json legacy(native);
+  BOOST_CHECK(!legacy["charge-quantization"]["enabled"].get<bool>());
+  legacy.erase("charge-quantization");
+  BOOST_CHECK(!legacy.get<GeometricConfig>().chargeQuantization.enabled);
+
+  for (bool enabled : {false, true}) {
+    native.chargeQuantization =
+        ChargeQuantizationConfig{enabled, 8, 0.01, 0.0006121157693937201};
+    const nlohmann::json encoded(native);
+    const auto restored = encoded.get<GeometricConfig>();
+    const auto &q = restored.chargeQuantization;
+    BOOST_CHECK_EQUAL(q.enabled, enabled);
+    BOOST_CHECK_EQUAL(q.bits, 8);
+    BOOST_CHECK_EQUAL(q.offset, native.chargeQuantization.offset);
+    BOOST_CHECK_EQUAL(q.step, native.chargeQuantization.step);
+    BOOST_CHECK(nlohmann::json(restored) == encoded);
+  }
+  // Re-reading a legacy entry must clear any earlier response settings.
+  from_json(legacy, native);
+  BOOST_CHECK(native.chargeQuantization == ChargeQuantizationConfig{});
+
+  auto encoded = legacy;
+  encoded["charge-quantization"] = {
+      {"enabled", true}, {"bits", 4}, {"offset", 0.01}, {"step", 0.01}};
+  auto implicitEnabled = encoded;
+  implicitEnabled["charge-quantization"].erase("enabled");
+  BOOST_CHECK(
+      implicitEnabled.get<GeometricConfig>().chargeQuantization.enabled);
+  auto broken = encoded;
+  broken["charge-quantization"]["bits"] = 4.5;
+  BOOST_CHECK_THROW(broken.get<GeometricConfig>(), std::invalid_argument);
+  // Parameter validity is checked at algorithm initialization, not during I/O.
+  for (unsigned int bits : {0u, 17u}) {
+    auto unchecked = encoded;
+    unchecked["charge-quantization"]["bits"] = bits;
+    const auto restored = unchecked.get<GeometricConfig>();
+    BOOST_CHECK_EQUAL(restored.chargeQuantization.bits, bits);
+    BOOST_CHECK(nlohmann::json(restored) == unchecked);
+  }
+  encoded["charge-quantization"]["step"] = 0.;
+  const auto unchecked = encoded.get<GeometricConfig>();
+  BOOST_CHECK_EQUAL(unchecked.chargeQuantization.step, 0.);
+  BOOST_CHECK(nlohmann::json(unchecked) == encoded);
+  encoded["charge-quantization"]["step"] = 0.01;
+  encoded["digital"] = true;
+  BOOST_CHECK_NO_THROW(encoded.get<GeometricConfig>());
+  encoded["charge-quantization"]["enabled"] = false;
+  BOOST_CHECK_NO_THROW(encoded.get<GeometricConfig>());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

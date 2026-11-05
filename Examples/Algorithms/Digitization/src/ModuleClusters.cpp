@@ -249,7 +249,8 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) const {
   // First, start by computing cell weights
   for (const ModuleValue& other : values) {
     if (std::holds_alternative<Cluster::Cell>(other.value)) {
-      weights.push_back(std::get<Cluster::Cell>(other.value).activation);
+      const double activation = std::get<Cluster::Cell>(other.value).activation;
+      weights.push_back(m_chargeQuantization.quantize(activation));
     } else {
       weights.push_back(1);
     }
@@ -278,6 +279,7 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) const {
     }
 
     Cluster::Cell ch = std::get<Cluster::Cell>(other.value);
+    ch.activation = weights.at(i);
     const auto bin = ch.bin;
 
     const std::size_t b0 = bin[0];
