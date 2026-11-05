@@ -400,7 +400,7 @@ if args.reco:
                     ),
                     graphConfig=acts.examples.GbtsGraphBuilderConfig(
                         minPt=0.9 * u.GeV,
-                        z0HistogramMaxBarrelOrder=-1,
+                        z0HistogramMaxDepth=-1,
                     ),
                     useAdaptiveCuts=False,
                 ),

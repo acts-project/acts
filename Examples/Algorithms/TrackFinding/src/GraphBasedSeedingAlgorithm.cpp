@@ -34,6 +34,57 @@
 
 namespace ActsExamples {
 
+namespace {
+
+/// Fill the tau ratio tolerances of the layer pairs. A pair is widened by
+/// `tauRatioCorr` if it skips a layer of depth, or, as an outer pair, if it
+/// leaves those layers. A pair with a strip layer is widened by
+/// `tauRatioCorrStrip` on top.
+void assignTauRatioCuts(
+    std::vector<Acts::Experimental::GbtsLayerConnection> &connections,
+    const std::vector<Acts::Experimental::GbtsLayerDescription> &layers,
+    const GraphBasedSeedingAlgorithm::TauRatioCuts &cuts) {
+  std::map<Acts::Experimental::GbtsExperimentLayerId,
+           const Acts::Experimental::GbtsLayerDescription *>
+      byId;
+  for (const auto &layer : layers) {
+    byId.emplace(layer.id, &layer);
+  }
+  const auto find = [&](Acts::Experimental::GbtsExperimentLayerId id) {
+    const auto it = byId.find(id);
+    if (it == byId.end()) {
+      throw std::invalid_argument(
+          "GraphBasedSeedingAlgorithm: connection to an unknown layer");
+    }
+    return it->second;
+  };
+
+  for (auto &connection : connections) {
+    const auto *outer = find(connection.src);
+    const auto *inner = find(connection.dst);
+
+    const bool outerHasDepth = outer->depth >= 0;
+    const bool innerHasDepth = inner->depth >= 0;
+    const bool skipsLayer =
+        outerHasDepth && innerHasDepth && outer->depth - inner->depth != 1;
+    const bool leavesDepth = innerHasDepth && !outerHasDepth;
+    const float strip =
+        (outer->technology == Acts::Experimental::GbtsLayerTechnology::Strip ||
+         inner->technology == Acts::Experimental::GbtsLayerTechnology::Strip)
+            ? cuts.tauRatioCorrStrip
+            : 0.f;
+
+    // leaving widens only the triplet that leaves after its middle
+    connection.tauRatioCutInner =
+        cuts.tauRatioCut + (skipsLayer ? cuts.tauRatioCorr : 0.f) + strip;
+    connection.tauRatioCutOuter =
+        cuts.tauRatioCut +
+        (skipsLayer || leavesDepth ? cuts.tauRatioCorr : 0.f) + strip;
+  }
+}
+
+}  // namespace
+
 GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
     const Config &cfg, std::unique_ptr<const Acts::Logger> logger)
     : IAlgorithm("GraphBasedSeedingAlgorithm", std::move(logger)), m_cfg(cfg) {
@@ -89,13 +140,11 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
-  Acts::Experimental::GbtsAdaptiveTauRatioCuts tauRatioCuts =
-      m_cfg.tauRatioCuts;
+  TauRatioCuts tauRatioCuts = m_cfg.tauRatioCuts;
   if (!m_cfg.useAdaptiveCuts) {
     tauRatioCuts.tauRatioCorr = 0.f;
   }
-  Acts::Experimental::assignAdaptiveTauRatioCuts(connections, layerGeometry,
-                                                 tauRatioCuts);
+  assignTauRatioCuts(connections, layerGeometry, tauRatioCuts);
 
   // initialise the object that holds all the geometry information needed for
   // the algorithm
@@ -217,7 +266,8 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
     for (const Acts::GeometryIdentifier &surface : layer.surfaces) {
       const GbtsLayerInfo layerInfo{.layerId = layer.id,
                                     .type = layer.type,
-                                    .technology = layer.technology};
+                                    .technology = layer.technology,
+                                    .depth = layer.depth};
       actsToGbtsMap.emplace_back(surface, layerInfo);
     }
   }
@@ -343,7 +393,8 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
                                                  .refCoord = rc,
                                                  .minBound = minBound,
                                                  .maxBound = maxBound,
-                                                 .slope = slope});
+                                                 .slope = slope,
+                                                 .depth = find->depth});
     // so the element exists and not divinding by 0
     countVector.push_back(1);
   }
