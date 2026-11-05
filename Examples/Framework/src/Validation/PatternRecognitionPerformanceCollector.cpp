@@ -17,12 +17,12 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <format>
 #include <limits>
 #include <numbers>
 #include <optional>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -37,10 +37,8 @@ std::vector<double> nearestParticleDistances(
   if (particles.size() < 2) {
     return distances;
   }
-  if (!std::isfinite(maxDeltaR) || maxDeltaR <= 0.) {
-    throw std::invalid_argument(
-        "DeltaR histogram upper edge must be finite and positive");
-  }
+  assert((std::isfinite(maxDeltaR) && maxDeltaR > 0.) &&
+         "DeltaR histogram upper edge must be finite and positive");
   // Distances at or above the histogram upper edge share its overflow bin.
   std::ranges::fill(distances, maxDeltaR);
 
@@ -68,10 +66,8 @@ std::vector<double> nearestParticleDistances(
   etaMin -= maxDeltaR;
   etaMax += maxDeltaR;
 
-  if (!std::isfinite(etaMax - etaMin) || !(etaMin < etaMax)) {
-    throw std::invalid_argument(
-        "DeltaR histogram range cannot define an eta grid");
-  }
+  assert((std::isfinite(etaMax - etaMin) && etaMin < etaMax) &&
+         "DeltaR histogram range cannot define an eta grid");
 
   using EtaAxis =
       Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>;
