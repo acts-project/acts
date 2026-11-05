@@ -57,12 +57,24 @@ namespace {
 /// Convert the chi2 cut @p cut1D for one-dimensional measurements to the cut
 /// with the same p-value for each measurement dimension. Without
 /// @p perDimension every dimension uses @p cut1D.
+/// @throws std::invalid_argument if @p perDimension is set and @p cut1D is
+///         NaN or negative, because such a cut has no p-value
 std::array<double, kMeasurementSizeMax + 1> convertChi2Cut(double cut1D,
                                                            bool perDimension) {
   std::array<double, kMeasurementSizeMax + 1> result{};
   result.fill(cut1D);
-  if (!perDimension || !std::isfinite(cut1D) ||
-      cut1D == std::numeric_limits<double>::max() || cut1D <= 0) {
+  if (!perDimension) {
+    return result;
+  }
+  if (std::isnan(cut1D) || cut1D < 0) {
+    throw std::invalid_argument(
+        "MeasurementSelector: The chi2 cut must not be NaN or negative if "
+        "chi2CutPerDimension is set");
+  }
+  // An infinite cut or the maximum value means no cut, and a zero cut rejects
+  // every dimension
+  if (std::isinf(cut1D) || cut1D == std::numeric_limits<double>::max() ||
+      cut1D == 0) {
     return result;
   }
 
