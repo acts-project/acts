@@ -13,15 +13,19 @@
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/TrackFinding/Chi2Cuts.hpp"
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <numbers>
 #include <span>
 #include <stdexcept>
 
 namespace Acts {
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 MeasurementSelector::MeasurementSelector()
     : MeasurementSelector({{GeometryIdentifier(), MeasurementSelectorCuts{}}}) {
@@ -48,6 +52,19 @@ MeasurementSelector::MeasurementSelector(const Config& config) {
   m_config = InternalConfig(std::move(tmp));
 }
 
+namespace {
+
+Chi2CutPerDimension convertChi2Cut(double cut, bool perDimension) {
+  if (perDimension) {
+    return chi2CutsWithSameProbability(cut);
+  }
+  Chi2CutPerDimension result{};
+  result.fill(cut);
+  return result;
+}
+
+}  // namespace
+
 MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
     const MeasurementSelectorCuts& config) {
   InternalCutBins cutBins;
@@ -71,8 +88,11 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
     cuts.maxTheta = getEtaOrInf(config.etaBins, bin);
     cuts.maxNumMeasurements =
         getBinOrBackOrMax(config.numMeasurementsCutOff, bin);
-    cuts.maxChi2Measurement = getBinOrBackOrMax(config.chi2CutOff, bin);
-    cuts.maxChi2Outlier = getBinOrBackOrMax(config.chi2CutOffOutlier, bin);
+    cuts.maxChi2Measurement = convertChi2Cut(
+        getBinOrBackOrMax(config.chi2CutOff, bin), config.chi2CutPerDimension);
+    cuts.maxChi2Outlier =
+        convertChi2Cut(getBinOrBackOrMax(config.chi2CutOffOutlier, bin),
+                       config.chi2CutPerDimension);
     cutBins.push_back(cuts);
   }
 
@@ -144,5 +164,7 @@ Result<MeasurementSelector::Cuts> MeasurementSelector::getCuts(
   }
   return getCutsByTheta(*cuts, theta);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts

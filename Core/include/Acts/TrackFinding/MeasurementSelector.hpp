@@ -14,7 +14,9 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/TrackFinding/Chi2Cuts.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -26,12 +28,20 @@
 
 namespace Acts {
 
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 /// Selection cuts for associating measurements with predicted track
 /// parameters on a surface.
 ///
 /// The default configuration only takes the best matching measurement without a
 /// cut on the local chi2.
-struct MeasurementSelectorCuts {
+///
+/// @deprecated Goes away together with @ref MeasurementSelector. A creator
+///   derived from @ref TrackStateCreatorBase carries whatever cuts its
+///   selection needs.
+struct [[deprecated(
+    "Carry the cuts in a class derived from Acts::TrackStateCreatorBase "
+    "instead")]] MeasurementSelectorCuts {
   /// bins in |eta| to specify variable selections
   std::vector<double> etaBins{};
   /// Maximum local chi2 contribution to classify as measurement.
@@ -40,6 +50,11 @@ struct MeasurementSelectorCuts {
   std::vector<std::size_t> numMeasurementsCutOff{1};
   /// Maximum local chi2 contribution to classify as outlier.
   std::vector<double> chi2CutOffOutlier{};
+  /// If true, the chi2 cuts are the cuts for one-dimensional measurements. A
+  /// measurement of dimension D uses the chi2 value with the same p-value for D
+  /// degrees of freedom, so that every dimension has the same rejection
+  /// probability.
+  bool chi2CutPerDimension = false;
 };
 
 /// @brief Measurement selection struct selecting those measurements compatible
@@ -51,7 +66,13 @@ struct MeasurementSelectorCuts {
 /// If there is no compatible measurement, the measurement with the minimum
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
-class MeasurementSelector {
+/// @deprecated Implement the selection in a @ref TrackStateCreatorBase
+///   instead. Selecting on track states forces every measurement on a surface
+///   through the track EDM, and the geometry and eta binned cut lookup here is
+///   not used by anything ACTS ships.
+class [[deprecated(
+    "Implement the selection in a class derived from "
+    "Acts::TrackStateCreatorBase instead")]] MeasurementSelector {
  public:
   /// Geometry-dependent cut configuration.
   ///
@@ -96,16 +117,16 @@ class MeasurementSelector {
   struct InternalCutBin {
     double maxTheta{};
     std::size_t maxNumMeasurements{};
-    double maxChi2Measurement{};
-    double maxChi2Outlier{};
+    Chi2CutPerDimension maxChi2Measurement{};
+    Chi2CutPerDimension maxChi2Outlier{};
   };
   using InternalCutBins = std::vector<InternalCutBin>;
   using InternalConfig = Acts::GeometryHierarchyMap<InternalCutBins>;
 
   struct Cuts {
     std::size_t numMeasurements{};
-    double chi2Measurement{};
-    double chi2Outlier{};
+    Chi2CutPerDimension chi2Measurement{};
+    Chi2CutPerDimension chi2Outlier{};
   };
 
   static InternalCutBins convertCutBins(const MeasurementSelectorCuts& config);
@@ -122,6 +143,8 @@ class MeasurementSelector {
 
   InternalConfig m_config;
 };
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts
 

@@ -5,3 +5,9 @@ target_link_libraries(
     ActsUnitTestMuonHoughSeeder
     PRIVATE ActsExamplesTrackFinding ActsExamplesFramework
 )
+
+add_unittest(ExamplesTrackStateCreator TrackStateCreatorTests.cpp)
+target_link_libraries(
+    ActsUnitTestExamplesTrackStateCreator
+    PRIVATE ActsExamplesTrackFinding ActsExamplesFramework
+)

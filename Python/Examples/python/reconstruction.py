@@ -191,6 +191,7 @@ CkfConfig = namedtuple(
         "constrainToVolumes",
         "endOfWorldVolumes",
         "seedDeduplicatorConfig",
+        "chi2CutPerDimension",
     ],
     defaults=[
         15.0,
@@ -209,6 +210,7 @@ CkfConfig = namedtuple(
         None,
         None,
         None,
+        False,
     ],
 )
 
@@ -2003,18 +2005,11 @@ def addCKFTracks(
     # truth particle smearing and source link selection config
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=customLogLevel(),
-        measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [
-                (
-                    acts.GeometryIdentifier(),
-                    (
-                        [],
-                        [ckfConfig.chi2CutOffMeasurement],
-                        [ckfConfig.chi2CutOffOutlier],
-                        [ckfConfig.numMeasurementsCutOff],
-                    ),
-                )
-            ]
+        trackStateSelection=acts.examples.TrackStateSelectionCuts(
+            chi2CutOffMeasurement=ckfConfig.chi2CutOffMeasurement,
+            chi2CutOffOutlier=ckfConfig.chi2CutOffOutlier,
+            maxBranchesPerSurface=ckfConfig.numMeasurementsCutOff,
+            chi2CutPerDimension=ckfConfig.chi2CutPerDimension,
         ),
         inputMeasurements=f"{prefix}measurement_subset",
         inputInitialTrackParameters=(
