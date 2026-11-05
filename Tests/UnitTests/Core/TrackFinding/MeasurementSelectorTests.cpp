@@ -27,6 +27,7 @@
 #include <limits>
 #include <memory>
 #include <numbers>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts::Test {
@@ -169,6 +170,59 @@ BOOST_AUTO_TEST_CASE(Chi2CutPerDimension) {
   BOOST_CHECK(selectSingle<3>(selector, outlier3D - 0.1) == Selection::Outlier);
   BOOST_CHECK(selectSingle<3>(selector, outlier3D + 0.1) ==
               Selection::Rejected);
+}
+
+/// If the chi2 cut depends on the dimension, the candidate with the lowest chi2
+/// can fail its cut while a candidate with a higher chi2 passes. The selector
+/// must return the candidate that passes.
+BOOST_AUTO_TEST_CASE(Chi2CutPerDimensionMixedDimensions) {
+  auto logger = getDefaultLogger("MeasurementSelector", Logging::INFO);
+  auto surface = makeSurface();
+
+  MeasurementSelectorCuts cuts;
+  cuts.chi2CutOff = {15};
+  cuts.chi2CutOffOutlier = {25};
+  cuts.chi2CutPerDimension = true;
+  MeasurementSelector selector{cuts};
+
+  // The 1D candidate fails the 1D cut of 15. The 3D candidate has a higher
+  // chi2 but passes the 3D cut of 20.96. Check both orders of the candidates.
+  for (bool oneDimFirst : {true, false}) {
+    BOOST_TEST_CONTEXT("oneDimFirst=" << oneDimFirst) {
+      VectorMultiTrajectory traj;
+      auto ts1D = addCandidateWithChi2<1>(traj, surface, 16);
+      auto ts3D = addCandidateWithChi2<3>(traj, surface, 19);
+      std::vector<VectorMultiTrajectory::TrackStateProxy> candidates;
+      if (oneDimFirst) {
+        candidates = {ts1D, ts3D};
+      } else {
+        candidates = {ts3D, ts1D};
+      }
+
+      bool isOutlier = false;
+      auto result = selector.select<VectorMultiTrajectory>(candidates,
+                                                           isOutlier, *logger);
+      BOOST_REQUIRE(result.ok());
+      auto [begin, end] = *result;
+      BOOST_REQUIRE_EQUAL(end - begin, 1);
+      BOOST_CHECK(!isOutlier);
+      BOOST_CHECK_EQUAL(begin->calibratedSize(), 3u);
+    }
+  }
+}
+
+/// A NaN or negative chi2 cut has no p-value, so the per dimension conversion
+/// rejects it.
+BOOST_AUTO_TEST_CASE(Chi2CutPerDimensionInvalidCut) {
+  for (double cut : {std::numeric_limits<double>::quiet_NaN(), -1.}) {
+    MeasurementSelectorCuts cuts;
+    cuts.chi2CutOff = {cut};
+    cuts.chi2CutPerDimension = true;
+    BOOST_CHECK_THROW(MeasurementSelector{cuts}, std::invalid_argument);
+
+    cuts.chi2CutPerDimension = false;
+    BOOST_CHECK_NO_THROW(MeasurementSelector{cuts});
+  }
 }
 
 /// Every comparison against NaN is false, so a candidate with a non-finite
