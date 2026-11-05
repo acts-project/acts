@@ -15,6 +15,7 @@
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <detray/builders/detector_builder.hpp>
@@ -144,8 +145,24 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
       DetrayGeometryConverter::DetrayGeometry<DetrayMetaDataODD>;
   py::class_<DetraySurfaceIdMap, std::shared_ptr<DetraySurfaceIdMap>>(
       detray, "DetraySurfaceIdMap")
-      .def("toDetray", &DetraySurfaceIdMap::toDetray, "id"_a)
-      .def("fromDetray", &DetraySurfaceIdMap::fromDetray, "detrayId"_a)
+      // detray identifiers are exposed as their integer value
+      .def(
+          "toDetray",
+          [](const DetraySurfaceIdMap& self, Acts::GeometryIdentifier id)
+              -> std::optional<detray::geometry::identifier::value_t> {
+            if (auto detrayId = self.toDetray(id)) {
+              return detrayId->value();
+            }
+            return std::nullopt;
+          },
+          "id"_a)
+      .def(
+          "fromDetray",
+          [](const DetraySurfaceIdMap& self,
+             detray::geometry::identifier::value_t detrayId) {
+            return self.fromDetray(detray::geometry::identifier{detrayId});
+          },
+          "detrayId"_a)
       .def("__len__", &DetraySurfaceIdMap::size);
 
   py::class_<DetrayGeometryODD>(geometryConverter, "DetrayGeometry")

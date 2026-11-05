@@ -76,7 +76,9 @@ class DetrayGeometryConverter {
     /// The detray volume and surface name map
     detray::name_map names;
 
-    /// The map between ACTS and detray identifiers of the sensitive surfaces
+    /// The map between ACTS and detray identifiers of the sensitive surfaces.
+    /// It points to the surfaces of the converted tracking geometry, which
+    /// has to outlive it.
     DetraySurfaceIdMap surfaceIds;
   };
 
@@ -199,7 +201,7 @@ class DetrayGeometryConverter {
         detectorBuilder.build(mr, build_opts, result.names));
 
     // detray assigns the surface identifiers during the build
-    result.surfaceIds = DetraySurfaceIdMap(*result.detector);
+    result.surfaceIds = DetraySurfaceIdMap(*result.detector, *trackingGeometry);
     ACTS_DEBUG("Mapped " << result.surfaceIds.size()
                          << " sensitive surfaces between ACTS and detray");
 
