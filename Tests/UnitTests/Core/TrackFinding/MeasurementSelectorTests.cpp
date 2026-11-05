@@ -27,7 +27,6 @@
 #include <limits>
 #include <memory>
 #include <numbers>
-#include <utility>
 #include <vector>
 
 namespace Acts::Test {
@@ -102,11 +101,12 @@ VectorMultiTrajectory::TrackStateProxy addCandidateWithChi2(
   return ts;
 }
 
-/// Run the selector on a single candidate and return the number of selected
-/// candidates and whether it is an outlier.
+/// Outcome of the selection of a single candidate
+enum class Selection { Measurement, Outlier, Rejected };
+
+/// Run the selector on a single candidate and return the outcome.
 template <std::size_t dim>
-std::pair<std::ptrdiff_t, bool> selectSingle(
-    const MeasurementSelector& selector, double chi2) {
+Selection selectSingle(const MeasurementSelector& selector, double chi2) {
   auto logger = getDefaultLogger("MeasurementSelector", Logging::INFO);
   auto surface = makeSurface();
 
@@ -119,7 +119,12 @@ std::pair<std::ptrdiff_t, bool> selectSingle(
       selector.select<VectorMultiTrajectory>(candidates, isOutlier, *logger);
   BOOST_REQUIRE(result.ok());
   auto [begin, end] = *result;
-  return {end - begin, isOutlier};
+  BOOST_REQUIRE_LE(end - begin, 1);
+  if (begin == end) {
+    BOOST_CHECK(!isOutlier);
+    return Selection::Rejected;
+  }
+  return isOutlier ? Selection::Outlier : Selection::Measurement;
 }
 
 }  // namespace
@@ -131,12 +136,11 @@ BOOST_AUTO_TEST_CASE(Chi2CutSameForAllDimensions) {
   cuts.chi2CutOffOutlier = {25};
   MeasurementSelector selector{cuts};
 
-  BOOST_CHECK_EQUAL(selectSingle<1>(selector, 14.9).first, 1);
-  BOOST_CHECK(!selectSingle<1>(selector, 14.9).second);
-  BOOST_CHECK(selectSingle<1>(selector, 15.1).second);
-  BOOST_CHECK(selectSingle<2>(selector, 15.1).second);
-  BOOST_CHECK(selectSingle<3>(selector, 15.1).second);
-  BOOST_CHECK_EQUAL(selectSingle<3>(selector, 25.1).first, 0);
+  BOOST_CHECK(selectSingle<1>(selector, 14.9) == Selection::Measurement);
+  BOOST_CHECK(selectSingle<1>(selector, 15.1) == Selection::Outlier);
+  BOOST_CHECK(selectSingle<2>(selector, 15.1) == Selection::Outlier);
+  BOOST_CHECK(selectSingle<3>(selector, 15.1) == Selection::Outlier);
+  BOOST_CHECK(selectSingle<3>(selector, 25.1) == Selection::Rejected);
 }
 
 /// With the per dimension flag the cuts are the 1D cuts for 1D measurements and
@@ -153,16 +157,18 @@ BOOST_AUTO_TEST_CASE(Chi2CutPerDimension) {
   constexpr double cut3D = 20.96;
   constexpr double outlier3D = 31.81;
 
-  BOOST_CHECK(!selectSingle<1>(selector, 14.9).second);
-  BOOST_CHECK(selectSingle<1>(selector, 15.1).second);
+  BOOST_CHECK(selectSingle<1>(selector, 14.9) == Selection::Measurement);
+  BOOST_CHECK(selectSingle<1>(selector, 15.1) == Selection::Outlier);
+  BOOST_CHECK(selectSingle<1>(selector, 25.1) == Selection::Rejected);
 
-  BOOST_CHECK(!selectSingle<2>(selector, cut2D - 0.1).second);
-  BOOST_CHECK(selectSingle<2>(selector, cut2D + 0.1).second);
+  BOOST_CHECK(selectSingle<2>(selector, cut2D - 0.1) == Selection::Measurement);
+  BOOST_CHECK(selectSingle<2>(selector, cut2D + 0.1) == Selection::Outlier);
 
-  BOOST_CHECK(!selectSingle<3>(selector, cut3D - 0.1).second);
-  BOOST_CHECK(selectSingle<3>(selector, cut3D + 0.1).second);
-  BOOST_CHECK_EQUAL(selectSingle<3>(selector, outlier3D - 0.1).first, 1);
-  BOOST_CHECK_EQUAL(selectSingle<3>(selector, outlier3D + 0.1).first, 0);
+  BOOST_CHECK(selectSingle<3>(selector, cut3D - 0.1) == Selection::Measurement);
+  BOOST_CHECK(selectSingle<3>(selector, cut3D + 0.1) == Selection::Outlier);
+  BOOST_CHECK(selectSingle<3>(selector, outlier3D - 0.1) == Selection::Outlier);
+  BOOST_CHECK(selectSingle<3>(selector, outlier3D + 0.1) ==
+              Selection::Rejected);
 }
 
 /// Every comparison against NaN is false, so a candidate with a non-finite
