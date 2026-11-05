@@ -31,13 +31,14 @@ struct GbtsGraph {
   /// Number of links between edges.
   std::uint32_t nConnections = 0;
 
-  /// Edges held in one word of `linked`.
-  static constexpr std::uint32_t kEdgesPerWord = 64;
+  /// A word of `linked`, one bit per edge.
+  using LinkedWord = std::uint64_t;
 
-  /// One bit per edge, set once the edge holds a neighbour: edge `e` is bit
-  /// `e % kEdgesPerWord` of word `e / kEdgesPerWord`. The seed extraction
-  /// reads these edges alone, the others ending every chain they are in.
-  std::vector<std::uint64_t> linked;
+  /// One bit per edge, set once the edge holds a neighbour: with N the bits of
+  /// a `LinkedWord`, edge `e` is bit `e % N` of word `e / N`. The seed
+  /// extraction reads these edges alone, the others ending every chain they
+  /// are in.
+  std::vector<LinkedWord> linked;
 };
 
 /// Builds the doublet graph of the GBTS workflow.

@@ -347,13 +347,15 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   // it is in, so it settles nothing below and heads no path of more than one
   // edge, which makes no seed. Read a word of `graph.linked` at a time, so a
   // word of edges with no neighbour is skipped at once.
+  constexpr std::uint32_t kEdgesPerWord =
+      std::numeric_limits<GbtsGraph::LinkedWord>::digits;
   std::vector<std::uint32_t> linkedEdges;
   for (std::uint32_t word = 0; word < graph.linked.size(); ++word) {
-    std::uint64_t bits = graph.linked[word];
+    GbtsGraph::LinkedWord bits = graph.linked[word];
     while (bits != 0) {
       // the lowest bit still set is the next linked edge
       const auto bit = static_cast<std::uint32_t>(std::countr_zero(bits));
-      linkedEdges.push_back(word * GbtsGraph::kEdgesPerWord + bit);
+      linkedEdges.push_back(word * kEdgesPerWord + bit);
       // clear it
       bits &= bits - 1;
     }
