@@ -72,6 +72,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(traccc-functions)
 
+# Honour ACTS_FORCE_ASSERTIONS in standalone builds inside the ACTS tree. When
+# traccc is built via add_subdirectory from ACTS this is a no-op.
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsForceAssertions.cmake)
+
 # Temporary setting for the traccc::scalar type, until it can be removed.
 set(TRACCC_CUSTOM_SCALARTYPE
     "float"
@@ -150,9 +154,6 @@ if(TRACCC_BUILD_CUDA)
     find_package(CUDAToolkit REQUIRED)
 endif()
 
-# In order to generate specializations for our kernels, we need to have both
-# a working Python interpreter, and a list of supported detectors.
-find_package(Python COMPONENTS Interpreter REQUIRED)
 # The detector types supported by this build of traccc.
 set(TRACCC_SUPPORTED_DETECTORS
     "default_detector;odd_detector;telescope_detector"
@@ -384,6 +385,19 @@ if(TRACCC_SETUP_ALPAKA)
     else()
         add_subdirectory(extern/alpaka)
     endif()
+endif()
+# Alpaka drops members under NDEBUG that its (now forced) asserts still use.
+if(ACTS_FORCE_ASSERTIONS AND TARGET alpaka::alpaka)
+    get_target_property(_alpaka_target alpaka::alpaka ALIASED_TARGET)
+    if(NOT _alpaka_target)
+        set(_alpaka_target alpaka::alpaka)
+    endif()
+    set_property(
+        TARGET ${_alpaka_target}
+        APPEND
+        PROPERTY INTERFACE_COMPILE_OPTIONS -UNDEBUG
+    )
+    unset(_alpaka_target)
 endif()
 
 # Set up covfie.

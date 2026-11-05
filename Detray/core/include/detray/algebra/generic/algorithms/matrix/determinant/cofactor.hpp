@@ -21,19 +21,29 @@ namespace detray::algebra::generic::matrix::determinant {
 /// "Determinant getter", assuming a N X N matrix
 template <concepts::square_matrix matrix_t>
 struct cofactor {
+  /// Scalar type of the determinant.
   using scalar_type = detray::traits::value_t<matrix_t>;
+  /// Index type used to traverse the matrix.
   using index_type = detray::traits::index_t<matrix_t>;
 
+  /// Compute the determinant of a square matrix.
+  /// @param m Matrix whose determinant is calculated.
+  /// @returns The determinant.
   DETRAY_HOST_DEVICE constexpr scalar_type operator()(const matrix_t &m) const {
     return determinant_getter_helper<detray::traits::max_rank<matrix_t>>()(m);
   }
 
+  /// Helper that evaluates the determinant for a fixed matrix rank.
   template <index_type N>
   struct determinant_getter_helper;
 
+  /// Determinant specialization for a one-element matrix.
   template <index_type N>
     requires(N == 1)
   struct determinant_getter_helper<N> {
+    /// Return the sole element of the one-element matrix.
+    /// @param m Matrix to evaluate.
+    /// @returns Its only element.
     template <class input_matrix_type>
     DETRAY_HOST_DEVICE constexpr scalar_type operator()(
         const input_matrix_type &m) const {
@@ -46,9 +56,13 @@ struct cofactor {
     }
   };
 
+  /// Determinant specialization using expansion along the first row.
   template <index_type N>
     requires(N != 1)
   struct determinant_getter_helper<N> {
+    /// Evaluate the determinant recursively for the input matrix.
+    /// @param m Matrix to evaluate.
+    /// @returns The determinant.
     template <class input_matrix_type>
     DETRAY_HOST_DEVICE constexpr scalar_type operator()(
         const input_matrix_type &m) const {
@@ -80,6 +94,11 @@ struct cofactor {
       return D;
     }
 
+    /// Fill the temporary matrix with the minor excluding one row and column.
+    /// @param m Source matrix.
+    /// @param temp Matrix receiving the minor.
+    /// @param p Row excluded from the minor.
+    /// @param q Column excluded from the minor.
     template <class input_matrix_type>
     DETRAY_HOST_DEVICE constexpr void get_cofactor(const input_matrix_type &m,
                                                    input_matrix_type &temp,

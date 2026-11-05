@@ -30,6 +30,7 @@ namespace detray {
 template <typename frame_t, concepts::algebra algebra_t, bool resolve_pos>
 struct ray_intersector_impl {};
 
+/// Select the ray intersector specialization for a shape's local frame.
 template <typename shape_t, concepts::algebra algebra_t,
           bool resolve_pos = false>
 using ray_intersector = intersector_base<

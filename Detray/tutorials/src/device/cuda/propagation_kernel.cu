@@ -38,7 +38,8 @@ __global__ void propagation_kernel(
 
   // Create actor states
   detray::actor::pathlimit_aborter<scalar>::state aborter_state{path_limit};
-  detray::actor::parameter_updater_state<algebra_t> updater_state{cfg};
+  detray::actor::parameter_updater_state<algebra_t> updater_state{cfg,
+                                                                  tracks[gid]};
   detray::actor::pointwise_material_interactor<algebra_t>::state
       interactor_state{};
 

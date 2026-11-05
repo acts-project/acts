@@ -52,6 +52,7 @@ struct common_header_payload {
 /// @brief a payload for common and extra information
 template <typename sub_header_payload_t = bool>
 struct header_payload {
+  /// Shared version, detector name, tag, and creation date.
   common_header_payload common{};
   /// Information that is specific to a tag, i.e. type of detector payload
   std::optional<sub_header_payload_t> sub_header;
@@ -59,12 +60,14 @@ struct header_payload {
 
 /// @brief A payload for a single object link (volume local)
 struct single_link_payload {
+  /// Volume-local index of the linked object.
   std::size_t link{std::numeric_limits<std::size_t>::max()};
 };
 
 /// @brief A payload for a typed object link (@c dtyped_index)
 template <typename type_id_t>
 struct typed_link_payload {
+  /// Identifier type used by the linked object.
   using type_id = type_id_t;
 
   /// Type id of the object, e.g. @c shape_id
@@ -98,12 +101,16 @@ struct transform_payload {
   /// Translation
   std::array<io::scalar, 3u> tr{};
   // Column major rotation matrix
+  /// Column-major 3 by 3 rotation matrix.
+  /// Column-major 3 by 3 rotation matrix.
   std::array<io::scalar, 9u> rot{};
 
  private:
   DETRAY_HOST friend inline std::ostream& operator<<(
       std::ostream& os, const transform_payload& transform) {
+    /// Column-major 3 by 3 rotation matrix.
     const auto& r = transform.rot;
+    /// Column-major 3 by 3 rotation matrix.
     os << "rot: ";
     os << std::fixed << std::setw(4);
     auto print_line = [&](std::size_t i) {
@@ -115,6 +122,7 @@ struct transform_payload {
     os << "     ";
     print_line(2);
 
+    /// Placement transform of the surface.
     const auto& t = transform.tr;
 
     os << "tr:  ";
@@ -125,12 +133,18 @@ struct transform_payload {
 
 /// @brief A payload object for surface masks
 struct mask_payload {
+  /// Shape identifier for a surface mask.
   using mask_shape = io::shape_id;
 
+  /// Portal destination marking the end of the world in an I/O payload.
+  static constexpr std::size_t end_of_world =
+      detray::detail::invalid_value<std::size_t>();
+
+  /// Shape used to interpret the boundary values.
   mask_shape shape{mask_shape::unknown};
   /// Sensitive/passive surface: Mother volume index, Portal: Volume the
-  /// portal leads into
-  single_link_payload volume_link{};
+  /// portal leads into, or @c end_of_world when leaving the detector.
+  single_link_payload volume_link{end_of_world};
   /// Boundary values according to @c boundaries enum of the shape in @c shape
   std::vector<io::scalar> boundaries{};
 };
@@ -140,7 +154,9 @@ struct surface_payload {
   /// Position of the surface in the volume surface container.
   /// Optional, if no specific ordering
   std::optional<std::size_t> index_in_coll;
+  /// Placement transform of the surface.
   transform_payload transform{};
+  /// Mask definitions attached to the surface.
   std::vector<mask_payload> masks{};
   /// Write the material link of the surface as additional information
   std::optional<material_link_payload> material;
@@ -155,9 +171,13 @@ struct surface_payload {
 
 /// @brief A payload for volumes
 struct volume_payload {
+  /// Detector-local volume name.
   std::string name{};
+  /// Geometric shape or category of the volume.
   detray::volume_id type{detray::volume_id::e_cylinder};
+  /// Placement transform of the volume.
   transform_payload transform{};
+  /// Surfaces belonging to this volume.
   std::vector<surface_payload> surfaces{};
   /// Index of the volume in the detector volume container
   single_link_payload index{};
@@ -201,6 +221,7 @@ struct material_param_payload {
 
 /// @brief A payload object for a material slab/rod
 struct surface_material_payload {
+  /// Identifier type for homogeneous material representations.
   using mat_type = io::material_id;
 
   /// Either 'slab' or 'rod'
@@ -234,6 +255,7 @@ struct material_volume_payload {
 
 /// @brief A payload for the homogeneous material description of a detector
 struct detector_homogeneous_material_payload {
+  /// Material payloads grouped by detector volume.
   std::vector<material_volume_payload> volumes{};
 };
 
@@ -244,6 +266,7 @@ struct detector_homogeneous_material_payload {
 
 /// @brief a payload for the grid specific part of the file header
 struct grid_sub_header_payload {
+  /// Number of grid payloads described by the file.
   std::size_t n_grids{0u};
 };
 
@@ -299,14 +322,19 @@ struct grid_bin_payload {
 template <typename bin_content_t = std::size_t,
           typename grid_id_t = io::accel_id>
 struct grid_payload {
+  /// Identifier type used for this grid.
   using grid_type = grid_id_t;
   // volume-local surface or global volume index the grids belongs to
+  /// Volume-local owner of this grid payload.
   single_link_payload owner_link{};
   // Type and global index of the grid (index is optional only for debugging)
+  /// Grid type and index within the linked volume.
   typed_link_payload<grid_id_t> grid_link{};
 
   /// Must match the number of axis in the grid type indicated by @c grid_link
   std::vector<axis_payload> axes{};
+  /// Bin contents in serializer-defined order.
+  /// Bin contents arranged in serializer order.
   std::vector<grid_bin_payload<bin_content_t>> bins{};
 };
 
@@ -317,6 +345,7 @@ struct detector_grids_payload {
   // A collection of grids (can be the surface search grid, volume or surface
   // material grids) per volume index (not all volumes may contain grids)
   std::map<std::size_t, std::vector<grid_payload<bin_content_t, grid_id_t>>>
+      /// Grid collections keyed by owning volume index.
       grids = {};
 };
 
@@ -324,6 +353,7 @@ struct detector_grids_payload {
 
 /// @brief A payload for a detector geometry
 struct detector_payload {
+  /// Material payloads grouped by detector volume.
   std::vector<volume_payload> volumes = {};
   /// Volume acceleration structure
   std::optional<grid_payload<std::size_t, io::accel_id>> volume_grid;

@@ -23,10 +23,12 @@ namespace detray::svgtools::conversion {
 ///
 /// @param context The geometry context.
 /// @param detector The detector object
+/// @param view Projection used to convert geometry to SVG primitives.
 /// @param style the style settings.
 /// @param hide_portals whether to display portals.
 /// @param hide_passives whether to display passive surfaces.
 /// @param hide_grids whether to display the volume surface grids.
+/// @return Proto detector containing converted volumes.
 ///
 /// @returns An actsvg proto detector representing
 template <concepts::detector detector_t, typename view_t>

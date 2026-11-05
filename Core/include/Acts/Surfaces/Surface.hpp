@@ -123,6 +123,11 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param other Source surface for the assignment
   /// @return Reference to this surface after assignment
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<T>(other)` instead.
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<T>(other) instead.")]]
   Surface& operator=(const Surface& other) noexcept = default;
 
  public:

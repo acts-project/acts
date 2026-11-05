@@ -72,6 +72,10 @@ class GraphBasedTrackSeeder {
     float maxSeedSplitEta = 0.6;
     /// Max allowed curvature for seed self consistency check.
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
+    /// Reject a complete chain whose fitted |curvature| times this factor
+    /// exceeds `GbtsTrackingFilter::Config::maxCurvature`: a tighter minimum
+    /// pT once the whole chain has been fitted. Values below 1 does nothing.
+    float postFitCurvatureFactor = 0.0f;
     // GbtsNodeStorage options
     /// Maximum endcap cluster width.
     float maxEndcapClusterWidth = 0.35f * Acts::UnitConstants::mm;
@@ -86,9 +90,6 @@ class GraphBasedTrackSeeder {
     /// Multiples of the phi slice width duplicated either side of the
     /// wrap-around, so a sliding window never has to wrap.
     float phiIndexMargin = 1.5f;
-    /// Buckets used to sort an eta bin by phi, at most
-    /// `GbtsNodeStorage::kMaxPhiSortBuckets`.
-    std::uint32_t phiSortBuckets = 31;
   };
 
   /// Derived configuration struct that contains calculated parameters based on

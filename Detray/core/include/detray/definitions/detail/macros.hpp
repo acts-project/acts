@@ -13,3 +13,10 @@
     not defined(SYCL_LANGUAGE_VERSION) && not defined(__HIP__)
 #define __NO_DEVICE__
 #endif
+
+// Define a macro that hints a pointer is in global memory
+#ifdef __CUDA_ARCH__
+#define DETRAY_ASSUME_PTR_GLOBAL(p) __builtin_assume(__isGlobal(p))
+#else
+#define DETRAY_ASSUME_PTR_GLOBAL(p)
+#endif
