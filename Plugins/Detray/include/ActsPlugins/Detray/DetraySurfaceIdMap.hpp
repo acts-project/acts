@@ -65,6 +65,12 @@ class DetraySurfaceIdMap {
   /// Create an empty map
   DetraySurfaceIdMap() = default;
 
+  /// Build the map from a list of surfaces
+  /// @param entries the detray identifier and ACTS surface of every surface
+  /// @throws std::invalid_argument if a surface is null, or if two entries
+  ///         share an ACTS or a detray identifier
+  explicit DetraySurfaceIdMap(std::span<const Entry> entries);
+
   /// Build the map from the sensitive surfaces of a detray detector
   /// @tparam detector_t the detray detector type
   /// @param detector the detray detector converted from ACTS

@@ -130,7 +130,7 @@ class DetrayGeometryConverter {
                          << " sensitive surfaces between ACTS and detray");
 
     // detray assigns the surface identifiers during the build
-    result.surfaceIds = DetraySurfaceIdMap(*result.detector);
+    result.surfaceIds = DetraySurfaceIdMap(*result.detector, *trackingGeometry);
     ACTS_DEBUG("Mapped " << result.surfaceIds.size()
                          << " sensitive surfaces between ACTS and detray");
 
