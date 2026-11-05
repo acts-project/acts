@@ -328,18 +328,17 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().memset(vecmem::ignore_event, nn_outcome, 0);
 
   evaluate_nn_kernel({total_maxima, images, maxima_x_value, nn_outcome});
-  return {};
+  
+
   // ---------------------------------------------------
   // Count and find the contributing hits
   // ---------------------------------------------------
-  /*
   vecmem::data::vector_buffer<unsigned int> hits_sizes(total_maxima, mr().main);
   copy().setup(vecmem::ignore_event, hits_sizes);
   copy().memset(vecmem::ignore_event, hits_sizes, 0);
  
   count_contributing_hits_kernel({total_maxima,
                            bfield,
-                           result,
                            edges_x,
                            edges_y,
                            spacepoints,
@@ -354,7 +353,6 @@ auto hough_transform_seeding_algorithm::operator()(
                 ? vecmem::vector<unsigned int>(mr().host)
                 : vecmem::vector<unsigned int>());
   copy()(hits_sizes, hits_sizes_host)->wait();
-  */
 
 
   /*  
@@ -369,7 +367,7 @@ auto hough_transform_seeding_algorithm::operator()(
   // unsigned int total_hits = 0u;
   // for (unsigned int i(0); i<hits_sizes_host.size(); ++i) total_hits += hits_sizes_host[i];
 
-  /*
+
   vecmem::data::jagged_vector_buffer<global_index_t> hits(hits_sizes_host,
         mr().main, mr().host,
         vecmem::data::buffer_type::resizable);
@@ -378,7 +376,6 @@ auto hough_transform_seeding_algorithm::operator()(
 
   find_contributing_hits_kernel({total_maxima,
                             bfield,
-                            result,
                             edges_x,
                             edges_y,
                             spacepoints,
@@ -389,7 +386,7 @@ auto hough_transform_seeding_algorithm::operator()(
                             nn_outcome,
                             hits});
   synchronize();
-  */
+
 
   /*
   synchronize();
@@ -417,7 +414,6 @@ auto hough_transform_seeding_algorithm::operator()(
   */
 
   // Make the seeds
-  /*
   std::vector<unsigned int> matrices_sizes(hits_sizes_host.size());
   std::transform(hits_sizes_host.begin(), hits_sizes_host.end(), matrices_sizes.begin(),
                [](unsigned int x) { return x * x; });
@@ -433,7 +429,6 @@ auto hough_transform_seeding_algorithm::operator()(
                      nn_outcome,
                      hits,
                      matrices});
-  */
 
 
   /*

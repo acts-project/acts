@@ -40,7 +40,6 @@ inline void take_the_picture(const unsigned short* wedge,
 }
 
 
-template<typename T>
 TRACCC_HOST_DEVICE
 void take_pictures(const global_index_t globalIndex,
                    const global_index_t colIndex,

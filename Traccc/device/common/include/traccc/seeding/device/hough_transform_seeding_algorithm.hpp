@@ -162,8 +162,6 @@ class hough_transform_seeding_algorithm
     unsigned int n_images;
     // The magnetic field object
     const magnetic_field& bfield;
-    // The planes
-    const edm::houghplane_collection<unsigned short>::const_view& houghplanes;
     // The edges X
     const vecmem::data::vector_view<scalar>& edges_x;
     // The edges Y
@@ -189,8 +187,6 @@ class hough_transform_seeding_algorithm
     unsigned int n_images;
     // The magnetic field object
     const magnetic_field& bfield;
-    // The planes
-    const edm::houghplane_collection<unsigned short>::const_view& houghplanes;
     // The edges X
     const vecmem::data::vector_view<scalar>& edges_x;
     // The edges Y
