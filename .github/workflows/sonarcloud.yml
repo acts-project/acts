@@ -43,7 +43,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
