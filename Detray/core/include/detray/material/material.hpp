@@ -121,6 +121,7 @@ struct material {
   }
 
   /// Boolean operator
+  /// @returns whether the material contains valid values
   DETRAY_HOST_DEVICE
   constexpr explicit operator bool() const {
     if (m_x0 == detail::invalid_value<scalar_type>()) {

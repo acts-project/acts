@@ -154,8 +154,7 @@ struct toy_det_config {
   /// Config for the module generation (endcaps)
   endcap_generator_config<scalar_t> m_endcap_factory_cfg{};
   /// Volume builder configuration
-  volume_builder_options m_builder_opts{.m_deduplicate = false,
-                                        .m_sort = false};
+  volume_builder_options m_builder_opts{.m_deduplicate = true, .m_sort = false};
   /// Run detector consistency check after reading
   bool m_do_check{true};
 
@@ -256,7 +255,7 @@ struct toy_det_config {
   }
   /// @brief Return the builder options.
   /// @return configured builder options
-  volume_builder_options builder_options() { return m_builder_opts; }
+  volume_builder_options &builder_options() { return m_builder_opts; }
   /// @brief Set the do check.
   /// @param check whether to run the consistency check
   /// @return reference to the updated configuration
@@ -398,8 +397,10 @@ struct toy_det_config {
   /// Print the toy detector configuration
   friend std::ostream &operator<<(std::ostream &out,
                                   const toy_det_config &cfg) {
+    out << std::boolalpha;
     out << "\nToy Detector\n"
         << "----------------------------\n"
+        << "  Check                 : " << cfg.do_check() << "\n"
         << "  No. barrel layers     : " << cfg.n_brl_layers() << "\n"
         << "  No. endcap layers     : " << cfg.n_edc_layers() << "\n"
         << "  Portal envelope       : " << cfg.envelope() << " [mm]\n";
@@ -429,6 +430,8 @@ struct toy_det_config {
     } else {
       out << "  No material\n";
     }
+    out << cfg.builder_options() << "\n";
+    out << std::noboolalpha;
 
     return out;
   }
