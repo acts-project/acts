@@ -11,7 +11,7 @@ template<typename T,
 	unsigned int N_COLS,
 	unsigned int N_ROWS>
 TRACCC_HOST_DEVICE
-void ranges(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device& container,
+void ranges(const typename edm::houghplane_collection<T>::device& container,
             const vecmem::device_vector<scalar>& edges_x,
             const vecmem::device_vector<scalar>& edges_y,
 	        const scalar magnetic_field_z,
@@ -64,10 +64,10 @@ void fill_hough_plane(const global_index_t globalIndex,
                 const vecmem::data::vector_view<scalar>& spacepoint_phi_view,
                 const vecmem::data::vector_view<scalar>& edges_x_view,
                 const vecmem::data::vector_view<scalar>& edges_y_view,
-                typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes_view) {
+                typename edm::houghplane_collection<T>::view& houghplanes_view) {
     if (globalIndex > N_COLS * N_ROWS) return;
 
-    typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device houghplanes(houghplanes_view);
+    typename edm::houghplane_collection<T>::device houghplanes(houghplanes_view);
     const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
 
     const vecmem::device_vector<unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);

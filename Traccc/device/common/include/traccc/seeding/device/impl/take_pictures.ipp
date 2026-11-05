@@ -47,7 +47,7 @@ TRACCC_HOST_DEVICE
 void take_pictures(const global_index_t globalIndex,
                    const global_index_t colIndex,
                    const global_index_t rowIndex,
-                   const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes_view,
+                   const typename edm::houghplane_collection<T>::const_view& houghplanes_view,
                    const vecmem::data::vector_view<scalar>& edges_x_view,
                    const vecmem::data::jagged_vector_view<global_index_t>& maxima_index_view,
                    const unsigned int n_maxima,
@@ -55,7 +55,7 @@ void take_pictures(const global_index_t globalIndex,
                    vecmem::data::vector_view<scalar>& maxima_x_view) {
     if (globalIndex >= n_maxima) return;
 
-    const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device houghplanes(houghplanes_view);
+    const typename edm::houghplane_collection<T>::const_device houghplanes(houghplanes_view);
     const vecmem::jagged_device_vector<global_index_t> maxima_index(maxima_index_view);
     vecmem::jagged_device_vector<scalar> images(images_view);
 

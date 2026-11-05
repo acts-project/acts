@@ -47,9 +47,7 @@ class houghplane : public BASE {
 };
  
 /// SoA container describing reconstructed hough planes
-template<typename T,
-	unsigned int N_COLS, 
-	unsigned int N_ROWS>
+template<typename T>
 using houghplane_collection =
     vecmem::edm::container<houghplane,
                            // bins of the plane

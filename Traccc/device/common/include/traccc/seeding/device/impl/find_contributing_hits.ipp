@@ -13,7 +13,7 @@ TRACCC_HOST_DEVICE
 void find_contributing_hits(const global_index_t globalIndex,
                             const unsigned int n_images,
                             const bfield_t& bfield,
-                            const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_view& houghplanes_view,
+                            const typename edm::houghplane_collection<T>::const_view& houghplanes_view,
                             const vecmem::data::vector_view<scalar>& edges_x_view,
                             const vecmem::data::vector_view<scalar>& edges_y_view,
                             const edm::spacepoint_collection::const_view& spacepoints_view,
@@ -37,7 +37,7 @@ void find_contributing_hits(const global_index_t globalIndex,
     const vecmem::device_vector<scalar> edges_y(edges_y_view);
 
     const global_index_t peak_global_index = global_index[wedge_idx][element_idx];
-    const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_device houghplanes(houghplanes_view);
+    const typename edm::houghplane_collection<T>::const_device houghplanes(houghplanes_view);
     const auto [col, row] = get_col_row<N_COLS, N_ROWS>(peak_global_index);
     const scalar min_x = edges_x[col];
     const scalar max_x = edges_x[col + 1];

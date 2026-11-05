@@ -11,10 +11,10 @@ template< typename T,
     unsigned int N_ROWS>
 TRACCC_HOST_DEVICE
 void count_maxima(const global_index_t globalIndex,
-                  const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes_view,
+                  const typename edm::houghplane_collection<T>::view& houghplanes_view,
                   vecmem::data::vector_view<unsigned int>& number_maxima_view) {
     if (globalIndex >= N_COLS * N_ROWS) return;
-    const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device houghplanes(houghplanes_view);
+    const typename edm::houghplane_collection<T>::device houghplanes(houghplanes_view);
     vecmem::device_vector<unsigned int> number_maxima(number_maxima_view);
 
     const auto [col, row] = get_col_row<N_COLS, N_ROWS>(globalIndex);    

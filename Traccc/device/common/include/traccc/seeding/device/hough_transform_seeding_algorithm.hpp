@@ -34,7 +34,7 @@ static constexpr unsigned int N_ROWS = 7000u;
 
 // we need to template the class i guess
 class hough_transform_seeding_algorithm
-    : public algorithm<edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer(
+    : public algorithm<edm::houghplane_collection<unsigned short>::buffer(
 	  const magnetic_field&,
 	  const detector_buffer&,
 	  const edm::measurement_collection::const_view&,
@@ -102,19 +102,19 @@ class hough_transform_seeding_algorithm
     // The edges Y
     const vecmem::data::vector_view<scalar>& edges_y;
     /// The output hough planes
-    edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
+    edm::houghplane_collection<unsigned short>::view& houghplanes;
   };
 
   struct count_maxima_payload {
     // The hough planes
-    const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
+    const edm::houghplane_collection<unsigned short>::view& houghplanes;
     // The count vector
     vecmem::data::vector_view<unsigned int>& count_vector;
   };
  
   struct find_maxima_payload {
     // The hough planes
-    const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
+    const edm::houghplane_collection<unsigned short>::view& houghplanes;
     // The global index vector
     vecmem::data::jagged_vector_view<global_index_t>& global_index;
   };
@@ -123,7 +123,7 @@ class hough_transform_seeding_algorithm
     // Number of maxima
     unsigned int n_maxima;
     // The hough planes
-    const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
+    const edm::houghplane_collection<unsigned short>::const_view& houghplanes;
     // The edges X
     const vecmem::data::vector_view<scalar>& edges_x;
     // The maxima location
@@ -151,7 +151,7 @@ class hough_transform_seeding_algorithm
     // The magnetic field object
     const magnetic_field& bfield;
     // The planes
-    const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view& houghplanes;
+    const edm::houghplane_collection<unsigned short>::const_view& houghplanes;
     // The edges X
     const vecmem::data::vector_view<scalar>& edges_x;
     // The edges Y
@@ -178,7 +178,7 @@ class hough_transform_seeding_algorithm
     // The magnetic field object
     const magnetic_field& bfield;
     // The planes
-    const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view& houghplanes;
+    const edm::houghplane_collection<unsigned short>::const_view& houghplanes;
     // The edges X
     const vecmem::data::vector_view<scalar>& edges_x;
     // The edges Y

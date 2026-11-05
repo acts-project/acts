@@ -4,9 +4,6 @@
 
 namespace traccc::device {
 
-template<typename T,
-	unsigned int N_COLS,
-	unsigned int N_ROWS>
 TRACCC_HOST_DEVICE
 void define_plane_edges(const global_index_t globalIndex,
         vecmem::data::vector_view<scalar>& edges_x_view,

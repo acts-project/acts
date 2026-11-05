@@ -14,11 +14,11 @@ template< typename T,
     unsigned int N_ROWS >
 TRACCC_HOST_DEVICE
 void find_maxima(const global_index_t globalIndex,
-                 const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes_view,
+                 const typename edm::houghplane_collection<T>::view& houghplanes_view,
                  vecmem::data::jagged_vector_view<global_index_t>& maxima_index_view) {
     if (globalIndex >= N_COLS * N_ROWS) return;
 
-    const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device houghplanes(houghplanes_view);
+    const typename edm::houghplane_collection<T>::device houghplanes(houghplanes_view);
     vecmem::jagged_device_vector<global_index_t> maxima_index(maxima_index_view);
 
     const auto [col, row] = get_col_row<N_COLS, N_ROWS>(globalIndex);

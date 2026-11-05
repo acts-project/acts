@@ -17,17 +17,15 @@
 namespace traccc::cuda {
 namespace kernels {
    
-   template<typename T,
-	   unsigned int N_COLS,
-	   unsigned int N_ROWS>
    __global__ 
    void define_plane_edges(const traccc::hough_seeding_config config,
+                           const unsigned int n_cols,
+                           const unsigned int n_rows,
                            vecmem::data::vector_view<scalar> edges_x,
                            vecmem::data::vector_view<scalar> edges_y) {
-      float steps_x = (config.max_range_x - config.min_range_x) / N_COLS;
-      float steps_y = (config.max_range_y - config.min_range_y) / N_ROWS;
-      device::define_plane_edges<T, N_COLS, N_ROWS>(
-		      details::global_index1(),
+      float steps_x = (config.max_range_x - config.min_range_x) / n_cols;
+      float steps_y = (config.max_range_y - config.min_range_y) / n_rows;
+      device::define_plane_edges(details::global_index1(),
               edges_x, edges_y,
 		      steps_x, config.min_range_x,
 		      steps_y, config.min_range_y); 
@@ -64,7 +62,7 @@ namespace kernels {
            const vecmem::data::vector_view<scalar> spacepoint_phi,
            const vecmem::data::vector_view<scalar> edges_x,
            const vecmem::data::vector_view<scalar> edges_y,
-		   typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes) {
+		   typename edm::houghplane_collection<T>::view houghplanes) {
       device::fill_hough_plane<bfield_t, T, N_COLS, N_ROWS>(details::global_index1(), bfield,
 		      n_spacepoints,
               spacepoints,
@@ -81,7 +79,7 @@ namespace kernels {
              unsigned int N_COLS,
              unsigned int N_ROWS>
    __global__
-   void count_maxima(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes,
+   void count_maxima(const typename edm::houghplane_collection<T>::view houghplanes,
                      vecmem::data::vector_view<unsigned int> count_vector) {
       device::count_maxima<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, count_vector);
    }
@@ -90,7 +88,7 @@ namespace kernels {
              unsigned int N_COLS,
              unsigned int N_ROWS>
    __global__
-   void find_maxima(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes,
+   void find_maxima(const typename edm::houghplane_collection<T>::view houghplanes,
                     vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes) {
       device::find_maxima<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, global_indexes);
    }
@@ -99,7 +97,7 @@ namespace kernels {
              unsigned int N_COLS,
              unsigned int N_ROWS>
    __global__
-   void take_pictures(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view houghplanes,
+   void take_pictures(const typename edm::houghplane_collection<T>::const_view houghplanes,
                       const vecmem::data::vector_view<scalar> edges_x,
                       const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes,
                       const unsigned int n_maxima,
@@ -127,7 +125,7 @@ namespace kernels {
    __global__
    void count_contributing_hits(const unsigned int n_images,
                                 const bfield_t bfield,
-                                const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_view houghplanes,
+                                const typename edm::houghplane_collection<T>::const_view houghplanes,
                                 const vecmem::data::vector_view<scalar> edges_x,
                                 const vecmem::data::vector_view<scalar> edges_y,
                                 const edm::spacepoint_collection::const_view spacepoints,
@@ -159,7 +157,7 @@ namespace kernels {
    __global__
    void find_contributing_hits(const unsigned int n_images,
                                 const bfield_t bfield,
-                                const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_view houghplanes,
+                                const typename edm::houghplane_collection<T>::const_view houghplanes,
                                 const vecmem::data::vector_view<scalar> edges_x,
                                 const vecmem::data::vector_view<scalar> edges_y,
                                 const edm::spacepoint_collection::const_view spacepoints,
@@ -211,8 +209,10 @@ void hough_transform_seeding_algorithm::define_plane_edges_kernel(const define_p
    unsigned int maxValues = std::max(device::N_COLS, device::N_ROWS);
    const unsigned int n_threads = warp_size() * 4;
    const unsigned int n_blocks = (maxValues  + n_threads - 1) / n_threads;
-   kernels::define_plane_edges<unsigned short, device::N_COLS, device::N_ROWS>
+   kernels::define_plane_edges
 	   <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, 
+                                                                   device::N_COLS,
+                                                                   device::N_ROWS,
                                                                    payload.edges_x,
                                                                    payload.edges_y);
    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
