@@ -59,7 +59,8 @@ class hough_transform_seeding_algorithm
  protected:
   struct define_plane_edges_kernel_payload {
     const hough_seeding_config& config;
-    edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
+    vecmem::data::vector_view<scalar>& edges_x;
+    vecmem::data::vector_view<scalar>& edges_y;    
   };
 
   struct precompute_spacepoint_variables_payload {
@@ -89,13 +90,17 @@ class hough_transform_seeding_algorithm
     /// The input spacepoints
     const edm::spacepoint_collection::const_view& spacepoints;
     // association to wedge
-    vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association;
+    const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association;
     // the detector id to use in the HT filling
-    vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id;
+    const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id;
     // the space point r
-    vecmem::data::vector_view<scalar>& spacepoint_r;
+    const vecmem::data::vector_view<scalar>& spacepoint_r;
     // the space point phi
-    vecmem::data::vector_view<scalar>& spacepoint_phi;
+    const vecmem::data::vector_view<scalar>& spacepoint_phi;
+    // The edges X
+    const vecmem::data::vector_view<scalar>& edges_x;
+    // The edges Y
+    const vecmem::data::vector_view<scalar>& edges_y;
     /// The output hough planes
     edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view& houghplanes;
   };
@@ -145,6 +150,10 @@ class hough_transform_seeding_algorithm
     const magnetic_field& bfield;
     // The planes
     const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view& houghplanes;
+    // The edges X
+    const vecmem::data::vector_view<scalar>& edges_x;
+    // The edges Y
+    const vecmem::data::vector_view<scalar>& edges_y;
     // The space points
     const edm::spacepoint_collection::const_view& spacepoints;
     // the space point r
@@ -168,6 +177,10 @@ class hough_transform_seeding_algorithm
     const magnetic_field& bfield;
     // The planes
     const edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::const_view& houghplanes;
+    // The edges X
+    const vecmem::data::vector_view<scalar>& edges_x;
+    // The edges Y
+    const vecmem::data::vector_view<scalar>& edges_y;
     // The space points
     const edm::spacepoint_collection::const_view& spacepoints;
     // the space point r

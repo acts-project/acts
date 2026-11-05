@@ -53,10 +53,38 @@ auto hough_transform_seeding_algorithm::operator()(
 
   // ---------------------------------------------------
   // Fill plane edges
-  // we will move to a config at a certain point and template the algorithm
-  define_plane_edges_kernel({m_config, result});
+  vecmem::data::vector_buffer<scalar> edges_x(N_COLS + 1, mr().main);
+  vecmem::data::vector_buffer<scalar> edges_y(N_ROWS + 1, mr().main);
 
+  copy().setup(vecmem::ignore_event, edges_x);
+  copy().memset(vecmem::ignore_event, edges_x, 0);
+  copy().setup(vecmem::ignore_event, edges_y);
+  copy().memset(vecmem::ignore_event, edges_y, 0);
+
+  define_plane_edges_kernel({m_config,
+                             edges_x, edges_y});
+
+  /*
+  vecmem::vector<scalar> edges_x_host = ((mr().host != nullptr)
+                ? vecmem::vector<scalar>(mr().host)
+                : vecmem::vector<scalar>());
+  copy()(edges_x, edges_x_host)->wait();
+
+  vecmem::vector<scalar> edges_y_host = ((mr().host != nullptr)
+                ? vecmem::vector<scalar>(mr().host)
+                : vecmem::vector<scalar>());
+  copy()(edges_y, edges_y_host)->wait();
   
+  printf("edges x: ");
+  for (const scalar value : edges_x_host) printf("%.4f ", value);
+  printf("\n");
+
+  printf("edges y: ");
+  for (const scalar value : edges_y_host) printf("%.4f ", value);
+  printf("\n");
+  */
+
+ 
   // ---------------------------------------------------
   // Pre-compute some quantities
   // ---------------------------------------------------
@@ -126,14 +154,21 @@ auto hough_transform_seeding_algorithm::operator()(
   }
   */
 
+
   // ---------------------------------------------------
   // Fill the planes with space points
   // ---------------------------------------------------
   fill_hough_plane_kernel({m_config, bfield,
-                  n_spacepoints, spacepoints,
-                  spacepoint_wedge_association, spacepoint_detector_id,
-		  spacepoint_r, spacepoint_phi,
-		  result});
+                  n_spacepoints, 
+                  spacepoints,
+                  spacepoint_wedge_association,
+                  spacepoint_detector_id,
+		          spacepoint_r, 
+                  spacepoint_phi,
+                  edges_x,
+                  edges_y,
+		          result});
+
 
   // ---------------------------------------------------
   // Count and then find the maxima
@@ -286,6 +321,8 @@ auto hough_transform_seeding_algorithm::operator()(
   count_contributing_hits_kernel({total_maxima,
                            bfield,
                            result,
+                           edges_x,
+                           edges_y,
                            spacepoints,
                            spacepoint_r,
                            spacepoint_phi,
@@ -311,6 +348,7 @@ auto hough_transform_seeding_algorithm::operator()(
   // unsigned int total_hits = 0u;
   // for (unsigned int i(0); i<hits_sizes_host.size(); ++i) total_hits += hits_sizes_host[i];
 
+
   vecmem::data::jagged_vector_buffer<global_index_t> hits(hits_sizes_host,
         mr().main, mr().host,
         vecmem::data::buffer_type::resizable);
@@ -320,6 +358,8 @@ auto hough_transform_seeding_algorithm::operator()(
   find_contributing_hits_kernel({total_maxima,
                             bfield,
                             result,
+                            edges_x,
+                            edges_y,
                             spacepoints,
                             spacepoint_r,
                             spacepoint_phi,

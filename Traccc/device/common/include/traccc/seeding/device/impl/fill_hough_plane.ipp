@@ -12,14 +12,16 @@ template<typename T,
 	unsigned int N_ROWS>
 TRACCC_HOST_DEVICE
 void ranges(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device& container,
+            const vecmem::device_vector<scalar>& edges_x,
+            const vecmem::device_vector<scalar>& edges_y,
 	        const scalar magnetic_field_z,
             const scalar r,
             const scalar phi,
             unsigned int* min_ranges,
             unsigned int* max_ranges) {
     for (unsigned int i(0); i<N_COLS; ++i) {
-        scalar min_value_phi = transform(container.edges_x()[i], r, phi, magnetic_field_z);
-        scalar max_value_phi = transform(container.edges_x()[i + 1], r, phi, magnetic_field_z);
+        scalar min_value_phi = transform(edges_x[i], r, phi, magnetic_field_z);
+        scalar max_value_phi = transform(edges_x[i + 1], r, phi, magnetic_field_z);
         if (min_value_phi > max_value_phi) std::swap(min_value_phi, max_value_phi);
         
         // out of bounds
@@ -30,12 +32,12 @@ void ranges(const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::device
             return;
         }
         
-        unsigned int phi_bin_min = quant(container.edges_y()[0], 
-                                         container.edges_y()[N_ROWS],
+        unsigned int phi_bin_min = quant(edges_y[0], 
+                                         edges_y[N_ROWS],
                                          N_ROWS, 
                                          min_value_phi);
-        unsigned int phi_bin_max = quant(container.edges_y()[0], 
-                                         container.edges_y()[N_ROWS],
+        unsigned int phi_bin_max = quant(edges_y[0], 
+                                         edges_y[N_ROWS],
                                          N_ROWS, 
                                          max_value_phi) + 1;
         
@@ -60,6 +62,8 @@ void fill_hough_plane(const global_index_t globalIndex,
                 const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id_view,
                 const vecmem::data::vector_view<scalar>& spacepoint_r_view,
                 const vecmem::data::vector_view<scalar>& spacepoint_phi_view,
+                const vecmem::data::vector_view<scalar>& edges_x_view,
+                const vecmem::data::vector_view<scalar>& edges_y_view,
                 typename edm::houghplane_collection<T, N_COLS, N_ROWS>::view& houghplanes_view) {
     if (globalIndex > N_COLS * N_ROWS) return;
 
@@ -70,14 +74,16 @@ void fill_hough_plane(const global_index_t globalIndex,
     const vecmem::device_vector<unsigned long long> spacepoint_detector_id(spacepoint_detector_id_view);
     const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
     const vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
+    const vecmem::device_vector<scalar> edges_x(edges_x_view);
+    const vecmem::device_vector<scalar> edges_y(edges_y_view);
 
     const auto [x_bin, y_bin] = get_col_row<N_COLS, N_ROWS>(globalIndex);
 
     // given the bin, take the edges in both dimensions
-    const scalar min_x = houghplanes.edges_x()[x_bin];
-    const scalar max_x = houghplanes.edges_x()[x_bin + 1];
-    const scalar min_y = houghplanes.edges_y()[y_bin];
-    const scalar max_y = houghplanes.edges_y()[y_bin + 1];
+    const scalar min_x = edges_x[x_bin];
+    const scalar max_x = edges_x[x_bin + 1];
+    const scalar min_y = edges_y[y_bin];
+    const scalar max_y = edges_y[y_bin + 1];
 
     std::array<unsigned long long, 25> binContents {};
     for (unsigned int i(0); i<n_spacepoints; ++i) {

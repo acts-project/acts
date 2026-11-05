@@ -17,7 +17,7 @@ inline void take_the_picture(const vecmem::jagged_device_vector<unsigned short>:
                              const int height,
                              const int ix,
                              const int iy) {
-    static constexpr scalar normalization = 1.f; // / 256.f;
+    static constexpr scalar normalization = 1.f / 256.f;
     constexpr int wedge_width = 256;
     constexpr int wedge_height = 7000;
 

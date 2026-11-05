@@ -14,6 +14,8 @@ void find_contributing_hits(const global_index_t globalIndex,
                             const unsigned int n_images,
                             const bfield_t& bfield,
                             const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_view& houghplanes_view,
+                            const vecmem::data::vector_view<scalar>& edges_x_view,
+                            const vecmem::data::vector_view<scalar>& edges_y_view,
                             const edm::spacepoint_collection::const_view& spacepoints_view,
                             const vecmem::data::vector_view<scalar>& spacepoint_r_view,
                             const vecmem::data::vector_view<scalar>& spacepoint_phi_view,
@@ -31,13 +33,16 @@ void find_contributing_hits(const global_index_t globalIndex,
     const vecmem::jagged_device_vector<global_index_t> global_index(global_index_view);
     const auto [wedge_idx, element_idx] = get_wedge_element<global_index_t>(globalIndex, global_index);   
  
+    const vecmem::device_vector<scalar> edges_x(edges_x_view);
+    const vecmem::device_vector<scalar> edges_y(edges_y_view);
+
     const global_index_t peak_global_index = global_index[wedge_idx][element_idx];
     const typename edm::houghplane_collection<T, N_COLS, N_ROWS>::const_device houghplanes(houghplanes_view);
     const auto [col, row] = get_col_row<N_COLS, N_ROWS>(peak_global_index);
-    const scalar min_x = houghplanes.edges_x()[col];
-    const scalar max_x = houghplanes.edges_x()[col + 1];
-    const scalar min_y = houghplanes.edges_y()[row];
-    const scalar max_y = houghplanes.edges_y()[row + 1];
+    const scalar min_x = edges_x[col];
+    const scalar max_x = edges_x[col + 1];
+    const scalar min_y = edges_y[row];
+    const scalar max_y = edges_y[row + 1];
 
    
     vecmem::jagged_device_vector<global_index_t> hits(hits_view);
