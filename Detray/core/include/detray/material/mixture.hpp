@@ -25,6 +25,7 @@ struct mixture
     : public material<scalar_t, typename ratio_sum<
                                     typename material_types::ratio...>::ratio> {
  public:
+  /// Ratio type used for material-component fractions.
   using ratio = typename ratio_sum<typename material_types::ratio...>::ratio;
 
   static_assert(is_ratio_one_v<ratio>,

@@ -26,22 +26,38 @@ namespace detray::io::csv {
 
 /// Type to read the data of a line-surface intersection
 struct intersection2D {
+  /// Index of the track owning this intersection.
   unsigned int track_id = 0;
+  /// Geometry identifier of the intersected surface.
   std::uint64_t identifier = 0ul;
+  /// Surface category identifier.
   unsigned int type = 0u;
+  /// Index of the surface transform.
   unsigned int transform_index = 0u;
+  /// Identifier of the surface mask type.
   unsigned int mask_id = 0u;
+  /// Index of the surface mask.
   unsigned int mask_index = 0u;
+  /// Number of masks in the linked mask range.
   unsigned int n_masks = 1u;
+  /// Identifier of the material representation.
   unsigned int material_id = 0u;
+  /// Index of the material representation.
   unsigned int material_index = 0u;
+  /// First local intersection coordinate.
   double loc_0 = 0.;
+  /// Second local intersection coordinate.
   double loc_1 = 0.;
+  /// Accumulated path length at the intersection.
   double path = 0.;
+  /// Index of the associated volume link.
   unsigned int volume_link = 0u;
+  /// Navigation direction encoded as an integer flag.
   int direction = 0;
+  /// Intersection status encoded as a navigation status value.
   int status = 0;
 
+  /// Define the serialized CSV column order for intersection records.
   DETRAY_DFE_NAMEDTUPLE(intersection2D, track_id, identifier, type,
                         transform_index, mask_id, mask_index, material_id,
                         material_index, loc_0, loc_1, path, volume_link,

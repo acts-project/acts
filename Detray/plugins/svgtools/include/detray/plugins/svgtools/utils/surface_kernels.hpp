@@ -29,6 +29,14 @@ namespace detray::svgtools::utils {
 /// link arrow.
 struct link_start_getter {
  public:
+  /// Find the link origin for one mask in a mask collection.
+  /// @tparam mask_group_t Mask collection type.
+  /// @tparam index_t Selected mask index type.
+  /// @tparam transform3_t Transform type.
+  /// @param mask_group Collection containing the mask.
+  /// @param index Index of the selected mask.
+  /// @param transform Transform from local to global coordinates.
+  /// @return Global point at which the link starts.
   template <typename mask_group_t, concepts::index index_t,
             concepts::transform3D transform3_t>
   DETRAY_HOST inline auto operator()(const mask_group_t& mask_group,
@@ -38,6 +46,15 @@ struct link_start_getter {
     return link_start(mask_group.at(index), transform);
   }
 
+  /// Find the link origin for a mask selected from an index range.
+  /// @tparam mask_group_t Mask collection type.
+  /// @tparam idx_range_t Range of mask indices.
+  /// @tparam transform3_t Transform type.
+  /// @param mask_group Collection containing the masks.
+  /// @param idx_range Range containing the selected mask.
+  /// @param transform Transform from local to global coordinates.
+  /// @param mask_idx Offset in the range.
+  /// @return Global point at which the link starts.
   template <typename mask_group_t, concepts::interval idx_range_t,
             concepts::transform3D transform3_t>
   DETRAY_HOST inline auto operator()(const mask_group_t& mask_group,
@@ -146,6 +163,21 @@ struct link_start_getter {
 /// arrow.
 struct link_end_getter {
  public:
+  /// Find the endpoint for a link drawn from one mask.
+  /// @tparam mask_group_t Mask collection type.
+  /// @tparam index_t Mask index type.
+  /// @tparam detector_t Detector type.
+  /// @tparam point3_t Point type.
+  /// @tparam vector3_t Vector type.
+  /// @tparam scalar_t Link length type.
+  /// @param mask_group Collection containing the mask.
+  /// @param index Selected mask index.
+  /// @param detector Detector used to resolve neighboring surfaces.
+  /// @param volume Volume containing the surface.
+  /// @param surface_point Global link origin.
+  /// @param surface_normal Normal at the link origin.
+  /// @param link_length Length of the displayed link.
+  /// @return Global endpoint of the displayed link.
   template <typename mask_group_t, concepts::index index_t,
             concepts::detector detector_t, concepts::point3D point3_t,
             concepts::vector3D vector3_t, concepts::scalar scalar_t>
@@ -161,6 +193,22 @@ struct link_end_getter {
            surface_point;
   }
 
+  /// Find the endpoint for a link from a mask selected within an index range.
+  /// @tparam mask_group_t Mask collection type.
+  /// @tparam idx_range_t Mask index range type.
+  /// @tparam detector_t Detector type.
+  /// @tparam point3_t Point type.
+  /// @tparam vector3_t Vector type.
+  /// @tparam scalar_t Link length type.
+  /// @param mask_group Collection containing the masks.
+  /// @param idx_range Range containing the selected mask.
+  /// @param detector Detector used to resolve neighboring surfaces.
+  /// @param volume Volume containing the surface.
+  /// @param surface_point Global link origin.
+  /// @param surface_normal Normal at the link origin.
+  /// @param link_length Length of the displayed link.
+  /// @param mask_idx Offset in the range.
+  /// @return Global endpoint of the displayed link.
   template <typename mask_group_t, concepts::interval idx_range_t,
             concepts::detector detector_t, concepts::point3D point3_t,
             concepts::vector3D vector3_t, concepts::scalar scalar_t>
@@ -222,3 +270,28 @@ struct link_end_getter {
 };
 
 }  // namespace detray::svgtools::utils
+   /// Find the link origin for a mask selected from an index range.
+/// @tparam mask_group_t Mask collection type.
+/// @tparam idx_range_t Range of mask indices.
+/// @tparam transform3_t Transform type.
+/// @param mask_group Collection containing the masks.
+/// @param idx_range Range containing the selected mask.
+/// @param transform Transform from local to global coordinates.
+/// @param mask_idx Offset in the range.
+/// @return Global point at which the link starts.
+/// Find the endpoint for a link from a mask selected within an index range.
+/// @tparam mask_group_t Mask collection type.
+/// @tparam idx_range_t Mask index range type.
+/// @tparam detector_t Detector type.
+/// @tparam point3_t Point type.
+/// @tparam vector3_t Vector type.
+/// @tparam scalar_t Link length type.
+/// @param mask_group Collection containing the masks.
+/// @param idx_range Range containing the selected mask.
+/// @param detector Detector used to resolve neighboring surfaces.
+/// @param volume Volume containing the surface.
+/// @param surface_point Global link origin.
+/// @param surface_normal Normal at the link origin.
+/// @param link_length Length of the displayed link.
+/// @param mask_idx Offset in the range.
+/// @return Global endpoint of the displayed link.

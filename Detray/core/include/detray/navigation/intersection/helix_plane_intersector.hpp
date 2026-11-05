@@ -40,18 +40,23 @@ struct helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> {
   using scalar_t = dscalar<algebra_t>;
 
  public:
+  /// Algebra policy used by this intersector.
   using algebra_type = algebra_t;
 
+  /// Intersection result type associated with a surface descriptor.
   template <typename surface_descr_t>
   using intersection_type =
       intersection2D<surface_descr_t, algebra_t, intersection::contains_pos>;
 
+  /// Trajectory representation accepted by this intersector.
   template <typename other_algebra_t>
   using trajectory_type = detail::helix<other_algebra_t>;
 
   // Maximum number of solutions this intersector can produce
+  /// Maximum number of solutions produced by this intersector.
   static constexpr std::uint8_t n_solutions{1u};
 
+  /// Result type returned by the geometric intersection calculation.
   using result_type = intersection_point_err<algebra_t>;
 
   /// Operator function to find intersections between a helix and a planar
@@ -136,11 +141,11 @@ struct helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> {
 
   /// Tolerance for convergence
   scalar_t convergence_tolerance{1.f * unit<scalar_t>::um};
-  // Guard against infinite loops
+  /// Guard against infinite loops
   std::size_t max_n_tries{1000u};
-  // Early exit, if the intersection is too far away
+  /// Early exit, if the intersection is too far away
   scalar_t max_path{5.f * unit<scalar_t>::m};
-  // Complement the Newton algorithm with Bisection steps
+  /// Complement the Newton algorithm with Bisection steps
   bool run_rtsafe{true};
 };
 

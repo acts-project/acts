@@ -68,10 +68,6 @@ class mutex {
 
  private:
   const vecmem::device_atomic_ref<T> m_atomic;
-
-#ifndef NDEBUG
-  bool m_is_locked = false;
-#endif
 };
 }  // namespace traccc::device
 

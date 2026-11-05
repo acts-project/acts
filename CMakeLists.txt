@@ -313,17 +313,7 @@ if(PROJECT_IS_TOP_LEVEL)
 endif()
 
 # This needs to happen before we set up any targets
-if(ACTS_FORCE_ASSERTIONS)
-    message(
-        STATUS
-        "Injecting headers to force assertions. This can have side-effects, USE WITH CAUTION!"
-    )
-    include_directories(
-        BEFORE
-        SYSTEM
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/assert_include
-    )
-endif()
+include(ActsForceAssertions)
 
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
@@ -354,7 +344,7 @@ set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
 set(_acts_traccc_version 1.4.0)
-set(_acts_covfie_version 0.15.2)
+set(_acts_covfie_version 0.16.0)
 set(_acts_vecmem_version 1.28.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)

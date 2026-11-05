@@ -16,8 +16,12 @@
 #include <cmath>
 #include <limits>
 #include <numbers>
+#include <ranges>
+#include <span>
 #include <tuple>
 #include <utility>
+
+#include "detail/SortByKey.hpp"
 
 namespace Acts::Experimental {
 
@@ -94,33 +98,36 @@ void GbtsNodeStorage::extend(
 
 std::vector<std::uint32_t> GbtsNodeStorage::sortBinByPhi(
     const std::vector<std::uint32_t>& staged) const {
-  const std::uint32_t nBuckets = m_cfg.phiSortBuckets;
-  // Sort key (phi, z, r, staged index). Nodes with identical phi are ordered
-  // by position, so the order does not depend on the input order. Only nodes
-  // at the same position fall back to the insertion index.
-  using SortKey = std::tuple<float, float, float, std::uint32_t>;
-  std::array<std::vector<SortKey>, kMaxPhiSortBuckets + 1> phiBuckets;
+  using Item = std::pair<std::uint32_t, float>;
+  struct PhiSortBuckets {
+    std::vector<Item> scratch;
+    std::vector<std::uint32_t> buckets;
+  };
 
+  std::vector<Item> items;
+  items.reserve(staged.size());
   for (const std::uint32_t stagedIdx : staged) {
-    const StagedNode& node = m_staged[stagedIdx];
-    const auto bIdx = static_cast<std::uint32_t>(
-        0.5 * nBuckets * (node.phi / std::numbers::pi_v<float> + 1.0f));
-    phiBuckets[bIdx].emplace_back(node.phi, node.z, node.r, stagedIdx);
+    items.emplace_back(stagedIdx, m_staged[stagedIdx].phi);
   }
 
-  for (std::uint32_t bucket = 0; bucket <= nBuckets; ++bucket) {
-    std::ranges::sort(phiBuckets[bucket]);
-  }
+  // Sort by phi. Nodes with the same phi are ordered by z, then r, so the
+  // result does not depend on the order the space points were inserted in.
+  // Nodes at the same position stay in insertion order, as the sort is
+  // stable.
+  const auto phiOf = [](const Item& item) { return item.second; };
+  const auto byPosition = [this](const Item& a, const Item& b) {
+    const StagedNode& nodeA = m_staged[a.first];
+    const StagedNode& nodeB = m_staged[b.first];
+    return std::tie(nodeA.z, nodeA.r) < std::tie(nodeB.z, nodeB.r);
+  };
 
-  std::vector<std::uint32_t> sorted;
-  sorted.reserve(staged.size());
-  for (std::uint32_t bucket = 0; bucket <= nBuckets; ++bucket) {
-    for (const SortKey& key : phiBuckets[bucket]) {
-      sorted.push_back(std::get<3>(key));
-    }
-  }
+  constexpr std::size_t kQuadraticLinearCrossover = 32;
+  PhiSortBuckets phiBuckets;
+  Acts::detail::sortByKey<kQuadraticLinearCrossover>(
+      std::span(items), phiBuckets, phiOf, byPosition);
 
-  return sorted;
+  const auto order = items | std::views::keys;
+  return {order.begin(), order.end()};
 }
 
 void GbtsNodeStorage::finalize() {

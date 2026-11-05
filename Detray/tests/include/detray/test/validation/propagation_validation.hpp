@@ -33,15 +33,22 @@ namespace detray {
 /// Configure the Kalman Filter comparison test
 template <concepts::scalar scalar_t>
 struct propagation_validation_config {
+  /// Propagation settings for the validation.
   propagation::config propagation;
 
+  /// Particle hypothesis used for propagation.
   pdg_particle<scalar_t> particle = detray::muon<scalar_t>();
 
+  /// Whether multiple scattering is enabled.
   bool do_multiple_scattering{true};
+  /// Whether energy loss is enabled.
   bool do_energy_loss{true};
 
+  /// Whether SVG output is enabled.
   bool display_svg{true};
+  /// Maximum allowed percentage of tracks with missed surfaces.
   float max_percent_missed{1.f};
+  /// Maximum allowed percentage of tracks with additional surfaces.
   float max_percent_additional{15.f};
 };
 

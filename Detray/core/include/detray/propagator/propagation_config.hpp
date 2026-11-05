@@ -21,8 +21,11 @@ namespace detray::propagation {
 
 /// Configuration of the propagation
 struct config {
+  /// Navigation options controlling candidate selection and stopping.
   navigation::config navigation{};
+  /// Stepper options controlling integration and step limits.
   stepping::config stepping{};
+  /// Geometry context passed to propagator actors and surface transforms.
   geometry_context context{};
 
   /// Print the propagation configuration

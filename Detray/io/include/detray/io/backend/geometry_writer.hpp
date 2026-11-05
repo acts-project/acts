@@ -39,6 +39,10 @@ class geometry_writer {
   using payload_type = detector_payload;
 
   /// Convert the header information into its payload
+  /// @tparam detector_t Detector type to serialize.
+  /// @param det Detector providing the volume and surface collections.
+  /// @param det_name Name recorded in the serialized header.
+  /// @return Header payload describing this geometry.
   template <detray::concepts::detector detector_t>
   static geo_header_payload header_to_payload(const detector_t& det,
                                               const std::string_view det_name) {
@@ -54,7 +58,11 @@ class geometry_writer {
     return header_data;
   }
 
-  /// Convert a detector @param det into its io payload
+  /// Convert a detector @p det into its io payload
+  /// @tparam detector_t Detector type to serialize.
+  /// @param det Detector whose geometry is serialized.
+  /// @param names Optional volume names indexed by volume index.
+  /// @return Payload containing serialized volumes and surfaces.
   template <detray::concepts::detector detector_t>
   static payload_type to_payload(const detector_t& det,
                                  const typename detector_t::name_map& names) {
@@ -72,7 +80,10 @@ class geometry_writer {
     return det_data;
   }
 
-  /// Convert a surface transform @param trf into its io payload
+  /// Convert a surface transform @p trf into its io payload
+  /// @tparam detector_t Detector type supplying the transform type.
+  /// @param trf Transform to serialize.
+  /// @return Translation and rotation payload.
   template <detray::concepts::detector detector_t>
   static transform_payload to_payload(
       const typename detector_t::transform3_type& trf) {
@@ -89,7 +100,10 @@ class geometry_writer {
     return trf_data;
   }
 
-  /// Convert a surface mask @param m into its io payload
+  /// Convert a surface mask @p m into its io payload
+  /// @tparam mask_t Mask type to serialize.
+  /// @param m Mask whose shape, link, and boundaries are recorded.
+  /// @return Mask payload.
   template <typename mask_t>
     requires(!std::is_same_v<typename mask_t::shape, void>)
   static mask_payload to_payload(const mask_t& m) {
@@ -106,7 +120,11 @@ class geometry_writer {
     return mask_data;
   }
 
-  /// Convert a detector surface @param sf into its io payload
+  /// Convert a detector surface @p sf into its io payload
+  /// @tparam detector_t Detector type owning the surface.
+  /// @param sf Surface descriptor to serialize.
+  /// @param sf_idx Surface position within its volume collection.
+  /// @return Surface payload with transform, mask, and material links.
   template <detray::concepts::detector detector_t>
   static surface_payload to_payload(const geometry::surface<detector_t>& sf,
                                     std::size_t sf_idx) {
@@ -127,7 +145,12 @@ class geometry_writer {
     return sf_data;
   }
 
-  /// Convert a detector portal @param sf into its io payload
+  /// Convert a detector volume and its contents to its IO representation.
+  /// @tparam detector_t Detector type to serialize.
+  /// @param vol_desc Volume descriptor to serialize.
+  /// @param det Detector providing transforms, surfaces, and accelerators.
+  /// @param name Name associated with the volume.
+  /// @return Volume payload containing surfaces and acceleration links.
   template <detray::concepts::detector detector_t>
   static volume_payload to_payload(
       const typename detector_t::volume_type& vol_desc, const detector_t& det,
