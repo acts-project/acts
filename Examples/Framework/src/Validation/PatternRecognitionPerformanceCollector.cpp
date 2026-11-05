@@ -22,6 +22,7 @@
 #include <limits>
 #include <numbers>
 #include <optional>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -35,40 +36,40 @@ std::vector<double> nearestParticleDistances(
   if (particles.size() < 2) {
     return distances;
   }
+  if (!std::isfinite(maxDeltaR) || maxDeltaR <= 0.) {
+    throw std::invalid_argument(
+        "DeltaR histogram upper edge must be finite and positive");
+  }
+  // Distances at or above the histogram upper edge share its overflow bin.
+  std::ranges::fill(distances, maxDeltaR);
 
   std::vector<std::array<double, 2>> coordinates;
   coordinates.reserve(particles.size());
   double etaMin = std::numeric_limits<double>::infinity();
   double etaMax = -std::numeric_limits<double>::infinity();
-  bool finite = std::isfinite(maxDeltaR) && maxDeltaR > 0.;
+  std::vector<std::size_t> finiteIndices;
+  finiteIndices.reserve(particles.size());
   for (const auto& particle : particles) {
     const double eta = Acts::VectorHelpers::eta(particle.direction());
     const double phi = Acts::VectorHelpers::phi(particle.direction());
     coordinates.push_back({eta, phi});
+    // Non-finite directions do not participate in the neighbour search.
+    if (!std::isfinite(eta) || !std::isfinite(phi)) {
+      continue;
+    }
+    finiteIndices.push_back(coordinates.size() - 1);
     etaMin = std::min(etaMin, eta);
     etaMax = std::max(etaMax, eta);
-    finite = finite && std::isfinite(eta) && std::isfinite(phi);
+  }
+  if (finiteIndices.size() < 2) {
+    return distances;
   }
   etaMin -= maxDeltaR;
   etaMax += maxDeltaR;
 
-  // Non-finite coordinates or unbounded histogram ranges cannot be indexed.
-  if (!finite || !std::isfinite(etaMax - etaMin) || !(etaMin < etaMax)) {
-    std::size_t i = 0;
-    for (const auto& particle : particles) {
-      for (const auto& other : particles) {
-        if (particle.particleId() == other.particleId()) {
-          continue;
-        }
-        const double distance = Acts::VectorHelpers::deltaR(
-            particle.direction(), other.direction());
-        if (distances[i] == -1. || distance < distances[i]) {
-          distances[i] = distance;
-        }
-      }
-      ++i;
-    }
-    return distances;
+  if (!std::isfinite(etaMax - etaMin) || !(etaMin < etaMax)) {
+    throw std::invalid_argument(
+        "DeltaR histogram range cannot define an eta grid");
   }
 
   using EtaAxis =
@@ -86,13 +87,11 @@ std::vector<double> nearestParticleDistances(
       EtaAxis(etaMin, etaMax, bins(etaMax - etaMin)),
       PhiAxis(-std::numbers::pi, std::numbers::pi,
               bins(2. * std::numbers::pi)));
-  for (std::size_t i = 0; i < coordinates.size(); ++i) {
+  for (auto i : finiteIndices) {
     grid.atPosition(coordinates[i]).push_back(i);
   }
 
-  // Distances at or above the histogram upper edge share its overflow bin.
-  std::ranges::fill(distances, maxDeltaR);
-  for (std::size_t i = 0; i < coordinates.size(); ++i) {
+  for (auto i : finiteIndices) {
     const auto localBins =
         grid.multiAxis().getLocalBinsFromPoint(coordinates[i]);
     for (auto bin : grid.multiAxis().getNeighborHoodIndices(localBins, 1)) {

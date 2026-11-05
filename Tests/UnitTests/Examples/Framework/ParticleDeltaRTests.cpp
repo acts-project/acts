@@ -13,6 +13,7 @@
 
 #include <array>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <numbers>
 #include <random>
@@ -32,13 +33,14 @@ void checkAgainstBruteForce(const std::vector<std::array<double, 2>>& points,
   auto stateBackend = std::make_shared<VectorMultiTrajectory>();
   ActsExamples::TrackContainer tracks(trackBackend, stateBackend);
   for (std::size_t i = 0; i < points.size(); ++i) {
-    SimBarcode barcode;
-    barcode.setVertexPrimary(1).setParticle(i + 1);
+    auto barcode = SimBarcode{}.withVertexPrimary(1).withParticle(i + 1);
     SimParticle particle(barcode, PdgParticle::eMuon);
     const auto [eta, phi] = points[i];
     particle.initialState().setDirection(
-        Vector3(std::cos(phi), std::sin(phi), std::sinh(eta)));
-    particle.initialState().setAbsoluteMomentum(10. * std::cosh(eta));
+        std::isinf(eta)
+            ? Vector3(0., 0., std::copysign(1., eta))
+            : Vector3(std::cos(phi), std::sin(phi), std::sinh(eta)));
+    particle.initialState().setAbsoluteMomentum(10.);
     particles.insert(particle);
     if (i % 2 == 0) {
       auto track = tracks.makeTrack();
@@ -123,4 +125,10 @@ BOOST_AUTO_TEST_CASE(ConfiguredRangeAndRandomParticles) {
       checkAgainstBruteForce(points, maxDeltaR);
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(BeamAxisParticles) {
+  const double infinity = std::numeric_limits<double>::infinity();
+  checkAgainstBruteForce({{infinity, 0.}, {0., 0.}, {0., 0.1}});
+  checkAgainstBruteForce({{-infinity, 0.}, {0., 0.}});
 }
