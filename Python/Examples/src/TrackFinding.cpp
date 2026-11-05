@@ -213,13 +213,13 @@ void addTrackFinding(py::module& mex) {
     ACTS_PYTHON_STRUCT(
         c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
         outputTracks, trackingGeometry, magneticField, findTracks,
-        findTracksBrem, trackStateSelection, trackSelectorCfg, maxSteps,
-        twoWay, twoWaySmoothing, seedParamsEstimation, reverseSearch,
-        reverseSearchMinR, reverseSearchMinAbsZ, inwardOnlyMinR,
-        inwardOnlyMinAbsZ, seedDeduplication, seedDeduplicatorCfg, stayOnSeed,
-        pixelVolumeIds, stripVolumeIds, maxPixelHoles, maxStripHoles,
-        trimTracks, recordMaterialStates, useJosephFormulation,
-        constrainToVolumeIds, endOfWorldVolumeIds);
+        findTracksBrem, trackStateSelection, trackSelectorCfg, maxSteps, twoWay,
+        twoWaySmoothing, seedParamsEstimation, reverseSearch, reverseSearchMinR,
+        reverseSearchMinAbsZ, inwardOnlyMinR, inwardOnlyMinAbsZ,
+        seedDeduplication, seedDeduplicatorCfg, stayOnSeed, pixelVolumeIds,
+        stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
+        recordMaterialStates, useJosephFormulation, constrainToVolumeIds,
+        endOfWorldVolumeIds);
   }
 }
 
