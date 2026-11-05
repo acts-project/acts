@@ -246,9 +246,9 @@ auto hough_transform_seeding_algorithm::operator()(
                        images,
                        maxima_x_value});
 
-  /* 
-  edm::houghplane_collection<scalar, 32, 32>::const_view host_view;
-  edm::houghplane_collection<scalar, 32, 32>::buffer host_buffer;
+  /*
+  vecmem::data::jagged_vector_view<scalar> host_view;
+  vecmem::data::jagged_vector_buffer<scalar> host_buffer;
   if (mr().host) {
     host_buffer = copy().to(images, *(mr().host));
     host_view = host_buffer;
@@ -256,10 +256,10 @@ auto hough_transform_seeding_algorithm::operator()(
     host_view = images;
   }
 
-  edm::houghplane_collection<scalar, 32, 32>::const_device host_device{host_view};
+  vecmem::jagged_device_vector<scalar> host_device{host_view};
   std::cout << std::endl;
   for (unsigned int i(0); i<32; ++i) {
-    const auto& image = host_device.plane()[i];
+    const auto& image = host_device[i];
     std::cout << "* IMAGE " << i << ": ";
     for (unsigned int idx(0); idx<32*32; ++idx) std::cout << image[idx] << " ";    
     std::cout << std::endl;
@@ -267,7 +267,7 @@ auto hough_transform_seeding_algorithm::operator()(
   std::cout << std::endl;
   */
 
-  // ---------------------------------------------------
+ // ---------------------------------------------------
   // Run NN
   // ---------------------------------------------------
   vecmem::data::vector_buffer<unsigned int> nn_outcome(total_maxima, mr().main);

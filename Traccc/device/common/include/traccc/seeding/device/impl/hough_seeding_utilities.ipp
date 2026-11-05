@@ -11,7 +11,9 @@ template <unsigned int N_COLS,
 TRACCC_HOST_DEVICE
 inline std::pair<global_index_t, global_index_t> get_col_row(const global_index_t global_index) {
     assert(global_index < N_COLS * N_ROWS);
-    return {global_index / N_ROWS, global_index % N_ROWS};
+    global_index_t col = global_index / N_ROWS;
+    global_index_t row = global_index - N_ROWS * col;
+    return {col, row};
 }
 
 template <typename T>

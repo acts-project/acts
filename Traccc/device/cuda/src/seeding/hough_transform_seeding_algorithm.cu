@@ -95,7 +95,10 @@ namespace kernels {
                       const unsigned int n_maxima,
                       vecmem::data::jagged_vector_view<scalar> images,
                       vecmem::data::vector_view<scalar> maxima_x) {
-      device::take_pictures<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, global_indexes, n_maxima, images, maxima_x);
+      device::take_pictures<T, N_COLS, N_ROWS>(blockIdx.x,
+            threadIdx.y, // cols
+            threadIdx.x, // rows
+            houghplanes, global_indexes, n_maxima, images, maxima_x);
    }
 
    __global__
@@ -241,8 +244,8 @@ void hough_transform_seeding_algorithm::find_maxima_kernel(const find_maxima_pay
 }
 
 void hough_transform_seeding_algorithm::take_picture_kernel(const take_picture_payload& payload) const {
-   const unsigned int n_threads = warp_size() * 8;
-   const unsigned int n_blocks = (payload.n_maxima + n_threads - 1) / n_threads;
+   const dim3 n_threads(32, 32);
+   const unsigned int n_blocks = payload.n_maxima;
    kernels::take_pictures<unsigned short, device::N_COLS, device::N_ROWS>
         <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, 
                                                                     payload.global_index, 
