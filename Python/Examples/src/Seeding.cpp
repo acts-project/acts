@@ -88,7 +88,7 @@ void addSeeding(py::module& mex) {
     ACTS_PYTHON_STRUCT(c, minPt, maxEdgesPerSP, dropDeadEnds, minDeltaRadius,
                        doubletFilterRZ, matchBeforeCreate, validateTriplets,
                        calibrateStrips, maxOuterRadius,
-                       z0HistogramMaxBarrelOrder, pruneShortChains,
+                       z0HistogramMaxDepth, pruneShortChains,
                        useSumRatioCut, sumRatioCutMax);
     patchKwargsConstructor(c);
   }

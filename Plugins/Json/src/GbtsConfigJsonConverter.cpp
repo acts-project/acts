@@ -27,6 +27,7 @@ void Acts::Experimental::to_json(nlohmann::json& j,
   j["id"] = layer.id;
   j["type"] = layer.type;
   j["technology"] = layer.technology;
+  j["depth"] = layer.depth;
   j["surfaces"] = layer.surfaces;
 }
 
@@ -35,6 +36,7 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
   layer.id = j.at("id").get<GbtsExperimentLayerId>();
   layer.type = j.at("type").get<GbtsLayerType>();
   layer.technology = j.at("technology").get<GbtsLayerTechnology>();
+  layer.depth = j.at("depth").get<std::int32_t>();
   layer.surfaces = j.at("surfaces").get<std::vector<GeometryIdentifier>>();
 }
 

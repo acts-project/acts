@@ -2,6 +2,7 @@ set(unittest_extra_libraries ActsPluginJson)
 
 add_unittest(AlgebraJsonConverter AlgebraJsonConverterTests.cpp)
 add_unittest(ExtentJsonConverter ExtentJsonConverterTests.cpp)
+add_unittest(GbtsConfigJsonConverter GbtsConfigJsonConverterTests.cpp)
 add_unittest(GeometryIdentifierJsonConverter GeometryIdentifierJsonConverterTests.cpp)
 add_unittest(GeometryHierarchyMapJsonConverter GeometryHierarchyMapJsonConverterTests.cpp)
 add_unittest(GridJsonConverter GridJsonConverterTests.cpp)
