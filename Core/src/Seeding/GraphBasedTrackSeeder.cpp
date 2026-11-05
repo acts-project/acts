@@ -452,7 +452,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
       continue;
     }
 
-    candidates.push_back({bestState, bestPath});
+    candidates.emplace_back(std::move(bestState), bestPath);
   }
 
   return candidates;
