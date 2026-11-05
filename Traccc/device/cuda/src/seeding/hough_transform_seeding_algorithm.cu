@@ -48,9 +48,7 @@ namespace kernels {
    }
 
    template <typename bfield_t,
-             typename T,
-             unsigned int N_COLS,
-             unsigned int N_ROWS>
+             typename T>
    __global__
    void fill_hough_plane(const traccc::hough_seeding_config config,
 		   const bfield_t bfield,
@@ -63,7 +61,7 @@ namespace kernels {
            const vecmem::data::vector_view<scalar> edges_x,
            const vecmem::data::vector_view<scalar> edges_y,
 		   typename edm::houghplane_collection<T>::view houghplanes) {
-      device::fill_hough_plane<bfield_t, T, N_COLS, N_ROWS>(details::global_index1(), bfield,
+      device::fill_hough_plane<bfield_t, T>(details::global_index1(), bfield,
 		      n_spacepoints,
               spacepoints,
 		      spacepoint_wedge_association,
@@ -75,39 +73,39 @@ namespace kernels {
 		      houghplanes);
    }
 
-   template <typename T,
-             unsigned int N_COLS,
-             unsigned int N_ROWS>
+   template <typename T>
    __global__
    void count_maxima(const typename edm::houghplane_collection<T>::view houghplanes,
                      vecmem::data::vector_view<unsigned int> count_vector) {
-      device::count_maxima<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, count_vector);
+      device::count_maxima<T>(details::global_index1(), houghplanes, count_vector);
    }
 
-   template <typename T,
-             unsigned int N_COLS,
-             unsigned int N_ROWS>
+   template <typename T>
    __global__
    void find_maxima(const typename edm::houghplane_collection<T>::view houghplanes,
                     vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes) {
-      device::find_maxima<T, N_COLS, N_ROWS>(details::global_index1(), houghplanes, global_indexes);
+      device::find_maxima<T>(details::global_index1(), houghplanes, global_indexes);
    }
 
-   template <typename T,
-             unsigned int N_COLS,
-             unsigned int N_ROWS>
+   template <typename T>
    __global__
    void take_pictures(const typename edm::houghplane_collection<T>::const_view houghplanes,
                       const vecmem::data::vector_view<scalar> edges_x,
+                      const vecmem::data::vector_view<scalar> edges_y,
                       const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes,
                       const unsigned int n_maxima,
                       vecmem::data::jagged_vector_view<scalar> images,
                       vecmem::data::vector_view<scalar> maxima_x) {
-      device::take_pictures<T, N_COLS, N_ROWS>(blockIdx.x,
+      device::take_pictures<T>(blockIdx.x,
             threadIdx.y, // cols
             threadIdx.x, // rows
-            houghplanes, edges_x,
-            global_indexes, n_maxima, images, maxima_x);
+            houghplanes, 
+            edges_x,
+            edges_y,
+            global_indexes, 
+            n_maxima, 
+            images, 
+            maxima_x);
    }
 
    __global__
@@ -119,9 +117,7 @@ namespace kernels {
     }
 
    template <typename bfield_t,
-             typename T,
-             unsigned int N_COLS,
-             unsigned int N_ROWS>
+             typename T>
    __global__
    void count_contributing_hits(const unsigned int n_images,
                                 const bfield_t bfield,
@@ -135,7 +131,7 @@ namespace kernels {
                                 const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_index,
                                 const vecmem::data::vector_view<unsigned int> nn_outcome,
                                 vecmem::data::vector_view<unsigned int> count_vector) {
-        device::count_contributing_hits<bfield_t, T, N_COLS, N_ROWS>(details::global_index1(),
+        device::count_contributing_hits<bfield_t, T>(details::global_index1(),
                     n_images,
                     bfield,
                     houghplanes,
@@ -151,9 +147,7 @@ namespace kernels {
    }
 
    template <typename bfield_t,
-             typename T,
-             unsigned int N_COLS,
-             unsigned int N_ROWS>
+             typename T>
    __global__
    void find_contributing_hits(const unsigned int n_images,
                                 const bfield_t bfield,
@@ -167,7 +161,7 @@ namespace kernels {
                                 const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_index,
                                 const vecmem::data::vector_view<unsigned int> nn_outcome,
                                 vecmem::data::jagged_vector_view<traccc::device::global_index_t> hits) {
-      device::find_contributing_hits<bfield_t, T, N_COLS, N_ROWS>(details::global_index1(),
+      device::find_contributing_hits<bfield_t, T>(details::global_index1(),
                     n_images,
                     bfield,
                     houghplanes,
@@ -236,7 +230,7 @@ void hough_transform_seeding_algorithm::fill_hough_plane_kernel(const fill_hough
   const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
   magnetic_field_visitor<bfield_type_list<scalar>>(
   	payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
-		kernels::fill_hough_plane<bfield_view_t, unsigned short, device::N_COLS, device::N_ROWS>
+		kernels::fill_hough_plane<bfield_view_t, unsigned short>
             <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, bfield,
 			    payload.n_spacepoints, payload.spacepoints,
 			    payload.spacepoint_wedge_association,
@@ -253,7 +247,7 @@ void hough_transform_seeding_algorithm::fill_hough_plane_kernel(const fill_hough
 void hough_transform_seeding_algorithm::count_maxima_kernel(const count_maxima_payload& payload) const {
   const unsigned int n_threads = warp_size() * 8;
   const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
-  kernels::count_maxima<unsigned short, device::N_COLS, device::N_ROWS>
+  kernels::count_maxima<unsigned short>
         <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, payload.count_vector);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
@@ -261,7 +255,7 @@ void hough_transform_seeding_algorithm::count_maxima_kernel(const count_maxima_p
 void hough_transform_seeding_algorithm::find_maxima_kernel(const find_maxima_payload& payload) const {
   const unsigned int n_threads = warp_size() * 8;
   const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
-  kernels::find_maxima<unsigned short, device::N_COLS, device::N_ROWS>
+  kernels::find_maxima<unsigned short>
         <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, payload.global_index);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
@@ -269,9 +263,10 @@ void hough_transform_seeding_algorithm::find_maxima_kernel(const find_maxima_pay
 void hough_transform_seeding_algorithm::take_picture_kernel(const take_picture_payload& payload) const {
    const dim3 n_threads(32, 32);
    const unsigned int n_blocks = payload.n_maxima;
-   kernels::take_pictures<unsigned short, device::N_COLS, device::N_ROWS>
+   kernels::take_pictures<unsigned short>
         <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes,
                                                                     payload.edges_x,
+                                                                    payload.edges_y,
                                                                     payload.global_index, 
                                                                     payload.n_maxima, 
                                                                     payload.images,
@@ -295,7 +290,7 @@ void hough_transform_seeding_algorithm::count_contributing_hits_kernel(const cou
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
   magnetic_field_visitor<bfield_type_list<scalar>>(
     payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
-        kernels::count_contributing_hits<bfield_view_t, unsigned short, device::N_COLS, device::N_ROWS>
+        kernels::count_contributing_hits<bfield_view_t, unsigned short>
             <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.n_images,
                                                                     bfield,
                                                                     payload.houghplanes,
@@ -317,7 +312,7 @@ void hough_transform_seeding_algorithm::find_contributing_hits_kernel(const find
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
   magnetic_field_visitor<bfield_type_list<scalar>>(
     payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
-        kernels::find_contributing_hits<bfield_view_t, unsigned short, device::N_COLS, device::N_ROWS>
+        kernels::find_contributing_hits<bfield_view_t, unsigned short>
             <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.n_images,
                                                                     bfield,
                                                                     payload.houghplanes,

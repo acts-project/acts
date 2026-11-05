@@ -6,24 +6,25 @@
 
 namespace traccc::device {
 
-template< typename T,
-    unsigned int N_COLS,
-    unsigned int N_ROWS>
+template< typename T>
 TRACCC_HOST_DEVICE
 void count_maxima(const global_index_t globalIndex,
                   const typename edm::houghplane_collection<T>::view& houghplanes_view,
                   vecmem::data::vector_view<unsigned int>& number_maxima_view) {
-    if (globalIndex >= N_COLS * N_ROWS) return;
+    const unsigned int n_cols = device::N_COLS;
+    const unsigned int n_rows = device::N_ROWS;    
+
+    if (globalIndex >= n_cols * n_rows) return;
     const typename edm::houghplane_collection<T>::device houghplanes(houghplanes_view);
     vecmem::device_vector<unsigned int> number_maxima(number_maxima_view);
 
-    const auto [col, row] = get_col_row<N_COLS, N_ROWS>(globalIndex);    
+    const auto [col, row] = get_col_row(globalIndex, n_cols, n_rows);
     for (unsigned int wedge_idx(0); wedge_idx<houghplanes.size(); ++wedge_idx) {
         const auto& plane = houghplanes.plane()[wedge_idx];
         const T value = plane[globalIndex];
         if (value == 0) continue;
         
-        bool is_maximum = is_local_maximum<T, N_COLS, N_ROWS>(globalIndex, value, plane, col, row);
+        bool is_maximum = is_local_maximum<T>(globalIndex, n_cols, n_rows, value, plane, col, row);
         if (!is_maximum) continue;
         // it is a local maximum
         vecmem::device_atomic_ref<unsigned int> val(number_maxima[wedge_idx]);

@@ -9,25 +9,25 @@
 
 namespace traccc::device {
 
-template< typename T,
-    unsigned int N_COLS,
-    unsigned int N_ROWS >
+template< typename T>
 TRACCC_HOST_DEVICE
 void find_maxima(const global_index_t globalIndex,
                  const typename edm::houghplane_collection<T>::view& houghplanes_view,
                  vecmem::data::jagged_vector_view<global_index_t>& maxima_index_view) {
-    if (globalIndex >= N_COLS * N_ROWS) return;
+    const global_index_t n_cols = device::N_COLS;
+    const global_index_t n_rows = device::N_ROWS;
+    if (globalIndex >= n_cols * n_rows) return;
 
     const typename edm::houghplane_collection<T>::device houghplanes(houghplanes_view);
     vecmem::jagged_device_vector<global_index_t> maxima_index(maxima_index_view);
 
-    const auto [col, row] = get_col_row<N_COLS, N_ROWS>(globalIndex);
+    const auto [col, row] = get_col_row(globalIndex, n_cols, n_rows);
     for (unsigned int wedge_idx(0); wedge_idx<houghplanes.size(); ++wedge_idx) {
         const auto& plane = houghplanes.plane()[wedge_idx];
         const T value = plane[globalIndex];
         if (value == 0) continue;
 
-        bool is_maximum = is_local_maximum<T, N_COLS, N_ROWS>(globalIndex, value, plane, col, row);
+        bool is_maximum = is_local_maximum<T>(globalIndex, n_cols, n_rows, value, plane, col, row);
         if (!is_maximum) continue;
         maxima_index[wedge_idx].push_back(globalIndex);
     }    

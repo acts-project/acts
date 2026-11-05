@@ -6,9 +6,7 @@
 namespace traccc::device {
 
 template <typename bfield_t,
-          typename T,
-          unsigned int N_COLS,
-          unsigned int N_ROWS>
+          typename T>
 TRACCC_HOST_DEVICE
 void count_contributing_hits(const global_index_t globalIndex,
                              const unsigned int n_images,
@@ -35,10 +33,13 @@ void count_contributing_hits(const global_index_t globalIndex,
     
     const vecmem::device_vector<scalar> edges_x(edges_x_view);
     const vecmem::device_vector<scalar> edges_y(edges_y_view);
+ 
+    const global_index_t n_cols = edges_x.size() - 1;
+    const global_index_t n_rows = edges_y.size() - 1;
 
     const global_index_t peak_global_index = global_index[wedge_idx][element_idx];
     const typename edm::houghplane_collection<T>::const_device houghplanes(houghplanes_view);
-    const auto [col, row] = get_col_row<N_COLS, N_ROWS>(peak_global_index);
+    const auto [col, row] = get_col_row(peak_global_index, n_cols, n_rows);
     const scalar min_x = edges_x[col];
     const scalar max_x = edges_x[col + 1];
     const scalar min_y = edges_y[row];

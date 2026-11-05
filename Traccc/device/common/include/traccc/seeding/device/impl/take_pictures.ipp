@@ -21,7 +21,7 @@ inline void take_the_picture(const vecmem::jagged_device_vector<unsigned short>:
     constexpr int wedge_width = 256;
     constexpr int wedge_height = 7000;
 
-    const auto [col, row] = get_col_row<device::N_COLS, device::N_ROWS>(index);
+    const auto [col, row] = get_col_row(index, device::N_COLS, device::N_ROWS);
     const int center_x = static_cast<int>(col);
     const int center_y = static_cast<int>(row);
 
@@ -40,19 +40,24 @@ inline void take_the_picture(const vecmem::jagged_device_vector<unsigned short>:
 }
 
 
-template< typename T,
-    unsigned int N_COLS,
-    unsigned int N_ROWS >
+template<typename T>
 TRACCC_HOST_DEVICE
 void take_pictures(const global_index_t globalIndex,
                    const global_index_t colIndex,
                    const global_index_t rowIndex,
                    const typename edm::houghplane_collection<T>::const_view& houghplanes_view,
                    const vecmem::data::vector_view<scalar>& edges_x_view,
+                   const vecmem::data::vector_view<scalar>& edges_y_view,
                    const vecmem::data::jagged_vector_view<global_index_t>& maxima_index_view,
                    const unsigned int n_maxima,
                    vecmem::data::jagged_vector_view<scalar>& images_view,
                    vecmem::data::vector_view<scalar>& maxima_x_view) {
+    vecmem::device_vector<scalar> edges_x(edges_x_view);
+    vecmem::device_vector<scalar> edges_y(edges_y_view);
+
+    const global_index_t n_cols = edges_x.size() - 1;
+    const global_index_t n_rows = edges_y.size() - 1;
+    
     if (globalIndex >= n_maxima) return;
 
     const typename edm::houghplane_collection<T>::const_device houghplanes(houghplanes_view);
@@ -73,9 +78,8 @@ void take_pictures(const global_index_t globalIndex,
                      rowIndex);
 
     if (colIndex == 0 && rowIndex == 0) {
-        vecmem::device_vector<scalar> edges_x(edges_x_view);
         vecmem::device_vector<scalar> maxima_x(maxima_x_view);
-        const auto [col, _] = get_col_row<N_COLS, N_ROWS>(maxima_idx);
+        const auto [col, _] = get_col_row(maxima_idx, n_cols, n_rows);
         maxima_x[globalIndex] = 0.50f * (edges_x[col] + edges_x[col + 1]);
     }
 }

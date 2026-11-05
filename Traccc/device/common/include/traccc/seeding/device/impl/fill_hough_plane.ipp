@@ -7,9 +7,7 @@
 
 namespace traccc::device {
 
-template<typename T,
-	unsigned int N_COLS,
-	unsigned int N_ROWS>
+template<typename T>
 TRACCC_HOST_DEVICE
 void ranges(const typename edm::houghplane_collection<T>::device& container,
             const vecmem::device_vector<scalar>& edges_x,
@@ -19,30 +17,33 @@ void ranges(const typename edm::houghplane_collection<T>::device& container,
             const scalar phi,
             unsigned int* min_ranges,
             unsigned int* max_ranges) {
-    for (unsigned int i(0); i<N_COLS; ++i) {
+    const unsigned int n_cols = edges_x.size() - 1;
+    const unsigned int n_rows = edges_y.size() - 1;
+
+    for (unsigned int i(0); i<n_cols; ++i) {
         scalar min_value_phi = transform(edges_x[i], r, phi, magnetic_field_z);
         scalar max_value_phi = transform(edges_x[i + 1], r, phi, magnetic_field_z);
         if (min_value_phi > max_value_phi) std::swap(min_value_phi, max_value_phi);
         
         // out of bounds
         if (min_value_phi < container.edges_y()[0] ||
-            max_value_phi > container.edges_y()[N_ROWS]) {
+            max_value_phi > container.edges_y()[n_rows]) {
             min_ranges[i] = 0;
             max_ranges[i] = 0;
             return;
         }
         
         unsigned int phi_bin_min = quant(edges_y[0], 
-                                         edges_y[N_ROWS],
+                                         edges_y[n_rows],
                                          N_ROWS, 
                                          min_value_phi);
         unsigned int phi_bin_max = quant(edges_y[0], 
-                                         edges_y[N_ROWS],
+                                         edges_y[n_rows],
                                          N_ROWS, 
                                          max_value_phi) + 1;
         
         // Clamp bins
-        if (phi_bin_max > device::N_ROWS) phi_bin_max = N_ROWS;
+        if (phi_bin_max > device::N_ROWS) phi_bin_max = n_rows;
         min_ranges[i] = phi_bin_min;
         max_ranges[i] = phi_bin_max;
     }
@@ -50,9 +51,7 @@ void ranges(const typename edm::houghplane_collection<T>::device& container,
 
 
 template<typename bfield_t,
-    typename T,
-    unsigned int N_COLS,
-    unsigned int N_ROWS>
+    typename T>
 TRACCC_HOST_DEVICE
 void fill_hough_plane(const global_index_t globalIndex,
                 const bfield_t& bfield,
@@ -65,7 +64,12 @@ void fill_hough_plane(const global_index_t globalIndex,
                 const vecmem::data::vector_view<scalar>& edges_x_view,
                 const vecmem::data::vector_view<scalar>& edges_y_view,
                 typename edm::houghplane_collection<T>::view& houghplanes_view) {
-    if (globalIndex > N_COLS * N_ROWS) return;
+    const vecmem::device_vector<scalar> edges_x(edges_x_view);
+    const vecmem::device_vector<scalar> edges_y(edges_y_view);
+    const unsigned int n_cols = edges_x.size() - 1;
+    const unsigned int n_rows = edges_y.size() - 1;
+
+    if (globalIndex > n_cols * n_rows) return;
 
     typename edm::houghplane_collection<T>::device houghplanes(houghplanes_view);
     const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
@@ -74,10 +78,8 @@ void fill_hough_plane(const global_index_t globalIndex,
     const vecmem::device_vector<unsigned long long> spacepoint_detector_id(spacepoint_detector_id_view);
     const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
     const vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
-    const vecmem::device_vector<scalar> edges_x(edges_x_view);
-    const vecmem::device_vector<scalar> edges_y(edges_y_view);
 
-    const auto [x_bin, y_bin] = get_col_row<N_COLS, N_ROWS>(globalIndex);
+    const auto [x_bin, y_bin] = get_col_row(globalIndex, n_cols, n_rows);
 
     // given the bin, take the edges in both dimensions
     const scalar min_x = edges_x[x_bin];

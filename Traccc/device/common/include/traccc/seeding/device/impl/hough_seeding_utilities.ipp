@@ -6,14 +6,13 @@
 
 namespace traccc::device {
 
-template <unsigned int N_COLS,
-          unsigned int N_ROWS>
 TRACCC_HOST_DEVICE
-inline std::pair<global_index_t, global_index_t> get_col_row(const global_index_t global_index) {
-    assert(global_index < N_COLS * N_ROWS);
-    global_index_t col = global_index / N_ROWS;
-    global_index_t row = global_index - N_ROWS * col;
-    return {col, row};
+inline std::pair<global_index_t, global_index_t> get_col_row(const global_index_t global_index,
+                                                             [[maybe_unused]] const global_index_t n_cols,
+                                                             const global_index_t n_rows) {
+    assert(global_index < n_cols * n_rows);
+    global_index_t col = global_index / n_rows;
+    return {col, global_index - n_rows * col};
 }
 
 template <typename T>
@@ -60,18 +59,18 @@ scalar transform(const scalar qopt_value,
     return phi_value;
 }
 
-template <typename T,
-    unsigned int N_COLS,
-    unsigned int N_ROWS >
+template <typename T>
 TRACCC_HOST_DEVICE
 bool is_local_maximum(const global_index_t globalIndex,
+                      const global_index_t n_cols,
+                      const global_index_t n_rows,
                       const T value,
                       const vecmem::device_vector<const T>& plane,                      
                       const long long col,
                       const long long row) {
     if (value < 5) return false; // threshold
-    static constexpr long long rows = N_ROWS;
-    static constexpr long long cols = N_COLS;
+    const long long rows = n_rows;
+    const long long cols = n_cols;
 
     for (int dx = -1; dx <= 1; ++dx) {
             const long long neighbor_col = col + dx;

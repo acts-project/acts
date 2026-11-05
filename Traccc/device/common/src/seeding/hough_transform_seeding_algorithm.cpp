@@ -280,6 +280,7 @@ auto hough_transform_seeding_algorithm::operator()(
   take_picture_kernel({total_maxima,
                        result,
                        edges_x,
+                       edges_y,
                        maxima_global_index,
                        images,
                        maxima_x_value});
