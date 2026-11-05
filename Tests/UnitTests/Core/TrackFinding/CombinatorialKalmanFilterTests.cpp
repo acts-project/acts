@@ -242,7 +242,7 @@ struct Fixture {
 /// A calibrated measurement reading straight out of a @ref TestSourceLink,
 /// which stores its values inline in a 2d buffer. Its dimension is only known
 /// at runtime, i.e. this exercises the dynamically sized side of
-/// @ref Acts::MeasurementConcept.
+/// @c Acts::detail::CalibratedMeasurementConcept.
 class CalibratedTestSourceLink {
  public:
   explicit CalibratedTestSourceLink(const TestSourceLink& sourceLink)
@@ -281,10 +281,12 @@ class CalibratedTestSourceLink {
   std::array<std::uint8_t, 2> m_indices{};
 };
 
-static_assert(MeasurementConcept<CalibratedTestSourceLink> &&
-                  !StaticMeasurementConcept<CalibratedTestSourceLink>,
-              "The calibrated test source link should exercise the runtime "
-              "dispatch on the measurement dimension");
+static_assert(
+    Acts::detail::CalibratedMeasurementConcept<CalibratedTestSourceLink> &&
+        !Acts::detail::StaticCalibratedMeasurementConcept<
+            CalibratedTestSourceLink>,
+    "The calibrated test source link should exercise the runtime "
+    "dispatch on the measurement dimension");
 
 /// The same thing built on @ref TrackStateCreatorBase, i.e. without pushing
 /// every measurement through the track EDM first.

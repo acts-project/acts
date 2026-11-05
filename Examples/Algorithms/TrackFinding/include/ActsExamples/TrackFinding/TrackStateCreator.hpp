@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 
 #include <algorithm>
@@ -23,6 +24,13 @@
 #include <utility>
 
 namespace ActsExamples {
+
+// The creators below hand the measurement proxies to track finding as
+// calibrated measurements, so they have to satisfy the contract it expects.
+static_assert(Acts::detail::CalibratedMeasurementConcept<
+              ConstVariableBoundMeasurementProxy>);
+static_assert(Acts::detail::StaticCalibratedMeasurementConcept<
+              ConstFixedBoundMeasurementProxy<2>>);
 
 /// Cuts applied when extending a track onto a surface.
 struct TrackStateSelectionCuts {

@@ -42,11 +42,13 @@
 #include "ActsExamples/TrackFinding/TrackStateCreator.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <utility>
 

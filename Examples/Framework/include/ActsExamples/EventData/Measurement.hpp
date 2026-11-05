@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MeasurementConcept.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -597,11 +596,5 @@ class MeasurementSubset
 
   MeasurementContainer::OrderedIndices m_orderedIndices;
 };
-
-// The proxies are handed to track finding as calibrated measurements, so they
-// have to satisfy the contract it expects.
-static_assert(Acts::MeasurementConcept<ConstVariableBoundMeasurementProxy>);
-static_assert(
-    Acts::StaticMeasurementConcept<ConstFixedBoundMeasurementProxy<2>>);
 
 }  // namespace ActsExamples

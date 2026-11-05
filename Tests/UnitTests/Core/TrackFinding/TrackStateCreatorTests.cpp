@@ -51,7 +51,7 @@ struct TestMeasurement {
 };
 
 /// The calibrated form of a @ref TestMeasurement, i.e. about the smallest
-/// thing satisfying @ref Acts::MeasurementConcept. Its dimension is known at
+/// thing satisfying @c Acts::detail::CalibratedMeasurementConcept. Its dimension is known at
 /// compile time, so the creator never dispatches on it at runtime.
 struct CalibratedTestMeasurement {
   Vector<1> params;
@@ -64,9 +64,10 @@ struct CalibratedTestMeasurement {
   const SquareMatrix<1>& covariance() const { return cov; }
 };
 
-static_assert(StaticMeasurementConcept<CalibratedTestMeasurement>,
-              "The test measurement should be usable without a runtime "
-              "dispatch on its dimension");
+static_assert(
+    Acts::detail::StaticCalibratedMeasurementConcept<CalibratedTestMeasurement>,
+    "The test measurement should be usable without a runtime "
+    "dispatch on its dimension");
 
 /// Minimal creator over a flat list of `TestMeasurement`.
 struct TestCreator final

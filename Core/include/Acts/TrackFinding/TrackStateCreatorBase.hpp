@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
-#include "Acts/EventData/MeasurementConcept.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
@@ -23,13 +22,83 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cassert>
+#include <concepts>
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <ranges>
+#include <type_traits>
+#include <utility>
 
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
+
+namespace detail {
+
+/// The parameter vector type of a measurement like type
+/// @tparam T the measurement like type
+template <typename T>
+using MeasurementParametersType =
+    std::decay_t<decltype(std::declval<const T&>().parameters())>;
+
+/// The covariance matrix type of a measurement like type
+/// @tparam T the measurement like type
+template <typename T>
+using MeasurementCovarianceType =
+    std::decay_t<decltype(std::declval<const T&>().covariance())>;
+
+/// Requirements on a calibrated measurement expressed in a subspace of a
+/// parameter space.
+///
+/// This is the contract between a track finder and whatever the client uses to
+/// represent a calibrated measurement. It is deliberately minimal so that
+/// existing measurement proxies satisfy it without a copy.
+///
+/// The dimension may be known at compile time or only at runtime, see
+/// @c StaticCalibratedMeasurementConcept.
+///
+/// @tparam T the measurement like type
+template <typename T>
+concept CalibratedMeasurementConcept = requires(const T& measurement) {
+  /// The measurement dimension
+  { measurement.size() } -> std::integral;
+  /// The parameters of the parameter space the measurement constrains,
+  /// exactly `size()` of them
+  { measurement.subspaceIndices() } -> std::ranges::sized_range;
+  /// The measured values
+  { measurement.parameters() };
+  /// The covariance of the measured values
+  { measurement.covariance() };
+
+  requires std::convertible_to<
+      std::ranges::range_value_t<decltype(measurement.subspaceIndices())>,
+      std::uint8_t>;
+  requires detail::MeasurementParametersType<T>::ColsAtCompileTime == 1;
+  requires detail::MeasurementParametersType<T>::RowsAtCompileTime ==
+               detail::MeasurementCovarianceType<T>::RowsAtCompileTime;
+};
+
+/// The dimension of a measurement if it is known at compile time,
+/// `Eigen::Dynamic` otherwise.
+///
+/// @tparam measurement_t the measurement type
+template <CalibratedMeasurementConcept measurement_t>
+constexpr int CalibratedMeasurementSizeAtCompileTime =
+    detail::MeasurementParametersType<measurement_t>::RowsAtCompileTime;
+
+/// A calibrated measurement whose dimension is known at compile time.
+///
+/// Algorithms can use this to skip the runtime dispatch over the measurement
+/// dimension.
+///
+/// @tparam measurement_t the measurement type
+template <typename measurement_t>
+concept StaticCalibratedMeasurementConcept =
+    CalibratedMeasurementConcept<measurement_t> &&
+    (CalibratedMeasurementSizeAtCompileTime<measurement_t> != Eigen::Dynamic);
+
+}  // namespace detail
 
 /// @addtogroup track_finding
 /// @{
@@ -44,10 +113,11 @@ namespace Acts {
 ///
 /// @param measurement the calibrated measurement
 /// @param trackState the track state to write to
-template <MeasurementConcept measurement_t, typename track_state_proxy_t>
+template <detail::CalibratedMeasurementConcept measurement_t,
+          typename track_state_proxy_t>
 void fillTrackStateCalibrated(const measurement_t& measurement,
                               track_state_proxy_t trackState) {
-  if constexpr (StaticMeasurementConcept<measurement_t>) {
+  if constexpr (detail::StaticCalibratedMeasurementConcept<measurement_t>) {
     trackState.allocateCalibrated(measurement.parameters().eval(),
                                   measurement.covariance().eval());
   } else {
@@ -144,7 +214,8 @@ struct TrackStateCandidate {
 /// EDM. The derived class has to provide
 /// - `measurementRange(state)`: the measurements associated to `state.surface`
 /// - `sourceLink(state, measurement)`: the uncalibrated source link
-/// - `calibrate(state, measurement)`: a @ref Acts::MeasurementConcept value
+/// - `calibrate(state, measurement)`: the calibrated measurement, see
+///   @c detail::CalibratedMeasurementConcept
 ///
 /// and may override any of the defaulted customization points below.
 ///
@@ -281,10 +352,10 @@ class TrackStateCreatorBase {
   /// @param measurement the calibrated measurement
   ///
   /// @return the local chi2 contribution
-  template <MeasurementConcept measurement_t>
+  template <detail::CalibratedMeasurementConcept measurement_t>
   double calculatePredictedChi2(const State& state,
                                 const measurement_t& measurement) const {
-    if constexpr (StaticMeasurementConcept<measurement_t>) {
+    if constexpr (detail::StaticCalibratedMeasurementConcept<measurement_t>) {
       return predictedChi2(measurement.parameters(), measurement.covariance(),
                            measurement.subspaceIndices(), state.predicted(),
                            state.predictedCovariance());
