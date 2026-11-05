@@ -23,6 +23,13 @@
 
 namespace Acts::detail {
 
+/// The limit up to which a quadratic sort is used: the rank sort for the whole
+/// list instead of the linear bucket sort, and the insertion pass for one
+/// bucket instead of std::ranges::stable_sort. A general value, not tuned for
+/// one architecture: anything from 32 to 256 does about as well, below 32 it
+/// can get slower.
+inline constexpr std::size_t kQuadraticLinearCrossover = 32;
+
 /// Sorts at most @p kMaxSize items stably by key with a rank sort: an item's
 /// new position is the number of smaller keys, plus the number of equal keys
 /// before it.
@@ -87,11 +94,11 @@ void rankSortByKey(std::span<item_t> items, const key_of_t& keyOf) {
 /// Sorts @p items stably by key, given the smallest and the largest key: they
 /// are spread over buckets across the key range, then each bucket is put in
 /// order with an insertion pass. A bucket that gets more than
-/// @p kQuadraticLinearCrossover items is sorted with std::ranges::stable_sort
+/// kQuadraticLinearCrossover items is sorted with std::ranges::stable_sort
 /// instead, so that uneven keys cannot make it slow. The keys must lie well
 /// within float's range.
-template <std::size_t kQuadraticLinearCrossover, typename item_t,
-          typename storage_t, typename key_of_t, typename key_t>
+template <typename item_t, typename storage_t, typename key_of_t,
+          typename key_t>
 void bucketSortByKey(std::span<item_t> items, storage_t& storage,
                      const key_of_t& keyOf, const key_t minKey,
                      const key_t maxKey) {
@@ -178,18 +185,14 @@ void bucketSortByKey(std::span<item_t> items, storage_t& storage,
 }
 
 /// Sorts @p items stably by the number @p keyOf gives each, of any arithmetic
-/// type: the rank sort up to @p kQuadraticLinearCrossover items, the bucket
+/// type: the rank sort up to kQuadraticLinearCrossover items, the bucket
 /// sort above, and std::ranges::stable_sort where a key is not finite.
 ///
-/// @tparam kQuadraticLinearCrossover Up to how many items a quadratic sort is
-///         used: the rank sort for the whole list, the insertion pass for one
-///         bucket
 /// @param items The items to sort
 /// @param storage Kept between calls: `scratch`, a vector of items, and
 ///        `buckets`, a vector of std::uint32_t, both of any content
 /// @param keyOf Returns the key of an item
-template <std::size_t kQuadraticLinearCrossover, typename item_t,
-          typename storage_t, typename key_of_t>
+template <typename item_t, typename storage_t, typename key_of_t>
 void sortByKey(std::span<item_t> items, storage_t& storage,
                const key_of_t& keyOf) {
   // The type keyOf returns for an item
@@ -221,8 +224,7 @@ void sortByKey(std::span<item_t> items, storage_t& storage,
   if (items.size() <= kQuadraticLinearCrossover) {
     rankSortByKey<kQuadraticLinearCrossover>(items, keyOf);
   } else {
-    bucketSortByKey<kQuadraticLinearCrossover>(items, storage, keyOf, minKey,
-                                               maxKey);
+    bucketSortByKey(items, storage, keyOf, minKey, maxKey);
   }
 }
 
@@ -230,9 +232,6 @@ void sortByKey(std::span<item_t> items, storage_t& storage,
 /// @p orderOfEqualKeys. With float keys equal keys are rare, so this costs
 /// little more than the sort by key.
 ///
-/// @tparam kQuadraticLinearCrossover Up to how many items a quadratic sort is
-///         used: the rank sort for the whole list, the insertion pass for one
-///         bucket
 /// @param items The items to sort
 /// @param storage Kept between calls: `scratch`, a vector of items, and
 ///        `buckets`, a vector of std::uint32_t, both of any content
@@ -240,11 +239,11 @@ void sortByKey(std::span<item_t> items, storage_t& storage,
 /// @param orderOfEqualKeys Whether the first of two items with equal keys goes
 ///        before the second, a strict weak order; it is called only on items
 ///        with equal keys
-template <std::size_t kQuadraticLinearCrossover, typename item_t,
-          typename storage_t, typename key_of_t, typename order_t>
+template <typename item_t, typename storage_t, typename key_of_t,
+          typename order_t>
 void sortByKey(std::span<item_t> items, storage_t& storage,
                const key_of_t& keyOf, const order_t& orderOfEqualKeys) {
-  sortByKey<kQuadraticLinearCrossover>(items, storage, keyOf);
+  sortByKey(items, storage, keyOf);
 
   for (auto first = items.begin(); first != items.end();) {
     const auto key = keyOf(*first);
