@@ -102,19 +102,29 @@ class hough_transform_seeding_algorithm
     // The edges Y
     const vecmem::data::vector_view<scalar>& edges_y;
     /// The output hough planes
-    edm::houghplane_collection<unsigned short>::view& houghplanes;
+    // edm::houghplane_collection<unsigned short>::view& houghplanes;
+    vecmem::data::vector_view<unsigned long long>& bins;
+  };
+
+  struct count_bits_kernel_payload {
+    // The number of entries
+    const unsigned long long n_entries;
+    // The bit count entries
+    const vecmem::data::vector_view<unsigned long long>& bits;
+    // The output counts
+    vecmem::data::vector_view<unsigned short>& values;
   };
 
   struct count_maxima_payload {
     // The hough planes
-    const edm::houghplane_collection<unsigned short>::view& houghplanes;
+    const vecmem::data::vector_view<unsigned short>& houghplanes;    
     // The count vector
     vecmem::data::vector_view<unsigned int>& count_vector;
   };
  
   struct find_maxima_payload {
     // The hough planes
-    const edm::houghplane_collection<unsigned short>::view& houghplanes;
+    const vecmem::data::vector_view<unsigned short>& houghplanes;
     // The global index vector
     vecmem::data::jagged_vector_view<global_index_t>& global_index;
   };
@@ -123,7 +133,7 @@ class hough_transform_seeding_algorithm
     // Number of maxima
     unsigned int n_maxima;
     // The hough planes
-    const edm::houghplane_collection<unsigned short>::const_view& houghplanes;
+    const vecmem::data::vector_view<unsigned short>& houghplanes;    
     // The edges X
     const vecmem::data::vector_view<scalar>& edges_x;
     // The edges Y
@@ -219,6 +229,7 @@ class hough_transform_seeding_algorithm
   virtual void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const = 0;
   virtual void precompute_spacepoint_variables_kernel(const precompute_spacepoint_variables_payload& payload) const = 0;
   virtual void fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const = 0;
+  virtual void count_bits_kernel(const count_bits_kernel_payload& payload) const = 0;
   virtual void count_maxima_kernel(const count_maxima_payload& payload) const = 0;
   virtual void find_maxima_kernel(const find_maxima_payload& payload) const = 0;
   virtual void take_picture_kernel(const take_picture_payload& payload) const = 0;
@@ -245,4 +256,5 @@ class hough_transform_seeding_algorithm
 #include "traccc/seeding/device/impl/count_contributing_hits.ipp"
 #include "traccc/seeding/device/impl/find_contributing_hits.ipp"
 #include "traccc/seeding/device/impl/make_seeds.ipp"
+#include "traccc/seeding/device/impl/count_bits.ipp"
 

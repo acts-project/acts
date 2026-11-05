@@ -60,7 +60,7 @@ namespace kernels {
            const vecmem::data::vector_view<scalar> spacepoint_phi,
            const vecmem::data::vector_view<scalar> edges_x,
            const vecmem::data::vector_view<scalar> edges_y,
-		   typename edm::houghplane_collection<T>::view houghplanes) {
+           vecmem::data::vector_view<unsigned long long> bins) {
       device::fill_hough_plane<bfield_t, T>(details::global_index1(), bfield,
 		      n_spacepoints,
               spacepoints,
@@ -70,26 +70,32 @@ namespace kernels {
               spacepoint_phi,
               edges_x,
               edges_y,
-		      houghplanes);
+		      bins);
    }
 
-   template <typename T>
    __global__
-   void count_maxima(const typename edm::houghplane_collection<T>::view houghplanes,
+   void count_bits(const unsigned long long n_entries,
+            const vecmem::data::vector_view<unsigned long long> bits,
+            vecmem::data::vector_view<unsigned short> entries) {
+      device::count_bits(details::global_index1(),
+            n_entries, bits, entries);
+   }
+
+   __global__
+   void count_maxima(const vecmem::data::vector_view<unsigned short> houghplanes,
                      vecmem::data::vector_view<unsigned int> count_vector) {
-      device::count_maxima<T>(details::global_index1(), houghplanes, count_vector);
+      device::count_maxima(details::global_index1(), houghplanes, count_vector);
    }
 
-   template <typename T>
    __global__
-   void find_maxima(const typename edm::houghplane_collection<T>::view houghplanes,
+   void find_maxima(const vecmem::data::vector_view<unsigned short> houghplanes,
                     vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes) {
-      device::find_maxima<T>(details::global_index1(), houghplanes, global_indexes);
+      device::find_maxima(details::global_index1(), houghplanes, global_indexes);
    }
 
    template <typename T>
    __global__
-   void take_pictures(const typename edm::houghplane_collection<T>::const_view houghplanes,
+   void take_pictures(const vecmem::data::vector_view<unsigned short> houghplanes,
                       const vecmem::data::vector_view<scalar> edges_x,
                       const vecmem::data::vector_view<scalar> edges_y,
                       const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes,
@@ -239,15 +245,24 @@ void hough_transform_seeding_algorithm::fill_hough_plane_kernel(const fill_hough
                 payload.spacepoint_phi,
                 payload.edges_x,
                 payload.edges_y,
-			    payload.houghplanes);
+			    payload.bins);
   });
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+}
+
+void hough_transform_seeding_algorithm::count_bits_kernel(const count_bits_kernel_payload& payload) const {
+  const unsigned int n_threads = warp_size() * 8;
+  const  unsigned int n_blocks = (payload.n_entries + n_threads - 1) / n_threads;
+  kernels::count_bits<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.n_entries,
+        payload.bits,
+        payload.values);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 void hough_transform_seeding_algorithm::count_maxima_kernel(const count_maxima_payload& payload) const {
   const unsigned int n_threads = warp_size() * 8;
   const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
-  kernels::count_maxima<unsigned short>
+  kernels::count_maxima
         <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, payload.count_vector);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
@@ -255,7 +270,7 @@ void hough_transform_seeding_algorithm::count_maxima_kernel(const count_maxima_p
 void hough_transform_seeding_algorithm::find_maxima_kernel(const find_maxima_payload& payload) const {
   const unsigned int n_threads = warp_size() * 8;
   const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
-  kernels::find_maxima<unsigned short>
+  kernels::find_maxima
         <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, payload.global_index);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }

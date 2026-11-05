@@ -35,7 +35,7 @@ inline std::pair<global_index_t, global_index_t> get_wedge_element(const global_
 }
 
 TRACCC_HOST_DEVICE
-inline unsigned short count_bits(unsigned long long x) {
+inline unsigned short count_bits(const unsigned long long x) {
     unsigned short nOnes = 0;
     for (int i(0); i<64; ++i) {
        if ((x & (1ULL << i)) != 0ULL) ++nOnes;
@@ -59,13 +59,12 @@ scalar transform(const scalar qopt_value,
     return phi_value;
 }
 
-template <typename T>
 TRACCC_HOST_DEVICE
 bool is_local_maximum(const global_index_t globalIndex,
                       const global_index_t n_cols,
                       const global_index_t n_rows,
-                      const T value,
-                      const vecmem::device_vector<const T>& plane,                      
+                      const unsigned int value,
+                      const unsigned short* plane,
                       const long long col,
                       const long long row) {
     if (value < 5) return false; // threshold
@@ -73,11 +72,11 @@ bool is_local_maximum(const global_index_t globalIndex,
     const long long cols = n_cols;
 
     for (int dx = -1; dx <= 1; ++dx) {
-            const long long neighbor_col = col + dx;
-            if (neighbor_col < 0 || neighbor_col >= cols) continue;     
+        const long long neighbor_col = col + dx;
+        if (neighbor_col < 0 || neighbor_col >= cols) continue;     
+        
         for (int dy = -1; dy <= 1; ++dy) {
             const long long neighbor_row = (row + dy + rows) % rows;
-
             const auto neighbor_index =
                 static_cast<unsigned long long>(neighbor_col) * N_ROWS +
                 static_cast<unsigned long long>(neighbor_row);

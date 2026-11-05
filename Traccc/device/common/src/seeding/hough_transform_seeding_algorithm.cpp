@@ -45,12 +45,14 @@ auto hough_transform_seeding_algorithm::operator()(
  
   // Set up the output buffer.
   edm::houghplane_collection<unsigned short>::const_view::size_type n_slices = m_config.wedges.size();
+  /*
   edm::houghplane_collection<unsigned short>::buffer result(
           std::vector<unsigned int>(n_slices, N_COLS * N_ROWS),
 		  mr().main, mr().host, 
 		  vecmem::data::buffer_type::resizable);
   copy().setup(result)->ignore();
-
+  */
+  
   // ---------------------------------------------------
   // Fill plane edges
   vecmem::data::vector_buffer<scalar> edges_x(N_COLS + 1, mr().main);
@@ -76,7 +78,7 @@ auto hough_transform_seeding_algorithm::operator()(
   copy()(edges_y, edges_y_host)->wait();
   
   printf("edges x: ");
-  for (const scalar value : edges_x_host) printf("%.4f ", value);
+  lor (const scalar value : edges_x_host) printf("%.4f ", value);
   printf("\n");
 
   printf("edges y: ");
@@ -159,6 +161,11 @@ auto hough_transform_seeding_algorithm::operator()(
   // ---------------------------------------------------
   // Fill the planes with space points
   // ---------------------------------------------------
+  vecmem::data::vector_buffer<unsigned long long> houghplane_bins(n_slices * N_COLS * N_ROWS, mr().main);
+  copy().setup(vecmem::ignore_event, houghplane_bins);
+  copy().memset(vecmem::ignore_event, houghplane_bins, 0);
+
+
   fill_hough_plane_kernel({m_config, bfield,
                   n_spacepoints, 
                   spacepoints,
@@ -168,8 +175,20 @@ auto hough_transform_seeding_algorithm::operator()(
                   spacepoint_phi,
                   edges_x,
                   edges_y,
-		          result});
+                  houghplane_bins});
 
+
+  // ---------------------------------------------------
+  // COUNT BITS
+  // ---------------------------------------------------
+  
+  vecmem::data::vector_buffer<unsigned short> houghplane_entries(n_slices * N_COLS * N_ROWS, mr().main);
+  copy().setup(vecmem::ignore_event, houghplane_entries);
+  copy().memset(vecmem::ignore_event, houghplane_entries, 0);
+
+  count_bits_kernel({n_slices * N_COLS * N_ROWS,
+              houghplane_bins,
+              houghplane_entries}); 
 
   // ---------------------------------------------------
   // Count and then find the maxima
@@ -178,7 +197,7 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().setup(vecmem::ignore_event, maxima_sizes);
   copy().memset(vecmem::ignore_event, maxima_sizes, 0);
 
-  count_maxima_kernel({result, maxima_sizes});
+  count_maxima_kernel({houghplane_entries, maxima_sizes});
   vecmem::vector<unsigned int> maxima_sizes_host = ((mr().host != nullptr)
                 ? vecmem::vector<unsigned int>(mr().host)
                 : vecmem::vector<unsigned int>());
@@ -193,21 +212,16 @@ auto hough_transform_seeding_algorithm::operator()(
         vecmem::data::buffer_type::resizable);
   copy().setup(maxima_global_index)->ignore();
 
-  find_maxima_kernel({result,
+  find_maxima_kernel({houghplane_entries,
                       maxima_global_index});
 
 
   /*
   // planes
-  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::view ht_host_view;
-  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::buffer ht_host_buffer;
-  if (mr().host) {
-    ht_host_buffer = copy().to(result, *(mr().host));
-    ht_host_view = ht_host_buffer;
-  } else {
-    ht_host_view = result;
-  }
-  edm::houghplane_collection<unsigned short, N_COLS, N_ROWS>::device ht_host_device(ht_host_view); 
+  vecmem::vector<unsigned short> houghplane_entries_host = ((mr().host != nullptr)
+                ? vecmem::vector<unsigned short>(mr().host)
+                : vecmem::vector<unsigned short>());
+  copy()(houghplane_entries, houghplane_entries_host)->wait(); 
 
   // maxima
   vecmem::data::jagged_vector_view<unsigned int> host_view;
@@ -221,18 +235,17 @@ auto hough_transform_seeding_algorithm::operator()(
   vecmem::jagged_device_vector<unsigned int> host_device{host_view};  
 
   std::cout << std::endl;
-  for (unsigned int i(0); i<ht_host_device.size(); ++i) {
-    const auto& plane = ht_host_device.plane()[i];
+  for (unsigned int i(0); i<n_slices; ++i) {
+    const unsigned int plane_index = i * N_COLS * N_ROWS;
     const auto& maxima = host_device[i];
 
     std::cout << "Slice " << i << ": maxima = ";
     for (const auto maximum : maxima) std::cout << maximum << "  ";
     std::cout << "values = ";
-    for (unsigned int idx(0); idx<N_COLS * N_ROWS; ++idx) std::cout << plane[idx] << " ";
+    for (unsigned int idx(0); idx<N_COLS * N_ROWS; ++idx) std::cout << houghplane_entries_host[plane_index + idx] << " ";
     std::cout << std::endl;
   }
   */
-  
 
   /*
   vecmem::data::jagged_vector_view<unsigned int> host_view;
@@ -278,13 +291,12 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().setup(images)->ignore();
 
   take_picture_kernel({total_maxima,
-                       result,
+                       houghplane_entries,
                        edges_x,
                        edges_y,
                        maxima_global_index,
                        images,
                        maxima_x_value});
- 
   
 /* 
   vecmem::data::jagged_vector_view<scalar> host_view;
@@ -316,10 +328,11 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().memset(vecmem::ignore_event, nn_outcome, 0);
 
   evaluate_nn_kernel({total_maxima, images, maxima_x_value, nn_outcome});
-
+  return {};
   // ---------------------------------------------------
   // Count and find the contributing hits
   // ---------------------------------------------------
+  /*
   vecmem::data::vector_buffer<unsigned int> hits_sizes(total_maxima, mr().main);
   copy().setup(vecmem::ignore_event, hits_sizes);
   copy().memset(vecmem::ignore_event, hits_sizes, 0);
@@ -341,7 +354,9 @@ auto hough_transform_seeding_algorithm::operator()(
                 ? vecmem::vector<unsigned int>(mr().host)
                 : vecmem::vector<unsigned int>());
   copy()(hits_sizes, hits_sizes_host)->wait();
- 
+  */
+
+
   /*  
   std::cout << std::endl;
   std::cout << "Number of images: " << total_maxima << std::endl;
@@ -354,7 +369,7 @@ auto hough_transform_seeding_algorithm::operator()(
   // unsigned int total_hits = 0u;
   // for (unsigned int i(0); i<hits_sizes_host.size(); ++i) total_hits += hits_sizes_host[i];
 
-
+  /*
   vecmem::data::jagged_vector_buffer<global_index_t> hits(hits_sizes_host,
         mr().main, mr().host,
         vecmem::data::buffer_type::resizable);
@@ -374,7 +389,7 @@ auto hough_transform_seeding_algorithm::operator()(
                             nn_outcome,
                             hits});
   synchronize();
-
+  */
 
   /*
   synchronize();
@@ -402,6 +417,7 @@ auto hough_transform_seeding_algorithm::operator()(
   */
 
   // Make the seeds
+  /*
   std::vector<unsigned int> matrices_sizes(hits_sizes_host.size());
   std::transform(hits_sizes_host.begin(), hits_sizes_host.end(), matrices_sizes.begin(),
                [](unsigned int x) { return x * x; });
@@ -417,7 +433,9 @@ auto hough_transform_seeding_algorithm::operator()(
                      nn_outcome,
                      hits,
                      matrices});
-  
+  */
+
+
   /*
   synchronize();
 
@@ -446,7 +464,8 @@ auto hough_transform_seeding_algorithm::operator()(
 
 
   // Return the result.
-  return result;
+  // return result;
+  return {};
 }
 
 }  // namespace traccc::device

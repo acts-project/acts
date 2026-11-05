@@ -10,7 +10,7 @@
 namespace traccc::device {
 
 TRACCC_HOST_DEVICE
-inline void take_the_picture(const vecmem::jagged_device_vector<unsigned short>::const_reference wedge,
+inline void take_the_picture(const unsigned short* wedge,
                              vecmem::jagged_device_vector<scalar>::reference image,
                              const global_index_t index,
                              const int width, 
@@ -45,7 +45,7 @@ TRACCC_HOST_DEVICE
 void take_pictures(const global_index_t globalIndex,
                    const global_index_t colIndex,
                    const global_index_t rowIndex,
-                   const typename edm::houghplane_collection<T>::const_view& houghplanes_view,
+                   const vecmem::data::vector_view<unsigned short>& houghplanes_view,
                    const vecmem::data::vector_view<scalar>& edges_x_view,
                    const vecmem::data::vector_view<scalar>& edges_y_view,
                    const vecmem::data::jagged_vector_view<global_index_t>& maxima_index_view,
@@ -60,7 +60,7 @@ void take_pictures(const global_index_t globalIndex,
     
     if (globalIndex >= n_maxima) return;
 
-    const typename edm::houghplane_collection<T>::const_device houghplanes(houghplanes_view);
+    const vecmem::device_vector<unsigned short> houghplanes(houghplanes_view);
     const vecmem::jagged_device_vector<global_index_t> maxima_index(maxima_index_view);
     vecmem::jagged_device_vector<scalar> images(images_view);
 
@@ -68,9 +68,8 @@ void take_pictures(const global_index_t globalIndex,
     const auto [wedge_idx, element_idx] = get_wedge_element<global_index_t>(globalIndex, maxima_index);    
    
     // get variables
-    const auto& plane = houghplanes.plane()[wedge_idx];
     const global_index_t maxima_idx = maxima_index[wedge_idx][element_idx];
-    take_the_picture(plane, 
+    take_the_picture(&houghplanes[wedge_idx * n_cols * n_rows], 
                      images[globalIndex],
                      maxima_idx,
                      32, 32,
