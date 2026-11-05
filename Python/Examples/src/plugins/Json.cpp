@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
@@ -60,11 +61,22 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
   }
 
   {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     auto cls =
         py::class_<JsonMaterialWriter, IMaterialWriter,
                    std::shared_ptr<JsonMaterialWriter>>(json,
                                                         "JsonMaterialWriter")
-            .def(py::init<const JsonMaterialWriter::Config&, Logging::Level>(),
+            .def(py::init([](const JsonMaterialWriter::Config& config,
+                             Logging::Level level) {
+                   if (PyErr_WarnEx(
+                           PyExc_DeprecationWarning,
+                           "JsonMaterialWriter is deprecated; use "
+                           "TrackingGeometryMaterialJsonConverter.toFile().",
+                           1) < 0) {
+                     throw py::error_already_set();
+                   }
+                   return std::make_shared<JsonMaterialWriter>(config, level);
+                 }),
                  py::arg("config"), py::arg("level"))
             .def("writeMaterial", &JsonMaterialWriter::writeMaterial)
             .def("write", &JsonMaterialWriter::write)
@@ -73,6 +85,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
     auto c =
         py::class_<JsonMaterialWriter::Config>(cls, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, converterCfg, fileName, writeFormat);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   {

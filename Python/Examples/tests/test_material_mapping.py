@@ -22,6 +22,7 @@ from acts.examples import Sequencer
 @pytest.mark.odd
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.xdist_group("heavy")
 def test_material_recording(tmp_path, material_recording, assert_root_hash):
     root_files = [
         (
@@ -166,6 +167,7 @@ def test_material_recording_ddsim(tmp_path, threads, region):
 @pytest.mark.slow
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.xdist_group("heavy")
 @pytest.mark.parametrize("gen3", [False, True], ids=["gen1", "gen3"])
 def test_material_mapping(
     material_recording, tmp_path, assert_root_hash, request, gen3
@@ -240,7 +242,10 @@ def test_material_mapping(
     s = Sequencer(events=10, numThreads=1)
 
     with getOpenDataDetector(
-        materialDecorator=acts.IMaterialDecorator.fromFile(map_file_json), gen3=gen3
+        materialDecorator=acts.json.MaterialMapDecorator(
+            acts.json.TrackingGeometryMaterialJsonConverter().fromFile(map_file_json)
+        ),
+        gen3=gen3,
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()

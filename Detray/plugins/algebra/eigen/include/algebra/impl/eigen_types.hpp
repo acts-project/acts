@@ -75,38 +75,51 @@ namespace traits {
 /// @{
 template <typename derived_t>
 struct index<Eigen::MatrixBase<derived_t>> {
+  /// Index type used by Eigen algebra traits.
   using type = algebra::eigen::index_type;
 };
 
+/// Index trait specialization for a fixed Eigen matrix block.
 template <typename T, int ROWS, int COLS, int OPT, int bROWS, int bCOLS>
 struct index<Eigen::Block<Eigen::Matrix<T, ROWS, COLS, OPT, ROWS, COLS>, bROWS,
                           bCOLS, false>> {
+  /// Index type used by Eigen algebra traits.
   using type = algebra::eigen::index_type;
 };
 /// @}
 
 /// Dimensions
 /// @{
+/// Dimensions trait for a fixed Eigen matrix expression.
 template <typename derived_t>
 struct dimensions<Eigen::MatrixBase<derived_t>> {
+  /// Index type used for compile-time dimensions.
   using index_type = index_t<Eigen::MatrixBase<derived_t>>;
 
+  /// Number of matrix dimensions.
   static constexpr index_type _dim{2};
+  /// Compile-time row count.
   static constexpr index_type _rows{
       Eigen::MatrixBase<derived_t>::RowsAtCompileTime};
+  /// Compile-time column count.
   static constexpr index_type _columns{
       Eigen::MatrixBase<derived_t>::ColsAtCompileTime};
 };
 
+/// Dimensions trait for a fixed-size Eigen matrix block.
 template <typename T, int ROWS, int COLS, int OPT, int bROWS, int bCOLS>
 struct dimensions<Eigen::Block<Eigen::Matrix<T, ROWS, COLS, OPT, ROWS, COLS>,
                                bROWS, bCOLS, false>> {
+  /// Index type used for compile-time dimensions.
   using index_type =
       index_t<Eigen::Block<Eigen::Matrix<T, ROWS, COLS, OPT, ROWS, COLS>, bROWS,
                            bCOLS, false>>;
 
+  /// Number of matrix dimensions.
   static constexpr index_type _dim{2};
+  /// Block row count.
   static constexpr index_type _rows{bROWS};
+  /// Block column count.
   static constexpr index_type _columns{bCOLS};
 };
 /// @}
@@ -115,23 +128,29 @@ struct dimensions<Eigen::Block<Eigen::Matrix<T, ROWS, COLS, OPT, ROWS, COLS>,
 /// @{
 template <typename derived_t>
 struct value<Eigen::MatrixBase<derived_t>> {
+  /// Scalar element type of the Eigen expression.
   using type = typename Eigen::MatrixBase<derived_t>::value_type;
 };
 
+/// Value trait specialization for a fixed Eigen matrix block.
 template <typename T, int ROWS, int COLS, int OPT, int bROWS, int bCOLS>
 struct value<Eigen::Block<Eigen::Matrix<T, ROWS, COLS, OPT, ROWS, COLS>, bROWS,
                           bCOLS, false>> {
+  /// Scalar element type stored by the block.
   using type = T;
 };
 /// @}
 
 /// Vector
 /// @{
+/// Vector trait for an Eigen expression with a single compile-time column.
 template <typename derived_t>
 struct vector<Eigen::MatrixBase<derived_t>> {
+  /// Construct a vector representation with another scalar and length.
   template <typename other_T, int other_N>
   using other_type = algebra::eigen::vector_type<other_T, other_N>;
 
+  /// Vector type matching the expression's scalar type and row count.
   using type = other_type<value_t<Eigen::MatrixBase<derived_t>>,
                           rows<Eigen::MatrixBase<derived_t>>>;
 };
@@ -139,24 +158,30 @@ struct vector<Eigen::MatrixBase<derived_t>> {
 
 /// Matrix
 /// @{
+/// Matrix trait for an Eigen matrix expression.
 template <typename derived_t>
 struct matrix<Eigen::MatrixBase<derived_t>> {
+  /// Construct a matrix representation with the requested type and dimensions.
   template <typename other_T, int other_ROWS, int other_COLS>
   using other_type = algebra::eigen::matrix_type<
       typename Eigen::MatrixBase<derived_t>::value_type,
       Eigen::MatrixBase<derived_t>::RowsAtCompileTime,
       Eigen::MatrixBase<derived_t>::ColsAtCompileTime>;
 
+  /// Eigen matrix expression type itself.
   using type = Eigen::MatrixBase<derived_t>;
 };
 
+/// Matrix trait for an Eigen block expression.
 template <typename T, int ROWS, int COLS, int OPT, int bROWS, int bCOLS>
 struct matrix<Eigen::Block<Eigen::Matrix<T, ROWS, COLS, OPT, ROWS, COLS>, bROWS,
                            bCOLS, false>> {
+  /// Construct an Eigen matrix type with the requested dimensions.
   template <typename other_T, int other_ROWS, int other_COLS>
   using other_type =
       algebra::eigen::matrix_type<other_T, other_ROWS, other_COLS>;
 
+  /// Eigen block type represented by this trait.
   using type = Eigen::Block<Eigen::Matrix<T, ROWS, COLS, OPT, ROWS, COLS>,
                             bROWS, bCOLS, false>;
 };
@@ -166,12 +191,15 @@ struct matrix<Eigen::Block<Eigen::Matrix<T, ROWS, COLS, OPT, ROWS, COLS>, bROWS,
 /// @{
 template <typename derived_t>
 struct element_getter<Eigen::MatrixBase<derived_t>> {
+  /// Accessor type for Eigen matrix elements.
   using type = algebra::eigen::storage::element_getter;
 };
 
+/// Element accessor trait for an Eigen matrix block.
 template <typename T, int ROWS, int COLS, int OPT, int bROWS, int bCOLS>
 struct element_getter<Eigen::Block<
     Eigen::Matrix<T, ROWS, COLS, OPT, ROWS, COLS>, bROWS, bCOLS, false>> {
+  /// Accessor type for Eigen matrix elements.
   using type = algebra::eigen::storage::element_getter;
 };
 /// @}
@@ -180,6 +208,7 @@ struct element_getter<Eigen::Block<
 /// @{
 template <typename derived_t>
 struct block_getter<Eigen::MatrixBase<derived_t>> {
+  /// Accessor type for Eigen matrix blocks.
   using type = algebra::eigen::storage::block_getter;
 };
 /// @}

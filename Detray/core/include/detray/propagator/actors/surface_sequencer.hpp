@@ -22,13 +22,19 @@
 
 namespace detray::actor {
 
+/// Actor that records sensitive or material-bearing surfaces along a
+/// propagation.
 template <typename sf_descriptor_t>
 struct surface_sequencer : public base_actor {
+  /// Buffer and collection options maintained for one propagation.
   struct state {
+    /// Surface descriptor type recorded by the actor.
     using surface_type = sf_descriptor_t;
+    /// Device vector storing the encountered surface sequence.
     using sequence_type = vecmem::device_vector<sf_descriptor_t>;
 
     /// Constructor with the vector of track states
+    /// @param seq buffer used to store encountered surfaces
     DETRAY_HOST_DEVICE
     explicit state(sequence_type seq) : m_sequence(seq) {}
 
@@ -39,6 +45,7 @@ struct surface_sequencer : public base_actor {
     DETRAY_HOST_DEVICE bool overflow() const { return m_overflow; }
 
     /// Configure whether to collect only material surfaces
+    /// @param material_only true to skip sensitive surfaces without material
     DETRAY_HOST_DEVICE void collect_only_material_surfaces(bool material_only) {
       m_collect_only_material_surfaces = material_only;
     }
@@ -67,6 +74,9 @@ struct surface_sequencer : public base_actor {
 
   /// Record detector surfaces in sequence if they are sensitive or
   /// have material
+  /// @tparam propagator_state_t propagation state providing navigation data
+  /// @param actor_state sequence buffer and collection options
+  /// @param propagation current navigation and stepping state
   template <typename propagator_state_t>
     requires std::same_as<
         sf_descriptor_t,
