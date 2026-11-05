@@ -33,6 +33,7 @@ namespace {
 std::vector<double> nearestParticleDistances(
     const SimParticleContainer& particles, double maxDeltaR) {
   std::vector<double> distances(particles.size(), -1.);
+  // A singleton has no neighbour; retain -1 to fill the histogram underflow.
   if (particles.size() < 2) {
     return distances;
   }
