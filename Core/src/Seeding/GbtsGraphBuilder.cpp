@@ -418,7 +418,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                                          const std::uint16_t nodeInfo,
                                          const float r1c, const float z1c,
                                          const float tau, const float curv) {
-        const float ftau = std::fabs(tau);
+        const float ftau = std::abs(tau);
         // The doublet cuts as one test rather than a branch each: which cut
         // a pair fails depends on the data, so separate branches
         // mispredict. Equivalent to the separate cuts for finite values
