@@ -59,6 +59,19 @@ struct volume_builder_options {
     return *this;
   }
   /// @}
+
+  /// Print the volume builder configuration
+  friend std::ostream &operator<<(std::ostream &out,
+                                  const volume_builder_options &opt) {
+    out << std::boolalpha;
+    out << "\nBuild Options\n"
+        << "----------------------------\n"
+        << "  Deduplicate           : " << opt.deduplicate() << "\n"
+        << "  Sort                  : " << opt.sort() << "\n";
+    out << std::noboolalpha;
+
+    return out;
+  }
 };
 
 /// @brief Interface for volume builders (and volume builder decorators)
