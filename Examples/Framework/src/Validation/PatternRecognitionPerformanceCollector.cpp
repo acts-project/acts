@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/Zip.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
@@ -268,8 +269,8 @@ void PatternRecognitionPerformanceCollector::fill(
   const auto& deltaRAxis = m_cfg.effPlotToolConfig.varBinning.at("DeltaR");
   const auto nearestDistances = nearestParticleDistances(
       particles, deltaRAxis.bin(deltaRAxis.size() - 1).upper());
-  std::size_t particleIndex = 0;
-  for (const auto& particle : particles) {
+  for (const auto& [particle, nearestDistance] :
+       Acts::zip(particles, nearestDistances)) {
     auto particleId = particle.particleId();
 
     std::size_t nMatchedTracks = 0;
@@ -293,8 +294,8 @@ void PatternRecognitionPerformanceCollector::fill(
       }
     }
 
-    m_effPlotTool.fill(geoContext, particle.initialState(),
-                       nearestDistances[particleIndex++], isReconstructed);
+    m_effPlotTool.fill(geoContext, particle.initialState(), nearestDistance,
+                       isReconstructed);
     m_duplicationPlotTool.fill(particle.initialState(), nMatchedTracks);
     m_fakePlotTool.fill(particle.initialState(), nMatchedTracks, nFakeTracks);
 
