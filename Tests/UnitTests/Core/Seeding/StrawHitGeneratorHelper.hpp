@@ -863,7 +863,7 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
         CompSpacePointAuxiliaries::strawSign(line, **firstTube);
     const int signLast = CompSpacePointAuxiliaries::strawSign(line, **lastTube);
 
-    auto seedPars = CompositeSpacePointLineSeeder::constructTangenSeed(
+    auto seedPars = CompositeSpacePointLineSeeder::constructTangentSeed(
         **lastTube, **firstTube,
         CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
     const auto seedDir = CompositeSpacePointLineSeeder::makeDirection(
