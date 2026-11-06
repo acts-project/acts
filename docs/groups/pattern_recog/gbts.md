@@ -188,8 +188,7 @@ not add up to more than `sumRatioCutMax`, which rejects a pair that is marginal
 in all three at once. For
 pixel-barrel triplets an optional
 @ref Acts::Experimental::GraphBasedTrackSeeder "validateTriplets" step also fits
-a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$. Each
-edge stores up to `kGbtsMaxEdgeNeighbours` (6) such neighbours.
+a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$.
 
 Two further cuts apply on the innermost pixel barrel layers, where the
 combinatorics are worst. Each cut has its own depth limit on the `barrelOrder`
