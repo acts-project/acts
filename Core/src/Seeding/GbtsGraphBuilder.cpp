@@ -18,7 +18,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <numbers>
 #include <span>
 #include <utility>
@@ -358,14 +357,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       window.technology = B2.technology;
       window.minRadius = B2.minRadius;
       window.maxRadius = B2.maxRadius;
-      // the bin keeps its radial extent but not its z extent
-      window.minZ = std::numeric_limits<float>::max();
-      window.maxZ = std::numeric_limits<float>::lowest();
-      for (SpacePointIndex n2Idx = B2.nodes.first; n2Idx < B2.nodes.second;
-           ++n2Idx) {
-        window.minZ = std::min(window.minZ, params[n2Idx].z);
-        window.maxZ = std::max(window.maxZ, params[n2Idx].z);
-      }
+      window.minZ = B2.minZ;
+      window.maxZ = B2.maxZ;
 
       // Isolated n2 nodes are skipped below for every n1 of this group, and
       // the branch is unpredictable. Filter them out of the window once

@@ -119,14 +119,14 @@ Two different layer numbers meet here, and they are separate types:
 geometry's own numbering and is not derivable from the id.
 
 `insert` assigns the node to an eta bin via `GbtsLayer::getEtaBin` and buffers
-it. `finalize` then sorts each bin by @f$\phi@f$ and materialises the nodes into
-a space point container ordered by eta bin and then by @f$\phi@f$, so that every
-eta bin is **one contiguous range of node indices**. A node index is therefore
-all that the rest of the algorithm needs to pass around.
+it with the other nodes of its bin. `finalize` then sorts each bin by
+@f$\phi@f$ and lays the nodes out in plain per-node arrays ordered by eta bin and
+then by @f$\phi@f$, so that every eta bin is **one contiguous range of node
+indices**. A node index is therefore all that the rest of the algorithm needs to
+pass around.
 
-The per-node data the graph builder reads lives in dynamic columns on that same
-container. It is packed rather than split into one array per field, because the
-innermost loop reads all of it together:
+The per-node data the graph builder reads is one record per node rather than one
+array per field, because the innermost loop reads all of it together:
 
 @snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts node params
 
@@ -136,9 +136,10 @@ entirely; only the optional machine-learning lookup table narrows them (see
 
 @snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts node edge info
 
-Each eta bin carries its node range plus the @f$\phi@f$ index used by the sliding
-window. The @f$\phi@f$ index duplicates entries shifted by @f$\pm 2\pi@f$ near the
-wrap-around, so the window never has to handle wrapping:
+Each eta bin carries its node range, its radial and @f$z@f$ extent, and the
+@f$\phi@f$ index used by the sliding window. The @f$\phi@f$ index duplicates
+entries shifted by @f$\pm 2\pi@f$ near the wrap-around, so the window never has
+to handle wrapping:
 
 @snippet{trimleft} include/Acts/Seeding/detail/GbtsGraphTypes.hpp gbts eta bin info
 
