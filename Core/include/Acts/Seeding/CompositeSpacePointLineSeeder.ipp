@@ -475,7 +475,7 @@ CompositeSpacePointLineSeeder::buildSeed(
                         << ".");
 
   const TwoCircleTangentPars seedPars =
-      constructTangenSeed(lowerHit, upperHit, ambi);
+      constructTangentSeed(lowerHit, upperHit, ambi);
   ACTS_VERBOSE(__func__ << "() " << __LINE__
                         << " - Tangential parameters: " << seedPars);
   if (!isValidLine(seedPars)) {
