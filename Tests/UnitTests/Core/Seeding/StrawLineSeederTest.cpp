@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(SeedRotatedTangents) {
   ACTS_INFO(__LINE__ << " - Test space points: " << toString(tube1) << ", "
                      << toString(tube2) << ", ");
   for (const auto ambi : {LL, RL, LR, RR}) {
-    const auto seedPars = Seeder::constructTangenSeed(tube1, tube2, ambi);
+    const auto seedPars = Seeder::constructTangentSeed(tube1, tube2, ambi);
     ACTS_INFO(__LINE__ << " Seed parameters " << seedPars
                        << ", ambi: " << ambi);
     const auto [pos, dir] = Seeder::makeLineFromSeed(tube1, seedPars);
