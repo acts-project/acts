@@ -90,17 +90,17 @@ class hough_transform_seeding_algorithm
     /// The input spacepoints
     const edm::spacepoint_collection::const_view& spacepoints;
     // association to wedge
-    const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association;
+    const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association;
     // the detector id to use in the HT filling
-    const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id;
+    const vecmem::data::vector_view<const unsigned long long>& spacepoint_detector_id;
     // the space point r
-    const vecmem::data::vector_view<scalar>& spacepoint_r;
+    const vecmem::data::vector_view<const scalar>& spacepoint_r;
     // the space point phi
-    const vecmem::data::vector_view<scalar>& spacepoint_phi;
+    const vecmem::data::vector_view<const scalar>& spacepoint_phi;
     // The edges X
-    const vecmem::data::vector_view<scalar>& edges_x;
+    const vecmem::data::vector_view<const scalar>& edges_x;
     // The edges Y
-    const vecmem::data::vector_view<scalar>& edges_y;
+    const vecmem::data::vector_view<const scalar>& edges_y;
     /// The output hough planes
     // edm::houghplane_collection<unsigned short>::view& houghplanes;
     vecmem::data::vector_view<unsigned long long>& bins;

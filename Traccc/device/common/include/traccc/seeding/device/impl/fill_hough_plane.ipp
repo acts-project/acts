@@ -14,27 +14,27 @@ void fill_hough_plane(const global_index_t globalIndex,
 		    const bfield_t& bfield,
             const edm::spacepoint_collection::const_view::size_type n_spacepoints,
             const edm::spacepoint_collection::const_view& spacepoints_view,
-            const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association_view,
-            const vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id_view,
-		    const vecmem::data::vector_view<scalar>& spacepoint_r_view,
-		    const vecmem::data::vector_view<scalar>& spacepoint_phi_view,
-            const vecmem::data::vector_view<scalar>& edges_x_view,
-            const vecmem::data::vector_view<scalar>& edges_y_view,
+            const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association_view,
+            const vecmem::data::vector_view<const unsigned long long>& spacepoint_detector_id_view,
+		    const vecmem::data::vector_view<const scalar>& spacepoint_r_view,
+		    const vecmem::data::vector_view<const scalar>& spacepoint_phi_view,
+            const vecmem::data::vector_view<const scalar>& edges_x_view,
+            const vecmem::data::vector_view<const scalar>& edges_y_view,
             vecmem::data::vector_view<unsigned long long>& bins_view) {
    if (globalIndex >= n_spacepoints) return;
    
    const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
-   const vecmem::device_vector<unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);
-   const vecmem::device_vector<unsigned long long> spacepoint_detector_id(spacepoint_detector_id_view);
-   const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
-   const vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
+   const vecmem::device_vector<const unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);
+   const vecmem::device_vector<const unsigned long long> spacepoint_detector_id(spacepoint_detector_id_view);
+   const vecmem::device_vector<const scalar> spacepoint_r(spacepoint_r_view);
+   const vecmem::device_vector<const scalar> spacepoint_phi(spacepoint_phi_view);
    vecmem::device_vector<unsigned long long> bins(bins_view);
 
    // skip if it does not contribute
    if (spacepoint_wedge_association[globalIndex] == 0ULL) return;
 
-   const vecmem::device_vector<scalar> edges_x(edges_x_view);
-   const vecmem::device_vector<scalar> edges_y(edges_y_view);
+   const vecmem::device_vector<const scalar> edges_x(edges_x_view);
+   const vecmem::device_vector<const scalar> edges_y(edges_y_view);
    const global_index_t n_cols = edges_x.capacity() - 1;
    const global_index_t n_rows = edges_y.capacity() - 1;
 
