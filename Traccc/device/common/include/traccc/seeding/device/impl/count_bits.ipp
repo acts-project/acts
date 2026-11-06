@@ -13,6 +13,8 @@ void count_bits(const global_index_t globalIndex,
 
     const vecmem::device_vector<unsigned long long> bits(bits_view);
     vecmem::device_vector<unsigned short> entries(entries_view);
+    
+    if (bits[globalIndex] == 0ULL) return;
     entries[globalIndex] = count_bits(bits[globalIndex]);
 }
 

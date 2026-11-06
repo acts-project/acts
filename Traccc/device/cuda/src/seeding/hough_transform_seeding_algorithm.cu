@@ -212,7 +212,7 @@ void hough_transform_seeding_algorithm::define_plane_edges_kernel(const define_p
 }
 
 void hough_transform_seeding_algorithm::precompute_spacepoint_variables_kernel(const precompute_spacepoint_variables_payload& payload) const {
-   const unsigned int n_threads = warp_size() * 32;
+   const unsigned int n_threads = warp_size() * 8;
    const unsigned int n_blocks = (payload.n_spacepoints  + n_threads - 1) / n_threads;
    kernels::precompute_spacepoint_variables
 		<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config,
@@ -226,7 +226,7 @@ void hough_transform_seeding_algorithm::precompute_spacepoint_variables_kernel(c
 
 void hough_transform_seeding_algorithm::fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const {
   const unsigned int n_threads = warp_size() * 8;
-  const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
+  const unsigned int n_blocks = (payload.n_spacepoints + n_threads - 1) / n_threads;
   magnetic_field_visitor<bfield_type_list<scalar>>(
   	payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
 		kernels::fill_hough_plane<bfield_view_t, unsigned short>
