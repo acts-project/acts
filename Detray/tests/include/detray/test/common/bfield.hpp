@@ -92,6 +92,8 @@ using inhom_field_io_t = covfie::field<inhom_bknd_io_t<T>>;
 
 /// @brief Function that reads the first 4 bytes of a potential bfield file and
 /// checks that it contains data for a covfie field
+/// @param file_name path to the field file
+/// @return whether the file contains the covfie magic header
 inline bool check_covfie_file(const std::string& file_name) {
   // Open binary file
   io::file_handle file{file_name, std::ios_base::in | std::ios_base::binary};
@@ -104,6 +106,8 @@ inline bool check_covfie_file(const std::string& file_name) {
 }
 
 /// @brief function that reads a covfie field from file
+/// @param file_name path to the field file
+/// @return the field read from the file
 template <typename bfield_t>
 inline bfield_t read_bfield(const std::string& file_name) {
   if (!check_covfie_file(file_name)) {
@@ -116,14 +120,15 @@ inline bfield_t read_bfield(const std::string& file_name) {
   return bfield_t(*file);
 }
 
-/// @returns a constant covfie field constructed from the field vector @param B
+/// @returns a constant covfie field constructed from the field vector @p B
+/// @param B field vector used to construct the constant field
 template <typename T, concepts::vector3D vector3_t>
 inline bfield::const_field_t<T> create_const_field(const vector3_t& B) {
   return bfield::const_field_t<T>{covfie::make_parameter_pack(
       typename bfield::const_bknd_t<T>::configuration_t{B[0], B[1], B[2]})};
 }
 
-/// @returns a constant covfie field constructed from the field vector @param B
+/// @returns an inhomogeneous covfie field read from the configured file
 template <typename T>
 inline bfield::inhom_field_t<T> create_inhom_field() {
   return bfield::inhom_field_t<T>(read_bfield<bfield::inhom_field_io_t<T>>(

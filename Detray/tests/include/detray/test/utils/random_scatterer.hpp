@@ -34,15 +34,23 @@
 
 namespace detray::actor {
 
+/// Actor that applies random energy loss and multiple scattering in material.
 template <concepts::algebra algebra_t>
 struct random_scatterer : public base_actor {
+  /// Scalar type used for the simulation quantities.
   using scalar_type = dscalar<algebra_t>;
+  /// 3D vector type used for directions.
   using vector3_type = dvector3D<algebra_t>;
+  /// 3D transform type.
   using transform3_type = dtransform3D<algebra_t>;
+  /// Material interaction calculator type.
   using interaction_type = interaction<scalar_type>;
 
+  /// Per-propagation state for random scattering and energy loss.
   struct state {
+    /// Random device used to initialize the generator.
     std::random_device rd{};
+    /// Random number generator for this actor state.
     std::mt19937_64 generator{rd()};
 
     /// most probable energy loss
@@ -55,7 +63,9 @@ struct random_scatterer : public base_actor {
     scalar_type projected_scattering_angle = 0.f;
 
     // Simulation setup
+    /// Whether to apply energy loss.
     bool do_energy_loss = true;
+    /// Whether to apply multiple scattering.
     bool do_multiple_scattering = true;
 
     /// Constructor with seed
@@ -63,11 +73,22 @@ struct random_scatterer : public base_actor {
     /// @param sd the seed number
     explicit state(const uint_fast64_t sd = 0u) { generator.seed(sd); }
 
+    /// Set the random number generator seed.
+    /// @param sd Seed value.
     void set_seed(const uint_fast64_t sd) { generator.seed(sd); }
   };
 
   /// Material store visitor
   struct kernel {
+    /// Calculate material interaction quantities for the current surface.
+    /// @param material_group Material group to inspect.
+    /// @param mat_index Index of the material.
+    /// @param s Actor state to update.
+    /// @param ptc Particle hypothesis.
+    /// @param bound_params Bound track parameters.
+    /// @param cos_inc_angle Cosine of the incidence angle.
+    /// @param approach Local approach coordinate.
+    /// @return Whether a pointwise material interaction was computed.
     template <typename mat_group_t, typename index_t>
     DETRAY_HOST_DEVICE inline bool operator()(
         [[maybe_unused]] const mat_group_t& material_group,
@@ -121,6 +142,11 @@ struct random_scatterer : public base_actor {
     }
   };
 
+  /// Apply the sampled material effects to the transported parameters.
+  /// @param simulator_state Actor state with material effects and RNG.
+  /// @param prop_state Propagator state.
+  /// @param res Parameter transport result to update.
+
   template <typename propagator_state_t>
   DETRAY_HOST inline void operator()(
       state& simulator_state, propagator_state_t& prop_state,
@@ -173,6 +199,12 @@ struct random_scatterer : public base_actor {
   }
 
   /// @brief Get the new momentum from the landau distribution
+  /// @param mpv Most probable energy loss.
+  /// @param sigma Energy loss scale.
+  /// @param m0 Particle mass.
+  /// @param p0 Initial momentum magnitude.
+  /// @param generator Random number generator.
+  /// @return Momentum magnitude after energy loss.
   template <typename generator_t>
   DETRAY_HOST inline scalar_type attenuate(const scalar_type mpv,
                                            const scalar_type sigma,

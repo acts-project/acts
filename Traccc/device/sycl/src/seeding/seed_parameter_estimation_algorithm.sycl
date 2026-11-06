@@ -19,6 +19,9 @@
 // Project include(s).
 #include "traccc/seeding/device/estimate_track_params.hpp"
 
+// System include(s).
+#include <stdexcept>
+
 namespace traccc::sycl {
 
 seed_parameter_estimation_algorithm::seed_parameter_estimation_algorithm(
@@ -32,6 +35,11 @@ seed_parameter_estimation_algorithm::seed_parameter_estimation_algorithm(
 
 void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
     const struct estimate_seed_params_kernel_payload& payload) const {
+  if (payload.detector != nullptr) {
+    throw std::runtime_error(
+        "Detector aware seed parameter estimation is not yet implemented for "
+        "the SYCL backend.");
+  }
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
   magnetic_field_visitor<bfield_type_list<scalar>>(

@@ -861,9 +861,9 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
 
   // An extended surface can duplicate a policy candidate
   const bool candidatesAreUnique = nExtendedCandidates == 0;
-  state.stream.initialize(state.options.geoContext, {position, direction},
-                          logger(), state.options.surfaceTolerance,
-                          candidatesAreUnique);
+  state.stream.initialize(state.options.geoContext,
+                          {position, direction, state.curvature}, logger(),
+                          state.options.surfaceTolerance, candidatesAreUnique);
 
   ACTS_VERBOSE(volInfo(state)
                << "Now " << state.stream.candidates().size()

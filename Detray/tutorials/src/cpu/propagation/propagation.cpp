@@ -100,7 +100,8 @@ int main() {
     // Prepare actor states
     detray::actor::pathlimit_aborter<scalar>::state aborter_state{
         5.f * detray::unit<scalar>::m};
-    detray::actor::parameter_updater_state<algebra_t> updater_state{prop_cfg};
+    detray::actor::parameter_updater_state<algebra_t> updater_state{prop_cfg,
+                                                                    track};
     detray::actor::pointwise_material_interactor<algebra_t>::state
         interactor_state{};
 

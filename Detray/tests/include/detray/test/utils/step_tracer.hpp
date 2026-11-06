@@ -24,6 +24,7 @@ namespace detray::actor {
 /// Collect information at every step
 template <concepts::algebra algebra_t, template <typename...> class vector_t>
 struct step_tracer : public base_actor {
+  /// Type used to store one step's data.
   using step_data_t = step_record<algebra_t>;
 
   /// Actor state that collects the data
@@ -43,10 +44,12 @@ struct step_tracer : public base_actor {
 
     /// Access to the recorded step data of every step along the track -
     /// const
+    /// @return The recorded step data.
     DETRAY_HOST_DEVICE
     const auto& get_step_data() const { return m_steps; }
 
     /// Move the recorded step data out of the actor
+    /// @return The recorded step data, moved from the actor state.
     DETRAY_HOST
     auto&& release_step_data() && { return std::move(m_steps); }
 
@@ -57,6 +60,8 @@ struct step_tracer : public base_actor {
 
   /// Collect data at every step
   /// @note Primary actor call
+  /// @param tracer_state State containing the recorded steps.
+  /// @param prop_state Propagator state to collect data from.
   template <typename propagator_state_t>
   DETRAY_HOST_DEVICE void operator()(state& tracer_state,
                                      propagator_state_t& prop_state) const {
@@ -65,6 +70,9 @@ struct step_tracer : public base_actor {
 
   /// Collect only when transport to bound track parameters happens
   /// @note Observer to the parameter updater
+  /// @param tracer_state State containing the recorded steps.
+  /// @param prop_state Propagator state to collect data from.
+  /// @param res Result of transporting parameters to a surface.
   template <typename propagator_state_t>
   DETRAY_HOST_DEVICE void operator()(
       state& tracer_state, propagator_state_t& prop_state,

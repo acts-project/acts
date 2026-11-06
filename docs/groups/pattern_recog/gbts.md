@@ -59,9 +59,9 @@ barrel layer. If the caller leaves the field unset,
 them, because the constructor rejects a partial ordering.
 
 The cuts that were tuned on the pixel barrel read `barrelOrder` and nothing
-else. The adaptive @f$\tau@f$ correction of @ref gbts-graph asks whether three
-layers are radially consecutive, and the two innermost-layer cuts of the same
-section ask how deep a layer sits. GBTS therefore runs on any layer numbering.
+else: the two innermost-layer cuts of @ref gbts-graph ask how deep a layer sits.
+The @f$\tau@f$ ratio tolerance comes from the layer pairs instead, see below.
+GBTS therefore runs on any layer numbering.
 
 Which layer pairs may be joined by an edge is a list of
 @ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
@@ -176,7 +176,16 @@ a node form a contiguous range, recorded in that node's `GbtsNodeEdgeInfo`.
 Immediately after creating an edge @f$(n_1, n_2)@f$, the builder scans the edges
 incoming to @f$n_2@f$ — that is, edges @f$(n_2, n_3)@f$ — and links the two
 whenever the implied triplet is consistent: the @f$\tau@f$ ratio, the @f$\phi@f$
-continuation and the curvature difference must all agree within tolerance. For
+continuation and the curvature difference must all agree within tolerance. The
+@f$\tau@f$ ratio tolerance comes from the layer pairs: a triplet is held to
+the looser of `tauRatioCutInner` of its inner pair and `tauRatioCutOuter` of
+its outer pair, see @ref Acts::Experimental::GbtsLayerConnection.
+@ref Acts::Experimental::assignAdaptiveTauRatioCuts fills them from the
+layers: wider for a pair that skips a pixel barrel layer or, as the outer
+pair, leaves the pixel barrel, and wider again for a pair with a strip layer.
+With `useSumRatioCut` the three differences, each divided by its own cut, may
+not add up to more than `sumRatioCutMax`, which rejects a pair that is marginal
+in all three at once. For
 pixel-barrel triplets an optional
 @ref Acts::Experimental::GraphBasedTrackSeeder "validateTriplets" step also fits
 a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$. Each
@@ -279,8 +288,9 @@ The cuts that build and link the doublets live on
 | `minPt` | @ref gbts-graph | drives the curvature and @f$\phi@f$-window bounds |
 | `minDeltaRadius`, `maxAbsTau` | @ref gbts-graph | doublet acceptance |
 | `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
-| `tauRatioCut`, `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
-| `useAdaptiveCuts`, `tauRatioCorr` | @ref gbts-graph | widen the @f$\tau@f$ tolerance when a layer is skipped |
+| `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
+| `useSumRatioCut`, `sumRatioCutMax` | @ref gbts-graph | bound on the summed linking tolerances, against pairs marginal in all three |
+| `tauRatioCut` | @ref gbts-graph | @f$\tau@f$ scale of the `validateTriplets` high-pT check. The linking cut comes from @ref Acts::Experimental::GbtsLayerConnection |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
 | `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
@@ -292,6 +302,7 @@ The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackS
 | `nMaxPhiSlice` | @ref gbts-nodes | sets the @f$\phi@f$ slice width, and with it the base sliding-window width the graph uses |
 | `maxChainLength` | @ref gbts-levels | longest chain of edges taken into account |
 | `minSeedLevel` | @ref gbts-extraction | chain length a candidate must reach |
+| `postFitCurvatureFactor` | @ref gbts-extraction | tighter curvature bound on the fitted chain, as a factor on the filter's `maxCurvature`; values below 1 does nothing |
 | `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |

@@ -51,24 +51,12 @@ class GbtsGraphBuilder {
     /// Optional validation for barrel triplets.
     bool validateTriplets = true;
 
-    /// Widens allowed variation in tau ratio if a layer is missed in edge
-    /// connecting.
-    bool useAdaptiveCuts = true;
-
-    /// Tau ratio cut threshold.
+    /// Tau ratio scale of the `validateTriplets` high-pT check. The linking cut
+    /// comes from the layer pairs, see `GbtsLayerConnection`.
     float tauRatioCut = 0.007f;
 
     /// Tau ratio precut threshold.
     float tauRatioPrecut = 0.009f;
-
-    /// Correction applied to tau acceptance if a layer is missed during edge
-    /// connecting.
-    float tauRatioCorr = 0.006f;
-
-    /// The same for a triplet any of whose three nodes a strip module made,
-    /// whose two doublets resolved the shared node's along-strip coordinate
-    /// separately. Reaches nothing without a strip in the triplet.
-    float tauRatioCorrStrip = 0.03f;
 
     /// Minimum transverse momentum.
     float minPt = 1.0f * Acts::UnitConstants::GeV;
@@ -104,6 +92,15 @@ class GbtsGraphBuilder {
 
     /// Maximum allowed curvature tolerance for candidate edge connections.
     float cutDCurvMax = 0.001f;
+
+    /// Reject a candidate edge connection whose tau ratio, phi and curvature
+    /// differences, each divided by its own cut, add up to more than
+    /// `sumRatioCutMax`: a pair that is marginal in all three at once.
+    bool useSumRatioCut = false;
+
+    /// Threshold of the summed ratios, between 1 (only one difference
+    /// can use its full cut) and 3 (no effect beyond the individual cuts).
+    float sumRatioCutMax = 1.3f;
 
     /// Minimum z0 value. In pixel mode the value is picked from the RoI.
     float minZ0 = -600.0f;

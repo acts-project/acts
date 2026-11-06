@@ -8,12 +8,23 @@
 
 #pragma once
 
-#if not defined __has_builtin
-#define TRACCC_ASSUME(...)
-#elif __has_builtin(__builtin_assume)
+// Assume that a boolean expression is always true.
+#if defined(__NVCC__)
+#if defined(__CUDA_ARCH__)
 #define TRACCC_ASSUME(...) __builtin_assume(__VA_ARGS__)
 #else
-#define TRACCC_ASSUME(...)
+#define TRACCC_ASSUME(...) static_cast<void>(0)
+#endif
+#elif defined(__has_builtin)
+#if __has_builtin(__builtin_assume)
+#define TRACCC_ASSUME(...) __builtin_assume(__VA_ARGS__)
+#elif defined(__GNUC__) && not defined(__clang__) && __GNUC__ >= 13
+#define TRACCC_ASSUME(...) __attribute__((assume(__VA_ARGS__)))
+#else
+#define TRACCC_ASSUME(...) static_cast<void>(0)
+#endif
+#else
+#define TRACCC_ASSUME(...) static_cast<void>(0)
 #endif
 
 #if defined(__CUDACC__) || defined(__HIP__) || defined(__OPENMP) || \

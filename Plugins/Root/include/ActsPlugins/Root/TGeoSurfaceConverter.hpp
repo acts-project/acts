@@ -29,6 +29,7 @@ namespace Acts {
 
 class CylinderBounds;
 class DiscBounds;
+class LineBounds;
 class PlanarBounds;
 class Surface;
 
@@ -86,6 +87,26 @@ struct TGeoSurfaceConverter {
   planeComponents(const TGeoShape& tgShape, const Double_t* rotation,
                   const Double_t* translation, TGeoAxes axes,
                   double scalor = 10.) noexcept(false);
+
+  /// Convert a TGeoShape into line (straw) surface components
+  ///
+  /// Only full tubes are converted: the line runs along the tube axis and the
+  /// bounds radius is the outer radius. A tube can describe a cylinder as
+  /// well as a straw, so @ref toSurface never picks this conversion; use it
+  /// explicitly, e.g. from a detector element factory.
+  ///
+  /// @param tgShape The TGeoShape
+  /// @param rotation The rotation matrix as Double_t* from root
+  /// @param translation The translation vector as Double_t* from root
+  /// @param scalor The unit scalor between TGeo and Acts
+  ///
+  /// @return tuple of LineBounds, Transform, thickness, with null bounds if
+  ///         the shape is not a full tube
+  static std::tuple<std::shared_ptr<const Acts::LineBounds>,
+                    const Acts::Transform3, double>
+  lineComponents(const TGeoShape& tgShape, const Double_t* rotation,
+                 const Double_t* translation,
+                 double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape to a Surface
   ///

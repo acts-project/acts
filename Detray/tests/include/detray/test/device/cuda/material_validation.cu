@@ -58,7 +58,7 @@ __global__ void material_validation_kernel(
 
   // Create the actor states
   typename pathlimit_aborter_t::state aborter_state{cfg.stepping.path_limit};
-  actor::parameter_updater_state<algebra_t> updater_state{cfg};
+  actor::parameter_updater_state<algebra_t> updater_state{cfg, tracks[trk_id]};
   typename actor::pointwise_material_interactor<algebra_t>::state
       interactor_state{};
   typename material_tracer_t::state mat_tracer_state{mat_steps.at(trk_id)};

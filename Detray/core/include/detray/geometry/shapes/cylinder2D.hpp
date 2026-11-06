@@ -35,6 +35,7 @@ class cylinder2D {
   /// The name for this shape
   static constexpr std::string_view name = "cylinder2D";
 
+  /// Indices describing the entries in the shape boundary array.
   enum boundaries : unsigned int {
     e_r = 0u,
     e_lower_z = 1u,
@@ -79,6 +80,7 @@ class cylinder2D {
   /// @param trf the surface transform
   /// @param glob_p the point to be checked in the global coordinate system
   /// @param tol dynamic tolerance determined by caller
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::algebra algebra_t>
@@ -109,6 +111,7 @@ class cylinder2D {
   /// @param bounds the boundary values for this shape
   /// @param loc_p the point to be checked in the local coordinate system
   /// @param tol dynamic tolerance determined by caller
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::scalar scalar_t, concepts::point point_t>
@@ -193,6 +196,7 @@ class cylinder2D {
             xy_bound,  xy_bound,  bounds[e_upper_z] + env};
   }
 
+  /// @param bounds Boundary values used to determine the center.
   /// @returns the shapes centroid in local cartesian coordinates
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE dpoint3D<algebra_t> centroid(
@@ -204,8 +208,8 @@ class cylinder2D {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// @param bounds the boundary values for the cylinder
-  /// @param n_seg is the number of line segments
+  /// Boundary values define the vertices in the local frame.
+  /// The optional segment count controls tessellation of the curved boundary.
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>

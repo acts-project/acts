@@ -43,7 +43,9 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
   edm::measurement_collection::const_view::size_type n_measurements = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(measurements, *(mr().host));
-    n_measurements = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_measurements = size.unsafe_get();
   } else {
     n_measurements = copy().get_size(measurements);
   }
@@ -61,8 +63,8 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
       n_measurements, mr().main);
   vecmem::data::vector_buffer<unsigned int> overlap_offsets_buffer(
       n_measurements, mr().main);
-  copy().setup(standard_offsets_buffer)->ignore();
-  copy().setup(overlap_offsets_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, standard_offsets_buffer);
+  copy().setup(vecmem::ignore_event, overlap_offsets_buffer);
   vecmem::data::vector_view<unsigned int> standard_offsets(
       standard_offsets_buffer);
   vecmem::data::vector_view<unsigned int> overlap_offsets(
@@ -89,15 +91,15 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
                                                             mr().main);
   strip_pair_collection_types::buffer overlap_pairs_buffer(n_overlap_pairs,
                                                            mr().main);
-  copy().setup(opposite_pairs_buffer)->ignore();
-  copy().setup(overlap_pairs_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, opposite_pairs_buffer);
+  copy().setup(vecmem::ignore_event, overlap_pairs_buffer);
 
   // Count and find may disagree at floating-point cut boundaries. Initialise
   // unused slots to invalid indices; formation rejects them before access.
   // Find is bounded by each measurement's scanned range, so an excess pair
   // cannot overwrite the range assigned to another measurement.
-  copy().memset(opposite_pairs_buffer, 0xff)->ignore();
-  copy().memset(overlap_pairs_buffer, 0xff)->ignore();
+  copy().memset(vecmem::ignore_event, opposite_pairs_buffer, 0xff);
+  copy().memset(vecmem::ignore_event, overlap_pairs_buffer, 0xff);
   if ((n_opposite_pairs > 0u) || (n_overlap_pairs > 0u)) {
     find_strip_pairs_kernel({n_measurements, measurements, surface_infos,
                              pairing_rules, beam_spot, standard_offsets,
@@ -121,9 +123,9 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
                                                                   mr().main);
         strip_spacepoint_shape_collection_types::buffer candidate_shapes(
             retain_shapes ? n_pairs : 0u, mr().main);
-        copy().setup(candidate_shapes)->ignore();
-        copy().setup(candidates)->ignore();
-        copy().setup(accepted_buffer)->ignore();
+        copy().setup(vecmem::ignore_event, candidate_shapes);
+        copy().setup(vecmem::ignore_event, candidates);
+        copy().setup(vecmem::ignore_event, accepted_buffer);
         vecmem::data::vector_view<unsigned int> accepted(accepted_buffer);
         form_spacepoints_kernel({n_pairs, measurements, pairs, surface_infos,
                                  beam_spot, accepted, candidates,
@@ -136,8 +138,8 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
         edm::spacepoint_collection::buffer result(n_spacepoints, mr().main);
         strip_spacepoint_shape_collection_types::buffer shapes(
             retain_shapes ? n_spacepoints : 0u, mr().main);
-        copy().setup(shapes)->ignore();
-        copy().setup(result)->ignore();
+        copy().setup(vecmem::ignore_event, shapes);
+        copy().setup(vecmem::ignore_event, result);
         const edm::spacepoint_collection::const_view candidates_view(
             candidates);
         gather_spacepoints_kernel({n_pairs, candidates_view, accepted, result,

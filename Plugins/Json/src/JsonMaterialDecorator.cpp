@@ -9,12 +9,15 @@
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 
 #include <fstream>
 #include <stdexcept>
 
 namespace Acts {
 
+// The deprecated decorator continues to use the legacy material reader.
+ACTS_PUSH_IGNORE_DEPRECATED()
 JsonMaterialDecorator::JsonMaterialDecorator(
     const MaterialMapJsonConverter::Config& rConfig,
     const std::string& jFileName, Acts::Logging::Level level)
@@ -42,6 +45,8 @@ JsonMaterialDecorator::JsonMaterialDecorator(
   m_materialMaps = jmConverter.jsonToMaterialMaps(jin);
   ACTS_VERBOSE("JSON material description read complete");
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 void JsonMaterialDecorator::decorate(Surface& surface) const {
   m_materialMaps.apply(surface);

@@ -313,17 +313,7 @@ if(PROJECT_IS_TOP_LEVEL)
 endif()
 
 # This needs to happen before we set up any targets
-if(ACTS_FORCE_ASSERTIONS)
-    message(
-        STATUS
-        "Injecting headers to force assertions. This can have side-effects, USE WITH CAUTION!"
-    )
-    include_directories(
-        BEFORE
-        SYSTEM
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/assert_include
-    )
-endif()
+include(ActsForceAssertions)
 
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
@@ -348,13 +338,13 @@ set(_acts_gbl_version 04.00.05)
 set(_acts_mille_version 01.01.02)
 set(_acts_mp2_version 05.01.06)
 set(_acts_onnxruntime_version 1.12.0)
-set(_acts_geomodel_version 6.8.0)
+set(_acts_geomodel_version 6.16.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
 set(_acts_traccc_version 1.4.0)
-set(_acts_covfie_version 0.15.2)
+set(_acts_covfie_version 0.16.0)
 set(_acts_vecmem_version 1.28.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)

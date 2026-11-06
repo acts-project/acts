@@ -23,6 +23,7 @@ from acts.examples.reconstruction import (
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
+    GbtsConfigArg,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -123,7 +124,7 @@ def run_ckf_tracking(label, seeding):
             seedingAlgorithm=seeding,
             paramEstimationSpacePoints=(
                 acts.examples.SeedSpacePointSelection.SpreadTriplet
-                if seeding == SeedingAlgorithm.TruthEstimated
+                if seeding in [SeedingAlgorithm.TruthEstimated, SeedingAlgorithm.Gbts]
                 else None
             ),
             initialSigmas=[
@@ -140,6 +141,17 @@ def run_ckf_tracking(label, seeding):
             geoSelectionConfigFile=setup.geoSel,
             layerMappingConfigFile=setup.gbtsLayerMap,  # only used by SeedingAlgorithm.Gbts
             connectorInputConfigFile=setup.gbtsConnectionTable,  # only used by SeedingAlgorithm.Gbts
+            gbtsConfigArg=GbtsConfigArg(  # only used by SeedingAlgorithm.Gbts
+                seederConfig=acts.examples.GraphBasedSeedingConfig(
+                    minSeedLevel=2,
+                ),
+                graphConfig=acts.examples.GbtsGraphBuilderConfig(
+                    minPt=0.9 * u.GeV,
+                    z0HistogramMaxBarrelOrder=-1,
+                ),
+                useAdaptiveCuts=False,
+            ),
+            gbtsSeedParameters=True,  # only used by SeedingAlgorithm.Gbts
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
         )
