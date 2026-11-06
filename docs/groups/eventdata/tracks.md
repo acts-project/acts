@@ -199,6 +199,17 @@ raw fit-parameter updates have not been generalized or given covariance-aware
 branch changes. Supporting alternative coordinates requires
 updating that model consistently, rather than just replacing its angle addition.
 
+@ref Acts::AtlasStepper also remains explicitly canonical-only because its
+internal direction derivatives are written in phi/theta coordinates. It checks
+the surface before initialization, bound updates, bound parameter extraction,
+and bound covariance transport, including the path without covariance.
+An unsupported parametrization throws `std::system_error` with
+@ref Acts::AtlasStepperError::UnsupportedBoundParametrization and the surface
+identifier before modifying the stepper state. Free Cartesian updates and
+canonical curvilinear output do not consume a configurable bound interpretation.
+These checks concern requested bound operations, not surfaces merely traversed
+by navigation. Alternative-parametrization rejection tests remain deferred.
+
 Pointwise material physics computes a projected scattering variance independently
 of the direction coordinates. A separate mapping produces the direction-noise
 block, with a direct diagonal calculation for the canonical spherical convention.

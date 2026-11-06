@@ -1,6 +1,7 @@
 target_sources(
     ActsCore
     PRIVATE
+        AtlasStepperError.cpp
         EigenStepperError.cpp
         HelixStepper.cpp
         MultiStepperError.cpp

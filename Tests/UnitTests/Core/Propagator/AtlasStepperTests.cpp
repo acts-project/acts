@@ -40,6 +40,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -227,6 +228,35 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
   CHECK_CLOSE_ABS(stepper.direction(state), newUnitDir, eps);
   CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), newAbsMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
+}
+
+// Binding without covariance still consumes the requested bound interpretation.
+BOOST_AUTO_TEST_CASE(BoundRoundTripWithoutCovariance) {
+  Stepper stepper(magneticField);
+  Stepper::Options options(geoCtx, magCtx);
+  const auto surface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity());
+  for (double phi : {-std::numbers::pi + .01, std::numbers::pi - .01}) {
+    for (double theta : {1e-8, 1.}) {
+      BoundVector input = BoundVector::Zero();
+      input[eBoundDir0] = phi;
+      input[eBoundDir1] = theta;
+      input[eBoundQOverP] = charge / absMom;
+      auto state = stepper.makeState(options);
+      stepper.initialize(state, input, std::nullopt, particleHypothesis,
+                         *surface);
+      const auto before = state.pVector;
+      const auto jacobian = stepper.transportToBound(state, *surface);
+      BOOST_REQUIRE(jacobian.ok());
+      CHECK_CLOSE_ABS(*jacobian, BoundMatrix::Identity(), eps);
+      BOOST_CHECK(state.pVector == before);
+      const auto output = stepper.boundParameters(state, *surface);
+      BOOST_REQUIRE(output.ok());
+      BOOST_CHECK(!output->covariance().has_value());
+      CHECK_CLOSE_ABS(output->parameters(), input, eps);
+      CHECK_CLOSE_ABS(output->direction(geoCtx), stepper.direction(state), eps);
+    }
+  }
 }
 
 // test building a bound state object from the stepper state
