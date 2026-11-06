@@ -23,7 +23,8 @@ class MagneticFieldQuery;
 
 /// @typedef TrackLinearizer
 /// A delegate for linearizing a track at a given point in time and surface.
-/// @note Used for track fitting and vertexing.
+/// @note Used for track fitting and vertexing. Retained for compatibility;
+/// new callers should use FieldTrackLinearizer.
 using TrackLinearizer = Delegate<Result<LinearizedTrack>(
     const BoundTrackParameters& params, double linPointTime,
     const Surface& perigeeSurface, const GeometryContext& gctx,
@@ -31,10 +32,10 @@ using TrackLinearizer = Delegate<Result<LinearizedTrack>(
     MagneticFieldProvider::Cache& fieldCache)>;
 
 /// Linearizer using a caller-owned field query. The query must not be retained.
-/// Propagation uses mctx and its own independent field cache.
+/// Propagation uses the query's context and its own independent field cache.
 using FieldTrackLinearizer = Delegate<Result<LinearizedTrack>(
     const BoundTrackParameters& params, double linPointTime,
     const Surface& perigeeSurface, const GeometryContext& gctx,
-    const MagneticFieldContext& mctx, MagneticFieldQuery& field)>;
+    MagneticFieldQuery& field)>;
 
 }  // namespace Acts

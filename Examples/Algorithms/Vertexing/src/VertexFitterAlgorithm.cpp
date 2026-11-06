@@ -15,6 +15,7 @@
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/detail/LegacyTrackLinearizer.hpp"
 #include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
@@ -63,8 +64,8 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
   VertexFitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters
       .connect<&Acts::InputTrack::extractParameters>();
-  vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
-      &linearizer);
+  vertexFitterCfg.trackLinearizer =
+      Acts::detail::makeLegacyTrackLinearizer(linearizer);
   VertexFitter vertexFitter(vertexFitterCfg);
   auto fieldCache = m_cfg.bField->makeCache(ctx.magFieldContext);
 

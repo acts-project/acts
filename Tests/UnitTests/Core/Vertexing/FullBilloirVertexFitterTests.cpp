@@ -26,6 +26,7 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "Acts/Vertexing/detail/LegacyTrackLinearizer.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
@@ -140,8 +141,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   using VertexFitter = FullBilloirVertexFitter;
   VertexFitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  vertexFitterCfg.trackLinearizer
-      .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
+  vertexFitterCfg.trackLinearizer =
+      Acts::detail::makeLegacyTrackLinearizer(linearizer);
   VertexFitter billoirFitter(vertexFitterCfg);
   auto fieldCache = bField->makeCache(magFieldContext);
   // Vertexing options for default tracks
@@ -157,8 +158,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   // Set up Billoir vertex fitter with user-defined input tracks
   VertexFitter::Config customVertexFitterCfg;
   customVertexFitterCfg.extractParameters.connect(extractParameters);
-  customVertexFitterCfg.trackLinearizer
-      .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
+  customVertexFitterCfg.trackLinearizer =
+      Acts::detail::makeLegacyTrackLinearizer(linearizer);
   VertexFitter customBilloirFitter(customVertexFitterCfg);
   // Vertexing options for custom tracks
   VertexingOptions customVfOptions(geoContext, magFieldContext);

@@ -23,6 +23,7 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/detail/LegacyTrackLinearizer.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -159,7 +160,8 @@ AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder(
   fitterCfg.doSmoothing = m_cfg.doSmoothing;
   fitterCfg.useTime = m_cfg.useTime;
   fitterCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
-  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&m_linearizer);
+  fitterCfg.trackLinearizer =
+      Acts::detail::makeLegacyTrackLinearizer(m_linearizer);
   Fitter fitter(std::move(fitterCfg),
                 logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 

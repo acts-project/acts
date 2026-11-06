@@ -109,6 +109,8 @@ class NumericalTrackLinearizer {
   /// @param mctx Magnetic field context
   ///
   /// @return Linearized track
+  /// @deprecated Use linearizeTrackWithField with a reusable field query.
+  [[deprecated("Use linearizeTrackWithField with MagneticFieldQuery instead")]]
   Result<LinearizedTrack> linearizeTrack(
       const BoundTrackParameters& params, double linPointTime,
       const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
@@ -120,13 +122,12 @@ class NumericalTrackLinearizer {
   /// @param linPointTime Time of the linearization point
   /// @param perigeeSurface Surface defining the linearization point
   /// @param gctx Geometry context
-  /// @param mctx Field context for propagation
-  /// @param field Unused field query, for compatibility with FieldTrackLinearizer
+  /// @param field Query supplying the context for propagation
   /// @return Linearized track or a propagation error
   Result<LinearizedTrack> linearizeTrackWithField(
       const BoundTrackParameters& params, double linPointTime,
       const Surface& perigeeSurface, const GeometryContext& gctx,
-      const MagneticFieldContext& mctx, MagneticFieldQuery& field) const;
+      MagneticFieldQuery& field) const;
 
  private:
   Result<LinearizedTrack> linearizeTrackImpl(

@@ -31,6 +31,7 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "Acts/Vertexing/detail/LegacyTrackLinearizer.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <iostream>
@@ -120,7 +121,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   Linearizer linearizer(ltConfig);
 
   AdaptiveMultiVertexFitter::Config fitterCfg(ip3dEst);
-  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
+  fitterCfg.trackLinearizer =
+      Acts::detail::makeLegacyTrackLinearizer(linearizer);
 
   // Test smoothing
   fitterCfg.doSmoothing = true;
@@ -348,7 +350,8 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   // Do time fit
   fitterCfg.useTime = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
+  fitterCfg.trackLinearizer =
+      Acts::detail::makeLegacyTrackLinearizer(linearizer);
 
   AdaptiveMultiVertexFitter fitter(std::move(fitterCfg));
 
@@ -536,7 +539,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
-  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
+  fitterCfg.trackLinearizer =
+      Acts::detail::makeLegacyTrackLinearizer(linearizer);
 
   // Test smoothing
   // fitterCfg.doSmoothing = true;
@@ -813,7 +817,8 @@ BOOST_AUTO_TEST_CASE(deprecated_state_interface) {
   Linearizer linearizer(ltConfig);
 
   AdaptiveMultiVertexFitter::Config fitterCfg(ip3dEst);
-  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
+  fitterCfg.trackLinearizer =
+      Acts::detail::makeLegacyTrackLinearizer(linearizer);
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
 

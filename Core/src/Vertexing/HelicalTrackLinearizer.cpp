@@ -10,9 +10,11 @@
 
 #include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
+#include "Acts/Vertexing/detail/LegacyTrackLinearizer.hpp"
 
 Acts::Result<Acts::LinearizedTrack>
 Acts::HelicalTrackLinearizer::linearizeTrack(
@@ -28,9 +30,9 @@ Acts::Result<Acts::LinearizedTrack>
 Acts::HelicalTrackLinearizer::linearizeTrackWithField(
     const BoundTrackParameters& params, double linPointTime,
     const Surface& perigeeSurface, const GeometryContext& gctx,
-    const MagneticFieldContext& mctx, MagneticFieldQuery& field) const {
-  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx, mctx,
-                            nullptr, &field);
+    MagneticFieldQuery& field) const {
+  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx,
+                            field.context(), nullptr, &field);
 }
 
 Acts::Result<Acts::LinearizedTrack>
@@ -238,4 +240,24 @@ Acts::HelicalTrackLinearizer::linearizeTrackImpl(
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
                          positionJacobian, momentumJacobian, pca, momentumAtPCA,
                          constTerm);
+}
+
+Acts::TrackLinearizer Acts::detail::makeLegacyTrackLinearizer(
+    const HelicalTrackLinearizer& linearizer) {
+  TrackLinearizer delegate;
+  delegate.connect(
+      [](const void* payload, const BoundTrackParameters& params, double time,
+         const Surface& surface, const GeometryContext& gctx,
+         const MagneticFieldContext& mctx,
+         MagneticFieldProvider::Cache& cache) {
+        // Keep the suppression on the actual call, outside Delegate templates.
+        ACTS_PUSH_IGNORE_DEPRECATED()
+        auto result =
+            static_cast<const HelicalTrackLinearizer*>(payload)->linearizeTrack(
+                params, time, surface, gctx, mctx, cache);
+        ACTS_POP_IGNORE_DEPRECATED()
+        return result;
+      },
+      &linearizer);
+  return delegate;
 }
