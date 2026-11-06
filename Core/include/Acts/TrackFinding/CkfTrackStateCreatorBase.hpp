@@ -135,32 +135,23 @@ void fillTrackStateCalibrated(const measurement_t& measurement,
 /// Everything a @ref CkfTrackStateCreatorBase customization point needs to know
 /// about the surface it is currently working on.
 ///
-/// This does not depend on the concrete creator type, so that customization
-/// points can be plain, non-template member functions.
+/// This is the input from the CKF, see @ref CkfTypes::TrackStateCreatorInput,
+/// together with the scratch data of the creator. It does not depend on the
+/// concrete creator type, so that customization points can be plain,
+/// non-template member functions.
 ///
 /// @tparam track_container_t the track container used by the track finder
 template <typename track_container_t>
-struct CkfTrackStateCreatorState {
-  /// Type alias for the track state container backend
-  using TrackStateContainerBackend =
-      typename track_container_t::TrackStateContainerBackend;
+struct CkfTrackStateCreatorState
+    : public CkfTypes::TrackStateCreatorInput<track_container_t> {
+  /// Type alias for the input from the CKF
+  using Input = CkfTypes::TrackStateCreatorInput<track_container_t>;
   /// Type alias for the track state proxy
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
 
-  /// The current geometry context
-  const GeometryContext* geoContext{};
-  /// The current calibration context
-  const CalibrationContext* calibrationContext{};
-  /// The surface the trajectory is being extended onto
-  const Surface* surface{};
-  /// The predicted bound state on @ref surface
-  const CkfTypes::BoundState* boundState{};
-  /// The tip of the trajectory which is being extended
-  TrackIndexType prevTip{kTrackIndexInvalid};
-  /// The trajectory new track states are added to
-  TrackStateContainerBackend* trajectory{};
-  /// A logger for messages
-  const Logger* logger{};
+  /// Make the state for one surface from the input of the CKF
+  /// @param input the input from the CKF
+  explicit CkfTrackStateCreatorState(const Input& input) : Input(input) {}
 
   /// The track state on this surface which owns the predicted parameters and
   /// the jacobian. All further track states on the same surface share them.
@@ -169,7 +160,7 @@ struct CkfTrackStateCreatorState {
   /// The predicted bound parameters on the surface
   /// @return the bound track parameters
   const BoundTrackParameters& boundParameters() const {
-    return std::get<0>(*boundState);
+    return std::get<0>(*this->boundState);
   }
   /// The predicted parameter vector
   /// @return the predicted parameters
@@ -185,10 +176,10 @@ struct CkfTrackStateCreatorState {
   }
   /// The jacobian from the previous surface to this one
   /// @return the jacobian
-  const BoundMatrix& jacobian() const { return std::get<1>(*boundState); }
+  const BoundMatrix& jacobian() const { return std::get<1>(*this->boundState); }
   /// The path length accumulated up to this surface
   /// @return the path length
-  double pathLength() const { return std::get<2>(*boundState); }
+  double pathLength() const { return std::get<2>(*this->boundState); }
 };
 
 /// A measurement which was selected to become a track state on a surface.
@@ -252,35 +243,29 @@ class CkfTrackStateCreatorBase {
       boost::container::small_vector<CkfTrackStateCandidate<measurement_t>,
                                      kMaxCandidatesPerSurface>;
 
+  /// Type alias for the input from the CKF
+  using Input = CkfTypes::TrackStateCreatorInput<track_container_t>;
+
   /// Extend the trajectory onto the given surface.
   ///
-  /// @param gctx The current geometry context
-  /// @param cctx The current calibration context
-  /// @param surface The surface the trajectory is extended onto
-  /// @param boundState The predicted bound state on the given surface
-  /// @param prevTip The tip of the trajectory which is to be extended
-  /// @param trajectory The trajectory to be extended
-  /// @param logger A logger for messages
+  /// This is the function to connect to
+  /// @ref CombinatorialKalmanFilterExtensions::trackStateCreator.
+  ///
+  /// @param input the surface, the predicted bound state, the trajectory to
+  ///        extend, and the contexts
   ///
   /// @return the indices of the newly created track states, in the order the
   ///         selection produced them, or an error. An empty list means that no
   ///         compatible measurement was found and the caller is expected to
   ///         create a hole.
-  TrackStatesResult createTrackStates(const GeometryContext& gctx,
-                                      const CalibrationContext& cctx,
-                                      const Surface& surface,
-                                      const CkfTypes::BoundState& boundState,
-                                      TrackIndexType prevTip,
-                                      TrackStateContainerBackend& trajectory,
-                                      const Logger& logger) const {
-    State state{};
-    state.geoContext = &gctx;
-    state.calibrationContext = &cctx;
-    state.surface = &surface;
-    state.boundState = &boundState;
-    state.prevTip = prevTip;
-    state.trajectory = &trajectory;
-    state.logger = &logger;
+  TrackStatesResult createTrackStates(const Input& input) const {
+    assert(input.geoContext != nullptr && input.calibrationContext != nullptr &&
+           input.surface != nullptr && input.boundState != nullptr &&
+           input.trajectory != nullptr && input.logger != nullptr &&
+           "Incomplete input for the track state creation");
+
+    const Logger& logger = *input.logger;
+    State state(input);
 
     CkfTypes::BranchVector<TrackIndexType> trackStates;
 
@@ -288,7 +273,8 @@ class CkfTrackStateCreatorBase {
     // Bail out before the selection is consulted, so that an ordinary surface
     // without measurements can never turn into a selection error.
     if (std::ranges::empty(range)) {
-      ACTS_VERBOSE("No measurements on surface " << surface.geometryId());
+      ACTS_VERBOSE("No measurements on surface "
+                   << input.surface->geometryId());
       return trackStates;
     }
 

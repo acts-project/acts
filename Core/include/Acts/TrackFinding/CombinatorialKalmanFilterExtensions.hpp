@@ -8,8 +8,12 @@
 
 #pragma once
 
+#include "Acts/EventData/Types.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <vector>
@@ -30,6 +34,34 @@ template <typename T>
 using BranchVector = boost::container::small_vector<T, s_maxBranchesPerSurface>;
 
 using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+
+/// The input of the track state creation on one surface.
+///
+/// Only the CKF makes this object. It can get more fields without a change to
+/// the signature of the track state creator delegate.
+///
+/// @tparam track_container_t the track container used by the track finder
+template <typename track_container_t>
+struct TrackStateCreatorInput {
+  /// Type alias for the track state container backend
+  using TrackStateContainerBackend =
+      typename track_container_t::TrackStateContainerBackend;
+
+  /// The current geometry context
+  const GeometryContext* geoContext{};
+  /// The current calibration context
+  const CalibrationContext* calibrationContext{};
+  /// The surface the trajectory is being extended onto
+  const Surface* surface{};
+  /// The predicted bound state on @ref surface
+  const BoundState* boundState{};
+  /// The tip of the trajectory which is being extended
+  TrackIndexType prevTip{kTrackIndexInvalid};
+  /// The trajectory new track states are added to
+  TrackStateContainerBackend* trajectory{};
+  /// A logger for messages
+  const Logger* logger{};
+};
 
 }  // namespace CkfTypes
 
@@ -104,22 +136,16 @@ struct CombinatorialKalmanFilterExtensions {
   ///        an external unit.
   ///
   /// Same contract as @ref TrackStateCreator, but without the scratch buffer
-  /// for temporary track states.
+  /// for temporary track states. All inputs are in one struct, so that the CKF
+  /// can pass more of them later without a break of the implementations.
   ///
-  /// @param geoContext The current geometry context
-  /// @param calibrationContext pointer to the current calibration context
-  /// @param surface the surface at which new track states are to be created
-  /// @param boundState the current bound state of the trajectory
-  /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
-  /// @param trajectory the trajectory to which the new states are to be added
-  /// @param logger a logger for messages
-  /// @return indices of new track states which extend the trajectory given by prevTip
+  /// @param input the surface, the predicted bound state, the trajectory to
+  ///        extend, and the contexts
+  /// @return indices of new track states which extend the trajectory given by
+  ///         `input.prevTip`
   using TrackStateCreatorDelegate =
       Delegate<Result<CkfTypes::BranchVector<TrackIndexType>>(
-          const GeometryContext& geoContext,
-          const CalibrationContext& calibrationContext, const Surface& surface,
-          const CkfTypes::BoundState& boundState, TrackIndexType prevTip,
-          traj_t& trajectory, const Logger& logger)>;
+          const CkfTypes::TrackStateCreatorInput<track_container_t>& input)>;
 
   /// The delegate to create new track states.
   /// @note derive from @ref CkfTrackStateCreatorBase to implement one

@@ -206,8 +206,13 @@ struct Fixture {
   }
 
   Result<CkfTypes::BranchVector<TrackIndexType>> run() {
-    return creator.createTrackStates(gctx, cctx, *surface, boundState,
-                                     kTrackIndexInvalid, trajectory, *logger);
+    return creator.createTrackStates({.geoContext = &gctx,
+                                      .calibrationContext = &cctx,
+                                      .surface = surface.get(),
+                                      .boundState = &boundState,
+                                      .prevTip = kTrackIndexInvalid,
+                                      .trajectory = &trajectory,
+                                      .logger = logger.get()});
   }
 };
 

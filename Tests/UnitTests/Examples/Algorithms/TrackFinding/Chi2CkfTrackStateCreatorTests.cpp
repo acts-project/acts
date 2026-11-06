@@ -94,8 +94,13 @@ struct Fixture {
       BoundMatrix::Identity(), 1.5};
 
   auto run() {
-    return creator.createTrackStates(gctx, cctx, *surface, boundState,
-                                     kTrackIndexInvalid, trajectory, *logger);
+    return creator.createTrackStates({.geoContext = &gctx,
+                                      .calibrationContext = &cctx,
+                                      .surface = surface.get(),
+                                      .boundState = &boundState,
+                                      .prevTip = kTrackIndexInvalid,
+                                      .trajectory = &trajectory,
+                                      .logger = logger.get()});
   }
 };
 
