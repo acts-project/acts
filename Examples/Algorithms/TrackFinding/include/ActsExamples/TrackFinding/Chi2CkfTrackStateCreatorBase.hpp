@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/TrackFinding/CkfTrackStateCreatorBase.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
-#include "Acts/TrackFinding/TrackStateCreatorBase.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -55,11 +55,11 @@ struct TrackStateSelectionCuts {
 ///
 /// @tparam derived_t the concrete creator, see CRTP
 template <typename derived_t>
-class TrackStateCreatorBase
-    : public Acts::TrackStateCreatorBase<derived_t, TrackContainer> {
+class Chi2CkfTrackStateCreatorBase
+    : public Acts::CkfTrackStateCreatorBase<derived_t, TrackContainer> {
  public:
   /// Type alias for the CRTP base
-  using Base = Acts::TrackStateCreatorBase<derived_t, TrackContainer>;
+  using Base = Acts::CkfTrackStateCreatorBase<derived_t, TrackContainer>;
   /// Type alias for the per surface state object
   using State = typename Base::State;
 

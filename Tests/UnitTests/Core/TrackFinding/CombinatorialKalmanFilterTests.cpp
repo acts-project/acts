@@ -38,8 +38,8 @@
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFinding/CkfTrackStateCreatorBase.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
-#include "Acts/TrackFinding/TrackStateCreatorBase.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -288,11 +288,11 @@ static_assert(
     "The calibrated test source link should exercise the runtime "
     "dispatch on the measurement dimension");
 
-/// The same thing built on @ref TrackStateCreatorBase, i.e. without pushing
+/// The same thing built on @ref CkfTrackStateCreatorBase, i.e. without pushing
 /// every measurement through the track EDM first.
 struct TestTrackStateCreator final
-    : public TrackStateCreatorBase<TestTrackStateCreator, TrackContainer> {
-  using Base = TrackStateCreatorBase<TestTrackStateCreator, TrackContainer>;
+    : public CkfTrackStateCreatorBase<TestTrackStateCreator, TrackContainer> {
+  using Base = CkfTrackStateCreatorBase<TestTrackStateCreator, TrackContainer>;
   using State = typename Base::State;
 
   const Fixture::TestSourceLinkContainer* container = nullptr;

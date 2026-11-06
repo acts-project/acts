@@ -20,7 +20,7 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/TrackFinding/TrackStateCreator.hpp"
+#include "ActsExamples/TrackFinding/Chi2CkfTrackStateCreatorBase.hpp"
 
 #include <array>
 #include <cstdint>
@@ -50,7 +50,7 @@ struct CalibratedMeasurement {
 
 /// Creator over a flat list of loc0 values, one measurement per entry
 class TestCreator final
-    : public ActsExamples::TrackStateCreatorBase<TestCreator> {
+    : public ActsExamples::Chi2CkfTrackStateCreatorBase<TestCreator> {
  public:
   std::vector<double> values;
   std::vector<IndexSourceLink> sourceLinks;
@@ -77,7 +77,7 @@ struct Fixture {
   GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   CalibrationContext cctx;
   std::unique_ptr<const Logger> logger =
-      getDefaultLogger("TrackStateCreatorTests", Logging::INFO);
+      getDefaultLogger("Chi2CkfTrackStateCreatorTests", Logging::INFO);
 
   std::shared_ptr<const Surface> surface =
       CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();
@@ -103,7 +103,7 @@ constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(ExamplesTrackStateCreatorSuite)
+BOOST_AUTO_TEST_SUITE(ExamplesChi2CkfTrackStateCreatorSuite)
 
 /// A single candidate with a non-finite chi2 must not be selected
 BOOST_AUTO_TEST_CASE(NonFiniteChi2IsRejected) {

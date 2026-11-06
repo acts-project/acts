@@ -36,10 +36,10 @@ ACTS_PUSH_IGNORE_DEPRECATED()
 /// cut on the local chi2.
 ///
 /// @deprecated Goes away together with @ref MeasurementSelector. A creator
-///   derived from @ref TrackStateCreatorBase carries whatever cuts its
+///   derived from @ref CkfTrackStateCreatorBase carries whatever cuts its
 ///   selection needs.
 struct [[deprecated(
-    "Carry the cuts in a class derived from Acts::TrackStateCreatorBase "
+    "Carry the cuts in a class derived from Acts::CkfTrackStateCreatorBase "
     "instead")]] MeasurementSelectorCuts {
   /// bins in |eta| to specify variable selections
   std::vector<double> etaBins{};
@@ -60,13 +60,13 @@ struct [[deprecated(
 /// If there is no compatible measurement, the measurement with the minimum
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
-/// @deprecated Implement the selection in a @ref TrackStateCreatorBase
+/// @deprecated Implement the selection in a @ref CkfTrackStateCreatorBase
 ///   instead. Selecting on track states forces every measurement on a surface
 ///   through the track EDM, and the geometry and eta binned cut lookup here is
 ///   not used by anything ACTS ships.
 class [[deprecated(
     "Implement the selection in a class derived from "
-    "Acts::TrackStateCreatorBase instead")]] MeasurementSelector {
+    "Acts::CkfTrackStateCreatorBase instead")]] MeasurementSelector {
  public:
   /// Geometry-dependent cut configuration.
   ///

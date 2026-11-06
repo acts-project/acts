@@ -132,7 +132,7 @@ void fillTrackStateCalibrated(const measurement_t& measurement,
   trackState.setProjectorSubspaceIndices(measurement.subspaceIndices());
 }
 
-/// Everything a @ref TrackStateCreatorBase customization point needs to know
+/// Everything a @ref CkfTrackStateCreatorBase customization point needs to know
 /// about the surface it is currently working on.
 ///
 /// This does not depend on the concrete creator type, so that customization
@@ -140,7 +140,7 @@ void fillTrackStateCalibrated(const measurement_t& measurement,
 ///
 /// @tparam track_container_t the track container used by the track finder
 template <typename track_container_t>
-struct TrackStateCreatorState {
+struct CkfTrackStateCreatorState {
   /// Type alias for the track state container backend
   using TrackStateContainerBackend =
       typename track_container_t::TrackStateContainerBackend;
@@ -195,7 +195,7 @@ struct TrackStateCreatorState {
 ///
 /// @tparam measurement_t whatever the creator calls a measurement
 template <typename measurement_t>
-struct TrackStateCandidate {
+struct CkfTrackStateCandidate {
   /// The selected measurement
   measurement_t measurement;
   /// Its compatibility with the predicted parameters, written to the track
@@ -229,7 +229,7 @@ struct TrackStateCandidate {
 /// @tparam derived_t the concrete creator, see CRTP
 /// @tparam track_container_t the track container used by the track finder
 template <typename derived_t, typename track_container_t>
-class TrackStateCreatorBase {
+class CkfTrackStateCreatorBase {
  public:
   /// Type alias for the track state container backend
   using TrackStateContainerBackend =
@@ -237,7 +237,7 @@ class TrackStateCreatorBase {
   /// Type alias for the track state proxy
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
   /// Type alias for the per surface state object
-  using State = TrackStateCreatorState<track_container_t>;
+  using State = CkfTrackStateCreatorState<track_container_t>;
   /// Type alias for the result of the track state creation
   using TrackStatesResult = Result<CkfTypes::BranchVector<TrackIndexType>>;
 
@@ -249,7 +249,7 @@ class TrackStateCreatorBase {
   /// @tparam measurement_t whatever the creator calls a measurement
   template <typename measurement_t>
   using Candidates =
-      boost::container::small_vector<TrackStateCandidate<measurement_t>,
+      boost::container::small_vector<CkfTrackStateCandidate<measurement_t>,
                                      kMaxCandidatesPerSurface>;
 
   /// Extend the trajectory onto the given surface.
@@ -302,7 +302,7 @@ class TrackStateCreatorBase {
     }
 
     trackStates.reserve(candidates.size());
-    for (const TrackStateCandidate<Measurement>& candidate : candidates) {
+    for (const CkfTrackStateCandidate<Measurement>& candidate : candidates) {
       trackStates.push_back(derived().createTrackState(state, candidate));
     }
     return trackStates;
@@ -401,7 +401,8 @@ class TrackStateCreatorBase {
   /// @return the index of the new track state
   template <typename measurement_t>
   TrackIndexType createTrackState(
-      State& state, const TrackStateCandidate<measurement_t>& candidate) const {
+      State& state,
+      const CkfTrackStateCandidate<measurement_t>& candidate) const {
     using PM = TrackStatePropMask;
 
     const bool isFirst = !state.firstTrackState.has_value();

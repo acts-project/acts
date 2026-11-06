@@ -13,7 +13,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/TrackFinding/TrackStateCreator.hpp"
+#include "ActsExamples/TrackFinding/Chi2CkfTrackStateCreatorBase.hpp"
 
 #include <algorithm>
 #include <ranges>
@@ -31,7 +31,8 @@ using namespace ActsExamples;
 /// falling back to all measurements on surfaces the proto track does not
 /// touch.
 class ProtoTrackStateCreator final
-    : public ActsExamples::TrackStateCreatorBase<ProtoTrackStateCreator> {
+    : public ActsExamples::Chi2CkfTrackStateCreatorBase<
+          ProtoTrackStateCreator> {
  public:
   using Container = GeometryIdMultiset<IndexSourceLink>;
 

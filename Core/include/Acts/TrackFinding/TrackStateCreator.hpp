@@ -32,13 +32,13 @@ namespace Acts {
 /// may become big. Thus, it is advisable to copy selected tracks and their
 /// track states to a separate container after each track finding step.
 ///
-/// @deprecated Derive from @ref TrackStateCreatorBase and connect
+/// @deprecated Derive from @ref CkfTrackStateCreatorBase and connect
 ///   @ref CombinatorialKalmanFilterExtensions::trackStateCreator instead. This
 ///   runs its selection on temporary track states, so every measurement on a
 ///   surface has to pass through the track EDM to be selected on.
 ///
 template <typename source_link_iterator_t, typename track_container_t>
-struct [[deprecated("Derive from Acts::TrackStateCreatorBase instead")]]
+struct [[deprecated("Derive from Acts::CkfTrackStateCreatorBase instead")]]
 TrackStateCreator {
   /// Type alias for result of track states creation operation
   using TrackStatesResult =

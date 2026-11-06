@@ -122,7 +122,7 @@ struct CombinatorialKalmanFilterExtensions {
           traj_t& trajectory, const Logger& logger)>;
 
   /// The delegate to create new track states.
-  /// @note derive from @ref TrackStateCreatorBase to implement one
+  /// @note derive from @ref CkfTrackStateCreatorBase to implement one
   /// @note exactly one of this and @ref createTrackStates has to be connected
   TrackStateCreatorDelegate trackStateCreator;
 

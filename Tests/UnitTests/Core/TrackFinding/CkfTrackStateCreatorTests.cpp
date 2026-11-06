@@ -18,8 +18,8 @@
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFinding/CkfTrackStateCreatorBase.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
-#include "Acts/TrackFinding/TrackStateCreatorBase.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -71,8 +71,8 @@ static_assert(
 
 /// Minimal creator over a flat list of `TestMeasurement`.
 struct TestCreator final
-    : public TrackStateCreatorBase<TestCreator, TrackContainer> {
-  using Base = TrackStateCreatorBase<TestCreator, TrackContainer>;
+    : public CkfTrackStateCreatorBase<TestCreator, TrackContainer> {
+  using Base = CkfTrackStateCreatorBase<TestCreator, TrackContainer>;
   using State = typename Base::State;
 
   std::vector<TestMeasurement> measurements;
@@ -182,7 +182,7 @@ struct Fixture {
   GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   CalibrationContext cctx;
   std::unique_ptr<const Logger> logger =
-      getDefaultLogger("TrackStateCreatorTests", Logging::INFO);
+      getDefaultLogger("CkfTrackStateCreatorTests", Logging::INFO);
 
   std::shared_ptr<const Surface> surface =
       CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();

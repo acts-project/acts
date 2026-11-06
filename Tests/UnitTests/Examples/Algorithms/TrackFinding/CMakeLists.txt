@@ -6,8 +6,8 @@ target_link_libraries(
     PRIVATE ActsExamplesTrackFinding ActsExamplesFramework
 )
 
-add_unittest(ExamplesTrackStateCreator TrackStateCreatorTests.cpp)
+add_unittest(ExamplesChi2CkfTrackStateCreator Chi2CkfTrackStateCreatorTests.cpp)
 target_link_libraries(
-    ActsUnitTestExamplesTrackStateCreator
+    ActsUnitTestExamplesChi2CkfTrackStateCreator
     PRIVATE ActsExamplesTrackFinding ActsExamplesFramework
 )

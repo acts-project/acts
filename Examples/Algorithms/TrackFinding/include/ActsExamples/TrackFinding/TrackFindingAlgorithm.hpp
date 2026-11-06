@@ -25,8 +25,8 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/TrackFinding/Chi2CkfTrackStateCreatorBase.hpp"
 #include "ActsExamples/TrackFinding/SeedParamsEstimator.hpp"
-#include "ActsExamples/TrackFinding/TrackStateCreator.hpp"
 
 #include <atomic>
 #include <cstddef>

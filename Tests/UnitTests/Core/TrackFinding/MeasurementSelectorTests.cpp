@@ -29,7 +29,7 @@
 #include <numbers>
 #include <vector>
 
-// the measurement selector is deprecated in favour of TrackStateCreatorBase
+// the measurement selector is deprecated in favour of CkfTrackStateCreatorBase
 ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts::Test {

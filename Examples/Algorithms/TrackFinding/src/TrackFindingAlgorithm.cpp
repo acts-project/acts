@@ -39,7 +39,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/TrackFinding/TrackStateCreator.hpp"
+#include "ActsExamples/TrackFinding/Chi2CkfTrackStateCreatorBase.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -59,7 +59,7 @@ namespace {
 /// Creates track states for the measurements on a surface, restricted to the
 /// current seed when `stayOnSeed` is set.
 class TrackStateCreator final
-    : public TrackStateCreatorBase<TrackStateCreator> {
+    : public Chi2CkfTrackStateCreatorBase<TrackStateCreator> {
  public:
   const MeasurementSubset* measurements = nullptr;
 
