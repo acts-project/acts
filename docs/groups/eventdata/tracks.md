@@ -215,6 +215,13 @@ using the destination surface's parametrization, including periodic direction
 differences. Its perturbation generation and finite-difference algorithm are
 unchanged.
 
+@ref Acts::MeasurementSelector::select now takes the caller's geometry context
+as its first argument. The measurement-selector delegate in
+@ref Acts::TrackStateCreator forwards this context; custom selector callbacks
+must accept it too. Selection uses the surface parametrization for physical
+theta and measurement residuals, including direction measurements across the
+phi seam. Non-finite candidates are rejected before evaluating these residuals.
+
 ### Canonical support audit
 
 Only canonical global-spherical coordinates are selectable. The current
@@ -230,7 +237,7 @@ implementation and remaining work are:
 | GSF and bremsstrahlung CKF merging | Context-aware entry points with explicit canonical-only checks |
 | GX2F | Surface-selected measurement residuals; explicitly canonical scattering model and raw fit updates |
 | AtlasStepper | Explicit canonical-only checks at bound entry points |
-| CKF measurement selection | Still reads stored dir1 as physical theta and uses raw measurement residuals; requires follow-up |
+| CKF measurement selection | Uses the surface parametrization for physical theta and periodic measurement residuals |
 | Optional nonlinear free-to-bound correction | Still averages sigma points and forms covariance with raw bound arithmetic; requires follow-up |
 
 The explicit unsupported-configuration exceptions from mixture merging, GX2F,

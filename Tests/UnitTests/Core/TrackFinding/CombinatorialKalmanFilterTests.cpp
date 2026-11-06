@@ -321,6 +321,7 @@ template Result<std::pair<
     std::vector<
         ActsTests::TrackStateContainerBackend::TrackStateProxy>::iterator>>
 MeasurementSelector::select<ActsTests::TrackStateContainerBackend>(
+    const GeometryContext&,
     std::vector<ActsTests::TrackStateContainerBackend::TrackStateProxy>&, bool&,
     const Logger&) const;
 }  // namespace Acts

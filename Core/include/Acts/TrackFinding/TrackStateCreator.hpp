@@ -68,7 +68,8 @@ struct TrackStateCreator {
   using MeasurementSelector =
       Delegate<Result<std::pair<typename candidate_container_t::iterator,
                                 typename candidate_container_t::iterator>>(
-          candidate_container_t& trackStates, bool&, const Logger&)>;
+          const GeometryContext&, candidate_container_t& trackStates, bool&,
+          const Logger&)>;
 
   /// The source link accessor will return an source link range for a surface
   /// which link to the associated measurements.
@@ -206,7 +207,7 @@ struct TrackStateCreator {
     Result<std::pair<typename std::vector<TrackStateProxy>::iterator,
                      typename std::vector<TrackStateProxy>::iterator>>
         selectorResult =
-            measurementSelector(trackStateCandidates, isOutlier, logger);
+            measurementSelector(gctx, trackStateCandidates, isOutlier, logger);
     if (!selectorResult.ok()) {
       ACTS_DEBUG("Selection of calibrated measurements failed: "
                  << selectorResult.error().message());
@@ -298,10 +299,12 @@ struct TrackStateCreator {
 
   /// Default measurement selector which will return all measurements
   /// @param candidates Measurement track state candidates
+  /// @param gctx Geometry context (unused)
   /// @return Iterator pair representing the range of all candidates
   static Result<std::pair<typename std::vector<TrackStateProxy>::iterator,
                           typename std::vector<TrackStateProxy>::iterator>>
-  voidMeasurementSelector(typename std::vector<TrackStateProxy>& candidates,
+  voidMeasurementSelector(const GeometryContext& /*gctx*/,
+                          typename std::vector<TrackStateProxy>& candidates,
                           bool& /*isOutlier*/, const Logger& /*logger*/) {
     return std::pair{candidates.begin(), candidates.end()};
   };
