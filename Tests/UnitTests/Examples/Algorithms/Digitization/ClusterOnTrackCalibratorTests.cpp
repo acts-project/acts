@@ -23,9 +23,11 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
+#include <limits>
 #include <map>
 #include <numbers>
 #include <optional>
@@ -63,7 +65,8 @@ struct Sensor {
     transform.linear().col(1) = Vector3::UnitZ();
     transform.linear().col(2) = Vector3::UnitX();
     surface = Surface::makeShared<PlaneSurface>(
-        transform, std::make_shared<RectangleBounds>(10_mm, 10_mm));
+        transform,
+        std::make_shared<RectangleBounds>(kBinOffset * pitch, 10_mm));
     surface->assignGeometryId(geoId);
 
     const auto axisX = IAxis::createEquidistant(
@@ -93,22 +96,25 @@ struct Sensor {
   /// as the digitization. The result maps the fired bins to their charge.
   std::map<int, double> deposit(double mid, double alpha,
                                 std::mt19937& rng) const {
-    const double length = thickness * std::abs(std::tan(alpha));
-    const double low = mid - 0.5 * length;
-    const double high = mid + 0.5 * length;
+    const Vector4 position{0., mid, 0., 0.};
+    const Vector4 momentum{std::cos(alpha), std::sin(alpha), 0., 1.};
+    const ActsFatras::Hit hit(geoId, {}, position, momentum, momentum);
+    const auto& geoCfg = calibrator->config()
+                             .digitizationConfigs.find(geoId)
+                             ->geometricDigiConfig;
+    const auto channels = ActsFatras::Channelizer{}.channelize(
+        hit, *surface, GeometryContext::dangerouslyDefaultConstruct(),
+        Vector3::Zero(), *geoCfg.segmentation, thickness);
+    BOOST_REQUIRE(channels.ok());
     std::normal_distribution<double> noise(0., chargeNoise);
     std::map<int, double> fired;
-    for (int bin = static_cast<int>(std::floor(low / pitch));
-         bin <= static_cast<int>(std::floor(high / pitch)); ++bin) {
-      const double overlap =
-          std::min(high, (bin + 1) * pitch) - std::max(low, bin * pitch);
-      double charge =
-          length > 0 ? overlap / length * pathLength(alpha) : pathLength(alpha);
+    for (const auto& channel : *channels) {
+      double charge = channel.activation;
       if (chargeNoise > 0) {
         charge = std::max(0., charge + noise(rng));
       }
       if (charge > threshold) {
-        fired[bin] = charge;
+        fired[static_cast<int>(channel.bin[0]) - kBinOffset] = charge;
       }
     }
     return fired;
@@ -253,6 +259,70 @@ BOOST_AUTO_TEST_CASE(ClusterOnTrackAnalogueExact) {
       sensor.calibrate(sensor.deposit(mid, alpha, rng), alpha);
   CHECK_CLOSE_ABS(position, mid, 1e-9);
   CHECK_SMALL(variance, 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(ClusterOnTrackHighThreshold) {
+  Sensor sensor;
+  const double alpha = 10_degree;
+  sensor.threshold = 0.75 * sensor.pathLength(alpha);
+  sensor.build();
+  const auto [position, variance] = sensor.calibrate(makeBins(0, 0), alpha);
+  const double width = sensor.pitch - 0.5 * sensor.thickness * std::tan(alpha);
+  CHECK_CLOSE_ABS(position, 0.5 * sensor.pitch, 1e-12);
+  CHECK_CLOSE_REL(variance, width * width / 12, 1e-9);
+}
+
+BOOST_DATA_TEST_CASE(ClusterOnTrackSensorEdge,
+                     boost::unit_test::data::make({-1., 1.}), side) {
+  Sensor sensor;
+  sensor.build();
+  const double alpha = 10_degree;
+  const double length = sensor.thickness * std::tan(alpha);
+  std::mt19937 rng(42);
+  const double mid = side * (kBinOffset - 0.01) * sensor.pitch;
+  const auto [position, variance] =
+      sensor.calibrate(sensor.deposit(mid, alpha, rng), alpha);
+  const double low = (kBinOffset - 1) * sensor.pitch + 0.5 * length;
+  const double high = kBinOffset * sensor.pitch;
+  CHECK_CLOSE_ABS(position, side * 0.5 * (low + high), 1e-12);
+  CHECK_CLOSE_REL(variance, std::pow(high - low, 2) / 12, 1e-9);
+  BOOST_CHECK_LE(std::abs(position - mid), std::sqrt(3 * variance));
+}
+
+BOOST_AUTO_TEST_CASE(ClusterOnTrackInvalidConfig) {
+  for (double invalid : {-1., std::numeric_limits<double>::infinity(),
+                         std::numeric_limits<double>::quiet_NaN()}) {
+    ClusterOnTrackCalibrator::Config config;
+    config.chargeNoise = invalid;
+    BOOST_CHECK_THROW(ClusterOnTrackCalibrator{config}, std::invalid_argument);
+    config.chargeNoise = 0;
+    config.minError = invalid;
+    BOOST_CHECK_THROW(ClusterOnTrackCalibrator{config}, std::invalid_argument);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ClusterOnTrackInconsistentAnalogueCharge) {
+  Sensor sensor;
+  sensor.analogue = true;
+  sensor.build();
+  const double alpha = 25_degree;
+  // Each edge is partial, but together their charges exceed the full path.
+  const double charge = 0.6 * sensor.pathLength(alpha);
+  const auto [position, variance] =
+      sensor.calibrate({{0, charge}, {1, charge}}, alpha);
+  CHECK_CLOSE_ABS(position, sensor.pitch, 1e-12);
+  CHECK_CLOSE_REL(variance, std::pow(2 * sensor.pitch, 2) / 12, 1e-9);
+}
+
+BOOST_AUTO_TEST_CASE(ClusterOnTrackUncertainIncompatibleDirection) {
+  Sensor sensor;
+  sensor.chargeNoise = 1_um;
+  sensor.build();
+  // Normal incidence cannot give two bins, but the uncertain direction can.
+  const auto [position, variance] =
+      sensor.calibrate(makeBins(0, 1), 0., 5_degree);
+  CHECK_CLOSE_ABS(position, sensor.pitch, 1e-9);
+  BOOST_CHECK_LT(variance, sensor.pitch * sensor.pitch / 12);
 }
 
 // Without track parameters, the measurement passes through

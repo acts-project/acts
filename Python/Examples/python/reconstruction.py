@@ -1908,8 +1908,6 @@ def addCKFTracks(
     reverseSearchRZBoundary: Optional[Tuple[float, float]] = None,
     inwardOnlyRZBoundary: Optional[Tuple[float, float]] = None,
     seedParamsEstimation: Optional[acts.examples.SeedParamsEstimator.Config] = None,
-    clusters: Optional[str] = None,
-    calibrator: Optional[acts.examples.MeasurementCalibrator] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrackSummary: bool = True,
@@ -1919,6 +1917,8 @@ def addCKFTracks(
     writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     prefix: str = "",
+    clusters: Optional[str] = None,
+    calibrator: Optional[acts.examples.MeasurementCalibrator] = None,
 ) -> None:
     """This function steers the seeding
 

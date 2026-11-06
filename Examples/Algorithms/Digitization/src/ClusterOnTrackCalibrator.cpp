@@ -62,12 +62,10 @@ struct ClusterFootprint {
   double pathLength = 0;
 };
 
-/// The calibrated position on one axis.
-struct ClusterAxisCalibration {
-  double position = 0;
+/// The mean and variance of the track position on one axis.
+struct PosteriorMoments {
+  double mean = 0;
   double variance = 0;
-  /// False if the cluster cannot come from the predicted footprint
-  bool consistent = false;
 };
 
 constexpr double kMinusInfinity = -std::numeric_limits<double>::infinity();
@@ -165,12 +163,6 @@ struct ClusterLikelihood {
 /// A footprint length with its weight
 using WeightedLength = std::pair<double, double>;
 
-/// The mean and the variance of the track position
-struct PosteriorMoments {
-  double mean = 0;
-  double variance = 0;
-};
-
 /// log(exp(a) + exp(b)), where either can be minus infinity
 double logAddExp(double a, double b) {
   const double larger = std::max(a, b);
@@ -204,6 +196,13 @@ std::optional<PosteriorMoments> integratePosterior(
   }
   double low = projection.lastLower - 0.5 * maxLength;
   double high = projection.firstUpper + 0.5 * maxLength;
+  // The hit is on the sensor, even when its footprint is clipped at an edge.
+  if (projection.beforeWidth == 0) {
+    low = std::max(low, projection.firstLower);
+  }
+  if (projection.afterWidth == 0) {
+    high = std::min(high, projection.lastUpper);
+  }
   if (!(low < high)) {
     return std::nullopt;
   }
@@ -233,16 +232,19 @@ std::optional<PosteriorMoments> integratePosterior(
     double norm = 0;
     double sum1 = 0;
     double sum2 = 0;
+    const double origin = 0.5 * (low + high);
     for (std::size_t i = 0; i < kPoints; ++i) {
       const double w = Acts::safeExp(logLikelihood[i] - maxLog);
+      const double delta = position(i) - origin;
       norm += w;
-      sum1 += w * position(i);
-      sum2 += w * position(i) * position(i);
+      sum1 += w * delta;
+      sum2 += w * delta * delta;
     }
-    moments.mean = sum1 / norm;
+    const double mean = sum1 / norm;
+    moments.mean = origin + mean;
     // The grid spreads the weight of a point uniformly over its step
-    moments.variance = std::max(sum2 / norm - moments.mean * moments.mean, 0.) +
-                       step * step / 12.;
+    moments.variance =
+        std::max(sum2 / norm - mean * mean, 0.) + step * step / 12.;
 
     const double sigma = std::sqrt(moments.variance);
     if (sigma > 4 * step) {
@@ -254,116 +256,116 @@ std::optional<PosteriorMoments> integratePosterior(
   return moments;
 }
 
-/// The posterior without noise: uniform in a box, or exact for analogue
-/// readout.
-ClusterAxisCalibration calibrateWithoutNoise(const ClusterProjection& p,
-                                             const ClusterFootprint& footprint,
-                                             double threshold, bool analogue) {
-  ClusterAxisCalibration result;
+/// The noise-free digital box, optionally constrained by partial edge charges.
+/// A single analogue bin uses the digital box: a subthreshold neighbour can
+/// remove charge on either side, so its charge need not determine a position.
+std::optional<PosteriorMoments> calibrateWithoutNoise(
+    const ClusterProjection& p, const ClusterFootprint& footprint,
+    double threshold, bool analogue) {
   const double length = footprint.length;
   const double fraction = threshold / footprint.pathLength;
-  if (!(fraction < 0.5)) {
-    return result;
+  const double thresholdLength = fraction * length;
+  const double minWidth =
+      std::min(p.firstUpper - p.firstLower, p.lastUpper - p.lastLower);
+  // If a whole neighbour can stay silent, the box would need constraints
+  // from further bins. Use the cluster-wide fallback in that case.
+  if (fraction >= 1 || (length > 0 && thresholdLength >= minWidth) ||
+      (p.beforeWidth > 0 && thresholdLength >= p.beforeWidth) ||
+      (p.afterWidth > 0 && thresholdLength >= p.afterWidth)) {
+    return std::nullopt;
   }
 
-  // A bin fires if the segment, shrunk by the threshold fraction at both
-  // ends, touches it. The lower end of the shrunk segment is in the first
-  // bin and its upper end in the last bin.
+  // Fired edge bins require an overlap greater than threshold * length /
+  // pathLength. Silent neighbours bound the other ends; at a sensor edge,
+  // only the hit position must stay inside the sensor.
   const double half = 0.5 * length * (1. - 2. * fraction);
-  const double lowFromFirst = p.firstLower + half;
+  const double lowFromFirst = p.firstLower + (p.beforeWidth > 0 ? half : 0.);
   const double lowFromLast = p.lastLower - half;
   const double highFromFirst = p.firstUpper + half;
-  const double highFromLast = p.lastUpper - half;
+  const double highFromLast = p.lastUpper - (p.afterWidth > 0 ? half : 0.);
   const double low = std::max(lowFromFirst, lowFromLast);
   const double high = std::min(highFromFirst, highFromLast);
   if (low > high) {
-    return result;
+    return std::nullopt;
   }
 
   // The box moves with the footprint length. The centre moves by the mean
   // of the slopes of the active bounds.
   const double halfError = 0.5 * (1. - 2. * fraction) * footprint.lengthError;
-  const double centreSlope = 0.5 * ((lowFromFirst >= lowFromLast ? 1. : -1.) +
-                                    (highFromFirst <= highFromLast ? 1. : -1.));
-  result.consistent = true;
-  result.position = 0.5 * (low + high);
+  const double centreSlope =
+      0.5 *
+      ((lowFromFirst >= lowFromLast ? (p.beforeWidth > 0 ? 1. : 0.) : -1.) +
+       (highFromFirst <= highFromLast ? 1. : (p.afterWidth > 0 ? -1. : 0.)));
+  PosteriorMoments result;
+  result.mean = 0.5 * (low + high);
   result.variance =
       (high - low) * (high - low) / 12. + std::pow(centreSlope * halfError, 2);
 
-  // A single bin holds the full charge, so the charge adds nothing
+  // Keep the digital approximation for a single analogue bin.
   if (!analogue || p.firstLower == p.lastLower) {
     return result;
   }
 
-  // The part of the footprint in an edge bin is its charge times the
-  // footprint length per unit of path length. Each edge gives the exact
-  // position, unless the threshold removed the cell after it. Then the edge
-  // bin is full and its charge gives nothing.
+  // A partial edge gives the segment endpoint, hence the track midpoint.
+  // A full edge carries no position information. The sign distinguishes the
+  // lower endpoint inferred from the first bin from the upper endpoint.
   const double lengthPerCharge = length / footprint.pathLength;
-  const auto isPartial = [&](double charge, double lower, double upper) {
-    return charge * lengthPerCharge < (upper - lower) * (1. - 1e-9);
-  };
-  const bool firstPartial =
-      isPartial(p.firstCharge, p.firstLower, p.firstUpper);
-  const bool lastPartial = isPartial(p.lastCharge, p.lastLower, p.lastUpper);
-  if (!firstPartial && !lastPartial) {
-    return result;
+  const double tolerance = 1e-9 * std::max(length, p.lastUpper - p.firstLower);
+  const std::array edges = {
+      std::array{p.firstUpper, p.firstUpper - p.firstLower, p.firstCharge, 1.},
+      std::array{p.lastLower, p.lastUpper - p.lastLower, p.lastCharge, -1.}};
+  double sumPosition = 0;
+  double sumSlope = 0;
+  unsigned int partial = 0;
+  for (const auto& [edge, width, charge, sign] : edges) {
+    const double overlap = charge * lengthPerCharge;
+    if (footprint.lengthError == 0 && overlap > width + tolerance) {
+      return std::nullopt;
+    }
+    if (overlap >= width * (1. - 1e-9)) {
+      continue;
+    }
+    const double position = edge + sign * (0.5 * length - overlap);
+    // Contradictory charges must not produce a zero-variance measurement.
+    if (footprint.lengthError == 0 &&
+        (position < low - tolerance || position > high + tolerance ||
+         (partial != 0 && std::abs(position - sumPosition) > tolerance))) {
+      return std::nullopt;
+    }
+    sumPosition += position;
+    sumSlope += sign * (0.5 - charge / footprint.pathLength);
+    ++partial;
   }
-  const double fromFirst =
-      p.firstUpper - p.firstCharge * lengthPerCharge + 0.5 * length;
-  const double fromLast =
-      p.lastLower + p.lastCharge * lengthPerCharge - 0.5 * length;
-  const double slopeFirst = 0.5 - p.firstCharge / footprint.pathLength;
-  const double slopeLast = p.lastCharge / footprint.pathLength - 0.5;
-  const double wFirst = firstPartial ? 1. : 0.;
-  const double wLast = lastPartial ? 1. : 0.;
-  const double wSum = std::max(wFirst + wLast, 1.);
-  const double position = (wFirst * fromFirst + wLast * fromLast) / wSum;
-  const double slope = (wFirst * slopeFirst + wLast * slopeLast) / wSum;
-  result.position = std::clamp(position, low, high);
-  result.variance = std::pow(slope * footprint.lengthError, 2);
+  if (partial != 0) {
+    result.mean = std::clamp(sumPosition / partial, low, high);
+    result.variance = std::pow(sumSlope / partial * footprint.lengthError, 2);
+  }
   return result;
 }
 
-/// Calibrate the position of a cluster on one axis of the segmentation.
+/// Calibrate one axis with a uniform position prior and an edge-bin likelihood:
+/// first and last bins fire (or have the observed analogue charge), and their
+/// touched neighbours stay silent. Uniform deposition and Gaussian cell noise
+/// are assumed. With no noise, use the digital box and partial analogue edges;
+/// otherwise integrate numerically. If no position is compatible, fall back to
+/// a uniform distribution over the cluster.
 ///
-/// The track deposits a straight segment with a uniform charge density. The
-/// digitization adds Gaussian noise to the charge of each cell that the
-/// segment touches, and a cell fires if its charge is above the threshold.
-/// The result is the mean and the variance of the track position, for a
-/// uniform prior and this likelihood of the cluster:
-///
-/// - The first and the last bin fire. For analogue readout, their charge is
-///   Gaussian around the charge of the predicted overlap instead.
-/// - The touched bins before the first and after the last bin do not fire.
-///
-/// Without noise, the likelihood is 0 or 1, and the posterior is uniform in a
-/// box. With noise, the posterior is integrated numerically. The error of the
-/// predicted footprint length adds to the variance.
-///
-/// If no position gives the observed cluster, the cluster cannot come from
-/// this footprint. The result is then uniform over the cluster.
-///
-/// @param projection The cluster on this axis
-/// @param footprint The predicted track in the sensor on this axis
-/// @param threshold The activation threshold of a cell
-/// @param analogue Whether to use the charge of the cells
-/// @param chargeNoise The Gaussian noise of the activation of one cell
-ClusterAxisCalibration calibrateClusterAxis(const ClusterProjection& projection,
-                                            const ClusterFootprint& footprint,
-                                            double threshold, bool analogue,
-                                            double chargeNoise) {
+/// Direction uncertainty varies the footprint length at fixed pathLength,
+/// ignoring their correlation. This is a small-angle approximation.
+PosteriorMoments calibrateClusterAxis(const ClusterProjection& projection,
+                                      const ClusterFootprint& footprint,
+                                      double threshold, bool analogue,
+                                      double chargeNoise) {
   const auto& p = projection;
 
   // Uniform over the whole cluster if the footprint cannot make the cluster
-  ClusterAxisCalibration fallback;
-  fallback.position = 0.5 * (p.firstLower + p.lastUpper);
-  fallback.variance = std::pow(p.lastUpper - p.firstLower, 2) / 12.;
+  const PosteriorMoments fallback{
+      0.5 * (p.firstLower + p.lastUpper),
+      std::pow(p.lastUpper - p.firstLower, 2) / 12.};
 
   if (chargeNoise <= 0) {
-    ClusterAxisCalibration result =
-        calibrateWithoutNoise(p, footprint, threshold, analogue);
-    return result.consistent ? result : fallback;
+    return calibrateWithoutNoise(p, footprint, threshold, analogue)
+        .value_or(fallback);
   }
 
   const ClusterLikelihood likelihood{p, footprint.pathLength, threshold,
@@ -371,38 +373,30 @@ ClusterAxisCalibration calibrateClusterAxis(const ClusterProjection& projection,
 
   const std::array<WeightedLength, 1> central = {{{footprint.length, 1.}}};
   auto moments = integratePosterior(likelihood, p, central);
-  if (!moments.has_value()) {
-    return fallback;
-  }
 
   // A change of the footprint length moves each end of the segment by half
   // of it. If the Gauss-Hermite nodes move the ends by a part of the width of
   // the posterior, marginalise over the length with a three point rule.
   const double nodeShift = 0.5 * std::sqrt(3.) * footprint.lengthError;
-  if (nodeShift * nodeShift > 0.01 * moments->variance) {
+  if (nodeShift > 0 &&
+      (!moments || nodeShift * nodeShift > 0.01 * moments->variance)) {
     const std::array<WeightedLength, 3> nodes = {
         {{footprint.length, 2. / 3.},
          {std::max(footprint.length - 2. * nodeShift, 0.), 1. / 6.},
          {footprint.length + 2. * nodeShift, 1. / 6.}}};
     moments = integratePosterior(likelihood, p, nodes);
-    if (!moments.has_value()) {
-      return fallback;
-    }
   }
-
-  ClusterAxisCalibration result;
-  result.consistent = true;
-  result.position = moments->mean;
-  result.variance = moments->variance;
-  return result;
+  return moments.value_or(fallback);
 }
 
 }  // namespace
 
 ClusterOnTrackCalibrator::ClusterOnTrackCalibrator(const Config& config)
     : m_cfg(config) {
-  if (m_cfg.chargeNoise < 0 || m_cfg.minError < 0) {
-    throw std::invalid_argument("Negative charge noise or minimum error");
+  if (!std::isfinite(m_cfg.chargeNoise) || m_cfg.chargeNoise < 0 ||
+      !std::isfinite(m_cfg.minError) || m_cfg.minError < 0) {
+    throw std::invalid_argument(
+        "Charge noise and minimum error must be finite and nonnegative");
   }
 }
 
@@ -471,7 +465,9 @@ void ClusterOnTrackCalibrator::calibrate(
         trackState.template calibratedCovariance<kSize>();
 
     for (Acts::BoundIndices bIndex : geoCfg.indices) {
-      if (!measurement.contains(bIndex)) {
+      if ((bIndex != Acts::eBoundLoc0 && bIndex != Acts::eBoundLoc1) ||
+          !measurement.contains(bIndex) ||
+          static_cast<std::size_t>(bIndex) >= geoCfg.segmentation->getNAxes()) {
         continue;
       }
       const auto axisIndex = static_cast<std::size_t>(bIndex);
@@ -526,12 +522,12 @@ void ClusterOnTrackCalibrator::calibrate(
               std::max(slopeJacobian.dot(angleCovariance * slopeJacobian), 0.));
       footprint.pathLength = geoCfg.thickness / std::abs(dir.z());
 
-      const ClusterAxisCalibration axisCalibration =
+      const PosteriorMoments axisCalibration =
           calibrateClusterAxis(projection, footprint, geoCfg.threshold,
                                !geoCfg.digital, m_cfg.chargeNoise);
 
       const std::size_t i = measurement.indexOf(bIndex);
-      calibrated[i] = axisCalibration.position;
+      calibrated[i] = axisCalibration.mean;
       calibratedCovariance.row(i).setZero();
       calibratedCovariance.col(i).setZero();
       calibratedCovariance(i, i) =

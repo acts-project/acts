@@ -21,15 +21,27 @@ namespace ActsExamples {
 /// supports plane surfaces with a Cartesian segmentation. All other
 /// measurements, and measurements without track parameters, pass through.
 ///
-/// Each axis is calibrated on its own. The cells of the cluster in one bin of
-/// the axis count as one cell with the sum of their charge.
+/// Assumes a single straight track, uniform charge deposition, no drift or
+/// diffusion, and independent additive Gaussian cell noise. The charge noise
+/// must be supplied separately; the digitization charge smearer is not
+/// inspected.
+///
+/// Each axis uses the first and last fired bins and their immediate neighbours.
+/// Charges are summed within each projected bin. This is an approximation for
+/// pixels: thresholding acts on individual cells before projection, and the
+/// two coordinates are correlated. Interior holes and merged tracks are not
+/// modelled. Sensor edges are assumed to coincide with segmentation edges.
+/// Direction uncertainty varies the footprint length at fixed total path
+/// length. Without charge noise, only the motion of the box centre or the
+/// inferred analogue position is propagated; changes in the box width are
+/// neglected.
 class ClusterOnTrackCalibrator final : public MeasurementCalibrator {
  public:
   struct Config {
     /// The digitization configuration that made the clusters
     DigiConfigContainer digitizationConfigs;
-    /// The Gaussian noise of the activation of one cell. It must match the
-    /// charge smearing of the digitization.
+    /// The Gaussian standard deviation of one cell's activation. It must
+    /// match the charge smearing of the digitization.
     double chargeNoise = 0;
     /// The minimum error of a calibrated position. Without charge noise and
     /// without a direction error, the error of a position can be zero.
