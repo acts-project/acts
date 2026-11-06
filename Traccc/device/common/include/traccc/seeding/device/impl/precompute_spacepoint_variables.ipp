@@ -93,7 +93,7 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
    scalar eta_at_max = asinhf((spacepoints[globalIndex].z() - z0_max) / spacepoint_r[globalIndex]);
 
    spacepoint_phi[globalIndex] = atan2f(spacepoints[globalIndex].y(), spacepoints[globalIndex].x());
-   ::remainderf(spacepoint_phi[globalIndex], 2.0f * std::numbers::pi_v<scalar>);
+   spacepoint_phi[globalIndex] = ::remainderf(spacepoint_phi[globalIndex], 2.0f * std::numbers::pi_v<scalar>);
 
    // Retrieve the corresponding measurement index and, from it, the geo id
    // all of this is to retrieve the volume_id and layer_id of the 

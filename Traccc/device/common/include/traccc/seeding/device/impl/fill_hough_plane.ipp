@@ -35,8 +35,8 @@ void fill_hough_plane(const global_index_t globalIndex,
 
    const vecmem::device_vector<scalar> edges_x(edges_x_view);
    const vecmem::device_vector<scalar> edges_y(edges_y_view);
-   const global_index_t n_cols = edges_x.size() - 1;
-   const global_index_t n_rows = edges_y.size() - 1;
+   const global_index_t n_cols = edges_x.capacity() - 1;
+   const global_index_t n_rows = edges_y.capacity() - 1;
 
    // get magnetic field
    const auto covfie_field_at_sp = bfield.at(spacepoints.x()[globalIndex], spacepoints.y()[globalIndex], spacepoints.z()[globalIndex]);
