@@ -59,8 +59,7 @@ scalar transform(const scalar qopt_value,
          const scalar magnetic_field_z) {
     const scalar d0 = 0;
     scalar phi_value = asin(0.50f * r * magnetic_field_z * qopt_value - d0 / r) + phi;
-    ::remainderf(phi_value, 2.00f * std::numbers::pi_v<scalar>);
-    return phi_value;
+    return ::remainderf(phi_value, 2.00f * std::numbers::pi_v<scalar>);
 }
 
 TRACCC_HOST_DEVICE
