@@ -150,67 +150,68 @@ class CountingField final : public Acts::MagneticFieldProvider {
 }  // namespace
 
 BOOST_AUTO_TEST_CASE(FieldQueryOwnsAndReusesCache) {
-  auto provider = std::make_shared<CountingField>();
+  CountingField provider;
   Acts::MagneticFieldContext context;
   Acts::MagneticFieldQuery first(provider, context);
-  BOOST_CHECK_EQUAL(provider->cacheCreations, 1);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
   for (int i = 1; i <= 3; ++i) {
     auto result = first.getField(Acts::Vector3::Zero());
     BOOST_REQUIRE(result.ok());
     BOOST_CHECK_EQUAL(result->z(), i);
   }
-  BOOST_CHECK_EQUAL(provider->cacheCreations, 1);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
 
   // A second operation has independent cache state, even with one provider.
   Acts::MagneticFieldQuery second(provider, context);
-  BOOST_CHECK_EQUAL(provider->cacheCreations, 2);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 2);
   auto result = second.getField(Acts::Vector3::Zero());
   BOOST_REQUIRE(result.ok());
   BOOST_CHECK_EQUAL(result->z(), 1.);
   auto error = first.getField(Acts::Vector3(-1., 0., 0.));
   BOOST_REQUIRE(!error.ok());
   BOOST_CHECK(error.error() == Acts::MagneticFieldError::OutOfBounds);
-
-  // A query retains its provider even if the caller releases its ownership.
-  std::weak_ptr<const Acts::MagneticFieldProvider> weak = provider;
-  provider.reset();
-  BOOST_CHECK(!weak.expired());
-  BOOST_CHECK(first.getField(Acts::Vector3::Zero()).ok());
-  BOOST_CHECK_THROW(Acts::MagneticFieldQuery(nullptr, context),
-                    std::invalid_argument);
 }
 
 // Borrowing an lvalue is supported; temporaries must not silently dangle.
-using FieldProviderPtr = std::shared_ptr<const Acts::MagneticFieldProvider>;
+using FieldProviderRef = const Acts::MagneticFieldProvider&;
 static_assert(
-    std::is_constructible_v<Acts::MagneticFieldQuery, FieldProviderPtr,
+    std::is_constructible_v<Acts::MagneticFieldQuery, FieldProviderRef,
                             const Acts::MagneticFieldContext&>);
 static_assert(
-    !std::is_constructible_v<Acts::MagneticFieldQuery, FieldProviderPtr,
+    !std::is_constructible_v<Acts::MagneticFieldQuery, FieldProviderRef,
                              Acts::MagneticFieldContext&&>);
 static_assert(
-    !std::is_constructible_v<Acts::MagneticFieldQuery, FieldProviderPtr,
+    !std::is_constructible_v<Acts::MagneticFieldQuery, FieldProviderRef,
                              const Acts::MagneticFieldContext&&>);
 
+static_assert(
+    !std::is_constructible_v<Acts::MagneticFieldQuery, CountingField&&,
+                             const Acts::MagneticFieldContext&>);
+static_assert(
+    !std::is_constructible_v<Acts::MagneticFieldQuery, const CountingField&&,
+                             const Acts::MagneticFieldContext&>);
+
 BOOST_AUTO_TEST_CASE(FieldQueryRetainsContextAcrossMoves) {
-  auto provider = std::make_shared<CountingField>();
+  CountingField provider;
   const Acts::MagneticFieldContext firstContext;
   const Acts::MagneticFieldContext secondContext;
   Acts::MagneticFieldQuery first(provider, firstContext);
-  BOOST_CHECK(provider->lastContext == &first.context());
+  BOOST_CHECK(provider.lastContext == &first.context());
   BOOST_CHECK(&first.context() == &firstContext);
   BOOST_REQUIRE(first.getField(Acts::Vector3::Zero()).ok());
 
   Acts::MagneticFieldQuery moved(std::move(first));
   BOOST_CHECK(&moved.context() == &firstContext);
-  BOOST_CHECK_EQUAL(provider->cacheCreations, 1);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
 
-  Acts::MagneticFieldQuery second(provider, secondContext);
-  BOOST_CHECK(provider->lastContext == &second.context());
+  CountingField secondProvider;
+  Acts::MagneticFieldQuery second(secondProvider, secondContext);
+  BOOST_CHECK(secondProvider.lastContext == &second.context());
   BOOST_CHECK(&second.context() == &secondContext);
   second = std::move(moved);
   BOOST_CHECK(&second.context() == &firstContext);
-  BOOST_CHECK_EQUAL(provider->cacheCreations, 2);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
+  BOOST_CHECK_EQUAL(secondProvider.cacheCreations, 1);
   auto result = second.getField(Acts::Vector3::Zero());
   BOOST_REQUIRE(result.ok());
   BOOST_CHECK_EQUAL(result->z(), 2.);

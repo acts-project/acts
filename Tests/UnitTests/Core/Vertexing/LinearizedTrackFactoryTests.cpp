@@ -187,8 +187,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   MagneticFieldProvider::Cache zeroFieldCache =
       zeroField->makeCache(magFieldContext);
 
-  MagneticFieldQuery fieldQuery(constField, magFieldContext);
-  MagneticFieldQuery zeroFieldQuery(zeroField, magFieldContext);
+  MagneticFieldQuery fieldQuery(*constField, magFieldContext);
+  MagneticFieldQuery zeroFieldQuery(*zeroField, magFieldContext);
 
   // Lambda for comparing outputs of the two linearization methods
   // We compare the linearization result at the PCA to "linPoint"
