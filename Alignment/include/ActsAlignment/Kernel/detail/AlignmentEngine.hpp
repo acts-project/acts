@@ -88,6 +88,31 @@ struct TrackAlignmentState {
 void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
                               AlignmentMask mask);
 
+/// Calculate a masked bound-parameter derivative for a module or structure.
+///
+/// With a structure frame, convert the full surface derivative to local
+/// structure translations and rotations before masking. Without one, retain
+/// the ACTS surface alignment convention. For residual = measurement minus
+/// prediction, the caller forms the residual derivative as -H * result.
+///
+/// @param gctx Geometry context used to evaluate the surface
+/// @param surface Surface on which the track is measured
+/// @param position Global track position on the surface
+/// @param direction Global track direction
+/// @param pathDerivative Derivative of free track parameters with path length
+/// @param mask Floating degrees of freedom in the selected parameter frame
+/// @param structureTransform Resolved current structure-to-global frame, or
+/// nullptr for standalone-module parameters. The caller must supply a frame
+/// consistent with the member surface in gctx; it can be a solver-owned working
+/// frame rather than the value of a fixed initial provider.
+/// @return Derivative of bound parameters with respect to the selected
+/// alignment parameters, with fixed columns set to zero
+Acts::AlignmentToBoundMatrix alignmentToBoundDerivative(
+    const Acts::GeometryContext& gctx, const Acts::Surface& surface,
+    const Acts::Vector3& position, const Acts::Vector3& direction,
+    const Acts::FreeVector& pathDerivative, AlignmentMask mask,
+    const Acts::Transform3* structureTransform = nullptr);
+
 /// @brief Helper function to calculate first and second derivative
 /// of chi2 w.r.t. alignment parameters for a single track once the
 /// relevant information has
@@ -292,13 +317,11 @@ TrackAlignmentState trackAlignmentState(
       // parameters
       Acts::FreeVector pathDerivative = Acts::FreeVector::Zero();
       pathDerivative.head<3>() = direction;
-      // Get the derivative of bound parameters w.r.t. alignment parameters
-      Acts::AlignmentToBoundMatrix alignToBound =
-          surface->alignmentToBoundDerivative(gctx, position, direction,
-                                              pathDerivative);
-      // Set the degree of freedom per surface.
+      // Get the bound derivative and mask the surface degrees of freedom.
       // @Todo: don't allocate memory for fixed degree of freedom and consider surface/layer/volume wise align mask (instead of using global mask as now)
-      resetAlignmentDerivative(alignToBound, alignMask);
+      const Acts::AlignmentToBoundMatrix alignToBound =
+          alignmentToBoundDerivative(gctx, *surface, position, direction,
+                                     pathDerivative, alignMask);
 
       // Residual is calculated as the (measurement - parameters), thus we need
       // a minus sign below
