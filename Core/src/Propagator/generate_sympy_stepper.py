@@ -67,22 +67,13 @@ loss_samples = (dEds1, dEds2, dEds3, dEds4)
 loss_gradients = sym.symbols("dGdqop1:5", real=True)
 
 
-def stage_jacobian(expr, variables, stage_qop, stage):
-    """Differentiate a stage, including its stopping-power dependence on q/p.
+def stage_jacobian(k, variables, stage_ydot, stage):
+    """Jacobian of a stage slope, including the q/p dependence of its loss.
 
-    Field and spatial material gradients remain outside this approximation.
-    The loss samples are independent symbols in the value expressions, but
-    their q/p derivatives are supplied by the material model at each stage.
+    The field and the material position dependence are not included.
     """
-    result = expr.jacobian(variables)
-    loss = loss_samples[stage]
-    if expr.has(loss):
-        result += (
-            expr.diff(loss)
-            * loss_gradients[stage]
-            * Matrix([stage_qop]).jacobian(variables)
-        )
-    return result
+    loss_qop = loss_gradients[stage] * Matrix([stage_ydot[4, 0]]).jacobian(variables)
+    return k.jacobian(variables) + k.diff(loss_samples[stage]) * loss_qop
 
 
 def dtime_dqop(dtds):
@@ -170,14 +161,13 @@ def rk4_subexpr(eom, x, y, ydot, h):
     )
 
     ks = (k1, k2, k3, k4)
-    stage_states = (ydot, ydot2.expr, ydot3.expr, ydot4.expr)
+    stage_ydots = (ydot, ydot2.expr, ydot3.expr, ydot4.expr)
     dks = []
     for i, k in enumerate(ks):
-        stage_qop = stage_states[i][4, 0]
-        derivative = stage_jacobian(k.expr, [y, ydot], stage_qop, i)
+        derivative = stage_jacobian(k.expr, [y, ydot], stage_ydots[i], i)
         if i:
             derivative += (
-                stage_jacobian(k.expr, ks[i - 1].name, stage_qop, i) * dks[-1].name
+                stage_jacobian(k.expr, ks[i - 1].name, stage_ydots[i], i) * dks[-1].name
             )
         dks.append(name_expr(f"dk{i + 1}_dstate", derivative))
     dk1_dstate, dk2_dstate, dk3_dstate, dk4_dstate = dks
@@ -625,13 +615,13 @@ def propagate_tangent(
     """
     ks = step.ks
     ts = []
-    stage_states = (ydot, step.ydot2.expr, step.ydot3.expr, step.ydot4.expr)
+    stage_ydots = (ydot, step.ydot2.expr, step.ydot3.expr, step.ydot4.expr)
     for i in range(4):
-        stage_qop = stage_states[i][4, 0]
-        contrib = stage_jacobian(ks[i].expr, [y, ydot], stage_qop, i) * u
+        contrib = stage_jacobian(ks[i].expr, [y, ydot], stage_ydots[i], i) * u
         if i > 0:
             contrib += (
-                stage_jacobian(ks[i].expr, ks[i - 1].name, stage_qop, i) * ts[i - 1]
+                stage_jacobian(ks[i].expr, ks[i - 1].name, stage_ydots[i], i)
+                * ts[i - 1]
             )
         ts.append(explicit(deriv.add(f"{tag}k{i + 1}", contrib).name))
 

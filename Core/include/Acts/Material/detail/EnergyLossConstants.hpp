@@ -12,9 +12,10 @@
 
 namespace Acts::detail {
 
-// The stopping-power parameterizations have discontinuities at these branch
-// boundaries. Keep their locations shared with the dense transport Jacobian.
+// The stopping power jumps at these thresholds. The dense stepper jacobian
+// needs the same values.
 inline constexpr float BetheDensityEffectBetaGammaThreshold = 10.f;
+// TODO magic number 8 GeV
 inline constexpr float MuonRadiativeLowEnergyThreshold = 8 * UnitConstants::GeV;
 inline constexpr float MuonRadiativeHighEnergyThreshold = UnitConstants::TeV;
 

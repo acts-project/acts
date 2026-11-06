@@ -89,53 +89,45 @@ detail::Rk4Status detail::sympyDenseStep(
         state.pars[eFreeQOverP], std::span<double, 3>(lastField.data(), 3),
         std::span<double, 8>(state.derivative.data(), 8), jac);
 
+    // The stopping power jumps at the thresholds of the loss model. Crossing
+    // one scales the q/p row of the jacobian by the ratio of the slopes after
+    // and before it (saltation). This applies the factor at the step end, so
+    // the error in the other rows is first order in the step length.
     if (status == Rk4Status::Accepted && state.options.dense.includeGradient) {
-      // A smooth variational equation misses the change in crossing time at
-      // a discontinuity of the stopping power. For a boundary q/p = constant,
-      // the saltation matrix is the identity except for its q/p diagonal:
-      // f_after / f_before = (dE/ds)_after / (dE/ds)_before.
-      // Apply it at the end of the accepted crossing step. The RK error
-      // controller resolves the jump; the placement error vanishes with that
-      // step's length. No correction is needed on rejected trials.
       const double newPabs = stepper.absoluteMomentum(state);
-      const auto correctAt = [&](double threshold) {
+      const std::span<const double, 3> newPos(
+          state.pars.segment<3>(eFreePos0).data(), 3);
+      const auto saltate = [&](double threshold) {
         if ((pabs < threshold) == (newPabs < threshold)) {
           return;
         }
-        const double boundaryQop = q / threshold;
-        // Loss functions use float internally. Sample far enough from the
-        // boundary to select each branch reliably, then extrapolate its
-        // smooth derivative back to the boundary.
-        constexpr double relativeOffset = 1e-5;
-        const auto boundaryLoss = [&](double offset) {
-          const double sample = boundaryQop * (1 + offset);
-          const std::span<const double, 3> endPos(
-              state.pars.template segment<3>(eFreePos0).data(), 3);
-          return getG(endPos, sample) +
-                 getGGradient(endPos, sample) * (boundaryQop - sample);
+        // The loss is computed in float. Sample each side away from the
+        // threshold and extrapolate linearly back to it.
+        const double thresholdQop = q / threshold;
+        const auto lossAt = [&](double offset) {
+          const double l = thresholdQop * (1 + offset);
+          return getG(newPos, l) + getGGradient(newPos, l) * (thresholdQop - l);
         };
-        const double lowMomentumLoss = boundaryLoss(relativeOffset);
-        const double highMomentumLoss = boundaryLoss(-relativeOffset);
-        // Vacuum, or a user momentum cutoff, has no regular crossing flow.
-        if (lowMomentumLoss <= 0 || highMomentumLoss <= 0) {
+        // A positive offset is on the low momentum side.
+        const double offset = pabs < threshold ? 1e-5 : -1e-5;
+        const double before = lossAt(offset);
+        const double after = lossAt(-offset);
+        // Vacuum or momentum cutoff
+        if (before <= 0 || after <= 0) {
           return;
         }
-        const double factor = newPabs < pabs
-                                  ? lowMomentumLoss / highMomentumLoss
-                                  : highMomentumLoss / lowMomentumLoss;
-        Eigen::Map<BoundToFreeMatrix> matrix(jac.data());
-        matrix.row(eFreeQOverP) *= factor;
-        // Preserve the other rows in the plain Jacobian while restoring the
-        // kernel's scaling by the current q/p and its transported derivative.
-        matrix.template block<eFreeQOverP, 1>(0, eBoundQOverP) /= factor;
+        const double factor = after / before;
+        Eigen::Map<BoundToFreeMatrix> J(jac.data());
+        J.row(eFreeQOverP) *= factor;
+        // Rows above q/p store J(i, q/p) * q/p / J(q/p, q/p), see
+        // `toScaledBoundToFree`. Keep J(i, q/p) unchanged.
+        J.block<eFreeQOverP, 1>(0, eBoundQOverP) /= factor;
       };
-      correctAt(BetheDensityEffectBetaGammaThreshold * m);
+      saltate(BetheDensityEffectBetaGammaThreshold * m);
       if (absPdg == PdgParticle::eMuon) {
         for (double energy : {MuonRadiativeLowEnergyThreshold,
                               MuonRadiativeHighEnergyThreshold}) {
-          if (energy > m) {
-            correctAt(std::sqrt(energy * energy - m * m));
-          }
+          saltate(std::sqrt(energy * energy - m * m));
         }
       }
     }

@@ -638,8 +638,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_dense_zero_field_accuracy) {
   }
 }
 
-/// Stopping power depends on q/p at every RK stage. Check the transported
-/// derivative against finite differences of the actual trajectory.
+/// Check the q/p column of the jacobian against finite differences.
 BOOST_AUTO_TEST_CASE(sympy_stepper_dense_stopping_power_gradient) {
   SympyStepper stepper(std::make_shared<ConstantBField>(Vector3::Zero()));
   const auto particle = ParticleHypothesis::muon();
@@ -683,8 +682,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_dense_stopping_power_gradient) {
   }
 }
 
-/// The variational flow needs the jump in crossing time at each discontinuous
-/// stopping-power boundary, including when a trajectory is reversed.
+/// Check the jacobian across the stopping power thresholds in both directions.
 BOOST_AUTO_TEST_CASE(sympy_stepper_dense_stopping_power_thresholds) {
   const auto particle = ParticleHypothesis::muon();
   const HomogeneousVolumeMaterial iron(makeIron());
@@ -723,8 +721,8 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_dense_stopping_power_thresholds) {
             auto jacobian = central.jacToGlobal;
             detail::sympy::fromScaledBoundToFree(jacobian,
                                                  stepper.qOverP(central));
-            // For the autonomous q/p equation q' = f(q), the exact fixed-path
-            // derivative is f(q_final)/f(q_initial), also across these jumps.
+            // For q' = f(q) the exact derivative is f(q_final) / f(q_initial),
+            // also across a threshold.
             const auto flow = [&](double qp) {
               const double momentum = std::abs(charge / qp);
               const double loss =
