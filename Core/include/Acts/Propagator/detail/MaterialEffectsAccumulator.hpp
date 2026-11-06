@@ -24,6 +24,12 @@ class MaterialEffectsAccumulator {
                   const ParticleHypothesis& particleHypothesis,
                   double initialMomentum);
 
+  /// @param material Material of the step
+  /// @param pathLength Signed path length along the propagation direction.
+  ///        Negative values step back and remove material from the end of
+  ///        the path. Stepping back past the start clears the accumulator.
+  /// @param qOverPin Charge over momentum at the start of the step
+  /// @param qOverPout Charge over momentum at the end of the step
   void accumulate(const Material& material, double pathLength, double qOverPin,
                   double qOverPout);
 

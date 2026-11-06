@@ -120,10 +120,12 @@ MeasurementSelector::select(
   }
 
   if (passedCandidates <= 1ul) {
-    // return single item range, no sorting necessary
-    ACTS_VERBOSE("Returning only 1 element chi2=" << minChi2);
-    return Result::success(std::pair(candidates.begin() + minIndex,
-                                     candidates.begin() + minIndex + 1));
+    // Return the single item range, so no sorting is necessary. The loop moves
+    // the passed candidate to the front. It is not always the candidate with
+    // minChi2, because the chi2 cut can depend on the measurement dimension.
+    ACTS_VERBOSE("Returning only 1 element chi2=" << candidates.front().chi2());
+    return Result::success(
+        std::pair(candidates.begin(), candidates.begin() + 1));
   }
 
   std::sort(

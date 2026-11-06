@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Optional, Union, List
+from typing import Callable, Optional, Union, List, Tuple
 from enum import Enum
 from collections import namedtuple
 
@@ -350,7 +350,7 @@ def addSeeding(
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackParameterSmearing.hpp
     initialSigmas : list
         Sets the initial covariance matrix diagonal. This is ignored in case of TruthSmearing.
-        Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
+        Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedParamsEstimator.hpp
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackParameterSmearing.hpp
@@ -390,7 +390,7 @@ def addSeeding(
     paramEstimationWeight : Callable, None
         relative weight of a space point in the fit, requires
         `SeedSpacePointSelection.All`, see
-        `TrackParamsEstimationAlgorithm.inverseRadiusPowerWeight`
+        `SeedParamsEstimator.inverseRadiusPowerWeight`
     gbtsSeedParameters : bool
         GBTS seeding: use the fit of the GBTS tracking filter as the track
         parameter estimate, instead of a fit to the space points (default)
@@ -572,6 +572,18 @@ def addSeeding(
             outputSeeds=f"{prefix}estimatedseeds",
             trackingGeometry=trackingGeometry,
             magneticField=field,
+            seedParamsEstimation=acts.examples.SeedParamsEstimator.Config(
+                **acts.examples.defaultKWArgs(
+                    spacePointSelection=paramEstimationSpacePoints,
+                    geometricRefineIterations=paramEstimationRefineIterations,
+                    spacePointWeight=paramEstimationWeight,
+                    initialSigmas=initialSigmas,
+                    initialSigmaQoverPt=initialSigmaQoverPt,
+                    initialSigmaPtRel=initialSigmaPtRel,
+                    initialVarInflation=initialVarInflation,
+                    particleHypothesis=particleHypothesis,
+                )
+            ),
             **acts.examples.defaultKWArgs(
                 # a seed without an estimate drops its proto track too, so the
                 # truth fitters keep a parameter set per proto track
@@ -581,19 +593,11 @@ def addSeeding(
                     if unestimatedProtoTracks is not None
                     else None
                 ),
-                spacePointSelection=paramEstimationSpacePoints,
-                geometricRefineIterations=paramEstimationRefineIterations,
-                spacePointWeight=paramEstimationWeight,
                 inputFreeParameters=(
                     f"{prefix}seedfreeparameters"
                     if gbtsSeedParameters and seedingAlgorithm == SeedingAlgorithm.Gbts
                     else None
                 ),
-                initialSigmas=initialSigmas,
-                initialSigmaQoverPt=initialSigmaQoverPt,
-                initialSigmaPtRel=initialSigmaPtRel,
-                initialVarInflation=initialVarInflation,
-                particleHypothesis=particleHypothesis,
             ),
         )
         s.addAlgorithm(parEstimateAlg)
@@ -1902,6 +1906,10 @@ def addCKFTracks(
     ckfConfig: CkfConfig = CkfConfig(),
     twoWay: bool = True,
     twoWaySmoothing: bool = True,
+    reverseSearch: bool = False,
+    reverseSearchRZBoundary: Optional[Tuple[float, float]] = None,
+    inwardOnlyRZBoundary: Optional[Tuple[float, float]] = None,
+    seedParamsEstimation: Optional[acts.examples.SeedParamsEstimator.Config] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrackSummary: bool = True,
@@ -1928,6 +1936,16 @@ def addCKFTracks(
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
         Specify as a list(TrackSelectorConfig) for eta-dependent cuts, with binning specified by absEta[1].
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
+    reverseSearch : bool, False
+        search every seed inward first, from its last space point
+    reverseSearchRZBoundary : (r, |z|), None
+        search a seed inward first if its last space point lies beyond r or |z|
+    inwardOnlyRZBoundary : (r, |z|), None
+        search a seed inward only if its last space point lies beyond r or |z|
+    seedParamsEstimation : SeedParamsEstimator.Config, None
+        estimate the initial parameters from the seeds in the track finding, on
+        the space point the search starts from, instead of using the estimate
+        of `addSeeding`. The reverse search options need it.
     writeTrackSummary : bool, True
         write tracksummary_ckf.root ntuple?
     writeTrackStates : bool, False
@@ -1971,6 +1989,17 @@ def addCKFTracks(
             absEtaEdges=[cutSets[0].absEtaMin] + [c.absEta[1] for c in tslist],
         )
 
+    reverseSearchMinR, reverseSearchMinAbsZ = reverseSearchRZBoundary or (None, None)
+    inwardOnlyMinR, inwardOnlyMinAbsZ = inwardOnlyRZBoundary or (None, None)
+    directionFromSeed = (
+        reverseSearchRZBoundary is not None or inwardOnlyRZBoundary is not None
+    )
+    if (reverseSearch or directionFromSeed) and seedParamsEstimation is None:
+        raise ValueError(
+            "The reverse search starts on the last space point of the seed, "
+            "which needs seedParamsEstimation"
+        )
+
     # The chi2 cuts are the cuts for 1D measurements. With chi2CutPerDimension
     # every measurement dimension uses the cut with the same p-value.
     measurementSelectorCuts = acts.MeasurementSelectorCuts()
@@ -1988,10 +2017,14 @@ def addCKFTracks(
             [(acts.GeometryIdentifier(), measurementSelectorCuts)]
         ),
         inputMeasurements=f"{prefix}measurement_subset",
-        inputInitialTrackParameters=f"{prefix}estimatedparameters",
+        inputInitialTrackParameters=(
+            f"{prefix}estimatedparameters" if seedParamsEstimation is None else ""
+        ),
         inputSeeds=(
             f"{prefix}estimatedseeds"
-            if ckfConfig.seedDeduplication or ckfConfig.stayOnSeed
+            if ckfConfig.seedDeduplication
+            or ckfConfig.stayOnSeed
+            or seedParamsEstimation is not None
             else ""
         ),
         outputTracks=f"{prefix}ckf_tracks",
@@ -2008,6 +2041,12 @@ def addCKFTracks(
             maxSteps=ckfConfig.maxSteps,
             twoWay=twoWay,
             twoWaySmoothing=twoWaySmoothing,
+            seedParamsEstimation=seedParamsEstimation,
+            reverseSearch=reverseSearch,
+            reverseSearchMinR=reverseSearchMinR,
+            reverseSearchMinAbsZ=reverseSearchMinAbsZ,
+            inwardOnlyMinR=inwardOnlyMinR,
+            inwardOnlyMinAbsZ=inwardOnlyMinAbsZ,
             seedDeduplication=ckfConfig.seedDeduplication,
             seedDeduplicatorCfg=ckfConfig.seedDeduplicatorConfig,
             stayOnSeed=ckfConfig.stayOnSeed,

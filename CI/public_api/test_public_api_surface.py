@@ -96,6 +96,48 @@ def test_qualified_definition_preserves_defaulted_declaration():
     assert pad.classify(base, required)["has_breaking"]
 
 
+def test_private_nested_types_are_not_public_api():
+    # Exercise both Doxygen access representations independently, including a
+    # public descendant whose private enclosing compound is absent from XML.
+    for access in ("compound", "innerclass"):
+
+        def snapshot(field_type):
+            xml = ET.Element("doxygen")
+            for name in ("Hidden::Nested", "Hidden", "HiddenSibling"):
+                if access == "innerclass" and name == "Hidden":
+                    continue
+                cd = ET.SubElement(xml, "compounddef", kind="struct")
+                if access == "compound" and name == "Hidden":
+                    cd.set("prot", "private")
+                ET.SubElement(cd, "compoundname").text = f"Acts::Outer::{name}"
+                section = ET.SubElement(cd, "sectiondef")
+                for kind, member in (("variable", "cut"), ("function", "run")):
+                    md = ET.SubElement(section, "memberdef", kind=kind, prot="public")
+                    ET.SubElement(md, "name").text = member
+                    ET.SubElement(md, "type").text = (
+                        "int" if name == "HiddenSibling" else field_type
+                    )
+            outer = ET.SubElement(xml, "compounddef", kind="class")
+            ET.SubElement(outer, "compoundname").text = "Acts::Outer"
+            if access == "innerclass":
+                ET.SubElement(outer, "innerclass", prot="private").text = (
+                    "Acts::Outer::Hidden"
+                )
+            with tempfile.TemporaryDirectory() as tmp:
+                ET.ElementTree(xml).write(Path(tmp, "fixture.xml"))
+                return pas.parse_xml(Path(tmp))
+
+        base, head = snapshot("double"), snapshot("Array")
+        assert set(head["symbols"]) == {
+            "type Acts::Outer",
+            "type Acts::Outer::HiddenSibling",
+        }, head
+        assert head["fields"] == {"Acts::Outer::HiddenSibling::cut": "int"}, head
+        assert head["callables"] == {"Acts::Outer::HiddenSibling::run()": "int"}, head
+        assert head["public_methods"] == 1, head
+        assert not pad.classify(base, head)["has_breaking"]
+
+
 def test_scoped_type_preserves_distinct_namespaces():
     names = {"Acts::Mask", "Acts::Nested::Mask", "ActsOther::Mask"}
 
@@ -240,6 +282,53 @@ def test_end_to_end_fixture():
     ), head["callables"]
     # compute(int) must survive (defaulted arg) -> not a removal
     assert not any(s == "Acts::compute(int)" for s in c["removed_signatures"]), c
+
+
+def test_private_nested_types_with_doxygen():
+    if not shutil.which("doxygen"):
+        print("  (skipped: doxygen not on PATH)")
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        headers = Path(tmp)
+        header = headers / "Selector.hpp"
+        source = """
+namespace Acts {
+/// Selector with implementation-only cuts.
+class Selector {
+ public:
+  /// Public configuration.
+  struct Config {
+    /// Public cut.
+    double cut;
+  };
+ private:
+  struct Cuts {
+    double cut;
+    /// Internal operation.
+    double run();
+    /// Public descendant of a private type.
+    struct Nested {
+      /// Internal value.
+      double value;
+    };
+  };
+};
+}
+"""
+        header.write_text(source)
+        base = _measure(headers)
+        header.write_text(source.replace("double", "float"))
+        head = _measure(headers)
+        changes = pad.classify(base, head)
+        assert changes["breaking_count"] == 1, changes
+        assert changes["field_type_changes"] == [
+            "Acts::Selector::Config::cut: double -> float"
+        ], changes
+        assert set(head["symbols"]) == {
+            "type Acts::Selector",
+            "type Acts::Selector::Config",
+        }, head
+        assert head["public_methods"] == 0, head
 
 
 def test_detray_roots_and_gpu_api():

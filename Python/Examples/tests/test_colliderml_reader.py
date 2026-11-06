@@ -51,6 +51,7 @@ def test_colliderml_truth_tracking(tmp_path, reco_geo, assert_root_hash):
     produces zero seeds on real data; the ROOT performance check is skipped
     for gen3 until that's fixed.
     """
+    import acts.root
     from acts.examples.odd import getOpenDataDetector
     from generate_geoid_map import generate_geoid_map
 

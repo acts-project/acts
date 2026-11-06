@@ -24,7 +24,6 @@ void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
                                        const std::array<float, 3>& varianceX,
                                        const std::array<float, 2>& varianceY) {
   j = 0;
-  vs.clear();
 
   // n2->n1
 
