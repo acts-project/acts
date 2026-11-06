@@ -5,16 +5,15 @@
 
 namespace traccc::device {
 
-template <typename bfield_t>
 TRACCC_HOST_DEVICE
 void count_contributing_hits(const global_index_t globalIndex,
                              const unsigned int n_images,
-                             const bfield_t& bfield,
                              const vecmem::data::vector_view<const scalar>& edges_x_view,
                              const vecmem::data::vector_view<const scalar>& edges_y_view,
                              const edm::spacepoint_collection::const_view& spacepoints_view,
                              const vecmem::data::vector_view<const scalar>& spacepoint_r_view,
                              const vecmem::data::vector_view<const scalar>& spacepoint_phi_view,
+                             const vecmem::data::vector_view<const scalar>& spacepoint_bfield_z_view,
                              const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association_view,
                              const vecmem::data::jagged_vector_view<const global_index_t>& global_index_view,
                              const vecmem::data::vector_view<const unsigned int>& nn_outcome_view,
@@ -47,15 +46,14 @@ void count_contributing_hits(const global_index_t globalIndex,
     const vecmem::device_vector<const unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);
     const vecmem::device_vector<const scalar> spacepoint_r(spacepoint_r_view);
     const vecmem::device_vector<const scalar> spacepoint_phi(spacepoint_phi_view);
+    const vecmem::device_vector<const scalar> spacepoint_bfield_z(spacepoint_bfield_z_view);
    
     unsigned int n_contributing_hits = 0u; 
     for (unsigned int i(0); i<spacepoints.size(); ++i) {
         // contributes to wedge
         if ((spacepoint_wedge_association[i] & (1ULL << wedge_idx)) == 0ULL) continue;
-        const auto covfie_field_at_sp = bfield.at(spacepoints.x()[i], spacepoints.y()[i], spacepoints.z()[i]);
-
-        scalar min_value_y = transform(min_x, spacepoint_r[i], spacepoint_phi[i], covfie_field_at_sp[2]);
-        scalar max_value_y = transform(max_x, spacepoint_r[i], spacepoint_phi[i], covfie_field_at_sp[2]);
+        scalar min_value_y = transform(min_x, spacepoint_r[i], spacepoint_phi[i], spacepoint_bfield_z[i]);
+        scalar max_value_y = transform(max_x, spacepoint_r[i], spacepoint_phi[i], spacepoint_bfield_z[i]);
         if (min_value_y > max_value_y) std::swap(min_value_y, max_value_y);  
       
         if (min_value_y > max_y) continue;

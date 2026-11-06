@@ -91,6 +91,7 @@ auto hough_transform_seeding_algorithm::operator()(
   vecmem::data::vector_buffer<unsigned long long> spacepoint_detector_id(n_spacepoints, mr().main);
   vecmem::data::vector_buffer<scalar> spacepoint_r(n_spacepoints, mr().main);
   vecmem::data::vector_buffer<scalar> spacepoint_phi(n_spacepoints, mr().main);
+  vecmem::data::vector_buffer<scalar> spacepoint_bfield_z(n_spacepoints, mr().main);
   //  no idea what these do ...
   copy().setup(vecmem::ignore_event, spacepoint_wedge_association);
   copy().memset(vecmem::ignore_event, spacepoint_wedge_association, 0);
@@ -100,14 +101,17 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().memset(vecmem::ignore_event, spacepoint_r, 0);
   copy().setup(vecmem::ignore_event, spacepoint_phi);
   copy().memset(vecmem::ignore_event, spacepoint_phi, 0);
+  copy().setup(vecmem::ignore_event, spacepoint_bfield_z);
+  copy().memset(vecmem::ignore_event, spacepoint_bfield_z, 0);
 
-  precompute_spacepoint_variables_kernel({m_config,
+  precompute_spacepoint_variables_kernel({m_config, bfield,
 		  measurements,
 		  n_spacepoints, spacepoints,
 		  spacepoint_wedge_association,
 		  spacepoint_detector_id,
 		  spacepoint_r,
-		  spacepoint_phi});
+		  spacepoint_phi,
+          spacepoint_bfield_z});
 
   
   /*
@@ -161,13 +165,14 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().memset(vecmem::ignore_event, houghplane_bins, 0);
 
 
-  fill_hough_plane_kernel({m_config, bfield,
+  fill_hough_plane_kernel({m_config,
                   n_spacepoints, 
                   spacepoints,
                   spacepoint_wedge_association,
                   spacepoint_detector_id,
 		          spacepoint_r, 
                   spacepoint_phi,
+                  spacepoint_bfield_z,
                   edges_x,
                   edges_y,
                   houghplane_bins});
@@ -339,6 +344,7 @@ auto hough_transform_seeding_algorithm::operator()(
                            spacepoints,
                            spacepoint_r,
                            spacepoint_phi,
+                           spacepoint_bfield_z,
                            spacepoint_wedge_association,
                            maxima_global_index,
                            nn_outcome,
@@ -376,6 +382,7 @@ auto hough_transform_seeding_algorithm::operator()(
                             spacepoints,
                             spacepoint_r,
                             spacepoint_phi,
+                            spacepoint_bfield_z,
                             spacepoint_wedge_association,
                             maxima_global_index,
                             nn_outcome,

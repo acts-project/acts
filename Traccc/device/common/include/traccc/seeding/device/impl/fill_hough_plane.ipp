@@ -7,17 +7,16 @@
 
 namespace traccc::device {
 
-template <typename bfield_t,
-          typename T>
+template <typename T>
 TRACCC_HOST_DEVICE
 void fill_hough_plane(const global_index_t globalIndex,
-		    const bfield_t& bfield,
             const edm::spacepoint_collection::const_view::size_type n_spacepoints,
             const edm::spacepoint_collection::const_view& spacepoints_view,
             const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association_view,
             const vecmem::data::vector_view<const unsigned long long>& spacepoint_detector_id_view,
 		    const vecmem::data::vector_view<const scalar>& spacepoint_r_view,
 		    const vecmem::data::vector_view<const scalar>& spacepoint_phi_view,
+            const vecmem::data::vector_view<const scalar>& spacepoint_bfield_z_view,
             const vecmem::data::vector_view<const scalar>& edges_x_view,
             const vecmem::data::vector_view<const scalar>& edges_y_view,
             vecmem::data::vector_view<unsigned long long>& bins_view) {
@@ -28,6 +27,7 @@ void fill_hough_plane(const global_index_t globalIndex,
    const vecmem::device_vector<const unsigned long long> spacepoint_detector_id(spacepoint_detector_id_view);
    const vecmem::device_vector<const scalar> spacepoint_r(spacepoint_r_view);
    const vecmem::device_vector<const scalar> spacepoint_phi(spacepoint_phi_view);
+   const vecmem::device_vector<const scalar> spacepoint_bfield_z(spacepoint_bfield_z_view);
    vecmem::device_vector<unsigned long long> bins(bins_view);
 
    // skip if it does not contribute
@@ -38,8 +38,6 @@ void fill_hough_plane(const global_index_t globalIndex,
    const global_index_t n_cols = edges_x.capacity() - 1;
    const global_index_t n_rows = edges_y.capacity() - 1;
 
-   // get magnetic field
-   const auto covfie_field_at_sp = bfield.at(spacepoints.x()[globalIndex], spacepoints.y()[globalIndex], spacepoints.z()[globalIndex]);
 
    unsigned long long slice = spacepoint_wedge_association[globalIndex];
    const unsigned long long layer_bit = spacepoint_detector_id[globalIndex];
@@ -47,10 +45,10 @@ void fill_hough_plane(const global_index_t globalIndex,
    // Fill the planes
    
    // re-use the computation of the transform from the previous bin (right -> left edge)
-   scalar left_ht = transform(edges_x[0], spacepoint_r[globalIndex], spacepoint_phi[globalIndex], covfie_field_at_sp[2]);
+   scalar left_ht = transform(edges_x[0], spacepoint_r[globalIndex], spacepoint_phi[globalIndex], spacepoint_bfield_z[globalIndex]);
    
    for (unsigned int x_idx(0); x_idx < n_cols; ++x_idx) {
-      const scalar right_ht = transform(edges_x[x_idx + 1], spacepoint_r[globalIndex], spacepoint_phi[globalIndex], covfie_field_at_sp[2]);
+      const scalar right_ht = transform(edges_x[x_idx + 1], spacepoint_r[globalIndex], spacepoint_phi[globalIndex], spacepoint_bfield_z[globalIndex]);
       scalar lo_ht = left_ht;
       scalar hi_ht = right_ht;
       left_ht = right_ht;

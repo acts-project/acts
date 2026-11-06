@@ -55,8 +55,10 @@ unsigned long long getId(const unsigned int index) {
    return 1ULL << shift;
 }
 
+template <typename bfield_t>
 TRACCC_HOST_DEVICE
 void precompute_spacepoint_variables(const global_index_t globalIndex,
+        const bfield_t& bfield,
 		const edm::measurement_collection::const_view& measurements_view,
 		const edm::spacepoint_collection::const_view::size_type n_spacepoints,
         const edm::spacepoint_collection::const_view& spacepoints_view,
@@ -67,7 +69,8 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
 		vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association_view,
         vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id_view,
 		vecmem::data::vector_view<scalar>& spacepoint_r_view,
-		vecmem::data::vector_view<scalar>& spacepoint_phi_view) {
+		vecmem::data::vector_view<scalar>& spacepoint_phi_view,
+        vecmem::data::vector_view<scalar>& spacepoint_bfield_z_view) {
    if (globalIndex >= n_spacepoints) return;
    // we need to pass these from outside
    static const std::array<scalar, 25> wedges = {
@@ -84,22 +87,26 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
    vecmem::device_vector<unsigned long long> spacepoint_detector_id(spacepoint_detector_id_view);
    vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
    vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
-
+   vecmem::device_vector<scalar> spacepoint_bfield_z(spacepoint_bfield_z_view);
+   
    scalar z0_min = interactionCenter - interactionWindow;
    scalar z0_max = interactionCenter + interactionWindow;
     
-   spacepoint_r[globalIndex] = hypotf(spacepoints[globalIndex].x(), spacepoints[globalIndex].y());
-   scalar eta_at_min = asinhf((spacepoints[globalIndex].z() - z0_min) / spacepoint_r[globalIndex]);
-   scalar eta_at_max = asinhf((spacepoints[globalIndex].z() - z0_max) / spacepoint_r[globalIndex]);
+   spacepoint_r[globalIndex] = hypotf(spacepoints.x()[globalIndex], spacepoints.y()[globalIndex]);
+   scalar eta_at_min = asinhf((spacepoints.z()[globalIndex] - z0_min) / spacepoint_r[globalIndex]);
+   scalar eta_at_max = asinhf((spacepoints.z()[globalIndex] - z0_max) / spacepoint_r[globalIndex]);
 
-   spacepoint_phi[globalIndex] = atan2f(spacepoints[globalIndex].y(), spacepoints[globalIndex].x());
+   spacepoint_phi[globalIndex] = atan2f(spacepoints.y()[globalIndex], spacepoints.x()[globalIndex]);
    spacepoint_phi[globalIndex] = ::remainderf(spacepoint_phi[globalIndex], 2.0f * std::numbers::pi_v<scalar>);
+
+   const auto covfie_field_at_sp = bfield.at(spacepoints.x()[globalIndex], spacepoints.y()[globalIndex], spacepoints.z()[globalIndex]);
+   spacepoint_bfield_z[globalIndex] = covfie_field_at_sp[2];
 
    // Retrieve the corresponding measurement index and, from it, the geo id
    // all of this is to retrieve the volume_id and layer_id of the 
    // space point
    const edm::measurement_collection::const_device measurements(measurements_view);
-   const auto& meas = measurements.at(spacepoints[globalIndex].measurement_index_1());
+   const auto& meas = measurements.at(spacepoints.measurement_index_1()[globalIndex]);
 
    const auto volume_id = meas.surface_link().volume();
    const auto identifier_id = getId(volume_id);

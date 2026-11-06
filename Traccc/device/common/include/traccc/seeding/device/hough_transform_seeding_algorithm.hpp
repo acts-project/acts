@@ -65,6 +65,8 @@ class hough_transform_seeding_algorithm
 
   struct precompute_spacepoint_variables_payload {
     const hough_seeding_config& config;
+    /// The magnetic field object
+    const magnetic_field& bfield;
     /// The input measurements
     const edm::measurement_collection::const_view& measurements;
     /// The number of spacepoints in the event
@@ -79,12 +81,12 @@ class hough_transform_seeding_algorithm
     vecmem::data::vector_view<scalar>& spacepoint_r;
     // the space point phi
     vecmem::data::vector_view<scalar>& spacepoint_phi;
+    // The z-component of the bfield
+    vecmem::data::vector_view<scalar>& spacepoint_bfield_z;
   };
 
   struct fill_hough_planes_kernel_payload {
     const hough_seeding_config& config;
-    /// The magnetic field object
-    const magnetic_field& bfield;
     /// The number of spacepoints in the event
     const edm::spacepoint_collection::const_view::size_type n_spacepoints;
     /// The input spacepoints
@@ -97,12 +99,13 @@ class hough_transform_seeding_algorithm
     const vecmem::data::vector_view<const scalar>& spacepoint_r;
     // the space point phi
     const vecmem::data::vector_view<const scalar>& spacepoint_phi;
+    // The z-component of the bfield
+    const vecmem::data::vector_view<const scalar>& spacepoint_bfield_z;
     // The edges X
     const vecmem::data::vector_view<const scalar>& edges_x;
     // The edges Y
     const vecmem::data::vector_view<const scalar>& edges_y;
     /// The output hough planes
-    // edm::houghplane_collection<unsigned short>::view& houghplanes;
     vecmem::data::vector_view<unsigned long long>& bins;
   };
 
@@ -172,6 +175,8 @@ class hough_transform_seeding_algorithm
     const vecmem::data::vector_view<const scalar>& spacepoint_r;
     // the space point phi
     const vecmem::data::vector_view<const scalar>& spacepoint_phi;
+    // The z-component of the bfield
+    const vecmem::data::vector_view<const scalar>& spacepoint_bfield_z;
     // association to wedge
     const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association;
     // The maxima location
@@ -197,6 +202,8 @@ class hough_transform_seeding_algorithm
     const vecmem::data::vector_view<const scalar>& spacepoint_r;
     // the space point phi
     const vecmem::data::vector_view<const scalar>& spacepoint_phi;
+    // The z-component of the bfield
+    const vecmem::data::vector_view<const scalar>& spacepoint_bfield_z;
     // association to wedge
     const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association;
     // The maxima location
