@@ -23,8 +23,8 @@ namespace kernels {
                            const unsigned int n_rows,
                            vecmem::data::vector_view<scalar> edges_x,
                            vecmem::data::vector_view<scalar> edges_y) {
-      float steps_x = (config.max_range_x - config.min_range_x) / n_cols;
-      float steps_y = (config.max_range_y - config.min_range_y) / n_rows;
+      scalar steps_x = (config.max_range_x - config.min_range_x) / n_cols;
+      scalar steps_y = (config.max_range_y - config.min_range_y) / n_rows;
       device::define_plane_edges(details::global_index1(),
               edges_x, edges_y,
 		      steps_x, config.min_range_x,
@@ -199,13 +199,13 @@ hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
       cuda::algorithm_base{str, std::move(await_func)} {}
 
 void hough_transform_seeding_algorithm::define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const {
-   unsigned int maxValues = std::max(device::N_COLS, device::N_ROWS);
+   unsigned int maxValues = std::max(payload.config.n_cols, payload.config.n_rows);
    const unsigned int n_threads = warp_size() * 4;
    const unsigned int n_blocks = (maxValues  + n_threads - 1) / n_threads;
    kernels::define_plane_edges
 	   <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, 
-                                                                   device::N_COLS,
-                                                                   device::N_ROWS,
+                                                                   payload.config.n_cols,
+                                                                   payload.config.n_rows,
                                                                    payload.edges_x,
                                                                    payload.edges_y);
    TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());

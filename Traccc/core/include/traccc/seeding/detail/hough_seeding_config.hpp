@@ -17,6 +17,8 @@
 namespace traccc {
 
 struct hough_seeding_config {
+  unsigned int n_cols = 256;
+  unsigned int n_rows = 7000;
   scalar min_range_x = -1.1f;
   scalar max_range_x = 1.1f;
   scalar min_range_y = -std::numbers::pi_v<scalar>;

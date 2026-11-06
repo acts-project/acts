@@ -45,12 +45,13 @@ auto hough_transform_seeding_algorithm::operator()(
  
   // Set up the output buffer.
   const unsigned int n_slices = m_config.wedges.size(); 
-
+  const unsigned int n_cols = m_config.n_cols;
+  const unsigned int n_rows = m_config.n_rows;
  
   // ---------------------------------------------------
   // Fill plane edges
-  vecmem::data::vector_buffer<scalar> edges_x(N_COLS + 1, mr().main);
-  vecmem::data::vector_buffer<scalar> edges_y(N_ROWS + 1, mr().main);
+  vecmem::data::vector_buffer<scalar> edges_x(n_cols + 1, mr().main);
+  vecmem::data::vector_buffer<scalar> edges_y(n_rows + 1, mr().main);
 
   copy().setup(vecmem::ignore_event, edges_x);
   copy().memset(vecmem::ignore_event, edges_x, 0);
@@ -155,7 +156,7 @@ auto hough_transform_seeding_algorithm::operator()(
   // ---------------------------------------------------
   // Fill the planes with space points
   // ---------------------------------------------------
-  vecmem::data::vector_buffer<unsigned long long> houghplane_bins(n_slices * N_COLS * N_ROWS, mr().main);
+  vecmem::data::vector_buffer<unsigned long long> houghplane_bins(n_slices * n_cols * n_rows, mr().main);
   copy().setup(vecmem::ignore_event, houghplane_bins);
   copy().memset(vecmem::ignore_event, houghplane_bins, 0);
 
@@ -176,11 +177,11 @@ auto hough_transform_seeding_algorithm::operator()(
   // COUNT BITS
   // ---------------------------------------------------
   
-  vecmem::data::vector_buffer<unsigned short> houghplane_entries(n_slices * N_COLS * N_ROWS, mr().main);
+  vecmem::data::vector_buffer<unsigned short> houghplane_entries(n_slices * n_cols * n_rows, mr().main);
   copy().setup(vecmem::ignore_event, houghplane_entries);
   copy().memset(vecmem::ignore_event, houghplane_entries, 0);
 
-  count_bits_kernel({n_slices * N_COLS * N_ROWS,
+  count_bits_kernel({n_slices * n_cols * n_rows,
               houghplane_bins,
               houghplane_entries}); 
 
