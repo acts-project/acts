@@ -894,8 +894,11 @@ class CombinatorialKalmanFilter {
           newBranch.nDoF() += trackState.calibratedSize();
           newBranch.chi2() += trackState.chi2();
         } else {
-          ACTS_WARNING("Cannot handle this track state flags");
-          continue;
+          ACTS_DEBUG("Track state " << trackState.index() << " with flags "
+                                    << typeFlags
+                                    << " is neither a measurement nor an "
+                                       "outlier");
+          return CombinatorialKalmanFilterError::UnsupportedTrackState;
         }
 
         result.activeBranches.push_back(newBranch);

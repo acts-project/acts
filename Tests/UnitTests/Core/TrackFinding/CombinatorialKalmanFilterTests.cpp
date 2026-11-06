@@ -362,6 +362,33 @@ struct TestTrackStateCreator final
   }
 };
 
+/// Returns a hole state on every surface with measurements, which the CKF
+/// does not support from a track state creator.
+struct HoleTrackStateCreator {
+  const Fixture::TestSourceLinkContainer* container = nullptr;
+
+  Result<CkfTypes::BranchVector<TrackIndexType>> createTrackStates(
+      const CkfTypes::TrackStateCreatorInput<TrackContainer>& input) const {
+    CkfTypes::BranchVector<TrackIndexType> trackStates;
+    if (!container->contains(input.surface->geometryId())) {
+      return trackStates;
+    }
+
+    auto trackState = input.trajectory->makeTrackState(
+        TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian,
+        input.prevTip);
+    const auto& params = std::get<BoundTrackParameters>(*input.boundState);
+    trackState.predicted() = params.parameters();
+    trackState.predictedCovariance() = *params.covariance();
+    trackState.jacobian() = std::get<BoundMatrix>(*input.boundState);
+    trackState.setReferenceSurface(input.surface->getSharedPtr());
+    trackState.typeFlags().setHasParameters().setIsHole();
+
+    trackStates.push_back(trackState.index());
+    return trackStates;
+  }
+};
+
 }  // namespace ActsTests
 
 namespace ActsTests {
@@ -426,6 +453,29 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
     BOOST_CHECK_EQUAL(nummismatchedHits, 0u);
   }
+}
+
+/// A track state which is neither a measurement nor an outlier must stop the
+/// track finding. Before, the CKF dropped the branch without an error.
+BOOST_AUTO_TEST_CASE(UnsupportedTrackStateFails) {
+  Fixture f(0_T);
+
+  auto options = f.makeCkfOptions();
+
+  HoleTrackStateCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
+
+  options.extensions.trackStateCreator
+      .template connect<&HoleTrackStateCreator::createTrackStates>(
+          &trackStateCreator);
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+
+  auto res = f.ckf.findTracks(f.startParameters.front(), options, tc);
+
+  BOOST_REQUIRE(!res.ok());
+  BOOST_CHECK_EQUAL(res.error(),
+                    CombinatorialKalmanFilterError::UnsupportedTrackState);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
