@@ -9,14 +9,105 @@
 #include "ActsExamples/Validation/PatternRecognitionPerformanceCollector.hpp"
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/Zip.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cmath>
 #include <format>
+#include <limits>
+#include <numbers>
 #include <optional>
 #include <utility>
+#include <vector>
 
 namespace ActsExamples {
+
+namespace {
+
+std::vector<double> nearestParticleDistances(
+    const SimParticleContainer& particles, double maxDeltaR) {
+  std::vector<double> distances(particles.size(), -1.);
+  // A singleton has no neighbour; retain -1 to fill the histogram underflow.
+  if (particles.size() < 2) {
+    return distances;
+  }
+  assert((std::isfinite(maxDeltaR) && maxDeltaR > 0.) &&
+         "DeltaR histogram upper edge must be finite and positive");
+  // Distances at or above the histogram upper edge share its overflow bin.
+  std::ranges::fill(distances, maxDeltaR);
+
+  std::vector<std::array<double, 2>> coordinates;
+  coordinates.reserve(particles.size());
+  double etaMin = std::numeric_limits<double>::infinity();
+  double etaMax = -std::numeric_limits<double>::infinity();
+  std::vector<std::size_t> finiteIndices;
+  finiteIndices.reserve(particles.size());
+  for (const auto& particle : particles) {
+    const double eta = Acts::VectorHelpers::eta(particle.direction());
+    const double phi = Acts::VectorHelpers::phi(particle.direction());
+    coordinates.push_back({eta, phi});
+    // Non-finite directions do not participate in the neighbour search.
+    if (!std::isfinite(eta) || !std::isfinite(phi)) {
+      continue;
+    }
+    finiteIndices.push_back(coordinates.size() - 1);
+    etaMin = std::min(etaMin, eta);
+    etaMax = std::max(etaMax, eta);
+  }
+  if (finiteIndices.size() < 2) {
+    return distances;
+  }
+  etaMin -= maxDeltaR;
+  etaMax += maxDeltaR;
+
+  assert((std::isfinite(etaMax - etaMin) && etaMin < etaMax) &&
+         "DeltaR histogram range cannot define an eta grid");
+
+  using EtaAxis =
+      Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>;
+  using PhiAxis =
+      Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>;
+  // Widen bins when necessary to keep grid storage linear in particle count.
+  const double maxBins =
+      std::ceil(std::sqrt(static_cast<double>(particles.size())));
+  auto bins = [&](double extent) {
+    return static_cast<std::size_t>(
+        std::clamp(std::floor(extent / maxDeltaR), 1., maxBins));
+  };
+  Acts::Grid<std::vector<std::size_t>, EtaAxis, PhiAxis> grid(
+      EtaAxis(etaMin, etaMax, bins(etaMax - etaMin)),
+      PhiAxis(-std::numbers::pi, std::numbers::pi,
+              bins(2. * std::numbers::pi)));
+  for (auto i : finiteIndices) {
+    grid.atPosition(coordinates[i]).push_back(i);
+  }
+
+  for (auto i : finiteIndices) {
+    const auto localBins =
+        grid.multiAxis().getLocalBinsFromPoint(coordinates[i]);
+    for (auto bin : grid.multiAxis().getNeighborHoodIndices(localBins, 1)) {
+      for (auto j : grid.at(bin)) {
+        if (i == j) {
+          continue;
+        }
+        const double dphi = Acts::detail::difference_periodic(
+            coordinates[i][1], coordinates[j][1], 2. * std::numbers::pi);
+        const double deta = coordinates[i][0] - coordinates[j][0];
+        distances[i] = std::min(distances[i], Acts::fastHypot(dphi, deta));
+      }
+    }
+  }
+  return distances;
+}
+
+}  // namespace
 
 PatternRecognitionPerformanceCollector::PatternRecognitionPerformanceCollector(
     Config cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -175,7 +266,11 @@ void PatternRecognitionPerformanceCollector::fill(
                                                       << " " << labelPlural);
   }
 
-  for (const auto& particle : particles) {
+  const auto& deltaRAxis = m_cfg.effPlotToolConfig.varBinning.at("DeltaR");
+  const auto nearestDistances = nearestParticleDistances(
+      particles, deltaRAxis.bin(deltaRAxis.size() - 1).upper());
+  for (const auto& [particle, nearestDistance] :
+       Acts::zip(particles, nearestDistances)) {
     auto particleId = particle.particleId();
 
     std::size_t nMatchedTracks = 0;
@@ -199,19 +294,7 @@ void PatternRecognitionPerformanceCollector::fill(
       }
     }
 
-    double minDeltaR = -1;
-    for (const auto& closeParticle : particles) {
-      if (closeParticle.particleId() == particleId) {
-        continue;
-      }
-      double distance = Acts::VectorHelpers::deltaR(particle.direction(),
-                                                    closeParticle.direction());
-      if (minDeltaR == -1 || distance < minDeltaR) {
-        minDeltaR = distance;
-      }
-    }
-
-    m_effPlotTool.fill(geoContext, particle.initialState(), minDeltaR,
+    m_effPlotTool.fill(geoContext, particle.initialState(), nearestDistance,
                        isReconstructed);
     m_duplicationPlotTool.fill(particle.initialState(), nMatchedTracks);
     m_fakePlotTool.fill(particle.initialState(), nMatchedTracks, nFakeTracks);
