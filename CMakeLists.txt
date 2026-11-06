@@ -338,7 +338,7 @@ set(_acts_gbl_version 04.00.05)
 set(_acts_mille_version 01.01.02)
 set(_acts_mp2_version 05.01.06)
 set(_acts_onnxruntime_version 1.12.0)
-set(_acts_geomodel_version 6.8.0)
+set(_acts_geomodel_version 6.16.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)

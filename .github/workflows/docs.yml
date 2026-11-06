@@ -42,6 +42,7 @@ env:
 
 jobs:
   docs:
+    if: github.repository == 'acts-project/acts'
     runs-on: ubuntu-latest
     env:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS

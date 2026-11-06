@@ -12,6 +12,7 @@
 #include "Acts/Material/IntersectionMaterialAssigner.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
@@ -64,8 +65,9 @@ BOOST_AUTO_TEST_CASE(FinalizedMaterialIsAvailableBeforeDestruction) {
   MaterialMapping::Config config;
   config.materialMapper = std::make_shared<MaterialMapper>(mapperConfig);
   auto writer = std::make_shared<RecordingWriter>();
+  ACTS_PUSH_IGNORE_DEPRECATED()
   config.materialWriters = {writer};
-  {
+  ACTS_POP_IGNORE_DEPRECATED() {
     auto mapping = std::make_shared<MaterialMapping>(config);
     BOOST_CHECK_THROW(mapping->material(), std::logic_error);
     Sequencer::Config sequenceConfig;

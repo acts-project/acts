@@ -20,6 +20,10 @@
 namespace detray {
 
 /// @brief sequential (single thread) sort function
+/// @tparam rand_iter_t random-access iterator over the elements to sort
+/// @tparam sentinel_t sentinel marking the end of the range
+/// @param first iterator to the first element
+/// @param last sentinel after the final element
 template <std::random_access_iterator rand_iter_t,
           std::sentinel_for<rand_iter_t> sentinel_t>
 DETRAY_HOST_DEVICE inline void sequential_sort(rand_iter_t first,
@@ -32,6 +36,13 @@ DETRAY_HOST_DEVICE inline void sequential_sort(rand_iter_t first,
 }
 
 /// @brief find_if implementation for host/device (single thread)
+/// @tparam rand_iter_t random-access iterator over the elements
+/// @tparam sentinel_t sentinel marking the end of the range
+/// @tparam Predicate callable returning true for a matching element
+/// @param first iterator to the first element
+/// @param last sentinel after the final element
+/// @param comp predicate applied to each element
+/// @return iterator to the first match, or last when no element matches
 template <std::random_access_iterator rand_iter_t,
           std::sentinel_for<rand_iter_t> sentinel_t, class Predicate>
 DETRAY_HOST_DEVICE inline auto find_if(rand_iter_t first, sentinel_t last,
@@ -46,6 +57,13 @@ DETRAY_HOST_DEVICE inline auto find_if(rand_iter_t first, sentinel_t last,
 }
 
 /// @brief lower_bound implementation for host/device
+/// @tparam forw_iter_t forward iterator over the sorted elements
+/// @tparam sentinel_t sentinel marking the end of the range
+/// @tparam Value type of the lookup value
+/// @param first iterator to the first element
+/// @param last sentinel after the final element
+/// @param value value to locate
+/// @return iterator to the first element not less than value
 template <std::forward_iterator forw_iter_t,
           std::sentinel_for<forw_iter_t> sentinel_t, typename Value>
 DETRAY_HOST_DEVICE inline auto lower_bound(forw_iter_t first, sentinel_t last,
@@ -58,6 +76,13 @@ DETRAY_HOST_DEVICE inline auto lower_bound(forw_iter_t first, sentinel_t last,
 }
 
 /// @brief upper_bound implementation for host/device
+/// @tparam forw_iter_t forward iterator over the sorted elements
+/// @tparam sentinel_t sentinel marking the end of the range
+/// @tparam Value type of the lookup value
+/// @param first iterator to the first element
+/// @param last sentinel after the final element
+/// @param value value to locate
+/// @return iterator to the first element greater than value
 template <std::forward_iterator forw_iter_t,
           std::sentinel_for<forw_iter_t> sentinel_t, typename Value>
 DETRAY_HOST_DEVICE inline auto upper_bound(forw_iter_t first, sentinel_t last,

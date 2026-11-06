@@ -20,6 +20,10 @@ namespace detray::algebra::storage {
 /// Functor used to access elements of a matrix
 struct element_getter {
   /// Get const access to a matrix element
+  /// @param m Matrix to read.
+  /// @param row Zero-based row of the element.
+  /// @param col Zero-based column of the element.
+  /// @returns The selected element by const access.
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t ROW, std::size_t COL>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
@@ -34,6 +38,10 @@ struct element_getter {
   }
 
   /// Get non-const access to a matrix element
+  /// @param m Matrix to read.
+  /// @param row Zero-based row of the element.
+  /// @param col Zero-based column of the element.
+  /// @returns Mutable access to the selected element.
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t ROW, std::size_t COL>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
@@ -46,6 +54,9 @@ struct element_getter {
   }
 
   /// Get const access to a matrix element
+  /// @param m Single-column matrix to read.
+  /// @param row Zero-based row of the element.
+  /// @returns The selected element by const access.
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t ROW>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
@@ -55,6 +66,9 @@ struct element_getter {
   }
 
   /// Get non-const access to a matrix element
+  /// @param m Single-column matrix to read.
+  /// @param row Zero-based row of the element.
+  /// @returns Mutable access to the selected element.
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t ROW>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
@@ -64,6 +78,9 @@ struct element_getter {
   }
 
   /// Get const access to a vector element
+  /// @param v Vector to read.
+  /// @param row Zero-based index of the element.
+  /// @returns The selected element by const access.
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t N>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
@@ -73,6 +90,9 @@ struct element_getter {
   }
 
   /// Get non-const access to a vector element
+  /// @param v Vector to read.
+  /// @param row Zero-based index of the element.
+  /// @returns Mutable access to the selected element.
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t N>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
@@ -155,6 +175,10 @@ DETRAY_HOST_DEVICE decltype(auto) element(V &vector) {
 /// Functor used to access a submatrix of a matrix
 struct block_getter {
   /// Get a block of a const matrix
+  /// @param m Source matrix.
+  /// @param row First row of the block.
+  /// @param col First column of the block.
+  /// @returns A copy of the selected block.
   template <std::size_t ROWS, std::size_t COLS, std::size_t mROW,
             std::size_t mCOL, concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
@@ -192,6 +216,10 @@ struct block_getter {
   }
 
   /// Get a vector of a const matrix
+  /// @param m Source matrix.
+  /// @param row First row of the segment.
+  /// @param col Column containing the segment.
+  /// @returns A copy of the selected column segment.
   template <std::size_t SIZE, std::size_t ROWS, std::size_t COLS,
             concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
@@ -221,7 +249,11 @@ struct block_getter {
     return res_v;
   }
 
-  /// Get a block of a const matrix
+  /// Write a block into a matrix.
+  /// @param m Matrix to update.
+  /// @param b Block values to write.
+  /// @param row First destination row.
+  /// @param col First destination column.
   template <std::size_t ROWS, std::size_t COLS, std::size_t mROW,
             std::size_t mCOL, concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
@@ -255,6 +287,10 @@ struct block_getter {
   }
 
   /// Operator setting a block with a vector
+  /// @param m Matrix to update.
+  /// @param b Vector values to write into one column.
+  /// @param row First destination row.
+  /// @param col Destination column.
   template <std::size_t ROWS, std::size_t COLS, std::size_t N,
             concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
