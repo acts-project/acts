@@ -8,12 +8,36 @@
 
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 
 #include <cstddef>
 
 namespace ActsAlignment::detail {
+
+Acts::AlignmentToBoundMatrix alignmentToBoundDerivative(
+    const Acts::GeometryContext& gctx, const Acts::Surface& surface,
+    const Acts::Vector3& position, const Acts::Vector3& direction,
+    const Acts::FreeVector& pathDerivative, AlignmentMask mask,
+    const Acts::Transform3* structureTransform) {
+  Acts::AlignmentToBoundMatrix derivative = surface.alignmentToBoundDerivative(
+      gctx, position, direction, pathDerivative);
+  if (structureTransform != nullptr) {
+    const Acts::Transform3& surfaceTransform =
+        surface.localToGlobalTransform(gctx);
+    // ACTS surface translations are global; structure translations are local.
+    // Apply this convention adapter exactly once, before selecting DoFs.
+    derivative = (derivative *
+                  Acts::detail::localFrameToAlignmentParametersJacobian(
+                      surfaceTransform) *
+                  Acts::detail::compositeToComponentJacobian(
+                      *structureTransform, surfaceTransform))
+                     .eval();
+  }
+  resetAlignmentDerivative(derivative, mask);
+  return derivative;
+}
 
 void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
                               AlignmentMask mask) {
