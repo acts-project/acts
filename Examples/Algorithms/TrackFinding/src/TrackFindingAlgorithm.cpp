@@ -58,8 +58,8 @@ namespace {
 
 /// Creates track states for the measurements on a surface, restricted to the
 /// current seed when `stayOnSeed` is set.
-class TrackStateCreator final
-    : public Chi2CkfTrackStateCreatorBase<TrackStateCreator> {
+class SeedTrackStateCreator final
+    : public Chi2CkfTrackStateCreatorBase<SeedTrackStateCreator> {
  public:
   const MeasurementSubset* measurements = nullptr;
 
@@ -371,7 +371,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   BranchStopper branchStopper(m_cfg);
 
-  TrackStateCreator trackStateCreator;
+  SeedTrackStateCreator trackStateCreator;
   trackStateCreator.measurements = &measurements;
   trackStateCreator.cuts = m_cfg.trackStateSelection;
 
@@ -380,7 +380,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
   extensions.trackStateCreator
-      .template connect<&TrackStateCreator::createTrackStates>(
+      .template connect<&SeedTrackStateCreator::createTrackStates>(
           &trackStateCreator);
   extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
 
