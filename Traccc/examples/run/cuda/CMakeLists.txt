@@ -17,6 +17,8 @@ find_package(CUDAToolkit REQUIRED)
 #
 traccc_add_library( traccc_examples_cuda examples_cuda SHARED
    "include/traccc/examples/cuda/full_chain_algorithm.hpp"
+   "include/traccc/examples/cuda/full_chain_hough_transform_algorithm.hpp"
+   "src/full_chain_hough_transform_algorithm.cpp"
    "src/full_chain_algorithm.cpp"
    "include/traccc/examples/cuda/tbb_await.hpp"
    "src/tbb_await.cpp"
@@ -35,6 +37,13 @@ target_link_libraries(
         traccc::cuda
         traccc::examples_common
     PRIVATE TBB::tbb
+)
+
+traccc_add_executable( hought_transform_seeding_cuda "apps/hough_transform_seeding_cuda.cpp"
+   LINK_LIBRARIES TBB::tbb vecmem::core vecmem::cuda
+                  detray::detectors detray::io traccc::io traccc::performance
+		  traccc::core traccc::device_common traccc::cuda_utils traccc::cuda
+		  traccc::options traccc::examples_cuda traccc::examples_common
 )
 
 traccc_add_executable( throughput_st_cuda "apps/throughput_st.cpp"
