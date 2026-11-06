@@ -35,8 +35,14 @@ class MagneticFieldQuery {
   MagneticFieldQuery(const MagneticFieldProvider& provider,
                      const MagneticFieldContext&& mctx) = delete;
 
-  MagneticFieldQuery(const MagneticFieldQuery&) = delete;
-  MagneticFieldQuery& operator=(const MagneticFieldQuery&) = delete;
+  /// Copy the cache, retaining the borrowed provider and context.
+  /// @param other Query whose cache state is copied
+  MagneticFieldQuery(const MagneticFieldQuery& other) = default;
+
+  /// Copy the cache and borrowed provider/context references.
+  /// @param other Query whose cache state is copied
+  /// @return This query
+  MagneticFieldQuery& operator=(const MagneticFieldQuery& other) = default;
   /// Move another query, preserving its borrowed provider and context.
   /// @param other Query to move from
   MagneticFieldQuery(MagneticFieldQuery&& other) = default;
@@ -57,6 +63,12 @@ class MagneticFieldQuery {
   Result<Vector3> getField(const Vector3& position);
 
  private:
+  // Transitional access for tools accepting legacy cache-taking linearizers.
+  // Remove with their legacy configuration members.
+  friend class FullBilloirVertexFitter;
+  friend class AdaptiveMultiVertexFitter;
+  friend class IterativeVertexFinder;
+
   std::reference_wrapper<const MagneticFieldProvider> m_provider;
   std::reference_wrapper<const MagneticFieldContext> m_context;
   MagneticFieldProvider::Cache m_cache;

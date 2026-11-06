@@ -216,3 +216,26 @@ BOOST_AUTO_TEST_CASE(FieldQueryRetainsContextAcrossMoves) {
   BOOST_REQUIRE(result.ok());
   BOOST_CHECK_EQUAL(result->z(), 2.);
 }
+
+BOOST_AUTO_TEST_CASE(FieldQueryCopiesHaveIndependentCaches) {
+  CountingField provider;
+  const Acts::MagneticFieldContext context;
+  Acts::MagneticFieldQuery first(provider, context);
+  BOOST_REQUIRE(first.getField(Acts::Vector3::Zero()).ok());
+
+  Acts::MagneticFieldQuery copied(first);
+  BOOST_CHECK(&copied.context() == &context);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
+  BOOST_CHECK_EQUAL(copied.getField(Acts::Vector3::Zero()).value().z(), 2.);
+  BOOST_CHECK_EQUAL(first.getField(Acts::Vector3::Zero()).value().z(), 2.);
+
+  CountingField otherProvider;
+  const Acts::MagneticFieldContext otherContext;
+  Acts::MagneticFieldQuery assigned(otherProvider, otherContext);
+  assigned = first;
+  BOOST_CHECK(&assigned.context() == &context);
+  BOOST_CHECK_EQUAL(assigned.getField(Acts::Vector3::Zero()).value().z(), 3.);
+  BOOST_CHECK_EQUAL(first.getField(Acts::Vector3::Zero()).value().z(), 3.);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
+  BOOST_CHECK_EQUAL(otherProvider.cacheCreations, 1);
+}

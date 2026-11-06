@@ -31,8 +31,8 @@
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
-#include "Acts/Vertexing/detail/LegacyTrackLinearizer.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/LegacyTrackLinearizer.hpp"
 
 #include <array>
 #include <chrono>
@@ -131,8 +131,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  fitterCfg.trackLinearizer =
-      Acts::detail::makeLegacyTrackLinearizer(linearizer);
+  fitterCfg.trackLinearizer = ActsTests::makeLegacyTrackLinearizer(linearizer);
 
   Fitter fitter(fitterCfg);
 
@@ -291,8 +290,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect(extractParameters);
-  fitterCfg.trackLinearizer =
-      Acts::detail::makeLegacyTrackLinearizer(linearizer);
+  fitterCfg.fieldTrackLinearizer
+      .connect<&HelicalTrackLinearizer::linearizeTrackWithField>(&linearizer);
 
   Fitter fitter(fitterCfg);
 
@@ -436,8 +435,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  fitterCfg.trackLinearizer =
-      Acts::detail::makeLegacyTrackLinearizer(linearizer);
+  fitterCfg.fieldTrackLinearizer
+      .connect<&HelicalTrackLinearizer::linearizeTrackWithField>(&linearizer);
 
   Fitter fitter(fitterCfg);
 
@@ -589,8 +588,8 @@ BOOST_AUTO_TEST_CASE(
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  fitterCfg.trackLinearizer =
-      Acts::detail::makeLegacyTrackLinearizer(linearizer);
+  fitterCfg.fieldTrackLinearizer
+      .connect<&HelicalTrackLinearizer::linearizeTrackWithField>(&linearizer);
 
   Fitter fitter(fitterCfg);
 
@@ -730,8 +729,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_removes_rejected_seed) {
 
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  fitterCfg.trackLinearizer =
-      Acts::detail::makeLegacyTrackLinearizer(linearizer);
+  fitterCfg.fieldTrackLinearizer
+      .connect<&HelicalTrackLinearizer::linearizeTrackWithField>(&linearizer);
 
   Fitter fitter(fitterCfg);
 

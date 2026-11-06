@@ -16,7 +16,6 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/detail/LegacyTrackLinearizer.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <ostream>
@@ -84,8 +83,9 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
   Linearizer linearizer(linearizerCfg,
                         logger().cloneWithSuffix("HelicalTrackLinearizer"));
 
-  vertexFitterCfg.trackLinearizer =
-      Acts::detail::makeLegacyTrackLinearizer(linearizer);
+  vertexFitterCfg.fieldTrackLinearizer
+      .connect<&Acts::HelicalTrackLinearizer::linearizeTrackWithField>(
+          &linearizer);
   Fitter vertexFitter(vertexFitterCfg,
                       logger().cloneWithSuffix("FullBilloirVertexFitter"));
 
@@ -100,8 +100,9 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
       Seeder::Config{Acts::GaussianTrackDensity(densityCfg)});
   // Set up the actual vertex finder
   Finder::Config finderCfg(std::move(vertexFitter), seeder, ipEst);
-  finderCfg.trackLinearizer =
-      Acts::detail::makeLegacyTrackLinearizer(linearizer);
+  finderCfg.fieldTrackLinearizer
+      .connect<&Acts::HelicalTrackLinearizer::linearizeTrackWithField>(
+          &linearizer);
 
   finderCfg.maxVertices = m_cfg.maxIterations;
   finderCfg.reassignTracksAfterFirstFit = false;
