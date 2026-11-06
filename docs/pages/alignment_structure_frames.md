@@ -86,8 +86,36 @@ assert fixed.hasTransform
 frame = contextual.localToGlobalTransform(gctx)
 ```
 
-Providing a frame does not yet enable numerical structure alignment. The native
-solver still needs shared parameter indexing, Jacobian accumulation, and rigid
-updates of the members. The frame API supplies the geometry contract for that
-integration; hierarchy validation and standalone-module alignment retain their
-existing behavior.
+## Structure derivatives
+
+`ActsAlignment::detail::alignmentToBoundDerivative` can evaluate the bound
+parameter derivative for a supplied current structure frame. Resolve that frame
+with the same `GeometryContext` as the member surface, or supply the consistent
+working frame maintained by an iterative caller. For an immediate owner found
+through a validated `AlignmentHierarchy`, the connection is:
+
+```cpp
+const auto* owner = hierarchy.structureFor(surface);
+if (owner != nullptr) {
+  const Acts::Transform3 currentFrame = owner->localToGlobalTransform(gctx);
+  const auto derivative = ActsAlignment::detail::alignmentToBoundDerivative(
+      gctx, surface, position, direction, pathDerivative,
+      owner->alignmentMask(), &currentFrame);
+  // Residual = measurement - prediction: residual derivative = -H * derivative.
+}
+```
+
+The helper starts with the unmasked surface derivative, applies
+`localFrameToAlignmentParametersJacobian(surfaceTransform)` and then
+`compositeToComponentJacobian(currentFrame, surfaceTransform)`, and finally
+masks columns in structure coordinates. Masking surface columns before the
+conversion would incorrectly remove contributions to rotated structure axes.
+The convention adapter is applied once because surface translations on this
+baseline are global. With no structure frame, the helper retains the existing
+standalone-module derivative and mask convention.
+
+This helper does not activate structure solving. The native solver still uses
+module indexing and calls it without a structure frame. Shared parameter
+indexing, structure accumulation, and rigid member updates remain follow-up
+work. Hierarchy membership continues to provide metadata until those pieces
+are integrated; a successful derivative test is not a recovered alignment.
