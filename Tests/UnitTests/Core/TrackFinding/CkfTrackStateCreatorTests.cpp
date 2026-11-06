@@ -178,6 +178,34 @@ struct TestCreator final
   }
 };
 
+/// Creator with only the required customization points, so it uses the
+/// default selection of the base.
+struct DefaultSelectionCreator final
+    : public CkfTrackStateCreatorBase<DefaultSelectionCreator, TrackContainer> {
+  using Base =
+      CkfTrackStateCreatorBase<DefaultSelectionCreator, TrackContainer>;
+  using State = typename Base::State;
+
+  std::vector<TestMeasurement> measurements;
+
+  auto measurementRange(const State& /*state*/) const {
+    return std::ranges::subrange(measurements.begin(), measurements.end());
+  }
+
+  SourceLink sourceLink(const State& /*state*/,
+                        const TestMeasurement& measurement) const {
+    return SourceLink{measurement.id};
+  }
+
+  CalibratedTestMeasurement calibrate(
+      const State& /*state*/, const TestMeasurement& measurement) const {
+    return CalibratedTestMeasurement{
+        Vector<1>{measurement.value},
+        SquareMatrix<1>{SquareMatrix<1>::Constant(measurement.variance)},
+        {static_cast<std::uint8_t>(eBoundLoc0)}};
+  }
+};
+
 struct Fixture {
   GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   CalibrationContext cctx;
@@ -205,14 +233,24 @@ struct Fixture {
     creator.chi2Outlier = chi2Outlier;
   }
 
+  DefaultSelectionCreator defaultCreator;
+
+  CkfTypes::TrackStateCreatorInput<TrackContainer> input() {
+    return {.geoContext = &gctx,
+            .calibrationContext = &cctx,
+            .surface = surface.get(),
+            .boundState = &boundState,
+            .prevTip = kTrackIndexInvalid,
+            .trajectory = &trajectory,
+            .logger = logger.get()};
+  }
+
+  Result<CkfTypes::BranchVector<TrackIndexType>> runDefault() {
+    return defaultCreator.createTrackStates(input());
+  }
+
   Result<CkfTypes::BranchVector<TrackIndexType>> run() {
-    return creator.createTrackStates({.geoContext = &gctx,
-                                      .calibrationContext = &cctx,
-                                      .surface = surface.get(),
-                                      .boundState = &boundState,
-                                      .prevTip = kTrackIndexInvalid,
-                                      .trajectory = &trajectory,
-                                      .logger = logger.get()});
+    return creator.createTrackStates(input());
   }
 };
 
@@ -233,6 +271,66 @@ BOOST_AUTO_TEST_CASE(NoMeasurementsCreatesNothing) {
   BOOST_CHECK(result->empty());
   BOOST_CHECK_EQUAL(f.trajectory.size(), 0u);
   BOOST_CHECK_EQUAL(f.creator.nSelectMeasurements, 0u);
+}
+
+/// Without its own selection, a creator takes the best measurement by chi2,
+/// without a cut, as a measurement.
+BOOST_AUTO_TEST_CASE(DefaultSelectionTakesBestMeasurement) {
+  Fixture f;
+  // chi2 = value^2 / 2 -> 50, 2, 8
+  f.defaultCreator.measurements = {{10., 1., 0u}, {-2., 1., 1u}, {4., 1., 2u}};
+
+  auto result = f.runDefault();
+
+  BOOST_REQUIRE(result.ok());
+  BOOST_REQUIRE_EQUAL(result->size(), 1u);
+
+  const auto trackState = f.trajectory.getTrackState(result->front());
+  BOOST_CHECK(trackState.typeFlags().isMeasurement());
+  BOOST_CHECK(!trackState.typeFlags().isOutlier());
+  BOOST_CHECK_CLOSE(trackState.chi2(), 2., 1e-9);
+  BOOST_CHECK_EQUAL(trackState.getUncalibratedSourceLink().get<std::size_t>(),
+                    1u);
+  BOOST_CHECK_EQUAL(f.trajectory.size(), 1u);
+}
+
+/// The default has no chi2 cut, so even a far measurement is selected.
+BOOST_AUTO_TEST_CASE(DefaultSelectionHasNoCut) {
+  Fixture f;
+  f.defaultCreator.measurements = {{1e3, 1., 0u}};
+
+  auto result = f.runDefault();
+
+  BOOST_REQUIRE(result.ok());
+  BOOST_REQUIRE_EQUAL(result->size(), 1u);
+  BOOST_CHECK(
+      !f.trajectory.getTrackState(result->front()).typeFlags().isOutlier());
+}
+
+/// A non-finite chi2 is never selected. If no chi2 is finite, the caller
+/// creates a hole.
+BOOST_AUTO_TEST_CASE(DefaultSelectionRejectsNonFiniteChi2) {
+  Fixture f;
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  f.defaultCreator.measurements = {{nan, 1., 0u}, {3., 1., 1u}};
+
+  auto result = f.runDefault();
+
+  BOOST_REQUIRE(result.ok());
+  BOOST_REQUIRE_EQUAL(result->size(), 1u);
+  BOOST_CHECK_EQUAL(f.trajectory.getTrackState(result->front())
+                        .getUncalibratedSourceLink()
+                        .get<std::size_t>(),
+                    1u);
+
+  Fixture g;
+  g.defaultCreator.measurements = {{nan, 1., 0u}};
+
+  auto none = g.runDefault();
+
+  BOOST_REQUIRE(none.ok());
+  BOOST_CHECK(none->empty());
+  BOOST_CHECK_EQUAL(g.trajectory.size(), 0u);
 }
 
 /// A selection which cannot make up its mind must abort the track finding

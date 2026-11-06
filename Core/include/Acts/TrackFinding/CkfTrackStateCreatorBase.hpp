@@ -22,9 +22,11 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cassert>
+#include <cmath>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <ranges>
 #include <type_traits>
@@ -301,6 +303,11 @@ class CkfTrackStateCreatorBase {
   /// for the combinatorial Kalman filter should be the most compatible one
   /// first. An empty result means that the caller creates a hole.
   ///
+  /// The default selects the measurement with the smallest chi2, without a
+  /// cut, as a measurement and not as an outlier. This is the default of the
+  /// deprecated @ref MeasurementSelector. A measurement with a non-finite chi2
+  /// is never selected, so if all of them have one, the caller creates a hole.
+  ///
   /// @note This is only called when the surface has measurements.
   ///
   /// @tparam range_t the measurement range type
@@ -310,14 +317,21 @@ class CkfTrackStateCreatorBase {
   /// @param range the measurements on the current surface
   /// @param candidates the buffer to append the selected measurements to
   ///
-  /// @return success, i.e. the default takes all measurements
+  /// @return always success
   template <typename range_t, typename candidates_t>
   Result<void> selectMeasurements(const State& state, range_t&& range,
                                   candidates_t& candidates) const {
-    static_cast<void>(state);
-
+    double minChi2 = std::numeric_limits<double>::infinity();
     for (const auto& measurement : range) {
-      candidates.push_back({measurement, 0., false});
+      const double chi2 = derived().calculatePredictedChi2(
+          state, derived().calibrate(state, measurement));
+      // check finiteness first, because a comparison with NaN raises an FPE
+      if (!std::isfinite(chi2) || chi2 >= minChi2) {
+        continue;
+      }
+      minChi2 = chi2;
+      candidates.clear();
+      candidates.push_back({measurement, chi2, false});
     }
     return Result<void>::success();
   }
