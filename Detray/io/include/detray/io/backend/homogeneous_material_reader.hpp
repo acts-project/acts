@@ -66,6 +66,8 @@ class homogeneous_material_reader final : public reader_interface<detector_t> {
   }
 
   /// Implementation of the detector material conversion
+  /// @param det_builder Builder receiving material stores and links.
+  /// @param det_data Detector payload that contains the sub-payload
   static void from_payload_impl(detector_builder<typename detector_t::metadata,
                                                  volume_builder>& det_builder,
                                 const detector_payload& det_data)

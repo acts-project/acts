@@ -33,6 +33,8 @@ namespace detray::io::detail {
 class grid_writer {
  public:
   /// Convert the header information into its payload
+  /// @tparam grid_store_t deduced grid store type
+  /// @param store accelerator store of the detector
   template <typename grid_store_t>
   static grid_header_payload to_header_payload(const grid_store_t& store) {
     grid_header_payload header_data;
@@ -49,7 +51,7 @@ class grid_writer {
   /// @param vol_idx type and index of volume the grid belongs to
   /// @param owner_idx inder of the owner of the grid (can be identical to
   /// vol_idx or volume-local surface index)
-  /// @param grid_data the grid payload to be filled
+  /// @param grids_data the grid payload to be filled
   /// @param converter callable that can convert a grid bin entry into its
   /// respective IO payload (of type @tparam content_t)
   template <typename store_t, typename content_t, typename grid_id_t,

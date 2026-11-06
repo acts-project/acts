@@ -358,26 +358,37 @@ struct header_payload : public common_header_payload {
     this->metadata = ch.metadata;
     this->source = ch.source;
   }
-  /// Optional detector components: volume and surface acceleration structures
-  /// and material
+  /// Required detector component: geometry
   std::optional<geometry_header_payload> geometry{};
+  /// Optional detector components:
+  /// @{
+  /// Volume acceleration structures: Spatial grids
   std::optional<grid_header_payload> volume_grids{};
+  /// Surface acceleration structures: Spatial grids
   std::optional<grid_header_payload> surface_grids{};
+  /// Homogeneous material payload
   std::optional<homogeneous_material_header_payload> homogeneous_material{};
+  /// Material maps payload
   std::optional<grid_header_payload> material_maps{};
+  /// @}
 };
 
 /// Detector intermediate data representation
 struct detector_payload {
   /// Types of detector component payloads
   /// @{
+  /// Geometry payload type
   using geometry_payload_type = detector_geometry_payload;
+  /// Volume grids payload type
   using volume_grids_payload_type =
       detector_grids_payload<std::size_t, io::accel_id>;
+  /// Surface grids payload type
   using surface_grids_payload_type =
       detector_grids_payload<std::size_t, io::accel_id>;
+  /// Homogeneous material payload type
   using homogeneous_material_payload_type =
       detector_homogeneous_material_payload;
+  /// Material maps payload type
   using material_maps_payload_type =
       detector_grids_payload<surface_material_payload, io::material_id>;
   /// @}
@@ -390,9 +401,9 @@ struct detector_payload {
 
   /// Required detector component: geometry
   geometry_payload_type geometry{};
-  /// Optional detector components: 
+  /// Optional detector components:
   /// @{
-  /// volume acceleration structures: Spatial grids
+  /// Volume acceleration structures: Spatial grids
   std::optional<volume_grids_payload_type> volume_grids{};
   /// Surface acceleration structures: Spatial grids
   std::optional<surface_grids_payload_type> surface_grids{};
