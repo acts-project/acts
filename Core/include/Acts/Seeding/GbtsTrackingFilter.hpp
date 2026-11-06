@@ -32,9 +32,9 @@ class GbtsTrackingFilter final {
     /// scattering angle follows from it and the momentum of the state.
     float radLen = 0.025;
 
-    /// Measurement uncertainty in x direction.
+    /// Measurement uncertainty of a pixel node in the transverse plane.
     float sigmaX = 0.08 * Acts::UnitConstants::mm;
-    /// Measurement uncertainty in y direction.
+    /// Measurement uncertainty of a pixel node in z (barrel) or r (endcap).
     float sigmaY = 0.25 * Acts::UnitConstants::mm;
 
     /// Across the strips only. The along-strip resolution is not configured:
@@ -54,15 +54,21 @@ class GbtsTrackingFilter final {
     /// Chi2 penalty for adding a hit.
     float addHit = 14.0;
 
-    /// Maximum track curvature. While the curvature of a state is uncertain
-    /// beyond it, the state scatters at this curvature.
+    /// Maximum track curvature. It is also the curvature used for the
+    /// multiple scattering while the curvature of a state is not measured
+    /// yet.
     float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
     /// Maximum longitudinal impact parameter.
     float maxZ0 = 170.0 * Acts::UnitConstants::mm;
 
-    /// Initial variance of the transverse state (y, dy/dx, curvature).
+    /// Initial variance of the transverse state (y, dy/dx, curvature):
+    /// - y: 0.25 mm^2
+    /// - dy/dx: 0.001
+    /// - curvature: 0.001 / mm^2
     std::array<float, 3> initialVarianceX = {0.25f, 0.001f, 0.001f};
-    /// Initial variance of the longitudinal state (z, dz/ds).
+    /// Initial variance of the longitudinal state (z, dz/ds):
+    /// - z: 1.5 mm^2
+    /// - dz/ds: 0.001
     std::array<float, 2> initialVarianceY = {1.5f, 0.001f};
   };
 

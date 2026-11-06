@@ -32,12 +32,18 @@ struct GbtsEdgeState final {
   /// Score for comparison
   float j{};
 
+  /// Transverse state in the frame of the head edge: y', dy'/dx', curvature
   std::array<float, 3> x{};
+  /// Longitudinal state: z, dz/ds
   std::array<float, 2> y{};
-  std::array<std::array<float, 3>, 3> cx{};
-  std::array<std::array<float, 2>, 2> cy{};
+  /// Transverse covariance, upper triangle by rows: 00, 01, 02, 11, 12, 22
+  std::array<float, 6> cx{};
+  /// Longitudinal covariance, upper triangle by rows: 00, 01, 11
+  std::array<float, 3> cy{};
+  /// Position of the state: x' and r
   float refX{};
   float refY{};
+  /// Cosine and sine of the direction of the head edge, defining x'
   float c{};
   float s{};
 };
