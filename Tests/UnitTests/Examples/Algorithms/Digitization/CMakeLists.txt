@@ -1,3 +1,4 @@
 set(unittest_extra_libraries ActsExamplesDigitization ActsExamplesIoJson)
 
 add_unittest(ModuleClusters ModuleClustersTests.cpp)
+add_unittest(ClusterOnTrackCalibrator ClusterOnTrackCalibratorTests.cpp)

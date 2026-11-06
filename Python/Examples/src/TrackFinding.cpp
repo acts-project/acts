@@ -189,10 +189,10 @@ void addTrackFinding(py::module& mex) {
         alg, "TrackFinderFunction");
 
     ACTS_PYTHON_STRUCT(
-        c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
-        outputTracks, trackingGeometry, magneticField, findTracks,
-        findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
-        twoWay, twoWaySmoothing, seedParamsEstimation, reverseSearch,
+        c, inputMeasurements, inputClusters, inputInitialTrackParameters,
+        inputSeeds, outputTracks, calibrator, trackingGeometry, magneticField,
+        findTracks, findTracksBrem, measurementSelectorCfg, trackSelectorCfg,
+        maxSteps, twoWay, twoWaySmoothing, seedParamsEstimation, reverseSearch,
         reverseSearchMinR, reverseSearchMinAbsZ, inwardOnlyMinR,
         inwardOnlyMinAbsZ, seedDeduplication, seedDeduplicatorCfg, stayOnSeed,
         pixelVolumeIds, stripVolumeIds, maxPixelHoles, maxStripHoles,

@@ -1,0 +1,482 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include "ActsExamples/Digitization/ClusterOnTrackCalibrator.hpp"
+
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <limits>
+#include <numbers>
+#include <optional>
+#include <span>
+#include <stdexcept>
+#include <utility>
+
+namespace ActsExamples {
+
+namespace {
+
+using detail::ClusterAxisCalibration;
+using detail::ClusterFootprint;
+using detail::ClusterProjection;
+
+constexpr double kMinusInfinity = -std::numeric_limits<double>::infinity();
+
+// The compiler may evaluate both sides of a branch. So every operation below
+// gets arguments that cannot raise a floating point exception.
+
+/// The log of the standard normal CDF, without underflow in the tails
+double logNormalCdf(double x) {
+  constexpr double kTail = 8.;
+  const double inner = std::clamp(x, -kTail, kTail);
+  const double tail = std::min(x, -kTail);
+  const double tail2 = tail * tail;
+  // Asymptotic expansion of the Mills ratio
+  const double asymptotic = -0.5 * tail2 - std::log(-tail) -
+                            0.5 * std::log(2. * std::numbers::pi) +
+                            std::log1p(-1. / tail2 + 3. / (tail2 * tail2));
+  const double central =
+      std::log(0.5 * std::erfc(-inner / std::numbers::sqrt2));
+  return x > kTail ? 0. : (x < -kTail ? asymptotic : central);
+}
+
+/// The fraction of the segment with midpoint `mid` and length `length` in
+/// the bin [lower, upper).
+double overlapFraction(double mid, double length, double lower, double upper) {
+  const double overlap =
+      std::min(upper, mid + 0.5 * length) - std::max(lower, mid - 0.5 * length);
+  const double fraction = std::max(overlap, 0.) /
+                          std::max(length, std::numeric_limits<double>::min());
+  const double inside = (lower <= mid && mid < upper) ? 1. : 0.;
+  return length > 0 ? fraction : inside;
+}
+
+/// The log likelihood of the cluster for the track midpoint `mid`.
+struct ClusterLikelihood {
+  const ClusterProjection& projection;
+  double pathLength;
+  double threshold;
+  double noise;
+  bool analogue;
+
+  /// The log probability that a cell with this charge fires or not
+  double logFire(double charge, double sigma, bool fires) const {
+    const double z = (charge - threshold) / sigma;
+    return logNormalCdf(fires ? z : -z);
+  }
+
+  /// The log likelihood of the observed charge of a fired bin
+  double logFired(double charge, double observed, std::size_t cells) const {
+    const double sigma = noise * std::sqrt(static_cast<double>(cells));
+    if (!analogue) {
+      return logFire(charge, sigma, true);
+    }
+    const double z = (observed - charge) / sigma;
+    return -0.5 * z * z;
+  }
+
+  double operator()(double mid, double length) const {
+    const auto& p = projection;
+    const double first =
+        pathLength * overlapFraction(mid, length, p.firstLower, p.firstUpper);
+    const double last =
+        pathLength * overlapFraction(mid, length, p.lastLower, p.lastUpper);
+    // The segment touches every fired bin
+    if (first <= 0 || last <= 0) {
+      return kMinusInfinity;
+    }
+    double result = logFired(first, p.firstCharge, p.firstCells);
+    if (p.firstLower != p.lastLower) {
+      result += logFired(last, p.lastCharge, p.lastCells);
+    }
+    // A touched neighbour stays below the threshold, an untouched one never
+    // fires
+    if (p.beforeWidth > 0) {
+      const double before =
+          pathLength * overlapFraction(mid, length,
+                                       p.firstLower - p.beforeWidth,
+                                       p.firstLower);
+      if (before > 0) {
+        result += logFire(before, noise, false);
+      }
+    }
+    if (p.afterWidth > 0) {
+      const double after =
+          pathLength *
+          overlapFraction(mid, length, p.lastUpper, p.lastUpper + p.afterWidth);
+      if (after > 0) {
+        result += logFire(after, noise, false);
+      }
+    }
+    return result;
+  }
+};
+
+/// The posterior without noise: uniform in a box, or exact for analogue
+/// readout.
+ClusterAxisCalibration calibrateWithoutNoise(const ClusterProjection& p,
+                                             const ClusterFootprint& footprint,
+                                             double threshold, bool analogue) {
+  ClusterAxisCalibration result;
+  const double length = footprint.length;
+  const double fraction = threshold / footprint.pathLength;
+  if (!(fraction < 0.5)) {
+    return result;
+  }
+
+  // A bin fires if the segment, shrunk by the threshold fraction at both
+  // ends, touches it. The lower end of the shrunk segment is in the first
+  // bin and its upper end in the last bin.
+  const double half = 0.5 * length * (1. - 2. * fraction);
+  const double lowFromFirst = p.firstLower + half;
+  const double lowFromLast = p.lastLower - half;
+  const double highFromFirst = p.firstUpper + half;
+  const double highFromLast = p.lastUpper - half;
+  const double low = std::max(lowFromFirst, lowFromLast);
+  const double high = std::min(highFromFirst, highFromLast);
+  if (low > high) {
+    return result;
+  }
+
+  // The box moves with the footprint length. The centre moves by the mean
+  // of the slopes of the active bounds.
+  const double halfError = 0.5 * (1. - 2. * fraction) * footprint.lengthError;
+  const double centreSlope = 0.5 * ((lowFromFirst >= lowFromLast ? 1. : -1.) +
+                                    (highFromFirst <= highFromLast ? 1. : -1.));
+  result.consistent = true;
+  result.position = 0.5 * (low + high);
+  result.variance =
+      (high - low) * (high - low) / 12. + std::pow(centreSlope * halfError, 2);
+
+  // A single bin holds the full charge, so the charge adds nothing
+  if (!analogue || p.firstLower == p.lastLower) {
+    return result;
+  }
+
+  // The part of the footprint in an edge bin is its charge times the
+  // footprint length per unit of path length. Each edge gives the exact
+  // position, unless the threshold removed the cell after it. Then the edge
+  // bin is full and its charge gives nothing.
+  const double lengthPerCharge = length / footprint.pathLength;
+  const auto isPartial = [&](double charge, double lower, double upper) {
+    return charge * lengthPerCharge < (upper - lower) * (1. - 1e-9);
+  };
+  const bool firstPartial =
+      isPartial(p.firstCharge, p.firstLower, p.firstUpper);
+  const bool lastPartial = isPartial(p.lastCharge, p.lastLower, p.lastUpper);
+  if (!firstPartial && !lastPartial) {
+    return result;
+  }
+  const double fromFirst =
+      p.firstUpper - p.firstCharge * lengthPerCharge + 0.5 * length;
+  const double fromLast =
+      p.lastLower + p.lastCharge * lengthPerCharge - 0.5 * length;
+  const double slopeFirst = 0.5 - p.firstCharge / footprint.pathLength;
+  const double slopeLast = p.lastCharge / footprint.pathLength - 0.5;
+  const double wFirst = firstPartial ? 1. : 0.;
+  const double wLast = lastPartial ? 1. : 0.;
+  const double wSum = std::max(wFirst + wLast, 1.);
+  const double position = (wFirst * fromFirst + wLast * fromLast) / wSum;
+  const double slope = (wFirst * slopeFirst + wLast * slopeLast) / wSum;
+  result.position = std::clamp(position, low, high);
+  result.variance = std::pow(slope * footprint.lengthError, 2);
+  return result;
+}
+
+}  // namespace
+
+detail::ClusterAxisCalibration detail::calibrateClusterAxis(
+    const ClusterProjection& projection, const ClusterFootprint& footprint,
+    double threshold, bool analogue, double chargeNoise) {
+  const auto& p = projection;
+
+  // Uniform over the whole cluster if the footprint cannot make the cluster
+  ClusterAxisCalibration fallback;
+  fallback.position = 0.5 * (p.firstLower + p.lastUpper);
+  fallback.variance = std::pow(p.lastUpper - p.firstLower, 2) / 12.;
+
+  if (chargeNoise <= 0) {
+    ClusterAxisCalibration result =
+        calibrateWithoutNoise(p, footprint, threshold, analogue);
+    return result.consistent ? result : fallback;
+  }
+
+  const ClusterLikelihood likelihood{p, footprint.pathLength, threshold,
+                                     chargeNoise, analogue};
+
+  // A footprint length with its weight
+  using WeightedLength = std::pair<double, double>;
+
+  // The mean and the variance of the posterior, integrated on a grid
+  const auto integrate = [&](std::span<const WeightedLength> lengths)
+      -> std::optional<std::pair<double, double>> {
+    double maxLength = 0;
+    for (const auto& [length, weight] : lengths) {
+      maxLength = std::max(maxLength, length);
+    }
+    // The segment touches the first and the last bin
+    double low = p.lastLower - 0.5 * maxLength;
+    double high = p.firstUpper + 0.5 * maxLength;
+    if (!(low < high)) {
+      return std::nullopt;
+    }
+
+    // Refine the grid around the peak if the posterior is narrow compared
+    // to the grid step
+    constexpr std::size_t kPoints = 64;
+    constexpr std::size_t kMaxPasses = 4;
+    std::array<double, kPoints> logLikelihood{};
+    double mean = 0;
+    double variance = 0;
+    for (std::size_t pass = 0; pass < kMaxPasses; ++pass) {
+      const double step = (high - low) / kPoints;
+      double maxLog = kMinusInfinity;
+      for (std::size_t i = 0; i < kPoints; ++i) {
+        const double mid = low + (static_cast<double>(i) + 0.5) * step;
+        double sum = kMinusInfinity;
+        for (const auto& [length, weight] : lengths) {
+          const double value = likelihood(mid, length) + std::log(weight);
+          if (value == kMinusInfinity) {
+            continue;
+          }
+          // log(exp(sum) + exp(value))
+          const double larger = std::max(sum, value);
+          sum = sum == kMinusInfinity
+                    ? value
+                    : larger + std::log1p(Acts::safeExp(std::min(sum, value) -
+                                                        larger));
+        }
+        logLikelihood[i] = sum;
+        maxLog = std::max(maxLog, sum);
+      }
+      if (maxLog == kMinusInfinity) {
+        return std::nullopt;
+      }
+
+      double norm = 0;
+      double sum1 = 0;
+      double sum2 = 0;
+      for (std::size_t i = 0; i < kPoints; ++i) {
+        const double mid = low + (static_cast<double>(i) + 0.5) * step;
+        const double w = Acts::safeExp(logLikelihood[i] - maxLog);
+        norm += w;
+        sum1 += w * mid;
+        sum2 += w * mid * mid;
+      }
+      mean = sum1 / norm;
+      // The grid spreads the weight of a point uniformly over its step
+      variance = std::max(sum2 / norm - mean * mean, 0.) + step * step / 12.;
+
+      const double sigma = std::sqrt(variance);
+      if (sigma > 4 * step) {
+        break;
+      }
+      low = std::max(low, mean - 10 * sigma);
+      high = std::min(high, mean + 10 * sigma);
+    }
+    return std::pair(mean, variance);
+  };
+
+  const std::array<WeightedLength, 1> central = {{{footprint.length, 1.}}};
+  auto moments = integrate(central);
+  if (!moments.has_value()) {
+    return fallback;
+  }
+
+  // A change of the footprint length moves each end of the segment by half
+  // of it. If the Gauss-Hermite nodes move the ends by a part of the width of
+  // the posterior, marginalise over the length with a three point rule.
+  const double nodeShift = 0.5 * std::sqrt(3.) * footprint.lengthError;
+  if (nodeShift * nodeShift > 0.01 * moments->second) {
+    const std::array<WeightedLength, 3> nodes = {
+        {{footprint.length, 2. / 3.},
+         {std::max(footprint.length - 2. * nodeShift, 0.), 1. / 6.},
+         {footprint.length + 2. * nodeShift, 1. / 6.}}};
+    moments = integrate(nodes);
+    if (!moments.has_value()) {
+      return fallback;
+    }
+  }
+
+  ClusterAxisCalibration result;
+  result.consistent = true;
+  result.position = moments->first;
+  result.variance = moments->second;
+  return result;
+}
+
+ClusterOnTrackCalibrator::ClusterOnTrackCalibrator(const Config& config)
+    : m_cfg(config) {
+  if (m_cfg.chargeNoise < 0 || m_cfg.minError < 0) {
+    throw std::invalid_argument("Negative charge noise or minimum error");
+  }
+}
+
+void ClusterOnTrackCalibrator::calibrate(
+    const MeasurementContainer& measurements, const ClusterContainer* clusters,
+    const Acts::GeometryContext& gctx, const Acts::CalibrationContext& cctx,
+    const Acts::SourceLink& sourceLink,
+    Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
+  if (clusters == nullptr) {
+    throw std::invalid_argument("ClusterOnTrackCalibrator needs clusters");
+  }
+
+  // Start from the measurement as it is
+  PassThroughCalibrator{}.calibrate(measurements, clusters, gctx, cctx,
+                                    sourceLink, trackState);
+
+  // The fitters calibrate with different parameters on the track state
+  Acts::BoundVector parameters;
+  Acts::BoundMatrix covariance;
+  if (trackState.hasPredicted()) {
+    parameters = trackState.predicted();
+    covariance = trackState.predictedCovariance();
+  } else if (trackState.hasSmoothed()) {
+    parameters = trackState.smoothed();
+    covariance = trackState.smoothedCovariance();
+  } else if (trackState.hasFiltered()) {
+    parameters = trackState.filtered();
+    covariance = trackState.filteredCovariance();
+  } else {
+    return;
+  }
+
+  const Acts::Surface& surface = trackState.referenceSurface();
+  if (surface.type() != Acts::Surface::Plane) {
+    return;
+  }
+  auto digiIt = m_cfg.digitizationConfigs.find(surface.geometryId());
+  if (digiIt == m_cfg.digitizationConfigs.end()) {
+    return;
+  }
+  const GeometricConfig& geoCfg = digiIt->geometricDigiConfig;
+  if (geoCfg.indices.empty() || geoCfg.segmentation == nullptr ||
+      geoCfg.thickness <= 0) {
+    return;
+  }
+
+  const std::size_t index = sourceLink.get<IndexSourceLink>().index();
+  assert(index < clusters->size() && "Cluster index out of bounds");
+  const Cluster& cluster = clusters->at(index);
+  if (cluster.channels.empty()) {
+    return;
+  }
+
+  // The direction in the local frame and its derivatives by phi and theta
+  const double phi = parameters[Acts::eBoundPhi];
+  const double theta = parameters[Acts::eBoundTheta];
+  const Acts::RotationMatrix3 toLocal =
+      surface.localToGlobalTransform(gctx).linear().transpose();
+  const Acts::Vector3 dir =
+      toLocal * Acts::makeDirectionFromPhiTheta(phi, theta);
+  const Acts::Vector3 dDirdPhi =
+      toLocal * Acts::Vector3(-std::sin(phi) * std::sin(theta),
+                              std::cos(phi) * std::sin(theta), 0);
+  const Acts::Vector3 dDirdTheta =
+      toLocal * Acts::Vector3(std::cos(phi) * std::cos(theta),
+                              std::sin(phi) * std::cos(theta),
+                              -std::sin(theta));
+  if (std::abs(dir.z()) < std::numeric_limits<double>::epsilon()) {
+    return;
+  }
+  const Acts::SquareMatrix<2> angleCovariance =
+      covariance.block<2, 2>(Acts::eBoundPhi, Acts::eBoundPhi);
+
+  const auto measurement = measurements.getMeasurement(index);
+  const std::size_t size = measurement.size();
+  Acts::visit_measurement(size, [&](auto N) {
+    constexpr std::size_t kSize = decltype(N)::value;
+    Acts::Vector<kSize> calibrated = trackState.template calibrated<kSize>();
+    Acts::SquareMatrix<kSize> calibratedCovariance =
+        trackState.template calibratedCovariance<kSize>();
+
+    for (Acts::BoundIndices bIndex : geoCfg.indices) {
+      if (!measurement.contains(bIndex)) {
+        continue;
+      }
+      const auto axisIndex = static_cast<std::size_t>(bIndex);
+      const auto& axis = geoCfg.segmentation->getAxis(bIndex);
+      const auto expected = bIndex == Acts::eBoundLoc0
+                                ? Acts::AxisDirection::AxisX
+                                : Acts::AxisDirection::AxisY;
+      if (axis.getDirection() != expected) {
+        continue;
+      }
+
+      // Project the cluster onto this axis
+      std::size_t first = std::numeric_limits<std::size_t>::max();
+      std::size_t last = 0;
+      for (const auto& cell : cluster.channels) {
+        first = std::min<std::size_t>(first, cell.bin[axisIndex]);
+        last = std::max<std::size_t>(last, cell.bin[axisIndex]);
+      }
+      detail::ClusterProjection projection;
+      // Cell bins are zero-based while the axis bin indices start at one
+      projection.firstLower = axis.getBinLowerBound(first + 1);
+      projection.firstUpper = axis.getBinUpperBound(first + 1);
+      projection.lastLower = axis.getBinLowerBound(last + 1);
+      projection.lastUpper = axis.getBinUpperBound(last + 1);
+      if (first > 0) {
+        projection.beforeWidth = axis.getBinWidth(first);
+      }
+      if (last + 1 < axis.getNBins()) {
+        projection.afterWidth = axis.getBinWidth(last + 2);
+      }
+      for (const auto& cell : cluster.channels) {
+        if (cell.bin[axisIndex] == first) {
+          projection.firstCharge += cell.activation;
+          ++projection.firstCells;
+        }
+        if (cell.bin[axisIndex] == last) {
+          projection.lastCharge += cell.activation;
+          ++projection.lastCells;
+        }
+      }
+
+      // The footprint of the predicted track on this axis
+      const double slope = dir[bIndex] / dir.z();
+      const Acts::Vector2 slopeJacobian(
+          (dDirdPhi[bIndex] - slope * dDirdPhi.z()) / dir.z(),
+          (dDirdTheta[bIndex] - slope * dDirdTheta.z()) / dir.z());
+      detail::ClusterFootprint footprint;
+      footprint.length = geoCfg.thickness * std::abs(slope);
+      footprint.lengthError =
+          geoCfg.thickness *
+          std::sqrt(
+              std::max(slopeJacobian.dot(angleCovariance * slopeJacobian), 0.));
+      footprint.pathLength = geoCfg.thickness / std::abs(dir.z());
+
+      const detail::ClusterAxisCalibration axisCalibration =
+          detail::calibrateClusterAxis(projection, footprint, geoCfg.threshold,
+                                       !geoCfg.digital, m_cfg.chargeNoise);
+
+      const std::size_t i = measurement.indexOf(bIndex);
+      calibrated[i] = axisCalibration.position;
+      calibratedCovariance.row(i).setZero();
+      calibratedCovariance.col(i).setZero();
+      calibratedCovariance(i, i) =
+          std::max(axisCalibration.variance, m_cfg.minError * m_cfg.minError);
+    }
+
+    trackState.template calibrated<kSize>() = calibrated;
+    trackState.template calibratedCovariance<kSize>() = calibratedCovariance;
+  });
+}
+
+}  // namespace ActsExamples
