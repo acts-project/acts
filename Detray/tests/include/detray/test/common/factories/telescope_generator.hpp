@@ -42,8 +42,11 @@ class telescope_generator final : public surface_factory_interface<detector_t> {
   using vector3_t = dvector3D<algebra_t>;
 
  public:
-  /// Build a surface at with extent given in @param boundaries at every
-  /// position in @param positions along the pilot-track @param traj.
+  /// Build a surface at every position along the pilot track with the given
+  /// extent.
+  /// @param positions positions of the surfaces along the pilot track
+  /// @param boundaries mask boundaries of the surfaces
+  /// @param traj pilot track used to position the surfaces
   DETRAY_HOST
   telescope_generator(
       std::vector<scalar_t> positions,
@@ -93,6 +96,7 @@ class telescope_generator final : public surface_factory_interface<detector_t> {
   void push_back(
       surface_data<detector_t> && /*unused*/) override { /*Do nothing*/ }
   DETRAY_HOST
+  /// @brief Ignore supplied surface data because this factory generates its own.
   auto push_back(std::vector<surface_data<detector_t>> && /*unused*/)
       -> void override { /*Do nothing*/ }
   /// @}
@@ -105,6 +109,7 @@ class telescope_generator final : public surface_factory_interface<detector_t> {
   /// @param masks the masks of the surfaces.
   /// @param ctx the geometry context (not needed for portals).
   DETRAY_HOST
+  /// @return range of generated surfaces
   auto operator()(typename detector_t::volume_type &volume,
                   typename detector_t::surface_lookup_container &surfaces,
                   typename detector_t::transform_container &transforms,

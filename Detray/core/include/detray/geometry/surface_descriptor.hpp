@@ -36,12 +36,15 @@ class surface_descriptor {
  public:
   /// Link type of the mask to a volume.
   using navigation_link = navigation_link_t;
-  // Broadcast the type of links
+  /// Broadcast the type of links
   using transform_link = transform_link_t;
   /// might be a single mask, a range of masks or a multiindex in the future
   using mask_link = mask_link_t;
+  /// Identifier type of the linked mask.
   using mask_id = typename mask_link::id_type;
+  /// Link type used to locate the surface material.
   using material_link = material_link_t;
+  /// Identifier type of the linked material.
   using material_id = typename material_link::id_type;
 
   /// Default constructor
@@ -52,8 +55,7 @@ class surface_descriptor {
   /// @param trf the transform for positioning and 3D local frame
   /// @param mask the type and index of the mask for this surface
   /// @param material the type and index of the material for this surface
-  /// @param vol the volume this surface belongs to
-  /// @param src the source object/source link this surface is representing
+  /// @param volume Index of the containing volume.
   /// @param sf_id remember whether this is a portal or not
   DETRAY_HOST
   constexpr surface_descriptor(const transform_link trf, const mask_link mask,
@@ -69,6 +71,7 @@ class surface_descriptor {
   /// Equality operator
   ///
   /// @param rhs is the right hand side to be compared to
+  /// @returns True when links and identifier match.
   DETRAY_HOST_DEVICE
   constexpr auto operator==(const surface_descriptor &rhs) const -> bool {
     return (m_mask == rhs.m_mask && m_material == rhs.m_material &&
@@ -76,6 +79,7 @@ class surface_descriptor {
   }
 
   /// Sets a new surface identifier
+  /// @param geo_id Identifier to store.
   DETRAY_HOST_DEVICE
   auto set_identifier(const geometry::identifier geo_id) -> void {
     m_identifier = geo_id;
@@ -88,6 +92,7 @@ class surface_descriptor {
   }
 
   /// Sets a new surface id (portal/passive/sensitive)
+  /// @param new_id Surface category to store.
   DETRAY_HOST_DEVICE
   auto set_id(const surface_id new_id) -> void { m_identifier.set_id(new_id); }
 
@@ -96,6 +101,7 @@ class surface_descriptor {
   constexpr auto id() const -> surface_id { return m_identifier.id(); }
 
   /// Sets a new volume link (index in volume collection of detector)
+  /// @param new_idx Index of the containing volume.
   DETRAY_HOST
   auto set_volume(const dindex new_idx) -> void {
     m_identifier.set_volume(new_idx);
@@ -106,6 +112,7 @@ class surface_descriptor {
   constexpr auto volume() const -> dindex { return m_identifier.volume(); }
 
   /// Sets a new surface index (index in surface collection of surface store)
+  /// @param new_idx Index to store.
   DETRAY_HOST_DEVICE
   auto set_index(const dindex new_idx) -> void {
     m_identifier.set_index(new_idx);
@@ -146,6 +153,7 @@ class surface_descriptor {
   auto update_material(dindex offset) -> void { m_material.shift(offset); }
 
   /// Access to the material
+  /// @returns Mutable reference to the material link.
   DETRAY_HOST_DEVICE
   constexpr auto material() -> material_link & { return m_material; }
 

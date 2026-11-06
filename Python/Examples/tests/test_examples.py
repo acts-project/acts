@@ -134,6 +134,7 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 @pytest.mark.odd
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.xdist_group("heavy")
 def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
 
@@ -898,6 +899,7 @@ def test_full_chain_odd_example(tmp_path):
     not dd4hepEnabled or not geant4Enabled, reason="DD4hep and/or Geant4 not set up"
 )
 @pytest.mark.slow
+@pytest.mark.xdist_group("heavy")
 def test_full_chain_odd_example_pythia_geant4(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
 
@@ -1353,6 +1355,7 @@ def test_strip_space_points(detector_config, field, tmp_path, assert_root_hash):
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
 @pytest.mark.slow
+@pytest.mark.xdist_group("heavy")
 def test_geomodel_G4(tmp_path):
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -1373,6 +1376,10 @@ def test_geomodel_G4(tmp_path):
         str(mockup_det),
         "--outDir",
         str(out_dir),
+        # The script defaults to 100 events, which made this the slowest and
+        # most memory-hungry test; only the output is checked here.
+        "--nEvents",
+        "5",
     ]
     subprocess.check_call(args)
 
@@ -1382,6 +1389,7 @@ def test_geomodel_G4(tmp_path):
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
 @pytest.mark.slow
+@pytest.mark.xdist_group("heavy")
 def test_geomodel_G4_propagation(tmp_path):
     script = (
         Path(__file__).parent.parent.parent.parent

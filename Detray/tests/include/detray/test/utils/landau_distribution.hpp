@@ -24,6 +24,7 @@ namespace detray {
 template <concepts::scalar scalar_t>
 class landau_distribution {
  public:
+  /// Scalar type used for the distribution parameters and result.
   using scalar_type = scalar_t;
 
   /// Generate a random number following a Landau distribution
@@ -40,6 +41,10 @@ class landau_distribution {
   ///
   /// Reference[1]: ROOT TRandom.cxx
   /// Reference[2]: ACTS LandauDistribution.cxx
+  /// @param generator Random number generator.
+  /// @param location Location parameter of the distribution.
+  /// @param scale Scale parameter of the distribution.
+  /// @return A random value following the Landau distribution.
   template <typename generator_t>
   scalar_type operator()(generator_t &generator, const scalar_type location,
                          const scalar_type scale) const {
