@@ -657,6 +657,38 @@ BOOST_AUTO_TEST_CASE(CreatorNoExpectedHitMatchesCkf) {
   checkSameTracks(fromCreator, fromCkf);
 }
 
+/// After a branch switch, the stepper counts its path length from zero again.
+/// The path length of the track states must still grow along each track.
+BOOST_AUTO_TEST_CASE(PathLengthGrowsAfterBranchSwitch) {
+  Fixture f(0_T);
+
+  auto options = f.makeCkfOptions();
+  // two branches on every surface make about 64 branches
+  options.propagatorPlainOptions.maxSteps = 100000;
+
+  TestTrackStateCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
+  trackStateCreator.numMeasurements = 2;
+  options.extensions.trackStateCreator
+      .template connect<&TestTrackStateCreator::createTrackStates>(
+          &trackStateCreator);
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto res = f.ckf.findTracks(f.startParameters.front(), options, tc);
+  BOOST_REQUIRE(res.ok());
+  BOOST_REQUIRE_GT(res->size(), 1u);
+
+  for (const auto& track : *res) {
+    BOOST_CHECK_EQUAL(track.nTrackStates(), f.detector.numMeasurements);
+    double next = std::numeric_limits<double>::infinity();
+    for (const auto trackState : track.trackStatesReversed()) {
+      // the closest planes are 2 mm apart along the track
+      BOOST_CHECK_LT(trackState.pathLength(), next - 1_mm);
+      next = trackState.pathLength();
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   Fixture f(0_T);
 

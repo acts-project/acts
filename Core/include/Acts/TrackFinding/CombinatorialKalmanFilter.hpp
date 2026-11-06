@@ -177,6 +177,10 @@ struct CombinatorialKalmanFilterResult {
   /// recorded track state to keep the jacobian chain intact
   BoundMatrix accumulatedJacobian = BoundMatrix::Identity();
 
+  /// Path length of the branch tip at the last restart of the stepper. The
+  /// stepper counts its path length from zero after a restart.
+  double pathLengthOffset = 0;
+
   /// Indicator if track finding has been done
   bool finished = false;
 
@@ -493,6 +497,9 @@ class CombinatorialKalmanFilter {
       ACTS_VERBOSE("Propagation jumps to branch with tip = "
                    << currentBranch.tipIndex());
 
+      // The stepper restarts its path length at zero
+      result.pathLengthOffset = currentState.pathLength();
+
       // Reset the stepping state
       if constexpr (!IsMultiStepper) {
         stepper.initialize(state.stepping, currentState.filtered(),
@@ -644,7 +651,8 @@ class CombinatorialKalmanFilter {
             return res.error();
           }
           return Result<SingleBoundState>::success(
-              {std::move(*res), jacobian, stepper.pathLength(state.stepping)});
+              {std::move(*res), jacobian,
+               result.pathLengthOffset + stepper.pathLength(state.stepping)});
         } else {
           // This triggers a second covariance transport which is wasteful in
           // terms of compute. But the multi stepper might filter bound
@@ -663,7 +671,8 @@ class CombinatorialKalmanFilter {
           }
           const auto singleParams = res->merge(brem.mergeMethod);
           return Result<SingleBoundState>::success(
-              {singleParams, jacobian, stepper.pathLength(state.stepping)});
+              {singleParams, jacobian,
+               result.pathLengthOffset + stepper.pathLength(state.stepping)});
         }
       }();
       if (!boundStateRes.ok()) {
