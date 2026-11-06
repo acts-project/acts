@@ -230,15 +230,15 @@ reach a root far enough in are skipped. Nothing depends on the order the edges
 are visited in. This is the seed extraction of the traccc GPU GBTS.
 
 The filter is a small Kalman filter over the chain. It carries a state of two
-independent parts — a quadratic in the bending plane and a linear @f$z@f$ versus
-@f$r@f$ model — and at each step extrapolates to the next node, forms a
+independent parts — a circle in the bending plane and @f$z@f$ linear in the arc
+length along it — and at each step extrapolates to the next node, forms a
 @f$\chi^2@f$ residual for each part and rejects the branch if either exceeds its
 threshold (`maxDChi2X`, `maxDChi2Y`).
 
 Every accepted hit adds a fixed reward `addHit` to the branch score, minus its
 two @f$\chi^2@f$ increments weighted by `weightX` and `weightY`. The score
 therefore counts the hits on the chain, discounted by how badly they fit the
-circle and the @f$z@f$ versus @f$r@f$ line. Of the complete paths from an
+circle and the @f$z@f$ versus arc length line. Of the complete paths from an
 edge, the one with the best score per space point wins, and a path that fails
 the filter is dropped.
 
@@ -321,7 +321,7 @@ separately controls the chain-following filter of @ref gbts-extraction "seed ext
 | `sigmaX`, `sigmaY` | measurement resolution in the bending plane and along @f$z@f$ |
 | `maxDChi2X`, `maxDChi2Y` | per-step @f$\chi^2@f$ ceilings; a branch exceeding either is dropped |
 | `addHit`, `weightX`, `weightY` | the reward and the two @f$\chi^2@f$ weights in the branch score |
-| `sigmaMS`, `radLen` | multiple-scattering inflation added before each extrapolation |
+| `radLen` | material per layer behind the multiple-scattering inflation, from the momentum of the state and the field, added before each extrapolation |
 | `maxCurvature`, `maxZ0` | track-level bounds checked after each update |
 
 ## Implementation pointers {#gbts-implementation}
