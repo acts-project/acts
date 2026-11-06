@@ -362,7 +362,17 @@ function(acts_code_generation)
                 if(ACTS_USE_SYSTEM_LIBS)
                     # If we are not using uv, then we use pip to install the
                     # package into the virtual environment in the build directory.
-                    # Editable installs let regenerated headers see source edits.
+                    # Reinstall on source edits before regenerating headers.
+                    # Ordinary installs avoid the extra backend dependencies
+                    # required by editable installs in offline environments.
+                    set_property(
+                        DIRECTORY
+                        APPEND
+                        PROPERTY
+                            CMAKE_CONFIGURE_DEPENDS
+                                ${_depends_py}
+                                "${_requirement}/pyproject.toml"
+                    )
                     # The --no-build-isolation flag ensures that we don't
                     # automatically download setuptools. The --no-index flag
                     # ensures that nothing can be downloaded ever, and the
@@ -372,8 +382,9 @@ function(acts_code_generation)
                         COMMAND
                             ${CMAKE_BINARY_DIR}/codegen_venv/bin/python -m pip
                             install --no-build-isolation --no-index --no-deps
-                            --editable ${_requirement}
+                            --force-reinstall ${_requirement}
                         OUTPUT_QUIET
+                        COMMAND_ERROR_IS_FATAL ANY
                     )
                 endif()
             endif()
