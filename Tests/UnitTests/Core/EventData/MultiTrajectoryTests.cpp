@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(EnsureDynamicColumnsCopyOnTrackState) {
   auto sourceTrack = source.makeTrack();
   auto sourceState = sourceTrack.appendTrackState();
   sourceState.template component<std::uint64_t>("counter") = 42;
-  sourceState.template component<std::uint8_t>("odd") = true;
+  sourceState.template component<std::uint8_t>("odd") = 1;
 
   TrackContainer target{VectorTrackContainer{}, VectorMultiTrajectory{}};
   target.ensureDynamicColumns(source);
