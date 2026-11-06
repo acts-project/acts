@@ -206,6 +206,12 @@ of the inner layer, and a negative limit switches the cut off:
   rejects candidates whose @f$z_0@f$ falls in an empty bin, and nodes with no
   connections at all are skipped outright.
 
+Edges of an inner bin that no connection leads into, in practice the innermost
+pixel barrel layer, are never extended inwards. With `dropDeadEnds` (on by
+default) such an edge is kept only if it links to an outer edge, and outer
+nodes without edges are not tried for it. Neither could be part of a seed, so
+the seeds are unchanged while the graph and the edge array shrink.
+
 ## Chain levels {#gbts-levels}
 
 With the edge graph built, every edge gets a **level**: the length of the
@@ -293,6 +299,7 @@ The cuts that build and link the doublets live on
 | `tauRatioCut` | @ref gbts-graph | @f$\tau@f$ scale of the `validateTriplets` high-pT check. The linking cut comes from @ref Acts::Experimental::GbtsLayerConnection |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
 | `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
+| `dropDeadEnds` | @ref gbts-graph | leave out the innermost edges that cannot join a chain (on by default); the seeds are unchanged |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
 | `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
 The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
