@@ -8,18 +8,11 @@
 
 #include "Acts/MagneticField/MagneticFieldQuery.hpp"
 
-#include <stdexcept>
-#include <utility>
-
 Acts::MagneticFieldQuery::MagneticFieldQuery(
-    std::shared_ptr<const MagneticFieldProvider> provider,
-    const MagneticFieldContext& mctx)
-    : m_provider(std::move(provider)), m_context(mctx) {
-  if (!m_provider) {
-    throw std::invalid_argument("MagneticFieldQuery: provider is null");
-  }
-  m_cache = m_provider->makeCache(context());
-}
+    const MagneticFieldProvider& provider, const MagneticFieldContext& mctx)
+    : m_provider(provider),
+      m_context(mctx),
+      m_cache(provider.makeCache(mctx)) {}
 
 const Acts::MagneticFieldContext& Acts::MagneticFieldQuery::context() const {
   return m_context.get();
@@ -27,5 +20,5 @@ const Acts::MagneticFieldContext& Acts::MagneticFieldQuery::context() const {
 
 Acts::Result<Acts::Vector3> Acts::MagneticFieldQuery::getField(
     const Vector3& position) {
-  return m_provider->getField(position, m_cache);
+  return m_provider.get().getField(position, m_cache);
 }

@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
-  MagneticFieldQuery fieldQuery(bField, magFieldContext);
+  MagneticFieldQuery fieldQuery(*bField, magFieldContext);
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
-  MagneticFieldQuery fieldQuery(bField, magFieldContext);
+  MagneticFieldQuery fieldQuery(*bField, magFieldContext);
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =

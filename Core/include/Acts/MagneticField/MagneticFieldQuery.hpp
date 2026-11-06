@@ -11,36 +11,37 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
 #include <functional>
-#include <memory>
 
 namespace Acts {
 
 /// A field provider paired with its own reusable lookup cache.
 /// Construct once per magnetic field context and reuse for sequential lookups.
-/// The provider is kept alive by shared ownership. The context is borrowed:
-/// it and any data referenced by its cache must outlive the query and remain
-/// unchanged while the query is in use.
-/// Do not share a query between concurrent operations; construct independent
-/// queries for them (and for a new magnetic field context).
+/// The provider and context are borrowed and must outlive the query. The
+/// context and any context-dependent data referenced by the cache must remain
+/// unchanged while the query is in use. Do not share a query between concurrent
+/// operations; construct independent queries for them (and for a new magnetic
+/// field context).
 class MagneticFieldQuery {
  public:
   /// @param provider Field provider used for both cache creation and lookup
   /// @param mctx Borrowed context for cache creation and propagation
-  /// @throws std::invalid_argument if provider is null
-  MagneticFieldQuery(std::shared_ptr<const MagneticFieldProvider> provider,
+  MagneticFieldQuery(const MagneticFieldProvider& provider,
                      const MagneticFieldContext& mctx);
 
-  // A borrowed context must not be a temporary.
-  MagneticFieldQuery(std::shared_ptr<const MagneticFieldProvider> provider,
+  // Borrowed objects must not be temporaries.
+  MagneticFieldQuery(const MagneticFieldProvider&& provider,
+                     const MagneticFieldContext& mctx) = delete;
+
+  MagneticFieldQuery(const MagneticFieldProvider& provider,
                      const MagneticFieldContext&& mctx) = delete;
 
   MagneticFieldQuery(const MagneticFieldQuery&) = delete;
   MagneticFieldQuery& operator=(const MagneticFieldQuery&) = delete;
-  /// Move another query, preserving its borrowed context.
+  /// Move another query, preserving its borrowed provider and context.
   /// @param other Query to move from
   MagneticFieldQuery(MagneticFieldQuery&& other) = default;
 
-  /// Move another query's provider, context reference and cache into this
+  /// Move another query's provider and context references and cache into this
   /// query.
   /// @param other Query to move from
   /// @return This query
@@ -56,7 +57,7 @@ class MagneticFieldQuery {
   Result<Vector3> getField(const Vector3& position);
 
  private:
-  std::shared_ptr<const MagneticFieldProvider> m_provider;
+  std::reference_wrapper<const MagneticFieldProvider> m_provider;
   std::reference_wrapper<const MagneticFieldContext> m_context;
   MagneticFieldProvider::Cache m_cache;
 };
