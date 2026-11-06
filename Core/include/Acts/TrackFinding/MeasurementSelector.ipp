@@ -19,6 +19,7 @@ Result<
     std::pair<typename std::vector<typename traj_t::TrackStateProxy>::iterator,
               typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
 MeasurementSelector::select(
+    const GeometryContext& gctx,
     std::vector<typename traj_t::TrackStateProxy>& candidates, bool& isOutlier,
     const Logger& logger) const {
   using Result = Result<std::pair<
@@ -32,10 +33,22 @@ MeasurementSelector::select(
     return Result::success(std::pair(candidates.begin(), candidates.end()));
   }
 
-  // Get geoID of this surface
-  GeometryIdentifier geoID = candidates.front().referenceSurface().geometryId();
-  // Get the theta of the first track state
-  const double theta = candidates.front().predicted()[eBoundDir1];
+  // Candidates normally share one prediction. Find a usable one before
+  // invoking parametrization operations, which require finite coordinates.
+  const auto prediction = std::find_if(
+      candidates.begin(), candidates.end(),
+      [](const auto& candidate) { return candidate.predicted().allFinite(); });
+  if (prediction == candidates.end()) {
+    for (auto& candidate : candidates) {
+      candidate.chi2() = std::numeric_limits<double>::quiet_NaN();
+    }
+    isOutlier = false;
+    return Result::success(std::pair(candidates.begin(), candidates.begin()));
+  }
+  const auto& surface = prediction->referenceSurface();
+  const GeometryIdentifier geoID = surface.geometryId();
+  const double theta =
+      surface.boundParametrization(gctx).theta(prediction->predicted());
   // Find the appropriate cuts
   const auto cutsResult = getCuts(geoID, theta);
   if (!cutsResult.ok()) {
@@ -66,6 +79,7 @@ MeasurementSelector::select(
     // still done with compile time size and no dynamic memory allocation
     // is needed.
     double chi2 = calculateChi2(
+        trackState.referenceSurface().boundParametrization(gctx),
         trackState.effectiveCalibrated().data(),
         trackState.effectiveCalibratedCovariance().data(),
         trackState.predicted(), trackState.predictedCovariance(),

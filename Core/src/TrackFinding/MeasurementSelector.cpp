@@ -80,7 +80,8 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
 }
 
 double MeasurementSelector::calculateChi2(
-    const double* fullCalibrated, const double* fullCalibratedCovariance,
+    const BoundParametrization& parametrization, const double* fullCalibrated,
+    const double* fullCalibratedCovariance,
     TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted,
     TrackStateTraits<kMeasurementSizeMax, false>::Covariance
         predictedCovariance,
@@ -88,7 +89,7 @@ double MeasurementSelector::calculateChi2(
   return visit_measurement(
       calibratedSize,
       [&fullCalibrated, &fullCalibratedCovariance, &predicted,
-       &predictedCovariance, &projector](auto N) -> double {
+       &predictedCovariance, &projector, &parametrization](auto N) -> double {
         constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
         typename TrackStateTraits<kMeasurementSize, true>::Calibrated
@@ -104,9 +105,16 @@ double MeasurementSelector::calculateChi2(
         FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
             validSubspaceIndices);
 
-        // Get the residuals
-        ParametersVector res =
-            calibrated - subspaceHelper.projectVector(predicted);
+        // Reject diverged candidates before invoking finite-input operations.
+        if (!predicted.allFinite() || !calibrated.allFinite()) {
+          return std::numeric_limits<double>::quiet_NaN();
+        }
+        BoundVector measured = predicted;
+        for (std::size_t i = 0; i < kMeasurementSize; ++i) {
+          measured[validSubspaceIndices[i]] = calibrated[i];
+        }
+        const ParametersVector res = subspaceHelper.projectVector(
+            parametrization.difference(measured, predicted));
 
         // Get the chi2
         return (res.transpose() *

@@ -34,6 +34,8 @@ BOOST_AUTO_TEST_SUITE(MeasurementSelectorTests)
 
 namespace {
 
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+
 std::shared_ptr<Surface> makeSurface() {
   auto bounds = std::make_shared<RectangleBounds>(100., 100.);
   auto surface =
@@ -93,8 +95,8 @@ BOOST_AUTO_TEST_CASE(NonFiniteChi2IsRejected) {
   MeasurementSelector selector{cuts};
 
   bool isOutlier = false;
-  auto result =
-      selector.select<VectorMultiTrajectory>(candidates, isOutlier, *logger);
+  auto result = selector.select<VectorMultiTrajectory>(gctx, candidates,
+                                                       isOutlier, *logger);
 
   BOOST_REQUIRE(result.ok());
   BOOST_REQUIRE(!std::isfinite(candidates.front().chi2()));
@@ -124,14 +126,81 @@ BOOST_AUTO_TEST_CASE(FiniteChi2StillSelectedAlongsideNonFinite) {
   MeasurementSelector selector{cuts};
 
   bool isOutlier = false;
-  auto result =
-      selector.select<VectorMultiTrajectory>(candidates, isOutlier, *logger);
+  auto result = selector.select<VectorMultiTrajectory>(gctx, candidates,
+                                                       isOutlier, *logger);
 
   BOOST_REQUIRE(result.ok());
   auto [begin, end] = *result;
   BOOST_CHECK_GE(begin - candidates.begin(), 0);
   BOOST_REQUIRE_EQUAL(end - begin, 1);
   BOOST_CHECK(std::isfinite(begin->chi2()));
+}
+
+BOOST_AUTO_TEST_CASE(PhiSeamResidualAndThetaDependentCuts) {
+  auto logger = getDefaultLogger("MeasurementSelector", Logging::INFO);
+  const auto surface = makeSurface();
+  MeasurementSelectorCuts cuts;
+  // Preserve the existing direct theta comparison of these bin edges.
+  cuts.etaBins = {1.};
+  cuts.chi2CutOff = {.1, 1.};
+  cuts.chi2CutOffOutlier = {0.};
+  cuts.numMeasurementsCutOff = {1, 1};
+  MeasurementSelector selector(cuts);
+
+  for (double theta : {std::numbers::pi / 2., .3}) {
+    VectorMultiTrajectory trajectory;
+    auto candidate = addCandidate(trajectory, surface, false);
+    candidate.predicted()[eBoundDir0] = std::numbers::pi - .01;
+    candidate.predicted()[eBoundDir1] = theta;
+    candidate.setProjectorSubspaceIndices(
+        std::array<std::uint8_t, 2>{eBoundDir0, eBoundLoc0});
+    candidate.calibrated<2>() << -std::numbers::pi + .01, .1;
+    std::vector<VectorMultiTrajectory::TrackStateProxy> candidates{candidate};
+    bool isOutlier = false;
+    const auto result = selector.select<VectorMultiTrajectory>(
+        gctx, candidates, isOutlier, *logger);
+    BOOST_REQUIRE(result.ok());
+    // Variance .02 in each measured slot; residuals (.02, .1).
+    BOOST_CHECK_SMALL(candidate.chi2() - .52, 1e-6);
+    BOOST_CHECK_EQUAL(result->second - result->first, theta == .3 ? 0 : 1);
+    BOOST_CHECK(!isOutlier);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(PhiSeamOutlierAndNonfiniteDirection) {
+  auto logger = getDefaultLogger("MeasurementSelector", Logging::INFO);
+  const auto surface = makeSurface();
+  VectorMultiTrajectory trajectory;
+  auto invalid = addCandidate(trajectory, surface, false);
+  invalid.predicted()[eBoundDir0] = std::numeric_limits<double>::quiet_NaN();
+  auto valid = addCandidate(trajectory, surface, false);
+  valid.predicted()[eBoundDir0] = std::numbers::pi - .1;
+  valid.setProjectorSubspaceIndices(
+      std::array<std::uint8_t, 2>{eBoundDir0, eBoundLoc0});
+  valid.calibrated<2>() << -std::numbers::pi + .1, .1;
+  std::vector<VectorMultiTrajectory::TrackStateProxy> candidates{invalid,
+                                                                 valid};
+  MeasurementSelectorCuts cuts;
+  cuts.chi2CutOff = {1.};
+  cuts.chi2CutOffOutlier = {3.};
+  MeasurementSelector selector(cuts);
+  bool isOutlier = false;
+  const auto result = selector.select<VectorMultiTrajectory>(
+      gctx, candidates, isOutlier, *logger);
+  BOOST_REQUIRE(result.ok());
+  BOOST_REQUIRE_EQUAL(result->second - result->first, 1);
+  BOOST_CHECK_EQUAL(result->first->index(), valid.index());
+  BOOST_CHECK_SMALL(valid.chi2() - 2.5, 1e-6);
+  BOOST_CHECK(!std::isfinite(invalid.chi2()));
+  BOOST_CHECK(isOutlier);
+
+  // Position residuals must not wrap like direction coordinates.
+  valid.calibrated<2>()[1] = 2. * std::numbers::pi + .1;
+  const auto rejected = selector.select<VectorMultiTrajectory>(
+      gctx, candidates, isOutlier, *logger);
+  BOOST_REQUIRE(rejected.ok());
+  BOOST_CHECK(rejected->first == rejected->second);
+  BOOST_CHECK(!isOutlier);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

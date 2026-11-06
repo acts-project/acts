@@ -9,9 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
@@ -78,6 +80,7 @@ class MeasurementSelector {
   /// @brief Function that select the measurements compatible with
   /// the given track parameter on a surface
   ///
+  /// @param gctx Geometry context for physical theta and coordinate residuals
   /// @param candidates The track state candidates which already contain predicted parameters
   /// @param isOutlier The indicator for outlier or not
   /// @param logger The logger wrapper
@@ -89,7 +92,8 @@ class MeasurementSelector {
   Result<std::pair<
       typename std::vector<typename traj_t::TrackStateProxy>::iterator,
       typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
-  select(std::vector<typename traj_t::TrackStateProxy>& candidates,
+  select(const GeometryContext& gctx,
+         std::vector<typename traj_t::TrackStateProxy>& candidates,
          bool& isOutlier, const Logger& logger) const;
 
  private:
@@ -114,7 +118,8 @@ class MeasurementSelector {
   Result<Cuts> getCuts(const GeometryIdentifier& geoID, double theta) const;
 
   double calculateChi2(
-      const double* fullCalibrated, const double* fullCalibratedCovariance,
+      const BoundParametrization& parametrization, const double* fullCalibrated,
+      const double* fullCalibratedCovariance,
       TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted,
       TrackStateTraits<kMeasurementSizeMax, false>::Covariance
           predictedCovariance,
