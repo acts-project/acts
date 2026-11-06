@@ -187,6 +187,10 @@ bool checkZ0BitMask(const GbtsGraphBuilder::Config& cfg,
           static_cast<int>(isSet(binUp))) != 0;
 }
 
+/// Edges held in one word of `GbtsGraph::linked`.
+constexpr std::uint32_t kEdgesPerWord =
+    std::numeric_limits<GbtsGraph::LinkedWord>::digits;
+
 }  // namespace
 
 GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
@@ -231,6 +235,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       m_cfg.maxEdgesPerSP * static_cast<float>(nodeStorage.numberOfNodes()));
 
   edgeStorage.reserve(maxEdges);
+  graph.linked.assign(maxEdges / kEdgesPerWord + 1, 0);
 
   // scale factor to get indexes of binned beamspot
   const float z0HistoCoeff =
@@ -710,6 +715,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
               pS->vNei[pS->nNei] = outEdgeIdx;
               ++pS->nNei;
+              // mark the inner edge as holding a neighbour
+              const std::uint32_t word = inEdgeIdx / kEdgesPerWord;
+              const std::uint32_t bit = inEdgeIdx % kEdgesPerWord;
+              graph.linked[word] |= GbtsGraph::LinkedWord{1} << bit;
 
               isConnected = true;  // there is at least one good match
 
@@ -761,6 +770,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                          << " neighbours - possible efficiency loss");
   }
   graph.nConnections = nConnections;
+  graph.linked.resize(edgeStorage.size() / kEdgesPerWord + 1);
   return graph;
 }
 
