@@ -99,9 +99,6 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
    spacepoint_phi[globalIndex] = atan2f(spacepoints.y()[globalIndex], spacepoints.x()[globalIndex]);
    spacepoint_phi[globalIndex] = ::remainderf(spacepoint_phi[globalIndex], 2.0f * std::numbers::pi_v<scalar>);
 
-   const auto covfie_field_at_sp = bfield.at(spacepoints.x()[globalIndex], spacepoints.y()[globalIndex], spacepoints.z()[globalIndex]);
-   spacepoint_bfield_z[globalIndex] = covfie_field_at_sp[2];
-
    // Retrieve the corresponding measurement index and, from it, the geo id
    // all of this is to retrieve the volume_id and layer_id of the 
    // space point
@@ -126,6 +123,10 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
       slice |= (1ULL << wedge_idx);
    } // loop on wedges
    if (slice == 0ULL) return; 
-   spacepoint_wedge_association[globalIndex] = slice;  
+   spacepoint_wedge_association[globalIndex] = slice;
+
+   // get the bfield
+   const auto covfie_field_at_sp = bfield.at(spacepoints.x()[globalIndex], spacepoints.y()[globalIndex], spacepoints.z()[globalIndex]);
+   spacepoint_bfield_z[globalIndex] = covfie_field_at_sp[2];   
 }
 } // namespace
