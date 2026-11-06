@@ -107,26 +107,34 @@ class grid_impl {
       : m_bins(std::move(bin_data)), m_axes(std::move(axes)) {}
 
   /// Create grid from container pointers - non-owning (both grid and axes)
-  ///
+  /// @{
   /// @param bin_data_ptr Bin storage to view.
   /// @param axes Axis definitions to view.
   /// @param offset Offset of this grid's bins in the container.
-  /// @{
   DETRAY_HOST_DEVICE
   grid_impl(typename bin_storage::const_pointer_type const bin_data_ptr,
             const axes_type &axes, const dindex offset = 0)
       : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
 
+  /// @param bin_data_ptr Bin storage to view.
+  /// @param axes Axis definitions to view.
+  /// @param offset Offset of this grid's bins in the container.
   DETRAY_HOST_DEVICE
   grid_impl(typename bin_storage::pointer_type const bin_data_ptr,
             axes_type &axes, const dindex offset = 0u)
       : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
 
+  /// @param bin_data_ptr Bin storage to view.
+  /// @param axes Axis definitions to view.
+  /// @param offset Offset of this grid's bins in the container.
   DETRAY_HOST_DEVICE
   grid_impl(typename bin_storage::const_pointer_type const bin_data_ptr,
             axes_type &&axes, const dindex offset = 0)
       : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(std::move(axes)) {}
 
+  /// @param bin_data_ptr Bin storage to view.
+  /// @param axes Axis definitions to view.
+  /// @param offset Offset of this grid's bins in the container.
   DETRAY_HOST_DEVICE
   grid_impl(typename bin_storage::pointer_type const bin_data_ptr,
             axes_type &&axes, const dindex offset = 0u)
