@@ -91,7 +91,7 @@ template <std::size_t CAP = 0u, concepts::detector detector_t>
 auto test_detector_json_io(
     const detector_t& det, const typename detector_t::name_map& names,
     std::map<std::string, std::string, std::less<>>& file_names,
-    vecmem::host_memory_resource& host_mr) {
+    vecmem::host_memory_resource& host_mr, const bool deduplicate = true) {
   auto writer_cfg = io::detector_writer_config{}
                         .format(io::format::json)
                         .replace_files(true)
@@ -101,7 +101,7 @@ auto test_detector_json_io(
 
   // Read the detector back in
   io::detector_reader_config reader_cfg{};
-  reader_cfg.verbose_check(true).deduplicate(false);
+  reader_cfg.verbose_check(true).deduplicate(deduplicate);
   for (auto& [_, name] : file_names) {
     reader_cfg.add_file(name);
   }
@@ -158,6 +158,7 @@ GTEST_TEST(io, json_telescope_detector_reader) {
   using test_algebra = test::algebra;
   using scalar = test::scalar;
 
+  constexpr bool deduplicate{false};
   mask<rectangle2D, test_algebra> rec2{0u, 100.f, 100.f};
 
   // Surface positions
@@ -166,6 +167,7 @@ GTEST_TEST(io, json_telescope_detector_reader) {
 
   tel_det_config tel_cfg{rec2};
   tel_cfg.positions(positions);
+  tel_cfg.builder_options().deduplicate(deduplicate);
 
   // Telescope detector
   vecmem::host_memory_resource host_mr;
@@ -177,8 +179,8 @@ GTEST_TEST(io, json_telescope_detector_reader) {
   file_names["homogeneous_material"] =
       "telescope_detector_homogeneous_material.json";
 
-  auto [det_io, names_io] =
-      test_detector_json_io(tel_det, tel_names, file_names, host_mr);
+  auto [det_io, names_io] = test_detector_json_io(
+      tel_det, tel_names, file_names, host_mr, deduplicate);
 
   const auto& mat_store = det_io.material_store();
   const auto& slabs =
@@ -186,6 +188,42 @@ GTEST_TEST(io, json_telescope_detector_reader) {
 
   EXPECT_EQ(det_io.volumes().size(), 1u);
   EXPECT_EQ(slabs.size(), positions.size());
+}
+
+/// Test the reading and writing of a telescope detector - deduplicated
+GTEST_TEST(io, json_telescope_detector_reader_deduplicated) {
+  using test_algebra = test::algebra;
+  using scalar = test::scalar;
+
+  constexpr bool deduplicate{true};
+  mask<rectangle2D, test_algebra> rec2{0u, 100.f, 100.f};
+
+  // Surface positions
+  std::vector<scalar> positions = {1.f,   50.f,  100.f, 150.f, 200.f, 250.f,
+                                   300.f, 350.f, 400.f, 450.f, 500.f};
+
+  tel_det_config tel_cfg{rec2};
+  tel_cfg.builder_options().deduplicate(deduplicate);
+
+  // Telescope detector
+  vecmem::host_memory_resource host_mr;
+  auto [tel_det, tel_names] =
+      build_telescope_detector<test_algebra>(host_mr, tel_cfg);
+
+  std::map<std::string, std::string, std::less<>> file_names;
+  file_names["geometry"] = "telescope_detector_geometry.json";
+  file_names["homogeneous_material"] =
+      "telescope_detector_homogeneous_material.json";
+
+  auto [det_io, names_io] = test_detector_json_io(
+      tel_det, tel_names, file_names, host_mr, deduplicate);
+
+  const auto& mat_store = det_io.material_store();
+  const auto& slabs =
+      mat_store.get<decltype(tel_det)::material::id::e_material_slab>();
+
+  EXPECT_EQ(det_io.volumes().size(), 1u);
+  EXPECT_EQ(slabs.size(), 1u);
 }
 
 /// Test the reading and writing of a toy detector geometry
