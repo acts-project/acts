@@ -21,9 +21,9 @@ namespace Acts::Experimental {
 
 template <CompositeSpacePoint Sp_t>
 CompositeSpacePointLineSeeder::TwoCircleTangentPars
-CompositeSpacePointLineSeeder::constructTangenSeed(const Sp_t& topHit,
-                                                   const Sp_t& bottomHit,
-                                                   const TangentAmbi ambi) {
+CompositeSpacePointLineSeeder::constructTangentSeed(const Sp_t& topHit,
+                                                    const Sp_t& bottomHit,
+                                                    const TangentAmbi ambi) {
   using namespace Acts::UnitLiterals;
   using namespace Acts::detail;
   TwoCircleTangentPars result{};
