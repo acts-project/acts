@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
@@ -32,16 +33,48 @@ namespace ActsExamples {
 
 namespace {
 
-using detail::ClusterAxisCalibration;
-using detail::ClusterFootprint;
-using detail::ClusterProjection;
+/// The projection of a cluster onto one axis of the segmentation.
+struct ClusterProjection {
+  /// The edges of the first and the last bin of the cluster on this axis
+  double firstLower = 0;
+  double firstUpper = 0;
+  double lastLower = 0;
+  double lastUpper = 0;
+  /// The summed activation of the cells in the first and the last bin
+  double firstCharge = 0;
+  double lastCharge = 0;
+  /// The number of cells in the first and the last bin
+  std::size_t firstCells = 0;
+  std::size_t lastCells = 0;
+  /// The widths of the bins before the first and after the last bin. Zero if
+  /// the sensor ends there.
+  double beforeWidth = 0;
+  double afterWidth = 0;
+};
+
+/// The footprint of the predicted track in the sensor, along one axis.
+struct ClusterFootprint {
+  /// The extent of the path through the sensor on this axis
+  double length = 0;
+  /// The error of the extent, from the error of the predicted direction
+  double lengthError = 0;
+  /// The full length of the path through the sensor
+  double pathLength = 0;
+};
+
+/// The calibrated position on one axis.
+struct ClusterAxisCalibration {
+  double position = 0;
+  double variance = 0;
+  /// False if the cluster cannot come from the predicted footprint
+  bool consistent = false;
+};
 
 constexpr double kMinusInfinity = -std::numeric_limits<double>::infinity();
 
-// The compiler may evaluate both sides of a branch. So every operation below
-// gets arguments that cannot raise a floating point exception.
-
-/// The log of the standard normal CDF, without underflow in the tails
+/// The log of the standard normal CDF, without underflow in the tails.
+/// Both branches get clamped arguments, because the compiler can evaluate
+/// both.
 double logNormalCdf(double x) {
   constexpr double kTail = 8.;
   const double inner = std::clamp(x, -kTail, kTail);
@@ -57,7 +90,8 @@ double logNormalCdf(double x) {
 }
 
 /// The fraction of the segment with midpoint `mid` and length `length` in
-/// the bin [lower, upper).
+/// the bin [lower, upper). The division is safe for a zero length, because
+/// the compiler can evaluate it before the length check.
 double overlapFraction(double mid, double length, double lower, double upper) {
   const double overlap =
       std::min(upper, mid + 0.5 * length) - std::max(lower, mid - 0.5 * length);
@@ -127,6 +161,98 @@ struct ClusterLikelihood {
     return result;
   }
 };
+
+/// A footprint length with its weight
+using WeightedLength = std::pair<double, double>;
+
+/// The mean and the variance of the track position
+struct PosteriorMoments {
+  double mean = 0;
+  double variance = 0;
+};
+
+/// log(exp(a) + exp(b)), where either can be minus infinity
+double logAddExp(double a, double b) {
+  const double larger = std::max(a, b);
+  const double smaller = std::min(a, b);
+  return smaller == kMinusInfinity
+             ? larger
+             : larger + std::log1p(Acts::safeExp(smaller - larger));
+}
+
+/// Integrate the posterior of the track position on a grid.
+///
+/// The likelihood is the weighted sum over the footprint lengths. The grid
+/// covers the positions where the segment touches the first and the last bin
+/// of the cluster. If the posterior is narrow compared to the grid step, the
+/// grid is refined around the peak.
+///
+/// @param likelihood The log likelihood of the cluster
+/// @param projection The cluster on this axis
+/// @param lengths The footprint lengths with their weights
+///
+/// @return The moments, or nothing if no position gives the cluster
+std::optional<PosteriorMoments> integratePosterior(
+    const ClusterLikelihood& likelihood, const ClusterProjection& projection,
+    std::span<const WeightedLength> lengths) {
+  constexpr std::size_t kPoints = 64;
+  constexpr std::size_t kMaxPasses = 4;
+
+  double maxLength = 0;
+  for (const auto& [length, weight] : lengths) {
+    maxLength = std::max(maxLength, length);
+  }
+  double low = projection.lastLower - 0.5 * maxLength;
+  double high = projection.firstUpper + 0.5 * maxLength;
+  if (!(low < high)) {
+    return std::nullopt;
+  }
+
+  std::array<double, kPoints> logLikelihood{};
+  PosteriorMoments moments;
+  for (std::size_t pass = 0; pass < kMaxPasses; ++pass) {
+    const double step = (high - low) / kPoints;
+    const auto position = [&](std::size_t i) {
+      return low + (static_cast<double>(i) + 0.5) * step;
+    };
+
+    double maxLog = kMinusInfinity;
+    for (std::size_t i = 0; i < kPoints; ++i) {
+      double sum = kMinusInfinity;
+      for (const auto& [length, weight] : lengths) {
+        sum =
+            logAddExp(sum, likelihood(position(i), length) + std::log(weight));
+      }
+      logLikelihood[i] = sum;
+      maxLog = std::max(maxLog, sum);
+    }
+    if (maxLog == kMinusInfinity) {
+      return std::nullopt;
+    }
+
+    double norm = 0;
+    double sum1 = 0;
+    double sum2 = 0;
+    for (std::size_t i = 0; i < kPoints; ++i) {
+      const double w = Acts::safeExp(logLikelihood[i] - maxLog);
+      norm += w;
+      sum1 += w * position(i);
+      sum2 += w * position(i) * position(i);
+    }
+    moments.mean = sum1 / norm;
+    // The grid spreads the weight of a point uniformly over its step
+    moments.variance = std::max(sum2 / norm - moments.mean * moments.mean, 0.) +
+                       step * step / 12.;
+
+    const double sigma = std::sqrt(moments.variance);
+    if (sigma > 4 * step) {
+      break;
+    }
+    low = std::max(low, moments.mean - 10 * sigma);
+    high = std::min(high, moments.mean + 10 * sigma);
+  }
+  return moments;
+}
 
 /// The posterior without noise: uniform in a box, or exact for analogue
 /// readout.
@@ -199,11 +325,34 @@ ClusterAxisCalibration calibrateWithoutNoise(const ClusterProjection& p,
   return result;
 }
 
-}  // namespace
-
-detail::ClusterAxisCalibration detail::calibrateClusterAxis(
-    const ClusterProjection& projection, const ClusterFootprint& footprint,
-    double threshold, bool analogue, double chargeNoise) {
+/// Calibrate the position of a cluster on one axis of the segmentation.
+///
+/// The track deposits a straight segment with a uniform charge density. The
+/// digitization adds Gaussian noise to the charge of each cell that the
+/// segment touches, and a cell fires if its charge is above the threshold.
+/// The result is the mean and the variance of the track position, for a
+/// uniform prior and this likelihood of the cluster:
+///
+/// - The first and the last bin fire. For analogue readout, their charge is
+///   Gaussian around the charge of the predicted overlap instead.
+/// - The touched bins before the first and after the last bin do not fire.
+///
+/// Without noise, the likelihood is 0 or 1, and the posterior is uniform in a
+/// box. With noise, the posterior is integrated numerically. The error of the
+/// predicted footprint length adds to the variance.
+///
+/// If no position gives the observed cluster, the cluster cannot come from
+/// this footprint. The result is then uniform over the cluster.
+///
+/// @param projection The cluster on this axis
+/// @param footprint The predicted track in the sensor on this axis
+/// @param threshold The activation threshold of a cell
+/// @param analogue Whether to use the charge of the cells
+/// @param chargeNoise The Gaussian noise of the activation of one cell
+ClusterAxisCalibration calibrateClusterAxis(const ClusterProjection& projection,
+                                            const ClusterFootprint& footprint,
+                                            double threshold, bool analogue,
+                                            double chargeNoise) {
   const auto& p = projection;
 
   // Uniform over the whole cluster if the footprint cannot make the cluster
@@ -220,81 +369,8 @@ detail::ClusterAxisCalibration detail::calibrateClusterAxis(
   const ClusterLikelihood likelihood{p, footprint.pathLength, threshold,
                                      chargeNoise, analogue};
 
-  // A footprint length with its weight
-  using WeightedLength = std::pair<double, double>;
-
-  // The mean and the variance of the posterior, integrated on a grid
-  const auto integrate = [&](std::span<const WeightedLength> lengths)
-      -> std::optional<std::pair<double, double>> {
-    double maxLength = 0;
-    for (const auto& [length, weight] : lengths) {
-      maxLength = std::max(maxLength, length);
-    }
-    // The segment touches the first and the last bin
-    double low = p.lastLower - 0.5 * maxLength;
-    double high = p.firstUpper + 0.5 * maxLength;
-    if (!(low < high)) {
-      return std::nullopt;
-    }
-
-    // Refine the grid around the peak if the posterior is narrow compared
-    // to the grid step
-    constexpr std::size_t kPoints = 64;
-    constexpr std::size_t kMaxPasses = 4;
-    std::array<double, kPoints> logLikelihood{};
-    double mean = 0;
-    double variance = 0;
-    for (std::size_t pass = 0; pass < kMaxPasses; ++pass) {
-      const double step = (high - low) / kPoints;
-      double maxLog = kMinusInfinity;
-      for (std::size_t i = 0; i < kPoints; ++i) {
-        const double mid = low + (static_cast<double>(i) + 0.5) * step;
-        double sum = kMinusInfinity;
-        for (const auto& [length, weight] : lengths) {
-          const double value = likelihood(mid, length) + std::log(weight);
-          if (value == kMinusInfinity) {
-            continue;
-          }
-          // log(exp(sum) + exp(value))
-          const double larger = std::max(sum, value);
-          sum = sum == kMinusInfinity
-                    ? value
-                    : larger + std::log1p(Acts::safeExp(std::min(sum, value) -
-                                                        larger));
-        }
-        logLikelihood[i] = sum;
-        maxLog = std::max(maxLog, sum);
-      }
-      if (maxLog == kMinusInfinity) {
-        return std::nullopt;
-      }
-
-      double norm = 0;
-      double sum1 = 0;
-      double sum2 = 0;
-      for (std::size_t i = 0; i < kPoints; ++i) {
-        const double mid = low + (static_cast<double>(i) + 0.5) * step;
-        const double w = Acts::safeExp(logLikelihood[i] - maxLog);
-        norm += w;
-        sum1 += w * mid;
-        sum2 += w * mid * mid;
-      }
-      mean = sum1 / norm;
-      // The grid spreads the weight of a point uniformly over its step
-      variance = std::max(sum2 / norm - mean * mean, 0.) + step * step / 12.;
-
-      const double sigma = std::sqrt(variance);
-      if (sigma > 4 * step) {
-        break;
-      }
-      low = std::max(low, mean - 10 * sigma);
-      high = std::min(high, mean + 10 * sigma);
-    }
-    return std::pair(mean, variance);
-  };
-
   const std::array<WeightedLength, 1> central = {{{footprint.length, 1.}}};
-  auto moments = integrate(central);
+  auto moments = integratePosterior(likelihood, p, central);
   if (!moments.has_value()) {
     return fallback;
   }
@@ -303,12 +379,12 @@ detail::ClusterAxisCalibration detail::calibrateClusterAxis(
   // of it. If the Gauss-Hermite nodes move the ends by a part of the width of
   // the posterior, marginalise over the length with a three point rule.
   const double nodeShift = 0.5 * std::sqrt(3.) * footprint.lengthError;
-  if (nodeShift * nodeShift > 0.01 * moments->second) {
+  if (nodeShift * nodeShift > 0.01 * moments->variance) {
     const std::array<WeightedLength, 3> nodes = {
         {{footprint.length, 2. / 3.},
          {std::max(footprint.length - 2. * nodeShift, 0.), 1. / 6.},
          {footprint.length + 2. * nodeShift, 1. / 6.}}};
-    moments = integrate(nodes);
+    moments = integratePosterior(likelihood, p, nodes);
     if (!moments.has_value()) {
       return fallback;
     }
@@ -316,10 +392,12 @@ detail::ClusterAxisCalibration detail::calibrateClusterAxis(
 
   ClusterAxisCalibration result;
   result.consistent = true;
-  result.position = moments->first;
-  result.variance = moments->second;
+  result.position = moments->mean;
+  result.variance = moments->variance;
   return result;
 }
+
+}  // namespace
 
 ClusterOnTrackCalibrator::ClusterOnTrackCalibrator(const Config& config)
     : m_cfg(config) {
@@ -341,21 +419,13 @@ void ClusterOnTrackCalibrator::calibrate(
   PassThroughCalibrator{}.calibrate(measurements, clusters, gctx, cctx,
                                     sourceLink, trackState);
 
-  // The fitters calibrate with different parameters on the track state
-  Acts::BoundVector parameters;
-  Acts::BoundMatrix covariance;
-  if (trackState.hasPredicted()) {
-    parameters = trackState.predicted();
-    covariance = trackState.predictedCovariance();
-  } else if (trackState.hasSmoothed()) {
-    parameters = trackState.smoothed();
-    covariance = trackState.smoothedCovariance();
-  } else if (trackState.hasFiltered()) {
-    parameters = trackState.filtered();
-    covariance = trackState.filteredCovariance();
-  } else {
+  // The fitters allocate the parameters that they calibrate with
+  if (!trackState.hasPredicted() && !trackState.hasFiltered() &&
+      !trackState.hasSmoothed()) {
     return;
   }
+  const auto parameters = trackState.parameters();
+  const auto covariance = trackState.covariance();
 
   const Acts::Surface& surface = trackState.referenceSurface();
   if (surface.type() != Acts::Surface::Plane) {
@@ -379,19 +449,13 @@ void ClusterOnTrackCalibrator::calibrate(
   }
 
   // The direction in the local frame and its derivatives by phi and theta
-  const double phi = parameters[Acts::eBoundPhi];
-  const double theta = parameters[Acts::eBoundTheta];
+  const Acts::Vector3 globalDir = Acts::makeDirectionFromPhiTheta(
+      parameters[Acts::eBoundPhi], parameters[Acts::eBoundTheta]);
   const Acts::RotationMatrix3 toLocal =
       surface.localToGlobalTransform(gctx).linear().transpose();
-  const Acts::Vector3 dir =
-      toLocal * Acts::makeDirectionFromPhiTheta(phi, theta);
-  const Acts::Vector3 dDirdPhi =
-      toLocal * Acts::Vector3(-std::sin(phi) * std::sin(theta),
-                              std::cos(phi) * std::sin(theta), 0);
-  const Acts::Vector3 dDirdTheta =
-      toLocal * Acts::Vector3(std::cos(phi) * std::cos(theta),
-                              std::sin(phi) * std::cos(theta),
-                              -std::sin(theta));
+  const Acts::Vector3 dir = toLocal * globalDir;
+  const Acts::Matrix<3, 2> dirJacobian =
+      toLocal * Acts::sphericalToFreeDirectionJacobian(globalDir);
   if (std::abs(dir.z()) < std::numeric_limits<double>::epsilon()) {
     return;
   }
@@ -426,7 +490,7 @@ void ClusterOnTrackCalibrator::calibrate(
         first = std::min<std::size_t>(first, cell.bin[axisIndex]);
         last = std::max<std::size_t>(last, cell.bin[axisIndex]);
       }
-      detail::ClusterProjection projection;
+      ClusterProjection projection;
       // Cell bins are zero-based while the axis bin indices start at one
       projection.firstLower = axis.getBinLowerBound(first + 1);
       projection.firstUpper = axis.getBinUpperBound(first + 1);
@@ -451,10 +515,10 @@ void ClusterOnTrackCalibrator::calibrate(
 
       // The footprint of the predicted track on this axis
       const double slope = dir[bIndex] / dir.z();
-      const Acts::Vector2 slopeJacobian(
-          (dDirdPhi[bIndex] - slope * dDirdPhi.z()) / dir.z(),
-          (dDirdTheta[bIndex] - slope * dDirdTheta.z()) / dir.z());
-      detail::ClusterFootprint footprint;
+      const Acts::Vector2 slopeJacobian =
+          (dirJacobian.row(bIndex) - slope * dirJacobian.row(2)).transpose() /
+          dir.z();
+      ClusterFootprint footprint;
       footprint.length = geoCfg.thickness * std::abs(slope);
       footprint.lengthError =
           geoCfg.thickness *
@@ -462,9 +526,9 @@ void ClusterOnTrackCalibrator::calibrate(
               std::max(slopeJacobian.dot(angleCovariance * slopeJacobian), 0.));
       footprint.pathLength = geoCfg.thickness / std::abs(dir.z());
 
-      const detail::ClusterAxisCalibration axisCalibration =
-          detail::calibrateClusterAxis(projection, footprint, geoCfg.threshold,
-                                       !geoCfg.digital, m_cfg.chargeNoise);
+      const ClusterAxisCalibration axisCalibration =
+          calibrateClusterAxis(projection, footprint, geoCfg.threshold,
+                               !geoCfg.digital, m_cfg.chargeNoise);
 
       const std::size_t i = measurement.indexOf(bIndex);
       calibrated[i] = axisCalibration.position;
