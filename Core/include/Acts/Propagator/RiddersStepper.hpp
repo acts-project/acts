@@ -18,8 +18,8 @@
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
+#include <cmath>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -154,7 +154,7 @@ struct CovarianceBoundParameterVariationGenerator
 /// primary stepper to perform the nominal step and multiple secondary steppers
 /// with varied initial conditions to compute the Jacobian columns. The
 /// variations are generated based on the input covariance and a configurable
-/// variation generator.
+/// variation generator. Destination residuals use the surface parametrization.
 /// @tparam stepper_impl_t the type of the underlying stepper implementation
 template <Concepts::SingleStepper stepper_impl_t>
 class RiddersStepper final {
@@ -568,11 +568,11 @@ class RiddersStepper final {
     if (!state.cov.has_value()) {
       return Result<Jacobian>::success(Jacobian::Identity());
     }
+    const auto parametrization = surface.boundParametrization(
+        state.primaryStepperState.options.geoContext);
     const auto chartJacobian =
-        surface
-            .boundParametrization(state.primaryStepperState.options.geoContext)
-            .directionCoordinatesJacobianFromUnitDirection(direction(state),
-                                                           0.);
+        parametrization.directionCoordinatesJacobianFromUnitDirection(
+            direction(state), 0.);
     if (!chartJacobian.ok()) {
       return Result<Jacobian>::failure(chartJacobian.error());
     }
@@ -602,15 +602,8 @@ class RiddersStepper final {
       const auto& [index, delta] = state.variationMap[i];
       const auto& nudgedVector = boundVectors[i];
 
-      const auto diff = [&]() {
-        BoundVector d = nudgedVector - referenceVector;
-        d[eBoundDir0] = detail::difference_periodic(nudgedVector[eBoundDir0],
-                                                    referenceVector[eBoundDir0],
-                                                    2 * std::numbers::pi);
-        return d;
-      };
-
-      jacobian.col(index) += diff() / delta;
+      jacobian.col(index) +=
+          parametrization.difference(nudgedVector, referenceVector) / delta;
       ++numberOfVariationsPerParameter[index];
     }
     for (std::size_t i = 0; i < eBoundSize; ++i) {
