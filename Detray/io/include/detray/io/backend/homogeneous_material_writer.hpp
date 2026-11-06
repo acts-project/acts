@@ -40,7 +40,6 @@ class homogeneous_material_writer {
   /// Convert the header information into its payload
   /// @tparam detector_t Detector type to serialize.
   /// @param det Detector providing the material store and surface links.
-  /// @param det_name Name recorded in the serialized header.
   /// @return Header payload with counts for slabs, rods, and their surfaces.
   template <class detector_t>
   static homogeneous_material_header_payload to_header_payload(

@@ -34,10 +34,9 @@ namespace detail {
 /// @brief Register file converters in the detector components reader
 ///
 /// @tparam input_converter_t the type of converter to be registered
-/// @tparam detector_t the type of detector under construction
 ///
-/// @param detector_components class that holds all required readers
-///                            and converters
+/// @param payload_converter class that holds all required readers
+///                          and converters
 /// @param file_names list of input files that get associated to the converter
 ///                   by file extension matching
 template <typename input_converter_t>
@@ -63,12 +62,12 @@ void add_input_file_converters(
 
 /// @brief Convert input file data into the detector payload
 ///
+/// @{
 /// @param [out] payload the full detector payload, to which the converted data
 ///                      is added
 /// @param [in] file_names list of input file names whose data is converted
 ///                        into payloads. They are automatically assigned
 ///                        to a converter via file extensions.
-/// @{
 template <typename... input_converter_ts>
 void convert_to_payload(detray::io::detector_payload& payload,
                         const std::vector<std::string>& file_names) {
@@ -100,7 +99,11 @@ void convert_to_payload(detray::io::detector_payload& payload,
 
   payload_converter.convert(payload);
 }
-
+/// @param [out] payload the full detector payload, to which the converted data
+///                      is added
+/// @param [in] file_names list of input file names whose data is converted
+///                        into payloads. They are automatically assigned
+///                        to a converter via file extensions.
 template <typename... input_converter_ts>
 void convert_to_payload(detray::io::detector_payload& payload,
                         std::initializer_list<std::string_view> file_names) {
@@ -185,7 +188,6 @@ auto read_detector(vecmem::memory_resource& resc,
 ///
 /// @param resc the memory resource to be used for the detector container allocs
 /// @param cfg the detector reader configuration
-/// @param file_names list of input file names. Needs at least a geometry file!
 ///
 /// @returns a complete detector object + a map that contains the volume names
 template <class detector_t, std::size_t GCAP = 0u, std::size_t GDIM = 2u,

@@ -47,7 +47,8 @@ class writer_interface {
   /// @note The existence of the file path has to be guaranteed by the caller
   virtual std::string write(const detector_t& detector,
                             const typename detector_t::name_map& names,
-                            const std::string& source, const std::ios_base::openmode mode,
+                            const std::string& source,
+                            const std::ios_base::openmode mode,
                             const std::filesystem::path& path) = 0;
 
  private:

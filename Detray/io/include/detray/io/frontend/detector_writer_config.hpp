@@ -43,6 +43,7 @@ struct detector_writer_config {
   /// @return configured output format
   detray::io::format format() const { return m_format; }
   /// Description of the source of the detector, e.g. 'ACTS converted'
+  /// @return description string
   const std::string& source() const { return m_source; }
   /// Return whether existing output files are replaced.
   /// @return whether replacement is enabled

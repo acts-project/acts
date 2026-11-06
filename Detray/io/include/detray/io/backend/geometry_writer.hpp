@@ -41,7 +41,6 @@ class geometry_writer {
   /// Convert the header information into its payload
   /// @tparam detector_t Detector type to serialize.
   /// @param det Detector providing the volume and surface collections.
-  /// @param det_name Name recorded in the serialized header.
   /// @return Header payload describing this geometry.
   template <detray::concepts::detector detector_t>
   static geometry_header_payload to_header_payload(const detector_t& det) {

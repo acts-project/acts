@@ -42,7 +42,6 @@ class material_map_writer : public detail::grid_writer {
   /// Convert the header information into its payload
   /// @tparam detector_t Detector type to serialize.
   /// @param det Detector whose material grids are written.
-  /// @param det_name Name recorded in the serialized header.
   /// @return Header payload describing the material grids.
   template <class detector_t>
   static auto to_header_payload(const detector_t& det) {

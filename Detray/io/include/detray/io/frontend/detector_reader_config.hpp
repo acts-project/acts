@@ -70,6 +70,9 @@ struct detector_reader_config {
                    std::end(file_names));
     return *this;
   }
+  /// Add detector component files to the input list.
+  /// @param file_names vector of input file paths
+  /// @return this configuration for chaining
   detector_reader_config& add_files(
       const std::vector<std::string_view>& file_names) {
     m_files.reserve(m_files.size() + file_names.size());

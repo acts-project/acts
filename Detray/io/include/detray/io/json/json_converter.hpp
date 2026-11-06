@@ -104,6 +104,7 @@ class json_converter<detector_t, backend_t> final
   /// Writes the geometry to file with a given name
   /// @param det Detector to serialize.
   /// @param names Volume names used to form the output file name and payload.
+  /// @param source the detector source description
   /// @param mode Output stream mode.
   /// @param file_path Directory in which the JSON file is created.
   /// @return Path to the created file.
