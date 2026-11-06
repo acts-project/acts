@@ -10,30 +10,30 @@ TRACCC_HOST_DEVICE
 void find_contributing_hits(const global_index_t globalIndex,
                             const unsigned int n_images,
                             const bfield_t& bfield,
-                            const vecmem::data::vector_view<scalar>& edges_x_view,
-                            const vecmem::data::vector_view<scalar>& edges_y_view,
+                            const vecmem::data::vector_view<const scalar>& edges_x_view,
+                            const vecmem::data::vector_view<const scalar>& edges_y_view,
                             const edm::spacepoint_collection::const_view& spacepoints_view,
-                            const vecmem::data::vector_view<scalar>& spacepoint_r_view,
-                            const vecmem::data::vector_view<scalar>& spacepoint_phi_view,
-                            const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association_view,
-                            const vecmem::data::jagged_vector_view<global_index_t>& global_index_view,
-                            const vecmem::data::vector_view<unsigned int>& nn_outcome_view,
+                            const vecmem::data::vector_view<const scalar>& spacepoint_r_view,
+                            const vecmem::data::vector_view<const scalar>& spacepoint_phi_view,
+                            const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association_view,
+                            const vecmem::data::jagged_vector_view<const global_index_t>& global_index_view,
+                            const vecmem::data::vector_view<const unsigned int>& nn_outcome_view,
                             vecmem::data::jagged_vector_view<global_index_t>& hits_view) {
     if (globalIndex >= n_images) return;
     
     // does not pass the NN selection
-    const vecmem::device_vector<unsigned int> nn_outcome(nn_outcome_view);
+    const vecmem::device_vector<const unsigned int> nn_outcome(nn_outcome_view);
     if (nn_outcome[globalIndex] == 0) return;
     
     // get coordinates
-    const vecmem::jagged_device_vector<global_index_t> global_index(global_index_view);
+    const vecmem::jagged_device_vector<const global_index_t> global_index(global_index_view);
     const auto [wedge_idx, element_idx] = get_wedge_element<global_index_t>(globalIndex, global_index);   
  
-    const vecmem::device_vector<scalar> edges_x(edges_x_view);
-    const vecmem::device_vector<scalar> edges_y(edges_y_view);
+    const vecmem::device_vector<const scalar> edges_x(edges_x_view);
+    const vecmem::device_vector<const scalar> edges_y(edges_y_view);
 
-    const global_index_t n_cols = edges_x.size() - 1;
-    const global_index_t n_rows = edges_y.size() - 1;
+    const global_index_t n_cols = edges_x.capacity() - 1;
+    const global_index_t n_rows = edges_y.capacity() - 1;
 
     const global_index_t peak_global_index = global_index[wedge_idx][element_idx];
     const auto [col, row] = get_col_row(peak_global_index, n_cols, n_rows);
@@ -46,9 +46,9 @@ void find_contributing_hits(const global_index_t globalIndex,
     vecmem::jagged_device_vector<global_index_t> hits(hits_view);
 
     const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
-    const vecmem::device_vector<unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);
-    const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
-    const vecmem::device_vector<scalar> spacepoint_phi(spacepoint_phi_view);
+    const vecmem::device_vector<const unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);
+    const vecmem::device_vector<const scalar> spacepoint_r(spacepoint_r_view);
+    const vecmem::device_vector<const scalar> spacepoint_phi(spacepoint_phi_view);
 
     for (global_index_t i(0); i<spacepoints.size(); ++i) {
         // contributes to wedge

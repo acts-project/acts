@@ -75,29 +75,29 @@ namespace kernels {
 
    __global__
    void count_bits(const unsigned long long n_entries,
-            const vecmem::data::vector_view<unsigned long long> bits,
+            const vecmem::data::vector_view<const unsigned long long> bits,
             vecmem::data::vector_view<unsigned short> entries) {
       device::count_bits(details::global_index1(),
             n_entries, bits, entries);
    }
 
    __global__
-   void count_maxima(const vecmem::data::vector_view<unsigned short> houghplanes,
+   void count_maxima(const vecmem::data::vector_view<const unsigned short> houghplanes,
                      vecmem::data::vector_view<unsigned int> count_vector) {
       device::count_maxima(details::global_index1(), houghplanes, count_vector);
    }
 
    __global__
-   void find_maxima(const vecmem::data::vector_view<unsigned short> houghplanes,
+   void find_maxima(const vecmem::data::vector_view<const unsigned short> houghplanes,
                     vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes) {
       device::find_maxima(details::global_index1(), houghplanes, global_indexes);
    }
 
    __global__
-   void take_pictures(const vecmem::data::vector_view<unsigned short> houghplanes,
-                      const vecmem::data::vector_view<scalar> edges_x,
-                      const vecmem::data::vector_view<scalar> edges_y,
-                      const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes,
+   void take_pictures(const vecmem::data::vector_view<const unsigned short> houghplanes,
+                      const vecmem::data::vector_view<const scalar> edges_x,
+                      const vecmem::data::vector_view<const scalar> edges_y,
+                      const vecmem::data::jagged_vector_view<const traccc::device::global_index_t> global_indexes,
                       const unsigned int n_maxima,
                       vecmem::data::jagged_vector_view<scalar> images,
                       vecmem::data::vector_view<scalar> maxima_x) {
@@ -115,8 +115,8 @@ namespace kernels {
 
    __global__
    void evaluate_nn(const unsigned int n_images,
-                    const vecmem::data::jagged_vector_view<scalar> images,
-                    const vecmem::data::vector_view<scalar> maxima_x,
+                    const vecmem::data::jagged_vector_view<const scalar> images,
+                    const vecmem::data::vector_view<const scalar> maxima_x,
                     vecmem::data::vector_view<unsigned int> nn_outcome) {
         device::evaluate_nn(details::global_index1(), n_images, images, maxima_x, nn_outcome);
     }
@@ -125,14 +125,14 @@ namespace kernels {
    __global__
    void count_contributing_hits(const unsigned int n_images,
                                 const bfield_t bfield,
-                                const vecmem::data::vector_view<scalar> edges_x,
-                                const vecmem::data::vector_view<scalar> edges_y,
+                                const vecmem::data::vector_view<const scalar> edges_x,
+                                const vecmem::data::vector_view<const scalar> edges_y,
                                 const edm::spacepoint_collection::const_view spacepoints,
-                                const vecmem::data::vector_view<scalar> spacepoint_r,
-                                const vecmem::data::vector_view<scalar> spacepoint_phi,
-                                const vecmem::data::vector_view<unsigned long long> spacepoint_wedge_association,
-                                const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_index,
-                                const vecmem::data::vector_view<unsigned int> nn_outcome,
+                                const vecmem::data::vector_view<const scalar> spacepoint_r,
+                                const vecmem::data::vector_view<const scalar> spacepoint_phi,
+                                const vecmem::data::vector_view<const unsigned long long> spacepoint_wedge_association,
+                                const vecmem::data::jagged_vector_view<const traccc::device::global_index_t> global_index,
+                                const vecmem::data::vector_view<const unsigned int> nn_outcome,
                                 vecmem::data::vector_view<unsigned int> count_vector) {
         device::count_contributing_hits<bfield_t>(details::global_index1(),
                     n_images,
@@ -152,14 +152,14 @@ namespace kernels {
    __global__
    void find_contributing_hits(const unsigned int n_images,
                                 const bfield_t bfield,
-                                const vecmem::data::vector_view<scalar> edges_x,
-                                const vecmem::data::vector_view<scalar> edges_y,
+                                const vecmem::data::vector_view<const scalar> edges_x,
+                                const vecmem::data::vector_view<const scalar> edges_y,
                                 const edm::spacepoint_collection::const_view spacepoints,
-                                const vecmem::data::vector_view<scalar> spacepoint_r,
-                                const vecmem::data::vector_view<scalar> spacepoint_phi,
-                                const vecmem::data::vector_view<unsigned long long> spacepoint_wedge_association,
-                                const vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_index,
-                                const vecmem::data::vector_view<unsigned int> nn_outcome,
+                                const vecmem::data::vector_view<const scalar> spacepoint_r,
+                                const vecmem::data::vector_view<const scalar> spacepoint_phi,
+                                const vecmem::data::vector_view<const unsigned long long> spacepoint_wedge_association,
+                                const vecmem::data::jagged_vector_view<const traccc::device::global_index_t> global_index,
+                                const vecmem::data::vector_view<const unsigned int> nn_outcome,
                                 vecmem::data::jagged_vector_view<traccc::device::global_index_t> hits) {
       device::find_contributing_hits<bfield_t>(details::global_index1(),
                     n_images,
@@ -178,9 +178,9 @@ namespace kernels {
   __global__
   void make_seeds(const unsigned int n_images,
                   const edm::spacepoint_collection::const_view spacepoints,
-                  const vecmem::data::vector_view<scalar> spacepoint_r,
-                  const vecmem::data::vector_view<unsigned int> nn_outcome,
-                  const vecmem::data::jagged_vector_view<traccc::device::global_index_t> hits,
+                  const vecmem::data::vector_view<const scalar> spacepoint_r,
+                  const vecmem::data::vector_view<const unsigned int> nn_outcome,
+                  const vecmem::data::jagged_vector_view<const traccc::device::global_index_t> hits,
                   vecmem::data::jagged_vector_view<scalar> cot_theta_matrix) {
         device::make_seeds(details::global_index1(), n_images,
                            spacepoints, spacepoint_r,

@@ -44,15 +44,9 @@ auto hough_transform_seeding_algorithm::operator()(
 
  
   // Set up the output buffer.
-  edm::houghplane_collection<unsigned short>::const_view::size_type n_slices = m_config.wedges.size();
-  /*
-  edm::houghplane_collection<unsigned short>::buffer result(
-          std::vector<unsigned int>(n_slices, N_COLS * N_ROWS),
-		  mr().main, mr().host, 
-		  vecmem::data::buffer_type::resizable);
-  copy().setup(result)->ignore();
-  */
-  
+  const unsigned int n_slices = m_config.wedges.size(); 
+
+ 
   // ---------------------------------------------------
   // Fill plane edges
   vecmem::data::vector_buffer<scalar> edges_x(N_COLS + 1, mr().main);

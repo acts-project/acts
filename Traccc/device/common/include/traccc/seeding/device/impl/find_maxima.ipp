@@ -11,13 +11,13 @@ namespace traccc::device {
 
 TRACCC_HOST_DEVICE
 void find_maxima(const global_index_t globalIndex,
-                 const vecmem::data::vector_view<unsigned short>& houghplanes_view,
+                 const vecmem::data::vector_view<const unsigned short>& houghplanes_view,
                  vecmem::data::jagged_vector_view<global_index_t>& maxima_index_view) {
     const global_index_t n_cols = device::N_COLS;
     const global_index_t n_rows = device::N_ROWS;
     if (globalIndex >= n_cols * n_rows) return;
 
-    const vecmem::device_vector<unsigned short> houghplanes(houghplanes_view);    
+    const vecmem::device_vector<const unsigned short> houghplanes(houghplanes_view);    
     vecmem::jagged_device_vector<global_index_t> maxima_index(maxima_index_view);
 
     const auto [col, row] = get_col_row(globalIndex, n_cols, n_rows);

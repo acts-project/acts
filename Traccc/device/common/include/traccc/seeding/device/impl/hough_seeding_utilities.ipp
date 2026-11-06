@@ -18,7 +18,7 @@ inline std::pair<global_index_t, global_index_t> get_col_row(const global_index_
 template <typename T>
 TRACCC_HOST_DEVICE
 inline std::pair<global_index_t, global_index_t> get_wedge_element(const global_index_t global_index,
-                                                                   const vecmem::jagged_device_vector<T>& container) {
+                                                                   const vecmem::jagged_device_vector<const T>& container) {
     global_index_t current_size = global_index;
     global_index_t wedge_idx = 0;
     global_index_t element_idx = 0;

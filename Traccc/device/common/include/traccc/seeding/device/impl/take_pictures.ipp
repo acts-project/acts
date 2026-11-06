@@ -44,23 +44,23 @@ TRACCC_HOST_DEVICE
 void take_pictures(const global_index_t globalIndex,
                    const global_index_t colIndex,
                    const global_index_t rowIndex,
-                   const vecmem::data::vector_view<unsigned short>& houghplanes_view,
-                   const vecmem::data::vector_view<scalar>& edges_x_view,
-                   const vecmem::data::vector_view<scalar>& edges_y_view,
-                   const vecmem::data::jagged_vector_view<global_index_t>& maxima_index_view,
+                   const vecmem::data::vector_view<const unsigned short>& houghplanes_view,
+                   const vecmem::data::vector_view<const scalar>& edges_x_view,
+                   const vecmem::data::vector_view<const scalar>& edges_y_view,
+                   const vecmem::data::jagged_vector_view<const global_index_t>& maxima_index_view,
                    const unsigned int n_maxima,
                    vecmem::data::jagged_vector_view<scalar>& images_view,
                    vecmem::data::vector_view<scalar>& maxima_x_view) {
-    vecmem::device_vector<scalar> edges_x(edges_x_view);
-    vecmem::device_vector<scalar> edges_y(edges_y_view);
+    const vecmem::device_vector<const scalar> edges_x(edges_x_view);
+    const vecmem::device_vector<const scalar> edges_y(edges_y_view);
 
-    const global_index_t n_cols = edges_x.size() - 1;
-    const global_index_t n_rows = edges_y.size() - 1;
+    const global_index_t n_cols = edges_x.capacity() - 1;
+    const global_index_t n_rows = edges_y.capacity() - 1;
     
     if (globalIndex >= n_maxima) return;
 
-    const vecmem::device_vector<unsigned short> houghplanes(houghplanes_view);
-    const vecmem::jagged_device_vector<global_index_t> maxima_index(maxima_index_view);
+    const vecmem::device_vector<const unsigned short> houghplanes(houghplanes_view);
+    const vecmem::jagged_device_vector<const global_index_t> maxima_index(maxima_index_view);
     vecmem::jagged_device_vector<scalar> images(images_view);
 
     // deduce the correct index

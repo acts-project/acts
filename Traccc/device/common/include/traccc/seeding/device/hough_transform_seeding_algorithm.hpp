@@ -110,21 +110,21 @@ class hough_transform_seeding_algorithm
     // The number of entries
     const unsigned long long n_entries;
     // The bit count entries
-    const vecmem::data::vector_view<unsigned long long>& bits;
+    const vecmem::data::vector_view<const unsigned long long>& bits;
     // The output counts
     vecmem::data::vector_view<unsigned short>& values;
   };
 
   struct count_maxima_payload {
     // The hough planes
-    const vecmem::data::vector_view<unsigned short>& houghplanes;    
+    const vecmem::data::vector_view<const unsigned short>& houghplanes;    
     // The count vector
     vecmem::data::vector_view<unsigned int>& count_vector;
   };
  
   struct find_maxima_payload {
     // The hough planes
-    const vecmem::data::vector_view<unsigned short>& houghplanes;
+    const vecmem::data::vector_view<const unsigned short>& houghplanes;
     // The global index vector
     vecmem::data::jagged_vector_view<global_index_t>& global_index;
   };
@@ -133,13 +133,13 @@ class hough_transform_seeding_algorithm
     // Number of maxima
     unsigned int n_maxima;
     // The hough planes
-    const vecmem::data::vector_view<unsigned short>& houghplanes;    
+    const vecmem::data::vector_view<const unsigned short>& houghplanes;    
     // The edges X
-    const vecmem::data::vector_view<scalar>& edges_x;
+    const vecmem::data::vector_view<const scalar>& edges_x;
     // The edges Y
-    const vecmem::data::vector_view<scalar>& edges_y;
+    const vecmem::data::vector_view<const scalar>& edges_y;
     // The maxima location
-    const vecmem::data::jagged_vector_view<global_index_t>& global_index;
+    const vecmem::data::jagged_vector_view<const global_index_t>& global_index;
     // The images
     vecmem::data::jagged_vector_view<scalar>& images;
     // x value of maxima
@@ -150,9 +150,9 @@ class hough_transform_seeding_algorithm
     // Number of images
     unsigned int n_images;
     // The images
-    const vecmem::data::jagged_vector_view<scalar>& images;
+    const vecmem::data::jagged_vector_view<const scalar>& images;
     // The x values
-    const vecmem::data::vector_view<scalar>& maxima_x;
+    const vecmem::data::vector_view<const scalar>& maxima_x;
     // The NN outcome
     vecmem::data::vector_view<unsigned int>& nn_outcome;
   };
@@ -163,21 +163,21 @@ class hough_transform_seeding_algorithm
     // The magnetic field object
     const magnetic_field& bfield;
     // The edges X
-    const vecmem::data::vector_view<scalar>& edges_x;
+    const vecmem::data::vector_view<const scalar>& edges_x;
     // The edges Y
-    const vecmem::data::vector_view<scalar>& edges_y;
+    const vecmem::data::vector_view<const scalar>& edges_y;
     // The space points
     const edm::spacepoint_collection::const_view& spacepoints;
     // the space point r
-    const vecmem::data::vector_view<scalar>& spacepoint_r;
+    const vecmem::data::vector_view<const scalar>& spacepoint_r;
     // the space point phi
-    const vecmem::data::vector_view<scalar>& spacepoint_phi;
+    const vecmem::data::vector_view<const scalar>& spacepoint_phi;
     // association to wedge
-    const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association;
+    const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association;
     // The maxima location
-    const vecmem::data::jagged_vector_view<global_index_t>& global_index;
+    const vecmem::data::jagged_vector_view<const global_index_t>& global_index;
     // The NN outcome
-    const vecmem::data::vector_view<unsigned int>& nn_outcome;
+    const vecmem::data::vector_view<const unsigned int>& nn_outcome;
     // The count vector
     vecmem::data::vector_view<unsigned int>& count_vector;
   };
@@ -188,21 +188,21 @@ class hough_transform_seeding_algorithm
     // The magnetic field object
     const magnetic_field& bfield;
     // The edges X
-    const vecmem::data::vector_view<scalar>& edges_x;
+    const vecmem::data::vector_view<const scalar>& edges_x;
     // The edges Y
-    const vecmem::data::vector_view<scalar>& edges_y;
+    const vecmem::data::vector_view<const scalar>& edges_y;
     // The space points
     const edm::spacepoint_collection::const_view& spacepoints;
     // the space point r
-    const vecmem::data::vector_view<scalar>& spacepoint_r;
+    const vecmem::data::vector_view<const scalar>& spacepoint_r;
     // the space point phi
-    const vecmem::data::vector_view<scalar>& spacepoint_phi;
+    const vecmem::data::vector_view<const scalar>& spacepoint_phi;
     // association to wedge
-    const vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association;
+    const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association;
     // The maxima location
-    const vecmem::data::jagged_vector_view<global_index_t>& global_index;
+    const vecmem::data::jagged_vector_view<const global_index_t>& global_index;
     // The NN outcome
-    const vecmem::data::vector_view<unsigned int>& nn_outcome;
+    const vecmem::data::vector_view<const unsigned int>& nn_outcome;
     // The hits
     vecmem::data::jagged_vector_view<global_index_t>& hits;
   };
@@ -213,11 +213,11 @@ class hough_transform_seeding_algorithm
     // The space points
     const edm::spacepoint_collection::const_view& spacepoints;
     // The space point r
-    const vecmem::data::vector_view<scalar>& spacepoint_r;
+    const vecmem::data::vector_view<const scalar>& spacepoint_r;
     // The NN outcome
-    const vecmem::data::vector_view<unsigned int>& nn_outcome;
+    const vecmem::data::vector_view<const unsigned int>& nn_outcome;
     // The hits
-    const vecmem::data::jagged_vector_view<global_index_t>& hits;
+    const vecmem::data::jagged_vector_view<const global_index_t>& hits;
     // Cot-Theta matrix for filtering
     vecmem::data::jagged_vector_view<scalar>& cot_theta_matrix;
   };

@@ -17,21 +17,21 @@ TRACCC_HOST_DEVICE
 void make_seeds(const global_index_t globalIndex,
                 const unsigned int n_images,
                 const edm::spacepoint_collection::const_view& spacepoints_view,
-                const vecmem::data::vector_view<scalar>& spacepoint_r_view,
-                const vecmem::data::vector_view<unsigned int>& nn_outcome_view,
-                const vecmem::data::jagged_vector_view<global_index_t>& hits_view,
+                const vecmem::data::vector_view<const scalar>& spacepoint_r_view,
+                const vecmem::data::vector_view<const unsigned int>& nn_outcome_view,
+                const vecmem::data::jagged_vector_view<const global_index_t>& hits_view,
                 vecmem::data::jagged_vector_view<scalar>& cot_theta_matrix_view) {
     if (globalIndex >= n_images) return;
     
     // does not pass the NN selection
-    const vecmem::device_vector<unsigned int> nn_outcome(nn_outcome_view);
+    const vecmem::device_vector<const unsigned int> nn_outcome(nn_outcome_view);
     if (nn_outcome[globalIndex] == 0) return;
  
-    const vecmem::jagged_device_vector<global_index_t> hits(hits_view);
+    const vecmem::jagged_device_vector<const global_index_t> hits(hits_view);
     if (hits[globalIndex].size() < 3) return;
 
     const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
-    const vecmem::device_vector<scalar> spacepoint_r(spacepoint_r_view);
+    const vecmem::device_vector<const scalar> spacepoint_r(spacepoint_r_view);
  
     vecmem::jagged_device_vector<scalar> cot_theta_matrix(cot_theta_matrix_view);
 
