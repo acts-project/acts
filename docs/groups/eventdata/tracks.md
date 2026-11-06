@@ -222,6 +222,15 @@ must accept it too. Selection uses the surface parametrization for physical
 theta and measurement residuals, including direction measurements across the
 phi seam. Non-finite candidates are rejected before evaluating these residuals.
 
+The optional nonlinear free-to-bound correction averages sigma-point offsets
+relative to the nominal bound point using the surface parametrization. It uses
+periodic residuals for covariance and canonicalizes the resulting mean and
+covariance together. This avoids artificial spreads at the phi seam while
+retaining the existing local sigma-point approximation and weights. If the
+corrected covariance basis is undefined, correction falls back to nominal
+transport through its existing optional-result interface. Broad distributions
+spanning direction singularities remain outside this local approximation.
+
 ### Canonical support audit
 
 Only canonical global-spherical coordinates are selectable. The current
@@ -238,7 +247,7 @@ implementation and remaining work are:
 | GX2F | Surface-selected measurement residuals; explicitly canonical scattering model and raw fit updates |
 | AtlasStepper | Explicit canonical-only checks at bound entry points |
 | CKF measurement selection | Uses the surface parametrization for physical theta and periodic measurement residuals |
-| Optional nonlinear free-to-bound correction | Still averages sigma points and forms covariance with raw bound arithmetic; requires follow-up |
+| Optional nonlinear free-to-bound correction | Surface-selected local sigma-point residuals and covariance-aware canonicalization |
 
 The explicit unsupported-configuration exceptions from mixture merging, GX2F,
 and AtlasStepper escape the fitting and component-discard paths. The example
