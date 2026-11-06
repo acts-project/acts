@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
         BOOST_CHECK_EQUAL(seenTruePars, true);
         BOOST_CHECK_EQUAL(fourSeedPars.size(), 4);
         const auto seedPars =
-            Seeder::constructTangenSeed(topTube, bottomTube, trueAmbi);
+            Seeder::constructTangentSeed(topTube, bottomTube, trueAmbi);
         /// Construct line parameters
         ACTS_DEBUG(__func__
                    << "() " << __LINE__ << " - Line tan beta: " << lineTanBeta
