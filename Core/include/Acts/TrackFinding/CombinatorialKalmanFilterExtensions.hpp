@@ -142,10 +142,12 @@ struct CombinatorialKalmanFilterExtensions {
   /// @param input the surface, the predicted bound state, the trajectory to
   ///        extend, and the contexts
   /// @return indices of new track states which extend the trajectory given by
-  ///         `input.prevTip`. Each of them must be a measurement or an outlier,
-  ///         otherwise the CKF fails with
-  ///         @ref CombinatorialKalmanFilterError::UnsupportedTrackState. An
-  ///         empty list means that the CKF creates a hole.
+  ///         `input.prevTip`. Each one makes its own branch. Each one must
+  ///         be a measurement, an outlier, or a track state with parameters
+  ///         but without a measurement, e.g. a hole. Otherwise the CKF fails
+  ///         with @ref CombinatorialKalmanFilterError::UnsupportedTrackState.
+  ///         The CKF counts a state flagged as a hole in the holes of its
+  ///         branch. An empty list means that the CKF creates a hole.
   using TrackStateCreatorDelegate =
       Delegate<Result<CkfTypes::BranchVector<TrackIndexType>>(
           const CkfTypes::TrackStateCreatorInput<track_container_t>& input)>;

@@ -110,7 +110,8 @@ constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
 
 BOOST_AUTO_TEST_SUITE(ExamplesChi2CkfTrackStateCreatorSuite)
 
-/// A single candidate with a non-finite chi2 must not be selected
+/// A single candidate with a non-finite chi2 must not be selected, so the
+/// creator makes a hole
 BOOST_AUTO_TEST_CASE(NonFiniteChi2IsRejected) {
   Fixture f;
   f.creator.setValues({kNaN});
@@ -119,7 +120,10 @@ BOOST_AUTO_TEST_CASE(NonFiniteChi2IsRejected) {
   auto result = f.run();
 
   BOOST_REQUIRE(result.ok());
-  BOOST_CHECK(result->empty());
+  BOOST_REQUIRE_EQUAL(result->size(), 1u);
+  const auto trackState = f.trajectory.getTrackState(result->front());
+  BOOST_CHECK(trackState.typeFlags().isHole());
+  BOOST_CHECK(!trackState.typeFlags().hasMeasurement());
 }
 
 /// A finite candidate must be selected next to a non-finite one, and a

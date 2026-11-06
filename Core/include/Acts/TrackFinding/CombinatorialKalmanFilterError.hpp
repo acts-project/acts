@@ -30,7 +30,8 @@ enum class CombinatorialKalmanFilterError {
   /// No measurement expected on the current surface
   NoMeasurementExpected,
   /// The track state creator returned a track state which is neither a
-  /// measurement nor an outlier
+  /// measurement, an outlier, nor a state with parameters but without a
+  /// measurement
   UnsupportedTrackState
 };
 

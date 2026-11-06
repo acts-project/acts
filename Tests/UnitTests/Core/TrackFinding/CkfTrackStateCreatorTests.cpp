@@ -245,6 +245,24 @@ struct Fixture {
             .logger = logger.get()};
   }
 
+  /// The result must be a single hole with the predicted parameters
+  void checkSingleHole(
+      const Result<CkfTypes::BranchVector<TrackIndexType>>& result) const {
+    BOOST_REQUIRE(result.ok());
+    BOOST_REQUIRE_EQUAL(result->size(), 1u);
+    BOOST_CHECK_EQUAL(trajectory.size(), 1u);
+
+    const auto trackState = trajectory.getTrackState(result->front());
+    BOOST_CHECK(trackState.typeFlags().isHole());
+    BOOST_CHECK(trackState.typeFlags().hasParameters());
+    BOOST_CHECK(!trackState.typeFlags().hasMeasurement());
+    BOOST_CHECK(!trackState.hasCalibrated());
+    BOOST_CHECK(trackState.predicted() ==
+                std::get<BoundTrackParameters>(boundState).parameters());
+    BOOST_CHECK(trackState.filtered() == trackState.predicted());
+    BOOST_CHECK_EQUAL(trackState.pathLength(), std::get<double>(boundState));
+  }
+
   Result<CkfTypes::BranchVector<TrackIndexType>> runDefault() {
     return defaultCreator.createTrackStates(input());
   }
@@ -261,15 +279,13 @@ BOOST_AUTO_TEST_SUITE(TrackFindingSuite)
 /// A surface without measurements must not even resolve the cuts. Otherwise
 /// surfaces which are not covered by the selector configuration would turn
 /// into hard errors instead of holes.
-BOOST_AUTO_TEST_CASE(NoMeasurementsCreatesNothing) {
+BOOST_AUTO_TEST_CASE(NoMeasurementsCreatesHole) {
   Fixture f;
   f.setCuts(1u, 10., 100.);
 
   auto result = f.run();
 
-  BOOST_REQUIRE(result.ok());
-  BOOST_CHECK(result->empty());
-  BOOST_CHECK_EQUAL(f.trajectory.size(), 0u);
+  f.checkSingleHole(result);
   BOOST_CHECK_EQUAL(f.creator.nSelectMeasurements, 0u);
 }
 
@@ -307,7 +323,7 @@ BOOST_AUTO_TEST_CASE(DefaultSelectionHasNoCut) {
       !f.trajectory.getTrackState(result->front()).typeFlags().isOutlier());
 }
 
-/// A non-finite chi2 is never selected. If no chi2 is finite, the caller
+/// A non-finite chi2 is never selected. If no chi2 is finite, the creator
 /// creates a hole.
 BOOST_AUTO_TEST_CASE(DefaultSelectionRejectsNonFiniteChi2) {
   Fixture f;
@@ -326,11 +342,7 @@ BOOST_AUTO_TEST_CASE(DefaultSelectionRejectsNonFiniteChi2) {
   Fixture g;
   g.defaultCreator.measurements = {{nan, 1., 0u}};
 
-  auto none = g.runDefault();
-
-  BOOST_REQUIRE(none.ok());
-  BOOST_CHECK(none->empty());
-  BOOST_CHECK_EQUAL(g.trajectory.size(), 0u);
+  g.checkSingleHole(g.runDefault());
 }
 
 /// A selection which cannot make up its mind must abort the track finding
@@ -382,18 +394,13 @@ BOOST_AUTO_TEST_CASE(BestCandidateBecomesSingleOutlier) {
   BOOST_CHECK_EQUAL(f.trajectory.size(), 1u);
 }
 
-/// Nothing passes either cut: no track state at all, the caller creates the
-/// hole. Creating one here would make the CKF produce two states.
-BOOST_AUTO_TEST_CASE(NothingCompatibleCreatesNoTrackState) {
+/// Nothing passes either cut: a single hole and no measurement track state.
+BOOST_AUTO_TEST_CASE(NothingCompatibleCreatesHole) {
   Fixture f;
   f.creator.measurements = {{4., 1., 0u}, {6., 1., 1u}};
   f.setCuts(3u, 5., 6.);
 
-  auto result = f.run();
-
-  BOOST_REQUIRE(result.ok());
-  BOOST_CHECK(result->empty());
-  BOOST_CHECK_EQUAL(f.trajectory.size(), 0u);
+  f.checkSingleHole(f.run());
 }
 
 BOOST_AUTO_TEST_CASE(SinglePassingCandidateIsPicked) {

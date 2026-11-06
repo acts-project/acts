@@ -38,8 +38,8 @@ class CombinatorialKalmanFilterErrorCategory : public std::error_category {
       case CombinatorialKalmanFilterError::NoMeasurementExpected:
         return "No measurement expected on the current surface";
       case CombinatorialKalmanFilterError::UnsupportedTrackState:
-        return "The track state creator returned a track state which is "
-               "neither a measurement nor an outlier";
+        return "The track state creator returned a track state which the "
+               "CKF cannot process";
       default:
         return "unknown";
     }

@@ -824,8 +824,9 @@ class CombinatorialKalmanFilter {
     /// Process new, incompomplete track states and set the filtered state
     ///
     /// @note will process the given list of new states, run the updater
-    ///     or share the predicted state for states flagged as outliers
-    ///     and add them to the list of active branches
+    ///     for measurements or share the predicted state for outliers and
+    ///     states without measurement, and add them to the list of active
+    ///     branches
     ///
     /// @tparam propagator_state_t Type of the Propagator state
     /// @tparam stepper_t Type of the stepper
@@ -893,11 +894,20 @@ class CombinatorialKalmanFilter {
           newBranch.nMeasurements()++;
           newBranch.nDoF() += trackState.calibratedSize();
           newBranch.chi2() += trackState.chi2();
+        } else if (typeFlags.hasParameters() && !typeFlags.hasMeasurement()) {
+          // A hole, or a state on a surface without an expected measurement.
+          // As for an outlier, there is no Kalman update.
+          trackState.shareFrom(PM::Predicted, PM::Filtered);
+          if (typeFlags.isHole()) {
+            newBranch.nHoles()++;
+          }
+          ACTS_VERBOSE("Appended track state without measurement with tip = "
+                       << newBranch.tipIndex() << " and flags " << typeFlags);
         } else {
           ACTS_DEBUG("Track state " << trackState.index() << " with flags "
                                     << typeFlags
-                                    << " is neither a measurement nor an "
-                                       "outlier");
+                                    << " is neither a measurement, an outlier "
+                                       "nor a state without measurement");
           return CombinatorialKalmanFilterError::UnsupportedTrackState;
         }
 

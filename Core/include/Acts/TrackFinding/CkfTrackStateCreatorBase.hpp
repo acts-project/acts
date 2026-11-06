@@ -217,7 +217,7 @@ struct CkfTrackStateCandidate {
 /// @note This is expected to be connected to
 ///       @ref CombinatorialKalmanFilterExtensions::trackStateCreator.
 /// @note The API is not stable yet and is expected to grow further
-///       customization points, in particular for hole creation.
+///       customization points.
 ///
 /// @tparam derived_t the concrete creator, see CRTP
 /// @tparam track_container_t the track container used by the track finder
@@ -257,9 +257,9 @@ class CkfTrackStateCreatorBase {
   ///        extend, and the contexts
   ///
   /// @return the indices of the newly created track states, in the order the
-  ///         selection produced them, or an error. An empty list means that no
-  ///         compatible measurement was found and the caller is expected to
-  ///         create a hole.
+  ///         selection produced them, or an error. If the selection keeps no
+  ///         measurement, these are the track states from
+  ///         @ref createHoleTrackStates.
   TrackStatesResult createTrackStates(const Input& input) const {
     assert(input.geoContext != nullptr && input.calibrationContext != nullptr &&
            input.surface != nullptr && input.boundState != nullptr &&
@@ -271,29 +271,57 @@ class CkfTrackStateCreatorBase {
 
     CkfTypes::BranchVector<TrackIndexType> trackStates;
 
-    auto range = derived().measurementRange(state);
-    // Bail out before the selection is consulted, so that an ordinary surface
-    // without measurements can never turn into a selection error.
-    if (std::ranges::empty(range)) {
-      ACTS_VERBOSE("No measurements on surface "
+    if (Result<void> res = createMeasurementTrackStates(state, trackStates);
+        !res.ok()) {
+      return res.error();
+    }
+
+    if (trackStates.empty()) {
+      ACTS_VERBOSE("No measurement selected on surface "
                    << input.surface->geometryId());
-      return trackStates;
+      if (Result<void> res =
+              derived().createHoleTrackStates(state, trackStates);
+          !res.ok()) {
+        return res.error();
+      }
     }
 
-    using Measurement = std::ranges::range_value_t<decltype(range)>;
-    Candidates<Measurement> candidates;
-
-    if (Result<void> selection =
-            derived().selectMeasurements(state, range, candidates);
-        !selection.ok()) {
-      return selection.error();
-    }
-
-    trackStates.reserve(candidates.size());
-    for (const CkfTrackStateCandidate<Measurement>& candidate : candidates) {
-      trackStates.push_back(derived().createTrackState(state, candidate));
-    }
     return trackStates;
+  }
+
+  /// Create the track states on a surface on which the selection kept no
+  /// measurement, or which has no measurements at all.
+  ///
+  /// The default creates one track state without a measurement. It is a hole
+  /// if @ref isMeasurementExpected, and otherwise a state flagged with no
+  /// expected hit, which does not count as a hole.
+  ///
+  /// The CKF counts a track state flagged as a hole in the holes of the
+  /// branch. Each track state makes its own branch. If this adds no track
+  /// state, the CKF creates the hole itself.
+  ///
+  /// @param state the state of the current surface
+  /// @param trackStates the list to append the indices of new track states to
+  ///
+  /// @return success, or an error which stops the track finding
+  Result<void> createHoleTrackStates(
+      State& state, CkfTypes::BranchVector<TrackIndexType>& trackStates) const {
+    trackStates.push_back(derived().createTrackStateWithoutMeasurement(
+        state, derived().isMeasurementExpected(state)));
+    return Result<void>::success();
+  }
+
+  /// Whether a measurement is expected on this surface if the selection keeps
+  /// none, e.g. false for a dead module or a prediction outside of the active
+  /// area.
+  ///
+  /// @param state the state of the current surface
+  ///
+  /// @return true, i.e. a missing measurement is a hole
+  bool isMeasurementExpected(const State& state) const {
+    static_cast<void>(state);
+
+    return true;
   }
 
   /// Pick the measurements which are to become track states on this surface.
@@ -301,12 +329,13 @@ class CkfTrackStateCreatorBase {
   /// This is the main customization point. Implementations append to
   /// @p candidates in the order the track states are to be created in, which
   /// for the combinatorial Kalman filter should be the most compatible one
-  /// first. An empty result means that the caller creates a hole.
+  /// first. If it selects nothing, the creator calls
+  /// @ref createHoleTrackStates.
   ///
   /// The default selects the measurement with the smallest chi2, without a
   /// cut, as a measurement and not as an outlier. This is the default of the
   /// deprecated @ref MeasurementSelector. A measurement with a non-finite chi2
-  /// is never selected, so if all of them have one, the caller creates a hole.
+  /// is never selected, so if all of them have one, nothing is selected.
   ///
   /// @note This is only called when the surface has measurements.
   ///
@@ -405,12 +434,75 @@ class CkfTrackStateCreatorBase {
       const CkfTrackStateCandidate<measurement_t>& candidate) const {
     using PM = TrackStatePropMask;
 
-    const bool isFirst = !state.firstTrackState.has_value();
-
     // The filtered parameters are deliberately left unallocated. Outliers
     // never get their own, and the caller allocates them right before the
     // Kalman update writes them.
-    PM mask = PM::Calibrated;
+    TrackStateProxy trackState = makeTrackStateOnSurface(state, PM::Calibrated);
+
+    trackState.chi2() = candidate.chi2;
+    trackState.setUncalibratedSourceLink(
+        derived().sourceLink(state, candidate.measurement));
+    derived().fillCalibrated(state, candidate.measurement, trackState);
+
+    auto typeFlags = trackState.typeFlags();
+    typeFlags.setHasMeasurement();
+    if (candidate.isOutlier) {
+      typeFlags.setIsOutlier();
+    }
+
+    return trackState.index();
+  }
+
+  /// Create and fill a single track state without a measurement.
+  ///
+  /// The filtered parameters are the predicted ones, as for a hole which the
+  /// CKF creates.
+  ///
+  /// @param state the state of the current surface
+  /// @param isHole flag the track state as a hole, otherwise as a state with no
+  ///        expected hit
+  ///
+  /// @return the index of the new track state
+  TrackIndexType createTrackStateWithoutMeasurement(State& state,
+                                                    bool isHole) const {
+    using PM = TrackStatePropMask;
+
+    TrackStateProxy trackState = makeTrackStateOnSurface(state, PM::None);
+    trackState.shareFrom(PM::Predicted, PM::Filtered);
+
+    auto typeFlags = trackState.typeFlags();
+    if (isHole) {
+      typeFlags.setIsHole();
+    } else {
+      typeFlags.setHasNoExpectedHit();
+    }
+
+    return trackState.index();
+  }
+
+ protected:
+  /// Access to the concrete creator
+  /// @return the concrete creator
+  const derived_t& derived() const {
+    return static_cast<const derived_t&>(*this);
+  }
+
+  /// Make a track state on the current surface with the predicted parameters,
+  /// the jacobian, the path length, the surface and the flags which do not
+  /// depend on a measurement.
+  ///
+  /// The first track state on the surface owns the predicted parameters and
+  /// the jacobian. All further track states share them.
+  ///
+  /// @param state the state of the current surface
+  /// @param mask the components to allocate beyond the shared ones
+  ///
+  /// @return the new track state
+  TrackStateProxy makeTrackStateOnSurface(State& state,
+                                          TrackStatePropMask mask) const {
+    using PM = TrackStatePropMask;
+
+    const bool isFirst = !state.firstTrackState.has_value();
     if (isFirst) {
       mask |= PM::Predicted | PM::Jacobian;
     }
@@ -430,31 +522,51 @@ class CkfTrackStateCreatorBase {
     }
 
     trackState.pathLength() = state.pathLength();
-    trackState.chi2() = candidate.chi2;
     trackState.setReferenceSurface(
         state.boundParameters().referenceSurface().getSharedPtr());
-    trackState.setUncalibratedSourceLink(
-        derived().sourceLink(state, candidate.measurement));
-    derived().fillCalibrated(state, candidate.measurement, trackState);
 
     auto typeFlags = trackState.typeFlags();
     typeFlags.setHasParameters();
-    typeFlags.setHasMeasurement();
     if (trackState.referenceSurface().hasMaterial()) {
       typeFlags.setHasMaterial();
     }
-    if (candidate.isOutlier) {
-      typeFlags.setIsOutlier();
-    }
 
-    return trackState.index();
+    return trackState;
   }
 
- protected:
-  /// Access to the concrete creator
-  /// @return the concrete creator
-  const derived_t& derived() const {
-    return static_cast<const derived_t&>(*this);
+  /// Select the measurements on the surface of @p state and create their
+  /// track states
+  ///
+  /// @param state the state of the surface
+  /// @param trackStates the list to append the indices of new track states to
+  ///
+  /// @return success or the error of the selection
+  Result<void> createMeasurementTrackStates(
+      State& state, CkfTypes::BranchVector<TrackIndexType>& trackStates) const {
+    const Logger& logger = *state.logger;
+
+    auto range = derived().measurementRange(state);
+    // Bail out before the selection is consulted, so that an ordinary surface
+    // without measurements can never turn into a selection error.
+    if (std::ranges::empty(range)) {
+      ACTS_VERBOSE("No measurements on surface "
+                   << state.surface->geometryId());
+      return Result<void>::success();
+    }
+
+    using Measurement = std::ranges::range_value_t<decltype(range)>;
+    Candidates<Measurement> candidates;
+
+    if (Result<void> selection =
+            derived().selectMeasurements(state, range, candidates);
+        !selection.ok()) {
+      return selection.error();
+    }
+
+    for (const CkfTrackStateCandidate<Measurement>& candidate : candidates) {
+      trackStates.push_back(derived().createTrackState(state, candidate));
+    }
+    return Result<void>::success();
   }
 
   /// The Eigen math behind @ref calculatePredictedChi2, with the measurement

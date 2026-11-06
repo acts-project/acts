@@ -108,8 +108,8 @@ class Chi2CkfTrackStateCreatorBase
   ///
   /// If none of them satisfies the chi2 measurement cut, the best one is
   /// selected as an outlier if it satisfies the outlier cut. Otherwise nothing
-  /// is selected and the caller creates a hole. Measurements and outliers are
-  /// never mixed.
+  /// is selected, which makes a hole. Measurements and outliers are never
+  /// mixed.
   ///
   /// @tparam range_t the measurement range type
   /// @tparam candidates_t the candidate buffer type

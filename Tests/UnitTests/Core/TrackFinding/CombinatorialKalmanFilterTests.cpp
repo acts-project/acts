@@ -362,9 +362,9 @@ struct TestTrackStateCreator final
   }
 };
 
-/// Returns a hole state on every surface with measurements, which the CKF
-/// does not support from a track state creator.
-struct HoleTrackStateCreator {
+/// Returns a track state without any flags on every surface with
+/// measurements, which the CKF cannot process.
+struct FlaglessTrackStateCreator {
   const Fixture::TestSourceLinkContainer* container = nullptr;
 
   Result<CkfTypes::BranchVector<TrackIndexType>> createTrackStates(
@@ -382,10 +382,70 @@ struct HoleTrackStateCreator {
     trackState.predictedCovariance() = *params.covariance();
     trackState.jacobian() = std::get<BoundMatrix>(*input.boundState);
     trackState.setReferenceSurface(input.surface->getSharedPtr());
-    trackState.typeFlags().setHasParameters().setIsHole();
 
     trackStates.push_back(trackState.index());
     return trackStates;
+  }
+};
+
+/// Hides the measurements on some surfaces, so that the CKF passes surfaces
+/// without a measurement. It uses the default selection of the base.
+struct HoleTestCreator final
+    : public CkfTrackStateCreatorBase<HoleTestCreator, TrackContainer> {
+  using Base = CkfTrackStateCreatorBase<HoleTestCreator, TrackContainer>;
+  using State = typename Base::State;
+
+  /// Who creates the track state on a surface without a measurement
+  enum class HoleMode {
+    /// the creator, through the default of the base
+    Creator,
+    /// the CKF, because the creator returns no track state
+    Ckf,
+    /// the CKF, because the creator returns `NoMeasurementExpected`
+    CkfNoMeasurementExpected,
+  };
+
+  const Fixture::TestSourceLinkContainer* container = nullptr;
+  /// The measurements on these surfaces are hidden
+  std::vector<GeometryIdentifier> hiddenSurfaces;
+  HoleMode holeMode = HoleMode::Creator;
+  bool measurementExpected = true;
+
+  auto measurementRange(const State& state) const {
+    assert(container != nullptr);
+    auto [begin, end] = container->equal_range(state.surface->geometryId());
+    if (std::ranges::find(hiddenSurfaces, state.surface->geometryId()) !=
+        hiddenSurfaces.end()) {
+      begin = end;
+    }
+    return std::ranges::subrange(begin, end) | std::views::values;
+  }
+
+  SourceLink sourceLink(const State& /*state*/,
+                        const TestSourceLink& measurement) const {
+    return SourceLink{measurement};
+  }
+
+  CalibratedTestSourceLink calibrate(const State& /*state*/,
+                                     const TestSourceLink& measurement) const {
+    return CalibratedTestSourceLink{measurement};
+  }
+
+  Result<void> createHoleTrackStates(
+      State& state, CkfTypes::BranchVector<TrackIndexType>& trackStates) const {
+    switch (holeMode) {
+      case HoleMode::Creator:
+        return Base::createHoleTrackStates(state, trackStates);
+      case HoleMode::Ckf:
+        return Result<void>::success();
+      case HoleMode::CkfNoMeasurementExpected:
+        return CombinatorialKalmanFilterError::NoMeasurementExpected;
+    }
+    return Result<void>::success();
+  }
+
+  bool isMeasurementExpected(const State& /*state*/) const {
+    return measurementExpected;
   }
 };
 
@@ -455,18 +515,18 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   }
 }
 
-/// A track state which is neither a measurement nor an outlier must stop the
-/// track finding. Before, the CKF dropped the branch without an error.
+/// A track state which the CKF cannot process must stop the track finding.
+/// Before, the CKF dropped the branch without an error.
 BOOST_AUTO_TEST_CASE(UnsupportedTrackStateFails) {
   Fixture f(0_T);
 
   auto options = f.makeCkfOptions();
 
-  HoleTrackStateCreator trackStateCreator;
+  FlaglessTrackStateCreator trackStateCreator;
   trackStateCreator.container = &f.sourceLinks;
 
   options.extensions.trackStateCreator
-      .template connect<&HoleTrackStateCreator::createTrackStates>(
+      .template connect<&FlaglessTrackStateCreator::createTrackStates>(
           &trackStateCreator);
 
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
@@ -476,6 +536,125 @@ BOOST_AUTO_TEST_CASE(UnsupportedTrackStateFails) {
   BOOST_REQUIRE(!res.ok());
   BOOST_CHECK_EQUAL(res.error(),
                     CombinatorialKalmanFilterError::UnsupportedTrackState);
+}
+
+namespace {
+
+/// Run the CKF for all start parameters. If `hide` is set, the measurements on
+/// the second and the fourth surface with measurements are hidden.
+TrackContainer findWithHiddenSurfaces(Fixture& f,
+                                      HoleTestCreator::HoleMode mode,
+                                      bool measurementExpected,
+                                      bool hide = true) {
+  std::vector<GeometryIdentifier> surfaces;
+  for (const auto& [id, sl] : f.sourceLinks) {
+    if (std::ranges::find(surfaces, id) == surfaces.end()) {
+      surfaces.push_back(id);
+    }
+  }
+  std::sort(surfaces.begin(), surfaces.end());
+  BOOST_REQUIRE_GE(surfaces.size(), 4u);
+
+  HoleTestCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
+  if (hide) {
+    trackStateCreator.hiddenSurfaces = {surfaces[1], surfaces[3]};
+  }
+  trackStateCreator.holeMode = mode;
+  trackStateCreator.measurementExpected = measurementExpected;
+
+  auto options = f.makeCkfOptions();
+  options.extensions.trackStateCreator
+      .template connect<&HoleTestCreator::createTrackStates>(
+          &trackStateCreator);
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  for (const auto& startParameters : f.startParameters) {
+    auto res = f.ckf.findTracks(startParameters, options, tc);
+    BOOST_REQUIRE(res.ok());
+  }
+  return tc;
+}
+
+/// The track states of both containers must be the same
+void checkSameTracks(const TrackContainer& a, const TrackContainer& b) {
+  BOOST_REQUIRE_EQUAL(a.size(), b.size());
+  for (std::size_t i = 0; i < a.size(); ++i) {
+    const auto ta = a.getTrack(i);
+    const auto tb = b.getTrack(i);
+    BOOST_CHECK_EQUAL(ta.nMeasurements(), tb.nMeasurements());
+    BOOST_CHECK_EQUAL(ta.nOutliers(), tb.nOutliers());
+    BOOST_CHECK_EQUAL(ta.nHoles(), tb.nHoles());
+    BOOST_CHECK_EQUAL(ta.chi2(), tb.chi2());
+    BOOST_REQUIRE_EQUAL(ta.nTrackStates(), tb.nTrackStates());
+
+    auto sa = ta.trackStatesReversed().begin();
+    auto sb = tb.trackStatesReversed().begin();
+    for (; sa != ta.trackStatesReversed().end(); ++sa, ++sb) {
+      const auto stateA = *sa;
+      const auto stateB = *sb;
+      BOOST_CHECK_EQUAL(stateA.typeFlags().raw(), stateB.typeFlags().raw());
+      BOOST_CHECK_EQUAL(&stateA.referenceSurface(), &stateB.referenceSurface());
+      BOOST_CHECK_EQUAL(stateA.pathLength(), stateB.pathLength());
+      BOOST_CHECK(stateA.predicted() == stateB.predicted());
+      BOOST_CHECK(stateA.predictedCovariance() == stateB.predictedCovariance());
+      BOOST_CHECK(stateA.filtered() == stateB.filtered());
+      BOOST_CHECK(stateA.filteredCovariance() == stateB.filteredCovariance());
+      BOOST_CHECK(stateA.jacobian() == stateB.jacobian());
+    }
+  }
+}
+
+}  // namespace
+
+/// A hole from the creator gives the same tracks as a hole from the CKF.
+BOOST_AUTO_TEST_CASE(CreatorHolesMatchCkfHoles) {
+  Fixture f(0_T);
+
+  auto fromCreator =
+      findWithHiddenSurfaces(f, HoleTestCreator::HoleMode::Creator, true);
+  auto fromCkf =
+      findWithHiddenSurfaces(f, HoleTestCreator::HoleMode::Ckf, true);
+  auto reference = findWithHiddenSurfaces(f, HoleTestCreator::HoleMode::Creator,
+                                          true, false);
+
+  // the two hidden surfaces add two holes to each track
+  BOOST_REQUIRE_EQUAL(fromCreator.size(), reference.size());
+  for (std::size_t i = 0; i < fromCreator.size(); ++i) {
+    BOOST_CHECK_EQUAL(fromCreator.getTrack(i).nHoles(),
+                      reference.getTrack(i).nHoles() + 2u);
+  }
+  checkSameTracks(fromCreator, fromCkf);
+}
+
+/// If no measurement is expected, the creator flags the track state with no
+/// expected hit, which does not count as a hole. This is the same as the
+/// `NoMeasurementExpected` error.
+BOOST_AUTO_TEST_CASE(CreatorNoExpectedHitMatchesCkf) {
+  Fixture f(0_T);
+
+  auto fromCreator =
+      findWithHiddenSurfaces(f, HoleTestCreator::HoleMode::Creator, false);
+  auto fromCkf = findWithHiddenSurfaces(
+      f, HoleTestCreator::HoleMode::CkfNoMeasurementExpected, false);
+
+  auto reference = findWithHiddenSurfaces(f, HoleTestCreator::HoleMode::Creator,
+                                          true, false);
+
+  // the hidden surfaces and the holes without them all have no expected hit
+  BOOST_REQUIRE_EQUAL(fromCreator.size(), reference.size());
+  for (std::size_t i = 0; i < fromCreator.size(); ++i) {
+    const auto track = fromCreator.getTrack(i);
+    BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+    std::size_t nNoExpectedHit = 0;
+    for (const auto trackState : track.trackStatesReversed()) {
+      if (trackState.typeFlags().hasNoExpectedHit()) {
+        ++nNoExpectedHit;
+      }
+    }
+    BOOST_CHECK_EQUAL(nNoExpectedHit, reference.getTrack(i).nHoles() + 2u);
+  }
+  checkSameTracks(fromCreator, fromCkf);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
