@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
         std::set<std::pair<double, double>> fourSeedPars{};
         for (const auto ambi : {LL, RL, LR, RR}) {
           const auto pars =
-              Seeder::constructTangenSeed(topTube, bottomTube, ambi);
+              Seeder::constructTangentSeed(topTube, bottomTube, ambi);
 
           const bool isTruePars =
               Acts::abs(std::tan(pars.theta) - lineTanBeta) < tolerance &&
