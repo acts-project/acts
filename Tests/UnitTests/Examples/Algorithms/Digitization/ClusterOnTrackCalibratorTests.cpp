@@ -106,12 +106,12 @@ struct Sensor {
         hit, *surface, GeometryContext::dangerouslyDefaultConstruct(),
         Vector3::Zero(), *geoCfg.segmentation, thickness);
     BOOST_REQUIRE(channels.ok());
-    std::normal_distribution<double> noise(0., chargeNoise);
+    std::normal_distribution<double> gauss(0., 1.);
     std::map<int, double> fired;
     for (const auto& channel : *channels) {
       double charge = channel.activation;
       if (chargeNoise > 0) {
-        charge = std::max(0., charge + noise(rng));
+        charge = std::max(0., charge + chargeNoise * gauss(rng));
       }
       if (charge > threshold) {
         fired[static_cast<int>(channel.bin[0]) - kBinOffset] = charge;
@@ -178,7 +178,7 @@ double pullRms(const Sensor& sensor, double alpha, double alphaError,
                std::size_t n) {
   std::mt19937 rng(1234);
   std::uniform_real_distribution<double> uniform(0., sensor.pitch);
-  std::normal_distribution<double> angleNoise(0., alphaError);
+  std::normal_distribution<double> gauss(0., 1.);
   double sumPull2 = 0;
   std::size_t count = 0;
   for (std::size_t i = 0; i < n; ++i) {
@@ -187,7 +187,8 @@ double pullRms(const Sensor& sensor, double alpha, double alphaError,
     if (fired.empty()) {
       continue;
     }
-    const double predicted = alphaError > 0 ? alpha + angleNoise(rng) : alpha;
+    const double predicted =
+        alphaError > 0 ? alpha + alphaError * gauss(rng) : alpha;
     const auto [position, variance] =
         sensor.calibrate(fired, predicted, alphaError);
     if (variance == 0) {
