@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -101,6 +102,24 @@ template <typename measurement_t>
 concept StaticCalibratedMeasurementConcept =
     CalibratedMeasurementConcept<measurement_t> &&
     (CalibratedMeasurementSizeAtCompileTime<measurement_t> != Eigen::Dynamic);
+
+/// Transport a bound state onto another surface along a straight line.
+///
+/// This ignores the magnetic field and the material between the two surfaces,
+/// so it is only a good approximation for surfaces close to each other.
+///
+/// @param gctx the geometry context
+/// @param boundState the bound state to transport, with a covariance
+/// @param surface the target surface
+/// @param propagationDirection the direction of the propagation with respect
+///        to the momentum. The target must be ahead in this direction.
+///
+/// @return the bound state on @p surface. Its jacobian starts where the
+///         jacobian of @p boundState starts, and its path length includes the
+///         distance between the surfaces. An error if the surface is not ahead.
+Result<CkfTypes::BoundState> transportBoundStateStraightLine(
+    const GeometryContext& gctx, const CkfTypes::BoundState& boundState,
+    const Surface& surface, Direction propagationDirection);
 
 }  // namespace detail
 
@@ -257,8 +276,9 @@ class CkfTrackStateCreatorBase {
   ///        extend, and the contexts
   ///
   /// @return the indices of the newly created track states, in the order the
-  ///         selection produced them, or an error. If the selection keeps no
-  ///         measurement, these are the track states from
+  ///         selection produced them, first on the current surface and then
+  ///         on each of @ref neighbourSurfaces, or an error. If no selection
+  ///         keeps a measurement, these are the track states from
   ///         @ref createHoleTrackStates.
   TrackStatesResult createTrackStates(const Input& input) const {
     assert(input.geoContext != nullptr && input.calibrationContext != nullptr &&
@@ -276,6 +296,30 @@ class CkfTrackStateCreatorBase {
       return res.error();
     }
 
+    for (const Surface* neighbour : derived().neighbourSurfaces(state)) {
+      assert(neighbour != nullptr && neighbour != input.surface);
+
+      Result<CkfTypes::BoundState> neighbourBoundState =
+          derived().transportToSurface(state, *neighbour);
+      if (!neighbourBoundState.ok()) {
+        ACTS_VERBOSE("Skip neighbour surface " << neighbour->geometryId()
+                                               << ": "
+                                               << neighbourBoundState.error());
+        continue;
+      }
+
+      Input neighbourInput = input;
+      neighbourInput.surface = neighbour;
+      neighbourInput.boundState = &*neighbourBoundState;
+      State neighbourState(neighbourInput);
+
+      if (Result<void> res =
+              createMeasurementTrackStates(neighbourState, trackStates);
+          !res.ok()) {
+        return res.error();
+      }
+    }
+
     if (trackStates.empty()) {
       ACTS_VERBOSE("No measurement selected on surface "
                    << input.surface->geometryId());
@@ -289,8 +333,54 @@ class CkfTrackStateCreatorBase {
     return trackStates;
   }
 
+  /// The surfaces next to the current one which are also searched for
+  /// measurements, e.g. overlapping modules.
+  ///
+  /// The creator selects on each of these surfaces as on the current one, and
+  /// the track states on them come after the ones on the current surface. The
+  /// creator makes a hole only if no surface has a track state.
+  ///
+  /// @note A surface must be ahead in the propagation direction, because the
+  ///       CKF continues from there. @ref transportToSurface rejects one
+  ///       which is not.
+  /// @note If the CKF continues from a neighbour surface, it skips all
+  ///       surfaces between the current surface and the neighbour, so these
+  ///       get no track state, not even a hole.
+  /// @note If the CKF continues from a neighbour surface, it skips the part of
+  ///       the material of the current surface which comes after the update.
+  ///       The default @ref transportToSurface also skips the part of the
+  ///       material of the neighbour surface which comes before the update.
+  ///
+  /// @param state the state of the current surface
+  ///
+  /// @return a range of `const Surface*`, empty by default
+  auto neighbourSurfaces(const State& state) const {
+    static_cast<void>(state);
+
+    return std::ranges::empty_view<const Surface*>{};
+  }
+
+  /// The predicted bound state on a neighbour surface.
+  ///
+  /// The default transports the bound state of the current surface along a
+  /// straight line, see @ref detail::transportBoundStateStraightLine. It
+  /// ignores the magnetic field and all material, so override this if the
+  /// surfaces are far apart or carry a lot of material.
+  ///
+  /// @param state the state of the current surface
+  /// @param surface the neighbour surface
+  ///
+  /// @return the bound state on @p surface, or an error to skip it
+  Result<CkfTypes::BoundState> transportToSurface(
+      const State& state, const Surface& surface) const {
+    return detail::transportBoundStateStraightLine(*state.geoContext,
+                                                   *state.boundState, surface,
+                                                   state.propagationDirection);
+  }
+
   /// Create the track states on a surface on which the selection kept no
-  /// measurement, or which has no measurements at all.
+  /// measurement, or which has no measurements at all, and on whose neighbour
+  /// surfaces the selection kept none either.
   ///
   /// The default creates one track state without a measurement. It is a hole
   /// if @ref isMeasurementExpected, and otherwise a state flagged with no

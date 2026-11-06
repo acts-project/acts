@@ -410,6 +410,17 @@ struct HoleTestCreator final
   std::vector<GeometryIdentifier> hiddenSurfaces;
   HoleMode holeMode = HoleMode::Creator;
   bool measurementExpected = true;
+  /// The neighbour surfaces of a surface
+  std::unordered_map<GeometryIdentifier, std::vector<const Surface*>>
+      neighbours;
+
+  std::span<const Surface* const> neighbourSurfaces(const State& state) const {
+    auto it = neighbours.find(state.surface->geometryId());
+    if (it == neighbours.end()) {
+      return {};
+    }
+    return it->second;
+  }
 
   auto measurementRange(const State& state) const {
     assert(container != nullptr);
@@ -540,12 +551,8 @@ BOOST_AUTO_TEST_CASE(UnsupportedTrackStateFails) {
 
 namespace {
 
-/// Run the CKF for all start parameters. If `hide` is set, the measurements on
-/// the second and the fourth surface with measurements are hidden.
-TrackContainer findWithHiddenSurfaces(Fixture& f,
-                                      HoleTestCreator::HoleMode mode,
-                                      bool measurementExpected,
-                                      bool hide = true) {
+/// The surfaces with measurements, in the order the tracks cross them
+std::vector<GeometryIdentifier> measurementSurfaces(const Fixture& f) {
   std::vector<GeometryIdentifier> surfaces;
   for (const auto& [id, sl] : f.sourceLinks) {
     if (std::ranges::find(surfaces, id) == surfaces.end()) {
@@ -553,6 +560,16 @@ TrackContainer findWithHiddenSurfaces(Fixture& f,
     }
   }
   std::sort(surfaces.begin(), surfaces.end());
+  return surfaces;
+}
+
+/// Run the CKF for all start parameters. If `hide` is set, the measurements on
+/// the second and the fourth surface with measurements are hidden.
+TrackContainer findWithHiddenSurfaces(Fixture& f,
+                                      HoleTestCreator::HoleMode mode,
+                                      bool measurementExpected,
+                                      bool hide = true) {
+  const std::vector<GeometryIdentifier> surfaces = measurementSurfaces(f);
   BOOST_REQUIRE_GE(surfaces.size(), 4u);
 
   HoleTestCreator trackStateCreator;
@@ -655,6 +672,125 @@ BOOST_AUTO_TEST_CASE(CreatorNoExpectedHitMatchesCkf) {
     BOOST_CHECK_EQUAL(nNoExpectedHit, reference.getTrack(i).nHoles() + 2u);
   }
   checkSameTracks(fromCreator, fromCkf);
+}
+
+namespace {
+
+/// Run the CKF for all start parameters with the measurements on surface A
+/// hidden. If `jump` is set, surface B is a neighbour of surface A.
+TrackContainer findWithNeighbour(Fixture& f, const GeometryIdentifier& a,
+                                 const GeometryIdentifier& b, bool jump) {
+  HoleTestCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
+  trackStateCreator.hiddenSurfaces = {a};
+  if (jump) {
+    trackStateCreator.neighbours[a] = {f.detector.geometry->findSurface(b)};
+  }
+
+  auto options = f.makeCkfOptions();
+  options.extensions.trackStateCreator
+      .template connect<&HoleTestCreator::createTrackStates>(
+          &trackStateCreator);
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  for (const auto& startParameters : f.startParameters) {
+    auto res = f.ckf.findTracks(startParameters, options, tc);
+    BOOST_REQUIRE(res.ok());
+  }
+  return tc;
+}
+
+/// The track state of a track on a surface
+std::optional<TrackContainer::ConstTrackStateProxy> stateOnSurface(
+    const TrackContainer::ConstTrackProxy& track,
+    const GeometryIdentifier& id) {
+  for (const auto trackState : track.trackStatesReversed()) {
+    if (trackState.referenceSurface().geometryId() == id) {
+      return trackState;
+    }
+  }
+  return std::nullopt;
+}
+
+}  // namespace
+
+/// Without measurements on surface A, the creator finds the measurement on
+/// its neighbour B and the CKF continues from B. In zero field, the straight
+/// line transport to B is exact up to the material.
+BOOST_AUTO_TEST_CASE(NeighbourSurfaceJump) {
+  Fixture f(0_T);
+
+  const std::vector<GeometryIdentifier> surfaces = measurementSurfaces(f);
+  BOOST_REQUIRE_GE(surfaces.size(), 3u);
+  const GeometryIdentifier a = surfaces[1];
+  const GeometryIdentifier b = surfaces[2];
+
+  const TrackContainer jumped = findWithNeighbour(f, a, b, true);
+  const TrackContainer reference = findWithNeighbour(f, a, b, false);
+
+  BOOST_REQUIRE_EQUAL(jumped.size(), reference.size());
+  for (std::size_t i = 0; i < jumped.size(); ++i) {
+    const auto track = jumped.getTrack(i);
+    const auto referenceTrack = reference.getTrack(i);
+
+    // the reference has a hole on A, the jumped track has no state there
+    BOOST_CHECK_EQUAL(track.nMeasurements(), referenceTrack.nMeasurements());
+    BOOST_CHECK_EQUAL(track.nHoles() + 1u, referenceTrack.nHoles());
+    BOOST_CHECK_EQUAL(track.nTrackStates() + 1u, referenceTrack.nTrackStates());
+    BOOST_CHECK(!stateOnSurface(track, a).has_value());
+
+    // the navigator must not visit B again after the jump
+    std::vector<GeometryIdentifier> visited;
+    double next = std::numeric_limits<double>::infinity();
+    for (const auto trackState : track.trackStatesReversed()) {
+      const GeometryIdentifier id = trackState.referenceSurface().geometryId();
+      BOOST_CHECK(std::ranges::find(visited, id) == visited.end());
+      visited.push_back(id);
+      BOOST_CHECK_LT(trackState.pathLength(), next);
+      next = trackState.pathLength();
+    }
+
+    const auto onB = stateOnSurface(track, b);
+    const auto referenceOnA = stateOnSurface(referenceTrack, a);
+    const auto referenceOnB = stateOnSurface(referenceTrack, b);
+    BOOST_REQUIRE(onB.has_value() && referenceOnA.has_value() &&
+                  referenceOnB.has_value());
+    BOOST_CHECK(onB->typeFlags().isMeasurement());
+    BOOST_CHECK_EQUAL(
+        onB->getUncalibratedSourceLink().get<TestSourceLink>().sourceId,
+        referenceOnB->getUncalibratedSourceLink()
+            .get<TestSourceLink>()
+            .sourceId);
+
+    BOOST_CHECK_CLOSE(onB->pathLength(), referenceOnB->pathLength(), 1e-9);
+    for (const auto index : {eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta}) {
+      BOOST_CHECK_SMALL(
+          onB->predicted()[index] - referenceOnB->predicted()[index], 1e-9);
+    }
+
+    // The jacobian of B starts where the jacobian of A starts. The reference
+    // loses energy on A after the update and the jump does not, which changes
+    // the derivative of the time by q/p a little.
+    const BoundMatrix expectedJacobian =
+        referenceOnB->jacobian() * referenceOnA->jacobian();
+    BOOST_CHECK(onB->jacobian().isApprox(expectedJacobian, 1e-5));
+  }
+}
+
+/// A neighbour behind the current surface is skipped, so the current surface
+/// gets a hole.
+BOOST_AUTO_TEST_CASE(NeighbourSurfaceBehindIsSkipped) {
+  Fixture f(0_T);
+
+  const std::vector<GeometryIdentifier> surfaces = measurementSurfaces(f);
+  BOOST_REQUIRE_GE(surfaces.size(), 3u);
+
+  const TrackContainer jumped =
+      findWithNeighbour(f, surfaces[2], surfaces[1], true);
+  const TrackContainer reference =
+      findWithNeighbour(f, surfaces[2], surfaces[1], false);
+
+  checkSameTracks(jumped, reference);
 }
 
 /// After a branch switch, the stepper counts its path length from zero again.

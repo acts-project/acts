@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/GsfComponent.hpp"
@@ -61,6 +62,8 @@ struct TrackStateCreatorInput {
   TrackStateContainerBackend* trajectory{};
   /// A logger for messages
   const Logger* logger{};
+  /// The direction of the propagation with respect to the momentum
+  Direction propagationDirection = Direction::Forward();
 };
 
 }  // namespace CkfTypes
@@ -147,7 +150,10 @@ struct CombinatorialKalmanFilterExtensions {
   ///         but without a measurement, e.g. a hole. Otherwise the CKF fails
   ///         with @ref CombinatorialKalmanFilterError::UnsupportedTrackState.
   ///         The CKF counts a state flagged as a hole in the holes of its
-  ///         branch. An empty list means that the CKF creates a hole.
+  ///         branch. An empty list means that the CKF creates a hole. A track
+  ///         state may be on another surface than `input.surface`, if it is
+  ///         ahead in the propagation direction. If the CKF continues with
+  ///         such a state, it restarts the propagation on its surface.
   using TrackStateCreatorDelegate =
       Delegate<Result<CkfTypes::BranchVector<TrackIndexType>>(
           const CkfTypes::TrackStateCreatorInput<track_container_t>& input)>;

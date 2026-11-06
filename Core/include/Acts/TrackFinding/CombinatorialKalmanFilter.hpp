@@ -704,7 +704,8 @@ class CombinatorialKalmanFilter {
               .boundState = &boundState,
               .prevTip = prevTip,
               .trajectory = result.trackStates,
-              .logger = &logger()};
+              .logger = &logger(),
+              .propagationDirection = state.options.direction};
           tsRes = extensions.trackStateCreator(input);
         } else {
           tsRes = extensions.createTrackStates(
@@ -800,6 +801,17 @@ class CombinatorialKalmanFilter {
       }
 
       auto currentState = currentBranch.outermostTrackState();
+
+      if (&currentState.referenceSurface() != &surface) {
+        // The creator put the track state on another surface ahead. The
+        // stepper and the navigator continue from there, as for a branch
+        // switch, which also applies the material of that surface.
+        ACTS_VERBOSE("Track state with tip = "
+                     << currentState.index() << " is on surface "
+                     << currentState.referenceSurface().geometryId()
+                     << ", continue from there");
+        return reset(state, stepper, navigator, result);
+      }
 
       if (currentState.typeFlags().isOutlier()) {
         // We don't need to update the stepper given an outlier state
