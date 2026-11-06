@@ -64,6 +64,23 @@ class GbtsTrackingFilter final {
     std::array<float, 3> initialVarianceX = {0.25f, 0.001f, 0.001f};
     /// Initial variance of the longitudinal state (z, dz/dr).
     std::array<float, 2> initialVarianceY = {1.5f, 0.001f};
+
+    /// Calibrate a path's strip space points with the path's own direction,
+    /// as the doublet stage and the seed parameter estimate do. A stored strip
+    /// space point is where the two strips cross for a direction it does not
+    /// know, which is up to about 20 mm off along the strip at low pT; fitted
+    /// as stored, it biases the path's slope, and the filter then refuses true
+    /// pixels further in.
+    bool calibrateStrips = false;
+    /// How far along a strip a calibrated crossing may land, as a multiple of
+    /// the strip half-length, as `GbtsGraphBuilder::Config`.
+    float maxStripLengthFraction = 1.1f;
+    /// Search the pixels of a path inwards first, then pick up its strip space
+    /// points outwards from the outermost pixel, with the state the pixels
+    /// gave. The pixel chains then do not depend on a fit started in the
+    /// strips, and the strips are calibrated with a direction the pixels set.
+    /// Chains of strips alone are searched inwards as before.
+    bool pixelsInwardStripsOutward = false;
   };
 
   /// @param config Configuration for seed finder
@@ -98,6 +115,27 @@ class GbtsTrackingFilter final {
   /// @return Success flag
   bool update(const detail::GbtsNodeView& nodeView, const detail::GbtsEdge& pS,
               detail::GbtsEdgeState& ts) const;
+
+  /// Update an edge state in the inward frame with the edge's outer node: the
+  /// state is carried outwards from the edge's inner node, as the strips are
+  /// picked up with `pixelsInwardStripsOutward`.
+  /// @param nodeView View of the node positions and layers
+  /// @param pS Edge whose outer node to update with
+  /// @param ts Edge state to update
+  /// @return Success flag
+  bool updateOutward(const detail::GbtsNodeView& nodeView,
+                     const detail::GbtsEdge& pS,
+                     detail::GbtsEdgeState& ts) const;
+
+  /// Update an edge state with `newNode`, reached from `previousNode`.
+  /// @param nodeView View of the node positions and layers
+  /// @param newNode Node to update with
+  /// @param previousNode Node the state was last updated with
+  /// @param ts Edge state to update
+  /// @return Success flag
+  bool updateImpl(const detail::GbtsNodeView& nodeView,
+                  SpacePointIndex newNode, SpacePointIndex previousNode,
+                  detail::GbtsEdgeState& ts) const;
 
   /// Get layer type from layer index
   /// @param layerIndex Layer index
