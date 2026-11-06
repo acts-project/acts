@@ -210,6 +210,11 @@ canonical curvilinear output do not consume a configurable bound interpretation.
 These checks concern requested bound operations, not surfaces merely traversed
 by navigation. Alternative-parametrization rejection tests remain deferred.
 
+@ref Acts::Experimental::RiddersStepper forms its numerical transport residuals
+using the destination surface's parametrization, including periodic direction
+differences. Its perturbation generation and finite-difference algorithm are
+unchanged.
+
 Pointwise material physics computes a projected scattering variance independently
 of the direction coordinates. A separate mapping produces the direction-noise
 block, with a direct diagonal calculation for the canonical spherical convention.
