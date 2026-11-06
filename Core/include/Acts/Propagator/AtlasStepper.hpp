@@ -17,6 +17,7 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Propagator/AtlasStepperError.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
@@ -35,10 +36,12 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <format>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 #include <utility>
 
 namespace Acts {
@@ -58,6 +61,14 @@ class IVolumeMaterial;
 /// the non-linear free-to-bound correction are not supported.
 ///
 /// This historical port is maintained independently of Athena.
+///
+/// Bound-state entry points accept only canonical global-spherical bound
+/// coordinates. Initialization, bound updates, bound parameter extraction and
+/// bound transport check the supplied surface, including without covariance.
+/// Unsupported parametrizations throw std::system_error with
+/// AtlasStepperError::UnsupportedBoundParametrization before modifying the
+/// state. Free Cartesian updates and canonical curvilinear output need no such
+/// check.
 class AtlasStepper {
  public:
   /// Type alias for bound track parameters
@@ -172,6 +183,7 @@ class AtlasStepper {
   /// Initialize stepper state from bound track parameters
   /// @param state Stepper state to initialize
   /// @param par Bound track parameters containing initial conditions
+  /// @throws std::system_error for an unsupported bound parametrization
   void initialize(State& state, const BoundParameters& par) const {
     initialize(state, par.parameters(), par.covariance(),
                par.particleHypothesis(), par.referenceSurface());
@@ -183,10 +195,12 @@ class AtlasStepper {
   /// @param cov Optional covariance matrix
   /// @param particleHypothesis Particle hypothesis (mass, charge)
   /// @param surface Reference surface for bound parameters
+  /// @throws std::system_error for an unsupported bound parametrization
   void initialize(State& state, const BoundVector& boundParams,
                   const std::optional<BoundMatrix>& cov,
                   ParticleHypothesis particleHypothesis,
                   const Surface& surface) const {
+    requireCanonicalParametrization(state, surface);
     state.particleHypothesis = particleHypothesis;
 
     state.pathAccumulated = 0;
@@ -430,8 +444,10 @@ class AtlasStepper {
   /// @param [in] surface The surface of the parameters
   /// @return The bound parameters, or a failure if the position cannot be
   ///         expressed on @p surface
+  /// @throws std::system_error for an unsupported bound parametrization
   Result<BoundParameters> boundParameters(const State& state,
                                           const Surface& surface) const {
+    requireCanonicalParametrization(state, surface);
     Vector4 pos4(state.pVector[0], state.pVector[1], state.pVector[2],
                  state.pVector[3]);
     return BoundTrackParameters::create(
@@ -472,9 +488,11 @@ class AtlasStepper {
   /// @param [in] boundParams Corresponding bound parameters
   /// @param [in] covariance The updated covariance matrix
   /// @param [in] surface The surface used to update the pVector
+  /// @throws std::system_error for an unsupported bound parametrization
   void update(State& state, const FreeVector& parameters,
               const BoundVector& boundParams, const Covariance& covariance,
               const Surface& surface) const {
+    requireCanonicalParametrization(state, surface);
     static_cast<void>(boundParams);
     update(state, parameters.segment<3>(eFreePos0),
            parameters.segment<3>(eFreeDir0).normalized(),
@@ -538,10 +556,12 @@ class AtlasStepper {
   /// @param [in] surface The surface to transport the covariance to
   /// @return The jacobian from the previous anchor to @p surface, or a failure
   ///         if the state is not on @p surface
+  /// @throws std::system_error for an unsupported bound parametrization
   Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& /*freeToBoundCorrection*/ =
           FreeToBoundCorrection(false)) const {
+    requireCanonicalParametrization(state, surface);
     if (!surface.isOnSurface(state.options.geoContext, position(state),
                              direction(state), BoundaryTolerance::Infinite())) {
       return Result<Jacobian>::failure(
@@ -913,6 +933,19 @@ class AtlasStepper {
   }
 
  private:
+  static void requireCanonicalParametrization(const State& state,
+                                              const Surface& surface) {
+    if (!surface.boundParametrization(state.options.geoContext)
+             .isGlobalSpherical()) {
+      throw std::system_error(
+          make_error_code(AtlasStepperError::UnsupportedBoundParametrization),
+          std::format(
+              "AtlasStepper requires global-spherical bound coordinates "
+              "on surface {}",
+              surface.geometryId()));
+    }
+  }
+
   /// Initialize the bound-to-free Jacobian at a new covariance anchor.
   void resetJacobian(State& state, const Surface& surface) const {
     std::ranges::fill(state.pVector.begin() + eFreeSize, state.pVector.end(),
