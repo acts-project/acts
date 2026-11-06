@@ -27,6 +27,8 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
@@ -150,7 +152,7 @@ constexpr const char* kHeaderKey = "acts-geometry-volumes";
 constexpr const char* kVersionKey = "format-version";
 constexpr const char* kScopeKey = "scope";
 constexpr const char* kScopeValue = "volumes-bounds-portals";
-constexpr int kFormatVersion = 1;
+constexpr int kFormatVersion = 2;
 
 constexpr const char* kPortalsKey = "portals";
 constexpr const char* kSurfacesKey = "surfaces";
@@ -581,8 +583,17 @@ std::unique_ptr<Acts::PortalLinkBase> decodeCompositePortalLink(
   for (const auto& child : encoded.at(kChildrenKey)) {
     children.push_back(converter.portalLinkFromJson(child, surfaces, volumes));
   }
-  return std::make_unique<Acts::CompositePortalLink>(std::move(children),
-                                                     direction);
+  auto link = std::make_unique<Acts::CompositePortalLink>(std::move(children),
+                                                          direction);
+  // Construction merges the child surfaces into a new surface. Restore the
+  // serialized surface identity so material is applied to the actual portal.
+  auto surface = std::dynamic_pointer_cast<Acts::RegularSurface>(
+      surfaces.at(encoded.at(kSurfaceIdKey).get<std::size_t>()));
+  if (!surface) {
+    throw std::invalid_argument("Composite portal surface is not regular");
+  }
+  link->setSurface(std::move(surface));
+  return link;
 }
 
 std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
@@ -750,7 +761,8 @@ void verifySchemaHeader(const nlohmann::json& encoded) {
     throw std::invalid_argument("Missing geometry JSON header");
   }
   const auto& header = encoded.at(kHeaderKey);
-  if (header.at(kVersionKey).get<int>() != kFormatVersion) {
+  const int version = header.at(kVersionKey).get<int>();
+  if (version != 1 && version != kFormatVersion) {
     throw std::invalid_argument("Unsupported geometry JSON format version");
   }
   if (header.at(kScopeKey).get<std::string>() != kScopeValue) {
@@ -1006,12 +1018,36 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
 
   encoded[kRootVolumeIdKey] = volumeIds.at(world);
 
+  if (options.writeMaterial) {
+    std::vector<const Surface*> materialSurfaces;
+    SurfaceMaterialMaps assignments;
+    for (const auto* surface : orderedSurfaces) {
+      if (auto material = surface->surfaceMaterialSharedPtr()) {
+        materialSurfaces.push_back(surface);
+        assignments.try_emplace(surface->geometryId(), std::move(material));
+      }
+    }
+    auto material = detail::MaterialSurfaceRegistry(materialSurfaces)
+                        .materialMaps(std::move(assignments));
+    for (const auto* volume : orderedVolumes) {
+      if (volume->volumeMaterial() != nullptr) {
+        material.volumeMaterials.try_emplace(volume->geometryId(),
+                                             volume->volumeMaterialPtr());
+      }
+    }
+    encoded["material"] =
+        TrackingGeometryMaterialJsonConverter(m_cfg.materialConfig)
+            .toJson(material, options.materialOptions);
+  }
+
   // Encode surfaces
-  const SurfaceJsonConverter::Options surfaceOptions{.writeMaterial =
-                                                         options.writeMaterial};
+  const SurfaceJsonConverter::Options surfaceOptions{.writeMaterial = false};
   for (const auto* surf : orderedSurfaces) {
     nlohmann::json jSurface =
         SurfaceJsonConverter::toJson(gctx, *surf, surfaceOptions);
+    if (const auto& key = detail::materialKey(surf->surfaceMaterial())) {
+      jSurface["material_key"] = *key;
+    }
     jSurface[kSurfaceIdKey] = surfaceIds.at(*surf);
     encoded[kSurfacesKey].push_back(std::move(jSurface));
   }
@@ -1088,6 +1124,8 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     const GeometryContext& gctx, const nlohmann::json& encoded,
     const Options& /*options*/) const {
   verifySchemaHeader(encoded);
+  const bool legacyFormat =
+      encoded.at(kHeaderKey).at(kVersionKey).get<int>() == 1;
 
   if (!encoded.contains(kVolumesKey) || !encoded.contains(kRootVolumeIdKey) ||
       !encoded.contains(kPortalsKey)) {
@@ -1170,7 +1208,16 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 
   // ---------------------------------------------------
   for (const auto& [surfaceId, record] : surfaceRecords) {
+    if (!legacyFormat && record.payload.contains("material")) {
+      throw std::invalid_argument(
+          "Inline surface material is not supported in geometry v2");
+    }
     auto surface = Acts::SurfaceJsonConverter::fromJson(record.payload);
+    if (!legacyFormat && record.payload.contains("material_key")) {
+      surface->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
+          BinUtility{}, MappingType::Default,
+          record.payload.at("material_key").get<std::string>()));
+    }
     surfacePointers.emplace(surfaceId, surface);
   }
 
@@ -1185,7 +1232,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
         record.transform, std::move(volumeBounds), record.name);
 
     GeometryIdentifier geometryId(record.geometryId);
-    if (geometryId == GeometryIdentifier{}) {
+    if (legacyFormat && geometryId == GeometryIdentifier{}) {
       geometryId = GeometryIdentifier{}.withVolume(volumeId + 1u);
     }
     volume->assignGeometryId(geometryId);
@@ -1307,6 +1354,18 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     throw std::invalid_argument("Root volume reconstruction failed");
   }
 
+  if (!legacyFormat && encoded.contains("material")) {
+    auto material = TrackingGeometryMaterialJsonConverter(m_cfg.materialConfig)
+                        .fromJson(encoded.at("material"));
+    std::vector<Surface*> surfaces;
+    for (const auto& [id, record] : surfaceRecords) {
+      surfaces.push_back(surfacePointers.at(id).get());
+    }
+    material.apply(surfaces);
+    for (const auto& [id, record] : volumeRecords) {
+      material.apply(*volumePointers.at(id));
+    }
+  }
   return std::shared_ptr<TrackingVolume>(std::move(root));
 }
 
@@ -1340,8 +1399,12 @@ Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
   ACTS_DEBUG("Reconstructing TrackingGeometry from JSON");
   auto world = trackingVolumeFromJson(gctx, encoded, options);
 
-  GeometryIdentifier::Value nextVolumeId = 1u;
-  ensureIdentifiers(*world, nextVolumeId);
+  // V2 preserves serialized IDs exactly: material assignment uses those IDs.
+  // Retain the historical synthesis of missing identifiers only for v1 files.
+  if (encoded.at(kHeaderKey).at(kVersionKey).get<int>() == 1) {
+    GeometryIdentifier::Value nextVolumeId = 1u;
+    ensureIdentifiers(*world, nextVolumeId);
+  }
 
   ACTS_DEBUG("TrackingGeometry reconstruction complete, root volume '"
              << world->volumeName() << "'");
