@@ -30,13 +30,11 @@ struct GbtsGraph {
   std::vector<detail::GbtsEdge> edgeStorage;
 
   /// The inner neighbours of edge `e` are `neighbours[neighbourOffsets[e]]` up
-  /// to `neighbours[neighbourOffsets[e + 1]]`, in the order they were linked.
+  /// to, not including, `neighbours[neighbourOffsets[e + 1]]`, in the order
+  /// they were linked.
   std::vector<std::uint32_t> neighbourOffsets;
   /// Inner neighbour edges of all edges, see `neighbourOffsets`.
   std::vector<std::uint32_t> neighbours;
-
-  /// Number of links between edges.
-  std::uint32_t nConnections = 0;
 
   /// The inner neighbour edges of an edge
   /// @param edge Index of the edge in `edgeStorage`

@@ -628,7 +628,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
           const float dPhi1 = curv * r1c;
 
           if (edgeStorage.size() < maxEdges) {
-            const auto outEdgeIdx =
+            const auto newEdgeIdx =
                 static_cast<std::uint32_t>(edgeStorage.size());
 
             edgeStorage.emplace_back(n1Idx, n2Idx, slw.tauRatioCutOuter,
@@ -642,9 +642,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
             const float curv2 = curv;
 
             // looking for neighbours of the new edge
-            for (std::uint32_t inEdgeIdx = n2FirstEdge; inEdgeIdx < n2LastEdge;
-                 ++inEdgeIdx) {
-              detail::GbtsEdge* pS = &edgeStorage[inEdgeIdx];
+            for (std::uint32_t outerEdgeIdx = n2FirstEdge;
+                 outerEdgeIdx < n2LastEdge; ++outerEdgeIdx) {
+              detail::GbtsEdge* pS = &edgeStorage[outerEdgeIdx];
 
               const float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
 
@@ -698,7 +698,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                 }
               }
 
-              links.emplace_back(inEdgeIdx, outEdgeIdx);
+              links.emplace_back(outerEdgeIdx, newEdgeIdx);
 
               isConnected = true;  // there is at least one good match
 
@@ -766,7 +766,6 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
     nextSlot[outer]++;
   }
 
-  graph.nConnections = static_cast<std::uint32_t>(links.size());
   return graph;
 }
 

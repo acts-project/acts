@@ -89,9 +89,9 @@ void GraphBasedTrackSeeder::createSeeds(
       graphBuilder.buildTheGraph(roi, nodeStorage, options.bFieldInZ);
 
   ACTS_DEBUG("Created graph with " << graph.edgeStorage.size() << " edges and "
-                                   << graph.nConnections << " edge links");
+                                   << graph.neighbours.size() << " edge links");
 
-  if (graph.edgeStorage.empty() || graph.nConnections == 0) {
+  if (graph.edgeStorage.empty() || graph.neighbours.empty()) {
     ACTS_WARNING("Missing edges or edge connections");
   }
 
@@ -340,9 +340,9 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   const auto maxLength = static_cast<std::uint32_t>(m_cfg.maxChainLength);
 
   // The level of an edge is the length of the longest chain of edges going
-  // outwards from it. The inner neighbours of an edge are further in, which are
-  // created later, so one pass in edge order settles it. Edges in chains longer
-  // than `maxLength` stay above it and are left out.
+  // outwards from it. The inner neighbours of an edge are created after it, so
+  // one pass in edge order settles it. Edges in chains longer than `maxLength`
+  // stay above it and are left out.
   std::vector<std::uint32_t> level(nEdges, 1);
   for (std::uint32_t e = 0; e < nEdges; ++e) {
     const std::uint32_t next = std::min(level[e] + 1, maxLength + 1);

@@ -676,7 +676,7 @@ BOOST_AUTO_TEST_CASE(EdgesKeepEveryInnerNeighbour) {
 
   const auto nEdges = static_cast<std::uint32_t>(graph.edgeStorage.size());
   BOOST_REQUIRE_EQUAL(graph.neighbourOffsets.size(), nEdges + 1);
-  BOOST_CHECK_EQUAL(graph.neighbours.size(), graph.nConnections);
+  BOOST_CHECK_EQUAL(graph.neighbours.size(), graph.neighbourOffsets.back());
 
   // the outer edge runs from the hit on layer 1 (index 0) to the one on
   // layer 2 (index 1)
