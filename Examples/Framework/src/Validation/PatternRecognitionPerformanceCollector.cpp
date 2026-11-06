@@ -205,6 +205,12 @@ void PatternRecognitionPerformanceCollector::fill(
     }
 
     auto imatched = trackParticleMatching.find(track.index());
+    if (fittedParameters.has_value()) {
+      m_fakePlotTool.fill(*fittedParameters,
+                          imatched != trackParticleMatching.end() &&
+                              imatched->second.classification ==
+                                  TrackMatchClassification::Fake);
+    }
     if (imatched == trackParticleMatching.end()) {
       m_stats.nTotalUnmatchedTracks++;
       unmatched++;
@@ -221,9 +227,6 @@ void PatternRecognitionPerformanceCollector::fill(
     }
 
     if (fittedParameters.has_value()) {
-      m_fakePlotTool.fill(
-          *fittedParameters,
-          particleMatch.classification == TrackMatchClassification::Fake);
       m_duplicationPlotTool.fill(
           *fittedParameters,
           particleMatch.classification == TrackMatchClassification::Duplicate);
