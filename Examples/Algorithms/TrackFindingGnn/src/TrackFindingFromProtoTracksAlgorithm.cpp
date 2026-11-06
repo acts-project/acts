@@ -30,9 +30,9 @@ using namespace ActsExamples;
 /// Creates track states from the measurements of the current proto track,
 /// falling back to all measurements on surfaces the proto track does not
 /// touch.
-class ProtoTrackStateCreator final
+class CustomTrackStateCreator final
     : public ActsExamples::Chi2CkfTrackStateCreatorBase<
-          ProtoTrackStateCreator> {
+          CustomTrackStateCreator> {
  public:
   using Container = GeometryIdMultiset<IndexSourceLink>;
 
@@ -101,7 +101,7 @@ ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
   GainMatrixUpdater kfUpdater;
   GainMatrixSmoother kfSmoother;
 
-  ProtoTrackStateCreator trackStateCreator;
+  CustomTrackStateCreator trackStateCreator;
   trackStateCreator.loggerPtr = logger().clone("TrackStateCreator");
   trackStateCreator.measurements = &measurements;
   trackStateCreator.cuts = m_cfg.trackStateSelection;
@@ -110,7 +110,7 @@ ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
   extensions.updater.connect<&GainMatrixUpdater::operator()<
       typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
   extensions.trackStateCreator
-      .template connect<&ProtoTrackStateCreator::createTrackStates>(
+      .template connect<&CustomTrackStateCreator::createTrackStates>(
           &trackStateCreator);
 
   // Set the CombinatorialKalmanFilter options

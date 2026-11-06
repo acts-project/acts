@@ -49,8 +49,9 @@ struct CalibratedMeasurement {
 };
 
 /// Creator over a flat list of loc0 values, one measurement per entry
-class TestCreator final
-    : public ActsExamples::Chi2CkfTrackStateCreatorBase<TestCreator> {
+class CustomTrackStateCreator final
+    : public ActsExamples::Chi2CkfTrackStateCreatorBase<
+          CustomTrackStateCreator> {
  public:
   std::vector<double> values;
   std::vector<IndexSourceLink> sourceLinks;
@@ -83,7 +84,7 @@ struct Fixture {
       CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();
 
   VectorMultiTrajectory trajectory;
-  TestCreator creator;
+  CustomTrackStateCreator creator;
 
   /// Predicted loc0 = 0 with unit variance, so the chi2 of a measurement at
   /// `value` is `value^2 / 2`
