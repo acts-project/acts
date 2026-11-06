@@ -85,6 +85,8 @@ class HelicalTrackLinearizer {
   /// @param fieldCache Magnetic field cache
   ///
   /// @return Linearized track
+  /// @deprecated Use linearizeTrackWithField with a reusable field query.
+  [[deprecated("Use linearizeTrackWithField with MagneticFieldQuery instead")]]
   Result<LinearizedTrack> linearizeTrack(
       const BoundTrackParameters& params, double linPointTime,
       const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
@@ -97,15 +99,15 @@ class HelicalTrackLinearizer {
   /// @param linPointTime Time of the linearization point
   /// @param perigeeSurface Surface defining the linearization point
   /// @param gctx Geometry context
-  /// @param mctx Field context for propagation; must match field's context
-  /// @param field Field query, borrowed for this call only
+  /// @param field Query providing both the PCA field and propagation context
   /// @return Linearized track or a propagation/field error
   Result<LinearizedTrack> linearizeTrackWithField(
       const BoundTrackParameters& params, double linPointTime,
       const Surface& perigeeSurface, const GeometryContext& gctx,
-      const MagneticFieldContext& mctx, MagneticFieldQuery& field) const;
+      MagneticFieldQuery& field) const;
 
  private:
+  // Transitional implementation shared with the deprecated API.
   // Exactly one of fieldCache and field is supplied by the public overloads.
   Result<LinearizedTrack> linearizeTrackImpl(
       const BoundTrackParameters& params, double linPointTime,

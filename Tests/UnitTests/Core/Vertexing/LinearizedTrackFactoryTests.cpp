@@ -23,6 +23,7 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
@@ -215,6 +216,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     std::shared_ptr<PerigeeSurface> perigee =
         Surface::makeShared<PerigeeSurface>(VectorHelpers::position(linPoint));
 
+    // Compare the deprecated entry points against the query-based API.
+    ACTS_PUSH_IGNORE_DEPRECATED()
     const LinearizedTrack linTrack1 =
         lin1.linearizeTrack(track, linPoint[3], *perigee, geometryContext,
                             fieldContext, fieldCache)
@@ -224,11 +227,13 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
                             fieldContext, zeroFieldCache)
             .value();
 
+    ACTS_POP_IGNORE_DEPRECATED()
+
     // Both public entry points use the same numerical implementation.
     auto queryTrack1 = lin1.linearizeTrackWithField(
-        track, linPoint[3], *perigee, geometryContext, fieldContext, query);
+        track, linPoint[3], *perigee, geometryContext, query);
     auto queryTrack2 = lin2.linearizeTrackWithField(
-        track, linPoint[3], *perigee, geometryContext, fieldContext, query);
+        track, linPoint[3], *perigee, geometryContext, query);
     BOOST_REQUIRE(queryTrack1.ok());
     BOOST_REQUIRE(queryTrack2.ok());
     CHECK_CLOSE_ABS(queryTrack1->positionJacobian, linTrack1.positionJacobian,
