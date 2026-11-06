@@ -287,6 +287,8 @@ class TrackContainer {
     requires(!ReadOnly)
   {
     container().ensureDynamicColumns_impl(other.container());
+    trackStateContainer().ensureDynamicColumns_impl(
+        other.trackStateContainer());
   }
 
   /// @}
