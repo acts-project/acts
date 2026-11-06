@@ -15,14 +15,17 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
+#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <array>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -65,7 +68,199 @@ struct DummyFitter {
   }
 };
 
+struct DerivativeFrames {
+  Transform3 structure;
+  Transform3 surface;
+};
+
+class ContextualDerivativeElement final
+    : public ActsTests::DetectorElementStub {
+ public:
+  ContextualDerivativeElement()
+      : DetectorElementStub(
+            Transform3::Identity(),
+            std::make_shared<const RectangleBounds>(1000_mm, 1000_mm), 1_um) {}
+
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const override {
+    return gctx.get<DerivativeFrames>().surface;
+  }
+};
+
+struct StructureDerivativeFixture {
+  DerivativeFrames frames;
+  ContextualDerivativeElement element;
+  std::shared_ptr<AlignableStructure> structure;
+  Vector3 trackOrigin;
+  Vector3 direction;
+  FreeVector pathDerivative = FreeVector::Zero();
+  Matrix<2, eBoundSize> projector = Matrix<2, eBoundSize>::Zero();
+
+  StructureDerivativeFixture() {
+    frames.structure = Translation3(100_mm, -40_mm, 300_mm) *
+                       AngleAxis3(0.6_rad, Vector3(1., 2., -1.).normalized());
+    frames.surface = frames.structure * Translation3(30_mm, -20_mm, 50_mm) *
+                     AngleAxis3(-0.8_rad, Vector3(2., -1., 3.).normalized());
+    structure = std::make_shared<AlignableStructure>(
+        GeometryIdentifier().withVolume(1), [](const GeometryContext& gctx) {
+          return gctx.get<DerivativeFrames>().structure;
+        });
+    structure->addSurface(element.surface().getSharedPtr());
+    structure->alignmentMask() = AlignmentMask::All;
+    trackOrigin = frames.surface * Vector3(3_mm, -7_mm, 0.);
+    direction =
+        (frames.surface.rotation() * Vector3(0.3, -0.2, 1.)).normalized();
+    pathDerivative.segment<3>(eFreePos0) = direction;
+    // Reverse measurement order to exercise the bound-to-measurement
+    // projection.
+    projector(0, eBoundLoc1) = 1.;
+    projector(1, eBoundLoc0) = 1.;
+  }
+
+  Vector3 intersection(const DerivativeFrames& state) const {
+    const Vector3 normal = state.surface.rotation().col(2);
+    const double path = normal.dot(state.surface.translation() - trackOrigin) /
+                        normal.dot(direction);
+    return trackOrigin + path * direction;
+  }
+
+  Vector2 residual(const DerivativeFrames& state) const {
+    const GeometryContext gctx{state};
+    BoundVector prediction = BoundVector::Zero();
+    prediction.segment<2>(eBoundLoc0) =
+        element.surface()
+            .globalToLocal(gctx, intersection(state), direction)
+            .value();
+    return Vector2(1_mm, -2_mm) - projector * prediction;
+  }
+
+  DerivativeFrames moved(const DerivativeFrames& state, std::size_t parameter,
+                         double step) const {
+    Transform3 delta = Transform3::Identity();
+    if (parameter < eAlignmentRotation0) {
+      delta.translation()[parameter] = step;
+    } else {
+      delta.linear() =
+          AngleAxis3(step, Vector3::Unit(parameter - eAlignmentRotation0))
+              .toRotationMatrix();
+    }
+    const Transform3 current = state.structure * delta;
+    return {current, current * state.structure.inverse() * state.surface};
+  }
+};
+
 }  // namespace
+
+BOOST_AUTO_TEST_CASE(StructureResidualDerivative) {
+  const StructureDerivativeFixture fixture;
+  const AlignmentHierarchy hierarchy({fixture.structure});
+  BOOST_REQUIRE(hierarchy.validate().ok());
+  const auto* owner = hierarchy.structureFor(fixture.element.surface());
+  BOOST_REQUIRE_EQUAL(owner, fixture.structure.get());
+
+  // Both contexts are displaced from the nominal element and have different
+  // structure/member poses. Hold the same global straight track in both.
+  const Transform3 motion =
+      Translation3(-12_mm, 8_mm, 5_mm) * AngleAxis3(-0.2_rad, Vector3::UnitY());
+  const std::array states{fixture.frames,
+                          DerivativeFrames{motion * fixture.frames.structure,
+                                           motion * fixture.frames.surface}};
+  for (std::size_t contextIndex = 0; contextIndex < states.size();
+       ++contextIndex) {
+    const auto& state = states[contextIndex];
+    const GeometryContext gctx{state};
+    const Transform3 frame = owner->localToGlobalTransform(gctx);
+    const Matrix<2, eAlignmentSize> analytical =
+        -fixture.projector * ActsAlignment::detail::alignmentToBoundDerivative(
+                                 gctx, fixture.element.surface(),
+                                 fixture.intersection(state), fixture.direction,
+                                 fixture.pathDerivative, owner->alignmentMask(),
+                                 &frame);
+    for (double scale : std::array{1e-5, 2e-6}) {
+      for (std::size_t parameter = 0; parameter < eAlignmentSize; ++parameter) {
+        BOOST_TEST_CONTEXT("context=" << contextIndex << ", parameter="
+                                      << parameter << ", scale=" << scale) {
+          const double step =
+              scale * (parameter < eAlignmentRotation0 ? 1_mm : 1_rad);
+          const Vector2 numerical =
+              (fixture.residual(fixture.moved(state, parameter, step)) -
+               fixture.residual(fixture.moved(state, parameter, -step))) /
+              (2. * step);
+          CHECK_CLOSE_ABS(analytical.col(parameter), numerical, 1e-6);
+        }
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(StructureDerivativeMaskAfterConversion) {
+  const StructureDerivativeFixture fixture;
+  const GeometryContext gctx{fixture.frames};
+  const Transform3 frame = fixture.structure->localToGlobalTransform(gctx);
+  const auto& surface = fixture.element.surface();
+  const Vector3 position = fixture.intersection(fixture.frames);
+  const AlignmentMask mask = AlignmentMask::Center0 | AlignmentMask::Rotation2;
+  const AlignmentToBoundMatrix masked =
+      ActsAlignment::detail::alignmentToBoundDerivative(
+          gctx, surface, position, fixture.direction, fixture.pathDerivative,
+          mask, &frame);
+  for (std::size_t parameter = 0; parameter < eAlignmentSize; ++parameter) {
+    if (parameter == eAlignmentCenter0 || parameter == eAlignmentRotation2) {
+      const double step =
+          2e-6 * (parameter < eAlignmentRotation0 ? 1_mm : 1_rad);
+      const Vector2 numerical =
+          (fixture.residual(fixture.moved(fixture.frames, parameter, step)) -
+           fixture.residual(fixture.moved(fixture.frames, parameter, -step))) /
+          (2. * step);
+      const Vector2 analytical = -fixture.projector * masked.col(parameter);
+      CHECK_CLOSE_ABS(analytical, numerical, 1e-6);
+    } else {
+      BOOST_CHECK_EQUAL(masked.col(parameter).squaredNorm(), 0.);
+    }
+  }
+  const AlignmentToBoundMatrix fixed =
+      ActsAlignment::detail::alignmentToBoundDerivative(
+          gctx, surface, position, fixture.direction, fixture.pathDerivative,
+          AlignmentMask::None, &frame);
+  BOOST_CHECK_EQUAL(fixed.squaredNorm(), 0.);
+
+  // Verify that this rotated geometry distinguishes both common mistakes.
+  const AlignmentToBoundMatrix raw = surface.alignmentToBoundDerivative(
+      gctx, position, fixture.direction, fixture.pathDerivative);
+  AlignmentToBoundMatrix prematureMask = raw;
+  ActsAlignment::detail::resetAlignmentDerivative(prematureMask, mask);
+  const AlignmentMatrix adapter =
+      Acts::detail::localFrameToAlignmentParametersJacobian(
+          fixture.frames.surface);
+  const AlignmentMatrix composite =
+      Acts::detail::compositeToComponentJacobian(frame, fixture.frames.surface);
+  const Vector2 wronglyMasked = -fixture.projector * prematureMask * adapter *
+                                composite.col(eAlignmentCenter0);
+  const Vector2 twiceAdapted = -fixture.projector * raw * adapter * adapter *
+                               composite.col(eAlignmentCenter0);
+  const Vector2 correct = -fixture.projector * masked.col(eAlignmentCenter0);
+  BOOST_CHECK_GT((wronglyMasked - correct).norm(), 1e-2);
+  BOOST_CHECK_GT((twiceAdapted - correct).norm(), 1e-2);
+}
+
+BOOST_AUTO_TEST_CASE(StandaloneDerivativeCompatibility) {
+  const StructureDerivativeFixture fixture;
+  const GeometryContext gctx{fixture.frames};
+  const auto& surface = fixture.element.surface();
+  const Vector3 position = fixture.intersection(fixture.frames);
+  for (AlignmentMask mask :
+       {AlignmentMask::All, AlignmentMask::None,
+        AlignmentMask::Center1 | AlignmentMask::Rotation0}) {
+    AlignmentToBoundMatrix expected = surface.alignmentToBoundDerivative(
+        gctx, position, fixture.direction, fixture.pathDerivative);
+    ActsAlignment::detail::resetAlignmentDerivative(expected, mask);
+    const AlignmentToBoundMatrix actual =
+        ActsAlignment::detail::alignmentToBoundDerivative(
+            gctx, surface, position, fixture.direction, fixture.pathDerivative,
+            mask);
+    BOOST_CHECK_EQUAL((actual - expected).squaredNorm(), 0.);
+  }
+}
 
 BOOST_AUTO_TEST_CASE(StructureWithoutFrame) {
   const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
