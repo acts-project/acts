@@ -13,9 +13,11 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -362,6 +364,32 @@ BOOST_AUTO_TEST_CASE(ChangeSourceLinkType) {
   BOOST_CHECK_EQUAL(ts.getUncalibratedSourceLink().get<double>(), otherValue);
   BOOST_CHECK_THROW(ts.getUncalibratedSourceLink().get<int>(),
                     std::bad_any_cast);
+}
+
+BOOST_AUTO_TEST_CASE(EnsureDynamicColumnsCopyOnTrackState) {
+  TrackContainer source{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  source.trackStateContainer().template addColumn<std::uint64_t>("counter");
+  source.trackStateContainer().template addColumn<std::uint8_t>("odd");
+
+  auto sourceTrack = source.makeTrack();
+  auto sourceState = sourceTrack.appendTrackState();
+  sourceState.template component<std::uint64_t>("counter") = 42;
+  sourceState.template component<std::uint8_t>("odd") = true;
+
+  TrackContainer target{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  target.ensureDynamicColumns(source);
+
+  BOOST_CHECK(target.trackStateContainer().hasColumn(hashString("counter")));
+  BOOST_CHECK(target.trackStateContainer().hasColumn(hashString("odd")));
+
+  auto targetTrack = target.makeTrack();
+  auto targetState = targetTrack.appendTrackState();
+  targetState.copyFrom(sourceState);
+
+  BOOST_CHECK_EQUAL(targetState.template component<std::uint64_t>("counter"),
+                    sourceState.template component<std::uint64_t>("counter"));
+  BOOST_CHECK_EQUAL(targetState.template component<std::uint8_t>("odd"),
+                    sourceState.template component<std::uint8_t>("odd"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
