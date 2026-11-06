@@ -19,6 +19,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -1032,6 +1033,17 @@ DetrayPayloadConverter::convertTrackingGeometry(
           // combine e.g. a SurfaceArrayNavigationPolicy with a
           // TryAllNavigationPolicy for passives and portals.
           return;
+        }
+
+        if (m_cfg.surfaceGridFill.has_value()) {
+          const auto& fillCfg = *m_cfg.surfaceGridFill;
+          const auto* surfaceArray =
+              dynamic_cast<const SurfaceArrayNavigationPolicy*>(&policy);
+          if (surfaceArray != nullptr &&
+              (!fillCfg.volumeSelector || fillCfg.volumeSelector(volume))) {
+            fillSurfaceGridFromLookup(*grid, *surfaceArray, volume, gctx,
+                                      surfaceLookupFn, fillCfg, logger());
+          }
         }
 
         if (detrayGrid.has_value()) {

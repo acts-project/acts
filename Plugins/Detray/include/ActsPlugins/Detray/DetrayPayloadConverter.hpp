@@ -22,8 +22,10 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeDispatcher.hpp"
 
+#include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 
 /// @cond
 namespace detray {
@@ -176,6 +178,60 @@ class DetrayPayloadConverter {
       const Acts::GeometryContext& gctx,
       const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
 
+  /// @brief Configuration for filling Detray surface grid bins from the ACTS
+  ///        surface array lookup.
+  ///
+  /// Every bin of a converted surface grid is filled with the surfaces the
+  /// ACTS neighbor lookup returns for tracks coming from the luminous region
+  /// and crossing that bin. This allows Detray to navigate the grids with a
+  /// {0, 0} search window. Tracks are sampled as straight lines from a set of
+  /// vertex z positions, rotated in phi to cover the bending of tracks down
+  /// to @c minPt in a solenoid field of strength @c bField.
+  struct SurfaceGridFillConfig {
+    /// Half range of the sampled vertex z positions around z = 0
+    double vertexZHalfRange = 200. * Acts::UnitConstants::mm;
+    /// Number of sampled vertex z positions
+    unsigned int nVertexZ = 21;
+    /// Lowest transverse momentum whose bending is covered. A value <= 0
+    /// samples straight lines only.
+    double minPt = 1. * Acts::UnitConstants::GeV;
+    /// Solenoid field strength used to estimate the bending
+    double bField = 2. * Acts::UnitConstants::T;
+    /// Number of bending directions sampled per crossing point. An odd number
+    /// includes the straight line.
+    unsigned int nBend = 3;
+    /// Number of crossing points sampled per bin and grid axis
+    unsigned int nPointsPerAxis = 3;
+    /// Optional selection of the volumes whose grids are filled. Grids of
+    /// volumes that are not selected keep the plain ACTS bin contents. If
+    /// empty, all volumes are selected.
+    std::function<bool(const Acts::TrackingVolume&)> volumeSelector;
+  };
+
+  /// Fill the bins of a converted surface grid with the surfaces the ACTS
+  /// surface array lookup returns for tracks from the luminous region.
+  ///
+  /// The Detray grid of a volume is looked up on a reference surface that is
+  /// not the ACTS layer surface: cylinder grids on the cylinder half way
+  /// between the volume's inner and outer radius, disc grids on the plane
+  /// through the volume centre. Surfaces are therefore added both to the bin
+  /// at the track position and to the bin at the crossing with the reference
+  /// surface. Bin contents are only extended, never removed.
+  ///
+  /// @param grid Detray surface grid converted from @p policy, filled in place
+  /// @param policy Surface array navigation policy the grid was converted from
+  /// @param volume Tracking volume owning @p policy
+  /// @param gctx Geometry context
+  /// @param surfaceLookup Surface lookup function
+  /// @param cfg Sampling configuration
+  /// @param logger Logger instance
+  /// @note Only cylinder and disc grids are filled; other grids are left unchanged.
+  static void fillSurfaceGridFromLookup(
+      DetraySurfaceGrid& grid, const Acts::SurfaceArrayNavigationPolicy& policy,
+      const Acts::TrackingVolume& volume, const Acts::GeometryContext& gctx,
+      const SurfaceLookupFunction& surfaceLookup,
+      const SurfaceGridFillConfig& cfg, const Acts::Logger& logger);
+
   /// @brief Configuration for the Detray payload converter
   struct Config {
     Config() = default;
@@ -227,6 +283,11 @@ class DetrayPayloadConverter {
     /// portal binning direction are considered numerical noise and are
     /// absorbed into their neighbour, as are gaps between segments.
     double portalSegmentTolerance = 1 * Acts::UnitConstants::um;
+
+    /// If set, the bins of surface grids converted from a
+    /// SurfaceArrayNavigationPolicy are filled from the ACTS lookup, see
+    /// @ref DetrayPayloadConverter::fillSurfaceGridFromLookup.
+    std::optional<SurfaceGridFillConfig> surfaceGridFill = std::nullopt;
 
     /// Type dispatcher for converting navigation policies
     Acts::TypeDispatcher<Acts::INavigationPolicy,
