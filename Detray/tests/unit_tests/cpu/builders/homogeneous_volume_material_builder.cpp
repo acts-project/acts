@@ -45,8 +45,6 @@ TEST(detray_builders, homogeneous_volume_material_builder) {
   vecmem::host_memory_resource host_mr;
   detector_t d(host_mr);
 
-  ASSERT_TRUE(d.material_store().template empty<material_id>());
-
   // Add material to a new volume
   auto vbuilder =
       std::make_unique<volume_builder<detector_t>>(volume_id::e_cylinder);

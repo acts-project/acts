@@ -143,6 +143,8 @@ class grid_impl {
 
   /// Create non-owning grid from owning grid. A single owning grid cannot be
   /// part of a grid collection, so the offset is 0
+  /// @tparam owner whether the grid is owning: non-owning
+  /// @param owning_grid the owning grid of which to create a non-owning grid
   template <bool owner = is_owning>
     requires(!owner)
   DETRAY_HOST_DEVICE explicit grid_impl(const owning_type<true> &owning_grid)
