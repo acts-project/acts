@@ -5,6 +5,14 @@ on:
     branches:
       - 'releases'
       - 'release/**'
+  # A manual run makes a release with a given version, instead of the version
+  # that git-cliff calculates from the commit messages.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version, for example v48.5.0. Leave empty to calculate it from the commit messages.'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -16,6 +24,9 @@ jobs:
     # the source archive it builds (see the codegen_prebuilt job in
     # checks.yml).
     runs-on: ubuntu-latest
+    # A manual run is possible on any branch, but CI/release.sh pushes the
+    # version bump commit to the branch, so only allow the release branches.
+    if: github.ref == 'refs/heads/releases' || startsWith(github.ref, 'refs/heads/release/')
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -49,6 +60,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # for git-cliff
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+          # CI/release.sh calculates the version if this is empty
+          version: ${{ inputs.version }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
