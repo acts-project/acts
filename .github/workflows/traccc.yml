@@ -257,7 +257,6 @@ jobs:
             -DTRACCC_USE_SYSTEM_GOOGLETEST_DEFAULT=ON \
             -DTRACCC_SETUP_GOOGLETEST=ON \
             -DTRACCC_SUPPORTED_DETECTORS="default_detector;odd_detector;telescope_detector;toy_detector;itk_detector" \
-            -DDETRAY_GENERATE_METADATA="itk_metadata" \
             -S ${GITHUB_WORKSPACE}/Traccc \
             -B build
       - name: Build
