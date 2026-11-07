@@ -23,6 +23,8 @@ struct detector_writer_config {
   std::string m_path{"./"};
   /// The output file format
   detray::io::format m_format = detray::io::format::json;
+  /// The original data source of the detector
+  std::string m_source{"unknown"};
   /// Replace files in case they already exists
   bool m_replace = false;
   /// Compactify json output, if not json format this flag does nothing
@@ -40,6 +42,9 @@ struct detector_writer_config {
   /// Return the selected output format.
   /// @return configured output format
   detray::io::format format() const { return m_format; }
+  /// Description of the source of the detector, e.g. 'ACTS converted'
+  /// @return description string
+  const std::string& source() const { return m_source; }
   /// Return whether existing output files are replaced.
   /// @return whether replacement is enabled
   bool replace_files() const { return m_replace; }
@@ -68,6 +73,13 @@ struct detector_writer_config {
   /// @return this configuration for chaining
   detector_writer_config& format(detray::io::format f) {
     m_format = f;
+    return *this;
+  }
+  /// Configure the detector source description.
+  /// @param s the description
+  /// @return this configuration for chaining
+  detector_writer_config& source(std::string s) {
+    m_source = std::move(s);
     return *this;
   }
   /// Configure whether to replace existing files.
@@ -106,6 +118,7 @@ struct detector_writer_config {
     out << "\nDetector writer\n"
         << "----------------------------\n"
         << "  Path                  : " << cfg.path() << "\n"
+        << "  Source                : " << cfg.source() << "\n"
         << "  Write grids           : " << std::boolalpha << cfg.write_grids()
         << "\n"
         << "  Write material        : " << cfg.write_material() << "\n";
