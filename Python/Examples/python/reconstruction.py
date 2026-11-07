@@ -1920,6 +1920,8 @@ def addCKFTracks(
     writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     prefix: str = "",
+    clusters: Optional[str] = None,
+    calibrator: Optional[acts.examples.MeasurementCalibrator] = None,
 ) -> None:
     """This function steers the seeding
 
@@ -1947,6 +1949,11 @@ def addCKFTracks(
         estimate the initial parameters from the seeds in the track finding, on
         the space point the search starts from, instead of using the estimate
         of `addSeeding`. The reverse search options need it.
+    clusters : str, None
+        the clusters of the measurements, if the calibrator needs them
+    calibrator : MeasurementCalibrator, None
+        calibrate the measurements with the predicted track, for example
+        `ClusterOnTrackCalibrator`. None uses the measurements as they are.
     writeTrackSummary : bool, True
         write tracksummary_ckf.root ntuple?
     writeTrackStates : bool, False
@@ -2020,6 +2027,8 @@ def addCKFTracks(
             ]
         ),
         inputMeasurements=f"{prefix}measurement_subset",
+        inputClusters=clusters if clusters is not None else "",
+        calibrator=calibrator,
         inputInitialTrackParameters=(
             f"{prefix}estimatedparameters" if seedParamsEstimation is None else ""
         ),
