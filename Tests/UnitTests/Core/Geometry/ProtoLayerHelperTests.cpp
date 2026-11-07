@@ -12,6 +12,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
@@ -20,13 +23,10 @@
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-
-namespace Acts {
-class Surface;
-}  // namespace Acts
 
 using namespace Acts;
 
@@ -221,6 +221,37 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
                  std::to_string(irz++));
     objVis.clear();
   }
+}
+
+BOOST_AUTO_TEST_CASE(ProtoLayerHelperMergesBridgedClusters) {
+  // Surfaces at r ~ 10 and r ~ 13 are disjoint, but a surface in between
+  // bridges them. Processing the outer two first used to create two
+  // clusters, and the bridging surface was only added to the first one,
+  // leaving two radially overlapping proto layers.
+  ProtoLayerHelper plHelper(
+      ProtoLayerHelper::Config{},
+      getDefaultLogger("ProtoLayerHelper", Logging::INFO));
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
+
+  auto makePlane = [](double x, double halfX) {
+    return Surface::makeShared<PlaneSurface>(
+        Transform3(Translation3(x, 0., 0.)),
+        std::make_shared<RectangleBounds>(halfX, 0.5));
+  };
+
+  auto inner = makePlane(10., 0.5);   // r in [9.5, 10.5]
+  auto outer = makePlane(13., 0.5);   // r in [12.5, 13.5]
+  auto bridge = makePlane(11.5, 1.);  // r in [10.5, 12.5]
+
+  std::vector<const Surface*> surfaces = {inner.get(), outer.get(),
+                                          bridge.get()};
+
+  auto layers = plHelper.protoLayers(
+      tgContext, surfaces,
+      ProtoLayerHelper::SortingConfig(AxisDirection::AxisR, 0.1));
+
+  BOOST_REQUIRE_EQUAL(layers.size(), 1u);
+  BOOST_CHECK_EQUAL(layers.front().surfaces().size(), 3u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

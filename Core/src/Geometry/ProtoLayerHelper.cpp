@@ -25,16 +25,34 @@ std::vector<ProtoLayer> ProtoLayerHelper::protoLayers(
   using SurfaceCluster = std::pair<Extent, std::vector<const Surface*>>;
   std::vector<SurfaceCluster> clusteredSurfaces;
   /// Helper function to find/create the cluster of surfaces where
-  /// the Extent belongs to. In case none is found, a new one is inserted
+  /// the Extent belongs to. In case none is found, a new one is inserted.
+  /// If the extent bridges several existing clusters, they are merged into
+  /// one, so that the result does not depend on the surface ordering.
   ///
   /// @param extent The test extent for finding the cluster
   ///
   /// @return the reference of the SurfaceCluster for insertion
   auto findCluster = [&](const Extent& extent) -> SurfaceCluster& {
-    for (auto& cluster : clusteredSurfaces) {
-      if (cluster.first.intersects(extent, sorting.first)) {
-        return cluster;
+    SurfaceCluster* target = nullptr;
+    for (auto it = clusteredSurfaces.begin(); it != clusteredSurfaces.end();) {
+      if (!it->first.intersects(extent, sorting.first)) {
+        ++it;
+        continue;
       }
+      if (target == nullptr) {
+        target = &(*it);
+        ++it;
+        continue;
+      }
+      // Merge this cluster into the first matching one
+      target->first.extend(it->first);
+      target->second.insert(target->second.end(), it->second.begin(),
+                            it->second.end());
+      // Erasing only invalidates iterators/pointers after the first match
+      it = clusteredSurfaces.erase(it);
+    }
+    if (target != nullptr) {
+      return *target;
     }
     // No cluster found, let's create a new one
     clusteredSurfaces.push_back(SurfaceCluster(extent, {}));
