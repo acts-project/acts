@@ -22,6 +22,7 @@
 #include "traccc/seeding/device/populate_grid.hpp"
 #include "traccc/seeding/device/reduce_triplet_counts.hpp"
 #include "traccc/seeding/device/select_seeds.hpp"
+#include "traccc/seeding/device/suppress_seeds.hpp"
 #include "traccc/seeding/device/update_triplet_weights.hpp"
 
 namespace traccc::hip {
@@ -76,15 +77,17 @@ __global__ void find_doublets(
 __global__ void count_triplets(
     seedfinder_config config,
     edm::spacepoint_collection::const_view spacepoints,
+    strip_spacepoint_calibration_collection_types::const_view
+        strip_calibrations,
     traccc::details::spacepoint_grid_types::const_view sp_grid,
     device::doublet_counter_collection_types::const_view doublet_counter,
     device::device_doublet_collection_types::const_view mb_doublets,
     device::device_doublet_collection_types::const_view mt_doublets,
     device::triplet_counter_spM_collection_types::view spM_counter,
     device::triplet_counter_collection_types::view midBot_counter) {
-  device::count_triplets(details::global_index1(), config, spacepoints, sp_grid,
-                         doublet_counter, mb_doublets, mt_doublets, spM_counter,
-                         midBot_counter);
+  device::count_triplets(details::global_index1(), config, spacepoints,
+                         strip_calibrations, sp_grid, doublet_counter,
+                         mb_doublets, mt_doublets, spM_counter, midBot_counter);
 }
 
 /// HIP kernel for running @c traccc::device::reduce_triplet_counts
@@ -100,6 +103,8 @@ __global__ void reduce_triplet_counts(
 __global__ void find_triplets(
     seedfinder_config config, seedfilter_config filter_config,
     edm::spacepoint_collection::const_view spacepoints,
+    strip_spacepoint_calibration_collection_types::const_view
+        strip_calibrations,
     traccc::details::spacepoint_grid_types::const_view sp_grid,
     device::doublet_counter_collection_types::const_view doublet_counter,
     device::device_doublet_collection_types::const_view mt_doublets,
@@ -107,8 +112,9 @@ __global__ void find_triplets(
     device::triplet_counter_collection_types::const_view midBot_tc,
     device::device_triplet_collection_types::view triplet_view) {
   device::find_triplets(details::global_index1(), config, filter_config,
-                        spacepoints, sp_grid, doublet_counter, mt_doublets,
-                        spM_tc, midBot_tc, triplet_view);
+                        spacepoints, strip_calibrations, sp_grid,
+                        doublet_counter, mt_doublets, spM_tc, midBot_tc,
+                        triplet_view);
 }
 
 /// HIP kernel for running @c traccc::device::update_triplet_weights
@@ -143,11 +149,27 @@ __global__ void select_seeds(
   extern __shared__ device::device_triplet data2[];
   // Each thread uses max_triplets_per_spM elements of the array
   device::device_triplet* dataPos =
-      &data2[threadIdx.x * finder_config.maxSeedsPerSpM];
+      &data2[threadIdx.x * filter_config.seed_candidates_per_spM(
+                               finder_config.maxSeedsPerSpM)];
 
   device::select_seeds(details::global_index1(), finder_config, filter_config,
                        spacepoints, sp_view, spM_tc, midBot_tc, triplet_view,
                        dataPos, seed_view);
+}
+
+/// HIP kernel for running @c traccc::device::mark_seed_weights
+__global__ void mark_seed_weights(
+    edm::seed_collection::const_view seeds,
+    vecmem::data::vector_view<unsigned int> best_weights) {
+  device::mark_seed_weights(details::global_index1(), seeds, best_weights);
+}
+
+/// HIP kernel for running @c traccc::device::suppress_seeds
+__global__ void suppress_seeds(
+    edm::seed_collection::const_view seeds,
+    vecmem::data::vector_view<const unsigned int> best_weights,
+    edm::seed_collection::view out) {
+  device::suppress_seeds(details::global_index1(), seeds, best_weights, out);
 }
 
 }  // namespace kernels
@@ -217,7 +239,8 @@ void triplet_seeding_algorithm::count_triplets_kernel(
   const unsigned int n_blocks = (payload.nMidBot + n_threads - 1) / n_threads;
   hipLaunchKernelGGL(kernels::count_triplets, n_blocks, n_threads, 0,
                      details::get_stream(stream()), payload.config,
-                     payload.spacepoints, payload.grid, payload.doublet_counter,
+                     payload.spacepoints, payload.strip_calibrations,
+                     payload.grid, payload.doublet_counter,
                      payload.mb_doublets, payload.mt_doublets,
                      payload.spM_counter, payload.midBot_counter);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
@@ -240,7 +263,8 @@ void triplet_seeding_algorithm::find_triplets_kernel(
   const unsigned int n_blocks = (payload.nMidBot + n_threads - 1) / n_threads;
   hipLaunchKernelGGL(kernels::find_triplets, n_blocks, n_threads, 0,
                      details::get_stream(stream()), payload.finding_config,
-                     payload.filter_config, payload.spacepoints, payload.grid,
+                     payload.filter_config, payload.spacepoints,
+                     payload.strip_calibrations, payload.grid,
                      payload.doublet_counter, payload.mt_doublets,
                      payload.spM_tc, payload.midBot_tc, payload.triplets);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
@@ -267,6 +291,10 @@ void triplet_seeding_algorithm::select_seeds_kernel(
   hipLaunchKernelGGL(kernels::select_seeds, n_blocks, n_threads,
                      sizeof(device::device_triplet) *
                          payload.finder_config.maxSeedsPerSpM * n_threads,
+
+                     payload.filter_config.seed_candidates_per_spM(
+                         payload.finder_config.maxSeedsPerSpM) *
+                         n_threads,
                      details::get_stream(stream()), payload.finder_config,
                      payload.filter_config, payload.spacepoints, payload.grid,
                      payload.spM_tc, payload.midBot_tc, payload.triplets,
@@ -276,6 +304,26 @@ void triplet_seeding_algorithm::select_seeds_kernel(
 
 void triplet_seeding_algorithm::synchronize() const {
   stream().synchronize();
+}
+
+void triplet_seeding_algorithm::mark_seed_weights_kernel(
+    const mark_seed_weights_kernel_payload& payload) const {
+  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_blocks = (payload.n_seeds + n_threads - 1) / n_threads;
+  hipLaunchKernelGGL(kernels::mark_seed_weights, n_blocks, n_threads, 0,
+                     details::get_stream(stream()), payload.seeds,
+                     payload.best_weights);
+  TRACCC_HIP_ERROR_CHECK(hipGetLastError());
+}
+
+void triplet_seeding_algorithm::suppress_seeds_kernel(
+    const suppress_seeds_kernel_payload& payload) const {
+  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_blocks = (payload.n_seeds + n_threads - 1) / n_threads;
+  hipLaunchKernelGGL(kernels::suppress_seeds, n_blocks, n_threads, 0,
+                     details::get_stream(stream()), payload.seeds,
+                     payload.best_weights, payload.out);
+  TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 }
 
 }  // namespace traccc::hip
