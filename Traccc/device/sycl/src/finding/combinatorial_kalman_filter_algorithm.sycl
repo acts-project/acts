@@ -33,6 +33,7 @@
 #include "traccc/finding/device/gather_best_tips_per_measurement.hpp"
 #include "traccc/finding/device/gather_measurement_votes.hpp"
 #include "traccc/finding/device/geo_id_surface_comparator.hpp"
+#include "traccc/finding/device/permute_tracks.hpp"
 #include "traccc/finding/device/progressive_kalman_filter.hpp"
 #include "traccc/finding/device/propagate_to_next_surface.hpp"
 #include "traccc/finding/device/remove_duplicates.hpp"
@@ -63,6 +64,8 @@ struct fill_finding_duplicate_removal_sort_keys {};
 struct remove_duplicates {};
 
 struct fill_finding_propagation_sort_keys {};
+
+struct permute_tracks {};
 
 template <detray::concepts::detector detector_t, typename bfield_t>
 struct progressive_kalman_filter {};
@@ -346,6 +349,20 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_keys(
   oneapi::dpl::sort_by_key(
       oneapi::dpl::execution::device_policy{details::get_queue(queue())},
       keys.ptr(), keys.ptr() + keys.capacity(), param_ids.ptr());
+}
+
+void combinatorial_kalman_filter_algorithm::permute_tracks_kernel(
+    unsigned int n_threads,
+    const device::permute_tracks_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::permute_tracks>(
+        details::calculate1DimNdRange(n_threads, 256),
+        [payload](::sycl::nd_item<1> item) {
+          device::permute_tracks(details::global_index(item), payload);
+        });
+  });
 }
 
 void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(

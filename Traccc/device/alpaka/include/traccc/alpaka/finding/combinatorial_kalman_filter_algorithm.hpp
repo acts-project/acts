@@ -154,6 +154,15 @@ class combinatorial_kalman_filter_algorithm
       vecmem::data::vector_view<device::sort_key>& keys,
       vecmem::data::vector_view<unsigned int>& param_ids) const override;
 
+  /// Launch the @c permute_tracks kernel
+  ///
+  /// @param n_threads The number of threads to launch the kernel with
+  /// @param payload The payload for the kernel
+  ///
+  void permute_tracks_kernel(
+      unsigned int n_threads,
+      const device::permute_tracks_payload& payload) const override;
+
   /// Launch the @c propagate_to_next_surface kernel
   ///
   /// @param n_threads The number of threads to launch the kernel with
