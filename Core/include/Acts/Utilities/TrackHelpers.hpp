@@ -21,7 +21,6 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
@@ -361,8 +360,7 @@ Result<void> extrapolateTrackToReferenceSurface(
                << " with starting parameters " << parameters);
 
   auto propagateResult =
-      propagator.template propagate<propagator_options_t, ForcedSurfaceReached>(
-          parameters, referenceSurface, options);
+      propagator.propagate(parameters, referenceSurface, options);
 
   if (!propagateResult.ok()) {
     ACTS_DEBUG("failed to extrapolate track: " << propagateResult.error());

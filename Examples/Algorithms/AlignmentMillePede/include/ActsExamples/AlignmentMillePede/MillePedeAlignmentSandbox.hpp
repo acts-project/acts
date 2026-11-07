@@ -50,7 +50,6 @@ namespace ActsExamples {
 class MillePedeAlignmentSandbox final : public IAlgorithm {
  public:
   using SteppingLogger = Acts::detail::SteppingLogger;
-  using EndOfWorld = Acts::EndOfWorldReached;
   using Stepper = Acts::EigenStepper<>;
   using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
   using Fitter = Acts::KalmanFitter<Propagator, Acts::VectorMultiTrajectory>;

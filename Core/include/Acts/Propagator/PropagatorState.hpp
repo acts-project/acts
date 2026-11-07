@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Propagator/ActorConcepts.hpp"
 #include "Acts/Propagator/PropagatorStatistics.hpp"
-#include "Acts/Utilities/detail/Extendable.hpp"
 
 #include <functional>
 
@@ -33,8 +33,8 @@ enum class PropagatorStage {
 /// This struct holds the common state information for propagating
 /// which is independent of the actual stepper implementation.
 template <typename propagator_options_t, typename stepper_state_t,
-          typename navigator_state_t, typename... extension_state_t>
-struct PropagatorState : private detail::Extendable<extension_state_t...> {
+          typename navigator_state_t>
+struct PropagatorState {
   /// Type alias for propagator options
   using options_type = propagator_options_t;
   /// Type alias for stepper state
@@ -55,9 +55,6 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
         options(topts),
         stepping{std::move(steppingIn)},
         navigation{std::move(navigationIn)} {}
-
-  using detail::Extendable<extension_state_t...>::get;
-  using detail::Extendable<extension_state_t...>::tuple;
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -84,6 +81,9 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
 
   /// Navigation state - internal state of the Navigator
   navigator_state_t navigation;
+
+  /// State of the actor of the propagation
+  ActorStateType<typename propagator_options_t::actor_type> actorState;
 
   /// Number of propagation steps that were carried out
   std::size_t steps = 0;

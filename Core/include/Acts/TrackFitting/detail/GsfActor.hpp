@@ -70,8 +70,8 @@ struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
 
-  /// Broadcast the result_type
-  using result_type = GsfResult<traj_t>;
+  /// Type alias for the actor state
+  using state_type = GsfResult<traj_t>;
 
   // Actor configuration
   struct Config {
@@ -139,7 +139,7 @@ struct GsfActor {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, result_type& result,
+                   const navigator_t& navigator, state_type& result,
                    const Logger& /*logger*/) const {
     assert(result.fittedStates && "No MultiTrajectory set");
 
@@ -360,7 +360,7 @@ struct GsfActor {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/, const result_type& result,
+                  const navigator_t& /*navigator*/, const state_type& result,
                   const Logger& /*logger*/) const {
     if (m_cfg.numberMeasurements &&
         result.measurementStates == m_cfg.numberMeasurements) {
@@ -375,7 +375,7 @@ struct GsfActor {
   /// weights, renormalizes all components, and does some statistics.
   template <typename propagator_state_t, typename stepper_t>
   Result<void> kalmanUpdate(propagator_state_t& state, const stepper_t& stepper,
-                            const Surface& surface, result_type& result,
+                            const Surface& surface, state_type& result,
                             TemporaryStates& tmpStates,
                             const SourceLink& sourceLink,
                             const BoundMatrix& jacobian) const {
@@ -506,7 +506,7 @@ struct GsfActor {
   template <typename propagator_state_t, typename stepper_t>
   Result<void> noMeasurementUpdate(propagator_state_t& state,
                                    const stepper_t& stepper,
-                                   const Surface& surface, result_type& result,
+                                   const Surface& surface, state_type& result,
                                    TemporaryStates& tmpStates,
                                    const BoundMatrix& jacobian) const {
     for (auto cmp : stepper.componentIterable(state.stepping)) {
@@ -566,7 +566,7 @@ struct GsfActor {
     return Result<void>::success();
   }
 
-  void updateMultiTrajectory(result_type& result,
+  void updateMultiTrajectory(state_type& result,
                              const TemporaryStates& tmpStates,
                              const Surface& surface, TrackStateType type,
                              const BoundMatrix& jacobian) const {

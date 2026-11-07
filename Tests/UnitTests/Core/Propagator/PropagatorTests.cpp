@@ -64,14 +64,14 @@ struct PerpendicularMeasure {
     double distance = std::numeric_limits<double>::max();
   };
 
-  using result_type = this_result;
+  using state_type = this_result;
 
   PerpendicularMeasure() = default;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, result_type& result) const {
+                  const navigator_t& /*navigator*/, state_type& result) const {
     result.distance = perp(stepper.position(state.stepping));
   }
 };
@@ -96,12 +96,12 @@ struct SurfaceObserver {
     double surface_passed_r = std::numeric_limits<double>::max();
   };
 
-  using result_type = this_result;
+  using state_type = this_result;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& /*navigator*/, result_type& result,
+                   const navigator_t& /*navigator*/, state_type& result,
                    const Logger& logger) const {
     if (surface == nullptr || result.surfaces_passed != 0) {
       return Result<void>::success();
@@ -142,7 +142,7 @@ struct SurfaceObserver {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/, result_type& result,
+                  const navigator_t& /*navigator*/, state_type& result,
                   const Logger& /*logger*/) const {
     return result.surfaces_passed != 0;
   }
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
   using NullOptionsType = EigenPropagatorType::Options<>;
   NullOptionsType null_options(tgContext, mfContext);
 
-  using ActorList = ActorList<PerpendicularMeasure>;
+  using ActorList = ActorList<DefaultActor, PerpendicularMeasure>;
   using OptionsType = EigenPropagatorType::Options<ActorList>;
   OptionsType options(tgContext, mfContext);
 }
@@ -205,7 +205,7 @@ BOOST_DATA_TEST_CASE(
   static_cast<void>(index);
 
   using CylinderObserver = SurfaceObserver<CylinderSurface>;
-  using ActorList = ActorList<CylinderObserver>;
+  using ActorList = ActorList<DefaultActor, CylinderObserver>;
 
   // setup propagation options
   EigenPropagatorType::Options<ActorList> options(tgContext, mfContext);
@@ -214,9 +214,9 @@ BOOST_DATA_TEST_CASE(
   options.stepping.maxStepSize = 1_cm;
 
   // set the surface to be passed by
-  options.actorList.get<CylinderObserver>().surface = mSurface.get();
+  options.actor.get<CylinderObserver>().surface = mSurface.get();
 
-  using so_result = typename CylinderObserver::result_type;
+  using so_result = typename CylinderObserver::state_type;
 
   // define start parameters
   double x = 0;
@@ -232,8 +232,9 @@ BOOST_DATA_TEST_CASE(
       makeVector4(pos, time), mom.normalized(), q / mom.norm(), std::nullopt,
       ParticleHypothesis::pion());
   // propagate to the cylinder surface
-  const auto& result = epropagator.propagate(start, options).value();
-  auto& sor = result.get<so_result>();
+  auto state = epropagator.makeState(options);
+  epropagator.propagate(state, start).value();
+  auto& sor = state.actorState.get<so_result>();
 
   BOOST_CHECK_EQUAL(sor.surfaces_passed, 1u);
   CHECK_CLOSE_ABS(sor.surface_passed_r, 10., 1e-5);

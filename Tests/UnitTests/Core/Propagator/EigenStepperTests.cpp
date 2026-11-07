@@ -120,7 +120,7 @@ struct StepCollector {
     std::vector<Vector3> momentum;
   };
 
-  using result_type = this_result;
+  using state_type = this_result;
 
   /// @brief Main call operator for the action list. It stores the data for
   /// analysis afterwards
@@ -136,7 +136,7 @@ struct StepCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& /*navigator*/, result_type& result,
+                   const navigator_t& /*navigator*/, state_type& result,
                    const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping));
@@ -146,7 +146,7 @@ struct StepCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/, result_type& /*result*/,
+                  const navigator_t& /*navigator*/, state_type& /*result*/,
                   const Logger& /*logger*/) const {
     return false;
   }
@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
   using PropagatorOptions =
-      Propagator::Options<ActorList<StepCollector, EndOfWorld>>;
+      Propagator::Options<ActorList<DefaultActor, StepCollector, EndOfWorld>>;
 
   // Set options for propagator
   PropagatorOptions propOpts(tgContext, mfContext);
@@ -532,9 +532,10 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   Propagator prop(es, naviVac);
 
   // Launch and collect results
-  const auto& result = prop.propagate(sbtp, propOpts).value();
+  auto state = prop.makeState(propOpts);
+  prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      result.get<typename StepCollector::result_type>();
+      state.actorState.get<typename StepCollector::state_type>();
 
   // Check that the propagation happened without interactions
   for (const auto& pos : stepResult.position) {
@@ -550,8 +551,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   using DefStepper = EigenStepper<EigenStepperDenseExtension>;
   using DefPropagator = Acts::Propagator<DefStepper, Navigator>;
-  using DefPropagatorOptions =
-      DefPropagator::Options<ActorList<StepCollector, EndOfWorld>>;
+  using DefPropagatorOptions = DefPropagator::Options<
+      ActorList<DefaultActor, StepCollector, EndOfWorld>>;
 
   // Set options for propagator
   DefPropagatorOptions propOptsDef(tgContext, mfContext);
@@ -562,9 +563,10 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   DefPropagator propDef(esDef, naviVac);
 
   // Launch and collect results
-  const auto& resultDef = propDef.propagate(sbtp, propOptsDef).value();
+  auto stateDef = propDef.makeState(propOptsDef);
+  propDef.propagate(stateDef, sbtp).value();
   const StepCollector::this_result& stepResultDef =
-      resultDef.get<typename StepCollector::result_type>();
+      stateDef.actorState.template get<typename StepCollector::state_type>();
 
   // Check that the right extension was chosen
   // If chosen correctly, the number of elements should be identical
@@ -614,7 +616,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
   using PropagatorOptions =
-      Propagator::Options<ActorList<StepCollector, EndOfWorld>>;
+      Propagator::Options<ActorList<DefaultActor, StepCollector, EndOfWorld>>;
 
   // Set options for propagator
   PropagatorOptions propOpts(tgContext, mfContext);
@@ -628,9 +630,10 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
                   getDefaultLogger("Propagator", Logging::VERBOSE));
 
   // Launch and collect results
-  const auto& result = prop.propagate(sbtp, propOpts).value();
+  auto state = prop.makeState(propOpts);
+  prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      result.get<typename StepCollector::result_type>();
+      state.actorState.get<typename StepCollector::state_type>();
 
   // Check that there occurred interaction
   for (const auto& pos : stepResult.position) {
@@ -654,8 +657,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   using DenseStepper = EigenStepper<EigenStepperDenseExtension>;
   using DensePropagator = Acts::Propagator<DenseStepper, Navigator>;
-  using DensePropagatorOptions =
-      DensePropagator::Options<ActorList<StepCollector, EndOfWorld>>;
+  using DensePropagatorOptions = DensePropagator::Options<
+      ActorList<DefaultActor, StepCollector, EndOfWorld>>;
 
   // Rebuild and check the choice of extension
   // Set options for propagator
@@ -668,9 +671,10 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   DensePropagator propDense(esDense, naviMat);
 
   // Launch and collect results
-  const auto& resultDense = propDense.propagate(sbtp, propOptsDense).value();
+  auto stateDense = propDense.makeState(propOptsDense);
+  propDense.propagate(stateDense, sbtp).value();
   const StepCollector::this_result& stepResultDense =
-      resultDense.get<typename StepCollector::result_type>();
+      stateDense.actorState.template get<typename StepCollector::state_type>();
 
   // Check that the right extension was chosen
   // If chosen correctly, the number of elements should be identical
@@ -692,9 +696,10 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   Stepper esB(bField);
   Propagator propB(esB, naviMat);
 
-  const auto& resultB = propB.propagate(sbtp, propOptsDense).value();
+  auto stateB = propB.makeState(propOptsDense);
+  propB.propagate(stateB, sbtp).value();
   const StepCollector::this_result& stepResultB =
-      resultB.get<typename StepCollector::result_type>();
+      stateB.actorState.template get<typename StepCollector::state_type>();
 
   // Check that there occurred interaction
   for (const auto& pos : stepResultB.position) {
@@ -759,11 +764,11 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
   using PropagatorOptions =
-      Propagator::Options<ActorList<StepCollector, EndOfWorld>>;
+      Propagator::Options<ActorList<DefaultActor, StepCollector, EndOfWorld>>;
 
   // Set options for propagator
   PropagatorOptions propOpts(tgContext, mfContext);
-  propOpts.actorList.get<EndOfWorld>().maxX = 3_m;
+  propOpts.actor.get<EndOfWorld>().maxX = 3_m;
   propOpts.maxSteps = 1000;
   propOpts.stepping.maxStepSize = 1.5_m;
 
@@ -773,9 +778,10 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   Propagator prop(es, naviDet);
 
   // Launch and collect results
-  const auto& result = prop.propagate(sbtp, propOpts).value();
+  auto state = prop.makeState(propOpts);
+  const auto& result = prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      result.get<typename StepCollector::result_type>();
+      state.actorState.get<typename StepCollector::state_type>();
 
   // Manually set the extensions for each step and propagate through each
   // volume by propagation to the boundaries
@@ -815,11 +821,11 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 
   using DefStepper = EigenStepper<EigenStepperDenseExtension>;
   using DefPropagator = Acts::Propagator<DefStepper, Navigator>;
-  using DefPropagatorOptions =
-      DefPropagator::Options<ActorList<StepCollector, EndOfWorld>>;
+  using DefPropagatorOptions = DefPropagator::Options<
+      ActorList<DefaultActor, StepCollector, EndOfWorld>>;
 
   DefPropagatorOptions propOptsDef(tgContext, mfContext);
-  propOptsDef.actorList.get<EndOfWorld>().maxX = 3_m;
+  propOptsDef.actor.get<EndOfWorld>().maxX = 3_m;
   propOptsDef.maxSteps = 1000;
   propOptsDef.stepping.maxStepSize = 1.5_m;
 
@@ -828,9 +834,10 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   DefPropagator propDef(esDef, naviDet);
 
   // Launch and collect results
-  const auto& resultDef = propDef.propagate(sbtp, propOptsDef).value();
+  auto stateDef = propDef.makeState(propOptsDef);
+  propDef.propagate(stateDef, sbtp).value();
   const StepCollector::this_result& stepResultDef =
-      resultDef.get<typename StepCollector::result_type>();
+      stateDef.actorState.template get<typename StepCollector::state_type>();
 
   // Check the exit situation of the first volume
   std::pair<Vector3, Vector3> endParams, endParamsControl;
@@ -865,12 +872,12 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 
   using DenseStepper = EigenStepper<EigenStepperDenseExtension>;
   using DensePropagator = Acts::Propagator<DenseStepper, Navigator>;
-  using DensePropagatorOptions =
-      DensePropagator::Options<ActorList<StepCollector, EndOfWorld>>;
+  using DensePropagatorOptions = DensePropagator::Options<
+      ActorList<DefaultActor, StepCollector, EndOfWorld>>;
 
   // Set options for propagator
   DensePropagatorOptions propOptsDense(tgContext, mfContext);
-  propOptsDense.actorList.get<EndOfWorld>().maxX = 3_m;
+  propOptsDense.actor.get<EndOfWorld>().maxX = 3_m;
   propOptsDense.maxSteps = 1000;
   propOptsDense.stepping.maxStepSize = 1.5_m;
 
@@ -879,9 +886,10 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   DensePropagator propDense(esDense, naviDet);
 
   // Launch and collect results
-  const auto& resultDense = propDense.propagate(sbtp, propOptsDense).value();
+  auto stateDense = propDense.makeState(propOptsDense);
+  propDense.propagate(stateDense, sbtp).value();
   const StepCollector::this_result& stepResultDense =
-      resultDense.get<typename StepCollector::result_type>();
+      stateDense.actorState.template get<typename StepCollector::state_type>();
 
   // Check the exit situation of the second volume
   for (unsigned int i = 0; i < stepResultDense.position.size(); i++) {
@@ -995,11 +1003,11 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
   using PropagatorOptions = Propagator::Options<
-      ActorList<StepCollector, MaterialInteractor, EndOfWorld>>;
+      ActorList<DefaultActor, StepCollector, MaterialInteractor, EndOfWorld>>;
 
   // Set options for propagator
   PropagatorOptions propOpts(tgContext, mfContext);
-  propOpts.actorList.get<EndOfWorld>().maxX = 3._m;
+  propOpts.actor.get<EndOfWorld>().maxX = 3._m;
   propOpts.maxSteps = 10000;
 
   // Build stepper and propagator
@@ -1008,9 +1016,10 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   Propagator prop(es, naviVac);
 
   // Launch and collect results
-  const auto& result = prop.propagate(sbtp, propOpts).value();
+  auto state = prop.makeState(propOpts);
+  prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      result.get<typename StepCollector::result_type>();
+      state.actorState.get<typename StepCollector::state_type>();
 
   // Test that momentum changes only occurred at the right detector parts
   double lastMomentum = stepResult.momentum[0].x();

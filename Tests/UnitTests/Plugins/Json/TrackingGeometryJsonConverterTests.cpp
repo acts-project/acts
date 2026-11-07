@@ -81,11 +81,11 @@ struct StateCollector {
     std::vector<typename stepper_t::State> stepping;
   };
 
-  using result_type = this_result;
+  using state_type = this_result;
 
   template <typename propagator_state_t>
   Result<void> act(propagator_state_t& state, const stepper_t& /*stepper*/,
-                   const navigator_t& /*navigator*/, result_type& result,
+                   const navigator_t& /*navigator*/, state_type& result,
                    const Logger& /*logger*/) const {
     result.navigation.push_back(state.navigation);
     result.stepping.push_back(state.stepping);
@@ -406,13 +406,13 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
       ParticleHypothesis::pion());
 
   // Action list and abort list
-  using EndOfWorld = EndOfWorldReached;
-  using ReferenceActorList = ActorList<StateCollector<>, EndOfWorld>;
+  using ReferenceActorList = ActorList<DefaultActor, StateCollector<>>;
   using PropagatorOptions =
       typename ConstantFieldPropagator::template Options<ReferenceActorList>;
 
   // Options definition
   PropagatorOptions options(gctx, mctx);
+  options.stopAtEndOfWorld = true;
   options.pathLimit = 100._m;
 
   // Build geometry
@@ -449,7 +449,8 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
       Acts::getDefaultLogger("SourceNavigator", Acts::Logging::INFO)};
   ConstantFieldPropagator sourcePropagator(stepper, sourceNavigator);
 
-  auto sourceRes = sourcePropagator.propagate(start, options).value();
+  auto sourceState = sourcePropagator.makeState(options);
+  sourcePropagator.propagate(sourceState, start).value();
 
   Navigator::Config decodedNavCfg;
   decodedNavCfg.trackingGeometry = decodedGeometry;
@@ -461,11 +462,13 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
       Acts::getDefaultLogger("DecodedNavigator", Acts::Logging::INFO)};
   ConstantFieldPropagator decodedPropagator(stepper, decodedNavigator);
 
-  auto decodedRes = decodedPropagator.propagate(start, options).value();
+  auto decodedState = decodedPropagator.makeState(options);
+  decodedPropagator.propagate(decodedState, start).value();
 
-  auto& sourceStates = sourceRes.template get<StateCollector<>::result_type>();
+  auto& sourceStates =
+      sourceState.actorState.template get<StateCollector<>::state_type>();
   auto& decodedStates =
-      decodedRes.template get<StateCollector<>::result_type>();
+      decodedState.actorState.template get<StateCollector<>::state_type>();
   BOOST_REQUIRE_EQUAL(sourceStates.navigation.size(),
                       decodedStates.navigation.size());
   BOOST_REQUIRE_EQUAL(sourceStates.stepping.size(),
