@@ -289,7 +289,7 @@ class KalmanFitter {
     using result_type = KalmanFitterResult<traj_t>;
 
     /// The target surface aborter
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+    SurfaceReached targetReached;
 
     /// Allows retrieving measurements for a surface
     std::unordered_map<const Surface*, SourceLink> inputMeasurements;
@@ -354,8 +354,9 @@ class KalmanFitter {
       // Initialize path limit reached aborter
       if (result.pathLimitReached.internalLimit ==
           std::numeric_limits<double>::max()) {
-        detail::setupLoopProtection(state, stepper, result.pathLimitReached,
-                                    true, logger());
+        detail::setupLoopProtection(state, stepper,
+                                    result.pathLimitReached.internalLimit, true,
+                                    logger());
       }
 
       // Update:
@@ -789,6 +790,12 @@ class KalmanFitter {
              "DirectNavigator requires a surface sequence for KalmanFitter");
       // Set the surface sequence
       propagatorOptions.navigation.surfaceSequence = *sSequence;
+    }
+
+    // The navigator stops on the target surface as the current surface
+    if (targetSurface != nullptr) {
+      propagatorOptions.navigation.registerAdditionalSurface(
+          *targetSurface, BoundaryTolerance::None());
     }
 
     // Catch the actor and set the measurements
