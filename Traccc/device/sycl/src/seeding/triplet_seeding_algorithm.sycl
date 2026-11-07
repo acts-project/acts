@@ -272,8 +272,4 @@ void triplet_seeding_algorithm::select_seeds_kernel(
   });
 }
 
-void triplet_seeding_algorithm::synchronize() const {
-  details::get_queue(queue()).wait_and_throw();
-}
-
 }  // namespace traccc::sycl

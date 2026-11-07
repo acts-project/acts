@@ -71,9 +71,6 @@ class triplet_seeding_algorithm
       const edm::spacepoint_collection::const_view& spacepoints) const override;
 
  protected:
-  /// Wait for outstanding device work before releasing local buffers.
-  virtual void synchronize() const = 0;
-
   /// @name Function(s) to be implemented by derived classes
   /// @{
 

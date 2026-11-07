@@ -274,8 +274,4 @@ void triplet_seeding_algorithm::select_seeds_kernel(
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 }
 
-void triplet_seeding_algorithm::synchronize() const {
-  stream().synchronize();
-}
-
 }  // namespace traccc::hip

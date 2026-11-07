@@ -265,9 +265,6 @@ class combinatorial_kalman_filter_algorithm
   virtual move_only_any create_device_detector(
       const detector_buffer& det) const = 0;
 
-  /// Wait for all work this algorithm enqueued to complete
-  virtual void synchronize() const = 0;
-
   /// @}
 
  private:

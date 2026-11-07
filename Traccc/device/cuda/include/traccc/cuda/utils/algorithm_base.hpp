@@ -36,6 +36,9 @@ class algorithm_base : public virtual device::abstract_awaitable {
   /// Get the warp size of the GPU being used
   unsigned int warp_size() const;
 
+  /// Wait for all work enqueued to complete
+  void synchronize() const override;
+
   /// Synchronize an event related to asynchronous operations
   /// @param event The event to synchronize
   ///
