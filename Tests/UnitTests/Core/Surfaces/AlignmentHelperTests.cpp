@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -19,6 +20,7 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numbers>
 #include <utility>
@@ -246,6 +248,92 @@ BOOST_AUTO_TEST_CASE(composite_jacobian_plane_derivative) {
     const Vector2 numerical =
         (boundLocal(delta) - boundLocal(-delta)) / (2. * step);
     CHECK_CLOSE_ABS(numerical, expected.col(iPar), 1e-6);
+  }
+}
+
+/// Coincident frames give identity, offsets give a lever arm, and concentric
+/// rotated frames rotate both the translation and rotation parameters.
+BOOST_AUTO_TEST_CASE(composite_jacobian_limiting_frames) {
+  using namespace Acts::UnitLiterals;
+  const CompositeFixture fix;
+  const AlignmentMatrix identity = AlignmentMatrix::Identity();
+  CHECK_CLOSE_ABS(
+      detail::compositeToComponentJacobian(fix.composite, fix.composite),
+      identity, 1e-14);
+
+  // The local-frame Jacobian is identity for coincident frames, but the ACTS
+  // adapter must still rotate translations from local to global coordinates.
+  AlignmentMatrix expectedAdapter = identity;
+  expectedAdapter.block<3, 3>(eAlignmentCenter0, eAlignmentCenter0) =
+      fix.composite.rotation();
+  CHECK_CLOSE_ABS(
+      detail::localFrameToAlignmentParametersJacobian(fix.composite),
+      expectedAdapter, 1e-14);
+
+  const Transform3 origin = Transform3::Identity();
+  const Transform3 offset{Translation3(10_mm, 20_mm, 30_mm)};
+  AlignmentMatrix expectedLever = identity;
+  expectedLever.block<3, 3>(eAlignmentCenter0, eAlignmentRotation0) << 0.,
+      30_mm, -20_mm, -30_mm, 0., 10_mm, 20_mm, -10_mm, 0.;
+  CHECK_CLOSE_ABS(detail::compositeToComponentJacobian(origin, offset),
+                  expectedLever, 1e-14);
+
+  Transform3 concentric = fix.component;
+  concentric.translation() = fix.composite.translation();
+  const RotationMatrix3 relative =
+      concentric.rotation().transpose() * fix.composite.rotation();
+  AlignmentMatrix expectedConcentric = AlignmentMatrix::Zero();
+  expectedConcentric.block<3, 3>(eAlignmentCenter0, eAlignmentCenter0) =
+      relative;
+  expectedConcentric.block<3, 3>(eAlignmentRotation0, eAlignmentRotation0) =
+      relative;
+  CHECK_CLOSE_ABS(
+      detail::compositeToComponentJacobian(fix.composite, concentric),
+      expectedConcentric, 1e-14);
+}
+
+/// Chain local-frame Jacobians through a tilted intermediate structure, then
+/// adapt only the final component parameters to the ACTS convention.
+BOOST_AUTO_TEST_CASE(composite_jacobian_nested_frames) {
+  using namespace Acts::UnitLiterals;
+  const CompositeFixture fix;
+  const Transform3 parent = Translation3(120_mm, -80_mm, 210_mm) *
+                            AngleAxis3(0.7_rad, Vector3::UnitZ()) *
+                            AngleAxis3(-0.5_rad, Vector3::UnitY()) *
+                            AngleAxis3(0.4_rad, Vector3::UnitX());
+  const AlignmentMatrix chained =
+      detail::compositeToComponentJacobian(fix.composite, fix.component) *
+      detail::compositeToComponentJacobian(parent, fix.composite);
+  const AlignmentMatrix direct =
+      detail::compositeToComponentJacobian(parent, fix.component);
+  CHECK_CLOSE_ABS(chained, direct, 1e-12);
+
+  const AlignmentMatrix chainedActs =
+      detail::localFrameToAlignmentParametersJacobian(fix.component) * chained;
+  // Move the parent directly, keeping the component's relative pose fixed;
+  // this checks the chain against rigid motion independently of the Jacobians.
+  for (double scale : std::array{1e-5, 2e-6}) {
+    for (std::size_t iPar = 0; iPar < eAlignmentSize; ++iPar) {
+      BOOST_TEST_CONTEXT("parameter=" << iPar << ", scale=" << scale) {
+        const double step = scale * (iPar < eAlignmentRotation0 ? 1_mm : 1_rad);
+        AlignmentVector delta = AlignmentVector::Zero();
+        delta[iPar] = step;
+        const Transform3 plus =
+            moveInLocalFrame(parent, delta) * parent.inverse() * fix.component;
+        const Transform3 minus =
+            moveInLocalFrame(parent, -delta) * parent.inverse() * fix.component;
+        const AlignmentVector numericalLocal =
+            (localFrameParameters(fix.component, plus) -
+             localFrameParameters(fix.component, minus)) /
+            (2. * step);
+        CHECK_CLOSE_ABS(chained.col(iPar), numericalLocal, 1e-7);
+
+        AlignmentVector numericalActs = numericalLocal;
+        numericalActs.segment<3>(eAlignmentCenter0) =
+            (plus.translation() - minus.translation()) / (2. * step);
+        CHECK_CLOSE_ABS(chainedActs.col(iPar), numericalActs, 1e-7);
+      }
+    }
   }
 }
 
