@@ -38,9 +38,8 @@
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFinding/CkfTrackStateCreatorBase.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
-#include "Acts/TrackFinding/MeasurementSelector.hpp"
-#include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -58,12 +57,17 @@
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <limits>
 #include <memory>
 #include <random>
+#include <ranges>
+#include <span>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <unordered_map>
@@ -108,52 +112,6 @@ struct Detector {
       : store(geoCtx), geometry(store()) {}
 };
 
-/// The map(-like) container accessor
-template <typename container_t>
-struct TestContainerAccessor {
-  using Container = container_t;
-  using Key = typename container_t::key_type;
-  using Value = typename container_t::mapped_type;
-
-  /// This iterator adapter is needed to have the deref operator return a single
-  /// source link instead of the map pair <GeometryIdentifier,SourceLink>
-  struct Iterator {
-    using BaseIterator = typename container_t::const_iterator;
-
-    using iterator_category = typename BaseIterator::iterator_category;
-    using value_type = typename BaseIterator::value_type;
-    using difference_type = typename BaseIterator::difference_type;
-    using pointer = typename BaseIterator::pointer;
-    using reference = typename BaseIterator::reference;
-
-    Iterator& operator++() {
-      ++m_iterator;
-      return *this;
-    }
-
-    bool operator==(const Iterator& other) const {
-      return m_iterator == other.m_iterator;
-    }
-
-    SourceLink operator*() const {
-      const auto& sl = m_iterator->second;
-      return SourceLink{sl};
-    }
-
-    BaseIterator m_iterator;
-  };
-
-  // pointer to the container
-  const Container* container = nullptr;
-
-  // get the range of elements with requested key
-  std::pair<Iterator, Iterator> range(const Surface& surface) const {
-    assert(container != nullptr);
-    auto [begin, end] = container->equal_range(surface.geometryId());
-    return {Iterator{begin}, Iterator{end}};
-  }
-};
-
 struct Fixture {
   using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
   using ConstantFieldStepper = EigenStepper<>;
@@ -165,7 +123,6 @@ struct Fixture {
       CombinatorialKalmanFilter<ConstantFieldPropagator, TrackContainer>;
   using TestSourceLinkContainer =
       std::unordered_multimap<GeometryIdentifier, TestSourceLink>;
-  using TestSourceLinkAccessor = TestContainerAccessor<TestSourceLinkContainer>;
   using TestCombinatorialKalmanFilterOptions =
       CombinatorialKalmanFilterOptions<TrackContainer>;
 
@@ -187,14 +144,6 @@ struct Fixture {
 
   // CKF implementation to be tested
   TestCombinatorialKalmanFilter ckf;
-  // configuration for the measurement selector
-  MeasurementSelector::Config measurementSelectorCfg = {
-      // global default: no chi2 cut, only one measurement per surface
-      {GeometryIdentifier(), {{}, {std::numeric_limits<double>::max()}, {1u}}},
-  };
-
-  MeasurementSelector measSel{measurementSelectorCfg};
-
   CombinatorialKalmanFilterExtensions<TrackContainer> getExtensions() const {
     CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
     extensions.updater.template connect<
@@ -290,40 +239,228 @@ struct Fixture {
   }
 };
 
-// set up composable track state creator from these components:
-//  - source link accessor,
-//  - measurement selector
-//  - track  state candidate creator
-template <typename source_link_accessor_t>
-inline auto makeTrackStateCreator(const source_link_accessor_t& slAccessor,
-                                  const MeasurementSelector& measSel) {
-  using TrackStateCreatorType =
-      TrackStateCreator<typename source_link_accessor_t::Iterator,
-                        TrackContainer>;
-  TrackStateCreatorType trackStateCreator;
-  trackStateCreator.sourceLinkAccessor
-      .template connect<&source_link_accessor_t::range>(&slAccessor);
-  trackStateCreator.calibrator.template connect<
-      &testSourceLinkCalibratorStrict<TrackStateContainerBackend>>();
-  trackStateCreator.measurementSelector.template connect<
-      &MeasurementSelector::select<TrackStateContainerBackend>>(&measSel);
-  return trackStateCreator;
-}
+/// A calibrated measurement reading straight out of a @ref TestSourceLink,
+/// which stores its values inline in a 2d buffer. Its dimension is only known
+/// at runtime, i.e. this exercises the dynamically sized side of
+/// @c Acts::detail::CalibratedMeasurementConcept.
+class CalibratedTestSourceLink {
+ public:
+  explicit CalibratedTestSourceLink(const TestSourceLink& sourceLink)
+      : m_sourceLink(&sourceLink) {
+    for (const BoundIndices index : sourceLink.indices) {
+      if (index == eBoundSize) {
+        break;
+      }
+      m_indices[m_size] = static_cast<std::uint8_t>(index);
+      ++m_size;
+    }
+    if (m_size == 0) {
+      throw std::runtime_error(
+          "Tried to extract measurement from invalid TestSourceLink");
+    }
+  }
+
+  std::size_t size() const { return m_size; }
+
+  std::span<const std::uint8_t> subspaceIndices() const {
+    return {m_indices.data(), m_size};
+  }
+
+  Eigen::Map<const Eigen::VectorXd> parameters() const {
+    return {m_sourceLink->parameters.data(), static_cast<Eigen::Index>(m_size)};
+  }
+
+  Eigen::Map<const Eigen::MatrixXd> covariance() const {
+    return {m_sourceLink->covariance.data(), static_cast<Eigen::Index>(m_size),
+            static_cast<Eigen::Index>(m_size)};
+  }
+
+ private:
+  const TestSourceLink* m_sourceLink{};
+  std::size_t m_size{0};
+  std::array<std::uint8_t, 2> m_indices{};
+};
+
+static_assert(
+    Acts::detail::CalibratedMeasurementConcept<CalibratedTestSourceLink> &&
+        !Acts::detail::StaticCalibratedMeasurementConcept<
+            CalibratedTestSourceLink>,
+    "The calibrated test source link should exercise the runtime "
+    "dispatch on the measurement dimension");
+
+/// The same thing built on @ref CkfTrackStateCreatorBase, i.e. without pushing
+/// every measurement through the track EDM first.
+struct TestTrackStateCreator final
+    : public CkfTrackStateCreatorBase<TestTrackStateCreator, TrackContainer> {
+  using Base = CkfTrackStateCreatorBase<TestTrackStateCreator, TrackContainer>;
+  using State = typename Base::State;
+
+  const Fixture::TestSourceLinkContainer* container = nullptr;
+
+  /// Cuts the selection below applies
+  std::size_t numMeasurements = 1;
+  double chi2Measurement = std::numeric_limits<double>::max();
+  double chi2Outlier = std::numeric_limits<double>::max();
+
+  auto measurementRange(const State& state) const {
+    assert(container != nullptr);
+    auto [begin, end] = container->equal_range(state.surface->geometryId());
+    return std::ranges::subrange(begin, end) | std::views::values;
+  }
+
+  SourceLink sourceLink(const State& /*state*/,
+                        const TestSourceLink& measurement) const {
+    return SourceLink{measurement};
+  }
+
+  CalibratedTestSourceLink calibrate(const State& /*state*/,
+                                     const TestSourceLink& measurement) const {
+    return CalibratedTestSourceLink{measurement};
+  }
+
+  /// Same policy as the legacy creator, but selecting on the measurements
+  /// directly instead of on temporary track states.
+  template <typename range_t, typename candidates_t>
+  Result<void> selectMeasurements(const State& state, range_t&& range,
+                                  candidates_t& candidates) const {
+    for (const TestSourceLink& measurement : range) {
+      candidates.push_back(
+          {measurement,
+           calculatePredictedChi2(state, calibrate(state, measurement)),
+           false});
+    }
+
+    const auto best = std::ranges::min_element(
+        candidates, {}, [](const auto& candidate) { return candidate.chi2; });
+    if (best == candidates.end()) {
+      return Result<void>::success();
+    }
+
+    const bool isOutlier = best->chi2 >= chi2Measurement;
+    if (isOutlier && best->chi2 >= chi2Outlier) {
+      candidates.clear();
+      return Result<void>::success();
+    }
+    if (isOutlier || numMeasurements == 1) {
+      const auto selected = *best;
+      candidates.clear();
+      candidates.push_back({selected.measurement, selected.chi2, isOutlier});
+      return Result<void>::success();
+    }
+
+    candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
+                                    [this](const auto& candidate) {
+                                      return candidate.chi2 >= chi2Measurement;
+                                    }),
+                     candidates.end());
+    std::ranges::sort(candidates, {},
+                      [](const auto& candidate) { return candidate.chi2; });
+    candidates.erase(
+        candidates.begin() + std::min(numMeasurements, candidates.size()),
+        candidates.end());
+    return Result<void>::success();
+  }
+};
+
+/// Returns a track state without any flags on every surface with
+/// measurements, which the CKF cannot process.
+struct FlaglessTrackStateCreator {
+  const Fixture::TestSourceLinkContainer* container = nullptr;
+
+  Result<CkfTypes::BranchVector<TrackIndexType>> createTrackStates(
+      const CkfTypes::TrackStateCreatorInput<TrackContainer>& input) const {
+    CkfTypes::BranchVector<TrackIndexType> trackStates;
+    if (!container->contains(input.surface->geometryId())) {
+      return trackStates;
+    }
+
+    auto trackState = input.trajectory->makeTrackState(
+        TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian,
+        input.prevTip);
+    const auto& params = std::get<BoundTrackParameters>(*input.boundState);
+    trackState.predicted() = params.parameters();
+    trackState.predictedCovariance() = *params.covariance();
+    trackState.jacobian() = std::get<BoundMatrix>(*input.boundState);
+    trackState.setReferenceSurface(input.surface->getSharedPtr());
+
+    trackStates.push_back(trackState.index());
+    return trackStates;
+  }
+};
+
+/// Hides the measurements on some surfaces, so that the CKF passes surfaces
+/// without a measurement. It uses the default selection of the base.
+struct HoleTestCreator final
+    : public CkfTrackStateCreatorBase<HoleTestCreator, TrackContainer> {
+  using Base = CkfTrackStateCreatorBase<HoleTestCreator, TrackContainer>;
+  using State = typename Base::State;
+
+  /// Who creates the track state on a surface without a measurement
+  enum class HoleMode {
+    /// the creator, through the default of the base
+    Creator,
+    /// the CKF, because the creator returns no track state
+    Ckf,
+    /// the CKF, because the creator returns `NoMeasurementExpected`
+    CkfNoMeasurementExpected,
+  };
+
+  const Fixture::TestSourceLinkContainer* container = nullptr;
+  /// The measurements on these surfaces are hidden
+  std::vector<GeometryIdentifier> hiddenSurfaces;
+  HoleMode holeMode = HoleMode::Creator;
+  bool measurementExpected = true;
+  /// The neighbour surfaces of a surface
+  std::unordered_map<GeometryIdentifier, std::vector<const Surface*>>
+      neighbours;
+
+  std::span<const Surface* const> neighbourSurfaces(const State& state) const {
+    auto it = neighbours.find(state.surface->geometryId());
+    if (it == neighbours.end()) {
+      return {};
+    }
+    return it->second;
+  }
+
+  auto measurementRange(const State& state) const {
+    assert(container != nullptr);
+    auto [begin, end] = container->equal_range(state.surface->geometryId());
+    if (std::ranges::find(hiddenSurfaces, state.surface->geometryId()) !=
+        hiddenSurfaces.end()) {
+      begin = end;
+    }
+    return std::ranges::subrange(begin, end) | std::views::values;
+  }
+
+  SourceLink sourceLink(const State& /*state*/,
+                        const TestSourceLink& measurement) const {
+    return SourceLink{measurement};
+  }
+
+  CalibratedTestSourceLink calibrate(const State& /*state*/,
+                                     const TestSourceLink& measurement) const {
+    return CalibratedTestSourceLink{measurement};
+  }
+
+  Result<void> createHoleTrackStates(
+      State& state, CkfTypes::BranchVector<TrackIndexType>& trackStates) const {
+    switch (holeMode) {
+      case HoleMode::Creator:
+        return Base::createHoleTrackStates(state, trackStates);
+      case HoleMode::Ckf:
+        return Result<void>::success();
+      case HoleMode::CkfNoMeasurementExpected:
+        return CombinatorialKalmanFilterError::NoMeasurementExpected;
+    }
+    return Result<void>::success();
+  }
+
+  bool isMeasurementExpected(const State& /*state*/) const {
+    return measurementExpected;
+  }
+};
 
 }  // namespace ActsTests
-
-namespace Acts {
-
-// somehow this is not automatically instantiated
-template Result<std::pair<
-    std::vector<
-        ActsTests::TrackStateContainerBackend::TrackStateProxy>::iterator,
-    std::vector<
-        ActsTests::TrackStateContainerBackend::TrackStateProxy>::iterator>>
-MeasurementSelector::select<ActsTests::TrackStateContainerBackend>(
-    std::vector<ActsTests::TrackStateContainerBackend::TrackStateProxy>&, bool&,
-    const Logger&) const;
-}  // namespace Acts
 
 namespace ActsTests {
 
@@ -340,13 +477,11 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
       CurvilinearSurface(Vector3{-3_m, 0., 0.}, Vector3{1., 0., 0})
           .planeSurface();
 
-  Fixture::TestSourceLinkAccessor slAccessor;
-  slAccessor.container = &f.sourceLinks;
+  TestTrackStateCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
 
-  auto trackStateCreator = makeTrackStateCreator(slAccessor, f.measSel);
-
-  options.extensions.createTrackStates
-      .template connect<&decltype(trackStateCreator)::createTrackStates>(
+  options.extensions.trackStateCreator
+      .template connect<&TestTrackStateCreator::createTrackStates>(
           &trackStateCreator);
 
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
@@ -391,6 +526,305 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   }
 }
 
+/// A track state which the CKF cannot process must stop the track finding.
+/// Before, the CKF dropped the branch without an error.
+BOOST_AUTO_TEST_CASE(UnsupportedTrackStateFails) {
+  Fixture f(0_T);
+
+  auto options = f.makeCkfOptions();
+
+  FlaglessTrackStateCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
+
+  options.extensions.trackStateCreator
+      .template connect<&FlaglessTrackStateCreator::createTrackStates>(
+          &trackStateCreator);
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+
+  auto res = f.ckf.findTracks(f.startParameters.front(), options, tc);
+
+  BOOST_REQUIRE(!res.ok());
+  BOOST_CHECK_EQUAL(res.error(),
+                    CombinatorialKalmanFilterError::UnsupportedTrackState);
+}
+
+namespace {
+
+/// The surfaces with measurements, in the order the tracks cross them
+std::vector<GeometryIdentifier> measurementSurfaces(const Fixture& f) {
+  std::vector<GeometryIdentifier> surfaces;
+  for (const auto& [id, sl] : f.sourceLinks) {
+    if (std::ranges::find(surfaces, id) == surfaces.end()) {
+      surfaces.push_back(id);
+    }
+  }
+  std::sort(surfaces.begin(), surfaces.end());
+  return surfaces;
+}
+
+/// Run the CKF for all start parameters. If `hide` is set, the measurements on
+/// the second and the fourth surface with measurements are hidden.
+TrackContainer findWithHiddenSurfaces(Fixture& f,
+                                      HoleTestCreator::HoleMode mode,
+                                      bool measurementExpected,
+                                      bool hide = true) {
+  const std::vector<GeometryIdentifier> surfaces = measurementSurfaces(f);
+  BOOST_REQUIRE_GE(surfaces.size(), 4u);
+
+  HoleTestCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
+  if (hide) {
+    trackStateCreator.hiddenSurfaces = {surfaces[1], surfaces[3]};
+  }
+  trackStateCreator.holeMode = mode;
+  trackStateCreator.measurementExpected = measurementExpected;
+
+  auto options = f.makeCkfOptions();
+  options.extensions.trackStateCreator
+      .template connect<&HoleTestCreator::createTrackStates>(
+          &trackStateCreator);
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  for (const auto& startParameters : f.startParameters) {
+    auto res = f.ckf.findTracks(startParameters, options, tc);
+    BOOST_REQUIRE(res.ok());
+  }
+  return tc;
+}
+
+/// The track states of both containers must be the same
+void checkSameTracks(const TrackContainer& a, const TrackContainer& b) {
+  BOOST_REQUIRE_EQUAL(a.size(), b.size());
+  for (std::size_t i = 0; i < a.size(); ++i) {
+    const auto ta = a.getTrack(i);
+    const auto tb = b.getTrack(i);
+    BOOST_CHECK_EQUAL(ta.nMeasurements(), tb.nMeasurements());
+    BOOST_CHECK_EQUAL(ta.nOutliers(), tb.nOutliers());
+    BOOST_CHECK_EQUAL(ta.nHoles(), tb.nHoles());
+    BOOST_CHECK_EQUAL(ta.chi2(), tb.chi2());
+    BOOST_REQUIRE_EQUAL(ta.nTrackStates(), tb.nTrackStates());
+
+    auto sa = ta.trackStatesReversed().begin();
+    auto sb = tb.trackStatesReversed().begin();
+    for (; sa != ta.trackStatesReversed().end(); ++sa, ++sb) {
+      const auto stateA = *sa;
+      const auto stateB = *sb;
+      BOOST_CHECK_EQUAL(stateA.typeFlags().raw(), stateB.typeFlags().raw());
+      BOOST_CHECK_EQUAL(&stateA.referenceSurface(), &stateB.referenceSurface());
+      BOOST_CHECK_EQUAL(stateA.pathLength(), stateB.pathLength());
+      BOOST_CHECK(stateA.predicted() == stateB.predicted());
+      BOOST_CHECK(stateA.predictedCovariance() == stateB.predictedCovariance());
+      BOOST_CHECK(stateA.filtered() == stateB.filtered());
+      BOOST_CHECK(stateA.filteredCovariance() == stateB.filteredCovariance());
+      BOOST_CHECK(stateA.jacobian() == stateB.jacobian());
+    }
+  }
+}
+
+}  // namespace
+
+/// A hole from the creator gives the same tracks as a hole from the CKF.
+BOOST_AUTO_TEST_CASE(CreatorHolesMatchCkfHoles) {
+  Fixture f(0_T);
+
+  auto fromCreator =
+      findWithHiddenSurfaces(f, HoleTestCreator::HoleMode::Creator, true);
+  auto fromCkf =
+      findWithHiddenSurfaces(f, HoleTestCreator::HoleMode::Ckf, true);
+  auto reference = findWithHiddenSurfaces(f, HoleTestCreator::HoleMode::Creator,
+                                          true, false);
+
+  // the two hidden surfaces add two holes to each track
+  BOOST_REQUIRE_EQUAL(fromCreator.size(), reference.size());
+  for (std::size_t i = 0; i < fromCreator.size(); ++i) {
+    BOOST_CHECK_EQUAL(fromCreator.getTrack(i).nHoles(),
+                      reference.getTrack(i).nHoles() + 2u);
+  }
+  checkSameTracks(fromCreator, fromCkf);
+}
+
+/// If no measurement is expected, the creator flags the track state with no
+/// expected hit, which does not count as a hole. This is the same as the
+/// `NoMeasurementExpected` error.
+BOOST_AUTO_TEST_CASE(CreatorNoExpectedHitMatchesCkf) {
+  Fixture f(0_T);
+
+  auto fromCreator =
+      findWithHiddenSurfaces(f, HoleTestCreator::HoleMode::Creator, false);
+  auto fromCkf = findWithHiddenSurfaces(
+      f, HoleTestCreator::HoleMode::CkfNoMeasurementExpected, false);
+
+  auto reference = findWithHiddenSurfaces(f, HoleTestCreator::HoleMode::Creator,
+                                          true, false);
+
+  // the hidden surfaces and the holes without them all have no expected hit
+  BOOST_REQUIRE_EQUAL(fromCreator.size(), reference.size());
+  for (std::size_t i = 0; i < fromCreator.size(); ++i) {
+    const auto track = fromCreator.getTrack(i);
+    BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+    std::size_t nNoExpectedHit = 0;
+    for (const auto trackState : track.trackStatesReversed()) {
+      if (trackState.typeFlags().hasNoExpectedHit()) {
+        ++nNoExpectedHit;
+      }
+    }
+    BOOST_CHECK_EQUAL(nNoExpectedHit, reference.getTrack(i).nHoles() + 2u);
+  }
+  checkSameTracks(fromCreator, fromCkf);
+}
+
+namespace {
+
+/// Run the CKF for all start parameters with the measurements on surface A
+/// hidden. If `jump` is set, surface B is a neighbour of surface A.
+TrackContainer findWithNeighbour(Fixture& f, const GeometryIdentifier& a,
+                                 const GeometryIdentifier& b, bool jump) {
+  HoleTestCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
+  trackStateCreator.hiddenSurfaces = {a};
+  if (jump) {
+    trackStateCreator.neighbours[a] = {f.detector.geometry->findSurface(b)};
+  }
+
+  auto options = f.makeCkfOptions();
+  options.extensions.trackStateCreator
+      .template connect<&HoleTestCreator::createTrackStates>(
+          &trackStateCreator);
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  for (const auto& startParameters : f.startParameters) {
+    auto res = f.ckf.findTracks(startParameters, options, tc);
+    BOOST_REQUIRE(res.ok());
+  }
+  return tc;
+}
+
+/// The track state of a track on a surface
+std::optional<TrackContainer::ConstTrackStateProxy> stateOnSurface(
+    const TrackContainer::ConstTrackProxy& track,
+    const GeometryIdentifier& id) {
+  for (const auto trackState : track.trackStatesReversed()) {
+    if (trackState.referenceSurface().geometryId() == id) {
+      return trackState;
+    }
+  }
+  return std::nullopt;
+}
+
+}  // namespace
+
+/// Without measurements on surface A, the creator finds the measurement on
+/// its neighbour B and the CKF continues from B. In zero field, the straight
+/// line transport to B is exact up to the material.
+BOOST_AUTO_TEST_CASE(NeighbourSurfaceJump) {
+  Fixture f(0_T);
+
+  const std::vector<GeometryIdentifier> surfaces = measurementSurfaces(f);
+  BOOST_REQUIRE_GE(surfaces.size(), 3u);
+  const GeometryIdentifier a = surfaces[1];
+  const GeometryIdentifier b = surfaces[2];
+
+  const TrackContainer jumped = findWithNeighbour(f, a, b, true);
+  const TrackContainer reference = findWithNeighbour(f, a, b, false);
+
+  BOOST_REQUIRE_EQUAL(jumped.size(), reference.size());
+  for (std::size_t i = 0; i < jumped.size(); ++i) {
+    const auto track = jumped.getTrack(i);
+    const auto referenceTrack = reference.getTrack(i);
+
+    // the reference has a hole on A, the jumped track has no state there
+    BOOST_CHECK_EQUAL(track.nMeasurements(), referenceTrack.nMeasurements());
+    BOOST_CHECK_EQUAL(track.nHoles() + 1u, referenceTrack.nHoles());
+    BOOST_CHECK_EQUAL(track.nTrackStates() + 1u, referenceTrack.nTrackStates());
+    BOOST_CHECK(!stateOnSurface(track, a).has_value());
+
+    // the navigator must not visit B again after the jump
+    std::vector<GeometryIdentifier> visited;
+    double next = std::numeric_limits<double>::infinity();
+    for (const auto trackState : track.trackStatesReversed()) {
+      const GeometryIdentifier id = trackState.referenceSurface().geometryId();
+      BOOST_CHECK(std::ranges::find(visited, id) == visited.end());
+      visited.push_back(id);
+      BOOST_CHECK_LT(trackState.pathLength(), next);
+      next = trackState.pathLength();
+    }
+
+    const auto onB = stateOnSurface(track, b);
+    const auto referenceOnA = stateOnSurface(referenceTrack, a);
+    const auto referenceOnB = stateOnSurface(referenceTrack, b);
+    BOOST_REQUIRE(onB.has_value() && referenceOnA.has_value() &&
+                  referenceOnB.has_value());
+    BOOST_CHECK(onB->typeFlags().isMeasurement());
+    BOOST_CHECK_EQUAL(
+        onB->getUncalibratedSourceLink().get<TestSourceLink>().sourceId,
+        referenceOnB->getUncalibratedSourceLink()
+            .get<TestSourceLink>()
+            .sourceId);
+
+    BOOST_CHECK_CLOSE(onB->pathLength(), referenceOnB->pathLength(), 1e-9);
+    for (const auto index : {eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta}) {
+      BOOST_CHECK_SMALL(
+          onB->predicted()[index] - referenceOnB->predicted()[index], 1e-9);
+    }
+
+    // The jacobian of B starts where the jacobian of A starts. The reference
+    // loses energy on A after the update and the jump does not, which changes
+    // the derivative of the time by q/p a little.
+    const BoundMatrix expectedJacobian =
+        referenceOnB->jacobian() * referenceOnA->jacobian();
+    BOOST_CHECK(onB->jacobian().isApprox(expectedJacobian, 1e-5));
+  }
+}
+
+/// A neighbour behind the current surface is skipped, so the current surface
+/// gets a hole.
+BOOST_AUTO_TEST_CASE(NeighbourSurfaceBehindIsSkipped) {
+  Fixture f(0_T);
+
+  const std::vector<GeometryIdentifier> surfaces = measurementSurfaces(f);
+  BOOST_REQUIRE_GE(surfaces.size(), 3u);
+
+  const TrackContainer jumped =
+      findWithNeighbour(f, surfaces[2], surfaces[1], true);
+  const TrackContainer reference =
+      findWithNeighbour(f, surfaces[2], surfaces[1], false);
+
+  checkSameTracks(jumped, reference);
+}
+
+/// After a branch switch, the stepper counts its path length from zero again.
+/// The path length of the track states must still grow along each track.
+BOOST_AUTO_TEST_CASE(PathLengthGrowsAfterBranchSwitch) {
+  Fixture f(0_T);
+
+  auto options = f.makeCkfOptions();
+  // two branches on every surface make about 64 branches
+  options.propagatorPlainOptions.maxSteps = 100000;
+
+  TestTrackStateCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
+  trackStateCreator.numMeasurements = 2;
+  options.extensions.trackStateCreator
+      .template connect<&TestTrackStateCreator::createTrackStates>(
+          &trackStateCreator);
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto res = f.ckf.findTracks(f.startParameters.front(), options, tc);
+  BOOST_REQUIRE(res.ok());
+  BOOST_REQUIRE_GT(res->size(), 1u);
+
+  for (const auto& track : *res) {
+    BOOST_CHECK_EQUAL(track.nTrackStates(), f.detector.numMeasurements);
+    double next = std::numeric_limits<double>::infinity();
+    for (const auto trackState : track.trackStatesReversed()) {
+      // the closest planes are 2 mm apart along the track
+      BOOST_CHECK_LT(trackState.pathLength(), next - 1_mm);
+      next = trackState.pathLength();
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   Fixture f(0_T);
 
@@ -401,12 +835,11 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
       CurvilinearSurface(Vector3{3_m, 0., 0.}, Vector3{1., 0., 0})
           .planeSurface();
 
-  Fixture::TestSourceLinkAccessor slAccessor;
-  slAccessor.container = &f.sourceLinks;
+  TestTrackStateCreator trackStateCreator;
+  trackStateCreator.container = &f.sourceLinks;
 
-  auto trackStateCreator = makeTrackStateCreator(slAccessor, f.measSel);
-  options.extensions.createTrackStates
-      .template connect<&decltype(trackStateCreator)::createTrackStates>(
+  options.extensions.trackStateCreator
+      .template connect<&TestTrackStateCreator::createTrackStates>(
           &trackStateCreator);
 
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
@@ -539,7 +972,6 @@ struct MaterialFixture {
   using KalmanUpdater = Fixture::KalmanUpdater;
   using TestCombinatorialKalmanFilter = Fixture::TestCombinatorialKalmanFilter;
   using TestSourceLinkContainer = Fixture::TestSourceLinkContainer;
-  using TestSourceLinkAccessor = Fixture::TestSourceLinkAccessor;
   using BremPropagator =
       Propagator<MultiStepperLoop<ConstantFieldStepper>, Navigator>;
   using BremCombinatorialKalmanFilter =
@@ -569,10 +1001,6 @@ struct MaterialFixture {
   TestSourceLinkContainer sourceLinks;
 
   KalmanUpdater kfUpdater;
-  MeasurementSelector::Config measurementSelectorCfg = {
-      {GeometryIdentifier(), {{}, {std::numeric_limits<double>::max()}, {1u}}},
-  };
-  MeasurementSelector measSel{measurementSelectorCfg};
 
   TestCombinatorialKalmanFilter ckf;
   BremCombinatorialKalmanFilter bremCkf;
@@ -625,11 +1053,12 @@ struct MaterialFixture {
         PropagatorPlainOptions(geoCtx, magCtx));
     options.recordMaterialStates = recordMaterialStates;
 
-    TestSourceLinkAccessor slAccessor;
-    slAccessor.container = &sourceLinks;
-    auto trackStateCreator = makeTrackStateCreator(slAccessor, measSel);
-    options.extensions.createTrackStates
-        .template connect<&decltype(trackStateCreator)::createTrackStates>(
+    // the creator defaults keep one measurement per surface without a chi2
+    // cut, which is all this material test needs
+    TestTrackStateCreator trackStateCreator;
+    trackStateCreator.container = &sourceLinks;
+    options.extensions.trackStateCreator
+        .template connect<&TestTrackStateCreator::createTrackStates>(
             &trackStateCreator);
 
     TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
@@ -652,11 +1081,10 @@ struct MaterialFixture {
     options.betheHeitlerApprox = std::make_shared<PolynomialBetheHeitlerApprox>(
         makeDefaultBetheHeitlerApprox());
 
-    TestSourceLinkAccessor slAccessor;
-    slAccessor.container = &sourceLinks;
-    auto trackStateCreator = makeTrackStateCreator(slAccessor, measSel);
-    options.extensions.createTrackStates
-        .template connect<&decltype(trackStateCreator)::createTrackStates>(
+    TestTrackStateCreator trackStateCreator;
+    trackStateCreator.container = &sourceLinks;
+    options.extensions.trackStateCreator
+        .template connect<&TestTrackStateCreator::createTrackStates>(
             &trackStateCreator);
 
     const BoundTrackParameters electronParameters(
