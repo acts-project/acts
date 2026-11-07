@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -27,12 +28,20 @@
 
 namespace Acts {
 
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 /// Selection cuts for associating measurements with predicted track
 /// parameters on a surface.
 ///
 /// The default configuration only takes the best matching measurement without a
 /// cut on the local chi2.
-struct MeasurementSelectorCuts {
+///
+/// @deprecated Goes away together with @ref MeasurementSelector. A creator
+///   derived from @ref CkfTrackStateCreatorBase carries whatever cuts its
+///   selection needs.
+struct [[deprecated(
+    "Carry the cuts in a class derived from Acts::CkfTrackStateCreatorBase "
+    "instead")]] MeasurementSelectorCuts {
   /// bins in |eta| to specify variable selections
   std::vector<double> etaBins{};
   /// Maximum local chi2 contribution to classify as measurement.
@@ -57,7 +66,13 @@ struct MeasurementSelectorCuts {
 /// If there is no compatible measurement, the measurement with the minimum
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
-class MeasurementSelector {
+/// @deprecated Implement the selection in a @ref CkfTrackStateCreatorBase
+///   instead. Selecting on track states forces every measurement on a surface
+///   through the track EDM, and the geometry and eta binned cut lookup here is
+///   not used by anything ACTS ships.
+class [[deprecated(
+    "Implement the selection in a class derived from "
+    "Acts::CkfTrackStateCreatorBase instead")]] MeasurementSelector {
  public:
   /// Geometry-dependent cut configuration.
   ///
@@ -131,6 +146,8 @@ class MeasurementSelector {
 
   InternalConfig m_config;
 };
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts
 
