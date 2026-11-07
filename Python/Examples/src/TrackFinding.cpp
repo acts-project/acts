@@ -90,7 +90,7 @@ void addTrackFinding(py::module& mex) {
         py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, nMaxPhiSlice, minSeedLevel, addTriplets,
                        maxAbsEtaAddTriplets, maxSeedSplitEta,
-                       postFitCurvatureFactor);
+                       postFitCurvatureFactor, seedFitAtOutermost);
     patchKwargsConstructor(c);
   }
 
@@ -152,7 +152,7 @@ void addTrackFinding(py::module& mex) {
       inputSeeds, inputProtoTracks, inputParticleHypotheses,
       outputTrackParameters, outputSeeds, outputProtoTracks,
       inputFreeParameters, seedParamsEstimation, trackingGeometry,
-      magneticField);
+      magneticField, parametersOnLastSpacePoint);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsLookupEstimation, mex, "TrackParamsLookupEstimation",
