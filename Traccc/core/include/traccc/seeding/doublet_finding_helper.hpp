@@ -15,6 +15,7 @@
 #include "traccc/seeding/detail/lin_circle.hpp"
 #include "traccc/seeding/detail/seeding_config.hpp"
 #include "traccc/seeding/detail/spacepoint_type.hpp"
+#include "traccc/seeding/detail/strip_spacepoint_calibration.hpp"
 
 namespace traccc {
 
@@ -34,6 +35,27 @@ struct doublet_finding_helper {
   static inline TRACCC_HOST_DEVICE bool isCompatible(
       const edm::spacepoint<T1>& sp1, const edm::spacepoint<T2>& sp2,
       const seedfinder_config& config);
+
+  /// Check whether the chord of a strip doublet crosses both of its strip
+  /// pairs
+  ///
+  /// The spacepoints are slid along their strips to the crossing of the
+  /// doublet chord; the doublet is rejected if either crossing falls outside
+  /// its strips. This is the doublet level counterpart of
+  /// triplet_finding_helper::isCompatibleStrip.
+  ///
+  /// @param sp1 is the middle spacepoint
+  /// @param sp2 is the bottom or top spacepoint
+  /// @param cal1 is the calibration of the middle spacepoint
+  /// @param cal2 is the calibration of the other spacepoint
+  /// @param tolerance is the allowed excess over the strip half length
+  ///
+  /// @return boolean value for compatibility
+  template <typename T1, typename T2>
+  static inline TRACCC_HOST_DEVICE bool isCompatibleStripDoublet(
+      const edm::spacepoint<T1>& sp1, const edm::spacepoint<T2>& sp2,
+      const strip_spacepoint_calibration& cal1,
+      const strip_spacepoint_calibration& cal2, const scalar tolerance);
 
   /// Do the conformal transformation on doublet's coordinate
   ///
@@ -267,6 +289,19 @@ lin_circle TRACCC_HOST_DEVICE doublet_finding_helper::transform_coordinates(
            iDeltaR2;
 
   return l;
+}
+
+template <typename T1, typename T2>
+inline bool TRACCC_HOST_DEVICE doublet_finding_helper::isCompatibleStripDoublet(
+    const edm::spacepoint<T1>& sp1, const edm::spacepoint<T2>& sp2,
+    const strip_spacepoint_calibration& cal1,
+    const strip_spacepoint_calibration& cal2, const scalar tolerance) {
+  // the chord length and sign do not matter for the crossing
+  const std::array<scalar, 3> chord{sp2.x() - sp1.x(), sp2.y() - sp1.y(),
+                                    sp2.z() - sp1.z()};
+  std::array<scalar, 3> calibrated{};
+  return calibrate_strip_spacepoint(chord, cal1, calibrated, tolerance) &&
+         calibrate_strip_spacepoint(chord, cal2, calibrated, tolerance);
 }
 
 }  // namespace traccc
