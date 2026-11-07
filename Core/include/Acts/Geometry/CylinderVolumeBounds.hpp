@@ -124,7 +124,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Copy Constructor
   ///
   /// @param cylbo is the source cylinder volume bounds for the copy
-  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
+  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo) = default;
 
   ~CylinderVolumeBounds() override = default;
   /// Assignment operator
