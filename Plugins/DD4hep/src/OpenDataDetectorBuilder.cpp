@@ -360,7 +360,7 @@ void addCaloMaterialCollector(const BlueprintBuilder& builder,
       [&](Acts::MaterialDesignatorBlueprintNode& mat) {
         configureCylinderFace(mat, Face::InnerCylinder, kMatPhiBins,
                               kCaloCollectorZBins);
-        mat.addChild(builder.backend().makeMaterialCollector(
+        mat.addChild(builder.makeMaterialCollector(
             kRMin, kRMax, kHalfZ, 0.0, "CaloMaterialCollectorBarrel"));
       });
 }
@@ -398,7 +398,7 @@ void addCaloMaterialCollectorDisc(const BlueprintBuilder& builder,
         configureDiscFace(mat,
                           positive ? Face::PositiveDisc : Face::NegativeDisc,
                           kCaloCollectorDiscPhiBins, kCaloCollectorDiscRBins);
-        mat.addChild(builder.backend().makeMaterialCollector(
+        mat.addChild(builder.makeMaterialCollector(
             kRMin, kRMax, kHalfZ, positive ? kAbsZ : -kAbsZ, name));
       });
 }
