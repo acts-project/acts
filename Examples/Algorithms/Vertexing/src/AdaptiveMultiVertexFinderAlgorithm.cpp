@@ -159,7 +159,9 @@ AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder(
   fitterCfg.doSmoothing = m_cfg.doSmoothing;
   fitterCfg.useTime = m_cfg.useTime;
   fitterCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
-  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&m_linearizer);
+  fitterCfg.fieldTrackLinearizer
+      .connect<&Acts::HelicalTrackLinearizer::linearizeTrackWithField>(
+          &m_linearizer);
   Fitter fitter(std::move(fitterCfg),
                 logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 
