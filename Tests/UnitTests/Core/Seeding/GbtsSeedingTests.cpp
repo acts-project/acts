@@ -684,6 +684,62 @@ BOOST_AUTO_TEST_CASE(SeedsFromDenseTracks) {
   checkOneSeedPerTrack(seeds, spacePoints, tracks);
 }
 
+// dropDeadEnds leaves out only edges that no chain can use: the graph has fewer
+// edges but the same links, and the seeds are the same.
+BOOST_AUTO_TEST_CASE(DropDeadEndsKeepsTheSeeds) {
+  const ToyDetector detector = barrelDetector();
+  std::vector<Track> tracks = makeDenseTracks();
+  // steep enough to leave the barrel after two layers, so the innermost edges
+  // of these tracks link to nothing
+  for (const float phi : {-0.02f, 0.f, 0.02f}) {
+    tracks.push_back({.phi = phi, .tau = 1.5f});
+  }
+  const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
+  const SeederSetup setup = makeSeeder(detector);
+
+  struct Result {
+    std::size_t nEdges{};
+    std::uint32_t nConnections{};
+    std::string seeds;
+  };
+  const auto run = [&](const bool dropDeadEnds) {
+    Experimental::GbtsGraphBuilder::Config config = setup.graphBuilder.config();
+    config.dropDeadEnds = dropDeadEnds;
+    // the z0 histogram would already skip the outer nodes without edges
+    config.z0HistogramMaxBarrelOrder = -1;
+    const Experimental::GbtsGraphBuilder graphBuilder(config,
+                                                      makeGeometry(detector));
+
+    // the graph is built on a storage of its own, as building writes into it
+    Experimental::GbtsNodeStorage storage = setup.seeder.makeNodeStorage();
+    auto layerColumn =
+        spacePoints.column<Experimental::GbtsLayerIndex>("gbtsLayerIndex");
+    for (const auto& sp : spacePoints) {
+      storage.insert(sp.index(), sp.x(), sp.y(), sp.z(), sp.r(), sp.phi(),
+                     sp.extra(layerColumn));
+    }
+    storage.finalize();
+    const Experimental::GbtsGraph graph =
+        graphBuilder.buildTheGraph(setup.roi, storage, setup.options.bFieldInZ);
+
+    SeedContainer seeds;
+    seeds.assignSpacePointContainer(spacePoints);
+    setup.seeder.createSeeds(spacePoints, setup.roi, graphBuilder, setup.filter,
+                             setup.options, seeds);
+
+    return Result{.nEdges = graph.edgeStorage.size(),
+                  .nConnections = graph.nConnections,
+                  .seeds = formatSeeds(seeds)};
+  };
+
+  const Result kept = run(false);
+  const Result dropped = run(true);
+
+  BOOST_CHECK_LT(dropped.nEdges, kept.nEdges);
+  BOOST_CHECK_EQUAL(dropped.nConnections, kept.nConnections);
+  BOOST_CHECK_EQUAL(dropped.seeds, kept.seeds);
+}
+
 // Guards the forward fixture: every track must reach the four layers a seed
 // needs, and the tau range must straddle the barrel-endcap transition.
 BOOST_AUTO_TEST_CASE(ForwardInputIsWellFormed) {
