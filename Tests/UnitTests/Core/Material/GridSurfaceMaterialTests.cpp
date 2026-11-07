@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(GridMaterialDirectFromAxes) {
 
 // This test covers building a grid material with direct storage by resolving
 // a MultiAxisSpec2D binning against a surface, following the same pattern
-// used for ProtoGridSurfaceMaterial (see BinnedSurfaceMaterialAccumulator).
+// used for ProtoSurfaceMaterial (see BinnedSurfaceMaterialAccumulator).
 // Binning is restricted to z; loc0 (rPhi) is a single-bin dummy axis that
 // should be ignored regardless of its (possibly out-of-range) value.
 BOOST_AUTO_TEST_CASE(GridMaterialDirectFromMultiAxisSpec) {

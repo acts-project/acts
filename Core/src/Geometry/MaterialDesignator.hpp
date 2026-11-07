@@ -93,8 +93,8 @@ class ProtoDesignator {
                         << " to face " << face);
 
       portal->surface().assignSurfaceMaterial(
-          std::make_shared<ProtoGridSurfaceMaterial>(
-              binning, MappingType::Default, key));
+          std::make_shared<ProtoSurfaceMaterial>(binning, MappingType::Default,
+                                                 key));
     }
   }
 
