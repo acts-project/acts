@@ -138,6 +138,9 @@ class ContainerBlueprintNode : public BlueprintNode {
   void addToGraphviz(std::ostream& os) const override;
 
  protected:
+  /// @copydoc BlueprintNode::visitBuiltVolumes
+  void visitBuiltVolumes(const std::function<void(Volume&)>& visitor) override;
+
   /// Make the volume stack for the container. This is called by the build
   /// method and is implemented by the derived classes.
   /// @param gctx The current geometry context object, e.g. alignment

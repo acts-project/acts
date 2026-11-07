@@ -22,6 +22,19 @@
 
 namespace Acts {
 
+void BlueprintNode::visitBuiltVolumes(
+    const std::function<void(Volume&)>& /*visitor*/) {
+  throw std::logic_error(
+      "Blueprint node does not support built-volume traversal: " + name());
+}
+
+void BlueprintNode::visitBuiltChildVolumes(
+    const std::function<void(Volume&)>& visitor) {
+  for (auto& child : children()) {
+    child.visitBuiltVolumes(visitor);
+  }
+}
+
 namespace {
 bool hasDescendent(const BlueprintNode& descendent,
                    const BlueprintNode& ancestor) {
