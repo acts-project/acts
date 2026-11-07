@@ -42,58 +42,34 @@ if(TARGET detray_detectors_HEADERS)
     )
 endif()
 
-# Create the metadata headers
-if(NOT "${DETRAY_GENERATE_METADATA}" STREQUAL "")
-    message(STATUS "Configuring detray detector types...")
+# Generate the metadata headers. Only hand-written headers (telescope) live in
+# the source tree; the shipped detector configurations in
+# codegen/detray_metadata/configurations are always generated.
+set(_detray_shipped_metadata default odd toy wire_chamber)
+foreach(_name IN LISTS _detray_shipped_metadata)
+    detray_add_metadata_header(detray_detectors "${_name}")
+endforeach()
 
-    find_package(Python COMPONENTS Interpreter REQUIRED)
-
-    set(OUTPUT_DIR
-        "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include/detray/detectors"
-    )
-    file(MAKE_DIRECTORY ${OUTPUT_DIR})
-
-    # Generate the custom metadata headers
-    foreach(GENERATOR ${DETRAY_GENERATE_METADATA})
-        set(GENERATED_HEADER "${OUTPUT_DIR}/${GENERATOR}.hpp")
-        set(GENERATOR_SCRIPT
-            "${PROJECT_SOURCE_DIR}/detectors/python/${GENERATOR}.py"
+# DETRAY_GENERATE_METADATA only adds external configurations.
+foreach(_configuration IN LISTS DETRAY_GENERATE_METADATA)
+    string(REGEX REPLACE "_metadata$" "" _name "${_configuration}")
+    if(_name IN_LIST _detray_shipped_metadata)
+        message(
+            DEPRECATION
+            "DETRAY_GENERATE_METADATA: '${_configuration}' is always generated, "
+            "remove it from the list"
         )
-
-        add_custom_command(
-            OUTPUT "${GENERATED_HEADER}"
-            COMMAND
-                ${CMAKE_CURRENT_SOURCE_DIR}/generate_metadata.sh -m
-                ${GENERATOR_SCRIPT} -o ${OUTPUT_DIR} -p ${CMAKE_BINARY_DIR}
-            DEPENDS
-                "${GENERATOR_SCRIPT}"
-                "${PROJECT_SOURCE_DIR}/detectors/generate_metadata.sh"
-                "${CMAKE_BINARY_DIR}/python/setup.sh"
+        continue()
+    endif()
+    if(_name STREQUAL "itk")
+        message(
+            DEPRECATION
+            "DETRAY_GENERATE_METADATA: the ITk metadata is no longer shipped by "
+            "detray; traccc generates it (see TRACCC_ITK_METADATA_CONFIGURATION)"
         )
+        continue()
+    endif()
+    detray_add_metadata_header(detray_detectors "${_configuration}")
+endforeach()
 
-        add_custom_target(
-            ${GENERATOR}_generation
-            ALL
-            DEPENDS ${GENERATED_HEADER}
-        )
-
-        # Set up how clients should find its headers.
-        target_include_directories(
-            detray_detectors
-            INTERFACE
-                $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include>
-                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-        )
-
-        install(
-            DIRECTORY
-                "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include/"
-            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-            OPTIONAL
-        )
-
-        add_dependencies(detray_detectors ${GENERATOR}_generation)
-
-        message(STATUS "Creating metadata: ${GENERATOR}")
-    endforeach()
-endif()
+unset(_detray_shipped_metadata)

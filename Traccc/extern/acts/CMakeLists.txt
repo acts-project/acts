@@ -53,11 +53,6 @@ set(DETRAY_BUILD_TEST_UTILS TRUE CACHE BOOL "")
 # HACK: Make sure that ACTS builds ACTSVG, which is required by Detray validation tools.
 set(ACTS_BUILD_PLUGIN_ACTSVG TRUE CACHE BOOL "")
 
-# The ITk metadata is required, so explicitly request that it be built.
-if(NOT ("itk_metadata" IN_LIST DETRAY_GENERATE_METADATA))
-    list(APPEND DETRAY_GENERATE_METADATA "itk_metadata")
-endif()
-
 # Build the colocated Acts (and, transitively, Detray) as a subdirectory of this
 # build. An explicit binary dir is required because the source lives outside the
 # current directory tree.

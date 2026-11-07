@@ -160,6 +160,13 @@ set(TRACCC_SUPPORTED_DETECTORS
     CACHE STRING
     "Semicolon-separated list of detector types to support in this build"
 )
+# The ITk detector metadata is not shipped by detray. traccc generates it from
+# this external configuration, which must be named itk_detector.py.
+set(TRACCC_ITK_METADATA_CONFIGURATION
+    "${CMAKE_CURRENT_SOURCE_DIR}/metadata/itk_detector.py:configure"
+    CACHE STRING
+    "External detray metadata configuration for the ITk (/path/to/itk_detector.py:configure)"
+)
 
 # Set up build profiling for the project.
 if(CTEST_USE_LAUNCHERS)
@@ -459,6 +466,7 @@ option(
 )
 
 # Build the traccc code.
+add_subdirectory(metadata)
 add_subdirectory(core)
 add_subdirectory(device/common)
 if(TRACCC_BUILD_CUDA_UTILS)
