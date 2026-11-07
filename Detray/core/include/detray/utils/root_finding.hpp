@@ -379,13 +379,13 @@ DETRAY_HOST_DEVICE inline std::pair<scalar_t, scalar_t> newton_raphson_safe(
 
 /// @brief Fill an intersection with the result of the root finding
 ///
-/// @param [out] sfi the surface intersection
-/// @param [in] traj the test trajectory that intersects the surface
-/// @param [in] s path length to the root
-/// @param [in] ds approximation error for the root
-/// @param [in] mask the mask of the surface
-/// @param [in] trf the transform of the surface
-/// @param [in] mask_tolerance minimal and maximal mask tolerance
+/// @param is Intersection object to populate.
+/// @param traj Trajectory used to evaluate the intersection point.
+/// @param ip Path length and error estimate returned by root finding.
+/// @param sf_desc Descriptor of the intersected surface.
+/// @param mask Shape mask defining the surface bounds.
+/// @param trf Transform from the surface frame to global coordinates.
+/// @param intr_cfg Intersection configuration, including mask tolerances.
 template <typename intersection_t, concepts::algebra algebra_t,
           typename surface_descr_t, typename mask_t, typename trajectory_t,
           concepts::transform3D transform3_t, concepts::scalar scalar_t>

@@ -41,6 +41,7 @@ struct track_material {
   /// Phi and eta values of the track for which the material was recorded
   /// @{
   double phi{detail::invalid_value<double>()};
+  /// Eta of the track.
   double eta{detail::invalid_value<double>()};
   /// @}
   /// Accumulated radiation length per pathlength through the material
@@ -56,6 +57,12 @@ struct track_material {
 /// @brief Functor to retrieve the material parameters for a given local
 /// position
 struct get_material_record {
+  /// Retrieve the material record at a local position.
+  /// @param mat_group Material group to inspect.
+  /// @param index Material index.
+  /// @param loc Local position.
+  /// @param cos_inc_angle Cosine of the incidence angle.
+  /// @return Material record for the position.
   template <typename mat_group_t, typename index_t, concepts::point2D point2_t,
             concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE auto operator()(
@@ -98,36 +105,44 @@ struct get_material_record {
 /// the material.
 template <template <typename...> class vector_t>
 struct material_tracer : public detray::base_actor {
+  /// Type storing accumulated track material.
   using track_material_type = track_material;
+  /// Type storing one material step.
   using material_record_type = material_record;
 
+  /// State used to collect material during propagation.
   struct state {
     friend struct material_tracer;
 
     /// Construct the vector containers with a given resource
-    /// @param resource
+    /// @param resource Memory resource for the material steps.
     DETRAY_HOST
     explicit state(vecmem::memory_resource &resource)
         : m_mat_steps(&resource) {}
 
-    /// Construct from externally provided vector for the @param steps
+    /// Construct from externally provided vector for the @p steps.
+    /// @param steps Vector containing the material steps.
     DETRAY_HOST_DEVICE
     explicit state(vector_t<material_record_type> &&steps)
         : m_mat_steps(std::move(steps)) {}
 
     /// Access to the total recorded material along the track - const
+    /// @return Recorded track material.
     DETRAY_HOST_DEVICE
     const auto &get_track_material() const { return m_track_material; }
 
     /// Move the total recorded material out of the actor
+    /// @return The moved track material.
     DETRAY_HOST
     auto &&release_track_material() && { return std::move(m_track_material); }
 
     /// Access to the recorded material steps along the track - const
+    /// @return Recorded material steps.
     DETRAY_HOST_DEVICE
     const auto &get_material_steps() const { return m_mat_steps; }
 
     /// Move the recorded material steps pout of the actor
+    /// @return The moved material steps.
     DETRAY_HOST_DEVICE
     auto &&release_material_steps() && { return std::move(m_mat_steps); }
 
@@ -140,6 +155,9 @@ struct material_tracer : public detray::base_actor {
   };
 
   /// Run as observer to the parameter transporter (covariance transport)
+  /// @param tracer State collecting material.
+  /// @param prop_state Current propagator state.
+  /// @param res Parameter transport result.
   template <typename propagator_state_t, concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE void operator()(
       state &tracer, const propagator_state_t &prop_state,
@@ -163,6 +181,8 @@ struct material_tracer : public detray::base_actor {
   }
 
   /// Run in a propagation chain without covariance transport
+  /// @param tracer State collecting material.
+  /// @param prop_state Current propagator state.
   template <typename propagator_state_t>
   DETRAY_HOST_DEVICE void operator()(
       state &tracer, const propagator_state_t &prop_state) const {

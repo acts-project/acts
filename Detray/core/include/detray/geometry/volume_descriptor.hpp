@@ -59,6 +59,7 @@ class volume_descriptor {
 
   /// How to link to the volume material, if any
   using material_link = mat_link_t;
+  /// Identifier type used by the volume material link.
   using material_id = typename material_link::id_type;
 
   /// Default constructor builds an ~infinitely long cylinder
@@ -69,12 +70,14 @@ class volume_descriptor {
   /// @param id id values that determines how to interpret the bounds.
   explicit constexpr volume_descriptor(const volume_id id) : m_id{id} {}
 
+  /// @param id Object identifier to classify.
   /// @returns true if the object ID corresponds to a surface
   static consteval bool is_surface_id(const object_id id) {
     return (id == object_id::e_portal || id == object_id::e_sensitive ||
             id == object_id::e_passive);
   }
 
+  /// @param id Object identifier to classify.
   /// @returns true if the object ID corresponds to a [daughter] volume
   static consteval bool is_volume_id(const object_id id) {
     return (id == object_id::e_volume);
@@ -96,7 +99,7 @@ class volume_descriptor {
   DETRAY_HOST_DEVICE
   constexpr auto transform() const -> dindex { return m_transform; }
 
-  /// @param index the index of the volume in the detector volume container.
+  /// @param trf_idx Index of this volume's transform in the transform store.
   DETRAY_HOST
   constexpr auto set_transform(const dindex trf_idx) -> void {
     m_transform = trf_idx;
@@ -156,6 +159,7 @@ class volume_descriptor {
     return sf_idx_range[1] - sf_idx_range[0];
   }
 
+  /// @param sf_idx Surface index in the detector-wide surface collection.
   /// @returns a surface index with respect to the volume surface range
   DETRAY_HOST_DEVICE constexpr dindex to_local_sf_index(dindex sf_idx) const {
     auto full_range = full_sf_range();
@@ -166,6 +170,7 @@ class volume_descriptor {
     return sf_idx - full_range[0];
   }
 
+  /// @param sf_idx Surface index relative to this volume's surface range.
   /// @returns a surface index with respect to the global detector containers
   DETRAY_HOST_DEVICE constexpr dindex to_global_sf_index(dindex sf_idx) const {
     auto full_range = full_sf_range();
@@ -250,6 +255,7 @@ class volume_descriptor {
     return m_accel_links;
   }
 
+  /// @param id Object type whose accelerator link is requested.
   /// @returns acc data structure link for a specific type of object - const
   /// version with runtime indexing
   DETRAY_HOST_DEVICE constexpr auto accel_link(const ID& id) const
@@ -281,9 +287,12 @@ class volume_descriptor {
     detail::get<obj_id>(m_accel_links) = acc_link_t{id, index};
   }
 
-  /// Set link for a type of surfaces ( @param obj_id ) from @param id
-  /// and @param index of the acceleration data structure (e.g. type and
+  /// Set link for a type of surfaces ( @p obj_id ) from @p accel_id
+  /// and @p index of the acceleration data structure (e.g. type and
   /// index of a grid in the accelerator store)
+  /// @param obj_id Object type to associate with the link.
+  /// @param accel_id Accelerator structure type.
+  /// @param index Index of the accelerator structure in its store.
   DETRAY_HOST constexpr auto set_accel_link(
       const ID obj_id, const typename acc_link_t::id_type accel_id,
       const typename acc_link_t::index_type index) -> void {
@@ -293,6 +302,7 @@ class volume_descriptor {
   /// Equality operator
   ///
   /// @param rhs is the right-hand side to compare against.
+  /// @returns True when the volume shape, index, and accelerator links match.
   DETRAY_HOST_DEVICE
   constexpr auto operator==(const volume_descriptor& rhs) const -> bool {
     return (m_id == rhs.m_id && m_index == rhs.m_index &&

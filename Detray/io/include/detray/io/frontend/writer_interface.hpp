@@ -26,7 +26,8 @@ class writer_interface {
   /// All writers must define a file extension
   writer_interface() = delete;
 
-  /// File gets created with a fixed @param extension
+  /// File gets created with a fixed @p ext
+  /// @param ext file extension handled by this writer
   explicit writer_interface(const std::string& ext) : m_file_extension{ext} {}
 
   /// Default destructor
@@ -35,13 +36,16 @@ class writer_interface {
   /// @returns the file extension
   const std::string& file_extension() const { return m_file_extension; }
 
-  /// Writes the respective detector component to file. Since the detector
-  /// does not provide the volume names, the name map is also passed.
-  /// @note The existence of the file path has to be guaranteed by the caller
-  virtual std::string write(const detector_t&,
-                            const typename detector_t::name_map&,
-                            const std::ios_base::openmode,
-                            const std::filesystem::path&) = 0;
+  /// Write detector components to a path using the supplied name map.
+  /// @param detector detector components to serialize
+  /// @param names map used to name detector components
+  /// @param mode stream open mode
+  /// @param path output directory guaranteed to exist by the caller
+  /// @return path or filename written by the implementation
+  virtual std::string write(const detector_t& detector,
+                            const typename detector_t::name_map& names,
+                            const std::ios_base::openmode mode,
+                            const std::filesystem::path& path) = 0;
 
  private:
   /// Extension that matches the file format of the respective writer
