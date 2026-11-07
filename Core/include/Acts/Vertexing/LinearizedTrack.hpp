@@ -29,6 +29,12 @@ namespace Acts {
 ///
 
 struct LinearizedTrack {
+  /// Weight matrix of the bound parameters without time. Time is the last
+  /// bound parameter, so these are the first eBoundSize - 1 parameters.
+  using WeightWithoutTime = SquareMatrix<eBoundSize - 1>;
+  static_assert(eBoundTime == eBoundSize - 1,
+                "Time must be the last bound parameter");
+
   LinearizedTrack() = default;
 
   /// @brief Constructor taking perigee parameters and covariance matrix
@@ -39,6 +45,9 @@ struct LinearizedTrack {
   /// @param parCovarianceAtPCA Parameter covariance matrix at point of closest
   ///                           approach
   /// @param parWeightAtPCA The weight at the point of closest approach
+  /// @param parWeightAtPCAWithoutTime The weight of the bound parameters
+  ///                                  without time at the point of closest
+  ///                                  approach
   /// @param linPoint Linearization point
   /// @param posJacobian Position jacobian
   /// @param momJacobian Momentum jacobian
@@ -47,7 +56,9 @@ struct LinearizedTrack {
   /// @param constTerm Constant term in taylor expansion
   LinearizedTrack(const BoundVector& paramsAtPCA,
                   const BoundMatrix& parCovarianceAtPCA,
-                  const BoundMatrix& parWeightAtPCA, const Vector4& linPoint,
+                  const BoundMatrix& parWeightAtPCA,
+                  const WeightWithoutTime& parWeightAtPCAWithoutTime,
+                  const Vector4& linPoint,
                   const Matrix<eBoundSize, 4>& posJacobian,
                   const Matrix<eBoundSize, 3>& momJacobian,
                   const Vector4& position, const Vector3& momentum,
@@ -55,6 +66,7 @@ struct LinearizedTrack {
       : parametersAtPCA(paramsAtPCA),
         covarianceAtPCA(parCovarianceAtPCA),
         weightAtPCA(parWeightAtPCA),
+        weightAtPCAWithoutTime(parWeightAtPCAWithoutTime),
         linearizationPoint(linPoint),
         positionJacobian(posJacobian),
         momentumJacobian(momJacobian),
@@ -68,6 +80,10 @@ struct LinearizedTrack {
   BoundMatrix covarianceAtPCA{BoundMatrix::Zero()};
   /// Weight matrix (inverse covariance) at PCA
   BoundMatrix weightAtPCA{BoundMatrix::Zero()};
+  /// Weight matrix of the bound parameters without time at PCA.
+  /// This is not a block of `weightAtPCA`: time is in general
+  /// correlated with the other parameters.
+  WeightWithoutTime weightAtPCAWithoutTime{WeightWithoutTime::Zero()};
   /// 4D point where track was linearized for vertex fitting
   Vector4 linearizationPoint{Vector4::Zero()};
   /// Jacobian of track parameters w.r.t. vertex position
