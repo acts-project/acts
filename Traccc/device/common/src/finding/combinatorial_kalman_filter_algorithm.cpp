@@ -276,10 +276,14 @@ auto combinatorial_kalman_filter_algorithm::operator()(
         link_buffer_capacity, mr().main, vecmem::data::buffer_type::resizable);
     copy().setup(vecmem::ignore_event, links_buffer);
 
-    // Buffers needed for MBF smoother (if enabled).
-    unsigned int tmp_jacobian_buffer_size = 0;
-    vecmem::data::vector_buffer<bound_matrix<algebra_t>> jacobian_buffer,
-        tmp_jacobian_buffer;
+    // Buffers needed for MBF smoother (if enabled). Note that at index i, the
+    // Jacobian buffer contains J(i -> C(i)), i.e. it contains, for link i, the
+    // Jacobian from that link to the next surface.
+    vecmem::data::vector_buffer<bound_matrix<algebra_t>> jacobian_buffer;
+    // These two buffers have slightly different semantics. At index i, the
+    // predicted parameters contain the parameters on the next surface departing
+    // from link i, while the filtered parameters hold the parameters at link i
+    // itself.
     bound_track_parameters_collection_types::buffer
         link_predicted_parameter_buffer,
         link_filtered_parameter_buffer;
@@ -458,7 +462,6 @@ auto combinatorial_kalman_filter_algorithm::operator()(
              .max_track_candidates_per_track =
                  cfg.max_track_candidates_per_track,
              .links_view = links_buffer,
-             .in_params_view = in_params_view,
              .in_tmp_params_view = tmp_params_view,
              .in_tmp_links_view = tmp_links_view,
              .in_params_index_view = out_params_index_view,
@@ -466,11 +469,6 @@ auto combinatorial_kalman_filter_algorithm::operator()(
              .out_params_liveness_view = updated_params_liveness_view,
              .tips_view = tips_buffer,
              .tip_lengths_view = tip_length_buffer,
-             .jacobian_view = jacobian_buffer,
-             .tmp_jacobian_view = get_sized_view(
-                 std::min(n_in_params, tmp_jacobian_buffer.capacity()),
-                 tmp_jacobian_buffer),
-             .link_predicted_parameter_view = link_predicted_parameter_buffer,
              .link_filtered_parameter_view = link_filtered_parameter_buffer});
 
         std::swap(in_params_buffer, updated_params_buffer);
@@ -586,25 +584,19 @@ auto combinatorial_kalman_filter_algorithm::operator()(
         /*****************************************************************
          * Propagate to the next surface
          *****************************************************************/
-        if (cfg.run_smoother == smoother_type::e_mbf &&
-            n_candidates > tmp_jacobian_buffer_size) {
-          tmp_jacobian_buffer_size = n_candidates;
-          tmp_jacobian_buffer = {n_candidates, mr().main};
-        }
-
         propagate_to_next_surface_kernel(
             n_candidates, cfg, det, device_detector, bfield,
             {.params_view = params_view,
              .params_liveness_view = params_liveness_view,
              .param_ids_view = param_ids_view,
              .links_view = links_buffer,
+             .link_predicted_parameter_view = link_predicted_parameter_buffer,
              .prev_links_idx = step_to_link_idx_map[step],
              .step = step,
              .n_in_params = n_candidates,
              .tips_view = tips_buffer,
              .tip_lengths_view = tip_length_buffer,
-             .tmp_jacobian_view =
-                 get_sized_view(n_candidates, tmp_jacobian_buffer)});
+             .jacobian_view = jacobian_buffer});
       }
 
       n_in_params = n_candidates;
@@ -628,7 +620,6 @@ auto combinatorial_kalman_filter_algorithm::operator()(
     param_ids_buffer = {};
     link_last_measurement_buffer = {};
     keys_buffer = {};
-    tmp_jacobian_buffer = {};
     n_tracks_per_seed_buffer = {};
     meas_ranges_buffer = {};
 
