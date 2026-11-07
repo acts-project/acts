@@ -10,3 +10,7 @@ add_unittest(GeoTrdToVolumeTest GeoTrdToVolumeTests.cpp)
 add_unittest(GeoBoxToVolumeTest GeoBoxToVolumeTest.cpp)
 add_unittest(GeoTubeToVolumeTest GeoTubeToVolumeTest.cpp)
 add_unittest(GeoSubConverterTests GeoSubConverterTest.cpp)
+
+
+add_test(NAME GeoMaterialTest 
+         COMMAND  python ${CMAKE_CURRENT_SOURCE_DIR}/geoModel_MaterialDBTest.py --materialDB ${CMAKE_SOURCE_DIR}/Examples/Configs/GeoModel_MaterialMap.json )
