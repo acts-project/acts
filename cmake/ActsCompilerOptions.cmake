@@ -42,13 +42,13 @@ endif()
 set(ACTS_CXX_STANDARD 23)
 set(ACTS_CXX_STANDARD_FEATURE cxx_std_23)
 if(DEFINED CMAKE_CXX_STANDARD)
-    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
+    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 23)
         set(ACTS_CXX_STANDARD ${CMAKE_CXX_STANDARD})
         set(ACTS_CXX_STANDARD_FEATURE "cxx_std_${CMAKE_CXX_STANDARD}")
     else()
         message(
             SEND_ERROR
-            "CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}, but ACTS requires C++ >=20"
+            "CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}, but ACTS requires C++ >=23"
         )
     endif()
 endif()
@@ -74,18 +74,19 @@ set(CMAKE_MACOSX_RPATH 1)
 # were not in the default library directories
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-message(CHECK_START "Checking C++20 std::format support")
+message(CHECK_START "Checking std::format support")
 try_compile(
     HAVE_STDFORMAT
     SOURCES ${PROJECT_SOURCE_DIR}/cmake/src/format.cpp
-    CXX_STANDARD 20
+    CXX_STANDARD ${ACTS_CXX_STANDARD}
+    CXX_STANDARD_REQUIRED ON
 )
 
 if(NOT HAVE_STDFORMAT)
     message(CHECK_FAIL "missing")
     message(
         SEND_ERROR
-        "C++20 std::format support is required, "
+        "std::format support is required, "
         "but not available in this compiler"
     )
 else()
