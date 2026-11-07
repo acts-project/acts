@@ -483,7 +483,14 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  pOptions.direction = Direction::Backward();
+  // The point of closest approach can be on either side of the track
+  const Intersection3D intersection =
+      perigeeSurface
+          ->intersect(gctx, track.position(gctx), track.direction(),
+                      BoundaryTolerance::Infinite())
+          .closest();
+  pOptions.direction =
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Do the propagation to the perigeee
   auto result =
@@ -522,7 +529,14 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  pOptions.direction = Direction::Backward();
+  // The point of closest approach can be on either side of the track
+  const Intersection3D intersection =
+      perigeeSurface
+          ->intersect(gctx, track.position(gctx), track.direction(),
+                      BoundaryTolerance::Infinite())
+          .closest();
+  pOptions.direction =
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Do the propagation to the perigeee
   auto result =
