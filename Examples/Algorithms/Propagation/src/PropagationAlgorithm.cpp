@@ -12,6 +12,7 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 
+#include <chrono>
 #include <stdexcept>
 #include <utility>
 
@@ -51,6 +52,7 @@ ProcessCode PropagationAlgorithm::execute(
   for (const auto [it, parameters] : Acts::enumerate(inputTrackParameters)) {
     // In case covariance transport is not desired, it has to be stripped
     // off the input parameters
+    const auto propagationStart = std::chrono::steady_clock::now();
     auto propagationResult =
         m_cfg.covarianceTransport
             ? m_cfg.propagatorImpl->execute(context, m_cfg, logger(),
@@ -60,12 +62,20 @@ ProcessCode PropagationAlgorithm::execute(
                   TrackParameters(parameters.referenceSurface().getSharedPtr(),
                                   parameters.parameters(), std::nullopt,
                                   parameters.particleHypothesis()));
+
     if (!propagationResult.ok()) {
       ACTS_ERROR("Propagation failed with " << propagationResult.error());
       continue;
     }
-
+    const auto propagationEnd = std::chrono::steady_clock::now();
     PropagationOutput& propagationOutput = propagationResult.value();
+
+    propagationOutput.first.propagationTime =
+        (std::chrono::duration<double>(propagationEnd - propagationStart)
+             .count()) *
+        1000;
+    // std::cout<<"propagation
+    // time="<<propagationOutput.first.propagationTime<<std::endl;
 
     // Position / momentum for the output writing
     Acts::Vector3 position = parameters.position(context.recoGeoContext);
