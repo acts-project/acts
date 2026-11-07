@@ -19,6 +19,7 @@ inline void to_json(nlohmann::ordered_json& j, const common_header_payload& h) {
   j["detector"] = h.detector;
   j["date"] = h.date;
   j["tag"] = h.tag;
+  j["metadata"] = h.metadata;
 }
 
 inline void from_json(const nlohmann::ordered_json& j,
@@ -27,6 +28,7 @@ inline void from_json(const nlohmann::ordered_json& j,
   h.detector = j["detector"];
   h.date = j["date"];
   h.tag = j["tag"];
+  h.metadata = j["metadata"];
 }
 
 inline void to_json(nlohmann::ordered_json& j, const header_payload<bool>& h) {
