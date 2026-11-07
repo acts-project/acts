@@ -322,6 +322,19 @@ void gbts_seeding_algorithm::gbts_bid_seeds_for_hits_kernel(
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
+void gbts_seeding_algorithm::gbts_sort_seeds_kernel(
+    const vecmem::data::vector_view<unsigned long long int> seed_bids,
+    const unsigned int nSeeds) const {
+  // sort seeds by their bid of quality-dropout_kind-proposal_index
+  vecmem::device_vector<unsigned long long int> d_seed_bids(seed_bids);
+  thrust::sort(thrust::cuda::par_nosync(
+                   stream_synchronizing_allocator(mr().main, stream()))
+                   .on(details::get_stream(stream())),
+               d_seed_bids.begin(), d_seed_bids.begin() + nSeeds,
+               ::cuda::std::greater<unsigned long long int>());
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+}
+
 void gbts_seeding_algorithm::gbts_convert_seeds_kernel(
     const device::gbts_convert_seeds_payload& payload) const {
   const unsigned int n_threads = 128;
