@@ -52,7 +52,7 @@ class GbtsTrackingFilter final {
     /// Maximum delta chi2 in y direction.
     float maxDChi2Y = 6.0;
 
-    /// Chi2 penalty for adding a hit.
+    /// Score a hit adds to a path before its weighted chi2 is subtracted.
     float addHit = 14.0;
 
     /// Maximum track curvature.

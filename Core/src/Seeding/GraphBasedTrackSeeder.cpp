@@ -414,6 +414,21 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
             path.size() + edgesToRoot[inner] < minLength) {
           continue;
         }
+        // A hit adds at most `addHit` to the score and at most
+        // `edgesToRoot[inner]` hits are left, so no path through this edge can
+        // beat the best one found if even the longest cannot. A shorter one
+        // scores no better per point, as the best scores under `addHit` each.
+        if (!bestPath.empty()) {
+          const float maxScore =
+              state.j +
+              static_cast<float>(edgesToRoot[inner]) * filter.m_cfg.addHit;
+          const float bestScore =
+              -bestQuality *
+              static_cast<float>(path.size() + edgesToRoot[inner] + 1);
+          if (maxScore <= bestScore) {
+            continue;
+          }
+        }
         detail::GbtsEdgeState innerState = state;
         if (filter.update(nodeView, edgeStorage[inner], innerState)) {
           self(self, inner, innerState);
