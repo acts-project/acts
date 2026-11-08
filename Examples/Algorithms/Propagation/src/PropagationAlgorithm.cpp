@@ -75,7 +75,7 @@ ProcessCode PropagationAlgorithm::execute(
         (std::chrono::duration<double>(propagationEnd - propagationStart)
              .count()) *
         1000;
-    
+
     // Position / momentum for the output writing
     Acts::Vector3 position = parameters.position(context.recoGeoContext);
     Acts::Vector3 direction = parameters.direction();
