@@ -96,3 +96,5 @@ install(
     TARGETS ActsMaterialMapMigrate
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin
 )
+
+add_component_dependencies(PluginJson nlohmann_json)

@@ -49,6 +49,10 @@ void report_empty(const store_t &store,
 /// every acceleration data structure for a given volume
 struct surface_checker {
   /// Test the contained surfaces for consistency
+  /// @param sf_descr Surface descriptor being checked.
+  /// @param det Detector that owns the surface.
+  /// @param vol_idx Index of the volume expected to contain the surface.
+  /// @param names Map used to resolve volume names in diagnostics.
   template <concepts::detector detector_t>
   DETRAY_HOST_DEVICE void operator()(
       const typename detector_t::surface_type &sf_descr, const detector_t &det,
@@ -106,7 +110,7 @@ struct surface_checker {
     }
   }
 
-  /// Test whether a given surface @param check_desc is properly registered at
+  /// Test whether a given surface @p check_desc is properly registered at
   /// least once in one of the volume acceleration data structures
   ///
   /// @param ref_descr one of the surfaces in the volumes acceleration data
@@ -139,6 +143,9 @@ struct surface_checker {
 /// A functor that checks the material parametrization for a surface/volume
 struct material_checker {
   /// Error message for material consistency check
+  /// @param type Name of the material collection or object type.
+  /// @param idx Index of the invalid material.
+  /// @param mat Material value that failed validation.
   template <typename material_t>
   void throw_material_error(const std::string &type, const dindex idx,
                             const material_t &mat) const {

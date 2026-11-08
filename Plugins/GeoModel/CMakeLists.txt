@@ -37,3 +37,5 @@ target_link_libraries(
 )
 
 acts_compile_headers(PluginGeoModel GLOB include/**/*.hpp)
+
+add_component_dependencies(PluginGeoModel GeoModelCore GeoModelIO)

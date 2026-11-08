@@ -23,10 +23,11 @@ namespace detray::io {
 
 /// @brief Writer function for detray detectors.
 ///
-/// Based on both the given config/file format and the detector type,
-/// the correct writers are being assembled and called.
-/// Write @param det to file in the format @param format,
-/// using @param names to name the components
+/// Assemble the configured component writers and serialize the detector.
+/// @tparam detector_t detector type providing stores and name map
+/// @param det detector whose component stores are written
+/// @param names map used to write component names
+/// @param cfg output format, destination, and component-selection options
 template <class detector_t>
 void write_detector(detector_t& det, const typename detector_t::name_map& names,
                     detector_writer_config& cfg) {
