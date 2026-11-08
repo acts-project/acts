@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 
 namespace {
 using namespace Acts;
@@ -673,6 +674,20 @@ std::unique_ptr<const ISurfaceMaterial> decodeMarker(
   return std::make_unique<MergedMaterialMarker>(origins);
 }
 
+// The v1 wire layout includes two guard slots for every axis. Bound and closed
+// axes omit these slots in memory, but the on-disk layout remains unchanged.
+bool isAddressableGridBin(const IMultiAxis2D& axes,
+                          const IMultiAxis2D::LocalBins& localBins) {
+  for (std::size_t i = 0; i < localBins.size(); ++i) {
+    const auto& axis = axes.getAxis(i);
+    const auto begin = axis.getBinIndexOffset();
+    if (localBins[i] < begin || localBins[i] >= begin + axis.getNTotalBins()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 template <typename Storage>
 nlohmann::json encodeGridStorage(const Storage& s, const GridSurfaceMaterial& m,
                                  EncodeContext& context) {
@@ -691,6 +706,14 @@ nlohmann::json encodeGridStorage(const Storage& s, const GridSurfaceMaterial& m,
   }
   for (std::size_t i1 = 0; i1 < n[1] + 2; ++i1) {
     for (std::size_t i0 = 0; i0 < n[0] + 2; ++i0) {
+      if (!isAddressableGridBin(m.multiAxis(), {i0, i1})) {
+        if constexpr (std::is_same_v<Storage, GridSurfaceMaterial::Direct>) {
+          storage["values"].emplace_back(encodeSlab(MaterialSlab::Nothing()));
+        } else {
+          storage["indices"].emplace_back(0);
+        }
+        continue;
+      }
       auto bin = m.multiAxis().getGlobalBinFromLocalBins({i0, i1});
       if constexpr (std::is_same_v<Storage, GridSurfaceMaterial::Direct>) {
         storage["values"].emplace_back(encodeSlab(s.at(bin)));
@@ -734,17 +757,21 @@ std::unique_ptr<const ISurfaceMaterial> decodeGrid(
                               decodeAxis(j.at("axes").at(1), false, context)});
   auto axes = spec.buildMultiAxis();
   const auto n = axes->getNBins();
-  auto count = product(n[0] + 2, n[1] + 2);
+  const auto wireCount = product(n[0] + 2, n[1] + 2);
+  const auto count = axes->getNTotalBins(true);
   const auto& storage = j.at("storage");
   GridSurfaceMaterial::Storage result;
   if (const auto kind = storage.at("kind").get<std::string>();
       kind == "direct") {
-    array(storage.at("values"), count, count);
+    array(storage.at("values"), wireCount, wireCount);
     GridSurfaceMaterial::Direct slabs(count);
     for (std::size_t i1 = 0; i1 < n[1] + 2; ++i1) {
       for (std::size_t i0 = 0; i0 < n[0] + 2; ++i0) {
-        slabs[axes->getGlobalBinFromLocalBins({i0, i1})] =
+        auto slab =
             decodeSlab(storage.at("values").at(i0 + (n[0] + 2) * i1), context);
+        if (isAddressableGridBin(*axes, {i0, i1})) {
+          slabs[axes->getGlobalBinFromLocalBins({i0, i1})] = std::move(slab);
+        }
       }
     }
     result = std::move(slabs);
@@ -760,12 +787,15 @@ std::unique_ptr<const ISurfaceMaterial> decodeGrid(
     }
     const auto size = shared ? shared->size() : local.size();
     check(size != 0, "empty slab store");
-    array(storage.at("indices"), count, count);
+    array(storage.at("indices"), wireCount, wireCount);
     std::vector<std::size_t> indices(count);
     for (std::size_t i1 = 0; i1 < n[1] + 2; ++i1) {
       for (std::size_t i0 = 0; i0 < n[0] + 2; ++i0) {
-        indices[axes->getGlobalBinFromLocalBins({i0, i1})] =
+        const auto slabIndex =
             index(storage.at("indices").at(i0 + (n[0] + 2) * i1), size - 1);
+        if (isAddressableGridBin(*axes, {i0, i1})) {
+          indices[axes->getGlobalBinFromLocalBins({i0, i1})] = slabIndex;
+        }
       }
     }
     if (shared) {
