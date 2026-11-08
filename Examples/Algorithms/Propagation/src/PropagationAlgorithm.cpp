@@ -68,15 +68,14 @@ ProcessCode PropagationAlgorithm::execute(
       continue;
     }
     const auto propagationEnd = std::chrono::steady_clock::now();
+
     PropagationOutput& propagationOutput = propagationResult.value();
 
     propagationOutput.first.propagationTime =
         (std::chrono::duration<double>(propagationEnd - propagationStart)
              .count()) *
         1000;
-    // std::cout<<"propagation
-    // time="<<propagationOutput.first.propagationTime<<std::endl;
-
+    
     // Position / momentum for the output writing
     Acts::Vector3 position = parameters.position(context.recoGeoContext);
     Acts::Vector3 direction = parameters.direction();
