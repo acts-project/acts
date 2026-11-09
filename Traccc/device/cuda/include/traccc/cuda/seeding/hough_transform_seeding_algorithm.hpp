@@ -22,8 +22,8 @@ namespace traccc::cuda {
 /// This algorithm returns a buffer which is not necessarily filled yet. A
 /// synchronisation statement is required before destroying this buffer.
 ///
-class hough_transform_seeding_algorithm	: public device::hough_transform_seeding_algorithm,
-                                  	  public cuda::algorithm_base {
+class hough_transform_seeding_algorithm : public device::hough_transform_seeding_algorithm,
+                                  	      public cuda::algorithm_base {
  public:
   /// Constructor for the seed finding algorithm
   ///

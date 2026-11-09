@@ -10,6 +10,7 @@ namespace traccc::device {
 template <typename T>
 TRACCC_HOST_DEVICE
 void fill_hough_plane(const global_index_t globalIndex,
+            const global_index_t n_wedges,
             const global_index_t n_cols,
             const global_index_t n_rows,
             const edm::spacepoint_collection::const_view::size_type n_spacepoints,
@@ -75,7 +76,7 @@ void fill_hough_plane(const global_index_t globalIndex,
       const unsigned int diff_phi = last - first;
 
         // loop on wedges
-        for (unsigned int wedge_idx(0); wedge_idx<25u; ++wedge_idx) {
+        for (unsigned int wedge_idx(0); wedge_idx<n_wedges; ++wedge_idx) {
             if ((slice & (1ULL << wedge_idx)) == 0ULL) continue;
             const unsigned long long offset = wedge_idx * n_cols * n_rows + x_idx * n_rows;
 

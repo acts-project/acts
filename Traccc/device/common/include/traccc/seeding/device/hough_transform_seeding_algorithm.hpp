@@ -17,7 +17,7 @@
 #include "traccc/bfield/magnetic_field.hpp"
 #include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
-#include "traccc/edm/houghplane_collection.hpp"
+#include "traccc/edm/seed_collection.hpp"
 #include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/memory_resource.hpp"
@@ -31,7 +31,7 @@ namespace traccc::device {
 
 // we need to template the class i guess
 class hough_transform_seeding_algorithm
-    : public algorithm<edm::houghplane_collection<unsigned short>::buffer(
+    : public algorithm<edm::seed_collection::buffer(
 	  const magnetic_field&,
 	  const detector_buffer&,
 	  const edm::measurement_collection::const_view&,

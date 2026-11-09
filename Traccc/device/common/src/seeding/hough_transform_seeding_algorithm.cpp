@@ -275,11 +275,6 @@ auto hough_transform_seeding_algorithm::operator()(
 
 
   // ---------------------------------------------------
-  // Run clustering on the maxima
-  // ---------------------------------------------------
-
-
-  // ---------------------------------------------------
   // Take the pictures from the merged maxima
   // ---------------------------------------------------
   vecmem::data::jagged_vector_buffer<scalar> images(

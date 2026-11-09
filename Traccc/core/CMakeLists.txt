@@ -47,7 +47,6 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/edm/track_collection.hpp"
   "include/traccc/edm/impl/track_collection.ipp"
   "include/traccc/edm/track_container.hpp"
-  "include/traccc/edm/houghplane_collection.hpp"
   # Magnetic field description.
   "include/traccc/bfield/magnetic_field_types.hpp"
   "include/traccc/bfield/magnetic_field.hpp"

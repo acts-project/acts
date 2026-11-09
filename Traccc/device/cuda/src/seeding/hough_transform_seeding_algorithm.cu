@@ -66,6 +66,7 @@ namespace kernels {
            const vecmem::data::vector_view<const scalar> edges_y,
            vecmem::data::vector_view<unsigned long long> bins) {
       device::fill_hough_plane<T>(details::global_index1(),
+              config.wedges.size(),
               config.n_cols,
               config.n_rows,
 		      n_spacepoints,
