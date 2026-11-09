@@ -102,10 +102,16 @@ class BoundParametrization {
     Matrix<3, 2> directionJacobianFromUnitDirection(
         const Vector3& direction) const {
       assertUnitDirection(direction);
-      const double transverse = std::hypot(direction.x(), direction.y());
+      const double transverse = transverseNorm(direction.x(), direction.y());
       // Encoding chooses phi = 0 at an exact pole.
-      const double cp = transverse == 0. ? 1. : direction.x() / transverse;
-      const double sp = transverse == 0. ? 0. : direction.y() / transverse;
+      double cp = 1.;
+      double sp = 0.;
+      if (transverse != 0.) {
+        const Azimuth azimuth =
+            makeAzimuth(direction.x(), direction.y(), transverse);
+        cp = azimuth.cosPhi;
+        sp = azimuth.sinPhi;
+      }
       Matrix<3, 2> jacobian;
       jacobian << -direction.y(), cp * direction.z(), direction.x(),
           sp * direction.z(), 0., -transverse;
@@ -116,16 +122,17 @@ class BoundParametrization {
         const Vector3& direction, double minTransverse = 1e-12) const {
       assertUnitDirection(direction);
       assertValidThreshold(minTransverse);
-      const double transverse = std::hypot(direction.x(), direction.y());
+      const double transverse = transverseNorm(direction.x(), direction.y());
       if (transverse <= minTransverse) {
         return Result<Matrix<2, 3>>::failure(
             BoundParametrizationError::SingularDirection);
       }
-      const double cp = direction.x() / transverse;
-      const double sp = direction.y() / transverse;
+      const Azimuth azimuth =
+          makeAzimuth(direction.x(), direction.y(), transverse);
       Matrix<2, 3> jacobian;
-      jacobian << -sp / transverse, cp / transverse, 0., cp * direction.z(),
-          sp * direction.z(), -transverse;
+      jacobian << -azimuth.sinPhiOverTransverse, azimuth.cosPhiOverTransverse,
+          0., azimuth.cosPhi * direction.z(), azimuth.sinPhi * direction.z(),
+          -transverse;
       return Result<Matrix<2, 3>>::success(jacobian);
     }
 
@@ -292,6 +299,27 @@ class BoundParametrization {
         return std::sqrt(squared);
       }
       return std::hypot(x, y);
+    }
+    /// Azimuthal cosine and sine of a direction and their ratios to the
+    /// transverse fraction.
+    struct Azimuth {
+      double cosPhi;
+      double sinPhi;
+      double cosPhiOverTransverse;
+      double sinPhiOverTransverse;
+    };
+    /// Evaluate the azimuth for a nonzero transverse fraction, using a single
+    /// division whenever the reciprocal of the fraction is representable.
+    static Azimuth makeAzimuth(double x, double y, double transverse) {
+      if (transverse >= std::numeric_limits<double>::min()) [[likely]] {
+        const double invTransverse = 1. / transverse;
+        const double cosPhi = x * invTransverse;
+        const double sinPhi = y * invTransverse;
+        return {cosPhi, sinPhi, cosPhi * invTransverse, sinPhi * invTransverse};
+      }
+      const double cosPhi = x / transverse;
+      const double sinPhi = y / transverse;
+      return {cosPhi, sinPhi, cosPhi / transverse, sinPhi / transverse};
     }
     /// Whether a direction is finite and nonzero with a representable norm.
     /// The norm is bounded by sqrt(3) times the largest component, so the
