@@ -258,14 +258,11 @@ BOOST_AUTO_TEST_CASE(composite_jacobian_limiting_frames) {
       detail::compositeToComponentJacobian(fix.composite, fix.composite),
       identity, 1e-14);
 
-  // The local-frame Jacobian is identity for coincident frames, but the ACTS
-  // adapter must still rotate translations from local to global coordinates.
-  AlignmentMatrix expectedAdapter = identity;
-  expectedAdapter.block<3, 3>(eAlignmentCenter0, eAlignmentCenter0) =
-      fix.composite.rotation();
+  // ACTS and local-frame alignment parameters use the same local axes,
+  // including when the frame is rotated relative to the global frame.
   CHECK_CLOSE_ABS(
-      detail::localFrameToAlignmentParametersJacobian(fix.composite),
-      expectedAdapter, 1e-14);
+      detail::localFrameToAlignmentParametersJacobian(fix.composite), identity,
+      1e-14);
 
   const Transform3 origin = Transform3::Identity();
   const Transform3 offset{Translation3(10_mm, 20_mm, 30_mm)};
@@ -289,8 +286,8 @@ BOOST_AUTO_TEST_CASE(composite_jacobian_limiting_frames) {
       expectedConcentric, 1e-14);
 }
 
-/// Chain local-frame Jacobians through a tilted intermediate structure, then
-/// adapt only the final component parameters to the ACTS convention.
+/// Chain local-frame Jacobians through a tilted intermediate structure and
+/// verify that ACTS parameters follow the same local-frame convention.
 BOOST_AUTO_TEST_CASE(composite_jacobian_nested_frames) {
   using namespace Acts::UnitLiterals;
   const CompositeFixture fix;
@@ -325,10 +322,7 @@ BOOST_AUTO_TEST_CASE(composite_jacobian_nested_frames) {
             (2. * step);
         CHECK_CLOSE_ABS(chained.col(iPar), numericalLocal, 1e-7);
 
-        AlignmentVector numericalActs = numericalLocal;
-        numericalActs.segment<3>(eAlignmentCenter0) =
-            (plus.translation() - minus.translation()) / (2. * step);
-        CHECK_CLOSE_ABS(chainedActs.col(iPar), numericalActs, 1e-7);
+        CHECK_CLOSE_ABS(chainedActs.col(iPar), numericalLocal, 1e-7);
       }
     }
   }
