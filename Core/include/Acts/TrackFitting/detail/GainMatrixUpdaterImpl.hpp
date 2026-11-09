@@ -55,14 +55,10 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
           ? trackState.referenceSurface().boundParametrization(gctx)
           : BoundParametrization::globalSpherical();
 
-  // Embed the measured coordinates in the predicted state so the facade
-  // interprets periodic direction residuals without changing unmeasured slots.
-  BoundVector measured = predicted;
-  for (std::size_t i = 0; i < kMeasurementSize; ++i) {
-    measured[validSubspaceIndices[i]] = calibrated[i];
-  }
-  const ProjectedVector innovation =
-      H * parametrization.difference(measured, predicted);
+  // The facade interprets periodic direction residuals in the measured
+  // subspace, as if the measurement were embedded in the predicted state.
+  const ProjectedVector innovation = parametrization.subspaceDifference(
+      calibrated, predicted, validSubspaceIndices);
   const ProjectedMatrix innovationInverse =
       (H * predictedCovariance * H.transpose() + calibratedCovariance)
           .inverse();
