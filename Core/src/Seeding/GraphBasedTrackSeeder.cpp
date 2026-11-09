@@ -127,9 +127,12 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   std::uint32_t seedCounter = 0;
 
+  // the outer node of each edge too far out to head a path, by node index
+  std::vector<std::uint8_t> outerHits(nodeStorage.numberOfNodes(), 0);
+
   // Turn the fitted path of every head edge into a seed candidate.
   for (const auto& [rs, edges] :
-       extractBestPathPerEdge(nodeView, graph, filter)) {
+       extractBestPathPerEdge(nodeView, graph, filter, outerHits)) {
     const detail::GbtsEdge& head = graph.edgeStorage[edges.front()];
     const float seedAbsEta = std::abs(-std::log(head.p[0]));
 
@@ -265,8 +268,11 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
       const std::uint32_t tid = h2t[hitId];
 
-      // taken by a better candidate
-      if (tid != trackId) {
+      // a hit further out than any path's head counts twice; others count
+      // once where a better candidate took them
+      if (outerHits[node] != 0) {
+        nOther += 2;
+      } else if (tid != trackId) {
         nOther++;
       }
     }
@@ -334,7 +340,8 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 std::vector<GraphBasedTrackSeeder::FittedPath>
 GraphBasedTrackSeeder::extractBestPathPerEdge(
     const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
-    const GbtsTrackingFilter& filter) const {
+    const GbtsTrackingFilter& filter,
+    std::vector<std::uint8_t>& outerHits) const {
   const std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
   const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
   const auto maxLength = static_cast<std::uint32_t>(m_cfg.maxChainLength);
@@ -424,8 +431,21 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     path.pop_back();
   };
 
+  // Seeds come from a chain's inner hits: an edge further out than this heads
+  // no path, the edges inside it covering the same track at a fraction of the
+  // fits, which grow with the square of a chain's length.
+  constexpr std::uint32_t kMaxEdgesToRoot = 6;
+
   for (std::uint32_t head = 0; head < nEdges; ++head) {
     const detail::GbtsEdge& headEdge = edgeStorage[head];
+
+    // The hits further out belong to the seed made from that chain's inner
+    // hits: a shorter chain through them is its clone, as if it had taken them,
+    // and counted twice, as the chain itself would have taken its neighbours.
+    if (edgesToRoot[head] > kMaxEdgesToRoot) {
+      outerHits[headEdge.n2] = 1;
+      continue;
+    }
 
     // `addTriplets` accepts a path one edge short at low eta
     minLength = m_cfg.minSeedLevel;
