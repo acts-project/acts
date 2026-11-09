@@ -20,6 +20,19 @@
 namespace Acts {
 
 namespace {
+
+/// Direction from the track to its closest straight-line intersection with the
+/// surface, which can be on either side of the track
+Direction directionToSurface(const GeometryContext& gctx,
+                             const Surface& surface,
+                             const BoundTrackParameters& track) {
+  const Intersection3D intersection =
+      surface
+          .intersect(gctx, track.position(gctx), track.direction(),
+                     BoundaryTolerance::Infinite())
+          .closest();
+  return Direction::fromScalarZeroAsPositive(intersection.pathLength());
+}
 template <typename vector_t>
 Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
                                           const BoundTrackParameters* trkParams,
@@ -337,15 +350,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-
-  // Use a straight-line intersection to decide the propagation direction
-  Intersection3D intersection =
-      pointSurface
-          ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
-                      BoundaryTolerance::Infinite())
-          .closest();
-  pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.pathLength());
+  pOptions.direction = directionToSurface(gctx, *pointSurface, trkParams);
 
   // Propagate to the point surface; the resulting parameters are at the 3D PCA
   auto result =
@@ -399,13 +404,7 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  Intersection3D intersection =
-      perigeeSurface
-          ->intersect(gctx, track.position(gctx), track.direction(),
-                      BoundaryTolerance::Infinite())
-          .closest();
-  pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.pathLength());
+  pOptions.direction = directionToSurface(gctx, *perigeeSurface, track);
 
   // Do the propagation to linPoint
   auto result =
@@ -483,14 +482,7 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  // The point of closest approach can be on either side of the track
-  const Intersection3D intersection =
-      perigeeSurface
-          ->intersect(gctx, track.position(gctx), track.direction(),
-                      BoundaryTolerance::Infinite())
-          .closest();
-  pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.pathLength());
+  pOptions.direction = directionToSurface(gctx, *perigeeSurface, track);
 
   // Do the propagation to the perigeee
   auto result =
@@ -529,14 +521,7 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  // The point of closest approach can be on either side of the track
-  const Intersection3D intersection =
-      perigeeSurface
-          ->intersect(gctx, track.position(gctx), track.direction(),
-                      BoundaryTolerance::Infinite())
-          .closest();
-  pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.pathLength());
+  pOptions.direction = directionToSurface(gctx, *perigeeSurface, track);
 
   // Do the propagation to the perigeee
   auto result =

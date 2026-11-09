@@ -26,6 +26,7 @@
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -502,6 +503,30 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
     static_assert(!std::is_base_of_v<BasePropagator, decltype(propagator)>,
                   "Propagator unexpectedly inherits from BasePropagator");
   }
+}
+
+// A target behind the start is not reached, so the caller selects the
+// direction
+BOOST_AUTO_TEST_CASE(TargetBehindStart) {
+  auto field = std::make_shared<ConstantBField>(Vector3{0, 0, 2_T});
+  Propagator propagator{EigenStepper<>{field}, VoidNavigator{}};
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx;
+
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+  auto target = Surface::makeShared<PerigeeSurface>(Vector3{-10_mm, 0, 0});
+
+  EigenPropagatorType::Options<> options{gctx, mctx};
+  BOOST_CHECK(!propagator.propagate(start, *target, options).ok());
+
+  options.direction = Direction::Backward();
+  auto result = propagator.propagate(start, *target, options);
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(&result->endParameters->referenceSurface(), target.get());
+  CHECK_CLOSE_ABS(result->pathLength, -10_mm, 1_um);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
