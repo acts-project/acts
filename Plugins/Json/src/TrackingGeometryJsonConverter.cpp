@@ -19,6 +19,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/LinearVolumeLookup.hpp"
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/RzGridVolumeLookup.hpp"
@@ -28,6 +29,7 @@
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
+#include "Acts/Navigation/DetrayGridExportPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
@@ -232,6 +234,8 @@ std::string getNavigationPolicyKind() {
     return "MultiLayerNavigation";
   } else if (std::is_same_v<bounds_t, Acts::CylinderNavigationPolicy>) {
     return "Cylinder";
+  } else if (std::is_same_v<bounds_t, Acts::DetrayGridExportPolicy>) {
+    return "DetrayGridExport";
   } else {
     throw std::invalid_argument("Unknown portal link kind");
   }
@@ -264,14 +268,49 @@ nlohmann::json encodeVolumeBoundsT(const bounds_t& bounds) {
 // -------------------------------------------------------------------
 // Navigation policy encoder/decoder
 
+std::unique_ptr<Acts::INavigationPolicy> decodeDetrayGridExportPolicy(
+    const nlohmann::json& encoded, const Acts::GeometryContext& gctx,
+    const Acts::TrackingVolume& volume, const Acts::Logger& logger,
+    Acts::NavigationPolicySiblings siblings) {
+  Acts::DetrayGridExportPolicy::Config cfg;
+  cfg.vertexZHalfRange = encoded.at("vertexZHalfRange").get<double>();
+  cfg.minPt = encoded.at("minPt").get<double>();
+  cfg.bField = encoded.at("bField").get<double>();
+  cfg.fixedWindow = encoded.at("fixedWindow").get<bool>();
+  return std::make_unique<Acts::DetrayGridExportPolicy>(gctx, volume, logger,
+                                                        siblings, cfg);
+}
+
+// Registered for the kind only to reject it outside a MultiNavigation
+std::unique_ptr<Acts::INavigationPolicy> decodeStandaloneDetrayGridExportPolicy(
+    const nlohmann::json& /*encoded*/, const Acts::GeometryContext& /*gctx*/,
+    const Acts::TrackingGeometryJsonConverter& /*converter*/,
+    const Acts::TrackingVolume& volume, const Acts::Logger& /*logger*/) {
+  throw std::invalid_argument(
+      "DetrayGridExport navigation policy of volume '" + volume.volumeName() +
+      "' must be a child of a MultiNavigation policy, after its "
+      "SurfaceArray sibling");
+}
+
 std::unique_ptr<Acts::INavigationPolicy> decodeMultiNavigationPolicy(
     const nlohmann::json& encoded, const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometryJsonConverter& converter,
     const Acts::TrackingVolume& volume, const Acts::Logger& logger) {
+  // Children are decoded in order, so later ones can refer to earlier ones
   std::vector<std::unique_ptr<Acts::INavigationPolicy>> children;
+  std::vector<const Acts::INavigationPolicy*> siblings;
   for (const auto& child : encoded.at(kChildrenKey)) {
-    children.push_back(converter.navigationPolicyFromJson(
-        gctx, child[kNavigationPolicyKey], volume, logger));
+    const nlohmann::json& jChild = child.at(kNavigationPolicyKey);
+    if (jChild.at(kKindKey).get<std::string>() ==
+        getNavigationPolicyKind<Acts::DetrayGridExportPolicy>()) {
+      children.push_back(decodeDetrayGridExportPolicy(
+          jChild, gctx, volume, logger,
+          Acts::NavigationPolicySiblings{siblings}));
+    } else {
+      children.push_back(
+          converter.navigationPolicyFromJson(gctx, jChild, volume, logger));
+    }
+    siblings.push_back(children.back().get());
   }
   return std::make_unique<Acts::MultiNavigationPolicy>(std::move(children));
 }
@@ -417,6 +456,20 @@ std::unique_ptr<Acts::INavigationPolicy> decodeMultiLayerNavigationPolicy(
 
   return std::make_unique<Acts::MultiLayerNavigationPolicy>(
       gctx, volume, logger, config, std::move(indexedGrid));
+}
+
+nlohmann::json encodeDetrayGridExportPolicy(
+    const Acts::DetrayGridExportPolicy& policy,
+    const Acts::TrackingGeometryJsonConverter& /*converter*/) {
+  // The sibling is implied by the position in the parent MultiNavigation
+  const auto& cfg = policy.config();
+  nlohmann::json jPolicy;
+  jPolicy[kKindKey] = getNavigationPolicyKind<Acts::DetrayGridExportPolicy>();
+  jPolicy["vertexZHalfRange"] = cfg.vertexZHalfRange;
+  jPolicy["minPt"] = cfg.minPt;
+  jPolicy["bField"] = cfg.bField;
+  jPolicy["fixedWindow"] = cfg.fixedWindow;
+  return jPolicy;
 }
 
 nlohmann::json encodeCylinderNavigationPolicy(
@@ -890,7 +943,8 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
       .registerFunction(encodeSurfaceArrayNavigationPolicy)
       .registerFunction(encodeMultiNavigationPolicy)
       .registerFunction(encodeMultiLayerNavigationPolicy)
-      .registerFunction(encodeCylinderNavigationPolicy);
+      .registerFunction(encodeCylinderNavigationPolicy)
+      .registerFunction(encodeDetrayGridExportPolicy);
 
   cfg.encodePortalLink.registerFunction(encodeTrivialPortalLink)
       .registerFunction(encodeCompositePortalLink)
@@ -929,7 +983,9 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
       .registerKind(getNavigationPolicyKind<MultiLayerNavigationPolicy>(),
                     decodeMultiLayerNavigationPolicy)
       .registerKind(getNavigationPolicyKind<CylinderNavigationPolicy>(),
-                    decodeCylinderNavigationPolicy);
+                    decodeCylinderNavigationPolicy)
+      .registerKind(getNavigationPolicyKind<DetrayGridExportPolicy>(),
+                    decodeStandaloneDetrayGridExportPolicy);
 
   return cfg;
 }

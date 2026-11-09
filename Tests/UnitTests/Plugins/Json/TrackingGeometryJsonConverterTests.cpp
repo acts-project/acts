@@ -21,6 +21,7 @@
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/LinearVolumeLookup.hpp"
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/RzGridVolumeLookup.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
@@ -28,7 +29,9 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Navigation/DetrayGridExportPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
+#include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -838,6 +841,99 @@ BOOST_AUTO_TEST_CASE(SurfaceArrayNavigationPolicyAutoBinsRoundTrip) {
         originalSurfaces.begin(), originalSurfaces.end(),
         restoredSurfaces.begin(), restoredSurfaces.end());
   }
+}
+
+BOOST_AUTO_TEST_CASE(DetrayGridExportPolicyRoundTrip) {
+  auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+  auto tLogger =
+      Acts::getDefaultLogger("DetrayGridExportJsonTest", Logging::INFO);
+  auto tVolume = makeSurfaceArrayVolume();
+  TrackingGeometryJsonConverter conv;
+
+  const DetrayGridExportPolicy::Config exportConfig{.vertexZHalfRange = 150.,
+                                                    .minPt = 0.5,
+                                                    .bField = 4.,
+                                                    .fixedWindow = true};
+
+  auto policy =
+      NavigationPolicyFactory{}
+          .add<TryAllNavigationPolicy>()
+          .add<SurfaceArrayNavigationPolicy>(
+              SurfaceArrayNavigationPolicy::Config{
+                  .layerType =
+                      SurfaceArrayNavigationPolicy::LayerType::Cylinder,
+                  .bins = {12, 3}})
+          .add<DetrayGridExportPolicy>(exportConfig)(tContext, *tVolume,
+                                                     *tLogger);
+
+  nlohmann::json j = conv.navigationPolicyToJson(*policy);
+  const auto& jExport = j.at("children").at(2).at("navigation_policy");
+  BOOST_CHECK_EQUAL(jExport.at("kind").get<std::string>(), "DetrayGridExport");
+
+  auto decodedPtr =
+      conv.navigationPolicyFromJson(tContext, j, *tVolume, *tLogger);
+  const auto& decoded = dynamic_cast<const MultiNavigationPolicy&>(*decodedPtr);
+  BOOST_REQUIRE_EQUAL(decoded.policies().size(), 3);
+  const auto& restored =
+      dynamic_cast<const DetrayGridExportPolicy&>(*decoded.policies()[2]);
+  BOOST_CHECK_EQUAL(restored.config().vertexZHalfRange, 150.);
+  BOOST_CHECK_EQUAL(restored.config().minPt, 0.5);
+  BOOST_CHECK_EQUAL(restored.config().bField, 4.);
+  BOOST_CHECK(restored.config().fixedWindow);
+  BOOST_CHECK_EQUAL(&restored.surfaceArrayPolicy(),
+                    decoded.policies()[1].get());
+
+  // Without its sibling the export policy cannot be decoded
+  BOOST_CHECK_THROW(
+      conv.navigationPolicyFromJson(tContext, jExport, *tVolume, *tLogger),
+      std::invalid_argument);
+  nlohmann::json jNoSibling = j;
+  jNoSibling.at("children").erase(1);
+  BOOST_CHECK_THROW(
+      conv.navigationPolicyFromJson(tContext, jNoSibling, *tVolume, *tLogger),
+      std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(DetrayGridExportPolicyGeometryRoundTrip) {
+  auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+
+  const DetrayGridExportPolicy::Config exportConfig{.vertexZHalfRange = 50.,
+                                                    .minPt = 0.};
+  CylindricalTrackingGeometry builder(tContext, true);
+  builder.extendLayerNavigationPolicy = [&](NavigationPolicyFactory&& factory) {
+    return std::move(factory).add<DetrayGridExportPolicy>(exportConfig);
+  };
+  auto sourceGeometry = builder();
+
+  TrackingGeometryJsonConverter conv;
+  auto decodedGeometry =
+      conv.fromJson(tContext, conv.toJson(tContext, *sourceGeometry));
+
+  std::size_t nExport = 0;
+  decodedGeometry->apply([&](const TrackingVolume& volume) {
+    const auto* navPolicy = volume.navigationPolicy();
+    if (navPolicy == nullptr) {
+      return;
+    }
+    navPolicy->visit([&](const INavigationPolicy& p) {
+      const auto* exportPolicy =
+          dynamic_cast<const DetrayGridExportPolicy*>(&p);
+      if (exportPolicy == nullptr) {
+        return;
+      }
+      ++nExport;
+      BOOST_CHECK_EQUAL(exportPolicy->config().vertexZHalfRange, 50.);
+      BOOST_CHECK_EQUAL(exportPolicy->config().minPt, 0.);
+      BOOST_CHECK(!exportPolicy->config().fixedWindow);
+      // The sibling is the decoded surface array of the same volume
+      bool foundSibling = false;
+      navPolicy->visit([&](const INavigationPolicy& other) {
+        foundSibling |= &other == &exportPolicy->surfaceArrayPolicy();
+      });
+      BOOST_CHECK(foundSibling);
+    });
+  });
+  BOOST_CHECK_EQUAL(nExport, CylindricalTrackingGeometry::kLayerRadii.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
