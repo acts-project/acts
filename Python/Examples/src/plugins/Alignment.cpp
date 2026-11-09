@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Alignment.hpp"
+
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
@@ -22,6 +23,9 @@
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <bitset>
+#include <map>
+
 #include <pybind11/functional.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -36,16 +40,6 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
-  py::enum_<ActsAlignment::AlignmentMask>(m, "AlignmentMask", py::arithmetic())
-      .value("eNone", ActsAlignment::AlignmentMask::None)
-      .value("Center0", ActsAlignment::AlignmentMask::Center0)
-      .value("Center1", ActsAlignment::AlignmentMask::Center1)
-      .value("Center2", ActsAlignment::AlignmentMask::Center2)
-      .value("Rotation0", ActsAlignment::AlignmentMask::Rotation0)
-      .value("Rotation1", ActsAlignment::AlignmentMask::Rotation1)
-      .value("Rotation2", ActsAlignment::AlignmentMask::Rotation2)
-      .value("All", ActsAlignment::AlignmentMask::All);
-
   {
     py::enum_<AlignmentMask>(m, "AlignmentMask")
         .value("None_", AlignmentMask::None)
@@ -272,11 +266,18 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
         return result;
       },
       [](AA::Config& cfg, py::dict d) {
-        cfg.iterationState.clear();
+        // Convert first. A bad key or value throws before the stored map is
+        // replaced, so a rejected assignment keeps the previous configuration.
+        std::map<unsigned int, std::bitset<6>> parsed;
         for (auto item : d) {
-          unsigned int iter = item.first.cast<unsigned int>();
+          unsigned int iter = 0;
+          try {
+            iter = item.first.cast<unsigned int>();
+          } catch (const py::cast_error&) {
+            throw py::type_error("iterationState key must be an unsigned int");
+          }
 
-          std::uint8_t mask_value;
+          std::uint8_t mask_value = 0;
           if (py::isinstance<ActsAlignment::AlignmentMask>(item.second)) {
             mask_value = static_cast<std::uint8_t>(
                 item.second.cast<ActsAlignment::AlignmentMask>());
@@ -287,8 +288,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
                 "iterationState value must be AlignmentMask or int");
           }
 
-          cfg.iterationState[iter] = std::bitset<6>(mask_value);
+          parsed.emplace(iter, std::bitset<6>(mask_value));
         }
+        cfg.iterationState = std::move(parsed);
       });
 
   py::class_<AA::AlignmentFunction, std::shared_ptr<AA::AlignmentFunction>>(
