@@ -65,11 +65,11 @@ class BoundParametrization {
              "Direction must be finite and nonzero with a representable norm");
       // Angles are scale invariant: no normalization is needed. Preserve the
       // atan2 endpoint convention used by bound/free conversion at +/-pi.
-      return {
-          (direction.x() == 0. && direction.y() == 0.)
-              ? 0.
-              : VectorHelpers::phi(direction),
-          std::atan2(std::hypot(direction.x(), direction.y()), direction.z())};
+      return {(direction.x() == 0. && direction.y() == 0.)
+                  ? 0.
+                  : VectorHelpers::phi(direction),
+              std::atan2(transverseNorm(direction.x(), direction.y()),
+                         direction.z())};
     }
 
     template <typename Derived>
@@ -281,6 +281,18 @@ class BoundParametrization {
     }
 
    private:
+    /// Transverse norm sqrt(x^2 + y^2) without spurious over- or underflow.
+    /// Uses the direct formula whenever the sum of squares is a normal number,
+    /// which matches VectorHelpers::perp, and std::hypot otherwise. Both keep
+    /// the relative accuracy of the transverse components near the poles.
+    static double transverseNorm(double x, double y) {
+      const double squared = x * x + y * y;
+      if (squared >= std::numeric_limits<double>::min() &&
+          squared <= std::numeric_limits<double>::max()) [[likely]] {
+        return std::sqrt(squared);
+      }
+      return std::hypot(x, y);
+    }
     /// Whether a direction is finite and nonzero with a representable norm.
     /// The norm is bounded by sqrt(3) times the largest component, so the
     /// expensive overflow-safe norm is only needed close to the overflow
