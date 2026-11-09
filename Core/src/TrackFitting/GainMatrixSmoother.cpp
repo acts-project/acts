@@ -72,21 +72,19 @@ Result<void> GainMatrixSmoother::calculate(const GeometryContext& gctx,
           : BoundParametrization::globalSpherical();
 
   // The residual lives in the destination basis; G maps it to the source.
-  const BoundVector updated =
-      filtered +
-      G * destinationParametrization.difference(prevSmoothed, prevPredicted);
-  const BoundMatrix updatedCovariance =
+  BoundVector smoothed = filtered + G * destinationParametrization.difference(
+                                            prevSmoothed, prevPredicted);
+  BoundMatrix smoothedCovariance =
       filteredCovariance +
       G * (prevSmoothedCovariance - prevPredictedCovariance) * G.transpose();
-  if (!detail::allFinite(updated) || !detail::allFinite(updatedCovariance)) {
+  if (!detail::allFinite(smoothed) || !detail::allFinite(smoothedCovariance)) {
     return KalmanFitterError::SmoothFailed;
   }
-  const auto canonical =
-      sourceParametrization.canonicalize(updated, updatedCovariance);
-  if (!canonical.ok()) {
-    return canonical.error();
+  const auto canonicalization =
+      sourceParametrization.canonicalizeInPlace(smoothed, smoothedCovariance);
+  if (!canonicalization.ok()) {
+    return canonicalization.error();
   }
-  BoundMatrix smoothedCovariance = canonical->second;
 
   if (doCovCheckAndAttemptFix) {
     // Check if the covariance matrix is semi-positive definite.
@@ -103,7 +101,7 @@ Result<void> GainMatrixSmoother::calculate(const GeometryContext& gctx,
     smoothedCovariance = smoothedCov;
   }
 
-  ts.smoothed() = canonical->first;
+  ts.smoothed() = smoothed;
   ts.smoothedCovariance() = smoothedCovariance;
 
   ACTS_VERBOSE("Smoothed covariance is: \n" << smoothedCovariance);

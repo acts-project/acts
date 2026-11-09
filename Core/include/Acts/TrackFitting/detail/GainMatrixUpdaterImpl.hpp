@@ -76,7 +76,7 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
     return Result<void>::failure(KalmanFitterError::UpdateFailed);
   }
 
-  const BoundVector updated = predicted + K * innovation;
+  BoundVector updated = predicted + K * innovation;
   const auto tmp = (BoundMatrix::Identity() - K * H).eval();
   BoundMatrix updatedCovariance;
   if (!m_useJosephFormulation) {
@@ -88,10 +88,10 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
   if (!detail::allFinite(updated) || !detail::allFinite(updatedCovariance)) {
     return Result<void>::failure(KalmanFitterError::UpdateFailed);
   }
-  const auto canonical =
-      parametrization.canonicalize(updated, updatedCovariance);
-  if (!canonical.ok()) {
-    return canonical.error();
+  const auto canonicalization =
+      parametrization.canonicalizeInPlace(updated, updatedCovariance);
+  if (!canonicalization.ok()) {
+    return canonicalization.error();
   }
 
   // Chi2 uses the innovation in the measurement's original coordinate basis.
@@ -101,8 +101,8 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
   if (!std::isfinite(chi2)) {
     return Result<void>::failure(KalmanFitterError::UpdateFailed);
   }
-  trackState.filtered() = canonical->first;
-  trackState.filteredCovariance() = canonical->second;
+  trackState.filtered() = updated;
+  trackState.filteredCovariance() = updatedCovariance;
   trackState.chi2() = chi2;
   ACTS_VERBOSE("Filtered parameters: " << trackState.filtered().transpose());
   ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance());
