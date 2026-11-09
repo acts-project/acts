@@ -50,14 +50,14 @@ class json_input_converter final : public input_file_converter_interface {
     *file >> in_json;
 
     // Peek at the header to determine the kind of payload is in the file
-    const tagged_header_payload header = in_json["header"];
+    const tagged_header_payload header = in_json["header"]["common"];
     // If not already done, add common header information to detector payload
     if (payload.header.version.empty()) {
       payload.detector_name = header.detector;
       payload.header = header;
     }
 
-    if (header.tag < io::detail::minimal_io_version) {
+    if (header.version < io::detail::minimal_io_version) {
       DETRAY_WARN_HOST("File was generated with a different detray version");
     }
 
@@ -132,7 +132,7 @@ class json_converter<detector_t, backend_t> final
     nlohmann::ordered_json out_json;
     out_json["header"] = io_backend::to_header_payload(det);
     out_json["header"]["common"] =
-        io::detail::basic_converter::to_header_payload<detector_t>(
+        io::detail::basic_converter::to_tagged_header_payload<detector_t>(
             det_name, std::string(io_backend::tag), source);
 
     // Write the detector data into the json stream by using the

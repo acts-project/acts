@@ -508,12 +508,13 @@ class grid_reader : public reader_interface<detector_t> {
       DETRAY_VERBOSE_HOST(
           "...finished filling grid in volume: " << vgr_builder->name());
     } else {
-      err_stream
-          << "Grid type in file does not match any grid type in detector:";
+      err_stream << "Grid type deduced from payload does not match any grid "
+                    "type in detector ("
+                 << detray::types::get_name<typename detector_t::metadata>()
+                 << "):";
       DETRAY_FATAL_HOST(err_stream.str()
                         << "\n\ngrid_t = " << DETRAY_TYPENAME(grid_t)
-                        << "\n\nType should be registered within one of the "
-                           "detector stores:");
+                        << "\n\nCheck the detector metadata! Detector stores:");
       if constexpr (detray::concepts::has_surface_grids<detector_t>) {
         DETRAY_FATAL_HOST("\n\nDetector accel. store = "
                           << DETRAY_TYPENAME(typename detector_t::accel));

@@ -201,7 +201,7 @@ class DetrayPayloadConverter {
       DetectorElement
     };
     /// Name for the detector
-    std::string detectorName{"ACTS_converted_detector"};
+    std::string detectorName{"unknown_detector"};
 
     /// Whether to convert material information from ACTS to detray
     bool convertMaterial = true;

@@ -770,9 +770,9 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
 
   {
     detray::io::tagged_header_payload tagged_header_data =
-        detray::io::detail::basic_converter::to_header_payload<detector_t>(
-            payloads.detector_name, detray::io::geometry_writer::tag,
-            "ACTS unit test");
+        detray::io::detail::basic_converter::to_tagged_header_payload<
+            detector_t>(payloads.detector_name,
+                        detray::io::geometry_writer::tag, "ACTS unit test");
 
     detray::io::geometry_header_payload sub_header_data{};
     sub_header_data.n_volumes = detector.volumes.size();
@@ -792,9 +792,10 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
 
   {
     detray::io::tagged_header_payload tagged_header_data =
-        detray::io::detail::basic_converter::to_header_payload<detector_t>(
-            payloads.detector_name,
-            detray::io::homogeneous_material_writer::tag, "ACTS unit test");
+        detray::io::detail::basic_converter::to_tagged_header_payload<
+            detector_t>(payloads.detector_name,
+                        detray::io::homogeneous_material_writer::tag,
+                        "ACTS unit test");
 
     detray::io::homogeneous_material_header_payload sub_header_data;
     sub_header_data.n_rods = 0;

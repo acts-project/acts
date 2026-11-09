@@ -30,7 +30,7 @@ GTEST_TEST(io, json_header_payload) {
   nlohmann::ordered_json j;
   j["header"]["common"] = h;
 
-  detray::io::tagged_header_payload ph = j["header"];
+  detray::io::tagged_header_payload ph = j["header"]["common"];
 
   EXPECT_EQ(h.version, ph.version);
   EXPECT_EQ(h.date, ph.date);

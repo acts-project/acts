@@ -19,6 +19,7 @@
 #include "detray/io/frontend/payloads.hpp"
 #include "detray/io/frontend/reader_interface.hpp"
 #include "detray/material/material_slab.hpp"
+#include "detray/utils/logging.hpp"
 #include "detray/utils/type_list.hpp"
 
 // System include(s)
@@ -130,6 +131,19 @@ class material_map_reader final : public reader_interface<detector_t> {
         mat_id map_id =
             from_payload_impl<mat_registry_t>(grid_data.grid_link.type);
         DETRAY_VERBOSE_HOST("-> Type id: " << map_id);
+
+        // Material map id from payload could be matched to detector store ids
+        if (map_id == mat_id::e_none) {
+          std::stringstream err_str{};
+          err_str << "Material map ID " << grid_data.grid_link.type
+                  << " in payload does not match any material type in "
+                     "detector ("
+                  << detray::types::get_name<typename detector_t::metadata>()
+                  << "). Check the detector metadata!\nMaterial store:\n"
+                  << detray::types::get_name<typename detector_t::material>();
+          DETRAY_FATAL_HOST(err_str.str());
+          throw std::invalid_argument(err_str.str());
+        }
 
         DETRAY_VERBOSE_HOST("-> Reading axis bins: Dims = " << dim);
         for ([[maybe_unused]] const auto &[i, count] :

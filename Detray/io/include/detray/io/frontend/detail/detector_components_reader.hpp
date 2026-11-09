@@ -23,6 +23,7 @@
 #include <cassert>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -116,29 +117,45 @@ class detector_components_reader final {
 
     // Add any optional readers
     std::vector<reader_ptr_t> readers;
-    if constexpr (detray::concepts::has_surface_grids<detector_t>) {
-      if (payload.surface_grids.has_value()) {
+
+    const auto print_type_err = [](const std::string& payload_type) {
+      std::stringstream stream{};
+      stream << "Found " << payload_type << " payload, but detector type ("
+             << detray::types::get_name<typename detector_t::metadata>()
+             << ") does not support it: Check the metadata!";
+      DETRAY_FATAL_HOST(stream.str());
+      throw std::invalid_argument(stream.str());
+    };
+
+    if (payload.surface_grids.has_value()) {
+      if constexpr (detray::concepts::has_surface_grids<detector_t>) {
         using GRID_CAP = std::integral_constant<std::size_t, GCAP>;
         using GRID_DIM = std::integral_constant<std::size_t, GDIM>;
 
         readers.push_back(
             std::make_unique<
                 surface_grid_reader<detector_t, GRID_CAP, GRID_DIM>>());
+      } else {
+        print_type_err("surface grids");
       }
     }
-    if constexpr (detray::concepts::has_homogeneous_material<detector_t>) {
-      if (payload.homogeneous_material.has_value()) {
+    if (payload.homogeneous_material.has_value()) {
+      if constexpr (detray::concepts::has_homogeneous_material<detector_t>) {
         readers.push_back(
             std::make_unique<
                 detray::io::homogeneous_material_reader<detector_t>>());
+      } else {
+        print_type_err("homogeneous material");
       }
     }
-    if constexpr (detray::concepts::has_material_maps<detector_t>) {
-      if (payload.material_maps.has_value()) {
+    if (payload.material_maps.has_value()) {
+      if constexpr (detray::concepts::has_material_maps<detector_t>) {
         using MAP_DIM = std::integral_constant<std::size_t, MDIM>;
         readers.push_back(
             std::make_unique<
                 detray::io::material_map_reader<detector_t, MAP_DIM>>());
+      } else {
+        print_type_err("material maps");
       }
     }
 

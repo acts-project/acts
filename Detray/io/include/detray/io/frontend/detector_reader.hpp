@@ -22,6 +22,7 @@
 #include <initializer_list>
 #include <ios>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -43,12 +44,11 @@ template <typename input_converter_t>
 void add_input_file_converters(
     detray::io::detail::detector_components_converter& payload_converter,
     const std::vector<std::string>& file_names) {
+  assert(!file_names.empty());
   // Register each file according to the file extension
   for (const std::filesystem::path file_name : file_names) {
-    if (file_name.empty()) {
-      DETRAY_DEBUG_HOST("Empty file name. Component will not be built");
-      continue;
-    }
+    // File names have already been filtered
+    assert(!file_name.empty());
 
     // Only add readers for json files
     std::string file_ext{file_name.extension()};
@@ -76,22 +76,42 @@ void convert_to_payload(detray::io::detector_payload& payload,
   // Hold all required readers (one for every component) and optional converters
   detray::io::detail::detector_components_converter payload_converter{};
 
+  // Filter out malformed paths from filenames
+  std::vector<std::string> filtered_files{file_names.size()};
+  const auto file_filter = [](const std::string& f) {
+    const bool file_pred{detray::io::file_exists(f)};
+    // Empty file names are treated as defaults, do not spam warnings for them
+    if (!file_pred && !f.empty()) {
+      DETRAY_WARN_HOST(
+          "Skipping detector component: Input file does not exist\n(\""
+          << f << "\")");
+    }
+    return file_pred;
+  };
+  std::ranges::copy_if(file_names, std::back_inserter(filtered_files),
+                       file_filter);
+
+  // Remove duplicates
+  std::ranges::sort(filtered_files);
+  auto [first, last] = std::ranges::unique(filtered_files);
+  filtered_files.erase(first, last);
+
   // Check if data from any input files needs to be converted
-  if (!file_names.empty()) {
+  if (!filtered_files.empty()) {
     // Register the readers for the files in json format
     (detray::io::detail::add_input_file_converters<input_converter_ts>(
-         payload_converter, file_names),
+         payload_converter, filtered_files),
      ...);
 
     // Make sure that all files will be read
-    if (payload_converter.converter_map().size() != file_names.size()) {
+    if (payload_converter.converter_map().size() != filtered_files.size()) {
       std::stringstream err_str{};
       for (const auto& conv_pair : payload_converter.converter_map()) {
         err_str << "-> " << conv_pair.first << std::endl;
       }
       DETRAY_ERROR_HOST(
-          "Not all files were registered to a converter: Please check that the "
-          "file extensions match the converter types!"
+          "Not all files were registered to a converter: Please check e.g. "
+          "that the file extensions match the converter types!\n"
           << "Successfully registered files:\n"
           << err_str.str());
     }

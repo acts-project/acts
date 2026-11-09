@@ -20,6 +20,7 @@
 #include "detray/io/frontend/payloads.hpp"
 #include "detray/io/frontend/reader_interface.hpp"
 #include "detray/material/material.hpp"
+#include "detray/utils/logging.hpp"
 
 // System include(s)
 #include <memory>
@@ -134,7 +135,17 @@ class homogeneous_material_reader final : public reader_interface<detector_t> {
             mat_type = mat_id::e_material_slab;
           }
         }
-        assert(mat_type != mat_id::e_none);
+        if (mat_type == mat_id::e_none) {
+          std::stringstream err_str{};
+          err_str << "Homogeneous material ID \"" << mat_data.type
+                  << "\" in payload does not match any material type in "
+                     "detector ("
+                  << detray::types::get_name<typename detector_t::metadata>()
+                  << "). Check the detector metadata!\nMaterial store:\n"
+                  << detray::types::get_name<typename detector_t::material>();
+          DETRAY_FATAL_HOST(err_str.str());
+          throw std::invalid_argument(err_str.str());
+        }
 
         const auto mat_idx{mat_data.index_in_coll.has_value()
                                ? mat_data.index_in_coll.value()

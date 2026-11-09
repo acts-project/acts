@@ -115,12 +115,13 @@ class DetrayGeometryConverter {
         m_cfg.payloadConverter->convertTrackingGeometry(gctx,
                                                         *trackingGeometry);
 
+    // Overwrite detector name
     if (!detectorName.empty()) {
       payload.detector_name = detectorName;
     }
 
     // ── Build detray detector from payload ───────────────────────────────
-    auto readerCfg = detray::io::detector_reader_config{};
+    detray::io::detector_reader_config readerCfg{};
     readerCfg.do_check(true).deduplicate(m_cfg.deduplicateMaterial);
     auto [detector, names] =
         detray::io::read_detector<detector_t>(mr, readerCfg, payload);

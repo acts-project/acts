@@ -45,6 +45,7 @@
 #include <detray/geometry/shapes/trapezoid2D.hpp>
 #include <detray/io/frontend/definitions.hpp>
 #include <detray/io/frontend/payloads.hpp>
+#include <detray/io/utils/io_metadata.hpp>
 
 using namespace Acts;
 
@@ -1190,8 +1191,10 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
     }
   }
 
-  // TODO: Make detector name customizable
+  // Write some general information about the payload
   payloads.detector_name = m_cfg.detectorName;
+  payloads.header.source = "ACTS Detray Plugin";
+  payloads.header.date = detray::io::detail::get_current_date();
 
   ACTS_DEBUG("Collected " << detPayload.volumes.size() << " volumes");
 

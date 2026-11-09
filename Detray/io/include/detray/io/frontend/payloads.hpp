@@ -343,6 +343,14 @@ struct common_header_payload {
 
 /// @brief a payload for common information and a content tag
 struct tagged_header_payload : public common_header_payload {
+  /// Default constructor
+  constexpr tagged_header_payload() = default;
+
+  /// Constructor from common data
+  /// @param cp the common header payload
+  explicit tagged_header_payload(const common_header_payload& cp)
+      : common_header_payload(cp) {}
+
   /// Detector name
   std::string detector{};
   /// Type of data the file contains (e.g. geometry vs material_maps)
@@ -351,6 +359,14 @@ struct tagged_header_payload : public common_header_payload {
 
 /// @brief a payload for common and extra information in file IO
 struct header_payload : public common_header_payload {
+  /// Default constructor
+  constexpr header_payload() = default;
+
+  /// Constructor from common data
+  /// @param cp the common header payload
+  explicit header_payload(const common_header_payload& cp)
+      : common_header_payload(cp) {}
+
   /// Assign the common information from @param ch
   void operator=(const common_header_payload& ch) {
     this->version = ch.version;
@@ -412,9 +428,6 @@ struct detector_payload {
   /// Material maps payload
   std::optional<material_maps_payload_type> material_maps{};
   /// @}
-
-  /// Contains the detector and volume names mapped to volume indices
-  detray::name_map names{};
 };
 
 }  // namespace detray::io

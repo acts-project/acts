@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
+#include <sstream>
 #include <stdexcept>
 #include <string_view>
 #include <utility>
@@ -129,9 +130,14 @@ class geometry_reader final : public reader_interface<detector_t> {
                           : mask_data.front().shape};
 
         if (shape_id == io_shape_id::unknown) {
-          std::string err_str{"Unknown mask shape id in geometry file!"};
-          DETRAY_FATAL_HOST(err_str);
-          throw std::invalid_argument(err_str);
+          std::stringstream err_str{};
+          err_str << "Mask shape ID \"" << mask_data.front().shape
+                  << "\" in payload does not match any shape type in detector ("
+                  << detray::types::get_name<typename detector_t::metadata>()
+                  << "). Check the detector metadata!\nMask store:\n"
+                  << detray::types::get_name<typename detector_t::masks>();
+          DETRAY_FATAL_HOST(err_str.str());
+          throw std::invalid_argument(err_str.str());
         }
 
         // Check if a fitting factory already exists. If not, add it
