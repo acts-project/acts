@@ -342,13 +342,12 @@ class TryAllNavigator final {
   ///
   /// @return True if the target is still valid
   bool checkTargetValid(
-      const State& state, const Vector3& position, const Vector3& direction,
+      State& state, const Vector3& position, const Vector3& direction,
       [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
-    static_cast<void>(state);
-    static_cast<void>(position);
-    static_cast<void>(direction);
-
-    return false;
+    // Resolves the geometry anew before every step, together with the
+    // additional surfaces
+    return m_additional.checkAdditionalTargetValid(
+        state.additional, position, direction, state.currentVolume, false);
   }
 
   /// @brief Handle the surface reached

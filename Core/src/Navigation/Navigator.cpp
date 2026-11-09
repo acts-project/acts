@@ -366,6 +366,15 @@ bool Navigator::checkTargetValid(State& state, const Vector3& position,
   state.curvature = curvature;
   ACTS_VERBOSE(volInfo(state) << "Entering Navigator::checkTargetValid.");
 
+  // The additional surfaces compete with the staged candidate before every
+  // step, and are told whether the staged candidates are still valid
+  return m_additional.checkAdditionalTargetValid(
+      state.additional, position, direction, state.currentVolume,
+      checkStagedTargetValid(state, position, direction));
+}
+
+bool Navigator::checkStagedTargetValid(State& state, const Vector3& position,
+                                       const Vector3& direction) const {
   if (state.navigationStage == Stage::initial) {
     return false;
   }

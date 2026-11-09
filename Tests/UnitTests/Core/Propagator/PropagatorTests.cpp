@@ -529,6 +529,70 @@ BOOST_AUTO_TEST_CASE(TargetBehindStart) {
   CHECK_CLOSE_ABS(result->pathLength, -10_mm, 1_um);
 }
 
+// The point of closest approach to a perigee moves with the direction. Reached
+// on another surface shortly before it, the propagation targets a second
+// surface just past it, which the straight line puts closer. That surface
+// leaves the perigee behind, and the propagation steps back onto it.
+BOOST_AUTO_TEST_CASE(TargetCrossedByTheLastStep) {
+  auto field = std::make_shared<ConstantBField>(Vector3{0, 0, 2_T});
+  Propagator propagator{EigenStepper<>{field}, VoidNavigator{}};
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx;
+
+  auto target = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+
+  // A plane across the track at the path length
+  const auto planeAt = [&](const BoundTrackParameters& start,
+                           double pathLength) {
+    EigenPropagatorType::Options<> options{gctx, mctx};
+    options.pathLimit = pathLength;
+    auto result = propagator.propagate(start, options);
+    BOOST_REQUIRE(result.ok());
+    const BoundTrackParameters& parameters = result->endParameters.value();
+    return CurvilinearSurface(parameters.position(gctx), parameters.direction())
+        .planeSurface();
+  };
+
+  for (double startX : {-50_mm, -200_mm, -500_mm}) {
+    for (double momentum : {0.5_GeV, 2_GeV}) {
+      BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+          Vector4{startX, 5_mm, 0, 0}, Vector3::UnitX(), 1. / momentum,
+          std::nullopt, ParticleHypothesis::pion());
+
+      EigenPropagatorType::Options<> options{gctx, mctx};
+      auto direct = propagator.propagate(start, *target, options);
+      BOOST_REQUIRE(direct.ok());
+      const double pathLength = direct->pathLength;
+
+      for (double before : {2_mm, 10_mm, 20_mm}) {
+        for (double past : {10_um, 100_um, 1_mm}) {
+          if (before >= pathLength) {
+            continue;
+          }
+          BOOST_TEST_CONTEXT("start x " << startX << ", momentum " << momentum
+                                        << ", before " << before << ", past "
+                                        << past) {
+            auto first = planeAt(start, pathLength - before);
+            auto second = planeAt(start, pathLength + past);
+
+            EigenPropagatorType::Options<> withPlanes{gctx, mctx};
+            withPlanes.navigation.registerAdditionalSurface(*first);
+            withPlanes.navigation.registerAdditionalSurface(*second);
+            auto result = propagator.propagate(start, *target, withPlanes);
+            BOOST_CHECK(result.ok());
+            if (result.ok()) {
+              BOOST_CHECK_EQUAL(&result->endParameters->referenceSurface(),
+                                target.get());
+              CHECK_CLOSE_ABS(result->pathLength, pathLength, 1_um);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

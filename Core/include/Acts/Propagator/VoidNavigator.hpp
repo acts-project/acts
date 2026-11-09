@@ -34,6 +34,12 @@ class IVolumeMaterial;
 /// which is one of them. Without either it does nothing. The navigators with a
 /// tracking geometry hold one to offer the additional surfaces on top of the
 /// geometry.
+///
+/// The additional surfaces and the candidates of the other navigator are two
+/// streams. Both are intersected again before every step, and the closer one
+/// is the target. A surface the last step crossed, ahead before it and behind
+/// after it, is offered behind the position, so the propagation steps back
+/// onto it.
 class VoidNavigator {
  public:
   /// Nested Config struct
@@ -79,6 +85,16 @@ class VoidNavigator {
       AdditionalSurface surface;
       /// Whether the propagation reached the surface
       bool reached = false;
+      /// Whether the surface is ahead of the last position the surfaces were
+      /// intersected from
+      bool ahead = false;
+      /// The same for the position before
+      bool aheadBefore = false;
+      /// Whether the last position the surfaces were intersected from is on
+      /// the surface
+      bool on = false;
+      /// The same for the position before
+      bool onBefore = false;
     };
 
     /// Additional surfaces of the options and the target surface
@@ -88,6 +104,16 @@ class VoidNavigator {
     /// precedence over. It is handed out once the additional surface is no
     /// longer the closer one.
     std::optional<NavigationTarget> heldBack;
+
+    /// The target handed out to the propagation
+    std::optional<NavigationTarget> handedOut;
+    /// Whether the target handed out is an additional surface
+    bool handedOutIsAdditional = false;
+
+    /// Last position the additional surfaces were intersected from
+    std::optional<Vector3> lastPosition;
+    /// The position before
+    std::optional<Vector3> positionBefore;
 
     /// Navigation statistics
     NavigatorStatistics statistics;
@@ -166,6 +192,10 @@ class VoidNavigator {
     }
 
     state.heldBack.reset();
+    state.handedOut.reset();
+    state.handedOutIsAdditional = false;
+    state.lastPosition.reset();
+    state.positionBefore.reset();
 
     return Result<void>::success();
   }
@@ -179,17 +209,12 @@ class VoidNavigator {
       State& state, const Vector3& position, const Vector3& direction,
       const Vector3& /*curvature*/ = Vector3::Zero()) const {
     state.currentSurface = nullptr;
-    return closest(state, position, direction, nullptr, false);
+    return handOut(state, closest(state, position, direction, nullptr), true);
   }
 
   /// Returns the closer of the next candidate of another navigator and the
   /// closest additional surface. The candidate is held back, not skipped,
   /// while an additional surface is closer.
-  ///
-  /// While the other navigator has a candidate, an additional surface competes
-  /// only if it is crossed inside the current volume. The stepper tests only
-  /// the target it gets, so a held back candidate is never found unreachable,
-  /// and the other navigator would never reach the volume boundary.
   ///
   /// @param state The navigation state
   /// @param position The current position
@@ -215,40 +240,92 @@ class VoidNavigator {
       state.heldBack = nextCandidate();
     }
 
-    if (const NavigationTarget additional = closest(
-            state, position, direction, volume, !state.heldBack->isNone());
+    if (const NavigationTarget additional =
+            closest(state, position, direction, volume);
         !additional.isNone()) {
       NavigationTarget& candidate = state.heldBack.value();
-      if (!candidate.isNone()) {
-        // The stored path length is stale by the distance travelled since
-        const Intersection3D refreshed =
-            candidate.surface()
-                .intersect(state.options.geoContext, position, direction,
-                           candidate.boundaryTolerance(),
-                           state.options.surfaceTolerance)
-                .at(candidate.intersectionIndex());
-        // Keep the stored one if the straight-line estimate lost the surface
-        if (refreshed.isValid()) {
-          candidate.intersection() = refreshed;
-        }
-      }
+      refresh(state, candidate, position, direction);
       // A tie goes to the candidate of the other navigator
       if (candidate.isNone() ||
           additional.pathLength() < candidate.intersection().pathLength()) {
-        return additional;
+        return handOut(state, additional, true);
       }
     }
 
     const NavigationTarget candidate = state.heldBack.value();
     state.heldBack.reset();
-    return candidate;
+    return handOut(state, candidate, false);
   }
 
-  /// Checks if the current target is valid (always true for void navigator)
-  /// @return Always true since the stepper re-intersects the target
-  bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
-                        const Vector3& /*direction*/,
+  /// Checks if the target is still the closest of the two streams
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return True if the target handed out is still the closest
+  bool checkTargetValid(State& state, const Vector3& position,
+                        const Vector3& direction,
                         const Vector3& /*curvature*/ = Vector3::Zero()) const {
+    return checkAdditionalTargetValid(state, position, direction, nullptr,
+                                      true);
+  }
+
+  /// Checks the target handed out against the other stream, for another
+  /// navigator holding this one. Intersects the additional surfaces and the
+  /// held back candidate again, so the target is swapped as soon as the other
+  /// stream is closer, and a crossed additional surface is found.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @param volume The current volume of the other navigator
+  /// @param candidateValid Whether the other navigator holds its candidates
+  ///        valid. If not, it is asked for a new one.
+  /// @return True if the target handed out is still the closest
+  bool checkAdditionalTargetValid(State& state, const Vector3& position,
+                                  const Vector3& direction,
+                                  const TrackingVolume* volume,
+                                  bool candidateValid) const {
+    if (!candidateValid) {
+      state.heldBack.reset();
+      state.handedOut.reset();
+      return false;
+    }
+    if (state.additionalSurfaces.empty() || !state.handedOut.has_value()) {
+      return true;
+    }
+
+    const NavigationTarget additional =
+        closest(state, position, direction, volume);
+    NavigationTarget& handedOut = state.handedOut.value();
+
+    if (state.handedOutIsAdditional) {
+      if (additional.isNone() ||
+          &additional.surface() != &handedOut.surface() ||
+          additional.intersectionIndex() != handedOut.intersectionIndex()) {
+        return false;
+      }
+      if (state.heldBack.has_value() && !state.heldBack->isNone()) {
+        NavigationTarget& candidate = state.heldBack.value();
+        refresh(state, candidate, position, direction);
+        // A tie goes to the candidate of the other navigator
+        if (candidate.intersection().pathLength() <= additional.pathLength()) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    if (additional.isNone()) {
+      return true;
+    }
+    refresh(state, handedOut, position, direction);
+    if (additional.pathLength() < handedOut.intersection().pathLength()) {
+      // Hold the candidate back instead of asking the other navigator again,
+      // which would move on to its next candidate
+      state.heldBack = handedOut;
+      state.handedOut.reset();
+      return false;
+    }
     return true;
   }
 
@@ -280,20 +357,86 @@ class VoidNavigator {
       return false;
     }
     state.currentSurface = &surface;
-    return state.heldBack.has_value();
+    return state.handedOutIsAdditional;
   }
 
  private:
-  /// Closest additional surface ahead of the position, crossed inside
-  /// @p volume if @p insideVolume is set and the volume is known
-  NavigationTarget closest(const State& state, const Vector3& position,
+  /// Slack of the crossing check, relative to the step. Covers the sagitta of
+  /// a curved step.
+  static constexpr double s_crossingSlack = 0.05;
+
+  /// Records the target handed out
+  static NavigationTarget handOut(State& state, const NavigationTarget& target,
+                                  bool isAdditional) {
+    if (target.isNone()) {
+      state.handedOut.reset();
+    } else {
+      state.handedOut = target;
+    }
+    state.handedOutIsAdditional = isAdditional && !target.isNone();
+    return target;
+  }
+
+  /// Intersects a candidate of the other navigator again. Keeps the stored
+  /// intersection if the straight-line estimate lost the surface.
+  static void refresh(const State& state, NavigationTarget& candidate,
+                      const Vector3& position, const Vector3& direction) {
+    if (candidate.isNone()) {
+      return;
+    }
+    const Intersection3D refreshed =
+        candidate.surface()
+            .intersect(state.options.geoContext, position, direction,
+                       candidate.boundaryTolerance(),
+                       state.options.surfaceTolerance)
+            .at(candidate.intersectionIndex());
+    if (refreshed.isValid()) {
+      candidate.intersection() = refreshed;
+    }
+  }
+
+  /// Whether the last step crossed the surface at @p intersection, which is
+  /// behind the position: the surface was ahead before the step, the step did
+  /// not start on it, and the intersection lies on the step
+  static bool crossed(const State& state,
+                      const State::AdditionalSurfaceState& additional,
+                      const Intersection3D& intersection) {
+    if (!additional.aheadBefore || additional.onBefore ||
+        !state.positionBefore.has_value()) {
+      return false;
+    }
+    const Vector3& before = state.positionBefore.value();
+    const Vector3& after = state.lastPosition.value();
+    const double step = (after - before).norm();
+    const double along = (intersection.position() - before).norm() +
+                         (intersection.position() - after).norm();
+    return along <=
+           (1 + s_crossingSlack) * step + state.options.surfaceTolerance;
+  }
+
+  /// Closest additional surface ahead of the position, or crossed by the last
+  /// step, in @p volume for a surface restricted to a volume
+  NavigationTarget closest(State& state, const Vector3& position,
                            const Vector3& direction,
-                           const TrackingVolume* volume,
-                           bool insideVolume) const {
+                           const TrackingVolume* volume) const {
+    // Intersected from a new position: the last one becomes the one before
+    const bool moved =
+        !state.lastPosition.has_value() || state.lastPosition != position;
+    if (moved) {
+      state.positionBefore = state.lastPosition;
+      state.lastPosition = position;
+    }
+
     NavigationTarget closest = NavigationTarget::None();
 
-    for (const State::AdditionalSurfaceState& additional :
-         state.additionalSurfaces) {
+    for (State::AdditionalSurfaceState& additional : state.additionalSurfaces) {
+      if (moved) {
+        additional.aheadBefore = additional.ahead;
+        additional.ahead = false;
+        additional.onBefore = additional.on;
+        additional.on = false;
+      }
+
       const AdditionalSurface& surface = additional.surface;
       if (additional.reached && surface.dropAfterReached) {
         continue;
@@ -307,25 +450,32 @@ class VoidNavigator {
           state.options.geoContext, position, direction,
           surface.boundaryTolerance, state.options.surfaceTolerance);
 
-      // Offer what is ahead, and what is on the position unless reached, so a
-      // kept surface is not reached again without a step
-      const bool offerOnSurface = !additional.reached;
       for (const auto [intersectionIndex, intersection] :
            enumerate(multiIntersection)) {
-        const bool onSurface =
-            intersection.status() == IntersectionStatus::onSurface;
         if (!intersection.isValid() ||
-            (onSurface ? !offerOnSurface : intersection.pathLength() <= 0) ||
             intersection.pathLength() > state.options.farLimit) {
           continue;
         }
-        if (insideVolume && volume != nullptr &&
-            !volume->inside(state.options.geoContext, intersection.position(),
-                            state.options.surfaceTolerance)) {
+        const double pathLength = intersection.pathLength();
+        const bool onSurface =
+            intersection.status() == IntersectionStatus::onSurface;
+        if (onSurface) {
+          additional.on = true;
+        } else if (pathLength > 0) {
+          additional.ahead = true;
+        }
+
+        // Offer what is ahead, what is on the position unless reached, so a
+        // kept surface is not reached again without a step, and what the last
+        // step crossed
+        const bool offer =
+            onSurface
+                ? !additional.reached
+                : pathLength > 0 || crossed(state, additional, intersection);
+        if (!offer) {
           continue;
         }
-        if (closest.isNone() ||
-            intersection.pathLength() < closest.pathLength()) {
+        if (closest.isNone() || pathLength < closest.pathLength()) {
           closest = NavigationTarget(
               intersection, static_cast<IntersectionIndex>(intersectionIndex),
               *surface.surface, surface.boundaryTolerance);

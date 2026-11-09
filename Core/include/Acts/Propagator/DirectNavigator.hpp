@@ -307,8 +307,8 @@ class DirectNavigator {
 
   /// @brief Check if the current target is still valid
   ///
-  /// This function checks if the target is valid. For the direct navigator this
-  /// is always true.
+  /// The surface sequence stays valid, so only the additional surfaces can
+  /// take over the target.
   ///
   /// @param state The navigation state
   /// @param position The current position
@@ -317,13 +317,10 @@ class DirectNavigator {
   ///
   /// @return True if the target is valid
   bool checkTargetValid(
-      const State& state, const Vector3& position, const Vector3& direction,
+      State& state, const Vector3& position, const Vector3& direction,
       [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
-    static_cast<void>(state);
-    static_cast<void>(position);
-    static_cast<void>(direction);
-
-    return true;
+    return m_additional.checkAdditionalTargetValid(state.additional, position,
+                                                   direction, nullptr, true);
   }
 
   /// @brief Handle the surface reached

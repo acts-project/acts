@@ -522,7 +522,7 @@ class LegacyNavigator : public DirectNavigator {
     ++calls->next;
     return DirectNavigator::nextTarget(state, position, direction);
   }
-  bool checkTargetValid(const State& state, const Vector3& position,
+  bool checkTargetValid(State& state, const Vector3& position,
                         const Vector3& direction) const {
     ++calls->valid;
     return DirectNavigator::checkTargetValid(state, position, direction);

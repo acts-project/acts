@@ -407,6 +407,16 @@ class Navigator final {
   /// @param state The navigation state
   void resolveExtendedSurfaces(State& state) const;
 
+  /// @brief Whether the staged candidates are still valid, without the
+  ///        additional surfaces
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return True if the staged candidates are still valid
+  bool checkStagedTargetValid(State& state, const Vector3& position,
+                              const Vector3& direction) const;
+
   /// @brief Get the next target of the staged navigation, without the
   ///        additional surfaces
   ///
