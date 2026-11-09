@@ -83,7 +83,7 @@ CompositeSpacePointLineSeeder::makeLineFromSeed(
   Vector dir = makeDirection(refHit, seed.theta);
   const Vector& eY{refHit.toNextSensor()};
   if (Acts::abs(eY.z()) > s_epsilon) {
-    using namespace Acts::PlanarHelper;
+    using namespace Acts::detail::PlanarHelper;
     auto isect = intersectPlane(seed.y0 * eY, dir, Vector3::UnitZ(), 0.);
     assert(isect.isValid());
     return std::make_pair(isect.position(), std::move(dir));
