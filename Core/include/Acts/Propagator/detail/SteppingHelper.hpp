@@ -77,15 +77,19 @@ Result<Vector3> getCurvature(const Stepper& stepper,
 /// @param surfaceTolerance [in] Surface tolerance used for intersection
 /// @param stype [in] The step size type to be set
 /// @param logger [in] A @c Logger instance
+/// @param curvature Global local curvature for the crossing estimate
 template <typename stepper_t>
 IntersectionStatus updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
     const Surface& surface, std::uint8_t index, Direction direction,
     const BoundaryTolerance& boundaryTolerance, double surfaceTolerance,
-    ConstrainedStep::Type stype, const Logger& logger) {
+    ConstrainedStep::Type stype, const Logger& logger,
+    [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) {
   ACTS_VERBOSE("Update single surface status for surface: "
                << surface.geometryId() << " index " << static_cast<int>(index));
 
+  // The curvature argument is wired for the follow-up intersection correction.
+  // Keep the existing ray estimate in this API-only change.
   auto sIntersection =
       surface
           .intersect(state.options.geoContext, stepper.position(state),
@@ -115,6 +119,57 @@ IntersectionStatus updateSingleSurfaceStatus(
 
   ACTS_VERBOSE("Surface is NOT reachable");
   return IntersectionStatus::unreachable;
+}
+
+/// Update a target with curvature, retaining the old API for custom steppers.
+/// Composite steppers query each component; single steppers receive their own
+/// current curvature through the extended surface-status method.
+/// @param stepper Stepper instance
+/// @param state Stepping state
+/// @param surface Target surface
+/// @param index Ray intersection branch
+/// @param direction Propagation direction
+/// @param boundaryTolerance Physical surface bounds tolerance
+/// @param surfaceTolerance On-surface tolerance
+/// @param stype Step constraint type
+/// @param logger Logger
+/// @return Status or curvature lookup error
+template <typename Stepper>
+Result<IntersectionStatus> updateSurfaceStatusWithCurvature(
+    const Stepper& stepper, typename Stepper::State& state,
+    const Surface& surface, std::uint8_t index, Direction direction,
+    const BoundaryTolerance& boundaryTolerance, double surfaceTolerance,
+    ConstrainedStep::Type stype, const Logger& logger) {
+  if constexpr (requires {
+                  {
+                    stepper.updateSurfaceStatusWithCurvature(
+                        state, surface, index, direction, boundaryTolerance,
+                        surfaceTolerance, stype, logger)
+                  } -> std::same_as<Result<IntersectionStatus>>;
+                }) {
+    return stepper.updateSurfaceStatusWithCurvature(
+        state, surface, index, direction, boundaryTolerance, surfaceTolerance,
+        stype, logger);
+  } else if constexpr (requires {
+                         {
+                           stepper.updateSurfaceStatus(
+                               state, surface, index, direction,
+                               boundaryTolerance, surfaceTolerance, stype,
+                               logger, Vector3::Zero())
+                         } -> std::same_as<IntersectionStatus>;
+                       }) {
+    const auto curvature = getCurvature(stepper, state);
+    if (!curvature.ok()) {
+      return curvature.error();
+    }
+    return Result<IntersectionStatus>::success(stepper.updateSurfaceStatus(
+        state, surface, index, direction, boundaryTolerance, surfaceTolerance,
+        stype, logger, *curvature));
+  } else {
+    return Result<IntersectionStatus>::success(stepper.updateSurfaceStatus(
+        state, surface, index, direction, boundaryTolerance, surfaceTolerance,
+        stype, logger));
+  }
 }
 
 }  // namespace Acts::detail

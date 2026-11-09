@@ -88,6 +88,11 @@ class ConeSurface : public RegularSurface {
   ///
   /// @param other is the source surface for the assignment
   /// @return Reference to this ConeSurface after assignment
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<ConeSurface>(other)` instead.
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<ConeSurface>(other) instead.")]]
   ConeSurface& operator=(const ConeSurface& other);
 
   /// The binning position method - is overloaded for r-type binning
@@ -240,8 +245,8 @@ class ConeSurface : public RegularSurface {
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
-  /// local frame origin in global 3D Cartesian coordinates and its rotation
-  /// represented with extrinsic Euler angles)
+  /// translations along the local x/y/z axes and rotations represented with
+  /// extrinsic Euler angles around the local x/y/z axes)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
@@ -257,11 +262,13 @@ class ConeSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position of the parameters in global
+  /// @param direction The track direction. The cone derivative does not use it.
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
   Matrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3& position) const final;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
 
  protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)

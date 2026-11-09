@@ -38,6 +38,10 @@ class homogeneous_material_writer {
   using payload_type = detector_homogeneous_material_payload;
 
   /// Convert the header information into its payload
+  /// @tparam detector_t Detector type to serialize.
+  /// @param det Detector providing the material store and surface links.
+  /// @param det_name Name recorded in the serialized header.
+  /// @return Header payload with counts for slabs, rods, and their surfaces.
   template <class detector_t>
   static homogeneous_material_header_payload header_to_payload(
       const detector_t& det, const std::string_view det_name) {
@@ -87,8 +91,11 @@ class homogeneous_material_writer {
     return header_data;
   }
 
-  /// Convert the material description of a detector @param det into its io
+  /// Convert the material description of a detector @p det into its io
   /// payload
+  /// @tparam detector_t Detector type to serialize.
+  /// @param det Detector whose material descriptions are serialized.
+  /// @return Payload containing the material entries grouped by volume.
   template <class detector_t>
   static payload_type to_payload(
       const detector_t& det, const typename detector_t::name_map& /*unused*/) {
@@ -102,8 +109,12 @@ class homogeneous_material_writer {
     return dm_data;
   }
 
-  /// Convert the material description of a volume @param vol_desc into its
+  /// Convert the material description of a volume @p vol_desc into its
   /// io payload
+  /// @tparam detector_t Detector type to serialize.
+  /// @param vol_desc Volume descriptor whose surfaces are inspected.
+  /// @param det Detector providing material data and surface descriptors.
+  /// @return Material payload for the volume.
   template <class detector_t>
   static material_volume_payload to_payload(
       const typename detector_t::volume_type& vol_desc, const detector_t& det) {
@@ -160,7 +171,10 @@ class homogeneous_material_writer {
     return mv_data;
   }
 
-  /// Convert surface material @param mat into its io payload
+  /// Convert surface material @p mat into its io payload
+  /// @tparam material_t Material parameter type.
+  /// @param mat Material properties to serialize.
+  /// @return Payload containing the material parameters.
   template <detray::concepts::material_params material_t>
   static material_param_payload to_payload(const material_t& mat) {
     material_param_payload mat_data;
@@ -175,7 +189,12 @@ class homogeneous_material_writer {
     return mat_data;
   }
 
-  /// Convert a surface material slab @param mat_slab into its io payload
+  /// Convert a homogeneous material surface entry to payload form.
+  /// @tparam algebra_t Algebra backend used by the detector.
+  /// @tparam material_t Homogeneous material type.
+  /// @param mat Material and thickness attached to the surface.
+  /// @param sf_idx Index of the owning surface in its collection.
+  /// @return Payload linking the surface to its material.
   template <detray::concepts::algebra algebra_t,
             detray::concepts::homogeneous_material material_t>
   static surface_material_payload to_payload(const material_t& mat,

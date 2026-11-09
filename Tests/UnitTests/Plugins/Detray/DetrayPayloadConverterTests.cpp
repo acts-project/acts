@@ -16,6 +16,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/PadBlueprintNode.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -46,6 +47,7 @@
 
 #include <array>
 #include <filesystem>
+#include <limits>
 #include <map>
 #include <memory>
 #include <numbers>
@@ -979,6 +981,177 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   checkSameSurfaceMaterial(det, readDet);
 }
 
+BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  Blueprint::Config bpCfg;
+  bpCfg.envelope[AxisDirection::AxisZ] = {20., 20.};
+  bpCfg.envelope[AxisDirection::AxisR] = {0., 20.};
+  Blueprint root{bpCfg};
+  auto envelope = std::make_shared<PadBlueprintNode>(
+      "Envelope", ExtentEnvelope{{.z = {10., 10.}, .r = {0., 10.}}});
+  root.addChild(envelope);
+  envelope->addCylinderContainer(
+      "Inner", AxisDirection::AxisR, [](auto& inner) {
+        inner.addStaticVolume(
+            Transform3::Identity(),
+            std::make_shared<CylinderVolumeBounds>(0., 10., 50.), "BeamPipe");
+        inner.addStaticVolume(
+            Transform3::Identity(),
+            std::make_shared<CylinderVolumeBounds>(10., 20., 50.), "Tracker");
+      });
+  auto geometry = root.construct({}, gctx, *logger);
+  DetrayPayloadConverter::Config cfg;
+  cfg.beampipeVolume = geometry->findVolumeByName("BeamPipe");
+  cfg.replacementWorld = geometry->findVolumeByName("Envelope");
+  BOOST_REQUIRE(cfg.beampipeVolume != nullptr);
+  BOOST_REQUIRE(cfg.replacementWorld != nullptr);
+
+  auto convert = [&]() {
+    return DetrayPayloadConverter{cfg}.convertTrackingGeometry(gctx, *geometry);
+  };
+  auto selected = convert();
+  BOOST_REQUIRE_EQUAL(selected.detector->volumes.size(), 3u);
+  BOOST_CHECK_EQUAL(selected.detector->volumes.front().name, "BeamPipe");
+  std::set<std::pair<std::string, std::string>> links;
+  std::size_t exits = 0;
+  for (const auto& volume : selected.detector->volumes) {
+    for (const auto& surface : volume.surfaces) {
+      for (const auto& mask : surface.masks) {
+        auto target = mask.volume_link.link;
+        if (target == detray::io::mask_payload::end_of_world) {
+          ++exits;
+          BOOST_CHECK_EQUAL(volume.name, "Envelope");
+        } else {
+          BOOST_REQUIRE_LT(target, selected.detector->volumes.size());
+          links.emplace(volume.name,
+                        selected.detector->volumes.at(target).name);
+        }
+      }
+    }
+  }
+  BOOST_CHECK_GT(exits, 0u);
+  BOOST_CHECK(links.contains({"BeamPipe", "Tracker"}));
+  BOOST_CHECK(links.contains({"Tracker", "BeamPipe"}));
+  BOOST_CHECK(links.contains({"Tracker", "Envelope"}));
+  BOOST_CHECK(links.contains({"Envelope", "Tracker"}));
+
+  using detector_t =
+      detray::host::detector<detray::default_metadata<detray::array<double>>>;
+  detray::detector_builder<detector_t::metadata> builder{};
+  detray::io::geometry_reader::from_payload<detector_t>(builder,
+                                                        *selected.detector);
+  vecmem::host_memory_resource mr;
+  auto det = builder.build(mr, detray::volume_builder_options{});
+  detray::detail::check_consistency(det);
+
+  cfg.includeWorld = false;
+  auto withoutWorld = convert();
+  BOOST_REQUIRE_EQUAL(withoutWorld.detector->volumes.size(), 2u);
+  BOOST_CHECK_EQUAL(withoutWorld.detector->volumes.front().name, "BeamPipe");
+  // Every retained surface keeps its masks; only the envelope destination
+  // changes. Compare by name because removing the world renumbers volumes.
+  for (const auto& volume : withoutWorld.detector->volumes) {
+    auto original = std::ranges::find(selected.detector->volumes, volume.name,
+                                      &detray::io::volume_payload::name);
+    BOOST_REQUIRE(original != selected.detector->volumes.end());
+    BOOST_REQUIRE_EQUAL(volume.surfaces.size(), original->surfaces.size());
+    for (std::size_t i = 0; i < volume.surfaces.size(); ++i) {
+      const auto& masks = volume.surfaces.at(i).masks;
+      const auto& originalMasks = original->surfaces.at(i).masks;
+      BOOST_REQUIRE_EQUAL(masks.size(), originalMasks.size());
+      for (std::size_t j = 0; j < masks.size(); ++j) {
+        BOOST_CHECK(masks[j].boundaries == originalMasks[j].boundaries);
+        const auto& target =
+            selected.detector->volumes.at(originalMasks[j].volume_link.link)
+                .name;
+        if (target == "Envelope") {
+          BOOST_CHECK_EQUAL(masks[j].volume_link.link,
+                            detray::io::mask_payload::end_of_world);
+        } else {
+          BOOST_REQUIRE_LT(masks[j].volume_link.link,
+                           withoutWorld.detector->volumes.size());
+          BOOST_CHECK_EQUAL(
+              withoutWorld.detector->volumes.at(masks[j].volume_link.link).name,
+              target);
+        }
+      }
+    }
+  }
+  detray::detector_builder<detector_t::metadata> withoutWorldBuilder{};
+  detray::io::geometry_reader::from_payload<detector_t>(withoutWorldBuilder,
+                                                        *withoutWorld.detector);
+  auto withoutWorldDetector =
+      withoutWorldBuilder.build(mr, detray::volume_builder_options{});
+  detray::detail::check_consistency(withoutWorldDetector);
+
+  const auto* beampipe = cfg.beampipeVolume;
+  cfg.beampipeVolume = cfg.replacementWorld;
+  BOOST_CHECK_THROW(convert(), std::invalid_argument);
+  cfg.beampipeVolume = beampipe;
+  cfg.replacementWorld = beampipe;
+  BOOST_CHECK_THROW(convert(), std::invalid_argument);
+
+  // Omitting the original world also works without a replacement pointer.
+  cfg.replacementWorld = nullptr;
+  auto withoutOriginalWorld = convert();
+  BOOST_REQUIRE_EQUAL(withoutOriginalWorld.detector->volumes.size(), 3u);
+  BOOST_CHECK(std::ranges::none_of(
+      withoutOriginalWorld.detector->volumes,
+      [](const auto& volume) { return volume.name == "World"; }));
+
+  // Conversion must not disconnect shared portals in the original geometry.
+  cfg.includeWorld = true;
+  cfg.replacementWorld = nullptr;
+  auto full = convert();
+  BOOST_REQUIRE_EQUAL(full.detector->volumes.size(), 4u);
+  bool stillConnected = false;
+  for (const auto& volume : full.detector->volumes) {
+    if (volume.name != "Envelope") {
+      continue;
+    }
+    for (const auto& surface : volume.surfaces) {
+      for (const auto& mask : surface.masks) {
+        BOOST_REQUIRE_LT(mask.volume_link.link, full.detector->volumes.size());
+        stillConnected |=
+            full.detector->volumes.at(mask.volume_link.link).name == "World";
+      }
+    }
+  }
+  BOOST_CHECK(stillConnected);
+
+  // Selecting the original world is equivalent to the default conversion.
+  cfg.replacementWorld = geometry->highestTrackingVolume();
+  auto explicitWorld = convert();
+  BOOST_CHECK_EQUAL(explicitWorld.detector->volumes.size(),
+                    full.detector->volumes.size());
+
+  cfg.replacementWorld = geometry->findVolumeByName("Tracker");
+  BOOST_CHECK_THROW(convert(), std::invalid_argument);
+  TrackingVolume unrelated(Transform3::Identity(),
+                           std::make_shared<CylinderVolumeBounds>(0., 1., 1.));
+  cfg.replacementWorld = &unrelated;
+  BOOST_CHECK_THROW(convert(), std::invalid_argument);
+
+  // A malformed internal link must not silently turn into a world exit.
+  cfg.replacementWorld = geometry->findVolumeByName("Envelope");
+  auto surface = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(1., 1.));
+  geometry->apply([&](TrackingVolume& volume) {
+    if (&volume != cfg.beampipeVolume) {
+      return;
+    }
+    auto portal =
+        std::make_shared<Portal>(Direction::AlongNormal(), surface, volume);
+    portal->setLink(gctx, Direction::OppositeNormal(),
+                    std::make_unique<TrivialPortalLink>(
+                        surface, *geometry->highestTrackingVolume()));
+    volume.addPortal(portal);
+  });
+  BOOST_CHECK_THROW(convert(), std::runtime_error);
+  cfg.includeWorld = false;
+  BOOST_CHECK_THROW(convert(), std::runtime_error);
+}
+
 // Stack of z-segmented layers in r, with the segment boundaries chosen such
 // that the fused cylinder portals between the layers cover all cases:
 //   L0 | L1: one volume against three          (L0 is the whole face)
@@ -1174,6 +1347,28 @@ BOOST_AUTO_TEST_CASE(DetrayPortalSegmentation) {
   detray::volume_builder_options builder_opts{};
   detector_t detrayDetector(detectorBuilder.build(mr, builder_opts));
   detray::detail::check_consistency(detrayDetector);
+
+  // Promote a leaf whose outer portal has three different neighbours. All
+  // segments become exits, with the original clipping and material preserved.
+  cfg.replacementWorld = cfg.beampipeVolume;
+  auto isolated =
+      DetrayPayloadConverter{cfg}.convertTrackingGeometry(gctx, *tGeometry);
+  BOOST_REQUIRE_EQUAL(isolated.detector->volumes.size(), 1u);
+  const auto& isolatedVolume = isolated.detector->volumes.front();
+  BOOST_CHECK_EQUAL(isolatedVolume.name, "L0_0");
+  std::size_t outerMasks = 0;
+  for (const auto& surface : isolatedVolume.surfaces) {
+    for (const auto& mask : surface.masks) {
+      BOOST_CHECK_EQUAL(mask.volume_link.link,
+                        detray::io::mask_payload::end_of_world);
+      if (mask.shape == detray::io::shape_id::portal_cylinder2) {
+        ++outerMasks;
+      }
+    }
+  }
+  BOOST_CHECK_EQUAL(outerMasks, 3u);
+  BOOST_REQUIRE(isolated.homogeneousMaterial != nullptr);
+  BOOST_CHECK_EQUAL(isolated.homogeneousMaterial->volumes.size(), 1u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

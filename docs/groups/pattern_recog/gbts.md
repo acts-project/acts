@@ -183,7 +183,9 @@ its outer pair, see @ref Acts::Experimental::GbtsLayerConnection.
 @ref Acts::Experimental::assignAdaptiveTauRatioCuts fills them from the
 layers: wider for a pair that skips a pixel barrel layer or, as the outer
 pair, leaves the pixel barrel, and wider again for a pair with a strip layer.
-For
+With `useSumRatioCut` the three differences, each divided by its own cut, may
+not add up to more than `sumRatioCutMax`, which rejects a pair that is marginal
+in all three at once. For
 pixel-barrel triplets an optional
 @ref Acts::Experimental::GraphBasedTrackSeeder "validateTriplets" step also fits
 a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$. Each
@@ -287,6 +289,7 @@ The cuts that build and link the doublets live on
 | `minDeltaRadius`, `maxAbsTau` | @ref gbts-graph | doublet acceptance |
 | `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
 | `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
+| `useSumRatioCut`, `sumRatioCutMax` | @ref gbts-graph | bound on the summed linking tolerances, against pairs marginal in all three |
 | `tauRatioCut` | @ref gbts-graph | @f$\tau@f$ scale of the `validateTriplets` high-pT check. The linking cut comes from @ref Acts::Experimental::GbtsLayerConnection |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
 | `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
@@ -299,6 +302,7 @@ The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackS
 | `nMaxPhiSlice` | @ref gbts-nodes | sets the @f$\phi@f$ slice width, and with it the base sliding-window width the graph uses |
 | `maxChainLength` | @ref gbts-levels | longest chain of edges taken into account |
 | `minSeedLevel` | @ref gbts-extraction | chain length a candidate must reach |
+| `postFitCurvatureFactor` | @ref gbts-extraction | tighter curvature bound on the fitted chain, as a factor on the filter's `maxCurvature`; values below 1 does nothing |
 | `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |

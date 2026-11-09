@@ -20,16 +20,26 @@
 
 namespace detray {
 
+/// Frame and Jacobian data associated with a free track's curvilinear frame.
 template <concepts::algebra algebra_t>
 struct curvilinear_frame {
+  /// Three-dimensional transform type for the curvilinear frame.
   using transform3_type = dtransform3D<algebra_t>;
+  /// Three-dimensional vector type used by the transform.
   using vector3 = typename transform3_type::vector3;
+  /// Helper for constructing the transverse unit vectors.
   using unit_vectors_type = unit_vectors<vector3>;
+  /// Matrix type mapping bound parameter variations to free parameters.
   using bound_to_free_matrix_type = bound_to_free_matrix<algebra_t>;
+  /// Vector holding the bound parameters at the frame's reference point.
   using bound_vector_type = bound_parameters_vector<algebra_t>;
+  /// Engine that computes the bound-to-free Jacobian.
   using jacobian_engine_type = detail::jacobian_engine<algebra_t>;
+  /// Type of the free track parameters used to initialize the frame.
   using free_track_parameters_type = free_track_parameters<algebra_t>;
 
+  /// Build the frame and bound parameter vector from a valid free track.
+  /// @param free_params Free track parameters defining the reference point.
   DETRAY_HOST_DEVICE
   explicit curvilinear_frame(const free_track_parameters_type& free_params) {
     assert(!free_params.is_invalid());
@@ -43,6 +53,8 @@ struct curvilinear_frame {
         m_trf, free_params);
   }
 
+  /// Compute the Jacobian from bound curvilinear parameters to free parameters.
+  /// @returns The bound-to-free Jacobian at the reference point.
   DETRAY_HOST_DEVICE
   bound_to_free_matrix_type bound_to_free_jacobian() const {
     return jacobian_engine_type()
@@ -50,7 +62,9 @@ struct curvilinear_frame {
             m_trf, mask<rectangle2D, algebra_t>{}, m_bound_vec);
   }
 
+  /// Transform placing the curvilinear frame at the track reference point.
   transform3_type m_trf{};
+  /// Bound curvilinear parameters of the reference track.
   bound_vector_type m_bound_vec{};
 
 };  // curvilinear frame

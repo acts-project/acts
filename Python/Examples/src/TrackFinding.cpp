@@ -15,6 +15,7 @@
 #include "ActsExamples/TrackFinding/MeasurementFilterAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/OrthogonalTripletSeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SeedParamsEstimator.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
@@ -88,7 +89,8 @@ void addTrackFinding(py::module& mex) {
     auto c =
         py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, nMaxPhiSlice, minSeedLevel, addTriplets,
-                       maxAbsEtaAddTriplets);
+                       maxAbsEtaAddTriplets, maxSeedSplitEta,
+                       postFitCurvatureFactor);
     patchKwargsConstructor(c);
   }
 
@@ -98,7 +100,8 @@ void addTrackFinding(py::module& mex) {
         py::class_<Config>(mex, "GbtsGraphBuilderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, maxEdgesPerSP, minDeltaRadius, doubletFilterRZ,
                        matchBeforeCreate, validateTriplets, calibrateStrips,
-                       maxOuterRadius);
+                       maxOuterRadius, z0HistogramMaxBarrelOrder,
+                       useSumRatioCut, sumRatioCutMax);
     patchKwargsConstructor(c);
   }
 
@@ -129,22 +132,27 @@ void addTrackFinding(py::module& mex) {
       dumpVisualization, extendWithPhi, visualizationFunction);
 
   {
-    using Alg = TrackParamsEstimationAlgorithm;
-
-    auto [alg, c] = declareAlgorithm<Alg, IAlgorithm>(
-        mex, "TrackParamsEstimationAlgorithm");
-
-    alg.def_static("inverseRadiusPowerWeight", &Alg::inverseRadiusPowerWeight,
-                   py::arg("exponent"));
-
+    auto e =
+        py::class_<SeedParamsEstimator, std::shared_ptr<SeedParamsEstimator>>(
+            mex, "SeedParamsEstimator");
+    e.def_static("inverseRadiusPowerWeight",
+                 &SeedParamsEstimator::inverseRadiusPowerWeight,
+                 py::arg("exponent"));
+    auto c =
+        py::class_<SeedParamsEstimator::Config>(e, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(
-        c, inputSeeds, inputProtoTracks, inputParticleHypotheses,
-        outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-        magneticField, bFieldMin, spacePointSelection, minTransverseDistance,
-        geometricRefineIterations, spacePointWeight, initialSigmas,
-        initialSigmaQoverPt, initialSigmaPtRel, initialVarInflation,
-        noTimeVarInflation, particleHypothesis, inputFreeParameters);
+        c, trackingGeometry, magneticField, bFieldMin, spacePointSelection,
+        minTransverseDistance, geometricRefineIterations, spacePointWeight,
+        initialSigmas, initialSigmaQoverPt, initialSigmaPtRel,
+        initialVarInflation, noTimeVarInflation, particleHypothesis);
   }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      TrackParamsEstimationAlgorithm, mex, "TrackParamsEstimationAlgorithm",
+      inputSeeds, inputProtoTracks, inputParticleHypotheses,
+      outputTrackParameters, outputSeeds, outputProtoTracks,
+      inputFreeParameters, seedParamsEstimation, trackingGeometry,
+      magneticField);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsLookupEstimation, mex, "TrackParamsLookupEstimation",
@@ -184,7 +192,9 @@ void addTrackFinding(py::module& mex) {
         c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
         outputTracks, trackingGeometry, magneticField, findTracks,
         findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
-        twoWay, seedDeduplication, seedDeduplicatorCfg, stayOnSeed,
+        twoWay, twoWaySmoothing, seedParamsEstimation, reverseSearch,
+        reverseSearchMinR, reverseSearchMinAbsZ, inwardOnlyMinR,
+        inwardOnlyMinAbsZ, seedDeduplication, seedDeduplicatorCfg, stayOnSeed,
         pixelVolumeIds, stripVolumeIds, maxPixelHoles, maxStripHoles,
         trimTracks, recordMaterialStates, useJosephFormulation,
         constrainToVolumeIds, endOfWorldVolumeIds);

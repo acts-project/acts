@@ -11,6 +11,7 @@
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <vector>
@@ -18,9 +19,6 @@
 namespace Acts {
 
 /// Container for triplet candidates found by the triplet seed finder.
-///
-/// This implementation uses partial AoS/SoA depending on the access pattern in
-/// the triplet finding process.
 class TripletTopCandidates {
  public:
   /// Type alias for candidate index type
@@ -28,47 +26,21 @@ class TripletTopCandidates {
 
   /// @brief Returns the number of triplet candidates stored
   /// @return Number of triplet candidates in the container
-  Index size() const { return static_cast<Index>(m_topSpacePoints.size()); }
+  Index size() const { return static_cast<Index>(m_candidates.size()); }
 
   /// @brief Reserves storage space for the specified number of candidates
   /// @param size Number of candidates to reserve space for
-  void reserve(Index size) {
-    m_topSpacePoints.reserve(size);
-    m_curvatures.reserve(size);
-    m_impactParameters.reserve(size);
-  }
+  void reserve(Index size) { m_candidates.reserve(size); }
 
-  /// @brief Clears all stored triplet candidates
-  /// Removes all candidates from the container and frees memory
-  void clear() {
-    m_topSpacePoints.clear();
-    m_curvatures.clear();
-    m_impactParameters.clear();
-  }
+  /// @brief Clears all stored triplet candidates, keeping their storage
+  void clear() { m_candidates.clear(); }
 
   /// @brief Adds a new triplet candidate to the container
   /// @param spT Space point index for the top space point of the triplet
   /// @param curvature Track curvature estimation for the triplet
   /// @param impactParameter Impact parameter estimation for the triplet
-  void emplace_back(SpacePointIndex spT, float curvature,
-                    float impactParameter) {
-    m_topSpacePoints.emplace_back(spT);
-    m_curvatures.emplace_back(curvature);
-    m_impactParameters.emplace_back(impactParameter);
-  }
-
-  /// @brief Returns the vector of top space point indices
-  /// @return Const reference to vector containing all top space point indices
-  const std::vector<SpacePointIndex>& topSpacePoints() const {
-    return m_topSpacePoints;
-  }
-  /// @brief Returns the vector of track curvature estimations
-  /// @return Const reference to vector containing curvature values for all candidates
-  const std::vector<float>& curvatures() const { return m_curvatures; }
-  /// @brief Returns the vector of impact parameter estimations
-  /// @return Const reference to vector containing impact parameter values for all candidates
-  const std::vector<float>& impactParameters() const {
-    return m_impactParameters;
+  void push_back(SpacePointIndex spT, float curvature, float impactParameter) {
+    m_candidates.push_back({spT, curvature, impactParameter});
   }
 
   /// Proxy providing access to a triplet candidate.
@@ -83,17 +55,19 @@ class TripletTopCandidates {
     /// Get the space point index
     /// @return The space point index
     SpacePointIndex spacePoint() const {
-      return m_container->m_topSpacePoints[m_index];
+      return m_container->m_candidates[m_index].topSpacePoint;
     }
 
     /// Get the curvature estimation
     /// @return The curvature value
-    float curvature() const { return m_container->m_curvatures[m_index]; }
+    float curvature() const {
+      return m_container->m_candidates[m_index].curvature;
+    }
 
     /// Get the impact parameter estimation
     /// @return The impact parameter value
     float impactParameter() const {
-      return m_container->m_impactParameters[m_index];
+      return m_container->m_candidates[m_index].impactParameter;
     }
 
    private:
@@ -118,9 +92,14 @@ class TripletTopCandidates {
   const_iterator end() const { return const_iterator(*this, size()); }
 
  private:
-  std::vector<SpacePointIndex> m_topSpacePoints;
-  std::vector<float> m_curvatures;
-  std::vector<float> m_impactParameters;
+  /// One triplet candidate
+  struct Candidate {
+    SpacePointIndex topSpacePoint{};
+    float curvature{};
+    float impactParameter{};
+  };
+
+  std::vector<Candidate> m_candidates;
 };
 
 /// Interface and a collection of standard implementations for a triplet seed
@@ -272,6 +251,43 @@ class TripletSeedFinder {
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Subset2 topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;
+
+  /// Called with a bottom doublet and its triplet top candidates.
+  using CandidatesCallback =
+      Delegate<void(const DoubletsForMiddleSp::Proxy& /*bottomDoublet*/,
+                    const TripletTopCandidates& /*candidates*/)>;
+
+  /// Create triplets from the bottom, middle, and top space points.
+  ///
+  /// @param spacePoints Space point container
+  /// @param spM Space point candidate to be used as middle SP in a seed
+  /// @param bottomDoublets Bottom doublets to be used for triplet creation
+  /// @param topDoublets Top doublets to be used for triplet creation
+  /// @param tripletTopCandidates Cache for triplet top candidates
+  /// @param callback Called with each bottom doublet that has triplet top
+  ///   candidates
+  virtual void createTripletTopCandidates(
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
+      DoubletsForMiddleSp::Range bottomDoublets,
+      DoubletsForMiddleSp::Range topDoublets,
+      TripletTopCandidates& tripletTopCandidates,
+      const CandidatesCallback& callback) const = 0;
+
+  /// Create triplets from the bottom, middle, and top space points.
+  ///
+  /// @param spacePoints Space point container
+  /// @param spM Space point candidate to be used as middle SP in a seed
+  /// @param bottomDoublets Bottom doublets to be used for triplet creation
+  /// @param topDoublets Top doublets to be used for triplet creation
+  /// @param tripletTopCandidates Cache for triplet top candidates
+  /// @param callback Called with each bottom doublet that has triplet top
+  ///   candidates
+  virtual void createTripletTopCandidates(
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
+      DoubletsForMiddleSp::Subset2 bottomDoublets,
+      DoubletsForMiddleSp::Subset2 topDoublets,
+      TripletTopCandidates& tripletTopCandidates,
+      const CandidatesCallback& callback) const = 0;
 };
 
 }  // namespace Acts

@@ -11,7 +11,9 @@
 #include "Acts/Utilities/CloneablePtr.hpp"
 
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 using namespace Acts;
@@ -72,6 +74,46 @@ BOOST_AUTO_TEST_CASE(CopyAssignment) {
   BOOST_CHECK(b);
   BOOST_CHECK_EQUAL(*b, 20);
   BOOST_CHECK(a.get() != b.get());
+}
+
+BOOST_AUTO_TEST_CASE(ThrowingCopyAssignment) {
+  CloneablePtr<int> destination(std::make_unique<int>(7));
+  auto* original = destination.get();
+  CloneablePtr<int> source(std::make_unique<int>(42),
+                           [](const int&) -> std::unique_ptr<int> {
+                             throw std::runtime_error("clone failed");
+                           });
+  static_assert(!std::is_nothrow_copy_assignable_v<CloneablePtr<int>>);
+  BOOST_CHECK_THROW(destination = source, std::runtime_error);
+  BOOST_CHECK_EQUAL(destination.get(), original);
+  BOOST_CHECK_EQUAL(*destination, 7);
+  CloneablePtr<int> copy(destination);
+  BOOST_CHECK_EQUAL(*copy, 7);
+}
+
+BOOST_AUTO_TEST_CASE(ThrowingClonerCopyAssignment) {
+  struct Cloner {
+    std::shared_ptr<bool> fail;
+    explicit Cloner(std::shared_ptr<bool> flag) : fail(std::move(flag)) {}
+    Cloner(const Cloner& other) : fail(other.fail) {
+      if (*fail) {
+        throw std::runtime_error("cloner copy failed");
+      }
+    }
+    std::unique_ptr<int> operator()(const int& value) const {
+      return std::make_unique<int>(value);
+    }
+  };
+  auto fail = std::make_shared<bool>(false);
+  CloneablePtr<int> source(std::make_unique<int>(42), Cloner(fail));
+  CloneablePtr<int> destination(std::make_unique<int>(7));
+  auto* original = destination.get();
+  *fail = true;
+  BOOST_CHECK_THROW(destination = source, std::runtime_error);
+  BOOST_CHECK_EQUAL(destination.get(), original);
+  BOOST_CHECK_EQUAL(*destination, 7);
+  CloneablePtr<int> copy(destination);
+  BOOST_CHECK_EQUAL(*copy, 7);
 }
 
 BOOST_AUTO_TEST_CASE(MoveConstruction) {
