@@ -36,8 +36,9 @@ MeasurementSelector::select(
   // Candidates normally share one prediction. Find a usable one before
   // invoking parametrization operations, which require finite coordinates.
   const auto prediction = std::find_if(
-      candidates.begin(), candidates.end(),
-      [](const auto& candidate) { return candidate.predicted().allFinite(); });
+      candidates.begin(), candidates.end(), [](const auto& candidate) {
+        return detail::allFinite(candidate.predicted());
+      });
   if (prediction == candidates.end()) {
     for (auto& candidate : candidates) {
       candidate.chi2() = std::numeric_limits<double>::quiet_NaN();

@@ -13,6 +13,7 @@
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -106,7 +107,7 @@ double MeasurementSelector::calculateChi2(
             validSubspaceIndices);
 
         // Reject diverged candidates before invoking finite-input operations.
-        if (!predicted.allFinite() || !calibrated.allFinite()) {
+        if (!detail::allFinite(predicted) || !detail::allFinite(calibrated)) {
           return std::numeric_limits<double>::quiet_NaN();
         }
         BoundVector measured = predicted;

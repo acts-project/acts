@@ -19,6 +19,7 @@
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 
 #include <cassert>
 #include <cstddef>

@@ -14,6 +14,7 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -70,7 +71,7 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
 
   ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
-  if (!K.allFinite()) {
+  if (!detail::allFinite(K)) {
     // set to error abort execution
     return Result<void>::failure(KalmanFitterError::UpdateFailed);
   }
@@ -84,7 +85,7 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
     updatedCovariance = tmp * predictedCovariance * tmp.transpose() +
                         K * calibratedCovariance * K.transpose();
   }
-  if (!updated.allFinite() || !updatedCovariance.allFinite()) {
+  if (!detail::allFinite(updated) || !detail::allFinite(updatedCovariance)) {
     return Result<void>::failure(KalmanFitterError::UpdateFailed);
   }
   const auto canonical =
