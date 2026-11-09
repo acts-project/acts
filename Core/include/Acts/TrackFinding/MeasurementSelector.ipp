@@ -11,6 +11,7 @@
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 
 #include <cmath>
+#include <optional>
 
 namespace Acts {
 
@@ -35,21 +36,29 @@ MeasurementSelector::select(
 
   // Candidates normally share one prediction. Find a usable one before
   // invoking parametrization operations, which require finite coordinates.
-  const auto prediction = std::find_if(
-      candidates.begin(), candidates.end(), [](const auto& candidate) {
-        return detail::allFinite(candidate.predicted());
-      });
-  if (prediction == candidates.end()) {
+  // Keep the found prediction to avoid repeating the component lookup.
+  auto prediction = candidates.begin();
+  std::optional<decltype(prediction->predicted())> predicted;
+  for (; prediction != candidates.end(); ++prediction) {
+    if (auto candidatePredicted = prediction->predicted();
+        detail::allFinite(candidatePredicted)) {
+      predicted.emplace(candidatePredicted);
+      break;
+    }
+  }
+  if (!predicted.has_value()) {
     for (auto& candidate : candidates) {
       candidate.chi2() = std::numeric_limits<double>::quiet_NaN();
     }
     isOutlier = false;
     return Result::success(std::pair(candidates.begin(), candidates.begin()));
   }
+  // All candidates are on the same surface, which also selects the cuts.
   const auto& surface = prediction->referenceSurface();
   const GeometryIdentifier geoID = surface.geometryId();
-  const double theta =
-      surface.boundParametrization(gctx).theta(prediction->predicted());
+  const BoundParametrization parametrization =
+      surface.boundParametrization(gctx);
+  const double theta = parametrization.theta(*predicted);
   // Find the appropriate cuts
   const auto cutsResult = getCuts(geoID, theta);
   if (!cutsResult.ok()) {
@@ -80,8 +89,7 @@ MeasurementSelector::select(
     // still done with compile time size and no dynamic memory allocation
     // is needed.
     double chi2 = calculateChi2(
-        trackState.referenceSurface().boundParametrization(gctx),
-        trackState.effectiveCalibrated().data(),
+        parametrization, trackState.effectiveCalibrated().data(),
         trackState.effectiveCalibratedCovariance().data(),
         trackState.predicted(), trackState.predictedCovariance(),
         trackState.projectorSubspaceIndices(), trackState.calibratedSize());
