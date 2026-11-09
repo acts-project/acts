@@ -22,6 +22,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/MultiStepperError.hpp"
 #include "Acts/Propagator/MultiStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -524,6 +525,89 @@ struct MultiStepperTester {
 
       BOOST_CHECK_EQUAL(cmp_1.cmp.state.stepSize.value(), -1.0);
       BOOST_CHECK_EQUAL(cmp_2.cmp.state.stepSize.value(), 1.0);
+    }
+  }
+
+  void test_step_limit_after_first_component_on_surface() const {
+    typename MultiStepper::Config cfg;
+    cfg.bField = defaultNullBField;
+    cfg.stepLimitAfterFirstComponentOnSurface = 2;
+    MultiStepper multi_stepper(cfg);
+
+    // The second component needs 4 steps to the target
+    MultiOptions options(geoCtx, magCtx);
+    options.maxStepSize = 0.25;
+
+    std::shared_ptr<PlaneSurface> start_surface =
+        CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
+            .planeSurface();
+    std::shared_ptr<PlaneSurface> target_surface =
+        CurvilinearSurface(Vector3::Zero(), Vector3{0.0, 1.0, 0.0})
+            .planeSurface();
+
+    // Both components move along -y, the first one starts on the target
+    std::vector<std::tuple<double, BoundVector>> cmps(
+        2, {0.5, BoundVector::Zero()});
+    for (auto &[weight, pars] : cmps) {
+      pars[eBoundPhi] = -std::numbers::pi / 2.;
+      pars[eBoundTheta] = std::numbers::pi / 2.;
+      pars[eBoundQOverP] = 1.0;
+    }
+    std::get<BoundVector>(cmps[1])[eBoundLoc0] = 1.0;
+
+    MultiComponentBoundTrackParameters multi_pars(
+        start_surface, cmps,
+        [](const auto &cmp) {
+          return std::tie(std::get<0>(cmp), std::get<1>(cmp));
+        },
+        particleHypothesis);
+
+    const auto updateStatus = [&](MultiState &state) {
+      return multi_stepper.updateSurfaceStatus(
+          state, *target_surface, 0, Direction::Forward(),
+          BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+          ConstrainedStep::Type::Navigator);
+    };
+
+    const auto makeState = [&] {
+      MultiState state = multi_stepper.makeState(options);
+      multi_stepper.initialize(state, multi_pars);
+      BOOST_REQUIRE_EQUAL(updateStatus(state), IntersectionStatus::reachable);
+      auto cmp_iterable = multi_stepper.constComponentIterable(state);
+      BOOST_REQUIRE_EQUAL((*cmp_iterable.begin()).status(),
+                          IntersectionStatus::onSurface);
+      BOOST_REQUIRE_EQUAL((*(++cmp_iterable.begin())).status(),
+                          IntersectionStatus::reachable);
+      return state;
+    };
+
+    // The status is updated after every step, so the limit removes the
+    // component that did not reach the target
+    {
+      MultiState state = makeState();
+      BOOST_REQUIRE(
+          multi_stepper.step(state, Direction::Forward(), nullptr).ok());
+      BOOST_REQUIRE_EQUAL(updateStatus(state), IntersectionStatus::reachable);
+
+      const Result<double> res =
+          multi_stepper.step(state, Direction::Forward(), nullptr);
+      BOOST_REQUIRE(res.ok());
+      BOOST_CHECK_EQUAL(*res, 0.0);
+      BOOST_CHECK_EQUAL(multi_stepper.numberComponents(state), 1);
+    }
+
+    // The status is not updated, e.g. because the navigator dropped the
+    // target, so the limit removes all components
+    {
+      MultiState state = makeState();
+      BOOST_REQUIRE(
+          multi_stepper.step(state, Direction::Forward(), nullptr).ok());
+
+      const Result<double> res =
+          multi_stepper.step(state, Direction::Forward(), nullptr);
+      BOOST_REQUIRE(!res.ok());
+      BOOST_CHECK_EQUAL(res.error(), MultiStepperError::NoComponentsLeft);
+      BOOST_CHECK_EQUAL(multi_stepper.numberComponents(state), 0);
     }
   }
 

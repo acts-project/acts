@@ -136,6 +136,12 @@ Result<double> MultiStepperLoop<S, R>::step(
       reweightComponents(state);
       //! [step limit]
 
+      // No component is on a surface, e.g. if the navigator dropped the target
+      if (components.empty()) {
+        ACTS_DEBUG("No components left after removing missed components");
+        return MultiStepperError::NoComponentsLeft;
+      }
+
       ACTS_VERBOSE(components.size()
                    << " components left after removing missed components");
 
