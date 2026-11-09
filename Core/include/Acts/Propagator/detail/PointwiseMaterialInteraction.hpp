@@ -20,6 +20,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -188,7 +189,7 @@ inline Result<void> updateMaterialCovariance(BoundMatrix& covariance,
                                              const Matrix<2, 2>& directionNoise,
                                              double varianceQoverP,
                                              NoiseUpdateMode mode) {
-  assert(covariance.allFinite() && directionNoise.allFinite());
+  assert(detail::allFinite(covariance) && detail::allFinite(directionNoise));
   assert(std::isfinite(varianceQoverP) && varianceQoverP >= 0.);
   if (mode == NoiseUpdateMode::addNoise) {
     covariance.block<2, 2>(eBoundDir0, eBoundDir0) += directionNoise;

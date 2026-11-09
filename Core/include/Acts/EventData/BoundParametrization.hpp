@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cassert>
@@ -252,7 +253,8 @@ class BoundParametrization {
     template <typename Derived>
     static void assertFinite(
         [[maybe_unused]] const Eigen::MatrixBase<Derived>& values) {
-      assert(values.allFinite() && "Nonfinite bound coordinates or covariance");
+      assert(detail::allFinite(values) &&
+             "Nonfinite bound coordinates or covariance");
     }
     static void assertValidThreshold([[maybe_unused]] double threshold) {
       assert(std::isfinite(threshold) && threshold >= 0. && threshold < 1. &&

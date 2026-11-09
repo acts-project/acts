@@ -12,6 +12,7 @@
 #include "Acts/EventData/detail/CovarianceHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 
 namespace Acts {
 
@@ -33,7 +34,7 @@ Result<void> GainMatrixSmoother::calculate(const GeometryContext& gctx,
   BoundMatrix G = filteredCovariance * prevJacobian.transpose() *
                   prevPredictedCovariance.inverse();
 
-  if (!G.allFinite()) {
+  if (!detail::allFinite(G)) {
     ACTS_VERBOSE("Gain smoothing matrix G has nonfinite entries");
 
     ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
@@ -77,7 +78,7 @@ Result<void> GainMatrixSmoother::calculate(const GeometryContext& gctx,
   const BoundMatrix updatedCovariance =
       filteredCovariance +
       G * (prevSmoothedCovariance - prevPredictedCovariance) * G.transpose();
-  if (!updated.allFinite() || !updatedCovariance.allFinite()) {
+  if (!detail::allFinite(updated) || !detail::allFinite(updatedCovariance)) {
     return KalmanFitterError::SmoothFailed;
   }
   const auto canonical =
