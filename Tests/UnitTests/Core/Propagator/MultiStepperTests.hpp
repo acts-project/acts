@@ -43,12 +43,10 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Concepts {
+namespace Acts::Concepts {
 template <typename T>
 concept has_components = requires { typename T::components; };
-}  // namespace Concepts
-}  // namespace Acts
+}  // namespace Acts::Concepts
 
 using namespace Acts;
 using namespace VectorHelpers;
