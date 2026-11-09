@@ -42,16 +42,40 @@ if(TARGET detray_detectors_HEADERS)
     )
 endif()
 
+# Location of the generated metadata headers. This directory always exists, so
+# that clients can always include the aggregate "generated_metadata.hpp" header.
+set(DETRAY_GENERATED_METADATA_DIR
+    "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include"
+)
+set(OUTPUT_DIR "${DETRAY_GENERATED_METADATA_DIR}/detray/detectors")
+file(MAKE_DIRECTORY ${OUTPUT_DIR})
+message(STATUS "Detector metadata header location: ${OUTPUT_DIR}")
+
+# Set up how clients should find the generated headers.
+target_include_directories(
+    detray_detectors
+    INTERFACE
+        $<BUILD_INTERFACE:${DETRAY_GENERATED_METADATA_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+install(
+    DIRECTORY "${DETRAY_GENERATED_METADATA_DIR}/"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    OPTIONAL
+)
+
+# Content of the aggregate header: one include and one feature macro per
+# generated metadata header.
+set(DETRAY_GENERATED_METADATA_CONTENT "")
+# X-macro list of all generated metadata names, e.g. " X(itk)"
+set(DETRAY_GENERATED_METADATA_LIST "")
+
 # Create the metadata headers
 if(NOT "${DETRAY_GENERATE_METADATA}" STREQUAL "")
     message(STATUS "Configuring detray detector types...")
 
     find_package(Python COMPONENTS Interpreter REQUIRED)
-
-    set(OUTPUT_DIR
-        "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include/detray/detectors"
-    )
-    file(MAKE_DIRECTORY ${OUTPUT_DIR})
 
     # Generate the custom metadata headers
     foreach(GENERATOR ${DETRAY_GENERATE_METADATA})
@@ -77,23 +101,52 @@ if(NOT "${DETRAY_GENERATE_METADATA}" STREQUAL "")
             DEPENDS ${GENERATED_HEADER}
         )
 
-        # Set up how clients should find its headers.
-        target_include_directories(
-            detray_detectors
-            INTERFACE
-                $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include>
-                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-        )
-
-        install(
-            DIRECTORY
-                "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include/"
-            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-            OPTIONAL
-        )
-
         add_dependencies(detray_detectors ${GENERATOR}_generation)
+
+        # Register the header in the aggregate header, e.g.
+        # "<name>_metadata" -> DETRAY_HAS_<name>_METADATA and X(name)
+        string(MAKE_C_IDENTIFIER "${GENERATOR}" _detray_md_macro)
+        string(TOUPPER "${_detray_md_macro}" _detray_md_macro)
+        string(
+            APPEND DETRAY_GENERATED_METADATA_CONTENT
+            "#define DETRAY_HAS_${_detray_md_macro}\n"
+        )
+        if(
+            EXISTS
+                "${CMAKE_CURRENT_SOURCE_DIR}/include/detray/detectors/${GENERATOR}.hpp"
+        )
+            # A static header with the same name exists: Do not include the
+            # generated header, because it defines the same metadata type again
+            message(
+                STATUS
+                "Static header for '${GENERATOR}' exists: "
+                "Not added to 'generated_metadata.hpp'"
+            )
+        else()
+            string(REGEX REPLACE "_metadata$" "" _detray_md_name "${GENERATOR}")
+            string(
+                APPEND DETRAY_GENERATED_METADATA_CONTENT
+                "#include \"detray/detectors/${GENERATOR}.hpp\"\n"
+            )
+            string(
+                APPEND DETRAY_GENERATED_METADATA_LIST
+                " X(${_detray_md_name})"
+            )
+            unset(_detray_md_name)
+        endif()
+        unset(_detray_md_macro)
 
         message(STATUS "Creating metadata: ${GENERATOR}")
     endforeach()
 endif()
+
+# Always create the aggregate header (it is empty if no metadata is generated)
+string(
+    APPEND DETRAY_GENERATED_METADATA_CONTENT
+    "#define DETRAY_FOR_EACH_GENERATED_METADATA(X)${DETRAY_GENERATED_METADATA_LIST}\n"
+)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/detray/detectors/generated_metadata.hpp.in"
+    "${OUTPUT_DIR}/generated_metadata.hpp"
+    @ONLY
+)

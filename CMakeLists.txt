@@ -699,7 +699,7 @@ if(ACTS_SETUP_DETRAY)
         )
 
         set(DETRAY_GENERATE_METADATA
-            "itk_metadata"
+            ""
             CACHE STRING
             "Semicolon-separated list of metadata generator scripts to run in this build"
         )

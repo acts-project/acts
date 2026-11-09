@@ -39,8 +39,10 @@ class grid_writer {
       const std::string_view det_name) {
     grid_header_payload header_data;
 
-    header_data.common =
-        detail::basic_converter::to_payload(det_name, writer_tag);
+    // TODO: Leave empty for now (will be fixed in PR 5798)
+    header_data.common = {};
+    header_data.common.detector = det_name;
+    header_data.common.tag = writer_tag;
 
     header_data.sub_header.emplace();
     auto& grid_sub_header = header_data.sub_header.value();

@@ -68,7 +68,8 @@ class homogeneous_material_writer {
       return count;
     };
 
-    header_data.common = detail::basic_converter::to_payload(det_name, tag);
+    header_data.common =
+        detail::basic_converter::to_payload<detector_t>(det_name, tag);
 
     const auto& materials = det.material_store();
 
