@@ -10,6 +10,8 @@ namespace traccc::device {
 template <typename T>
 TRACCC_HOST_DEVICE
 void fill_hough_plane(const global_index_t globalIndex,
+            const global_index_t n_cols,
+            const global_index_t n_rows,
             const edm::spacepoint_collection::const_view::size_type n_spacepoints,
             const edm::spacepoint_collection::const_view& spacepoints_view,
             const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association_view,
@@ -35,9 +37,6 @@ void fill_hough_plane(const global_index_t globalIndex,
 
    const vecmem::device_vector<const scalar> edges_x(edges_x_view);
    const vecmem::device_vector<const scalar> edges_y(edges_y_view);
-   const global_index_t n_cols = edges_x.capacity() - 1;
-   const global_index_t n_rows = edges_y.capacity() - 1;
-
 
    unsigned long long slice = spacepoint_wedge_association[globalIndex];
    const unsigned long long layer_bit = spacepoint_detector_id[globalIndex];

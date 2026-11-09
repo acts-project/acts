@@ -81,7 +81,7 @@ bool is_local_maximum(const global_index_t globalIndex,
         for (int dy = -1; dy <= 1; ++dy) {
             const long long neighbor_row = (row + dy + rows) % rows;
             const auto neighbor_index =
-                static_cast<unsigned long long>(neighbor_col) * N_ROWS +
+                static_cast<unsigned long long>(neighbor_col) * n_rows +
                 static_cast<unsigned long long>(neighbor_row);
 
             if (neighbor_index == globalIndex) continue;

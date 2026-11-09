@@ -29,9 +29,6 @@
 
 namespace traccc::device {
 
-static constexpr unsigned int N_COLS = 256u;
-static constexpr unsigned int N_ROWS = 7000u;
-
 // we need to template the class i guess
 class hough_transform_seeding_algorithm
     : public algorithm<edm::houghplane_collection<unsigned short>::buffer(
@@ -119,6 +116,7 @@ class hough_transform_seeding_algorithm
   };
 
   struct count_maxima_payload {
+    const hough_seeding_config& config;
     // The hough planes
     const vecmem::data::vector_view<const unsigned short>& houghplanes;    
     // The count vector
@@ -126,6 +124,7 @@ class hough_transform_seeding_algorithm
   };
  
   struct find_maxima_payload {
+    const hough_seeding_config& config;
     // The hough planes
     const vecmem::data::vector_view<const unsigned short>& houghplanes;
     // The global index vector
@@ -133,14 +132,13 @@ class hough_transform_seeding_algorithm
   };
  
   struct take_picture_payload {
+    const hough_seeding_config& config;
     // Number of maxima
     unsigned int n_maxima;
     // The hough planes
     const vecmem::data::vector_view<const unsigned short>& houghplanes;    
     // The edges X
     const vecmem::data::vector_view<const scalar>& edges_x;
-    // The edges Y
-    const vecmem::data::vector_view<const scalar>& edges_y;
     // The maxima location
     const vecmem::data::jagged_vector_view<const global_index_t>& global_index;
     // The images
@@ -161,6 +159,7 @@ class hough_transform_seeding_algorithm
   };
 
   struct count_contributing_hits_payload {
+    const hough_seeding_config& config;
     // Number of images
     unsigned int n_images;
     // The magnetic field object
@@ -188,6 +187,7 @@ class hough_transform_seeding_algorithm
   };
 
   struct find_contributing_hits_payload {
+    const hough_seeding_config& config;
     // Number of images
     unsigned int n_images;
     // The magnetic field object

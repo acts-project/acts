@@ -197,7 +197,8 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().setup(vecmem::ignore_event, maxima_sizes);
   copy().memset(vecmem::ignore_event, maxima_sizes, 0);
 
-  count_maxima_kernel({houghplane_entries, maxima_sizes});
+  count_maxima_kernel({m_config, houghplane_entries, maxima_sizes});
+
   vecmem::vector<unsigned int> maxima_sizes_host = ((mr().host != nullptr)
                 ? vecmem::vector<unsigned int>(mr().host)
                 : vecmem::vector<unsigned int>());
@@ -212,7 +213,8 @@ auto hough_transform_seeding_algorithm::operator()(
         vecmem::data::buffer_type::resizable);
   copy().setup(maxima_global_index)->ignore();
 
-  find_maxima_kernel({houghplane_entries,
+  find_maxima_kernel({m_config,
+                      houghplane_entries,
                       maxima_global_index});
 
 
@@ -290,10 +292,10 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().memset(vecmem::ignore_event, maxima_x_value, 0);
   copy().setup(images)->ignore();
 
-  take_picture_kernel({total_maxima,
+  take_picture_kernel({m_config,
+                       total_maxima,
                        houghplane_entries,
                        edges_x,
-                       edges_y,
                        maxima_global_index,
                        images,
                        maxima_x_value});
@@ -337,7 +339,8 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().setup(vecmem::ignore_event, hits_sizes);
   copy().memset(vecmem::ignore_event, hits_sizes, 0);
  
-  count_contributing_hits_kernel({total_maxima,
+  count_contributing_hits_kernel({m_config,
+                           total_maxima,
                            bfield,
                            edges_x,
                            edges_y,
@@ -375,7 +378,8 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().setup(hits)->ignore();
 
 
-  find_contributing_hits_kernel({total_maxima,
+  find_contributing_hits_kernel({m_config,
+                            total_maxima,
                             bfield,
                             edges_x,
                             edges_y,

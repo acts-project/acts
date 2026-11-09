@@ -7,6 +7,8 @@ namespace traccc::device {
 
 TRACCC_HOST_DEVICE
 void find_contributing_hits(const global_index_t globalIndex,
+                            const global_index_t n_cols,
+                            const global_index_t n_rows,
                             const unsigned int n_images,
                             const vecmem::data::vector_view<const scalar>& edges_x_view,
                             const vecmem::data::vector_view<const scalar>& edges_y_view,
@@ -30,9 +32,6 @@ void find_contributing_hits(const global_index_t globalIndex,
  
     const vecmem::device_vector<const scalar> edges_x(edges_x_view);
     const vecmem::device_vector<const scalar> edges_y(edges_y_view);
-
-    const global_index_t n_cols = edges_x.capacity() - 1;
-    const global_index_t n_rows = edges_y.capacity() - 1;
 
     const global_index_t peak_global_index = global_index[wedge_idx][element_idx];
     const auto [col, row] = get_col_row(peak_global_index, n_cols, n_rows);

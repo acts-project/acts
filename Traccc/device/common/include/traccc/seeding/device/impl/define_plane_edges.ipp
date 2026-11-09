@@ -6,6 +6,8 @@ namespace traccc::device {
 
 TRACCC_HOST_DEVICE
 void define_plane_edges(const global_index_t globalIndex,
+        const global_index_t n_cols,
+        const global_index_t n_rows,
 		const scalar stepQopt, 
         const scalar minQoptRange,
 		const scalar stepPhi, 
@@ -15,8 +17,8 @@ void define_plane_edges(const global_index_t globalIndex,
     vecmem::device_vector<scalar> edges_x(edges_x_view);
     vecmem::device_vector<scalar> edges_y(edges_y_view);
 
-    if (globalIndex < edges_x.capacity()) edges_x[globalIndex] = minQoptRange + stepQopt * globalIndex;
-    if (globalIndex < edges_y.capacity()) edges_y[globalIndex] = minPhi + stepPhi * globalIndex;
+    if (globalIndex <= n_cols) edges_x[globalIndex] = minQoptRange + stepQopt * globalIndex;
+    if (globalIndex <= n_rows) edges_y[globalIndex] = minPhi + stepPhi * globalIndex;
 }
 
 } // namespace

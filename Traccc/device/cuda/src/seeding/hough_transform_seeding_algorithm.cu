@@ -26,6 +26,7 @@ namespace kernels {
       scalar steps_x = (config.max_range_x - config.min_range_x) / n_cols;
       scalar steps_y = (config.max_range_y - config.min_range_y) / n_rows;
       device::define_plane_edges(details::global_index1(),
+              n_cols, n_rows,
               steps_x, config.min_range_x,
 		      steps_y, config.min_range_y,
               edges_x, edges_y); 
@@ -65,6 +66,8 @@ namespace kernels {
            const vecmem::data::vector_view<const scalar> edges_y,
            vecmem::data::vector_view<unsigned long long> bins) {
       device::fill_hough_plane<T>(details::global_index1(),
+              config.n_cols,
+              config.n_rows,
 		      n_spacepoints,
               spacepoints,
 		      spacepoint_wedge_association,
@@ -86,21 +89,33 @@ namespace kernels {
    }
 
    __global__
-   void count_maxima(const vecmem::data::vector_view<const unsigned short> houghplanes,
+   void count_maxima(const traccc::hough_seeding_config config,
+                     const vecmem::data::vector_view<const unsigned short> houghplanes,
                      vecmem::data::vector_view<unsigned int> count_vector) {
-      device::count_maxima(details::global_index1(), houghplanes, count_vector);
+      device::count_maxima(details::global_index1(),
+                           config.wedges.size(),
+                           config.n_cols,
+                           config.n_rows, 
+                           houghplanes,
+                           count_vector);
    }
 
    __global__
-   void find_maxima(const vecmem::data::vector_view<const unsigned short> houghplanes,
+   void find_maxima(const traccc::hough_seeding_config config,
+                    const vecmem::data::vector_view<const unsigned short> houghplanes,
                     vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes) {
-      device::find_maxima(details::global_index1(), houghplanes, global_indexes);
+      device::find_maxima(details::global_index1(),
+                          config.wedges.size(),
+                          config.n_cols,
+                          config.n_rows,
+                          houghplanes,
+                          global_indexes);
    }
 
    __global__
-   void take_pictures(const vecmem::data::vector_view<const unsigned short> houghplanes,
+   void take_pictures(const traccc::hough_seeding_config config,
+                      const vecmem::data::vector_view<const unsigned short> houghplanes,
                       const vecmem::data::vector_view<const scalar> edges_x,
-                      const vecmem::data::vector_view<const scalar> edges_y,
                       const vecmem::data::jagged_vector_view<const traccc::device::global_index_t> global_indexes,
                       const unsigned int n_maxima,
                       vecmem::data::jagged_vector_view<scalar> images,
@@ -108,11 +123,12 @@ namespace kernels {
       device::take_pictures(blockIdx.x,
             threadIdx.y, // cols
             threadIdx.x, // rows
+            config.n_cols,
+            config.n_rows,
+            n_maxima,
             houghplanes, 
             edges_x,
-            edges_y,
             global_indexes, 
-            n_maxima, 
             images, 
             maxima_x);
    }
@@ -126,7 +142,8 @@ namespace kernels {
     }
 
    __global__
-   void count_contributing_hits(const unsigned int n_images,
+   void count_contributing_hits(const traccc::hough_seeding_config config,
+                                const unsigned int n_images,
                                 const vecmem::data::vector_view<const scalar> edges_x,
                                 const vecmem::data::vector_view<const scalar> edges_y,
                                 const edm::spacepoint_collection::const_view spacepoints,
@@ -138,6 +155,8 @@ namespace kernels {
                                 const vecmem::data::vector_view<const unsigned int> nn_outcome,
                                 vecmem::data::vector_view<unsigned int> count_vector) {
         device::count_contributing_hits(details::global_index1(),
+                    config.n_cols,
+                    config.n_rows,
                     n_images,
                     edges_x,
                     edges_y,
@@ -152,18 +171,21 @@ namespace kernels {
    }
 
    __global__
-   void find_contributing_hits(const unsigned int n_images,
-                                const vecmem::data::vector_view<const scalar> edges_x,
-                                const vecmem::data::vector_view<const scalar> edges_y,
-                                const edm::spacepoint_collection::const_view spacepoints,
-                                const vecmem::data::vector_view<const scalar> spacepoint_r,
-                                const vecmem::data::vector_view<const scalar> spacepoint_phi,
-                                const vecmem::data::vector_view<const scalar> spacepoint_bfield_z,
-                                const vecmem::data::vector_view<const unsigned long long> spacepoint_wedge_association,
-                                const vecmem::data::jagged_vector_view<const traccc::device::global_index_t> global_index,
-                                const vecmem::data::vector_view<const unsigned int> nn_outcome,
-                                vecmem::data::jagged_vector_view<traccc::device::global_index_t> hits) {
+   void find_contributing_hits(const traccc::hough_seeding_config config,
+                               const unsigned int n_images,
+                               const vecmem::data::vector_view<const scalar> edges_x,
+                               const vecmem::data::vector_view<const scalar> edges_y,
+                               const edm::spacepoint_collection::const_view spacepoints,
+                               const vecmem::data::vector_view<const scalar> spacepoint_r,
+                               const vecmem::data::vector_view<const scalar> spacepoint_phi,
+                               const vecmem::data::vector_view<const scalar> spacepoint_bfield_z,
+                               const vecmem::data::vector_view<const unsigned long long> spacepoint_wedge_association,
+                               const vecmem::data::jagged_vector_view<const traccc::device::global_index_t> global_index,
+                               const vecmem::data::vector_view<const unsigned int> nn_outcome,
+                               vecmem::data::jagged_vector_view<traccc::device::global_index_t> hits) {
       device::find_contributing_hits(details::global_index1(),
+                    config.n_cols,
+                    config.n_rows,
                     n_images,
                     edges_x,
                     edges_y,
@@ -258,17 +280,17 @@ void hough_transform_seeding_algorithm::count_bits_kernel(const count_bits_kerne
 
 void hough_transform_seeding_algorithm::count_maxima_kernel(const count_maxima_payload& payload) const {
   const unsigned int n_threads = warp_size() * 8;
-  const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
+  const unsigned int n_blocks = (payload.config.n_cols * payload.config.n_rows + n_threads - 1) / n_threads;
   kernels::count_maxima
-        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, payload.count_vector);
+        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, payload.houghplanes, payload.count_vector);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 void hough_transform_seeding_algorithm::find_maxima_kernel(const find_maxima_payload& payload) const {
   const unsigned int n_threads = warp_size() * 8;
-  const unsigned int n_blocks = (device::N_COLS * device::N_ROWS + n_threads - 1) / n_threads;
+  const unsigned int n_blocks = (payload.config.n_cols * payload.config.n_rows + n_threads - 1) / n_threads;
   kernels::find_maxima
-        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes, payload.global_index);
+        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, payload.houghplanes, payload.global_index);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
@@ -276,9 +298,9 @@ void hough_transform_seeding_algorithm::take_picture_kernel(const take_picture_p
    const dim3 n_threads(32, 32);
    const unsigned int n_blocks = payload.n_maxima;
    kernels::take_pictures
-        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes,
+        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config,
+                                                                    payload.houghplanes,
                                                                     payload.edges_x,
-                                                                    payload.edges_y,
                                                                     payload.global_index, 
                                                                     payload.n_maxima, 
                                                                     payload.images,
@@ -301,7 +323,8 @@ void hough_transform_seeding_algorithm::count_contributing_hits_kernel(const cou
   const unsigned int n_threads = warp_size() * 8;
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
   kernels::count_contributing_hits
-            <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.n_images,
+            <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config,
+                                                                    payload.n_images,
                                                                     payload.edges_x,
                                                                     payload.edges_y,
                                                                     payload.spacepoints,
@@ -319,7 +342,8 @@ void hough_transform_seeding_algorithm::find_contributing_hits_kernel(const find
   const unsigned int n_threads = warp_size() * 4;
   const unsigned int n_blocks = (payload.n_images + n_threads - 1) / n_threads;
   kernels::find_contributing_hits
-            <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.n_images,
+            <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config,
+                                                                    payload.n_images,
                                                                     payload.edges_x,
                                                                     payload.edges_y,
                                                                     payload.spacepoints,
