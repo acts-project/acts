@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/PointBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
@@ -240,28 +241,41 @@ FreeToPathMatrix PointSurface::freeToPathDerivative(
 AlignmentToPathMatrix PointSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  static_cast<void>(gctx);
   static_cast<void>(position);
 
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // u = (c - position) . direction, so d u / d center = direction. A point has
-  // no orientation, hence the rotation block is zero.
+  // no orientation, hence the rotation block is zero. The center columns are
+  // that derivative mapped onto translations along the local x/y/z axes.
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
   AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
-  alignToPath.segment<3>(eAlignmentCenter0) = direction.transpose();
+  detail::setAlignToPathLocalCenterDerivative(alignToPath, direction, rotation);
 
   return alignToPath;
 }
 
+AlignmentToBoundMatrix
+PointSurface::alignmentToBoundDerivativeWithoutCorrection(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+
+  AlignmentToBoundMatrix alignToBound = AlignmentToBoundMatrix::Zero();
+  alignToBound.block<2, 3>(eBoundLoc0, eAlignmentCenter0) =
+      -localCartesianToBoundLocalDerivative(gctx, position, direction);
+  return alignToBound;
+}
+
 Matrix<2, 3> PointSurface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& /*gctx*/, const Vector3& /*position*/) const {
-  // The bound local coordinates are the (x, y) components of the local 3D
-  // Cartesian position, so the derivative selects the first two rows. Note the
-  // local frame here is the transform frame; the direction-dependent
-  // measurement frame is handled in the jacobians above.
-  Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
-  loc3DToLocBound << 1, 0, 0, 0, 1, 0;
-  return loc3DToLocBound;
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  // The bound local coordinates are the x/y components of position - center
+  // in the measurement frame, which follows the track direction rather than
+  // the transform.
+  const RotationMatrix3 frame = referenceFrame(gctx, position, direction);
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
+  return (frame.transpose() * rotation).topRows<2>();
 }
 
 double PointSurface::pathCorrection(const GeometryContext& /*gctx*/,

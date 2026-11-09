@@ -665,12 +665,14 @@ def rk4_dense_derivation() -> DenseDerivation:
         "new_dir", new_dir_unnorm.name / new_dir_unnorm.name.as_explicit().norm()
     )
     new_qop = name_expr("new_qop", new_ydot.expr[4, 0])
+    residual = explicit(k1.name - k2.name - k3.name + k4.name)
+    # The direction and dt/ds slopes have units 1/length. Normalize the
+    # q/p slope by the initial q/p to put it on the same scale, so all terms
+    # use the existing length-valued tolerance and fourth-root controller.
+    # In particular, energy loss must constrain steps even in zero field.
     err = name_expr(
         "err",
-        h**2
-        * (k1.name[0:3, 0] - k2.name[0:3, 0] - k3.name[0:3, 0] + k4.name[0:3, 0])
-        .as_explicit()
-        .norm(1),
+        h**2 * (residual[0:4, 0].norm(1) + sym.Abs(residual[4, 0] / qop)),
     )
 
     new_B = name_expr("new_B", B3)

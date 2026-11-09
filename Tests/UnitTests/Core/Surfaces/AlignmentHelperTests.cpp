@@ -196,11 +196,8 @@ BOOST_AUTO_TEST_CASE(composite_jacobian_rigid_motion) {
         (2. * step);
     CHECK_CLOSE_ABS(numLocal, jacobian.col(iPar), 1e-6);
 
-    // ACTS parameters: global center shift, local rotations
-    AlignmentVector numActs = numLocal;
-    numActs.head<3>() =
-        (plus.translation() - minus.translation()) / (2. * step);
-    CHECK_CLOSE_ABS(numActs, jacobianActs.col(iPar), 1e-6);
+    // ACTS parameters are the local-frame parameters, so this matches numLocal.
+    CHECK_CLOSE_ABS(numLocal, jacobianActs.col(iPar), 1e-6);
   }
 }
 

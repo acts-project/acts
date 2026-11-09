@@ -20,7 +20,19 @@ cmake_policy(VERSION 3.10...@CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@)
 
 @PACKAGE_INIT@
 
-set(Acts_COMPONENTS @_components@)
+# Components can be installed separately from this file, e.g. when a package
+# manager ships plugins in their own packages. Advertise the known components
+# whose targets and dependency files are installed, in the order they were
+# registered.
+set(Acts_COMPONENTS)
+foreach(_component @_known_components@)
+    if(
+        EXISTS "${CMAKE_CURRENT_LIST_DIR}/Acts${_component}Targets.cmake"
+        AND EXISTS "${CMAKE_CURRENT_LIST_DIR}/Acts${_component}Dependencies.cmake"
+    )
+        list(APPEND Acts_COMPONENTS ${_component})
+    endif()
+endforeach()
 set(Acts_COMMIT_HASH "@_acts_commit_hash@")
 set(Acts_COMMIT_HASH_SHORT "@_acts_commit_hash_short@")
 set(ACTS_GEOMETRY_MODULE_ABI_TAG "@ACTS_GEOMETRY_MODULE_ABI_TAG@")
@@ -32,26 +44,6 @@ if(NOT Acts_FIND_QUIETLY)
         "Found ACTS version ${Acts_VERSION} commit ${Acts_COMMIT_HASH_SHORT}"
     )
 endif()
-
-# check that requested components are available
-foreach(_component ${Acts_FIND_COMPONENTS})
-    # check if this component is available
-    if(NOT _component IN_LIST Acts_COMPONENTS)
-        if(${Acts_FIND_REQUIRED_${_component}})
-            # not supported, but required -> fail
-            set(Acts_FOUND False)
-            set(Acts_NOT_FOUND_MESSAGE
-                "required component '${_component}' not found"
-            )
-        else()
-            # not supported and optional -> skip
-            list(REMOVE_ITEM Acts_FIND_COMPONENTS ${_component})
-            if(NOT Acts_FIND_QUIETLY)
-                message(STATUS "optional component '${_component}' not found")
-            endif()
-        endif()
-    endif()
-endforeach()
 
 # add this to the current CMAKE_MODULE_PATH to find third party modules
 # that not provide a XXXConfig.cmake or XXX-config.cmake file, and to allow
@@ -75,29 +67,47 @@ find_dependency(Boost @Boost_VERSION_STRING@ CONFIG EXACT)
 if(@ACTS_USE_SYSTEM_EIGEN3@)
     find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
 endif()
-if(PluginDD4hep IN_LIST Acts_COMPONENTS)
-    find_dependency(DD4hep @DD4hep_VERSION@ CONFIG EXACT)
-endif()
-if(PluginJson IN_LIST Acts_COMPONENTS)
-    find_dependency(nlohmann_json @nlohmann_json_VERSION@ CONFIG EXACT)
-endif()
-if(PluginRoot IN_LIST Acts_COMPONENTS)
-    find_dependency(ROOT @ROOT_VERSION@ CONFIG EXACT)
-endif()
-if(PluginActSVG IN_LIST Acts_COMPONENTS)
-    find_dependency(actsvg @actsvg_VERSION@ CONFIG EXACT)
-endif()
-if(PluginEDM4hep IN_LIST Acts_COMPONENTS)
-    find_dependency(EDM4HEP @EDM4HEP_VERSION@ CONFIG EXACT)
-    find_dependency(podio @podio_VERSION@ CONFIG EXACT)
-endif()
-if(PluginGeoModel IN_LIST Acts_COMPONENTS)
-    find_dependency(GeoModelCore @GeoModelCore_VERSION@ CONFIG EXACT)
-    find_dependency(GeoModelIO @GeoModelIO_VERSION@ CONFIG EXACT)
-endif()
-if(PluginHashing IN_LIST Acts_COMPONENTS)
-    find_dependency(Annoy @ANNOY_VERSION@ CONFIG EXACT)
-endif()
+
+# each component records the ACTS version it was built with and finds its own
+# external dependencies at the versions used for its build. components from a
+# different ACTS version are dropped.
+foreach(_component ${Acts_COMPONENTS})
+    unset(_acts_component_version)
+    include(${CMAKE_CURRENT_LIST_DIR}/Acts${_component}Dependencies.cmake)
+    # find_dependency only returns from the included file on failure
+    if(DEFINED Acts_FOUND AND NOT Acts_FOUND)
+        return()
+    endif()
+    if(DEFINED _acts_component_version)
+        list(REMOVE_ITEM Acts_COMPONENTS ${_component})
+        if(NOT Acts_FIND_QUIETLY)
+            message(
+                STATUS
+                "ignore component '${_component}' built for ACTS version ${_acts_component_version}"
+            )
+        endif()
+    endif()
+endforeach()
+
+# check that requested components are available
+foreach(_component ${Acts_FIND_COMPONENTS})
+    # check if this component is available
+    if(NOT _component IN_LIST Acts_COMPONENTS)
+        if(${Acts_FIND_REQUIRED_${_component}})
+            # not supported, but required -> fail
+            set(Acts_FOUND False)
+            set(Acts_NOT_FOUND_MESSAGE
+                "required component '${_component}' not found"
+            )
+        else()
+            # not supported and optional -> skip
+            list(REMOVE_ITEM Acts_FIND_COMPONENTS ${_component})
+            if(NOT Acts_FIND_QUIETLY)
+                message(STATUS "optional component '${_component}' not found")
+            endif()
+        endif()
+    endif()
+endforeach()
 
 # dependencies that we have built ourselves but cannot be
 # straightforwardly handed to cmake
@@ -111,25 +121,6 @@ endif()
 
 if(PluginEDM4hep IN_LIST Acts_COMPONENTS)
     include(${CMAKE_CURRENT_LIST_DIR}/ActsPodioEdmTargets.cmake)
-endif()
-
-if(PluginDetray IN_LIST Acts_COMPONENTS)
-    find_dependency(vecmem @vecmem_VERSION@ CONFIG EXACT)
-    find_dependency(covfie @covfie_VERSION@ CONFIG EXACT)
-    find_dependency(actsvg @actsvg_VERSION@ CONFIG EXACT)
-    find_dependency(detray @detray_VERSION@ CONFIG EXACT)
-endif()
-
-if(PluginCovfie IN_LIST Acts_COMPONENTS)
-    find_dependency(covfie @covfie_VERSION@ CONFIG EXACT)
-endif()
-
-# PluginTraccc: traccc is not looked up here. Its package configuration
-# itself depends on Acts (and on Thrust), so the plugin links traccc privately
-# and users of the plugin have to find and link traccc themselves.
-if(PluginTraccc IN_LIST Acts_COMPONENTS)
-    find_dependency(vecmem @vecmem_VERSION@ CONFIG EXACT)
-    find_dependency(detray @detray_VERSION@ CONFIG EXACT)
 endif()
 
 # load **all** available components. we can not just include the requested

@@ -3,7 +3,7 @@
 # Quick start
 
 ACTS is developed in C++ and is built using [CMake](https://cmake.org). Building
-the core library requires a C++20 compatible compiler,
+the core library requires a C++23 compatible compiler,
 [Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
 library:
@@ -14,8 +14,7 @@ cmake -B <build> -S <source>
 cmake --build <build>
 ```
 
-The default C++ standard is C++23. To build in the supported C++20 mode,
-configure with `-DCMAKE_CXX_STANDARD=20` and use dependencies built for C++20.
+The minimum and default C++ standard is C++23. Use dependencies built for C++23.
 
 For a full list of dependencies, including specific versions, see the
 [Prerequisites](#prerequisites) section below. Build options to activate
@@ -26,7 +25,7 @@ section.
 
 The following dependencies are required to build the ACTS core library:
 
-- A C++20 compatible compiler (recent versions of either gcc and clang should work)
+- A C++23 compatible compiler (recent versions of either gcc and clang should work)
 - [CMake](https://cmake.org) >= 3.14
 - [Boost](https://www.boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
 - [Eigen](https://eigen.tuxfamily.org) >= 3.3.7

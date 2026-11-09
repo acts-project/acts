@@ -14,9 +14,11 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Diagnostics.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
 #include <iomanip>
 #include <memory>
+#include <numbers>
 #include <sstream>
 #include <string>
 
@@ -120,6 +122,23 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
 
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedPerigeeSurface == *perigeeSurfaceObject);
+}
+
+BOOST_AUTO_TEST_CASE(PerigeeSurfaceDerivativeCheck) {
+  Transform3 transform = Transform3::Identity();
+  transform.linear() =
+      AngleAxis3(std::numbers::pi / 2., Vector3::UnitZ()).toRotationMatrix();
+  transform.translation() = Vector3(0., 1., 2.);
+  auto surface = Surface::makeShared<PerigeeSurface>(transform);
+  const Vector3 direction = Vector3(-1., 1., 1.).normalized();
+  const RotationMatrix3 frame =
+      surface->referenceFrame(tgContext, surface->center(tgContext), direction);
+  const Vector3 position =
+      surface->center(tgContext) + 0.25 * frame.col(0) + 0.4 * frame.col(1);
+  checkSurfaceDerivatives(tgContext, *surface, transform, position, direction,
+                          [](const Transform3& tf) {
+                            return Surface::makeShared<PerigeeSurface>(tf);
+                          });
 }
 
 BOOST_AUTO_TEST_SUITE_END()
