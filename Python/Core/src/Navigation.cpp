@@ -9,6 +9,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/DetrayGridExportPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -118,6 +119,22 @@ void addNavigation(py::module_& m) {
                  config);
            })
 
+      .def("add",
+           [](NavigationPolicyFactory* self, const py::object& cls,
+              const DetrayGridExportPolicy::Config& config) {
+             auto mod = py::module_::import("acts");
+             if (py::object o = mod.attr("DetrayGridExportPolicy");
+                 !cls.is(o)) {
+               throw std::invalid_argument(
+                   "Unknown navigation policy class: " +
+                   cls.attr("__name__").cast<std::string>());
+             }
+
+             // Picks the sibling-aware constructor
+             return std::move(*self).template add<DetrayGridExportPolicy>(
+                 config);
+           })
+
       .def("_buildTest", [](NavigationPolicyFactory* self) {
         auto vol1 = std::make_shared<TrackingVolume>(
             Transform3::Identity(),
@@ -150,6 +167,15 @@ void addNavigation(py::module_& m) {
     using Config = SurfaceArrayNavigationPolicy::Config;
     auto c = py::class_<Config>(saPolicy, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, layerType, bins);
+  }
+
+  {
+    auto exportPolicy =
+        py::class_<DetrayGridExportPolicy>(m, "DetrayGridExportPolicy");
+
+    using Config = DetrayGridExportPolicy::Config;
+    auto c = py::class_<Config>(exportPolicy, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, vertexZHalfRange, minPt, bField, fixedWindow);
   }
 }
 
