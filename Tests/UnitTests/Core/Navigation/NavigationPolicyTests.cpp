@@ -22,6 +22,7 @@
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
+#include "Acts/Navigation/DetrayGridExportPolicy.hpp"
 #include "Acts/Navigation/FrustumNavigationPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
@@ -34,6 +35,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 
@@ -1033,6 +1035,146 @@ BOOST_AUTO_TEST_CASE(SurfaceArrayPolicyNeighborWindowTest) {
   BOOST_CHECK_EQUAL(window.min[1], 1);
   BOOST_CHECK_EQUAL(window.max[0], 1);
   BOOST_CHECK_EQUAL(window.max[1], 8);
+}
+
+namespace {
+
+// A barrel layer with 12 modules in phi and 3 modules in z at r = 30 mm
+std::shared_ptr<TrackingVolume> makeBarrelLayerVolume() {
+  auto cylBounds = std::make_shared<CylinderVolumeBounds>(20_mm, 40_mm, 100_mm);
+  auto cylVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(), cylBounds, "SurfaceArrayVolume");
+
+  auto moduleBounds = std::make_shared<RectangleBounds>(8_mm, 30_mm);
+  for (int iphi = 0; iphi < 12; ++iphi) {
+    const double phi = (iphi + 0.5) * 2 * std::numbers::pi / 12;
+    RotationMatrix3 rotation;
+    rotation.col(0) = Vector3{-std::sin(phi), std::cos(phi), 0};
+    rotation.col(1) = Vector3::UnitZ();
+    rotation.col(2) = Vector3{std::cos(phi), std::sin(phi), 0};
+    for (int iz = -1; iz <= 1; ++iz) {
+      Transform3 transform = Transform3::Identity();
+      transform.linear() = rotation;
+      transform.translation() =
+          Vector3{30_mm * std::cos(phi), 30_mm * std::sin(phi), iz * 60_mm};
+      auto surface = Surface::makeShared<PlaneSurface>(transform, moduleBounds);
+      surface->assignIsSensitive(true);
+      cylVolume->addSurface(surface);
+    }
+  }
+  return cylVolume;
+}
+
+const SurfaceArrayNavigationPolicy::Config kBarrelArrayConfig{
+    .layerType = SurfaceArrayNavigationPolicy::LayerType::Cylinder,
+    .bins = {0, 0}};
+
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(DetrayGridExportPolicyFindsSibling) {
+  auto volume = makeBarrelLayerVolume();
+  const DetrayGridExportPolicy::Config exportConfig{
+      .vertexZHalfRange = 100_mm, .minPt = 500_MeV, .fixedWindow = true};
+
+  auto factory = NavigationPolicyFactory{}
+                     .add<TryAllNavigationPolicy>(
+                         TryAllNavigationPolicy::Config{.sensitives = false})
+                     .add<SurfaceArrayNavigationPolicy>(kBarrelArrayConfig)
+                     .add<DetrayGridExportPolicy>(exportConfig);
+
+  auto policy = factory(gctx, *volume, *logger);
+  const auto children = policy->policies();
+  BOOST_REQUIRE_EQUAL(children.size(), 3);
+
+  auto& exportPolicy = dynamic_cast<DetrayGridExportPolicy&>(*children[2]);
+  BOOST_CHECK_EQUAL(&exportPolicy.surfaceArrayPolicy(), children[1].get());
+  BOOST_CHECK_EQUAL(exportPolicy.config().vertexZHalfRange, 100_mm);
+  BOOST_CHECK_EQUAL(exportPolicy.config().minPt, 500_MeV);
+  BOOST_CHECK_EQUAL(exportPolicy.config().bField, 2_T);
+  BOOST_CHECK(exportPolicy.config().fixedWindow);
+
+  // Takes no part in navigation: no state and no candidates
+  exportPolicy.initializeStatelessCache(gctx, *logger);
+  BOOST_CHECK(exportPolicy.isStateless());
+
+  NavigationDelegate delegate;
+  exportPolicy.connect(delegate);
+  BOOST_CHECK(delegate.connected());
+
+  NavigationStream main;
+  AppendOnlyNavigationStream stream{main};
+  NavigationArguments args{.position = Vector3{25_mm, 0, 0},
+                           .direction = Vector3::UnitX()};
+  NavigationPolicyState emptyState;
+  delegate(gctx, args, emptyState, stream, *logger);
+  exportPolicy.initializeCandidates(gctx, args, emptyState, stream, *logger);
+  BOOST_CHECK(main.candidates().empty());
+
+  // The whole policy tree still gets the sensitives from the sibling
+  NavigationDelegate multiDelegate;
+  policy->connect(multiDelegate);
+  multiDelegate(gctx, args, emptyState, stream, *logger);
+  BOOST_CHECK(std::ranges::any_of(
+      main.candidates(), [](const auto& c) { return c.isSurfaceTarget(); }));
+}
+
+BOOST_AUTO_TEST_CASE(DetrayGridExportPolicyNestedSibling) {
+  auto volume = makeBarrelLayerVolume();
+
+  auto makeNested =
+      [](const GeometryContext& gctx_, const TrackingVolume& volume_,
+         const Logger& logger_) -> std::unique_ptr<INavigationPolicy> {
+    return std::make_unique<MultiNavigationPolicy>(
+        std::make_unique<TryAllNavigationPolicy>(gctx_, volume_, logger_),
+        std::make_unique<SurfaceArrayNavigationPolicy>(gctx_, volume_, logger_,
+                                                       kBarrelArrayConfig));
+  };
+
+  auto policy =
+      NavigationPolicyFactory{}
+          .add(makeNested)
+          .add<DetrayGridExportPolicy>(DetrayGridExportPolicy::Config{})(
+              gctx, *volume, *logger);
+  const auto children = policy->policies();
+  BOOST_REQUIRE_EQUAL(children.size(), 2);
+  const auto& nested = dynamic_cast<const MultiNavigationPolicy&>(*children[0]);
+  const auto& exportPolicy =
+      dynamic_cast<const DetrayGridExportPolicy&>(*children[1]);
+  BOOST_CHECK_EQUAL(&exportPolicy.surfaceArrayPolicy(),
+                    nested.policies()[1].get());
+}
+
+BOOST_AUTO_TEST_CASE(DetrayGridExportPolicyRequiresOneSibling) {
+  auto volume = makeBarrelLayerVolume();
+
+  // No SurfaceArrayNavigationPolicy before it
+  BOOST_CHECK_THROW(
+      NavigationPolicyFactory{}
+          .add<DetrayGridExportPolicy>(DetrayGridExportPolicy::Config{})
+          .add<SurfaceArrayNavigationPolicy>(kBarrelArrayConfig)(gctx, *volume,
+                                                                 *logger),
+      std::invalid_argument);
+
+  BOOST_CHECK_THROW(
+      NavigationPolicyFactory{}
+          .add<TryAllNavigationPolicy>()
+          .add<DetrayGridExportPolicy>(DetrayGridExportPolicy::Config{})(
+              gctx, *volume, *logger),
+      std::invalid_argument);
+
+  // Ambiguous: two of them
+  BOOST_CHECK_THROW(
+      NavigationPolicyFactory{}
+          .add<SurfaceArrayNavigationPolicy>(kBarrelArrayConfig)
+          .add<SurfaceArrayNavigationPolicy>(kBarrelArrayConfig)
+          .add<DetrayGridExportPolicy>(DetrayGridExportPolicy::Config{})(
+              gctx, *volume, *logger),
+      std::invalid_argument);
+
+  // Direct construction without siblings
+  BOOST_CHECK_THROW(DetrayGridExportPolicy(gctx, *volume, *logger, {},
+                                           DetrayGridExportPolicy::Config{}),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

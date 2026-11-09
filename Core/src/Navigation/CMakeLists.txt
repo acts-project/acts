@@ -9,4 +9,5 @@ target_sources(
         MultiLayerNavigationPolicy.cpp
         MultiNavigationPolicy.cpp
         FrustumNavigationPolicy.cpp
+        DetrayGridExportPolicy.cpp
 )
