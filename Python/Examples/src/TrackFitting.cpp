@@ -105,7 +105,7 @@ void addTrackFitting(py::module& mex) {
       auto c =
           py::class_<ClusterOnTrackCalibrator::Config>(calibrator, "Config")
               .def(py::init<>());
-      ACTS_PYTHON_STRUCT(c, digitizationConfigs, chargeNoise, minError);
+      ACTS_PYTHON_STRUCT(c, digitizationConfigs, minError);
       patchKwargsConstructor(c);
     }
 

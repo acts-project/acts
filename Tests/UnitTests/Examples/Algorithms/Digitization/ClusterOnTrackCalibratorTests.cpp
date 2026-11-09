@@ -20,6 +20,7 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsExamples/Digitization/ClusterOnTrackCalibrator.hpp"
+#include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -43,6 +44,10 @@ namespace ActsTests {
 namespace {
 
 constexpr int kBinOffset = 50;
+
+/// The grid resolves a box with sharp edges to these tolerances
+constexpr double kGridPosition = 0.5_um;
+constexpr double kGridWidth = 0.03;
 
 /// A sensor with one measured axis. Its normal is the global x axis, so a
 /// track at the angle `alpha` to the normal in the local x-z plane has
@@ -81,10 +86,12 @@ struct Sensor {
     geoCfg.thickness = thickness;
     geoCfg.threshold = threshold;
     geoCfg.digital = !analogue;
+    if (chargeNoise > 0) {
+      geoCfg.chargeSmearer = Digitization::Gauss(chargeNoise);
+    }
 
     ClusterOnTrackCalibrator::Config cfg;
     cfg.digitizationConfigs = DigiConfigContainer({{geoId, digiCfg}});
-    cfg.chargeNoise = chargeNoise;
     cfg.minError = 0;
     calibrator.emplace(cfg);
   }
@@ -173,12 +180,10 @@ std::map<int, double> makeBins(int first, int last) {
 }
 
 /// The RMS of the pulls of `n` tracks, uniform within one bin. Without
-/// noise and without an angle error, the truth must be in the digital box.
-double pullRms(const Sensor& sensor, double alpha, double alphaError,
-               std::size_t n) {
+/// noise, the truth must be in the digital box.
+double pullRms(const Sensor& sensor, double alpha, std::size_t n) {
   std::mt19937 rng(1234);
   std::uniform_real_distribution<double> uniform(0., sensor.pitch);
-  std::normal_distribution<double> gauss(0., 1.);
   double sumPull2 = 0;
   std::size_t count = 0;
   for (std::size_t i = 0; i < n; ++i) {
@@ -187,23 +192,25 @@ double pullRms(const Sensor& sensor, double alpha, double alphaError,
     if (fired.empty()) {
       continue;
     }
-    const double predicted =
-        alphaError > 0 ? alpha + alphaError * gauss(rng) : alpha;
-    const auto [position, variance] =
-        sensor.calibrate(fired, predicted, alphaError);
-    if (variance == 0) {
+    const auto [position, variance] = sensor.calibrate(fired, alpha);
+    if (variance < 1e-12 * sensor.pitch * sensor.pitch) {
       // Analogue readout without noise is exact, unless the threshold
       // removed the cells after both edge bins
       CHECK_CLOSE_ABS(position, mid, 1e-9);
       continue;
     }
-    if (!sensor.analogue && sensor.chargeNoise == 0 && alphaError == 0) {
-      BOOST_CHECK_LE(std::abs(mid - position), std::sqrt(3 * variance) + 1e-12);
+    if (!sensor.analogue && sensor.chargeNoise == 0) {
+      BOOST_CHECK_LE(std::abs(mid - position),
+                     (1 + kGridWidth) * std::sqrt(3 * variance));
     }
     sumPull2 += std::pow(mid - position, 2) / variance;
     ++count;
   }
-  return count > 0 ? std::sqrt(sumPull2 / count) : 1.;
+  const double rms = count > 0 ? std::sqrt(sumPull2 / count) : 1.;
+  BOOST_TEST_MESSAGE("alpha " << alpha << " analogue " << sensor.analogue
+                              << " noise " << sensor.chargeNoise
+                              << ": pull rms " << rms);
+  return rms;
 }
 
 }  // namespace
@@ -220,11 +227,12 @@ BOOST_AUTO_TEST_CASE(ClusterOnTrackDigitalBoxWidths) {
   const auto [single, singleVar] = sensor.calibrate(makeBins(2, 2), alpha);
   CHECK_CLOSE_ABS(single, 2.5 * sensor.pitch, 1e-9);
   CHECK_CLOSE_REL(std::sqrt(singleVar),
-                  (1 - phi) * sensor.pitch / std::sqrt(12), 1e-9);
+                  (1 - phi) * sensor.pitch / std::sqrt(12), kGridWidth);
 
   const auto [pair, pairVar] = sensor.calibrate(makeBins(2, 3), alpha);
   CHECK_CLOSE_ABS(pair, 3 * sensor.pitch, 1e-9);
-  CHECK_CLOSE_REL(std::sqrt(pairVar), phi * sensor.pitch / std::sqrt(12), 1e-9);
+  CHECK_CLOSE_REL(std::sqrt(pairVar), phi * sensor.pitch / std::sqrt(12),
+                  kGridWidth);
 
   // Three bins cannot come from 0.529 pitches: uniform over the cluster
   const auto [triple, tripleVar] = sensor.calibrate(makeBins(2, 4), alpha);
@@ -243,9 +251,10 @@ BOOST_AUTO_TEST_CASE(ClusterOnTrackDigitalThreshold) {
 
   const auto [single, singleVar] = sensor.calibrate(makeBins(0, 0), alpha);
   CHECK_CLOSE_REL(std::sqrt(singleVar),
-                  (1 - phi) * sensor.pitch / std::sqrt(12), 1e-9);
+                  (1 - phi) * sensor.pitch / std::sqrt(12), kGridWidth);
   const auto [pair, pairVar] = sensor.calibrate(makeBins(0, 1), alpha);
-  CHECK_CLOSE_REL(std::sqrt(pairVar), phi * sensor.pitch / std::sqrt(12), 1e-9);
+  CHECK_CLOSE_REL(std::sqrt(pairVar), phi * sensor.pitch / std::sqrt(12),
+                  kGridWidth);
 }
 
 // Without noise, the charge of the edge bins gives the exact position
@@ -270,7 +279,7 @@ BOOST_AUTO_TEST_CASE(ClusterOnTrackHighThreshold) {
   const auto [position, variance] = sensor.calibrate(makeBins(0, 0), alpha);
   const double width = sensor.pitch - 0.5 * sensor.thickness * std::tan(alpha);
   CHECK_CLOSE_ABS(position, 0.5 * sensor.pitch, 1e-12);
-  CHECK_CLOSE_REL(variance, width * width / 12, 1e-9);
+  CHECK_CLOSE_REL(variance, width * width / 12, 2 * kGridWidth);
 }
 
 BOOST_DATA_TEST_CASE(ClusterOnTrackSensorEdge,
@@ -285,21 +294,29 @@ BOOST_DATA_TEST_CASE(ClusterOnTrackSensorEdge,
       sensor.calibrate(sensor.deposit(mid, alpha, rng), alpha);
   const double low = (kBinOffset - 1) * sensor.pitch + 0.5 * length;
   const double high = kBinOffset * sensor.pitch;
-  CHECK_CLOSE_ABS(position, side * 0.5 * (low + high), 1e-12);
-  CHECK_CLOSE_REL(variance, std::pow(high - low, 2) / 12, 1e-9);
-  BOOST_CHECK_LE(std::abs(position - mid), std::sqrt(3 * variance));
+  CHECK_CLOSE_ABS(position, side * 0.5 * (low + high), kGridPosition);
+  CHECK_CLOSE_REL(variance, std::pow(high - low, 2) / 12, 2 * kGridWidth);
+  BOOST_CHECK_LE(std::abs(position - mid),
+                 (1 + kGridWidth) * std::sqrt(3 * variance));
 }
 
 BOOST_AUTO_TEST_CASE(ClusterOnTrackInvalidConfig) {
   for (double invalid : {-1., std::numeric_limits<double>::infinity(),
                          std::numeric_limits<double>::quiet_NaN()}) {
     ClusterOnTrackCalibrator::Config config;
-    config.chargeNoise = invalid;
-    BOOST_CHECK_THROW(ClusterOnTrackCalibrator{config}, std::invalid_argument);
-    config.chargeNoise = 0;
     config.minError = invalid;
     BOOST_CHECK_THROW(ClusterOnTrackCalibrator{config}, std::invalid_argument);
   }
+
+  // The charge noise comes from a Gaussian charge smearing
+  DigiComponentsConfig digiCfg;
+  digiCfg.geometricDigiConfig.indices = {eBoundLoc0};
+  digiCfg.geometricDigiConfig.chargeSmearer =
+      Digitization::Uniform(1_um, {0., 1.});
+  ClusterOnTrackCalibrator::Config config;
+  config.digitizationConfigs =
+      DigiConfigContainer({{GeometryIdentifier().withVolume(1), digiCfg}});
+  BOOST_CHECK_THROW(ClusterOnTrackCalibrator{config}, std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ClusterOnTrackInconsistentAnalogueCharge) {
@@ -308,6 +325,7 @@ BOOST_AUTO_TEST_CASE(ClusterOnTrackInconsistentAnalogueCharge) {
   sensor.build();
   const double alpha = 25_degree;
   // Each edge is partial, but together their charges exceed the full path.
+  // The charges contradict the track, so the cluster is uniform.
   const double charge = 0.6 * sensor.pathLength(alpha);
   const auto [position, variance] =
       sensor.calibrate({{0, charge}, {1, charge}}, alpha);
@@ -315,15 +333,18 @@ BOOST_AUTO_TEST_CASE(ClusterOnTrackInconsistentAnalogueCharge) {
   CHECK_CLOSE_REL(variance, std::pow(2 * sensor.pitch, 2) / 12, 1e-9);
 }
 
-BOOST_AUTO_TEST_CASE(ClusterOnTrackUncertainIncompatibleDirection) {
+// The error of the predicted direction does not change the calibration
+BOOST_AUTO_TEST_CASE(ClusterOnTrackIgnoresAngleError) {
   Sensor sensor;
-  sensor.chargeNoise = 1_um;
+  sensor.analogue = true;
+  sensor.chargeNoise = 5_um;
   sensor.build();
-  // Normal incidence cannot give two bins, but the uncertain direction can.
-  const auto [position, variance] =
-      sensor.calibrate(makeBins(0, 1), 0., 5_degree);
-  CHECK_CLOSE_ABS(position, sensor.pitch, 1e-9);
-  BOOST_CHECK_LT(variance, sensor.pitch * sensor.pitch / 12);
+  std::mt19937 rng(3);
+  const auto fired = sensor.deposit(0.3 * sensor.pitch, 25_degree, rng);
+  const auto exact = sensor.calibrate(fired, 25_degree);
+  const auto uncertain = sensor.calibrate(fired, 25_degree, 50_degree);
+  BOOST_CHECK_EQUAL(exact.first, uncertain.first);
+  BOOST_CHECK_EQUAL(exact.second, uncertain.second);
 }
 
 // Without track parameters, the measurement passes through
@@ -358,20 +379,7 @@ BOOST_DATA_TEST_CASE(ClusterOnTrackPulls,
   sensor.chargeNoise = noise * 1_um;
   sensor.threshold = 0.05 * sensor.pathLength(angle * 1_degree);
   sensor.build();
-  CHECK_CLOSE_REL(pullRms(sensor, angle * 1_degree, 0, 20000), 1., 0.05);
-}
-
-// The error of the predicted angle is part of the calibrated error
-BOOST_DATA_TEST_CASE(ClusterOnTrackAngleError,
-                     boost::unit_test::data::make({10., 30.}) *
-                         boost::unit_test::data::make({false, true}),
-                     angle, analogue) {
-  Sensor sensor;
-  sensor.analogue = analogue;
-  sensor.chargeNoise = 5_um;
-  sensor.threshold = 0.05 * sensor.pathLength(angle * 1_degree);
-  sensor.build();
-  CHECK_CLOSE_REL(pullRms(sensor, angle * 1_degree, 2_degree, 20000), 1., 0.05);
+  CHECK_CLOSE_REL(pullRms(sensor, angle * 1_degree, 20000), 1., 0.05);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

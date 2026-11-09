@@ -7,6 +7,7 @@ acts_add_library(
     src/DigitizationConfigurator.cpp
     src/ModuleClusters.cpp
     src/MuonSpacePointDigitizer.cpp
+    src/ClusterAxisCalibration.cpp
     src/ClusterOnTrackCalibrator.cpp
 )
 target_include_directories(

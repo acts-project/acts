@@ -16,35 +16,32 @@ namespace ActsExamples {
 
 /// Calibrate geometric clusters with the direction of the predicted track.
 ///
-/// The calibrator reads the sensor thickness, the segmentation, the threshold
-/// and the readout mode from the geometric digitization configuration. It
+/// This connects the geometric digitization to `calibrateClusterAxis`. The
+/// calibrator reads the sensor thickness, the segmentation, the threshold, the
+/// readout mode and the charge noise from the digitization configuration. It
 /// supports plane surfaces with a Cartesian segmentation. All other
 /// measurements, and measurements without track parameters, pass through.
 ///
-/// Assumes a single straight track, uniform charge deposition, no drift or
-/// diffusion, and independent additive Gaussian cell noise. The charge noise
-/// must be supplied separately; the digitization charge smearer is not
-/// inspected.
+/// The cell activation of a cluster must be the calibrated charge. The
+/// geometric digitization gives a cell the path length in it as its charge,
+/// so the expected charge of a track is its path length through the sensor.
+/// A raw quantity, for example the time over threshold, must be converted to
+/// this charge before the calibration.
 ///
 /// Each axis uses the first and last fired bins and their immediate neighbours.
 /// Charges are summed within each projected bin. This is an approximation for
-/// pixels: thresholding acts on individual cells before projection, and the
-/// two coordinates are correlated. Interior holes and merged tracks are not
-/// modelled. Sensor edges are assumed to coincide with segmentation edges.
-/// Direction uncertainty varies the footprint length at fixed total path
-/// length. Without charge noise, only the motion of the box centre or the
-/// inferred analogue position is propagated; changes in the box width are
-/// neglected.
+/// pixels: the threshold acts on single cells before the projection, and the
+/// two coordinates are correlated. A cluster that the track cannot make, for
+/// example a merged cluster, is uniform over the cluster. Sensor edges are
+/// assumed to coincide with segmentation edges.
 class ClusterOnTrackCalibrator final : public MeasurementCalibrator {
  public:
   struct Config {
-    /// The digitization configuration that made the clusters
+    /// The digitization configuration that made the clusters. The charge
+    /// smearing must be `Exact` or `Gauss`.
     DigiConfigContainer digitizationConfigs;
-    /// The Gaussian standard deviation of one cell's activation. It must
-    /// match the charge smearing of the digitization.
-    double chargeNoise = 0;
-    /// The minimum error of a calibrated position. Without charge noise and
-    /// without a direction error, the error of a position can be zero.
+    /// The minimum error of a calibrated position. Without charge noise, the
+    /// error of an analogue position can be zero.
     double minError = 1 * Acts::UnitConstants::um;
   };
 
