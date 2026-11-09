@@ -46,12 +46,13 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
         0.1f;  // wrap size around angle domain limits (min pT dependent)
     float qOverPtMin = 1.1f;  // min q/pt, -1/1 GeV
 
-    float qOverPtMinBinSize = 0.01f;  // minimal size of pT bin that the
-                                      // algorithm should not go beyond (in GeV)
-    float phiMinBinSize = 0.01f;  // minimal size of phi bin that the algorithm
-                                  // should not go beyond
-    float zRange = 200;           // range in z
-    float cotThetaRange = 10;     // range in cotTheta
+    float qOverPtMinBinSize =
+        0.055f;                    // minimal size of pT bin that the
+                                   // algorithm should not go beyond (in GeV)
+    float phiMinBinSize = 0.025f;  // minimal size of phi bin that the algorithm
+                                   // should not go beyond
+    float zRange = 200;            // range in z
+    float cotThetaRange = 10;      // range in cotTheta
 
     float zMinBinSize =
         1;  // minimal size of z bin that the algorithm should
@@ -76,9 +77,19 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                        // units of GeV / (c*mm*e)
   };
 
-  /// @brief Lightweight representation of a seed candidate holding measurement indices
+  /// @brief Lightweight representation of a 3-spacepoint seed candidate
   struct SeedCandidate {
+    std::array<unsigned, 3> indices{};
+  };
+
+  /// @brief Intermediate candidate extracted from the first phase (q/pT - phi)
+  /// carrying measurement indices and historical z - cot(theta) bounds
+  struct Phase1Candidate {
     std::vector<unsigned> indices;
+    float zMin{};
+    float zWidth{};
+    float cotThetaMin{};
+    float cotThetaWidth{};
   };
 
   /// @brief Hash functor using hashMixAndCombine utility to enable O(1) deduplication
@@ -92,16 +103,30 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     }
   };
 
+  /// @brief Hash functor for std::array<unsigned, 3> using hashMixAndCombine
+  struct Array3Hash {
+    std::size_t operator()(const std::array<unsigned, 3> &a) const {
+      return static_cast<std::size_t>(
+          Acts::hashMixAndCombine(a[0], a[1], a[2]));
+    }
+  };
+
   // information that is needed for each measurement
   struct PreprocessedMeasurement {
     /// Construct the measurement
+    /// @param radius radius of the SP
     /// @param inverseR inverse of radius of the SP
     /// @param phiAngle azimuthal angle of the SP
     /// @param zpos z position of the SP
     /// @param spacePointIndex index of the original space point, needed to construct seeds in the end
-    PreprocessedMeasurement(double inverseR, double phiAngle, double zpos,
-                            SpacePointIndex spacePointIndex)
-        : invr(inverseR), phi(phiAngle), z(zpos), sp(spacePointIndex) {}
+    PreprocessedMeasurement(double radius, double inverseR, double phiAngle,
+                            double zpos, SpacePointIndex spacePointIndex)
+        : r(radius),
+          invr(inverseR),
+          phi(phiAngle),
+          z(zpos),
+          sp(spacePointIndex) {}
+    double r{};
     double invr{};
     double phi{};
     double z{};
@@ -132,13 +157,13 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// Construct the seeding algorithm.
   ///
   /// @param cfg is the algorithm configuration
-  /// @param lvl is the logging level
+  /// @param logger is the logging instance
   explicit AdaptiveHoughTransformSeeder(
       const Config &cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the seeding algorithm.
   ///
-  /// @param txt is the algorithm context with event information
+  /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext &ctx) const override;
 
@@ -147,13 +172,15 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
 
  private:
   Config m_cfg;
+  float m_bFieldA{};
 
   ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
                                                          "InputSpacePoints"};
 
   WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
-  /// @brief fill vector pf measurements from input space points
+  /// @brief fill vector of measurements from input space points
+  /// @param spacePoints - input space points container
   /// @param measurements - vector to fill
   void preparePreprocessedMeasurements(
       const SpacePointContainer &spacePoints,
@@ -171,37 +198,62 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// and qualifying them for further division, discarding them or moving to
   /// solutions vector
   /// the search happens in q/pt - phi space
-  /// @param sections is the stack of sectoins to consider
-  /// @param solutions is the output set of sections
+  /// @param input is the stack of sections to consider
+  /// @param output is the output set of sections
   /// @param measurements are input measurements
   void processStackQOverPtPhi(
       std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
       std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
-  /// @brief process sections on the stack in z - cot(theta) space
-  /// @param input is the stack of sections to consider
-  /// @param output is the output set of seed candidates
+  /// @brief 1D sliding window search for clusters in q/pt - phi space
+  /// @param input is the stack of sections to consider in 1D cluster search
+  /// @param output is the output set of candidates after the first phase
   /// @param measurements are input measurements
-  void processStackZCotTheta(
-      std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
-      std::vector<SeedCandidate> &output,
+  void processQOverPtPhiSlidingWindow(
+      const std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
+      std::vector<Phase1Candidate> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
-  /// @brief Evaluates lines at discrete check points and extracts 1D clusters
-  /// using a sliding window approach.
-  /// @param indices measurement indices present in the current section
-  /// @param checkPoints discrete coordinates along the primary axis to evaluate
+  /// @brief Evaluates lines at discrete check points in q/pT - phi space and
+  /// extracts 1D clusters into Phase1Candidates.
+  /// @param section current accumulator section being evaluated
+  /// @param checkPoints discrete q/pT coordinates at which phi intersections are evaluated
   /// @param measurements global collection of preprocessed measurements
-  /// @param lineFunctor functor evaluating the secondary coordinate for a given primary coordinate
-  /// @param maxSpread maximum allowed spread along the secondary axis to form a cluster
+  /// @param lineFunctor functor evaluating the phi coordinate for a given q/pT coordinate
+  /// @param maxSpread maximum allowed spread along the phi axis to form a cluster
   /// @param uniqueClusters hash set tracking already discovered index combinations
-  /// @param output output vector of unique seed candidates
-  void findClusters1D(
-      const std::vector<unsigned> &indices, std::span<const float> checkPoints,
+  /// @param output output vector of unique Phase1Candidates
+  void findClustersQOverPtPhi(
+      const Acts::Experimental::HoughAccumulatorSection &section,
+      std::span<const float> checkPoints,
       const std::vector<PreprocessedMeasurement> &measurements,
       const LineFunctor &lineFunctor, float maxSpread,
       std::unordered_set<std::vector<unsigned>, VectorHash> &uniqueClusters,
+      std::vector<Phase1Candidate> &output) const;
+
+  /// @brief process candidates from Phase 1 in z - cot(theta) space
+  /// @param input is the vector of Phase 1 candidates to consider
+  /// @param output is the output set of 3-point seed candidates
+  /// @param measurements are input measurements
+  void processStackZCotTheta(
+      std::vector<Phase1Candidate> &input, std::vector<SeedCandidate> &output,
+      const std::vector<PreprocessedMeasurement> &measurements) const;
+
+  /// @brief Evaluates lines at discrete check points in z - cot(theta) space
+  /// and extracts radially separated 3-point seed candidates.
+  /// @param indices measurement indices present in the current candidate
+  /// @param checkPoints discrete z coordinates to evaluate
+  /// @param measurements global collection of preprocessed measurements
+  /// @param lineFunctor functor evaluating cot(theta) for a given z coordinate
+  /// @param maxSpread maximum allowed spread along the cot(theta) axis to form a cluster
+  /// @param uniqueClusters hash set tracking already discovered triplets
+  /// @param output output vector of unique 3-point SeedCandidates
+  void findClustersZCotTheta(
+      const std::vector<unsigned> &indices, std::span<const float> checkPoints,
+      const std::vector<PreprocessedMeasurement> &measurements,
+      const LineFunctor &lineFunctor, float maxSpread,
+      std::unordered_set<std::array<unsigned, 3>, Array3Hash> &uniqueClusters,
       std::vector<SeedCandidate> &output) const;
 
   void processStackZCotThetaSplit(
@@ -217,12 +269,20 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       SeedContainer &seeds, const std::vector<SeedCandidate> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
+  /// @brief line functor to access q/pT - phi line parameters
   LineFunctor m_qOverPtPhiLineParams = [this](const PreprocessedMeasurement &m,
                                               float arg) {
     return m.invr * config().inverseA * arg -
            m.invr * m.phi * config().inverseA;
   };
 
+  /// @brief line functor to access phi - q/pT line parameters
+  LineFunctor m_phiQOverPtLineParams = [this](const PreprocessedMeasurement &m,
+                                              float arg) {
+    return static_cast<float>(m.phi + arg * m.r * m_bFieldA);
+  };
+
+  /// @brief line functor to access cot(theta) - z line parameters
   LineFunctor m_zCotThetaLineParams = [](const PreprocessedMeasurement &m,
                                          float arg) {
     return -m.invr * arg + m.z * m.invr;
@@ -231,8 +291,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @brief check if lines intersect in the section
   /// modifies the section leaving only indices of measurements that do so
   /// @param section - the section to check
-  /// @param measurements - the measurements that are pointed to by indices in
-  /// @param lineParamsAccessor - functions to be used to access line parameters
+  /// @param measurements - the measurements that are pointed to by indices in the section
+  /// @param lineFunctor - functions to be used to access line parameters
   /// @param threshold - the number of lines in the section should be at minimum
   bool passIntersectionsCheck(
       const Acts::Experimental::HoughAccumulatorSection &section,
