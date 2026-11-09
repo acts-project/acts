@@ -181,7 +181,7 @@ using silicon_cell_collection =
                            // time
                            vecmem::edm::type::vector<float>,
                            // module_index
-                           vecmem::edm::type::vector<unsigned int> 
+                           vecmem::edm::type::vector<unsigned int>,
                            // user_data
                            vecmem::edm::type::vector<std::uint64_t> >;
                            >;
