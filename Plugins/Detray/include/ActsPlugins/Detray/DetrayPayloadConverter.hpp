@@ -14,6 +14,7 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
+#include "Acts/Navigation/DetrayGridExportPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
@@ -176,6 +177,44 @@ class DetrayPayloadConverter {
       const Acts::GeometryContext& gctx,
       const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
 
+  /// Convert detray grid export policy
+  /// @param policy Detray grid export policy
+  /// @param gctx Geometry context
+  /// @param surfaceLookup Surface lookup function
+  /// @param logger Logger instance
+  /// @return Detray surface grid payload
+  /// @note This is a noop: the grid comes from the sibling
+  ///       @ref Acts::SurfaceArrayNavigationPolicy, and the export policy is
+  ///       applied to it afterwards, see @ref fillSurfaceGridForExport.
+  static std::optional<DetraySurfaceGrid> convertDetrayGridExportPolicy(
+      const Acts::DetrayGridExportPolicy& policy,
+      const Acts::GeometryContext& gctx,
+      const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
+
+  /// Fill the bins of a converted surface grid with the surfaces the ACTS
+  /// surface array lookup returns for the track family of @p policy, so
+  /// detray can navigate the grid with a {0, 0} search window.
+  ///
+  /// detray does not look the grid up on the ACTS layer surface, but on a
+  /// reference surface of the volume (see @c detray::grid_builder). For each
+  /// ACTS bin, the lookup result for the extreme directions of the track
+  /// family is added to the detray bin at the track position and to the bin
+  /// where the track crosses the reference surface. Bin contents are only
+  /// extended.
+  ///
+  /// @param grid Detray surface grid converted from the sibling of @p policy,
+  ///        filled in place
+  /// @param policy Export policy describing the track family
+  /// @param volume Tracking volume owning @p policy
+  /// @param gctx Geometry context
+  /// @param surfaceLookup Surface lookup function
+  /// @param logger Logger instance
+  /// @note Only cylinder and disc grids are filled, others are left unchanged.
+  static void fillSurfaceGridForExport(
+      DetraySurfaceGrid& grid, const Acts::DetrayGridExportPolicy& policy,
+      const Acts::TrackingVolume& volume, const Acts::GeometryContext& gctx,
+      const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
+
   /// @brief Configuration for the Detray payload converter
   struct Config {
     Config() = default;
@@ -234,10 +273,12 @@ class DetrayPayloadConverter {
                              const Acts::GeometryContext& gctx,
                              const SurfaceLookupFunction& surfaceLookup,
                              const Acts::Logger& logger)>
-        convertNavigationPolicy{
-            convertSurfaceArray, convertTryAllNavigationPolicy,
-            convertCylinderNavigationPolicy, convertMultiLayerNavigationPolicy,
-            convertMultiNavigationPolicy};
+        convertNavigationPolicy{convertSurfaceArray,
+                                convertTryAllNavigationPolicy,
+                                convertCylinderNavigationPolicy,
+                                convertMultiLayerNavigationPolicy,
+                                convertMultiNavigationPolicy,
+                                convertDetrayGridExportPolicy};
 
     /// Type dispatcher for converting surface materials
     Acts::TypeDispatcher<Acts::ISurfaceMaterial,

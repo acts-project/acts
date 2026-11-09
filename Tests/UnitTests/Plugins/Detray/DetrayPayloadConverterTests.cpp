@@ -26,6 +26,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Navigation/DetrayGridExportPolicy.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -45,6 +46,7 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <limits>
@@ -883,6 +885,108 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   //           << std::endl;
 
   detray::io::write_detector(detrayDetector, detrayNames, writer_cfg);
+}
+
+BOOST_AUTO_TEST_CASE(DetraySurfaceGridFillForExport) {
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  auto geoLogger = getDefaultLogger("Geo", Logging::INFO);
+
+  using GridMap =
+      std::map<std::pair<unsigned int, unsigned int>, std::set<std::size_t>>;
+
+  // Volume index -> (bin -> surface indices), plus the payloads
+  auto convertGrids =
+      [&](std::optional<DetrayGridExportPolicy::Config> exportConfig) {
+        CylindricalTrackingGeometry cGeometry(gctx, true);
+        if (exportConfig.has_value()) {
+          cGeometry.extendLayerNavigationPolicy =
+              [cfg = *exportConfig](NavigationPolicyFactory&& factory) {
+                return std::move(factory).add<DetrayGridExportPolicy>(cfg);
+              };
+        }
+        auto tGeometry = cGeometry(*geoLogger);
+
+        DetrayPayloadConverter::Config cfg;
+        tGeometry->apply([&cfg](const TrackingVolume& volume) {
+          if (volume.volumeName() == "Beampipe") {
+            cfg.beampipeVolume = &volume;
+          }
+        });
+
+        DetrayPayloadConverter converter(
+            cfg, getDefaultLogger("Cnv", Logging::INFO));
+        auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
+        std::map<std::size_t, GridMap> result;
+        for (const auto& [volIdx, grids] : payloads.surfaceGrids->grids) {
+          BOOST_REQUIRE_EQUAL(grids.size(), 1);
+          for (const auto& bin : grids.front().bins) {
+            result[volIdx][{bin.loc_index.at(0), bin.loc_index.at(1)}] =
+                std::set<std::size_t>(bin.content.begin(), bin.content.end());
+          }
+        }
+        return std::pair{std::move(result), std::move(payloads)};
+      };
+
+  auto countEntries = [](const std::map<std::size_t, GridMap>& grids) {
+    std::size_t n = 0;
+    for (const auto& [volIdx, bins] : grids) {
+      for (const auto& [bin, content] : bins) {
+        n += content.size();
+      }
+    }
+    return n;
+  };
+
+  // Same grids and bins, every bin keeps what it had and some grow
+  auto checkSuperset = [&](const std::map<std::size_t, GridMap>& plain,
+                           const std::map<std::size_t, GridMap>& filled) {
+    BOOST_REQUIRE_EQUAL(filled.size(), plain.size());
+    for (const auto& [volIdx, bins] : plain) {
+      const auto& filledBins = filled.at(volIdx);
+      BOOST_REQUIRE_EQUAL(filledBins.size(), bins.size());
+      for (const auto& [bin, content] : bins) {
+        BOOST_CHECK(std::ranges::includes(filledBins.at(bin), content));
+      }
+    }
+    BOOST_CHECK_GT(countEntries(filled), countEntries(plain));
+  };
+
+  // The filled payload still builds a consistent detray detector
+  auto checkDetector = [](const DetrayPayloadConverter::Payloads& payloads) {
+    using detector_t =
+        detray::host::detector<detray::default_metadata<detray::array<double>>>;
+    vecmem::host_memory_resource mr;
+    detray::detector_builder<detector_t::metadata> detectorBuilder{};
+    detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
+                                                          *payloads.detector);
+    detray::io::surface_grid_reader<detector_t::surface_type,
+                                    std::integral_constant<std::size_t, 0>,
+                                    std::integral_constant<std::size_t, 2>>::
+        from_payload<detector_t>(detectorBuilder, *payloads.surfaceGrids);
+    detray::volume_builder_options builderOpts{};
+    detector_t detrayDetector(detectorBuilder.build(mr, builderOpts));
+    BOOST_CHECK(detray::detail::check_consistency(detrayDetector));
+  };
+
+  const auto [plain, plainPayloads] = convertGrids(std::nullopt);
+  BOOST_REQUIRE(!plain.empty());
+
+  const auto [filled, filledPayloads] =
+      convertGrids(DetrayGridExportPolicy::Config{});
+  checkSuperset(plain, filled);
+  checkDetector(filledPayloads);
+
+  const auto [fixed, fixedPayloads] =
+      convertGrids(DetrayGridExportPolicy::Config{.fixedWindow = true});
+  checkSuperset(plain, fixed);
+  checkDetector(fixedPayloads);
+
+  // Straight tracks from z = 0 are the narrowest family, softer tracks and a
+  // longer luminous region can only add surfaces
+  const auto [narrow, narrowPayloads] = convertGrids(
+      DetrayGridExportPolicy::Config{.vertexZHalfRange = 0., .minPt = 0.});
+  checkSuperset(plain, narrow);
+  BOOST_CHECK_LE(countEntries(narrow), countEntries(filled));
 }
 
 BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {

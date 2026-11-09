@@ -18,6 +18,7 @@
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Navigation/DetrayGridExportPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -1022,8 +1023,22 @@ DetrayPayloadConverter::convertTrackingGeometry(
       };
 
       std::optional<DetraySurfaceGrid> detrayGrid = std::nullopt;
+      const INavigationPolicy* gridSource = nullptr;
+      const DetrayGridExportPolicy* exportPolicy = nullptr;
 
       navPolicy->visit([&](const INavigationPolicy& policy) {
+        if (const auto* candidate =
+                dynamic_cast<const DetrayGridExportPolicy*>(&policy);
+            candidate != nullptr) {
+          if (exportPolicy != nullptr) {
+            ACTS_ERROR("Volume "
+                       << volume.volumeName()
+                       << " has more than one DetrayGridExportPolicy");
+            throw std::runtime_error{"Multiple DetrayGridExportPolicy"};
+          }
+          exportPolicy = candidate;
+        }
+
         auto grid = m_cfg.convertNavigationPolicy(policy, gctx, surfaceLookupFn,
                                                   logger());
         if (!grid.has_value()) {
@@ -1044,7 +1059,25 @@ DetrayPayloadConverter::convertTrackingGeometry(
         }
 
         detrayGrid = std::move(grid);
+        gridSource = &policy;
       });
+
+      if (exportPolicy != nullptr) {
+        // The export policy describes its sibling's grid; anything else means
+        // the policy tree does not match what it was built against
+        if (!detrayGrid.has_value() ||
+            gridSource != &exportPolicy->surfaceArrayPolicy()) {
+          ACTS_ERROR("Volume "
+                     << volume.volumeName()
+                     << " has a DetrayGridExportPolicy, but its detray grid "
+                        "was not converted from the policy's "
+                        "SurfaceArrayNavigationPolicy sibling");
+          throw std::runtime_error{
+              "DetrayGridExportPolicy does not match the converted grid"};
+        }
+        fillSurfaceGridForExport(*detrayGrid, *exportPolicy, volume, gctx,
+                                 surfaceLookupFn, logger());
+      }
 
       if (detrayGrid.has_value()) {
         ACTS_DEBUG("Volume " << volume.volumeName()
