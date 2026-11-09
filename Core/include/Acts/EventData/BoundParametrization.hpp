@@ -21,6 +21,7 @@
 #include <cmath>
 #include <limits>
 #include <numbers>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -197,20 +198,38 @@ class BoundParametrization {
     }
 
     template <typename Derived, typename Covariance>
+    Result<void> canonicalizeInPlace(
+        Eigen::MatrixBase<Derived>& parameters,
+        Eigen::MatrixBase<Covariance>& covariance) const {
+      assertFinite(parameters);
+      assertFinite(covariance);
+      // Same fold criterion as canonicalizationJacobian(), without
+      // materializing the diagonal Jacobian.
+      const double theta = detail::radian_pos(parameters[eBoundDir1]);
+      if (theta == 0. || theta == std::numbers::pi) {
+        return Result<void>::failure(
+            BoundParametrizationError::UndefinedCanonicalization);
+      }
+      if (theta > std::numbers::pi) {
+        covariance.row(eBoundDir1) *= -1.;
+        covariance.col(eBoundDir1) *= -1.;
+      }
+      std::tie(parameters[eBoundDir0], parameters[eBoundDir1]) =
+          detail::normalizePhiTheta(parameters[eBoundDir0],
+                                    parameters[eBoundDir1]);
+      return Result<void>::success();
+    }
+
+    template <typename Derived, typename Covariance>
     Result<std::pair<BoundVector, BoundMatrix>> canonicalize(
         const Eigen::MatrixBase<Derived>& parameters,
         const Eigen::MatrixBase<Covariance>& covariance) const {
-      assertFinite(covariance);
-      const auto jacobian = canonicalizationJacobian(parameters);
-      if (!jacobian.ok()) {
-        return jacobian.error();
+      std::pair<BoundVector, BoundMatrix> result{parameters, covariance};
+      const auto status = canonicalizeInPlace(result.first, result.second);
+      if (!status.ok()) {
+        return status.error();
       }
-      BoundMatrix transformed = covariance;
-      if ((*jacobian)(eBoundDir1, eBoundDir1) < 0.) {
-        transformed.row(eBoundDir1) *= -1.;
-        transformed.col(eBoundDir1) *= -1.;
-      }
-      return std::pair{canonicalize(parameters), transformed};
+      return result;
     }
 
     template <typename Left, typename Right>
@@ -472,6 +491,26 @@ class BoundParametrization {
       const Eigen::MatrixBase<Covariance>& covariance) const {
     return visit([&](const auto& chart) {
       return chart.canonicalize(parameters, covariance);
+    });
+  }
+
+  /// Canonicalize a state and its covariance in place.
+  ///
+  /// Same transformation as the copying canonicalize() overload. Both inputs
+  /// are left untouched on failure.
+  /// @tparam Derived Eigen bound vector type
+  /// @tparam Covariance Eigen bound covariance matrix type
+  /// @param parameters Bound coordinates, canonicalized on success
+  /// @param covariance Covariance in the original coordinate basis,
+  ///        transformed into the canonical basis on success
+  /// @return Success or UndefinedCanonicalization exactly at a pole
+  /// @pre Input coordinates and covariance are finite (asserted).
+  template <typename Derived, typename Covariance>
+  Result<void> canonicalizeInPlace(
+      Eigen::MatrixBase<Derived>& parameters,
+      Eigen::MatrixBase<Covariance>& covariance) const {
+    return visit([&](const auto& chart) {
+      return chart.canonicalizeInPlace(parameters, covariance);
     });
   }
 
