@@ -110,12 +110,8 @@ double MeasurementSelector::calculateChi2(
         if (!detail::allFinite(predicted) || !detail::allFinite(calibrated)) {
           return std::numeric_limits<double>::quiet_NaN();
         }
-        BoundVector measured = predicted;
-        for (std::size_t i = 0; i < kMeasurementSize; ++i) {
-          measured[validSubspaceIndices[i]] = calibrated[i];
-        }
-        const ParametersVector res = subspaceHelper.projectVector(
-            parametrization.difference(measured, predicted));
+        const ParametersVector res = parametrization.subspaceDifference(
+            calibrated, predicted, validSubspaceIndices);
 
         // Get the chi2
         return (res.transpose() *

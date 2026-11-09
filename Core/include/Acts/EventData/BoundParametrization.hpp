@@ -19,6 +19,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstddef>
 #include <limits>
 #include <numbers>
 #include <tuple>
@@ -244,6 +245,35 @@ class BoundParametrization {
       return result;
     }
 
+    // Evaluated for every measurement candidate. Forced inline because the
+    // live assertions push it just above the inlining threshold, and an
+    // out-of-line call costs as much as the residual itself.
+    template <typename Measured, typename Predicted, typename Indices>
+    [[gnu::always_inline]] Vector<Measured::RowsAtCompileTime>
+    subspaceDifference(const Eigen::MatrixBase<Measured>& measured,
+                       const Eigen::MatrixBase<Predicted>& predicted,
+                       const Indices& indices) const {
+      constexpr int kSize = Measured::RowsAtCompileTime;
+      Vector<kSize> result;
+      // Sum of r - r, which is zero iff every residual r is finite. Checked on
+      // the values in registers, as reloading the freshly stored scalars as a
+      // vector would stall store forwarding.
+      [[maybe_unused]] double finiteCheck = 0.;
+      for (int i = 0; i < kSize; ++i) {
+        const auto index = static_cast<std::size_t>(indices[i]);
+        double residual = measured[i] - predicted[index];
+        finiteCheck += residual - residual;
+        if (index == eBoundDir0 || index == eBoundDir1) {
+          residual = detail::radian_sym(residual);
+        }
+        result[i] = residual;
+      }
+      // A finite residual implies finite measured and predicted coordinates in
+      // the subspace. Unmeasured predicted coordinates are not used.
+      assert(finiteCheck == 0. && "Nonfinite bound coordinates or covariance");
+      return result;
+    }
+
     template <typename Parameters, typename Delta>
     BoundVector update(const Eigen::MatrixBase<Parameters>& parameters,
                        const Eigen::MatrixBase<Delta>& delta) const {
@@ -299,8 +329,14 @@ class BoundParametrization {
   Variant m_chart;
 
   template <typename Visitor>
-  decltype(auto) visit(Visitor&& visitor) const {
-    return std::visit(std::forward<Visitor>(visitor), m_chart);
+  [[gnu::always_inline]] decltype(auto) visit(Visitor&& visitor) const {
+    if constexpr (std::variant_size_v<Variant> == 1) {
+      // A single alternative needs no dispatch. Calling it directly keeps the
+      // std::visit invocation layers out of the per-candidate hot paths.
+      return std::forward<Visitor>(visitor)(*std::get_if<0>(&m_chart));
+    } else {
+      return std::visit(std::forward<Visitor>(visitor), m_chart);
+    }
   }
 
   explicit constexpr BoundParametrization(GlobalSpherical chart)
@@ -525,6 +561,35 @@ class BoundParametrization {
   BoundVector difference(const Eigen::MatrixBase<Left>& lhs,
                          const Eigen::MatrixBase<Right>& rhs) const {
     return visit([&](const auto& chart) { return chart.difference(lhs, rhs); });
+  }
+
+  /// Coordinate residual of a measurement in a subspace of the bound
+  /// coordinates, respecting this parametrization's topology.
+  ///
+  /// Equivalent to embedding @p measured into @p predicted at @p indices,
+  /// taking difference() with @p predicted and projecting the result back onto
+  /// the subspace, without forming the full bound vectors.
+  /// @tparam Measured Fixed-size Eigen vector or map type of the subspace
+  /// @tparam Predicted Eigen bound vector or map type
+  /// @tparam Indices Indexable container of the measured bound indices
+  /// @param measured Measured coordinates in the subspace
+  /// @param predicted Bound coordinates
+  /// @param indices Bound index of each measured coordinate, without duplicates
+  /// @return Subspace residual measured - predicted
+  /// @pre The residual is finite (asserted), which implies finite measured and
+  /// predicted coordinates in the subspace.
+  template <typename Measured, typename Predicted, typename Indices>
+  [[gnu::always_inline]] Vector<Measured::RowsAtCompileTime> subspaceDifference(
+      const Eigen::MatrixBase<Measured>& measured,
+      const Eigen::MatrixBase<Predicted>& predicted,
+      const Indices& indices) const {
+    constexpr int kSize = Measured::RowsAtCompileTime;
+    static_assert(kSize > 0 && kSize <= static_cast<int>(eBoundSize) &&
+                      Measured::ColsAtCompileTime == 1,
+                  "Subspace residual requires a fixed-size column vector");
+    return visit([&](const auto& chart) __attribute__((always_inline)) {
+      return chart.subspaceDifference(measured, predicted, indices);
+    });
   }
 
   /// Apply a small coordinate update and canonicalize the result.
