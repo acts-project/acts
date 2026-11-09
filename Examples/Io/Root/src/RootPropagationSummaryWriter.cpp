@@ -163,7 +163,6 @@ ProcessCode RootPropagationSummaryWriter::writeT(
     m_pathLength = summary.statistics.stepping.pathLength;
     m_absolutePathLength = summary.statistics.stepping.absolutePathLength;
     m_propagationTime = summary.propagationTime;
-    // std::cout<<m_propagationTime<<std::endl;
 
     // Navigator statistics
     m_nRenavigations = summary.statistics.navigation.nRenavigations;
