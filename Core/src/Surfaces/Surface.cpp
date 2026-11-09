@@ -65,7 +65,7 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
   // 2) Calculate the derivative of path length w.r.t. alignment parameters
   const auto alignToPath = alignmentToPathDerivative(gctx, position, direction);
   // 3) Calculate the jacobian from free parameters to bound parameters
-  FreeToBoundMatrix jacToLocal = freeToBoundJacobian(gctx, position, direction);
+  const auto jacToLocal = freeToBoundJacobian(gctx, position, direction);
   // 4) The derivative of bound parameters w.r.t. alignment
   // parameters is alignToBoundWithoutCorrection +
   // jacToLocal*pathDerivative*alignToPath
@@ -78,35 +78,28 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
 AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  static_cast<void>(direction);
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
-  // The local frame rotation
-  const auto& rotation = localToGlobalTransform(gctx).rotation();
-  // The axes of local frame
-  const auto& localXAxis = rotation.col(0);
-  const auto& localYAxis = rotation.col(1);
-  const auto& localZAxis = rotation.col(2);
   // Calculate the derivative of local frame axes w.r.t its rotation
   const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       detail::rotationToLocalAxesDerivative(rotation);
-  // Calculate the derivative of local 3D Cartesian coordinates w.r.t.
-  // alignment parameters (without path correction)
+  // Derivative of local 3D Cartesian coordinates w.r.t. alignment parameters
+  // (without path correction). The translation block is -identity.
   AlignmentToPositionMatrix alignToLoc3D = AlignmentToPositionMatrix::Zero();
-  alignToLoc3D.block<1, 3>(eX, eAlignmentCenter0) = -localXAxis.transpose();
-  alignToLoc3D.block<1, 3>(eY, eAlignmentCenter0) = -localYAxis.transpose();
-  alignToLoc3D.block<1, 3>(eZ, eAlignmentCenter0) = -localZAxis.transpose();
+  alignToLoc3D(eX, eAlignmentCenter0) = -1;
+  alignToLoc3D(eY, eAlignmentCenter1) = -1;
+  alignToLoc3D(eZ, eAlignmentCenter2) = -1;
   alignToLoc3D.block<1, 3>(eX, eAlignmentRotation0) =
       pcRowVec * rotToLocalXAxis;
   alignToLoc3D.block<1, 3>(eY, eAlignmentRotation0) =
       pcRowVec * rotToLocalYAxis;
   alignToLoc3D.block<1, 3>(eZ, eAlignmentRotation0) =
       pcRowVec * rotToLocalZAxis;
-  // The derivative of bound local w.r.t. local 3D Cartesian coordinates
-  Matrix<2, 3> loc3DToBoundLoc =
-      localCartesianToBoundLocalDerivative(gctx, position);
+  const Matrix<2, 3> loc3DToBoundLoc =
+      localCartesianToBoundLocalDerivative(gctx, position, direction);
   // Initialize the derivative of bound parameters w.r.t. alignment
   // parameters without path correction
   AlignmentToBoundMatrix alignToBound = AlignmentToBoundMatrix::Zero();
@@ -132,10 +125,11 @@ AlignmentToPathMatrix Surface::alignmentToPathDerivative(
   // Calculate the derivative of local frame axes w.r.t its rotation
   const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       detail::rotationToLocalAxesDerivative(rotation);
-  // Initialize the derivative of propagation path w.r.t. local frame
-  // translation (origin) and rotation
+  // Initialize the derivative of propagation path w.r.t. local translations
+  // and rotations
   AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
-  alignToPath.segment<3>(eAlignmentCenter0) = localZAxis.transpose() / dz;
+  detail::setAlignToPathLocalCenterDerivative(alignToPath, localZAxis / dz,
+                                              rotation);
   alignToPath.segment<3>(eAlignmentRotation0) =
       -pcRowVec * rotToLocalZAxis / dz;
 

@@ -65,16 +65,30 @@ AlignmentMatrix compositeToComponentJacobian(
 /// (see @c AlignmentIndices) w.r.t. the local-frame alignment parameters
 /// defined in @c compositeToComponentJacobian, for the same surface.
 ///
-/// The ACTS parameters are the translation of the surface center in global
-/// coordinates and small rotations about the local axes, so the Jacobian is
-/// diag(R, 1). This is the single place encoding that convention: multiplying
-/// derivatives w.r.t. the ACTS alignment parameters by it gives derivatives
-/// w.r.t. the local-frame parameters.
+/// The ACTS parameters are translations along the local axes and small
+/// rotations about those axes, the same convention as the local-frame
+/// parameters, so the Jacobian is the identity. This is the single place
+/// encoding that convention.
 ///
-/// @param surfaceTransform The local-to-global transform of the surface
+/// @param surfaceTransform The local-to-global transform of the surface. It is
+/// not used while the two conventions agree.
 ///
 /// @return The 6x6 Jacobian d(ACTS parameters) / d(local-frame parameters)
 AlignmentMatrix localFrameToAlignmentParametersJacobian(
     const Transform3& surfaceTransform);
+
+/// @brief Map path-length derivatives w.r.t. a global center shift to
+/// derivatives w.r.t. local translations along local x/y/z.
+///
+/// @param alignToPath The alignment path derivative matrix to update
+/// @param alignToPathWrtGlobalCenter Path derivative w.r.t. global center shift
+/// @param rotation Local-to-global rotation of the surface
+inline void setAlignToPathLocalCenterDerivative(
+    AlignmentToPathMatrix& alignToPath,
+    const Vector3& alignToPathWrtGlobalCenter,
+    const RotationMatrix3& rotation) {
+  alignToPath.segment<3>(eAlignmentCenter0) =
+      alignToPathWrtGlobalCenter.transpose() * rotation;
+}
 
 }  // namespace Acts::detail
