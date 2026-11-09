@@ -71,6 +71,13 @@ ProcessCode PropagationAlgorithm::execute(
 
     PropagationOutput& propagationOutput = propagationResult.value();
 
+    if (m_cfg.recordPropagationTime) {
+      propagationOutput.first.propagationTime =
+          (std::chrono::duration<double>(propagationEnd - propagationStart)
+               .count()) *
+          1000;
+    }
+
     propagationOutput.first.propagationTime =
         (std::chrono::duration<double>(propagationEnd - propagationStart)
              .count()) *

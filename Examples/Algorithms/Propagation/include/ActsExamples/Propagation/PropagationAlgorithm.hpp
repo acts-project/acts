@@ -44,7 +44,7 @@ class PropagationAlgorithm : public IAlgorithm {
     /// Switch the logger to sterile - for timing measurements
     bool sterileLogger = false;
     /// debug output
-    bool debugOutput = false;
+    bool debugOutput = true;
     /// Modify the behavior of the material interaction: energy loss
     bool energyLoss = true;
     /// Modify the behavior of the material interaction: scattering
@@ -54,9 +54,11 @@ class PropagationAlgorithm : public IAlgorithm {
     /// looper protection
     double ptLoopers = 500 * Acts::UnitConstants::MeV;
     /// Max step size steering
-    double maxStepSize = 5 * Acts::UnitConstants::m;
+    double maxStepSize = 20 * Acts::UnitConstants::m;
     /// Switch covariance transport on
     bool covarianceTransport = false;
+    // Switch on the recording of the propagation time
+    bool recordPropagationTime = false;
   };
 
   /// Constructor
