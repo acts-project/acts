@@ -224,7 +224,8 @@ BOOST_AUTO_TEST_CASE(StructureDerivativeMaskAfterConversion) {
           AlignmentMask::None, &frame);
   BOOST_CHECK_EQUAL(fixed.squaredNorm(), 0.);
 
-  // Verify that this rotated geometry distinguishes both common mistakes.
+  // Verify that this rotated geometry distinguishes premature masking and
+  // the obsolete conversion of surface translations to global coordinates.
   const AlignmentToBoundMatrix raw = surface.alignmentToBoundDerivative(
       gctx, position, fixture.direction, fixture.pathDerivative);
   AlignmentToBoundMatrix prematureMask = raw;
@@ -236,11 +237,14 @@ BOOST_AUTO_TEST_CASE(StructureDerivativeMaskAfterConversion) {
       Acts::detail::compositeToComponentJacobian(frame, fixture.frames.surface);
   const Vector2 wronglyMasked = -fixture.projector * prematureMask * adapter *
                                 composite.col(eAlignmentCenter0);
-  const Vector2 twiceAdapted = -fixture.projector * raw * adapter * adapter *
-                               composite.col(eAlignmentCenter0);
+  AlignmentMatrix obsoleteAdapter = AlignmentMatrix::Identity();
+  obsoleteAdapter.block<3, 3>(eAlignmentCenter0, eAlignmentCenter0) =
+      fixture.frames.surface.rotation();
+  const Vector2 wronglyAdapted = -fixture.projector * raw * obsoleteAdapter *
+                                 composite.col(eAlignmentCenter0);
   const Vector2 correct = -fixture.projector * masked.col(eAlignmentCenter0);
   BOOST_CHECK_GT((wronglyMasked - correct).norm(), 1e-2);
-  BOOST_CHECK_GT((twiceAdapted - correct).norm(), 1e-2);
+  BOOST_CHECK_GT((wronglyAdapted - correct).norm(), 1e-2);
 }
 
 BOOST_AUTO_TEST_CASE(StandaloneDerivativeCompatibility) {
