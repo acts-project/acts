@@ -11,11 +11,12 @@ for the rotation pivot and an orientation for its local axes.
 
 `localToGlobalTransform(gctx)` returns the structure-to-global rigid transform.
 Its translation is the pivot in global coordinates; its rotation maps the
-structure's local axes to global axes. Structure corrections use local
-translations and local rotations. Surface alignment parameters still use global
-translations and local rotations, so chaining to a surface derivative requires
-`Acts::detail::localFrameToAlignmentParametersJacobian` as well as
-`Acts::detail::compositeToComponentJacobian`.
+structure's local axes to global axes. Structure corrections and surface
+alignment parameters both use local translations and local rotations, each in
+their own frame. `Acts::detail::compositeToComponentJacobian` maps structure
+corrections to the member surface's local parameters, including the rotation
+lever arm. `Acts::detail::localFrameToAlignmentParametersJacobian` is identity
+under this convention.
 
 Every structure frame is global, including child frames. `addChild()` declares
 membership; it does not compose frames or move surfaces. The user chooses the
