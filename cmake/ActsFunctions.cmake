@@ -60,10 +60,13 @@ endfunction()
 #       LINK detray::core_array
 #       GLOB include/detray/**/*.hpp
 #   )
+#
+# Headers matching any of the regular expressions given with `EXCLUDE` are
+# skipped, e.g. deprecated forwarding headers that emit a warning.
 function(acts_compile_headers target)
     set(options "")
     set(oneValueArgs NAME LINK)
-    set(multiValueArgs GLOB)
+    set(multiValueArgs GLOB EXCLUDE)
     cmake_parse_arguments(
         PARSE_ARGV 0
         ARGS
@@ -95,6 +98,10 @@ function(acts_compile_headers target)
             ${ARGS_GLOB}
         )
     endif()
+
+    foreach(_exclude ${ARGS_EXCLUDE})
+        list(FILTER _headers EXCLUDE REGEX "${_exclude}")
+    endforeach()
 
     if("${_headers}" STREQUAL "")
         message(SEND_ERROR "No headers specified")

@@ -22,6 +22,7 @@ class ISurfaceMaterial;
 class SurfaceBounds;
 class PlanarBounds;
 class DiscBounds;
+class LineBounds;
 class DigitizationModule;
 class Surface;
 }  // namespace Acts
@@ -114,6 +115,21 @@ class TGeoDetectorElement : public Acts::SurfacePlacementBase {
   TGeoDetectorElement(const Identifier& identifier, const TGeoNode& tGeoNode,
                       const Acts::Transform3& tgTransform,
                       const std::shared_ptr<const Acts::DiscBounds>& tgBounds,
+                      double tgThickness = 0.);
+
+  /// Constructor with pre-computed straw surface.
+  ///
+  /// @note this detector element constructor needs everything
+  /// pre-computed, e.g. by @ref TGeoSurfaceConverter::lineComponents.
+  ///
+  /// @param identifier is the detector identifier
+  /// @param tGeoNode is the TGeoNode which should be represented
+  /// @param tgTransform the transform of this detector element
+  /// @param tgBounds the bounds of this surface
+  /// @param tgThickness the thickness of this detector element
+  TGeoDetectorElement(const Identifier& identifier, const TGeoNode& tGeoNode,
+                      const Acts::Transform3& tgTransform,
+                      const std::shared_ptr<const Acts::LineBounds>& tgBounds,
                       double tgThickness = 0.);
 
   ~TGeoDetectorElement() override;

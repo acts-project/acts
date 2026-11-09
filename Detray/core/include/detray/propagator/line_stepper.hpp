@@ -30,22 +30,33 @@ class line_stepper final
       base_stepper<algebra_t, constraint_t, policy_t, inspector_t>;
 
  public:
+  /// This stepper has a nonzero position-direction transport gradient.
   static constexpr bool uses_gradient = true;
 
+  /// Algebra backend used by the stepper.
   using algebra_type = algebra_t;
+  /// Scalar type for step lengths and material derivatives.
   using scalar_type = dscalar<algebra_t>;
+  /// Three-dimensional vector type.
   using vector3_type = dvector3D<algebra_t>;
+  /// Three-dimensional transform type.
   using transform3_type = dtransform3D<algebra_t>;
+  /// Free track parameter representation.
   using free_track_parameters_type =
       typename base_type::free_track_parameters_type;
+  /// Bound track parameter representation.
   using bound_track_parameters_type =
       typename base_type::bound_track_parameters_type;
+  /// Matrix type with dimensions selected by the template arguments.
   template <std::size_t ROWS, std::size_t COLS>
   using matrix_type = dmatrix<algebra_t, ROWS, COLS>;
 
+  /// State carried by the straight-line stepper.
   struct state : public base_type::template state<> {
+    /// Stepper identifier used by propagation diagnostics.
     static constexpr const stepping::id id = stepping::id::e_linear;
 
+    /// Base state providing common track, path, and constraint storage.
     using base_state = typename base_type::template state<>;
 
     /// Import base class constructors
@@ -60,6 +71,7 @@ class line_stepper final
       this->update_path_lengths(this->step_size());
     }
 
+    /// Advance the free-parameter transport Jacobian for a straight segment.
     DETRAY_HOST_DEVICE
     inline void advance_jacobian() {
       DETRAY_VERBOSE_HOST_DEVICE("Advance Jacobian");
@@ -77,9 +89,13 @@ class line_stepper final
       this->transport_jacobian() = D * this->transport_jacobian();
     }
 
+    /// Derivative of time with respect to path length for straight motion.
+    /// @return Zero time derivative for this straight-line model.
     DETRAY_HOST_DEVICE
     constexpr vector3_type dtds() const { return {0.f, 0.f, 0.f}; }
 
+    /// Derivative of q/p with respect to path length in vacuum.
+    /// @return Zero because this stepper does not model energy loss.
     DETRAY_HOST_DEVICE
     constexpr scalar_type dqopds(
         const material<scalar_type>* /*unused*/) const {

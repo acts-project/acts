@@ -8,14 +8,17 @@
 
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <numbers>
 #include <span>
 #include <utility>
@@ -48,6 +51,14 @@ struct SlidingWindow {
   GbtsLayerType type{};
   /// Technology of the bin's layer.
   GbtsLayerTechnology technology{};
+  /// Smallest radius of the bin's nodes.
+  float minRadius{};
+  /// Largest radius of the bin's nodes.
+  float maxRadius{};
+  /// Smallest z of the bin's nodes.
+  float minZ{};
+  /// Largest z of the bin's nodes.
+  float maxZ{};
 };
 
 /// Check a triplet against the pT and d0 cuts.
@@ -139,53 +150,69 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
 
 /// Check to see if z0 of segment is within the expected z range of the
 /// beamspot
+///
+/// Computed without a branch, so that the caller can fold it into one branch
+/// with its other doublet cuts.
 /// @param cfg Graph builder configuration
 /// @param minZ0 Lower end of the z0 window the histogram spans
-/// @param z0BitMask Sets allowed bins of allowed z value
+/// @param z0BitMask Sets allowed bins of allowed z value; an isolated node's
+///                  is empty and fails
 /// @param z0 Estimated z0 of segments z value at beamspot
-/// @param z0HistoCoeff Scalfactor that converts z coodindate into bin index
+/// @param z0HistoCoeff Scale factor that converts z coordinate into bin index
 /// @return Whether segment is within beamspot range
 bool checkZ0BitMask(const GbtsGraphBuilder::Config& cfg, const float minZ0,
                     const std::uint16_t z0BitMask, const float z0,
                     const float z0HistoCoeff) {
-  if (z0BitMask == 0) {
-    return true;
-  }
-
-  // z0 is not yet range checked here -- doubletFilterRZ runs after this -- so
-  // a bin outside the histogram is reachable and must not reach the shift.
+  // z0 is not range checked before this (doubletFilterRZ is optional and
+  // evaluated beside it), so a bin outside the histogram is reachable: it
+  // counts as unset. The shift is clamped so it stays in range; the range
+  // test decides.
   const auto isSet = [z0BitMask](const std::int32_t bin) {
-    return bin >= 0 && bin < detail::kGbtsZ0HistogramBins &&
-           ((z0BitMask >> bin) & 1) != 0;
+    const std::int32_t shift =
+        std::clamp<std::int32_t>(bin, 0, detail::kGbtsZ0HistogramBins - 1);
+    return ((static_cast<int>(bin >= 0) &
+             static_cast<int>(bin < detail::kGbtsZ0HistogramBins) &
+             (z0BitMask >> shift)) &
+            1) != 0;
   };
 
+  // the bin of z0 and either neighbour
   const float dz = z0 - minZ0;
-  const std::int32_t z0BinIndex = static_cast<std::int32_t>(z0HistoCoeff * dz);
+  const auto bin = static_cast<std::int32_t>(z0HistoCoeff * dz);
+  const auto binDown =
+      static_cast<std::int32_t>(z0HistoCoeff * (dz - cfg.z0Resolution));
+  const auto binUp =
+      static_cast<std::int32_t>(z0HistoCoeff * (dz + cfg.z0Resolution));
 
-  if (isSet(z0BinIndex)) {
-    return true;
-  }
-
-  // check adjacent bins as well
-
-  const float dzm = dz - cfg.z0Resolution;
-
-  std::int32_t nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzm);
-
-  if (nextBin != z0BinIndex && isSet(nextBin)) {
-    return true;
-  }
-
-  const float dzp = dz + cfg.z0Resolution;
-
-  nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzp);
-
-  if (nextBin != z0BinIndex && isSet(nextBin)) {
-    return true;
-  }
-
-  return false;
+  return (static_cast<int>(isSet(bin)) | static_cast<int>(isSet(binDown)) |
+          static_cast<int>(isSet(binUp))) != 0;
 }
+
+/// A window's pairs that pass the doublet cuts: their positions in the
+/// window, the ends the cuts were made on, and the tau and curvature they gave.
+/// The scan writes every pair and keeps it by advancing its count, so the
+/// buffers hold a slot for each pair of the window.
+struct KeptContainer {
+  /// Make room for a window of @p size pairs; the buffers never shrink.
+  void ensureSize(const std::size_t size) {
+    if (phiIdx.size() >= size) {
+      return;
+    }
+    phiIdx.resize(size);
+    r1.resize(size);
+    z1.resize(size);
+    r2.resize(size);
+    tau.resize(size);
+    curv.resize(size);
+  }
+
+  std::vector<std::uint32_t> phiIdx;
+  std::vector<float> r1;
+  std::vector<float> z1;
+  std::vector<float> r2;
+  std::vector<float> tau;
+  std::vector<float> curv;
+};
 
 }  // namespace
 
@@ -248,6 +275,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
   // reused across bin groups so that the windows are allocated once
   std::vector<SlidingWindow> phiSlidingWindow;
+
+  KeptContainer kept;
 
   // per window: the connected nodes of its bin, where useZ0Histogram filters
   // them; reused across bin groups as the windows are
@@ -321,6 +350,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
         }
       }
 
+      kept.ensureSize(B2.phiNodes.size());
+
       SlidingWindow& window = phiSlidingWindow.emplace_back();
       window.phiNodes = B2.phiNodes.data();
       window.numPhiNodes = static_cast<std::uint32_t>(B2.phiNodes.size());
@@ -330,6 +361,16 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       window.tauRatioCutOuter = link.tauRatioCutOuter;
       window.type = B2.type;
       window.technology = B2.technology;
+      window.minRadius = B2.minRadius;
+      window.maxRadius = B2.maxRadius;
+      // the bin keeps its radial extent but not its z extent
+      window.minZ = std::numeric_limits<float>::max();
+      window.maxZ = std::numeric_limits<float>::lowest();
+      for (SpacePointIndex n2Idx = B2.nodes.first; n2Idx < B2.nodes.second;
+           ++n2Idx) {
+        window.minZ = std::min(window.minZ, params[n2Idx].z);
+        window.maxZ = std::max(window.maxZ, params[n2Idx].z);
+      }
 
       // Isolated n2 nodes are skipped below for every n1 of this group, and
       // the branch is unpredictable. Filter them out of the window once
@@ -375,6 +416,90 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       const float r1 = n1pars.r;
       const float z1 = n1pars.z;
 
+      // n1's side of the tau window, the same for every n2
+      const float maxTau1 = std::min(m_cfg.maxAbsTau, n1pars.maxTau);
+
+      const auto passesDoubletCuts = [&](const detail::GbtsNodeParams& n2pars,
+                                         const std::uint16_t nodeInfo,
+                                         const float r1c, const float z1c,
+                                         const float tau, const float curv) {
+        const float ftau = std::abs(tau);
+        // The doublet cuts as one test rather than a branch each: which cut
+        // a pair fails depends on the data, so separate branches
+        // mispredict. Equivalent to the separate cuts for finite values
+        // (dr >= minDeltaRadius > 0 by default). First maxAbsTau and both
+        // nodes' tau windows; z0 is bounded only by the detector's size,
+        // which keeps the casts below in range,
+        const float minTau = std::max(n1pars.minTau, n2pars.minTau);
+        const float maxTau = std::min(maxTau1, n2pars.maxTau);
+        const bool inTauWindow = (static_cast<int>(ftau >= minTau) &
+                                  static_cast<int>(ftau <= maxTau)) != 0;
+
+        const float z0 = z1c - r1c * tau;
+
+        // then the z0 histogram, the r-z cuts and the curvature cut. The two
+        // flags are fixed per bin group, so their branches are predicted.
+        const bool inZ0Histogram =
+            !useZ0Histogram ||
+            checkZ0BitMask(m_cfg, minZ0, nodeInfo, z0, z0HistoCoeff);
+
+        const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
+        const bool inRZ =
+            !m_cfg.doubletFilterRZ ||
+            (static_cast<int>(z0 >= minZ0) & static_cast<int>(z0 <= maxZ0) &
+             static_cast<int>(zOuter >= cutZMinU) &
+             static_cast<int>(zOuter <= cutZMaxU)) != 0;
+
+        const float curvCut = ftau < m_cfg.curvatureSplitAbsTau
+                                  ? curvatureCutLowEta
+                                  : curvatureCutHighEta;
+
+        const bool inCurvature = std::abs(curv) <= curvCut;
+
+        return (static_cast<int>(inTauWindow) &
+                static_cast<int>(inZ0Histogram) & static_cast<int>(inRZ) &
+                static_cast<int>(inCurvature)) != 0;
+      };
+
+      // The tau range a doublet from n1 can pass the cuts below with: n1's own
+      // |tau| window, narrowed by the z0 and zOuter cuts when doubletFilterRZ
+      // is on. A window whose bin it cannot reach is skipped whole below.
+      float minReachTau = -maxTau1;
+      float maxReachTau = maxTau1;
+      if (m_cfg.doubletFilterRZ && r1 > 0) {
+        minReachTau = std::max(minReachTau, (z1 - maxZ0) / r1);
+        maxReachTau = std::min(maxReachTau, (z1 - minZ0) / r1);
+        const float outerDr = m_cfg.maxOuterRadius - r1;
+        if (outerDr > 0) {
+          minReachTau = std::max(minReachTau, (cutZMinU - z1) / outerDr);
+          maxReachTau = std::min(maxReachTau, (cutZMaxU - z1) / outerDr);
+        }
+      }
+
+      // Whether a pair with n2 in a window with tau in [tauLo, tauHi] could
+      // land in the window's bin, z2 - z1 being tau * dr. The float rounding
+      // of the bounds is far below the margin, which only keeps the test from
+      // skipping a pair the exact cuts below would keep.
+      constexpr float kReachMargin = 1 * UnitConstants::mm;
+      const auto binInReach = [&](const SlidingWindow& window,
+                                  const float tauLo, const float tauHi) {
+        // dr >= minDeltaRadius > 0 here (a window whose bin lies wholly within
+        // minDeltaRadius of n1 is skipped before this is called), so tau * dr
+        // grows with tau and the corners below bound it
+        assert(m_cfg.minDeltaRadius > 0);
+        const float drLo =
+            std::max(window.minRadius - r1, m_cfg.minDeltaRadius);
+        const float drHi = window.maxRadius - r1;
+        if (tauLo > tauHi) {
+          return false;
+        }
+        const float zLo =
+            z1 + std::min(tauLo * drLo, tauLo * drHi) - kReachMargin;
+        const float zHi =
+            z1 + std::max(tauHi * drLo, tauHi * drHi) + kReachMargin;
+        return zHi >= window.minZ && zLo <= window.maxZ;
+      };
+
       // the chord of a pair, which only the strip path below reads
       float x1 = 0.f;
       float y1 = 0.f;
@@ -393,6 +518,28 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
         const bool stripPair = calibrate && (!isPixel1 || !isPixel2);
 
+        // No pair of the window is in reach: every one would fail the radius,
+        // |tau|, or z0/zOuter cuts below. A strip pair's ends move, so it is
+        // not judged here. Skipping leaves firstIt behind; the next visit
+        // catches up.
+        if (!stripPair) {
+          if (slw.maxRadius - r1 < m_cfg.minDeltaRadius) {
+            continue;
+          }
+          // n1's |tau| window leaves out (-minTau, minTau): test each sign on
+          // its own, or the gap would count as reachable
+          const bool inReach =
+              n1pars.minTau > 0
+                  ? binInReach(slw, std::max(minReachTau, n1pars.minTau),
+                               maxReachTau) ||
+                        binInReach(slw, minReachTau,
+                                   std::min(maxReachTau, -n1pars.minTau))
+                  : binInReach(slw, minReachTau, maxReachTau);
+          if (!inReach) {
+            continue;
+          }
+        }
+
         const float deltaPhi = slw.deltaPhi;
 
         // sliding window phi1 +/- deltaPhi
@@ -400,7 +547,11 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
         const float minPhi = phi1 - deltaPhi;
         const float maxPhi = phi1 + deltaPhi;
 
-        // the inner loop over n2 nodes using sliding window
+        // the inner loop over n2 nodes using sliding window: first scanned
+        // with no branch on the doublet cuts, keeping the pairs that pass them
+        // in order. An isolated n2's empty z0 mask fails them, so it is
+        // dropped here too.
+        std::uint32_t numKept = 0;
         for (std::uint32_t n2PhiIdx = slw.firstIt; n2PhiIdx < slw.numPhiNodes;
              ++n2PhiIdx) {
           const float phi2 = slw.phiNodes[n2PhiIdx].first;
@@ -417,19 +568,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
           const SpacePointIndex n2Idx = slw.phiNodes[n2PhiIdx].second;
 
-          const detail::GbtsNodeEdgeInfo& n2Info = edgeInfo[n2Idx];
-
-          const std::uint16_t nodeInfo = n2Info.isConnected;
-
-          // skip isolated nodes as their incoming edges lead to nowhere; only
-          // the group's own bin can still hold them here
-          if (useZ0Histogram && (nodeInfo == 0)) {
-            continue;
-          }
-
-          const std::uint32_t n2FirstEdge = n2Info.firstEdge;
-          const std::uint16_t n2NumEdges = n2Info.numEdges;
-          const std::uint32_t n2LastEdge = n2FirstEdge + n2NumEdges;
+          const std::uint16_t nodeInfo = edgeInfo[n2Idx].isConnected;
 
           const detail::GbtsNodeParams& n2pars = params[n2Idx];
 
@@ -455,6 +594,12 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
           float z2c = z2;
 
           if (stripPair) {
+            // skip isolated nodes as their incoming edges lead to nowhere; only
+            // the group's own bin can still hold them here
+            if (useZ0Histogram && (nodeInfo == 0)) {
+              continue;
+            }
+
             // A circle's chord bisects the tangent directions, so turning the
             // chord by the pair's own azimuth difference gives each tangent.
             const std::array<float, 4>& position = nodeView.positions[n2Idx];
@@ -482,54 +627,41 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
             }
           }
 
-          const float dz = z2c - z1c;
-          const float tau = dz / dr;
-          const float ftau = std::fabs(tau);
-          if (ftau > m_cfg.maxAbsTau) {
-            continue;
-          }
-
-          if (ftau < n1pars.minTau) {
-            continue;
-          }
-          if (ftau > n1pars.maxTau) {
-            continue;
-          }
-
-          if (ftau < n2pars.minTau) {
-            continue;
-          }
-          if (ftau > n2pars.maxTau) {
-            continue;
-          }
-
-          const float z0 = z1c - r1c * tau;
-
-          // check against a non-empty z0 histogram
-          if (useZ0Histogram &&
-              !checkZ0BitMask(m_cfg, minZ0, nodeInfo, z0, z0HistoCoeff)) {
-            continue;
-          }
-
-          if (m_cfg.doubletFilterRZ) {
-            if (z0 < minZ0 || z0 > maxZ0) {
-              continue;
-            }
-
-            const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
-
-            if (zOuter < cutZMinU || zOuter > cutZMaxU) {
-              continue;
-            }
-          }
-
+          const float tau = (z2c - z1c) / dr;
           const float curv = (phi2 - phi1) / dr;
 
-          if (std::abs(curv) > (ftau < m_cfg.curvatureSplitAbsTau
-                                    ? curvatureCutLowEta
-                                    : curvatureCutHighEta)) {
-            continue;
-          }
+          // written for every pair, kept by advancing numKept
+          kept.phiIdx[numKept] = n2PhiIdx;
+          kept.r1[numKept] = r1c;
+          kept.z1[numKept] = z1c;
+          kept.r2[numKept] = r2c;
+          kept.tau[numKept] = tau;
+          kept.curv[numKept] = curv;
+          numKept += static_cast<std::uint32_t>(
+              passesDoubletCuts(n2pars, nodeInfo, r1c, z1c, tau, curv));
+        }
+
+        // the inner loop over the n2 nodes kept
+        for (std::uint32_t i = 0; i < numKept; ++i) {
+          const std::uint32_t n2PhiIdx = kept.phiIdx[i];
+          const float phi2 = slw.phiNodes[n2PhiIdx].first;
+
+          const SpacePointIndex n2Idx = slw.phiNodes[n2PhiIdx].second;
+
+          const detail::GbtsNodeEdgeInfo& n2Info = edgeInfo[n2Idx];
+
+          const std::uint32_t n2FirstEdge = n2Info.firstEdge;
+          const std::uint16_t n2NumEdges = n2Info.numEdges;
+          const std::uint32_t n2LastEdge = n2FirstEdge + n2NumEdges;
+
+          // the ends, tau and curvature as the scan made them
+          const float r1c = kept.r1[i];
+          const float z1c = kept.z1[i];
+          const float r2c = kept.r2[i];
+          const float tau = kept.tau[i];
+          const float curv = kept.curv[i];
+
+          const float z0 = z1c - r1c * tau;
 
           const float hypotTau = fastHypot(1, tau);
           const float expEta = hypotTau - tau;

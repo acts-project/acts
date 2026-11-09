@@ -6,10 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
+// Built with NDEBUG defined: the assert below only fires if
+// ACTS_FORCE_ASSERTIONS re-enabled it.
 
-#include "Acts/Material/detail/AverageMaterials.hpp"
+#include <cassert>
+#include <cstdio>
 
-void Acts::AccumulatedVolumeMaterial::accumulate(const MaterialSlab& mat) {
-  m_average = detail::combineSlabs(m_average, mat);
+int main() {
+  assert(false && "forced assertion");
+  std::puts("ACTS_ASSERTION_NOT_TRIGGERED");
+  return 0;
 }

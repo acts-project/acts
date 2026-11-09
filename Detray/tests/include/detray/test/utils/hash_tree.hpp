@@ -22,12 +22,22 @@ namespace detray {
 /// Default hash function makes use of default node in the hash tree.
 template <typename value_t>
 struct default_hash {
+  /// Type returned by the hash function.
   using hash_type = std::size_t;
+  /// Hash function used for input data values.
   using data_hasher = std::hash<value_t>;
+  /// Hash function used for child hashes.
   using node_hasher = std::hash<hash_type>;
 
+  /// Hash an input value.
+  /// @param v Input value to hash.
+  /// @return Hash of the input value.
   auto operator()(const value_t &v) { return data_hasher{}(v); }
 
+  /// Combine two child hashes.
+  /// @param left Hash of the left child.
+  /// @param right Hash of the right child.
+  /// @return Combined hash of the child hashes.
   auto operator()(const hash_type &left, const hash_type &right) {
     return node_hasher{}(left) + node_hasher{}(right);
   }
@@ -52,23 +62,40 @@ template <typename input_collection_t,
            std::is_invocable_v<hash_function_t, hash_t>
 class hash_tree {
  public:
+  /// Hash function used by the tree.
   using hash_function = hash_function_t;
+  /// Type of hashes stored in the tree.
   using hash_type = hash_t;
 
   /// Default node in the hash tree.
   struct hashed_node {
+    /// Construct a node with its hash.
+    /// @param hash Hash stored in the node.
     explicit hashed_node(hash_t hash) : _key(hash) {}
 
+    /// Hash key of this node.
     hash_t _key;
+    /// Index of this node's parent.
     dindex _parent{detail::invalid_value<dindex>()};
+    /// Index of this node's left child.
     dindex _left_child{detail::invalid_value<dindex>()};
+    /// Index of this node's right child.
     dindex _right_child{detail::invalid_value<dindex>()};
 
+    /// Get the node hash.
+    /// @return Hash of the node.
     const hash_t &key() const { return _key; }
+    /// Get the mutable node hash.
+    /// @return Mutable reference to the node hash.
     hash_t &key() { return _key; }
 
+    /// Set the parent node index.
+    /// @param pi Parent node index.
     void set_parent(dindex pi) { _parent = pi; }
 
+    /// Set the child node indices.
+    /// @param lc Left child node index.
+    /// @param rc Right child node index.
     void set_children(dindex lc, dindex rc) {
       _left_child = lc;
       _right_child = rc;
@@ -78,10 +105,11 @@ class hash_tree {
   /// No empty tree
   hash_tree() = delete;
 
-  /// Build from existing nodes and edges, which are provide by the geometry.
+  /// Build from an input collection using the configured hash function.
+  /// The optional hash function argument is ignored; the default-constructed
+  /// hash function is used.
   ///
-  /// @param volumes geometry volumes that become the graph nodes
-  /// @param portals geometry portals link volumes and become edges
+  /// @param data Input data to hash.
   explicit hash_tree(const input_collection_t &data,
                      const hash_function_t & /*hf*/ = {}) {
     build(data);
@@ -131,6 +159,7 @@ class hash_tree {
   ///
   /// @param first_child the beginning of the nodes for which to construct
   ///                    the parents in this iteration.
+  /// @param n_prev_level Number of nodes in the current level.
   template <typename iterator_t>
   void build(iterator_t &&first_child, dindex n_prev_level) {
     // base case

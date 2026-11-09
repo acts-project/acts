@@ -37,6 +37,9 @@ struct configuration {
 
   /// Setters
   /// @{
+  /// Set the tolerance for floating point comparisons.
+  /// @param t New comparison tolerance.
+  /// @return This configuration.
   configuration& tol(scalar_t t) {
     m_tolerance = t;
     return *this;
@@ -45,8 +48,14 @@ struct configuration {
 
   /// Getters
   /// @{
+  /// Get the tolerance for floating point comparisons.
+  /// @return The configured comparison tolerance.
   scalar_t tol() const { return m_tolerance; }
+  /// Get the propagation configuration.
+  /// @return Mutable propagation configuration.
   propagation::config& propagation() { return m_prop_cfg; }
+  /// Get the propagation configuration.
+  /// @return Const propagation configuration.
   const propagation::config& propagation() const { return m_prop_cfg; }
   /// @}
 

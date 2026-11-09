@@ -22,12 +22,14 @@ namespace detray::algebra::generic {
 // Default algorithm
 template <std::size_t N, typename... Args>
 struct determinant_selector {
+  /// Determinant implementation selected for rank `N`.
   using type = matrix::determinant::partial_pivot_lud<Args...>;
 };
 
 /// Always use hard coded implementation for very small matrices
 template <typename... Args>
 struct determinant_selector<2, Args...> {
+  /// Direct determinant implementation selected for rank two.
   using type = matrix::determinant::hard_coded<Args...>;
 };
 
@@ -41,12 +43,14 @@ using determinant_t =
 /// @{
 template <std::size_t N, typename... Args>
 struct inversion_selector {
+  /// Inversion implementation selected for rank `N`.
   using type = matrix::inverse::partial_pivot_lud<Args...>;
 };
 
 /// Always use hard coded implementation for very small matrices
 template <typename... Args>
 struct inversion_selector<2, Args...> {
+  /// Direct inversion implementation selected for rank two.
   using type = matrix::inverse::hard_coded<Args...>;
 };
 
