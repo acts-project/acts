@@ -26,8 +26,8 @@ Acts::AlignmentToBoundMatrix alignmentToBoundDerivative(
   if (structureTransform != nullptr) {
     const Acts::Transform3& surfaceTransform =
         surface.localToGlobalTransform(gctx);
-    // ACTS surface translations are global; structure translations are local.
-    // Apply this convention adapter exactly once, before selecting DoFs.
+    // Surface and structure parameters use their respective local frames.
+    // The convention adapter is identity; convert frames before selecting DoFs.
     derivative = (derivative *
                   Acts::detail::localFrameToAlignmentParametersJacobian(
                       surfaceTransform) *

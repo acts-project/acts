@@ -110,9 +110,10 @@ The helper starts with the unmasked surface derivative, applies
 `compositeToComponentJacobian(currentFrame, surfaceTransform)`, and finally
 masks columns in structure coordinates. Masking surface columns before the
 conversion would incorrectly remove contributions to rotated structure axes.
-The convention adapter is applied once because surface translations on this
-baseline are global. With no structure frame, the helper retains the existing
-standalone-module derivative and mask convention.
+The convention adapter is identity because surface alignment parameters use
+local translations and rotations. The product therefore reduces to the local
+surface derivative times the composite Jacobian. With no structure frame, the
+helper retains the existing standalone-module derivative and mask convention.
 
 This helper does not activate structure solving. The native solver still uses
 module indexing and calls it without a structure frame. Shared parameter
