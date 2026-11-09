@@ -91,8 +91,8 @@ struct StructureDerivativeFixture {
   DerivativeFrames frames;
   ContextualDerivativeElement element;
   std::shared_ptr<AlignableStructure> structure;
-  Vector3 trackOrigin;
-  Vector3 direction;
+  Vector3 trackOrigin = Vector3::Zero();
+  Vector3 direction = Vector3::Zero();
   FreeVector pathDerivative = FreeVector::Zero();
   Matrix<2, eBoundSize> projector = Matrix<2, eBoundSize>::Zero();
 
