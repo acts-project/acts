@@ -13,7 +13,7 @@ set(ACTS_VECMEM_SOURCE
 mark_as_advanced(ACTS_VECMEM_SOURCE)
 
 set(ACTS_COVFIE_SOURCE
-    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=6eff65e05118d3007c689e3529a62bb1674348ac1b0f0f32afd953c62d1b8890"
+    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=f1491b85c5e8ed9535e4b99adb85661512964132baf6dc9b9a9af10e4b625cb3"
     CACHE STRING
     "Source to take COVFIE from"
 )
@@ -60,7 +60,7 @@ set(ACTS_MP2_SOURCE
 mark_as_advanced(ACTS_MP2_SOURCE)
 
 set(ACTS_EIGEN3_SOURCE
-    "URL;https://gitlab.com/libeigen/eigen/-/archive/${_acts_eigen3_version}/${_acts_eigen3_version}.tar.gz;URL_HASH;SHA256=ba6ef66ba2d319e0a871a267889411c550d4bdf5bc7c62f86c60276913f3f4ba"
+    "URL;https://gitlab.com/libeigen/eigen/-/archive/${_acts_eigen3_version}/${_acts_eigen3_version}.tar.gz;URL_HASH;SHA256=f3e578e5028dac65f437a412570c6c9d192b3e1f4a48c7820f40cb7ad0524d34"
     CACHE STRING
     "Source to take eigen3 from"
 )
@@ -81,7 +81,7 @@ set(ACTS_ANNOY_SOURCE
 mark_as_advanced(ACTS_ANNOY_SOURCE)
 
 set(ACTS_ODD_SOURCE
-    "GIT_REPOSITORY;https://github.com/OpenDataDetector/OpenDataDetector.git;GIT_TAG;v6.0.2"
+    "GIT_REPOSITORY;https://github.com/OpenDataDetector/OpenDataDetector.git;GIT_TAG;v6.0.3"
     CACHE STRING
     "Source to take OpenDataDetector from"
 )

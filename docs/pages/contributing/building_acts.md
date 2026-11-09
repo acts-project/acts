@@ -3,7 +3,7 @@
 # Quick start
 
 ACTS is developed in C++ and is built using [CMake](https://cmake.org). Building
-the core library requires a C++20 compatible compiler,
+the core library requires a C++23 compatible compiler,
 [Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
 library:
@@ -14,8 +14,7 @@ cmake -B <build> -S <source>
 cmake --build <build>
 ```
 
-The default C++ standard is C++23. To build in the supported C++20 mode,
-configure with `-DCMAKE_CXX_STANDARD=20` and use dependencies built for C++20.
+The minimum and default C++ standard is C++23. Use dependencies built for C++23.
 
 For a full list of dependencies, including specific versions, see the
 [Prerequisites](#prerequisites) section below. Build options to activate
@@ -26,7 +25,7 @@ section.
 
 The following dependencies are required to build the ACTS core library:
 
-- A C++20 compatible compiler (recent versions of either gcc and clang should work)
+- A C++23 compatible compiler (recent versions of either gcc and clang should work)
 - [CMake](https://cmake.org) >= 3.14
 - [Boost](https://www.boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
 - [Eigen](https://eigen.tuxfamily.org) >= 3.3.7
@@ -234,6 +233,40 @@ source files or documentation.
 
 [doxygen]: https://doxygen.nl/
 
+# Documenting a code generator {#codegen-notebooks}
+
+Parts of ACTS are C++ headers derived symbolically with sympy and printed at
+build time (see @ref source-package for the mechanics). What such a generator
+does is rarely obvious from its source, so there is a way to write one that
+documents itself.
+
+A generator can be written in [jupytext](https://jupytext.readthedocs.io/)'s
+`percent` format: ordinary Python with `# %%` cell markers, which the build runs
+as a script and a notebook viewer (JupyterLab, or VS Code with the jupytext
+extension) opens as a notebook. Prose, the symbolic expressions and the
+generated code then live in one file that cannot drift out of date, because it
+is the file the build runs.
+
+`Core/src/Propagator/detail/generate_sympy_jac.py` is written this way; the
+result is @ref codegen_sympy_jac. Such a notebook has to work in both roles, so
+it takes the output path from `argv[1]` as any generator does, and detects the
+notebook case (`"ipykernel" in sys.modules`) to show its results instead of
+writing them.
+
+Registering one with the documentation is a line in `docs/CMakeLists.txt`:
+
+```cmake
+acts_render_notebook(
+    SOURCE ${PROJECT_SOURCE_DIR}/path/to/generator.py
+    PAGE_ID some_page_id
+)
+```
+
+The docs build then executes it with `docs/render_notebook.py` and turns the
+result into a doxygen page labelled `some_page_id`, so other pages can point at
+it with `@ref`. Note that the notebook is executed, so anything it prints or
+leaves as a cell's last expression ends up on the page.
+
 # Build options {#build-options}
 
 Optional zstd compression is controlled by the global string setting
@@ -353,6 +386,16 @@ list of presets contains:
   necessary for running the ODD full chain examples with Fatras. It
   sets the cpp standard to 20, the generator to ninja and enables ccache.
 - `perf` is similar to `dev` but tweaked for performance measurements.
+- `github-ci` reproduces the GitHub CI configuration and enables ccache.
+- `github-ci-no-ccache` inherits the same configuration but clears the C++
+  compiler launcher, so it can be used locally without installing ccache:
+
+  ```console
+  cmake --preset github-ci-no-ccache -B build
+  ```
+
+  All other CI dependencies are still required. The `dev`, `perf`,
+  `devcontainer`, and `github-ci` presets continue to enable ccache by default.
 
 In addition to the ACTS-specific options, many generic options are available
 that modify various aspects of the build. The following options are some of the

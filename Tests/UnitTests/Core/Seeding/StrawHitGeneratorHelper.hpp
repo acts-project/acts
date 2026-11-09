@@ -252,6 +252,11 @@ class FitTestSpacePoint {
       m_layer = lay;
     }
   }
+  /// Update to next sensor
+  void setToNextSensor(const Vector3& v) {
+    m_toNextSen = v.normalized();
+    m_planeNorm = m_sensorDir.cross(m_toNextSen).normalized();
+  }
 
  private:
   Vector3 m_position{Vector3::Zero()};
@@ -754,11 +759,9 @@ class MeasurementGenerator {
         }
         return dist * stripNormal;
       };
-      /// Calculate the strip measurement's covariance
-      const double stripCovLoc0 =
-          Acts::square(genCfg.stripPitchLoc0) / std::sqrt(12.);
-      const double stripCovLoc1 =
-          Acts::square(genCfg.stripPitchLoc1) / std::sqrt(12.);
+      /// Calculate the strip measurement's uncertainty
+      const double stripUncertLoc0 = genCfg.stripPitchLoc0 / std::sqrt(12.);
+      const double stripUncertLoc1 = genCfg.stripPitchLoc1 / std::sqrt(12.);
 
       for (std::size_t sL = 0; sL < std::max(genCfg.stripDirLoc0.size(),
                                              genCfg.stripDirLoc1.size());
@@ -779,9 +782,12 @@ class MeasurementGenerator {
             const Vector3 extpPos{discretize(extp.position(), sL, false) +
                                   discretize(extp.position(), sL, true) +
                                   plane * Vector3::UnitZ()};
+            /// The sensor direction is the strip measuring the bending
+            /// direction, toNext is the direction of the strip measuring the
+            /// non-bending direction
             measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                extpPos, genCfg.stripDirLoc0.at(sL), genCfg.stripDirLoc1.at(sL),
-                stripCovLoc0, stripCovLoc1));
+                extpPos, genCfg.stripDirLoc1.at(sL), genCfg.stripDirLoc0.at(sL),
+                stripUncertLoc0, stripUncertLoc1));
             measurements.back()->setLayer(sL);
           } else {
             if (sL < genCfg.stripDirLoc0.size()) {
@@ -790,7 +796,7 @@ class MeasurementGenerator {
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                   extpPos, genCfg.stripDirLoc0.at(sL),
                   genCfg.stripDirLoc0.at(sL).cross(Vector3::UnitZ()),
-                  stripCovLoc0, 0.));
+                  stripUncertLoc0, 0.));
               auto& nM{*measurements.back()};
               nM.setLayer(sL);
               ACTS_VERBOSE("spawn() - Created loc0 strip @" << toString(nM)
@@ -802,7 +808,7 @@ class MeasurementGenerator {
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                   extpPos, genCfg.stripDirLoc1.at(sL),
                   genCfg.stripDirLoc1.at(sL).cross(Vector3::UnitZ()), 0.,
-                  stripCovLoc1));
+                  stripUncertLoc1));
               auto& nM{*measurements.back()};
               nM.setLayer(sL);
               ACTS_VERBOSE("spawn() - Created loc1 strip @" << toString(nM)
@@ -857,7 +863,7 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
         CompSpacePointAuxiliaries::strawSign(line, **firstTube);
     const int signLast = CompSpacePointAuxiliaries::strawSign(line, **lastTube);
 
-    auto seedPars = CompositeSpacePointLineSeeder::constructTangentLine(
+    auto seedPars = CompositeSpacePointLineSeeder::constructTangentSeed(
         **lastTube, **firstTube,
         CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
     const auto seedDir = CompositeSpacePointLineSeeder::makeDirection(

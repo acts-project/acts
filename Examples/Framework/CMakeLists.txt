@@ -4,6 +4,7 @@ acts_add_library(
     ExamplesFramework
     src/EventData/MuonSpacePoint.cpp
     src/EventData/MuonSpacePointCalibrator.cpp
+    src/EventData/IndexSourceLink.cpp
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
     src/EventData/SimParticle.cpp

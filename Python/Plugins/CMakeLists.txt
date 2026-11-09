@@ -68,6 +68,7 @@ if(ACTS_BUILD_PLUGIN_MILLE)
         MillePedeParameterResult
         MillePedeSteeringConfig
         MillePedeEqualityConstraint,
+        MillePedeParameterSeed,
         MillePedeSolverConfig
     )
 endif()

@@ -24,6 +24,7 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addSeeding,
     SeedingAlgorithm,
+    GbtsConfigArg,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -80,6 +81,12 @@ parser.add_argument(
     help="Multiplicity (no. of particles) of the particle gun",
     type=int,
     default=4,
+)
+parser.add_argument(
+    "--gun-particle-type",
+    help="Particle type of the particle gun; options: muon(default), electron, pion, kaon, proton",
+    type=str,
+    default="muon",
 )
 parser.add_argument(
     "--gun-multiplicity",
@@ -272,6 +279,13 @@ if args.edm4hep:
     )
 else:
     if not args.ttbar:
+        particleType = {
+            "muon": acts.PdgParticle.eMuon,
+            "electron": acts.PdgParticle.eElectron,
+            "pion": acts.PdgParticle.ePionPlus,
+            "kaon": acts.PdgParticle.eKaonPlus,
+            "proton": acts.PdgParticle.eProton,
+        }[args.gun_particle_type]
         addParticleGun(
             s,
             MomentumConfig(
@@ -281,9 +295,7 @@ else:
             ),
             EtaConfig(args.gun_eta_range[0], args.gun_eta_range[1]),
             PhiConfig(0.0, 360.0 * u.degree),
-            ParticleConfig(
-                args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
-            ),
+            ParticleConfig(args.gun_particles, particleType, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
@@ -380,6 +392,21 @@ if args.reco:
                 seedingAlgorithm=SeedingAlgorithm.Gbts,
                 layerMappingConfigFile=oddGbtsLayerMap,
                 connectorInputConfigFile=oddGbtsConnectionTable,
+                # with four pixel barrel layers a seed needs only two linked
+                # doublets and no z0 histogram cut, which asks for a fourth hit
+                gbtsConfigArg=GbtsConfigArg(
+                    seederConfig=acts.examples.GraphBasedSeedingConfig(
+                        minSeedLevel=2,
+                    ),
+                    graphConfig=acts.examples.GbtsGraphBuilderConfig(
+                        minPt=0.9 * u.GeV,
+                        z0HistogramMaxBarrelOrder=-1,
+                    ),
+                    useAdaptiveCuts=False,
+                ),
+                gbtsSeedParameters=True,
+                # for seeds without a GBTS fit
+                paramEstimationSpacePoints=acts.examples.SeedSpacePointSelection.SpreadTriplet,
             )
             if args.use_gbts
             else {}

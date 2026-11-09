@@ -39,6 +39,7 @@
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
 #include <vecmem/memory/cuda/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
+#include <vecmem/memory/synchronized_memory_resource.hpp>
 #include <vecmem/utils/cuda/async_copy.hpp>
 #include <vecmem/utils/cuda/stream_wrapper.hpp>
 
@@ -91,6 +92,32 @@ class full_chain_algorithm
 
     /// Device memory resource
     vecmem::cuda::device_memory_resource m_device_mr;
+
+    /// @name Memory resources shared by all instances of the algorithm
+    ///
+    /// The caching memory resources are not thread safe, so every user goes
+    /// through a @c vecmem::synchronized_memory_resource. Sharing one cache
+    /// between all instances keeps the peak memory usage of the
+    /// multi-threaded throughput test independent of the number of threads.
+    ///
+    /// @{
+
+    /// Device caching memory resource
+    mutable vecmem::binary_page_memory_resource m_cached_device_mr{m_device_mr};
+    /// Thread safe access to the cached device memory resource
+    mutable vecmem::synchronized_memory_resource m_synchronized_device_mr{
+        m_cached_device_mr};
+    /// Pinned host memory resource
+    vecmem::cuda::host_memory_resource m_pinned_host_mr;
+    /// Cached pinned host memory resource
+    mutable vecmem::binary_page_memory_resource m_cached_pinned_host_mr{
+        m_pinned_host_mr};
+    /// Thread safe access to the cached pinned host memory resource
+    mutable vecmem::synchronized_memory_resource m_synchronized_pinned_host_mr{
+        m_cached_pinned_host_mr};
+
+    /// @}
+
     /// B field for the track finding and fitting
     magnetic_field m_field;
     /// Detector description buffer
@@ -142,18 +169,14 @@ class full_chain_algorithm
  private:
   /// Host memory resource
   vecmem::memory_resource& m_host_mr;
-  /// Pinned host memory resource
-  vecmem::cuda::host_memory_resource m_pinned_host_mr;
-  /// Cached pinned host memory resource
-  mutable vecmem::binary_page_memory_resource m_cached_pinned_host_mr;
+  /// Cached pinned host memory resource, shared by all instances
+  vecmem::memory_resource& m_cached_pinned_host_mr;
   /// (vecmem) CUDA stream to use
   vecmem::cuda::stream_wrapper m_vecmem_stream;
   /// (traccc) CUDA stream to use
   stream_wrapper m_stream;
-  /// Device memory resource
-  vecmem::cuda::device_memory_resource m_device_mr;
-  /// Device caching memory resource
-  mutable vecmem::binary_page_memory_resource m_cached_device_mr;
+  /// Device caching memory resource, shared by all instances
+  vecmem::memory_resource& m_cached_device_mr;
   /// (Asynchronous) Memory copy object
   mutable vecmem::cuda::async_copy m_copy;
   /// The function for awaiting asynchronous operations

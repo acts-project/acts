@@ -32,6 +32,7 @@ struct empty_result {};
 
 /// Result of the principal actor to be passed to the obsevers
 struct result {
+  /// Navigation status reported by the principal actor.
   actor::status status{actor::status::e_unknown};
 
   /// @returns a string stream that prints the transporter result details

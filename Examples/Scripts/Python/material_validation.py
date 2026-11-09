@@ -44,7 +44,9 @@ def runMaterialValidation(
         ParticleConfig(
             num=tracksPerEvent, pdg=acts.PdgParticle.eMuon, randomizeCharge=True
         ),
-        EtaConfig(*etaRange),
+        # uniform in eta like the recording, so the comparison per eta bin
+        # weighs the tracks within a bin the same way
+        EtaConfig(*etaRange, uniform=True),
         PhiConfig(*phiRange),
         rnd=rnd,
     )
@@ -168,13 +170,23 @@ def main():
         action="store_true",
         help="Enable propagation validation",
     )
+    p.add_argument(
+        "--gen1",
+        action="store_true",
+        help="Validate against the Gen1 (Layer-based) geometry instead of "
+        "Gen3 (default).",
+    )
 
     args = p.parse_args()
+    gen3 = not args.gen1
     materialDecorator = None
     if args.map != "":
         materialDecorator = acts.IMaterialDecorator.fromFile(args.map)
 
-    detector = getOpenDataDetector(materialDecorator)
+    # Gen1 has no calorimeter catch-all surface, so its material would
+    # otherwise be misattributed to the nearest tracker surface; Gen3
+    # has a dedicated collector, so its calorimeter can stay enabled.
+    detector = getOpenDataDetector(materialDecorator, gen3=gen3, buildCalorimeter=gen3)
     trackingGeometry = detector.trackingGeometry()
 
     materialSurfaces = trackingGeometry.extractMaterialSurfaces()

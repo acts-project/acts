@@ -130,3 +130,5 @@ install(
     DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     COMPONENT dev
 )
+
+add_component_dependencies(PluginEDM4hep EDM4HEP podio)

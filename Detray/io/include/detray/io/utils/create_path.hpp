@@ -17,12 +17,16 @@
 namespace detray::io {
 
 /// Check if a file exists
+/// @param outdir path to inspect
+/// @return true when the path exists
 inline bool file_exists(const std::string& outdir) {
   auto path = std::filesystem::path(outdir);
 
   return std::filesystem::exists(path);
 }
 
+/// Find an unused numbered alternative to an existing file name.
+/// @param name original file path
 /// @returns an alternative file name by counting up, if file exists
 inline std::string alt_file_name(const std::string& name) {
   auto path = std::filesystem::path(name);
@@ -70,6 +74,8 @@ inline std::string alt_file_name(const std::string& name) {
 }
 
 /// Check if a given file path exists and generate it if not
+/// @param outdir directory path to create
+/// @return filesystem path for the requested directory
 inline auto create_path(const std::string& outdir) {
   auto path = std::filesystem::path(outdir);
 

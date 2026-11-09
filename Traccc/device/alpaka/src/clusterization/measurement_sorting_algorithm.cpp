@@ -68,9 +68,10 @@ struct fill_sorted_measurements {
 
 measurement_sorting_algorithm::measurement_sorting_algorithm(
     const traccc::memory_resource& mr, const vecmem::copy& copy,
-    alpaka::queue& q, std::unique_ptr<const Logger> logger)
+    alpaka::queue& q, std::unique_ptr<const Logger> logger,
+    await_function_type await_func)
     : device::measurement_sorting_algorithm(mr, copy, std::move(logger)),
-      alpaka::algorithm_base(q) {}
+      alpaka::algorithm_base(q, std::move(await_func)) {}
 
 void measurement_sorting_algorithm::sorting_kernel(
     const measurement_sorting_kernel_payload& payload) const {

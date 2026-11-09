@@ -91,4 +91,41 @@ detail::RotationToAxes detail::rotationToLocalAxesDerivative(
           std::move(rotToLocalZAxis)};
 }
 
+AlignmentMatrix detail::compositeToComponentJacobian(
+    const Transform3& compositeTransform,
+    const Transform3& componentTransform) {
+  const RotationMatrix3 compositeRotation = compositeTransform.rotation();
+  const RotationMatrix3 componentRotation = componentTransform.rotation();
+  // The component rotation relative to the composite, inverted: it maps
+  // vectors in the composite frame to the component frame
+  const RotationMatrix3 compositeToComponent =
+      componentRotation.transpose() * compositeRotation;
+  // The component origin relative to the composite pivot, in global frame
+  const Vector3 lever =
+      componentTransform.translation() - compositeTransform.translation();
+  // Cross-product matrix [d]x, i.e. [d]x * v = d.cross(v)
+  RotationMatrix3 leverCross = RotationMatrix3::Zero();
+  leverCross << 0., -lever.z(), lever.y(), lever.z(), 0., -lever.x(),
+      -lever.y(), lever.x(), 0.;
+
+  AlignmentMatrix jacobian = AlignmentMatrix::Zero();
+  // Composite translation moves the component origin by Rc * dT
+  jacobian.block<3, 3>(eAlignmentCenter0, eAlignmentCenter0) =
+      compositeToComponent;
+  // Composite rotation moves the component origin by (Rc * dW) x d
+  jacobian.block<3, 3>(eAlignmentCenter0, eAlignmentRotation0) =
+      -componentRotation.transpose() * leverCross * compositeRotation;
+  // and rotates it by the global rotation vector Rc * dW
+  jacobian.block<3, 3>(eAlignmentRotation0, eAlignmentRotation0) =
+      compositeToComponent;
+  return jacobian;
+}
+
+AlignmentMatrix detail::localFrameToAlignmentParametersJacobian(
+    const Transform3& /*surfaceTransform*/) {
+  // ACTS translations are along the local axes, same as the local-frame
+  // parameters, so the adapter is the identity.
+  return AlignmentMatrix::Identity();
+}
+
 }  // namespace Acts

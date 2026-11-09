@@ -28,6 +28,7 @@ namespace detray {
 template <typename frame_t, concepts::algebra algebra_t>
 struct helix_intersector_impl {};
 
+/// Select the helix intersector specialization for a shape's local frame.
 template <typename shape_t, concepts::algebra algebra_t, bool = true>
 using helix_intersector = intersector_base<helix_intersector_impl<
     typename shape_t::template local_frame_type<algebra_t>, algebra_t>>;

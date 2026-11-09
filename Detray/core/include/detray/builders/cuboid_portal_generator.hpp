@@ -71,6 +71,8 @@ class cuboid_portal_generator final
   DETRAY_HOST
   void push_back(
       surface_data<detector_t> && /*unused*/) override { /*Do nothing*/ }
+  /// Ignore inserted surfaces; this factory derives portals from the volume's
+  /// existing surfaces when invoked.
   DETRAY_HOST
   auto push_back(std::vector<surface_data<detector_t>> && /*unused*/)
       -> void override { /*Do nothing*/ }
@@ -83,6 +85,7 @@ class cuboid_portal_generator final
   /// @param transforms the transforms of the surfaces.
   /// @param masks the masks of the surfaces.
   /// @param ctx the geometry context (not needed for portals).
+  /// @returns The half-open range of newly appended portal surfaces.
   DETRAY_HOST
   auto operator()(typename detector_t::volume_type &volume,
                   typename detector_t::surface_lookup_container &surfaces,

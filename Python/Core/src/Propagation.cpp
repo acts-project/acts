@@ -11,6 +11,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/GenericRungeKuttaStepper.hpp"
 #include "Acts/Propagator/HelixStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -129,6 +130,12 @@ void addPropagation(py::module_& m) {
     auto stepper = py::class_<HelixStepper>(m, "HelixStepper");
     stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());
     addPropagator<HelixStepper, Navigator>(m, "Helix");
+  }
+  {
+    auto stepper =
+        py::class_<GenericRungeKuttaStepper>(m, "GenericRungeKuttaStepper");
+    stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());
+    addPropagator<GenericRungeKuttaStepper, Navigator>(m, "GenericRungeKutta");
   }
   {
     auto stepper = py::class_<StraightLineStepper>(m, "StraightLineStepper");

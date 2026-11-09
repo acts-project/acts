@@ -55,6 +55,12 @@ BOOST_AUTO_TEST_CASE(ridders_stepper_repeated_transport) {
   options.maxStepSize = 10_mm;
   auto state = stepper.makeState(options);
   stepper.initialize(state, start);
+  const auto curvature = stepper.curvature(state);
+  BOOST_REQUIRE(curvature.ok());
+  const Vector3 expectedCurvature =
+      stepper.qOverP(state) *
+      stepper.direction(state).cross(Vector3(0., 0., 2_T));
+  CHECK_CLOSE_ABS(*curvature, expectedCurvature, 1e-12);
 
   for (int i = 0; i < 20; ++i) {
     BOOST_REQUIRE(stepper.step(state, Direction::Forward(), nullptr).ok());
@@ -68,11 +74,11 @@ BOOST_AUTO_TEST_CASE(ridders_stepper_repeated_transport) {
   // Step all states onto the surface, like the navigator does
   bool onSurface = false;
   for (int i = 0; i < 10 && !onSurface; ++i) {
-    onSurface =
-        stepper.updateSurfaceStatus(
-            state, *surface, 0, Direction::Forward(),
-            BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
-            ConstrainedStep::Type::Navigator) == IntersectionStatus::onSurface;
+    const auto status = stepper.updateSurfaceStatusWithCurvature(
+        state, *surface, 0, Direction::Forward(), BoundaryTolerance::Infinite(),
+        s_onSurfaceTolerance, ConstrainedStep::Type::Navigator);
+    BOOST_REQUIRE(status.ok());
+    onSurface = *status == IntersectionStatus::onSurface;
     if (!onSurface) {
       BOOST_REQUIRE(stepper.step(state, Direction::Forward(), nullptr).ok());
     }

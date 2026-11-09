@@ -174,6 +174,11 @@ class TrackingGeometryJsonConverter {
           "TrackingGeometryJsonConverter", Acts::Logging::INFO));
 
   /// Convert a tracking geometry to JSON.
+  /// Built-in volume lookup policies are stored as an optional `volume_lookup`
+  /// construction recipe on each volume record (kind and settings), not as
+  /// bin/node assignments. Explicit linear policies are recorded even with
+  /// default settings, since they form subtree delegation boundaries.
+  /// Unsupported custom lookup policies cause an exception.
   ///
   /// @param gctx geometry context
   /// @param geometry tracking geometry to convert
@@ -185,6 +190,9 @@ class TrackingGeometryJsonConverter {
       const Options& options = Options::defaultOptions()) const;
 
   /// Reconstruct a tracking geometry from an in-memory JSON payload.
+  /// A `volume_lookup` recipe is rebuilt after loading the volume hierarchy,
+  /// with descendant policies installed before enclosing indices.
+  /// Payloads without this field retain the default linear lookup.
   ///
   /// @param gctx geometry context
   /// @param encoded Reference to the encoded JSON object
