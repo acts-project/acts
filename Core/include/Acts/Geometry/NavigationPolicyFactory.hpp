@@ -12,7 +12,11 @@
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 
 #include <concepts>
+#include <functional>
 #include <memory>
+#include <span>
+#include <stdexcept>
+#include <vector>
 
 namespace Acts {
 
@@ -20,6 +24,13 @@ class TrackingVolume;
 class GeometryContext;
 class Logger;
 class INavigationPolicy;
+
+/// Non-owning view of the policies already constructed by the same
+/// @ref NavigationPolicyFactory, in the order they were added. Passed to
+/// policies that build on an earlier sibling. The pointees are owned by the
+/// @ref MultiNavigationPolicy the factory returns, so they outlive the policy
+/// receiving them; the view itself is only valid during construction.
+using NavigationPolicySiblings = std::span<const INavigationPolicy* const>;
 
 namespace detail {
 
@@ -46,6 +57,30 @@ concept NavigationPolicyPointerFactoryConcept = requires(
   requires IsNavigationPolicyPtr<
       std::remove_cvref_t<decltype(f(gctx, volume, logger, args...))>>::value;
 };
+
+/// Same as @ref NavigationPolicyPointerFactoryConcept, for factory functions
+/// that additionally receive the earlier sibling policies.
+/// @tparam F The factory function type
+/// @tparam Args The argument types for the factory function
+template <typename F, typename... Args>
+concept NavigationPolicySiblingPointerFactoryConcept = requires(
+    F f, const GeometryContext& gctx, const TrackingVolume& volume,
+    const Logger& logger, NavigationPolicySiblings siblings, Args&&... args) {
+  requires IsNavigationPolicyPtr<std::remove_cvref_t<decltype(f(
+      gctx, volume, logger, siblings, args...))>>::value;
+};
+
+/// Policy constructible from the volume and @p Args
+template <typename P, typename... Args>
+concept NavigationPolicyConstructible =
+    std::is_constructible_v<P, const GeometryContext&, const TrackingVolume&,
+                            const Logger&, Args...>;
+
+/// Policy constructible from the volume, the earlier siblings and @p Args
+template <typename P, typename... Args>
+concept NavigationPolicySiblingConstructible =
+    std::is_constructible_v<P, const GeometryContext&, const TrackingVolume&,
+                            const Logger&, NavigationPolicySiblings, Args...>;
 }  // namespace detail
 
 /// Base class for navigation policy factories. The factory can be assembled
@@ -58,11 +93,18 @@ concept NavigationPolicyPointerFactoryConcept = requires(
 ///  .add<NavigationPolicy2>(/*no args*/)
 ///  .asUniquePtr();
 /// ```
+///
+/// Policies are constructed in the order they were added. A policy (or factory
+/// function) may take the already constructed earlier policies as a
+/// @ref NavigationPolicySiblings argument right after the logger, which lets it
+/// build on an earlier sibling. Siblings are owned by the same
+/// @ref MultiNavigationPolicy, so references to them stay valid.
 class NavigationPolicyFactory {
  private:
   /// Type alias for factory functions that create navigation policies
   using factory_type = std::function<std::unique_ptr<INavigationPolicy>(
-      const GeometryContext&, const TrackingVolume&, const Logger&)>;
+      const GeometryContext&, const TrackingVolume&, const Logger&,
+      NavigationPolicySiblings)>;
 
   /// Private constructor for internal use
   /// @param factories Vector of factory functions
@@ -76,19 +118,29 @@ class NavigationPolicyFactory {
   /// Add a navigation policy to the factory
   /// @tparam P The policy type to add
   /// @param args The arguments to pass to the policy constructor
+  /// @note The policy is constructed from `(gctx, volume, logger, args...)`,
+  ///       or, if it accepts them, from
+  ///       `(gctx, volume, logger, siblings, args...)` with the policies
+  ///       constructed before it.
   /// @note Arguments need to be copy constructible because the factory must be
   ///       able to execute multiple times.
   /// @return New instance of this object with the added factory for method
   ///         chaining
   template <NavigationPolicyConcept P, typename... Args>
-    requires(std::is_constructible_v<P, const GeometryContext&,
-                                     const TrackingVolume&, const Logger&,
-                                     Args...> &&
+    requires((detail::NavigationPolicyConstructible<P, Args...> ||
+              detail::NavigationPolicySiblingConstructible<P, Args...>) &&
              (std::is_copy_constructible_v<Args> && ...))
   constexpr NavigationPolicyFactory add(Args&&... args) && {
-    auto factory = [=](const GeometryContext& gctx,
-                       const TrackingVolume& volume, const Logger& logger) {
-      return std::make_unique<P>(gctx, volume, logger, args...);
+    auto factory =
+        [=](const GeometryContext& gctx, const TrackingVolume& volume,
+            const Logger& logger,
+            NavigationPolicySiblings siblings) -> factory_type::result_type {
+      // Prefer the sibling-aware constructor: a policy offering it wants them
+      if constexpr (detail::NavigationPolicySiblingConstructible<P, Args...>) {
+        return std::make_unique<P>(gctx, volume, logger, siblings, args...);
+      } else {
+        return std::make_unique<P>(gctx, volume, logger, args...);
+      }
     };
 
     m_factories.push_back(std::move(factory));
@@ -100,20 +152,30 @@ class NavigationPolicyFactory {
   /// factory function to select between different concrete policy types at
   /// runtime (e.g. based on the volume geometry).
   /// @tparam Fn The type of the function to construct the policy
-  /// @param fn The factory function
+  /// @param fn The factory function, called with
+  ///           `(gctx, volume, logger, args...)` or, if it accepts them,
+  ///           `(gctx, volume, logger, siblings, args...)`
   /// @param args The arguments to pass to the policy factory
   /// @note Arguments need to be copy constructible because the factory must be
   ///       able to execute multiple times.
   /// @return New instance of this object with the added factory for method
   ///         chaining
   template <typename Fn, typename... Args>
-    requires(detail::NavigationPolicyPointerFactoryConcept<Fn, Args...> &&
-             (std::is_copy_constructible_v<Args> && ...))
+    requires(
+        (detail::NavigationPolicyPointerFactoryConcept<Fn, Args...> ||
+         detail::NavigationPolicySiblingPointerFactoryConcept<Fn, Args...>) &&
+        (std::is_copy_constructible_v<Args> && ...))
   constexpr NavigationPolicyFactory add(Fn&& fn, Args&&... args) && {
-    auto factory = [=](const GeometryContext& gctx,
-                       const TrackingVolume& volume,
-                       const Logger& logger) -> factory_type::result_type {
-      return fn(gctx, volume, logger, args...);
+    auto factory =
+        [=](const GeometryContext& gctx, const TrackingVolume& volume,
+            const Logger& logger,
+            NavigationPolicySiblings siblings) -> factory_type::result_type {
+      if constexpr (detail::NavigationPolicySiblingPointerFactoryConcept<
+                        Fn, Args...>) {
+        return fn(gctx, volume, logger, siblings, args...);
+      } else {
+        return fn(gctx, volume, logger, args...);
+      }
     };
 
     m_factories.push_back(std::move(factory));
@@ -126,7 +188,8 @@ class NavigationPolicyFactory {
     return std::make_unique<NavigationPolicyFactory>(std::move(*this));
   }
 
-  /// Construct a multi-navigation policy using the registered factories
+  /// Construct a multi-navigation policy using the registered factories. The
+  /// factories run in order, each receiving the policies built before it.
   /// @param gctx The geometry context
   /// @param volume The tracking volume
   /// @param logger The logger
@@ -142,8 +205,13 @@ class NavigationPolicyFactory {
 
     std::vector<std::unique_ptr<INavigationPolicy>> policies;
     policies.reserve(m_factories.size());
-    for (auto& factory : m_factories) {
-      policies.push_back(factory(gctx, volume, logger));
+    // Observation-only view handed to the children, hides the ownership
+    std::vector<const INavigationPolicy*> siblings;
+    siblings.reserve(m_factories.size());
+    for (const auto& factory : m_factories) {
+      policies.push_back(
+          factory(gctx, volume, logger, NavigationPolicySiblings{siblings}));
+      siblings.push_back(policies.back().get());
     }
 
     return std::make_unique<MultiNavigationPolicy>(std::move(policies));

@@ -304,6 +304,83 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
   BOOST_CHECK_EQUAL(cPolicy.value, 44);
 }
 
+// Records the earlier siblings it was constructed with
+struct SiblingPolicy : public INavigationPolicy {
+  struct Config {
+    int value = 0;
+  };
+
+  SiblingPolicy(const GeometryContext& /*gctx*/,
+                const TrackingVolume& /*volume*/, const Logger& /*logger*/,
+                NavigationPolicySiblings siblings, Config config)
+      : m_config(config) {
+    seen.assign(siblings.begin(), siblings.end());
+  }
+
+  void connect(NavigationDelegate& delegate) const override {
+    connectDefault<SiblingPolicy>(delegate);
+  }
+
+  void initializeCandidates(const GeometryContext& /*unused*/,
+                            const NavigationArguments& /*unused*/,
+                            NavigationPolicyState& /*unused*/,
+                            AppendOnlyNavigationStream& /*unused*/,
+                            const Logger& /*unused*/) const {}
+
+  std::vector<const INavigationPolicy*> seen;
+  Config m_config;
+};
+
+std::unique_ptr<INavigationPolicy> makeSiblingPolicy(
+    const GeometryContext& gctx_, const TrackingVolume& volume,
+    const Logger& logger_, NavigationPolicySiblings siblings, int value) {
+  return std::make_unique<SiblingPolicy>(gctx_, volume, logger_, siblings,
+                                         SiblingPolicy::Config{.value = value});
+}
+
+BOOST_AUTO_TEST_CASE(FactorySiblingsTest) {
+  TrackingVolume volume{
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 310_mm),
+      "PixelLayer3"};
+
+  auto factory = NavigationPolicyFactory{}
+                     .add<SiblingPolicy>(SiblingPolicy::Config{.value = 1})
+                     .add<APolicy>()
+                     .add<BPolicy>(BPolicy::Config{.value = 2})
+                     .add<SiblingPolicy>(SiblingPolicy::Config{.value = 3})
+                     .add(makeSiblingPolicy, 4);
+
+  // Build twice: every run must see its own siblings
+  for (int run = 0; run < 2; ++run) {
+    auto policyBase = factory(gctx, volume, *logger);
+    const auto children = policyBase->policies();
+    BOOST_REQUIRE_EQUAL(children.size(), 5);
+
+    const auto& first = dynamic_cast<const SiblingPolicy&>(*children[0]);
+    BOOST_CHECK(first.seen.empty());
+    BOOST_CHECK_EQUAL(first.m_config.value, 1);
+
+    const auto& fourth = dynamic_cast<const SiblingPolicy&>(*children[3]);
+    BOOST_CHECK_EQUAL(fourth.m_config.value, 3);
+    BOOST_REQUIRE_EQUAL(fourth.seen.size(), 3);
+    for (std::size_t i = 0; i < 3; ++i) {
+      BOOST_CHECK_EQUAL(fourth.seen[i], children[i].get());
+    }
+
+    const auto& fifth = dynamic_cast<const SiblingPolicy&>(*children[4]);
+    BOOST_CHECK_EQUAL(fifth.m_config.value, 4);
+    BOOST_REQUIRE_EQUAL(fifth.seen.size(), 4);
+    for (std::size_t i = 0; i < 4; ++i) {
+      BOOST_CHECK_EQUAL(fifth.seen[i], children[i].get());
+    }
+
+    // The sibling-aware policies still connect like any other
+    NavigationDelegate delegate;
+    BOOST_CHECK_NO_THROW(policyBase->connect(delegate));
+  }
+}
+
 namespace {
 
 std::vector<const Portal*> getTruth(const Vector3& position,
