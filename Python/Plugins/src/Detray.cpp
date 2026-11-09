@@ -91,25 +91,32 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
           .def_readwrite("convertSurfaceGrids",
                          &DetrayPayloadConverter::Config::convertSurfaceGrids)
           .def_property(
-              "beampipeVolume",
+              "detectorName",
               [](const DetrayPayloadConverter::Config& cfg) {
-                return cfg.beampipeVolume;
+                return cfg.detectorName;
               },
-              [](DetrayPayloadConverter::Config& cfg,
-                 const Acts::TrackingVolume* volume) {
-                cfg.beampipeVolume = volume;
-              },
-              py::return_value_policy::reference)
-          .def_property(
-              "replacementWorld",
-              [](const DetrayPayloadConverter::Config& cfg) {
-                return cfg.replacementWorld;
-              },
-              [](DetrayPayloadConverter::Config& cfg,
-                 const Acts::TrackingVolume* volume) {
-                cfg.replacementWorld = volume;
+              [](DetrayPayloadConverter::Config& cfg, const std::string& name) {
+                cfg.detectorName = name;
               },
               py::return_value_policy::reference);
+  .def_property(
+      "beampipeVolume",
+      [](const DetrayPayloadConverter::Config& cfg) {
+        return cfg.beampipeVolume;
+      },
+      [](DetrayPayloadConverter::Config& cfg,
+         const Acts::TrackingVolume* volume) { cfg.beampipeVolume = volume; },
+      py::return_value_policy::reference)
+      .def_property(
+          "replacementWorld",
+          [](const DetrayPayloadConverter::Config& cfg) {
+            return cfg.replacementWorld;
+          },
+          [](DetrayPayloadConverter::Config& cfg,
+             const Acts::TrackingVolume* volume) {
+            cfg.replacementWorld = volume;
+          },
+          py::return_value_policy::reference);
 
   py::enum_<DetrayPayloadConverter::Config::SensitiveStrategy>(
       payloadConfig, "SensitiveStrategy")
@@ -180,10 +187,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
           "convert",
           [](const DetrayGeometryConverter& self, vecmem::memory_resource& mr,
              const Acts::GeometryContext& gctx,
-             std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-             const std::string& detectorName) {
-            return self.convert<DetrayMetaDataODD>(
-                mr, gctx, std::move(trackingGeometry), detectorName);
+             std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
+            return self.convert<DetrayMetaDataODD>(mr, gctx,
+                                                   std::move(trackingGeometry));
           },
           "mr"_a, "gctx"_a, "trackingGeometry"_a, "detectorName"_a = "");
 }

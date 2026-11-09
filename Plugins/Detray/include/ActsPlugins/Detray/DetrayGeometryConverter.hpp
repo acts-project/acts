@@ -101,8 +101,8 @@ class DetrayGeometryConverter {
   template <detray::concepts::metadata metadata_t>
   DetrayGeometry<metadata_t> convert(
       vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
-      const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
-      const std::string& detectorName = "") const {
+      const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry)
+      const {
     using detector_t = detray::host::detector<metadata_t>;
 
     if (trackingGeometry == nullptr) {
@@ -114,11 +114,6 @@ class DetrayGeometryConverter {
     detray::io::detector_payload payload =
         m_cfg.payloadConverter->convertTrackingGeometry(gctx,
                                                         *trackingGeometry);
-
-    // Overwrite detector name
-    if (!detectorName.empty()) {
-      payload.detector_name = detectorName;
-    }
 
     // ── Build detray detector from payload ───────────────────────────────
     detray::io::detector_reader_config readerCfg{};

@@ -123,6 +123,7 @@ def main():
             detrayDetector, detrayNames = acts.detray.readODD(__pmr, files)
         else:
             payloadConfig = acts.detray.DetrayPayloadConverter.Config()
+            payloadConfig.detectorName = "odd"
             payloadConfig.beampipeVolume = trackingGeometry.findVolumeByName("BeamPipe")
             payloadConverter = acts.detray.DetrayPayloadConverter(
                 payloadConfig, logLevel
@@ -132,9 +133,7 @@ def main():
             converterConfig.payloadConverter = payloadConverter
             converter = acts.detray.DetrayGeometryConverter(converterConfig, logLevel)
 
-            detrayGeometry = converter.convert(
-                __pmr, gContext, trackingGeometry, detectorName="odd"
-            )
+            detrayGeometry = converter.convert(__pmr, gContext, trackingGeometry)
             detrayDetector, detrayNames = (
                 detrayGeometry.detector,
                 detrayGeometry.names,
