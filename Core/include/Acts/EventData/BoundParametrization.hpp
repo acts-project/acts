@@ -58,8 +58,7 @@ class BoundParametrization {
     }
 
     Vector2 directionCoordinates(const Vector3& direction) const {
-      assert(direction.allFinite() && direction.cwiseAbs().maxCoeff() > 0. &&
-             std::isfinite(direction.stableNorm()) &&
+      assert(hasNonzeroRepresentableNorm(direction) &&
              "Direction must be finite and nonzero with a representable norm");
       // Angles are scale invariant: no normalization is needed. Preserve the
       // atan2 endpoint convention used by bound/free conversion at +/-pi.
@@ -216,9 +215,9 @@ class BoundParametrization {
     template <typename Left, typename Right>
     BoundVector difference(const Eigen::MatrixBase<Left>& lhs,
                            const Eigen::MatrixBase<Right>& rhs) const {
-      assertFinite(lhs);
-      assertFinite(rhs);
       BoundVector result = lhs - rhs;
+      // A finite difference implies finite inputs: a nonfinite operand always
+      // yields a nonfinite result.
       assertFinite(result);
       result[eBoundDir0] = detail::radian_sym(result[eBoundDir0]);
       result[eBoundDir1] = detail::radian_sym(result[eBoundDir1]);
@@ -232,6 +231,19 @@ class BoundParametrization {
     }
 
    private:
+    /// Whether a direction is finite and nonzero with a representable norm.
+    /// The norm is bounded by sqrt(3) times the largest component, so the
+    /// expensive overflow-safe norm is only needed close to the overflow
+    /// threshold.
+    static bool hasNonzeroRepresentableNorm(const Vector3& direction) {
+      if (!direction.allFinite()) {
+        return false;
+      }
+      const double maxComponent = direction.cwiseAbs().maxCoeff();
+      return maxComponent > 0. &&
+             (maxComponent <= 0.5 * std::numeric_limits<double>::max() ||
+              std::isfinite(direction.stableNorm()));
+    }
     static void assertFiniteAngles([[maybe_unused]] double phi,
                                    [[maybe_unused]] double theta) {
       assert(std::isfinite(phi) && std::isfinite(theta) &&
