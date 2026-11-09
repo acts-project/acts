@@ -187,9 +187,11 @@ class FpeMonitor {
   /// Constructor with exception mask
   /// @param excepts Mask of exceptions to monitor
   explicit FpeMonitor(int excepts);
-  /// Move constructor
-  /// @param other Monitor to move from
-  FpeMonitor(FpeMonitor &&other) = default;
+  // The thread-local monitor stack stores this object's address.
+  FpeMonitor(const FpeMonitor &) = delete;
+  FpeMonitor &operator=(const FpeMonitor &) = delete;
+  FpeMonitor(FpeMonitor &&) = delete;
+  FpeMonitor &operator=(FpeMonitor &&) = delete;
   ~FpeMonitor();
 
   /// Get monitoring result
