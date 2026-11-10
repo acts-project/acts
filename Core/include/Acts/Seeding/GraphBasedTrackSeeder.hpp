@@ -231,10 +231,13 @@ class GraphBasedTrackSeeder {
   /// @param nodeView View of the node positions and layers
   /// @param graph The graph
   /// @param filter Tracking filter fitting the paths
+  /// @param outerHits Set for the outer node of each edge too far out to head
+  ///                  a path, which the clone removal counts as taken twice
   /// @return The fitted paths
   std::vector<FittedPath> extractBestPathPerEdge(
       const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
-      const GbtsTrackingFilter& filter) const;
+      const GbtsTrackingFilter& filter,
+      std::vector<std::uint8_t>& outerHits) const;
 
   /// Estimate the inverse radius of the circle through three nodes.
   /// @param nodeView View of the node positions and layers
