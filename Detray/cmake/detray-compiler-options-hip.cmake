@@ -26,4 +26,4 @@ if(PROJECT_IS_TOP_LEVEL)
     endif()
 endif()
 
-acts_apply_warning_flags(PROFILE detray LANGUAGES HIP)
+acts_apply_warning_flags(HIP ${DETRAY_FAIL_ON_WARNINGS})

@@ -1,4 +1,4 @@
-acts_apply_warning_flags(PROFILE acts LANGUAGES CXX)
+acts_apply_warning_flags(CXX ${ACTS_FAIL_ON_WARNINGS})
 
 # Configure setup and install python files
 set(_python_dir "${CMAKE_BINARY_DIR}/python")

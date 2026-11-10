@@ -521,7 +521,7 @@ endif()
 #
 
 # Apply warnings after dependency setup so they only affect our targets.
-acts_apply_warning_flags(PROFILE detray LANGUAGES CXX)
+acts_apply_warning_flags(CXX ${DETRAY_FAIL_ON_WARNINGS})
 
 add_subdirectory(core)
 add_subdirectory(detectors)

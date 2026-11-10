@@ -8,4 +8,4 @@
 
 cmake_minimum_required(VERSION 3.21)
 
-acts_apply_warning_flags(PROFILE detray LANGUAGES SYCL)
+acts_apply_warning_flags(SYCL ${DETRAY_FAIL_ON_WARNINGS})

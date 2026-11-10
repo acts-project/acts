@@ -1,4 +1,4 @@
-acts_apply_warning_flags(PROFILE acts LANGUAGES CXX)
+acts_apply_warning_flags(CXX ${ACTS_FAIL_ON_WARNINGS})
 
 configure_file(
     ActsVersion.hpp.in

@@ -461,9 +461,6 @@ option(
     FALSE
 )
 
-# Apply warnings after dependency setup so they only affect our targets.
-acts_apply_warning_flags(PROFILE traccc LANGUAGES CXX)
-
 # Build the traccc code.
 add_subdirectory(core)
 add_subdirectory(device/common)

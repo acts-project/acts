@@ -29,4 +29,4 @@ if("${CMAKE_HIP_PLATFORM}" STREQUAL "nvidia")
     traccc_add_flag(CMAKE_HIP_FLAGS "--use_fast_math")
 endif()
 
-acts_apply_warning_flags(PROFILE traccc LANGUAGES HIP)
+acts_apply_warning_flags(HIP ${TRACCC_FAIL_ON_WARNINGS})

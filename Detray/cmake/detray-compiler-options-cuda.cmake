@@ -40,4 +40,4 @@ if(PROJECT_IS_TOP_LEVEL)
     detray_add_flag( CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-lineinfo -src-in-ptx" )
 endif()
 
-acts_apply_warning_flags(PROFILE detray LANGUAGES CUDA)
+acts_apply_warning_flags(CUDA ${DETRAY_FAIL_ON_WARNINGS})
