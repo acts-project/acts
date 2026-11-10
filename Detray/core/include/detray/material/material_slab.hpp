@@ -53,9 +53,10 @@ struct material_slab {
   /// Boolean operator
   /// @return true when the slab contributes material
   DETRAY_HOST_DEVICE
-  constexpr explicit operator bool() const {
+  constexpr bool is_valid() const {
     if (m_thickness <= std::numeric_limits<scalar_type>::epsilon() ||
-        m_thickness == std::numeric_limits<scalar_type>::max() || !m_material) {
+        m_thickness == std::numeric_limits<scalar_type>::max() ||
+        !m_material.is_valid()) {
       return false;
     }
     assert(m_material != vacuum<scalar_type>());
