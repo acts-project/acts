@@ -19,4 +19,4 @@ if(
     return()
 endif()
 
-acts_apply_warning_flags(PROFILE traccc LANGUAGES SYCL)
+acts_apply_warning_flags(SYCL ${TRACCC_FAIL_ON_WARNINGS})

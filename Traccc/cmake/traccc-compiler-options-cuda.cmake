@@ -47,4 +47,4 @@ endif()
 # profilers have access to line data.
 traccc_add_flag(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-lineinfo")
 
-acts_apply_warning_flags(PROFILE traccc LANGUAGES CUDA)
+acts_apply_warning_flags(CUDA ${TRACCC_FAIL_ON_WARNINGS})
