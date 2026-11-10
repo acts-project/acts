@@ -339,12 +339,22 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
   const auto maxLength = static_cast<std::uint32_t>(m_cfg.maxChainLength);
 
+  // The edges that hold a neighbour, in order. Any other edge ends every chain
+  // it is in, so it settles nothing below and heads no path of more than one
+  // edge, which makes no seed.
+  std::vector<std::uint32_t> linkedEdges;
+  for (std::uint32_t e = 0; e < nEdges; ++e) {
+    if (!graph.innerNeighbours(e).empty()) {
+      linkedEdges.push_back(e);
+    }
+  }
+
   // The level of an edge is the length of the longest chain of edges going
   // outwards from it. The inner neighbours of an edge are created after it, so
   // one pass in edge order settles it. Edges in chains longer than `maxLength`
   // stay above it and are left out.
   std::vector<std::uint32_t> level(nEdges, 1);
-  for (std::uint32_t e = 0; e < nEdges; ++e) {
+  for (const std::uint32_t e : linkedEdges) {
     const std::uint32_t next = std::min(level[e] + 1, maxLength + 1);
     for (const std::uint32_t inner : graph.innerNeighbours(e)) {
       std::uint32_t& innerLevel = level[inner];
@@ -355,8 +365,11 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   // The most edges on a chain from an edge inwards to a root, the edge
   // included, stepping one level up at a time; zero for an edge left out.
   // The edges further in come later, so one pass backwards settles it.
-  std::vector<std::uint32_t> edgesToRoot(nEdges, 0);
-  for (std::uint32_t e = nEdges; e-- > 0;) {
+  std::vector<std::uint32_t> edgesToRoot(nEdges);
+  for (std::uint32_t e = 0; e < nEdges; ++e) {
+    edgesToRoot[e] = level[e] <= maxLength ? 1 : 0;
+  }
+  for (const std::uint32_t e : linkedEdges | std::views::reverse) {
     if (level[e] > maxLength) {
       continue;
     }
@@ -434,7 +447,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     path.pop_back();
   };
 
-  for (std::uint32_t head = 0; head < nEdges; ++head) {
+  for (const std::uint32_t head : linkedEdges) {
     const detail::GbtsEdge& headEdge = edgeStorage[head];
 
     // `addTriplets` accepts a path one edge short at low eta
