@@ -5,8 +5,9 @@
 #
 #   1. CI/physmon/workflows/physmon_<slug>.py
 #   2. a `producers:` block here (see below)
-#   3. a six-line `rule produce_<slug>` in the Snakefile, whose directives are
-#      all derived from this file -- no output paths are written out by hand
+#
+# The Snakefile generates the `produce_<slug>` rule (one per variant) from
+# that block; no output paths are written out by hand.
 #
 # Three top-level sections:
 #   - trackfinding_base / trackfinding_extras: row templates. Trackfinding
@@ -96,8 +97,8 @@ trackfinding_extras:
 
 
 # ---------------------------------------------------------------------------
-# Producers. One block per `rule produce_<slug>`; the key is the slug, which
-# also names the script (workflows/physmon_<slug>.py) and the output directory
+# Producers. One block per producer; the key is the slug, which also names the
+# script (workflows/physmon_<slug>.py) and the output directory
 # ({OUTDIR}/data/<slug>).
 #
 # Keys, all optional:

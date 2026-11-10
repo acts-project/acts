@@ -5,12 +5,11 @@
 #   - Editing one producer only re-runs that branch.
 #   - The catalog of jobs lives in config/physmon.yaml, not in shell ifs.
 #
-# This file holds mechanism; config/physmon.yaml holds the catalog. Every
-# producer rule's outputs, inputs, thread budget and command are derived from
-# that file, so adding a physmon chain means writing a workflow script, adding
-# a `producers:` block, and pasting the same six-line rule stanza with the new
-# slug -- no output paths are listed by hand. A `producers:` entry with no
-# matching rule fails at DAG construction rather than silently doing nothing.
+# This file holds mechanism; config/physmon.yaml holds the catalog. One
+# producer rule per producer and variant is generated from that file, with its
+# outputs, inputs, thread budget and command, so adding a physmon chain or a
+# variant means writing or extending a workflow script and editing the catalog
+# -- this file and the output paths stay untouched.
 #
 # Every rule is run through scripts/wrap.sh so it always exits 0 and writes a
 # small JSON witness {"step","rc","log"}. The summary step joins those witnesses
@@ -308,41 +307,27 @@ def _output_key(rel):
     return Path(rel).name[: -len(".root")] if rel.endswith(".root") else Path(rel).name
 
 
-def producer_outputs(slug, variant=None, path_variant=None):
-    """The `output:` mapping for a producer rule.
-
-    `path_variant` overrides the variant used in the emitted paths, so a rule
-    covering several variants through a wildcard can select its row set with a
-    representative variant while still emitting '{variant}' in the paths.
-    """
-    if path_variant is None:
-        path_variant = variant
-    prefix = f"{slug}/{path_variant}/" if path_variant is not None else f"{slug}/"
-    # The comparison's paths already carry the concrete variant; swap in the
-    # wildcard (or nothing) so the emitted path matches the rule.
-    concrete = f"{slug}/{variant}/" if variant is not None else f"{slug}/"
+def producer_outputs(slug, variant=None):
+    """The `output:` mapping for the rule of one producer (and variant)."""
+    prefix = f"{slug}/{variant}/" if variant is not None else f"{slug}/"
 
     outputs = {}
     for comp in comps_for_producer(slug, variant):
         if "plot" in comp:
             rel = comp["plot"]["from"]
-            outputs[_output_key(rel)] = temp(f"{OUTDIR}/data/{prefix}{rel[len(concrete):]}")
+            outputs[_output_key(rel)] = temp(f"{OUTDIR}/data/{rel}")
         else:
             rel = comp["current"]
-            outputs[_output_key(rel)] = f"{OUTDIR}/data/{prefix}{rel[len(concrete):]}"
+            outputs[_output_key(rel)] = f"{OUTDIR}/data/{rel}"
         if comp.get("reference_in") == "outdir":
             rel = comp["reference"]
-            outputs[_output_key(rel)] = f"{OUTDIR}/data/{prefix}{rel[len(concrete):]}"
+            outputs[_output_key(rel)] = f"{OUTDIR}/data/{rel}"
 
     for rel in PRODUCERS[slug].get("extra_outputs") or []:
         outputs[_output_key(rel)] = f"{OUTDIR}/data/{prefix}{rel}"
 
     assert "witness" not in outputs, f"{slug}: an output is named 'witness'"
-    outputs["witness"] = (
-        f"{OUTDIR}/witnesses/producer/{slug}/{path_variant}.json"
-        if path_variant is not None
-        else witness_for_producer(slug)
-    )
+    outputs["witness"] = witness_for_producer(slug, variant)
     return outputs
 
 
@@ -360,21 +345,27 @@ def producer_log(slug, variant=None):
     return f"{OUTDIR}/logs/{stem}.log"
 
 
-def producer_shell(slug, variant=None):
-    """The wrapped script invocation. Scripts and output dirs follow the slug."""
+def producer_command(slug, variant, threads):
+    """The script invocation. Scripts and output dirs follow the slug."""
     outdir = f"{OUTDIR}/data/{slug}"
-    cmd = (
-        WRAP + " --witness {output.witness} --step producer --log {log} "
-        "--touches '{output}' -- "
-        f"python3 {WORKFLOWS_DIR}/physmon_{slug}.py "
-    )
+    cmd = f"python3 {WORKFLOWS_DIR}/physmon_{slug}.py "
     if variant is not None:
         cmd += f"{outdir}/{variant} --variant {variant} "
     else:
         cmd += f"{outdir} "
     if PRODUCERS[slug].get("threads", True):
-        cmd += "--threads {threads}"
+        cmd += f"--threads {threads}"
     return cmd.rstrip()
+
+
+def producer_command_param(slug, variant):
+    """producer_command() as a params function, bound to this slug and variant.
+
+    The producer rules are defined in a loop, and a shell: directive is only
+    evaluated when the job runs, after the loop has moved on. Binding the
+    command through params keeps each rule on its own slug and variant.
+    """
+    return lambda wildcards, threads: producer_command(slug, variant, threads)
 
 
 def _check_histcmp_witnesses(comps):
@@ -487,125 +478,32 @@ rule gx2f_vs_kf:
 
 
 # ---------------------------------------------------------------------------
-# Producer rules. One per script, and deliberately still one rule each rather
-# than a loop: `snakemake produce_<slug>` and a grep for the rule name both
-# keep working, and the DAG stays readable. Every directive is derived from
-# the catalog, so the body is the same six lines for each and adding a chain
-# means adding a `producers:` block and a script, not a list of output paths.
+# Producer rules: one per producer, and per variant for producers that have
+# variants, named produce_<slug> or produce_<slug>_<variant>, so
+# `snakemake produce_<slug>_<variant>` runs a single one. Every directive comes
+# from the catalog, so a new `producers:` block or variant needs no change here.
 #
 # Outputs that feed plot_hist come back from producer_outputs() wrapped in
 # temp(), so snakemake auto-cleans the large ntuples once they have been
 # consumed (matching the original `rm` in the legacy shell script).
 # ---------------------------------------------------------------------------
 
-rule produce_simulation:
-    input:   producer_inputs("simulation")
-    output:  **producer_outputs("simulation")
-    log:     producer_log("simulation")
-    threads: producer_threads("simulation")
-    shell:   producer_shell("simulation")
+def producer_rule_name(slug, variant=None):
+    return f"produce_{slug}" + (f"_{variant}" if variant is not None else "")
 
 
-rule produce_simulation_gsf:
-    input:   producer_inputs("simulation_gsf")
-    output:  **producer_outputs("simulation_gsf")
-    log:     producer_log("simulation_gsf")
-    threads: producer_threads("simulation_gsf")
-    shell:   producer_shell("simulation_gsf")
-
-
-rule produce_trackfitting_kf:
-    input:   producer_inputs("trackfitting_kf")
-    output:  **producer_outputs("trackfitting_kf")
-    log:     producer_log("trackfitting_kf")
-    threads: producer_threads("trackfitting_kf")
-    shell:   producer_shell("trackfitting_kf")
-
-
-rule produce_trackfitting_gsf:
-    input:   producer_inputs("trackfitting_gsf")
-    output:  **producer_outputs("trackfitting_gsf")
-    log:     producer_log("trackfitting_gsf")
-    threads: producer_threads("trackfitting_gsf")
-    shell:   producer_shell("trackfitting_gsf")
-
-
-rule produce_trackfitting_gx2f:
-    input:   producer_inputs("trackfitting_gx2f")
-    output:  **producer_outputs("trackfitting_gx2f")
-    log:     producer_log("trackfitting_gx2f")
-    threads: producer_threads("trackfitting_gx2f")
-    shell:   producer_shell("trackfitting_gx2f")
-
-
-rule produce_trackrefitting_kf:
-    input:   producer_inputs("trackrefitting_kf")
-    output:  **producer_outputs("trackrefitting_kf")
-    log:     producer_log("trackrefitting_kf")
-    threads: producer_threads("trackrefitting_kf")
-    shell:   producer_shell("trackrefitting_kf")
-
-
-rule produce_trackrefitting_gsf:
-    input:   producer_inputs("trackrefitting_gsf")
-    output:  **producer_outputs("trackrefitting_gsf")
-    log:     producer_log("trackrefitting_gsf")
-    threads: producer_threads("trackrefitting_gsf")
-    shell:   producer_shell("trackrefitting_gsf")
-
-
-rule produce_trackfitting_gx2f_vs_kf:
-    input:   producer_inputs("trackfitting_gx2f_vs_kf")
-    output:  **producer_outputs("trackfitting_gx2f_vs_kf")
-    log:     producer_log("trackfitting_gx2f_vs_kf")
-    threads: producer_threads("trackfitting_gx2f_vs_kf")
-    shell:   producer_shell("trackfitting_gx2f_vs_kf")
-
-
-# trackfinding_1muon is split into two rules so the output set correctly
-# reflects that TruthSmeared does NOT produce performance_seeding.root. The
-# wildcard rule covers the rest, which all share one row set -- asserted here
-# so a future variant with a different pack cannot silently ride along on
-# SEEDING_VARIANT's outputs.
-SEEDING_VARIANTS = [v for v in PRODUCER_VARIANTS["trackfinding_1muon"] if v != "TruthSmeared"]
-SEEDING_VARIANT = SEEDING_VARIANTS[0]
-for _v in SEEDING_VARIANTS[1:]:
-    assert set(producer_outputs("trackfinding_1muon", _v, path_variant="{variant}")) == set(
-        producer_outputs("trackfinding_1muon", SEEDING_VARIANT, path_variant="{variant}")
-    ), f"trackfinding_1muon variant {_v} has a different output set than {SEEDING_VARIANT}"
-
-
-rule produce_trackfinding_1muon_with_seeding:
-    output:
-        **producer_outputs("trackfinding_1muon", SEEDING_VARIANT, path_variant="{variant}"),
-    wildcard_constraints:
-        variant = "|".join(SEEDING_VARIANTS),
-    log:     producer_log("trackfinding_1muon", "{variant}")
-    threads: producer_threads("trackfinding_1muon")
-    shell:   producer_shell("trackfinding_1muon", "{wildcards.variant}")
-
-
-rule produce_trackfinding_1muon_TruthSmeared:
-    output:  **producer_outputs("trackfinding_1muon", "TruthSmeared")
-    log:     producer_log("trackfinding_1muon", "TruthSmeared")
-    threads: producer_threads("trackfinding_1muon")
-    shell:   producer_shell("trackfinding_1muon", "TruthSmeared")
-
-
-rule produce_trackfinding_4muon_50vertices:
-    input:   producer_inputs("trackfinding_4muon_50vertices")
-    output:  **producer_outputs("trackfinding_4muon_50vertices")
-    log:     producer_log("trackfinding_4muon_50vertices")
-    threads: producer_threads("trackfinding_4muon_50vertices")
-    shell:   producer_shell("trackfinding_4muon_50vertices")
-
-
-rule produce_trackfinding_ttbar_pu200:
-    input:   producer_inputs("trackfinding_ttbar_pu200")
-    output:  **producer_outputs("trackfinding_ttbar_pu200")
-    log:     producer_log("trackfinding_ttbar_pu200")
-    threads: producer_threads("trackfinding_ttbar_pu200")
-    shell:   producer_shell("trackfinding_ttbar_pu200")
+for _slug in PRODUCER_SLUGS:
+    for _variant in PRODUCER_VARIANTS.get(_slug, [None]):
+        rule:
+            name:    producer_rule_name(_slug, _variant)
+            input:   producer_inputs(_slug)
+            output:  **producer_outputs(_slug, _variant)
+            log:     producer_log(_slug, _variant)
+            threads: producer_threads(_slug)
+            params:  cmd = producer_command_param(_slug, _variant)
+            shell:
+                WRAP + " --witness {output.witness} --step producer --log {log} "
+                "--touches '{output}' -- {params.cmd}"
 
 
 # ---------------------------------------------------------------------------
