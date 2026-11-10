@@ -15,7 +15,6 @@ from detray_metadata import (
     add_wire_chamber_defaults,
 )
 
-from .itk_detector import configure as configure_itk
 from .odd_detector import configure as configure_odd
 
 import logging
@@ -39,7 +38,8 @@ def configure(md: metadata):
 
     # Make sure all detectors can be represented by this metadata
     configure_odd(md)
-    configure_itk(md)
+    # Stereo annulus strip modules (e.g. ATLAS ITk)
+    md.add_sensitive(Shape.ANNULUS)
 
     # Extra passive surface shapes (cylinder with two intersection solutions)
     md.add_passive(Shape.CYLINDER2D)
