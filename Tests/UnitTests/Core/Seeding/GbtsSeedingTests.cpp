@@ -26,6 +26,7 @@
 #include <numbers>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -238,6 +239,15 @@ std::vector<Track> makeDenseForwardTracks() {
   return makeTracks(20, -0.05f, 0.05f, 1.9f, 2.1f);
 }
 
+/// Dense tracks plus dense tracks that leave the barrel before its outermost
+/// layer, with three hits, between them chains of every length.
+std::vector<Track> makeMixedLengthTracks() {
+  std::vector<Track> tracks = makeDenseTracks();
+  const std::vector<Track> shorter = makeTracks(20, -0.05f, 0.05f, 0.95f, 1.2f);
+  tracks.insert(tracks.end(), shorter.begin(), shorter.end());
+  return tracks;
+}
+
 /// One hit per crossed layer per track, in the container layout
 /// GraphBasedSeedingAlgorithm::makeSpContainer produces. `trackId` is test-only
 /// bookkeeping: with endcaps the number of hits varies per track.
@@ -389,9 +399,15 @@ struct SeederSetup {
 /// @param quiet mute the loggers, for a case that drives the graph empty on
 ///              purpose: the log failure threshold makes the warning that says
 ///              so an error, and a level above it cannot be asked for either
+/// @param pruneShortChains leave out edges too short for a seed
+/// @param addTriplets accept a chain one edge short at low eta
+/// @param minSeedLevel chain length a seed needs
 SeederSetup makeSeeder(const ToyDetector& detector,
                        const bool calibrateStrips = true,
-                       const bool quiet = false) {
+                       const bool quiet = false,
+                       const bool pruneShortChains = false,
+                       const bool addTriplets = false,
+                       const std::uint8_t minSeedLevel = 3) {
   auto geometry = makeGeometry(detector);
 
   const auto makeLogger = [quiet]() -> std::unique_ptr<const Logger> {
@@ -402,11 +418,14 @@ SeederSetup makeSeeder(const ToyDetector& detector,
   Experimental::GraphBasedTrackSeeder::Config config;
   // the toy setup has no tau lookup table and no cluster widths
   config.useClusterWidthCuts = false;
+  config.addTriplets = addTriplets;
+  config.minSeedLevel = minSeedLevel;
 
   Experimental::GbtsGraphBuilder::Config graphConfig;
   graphConfig.minPt = 1_GeV;
   graphConfig.maxOuterRadius = detector.maxOuterRadius;
   graphConfig.calibrateStrips = calibrateStrips;
+  graphConfig.pruneShortChains = pruneShortChains;
 
   return SeederSetup{
       .seeder = Experimental::GraphBasedTrackSeeder(
@@ -696,6 +715,121 @@ BOOST_AUTO_TEST_CASE(EdgesKeepEveryInnerNeighbour) {
     BOOST_REQUIRE_LT(e, nEdges);
     // a link joins two edges through their common node
     BOOST_CHECK_EQUAL(graph.edgeStorage[e].n2, graph.edgeStorage[*outer].n1);
+  }
+}
+
+// With a minimum level per bin, the graph builder drops exactly the edges
+// whose longest chain outwards stays below the minimum of their inner node's
+// bin.
+BOOST_AUTO_TEST_CASE(GraphPrunesEdgesBelowTheirBinLevel) {
+  const ToyDetector detector = barrelDetector();
+  const SpacePointContainer spacePoints =
+      makeSpacePoints(detector, makeMixedLengthTracks());
+  const auto geometry = makeGeometry(detector);
+  const SeederSetup setup = makeSeeder(detector, true, /*quiet=*/false,
+                                       /*pruneShortChains=*/true);
+
+  // a chain from the innermost layer needs three edges, one from the next
+  // layer two, the others are not pruned
+  const std::array<std::uint32_t, 4> layerMinLevel = {3, 2, 1, 1};
+  std::vector<std::uint32_t> minEdgeLevel(geometry->numBins(), 1);
+  for (Experimental::GbtsLayerIndex layer = 0; layer < layerMinLevel.size();
+       ++layer) {
+    const Experimental::GbtsLayerBinning& binning =
+        geometry->layerBinning(layer);
+    std::fill_n(minEdgeLevel.begin() + binning.firstBin, binning.numBins,
+                layerMinLevel[layer]);
+  }
+
+  // per edge its space points, its inner node's layer and the length of the
+  // longest chain outwards from it; the graph builder writes to the storage,
+  // so each graph gets its own
+  struct EdgeInfo {
+    std::pair<std::uint32_t, std::uint32_t> spacePoints;
+    std::uint32_t layer{};
+    std::uint32_t level{};
+  };
+  const auto build = [&](const std::span<const std::uint32_t> table) {
+    Experimental::GbtsNodeStorage storage = setup.seeder.makeNodeStorage();
+    const auto layerColumn =
+        spacePoints.column<Experimental::GbtsLayerIndex>("gbtsLayerIndex");
+    storage.extend(spacePoints, layerColumn,
+                   spacePoints.column<float>("clusterWidth"),
+                   spacePoints.column<float>("localPositionY"));
+    storage.finalize();
+    const Experimental::GbtsGraph graph = setup.graphBuilder.buildTheGraph(
+        setup.roi, storage, setup.options.bFieldInZ, table);
+
+    // the inner neighbours of an edge are created after it
+    const auto nEdges = static_cast<std::uint32_t>(graph.edgeStorage.size());
+    std::vector<std::uint32_t> level(nEdges, 1);
+    for (std::uint32_t e = 0; e < nEdges; ++e) {
+      for (const std::uint32_t inner : graph.innerNeighbours(e)) {
+        level[inner] = std::max(level[inner], level[e] + 1);
+      }
+    }
+
+    std::vector<EdgeInfo> edges;
+    for (std::uint32_t e = 0; e < nEdges; ++e) {
+      const auto& edge = graph.edgeStorage[e];
+      const std::uint32_t sp1 = storage.spacePointIndex(edge.n1);
+      edges.push_back({.spacePoints = {sp1, storage.spacePointIndex(edge.n2)},
+                       .layer = spacePoints.at(sp1).extra(layerColumn),
+                       .level = level[e]});
+    }
+    return edges;
+  };
+
+  const std::vector<EdgeInfo> full = build({});
+  const std::vector<EdgeInfo> pruned = build(minEdgeLevel);
+
+  std::vector<std::pair<std::uint32_t, std::uint32_t>> expected;
+  for (const EdgeInfo& edge : full) {
+    if (edge.level >= layerMinLevel.at(edge.layer)) {
+      expected.push_back(edge.spacePoints);
+    }
+  }
+  BOOST_CHECK_LT(expected.size(), full.size());
+
+  std::vector<std::pair<std::uint32_t, std::uint32_t>> kept;
+  for (const EdgeInfo& edge : pruned) {
+    BOOST_CHECK_GE(edge.level, layerMinLevel.at(edge.layer));
+    kept.push_back(edge.spacePoints);
+  }
+  std::ranges::sort(expected);
+  std::ranges::sort(kept);
+  BOOST_CHECK(kept == expected);
+}
+
+// Pruning the short chains while the graph is built leaves the seeds as they
+// are, whatever length a seed needs.
+BOOST_AUTO_TEST_CASE(PruneShortChainsKeepsTheSeeds) {
+  const auto seeds = [](const ToyDetector& detector,
+                        const std::vector<Track>& tracks, const bool prune,
+                        const bool addTriplets,
+                        const std::uint8_t minSeedLevel) {
+    const SpacePointContainer spacePoints = makeSpacePoints(detector, tracks);
+    const SeederSetup setup = makeSeeder(detector, true, /*quiet=*/true, prune,
+                                         addTriplets, minSeedLevel);
+    SeedContainer result;
+    result.assignSpacePointContainer(spacePoints);
+    setup.seeder.createSeeds(spacePoints, setup.roi, setup.graphBuilder,
+                             setup.filter, setup.options, result);
+    return formatSeeds(result);
+  };
+
+  for (const ToyDetector& detector : {barrelDetector(), forwardDetector()}) {
+    for (const auto& tracks : {makeMixedLengthTracks(),
+                               makeDenseForwardTracks(), makeForwardTracks()}) {
+      for (const std::uint8_t minSeedLevel :
+           std::array<std::uint8_t, 3>{2, 3, 4}) {
+        for (const bool addTriplets : {false, true}) {
+          BOOST_CHECK_EQUAL(
+              seeds(detector, tracks, true, addTriplets, minSeedLevel),
+              seeds(detector, tracks, false, addTriplets, minSeedLevel));
+        }
+      }
+    }
   }
 }
 
