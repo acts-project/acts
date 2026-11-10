@@ -1019,11 +1019,20 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
 
   encoded[kRootVolumeIdKey] = volumeIds.at(world);
 
+  // Portal-link child/artifact surfaces are serialized for navigation, but
+  // are not material targets in the completed geometry.
+  std::unordered_set<const Surface*> activeSurfaces;
+  world.visitSurfaces(
+      [&](const Surface* surface) { activeSurfaces.insert(surface); }, false);
+
   if (options.writeMaterial) {
     std::vector<const Surface*> materialSurfaces;
     SurfaceMaterialMaps assignments;
     SurfaceMaterialMaps markers;
     for (const auto* surface : orderedSurfaces) {
+      if (!activeSurfaces.contains(surface)) {
+        continue;
+      }
       if (auto material = surface->surfaceMaterialSharedPtr()) {
         // Markers are diagnostic payloads, not mapping inputs. Preserve them
         // through the material codec without registering them for mapping.
@@ -1064,8 +1073,10 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
   for (const auto* surf : orderedSurfaces) {
     nlohmann::json jSurface =
         SurfaceJsonConverter::toJson(gctx, *surf, surfaceOptions);
-    if (const auto& key = detail::materialKey(surf->surfaceMaterial())) {
-      jSurface["material_key"] = *key;
+    if (activeSurfaces.contains(surf)) {
+      if (const auto& key = detail::materialKey(surf->surfaceMaterial())) {
+        jSurface["material_key"] = *key;
+      }
     }
     jSurface[kSurfaceIdKey] = surfaceIds.at(*surf);
     encoded[kSurfacesKey].push_back(std::move(jSurface));
@@ -1377,8 +1388,13 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     auto material = TrackingGeometryMaterialJsonConverter(m_cfg.materialConfig)
                         .fromJson(encoded.at("material"));
     std::vector<Surface*> surfaces;
-    for (const auto& [id, record] : surfaceRecords) {
-      surfaces.push_back(surfacePointers.at(id).get());
+    for (const auto& [id, record] : portalRecords) {
+      surfaces.push_back(&portalPointers.at(id)->surface());
+    }
+    for (const auto& [id, record] : volumeRecords) {
+      for (const auto surfaceId : record.surfaceIds) {
+        surfaces.push_back(surfacePointers.at(surfaceId).get());
+      }
     }
     material.apply(surfaces);
     for (const auto& [id, record] : volumeRecords) {
