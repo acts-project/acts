@@ -157,8 +157,10 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
   }
   Experimental::assignAdaptiveTauRatioCuts(connections, layers);
 
+  const Experimental::GbtsZ0Range z0Range{.min = -kBarrelHalfZ,
+                                          .max = kBarrelHalfZ};
   return std::make_shared<Experimental::GbtsGeometry>(layers, connections,
-                                                      kEtaBinWidth);
+                                                      kEtaBinWidth, z0Range);
 }
 
 /// Straight track from the origin: fixed phi, z = r * tau, tau = cot(theta).
@@ -403,8 +405,6 @@ SeederSetup makeSeeder(const ToyDetector& detector,
 
   Experimental::GbtsGraphBuilder::Config graphConfig;
   graphConfig.minPt = 1_GeV;
-  graphConfig.minZ0 = -kBarrelHalfZ;
-  graphConfig.maxZ0 = kBarrelHalfZ;
   graphConfig.maxOuterRadius = detector.maxOuterRadius;
   graphConfig.calibrateStrips = calibrateStrips;
 

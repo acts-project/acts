@@ -116,12 +116,6 @@ class GbtsGraphBuilder {
     /// can use its full cut) and 3 (no effect beyond the individual cuts).
     float sumRatioCutMax = 1.3f;
 
-    /// Minimum z0 value. In pixel mode the value is picked from the RoI.
-    float minZ0 = -600.0f;
-
-    /// Maximum z0 value. In pixel mode the value is picked from the RoI.
-    float maxZ0 = 600.0f;
-
     /// pT at which the default cut coefficients were tuned; they scale by
     /// `tuningPt / minPt`.
     float tuningPt = 0.9f * Acts::UnitConstants::GeV;

@@ -154,12 +154,13 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
 /// Computed without a branch, so that the caller can fold it into one branch
 /// with its other doublet cuts.
 /// @param cfg Graph builder configuration
+/// @param minZ0 Lower end of the z0 window the histogram spans
 /// @param z0BitMask Sets allowed bins of allowed z value; an isolated node's
 ///                  is empty and fails
 /// @param z0 Estimated z0 of segments z value at beamspot
 /// @param z0HistoCoeff Scale factor that converts z coordinate into bin index
 /// @return Whether segment is within beamspot range
-bool checkZ0BitMask(const GbtsGraphBuilder::Config& cfg,
+bool checkZ0BitMask(const GbtsGraphBuilder::Config& cfg, const float minZ0,
                     const std::uint16_t z0BitMask, const float z0,
                     const float z0HistoCoeff) {
   // z0 is not range checked before this (doubletFilterRZ is optional and
@@ -176,7 +177,7 @@ bool checkZ0BitMask(const GbtsGraphBuilder::Config& cfg,
   };
 
   // the bin of z0 and either neighbour
-  const float dz = z0 - cfg.minZ0;
+  const float dz = z0 - minZ0;
   const auto bin = static_cast<std::int32_t>(z0HistoCoeff * dz);
   const auto binDown =
       static_cast<std::int32_t>(z0HistoCoeff * (dz - cfg.z0Resolution));
@@ -228,11 +229,15 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
   GbtsGraph graph;
   std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
 
+  // the one z0 window of the seeding, held by the geometry
+  const float minZ0 = m_geometry->z0Range().min;
+  const float maxZ0 = m_geometry->z0Range().max;
+
   // used to calculate Z cut on doublets
   const float cutZMinU =
-      m_cfg.minZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMin());
+      minZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMin());
   const float cutZMaxU =
-      m_cfg.maxZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMax());
+      maxZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMax());
 
   const float tripletPtMin = m_cfg.tripletPtFraction * m_cfg.minPt;
 
@@ -257,7 +262,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
   // scale factor to get indexes of binned beamspot
   const float z0HistoCoeff =
-      detail::kGbtsZ0HistogramBins / (m_cfg.maxZ0 - m_cfg.minZ0 + 1e-6f);
+      detail::kGbtsZ0HistogramBins / (maxZ0 - minZ0 + 1e-6f);
 
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
   const std::span<const detail::GbtsNodeParams> params =
@@ -433,14 +438,14 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
         // flags are fixed per bin group, so their branches are predicted.
         const bool inZ0Histogram =
             !useZ0Histogram ||
-            checkZ0BitMask(m_cfg, nodeInfo, z0, z0HistoCoeff);
+            checkZ0BitMask(m_cfg, minZ0, nodeInfo, z0, z0HistoCoeff);
 
         const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
-        const bool inRZ = !m_cfg.doubletFilterRZ ||
-                          (static_cast<int>(z0 >= m_cfg.minZ0) &
-                           static_cast<int>(z0 <= m_cfg.maxZ0) &
-                           static_cast<int>(zOuter >= cutZMinU) &
-                           static_cast<int>(zOuter <= cutZMaxU)) != 0;
+        const bool inRZ =
+            !m_cfg.doubletFilterRZ ||
+            (static_cast<int>(z0 >= minZ0) & static_cast<int>(z0 <= maxZ0) &
+             static_cast<int>(zOuter >= cutZMinU) &
+             static_cast<int>(zOuter <= cutZMaxU)) != 0;
 
         const float curvCut = ftau < m_cfg.curvatureSplitAbsTau
                                   ? curvatureCutLowEta
@@ -459,8 +464,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       float minReachTau = -maxTau1;
       float maxReachTau = maxTau1;
       if (m_cfg.doubletFilterRZ && r1 > 0) {
-        minReachTau = std::max(minReachTau, (z1 - m_cfg.maxZ0) / r1);
-        maxReachTau = std::min(maxReachTau, (z1 - m_cfg.minZ0) / r1);
+        minReachTau = std::max(minReachTau, (z1 - maxZ0) / r1);
+        maxReachTau = std::min(maxReachTau, (z1 - minZ0) / r1);
         const float outerDr = m_cfg.maxOuterRadius - r1;
         if (outerDr > 0) {
           minReachTau = std::max(minReachTau, (cutZMinU - z1) / outerDr);
@@ -767,8 +772,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
               // edge confirmed - update z0 histogram. Only doubletFilterRZ
               // holds z0 to the histogram range, and it is optional.
-              if (const auto z0BinIndex = static_cast<std::int32_t>(
-                      z0HistoCoeff * (z0 - m_cfg.minZ0));
+              if (const auto z0BinIndex =
+                      static_cast<std::int32_t>(z0HistoCoeff * (z0 - minZ0));
                   z0BinIndex >= 0 &&
                   z0BinIndex < detail::kGbtsZ0HistogramBins) {
                 ++z0Histo[static_cast<std::size_t>(z0BinIndex)];
