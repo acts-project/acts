@@ -824,3 +824,5 @@ add_subdirectory(docs)
 # create cmake configuration files and environment setup script
 include(ActsCreatePackageConfig)
 include(ActsCreateSetup)
+
+acts_print_auto_enabled_options()
