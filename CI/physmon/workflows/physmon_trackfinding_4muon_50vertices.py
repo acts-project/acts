@@ -2,7 +2,6 @@
 
 import tempfile
 from pathlib import Path
-import shutil
 
 import acts
 from acts.examples.simulation import (
@@ -18,9 +17,9 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
+    SeedingAlgorithm,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
-    SeedingAlgorithm,
     CkfConfig,
     addCKFTracks,
     addAmbiguityResolution,
@@ -30,12 +29,69 @@ from acts.examples.reconstruction import (
     TrackSelectorConfig,
 )
 
-from physmon_common import makeSetup
+from physmon_common import SEED_PARAMETER_SIGMAS, copyOutputs, makeSetup
 
 u = acts.UnitConstants
 
 setup = makeSetup()
 
+SEEDING = dict(
+    seedFinderConfigArg=SeedFinderConfigArg(
+        r=(33 * u.mm, 200 * u.mm),
+        deltaR=(1 * u.mm, 300 * u.mm),
+        collisionRegion=(-250 * u.mm, 250 * u.mm),
+        z=(-2000 * u.mm, 2000 * u.mm),
+        maxSeedsPerSpM=1,
+        sigmaScattering=5,
+        radLengthPerSeed=0.1,
+        minPt=0.5 * u.GeV,
+        impactMax=3 * u.mm,
+    ),
+    seedFinderOptionsArg=SeedFinderOptionsArg(
+        bFieldInZ=setup.bFieldInZ, beamPos=(0.0, 0.0)
+    ),
+    geoSelectionConfigFile=setup.geoSel,
+    **SEED_PARAMETER_SIGMAS,
+)
+
+CKF = dict(
+    chi2CutOffMeasurement=15.0,
+    chi2CutOffOutlier=25.0,
+    numMeasurementsCutOff=10,
+    seedDeduplication=True,
+    stayOnSeed=True,
+)
+
+# Vertex finders, keyed by the name of their output directory and file.
+# The seeder and useTime only have an effect on VertexFinder.AMVF: VertexFinder.IVF
+# always uses acts.examples.VertexSeedFinder.GaussianSeeder (Python binding is
+# not implemented).
+VERTEXING = {
+    "ivf_notime": dict(vertexFinder=VertexFinder.Iterative),
+    "amvf_gauss_notime": dict(
+        vertexFinder=VertexFinder.AMVF,
+        seeder=acts.examples.VertexSeedFinder.GaussianSeeder,
+        useTime=False,  # Time seeding not implemented for the Gaussian seeder
+    ),
+    "amvf_grid_time": dict(
+        vertexFinder=VertexFinder.AMVF,
+        seeder=acts.examples.VertexSeedFinder.AdaptiveGridSeeder,
+        useTime=True,
+    ),
+}
+
+# The files the chain writes, and the names they are stored under.
+OUTPUTS = {
+    "performance_seeding.root": "performance_seeding.root",
+    "tracksummary_ckf.root": "tracksummary_ckf.root",
+    "performance_finding_ckf.root": "performance_finding_ckf.root",
+    "performance_fitting_ckf.root": "performance_fitting_ckf.root",
+    "performance_finding_ambi.root": "performance_finding_ckf_ambi.root",
+    "performance_fitting_ambi.root": "performance_fitting_ckf_ambi.root",
+    "ivf_notime/performance_vertexing.root": "performance_vertexing_ivf_notime.root",
+    "amvf_gauss_notime/performance_vertexing.root": "performance_vertexing_amvf_gauss_notime.root",
+    "amvf_grid_time/performance_vertexing.root": "performance_vertexing_amvf_grid_time.root",
+}
 
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
@@ -93,32 +149,9 @@ with tempfile.TemporaryDirectory() as temp:
         s,
         setup.trackingGeometry,
         setup.field,
-        SeedFinderConfigArg(
-            r=(33 * u.mm, 200 * u.mm),
-            deltaR=(1 * u.mm, 300 * u.mm),
-            collisionRegion=(-250 * u.mm, 250 * u.mm),
-            z=(-2000 * u.mm, 2000 * u.mm),
-            maxSeedsPerSpM=1,
-            sigmaScattering=5,
-            radLengthPerSeed=0.1,
-            minPt=0.5 * u.GeV,
-            impactMax=3 * u.mm,
-        ),
-        SeedFinderOptionsArg(bFieldInZ=setup.bFieldInZ, beamPos=(0.0, 0.0)),
         seedingAlgorithm=SeedingAlgorithm.GridTriplet,
-        initialSigmas=[
-            1 * u.mm,
-            1 * u.mm,
-            1 * u.degree,
-            1 * u.degree,
-            0 * u.e / u.GeV,
-            1 * u.ns,
-        ],
-        initialSigmaQoverPt=0.1 * u.e / u.GeV,
-        initialSigmaPtRel=0.1,
-        initialVarInflation=[1.0] * 6,
-        geoSelectionConfigFile=setup.geoSel,
         outputDirRoot=tp,
+        **SEEDING,
     )
 
     addCKFTracks(
@@ -132,13 +165,7 @@ with tempfile.TemporaryDirectory() as temp:
             maxHoles=2,
             maxOutliers=2,
         ),
-        CkfConfig(
-            chi2CutOffMeasurement=15.0,
-            chi2CutOffOutlier=25.0,
-            numMeasurementsCutOff=10,
-            seedDeduplication=True,
-            stayOnSeed=True,
-        ),
+        CkfConfig(**CKF),
         outputDirRoot=tp,
     )
 
@@ -160,81 +187,20 @@ with tempfile.TemporaryDirectory() as temp:
         )
     )
 
-    # Choosing a seeder only has an effect on VertexFinder.AMVF. For
-    # VertexFinder.IVF we always use acts.examples.VertexSeedFinder.GaussianSeeder
-    # (Python binding is not implemented).
-    # Setting useTime also only has an effect on VertexFinder.AMVF due to
-    # the same reason.
-    addVertexFitting(
-        s,
-        setup.field,
-        trackParameters="trackParameters",
-        outputProtoVertices="ivf_notime_protovertices",
-        outputVertices="ivf_notime_vertices",
-        outputVertexTruthMatching="ivf_notime_vertex_truth_matching",
-        outputTruthVertexMatching="ivf_notime_truth_vertex_matching",
-        vertexFinder=VertexFinder.Iterative,
-        outputDirRoot=tp / "ivf_notime",
-        writeTrackInfo=True,
-    )
-
-    addVertexFitting(
-        s,
-        setup.field,
-        trackParameters="trackParameters",
-        outputProtoVertices="amvf_gauss_notime_protovertices",
-        outputVertices="amvf_gauss_notime_vertices",
-        outputVertexTruthMatching="amvf_gauss_notime_vertex_truth_matching",
-        outputTruthVertexMatching="amvf_gauss_notime_truth_vertex_matching",
-        seeder=acts.examples.VertexSeedFinder.GaussianSeeder,
-        useTime=False,  # Time seeding not implemented for the Gaussian seeder
-        vertexFinder=VertexFinder.AMVF,
-        outputDirRoot=tp / "amvf_gauss_notime",
-        writeTrackInfo=True,
-    )
-
-    addVertexFitting(
-        s,
-        setup.field,
-        trackParameters="trackParameters",
-        outputProtoVertices="amvf_grid_time_protovertices",
-        outputVertices="amvf_grid_time_vertices",
-        outputVertexTruthMatching="amvf_grid_time_vertex_truth_matching",
-        outputTruthVertexMatching="amvf_grid_time_truth_vertex_matching",
-        seeder=acts.examples.VertexSeedFinder.AdaptiveGridSeeder,
-        useTime=True,
-        vertexFinder=VertexFinder.AMVF,
-        outputDirRoot=tp / "amvf_grid_time",
-        writeTrackInfo=True,
-    )
+    for name, settings in VERTEXING.items():
+        addVertexFitting(
+            s,
+            setup.field,
+            trackParameters="trackParameters",
+            outputProtoVertices=f"{name}_protovertices",
+            outputVertices=f"{name}_vertices",
+            outputVertexTruthMatching=f"{name}_vertex_truth_matching",
+            outputTruthVertexMatching=f"{name}_truth_vertex_matching",
+            outputDirRoot=tp / name,
+            writeTrackInfo=True,
+            **settings,
+        )
 
     s.run()
 
-    shutil.move(
-        tp / "performance_finding_ambi.root",
-        tp / "performance_finding_ckf_ambi.root",
-    )
-    shutil.move(
-        tp / "performance_fitting_ambi.root",
-        tp / "performance_fitting_ckf_ambi.root",
-    )
-    for vertexing in ["ivf_notime", "amvf_gauss_notime", "amvf_grid_time"]:
-        shutil.move(
-            tp / f"{vertexing}/performance_vertexing.root",
-            tp / f"performance_vertexing_{vertexing}.root",
-        )
-
-    for file in [
-        "performance_seeding.root",
-        "tracksummary_ckf.root",
-        "performance_finding_ckf.root",
-        "performance_fitting_ckf.root",
-        "performance_finding_ckf_ambi.root",
-        "performance_fitting_ckf_ambi.root",
-        "performance_vertexing_ivf_notime.root",
-        "performance_vertexing_amvf_gauss_notime.root",
-        "performance_vertexing_amvf_grid_time.root",
-    ]:
-        perf_file = tp / file
-        assert perf_file.exists(), f"Performance file not found {perf_file}"
-        shutil.copy(perf_file, setup.outdir / file)
+    copyOutputs(OUTPUTS, tp, setup.outdir)

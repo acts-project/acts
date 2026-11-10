@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import argparse
 import tempfile
 from pathlib import Path
-import shutil
 
 import acts
 from acts.examples.simulation import (
@@ -30,17 +28,20 @@ from acts.examples.reconstruction import (
     TrackSelectorConfig,
 )
 
-from physmon_common import makeSetup
+from physmon_common import (
+    copyOutputs,
+    GBTS_CONNECTION_TABLE,
+    GBTS_LAYER_MAP,
+    SEED_PARAMETER_SIGMAS,
+    makeSetup,
+    seedingVariants,
+)
 
 u = acts.UnitConstants
 
-# All variants supported by this script. Names are `SeedingAlgorithm` enum
-# member names so we can resolve them via `getattr(SeedingAlgorithm, name)`.
-# When `--variant` is given, exactly that one runs with outputs flat under
-# outdir (Snakemake's preferred shape — one variant per job, one outdir per
-# variant). When `--variant` is omitted, all variants run sequentially under
-# outdir/<name>/, useful for manual invocation outside snakemake.
-ALL_VARIANTS = [
+# Seeding variants, as `SeedingAlgorithm` member names (see seedingVariants).
+# config/physmon.yaml picks which of them run in CI.
+VARIANTS = [
     "TruthSmeared",
     "TruthEstimated",
     "GridTriplet",
@@ -48,20 +49,85 @@ ALL_VARIANTS = [
     "Gbts",
 ]
 
-_variant_parser = argparse.ArgumentParser(add_help=False)
-_variant_parser.add_argument("outdir")
-_variant_parser.add_argument(
-    "--variant",
-    choices=ALL_VARIANTS,
-    default=None,
-    help="If set, run only this seeding variant and write files directly under outdir.",
+setup = makeSetup(VARIANTS)
+
+SEEDING = dict(
+    seedFinderConfigArg=SeedFinderConfigArg(
+        r=(33 * u.mm, 200 * u.mm),
+        deltaR=(1 * u.mm, 300 * u.mm),
+        collisionRegion=(-250 * u.mm, 250 * u.mm),
+        z=(-2000 * u.mm, 2000 * u.mm),
+        maxSeedsPerSpM=1,
+        sigmaScattering=5,
+        radLengthPerSeed=0.1,
+        minPt=0.5 * u.GeV,
+        impactMax=3 * u.mm,
+    ),
+    seedFinderOptionsArg=SeedFinderOptionsArg(bFieldInZ=setup.bFieldInZ),
+    geoSelectionConfigFile=setup.geoSel,
+    **SEED_PARAMETER_SIGMAS,
 )
-_variant_args, _ = _variant_parser.parse_known_args()
 
-setup = makeSetup()
+CKF = dict(
+    chi2CutOffMeasurement=15.0,
+    chi2CutOffOutlier=25.0,
+    numMeasurementsCutOff=10,
+)
+
+# The files the chain writes, and the names they are stored under.
+OUTPUTS = {
+    "performance_seeding.root": "performance_seeding.root",
+    "tracksummary_ckf.root": "tracksummary_ckf.root",
+    "performance_finding_ckf.root": "performance_finding_ckf.root",
+    "performance_fitting_ckf.root": "performance_fitting_ckf.root",
+}
 
 
-def run_ckf_tracking(seeding, label=None):
+def seedingSettings(seeding):
+    """The addSeeding arguments that only this seeding algorithm needs."""
+    spreadTriplet = acts.examples.SeedSpacePointSelection.SpreadTriplet
+    if seeding == SeedingAlgorithm.TruthSmeared:
+        return dict(
+            # zero everything so the CKF has a chance to find the measurements
+            trackSmearingSigmas=TrackSmearingSigmas(
+                loc0=0,
+                loc0PtA=0,
+                loc0PtB=0,
+                loc1=0,
+                loc1PtA=0,
+                loc1PtB=0,
+                time=0,
+                phi=0,
+                theta=0,
+                ptRel=0,
+            ),
+        )
+    if seeding == SeedingAlgorithm.TruthEstimated:
+        return dict(paramEstimationSpacePoints=spreadTriplet)
+    if seeding == SeedingAlgorithm.Gbts:
+        return dict(
+            paramEstimationSpacePoints=spreadTriplet,
+            layerMappingConfigFile=GBTS_LAYER_MAP,
+            connectorInputConfigFile=GBTS_CONNECTION_TABLE,
+            gbtsConfigArg=GbtsConfigArg(
+                seederConfig=acts.examples.GraphBasedSeedingConfig(
+                    minSeedLevel=2,
+                ),
+                graphConfig=acts.examples.GbtsGraphBuilderConfig(
+                    minPt=0.9 * u.GeV,
+                    z0HistogramMaxBarrelOrder=-1,
+                ),
+                useAdaptiveCuts=False,
+            ),
+            gbtsSeedParameters=True,
+        )
+    return {}
+
+
+def run_ckf_tracking(seeding, outdir):
+    # TruthSmeared starts the CKF from smeared truth parameters, without seeds
+    hasSeeds = seeding != SeedingAlgorithm.TruthSmeared
+
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
             events=10000,
@@ -121,64 +187,10 @@ def run_ckf_tracking(seeding, label=None):
             s,
             setup.trackingGeometry,
             setup.field,
-            TrackSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
-                # zero everything so the CKF has a chance to find the measurements
-                loc0=0,
-                loc0PtA=0,
-                loc0PtB=0,
-                loc1=0,
-                loc1PtA=0,
-                loc1PtB=0,
-                time=0,
-                phi=0,
-                theta=0,
-                ptRel=0,
-            ),
-            SeedFinderConfigArg(
-                r=(33 * u.mm, 200 * u.mm),
-                deltaR=(1 * u.mm, 300 * u.mm),
-                collisionRegion=(-250 * u.mm, 250 * u.mm),
-                z=(-2000 * u.mm, 2000 * u.mm),
-                maxSeedsPerSpM=1,
-                sigmaScattering=5,
-                radLengthPerSeed=0.1,
-                minPt=0.5 * u.GeV,
-                impactMax=3 * u.mm,
-            ),
-            SeedFinderOptionsArg(bFieldInZ=setup.bFieldInZ),
             seedingAlgorithm=seeding,
-            paramEstimationSpacePoints=(
-                acts.examples.SeedSpacePointSelection.SpreadTriplet
-                if seeding in [SeedingAlgorithm.TruthEstimated, SeedingAlgorithm.Gbts]
-                else None
-            ),
-            initialSigmas=[
-                1 * u.mm,
-                1 * u.mm,
-                1 * u.degree,
-                1 * u.degree,
-                0 * u.e / u.GeV,
-                1 * u.ns,
-            ],
-            initialSigmaQoverPt=0.1 * u.e / u.GeV,
-            initialSigmaPtRel=0.1,
-            initialVarInflation=[1.0] * 6,
-            geoSelectionConfigFile=setup.geoSel,
-            layerMappingConfigFile=setup.gbtsLayerMap,  # only used by SeedingAlgorithm.Gbts
-            connectorInputConfigFile=setup.gbtsConnectionTable,  # only used by SeedingAlgorithm.Gbts
-            gbtsConfigArg=GbtsConfigArg(  # only used by SeedingAlgorithm.Gbts
-                seederConfig=acts.examples.GraphBasedSeedingConfig(
-                    minSeedLevel=2,
-                ),
-                graphConfig=acts.examples.GbtsGraphBuilderConfig(
-                    minPt=0.9 * u.GeV,
-                    z0HistogramMaxBarrelOrder=-1,
-                ),
-                useAdaptiveCuts=False,
-            ),
-            gbtsSeedParameters=True,  # only used by SeedingAlgorithm.Gbts
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
+            **(SEEDING | seedingSettings(seeding)),
         )
 
         addCKFTracks(
@@ -192,38 +204,17 @@ def run_ckf_tracking(seeding, label=None):
                 maxHoles=2,
                 maxOutliers=2,
             ),
-            CkfConfig(
-                chi2CutOffMeasurement=15.0,
-                chi2CutOffOutlier=25.0,
-                numMeasurementsCutOff=10,
-                seedDeduplication=(
-                    True if seeding != SeedingAlgorithm.TruthSmeared else False
-                ),
-                stayOnSeed=True if seeding != SeedingAlgorithm.TruthSmeared else False,
-            ),
+            CkfConfig(**CKF, seedDeduplication=hasSeeds, stayOnSeed=hasSeeds),
             outputDirRoot=tp,
         )
 
         s.run()
 
-        dest_dir = setup.outdir / label if label is not None else setup.outdir
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        for file in (
-            ["performance_seeding.root"]
-            if seeding != SeedingAlgorithm.TruthSmeared
-            else []
-        ) + [
-            "tracksummary_ckf.root",
-            "performance_finding_ckf.root",
-            "performance_fitting_ckf.root",
-        ]:
-            perf_file = tp / file
-            assert perf_file.exists(), f"Performance file not found {perf_file}"
-            shutil.copy(perf_file, dest_dir / file)
+        outputs = dict(OUTPUTS)
+        if not hasSeeds:
+            del outputs["performance_seeding.root"]
+        copyOutputs(outputs, tp, outdir)
 
 
-if _variant_args.variant is not None:
-    run_ckf_tracking(getattr(SeedingAlgorithm, _variant_args.variant), label=None)
-else:
-    for name in ALL_VARIANTS:
-        run_ckf_tracking(getattr(SeedingAlgorithm, name), label=name)
+for seeding, outdir in seedingVariants(setup, VARIANTS):
+    run_ckf_tracking(seeding, outdir)
