@@ -13,11 +13,13 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
+#include <functional>
 #include <vector>
 
 namespace ActsTests {
@@ -40,6 +42,11 @@ struct CylindricalTrackingGeometry {
 
   std::reference_wrapper<const Acts::GeometryContext> geoContext;
   bool gen3 = false;
+
+  /// Gen3 only: optional hook appending policies to each layer's navigation
+  /// policy factory, after the surface array policy
+  std::function<Acts::NavigationPolicyFactory(Acts::NavigationPolicyFactory&&)>
+      extendLayerNavigationPolicy;
 
   /// Only allowed constructor with reference wrapper
   explicit CylindricalTrackingGeometry(const Acts::GeometryContext& gctx,

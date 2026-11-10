@@ -21,6 +21,7 @@
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeDispatcher.hpp"
+#include "ActsPlugins/Detray/DetraySurfaceGridPolicy.hpp"
 
 #include <map>
 #include <memory>
@@ -56,6 +57,7 @@ enum class accel_id : unsigned int;
 /// @endcond
 
 namespace Acts {
+class SurfaceArray;
 class GeometryContext;
 class TrackingGeometry;
 class SurfaceBounds;
@@ -165,6 +167,16 @@ class DetrayPayloadConverter {
       const Acts::GeometryContext& gctx,
       const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
 
+  /// Detray surface grid policies carry parameters only
+  /// @param policy Detray surface grid policy
+  /// @param gctx Geometry context
+  /// @param surfaceLookup Function to look up surface indices
+  /// @param logger Logger instance
+  /// @return Always std::nullopt; the grid comes from the surface array
+  static std::optional<DetraySurfaceGrid> convertDetraySurfaceGridPolicy(
+      const DetraySurfaceGridPolicy& policy, const Acts::GeometryContext& gctx,
+      const SurfaceLookupFunction& surfaceLookup, const Acts::Logger& logger);
+
   /// Convert multi navigation policy
   /// @param policy Multi navigation policy
   /// @param gctx Geometry context
@@ -238,16 +250,29 @@ class DetrayPayloadConverter {
     /// absorbed into their neighbour, as are gaps between segments.
     double portalSegmentTolerance = 1 * Acts::UnitConstants::um;
 
+    /// Parameters for building detray surface grids from surface arrays.
+    ///
+    /// Detray looks up a surface grid on a virtual reference surface and
+    /// reads one bin, which the ACTS bins do not serve. With this set, each
+    /// grid is filled for detray's lookup and the given track family. A
+    /// @ref DetraySurfaceGridPolicy in a volume overrides it for that volume.
+    /// If unset, volumes without such a policy get a 1:1 copy of the ACTS
+    /// bins.
+    std::optional<DetraySurfaceGridConfig> surfaceGridFill =
+        DetraySurfaceGridConfig{};
+
     /// Type dispatcher for converting navigation policies
     Acts::TypeDispatcher<Acts::INavigationPolicy,
                          std::optional<DetraySurfaceGrid>(
                              const Acts::GeometryContext& gctx,
                              const SurfaceLookupFunction& surfaceLookup,
                              const Acts::Logger& logger)>
-        convertNavigationPolicy{
-            convertSurfaceArray, convertTryAllNavigationPolicy,
-            convertCylinderNavigationPolicy, convertMultiLayerNavigationPolicy,
-            convertMultiNavigationPolicy};
+        convertNavigationPolicy{convertSurfaceArray,
+                                convertTryAllNavigationPolicy,
+                                convertCylinderNavigationPolicy,
+                                convertMultiLayerNavigationPolicy,
+                                convertMultiNavigationPolicy,
+                                convertDetraySurfaceGridPolicy};
 
     /// Type dispatcher for converting surface materials
     Acts::TypeDispatcher<Acts::ISurfaceMaterial,
@@ -258,6 +283,36 @@ class DetrayPayloadConverter {
                                convertProtoSurfaceMaterialAxisSpec,
                                convertProtoSurfaceMaterialBinUtility};
   };
+
+  /// Build the detray surface grid of a volume from its surface array,
+  /// binned and filled for detray's lookup
+  /// @param policy Surface array policy of the volume
+  /// @param volume Volume owning @p policy
+  /// @param gctx Geometry context
+  /// @param surfaceLookup Detray index lookup for the surfaces
+  /// @param fill Grid parameters
+  /// @param logger Logger
+  /// @return The detray surface grid payload
+  static std::optional<DetraySurfaceGrid> convertSurfaceGridForDetray(
+      const Acts::SurfaceArrayNavigationPolicy& policy,
+      const Acts::TrackingVolume& volume, const Acts::GeometryContext& gctx,
+      const SurfaceLookupFunction& surfaceLookup,
+      const DetraySurfaceGridConfig& fill, const Acts::Logger& logger);
+
+  /// Replace the bin contents of @p grid, converted from @p surfaceArray, by
+  /// the surfaces detray must find for the track family of @p fill
+  /// @param grid Detray surface grid converted from @p surfaceArray
+  /// @param surfaceArray Surface array the grid was converted from
+  /// @param volume Volume owning the surface array
+  /// @param gctx Geometry context
+  /// @param surfaceLookup Detray index lookup for the surfaces
+  /// @param fill Track family to serve
+  /// @param logger Logger
+  static void fillSurfaceGridDetrayNative(
+      DetraySurfaceGrid& grid, const Acts::SurfaceArray& surfaceArray,
+      const Acts::TrackingVolume& volume, const Acts::GeometryContext& gctx,
+      const SurfaceLookupFunction& surfaceLookup,
+      const DetraySurfaceGridConfig& fill, const Acts::Logger& logger);
 
   /// Convert surface bounds to detray mask payload
   /// @param bounds the surface bounds to convert

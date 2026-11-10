@@ -1031,8 +1031,20 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
         };
 
         std::optional<DetraySurfaceGrid> detrayGrid = std::nullopt;
+        const INavigationPolicy* gridSource = nullptr;
+        const DetraySurfaceGridPolicy* gridPolicy = nullptr;
 
         navPolicy->visit([&](const INavigationPolicy& policy) {
+          if (const auto* p =
+                  dynamic_cast<const DetraySurfaceGridPolicy*>(&policy);
+              p != nullptr) {
+            if (gridPolicy != nullptr) {
+              throw std::runtime_error{"Volume " + volume.volumeName() +
+                                       " has more than one "
+                                       "DetraySurfaceGridPolicy"};
+            }
+            gridPolicy = p;
+          }
           auto grid = m_cfg.convertNavigationPolicy(policy, gctx,
                                                     surfaceLookupFn, logger());
           if (!grid.has_value()) {
@@ -1053,7 +1065,34 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
           }
 
           detrayGrid = std::move(grid);
+          gridSource = &policy;
         });
+
+        if (gridPolicy != nullptr) {
+          if (gridSource == nullptr ||
+              dynamic_cast<const SurfaceArrayNavigationPolicy*>(gridSource) ==
+                  nullptr) {
+            ACTS_ERROR("Volume "
+                       << volume.volumeName()
+                       << " has a DetraySurfaceGridPolicy but no "
+                          "SurfaceArrayNavigationPolicy to fill from");
+            throw std::runtime_error{
+                "DetraySurfaceGridPolicy without a surface array"};
+          }
+        }
+
+        const auto* surfaceArrayPolicy =
+            dynamic_cast<const SurfaceArrayNavigationPolicy*>(gridSource);
+        const DetraySurfaceGridConfig* fill =
+            gridPolicy != nullptr
+                ? &gridPolicy->config()
+                : (m_cfg.surfaceGridFill.has_value() ? &*m_cfg.surfaceGridFill
+                                                     : nullptr);
+        if (surfaceArrayPolicy != nullptr && fill != nullptr) {
+          detrayGrid =
+              convertSurfaceGridForDetray(*surfaceArrayPolicy, volume, gctx,
+                                          surfaceLookupFn, *fill, logger());
+        }
 
         if (detrayGrid.has_value()) {
           ACTS_DEBUG("Volume " << volume.volumeName()
