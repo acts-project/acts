@@ -54,9 +54,10 @@ struct material_rod {
   /// Boolean operator
   /// @return true when the rod contributes material
   DETRAY_HOST_DEVICE
-  constexpr explicit operator bool() const {
+  constexpr bool is_valid() const {
     if (m_radius <= std::numeric_limits<scalar_type>::epsilon() ||
-        m_material.state() == material_state::e_unknown || !m_material) {
+        m_material.state() == material_state::e_unknown ||
+        !m_material.is_valid()) {
       return false;
     }
     assert(m_material != vacuum<scalar_type>());
