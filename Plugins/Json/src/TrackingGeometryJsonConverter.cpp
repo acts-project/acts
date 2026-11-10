@@ -27,6 +27,7 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
@@ -1021,14 +1022,32 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
   if (options.writeMaterial) {
     std::vector<const Surface*> materialSurfaces;
     SurfaceMaterialMaps assignments;
+    SurfaceMaterialMaps markers;
     for (const auto* surface : orderedSurfaces) {
       if (auto material = surface->surfaceMaterialSharedPtr()) {
+        // Markers are diagnostic payloads, not mapping inputs. Preserve them
+        // through the material codec without registering them for mapping.
+        if (dynamic_cast<const MergedMaterialMarker*>(material.get()) !=
+            nullptr) {
+          if (!markers.try_emplace(surface->geometryId(), std::move(material))
+                   .second) {
+            throw std::invalid_argument(
+                "Duplicate material surface geometry ID");
+          }
+          continue;
+        }
         materialSurfaces.push_back(surface);
         assignments.try_emplace(surface->geometryId(), std::move(material));
       }
     }
-    auto material = detail::MaterialSurfaceRegistry(materialSurfaces)
-                        .materialMaps(std::move(assignments));
+    const detail::MaterialSurfaceRegistry registry(materialSurfaces);
+    auto material = registry.materialMaps(std::move(assignments));
+    for (auto& [id, marker] : markers) {
+      if (registry.surfaces().contains(id)) {
+        throw std::invalid_argument("Duplicate material surface geometry ID");
+      }
+      material.surfaceMaterials.emplace(id, std::move(marker));
+    }
     for (const auto* volume : orderedVolumes) {
       if (volume->volumeMaterial() != nullptr) {
         material.volumeMaterials.try_emplace(volume->geometryId(),
