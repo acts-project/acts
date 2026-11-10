@@ -160,6 +160,8 @@ install(EXPORT traccc-exports NAMESPACE traccc:: DESTINATION lib/cmake/traccc)
     result = subprocess.run(
         [
             "cmake",
+            "-G",
+            "Ninja",
             "-S",
             str(source),
             "-B",

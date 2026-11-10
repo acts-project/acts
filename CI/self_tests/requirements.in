@@ -1,2 +1,4 @@
 pytest
 jsonschema>=4.18,<5
+cmake>=3.19
+ninja

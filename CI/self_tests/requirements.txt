@@ -4,6 +4,8 @@ attrs==26.1.0
     # via
     #   jsonschema
     #   referencing
+cmake==4.4.4
+    # via -r CI/self_tests/requirements.in
 colorama==0.4.6 ; sys_platform == 'win32'
     # via pytest
 iniconfig==2.3.0
@@ -12,6 +14,8 @@ jsonschema==4.26.0
     # via -r CI/self_tests/requirements.in
 jsonschema-specifications==2025.9.1
     # via jsonschema
+ninja==1.13.2
+    # via -r CI/self_tests/requirements.in
 packaging==26.3
     # via pytest
 pluggy==1.6.0
