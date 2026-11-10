@@ -19,7 +19,10 @@
 # the summary shows the full failure chain.
 #
 # Usage (from repo root):
-#   snakemake -s CI/physmon/Snakefile --cores N [target]
+#   snakemake -s CI/physmon/Snakefile --cores N --resources mem_mb=M [target]
+#
+# M is the memory the jobs may reserve together, in MB; see "Scheduling" below.
+# CI/physmon/scripts/memory_budget.sh gives 75% of what the machine may use.
 #
 # No environment setup is needed first: every rule sources CI/physmon/setup.sh,
 # which activates the ACTS build (assumed to be at <repo>/build) for that rule's
@@ -38,6 +41,7 @@ import csv
 import json
 import os
 from pathlib import Path
+from types import SimpleNamespace
 
 configfile: "CI/physmon/config/physmon.yaml"
 
@@ -86,18 +90,24 @@ REFERENCE_FILES = read_reference_manifest(REFMANIFEST)
 # ACTS_PHYSMON_NO_FETCH=1 (or --config fetch_references=0) runs against REFDIR as
 # it is on disk. The fetch rule is then not defined at all, so snakemake reports
 # any reference it still needs as a missing input file rather than reaching for
-# the registry. Same escape hatch phys_perf_mon.sh offered.
+# the registry.
 FETCH_REFERENCES = bool(
     int(config.get("fetch_references", 0 if os.environ.get("ACTS_PHYSMON_NO_FETCH") else 1))
 )
 
-# Thread budget for compute-heavy rules. Setting this equal to the whole
-# snakemake budget means at most one heavy rule runs at a time but it uses
-# every available core: the producer scripts (via --threads) and histcmp
-# (via --jobs, which fans its per-item comparisons and plot rendering across a
-# ProcessPoolExecutor). Cheap rules (plot/summary) and the three
-# Geant4/Pythia8-bound producers (threads: 1) can fill the gaps in parallel.
-HEAVY_THREADS = workflow.cores
+# Scheduling. Every job declares the peak memory it reserves as `mem_mb`. A
+# job reaches its peak within seconds (geometry, material and field are loaded
+# first) and holds it until it exits, and running it with fewer threads does
+# not lower it. So jobs run single-threaded unless the catalog says otherwise,
+# the parallelism comes from running them side by side, and
+# `--resources mem_mb=<limit>` keeps the sum of the reservations under the
+# runner's memory. Each job's measured peak is in {OUTDIR}/benchmarks, and the
+# summary lists every job that used more than it reserves.
+PLOT_MEM_MB = 300
+# histcmp memory follows the size of the two files it compares: below 1 MB it
+# needs up to 0.8 GB, the multi-MB fitting performance files up to 1.4 GB.
+HISTCMP_MEM_MB = {"small": 1000, "large": 1800}
+HISTCMP_LARGE_INPUT_MB = 1
 
 
 # ---------------------------------------------------------------------------
@@ -121,6 +131,14 @@ PRODUCER_VARIANTS = {
     for slug, spec in PRODUCERS.items()
     if spec.get("variants")
 }
+
+
+def variant_spec(slug, variant):
+    """A variant entry: a plain display label, or {label, mem_mb} to override
+    the producer's mem_mb for this variant."""
+    entry = PRODUCERS[slug]["variants"][variant]
+    return entry if isinstance(entry, dict) else {"label": entry}
+
 
 # Producers that consume another producer's output. The upstream slug is the
 # leading path component of the input, so the dependency is stated once and
@@ -197,7 +215,8 @@ def expand_trackfinding():
         variants = spec.get("variants")
         if variants:
             assert "label_fmt" in opts, f"{slug} has variants, needs label_fmt"
-            for variant, var_label in variants.items():
+            for variant in variants:
+                var_label = variant_spec(slug, variant)["label"]
                 label = opts["label_fmt"].format(variant_label=var_label)
                 for row in rows:
                     out = _expand_row(slug, variant, label, row, vcfg)
@@ -336,8 +355,23 @@ def producer_inputs(slug):
 
 
 def producer_threads(slug):
-    """Heavy thread budget unless the producer is declared single-threaded."""
-    return HEAVY_THREADS if PRODUCERS[slug].get("threads", True) else 1
+    return PRODUCERS[slug].get("threads", 1)
+
+
+def producer_mem_mb(slug, variant=None):
+    if variant is not None and "mem_mb" in variant_spec(slug, variant):
+        return variant_spec(slug, variant)["mem_mb"]
+    assert "mem_mb" in PRODUCERS[slug], f"producer {slug} needs a mem_mb"
+    return PRODUCERS[slug]["mem_mb"]
+
+
+def producer_priority(slug):
+    """Start producers that other producers wait for first."""
+    return 1 if slug in PRODUCER_UPSTREAM.values() else 0
+
+
+def benchmark_for(kind, rel):
+    return f"{OUTDIR}/benchmarks/{kind}/{rel}.tsv"
 
 
 def producer_log(slug, variant=None):
@@ -353,9 +387,8 @@ def producer_command(slug, variant, threads):
         cmd += f"{outdir}/{variant} --variant {variant} "
     else:
         cmd += f"{outdir} "
-    if PRODUCERS[slug].get("threads", True):
-        cmd += f"--threads {threads}"
-    return cmd.rstrip()
+    cmd += f"--threads {threads}"
+    return cmd
 
 
 def producer_command_param(slug, variant):
@@ -485,7 +518,7 @@ rule gx2f_vs_kf:
 #
 # Outputs that feed plot_hist come back from producer_outputs() wrapped in
 # temp(), so snakemake auto-cleans the large ntuples once they have been
-# consumed (matching the original `rm` in the legacy shell script).
+# consumed.
 # ---------------------------------------------------------------------------
 
 def producer_rule_name(slug, variant=None):
@@ -500,6 +533,9 @@ for _slug in PRODUCER_SLUGS:
             output:  **producer_outputs(_slug, _variant)
             log:     producer_log(_slug, _variant)
             threads: producer_threads(_slug)
+            resources: mem_mb = producer_mem_mb(_slug, _variant)
+            priority: producer_priority(_slug)
+            benchmark: benchmark_for("producer", producer_rule_name(_slug, _variant))
             params:  cmd = producer_command_param(_slug, _variant)
             shell:
                 WRAP + " --witness {output.witness} --step producer --log {log} "
@@ -531,6 +567,10 @@ rule plot_hist:
         config = _plot_config,
     log:
         f"{OUTDIR}/logs/plot_{{rel}}_hist.log",
+    resources:
+        mem_mb = PLOT_MEM_MB,
+    benchmark:
+        benchmark_for("plot", "{rel}_hist")
     shell:
         WRAP + " --witness {output.witness} --step plot --log {log} "
         "--touches '{output}' -- "
@@ -561,6 +601,8 @@ if FETCH_REFERENCES:
             refdir = REFDIR,
         log:
             f"{OUTDIR}/logs/fetch_references.log",
+        resources:
+            mem_mb = 500,
         shell:
             "mkdir -p $(dirname {log}) && "
             "uv run --no-project CI/physmon/reference.py pull "
@@ -581,6 +623,13 @@ def _histcmp_reference(wildcards):
     if comp.get("reference_in") == "outdir":
         return f"{OUTDIR}/data/{ref_rel}"
     return f"{REFDIR}/{ref_rel}"
+
+def histcmp_mem_mb(input_mb):
+    large = input_mb >= HISTCMP_LARGE_INPUT_MB
+    return HISTCMP_MEM_MB["large" if large else "small"]
+
+def _histcmp_mem_mb(wildcards, input):
+    return histcmp_mem_mb(input.size_mb)
 
 def _histcmp_params(wildcards):
     rel = wildcards.rel + ".root"
@@ -605,9 +654,12 @@ rule histcmp:
         witness = f"{OUTDIR}/witnesses/histcmp/{{rel}}.json",
     params:
         p = _histcmp_params,
-    threads: HEAVY_THREADS
     log:
         f"{OUTDIR}/logs/histcmp_{{rel}}.log",
+    resources:
+        mem_mb = _histcmp_mem_mb,
+    benchmark:
+        benchmark_for("histcmp", "{rel}")
     shell:
         WRAP + " --witness {output.witness} --step histcmp --log {log} "
         "--touches '{output}' -- "
@@ -663,8 +715,8 @@ def _comparison_row(comp):
     # Which reference file this comparison covers, and which output would
     # replace it. reference.py candidate turns a failing comparison into a
     # manifest entry from these two. A comparison between two monitored outputs
-    # (reference_in: outdir) has no reference and leaves both empty, which is
-    # what phys_perf_mon.sh wrote and what candidate skips on.
+    # (reference_in: outdir) has no reference and leaves both empty, which
+    # candidate skips.
     if comp.get("reference_in") == "outdir":
         ref_path, monitored_path = "", ""
     else:
@@ -681,6 +733,39 @@ def _comparison_row(comp):
     }
 
 
+def _memory_rows():
+    """Every job's reservation next to the peak its benchmark measured."""
+    jobs = []
+    for slug in PRODUCER_SLUGS:
+        for variant in PRODUCER_VARIANTS.get(slug, [None]):
+            name = producer_rule_name(slug, variant)
+            jobs.append((name, producer_mem_mb(slug, variant), benchmark_for("producer", name)))
+    for c in COMPARISONS:
+        rel = _rel_no_root(c["current"])
+        if "plot" in c:
+            jobs.append((f"plot {rel}", PLOT_MEM_MB, benchmark_for("plot", rel)))
+        wc = SimpleNamespace(rel=rel)
+        files = [_histcmp_current(wc), _histcmp_reference(wc)]
+        input_mb = sum(os.path.getsize(f) for f in files if os.path.exists(f)) / 2**20
+        jobs.append((f"histcmp {rel}", histcmp_mem_mb(input_mb), benchmark_for("histcmp", rel)))
+
+    rows = []
+    for name, reserved, bench in jobs:
+        try:
+            with open(bench, newline="") as f:
+                measured = next(csv.DictReader(f, delimiter="\t"))
+        except (OSError, StopIteration):
+            continue
+        rows.append({
+            "job":         name,
+            "reserved_mb": reserved,
+            "max_pss_mb":  round(float(measured["max_pss"])),
+            "max_rss_mb":  round(float(measured["max_rss"])),
+            "wall_s":      round(float(measured["s"]), 1),
+        })
+    return rows
+
+
 def _histcmp_rc(row):
     """The row's histcmp exit code — what candidate keys 'needs replacing' off."""
     for s in row["steps"]:
@@ -694,11 +779,13 @@ rule build_results:
         _all_witnesses(),
     output:
         results = f"{OUTDIR}/physmon_results.json",
-        # The 5-column histcmp_results.csv phys_perf_mon.sh used to append to,
-        # in that exact format: reference.py candidate reads it, so the reference
-        # publish workflow keeps working against this run without changes.
+        # One row per comparison (title, report, histcmp rc, reference path,
+        # monitored path): reference.py candidate reads it to write
+        # reference-candidate.sha256 for the reference publish workflow.
         csv     = f"{OUTDIR}/histcmp_results.csv",
+        memory  = f"{OUTDIR}/memory.json",
     run:
+        Path(output.memory).write_text(json.dumps(_memory_rows(), indent=2) + "\n")
         rows = [_comparison_row(c) for c in COMPARISONS]
         Path(output.results).write_text(json.dumps(rows, indent=2) + "\n")
         with open(output.csv, "w", newline="") as f:
@@ -749,10 +836,11 @@ rule reference_candidate:
 rule summary:
     input:
         results   = f"{OUTDIR}/physmon_results.json",
+        memory    = f"{OUTDIR}/memory.json",
         candidate = f"{OUTDIR}/reference-candidate.sha256",
     output:
         md      = f"{OUTDIR}/summary.md",
         html    = f"{OUTDIR}/summary.html",
     shell:
-        "python3 CI/physmon/summary.py {input.results} "
+        "python3 CI/physmon/summary.py {input.results} --memory {input.memory} "
         "--md {output.md} --html {output.html}"

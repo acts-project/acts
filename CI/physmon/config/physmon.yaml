@@ -101,10 +101,19 @@ trackfinding_extras:
 # script (workflows/physmon_<slug>.py) and the output directory
 # ({OUTDIR}/data/<slug>).
 #
-# Keys, all optional:
-#   threads: false     single-threaded (Geant4/Pythia8-bound). Default true,
-#                      meaning the rule takes the heavy-job thread budget and
-#                      passes --threads to the script.
+# Required key:
+#   mem_mb:            peak memory one job of this producer reserves, in MB:
+#                      the higher of the peaks measured in CI and locally, plus
+#                      25%, per variant. CI needs more: resolving the masked FPEs
+#                      loads debug info that stays in memory. The physmon summary
+#                      lists every job that used more than it reserves; the
+#                      measured peaks are in {OUTDIR}/benchmarks.
+#
+# Optional keys:
+#   threads:           threads passed to the script via --threads (default 1).
+#                      More threads do not lower a job's memory, and most
+#                      scripts keep fewer than 1.5 cores busy at 4 threads, so
+#                      the parallelism comes from running jobs side by side.
 #   inputs:            files from another producer this one consumes. The
 #                      leading path component names the upstream producer,
 #                      which is what the summary reports as the upstream step.
@@ -112,10 +121,11 @@ trackfinding_extras:
 #                      Every other output is derived from the comparisons, so
 #                      these have to be declared or snakemake would not know
 #                      about them.
-#   variants:          variant -> display label. Variant keys are
-#                      `SeedingAlgorithm` enum member names so the script can
-#                      resolve them with getattr(); outputs land in
-#                      <slug>/<variant>/.
+#   variants:          variant -> display label, or -> {label, mem_mb} when
+#                      the variant needs a different mem_mb than the producer.
+#                      Variant keys are `SeedingAlgorithm` enum member names so
+#                      the script can resolve them with getattr(); outputs land
+#                      in <slug>/<variant>/.
 #   trackfinding:      expand the trackfinding pack for this producer.
 #                      `label` (or `label_fmt` with {variant_label} when the
 #                      producer has variants), optional `extras`, and
@@ -124,31 +134,38 @@ trackfinding_extras:
 
 producers:
   simulation:
-    threads: false
+    mem_mb: 1500
     extra_outputs: [particles_gun.root]
 
   simulation_gsf:
-    threads: false
+    mem_mb: 1400
     # Consumed by trackfitting_gsf / trackrefitting_gsf, never compared.
     extra_outputs:
       - simulation/particles_simulation.root
       - simulation/hits.root
 
-  trackfitting_kf: {}
+  trackfitting_kf:
+    mem_mb: 1000
 
   trackfitting_gsf:
+    mem_mb: 1600
     inputs: [simulation_gsf/simulation/particles_simulation.root]
 
-  trackfitting_gx2f: {}
+  trackfitting_gx2f:
+    mem_mb: 1600
 
-  trackrefitting_kf: {}
+  trackrefitting_kf:
+    mem_mb: 1400
 
   trackrefitting_gsf:
+    mem_mb: 1800
     inputs: [simulation_gsf/simulation/particles_simulation.root]
 
-  trackfitting_gx2f_vs_kf: {}
+  trackfitting_gx2f_vs_kf:
+    mem_mb: 1000
 
   trackfinding_1muon:
+    mem_mb: 1000
     variants:
       TruthSmeared: "truth smeared seeding"
       TruthEstimated: "truth estimated seeding"
@@ -159,6 +176,7 @@ producers:
       label_fmt: "trackfinding | single muon | {variant_label}"
 
   trackfinding_4muon_50vertices:
+    mem_mb: 1100
     extra_outputs: [performance_fitting_ckf_ambi.root]
     trackfinding:
       label: "trackfinding | 4 muon x 50 vertices | default seeding"
@@ -166,7 +184,7 @@ producers:
       vertexing_config: vertexing_4muon_50vertices.yml
 
   trackfinding_ttbar_pu200:
-    threads: false
+    mem_mb: 1800
     extra_outputs:
       - performance_fitting_ckf_ambi.root
       - performance_fitting_ckf_ml_solver.root

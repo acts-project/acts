@@ -282,7 +282,11 @@ jobs:
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
           source .env
-          snakemake -s CI/physmon/Snakefile --cores 4 -p all
+          # The jobs may reserve 12 GB of the runner's 16 GB of memory together.
+          # --keep-incomplete keeps the summary when a comparison fails and
+          # the summary rule exits 1.
+          snakemake -s CI/physmon/Snakefile --cores $(nproc) \
+            --resources mem_mb=12000 --keep-incomplete -p all
 
       - name: Post step summary
         if: always()

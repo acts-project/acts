@@ -27,7 +27,7 @@ import os
 import sys
 from pathlib import Path
 
-# Same Herald artifact-URL pattern the legacy summary used for CI links.
+# Herald serves the physmon artifact of a CI run; the summary links point there.
 HERALD_URL = "https://acts-herald.app.cern.ch/view/{repo}/runs/{run_id}/artifacts/{artifact_name}/{path}"
 IS_CI = "GITHUB_ACTIONS" in os.environ
 
@@ -36,8 +36,8 @@ STEP_KINDS = ["upstream", "producer", "plot", "histcmp"]
 STEP_HEADERS = {
     "upstream": "Upstream",
     "producer": "Producer",
-    "plot":     "Plot",
-    "histcmp":  "Histcmp",
+    "plot": "Plot",
+    "histcmp": "Histcmp",
 }
 
 
@@ -101,10 +101,39 @@ def _md_escape(s: str) -> str:
     return s.replace("|", "\\|")
 
 
-def render_markdown(rows: list[dict]) -> str:
+def _memory_report(memory: list[dict]) -> tuple[str, list[dict]]:
+    """A one-line verdict on the memory reservations and the jobs above theirs."""
+    over = [m for m in memory if m["max_pss_mb"] > m["reserved_mb"]]
+    if over:
+        text = (
+            f"{len(over)} of {len(memory)} jobs used more memory than they reserve. "
+            "Raise their reservation, otherwise the jobs running together can "
+            "exceed the memory budget: mem_mb in CI/physmon/config/physmon.yaml "
+            "for producers, HISTCMP_MEM_MB or PLOT_MEM_MB in CI/physmon/Snakefile "
+            "for histcmp and plot jobs."
+        )
+    else:
+        closest = max(memory, key=lambda m: m["max_pss_mb"] / m["reserved_mb"])
+        text = (
+            f"All {len(memory)} jobs stayed within the memory they reserve; closest: "
+            f"{closest['job']} at {closest['max_pss_mb']} of {closest['reserved_mb']} MB."
+        )
+    return text, over
+
+
+MEMORY_HEADERS = ["Job", "Reserved [MB]", "Peak PSS [MB]", "Peak RSS [MB]"]
+
+
+def _memory_cells(m: dict) -> list[str]:
+    return [m["job"], str(m["reserved_mb"]), str(m["max_pss_mb"]), str(m["max_rss_mb"])]
+
+
+def render_markdown(rows: list[dict], memory: list[dict] | None = None) -> str:
     lines = ["# physmon summary", ""]
-    headers = ["Status", "Comparison"] + [STEP_HEADERS[k] for k in STEP_KINDS] + ["Report"]
-    aligns  = [":---:", ":---"] + [":---:"] * len(STEP_KINDS) + [":---:"]
+    headers = (
+        ["Status", "Comparison"] + [STEP_HEADERS[k] for k in STEP_KINDS] + ["Report"]
+    )
+    aligns = [":---:", ":---"] + [":---:"] * len(STEP_KINDS) + [":---:"]
     lines.append("| " + " | ".join(headers) + " |")
     lines.append("| " + " | ".join(aligns) + " |")
     for row in rows:
@@ -117,14 +146,24 @@ def render_markdown(rows: list[dict]) -> str:
         cells.append(f"[report]({report_url})")
         lines.append("| " + " | ".join(cells) + " |")
     lines.append("")
-    lines.append("*An asterisk (e.g. 🔴\\*) marks a cascade failure: an earlier step in the same row failed first.*")
+    lines.append(
+        "*An asterisk (e.g. 🔴\\*) marks a cascade failure: an earlier step in the same row failed first.*"
+    )
+    if memory:
+        text, over = _memory_report(memory)
+        lines += ["", "## Memory", "", text]
+        if over:
+            lines += ["", "| " + " | ".join(MEMORY_HEADERS) + " |"]
+            lines.append("| :--- |" + " ---: |" * (len(MEMORY_HEADERS) - 1))
+            for m in over:
+                lines.append("| " + " | ".join(_memory_cells(m)) + " |")
     return "\n".join(lines) + "\n"
 
 
-def render_html(rows: list[dict]) -> str:
+def render_html(rows: list[dict], memory: list[dict] | None = None) -> str:
     out = [
         "<!DOCTYPE html>",
-        "<html><head><title>physmon summary</title><meta charset=\"UTF-8\">",
+        '<html><head><title>physmon summary</title><meta charset="UTF-8">',
         "<style>",
         "body{font-family:sans-serif;margin:2em}",
         "table{border-collapse:collapse}",
@@ -145,22 +184,43 @@ def render_html(rows: list[dict]) -> str:
         cells.append(f'<a href="{_herald(row["report"])}">report</a>')
         out.append("<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
     out.append("</table>")
-    out.append("<p><em>An asterisk (e.g. 🔴*) marks a cascade failure: an earlier step in the same row failed first.</em></p>")
+    out.append(
+        "<p><em>An asterisk (e.g. 🔴*) marks a cascade failure: an earlier step in the same row failed first.</em></p>"
+    )
+    if memory:
+        text, over = _memory_report(memory)
+        out += ["<h2>Memory</h2>", f"<p>{text}</p>"]
+        if over:
+            out.append(
+                "<table><tr>"
+                + "".join(f"<th>{h}</th>" for h in MEMORY_HEADERS)
+                + "</tr>"
+            )
+            for m in over:
+                cells = "".join(f"<td>{c}</td>" for c in _memory_cells(m))
+                out.append(f"<tr>{cells}</tr>")
+            out.append("</table>")
     out.append("</body></html>")
     return "\n".join(out) + "\n"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("results", type=Path, help="physmon_results.json from build_results")
+    parser.add_argument(
+        "results", type=Path, help="physmon_results.json from build_results"
+    )
+    parser.add_argument(
+        "--memory", type=Path, help="memory.json from build_results (optional)"
+    )
     parser.add_argument("--md", type=Path, required=True)
     parser.add_argument("--html", type=Path, required=True)
     args = parser.parse_args()
 
     rows = json.loads(args.results.read_text())
+    memory = json.loads(args.memory.read_text()) if args.memory else None
 
-    args.md.write_text(render_markdown(rows))
-    args.html.write_text(render_html(rows))
+    args.md.write_text(render_markdown(rows, memory))
+    args.html.write_text(render_html(rows, memory))
 
     any_failed = False
     for row in rows:
