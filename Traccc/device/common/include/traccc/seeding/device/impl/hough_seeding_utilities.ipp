@@ -73,18 +73,25 @@ bool is_local_maximum(const global_index_t globalIndex,
     const long long rows = n_rows;
     const long long cols = n_cols;
 
-    for (int dx = -1; dx <= 1; ++dx) {
+    for (int dx = -1; dx <= 0; ++dx) {
         const long long neighbor_col = col + dx;
         if (neighbor_col < 0 || neighbor_col >= cols) continue;     
         
         for (int dy = -1; dy <= 1; ++dy) {
-            const long long neighbor_row = (row + dy + rows) % rows;
+            if (dx == 0 && dy != 1) continue;
+
+            long long neighbor_row = row + dy;
+            if (neighbor_row < 0) {
+                neighbor_row += rows;
+            } else if (neighbor_row >= rows) {
+                neighbor_row -= rows;
+            }
             const auto neighbor_index =
                 static_cast<unsigned long long>(neighbor_col) * n_rows +
                 static_cast<unsigned long long>(neighbor_row);
 
             if (neighbor_index == globalIndex) continue;
-            if (plane[neighbor_index] > value) return false;
+            if (plane[neighbor_index] >= value) return false;
         } // loop on dx
     } // loop on dy
     return true;

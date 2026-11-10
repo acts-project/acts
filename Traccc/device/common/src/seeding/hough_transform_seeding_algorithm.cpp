@@ -198,7 +198,7 @@ auto hough_transform_seeding_algorithm::operator()(
   find_maxima_kernel({m_config,
                       houghplane_entries,
                       maxima_global_index});
-
+  
   /*
   // planes
   vecmem::vector<unsigned short> houghplane_entries_host = ((mr().host != nullptr)
