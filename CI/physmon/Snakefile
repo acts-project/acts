@@ -687,11 +687,12 @@ def _histcmp_reference(wildcards):
 def _histcmp_params(wildcards):
     rel = wildcards.rel + ".root"
     comp = COMP_BY_CURRENT[rel]
-    cfg = comp.get("config")
-    config_flag = f"--config {HISTCMP_CONFIG_DIR}/{cfg}" if cfg else ""
+    # standard.toml carries histcmp's default checks for comparisons without
+    # a config of their own.
+    cfg = comp.get("config", "standard.toml")
     return {
         "title":       comp["title"],
-        "config_flag": config_flag,
+        "config_flag": f"--config {HISTCMP_CONFIG_DIR}/{cfg}",
         "label_ref":   comp.get("label_reference", "reference"),
         "label_mon":   comp.get("label_monitored", "monitored"),
     }
@@ -717,6 +718,9 @@ rule histcmp:
         "--label-reference={params.p[label_ref]} "
         "--label-monitored={params.p[label_mon]} "
         "--title={params.p[title]:q} "
+        # scatter renders 3D histograms much faster than the default voxel
+        # renderer at every histogram size
+        "--renderer-3d scatter "
         "-o {output.html} "
         "-p {output.html}_plots "
         "{params.p[config_flag]}"

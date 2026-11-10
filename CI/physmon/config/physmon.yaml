@@ -41,17 +41,17 @@
 trackfinding_base:
   - kind_fmt: "Seeding {label}"
     file: performance_seeding.root
-    config: default.yml
+    config: default.toml
     # TruthSmeared has no seeding step, so it produces no seeding performance.
     skip_variants: [TruthSmeared]
 
   - kind_fmt: "CKF finding performance | {label}"
     file: performance_finding_ckf.root
-    config: default.yml
+    config: default.toml
 
   - kind_fmt: "CKF fitting performance | {label}"
     file: performance_fitting_ckf.root
-    config: default.yml
+    config: default.toml
 
   - kind_fmt: "CKF track summary | {label}"
     file: tracksummary_ckf_hist.root
@@ -153,6 +153,7 @@ producers:
       TruthEstimated: "truth estimated seeding"
       GridTriplet: "default seeding"
       OrthogonalTriplet: "orthogonal seeding"
+      Gbts: "GBTS seeding"
     trackfinding:
       label_fmt: "trackfinding | single muon | {variant_label}"
 
@@ -215,27 +216,27 @@ comparisons:
   # ---- trackfitting / trackrefitting --------------------------------------
   - title: "Truth tracking (KF)"
     current: trackfitting_kf/performance_trackfitting.root
-    config: trackfitting_kf.yml
+    config: trackfitting_kf.toml
     mode: kf
 
   - title: "Truth tracking (GSF)"
     current: trackfitting_gsf/performance_trackfitting.root
-    config: trackfitting_gsf.yml
+    config: trackfitting_gsf.toml
     mode: gsf
 
   - title: "Truth tracking (GX2F)"
     current: trackfitting_gx2f/performance_trackfitting.root
-    config: trackfitting_gx2f.yml
+    config: trackfitting_gx2f.toml
     mode: gx2f
 
   - title: "Truth tracking (KF refit)"
     current: trackrefitting_kf/performance_trackrefitting.root
-    config: trackfitting_kf.yml
+    config: trackfitting_kf.toml
     mode: refit_kf
 
   - title: "Truth tracking (GSF refit)"
     current: trackrefitting_gsf/performance_trackrefitting.root
-    config: trackfitting_gsf.yml
+    config: trackfitting_gsf.toml
     mode: refit_gsf
 
   # ---- gx2f vs kf (special: reference is produced, not in reference/) ---
@@ -243,7 +244,7 @@ comparisons:
     current: trackfitting_gx2f_vs_kf/performance_trackfitting_gx2f.root
     reference: trackfitting_gx2f_vs_kf/performance_trackfitting_kf.root
     reference_in: outdir
-    config: info_only.yml
+    config: info_only.toml
     label_reference: KF
     label_monitored: GX2F
     mode: gx2f_vs_kf
