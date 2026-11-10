@@ -26,16 +26,10 @@ macro(acts_apply_warning_flags lang warnings_as_errors)
                 -Wzero-as-null-pointer-constant
                 -Wold-style-cast
                 -Woverloaded-virtual
-                -Wconversion
                 -Wunused-local-typedefs
             )
             if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-                list(
-                    APPEND
-                    _acts_warning_flags
-                    -Wfloat-conversion
-                    -Wshorten-64-to-32
-                )
+                list(APPEND _acts_warning_flags -Wfloat-conversion)
                 if(ACTS_HAS_WNO_C2Y_EXTENSIONS)
                     list(APPEND _acts_warning_flags -Wno-c2y-extensions)
                 endif()
@@ -62,7 +56,7 @@ macro(acts_apply_warning_flags lang warnings_as_errors)
         endif()
     elseif("${lang}" STREQUAL "CUDA")
         if(CMAKE_CUDA_COMPILER_ID MATCHES "NVIDIA")
-            list(APPEND _acts_warning_flags -Wall -Wextra -Wconversion)
+            list(APPEND _acts_warning_flags -Wall -Wextra)
         endif()
     elseif("${lang}" STREQUAL "SYCL")
         if(
@@ -81,7 +75,6 @@ macro(acts_apply_warning_flags lang warnings_as_errors)
             if(NOT WIN32)
                 list(APPEND _acts_warning_flags -Wpedantic)
             endif()
-            list(APPEND _acts_warning_flags -Wconversion)
             if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
                 list(
                     APPEND
