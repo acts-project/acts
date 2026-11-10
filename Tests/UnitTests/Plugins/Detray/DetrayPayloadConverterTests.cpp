@@ -16,6 +16,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/PadBlueprintNode.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
@@ -40,6 +41,7 @@
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
+#include "ActsPlugins/Detray/DetraySurfaceGridPolicy.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
@@ -662,6 +664,11 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   auto geoLogger = getDefaultLogger("Geo", Logging::VERBOSE);
 
   CylindricalTrackingGeometry cGeometry(gctx, true);
+  // Surface arrays only get a detray grid with the detray policy next to them
+  cGeometry.extendLayerNavigationPolicy =
+      [](NavigationPolicyFactory&& factory) {
+        return std::move(factory).add<DetraySurfaceGridPolicy>();
+      };
   auto tGeometry = cGeometry(*geoLogger);
 
   ObjVisualization3D obj;

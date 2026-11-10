@@ -4,6 +4,9 @@ acts_add_library(
     src/DetrayPayloadConverter.cpp
     src/DetrayMaterial.cpp
     src/DetrayNavigation.cpp
+    src/DetrayGridFill.cpp
+    src/DetraySurfaceGridPolicy.cpp
+    src/DetrayJsonConverter.cpp
     src/DetraySurfaceIdMap.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
