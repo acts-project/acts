@@ -8,7 +8,4 @@
 
 cmake_minimum_required(VERSION 3.21)
 
-# All SYCL warning flags come from the shared module. Note that CMake has no
-# COMPILE_WARNING_AS_ERROR implementation for SYCL (it is a vecmem-provided
-# pseudo-language), so the module emits -Werror for it by hand.
 acts_apply_warning_flags(PROFILE detray LANGUAGES SYCL)
