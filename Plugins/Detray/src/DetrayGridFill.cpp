@@ -178,7 +178,16 @@ void DetrayPayloadConverter::fillSurfaceGridDetrayNative(
   const double zHigh = volumeCenter.z() + halfZ;
   // Mirrors detray::grid_builder: mean of the smallest and largest portal
   // radius, i.e. the outer radius without an inner cylinder portal
-  const double refRadius = rMin > 0. ? 0.5 * (rMin + rMax) : rMax;
+  double refRadius = rMin > 0. ? 0.5 * (rMin + rMax) : rMax;
+  if (isCylinder && fill.lookupOnLayer && !surfaceArray.surfaces().empty()) {
+    double sum = 0.;
+    for (const Surface* surface : surfaceArray.surfaces()) {
+      const Vector3 r = surface->referencePosition(gctx, AxisDirection::AxisR);
+      sum += std::hypot(r.x(), r.y());
+    }
+    refRadius = sum / static_cast<double>(surfaceArray.surfaces().size());
+    grid.reference_radius = static_cast<detray::io::scalar>(refRadius);
+  }
 
   std::array<DetrayAxis, 2> axes{};
   for (std::size_t i = 0; i < 2; ++i) {

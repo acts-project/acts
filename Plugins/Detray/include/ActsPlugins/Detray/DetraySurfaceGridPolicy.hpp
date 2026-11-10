@@ -45,6 +45,11 @@ struct DetraySurfaceGridConfig {
   /// Bin count factor for axes the surface array bins automatically, relative
   /// to one bin per module. If unset, the surface array's own binning is kept.
   std::optional<double> numberOfBinsFactor = 2.;
+  /// Look cylinder grids up on the mean radius of their surfaces instead of
+  /// the mean radius of the volume portals. Straight tracks then cross the
+  /// lookup surface where they hit a surface, so the vertex spread no longer
+  /// widens the bins.
+  bool lookupOnLayer = true;
 };
 
 /// Navigation policy carrying the @ref DetraySurfaceGridConfig of a volume.

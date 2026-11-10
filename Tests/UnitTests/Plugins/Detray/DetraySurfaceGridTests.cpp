@@ -216,6 +216,42 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceGridPolicyJsonRoundTrip) {
               convert(*geometry, std::nullopt).grids);
 }
 
+BOOST_AUTO_TEST_CASE(DetraySurfaceGridLookupRadius) {
+  auto geometry = buildGeometry();
+
+  auto radii = [&](bool onLayer) {
+    DetrayPayloadConverter::Config cfg;
+    DetraySurfaceGridConfig fill;
+    fill.lookupOnLayer = onLayer;
+    cfg.surfaceGridFill = fill;
+    geometry->apply([&cfg](const TrackingVolume& volume) {
+      if (volume.volumeName() == "Beampipe") {
+        cfg.beampipeVolume = &volume;
+      }
+    });
+    DetrayPayloadConverter converter(cfg,
+                                     getDefaultLogger("Cnv", Logging::WARNING));
+    auto payloads = converter.convertTrackingGeometry(gctx, *geometry);
+    std::vector<std::optional<double>> out;
+    for (const auto& [volume, grids] : payloads.surface_grids->grids) {
+      out.push_back(grids.front().reference_radius);
+    }
+    return out;
+  };
+
+  // On the layer: the mean module radius, inside the layer volume
+  const auto onLayer = radii(true);
+  BOOST_CHECK_EQUAL(onLayer.size(), 4u);
+  for (const auto& r : onLayer) {
+    BOOST_REQUIRE(r.has_value());
+    BOOST_CHECK_GT(*r, 0.);
+  }
+  // Otherwise detray derives it from the portals
+  for (const auto& r : radii(false)) {
+    BOOST_CHECK(!r.has_value());
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

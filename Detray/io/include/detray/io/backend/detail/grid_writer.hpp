@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/definitions/indexing.hpp"
+#include "detray/geometry/concepts.hpp"
 #include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/backend/detail/type_info.hpp"
 #include "detray/io/frontend/payloads.hpp"
@@ -89,6 +90,17 @@ class grid_writer {
 
     grid_data.axes.resize(axes_data.size());
     std::ranges::copy(axes_data, std::begin(grid_data.axes));
+
+    // Cylinder search grids are looked up on a cylinder of their own radius
+    if constexpr (requires { gr.mask(); }) {
+      if constexpr (detray::concepts::cylindrical<
+                        typename grid_t::local_frame_type>) {
+        using shape_t =
+            typename std::remove_cvref_t<decltype(gr.mask())>::shape;
+        grid_data.reference_radius =
+            static_cast<io::scalar>(gr.mask()[shape_t::e_r]);
+      }
+    }
 
     // Write the surface indices
     for (unsigned int gid = 0u; gid < gr.nbins(); ++gid) {

@@ -30,6 +30,7 @@ nlohmann::json encodeDetraySurfaceGridPolicy(
   j["nVertexZ"] = cfg.nVertexZ;
   j["nCurvature"] = cfg.nCurvature;
   j["maxSampleSpacing"] = cfg.maxSampleSpacing;
+  j["lookupOnLayer"] = cfg.lookupOnLayer;
   if (cfg.numberOfBinsFactor.has_value()) {
     j["numberOfBinsFactor"] = *cfg.numberOfBinsFactor;
   }
@@ -47,6 +48,7 @@ std::unique_ptr<Acts::INavigationPolicy> decodeDetraySurfaceGridPolicy(
   cfg.nVertexZ = j.at("nVertexZ").get<std::size_t>();
   cfg.nCurvature = j.at("nCurvature").get<std::size_t>();
   cfg.maxSampleSpacing = j.at("maxSampleSpacing").get<double>();
+  cfg.lookupOnLayer = j.value("lookupOnLayer", false);
   cfg.numberOfBinsFactor = std::nullopt;
   if (j.contains("numberOfBinsFactor")) {
     cfg.numberOfBinsFactor = j.at("numberOfBinsFactor").get<double>();

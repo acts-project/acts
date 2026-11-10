@@ -73,6 +73,9 @@ inline void to_json(nlohmann::ordered_json& j,
     jaxes.push_back(a);
   }
   j["axes"] = jaxes;
+  if (g.reference_radius.has_value()) {
+    j["reference_radius"] = *g.reference_radius;
+  }
 
   nlohmann::ordered_json jbins;
   for (const auto& bin : g.bins) {
@@ -91,6 +94,9 @@ inline void from_json(const nlohmann::ordered_json& j,
   for (const auto& jax : jaxes) {
     axis_payload a = jax;
     g.axes.push_back(std::move(a));
+  }
+  if (j.contains("reference_radius")) {
+    g.reference_radius = j["reference_radius"].get<io::scalar>();
   }
 
   nlohmann::ordered_json jbins = j["bins"];

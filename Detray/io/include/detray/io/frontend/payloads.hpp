@@ -303,6 +303,9 @@ struct grid_payload {
 
   /// Must match the number of axis in the grid type indicated by @c grid_link
   std::vector<axis_payload> axes{};
+  /// Radius of the virtual cylinder a cylinder surface grid is looked up on.
+  /// If unset, the reader derives it from the portals of the volume.
+  std::optional<io::scalar> reference_radius{};
   /// Bin contents in serializer-defined order.
   /// Bin contents arranged in serializer order.
   std::vector<grid_bin_payload<bin_content_t>> bins{};
