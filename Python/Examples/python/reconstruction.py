@@ -321,6 +321,8 @@ def addSeeding(
     paramEstimationRefineIterations: Optional[int] = None,
     paramEstimationWeight: Optional[Callable] = None,
     gbtsSeedParameters: bool = False,
+    gbtsSeedFitAtOutermost: bool = False,
+    paramEstimationOnLastSpacePoint: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     trackParameterPerformance: bool = False,
@@ -392,6 +394,12 @@ def addSeeding(
     gbtsSeedParameters : bool
         GBTS seeding: use the fit of the GBTS tracking filter as the track
         parameter estimate, instead of a fit to the space points (default)
+    gbtsSeedFitAtOutermost : bool, False
+        GBTS seeding: give the fit of the tracking filter at the outermost
+        space point of the seed instead of the innermost
+    paramEstimationOnLastSpacePoint : bool, False
+        give the estimated parameters on the surface of the last space point
+        of the seed instead of the first, see `addCKFTracks(reverseSearch=True)`
     outputDirRoot : Path|str, path, None
         the output folder for ROOT output, None triggers no output
     trackParameterPerformance : bool, False
@@ -503,6 +511,7 @@ def addSeeding(
                     f"{prefix}seedfreeparameters" if gbtsSeedParameters else None
                 ),
                 magneticField=field if gbtsSeedParameters else None,
+                seedFitAtOutermost=gbtsSeedFitAtOutermost,
             )
         elif seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
             logger.info("Using Hashing seeding")
@@ -599,6 +608,7 @@ def addSeeding(
                     if gbtsSeedParameters and seedingAlgorithm == SeedingAlgorithm.Gbts
                     else None
                 ),
+                parametersOnLastSpacePoint=paramEstimationOnLastSpacePoint,
             ),
         )
         s.addAlgorithm(parEstimateAlg)
@@ -650,9 +660,9 @@ def addSeeding(
             )
 
             if trackParameterPerformance:
-                # the estimate sits on the bottom space point's sensor and has
-                # to be moved to a common surface to be comparable to truth.
-                # `first` because only the innermost state carries parameters.
+                # the estimate sits on the sensor of the bottom or the top space
+                # point and has to be moved to a common surface to be
+                # comparable to truth. Only that state carries parameters.
                 extrapolatedTracks = f"{prefix}seed-tracks-perigee"
                 s.addAlgorithm(
                     acts.examples.TrackExtrapolationAlgorithm(
@@ -662,7 +672,11 @@ def addSeeding(
                         targetSurface=acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
                         trackingGeometry=trackingGeometry,
                         magneticField=field,
-                        strategy=acts.examples.TrackExtrapolationStrategy.first,
+                        strategy=(
+                            acts.examples.TrackExtrapolationStrategy.last
+                            if paramEstimationOnLastSpacePoint
+                            else acts.examples.TrackExtrapolationStrategy.first
+                        ),
                     )
                 )
 
@@ -1501,6 +1515,7 @@ def addGbtsSeeding(
     outputSeeds: str = "seeds",
     outputFreeParameters: Optional[str] = None,
     magneticField: Optional[acts.MagneticFieldProvider] = None,
+    seedFitAtOutermost: bool = False,
 ):
     """Gbts seeding"""
 
@@ -1511,6 +1526,8 @@ def addGbtsSeeding(
     seedFinderConfig = gbtsConfigArg.seederConfig
     if seedFinderConfig is None:
         seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
+    if seedFitAtOutermost:
+        seedFinderConfig.seedFitAtOutermost = True
 
     graphConfig = gbtsConfigArg.graphConfig
     if graphConfig is None:
@@ -1938,7 +1955,9 @@ def addCKFTracks(
         Specify as a list(TrackSelectorConfig) for eta-dependent cuts, with binning specified by absEta[1].
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
     reverseSearch : bool, False
-        search every seed inward first, from its last space point
+        search every seed inward first, from its last space point. Without
+        seedParamsEstimation, the estimated parameters must lie there, see
+        `addSeeding(paramEstimationOnLastSpacePoint=True)`
     reverseSearchRZBoundary : (r, |z|), None
         search a seed inward first if its last space point lies beyond r or |z|
     inwardOnlyRZBoundary : (r, |z|), None
@@ -1995,10 +2014,11 @@ def addCKFTracks(
     directionFromSeed = (
         reverseSearchRZBoundary is not None or inwardOnlyRZBoundary is not None
     )
-    if (reverseSearch or directionFromSeed) and seedParamsEstimation is None:
+    # given parameters for the reverse search must lie on the last space point
+    if directionFromSeed and seedParamsEstimation is None:
         raise ValueError(
-            "The reverse search starts on the last space point of the seed, "
-            "which needs seedParamsEstimation"
+            "The search direction per seed needs the estimate on either end of "
+            "the seed, which needs seedParamsEstimation"
         )
 
     # Set up the track finding algorithm with CKF
