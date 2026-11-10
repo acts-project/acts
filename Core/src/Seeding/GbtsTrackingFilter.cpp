@@ -201,6 +201,9 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
     return false;
   }
 
+  // The path search in GraphBasedTrackSeeder::extractBestPathPerEdge skips
+  // paths that cannot beat the best one found, assuming a hit adds at most
+  // addHit here. A score that can add more must change or remove that bound.
   ts.j += m_cfg.addHit - dchi2_x * m_cfg.weightX - dchi2_y * m_cfg.weightY;
 
   // state update
