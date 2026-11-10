@@ -15,8 +15,6 @@
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <array>
-#include <cstddef>
-#include <limits>
 #include <stdexcept>
 #include <vector>
 
@@ -28,8 +26,9 @@ namespace Acts::detail {
 ///
 /// The additional surfaces and the candidates of the geometry navigator are two
 /// streams. Both are intersected again before every step, and the closer one is
-/// the target. A surface seen ahead stays a candidate when it moves behind, so
-/// the propagation steps back onto it, until it is reached or missed.
+/// the target. An intersection seen ahead stays a candidate when it moves
+/// behind, so the propagation can correct backwards until the surface is
+/// reached. Unreachable targets are bounded by the propagation limits.
 class AdditionalSurfaceNavigation {
   /// An additional surface with its bookkeeping
   struct AdditionalSurfaceState {
@@ -40,16 +39,6 @@ class AdditionalSurfaceNavigation {
     /// Once seen ahead, keep each intersection available until the surface
     /// is reached, even if it moves behind the propagation.
     std::array<bool, s_maximumNumberOfIntersections> pending{};
-    /// Whether each intersection was offered behind the propagation
-    std::array<bool, s_maximumNumberOfIntersections> offeredBehind{};
-    /// Distance ahead when each intersection last came back after it was
-    /// offered behind, infinite if it came back invalid, zero if it did not
-    /// come back. Corrections that converge onto the surface come back closer
-    /// every time.
-    std::array<double, s_maximumNumberOfIntersections> returnDistance{};
-    /// An intersection that does not come back closer was missed. It is
-    /// offered only ahead until the surface is reached.
-    std::array<bool, s_maximumNumberOfIntersections> missed{};
   };
 
   /// Additional surfaces of the options and the target surface
@@ -209,9 +198,6 @@ class AdditionalSurfaceNavigation {
       if (additional.surface.surface == &surface) {
         additional.reached = true;
         additional.pending.fill(false);
-        additional.offeredBehind.fill(false);
-        additional.returnDistance.fill(0);
-        additional.missed.fill(false);
         found = true;
       }
     }
@@ -244,23 +230,6 @@ class AdditionalSurfaceNavigation {
     }
   }
 
-  /// Records that an intersection offered behind is ahead or invalid again. A
-  /// track that never reaches the surface, e.g. at its turning point, does not
-  /// come back closer.
-  static void comeBack(AdditionalSurfaceState& additional, std::size_t index,
-                       double distance) {
-    if (!additional.offeredBehind[index]) {
-      return;
-    }
-    additional.offeredBehind[index] = false;
-    double& returnDistance = additional.returnDistance[index];
-    additional.missed[index] =
-        additional.missed[index] ||
-        (returnDistance > 0 && distance >= returnDistance);
-    additional.pending[index] = !additional.missed[index];
-    returnDistance = distance;
-  }
-
   /// Closest additional surface in the current volume, ahead or pending.
   /// Intersections are tracked by index, which for a surface with two
   /// solutions is their order in signed path length.
@@ -287,31 +256,23 @@ class AdditionalSurfaceNavigation {
            enumerate(multiIntersection)) {
         if (!intersection.isValid() ||
             intersection.pathLength() > options.farLimit) {
-          comeBack(additional, intersectionIndex,
-                   std::numeric_limits<double>::infinity());
           continue;
         }
         const double pathLength = intersection.pathLength();
         const bool onSurface =
             intersection.status() == IntersectionStatus::onSurface;
         if (!onSurface && pathLength > 0) {
-          comeBack(additional, intersectionIndex, pathLength);
-          additional.pending[intersectionIndex] =
-              !additional.missed[intersectionIndex];
+          additional.pending[intersectionIndex] = true;
         }
 
         // Retain an earlier forward candidate even if it is now behind, as a
         // turn can change the order of the candidates. The stepper corrects
         // backwards, just as for a direct navigation target. A kept surface
         // is not reached twice at the same position.
-        const bool offer =
-            onSurface ? !additional.reached
-                      : pathLength > 0 || additional.pending[intersectionIndex];
+        const bool offer = onSurface ? !additional.reached
+                                     : additional.pending[intersectionIndex];
         if (!offer) {
           continue;
-        }
-        if (!onSurface && pathLength < 0) {
-          additional.offeredBehind[intersectionIndex] = true;
         }
         if (closest.isNone() || pathLength < closest.pathLength()) {
           closest = NavigationTarget(

@@ -87,6 +87,13 @@ BOOST_AUTO_TEST_CASE(AdditionalSurfaceRetainedBehindSequence) {
   position = Vector3{-0.4_mm, 0.5_mm, 0};
   BOOST_CHECK(navigator.checkTargetValid(state, position, direction));
 
+  // A non-monotonic correction does not discard the pending intersection.
+  // The propagator's limits bound attempts if these corrections never converge.
+  for (double y : {-0.5_mm, 0.5_mm, -1_mm, 1_mm}) {
+    position.y() = y;
+    BOOST_CHECK(navigator.checkTargetValid(state, position, direction));
+  }
+
   // Once reached, a kept surface must not pull us back after moving away.
   position.y() = 0.;
   navigator.handleSurfaceReached(state, position, direction, *perigee);
