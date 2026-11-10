@@ -46,16 +46,20 @@ class DetrayConcretePropagator : public PropagatorInterface {
   ///        whether the surface-grid filling needs to merge neighbor cells:
   ///        if results change with a larger window, the converted grids are
   ///        missing neighbor entries and the filling should be optimized.
+  /// @param field the magnetic field (view) handed to the stepper; unused
+  ///        for field-free steppers
   explicit DetrayConcretePropagator(
       std::shared_ptr<detector_t> dGeometry,
       vecmem::memory_resource& memoryResource,
       std::unique_ptr<const Acts::Logger> logger =
           Acts::getDefaultLogger("DetrayPropagator", Acts::Logging::INFO),
-      std::array<unsigned int, 2> searchWindow = {0u, 0u})
+      std::array<unsigned int, 2> searchWindow = {0u, 0u},
+      field_t field = field_t())
       : PropagatorInterface(),
         m_detrayGeometry(std::move(dGeometry)),
         m_memoryResource(&memoryResource),
         m_searchWindow(searchWindow),
+        m_field(std::move(field)),
         m_logger(std::move(logger)) {}
 
   ///@brief  Execute a propagation for charged particle parameters
@@ -83,12 +87,15 @@ class DetrayConcretePropagator : public PropagatorInterface {
     // the same volumes and distances along the way
     using DAlgebra = typename detector_t::algebra_type;
 
+    // The full momentum, so the helix in a field has the right curvature;
+    // ACTS and detray share GeV as momentum unit
+    const Acts::Vector3 momentum = startParameters.momentum();
     detray::free_track_parameters<DAlgebra> track(
         {static_cast<float>(position.x()), static_cast<float>(position.y()),
          static_cast<float>(position.z())},
         0.f,
-        {static_cast<float>(direction.x()), static_cast<float>(direction.y()),
-         static_cast<float>(direction.z())},
+        {static_cast<float>(momentum.x()), static_cast<float>(momentum.y()),
+         static_cast<float>(momentum.z())},
         static_cast<float>(startParameters.charge()));
 
     // Return material
@@ -219,7 +226,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
   /// config. {0, 0} disables neighbor lookup.
   std::array<unsigned int, 2> m_searchWindow = {0u, 0u};
 
-  field_t m_field = field_t();
+  field_t m_field;
 
   /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger = nullptr;
