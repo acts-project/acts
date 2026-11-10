@@ -190,6 +190,7 @@ def drawResult(
     fname="AlignmentResults",
     title=None,
     xLim=None,
+    extraText=None,
 ):
     assert len(paramsActs) == len(paramsActsMille) and len(paramsActs) == len(paramsMP2)
 
@@ -237,10 +238,17 @@ def drawResult(
             "markersize": 11,
             "markeredgewidth": 1.6,
         },
-        {"label": "Millepede-II", "fmt": "o", "color": "red", "markersize": 5},
+        {
+            "label": "ACTS with Millepede-II",
+            "fmt": "o",
+            "color": "red",
+            "markersize": 5,
+        },
     ]
 
-    plotAlignImpacts(labels, central, sigma, formatDict, fname, title, xLim=xLim)
+    plotAlignImpacts(
+        labels, central, sigma, formatDict, fname, title, xLim=xLim, extraText=extraText
+    )
 
 
 def addTrackingSequence(s, field, detector):
@@ -475,7 +483,15 @@ def main():
 
     # visualise the outcome!
     drawResult(
-        res_actsInternal, res_actsViaMille, res_MillepedeII, {3: 0.05}, xLim=(-0.2, 0.2)
+        res_actsInternal,
+        res_actsViaMille,
+        res_MillepedeII,
+        {3: 0.05},
+        xLim=(-0.2, 0.2),
+        extraText=[
+            f"ACTS Telescope detector,  {args.events} tracks",
+            "Alignment with three fixed layers",
+        ],
     )
 
 
