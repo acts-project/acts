@@ -21,10 +21,15 @@
 #include "traccc/edm/seed_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/seeding/detail/seeding_config.hpp"
+#include "traccc/seeding/detail/strip_spacepoint_calibration.hpp"
 #include "traccc/seeding/detail/spacepoint_grid.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/memory_resource.hpp"
 #include "traccc/utils/messaging.hpp"
+
+// VecMem include(s).
+#include <vecmem/containers/data/vector_buffer.hpp>
+#include <vecmem/containers/data/vector_view.hpp>
 
 // System include(s).
 #include <memory>
@@ -69,6 +74,18 @@ class triplet_seeding_algorithm
   ///
   output_type operator()(
       const edm::spacepoint_collection::const_view& spacepoints) const override;
+
+  /// Operator executing the algorithm with strip aware triplet finding.
+  ///
+  /// @param spacepoints is a view of all spacepoints in the event
+  /// @param strip_calibrations the per spacepoint strip calibrations, parallel
+  ///        to @c spacepoints
+  /// @return the buffer of track seeds reconstructed from the spacepoints
+  ///
+  output_type operator()(
+      const edm::spacepoint_collection::const_view& spacepoints,
+      const strip_spacepoint_calibration_collection_types::const_view&
+          strip_calibrations) const;
 
  protected:
   /// Wait for outstanding device work before releasing local buffers.
@@ -129,6 +146,9 @@ class triplet_seeding_algorithm
     const seedfinder_config& config;
     /// All spacepoints in the event
     const edm::spacepoint_collection::const_view& spacepoints;
+    /// The per spacepoint strip calibrations
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations;
     /// The populated spacepoint grid
     const traccc::details::spacepoint_grid_types::const_view& grid;
     /// A prefix sum describing the grid contents
@@ -157,6 +177,9 @@ class triplet_seeding_algorithm
     const seedfinder_config& config;
     /// All spacepoints in the event
     const edm::spacepoint_collection::const_view& spacepoints;
+    /// The per spacepoint strip calibrations
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations;
     /// The populated spacepoint grid
     const traccc::details::spacepoint_grid_types::const_view& grid;
     /// The doublet counter collection
@@ -182,6 +205,9 @@ class triplet_seeding_algorithm
     const seedfinder_config& config;
     /// All spacepoints in the event
     const edm::spacepoint_collection::const_view& spacepoints;
+    /// The per spacepoint strip calibrations
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations;
     /// The populated spacepoint grid
     const traccc::details::spacepoint_grid_types::const_view& grid;
     /// The doublet counter collection
@@ -232,6 +258,9 @@ class triplet_seeding_algorithm
     const seedfilter_config& filter_config;
     /// All spacepoints in the event
     const edm::spacepoint_collection::const_view& spacepoints;
+    /// The per spacepoint strip calibrations
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations;
     /// The populated spacepoint grid
     const traccc::details::spacepoint_grid_types::const_view& grid;
     /// The doublet counter collection
@@ -305,9 +334,56 @@ class triplet_seeding_algorithm
   virtual void select_seeds_kernel(
       const select_seeds_kernel_payload& payload) const = 0;
 
+  /// Payload for the seed weight marking kernel
+  struct mark_seed_weights_kernel_payload {
+    /// The number of seeds selected per middle spacepoint
+    edm::seed_collection::const_view::size_type n_seeds;
+    /// The seeds selected per middle spacepoint
+    const edm::seed_collection::const_view& seeds;
+    /// The encoded best seed weight per spacepoint to fill
+    vecmem::data::vector_view<unsigned int>& best_weights;
+  };
+
+  /// Seed weight marking kernel launcher (seed confirmation)
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void mark_seed_weights_kernel(
+      const mark_seed_weights_kernel_payload& payload) const = 0;
+
+  /// Payload for the seed suppression kernel
+  struct suppress_seeds_kernel_payload {
+    /// The number of seeds selected per middle spacepoint
+    edm::seed_collection::const_view::size_type n_seeds;
+    /// The seeds selected per middle spacepoint
+    const edm::seed_collection::const_view& seeds;
+    /// The encoded best seed weight per spacepoint
+    const vecmem::data::vector_view<const unsigned int>& best_weights;
+    /// The seed collection to fill
+    edm::seed_collection::view& out;
+  };
+
+  /// Seed suppression kernel launcher (seed confirmation)
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void suppress_seeds_kernel(
+      const suppress_seeds_kernel_payload& payload) const = 0;
+
   /// @}
 
  private:
+  /// Common implementation of the operators
+  ///
+  /// @param strip_calibrations is only read when the seed finder is
+  ///        configured for strip aware triplet finding, and may be empty
+  ///        otherwise
+  ///
+  output_type execute(
+      const edm::spacepoint_collection::const_view& spacepoints,
+      const strip_spacepoint_calibration_collection_types::const_view&
+          strip_calibrations) const;
+
   /// Internal data type
   struct data;
   /// Pointer to internal data

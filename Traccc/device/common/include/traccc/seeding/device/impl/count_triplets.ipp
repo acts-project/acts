@@ -21,6 +21,8 @@ TRACCC_HOST_DEVICE
 inline void count_triplets(
     const global_index_t globalIndex, const seedfinder_config& config,
     const edm::spacepoint_collection::const_view& spacepoints_view,
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations_view,
     const traccc::details::spacepoint_grid_types::const_view& sp_view,
     const doublet_counter_collection_types::const_view& dc_view,
     const device_doublet_collection_types::const_view& mid_bot_doublet_view,
@@ -46,6 +48,8 @@ inline void count_triplets(
 
   // Create device copy of input parameters
   const edm::spacepoint_collection::const_device spacepoints{spacepoints_view};
+  const strip_spacepoint_calibration_collection_types::const_device
+      strip_calibrations{strip_calibrations_view};
   const device_doublet_collection_types::const_device mid_top_doublet_device(
       mid_top_doublet_view);
   const doublet_counter_collection_types::const_device dc_device(dc_view);
@@ -62,12 +66,14 @@ inline void count_triplets(
 
   // middle spacepoint
   const sp_location spM_loc = doublet_counts.m_spM;
+  const unsigned int spM_idx = sp_device.bin(spM_loc.bin_idx)[spM_loc.sp_idx];
   const edm::spacepoint_collection::const_device::const_proxy_type spM =
-      spacepoints.at(sp_device.bin(spM_loc.bin_idx)[spM_loc.sp_idx]);
+      spacepoints.at(spM_idx);
   const sp_location spB_loc = mid_bot.sp2;
   // bottom spacepoint
+  const unsigned int spB_idx = sp_device.bin(spB_loc.bin_idx)[spB_loc.sp_idx];
   const edm::spacepoint_collection::const_device::const_proxy_type spB =
-      spacepoints.at(sp_device.bin(spB_loc.bin_idx)[spB_loc.sp_idx]);
+      spacepoints.at(spB_idx);
 
   // Apply the conformal transformation to middle-bot doublet
   traccc::lin_circle lb = doublet_finding_helper::transform_coordinates<
@@ -92,28 +98,68 @@ inline void count_triplets(
   // number of triplets per middle-bot doublet
   unsigned int num_triplets_per_mb = 0;
 
-  // iterate over mid-top doublets
-  for (unsigned int i = mt_start_idx; i < mt_end_idx; ++i) {
-    const traccc::sp_location spT_loc = mid_top_doublet_device[i].sp2;
+  // The two triplet compatibility checks run in separate loops, so that the
+  // doublet quantities of the strip aware one do not occupy registers of the
+  // default one. The branch is uniform across the grid.
+  if (config.useStripInfo) {
+    // Doublet quantities of the strip aware triplet finding
+    const strip_triplet_context strip_ctx(spM, lb, config, iSinTheta2,
+                                          scatteringInRegion2);
+    const strip_spacepoint_calibration& calM = strip_calibrations.at(spM_idx);
+    const strip_spacepoint_calibration& calB = strip_calibrations.at(spB_idx);
 
-    // Sentinels should never be accessed, because m_nMidTop is updated to
-    // exclude them; this assert checks whether that assumption actually
-    // holds.
-    assert(spT_loc.bin_idx != std::numeric_limits<unsigned int>::max() &&
-           spT_loc.sp_idx != std::numeric_limits<unsigned int>::max());
+    // iterate over mid-top doublets
+    for (unsigned int i = mt_start_idx; i < mt_end_idx; ++i) {
+      const traccc::sp_location spT_loc = mid_top_doublet_device[i].sp2;
 
-    const edm::spacepoint_collection::const_device::const_proxy_type spT =
-        spacepoints.at(sp_device.bin(spT_loc.bin_idx)[spT_loc.sp_idx]);
+      // Sentinels should never be accessed, because m_nMidTop is updated to
+      // exclude them; this assert checks whether that assumption actually
+      // holds.
+      assert(spT_loc.bin_idx != std::numeric_limits<unsigned int>::max() &&
+             spT_loc.sp_idx != std::numeric_limits<unsigned int>::max());
 
-    // Apply the conformal transformation to middle-top doublet
-    traccc::lin_circle lt = doublet_finding_helper::transform_coordinates<
-        traccc::details::spacepoint_type::top>(spM, spT);
+      const unsigned int spT_idx =
+          sp_device.bin(spT_loc.bin_idx)[spT_loc.sp_idx];
 
-    // Check if mid-bot and mid-top doublets can form a triplet
-    if (triplet_finding_helper::isCompatible(spM, lb, lt, config, iSinTheta2,
-                                             scatteringInRegion2, curvature,
-                                             impact_parameter)) {
-      num_triplets_per_mb++;
+      // Apply the conformal transformation to middle-top doublet
+      const traccc::lin_circle lt =
+          doublet_finding_helper::transform_coordinates<
+              traccc::details::spacepoint_type::top>(spM,
+                                                     spacepoints.at(spT_idx));
+
+      // Check if mid-bot and mid-top doublets can form a triplet
+      if (triplet_finding_helper::isCompatibleStrip(
+              strip_ctx, calM, calB, strip_calibrations.at(spT_idx), lt, config,
+              curvature, impact_parameter)) {
+        num_triplets_per_mb++;
+      }
+    }
+  } else {
+    // iterate over mid-top doublets
+    for (unsigned int i = mt_start_idx; i < mt_end_idx; ++i) {
+      const traccc::sp_location spT_loc = mid_top_doublet_device[i].sp2;
+
+      // Sentinels should never be accessed, because m_nMidTop is updated to
+      // exclude them; this assert checks whether that assumption actually
+      // holds.
+      assert(spT_loc.bin_idx != std::numeric_limits<unsigned int>::max() &&
+             spT_loc.sp_idx != std::numeric_limits<unsigned int>::max());
+
+      const unsigned int spT_idx =
+          sp_device.bin(spT_loc.bin_idx)[spT_loc.sp_idx];
+
+      // Apply the conformal transformation to middle-top doublet
+      const traccc::lin_circle lt =
+          doublet_finding_helper::transform_coordinates<
+              traccc::details::spacepoint_type::top>(spM,
+                                                     spacepoints.at(spT_idx));
+
+      // Check if mid-bot and mid-top doublets can form a triplet
+      if (triplet_finding_helper::isCompatible(spM, lb, lt, config, iSinTheta2,
+                                               scatteringInRegion2, curvature,
+                                               impact_parameter)) {
+        num_triplets_per_mb++;
+      }
     }
   }
 
