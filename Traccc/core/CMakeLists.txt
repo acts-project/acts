@@ -119,6 +119,7 @@ target_link_libraries(
         covfie::core
         detray::core_array
         detray::detectors
+        traccc::detray_metadata
         Acts::Core
 )
 

@@ -38,9 +38,19 @@ Detray/detectors/
 
 ## Building
 
-The shipped configurations (`default`, `itk`, `odd`, `toy`, `wire_chamber`) are
-always generated through the ACTS codegen manifest, or taken from prebuilt
-headers. Generated headers are never committed.
+The shipped configurations (`default`, `odd`, `toy`, `wire_chamber`) are always
+generated through the ACTS codegen manifest, or taken from prebuilt headers.
+Generated headers are never committed.
+
+The ITk metadata is not shipped: traccc generates it as an external
+configuration from `Traccc/metadata/itk_detector.py`, selected by
+`TRACCC_ITK_METADATA_CONFIGURATION`. It is therefore not part of release
+pregeneration. The configuration filename must be `itk_detector.py` or `itk.py`
+so that it generates the `itk_metadata.hpp` header expected by traccc. For a
+release archive build with `ACTS_CODEGEN_REQUIRE_PREBUILT=ON`, supply
+`Detray/detectors/detray/detectors/itk_metadata.hpp` under
+`ACTS_CODEGEN_PREBUILT_DIR`, alongside the shipped prebuilt headers. Otherwise,
+turn strict mode off to generate the ITk header locally.
 
 To generate a header manually:
 
@@ -77,7 +87,9 @@ Select it with
 to `generate_metadata.py`. A trailing `_detector` is dropped from the file stem
 to form the name, so this produces `detray/detectors/custom_metadata.hpp` with
 `detray::custom_metadata`. The name must not reuse a shipped one. CMake tracks
-changes to the configuration file.
+changes to the configuration file. Each name can be generated only once per
+build, so do not also pass the ITk configuration via `DETRAY_GENERATE_METADATA`
+when building traccc.
 
 External configurations use the common generator runtime and prebuilt lookup,
 but are not part of release pregeneration. They generate locally unless a header
