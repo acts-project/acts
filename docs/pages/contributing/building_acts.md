@@ -460,6 +460,9 @@ produces the same files from it ahead of time, so the two cannot disagree about
 what exists or where it goes. Adding a generator means adding it to the manifest;
 `acts_code_generation` refuses a key that is not listed there.
 
+Detray's detector metadata headers are manifest units as well, and are always
+generated; see `Detray/detectors/codegen/README.md`.
+
 Pre-generating the code needs `uv` and nothing else — no CMake, no compiler, and
 none of the C++ dependencies a real ACTS configure requires:
 

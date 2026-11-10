@@ -25,6 +25,8 @@ import itertools
 import logging
 import numbers
 import os
+import re
+from pathlib import Path
 from typing import Optional
 import subprocess
 
@@ -32,7 +34,6 @@ import subprocess
 
 
 class metadata:
-
     def __init__(
         self,
         detector_name,
@@ -179,7 +180,6 @@ class metadata:
         grid_bin: GridBin = GridBin.DYNAMIC,
         grid_serializer: GridSerializer = GridSerializer.SIMPLE,
     ):
-
         # Update accelerator type with specific configuration
         if "grid" in accel.specifier:
             accel.param["bin"] = grid_bin
@@ -260,19 +260,16 @@ class metadata:
 
 
 class metadata_generator:
-
     def __init__(
         self,
         md: metadata,
         output=None,
         format_header=True,
+        output_file=None,
     ):
         # Internal state during header generation
-        self.out_dir = (
-            "../Detray/detectors/include/detray/detectors/"
-            if output is None
-            else output
-        )
+        self.out_dir = os.getcwd() if output is None else output
+        self.output_file = output_file
         self.file = None
         self.logger = logging.getLogger(__name__)
         self.format_header = format_header
@@ -299,13 +296,13 @@ class metadata_generator:
         self.__generate(md, self.out_dir)
 
     # Write the given metadata to file
-    def __generate(
-        self, md: metadata, src_dir="../Detray/detectors/include/detray/detectors/"
-    ):
-        # Shortened naming convention
-        det_name = md.det_name.replace("_detector", "")
-        filename = f"{os.path.abspath(src_dir)}/{det_name}_metadata.hpp"
+    def __generate(self, md: metadata, src_dir):
+        filename = (
+            self.output_file or f"{os.path.abspath(src_dir)}/{md.det_name}_metadata.hpp"
+        )
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
         self.logger.debug(f'Open "{filename}"')
+        self.det_name = md.det_name
         self.file = open(filename, "w+")
 
         self.logger.info("Generating metadata...")
@@ -467,13 +464,16 @@ class metadata_generator:
         # Add the corresponding includes
         root_dir = '#include "detray'
         shape_names.discard(None)
-        [self.__put(f'{root_dir}/geometry/shapes/{n}.hpp"\n') for n in shape_names]
+        [
+            self.__put(f'{root_dir}/geometry/shapes/{n}.hpp"\n')
+            for n in sorted(shape_names)
+        ]
 
-        [self.__put(f'{root_dir}/material/{n}.hpp"\n') for n in mat_names]
+        [self.__put(f'{root_dir}/material/{n}.hpp"\n') for n in sorted(mat_names)]
 
         [
             self.__put(f'{root_dir}/navigation/accelerators/{n}.hpp"\n')
-            for n in accel_names
+            for n in sorted(accel_names)
         ]
 
     # Add some mandatory local typedefs of the metadata class
@@ -532,7 +532,6 @@ template <template <typename...> class vector_t = dvector>\n\
 
         self.indent = self.indent + 1
         for i, values in itertools.chain(items.items(), extra_items.items()):
-
             value = ""
             item = ""
             sub_specifier = ""
@@ -742,7 +741,6 @@ template <template <typename...> class vector_t = dvector>\n\
         type_specifier = f"{self.__name_from_specifier(acc.specifier)}_t"
 
         if type_specifier.endswith("grid_t"):
-
             # Assemble the spatial grid type
 
             # Grid shape
@@ -823,7 +821,6 @@ template <template <typename...> class vector_t = dvector>\n\
         # Resolve same accelerator with different type_ids
         tmp_specifiers = {}
         for obj_type, acc, type_id, value_type in unique_accel:
-
             is_valid_id = type_id >= 0
             next_auto_id = (
                 0
@@ -915,7 +912,6 @@ template <template <typename...> class vector_t = dvector>\n\
     # that are distinguishable to the volume: use enum values to link a
     # geometry object type category to the corresponding accel. struct
     def __declare_geometry_objects(self, md: metadata):
-
         # Helper to determine if an accel. struct is one of the defaults
         def is_default_accel(value_type, accel):
             is_surface_default = (
@@ -986,19 +982,21 @@ template <template <typename...> class vector_t = dvector>\n\
 
         # Check duplicate sets (make the set hashable by converting to tuple)
         counted_dict = Counter(
-            [tuple(s) for (s, type_id) in accel_to_types_merged.values()]
+            [tuple(sorted(s)) for (s, type_id) in accel_to_types_merged.values()]
         )
         duplicates = {
             key: (value, type_id)
             for key, (value, type_id) in accel_to_types_merged.items()
-            if counted_dict[tuple(value)] > 1
+            if counted_dict[tuple(sorted(value))] > 1
         }
 
         # Get the list of keys for every duplicate
         flipped_duplicates = {}
         for key, value in duplicates.items():
             obj_set, type_id = value
-            flipped_duplicates.setdefault((tuple(obj_set), type_id), []).append(key)
+            flipped_duplicates.setdefault((tuple(sorted(obj_set)), type_id), []).append(
+                key
+            )
 
         # Find best representative key for the duplicates and remove the others
         removal_keys = []
@@ -1035,7 +1033,7 @@ template <template <typename...> class vector_t = dvector>\n\
         def add_link(key, new_objects):
             new_link_types = [
                 l
-                for l in new_objects
+                for l in sorted(new_objects)
                 if l not in itertools.chain(*accel_link_types.values())
             ]
 
@@ -1128,6 +1126,12 @@ template <template <typename...> class vector_t = dvector>\n\
         self.__put("};\n\n} // namespace detray\n")
         self.file.close()
 
+        # Document the generated declarations
+        with open(self.file.name) as header:
+            text = header.read()
+        with open(self.file.name, "w") as header:
+            header.write(_add_doc_comments(text, self.det_name))
+
         self.logger.debug("Wrote file to disk")
 
         # Run code formatting
@@ -1148,3 +1152,84 @@ template <template <typename...> class vector_t = dvector>\n\
             except Exception as e:
                 logging.error(f"Unexpected error for clang-format: {e}")
                 raise
+
+
+# Doxygen comments for the generated declarations, keyed by declaration name
+_ENUM_DOCS = {
+    "mask_id": "Identifiers for the supported surface masks.",
+    "material_id": "Identifiers for material payload and map alternatives.",
+    "accel_id": "Identifiers for navigation accelerator alternatives.",
+    "geo_objects": "Categories used to distinguish detector geometry objects.",
+}
+
+_LINK_TYPES = (
+    "nav_link",
+    "transform_link",
+    "mask_link",
+    "material_link",
+    "object_link_type",
+)
+
+_MATERIAL_TYPES = ("material_slab_t", "material_rod_t", "raw_material_t")
+
+
+def _using_doc(name):
+    if name == "algebra_type":
+        return "Algebra backend used by this detector metadata."
+    if name == "scalar_t":
+        return "Scalar type associated with the selected algebra backend."
+    if name in _LINK_TYPES:
+        return "Link type used to refer to the corresponding detector component store."
+    if name == "surface_type":
+        return "Surface descriptor type combining links to its geometry components."
+    if name.endswith("_store"):
+        return "Store type holding the corresponding detector component collection."
+    if name.endswith("_map_t"):
+        return "Material map type associated with this surface shape."
+    if name.endswith("_grid_t"):
+        return "Grid type used to index the corresponding detector components."
+    if name in _MATERIAL_TYPES:
+        return "Material representation used by this detector metadata."
+    return "Type alias used by this detector metadata configuration."
+
+
+def _struct_doc(det_name):
+    if det_name == "default":
+        return [
+            "Type and storage policy used to assemble a detector from geometry and",
+            "material components.",
+        ]
+    name = det_name.replace("_", " ")
+    return [f"Detector-specific aliases and storage policy for {name} geometry."]
+
+
+def _add_doc_comments(text, det_name):
+    """Put a Doxygen comment in front of every generated declaration."""
+    using_re = re.compile(r"^(\s*)using (\w+)\b")
+    enum_re = re.compile(r"^(\s*)enum (?:class )?(\w+)\b")
+    struct_re = re.compile(rf"^(\s*)struct {re.escape(det_name)}_metadata\b")
+
+    lines = text.split("\n")
+    result = []
+    for line in lines:
+        docs = []
+        indent = ""
+        is_struct = False
+        if match := using_re.match(line):
+            indent, name = match.groups()
+            docs = [_using_doc(name)]
+        elif (match := enum_re.match(line)) and match.group(2) in _ENUM_DOCS:
+            indent, name = match.groups()
+            docs = [_ENUM_DOCS[name]]
+        elif match := struct_re.match(line):
+            indent = match.group(1)
+            docs = _struct_doc(det_name)
+            is_struct = True
+        if docs:
+            # Struct comments go in front of the template parameter list
+            position = len(result)
+            if is_struct and result and result[-1].lstrip().startswith("template"):
+                position -= 1
+            result[position:position] = [f"{indent}/// {doc}" for doc in docs]
+        result.append(line)
+    return "\n".join(result)

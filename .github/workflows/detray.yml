@@ -140,7 +140,6 @@ jobs:
                  -DDETRAY_FASTOR_PLUGIN=OFF
                  -DDETRAY_VC_AOS_PLUGIN=OFF
                  -DDETRAY_VC_SOA_PLUGIN=OFF
-                 -DDETRAY_GENERATE_METADATA="default_metadata;itk_metadata;odd_metadata;toy_metadata;wire_chamber_metadata"
                  -S ${{ github.workspace }}/Detray -B build
                  -G "${{ matrix.PLATFORM.GENERATOR }}"
     # Perform the build. The per-header TU targets are EXCLUDE_FROM_ALL, so

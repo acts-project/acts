@@ -697,12 +697,6 @@ if(ACTS_SETUP_DETRAY)
             OR
             TRACCC_BUILD_TESTING
         )
-
-        set(DETRAY_GENERATE_METADATA
-            "itk_metadata"
-            CACHE STRING
-            "Semicolon-separated list of metadata generator scripts to run in this build"
-        )
     endif()
 
     add_subdirectory(Detray)
