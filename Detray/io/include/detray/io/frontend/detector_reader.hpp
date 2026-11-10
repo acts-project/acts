@@ -77,7 +77,8 @@ void convert_to_payload(detray::io::detector_payload& payload,
   detray::io::detail::detector_components_converter payload_converter{};
 
   // Filter out malformed paths from filenames
-  std::vector<std::string> filtered_files{file_names.size()};
+  std::vector<std::string> filtered_files{};
+  filtered_files.reserve(file_names.size());
   const auto file_filter = [](const std::string& f) {
     const bool file_pred{detray::io::file_exists(f)};
     // Empty file names are treated as defaults, do not spam warnings for them

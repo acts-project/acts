@@ -87,8 +87,6 @@ class DetrayGeometryConverter {
   /// @param mr the memory resource to use for the detray detector construction
   /// @param gctx the geometry context
   /// @param trackingGeometry the ACTS tracking geometry to convert
-  /// @param detectorName the name to set for the detray detector (optional, if
-  ///     not set, it will be taken from the payloads or defaulted to empty)
   ///
   /// This method performs the following steps:
   /// 1. It converts the ACTS tracking geometry into a detray detector payload
