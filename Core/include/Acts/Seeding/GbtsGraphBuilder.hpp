@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -28,8 +29,21 @@ struct GbtsGraph {
   /// The graph edges, i.e. the doublets.
   std::vector<detail::GbtsEdge> edgeStorage;
 
-  /// Number of links between edges.
-  std::uint32_t nConnections = 0;
+  /// The inner neighbours of edge `e` are `neighbours[neighbourOffsets[e]]` up
+  /// to, not including, `neighbours[neighbourOffsets[e + 1]]`, in the order
+  /// they were linked.
+  std::vector<std::uint32_t> neighbourOffsets;
+  /// Inner neighbour edges of all edges, see `neighbourOffsets`.
+  std::vector<std::uint32_t> neighbours;
+
+  /// The inner neighbour edges of an edge
+  /// @param edge Index of the edge in `edgeStorage`
+  /// @return The indices of its inner neighbours
+  std::span<const std::uint32_t> innerNeighbours(std::uint32_t edge) const {
+    return std::span(neighbours)
+        .subspan(neighbourOffsets[edge],
+                 neighbourOffsets[edge + 1] - neighbourOffsets[edge]);
+  }
 };
 
 /// Builds the doublet graph of the GBTS workflow.
@@ -188,7 +202,7 @@ class GbtsGraphBuilder {
   /// @param roi Region of interest descriptor
   /// @param nodeStorage Data storage containing nodes
   /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
-  /// @return The graph, with its edges and their link counts
+  /// @return The graph, with its edges and the links between them
   GbtsGraph buildTheGraph(const GbtsRoiDescriptor& roi,
                           GbtsNodeStorage& nodeStorage, float bFieldInZ) const;
 
