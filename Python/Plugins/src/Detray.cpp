@@ -87,7 +87,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
         .def_readwrite("maxSampleSpacing",
                        &DetraySurfaceGridConfig::maxSampleSpacing)
         .def_readwrite("numberOfBinsFactor",
-                       &DetraySurfaceGridConfig::numberOfBinsFactor);
+                       &DetraySurfaceGridConfig::numberOfBinsFactor)
+        .def_readwrite("lookupOnLayer",
+                       &DetraySurfaceGridConfig::lookupOnLayer);
 
     py::class_<DetraySurfaceGridPolicy>(detray, "DetraySurfaceGridPolicy")
         .def_property_readonly("config", &DetraySurfaceGridPolicy::config);

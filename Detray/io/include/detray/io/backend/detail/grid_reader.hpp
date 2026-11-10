@@ -470,6 +470,14 @@ class grid_reader : public reader_interface<detector_t> {
 
       vgr_builder->set_type(sf_type);
       vgr_builder->init_grid(spans, n_bins_per_axis, capacities, ax_bin_edges);
+      if (grid_data.reference_radius.has_value()) {
+        if constexpr (requires {
+                        vgr_builder->set_reference_radius(scalar_t{});
+                      }) {
+          vgr_builder->set_reference_radius(
+              static_cast<scalar_t>(*grid_data.reference_radius));
+        }
+      }
       auto &grid = vgr_builder->get();
 
       DETRAY_VERBOSE_HOST("Filling grid...");
