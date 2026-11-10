@@ -21,6 +21,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperDenseExtension.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
@@ -28,6 +29,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -554,6 +556,43 @@ BOOST_AUTO_TEST_CASE(TargetBehindStart) {
   BOOST_REQUIRE(result.ok());
   BOOST_CHECK_EQUAL(&result->endParameters->referenceSurface(), target.get());
   CHECK_CLOSE_ABS(result->pathLength, -10_mm, 1_um);
+}
+
+// The straight line reaches a target the track never gets to, because it
+// turns before. The target moves behind at the turn, and the propagation steps
+// back, but then gives it up instead of turning back and forth. Behind the
+// turn, the intersection of the bounded plane is in and out of its bounds.
+BOOST_AUTO_TEST_CASE(TargetMissedAfterTurn) {
+  auto field = std::make_shared<ConstantBField>(Vector3{0, 0, 2_T});
+  Propagator propagator{EigenStepper<>{field}, VoidNavigator{}};
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx;
+
+  // The radius of the track is about 167 mm
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitX(), 1. / 100_MeV, std::nullopt,
+      ParticleHypothesis::pion());
+  const Transform3 transform(
+      Translation3(Vector3{500_mm, 0, 0}) *
+      AngleAxis3(std::numbers::pi / 2, Vector3::UnitY()));
+  const std::shared_ptr<const Surface> unbounded =
+      Surface::makeShared<PlaneSurface>(transform);
+  const std::shared_ptr<const Surface> bounded =
+      Surface::makeShared<PlaneSurface>(
+          transform, std::make_shared<RectangleBounds>(2_m, 2_m));
+
+  for (const auto& [name, target] :
+       {std::pair{"unbounded", unbounded}, std::pair{"bounded", bounded}}) {
+    BOOST_TEST_CONTEXT(name) {
+      EigenPropagatorType::Options<> options{gctx, mctx};
+      options.maxSteps = 200;
+      auto result = propagator.propagate(start, *target, options);
+      BOOST_REQUIRE(!result.ok());
+      BOOST_CHECK_NE(result.error(),
+                     make_error_code(PropagatorError::StepCountLimitReached));
+    }
+  }
 }
 
 // The point of closest approach to a perigee moves with the direction. Reached

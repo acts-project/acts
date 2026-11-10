@@ -10,7 +10,9 @@
 
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -46,6 +48,58 @@ bool isSubsequence(const std::vector<const Surface*>& sub,
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(NavigatorAdditionalSurface)
+
+// A turn on the way to a sequence surface can move an additional surface
+// behind us. Keep approaching it, including successive backward corrections.
+BOOST_AUTO_TEST_CASE(AdditionalSurfaceRetainedBehindSequence) {
+  DirectNavigator navigator;
+  auto perigee = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+  auto plane = CurvilinearSurface(Vector3{-0.5_mm, 1.5_mm, 0},
+                                  Vector3{1., 0.5, 0.}.normalized())
+                   .planeSurface();
+  DirectNavigator::Options options(gctx);
+  options.surfaceSequence = {plane.get()};
+  options.registerAdditionalSurface(*perigee, BoundaryTolerance::Infinite(),
+                                    nullptr, false);
+  auto state = navigator.makeState(options);
+  Vector3 position{-1_mm, 1_mm, 0};
+  Vector3 direction = Vector3::UnitX();
+  BOOST_REQUIRE(
+      navigator
+          .initialize(state, {.position = position, .direction = direction})
+          .ok());
+
+  auto target = navigator.nextTarget(state, position, direction);
+  BOOST_REQUIRE(!target.isNone());
+  BOOST_CHECK_EQUAL(&target.surface(), plane.get());
+
+  // End of a curved step: the plane has been reached, and the perigee is now
+  // behind. Its tangent intersection lies outside the chord of that step.
+  position = Vector3{-0.5_mm, 1.5_mm, 0};
+  direction = Vector3::UnitY();
+  navigator.handleSurfaceReached(state, position, direction, *plane);
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_REQUIRE(!target.isNone());
+  BOOST_CHECK_EQUAL(&target.surface(), perigee.get());
+  BOOST_CHECK_LT(target.pathLength(), 0.);
+
+  // A partial backward correction must not discard the target.
+  position = Vector3{-0.4_mm, 0.5_mm, 0};
+  BOOST_CHECK(navigator.checkTargetValid(state, position, direction));
+
+  // Once reached, a kept surface must not pull us back after moving away.
+  position.y() = 0.;
+  navigator.handleSurfaceReached(state, position, direction, *perigee);
+  position.y() = 0.5_mm;
+  BOOST_CHECK(navigator.nextTarget(state, position, direction).isNone());
+
+  // A new forward approach makes the kept surface eligible again.
+  direction = -Vector3::UnitY();
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_REQUIRE(!target.isNone());
+  BOOST_CHECK_EQUAL(&target.surface(), perigee.get());
+  BOOST_CHECK_GT(target.pathLength(), 0.);
+}
 
 // By default a surface the track misses is targeted too
 

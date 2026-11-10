@@ -17,7 +17,7 @@
 #include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
-#include "Acts/Propagator/VoidNavigator.hpp"
+#include "Acts/Propagator/detail/AdditionalSurfaceNavigation.hpp"
 #include "Acts/Propagator/detail/NavigationHelpers.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -90,8 +90,7 @@ class TryAllNavigator final {
   /// Nested state struct
   struct State final {
     /// @param options_ Navigator options to initialise state with
-    explicit State(const Options& options_)
-        : options(options_), additional(VoidNavigator::Options(options_)) {}
+    explicit State(const Options& options_) : options(options_) {}
 
     /// Navigation options containing configuration for this propagation
     Options options;
@@ -121,8 +120,8 @@ class TryAllNavigator final {
     /// If a break has been detected
     bool navigationBreak = false;
 
-    /// State of the navigator that offers the additional surfaces
-    VoidNavigator::State additional;
+    /// Additional surfaces and candidate history
+    detail::AdditionalSurfaceNavigation additional;
 
     /// Navigation statistics
     NavigatorStatistics statistics;
@@ -251,10 +250,7 @@ class TryAllNavigator final {
 
     state.startSurface = args.startSurface;
     state.targetSurface = args.targetSurface;
-    if (Result<void> res = m_additional.initialize(state.additional, args);
-        !res.ok()) {
-      return res.error();
-    }
+    state.additional.initialize(state.options, args.targetSurface);
 
     const TrackingVolume* startVolume = args.startVolume;
 
@@ -322,8 +318,8 @@ class TryAllNavigator final {
     state.currentSurface = nullptr;
 
     // The additional surfaces outlive the navigation in the geometry
-    return m_additional.nextTarget(
-        state.additional, position, direction, state.currentVolume,
+    return state.additional.nextTarget(
+        state.options, position, direction, state.currentVolume,
         [&] { return nextGeometryTarget(state, position, direction); });
   }
 
@@ -346,8 +342,8 @@ class TryAllNavigator final {
       [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
     // Resolves the geometry anew before every step, together with the
     // additional surfaces
-    return m_additional.checkAdditionalTargetValid(
-        state.additional, position, direction, state.currentVolume, false);
+    return state.additional.checkTargetValid(state.options, position, direction,
+                                             state.currentVolume, false);
   }
 
   /// @brief Handle the surface reached
@@ -368,8 +364,7 @@ class TryAllNavigator final {
 
     // Reaching an additional surface does not touch the navigation in the
     // geometry, unless it targets the surface too
-    if (m_additional.handleAdditionalSurfaceReached(state.additional,
-                                                    surface)) {
+    if (state.additional.handleSurfaceReached(surface)) {
       ACTS_VERBOSE(volInfo(state)
                    << "Reached additional surface " << surface.geometryId());
       state.currentSurface = &surface;
@@ -463,9 +458,6 @@ class TryAllNavigator final {
  private:
   /// Configuration object for this navigator
   Config m_cfg;
-
-  /// Offers the additional surfaces on top of the tracking geometry
-  VoidNavigator m_additional;
 
   /// Get the next target in the tracking geometry
   NavigationTarget nextGeometryTarget(State& state, const Vector3& position,

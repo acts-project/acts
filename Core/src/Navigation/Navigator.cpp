@@ -154,10 +154,7 @@ Result<void> Navigator::initialize(
 
   resolveExtendedSurfaces(state);
 
-  if (Result<void> res = m_additional.initialize(state.additional, args);
-      !res.ok()) {
-    return res.error();
-  }
+  state.additional.initialize(state.options, args.targetSurface);
 
   // @TODO: Implement fast initialization with Gen3. This requires the volume
   // lookup to work properly
@@ -292,8 +289,8 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
   state.currentSurface = nullptr;
 
   // The additional surfaces outlive the staged navigation
-  return m_additional.nextTarget(
-      state.additional, position, direction, state.currentVolume, [&] {
+  return state.additional.nextTarget(
+      state.options, position, direction, state.currentVolume, [&] {
         if (inactive(state)) {
           return NavigationTarget::None();
         }
@@ -368,8 +365,8 @@ bool Navigator::checkTargetValid(State& state, const Vector3& position,
 
   // The additional surfaces compete with the staged candidate before every
   // step, and are told whether the staged candidates are still valid
-  return m_additional.checkAdditionalTargetValid(
-      state.additional, position, direction, state.currentVolume,
+  return state.additional.checkTargetValid(
+      state.options, position, direction, state.currentVolume,
       checkStagedTargetValid(state, position, direction));
 }
 
@@ -411,7 +408,7 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
 
   // Reaching an additional surface does not advance the staged navigation,
   // unless it also staged the surface
-  if (m_additional.handleAdditionalSurfaceReached(state.additional, surface)) {
+  if (state.additional.handleSurfaceReached(surface)) {
     ACTS_VERBOSE(volInfo(state)
                  << "Reached additional surface " << surface.geometryId());
     state.currentSurface = &surface;

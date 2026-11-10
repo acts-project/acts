@@ -18,7 +18,7 @@
 #include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
-#include "Acts/Propagator/VoidNavigator.hpp"
+#include "Acts/Propagator/detail/AdditionalSurfaceNavigation.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -141,8 +141,7 @@ class Navigator final {
   struct State {
     /// Constructor with navigation options
     /// @param options_ The navigation options for this state
-    explicit State(const Options& options_)
-        : options(options_), additional(VoidNavigator::Options(options_)) {}
+    explicit State(const Options& options_) : options(options_) {}
 
     /// Navigation options configuration
     Options options;
@@ -197,8 +196,8 @@ class Navigator final {
     /// Extended surfaces resolved once at initialization
     std::vector<ResolvedExtendedSurface> extendedSurfaces{};
 
-    /// State of the navigator that offers the additional surfaces
-    VoidNavigator::State additional;
+    /// Additional surfaces and candidate history
+    detail::AdditionalSurfaceNavigation additional;
 
     /// Get reference to current navigation surface
     /// @return Reference to current navigation target
@@ -536,9 +535,6 @@ class Navigator final {
   const Logger& logger() const { return *m_logger; }
 
   Config m_cfg;
-
-  /// Offers the additional surfaces on top of the tracking geometry
-  VoidNavigator m_additional;
 
   // Cached so we don't have to query the TrackingGeometry constantly.
   TrackingGeometry::GeometryVersion m_geometryVersion{};

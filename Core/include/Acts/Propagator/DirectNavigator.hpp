@@ -17,7 +17,7 @@
 #include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
-#include "Acts/Propagator/VoidNavigator.hpp"
+#include "Acts/Propagator/detail/AdditionalSurfaceNavigation.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -78,8 +78,7 @@ class DirectNavigator {
   struct State {
     /// Constructor from options
     /// @param options_ The navigator options
-    explicit State(const Options& options_)
-        : options(options_), additional(VoidNavigator::Options(options_)) {}
+    explicit State(const Options& options_) : options(options_) {}
 
     /// Configuration options for the direct navigator
     Options options;
@@ -104,8 +103,8 @@ class DirectNavigator {
     /// Navigation state - external interface: a break has been detected
     bool navigationBreak = false;
 
-    /// State of the navigator that offers the additional surfaces
-    VoidNavigator::State additional;
+    /// Additional surfaces and candidate history
+    detail::AdditionalSurfaceNavigation additional;
 
     /// Navigation statistics
     NavigatorStatistics statistics;
@@ -243,10 +242,7 @@ class DirectNavigator {
 
     state.startSurface = args.startSurface;
     state.targetSurface = args.targetSurface;
-    if (Result<void> res = m_additional.initialize(state.additional, args);
-        !res.ok()) {
-      return res.error();
-    }
+    state.additional.initialize(state.options, args.targetSurface);
 
     // We set the current surface to the start surface
     state.currentSurface = state.startSurface;
@@ -300,8 +296,8 @@ class DirectNavigator {
 
     // The additional surfaces outlive the surface sequence
     const TrackingVolume* noVolume = nullptr;
-    return m_additional.nextTarget(
-        state.additional, position, direction, noVolume,
+    return state.additional.nextTarget(
+        state.options, position, direction, noVolume,
         [&] { return nextSequenceTarget(state, position, direction); });
   }
 
@@ -319,8 +315,8 @@ class DirectNavigator {
   bool checkTargetValid(
       State& state, const Vector3& position, const Vector3& direction,
       [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
-    return m_additional.checkAdditionalTargetValid(state.additional, position,
-                                                   direction, nullptr, true);
+    return state.additional.checkTargetValid(state.options, position, direction,
+                                             nullptr, true);
   }
 
   /// @brief Handle the surface reached
@@ -344,8 +340,7 @@ class DirectNavigator {
 
     // Reaching an additional surface does not advance the sequence, unless
     // the sequence targets the surface too
-    if (m_additional.handleAdditionalSurfaceReached(state.additional,
-                                                    surface)) {
+    if (state.additional.handleSurfaceReached(surface)) {
       state.currentSurface = &surface;
       ACTS_VERBOSE("Current surface set to additional surface "
                    << surface.geometryId());
@@ -428,9 +423,6 @@ class DirectNavigator {
   const Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Logger> m_logger;
-
-  /// Offers the additional surfaces on top of the surface sequence
-  VoidNavigator m_additional;
 };
 
 }  // namespace Acts
