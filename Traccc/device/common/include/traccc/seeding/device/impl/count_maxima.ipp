@@ -22,7 +22,7 @@ void count_maxima(const global_index_t globalIndex,
     for (unsigned int wedge_idx(0); wedge_idx<n_wedges; ++wedge_idx) {
         const global_index_t value_index = wedge_idx * dim + globalIndex;
         const unsigned int value = houghplanes[value_index];
-        if (value == 0) continue;
+        if (value < 5) continue; // Threshold
         
         bool is_maximum = is_local_maximum(globalIndex, 
                                            n_cols, n_rows, 

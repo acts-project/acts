@@ -91,26 +91,26 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
    
    scalar z0_min = interactionCenter - interactionWindow;
    scalar z0_max = interactionCenter + interactionWindow;
-    
-   spacepoint_r[globalIndex] = hypotf(spacepoints.x()[globalIndex], spacepoints.y()[globalIndex]);
-   scalar eta_at_min = asinhf((spacepoints.z()[globalIndex] - z0_min) / spacepoint_r[globalIndex]);
-   scalar eta_at_max = asinhf((spacepoints.z()[globalIndex] - z0_max) / spacepoint_r[globalIndex]);
+ 
+   spacepoint_r[globalIndex] = hypotf(spacepoints[globalIndex].x(), spacepoints[globalIndex].y());
+   scalar eta_at_min = asinhf((spacepoints[globalIndex].z() - z0_min) / spacepoint_r[globalIndex]);
+   scalar eta_at_max = asinhf((spacepoints[globalIndex].z() - z0_max) / spacepoint_r[globalIndex]);
 
-   spacepoint_phi[globalIndex] = atan2f(spacepoints.y()[globalIndex], spacepoints.x()[globalIndex]);
+   spacepoint_phi[globalIndex] = atan2f(spacepoints[globalIndex].y(), spacepoints[globalIndex].x());
    spacepoint_phi[globalIndex] = ::remainderf(spacepoint_phi[globalIndex], 2.0f * std::numbers::pi_v<scalar>);
 
    // Retrieve the corresponding measurement index and, from it, the geo id
    // all of this is to retrieve the volume_id and layer_id of the 
    // space point
    const edm::measurement_collection::const_device measurements(measurements_view);
-   const auto& meas = measurements.at(spacepoints.measurement_index_1()[globalIndex]);
+   const auto& meas = measurements.at(spacepoints[globalIndex].measurement_index_1());
 
    const auto volume_id = meas.surface_link().volume();
    const auto identifier_id = getId(volume_id);
    spacepoint_detector_id[globalIndex] = identifier_id;
 
    // veto layers
-   if ((identifier_id & module_veto) != 0ULL) return;
+   // if ((identifier_id & module_veto) != 0ULL) return;
 
    // understand what wedge(s) the space points belongs to
    // wedges define eta ranges and they may overlap
@@ -126,7 +126,7 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
    spacepoint_wedge_association[globalIndex] = slice;
 
    // get the bfield
-   const auto covfie_field_at_sp = bfield.at(spacepoints.x()[globalIndex], spacepoints.y()[globalIndex], spacepoints.z()[globalIndex]);
+   const auto covfie_field_at_sp = bfield.at(spacepoints[globalIndex].x(), spacepoints[globalIndex].y(), spacepoints[globalIndex].z());
    spacepoint_bfield_z[globalIndex] = covfie_field_at_sp[2];   
 }
 } // namespace

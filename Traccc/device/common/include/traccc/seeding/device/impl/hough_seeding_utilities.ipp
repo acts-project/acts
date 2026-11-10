@@ -70,7 +70,6 @@ bool is_local_maximum(const global_index_t globalIndex,
                       const unsigned short* plane,
                       const long long col,
                       const long long row) {
-    if (value < 5) return false; // threshold
     const long long rows = n_rows;
     const long long cols = n_cols;
 

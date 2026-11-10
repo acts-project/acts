@@ -61,27 +61,7 @@ auto hough_transform_seeding_algorithm::operator()(
   define_plane_edges_kernel({m_config,
                              edges_x, edges_y});
 
-  /*
-  vecmem::vector<scalar> edges_x_host = ((mr().host != nullptr)
-                ? vecmem::vector<scalar>(mr().host)
-                : vecmem::vector<scalar>());
-  copy()(edges_x, edges_x_host)->wait();
-
-  vecmem::vector<scalar> edges_y_host = ((mr().host != nullptr)
-                ? vecmem::vector<scalar>(mr().host)
-                : vecmem::vector<scalar>());
-  copy()(edges_y, edges_y_host)->wait();
   
-  printf("edges x: ");
-  lor (const scalar value : edges_x_host) printf("%.4f ", value);
-  printf("\n");
-
-  printf("edges y: ");
-  for (const scalar value : edges_y_host) printf("%.4f ", value);
-  printf("\n");
-  */
-
- 
   // ---------------------------------------------------
   // Pre-compute some quantities
   // ---------------------------------------------------
@@ -112,8 +92,8 @@ auto hough_transform_seeding_algorithm::operator()(
 		  spacepoint_r,
 		  spacepoint_phi,
           spacepoint_bfield_z});
-
   
+
   /*
   edm::spacepoint_collection::const_view sp_host_view;
   edm::spacepoint_collection::buffer sp_host_buffer;
@@ -146,16 +126,18 @@ auto hough_transform_seeding_algorithm::operator()(
   copy()(spacepoint_phi, spacepoint_phi_host)->wait();
 
   assert(spacepoint_detector_id_host.size() == spacepoint_wedge_association_host.size());
-  for (unsigned int i(0); i<spacepoint_detector_id_host.size(); ++i) {
+  assert(n_spacepoints == spacepoint_detector_id_host.size());
+  for (unsigned int i(0); i<n_spacepoints; ++i) {
     const auto& sp = sp_host_device.at(i);
     unsigned long long detector_id = spacepoint_detector_id_host.at(i);
     unsigned long long wedge_association = spacepoint_wedge_association_host.at(i);
     unsigned int n_bits = count_bits(wedge_association);
+    scalar r = spacepoint_r_host.at(i);
+    assert(r == std::sqrt(sp.x()*sp.x() + sp.y()*sp.y()));
     std::cout << "sp " << i << " x=" << sp.x() << " y=" << sp.y() << " z=" << sp.z()  << " r=" << spacepoint_r_host.at(i) << " phi=" << spacepoint_phi_host.at(i)
               << " bit count: " << n_bits << " [value was " << std::bitset<64>(wedge_association) << "] (id: " << std::bitset<64>(detector_id) << ")" << std::endl;
   }
-  */  
-
+  */
 
   // ---------------------------------------------------
   // Fill the planes with space points
@@ -217,7 +199,6 @@ auto hough_transform_seeding_algorithm::operator()(
                       houghplane_entries,
                       maxima_global_index});
 
-
   /*
   // planes
   vecmem::vector<unsigned short> houghplane_entries_host = ((mr().host != nullptr)
@@ -238,16 +219,18 @@ auto hough_transform_seeding_algorithm::operator()(
 
   std::cout << std::endl;
   for (unsigned int i(0); i<n_slices; ++i) {
-    const unsigned int plane_index = i * N_COLS * N_ROWS;
+    const unsigned int plane_index = i * n_cols * n_rows;
     const auto& maxima = host_device[i];
 
     std::cout << "Slice " << i << ": maxima = ";
     for (const auto maximum : maxima) std::cout << maximum << "  ";
     std::cout << "values = ";
-    for (unsigned int idx(0); idx<N_COLS * N_ROWS; ++idx) std::cout << houghplane_entries_host[plane_index + idx] << " ";
+    for (unsigned int idx(0); idx<n_cols * n_rows; ++idx) std::cout << houghplane_entries_host[plane_index + idx] << " ";
     std::cout << std::endl;
   }
+  throw;
   */
+
 
   /*
   vecmem::data::jagged_vector_view<unsigned int> host_view;
