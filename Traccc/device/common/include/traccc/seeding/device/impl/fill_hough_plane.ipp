@@ -14,7 +14,6 @@ void fill_hough_plane(const global_index_t globalIndex,
             const global_index_t n_cols,
             const global_index_t n_rows,
             const edm::spacepoint_collection::const_view::size_type n_spacepoints,
-            const edm::spacepoint_collection::const_view& spacepoints_view,
             const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association_view,
             const vecmem::data::vector_view<const unsigned long long>& spacepoint_detector_id_view,
 		    const vecmem::data::vector_view<const scalar>& spacepoint_r_view,
@@ -25,7 +24,6 @@ void fill_hough_plane(const global_index_t globalIndex,
             vecmem::data::vector_view<unsigned long long>& bins_view) {
    if (globalIndex >= n_spacepoints) return;
    
-   const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
    const vecmem::device_vector<const unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);
    const vecmem::device_vector<const unsigned long long> spacepoint_detector_id(spacepoint_detector_id_view);
    const vecmem::device_vector<const scalar> spacepoint_r(spacepoint_r_view);

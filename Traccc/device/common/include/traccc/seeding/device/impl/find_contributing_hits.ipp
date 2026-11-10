@@ -12,7 +12,6 @@ void find_contributing_hits(const global_index_t globalIndex,
                             const unsigned int n_images,
                             const vecmem::data::vector_view<const scalar>& edges_x_view,
                             const vecmem::data::vector_view<const scalar>& edges_y_view,
-                            const edm::spacepoint_collection::const_view& spacepoints_view,
                             const vecmem::data::vector_view<const scalar>& spacepoint_r_view,
                             const vecmem::data::vector_view<const scalar>& spacepoint_phi_view,
                             const vecmem::data::vector_view<const scalar>& spacepoint_bfield_z_view,
@@ -43,13 +42,12 @@ void find_contributing_hits(const global_index_t globalIndex,
    
     vecmem::jagged_device_vector<global_index_t> hits(hits_view);
 
-    const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
     const vecmem::device_vector<const unsigned long long> spacepoint_wedge_association(spacepoint_wedge_association_view);
     const vecmem::device_vector<const scalar> spacepoint_r(spacepoint_r_view);
     const vecmem::device_vector<const scalar> spacepoint_phi(spacepoint_phi_view);
     const vecmem::device_vector<const scalar> spacepoint_bfield_z(spacepoint_bfield_z_view);
 
-    for (global_index_t i(0); i<spacepoints.size(); ++i) {
+    for (global_index_t i(0); i<spacepoint_r.size(); ++i) {
         // contributes to wedge
         if ((spacepoint_wedge_association[i] & (1ULL << wedge_idx)) == 0ULL) continue;
         scalar min_value_y = transform(min_x, spacepoint_r[i], spacepoint_phi[i], spacepoint_bfield_z[i]);

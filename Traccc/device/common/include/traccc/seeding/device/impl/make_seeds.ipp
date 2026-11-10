@@ -40,13 +40,13 @@ void make_seeds(const global_index_t globalIndex,
     for (unsigned int i(0); i<associated_hits.size(); ++i) {
         const unsigned int i_index = associated_hits[i];
         const scalar ri = spacepoint_r[i_index];
-        const scalar zi = spacepoints.z()[i_index];
+        const scalar zi = spacepoints[i_index].z();
         for (unsigned int j(0); j<associated_hits.size(); ++j) {
             ++counter;
             if (i == j) continue;
             const unsigned int j_index = associated_hits[j];
             const scalar rj = spacepoint_r[j_index];
-            const scalar zj = spacepoints.z()[j_index];
+            const scalar zj = spacepoints[j_index].z();
             const scalar cot = rounded_cot_theta(zi, ri, zj, rj);;
             if (cot != cot) continue;
             if (cot == scalar{0} && (zi > 550.f || zi < -550.f)) continue;

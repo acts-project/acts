@@ -86,8 +86,6 @@ class hough_transform_seeding_algorithm
     const hough_seeding_config& config;
     /// The number of spacepoints in the event
     const edm::spacepoint_collection::const_view::size_type n_spacepoints;
-    /// The input spacepoints
-    const edm::spacepoint_collection::const_view& spacepoints;
     // association to wedge
     const vecmem::data::vector_view<const unsigned long long>& spacepoint_wedge_association;
     // the detector id to use in the HT filling
@@ -168,8 +166,6 @@ class hough_transform_seeding_algorithm
     const vecmem::data::vector_view<const scalar>& edges_x;
     // The edges Y
     const vecmem::data::vector_view<const scalar>& edges_y;
-    // The space points
-    const edm::spacepoint_collection::const_view& spacepoints;
     // the space point r
     const vecmem::data::vector_view<const scalar>& spacepoint_r;
     // the space point phi
@@ -196,8 +192,6 @@ class hough_transform_seeding_algorithm
     const vecmem::data::vector_view<const scalar>& edges_x;
     // The edges Y
     const vecmem::data::vector_view<const scalar>& edges_y;
-    // The space points
-    const edm::spacepoint_collection::const_view& spacepoints;
     // the space point r
     const vecmem::data::vector_view<const scalar>& spacepoint_r;
     // the space point phi

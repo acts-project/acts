@@ -56,7 +56,6 @@ namespace kernels {
    __global__
    void fill_hough_plane(const traccc::hough_seeding_config config,
 		   const edm::spacepoint_collection::const_view::size_type n_spacepoints,
-		   const edm::spacepoint_collection::const_view spacepoints,
 		   const vecmem::data::vector_view<const unsigned long long> spacepoint_wedge_association,
            const vecmem::data::vector_view<const unsigned long long> spacepoint_detector_id,
 		   const vecmem::data::vector_view<const scalar> spacepoint_r,
@@ -70,7 +69,6 @@ namespace kernels {
               config.n_cols,
               config.n_rows,
 		      n_spacepoints,
-              spacepoints,
 		      spacepoint_wedge_association,
               spacepoint_detector_id,
 		      spacepoint_r,
@@ -98,6 +96,7 @@ namespace kernels {
                            config.n_cols,
                            config.n_rows, 
                            houghplanes,
+                           config.min_contributions,
                            count_vector);
    }
 
@@ -110,6 +109,7 @@ namespace kernels {
                           config.n_cols,
                           config.n_rows,
                           houghplanes,
+                          config.min_contributions,
                           global_indexes);
    }
 
@@ -147,7 +147,6 @@ namespace kernels {
                                 const unsigned int n_images,
                                 const vecmem::data::vector_view<const scalar> edges_x,
                                 const vecmem::data::vector_view<const scalar> edges_y,
-                                const edm::spacepoint_collection::const_view spacepoints,
                                 const vecmem::data::vector_view<const scalar> spacepoint_r,
                                 const vecmem::data::vector_view<const scalar> spacepoint_phi,
                                 const vecmem::data::vector_view<const scalar> spacepoint_bfield_z,
@@ -161,7 +160,6 @@ namespace kernels {
                     n_images,
                     edges_x,
                     edges_y,
-                    spacepoints,
                     spacepoint_r,
                     spacepoint_phi,
                     spacepoint_bfield_z,
@@ -176,7 +174,6 @@ namespace kernels {
                                const unsigned int n_images,
                                const vecmem::data::vector_view<const scalar> edges_x,
                                const vecmem::data::vector_view<const scalar> edges_y,
-                               const edm::spacepoint_collection::const_view spacepoints,
                                const vecmem::data::vector_view<const scalar> spacepoint_r,
                                const vecmem::data::vector_view<const scalar> spacepoint_phi,
                                const vecmem::data::vector_view<const scalar> spacepoint_bfield_z,
@@ -190,7 +187,6 @@ namespace kernels {
                     n_images,
                     edges_x,
                     edges_y,
-                    spacepoints,
                     spacepoint_r,
                     spacepoint_phi,
                     spacepoint_bfield_z,
@@ -258,7 +254,7 @@ void hough_transform_seeding_algorithm::fill_hough_plane_kernel(const fill_hough
   const unsigned int n_blocks = (payload.n_spacepoints + n_threads - 1) / n_threads;
   kernels::fill_hough_plane<unsigned short>
             <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config,
-			    payload.n_spacepoints, payload.spacepoints,
+			    payload.n_spacepoints,
 			    payload.spacepoint_wedge_association,
 			    payload.spacepoint_detector_id,
 			    payload.spacepoint_r,
@@ -328,7 +324,6 @@ void hough_transform_seeding_algorithm::count_contributing_hits_kernel(const cou
                                                                     payload.n_images,
                                                                     payload.edges_x,
                                                                     payload.edges_y,
-                                                                    payload.spacepoints,
                                                                     payload.spacepoint_r,
                                                                     payload.spacepoint_phi,
                                                                     payload.spacepoint_bfield_z,
@@ -347,7 +342,6 @@ void hough_transform_seeding_algorithm::find_contributing_hits_kernel(const find
                                                                     payload.n_images,
                                                                     payload.edges_x,
                                                                     payload.edges_y,
-                                                                    payload.spacepoints,
                                                                     payload.spacepoint_r,
                                                                     payload.spacepoint_phi,
                                                                     payload.spacepoint_bfield_z,

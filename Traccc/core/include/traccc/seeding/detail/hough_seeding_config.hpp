@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <array>
+#include <vector>
 #include <numbers>
 
 #include "traccc/definitions/common.hpp"
@@ -26,13 +26,13 @@ struct hough_seeding_config {
   scalar interaction_center = 0.f;
   scalar interaction_window = 150.f;
   scalar eta_width = 0.12f;
-  std::array<scalar, 25> wedges = {
+  std::vector<scalar> wedges = {
   	-2.88f, -2.64f, -2.40f, -2.16f, -1.92f, -1.68f, 
     	-1.44f, -1.20f, -0.96f, -0.72f, -0.48f, -0.24f, 0.00f,
     	0.24f, 0.48f, 0.72f, 0.96f, 1.20f, 1.44f,
     	1.68f, 1.92f, 2.16f, 2.40f, 2.64f, 2.88f
     };
-  std::array<unsigned int, 25> min_contributions {
+  std::vector<unsigned short> min_contributions {
 	5, 5, 5, 5, 5, 5,
 	5, 5, 5, 5, 5, 5, 5,
 	5, 5, 5, 5, 5, 5,

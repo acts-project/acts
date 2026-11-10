@@ -149,7 +149,6 @@ auto hough_transform_seeding_algorithm::operator()(
 
   fill_hough_plane_kernel({m_config,
                   n_spacepoints, 
-                  spacepoints,
                   spacepoint_wedge_association,
                   spacepoint_detector_id,
 		          spacepoint_r, 
@@ -322,7 +321,6 @@ auto hough_transform_seeding_algorithm::operator()(
                            bfield,
                            edges_x,
                            edges_y,
-                           spacepoints,
                            spacepoint_r,
                            spacepoint_phi,
                            spacepoint_bfield_z,
@@ -361,7 +359,6 @@ auto hough_transform_seeding_algorithm::operator()(
                             bfield,
                             edges_x,
                             edges_y,
-                            spacepoints,
                             spacepoint_r,
                             spacepoint_phi,
                             spacepoint_bfield_z,
@@ -369,7 +366,6 @@ auto hough_transform_seeding_algorithm::operator()(
                             maxima_global_index,
                             nn_outcome,
                             hits});
-  synchronize();
 
 
   /*
