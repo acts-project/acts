@@ -59,6 +59,7 @@ template <typename bfield_t>
 TRACCC_HOST_DEVICE
 void precompute_spacepoint_variables(const global_index_t globalIndex,
         const bfield_t& bfield,
+        const unsigned int n_wedges,
 		const edm::measurement_collection::const_view& measurements_view,
 		const edm::spacepoint_collection::const_view::size_type n_spacepoints,
         const edm::spacepoint_collection::const_view& spacepoints_view,
@@ -66,19 +67,13 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
         const scalar interactionWindow,
         const scalar etaWidth,
         const unsigned long long module_veto,
+        const scalar* wedges,
 		vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association_view,
         vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id_view,
 		vecmem::data::vector_view<scalar>& spacepoint_r_view,
 		vecmem::data::vector_view<scalar>& spacepoint_phi_view,
         vecmem::data::vector_view<scalar>& spacepoint_bfield_z_view) {
    if (globalIndex >= n_spacepoints) return;
-   // we need to pass these from outside
-   static const std::array<scalar, 25> wedges = {
-  	-2.88f, -2.64f, -2.40f, -2.16f, -1.92f, -1.68f,
-    	-1.44f, -1.20f, -0.96f, -0.72f, -0.48f, -0.24f, 0.00f,
-    	0.24f, 0.48f, 0.72f, 0.96f, 1.20f, 1.44f,
-    	1.68f, 1.92f, 2.16f, 2.40f, 2.64f, 2.88f
-   };
    
    // input   
    const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
@@ -117,7 +112,7 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
    //
    // this implementation has an upper limit on the number of wedges
    unsigned long long slice = 0ULL;
-   for (unsigned int wedge_idx(0); wedge_idx<wedges.size(); ++wedge_idx) {
+   for (unsigned int wedge_idx(0); wedge_idx<n_wedges; ++wedge_idx) {
       if (eta_at_min < wedges[wedge_idx] - etaWidth) continue;
       if (eta_at_max > wedges[wedge_idx] + etaWidth) continue;
       slice |= (1ULL << wedge_idx);

@@ -36,6 +36,7 @@ namespace kernels {
    __global__
    void precompute_spacepoint_variables(const traccc::hough_seeding_config config,
            const bfield_t bfield,
+           const unsigned int n_wedges,
 		   const edm::measurement_collection::const_view measurements,
 		   const edm::spacepoint_collection::const_view::size_type n_spacepoints,
 		   const edm::spacepoint_collection::const_view spacepoints,
@@ -45,8 +46,9 @@ namespace kernels {
 		   vecmem::data::vector_view<scalar> spacepoint_phi,
            vecmem::data::vector_view<scalar> spacepoint_bfield_z) {
       device::precompute_spacepoint_variables<bfield_t>(details::global_index1(), bfield,
-		      measurements, n_spacepoints, spacepoints,
+		      n_wedges, measurements, n_spacepoints, spacepoints,
 		      config.interaction_center, config.interaction_window, config.eta_width, config.module_veto,
+              &config.wedges[0],
 		      spacepoint_wedge_association, spacepoint_detector_id,
 		      spacepoint_r, spacepoint_phi,
               spacepoint_bfield_z);
@@ -96,7 +98,7 @@ namespace kernels {
                            config.n_cols,
                            config.n_rows, 
                            houghplanes,
-                           config.min_contributions,
+                           &config.min_contributions[0],
                            count_vector);
    }
 
@@ -109,7 +111,7 @@ namespace kernels {
                           config.n_cols,
                           config.n_rows,
                           houghplanes,
-                          config.min_contributions,
+                          &config.min_contributions[0],
                           global_indexes);
    }
 
@@ -239,7 +241,8 @@ void hough_transform_seeding_algorithm::precompute_spacepoint_variables_kernel(c
      payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
         kernels::precompute_spacepoint_variables<bfield_view_t>
 		    <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, bfield,
-				payload.measurements, payload.n_spacepoints, payload.spacepoints,
+				payload.config.wedges.size(),
+                payload.measurements, payload.n_spacepoints, payload.spacepoints,
 				payload.spacepoint_wedge_association,
 				payload.spacepoint_detector_id,
 				payload.spacepoint_r,
