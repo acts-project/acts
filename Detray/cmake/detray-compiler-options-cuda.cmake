@@ -40,8 +40,4 @@ if(PROJECT_IS_TOP_LEVEL)
     detray_add_flag( CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-lineinfo -src-in-ptx" )
 endif()
 
-# Warnings and warnings-as-errors come from the shared module, and are applied
-# in the directory that includes this file -- regardless of whether detray is
-# the top level project. CMake itself picks the right flag for the compiler in
-# use (`-Werror all-warnings` for nvcc >= 10.2, `-Werror` for clang-cuda).
 acts_apply_warning_flags(PROFILE detray LANGUAGES CUDA)

@@ -19,7 +19,4 @@ if(
     return()
 endif()
 
-# All SYCL warning flags come from the shared ActsWarningFlags.cmake module.
-# Note that CMake has no COMPILE_WARNING_AS_ERROR implementation for SYCL (it is
-# a vecmem-provided pseudo-language), so the module emits -Werror by hand.
 acts_apply_warning_flags(PROFILE traccc LANGUAGES SYCL)

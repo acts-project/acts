@@ -24,8 +24,4 @@ if(PROJECT_IS_TOP_LEVEL)
     endif()
 endif()
 
-# Note that the C++ warning flags are *not* set here. They come from the shared
-# ActsWarningFlags.cmake module and are applied once, per-directory, from
-# Detray/CMakeLists.txt -- so that they apply identically whether detray is
-# built standalone or as part of the Acts monorepo, and so that they never
-# reach the dependencies set up in Detray/extern.
+# C++ warnings are applied in Detray/CMakeLists.txt after dependency setup.

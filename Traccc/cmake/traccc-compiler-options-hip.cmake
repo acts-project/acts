@@ -29,7 +29,4 @@ if("${CMAKE_HIP_PLATFORM}" STREQUAL "nvidia")
     traccc_add_flag(CMAKE_HIP_FLAGS "--use_fast_math")
 endif()
 
-# Warnings and warnings-as-errors come from the shared ActsWarningFlags.cmake
-# module. CMake picks the right flag for the platform in use (`-Werror` on amd,
-# `-Werror all-warnings` on nvidia).
 acts_apply_warning_flags(PROFILE traccc LANGUAGES HIP)

@@ -15,11 +15,7 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
     traccc_add_flag(CMAKE_CXX_FLAGS "/Zc:__cplusplus")
 endif()
 
-# Note that the C++ warning flags are *not* set here. They come from the shared
-# ActsWarningFlags.cmake module and are applied once, per-directory, from
-# Traccc/CMakeLists.txt -- so that they apply identically whether traccc is
-# built standalone or as part of the Acts monorepo, and so that they never reach
-# the dependencies set up in Traccc/extern.
+# C++ warnings are applied in Traccc/CMakeLists.txt after dependency setup.
 
 # Set architecture level to v2 - enable generation of code using SSE4.2.
 # But only use the flag if it's available from the compiler. And the user

@@ -1,42 +1,25 @@
-# Compiler warning policy, shared by Acts, Detray and Traccc.
-#
-# This module is the single source of truth for *warning* flags and for
-# warnings-as-errors in this repository. It is deliberately limited to that:
-# functional flags (architectures, -march, --use_fast_math, -G/-lineinfo,
-# --expt-relaxed-constexpr, ...) stay in the per-project compiler option files.
-#
-# Flags are applied with add_compile_options(), i.e. as a *directory* property,
-# rather than by appending to the global CMAKE_<LANG>_FLAGS. That is what keeps
-# them off the third-party code that Acts, Detray and Traccc pull in via
-# add_subdirectory()/FetchContent: only directories that explicitly opt in by
-# calling acts_apply_warning_flags() are affected.
-#
-# Detray and Traccc include this file by absolute path (via ../cmake) instead of
-# through CMAKE_MODULE_PATH, so that Acts' Find<Package>.cmake modules do not
-# shadow theirs.
+# Shared warning flags for Acts, Detray and Traccc.
+# Apply per directory after dependency setup to keep warnings off third-party code.
+# Other compiler options stay in each project's compiler-options files.
 
 include_guard(GLOBAL)
 
 include(CheckCXXCompilerFlag)
 
-# __COUNTER__ is classified as a C2y extension in Clang 22+. Third-party
-# generated code (podio, Boost.Test, etc.) relies on it.
+# Allow __COUNTER__ in third-party headers with Clang 22+.
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     check_cxx_compiler_flag("-Wno-c2y-extensions" ACTS_HAS_WNO_C2Y_EXTENSIONS)
 endif()
 
 # _acts_warning_flags(<out_var> <profile> <language>)
-#
-# Computes the warning flag list for one profile/language combination. This is
-# the one place where the projects' warning sets are allowed to differ.
+
 function(_acts_warning_flags out profile lang)
     set(flags "")
 
     if(profile STREQUAL "none")
-        # nothing at all: explicit opt-out
+        # No warning flags.
     elseif(lang STREQUAL "CXX")
         if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|IntelLLVM")
-            # the common base, shared by all three projects
             list(
                 APPEND flags
                 -Wall
@@ -49,17 +32,14 @@ function(_acts_warning_flags out profile lang)
             )
 
             if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-                # useful conversion checks like float-to-bool, float-to-int.
-                # Not enabled for GCC, where -Wfloat-conversion is much more
-                # aggressive and also triggers on e.g. double-to-float.
+                # GCC also warns on double-to-float conversions, which Acts allows.
                 list(APPEND flags -Wfloat-conversion)
                 if(ACTS_HAS_WNO_C2Y_EXTENSIONS)
                     list(APPEND flags -Wno-c2y-extensions)
                 endif()
             endif()
 
-            # -Wnull-dereference gets applied to -isystem includes in GCC13,
-            # which causes lots of warnings in code we have no control over
+            # GCC 13+ reports null dereferences in system headers.
             if(
                 CMAKE_CXX_COMPILER_ID MATCHES "Clang"
                 OR (
@@ -70,12 +50,10 @@ function(_acts_warning_flags out profile lang)
                 list(APPEND flags -Wnull-dereference)
             endif()
 
-            # Detray and Traccc enforce a stricter set than Acts does. Acts'
-            # own code is not -Wconversion clean, so it stays on the base set.
+            # Acts is not yet -Wconversion clean.
             if(profile STREQUAL "detray" OR profile STREQUAL "traccc")
                 list(APPEND flags -Wconversion -Wunused-local-typedefs)
-                # GCC 13+ diagnoses Eigen internals even through system includes.
-                # Preserve detray's suppression when applying the shared profile.
+                # Suppress GCC 13+ false positives in Eigen for Detray.
                 if(
                     profile STREQUAL "detray"
                     AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
@@ -91,7 +69,7 @@ function(_acts_warning_flags out profile lang)
             list(APPEND flags /W4)
         endif()
     elseif(lang STREQUAL "CUDA")
-        # Acts (Plugins/Gnn) and Detray do not warn on device code today.
+        # Only Traccc enables additional CUDA warnings.
         if(
             profile STREQUAL "traccc"
             AND CMAKE_CUDA_COMPILER_ID MATCHES "NVIDIA"
@@ -143,16 +121,9 @@ endfunction()
 #     [WARNING_AS_ERROR <bool>]   # defaults to the profile's project option
 # )
 #
-# Applies the warning flags for PROFILE to the current directory and everything
-# added below it, and enables warnings-as-errors in the same scope if the
-# project's <PROJECT>_FAIL_ON_WARNINGS option is set.
-#
-# This must be called before any target is created in the directory and before
-# any add_subdirectory(): both the directory COMPILE_OPTIONS property and the
-# CMAKE_COMPILE_WARNING_AS_ERROR variable are snapshotted at those points.
-#
-# This is a macro rather than a function because CMAKE_COMPILE_WARNING_AS_ERROR
-# and the MSVC /W<n> fixup have to land in the caller's directory scope.
+# Call after dependency setup and before adding project targets/subdirectories.
+# Uses <PROJECT>_FAIL_ON_WARNINGS to control warnings-as-errors.
+# A macro is needed to set compiler variables in the caller's directory scope.
 macro(acts_apply_warning_flags)
     cmake_parse_arguments(
         _awf
@@ -174,24 +145,18 @@ macro(acts_apply_warning_flags)
         message(FATAL_ERROR "acts_apply_warning_flags: LANGUAGES is required")
     endif()
 
-    # per-project switches
-    set(_awf_enabled ON)
     set(_awf_wae OFF)
     if(_awf_PROFILE STREQUAL "acts")
-        set(_awf_enabled ${ACTS_ENABLE_WARNINGS})
         set(_awf_wae ${ACTS_FAIL_ON_WARNINGS})
     elseif(_awf_PROFILE STREQUAL "detray")
         set(_awf_wae ${DETRAY_FAIL_ON_WARNINGS})
     elseif(_awf_PROFILE STREQUAL "traccc")
         set(_awf_wae ${TRACCC_FAIL_ON_WARNINGS})
-    elseif(_awf_PROFILE STREQUAL "none")
-        set(_awf_enabled OFF)
     endif()
     if(DEFINED _awf_WARNING_AS_ERROR)
         set(_awf_wae ${_awf_WARNING_AS_ERROR})
     endif()
-    if(NOT _awf_enabled)
-        set(_awf_PROFILE "none")
+    if(_awf_PROFILE STREQUAL "none")
         set(_awf_wae OFF)
     endif()
 
@@ -202,7 +167,7 @@ macro(acts_apply_warning_flags)
                 _awf_lang STREQUAL "CXX"
                 AND CMAKE_CXX_COMPILER_ID MATCHES "MSVC"
             )
-                # avoid D9025 ("overriding /W3 with /W4") on every TU
+                # Avoid MSVC D9025 when replacing /W3 with /W4.
                 string(
                     REGEX REPLACE "/W[0-9]"
                     ""
@@ -215,7 +180,7 @@ macro(acts_apply_warning_flags)
             )
         endif()
 
-        # announce each profile once, not once per call site
+        # Log each profile/language pair once.
         get_property(
             _awf_announced
             GLOBAL
@@ -242,14 +207,10 @@ macro(acts_apply_warning_flags)
                 "<PROJECT>_FAIL_ON_WARNINGS, or use a newer CMake."
             )
         endif()
-        # The native mechanism picks the right flag per compiler (-Werror,
-        # /WX, or `-Werror all-warnings` for nvcc) and keeps
-        # `cmake --build ... --compile-no-warning-as-error` working.
+        # Let CMake select the compiler flag and honor --compile-no-warning-as-error.
         set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 
-        # ... except for SYCL, which is a vecmem-provided pseudo-language that
-        # CMake has no COMPILE_WARNING_AS_ERROR implementation for. The
-        # property would be silently ignored there.
+        # CMake does not implement COMPILE_WARNING_AS_ERROR for vecmem's SYCL language.
         if("SYCL" IN_LIST _awf_LANGUAGES AND NOT _awf_PROFILE STREQUAL "none")
             add_compile_options($<$<COMPILE_LANGUAGE:SYCL>:-Werror>)
         endif()
@@ -260,7 +221,6 @@ macro(acts_apply_warning_flags)
     unset(_awf_WARNING_AS_ERROR)
     unset(_awf_UNPARSED_ARGUMENTS)
     unset(_awf_KEYWORDS_MISSING_VALUES)
-    unset(_awf_enabled)
     unset(_awf_wae)
     unset(_awf_lang)
     unset(_awf_flags)

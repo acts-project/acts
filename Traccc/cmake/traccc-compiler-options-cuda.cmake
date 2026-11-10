@@ -47,8 +47,4 @@ endif()
 # profilers have access to line data.
 traccc_add_flag(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-lineinfo")
 
-# Warnings and warnings-as-errors come from the shared ActsWarningFlags.cmake
-# module, and are applied to the directory that includes this file. CMake picks
-# the right flag for the compiler in use (`-Werror all-warnings` for
-# nvcc >= 10.2, `-Werror` for clang-cuda).
 acts_apply_warning_flags(PROFILE traccc LANGUAGES CUDA)

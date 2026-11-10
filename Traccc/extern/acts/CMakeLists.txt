@@ -29,12 +29,7 @@ set(ACTS_SETUP_EIGEN3 TRUE CACHE BOOL "Set up Eigen in the Acts code")
 set(ACTS_BUILD_PLUGIN_JSON TRUE CACHE BOOL "Build JSON plugin in Acts")
 set(ACTS_SETUP_DETRAY TRUE CACHE BOOL "Set up Detray in the Acts code")
 
-# Acts and Detray are in-tree, first-party code here, so hold them to the same
-# warnings-as-errors policy as traccc itself. These are plain (non-FORCE) cache
-# defaults, so -DACTS_FAIL_ON_WARNINGS=OFF on the command line still wins. Note
-# that a cache default is only applied on the first configuration of a build
-# directory: flipping TRACCC_FAIL_ON_WARNINGS in an existing build tree does not
-# retroactively flip these.
+# Default to Traccc's warning policy on first configuration; preserve cache overrides.
 set(ACTS_FAIL_ON_WARNINGS ${TRACCC_FAIL_ON_WARNINGS} CACHE BOOL "")
 set(DETRAY_FAIL_ON_WARNINGS ${TRACCC_FAIL_ON_WARNINGS} CACHE BOOL "")
 

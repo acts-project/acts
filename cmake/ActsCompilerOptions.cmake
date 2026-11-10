@@ -9,9 +9,7 @@ if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting default build type: ${CMAKE_BUILD_TYPE}")
 endif()
 
-# Warning flags are *not* set here: they are applied per-directory by
-# acts_apply_warning_flags() from ActsWarningFlags.cmake, so that they only
-# affect Acts' own code and not the dependencies built as part of this project.
+# Warning flags are applied per directory by ActsWarningFlags.cmake.
 set(cxx_flags "")
 
 set(ACTS_CXX_STANDARD 23)

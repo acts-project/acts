@@ -26,7 +26,4 @@ if(PROJECT_IS_TOP_LEVEL)
     endif()
 endif()
 
-# Warnings and warnings-as-errors come from the shared module. CMake picks the
-# right flag for the platform in use (`-Werror` on amd, `-Werror all-warnings`
-# on nvidia).
 acts_apply_warning_flags(PROFILE detray LANGUAGES HIP)
