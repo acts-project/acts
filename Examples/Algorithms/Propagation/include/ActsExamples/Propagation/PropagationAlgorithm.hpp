@@ -57,8 +57,6 @@ class PropagationAlgorithm : public IAlgorithm {
     double maxStepSize = 5 * Acts::UnitConstants::m;
     /// Switch covariance transport on
     bool covarianceTransport = false;
-    // Switch on the recording of the propagation time
-    bool recordPropagationTime = false;
   };
 
   /// Constructor

@@ -46,6 +46,8 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
     std::string treeName = "propagation_summary";
     /// common root file
     TFile* rootFile = nullptr;
+    /// toggle wether to write propagation time
+    bool storePropagationTime = false;
   };
 
   /// Constructor with

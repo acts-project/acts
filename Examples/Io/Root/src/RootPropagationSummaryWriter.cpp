@@ -75,7 +75,9 @@ RootPropagationSummaryWriter::RootPropagationSummaryWriter(
   m_outputTree->Branch("nReverseSteps", &m_nReverseSteps);
   m_outputTree->Branch("pathLength", &m_pathLength);
   m_outputTree->Branch("absolutePathLength", &m_absolutePathLength);
-  m_outputTree->Branch("propagationTime", &m_propagationTime);
+  if (m_cfg.storePropagationTime) {
+    m_outputTree->Branch("propagationTime", &m_propagationTime);
+  }
 
   m_outputTree->Branch("nRenavigations", &m_nRenavigations);
   m_outputTree->Branch("nVolumeSwitches", &m_nVolumeSwitches);

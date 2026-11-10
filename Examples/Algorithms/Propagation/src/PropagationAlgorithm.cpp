@@ -71,12 +71,12 @@ ProcessCode PropagationAlgorithm::execute(
 
     PropagationOutput& propagationOutput = propagationResult.value();
 
-    if (m_cfg.recordPropagationTime) {
-      propagationOutput.first.propagationTime =
-          (std::chrono::duration<double>(propagationEnd - propagationStart)
-               .count()) *
-          1000;
-    }
+    propagationOutput.first.propagationTime =
+        (std::chrono::duration<double>(propagationEnd - propagationStart)
+             .count()) *
+        1000;
+    ACTS_VERBOSE("Propagation took: " << propagationOutput.first.propagationTime
+                                      << " ms");
 
     // Position / momentum for the output writing
     Acts::Vector3 position = parameters.position(context.recoGeoContext);
