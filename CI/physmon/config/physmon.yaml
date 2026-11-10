@@ -26,7 +26,9 @@
 #   - reference files   -> CI/physmon/reference/<path>   (unless reference_in: outdir)
 #   - html/plots output -> {OUTDIR}/html/<path>          (.root replaced with .html)
 #
-# `mode` groups comparisons for the Snakefile's per-mode meta-targets.
+# `mode` groups comparisons: the Snakefile defines one target per mode, so
+# `snakemake ... <mode>` runs only that group. `info_only: true` marks a
+# comparison that is shown in the summary but never fails the run.
 
 
 # ---------------------------------------------------------------------------
@@ -149,7 +151,9 @@ producers:
 
   trackfitting_gsf:
     mem_mb: 1600
-    inputs: [simulation_gsf/simulation/particles_simulation.root]
+    inputs:
+      - simulation_gsf/simulation/particles_simulation.root
+      - simulation_gsf/simulation/hits.root
 
   trackfitting_gx2f:
     mem_mb: 1600
@@ -159,7 +163,9 @@ producers:
 
   trackrefitting_gsf:
     mem_mb: 1800
-    inputs: [simulation_gsf/simulation/particles_simulation.root]
+    inputs:
+      - simulation_gsf/simulation/particles_simulation.root
+      - simulation_gsf/simulation/hits.root
 
   trackfitting_gx2f_vs_kf:
     mem_mb: 1000
@@ -264,6 +270,7 @@ comparisons:
     reference: trackfitting_gx2f_vs_kf/performance_trackfitting_kf.root
     reference_in: outdir
     config: info_only.toml
+    info_only: true
     label_reference: KF
     label_monitored: GX2F
     mode: gx2f_vs_kf

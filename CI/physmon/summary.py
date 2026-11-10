@@ -5,11 +5,11 @@ Input: physmon_results.json — a list of comparison rows, each with:
     {
       "title": "...",
       "report": "html/.../foo.html",
-      "info_only": false,             # true for "Comparison ..." (gx2f_vs_kf)
+      "info_only": false,             # true: shown, never fails the run
       "steps": [
         {"kind": "upstream"|"producer"|"plot"|"histcmp",
          "name": "trackfitting_kf",   # display label
-         "rc": 0,
+         "exit_code": 0,
          "log": "logs/trackfitting_kf.log" | null,
          "cascade": false}            # true if earlier step in the row failed first
       ]
@@ -52,25 +52,32 @@ def _herald(path: str) -> str:
     )
 
 
-def _status_for(row: dict) -> tuple[str, bool]:
-    """Return (icon, failed) for the row's overall status."""
+def _failed(step: dict) -> bool:
+    """A step failed on any non-zero exit code, also the -1 of an unreadable witness."""
+    return step["exit_code"] != 0
+
+
+def _row_failed(row: dict) -> bool:
+    """An info-only row never fails; any other row fails with one failed step."""
+    return not row.get("info_only") and any(_failed(s) for s in row["steps"])
+
+
+def _row_icon(row: dict) -> str:
     if row.get("info_only"):
-        return "🔵", False
-    rc = 0
-    for s in row["steps"]:
-        rc |= max(s["rc"], 0)
-    if rc == 0:
-        return "✅", False
-    return "🔴", True
+        return "🔵"
+    return "🔴" if _row_failed(row) else "✅"
+
+
+def _step_icon(step: dict) -> str:
+    icon = "🔴" if _failed(step) else "✅"
+    return f"{icon}*" if step.get("cascade") else icon
 
 
 def _cell_md(step: dict | None) -> str:
     """Markdown cell for one step (or em-dash if step doesn't exist for this row)."""
     if step is None:
         return "—"
-    icon = "✅" if step["rc"] == 0 else "🔴"
-    if step.get("cascade"):
-        icon = f"{icon}*"
+    icon = _step_icon(step)
     log = step.get("log")
     if log:
         return f"[{icon}]({_herald(log)})"
@@ -80,9 +87,7 @@ def _cell_md(step: dict | None) -> str:
 def _cell_html(step: dict | None) -> str:
     if step is None:
         return "—"
-    icon = "✅" if step["rc"] == 0 else "🔴"
-    if step.get("cascade"):
-        icon = f"{icon}*"
+    icon = _step_icon(step)
     log = step.get("log")
     if log:
         return f'<a href="{_herald(log)}" title="{step.get("name","")}">{icon}</a>'
@@ -137,9 +142,8 @@ def render_markdown(rows: list[dict], memory: list[dict] | None = None) -> str:
     lines.append("| " + " | ".join(headers) + " |")
     lines.append("| " + " | ".join(aligns) + " |")
     for row in rows:
-        icon, _ = _status_for(row)
         by_kind = _step_by_kind(row)
-        cells = [icon, _md_escape(row["title"])]
+        cells = [_row_icon(row), _md_escape(row["title"])]
         for k in STEP_KINDS:
             cells.append(_cell_md(by_kind.get(k)))
         report_url = _herald(row["report"])
@@ -178,9 +182,10 @@ def render_html(rows: list[dict], memory: list[dict] | None = None) -> str:
         + "<th>Report</th></tr>",
     ]
     for row in rows:
-        icon, _ = _status_for(row)
         by_kind = _step_by_kind(row)
-        cells = [icon, row["title"]] + [_cell_html(by_kind.get(k)) for k in STEP_KINDS]
+        cells = [_row_icon(row), row["title"]] + [
+            _cell_html(by_kind.get(k)) for k in STEP_KINDS
+        ]
         cells.append(f'<a href="{_herald(row["report"])}">report</a>')
         out.append("<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
     out.append("</table>")
@@ -224,8 +229,7 @@ def main() -> int:
 
     any_failed = False
     for row in rows:
-        _, failed = _status_for(row)
-        if failed:
+        if _row_failed(row):
             any_failed = True
             print(f"physmon: FAIL {row['title']}", file=sys.stderr)
     return 1 if any_failed else 0

@@ -2,7 +2,7 @@
 #
 # wrap.sh --witness <path> --step <name> [--log <path>] [--touches "<list>"] -- <cmd...>
 #
-# Runs <cmd>; writes a small JSON witness {"step", "rc", "log"} to <witness>;
+# Runs <cmd>; writes a small JSON witness {"step", "exit_code", "log"} to <witness>;
 # touches any path in <list> that does not already exist (so snakemake's
 # declared outputs are always present and the DAG can continue even when an
 # upstream step failed); always exits 0 itself.
@@ -47,7 +47,7 @@ if [ -n "$log_path" ]; then
 else
     "$@"
 fi
-rc=$?
+exit_code=$?
 
 # JSON-escape the log path (only need to handle backslash and double quote;
 # we control the character set).
@@ -59,7 +59,7 @@ else
     log_json="null"
 fi
 
-printf '{"step":"%s","rc":%d,"log":%s}\n' "$step" "$rc" "$log_json" > "$witness"
+printf '{"step":"%s","exit_code":%d,"log":%s}\n' "$step" "$exit_code" "$log_json" > "$witness"
 
 # Touch any declared outputs that didn't get produced. The witness itself was
 # just written above; skip it. Empty 'touches' is fine — the for loop is a no-op.
