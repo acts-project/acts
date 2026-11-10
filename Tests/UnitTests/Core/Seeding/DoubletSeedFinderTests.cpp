@@ -15,6 +15,8 @@
 #include <array>
 #include <cmath>
 #include <optional>
+#include <span>
+#include <vector>
 
 using namespace Acts::UnitLiterals;
 
@@ -192,6 +194,70 @@ BOOST_AUTO_TEST_CASE(DoubletInteractionPointCutsOverBlocks) {
     BOOST_CHECK_LT(together.size(), 2 * nCandidates / 3 + 1);
     BOOST_REQUIRE_EQUAL(together.size(), alone.size());
     // exact: the same expressions on the same inputs, so the same bits
+    for (DoubletsForMiddleSp::Index k = 0; k < together.size(); ++k) {
+      BOOST_CHECK_EQUAL(together[k].spacePointIndex(),
+                        alone[k].spacePointIndex());
+      BOOST_CHECK_EQUAL(together[k].cotTheta(), alone[k].cotTheta());
+      BOOST_CHECK_EQUAL(together[k].iDeltaR(), alone[k].iDeltaR());
+      BOOST_CHECK_EQUAL(together[k].er(), alone[k].er());
+      BOOST_CHECK_EQUAL(together[k].u(), alone[k].u());
+      BOOST_CHECK_EQUAL(together[k].v(), alone[k].v());
+      BOOST_CHECK_EQUAL(together[k].x(), alone[k].x());
+      BOOST_CHECK_EQUAL(together[k].y(), alone[k].y());
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(DoubletsOfSeveralGroups) {
+  // groups of candidates, an empty one and some longer than a block among
+  // them: one call over all of them gives the same doublets in the same order
+  // as one call per group
+  constexpr std::size_t nCandidates = 600;
+  const std::vector<std::array<SpacePointIndex, 2>> groupBounds = {
+      {1, 41}, {41, 41}, {41, 341}, {341, 342}, {342, 601}};
+  for (const bool isBottom : {false, true}) {
+    const float rM = isBottom ? 400_mm : 100_mm;
+    SpacePointContainer container(
+        SpacePointColumns::PackedXY | SpacePointColumns::PackedZR |
+        SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR);
+    addPixelSpacePoint(container, rM, 0);
+    for (std::size_t i = 0; i < nCandidates; ++i) {
+      const float r = isBottom ? 60_mm + 0.46_mm * i : 150_mm + 0.3_mm * i;
+      const float slope = (i % 3 == 0) ? (isBottom ? -0.3f : 0.6f) : 0.f;
+      addPixelSpacePoint(container, r, slope * (r - rM));
+    }
+    const Direction direction =
+        isBottom ? Direction::Backward() : Direction::Forward();
+
+    DoubletSeedFinder::Config config;
+    config.candidateDirection = direction;
+    config.interactionPointCut = true;
+    const auto finder = DoubletSeedFinder::create(
+        DoubletSeedFinder::DerivedConfig(config, 2_T));
+    const SpacePointContainer& spacePoints = container;
+    const ConstSpacePointProxy middle = spacePoints[0];
+    std::vector<SpacePointContainer::ConstRange> groups;
+    for (const auto& [first, last] : groupBounds) {
+      groups.push_back(spacePoints.range({first, last}));
+    }
+    DoubletsForMiddleSp together;
+    finder->createDoublets(
+        middle, DoubletSeedFinder::computeMiddleSpInfo(middle),
+        std::span<const SpacePointContainer::ConstRange>(groups), together);
+
+    DoubletsForMiddleSp alone;
+    for (const auto& [first, last] : groupBounds) {
+      const DoubletsForMiddleSp one =
+          findPixelDoublets(container, direction, first, last);
+      for (const auto doublet : one) {
+        alone.emplace_back(doublet.spacePointIndex(), doublet.cotTheta(),
+                           doublet.iDeltaR(), doublet.er(), doublet.u(),
+                           doublet.v(), doublet.x(), doublet.y());
+      }
+    }
+
+    BOOST_CHECK_GT(together.size(), 0u);
+    BOOST_REQUIRE_EQUAL(together.size(), alone.size());
     for (DoubletsForMiddleSp::Index k = 0; k < together.size(); ++k) {
       BOOST_CHECK_EQUAL(together[k].spacePointIndex(),
                         alone[k].spacePointIndex());

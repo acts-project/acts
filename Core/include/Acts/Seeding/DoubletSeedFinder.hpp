@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <span>
 #include <vector>
 
 namespace Acts {
@@ -429,6 +430,20 @@ class DoubletSeedFinder {
   virtual void createDoublets(
       const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,
       SpacePointContainer::ConstRange candidateSps,
+      DoubletsForMiddleSp& compatibleDoublets) const = 0;
+
+  /// Creates the compatible dublets of several ranges of candidates in one
+  /// call, in the order of the ranges: the same doublets as one call per
+  /// range.
+  ///
+  /// @param middleSp Space point candidate to be used as middle SP in a seed
+  /// @param middleSpInfo Information about the middle space point
+  /// @param candidateSpGroups Ranges of space points to be used as candidates
+  ///   for middle SP in a seed
+  /// @param compatibleDoublets Output container for compatible doublets
+  virtual void createDoublets(
+      const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,
+      std::span<const SpacePointContainer::ConstRange> candidateSpGroups,
       DoubletsForMiddleSp& compatibleDoublets) const = 0;
 };
 

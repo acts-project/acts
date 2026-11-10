@@ -52,8 +52,8 @@ void DoubletsForMiddleSp::sortByCotTheta(
 
 namespace {
 
-template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR,
-          bool useTime, bool stripCalibration, bool symmetricCollisionRegion>
+template <bool isBottomCandidate, bool interactionPointCut, bool useTime,
+          bool stripCalibration, bool symmetricCollisionRegion>
 class Impl final : public DoubletSeedFinder {
  public:
   explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
@@ -72,8 +72,11 @@ class Impl final : public DoubletSeedFinder {
   template <typename CandidateSps>
   void createDoubletsImpl(const ConstSpacePointProxy& middleSp,
                           const MiddleSpInfo& middleSpInfo,
-                          CandidateSps candidateSps,
+                          std::span<const CandidateSps> candidateSpGroups,
                           DoubletsForMiddleSp& compatibleDoublets) const {
+    if (candidateSpGroups.empty()) {
+      return;
+    }
     const float impactMax =
         isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
 
@@ -120,7 +123,8 @@ class Impl final : public DoubletSeedFinder {
                          (cotTheta * cotTheta) * (varianceRM + varianceRO));
     };
 
-    const SpacePointContainer& container = candidateSps.container();
+    const SpacePointContainer& container =
+        candidateSpGroups.front().container();
     const auto xyColumn = container.xyColumn().data();
     const auto zrColumn = container.zrColumn().data();
     const auto varianceZColumn = container.varianceZColumn().data();
@@ -133,8 +137,9 @@ class Impl final : public DoubletSeedFinder {
       varianceTColumn = container.varianceTColumn().data();
     }
 
-    // the index in the container of the k-th candidate
-    const auto candidateIndex = [&](std::size_t k) -> std::size_t {
+    // the index in the container of the k-th candidate of a group
+    const auto candidateIndex = [](const CandidateSps& candidateSps,
+                                   std::size_t k) -> std::size_t {
       if constexpr (std::is_same_v<CandidateSps,
                                    SpacePointContainer::ConstRange>) {
         return candidateSps.range().first + k;
@@ -149,24 +154,11 @@ class Impl final : public DoubletSeedFinder {
       return isBottomCandidate ? middle - other : other - middle;
     };
 
-    // the number of candidates to look at; if they are sorted by radius, they
-    // end at the first candidate outside the radial range
-    std::size_t nCandidates = candidateSps.size();
-    if constexpr (sortedByR) {
-      const auto insideRadialRange = [&](const ConstSpacePointProxy& sp) {
-        const float deltaR = outerMinusInner(rM, sp.zr()[1]);
-        return isBottomCandidate ? deltaR >= m_cfg.deltaRMin
-                                 : deltaR <= m_cfg.deltaRMax;
-      };
-      nCandidates =
-          std::ranges::partition_point(candidateSps, insideRadialRange) -
-          candidateSps.begin();
-    }
-
-    // the candidates go through in blocks: in each block the cuts that need
-    // only z and r are made for every candidate first, then the cuts in the
-    // u-v frame for those that passed, then the other cuts for those that
-    // passed them too
+    // the candidates go through in blocks: the cuts that need only z and r
+    // are made for every candidate of a block first; those that passed are
+    // collected over the blocks and the groups, and the cuts in the u-v frame
+    // are made for them together, then the other cuts for those that passed
+    // them too
     constexpr std::size_t blockSize = 256;
     // measured difference with initialization
     // please don't remove this without profiling
@@ -206,74 +198,97 @@ class Impl final : public DoubletSeedFinder {
                                       xNewFrame, yNewFrame);
     };
 
-    for (std::size_t blockBegin = 0; blockBegin < nCandidates;
-         blockBegin += blockSize) {
-      const std::size_t blockCount =
-          std::min(blockSize, nCandidates - blockBegin);
-
-      // the z-r and time cuts for every candidate of the block, one flag each
+    // the groups' candidates go through the z-r and time cuts block by block
+    // until those that passed would no longer fit in a block, or the
+    // candidates end; then the other cuts are made for those collected
+    std::size_t group = 0;
+    std::size_t blockBegin = 0;
+    while (group < candidateSpGroups.size()) {
       std::uint32_t nPassed = 0;
-      for (std::size_t i = 0; i < blockCount; ++i) {
-        const std::size_t indexO = candidateIndex(blockBegin + i);
-        const auto& zrO = zrColumn[indexO];
-        const float deltaR = outerMinusInner(rM, zrO[1]);
-        const float deltaZ = outerMinusInner(zM, zrO[0]);
-
-        bool outside = false;
-        if constexpr (!sortedByR) {
-          outside = outsideRangeCheck(deltaR, m_cfg.deltaRMin, m_cfg.deltaRMax);
+      while (group < candidateSpGroups.size()) {
+        const CandidateSps& candidateSps = candidateSpGroups[group];
+        const std::size_t blockCount =
+            std::min(blockSize, candidateSps.size() - blockBegin);
+        if (nPassed + blockCount > blockSize) {
+          break;
         }
 
-        outside |= std::abs(deltaZ) > m_cfg.absDeltaZMax;
+        // the z-r and time cuts for every candidate of the block, one flag
+        // each
+        std::uint32_t nBlockPassed = 0;
+        for (std::size_t i = 0; i < blockCount; ++i) {
+          const std::size_t indexO =
+              candidateIndex(candidateSps, blockBegin + i);
+          const auto& zrO = zrColumn[indexO];
+          const float deltaR = outerMinusInner(rM, zrO[1]);
+          const float deltaZ = outerMinusInner(zM, zrO[0]);
 
-        // the longitudinal impact parameter zOrigin is defined as (zM - rM *
-        // cotTheta) where cotTheta is the ratio Z/R (forward angle) of space
-        // point duplet but instead we calculate (zOrigin * deltaR) and
-        // multiply collisionRegion by deltaR to avoid divisions
-        const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
-        // check if duplet origin on z axis within collision region
-        if constexpr (symmetricCollisionRegion) {
-          outside |=
-              std::abs(zOriginTimesDeltaR) > m_cfg.collisionRegionMax * deltaR;
-        } else {
-          outside |= outsideRangeCheck(zOriginTimesDeltaR,
-                                       m_cfg.collisionRegionMin * deltaR,
-                                       m_cfg.collisionRegionMax * deltaR);
+          // the radial cut is made here also for candidates sorted by
+          // radius: their range may be that of several middle space points
+          bool outside =
+              outsideRangeCheck(deltaR, m_cfg.deltaRMin, m_cfg.deltaRMax);
+
+          outside |= std::abs(deltaZ) > m_cfg.absDeltaZMax;
+
+          // the longitudinal impact parameter zOrigin is defined as (zM - rM *
+          // cotTheta) where cotTheta is the ratio Z/R (forward angle) of space
+          // point duplet but instead we calculate (zOrigin * deltaR) and
+          // multiply collisionRegion by deltaR to avoid divisions
+          const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
+          // check if duplet origin on z axis within collision region
+          if constexpr (symmetricCollisionRegion) {
+            outside |= std::abs(zOriginTimesDeltaR) >
+                       m_cfg.collisionRegionMax * deltaR;
+          } else {
+            outside |= outsideRangeCheck(zOriginTimesDeltaR,
+                                         m_cfg.collisionRegionMin * deltaR,
+                                         m_cfg.collisionRegionMax * deltaR);
+          }
+
+          // cotTheta = deltaZ / deltaR, compared without the division. The
+          // strip calibration moves deltaZ and deltaR, so there the cut comes
+          // after it
+          if constexpr (!stripCalibration) {
+            outside |= std::abs(deltaZ) > m_cfg.cotThetaMax * deltaR;
+          }
+
+          // check the time compatibility of the two space points. the time
+          // difference is corrected for the time of flight along the straight
+          // line between them, assuming an outgoing particle at the speed of
+          // light (which is 1 in ACTS units)
+          if constexpr (useTime) {
+            const auto& xyO = xyColumn[indexO];
+            const float distance =
+                fastHypot(xyO[0] - xM, xyO[1] - yM, zrO[0] - zM);
+            const float dt = outerMinusInner(tM, timeColumn[indexO]) - distance;
+            const float varianceDt = varianceTM + varianceTColumn[indexO];
+            outside |= dt * dt > m_cfg.timeCutNSigma2 * varianceDt;
+          }
+
+          passesZRTimeCuts[i] = outside ? 0 : 1;
+          nBlockPassed += passesZRTimeCuts[i];
         }
 
-        // cotTheta = deltaZ / deltaR, compared without the division. The strip
-        // calibration moves deltaZ and deltaR, so there the cut comes after it
-        if constexpr (!stripCalibration) {
-          outside |= std::abs(deltaZ) > m_cfg.cotThetaMax * deltaR;
+        // collect the indices of the candidates that passed, in order
+        if (nBlockPassed != 0) {
+          std::size_t next = nPassed;
+          for (std::size_t i = 0; i < blockCount; ++i) {
+            passedIndices[next] = static_cast<SpacePointIndex>(
+                candidateIndex(candidateSps, blockBegin + i));
+            next += passesZRTimeCuts[i];
+          }
+          nPassed += nBlockPassed;
         }
 
-        // check the time compatibility of the two space points. the time
-        // difference is corrected for the time of flight along the straight
-        // line between them, assuming an outgoing particle at the speed of
-        // light (which is 1 in ACTS units)
-        if constexpr (useTime) {
-          const auto& xyO = xyColumn[indexO];
-          const float distance =
-              fastHypot(xyO[0] - xM, xyO[1] - yM, zrO[0] - zM);
-          const float dt = outerMinusInner(tM, timeColumn[indexO]) - distance;
-          const float varianceDt = varianceTM + varianceTColumn[indexO];
-          outside |= dt * dt > m_cfg.timeCutNSigma2 * varianceDt;
+        blockBegin += blockCount;
+        if (blockBegin == candidateSps.size()) {
+          ++group;
+          blockBegin = 0;
         }
-
-        passesZRTimeCuts[i] = outside ? 0 : 1;
-        nPassed += passesZRTimeCuts[i];
       }
 
       if (nPassed == 0) {
         continue;
-      }
-
-      // collect the indices of the candidates that passed, in order
-      std::size_t next = 0;
-      for (std::size_t i = 0; i < blockCount; ++i) {
-        passedIndices[next] =
-            static_cast<SpacePointIndex>(candidateIndex(blockBegin + i));
-        next += passesZRTimeCuts[i];
       }
 
       if constexpr (!stripCalibration) {
@@ -473,15 +488,27 @@ class Impl final : public DoubletSeedFinder {
                       const MiddleSpInfo& middleSpInfo,
                       SpacePointContainer::ConstSubset candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
-    createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
-                       compatibleDoublets);
+    createDoubletsImpl(
+        middleSp, middleSpInfo,
+        std::span<const SpacePointContainer::ConstSubset>(&candidateSps, 1),
+        compatibleDoublets);
   }
 
   void createDoublets(const ConstSpacePointProxy& middleSp,
                       const MiddleSpInfo& middleSpInfo,
                       SpacePointContainer::ConstRange candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
-    createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
+    createDoubletsImpl(
+        middleSp, middleSpInfo,
+        std::span<const SpacePointContainer::ConstRange>(&candidateSps, 1),
+        compatibleDoublets);
+  }
+
+  void createDoublets(
+      const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,
+      std::span<const SpacePointContainer::ConstRange> candidateSpGroups,
+      DoubletsForMiddleSp& compatibleDoublets) const override {
+    createDoubletsImpl(middleSp, middleSpInfo, candidateSpGroups,
                        compatibleDoublets);
   }
 
@@ -498,15 +525,14 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
 
   using IsBottomCandidateOptions = BooleanOptions;
   using InteractionPointCutOptions = BooleanOptions;
-  using SortedByROptions = BooleanOptions;
   using UseTimeOptions = BooleanOptions;
   using StripCalibrationOptions = BooleanOptions;
   using SymmetricCollisionRegionOptions = BooleanOptions;
 
   using DoubletOptions =
       boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
-                              InteractionPointCutOptions, SortedByROptions,
-                              UseTimeOptions, StripCalibrationOptions,
+                              InteractionPointCutOptions, UseTimeOptions,
+                              StripCalibrationOptions,
                               SymmetricCollisionRegionOptions>;
 
   std::unique_ptr<DoubletSeedFinder> result;
@@ -515,17 +541,15 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
 
     using IsBottomCandidate = boost::mp11::mp_at_c<OptionType, 0>;
     using InteractionPointCut = boost::mp11::mp_at_c<OptionType, 1>;
-    using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
-    using UseTime = boost::mp11::mp_at_c<OptionType, 3>;
-    using StripCalibration = boost::mp11::mp_at_c<OptionType, 4>;
-    using SymmetricCollisionRegion = boost::mp11::mp_at_c<OptionType, 5>;
+    using UseTime = boost::mp11::mp_at_c<OptionType, 2>;
+    using StripCalibration = boost::mp11::mp_at_c<OptionType, 3>;
+    using SymmetricCollisionRegion = boost::mp11::mp_at_c<OptionType, 4>;
 
     const bool configIsBottomCandidate =
         config.candidateDirection == Direction::Backward();
 
     if (configIsBottomCandidate != IsBottomCandidate::value ||
         config.interactionPointCut != InteractionPointCut::value ||
-        config.spacePointsSortedByRadius != SortedByR::value ||
         config.useTime != UseTime::value ||
         config.stripCalibrationTolerance.has_value() !=
             StripCalibration::value ||
@@ -542,10 +566,9 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     }
 
     // create the implementation for the given configuration
-    result = std::make_unique<
-        Impl<IsBottomCandidate::value, InteractionPointCut::value,
-             SortedByR::value, UseTime::value, StripCalibration::value,
-             SymmetricCollisionRegion::value>>(config);
+    result = std::make_unique<Impl<
+        IsBottomCandidate::value, InteractionPointCut::value, UseTime::value,
+        StripCalibration::value, SymmetricCollisionRegion::value>>(config);
   });
   if (result == nullptr) {
     throw std::runtime_error(
