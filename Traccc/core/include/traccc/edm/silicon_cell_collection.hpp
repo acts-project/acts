@@ -105,17 +105,25 @@ class silicon_cell : public BASE {
   ///
   TRACCC_HOST_DEVICE
   auto& module_index() { return BASE::template get<4>(); }
-  /// The index of the module that this cell belongs to (const)
+  
+  /// User-defined data associated with the cell / strip (non-const)
   ///
-  /// Used to look up the module in @c traccc::silicon_detector_description.
+  /// An opaque 64-bit value carried along with each cell. It is not
+  /// interpreted by traccc, so client code can use it, for example, to
+  /// store an external identifier of the cell.
   ///
-  /// @return A (const) vector of <tt>unsigned int</tt> values
+  /// @return A (non-const) vector of <tt>std::uint64_t</tt> values
   ///
-  TRACCC_HOST_DEVICE
-  const auto& module_index() const { return BASE::template get<4>(); }
-
   TRACCC_HOST_DEVICE
   auto& user_data() { return BASE::template get<5>(); }
+  /// User-defined data associated with the cell / strip (const)
+  ///
+  /// An opaque 64-bit value carried along with each cell. It is not
+  /// interpreted by traccc, so client code can use it, for example, to
+  /// store an external identifier of the cell.
+  ///
+  /// @return A (const) vector of <tt>std::uint64_t</tt> values
+  ///
   TRACCC_HOST_DEVICE
   const auto& user_data() const { return BASE::template get<5>(); }
 
