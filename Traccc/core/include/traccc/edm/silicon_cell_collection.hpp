@@ -105,7 +105,15 @@ class silicon_cell : public BASE {
   ///
   TRACCC_HOST_DEVICE
   auto& module_index() { return BASE::template get<4>(); }
-  
+  /// The index of the module that this cell belongs to (const)
+  ///
+  /// Used to look up the module in @c traccc::silicon_detector_description.
+  ///
+  /// @return A (const) vector of <tt>unsigned int</tt> values
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& module_index() const { return BASE::template get<4>(); }
+
   /// User-defined data associated with the cell / strip (non-const)
   ///
   /// An opaque 64-bit value carried along with each cell. It is not
