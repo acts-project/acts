@@ -505,6 +505,33 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
   }
 }
 
+// Handling coincident additional surfaces must not leave a zero step constraint
+// when there is no next target. Only the step to the path limit is needed.
+BOOST_AUTO_TEST_CASE(AlreadyOnAdditionalSurfaceDoesNotConsumeStep) {
+  Propagator propagator{StraightLineStepper{}, VoidNavigator{}};
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx;
+
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+  auto first =
+      CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface();
+  auto second =
+      CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface();
+
+  decltype(propagator)::Options<> options{gctx, mctx};
+  options.navigation.registerAdditionalSurface(*first);
+  options.navigation.registerAdditionalSurface(*second);
+  options.pathLimit = 1_mm;
+  options.maxSteps = 1;
+
+  auto result = propagator.propagate(start, options);
+  BOOST_REQUIRE(result.ok());
+  CHECK_CLOSE_ABS(result->pathLength, 1_mm, 1_nm);
+  BOOST_CHECK_EQUAL(result->statistics.stepping.nSuccessfulSteps, 1);
+}
+
 // A target behind the start is not reached, so the caller selects the
 // direction
 BOOST_AUTO_TEST_CASE(TargetBehindStart) {

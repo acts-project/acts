@@ -110,6 +110,10 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
       }
       const IntersectionStatus preStepSurfaceStatus = *preStepSurfaceResult;
       if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
+        // The surface status installed a constraint for a target already
+        // reached. Release it before actors set constraints for the next step.
+        m_stepper.releaseStepSize(state.stepping,
+                                  ConstrainedStep::Type::Navigator);
         // The actors handled the current surface already
         if (&nextTarget.surface() == currentSurface) {
           ACTS_VERBOSE(
