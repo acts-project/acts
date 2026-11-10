@@ -156,8 +156,8 @@ void read_cells(edm::silicon_cell_collection::host& cells,
 
     // Add the cells to the output.
     for (const csv::cell& cell : cellz) {
-      cells.push_back(
-          {cell.channel0, cell.channel1, cell.value, cell.timestamp, ddIndex, DEFAULT_USER_DATA});
+      cells.push_back({cell.channel0, cell.channel1, cell.value, cell.timestamp,
+                       ddIndex, DEFAULT_USER_DATA});
     }
   }
 }
