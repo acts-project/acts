@@ -9,6 +9,7 @@
 #include "Acts/Definitions/Alignment.hpp"
 
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
@@ -31,6 +32,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 
@@ -249,11 +251,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
   auto c =
       py::class_<AA::Config>(m, "AlignmentAlgorithmConfig").def(py::init<>());
 
-  ACTS_PYTHON_STRUCT(c, inputMeasurements, inputProtoTracks,
-                     inputInitialTrackParameters, outputAlignmentParameters,
-                     alignedDetElements, chi2ONdfCutOff, align,
-                     alignedTransformUpdater, deltaChi2ONdfCutOff,
-                     maxNumIterations, maxNumTracks);
+  ACTS_PYTHON_STRUCT(
+      c, inputMeasurements, inputProtoTracks, inputInitialTrackParameters,
+      outputAlignmentFile, outputAlignmentIndexFile, trackingGeometry,
+      alignedDetElements, chi2ONdfCutOff, align, alignedTransformUpdater,
+      deltaChi2ONdfCutOff, maxNumIterations, maxNumTracks);
 
   c.def_property(
       "iterationState",
@@ -297,7 +299,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
       m, "AlignmentFunction");
 
   m.def("makeAlignmentFunction", &AA::makeAlignmentFunction,
-        py::arg("trackingGeometry"), py::arg("magneticField"));
+        py::arg("trackingGeometry"), py::arg("magneticField"),
+        py::arg("logLevel") = Acts::Logging::INFO);
 
   m.def("makeAlignedTransformUpdater", &makeAlignedTransformUpdater,
         py::arg("store"),
@@ -310,4 +313,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
                  std::move(cfg), getDefaultLogger("AlignmentAlgorithm", level));
            }),
            py::arg("config"), py::arg("level") = Acts::Logging::INFO);
+
+  m.def(
+      "surfacePlacement",
+      [](const Acts::Surface& s) { return s.surfacePlacement(); },
+      py::arg("surface"), py::return_value_policy::reference);
 }

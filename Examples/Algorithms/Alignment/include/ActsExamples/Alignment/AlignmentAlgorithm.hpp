@@ -8,8 +8,13 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -17,7 +22,11 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include <filesystem>
+#include <map>
 #include <memory>
+#include <mutex>
+#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -25,6 +34,8 @@ class MagneticFieldProvider;
 }
 
 namespace ActsExamples {
+
+class IAlignmentStore;
 
 class AlignmentGroup {
  public:
@@ -58,8 +69,6 @@ class AlignmentGroup {
 class AlignmentAlgorithm final : public IAlgorithm {
  public:
   using AlignmentResult = Acts::Result<ActsAlignment::AlignmentResult>;
-  using AlignmentParameters =
-      std::unordered_map<Acts::SurfacePlacementBase*, Acts::Transform3>;
   /// Alignment function that takes sets of input measurements, initial
   /// trackstate and alignment options and returns some alignment-specific
   /// result.
@@ -84,17 +93,25 @@ class AlignmentAlgorithm final : public IAlgorithm {
   /// contains shared_ptr anyway.
   static std::shared_ptr<AlignmentFunction> makeAlignmentFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
     /// Input proto tracks collection, i.e. groups of hit indices.
     std::string inputProtoTracks;
-    /// Input initial track parameter estimates for for each proto track.
+    /// Input initial track parameter estimates for each proto track.
     std::string inputInitialTrackParameters;
-    /// Output aligned parameters collection.
-    std::string outputAlignmentParameters;
+    /// Millepede-style 6-column alignment result. Unset skips the file.
+    /// An existing file is replaced only after the fit succeeds.
+    std::optional<std::filesystem::path> outputAlignmentFile;
+    /// Surface-index map for the labels in @c outputAlignmentFile. Unset
+    /// skips the file. Replaced only after the fit succeeds.
+    std::optional<std::filesystem::path> outputAlignmentIndexFile;
+    /// Geometry used to resolve source-link surfaces. Pass the same geometry
+    /// as @c makeAlignmentFunction.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Type erased fitter function.
     std::shared_ptr<AlignmentFunction> align;
     /// The aligned transform updater
@@ -109,7 +126,10 @@ class AlignmentAlgorithm final : public IAlgorithm {
     std::pair<std::size_t, double> deltaChi2ONdfCutOff = {10, 0.00001};
     /// Maximum number of iterations
     std::size_t maxNumIterations = 100;
-    /// Number of tracks to be used for alignment
+    /// Track cap for the fit. Non-positive disables it. The kept sample is the
+    /// leading tracks in event-number order; within one event, its leading
+    /// tracks. Events are held until @c finalize(), including when they run
+    /// in parallel.
     int maxNumTracks = -1;
     std::vector<AlignmentGroup> m_groups;
   };
@@ -117,17 +137,37 @@ class AlignmentAlgorithm final : public IAlgorithm {
   /// Constructor of the alignment algorithm
   ///
   /// @param cfg is the config struct to configure the algorithm
-  /// @param level is the logging level
+  /// @param logger is the logging instance
   explicit AlignmentAlgorithm(
       Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
-  /// Framework execute method of the alignment algorithm
+  /// Copy this event's measurements and track parameters.
+  /// The fit runs once in @c finalize().
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
+  /// Fit the kept sample and write the alignment result.
+  ProcessCode finalize() override;
+
+  /// Drop tracks and the alignment-store check from a previous run.
+  ProcessCode initialize() override;
+
  private:
+  struct CollectedChunk {
+    Acts::GeometryContext geoContext{
+        Acts::GeometryContext::dangerouslyDefaultConstruct()};
+    Acts::MagneticFieldContext magFieldContext;
+    Acts::CalibrationContext calibContext;
+    MeasurementContainer measurements;
+    std::vector<std::vector<IndexSourceLink>> sourceLinks;
+    TrackParametersContainer parameters;
+  };
+
+  /// Apply the track cap and merge. Contexts come from the lowest event.
+  CollectedChunk takeCollectedSample();
+
   Config m_cfg;
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
@@ -136,8 +176,15 @@ class AlignmentAlgorithm final : public IAlgorithm {
       this, "InputInitialTrackParameters"};
   ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
                                                          "InputProtoTracks"};
-  WriteDataHandle<AlignmentParameters> m_outputAlignmentParameters{
-      this, "OutputAlignmentParameters"};
+
+  // execute() may run concurrently. The mutex guards the chunks and the
+  // alignment-store check. initialize() clears both. finalize() runs after
+  // event processing.
+  mutable std::mutex m_collectionMutex;
+  mutable std::map<std::size_t, CollectedChunk> m_collectedChunks;
+  mutable const IAlignmentStore* m_alignmentStore = nullptr;
+  mutable bool m_alignmentStoreSeen = false;
+  mutable bool m_alignmentStoreMismatch = false;
 };
 
 }  // namespace ActsExamples
