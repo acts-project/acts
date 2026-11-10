@@ -115,7 +115,6 @@ class silicon_cell : public BASE {
   const auto& module_index() const { return BASE::template get<4>(); }
 
   TRACCC_HOST_DEVICE
-  // carries the real Athena Identifier alongside each cell
   auto& user_data() { return BASE::template get<5>(); }
   TRACCC_HOST_DEVICE
   const auto& user_data() const { return BASE::template get<5>(); }
@@ -184,7 +183,6 @@ using silicon_cell_collection =
                            vecmem::edm::type::vector<unsigned int>,
                            // user_data
                            vecmem::edm::type::vector<std::uint64_t> >;
-                           >;
 
 }  // namespace traccc::edm
 
