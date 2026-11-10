@@ -9,6 +9,7 @@
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <array>
@@ -22,7 +23,9 @@ namespace Acts::Experimental::detail {
 void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
                                        const detail::GbtsNodeView& nodeView,
                                        const std::array<float, 3>& varianceX,
-                                       const std::array<float, 2>& varianceY) {
+                                       const std::array<float, 2>& varianceY,
+                                       const bool calibrateStrips,
+                                       const float stripLengthFraction) {
   j = 0;
 
   // n2->n1
@@ -55,6 +58,41 @@ void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
   y[0] = n2.z();
   y[1] = (n1.z() - n2.z()) / (n1.r() - n2.r());
 
+  const auto* strip1 = nodeView.strip(pS.n1);
+  const auto* strip2 = nodeView.strip(pS.n2);
+  if (calibrateStrips && (strip1 != nullptr || strip2 != nullptr)) {
+    // as the graph builder: the chord turned by the pair's azimuth difference
+    // gives each end's tangent
+    const float cross = n1.x() * n2.y() - n1.y() * n2.x();
+    const float dot = n1.x() * n2.x() + n1.y() * n2.y();
+    const float turn = std::atan2(cross, dot);
+    const float ox = -dx;
+    const float oy = -dy;
+    const float dzc = n2.z() - n1.z();
+    float r1c = n1.r();
+    float z1c = n1.z();
+    float r2c = n2.r();
+    float z2c = n2.z();
+    std::array<float, 3> point{};
+    if (strip1 != nullptr &&
+        Acts::detail::calibrateOuterStripSpacePoint(
+            {ox + oy * turn, oy - ox * turn, dzc}, *strip1, point,
+            stripLengthFraction)) {
+      r1c = fastHypot(point[0], point[1]);
+      z1c = point[2];
+    }
+    if (strip2 != nullptr &&
+        Acts::detail::calibrateOuterStripSpacePoint(
+            {ox - oy * turn, oy + ox * turn, dzc}, *strip2, point,
+            stripLengthFraction)) {
+      r2c = fastHypot(point[0], point[1]);
+      z2c = point[2];
+    }
+    refY = r2c;
+    y[0] = z2c;
+    y[1] = (z1c - z2c) / (r1c - r2c);
+  }
+
   cx = {};
   cx[0][0] = varianceX[0];
   cx[1][1] = varianceX[1];
@@ -77,6 +115,19 @@ GbtsTrackingFilter::GbtsTrackingFilter(
 bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
                                 const detail::GbtsEdge& pS,
                                 detail::GbtsEdgeState& ts) const {
+  return updateImpl(nodeView, pS.n1, pS.n2, ts);
+}
+
+bool GbtsTrackingFilter::updateOutward(const detail::GbtsNodeView& nodeView,
+                                       const detail::GbtsEdge& pS,
+                                       detail::GbtsEdgeState& ts) const {
+  return updateImpl(nodeView, pS.n2, pS.n1, ts);
+}
+
+bool GbtsTrackingFilter::updateImpl(const detail::GbtsNodeView& nodeView,
+                                    const SpacePointIndex newNode,
+                                    const SpacePointIndex previousNode,
+                                    detail::GbtsEdgeState& ts) const {
   if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
     ACTS_DEBUG("Negative cov_x");
   }
@@ -90,8 +141,8 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   const float tau2 = ts.y[1] * ts.y[1];
   const float invSin2 = 1 + tau2;
 
-  const detail::GbtsNodeProxy n1 = nodeView[pS.n1];
-  const detail::GbtsNodeProxy n2 = nodeView[pS.n2];
+  const detail::GbtsNodeProxy n1 = nodeView[newNode];
+  const detail::GbtsNodeProxy n2 = nodeView[previousNode];
 
   const GbtsLayerType layerType1 = getLayerType(n2.layer());
 
@@ -115,10 +166,30 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
   std::array<std::array<float, 3>, 3> Cx{};
   std::array<std::array<float, 2>, 2> Cy{};
 
-  const float x = n1.x();
-  const float y = n1.y();
-  const float z = n1.z();
-  const float r = n1.r();
+  float x = n1.x();
+  float y = n1.y();
+  float z = n1.z();
+  float r = n1.r();
+
+  // A strip node goes where the path's direction crosses its strips: the
+  // transverse tangent of the fit at the node, in the frame the fit runs in,
+  // and dz/dr. The calibration does not depend on the direction's sign.
+  if (m_cfg.calibrateStrips) {
+    if (const auto* strip = nodeView.strip(n1.index()); strip != nullptr) {
+      const float slope = ts.x[1] + ts.x[2] * (x * ts.c + y * ts.s - ts.refX);
+      const float tx = ts.c - ts.s * slope;
+      const float ty = ts.s + ts.c * slope;
+      std::array<float, 3> point{};
+      if (Acts::detail::calibrateOuterStripSpacePoint(
+              {tx, ty, -ts.y[1] * fastHypot(tx, ty)}, *strip, point,
+              m_cfg.maxStripLengthFraction)) {
+        x = point[0];
+        y = point[1];
+        z = point[2];
+        r = fastHypot(x, y);
+      }
+    }
+  }
 
   const float refX = x * ts.c + y * ts.s;
   const float mx = -x * ts.s + y * ts.c;  // measured X[0]

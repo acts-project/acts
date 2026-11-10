@@ -203,7 +203,9 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     vSeedCandidates.emplace_back(origSeedQuality, false, vN, seedSplitFlag);
 
-    if (withFits) {
+    // pixelsInwardStripsOutward leaves the state at the innermost pixel with
+    // the strips outside it, which is not what the fit below describes
+    if (withFits && !filter.m_cfg.pixelsInwardStripsOutward) {
       // filter state at the innermost node, x' along the first edge (inwards)
       const double slope2 = 1. + static_cast<double>(rs.x[1]) * rs.x[1];
       vSeedCandidates.back().fit = GbtsSeedFit{
@@ -339,6 +341,13 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
   const auto maxLength = static_cast<std::uint32_t>(m_cfg.maxChainLength);
 
+  // Per edge, whether its inner (bit 0) and its outer (bit 1) node is a strip
+  // node: looked up once here instead of on every pass below.
+  constexpr std::uint8_t kInnerStrip = 1;
+  constexpr std::uint8_t kOuterStrip = 2;
+  const bool anyStrips = !nodeView.stripIndex.empty();
+  std::vector<std::uint8_t> stripEnds(anyStrips ? nEdges : 0, 0);
+
   // The level of an edge is the length of the longest chain of edges going
   // outwards from it. `vNei` only holds edges further in, which are created
   // later, so one pass in edge order settles it. Edges in chains longer than
@@ -346,6 +355,11 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   std::vector<std::uint32_t> level(nEdges, 1);
   for (std::uint32_t e = 0; e < nEdges; ++e) {
     const detail::GbtsEdge& edge = edgeStorage[e];
+    if (anyStrips) {
+      stripEnds[e] = static_cast<std::uint8_t>(
+          (nodeView.strip(edge.n1) != nullptr ? kInnerStrip : 0) |
+          (nodeView.strip(edge.n2) != nullptr ? kOuterStrip : 0));
+    }
     const std::uint32_t next = std::min(level[e] + 1, maxLength + 1);
     for (std::uint32_t k = 0; k < edge.nNei; ++k) {
       std::uint32_t& innerLevel = level[edge.vNei[k]];
@@ -377,6 +391,51 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     edgesToRoot[e] = length;
   }
 
+  // The same over chains of strips alone, which the strip-only search of
+  // `pixelsInwardStripsOutward` follows: it does not step into an edge ending
+  // on a pixel, so such an edge further in, of the particle or not, must not
+  // keep a strip chain from ending at its innermost strip edge.
+  constexpr std::uint8_t kStripStrip = kInnerStrip | kOuterStrip;
+  std::vector<std::uint32_t> stripEdgesToRoot(
+      filter.m_cfg.pixelsInwardStripsOutward && anyStrips ? nEdges : 0, 0);
+  if (!stripEdgesToRoot.empty()) {
+    for (std::uint32_t e = nEdges; e-- > 0;) {
+      if (level[e] > maxLength || stripEnds[e] != kStripStrip) {
+        continue;
+      }
+      const std::uint32_t nextLevel = level[e] + 1;
+      std::uint32_t length = 1;
+      if (nextLevel <= maxLength) {
+        const detail::GbtsEdge& edge = edgeStorage[e];
+        for (std::uint32_t k = 0; k < edge.nNei; ++k) {
+          const std::uint32_t inner = edge.vNei[k];
+          if (level[inner] == nextLevel && stripEnds[inner] == kStripStrip) {
+            length = std::max(length, stripEdgesToRoot[inner] + 1);
+          }
+        }
+      }
+      stripEdgesToRoot[e] = length;
+    }
+  }
+
+  // The chain length a head's path needs: `addTriplets` accepts one edge short
+  // at low eta
+  const auto minLengthOf = [&](const detail::GbtsEdge& head) {
+    std::uint32_t length = m_cfg.minSeedLevel;
+    if (m_cfg.addTriplets && length > 0 &&
+        std::abs(-std::log(head.p[0])) <= m_cfg.maxAbsEtaAddTriplets) {
+      --length;
+    }
+    return length;
+  };
+
+  // A mixed path on few pixels with too few strips: see `mixedMinStrips`
+  const auto tooFewStrips = [&](const std::uint32_t nPixels,
+                                const std::uint32_t nStrips) {
+    return m_cfg.mixedMinStrips > 0 && nPixels > 0 && nStrips > 0 &&
+           nPixels < m_cfg.mixedFewPixels && nStrips < m_cfg.mixedMinStrips;
+  };
+
   // From every edge, search all paths inwards to a root, fitting on the way.
   // The complete path with the best score per space point is the candidate
   // of the edge.
@@ -386,6 +445,22 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
   std::vector<std::uint32_t> bestPath;
   float bestQuality = 0;
   detail::GbtsEdgeState bestState;
+  // with `pixelsInwardStripsOutward`, the strip chains do not enter the pixels
+  bool stripsOnlyInward = false;
+
+  // the path from the head inwards, `path`, against `mixedMinStrips`
+  const auto pathTooFewStrips = [&]() {
+    if (m_cfg.mixedMinStrips == 0 || !anyStrips) {
+      return false;
+    }
+    std::uint32_t nStrips = 0;
+    for (const std::uint32_t e : path) {
+      nStrips += (stripEnds[e] & kOuterStrip) != 0 ? 1 : 0;
+    }
+    nStrips += (stripEnds[path.back()] & kInnerStrip) != 0 ? 1 : 0;
+    const auto nPixels = static_cast<std::uint32_t>(path.size()) + 1 - nStrips;
+    return tooFewStrips(nPixels, nStrips);
+  };
 
   const auto search = [&](const auto& self, const std::uint32_t e,
                           const detail::GbtsEdgeState& state) -> void {
@@ -393,7 +468,10 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     // every step goes one level up, so the depth is bounded by `maxLength`
     assert(path.size() <= maxLength);
 
-    if (edgesToRoot[e] == 1) {
+    // a strip-only chain ends at its innermost strip edge
+    const std::vector<std::uint32_t>& toRoot =
+        stripsOnlyInward ? stripEdgesToRoot : edgesToRoot;
+    if (toRoot[e] == 1) {
       // a root completes the chain
       const float quality = -state.j / static_cast<float>(path.size() + 1);
       const bool maxCurvatureCut =
@@ -401,7 +479,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
           std::abs(state.x[2]) * m_cfg.postFitCurvatureFactor >
               filter.m_cfg.maxCurvature;
       if (!maxCurvatureCut && path.size() >= minLength &&
-          quality < bestQuality) {
+          quality < bestQuality && !pathTooFewStrips()) {
         bestQuality = quality;
         bestState = state;
         bestPath = path;
@@ -411,7 +489,8 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
       for (std::uint32_t k = 0; k < edge.nNei; ++k) {
         const std::uint32_t inner = edge.vNei[k];
         if (level[inner] != level[e] + 1 ||
-            path.size() + edgesToRoot[inner] < minLength) {
+            path.size() + toRoot[inner] < minLength ||
+            (stripsOnlyInward && (stripEnds[inner] & kInnerStrip) == 0)) {
           continue;
         }
         detail::GbtsEdgeState innerState = state;
@@ -424,24 +503,199 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     path.pop_back();
   };
 
+  // a head's state, from the head edge alone
+  const auto startState = [&](const detail::GbtsEdge& head,
+                              detail::GbtsEdgeState& state) {
+    state.initialize(head, nodeView, filter.m_cfg.initialVarianceX,
+                     filter.m_cfg.initialVarianceY,
+                     filter.m_cfg.calibrateStrips,
+                     filter.m_cfg.maxStripLengthFraction);
+    return filter.update(nodeView, head, state);
+  };
+
+  if (filter.m_cfg.pixelsInwardStripsOutward && anyStrips) {
+    // The links from an edge to the edges further out that end on a strip,
+    // the ones the strip pickup follows: the same links as the inward search,
+    // the other way, with `vNei` inverted.
+    std::vector<std::uint32_t> outOffset(nEdges + 1, 0);
+    const auto isLink = [&](const std::uint32_t e, const std::uint32_t inner) {
+      return level[inner] <= maxLength && level[inner] == level[e] + 1;
+    };
+    for (std::uint32_t e = 0; e < nEdges; ++e) {
+      if ((stripEnds[e] & kOuterStrip) == 0) {
+        continue;
+      }
+      const detail::GbtsEdge& edge = edgeStorage[e];
+      for (std::uint32_t k = 0; k < edge.nNei; ++k) {
+        if (isLink(e, edge.vNei[k])) {
+          ++outOffset[edge.vNei[k] + 1];
+        }
+      }
+    }
+    for (std::uint32_t e = 0; e < nEdges; ++e) {
+      outOffset[e + 1] += outOffset[e];
+    }
+    std::vector<std::uint32_t> outLinks(outOffset[nEdges]);
+    std::vector<std::uint32_t> outFill(outOffset.begin(), outOffset.end() - 1);
+    for (std::uint32_t e = 0; e < nEdges; ++e) {
+      if ((stripEnds[e] & kOuterStrip) == 0) {
+        continue;
+      }
+      const detail::GbtsEdge& edge = edgeStorage[e];
+      for (std::uint32_t k = 0; k < edge.nNei; ++k) {
+        if (isLink(e, edge.vNei[k])) {
+          outLinks[outFill[edge.vNei[k]]++] = e;
+        }
+      }
+    }
+
+    // the best candidate per head edge so far
+    constexpr auto kNoCandidate = std::numeric_limits<std::uint32_t>::max();
+    std::vector<std::uint32_t> candidateOfHead(nEdges, kNoCandidate);
+    std::vector<float> qualityOfHead(nEdges,
+                                     std::numeric_limits<float>::max());
+    std::vector<FittedPath> headCandidates;
+    // `edges` from the head inwards
+    const auto store = [&](const std::uint32_t head,
+                           const detail::GbtsEdgeState& state,
+                           const float quality,
+                           const std::vector<std::uint32_t>& edges) {
+      qualityOfHead[head] = quality;
+      if (candidateOfHead[head] == kNoCandidate) {
+        candidateOfHead[head] =
+            static_cast<std::uint32_t>(headCandidates.size());
+        headCandidates.emplace_back(state, edges);
+      } else {
+        headCandidates[candidateOfHead[head]] = FittedPath{state, edges};
+      }
+    };
+
+    // The strips picked up outwards from a pixel path, `pixelPath` from its
+    // head inwards: each strip edge reached ends a candidate path of its own.
+    std::vector<std::uint32_t> pixelPath;
+    std::vector<std::uint32_t> stripPath;
+    std::vector<std::uint32_t> fullPath;
+    const auto extend = [&](const auto& self, const std::uint32_t e,
+                            const detail::GbtsEdgeState& state) -> void {
+      stripPath.push_back(e);
+      const auto total =
+          static_cast<std::uint32_t>(pixelPath.size() + stripPath.size());
+      const auto nPixels = static_cast<std::uint32_t>(pixelPath.size()) + 1;
+      const auto nStrips = static_cast<std::uint32_t>(stripPath.size());
+      const bool tooFew = tooFewStrips(nPixels, nStrips);
+      const bool maxCurvatureCut =
+          m_cfg.postFitCurvatureFactor > 0 &&
+          std::abs(state.x[2]) * m_cfg.postFitCurvatureFactor >
+              filter.m_cfg.maxCurvature;
+      const float quality = -state.j / static_cast<float>(total + 1);
+      if (!tooFew && !maxCurvatureCut && total >= minLengthOf(edgeStorage[e]) &&
+          quality < qualityOfHead[e]) {
+        fullPath.assign(stripPath.rbegin(), stripPath.rend());
+        fullPath.insert(fullPath.end(), pixelPath.begin(), pixelPath.end());
+        store(e, state, quality, fullPath);
+      }
+      // at most `level[e] - 1` strips are still to come, one per edge
+      if (!tooFew || nStrips + level[e] - 1 >= m_cfg.mixedMinStrips) {
+        for (std::uint32_t k = outOffset[e]; k < outOffset[e + 1]; ++k) {
+          const std::uint32_t outer = outLinks[k];
+          detail::GbtsEdgeState outerState = state;
+          if (filter.updateOutward(nodeView, edgeStorage[outer], outerState)) {
+            self(self, outer, outerState);
+          }
+        }
+      }
+      stripPath.pop_back();
+    };
+
+    // Each pixel head's best path, kept as a seed if long enough, then
+    // extended with strips from the head's outer node.
+    for (std::uint32_t head = 0; head < nEdges; ++head) {
+      const detail::GbtsEdge& headEdge = edgeStorage[head];
+      if ((stripEnds[head] & kOuterStrip) != 0 || edgesToRoot[head] == 0) {
+        continue;
+      }
+      // A head with no strip to extend to only needs a path long enough to be
+      // a seed of its own; one that can extend needs any path.
+      const bool canExtend = outOffset[head] != outOffset[head + 1];
+      minLength = canExtend ? 1 : minLengthOf(headEdge);
+      if (edgesToRoot[head] < minLength) {
+        continue;
+      }
+      detail::GbtsEdgeState state;
+      if (!startState(headEdge, state)) {
+        continue;
+      }
+      bestQuality = std::numeric_limits<float>::max();
+      bestPath.clear();
+      search(search, head, state);
+      if (bestPath.empty()) {
+        continue;
+      }
+      if (bestPath.size() >= minLengthOf(headEdge)) {
+        store(head, bestState, bestQuality, bestPath);
+      }
+      // too few pixels for a path that cannot reach enough strips
+      const auto nChainPixels = static_cast<std::uint32_t>(bestPath.size()) + 1;
+      if (m_cfg.mixedMinStrips > 0 && nChainPixels < m_cfg.mixedFewPixels &&
+          level[head] - 1 < m_cfg.mixedMinStrips) {
+        continue;
+      }
+      pixelPath = bestPath;
+      for (std::uint32_t k = outOffset[head]; k < outOffset[head + 1]; ++k) {
+        const std::uint32_t outer = outLinks[k];
+        detail::GbtsEdgeState outerState = bestState;
+        if (filter.updateOutward(nodeView, edgeStorage[outer], outerState)) {
+          extend(extend, outer, outerState);
+        }
+      }
+    }
+
+    // Chains of strips alone, inwards as usual.
+    stripsOnlyInward = true;
+    for (std::uint32_t head = 0; head < nEdges; ++head) {
+      const detail::GbtsEdge& headEdge = edgeStorage[head];
+      if ((stripEnds[head] & (kInnerStrip | kOuterStrip)) !=
+          (kInnerStrip | kOuterStrip)) {
+        continue;
+      }
+      minLength = minLengthOf(headEdge);
+      if (stripEdgesToRoot[head] == 0 || stripEdgesToRoot[head] < minLength) {
+        continue;
+      }
+      detail::GbtsEdgeState state;
+      if (!startState(headEdge, state)) {
+        continue;
+      }
+      bestQuality = std::numeric_limits<float>::max();
+      bestPath.clear();
+      search(search, head, state);
+      if (!bestPath.empty() && bestQuality < qualityOfHead[head]) {
+        store(head, bestState, bestQuality, bestPath);
+      }
+    }
+    stripsOnlyInward = false;
+
+    // in the order of the heads, as the inward search gives them
+    candidates.reserve(headCandidates.size());
+    for (std::uint32_t head = 0; head < nEdges; ++head) {
+      if (candidateOfHead[head] != kNoCandidate) {
+        candidates.push_back(std::move(headCandidates[candidateOfHead[head]]));
+      }
+    }
+    return candidates;
+  }
+
   for (std::uint32_t head = 0; head < nEdges; ++head) {
     const detail::GbtsEdge& headEdge = edgeStorage[head];
 
-    // `addTriplets` accepts a path one edge short at low eta
-    minLength = m_cfg.minSeedLevel;
-    if (m_cfg.addTriplets && minLength > 0 &&
-        std::abs(-std::log(headEdge.p[0])) <= m_cfg.maxAbsEtaAddTriplets) {
-      --minLength;
-    }
+    minLength = minLengthOf(headEdge);
 
     if (edgesToRoot[head] == 0 || edgesToRoot[head] < minLength) {
       continue;
     }
 
     detail::GbtsEdgeState state;
-    state.initialize(headEdge, nodeView, filter.m_cfg.initialVarianceX,
-                     filter.m_cfg.initialVarianceY);
-    if (!filter.update(nodeView, headEdge, state)) {
+    if (!startState(headEdge, state)) {
       continue;
     }
 

@@ -76,6 +76,13 @@ class GraphBasedTrackSeeder {
     /// exceeds `GbtsTrackingFilter::Config::maxCurvature`: a tighter minimum
     /// pT once the whole chain has been fitted. Values below 1 does nothing.
     float postFitCurvatureFactor = 0.0f;
+    /// A path with both pixel and strip space points but fewer than
+    /// `mixedFewPixels` pixel ones needs at least `mixedMinStrips` strip ones:
+    /// one or two loosely constrained strip points line up by chance, and
+    /// nearly every such short path finds no track. 0 switches it off.
+    std::uint32_t mixedMinStrips = 0;
+    /// See `mixedMinStrips`.
+    std::uint32_t mixedFewPixels = 4;
     // GbtsNodeStorage options
     /// Maximum endcap cluster width.
     float maxEndcapClusterWidth = 0.35f * Acts::UnitConstants::mm;

@@ -25,9 +25,15 @@ struct GbtsEdgeState final {
   /// @param nodeView View of the node positions and layers
   /// @param varianceX Initial variance of the transverse state
   /// @param varianceY Initial variance of the longitudinal state
+  /// @param calibrateStrips Start from the edge's strip ends calibrated with
+  ///        the edge's own direction
+  /// @param stripLengthFraction How far along a strip a calibrated crossing
+  ///        may land, as a multiple of the strip half-length
   void initialize(const GbtsEdge& pS, const GbtsNodeView& nodeView,
                   const std::array<float, 3>& varianceX,
-                  const std::array<float, 2>& varianceY);
+                  const std::array<float, 2>& varianceY,
+                  bool calibrateStrips = false,
+                  float stripLengthFraction = 1.1f);
 
   /// Score for comparison
   float j{};
