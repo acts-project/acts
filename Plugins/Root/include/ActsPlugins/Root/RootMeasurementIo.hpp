@@ -76,10 +76,6 @@ class RootMeasurementIo {
   void clear();
 
  private:
-  // Names of the bound parameters
-  static constexpr std::array<std::string, Acts::eBoundSize> bNames = {
-      "loc0", "loc1", "phi", "theta", "qop", "time"};
-
   /// The configuration for the accessor
   Config m_cfg;
 
