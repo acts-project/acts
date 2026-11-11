@@ -26,11 +26,7 @@ def test_structure_fixed_frame():
     rotation = np.array([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     frame = acts.Transform3(
         acts.Vector3(12.0, -8.0, 30.0),
-        acts.RotationMatrix3(
-            acts.Vector3(0.0, 1.0, 0.0),
-            acts.Vector3(-1.0, 0.0, 0.0),
-            acts.Vector3(0.0, 0.0, 1.0),
-        ),
+        acts.RotationMatrix3(*(acts.Vector3(*rotation[:, i]) for i in range(3))),
     )
     structure = alignment.AlignableStructure(
         acts.GeometryIdentifier(volume=1), transform=frame
