@@ -62,49 +62,38 @@ class ConcretePropagator : public PropagatorInterface {
     PropagationSummary summary(startParameters);
     RecordedMaterial recordedMaterial;
 
-    // The step length logger for testing & end of world aborter
+    // The step length logger for testing
     using MaterialInteractor = Acts::MaterialInteractor;
     using SteppingLogger = Acts::detail::SteppingLogger;
-    using EndOfWorld = Acts::EndOfWorldReached;
 
     // Actor list
     using ActorList =
-        Acts::ActorList<SteppingLogger, MaterialInteractor, EndOfWorld>;
+        Acts::ActorList<Acts::DefaultActor, SteppingLogger, MaterialInteractor>;
     using PropagatorOptions =
         typename propagator_t::template Options<ActorList>;
 
     PropagatorOptions options(context.recoGeoContext, context.magFieldContext);
+    options.stopAtEndOfWorld = true;
     // Activate loop protection at some pt value
     options.loopProtection =
         startParameters.transverseMomentum() < cfg.ptLoopers;
 
     // Switch the material interaction on/off & eventually into logging mode
-    auto& mInteractor = options.actorList.template get<MaterialInteractor>();
+    auto& mInteractor = options.actor.template get<MaterialInteractor>();
     mInteractor.multipleScattering = cfg.multipleScattering;
     mInteractor.energyLoss = cfg.energyLoss;
     mInteractor.recordInteractions = cfg.recordMaterialInteractions;
 
     // Switch the logger to sterile, e.g. for timing checks
-    auto& sLogger = options.actorList.template get<SteppingLogger>();
+    auto& sLogger = options.actor.template get<SteppingLogger>();
     sLogger.sterile = cfg.sterileLogger;
     // Set a maximum step size
     options.stepping.maxStepSize = cfg.maxStepSize;
 
     auto state = m_propagator.makeState(options);
 
-    auto resultInit = m_propagator.initialize(state, startParameters, nullptr);
-    if (!resultInit.ok()) {
-      return resultInit.error();
-    }
-
     // Propagate using the propagator
-    auto resultTmp = m_propagator.propagate(state);
-    if (!resultTmp.ok()) {
-      return resultTmp.error();
-    }
-
-    auto result =
-        m_propagator.makeResult(std::move(state), resultTmp, options, true);
+    auto result = m_propagator.propagate(state, startParameters);
     if (!result.ok()) {
       return result.error();
     }
@@ -116,7 +105,7 @@ class ConcretePropagator : public PropagatorInterface {
 
     // Collect the steps
     auto& steppingResults =
-        resultValue.template get<SteppingLogger::result_type>();
+        state.actorState.template get<SteppingLogger::state_type>();
     summary.steps = std::move(steppingResults.steps);
 
     summary.statistics = resultValue.statistics;
@@ -124,9 +113,8 @@ class ConcretePropagator : public PropagatorInterface {
 
     // Also set the material recording result - if configured
     if (cfg.recordMaterialInteractions) {
-      auto materialResult =
-          resultValue.template get<MaterialInteractor::result_type>();
-      recordedMaterial = std::move(materialResult);
+      recordedMaterial = std::move(
+          state.actorState.template get<MaterialInteractor::state_type>());
     }
 
     return std::pair{std::move(summary), std::move(recordedMaterial)};

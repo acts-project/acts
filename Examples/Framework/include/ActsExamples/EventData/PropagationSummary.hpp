@@ -42,7 +42,7 @@ struct PropagationSummary {
 using PropagationSummaries = std::vector<PropagationSummary>;
 
 /// Using some short hands for Recorded Material
-using RecordedMaterial = Acts::MaterialInteractor::result_type;
+using RecordedMaterial = Acts::MaterialInteractor::state_type;
 
 /// And recorded material track
 /// - this is start:  position, start momentum

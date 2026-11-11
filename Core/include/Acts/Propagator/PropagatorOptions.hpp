@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 
@@ -42,6 +42,9 @@ struct PurePropagatorPlainOptions {
   /// Absolute maximum path length
   double pathLimit = std::numeric_limits<double>::max();
 
+  /// Whether the @c DefaultActor stops the propagation at the end of the world
+  bool stopAtEndOfWorld = false;
+
   /// Loop protection step, it adapts the pathLimit
   bool loopProtection = true;
   /// Allowed loop fraction, 1 is a full loop
@@ -52,11 +55,13 @@ struct PurePropagatorPlainOptions {
 
   /// Constrain the propagation to selected volumes
   /// @note ignored if empty
-  /// @note requires `VolumeConstraintAborter` aborter
+  /// @note applied by the @c DefaultActor, so by every propagation with the
+  ///       default actor, and by the fitters
   std::vector<std::uint32_t> constrainToVolumeIds;
   /// Additional volumes to be considered as end of world
   /// @note ignored if empty
-  /// @note requires `VolumeConstraintAborter` aborter
+  /// @note applied by the @c DefaultActor, so by every propagation with the
+  ///       default actor, and by the fitters
   std::vector<std::uint32_t> endOfWorldVolumeIds;
 };
 
@@ -89,18 +94,19 @@ struct PropagatorPlainOptions : public detail::PurePropagatorPlainOptions {
 
 /// @brief Options for propagate() call
 ///
-/// @tparam actor_list_t List of action types called after each
-///    propagation step with the current propagation and stepper state
+/// @tparam actor_t The actor of the propagation. It is called at the start,
+///    after each step and at the end of the propagation, and it decides when
+///    the propagation stops.
 ///
 template <typename stepper_options_t, typename navigator_options_t,
-          typename actor_list_t = ActorList<>>
+          typename actor_t = DefaultActor>
 struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
   /// Type alias for stepper options
   using stepper_options_type = stepper_options_t;
   /// Type alias for navigator options
   using navigator_options_type = navigator_options_t;
-  /// Type alias for actor list
-  using actor_list_type = actor_list_t;
+  /// Type alias for the actor
+  using actor_type = actor_t;
 
   /// PropagatorOptions with context
   /// @param gctx Geometry context for propagation
@@ -132,35 +138,6 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
     return pOptions;
   }
 
-  /// @brief Expand the options with extended actors
-  ///
-  /// @tparam extended_actor_list_t Type of the new actor list
-  ///
-  /// @param extendedActorList The new actor list to be used (internally)
-  /// @return PropagatorOptions with the extended actor list
-  template <typename extended_actor_list_t>
-  PropagatorOptions<stepper_options_t, navigator_options_t,
-                    extended_actor_list_t>
-  extend(extended_actor_list_t extendedActorList) const {
-    PropagatorOptions<stepper_options_t, navigator_options_t,
-                      extended_actor_list_t>
-        eoptions(geoContext, magFieldContext);
-
-    // Copy the base options
-    static_cast<PurePropagatorPlainOptions&>(eoptions) =
-        static_cast<const PurePropagatorPlainOptions&>(*this);
-
-    // Stepper / Navigator options
-    eoptions.stepping = stepping;
-    eoptions.navigation = navigation;
-
-    // Action / Abort list
-    eoptions.actorList = std::move(extendedActorList);
-
-    // And return the options
-    return eoptions;
-  }
-
   /// @brief Set the plain options
   ///
   /// @param pOptions The plain options
@@ -184,8 +161,8 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
   /// Navigator options
   navigator_options_t navigation;
 
-  /// List of actions
-  actor_list_t actorList;
+  /// The actor of the propagation
+  actor_t actor;
 };
 
 }  // namespace Acts

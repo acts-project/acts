@@ -274,6 +274,35 @@ BOOST_AUTO_TEST_CASE(KeptAfterReachedGen1) {
   BOOST_CHECK_EQUAL(&target.surface(), additional.get());
 }
 
+// A kept surface is not offered again at the position where it was reached
+BOOST_AUTO_TEST_CASE(KeptNotReachedTwiceInPlaceGen1) {
+  ACTS_LOCAL_LOGGER(getDefaultLogger("Gen1", logLevel));
+  Telescope telescope = makeTelescopeGen1();
+  Navigator navigator = makeNavigator(telescope.geometry, logger());
+
+  auto additional = makeOutOfGeometrySurface({0, 0, 0.25_m});
+
+  Navigator::Options options(gctx);
+  options.registerAdditionalSurface(*additional, BoundaryTolerance::Infinite(),
+                                    nullptr, false);
+  Navigator::State state = navigator.makeState(options);
+  Vector3 position = Vector3::Zero();
+  const Vector3 direction = Vector3::UnitZ();
+  BOOST_REQUIRE(
+      navigator
+          .initialize(state, {.position = position, .direction = direction})
+          .ok());
+
+  NavigationTarget target = navigator.nextTarget(state, position, direction);
+  BOOST_REQUIRE(!target.isNone());
+  BOOST_REQUIRE_EQUAL(&target.surface(), additional.get());
+  stepOnto(position, direction, target.surface());
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
+
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(target.isNone() || &target.surface() != additional.get());
+}
+
 // A volume scopes the surface to that one volume
 
 BOOST_AUTO_TEST_CASE(ScopedToAVolumeGen3) {

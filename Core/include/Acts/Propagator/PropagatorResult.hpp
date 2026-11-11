@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Propagator/PropagatorStatistics.hpp"
-#include "Acts/Utilities/detail/Extendable.hpp"
 
 #include <optional>
 
@@ -18,14 +17,12 @@ namespace Acts {
 
 /// @brief Simple class holding result of propagation call
 ///
+/// The actor state stays in the propagator state. A caller that needs it runs
+/// the propagation on its own state and reads it there.
+///
 /// @tparam parameters_t Type of final track parameters
-/// @tparam result_list  Result pack for additional propagation
-///                      quantities
-template <typename parameters_t, typename... result_list>
-struct PropagatorResult : private detail::Extendable<result_list...> {
-  using detail::Extendable<result_list...>::get;
-  using detail::Extendable<result_list...>::tuple;
-
+template <typename parameters_t>
+struct PropagatorResult {
   /// Final track parameters
   std::optional<parameters_t> endParameters = std::nullopt;
 
