@@ -14,10 +14,10 @@
 namespace ActsExamples {
 
 void ChargeQuantizationConfig::validate() const {
-  if (bits < 1 || bits > 16 || !std::isfinite(offset) || !std::isfinite(step) ||
+  if (bits < 1 || bits > 24 || !std::isfinite(offset) || !std::isfinite(step) ||
       step <= 0.) {
     throw std::invalid_argument(
-        "Charge quantization requires 1..16 bits, finite offset and positive "
+        "Charge quantization requires 1..24 bits, finite offset and positive "
         "finite step");
   }
   const unsigned int maxCode = (1u << bits) - 1u;
@@ -30,9 +30,6 @@ void ChargeQuantizationConfig::validate() const {
 }
 
 double ChargeQuantizationConfig::quantize(double activation) const {
-  if (!enabled) {
-    return activation;
-  }
   if (!std::isfinite(activation)) {
     throw std::invalid_argument("Cannot quantize a non-finite activation");
   }

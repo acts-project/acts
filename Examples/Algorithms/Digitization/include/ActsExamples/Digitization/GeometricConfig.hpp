@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <map>
+#include <optional>
 #include <stdexcept>
 #include <system_error>
 #include <utility>
@@ -50,8 +51,8 @@ struct GeometricConfig {
   /// The threshold below a cell activation is ignored
   double threshold = 0.;
 
-  /// Readout applied after channel merging, before measurement weighting.
-  ChargeQuantizationConfig chargeQuantization;
+  /// Optional readout after channel merging, before measurement weighting.
+  std::optional<ChargeQuantizationConfig> chargeQuantization;
 
   /// Whether to assume digital readout (activation is either 0 or 1)
   bool digital = false;

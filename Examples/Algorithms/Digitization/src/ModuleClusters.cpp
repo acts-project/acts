@@ -250,7 +250,9 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) const {
   for (const ModuleValue& other : values) {
     if (std::holds_alternative<Cluster::Cell>(other.value)) {
       const double activation = std::get<Cluster::Cell>(other.value).activation;
-      weights.push_back(m_chargeQuantization.quantize(activation));
+      weights.push_back(m_chargeQuantization
+                            ? m_chargeQuantization->quantize(activation)
+                            : activation);
     } else {
       weights.push_back(1);
     }

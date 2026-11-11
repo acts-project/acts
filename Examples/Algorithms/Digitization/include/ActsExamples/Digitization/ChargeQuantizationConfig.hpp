@@ -10,11 +10,10 @@
 
 namespace ActsExamples {
 
-/// Linear readout of accepted, aggregated channel activations; disabled by
-/// default. Zero is reserved for absent cells; retained cells have
-/// codes 1..2^bits-1.
+/// Linear readout of accepted, aggregated channel activations.
+/// Zero is reserved for absent cells; retained cells have codes 1..2^bits-1.
 struct ChargeQuantizationConfig {
-  bool enabled = false;
+  /// At most 24 bits so integer codes remain exact in float32 cell writers.
   unsigned int bits = 4;
   double offset = 0.;
   double step = 1.;

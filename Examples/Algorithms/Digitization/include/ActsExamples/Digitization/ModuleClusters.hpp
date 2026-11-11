@@ -17,6 +17,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 
 #include <cstddef>
+#include <optional>
 #include <set>
 #include <utility>
 #include <variant>
@@ -70,7 +71,7 @@ class ModuleClusters {
   ModuleClusters(std::shared_ptr<const Acts::IMultiAxis> segmentation,
                  std::vector<Acts::BoundIndices> geoIndices, bool merge,
                  double nsigma, bool commonCorner,
-                 ChargeQuantizationConfig chargeQuantization = {})
+                 std::optional<ChargeQuantizationConfig> chargeQuantization = std::nullopt)
       : m_segmentation(std::move(segmentation)),
         m_geoIndices(std::move(geoIndices)),
         m_merge(merge),
@@ -111,7 +112,7 @@ class ModuleClusters {
   bool m_commonCorner;
 
   /// Native activations stay intact until squash(); readout defaults to off.
-  ChargeQuantizationConfig m_chargeQuantization;
+  std::optional<ChargeQuantizationConfig> m_chargeQuantization;
 
   /// Collect the unique cells, summing the activation of duplicates.
   ///

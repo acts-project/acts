@@ -101,12 +101,13 @@ DigitizationAlgorithm::DigitizationAlgorithm(
     const auto& digiCfg = m_cfg.digitizationConfigs.valueAt(i);
     geoCfg = digiCfg.geometricDigiConfig;
 
-    geoCfg.chargeQuantization.validate();
-    if (geoCfg.chargeQuantization.enabled &&
-        (!m_cfg.doMerge || geoCfg.digital || geoCfg.indices.empty())) {
-      throw std::invalid_argument(
-          "Charge quantization requires geometric digitization, "
-          "doMerge=true and digital=false");
+    if (geoCfg.chargeQuantization) {
+      geoCfg.chargeQuantization->validate();
+      if (!m_cfg.doMerge || geoCfg.digital || geoCfg.indices.empty()) {
+        throw std::invalid_argument(
+            "Charge quantization requires geometric digitization, "
+            "doMerge=true and digital=false");
+      }
     }
 
     if (!geoCfg.indices.empty() && geoCfg.segmentation == nullptr) {
