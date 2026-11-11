@@ -106,7 +106,9 @@ repos:
       language: python
       entry: CI/check_codegen_dependencies.sh
       additional_dependencies: ["uv"]
-      files: pyproject.toml$
+      # Only codegen/ consumes its compiled requirements.txt; keep in sync with
+      # the folder list in .github/workflows/update-pip-requirements.yml.
+      files: ^codegen/pyproject\.toml$
 
     - id: format-json
       name: Format JSON files (Python)
