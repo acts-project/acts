@@ -19,7 +19,7 @@ file(
     "include/detray/detectors/*.hpp"
 )
 
-detray_add_library( detray_detectors detectors ${_detray_detectors_headers})
+detray_add_library( detray_detectors detectors ${_detray_detector_headers})
 target_link_libraries(
     detray_detectors
     INTERFACE vecmem::core detray::core detray::io
@@ -67,43 +67,18 @@ foreach(_configuration IN LISTS DETRAY_GENERATE_METADATA)
         )
         continue()
     endif()
-    detray_add_metadata_header(detray_detectors "${_configuration}")
+    if(_configuration MATCHES "^([a-z][a-z0-9_]*)=(.+)$")
+        detray_add_metadata_header(detray_detectors "${CMAKE_MATCH_2}" ID "${CMAKE_MATCH_1}")
+    else()
+        detray_add_metadata_header(detray_detectors "${_configuration}")
+    endif()
 endforeach()
 
 unset(_detray_shipped_metadata)
 
-# The aggregate header follows the same metadata registrations as codegen.
-get_target_property(_metadata detray_detectors DETRAY_METADATA_NAMES)
-set(DETRAY_GENERATED_METADATA_CONTENT "")
-set(DETRAY_GENERATED_METADATA_LIST "")
-foreach(_name IN LISTS _metadata)
-    string(TOUPPER "${_name}" _macro)
-    string(
-        APPEND
-        DETRAY_GENERATED_METADATA_CONTENT
-        "#define DETRAY_HAS_${_macro}_METADATA\n"
-        "#include \"detray/detectors/${_name}_metadata.hpp\"\n"
-    )
-    string(APPEND DETRAY_GENERATED_METADATA_LIST " X(${_name})")
-endforeach()
-string(
-    APPEND
-    DETRAY_GENERATED_METADATA_CONTENT
-    "#define DETRAY_FOR_EACH_GENERATED_METADATA(X)${DETRAY_GENERATED_METADATA_LIST}\n"
+# All metadata families, including handwritten and external headers.
+detray_register_metadata(detray_detectors ID telescope
+    HEADER "detray/detectors/telescope_metadata.hpp"
+    TYPE "detray::telescope_metadata<@ALGEBRA@, detray::rectangle2D>"
 )
-set(_aggregate_dir
-    "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include"
-)
-configure_file(
-    include/detray/detectors/generated_metadata.hpp.in
-    ${_aggregate_dir}/detray/detectors/generated_metadata.hpp
-    @ONLY
-)
-target_include_directories(
-    detray_detectors
-    INTERFACE $<BUILD_INTERFACE:${_aggregate_dir}>
-)
-install(
-    FILES ${_aggregate_dir}/detray/detectors/generated_metadata.hpp
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/detray/detectors
-)
+detray_generate_metadata_registry(detray_detectors ${DETRAY_METADATA_PROVIDERS})

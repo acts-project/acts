@@ -28,7 +28,7 @@
 namespace traccc::io {
 
 /// All detector types that @c read_detector can construct
-using readable_detector_type_list = generated_detector_type_list;
+using readable_detector_type_list = available_detector_type_list;
 
 /// Populate a @c traccc::detector_design_description object from text files.
 ///

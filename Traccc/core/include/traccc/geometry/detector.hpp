@@ -20,67 +20,24 @@
 #include <detray/utils/quiet_log_end.hpp>
 // clang-format on
 
-#include <detray/detectors/default_metadata.hpp>
-// Metadata that was generated in this build (see DETRAY_GENERATE_METADATA)
-#include <detray/detectors/generated_metadata.hpp>
-#include <detray/detectors/odd_metadata.hpp>
-#include <detray/detectors/telescope_metadata.hpp>
-#include <detray/detectors/toy_metadata.hpp>
-#include <detray/detectors/wire_chamber_metadata.hpp>
-#include <detray/utils/tuple_helpers.hpp>
-
-// System include(s).
-#include <string_view>
-#include <tuple>
+#include <detray/detectors/metadata_registry.hpp>
 
 namespace traccc {
 
-/// Detray telescope detector (hand-written metadata).
-using telescope_detector = detray::host::detector<
-    detray::telescope_metadata<traccc::default_algebra, detray::rectangle2D>>;
-
-/// Name of a generated detector type
-///
-/// For the metadata @c detray::<name>_metadata the name is @c "<name>". It is
-/// used to match the detector name in a geometry file header.
-///
-/// @tparam detector_t the detector type
-template <typename detector_t>
-inline constexpr std::string_view generated_detector_name{};
-
-/// Detector types for all metadata generated in this build
-///
-/// For each metadata @c detray::<name>_metadata (see
-/// @c DETRAY_GENERATE_METADATA), define the detector type @c <name>_detector
-/// and its name @c generated_detector_name.
-///
-/// @note The generated metadata must be templated on the algebra type.
-/// @{
+/// Concrete aliases for every available metadata family. Backend instantiation
+/// remains controlled by TRACCC_SUPPORTED_DETECTORS.
 // clang-format off
-#define TRACCC_DEFINE_GENERATED_DETECTOR(NAME)                          \
-  using NAME##_detector = detray::host::detector<                       \
-      detray::NAME##_metadata<traccc::default_algebra>>;                \
-  template <>                                                           \
-  inline constexpr std::string_view                                     \
-      generated_detector_name<NAME##_detector> = #NAME;
-DETRAY_FOR_EACH_GENERATED_METADATA(TRACCC_DEFINE_GENERATED_DETECTOR)
-#undef TRACCC_DEFINE_GENERATED_DETECTOR
-
-#define TRACCC_GENERATED_DETECTOR_TUPLE(NAME) , std::tuple<NAME##_detector>
-/// List of all generated detector types (can be empty)
-using generated_detector_type_list = detray::detail::tuple_cat_t<
-    std::tuple<> DETRAY_FOR_EACH_GENERATED_METADATA(
-        TRACCC_GENERATED_DETECTOR_TUPLE)>;
-#undef TRACCC_GENERATED_DETECTOR_TUPLE
-
-#define TRACCC_GENERATED_METADATA_TUPLE(NAME) , std::tuple<detray::NAME##_metadata<traccc::default_algebra>>
-/// List of all generated detector types (can be empty)
-using generated_metadata_list = detray::detail::tuple_cat_t<
-    std::tuple<> DETRAY_FOR_EACH_GENERATED_METADATA(
-        TRACCC_GENERATED_METADATA_TUPLE)>;
-#undef TRACCC_GENERATED_METADATA_TUPLE
+#define TRACCC_DEFINE_DETECTOR(ID) \
+  using ID##_detector = detray::host::detector< \
+      detray::registry::ID##_metadata<traccc::default_algebra>>;
+DETRAY_FOR_EACH_METADATA(TRACCC_DEFINE_DETECTOR)
+#undef TRACCC_DEFINE_DETECTOR
 // clang-format on
-/// @}
+
+using available_detector_type_list =
+    detray::registry::detector_types<traccc::default_algebra>;
+using available_metadata_list =
+    detray::registry::metadata_types<traccc::default_algebra>;
 
 using default_detector_traits = detray::detector_traits<default_detector>;
 using wire_chamber = wire_chamber_detector;

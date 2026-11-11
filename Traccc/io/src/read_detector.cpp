@@ -90,7 +90,7 @@ void read_detector(host_detector& detector, vecmem::memory_resource& mr,
     ::read_detector<traccc::itk_detector>(detector, mr, payload, cfg);
 #endif
   } else if (!::read_generated_detector(
-                 static_cast<generated_metadata_list*>(nullptr), metadata,
+                 static_cast<available_metadata_list*>(nullptr), metadata,
                  detector, mr, payload, cfg)) {
     // TODO: Warning here
     ::read_detector<traccc::default_detector>(detector, mr, payload, cfg);

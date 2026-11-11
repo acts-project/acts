@@ -18,18 +18,12 @@ namespace traccc::sycl {
  * SYCL requires a little bit of extra massaging to make the kernel tags
  * work...
  */
-struct telescope_detector_kernel_tag {};
 
 template <typename T>
 struct detector_tag_selector {};
 
-template <>
-struct detector_tag_selector<traccc::telescope_detector> {
-  using type = telescope_detector_kernel_tag;
-};
-
-/// Kernel tags for all generated detector types
-/// (see traccc::generated_detector_type_list)
+/// Kernel tags for all available detector types
+/// (see traccc::available_detector_type_list)
 // clang-format off
 #define TRACCC_SYCL_GENERATED_DETECTOR_TAG(NAME)            \
   struct NAME##_detector_kernel_tag {};                     \
@@ -37,7 +31,7 @@ struct detector_tag_selector<traccc::telescope_detector> {
   struct detector_tag_selector<traccc::NAME##_detector> {   \
     using type = NAME##_detector_kernel_tag;                \
   };
-DETRAY_FOR_EACH_GENERATED_METADATA(TRACCC_SYCL_GENERATED_DETECTOR_TAG)
+DETRAY_FOR_EACH_METADATA(TRACCC_SYCL_GENERATED_DETECTOR_TAG)
 #undef TRACCC_SYCL_GENERATED_DETECTOR_TAG
 // clang-format on
 

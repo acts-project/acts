@@ -83,7 +83,13 @@ option(DETRAY_BUILD_CLI_TOOLS "Build the command line tools of Detray" OFF)
 set(DETRAY_GENERATE_METADATA
     ""
     CACHE STRING
-    "Semicolon-separated external /path/to/<name>_detector.py:configure selectors"
+    "Semicolon-separated [id=]/path/to/<name>_detector.py:configure selectors"
+)
+
+set(DETRAY_METADATA_PROVIDERS
+    ""
+    CACHE STRING
+    "Targets registering external metadata via detray_register_metadata"
 )
 
 # Device compilation
