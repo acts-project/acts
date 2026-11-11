@@ -204,7 +204,8 @@ class gbts_seeding_algorithm
   ///
   /// @param payload The payload for the kernels
   ///
-  virtual void gbts_sort_seeds_kernel(const gbts_fill_seeds_from_sorted_bids_payload& payload) const = 0;
+  virtual void gbts_sort_seeds_kernel(
+      const gbts_fill_seeds_from_sorted_bids_payload& payload) const = 0;
 
   /// GBTS seed conversion kernel launcher
   ///

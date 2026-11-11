@@ -328,7 +328,8 @@ void gbts_seeding_algorithm::gbts_bid_seeds_for_hits_kernel(
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
-void gbts_seeding_algorithm::gbts_sort_seeds_kernel(const device::gbts_fill_seeds_from_sorted_bids_payload& payload) const {
+void gbts_seeding_algorithm::gbts_sort_seeds_kernel(
+    const device::gbts_fill_seeds_from_sorted_bids_payload& payload) const {
   // sort seeds by their bid of quality-dropout_kind-proposal_index
   vecmem::device_vector<unsigned long long int> d_seed_bids(payload.seed_bids);
   thrust::sort(thrust::cuda::par_nosync(
@@ -336,9 +337,11 @@ void gbts_seeding_algorithm::gbts_sort_seeds_kernel(const device::gbts_fill_seed
                    .on(details::get_stream(stream())),
                d_seed_bids.begin(), d_seed_bids.begin() + payload.nSeeds,
                ::cuda::std::greater<unsigned long long int>());
-	const unsigned int n_threads = 128;
-	const unsigned int n_blocks = 1 + payload.nSeeds / n_threads;
-	kernels::gbts_fill_seeds_from_sorted_bids<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload);
+  const unsigned int n_threads = 128;
+  const unsigned int n_blocks = 1 + payload.nSeeds / n_threads;
+  kernels::gbts_fill_seeds_from_sorted_bids<<<n_blocks, n_threads, 0,
+                                              details::get_stream(stream())>>>(
+      payload);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
