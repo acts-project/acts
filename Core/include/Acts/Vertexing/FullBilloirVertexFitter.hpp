@@ -58,7 +58,7 @@ class FullBilloirVertexFitter {
     /// Legacy cache-taking linearizer; use fieldTrackLinearizer for new code
     TrackLinearizer trackLinearizer;
 
-    /// Query-taking linearizer, preferred by the field-query fit overload
+    /// Query-taking linearizer; mutually exclusive with trackLinearizer
     FieldTrackLinearizer fieldTrackLinearizer;
   };
 

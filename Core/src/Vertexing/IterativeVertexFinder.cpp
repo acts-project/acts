@@ -21,11 +21,11 @@ Acts::IterativeVertexFinder::IterativeVertexFinder(
         "provided.");
   }
 
-  if (!m_cfg.trackLinearizer.connected() &&
-      !m_cfg.fieldTrackLinearizer.connected()) {
+  if (m_cfg.trackLinearizer.connected() ==
+      m_cfg.fieldTrackLinearizer.connected()) {
     throw std::invalid_argument(
         "IterativeVertexFinder: "
-        "No track linearizer provided.");
+        "Configure exactly one track linearizer.");
   }
 
   if (!m_cfg.seedFinder) {

@@ -24,10 +24,10 @@ AdaptiveMultiVertexFitter::AdaptiveMultiVertexFitter(
         "from InputTrack_t provided.");
   }
 
-  if (!m_cfg.trackLinearizer.connected() &&
-      !m_cfg.fieldTrackLinearizer.connected()) {
+  if (m_cfg.trackLinearizer.connected() ==
+      m_cfg.fieldTrackLinearizer.connected()) {
     throw std::invalid_argument(
-        "AdaptiveMultiVertexFitter: No track linearizer provided.");
+        "AdaptiveMultiVertexFitter: Configure exactly one track linearizer.");
   }
 }
 

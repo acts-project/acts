@@ -36,6 +36,7 @@
 #include <memory>
 #include <numbers>
 #include <random>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -145,6 +146,15 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
   vertexFitterCfg.trackLinearizer =
       ActsTests::makeLegacyTrackLinearizer(linearizer);
+  // Reject ambiguous and missing linearizer configurations.
+  auto invalidCfg = vertexFitterCfg;
+  invalidCfg.fieldTrackLinearizer
+      .connect<&HelicalTrackLinearizer::linearizeTrackWithField>(&linearizer);
+  BOOST_CHECK_THROW(VertexFitter{invalidCfg}, std::invalid_argument);
+  invalidCfg.trackLinearizer = {};
+  invalidCfg.fieldTrackLinearizer = {};
+  BOOST_CHECK_THROW(VertexFitter{invalidCfg}, std::invalid_argument);
+
   VertexFitter billoirFitter(vertexFitterCfg);
   auto fieldCache = bField->makeCache(magFieldContext);
   MagneticFieldQuery field(*bField, magFieldContext);

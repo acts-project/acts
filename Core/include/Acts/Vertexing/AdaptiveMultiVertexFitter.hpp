@@ -162,7 +162,7 @@ class AdaptiveMultiVertexFitter {
     /// Legacy cache-taking linearizer; use fieldTrackLinearizer for new code
     TrackLinearizer trackLinearizer;
 
-    /// Query-taking track linearizer, preferred when connected
+    /// Query-taking linearizer; mutually exclusive with trackLinearizer
     FieldTrackLinearizer fieldTrackLinearizer;
   };
 

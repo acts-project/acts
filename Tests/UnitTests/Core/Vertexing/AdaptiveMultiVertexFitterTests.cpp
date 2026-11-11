@@ -39,6 +39,7 @@
 #include <memory>
 #include <numbers>
 #include <random>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -126,6 +127,17 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+
+  // Reject ambiguous and missing linearizer configurations.
+  auto invalidCfg = fitterCfg;
+  invalidCfg.fieldTrackLinearizer
+      .connect<&HelicalTrackLinearizer::linearizeTrackWithField>(&linearizer);
+  BOOST_CHECK_THROW(AdaptiveMultiVertexFitter{invalidCfg},
+                    std::invalid_argument);
+  invalidCfg.trackLinearizer = {};
+  invalidCfg.fieldTrackLinearizer = {};
+  BOOST_CHECK_THROW(AdaptiveMultiVertexFitter{invalidCfg},
+                    std::invalid_argument);
 
   AdaptiveMultiVertexFitter fitter(std::move(fitterCfg));
 

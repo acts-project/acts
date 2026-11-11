@@ -120,7 +120,7 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> field;
 
-    /// Query-taking track linearizer, preferred when connected
+    /// Query-taking linearizer; mutually exclusive with trackLinearizer
     FieldTrackLinearizer fieldTrackLinearizer;
   };
 
