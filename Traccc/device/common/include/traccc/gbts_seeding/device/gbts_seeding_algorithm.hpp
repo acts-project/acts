@@ -202,12 +202,9 @@ class gbts_seeding_algorithm
 
   /// GBTS seed sorting kernel launcher
   ///
-  /// @param seed_bids The array of bids to sort
-  /// €param nSeeds The number of seeds to sort
+  /// @param payload The payload for the kernels
   ///
-  virtual void gbts_sort_seeds_kernel(
-      const vecmem::data::vector_view<unsigned long long int> seed_bids,
-      const unsigned int nSeeds) const = 0;
+  virtual void gbts_sort_seeds_kernel(const gbts_fill_seeds_from_sorted_bids_payload& payload) const = 0;
 
   /// GBTS seed conversion kernel launcher
   ///
