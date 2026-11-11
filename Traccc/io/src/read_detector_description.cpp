@@ -131,7 +131,6 @@ void read_json_dd(traccc::detector_design_description::host& det_desc,
       detector, [&](const auto& concrete_detector) {
         read_json_dd_impl(det_desc, det_cond, concrete_detector, digi, cond);
       });
-
 }
 
 }  // namespace

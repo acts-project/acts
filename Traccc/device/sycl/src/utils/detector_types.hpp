@@ -18,32 +18,14 @@ namespace traccc::sycl {
  * SYCL requires a little bit of extra massaging to make the kernel tags
  * work...
  */
-struct default_detector_kernel_tag {};
-struct toy_detector_kernel_tag {};
 struct telescope_detector_kernel_tag {};
-struct odd_detector_kernel_tag {};
 
 template <typename T>
 struct detector_tag_selector {};
 
 template <>
-struct detector_tag_selector<traccc::default_detector> {
-  using type = default_detector_kernel_tag;
-};
-
-template <>
-struct detector_tag_selector<traccc::toy_detector> {
-  using type = toy_detector_kernel_tag;
-};
-
-template <>
 struct detector_tag_selector<traccc::telescope_detector> {
   using type = telescope_detector_kernel_tag;
-};
-
-template <>
-struct detector_tag_selector<traccc::odd_detector> {
-  using type = odd_detector_kernel_tag;
 };
 
 /// Kernel tags for all generated detector types

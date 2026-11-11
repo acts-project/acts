@@ -78,17 +78,32 @@ set(DETRAY_GENERATED_METADATA_CONTENT "")
 set(DETRAY_GENERATED_METADATA_LIST "")
 foreach(_name IN LISTS _metadata)
     string(TOUPPER "${_name}" _macro)
-    string(APPEND DETRAY_GENERATED_METADATA_CONTENT
+    string(
+        APPEND
+        DETRAY_GENERATED_METADATA_CONTENT
         "#define DETRAY_HAS_${_macro}_METADATA\n"
-        "#include \"detray/detectors/${_name}_metadata.hpp\"\n")
+        "#include \"detray/detectors/${_name}_metadata.hpp\"\n"
+    )
     string(APPEND DETRAY_GENERATED_METADATA_LIST " X(${_name})")
 endforeach()
-string(APPEND DETRAY_GENERATED_METADATA_CONTENT
-    "#define DETRAY_FOR_EACH_GENERATED_METADATA(X)${DETRAY_GENERATED_METADATA_LIST}\n")
-set(_aggregate_dir "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include")
-configure_file(include/detray/detectors/generated_metadata.hpp.in
-    ${_aggregate_dir}/detray/detectors/generated_metadata.hpp @ONLY)
-target_include_directories(detray_detectors INTERFACE
-    $<BUILD_INTERFACE:${_aggregate_dir}>)
-install(FILES ${_aggregate_dir}/detray/detectors/generated_metadata.hpp
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/detray/detectors)
+string(
+    APPEND
+    DETRAY_GENERATED_METADATA_CONTENT
+    "#define DETRAY_FOR_EACH_GENERATED_METADATA(X)${DETRAY_GENERATED_METADATA_LIST}\n"
+)
+set(_aggregate_dir
+    "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/include"
+)
+configure_file(
+    include/detray/detectors/generated_metadata.hpp.in
+    ${_aggregate_dir}/detray/detectors/generated_metadata.hpp
+    @ONLY
+)
+target_include_directories(
+    detray_detectors
+    INTERFACE $<BUILD_INTERFACE:${_aggregate_dir}>
+)
+install(
+    FILES ${_aggregate_dir}/detray/detectors/generated_metadata.hpp
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/detray/detectors
+)
