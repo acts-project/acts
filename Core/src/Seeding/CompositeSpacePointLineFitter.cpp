@@ -8,6 +8,9 @@
 
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 
+#include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+
 namespace Acts::Experimental {
 
 CompositeSpacePointLineFitter::CompositeSpacePointLineFitter(
@@ -22,6 +25,92 @@ CompositeSpacePointLineFitter::fastFitterCfg() const {
   fastCfg.maxIter = m_cfg.maxIter;
   fastCfg.precCutOff = m_cfg.precCutOff;
   return fastCfg;
+}
+
+void CompositeSpacePointLineFitter::toChamberFrame(
+    FastFitter_t::FitResult& result, const Vector_t& eY, const Vector_t& eZ,
+    const std::size_t coord) {
+  // Line of the fast fit: through y0' eY with direction sin(angle) eY + cos(angle) eZ. Its slope dc/dz in the
+  // chamber and, as in the seeder, its intersection with the z = 0 plane: c = y0' (eY.c - eY.z slope)
+  const double sinA = std::sin(result.theta);
+  const double cosA = std::cos(result.theta);
+  const auto dir = copySign<Vector_t, double>(sinA * eY + cosA * eZ, sinA);
+  assert(std::abs(dir.z()) > std::numeric_limits<double>::epsilon());
+  const double slope = dir[coord] / dir.z();
+  auto isect = PlanarHelper::intersectPlane(result.y0 * eY, dir, Vector_t::UnitZ(), 0.);
+  assert(isect.isValid());
+  // Derivative of the direction w.r.t. the angle, with the same sign as dir
+  const auto dDir = copySign<Vector_t, double>(cosA * eY - sinA * eZ, sinA);
+  const double dSlope = (dDir[coord] * dir.z() - dir[coord] * dDir.z()) / Acts::square(dir.z());
+  const double dPosdY0 = eY[coord] - eY.z() * slope;
+  const double dPosdA = -result.y0 * eY.z() * dSlope;
+  // Jacobian ((c, slope) w.r.t. (y0', angle)) = ((dPosdY0, dPosdA), (0, dSlope))
+  const double varY0 = Acts::square(result.dY0);
+  const double varA = Acts::square(result.dTheta);
+  const double covY0A = result.covY0Theta;
+  result.y0 = isect.position()[coord];
+  result.theta = slope;
+  result.dY0 = std::sqrt(Acts::square(dPosdY0) * varY0 + 2. * dPosdY0 * dPosdA * covY0A +
+                         Acts::square(dPosdA) * varA);
+  result.covY0Theta = (dPosdY0 * covY0A + dPosdA * varA) * dSlope;
+  result.dTheta = std::abs(dSlope) * result.dTheta;
+}
+
+void CompositeSpacePointLineFitter::fastFitCovariance(
+    const FastFitter_t::FitResult& planeResult, const std::size_t coord,
+    const Vector_t& lineDir, CovMat_t& cov) {
+  using enum FitParIndex;
+  const bool bending = coord == Acts::eY;
+  const auto iPos = toUnderlying(bending ? y0 : x0);
+  const auto iAng = toUnderlying(bending ? theta : phi);
+  
+  const double dirTheta = VectorHelpers::theta(lineDir);
+  const double sinPhi = std::sin(VectorHelpers::phi(lineDir));
+  if (std::abs(sinPhi) < std::numeric_limits<double>::epsilon()) {
+    return;
+  }
+  /// Jacobian of the angle w.r.t. the slope
+  const double dAng = bending ? Acts::square(std::cos(dirTheta)) / sinPhi
+                              : -1. / (std::tan(dirTheta) * sinPhi);
+  cov(iPos, iPos) = Acts::square(planeResult.dY0);
+  cov(iAng, iAng) = Acts::square(dAng * planeResult.dTheta);
+  cov(iPos, iAng) = cov(iAng, iPos) = dAng * planeResult.covY0Theta;
+}
+
+void CompositeSpacePointLineFitter::fastFitCovariance(
+    const FastFitter_t::FitResult& precResult,
+    const FastFitter_t::FitResult& nonPrecResult, const Vector_t& lineDir,
+    CovMat_t& cov) {
+  using enum FitParIndex;
+  const auto iY0 = toUnderlying(y0);
+  const auto iTh = toUnderlying(theta);
+  const auto iX0 = toUnderlying(x0);
+  const auto iPh = toUnderlying(phi);
+  // Slopes of the fitted line
+  const double tanAlpha = lineDir.x() / lineDir.z();
+  const double tanBeta = lineDir.y() / lineDir.z();
+  const double rho2 = Acts::square(tanAlpha) + Acts::square(tanBeta);
+  // A direction along z has no phi
+  if (rho2 < std::numeric_limits<double>::epsilon()) {
+    return;
+  }
+  const double rho = std::sqrt(rho2);
+  // Jacobian of (theta, phi) w.r.t. (tanBeta, tanAlpha)
+  const double dThdTb = tanBeta / (rho * (1. + rho2));
+  const double dThdTa = tanAlpha / (rho * (1. + rho2));
+  const double dPhdTb = tanAlpha / rho2;
+  const double dPhdTa = -tanBeta / rho2;
+  const double varTanB = Acts::square(precResult.dTheta);
+  const double varTanA = Acts::square(nonPrecResult.dTheta);
+  cov(iY0, iY0) = Acts::square(precResult.dY0);
+  cov(iX0, iX0) = Acts::square(nonPrecResult.dY0);
+  cov(iTh, iTh) = Acts::square(dThdTb) * varTanB + Acts::square(dThdTa) * varTanA;
+  cov(iPh, iPh) = Acts::square(dPhdTb) * varTanB + Acts::square(dPhdTa) * varTanA;
+  cov(iTh, iPh) = cov(iPh, iTh) = dThdTb * dPhdTb * varTanB + dThdTa * dPhdTa * varTanA;
+  cov(iY0, iTh) = cov(iTh, iY0) = precResult.covY0Theta * dThdTb;
+  cov(iY0, iPh) = cov(iPh, iY0) = precResult.covY0Theta * dPhdTb;
+  cov(iX0, iTh) = cov(iTh, iX0) = nonPrecResult.covY0Theta * dThdTa;
+  cov(iX0, iPh) = cov(iPh, iX0) = nonPrecResult.covY0Theta * dPhdTa;
 }
 
 std::vector<CompositeSpacePointLineFitter::FitParIndex>

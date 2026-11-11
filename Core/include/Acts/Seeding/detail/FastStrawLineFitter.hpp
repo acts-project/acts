@@ -92,6 +92,8 @@ class FastStrawLineFitter {
     double y0{0.};
     /// Uncertainty on the intercept
     double dY0{0.};
+    /// Covariance between the intercept and the angle
+    double covY0Theta{0.};
     /// Evaluated chi2 postfit
     double chi2{0.};
     /// Number of degrees of freedom

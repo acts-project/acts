@@ -46,7 +46,7 @@ void FastStrawLineFitter::FitAuxiliaries::print(std::ostream& ostr) const {
        << std::format("y0: {:.3f}", fitY0)
        << std::format(", norm: {:.3f}", covNorm) << ", nDoF: " << nDoF;
 }
-void FastStrawLineFitter::FitAuxiliariesWithT0::print(
+void FastStrawLineFitter::FitAuxiliariesWithT0 ::print(
     std::ostream& ostr) const {
   ostr << std::format("R_vr: {:.3f}, ", R_vr);
   ostr << std::format("R_ar: {:.3f}, ", R_ar);
@@ -109,11 +109,12 @@ void FastStrawLineFitter::completeResult(const FitAuxiliaries& fitPars,
   const double secTheta = 1. / std::cos(result.theta);
   result.y0 =
       fitPars.centerY - fitPars.centerZ * tanTheta + fitPars.fitY0 * secTheta;
-  result.dY0 = Acts::fastHypot(-fitPars.centerZ * Acts::square(secTheta) +
-                                   fitPars.fitY0 * secTheta * tanTheta,
-                               secTheta);
 
-  result.dY0 *= result.dTheta;
+  const double dY0dTheta = -fitPars.centerZ * Acts::square(secTheta) +
+                           fitPars.fitY0 * secTheta * tanTheta;
+  result.dY0 = Acts::fastHypot(dY0dTheta * result.dTheta,
+                               std::sqrt(fitPars.covNorm) * secTheta);
+  result.covY0Theta = dY0dTheta * Acts::square(result.dTheta);
   ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit succeeded " << result);
 }
 

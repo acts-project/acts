@@ -247,6 +247,35 @@ class CompositeSpacePointLineFitter {
   /// @param parValue: Value of the line parameter to check
   /// @param fitPar: Parameter index to which the value corresponds and which interval shall be picked
   bool withinRange(const double parValue, const FitParIndex fitPar) const;
+  /// Converts in place a fast fit done in the (eY, eZ) frame of its reference hit to the chamber frame: the
+  /// angle is replaced by the slope dc/dz of the line and the intercept by its coordinate c at z = 0, with
+  /// their uncertainties and covariance
+  /// @param result: Fast fit result to convert
+  /// @param eY: Measurement axis of the reference hit
+  /// @param eZ: Plane normal of the reference hit
+  /// @param coord: Chamber coordinate measured by the fit (x for the non-bending, y for the bending fit)
+  static void toChamberFrame(FastFitter_t::FitResult& result, const Vector_t& eY,
+                             const Vector_t& eZ, const std::size_t coord);
+  /// Covariance of the line parameters from the fast fit in one plane alone. The parameters of the other
+  /// plane are not fitted and keep their identity rows: in the bending plane theta is the polar angle at
+  /// fixed phi, in the non-bending plane phi is the azimuth at fixed theta.
+  /// @param planeResult: Fast fit in one plane, in the chamber frame ((tanBeta, y0) or (tanAlpha, x0))
+  /// @param coord: Chamber coordinate measured by the fit (y for the bending, x for the non-bending fit)
+  /// @param lineDir: Direction of the fitted line
+  /// @param cov: Covariance whose (y0, theta) or (x0, phi) block is set
+  static void fastFitCovariance(const FastFitter_t::FitResult& planeResult,
+                                const std::size_t coord,
+                                const Vector_t& lineDir, CovMat_t& cov);
+  /// Covariance of the line parameters from the fast fits in the bending and in the non-bending plane:
+  /// (y0, x0, tanBeta, tanAlpha) -> (y0, theta, x0, phi), theta = atan(|(tanAlpha, tanBeta)|),
+  /// phi = atan2(tanBeta, tanAlpha)
+  /// @param precResult: Fast fit in the bending plane, in the chamber frame (tanBeta, y0)
+  /// @param nonPrecResult: Fast fit in the non-bending plane, in the chamber frame (tanAlpha, x0)
+  /// @param lineDir: Direction of the fitted line
+  /// @param cov: Covariance whose (y0, theta, x0, phi) block is set
+  static void fastFitCovariance(const FastFitter_t::FitResult& precResult,
+                                const FastFitter_t::FitResult& nonPrecResult,
+                                const Vector_t& lineDir, CovMat_t& cov);
   /// Abrivation of the fit result returned by the FastStrawLineFitter
   using FastFitResult = std::optional<FastFitter_t::FitResult>;
   using FastFitResultT0 = std::optional<FastFitter_t::FitResultT0>;
