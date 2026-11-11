@@ -16,7 +16,7 @@ namespace traccc {
 /// Header: unsigned int for the number of lin_circles per spacepoint bin
 
 /// Item: transformed coordinate of doublet of middle-bottom or middle-top
-struct lin_circle {
+struct alignas(8) lin_circle {
   // z origin
   scalar m_Zo;
   // cotangent of pitch angle
