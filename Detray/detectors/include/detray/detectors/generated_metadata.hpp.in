@@ -20,10 +20,8 @@
 ///   @c X(<name>) for each included header. Use it to write code for all
 ///   generated metadata types, without naming them.
 ///
-/// @note Generated headers with the same name as a static header in
-/// @c detray/detectors are not included and not in the X-macro.
-/// @note If no metadata is generated, the X-macro expands to nothing.
+/// @note Hand-written metadata (such as telescope) is not in the X-macro.
 
 // clang-format off
 @DETRAY_GENERATED_METADATA_CONTENT@
-// clang-format on
+    // clang-format on
