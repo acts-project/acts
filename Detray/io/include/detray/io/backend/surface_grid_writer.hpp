@@ -39,13 +39,10 @@ class surface_grid_writer : public detail::grid_writer {
   /// Convert the header information into its payload
   /// @tparam detector_t Detector type to serialize.
   /// @param det Detector whose surface grids are written.
-  /// @param det_name Name recorded in the serialized header.
   /// @return Header payload describing the surface grids.
   template <detray::concepts::detector detector_t>
-  static auto header_to_payload(const detector_t& det,
-                                const std::string_view det_name) {
-    return grid_writer_t::header_to_payload(tag, det.accelerator_store(),
-                                            det_name);
+  static auto to_header_payload(const detector_t& det) {
+    return grid_writer_t::to_header_payload(det.accelerator_store());
   }
 
   /// Convert the grid collections of a detector @p det into their io
