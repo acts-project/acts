@@ -133,6 +133,73 @@ BOOST_AUTO_TEST_CASE(ContextualStructureFrame) {
                   first.matrix(), 1e-14);
 }
 
+BOOST_AUTO_TEST_CASE(StructureFrameReplacement) {
+  struct FrameContext {
+    Transform3 transform;
+  };
+  const Transform3 first =
+      Translation3(12_mm, -5_mm, 70_mm) * AngleAxis3(0.4_rad, Vector3::UnitZ());
+  const Transform3 second = Translation3(-18_mm, 9_mm, 80_mm) *
+                            AngleAxis3(-0.2_rad, Vector3::UnitY());
+  const GeometryContext firstContext{FrameContext{first}};
+  const GeometryContext secondContext{FrameContext{second}};
+  auto structure =
+      std::make_shared<AlignableStructure>(GeometryIdentifier().withVolume(1));
+  auto element = makeDummyElement(Transform3::Identity());
+  structure->addSurface(element->surface().getSharedPtr());
+  const AlignmentHierarchy hierarchy({structure});
+  BOOST_REQUIRE(hierarchy.validate().ok());
+
+  BOOST_CHECK_THROW(
+      structure->setTransform(AlignableStructure::TransformProvider{}),
+      std::invalid_argument);
+  BOOST_CHECK(!structure->hasTransform());
+
+  Transform3 supplied = first;
+  structure->setTransform(supplied);
+  supplied.setIdentity();
+  BOOST_REQUIRE(structure->hasTransform());
+  CHECK_CLOSE_ABS(structure->localToGlobalTransform(firstContext).matrix(),
+                  first.matrix(), 1e-14);
+
+  const auto provider = [](const GeometryContext& gctx) {
+    return gctx.get<FrameContext>().transform;
+  };
+  structure->setTransform(provider);
+  CHECK_CLOSE_ABS(structure->localToGlobalTransform(firstContext).matrix(),
+                  first.matrix(), 1e-14);
+  CHECK_CLOSE_ABS(structure->localToGlobalTransform(secondContext).matrix(),
+                  second.matrix(), 1e-14);
+  BOOST_CHECK_THROW(
+      structure->setTransform(AlignableStructure::TransformProvider{}),
+      std::invalid_argument);
+  CHECK_CLOSE_ABS(structure->localToGlobalTransform(secondContext).matrix(),
+                  second.matrix(), 1e-14);
+
+  structure->setTransform(first);
+  CHECK_CLOSE_ABS(structure->localToGlobalTransform(secondContext).matrix(),
+                  first.matrix(), 1e-14);
+  BOOST_CHECK_THROW(
+      structure->setTransform(AlignableStructure::TransformProvider{}),
+      std::invalid_argument);
+  CHECK_CLOSE_ABS(structure->localToGlobalTransform(secondContext).matrix(),
+                  first.matrix(), 1e-14);
+
+  // Frames can be attached after building the hierarchy without changing its
+  // membership lookup or moving a member surface.
+  BOOST_CHECK_EQUAL(hierarchy.structureFor(element->surface()),
+                    structure.get());
+  CHECK_CLOSE_ABS(
+      element->surface().localToGlobalTransform(firstContext).matrix(),
+      Transform3::Identity().matrix(), 1e-14);
+
+  AlignableStructure lateContextual(GeometryIdentifier().withVolume(2));
+  lateContextual.setTransform(provider);
+  BOOST_CHECK(lateContextual.hasTransform());
+  CHECK_CLOSE_ABS(lateContextual.localToGlobalTransform(secondContext).matrix(),
+                  second.matrix(), 1e-14);
+}
+
 BOOST_AUTO_TEST_CASE(AlignmentRejectsOverlappingStructures) {
   auto element = makeDummyElement(Acts::Transform3::Identity());
   auto struct1 = std::make_shared<ActsAlignment::AlignableStructure>(

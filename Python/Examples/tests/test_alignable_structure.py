@@ -73,3 +73,58 @@ def test_structure_owns_frame_provider():
     del structure
     gc.collect()
     assert retained() is None
+
+
+@pytest.mark.parametrize("initial_kind", ["missing", "fixed"])
+def test_structure_set_transform(initial_kind):
+    context = acts.GeometryContext.dangerouslyDefaultConstruct()
+    structure = alignment.AlignableStructure(acts.GeometryIdentifier(volume=1))
+    fixed_translation = [12.0, -8.0, 30.0]
+    provider_translation = [-4.0, 5.0, 6.0]
+
+    with pytest.raises(ValueError, match="provider is empty"):
+        structure.setTransform(transformProvider=None)
+    assert not structure.hasTransform
+
+    if initial_kind == "fixed":
+        frame = acts.Transform3(acts.Vector3(*fixed_translation))
+        structure.setTransform(transform=frame)
+        del frame
+        gc.collect()
+        assert structure.hasTransform
+        np.testing.assert_allclose(
+            structure.localToGlobalTransform(context).translation, fixed_translation
+        )
+
+    class Provider:
+        def __call__(self, gctx):
+            assert isinstance(gctx, acts.GeometryContext)
+            return acts.Transform3(acts.Vector3(*provider_translation))
+
+    provider = Provider()
+    retained = weakref.ref(provider)
+    structure.setTransform(transformProvider=provider)
+    del provider
+    gc.collect()
+    assert retained() is not None
+    assert structure.hasTransform
+    np.testing.assert_allclose(
+        structure.localToGlobalTransform(context).translation, provider_translation
+    )
+
+    with pytest.raises(ValueError, match="provider is empty"):
+        structure.setTransform(transformProvider=None)
+    assert retained() is not None
+    np.testing.assert_allclose(
+        structure.localToGlobalTransform(context).translation, provider_translation
+    )
+
+    structure.setTransform(transform=acts.Transform3(acts.Vector3(*fixed_translation)))
+    gc.collect()
+    assert retained() is None
+    with pytest.raises(ValueError, match="provider is empty"):
+        structure.setTransform(transformProvider=None)
+    assert structure.hasTransform
+    np.testing.assert_allclose(
+        structure.localToGlobalTransform(context).translation, fixed_translation
+    )

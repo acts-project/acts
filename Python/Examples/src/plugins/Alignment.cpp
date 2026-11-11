@@ -116,6 +116,14 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
         .def(py::init<Acts::GeometryIdentifier,
                       AlignableStructure::TransformProvider>(),
              py::arg("id"), py::arg("transformProvider"))
+        .def("setTransform",
+             py::overload_cast<const Acts::Transform3&>(
+                 &AlignableStructure::setTransform),
+             py::arg("transform"))
+        .def("setTransform",
+             py::overload_cast<AlignableStructure::TransformProvider>(
+                 &AlignableStructure::setTransform),
+             py::arg("transformProvider"))
         .def_property_readonly("hasTransform",
                                &AlignableStructure::hasTransform)
         .def("localToGlobalTransform",

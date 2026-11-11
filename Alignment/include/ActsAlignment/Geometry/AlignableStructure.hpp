@@ -39,9 +39,9 @@ namespace ActsAlignment {
 /// Both structure translations and rotations use these local axes, following
 /// @c Acts::detail::compositeToComponentJacobian.
 /// Querying the frame does not move any member surface.
-/// A structure constructed with only an ID remains a frame-less declaration
-/// of membership, suitable for hierarchy validation but not numerical
-/// alignment.
+/// A structure constructed with only an ID is a frame-less declaration of
+/// membership, suitable for hierarchy validation. Numerical alignment also
+/// requires a frame, which can be supplied later with setTransform().
 class AlignableStructure {
  public:
   /// Resolve the current structure-to-global rigid transform for a context.
@@ -72,7 +72,8 @@ class AlignableStructure {
   /// a callable when the structure's pose depends on an IOV or alignment state.
   /// The caller chooses the pivot; it is not inferred from member surface
   /// centers. A solver using this as an initial frame must maintain subsequent
-  /// frame updates separately; this overload always returns the supplied frame.
+  /// frame updates separately; the supplied frame is used until replaced with
+  /// setTransform().
   AlignableStructure(Acts::GeometryIdentifier id,
                      const Acts::Transform3& transform)
       : AlignableStructure(id, [transform](const Acts::GeometryContext&) {
@@ -89,14 +90,34 @@ class AlignableStructure {
   /// not perform this composition or update frames automatically.
   AlignableStructure(Acts::GeometryIdentifier id,
                      TransformProvider transformProvider)
-      : m_id(id), m_transformProvider(std::move(transformProvider)) {
-    if (!m_transformProvider) {
-      throw std::invalid_argument("Structure transform provider is empty");
-    }
+      : m_id(id) {
+    setTransform(std::move(transformProvider));
   }
 
-  /// Whether a frame provider was supplied at construction.
-  /// @return True for a fixed or contextual frame, false for an ID-only structure
+  /// Add or replace the frame with a context-independent transform.
+  /// @param transform Rigid structure-to-global transform, copied into the provider
+  /// @note This configures the frame lookup; it does not move member surfaces.
+  /// The caller must ensure there are no concurrent readers or writers.
+  void setTransform(const Acts::Transform3& transform) {
+    setTransform(
+        [transform](const Acts::GeometryContext&) { return transform; });
+  }
+
+  /// Add or replace the context-dependent frame provider.
+  /// @param transformProvider Callable returning the structure-to-global rigid transform
+  /// @throws std::invalid_argument if the provider is empty; the existing provider is preserved
+  /// @note This configures the frame lookup; it does not move member surfaces.
+  /// The caller must ensure there are no concurrent readers or writers. Use
+  /// GeometryContext with the installed provider for ordinary IOV changes.
+  void setTransform(TransformProvider transformProvider) {
+    if (!transformProvider) {
+      throw std::invalid_argument("Structure transform provider is empty");
+    }
+    m_transformProvider = std::move(transformProvider);
+  }
+
+  /// Whether a frame provider is currently installed.
+  /// @return True for a fixed or contextual frame, false if no frame was supplied
   bool hasTransform() const { return static_cast<bool>(m_transformProvider); }
 
   /// Resolve this structure's origin and axes in the global coordinate system.
@@ -104,7 +125,7 @@ class AlignableStructure {
   /// @return A copy of the current rigid structure-to-global transform
   /// @throws std::logic_error if this structure has no frame provider
   /// @note Provider exceptions propagate to the caller. The provider is queried
-  /// on every call; no transform is cached or modified by this class.
+  /// on every call; querying does not cache or modify any transform.
   /// Corrections must be applied consistently to the structure frame and its
   /// member surfaces by the owner of the alignment state before evaluating the
   /// next iteration.
@@ -180,7 +201,8 @@ class AlignableStructure {
   /// The unique identifier for this structure
   Acts::GeometryIdentifier m_id;
 
-  /// Frame lookup fixed at construction; contextual state belongs to the caller
+  /// Frame lookup configured by the caller; contextual state belongs to the
+  /// caller
   TransformProvider m_transformProvider;
 
   /// The collection of sensors governed by this structure
