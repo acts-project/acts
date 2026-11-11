@@ -94,11 +94,14 @@ struct find_doublets {
 };
 
 /// Kernel for running @c traccc::device::count_triplets
+template <bool use_strip_info>
 struct count_triplets {
   template <typename TAcc>
   ALPAKA_FN_ACC void operator()(
       TAcc const& acc, seedfinder_config config,
       edm::spacepoint_collection::const_view spacepoints,
+      strip_spacepoint_calibration_collection_types::const_view
+          strip_calibrations,
       traccc::details::spacepoint_grid_types::const_view sp_grid,
       device::doublet_counter_collection_types::const_view doublet_counter,
       device::device_doublet_collection_types::const_view mb_doublets,
@@ -107,9 +110,9 @@ struct count_triplets {
       device::triplet_counter_collection_types::view midBot_counter) const {
     auto const globalThreadIdx =
         ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0u];
-    device::count_triplets(globalThreadIdx, config, spacepoints, sp_grid,
-                           doublet_counter, mb_doublets, mt_doublets,
-                           spM_counter, midBot_counter);
+    device::count_triplets<use_strip_info>(
+        globalThreadIdx, config, spacepoints, strip_calibrations, sp_grid,
+        doublet_counter, mb_doublets, mt_doublets, spM_counter, midBot_counter);
   }
 };
 
@@ -129,12 +132,15 @@ struct reduce_triplet_counts {
 };
 
 /// Kernel for running @c traccc::device::find_triplets
+template <bool use_strip_info>
 struct find_triplets {
   template <typename TAcc>
   ALPAKA_FN_ACC void operator()(
       TAcc const& acc, seedfinder_config config,
       seedfilter_config filter_config,
       edm::spacepoint_collection::const_view spacepoints,
+      strip_spacepoint_calibration_collection_types::const_view
+          strip_calibrations,
       traccc::details::spacepoint_grid_types::const_view sp_grid,
       device::doublet_counter_collection_types::const_view doublet_counter,
       device::device_doublet_collection_types::const_view mt_doublets,
@@ -143,9 +149,9 @@ struct find_triplets {
       device::device_triplet_collection_types::view triplet_view) const {
     auto const globalThreadIdx =
         ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0u];
-    device::find_triplets(globalThreadIdx, config, filter_config, spacepoints,
-                          sp_grid, doublet_counter, mt_doublets, spM_tc,
-                          midBot_tc, triplet_view);
+    device::find_triplets<use_strip_info>(
+        globalThreadIdx, config, filter_config, spacepoints, strip_calibrations,
+        sp_grid, doublet_counter, mt_doublets, spM_tc, midBot_tc, triplet_view);
   }
 };
 
@@ -270,11 +276,19 @@ void triplet_seeding_algorithm::count_triplets_kernel(
     const count_triplets_kernel_payload& payload) const {
   const unsigned int n_threads = warp_size() * 2;
   const unsigned int n_blocks = (payload.nMidBot + n_threads - 1) / n_threads;
-  ::alpaka::exec<Acc>(
-      details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
-      kernels::count_triplets{}, payload.config, payload.spacepoints,
-      payload.grid, payload.doublet_counter, payload.mb_doublets,
-      payload.mt_doublets, payload.spM_counter, payload.midBot_counter);
+  // The strip aware check is compiled into its own kernel instance
+  const auto launch = [&](auto kernel) {
+    ::alpaka::exec<Acc>(
+        details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
+        kernel, payload.config, payload.spacepoints, payload.strip_calibrations,
+        payload.grid, payload.doublet_counter, payload.mb_doublets,
+        payload.mt_doublets, payload.spM_counter, payload.midBot_counter);
+  };
+  if (payload.config.useStripInfo) {
+    launch(kernels::count_triplets<true>{});
+  } else {
+    launch(kernels::count_triplets<false>{});
+  }
 }
 
 void triplet_seeding_algorithm::triplet_counts_reduction_kernel(
@@ -292,11 +306,20 @@ void triplet_seeding_algorithm::find_triplets_kernel(
     const find_triplets_kernel_payload& payload) const {
   const unsigned int n_threads = warp_size() * 2;
   const unsigned int n_blocks = (payload.nMidBot + n_threads - 1) / n_threads;
-  ::alpaka::exec<Acc>(
-      details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
-      kernels::find_triplets{}, payload.finding_config, payload.filter_config,
-      payload.spacepoints, payload.grid, payload.doublet_counter,
-      payload.mt_doublets, payload.spM_tc, payload.midBot_tc, payload.triplets);
+  // The strip aware check is compiled into its own kernel instance
+  const auto launch = [&](auto kernel) {
+    ::alpaka::exec<Acc>(
+        details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
+        kernel, payload.finding_config, payload.filter_config,
+        payload.spacepoints, payload.strip_calibrations, payload.grid,
+        payload.doublet_counter, payload.mt_doublets, payload.spM_tc,
+        payload.midBot_tc, payload.triplets);
+  };
+  if (payload.finding_config.useStripInfo) {
+    launch(kernels::find_triplets<true>{});
+  } else {
+    launch(kernels::find_triplets<false>{});
+  }
 }
 
 void triplet_seeding_algorithm::update_triplet_weights_kernel(
