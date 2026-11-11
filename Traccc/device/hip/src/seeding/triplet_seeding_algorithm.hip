@@ -299,10 +299,8 @@ void triplet_seeding_algorithm::select_seeds_kernel(
       (payload.n_doublets + n_threads - 1) / n_threads;
   hipLaunchKernelGGL(kernels::select_seeds, n_blocks, n_threads,
                      sizeof(device::device_triplet) *
-                         payload.finder_config.maxSeedsPerSpM * n_threads,
-
-                     payload.filter_config.seed_candidates_per_spM(
-                         payload.finder_config.maxSeedsPerSpM) *
+                         payload.filter_config.seed_candidates_per_spM(
+                             payload.finder_config.maxSeedsPerSpM) *
                          n_threads,
                      details::get_stream(stream()), payload.finder_config,
                      payload.filter_config, payload.spacepoints, payload.grid,
