@@ -20,8 +20,8 @@
 
 namespace traccc::device {
 
-TRACCC_HOST_DEVICE
-inline void count_doublets(
+template <bool use_dphi_cut>
+TRACCC_HOST_DEVICE inline void count_doublets(
     const global_index_t globalIndex, const seedfinder_config& config,
     const edm::spacepoint_collection::const_view& spacepoints_view,
     const traccc::details::spacepoint_grid_types::const_view& sp_view,
@@ -102,15 +102,15 @@ inline void count_doublets(
         // Check if this spacepoint is a compatible "bottom" spacepoint
         // to the thread's "middle" spacepoint.
         if (doublet_finding_helper::isCompatible<
-                traccc::details::spacepoint_type::bottom>(middle_sp, other_sp,
-                                                          config)) {
+                traccc::details::spacepoint_type::bottom, use_dphi_cut>(
+                middle_sp, other_sp, config)) {
           ++n_mb_cand;
         }
         // Check if this spacepoint is a compatible "top" spacepoint to
         // the thread's "middle" spacepoint.
         if (doublet_finding_helper::isCompatible<
-                traccc::details::spacepoint_type::top>(middle_sp, other_sp,
-                                                       config)) {
+                traccc::details::spacepoint_type::top, use_dphi_cut>(
+                middle_sp, other_sp, config)) {
           ++n_mt_cand;
         }
       }

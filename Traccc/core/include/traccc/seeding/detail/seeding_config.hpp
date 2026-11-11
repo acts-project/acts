@@ -155,27 +155,26 @@ struct seedfinder_config {
 
   std::array<unsigned int, 2> neighbor_scope{1, 1};
 
-  // Effective doublet radial windows, taking the fallback into account
-  TRACCC_HOST_DEVICE
-  float get_deltaRMinBottomSP() const {
-    return deltaRMinBottomSP < 0.f ? deltaRMin : deltaRMinBottomSP;
-  }
-  TRACCC_HOST_DEVICE
-  float get_deltaRMaxBottomSP() const {
-    return deltaRMaxBottomSP < 0.f ? deltaRMax : deltaRMaxBottomSP;
-  }
-  TRACCC_HOST_DEVICE
-  float get_deltaRMinTopSP() const {
-    return deltaRMinTopSP < 0.f ? deltaRMin : deltaRMinTopSP;
-  }
-  TRACCC_HOST_DEVICE
-  float get_deltaRMaxTopSP() const {
-    return deltaRMaxTopSP < 0.f ? deltaRMax : deltaRMaxTopSP;
-  }
-  // Effective impact parameter of the azimuthal separation cut
-  TRACCC_HOST_DEVICE
-  float get_doubletDPhiD0Max() const {
-    return doubletDPhiD0Max < 0.f ? impactMax : doubletDPhiD0Max;
+  // Replace the negative fallback values of the doublet radial windows and
+  // of the azimuthal separation cut by the values they fall back to. The
+  // device triplet seeding does this once, so that its kernels can read the
+  // configuration directly.
+  void resolve_fallbacks() {
+    if (deltaRMinBottomSP < 0.f) {
+      deltaRMinBottomSP = deltaRMin;
+    }
+    if (deltaRMaxBottomSP < 0.f) {
+      deltaRMaxBottomSP = deltaRMax;
+    }
+    if (deltaRMinTopSP < 0.f) {
+      deltaRMinTopSP = deltaRMin;
+    }
+    if (deltaRMaxTopSP < 0.f) {
+      deltaRMaxTopSP = deltaRMax;
+    }
+    if (doubletDPhiD0Max < 0.f) {
+      doubletDPhiD0Max = impactMax;
+    }
   }
 
   TRACCC_HOST_DEVICE

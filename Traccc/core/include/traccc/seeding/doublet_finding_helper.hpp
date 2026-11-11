@@ -24,15 +24,35 @@ struct doublet_finding_helper {
   ///
   /// @param sp1 is middle spacepoint
   /// @param sp2 is bottom or top spacepoint
-  /// @param config is configuration parameter
+  /// @param config is configuration parameter, with its fallbacks resolved
+  ///        (@c seedfinder_config::resolve_fallbacks)
   /// @tparam otherSpType is whether it is for middle-bottom or middle-top
   /// doublet
+  /// @tparam use_dphi_cut is whether to apply the azimuthal separation cut
   ///
   /// @return boolean value for compatibility
   ///
-  template <details::spacepoint_type otherSpType, typename T1, typename T2>
+  template <details::spacepoint_type otherSpType, bool use_dphi_cut,
+            typename T1, typename T2>
   static inline TRACCC_HOST_DEVICE bool isCompatible(
       const edm::spacepoint<T1>& sp1, const edm::spacepoint<T2>& sp2,
+      const seedfinder_config& config);
+
+  /// Check the azimuthal separation of two spacepoints against the maximum
+  /// separation that a track with an impact parameter up to
+  /// @c doubletDPhiD0Max can produce between their radii
+  ///
+  /// The bound is b = doubletDPhiConst + doubletDPhiSlope * |r2 - r1| +
+  /// min(doubletDPhiCap, |asin(d0 / r2) - asin(d0 / r1)|), and the check
+  /// |dphi| <= b is evaluated as sin(b) (p1 . p2) >= cos(b) |p1 x p2|, with
+  /// sin(b) and cos(b) built from angle sums, so that no inverse
+  /// trigonometric function is needed. The configuration terms are assumed
+  /// to be non-negative.
+  ///
+  /// @return boolean value for compatibility
+  ///
+  static inline TRACCC_HOST_DEVICE bool isCompatibleDPhi(
+      scalar x1, scalar y1, scalar r1, scalar x2, scalar y2, scalar r2,
       const seedfinder_config& config);
 
   /// Do the conformal transformation on doublet's coordinate
@@ -49,37 +69,41 @@ struct doublet_finding_helper {
       const edm::spacepoint<T1>& sp1, const edm::spacepoint<T2>& sp2);
 };
 
-template <details::spacepoint_type otherSpType, typename T1, typename T2>
+template <details::spacepoint_type otherSpType, bool use_dphi_cut, typename T1,
+          typename T2>
 bool TRACCC_HOST_DEVICE doublet_finding_helper::isCompatible(
     const edm::spacepoint<T1>& sp1, const edm::spacepoint<T2>& sp2,
     const seedfinder_config& config) {
   static_assert(otherSpType == details::spacepoint_type::bottom ||
                 otherSpType == details::spacepoint_type::top);
 
+  const scalar r1 = sp1.radius();
+  const scalar r2 = sp2.radius();
+
   scalar deltaR, cotTheta, zOrigin;
   if constexpr (otherSpType == details::spacepoint_type::bottom) {
     // check if R distance is too small, because bins are not R-sorted
-    deltaR = sp1.radius() - sp2.radius();
+    deltaR = r1 - r2;
     // actually cotTheta * deltaR to avoid division by 0 statements
     cotTheta = sp1.z() - sp2.z();
     // actually zOrigin * deltaR to avoid division by 0 statements
-    zOrigin = sp1.z() * deltaR - sp1.radius() * cotTheta;
+    zOrigin = sp1.z() * deltaR - r1 * cotTheta;
   } else {
     // check if R distance is too small, because bins are not R-sorted
-    deltaR = sp2.radius() - sp1.radius();
+    deltaR = r2 - r1;
     // actually cotTheta * deltaR to avoid division by 0 statements
     cotTheta = (sp2.z() - sp1.z());
     // actually zOrigin * deltaR to avoid division by 0 statements
-    zOrigin = sp1.z() * deltaR - sp1.radius() * cotTheta;
+    zOrigin = sp1.z() * deltaR - r1 * cotTheta;
   }
 
   scalar deltaRMin, deltaRMax;
   if constexpr (otherSpType == details::spacepoint_type::bottom) {
-    deltaRMin = config.get_deltaRMinBottomSP();
-    deltaRMax = config.get_deltaRMaxBottomSP();
+    deltaRMin = config.deltaRMinBottomSP;
+    deltaRMax = config.deltaRMaxBottomSP;
   } else {
-    deltaRMin = config.get_deltaRMinTopSP();
-    deltaRMax = config.get_deltaRMaxTopSP();
+    deltaRMin = config.deltaRMinTopSP;
+    deltaRMax = config.deltaRMaxTopSP;
   }
 
   if ((deltaR >= deltaRMax) || (deltaR <= deltaRMin) ||
@@ -90,26 +114,8 @@ bool TRACCC_HOST_DEVICE doublet_finding_helper::isCompatible(
     return false;
   }
 
-  if (config.doubletDPhiCut) {
-    // Azimuthal separation of the two spacepoints, compared to the maximum
-    // separation that a track with an impact parameter up to
-    // doubletDPhiD0Max can produce between the two radii
-    const scalar rInner = math::min(sp1.radius(), sp2.radius());
-    const scalar rOuter = math::max(sp1.radius(), sp2.radius());
-    const scalar d0 = config.get_doubletDPhiD0Max();
-    const scalar swing = math::fabs(
-        math::asin(math::min(1.f, d0 / math::max(sp2.radius(), 1.f))) -
-        math::asin(math::min(1.f, d0 / math::max(sp1.radius(), 1.f))));
-    scalar dPhi = sp2.phi() - sp1.phi();
-    if (dPhi > constant<scalar>::pi) {
-      dPhi -= 2.f * constant<scalar>::pi;
-    } else if (dPhi < -constant<scalar>::pi) {
-      dPhi += 2.f * constant<scalar>::pi;
-    }
-    const scalar bound = config.doubletDPhiConst +
-                         config.doubletDPhiSlope * (rOuter - rInner) +
-                         math::min(config.doubletDPhiCap, swing);
-    if (math::fabs(dPhi) > bound) {
+  if constexpr (use_dphi_cut) {
+    if (!isCompatibleDPhi(sp1.x(), sp1.y(), r1, sp2.x(), sp2.y(), r2, config)) {
       return false;
     }
   }
@@ -249,6 +255,49 @@ bool TRACCC_HOST_DEVICE doublet_finding_helper::isCompatible(
   }
 
   return true;
+}
+
+bool TRACCC_HOST_DEVICE doublet_finding_helper::isCompatibleDPhi(
+    const scalar x1, const scalar y1, const scalar r1, const scalar x2,
+    const scalar y2, const scalar r2, const seedfinder_config& config) {
+  // Linear part of the bound
+  const scalar a =
+      config.doubletDPhiConst + config.doubletDPhiSlope * math::fabs(r2 - r1);
+  if (a >= constant<scalar>::pi) {
+    return true;
+  }
+  const scalar sinA = math::sin(a);
+  const scalar cosA = math::cos(a);
+
+  // Swing s = |asin(v2) - asin(v1)| of a track with impact parameter d0,
+  // through sin(asin(v)) = v and cos(asin(v)) = sqrt(1 - v^2). It lies in
+  // [0, pi/2].
+  const scalar d0 = config.doubletDPhiD0Max;
+  const scalar v1 = math::min(1.f, d0 / math::max(r1, 1.f));
+  const scalar v2 = math::min(1.f, d0 / math::max(r2, 1.f));
+  const scalar c1 = math::sqrt(1.f - v1 * v1);
+  const scalar c2 = math::sqrt(1.f - v2 * v2);
+  scalar sinM = math::fabs(v2 * c1 - c2 * v1);
+  scalar cosM = c1 * c2 + v1 * v2;
+
+  // min(cap, s): on [0, pi/2] the sine rises and the cosine falls
+  if (config.doubletDPhiCap < 0.5f * constant<scalar>::pi) {
+    sinM = math::min(sinM, math::sin(config.doubletDPhiCap));
+    cosM = math::max(cosM, math::cos(config.doubletDPhiCap));
+  }
+
+  // b = a + min(cap, s) lies in [a, a + pi/2]; the comparison below needs
+  // b <= pi, and b >= pi accepts every separation
+  const scalar sinB = sinA * cosM + cosA * sinM;
+  const scalar cosB = cosA * cosM - sinA * sinM;
+  if (a >= 0.5f * constant<scalar>::pi && sinB <= 0.f) {
+    return true;
+  }
+
+  // r1 r2 cos(dphi) and r1 r2 |sin(dphi)|
+  const scalar dot = x1 * x2 + y1 * y2;
+  const scalar cross = math::fabs(x1 * y2 - y1 * x2);
+  return sinB * dot >= cosB * cross;
 }
 
 template <details::spacepoint_type otherSpType, typename T1, typename T2>
