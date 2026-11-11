@@ -337,7 +337,8 @@ BOOST_AUTO_TEST_CASE(AbortsWhenTheResultFileCannotBeOpened) {
   std::filesystem::create_directories(directory);
 
   auto cfg = configFor(align, geometry, directory);
-  cfg.outputAlignmentFile = directory / "missing" / "aligned_result.txt";
+  const auto resultPath = directory / "missing" / "aligned_result.txt";
+  cfg.outputAlignmentFile = resultPath;
 
   AlignmentAlgorithm algorithm{
       std::move(cfg),
@@ -350,7 +351,8 @@ BOOST_AUTO_TEST_CASE(AbortsWhenTheResultFileCannotBeOpened) {
              protoTracks({0}), {trackAt(10.)});
   BOOST_CHECK(algorithm.execute(ctx) == ProcessCode::SUCCESS);
   BOOST_CHECK(algorithm.finalize() == ProcessCode::ABORT);
-  BOOST_CHECK_EQUAL(align->calls, 0u);
+  BOOST_CHECK_EQUAL(align->calls, 1u);
+  BOOST_CHECK(!std::filesystem::exists(resultPath));
 
   std::filesystem::remove_all(directory);
 }
@@ -512,10 +514,7 @@ BOOST_AUTO_TEST_CASE(LeavesTheResultFileUntouchedWhenTheFitFails) {
   std::string line;
   BOOST_REQUIRE(std::getline(result, line));
   BOOST_CHECK_EQUAL(line, "keep-me");
-  BOOST_CHECK(
-      !std::filesystem::exists(directory / "aligned_result.txt.acts-tmp"));
   BOOST_CHECK(!std::filesystem::exists(directory / "index_map.txt"));
-  BOOST_CHECK(!std::filesystem::exists(directory / "index_map.txt.acts-tmp"));
 
   std::filesystem::remove_all(directory);
 }
@@ -549,8 +548,6 @@ BOOST_AUTO_TEST_CASE(WritesTheResultWhenAlignmentDidNotConverge) {
   std::string line;
   BOOST_REQUIRE(std::getline(result, line));
   BOOST_CHECK(line.find("99") != std::string::npos);
-  BOOST_CHECK(
-      !std::filesystem::exists(directory / "aligned_result.txt.acts-tmp"));
 
   std::filesystem::remove_all(directory);
 }

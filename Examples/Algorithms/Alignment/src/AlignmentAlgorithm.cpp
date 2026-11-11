@@ -24,7 +24,6 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -32,7 +31,6 @@
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -76,40 +74,6 @@ std::optional<std::size_t> copyReferencedMeasurements(
   }
   return std::nullopt;
 }
-
-// Replaces destination only after commit(). Otherwise the destructor removes
-// the temporary file.
-struct StagedFile {
-  std::filesystem::path destination;
-  std::filesystem::path temporary;
-  std::ofstream stream;
-  bool committed = false;
-
-  explicit StagedFile(const std::filesystem::path& path) : destination(path) {
-    temporary = destination;
-    temporary += ".acts-tmp";
-    stream.open(temporary);
-  }
-
-  ~StagedFile() {
-    if (committed) {
-      return;
-    }
-    stream.close();
-    std::error_code error;
-    std::filesystem::remove(temporary, error);
-  }
-
-  bool commit() {
-    stream.close();
-    std::error_code error;
-    if (stream) {
-      std::filesystem::rename(temporary, destination, error);
-    }
-    committed = static_cast<bool>(stream) && !error;
-    return committed;
-  }
-};
 
 bool writeAlignmentIndex(const ActsAlignment::AlignmentResult& alignOutput,
                          std::ostream& out) {
@@ -275,30 +239,6 @@ ProcessCode AlignmentAlgorithm::finalize() {
     return ProcessCode::SUCCESS;
   }
 
-  // Open the temporary files before the fit. A missing directory then fails
-  // without truncating an existing result.
-  std::unique_ptr<StagedFile> resultFile;
-  std::unique_ptr<StagedFile> indexFile;
-  auto openFile = [&](std::unique_ptr<StagedFile>& slot,
-                      const std::optional<std::filesystem::path>& path,
-                      const char* what) {
-    if (!path.has_value()) {
-      return true;
-    }
-    slot = std::make_unique<StagedFile>(*path);
-    if (slot->stream) {
-      return true;
-    }
-    ACTS_ERROR("Failed to open " << what << ": " << *path);
-    return false;
-  };
-  if (!openFile(resultFile, m_cfg.outputAlignmentFile,
-                "alignment result file") ||
-      !openFile(indexFile, m_cfg.outputAlignmentIndexFile,
-                "alignment index file")) {
-    return ProcessCode::ABORT;
-  }
-
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
@@ -357,31 +297,30 @@ ProcessCode AlignmentAlgorithm::finalize() {
                  << alignOutput.result.error().message() << ")");
   }
 
-  if (resultFile != nullptr) {
-    ActsAlignment::dumpResultAsMP2(alignOutput, resultFile->stream);
-  }
-  const bool resultWritten = resultFile == nullptr || resultFile->stream;
-  const bool indexWritten = indexFile == nullptr ||
-                            writeAlignmentIndex(alignOutput, indexFile->stream);
-  if (!resultWritten || !indexWritten) {
-    ACTS_ERROR("Failed to write alignment output");
-    return ProcessCode::ABORT;
-  }
-  auto commitFile = [&](const std::unique_ptr<StagedFile>& slot,
-                        const char* what) {
-    if (slot == nullptr) {
-      return true;
+  if (m_cfg.outputAlignmentFile.has_value()) {
+    std::ofstream out(*m_cfg.outputAlignmentFile);
+    if (!out) {
+      ACTS_ERROR("Failed to open alignment result file: "
+                 << *m_cfg.outputAlignmentFile);
+      return ProcessCode::ABORT;
     }
-    if (!slot->commit()) {
-      ACTS_ERROR("Failed to write " << what << ": " << slot->destination);
-      return false;
+    ActsAlignment::dumpResultAsMP2(alignOutput, out);
+    if (!out) {
+      ACTS_ERROR("Failed to write alignment result file: "
+                 << *m_cfg.outputAlignmentFile);
+      return ProcessCode::ABORT;
     }
-    ACTS_INFO("Wrote " << what << ": " << slot->destination);
-    return true;
-  };
-  if (!commitFile(resultFile, "alignment result file") ||
-      !commitFile(indexFile, "alignment index file")) {
-    return ProcessCode::ABORT;
+    ACTS_INFO("Wrote alignment result file: " << *m_cfg.outputAlignmentFile);
+  }
+  if (m_cfg.outputAlignmentIndexFile.has_value()) {
+    std::ofstream out(*m_cfg.outputAlignmentIndexFile);
+    if (!out || !writeAlignmentIndex(alignOutput, out)) {
+      ACTS_ERROR("Failed to write alignment index file: "
+                 << *m_cfg.outputAlignmentIndexFile);
+      return ProcessCode::ABORT;
+    }
+    ACTS_INFO(
+        "Wrote alignment index file: " << *m_cfg.outputAlignmentIndexFile);
   }
   return ProcessCode::SUCCESS;
 }

@@ -104,10 +104,10 @@ class AlignmentAlgorithm final : public IAlgorithm {
     /// Input initial track parameter estimates for each proto track.
     std::string inputInitialTrackParameters;
     /// Millepede-style 6-column alignment result. Unset skips the file.
-    /// An existing file is replaced only after the fit succeeds.
+    /// Written after the fit returns successfully.
     std::optional<std::filesystem::path> outputAlignmentFile;
     /// Surface-index map for the labels in @c outputAlignmentFile. Unset
-    /// skips the file. Replaced only after the fit succeeds.
+    /// skips the file. Written after the fit returns successfully.
     std::optional<std::filesystem::path> outputAlignmentIndexFile;
     /// Geometry used to resolve source-link surfaces. Pass the same geometry
     /// as @c makeAlignmentFunction.
