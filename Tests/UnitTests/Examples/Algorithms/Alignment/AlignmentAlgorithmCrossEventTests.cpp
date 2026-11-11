@@ -125,7 +125,11 @@ MeasurementContainer measurementsOf(GeometryIdentifier geoId,
                                     std::size_t count) {
   MeasurementContainer container;
   for (std::size_t i = 0; i < count; ++i) {
-    container.makeMeasurement(2, geoId);
+    auto measurement = container.makeMeasurement(2, geoId);
+    // Default indices are both zero. copyMeasurement rejects duplicates.
+    measurement.setSubspaceIndices(
+        std::array<std::uint8_t, 2>{static_cast<std::uint8_t>(eBoundLoc0),
+                                    static_cast<std::uint8_t>(eBoundLoc1)});
   }
   return container;
 }
