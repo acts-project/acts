@@ -229,8 +229,6 @@ CompositeSpacePointLineFitter::fastFit(
                         result.covariance);
     }
   }
-  // ranges of the fitted parameters at the end, on the line parameters as in
-  // the full fit
   for (const FitParIndex par : parsToUse) {
     if (par == t0 && !fitTime) {
       continue;
