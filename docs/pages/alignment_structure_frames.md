@@ -18,22 +18,48 @@ corrections to the member surface's local parameters, including the rotation
 lever arm. `Acts::detail::localFrameToAlignmentParametersJacobian` is identity
 under this convention.
 
-Every structure frame is global, including child frames. `addChild()` declares
-membership; it does not compose frames or move surfaces. The user chooses the
-pivot explicitly. It is not computed from a centroid or inferred from a
-geometry identifier.
+Every frame returned by `localToGlobalTransform(gctx)` maps structure-local
+coordinates to global coordinates, including for child structures. This return
+convention does not require applications to store or define geometry in global
+coordinates. An application can express a child relative to its parent and
+compose the transforms in the child's callable:
 
-## Fixed and contextual frames
+```cpp
+const Acts::Transform3 childToGlobal = parentToGlobal * childToParent;
+```
 
-A fixed frame is copied into the structure at construction:
+Both transforms must describe the geometry for the same `GeometryContext`.
+The relative transform can also be recovered as
+`parentToGlobal.inverse() * childToGlobal`. This allows parent-relative geometry
+descriptions and reuse of symmetric layouts while retaining a common global
+representation for the derivative calculations. Alignment corrections still
+use each structure's own local axes.
+
+`addChild()` declares membership; it does not perform this composition or move
+surfaces. Automatic composition through the hierarchy, coordinated updates of
+member surfaces, and hierarchy constraints are not implemented by this frame
+API. The user chooses the pivot explicitly; it is not computed from a centroid
+or inferred from a geometry identifier.
+
+## Context-independent and contextual frames
+
+A context-independent frame is copied into the structure at construction:
 
 ```cpp
 ActsAlignment::AlignableStructure structure(id, structureToGlobal);
 ```
 
-It returns the same frame for every context. This is useful for a fixed geometry
-or an explicitly chosen linearisation point. It does not follow later changes
-to the supplied transform or to member surfaces.
+It returns the same frame for every context. This fixes the frame returned by
+`localToGlobalTransform()`, not the alignment degrees of freedom, which are
+controlled by `alignmentMask()`. The overload is useful for an explicitly
+chosen pivot and orientation in derivative calculations or tests, and as an
+initial linearisation frame for the planned structure solver. A fixed global
+reference frame is one possible use, but is not required.
+
+The stored frame does not follow later changes to the supplied transform or to
+member surfaces. A solver using it as an initial frame must maintain subsequent
+frame updates separately. The planned working-state mechanism is described
+below; the frame API does not yet implement iterative structure alignment.
 
 For a context-dependent frame, supply a callable instead. For example, an
 application can put its own structure transforms in a geometry-context payload:

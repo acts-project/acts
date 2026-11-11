@@ -31,11 +31,14 @@ namespace ActsAlignment {
 /// AlignableStructure aggregates a set of modules (surfaces) into a single
 /// alignable unit parameterised by the 6 standard rigid-body DoFs
 /// (Center0..2, Rotation0..2) plus optional per-DoF rigidity constraints.
-/// A frame provider defines the structure's origin (rotation pivot) and local
-/// axes in global coordinates. Both structure translations and rotations use
-/// these local axes, following @c Acts::detail::compositeToComponentJacobian.
-/// The provider must describe the same geometry context as the member surfaces.
-/// It supplies a frame only: querying it does not move any member surface.
+/// The structure frame defines its origin (rotation pivot) and local axes
+/// in global coordinates. It is supplied either as a fixed transform or
+/// as a TransformProvider callable evaluated with a GeometryContext.
+/// The returned frame must be consistent with the member-surface transforms
+/// evaluated using the same GeometryContext.
+/// Both structure translations and rotations use these local axes, following
+/// @c Acts::detail::compositeToComponentJacobian.
+/// Querying the frame does not move any member surface.
 /// A structure constructed with only an ID remains a frame-less declaration
 /// of membership, suitable for hierarchy validation but not numerical
 /// alignment.
@@ -60,12 +63,16 @@ class AlignableStructure {
   /// @todo Define a project-wide strategy for assigning structure IDs.
   explicit AlignableStructure(Acts::GeometryIdentifier id) : m_id(id) {}
 
-  /// Construct a structure with an explicitly fixed frame.
+  /// Construct a structure with a context-independent frame.
+  /// This fixes the frame returned by localToGlobalTransform(), not the
+  /// alignment degrees of freedom, which are controlled by alignmentMask().
   /// @param id Identifier with the same uniqueness requirements as the ID-only constructor
   /// @param transform Rigid structure-to-global transform, copied into the provider
-  /// @note This frame is independent of the context. Use a contextual provider
-  /// when the structure's pose depends on an IOV or alignment state. The caller
-  /// chooses the pivot; it is not inferred from member surface centers.
+  /// @note This frame is independent of the context. Use the constructor taking
+  /// a callable when the structure's pose depends on an IOV or alignment state.
+  /// The caller chooses the pivot; it is not inferred from member surface
+  /// centers. A solver using this as an initial frame must maintain subsequent
+  /// frame updates separately; this overload always returns the supplied frame.
   AlignableStructure(Acts::GeometryIdentifier id,
                      const Acts::Transform3& transform)
       : AlignableStructure(id, [transform](const Acts::GeometryContext&) {
@@ -76,8 +83,10 @@ class AlignableStructure {
   /// @param id Identifier with the same uniqueness requirements as the ID-only constructor
   /// @param transformProvider Callable returning the structure-to-global rigid transform
   /// @throws std::invalid_argument if the provider is empty
-  /// @note Child frames are also global transforms, not transforms relative to
-  /// their parent. Hierarchy membership does not compose or update frames.
+  /// @note The returned child frame must map child-local to global coordinates.
+  /// The callable may compose a parent-to-global frame with a child-to-parent
+  /// transform, both evaluated for the same context. Hierarchy membership does
+  /// not perform this composition or update frames automatically.
   AlignableStructure(Acts::GeometryIdentifier id,
                      TransformProvider transformProvider)
       : m_id(id), m_transformProvider(std::move(transformProvider)) {
