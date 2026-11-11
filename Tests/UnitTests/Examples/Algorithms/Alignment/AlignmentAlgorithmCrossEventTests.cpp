@@ -333,6 +333,7 @@ BOOST_AUTO_TEST_CASE(TruncatesTracksInsideOneEvent) {
 }
 
 BOOST_AUTO_TEST_CASE(AbortsWhenTheResultFileCannotBeOpened) {
+  Logging::ScopedFailureThreshold threshold{Logging::FATAL};
   auto geometry = makeGeometry();
   auto align = std::make_shared<RecordingAlignment>();
   const auto directory = std::filesystem::temp_directory_path() /
@@ -435,6 +436,7 @@ BOOST_AUTO_TEST_CASE(PreservesMeasurementValuesInEventOrder) {
 }
 
 BOOST_AUTO_TEST_CASE(AbortsOnAMeasurementIndexPastTheContainer) {
+  Logging::ScopedFailureThreshold threshold{Logging::FATAL};
   auto geometry = makeGeometry();
   auto align = std::make_shared<RecordingAlignment>();
   const auto directory = std::filesystem::temp_directory_path() /
@@ -455,6 +457,7 @@ BOOST_AUTO_TEST_CASE(AbortsOnAMeasurementIndexPastTheContainer) {
 }
 
 BOOST_AUTO_TEST_CASE(AbortsWhenTheAlignmentStoreChanges) {
+  Logging::ScopedFailureThreshold threshold{Logging::FATAL};
   auto geometry = makeGeometry();
   auto align = std::make_shared<RecordingAlignment>();
   const auto directory = std::filesystem::temp_directory_path() /
@@ -489,6 +492,7 @@ BOOST_AUTO_TEST_CASE(AbortsWhenTheAlignmentStoreChanges) {
 }
 
 BOOST_AUTO_TEST_CASE(LeavesTheResultFileUntouchedWhenTheFitFails) {
+  Logging::ScopedFailureThreshold threshold{Logging::FATAL};
   auto geometry = makeGeometry();
   auto align = std::make_shared<RecordingAlignment>();
   align->fail = true;
@@ -524,6 +528,7 @@ BOOST_AUTO_TEST_CASE(LeavesTheResultFileUntouchedWhenTheFitFails) {
 }
 
 BOOST_AUTO_TEST_CASE(WritesTheResultWhenAlignmentDidNotConverge) {
+  Logging::ScopedFailureThreshold threshold{Logging::FATAL};
   auto geometry = makeGeometry();
   auto align = std::make_shared<RecordingAlignment>();
   align->markNotConverged = true;
