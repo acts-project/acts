@@ -71,11 +71,11 @@ Acts::FullBilloirVertexFitter::FullBilloirVertexFitter(
         "provided.");
   }
 
-  if (!m_cfg.trackLinearizer.connected() &&
-      !m_cfg.fieldTrackLinearizer.connected()) {
+  if (m_cfg.trackLinearizer.connected() ==
+      m_cfg.fieldTrackLinearizer.connected()) {
     throw std::invalid_argument(
         "FullBilloirVertexFitter: "
-        "No track linearizer provided.");
+        "Configure exactly one track linearizer.");
   }
 }
 
