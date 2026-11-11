@@ -286,14 +286,10 @@ if(ACTS_BUILD_PYTHON_WHEEL)
     set(CMAKE_INSTALL_DATADIR "acts/share")
     set(CMAKE_INSTALL_RPATH "${_acts_rpath_origin}")
     set(_acts_python_install_dir "acts")
-    set(_acts_python_modules_rpath "${_acts_rpath_origin}")
 elseif(PROJECT_IS_TOP_LEVEL)
     include(GNUInstallDirs)
     set(CMAKE_INSTALL_RPATH "${_acts_rpath_origin}/../${CMAKE_INSTALL_LIBDIR}")
     set(_acts_python_install_dir "python/acts")
-    set(_acts_python_modules_rpath
-        "${_acts_rpath_origin}/../../${CMAKE_INSTALL_LIBDIR}"
-    )
 endif()
 
 include(ActsCompilerOptions) # default compile options
@@ -679,6 +675,21 @@ if(ACTS_SETUP_DETRAY)
     option(DETRAY_SETUP_PYBIND11 "" FALSE)
 
     # Enable optional components depending on ACTS configuration
+    set_option_if(
+        DETRAY_BUILD_PYTHON_BINDINGS
+        ACTS_BUILD_PYTHON_BINDINGS
+        AND
+        ACTS_BUILD_PLUGIN_TRACCC
+    )
+    set_option_if(
+        DETRAY_GENERATE_PYTHON_STUBS
+        DETRAY_BUILD_PYTHON_BINDINGS
+        AND
+        ACTS_GENERATE_PYTHON_STUBS
+    )
+    if(ACTS_BUILD_PYTHON_WHEEL)
+        set(DETRAY_PYTHON_INSTALL_DIR "detray")
+    endif()
     set_option_if(DETRAY_BUILD_CUDA ACTS_ENABLE_CUDA)
     set_option_if(DETRAY_BUILD_UNIT_TESTS ACTS_BUILD_UNITTESTS)
     set_option_if(DETRAY_BUILD_INTEGRATION_TESTS ACTS_BUILD_INTEGRATIONTESTS)

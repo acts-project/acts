@@ -9,17 +9,12 @@ macro(add_plugin_binding_if _name _dependency _flag)
         list(APPEND _plugins_built "'${_name_lower}'")
         # automatically prefix the target name
         set(_target "ActsPluginsPythonBindings${_name}")
-        pybind11_add_module(${_target} src/${_name}.cpp)
-
-        install(TARGETS ${_target} DESTINATION ${_acts_python_install_dir})
-
-        set_target_properties(
+        acts_add_python_module(
             ${_target}
-            PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath}"
-        )
-        set_target_properties(
-            ${_target}
-            PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
+            SOURCES src/${_name}.cpp
+            OUTPUT_DIRECTORY ${_python_dir}/acts
+            INSTALL_DIRECTORY ${_acts_python_install_dir}
+            LIBRARY_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
         )
 
         target_link_libraries(
@@ -30,7 +25,11 @@ macro(add_plugin_binding_if _name _dependency _flag)
         acts_pybind_generate_stubs(
             acts.${_name_lower}
             ${_target}
-            ActsPythonBindings
+            ENABLED ${ACTS_GENERATE_PYTHON_STUBS}
+            PYTHON_ROOT ${_python_dir}
+            PYTHON_EXECUTABLE ${Python_EXECUTABLE}
+            DEPENDS ActsPythonBindings
+            IGNORE_INVALID_IDENTIFIERS "GeoModelTree::FpvConstLink"
         )
     endif()
 
@@ -49,14 +48,10 @@ macro(add_plugin_binding_if _name _dependency _flag)
     string(JOIN "\", \"" SYMBOLS_FOR_KWARGS_PY ${SYMBOLS_FOR_KWARGS})
     set(SYMBOLS_FOR_KWARGS_PY "[\"${SYMBOLS_FOR_KWARGS_PY}\"]")
 
-    configure_file(
+    acts_python_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/python/plugin.py.in
         ${_python_dir}/acts/${_name_lower}.py
-        @ONLY
-    )
-    install(
-        FILES ${_python_dir}/acts/${_name_lower}.py
-        DESTINATION ${_acts_python_install_dir}
+        ${_acts_python_install_dir}
     )
 endmacro()
 

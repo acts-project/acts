@@ -6,8 +6,9 @@ file(MAKE_DIRECTORY ${_python_dir}/acts)
 # List to collect built plugins
 set(_plugins_built)
 
-# Provides acts_pybind_generate_stubs() (shared with detray).
-include(ActsPybindStubs)
+# Shared extension, installation, environment, and stub-generation helpers.
+include(ActsPython)
+acts_python_environment(${_python_dir} python)
 
 # Add the bindings
 add_subdirectory(Core)
@@ -17,11 +18,8 @@ add_subdirectory(Plugins)
 add_subdirectory(Utilities)
 
 # Install all generated stubs in one pass
-if(ACTS_GENERATE_PYTHON_STUBS)
-    install(
-        DIRECTORY ${CMAKE_BINARY_DIR}/python/acts/
-        DESTINATION ${_acts_python_install_dir}
-        FILES_MATCHING
-        PATTERN "*.pyi"
-    )
-endif()
+acts_python_install_stubs(
+    ${_python_dir}/acts
+    ${_acts_python_install_dir}
+    ${ACTS_GENERATE_PYTHON_STUBS}
+)

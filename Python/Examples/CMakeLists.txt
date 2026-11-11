@@ -3,17 +3,6 @@ file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 set(_examples_python_install_dir "${_acts_python_install_dir}/examples")
-# The examples modules are installed below the core python modules, so derive
-# their origin-relative rpath from the actual install locations.
-file(
-    RELATIVE_PATH
-    _examples_to_libdir
-    "${CMAKE_INSTALL_PREFIX}/${_examples_python_install_dir}"
-    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
-)
-set(_examples_python_modules_rpath
-    "${_acts_rpath_origin}/${_examples_to_libdir}"
-)
 set(py_files
     __init__.py
     simulation.py
@@ -66,17 +55,12 @@ macro(add_examples_binding_if)
         # automatically prefix the target name
         set(_target "ActsExamplesPythonBindings${AEBI_NAME}")
 
-        pybind11_add_module(${_target} src/plugins/${AEBI_NAME}.cpp)
-
-        install(TARGETS ${_target} DESTINATION ${_examples_python_install_dir})
-
-        set_target_properties(
+        acts_add_python_module(
             ${_target}
-            PROPERTIES INSTALL_RPATH "${_examples_python_modules_rpath}"
-        )
-        set_target_properties(
-            ${_target}
-            PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts/examples
+            SOURCES src/plugins/${AEBI_NAME}.cpp
+            OUTPUT_DIRECTORY ${_python_dir}/acts/examples
+            INSTALL_DIRECTORY ${_examples_python_install_dir}
+            LIBRARY_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
         )
 
         target_link_libraries(
@@ -94,31 +78,34 @@ macro(add_examples_binding_if)
         set(PLUGIN_IMPORT "from acts import ${_name_lower}")
     endif()
 
-    configure_file(
+    acts_python_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/python/example.py.in
         ${_python_dir}/acts/examples/${_name_lower}.py
-        @ONLY
+        ${_examples_python_install_dir}
     )
     # Augment the file if needed
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in")
         file(
-            READ "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in"
+            READ
+            "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in"
             _extra_content
         )
         file(
-            APPEND "${_python_dir}/acts/examples/${_name_lower}.py"
+            APPEND
+            "${_python_dir}/acts/examples/${_name_lower}.py"
             "\n${_extra_content}"
         )
     endif()
-    # Install the file
-    install(
-        FILES ${_python_dir}/acts/examples/${_name_lower}.py
-        DESTINATION ${_examples_python_install_dir}
-    )
 endmacro()
 
 # Add the examples python binding
-pybind11_add_module(ActsExamplesPythonBindings src/ExamplesModuleEntry.cpp)
+acts_add_python_module(
+    ActsExamplesPythonBindings
+    SOURCES src/ExamplesModuleEntry.cpp
+    OUTPUT_DIRECTORY ${_python_dir}/acts/examples
+    INSTALL_DIRECTORY ${_examples_python_install_dir}
+    LIBRARY_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
+)
 
 add_dependencies(ActsPythonBindings ActsExamplesPythonBindings)
 
@@ -151,24 +138,15 @@ target_sources(
         src/Utilities.cpp
 )
 
-install(
-    TARGETS ActsExamplesPythonBindings
-    DESTINATION ${_examples_python_install_dir}
-)
-
 acts_pybind_generate_stubs(
     acts.examples
     ActsExamplesPythonBindings
-    ActsPythonBindings
-)
-
-set_target_properties(
-    ActsExamplesPythonBindings
-    PROPERTIES INSTALL_RPATH "${_examples_python_modules_rpath}"
-)
-set_target_properties(
-    ActsExamplesPythonBindings
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts/examples
+    PACKAGE
+    ENABLED ${ACTS_GENERATE_PYTHON_STUBS}
+    PYTHON_ROOT ${_python_dir}
+    PYTHON_EXECUTABLE ${Python_EXECUTABLE}
+    DEPENDS ActsPythonBindings
+    IGNORE_INVALID_IDENTIFIERS "GeoModelTree::FpvConstLink"
 )
 
 target_link_libraries(
@@ -306,18 +284,12 @@ add_examples_binding_if(
 )
 
 # Special case for HepMC3 as it a hard dependency
-pybind11_add_module(ActsExamplesPythonBindingsHepMC3 src/plugins/HepMC3.cpp)
-install(
-    TARGETS ActsExamplesPythonBindingsHepMC3
-    DESTINATION ${_examples_python_install_dir}
-)
-set_target_properties(
+acts_add_python_module(
     ActsExamplesPythonBindingsHepMC3
-    PROPERTIES INSTALL_RPATH "${_examples_python_modules_rpath}"
-)
-set_target_properties(
-    ActsExamplesPythonBindingsHepMC3
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts/examples
+    SOURCES src/plugins/HepMC3.cpp
+    OUTPUT_DIRECTORY ${_python_dir}/acts/examples
+    INSTALL_DIRECTORY ${_examples_python_install_dir}
+    LIBRARY_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
 )
 target_link_libraries(
     ActsExamplesPythonBindingsHepMC3
@@ -355,24 +327,11 @@ install(PROGRAMS ${_python_scripts} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Install the additional python files
 foreach(f ${py_files})
-    set(_target ${_python_dir}/acts/examples/${f})
-    get_filename_component(_dir ${_target} DIRECTORY)
-    file(MAKE_DIRECTORY ${_dir})
-
-    file(
-        CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/${f} ${_target}
-        SYMBOLIC
-    )
-
     get_filename_component(_rel ${f} DIRECTORY)
-    message(
-        STATUS
-        "Installing example python file: ${f} to ${_examples_python_install_dir}/${_rel}"
-    )
-
-    install(
-        FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-        DESTINATION ${_examples_python_install_dir}/${_rel}
+    acts_python_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
+        ${_python_dir}/acts/examples/${f}
+        ${_examples_python_install_dir}/${_rel}
     )
 endforeach()
 
