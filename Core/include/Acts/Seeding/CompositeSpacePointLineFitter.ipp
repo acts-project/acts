@@ -62,14 +62,18 @@ CompositeSpacePointLineFitter::DelegateRet_t<fitTime>
 CompositeSpacePointLineFitter::fastPrecFit(
     const Cont_t& measurements, const Line_t& initialGuess,
     const FastFitDelegate_t<Cont_t, fitTime>& delegate) const {
-  // The result is converted to the chamber frame from the frame of the first bending measurement
-  auto toChamber = [&measurements](DelegateRet_t<fitTime>& fitResult) -> DelegateRet_t<fitTime>& {
+  // The result is converted to the chamber frame from the frame of the first
+  // bending measurement
+  auto toChamber =
+      [&measurements](
+          DelegateRet_t<fitTime>& fitResult) -> DelegateRet_t<fitTime>& {
     if (fitResult) {
       auto refHit = std::ranges::find_if(measurements, [](const auto& m) {
         return (fitStraws && m->isStraw()) || (!fitStraws && m->measuresLoc1());
       });
       assert(refHit != measurements.end());
-      toChamberFrame(*fitResult, (*refHit)->toNextSensor(), (*refHit)->planeNormal(), Acts::eY);
+      toChamberFrame(*fitResult, (*refHit)->toNextSensor(),
+                     (*refHit)->planeNormal(), CoordinateIndices::eY);
     }
     return fitResult;
   };
@@ -215,20 +219,25 @@ CompositeSpacePointLineFitter::fastFit(
   result.parameters[toUnderlying(phi)] = VectorHelpers::phi(postFitDir);
   if (!m_cfg.fastPreFitter) {
     if (precResult && nonPrecResult) {
-      fastFitCovariance(*precResult, *nonPrecResult, postFitDir, result.covariance);
+      fastFitCovariance(*precResult, *nonPrecResult, postFitDir,
+                        result.covariance);
     } else if (precResult) {
-      fastFitCovariance(*precResult, Acts::eY, postFitDir, result.covariance);
+      fastFitCovariance(*precResult, CoordinateIndices::eY, postFitDir,
+                        result.covariance);
     } else if (nonPrecResult) {
-      fastFitCovariance(*nonPrecResult, Acts::eX, postFitDir, result.covariance);
+      fastFitCovariance(*nonPrecResult, CoordinateIndices::eX, postFitDir,
+                        result.covariance);
     }
   }
-  // ranges of the fitted parameters at the end, on the line parameters as in the full fit
+  // ranges of the fitted parameters at the end, on the line parameters as in
+  // the full fit
   for (const FitParIndex par : parsToUse) {
     if (par == t0 && !fitTime) {
       continue;
     }
     if (!withinRange(result.parameters[toUnderlying(par)], par)) {
-      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit parameter " << par << " is out of bounds.");
+      ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fit parameter " << par
+                          << " is out of bounds.");
       result.converged = false;
       break;
     }
@@ -260,7 +269,7 @@ CompositeSpacePointLineFitter::fastNonPrecFit(
   const auto& refHit{**firstNonPrecMeas};
   const Vector_t& eY{!refHit.measuresLoc1() ? refHit.toNextSensor()
                                             : refHit.sensorDirection()};
-  toChamberFrame(*result, eY, refHit.planeNormal(), Acts::eX);
+  toChamberFrame(*result, eY, refHit.planeNormal(), CoordinateIndices::eX);
   return result;
 }
 
@@ -318,7 +327,8 @@ CompositeSpacePointLineFitter::fit(
       }
     }
     FitParameters fastResult{};
-    // the fast fit uses only the measurements accepted by the selector (outliers excluded), as the full fit
+    // the fast fit uses only the measurements accepted by the selector
+    // (outliers excluded), as the full fit
     if (fitOpts.selector.connected()) {
       Cont_t selectedMeasurements{};
       for (const auto& m : result.measurements) {
@@ -367,9 +377,11 @@ CompositeSpacePointLineFitter::fit(
                                          resCfg.parsToUse, fitDelegate);
     }
     if (fastResult.converged) {
-      // t0 not fitted keeps its start value (x0 and tanAlpha are kept in fastFit)
+      // t0 not fitted keeps its start value (x0 and tanAlpha are kept in
+      // fastFit)
       if (!fitTime) {
-        fastResult.parameters[toUnderlying(FitParIndex::t0)] = result.parameters[toUnderlying(FitParIndex::t0)];
+        fastResult.parameters[toUnderlying(FitParIndex::t0)] =
+            result.parameters[toUnderlying(FitParIndex::t0)];
       }
       static_cast<FitParameters&>(result) = std::move(fastResult);
       ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit converged.");

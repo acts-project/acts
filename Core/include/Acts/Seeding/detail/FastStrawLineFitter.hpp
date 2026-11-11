@@ -8,14 +8,11 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/EventData/CompositeSpacePointCalibrator.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/RangeXD.hpp"
-#include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <vector>

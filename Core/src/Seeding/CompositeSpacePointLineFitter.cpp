@@ -29,41 +29,46 @@ CompositeSpacePointLineFitter::fastFitterCfg() const {
 
 void CompositeSpacePointLineFitter::toChamberFrame(
     FastFitter_t::FitResult& result, const Vector_t& eY, const Vector_t& eZ,
-    const std::size_t coord) {
-  // Line of the fast fit: through y0' eY with direction sin(angle) eY + cos(angle) eZ. Its slope dc/dz in the
-  // chamber and, as in the seeder, its intersection with the z = 0 plane: c = y0' (eY.c - eY.z slope)
+    const CoordinateIndices coord) {
+  assert(coord == CoordinateIndices::eY || coord == CoordinateIndices::eX);
+  const auto iCoord = toUnderlying(coord);
   const double sinA = std::sin(result.theta);
   const double cosA = std::cos(result.theta);
   const auto dir = copySign<Vector_t, double>(sinA * eY + cosA * eZ, sinA);
   assert(std::abs(dir.z()) > std::numeric_limits<double>::epsilon());
-  const double slope = dir[coord] / dir.z();
-  auto isect = PlanarHelper::intersectPlane(result.y0 * eY, dir, Vector_t::UnitZ(), 0.);
+  const double slope = dir[iCoord] / dir.z();
+  auto isect =
+      PlanarHelper::intersectPlane(result.y0 * eY, dir, Vector_t::UnitZ(), 0.);
   assert(isect.isValid());
   // Derivative of the direction w.r.t. the angle, with the same sign as dir
   const auto dDir = copySign<Vector_t, double>(cosA * eY - sinA * eZ, sinA);
-  const double dSlope = (dDir[coord] * dir.z() - dir[coord] * dDir.z()) / Acts::square(dir.z());
-  const double dPosdY0 = eY[coord] - eY.z() * slope;
+  const double dSlope =
+      (dDir[iCoord] * dir.z() - dir[iCoord] * dDir.z()) / Acts::square(dir.z());
+  const double dPosdY0 = eY[iCoord] - eY.z() * slope;
   const double dPosdA = -result.y0 * eY.z() * dSlope;
-  // Jacobian ((c, slope) w.r.t. (y0', angle)) = ((dPosdY0, dPosdA), (0, dSlope))
+  // Jacobian ((c, slope) w.r.t. (y0', angle)) = ((dPosdY0, dPosdA), (0,
+  // dSlope))
   const double varY0 = Acts::square(result.dY0);
   const double varA = Acts::square(result.dTheta);
   const double covY0A = result.covY0Theta;
-  result.y0 = isect.position()[coord];
+  result.y0 = isect.position()[iCoord];
   result.theta = slope;
-  result.dY0 = std::sqrt(Acts::square(dPosdY0) * varY0 + 2. * dPosdY0 * dPosdA * covY0A +
-                         Acts::square(dPosdA) * varA);
+  result.dY0 =
+      std::sqrt(Acts::square(dPosdY0) * varY0 + 2. * dPosdY0 * dPosdA * covY0A +
+                Acts::square(dPosdA) * varA);
   result.covY0Theta = (dPosdY0 * covY0A + dPosdA * varA) * dSlope;
   result.dTheta = std::abs(dSlope) * result.dTheta;
 }
 
 void CompositeSpacePointLineFitter::fastFitCovariance(
-    const FastFitter_t::FitResult& planeResult, const std::size_t coord,
+    const FastFitter_t::FitResult& planeResult, const CoordinateIndices coord,
     const Vector_t& lineDir, CovMat_t& cov) {
   using enum FitParIndex;
-  const bool bending = coord == Acts::eY;
+  assert(coord == CoordinateIndices::eY || coord == CoordinateIndices::eX);
+  const bool bending = coord == CoordinateIndices::eY;
   const auto iPos = toUnderlying(bending ? y0 : x0);
   const auto iAng = toUnderlying(bending ? theta : phi);
-  
+
   const double dirTheta = VectorHelpers::theta(lineDir);
   const double sinPhi = std::sin(VectorHelpers::phi(lineDir));
   if (std::abs(sinPhi) < std::numeric_limits<double>::epsilon()) {
@@ -104,9 +109,12 @@ void CompositeSpacePointLineFitter::fastFitCovariance(
   const double varTanA = Acts::square(nonPrecResult.dTheta);
   cov(iY0, iY0) = Acts::square(precResult.dY0);
   cov(iX0, iX0) = Acts::square(nonPrecResult.dY0);
-  cov(iTh, iTh) = Acts::square(dThdTb) * varTanB + Acts::square(dThdTa) * varTanA;
-  cov(iPh, iPh) = Acts::square(dPhdTb) * varTanB + Acts::square(dPhdTa) * varTanA;
-  cov(iTh, iPh) = cov(iPh, iTh) = dThdTb * dPhdTb * varTanB + dThdTa * dPhdTa * varTanA;
+  cov(iTh, iTh) =
+      Acts::square(dThdTb) * varTanB + Acts::square(dThdTa) * varTanA;
+  cov(iPh, iPh) =
+      Acts::square(dPhdTb) * varTanB + Acts::square(dPhdTa) * varTanA;
+  cov(iTh, iPh) = cov(iPh, iTh) =
+      dThdTb * dPhdTb * varTanB + dThdTa * dPhdTa * varTanA;
   cov(iY0, iTh) = cov(iTh, iY0) = precResult.covY0Theta * dThdTb;
   cov(iY0, iPh) = cov(iPh, iY0) = precResult.covY0Theta * dPhdTb;
   cov(iX0, iTh) = cov(iTh, iX0) = nonPrecResult.covY0Theta * dThdTa;
