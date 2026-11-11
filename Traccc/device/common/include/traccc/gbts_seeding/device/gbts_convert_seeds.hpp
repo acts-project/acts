@@ -66,7 +66,7 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
 
 struct gbts_fill_seeds_from_sorted_bids_payload {
   unsigned int nSeeds;
-	/// seed quality (30 bits) + dropout_index (2 bits) + prop_idx (32 bits) for
+  /// seed quality (30 bits) + dropout_index (2 bits) + prop_idx (32 bits) for
   /// ordering the seeds
   vecmem::data::vector_view<unsigned long long int> seed_bids;
   /// Per-path (edge index, parent path-store index or -1) entries
@@ -81,13 +81,15 @@ struct gbts_fill_seeds_from_sorted_bids_payload {
 ///
 /// Each thread (strided by gridSize) processes one accepted proposal,
 /// reads the three constituent spacepoint and places the seed in the
-/// ouput buffer
+/// output buffer
 ///
 /// @param[in] thread_id Thread identifier for the kernel launch
 /// @param[in] payload   The global memory payload
 ///
 template <concepts::thread_id1 thread_id_t>
-TRACCC_HOST_DEVICE inline void gbts_fill_seeds_from_sorted_bids(const thread_id_t& thread_id, const gbts_fill_seeds_from_sorted_bids_payload& payload);
+TRACCC_HOST_DEVICE inline void gbts_fill_seeds_from_sorted_bids(
+    const thread_id_t& thread_id,
+    const gbts_fill_seeds_from_sorted_bids_payload& payload);
 
 }  // namespace traccc::device
 
