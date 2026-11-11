@@ -23,6 +23,7 @@
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -345,31 +346,49 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   std::unordered_map<std::uint64_t, SimBarcode> cmlPidToActsBarcode;
   cmlPidToActsBarcode.reserve(static_cast<std::size_t>(nParticles));
 
-  SimParticleContainer::sequence_type particleSeq;
-  particleSeq.reserve(static_cast<std::size_t>(nParticles));
+  if (nParticles > std::numeric_limits<std::uint32_t>::max()) {
+    ACTS_ERROR("Too many particles in event: " << nParticles);
+    return ProcessCode::ABORT;
+  }
+
+  auto barcodeForRow = [&](std::int64_t row) {
+    return SimBarcode()
+        .withVertexPrimary(vprimArr->Value(pOff + row))
+        .withParticle(static_cast<std::uint64_t>(row))
+        .withGeneration(primaryArr->Value(pOff + row) ? 0u : 1u);
+  };
+
+  // Barcodes are (vertex_primary, 0, row, generation, 0) with unique rows, so
+  // sorting (vertex_primary, row) keys yields the container order without
+  // sorting the particle objects themselves.
+  std::vector<std::uint64_t> sortKeys;
+  sortKeys.reserve(static_cast<std::size_t>(nParticles));
 
   for (std::int64_t i = 0; i < nParticles; ++i) {
-    const std::uint16_t vp = vprimArr->Value(pOff + i);
-    const bool isPrimary = primaryArr->Value(pOff + i);
-
-    SimBarcode bc = SimBarcode()
-                        .withVertexPrimary(vp)
-                        .withParticle(static_cast<std::uint64_t>(i))
-                        .withGeneration(isPrimary ? 0u : 1u);
     const std::uint64_t pid = pidArr->Value(pOff + i);
-    cmlPidToActsBarcode[pid] = bc;
+    cmlPidToActsBarcode[pid] = barcodeForRow(i);
 
     if (!m_cfg.keepParticlesWithoutHits &&
         particleIdsWithHits.count(pid) == 0) {
       continue;
     }
+    sortKeys.push_back(
+        (static_cast<std::uint64_t>(vprimArr->Value(pOff + i)) << 32) |
+        static_cast<std::uint64_t>(i));
+  }
+  std::ranges::sort(sortKeys);
 
+  SimParticleContainer::sequence_type particleSeq;
+  particleSeq.reserve(sortKeys.size());
+
+  for (const std::uint64_t key : sortKeys) {
+    const auto i = static_cast<std::int64_t>(key & 0xFFFFFFFFu);
     const double mass = static_cast<double>(massArr->Value(pOff + i));
     const double charge = static_cast<double>(chargeArr->Value(pOff + i));
     const auto pdg =
         Acts::PdgParticle{static_cast<int>(pdgArr->Value(pOff + i))};
 
-    SimParticleState state(bc, pdg, charge, mass);
+    SimParticleState state(barcodeForRow(i), pdg, charge, mass);
     state.setPosition4(vxArr->Value(pOff + i), vyArr->Value(pOff + i),
                        vzArr->Value(pOff + i), vtArr->Value(pOff + i));
     const double px = pxArr->Value(pOff + i);
@@ -382,10 +401,11 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   }
 
   SimParticleContainer particles;
-  particles.insert(particleSeq.begin(), particleSeq.end());
+  particles.adopt_sequence(boost::container::ordered_unique_range,
+                           std::move(particleSeq));
 
   if (m_outputParticles.isInitialized()) {
-    m_outputParticles(ctx, SimParticleContainer(particles));
+    m_outputParticles(ctx, std::move(particles));
   }
 
   // ------------------------------------------------------------------
