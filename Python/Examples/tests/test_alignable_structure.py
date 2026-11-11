@@ -23,9 +23,10 @@ def test_structure_without_frame():
 
 
 def test_structure_fixed_frame():
+    translation = [12.0, -8.0, 30.0]
     rotation = np.array([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     frame = acts.Transform3(
-        acts.Vector3(12.0, -8.0, 30.0),
+        acts.Vector3(*translation),
         acts.RotationMatrix3(*(acts.Vector3(*rotation[:, i]) for i in range(3))),
     )
     structure = alignment.AlignableStructure(
@@ -37,7 +38,7 @@ def test_structure_fixed_frame():
     resolved = structure.localToGlobalTransform(
         acts.GeometryContext.dangerouslyDefaultConstruct()
     )
-    np.testing.assert_allclose(resolved.translation, [12.0, -8.0, 30.0])
+    np.testing.assert_allclose(resolved.translation, translation)
     np.testing.assert_allclose(
         [[resolved.rotation[i, j] for j in range(3)] for i in range(3)], rotation
     )
