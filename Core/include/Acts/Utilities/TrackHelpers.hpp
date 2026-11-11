@@ -360,8 +360,7 @@ Result<void> extrapolateTrackToReferenceSurface(
                << " with starting parameters " << parameters);
 
   auto propagateResult =
-      propagator.template propagate<propagator_options_t, ForcedSurfaceReached>(
-          parameters, referenceSurface, options);
+      propagator.propagate(parameters, referenceSurface, options);
 
   if (!propagateResult.ok()) {
     ACTS_DEBUG("failed to extrapolate track: " << propagateResult.error());
