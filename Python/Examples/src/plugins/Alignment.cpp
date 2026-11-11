@@ -8,15 +8,23 @@
 
 #include "Acts/Definitions/Alignment.hpp"
 
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
+#include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
+#include "ActsExamples/Alignment/ExampleAlignedTransformUpdater.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentDecorator.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentGenerator.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
+
+#include <bitset>
+#include <map>
 
 #include <pybind11/functional.h>
 #include <pybind11/operators.h>
@@ -89,7 +97,14 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
     py::class_<GeoIdAlignmentStore, IAlignmentStore,
                std::shared_ptr<GeoIdAlignmentStore>>(m, "GeoIdAlignmentStore")
         .def(py::init<
-             const std::unordered_map<GeometryIdentifier, Transform3>&>());
+             const std::unordered_map<GeometryIdentifier, Transform3>&>())
+        .def("setTransform", &GeoIdAlignmentStore::setTransform,
+             py::arg("geoId"), py::arg("transform"),
+             "Update or insert a transform for a given geometry ID")
+        .def("getTransformMap", &GeoIdAlignmentStore::getTransformMap,
+             py::return_value_policy::reference_internal,
+             "Return a new dict whose Transform3 values are live views of the "
+             "stored transforms");
   }
 
   {
@@ -228,4 +243,71 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
         .def_readwrite("randomize", &AlignmentGenerator::LocalShift::randomize)
         .def("__call__", &AlignmentGenerator::LocalShift::operator());
   }
+
+  using AA = ActsExamples::AlignmentAlgorithm;
+
+  auto c =
+      py::class_<AA::Config>(m, "AlignmentAlgorithmConfig").def(py::init<>());
+
+  ACTS_PYTHON_STRUCT(c, inputMeasurements, inputProtoTracks,
+                     inputInitialTrackParameters, outputAlignmentParameters,
+                     alignedDetElements, chi2ONdfCutOff, align,
+                     alignedTransformUpdater, deltaChi2ONdfCutOff,
+                     maxNumIterations, maxNumTracks);
+
+  c.def_property(
+      "iterationState",
+      [](const AA::Config& cfg) {
+        py::dict result;
+        for (const auto& [iter, mask] : cfg.iterationState) {
+          result[py::cast(iter)] =
+              py::cast(static_cast<std::uint8_t>(mask.to_ulong()));
+        }
+        return result;
+      },
+      [](AA::Config& cfg, py::dict d) {
+        // Convert first. A bad key or value throws before the stored map is
+        // replaced, so a rejected assignment keeps the previous configuration.
+        std::map<unsigned int, std::bitset<6>> parsed;
+        for (auto item : d) {
+          unsigned int iter = 0;
+          try {
+            iter = item.first.cast<unsigned int>();
+          } catch (const py::cast_error&) {
+            throw py::type_error("iterationState key must be an unsigned int");
+          }
+
+          std::uint8_t mask_value = 0;
+          if (py::isinstance<ActsAlignment::AlignmentMask>(item.second)) {
+            mask_value = static_cast<std::uint8_t>(
+                item.second.cast<ActsAlignment::AlignmentMask>());
+          } else if (py::isinstance<py::int_>(item.second)) {
+            mask_value = item.second.cast<std::uint8_t>();
+          } else {
+            throw py::type_error(
+                "iterationState value must be AlignmentMask or int");
+          }
+
+          parsed.emplace(iter, std::bitset<6>(mask_value));
+        }
+        cfg.iterationState = std::move(parsed);
+      });
+
+  py::class_<AA::AlignmentFunction, std::shared_ptr<AA::AlignmentFunction>>(
+      m, "AlignmentFunction");
+
+  m.def("makeAlignmentFunction", &AA::makeAlignmentFunction,
+        py::arg("trackingGeometry"), py::arg("magneticField"));
+
+  m.def("makeAlignedTransformUpdater", &makeAlignedTransformUpdater,
+        py::arg("store"),
+        "Create an aligned transform updater with an alignment store");
+
+  py::class_<AA, ActsExamples::IAlgorithm, std::shared_ptr<AA>>(
+      m, "AlignmentAlgorithm")
+      .def(py::init([](AA::Config cfg, Acts::Logging::Level level) {
+             return std::make_shared<AA>(
+                 std::move(cfg), getDefaultLogger("AlignmentAlgorithm", level));
+           }),
+           py::arg("config"), py::arg("level") = Acts::Logging::INFO);
 }

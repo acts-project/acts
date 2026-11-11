@@ -21,7 +21,7 @@ namespace Acts::Experimental {
 
 template <CompositeSpacePoint Sp_t>
 CompositeSpacePointLineSeeder::TwoCircleTangentPars
-CompositeSpacePointLineSeeder::constructTangentLine(const Sp_t& topHit,
+CompositeSpacePointLineSeeder::constructTangentSeed(const Sp_t& topHit,
                                                     const Sp_t& bottomHit,
                                                     const TangentAmbi ambi) {
   using namespace Acts::UnitLiterals;
@@ -76,6 +76,20 @@ CompositeSpacePointLineSeeder::constructTangentLine(const Sp_t& topHit,
   return result;
 }
 
+template <CompositeSpacePoint Sp_t>
+CompositeSpacePointLineSeeder::Line_t
+CompositeSpacePointLineSeeder::makeLineFromSeed(
+    const Sp_t& refHit, const TwoCircleTangentPars& seed) {
+  Vector dir = makeDirection(refHit, seed.theta);
+  const Vector& eY{refHit.toNextSensor()};
+  if (Acts::abs(eY.z()) > s_epsilon) {
+    using namespace Acts::PlanarHelper;
+    auto isect = intersectPlane(seed.y0 * eY, dir, Vector3::UnitZ(), 0.);
+    assert(isect.isValid());
+    return std::make_pair(isect.position(), std::move(dir));
+  }
+  return std::make_pair(seed.y0 * Vector3::UnitY(), std::move(dir));
+}
 template <CompositeSpacePoint Sp_t>
 CompositeSpacePointLineSeeder::Vector
 CompositeSpacePointLineSeeder::makeDirection(const Sp_t& refHit,
@@ -461,7 +475,7 @@ CompositeSpacePointLineSeeder::buildSeed(
                         << ".");
 
   const TwoCircleTangentPars seedPars =
-      constructTangentLine(lowerHit, upperHit, ambi);
+      constructTangentSeed(lowerHit, upperHit, ambi);
   ACTS_VERBOSE(__func__ << "() " << __LINE__
                         << " - Tangential parameters: " << seedPars);
   if (!isValidLine(seedPars)) {
@@ -480,8 +494,7 @@ CompositeSpacePointLineSeeder::buildSeed(
     return std::nullopt;
   }
 
-  const Line_t tangentSeed{seedPars.y0 * Vector3::UnitY(),
-                           makeDirection(lowerHit, seedPars.theta)};
+  const Line_t tangentSeed{makeLineFromSeed(lowerHit, seedPars)};
 
   const auto& [seedPos, seedDir] = tangentSeed;
 
