@@ -45,9 +45,12 @@ def test_structure_fixed_frame():
 
 
 def test_structure_owns_frame_provider():
+    initial_translation = [1.0, 2.0, 3.0]
+    updated_translation = [4.0, 5.0, 6.0]
+
     class Provider:
         def __init__(self):
-            self.frame = acts.Transform3(acts.Vector3(1.0, 2.0, 3.0))
+            self.frame = acts.Transform3(acts.Vector3(*initial_translation))
 
         def __call__(self, gctx):
             assert isinstance(gctx, acts.GeometryContext)
@@ -63,10 +66,10 @@ def test_structure_owns_frame_provider():
     assert retained() is not None
     context = acts.GeometryContext.dangerouslyDefaultConstruct()
     first = structure.localToGlobalTransform(context)
-    retained().frame = acts.Transform3(acts.Vector3(4.0, 5.0, 6.0))
+    retained().frame = acts.Transform3(acts.Vector3(*updated_translation))
     second = structure.localToGlobalTransform(context)
-    np.testing.assert_allclose(first.translation, [1.0, 2.0, 3.0])
-    np.testing.assert_allclose(second.translation, [4.0, 5.0, 6.0])
+    np.testing.assert_allclose(first.translation, initial_translation)
+    np.testing.assert_allclose(second.translation, updated_translation)
     del structure
     gc.collect()
     assert retained() is None
