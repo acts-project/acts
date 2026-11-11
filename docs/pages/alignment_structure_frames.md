@@ -99,7 +99,23 @@ API.
 The existing constructor `AlignableStructure(id)` remains available for hierarchy
 declarations. Such a structure has `hasTransform() == false`, and querying its
 frame throws `std::logic_error`. There is no implicit identity frame. An empty
-callable is rejected with `std::invalid_argument` at construction.
+callable is rejected with `std::invalid_argument` at construction or by
+`setTransform()`. A rejected replacement preserves the existing provider.
+
+A frame can also be attached after declaring the hierarchy, or replaced during
+configuration, using either overload:
+
+```cpp
+ActsAlignment::AlignableStructure structure(id);
+structure.setTransform(structureToGlobal);
+structure.setTransform(frameProvider);
+```
+
+The transform overload stores a copy; the callable overload owns the provider.
+Neither overload moves member surfaces. Callers must ensure there are no
+concurrent readers or writers while replacing a provider. Ordinary IOV changes
+should use `GeometryContext` with the installed provider. Replacing the frame
+alone does not apply a coordinated alignment correction to the member surfaces.
 
 Python exposes the same choices:
 
@@ -110,6 +126,10 @@ fixed = AlignableStructure(id, transform=structure_to_global)
 contextual = AlignableStructure(id, transformProvider=frame_provider)
 assert fixed.hasTransform
 frame = contextual.localToGlobalTransform(gctx)
+
+late_bound = AlignableStructure(id)
+late_bound.setTransform(transform=structure_to_global)
+late_bound.setTransform(transformProvider=frame_provider)
 ```
 
 Providing a frame does not yet enable numerical structure alignment. The native
