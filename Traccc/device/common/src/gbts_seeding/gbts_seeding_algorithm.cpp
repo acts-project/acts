@@ -456,27 +456,31 @@ auto gbts_seeding_algorithm::extract_seeds(
     }
     output_seeds = edm::seed_collection::buffer(nSeeds, mr().main);
     copy().setup(vecmem::ignore_event, output_seeds);
-    gbts_sort_seeds_kernel({.nSeeds = nSeeds, .seed_bids = seed_bids_buf, .path_store = path_store_buf, .output_edge_nodes = output_edge_nodes, .output_seeds = output_seeds}); 
+    gbts_sort_seeds_kernel({.nSeeds = nSeeds,
+                            .seed_bids = seed_bids_buf,
+                            .path_store = path_store_buf,
+                            .output_edge_nodes = output_edge_nodes,
+                            .output_seeds = output_seeds});
   } else {
     output_seeds = edm::seed_collection::buffer(
         2 * nPathsMax, mr().main, vecmem::data::buffer_type::resizable);
     copy().setup(vecmem::ignore_event, output_seeds);
-		
-		gbts_convert_seeds_kernel({
-				.nPathsMax = nPathsMax,
-				.nPathsGrid = nPathsGrid,
-				.path_count = path_count,
-				.seed_bids = seed_bids_buf,
-				.seed_proposals = seed_proposals_buf,
-				.seed_ambiguity = seed_ambiguity_buf,
-				.path_store = path_store_buf,
-				.output_edge_nodes = output_edge_nodes,
-				.reducedSP = reducedSP,
-				.output_seeds = output_seeds,
-				.hit_bids = hit_bids_buf,
-				.gbts_convert_seeds_params = cfg.gbts_convert_seeds_params,
-		});
-	}
+
+    gbts_convert_seeds_kernel({
+        .nPathsMax = nPathsMax,
+        .nPathsGrid = nPathsGrid,
+        .path_count = path_count,
+        .seed_bids = seed_bids_buf,
+        .seed_proposals = seed_proposals_buf,
+        .seed_ambiguity = seed_ambiguity_buf,
+        .path_store = path_store_buf,
+        .output_edge_nodes = output_edge_nodes,
+        .reducedSP = reducedSP,
+        .output_seeds = output_seeds,
+        .hit_bids = hit_bids_buf,
+        .gbts_convert_seeds_params = cfg.gbts_convert_seeds_params,
+    });
+  }
 
   // The caller synchronises for the seed count right after this.
   copy()(path_count,

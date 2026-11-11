@@ -106,27 +106,23 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
   const unsigned int blockDimX = thread_id.getBlockDimX();
   const unsigned int gridDimX = thread_id.getGridDimX();
 
-  // Loop over nPaths clamped to nMaxPaths when converting paths into seeds or
-  // seed_bids, nSeeds if filling the seed container from sorted bids
   const unsigned int nPaths = math::min(
       payload.nPathsMax,
       vecmem::device_vector<const unsigned int>(payload.path_count)[0]);
 
   for (unsigned int prop_idx = globalIdx; prop_idx < nPaths;
        prop_idx += blockDimX * gridDimX) {
-    int2 prop;
-    char diff_code = -1;
+    char diff_code = 0;
     bool force_dropout = false;
     unsigned long long int dropout_index = -1;
-		prop = d_seed_proposals[prop_idx];
-		diff_code = 0;
-		if (prop.y < 0) {
-			continue;
-		}
-		if (d_seed_ambiguity[prop_idx] == -2) {
-			continue;
-		}
     char best_for_hit = 0;
+    int2 prop = d_seed_proposals[prop_idx];
+    if (prop.y < 0) {
+      continue;
+    }
+    if (d_seed_ambiguity[prop_idx] == -2) {
+      continue;
+    }
     detail::Tracklet seed;
     seed.size = 0;
     int2 path = int2{0, prop.y};
@@ -177,8 +173,8 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
                        (diff_code == 0);
     }
     // zero out the last two bits of quality for the dropout index
-    //dropout index starts at 2 to prioitize the default/longer seed
-		const unsigned int quality_int = prop.x & 0xFFFFFFFC;
+    // dropout index starts at 2 to prioitize the default/longer seed
+    const unsigned int quality_int = prop.x & 0xFFFFFFFC;
     float quality = static_cast<float>(quality_int);
     unsigned long long int seed_bid =
         (static_cast<unsigned long long int>(quality_int) << 32) |
@@ -211,7 +207,8 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
     }
     // include 3rd order if it is consistent with 1 and 2 or only 1 and 2
     // are consistent or if only 2 and 3 are consistent
-    if ((diff_code == 2) | (diff_code == 3) | (diff_code == 4) | force_dropout) {
+    if ((diff_code == 2) | (diff_code == 3) | (diff_code == 4) |
+        force_dropout) {
       if (payload.gbts_convert_seeds_params.do_seed_sorting) {
         dropout_index = 0;
         d_seed_bids.push_back(seed_bid + (dropout_index << 32));
@@ -225,28 +222,29 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
 }
 
 template <concepts::thread_id1 thread_id_t>
-TRACCC_HOST_DEVICE inline void gbts_fill_seeds_from_sorted_bids(const thread_id_t& thread_id, const gbts_fill_seeds_from_sorted_bids_payload& payload) {
-  
+TRACCC_HOST_DEVICE inline void gbts_fill_seeds_from_sorted_bids(
+    const thread_id_t& thread_id,
+    const gbts_fill_seeds_from_sorted_bids_payload& payload) {
   edm::seed_collection::device seeds_device(payload.output_seeds);
-	vecmem::device_vector<long long unsigned int> d_seed_bids(payload.seed_bids);
+  vecmem::device_vector<long long unsigned int> d_seed_bids(payload.seed_bids);
   const vecmem::device_vector<const int2> d_path_store(payload.path_store);
   const vecmem::device_vector<const uint2> d_output_edge_nodes(
       payload.output_edge_nodes);
-	
-	const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
+
+  const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
   const unsigned int gridDimX = thread_id.getGridDimX();
-	
+
   for (unsigned int prop_idx = globalIdx; prop_idx < payload.nSeeds;
        prop_idx += blockDimX * gridDimX) {
-		// take the dropout index from the saved bid
-		unsigned long long int bid = d_seed_bids.at(prop_idx);
-		int2 prop = {bid >> 32, bid & 0xFFFFFFFF};
-		unsigned int dropout_index = prop.x & 0x3;
-		// match quality to non-sorted case
-		prop.x -= dropout_index;
-    
-		detail::Tracklet seed;
+    // take the dropout index from the saved bid
+    unsigned long long int bid = d_seed_bids.at(prop_idx);
+    int2 prop = {bid >> 32, bid & 0xFFFFFFFF};
+    unsigned int dropout_index = prop.x & 0x3;
+    // match quality to non-sorted case
+    prop.x -= dropout_index;
+
+    detail::Tracklet seed;
     seed.size = 0;
     int2 path = int2{0, prop.y};
     while (path.y >= 0) {
@@ -256,14 +254,14 @@ TRACCC_HOST_DEVICE inline void gbts_fill_seeds_from_sorted_bids(const thread_id_
     }
     seed.nodes[seed.size++] =
         d_output_edge_nodes[static_cast<unsigned int>(path.x)].y;
-		
-		const int node1 = seed.nodes[seed.size - 1 - (dropout_index == 0)];
-		const int node2 = seed.nodes[(seed.size - 1) / 2 + (dropout_index == 2)];
-		const int node3 = seed.nodes[0];
-		
-		auto out = seeds_device.at(prop_idx);
-		detail::set_seed(out, node1, node2, node3, static_cast<float>(prop.x));
-	}
+
+    const int node1 = seed.nodes[seed.size - 1 - (dropout_index == 0)];
+    const int node2 = seed.nodes[(seed.size - 1) / 2 + (dropout_index == 2)];
+    const int node3 = seed.nodes[0];
+
+    auto out = seeds_device.at(prop_idx);
+    detail::set_seed(out, node1, node2, node3, static_cast<float>(prop.x));
+  }
 }
 
 }  // namespace traccc::device
