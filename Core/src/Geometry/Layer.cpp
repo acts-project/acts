@@ -196,7 +196,7 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
   std::optional<IntersectionIndex> approachIndex;
   if (layerSurface.type() == Surface::Cylinder &&
       (options.resolveMaterial || options.resolvePassive)) {
-    // Include the start approach and geometrically relevant nonmaterial
+    // Include the start approach and geometrically relevant non material
     // approaches even though they may not be emitted as targets.
     for (const Surface* approach : m_approachDescriptor->containedSurfaces()) {
       if (approach->type() != Surface::Cylinder) {
