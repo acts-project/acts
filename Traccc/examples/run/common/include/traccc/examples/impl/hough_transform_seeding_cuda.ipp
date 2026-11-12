@@ -25,6 +25,10 @@
 #include "traccc/options/program_options.hpp"
 #include "traccc/options/threading.hpp"
 #include "traccc/options/throughput.hpp"
+#include "traccc/seeding/detail/track_params_estimation_config.hpp"
+#include "traccc/options/track_finding.hpp"
+#include "traccc/options/track_fitting.hpp"
+#include "traccc/options/track_propagation.hpp"
 
 // I/O include(s).
 #include "traccc/io/read_cells.hpp"
@@ -73,12 +77,15 @@ int hough_transform_seeding_cuda(std::string_view description, int argc, char* a
   opts::magnetic_field bfield_opts;
   opts::input_data input_opts;
   opts::clusterization clusterization_opts;
+  opts::track_finding finding_opts;
+  opts::track_propagation propagation_opts;
   opts::throughput throughput_opts;
   opts::threading threading_opts;
   opts::logging logging_opts;
   opts::program_options program_opts{
       description,
-      {detector_opts, bfield_opts, input_opts, clusterization_opts,
+      {detector_opts, bfield_opts, input_opts, clusterization_opts, 
+       finding_opts, propagation_opts,
        throughput_opts, threading_opts, logging_opts},
       argc,
       argv,
@@ -144,6 +151,14 @@ int hough_transform_seeding_cuda(std::string_view description, int argc, char* a
 
   typename FULL_CHAIN_ALG::seeding_algorithm::config_type seeding_cfg;
 
+  // param estimation
+  const traccc::track_params_estimation_config track_params_estimation_cfg;
+
+  detray::propagation::config propagation_config(propagation_opts);
+  typename FULL_CHAIN_ALG::finding_algorithm::config_type finding_cfg(
+      finding_opts);
+  finding_cfg.propagation = propagation_config;
+
   // Determine the await strategy to use.
   await_strategy await_mode = await_strategy::sync_event;
   if (threading_opts.await_mode == opts::threading::await_strategy::callback) {
@@ -160,6 +175,8 @@ int hough_transform_seeding_cuda(std::string_view description, int argc, char* a
     algs.emplace_back(std::make_unique<FULL_CHAIN_ALG>(unpinned_host_mr,
 						       clustering_cfg,
 						       seeding_cfg,
+                               track_params_estimation_cfg,
+                               finding_cfg,
 						       shared_data,
 						       logger().clone(),
 						       await_mode));

@@ -80,6 +80,8 @@ full_chain_hough_transform_algorithm::shared_data::shared_data(
 full_chain_hough_transform_algorithm::full_chain_hough_transform_algorithm(vecmem::memory_resource& host_mr,
 									   const clustering_config& clustering_config,
 									   const hough_seeding_config& seeding_config,
+                                       const track_params_estimation_config& track_params_estimation_config,
+                                       const finding_algorithm::config_type& finding_config,
 									   const shared_data& data,
 									   std::unique_ptr<const traccc::Logger> logger,
 									   await_strategy await_mode)
@@ -111,7 +113,13 @@ full_chain_hough_transform_algorithm::full_chain_hough_transform_algorithm(vecme
       m_seeding({m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
                 m_stream, seeding_config,
 		logger->cloneWithSuffix("SeedingAlg"),
-                m_await_function) {
+                m_await_function),
+      m_track_parameter_estimation(track_params_estimation_config,
+            {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy, m_stream,
+            logger->cloneWithSuffix("TrackParEstAlg"), m_await_function),
+      m_finding(finding_config, {m_cached_device_mr, &m_cached_pinned_host_mr},
+                m_copy, m_stream, logger->cloneWithSuffix("TrackFindingAlg"),
+                nullptr, m_await_function) {
   // Tell the user what device is being used.
   int device = 0;
   CUDA_ERROR_CHECK(cudaGetDevice(&device));
@@ -146,6 +154,12 @@ full_chain_hough_transform_algorithm::output_type full_chain_hough_transform_alg
     const seeding_algorithm::output_type seeds = 
 	    m_seeding(m_field, m_device_detector, measurements, spacepoints); 
 
+    const seed_parameter_estimation_algorithm::output_type track_params =
+        m_track_parameter_estimation(m_field, measurements, spacepoints, seeds);
+
+    const finding_algorithm::output_type track_candidates =
+        m_finding(m_device_detector, m_field, measurements, track_params);
+   
     // Copy the measurements back to the host.
     edm::measurement_collection::host measurements_host(m_host_mr);
     m_copy(measurements, measurements_host)->wait();

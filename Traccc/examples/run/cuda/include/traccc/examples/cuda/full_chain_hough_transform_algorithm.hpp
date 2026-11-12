@@ -14,6 +14,8 @@
 #include "traccc/cuda/clusterization/measurement_sorting_algorithm.hpp"
 #include "traccc/cuda/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
 #include "traccc/cuda/seeding/hough_transform_seeding_algorithm.hpp"
+#include "traccc/cuda/seeding/seed_parameter_estimation_algorithm.hpp"
+#include "traccc/cuda/finding/combinatorial_kalman_filter_algorithm.hpp"
 #include "traccc/cuda/utils/stream_wrapper.hpp"
 #include "traccc/edm/silicon_cell_collection.hpp"
 #include "traccc/edm/track_collection.hpp"
@@ -55,7 +57,11 @@ class full_chain_hough_transform_algorithm
  public:
   /// @name Type declaration(s)
   /// @{
-  /// Seeding algorithm
+  /// Track Finding type
+  using finding_algorithm = traccc::cuda::combinatorial_kalman_filter_algorithm;
+  /// Seed parameter algorithm type
+  using parameter_estimation_algorithm = traccc::cuda::seed_parameter_estimation_algorithm;
+  /// Seeding algorithm type
   using seeding_algorithm = traccc::cuda::hough_transform_seeding_algorithm;
   /// Spacepoint formation algorithm type
   using spacepoint_formation_algorithm =
@@ -104,6 +110,8 @@ class full_chain_hough_transform_algorithm
   full_chain_hough_transform_algorithm(vecmem::memory_resource& host_mr,
 				       const clustering_config& clustering_config,
 				       const hough_seeding_config& seeding_config,
+                       const track_params_estimation_config& track_params_estimation_config,
+                       const finding_algorithm::config_type& finding_config,
 				       const shared_data& data,
 				       std::unique_ptr<const traccc::Logger> logger,
 				       await_strategy = await_strategy::sync_event);
@@ -164,6 +172,10 @@ class full_chain_hough_transform_algorithm
   spacepoint_formation_algorithm m_spacepoint_formation;
   /// Seeding algorithm
   seeding_algorithm m_seeding;
+  /// Track parameter estimation algorithm
+  parameter_estimation_algorithm m_track_parameter_estimation;
+  /// Track finding algorithm
+  finding_algorithm m_finding;
 };
 
 }  // namespace traccc::cuda
