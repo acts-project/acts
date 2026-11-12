@@ -15,6 +15,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -346,11 +347,6 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   std::unordered_map<std::uint64_t, SimBarcode> cmlPidToActsBarcode;
   cmlPidToActsBarcode.reserve(static_cast<std::size_t>(nParticles));
 
-  if (nParticles > std::numeric_limits<std::uint32_t>::max()) {
-    ACTS_ERROR("Too many particles in event: " << nParticles);
-    return ProcessCode::ABORT;
-  }
-
   auto barcodeForRow = [&](std::int64_t row) {
     return SimBarcode()
         .withVertexPrimary(vprimArr->Value(pOff + row))
@@ -361,7 +357,8 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   // Barcodes are (vertex_primary, 0, row, generation, 0) with unique rows, so
   // sorting (vertex_primary, row) keys yields the container order without
   // sorting the particle objects themselves.
-  std::vector<std::uint64_t> sortKeys;
+  using SortKey = Acts::MultiIndex<std::uint64_t, 32, 32>;
+  std::vector<SortKey> sortKeys;
   sortKeys.reserve(static_cast<std::size_t>(nParticles));
 
   for (std::int64_t i = 0; i < nParticles; ++i) {
@@ -372,17 +369,16 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
         particleIdsWithHits.count(pid) == 0) {
       continue;
     }
-    sortKeys.push_back(
-        (static_cast<std::uint64_t>(vprimArr->Value(pOff + i)) << 32) |
-        static_cast<std::uint64_t>(i));
+    sortKeys.push_back(SortKey::Encode(vprimArr->Value(pOff + i),
+                                       static_cast<std::uint64_t>(i)));
   }
-  std::ranges::sort(sortKeys);
+  std::ranges::sort(sortKeys, {}, &SortKey::value);
 
   SimParticleContainer::sequence_type particleSeq;
   particleSeq.reserve(sortKeys.size());
 
-  for (const std::uint64_t key : sortKeys) {
-    const auto i = static_cast<std::int64_t>(key & 0xFFFFFFFFu);
+  for (const SortKey key : sortKeys) {
+    const auto i = static_cast<std::int64_t>(key.level(1));
     const double mass = static_cast<double>(massArr->Value(pOff + i));
     const double charge = static_cast<double>(chargeArr->Value(pOff + i));
     const auto pdg =
