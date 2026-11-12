@@ -72,6 +72,9 @@ class gbts_seeding_algorithm : public device::gbts_seeding_algorithm,
       const device::gbts_fill_path_store_payload& payload) const override;
   void gbts_bid_seeds_for_hits_kernel(
       const device::gbts_bid_seeds_for_hits_payload& payload) const override;
+  void gbts_sort_seeds_kernel(
+      const device::gbts_fill_seeds_from_sorted_bids_payload& payload)
+      const override;
   void gbts_convert_seeds_kernel(
       const device::gbts_convert_seeds_payload& payload) const override;
 
