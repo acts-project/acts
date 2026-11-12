@@ -607,6 +607,70 @@ BOOST_AUTO_TEST_CASE(JoinEmptySecondPassKeepsStatesAndTargetEstimate) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(LinkOnlyJoinsUnsmoothedTracklets) {
+  const auto nodes = makeModel(Variant::Base);
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  constexpr auto mask =
+      TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
+      TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
+
+  // filtered tracklets without smoothed states, as from a filter without a
+  // smoother
+  std::map<std::size_t, BoundVector> filteredOfNode;
+  auto appendTracklet = [&](Container::TrackProxy& track,
+                            std::initializer_list<std::size_t> trackletNodes,
+                            BoundVector mean, BoundMatrix cov) {
+    for (std::size_t node : trackletNodes) {
+      appendState(track, nodes[node], mean, cov, mask);
+      auto ts = track.outermostTrackState();
+      mean = ts.filtered();
+      cov = ts.filteredCovariance();
+      filteredOfNode[node] = mean;
+    }
+  };
+  auto first = tc.makeTrack();
+  appendTracklet(first, {0, 1, 2, 3}, kPriorMean, kPriorCov);
+  first.linkForward();
+  auto shared = *std::ranges::next(first.trackStatesReversed().begin(), 3);
+  BOOST_REQUIRE(shared.typeFlags().isMeasurement());
+  auto second = tc.makeTrack();
+  appendTracklet(second, {4, 5, 6}, shared.filtered(),
+                 shared.filteredCovariance());
+
+  // the default joiner needs a smoothed first tracklet
+  BOOST_CHECK(!TrackletJoiner{}.joinCopy(gctx, tc, first, shared, second).ok());
+
+  TrackletJoiner::Config cfg;
+  cfg.smoothSecond = false;
+  cfg.conditionFirst = false;
+  const TrackletJoiner linker(cfg);
+  auto copy = linker.joinCopy(gctx, tc, first, shared, second);
+  BOOST_REQUIRE(copy.ok());
+  BOOST_REQUIRE(linker.joinInPlace(gctx, first, shared, second).ok());
+
+  // the first tracklet from its tip, then the second tracklet from its start
+  const std::vector<std::size_t> order = {3, 2, 1, 0, 4, 5, 6};
+  for (const auto& joined : {first, *copy}) {
+    std::vector<std::size_t> backward;
+    std::size_t i = 0;
+    for (const auto& ts : joined.trackStatesReversed()) {
+      BOOST_REQUIRE_LT(i, order.size());
+      BOOST_CHECK(!ts.hasSmoothed());
+      CHECK_CLOSE_ABS(ts.filtered(), filteredOfNode.at(order[i]), 0.);
+      backward.push_back(ts.index());
+      ++i;
+    }
+    BOOST_CHECK_EQUAL(i, order.size());
+    std::vector<std::size_t> forward;
+    for (const auto& ts : joined.trackStates()) {
+      forward.push_back(ts.index());
+    }
+    std::ranges::reverse(backward);
+    BOOST_CHECK_EQUAL_COLLECTIONS(forward.begin(), forward.end(),
+                                  backward.begin(), backward.end());
+  }
+}
+
 BOOST_AUTO_TEST_CASE(RejectInvalidCovariances) {
   Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto t = buildTracklets(tc, makeModel(Variant::Base), Variant::Base);
