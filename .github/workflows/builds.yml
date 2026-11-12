@@ -431,9 +431,6 @@ jobs:
   # keeps requiring them.
   # ─────────────────────────────────────────────────────────────────────
   changes:
-    # Gates gnn_build, gnn_tensorrt and cuda_muon_build, which in turn gate
-    # gnn_gpu and cuda_muon_gpu. Skipping it here skips all five.
-    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -527,7 +524,7 @@ jobs:
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
-    if: github.event_name != 'pull_request' || needs.changes.outputs.gnn == 'true'
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
@@ -724,7 +721,7 @@ jobs:
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
-    if: github.event_name != 'pull_request' || needs.changes.outputs.gnn == 'true'
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
@@ -796,7 +793,7 @@ jobs:
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
-    if: github.event_name != 'pull_request' || needs.changes.outputs.cuda_muon == 'true'
+    if: false  # DISABLED for physmon CI test — do not merge
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
