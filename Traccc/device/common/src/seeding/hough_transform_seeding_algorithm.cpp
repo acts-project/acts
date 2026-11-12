@@ -435,12 +435,17 @@ auto hough_transform_seeding_algorithm::operator()(
         vecmem::data::buffer_type::resizable);
   copy().setup(matrices)->ignore();
 
+  // Create the result object.
+  edm::seed_collection::buffer seed_buffer(total_maxima, mr().main);
+  copy().setup(vecmem::ignore_event, seed_buffer);
+
   make_seeds_kernel({total_maxima,
                      spacepoints,
                      spacepoint_r,
                      nn_outcome,
                      hits,
-                     matrices});
+                     matrices,
+                     seed_buffer});
   
 
   /*  
@@ -466,12 +471,40 @@ auto hough_transform_seeding_algorithm::operator()(
   throw; 
   */
 
+
+  /*
+  // -------------------------------------------------------------------------------------
+  edm::seed_collection::view seeds_view_host;
+  edm::seed_collection::buffer seeds_buffer_host;
+
+  if (mr().host) {
+    seeds_buffer_host = copy().to(seed_buffer, *(mr().host));
+    seeds_view_host = seeds_buffer_host;
+  } else {
+    seeds_view_host = seed_buffer;
+  }
+  edm::seed_collection::device seeds_host_device(seeds_view_host);
+
+  for (unsigned int i(0); i<seeds_host_device.size(); ++i) {
+    const auto& seed = seeds_host_device[i];
+    std::cout << "Seed " << i << ": "
+            << "bottom=" << seed.bottom_index() << " "
+            << "middle=" << seed.middle_index() << " "
+            << "top=" << seed.top_index() << " "
+            << "quality=" << seed.quality() << std::endl;
+  }
+  throw;
+  // -------------------------------------------------------------------------------------
+  */
+
+
+
   // no idea
   synchronize();
 
   // Return the result.
   // return result;
-  return {};
+  return seed_buffer;
 }
 
 }  // namespace traccc::device

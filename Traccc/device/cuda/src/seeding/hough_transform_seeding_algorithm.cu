@@ -206,11 +206,13 @@ namespace kernels {
                   const vecmem::data::vector_view<const scalar> spacepoint_r,
                   const vecmem::data::vector_view<const unsigned int> nn_outcome,
                   const vecmem::data::jagged_vector_view<const traccc::device::global_index_t> hits,
-                  vecmem::data::jagged_vector_view<scalar> cot_theta_matrix) {
+                  vecmem::data::jagged_vector_view<scalar> cot_theta_matrix,
+                  edm::seed_collection::view seeds) {
         device::make_seeds(details::global_index1(), n_images,
                            spacepoints, spacepoint_r,
                            nn_outcome, hits,
-                           cot_theta_matrix);
+                           cot_theta_matrix,
+                           seeds);
   }
 } // namespace kernels
 
@@ -372,7 +374,8 @@ void hough_transform_seeding_algorithm::make_seeds_kernel(const make_seeds_paylo
                                                                                    payload.spacepoint_r,
                                                                                    payload.nn_outcome,                                                                                   
                                                                                    payload.hits,
-                                                                                   payload.cot_theta_matrix);
+                                                                                   payload.cot_theta_matrix,
+                                                                                   payload.seeds);
 }
 
 void hough_transform_seeding_algorithm::synchronize() const {

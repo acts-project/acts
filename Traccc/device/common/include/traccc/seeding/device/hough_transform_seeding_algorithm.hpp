@@ -227,6 +227,8 @@ class hough_transform_seeding_algorithm
     const vecmem::data::jagged_vector_view<const global_index_t>& hits;
     // Cot-Theta matrix for filtering
     vecmem::data::jagged_vector_view<scalar>& cot_theta_matrix;
+    // Seeds
+    edm::seed_collection::view& seeds;
   };
 
   virtual void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const = 0;
