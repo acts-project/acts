@@ -56,6 +56,21 @@ std::uint32_t advanceGroupEnd(const SpacePointGroup& group, std::uint32_t end,
   return end;
 }
 
+/// The columns kept longer than the candidates by this many values, which
+/// the doublet finders read to make their flags for whole vectors: zeros, or
+/// candidates of an earlier batch
+constexpr std::size_t kColumnPadding = 16;
+
+/// Make room in the columns for a number of candidates
+void reserveColumns(TripletSeeder::Cache::CandidateColumns& columns,
+                    std::size_t size) {
+  if (columns.z.size() < size + kColumnPadding) {
+    columns.z.resize(size + kColumnPadding);
+    columns.r.resize(size + kColumnPadding);
+    columns.indices.resize(size + kColumnPadding);
+  }
+}
+
 /// The seeds of one middle space point. The candidates are what the doublet
 /// finders take: they make the radial cut, so the candidates may be more than
 /// the middle space point's own radial range holds.
@@ -201,6 +216,32 @@ void TripletSeeder::createSeedsFromGroups(
       candidateSpGroups[g] = spGroup.subrange(0, ends[g]);
     }
   };
+  // the candidates of all groups copied into columns, one group after the
+  // other: the doublet finders then go through them in one piece, and read
+  // them from a few hundred bytes for each middle space point of the batch
+  const auto zrColumn = spacePoints.zrColumn().data();
+  const auto copyCandidates =
+      [&](const std::vector<SpacePointContainer::ConstRange>& candidateSpGroups,
+          Cache::CandidateColumns& columns) {
+        std::size_t next = 0;
+        for (const SpacePointContainer::ConstRange& spGroup :
+             candidateSpGroups) {
+          const SpacePointIndex first = spGroup.range().first;
+          const std::size_t count = spGroup.size();
+          reserveColumns(columns, next + count);
+          float* const z = columns.z.data() + next;
+          float* const r = columns.r.data() + next;
+          SpacePointIndex* const indices = columns.indices.data() + next;
+          for (std::size_t k = 0; k < count; ++k) {
+            z[k] = zrColumn[first + k][0];
+            r[k] = zrColumn[first + k][1];
+            indices[k] = static_cast<SpacePointIndex>(first + k);
+          }
+          next += count;
+        }
+        columns.count = next;
+      };
+
   // the middle space points that share one cut of the groups: their radial
   // ranges nearly coincide, and the doublet finders cut each one's exactly
   constexpr std::uint32_t middleSpsPerCut = 8;
@@ -269,8 +310,16 @@ void TripletSeeder::createSeedsFromGroups(
             [&](const ConstSpacePointProxy& sp) {
               return rLast - sp.zr()[1] >= bottomDeltaRMin;
             });
+        copyCandidates(cache.topCandidateSpGroups, cache.topCandidates);
+        copyCandidates(cache.bottomCandidateSpGroups, cache.bottomCandidates);
       }
       --middleSpsUntilCut;
+
+      createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
+                                tripletFinder, filter, spacePoints,
+                                cache.bottomCandidates, spM,
+                                cache.topCandidates, outputSeeds);
+      continue;
     }
 
     createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,

@@ -16,6 +16,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <span>
 #include <stdexcept>
 #include <type_traits>
@@ -77,6 +78,9 @@ class Impl final : public DoubletSeedFinder {
     if (candidateSpGroups.empty()) {
       return;
     }
+    // whether the candidates come as columns of their own
+    constexpr bool candidatesAsColumns =
+        std::is_same_v<CandidateSps, CandidateColumns>;
     const float impactMax =
         isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
 
@@ -123,8 +127,7 @@ class Impl final : public DoubletSeedFinder {
                          (cotTheta * cotTheta) * (varianceRM + varianceRO));
     };
 
-    const SpacePointContainer& container =
-        candidateSpGroups.front().container();
+    const SpacePointContainer& container = middleSp.container();
     const auto xyColumn = container.xyColumn().data();
     const auto zrColumn = container.zrColumn().data();
     const auto varianceZColumn = container.varianceZColumn().data();
@@ -140,8 +143,10 @@ class Impl final : public DoubletSeedFinder {
     // the index in the container of the k-th candidate of a group
     const auto candidateIndex = [](const CandidateSps& candidateSps,
                                    std::size_t k) -> std::size_t {
-      if constexpr (std::is_same_v<CandidateSps,
-                                   SpacePointContainer::ConstRange>) {
+      if constexpr (candidatesAsColumns) {
+        return candidateSps.indices[k];
+      } else if constexpr (std::is_same_v<CandidateSps,
+                                          SpacePointContainer::ConstRange>) {
         return candidateSps.range().first + k;
       } else {
         return candidateSps.subset()[k];
@@ -163,8 +168,13 @@ class Impl final : public DoubletSeedFinder {
     // measured difference with initialization
     // please don't remove this without profiling
     // NOLINTBEGIN(cppcoreguidelines-pro-type-member-init)
-    std::array<std::uint32_t, blockSize> passesZRTimeCuts;
+    [[maybe_unused]] std::array<std::uint32_t, blockSize> passesZRTimeCuts;
     std::array<SpacePointIndex, blockSize> passedIndices;
+    // for candidates in columns: a flag in a byte, with room for the vectors
+    // that start in the block, and the positions in the block of those that
+    // passed, with room for the eight written at a time
+    [[maybe_unused]] std::array<std::uint8_t, blockSize + 16> passesAsBytes;
+    [[maybe_unused]] std::array<std::uint8_t, blockSize + 8> passedPositions;
     // the x-y difference of each candidate that passed, and its u-v frame with
     // the cuts made in it; only filled without the strip calibration
     [[maybe_unused]] std::array<float, blockSize> deltaXs;
@@ -198,30 +208,13 @@ class Impl final : public DoubletSeedFinder {
                                       xNewFrame, yNewFrame);
     };
 
-    // the groups' candidates go through the z-r and time cuts block by block
-    // until those that passed would no longer fit in a block, or the
-    // candidates end; then the other cuts are made for those collected
-    std::size_t group = 0;
-    std::size_t blockBegin = 0;
-    while (group < candidateSpGroups.size()) {
-      std::uint32_t nPassed = 0;
-      while (group < candidateSpGroups.size()) {
-        const CandidateSps& candidateSps = candidateSpGroups[group];
-        const std::size_t blockCount =
-            std::min(blockSize, candidateSps.size() - blockBegin);
-        if (nPassed + blockCount > blockSize) {
-          break;
-        }
-
-        // the z-r and time cuts for every candidate of the block, one flag
-        // each
-        std::uint32_t nBlockPassed = 0;
-        for (std::size_t i = 0; i < blockCount; ++i) {
-          const std::size_t indexO =
-              candidateIndex(candidateSps, blockBegin + i);
-          const auto& zrO = zrColumn[indexO];
-          const float deltaR = outerMinusInner(rM, zrO[1]);
-          const float deltaZ = outerMinusInner(zM, zrO[0]);
+    // whether a candidate fails the cuts that need only its z and radius, or
+    // the time cut
+    const auto failsZRTimeCuts =
+        [&](const float zO, const float rO,
+            [[maybe_unused]] const std::size_t indexO) {
+          const float deltaR = outerMinusInner(rM, rO);
+          const float deltaZ = outerMinusInner(zM, zO);
 
           // the radial cut is made here also for candidates sorted by
           // radius: their range may be that of several middle space points
@@ -258,26 +251,81 @@ class Impl final : public DoubletSeedFinder {
           // light (which is 1 in ACTS units)
           if constexpr (useTime) {
             const auto& xyO = xyColumn[indexO];
-            const float distance =
-                fastHypot(xyO[0] - xM, xyO[1] - yM, zrO[0] - zM);
+            const float distance = fastHypot(xyO[0] - xM, xyO[1] - yM, zO - zM);
             const float dt = outerMinusInner(tM, timeColumn[indexO]) - distance;
             const float varianceDt = varianceTM + varianceTColumn[indexO];
             outside |= dt * dt > m_cfg.timeCutNSigma2 * varianceDt;
           }
+          return outside;
+        };
 
-          passesZRTimeCuts[i] = outside ? 0 : 1;
-          nBlockPassed += passesZRTimeCuts[i];
+    // the groups' candidates go through the z-r and time cuts block by block
+    // until those that passed would no longer fit in a block, or the
+    // candidates end; then the other cuts are made for those collected
+    std::size_t group = 0;
+    std::size_t blockBegin = 0;
+    while (group < candidateSpGroups.size()) {
+      std::uint32_t nPassed = 0;
+      while (group < candidateSpGroups.size()) {
+        const CandidateSps& candidateSps = candidateSpGroups[group];
+        const std::size_t blockCount =
+            std::min(blockSize, candidateSps.size() - blockBegin);
+        if (nPassed + blockCount > blockSize) {
+          break;
         }
 
-        // collect the indices of the candidates that passed, in order
-        if (nBlockPassed != 0) {
-          std::size_t next = nPassed;
-          for (std::size_t i = 0; i < blockCount; ++i) {
-            passedIndices[next] = static_cast<SpacePointIndex>(
-                candidateIndex(candidateSps, blockBegin + i));
-            next += passesZRTimeCuts[i];
+        // the z-r and time cuts for every candidate of the block, one flag
+        // each
+        std::uint32_t nBlockPassed = 0;
+        if constexpr (candidatesAsColumns) {
+          const float* const blockZ = candidateSps.z.data() + blockBegin;
+          const float* const blockR = candidateSps.r.data() + blockBegin;
+          const SpacePointIndex* const blockIndices =
+              candidateSps.indices.data() + blockBegin;
+          // the flags are made for whole vectors where the columns go on past
+          // the candidates, which leaves the loop no remainder; the flags
+          // past the candidates are then cleared
+          const std::size_t flagCount =
+              useTime ? blockCount
+                      : std::min((blockCount + 15) & ~std::size_t{15},
+                                 candidateSps.z.size() - blockBegin);
+          for (std::size_t i = 0; i < flagCount; ++i) {
+            passesAsBytes[i] =
+                failsZRTimeCuts(blockZ[i], blockR[i],
+                                useTime ? blockIndices[i] : SpacePointIndex{0})
+                    ? 0
+                    : 1;
+          }
+          std::memset(passesAsBytes.data() + blockCount, 0, 16);
+
+          // collect the positions in the block of the candidates that passed,
+          // in order
+          nBlockPassed = detail::collectSetFlags(
+              passesAsBytes.data(), blockCount, passedPositions.data());
+          for (std::uint32_t k = 0; k < nBlockPassed; ++k) {
+            passedIndices[nPassed + k] = blockIndices[passedPositions[k]];
           }
           nPassed += nBlockPassed;
+        } else {
+          for (std::size_t i = 0; i < blockCount; ++i) {
+            const std::size_t indexO =
+                candidateIndex(candidateSps, blockBegin + i);
+            const auto& zrO = zrColumn[indexO];
+            passesZRTimeCuts[i] =
+                failsZRTimeCuts(zrO[0], zrO[1], indexO) ? 0 : 1;
+            nBlockPassed += passesZRTimeCuts[i];
+          }
+
+          // collect the indices of the candidates that passed, in order
+          if (nBlockPassed != 0) {
+            std::size_t next = nPassed;
+            for (std::size_t i = 0; i < blockCount; ++i) {
+              passedIndices[next] = static_cast<SpacePointIndex>(
+                  candidateIndex(candidateSps, blockBegin + i));
+              next += passesZRTimeCuts[i];
+            }
+            nPassed += nBlockPassed;
+          }
         }
 
         blockBegin += blockCount;
@@ -509,6 +557,15 @@ class Impl final : public DoubletSeedFinder {
       std::span<const SpacePointContainer::ConstRange> candidateSpGroups,
       DoubletsForMiddleSp& compatibleDoublets) const override {
     createDoubletsImpl(middleSp, middleSpInfo, candidateSpGroups,
+                       compatibleDoublets);
+  }
+
+  void createDoublets(const ConstSpacePointProxy& middleSp,
+                      const MiddleSpInfo& middleSpInfo,
+                      const CandidateColumns& candidates,
+                      DoubletsForMiddleSp& compatibleDoublets) const override {
+    createDoubletsImpl(middleSp, middleSpInfo,
+                       std::span<const CandidateColumns>(&candidates, 1),
                        compatibleDoublets);
   }
 

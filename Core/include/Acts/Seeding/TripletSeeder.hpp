@@ -57,6 +57,14 @@ class TripletSeeder {
     /// Each top group as passed to the doublet finder, cut to the radial
     /// range of the current batch of middle space points
     std::vector<SpacePointContainer::ConstRange> topCandidateSpGroups;
+
+    /// Columns of candidates copied out of the space point container
+    using CandidateColumns = DoubletSeedFinder::CandidateColumns;
+    /// The bottom candidates of the current batch of middle space points, of
+    /// all groups one after the other
+    CandidateColumns bottomCandidates;
+    /// The top candidates of the current batch of middle space points
+    CandidateColumns topCandidates;
   };
 
   /// Construct a TripletSeeder with optional logger.
