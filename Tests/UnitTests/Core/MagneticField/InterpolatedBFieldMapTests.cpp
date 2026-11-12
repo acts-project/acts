@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <numbers>
 #include <optional>
+#include <stdexcept>
 #include <utility>
 
 using Acts::VectorHelpers::perp;
@@ -289,6 +290,89 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rphiz_cache_azimuth) {
     CHECK_CLOSE_ABS(cached, expected(pos), 1e-12);
     CHECK_CLOSE_ABS(cached, b.getField(pos).value(), 1e-12);
   }
+}
+
+// A Cartesian map with a position-independent transformation can apply it
+// once per cached cell instead of once per lookup, with the same result.
+BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_position_independent) {
+  // (Bx,By,Bz) linear in x, y and z so interpolation should be exact
+  auto value = [](double x, double y, double z) {
+    return Vector3(1. + 0.1 * x, -0.5 + 0.2 * y, 2. + 0.05 * z);
+  };
+
+  auto transformPos = [](const Vector3& pos) { return pos; };
+
+  // identity, counting its calls
+  std::size_t nTransforms = 0;
+  auto transformBField = [&nTransforms](const Vector3& field,
+                                        const Vector3& /*pos*/) {
+    ++nTransforms;
+    return field;
+  };
+
+  // cells of size 1 in x, y and z
+  Axis xAxis(-2., 3., 5u);
+  Axis yAxis(-2., 3., 5u);
+  Axis zAxis(-2., 3., 5u);
+  Grid g(Type<Vector3>, std::move(xAxis), std::move(yAxis), std::move(zAxis));
+  using Grid_t = decltype(g);
+  using BField_t = InterpolatedBFieldMap<Grid_t>;
+
+  for (std::size_t i = 1; i <= g.multiAxis().getNBins().at(0) + 1; ++i) {
+    for (std::size_t j = 1; j <= g.multiAxis().getNBins().at(1) + 1; ++j) {
+      for (std::size_t k = 1; k <= g.multiAxis().getNBins().at(2) + 1; ++k) {
+        Grid_t::index_t indices = {{i, j, k}};
+        const auto& llCorner = g.multiAxis().getLowerLeftBinEdge(indices);
+        g.atLocalBins(indices) =
+            value(llCorner.at(0), llCorner.at(1), llCorner.at(2));
+      }
+    }
+  }
+
+  const std::array<Vector3, 4> positions = {
+      Vector3(0.1, 0.2, 0.3), Vector3(0.9, 0.5, 0.1), Vector3(0.4, 0.8, 0.7),
+      Vector3(0.6, 0.1, 0.95)};
+
+  for (bool dependsOnPosition : {true, false}) {
+    BField_t::Config cfg{transformPos, transformBField, g};
+    cfg.transformDependsOnPosition = dependsOnPosition;
+    BField_t b{std::move(cfg)};
+
+    auto bCacheAny = b.makeCache(mfContext);
+    BField_t::Cache& bCache = bCacheAny.as<BField_t::Cache>();
+
+    nTransforms = 0;
+    for (const Vector3& pos : positions) {
+      const Vector3 cached = b.getField(pos, bCacheAny).value();
+      BOOST_CHECK(bCache.fieldCell->isInside(pos));
+      CHECK_CLOSE_ABS(cached, value(pos.x(), pos.y(), pos.z()), 1e-12);
+    }
+    // all positions share one cell: one transformation per corner when the
+    // cell is filled, or one per lookup
+    BOOST_CHECK_EQUAL(nTransforms, dependsOnPosition ? positions.size() : 8u);
+
+    for (const Vector3& pos : positions) {
+      CHECK_CLOSE_ABS(b.getField(pos, bCacheAny).value(),
+                      b.getField(pos).value(), 1e-12);
+    }
+  }
+}
+
+// Applying the transformation once per cell requires Cartesian field values.
+BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_position_independent_vector3) {
+  auto transformPos = [](const Vector3& pos) {
+    return Vector2(perp(pos), pos.z());
+  };
+  auto transformBField = [](const Vector2& field, const Vector3& /*pos*/) {
+    return Vector3(0., field.x(), field.y());
+  };
+
+  Grid g(Type<Vector2>, Axis(0.0, 4.0, 4u), Axis(-5., 7., 6u));
+  using BField_t = InterpolatedBFieldMap<decltype(g)>;
+
+  BField_t::Config cfg{transformPos, transformBField, std::move(g)};
+  cfg.transformDependsOnPosition = false;
+  BOOST_CHECK_THROW(BField_t{std::move(cfg)}, std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
