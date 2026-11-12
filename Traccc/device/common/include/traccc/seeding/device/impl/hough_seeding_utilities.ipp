@@ -23,13 +23,13 @@ inline std::pair<global_index_t, global_index_t> get_wedge_element(const global_
     global_index_t wedge_idx = 0;
     global_index_t element_idx = 0;
 
-    for (global_index_t i(0); i<container.size(); ++i) {
-        if (container[i].size() > current_size) {
+    for (global_index_t i(0); i<container.capacity(); ++i) {
+        if (container[i].capacity() > current_size) {
            wedge_idx = i;
            element_idx = current_size;
            break;
         }
-        current_size -= container[i].size();
+        current_size -= container[i].capacity();
     }
     return {wedge_idx, element_idx};
 }

@@ -28,7 +28,7 @@ void make_seeds(const global_index_t globalIndex,
     if (nn_outcome[globalIndex] == 0) return;
  
     const vecmem::jagged_device_vector<const global_index_t> hits(hits_view);
-    if (hits[globalIndex].size() < 3) return;
+    if (hits[globalIndex].capacity() < 3) return;
 
     const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
     const vecmem::device_vector<const scalar> spacepoint_r(spacepoint_r_view);
@@ -37,11 +37,11 @@ void make_seeds(const global_index_t globalIndex,
 
     unsigned int counter = 0u;
     const auto& associated_hits = hits[globalIndex];
-    for (unsigned int i(0); i<associated_hits.size(); ++i) {
+    for (unsigned int i(0); i<associated_hits.capacity(); ++i) {
         const unsigned int i_index = associated_hits[i];
         const scalar ri = spacepoint_r[i_index];
         const scalar zi = spacepoints[i_index].z();
-        for (unsigned int j(0); j<associated_hits.size(); ++j) {
+        for (unsigned int j(0); j<associated_hits.capacity(); ++j) {
             ++counter;
             if (i == j) continue;
             const unsigned int j_index = associated_hits[j];

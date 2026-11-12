@@ -101,7 +101,7 @@ auto hough_transform_seeding_algorithm::operator()(
           spacepoint_bfield_z});
   
 
-  /*
+  /*  
   // --------------------------------------------------------------------------------------
   edm::spacepoint_collection::const_view sp_host_view;
   edm::spacepoint_collection::buffer sp_host_buffer;
@@ -361,7 +361,7 @@ auto hough_transform_seeding_algorithm::operator()(
   copy()(hits_sizes, hits_sizes_host)->wait();
 
 
-  /*  
+  /*
   // -------------------------------------------------------------------------------------
   std::cout << std::endl;
   std::cout << "Number of images: " << total_maxima << std::endl;
@@ -374,6 +374,7 @@ auto hough_transform_seeding_algorithm::operator()(
   // for (unsigned int i(0); i<hits_sizes_host.size(); ++i) total_hits += hits_sizes_host[i];
   // -------------------------------------------------------------------------------------
   */
+
 
 
   vecmem::data::jagged_vector_buffer<global_index_t> hits(hits_sizes_host,
@@ -442,7 +443,7 @@ auto hough_transform_seeding_algorithm::operator()(
                      matrices});
   
 
-  /*
+  /*  
   // -------------------------------------------------------------------------------------
   vecmem::data::jagged_vector_view<scalar> matrices_host_view;
   vecmem::data::jagged_vector_buffer<scalar> matrices_host_buffer;
@@ -462,8 +463,8 @@ auto hough_transform_seeding_algorithm::operator()(
     std::cout << std::endl;
   };
   // -------------------------------------------------------------------------------------
+  throw; 
   */
-
 
   // no idea
   synchronize();
