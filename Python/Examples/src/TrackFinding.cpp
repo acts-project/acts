@@ -101,7 +101,7 @@ void addTrackFinding(py::module& mex) {
     ACTS_PYTHON_STRUCT(c, minPt, maxEdgesPerSP, minDeltaRadius, doubletFilterRZ,
                        matchBeforeCreate, validateTriplets, calibrateStrips,
                        maxOuterRadius, z0HistogramMaxBarrelOrder,
-                       useSumRatioCut, sumRatioCutMax);
+                       pruneShortChains, useSumRatioCut, sumRatioCutMax);
     patchKwargsConstructor(c);
   }
 

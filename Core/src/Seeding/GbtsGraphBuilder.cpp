@@ -223,9 +223,10 @@ GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
       m_geometry(std::move(geometry)),
       m_logger(std::move(logger)) {}
 
-GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
-                                          GbtsNodeStorage& nodeStorage,
-                                          const float bFieldInZ) const {
+GbtsGraph GbtsGraphBuilder::buildTheGraph(
+    const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
+    const float bFieldInZ,
+    const std::span<const std::uint32_t> minEdgeLevel) const {
   GbtsGraph graph;
   std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
 
@@ -275,9 +276,20 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
   KeptContainer kept;
 
-  // per window: the connected nodes of its bin, where useZ0Histogram filters
-  // them; reused across bin groups as the windows are
+  // per window: the nodes of its bin that the z0 histogram or the chain
+  // pruning keeps; reused across bin groups as the windows are
   std::vector<std::vector<std::pair<float, SpacePointIndex>>> connectedPhiNodes;
+
+  const bool pruneShortChains = m_cfg.pruneShortChains && !minEdgeLevel.empty();
+  assert(!pruneShortChains || minEdgeLevel.size() == m_geometry->numBins());
+
+  // per edge its level, the longest chain outwards, saturated; per node the
+  // highest level of its edges
+  std::vector<std::uint8_t> edgeLevel;
+  std::vector<std::uint8_t> nodeLevel;
+  if (pruneShortChains) {
+    nodeLevel.assign(nodeStorage.numberOfNodes(), 0);
+  }
 
   const bool calibrate = m_cfg.calibrateStrips && nodeStorage.hasStrips();
 
@@ -318,6 +330,12 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
     const bool useMatchBeforeCreate =
         m_cfg.matchBeforeCreate && barrelOrder1 >= 0 &&
         barrelOrder1 <= m_cfg.matchBeforeCreateMaxBarrelOrder;
+
+    // An edge of this bin below this level is on no chain long enough for a
+    // seed. Its level is final once it is linked, as the outer bins are built
+    // first. Every edge has level 1, so 1 prunes nothing.
+    const std::uint32_t minLevel1 = pruneShortChains ? minEdgeLevel[bg.bin] : 0;
+    const bool pruneGroup = minLevel1 > 1;
 
     // prepare a sliding window for each non-empty bin2 in the group
 
@@ -371,9 +389,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
       // Isolated n2 nodes are skipped below for every n1 of this group, and
       // the branch is unpredictable. Filter them out of the window once
-      // instead. Not for the group's own bin: its nodes gain connections as
-      // n1 is processed.
-      if (useZ0Histogram && link.bin != bg.bin) {
+      // instead, and with the chain pruning the n2 nodes whose chains are too
+      // short. Not for the group's own bin: its nodes gain connections as n1
+      // is processed.
+      if ((useZ0Histogram || pruneGroup) && link.bin != bg.bin) {
         const std::size_t windowIdx = phiSlidingWindow.size() - 1;
         // growing the outer vector moves the inner ones, which keeps their
         // buffers, so earlier windows' pointers stay valid
@@ -384,7 +403,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
             connectedPhiNodes[windowIdx];
         connected.clear();
         for (const auto& phiNode : B2.phiNodes) {
-          if (edgeInfo[phiNode.second].isConnected != 0) {
+          const bool keep =
+              (!useZ0Histogram || edgeInfo[phiNode.second].isConnected != 0) &&
+              (!pruneGroup || nodeLevel[phiNode.second] + 1u >= minLevel1);
+          if (keep) {
             connected.push_back(phiNode);
           }
         }
@@ -402,6 +424,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
       // the counter for the incoming graph edges created for n1
       std::uint16_t numCreatedEdges = 0;
+
+      std::uint8_t maxLevel1 = 0;
 
       bool isConnected = false;
 
@@ -709,6 +733,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
             const float phi2u = phi2 + dPhi2;
             const float curv2 = curv;
 
+            const std::size_t numLinks = links.size();
+            std::uint8_t level = 1;
+
             // looking for neighbours of the new edge
             for (std::uint32_t outerEdgeIdx = n2FirstEdge;
                  outerEdgeIdx < n2LastEdge; ++outerEdgeIdx) {
@@ -768,6 +795,13 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
               links.emplace_back(outerEdgeIdx, newEdgeIdx);
 
+              if (pruneShortChains && edgeLevel[outerEdgeIdx] >= level) {
+                const std::uint8_t outerLevel = edgeLevel[outerEdgeIdx];
+                level = outerLevel == std::numeric_limits<std::uint8_t>::max()
+                            ? outerLevel
+                            : static_cast<std::uint8_t>(outerLevel + 1);
+              }
+
               isConnected = true;  // there is at least one good match
 
               // edge confirmed - update z0 histogram. Only doubletFilterRZ
@@ -779,6 +813,17 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                 ++z0Histo[static_cast<std::size_t>(z0BinIndex)];
               }
             }
+
+            if (pruneGroup && level < minLevel1) {
+              // Its z0 stays in the histogram, so that the z0 cut further in is
+              // the same as without the pruning.
+              links.resize(numLinks);
+              edgeStorage.pop_back();
+              --numCreatedEdges;
+            } else if (pruneShortChains) {
+              edgeLevel.push_back(level);
+              maxLevel1 = std::max(maxLevel1, level);
+            }
           }
         }  // loop over n2 (outer) nodes inside a sliding window on n2 bin
       }  // loop over sliding windows associated with n2 bins
@@ -786,6 +831,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       // updating the n1 node attributes
 
       edgeInfo[n1Idx].numEdges = numCreatedEdges;
+      if (pruneShortChains) {
+        nodeLevel[n1Idx] = maxLevel1;
+      }
       if (isConnected) {
         std::uint16_t z0BitMask = 0x0;
 

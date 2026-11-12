@@ -161,6 +161,10 @@ class GbtsGraphBuilder {
     /// disables it.
     std::int32_t matchBeforeCreateMaxBarrelOrder = 1;
 
+    /// Leave out edges and outer nodes that cannot be on a chain long enough
+    /// for a seed, see `buildTheGraph`.
+    bool pruneShortChains = false;
+
     /// Half-width of the z0 window against which a node is matched in the
     /// histogram.
     float z0Resolution = 2.5f * Acts::UnitConstants::mm;
@@ -196,9 +200,13 @@ class GbtsGraphBuilder {
   /// @param roi Region of interest descriptor
   /// @param nodeStorage Data storage containing nodes
   /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
+  /// @param minEdgeLevel Per eta bin, the level an edge whose inner node is in
+  ///        the bin needs to be on a seed, for `pruneShortChains`; empty for
+  ///        no pruning
   /// @return The graph, with its edges and the links between them
-  GbtsGraph buildTheGraph(const GbtsRoiDescriptor& roi,
-                          GbtsNodeStorage& nodeStorage, float bFieldInZ) const;
+  GbtsGraph buildTheGraph(
+      const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
+      float bFieldInZ, std::span<const std::uint32_t> minEdgeLevel = {}) const;
 
  private:
   Config m_cfg;

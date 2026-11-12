@@ -204,6 +204,15 @@ of the inner layer, and a negative limit switches the cut off:
   rejects candidates whose @f$z_0@f$ falls in an empty bin, and nodes with no
   connections at all are skipped outright.
 
+With `pruneShortChains` the graph builder also leaves out the
+edges that cannot be on a chain long enough for a seed. The seeder hands it a
+minimum level per eta bin: `minSeedLevel`, less one with `addTriplets`, and
+less @f$k@f$ for a bin from which a chain can still go @f$k@f$ connection steps
+further in. Edges are linked to the edges further out as they are created, and
+those are built first, so an edge's level is known right away: one below its
+bin's minimum is dropped, and outer nodes whose highest edge level cannot reach
+it are not tried.
+
 ## Chain levels {#gbts-levels}
 
 With the edge graph built, every edge gets a **level**: the length of the
@@ -293,6 +302,7 @@ The cuts that build and link the doublets live on
 | `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
 | `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
+| `pruneShortChains` | @ref gbts-graph | leave out edges too short for a seed while the graph is built |
 The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
 
 | Option | Stage | Effect |
