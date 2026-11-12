@@ -35,18 +35,6 @@ std::string printThetaStep(const double theta, const double thetaPrime,
       inDeg(theta), inDeg(thetaPrime), inDeg(thetaTwoPrime),
       inDeg(thetaPrime / thetaTwoPrime));
 }
-/// @brief Oblique projector onto the z = 0 plane along the direction d,
-///        P = 1 - d e_z^T / d_z
-///
-/// P p is the crossing of the line (p, d) with the z = 0 plane, so P is the
-/// derivative of the crossing w.r.t. the line point, and P / d_z the
-/// derivative of the slopes d / d_z w.r.t. the direction.
-/// @param dir: Direction of the line, not parallel to the plane
-Acts::SquareMatrix<3> zPlaneProjector(const Acts::Vector3& dir) {
-  assert(std::abs(dir.z()) > std::numeric_limits<double>::epsilon());
-  return Acts::SquareMatrix<3>::Identity() -
-         dir * Acts::Vector3::UnitZ().transpose() / dir.z();
-}
 /// @brief Covariance of a fast fit in its (intercept, angle) parameters
 /// @param result: Fast fit result
 Acts::SquareMatrix<2> planeCov(
@@ -157,7 +145,10 @@ void FastStrawLineFitter::toChamberFrame(const FitAuxiliaries& fitPars,
   // Derivative of the direction w.r.t. the angle, with the same sign as dir
   const auto dDir = copySign<Vector, double>(cosA * eY - sinA * eZ, sinA);
 
-  const SquareMatrix<3> proj = zPlaneProjector(dir);
+  // Oblique projector to the plane z = 0 along the direction dir
+  assert(std::abs(dir.z()) > std::numeric_limits<double>::epsilon());
+  const SquareMatrix<3> proj =
+      SquareMatrix<3>::Identity() - dir * Vector::UnitZ().transpose() / dir.z();
   // Jacobian of (c, slope) w.r.t. (y0', angle): the position y0' eY and the
   // direction vary through the projector
   const double dIsectdY0 = (proj * eY)[iCoord];
