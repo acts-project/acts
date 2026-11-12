@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/HoughAccumulatorSection.hpp"
 #include "Acts/Utilities/HashCombine.hpp"
@@ -75,6 +76,10 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                        // this with fieldCorrection function
                        // This 3e-4 comes from the 2T field when converted to
                        // units of GeV / (c*mm*e)
+
+    float minDeltaR =
+        5.0f * Acts::UnitConstants::mm;  // minimum radial separation between
+                                         // scpace points in a triplet
   };
 
   /// @brief Lightweight representation of a 3-spacepoint seed candidate

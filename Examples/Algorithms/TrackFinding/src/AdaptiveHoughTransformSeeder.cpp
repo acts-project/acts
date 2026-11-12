@@ -8,7 +8,6 @@
 
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -326,69 +325,41 @@ void AdaptiveHoughTransformSeeder::findClustersQOverPtPhi(
       xVals.push_back({lineFunctor(m, yCheck), measIdx});
     }
 
-    const unsigned validCnt = xVals.size();
-    if (validCnt < reqLines) {
-      continue;
-    }
-
-    // Sort evaluated line positions along the phi axis to enable 1D sliding
-    // window cluster identification in O(N log N) time
+    // Sort evaluated coordinates along the primary axis for 1D sliding
+    // window clustering
     std::sort(xVals.begin(), xVals.end());
 
     unsigned start = 0;
     unsigned end = reqLines - 1;
-    bool candidateFound = false;
 
     // Two-pointer greedy 1D sliding window scan
-    while (end < validCnt) {
-      if (xVals[end].x - xVals[start].x <= maxSpread) {
-        end++;
-      } else {
-        if (end - start >= reqLines) {
-          std::vector<unsigned> clusteredIndices;
-          clusteredIndices.reserve(end - start);
-          for (unsigned k = start; k < end; ++k) {
-            clusteredIndices.push_back(xVals[k].idx);
-          }
-
-          // Sort measurement indices to form a canonical key for hash
-          // deduplication
-          std::sort(clusteredIndices.begin(), clusteredIndices.end());
-
-          if (uniqueClusters.insert(clusteredIndices).second) {
-            Phase1Candidate candidate;
-            candidate.indices = std::move(clusteredIndices);
-            candidate.zMin = section.history(zSplitMinIndex);
-            candidate.zWidth = section.history(zSplitWidthIndex);
-            candidate.cotThetaMin = section.history(cotThetaSplitMinIndex);
-            candidate.cotThetaWidth = section.history(cotThetaSplitWidthIndex);
-            output.push_back(std::move(candidate));
-            candidateFound = true;
-            break;
-          }
+    while (end < cnt) {
+      while (end < cnt && xVals[end].x - xVals[start].x <= maxSpread) {
+        ++end;
+      }
+      if (end - start >= reqLines) {
+        std::vector<unsigned> clusteredIndices;
+        clusteredIndices.reserve(end - start);
+        for (unsigned k = start; k < end; ++k) {
+          clusteredIndices.push_back(xVals[k].idx);
         }
-        start++;
-      }
-    }
 
-    if (!candidateFound && end - start >= reqLines) {
-      std::vector<unsigned> clusteredIndices;
-      clusteredIndices.reserve(end - start);
-      for (unsigned k = start; k < end; ++k) {
-        clusteredIndices.push_back(xVals[k].idx);
-      }
+        // Sort measurement indices to form a canonical key for hash
+        // deduplication
+        std::sort(clusteredIndices.begin(), clusteredIndices.end());
 
-      std::sort(clusteredIndices.begin(), clusteredIndices.end());
-
-      if (uniqueClusters.insert(clusteredIndices).second) {
-        Phase1Candidate candidate;
-        candidate.indices = std::move(clusteredIndices);
-        candidate.zMin = section.history(zSplitMinIndex);
-        candidate.zWidth = section.history(zSplitWidthIndex);
-        candidate.cotThetaMin = section.history(cotThetaSplitMinIndex);
-        candidate.cotThetaWidth = section.history(cotThetaSplitWidthIndex);
-        output.push_back(std::move(candidate));
+        if (uniqueClusters.insert(clusteredIndices).second) {
+          Phase1Candidate candidate;
+          candidate.indices = std::move(clusteredIndices);
+          candidate.zMin = section.history(zSplitMinIndex);
+          candidate.zWidth = section.history(zSplitWidthIndex);
+          candidate.cotThetaMin = section.history(cotThetaSplitMinIndex);
+          candidate.cotThetaWidth = section.history(cotThetaSplitWidthIndex);
+          output.push_back(std::move(candidate));
+          break;
+        }
       }
+      ++start;
     }
   }
 }
@@ -491,15 +462,14 @@ void AdaptiveHoughTransformSeeder::findClustersZCotTheta(
         bool validRSpread = false;
         for (unsigned j = i; j < clusterEndIdx; ++j) {
           const double r = measurements[yVals[j].idx].r;
-          if (r - minR > 5.0 * Acts::UnitConstants::mm &&
-              maxR - r > 5.0 * Acts::UnitConstants::mm) {
+          if (r - minR > m_cfg.minDeltaR && maxR - r > m_cfg.minDeltaR) {
             validRSpread = true;
             idxMid = j;
             break;
           }
         }
 
-        if (!validRSpread || maxR - minR < 10.0 * Acts::UnitConstants::mm) {
+        if (!validRSpread || maxR - minR < 2 * m_cfg.minDeltaR) {
           continue;
         }
 
@@ -612,8 +582,7 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
     double lastR = -1000.0;
     for (unsigned sidx : sortedIndices) {
       const PreprocessedMeasurement &m = measurements[sidx];
-      if (spIndex == 0 ||
-          std::abs(m.r - lastR) > 5.0 * Acts::UnitConstants::mm) {
+      if (spIndex == 0 || std::abs(m.r - lastR) > m_cfg.minDeltaR) {
         sp[spIndex] = spacePoints.at(m.sp);
         lastR = m.r;
         spIndex++;
