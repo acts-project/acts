@@ -13,9 +13,14 @@
 #include "Acts/Seeding/TripletSeedFinder.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
+#include <cstring>
+#include <limits>
 #include <span>
+#include <utility>
 
 #include <Eigen/Dense>
 
@@ -69,6 +74,62 @@ void reserveColumns(TripletSeeder::Cache::CandidateColumns& columns,
     columns.r.resize(size + kColumnPadding);
     columns.indices.resize(size + kColumnPadding);
   }
+}
+
+/// The straight lines in the r-z plane between which a candidate must lie to
+/// pair with any of a few middle space points.
+struct CandidateReach {
+  /// z at radius 0 of the line below the candidates
+  float zLowAt0{};
+  /// Slope dz/dr of the line below the candidates
+  float zLowSlope{};
+  /// z at radius 0 of the line above the candidates
+  float zHighAt0{};
+  /// Slope dz/dr of the line above the candidates
+  float zHighSlope{};
+};
+
+/// Copy the candidates within reach, in their order. Those left out fail the
+/// collision region cut with every middle space point the reach was made for.
+void pruneCandidates(const TripletSeeder::Cache::CandidateColumns& all,
+                     const CandidateReach reach,
+                     TripletSeeder::Cache::CandidateColumns& kept) {
+  constexpr std::size_t blockSize = 256;
+  const std::size_t size = all.count;
+  reserveColumns(kept, size);
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-member-init)
+  std::array<std::uint8_t, blockSize + 16> inReach;
+  std::array<std::uint8_t, blockSize + 8> positions;
+  // NOLINTEND(cppcoreguidelines-pro-type-member-init)
+  std::size_t count = 0;
+  for (std::size_t begin = 0; begin < size; begin += blockSize) {
+    const std::size_t blockCount = std::min(blockSize, size - begin);
+    const float* const z = all.z.data() + begin;
+    const float* const r = all.r.data() + begin;
+    const SpacePointIndex* const indices = all.indices.data() + begin;
+    // one flag a candidate, for whole vectors: the columns go on past the
+    // candidates
+    const std::size_t flagCount = (blockCount + 15) & ~std::size_t{15};
+    for (std::size_t i = 0; i < flagCount; ++i) {
+      const float rO = r[i];
+      const float zO = z[i];
+      const bool outside = static_cast<bool>(
+          static_cast<int>(zO < reach.zLowAt0 + rO * reach.zLowSlope) |
+          static_cast<int>(zO > reach.zHighAt0 + rO * reach.zHighSlope));
+      inReach[i] = outside ? 0 : 1;
+    }
+    std::memset(inReach.data() + blockCount, 0, 16);
+
+    const std::uint32_t nInReach =
+        detail::collectSetFlags(inReach.data(), blockCount, positions.data());
+    for (std::uint32_t k = 0; k < nInReach; ++k) {
+      kept.z[count + k] = z[positions[k]];
+      kept.r[count + k] = r[positions[k]];
+      kept.indices[count + k] = indices[positions[k]];
+    }
+    count += nInReach;
+  }
+  kept.count = count;
 }
 
 /// The seeds of one middle space point. The candidates are what the doublet
@@ -244,8 +305,77 @@ void TripletSeeder::createSeedsFromGroups(
 
   // the middle space points that share one cut of the groups: their radial
   // ranges nearly coincide, and the doublet finders cut each one's exactly
-  constexpr std::uint32_t middleSpsPerCut = 8;
+  constexpr std::uint32_t middleSpsPerCut = 16;
   std::uint32_t middleSpsUntilCut = 0;
+
+  // The middle space points of a batch are split in parts by z. Between the
+  // lines from the ends of the collision region through the middle space
+  // points of a part lie all candidates that pass the collision region cut
+  // with any of them: the others are left out for the part, once, where each
+  // middle space point would cut them itself. The margins are far above the
+  // rounding of the cuts.
+  constexpr float zMargin = 0.5;
+  std::uint32_t batchBegin = 0;
+  std::array<std::uint8_t, middleSpsPerCut> partOfMiddleSp{};
+  const auto reachOf = [&](const DoubletSeedFinder::DerivedConfig& config,
+                           const bool isBottom, const float zMin,
+                           const float zMax, const float rMin,
+                           const float rMax) {
+    CandidateReach reach;
+    // the end of the collision region the line below the candidates starts
+    // at, and the one above them
+    const float lowAt0 =
+        isBottom ? config.collisionRegionMin : config.collisionRegionMax;
+    const float highAt0 =
+        isBottom ? config.collisionRegionMax : config.collisionRegionMin;
+    if (std::isfinite(lowAt0) && std::isfinite(highAt0)) {
+      reach.zLowAt0 = lowAt0 - zMargin;
+      reach.zLowSlope =
+          std::min((zMin - lowAt0) / rMin, (zMin - lowAt0) / rMax);
+      reach.zHighAt0 = highAt0 + zMargin;
+      reach.zHighSlope =
+          std::max((zMax - highAt0) / rMin, (zMax - highAt0) / rMax);
+    } else {
+      reach.zLowAt0 = std::numeric_limits<float>::lowest();
+      reach.zHighAt0 = std::numeric_limits<float>::max();
+    }
+    return reach;
+  };
+  const auto splitBatch = [&](const std::uint32_t first,
+                              const std::uint32_t last) {
+    batchBegin = first;
+    const std::uint32_t batchCount = last - first + 1;
+    std::array<std::pair<float, std::uint8_t>, middleSpsPerCut> byZ{};
+    for (std::uint32_t i = 0; i < batchCount; ++i) {
+      byZ[i] = {middleSpGroup[first + i].zr()[0], static_cast<std::uint8_t>(i)};
+    }
+    std::sort(byZ.begin(), byZ.begin() + batchCount);
+    for (std::uint32_t part = 0; part < Cache::kSubBatches; ++part) {
+      const std::uint32_t begin = part * batchCount / Cache::kSubBatches;
+      const std::uint32_t end = (part + 1) * batchCount / Cache::kSubBatches;
+      if (begin == end) {
+        continue;
+      }
+      float rMin = std::numeric_limits<float>::max();
+      float rMax = std::numeric_limits<float>::lowest();
+      for (std::uint32_t j = begin; j < end; ++j) {
+        const float r = middleSpGroup[first + byZ[j].second].zr()[1];
+        rMin = std::min(rMin, r);
+        rMax = std::max(rMax, r);
+        partOfMiddleSp[byZ[j].second] = static_cast<std::uint8_t>(part);
+      }
+      const float zMin = byZ[begin].first;
+      const float zMax = byZ[end - 1].first;
+      pruneCandidates(
+          cache.topCandidates,
+          reachOf(topFinder.config(), false, zMin, zMax, rMin, rMax),
+          cache.topSubCandidates[part]);
+      pruneCandidates(
+          cache.bottomCandidates,
+          reachOf(bottomFinder.config(), true, zMin, zMax, rMin, rMax),
+          cache.bottomSubCandidates[part]);
+    }
+  };
 
   if (spacePointsSortedByRadius) {
     // Initialize initial offsets for bottom and top space points with binary
@@ -312,13 +442,15 @@ void TripletSeeder::createSeedsFromGroups(
             });
         copyCandidates(cache.topCandidateSpGroups, cache.topCandidates);
         copyCandidates(cache.bottomCandidateSpGroups, cache.bottomCandidates);
+        splitBatch(m, last);
       }
       --middleSpsUntilCut;
 
+      const std::size_t part = partOfMiddleSp[m - batchBegin];
       createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
                                 tripletFinder, filter, spacePoints,
-                                cache.bottomCandidates, spM,
-                                cache.topCandidates, outputSeeds);
+                                cache.bottomSubCandidates[part], spM,
+                                cache.topSubCandidates[part], outputSeeds);
       continue;
     }
 

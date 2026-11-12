@@ -15,6 +15,8 @@
 #include "Acts/Seeding/TripletSeedFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -65,6 +67,15 @@ class TripletSeeder {
     CandidateColumns bottomCandidates;
     /// The top candidates of the current batch of middle space points
     CandidateColumns topCandidates;
+
+    /// Number of parts the middle space points of a batch are split in by z
+    static constexpr std::size_t kSubBatches = 4;
+    /// The bottom candidates that the middle space points of each part of
+    /// the batch can reach in z
+    std::array<CandidateColumns, kSubBatches> bottomSubCandidates;
+    /// The top candidates that the middle space points of each part of the
+    /// batch can reach in z
+    std::array<CandidateColumns, kSubBatches> topSubCandidates;
   };
 
   /// Construct a TripletSeeder with optional logger.
