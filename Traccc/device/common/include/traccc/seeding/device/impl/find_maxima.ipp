@@ -29,7 +29,7 @@ void find_maxima(const global_index_t globalIndex,
         const global_index_t value_index = wedge_idx * dim + globalIndex;
         const unsigned int value = houghplanes[value_index];
         if (value < thresholds[wedge_idx]) continue;
-
+        
         bool is_maximum = is_local_maximum(globalIndex,
                                            n_cols, n_rows,
                                            value,

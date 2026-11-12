@@ -216,8 +216,9 @@ auto hough_transform_seeding_algorithm::operator()(
                       houghplane_entries,
                       thresholds,
                       maxima_global_index});
-  
-  /*
+ 
+
+  /* 
   // -------------------------------------------------------------------------------------
   // planes
   vecmem::vector<unsigned short> houghplane_entries_host = ((mr().host != nullptr)
@@ -249,6 +250,7 @@ auto hough_transform_seeding_algorithm::operator()(
   }
   throw;
   */
+
 
   /*
   vecmem::data::jagged_vector_view<unsigned int> host_view;
@@ -296,7 +298,8 @@ auto hough_transform_seeding_algorithm::operator()(
                        images,
                        maxima_x_value});
 
-   
+
+     
   // -------------------------------------------------------------------------------------
   vecmem::data::jagged_vector_view<scalar> host_view;
   vecmem::data::jagged_vector_buffer<scalar> host_buffer;
