@@ -252,6 +252,11 @@ class FitTestSpacePoint {
       m_layer = lay;
     }
   }
+  /// Update to next sensor
+  void setToNextSensor(const Vector3& v) {
+    m_toNextSen = v.normalized();
+    m_planeNorm = m_sensorDir.cross(m_toNextSen).normalized();
+  }
 
  private:
   Vector3 m_position{Vector3::Zero()};
@@ -858,7 +863,7 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
         CompSpacePointAuxiliaries::strawSign(line, **firstTube);
     const int signLast = CompSpacePointAuxiliaries::strawSign(line, **lastTube);
 
-    auto seedPars = CompositeSpacePointLineSeeder::constructTangentLine(
+    auto seedPars = CompositeSpacePointLineSeeder::constructTangentSeed(
         **lastTube, **firstTube,
         CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
     const auto seedDir = CompositeSpacePointLineSeeder::makeDirection(

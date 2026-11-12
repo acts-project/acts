@@ -19,8 +19,8 @@
 
 namespace traccc::device {
 
-TRACCC_HOST_DEVICE
-inline void find_doublets(
+template <bool use_dphi_cut>
+TRACCC_HOST_DEVICE inline void find_doublets(
     const global_index_t globalIndex, const seedfinder_config& config,
     const edm::spacepoint_collection::const_view& spacepoints_view,
     const traccc::details::spacepoint_grid_types::const_view& sp_view,
@@ -106,8 +106,8 @@ inline void find_doublets(
         // Check if this spacepoint is a compatible "bottom" spacepoint
         // to the thread's "middle" spacepoint.
         if (doublet_finding_helper::isCompatible<
-                traccc::details::spacepoint_type::bottom>(middle_sp, other_sp,
-                                                          config)) {
+                traccc::details::spacepoint_type::bottom, use_dphi_cut>(
+                middle_sp, other_sp, config)) {
           // Add it as a candidate to the middle-bottom container.
           //
           // WARNING: We must imperatively check if the current index is
@@ -124,8 +124,8 @@ inline void find_doublets(
         // Check if this spacepoint is a compatible "top" spacepoint to
         // the thread's "middle" spacepoint.
         if (doublet_finding_helper::isCompatible<
-                traccc::details::spacepoint_type::top>(middle_sp, other_sp,
-                                                       config)) {
+                traccc::details::spacepoint_type::top, use_dphi_cut>(
+                middle_sp, other_sp, config)) {
           // Add it as a candidate to the middle-top container.
           if (mid_top_idx < mid_top_count) {
             const unsigned int pos = mid_top_start_idx + mid_top_idx++;

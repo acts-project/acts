@@ -213,7 +213,7 @@ class Impl final : public TripletSeedFinder {
 
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
-      tripletTopCandidates.emplace_back(spT, B / std::sqrt(S2), im);
+      tripletTopCandidates.push_back(spT, B / std::sqrt(S2), im);
     }  // loop on tops
 
     if constexpr (sortedByCotTheta) {
@@ -483,8 +483,8 @@ class Impl final : public TripletSeedFinder {
 
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
-      tripletTopCandidates.emplace_back(topDoublet.spacePointIndex(),
-                                        B / std::sqrt(S2), im);
+      tripletTopCandidates.push_back(topDoublet.spacePointIndex(),
+                                     B / std::sqrt(S2), im);
     }  // loop on tops
 
     if constexpr (sortedByCotTheta) {

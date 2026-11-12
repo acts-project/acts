@@ -423,6 +423,47 @@ BOOST_AUTO_TEST_CASE(AndThenResult) {
 
   BOOST_CHECK(!Result1::failure(MyError::Failure).and_then(f2).ok());
 }
+BOOST_AUTO_TEST_CASE(ThrowingPayloadMoves) {
+  struct Payload {
+    bool fail = false;
+    Payload() = default;
+    Payload(Payload&& other) {
+      if (other.fail) {
+        throw std::runtime_error("move construction failed");
+      }
+    }
+    Payload& operator=(Payload&& other) {
+      if (other.fail) {
+        throw std::runtime_error("move assignment failed");
+      }
+      return *this;
+    }
+  };
+
+  using ValueResult = Acts::Result<Payload>;
+  using ErrorResult = Acts::Result<void, Payload>;
+  static_assert(!std::is_nothrow_move_constructible_v<ValueResult>);
+  static_assert(!std::is_nothrow_move_assignable_v<ValueResult>);
+  static_assert(!std::is_nothrow_move_constructible_v<ErrorResult>);
+  static_assert(!std::is_nothrow_move_assignable_v<ErrorResult>);
+  static_assert(std::is_nothrow_move_constructible_v<Acts::Result<int>>);
+  static_assert(std::is_nothrow_move_assignable_v<Acts::Result<int>>);
+  static_assert(std::is_nothrow_move_constructible_v<Acts::Result<void>>);
+  static_assert(std::is_nothrow_move_assignable_v<Acts::Result<void>>);
+
+  auto value = ValueResult::success(Payload{});
+  value.value().fail = true;
+  BOOST_CHECK_THROW(ValueResult moved(std::move(value)), std::runtime_error);
+  auto valueDestination = ValueResult::success(Payload{});
+  BOOST_CHECK_THROW(valueDestination = std::move(value), std::runtime_error);
+
+  auto error = ErrorResult::failure(Payload{});
+  error.error().fail = true;
+  BOOST_CHECK_THROW(ErrorResult moved(std::move(error)), std::runtime_error);
+  auto errorDestination = ErrorResult::failure(Payload{});
+  BOOST_CHECK_THROW(errorDestination = std::move(error), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

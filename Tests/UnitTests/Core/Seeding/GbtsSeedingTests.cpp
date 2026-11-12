@@ -157,8 +157,10 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
   }
   Experimental::assignAdaptiveTauRatioCuts(connections, layers);
 
+  const Experimental::GbtsZ0Range z0Range{.min = -kBarrelHalfZ,
+                                          .max = kBarrelHalfZ};
   return std::make_shared<Experimental::GbtsGeometry>(layers, connections,
-                                                      kEtaBinWidth);
+                                                      kEtaBinWidth, z0Range);
 }
 
 /// Straight track from the origin: fixed phi, z = r * tau, tau = cot(theta).
@@ -403,8 +405,6 @@ SeederSetup makeSeeder(const ToyDetector& detector,
 
   Experimental::GbtsGraphBuilder::Config graphConfig;
   graphConfig.minPt = 1_GeV;
-  graphConfig.minZ0 = -kBarrelHalfZ;
-  graphConfig.maxZ0 = kBarrelHalfZ;
   graphConfig.maxOuterRadius = detector.maxOuterRadius;
   graphConfig.calibrateStrips = calibrateStrips;
 
@@ -640,6 +640,63 @@ BOOST_AUTO_TEST_CASE(NodeOrderIgnoresInsertionOrderAtEqualPhi) {
   const std::vector<SpacePointIndex> forward = nodeOrder(false);
   BOOST_CHECK_EQUAL(forward.size(), zs.size());
   BOOST_CHECK(forward == nodeOrder(true));
+}
+
+// An edge keeps every inner neighbour that passes the linking cuts, however
+// many there are: here eight inner hits a few micrometres apart all continue
+// the same outer edge.
+BOOST_AUTO_TEST_CASE(EdgesKeepEveryInnerNeighbour) {
+  const ToyDetector detector = barrelDetector();
+  const SeederSetup setup = makeSeeder(detector);
+
+  const Track track{.phi = 0.3f, .tau = 0.2f};
+  constexpr std::size_t nInner = 8;
+
+  Experimental::GbtsNodeStorage storage = setup.seeder.makeNodeStorage();
+  SpacePointIndex index = 0;
+  const auto insert = [&](std::size_t layer, float dz) {
+    const float r = detector.layers[layer].refCoord;
+    storage.insert(index, r * std::cos(track.phi), r * std::sin(track.phi),
+                   r * track.tau + dz, r, track.phi,
+                   static_cast<Experimental::GbtsLayerIndex>(layer));
+    index++;
+  };
+  // the hit on layer 3 links the outer edge on outwards, without which the
+  // graph builder treats its inner node as isolated
+  insert(1, 0.f);
+  insert(2, 0.f);
+  insert(3, 0.f);
+  for (std::size_t k = 0; k < nInner; ++k) {
+    insert(0, 0.002f * static_cast<float>(k));
+  }
+  storage.finalize();
+
+  const Experimental::GbtsGraph graph = setup.graphBuilder.buildTheGraph(
+      setup.roi, storage, setup.options.bFieldInZ);
+
+  const auto nEdges = static_cast<std::uint32_t>(graph.edgeStorage.size());
+  BOOST_REQUIRE_EQUAL(graph.neighbourOffsets.size(), nEdges + 1);
+  BOOST_CHECK_EQUAL(graph.neighbours.size(), graph.neighbourOffsets.back());
+
+  // the outer edge runs from the hit on layer 1 (index 0) to the one on
+  // layer 2 (index 1)
+  std::optional<std::uint32_t> outer;
+  for (std::uint32_t e = 0; e < nEdges; ++e) {
+    const auto& edge = graph.edgeStorage[e];
+    if (storage.spacePointIndex(edge.n1) == 0 &&
+        storage.spacePointIndex(edge.n2) == 1) {
+      outer = e;
+    }
+  }
+  BOOST_REQUIRE(outer.has_value());
+
+  const auto inner = graph.innerNeighbours(*outer);
+  BOOST_CHECK_EQUAL(inner.size(), nInner);
+  for (const std::uint32_t e : inner) {
+    BOOST_REQUIRE_LT(e, nEdges);
+    // a link joins two edges through their common node
+    BOOST_CHECK_EQUAL(graph.edgeStorage[e].n2, graph.edgeStorage[*outer].n1);
+  }
 }
 
 // One seed per track, all four hits, in radial order.

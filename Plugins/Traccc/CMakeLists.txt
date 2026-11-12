@@ -13,8 +13,8 @@ target_include_directories(
 
 # traccc is linked privately, so that the exported plugin target does not
 # reference traccc::core: the Acts package configuration does not look up
-# traccc (see ActsConfig.cmake.in). Users of the plugin headers have to find
-# and link traccc themselves.
+# traccc, since its own package configuration depends on Acts (and on Thrust).
+# Users of the plugin headers have to find and link traccc themselves.
 target_link_libraries(
     ActsPluginTraccc
     PUBLIC Acts::Core detray::core vecmem::core
@@ -27,3 +27,5 @@ acts_compile_headers(PluginTraccc GLOB include/**/*.hpp)
 if(TARGET ActsPluginTraccc_HEADERS)
     target_link_libraries(ActsPluginTraccc_HEADERS PRIVATE traccc::core)
 endif()
+
+add_component_dependencies(PluginTraccc vecmem detray)
