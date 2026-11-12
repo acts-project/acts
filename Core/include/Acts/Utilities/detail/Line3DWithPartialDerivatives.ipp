@@ -124,9 +124,8 @@ Line3DWithPartialDerivatives<T>::Vector Line3DWithPartialDerivatives<T>::point(
 }
 
 template <std::floating_point T>
-Eigen::Matrix<T, Line3DWithPartialDerivatives<T>::s_nPars,
-              Line3DWithPartialDerivatives<T>::s_nPars>
-Line3DWithPartialDerivatives<T>::lineToSlopesJacobian(const Vector& dir) {
+auto Line3DWithPartialDerivatives<T>::lineToSlopesJacobian(const Vector& dir)
+    -> Eigen::Matrix<T, s_nPars, s_nPars> {
   constexpr auto iTh = toUnderlying(ParIndex::theta);
   constexpr auto iPh = toUnderlying(ParIndex::phi);
   assert(std::abs(dir.z()) > std::numeric_limits<T>::epsilon());

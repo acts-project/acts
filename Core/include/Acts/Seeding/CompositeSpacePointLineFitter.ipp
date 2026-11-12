@@ -280,23 +280,23 @@ CompositeSpacePointLineFitter::fit(
       }
     }
     FitParameters fastResult{};
-    // the fast fit uses only the measurements accepted by the selector
-    // (outliers excluded), as the full fit
-    if (fitOpts.selector.connected()) {
-      Cont_t selectedMeasurements{};
-      for (const auto& m : result.measurements) {
-        if (fitOpts.selector(*m)) {
-          selectedMeasurements.push_back(m);
-        }
+    // The fast fit uses only the measurements accepted by the selector
+    // (outliers excluded). They are passed as non-owning pointers.
+    using FastFitCont_t = std::vector<const SpacePoint_t<Cont_t>*>;
+    static_assert(CompositeSpacePointContainer<FastFitCont_t>);
+    FastFitCont_t selectedMeas{};
+    selectedMeas.reserve(result.measurements.size());
+    for (const auto& m : result.measurements) {
+      if (!fitOpts.selector.connected() || fitOpts.selector(*m)) {
+        selectedMeas.push_back(std::addressof(*m));
       }
-      std::swap(selectedMeasurements, result.measurements);
     }
     // Straw fit
     if (nStraws >= 2) {
       if (fitTime) {
         if constexpr (fastCalibrator) {
-          FastFitDelegate_t<Cont_t, true> fitDelegate{
-              [this, &fitOpts, &result](const Cont_t& measurements,
+          FastFitDelegate_t<FastFitCont_t, true> fitDelegate{
+              [this, &fitOpts, &result](const FastFitCont_t& measurements,
                                         const std::vector<int>& strawSigns) {
                 const double initialT0 =
                     result.parameters[toUnderlying(FitParIndex::t0)];
@@ -304,30 +304,30 @@ CompositeSpacePointLineFitter::fit(
                                         *fitOpts.calibrator, measurements,
                                         strawSigns, initialT0);
               }};
-          fastResult = fastFit<true, true>(result.measurements, line,
-                                           resCfg.parsToUse, fitDelegate);
+          fastResult = fastFit<true, true>(selectedMeas, line, resCfg.parsToUse,
+                                           fitDelegate);
         }
       } else {
-        FastFitDelegate_t<Cont_t, false> fitDelegate{
-            [this](const Cont_t& measurements,
+        FastFitDelegate_t<FastFitCont_t, false> fitDelegate{
+            [this](const FastFitCont_t& measurements,
                    const std::vector<int>& strawSigns) {
               return m_fastFitter.fit(measurements, strawSigns);
             }};
-        fastResult = fastFit<true, false>(result.measurements, line,
-                                          resCfg.parsToUse, fitDelegate);
+        fastResult = fastFit<true, false>(selectedMeas, line, resCfg.parsToUse,
+                                          fitDelegate);
       }
     }
     // Pure strip fit
     else {
-      FastFitDelegate_t<Cont_t, false> fitDelegate{
-          [this](const Cont_t& measurements,
+      FastFitDelegate_t<FastFitCont_t, false> fitDelegate{
+          [this](const FastFitCont_t& measurements,
                  const std::vector<int>& /*strawSigns*/) {
             return m_fastFitter.fit(
                 measurements,
                 detail::CompSpacePointAuxiliaries::ResidualIdx::bending);
           }};
-      fastResult = fastFit<false, false>(result.measurements, line,
-                                         resCfg.parsToUse, fitDelegate);
+      fastResult = fastFit<false, false>(selectedMeas, line, resCfg.parsToUse,
+                                         fitDelegate);
     }
     if (fastResult.converged) {
       // t0 not fitted keeps its start value (x0 and tanAlpha are kept in
