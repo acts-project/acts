@@ -49,6 +49,7 @@ __global__ void populate_grid(
 }
 
 /// CUDA kernel for running @c traccc::device::count_doublets
+template <bool use_dphi_cut>
 __global__ void count_doublets(
     seedfinder_config config,
     edm::spacepoint_collection::const_view spacepoints,
@@ -56,11 +57,13 @@ __global__ void count_doublets(
     vecmem::data::vector_view<const device::prefix_sum_element_t> sp_prefix_sum,
     device::doublet_counter_collection_types::view doublet_counter,
     unsigned int& nMidBot, unsigned int& nMidTop) {
-  device::count_doublets(details::global_index1(), config, spacepoints, sp_grid,
-                         sp_prefix_sum, doublet_counter, nMidBot, nMidTop);
+  device::count_doublets<use_dphi_cut>(details::global_index1(), config,
+                                       spacepoints, sp_grid, sp_prefix_sum,
+                                       doublet_counter, nMidBot, nMidTop);
 }
 
 /// CUDA kernel for running @c traccc::device::find_doublets
+template <bool use_dphi_cut>
 __global__ void find_doublets(
     seedfinder_config config,
     edm::spacepoint_collection::const_view spacepoints,
@@ -68,8 +71,9 @@ __global__ void find_doublets(
     device::doublet_counter_collection_types::view doublet_counter,
     device::device_doublet_collection_types::view mb_doublets,
     device::device_doublet_collection_types::view mt_doublets) {
-  device::find_doublets(details::global_index1(), config, spacepoints, sp_grid,
-                        doublet_counter, mb_doublets, mt_doublets);
+  device::find_doublets<use_dphi_cut>(details::global_index1(), config,
+                                      spacepoints, sp_grid, doublet_counter,
+                                      mb_doublets, mt_doublets);
 }
 
 /// CUDA kernel for running @c traccc::device::count_triplets
@@ -200,11 +204,14 @@ void triplet_seeding_algorithm::count_doublets_kernel(
   const unsigned int n_threads = warp_size() * 2;
   const unsigned int n_blocks =
       (payload.n_spacepoints + n_threads - 1) / n_threads;
-  kernels::
-      count_doublets<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
-          payload.config, payload.spacepoints, payload.grid,
-          payload.grid_prefix_sum, payload.doublet_counter, payload.nMidBot,
-          payload.nMidTop);
+  // The azimuthal separation cut is compiled into its own kernel instance
+  const auto kernel = payload.config.doubletDPhiCut
+                          ? kernels::count_doublets<true>
+                          : kernels::count_doublets<false>;
+  kernel<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
+      payload.config, payload.spacepoints, payload.grid,
+      payload.grid_prefix_sum, payload.doublet_counter, payload.nMidBot,
+      payload.nMidTop);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
@@ -213,10 +220,13 @@ void triplet_seeding_algorithm::find_doublets_kernel(
   const unsigned int n_threads = warp_size() * 2;
   const unsigned int n_blocks =
       (payload.n_doublets + n_threads - 1) / n_threads;
-  kernels::
-      find_doublets<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
-          payload.config, payload.spacepoints, payload.grid,
-          payload.doublet_counter, payload.mb_doublets, payload.mt_doublets);
+  // The azimuthal separation cut is compiled into its own kernel instance
+  const auto kernel = payload.config.doubletDPhiCut
+                          ? kernels::find_doublets<true>
+                          : kernels::find_doublets<false>;
+  kernel<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
+      payload.config, payload.spacepoints, payload.grid,
+      payload.doublet_counter, payload.mb_doublets, payload.mt_doublets);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
