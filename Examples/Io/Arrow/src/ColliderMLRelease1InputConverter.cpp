@@ -372,7 +372,7 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     sortKeys.push_back(SortKey::Encode(vprimArr->Value(pOff + i),
                                        static_cast<std::uint64_t>(i)));
   }
-  std::ranges::sort(sortKeys, {}, &SortKey::value);
+  std::ranges::sort(sortKeys);
 
   SimParticleContainer::sequence_type particleSeq;
   particleSeq.reserve(sortKeys.size());
