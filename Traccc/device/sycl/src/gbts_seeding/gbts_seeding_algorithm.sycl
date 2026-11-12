@@ -104,6 +104,9 @@ class gbts_fill_path_store;
 /// traccc::device::gbts_bid_seeds_for_hits
 class gbts_bid_seeds_for_hits;
 
+/// Class identifying the kernel running @c traccc::device::gbts_fill_seeds_from_sorted_bids
+class gbts_fill_seeds_from_sorted_bids;
+
 /// Class identifying the kernel running @c traccc::device::gbts_convert_seeds
 class gbts_convert_seeds;
 
@@ -351,6 +354,23 @@ void gbts_seeding_algorithm::gbts_bid_seeds_for_hits_kernel(
           device::gbts_bid_seeds_for_hits(details::thread_id<1>{item}, payload);
         });
   });
+}
+
+void gbts_seeding_algorithm::gbts_sort_seeds_kernel(
+    const device::gbts_fill_seeds_from_sorted_bids_payload& payload) const {
+  // sort seeds by their bid of quality-dropout_kind-proposal_index
+  oneapi::dpl::sort<IsAscending = true>(
+      oneapi::dpl::execution::device_policy{squeue}, payload.seed_bids.ptr(),
+      payload.seed_bids.ptr() + payload.nSeeds);
+  const unsigned int n_threads = 128;
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::gbts_fill_seeds_from_sorted_bids>(
+        details::calculate1DimNdRange(payload.nSeeds, n_threads),
+        [payload](::sycl::nd_item<1> item) {
+          device::gbts_fill_seeds_from_sorted_bids(details::thread_id<1>{item},
+                                                   payload);
+        });
+	};
 }
 
 void gbts_seeding_algorithm::gbts_convert_seeds_kernel(
