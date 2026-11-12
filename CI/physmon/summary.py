@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Render the physmon results JSON into markdown and HTML summary tables.
+"""Render the physmon results JSON into the summary table, as markdown and HTML.
 
 Input: physmon_results.json — a list of comparison rows, each with:
     {
-      "title": "...",
+      "group": "GBTS seeding",            # rows with the same group and subgroup
+      "subgroup": "Single muon" | null,   # are listed under one heading
+      "title": "CKF finding performance",
       "report": "html/.../foo.html",
       "info_only": false,             # true: shown, never fails the run
       "steps": [
@@ -26,6 +28,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Optional, Tuple
 
 # Herald serves the physmon artifact of a CI run; the summary links point there.
 HERALD_URL = "https://acts-herald.app.cern.ch/view/{repo}/runs/{run_id}/artifacts/{artifact_name}/{path}"
@@ -33,23 +36,36 @@ IS_CI = "GITHUB_ACTIONS" in os.environ
 
 # Step kinds, in display order.
 STEP_KINDS = ["upstream", "producer", "plot", "histcmp"]
-STEP_HEADERS = {
-    "upstream": "Upstream",
-    "producer": "Producer",
-    "plot": "Plot",
-    "histcmp": "Histcmp",
-}
+RESULT_HEADERS = ["", "Comparison", "Upstream", "Producer", "Plot", "Histcmp", "Report"]
+CASCADE_NOTE = (
+    "An asterisk (e.g. 🔴*) marks a cascade failure: "
+    "an earlier step in the same row failed first."
+)
 
 
-def _herald(path: str) -> str:
-    if not IS_CI:
-        return path
-    return HERALD_URL.format(
-        repo=os.environ["GITHUB_REPOSITORY"],
-        run_id=os.environ["GITHUB_RUN_ID"],
-        artifact_name="physmon",
-        path=path,
-    )
+# A table cell: its text and, optionally, the path it links to.
+Cell = Tuple[str, Optional[str]]
+
+
+def _markdown(cell: Cell) -> str:
+    """The cell as markdown; on CI its link goes through Herald."""
+    text, path = cell
+    if not path:
+        return text
+    if IS_CI:
+        path = HERALD_URL.format(
+            repo=os.environ["GITHUB_REPOSITORY"],
+            run_id=os.environ["GITHUB_RUN_ID"],
+            artifact_name="physmon",
+            path=path,
+        )
+    return f"[{text}]({path})"
+
+
+def _html(cell: Cell) -> str:
+    """The cell as HTML; summary.html is next to the files it links to."""
+    text, path = cell
+    return f'<a href="{path}">{text}</a>' if path else text
 
 
 def _failed(step: dict) -> bool:
@@ -62,151 +78,101 @@ def _row_failed(row: dict) -> bool:
     return not row.get("info_only") and any(_failed(s) for s in row["steps"])
 
 
-def _row_icon(row: dict) -> str:
-    if row.get("info_only"):
-        return "🔵"
-    return "🔴" if _row_failed(row) else "✅"
+def _icon(rows: list[dict]) -> str:
+    """Red if one of the rows failed, blue if all of them are info-only."""
+    if any(_row_failed(row) for row in rows):
+        return "🔴"
+    return "🔵" if all(row.get("info_only") for row in rows) else "✅"
 
 
-def _step_icon(step: dict) -> str:
+def _step_cell(step: dict | None) -> Cell:
+    """The step's icon, linked to its log; a dash if the row has no such step."""
+    if step is None:
+        return ("—", None)
     icon = "🔴" if _failed(step) else "✅"
-    return f"{icon}*" if step.get("cascade") else icon
+    return (f"{icon}*" if step.get("cascade") else icon, step.get("log"))
 
 
-def _cell_md(step: dict | None) -> str:
-    """Markdown cell for one step (or em-dash if step doesn't exist for this row)."""
-    if step is None:
-        return "—"
-    icon = _step_icon(step)
-    log = step.get("log")
-    if log:
-        return f"[{icon}]({_herald(log)})"
-    return icon
+def _cells(row: dict) -> list[Cell]:
+    steps = {s["kind"]: s for s in reversed(row["steps"])}
+    return [
+        (_icon([row]), None),
+        (row["title"], None),
+        *(_step_cell(steps.get(kind)) for kind in STEP_KINDS),
+        ("report", row["report"]),
+    ]
 
 
-def _cell_html(step: dict | None) -> str:
-    if step is None:
-        return "—"
-    icon = _step_icon(step)
-    log = step.get("log")
-    if log:
-        return f'<a href="{_herald(log)}" title="{step.get("name","")}">{icon}</a>'
-    return icon
+def _grouped(rows: list[dict]) -> list[tuple[str, str | None, list[dict]]]:
+    """The rows by group and subgroup, each in the order of its first row."""
+    groups: dict[str, dict[str | None, list[dict]]] = {}
+    for row in rows:
+        subgroups = groups.setdefault(row["group"], {})
+        subgroups.setdefault(row.get("subgroup"), []).append(row)
+    return [
+        (group, subgroup, members)
+        for group, subgroups in groups.items()
+        for subgroup, members in subgroups.items()
+    ]
 
 
-def _step_by_kind(row: dict) -> dict[str, dict]:
-    by_kind: dict[str, dict] = {}
-    for s in row["steps"]:
-        by_kind.setdefault(s["kind"], s)
-    return by_kind
-
-
-def _md_escape(s: str) -> str:
-    """Escape '|' for use inside markdown table cells. Catalog titles use '|' as a separator."""
-    return s.replace("|", "\\|")
-
-
-def _memory_report(memory: list[dict]) -> tuple[str, list[dict]]:
-    """A one-line verdict on the memory reservations and the jobs above theirs."""
+def _memory_lines(memory: list[dict]) -> list[str]:
+    """A warning that names the jobs which used more memory than they reserve."""
     over = [m for m in memory if m["max_pss_mb"] > m["reserved_mb"]]
-    if over:
-        text = (
-            f"{len(over)} of {len(memory)} jobs used more memory than they reserve. "
-            "Raise their reservation, otherwise the jobs running together can "
-            "exceed the memory budget: mem_mb in CI/physmon/config/physmon.yaml "
-            "for producers, HISTCMP_MEM_MB or PLOT_MEM_MB in CI/physmon/Snakefile "
-            "for histcmp and plot jobs."
-        )
-    else:
-        closest = max(memory, key=lambda m: m["max_pss_mb"] / m["reserved_mb"])
-        text = (
-            f"All {len(memory)} jobs stayed within the memory they reserve; closest: "
-            f"{closest['job']} at {closest['max_pss_mb']} of {closest['reserved_mb']} MB."
-        )
-    return text, over
-
-
-MEMORY_HEADERS = ["Job", "Reserved [MB]", "Peak PSS [MB]", "Peak RSS [MB]"]
-
-
-def _memory_cells(m: dict) -> list[str]:
-    return [m["job"], str(m["reserved_mb"]), str(m["max_pss_mb"]), str(m["max_rss_mb"])]
+    if not over:
+        return []
+    return [
+        "",
+        "## Memory",
+        "",
+        "These jobs used more memory than they reserve. Raise `mem_mb` in "
+        "CI/physmon/config/physmon.yaml for a producer, or HISTCMP_MEM_MB / "
+        "PLOT_MEM_MB in CI/physmon/Snakefile, so that the jobs running together "
+        "stay within the memory budget:",
+        "",
+        *(
+            f"- {m['job']}: {m['max_pss_mb']} MB used, {m['reserved_mb']} MB reserved"
+            for m in over
+        ),
+    ]
 
 
 def render_markdown(rows: list[dict], memory: list[dict] | None = None) -> str:
-    lines = ["# physmon summary", ""]
-    headers = (
-        ["Status", "Comparison"] + [STEP_HEADERS[k] for k in STEP_KINDS] + ["Report"]
-    )
-    aligns = [":---:", ":---"] + [":---:"] * len(STEP_KINDS) + [":---:"]
-    lines.append("| " + " | ".join(headers) + " |")
-    lines.append("| " + " | ".join(aligns) + " |")
-    for row in rows:
-        by_kind = _step_by_kind(row)
-        cells = [_row_icon(row), _md_escape(row["title"])]
-        for k in STEP_KINDS:
-            cells.append(_cell_md(by_kind.get(k)))
-        report_url = _herald(row["report"])
-        cells.append(f"[report]({report_url})")
-        lines.append("| " + " | ".join(cells) + " |")
-    lines.append("")
-    lines.append(
-        "*An asterisk (e.g. 🔴\\*) marks a cascade failure: an earlier step in the same row failed first.*"
-    )
-    if memory:
-        text, over = _memory_report(memory)
-        lines += ["", "## Memory", "", text]
-        if over:
-            lines += ["", "| " + " | ".join(MEMORY_HEADERS) + " |"]
-            lines.append("| :--- |" + " ---: |" * (len(MEMORY_HEADERS) - 1))
-            for m in over:
-                lines.append("| " + " | ".join(_memory_cells(m)) + " |")
+    def line(cells: list[str]) -> str:
+        return "| " + " | ".join(cells) + " |"
+
+    empty = [""] * (len(RESULT_HEADERS) - 2)
+    lines = ["# physmon summary", "", line(RESULT_HEADERS)]
+    lines.append(line([":---:", ":---"] + [":---:"] * len(empty)))
+    for group, subgroup, members in _grouped(rows):
+        name = f"**{group}**" + (f" — {subgroup}" if subgroup else "")
+        lines.append(line([_icon(members), name] + empty))
+        lines += [line([_markdown(cell) for cell in _cells(row)]) for row in members]
+    lines += ["", f"*{CASCADE_NOTE}*".replace("🔴*", "🔴\\*")]
+    lines += _memory_lines(memory or [])
     return "\n".join(lines) + "\n"
 
 
-def render_html(rows: list[dict], memory: list[dict] | None = None) -> str:
-    out = [
+def render_html(rows: list[dict]) -> str:
+    def line(cells: list[str], tag: str = "td") -> str:
+        return "<tr>" + "".join(f"<{tag}>{cell}</{tag}>" for cell in cells) + "</tr>"
+
+    empty = [""] * (len(RESULT_HEADERS) - 2)
+    lines = [
         "<!DOCTYPE html>",
-        '<html><head><title>physmon summary</title><meta charset="UTF-8">',
-        "<style>",
-        "body{font-family:sans-serif;margin:2em}",
-        "table{border-collapse:collapse}",
+        '<html><head><title>physmon summary</title><meta charset="UTF-8"><style>',
+        "body{font-family:sans-serif;margin:2em} table{border-collapse:collapse}",
         "th,td{border:1px solid #ccc;padding:.3em .6em;text-align:center}",
         "td:nth-child(2){text-align:left}",
-        "</style>",
-        "</head><body>",
-        "<h1>physmon summary</h1>",
-        "<table>",
-        "<tr><th>Status</th><th>Comparison</th>"
-        + "".join(f"<th>{STEP_HEADERS[k]}</th>" for k in STEP_KINDS)
-        + "<th>Report</th></tr>",
+        "</style></head><body><h1>physmon summary</h1><table>",
+        line(RESULT_HEADERS, "th"),
     ]
-    for row in rows:
-        by_kind = _step_by_kind(row)
-        cells = [_row_icon(row), row["title"]] + [
-            _cell_html(by_kind.get(k)) for k in STEP_KINDS
-        ]
-        cells.append(f'<a href="{_herald(row["report"])}">report</a>')
-        out.append("<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
-    out.append("</table>")
-    out.append(
-        "<p><em>An asterisk (e.g. 🔴*) marks a cascade failure: an earlier step in the same row failed first.</em></p>"
-    )
-    if memory:
-        text, over = _memory_report(memory)
-        out += ["<h2>Memory</h2>", f"<p>{text}</p>"]
-        if over:
-            out.append(
-                "<table><tr>"
-                + "".join(f"<th>{h}</th>" for h in MEMORY_HEADERS)
-                + "</tr>"
-            )
-            for m in over:
-                cells = "".join(f"<td>{c}</td>" for c in _memory_cells(m))
-                out.append(f"<tr>{cells}</tr>")
-            out.append("</table>")
-    out.append("</body></html>")
-    return "\n".join(out) + "\n"
+    for group, subgroup, members in _grouped(rows):
+        name = f"<b>{group}</b>" + (f" — {subgroup}" if subgroup else "")
+        lines.append(line([_icon(members), name] + empty))
+        lines += [line([_html(cell) for cell in _cells(row)]) for row in members]
+    lines += ["</table>", f"<p><em>{CASCADE_NOTE}</em></p>", "</body></html>"]
+    return "\n".join(lines) + "\n"
 
 
 def main() -> int:
@@ -225,14 +191,13 @@ def main() -> int:
     memory = json.loads(args.memory.read_text()) if args.memory else None
 
     args.md.write_text(render_markdown(rows, memory))
-    args.html.write_text(render_html(rows, memory))
+    args.html.write_text(render_html(rows))
 
-    any_failed = False
-    for row in rows:
-        if _row_failed(row):
-            any_failed = True
-            print(f"physmon: FAIL {row['title']}", file=sys.stderr)
-    return 1 if any_failed else 0
+    failed = [row for row in rows if _row_failed(row)]
+    for row in failed:
+        name = ", ".join(filter(None, [row["group"], row.get("subgroup")]))
+        print(f"physmon: FAIL {name} | {row['title']}", file=sys.stderr)
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

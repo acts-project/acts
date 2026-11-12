@@ -1,73 +1,49 @@
 #!/usr/bin/env bash
 #
-# wrap.sh --witness <path> --step <name> [--log <path>] [--touches "<list>"] -- <cmd...>
+# wrap.sh --witness <path> --step <name> [--log <path>] [--touches "<paths>"] -- <cmd...>
 #
-# Runs <cmd>; writes a small JSON witness {"step", "exit_code", "log"} to <witness>;
-# touches any path in <list> that does not already exist (so snakemake's
-# declared outputs are always present and the DAG can continue even when an
-# upstream step failed); always exits 0 itself.
-#
-# Used by every rule in the physmon Snakefile so the workflow runs to
-# completion regardless of per-step failures; failure surfacing happens in the
-# summary step which reads the witness JSON files.
+# Runs <cmd>, with its output in <log> if given, and writes the witness
+# {"step", "exit_code", "log"}. Creates every path in <paths> that <cmd> did
+# not, and always exits 0. The physmon rules run through this, so the workflow
+# carries on after a failed step, and the summary reports the failure from the
+# witnesses.
 
 set -u
 
-witness=""
-step=""
-log_path=""
-touches=""
-
+witness="" step="" log="" touches=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --witness) witness="$2"; shift 2;;
         --step)    step="$2";    shift 2;;
-        --log)     log_path="$2"; shift 2;;
+        --log)     log="$2";     shift 2;;
         --touches) touches="$2"; shift 2;;
         --)        shift; break;;
-        *) echo "wrap.sh: unknown arg: $1" >&2; exit 2;;
+        *) echo "wrap.sh: unknown argument: $1" >&2; exit 2;;
     esac
 done
-
 if [ -z "$witness" ] || [ -z "$step" ] || [ $# -eq 0 ]; then
-    echo "wrap.sh: usage: $0 --witness <p> --step <n> [--log <p>] [--touches '<list>'] -- <cmd...>" >&2
+    echo "wrap.sh: usage: $0 --witness <path> --step <name> [--log <path>] [--touches '<paths>'] -- <cmd...>" >&2
     exit 2
 fi
 
-mkdir -p "$(dirname "$witness")"
-
-# Run the command without aborting on non-zero. If a log path was given, redirect
-# the command's stdout/stderr there. wrap.sh's own messages go to its inherited
-# stderr (snakemake's main log).
-set +e
-if [ -n "$log_path" ]; then
-    mkdir -p "$(dirname "$log_path")"
-    : > "$log_path"
-    "$@" >> "$log_path" 2>&1
+if [ -n "$log" ]; then
+    mkdir -p "$(dirname "$log")"
+    "$@" > "$log" 2>&1
+    exit_code=$?
+    log_json="\"$log\""
 else
     "$@"
-fi
-exit_code=$?
-
-# JSON-escape the log path (only need to handle backslash and double quote;
-# we control the character set).
-if [ -n "$log_path" ]; then
-    escaped=${log_path//\\/\\\\}
-    escaped=${escaped//\"/\\\"}
-    log_json="\"$escaped\""
-else
+    exit_code=$?
     log_json="null"
 fi
 
+mkdir -p "$(dirname "$witness")"
 printf '{"step":"%s","exit_code":%d,"log":%s}\n' "$step" "$exit_code" "$log_json" > "$witness"
 
-# Touch any declared outputs that didn't get produced. The witness itself was
-# just written above; skip it. Empty 'touches' is fine — the for loop is a no-op.
-for f in $touches; do
-    [ "$f" = "$witness" ] && continue
-    if [ ! -e "$f" ]; then
-        mkdir -p "$(dirname "$f")"
-        touch "$f"
+for path in $touches; do
+    if [ ! -e "$path" ]; then
+        mkdir -p "$(dirname "$path")"
+        touch "$path"
     fi
 done
 
