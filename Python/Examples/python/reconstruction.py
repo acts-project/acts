@@ -1534,6 +1534,8 @@ def addGbtsSeeding(
         inputClusters="clusters",
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
+            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
             useAdaptiveCuts=gbtsConfigArg.useAdaptiveCuts,
             outputFreeParameters=outputFreeParameters,
             magneticField=magneticField,

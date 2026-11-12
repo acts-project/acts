@@ -46,6 +46,8 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
     std::string treeName = "propagation_summary";
     /// common root file
     TFile* rootFile = nullptr;
+    /// toggle whether to write propagation time
+    bool storePropagationTime = false;
   };
 
   /// Constructor with
@@ -113,6 +115,7 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   std::size_t m_nReverseSteps = 0;
   double m_pathLength = 0;
   double m_absolutePathLength = 0;
+  double m_propagationTime = 0;
 
   // navigator statistics
   std::size_t m_nRenavigations = 0;

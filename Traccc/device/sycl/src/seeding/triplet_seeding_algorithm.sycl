@@ -9,6 +9,9 @@
 // SYCL include
 #include <sycl/sycl.hpp>
 
+// System include(s).
+#include <type_traits>
+
 // Library include(s).
 #include "../utils/calculate1DimNdRange.hpp"
 #include "../utils/get_queue.hpp"
@@ -40,12 +43,15 @@ class count_grid_capacities;
 class populate_grid;
 
 /// Class identifying the kernel running @c traccc::device::count_doublets
+template <bool use_dphi_cut>
 class count_doublets;
 
 /// Class identifying the kernel running @c traccc::device::find_doublets
+template <bool use_dphi_cut>
 class find_doublets;
 
 /// Class identifying the kernel running @c traccc::device::count_triplets
+template <bool use_strip_info>
 class count_triplets;
 
 /// Class identifying the kernel running @c
@@ -53,6 +59,7 @@ class count_triplets;
 class reduce_triplet_counts;
 
 /// Class identifying the kernel running @c traccc::device::find_triplets
+template <bool use_strip_info>
 class find_triplets;
 
 /// Class identifying the kernel running @c
@@ -112,57 +119,85 @@ void triplet_seeding_algorithm::count_doublets_kernel(
     const count_doublets_kernel_payload& payload) const {
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
-  squeue.submit([&](::sycl::handler& h) {
-    h.parallel_for<kernels::count_doublets>(
-        details::calculate1DimNdRange(payload.n_spacepoints, warp_size() * 2),
-        [config = payload.config, spacepoints = payload.spacepoints,
-         grid = payload.grid, grid_prefix_sum = payload.grid_prefix_sum,
-         doublet_counter = payload.doublet_counter,
-         nMidBot = &(payload.nMidBot),
-         nMidTop = &(payload.nMidTop)](::sycl::nd_item<1> item) {
-          device::count_doublets(details::global_index(item), config,
-                                 spacepoints, grid, grid_prefix_sum,
-                                 doublet_counter, *nMidBot, *nMidTop);
-        });
-  });
+  // The azimuthal separation cut is compiled into its own kernel instance
+  const auto submit = [&](auto use_dphi_cut_t) {
+    constexpr bool use_dphi_cut = decltype(use_dphi_cut_t)::value;
+    squeue.submit([&](::sycl::handler& h) {
+      h.parallel_for<kernels::count_doublets<use_dphi_cut>>(
+          details::calculate1DimNdRange(payload.n_spacepoints, warp_size() * 2),
+          [config = payload.config, spacepoints = payload.spacepoints,
+           grid = payload.grid, grid_prefix_sum = payload.grid_prefix_sum,
+           doublet_counter = payload.doublet_counter,
+           nMidBot = &(payload.nMidBot),
+           nMidTop = &(payload.nMidTop)](::sycl::nd_item<1> item) {
+            device::count_doublets<use_dphi_cut>(
+                details::global_index(item), config, spacepoints, grid,
+                grid_prefix_sum, doublet_counter, *nMidBot, *nMidTop);
+          });
+    });
+  };
+  if (payload.config.doubletDPhiCut) {
+    submit(std::true_type{});
+  } else {
+    submit(std::false_type{});
+  }
 }
 
 void triplet_seeding_algorithm::find_doublets_kernel(
     const find_doublets_kernel_payload& payload) const {
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
-  squeue.submit([&](::sycl::handler& h) {
-    h.parallel_for<kernels::find_doublets>(
-        details::calculate1DimNdRange(payload.n_doublets, warp_size() * 2),
-        [config = payload.config, spacepoints = payload.spacepoints,
-         grid = payload.grid, doublet_counter = payload.doublet_counter,
-         mb_doublets = payload.mb_doublets,
-         mt_doublets = payload.mt_doublets](::sycl::nd_item<1> item) {
-          device::find_doublets(details::global_index(item), config,
-                                spacepoints, grid, doublet_counter, mb_doublets,
-                                mt_doublets);
-        });
-  });
+  // The azimuthal separation cut is compiled into its own kernel instance
+  const auto submit = [&](auto use_dphi_cut_t) {
+    constexpr bool use_dphi_cut = decltype(use_dphi_cut_t)::value;
+    squeue.submit([&](::sycl::handler& h) {
+      h.parallel_for<kernels::find_doublets<use_dphi_cut>>(
+          details::calculate1DimNdRange(payload.n_doublets, warp_size() * 2),
+          [config = payload.config, spacepoints = payload.spacepoints,
+           grid = payload.grid, doublet_counter = payload.doublet_counter,
+           mb_doublets = payload.mb_doublets,
+           mt_doublets = payload.mt_doublets](::sycl::nd_item<1> item) {
+            device::find_doublets<use_dphi_cut>(
+                details::global_index(item), config, spacepoints, grid,
+                doublet_counter, mb_doublets, mt_doublets);
+          });
+    });
+  };
+  if (payload.config.doubletDPhiCut) {
+    submit(std::true_type{});
+  } else {
+    submit(std::false_type{});
+  }
 }
 
 void triplet_seeding_algorithm::count_triplets_kernel(
     const count_triplets_kernel_payload& payload) const {
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
-  squeue.submit([&](::sycl::handler& h) {
-    h.parallel_for<kernels::count_triplets>(
-        details::calculate1DimNdRange(payload.nMidBot, warp_size() * 2),
-        [config = payload.config, spacepoints = payload.spacepoints,
-         grid = payload.grid, doublet_counter = payload.doublet_counter,
-         mb_doublets = payload.mb_doublets, mt_doublets = payload.mt_doublets,
-         spM_counter = payload.spM_counter,
-         midBot_counter = payload.midBot_counter](::sycl::nd_item<1> item) {
-          device::count_triplets(details::global_index(item), config,
-                                 spacepoints, grid, doublet_counter,
-                                 mb_doublets, mt_doublets, spM_counter,
-                                 midBot_counter);
-        });
-  });
+  // The strip aware check is compiled into its own kernel instance
+  const auto submit = [&](auto use_strip_info_t) {
+    constexpr bool use_strip_info = decltype(use_strip_info_t)::value;
+    squeue.submit([&](::sycl::handler& h) {
+      h.parallel_for<kernels::count_triplets<use_strip_info>>(
+          details::calculate1DimNdRange(payload.nMidBot, warp_size() * 2),
+          [config = payload.config, spacepoints = payload.spacepoints,
+           strip_calibrations = payload.strip_calibrations, grid = payload.grid,
+           doublet_counter = payload.doublet_counter,
+           mb_doublets = payload.mb_doublets, mt_doublets = payload.mt_doublets,
+           spM_counter = payload.spM_counter,
+           midBot_counter = payload.midBot_counter](::sycl::nd_item<1> item) {
+            device::count_triplets<use_strip_info>(
+                details::global_index(item), config, spacepoints,
+                strip_calibrations, grid, doublet_counter, mb_doublets,
+                mt_doublets, spM_counter, midBot_counter);
+          });
+    });
+  };
+  if (payload.config.useStripInfo) {
+    submit(std::true_type{});
+  } else {
+    submit(std::false_type{});
+  }
 }
 
 void triplet_seeding_algorithm::triplet_counts_reduction_kernel(
@@ -186,22 +221,32 @@ void triplet_seeding_algorithm::find_triplets_kernel(
     const find_triplets_kernel_payload& payload) const {
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
-  squeue.submit([&](::sycl::handler& h) {
-    h.parallel_for<kernels::find_triplets>(
-        details::calculate1DimNdRange(payload.nMidBot, warp_size() * 2),
-        [finding_config = payload.finding_config,
-         filter_config = payload.filter_config,
-         spacepoints = payload.spacepoints, grid = payload.grid,
-         doublet_counter = payload.doublet_counter,
-         mt_doublets = payload.mt_doublets, spM_tc = payload.spM_tc,
-         midBot_tc = payload.midBot_tc,
-         triplets = payload.triplets](::sycl::nd_item<1> item) {
-          device::find_triplets(details::global_index(item), finding_config,
-                                filter_config, spacepoints, grid,
-                                doublet_counter, mt_doublets, spM_tc, midBot_tc,
-                                triplets);
-        });
-  });
+  // The strip aware check is compiled into its own kernel instance
+  const auto submit = [&](auto use_strip_info_t) {
+    constexpr bool use_strip_info = decltype(use_strip_info_t)::value;
+    squeue.submit([&](::sycl::handler& h) {
+      h.parallel_for<kernels::find_triplets<use_strip_info>>(
+          details::calculate1DimNdRange(payload.nMidBot, warp_size() * 2),
+          [finding_config = payload.finding_config,
+           filter_config = payload.filter_config,
+           spacepoints = payload.spacepoints,
+           strip_calibrations = payload.strip_calibrations, grid = payload.grid,
+           doublet_counter = payload.doublet_counter,
+           mt_doublets = payload.mt_doublets, spM_tc = payload.spM_tc,
+           midBot_tc = payload.midBot_tc,
+           triplets = payload.triplets](::sycl::nd_item<1> item) {
+            device::find_triplets<use_strip_info>(
+                details::global_index(item), finding_config, filter_config,
+                spacepoints, strip_calibrations, grid, doublet_counter,
+                mt_doublets, spM_tc, midBot_tc, triplets);
+          });
+    });
+  };
+  if (payload.finding_config.useStripInfo) {
+    submit(std::true_type{});
+  } else {
+    submit(std::false_type{});
+  }
 }
 
 void triplet_seeding_algorithm::update_triplet_weights_kernel(

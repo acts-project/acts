@@ -20,7 +20,6 @@ from datetime import datetime
 
 
 def add_logging_options(parser):
-
     parser.add_argument(
         "-v",
         "--info",
@@ -68,6 +67,11 @@ def parse_logging_options(args, prog_name=sys.argv[0]):
 
 
 def add_io_options(parser):
+    parser.add_argument(
+        "output_file",
+        nargs="?",
+        help="Exact output filename for codegen (disables formatting)",
+    )
 
     parser.add_argument(
         "-o",
@@ -90,6 +94,12 @@ def add_io_options(parser):
 
 
 def parse_io_options(args):
+    if args.output_file:
+        if args.output:
+            raise ValueError(
+                "Specify an output filename or --output directory, not both"
+            )
+        args.format = False
     # Check if the output directory exists
     if args.output and not os.path.isdir(args.output):
         print(f"Output directory does not exist! ({args.output})")
