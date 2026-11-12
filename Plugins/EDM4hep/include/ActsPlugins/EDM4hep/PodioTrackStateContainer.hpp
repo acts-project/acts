@@ -35,8 +35,11 @@ ACTS_DIAGNOSTIC_POP()
 #include <any>
 #include <memory>
 #include <stdexcept>
+#include <optional>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
+#include <typeinfo>
 
 #include <podio/CollectionBase.h>
 #include <podio/Frame.h>
@@ -345,6 +348,97 @@ class PodioTrackStateContainerBase {
     }
   }
 
+  /// Get the data type of a column
+  /// @param instance Container instance
+  /// @param key Column key
+  /// @return Type info of the data stored in the column
+  template <typename T>
+  static const std::type_info& columnDataType_impl(const T& instance,
+                                                   Acts::HashedString key) {
+    using namespace Acts::HashedStringLiteral;
+    using Info = ActsPodioEdm::TrackStateInfo;
+    switch (key) {
+      case "predicted"_hash:
+      case "filtered"_hash:
+      case "smoothed"_hash:
+        return typeid(ConstParameters);
+      case "jacobian"_hash:
+        return typeid(ConstCovariance);
+      case "projector"_hash:
+        return typeid(decltype(Info::projector));
+      case "previous"_hash:
+        return typeid(decltype(Info::previous));
+      case "next"_hash:
+        return typeid(decltype(Info::next));
+      case "uncalibratedSourceLink"_hash:
+        return typeid(std::optional<Acts::SourceLink>);
+      case "referenceSurface"_hash:
+        return typeid(const Acts::Surface*);
+      case "measdim"_hash:
+        return typeid(decltype(Info::measdim));
+      case "chi2"_hash:
+        return typeid(decltype(Info::chi2));
+      case "pathLength"_hash:
+        return typeid(decltype(Info::pathLength));
+      case "typeFlags"_hash:
+        return typeid(decltype(Info::typeFlags));
+      default:
+        if (auto it = instance.m_dynamic.find(key);
+            it != instance.m_dynamic.end()) {
+          return it->second->dataTypeInfo();
+        }
+    }
+    throw std::runtime_error("Cannot deduce data type of unknown column");
+  }
+
+  /// Get the name of a column
+  /// @param instance Container instance
+  /// @param key Column key
+  /// @return Column name, or an empty string if the column is unknown
+  template <typename T>
+  static std::string_view columnName_impl(const T& instance,
+                                          Acts::HashedString key) {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "calibrated"_hash:
+        return "calibrated";
+      case "calibratedCov"_hash:
+        return "calibratedCov";
+      case "predicted"_hash:
+        return "predicted";
+      case "filtered"_hash:
+        return "filtered";
+      case "smoothed"_hash:
+        return "smoothed";
+      case "jacobian"_hash:
+        return "jacobian";
+      case "projector"_hash:
+        return "projector";
+      case "previous"_hash:
+        return "previous";
+      case "next"_hash:
+        return "next";
+      case "uncalibratedSourceLink"_hash:
+        return "uncalibratedSourceLink";
+      case "referenceSurface"_hash:
+        return "referenceSurface";
+      case "measdim"_hash:
+        return "measdim";
+      case "chi2"_hash:
+        return "chi2";
+      case "pathLength"_hash:
+        return "pathLength";
+      case "typeFlags"_hash:
+        return "typeFlags";
+      default:
+        if (auto it = instance.m_dynamic.find(key);
+            it != instance.m_dynamic.end()) {
+          return it->second->name();
+        }
+    }
+    return "";
+  }
+
   /// Populate surface buffer from track state collection
   /// @param helper Conversion helper
   /// @param collection Track state collection
@@ -526,6 +620,20 @@ class ConstPodioTrackStateContainer final
   /// @return True if column exists
   constexpr bool hasColumn_impl(Acts::HashedString key) const {
     return PodioTrackStateContainerBase::hasColumn_impl(*this, key);
+  }
+
+  /// Get the data type of a column
+  /// @param key Column key
+  /// @return Type info of the data stored in the column
+  const std::type_info& columnDataType_impl(Acts::HashedString key) const {
+    return PodioTrackStateContainerBase::columnDataType_impl(*this, key);
+  }
+
+  /// Get the name of a column
+  /// @param key Column key
+  /// @return Column name
+  std::string_view columnName_impl(Acts::HashedString key) const {
+    return PodioTrackStateContainerBase::columnName_impl(*this, key);
   }
 
   /// Check if a component exists for a track state
@@ -767,6 +875,20 @@ class MutablePodioTrackStateContainer final
   /// @return True if column exists
   constexpr bool hasColumn_impl(Acts::HashedString key) const {
     return PodioTrackStateContainerBase::hasColumn_impl(*this, key);
+  }
+
+  /// Get the data type of a column
+  /// @param key Column key
+  /// @return Type info of the data stored in the column
+  const std::type_info& columnDataType_impl(Acts::HashedString key) const {
+    return PodioTrackStateContainerBase::columnDataType_impl(*this, key);
+  }
+
+  /// Get the name of a column
+  /// @param key Column key
+  /// @return Column name
+  std::string_view columnName_impl(Acts::HashedString key) const {
+    return PodioTrackStateContainerBase::columnName_impl(*this, key);
   }
 
   /// Check if a track state component is present

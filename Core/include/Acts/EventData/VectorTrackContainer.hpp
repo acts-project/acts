@@ -59,6 +59,40 @@ class VectorTrackContainerBase {
 
   // BEGIN INTERFACE HELPER
 
+  template <typename T>
+  static const std::type_info& columnDataType_impl(const T& instance,
+                                                   HashedString key) {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "tipIndex"_hash:
+        return typeid(IndexType);
+      case "stemIndex"_hash:
+        return typeid(IndexType);
+      case "params"_hash:
+        return typeid(decltype(instance.parameters(0)));
+      case "cov"_hash:
+        return typeid(decltype(instance.covariance(0)));
+      case "nMeasurements"_hash:
+      case "nHoles"_hash:
+        return typeid(unsigned int);
+      case "chi2"_hash:
+        return typeid(float);
+      case "ndf"_hash:
+      case "nOutliers"_hash:
+      case "nSharedHits"_hash:
+      case "nSplitHits"_hash:
+        return typeid(unsigned int);
+      default: {
+        if (auto itr = instance.m_dynamic.find(key);
+            itr != instance.m_dynamic.end()) {
+          return itr->second->dataTypeInfo();
+        }
+      }
+    }
+
+    return typeid(void*);
+  }
+
   /// @cond
   template <bool EnsureConst, typename T>
   static std::any component_impl(T& instance, HashedString key,
@@ -165,6 +199,40 @@ class VectorTrackContainerBase {
     }
   }
 
+  constexpr std::string_view columnName_impl(HashedString key) const {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "tipIndex"_hash:
+        return "tipIndex";
+      case "stemIndex"_hash:
+        return "stemIndex";
+      case "params"_hash:
+        return "params";
+      case "cov"_hash:
+        return "cov";
+      case "nMeasurements"_hash:
+        return "nMeasurements";
+      case "nHoles"_hash:
+        return "nHoles";
+      case "chi2"_hash:
+        return "chi2";
+      case "ndf"_hash:
+        return "ndf";
+      case "nOutliers"_hash:
+        return "nOutliers";
+      case "nSharedHits"_hash:
+        return "nSharedHits";
+      case "nSplitHits"_hash:
+        return "nSplitHits";
+      default: {
+        if (auto itr = m_dynamic.find(key); itr != m_dynamic.end()) {
+          return itr->second->name();
+        }
+      }
+    }
+    return "";
+  }
+
   const Surface* referenceSurface_impl(IndexType itrack) const {
     return m_referenceSurfaces[itrack].get();
   }
@@ -249,10 +317,10 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   void removeTrack_impl(IndexType itrack);
 
   template <typename T>
-  constexpr void addColumn_impl(const std::string_view& key) {
+  constexpr void addColumn_impl(std::string_view key) {
     HashedString hashedKey = hashStringDynamic(key);
     auto insertItr = m_dynamic.insert(
-        {hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
+        {hashedKey, std::make_unique<detail::DynamicColumn<T>>(key)});
     if (insertItr.second && size() > 0ul) {
       insertItr.first->second->resize(size());
     }
@@ -274,6 +342,10 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
     return ConstCovariance{m_cov[itrack].data()};
   }
 
+  const std::type_info& columnDataType_impl(HashedString key) const {
+    return detail_vtc::VectorTrackContainerBase::columnDataType_impl(*this,
+                                                                     key);
+  }
   void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
                             const std::any& srcPtr);
 
@@ -362,7 +434,10 @@ class ConstVectorTrackContainer final
   ConstParameters parameters(IndexType itrack) const {
     return ConstParameters{m_params[itrack].data()};
   }
-
+  const std::type_info& columnDataType_impl(HashedString key) const {
+    return detail_vtc::VectorTrackContainerBase::columnDataType_impl(*this,
+                                                                     key);
+  }
   /// Get covariance for a track
   /// @param itrack The track index
   /// @return Covariance matrix

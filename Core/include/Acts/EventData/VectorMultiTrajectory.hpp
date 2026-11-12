@@ -328,6 +328,97 @@ class VectorMultiTrajectoryBase {
         return instance.m_dynamic.contains(key);
     }
   }
+  template <typename T>
+  static const std::type_info& columnDataType_impl(const T& instance,
+                                                   HashedString key) {
+    assert(instance.hasColumn_impl(key));
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      // case "calibrated"_hash: return typid();
+      // case "calibratedCov"_hash: return typid();
+      case "predicted"_hash:
+      case "filtered"_hash:
+      case "smoothed"_hash:
+        return typeid(decltype(instance.parameters_impl(0)));
+      case "jacobian"_hash:
+        return typeid(decltype(instance.jacobian_impl(0)));
+      case "projector"_hash:
+        return typeid(SerializedSubspaceIndices);
+      case "previous"_hash:
+      case "next"_hash:
+        return typeid(IndexType);
+      case "uncalibratedSourceLink"_hash:
+        return typeid(std::optional<SourceLink>);
+      case "referenceSurface"_hash:
+        return typeid(const Surface*);
+      case "measdim"_hash:
+        return typeid(IndexType);
+      case "chi2"_hash:
+        return typeid(float);
+      case "pathLength"_hash:
+        return typeid(double);
+      case "typeFlags"_hash:
+        return typeid(TrackStateType::raw_type);
+      default: {
+        if (auto itr = instance.m_dynamic.find(key);
+            itr != instance.m_dynamic.end()) {
+          return itr->second->dataTypeInfo();
+        }
+        break;
+      }
+    }
+    throw std::runtime_error(
+        std::format("Cannot deduce data type for column {:}",
+                    instance.columnName_impl(key)));
+    return typeid(const void*);
+  }
+
+  template <typename T>
+  static std::string_view columnName_impl(const T& instance, HashedString key) {
+    using namespace Acts::HashedStringLiteral;
+
+    assert(instance.hasColumn_impl(key));
+    switch (key) {
+      case "calibrated"_hash:
+        return "calibrated";
+      case "calibratedCov"_hash:
+        return "calibratedCov";
+      case "predicted"_hash:
+        return "predicted";
+      case "filtered"_hash:
+        return "filtered";
+      case "smoothed"_hash:
+        return "smoothed";
+      case "jacobian"_hash:
+        return "jacobian";
+      case "projector"_hash:
+        return "projector";
+      case "previous"_hash:
+        return "previous";
+      case "next"_hash:
+        return "next";
+      case "uncalibratedSourceLink"_hash:
+        return "uncalibratedSourceLink";
+      case "referenceSurface"_hash:
+        return "referenceSurface";
+      case "measdim"_hash:
+        return "measdim";
+      case "chi2"_hash:
+        return "chi2";
+      case "pathLength"_hash:
+        return "pathLength";
+      case "typeFlags"_hash:
+        return "typeFlags";
+      default: {
+        if (auto itr = instance.m_dynamic.find(key);
+            itr != instance.m_dynamic.end()) {
+          return itr->second->name();
+        }
+        break;
+      }
+    }
+    return "";
+  }
 
  public:
   detail::DynamicKeyRange<detail::DynamicColumnBase> dynamicKeys_impl() const {
@@ -504,7 +595,7 @@ class VectorMultiTrajectory final
   void addColumn_impl(std::string_view key) {
     HashedString hashedKey = hashStringDynamic(key);
     auto insertItr = m_dynamic.insert(
-        {hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
+        {hashedKey, std::make_unique<detail::DynamicColumn<T>>(key)});
     if (insertItr.second && size() > 0ul) {
       insertItr.first->second->resize(size());
     }
@@ -512,6 +603,14 @@ class VectorMultiTrajectory final
 
   bool hasColumn_impl(HashedString key) const {
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
+  }
+  const std::type_info& columnDataType_impl(HashedString key) const {
+    return detail_vmt::VectorMultiTrajectoryBase::columnDataType_impl(*this,
+                                                                      key);
+  }
+
+  std::string_view columnName_impl(HashedString key) const {
+    return detail_vmt::VectorMultiTrajectoryBase::columnName_impl(*this, key);
   }
 
   template <typename val_t, typename cov_t>
@@ -686,6 +785,13 @@ class ConstVectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
   }
 
+  const std::type_info& columnDataType_impl(HashedString key) const {
+    return detail_vmt::VectorMultiTrajectoryBase::columnDataType_impl(*this,
+                                                                      key);
+  }
+  std::string_view columnName_impl(HashedString key) const {
+    return detail_vmt::VectorMultiTrajectoryBase::columnName_impl(*this, key);
+  }
   // END INTERFACE
 };
 

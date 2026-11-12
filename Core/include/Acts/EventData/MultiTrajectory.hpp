@@ -403,6 +403,14 @@ class MultiTrajectory {
   /// @return True if the column exists, false if not.
   bool hasColumn(HashedString key) const { return self().hasColumn_impl(key); }
 
+  ///
+  const std::type_info& columnDataType(HashedString key) const {
+    return self().columnDataType_impl(key);
+  }
+
+  std::string_view columnName(HashedString key) const {
+    return self().columnName_impl(key);
+  }
   /// @}
 
   /// Clear the @c MultiTrajectory. Leaves the underlying storage untouched

@@ -27,14 +27,17 @@
 #include "Acts/Utilities/Holders.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <cstddef>
 #include <iterator>
 #include <memory>
 #include <numeric>
 #include <random>
 #include <stdexcept>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
+#include <typeinfo>
 #include <utility>
 #include <vector>
 
@@ -554,6 +557,120 @@ BOOST_AUTO_TEST_CASE(ShallowCopy) {
   BOOST_CHECK_EQUAL(t2_ts2.index(), ts2.index());
   BOOST_CHECK_EQUAL(t2_ts3.predicted(), ts3.predicted());
   BOOST_CHECK_EQUAL(t2_ts3.index(), ts3.index());
+}
+
+/// Check that the backend knows the column @p key, that it maps the key back
+/// to @p expName and that it reports @p expType as data type of the column
+template <typename backend_t>
+void checkTrackColumnInfo(const backend_t& backend, HashedString key,
+                          std::string_view expName,
+                          const std::type_info& expType) {
+  BOOST_TEST_CONTEXT("Column '" << expName << "'") {
+    BOOST_CHECK(backend.hasColumn_impl(key));
+    BOOST_CHECK_EQUAL(backend.columnName_impl(key), expName);
+    const std::type_info& type = backend.columnDataType_impl(key);
+    BOOST_CHECK_MESSAGE(type == expType, "Expected data type "
+                                             << expType.name() << " but got "
+                                             << type.name());
+  }
+}
+
+template <typename backend_t>
+void checkStaticTrackColumns(const backend_t& backend) {
+  using Base = detail_vtc::VectorTrackContainerBase;
+  checkTrackColumnInfo(backend, "tipIndex"_hash, "tipIndex",
+                       typeid(IndexType));
+  checkTrackColumnInfo(backend, "stemIndex"_hash, "stemIndex",
+                       typeid(IndexType));
+  checkTrackColumnInfo(backend, "params"_hash, "params",
+                       typeid(Base::ConstParameters));
+  checkTrackColumnInfo(backend, "cov"_hash, "cov",
+                       typeid(Base::ConstCovariance));
+  checkTrackColumnInfo(backend, "nMeasurements"_hash, "nMeasurements",
+                       typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nHoles"_hash, "nHoles", typeid(unsigned int));
+  checkTrackColumnInfo(backend, "chi2"_hash, "chi2", typeid(float));
+  checkTrackColumnInfo(backend, "ndf"_hash, "ndf", typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nOutliers"_hash, "nOutliers",
+                       typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nSharedHits"_hash, "nSharedHits",
+                       typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nSplitHits"_hash, "nSplitHits",
+                       typeid(unsigned int));
+}
+
+template <typename backend_t>
+void checkDynamicTrackColumns(const backend_t& backend) {
+  checkTrackColumnInfo(backend, hashString("col_float"), "col_float",
+                       typeid(float));
+  checkTrackColumnInfo(backend, hashString("col_bool"), "col_bool",
+                       typeid(bool));
+  checkTrackColumnInfo(backend, hashString("col_u64"), "col_u64",
+                       typeid(std::uint64_t));
+}
+
+void addDynamicTrackColumns(VectorTrackContainer& backend) {
+  backend.addColumn_impl<float>("col_float");
+  backend.addColumn_impl<bool>("col_bool");
+  backend.addColumn_impl<std::uint64_t>("col_u64");
+}
+
+BOOST_AUTO_TEST_CASE(VectorTrackContainerStaticColumnInfo) {
+  VectorTrackContainer vtc{};
+  checkStaticTrackColumns(vtc);
+
+  // The column information must not depend on the number of tracks
+  vtc.addTrack_impl();
+  vtc.addTrack_impl();
+  checkStaticTrackColumns(vtc);
+
+  ConstVectorTrackContainer cvtc{std::move(vtc)};
+  checkStaticTrackColumns(cvtc);
+}
+
+BOOST_AUTO_TEST_CASE(VectorTrackContainerDynamicColumnInfo) {
+  VectorTrackContainer vtc{};
+  addDynamicTrackColumns(vtc);
+  checkDynamicTrackColumns(vtc);
+
+  // Columns added after tracks have been created
+  vtc.addTrack_impl();
+  vtc.addColumn_impl<double>("late");
+  checkTrackColumnInfo(vtc, hashString("late"), "late", typeid(double));
+  checkDynamicTrackColumns(vtc);
+
+  // Name and type survive copies and conversions to the const backend
+  VectorTrackContainer copy{vtc};
+  checkDynamicTrackColumns(copy);
+  checkTrackColumnInfo(copy, hashString("late"), "late", typeid(double));
+
+  ConstVectorTrackContainer cvtc{vtc};
+  checkDynamicTrackColumns(cvtc);
+  checkTrackColumnInfo(cvtc, hashString("late"), "late", typeid(double));
+
+  ConstVectorTrackContainer cvtcMoved{std::move(copy)};
+  checkDynamicTrackColumns(cvtcMoved);
+
+  // The dynamic column must not shadow the static ones
+  checkStaticTrackColumns(cvtc);
+}
+
+BOOST_AUTO_TEST_CASE(VectorTrackContainerEnsureDynamicColumnInfo) {
+  VectorTrackContainer source{};
+  addDynamicTrackColumns(source);
+
+  VectorTrackContainer target{};
+  target.ensureDynamicColumns_impl(source);
+  checkDynamicTrackColumns(target);
+
+  // Also via the frontend
+  TrackContainer tcSource{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  tcSource.addColumn<float>("col_float");
+  tcSource.addColumn<bool>("col_bool");
+  tcSource.addColumn<std::uint64_t>("col_u64");
+  TrackContainer tcTarget{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  tcTarget.ensureDynamicColumns(tcSource);
+  checkDynamicTrackColumns(tcTarget.container());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -11,6 +11,7 @@
 #include <any>
 #include <cassert>
 #include <memory>
+#include <typeinfo>
 #include <vector>
 
 namespace Acts::detail {
@@ -76,6 +77,12 @@ class DynamicColumnBase {
   /// @returns A unique_ptr to a fresh DynamicColumnBase instance
   virtual std::unique_ptr<DynamicColumnBase> clone(
       bool empty = false) const = 0;
+
+  /// Return the type_id of the data type stored by the dynamic column
+  /// @returns Type info of the data type held by the column
+  virtual const std::type_info& dataTypeInfo() const = 0;
+
+  virtual std::string_view name() const = 0;
 };
 
 /// Actual implementation of the Column memory using a std::vector as backend.
@@ -85,6 +92,7 @@ class DynamicColumnBase {
 template <typename T>
 class DynamicColumn : public DynamicColumnBase {
  public:
+  explicit DynamicColumn(std::string_view _name) : m_name{_name} {}
   /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
@@ -118,7 +126,7 @@ class DynamicColumn : public DynamicColumnBase {
   /// @copydoc DynamicColumnBase::clone
   std::unique_ptr<DynamicColumnBase> clone(bool empty) const override {
     if (empty) {
-      return std::make_unique<DynamicColumn<T>>();
+      return std::make_unique<DynamicColumn<T>>(name());
     }
     return std::make_unique<DynamicColumn<T>>(*this);
   }
@@ -140,8 +148,14 @@ class DynamicColumn : public DynamicColumnBase {
     m_vector.at(dstIdx) = *other;
   }
 
+  /// @copydoc DynamicColumnBase::dataTypeInfo
+  const std::type_info& dataTypeInfo() const override { return typeid(T); }
+  /// @copydoc DynamicColumnBase::name
+  std::string_view name() const override { return m_name; }
+
  private:
   std::vector<T> m_vector;
+  std::string m_name{};
 };
 
 /// Template specification to circumvent the flaws of the bool implementation
@@ -149,6 +163,7 @@ class DynamicColumn : public DynamicColumnBase {
 template <>
 class DynamicColumn<bool> : public DynamicColumnBase {
  public:
+  explicit DynamicColumn(std::string_view _name) : m_name{_name} {}
   /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
@@ -182,7 +197,7 @@ class DynamicColumn<bool> : public DynamicColumnBase {
   /// @copydoc DynamicColumnBase::clone
   std::unique_ptr<DynamicColumnBase> clone(bool empty) const override {
     if (empty) {
-      return std::make_unique<DynamicColumn<bool>>();
+      return std::make_unique<DynamicColumn<bool>>(name());
     }
     return std::make_unique<DynamicColumn<bool>>(*this);
   }
@@ -204,12 +219,19 @@ class DynamicColumn<bool> : public DynamicColumnBase {
     m_vector.at(dstIdx).value = *other;
   }
 
+  /// @copydoc DynamicColumnBase::dataTypeInfo
+  const std::type_info& dataTypeInfo() const override { return typeid(bool); }
+
+  /// @copydoc DynamicColumnBase::name
+  std::string_view name() const override { return m_name; }
+
  private:
   /// Auxiliary struct to wrap a boolean for use in a vector
   struct Wrapper {
     bool value{false};
   };
   std::vector<Wrapper> m_vector;
+  std::string m_name{};
 };
 
 }  // namespace Acts::detail
