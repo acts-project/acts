@@ -29,6 +29,9 @@ struct gbts_convert_seeds_payload {
   unsigned int nPathsGrid;
   /// Device-side number of paths (clamped to nPathsMax by the kernel)
   vecmem::data::vector_view<const unsigned int> path_count;
+  /// seed quality (30 bits) + dropout_index (2 bits) + prop_idx (32 bits) for
+  /// ordering the seeds
+  vecmem::data::vector_view<unsigned long long int> seed_bids;
   /// Per-seed-proposal (quality, path-store index), index -1 if empty
   vecmem::data::vector_view<const int2> seed_proposals;
   /// Per-seed-proposal ambiguity tag
@@ -60,6 +63,33 @@ struct gbts_convert_seeds_payload {
 template <concepts::thread_id1 thread_id_t>
 TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
     const thread_id_t& thread_id, const gbts_convert_seeds_payload& payload);
+
+struct gbts_fill_seeds_from_sorted_bids_payload {
+  unsigned int nSeeds;
+  /// seed quality (30 bits) + dropout_index (2 bits) + prop_idx (32 bits) for
+  /// ordering the seeds
+  vecmem::data::vector_view<unsigned long long int> seed_bids;
+  /// Per-path (edge index, parent path-store index or -1) entries
+  vecmem::data::vector_view<const int2> path_store;
+  /// (node1, node2) original spacepoint indices per compacted edge
+  vecmem::data::vector_view<const uint2> output_edge_nodes;
+  /// Output: 3-SP seeds placed in this non-resizable buffer
+  edm::seed_collection::view output_seeds;
+};
+
+/// @brief From an array of sorted bids convert accepted seed proposals into 3-spacepoint edm::seeds.
+///
+/// Each thread (strided by gridSize) processes one accepted proposal,
+/// reads the three constituent spacepoint and places the seed in the
+/// output buffer
+///
+/// @param[in] thread_id Thread identifier for the kernel launch
+/// @param[in] payload   The global memory payload
+///
+template <concepts::thread_id1 thread_id_t>
+TRACCC_HOST_DEVICE inline void gbts_fill_seeds_from_sorted_bids(
+    const thread_id_t& thread_id,
+    const gbts_fill_seeds_from_sorted_bids_payload& payload);
 
 }  // namespace traccc::device
 
