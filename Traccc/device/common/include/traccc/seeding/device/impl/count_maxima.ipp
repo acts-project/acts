@@ -32,6 +32,7 @@ void count_maxima(const global_index_t globalIndex,
                                            &houghplanes[wedge_idx * dim],
                                            col, row);
         if (!is_maximum) continue;
+
         // it is a local maximum
         vecmem::device_atomic_ref<unsigned int> val(number_maxima[wedge_idx]);
         val.fetch_add(1u);

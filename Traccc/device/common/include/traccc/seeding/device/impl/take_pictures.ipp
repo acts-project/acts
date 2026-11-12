@@ -20,8 +20,8 @@ inline void take_the_picture(const global_index_t index,
                              const unsigned short* wedge,
                              vecmem::jagged_device_vector<scalar>::reference image) {
     static constexpr scalar normalization = 1.f / 256.f;
-    const int wedge_width = static_cast<int>(n_cols) - 1;
-    const int wedge_height = static_cast<int>(n_rows) - 1;
+    const int wedge_width = static_cast<int>(n_cols);
+    const int wedge_height = static_cast<int>(n_rows);
 
     const auto [col, row] = get_col_row(index, n_cols, n_rows);
     const int center_x = static_cast<int>(col);
