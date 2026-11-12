@@ -353,7 +353,7 @@ void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
     auto trackPars = track.parameters();
 
     trueY0 = trackPars[toUnderlying(Line_t::ParIndex::y0)];
-    trueTanTheta = std::tan(trackPars[toUnderlying(Line_t::ParIndex::theta)]);
+    trueTanTheta = track.direction().y() / track.direction().z();
     /// Calculate the chi2 again, from the fitted slope tan(theta)
     const Vector3 recoDir =
         makeDirectionFromAxisTangents(0., (*fitResult).theta);
@@ -473,7 +473,7 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
     auto linePars = track.parameters();
     /// True parameters
     trueY0 = linePars[toUnderlying(Line_t::ParIndex::y0)];
-    trueTanTheta = std::tan(linePars[toUnderlying(Line_t::ParIndex::theta)]);
+    trueTanTheta = track.direction().y() / track.direction().z();
     trueT0 = inNanoS(timeOffSet);
     /// Fit parameters
     recoY0 = (*result).y0;
@@ -518,7 +518,7 @@ void testStripFit(RandomEngine& engine, TFile& outFile) {
     auto linePars = track.parameters();
     /// True parameters
     trueY0 = linePars[toUnderlying(Line_t::ParIndex::y0)];
-    trueTanTheta = std::tan(linePars[toUnderlying(Line_t::ParIndex::theta)]);
+    trueTanTheta = track.direction().y() / track.direction().z();
 
     auto stripPoints = generateStrips(track, engine);
 
