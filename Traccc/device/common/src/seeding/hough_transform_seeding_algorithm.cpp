@@ -247,8 +247,8 @@ auto hough_transform_seeding_algorithm::operator()(
     for (unsigned int idx(0); idx<n_cols * n_rows; ++idx) std::cout << houghplane_entries_host[plane_index + idx] << " ";
     std::cout << std::endl;
   }
-  */ 
-
+  throw;
+  */
 
   /*
   vecmem::data::jagged_vector_view<unsigned int> host_view;
@@ -296,7 +296,7 @@ auto hough_transform_seeding_algorithm::operator()(
                        images,
                        maxima_x_value});
 
-  /*  
+   
   // -------------------------------------------------------------------------------------
   vecmem::data::jagged_vector_view<scalar> host_view;
   vecmem::data::jagged_vector_buffer<scalar> host_buffer;
@@ -318,7 +318,7 @@ auto hough_transform_seeding_algorithm::operator()(
   std::cout << std::endl;
   // -------------------------------------------------------------------------------------
   throw;
-  */
+  
 
 
   // ---------------------------------------------------
