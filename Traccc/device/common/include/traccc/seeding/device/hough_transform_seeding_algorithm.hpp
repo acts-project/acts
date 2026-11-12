@@ -64,6 +64,8 @@ class hough_transform_seeding_algorithm
     const hough_seeding_config& config;
     /// The magnetic field object
     const magnetic_field& bfield;
+    /// Wedges definition
+    const vecmem::data::vector_view<const scalar> wedges;
     /// The input measurements
     const edm::measurement_collection::const_view& measurements;
     /// The number of spacepoints in the event
@@ -117,6 +119,8 @@ class hough_transform_seeding_algorithm
     const hough_seeding_config& config;
     // The hough planes
     const vecmem::data::vector_view<const unsigned short>& houghplanes;    
+    // Thresholds
+    const vecmem::data::vector_view<const unsigned short>& thresholds;
     // The count vector
     vecmem::data::vector_view<unsigned int>& count_vector;
   };
@@ -125,6 +129,8 @@ class hough_transform_seeding_algorithm
     const hough_seeding_config& config;
     // The hough planes
     const vecmem::data::vector_view<const unsigned short>& houghplanes;
+    // Thresholds
+    const vecmem::data::vector_view<const unsigned short>& thresholds;
     // The global index vector
     vecmem::data::jagged_vector_view<global_index_t>& global_index;
   };

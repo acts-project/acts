@@ -37,6 +37,7 @@ namespace kernels {
    void precompute_spacepoint_variables(const traccc::hough_seeding_config config,
            const bfield_t bfield,
            const unsigned int n_wedges,
+           const vecmem::data::vector_view<const scalar> wedges,
 		   const edm::measurement_collection::const_view measurements,
 		   const edm::spacepoint_collection::const_view::size_type n_spacepoints,
 		   const edm::spacepoint_collection::const_view spacepoints,
@@ -46,9 +47,8 @@ namespace kernels {
 		   vecmem::data::vector_view<scalar> spacepoint_phi,
            vecmem::data::vector_view<scalar> spacepoint_bfield_z) {
       device::precompute_spacepoint_variables<bfield_t>(details::global_index1(), bfield,
-		      n_wedges, measurements, n_spacepoints, spacepoints,
+		      n_wedges, wedges, measurements, n_spacepoints, spacepoints,
 		      config.interaction_center, config.interaction_window, config.eta_width, config.module_veto,
-              &config.wedges[0],
 		      spacepoint_wedge_association, spacepoint_detector_id,
 		      spacepoint_r, spacepoint_phi,
               spacepoint_bfield_z);
@@ -67,7 +67,7 @@ namespace kernels {
            const vecmem::data::vector_view<const scalar> edges_y,
            vecmem::data::vector_view<unsigned long long> bins) {
       device::fill_hough_plane<T>(details::global_index1(),
-              config.wedges.size(),
+              config.n_wedges,
               config.n_cols,
               config.n_rows,
 		      n_spacepoints,
@@ -92,26 +92,28 @@ namespace kernels {
    __global__
    void count_maxima(const traccc::hough_seeding_config config,
                      const vecmem::data::vector_view<const unsigned short> houghplanes,
+                     const vecmem::data::vector_view<const unsigned short> thresholds,
                      vecmem::data::vector_view<unsigned int> count_vector) {
       device::count_maxima(details::global_index1(),
-                           config.wedges.size(),
+                           config.n_wedges,
                            config.n_cols,
                            config.n_rows, 
                            houghplanes,
-                           &config.min_contributions[0],
+                           thresholds,
                            count_vector);
    }
 
    __global__
    void find_maxima(const traccc::hough_seeding_config config,
                     const vecmem::data::vector_view<const unsigned short> houghplanes,
+                    const vecmem::data::vector_view<const unsigned short> thresholds,
                     vecmem::data::jagged_vector_view<traccc::device::global_index_t> global_indexes) {
       device::find_maxima(details::global_index1(),
-                          config.wedges.size(),
+                          config.n_wedges,
                           config.n_cols,
                           config.n_rows,
                           houghplanes,
-                          &config.min_contributions[0],
+                          thresholds,
                           global_indexes);
    }
 
@@ -241,7 +243,8 @@ void hough_transform_seeding_algorithm::precompute_spacepoint_variables_kernel(c
      payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
         kernels::precompute_spacepoint_variables<bfield_view_t>
 		    <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, bfield,
-				payload.config.wedges.size(),
+				payload.config.n_wedges,
+                payload.wedges,
                 payload.measurements, payload.n_spacepoints, payload.spacepoints,
 				payload.spacepoint_wedge_association,
 				payload.spacepoint_detector_id,
@@ -282,7 +285,10 @@ void hough_transform_seeding_algorithm::count_maxima_kernel(const count_maxima_p
   const unsigned int n_threads = warp_size() * 8;
   const unsigned int n_blocks = (payload.config.n_cols * payload.config.n_rows + n_threads - 1) / n_threads;
   kernels::count_maxima
-        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, payload.houghplanes, payload.count_vector);
+        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, 
+                    payload.houghplanes,
+                    payload.thresholds, 
+                    payload.count_vector);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
@@ -290,7 +296,10 @@ void hough_transform_seeding_algorithm::find_maxima_kernel(const find_maxima_pay
   const unsigned int n_threads = warp_size() * 8;
   const unsigned int n_blocks = (payload.config.n_cols * payload.config.n_rows + n_threads - 1) / n_threads;
   kernels::find_maxima
-        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, payload.houghplanes, payload.global_index);
+        <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, 
+                    payload.houghplanes,
+                    payload.thresholds,
+                    payload.global_index);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 

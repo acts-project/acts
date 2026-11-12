@@ -12,11 +12,12 @@ void count_maxima(const global_index_t globalIndex,
                   const global_index_t n_cols,
                   const global_index_t n_rows,
                   const vecmem::data::vector_view<const unsigned short>& houghplanes_view,
-                  const unsigned short* thresholds,
+                  const vecmem::data::vector_view<const unsigned short>& thresholds_view,
                   vecmem::data::vector_view<unsigned int>& number_maxima_view) {
     const global_index_t dim = n_cols * n_rows;
     if (globalIndex >= dim) return;
     const vecmem::device_vector<const unsigned short> houghplanes(houghplanes_view);
+    const vecmem::device_vector<const unsigned short> thresholds(thresholds_view);
     vecmem::device_vector<unsigned int> number_maxima(number_maxima_view);
 
     const auto [col, row] = get_col_row(globalIndex, n_cols, n_rows);

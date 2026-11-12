@@ -60,6 +60,7 @@ TRACCC_HOST_DEVICE
 void precompute_spacepoint_variables(const global_index_t globalIndex,
         const bfield_t& bfield,
         const unsigned int n_wedges,
+        const vecmem::data::vector_view<const scalar>& wedges_view,
 		const edm::measurement_collection::const_view& measurements_view,
 		const edm::spacepoint_collection::const_view::size_type n_spacepoints,
         const edm::spacepoint_collection::const_view& spacepoints_view,
@@ -67,14 +68,15 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
         const scalar interactionWindow,
         const scalar etaWidth,
         const unsigned long long module_veto,
-        const scalar* wedges,
 		vecmem::data::vector_view<unsigned long long>& spacepoint_wedge_association_view,
         vecmem::data::vector_view<unsigned long long>& spacepoint_detector_id_view,
 		vecmem::data::vector_view<scalar>& spacepoint_r_view,
 		vecmem::data::vector_view<scalar>& spacepoint_phi_view,
         vecmem::data::vector_view<scalar>& spacepoint_bfield_z_view) {
    if (globalIndex >= n_spacepoints) return;
-   
+    
+   // defs
+   const vecmem::device_vector<const scalar> wedges(wedges_view);
    // input   
    const edm::spacepoint_collection::const_device spacepoints(spacepoints_view);
    // outputs
@@ -105,7 +107,7 @@ void precompute_spacepoint_variables(const global_index_t globalIndex,
    spacepoint_detector_id[globalIndex] = identifier_id;
 
    // veto layers
-   // if ((identifier_id & module_veto) != 0ULL) return;
+   if ((identifier_id & module_veto) != 0ULL) return;
 
    // understand what wedge(s) the space points belongs to
    // wedges define eta ranges and they may overlap
