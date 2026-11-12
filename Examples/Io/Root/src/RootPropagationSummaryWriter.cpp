@@ -75,6 +75,9 @@ RootPropagationSummaryWriter::RootPropagationSummaryWriter(
   m_outputTree->Branch("nReverseSteps", &m_nReverseSteps);
   m_outputTree->Branch("pathLength", &m_pathLength);
   m_outputTree->Branch("absolutePathLength", &m_absolutePathLength);
+  if (m_cfg.storePropagationTime) {
+    m_outputTree->Branch("propagationTime", &m_propagationTime);
+  }
 
   m_outputTree->Branch("nRenavigations", &m_nRenavigations);
   m_outputTree->Branch("nVolumeSwitches", &m_nVolumeSwitches);
@@ -161,6 +164,7 @@ ProcessCode RootPropagationSummaryWriter::writeT(
     m_nReverseSteps = summary.statistics.stepping.nReverseSteps;
     m_pathLength = summary.statistics.stepping.pathLength;
     m_absolutePathLength = summary.statistics.stepping.absolutePathLength;
+    m_propagationTime = summary.propagationTime;
 
     // Navigator statistics
     m_nRenavigations = summary.statistics.navigation.nRenavigations;
