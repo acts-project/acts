@@ -88,5 +88,5 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGnn, gnn) {
       TrackFindingFromProtoTracksAlgorithm, gnn,
       "TrackFindingFromProtoTracksAlgorithm", inputProtoTracks,
       inputMeasurements, inputInitialTrackParameters, outputTracks,
-      measurementSelectorCfg, trackingGeometry, magneticField, findTracks, tag);
+      trackStateSelection, trackingGeometry, magneticField, findTracks, tag);
 }

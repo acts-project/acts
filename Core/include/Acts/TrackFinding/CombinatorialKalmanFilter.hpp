@@ -687,10 +687,22 @@ class CombinatorialKalmanFilter {
         // extend trajectory with measurements associated to the current surface
         // which may create extra trajectory branches if more than one
         // measurement is selected.
-        tsRes = extensions.createTrackStates(
-            state.geoContext, *calibrationContextPtr, surface, boundState,
-            prevTip, result.trackStateCandidates, *result.trackStates,
-            logger());
+        if (extensions.trackStateCreator.connected()) {
+          const CkfTypes::TrackStateCreatorInput<track_container_t> input{
+              .geoContext = &state.geoContext.get(),
+              .calibrationContext = calibrationContextPtr,
+              .surface = &surface,
+              .boundState = &boundState,
+              .prevTip = prevTip,
+              .trajectory = result.trackStates,
+              .logger = &logger()};
+          tsRes = extensions.trackStateCreator(input);
+        } else {
+          tsRes = extensions.createTrackStates(
+              state.geoContext, *calibrationContextPtr, surface, boundState,
+              prevTip, result.trackStateCandidates, *result.trackStates,
+              logger());
+        }
       }
 
       if (tsRes.ok() && !(*tsRes).empty()) {
@@ -882,8 +894,11 @@ class CombinatorialKalmanFilter {
           newBranch.nDoF() += trackState.calibratedSize();
           newBranch.chi2() += trackState.chi2();
         } else {
-          ACTS_WARNING("Cannot handle this track state flags");
-          continue;
+          ACTS_DEBUG("Track state " << trackState.index() << " with flags "
+                                    << typeFlags
+                                    << " is neither a measurement nor an "
+                                       "outlier");
+          return CombinatorialKalmanFilterError::UnsupportedTrackState;
         }
 
         result.activeBranches.push_back(newBranch);
@@ -1217,6 +1232,14 @@ class CombinatorialKalmanFilter {
   Result<std::vector<TrackProxy>> findTracks(
       const BoundTrackParameters& initialParameters, const Options& tfOptions,
       track_container_t& trackContainer, TrackProxy rootBranch) const {
+    if (tfOptions.extensions.trackStateCreator.connected() ==
+        tfOptions.extensions.createTrackStates.connected()) {
+      throw std::invalid_argument(
+          "CombinatorialKalmanFilter: exactly one of "
+          "`extensions.trackStateCreator` and the deprecated "
+          "`extensions.createTrackStates` has to be connected");
+    }
+
     // Create the ActorList
     using CombinatorialKalmanFilterActor = Actor;
     using Actors = ActorList<CombinatorialKalmanFilterActor>;
