@@ -756,7 +756,7 @@ BOOST_AUTO_TEST_CASE(DropDeadEndsKeepsTheSeeds) {
 
   struct Result {
     std::size_t nEdges{};
-    std::uint32_t nConnections{};
+    std::size_t nLinks{};
     std::string seeds;
   };
   const auto run = [&](const bool dropDeadEnds) {
@@ -785,7 +785,7 @@ BOOST_AUTO_TEST_CASE(DropDeadEndsKeepsTheSeeds) {
                              setup.options, seeds);
 
     return Result{.nEdges = graph.edgeStorage.size(),
-                  .nConnections = graph.nConnections,
+                  .nLinks = graph.neighbours.size(),
                   .seeds = formatSeeds(seeds)};
   };
 
@@ -793,7 +793,7 @@ BOOST_AUTO_TEST_CASE(DropDeadEndsKeepsTheSeeds) {
   const Result dropped = run(true);
 
   BOOST_CHECK_LT(dropped.nEdges, kept.nEdges);
-  BOOST_CHECK_EQUAL(dropped.nConnections, kept.nConnections);
+  BOOST_CHECK_EQUAL(dropped.nLinks, kept.nLinks);
   BOOST_CHECK_EQUAL(dropped.seeds, kept.seeds);
 }
 
