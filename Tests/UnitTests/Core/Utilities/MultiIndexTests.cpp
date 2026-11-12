@@ -96,6 +96,29 @@ BOOST_AUTO_TEST_CASE(index64_set_overflow) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(wide_levels) {
+  // levels with 32 or more bits, which do not fit into an int
+  using Index3232 = Acts::MultiIndex<std::uint64_t, 32, 32>;
+  constexpr std::uint64_t max32 = 0xffffffffu;
+  BOOST_CHECK_EQUAL(Index3232::Zeros().maxValue(0), max32);
+  BOOST_CHECK_EQUAL(Index3232::Zeros().maxValue(1), max32);
+
+  auto idx = Index3232::Encode(max32, 7u);
+  BOOST_CHECK_EQUAL(idx.value(), 0xffffffff00000007u);
+  BOOST_CHECK_EQUAL(idx.level(0), max32);
+  BOOST_CHECK_EQUAL(idx.level(1), 7u);
+  BOOST_CHECK_THROW(Index3232::Zeros().set(0, max32 + 1), std::out_of_range);
+  BOOST_CHECK_THROW(Index3232::Zeros().set(1, max32 + 1), std::out_of_range);
+  // ordering is lexicographic over the levels
+  BOOST_CHECK(Index3232::Encode(0u, max32) < Index3232::Encode(1u, 0u));
+
+  // a single level using the full storage
+  using Index64Full = Acts::MultiIndex<std::uint64_t, 64>;
+  constexpr std::uint64_t max64 = 0xffffffffffffffffu;
+  BOOST_CHECK_EQUAL(Index64Full::Zeros().maxValue(0), max64);
+  BOOST_CHECK_EQUAL(Index64Full::Encode(max64).level(0), max64);
+}
+
 BOOST_AUTO_TEST_CASE(index32_encode) {
   // all three levels set
   auto idx3 = Index32::Encode(13u, 14u, 15u);
