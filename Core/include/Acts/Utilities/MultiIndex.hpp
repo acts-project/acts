@@ -11,6 +11,7 @@
 #include <array>
 #include <cassert>
 #include <climits>
+#include <compare>
 #include <ostream>
 #include <type_traits>
 #include <utility>
@@ -177,13 +178,8 @@ class MultiIndex {
 
   Value m_value;
 
-  friend constexpr bool operator<(MultiIndex lhs, MultiIndex rhs) {
-    return lhs.m_value < rhs.m_value;
-  }
-
-  friend constexpr bool operator==(MultiIndex lhs, MultiIndex rhs) {
-    return lhs.m_value == rhs.m_value;
-  }
+  // also declares a defaulted operator==
+  friend constexpr auto operator<=>(MultiIndex lhs, MultiIndex rhs) = default;
 
   friend inline std::ostream& operator<<(std::ostream& os, MultiIndex idx) {
     // one level is always defined
