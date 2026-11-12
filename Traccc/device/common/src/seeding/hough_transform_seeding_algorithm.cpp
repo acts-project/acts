@@ -101,9 +101,8 @@ auto hough_transform_seeding_algorithm::operator()(
           spacepoint_bfield_z});
   
 
-
-  // -------------------------------------------------------------------------------------  
   /*
+  // --------------------------------------------------------------------------------------
   edm::spacepoint_collection::const_view sp_host_view;
   edm::spacepoint_collection::buffer sp_host_buffer;
   if (mr().host) {
@@ -150,8 +149,8 @@ auto hough_transform_seeding_algorithm::operator()(
     std::cout << "sp " << i << " x=" << sp.x() << " y=" << sp.y() << " z=" << sp.z()  << " r=" << spacepoint_r_host.at(i) << " phi=" << spacepoint_phi_host.at(i)
               << " bit count: " << n_bits << " [value was " << std::bitset<64>(wedge_association) << "] (id: " << std::bitset<64>(detector_id) << ") layer_number is " << layer_number << std::endl;
   }
-  */
   // -------------------------------------------------------------------------------------
+  */
 
 
   // ---------------------------------------------------
@@ -299,7 +298,8 @@ auto hough_transform_seeding_algorithm::operator()(
                        maxima_x_value});
 
 
-     
+
+  /*     
   // -------------------------------------------------------------------------------------
   vecmem::data::jagged_vector_view<scalar> host_view;
   vecmem::data::jagged_vector_buffer<scalar> host_buffer;
@@ -320,7 +320,8 @@ auto hough_transform_seeding_algorithm::operator()(
   }
   std::cout << std::endl;
   // -------------------------------------------------------------------------------------
-  throw;
+  */
+
   
 
 
@@ -359,7 +360,8 @@ auto hough_transform_seeding_algorithm::operator()(
                 : vecmem::vector<unsigned int>());
   copy()(hits_sizes, hits_sizes_host)->wait();
 
-  /*
+
+  /*  
   // -------------------------------------------------------------------------------------
   std::cout << std::endl;
   std::cout << "Number of images: " << total_maxima << std::endl;
@@ -372,6 +374,7 @@ auto hough_transform_seeding_algorithm::operator()(
   // for (unsigned int i(0); i<hits_sizes_host.size(); ++i) total_hits += hits_sizes_host[i];
   // -------------------------------------------------------------------------------------
   */
+
 
   vecmem::data::jagged_vector_buffer<global_index_t> hits(hits_sizes_host,
         mr().main, mr().host,
@@ -393,8 +396,8 @@ auto hough_transform_seeding_algorithm::operator()(
                             hits});
 
 
-  // -------------------------------------------------------------------------------------
   /*
+  // -------------------------------------------------------------------------------------
   synchronize();
 
   vecmem::data::jagged_vector_view<global_index_t> hits_host_view;
@@ -417,7 +420,9 @@ auto hough_transform_seeding_algorithm::operator()(
     for (unsigned int j(0); j<vals.capacity(); ++j) std::cout << vals[j] << " "; 
     std::cout << std::endl;
   }  
+  // -------------------------------------------------------------------------------------
   */
+  
 
   // Make the seeds
   std::vector<unsigned int> matrices_sizes(hits_sizes_host.size());
@@ -435,13 +440,10 @@ auto hough_transform_seeding_algorithm::operator()(
                      nn_outcome,
                      hits,
                      matrices});
-
-
-  // -------------------------------------------------------------------------------------
-  /*
-  synchronize();
-
   
+
+  /*
+  // -------------------------------------------------------------------------------------
   vecmem::data::jagged_vector_view<scalar> matrices_host_view;
   vecmem::data::jagged_vector_buffer<scalar> matrices_host_buffer;
     
@@ -459,13 +461,12 @@ auto hough_transform_seeding_algorithm::operator()(
     for (unsigned int j(0); j<matrices_sizes[i]; ++j) std::cout << matrices_host_device[i][j] << " ";
     std::cout << std::endl;
   };
-  throw;
-  */
   // -------------------------------------------------------------------------------------
+  */
+
 
   // no idea
   synchronize();
-
 
   // Return the result.
   // return result;
