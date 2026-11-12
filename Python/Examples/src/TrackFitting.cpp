@@ -10,11 +10,13 @@
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Digitization/ClusterOnTrackCalibrator.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsPlugins/Json/BetheHeitlerApproxJsonConverter.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
@@ -89,6 +91,23 @@ void addTrackFitting(py::module& mex) {
             []() -> std::shared_ptr<MeasurementCalibrator> {
               return std::make_shared<PassThroughCalibrator>();
             });
+
+    {
+      auto calibrator =
+          py::class_<ClusterOnTrackCalibrator, MeasurementCalibrator,
+                     std::shared_ptr<ClusterOnTrackCalibrator>>(
+              mex, "ClusterOnTrackCalibrator")
+              .def(py::init<const ClusterOnTrackCalibrator::Config&>(),
+                   py::arg("config"))
+              .def_property_readonly("config",
+                                     &ClusterOnTrackCalibrator::config);
+
+      auto c =
+          py::class_<ClusterOnTrackCalibrator::Config>(calibrator, "Config")
+              .def(py::init<>());
+      ACTS_PYTHON_STRUCT(c, digitizationConfigs, minError);
+      patchKwargsConstructor(c);
+    }
 
     py::enum_<ComponentMergeMethod>(mex, "ComponentMergeMethod")
         .value("mean", ComponentMergeMethod::eMean)
