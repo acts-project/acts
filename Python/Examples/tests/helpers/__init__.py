@@ -78,6 +78,13 @@ with warnings.catch_warnings():
         covfieEnabled = False
 
     try:
+        from acts import detray
+
+        detrayEnabled = True
+    except ModuleNotFoundError:
+        detrayEnabled = False
+
+    try:
         import acts.examples.pythia8
 
         pythia8Enabled = True

@@ -235,6 +235,7 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
 NOOP_CONVERTER_IMPL(TryAllNavigationPolicy)
 NOOP_CONVERTER_IMPL(MultiNavigationPolicy)
 NOOP_CONVERTER_IMPL(CylinderNavigationPolicy)
+NOOP_CONVERTER_IMPL(DetraySurfaceGridPolicy)
 NOOP_CONVERTER_IMPL_FULL(MultiLayerNavigationPolicy, MultiLayerNavigationPolicy)
 
 }  // namespace ActsPlugins
