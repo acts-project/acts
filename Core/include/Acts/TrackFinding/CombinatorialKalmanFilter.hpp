@@ -177,6 +177,10 @@ struct CombinatorialKalmanFilterResult {
   /// recorded track state to keep the jacobian chain intact
   BoundMatrix accumulatedJacobian = BoundMatrix::Identity();
 
+  /// Path length of the branch tip at the last restart of the stepper. The
+  /// stepper counts its path length from zero after a restart.
+  double pathLengthOffset = 0;
+
   /// Indicator if track finding has been done
   bool finished = false;
 
@@ -493,6 +497,9 @@ class CombinatorialKalmanFilter {
       ACTS_VERBOSE("Propagation jumps to branch with tip = "
                    << currentBranch.tipIndex());
 
+      // The stepper restarts its path length at zero
+      result.pathLengthOffset = currentState.pathLength();
+
       // Reset the stepping state
       if constexpr (!IsMultiStepper) {
         stepper.initialize(state.stepping, currentState.filtered(),
@@ -644,7 +651,8 @@ class CombinatorialKalmanFilter {
             return res.error();
           }
           return Result<SingleBoundState>::success(
-              {std::move(*res), jacobian, stepper.pathLength(state.stepping)});
+              {std::move(*res), jacobian,
+               result.pathLengthOffset + stepper.pathLength(state.stepping)});
         } else {
           // This triggers a second covariance transport which is wasteful in
           // terms of compute. But the multi stepper might filter bound
@@ -663,7 +671,8 @@ class CombinatorialKalmanFilter {
           }
           const auto singleParams = res->merge(brem.mergeMethod);
           return Result<SingleBoundState>::success(
-              {singleParams, jacobian, stepper.pathLength(state.stepping)});
+              {singleParams, jacobian,
+               result.pathLengthOffset + stepper.pathLength(state.stepping)});
         }
       }();
       if (!boundStateRes.ok()) {
@@ -687,10 +696,23 @@ class CombinatorialKalmanFilter {
         // extend trajectory with measurements associated to the current surface
         // which may create extra trajectory branches if more than one
         // measurement is selected.
-        tsRes = extensions.createTrackStates(
-            state.geoContext, *calibrationContextPtr, surface, boundState,
-            prevTip, result.trackStateCandidates, *result.trackStates,
-            logger());
+        if (extensions.trackStateCreator.connected()) {
+          const CkfTypes::TrackStateCreatorInput<track_container_t> input{
+              .geoContext = &state.geoContext.get(),
+              .calibrationContext = calibrationContextPtr,
+              .surface = &surface,
+              .boundState = &boundState,
+              .prevTip = prevTip,
+              .trajectory = result.trackStates,
+              .logger = &logger(),
+              .propagationDirection = state.options.direction};
+          tsRes = extensions.trackStateCreator(input);
+        } else {
+          tsRes = extensions.createTrackStates(
+              state.geoContext, *calibrationContextPtr, surface, boundState,
+              prevTip, result.trackStateCandidates, *result.trackStates,
+              logger());
+        }
       }
 
       if (tsRes.ok() && !(*tsRes).empty()) {
@@ -780,6 +802,17 @@ class CombinatorialKalmanFilter {
 
       auto currentState = currentBranch.outermostTrackState();
 
+      if (&currentState.referenceSurface() != &surface) {
+        // The creator put the track state on another surface ahead. The
+        // stepper and the navigator continue from there, as for a branch
+        // switch, which also applies the material of that surface.
+        ACTS_VERBOSE("Track state with tip = "
+                     << currentState.index() << " is on surface "
+                     << currentState.referenceSurface().geometryId()
+                     << ", continue from there");
+        return reset(state, stepper, navigator, result);
+      }
+
       if (currentState.typeFlags().isOutlier()) {
         // We don't need to update the stepper given an outlier state
         ACTS_VERBOSE("Outlier state detected on surface "
@@ -812,8 +845,9 @@ class CombinatorialKalmanFilter {
     /// Process new, incompomplete track states and set the filtered state
     ///
     /// @note will process the given list of new states, run the updater
-    ///     or share the predicted state for states flagged as outliers
-    ///     and add them to the list of active branches
+    ///     for measurements or share the predicted state for outliers and
+    ///     states without measurement, and add them to the list of active
+    ///     branches
     ///
     /// @tparam propagator_state_t Type of the Propagator state
     /// @tparam stepper_t Type of the stepper
@@ -881,9 +915,21 @@ class CombinatorialKalmanFilter {
           newBranch.nMeasurements()++;
           newBranch.nDoF() += trackState.calibratedSize();
           newBranch.chi2() += trackState.chi2();
+        } else if (typeFlags.hasParameters() && !typeFlags.hasMeasurement()) {
+          // A hole, or a state on a surface without an expected measurement.
+          // As for an outlier, there is no Kalman update.
+          trackState.shareFrom(PM::Predicted, PM::Filtered);
+          if (typeFlags.isHole()) {
+            newBranch.nHoles()++;
+          }
+          ACTS_VERBOSE("Appended track state without measurement with tip = "
+                       << newBranch.tipIndex() << " and flags " << typeFlags);
         } else {
-          ACTS_WARNING("Cannot handle this track state flags");
-          continue;
+          ACTS_DEBUG("Track state " << trackState.index() << " with flags "
+                                    << typeFlags
+                                    << " is neither a measurement, an outlier "
+                                       "nor a state without measurement");
+          return CombinatorialKalmanFilterError::UnsupportedTrackState;
         }
 
         result.activeBranches.push_back(newBranch);
@@ -1217,6 +1263,14 @@ class CombinatorialKalmanFilter {
   Result<std::vector<TrackProxy>> findTracks(
       const BoundTrackParameters& initialParameters, const Options& tfOptions,
       track_container_t& trackContainer, TrackProxy rootBranch) const {
+    if (tfOptions.extensions.trackStateCreator.connected() ==
+        tfOptions.extensions.createTrackStates.connected()) {
+      throw std::invalid_argument(
+          "CombinatorialKalmanFilter: exactly one of "
+          "`extensions.trackStateCreator` and the deprecated "
+          "`extensions.createTrackStates` has to be connected");
+    }
+
     // Create the ActorList
     using CombinatorialKalmanFilterActor = Actor;
     using Actors = ActorList<CombinatorialKalmanFilterActor>;

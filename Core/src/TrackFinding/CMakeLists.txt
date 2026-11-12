@@ -1,6 +1,7 @@
 target_sources(
     ActsCore
     PRIVATE
+        CkfTrackStateCreatorBase.cpp
         CombinatorialKalmanFilterError.cpp
         MeasurementSelector.cpp
         AmbiguityTrackClustering.cpp

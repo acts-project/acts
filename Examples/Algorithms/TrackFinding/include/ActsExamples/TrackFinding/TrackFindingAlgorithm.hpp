@@ -13,7 +13,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
-#include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/SeedDeduplicator.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "Acts/TrackFitting/TrackletJoiner.hpp"
@@ -26,6 +25,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/TrackFinding/Chi2CkfTrackStateCreatorBase.hpp"
 #include "ActsExamples/TrackFinding/SeedParamsEstimator.hpp"
 
 #include <atomic>
@@ -108,8 +108,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// Type erased track finder with brem recovery function.
     std::shared_ptr<TrackFinderFunction> findTracksBrem;
-    /// CKF measurement selector config
-    Acts::MeasurementSelector::Config measurementSelectorCfg;
+    /// Cuts applied when extending a track onto a surface
+    TrackStateSelectionCuts trackStateSelection;
     /// Track selector config
     std::optional<std::variant<Acts::TrackSelector::Config,
                                Acts::TrackSelector::EtaBinnedConfig>>
