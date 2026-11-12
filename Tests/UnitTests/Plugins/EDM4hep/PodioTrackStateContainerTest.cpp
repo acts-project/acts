@@ -626,9 +626,9 @@ void checkTrackStateColumnInfo(const backend_t& backend, HashedString key,
     BOOST_CHECK_EQUAL(backend.columnName_impl(key), expName);
     BOOST_CHECK_EQUAL(backend.columnName(key), expName);
     const std::type_info& type = backend.columnDataType_impl(key);
-    BOOST_CHECK_MESSAGE(type == expType, "Expected data type "
-                                             << expType.name() << " but got "
-                                             << type.name());
+    BOOST_CHECK_MESSAGE(type == expType, "Expected data type " << expType.name()
+                                                               << " but got "
+                                                               << type.name());
     BOOST_CHECK(backend.columnDataType(key) == type);
   }
 }

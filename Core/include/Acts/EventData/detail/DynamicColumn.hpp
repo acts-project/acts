@@ -81,7 +81,8 @@ class DynamicColumnBase {
   /// Return the type_id of the data type stored by the dynamic column
   /// @returns Type info of the data type held by the column
   virtual const std::type_info& dataTypeInfo() const = 0;
-
+  /// The name of the dynamic column in the container
+  /// @returns The column's name
   virtual std::string_view name() const = 0;
 };
 
@@ -92,6 +93,8 @@ class DynamicColumnBase {
 template <typename T>
 class DynamicColumn : public DynamicColumnBase {
  public:
+  /// Construct the dynamic column and associate a name with it
+  /// @param _name: The name with of the column in the container
   explicit DynamicColumn(std::string_view _name) : m_name{_name} {}
   /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) override {
@@ -163,6 +166,8 @@ class DynamicColumn : public DynamicColumnBase {
 template <>
 class DynamicColumn<bool> : public DynamicColumnBase {
  public:
+  /// Construct the dynamic column and associate a name with it
+  /// @param _name: The name with of the column in the container
   explicit DynamicColumn(std::string_view _name) : m_name{_name} {}
   /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) override {

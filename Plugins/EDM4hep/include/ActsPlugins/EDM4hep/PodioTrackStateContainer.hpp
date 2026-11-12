@@ -34,8 +34,8 @@ ACTS_DIAGNOSTIC_POP()
 
 #include <any>
 #include <memory>
-#include <stdexcept>
 #include <optional>
+#include <stdexcept>
 #include <string_view>
 #include <tuple>
 #include <type_traits>

@@ -27,8 +27,8 @@
 #include "Acts/Utilities/Holders.hpp"
 
 #include <algorithm>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <memory>
 #include <numeric>
@@ -569,17 +569,16 @@ void checkTrackColumnInfo(const backend_t& backend, HashedString key,
     BOOST_CHECK(backend.hasColumn_impl(key));
     BOOST_CHECK_EQUAL(backend.columnName_impl(key), expName);
     const std::type_info& type = backend.columnDataType_impl(key);
-    BOOST_CHECK_MESSAGE(type == expType, "Expected data type "
-                                             << expType.name() << " but got "
-                                             << type.name());
+    BOOST_CHECK_MESSAGE(type == expType, "Expected data type " << expType.name()
+                                                               << " but got "
+                                                               << type.name());
   }
 }
 
 template <typename backend_t>
 void checkStaticTrackColumns(const backend_t& backend) {
   using Base = detail_vtc::VectorTrackContainerBase;
-  checkTrackColumnInfo(backend, "tipIndex"_hash, "tipIndex",
-                       typeid(IndexType));
+  checkTrackColumnInfo(backend, "tipIndex"_hash, "tipIndex", typeid(IndexType));
   checkTrackColumnInfo(backend, "stemIndex"_hash, "stemIndex",
                        typeid(IndexType));
   checkTrackColumnInfo(backend, "params"_hash, "params",

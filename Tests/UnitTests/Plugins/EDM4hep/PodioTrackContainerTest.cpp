@@ -459,9 +459,9 @@ void checkTrackColumnInfo(const backend_t& backend, HashedString key,
   BOOST_TEST_CONTEXT("Column '" << expName << "'") {
     BOOST_CHECK_EQUAL(backend.columnName_impl(key), expName);
     const std::type_info& type = backend.columnDataType_impl(key);
-    BOOST_CHECK_MESSAGE(type == expType, "Expected data type "
-                                             << expType.name() << " but got "
-                                             << type.name());
+    BOOST_CHECK_MESSAGE(type == expType, "Expected data type " << expType.name()
+                                                               << " but got "
+                                                               << type.name());
   }
 }
 
