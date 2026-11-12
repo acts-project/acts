@@ -23,19 +23,8 @@ set(TRACCC_ALPAKA_SOURCE
     "Source for Alpaka, when built as part of this project"
 )
 
-set(TRACCC_ALPAKA_PATCH
-    ""
-    CACHE STRING
-    "Patch(es) for alpaka, when built as part of this project"
-)
-
-mark_as_advanced(TRACCC_ALPAKA_SOURCE TRACCC_ALPAKA_PATCH)
-FetchContent_Declare(
-    Alpaka
-    SYSTEM
-    ${TRACCC_ALPAKA_SOURCE}
-    ${TRACCC_ALPAKA_PATCH}
-)
+mark_as_advanced(TRACCC_ALPAKA_SOURCE)
+FetchContent_Declare(Alpaka SYSTEM ${TRACCC_ALPAKA_SOURCE})
 
 # Turn off build testing.
 set(BUILD_TESTING FALSE)
