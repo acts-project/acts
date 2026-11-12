@@ -50,7 +50,9 @@ triplet_seeding_algorithm::triplet_seeding_algorithm(
       algorithm_base{mr, copy},
       m_data{std::make_unique<data>(
           grid_config, finder_config, filter_config,
-          get_axes(grid_config, (mr.host ? *(mr.host) : mr.main)))} {}
+          get_axes(grid_config, (mr.host ? *(mr.host) : mr.main)))} {
+  m_data->m_finder_config.resolve_fallbacks();
+}
 
 triplet_seeding_algorithm::~triplet_seeding_algorithm() = default;
 

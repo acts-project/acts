@@ -117,6 +117,10 @@ bool TRACCC_HOST_DEVICE triplet_finding_helper::isCompatible(
 
   scalar deltaCotTheta = lb.cotTheta() - lt.cotTheta();
   scalar deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+
+  if (deltaCotTheta2 > config.cotThetaDiffMax * config.cotThetaDiffMax) {
+    return false;
+  }
   scalar error{0.f};
   scalar dCotThetaMinusError2{0.f};
 
@@ -199,6 +203,12 @@ inline bool TRACCC_HOST_DEVICE triplet_finding_helper::isCompatibleStrip(
     const strip_spacepoint_calibration& calT, const lin_circle& lt,
     const seedfinder_config& config, scalar& curvature,
     scalar& impact_parameter) {
+  const scalar deltaCotTheta0 = ctx.cotThetaB0 - lt.cotTheta();
+  if (deltaCotTheta0 * deltaCotTheta0 >
+      config.cotThetaDiffMax * config.cotThetaDiffMax) {
+    return false;
+  }
+
   // protects against division by 0
   const scalar dU0 = lt.U() - ctx.Ub0;
   if (dU0 == 0.f) {

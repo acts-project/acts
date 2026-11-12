@@ -59,6 +59,7 @@ struct populate_grid {
 };
 
 /// Kernel for running @c traccc::device::count_doublets
+template <bool use_dphi_cut>
 struct count_doublets {
   template <typename TAcc>
   ALPAKA_FN_ACC void operator()(
@@ -71,12 +72,14 @@ struct count_doublets {
       unsigned int* nMidBot, unsigned int* nMidTop) const {
     auto const globalThreadIdx =
         ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0u];
-    device::count_doublets(globalThreadIdx, config, spacepoints, sp_grid,
-                           sp_prefix_sum, doublet_counter, *nMidBot, *nMidTop);
+    device::count_doublets<use_dphi_cut>(globalThreadIdx, config, spacepoints,
+                                         sp_grid, sp_prefix_sum,
+                                         doublet_counter, *nMidBot, *nMidTop);
   }
 };
 
 /// Kernel for running @c traccc::device::find_doublets
+template <bool use_dphi_cut>
 struct find_doublets {
   template <typename TAcc>
   ALPAKA_FN_ACC void operator()(
@@ -88,8 +91,9 @@ struct find_doublets {
       device::device_doublet_collection_types::view mt_doublets) const {
     auto const globalThreadIdx =
         ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0u];
-    device::find_doublets(globalThreadIdx, config, spacepoints, sp_grid,
-                          doublet_counter, mb_doublets, mt_doublets);
+    device::find_doublets<use_dphi_cut>(globalThreadIdx, config, spacepoints,
+                                        sp_grid, doublet_counter, mb_doublets,
+                                        mt_doublets);
   }
 };
 
@@ -253,11 +257,19 @@ void triplet_seeding_algorithm::count_doublets_kernel(
   const unsigned int n_threads = warp_size() * 2;
   const unsigned int n_blocks =
       (payload.n_spacepoints + n_threads - 1) / n_threads;
-  ::alpaka::exec<Acc>(
-      details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
-      kernels::count_doublets{}, payload.config, payload.spacepoints,
-      payload.grid, payload.grid_prefix_sum, payload.doublet_counter,
-      &(payload.nMidBot), &(payload.nMidTop));
+  // The azimuthal separation cut is compiled into its own kernel instance
+  const auto launch = [&](auto kernel) {
+    ::alpaka::exec<Acc>(details::get_queue(queue()),
+                        makeWorkDiv<Acc>(n_blocks, n_threads), kernel,
+                        payload.config, payload.spacepoints, payload.grid,
+                        payload.grid_prefix_sum, payload.doublet_counter,
+                        &(payload.nMidBot), &(payload.nMidTop));
+  };
+  if (payload.config.doubletDPhiCut) {
+    launch(kernels::count_doublets<true>{});
+  } else {
+    launch(kernels::count_doublets<false>{});
+  }
 }
 
 void triplet_seeding_algorithm::find_doublets_kernel(
@@ -265,11 +277,18 @@ void triplet_seeding_algorithm::find_doublets_kernel(
   const unsigned int n_threads = warp_size() * 2;
   const unsigned int n_blocks =
       (payload.n_doublets + n_threads - 1) / n_threads;
-  ::alpaka::exec<Acc>(
-      details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
-      kernels::find_doublets{}, payload.config, payload.spacepoints,
-      payload.grid, payload.doublet_counter, payload.mb_doublets,
-      payload.mt_doublets);
+  // The azimuthal separation cut is compiled into its own kernel instance
+  const auto launch = [&](auto kernel) {
+    ::alpaka::exec<Acc>(
+        details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
+        kernel, payload.config, payload.spacepoints, payload.grid,
+        payload.doublet_counter, payload.mb_doublets, payload.mt_doublets);
+  };
+  if (payload.config.doubletDPhiCut) {
+    launch(kernels::find_doublets<true>{});
+  } else {
+    launch(kernels::find_doublets<false>{});
+  }
 }
 
 void triplet_seeding_algorithm::count_triplets_kernel(
