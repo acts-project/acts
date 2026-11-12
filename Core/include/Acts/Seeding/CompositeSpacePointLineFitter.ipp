@@ -62,21 +62,6 @@ CompositeSpacePointLineFitter::DelegateRet_t<fitTime>
 CompositeSpacePointLineFitter::fastPrecFit(
     const Cont_t& measurements, const Line_t& initialGuess,
     const FastFitDelegate_t<Cont_t, fitTime>& delegate) const {
-  // The result is converted to the chamber frame from the frame of the first
-  // bending measurement
-  auto toChamber =
-      [&measurements](
-          DelegateRet_t<fitTime>& fitResult) -> DelegateRet_t<fitTime>& {
-    if (fitResult) {
-      auto refHit = std::ranges::find_if(measurements, [](const auto& m) {
-        return (fitStraws && m->isStraw()) || (!fitStraws && m->measuresLoc1());
-      });
-      assert(refHit != measurements.end());
-      toChamberFrame(*fitResult, (*refHit)->toNextSensor(),
-                     (*refHit)->planeNormal(), CoordinateIndices::eY);
-    }
-    return fitResult;
-  };
   std::vector<int> strawSigns{};
   if constexpr (fitStraws) {
     strawSigns = detail::CompSpacePointAuxiliaries::strawSigns(initialGuess,
@@ -93,7 +78,7 @@ CompositeSpacePointLineFitter::fastPrecFit(
                         << " - Precision fit "
                         << (result ? "succeeded" : "failed"));
 
-    return toChamber(result);
+    return result;
   }
   if (result) {
     ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips") << ", "
@@ -102,7 +87,7 @@ CompositeSpacePointLineFitter::fastPrecFit(
 
     if (result->chi2 / std::max(1., static_cast<double>(result->nDoF)) <
         m_cfg.badFastChi2SignSwap) {
-      return toChamber(result);
+      return result;
     }
   }
 
@@ -123,7 +108,7 @@ CompositeSpacePointLineFitter::fastPrecFit(
                         << (fitTime ? "with" : "no") << " time>() " << __LINE__
                         << " - The fit did not improve");
 
-    return toChamber(result);
+    return result;
   }
   if (!result || swappedPrecResult->chi2 < result->chi2) {
     ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips") << ", "
@@ -133,14 +118,14 @@ CompositeSpacePointLineFitter::fastPrecFit(
     if (result) {
       swappedPrecResult->nIter += result->nIter;
     }
-    return toChamber(swappedPrecResult);
+    return swappedPrecResult;
   } else {
     result->nIter += swappedPrecResult->nIter;
     ACTS_DEBUG(__func__ << " <fit " << (fitStraws ? "straws" : "strips") << ", "
                         << (fitTime ? "with" : "no") << " time>() " << __LINE__
                         << " - Fit did not improve " << (*swappedPrecResult));
   }
-  return toChamber(result);
+  return result;
 }
 
 template <bool fitStraws, bool fitTime, CompositeSpacePointContainer Cont_t>
@@ -222,11 +207,11 @@ CompositeSpacePointLineFitter::fastFit(
       fastFitCovariance(*precResult, *nonPrecResult, postFitDir,
                         result.covariance);
     } else if (precResult) {
-      fastFitCovariance(*precResult, CoordinateIndices::eY, postFitDir,
-                        result.covariance);
+      fastFitCovariance(*precResult, FastFitter_t::ResidualIdx::bending,
+                        postFitDir, result.covariance);
     } else if (nonPrecResult) {
-      fastFitCovariance(*nonPrecResult, CoordinateIndices::eX, postFitDir,
-                        result.covariance);
+      fastFitCovariance(*nonPrecResult, FastFitter_t::ResidualIdx::nonBending,
+                        postFitDir, result.covariance);
     }
   }
   for (const FitParIndex par : parsToUse) {
@@ -264,10 +249,6 @@ CompositeSpacePointLineFitter::fastNonPrecFit(
     ACTS_DEBUG(__func__ << "() " << __LINE__ << " Non precision fit failed.");
     return result;
   }
-  const auto& refHit{**firstNonPrecMeas};
-  const Vector_t& eY{!refHit.measuresLoc1() ? refHit.toNextSensor()
-                                            : refHit.sensorDirection()};
-  toChamberFrame(*result, eY, refHit.planeNormal(), CoordinateIndices::eX);
   return result;
 }
 

@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -33,6 +34,28 @@ std::string printThetaStep(const double theta, const double thetaPrime,
       "step-size: {:.8f}",
       inDeg(theta), inDeg(thetaPrime), inDeg(thetaTwoPrime),
       inDeg(thetaPrime / thetaTwoPrime));
+}
+/// @brief Oblique projector onto the z = 0 plane along the direction d,
+///        P = 1 - d e_z^T / d_z
+///
+/// P p is the crossing of the line (p, d) with the z = 0 plane, so P is the
+/// derivative of the crossing w.r.t. the line point, and P / d_z the
+/// derivative of the slopes d / d_z w.r.t. the direction.
+/// @param dir: Direction of the line, not parallel to the plane
+Acts::SquareMatrix<3> zPlaneProjector(const Acts::Vector3& dir) {
+  assert(std::abs(dir.z()) > std::numeric_limits<double>::epsilon());
+  return Acts::SquareMatrix<3>::Identity() -
+         dir * Acts::Vector3::UnitZ().transpose() / dir.z();
+}
+/// @brief Covariance of a fast fit in its (intercept, angle) parameters
+/// @param result: Fast fit result
+Acts::SquareMatrix<2> planeCov(
+    const Acts::Experimental::detail::FastStrawLineFitter::FitResult& result) {
+  Acts::SquareMatrix<2> cov = Acts::SquareMatrix<2>::Zero();
+  cov(0, 0) = Acts::square(result.dY0);
+  cov(1, 1) = Acts::square(result.dTheta);
+  cov(0, 1) = cov(1, 0) = result.covY0Theta;
+  return cov;
 }
 }  // namespace
 namespace Acts::Experimental::detail {
@@ -64,7 +87,8 @@ void FastStrawLineFitter::FitResult::print(std::ostream& ostr) const {
   ostr << "# iteration: " << nIter << ", nDoF: " << nDoF << ", chi2: " << chi2
        << ", chi2 / nDoF: " << (chi2 / std::max(1., static_cast<double>(nDoF)))
        << ",\n";
-  ostr << std::format("theta: {:.3f} pm {:.3f}, ", inDeg(theta), inDeg(dTheta))
+  // theta is an angle during the fit and a slope after fit(): printed as is
+  ostr << std::format("theta: {:.5f} pm {:.5f}, ", theta, dTheta)
        << std::format("y0: {:.3f}  pm {:.3f}", y0, dY0);
 }
 void FastStrawLineFitter::FitResultT0::print(std::ostream& ostr) const {
@@ -116,6 +140,39 @@ void FastStrawLineFitter::completeResult(const FitAuxiliaries& fitPars,
                                std::sqrt(fitPars.covNorm) * secTheta);
   result.covY0Theta = dY0dTheta * Acts::square(result.dTheta);
   ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit succeeded " << result);
+}
+
+void FastStrawLineFitter::toChamberFrame(const FitAuxiliaries& fitPars,
+                                         const ResidualIdx projection,
+                                         FitResult& result) {
+  // Line of the fit: through y0' eY with direction sin(angle) eY + cos(angle)
+  // eZ.
+  const Vector& eY = fitPars.axisY;
+  const Vector& eZ = fitPars.axisZ;
+  const auto iCoord =
+      projection == ResidualIdx::nonBending ? Acts::eX : Acts::eY;
+  const double sinA = std::sin(result.theta);
+  const double cosA = std::cos(result.theta);
+  const auto dir = copySign<Vector, double>(sinA * eY + cosA * eZ, sinA);
+  // Derivative of the direction w.r.t. the angle, with the same sign as dir
+  const auto dDir = copySign<Vector, double>(cosA * eY - sinA * eZ, sinA);
+
+  const SquareMatrix<3> proj = zPlaneProjector(dir);
+  // Jacobian of (c, slope) w.r.t. (y0', angle): the position y0' eY and the
+  // direction vary through the projector
+  const double dIsectdY0 = (proj * eY)[iCoord];
+  const double dSlopedA = (proj * dDir)[iCoord] / dir.z();
+  SquareMatrix<2> jac = SquareMatrix<2>::Zero();
+  jac(0, 0) = dIsectdY0;                       // dc / dy0'
+  jac(0, 1) = -result.y0 * eY.z() * dSlopedA;  // dc / dangle
+  jac(1, 1) = dSlopedA;                        // dslope / dangle
+
+  result.y0 *= dIsectdY0;
+  result.theta = dir[iCoord] / dir.z();
+  const SquareMatrix<2> cov = jac * planeCov(result) * jac.transpose();
+  result.dY0 = std::sqrt(cov(0, 0));
+  result.dTheta = std::sqrt(cov(1, 1));
+  result.covY0Theta = cov(0, 1);
 }
 
 std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(

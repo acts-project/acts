@@ -71,7 +71,12 @@ class FastStrawLineFitter {
                                    getDefaultLogger("FastStrawLineFitter",
                                                     Logging::Level::INFO));
 
-  /// Helper struct to pack the result of the straw line fit
+  /// Helper struct to pack the result of the straw line fit. The fit is done
+  /// in the frame (y', z') of its first measurement (measured direction, plane
+  /// normal) with an inclination angle; the result returned by fit() is in the
+  /// frame common to all space points: theta is the slope dc/dz (tanBeta for
+  /// the bending, tanAlpha for the non-bending fit) and y0 the coordinate c of
+  /// the line at z = 0
   struct FitResult {
     virtual ~FitResult() = default;
     /// Printer method
@@ -81,11 +86,11 @@ class FastStrawLineFitter {
       x.print(ostr);
       return ostr;
     }
-    /// Fitted inclination angle
+    /// Fitted inclination angle; after fit(), the slope of the line
     double theta{0.};
-    /// Uncertainty on the fitted angle
+    /// Uncertainty on theta
     double dTheta{0.};
-    /// Fitted line intercept
+    /// Fitted line intercept; after fit(), the coordinate of the line at z = 0
     double y0{0.};
     /// Uncertainty on the intercept
     double dY0{0.};
@@ -171,6 +176,9 @@ class FastStrawLineFitter {
       x.print(ostr);
       return ostr;
     }
+    /// Axes of the fit frame
+    Vector axisY{Vector::UnitY()};
+    Vector axisZ{Vector::UnitZ()};
     /// Tube position center - y weighted with inverse covariances
     double centerY{0.};
     /// Tube position center - z weighted with inverse covariances
@@ -294,6 +302,17 @@ class FastStrawLineFitter {
   /// @param result: Mutable reference to the FitResult object. The updated parameter are written
   ///                to this object
   void completeResult(const FitAuxiliaries& fitPars, FitResult& result) const;
+  /// @brief Converts in place the converged result from the fit frame
+  ///        (axisY, axisZ) to the common frame
+  ///
+  /// The angle is replaced by the slope dc/dz of the line and the intercept by
+  /// its coordinate c at z = 0, with their uncertainties and covariance.
+  /// @param fitPars: Fit constants carrying the axes of the fit frame
+  /// @param projection: Plane of the fit: the bending (y) or non-bending (x)
+  ///                    coordinate
+  /// @param result: Mutable reference to the FitResult object
+  static void toChamberFrame(const FitAuxiliaries& fitPars,
+                             const ResidualIdx projection, FitResult& result);
   /// Enumeration to describe the outcome of the fit iteration
   enum class UpdateStatus : std::uint8_t {
     Converged,  ///< The fit converged
