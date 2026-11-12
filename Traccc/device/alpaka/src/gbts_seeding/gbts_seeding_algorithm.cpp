@@ -189,6 +189,16 @@ struct gbts_bid_seeds_for_hits {
   }
 };
 
+/// kernel for running @c traccc::device::gbts_fill_seeds_from_sorted_bids
+struct gbts_fill_seeds_from_sorted_bids {
+  template <typename TAcc>
+  ALPAKA_FN_ACC void operator()(
+      TAcc const& acc,
+      const device::gbts_fill_seeds_from_sorted_bids_payload payload) const {
+    device::gbts_fill_seeds_from_sorted_bids(details::thread_id1{acc}, payload);
+  }
+};
+
 /// Alpaka kernel for running @c traccc::device::gbts_convert_seeds
 struct gbts_convert_seeds {
   template <typename TAcc>
@@ -352,6 +362,18 @@ void gbts_seeding_algorithm::gbts_bid_seeds_for_hits_kernel(
   ::alpaka::exec<Acc>(details::get_queue(queue()),
                       makeWorkDiv<Acc>(n_blocks, n_threads),
                       kernels::gbts_bid_seeds_for_hits{}, payload);
+}
+void gbts_seeding_algorithm::gbts_sort_seeds_kernel(
+    const device::gbts_fill_seeds_from_sorted_bids_payload& payload) const {
+  // sort seeds by their bid of quality-dropout_kind-proposal_index
+  details::sort(queue(), mr(), payload.seed_bids.ptr(),
+                payload.seed_bids.ptr() + payload.nSeeds,
+                std::greater<unsigned long long int>());
+  const unsigned int n_threads = 128;
+  const unsigned int n_blocks = 1 + payload.nSeeds / n_threads;
+  ::alpaka::exec<Acc>(details::get_queue(queue()),
+                      makeWorkDiv<Acc>(n_blocks, n_threads),
+                      kernels::gbts_fill_seeds_from_sorted_bids{}, payload);
 }
 
 void gbts_seeding_algorithm::gbts_convert_seeds_kernel(

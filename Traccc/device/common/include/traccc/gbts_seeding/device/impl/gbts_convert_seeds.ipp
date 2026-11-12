@@ -114,7 +114,7 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
        prop_idx += blockDimX * gridDimX) {
     char diff_code = 0;
     bool force_dropout = false;
-    unsigned long long int dropout_index = -1;
+    unsigned long long int dropout_index = 0;
     char best_for_hit = 0;
     int2 prop = d_seed_proposals[prop_idx];
     if (prop.y < 0) {
@@ -239,8 +239,9 @@ TRACCC_HOST_DEVICE inline void gbts_fill_seeds_from_sorted_bids(
        prop_idx += blockDimX * gridDimX) {
     // take the dropout index from the saved bid
     unsigned long long int bid = d_seed_bids.at(prop_idx);
-    int2 prop = {bid >> 32, bid & 0xFFFFFFFF};
-    unsigned int dropout_index = prop.x & 0x3;
+    int2 prop = {static_cast<int>(bid >> 32),
+                 static_cast<int>(bid & 0xFFFFFFFF)};
+    unsigned int dropout_index = static_cast<unsigned int>(prop.x & 0x3);
     // match quality to non-sorted case
     prop.x -= dropout_index;
 

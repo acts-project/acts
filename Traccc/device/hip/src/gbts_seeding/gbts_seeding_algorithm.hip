@@ -149,6 +149,12 @@ __global__ void gbts_convert_seeds(
   device::gbts_convert_seeds(details::thread_id1{}, payload);
 }
 
+/// HIP kernel for running @c traccc::device::gbts_fill_seeds_from_sorted_bids
+__global__ void gbts_fill_seeds_from_sorted_bids(
+    const device::gbts_fill_seeds_from_sorted_bids_payload payload) {
+  device::gbts_fill_seeds_from_sorted_bids(details::thread_id1{}, payload);
+}
+
 }  // namespace kernels
 
 // ===========================================================================
@@ -357,6 +363,31 @@ void gbts_seeding_algorithm::gbts_bid_seeds_for_hits_kernel(
   const unsigned int n_blocks = 1 + (payload.nPathsGrid - 1) / n_threads;
   hipLaunchKernelGGL(kernels::gbts_bid_seeds_for_hits, n_blocks, n_threads, 0,
                      details::get_stream(stream()), payload);
+  TRACCC_HIP_ERROR_CHECK(hipGetLastError());
+}
+
+void gbts_seeding_algorithm::gbts_sort_seeds_kernel(
+    const device::gbts_fill_seeds_from_sorted_bids_payload& payload) const {
+  // sort seeds by their bid of quality-dropout_kind-proposal_index
+  vecmem::device_vector<unsigned long long int> d_seed_bids(payload.seed_bids);
+#if defined(__HIP_PLATFORM_AMD__)
+  auto policy =
+      thrust::hip::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+          .on(details::get_stream(stream()));
+#elif defined(__HIP_PLATFORM_NVIDIA__)
+  auto policy =
+      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+          .on(details::get_stream(stream()));
+#else
+#error "Unrecognised HIP platform."
+#endif
+  thrust::sort(policy, d_seed_bids.begin(),
+               d_seed_bids.begin() + static_cast<int>(payload.nSeeds),
+               std::greater<unsigned long long int>());
+  const unsigned int n_threads = 128;
+  const unsigned int n_blocks = 1 + payload.nSeeds / n_threads;
+  hipLaunchKernelGGL(kernels::gbts_fill_seeds_from_sorted_bids, n_blocks,
+                     n_threads, 0, details::get_stream(stream()), payload);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 }
 
