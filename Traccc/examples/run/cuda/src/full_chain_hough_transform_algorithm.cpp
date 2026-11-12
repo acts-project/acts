@@ -159,11 +159,15 @@ full_chain_hough_transform_algorithm::output_type full_chain_hough_transform_alg
 
     const finding_algorithm::output_type track_candidates =
         m_finding(m_device_detector, m_field, measurements, track_params);
-   
-    // Copy the measurements back to the host.
-    edm::measurement_collection::host measurements_host(m_host_mr);
-    m_copy(measurements, measurements_host)->wait();
-    return output_type{m_host_mr};
+  
+    // Copy a limited amount of result data back to the host.
+    const auto host_tracks =
+        m_copy.to(track_candidates.tracks, m_cached_pinned_host_mr, nullptr,
+                  vecmem::copy::type::device_to_host);
+    output_type result{m_host_mr};
+    vecmem::copy host_copy;
+    host_copy(host_tracks, result)->wait();
+    return result; 
   }
   // If not, copy the measurements back to the host, and return a dummy
   // object.
