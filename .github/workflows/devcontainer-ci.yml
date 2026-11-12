@@ -1,18 +1,8 @@
 name: Devcontainer CI
 
 on:
-  push:
-    # The release branches (keep in sync with release.yml) and the merge
-    # queue's temp ref carry a tree that has already been built.
-    branches-ignore:
-      - 'releases'
-      - 'release/**'
-      - 'gh-readonly-queue/**'
-  pull_request:
-    branches:
-      - main
-      - 'release/**'
-      - 'develop/**'
+  # DISABLED for physmon CI test — manual trigger only. Do not merge.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}

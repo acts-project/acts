@@ -55,3 +55,4 @@ codegen/src/codegen.egg-info/
 # physmon reference histograms are fetched by content hash, not committed.
 # See CI/physmon/reference.sha256 and CI/physmon/reference.py
 /CI/physmon/reference/
+/physmon/

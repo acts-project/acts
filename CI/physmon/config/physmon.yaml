@@ -1,0 +1,266 @@
+# The physmon catalog: what runs and what is compared. CI/physmon/Snakefile
+# generates the rules from it.
+#
+#   producers            one block per job: a script, its memory and variants
+#   trackfinding_base,   the comparisons every trackfinding producer gets,
+#   trackfinding_extras  written once and expanded per producer and variant
+#   comparisons          every other comparison
+#
+# A comparison names the output file it checks as `current`, relative to
+# {OUTDIR}/data, and compares it with the reference of the same path in
+# CI/physmon/reference. Its keys:
+#
+#   group, subgroup, title
+#                  its name. The summary lists the comparisons with the same
+#                  group and subgroup together, as "<group> — <subgroup>": what
+#                  ran, and the sample it ran on. The subgroup is optional.
+#   mode           `snakemake ... <mode>` runs only the comparisons of a mode
+#   config         the histcmp checks, a file in this directory (default
+#                  standard.toml)
+#   plot           {from, tree, config}: `current` is histogrammed from the
+#                  ntuple `from` with Examples/Scripts/generic_plotter.py
+#   info_only      true: shown in the summary, but never fails the run
+#   reference, reference_in: outdir
+#                  compare with another output of the run instead
+#
+# In the trackfinding templates `file` and `plot.from` are relative to the
+# producer's output directory.
+
+# Base pack: present for every trackfinding producer.
+trackfinding_base:
+  - title: "Seeding performance"
+    file: performance_seeding.root
+    config: default.toml
+    # TruthSmeared has no seeding step, so it produces no seeding performance.
+    skip_variants: [TruthSmeared]
+
+  - title: "CKF finding performance"
+    file: performance_finding_ckf.root
+    config: default.toml
+
+  - title: "CKF fitting performance"
+    file: performance_fitting_ckf.root
+    config: default.toml
+
+  - title: "CKF track summary"
+    file: tracksummary_ckf_hist.root
+    plot:
+      from: tracksummary_ckf.root
+      tree: tracksummary
+      config: tracksummary_ckf.yml
+
+# Optional add-on packs, selected per producer via `trackfinding.extras`.
+# `{vertexing_config}` resolves to that producer's `vertexing_config`.
+trackfinding_extras:
+  ambisolver:
+    - title: "Ambisolver finding performance"
+      file: performance_finding_ckf_ambi.root
+
+  ml_solver:
+    - title: "ML ambisolver finding performance"
+      file: performance_finding_ckf_ml_solver.root
+
+  vertexing_ivf:
+    - title: "Vertexing IVF, no time"
+      file: performance_vertexing_ivf_notime_hist.root
+      plot:
+        from: performance_vertexing_ivf_notime.root
+        tree: vertexing
+        config: "{vertexing_config}"
+
+  vertexing_amvf:
+    - title: "Vertexing AMVF Gauss, no time"
+      file: performance_vertexing_amvf_gauss_notime_hist.root
+      plot:
+        from: performance_vertexing_amvf_gauss_notime.root
+        tree: vertexing
+        config: "{vertexing_config}"
+
+    - title: "Vertexing AMVF grid, time"
+      file: performance_vertexing_amvf_grid_time_hist.root
+      plot:
+        from: performance_vertexing_amvf_grid_time.root
+        tree: vertexing
+        config: "{vertexing_config}"
+
+
+# ---------------------------------------------------------------------------
+# Producers. The key is the slug: it names the script
+# (workflows/physmon_<slug>.py), the rule and the output directory.
+#
+#   mem_mb         required: the peak memory one job reserves, in MB. The
+#                  higher of the peaks measured in CI and locally, plus 25%;
+#                  CI needs more, because resolving the masked FPEs loads debug
+#                  info. The summary lists every job above its reservation.
+#   inputs         files of another producer that this one reads; the summary
+#                  shows that producer as the upstream step
+#   extra_outputs  files the script writes that no comparison reads. All
+#                  other outputs follow from the comparisons.
+#   variants       one job per variant, with outputs in <slug>/<variant>/. The
+#                  key is a `SeedingAlgorithm` member name, the value its label
+#                  in the summary.
+#   trackfinding   gives the producer the trackfinding comparisons: their
+#                  group is the variant's label, or `seeding` without variants,
+#                  and their subgroup the `sample`;
+#                  `extras` the additional packs, and `vertexing_config` the
+#                  plot config of the vertexing packs
+# ---------------------------------------------------------------------------
+
+producers:
+  simulation:
+    mem_mb: 1500
+    extra_outputs: [particles_gun.root]
+
+  simulation_gsf:
+    mem_mb: 1400
+    # Consumed by trackfitting_gsf / trackrefitting_gsf, never compared.
+    extra_outputs:
+      - simulation/particles_simulation.root
+      - simulation/hits.root
+
+  trackfitting_kf:
+    mem_mb: 1000
+
+  trackfitting_gsf:
+    mem_mb: 1600
+    inputs:
+      - simulation_gsf/simulation/particles_simulation.root
+      - simulation_gsf/simulation/hits.root
+
+  trackfitting_gx2f:
+    mem_mb: 1600
+
+  trackrefitting_kf:
+    mem_mb: 1400
+
+  trackrefitting_gsf:
+    mem_mb: 1800
+    inputs:
+      - simulation_gsf/simulation/particles_simulation.root
+      - simulation_gsf/simulation/hits.root
+
+  trackfitting_gx2f_vs_kf:
+    mem_mb: 1000
+
+  trackfinding_1muon:
+    mem_mb: 1000
+    variants:
+      TruthSmeared: "TruthSmeared seeding"
+      TruthEstimated: "TruthEstimated seeding"
+      GridTriplet: "GridTriplet seeding"
+      OrthogonalTriplet: "OrthogonalTriplet seeding"
+      Gbts: "GBTS seeding"
+    trackfinding:
+      sample: "Single muon"
+
+  trackfinding_4muon_50vertices:
+    mem_mb: 1100
+    extra_outputs: [performance_fitting_ckf_ambi.root]
+    trackfinding:
+      sample: "4 muons × 50 vertices"
+      seeding: "GridTriplet seeding"
+      extras: [ambisolver, vertexing_ivf, vertexing_amvf]
+      vertexing_config: vertexing_4muon_50vertices.yml
+
+  trackfinding_ttbar_pu200:
+    mem_mb: 1800
+    extra_outputs:
+      - performance_fitting_ckf_ambi.root
+      - performance_fitting_ckf_ml_solver.root
+    trackfinding:
+      sample: "tt̄, ⟨μ⟩ = 200"
+      seeding: "GridTriplet seeding"
+      extras: [ambisolver, ml_solver, vertexing_amvf]
+      vertexing_config: vertexing_ttbar_pu200.yml
+
+
+# ---------------------------------------------------------------------------
+# Comparisons that are not part of a trackfinding pack.
+# ---------------------------------------------------------------------------
+
+comparisons:
+  # ---- simulation ---------------------------------------------------------
+  - title: "Particles fatras"
+    group: "Simulation"
+    current: simulation/particles_fatras_hist.root
+    mode: simulation
+    plot:
+      from: simulation/particles_fatras.root
+      tree: particles
+      config: simulation.yml
+
+  - title: "Particles geant4"
+    group: "Simulation"
+    current: simulation/particles_geant4_hist.root
+    mode: simulation
+    plot:
+      from: simulation/particles_geant4.root
+      tree: particles
+      config: simulation.yml
+
+  - title: "Particles ttbar"
+    group: "Simulation"
+    current: simulation/particles_ttbar_hist.root
+    mode: simulation
+    plot:
+      from: simulation/particles_ttbar.root
+      tree: particles
+      config: pythia8_ttbar.yml
+
+  - title: "Vertices ttbar"
+    group: "Simulation"
+    current: simulation/vertices_ttbar_hist.root
+    mode: simulation
+    plot:
+      from: simulation/vertices_ttbar.root
+      tree: vertices
+      config: pythia8_ttbar.yml
+
+  # ---- trackfitting / trackrefitting --------------------------------------
+  - title: "KF"
+    group: "Truth tracking"
+    subgroup: "Single muon"
+    current: trackfitting_kf/performance_trackfitting.root
+    config: trackfitting_kf.toml
+    mode: kf
+
+  - title: "GSF"
+    group: "Truth tracking"
+    subgroup: "Single electron"
+    current: trackfitting_gsf/performance_trackfitting.root
+    config: trackfitting_gsf.toml
+    mode: gsf
+
+  - title: "GX2F"
+    group: "Truth tracking"
+    subgroup: "Single muon"
+    current: trackfitting_gx2f/performance_trackfitting.root
+    config: trackfitting_gx2f.toml
+    mode: gx2f
+
+  - title: "KF refit"
+    group: "Truth tracking"
+    subgroup: "Single muon"
+    current: trackrefitting_kf/performance_trackrefitting.root
+    config: trackfitting_kf.toml
+    mode: refit_kf
+
+  - title: "GSF refit"
+    group: "Truth tracking"
+    subgroup: "Single electron"
+    current: trackrefitting_gsf/performance_trackrefitting.root
+    config: trackfitting_gsf.toml
+    mode: refit_gsf
+
+  # ---- gx2f vs kf (special: reference is produced, not in reference/) ---
+  - title: "GX2F vs KF"
+    group: "Truth tracking"
+    subgroup: "Single muon"
+    current: trackfitting_gx2f_vs_kf/performance_trackfitting_gx2f.root
+    reference: trackfitting_gx2f_vs_kf/performance_trackfitting_kf.root
+    reference_in: outdir
+    config: info_only.toml
+    info_only: true
+    label_reference: KF
+    label_monitored: GX2F
+    mode: gx2f_vs_kf

@@ -1,31 +1,8 @@
 name: Docs
 
 on:
-  push:
-    # The release branches (keep in sync with release.yml) carry a tree the
-    # merge queue has already built. The queue's own temp ref triggers
-    # merge_group below; a push run there shares its concurrency group and
-    # evicts the PR from the queue.
-    branches-ignore:
-      - 'releases'
-      - 'release/**'
-      - 'gh-readonly-queue/**'
-    # Tag pushes drive the versioned deploy in "Repository Dispatch" below,
-    # and a branch filter alone would suppress them.
-    tags:
-      - 'v*'
-  pull_request:
-    branches:
-      - main
-      - 'release/**'
-      - 'develop/**'
-  schedule:
-    # Daily external-link sweep at 04:17 UTC (see the external-linkcheck job)
-    - cron: '17 4 * * *'
+  # DISABLED for physmon CI test — manual trigger only. Do not merge.
   workflow_dispatch:
-  # Required directly ("docs") and via merge-sentinel's "Docs / docs" check.
-  merge_group:
-    types: [checks_requested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}

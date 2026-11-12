@@ -24,6 +24,11 @@ repos:
     hooks:
     - id: black-jupyter
 
+  - repo: https://github.com/snakemake/snakefmt
+    rev: 3fcf5db2ce8a2f706db7f707b839462829dcc332 # frozen: v2.1.0
+    hooks:
+    - id: snakefmt
+
   - repo: https://github.com/BlankSpruce/gersemi-pre-commit
     rev: 28010ddd6016e1a0f7bd232acb6536ef996ae897 # frozen: 0.29.2
     hooks:

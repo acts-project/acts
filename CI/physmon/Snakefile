@@ -1,0 +1,533 @@
+# Snakemake workflow for physmon. config/physmon.yaml is the catalog of
+# producers and comparisons; this file turns it into rules:
+#
+#   produce_<slug>[_<variant>]  runs workflows/physmon_<slug>.py
+#   plot_hist                   histograms an ntuple
+#   histcmp                     compares an output with its reference
+#   build_results, summary      collect the result of every step in the summary
+#
+# Every step runs through scripts/wrap.sh, which records the step's exit code
+# in a witness file and exits 0. A failed step therefore does not stop the
+# workflow; the summary reads the witnesses and is the one place that fails.
+#
+# Usage, from the repository root with the ACTS build in build/:
+#   snakemake -s CI/physmon/Snakefile --cores N --resources mem_mb=M [target]
+#
+# M is the memory in MB that the jobs may reserve together. A target is `all`
+# (default), a `mode` of the catalog (kf, fullchains, ...) or a single rule.
+
+import csv
+import json
+import os
+from pathlib import Path
+
+
+configfile: "CI/physmon/config/physmon.yaml"
+
+
+OUTDIR = config.get("outdir", "physmon")
+REFDIR = "CI/physmon/reference"
+REFMANIFEST = "CI/physmon/reference.sha256"
+WORKFLOWS_DIR = "CI/physmon/workflows"
+HISTCMP_CONFIG_DIR = "CI/physmon/config"
+WRAP = "bash CI/physmon/scripts/wrap.sh"
+
+# Every rule activates the ACTS environment itself. The snakemake process must
+# not have it: its Python would crash on the ROOT modules of the ACTS build.
+# This replaces snakemake's default prefix, hence the `set -euo pipefail`.
+shell.prefix("set -euo pipefail; source CI/physmon/setup.sh; ")
+
+# A job holds its peak memory for its whole run, whatever its thread count. So
+# every job reserves its peak as `mem_mb`, and `--resources mem_mb` limits the
+# sum over the jobs that run side by side.
+PLOT_MEM_MB = 300
+# Measured: up to 0.8 GB for files below 1 MB, 1.4 GB for the larger ones.
+HISTCMP_MEM_MB = {"small": 1000, "large": 1800}
+HISTCMP_LARGE_INPUT_MB = 1
+
+
+def data(rel):
+    return f"{OUTDIR}/data/{rel}"
+
+
+def witness(kind, name):
+    return f"{OUTDIR}/witnesses/{kind}/{name}.json"
+
+
+def benchmark_for(kind, name):
+    return f"{OUTDIR}/benchmarks/{kind}/{name}.tsv"
+
+
+def wrapped(step):
+    """The wrap.sh prefix of a rule's command."""
+    return f"{WRAP} --witness {{output.witness}} --step {step} --log {{log}} --touches '{{output}}' -- "
+
+
+# ---------------------------------------------------------------------------
+# References are fetched by hash from the registry, all in one rule. It is not
+# wrapped: without references the run has to fail. ACTS_PHYSMON_NO_FETCH=1 or
+# --config fetch_references=0 uses CI/physmon/reference as it is on disk.
+# ---------------------------------------------------------------------------
+
+REFERENCE_FILES = {
+    line.split()[1]
+    for line in Path(REFMANIFEST).read_text().splitlines()
+    if line.strip() and not line.startswith("#")
+}
+
+no_fetch = os.environ.get("ACTS_PHYSMON_NO_FETCH")
+if int(config.get("fetch_references", 0 if no_fetch else 1)):
+
+    rule fetch_references:
+        input:
+            manifest=REFMANIFEST,
+        output:
+            [f"{REFDIR}/{rel}" for rel in REFERENCE_FILES],
+        log:
+            f"{OUTDIR}/logs/fetch_references.log",
+        resources:
+            mem_mb=500,
+        params:
+            refdir=REFDIR,
+        shell:
+            "mkdir -p $(dirname {log}) && "
+            "uv run --no-project CI/physmon/reference.py pull "
+            "--manifest {input.manifest} --reference-dir {params.refdir} 2>&1 | tee {log}"
+
+
+# ---------------------------------------------------------------------------
+# Producers. The catalog key (slug) names the script, the rule and the output
+# directory. A producer with variants is one job per variant.
+# ---------------------------------------------------------------------------
+
+PRODUCERS = config["producers"]
+
+# The (slug, variant) of every producer job; variant is None without variants.
+JOBS = [
+    (slug, variant)
+    for slug, spec in PRODUCERS.items()
+    for variant in spec.get("variants") or [None]
+]
+
+
+def job_path(slug, variant):
+    return f"{slug}/{variant}" if variant else slug
+
+
+def rule_name(slug, variant):
+    return "produce_" + job_path(slug, variant).replace("/", "_")
+
+
+def upstream(slug):
+    """The producer whose files this one reads: the first component of its inputs."""
+    inputs = PRODUCERS[slug].get("inputs")
+    return inputs[0].split("/")[0] if inputs else None
+
+
+# ---------------------------------------------------------------------------
+# Comparisons: the ones the catalog lists, plus the trackfinding pack of every
+# trackfinding producer and variant. Each knows the job that writes its file.
+# ---------------------------------------------------------------------------
+
+
+def trackfinding_comparisons():
+    for slug, variant in JOBS:
+        opts = PRODUCERS[slug].get("trackfinding")
+        if not opts:
+            continue
+        prefix = job_path(slug, variant) + "/"
+        rows = list(config["trackfinding_base"])
+        for extra in opts.get("extras") or []:
+            rows += config["trackfinding_extras"][extra]
+        for row in rows:
+            if variant in row.get("skip_variants", []):
+                continue
+            comp = {
+                "group": (
+                    PRODUCERS[slug]["variants"][variant] if variant else opts["seeding"]
+                ),
+                "subgroup": opts["sample"],
+                "title": row["title"],
+                "current": prefix + row["file"],
+                "mode": "fullchains",
+                "producer": (slug, variant),
+            }
+            if "config" in row:
+                comp["config"] = row["config"]
+            if "plot" in row:
+                plot_config = row["plot"]["config"]
+                if plot_config == "{vertexing_config}":
+                    plot_config = opts["vertexing_config"]
+                comp["plot"] = {
+                    **row["plot"],
+                    "from": prefix + row["plot"]["from"],
+                    "config": plot_config,
+                }
+            yield comp
+
+
+def listed_comparisons():
+    """The catalog's own comparisons; the producer is the first directory of the file."""
+    for comp in config["comparisons"]:
+        slug = comp["current"].split("/")[0]
+        yield {**comp, "producer": (slug, None)}
+
+
+COMPARISONS = [*listed_comparisons(), *trackfinding_comparisons()]
+for comp in COMPARISONS:
+    # names the comparison's report, witness and log
+    comp["rel"] = comp["current"].removesuffix(".root")
+
+COMPS = {comp["rel"]: comp for comp in COMPARISONS}
+MODES = list(dict.fromkeys(comp["mode"] for comp in COMPARISONS))
+
+
+def full_title(comp):
+    """The comparison's name outside its group: "<group>[, <subgroup>] | <title>"."""
+    group = ", ".join(filter(None, [comp["group"], comp.get("subgroup")]))
+    return f"{group} | {comp['title']}"
+
+
+def reference_rel(comp):
+    """The reference of a comparison, None if it compares two outputs of the run."""
+    if comp.get("reference_in") == "outdir":
+        return None
+    return comp.get("reference", comp["current"])
+
+
+def reference_path(comp):
+    rel = reference_rel(comp)
+    return f"{REFDIR}/{rel}" if rel else data(comp["reference"])
+
+
+def read_witness(path):
+    try:
+        return json.loads(Path(path).read_text())
+    except (OSError, ValueError):
+        return {"exit_code": -1, "log": None}
+
+
+# ---------------------------------------------------------------------------
+# Targets: `all`, and one per mode, which fails if one of its comparisons failed.
+# ---------------------------------------------------------------------------
+
+
+rule all:
+    default_target: True
+    input:
+        f"{OUTDIR}/summary.md",
+        f"{OUTDIR}/summary.html",
+
+
+for _mode in MODES:
+
+    rule:
+        name:
+            _mode
+        input:
+            reports=[
+                f"{OUTDIR}/html/{comp['rel']}.html"
+                for comp in COMPARISONS
+                if comp["mode"] == _mode
+            ],
+            witnesses=[
+                witness("histcmp", comp["rel"])
+                for comp in COMPARISONS
+                if comp["mode"] == _mode
+            ],
+        shell:
+            "failed=$(grep -L '\"exit_code\":0,' {input.witnesses} || true); "
+            'if [ -n "$failed" ]; then echo "physmon: comparison failed: $failed" >&2; exit 1; fi'
+
+
+# ---------------------------------------------------------------------------
+# Producer rules. A job's outputs follow from its comparisons: the compared
+# file, or the ntuple it is histogrammed from (temp(): removed after plotting).
+# `extra_outputs` are the files that no comparison reads.
+# ---------------------------------------------------------------------------
+
+
+def producer_files(slug, variant):
+    files = []
+    for comp in COMPARISONS:
+        if comp["producer"] != (slug, variant):
+            continue
+        files.append(
+            temp(data(comp["plot"]["from"]))
+            if "plot" in comp
+            else data(comp["current"])
+        )
+        if reference_rel(comp) is None:
+            files.append(data(comp["reference"]))
+    for rel in PRODUCERS[slug].get("extra_outputs") or []:
+        files.append(data(f"{job_path(slug, variant)}/{rel}"))
+    return files
+
+
+for _slug, _variant in JOBS:
+
+    rule:
+        name:
+            rule_name(_slug, _variant)
+        input:
+            [data(rel) for rel in PRODUCERS[_slug].get("inputs") or []],
+        output:
+            files=producer_files(_slug, _variant),
+            witness=witness("producer", job_path(_slug, _variant)),
+        log:
+            f"{OUTDIR}/logs/{job_path(_slug, _variant).replace('/', '_')}.log",
+        benchmark:
+            benchmark_for("producer", rule_name(_slug, _variant))
+        # start the producers that other producers wait for first
+        priority: 1 if any(upstream(slug) == _slug for slug in PRODUCERS) else 0
+        resources:
+            mem_mb=PRODUCERS[_slug]["mem_mb"],
+        params:
+            script=f"{WORKFLOWS_DIR}/physmon_{_slug}.py",
+            outdir=data(job_path(_slug, _variant)),
+            variant=f"--variant {_variant}" if _variant else "",
+        shell:
+            wrapped("producer")
+            + "python3 {params.script} {params.outdir} {params.variant} --threads 1"
+
+
+# ---------------------------------------------------------------------------
+# Plot: histograms the ntuple of a comparison that has a `plot` block.
+# ---------------------------------------------------------------------------
+
+
+def plot_of(wildcards):
+    return COMPS[wildcards.rel + "_hist"]["plot"]
+
+
+rule plot_hist:
+    input:
+        ntuple=lambda wildcards: data(plot_of(wildcards)["from"]),
+    output:
+        hist=data("{rel}_hist.root"),
+        witness=witness("plot", "{rel}_hist"),
+    log:
+        f"{OUTDIR}/logs/plot_{{rel}}_hist.log",
+    benchmark:
+        benchmark_for("plot", "{rel}_hist")
+    resources:
+        mem_mb=PLOT_MEM_MB,
+    params:
+        plot=plot_of,
+    shell:
+        wrapped("plot") + "python3 Examples/Scripts/generic_plotter.py "
+        "{input.ntuple} {params.plot[tree]} {output.hist} "
+        f"--silent --config {HISTCMP_CONFIG_DIR}/{{params.plot[config]}}"
+
+
+# ---------------------------------------------------------------------------
+# histcmp. The reference is an input only if the manifest lists it: a new
+# comparison then fails on the missing file instead of stopping the workflow,
+# and the run still writes the outputs that its reference is published from.
+# ---------------------------------------------------------------------------
+
+
+def reference_input(wildcards):
+    comp = COMPS[wildcards.rel]
+    unpublished = reference_rel(comp) and reference_rel(comp) not in REFERENCE_FILES
+    return [] if unpublished else reference_path(comp)
+
+
+def histcmp_mem_mb(input_mb):
+    large = input_mb >= HISTCMP_LARGE_INPUT_MB
+    return HISTCMP_MEM_MB["large" if large else "small"]
+
+
+rule histcmp:
+    input:
+        current=data("{rel}.root"),
+        reference=reference_input,
+    output:
+        html=f"{OUTDIR}/html/{{rel}}.html",
+        witness=witness("histcmp", "{rel}"),
+    log:
+        f"{OUTDIR}/logs/histcmp_{{rel}}.log",
+    benchmark:
+        benchmark_for("histcmp", "{rel}")
+    resources:
+        mem_mb=lambda wildcards, input: histcmp_mem_mb(input.size_mb),
+    params:
+        reference=lambda wildcards: reference_path(COMPS[wildcards.rel]),
+        title=lambda wildcards: full_title(COMPS[wildcards.rel]),
+        label_ref=lambda wildcards: COMPS[wildcards.rel].get(
+            "label_reference", "reference"
+        ),
+        label_mon=lambda wildcards: COMPS[wildcards.rel].get(
+            "label_monitored", "monitored"
+        ),
+        # standard.toml has histcmp's default checks, for comparisons without a config
+        config=lambda wildcards: COMPS[wildcards.rel].get("config", "standard.toml"),
+    shell:
+        wrapped("histcmp") + "histcmp {input.current} {params.reference} "
+        "--jobs 1 "
+        "--label-reference={params.label_ref} "
+        "--label-monitored={params.label_mon} "
+        "--title={params.title:q} "
+        # scatter renders 3D histograms much faster than the default voxel renderer
+        "--renderer-3d scatter "
+        "-o {output.html} "
+        "-p {output.html}_plots "
+        f"--config {HISTCMP_CONFIG_DIR}/{{params.config}}"
+
+
+# ---------------------------------------------------------------------------
+# Results: the steps of every comparison for the summary, one line per
+# comparison for `reference.py candidate`, and the memory of every job.
+# ---------------------------------------------------------------------------
+
+
+def step(kind, name, witness_path):
+    result = read_witness(witness_path)
+    return {
+        "kind": kind,
+        "name": name,
+        "exit_code": result["exit_code"],
+        "log": result.get("log"),
+    }
+
+
+def comparison_row(comp):
+    slug, variant = comp["producer"]
+    steps = []
+    if upstream(slug):
+        steps.append(
+            step("upstream", upstream(slug), witness("producer", upstream(slug)))
+        )
+    steps.append(
+        step(
+            "producer",
+            job_path(slug, variant),
+            witness("producer", job_path(slug, variant)),
+        )
+    )
+    if "plot" in comp:
+        steps.append(step("plot", "plot", witness("plot", comp["rel"])))
+    steps.append(step("histcmp", "histcmp", witness("histcmp", comp["rel"])))
+    # A failure after the first failed step is a cascade of that one.
+    failed_before = False
+    for s in steps:
+        s["cascade"] = failed_before and s["exit_code"] != 0
+        failed_before = failed_before or s["exit_code"] != 0
+    return {
+        "group": comp["group"],
+        "subgroup": comp.get("subgroup"),
+        "title": comp["title"],
+        "mode": comp["mode"],
+        "report": f"html/{comp['rel']}.html",
+        "info_only": comp.get("info_only", False),
+        "steps": steps,
+        # for reference.py candidate; both empty without a reference
+        "ref_path": reference_rel(comp) or "",
+        "monitored_path": comp["current"] if reference_rel(comp) else "",
+    }
+
+
+def memory_rows():
+    jobs = [
+        (
+            rule_name(slug, variant),
+            PRODUCERS[slug]["mem_mb"],
+            "producer",
+            rule_name(slug, variant),
+        )
+        for slug, variant in JOBS
+    ]
+    for comp in COMPARISONS:
+        if "plot" in comp:
+            jobs.append((f"plot {comp['rel']}", PLOT_MEM_MB, "plot", comp["rel"]))
+        files = [data(comp["current"]), reference_path(comp)]
+        input_mb = sum(os.path.getsize(f) for f in files if os.path.exists(f)) / 2**20
+        jobs.append(
+            (f"histcmp {comp['rel']}", histcmp_mem_mb(input_mb), "histcmp", comp["rel"])
+        )
+
+    rows = []
+    for name, reserved, kind, benchmark_name in jobs:
+        try:
+            with open(benchmark_for(kind, benchmark_name), newline="") as f:
+                measured = next(csv.DictReader(f, delimiter="\t"))
+        except (OSError, StopIteration):
+            continue
+        rows.append(
+            {
+                "job": name,
+                "reserved_mb": reserved,
+                "max_pss_mb": round(float(measured["max_pss"])),
+                "max_rss_mb": round(float(measured["max_rss"])),
+                "wall_s": round(float(measured["s"]), 1),
+            }
+        )
+    return rows
+
+
+rule build_results:
+    input:
+        [witness("producer", job_path(slug, variant)) for slug, variant in JOBS],
+        [witness("plot", comp["rel"]) for comp in COMPARISONS if "plot" in comp],
+        [witness("histcmp", comp["rel"]) for comp in COMPARISONS],
+    output:
+        results=f"{OUTDIR}/physmon_results.json",
+        csv=f"{OUTDIR}/histcmp_results.csv",
+        memory=f"{OUTDIR}/memory.json",
+    run:
+        Path(output.memory).write_text(json.dumps(memory_rows(), indent=2) + "\n")
+        rows = [comparison_row(comp) for comp in COMPARISONS]
+        Path(output.results).write_text(json.dumps(rows, indent=2) + "\n")
+        with open(output.csv, "w", newline="") as f:
+            for row in rows:
+                histcmp_exit_code = row["steps"][-1]["exit_code"]
+                csv.writer(f).writerow(
+                    [
+                        full_title(row),
+                        row["report"],
+                        histcmp_exit_code,
+                        row["ref_path"],
+                        row["monitored_path"],
+                    ]
+                )
+
+
+# ---------------------------------------------------------------------------
+# The manifest if every failing comparison were accepted, from which
+# `reference.py update` publishes new references, and the manifest the run used.
+# ---------------------------------------------------------------------------
+
+
+rule reference_candidate:
+    input:
+        results=f"{OUTDIR}/histcmp_results.csv",
+        manifest=REFMANIFEST,
+    output:
+        candidate=f"{OUTDIR}/reference-candidate.sha256",
+        manifest=f"{OUTDIR}/reference.sha256",
+    params:
+        data_dir=f"{OUTDIR}/data",
+    shell:
+        "cp {input.manifest} {output.manifest} && "
+        "uv run --no-project CI/physmon/reference.py candidate "
+        "--manifest {input.manifest} --results {input.results} "
+        "--data-dir {params.data_dir} --output {output.candidate}"
+
+
+# ---------------------------------------------------------------------------
+# Summary. Its non-zero exit is what fails the workflow. It needs the candidate
+# manifest only so that one is written before a failure stops the workflow.
+# ---------------------------------------------------------------------------
+
+
+rule summary:
+    input:
+        results=f"{OUTDIR}/physmon_results.json",
+        memory=f"{OUTDIR}/memory.json",
+        candidate=f"{OUTDIR}/reference-candidate.sha256",
+    output:
+        md=f"{OUTDIR}/summary.md",
+        html=f"{OUTDIR}/summary.html",
+    shell:
+        "python3 CI/physmon/summary.py {input.results} --memory {input.memory} "
+        "--md {output.md} --html {output.html}"

@@ -56,45 +56,72 @@ On the workflow overview, scroll down to find the attached artifacts, and locate
 After the download, you need to unzip the archive, whose contents will look similar to this:
 
 ```
-acts_analysis_residuals_and_pulls.root
-ckf_seeded.html
-ckf_seeded_plots
-ckf_truth_estimated.html
-ckf_truth_estimated_plots
-ckf_truth_smeared.html
-ckf_truth_smeared_plots
-ivf_seeded.html
-ivf_seeded_plots
-ivf_truth_estimated.html
-ivf_truth_estimated_plots
-ivf_truth_smeared.html
-ivf_truth_smeared_plots
-performance_ckf_seeded.root
-performance_ckf_truth_estimated.root
-performance_ckf_truth_smeared.root
-performance_truth_tracking.root
-performance_vertexing_seeded.root
-performance_vertexing_seeded_hist.root
-performance_vertexing_truth_estimated.root
-performance_vertexing_truth_estimated_hist.root
-performance_vertexing_truth_smeared.root
-performance_vertexing_truth_smeared_hist.root
-run.log
-truth_tracking.html
-truth_tracking_plots
+summary.md / summary.html     the results table, as on the pull request
+data/<workflow>/...           performance output and histogram files
+html/<workflow>/...           one report per comparison, with its plots
+logs/                         one log per job
+benchmarks/                   run time and peak memory of every job
+reference-candidate.sha256    the manifest if all failing comparisons were accepted
 ```
 
-The `.root` files are the performance output files and corresponding histogram
-files. The physmon job log file is also available. Finally, the `_plots` folder
-contain plots of all the histogram comparisons, and the `.html` files contain
-single-file reports showing the detailed results. An example of an HTML report
-looks like this:
+Workflows with seeding variants have one directory per variant, for example
+`data/trackfinding_1muon/GridTriplet`. The summary groups the comparisons by
+algorithm and sample, with one row per comparison and one column per step
+(producer, plot, histcmp), each linking to its log, so it shows which step
+failed first. Its *Memory* section lists every job that used more memory than
+it reserves. The `.html` files are single-file reports showing the detailed
+results.
+An example of an HTML report looks like this:
 
 ![Physmon report](physmon/physmon_report.png) {width=100%}
 
 If you get a physmon job failure on your pull request, please investigate the
 failing report(s), and try to understand if the change causing the
 discrepancies is expected.
+
+## How do I run physmon locally?
+
+physmon is a [Snakemake](https://snakemake.readthedocs.io) workflow. It expects
+the ACTS build in `build/` in the repository and activates it for every job
+itself, so the shell needs no setup, and Snakemake can be installed with any
+Python, for example with `uv tool install 'snakemake>=9,<10'`. From the
+repository root:
+
+```console
+$ snakemake -s CI/physmon/Snakefile --cores 8 \
+    --resources mem_mb=12000 --keep-incomplete all
+```
+
+This is the command the CI runs. `mem_mb` is the memory in MB that all jobs
+running at the same time may reserve together; the CI uses 12 GB of its 16 GB.
+The results are written to `physmon/`, starting with `physmon/summary.md`.
+
+Instead of `all`, a target can be one group of comparisons (`simulation`, `kf`,
+`gsf`, `gx2f`, `refit_kf`, `refit_gsf`, `fullchains`, `gx2f_vs_kf`) or a single
+job such as `produce_trackfinding_1muon_Gbts`.
+
+> [!note]
+> A failed job does not stop the workflow: it leaves empty files in place of its
+> outputs, so that the other jobs still run and the summary shows what failed.
+> Snakemake then considers that job done. After fixing the cause, delete
+> `physmon/` or add `--forcerun <job>` to run it again.
+
+## How do I add a workflow or a seeding variant?
+
+The catalog `CI/physmon/config/physmon.yaml` lists what runs; its header
+describes every key.
+
+- A new workflow needs a script `CI/physmon/workflows/physmon_<name>.py`, a
+  block under `producers:` with the memory it reserves (`mem_mb`), and its
+  comparisons under `comparisons:`.
+- A new seeding variant of a track finding workflow needs its name in the
+  script's `VARIANTS` list, the settings only it needs in the script's
+  `seedingSettings()`, and a line under the workflow's `variants:` in the
+  catalog.
+
+The Snakemake rules are generated from the catalog. A new comparison has no
+reference yet: it is reported as failed until its reference is published, see
+[below](#how-do-i-update-the-reference-files).
 
 ## Where the reference files live
 
@@ -114,9 +141,10 @@ each other. A reference update is now a one-line change per file, and reviewers
 can see exactly which references a pull request touches instead of a list of
 changed binaries.
 
-`CI/physmon/phys_perf_mon.sh` populates `CI/physmon/reference/` from the manifest
-before running any comparison, so local runs need no extra step. Downloaded blobs
-are cached under `~/.cache/acts/physmon-references` (override with
+The workflow's `fetch_references` rule populates `CI/physmon/reference/` from the
+manifest, so local runs need no extra step: every reference is a normal output in
+the DAG, and a comparison that needs one waits for the fetch. Downloaded blobs are
+cached under `~/.cache/acts/physmon-references` (override with
 `ACTS_PHYSMON_CACHE`), so switching between branches with different references
 does not re-download everything.
 
@@ -127,10 +155,11 @@ $ uv run --no-project CI/physmon/reference.py pull     # populate CI/physmon/ref
 $ uv run --no-project CI/physmon/reference.py verify   # check it against the manifest
 ```
 
-Set `ACTS_PHYSMON_NO_FETCH=1` to stop `phys_perf_mon.sh` from touching the
-reference directory, if you want to point it at files of your own. The manifest
-is in `sha256sum` format, so `sha256sum -c ../reference.sha256` works from inside
-the reference directory too.
+Set `ACTS_PHYSMON_NO_FETCH=1` (or `--config fetch_references=0`) to drop the
+`fetch_references` rule from the workflow, if you want to point it at files of
+your own: the references are then plain inputs that must already be on disk. The
+manifest is in `sha256sum` format, so `sha256sum -c ../reference.sha256` works
+from inside the reference directory too.
 
 ## How do I update the reference files?
 

@@ -1,23 +1,8 @@
 name: Analysis
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-      - 'release/**'
-      - 'develop/**'
-    paths-ignore:
-      - "docs/**"
-  # merge_group does not support branch/path filters, so this runs
-  # unconditionally on every queue entry. Only build_debug is required, via
-  # merge-sentinel's "Analysis / build_debug" check; clang_tidy is skipped
-  # below since it isn't required and its incremental diff relies on
-  # github.base_ref, which merge_group runs don't have.
-  merge_group:
-    types: [checks_requested]
+  # DISABLED for physmon CI test — manual trigger only. Do not merge.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
