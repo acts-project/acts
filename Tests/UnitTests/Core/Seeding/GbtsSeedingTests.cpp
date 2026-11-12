@@ -27,6 +27,7 @@
 #include <optional>
 #include <ranges>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -135,6 +136,57 @@ ToyDetector forwardDetector() {
   return detector;
 }
 
+/// Set by the experiment, not by GBTS: the depth of the pixel barrel layers,
+/// inside out.
+void setPixelBarrelDepth(
+    std::vector<Experimental::GbtsLayerDescription>& layers) {
+  std::vector<Experimental::GbtsLayerDescription*> pixelBarrel;
+  for (Experimental::GbtsLayerDescription& layer : layers) {
+    if (layer.type == GbtsLayerType::Barrel &&
+        layer.technology == GbtsLayerTechnology::Pixel) {
+      pixelBarrel.push_back(&layer);
+    }
+  }
+  std::ranges::sort(pixelBarrel, {},
+                    [](const auto* layer) { return layer->refCoord; });
+  for (std::size_t i = 0; i < pixelBarrel.size(); ++i) {
+    pixelBarrel[i]->depth = static_cast<std::int32_t>(i);
+  }
+}
+
+/// Filled by the experiment, not by GBTS: the tau ratio tolerances of the layer
+/// pairs, wider for a pair that skips a layer of depth or, as the outer pair,
+/// leaves those layers, and wider again for a pair with a strip layer.
+void assignToyTauRatioCuts(
+    std::vector<Experimental::GbtsLayerConnection>& connections,
+    const std::vector<Experimental::GbtsLayerDescription>& layers) {
+  constexpr float kTauRatioCut = 0.007f;
+  constexpr float kTauRatioCorr = 0.006f;
+  constexpr float kTauRatioCorrStrip = 0.03f;
+
+  const auto find = [&](const Experimental::GbtsExperimentLayerId id) {
+    return std::ranges::find(layers, id,
+                             &Experimental::GbtsLayerDescription::id);
+  };
+  for (Experimental::GbtsLayerConnection& connection : connections) {
+    const auto outer = find(connection.src);
+    const auto inner = find(connection.dst);
+
+    const bool skipsLayer = outer->depth >= 0 && inner->depth >= 0 &&
+                            outer->depth - inner->depth != 1;
+    const bool leaves = inner->depth >= 0 && outer->depth < 0;
+    const float strip = outer->technology == GbtsLayerTechnology::Strip ||
+                                inner->technology == GbtsLayerTechnology::Strip
+                            ? kTauRatioCorrStrip
+                            : 0.f;
+
+    connection.tauRatioCutInner =
+        kTauRatioCut + (skipsLayer ? kTauRatioCorr : 0.f) + strip;
+    connection.tauRatioCutOuter =
+        kTauRatioCut + (skipsLayer || leaves ? kTauRatioCorr : 0.f) + strip;
+  }
+}
+
 std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
     const ToyDetector& detector) {
   std::vector<Experimental::GbtsLayerDescription> layers;
@@ -150,12 +202,14 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
     layers.push_back(layer);
   }
 
+  setPixelBarrelDepth(layers);
+
   std::vector<Experimental::GbtsLayerConnection> connections;
   connections.reserve(detector.links.size());
   for (const auto& [src, dst] : detector.links) {
     connections.push_back({.src = src, .dst = dst});
   }
-  Experimental::assignAdaptiveTauRatioCuts(connections, layers);
+  assignToyTauRatioCuts(connections, layers);
 
   const Experimental::GbtsZ0Range z0Range{.min = -kBarrelHalfZ,
                                           .max = kBarrelHalfZ};
@@ -862,50 +916,28 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
   BOOST_CHECK_EQUAL(seed(kWalk, true), tracks.size());
 }
 
-BOOST_AUTO_TEST_CASE(AdaptiveTauRatioCuts) {
-  using Experimental::GbtsLayerConnection;
-
+BOOST_AUTO_TEST_CASE(EndcapLayerCannotHaveADepth) {
   const auto layer = [](Experimental::GbtsExperimentLayerId id,
-                        GbtsLayerType type, GbtsLayerTechnology technology,
-                        float refCoord) {
+                        GbtsLayerType type, std::int32_t depth) {
     Experimental::GbtsLayerDescription description;
     description.id = id;
     description.type = type;
-    description.technology = technology;
-    description.refCoord = refCoord;
+    description.refCoord = 100.f;
+    description.minBound = 10.f;
+    description.maxBound = 100.f;
+    description.depth = depth;
     return description;
   };
-  // listed out of radial order, so the barrel order has to be derived
-  const std::vector<Experimental::GbtsLayerDescription> layers = {
-      layer(2, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 100.f),
-      layer(1, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 50.f),
-      layer(3, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 150.f),
-      layer(4, GbtsLayerType::Endcap, GbtsLayerTechnology::Pixel, 400.f),
-      layer(5, GbtsLayerType::Barrel, GbtsLayerTechnology::Strip, 400.f),
+
+  const std::vector<Experimental::GbtsLayerConnection> connections;
+  const auto geometry = [&](const std::int32_t depth) {
+    const std::vector<Experimental::GbtsLayerDescription> layers = {
+        layer(1, GbtsLayerType::Endcap, depth)};
+    return Experimental::GbtsGeometry(layers, connections, kEtaBinWidth);
   };
 
-  std::vector<GbtsLayerConnection> connections = {
-      {.src = 2, .dst = 1},  // adjacent
-      {.src = 3, .dst = 1},  // skips a layer
-      {.src = 4, .dst = 3},  // leaves the barrel
-      {.src = 4, .dst = 4},  // off the barrel
-      {.src = 5, .dst = 3},  // leaves the barrel onto a strip
-  };
-  const Experimental::GbtsAdaptiveTauRatioCuts cuts;
-  Experimental::assignAdaptiveTauRatioCuts(connections, layers, cuts);
-
-  const float base = cuts.tauRatioCut;
-  const float corr = cuts.tauRatioCorr;
-  const float strip = cuts.tauRatioCorrStrip;
-  const std::vector<std::pair<float, float>> expected = {
-      {base, base}, {base + corr, base + corr},          {base, base + corr},
-      {base, base}, {base + strip, base + corr + strip},
-  };
-  for (std::size_t i = 0; i < connections.size(); ++i) {
-    BOOST_CHECK_CLOSE(connections[i].tauRatioCutInner, expected[i].first, 1e-4);
-    BOOST_CHECK_CLOSE(connections[i].tauRatioCutOuter, expected[i].second,
-                      1e-4);
-  }
+  BOOST_CHECK_THROW(geometry(0), std::invalid_argument);
+  BOOST_CHECK_NO_THROW(geometry(-1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

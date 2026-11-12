@@ -50,18 +50,13 @@ along which its eta bins are cut. `ActsExamples::GraphBasedSeedingAlgorithm`
 takes the slope from the module planes of the tracking geometry when
 `useLayerTilt` is set.
 
-A pixel barrel layer carries one more field, `barrelOrder`: the position of the
-layer in the inside-out ordering of the pixel barrel. Every other layer keeps
-the default `-1`, so the sign of the field also says whether a layer is a pixel
-barrel layer. If the caller leaves the field unset,
-@ref Acts::Experimental::GbtsGeometry sorts the pixel barrel layers by
-`refCoord` and fills it in. Set it on every pixel barrel layer or on none of
-them, because the constructor rejects a partial ordering.
-
-The cuts that were tuned on the pixel barrel read `barrelOrder` and nothing
-else: the two innermost-layer cuts of @ref gbts-graph ask how deep a layer sits.
-The @f$\tau@f$ ratio tolerance comes from the layer pairs instead, see below.
-GBTS therefore runs on any layer numbering.
+A layer carries one more field, `depth`: how deep it sits, counted outwards from
+zero, for the two innermost-layer cuts of @ref gbts-graph. The caller sets it,
+because which layers should count differs between seeding configurations. The
+default `-1` keeps a layer out of those cuts, and is the only value an endcap
+layer may have: @ref Acts::Experimental::GbtsGeometry rejects anything else. GBTS
+therefore runs on any layer numbering. The Examples read `depth` from the layer
+mapping file.
 
 Which layer pairs may be joined by an edge is a list of
 @ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
@@ -179,9 +174,9 @@ continuation and the curvature difference must all agree within tolerance. The
 @f$\tau@f$ ratio tolerance comes from the layer pairs: a triplet is held to
 the looser of `tauRatioCutInner` of its inner pair and `tauRatioCutOuter` of
 its outer pair, see @ref Acts::Experimental::GbtsLayerConnection.
-@ref Acts::Experimental::assignAdaptiveTauRatioCuts fills them from the
-layers: wider for a pair that skips a pixel barrel layer or, as the outer
-pair, leaves the pixel barrel, and wider again for a pair with a strip layer.
+The caller fills them, since how much to widen a pair differs between seeding
+configurations. The Examples widen a pair that skips a layer of depth or, as the
+outer pair, leaves those layers, and widen again for a pair with a strip layer.
 With `useSumRatioCut` the three differences, each divided by its own cut, may
 not add up to more than `sumRatioCutMax`, which rejects a pair that is marginal
 in all three at once. For
@@ -189,18 +184,18 @@ pixel-barrel triplets an optional
 @ref Acts::Experimental::GraphBasedTrackSeeder "validateTriplets" step also fits
 a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$.
 
-Two further cuts apply on the innermost pixel barrel layers, where the
-combinatorics are worst. Each cut has its own depth limit on the `barrelOrder`
-of the inner layer, and a negative limit switches the cut off:
+Two further cuts apply on the innermost layers, where the combinatorics are
+worst. Each cut has its own limit on the `depth` of the inner layer, and a
+negative limit switches the cut off:
 
 - `matchBeforeCreate` (off by default, limited by
-  `matchBeforeCreateMaxBarrelOrder`) demands the @f$\tau@f$ half of the
+  `matchBeforeCreateMaxDepth`) demands the @f$\tau@f$ half of the
   triplet test *before* the edge exists: @f$n_2@f$ must already carry an
   incoming edge whose @f$\tau@f$ agrees with the candidate's within
   `tauRatioPrecut`. A node with two or fewer incoming edges passes
   unconditionally, there being too little evidence to reject it.
 - Every inner node accumulates a 16-bit @f$z_0@f$ **histogram bitmask** of its
-  confirmed edges. On the layers down to `z0HistogramMaxBarrelOrder` that mask
+  confirmed edges. On the layers down to `z0HistogramMaxDepth` that mask
   rejects candidates whose @f$z_0@f$ falls in an empty bin, and nodes with no
   connections at all are skipped outright.
 
@@ -291,8 +286,8 @@ The cuts that build and link the doublets live on
 | `tauRatioCut` | @ref gbts-graph | @f$\tau@f$ scale of the `validateTriplets` high-pT check. The linking cut comes from @ref Acts::Experimental::GbtsLayerConnection |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
 | `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
-| `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
-| `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
+| `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxDepth` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
+| `z0HistogramMaxDepth`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that `depth` |
 The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
 
 | Option | Stage | Effect |

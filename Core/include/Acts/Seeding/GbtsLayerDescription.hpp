@@ -49,10 +49,13 @@ struct GbtsLayerDescription final {
   /// Slope in r-z about the middle of the bounds: dr/dz for a barrel layer,
   /// dz/dr for an endcap layer.
   float slope{0.f};
-  /// Position of the layer in the inside-out ordering of the pixel barrel,
-  /// -1 for every other layer. Derived from `refCoord` when left unset; set it
-  /// on every pixel barrel layer or on none of them.
-  std::int32_t barrelOrder{-1};
+  /// How deep the layer sits, counted outwards from zero, for the cuts that
+  /// apply on the innermost layers only: see `z0HistogramMaxDepth` and
+  /// `matchBeforeCreateMaxDepth` of the graph builder. The caller sets it,
+  /// since which layers should count differs between seeding configurations. -1
+  /// keeps the layer out of those cuts, and is the only value an endcap layer
+  /// may have.
+  std::int32_t depth{-1};
 };
 
 /// A GBTS layer and the detector surfaces it is made of
@@ -63,6 +66,8 @@ struct GbtsLayerConfig final {
   GbtsLayerType type{};
   /// Sensor technology of the layer
   GbtsLayerTechnology technology{};
+  /// See `GbtsLayerDescription::depth`
+  std::int32_t depth{-1};
   /// Surfaces of the layer
   std::vector<GeometryIdentifier> surfaces;
 };

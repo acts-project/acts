@@ -181,81 +181,7 @@ namespace {
 using BinConnections =
     std::unordered_map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
                                                 std::vector<GbtsBinLink>>>;
-
-// Fill in the inside-out pixel barrel order where the layers leave it unset.
-std::vector<GbtsLayerDescription> orderPixelBarrel(
-    std::span<const GbtsLayerDescription> layerDescriptions) {
-  std::vector<GbtsLayerDescription> layers(layerDescriptions.begin(),
-                                           layerDescriptions.end());
-
-  std::vector<GbtsLayerDescription*> pixelBarrel;
-  for (GbtsLayerDescription& layer : layers) {
-    if (layer.type == GbtsLayerType::Barrel &&
-        layer.technology == GbtsLayerTechnology::Pixel) {
-      pixelBarrel.push_back(&layer);
-    }
-  }
-
-  const auto numOrdered = std::ranges::count_if(
-      pixelBarrel,
-      [](const GbtsLayerDescription* l) { return l->barrelOrder >= 0; });
-  if (numOrdered == 0) {
-    // ties broken by id so the result does not depend on the input order
-    std::ranges::sort(pixelBarrel, {}, [](const GbtsLayerDescription* l) {
-      return std::pair{l->refCoord, l->id};
-    });
-    for (std::size_t i = 0; i < pixelBarrel.size(); ++i) {
-      pixelBarrel[i]->barrelOrder = static_cast<std::int32_t>(i);
-    }
-  } else if (numOrdered != std::ssize(pixelBarrel)) {
-    throw std::invalid_argument(
-        "GbtsGeometry: barrelOrder must be set on every pixel barrel layer or "
-        "on none of them");
-  }
-
-  return layers;
-}
 }  // namespace
-
-void assignAdaptiveTauRatioCuts(std::span<GbtsLayerConnection> connections,
-                                std::span<const GbtsLayerDescription> layers,
-                                const GbtsAdaptiveTauRatioCuts& cuts) {
-  std::unordered_map<GbtsExperimentLayerId, const GbtsLayerDescription*> byId;
-  const std::vector<GbtsLayerDescription> ordered = orderPixelBarrel(layers);
-  for (const GbtsLayerDescription& layer : ordered) {
-    byId.emplace(layer.id, &layer);
-  }
-  const auto find = [&](GbtsExperimentLayerId id) {
-    const auto it = byId.find(id);
-    if (it == byId.end()) {
-      throw std::invalid_argument(
-          "assignAdaptiveTauRatioCuts: connection to an unknown layer");
-    }
-    return it->second;
-  };
-
-  for (GbtsLayerConnection& connection : connections) {
-    const GbtsLayerDescription* outer = find(connection.src);
-    const GbtsLayerDescription* inner = find(connection.dst);
-
-    const bool outerInBarrel = outer->barrelOrder >= 0;
-    const bool innerInBarrel = inner->barrelOrder >= 0;
-    const bool skipsLayer = outerInBarrel && innerInBarrel &&
-                            outer->barrelOrder - inner->barrelOrder != 1;
-    const bool leavesBarrel = innerInBarrel && !outerInBarrel;
-    const float strip = (outer->technology == GbtsLayerTechnology::Strip ||
-                         inner->technology == GbtsLayerTechnology::Strip)
-                            ? cuts.tauRatioCorrStrip
-                            : 0.f;
-
-    // leaving the barrel widens only the triplet that leaves after its middle
-    connection.tauRatioCutInner =
-        cuts.tauRatioCut + (skipsLayer ? cuts.tauRatioCorr : 0.f) + strip;
-    connection.tauRatioCutOuter =
-        cuts.tauRatioCut +
-        (skipsLayer || leavesBarrel ? cuts.tauRatioCorr : 0.f) + strip;
-  }
-}
 
 GbtsGeometry::GbtsGeometry(
     std::span<const GbtsLayerDescription> layerDescriptions,
@@ -265,11 +191,12 @@ GbtsGeometry::GbtsGeometry(
   const float minZ0 = z0Range.min;
   const float maxZ0 = z0Range.max;
 
-  // the innermost-layer cuts key on where a pixel barrel layer sits radially
-  const std::vector<GbtsLayerDescription> layers =
-      orderPixelBarrel(layerDescriptions);
+  for (const GbtsLayerDescription& layer : layerDescriptions) {
+    if (layer.type == GbtsLayerType::Endcap && layer.depth >= 0) {
+      throw std::invalid_argument(
+          "GbtsGeometry: an endcap layer cannot have a barrel depth");
+    }
 
-  for (const GbtsLayerDescription& layer : layers) {
     const detail::GbtsLayer& pL = createLayer(layer, m_nEtaBins);
     m_nEtaBins += pL.binning().numBins;
   }

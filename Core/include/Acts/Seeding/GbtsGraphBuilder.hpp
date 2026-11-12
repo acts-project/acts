@@ -151,15 +151,14 @@ class GbtsGraphBuilder {
     /// Incoming edge count below which a node is accepted without a tau match.
     std::uint32_t matchBeforeCreateMaxEdges = 2;
 
-    /// Highest pixel barrel layer, counted inside out, whose nodes are cut
-    /// against the z0 histogram of their outer neighbourhood and whose isolated
-    /// nodes are skipped. A negative value disables the cut.
-    std::int32_t z0HistogramMaxBarrelOrder = 0;
+    /// Deepest `GbtsLayerDescription::depth` whose nodes are cut against the z0
+    /// histogram of their outer neighbourhood and whose isolated nodes are
+    /// skipped. A negative value disables the cut.
+    std::int32_t z0HistogramMaxDepth = 0;
 
-    /// Highest pixel barrel layer, counted inside out, to which
-    /// `matchBeforeCreate` applies when it is enabled. A negative value
-    /// disables it.
-    std::int32_t matchBeforeCreateMaxBarrelOrder = 1;
+    /// Deepest `GbtsLayerDescription::depth` to which `matchBeforeCreate`
+    /// applies when it is enabled. A negative value disables it.
+    std::int32_t matchBeforeCreateMaxDepth = 1;
 
     /// Half-width of the z0 window against which a node is matched in the
     /// histogram.

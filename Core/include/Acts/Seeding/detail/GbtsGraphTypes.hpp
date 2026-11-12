@@ -76,8 +76,9 @@ struct GbtsEtaBinInfo final {
 
   float minRadius{};
   float maxRadius{};
-  /// Inside-out pixel barrel ordinal of the bin's layer, -1 for the rest.
-  std::int32_t barrelOrder{-1};
+  /// How deep the bin's layer sits, -1 if it is out of the innermost-layer
+  /// cuts.
+  std::int32_t depth{-1};
 
   /// Type of the layer this bin belongs to.
   GbtsLayerType type{};
