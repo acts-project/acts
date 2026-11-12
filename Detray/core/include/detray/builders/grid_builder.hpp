@@ -27,6 +27,7 @@
 #include <cassert>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace detray {
@@ -98,6 +99,11 @@ class grid_builder : public volume_decorator<detector_t> {
 
     m_id = sf_id;
   }
+
+  /// Set the radius of the virtual cylinder a cylinder grid is looked up on,
+  /// instead of deriving it from the portals of the volume
+  /// @param r Lookup radius.
+  void set_reference_radius(scalar_type r) { m_reference_radius = r; }
 
   /// Initialize a grid from a shape mask and explicit binning parameters.
   /// @param m Mask defining the grid's geometric bounds.
@@ -282,7 +288,9 @@ class grid_builder : public volume_decorator<detector_t> {
       }
 
       scalar_type grid_r{0.f};
-      if (!radii.empty()) {
+      if (m_reference_radius.has_value()) {
+        grid_r = *m_reference_radius;
+      } else if (!radii.empty()) {
         const scalar_type inner_r{*std::ranges::min_element(radii)};
         const scalar_type outer_r{*std::ranges::max_element(radii)};
 
@@ -330,6 +338,7 @@ class grid_builder : public volume_decorator<detector_t> {
   spatial_grid_owning_t m_grid{};
   bin_filler_t m_bin_filler{};
   bool m_add_passives{false};
+  std::optional<scalar_type> m_reference_radius{};
 };
 
 /// Grid builder from single components
