@@ -1,5 +1,6 @@
 acts_add_library(
     ExamplesDigitization
+    src/ChargeQuantizationConfig.cpp
     src/DigitizationAlgorithm.cpp
     src/GeometricConfig.cpp
     src/DigitizationCoordinatesConverter.cpp

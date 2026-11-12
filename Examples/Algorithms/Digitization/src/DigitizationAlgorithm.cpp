@@ -101,6 +101,15 @@ DigitizationAlgorithm::DigitizationAlgorithm(
     const auto& digiCfg = m_cfg.digitizationConfigs.valueAt(i);
     geoCfg = digiCfg.geometricDigiConfig;
 
+    if (geoCfg.chargeQuantization) {
+      geoCfg.chargeQuantization->validate();
+      if (!m_cfg.doMerge || geoCfg.digital || geoCfg.indices.empty()) {
+        throw std::invalid_argument(
+            "Charge quantization requires geometric digitization, "
+            "doMerge=true and digital=false");
+      }
+    }
+
     if (!geoCfg.indices.empty() && geoCfg.segmentation == nullptr) {
       throw std::invalid_argument(
           "Geometric digitization requires a segmentation");
@@ -246,7 +255,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
         [&](const auto& digitizer) {
           ModuleClusters moduleClusters(
               digitizer.geometric.segmentation, digitizer.geometric.indices,
-              m_cfg.doMerge, m_cfg.mergeNsigma, m_cfg.mergeCommonCorner);
+              m_cfg.doMerge, m_cfg.mergeNsigma, m_cfg.mergeCommonCorner,
+              digitizer.geometric.chargeQuantization);
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;

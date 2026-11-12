@@ -158,6 +158,12 @@ void ActsExamples::to_json(nlohmann::json& j, const GeometricConfig& gdc) {
   j["thickness"] = gdc.thickness;
   j["threshold"] = gdc.threshold;
   j["digital"] = gdc.digital;
+  if (const auto& q = gdc.chargeQuantization; q) {
+    j["charge-quantization"] = {
+        {"bits", q->bits}, {"offset", q->offset}, {"step", q->step}};
+  } else {
+    j.erase("charge-quantization");
+  }
   if (j.find("charge-smearing") != j.end()) {
     to_json(j["charge-smearing"], gdc.chargeSmearer);
   }
@@ -198,6 +204,17 @@ void ActsExamples::from_json(const nlohmann::json& j, GeometricConfig& gdc) {
   gdc.thickness = j["thickness"];
   gdc.threshold = j["threshold"];
   gdc.digital = j["digital"];
+  gdc.chargeQuantization.reset();
+  if (j.contains("charge-quantization")) {
+    const auto& jq = j.at("charge-quantization");
+    if (!jq.at("bits").is_number_integer()) {
+      throw std::invalid_argument("Charge quantization bits must be an integer");
+    }
+    auto& q = gdc.chargeQuantization.emplace();
+    q.bits = jq.at("bits").get<unsigned int>();
+    q.offset = jq.at("offset").get<double>();
+    q.step = jq.at("step").get<double>();
+  }
   if (j.find("variances") != j.end()) {
     /// Read the variances from the json file
     auto jvariances = j["variances"];
