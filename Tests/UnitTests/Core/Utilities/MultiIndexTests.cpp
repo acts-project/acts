@@ -11,10 +11,13 @@
 
 #include "Acts/Utilities/MultiIndex.hpp"
 
+#include <algorithm>
 #include <array>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <unordered_set>
+#include <vector>
 
 #include <boost/mpl/list.hpp>
 
@@ -248,6 +251,23 @@ BOOST_AUTO_TEST_CASE(index64_as_key) {
   BOOST_CHECK(!set.count(Index64(0u)));
   BOOST_CHECK(!set.count(Index64(std::numeric_limits<std::uint64_t>::max())));
   BOOST_CHECK_EQUAL(set.size(), 3);
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(ordering, T, Indices) {
+  static_assert(std::totally_ordered<T>);
+  const T a = T::Encode(1u, 2u);
+  const T b = T::Encode(2u, 0u);
+  BOOST_CHECK(a < b);
+  BOOST_CHECK(b > a);
+  BOOST_CHECK(a <= a);
+  BOOST_CHECK(b >= a);
+  BOOST_CHECK(a != b);
+
+  // lexicographic over the levels, i.e. usable as a sort key
+  std::vector<T> indices = {b, T::Encode(1u, 3u), a, T::Encode(1u)};
+  std::ranges::sort(indices);
+  BOOST_CHECK(
+      (indices == std::vector<T>{T::Encode(1u), a, T::Encode(1u, 3u), b}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
