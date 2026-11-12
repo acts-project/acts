@@ -28,7 +28,11 @@ enum class CombinatorialKalmanFilterError {
   /// Propagation reaches max steps before track finding is finished
   PropagationReachesMaxSteps,
   /// No measurement expected on the current surface
-  NoMeasurementExpected
+  NoMeasurementExpected,
+  /// The track state creator returned a track state which is neither a
+  /// measurement, an outlier, nor a state with parameters but without a
+  /// measurement
+  UnsupportedTrackState
 };
 
 /// Create error code from @ref CombinatorialKalmanFilterError

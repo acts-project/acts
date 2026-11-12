@@ -687,10 +687,22 @@ class CombinatorialKalmanFilter {
         // extend trajectory with measurements associated to the current surface
         // which may create extra trajectory branches if more than one
         // measurement is selected.
-        tsRes = extensions.createTrackStates(
-            state.geoContext, *calibrationContextPtr, surface, boundState,
-            prevTip, result.trackStateCandidates, *result.trackStates,
-            logger());
+        if (extensions.trackStateCreator.connected()) {
+          const CkfTypes::TrackStateCreatorInput<track_container_t> input{
+              .geoContext = &state.geoContext.get(),
+              .calibrationContext = calibrationContextPtr,
+              .surface = &surface,
+              .boundState = &boundState,
+              .prevTip = prevTip,
+              .trajectory = result.trackStates,
+              .logger = &logger()};
+          tsRes = extensions.trackStateCreator(input);
+        } else {
+          tsRes = extensions.createTrackStates(
+              state.geoContext, *calibrationContextPtr, surface, boundState,
+              prevTip, result.trackStateCandidates, *result.trackStates,
+              logger());
+        }
       }
 
       if (tsRes.ok() && !(*tsRes).empty()) {
@@ -812,8 +824,9 @@ class CombinatorialKalmanFilter {
     /// Process new, incompomplete track states and set the filtered state
     ///
     /// @note will process the given list of new states, run the updater
-    ///     or share the predicted state for states flagged as outliers
-    ///     and add them to the list of active branches
+    ///     for measurements or share the predicted state for outliers and
+    ///     states without measurement, and add them to the list of active
+    ///     branches
     ///
     /// @tparam propagator_state_t Type of the Propagator state
     /// @tparam stepper_t Type of the stepper
@@ -881,9 +894,21 @@ class CombinatorialKalmanFilter {
           newBranch.nMeasurements()++;
           newBranch.nDoF() += trackState.calibratedSize();
           newBranch.chi2() += trackState.chi2();
+        } else if (typeFlags.hasParameters() && !typeFlags.hasMeasurement()) {
+          // A hole, or a state on a surface without an expected measurement.
+          // As for an outlier, there is no Kalman update.
+          trackState.shareFrom(PM::Predicted, PM::Filtered);
+          if (typeFlags.isHole()) {
+            newBranch.nHoles()++;
+          }
+          ACTS_VERBOSE("Appended track state without measurement with tip = "
+                       << newBranch.tipIndex() << " and flags " << typeFlags);
         } else {
-          ACTS_WARNING("Cannot handle this track state flags");
-          continue;
+          ACTS_DEBUG("Track state " << trackState.index() << " with flags "
+                                    << typeFlags
+                                    << " is neither a measurement, an outlier "
+                                       "nor a state without measurement");
+          return CombinatorialKalmanFilterError::UnsupportedTrackState;
         }
 
         result.activeBranches.push_back(newBranch);
@@ -1217,6 +1242,14 @@ class CombinatorialKalmanFilter {
   Result<std::vector<TrackProxy>> findTracks(
       const BoundTrackParameters& initialParameters, const Options& tfOptions,
       track_container_t& trackContainer, TrackProxy rootBranch) const {
+    if (tfOptions.extensions.trackStateCreator.connected() ==
+        tfOptions.extensions.createTrackStates.connected()) {
+      throw std::invalid_argument(
+          "CombinatorialKalmanFilter: exactly one of "
+          "`extensions.trackStateCreator` and the deprecated "
+          "`extensions.createTrackStates` has to be connected");
+    }
+
     // Create the ActorList
     using CombinatorialKalmanFilterActor = Actor;
     using Actors = ActorList<CombinatorialKalmanFilterActor>;
