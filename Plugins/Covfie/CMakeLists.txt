@@ -14,3 +14,5 @@ target_include_directories(
 target_link_libraries(ActsPluginCovfie PUBLIC Acts::Core covfie::core)
 
 acts_compile_headers(PluginCovfie GLOB include/**/*.hpp)
+
+add_component_dependencies(PluginCovfie covfie)

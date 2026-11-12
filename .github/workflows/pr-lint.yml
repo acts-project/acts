@@ -20,3 +20,16 @@ jobs:
       - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Validate breaking change markers
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { title, body } = context.payload.pull_request;
+            const breakingTitle = /^\w+(?:\([^)\r\n]+\))?!:/.test(title);
+            const breakingTrailer = /^BREAKING(?: CHANGE|-CHANGE):/m.test(body ?? '');
+
+            if (breakingTitle && !breakingTrailer) {
+              core.setFailed('PR titles with ! must include a BREAKING CHANGE: trailer in the PR body explaining the breaking change.');
+            } else if (breakingTrailer && !breakingTitle) {
+              core.setFailed('PRs with a BREAKING CHANGE: or BREAKING-CHANGE: trailer must include ! before the colon in the title (e.g. feat!: or feat(Core)!:).');
+            }

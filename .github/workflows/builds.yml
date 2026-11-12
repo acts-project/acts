@@ -310,9 +310,8 @@ jobs:
     strategy:
       matrix:
         include:
-          # Keep the existing Clang build as the sole C++20 compatibility build.
           - image: ubuntu2604_clang22
-            std: 20
+            std: 23
             cxx: clang++-22
     # Templated tag, so CI/bump_versions.py cannot see it; bumped by hand.
     container: registry.cern.ch/ghcr.io/acts-project/${{ matrix.image }}:90
@@ -958,13 +957,6 @@ jobs:
             view: LCG_109
             tests: true
 
-          - tag: 109_alma9_clang19
-            platform: el9
-            compiler: clang19
-            repo: sft.cern.ch
-            view: LCG_109
-            tests: true
-
           - tag: 110_alma9_gcc16
             platform: el9
             compiler: gcc16
@@ -1006,7 +998,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for Python tests and cache transfers
-        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
 
       - name: Restore ccache snapshot
         uses: $/.github/actions/ccache-s3
@@ -1015,15 +1007,14 @@ jobs:
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg/${{ runner.os }}-${{ runner.arch }}/${{ matrix.tag }}/v1/
 
-      # Match ROOT in this LCG view; some stacks still require C++20.
+      # Exercise the minimum supported standard against this LCG dependency stack.
       - name: Configure
         run: >
           source "${LCG_VIEW}/setup.sh" &&
-          cxx_standard=$(root-config --cxxstandard) &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci-lcg
-          -DCMAKE_CXX_STANDARD="${cxx_standard}"
+          -DCMAKE_CXX_STANDARD=23
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
@@ -1131,7 +1122,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         continue-on-error: true
 
       - name: Restore ccache snapshot
@@ -1141,17 +1132,16 @@ jobs:
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg_dev4/${{ runner.os }}-${{ runner.arch }}/v1/
 
-      # Match ROOT in this LCG view; some stacks still require C++20.
+      # Exercise the minimum supported standard against this LCG dependency stack.
       - name: Configure
         id: configure
         continue-on-error: true
         run: >
           source "${LCG_VIEW}/setup.sh" &&
-          cxx_standard=$(root-config --cxxstandard) &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci-lcg
-          -DCMAKE_CXX_STANDARD="${cxx_standard}"
+          -DCMAKE_CXX_STANDARD=23
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
@@ -1425,7 +1415,7 @@ jobs:
         uses: cvmfs-contrib/github-action-cvmfs@72f2a8d366043978d6aebee154bc9ed321c2f2a8 # v5.6
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         continue-on-error: true
 
       - name: Restore ccache snapshot
@@ -1602,7 +1592,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         continue-on-error: true
 
       - name: Restore ccache snapshot
@@ -1719,7 +1709,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
 
       - name: Restore ccache snapshot
         uses: $/.github/actions/ccache-s3

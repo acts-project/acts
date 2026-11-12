@@ -18,11 +18,14 @@ namespace detray::io {
 
 /// Check if a file exists
 /// @param outdir path to inspect
-/// @return true when the path exists
+/// @return true when the path and file exists
 inline bool file_exists(const std::string& outdir) {
+  if (outdir.empty()) {
+    return false;
+  }
   auto path = std::filesystem::path(outdir);
-
-  return std::filesystem::exists(path);
+  return std::filesystem::exists(path) &&
+         std::filesystem::is_regular_file(path);
 }
 
 /// Find an unused numbered alternative to an existing file name.
