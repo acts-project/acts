@@ -14,8 +14,10 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
+#include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -57,6 +59,13 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// seeds
     std::string outputSeeds;
 
+    /// Magnetic field, needed for `outputFreeParameters`.
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
+    /// Output free track parameters of the seeds (optional), zero for a seed
+    /// without a fit of its own.
+    std::string outputFreeParameters;
+
     /// Magnetic field in z direction
     float bFieldInZ = 2 * Acts::UnitConstants::T;
 
@@ -71,8 +80,7 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// steers the chain-following filter of seed extraction
     Acts::Experimental::GbtsTrackingFilter::Config trackingFilterConfig;
 
-    /// steers doublet creation, edge linking and chain selection. `minZ0` and
-    /// `maxZ0` are overridden from the region of interest.
+    /// steers doublet creation, edge linking and chain selection
     Acts::Experimental::GbtsGraphBuilder::Config graphConfig;
 
     /// the connection table (parsed from json file) used to make geoemetry cuts
@@ -90,17 +98,20 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// createLinkingScheme.py)
     float etaBinWidth = 0.2f;
 
-    /// z0 range the eta bin table is built against
-    Acts::Experimental::GbtsZ0Range gbtsZ0Range;
+    /// Widen the tau ratio cut of layer pairs by `tauRatioCuts`
+    bool useAdaptiveCuts = true;
+    /// Tau ratio cuts assigned to the layer pairs
+    Acts::Experimental::GbtsAdaptiveTauRatioCuts tauRatioCuts;
 
     /// Cut the eta bins along the module tilt of inclined layers.
     bool useLayerTilt = false;
 
-    /// the region of interest along the beam line. Overrides
-    /// `seedFinderConfig.minZ0` and `maxZ0`.
-    float collisionRegionMin = -150. * Acts::UnitConstants::mm;
+    /// The luminous region along the beam line: the z0 window of the whole
+    /// seeding, which the geometry holds for the eta bin table, the doublet
+    /// cut and the tracking filter.
+    float collisionRegionMin = -200. * Acts::UnitConstants::mm;
     /// See @ref collisionRegionMin
-    float collisionRegionMax = 150. * Acts::UnitConstants::mm;
+    float collisionRegionMax = 200. * Acts::UnitConstants::mm;
 
     /// holds detector information, used to make the geometry objects used by
     /// GBTS
@@ -156,6 +167,9 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
   /// handle that points to container of output seeds
   WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
+
+  WriteDataHandle<std::vector<Acts::FreeVector>> m_outputFreeParameters{
+      this, "OutputFreeParameters"};
 
   /// make the map between ACTS geometry ID's and GBTS geometry ID's
   Acts::GeometryHierarchyMap<GbtsLayerInfo> makeActsGbtsMap() const;

@@ -44,6 +44,9 @@ namespace detray::detector_scanner {
 /// ACTS geometries can produce multiple overlapping portals, since some portals
 /// are larger than the volumes they belong to. This leads to duplicate
 /// intersections in the traces.
+/// @param[in,out] intersection_records Intersection trace to filter.
+/// @param[in] tol Maximum path difference treated as an overlap.
+/// @returns Range of overlapping records, if any.
 template <concepts::detector detector_t>
 inline dindex_range overlaps_removal(
     dvector<intersection_record<detector_t>> &intersection_records,
@@ -134,7 +137,11 @@ inline dindex_range overlaps_removal(
 
     // This is not a case of oversized portals, treat as actual overlaps
     if (n_erased != 1u || pt_buckets.empty() || !is_all_portals) {
-      DETRAY_ERROR_HOST("Could not resolve exit portal in overlap correction");
+      DETRAY_ERROR_HOST(
+          "Portals extrude volumes: Could not resolve which portals to remove "
+          "from trace (correct exit portal has to be kept!).\n Overlapping "
+          "intersection indices: "
+          << first << " to " << last);
 
       overlap_idx = {static_cast<dindex>(first), static_cast<dindex>(last)};
     } else {
@@ -571,6 +578,7 @@ inline auto trace_intersections(
 /// @param portal_trace the portal indices and their volume links (in adjacent
 ///                     portal pairs)
 /// @param module_trace the module indices and their volume links
+/// @param adj_list adjacency list to populate
 /// @param obj_hashes record which modules/portals were already added
 ///
 /// @return an adjacency list from the traced ray scan of a given geometry.
@@ -626,6 +634,7 @@ inline auto build_adjacency(
 /// @param portal_trace the portal indices and their volume links (in adjacent
 ///                     portal pairs)
 /// @param module_trace the module indices and their volume links
+/// @param adj_matrix adjacency matrix to populate
 /// @param obj_hashes record which modules/portals were already added
 ///
 /// @return an adjacency list from the traced ray scan of a given geometry.
@@ -725,7 +734,10 @@ inline bool check_trace(
 /// @param truth_trace the intersection records along the test track
 /// @param svg_style svgtools style for the detector display
 /// @param i_track index of the test track
-/// @param n_track total number of test tracks
+/// @param n_tracks total number of test tracks
+/// @param recorded_trace recorded intersection trace, if available
+/// @param overlap_idx range of overlapping surfaces
+/// @param verbose whether to print failure details
 template <concepts::detector detector_t, typename trajectory_t>
 inline void display_error(
     const typename detector_t::geometry_context gctx, const detector_t &det,
@@ -767,6 +779,9 @@ inline void display_error(
 }
 
 /// Print an intersection trace
+/// @param truth_trace Intersection trace to print.
+/// @param n Track number.
+/// @return Formatted intersection trace.
 template <concepts::detector detector_t>
 inline std::string print_trace(
     const dvector<intersection_record<detector_t>> &truth_trace,
@@ -793,6 +808,8 @@ inline std::string print_trace(
 }
 
 /// Print an adjacency list
+/// @param adjacency_matrix Adjacency matrix to print.
+/// @return Formatted adjacency list.
 inline std::string print_adj(const dvector<dindex> &adjacency_matrix) {
   std::size_t dim = static_cast<dindex>(math::sqrt(adjacency_matrix.size()));
   std::stringstream out_stream{};

@@ -33,7 +33,14 @@ if (
 
 
 def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
-    for prefix in ("Eigen", "Atlas", "Helix", "StraightLine", "Sympy"):
+    for prefix in (
+        "Eigen",
+        "Atlas",
+        "Helix",
+        "GenericRungeKutta",
+        "StraightLine",
+        "Sympy",
+    ):
         _stepper = getattr(ActsPythonBindings, f"{prefix}Stepper")
         if isinstance(stepper, _stepper):
             return getattr(ActsPythonBindings, f"{prefix}Propagator")(
@@ -64,6 +71,12 @@ class with_log_threshold:
 
 @staticmethod
 def _decoratorFromFile(file: Union[str, Path], **kwargs):
+    warnings.warn(
+        "IMaterialDecorator.fromFile is deprecated; load material with "
+        "TrackingGeometryMaterialJsonConverter.fromFile() and apply it to the geometry.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if isinstance(file, str):
         file = Path(file)
 

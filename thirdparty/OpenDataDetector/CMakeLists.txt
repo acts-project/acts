@@ -11,6 +11,12 @@ FetchContent_Declare(ODD ${ACTS_ODD_SOURCE})
 
 FetchContent_MakeAvailable(ODD)
 
+# Keep dependency warnings out of ACTS builds.
+target_compile_options(
+    OpenDataDetector
+    PRIVATE $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,AppleClang>:-w>
+)
+
 FetchContent_GetProperties(
     ODD
     SOURCE_DIR ODD_SOURCE_DIR

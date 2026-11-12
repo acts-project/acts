@@ -71,6 +71,21 @@ class RootMaterialTrackIo {
   void write(const Acts::GeometryContext& gctx, std::uint32_t eventNum,
              const Acts::RecordedMaterialTrack& materialTrack);
 
+  /// Write the material track to the tree, without a geometry context
+  ///
+  /// For material tracks that are not associated to a geometry, e.g. straight
+  /// from a Geant4 material recording. Without a geometry context, no surface
+  /// information can be computed.
+  ///
+  /// @param eventNum the event number to write
+  /// @param materialTrack the material track to be written out
+  ///
+  /// @throws std::invalid_argument if configured to store surface information
+  ///
+  /// @note the caller has to do the TTree::Fill() after this call
+  void write(std::uint32_t eventNum,
+             const Acts::RecordedMaterialTrack& materialTrack);
+
   /// Read the material track from the tree
   ///
   /// @note the caller has to do the TChain::GetEntry() before this call

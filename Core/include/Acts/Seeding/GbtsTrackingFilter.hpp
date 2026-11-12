@@ -52,14 +52,11 @@ class GbtsTrackingFilter final {
     /// Maximum delta chi2 in y direction.
     float maxDChi2Y = 6.0;
 
-    /// Chi2 penalty for adding a hit.
+    /// Score a hit adds to a path before its weighted chi2 is subtracted.
     float addHit = 14.0;
 
     /// Maximum track curvature.
     float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
-    /// Maximum longitudinal impact parameter.
-    float maxZ0 = 170.0 * Acts::UnitConstants::mm;
-
     /// Initial variance of the transverse state (y, dy/dx, d2y/dx2).
     std::array<float, 3> initialVarianceX = {0.25f, 0.001f, 0.001f};
     /// Initial variance of the longitudinal state (z, dz/dr).
@@ -78,19 +75,6 @@ class GbtsTrackingFilter final {
   // Only the seeder walks the edge graph.
   friend class GraphBasedTrackSeeder;
 
-  using State = detail::GbtsFilterState;
-
-  /// Follow track starting from edge
-  /// @param state Tracking filter state
-  /// @param nodeView View of the node positions and layers
-  /// @param sb Edge storage
-  /// @param pS Starting edge
-  /// @return Final edge state after following the track
-  detail::GbtsEdgeState followTrack(State& state,
-                                    const detail::GbtsNodeView& nodeView,
-                                    std::vector<detail::GbtsEdge>& sb,
-                                    detail::GbtsEdge& pS) const;
-
   /// Configuration for the tracking filter.
   Config m_cfg{};
 
@@ -103,16 +87,6 @@ class GbtsTrackingFilter final {
   /// Access the logging instance
   /// @return Logger reference
   const Logger& logger() const { return *m_logger; }
-
-  /// Propagate edge state
-  /// @param state Tracking filter state
-  /// @param nodeView View of the node positions and layers
-  /// @param sb Edge storage
-  /// @param pS Edge to propagate from
-  /// @param ts Edge state to update
-  void propagate(State& state, const detail::GbtsNodeView& nodeView,
-                 std::vector<detail::GbtsEdge>& sb, detail::GbtsEdge& pS,
-                 detail::GbtsEdgeState& ts) const;
 
   /// Update edge state with edge
   /// @param nodeView View of the node positions and layers

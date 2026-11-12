@@ -45,6 +45,7 @@ class line {
   /// Geometrical cross section of the line
   static constexpr bool square_cross_sect = kSquareCrossSect;
 
+  /// Indices for the line cross-section and half-length boundary values.
   enum boundaries : unsigned int {
     e_cross_section = 0u,
     e_half_z = 1u,
@@ -101,6 +102,7 @@ class line {
   /// @param trf the surface transform
   /// @param glob_p the point to be checked in the global coordinate system
   /// @param tol dynamic tolerance determined by caller
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::algebra algebra_t>
@@ -151,6 +153,7 @@ class line {
   /// @param bounds the boundary values for this shape
   /// @param loc_p the point to be checked in the local coordinate system
   /// @param tol dynamic tolerance determined by caller
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::scalar scalar_t, concepts::point point_t>
@@ -291,7 +294,7 @@ class line {
   /// Generate vertices in local cartesian frame
   ///
   /// @param bounds the boundary values for the line
-  /// @param n_seg is the number of line segments
+  /// The second argument is unused; the line is represented by its endpoints.
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>
@@ -333,9 +336,9 @@ class line {
   }
 };
 
-// Radial crossection, boundary check in polar coordinates
+/// Radial crossection, boundary check in polar coordinates
 using line_circular = line<false>;
-// Square crossection, boundary check in cartesian coordinates
+/// Square crossection, boundary check in cartesian coordinates
 using line_square = line<true>;
 
 }  // namespace detray

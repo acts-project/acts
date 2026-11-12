@@ -10,6 +10,9 @@ enable_language(CUDA)
 
 include(traccc-compiler-options-cuda)
 
+# Check that ACTS_FORCE_ASSERTIONS works for device code
+acts_add_assertion_tests(CUDA)
+
 find_package(CUDAToolkit REQUIRED)
 
 add_library(traccc_tests_cuda_main STATIC cuda_main.cpp)

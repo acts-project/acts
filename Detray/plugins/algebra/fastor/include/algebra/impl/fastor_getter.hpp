@@ -31,6 +31,11 @@ namespace detray::algebra::fastor::storage {
 
 /// Functor used to access elements of Fastor matrices
 struct element_getter {
+  /// Access a mutable matrix element.
+  /// @param m Matrix to access.
+  /// @param row Zero-based row index.
+  /// @param col Zero-based column index.
+  /// @returns A mutable reference to the element.
   template <std::size_t ROWS, std::size_t COLS, concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t &operator()(
       Fastor::Tensor<scalar_t, ROWS, COLS> &m, std::size_t row,
@@ -40,6 +45,11 @@ struct element_getter {
     return m(row, col);
   }
 
+  /// Read a matrix element.
+  /// @param m Matrix to read.
+  /// @param row Zero-based row index.
+  /// @param col Zero-based column index.
+  /// @returns The element value.
   template <std::size_t ROWS, std::size_t COLS, concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t operator()(
       const Fastor::Tensor<scalar_t, ROWS, COLS> &m, std::size_t row,
@@ -49,6 +59,10 @@ struct element_getter {
     return m(row, col);
   }
 
+  /// Access a mutable element of a single-column matrix.
+  /// @param m Matrix to access.
+  /// @param row Zero-based row index.
+  /// @returns A mutable reference to the element.
   template <std::size_t N, concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t &operator()(
       Fastor::Tensor<scalar_t, N, 1> &m, std::size_t row) const {
@@ -56,6 +70,10 @@ struct element_getter {
     return m(row);
   }
 
+  /// Read an element of a single-column matrix.
+  /// @param m Matrix to read.
+  /// @param row Zero-based row index.
+  /// @returns The element value.
   template <std::size_t N, concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t operator()(
       const Fastor::Tensor<scalar_t, N, 1> &m, std::size_t row) const {
@@ -63,6 +81,10 @@ struct element_getter {
     return m(row);
   }
 
+  /// Access a mutable vector element.
+  /// @param m Vector to access.
+  /// @param row Zero-based element index.
+  /// @returns A mutable reference to the element.
   template <std::size_t N, concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t &operator()(
       Fastor::Tensor<scalar_t, N> &m, std::size_t row) const {
@@ -70,6 +92,10 @@ struct element_getter {
     return m(row);
   }
 
+  /// Read a vector element.
+  /// @param m Vector to read.
+  /// @param row Zero-based element index.
+  /// @returns The element value.
   template <std::size_t N, concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t operator()(
       const Fastor::Tensor<scalar_t, N> &m, std::size_t row) const {
@@ -144,6 +170,11 @@ DETRAY_HOST_DEVICE decltype(auto) element(V &vector) {
 
 /// Functor used to extract a block from Fastor matrices
 struct block_getter {
+  /// Extract a rectangular block from a matrix.
+  /// @param m Source matrix.
+  /// @param row First row of the block.
+  /// @param col First column of the block.
+  /// @returns A matrix containing the selected block.
   template <std::size_t ROWS, std::size_t COLS, std::size_t oROWS,
             std::size_t oCOLS, concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE algebra::fastor::Matrix<scalar_t, ROWS, COLS> operator()(
@@ -153,6 +184,11 @@ struct block_getter {
              Fastor::seq(static_cast<int>(col), static_cast<int>(col + COLS)));
   }
 
+  /// Extract a contiguous segment from one matrix column.
+  /// @param m Source matrix.
+  /// @param row First row of the segment.
+  /// @param col Column containing the segment.
+  /// @returns A vector containing the selected segment.
   template <std::size_t SIZE, std::size_t oROWS, std::size_t oCOLS,
             concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE Fastor::Tensor<scalar_t, SIZE> vector(
@@ -164,6 +200,10 @@ struct block_getter {
   }
 
   /// Operator setting a block with a matrix
+  /// @param m Matrix to update.
+  /// @param b Block values to write.
+  /// @param row First destination row.
+  /// @param col First destination column.
   template <std::size_t ROWS, std::size_t COLS, concepts::scalar scalar_t,
             concepts::matrix input_matrix_type>
   DETRAY_HOST_DEVICE void set(input_matrix_type &m,
@@ -174,6 +214,10 @@ struct block_getter {
   }
 
   /// Operator setting a block with a vector
+  /// @param m Matrix to update.
+  /// @param b Vector values to write.
+  /// @param row First destination row.
+  /// @param col Destination column.
   template <std::size_t ROWS, concepts::scalar scalar_t,
             concepts::matrix input_matrix_type>
   DETRAY_HOST_DEVICE void set(input_matrix_type &m,

@@ -107,7 +107,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
-    - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+    - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
     - name: Install ccache
       shell: bash
       run: |
@@ -119,7 +119,7 @@ jobs:
         fi
 
     - name: Restore ccache snapshot
-      uses: ./.github/actions/ccache-s3
+      uses: $/.github/actions/ccache-s3
       continue-on-error: true
       timeout-minutes: 10
       with:
@@ -140,7 +140,6 @@ jobs:
                  -DDETRAY_FASTOR_PLUGIN=OFF
                  -DDETRAY_VC_AOS_PLUGIN=OFF
                  -DDETRAY_VC_SOA_PLUGIN=OFF
-                 -DDETRAY_GENERATE_METADATA="default_metadata;itk_metadata;odd_metadata;toy_metadata;wire_chamber_metadata"
                  -S ${{ github.workspace }}/Detray -B build
                  -G "${{ matrix.PLATFORM.GENERATOR }}"
     # Perform the build. The per-header TU targets are EXCLUDE_FROM_ALL, so
@@ -151,7 +150,7 @@ jobs:
 
     - name: ccache statistics
       if: always()
-      uses: ./.github/actions/ccache-s3/stats
+      uses: $/.github/actions/ccache-s3/stats
 
     - name: Clean ccache before publication
       if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -162,7 +161,7 @@ jobs:
       if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       continue-on-error: true
       timeout-minutes: 10
-      uses: ./.github/actions/ccache-s3
+      uses: $/.github/actions/ccache-s3
       with:
         operation: publish
         key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/host-native/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.OS }}/${{ matrix.BUILD_TYPE }}/v1/
@@ -227,7 +226,7 @@ jobs:
 
     # Same install as the device legs below, on the plain host stack.
     - name: Install dependencies
-      uses: ./.github/actions/dependencies
+      uses: $/.github/actions/dependencies
       with:
         compiler: g++
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -238,7 +237,7 @@ jobs:
       run: Detray/data/detray_data_get_files.sh
 
     - name: Restore ccache snapshot
-      uses: ./.github/actions/ccache-s3
+      uses: $/.github/actions/ccache-s3
       continue-on-error: true
       timeout-minutes: 10
       with:
@@ -271,7 +270,7 @@ jobs:
 
     - name: ccache statistics
       if: always()
-      uses: ./.github/actions/ccache-s3/stats
+      uses: $/.github/actions/ccache-s3/stats
 
     - name: Clean ccache before publication
       if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -282,7 +281,7 @@ jobs:
       if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       continue-on-error: true
       timeout-minutes: 10
-      uses: ./.github/actions/ccache-s3
+      uses: $/.github/actions/ccache-s3
       with:
         operation: publish
         key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/host-container/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.NAME }}/${{ matrix.BUILD_TYPE }}/${{ matrix.SCALAR_TYPE }}/v1/
@@ -366,7 +365,7 @@ jobs:
     # The whole ROCm toolchain -- hip, the AMD clang fork, rocthrust, vecmem --
     # comes from here, which is what lets this run on the plain OS image above.
     - name: Install dependencies
-      uses: ./.github/actions/dependencies
+      uses: $/.github/actions/dependencies
       with:
         compiler: g++
         flavor: ${{ matrix.PLATFORM.FLAVOR }}
@@ -374,7 +373,7 @@ jobs:
         env_file: .env
 
     - name: Restore ccache snapshot
-      uses: ./.github/actions/ccache-s3
+      uses: $/.github/actions/ccache-s3
       continue-on-error: true
       timeout-minutes: 10
       with:
@@ -415,7 +414,7 @@ jobs:
 
     - name: ccache statistics
       if: always()
-      uses: ./.github/actions/ccache-s3/stats
+      uses: $/.github/actions/ccache-s3/stats
 
     - name: Clean ccache before publication
       if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -426,7 +425,7 @@ jobs:
       if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       continue-on-error: true
       timeout-minutes: 10
-      uses: ./.github/actions/ccache-s3
+      uses: $/.github/actions/ccache-s3
       with:
         operation: publish
         key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/device-container/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.NAME }}/${{ matrix.BUILD_TYPE }}/${{ matrix.SCALAR_TYPE }}/v1/
@@ -476,7 +475,7 @@ jobs:
         persist-credentials: false
 
     - name: Install dependencies
-      uses: ./.github/actions/dependencies
+      uses: $/.github/actions/dependencies
       with:
         compiler: g++
         flavor: cuda13
@@ -484,7 +483,7 @@ jobs:
         env_file: .env
 
     - name: Restore ccache snapshot
-      uses: ./.github/actions/ccache-s3
+      uses: $/.github/actions/ccache-s3
       continue-on-error: true
       timeout-minutes: 10
       with:
@@ -520,7 +519,7 @@ jobs:
 
     - name: ccache statistics
       if: always()
-      uses: ./.github/actions/ccache-s3/stats
+      uses: $/.github/actions/ccache-s3/stats
 
     - name: Clean ccache before publication
       if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -533,7 +532,7 @@ jobs:
       if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       continue-on-error: true
       timeout-minutes: 10
-      uses: ./.github/actions/ccache-s3
+      uses: $/.github/actions/ccache-s3
       with:
         operation: publish
         key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/cuda/${{ runner.os }}-${{ runner.arch }}/${{ matrix.SCALAR_TYPE }}/v1/
@@ -618,7 +617,7 @@ jobs:
     # Not a rebuild: the binaries RPATH into the spack view, so it has to
     # exist at the same workspace path. Same lockfile, same result.
     - name: Install dependencies
-      uses: ./.github/actions/dependencies
+      uses: $/.github/actions/dependencies
       with:
         compiler: g++
         flavor: cuda13

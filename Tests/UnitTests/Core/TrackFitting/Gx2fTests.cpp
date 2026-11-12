@@ -85,7 +85,8 @@ BoundTrackParameters makeParameters(
     const double x = 0.0_m, const double y = 0.0_m, const double z = 0.0_m,
     const double w = 42_ns, const double phi = 0_degree,
     const double theta = 90_degree, const double p = 2_GeV,
-    const double q = 1_e) {
+    const double q = 1_e,
+    const ParticleHypothesis& particleHypothesis = ParticleHypothesis::pion()) {
   // create covariance matrix from reasonable standard deviations
   BoundVector stddev;
   stddev[eBoundLoc0] = 100_um;
@@ -98,7 +99,7 @@ BoundTrackParameters makeParameters(
   // define a track in the transverse plane along x
   const Vector4 mPos4(x, y, z, w);
   return BoundTrackParameters::createCurvilinear(mPos4, phi, theta, q / p, cov,
-                                                 ParticleHypothesis::pion());
+                                                 particleHypothesis);
 }
 
 static std::vector<SourceLink> prepareSourceLinks(
@@ -326,8 +327,10 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 
   ACTS_DEBUG("Set the start parameters for measurement creation and fit");
   const auto parametersMeasurements = makeParameters();
-  const auto startParametersFit = makeParameters(
-      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+  // Non-default hypothesis to check that it is propagated to the output track
+  const auto startParametersFit =
+      makeParameters(7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV,
+                     1_e, ParticleHypothesis::muon());
 
   ACTS_DEBUG("Create the measurements");
   using SimPropagator = Propagator<StraightLineStepper, Navigator>;
@@ -385,6 +388,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
   BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+  BOOST_CHECK_EQUAL(track.particleHypothesis(),
+                    startParametersFit.particleHypothesis());
 
   // Parameters
   // We need quite coarse checks here, since on different builds

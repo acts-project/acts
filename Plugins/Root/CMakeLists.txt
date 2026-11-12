@@ -42,3 +42,5 @@ target_link_libraries(
 )
 
 acts_compile_headers(PluginRoot GLOB include/**/*.hpp)
+
+add_component_dependencies(PluginRoot ROOT)

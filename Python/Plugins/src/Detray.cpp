@@ -10,19 +10,19 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
+#include "ActsPlugins/Detray/DetraySurfaceIdMap.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 
-#include <detray/builders/detector_builder.hpp>
-#include <detray/detectors/default_metadata.hpp>
 #include <detray/detectors/odd_metadata.hpp>
-#include <detray/io/frontend/detector_reader.hpp>
 #include <detray/io/frontend/detector_reader_config.hpp>
 #include <detray/io/frontend/detector_writer.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
+#include <detray/io/json/detector_reader.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -52,10 +52,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
            })
       .def("writeToJson",
            [](DetrayDetectorODD& self, const DetrayDetectorODD::name_map& names,
-              const std::string& fname) {
+              const std::string& source, const std::string& fname) {
              auto cfg = detray::io::detector_writer_config{}
                             .format(detray::io::format::json)
                             .path(fname)
+                            .source(source)
                             .replace_files(true);
              detray::io::write_detector(self, names, cfg);
            });
@@ -63,11 +64,10 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
   detray.def(
       "readODD",
       [](vecmem::memory_resource& mr, const std::vector<std::string>& files) {
-        auto cfg = detray::io::detector_reader_config{}.do_check(false);
-        for (const auto& f : files) {
-          cfg.add_file(f);
-        }
-        return detray::io::read_detector<DetrayDetectorODD>(mr, cfg);
+        detray::io::detector_reader_config cfg{};
+        cfg.do_check(false).add_files(files);
+
+        return detray::io::read_detector_json<DetrayDetectorODD>(mr, cfg);
       },
       "mr"_a, "files"_a);
 
@@ -81,9 +81,24 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
           .def(py::init<>())
           .def_readwrite("sensitiveStrategy",
                          &DetrayPayloadConverter::Config::sensitiveStrategy)
+          .def_readwrite("includeWorld",
+                         &DetrayPayloadConverter::Config::includeWorld)
           .def_readwrite(
               "portalSegmentTolerance",
               &DetrayPayloadConverter::Config::portalSegmentTolerance)
+          .def_readwrite("convertMaterial",
+                         &DetrayPayloadConverter::Config::convertMaterial)
+          .def_readwrite("convertSurfaceGrids",
+                         &DetrayPayloadConverter::Config::convertSurfaceGrids)
+          .def_property(
+              "detectorName",
+              [](const DetrayPayloadConverter::Config& cfg) {
+                return cfg.detectorName;
+              },
+              [](DetrayPayloadConverter::Config& cfg, const std::string& name) {
+                cfg.detectorName = name;
+              },
+              py::return_value_policy::reference)
           .def_property(
               "beampipeVolume",
               [](const DetrayPayloadConverter::Config& cfg) {
@@ -92,6 +107,16 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
               [](DetrayPayloadConverter::Config& cfg,
                  const Acts::TrackingVolume* volume) {
                 cfg.beampipeVolume = volume;
+              },
+              py::return_value_policy::reference)
+          .def_property(
+              "replacementWorld",
+              [](const DetrayPayloadConverter::Config& cfg) {
+                return cfg.replacementWorld;
+              },
+              [](DetrayPayloadConverter::Config& cfg,
+                 const Acts::TrackingVolume* volume) {
+                cfg.replacementWorld = volume;
               },
               py::return_value_policy::reference);
 
@@ -120,18 +145,37 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
       .def(py::init<>())
       .def_readwrite("payloadConverter",
                      &DetrayGeometryConverter::Config::payloadConverter)
-      .def_readwrite("convertMaterial",
-                     &DetrayGeometryConverter::Config::convertMaterial)
-      .def_readwrite("convertSurfaceGrids",
-                     &DetrayGeometryConverter::Config::convertSurfaceGrids)
       .def_readwrite("deduplicateMaterial",
                      &DetrayGeometryConverter::Config::deduplicateMaterial);
 
   using DetrayGeometryODD =
       DetrayGeometryConverter::DetrayGeometry<DetrayMetaDataODD>;
+  py::class_<DetraySurfaceIdMap, std::shared_ptr<DetraySurfaceIdMap>>(
+      detray, "DetraySurfaceIdMap")
+      // detray identifiers are exposed as their integer value
+      .def(
+          "toDetray",
+          [](const DetraySurfaceIdMap& self, Acts::GeometryIdentifier id)
+              -> std::optional<detray::geometry::identifier::value_t> {
+            if (auto detrayId = self.toDetray(id)) {
+              return detrayId->value();
+            }
+            return std::nullopt;
+          },
+          "id"_a)
+      .def(
+          "fromDetray",
+          [](const DetraySurfaceIdMap& self,
+             detray::geometry::identifier::value_t detrayId) {
+            return self.fromDetray(detray::geometry::identifier{detrayId});
+          },
+          "detrayId"_a)
+      .def("__len__", &DetraySurfaceIdMap::size);
+
   py::class_<DetrayGeometryODD>(geometryConverter, "DetrayGeometry")
       .def_readonly("detector", &DetrayGeometryODD::detector)
-      .def_readonly("names", &DetrayGeometryODD::names);
+      .def_readonly("names", &DetrayGeometryODD::names)
+      .def_readonly("surfaceIds", &DetrayGeometryODD::surfaceIds);
 
   geometryConverter
       .def(py::init([](DetrayGeometryConverter::Config config,
@@ -145,10 +189,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
           "convert",
           [](const DetrayGeometryConverter& self, vecmem::memory_resource& mr,
              const Acts::GeometryContext& gctx,
-             std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-             const std::string& detectorName) {
-            return self.convert<DetrayMetaDataODD>(
-                mr, gctx, std::move(trackingGeometry), detectorName);
+             std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
+            return self.convert<DetrayMetaDataODD>(mr, gctx,
+                                                   std::move(trackingGeometry));
           },
-          "mr"_a, "gctx"_a, "trackingGeometry"_a, "detectorName"_a = "");
+          "mr"_a, "gctx"_a, "trackingGeometry"_a);
 }

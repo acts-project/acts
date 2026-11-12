@@ -294,7 +294,9 @@ Result<double> HelixStepper::step(State& state, Direction propDir,
 
     ++state.statistics.nRejectedSteps;
 
-    h *= calcStepSizeScaling(errorEstimate);
+    // An error estimate just above the tolerance gives a scaling that rounds
+    // to 1, so always shrink a rejected step
+    h *= std::min(calcStepSizeScaling(errorEstimate), 0.9);
 
     if (std::abs(h) < std::abs(state.options.stepSizeCutOff)) {
       return EigenStepperError::StepSizeStalled;

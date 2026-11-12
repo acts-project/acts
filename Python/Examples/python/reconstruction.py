@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Optional, Union, List
+from typing import Callable, Optional, Union, List, Tuple
 from enum import Enum
 from collections import namedtuple
 
@@ -190,6 +190,7 @@ CkfConfig = namedtuple(
         "useJosephFormulation",
         "constrainToVolumes",
         "endOfWorldVolumes",
+        "seedDeduplicatorConfig",
     ],
     defaults=[
         15.0,
@@ -205,6 +206,7 @@ CkfConfig = namedtuple(
         None,
         None,
         False,
+        None,
         None,
         None,
     ],
@@ -253,6 +255,12 @@ HashingAlgorithmConfigArg = namedtuple(
     defaults=[None] * 3,
 )
 
+GbtsConfigArg = namedtuple(
+    "GbtsConfig",
+    ["seederConfig", "graphConfig", "useAdaptiveCuts"],
+    defaults=[None] * 3,
+)
+
 
 class VertexFinder(Enum):
     Truth = (1,)
@@ -270,6 +278,7 @@ class VertexFinder(Enum):
     seedingAlgorithmConfigArg=SeedingAlgorithmConfigArg,
     hashingTrainingConfigArg=HashingTrainingConfigArg,
     hashingAlgorithmConfigArg=HashingAlgorithmConfigArg,
+    gbtsConfigArg=GbtsConfigArg,
     logLevel=acts.logging.Level,
 )
 def addSeeding(
@@ -302,6 +311,7 @@ def addSeeding(
     hashingAlgorithmConfigArg: Optional[
         HashingAlgorithmConfigArg
     ] = HashingAlgorithmConfigArg(),
+    gbtsConfigArg: GbtsConfigArg = GbtsConfigArg(),
     particleHypothesis: Optional[
         acts.ParticleHypothesis
     ] = acts.ParticleHypothesis.pion,
@@ -310,6 +320,7 @@ def addSeeding(
     paramEstimationSpacePoints: Optional[acts.examples.SeedSpacePointSelection] = None,
     paramEstimationRefineIterations: Optional[int] = None,
     paramEstimationWeight: Optional[Callable] = None,
+    gbtsSeedParameters: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     trackParameterPerformance: bool = False,
@@ -337,7 +348,7 @@ def addSeeding(
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackParameterSmearing.hpp
     initialSigmas : list
         Sets the initial covariance matrix diagonal. This is ignored in case of TruthSmearing.
-        Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
+        Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedParamsEstimator.hpp
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackParameterSmearing.hpp
@@ -358,6 +369,10 @@ def addSeeding(
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp
     hashingAlgorithmConfigArg : HashingAlgorithmConfigArg(bucketSize, zBins, phiBins)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp
+    gbtsConfigArg : GbtsConfigArg(seederConfig, graphConfig, useAdaptiveCuts)
+                                A given config is used as is, otherwise the default one, the graphConfig with minPt from seedFinderConfigArg.
+                                Defaults specified in Core/include/Acts/Seeding/GraphBasedTrackSeeder.hpp, GbtsGraphBuilder.hpp and
+                                Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp
     particleHypothesis : Optional[acts.ParticleHypothesis]
         The hypothesis used for track finding. Defaults to pion.
     inputParticles : str, "particles"
@@ -373,7 +388,10 @@ def addSeeding(
     paramEstimationWeight : Callable, None
         relative weight of a space point in the fit, requires
         `SeedSpacePointSelection.All`, see
-        `TrackParamsEstimationAlgorithm.inverseRadiusPowerWeight`
+        `SeedParamsEstimator.inverseRadiusPowerWeight`
+    gbtsSeedParameters : bool
+        GBTS seeding: use the fit of the GBTS tracking filter as the track
+        parameter estimate, instead of a fit to the space points (default)
     outputDirRoot : Path|str, path, None
         the output folder for ROOT output, None triggers no output
     trackParameterPerformance : bool, False
@@ -447,14 +465,17 @@ def addSeeding(
             seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
         elif seedingAlgorithm == SeedingAlgorithm.AdaptiveHoughTransform:
             logger.info("Using Adaptive Hough Transform seeding")
-            adaptiveHoughTransformConfig.inputSpacePoints = [spacePoints]
-            adaptiveHoughTransformConfig.outputProtoTracks = "protoTracks"
+            if adaptiveHoughTransformConfig is None:
+                adaptiveHoughTransformConfig = (
+                    acts.examples.AdaptiveHoughTransformSeeder.Config()
+                )
+            adaptiveHoughTransformConfig.inputSpacePoints = spacePoints
             adaptiveHoughTransformConfig.outputSeeds = "seeds"
             adaptiveHoughTransformConfig.trackingGeometry = trackingGeometry
-            adaptiveHoughTransformConfig.threshold = 4
+            adaptiveHoughTransformConfig.threshold = 3
             adaptiveHoughTransformConfig.noiseThreshold = 12
-            adaptiveHoughTransformConfig.phiMinBinSize = 3.14 / (2.0 * 257.0)
-            adaptiveHoughTransformConfig.qOverPtMinBinSize = 1.1 / (2.0 * 257.0)
+            adaptiveHoughTransformConfig.phiMinBinSize = 2 * 3.14 / 257.0
+            adaptiveHoughTransformConfig.qOverPtMinBinSize = 16 * 0.9 / 257.0
             adaptiveHoughTransformConfig.qOverPtMin = 1.1
             adaptiveHoughTransformConfig.doSecondPhase = True
             adaptiveHoughTransformConfig.zMinBinSize = 1 * u.mm
@@ -476,7 +497,12 @@ def addSeeding(
                 layerMappingConfigFile,
                 connectorInputConfigFile,
                 lutInputConfigFile,
+                gbtsConfigArg,
                 outputSeeds=f"{prefix}seeds",
+                outputFreeParameters=(
+                    f"{prefix}seedfreeparameters" if gbtsSeedParameters else None
+                ),
+                magneticField=field if gbtsSeedParameters else None,
             )
         elif seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
             logger.info("Using Hashing seeding")
@@ -547,6 +573,18 @@ def addSeeding(
             outputSeeds=f"{prefix}estimatedseeds",
             trackingGeometry=trackingGeometry,
             magneticField=field,
+            seedParamsEstimation=acts.examples.SeedParamsEstimator.Config(
+                **acts.examples.defaultKWArgs(
+                    spacePointSelection=paramEstimationSpacePoints,
+                    geometricRefineIterations=paramEstimationRefineIterations,
+                    spacePointWeight=paramEstimationWeight,
+                    initialSigmas=initialSigmas,
+                    initialSigmaQoverPt=initialSigmaQoverPt,
+                    initialSigmaPtRel=initialSigmaPtRel,
+                    initialVarInflation=initialVarInflation,
+                    particleHypothesis=particleHypothesis,
+                )
+            ),
             **acts.examples.defaultKWArgs(
                 # a seed without an estimate drops its proto track too, so the
                 # truth fitters keep a parameter set per proto track
@@ -556,14 +594,11 @@ def addSeeding(
                     if unestimatedProtoTracks is not None
                     else None
                 ),
-                spacePointSelection=paramEstimationSpacePoints,
-                geometricRefineIterations=paramEstimationRefineIterations,
-                spacePointWeight=paramEstimationWeight,
-                initialSigmas=initialSigmas,
-                initialSigmaQoverPt=initialSigmaQoverPt,
-                initialSigmaPtRel=initialSigmaPtRel,
-                initialVarInflation=initialVarInflation,
-                particleHypothesis=particleHypothesis,
+                inputFreeParameters=(
+                    f"{prefix}seedfreeparameters"
+                    if gbtsSeedParameters and seedingAlgorithm == SeedingAlgorithm.Gbts
+                    else None
+                ),
             ),
         )
         s.addAlgorithm(parEstimateAlg)
@@ -1462,7 +1497,10 @@ def addGbtsSeeding(
     layerMappingConfigFile: Union[Path, str] = None,
     connectorInputConfigFile: Union[Path, str] = None,
     lutInputConfigFile: Optional[Union[Path, str]] = None,
+    gbtsConfigArg: GbtsConfigArg = GbtsConfigArg(),
     outputSeeds: str = "seeds",
+    outputFreeParameters: Optional[str] = None,
+    magneticField: Optional[acts.MagneticFieldProvider] = None,
 ):
     """Gbts seeding"""
 
@@ -1470,13 +1508,17 @@ def addGbtsSeeding(
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     connectorInputFileStr = str(connectorInputConfigFile)
     lutInputConfigFileStr = str(lutInputConfigFile)
-    seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
+    seedFinderConfig = gbtsConfigArg.seederConfig
+    if seedFinderConfig is None:
+        seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
 
-    graphConfig = acts.examples.GbtsGraphBuilderConfig(
-        **acts.examples.defaultKWArgs(
-            minPt=seedFinderConfigArg.minPt,
-        ),
-    )
+    graphConfig = gbtsConfigArg.graphConfig
+    if graphConfig is None:
+        graphConfig = acts.examples.GbtsGraphBuilderConfig(
+            **acts.examples.defaultKWArgs(
+                minPt=seedFinderConfigArg.minPt,
+            ),
+        )
 
     seedingAlg = acts.examples.GraphBasedSeedingAlgorithm(
         level=logLevel,
@@ -1492,6 +1534,11 @@ def addGbtsSeeding(
         inputClusters="clusters",
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
+            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
+            useAdaptiveCuts=gbtsConfigArg.useAdaptiveCuts,
+            outputFreeParameters=outputFreeParameters,
+            magneticField=magneticField,
         ),
     )
 
@@ -1861,7 +1908,11 @@ def addCKFTracks(
     ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
     twoWay: bool = True,
+    twoWaySmoothing: bool = True,
     reverseSearch: bool = False,
+    reverseSearchRZBoundary: Optional[Tuple[float, float]] = None,
+    inwardOnlyRZBoundary: Optional[Tuple[float, float]] = None,
+    seedParamsEstimation: Optional[acts.examples.SeedParamsEstimator.Config] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrackSummary: bool = True,
@@ -1888,6 +1939,16 @@ def addCKFTracks(
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
         Specify as a list(TrackSelectorConfig) for eta-dependent cuts, with binning specified by absEta[1].
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
+    reverseSearch : bool, False
+        search every seed inward first, from its last space point
+    reverseSearchRZBoundary : (r, |z|), None
+        search a seed inward first if its last space point lies beyond r or |z|
+    inwardOnlyRZBoundary : (r, |z|), None
+        search a seed inward only if its last space point lies beyond r or |z|
+    seedParamsEstimation : SeedParamsEstimator.Config, None
+        estimate the initial parameters from the seeds in the track finding, on
+        the space point the search starts from, instead of using the estimate
+        of `addSeeding`. The reverse search options need it.
     writeTrackSummary : bool, True
         write tracksummary_ckf.root ntuple?
     writeTrackStates : bool, False
@@ -1931,6 +1992,17 @@ def addCKFTracks(
             absEtaEdges=[cutSets[0].absEtaMin] + [c.absEta[1] for c in tslist],
         )
 
+    reverseSearchMinR, reverseSearchMinAbsZ = reverseSearchRZBoundary or (None, None)
+    inwardOnlyMinR, inwardOnlyMinAbsZ = inwardOnlyRZBoundary or (None, None)
+    directionFromSeed = (
+        reverseSearchRZBoundary is not None or inwardOnlyRZBoundary is not None
+    )
+    if (reverseSearch or directionFromSeed) and seedParamsEstimation is None:
+        raise ValueError(
+            "The reverse search starts on the last space point of the seed, "
+            "which needs seedParamsEstimation"
+        )
+
     # Set up the track finding algorithm with CKF
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
@@ -1950,10 +2022,14 @@ def addCKFTracks(
             ]
         ),
         inputMeasurements=f"{prefix}measurement_subset",
-        inputInitialTrackParameters=f"{prefix}estimatedparameters",
+        inputInitialTrackParameters=(
+            f"{prefix}estimatedparameters" if seedParamsEstimation is None else ""
+        ),
         inputSeeds=(
             f"{prefix}estimatedseeds"
-            if ckfConfig.seedDeduplication or ckfConfig.stayOnSeed
+            if ckfConfig.seedDeduplication
+            or ckfConfig.stayOnSeed
+            or seedParamsEstimation is not None
             else ""
         ),
         outputTracks=f"{prefix}ckf_tracks",
@@ -1969,8 +2045,15 @@ def addCKFTracks(
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
             twoWay=twoWay,
+            twoWaySmoothing=twoWaySmoothing,
+            seedParamsEstimation=seedParamsEstimation,
             reverseSearch=reverseSearch,
+            reverseSearchMinR=reverseSearchMinR,
+            reverseSearchMinAbsZ=reverseSearchMinAbsZ,
+            inwardOnlyMinR=inwardOnlyMinR,
+            inwardOnlyMinAbsZ=inwardOnlyMinAbsZ,
             seedDeduplication=ckfConfig.seedDeduplication,
+            seedDeduplicatorCfg=ckfConfig.seedDeduplicatorConfig,
             stayOnSeed=ckfConfig.stayOnSeed,
             pixelVolumeIds=ckfConfig.pixelVolumes,
             stripVolumeIds=ckfConfig.stripVolumes,

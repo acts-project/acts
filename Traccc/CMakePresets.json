@@ -9,12 +9,12 @@
             },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "ACTS_FORCE_ASSERTIONS": "ON",
                 "TRACCC_BUILD_TESTING": "TRUE",
                 "TRACCC_BUILD_EXAMPLES": "TRUE",
                 "TRACCC_FAIL_ON_WARNINGS": "TRUE",
                 "TRACCC_USE_ROOT": "FALSE",
-                "TRACCC_CUSTOM_SCALARTYPE": "float",
-                "DETRAY_GENERATE_METADATA": "itk_metadata"
+                "TRACCC_CUSTOM_SCALARTYPE": "float"
             }
         },
         {
@@ -25,12 +25,12 @@
             },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "ACTS_FORCE_ASSERTIONS": "ON",
                 "TRACCC_BUILD_TESTING": "TRUE",
                 "TRACCC_BUILD_EXAMPLES": "TRUE",
                 "TRACCC_FAIL_ON_WARNINGS": "TRUE",
                 "TRACCC_USE_ROOT": "FALSE",
-                "TRACCC_CUSTOM_SCALARTYPE": "double",
-                "DETRAY_GENERATE_METADATA": "itk_metadata"
+                "TRACCC_CUSTOM_SCALARTYPE": "double"
             }
         },
         {

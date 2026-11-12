@@ -1,0 +1,9 @@
+# Dependencies of the ACTS component @_component@, recorded when it was built.
+# Loaded by ActsConfig.cmake before the targets of the component.
+
+# a component from a different ACTS version can not be used
+if(NOT Acts_VERSION VERSION_EQUAL "@PROJECT_VERSION@")
+    set(_acts_component_version "@PROJECT_VERSION@")
+    return()
+endif()
+@_find_dependencies@

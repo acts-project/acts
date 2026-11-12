@@ -3,10 +3,12 @@ def test_load_material_map():
     import acts
     from acts.examples.odd import getOpenDataDetectorDirectory, getOpenDataDetector
 
-    # Any of .json, .cbor or .root produced by the mapping step works here.
+    # This bundled map uses ROOT; versioned JSON maps can instead be loaded
+    # with TrackingGeometryMaterialJsonConverter and applied to the geometry.
     material_map = getOpenDataDetectorDirectory() / "data/odd-material-maps.root"
-
-    decorator = acts.IMaterialDecorator.fromFile(material_map)
+    decorator = acts.root.RootMaterialDecorator(
+        fileName=str(material_map), level=acts.logging.INFO
+    )
     detector = getOpenDataDetector(materialDecorator=decorator)
     trackingGeometry = detector.trackingGeometry()
     #! [Load Material Map]

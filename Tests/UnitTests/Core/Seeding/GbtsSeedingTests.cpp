@@ -54,9 +54,8 @@ constexpr float kDiscMaxR = 220.f;
 /// createLinkingScheme.py.
 constexpr float kEtaBinWidth = 0.2f;
 
-/// One layer of the toy detector. The ids follow ATLAS, which the seeder still
-/// keys on: 80000 is the innermost barrel layer (extra z0 cuts) and barrel ids
-/// 1000 apart are adjacent.
+/// One layer of the toy detector. The seeder does not read the ids: it orders
+/// the pixel barrel layers by radius.
 struct LayerSpec {
   Experimental::GbtsExperimentLayerId id{};
   GbtsLayerType type{};
@@ -154,11 +153,14 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
   std::vector<Experimental::GbtsLayerConnection> connections;
   connections.reserve(detector.links.size());
   for (const auto& [src, dst] : detector.links) {
-    connections.push_back({src, dst});
+    connections.push_back({.src = src, .dst = dst});
   }
+  Experimental::assignAdaptiveTauRatioCuts(connections, layers);
 
+  const Experimental::GbtsZ0Range z0Range{.min = -kBarrelHalfZ,
+                                          .max = kBarrelHalfZ};
   return std::make_shared<Experimental::GbtsGeometry>(layers, connections,
-                                                      kEtaBinWidth);
+                                                      kEtaBinWidth, z0Range);
 }
 
 /// Straight track from the origin: fixed phi, z = r * tau, tau = cot(theta).
@@ -403,8 +405,6 @@ SeederSetup makeSeeder(const ToyDetector& detector,
 
   Experimental::GbtsGraphBuilder::Config graphConfig;
   graphConfig.minPt = 1_GeV;
-  graphConfig.minZ0 = -kBarrelHalfZ;
-  graphConfig.maxZ0 = kBarrelHalfZ;
   graphConfig.maxOuterRadius = detector.maxOuterRadius;
   graphConfig.calibrateStrips = calibrateStrips;
 
@@ -561,8 +561,8 @@ BOOST_AUTO_TEST_CASE(LayerBinningTilesTheBins) {
   BOOST_CHECK(!geometry->binGroups().empty());
   for (const Experimental::GbtsBinGroup& group : geometry->binGroups()) {
     BOOST_CHECK_LT(group.bin, geometry->numBins());
-    for (const std::uint32_t link : group.links) {
-      BOOST_CHECK_LT(link, geometry->numBins());
+    for (const Experimental::GbtsBinLink& link : group.links) {
+      BOOST_CHECK_LT(link.bin, geometry->numBins());
     }
   }
 }
@@ -609,6 +609,94 @@ BOOST_AUTO_TEST_CASE(SeedsFromCallerFilledNodeStorage) {
 
   BOOST_CHECK_EQUAL(formatSeeds(seeds),
                     formatSeeds(runSeeding(detector, spacePoints)));
+}
+
+// Nodes with identical phi are ordered by position, so the node order does not
+// depend on the order in which the caller inserts them.
+BOOST_AUTO_TEST_CASE(NodeOrderIgnoresInsertionOrderAtEqualPhi) {
+  const ToyDetector detector = barrelDetector();
+  const SeederSetup setup = makeSeeder(detector);
+
+  const float r = detector.layers.front().refCoord;
+  const float phi = 0.25f;
+  const std::array<float, 4> zs = {1.f, -2.f, 3.f, 0.5f};
+
+  const auto nodeOrder = [&](bool reversed) {
+    Experimental::GbtsNodeStorage storage = setup.seeder.makeNodeStorage();
+    for (std::size_t k = 0; k < zs.size(); ++k) {
+      const std::size_t i = reversed ? zs.size() - 1 - k : k;
+      storage.insert(static_cast<SpacePointIndex>(i), r * std::cos(phi),
+                     r * std::sin(phi), zs[i], r, phi, 0);
+    }
+    storage.finalize();
+
+    std::vector<SpacePointIndex> order;
+    for (std::uint32_t node = 0; node < storage.numberOfNodes(); ++node) {
+      order.push_back(storage.spacePointIndex(node));
+    }
+    return order;
+  };
+
+  const std::vector<SpacePointIndex> forward = nodeOrder(false);
+  BOOST_CHECK_EQUAL(forward.size(), zs.size());
+  BOOST_CHECK(forward == nodeOrder(true));
+}
+
+// An edge keeps every inner neighbour that passes the linking cuts, however
+// many there are: here eight inner hits a few micrometres apart all continue
+// the same outer edge.
+BOOST_AUTO_TEST_CASE(EdgesKeepEveryInnerNeighbour) {
+  const ToyDetector detector = barrelDetector();
+  const SeederSetup setup = makeSeeder(detector);
+
+  const Track track{.phi = 0.3f, .tau = 0.2f};
+  constexpr std::size_t nInner = 8;
+
+  Experimental::GbtsNodeStorage storage = setup.seeder.makeNodeStorage();
+  SpacePointIndex index = 0;
+  const auto insert = [&](std::size_t layer, float dz) {
+    const float r = detector.layers[layer].refCoord;
+    storage.insert(index, r * std::cos(track.phi), r * std::sin(track.phi),
+                   r * track.tau + dz, r, track.phi,
+                   static_cast<Experimental::GbtsLayerIndex>(layer));
+    index++;
+  };
+  // the hit on layer 3 links the outer edge on outwards, without which the
+  // graph builder treats its inner node as isolated
+  insert(1, 0.f);
+  insert(2, 0.f);
+  insert(3, 0.f);
+  for (std::size_t k = 0; k < nInner; ++k) {
+    insert(0, 0.002f * static_cast<float>(k));
+  }
+  storage.finalize();
+
+  const Experimental::GbtsGraph graph = setup.graphBuilder.buildTheGraph(
+      setup.roi, storage, setup.options.bFieldInZ);
+
+  const auto nEdges = static_cast<std::uint32_t>(graph.edgeStorage.size());
+  BOOST_REQUIRE_EQUAL(graph.neighbourOffsets.size(), nEdges + 1);
+  BOOST_CHECK_EQUAL(graph.neighbours.size(), graph.neighbourOffsets.back());
+
+  // the outer edge runs from the hit on layer 1 (index 0) to the one on
+  // layer 2 (index 1)
+  std::optional<std::uint32_t> outer;
+  for (std::uint32_t e = 0; e < nEdges; ++e) {
+    const auto& edge = graph.edgeStorage[e];
+    if (storage.spacePointIndex(edge.n1) == 0 &&
+        storage.spacePointIndex(edge.n2) == 1) {
+      outer = e;
+    }
+  }
+  BOOST_REQUIRE(outer.has_value());
+
+  const auto inner = graph.innerNeighbours(*outer);
+  BOOST_CHECK_EQUAL(inner.size(), nInner);
+  for (const std::uint32_t e : inner) {
+    BOOST_REQUIRE_LT(e, nEdges);
+    // a link joins two edges through their common node
+    BOOST_CHECK_EQUAL(graph.edgeStorage[e].n2, graph.edgeStorage[*outer].n1);
+  }
 }
 
 // One seed per track, all four hits, in radial order.
@@ -772,6 +860,52 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
   // unresolved, the walk loses every seed; resolved, it loses none
   BOOST_CHECK_EQUAL(seed(kWalk, false), 0u);
   BOOST_CHECK_EQUAL(seed(kWalk, true), tracks.size());
+}
+
+BOOST_AUTO_TEST_CASE(AdaptiveTauRatioCuts) {
+  using Experimental::GbtsLayerConnection;
+
+  const auto layer = [](Experimental::GbtsExperimentLayerId id,
+                        GbtsLayerType type, GbtsLayerTechnology technology,
+                        float refCoord) {
+    Experimental::GbtsLayerDescription description;
+    description.id = id;
+    description.type = type;
+    description.technology = technology;
+    description.refCoord = refCoord;
+    return description;
+  };
+  // listed out of radial order, so the barrel order has to be derived
+  const std::vector<Experimental::GbtsLayerDescription> layers = {
+      layer(2, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 100.f),
+      layer(1, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 50.f),
+      layer(3, GbtsLayerType::Barrel, GbtsLayerTechnology::Pixel, 150.f),
+      layer(4, GbtsLayerType::Endcap, GbtsLayerTechnology::Pixel, 400.f),
+      layer(5, GbtsLayerType::Barrel, GbtsLayerTechnology::Strip, 400.f),
+  };
+
+  std::vector<GbtsLayerConnection> connections = {
+      {.src = 2, .dst = 1},  // adjacent
+      {.src = 3, .dst = 1},  // skips a layer
+      {.src = 4, .dst = 3},  // leaves the barrel
+      {.src = 4, .dst = 4},  // off the barrel
+      {.src = 5, .dst = 3},  // leaves the barrel onto a strip
+  };
+  const Experimental::GbtsAdaptiveTauRatioCuts cuts;
+  Experimental::assignAdaptiveTauRatioCuts(connections, layers, cuts);
+
+  const float base = cuts.tauRatioCut;
+  const float corr = cuts.tauRatioCorr;
+  const float strip = cuts.tauRatioCorrStrip;
+  const std::vector<std::pair<float, float>> expected = {
+      {base, base}, {base + corr, base + corr},          {base, base + corr},
+      {base, base}, {base + strip, base + corr + strip},
+  };
+  for (std::size_t i = 0; i < connections.size(); ++i) {
+    BOOST_CHECK_CLOSE(connections[i].tauRatioCutInner, expected[i].first, 1e-4);
+    BOOST_CHECK_CLOSE(connections[i].tauRatioCutOuter, expected[i].second,
+                      1e-4);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
