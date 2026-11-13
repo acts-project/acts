@@ -11,6 +11,7 @@
 // Project include(s)
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/utils/tuple.hpp"
+#include "detray/utils/type_list.hpp"
 #include "detray/utils/type_traits.hpp"
 
 // System include(s)
@@ -214,57 +215,69 @@ using tuple_cat_t = typename tuple_cat_type<tuple_ts...>::type;
 
 /// Remove duplicate types from tuple
 /// @{
-template <std::size_t I, typename... tuple_ts>
+/// Convert tuple element types into a type list.
+template <typename tuple_t>
+struct tuple_to_type_list {};
+
+template <template <typename...> class tuple_t, typename... Args>
+struct tuple_to_type_list<tuple_t<Args...>> {
+  /// Type list preserving the input tuple order.
+  using type = detray::types::list<Args...>;
+};
+
+/// Convert a type list into the supplied tuple template.
+template <template <typename...> class tuple_t, typename type_list_t>
+struct type_list_to_tuple {};
+
+template <template <typename...> class tuple_t, typename... Args>
+struct type_list_to_tuple<tuple_t, detray::types::list<Args...>> {
+  /// Tuple type preserving the input list order.
+  using type = tuple_t<Args...>;
+};
+
+/// Collect the first occurrence of each input type in order.
+template <typename result_list_t, typename input_list_t>
 struct unique_types {};
 
-/// No elements in tuple
-template <std::size_t I>
-struct unique_types<I, std::tuple<>> {
-  using type = std::tuple<>;
+/// Return the accumulated list after all input types have been visited.
+template <typename result_list_t>
+struct unique_types<result_list_t, detray::types::list<>> {
+  /// Type list with repeated types removed.
+  using type = result_list_t;
 };
 
-/// Recursively check for duplicate entries in the tuple and remove them
-template <std::size_t I, typename Arg1, typename... Args>
-struct unique_types<I, std::tuple<Arg1, Args...>> {
-  using type = std::conditional_t<
-      has_type_v<Arg1, std::tuple<Args...>>,
-      typename unique_types<I - 1u, std::tuple<Args...>>::type,
-      typename unique_types<I - 1u, std::tuple<Args..., Arg1>>::type>;
+/// Append a previously unseen type and continue with the remaining inputs.
+template <typename result_list_t, typename arg_t, typename... input_args>
+struct unique_types<result_list_t, detray::types::list<arg_t, input_args...>> {
+ private:
+  using next_result_list_t =
+      detray::types::push_back_unique<result_list_t, arg_t>;
+
+ public:
+  /// Type list with stable left-to-right uniqueness.
+  using type = typename unique_types<next_result_list_t,
+                                     detray::types::list<input_args...>>::type;
 };
 
-/// All elements have been checked
-template <typename Arg1, typename... Args>
-struct unique_types<0u, std::tuple<Arg1, Args...>> {
-  using type = std::tuple<Arg1, Args...>;
-};
+/// Remove repeated tuple types while retaining their first occurrence.
+template <typename tuple_t>
+struct unique_type {};
 
-/// Base case for removing duplicates from an empty detray tuple.
-template <std::size_t I>
-struct unique_types<I, detray::dtuple<>> {
-  /// Empty tuple type.
-  using type = detray::dtuple<>;
-};
+/// Preserve the original tuple template when collecting unique types.
+template <template <typename...> class tuple_t, typename... Args>
+struct unique_type<tuple_t<Args...>> {
+ private:
+  using unique_list_t = typename unique_types<
+      detray::types::list<>,
+      typename tuple_to_type_list<tuple_t<Args...>>::type>::type;
 
-/// Remove duplicate entries from a detray tuple recursively.
-template <std::size_t I, typename Arg1, typename... Args>
-struct unique_types<I, detray::dtuple<Arg1, Args...>> {
-  /// Tuple type with repeated element types removed.
-  using type = std::conditional_t<
-      has_type_v<Arg1, detray::dtuple<Args...>>,
-      typename unique_types<I - 1u, detray::dtuple<Args...>>::type,
-      typename unique_types<I - 1u, detray::dtuple<Args..., Arg1>>::type>;
-};
-
-/// Base case retaining the remaining unique element types.
-template <typename Arg1, typename... Args>
-struct unique_types<0u, detray::dtuple<Arg1, Args...>> {
-  /// Tuple type at the end of duplicate removal.
-  using type = detray::dtuple<Arg1, Args...>;
+ public:
+  /// Tuple type with stable left-to-right uniqueness.
+  using type = typename type_list_to_tuple<tuple_t, unique_list_t>::type;
 };
 
 template <typename tuple_t>
-using unique_t =
-    typename unique_types<tuple_size_v<tuple_t> - 1u, tuple_t>::type;
+using unique_t = typename unique_type<tuple_t>::type;
 /// @}
 
 /// Check for equality of tuple types modulo permutation
