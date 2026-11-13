@@ -33,6 +33,7 @@ if(ACTS_GNN_ENABLE_TORCH)
     target_sources(
         ActsPluginGnn
         PRIVATE
+            src/TorchDevice.cpp
             src/TorchEdgeClassifier.cpp
             src/TorchMetricLearning.cpp
             src/buildEdges.cpp
