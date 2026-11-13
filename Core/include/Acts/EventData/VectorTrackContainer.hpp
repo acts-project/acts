@@ -434,6 +434,10 @@ class ConstVectorTrackContainer final
   ConstParameters parameters(IndexType itrack) const {
     return ConstParameters{m_params[itrack].data()};
   }
+
+  /// Type info of the data type held by the column
+  /// @param key The column key
+  /// @return The data type info
   const std::type_info& columnDataType_impl(HashedString key) const {
     return detail_vtc::VectorTrackContainerBase::columnDataType_impl(*this,
                                                                      key);

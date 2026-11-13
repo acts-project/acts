@@ -784,11 +784,16 @@ class ConstVectorMultiTrajectory final
   bool hasColumn_impl(HashedString key) const {
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
   }
-
+  /// Type info of the data type held by the column
+  /// @param key The column key
+  /// @return The data type info
   const std::type_info& columnDataType_impl(HashedString key) const {
     return detail_vmt::VectorMultiTrajectoryBase::columnDataType_impl(*this,
                                                                       key);
   }
+  /// Name of the column
+  /// @param key The column key
+  /// @return The column's name string
   std::string_view columnName_impl(HashedString key) const {
     return detail_vmt::VectorMultiTrajectoryBase::columnName_impl(*this, key);
   }
