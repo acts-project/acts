@@ -26,6 +26,9 @@ class abstract_awaitable {
   /// @param event The event to synchronize
   ///
   virtual void await(vecmem::abstract_event& event) const = 0;
+
+  /// Wait for all work enqueued to complete
+  virtual void synchronize() const = 0;
 };  // class abstract_awaitable
 
 }  // namespace traccc::device

@@ -150,9 +150,6 @@ void clusterization_algorithm::cluster_maker_kernel(
   ::alpaka::exec<Acc>(details::get_queue(queue()), workDiv,
                       kernels::reify_cluster_data{}, disjoint_set,
                       permutation_map_view, cluster_data);
-  // The base class destroys the input buffers right after this call, so
-  // the kernel must finish before returning.
-  queue().synchronize();
 }
 
 }  // namespace traccc::alpaka

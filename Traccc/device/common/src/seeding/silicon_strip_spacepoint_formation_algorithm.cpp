@@ -130,6 +130,7 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
         form_spacepoints_kernel({n_pairs, measurements, pairs, surface_infos,
                                  beam_spot, accepted, candidates,
                                  candidate_shapes});
+        synchronize();
         scan_offsets(accepted);
         const unsigned int n_spacepoints = read_total(accepted);
         if (n_spacepoints == 0u) {
@@ -144,6 +145,8 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
             candidates);
         gather_spacepoints_kernel({n_pairs, candidates_view, accepted, result,
                                    candidate_shapes, shapes});
+        // Finish gathering kernel before destroying its buffers.
+        synchronize();
         return result_type{std::move(result), std::move(shapes)};
       };
   auto opposite_spacepoints =
