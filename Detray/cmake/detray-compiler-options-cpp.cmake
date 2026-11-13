@@ -22,56 +22,6 @@ if(PROJECT_IS_TOP_LEVEL)
     if("${CMAKE_CXX_COMPILER_ID}" MATCHES "IntelLLVM")
         detray_add_flag(CMAKE_CXX_FLAGS "-fhonor-infinities")
     endif()
-
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        detray_add_flag(CMAKE_CXX_FLAGS "-Wshorten-64-to-32")
-    endif()
-
-    # Turn on a number of warnings for the "known compilers".
-    if(
-        ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-        OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "IntelLLVM")
-    )
-        # Basic flags for all build modes.
-        detray_add_flag(CMAKE_CXX_FLAGS "-Wall")
-        detray_add_flag(CMAKE_CXX_FLAGS "-Wextra")
-        detray_add_flag(CMAKE_CXX_FLAGS "-Wshadow")
-        detray_add_flag(CMAKE_CXX_FLAGS "-Wunused-local-typedefs")
-        detray_add_flag(CMAKE_CXX_FLAGS "-Wzero-as-null-pointer-constant")
-        # -Wnull-dereference and -Wmaybe-uninitialized (the latter pulled in
-        # by -Wall/-Wextra) fire from inside Eigen's own headers on GCC13+,
-        # even when Eigen is picked up as a system include -- ACTS's own
-        # ActsCompilerOptions.cmake carries the identical -Wnull-dereference
-        # exclusion for the same reason.
-        if(
-            "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"
-            OR (
-                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
-                AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 12
-            )
-        )
-            detray_add_flag(CMAKE_CXX_FLAGS "-Wnull-dereference")
-        elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-            detray_add_flag(CMAKE_CXX_FLAGS "-Wno-maybe-uninitialized")
-        endif()
-        detray_add_flag(CMAKE_CXX_FLAGS "-Wold-style-cast")
-        detray_add_flag(CMAKE_CXX_FLAGS "-pedantic")
-        # No implicit single to double conversions from floating point literals
-        detray_add_flag(CMAKE_CXX_FLAGS "-Wconversion")
-
-        # Fail on warnings, if asked for that behaviour.
-        if(DETRAY_FAIL_ON_WARNINGS)
-            detray_add_flag(CMAKE_CXX_FLAGS "-Werror")
-        endif()
-    elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
-        # Basic flags for all build modes.
-        string(REGEX REPLACE "/W[0-9]" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-        detray_add_flag(CMAKE_CXX_FLAGS "/W4")
-
-        # Fail on warnings, if asked for that behaviour.
-        if(DETRAY_FAIL_ON_WARNINGS)
-            detray_add_flag(CMAKE_CXX_FLAGS "/WX")
-        endif()
-    endif()
 endif()
+
+# C++ warnings are applied in Detray/CMakeLists.txt after dependency setup.

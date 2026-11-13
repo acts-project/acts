@@ -59,6 +59,9 @@ include(detray-functions)
 # detray is built via add_subdirectory from ACTS this is a no-op.
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsForceAssertions.cmake)
 
+# Use an absolute path to avoid changing package lookup via CMAKE_MODULE_PATH.
+include("${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsWarningFlags.cmake")
+
 #
 # Define build options
 #
@@ -516,6 +519,9 @@ endif()
 #
 # Set up all of the libraries of the project.
 #
+
+# Apply warnings after dependency setup so they only affect our targets.
+acts_apply_warning_flags(CXX ${DETRAY_FAIL_ON_WARNINGS})
 
 add_subdirectory(core)
 add_subdirectory(detectors)

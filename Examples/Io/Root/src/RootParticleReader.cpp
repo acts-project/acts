@@ -23,6 +23,8 @@
 
 namespace ActsExamples {
 
+RootParticleReader::~RootParticleReader() = default;
+
 RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
                                        Acts::Logging::Level level)
     : IReader(),

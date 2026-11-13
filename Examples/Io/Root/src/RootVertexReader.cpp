@@ -23,6 +23,8 @@
 
 namespace ActsExamples {
 
+RootVertexReader::~RootVertexReader() = default;
+
 RootVertexReader::RootVertexReader(const RootVertexReader::Config& config,
                                    Acts::Logging::Level level)
     : IReader(),
