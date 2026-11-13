@@ -473,6 +473,15 @@ struct SpacePointBucketData {
   std::array<std::uint64_t, 20> measurement_id;
 };
 
+struct GeometryIdMapData {
+  /// Athena module identifier.
+  std::uint64_t athena_id = 0;
+  /// ACTS surface identifier.
+  std::uint64_t acts_id = 0;
+};
+
+BOOST_DESCRIBE_STRUCT(GeometryIdMapData, (), (athena_id, acts_id))
+
 // SpacePointBucketData is not described with BOOST_DESCRIBE_STRUCT because it
 // uses array subscript access in its CSV columns. It is written using CsvWriter
 // directly.
