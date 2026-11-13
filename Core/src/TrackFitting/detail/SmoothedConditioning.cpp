@@ -11,8 +11,12 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
+#include "Acts/Utilities/detail/EigenCompat.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdint>
 #include <vector>
 
 #include <Eigen/Cholesky>
@@ -23,18 +27,18 @@ using namespace Acts;
 
 template <std::size_t N>
 struct MeasurementGain {
-  Matrix<N, eBoundSize> h;
+  FixedSubspaceHelper<eBoundSize, N> subspace;
   SquareMatrix<N> sInv;
   Matrix<eBoundSize, N> k;
 
   template <typename track_state_proxy_t>
   explicit MeasurementGain(const track_state_proxy_t& ts)
-      : h(ts.template projectorSubspaceHelper<N>().projector()) {
+      : subspace(ts.template projectorSubspaceHelper<N>()) {
     const BoundMatrix pp = ts.predictedCovariance();
     const SquareMatrix<N> s =
-        h * pp * h.transpose() + ts.template calibratedCovariance<N>();
+        subspace.projectMatrix(pp) + ts.template calibratedCovariance<N>();
     sInv = s.inverse();
-    k = pp * h.transpose() * sInv;
+    k = pp(detail::EigenCompat::all, subspace.indices()) * sInv;
   }
 };
 
@@ -89,7 +93,9 @@ Matrix<eBoundSize, C> filteredSensitivity(const AnyMutableTrackStateProxy& ts,
                                           const Matrix<eBoundSize, C>& dp) {
   Matrix<eBoundSize, C> df = dp;
   if (ts.typeFlags().isMeasurement()) {
-    visitGain(ts, [&](const auto& gain) { df = dp - gain.k * (gain.h * dp); });
+    visitGain(ts, [&](const auto& gain) {
+      df = dp - gain.k * dp(gain.subspace.indices(), detail::EigenCompat::all);
+    });
   }
   return df;
 }
@@ -105,8 +111,16 @@ Result<void> conditionStatesAfterNode(
     states = states.first(states.size() - 1);
   }
 
-  // forward sweep: sensitivities of the predicted and filtered states
-  std::vector<std::pair<Factor, Factor>> sensitivities(states.size());
+  // per state from the forward sweep: the filtered sensitivity, the gain and
+  // the measurement term `H^T S^-1 H Dp` of the backward sweep
+  struct Sweep {
+    Factor df;
+    Factor hshDp;
+    BoundMatrix k;
+    std::array<std::uint8_t, eBoundSize> indices;
+    std::size_t dim = 0;
+  };
+  std::vector<Sweep> sweep(states.size());
   Factor dfPrev = df;
   for (std::size_t j = 0; j < states.size(); ++j) {
     const AnyMutableTrackStateProxy& ts = states[j];
@@ -115,27 +129,47 @@ Result<void> conditionStatesAfterNode(
                           << " lacks smoothed, predicted or jacobian");
       return KalmanFitterError::SmoothFailed;
     }
+    Sweep& sj = sweep[j];
     const Factor dp = ts.jacobian() * dfPrev;
-    dfPrev = filteredSensitivity<C>(ts, dp);
-    sensitivities[j] = {dp, dfPrev};
+    sj.df = dp;
+    if (ts.typeFlags().isMeasurement()) {
+      visitGain(ts, [&]<std::size_t N>(const MeasurementGain<N>& gain) {
+        const auto& indices = gain.subspace.indices();
+        const Matrix<N, C> hDp = dp(indices, detail::EigenCompat::all);
+        sj.df = dp - gain.k * hDp;
+        sj.hshDp.setZero();
+        sj.hshDp(indices, detail::EigenCompat::all) = gain.sInv * hDp;
+        sj.k.template leftCols<N>() = gain.k;
+        std::ranges::copy(indices, sj.indices.begin());
+        sj.dim = N;
+      });
+    }
+    dfPrev = sj.df;
   }
 
   // backward sweep: condition the states from the last one to the node
   Factor psiHat = Factor::Zero();
   for (std::size_t j = states.size(); j-- > 0;) {
     AnyMutableTrackStateProxy ts = states[j];
-    const auto& [dp, dfj] = sensitivities[j];
-    const Factor t = dfj - filteredCovariance(ts) * psiHat;
+    const Sweep& sj = sweep[j];
+    const Factor t = sj.df - filteredCovariance(ts) * psiHat;
     auto res = addToSmoothed<C>(ts, t, u, w, logger);
     if (!res.ok()) {
       return res.error();
     }
+    if (j == 0) {
+      break;  // the adjoint before the segment is not needed
+    }
     Factor psiTilde = psiHat;
-    if (ts.typeFlags().isMeasurement()) {
-      visitGain(ts, [&](const auto& gain) {
-        psiTilde = gain.h.transpose() * (gain.sInv * (gain.h * dp)) + psiHat -
-                   gain.h.transpose() * (gain.k.transpose() * psiHat);
-      });
+    if (sj.dim > 0) {
+      visit_measurement(
+          sj.dim, [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
+            std::array<std::uint8_t, N> indices;
+            std::copy_n(sj.indices.begin(), N, indices.begin());
+            psiTilde += sj.hshDp;
+            psiTilde(indices, detail::EigenCompat::all) -=
+                sj.k.template leftCols<N>().transpose() * psiHat;
+          });
     }
     psiHat = ts.jacobian().transpose() * psiTilde;
   }
@@ -159,9 +193,10 @@ Result<void> conditionStatesBeforeNode(
     if (!res.ok()) {
       return res.error();
     }
-    if (ts.typeFlags().isMeasurement()) {
+    if (j > 1 && ts.typeFlags().isMeasurement()) {
       visitGain(ts, [&](const auto& gain) {
-        lambda -= gain.h.transpose() * (gain.k.transpose() * lambda);
+        lambda(gain.subspace.indices(), detail::EigenCompat::all) -=
+            (gain.k.transpose() * lambda).eval();
       });
     }
   }
@@ -191,7 +226,10 @@ Result<double> removeInformation(std::span<AnyMutableTrackStateProxy> states,
     return KalmanFitterError::SmoothFailed;
   }
   const Eigen::LLT<SquareMatrix<N>> rLlt(residualCov);
-  const Eigen::LDLT<BoundMatrix> ppLdlt(pp);
+  Eigen::LDLT<BoundMatrix> ppLdlt;
+  if (k > 0) {
+    ppLdlt.compute(pp);
+  }
   if (rLlt.info() != Eigen::Success ||
       (k > 0 && (ppLdlt.info() != Eigen::Success ||
                  !(ppLdlt.vectorD().array() > 0).all()))) {
