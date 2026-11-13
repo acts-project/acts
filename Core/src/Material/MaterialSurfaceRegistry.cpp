@@ -24,9 +24,6 @@ const std::optional<std::string>& materialKey(
   if (auto* proto = dynamic_cast<const ProtoSurfaceMaterial*>(material)) {
     return proto->materialKey();
   }
-  if (auto* proto = dynamic_cast<const ProtoGridSurfaceMaterial*>(material)) {
-    return proto->materialKey();
-  }
   static const std::optional<std::string> empty;
   return empty;
 }

@@ -26,7 +26,7 @@
 
 using namespace Acts;
 
-std::shared_ptr<ProtoGridSurfaceMaterial> ActsPlugins::createProtoMaterial(
+std::shared_ptr<ProtoSurfaceMaterial> ActsPlugins::createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
     const std::vector<std::pair<const std::string, BinningOption> >& binning,
     const Logger& logger) {
@@ -52,7 +52,7 @@ std::shared_ptr<ProtoGridSurfaceMaterial> ActsPlugins::createProtoMaterial(
                               : AxisBoundaryType::Bound,
         direction);
   };
-  return std::make_shared<ProtoGridSurfaceMaterial>(
+  return std::make_shared<ProtoSurfaceMaterial>(
       MultiAxisSpec2D({axisSpec(binning[0]), axisSpec(binning[1])}));
 }
 

@@ -80,7 +80,7 @@ void addLayerProtoMaterial(
 /// counts represent a homogeneous (single-bin) dimension.
 /// @return Proto-grid material with deferred ranges
 /// @throws std::invalid_argument if the prescription does not contain two axes
-std::shared_ptr<Acts::ProtoGridSurfaceMaterial> createProtoMaterial(
+std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning,
