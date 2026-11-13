@@ -26,7 +26,9 @@
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <memory>
 #include <string>
+#include <vector>
 
 using namespace Acts;
 using Converter = TrackingGeometryMaterialJsonConverter;
@@ -406,6 +408,105 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentPhysicalPropertiesAndStorage) {
   BOOST_CHECK(std::get<GridSurfaceMaterial::Direct>(grid.storage()) == values);
   BOOST_CHECK_EQUAL(grid.materialSlab(Vector2(-1., -1.)).thickness(), 0.);
   BOOST_CHECK_EQUAL(grid.materialSlab(Vector2(3., 4.)).thickness(), 43.);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialDocumentGridBoundaryStorage) {
+  Converter converter;
+  const auto id = GeometryIdentifier().withVolume(1);
+  for (const auto boundary0 : {AxisBoundaryType::Open, AxisBoundaryType::Bound,
+                               AxisBoundaryType::Closed}) {
+    for (const auto boundary1 :
+         {AxisBoundaryType::Open, AxisBoundaryType::Bound,
+          AxisBoundaryType::Closed}) {
+      MultiAxisSpec2D axes(std::array<AxisSpec, 2>{
+          AxisSpec::Equidistant(2, 0., 2., boundary0, AxisDirection::AxisX),
+          AxisSpec::Equidistant(3, 0., 3., boundary1, AxisDirection::AxisY)});
+      const auto multi = axes.buildMultiAxis();
+      const std::size_t count = multi->getNTotalBins(true);
+      GridSurfaceMaterial::Direct slabs;
+      std::vector<std::size_t> indices;
+      for (std::size_t bin = 0; bin < count; ++bin) {
+        slabs.push_back(MaterialSlab::Vacuum(static_cast<float>(bin + 1)));
+        indices.push_back(bin);
+      }
+      const auto shared = std::make_shared<std::vector<MaterialSlab>>(slabs);
+      for (unsigned int kind = 0; kind < 3; ++kind) {
+        GridSurfaceMaterial::Storage storage;
+        if (kind == 0) {
+          storage = slabs;
+        } else if (kind == 1) {
+          storage = GridSurfaceMaterial::Indexed{indices, slabs};
+        } else {
+          storage = GridSurfaceMaterial::GloballyIndexed{indices, shared};
+        }
+        TrackingGeometryMaterial source;
+        source.surfaceMaterials[id] =
+            std::make_shared<GridSurfaceMaterial>(axes, std::move(storage));
+        const auto encoded = converter.toJson(source);
+        const auto* payloadKey = kind == 0 ? "values" : "indices";
+        const auto& payload =
+            encoded["surfaces"][0]["material"]["storage"][payloadKey];
+        // Version 1 keeps both guard slots in its axis-0-fastest wire layout,
+        // even when the in-memory axes do not store them.
+        BOOST_REQUIRE_EQUAL(payload.size(), 20u);
+        for (std::size_t y = 0; y < 5; ++y) {
+          for (std::size_t x = 0; x < 4; ++x) {
+            const bool addressable =
+                (boundary0 == AxisBoundaryType::Open || (x > 0 && x < 3)) &&
+                (boundary1 == AxisBoundaryType::Open || (y > 0 && y < 4));
+            const auto& value = payload[x + 4 * y];
+            const auto bin =
+                addressable ? multi->getGlobalBinFromLocalBins({x, y}) : 0u;
+            if (kind == 0) {
+              BOOST_CHECK_EQUAL(
+                  value["thickness"].get<float>(),
+                  addressable ? static_cast<float>(bin + 1) : 0.f);
+            } else {
+              BOOST_CHECK_EQUAL(value.get<std::size_t>(), bin);
+            }
+          }
+        }
+        const auto recovered = converter.fromJson(encoded);
+        const auto& grid = dynamic_cast<const GridSurfaceMaterial&>(
+            *recovered.surfaceMaterials.at(id));
+        const auto& recoveredStorage = grid.storage();
+        if (kind == 0) {
+          BOOST_CHECK(std::get<GridSurfaceMaterial::Direct>(recoveredStorage) ==
+                      slabs);
+        } else if (kind == 1) {
+          BOOST_CHECK(std::get<GridSurfaceMaterial::Indexed>(recoveredStorage)
+                          .indices == indices);
+        } else {
+          BOOST_CHECK(
+              std::get<GridSurfaceMaterial::GloballyIndexed>(recoveredStorage)
+                  .indices == indices);
+        }
+        BOOST_CHECK(converter.toJson(recovered) == encoded);
+
+        // Older files may carry nondefault values in unused guard slots. Read
+        // and validate those entries, but do not store them in compact grids.
+        if (boundary0 != AxisBoundaryType::Open ||
+            boundary1 != AxisBoundaryType::Open) {
+          auto legacy = encoded;
+          auto& legacyPayload =
+              legacy["surfaces"][0]["material"]["storage"][payloadKey];
+          if (kind == 0) {
+            legacyPayload[0]["thickness"] = 123.;
+          } else {
+            legacyPayload[0] = count - 1;
+          }
+          BOOST_CHECK(converter.toJson(converter.fromJson(legacy)) == encoded);
+          if (kind == 0) {
+            legacyPayload[0]["thickness"] =
+                std::numeric_limits<double>::infinity();
+          } else {
+            legacyPayload[0] = count;
+          }
+          BOOST_CHECK_THROW(converter.fromJson(legacy), std::invalid_argument);
+        }
+      }
+    }
+  }
 }
 
 BOOST_AUTO_TEST_CASE(MaterialDocumentRejectsVolumes) {

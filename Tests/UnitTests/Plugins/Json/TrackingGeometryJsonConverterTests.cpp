@@ -34,6 +34,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -276,10 +277,8 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   auto gridLink = GridPortalLink::make(gridSurface, AxisDirection::AxisX,
                                        Axis{AxisBound, -2., 2., 2});
   AnyGridView<const TrackingVolume*> gridView(gridLink->grid());
-  gridView.atLocalBins({0u}) = rootPtr;
   gridView.atLocalBins({1u}) = childPtr;
   gridView.atLocalBins({2u}) = rootPtr;
-  gridView.atLocalBins({3u}) = childPtr;
 
   std::vector<TrivialPortalLink> artifacts;
   auto artifactSurface =
@@ -320,6 +319,19 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
     BOOST_REQUIRE(in.good());
     in >> encodedFromFile;
   }
+
+  auto& encodedGridBins =
+      encodedFromFile["portals"].at(2)["along_normal"]["bins"];
+  BOOST_REQUIRE_EQUAL(encodedGridBins.size(), 2u);
+
+  // Files produced before boundary-dependent grid storage contained unused
+  // underflow and overflow entries for bound axes.
+  auto legacyUnderflow = encodedGridBins.front();
+  legacyUnderflow["local"] = std::vector<std::size_t>{0u};
+  encodedGridBins.push_back(std::move(legacyUnderflow));
+  auto legacyOverflow = encodedGridBins.front();
+  legacyOverflow["local"] = std::vector<std::size_t>{3u};
+  encodedGridBins.push_back(std::move(legacyOverflow));
 
   auto decodedRoot = converter.trackingVolumeFromJson(gctx, encodedFromFile);
 
@@ -362,15 +374,11 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   BOOST_CHECK_EQUAL(decodedGrid->artifactPortalLinks().size(), 1u);
 
   AnyGridConstView<const TrackingVolume*> decodedGridView(decodedGrid->grid());
-  BOOST_REQUIRE(decodedGridView.atLocalBins({0u}) != nullptr);
   BOOST_REQUIRE(decodedGridView.atLocalBins({1u}) != nullptr);
   BOOST_REQUIRE(decodedGridView.atLocalBins({2u}) != nullptr);
-  BOOST_REQUIRE(decodedGridView.atLocalBins({3u}) != nullptr);
 
-  BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({0u})->volumeName(), "root");
   BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({1u})->volumeName(), "child");
   BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({2u})->volumeName(), "root");
-  BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({3u})->volumeName(), "child");
 
   std::vector<Portal*> decodedChildPortals;
   for (auto& portal : decodedChildren.front()->portals()) {
@@ -397,6 +405,67 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   const auto* htvDecoded = decodedGeometry->highestTrackingVolume();
   BOOST_CHECK(*root == *htvDecoded);
   checkHierarchy(gctx, htvSource->volumes(), htvDecoded->volumes());
+}
+
+BOOST_AUTO_TEST_CASE(GridPortalJsonValidatesLegacyIndices) {
+  using namespace Acts;
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  TrackingGeometryJsonConverter converter;
+  const auto encode = [&](std::unique_ptr<GridPortalLink> link) {
+    auto root = std::make_shared<TrackingVolume>(
+        Transform3::Identity(),
+        std::make_shared<CuboidVolumeBounds>(5., 5., 5.));
+    root->addPortal(
+        std::make_shared<Portal>(Direction::AlongNormal(), std::move(link)));
+    root->setNavigationPolicy(std::make_unique<TryAllNavigationPolicy>(
+        gctx, *root, getDummyLogger()));
+    return converter.trackingVolumeToJson(gctx, *root);
+  };
+  const auto plane = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(2., 2.));
+  const auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 1., 2.);
+  const auto bound = encode(GridPortalLink::make(plane, AxisDirection::AxisX,
+                                                 Axis{AxisBound, -2., 2., 2}));
+  const auto closed = encode(GridPortalLink::make(
+      cylinder, AxisDirection::AxisRPhi,
+      Axis{AxisClosed, -std::numbers::pi, std::numbers::pi, 2}));
+  const auto mixed = encode(GridPortalLink::make(
+      cylinder, Axis{AxisClosed, -std::numbers::pi, std::numbers::pi, 2},
+      Axis{AxisBound, -2., 2., 2}));
+  const auto withIndices = [](nlohmann::json document,
+                              const std::vector<std::size_t>& indices) {
+    auto& bins = document["portals"][0]["along_normal"]["bins"];
+    auto bin = bins.front();
+    bin["local"] = indices;
+    bins = nlohmann::json::array({bin});
+    return document;
+  };
+  for (const auto& document : {bound, closed}) {
+    BOOST_CHECK_NO_THROW(converter.trackingVolumeFromJson(gctx, document));
+    for (const std::size_t legacy : {0u, 3u}) {
+      BOOST_CHECK_NO_THROW(converter.trackingVolumeFromJson(
+          gctx, withIndices(document, {legacy})));
+    }
+    BOOST_CHECK_THROW(
+        converter.trackingVolumeFromJson(gctx, withIndices(document, {4u})),
+        std::invalid_argument);
+  }
+  for (const auto& indices :
+       {std::vector<std::size_t>{0u, 1u}, {3u, 1u}, {1u, 0u}, {1u, 3u}}) {
+    BOOST_CHECK_NO_THROW(
+        converter.trackingVolumeFromJson(gctx, withIndices(mixed, indices)));
+  }
+  for (const auto& indices :
+       {std::vector<std::size_t>{0u, 4u}, {3u, 4u}, {4u, 0u}, {4u, 3u}}) {
+    BOOST_CHECK_THROW(
+        converter.trackingVolumeFromJson(gctx, withIndices(mixed, indices)),
+        std::invalid_argument);
+  }
+  auto open = withIndices(bound, {4u});
+  open["portals"][0]["along_normal"]["axes"][0]["boundary_type"] = "Open";
+  BOOST_CHECK_THROW(converter.trackingVolumeFromJson(gctx, open),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {

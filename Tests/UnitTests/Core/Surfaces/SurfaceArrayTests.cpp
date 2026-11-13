@@ -282,6 +282,16 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_overfill) {
     for (const std::uint8_t radius : {0, 1, 2, 3, 255}) {
       const SurfaceArray array(tgContext, {module}, representative, 0.,
                                {axis, axis}, {{0, 0}, {0, 0}}, radius);
+      BOOST_REQUIRE_EQUAL(array.size(),
+                          axis.getNTotalBins() * axis.getNTotalBins());
+      BOOST_CHECK_THROW(array.at(array.size()), std::out_of_range);
+      if constexpr (boundary == AxisBoundaryType::Open) {
+        BOOST_CHECK(array.neighbors({0, 0}, {0, 0}).empty());
+        BOOST_CHECK(array.neighbors({8, 8}, {0, 0}).empty());
+      } else {
+        BOOST_CHECK_THROW(array.neighbors({0, 1}, {0, 0}), std::out_of_range);
+        BOOST_CHECK_THROW(array.neighbors({1, 8}, {0, 0}), std::out_of_range);
+      }
       for (int x = -3; x <= 3; ++x) {
         for (int y = -3; y <= 3; ++y) {
           const auto content =
@@ -304,6 +314,7 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_overfill) {
   };
   check.template operator()<AxisBoundaryType::Bound>();
   check.template operator()<AxisBoundaryType::Open>();
+  check.template operator()<AxisBoundaryType::Closed>();
 }
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArray_overfillPhiSeam, SurfaceArrayFixture) {

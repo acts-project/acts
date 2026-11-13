@@ -128,8 +128,9 @@ class Grid final : public IGrid {
   /// @pre The given @c Point type must represent a point in d (or higher)
   ///      dimensions where d is dimensionality of the grid.
   ///
-  /// @note The look-up considers under-/overflow bins along each axis.
-  ///       Therefore, the look-up will never fail.
+  /// @note Open axes use under-/overflow bins, while bound and closed axes
+  ///       map out-of-range positions to regular bins. Therefore, the look-up
+  ///       will never fail.
   //
   template <class Point>
   reference atPosition(const Point& point) {
@@ -148,8 +149,9 @@ class Grid final : public IGrid {
   /// @pre The given @c Point type must represent a point in d (or higher)
   ///      dimensions where d is dimensionality of the grid.
   ///
-  /// @note The look-up considers under-/overflow bins along each axis.
-  ///       Therefore, the look-up will never fail.
+  /// @note Open axes use under-/overflow bins, while bound and closed axes
+  ///       map out-of-range positions to regular bins. Therefore, the look-up
+  ///       will never fail.
   template <class Point>
   const_reference atPosition(const Point& point) const {
     return m_values.at(m_axes.getGlobalBinFromPoint(point));
@@ -176,7 +178,7 @@ class Grid final : public IGrid {
   ///         point
   ///
   /// @pre All local bin indices must be a valid index for the corresponding
-  ///      axis (including the under-/overflow bin for this axis).
+  ///      axis (including under-/overflow bins when supported by this axis).
   reference atLocalBins(const index_t& localBins) {
     return m_values.at(m_axes.getGlobalBinFromLocalBins(localBins));
   }
@@ -188,7 +190,7 @@ class Grid final : public IGrid {
   ///         point
   ///
   /// @pre All local bin indices must be a valid index for the corresponding
-  ///      axis (including the under-/overflow bin for this axis).
+  ///      axis (including under-/overflow bins when supported by this axis).
   const_reference atLocalBins(const index_t& localBins) const {
     return m_values.at(m_axes.getGlobalBinFromLocalBins(localBins));
   }
@@ -265,7 +267,7 @@ class Grid final : public IGrid {
   ///
   /// @pre The given @c Point type must represent a point in d (or higher)
   ///      dimensions where d is dimensionality of the grid.
-  /// @note This could be a under-/overflow bin along one or more axes.
+  /// @note This could be an under-/overflow bin along one or more open axes.
   /// @deprecated Use grid.multiAxis().getGlobalBinFromPoint(point) instead
   template <class Point>
   [[deprecated("Use grid.multiAxis().getGlobalBinFromPoint(point) instead")]]
@@ -279,7 +281,7 @@ class Grid final : public IGrid {
   /// @return global index for bin defined by the local bin indices
   ///
   /// @pre All local bin indices must be a valid index for the corresponding
-  ///      axis (including the under-/overflow bin for this axis).
+  ///      axis (including under-/overflow bins when supported by this axis).
   /// @deprecated Use grid.multiAxis().getGlobalBinFromLocalBins(localBins)
   ///             instead
   [[deprecated(
@@ -299,7 +301,7 @@ class Grid final : public IGrid {
   ///
   /// @pre The given @c Point type must represent a point in d (or higher)
   ///      dimensions where d is dimensionality of the grid.
-  /// @note This could be a under-/overflow bin along one or more axes.
+  /// @note This could be an under-/overflow bin along one or more open axes.
   /// @deprecated Use grid.multiAxis().getGlobalBinFromLowerLeftEdge(point)
   ///             instead
   template <class Point>
@@ -320,7 +322,7 @@ class Grid final : public IGrid {
   ///
   /// @pre The given @c Point type must represent a point in d (or higher)
   ///      dimensions where d is dimensionality of the grid.
-  /// @note This could be a under-/overflow bin along one or more axes.
+  /// @note This could be an under-/overflow bin along one or more open axes.
   /// @deprecated Use grid.multiAxis().getLocalBinsFromPoint(point) instead
   template <class Point>
   [[deprecated("Use grid.multiAxis().getLocalBinsFromPoint(point) instead")]]
@@ -334,8 +336,7 @@ class Grid final : public IGrid {
   /// @return array with local bin indices along each axis (in same order as
   ///         given @c axes object)
   ///
-  /// @note Local bin indices can contain under-/overflow bins along the
-  ///       corresponding axis.
+  /// @note Local bin indices can contain under-/overflow bins along open axes.
   /// @deprecated Use grid.multiAxis().getLocalBinsFromGlobalBin(bin) instead
   [[deprecated("Use grid.multiAxis().getLocalBinsFromGlobalBin(bin) instead")]]
   index_t localBinsFromGlobalBin(std::size_t bin) const {
@@ -354,7 +355,7 @@ class Grid final : public IGrid {
   ///
   /// @pre The given @c Point type must represent a point in d (or higher)
   ///      dimensions where d is dimensionality of the grid.
-  /// @note This could be a under-/overflow bin along one or more axes.
+  /// @note This could be an under-/overflow bin along one or more open axes.
   /// @deprecated Use grid.multiAxis().getLocalBinsFromLowerLeftEdge(point)
   ///             instead
   template <class Point>
@@ -428,10 +429,9 @@ class Grid final : public IGrid {
     return m_axes.getMaxPoint();
   }
 
-  /// set all overflow and underflow bins to a certain value
+  /// set all overflow and underflow bins of open axes to a certain value
   ///
-  /// @param value value to be inserted in every overflow and underflow
-  ///                   bin of the grid.
+  /// @param value value to be inserted in every overflow and underflow bin
   ///
   void setExteriorBins(const value_type& value) {
     for (std::size_t index :
@@ -447,7 +447,7 @@ class Grid final : public IGrid {
   ///
   /// @param point location to which to interpolate grid values. The
   ///                   position must be within the grid dimensions and not
-  ///                   lie in an under-/overflow bin along any axis.
+  ///                   lie in an under-/overflow bin along any open axis.
   ///
   /// @return interpolated value at given position
   ///
@@ -503,8 +503,8 @@ class Grid final : public IGrid {
   ///      dimensions where d is dimensionality of the grid.
   ///
   /// @post If @c true is returned, the global bin containing the given point
-  ///       is a valid bin, i.e. it is neither a underflow nor an overflow bin
-  ///       along any axis.
+  ///       is a valid bin, i.e. it is neither an underflow nor an overflow bin
+  ///       along any open axis.
   /// @deprecated Use grid.multiAxis().isInside(position) instead
   template <class Point>
   [[deprecated("Use grid.multiAxis().isInside(position) instead")]]
@@ -520,12 +520,12 @@ class Grid final : public IGrid {
   ///                       bins along each axis are considered
   /// @return set of global bin indices for all bins in neighborhood
   ///
-  /// @note Over-/underflow bins are included in the neighborhood.
+  /// @note Over-/underflow bins of open axes are included in the neighborhood.
   /// @note The @c size parameter sets the range by how many units each local
   ///       bin index is allowed to be varied. All local bin indices are
   ///       varied independently, that is diagonal neighbors are included.
-  ///       Ignoring the truncation of the neighborhood size reaching beyond
-  ///       over-/underflow bins, the neighborhood is of size \f$2 \times
+  ///       Ignoring truncation at the addressable range, the neighborhood is
+  ///       of size \f$2 \times
   ///       \text{size}+1\f$ along each dimension.
   /// @deprecated Use grid.multiAxis().getNeighborHoodIndices(localBins, size)
   ///             instead
@@ -545,12 +545,12 @@ class Grid final : public IGrid {
   ///                         adjacent bins along each axis are considered
   /// @return set of global bin indices for all bins in neighborhood
   ///
-  /// @note Over-/underflow bins are included in the neighborhood.
+  /// @note Over-/underflow bins of open axes are included in the neighborhood.
   /// @note The @c size parameter sets the range by how many units each local
   ///       bin index is allowed to be varied. All local bin indices are
   ///       varied independently, that is diagonal neighbors are included.
-  ///       Ignoring the truncation of the neighborhood size reaching beyond
-  ///       over-/underflow bins, the neighborhood is of size \f$2 \times
+  ///       Ignoring truncation at the addressable range, the neighborhood is
+  ///       of size \f$2 \times
   ///       \text{size}+1\f$ along each dimension.
   /// @deprecated Use grid.multiAxis().getNeighborHoodIndices(localBins,
   ///             sizePerAxis) instead
@@ -565,10 +565,10 @@ class Grid final : public IGrid {
 
   /// total number of bins
   ///
-  /// @param fullCounter Whether to include under-and overflow bins in the count
+  /// @param fullCounter Whether to include under- and overflow bins of open axes
   /// @return total number of bins in the grid
   ///
-  /// @note This number contains under-and overflow bins along all axes.
+  /// @note Bound and closed axes never contribute exterior bins.
   std::size_t size(bool fullCounter = true) const {
     return m_axes.getNTotalBins(fullCounter);
   }
