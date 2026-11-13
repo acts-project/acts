@@ -42,22 +42,28 @@ concept RangeLike = requires(R r) {
 template <typename T>
 concept CommonMultiTrajectoryBackend =
     requires(const T& cv, HashedString key, TrackIndexType istate) {
+      /// Return the dimension of the measurement parameters for a given track
+      /// state
       { cv.calibratedSize_impl(istate) } -> std::same_as<TrackIndexType>;
-
+      /// Return the source link to the experiment's measurement
       { cv.getUncalibratedSourceLink_impl(istate) } -> std::same_as<SourceLink>;
-
+      /// Return the surfaces associated with the track state
       { cv.referenceSurface_impl(istate) } -> std::same_as<const Surface*>;
-
+      /// Return the track parameters' jacobian associated with the track state
       { cv.jacobian_impl(istate) } -> std::same_as<detail::ConstCovariance>;
-
+      /// Return whether the track state has information provided by column
       { cv.has_impl(key, istate) } -> std::same_as<bool>;
-
+      /// Return the number of track states
       { cv.size_impl() } -> std::same_as<TrackIndexType>;
-
+      /// Fetch the data value from the given column associated with track state
       { cv.component_impl(key, istate) } -> std::same_as<std::any>;
-
+      /// Returns whether the column is defined
       { cv.hasColumn_impl(key) } -> std::same_as<bool>;
-
+      /// Returns the data type of the column
+      { cv.columnDataType_impl(key) } -> std::same_as<const std::type_info&>;
+      /// Transforms the hashed key of the column string
+      { cv.columnName_impl(key) } -> std::same_as<std::string_view>;
+      /// Returns the set of defined dynamic keys
       { cv.dynamicKeys_impl() };
       requires detail::RangeLike<decltype(cv.dynamicKeys_impl())>;
     };
@@ -101,7 +107,7 @@ concept MutableMultiTrajectoryBackend =
         v.template calibratedCovariance_impl<2>(istate)
       } -> std::same_as<Eigen::Map<SquareMatrix<2>>>;
 
-      { v.addTrackState_impl() } -> std::same_as<TrackIndexType>;
+      { v.addTrackState_impl(mask, istate) } -> std::same_as<TrackIndexType>;
 
       { v.addTrackStateComponents_impl(istate, mask) };
 

@@ -44,10 +44,13 @@
 #include "ActsPodioEdm/TrackCollection.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <iterator>
 #include <memory>
 #include <random>
 #include <stdexcept>
+#include <string_view>
+#include <typeinfo>
 
 using namespace Acts;
 using namespace ActsPlugins;
@@ -443,6 +446,90 @@ BOOST_AUTO_TEST_CASE(ExternalCollectionSupport) {
   // Test that releaseInto works for owned collection
   podio::Frame frame;
   BOOST_CHECK_NO_THROW(ownedContainer.releaseInto(frame, ""));
+}
+
+namespace {
+
+/// Check that the backend maps @p key back to @p expName and reports
+/// @p expType as data type of the column
+template <typename backend_t>
+void checkTrackColumnInfo(const backend_t& backend, HashedString key,
+                          std::string_view expName,
+                          const std::type_info& expType) {
+  BOOST_TEST_CONTEXT("Column '" << expName << "'") {
+    BOOST_CHECK_EQUAL(backend.columnName_impl(key), expName);
+    const std::type_info& type = backend.columnDataType_impl(key);
+    BOOST_CHECK_MESSAGE(type == expType, "Expected data type " << expType.name()
+                                                               << " but got "
+                                                               << type.name());
+  }
+}
+
+template <typename backend_t>
+void checkStaticPodioTrackColumns(const backend_t& backend) {
+  checkTrackColumnInfo(backend, "tipIndex"_hash, "tipIndex",
+                       typeid(std::uint32_t));
+  checkTrackColumnInfo(backend, "stemIndex"_hash, "stemIndex",
+                       typeid(std::uint32_t));
+  checkTrackColumnInfo(backend, "params"_hash, "params",
+                       typeid(PodioTrackContainerBase::ConstParameters));
+  checkTrackColumnInfo(backend, "cov"_hash, "cov",
+                       typeid(PodioTrackContainerBase::ConstCovariance));
+  checkTrackColumnInfo(backend, "nMeasurements"_hash, "nMeasurements",
+                       typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nHoles"_hash, "nHoles", typeid(unsigned int));
+  checkTrackColumnInfo(backend, "chi2"_hash, "chi2", typeid(float));
+  checkTrackColumnInfo(backend, "ndf"_hash, "ndf", typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nOutliers"_hash, "nOutliers",
+                       typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nSharedHits"_hash, "nSharedHits",
+                       typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nSplitHits"_hash, "nSplitHits",
+                       typeid(unsigned int));
+}
+
+template <typename backend_t>
+void checkDynamicPodioTrackColumns(const backend_t& backend) {
+  BOOST_CHECK(backend.hasColumn_impl(hashString("col_float")));
+  BOOST_CHECK(backend.hasColumn_impl(hashString("col_i32")));
+  BOOST_CHECK(backend.hasColumn_impl(hashString("col_u64")));
+  checkTrackColumnInfo(backend, hashString("col_float"), "col_float",
+                       typeid(float));
+  checkTrackColumnInfo(backend, hashString("col_i32"), "col_i32",
+                       typeid(std::int32_t));
+  checkTrackColumnInfo(backend, hashString("col_u64"), "col_u64",
+                       typeid(std::uint64_t));
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(ColumnInfo) {
+  NullHelper helper;
+
+  MutablePodioTrackContainer ptc{
+      helper, std::make_unique<ActsPodioEdm::TrackCollection>()};
+  checkStaticPodioTrackColumns(ptc);
+
+  ptc.addColumn_impl<float>("col_float");
+  ptc.addColumn_impl<std::int32_t>("col_i32");
+  ptc.addTrack_impl();
+  ptc.addColumn_impl<std::uint64_t>("col_u64");
+  ptc.addTrack_impl();
+
+  checkStaticPodioTrackColumns(ptc);
+  checkDynamicPodioTrackColumns(ptc);
+
+  BOOST_CHECK_EQUAL(ptc.columnName_impl(hashString("unknown")), "");
+  BOOST_CHECK_THROW(ptc.columnDataType_impl(hashString("unknown")),
+                    std::runtime_error);
+
+  // Name and type must survive the round trip through a podio frame
+  podio::Frame frame;
+  ptc.releaseInto(frame, "test");
+
+  ConstPodioTrackContainer<> cptc{helper, frame, "test"};
+  checkStaticPodioTrackColumns(cptc);
+  checkDynamicPodioTrackColumns(cptc);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

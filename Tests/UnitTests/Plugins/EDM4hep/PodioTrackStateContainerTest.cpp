@@ -13,6 +13,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -23,7 +24,11 @@
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
 
+#include <cstdint>
 #include <filesystem>
+#include <optional>
+#include <string_view>
+#include <typeinfo>
 
 #include <podio/UserDataCollection.h>
 
@@ -604,6 +609,108 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
     BOOST_REQUIRE_NE(hit, nullptr);
     BOOST_CHECK_EQUAL(hit->getCellID(), 22222u);
   }
+}
+
+namespace {
+
+using namespace HashedStringLiteral;
+
+/// Check that the backend maps @p key back to @p expName and reports
+/// @p expType as data type of the column. The same information must be
+/// available via the MultiTrajectory frontend.
+template <typename backend_t>
+void checkTrackStateColumnInfo(const backend_t& backend, HashedString key,
+                               std::string_view expName,
+                               const std::type_info& expType) {
+  BOOST_TEST_CONTEXT("Column '" << expName << "'") {
+    BOOST_CHECK_EQUAL(backend.columnName_impl(key), expName);
+    BOOST_CHECK_EQUAL(backend.columnName(key), expName);
+    const std::type_info& type = backend.columnDataType_impl(key);
+    BOOST_CHECK_MESSAGE(type == expType, "Expected data type " << expType.name()
+                                                               << " but got "
+                                                               << type.name());
+    BOOST_CHECK(backend.columnDataType(key) == type);
+  }
+}
+
+template <typename backend_t>
+void checkStaticPodioTrackStateColumns(const backend_t& backend) {
+  using Base = PodioTrackStateContainerBase;
+  checkTrackStateColumnInfo(backend, "predicted"_hash, "predicted",
+                            typeid(Base::ConstParameters));
+  checkTrackStateColumnInfo(backend, "filtered"_hash, "filtered",
+                            typeid(Base::ConstParameters));
+  checkTrackStateColumnInfo(backend, "smoothed"_hash, "smoothed",
+                            typeid(Base::ConstParameters));
+  checkTrackStateColumnInfo(backend, "jacobian"_hash, "jacobian",
+                            typeid(Base::ConstCovariance));
+  checkTrackStateColumnInfo(backend, "projector"_hash, "projector",
+                            typeid(SerializedSubspaceIndices));
+  checkTrackStateColumnInfo(backend, "previous"_hash, "previous",
+                            typeid(TrackIndexType));
+  checkTrackStateColumnInfo(backend, "next"_hash, "next",
+                            typeid(TrackIndexType));
+  checkTrackStateColumnInfo(backend, "uncalibratedSourceLink"_hash,
+                            "uncalibratedSourceLink",
+                            typeid(std::optional<SourceLink>));
+  checkTrackStateColumnInfo(backend, "referenceSurface"_hash,
+                            "referenceSurface", typeid(const Surface*));
+  checkTrackStateColumnInfo(backend, "measdim"_hash, "measdim",
+                            typeid(TrackIndexType));
+  checkTrackStateColumnInfo(backend, "chi2"_hash, "chi2", typeid(float));
+  checkTrackStateColumnInfo(backend, "pathLength"_hash, "pathLength",
+                            typeid(double));
+  checkTrackStateColumnInfo(backend, "typeFlags"_hash, "typeFlags",
+                            typeid(TrackStateType::raw_type));
+
+  BOOST_CHECK_EQUAL(backend.columnName("calibrated"_hash), "calibrated");
+  BOOST_CHECK_EQUAL(backend.columnName("calibratedCov"_hash), "calibratedCov");
+}
+
+template <typename backend_t>
+void checkDynamicPodioTrackStateColumns(const backend_t& backend) {
+  BOOST_CHECK(backend.hasColumn(hashString("col_float")));
+  BOOST_CHECK(backend.hasColumn(hashString("col_i32")));
+  BOOST_CHECK(backend.hasColumn(hashString("col_u64")));
+  checkTrackStateColumnInfo(backend, hashString("col_float"), "col_float",
+                            typeid(float));
+  checkTrackStateColumnInfo(backend, hashString("col_i32"), "col_i32",
+                            typeid(std::int32_t));
+  checkTrackStateColumnInfo(backend, hashString("col_u64"), "col_u64",
+                            typeid(std::uint64_t));
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(ColumnInfo) {
+  MapHelper helper;
+
+  MutablePodioTrackStateContainer c{
+      helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+      std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
+      std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr};
+  checkStaticPodioTrackStateColumns(c);
+
+  c.addColumn<float>("col_float");
+  c.addColumn<std::int32_t>("col_i32");
+  auto i0 = c.addTrackState();
+  c.addColumn<std::uint64_t>("col_u64");
+  c.addTrackState(TrackStatePropMask::All, i0);
+
+  checkStaticPodioTrackStateColumns(c);
+  checkDynamicPodioTrackStateColumns(c);
+
+  BOOST_CHECK_EQUAL(c.columnName(hashString("unknown")), "");
+  BOOST_CHECK_THROW(c.columnDataType(hashString("unknown")),
+                    std::runtime_error);
+
+  // Name and type must survive the round trip through a podio frame
+  podio::Frame frame;
+  c.releaseInto(frame, "test");
+
+  ConstPodioTrackStateContainer cc{helper, frame, "test"};
+  checkStaticPodioTrackStateColumns(cc);
+  checkDynamicPodioTrackStateColumns(cc);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

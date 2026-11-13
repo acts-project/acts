@@ -11,6 +11,7 @@
 #include <any>
 #include <string>
 #include <string_view>
+#include <typeinfo>
 
 #include <podio/Frame.h>
 #include <podio/UserDataCollection.h>
@@ -26,6 +27,14 @@ struct ConstDynamicColumnBase {
 
   virtual std::size_t size() const = 0;
 
+  /// Return the type info of the data type stored by the column
+  /// @returns Type info of the data type held by the column
+  virtual const std::type_info& dataTypeInfo() const = 0;
+
+  /// Return the name of the column
+  /// @returns Column name
+  std::string_view name() const { return m_name; }
+
  protected:
   std::string m_name;
 };
@@ -40,6 +49,8 @@ struct ConstDynamicColumn : public ConstDynamicColumnBase {
     return &m_collection.vec().at(i);
   }
   std::size_t size() const override { return m_collection.size(); }
+
+  const std::type_info& dataTypeInfo() const override { return typeid(T); }
 
   const podio::UserDataCollection<T>& m_collection;
 };
@@ -84,6 +95,8 @@ struct DynamicColumn : public DynamicColumnBase {
     m_collection.vec().erase(m_collection.vec().begin() + i);
   }
   std::size_t size() const override { return m_collection.size(); }
+
+  const std::type_info& dataTypeInfo() const override { return typeid(T); }
 
   std::unique_ptr<DynamicColumnBase> clone(bool empty) const override {
     if (empty) {

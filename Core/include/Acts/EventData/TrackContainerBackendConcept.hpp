@@ -46,6 +46,10 @@ concept ConstTrackContainerBackend =
         cv.particleHypothesis_impl(itrack)
       } -> std::same_as<ParticleHypothesis>;
 
+      /// Returns the data type of the column
+      { cv.columnDataType_impl(key) } -> std::same_as<const std::type_info&>;
+      /// Transforms the hashed key of the column string
+      { cv.columnName_impl(key) } -> std::same_as<std::string_view>;
       { cv.dynamicKeys_impl() };
       requires detail::RangeLike<decltype(cv.dynamicKeys_impl())>;
     };

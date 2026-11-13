@@ -22,9 +22,13 @@
 #include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 
+#include <cstdint>
+#include <optional>
 #include <random>
 #include <string>
+#include <string_view>
 #include <type_traits>
+#include <typeinfo>
 #include <utility>
 
 namespace {
@@ -390,6 +394,135 @@ BOOST_AUTO_TEST_CASE(EnsureDynamicColumnsCopyOnTrackState) {
                     sourceState.template component<std::uint64_t>("counter"));
   BOOST_CHECK_EQUAL(targetState.template component<std::uint8_t>("odd"),
                     sourceState.template component<std::uint8_t>("odd"));
+}
+
+/// Check that the backend knows the column @p key, that it maps the key back
+/// to @p expName and that it reports @p expType as data type of the column.
+/// The same information must be available via the MultiTrajectory frontend.
+template <typename backend_t>
+void checkTrackStateColumnInfo(const backend_t& backend, HashedString key,
+                               std::string_view expName,
+                               const std::type_info& expType) {
+  BOOST_TEST_CONTEXT("Column '" << expName << "'") {
+    BOOST_CHECK(backend.hasColumn(key));
+    BOOST_CHECK_EQUAL(backend.columnName_impl(key), expName);
+    BOOST_CHECK_EQUAL(backend.columnName(key), expName);
+    const std::type_info& type = backend.columnDataType_impl(key);
+    BOOST_CHECK_MESSAGE(type == expType, "Expected data type " << expType.name()
+                                                               << " but got "
+                                                               << type.name());
+    BOOST_CHECK(backend.columnDataType(key) == type);
+  }
+}
+
+template <typename backend_t>
+void checkStaticTrackStateColumns(const backend_t& backend) {
+  using ConstParameters = TrackStateTraits<eBoundSize, true>::Parameters;
+  using ConstCovariance = TrackStateTraits<eBoundSize, true>::Covariance;
+  using IndexType = TrackIndexType;
+
+  checkTrackStateColumnInfo(backend, "predicted"_hash, "predicted",
+                            typeid(ConstParameters));
+  checkTrackStateColumnInfo(backend, "filtered"_hash, "filtered",
+                            typeid(ConstParameters));
+  checkTrackStateColumnInfo(backend, "smoothed"_hash, "smoothed",
+                            typeid(ConstParameters));
+  checkTrackStateColumnInfo(backend, "jacobian"_hash, "jacobian",
+                            typeid(ConstCovariance));
+  checkTrackStateColumnInfo(backend, "projector"_hash, "projector",
+                            typeid(SerializedSubspaceIndices));
+  checkTrackStateColumnInfo(backend, "previous"_hash, "previous",
+                            typeid(IndexType));
+  checkTrackStateColumnInfo(backend, "next"_hash, "next", typeid(IndexType));
+  checkTrackStateColumnInfo(backend, "uncalibratedSourceLink"_hash,
+                            "uncalibratedSourceLink",
+                            typeid(std::optional<SourceLink>));
+  checkTrackStateColumnInfo(backend, "referenceSurface"_hash,
+                            "referenceSurface", typeid(const Surface*));
+  checkTrackStateColumnInfo(backend, "measdim"_hash, "measdim",
+                            typeid(IndexType));
+  checkTrackStateColumnInfo(backend, "chi2"_hash, "chi2", typeid(float));
+  checkTrackStateColumnInfo(backend, "pathLength"_hash, "pathLength",
+                            typeid(double));
+  checkTrackStateColumnInfo(backend, "typeFlags"_hash, "typeFlags",
+                            typeid(TrackStateType::raw_type));
+
+  // The calibrated columns have a measurement-dependent size. Only the name
+  // mapping is checked here.
+  BOOST_CHECK_EQUAL(backend.columnName("calibrated"_hash), "calibrated");
+  BOOST_CHECK_EQUAL(backend.columnName("calibratedCov"_hash), "calibratedCov");
+}
+
+template <typename backend_t>
+void checkDynamicTrackStateColumns(const backend_t& backend) {
+  checkTrackStateColumnInfo(backend, hashString("col_float"), "col_float",
+                            typeid(float));
+  checkTrackStateColumnInfo(backend, hashString("col_bool"), "col_bool",
+                            typeid(bool));
+  checkTrackStateColumnInfo(backend, hashString("col_u64"), "col_u64",
+                            typeid(std::uint64_t));
+}
+
+void addDynamicTrackStateColumns(VectorMultiTrajectory& mtj) {
+  mtj.addColumn<float>("col_float");
+  mtj.addColumn<bool>("col_bool");
+  mtj.addColumn<std::uint64_t>("col_u64");
+}
+
+BOOST_AUTO_TEST_CASE(VectorMultiTrajectoryStaticColumnInfo) {
+  VectorMultiTrajectory mtj{};
+  checkStaticTrackStateColumns(mtj);
+
+  // The column information must not depend on the number of track states
+  auto i0 = mtj.addTrackState();
+  mtj.addTrackState(TrackStatePropMask::All, i0);
+  checkStaticTrackStateColumns(mtj);
+
+  ConstVectorMultiTrajectory cmtj{std::move(mtj)};
+  checkStaticTrackStateColumns(cmtj);
+}
+
+BOOST_AUTO_TEST_CASE(VectorMultiTrajectoryDynamicColumnInfo) {
+  VectorMultiTrajectory mtj{};
+  addDynamicTrackStateColumns(mtj);
+  checkDynamicTrackStateColumns(mtj);
+
+  // Columns added after track states have been created
+  mtj.addTrackState();
+  mtj.addColumn<double>("late");
+  checkTrackStateColumnInfo(mtj, hashString("late"), "late", typeid(double));
+  checkDynamicTrackStateColumns(mtj);
+
+  // Name and type survive copies and conversions to the const backend
+  VectorMultiTrajectory copy{mtj};
+  checkDynamicTrackStateColumns(copy);
+  checkTrackStateColumnInfo(copy, hashString("late"), "late", typeid(double));
+
+  ConstVectorMultiTrajectory cmtj{mtj};
+  checkDynamicTrackStateColumns(cmtj);
+  checkTrackStateColumnInfo(cmtj, hashString("late"), "late", typeid(double));
+
+  ConstVectorMultiTrajectory cmtjMoved{std::move(copy)};
+  checkDynamicTrackStateColumns(cmtjMoved);
+
+  // The dynamic columns must not shadow the static ones
+  checkStaticTrackStateColumns(cmtj);
+}
+
+BOOST_AUTO_TEST_CASE(VectorMultiTrajectoryEnsureDynamicColumnInfo) {
+  VectorMultiTrajectory source{};
+  addDynamicTrackStateColumns(source);
+
+  VectorMultiTrajectory target{};
+  target.ensureDynamicColumns_impl(source);
+  checkDynamicTrackStateColumns(target);
+
+  // Also via the track container frontend
+  TrackContainer tcSource{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  addDynamicTrackStateColumns(tcSource.trackStateContainer());
+  TrackContainer tcTarget{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  tcTarget.ensureDynamicColumns(tcSource);
+  checkDynamicTrackStateColumns(tcTarget.trackStateContainer());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
