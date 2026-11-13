@@ -425,8 +425,10 @@ class TryAllNavigator final {
   /// This method checks if the target is valid based on the current position
   /// and direction. It returns true if the target is still valid.
   ///
-  /// For the TryAllNavigator, the target is always invalid since we do not want
-  /// to assume any specific surface sequence over multiple steps.
+  /// For the TryAllNavigator, a target ahead is always invalid since we do not
+  /// want to assume any specific surface sequence over multiple steps. A target
+  /// behind, found on the last step, stays valid until it is reached or becomes
+  /// unreachable.
   ///
   /// @param state The navigation state
   /// @param position The current position
@@ -437,11 +439,13 @@ class TryAllNavigator final {
   bool checkTargetValid(
       const State& state, const Vector3& position, const Vector3& direction,
       [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
-    static_cast<void>(state);
     static_cast<void>(position);
     static_cast<void>(direction);
 
-    return false;
+    // A crossing found behind is kept until the stepper reaches it: the step
+    // back can stop just outside the on-surface tolerance, and the next step
+    // would start past the crossing. Targets ahead are re-resolved every step.
+    return state.hasTargetsBehind();
   }
 
   /// @brief Handle the surface reached
