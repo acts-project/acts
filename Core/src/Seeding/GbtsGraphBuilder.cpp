@@ -221,7 +221,14 @@ GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
                                    std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(config),
       m_geometry(std::move(geometry)),
-      m_logger(std::move(logger)) {}
+      m_logger(std::move(logger)) {
+  m_binHasInnerLink.assign(m_geometry->numBins(), false);
+  for (const GbtsBinGroup& bg : m_geometry->binGroups()) {
+    for (const GbtsBinLink& link : bg.links) {
+      m_binHasInnerLink[link.bin] = true;
+    }
+  }
+}
 
 GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                                           GbtsNodeStorage& nodeStorage,
@@ -275,8 +282,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
   KeptContainer kept;
 
-  // per window: the connected nodes of its bin, where useZ0Histogram filters
-  // them; reused across bin groups as the windows are
+  // per window: the nodes of its bin that the z0 histogram or dropDeadEnds
+  // keeps; reused across bin groups as the windows are
   std::vector<std::vector<std::pair<float, SpacePointIndex>>> connectedPhiNodes;
 
   const bool calibrate = m_cfg.calibrateStrips && nodeStorage.hasStrips();
@@ -318,6 +325,12 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
     const bool useMatchBeforeCreate =
         m_cfg.matchBeforeCreate && barrelOrder1 >= 0 &&
         barrelOrder1 <= m_cfg.matchBeforeCreateMaxBarrelOrder;
+
+    // Nothing extends an edge of this bin inwards, so one that links to no
+    // outer edge, or whose outer node has no edges, stays a chain of its own,
+    // too short for a seed. Relies on the outer bins being built first, as the
+    // groups are ordered.
+    const bool dropDeadEnds = m_cfg.dropDeadEnds && !m_binHasInnerLink[bg.bin];
 
     // prepare a sliding window for each non-empty bin2 in the group
 
@@ -371,9 +384,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
       // Isolated n2 nodes are skipped below for every n1 of this group, and
       // the branch is unpredictable. Filter them out of the window once
-      // instead. Not for the group's own bin: its nodes gain connections as
-      // n1 is processed.
-      if (useZ0Histogram && link.bin != bg.bin) {
+      // instead, and with dropDeadEnds the n2 nodes without edges. Not for the
+      // group's own bin: its nodes gain connections as n1 is processed.
+      if ((useZ0Histogram || dropDeadEnds) && link.bin != bg.bin) {
         const std::size_t windowIdx = phiSlidingWindow.size() - 1;
         // growing the outer vector moves the inner ones, which keeps their
         // buffers, so earlier windows' pointers stay valid
@@ -384,7 +397,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
             connectedPhiNodes[windowIdx];
         connected.clear();
         for (const auto& phiNode : B2.phiNodes) {
-          if (edgeInfo[phiNode.second].isConnected != 0) {
+          const detail::GbtsNodeEdgeInfo& n2Info = edgeInfo[phiNode.second];
+          if (useZ0Histogram ? n2Info.isConnected != 0 : n2Info.numEdges != 0) {
             connected.push_back(phiNode);
           }
         }
@@ -709,6 +723,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
             const float phi2u = phi2 + dPhi2;
             const float curv2 = curv;
 
+            bool isLinked = false;
+
             // looking for neighbours of the new edge
             for (std::uint32_t outerEdgeIdx = n2FirstEdge;
                  outerEdgeIdx < n2LastEdge; ++outerEdgeIdx) {
@@ -769,6 +785,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
               links.emplace_back(outerEdgeIdx, newEdgeIdx);
 
               isConnected = true;  // there is at least one good match
+              isLinked = true;
 
               // edge confirmed - update z0 histogram. Only doubletFilterRZ
               // holds z0 to the histogram range, and it is optional.
@@ -778,6 +795,11 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                   z0BinIndex < detail::kGbtsZ0HistogramBins) {
                 ++z0Histo[static_cast<std::size_t>(z0BinIndex)];
               }
+            }
+
+            if (dropDeadEnds && !isLinked) {
+              edgeStorage.pop_back();
+              --numCreatedEdges;
             }
           }
         }  // loop over n2 (outer) nodes inside a sliding window on n2 bin
