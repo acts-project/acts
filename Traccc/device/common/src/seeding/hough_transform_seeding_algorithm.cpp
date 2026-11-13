@@ -23,7 +23,6 @@ hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
 
 auto hough_transform_seeding_algorithm::operator()(
 		const magnetic_field& bfield,
-		const detector_buffer& /*det*/,
 		const edm::measurement_collection::const_view& measurements,
 		const edm::spacepoint_collection::const_view& spacepoints) const -> output_type {
       	// Get the number of space points. In an asynchronous way if possible.

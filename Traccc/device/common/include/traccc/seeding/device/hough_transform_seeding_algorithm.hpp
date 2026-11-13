@@ -33,7 +33,6 @@ namespace traccc::device {
 class hough_transform_seeding_algorithm
     : public algorithm<edm::seed_collection::buffer(
 	  const magnetic_field&,
-	  const detector_buffer&,
 	  const edm::measurement_collection::const_view&,
 	  const edm::spacepoint_collection::const_view&)>,
       public messaging,
@@ -49,7 +48,6 @@ class hough_transform_seeding_algorithm
 
   output_type operator()(
 		  const magnetic_field&,
-		  const detector_buffer& det,
 		  const edm::measurement_collection::const_view& measurements,
 		  const edm::spacepoint_collection::const_view& spacepoints) const override;
 

@@ -152,7 +152,7 @@ full_chain_hough_transform_algorithm::output_type full_chain_hough_transform_alg
         m_spacepoint_formation(m_device_detector, measurements);
   
     const seeding_algorithm::output_type seeds = 
-	    m_seeding(m_field, m_device_detector, measurements, spacepoints); 
+	    m_seeding(m_field, measurements, spacepoints); 
 
     const seed_parameter_estimation_algorithm::output_type track_params =
         m_track_parameter_estimation(m_field, measurements, spacepoints, seeds);
