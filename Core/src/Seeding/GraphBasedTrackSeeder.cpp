@@ -205,14 +205,15 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     if (withFits) {
       // filter state at the innermost node, x' along the first edge (inwards)
-      const double slope2 = 1. + static_cast<double>(rs.x[1]) * rs.x[1];
+      const DecoupledSpacePointFilterState& fs = rs.filter;
+      const double slope2 = 1. + static_cast<double>(fs.x[1]) * fs.x[1];
       vSeedCandidates.back().fit = GbtsSeedFit{
-          .position = Vector3(rs.refX * rs.c - rs.x[0] * rs.s,
-                              rs.refX * rs.s + rs.x[0] * rs.c, rs.y[0]),
+          .position = Vector3(fs.refX * fs.c - fs.x[0] * fs.s,
+                              fs.refX * fs.s + fs.x[0] * fs.c, fs.y[0]),
           // outwards: along -x', with the slope of the state
-          .phi = std::atan2(-rs.s - rs.c * rs.x[1], -rs.c + rs.s * rs.x[1]),
-          .cotTheta = rs.y[1],
-          .curvature = rs.x[2] / (slope2 * std::sqrt(slope2))};
+          .phi = std::atan2(-fs.s - fs.c * fs.x[1], -fs.c + fs.s * fs.x[1]),
+          .cotTheta = fs.y[1],
+          .curvature = fs.x[2] / (slope2 * std::sqrt(slope2))};
     }
 
     vArgSort.emplace_back(origSeedQuality, seedCounter);
@@ -408,7 +409,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
       const float quality = -state.j / static_cast<float>(path.size() + 1);
       const bool maxCurvatureCut =
           m_cfg.postFitCurvatureFactor > 0 &&
-          std::abs(state.x[2]) * m_cfg.postFitCurvatureFactor >
+          std::abs(state.filter.x[2]) * m_cfg.postFitCurvatureFactor >
               filter.m_cfg.maxCurvature;
       if (!maxCurvatureCut && path.size() >= minLength &&
           quality < bestQuality) {
@@ -461,9 +462,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
       continue;
     }
 
-    detail::GbtsEdgeState state;
-    state.initialize(headEdge, nodeView, filter.m_cfg.initialVarianceX,
-                     filter.m_cfg.initialVarianceY);
+    detail::GbtsEdgeState state = filter.initialize(nodeView, headEdge);
     if (!filter.update(nodeView, headEdge, state)) {
       continue;
     }
