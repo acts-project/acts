@@ -185,6 +185,10 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
       DiamondVolumeBounds::Face face,
       std::shared_ptr<const Acts::ISurfaceMaterial> material);
 
+ protected:
+  /// @copydoc BlueprintNode::visitBuiltVolumes
+  void visitBuiltVolumes(const std::function<void(Volume&)>& visitor) override;
+
  private:
   /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;

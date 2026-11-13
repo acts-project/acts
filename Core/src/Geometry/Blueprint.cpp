@@ -24,6 +24,8 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <set>
 
 namespace {
 const std::string s_rootName = "Root";
@@ -31,6 +33,67 @@ const std::string s_worldName = "World";
 }  // namespace
 
 namespace Acts {
+
+namespace {
+// Collect and validate the complete construction geometry before changing any
+// transforms. Pointer identity matters: surfaces may be shared between nodes.
+class PlacementCollector final : public TrackingGeometryMutableVisitor {
+ public:
+  // Container stacks and their not-yet-connected gaps are bare Volumes.
+  // Static nodes own TrackingVolumes, which can already contain surfaces and
+  // child volumes; the blueprint-node traversal does not visit that content.
+  void collect(Volume &volume) {
+    if (auto *tracking = dynamic_cast<TrackingVolume *>(&volume)) {
+      tracking->apply(*this);
+    } else {
+      checkVolume(volume);
+    }
+  }
+
+  void visitVolume(TrackingVolume &volume) override {
+    if (volume.navigationPolicy() != nullptr ||
+        volume.volumeLookup() != nullptr || !volume.portals().empty() ||
+        volume.confinedLayers() != nullptr ||
+        volume.confinedVolumes() != nullptr || !volume.denseVolumes().empty()) {
+      throw std::invalid_argument(
+          "Blueprint global placement requires unfinalized geometry without "
+          "legacy arrays: " +
+          volume.volumeName());
+    }
+    checkVolume(volume);
+  }
+
+  void visitSurface(Surface &surface) override {
+    if (surface.surfacePlacement() != nullptr) {
+      throw std::invalid_argument(
+          "Blueprint global placement does not support external surface "
+          "placements");
+    }
+    surfaces.insert(&surface);
+  }
+
+  void place(const Transform3 &transform, const GeometryContext &gctx) const {
+    for (auto *volume : volumes) {
+      volume->setTransform(transform * volume->localToGlobalTransform(gctx));
+    }
+    for (auto *surface : surfaces) {
+      surface->setTransform(transform * surface->localToGlobalTransform(gctx));
+    }
+  }
+
+ private:
+  void checkVolume(Volume &volume) {
+    if (volume.isAlignable()) {
+      throw std::invalid_argument(
+          "Blueprint global placement does not support external volume "
+          "placements");
+    }
+    volumes.insert(&volume);
+  }
+  std::set<Volume *> volumes;
+  std::set<Surface *> surfaces;
+};
+}  // namespace
 
 ///@class BlueprintVisitor
 /// A class for visiting blueprint hierarchy and apply the geometry identifiers
@@ -173,6 +236,16 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   ACTS_DEBUG(prefix() << "New root volume bounds are: "
                       << world->volumeBounds());
+
+  if (m_cfg.globalTransform) {
+    PlacementCollector collector;
+    // The world is owned here, outside the blueprint subtree. Child volumes
+    // remain owned by their nodes until finalize(), so neither traversal
+    // reaches the other.
+    collector.collect(*world);
+    child.visitBuiltVolumes([&](Volume &volume) { collector.collect(volume); });
+    collector.place(*m_cfg.globalTransform, gctx);
+  }
 
   // Register the world on the outside of the child's shell, then produce the
   // world's own (outermost) portals.

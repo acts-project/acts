@@ -110,6 +110,10 @@ class GeometryIdentifierBlueprintNode : public BlueprintNode {
   /// @return String containing concatenated configuration names
   const std::string& name() const override;
 
+ protected:
+  /// @copydoc BlueprintNode::visitBuiltVolumes
+  void visitBuiltVolumes(const std::function<void(Volume&)>& visitor) override;
+
  private:
   std::unique_ptr<GeometryIdentifierBlueprintNodeImpl> m_impl;
 };
