@@ -15,6 +15,7 @@ import argparse
 
 import acts
 import acts.examples
+import acts.examples.root
 from acts.examples.reconstruction import addGnn
 from acts.examples.simulation import ParticleSelectorConfig, addDigiParticleSelection
 from acts.gnn import (
@@ -38,6 +39,7 @@ def runGNN4ITk(
     useEdgeLayerConnector: bool = False,
     trackBuilder: str = "junctionremoval",
     edgeClassifierCut: float | None = None,
+    pixelOnly: bool = False,
     logLevel=acts.logging.INFO,
 ):
     """
@@ -57,6 +59,10 @@ def runGNN4ITk(
         trackBuilder: Track builder to run: junctionremoval, edgelayerconnector, or dwalk
         edgeClassifierCut: Optional edge classifier cut. Defaults to 0.01 for D-WALK and
                            0.5 for the other builders.
+        pixelOnly: Run on pixel space points only with the 4 node features
+                   (r, phi, z, eta) of the pixel-only models, as used for GNN
+                   pixel seeding in Athena. Otherwise all space points with the
+                   12 space point + cluster features are used.
         logLevel: Logging level
     """
     # Validate inputs
@@ -83,6 +89,8 @@ def runGNN4ITk(
         treename="GNN4ITk",
         inputfiles=[str(inputRootDump)],
         outputSpacePoints="spacepoints",
+        outputPixelSpacePoints="pixel_spacepoints",
+        outputStripSpacePoints="strip_spacepoints",
         outputClusters="clusters",
         outputMeasurements="measurements",
         outputMeasurementSubset="measurement_subset",
@@ -190,23 +198,32 @@ def runGNN4ITk(
             doJunctionRemoval=True,
         )
 
-    # Node features: ITk 12-feature configuration (space point + 2 clusters)
     e = NodeFeature
-    nodeFeatures = [
-        e.R,
-        e.Phi,
-        e.Z,
-        e.Eta,
-        e.Cluster1R,
-        e.Cluster1Phi,
-        e.Cluster1Z,
-        e.Cluster1Eta,
-        e.Cluster2R,
-        e.Cluster2Phi,
-        e.Cluster2Z,
-        e.Cluster2Eta,
-    ]
-    featureScales = [1000.0, 3.141592654, 1000.0, 1.0] * 3
+    if pixelOnly:
+        # Node features: ITk pixel-only 4-feature configuration (space point)
+        nodeFeatures = [e.R, e.Phi, e.Z, e.Eta]
+        featureScales = [1000.0, 3.141592654, 1000.0, 1.0]
+        inputSpacePoints = "pixel_spacepoints"
+        inputClusters = ""
+    else:
+        # Node features: ITk 12-feature configuration (space point + 2 clusters)
+        nodeFeatures = [
+            e.R,
+            e.Phi,
+            e.Z,
+            e.Eta,
+            e.Cluster1R,
+            e.Cluster1Phi,
+            e.Cluster1Z,
+            e.Cluster1Eta,
+            e.Cluster2R,
+            e.Cluster2Phi,
+            e.Cluster2Z,
+            e.Cluster2Eta,
+        ]
+        featureScales = [1000.0, 3.141592654, 1000.0, 1.0] * 3
+        inputSpacePoints = "spacepoints"
+        inputClusters = "clusters"
 
     # Add GNN tracking (space points already created by reader, so no trackingGeometry)
     addGnn(
@@ -216,8 +233,8 @@ def runGNN4ITk(
         trackBuilder=trackBuilderObj,
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
-        inputSpacePoints="spacepoints",
-        inputClusters="clusters",
+        inputSpacePoints=inputSpacePoints,
+        inputClusters=inputClusters,
         outputDirRoot=str(outputDir),
         logLevel=logLevel,
     )
@@ -285,6 +302,12 @@ if __name__ == "__main__":
         default=None,
         help="Override the edge classifier score cut",
     )
+    argparser.add_argument(
+        "--pixelOnly",
+        action="store_true",
+        default=False,
+        help="Use pixel space points only with the 4 pixel-only node features",
+    )
     argparser.add_argument("--debug", action="store_true")
 
     args = argparser.parse_args()
@@ -299,5 +322,6 @@ if __name__ == "__main__":
         useEdgeLayerConnector=args.useEdgeLayerConnector,
         trackBuilder=args.trackBuilder,
         edgeClassifierCut=args.edgeClassifierCut,
+        pixelOnly=args.pixelOnly,
         logLevel=acts.logging.DEBUG if args.debug else acts.logging.INFO,
     )
