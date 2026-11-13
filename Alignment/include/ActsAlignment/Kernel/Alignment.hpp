@@ -22,6 +22,7 @@
 #include <map>
 #include <memory>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace ActsAlignment {
@@ -141,6 +142,11 @@ struct AlignmentResult {
   Acts::Result<void> result{Acts::Result<void>::success()};
 };
 
+/// Alignable surfaces ordered by alignment index.
+/// `AlignmentResult::idxedAlignSurfaces` is an unordered_map.
+std::vector<std::pair<const Acts::Surface*, std::size_t>>
+orderedAlignmentSurfaces(const AlignmentResult& result);
+
 /// @brief dump an alignment result to an
 /// output stream (file or iostream)
 /// following the Millepede-II convention.
@@ -154,6 +160,25 @@ void dumpResultAsMP2(const AlignmentResult& result, std::ostream& out);
 /// @param out: The stream to write to (file or iostream)
 void dumpResultAsMP2(const AlignmentResult& result,
                      const std::filesystem::path& fname);
+
+/// One local alignment step. Translation follows the current local axes,
+/// then rotation about local z, local y, and local x.
+Acts::Transform3 applyLocalAlignmentDelta(const Acts::Transform3& transform,
+                                          const Acts::AlignmentVector& delta);
+
+/// Replace @p result.deltaAlignmentParameters with the single local step from
+/// each pre-alignment transform to the final transform. That step is the
+/// inverse of @c applyLocalAlignmentDelta. Covariance is unchanged.
+/// When @p includeLastDelta is set, the current solve is applied first.
+/// Fails when an indexed surface is missing from either transform map, or
+/// its parameter row is outside the delta vector.
+Acts::Result<void> setTotalAlignmentDelta(
+    AlignmentResult& result,
+    const std::unordered_map<const Acts::Surface*, Acts::Transform3>&
+        initialTransforms,
+    const std::unordered_map<const Acts::Surface*, Acts::Transform3>&
+        currentTransforms,
+    bool includeLastDelta);
 
 /// @brief KalmanFitter-based alignment implementation
 ///

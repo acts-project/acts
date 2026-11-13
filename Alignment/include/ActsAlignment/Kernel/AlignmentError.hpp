@@ -18,7 +18,8 @@ enum class AlignmentError {
   NoAlignmentDofOnTrack = 1,
   AlignmentParametersUpdateFailure = 2,
   ConvergeFailure = 3,
-  HierarchyValidationFailure = 4
+  HierarchyValidationFailure = 4,
+  TotalDeltaFailure = 5
 };
 
 namespace detail {
@@ -39,6 +40,9 @@ class AlignmentErrorCategory : public std::error_category {
       case AlignmentError::HierarchyValidationFailure:
         return "Alignment hierarchy validation failed (assignment uniqueness "
                "error)";
+      case AlignmentError::TotalDeltaFailure:
+        return "Cannot compose the total alignment delta for an alignment "
+               "surface";
       default:
         return "unknown";
     }

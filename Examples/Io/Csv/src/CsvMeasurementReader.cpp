@@ -45,6 +45,8 @@ CsvMeasurementReader::CsvMeasurementReader(const Config& config,
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
   m_outputMeasurementParticlesMap.maybeInitialize(
       m_cfg.outputMeasurementParticlesMap);
+  m_outputParticleMeasurementsMap.maybeInitialize(
+      m_cfg.outputParticleMeasurementsMap);
   m_inputHits.maybeInitialize(m_cfg.inputSimHits);
 
   // Check if event ranges match (should also catch missing files)
@@ -260,9 +262,13 @@ ProcessCode CsvMeasurementReader::read(const AlgorithmContext& ctx) {
     measurements.emplaceMeasurement(meas.size(), meas.geometryId(), meas);
   }
 
-  // Generate measurement-particles-map
+  // Either map needs the simulated hits. Each is written only when configured.
+  const bool writeMeasurementParticles =
+      m_outputMeasurementParticlesMap.isInitialized();
+  const bool writeParticleMeasurements =
+      m_outputParticleMeasurementsMap.isInitialized();
   if (m_inputHits.isInitialized() &&
-      m_outputMeasurementParticlesMap.isInitialized()) {
+      (writeMeasurementParticles || writeParticleMeasurements)) {
     const auto hits = m_inputHits(ctx);
 
     MeasurementParticlesMap outputMap;
@@ -272,7 +278,12 @@ ProcessCode CsvMeasurementReader::read(const AlgorithmContext& ctx) {
       outputMap.emplace(measIdx, hit->particleId());
     }
 
-    m_outputMeasurementParticlesMap(ctx, std::move(outputMap));
+    if (writeParticleMeasurements) {
+      m_outputParticleMeasurementsMap(ctx, invertIndexMultimap(outputMap));
+    }
+    if (writeMeasurementParticles) {
+      m_outputMeasurementParticlesMap(ctx, std::move(outputMap));
+    }
   }
 
   // Write the data to the EventStore

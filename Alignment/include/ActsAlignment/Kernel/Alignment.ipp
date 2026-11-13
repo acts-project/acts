@@ -171,30 +171,12 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     const Acts::Transform3& oldTransform =
         surface->localToGlobalTransform(gctx);
 
-    // 2. The delta transform
+    // 2. The delta transform in the current local frame
     deltaAlignmentParam = alignResult.deltaAlignmentParameters.segment(
         Acts::eAlignmentSize * index, Acts::eAlignmentSize);
-    // Translation along the local x/y/z axes
-    const Acts::Vector3 deltaCenterLocal =
-        deltaAlignmentParam.segment<3>(Acts::eAlignmentCenter0);
-    // The delta Euler angles
-    Acts::Vector3 deltaEulerAngles =
-        deltaAlignmentParam.segment<3>(Acts::eAlignmentRotation0);
+    const Acts::Transform3 newTransform =
+        applyLocalAlignmentDelta(oldTransform, deltaAlignmentParam);
 
-    // 3. The new transform. translate() shifts in the local frame.
-    Acts::Transform3 newTransform = oldTransform;
-    newTransform.translate(deltaCenterLocal);
-    // Rotation first around fixed local x, then around fixed local y, and last
-    // around fixed local z, this is the same as first around local z, then
-    // around new local y, and last around new local x below
-    newTransform *=
-        Acts::AngleAxis3(deltaEulerAngles(2), Acts::Vector3::UnitZ());
-    newTransform *=
-        Acts::AngleAxis3(deltaEulerAngles(1), Acts::Vector3::UnitY());
-    newTransform *=
-        Acts::AngleAxis3(deltaEulerAngles(0), Acts::Vector3::UnitX());
-
-    // 4. Update the aligned transform
     //@Todo: use a better way to handle this (need dynamic cast to inherited
     // detector element type)
     ACTS_VERBOSE("Delta of alignment parameters at element "
@@ -270,6 +252,24 @@ ActsAlignment::Alignment<fitter_t>::align(
   }
   ACTS_VERBOSE("There are " << alignResult.idxedAlignSurfaces.size()
                             << " detector elements to be aligned");
+
+  const auto& geoContext = alignOptions.fitOptions.geoContext;
+  const auto snapshotTransforms =
+      [&geoContext](const std::vector<Acts::SurfacePlacementBase*>& elements) {
+        std::unordered_map<const Acts::Surface*, Acts::Transform3> transforms;
+        transforms.reserve(elements.size());
+        for (const auto* det : elements) {
+          const Acts::Surface& surface = det->surface();
+          transforms.emplace(&surface,
+                             surface.localToGlobalTransform(geoContext));
+        }
+        return transforms;
+      };
+
+  // Transforms before any iteration, so the reported delta is the whole
+  // correction rather than whichever step ran last.
+  const auto initialTransforms =
+      snapshotTransforms(alignOptions.alignedDetElements);
 
   // Start the iteration to minimize the chi2
   bool converged = false;
@@ -366,6 +366,19 @@ ActsAlignment::Alignment<fitter_t>::align(
     }
   } else {
     ACTS_DEBUG("Alignment parameters is not updated.");
+  }
+
+  // Early exit solves one more step than it applies. The file has to carry
+  // that step too: readers apply this delta once, on the pre-alignment pose.
+  if (alignResult.deltaAlignmentParameters.size() > 0) {
+    const auto currentTransforms =
+        snapshotTransforms(alignOptions.alignedDetElements);
+    auto totalDelta = setTotalAlignmentDelta(alignResult, initialTransforms,
+                                             currentTransforms, converged);
+    if (!totalDelta.ok()) {
+      ACTS_ERROR(totalDelta.error().message());
+      return totalDelta.error();
+    }
   }
 
   return alignResult;

@@ -11,11 +11,17 @@
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsTests/CommonHelpers/AlignmentHelpers.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <limits>
+#include <sstream>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 using namespace Acts;
 using namespace ActsTests;
@@ -136,4 +142,161 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
       alignZero.align(trajCollection, sParametersCollection, alignOptions);
 
   // BOOST_CHECK(alignRes.ok());
+}
+
+BOOST_AUTO_TEST_CASE(
+    DumpResultAsMP2SortsBySurfaceIndexAndSkipsInvalidVariance) {
+  auto low = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(1., 1.));
+  auto high = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(1., 1.));
+
+  constexpr Eigen::Index nDof = static_cast<Eigen::Index>(eAlignmentSize);
+  constexpr Eigen::Index nRows = 2 * nDof;
+  ActsAlignment::AlignmentResult result;
+  result.deltaAlignmentParameters = DynamicVector::Zero(nRows);
+  result.alignmentCovariance = DynamicMatrix::Zero(nRows, nRows);
+  // Insert the higher surface index first. The writer still emits the lower
+  // index first, in the same order as the alignment index file.
+  result.idxedAlignSurfaces.emplace(high.get(), 1);
+  result.idxedAlignSurfaces.emplace(low.get(), 0);
+
+  result.deltaAlignmentParameters(0) = 0.1;
+  result.alignmentCovariance(0, 0) = 4.;
+  result.deltaAlignmentParameters(1) = 0.2;
+  result.alignmentCovariance(1, 1) = -1.;
+  result.deltaAlignmentParameters(2) = 0.3;
+  result.alignmentCovariance(2, 2) = std::numeric_limits<double>::quiet_NaN();
+  for (Eigen::Index row = 3; row < nDof; ++row) {
+    result.deltaAlignmentParameters(row) = 0.4;
+    result.alignmentCovariance(row, row) = 1.;
+  }
+  for (Eigen::Index dof = 0; dof < nDof; ++dof) {
+    const Eigen::Index row = nDof + dof;
+    result.deltaAlignmentParameters(row) = 10. + static_cast<double>(dof);
+    result.alignmentCovariance(row, row) = 9.;
+  }
+
+  std::ostringstream out;
+  ActsAlignment::dumpResultAsMP2(result, out);
+
+  struct WrittenRow {
+    std::size_t label = 0;
+    double delta = 0.;
+    double error = 0.;
+    int placeholder = 0;
+  };
+  std::vector<WrittenRow> rows;
+  std::istringstream in(out.str());
+  WrittenRow written;
+  double preset = 0.;
+  double deltaAgain = 0.;
+  while (in >> written.label >> written.delta >> preset >> deltaAgain >>
+         written.error >> written.placeholder) {
+    rows.push_back(written);
+  }
+  BOOST_REQUIRE(in.eof());
+  BOOST_REQUIRE_EQUAL(rows.size(), static_cast<std::size_t>(nRows));
+  for (std::size_t i = 0; i < rows.size(); ++i) {
+    BOOST_CHECK_EQUAL(rows[i].label, i + 1);
+    BOOST_CHECK_EQUAL(rows[i].placeholder, 99);
+  }
+  CHECK_CLOSE_ABS(rows[0].delta, 0.1, 1e-12);
+  CHECK_CLOSE_ABS(rows[0].error, 2., 1e-12);
+  CHECK_CLOSE_ABS(rows[1].delta, 0.2, 1e-12);
+  CHECK_CLOSE_ABS(rows[1].error, 0., 1e-12);
+  CHECK_CLOSE_ABS(rows[2].delta, 0.3, 1e-12);
+  CHECK_CLOSE_ABS(rows[2].error, 0., 1e-12);
+  CHECK_CLOSE_ABS(rows[static_cast<std::size_t>(nDof)].delta, 10., 1e-12);
+  CHECK_CLOSE_ABS(rows[static_cast<std::size_t>(nDof)].error, 3., 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(LocalAlignmentDeltaIsTheTotalStep) {
+  Transform3 initial = Transform3::Identity();
+  initial.rotate(AngleAxis3(0.3, Vector3::UnitY()));
+  initial.translate(Vector3(10., -2., 4.));
+
+  AlignmentVector first = AlignmentVector::Zero();
+  first[eAlignmentCenter0] = 0.4;
+  first[eAlignmentCenter1] = -0.25;
+  first[eAlignmentCenter2] = 0.15;
+  first[eAlignmentRotation0] = -0.02;
+  first[eAlignmentRotation1] = 0.03;
+  first[eAlignmentRotation2] = -0.05;
+
+  AlignmentVector second = AlignmentVector::Zero();
+  second[eAlignmentCenter0] = 0.3;
+  second[eAlignmentRotation1] = -0.04;
+
+  const Transform3 once =
+      ActsAlignment::applyLocalAlignmentDelta(initial, first);
+  const Transform3 twice =
+      ActsAlignment::applyLocalAlignmentDelta(once, second);
+  const Transform3 fromSum =
+      ActsAlignment::applyLocalAlignmentDelta(initial, first + second);
+  BOOST_CHECK((fromSum.translation() - twice.translation()).norm() > 1e-4);
+
+  auto surface = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(1., 1.));
+  std::unordered_map<const Surface*, Transform3> initialTransforms{
+      {surface.get(), initial}};
+  std::unordered_map<const Surface*, Transform3> onceTransforms{
+      {surface.get(), once}};
+
+  ActsAlignment::AlignmentResult single;
+  single.idxedAlignSurfaces.emplace(surface.get(), 0);
+  single.deltaAlignmentParameters =
+      DynamicVector::Zero(static_cast<Eigen::Index>(eAlignmentSize));
+  BOOST_REQUIRE(ActsAlignment::setTotalAlignmentDelta(single, initialTransforms,
+                                                      onceTransforms, false)
+                    .ok());
+  for (Eigen::Index i = 0; i < eAlignmentSize; ++i) {
+    CHECK_CLOSE_ABS(single.deltaAlignmentParameters[i], first[i], 1e-12);
+  }
+
+  ActsAlignment::AlignmentResult early;
+  early.idxedAlignSurfaces.emplace(surface.get(), 0);
+  early.deltaAlignmentParameters =
+      DynamicVector::Zero(static_cast<Eigen::Index>(eAlignmentSize));
+  early.deltaAlignmentParameters.segment<eAlignmentSize>(0) = second;
+  early.alignmentCovariance =
+      DynamicMatrix::Identity(static_cast<Eigen::Index>(eAlignmentSize),
+                              static_cast<Eigen::Index>(eAlignmentSize));
+  BOOST_REQUIRE(ActsAlignment::setTotalAlignmentDelta(early, initialTransforms,
+                                                      onceTransforms, true)
+                    .ok());
+  const AlignmentVector earlyDelta =
+      early.deltaAlignmentParameters.segment<eAlignmentSize>(0);
+  const Transform3 earlyFinal =
+      ActsAlignment::applyLocalAlignmentDelta(initial, earlyDelta);
+  CHECK_CLOSE_ABS((earlyFinal.translation() - twice.translation()).norm(), 0.,
+                  1e-12);
+  CHECK_CLOSE_ABS(early.alignmentCovariance(0, 0), 1., 1e-12);
+
+  ActsAlignment::AlignmentResult finished;
+  finished.idxedAlignSurfaces.emplace(surface.get(), 0);
+  finished.deltaAlignmentParameters =
+      DynamicVector::Zero(static_cast<Eigen::Index>(eAlignmentSize));
+  finished.deltaAlignmentParameters.segment<eAlignmentSize>(0) = second;
+  std::unordered_map<const Surface*, Transform3> appliedTransforms{
+      {surface.get(), twice}};
+  BOOST_REQUIRE(ActsAlignment::setTotalAlignmentDelta(
+                    finished, initialTransforms, appliedTransforms, false)
+                    .ok());
+  const AlignmentVector finishedDelta =
+      finished.deltaAlignmentParameters.segment<eAlignmentSize>(0);
+  const Transform3 finishedFinal =
+      ActsAlignment::applyLocalAlignmentDelta(initial, finishedDelta);
+  CHECK_CLOSE_ABS((finishedFinal.translation() - twice.translation()).norm(),
+                  0., 1e-12);
+  CHECK_CLOSE_ABS((finishedFinal.rotation() - twice.rotation()).norm(), 0.,
+                  1e-12);
+
+  ActsAlignment::AlignmentResult missing;
+  missing.idxedAlignSurfaces.emplace(nullptr, 0);
+  missing.deltaAlignmentParameters =
+      DynamicVector::Zero(static_cast<Eigen::Index>(eAlignmentSize));
+  BOOST_CHECK(!ActsAlignment::setTotalAlignmentDelta(missing, initialTransforms,
+                                                     onceTransforms, false)
+                   .ok());
 }
