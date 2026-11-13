@@ -21,10 +21,6 @@ export run
 if [ -z "${version:-}" ]; then
   version=$(git cliff --bumped-version)
 fi
-if ! [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "Version '$version' does not have the form vX.Y.Z" >&2
-  exit 1
-fi
 echo "Bumped version will be: $version"
 
 zenodo=$(cat .zenodo.json)

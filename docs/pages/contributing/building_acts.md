@@ -375,6 +375,14 @@ components.
 | ACTS_COMPILE_HEADERS                          | Generate targets to compile header files<br> type: `bool`, default: `ON`                                                                                                                                                                                                    |
 <!-- CMAKE_OPTS_END -->
 
+Some options automatically enable dependencies during configuration. CMake
+prints each newly enabled option and the condition that enabled it, followed
+by a summary of their effective values at the end of configuration. Options
+already enabled by the user are not marked as automatically enabled.
+
+These overrides do not change the CMake cache, so tools such as `ccmake` or
+`cmake -LAH` can still show an option as `OFF` even though the build uses `ON`.
+
 All ACTS-specific options are disabled or empty by default and must be
 specifically requested.
 
@@ -459,6 +467,9 @@ where the generated file belongs. That file is the single source of truth:
 produces the same files from it ahead of time, so the two cannot disagree about
 what exists or where it goes. Adding a generator means adding it to the manifest;
 `acts_code_generation` refuses a key that is not listed there.
+
+Detray's detector metadata headers are manifest units as well, and are always
+generated; see `Detray/detectors/codegen/README.md`.
 
 Pre-generating the code needs `uv` and nothing else — no CMake, no compiler, and
 none of the C++ dependencies a real ACTS configure requires:
