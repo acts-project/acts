@@ -19,6 +19,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
+#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -127,6 +128,15 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
   double nearLimit = options.nearLimit;
   double farLimit = options.farLimit;
 
+  auto boundaryToleranceFor = [&](const Surface& surface) {
+    const auto extended =
+        std::ranges::find(options.extendedSurfaces, surface.geometryId(),
+                          [](const auto& entry) { return entry.first; });
+    return extended == options.extendedSurfaces.end()
+               ? options.boundaryTolerance
+               : extended->second;
+  };
+
   auto isUnique = [&](const NavigationTarget& b) {
     return std::ranges::none_of(
         surfaceIntersections, [&b](const NavigationTarget& a) {
@@ -151,7 +161,9 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
   };
 
   // lemma 1 : check and fill the surface
-  auto processSurface = [&](const Surface& surface, bool sensitive = false) {
+  auto processSurface = [&](const Surface& surface, bool sensitive = false,
+                            std::optional<IntersectionIndex> allowedIndex =
+                                std::nullopt) {
     // veto if it's start surface
     if (options.startObject == &surface) {
       return;
@@ -160,17 +172,14 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
     if (!acceptSurface(surface, sensitive)) {
       return;
     }
-    BoundaryTolerance boundaryTolerance = options.boundaryTolerance;
-    if (auto extendedSurface =
-            std::ranges::find(options.extendedSurfaces, surface.geometryId(),
-                              [](const auto& e) { return e.first; });
-        extendedSurface != options.extendedSurfaces.end()) {
-      boundaryTolerance = extendedSurface->second;
-    }
+    const BoundaryTolerance boundaryTolerance = boundaryToleranceFor(surface);
     // the surface intersection
     auto [intersection, intersectionIndex] =
         surface.intersect(gctx, position, direction, boundaryTolerance)
             .closestWithIndex();
+    if (allowedIndex && intersectionIndex != *allowedIndex) {
+      return;
+    }
     NavigationTarget surfaceIntersection(intersection, intersectionIndex,
                                          surface, boundaryTolerance);
     if (intersection.isValid() &&
@@ -180,6 +189,30 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
       surfaceIntersections.push_back(surfaceIntersection);
     }
   };
+
+  // Assume a cylinder layer's cylindrical approaches share its axis.
+  // This choice does not apply to its sensitive surfaces.
+  const Surface& layerSurface = surfaceRepresentation();
+  std::optional<IntersectionIndex> approachIndex;
+  if (layerSurface.type() == Surface::Cylinder &&
+      (options.resolveMaterial || options.resolvePassive)) {
+    // Include the start approach and geometrically relevant non material
+    // approaches even though they may not be emitted as targets.
+    for (const Surface* approach : m_approachDescriptor->containedSurfaces()) {
+      if (approach->type() != Surface::Cylinder) {
+        continue;
+      }
+      const auto roots = approach->intersect(gctx, position, direction,
+                                             boundaryToleranceFor(*approach));
+      const auto& first = roots.at(0);
+      if (first.isValid() &&
+          (first.status() == IntersectionStatus::onSurface ||
+           detail::checkPathLength(first.pathLength(), nearLimit, farLimit))) {
+        approachIndex = 0;
+        break;
+      }
+    }
+  }
 
   // (A) approach descriptor section
   //
@@ -195,7 +228,9 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the collect
     for (const Surface* aSurface : approachSurfaces) {
-      processSurface(*aSurface);
+      processSurface(
+          *aSurface, false,
+          aSurface->type() == Surface::Cylinder ? approachIndex : std::nullopt);
     }
   }
 
@@ -217,9 +252,8 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
 
   // (C) representing surface section
   //
-  // the layer surface itself is a testSurface
-  const Surface* layerSurface = &surfaceRepresentation();
-  processSurface(*layerSurface);
+  // The representation describes the layer itself and uses the approach side.
+  processSurface(layerSurface, false, approachIndex);
 
   return surfaceIntersections;
 }
