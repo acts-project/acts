@@ -21,10 +21,13 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
+#include <concepts>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 namespace Acts {
 
@@ -96,8 +99,6 @@ class TrackletJoiner {
                            typename track_proxy_t::TrackStateProxy sharedState,
                            track_proxy_t& second,
                            const smoother_t& smoother = smoother_t{}) const {
-    auto& trajectory = first.container().trackStateContainer();
-
     if (first.stemIndex() == kTrackIndexInvalid) {
       first.linkForward();
     }
@@ -111,56 +112,104 @@ class TrackletJoiner {
       first.stemIndex() = stemIndex;
       return Result<void>::success();
     }
-    if (!sharedState.hasSmoothed()) {
-      ACTS_DEBUG("Shared state " << sharedState.index()
-                                 << " has no smoothed parameters");
-      return KalmanFitterError::SmoothFailed;
-    }
-
-    BoundVector sharedMean = sharedState.smoothed();
-    BoundMatrix sharedCov = sharedState.smoothedCovariance();
-
-    if (m_cfg.smoothSecond) {
-      auto res = smoother(gctx, trajectory, second.tipIndex(), logger());
-      if (!res.ok()) {
-        ACTS_DEBUG("Smoothing of the second tracklet failed: "
-                   << res.error().message());
-        return res.error();
-      }
-      // the first state of the second tracklet was predicted from the shared
-      // state
-      auto secondStart = second.outermostTrackState();
-      for (auto ts : second.trackStatesReversed()) {
-        secondStart = ts;
-      }
-      auto prior = detail::smoothPriorNode(AnyConstTrackStateProxy{secondStart},
-                                           sharedMean, sharedCov, logger());
-      if (!prior.ok()) {
-        return prior.error();
-      }
-      std::tie(sharedMean, sharedCov) = *prior;
-    }
-
-    if (m_cfg.conditionFirst) {
-      auto res = detail::conditionSmoothedStatesOnSharedState(
-          trajectory, sharedState.index(), first.tipIndex(), sharedMean,
-          sharedCov, logger());
-      if (!res.ok()) {
-        ACTS_DEBUG("Conditioning of the first tracklet failed: "
-                   << res.error().message());
-        return res.error();
-      }
-    } else {
-      detail::setSmoothedWithoutSharing(AnyMutableTrackStateProxy{sharedState},
-                                        sharedMean, sharedCov);
-    }
 
     const auto tipIndex = first.tipIndex();
-    detail::linkTrackletBehind(sharedState, second, m_cfg.invertJacobians);
+    auto res = joinStates(gctx, first, sharedState, second, smoother);
+    if (!res.ok()) {
+      return res.error();
+    }
     first.copyFromWithoutStates(second);
     first.tipIndex() = tipIndex;
     first.stemIndex() = second.stemIndex();
 
+    return Result<void>::success();
+  }
+
+  /// Join in place, pass the joined track to @p visitor, and restore the
+  /// first tracklet. For a visitor that copies the joined track, e.g. into an
+  /// output container, this replaces @ref joinCopy without its copies.
+  ///
+  /// The joined track is @p second with the chain and the track-level data of
+  /// the joined track, as @ref joinInPlace gives @p first. The second tracklet
+  /// is consumed; copy it first if its states are shared. The first tracklet
+  /// gets back its smoothed states, its link at the shared state and its stem;
+  /// other tracklets sharing its states see the join only during the visit.
+  ///
+  /// @tparam visitor_t A callable taking the joined track proxy
+  /// @tparam smoother_t The smoother for the second tracklet
+  /// @tparam track_proxy_t The track proxy type
+  /// @param gctx The geometry context
+  /// @param first The first tracklet, smoothed
+  /// @param sharedState The state the second tracklet started from
+  /// @param second The second tracklet
+  /// @param visitor Called with the joined track if the join succeeds
+  /// @param smoother The smoother
+  /// @return Success or the first error; the first tracklet is restored in
+  ///         both cases
+  template <typename visitor_t, typename smoother_t = MbfSmoother,
+            TrackProxyConcept track_proxy_t>
+    requires std::invocable<visitor_t&, track_proxy_t&>
+  Result<void> joinVisit(const GeometryContext& gctx, track_proxy_t& first,
+                         typename track_proxy_t::TrackStateProxy sharedState,
+                         track_proxy_t& second, visitor_t&& visitor,
+                         const smoother_t& smoother = smoother_t{}) const {
+    auto& trajectory = first.container().trackStateContainer();
+
+    // what the join changes on the first tracklet
+    struct Smoothed {
+      TrackIndexType index;
+      TrackIndexType next;
+      std::optional<std::pair<BoundVector, BoundMatrix>> estimate;
+    };
+    std::vector<Smoothed> smoothed;
+    for (const auto& ts : first.trackStatesReversed()) {
+      smoothed.push_back(
+          {ts.index(),
+           ts.template component<TrackIndexType>(detail_tp::kNextKey),
+           ts.hasSmoothed() ? std::make_optional(std::pair{
+                                  BoundVector(ts.smoothed()),
+                                  BoundMatrix(ts.smoothedCovariance())})
+                            : std::nullopt});
+    }
+    const TrackIndexType stemIndex = first.stemIndex();
+    const TrackIndexType previous = sharedState.previous();
+    const std::optional<BoundMatrix> jacobian =
+        sharedState.hasJacobian()
+            ? std::optional<BoundMatrix>(sharedState.jacobian())
+            : std::nullopt;
+    auto undo = [&] {
+      for (const auto& [index, next, estimate] : smoothed) {
+        auto ts = trajectory.getTrackState(index);
+        ts.template component<TrackIndexType>(detail_tp::kNextKey) = next;
+        if (estimate.has_value()) {
+          ts.smoothed() = estimate->first;
+          ts.smoothedCovariance() = estimate->second;
+        } else if (ts.hasSmoothed()) {
+          ts.unset(TrackStatePropMask::Smoothed);
+        }
+      }
+      sharedState.previous() = previous;
+      if (jacobian.has_value()) {
+        sharedState.jacobian() = *jacobian;
+      }
+      first.stemIndex() = stemIndex;
+    };
+    const ScopeExit<decltype(undo)> restore{undo};
+
+    if (first.stemIndex() == kTrackIndexInvalid) {
+      first.linkForward();
+    }
+    if (second.tipIndex() == kTrackIndexInvalid) {
+      second.tipIndex() = first.tipIndex();
+      second.stemIndex() = first.stemIndex();
+    } else {
+      auto res = joinStates(gctx, first, sharedState, second, smoother);
+      if (!res.ok()) {
+        return res.error();
+      }
+      second.tipIndex() = first.tipIndex();
+    }
+    visitor(second);
     return Result<void>::success();
   }
 
@@ -222,6 +271,70 @@ class TrackletJoiner {
   }
 
  private:
+  template <typename F>
+  struct ScopeExit {
+    F f;
+    ~ScopeExit() { f(); }
+  };
+
+  /// The join of the states: smooth the second tracklet, condition the first
+  /// and link the second behind the shared state. The second tracklet must
+  /// not be empty; afterwards its stem is the stem of the joined chain.
+  template <typename smoother_t, TrackProxyConcept track_proxy_t>
+  Result<void> joinStates(const GeometryContext& gctx, track_proxy_t& first,
+                          typename track_proxy_t::TrackStateProxy sharedState,
+                          track_proxy_t& second,
+                          const smoother_t& smoother) const {
+    auto& trajectory = first.container().trackStateContainer();
+
+    if (!sharedState.hasSmoothed()) {
+      ACTS_DEBUG("Shared state " << sharedState.index()
+                                 << " has no smoothed parameters");
+      return KalmanFitterError::SmoothFailed;
+    }
+
+    BoundVector sharedMean = sharedState.smoothed();
+    BoundMatrix sharedCov = sharedState.smoothedCovariance();
+
+    if (m_cfg.smoothSecond) {
+      auto res = smoother(gctx, trajectory, second.tipIndex(), logger());
+      if (!res.ok()) {
+        ACTS_DEBUG("Smoothing of the second tracklet failed: "
+                   << res.error().message());
+        return res.error();
+      }
+      // the first state of the second tracklet was predicted from the shared
+      // state
+      auto secondStart = second.outermostTrackState();
+      for (auto ts : second.trackStatesReversed()) {
+        secondStart = ts;
+      }
+      auto prior = detail::smoothPriorNode(AnyConstTrackStateProxy{secondStart},
+                                           sharedMean, sharedCov, logger());
+      if (!prior.ok()) {
+        return prior.error();
+      }
+      std::tie(sharedMean, sharedCov) = *prior;
+    }
+
+    if (m_cfg.conditionFirst) {
+      auto res = detail::conditionSmoothedStatesOnSharedState(
+          trajectory, sharedState.index(), first.tipIndex(), sharedMean,
+          sharedCov, logger());
+      if (!res.ok()) {
+        ACTS_DEBUG("Conditioning of the first tracklet failed: "
+                   << res.error().message());
+        return res.error();
+      }
+    } else {
+      detail::setSmoothedWithoutSharing(AnyMutableTrackStateProxy{sharedState},
+                                        sharedMean, sharedCov);
+    }
+
+    detail::linkTrackletBehind(sharedState, second, m_cfg.invertJacobians);
+    return Result<void>::success();
+  }
+
   const Logger& logger() const { return *m_logger; }
 
   Config m_cfg;
