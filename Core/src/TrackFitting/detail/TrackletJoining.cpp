@@ -8,49 +8,12 @@
 
 #include "Acts/TrackFitting/detail/TrackletJoining.hpp"
 
-#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 
 #include <Eigen/Cholesky>
 
-namespace {
-
-using namespace Acts;
-
-/// Inverse residual covariance and Kalman gain of a measurement state
-template <std::size_t N>
-struct MeasurementGain {
-  Matrix<N, eBoundSize> h;
-  SquareMatrix<N> sInv;
-  Matrix<eBoundSize, N> k;
-
-  template <typename track_state_proxy_t>
-  explicit MeasurementGain(const track_state_proxy_t& ts)
-      : h(ts.template projectorSubspaceHelper<N>().projector()) {
-    const BoundMatrix pp = ts.predictedCovariance();
-    const SquareMatrix<N> s =
-        h * pp * h.transpose() + ts.template calibratedCovariance<N>();
-    sInv = s.inverse();
-    k = pp * h.transpose() * sInv;
-  }
-};
-
-}  // namespace
-
 namespace Acts::detail {
-
-void setSmoothedWithoutSharing(AnyMutableTrackStateProxy ts, BoundVector mean,
-                               BoundMatrix cov) {
-  if (ts.hasSmoothed() &&
-      ((ts.hasFiltered() && ts.smoothed().data() == ts.filtered().data()) ||
-       (ts.hasPredicted() && ts.smoothed().data() == ts.predicted().data()))) {
-    ts.unset(TrackStatePropMask::Smoothed);
-  }
-  ts.addComponents(TrackStatePropMask::Smoothed);
-  ts.smoothed() = mean;
-  ts.smoothedCovariance() = cov;
-}
 
 Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
     const AnyConstTrackStateProxy& first, const BoundVector& priorMean,
@@ -111,56 +74,6 @@ Result<SharedStateCondition> makeSharedStateCondition(
     return KalmanFitterError::SmoothFailed;
   }
   return condition;
-}
-
-BoundMatrix filteredSensitivity(const AnyConstTrackStateProxy& ts,
-                                const BoundMatrix& dp) {
-  if (!ts.typeFlags().isMeasurement()) {
-    return dp;
-  }
-  BoundMatrix df = dp;
-  visit_measurement(ts.calibratedSize(),
-                    [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
-                      const MeasurementGain<N> gain(ts);
-                      df = dp - gain.k * (gain.h * dp);
-                    });
-  return df;
-}
-
-Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
-                                 const BoundMatrix& dp, const BoundMatrix& df,
-                                 BoundMatrix& psiHat,
-                                 const SharedStateCondition& condition,
-                                 const Logger& logger) {
-  const BoundMatrix filteredCov = ts.hasFiltered()
-                                      ? BoundMatrix(ts.filteredCovariance())
-                                      : BoundMatrix(ts.predictedCovariance());
-  // T = Df - Pf Psi^
-  const BoundMatrix t = df - filteredCov * psiHat;
-
-  const BoundVector mean =
-      normalizeBoundParameters(ts.smoothed() + t * condition.u);
-  const BoundMatrix cov =
-      ts.smoothedCovariance() + t * condition.w * t.transpose();
-  if (!mean.allFinite() || !cov.allFinite()) {
-    ACTS_DEBUG("Conditioned state " << ts.index() << " is not finite");
-    return KalmanFitterError::SmoothFailed;
-  }
-  setSmoothedWithoutSharing(ts, mean, 0.5 * (cov + cov.transpose()));
-
-  // Psi~ = H^T S^-1 H Dp + (I - K H)^T Psi^, then transport to the previous
-  BoundMatrix psiTilde = psiHat;
-  if (ts.typeFlags().isMeasurement()) {
-    visit_measurement(
-        ts.calibratedSize(),
-        [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
-          const MeasurementGain<N> gain(ts);
-          psiTilde = gain.h.transpose() * (gain.sInv * (gain.h * dp)) + psiHat -
-                     gain.h.transpose() * (gain.k.transpose() * psiHat);
-        });
-  }
-  psiHat = ts.jacobian().transpose() * psiTilde;
-  return Result<void>::success();
 }
 
 }  // namespace Acts::detail
