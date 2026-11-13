@@ -23,6 +23,8 @@
 #include <cstddef>
 #include <iterator>
 #include <limits>
+#include <numbers>
+#include <span>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
@@ -95,10 +97,11 @@ const BoundMatrix kPriorCov = [] {
 /// and smooth it
 template <typename smoother_t = MbfSmoother>
 Container::TrackProxy buildTrack(Container& tc, const std::vector<Node>& nodes,
-                                 std::size_t outlier = kNoOutlier) {
+                                 std::size_t outlier = kNoOutlier,
+                                 const BoundMatrix& priorCov = kPriorCov) {
   auto track = tc.makeTrack();
   BoundVector mean = kPriorMean;
-  BoundMatrix cov = kPriorCov;
+  BoundMatrix cov = priorCov;
   for (std::size_t i = 0; i < nodes.size(); ++i) {
     const Node& node = nodes[i];
     auto ts = track.appendTrackState(TrackStatePropMask::All);
@@ -149,6 +152,61 @@ Container::TrackProxy buildTrack(Container& tc, const std::vector<Node>& nodes,
   BOOST_REQUIRE(
       smoother_t{}(gctx, tc.trackStateContainer(), track.tipIndex()).ok());
   return track;
+}
+
+/// Dense least-squares posterior of the chain with the prior information
+/// @p priorInfo on the first node. Returns the means, the covariances and the
+/// minimum of the objective.
+struct Dense {
+  DynamicVector mean;
+  DynamicMatrix cov;
+  double chi2 = 0;
+};
+
+Dense densePosterior(const std::vector<Node>& nodes,
+                     const BoundMatrix& priorInfo) {
+  constexpr std::size_t d = eBoundSize;
+  const std::size_t n = nodes.size();
+  DynamicMatrix a = DynamicMatrix::Zero(n * d, n * d);
+  DynamicVector b = DynamicVector::Zero(n * d);
+  a.topLeftCorner<d, d>() += priorInfo;
+  b.head<d>() += priorInfo * kPriorMean;
+  for (std::size_t i = 1; i < n; ++i) {
+    DynamicMatrix g = DynamicMatrix::Zero(d, n * d);
+    g.block<d, d>(0, (i - 1) * d) = -nodes[i].F;
+    g.block<d, d>(0, i * d) = BoundMatrix::Identity();
+    const BoundMatrix qInv = nodes[i].Q.inverse();
+    a += g.transpose() * qInv * g;
+    b += g.transpose() * qInv * nodes[i].d;
+  }
+  for (std::size_t i = 0; i < n; ++i) {
+    if (nodes[i].kind == Kind::Hole) {
+      continue;
+    }
+    const std::size_t dim = nodes[i].kind == Kind::Measurement2 ? 2 : 1;
+    const DynamicMatrix h = DynamicMatrix::Identity(d, d).topRows(dim);
+    const DynamicMatrix vInv = nodes[i].V.topLeftCorner(dim, dim).inverse();
+    a.block<d, d>(i * d, i * d) += h.transpose() * vInv * h;
+    b.segment<d>(i * d) += h.transpose() * vInv * nodes[i].y.head(dim);
+  }
+  Dense out;
+  out.cov = a.inverse();
+  out.mean = out.cov * b;
+  const auto x = [&](std::size_t i) { return out.mean.segment<d>(i * d); };
+  const BoundVector p = x(0) - kPriorMean;
+  out.chi2 = p.dot(priorInfo * p);
+  for (std::size_t i = 0; i < n; ++i) {
+    if (i > 0) {
+      const BoundVector w = x(i) - nodes[i].F * x(i - 1) - nodes[i].d;
+      out.chi2 += w.dot(nodes[i].Q.inverse() * w);
+    }
+    if (nodes[i].kind != Kind::Hole) {
+      const std::size_t dim = nodes[i].kind == Kind::Measurement2 ? 2 : 1;
+      const DynamicVector r = nodes[i].y.head(dim) - x(i).head(dim);
+      out.chi2 += r.dot(nodes[i].V.topLeftCorner(dim, dim).inverse() * r);
+    }
+  }
+  return out;
 }
 
 template <typename smoother_t>
@@ -312,6 +370,95 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(RejectionWithPermutedProjectors, smoother_t,
                       1e-10);
       ++e;
     }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(PriorRemovalMatchesFitWithoutPrior) {
+  const auto nodes = makeChain();
+  BoundVector correlation;
+  correlation << 0.1, 0.2, 0.01, 0.02, 0.001, 0.1;
+  const std::array<BoundMatrix, 2> priors = {
+      kPriorCov, kPriorCov + correlation * correlation.transpose()};
+  for (const auto& priorCov : priors) {
+    for (const auto& parameters :
+         {std::vector{eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta,
+                      eBoundQOverP},
+          std::vector{eBoundQOverP, eBoundLoc0}}) {
+      Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+      auto track = buildTrack(tc, nodes, kNoOutlier, priorCov);
+      const unsigned int nDoF = track.nDoF();
+      const Dense full = densePosterior(nodes, priorCov.inverse());
+      CHECK_CLOSE_REL(track.chi2(), full.chi2, 1e-5);
+      BOOST_REQUIRE(removePrior(track, parameters).ok());
+
+      // Removing the marginal prior keeps the conditional prior of the other
+      // parameters, including the unmeasured time.
+      DynamicMatrix h = DynamicMatrix::Zero(parameters.size(), eBoundSize);
+      for (std::size_t i = 0; i < parameters.size(); ++i) {
+        h(i, parameters[i]) = 1;
+      }
+      const BoundMatrix priorInfo =
+          priorCov.inverse() -
+          h.transpose() * (h * priorCov * h.transpose()).inverse() * h;
+      const Dense expected = densePosterior(nodes, priorInfo);
+      std::size_t i = nodes.size();
+      for (const auto& ts : track.trackStatesReversed()) {
+        --i;
+        BOOST_TEST_CONTEXT("node " << i) {
+          const BoundVector mean =
+              expected.mean.segment<eBoundSize>(i * eBoundSize);
+          const BoundMatrix cov = expected.cov.block<eBoundSize, eBoundSize>(
+              i * eBoundSize, i * eBoundSize);
+          CHECK_CLOSE_ABS(ts.smoothed(), mean, 1e-9);
+          CHECK_CLOSE_ABS(ts.smoothedCovariance(), cov, 1e-9);
+        }
+      }
+      CHECK_CLOSE_REL(track.chi2(), expected.chi2, 1e-5);
+      BOOST_CHECK_EQUAL(track.nDoF(), nDoF - parameters.size());
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(PriorRemovalRejectsInvalidParameters) {
+  const auto nodes = makeChain();
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto track = buildTrack(tc, nodes);
+  BOOST_CHECK_THROW((void)removePrior(track, std::span<const BoundIndices>{}),
+                    std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(PriorRemovalWrapsPhiResidual) {
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto track = tc.makeTrack();
+  auto state = track.appendTrackState(TrackStatePropMask::All);
+  state.typeFlags().setIsHole();
+  state.predicted() = kPriorMean;
+  state.predicted()[eBoundPhi] = std::numbers::pi - 0.1;
+  state.predictedCovariance() = BoundMatrix::Identity();
+  state.filtered() = state.predicted();
+  state.filteredCovariance() = state.predictedCovariance();
+  state.smoothed() = kPriorMean;
+  state.smoothed()[eBoundPhi] = -std::numbers::pi + 0.1;
+  state.smoothedCovariance() = BoundMatrix::Identity();
+  state.smoothedCovariance()(eBoundPhi, eBoundPhi) = 0.25;
+  track.nDoF() = 1;
+  track.chi2() = 1;
+  const std::array parameters = {eBoundPhi};
+  BOOST_REQUIRE(removePrior(track, parameters).ok());
+  CHECK_CLOSE_ABS(state.smoothed()[eBoundPhi], -std::numbers::pi + 1. / 6.,
+                  1e-12);
+  CHECK_CLOSE_ABS(state.smoothedCovariance()(eBoundPhi, eBoundPhi), 1. / 3.,
+                  1e-12);
+  CHECK_CLOSE_ABS(track.chi2(), 1. - 0.04 / 0.75, 1e-7);
+}
+
+BOOST_AUTO_TEST_CASE(PriorRemovalRejectsDuplicateParameters) {
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto track = buildTrack(tc, makeChain());
+  for (const auto parameters : {std::array{eBoundLoc0, eBoundLoc0},
+                                std::array{eBoundLoc0, eBoundSize}}) {
+    BOOST_CHECK_THROW((void)removePrior(track, parameters),
+                      std::invalid_argument);
   }
 }
 

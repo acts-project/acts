@@ -16,4 +16,5 @@ a first one, and combines their smoothed estimates without a new propagation;
 this is the two-way track finding.
 
 @ref Acts::rejectMeasurement turns a measurement of a smoothed track into an
-outlier and updates the smoothed states without a refit.
+outlier and updates the smoothed states without a refit. @ref Acts::removePrior
+removes the prior of the filter in the same way.

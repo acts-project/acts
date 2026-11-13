@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
@@ -17,7 +19,9 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
+#include <array>
 #include <iterator>
+#include <span>
 #include <stdexcept>
 #include <vector>
 
@@ -81,6 +85,65 @@ Result<void> rejectMeasurement(track_proxy_t& track,
   track.nMeasurements()--;
   track.nOutliers()++;
   return Result<void>::success();
+}
+
+/// Remove the prior of the filter from a smoothed track without a refit, so
+/// that the smoothed states depend on the measurements alone. The prior, the
+/// predicted state of the first state, is removed like a measurement of
+/// @p parameters. Parameters without measurement information, usually the
+/// time, must stay out; their prior is kept, conditional on the others.
+///
+/// Works in place, with the requirements of @ref rejectMeasurement. The chi2
+/// drops by the unbiased chi2 of the prior, the degrees of freedom by the
+/// number of parameters.
+///
+/// @tparam track_proxy_t The track proxy type
+/// @param track The track, smoothed
+/// @param parameters The parameters whose prior is removed
+/// @param logger The logger
+/// @return Success or the first error; on error the smoothed states may
+///         have changed
+template <TrackProxyConcept track_proxy_t>
+Result<void> removePrior(track_proxy_t& track,
+                         std::span<const BoundIndices> parameters,
+                         const Logger& logger = getDummyLogger()) {
+  if (parameters.empty() ||
+      !checkSubspaceIndices(parameters, eBoundSize, parameters.size())) {
+    throw std::invalid_argument("removePrior: invalid parameters");
+  }
+  if (track.nDoF() < parameters.size()) {
+    ACTS_DEBUG("Too few degrees of freedom to remove the prior");
+    return KalmanFitterError::SmoothFailed;
+  }
+  std::vector<AnyMutableTrackStateProxy> states = detail::statesInFilterOrder(
+      track.container().trackStateContainer(), track.tipIndex());
+  if (states.empty() || !states.front().hasSmoothed() ||
+      !states.front().hasPredicted()) {
+    ACTS_DEBUG("The first state lacks smoothed or predicted parameters");
+    return KalmanFitterError::SmoothFailed;
+  }
+
+  auto chi2 = detail::removeSmoothedPrior(states, parameters, logger);
+  if (!chi2.ok()) {
+    return chi2.error();
+  }
+  track.chi2() -= static_cast<float>(*chi2);
+  track.nDoF() -= static_cast<unsigned int>(parameters.size());
+  return Result<void>::success();
+}
+
+/// Remove the prior of the filter on all parameters but the time.
+/// @see removePrior
+/// @tparam track_proxy_t The track proxy type
+/// @param track The track, smoothed
+/// @param logger The logger
+/// @return Success or the first error
+template <TrackProxyConcept track_proxy_t>
+Result<void> removePrior(track_proxy_t& track,
+                         const Logger& logger = getDummyLogger()) {
+  static constexpr std::array parameters = {eBoundLoc0, eBoundLoc1, eBoundPhi,
+                                            eBoundTheta, eBoundQOverP};
+  return removePrior(track, parameters, logger);
 }
 
 /// @}

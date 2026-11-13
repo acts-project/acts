@@ -96,4 +96,15 @@ Result<double> rejectSmoothedMeasurement(
     std::span<AnyMutableTrackStateProxy> states, std::size_t rejected,
     const Logger& logger);
 
+/// Condition the smoothed states on the measurements alone: the prior of the
+/// filter, the predicted state of the first state, is removed like a
+/// measurement of @p parameters.
+/// @param states The states of the track in filter order
+/// @param parameters The parameters whose prior is removed
+/// @param logger The logger
+/// @return The chi2 of the prior against the smoothed state without it
+Result<double> removeSmoothedPrior(std::span<AnyMutableTrackStateProxy> states,
+                                   std::span<const BoundIndices> parameters,
+                                   const Logger& logger);
+
 }  // namespace Acts::detail

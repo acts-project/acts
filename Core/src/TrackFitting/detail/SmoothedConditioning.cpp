@@ -212,14 +212,13 @@ namespace {
 template <std::size_t N>
 Result<double> removeInformation(std::span<AnyMutableTrackStateProxy> states,
                                  std::size_t k, const Matrix<N, eBoundSize>& h,
-                                 const Vector<N>& m, const SquareMatrix<N>& v,
+                                 const Vector<N>& r, const SquareMatrix<N>& v,
                                  const Logger& logger) {
   AnyMutableTrackStateProxy target = states[k];
   const BoundMatrix ps = target.smoothedCovariance();
   const BoundMatrix pp = target.predictedCovariance();
 
   // the residual against the smoothed state and its covariance
-  const Vector<N> r = m - h * target.smoothed();
   const SquareMatrix<N> residualCov = v - h * ps * h.transpose();
   if (!r.allFinite() || !residualCov.allFinite() || !ps.allFinite() ||
       !pp.allFinite()) {
@@ -272,12 +271,33 @@ Result<double> rejectSmoothedMeasurement(
   Result<double> result = KalmanFitterError::SmoothFailed;
   visit_measurement(ts.calibratedSize(),
                     [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
+                      const auto h =
+                          ts.template projectorSubspaceHelper<N>().projector();
                       result = removeInformation<N>(
-                          states, rejected,
-                          ts.template projectorSubspaceHelper<N>().projector(),
-                          ts.template calibrated<N>(),
+                          states, rejected, h,
+                          ts.template calibrated<N>() - h * ts.smoothed(),
                           ts.template calibratedCovariance<N>(), logger);
                     });
+  return result;
+}
+
+Result<double> removeSmoothedPrior(std::span<AnyMutableTrackStateProxy> states,
+                                   std::span<const BoundIndices> parameters,
+                                   const Logger& logger) {
+  const AnyMutableTrackStateProxy first = states.front();
+  Result<double> result = KalmanFitterError::SmoothFailed;
+  visit_measurement(
+      parameters.size(),
+      [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
+        Matrix<N, eBoundSize> h = Matrix<N, eBoundSize>::Zero();
+        for (std::size_t i = 0; i < N; ++i) {
+          h(i, parameters[i]) = 1;
+        }
+        result = removeInformation<N>(
+            states, 0, h,
+            h * subtractBoundParameters(first.predicted(), first.smoothed()),
+            h * first.predictedCovariance() * h.transpose(), logger);
+      });
   return result;
 }
 
