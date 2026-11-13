@@ -19,6 +19,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -1054,6 +1055,17 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
 
           detrayGrid = std::move(grid);
         });
+
+        if (m_cfg.surfaceGridFill.has_value()) {
+          const auto& fillCfg = *m_cfg.surfaceGridFill;
+          const auto* surfaceArray =
+              dynamic_cast<const SurfaceArrayNavigationPolicy*>(&policy);
+          if (surfaceArray != nullptr &&
+              (!fillCfg.volumeSelector || fillCfg.volumeSelector(volume))) {
+            fillSurfaceGridFromLookup(*grid, *surfaceArray, volume, gctx,
+                                      surfaceLookupFn, fillCfg, logger());
+          }
+        }
 
         if (detrayGrid.has_value()) {
           ACTS_DEBUG("Volume " << volume.volumeName()
