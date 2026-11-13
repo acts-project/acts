@@ -291,6 +291,16 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
   ACTS_VERBOSE("===========================================================");
 }
 
+// Phase 1 cluster extraction in (phi, q/pT) parameter space: Here the
+// horizontal axis is x = phi and the vertical axis is y = q/pT. Track
+// trajectories follow: phi = phi_meas + (q/pT) * r * A. Because the field
+// factor A is small, lines in this plane are nearly vertical (steep slope in
+// q/pT vs phi). Slicing horizontally at fixed y = q/pT (checkPoints) and
+// evaluating intersections along x = phi (xVals) therefore yields sharp cluster
+// localization. After sorting xVals in, a greedy two-pointer sliding
+// window collects the first dense bundle of at least `threshold` lines within
+// `maxSpread` and packages all participating measurement indices into a
+// Phase1Candidate.
 void AdaptiveHoughTransformSeeder::findClustersQOverPtPhi(
     const Acts::Experimental::HoughAccumulatorSection &section,
     std::span<const float> checkPoints,
@@ -314,7 +324,7 @@ void AdaptiveHoughTransformSeeder::findClustersQOverPtPhi(
   std::vector<LinePoint> xVals;
   xVals.reserve(cnt);
 
-  // Evaluate line intersections along the primary axis for each check point
+  // Slice horizontally at fixed y = q/pT and evaluate x = phi intersections
   for (float yCheck : checkPoints) {
     xVals.clear();
 
@@ -325,14 +335,13 @@ void AdaptiveHoughTransformSeeder::findClustersQOverPtPhi(
       xVals.push_back({lineFunctor(m, yCheck), measIdx});
     }
 
-    // Sort evaluated coordinates along the primary axis for 1D sliding
-    // window clustering
+    // Sort phi (x) intersections to find dense line crossings via 1D scan
     std::sort(xVals.begin(), xVals.end());
 
     unsigned start = 0;
     unsigned end = reqLines - 1;
 
-    // Two-pointer greedy 1D sliding window scan
+    // Two-pointer greedy sliding window along phi (x)
     while (end < cnt) {
       while (end < cnt && xVals[end].x - xVals[start].x <= maxSpread) {
         ++end;
@@ -382,7 +391,9 @@ void AdaptiveHoughTransformSeeder::processQOverPtPhiSlidingWindow(
     const float yBottom = section.yBegin();
     const float yTop = yBottom + section.ySize();
 
-    // Evaluate at the midpoint of the section using std::lerp
+    // Since sections entering this step are already subdivided down to
+    // phiMinBinSize x qOverPtMinBinSize, evaluating at the y = q/pT midpoint
+    // accurately captures the crossing bundle.
     const std::array<float, kNumCheckPoints> checkPoints = {
         std::lerp(yBottom, yTop, 0.5f)};
 
@@ -392,6 +403,19 @@ void AdaptiveHoughTransformSeeder::processQOverPtPhiSlidingWindow(
   }
 }
 
+// Phase 2 cluster extraction and triplet verification in (z, cot(theta)) space:
+// In contrast to Phase 1, the horizontal axis is x = z (vertex z) and the
+// vertical axis is y = cot(theta). Track trajectories follow:
+// cot(theta) = (z_meas - z) / r = -z / r + z_meas / r. The slope (-1/r) is
+// shallow and lines run nearly horizontally. Slicing vertically at fixed x = z
+// (checkPoints) and evaluating intersections along y = cot(theta) (yVals)
+// therefore provides sharp cluster localization. Within each dense cot(theta)
+// window of at least `threshold` lines, we perform in-place radial verification
+// to form a physical 3-point seed:
+//   1. Identify minR and maxR space points.
+//   2. Require total radial span (maxR - minR >= 2 * minDeltaR) and at least
+//      one intermediate point separated by > minDeltaR from both extremes.
+//   3. Canonicalize and deduplicate the resulting 3-index array via Array3Hash.
 void AdaptiveHoughTransformSeeder::findClustersZCotTheta(
     const std::vector<unsigned> &indices, std::span<const float> checkPoints,
     const std::vector<PreprocessedMeasurement> &measurements,
@@ -413,22 +437,20 @@ void AdaptiveHoughTransformSeeder::findClustersZCotTheta(
 
   std::vector<LinePoint> yVals(cnt);
 
-  // Evaluate all lines in the candidate at each discrete z check point
+  // Slice vertically at fixed x = z and evaluate y = cot(theta) intersections
   for (float xCheck : checkPoints) {
     for (unsigned i = 0; i < cnt; ++i) {
       unsigned measIdx = indices[i];
       const auto &m = measurements[measIdx];
 
-      // Evaluate line coordinate using the provided space-specific functor
       yVals[i].y = lineFunctor(m, xCheck);
       yVals[i].idx = measIdx;
     }
 
-    // Sort evaluated line positions along the secondary axis to identify
-    // dense line crossings in O(N log N) time
+    // Sort cot(theta) intersections to find dense crossings
     std::sort(yVals.begin(), yVals.end());
 
-    // 1D sliding window scan with radial triplet verification
+    // 1D sliding window scan along cot(theta) with radial triplet verification
     for (unsigned i = 0; i <= cnt - reqLines; ++i) {
       if (yVals[i + reqLines - 1].y - yVals[i].y <= maxSpread) {
         const float baseY = yVals[i].y;
@@ -458,7 +480,7 @@ void AdaptiveHoughTransformSeeder::findClustersZCotTheta(
         }
 
         // Verify that an intermediate space point exists with sufficient
-        // radial separation (> 5 mm) from both inner and outer points
+        // radial separation (> minDeltaR) from both inner and outer points
         bool validRSpread = false;
         for (unsigned j = i; j < clusterEndIdx; ++j) {
           const double r = measurements[yVals[j].idx].r;
@@ -508,7 +530,8 @@ void AdaptiveHoughTransformSeeder::processStackZCotTheta(
     const float xLeft = candidate.zMin;
     const float xRight = xLeft + candidate.zWidth;
 
-    // Generate evenly spaced check points across the z width using std::lerp
+    // Sweeping across 9 evenly spaced z check points ensures we sample close to
+    // the true track vertex z, where lines converge tightly in cot(theta).
     std::array<float, kNumCheckPoints> checkPoints{};
     for (std::size_t i = 0; i < kNumCheckPoints; ++i) {
       checkPoints[i] = std::lerp(xLeft, xRight,

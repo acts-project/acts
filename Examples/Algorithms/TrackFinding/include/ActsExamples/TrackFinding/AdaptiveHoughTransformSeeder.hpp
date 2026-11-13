@@ -274,20 +274,23 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       SeedContainer &seeds, const std::vector<SeedCandidate> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
-  /// @brief line functor to access q/pT - phi line parameters
+  /// @brief Line functor for (x = phi, y = q/pT) quadtree exploration:
+  /// returns q/pT = (phi - phi_meas) / (r * A)
   LineFunctor m_qOverPtPhiLineParams = [this](const PreprocessedMeasurement &m,
                                               float arg) {
     return m.invr * config().inverseA * arg -
            m.invr * m.phi * config().inverseA;
   };
 
-  /// @brief line functor to access phi - q/pT line parameters
+  /// @brief Line functor for Phase 1 horizontal slicing at fixed
+  /// y = q/pT: returns phi = phi_meas + (q/pT) * r * A
   LineFunctor m_phiQOverPtLineParams = [this](const PreprocessedMeasurement &m,
                                               float arg) {
     return static_cast<float>(m.phi + arg * m.r * m_bFieldA);
   };
 
-  /// @brief line functor to access cot(theta) - z line parameters
+  /// @brief Line functor for Phase 2 vertical slicing at fixed x = z:
+  /// returns cot(theta) = (z_meas - z) / r
   LineFunctor m_zCotThetaLineParams = [](const PreprocessedMeasurement &m,
                                          float arg) {
     return -m.invr * arg + m.z * m.invr;
