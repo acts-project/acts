@@ -72,6 +72,59 @@ Result<SharedStateCondition> makeSharedStateCondition(
     const AnyConstTrackStateProxy& shared, const BoundVector& newMean,
     const BoundMatrix& newCov, const Logger& logger);
 
+/// Build the conditioning terms from the estimates of a node
+/// @param predictedCov The predicted covariance of the node
+/// @param smoothedMean The smoothed estimate of the node
+/// @param smoothedCov Its covariance
+/// @param newMean The new estimate of the node
+/// @param newCov Its covariance
+/// @param logger The logger
+/// @return The terms, or `KalmanFitterError::SmoothFailed` if the smoothed
+///         covariance is not positive definite or the terms are not finite
+Result<SharedStateCondition> makeNodeCondition(const BoundMatrix& predictedCov,
+                                               const BoundVector& smoothedMean,
+                                               const BoundMatrix& smoothedCov,
+                                               const BoundVector& newMean,
+                                               const BoundMatrix& newCov,
+                                               const Logger& logger);
+
+/// Combine the first tracklet at the shared state with the second tracklet
+/// smoothed onto its prior node, the second prior subtracted once:
+/// `Y = Y_A - Y_c + Y_s'`, `y = Y_A m_A - Y_c m_c + Y_s' m_s'`.
+/// @param sharedMean The shared state smoothed over the first tracklet
+/// @param sharedCov Its covariance
+/// @param priorMean The prior the second tracklet was filtered from
+/// @param priorCov Its covariance
+/// @param nodeMean The second tracklet smoothed onto its prior node
+/// @param nodeCov Its covariance
+/// @param logger The logger
+/// @return The shared state given both tracklets, or
+///         `KalmanFitterError::SmoothFailed` if an information matrix is not
+///         positive definite
+Result<std::pair<BoundVector, BoundMatrix>> subtractSecondPrior(
+    const BoundVector& sharedMean, const BoundMatrix& sharedCov,
+    const BoundVector& priorMean, const BoundMatrix& priorCov,
+    const BoundVector& nodeMean, const BoundMatrix& nodeCov,
+    const Logger& logger);
+
+/// Condition the smoothed states of a tracklet on a new estimate of the prior
+/// node it was filtered from: @ref conditionStatesAfterNode with the prior
+/// covariance as predicted and the tracklet smoothed onto the node as smoothed
+/// estimate of the node.
+/// @param states The states of the tracklet in filter order
+/// @param priorCov The prior covariance
+/// @param nodeMean The smoothed estimate of the prior node
+/// @param nodeCov Its covariance
+/// @param newMean The new estimate of the prior node
+/// @param newCov Its covariance
+/// @param logger The logger
+/// @return Success, or `KalmanFitterError::SmoothFailed` on failure
+Result<void> conditionSmoothedStatesOnPriorNode(
+    std::span<AnyMutableTrackStateProxy> states, const BoundMatrix& priorCov,
+    const BoundVector& nodeMean, const BoundMatrix& nodeCov,
+    const BoundVector& newMean, const BoundMatrix& newCov,
+    const Logger& logger);
+
 /// Condition the smoothed states of a chain on a new estimate of its shared
 /// state, the exact linear-Gaussian update for information that enters
 /// through that state: @ref conditionStatesAfterNode with `u = Z (x_s' - x_s)`
