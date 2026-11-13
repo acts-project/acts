@@ -24,6 +24,7 @@
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
+#include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitterBackend.hpp"
@@ -91,6 +92,86 @@ struct Gx2FitterExtensions {
     updater.template connect<&Acts::detail::voidFitterUpdater<traj_t>>();
     outlierFinder.template connect<&Acts::detail::voidOutlierFinder<traj_t>>();
     surfaceAccessor.connect<&Acts::detail::voidSurfaceAccessor>();
+  }
+};
+
+/// Propagator actor that stops a GX2F propagation with an error
+///
+/// - if the absolute momentum is below a cut-off, checked before the first
+///   step and after every step or;
+/// - if too many consecutive steps reverse the direction of the previous step.
+///   This happens when the stepper goes back and forth across a measurement
+///   surface it can't get to within the surface bounds, so would otherwise
+///   continue until the maximum number of steps is reached.
+///
+/// Both checks are disabled with a value of 0.
+struct Gx2FitterPropagationGuard {
+  /// Bookkeeping of the direction flips
+  struct result_type {
+    /// Signed path length after the previous step
+    double lastPathLength = 0.;
+    /// Signed length of the previous step
+    double lastStepLength = 0.;
+    /// Number of consecutive steps that reversed the direction
+    std::size_t nDirectionFlips = 0;
+  };
+
+  /// Momentum cut-off
+  double momentumCutOff = 0.;
+
+  /// Maximum number of consecutive direction flips
+  std::size_t maxDirectionFlips = 0;
+
+  /// @brief Check the momentum and the step direction
+  ///
+  /// @tparam propagator_state_t is the type of Propagator state
+  /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
+  /// @param state is the mutable propagator state object
+  /// @param stepper The stepper in use
+  /// @param result is the mutable result state object
+  /// @param logger the logger for debug output
+  /// @return failure if one of the limits is exceeded
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& /*navigator*/, result_type& result,
+                   const Logger& logger) const {
+    if (state.stage != PropagatorStage::prePropagation &&
+        state.stage != PropagatorStage::postStep) {
+      return Result<void>::success();
+    }
+
+    if (momentumCutOff > 0. &&
+        stepper.absoluteMomentum(state.stepping) < momentumCutOff) {
+      ACTS_DEBUG("Absolute momentum "
+                 << stepper.absoluteMomentum(state.stepping)
+                 << " below the cut-off of " << momentumCutOff
+                 << ". Abort the propagation.");
+      return Result<void>::failure(
+          GlobalChiSquareFitterError::MomentumBelowCutOff);
+    }
+
+    if (maxDirectionFlips == 0 || state.stage != PropagatorStage::postStep) {
+      return Result<void>::success();
+    }
+
+    const double stepLength = state.pathLength - result.lastPathLength;
+    result.lastPathLength = state.pathLength;
+    result.nDirectionFlips = stepLength * result.lastStepLength < 0.
+                                 ? result.nDirectionFlips + 1
+                                 : 0;
+    result.lastStepLength = stepLength;
+
+    if (result.nDirectionFlips > maxDirectionFlips) {
+      ACTS_DEBUG("The last " << result.nDirectionFlips
+                             << " steps reversed the direction of the "
+                                "previous step. Abort the propagation.");
+      return Result<void>::failure(
+          GlobalChiSquareFitterError::DirectionFlipLimitReached);
+    }
+    return Result<void>::success();
   }
 };
 
@@ -169,6 +250,15 @@ struct Gx2FitterOptions {
 
   /// Check for convergence (abort condition). Set to 0 to skip.
   double relChi2changeCutOff = 1e-7;
+
+  /// Abort the fit if the absolute momentum falls below this value in one of
+  /// its propagations. Set to 0 to skip.
+  double momentumCutOff = 0.;
+
+  /// Abort the fit if one of its propagations reverses the direction in more
+  /// than this number of consecutive steps (back and forth across a surface
+  /// without progress). Set to 0 to skip.
+  std::size_t maxDirectionFlips = 0;
 };
 
 /// Result container for a global chi-square fit.
@@ -1015,7 +1105,7 @@ class Gx2Fitter {
     using GX2FActor = Actor;
 
     using GX2FResult = typename GX2FActor::result_type;
-    using Actors = Acts::ActorList<GX2FActor>;
+    using Actors = Acts::ActorList<GX2FActor, Gx2FitterPropagationGuard>;
 
     using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
@@ -1074,6 +1164,11 @@ class Gx2Fitter {
       gx2fActor.actorLogger = m_actorLogger.get();
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
+
+      auto& propagationGuard =
+          propagatorOptions.actorList.template get<Gx2FitterPropagationGuard>();
+      propagationGuard.momentumCutOff = gx2fOptions.momentumCutOff;
+      propagationGuard.maxDirectionFlips = gx2fOptions.maxDirectionFlips;
 
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
@@ -1241,6 +1336,11 @@ class Gx2Fitter {
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
 
+      auto& propagationGuard =
+          propagatorOptions.actorList.template get<Gx2FitterPropagationGuard>();
+      propagationGuard.momentumCutOff = gx2fOptions.momentumCutOff;
+      propagationGuard.maxDirectionFlips = gx2fOptions.maxDirectionFlips;
+
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
       auto propagatorInitResult =
@@ -1392,6 +1492,11 @@ class Gx2Fitter {
       gx2fActor.actorLogger = m_actorLogger.get();
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
+
+      auto& propagationGuard =
+          propagatorOptions.actorList.template get<Gx2FitterPropagationGuard>();
+      propagationGuard.momentumCutOff = gx2fOptions.momentumCutOff;
+      propagationGuard.maxDirectionFlips = gx2fOptions.maxDirectionFlips;
 
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
