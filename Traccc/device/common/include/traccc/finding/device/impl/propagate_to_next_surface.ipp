@@ -44,6 +44,8 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
 
   // Links
   vecmem::device_vector<const candidate_link> links(payload.links_view);
+  bound_track_parameters_collection_types::device link_predicted_parameters(
+      payload.link_predicted_parameter_view);
 
   const unsigned int link_idx = payload.prev_links_idx + param_id;
   const candidate_link link = links.at(link_idx);
@@ -100,13 +102,10 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
    * is set to the multiplicative identity.
    */
   if (cfg.run_smoother == smoother_type::e_mbf) {
-    assert(payload.tmp_jacobian_view.ptr() != nullptr);
-
-    vecmem::device_vector<bound_matrix<default_algebra>> tmp_jacobian(
-        payload.tmp_jacobian_view);
-    tmp_jacobian.at(param_id) =
-        matrix::identity<bound_matrix<default_algebra>>();
-    updater_state.set_full_jacobian(&(tmp_jacobian.at(param_id)));
+    vecmem::device_vector<bound_matrix<default_algebra>> jacobians(
+        payload.jacobian_view);
+    jacobians.at(link_idx) = matrix::identity<bound_matrix<default_algebra>>();
+    updater_state.set_full_jacobian(&(jacobians.at(link_idx)));
   }
 
   // Notify the KF and material interaction only at the first propagation
@@ -129,6 +128,9 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
     assert(!updater_state.bound_params().is_invalid());
 
     params[param_id] = updater_state.bound_params();
+    if (link_predicted_parameters.capacity() > 0) {
+      link_predicted_parameters.at(link_idx) = updater_state.bound_params();
+    }
     params_liveness[param_id] = 1u;
 
     const scalar theta = params[param_id].theta();
