@@ -114,6 +114,27 @@ class silicon_cell : public BASE {
   TRACCC_HOST_DEVICE
   const auto& module_index() const { return BASE::template get<4>(); }
 
+  /// User-defined data associated with the cell / strip (non-const)
+  ///
+  /// An opaque 64-bit value carried along with each cell. It is not
+  /// interpreted by traccc, so client code can use it, for example, to
+  /// store an external identifier of the cell.
+  ///
+  /// @return A (non-const) vector of <tt>std::uint64_t</tt> values
+  ///
+  TRACCC_HOST_DEVICE
+  auto& user_data() { return BASE::template get<5>(); }
+  /// User-defined data associated with the cell / strip (const)
+  ///
+  /// An opaque 64-bit value carried along with each cell. It is not
+  /// interpreted by traccc, so client code can use it, for example, to
+  /// store an external identifier of the cell.
+  ///
+  /// @return A (const) vector of <tt>std::uint64_t</tt> values
+  ///
+  TRACCC_HOST_DEVICE
+  const auto& user_data() const { return BASE::template get<5>(); }
+
   /// @}
 
   /// @name Utility functions
@@ -175,7 +196,9 @@ using silicon_cell_collection =
                            // time
                            vecmem::edm::type::vector<float>,
                            // module_index
-                           vecmem::edm::type::vector<unsigned int> >;
+                           vecmem::edm::type::vector<unsigned int>,
+                           // user_data
+                           vecmem::edm::type::vector<std::uint64_t> >;
 
 }  // namespace traccc::edm
 
