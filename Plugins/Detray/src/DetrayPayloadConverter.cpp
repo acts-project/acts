@@ -1192,7 +1192,7 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
   }
 
   // Write some general information about the payload
-  payloads.detector_name = m_cfg.detectorName;
+  payloads.header.detector = m_cfg.detectorName;
   payloads.header.source = "ACTS Detray Plugin";
   payloads.header.date = detray::io::detail::get_current_date();
 

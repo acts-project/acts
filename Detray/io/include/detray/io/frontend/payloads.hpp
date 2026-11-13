@@ -230,6 +230,8 @@ struct material_volume_payload {
 struct detector_homogeneous_material_payload {
   /// Material payloads grouped by detector volume.
   std::vector<material_volume_payload> volumes{};
+  /// @returns whether the payload contains any valid data
+  bool is_valid() const { return !volumes.empty(); }
 };
 
 /// @}
@@ -312,11 +314,12 @@ struct grid_payload {
 template <typename bin_content_t = std::size_t,
           typename grid_id_t = io::accel_id>
 struct detector_grids_payload {
-  // A collection of grids (can be the surface search grid, volume or surface
-  // material grids) per volume index (not all volumes may contain grids)
+  /// A collection of grids (can be the surface search grid, volume or surface
+  /// material grids) per volume index (not all volumes may contain grids)
   std::map<std::size_t, std::vector<grid_payload<bin_content_t, grid_id_t>>>
-      /// Grid collections keyed by owning volume index.
       grids = {};
+  /// @returns whether the payload contains any valid data
+  bool is_valid() const { return !grids.empty(); }
 };
 
 /// @}
@@ -327,6 +330,8 @@ struct detector_geometry_payload {
   std::vector<volume_payload> volumes = {};
   /// Volume acceleration structure
   std::optional<grid_payload<std::size_t, io::accel_id>> volume_grid;
+  /// @returns whether the payload contains any valid data
+  bool is_valid() const { return !volumes.empty(); }
 };
 
 /// @brief a payload for common information in file IO
@@ -336,9 +341,11 @@ struct common_header_payload {
   /// Date of file creation
   std::string date{};
   /// Detector metadata type
-  std::string metadata{};
+  std::string metadata{"unknown"};
+  /// Name of the detector (might be different from metadata name type)
+  std::string detector{"unknown_detector"};
   /// Detector source (e.g. version tag of experiments original geometry)
-  std::string source{};
+  std::string source{"unknown"};
 };
 
 /// @brief a payload for common information and a content tag
@@ -346,13 +353,13 @@ struct tagged_header_payload : public common_header_payload {
   /// Default constructor
   constexpr tagged_header_payload() = default;
 
-  /// Constructor from common data
+  /// Constructor from common data and tag
   /// @param cp the common header payload
-  explicit tagged_header_payload(const common_header_payload& cp)
-      : common_header_payload(cp) {}
+  /// @param header_tag tag that represents the subheader type
+  explicit tagged_header_payload(const common_header_payload& cp,
+                                 const std::string& header_tag = "")
+      : common_header_payload(cp), tag{header_tag} {}
 
-  /// Detector name
-  std::string detector{};
   /// Type of data the file contains (e.g. geometry vs material_maps)
   std::string tag{};
 };
@@ -372,6 +379,7 @@ struct header_payload : public common_header_payload {
     this->version = ch.version;
     this->date = ch.date;
     this->metadata = ch.metadata;
+    this->detector = ch.detector;
     this->source = ch.source;
   }
   /// Required detector component: geometry
@@ -411,9 +419,6 @@ struct detector_payload {
 
   /// Metadata about the contained payloads
   header_payload header{};
-
-  /// Name of the detector (might be different from metadata name type)
-  std::string detector_name{"unknown_detector"};
 
   /// Required detector component: geometry
   geometry_payload_type geometry{};

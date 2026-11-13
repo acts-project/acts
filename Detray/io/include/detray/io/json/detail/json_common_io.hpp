@@ -18,6 +18,7 @@ inline void to_json(nlohmann::ordered_json& j, const common_header_payload& h) {
   j["version"] = h.version;
   j["date"] = h.date;
   j["metadata"] = h.metadata;
+  j["detector"] = h.detector;
   j["source"] = h.source;
 }
 
@@ -25,6 +26,7 @@ inline void from_json(const nlohmann::ordered_json& j,
                       common_header_payload& h) {
   h.version = j["version"];
   h.date = j["date"];
+  h.detector = j["detector"];
 
   if (j.find("metadata") != j.end()) {
     h.metadata = j["metadata"];
@@ -42,7 +44,6 @@ inline void from_json(const nlohmann::ordered_json& j,
 inline void to_json(nlohmann::ordered_json& j, const tagged_header_payload& h) {
   const common_header_payload& ch = h;
   detray::io::to_json(j, ch);
-  j["detector"] = h.detector;
   j["tag"] = h.tag;
 }
 
@@ -50,7 +51,6 @@ inline void from_json(const nlohmann::ordered_json& j,
                       tagged_header_payload& h) {
   common_header_payload& ch = h;
   detray::io::from_json(j, ch);
-  h.detector = j["detector"];
   h.tag = j["tag"];
 }
 

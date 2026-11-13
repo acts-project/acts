@@ -16,6 +16,7 @@
 #include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/backend/detail/type_info.hpp"
 #include "detray/io/frontend/payloads.hpp"
+#include "detray/io/frontend/writer_interface.hpp"
 #include "detray/utils/grid/concepts.hpp"
 
 // System include(s)
@@ -27,47 +28,61 @@
 
 namespace detray::io {
 
+/// Generate the geometry header payload
+/// @param geo_data the input geometry payload
+/// @returns the geometry header data
+inline geometry_header_payload to_header_payload(
+    const detector_geometry_payload& geo_data) {
+  geometry_header_payload header_data;
+
+  header_data.n_volumes = geo_data.volumes.size();
+  for (const auto& vol_data : geo_data.volumes) {
+    header_data.n_surfaces += vol_data.surfaces.size();
+  }
+
+  return header_data;
+}
+
 /// @brief Tracking geometry writer backend
 ///
 /// Fills a @c detector_geometry_payload from a @c detector instance
-class geometry_writer {
+template <detray::concepts::detector detector_t>
+class geometry_writer final : public writer_interface<detector_t> {
  public:
   /// Tag the writer as "geometry"
-  static constexpr std::string_view tag = "geometry";
+  static constexpr std::string_view s_tag = "geometry";
 
-  /// Payload type that the reader processes
+  /// Payload type that the writer processes
   using payload_type = detector_geometry_payload;
 
-  /// Convert the header information into its payload
-  /// @tparam detector_t Detector type to serialize.
-  /// @param det Detector providing the volume and surface collections.
-  /// @return Header payload describing this geometry.
-  template <detray::concepts::detector detector_t>
-  static geometry_header_payload to_header_payload(const detector_t& det) {
-    geometry_header_payload header_data;
+  /// @returns the tag of the writer: "geometry"
+  std::string_view tag() const override { return s_tag; }
 
-    header_data.n_volumes = det.volumes().size();
-    header_data.n_surfaces = det.surfaces().size();
-
-    return header_data;
+  /// Convert a detector @p det into its io payload
+  /// @param det Detector whose geometry is serialized.
+  /// @param names Optional volume names indexed by volume index.
+  /// @param det_data Payload to which the serialized data is added.
+  void to_payload(const detector_t& det,
+                  const typename detector_t::name_map& names,
+                  detector_payload& det_data) const override {
+    det_data.geometry = to_payload_impl(det, names);
   }
 
   /// Convert a detector @p det into its io payload
-  /// @tparam detector_t Detector type to serialize.
   /// @param det Detector whose geometry is serialized.
   /// @param names Optional volume names indexed by volume index.
   /// @return Payload containing serialized volumes and surfaces.
-  template <detray::concepts::detector detector_t>
-  static payload_type to_payload(const detector_t& det,
-                                 const typename detector_t::name_map& names) {
+  static payload_type to_payload_impl(
+      const detector_t& det, const typename detector_t::name_map& names) {
     payload_type det_data;
     det_data.volumes.reserve(det.volumes().size());
 
     for (const auto& vol : det.volumes()) {
       if (names.contains(vol.index())) {
-        det_data.volumes.push_back(to_payload(vol, det, names.at(vol.index())));
+        det_data.volumes.push_back(
+            to_payload_impl(vol, det, names.at(vol.index())));
       } else {
-        det_data.volumes.push_back(to_payload(vol, det, ""));
+        det_data.volumes.push_back(to_payload_impl(vol, det, ""));
       }
     }
 
@@ -75,11 +90,9 @@ class geometry_writer {
   }
 
   /// Convert a surface transform @p trf into its io payload
-  /// @tparam detector_t Detector type supplying the transform type.
   /// @param trf Transform to serialize.
   /// @return Translation and rotation payload.
-  template <detray::concepts::detector detector_t>
-  static transform_payload to_payload(
+  static transform_payload to_payload_impl(
       const typename detector_t::transform3_type& trf) {
     transform_payload trf_data;
 
@@ -100,7 +113,7 @@ class geometry_writer {
   /// @return Mask payload.
   template <typename mask_t>
     requires(!std::is_same_v<typename mask_t::shape, void>)
-  static mask_payload to_payload(const mask_t& m) {
+  static mask_payload to_payload_impl(const mask_t& m) {
     mask_payload mask_data;
 
     mask_data.shape = io::detail::get_id<typename mask_t::shape>();
@@ -115,20 +128,18 @@ class geometry_writer {
   }
 
   /// Convert a detector surface @p sf into its io payload
-  /// @tparam detector_t Detector type owning the surface.
   /// @param sf Surface descriptor to serialize.
   /// @param sf_idx Surface position within its volume collection.
   /// @return Surface payload with transform, mask, and material links.
-  template <detray::concepts::detector detector_t>
-  static surface_payload to_payload(const geometry::surface<detector_t>& sf,
-                                    std::size_t sf_idx) {
+  static surface_payload to_payload_impl(
+      const geometry::surface<detector_t>& sf, std::size_t sf_idx) {
     using algebra_t = typename detector_t::algebra_type;
     surface_payload sf_data;
 
     sf_data.index_in_coll = sf_idx;
     sf_data.type = sf.id();
     sf_data.identifier = sf.identifier().value();
-    sf_data.transform = to_payload<detector_t>(sf.transform({}));
+    sf_data.transform = to_payload_impl(sf.transform({}));
     sf_data.masks = sf.template visit_mask<get_mask_link_payload>();
     if (sf.has_material()) {
       sf_data.material =
@@ -140,13 +151,11 @@ class geometry_writer {
   }
 
   /// Convert a detector volume and its contents to its IO representation.
-  /// @tparam detector_t Detector type to serialize.
   /// @param vol_desc Volume descriptor to serialize.
   /// @param det Detector providing transforms, surfaces, and accelerators.
   /// @param name Name associated with the volume.
   /// @return Volume payload containing surfaces and acceleration links.
-  template <detray::concepts::detector detector_t>
-  static volume_payload to_payload(
+  static volume_payload to_payload_impl(
       const typename detector_t::volume_type& vol_desc, const detector_t& det,
       const std::string_view name) {
     volume_payload vol_data;
@@ -154,7 +163,7 @@ class geometry_writer {
     vol_data.index = detail::basic_converter::to_payload(vol_desc.index());
     vol_data.name = name;
     vol_data.transform =
-        to_payload<detector_t>(det.transform_store().at(vol_desc.transform()));
+        to_payload_impl(det.transform_store().at(vol_desc.transform()));
     vol_data.type = vol_desc.id();
 
     // Count the surfaces belonging to this volume
@@ -163,7 +172,7 @@ class geometry_writer {
     for (const auto& sf_desc : det.surfaces()) {
       if (sf_desc.volume() == vol_desc.index()) {
         vol_data.surfaces.push_back(
-            to_payload(geometry::surface{det, sf_desc}, sf_idx++));
+            to_payload_impl(geometry::surface{det, sf_desc}, sf_idx++));
       }
     }
 
@@ -196,7 +205,7 @@ class geometry_writer {
       std::vector<mask_payload> payloads{};
 
       for (const auto& mask : detray::ranges::subrange(mask_group, idx_range)) {
-        payloads.push_back(geometry_writer::to_payload(mask));
+        payloads.push_back(geometry_writer::to_payload_impl(mask));
       }
 
       return payloads;

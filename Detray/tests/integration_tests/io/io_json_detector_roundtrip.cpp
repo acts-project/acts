@@ -16,8 +16,8 @@
 // Detray IO include(s)
 #include "detray/io/backend/geometry_reader.hpp"
 #include "detray/io/backend/geometry_writer.hpp"
-#include "detray/io/frontend/detector_writer.hpp"
 #include "detray/io/json/detector_reader.hpp"
+#include "detray/io/json/detector_writer.hpp"
 #include "detray/io/json/json_converter.hpp"
 
 // Detray test include(s)
@@ -98,7 +98,7 @@ auto test_detector_json_io(
                         .replace_files(true)
                         .write_grids(true)
                         .write_material(true);
-  io::write_detector(det, names, writer_cfg);
+  io::write_detector_json(det, names, writer_cfg);
 
   // Read the detector back in
   io::detector_reader_config reader_cfg{};
@@ -112,7 +112,7 @@ auto test_detector_json_io(
 
   // Write the result to a different set of files
   writer_cfg.replace_files(false);
-  io::write_detector(det2, names2, writer_cfg);
+  io::write_detector_json(det2, names2, writer_cfg);
 
   // Compare writing round-trip
   std::string geometry_file{names.get_detector_name() + "_geometry_2.json"};
@@ -204,10 +204,17 @@ GTEST_TEST(io, json_toy_geometry) {
   auto [toy_det, names] = build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
   // Write the detector
-  io::json_converter<detector_t, io::geometry_writer> geo_writer;
-  auto file_name =
-      geo_writer.write(toy_det, names, "detray integration test",
-                       std::ios::out | std::ios::binary | std::ios::trunc);
+  io::detector_payload out_payload{};
+  out_payload.header.detector = toy_det.name(names);
+  out_payload.header.source = "detray integration test";
+  io::geometry_writer<detector_t>{}.to_payload(toy_det, names, out_payload);
+  out_payload.header.geometry = io::to_header_payload(out_payload.geometry);
+
+  const auto file_name =
+      io::json_output_converter{}
+          .write_to_file(out_payload, "./",
+                         std::ios::out | std::ios::binary | std::ios::trunc)
+          .front();
 
   // Read the detector back in
   io::detector_payload payload{};

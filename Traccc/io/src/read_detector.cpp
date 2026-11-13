@@ -55,7 +55,7 @@ void read_detector(host_detector& detector, vecmem::memory_resource& mr,
   cfg.do_check(do_consistency_check);
 
   // TODO: Update this and remove detector name
-  const std::string_view det_name{payload.detector_name};
+  const std::string_view det_name{payload.header.detector};
   const std::string_view metadata{payload.header.metadata};
   if (metadata == "odd_metadata" ||
       det_name == "Cylindrical detector from DD4hep blueprint") {

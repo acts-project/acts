@@ -33,7 +33,11 @@
 using namespace traccc;
 
 constexpr std::size_t n_events{1u};
+#ifdef NDEBUG
+constexpr std::size_t n_tracks{10u};
+#else
 constexpr std::size_t n_tracks{1000u};
+#endif
 
 constexpr detray::pdg_particle ptc_type{detray::muon<scalar>()};
 
@@ -49,9 +53,6 @@ class KF_integration_test_toy_detector
 
 /// Test the detray navigation on simulated tracks
 TEST_P(KF_integration_test_toy_detector, toy_detector) {
-  // TODO: Enable these tests at a later date.
-  GTEST_SKIP();
-
   using detector_t = traccc::default_detector_traits::host;
   using algebra_t = typename detector_t::algebra_type;
   using b_field_t = covfie::field<traccc::const_bfield_backend_t<scalar>>;
@@ -74,20 +75,24 @@ TEST_P(KF_integration_test_toy_detector, toy_detector) {
   std::string name =
       std::string{test_info.test_suite_name()} + "_" + test_info.name();
   std::replace(name.begin(), name.end(), '/', '_');
-  const std::filesystem::path det_dir{name};
 
-  WriteDetector(true, name);
+  // Path to the working directory.
+  const std::filesystem::path path = std::filesystem::current_path() / name;
+
+  const bool use_material{std::get<2>(GetParam())};
+  WriteDetector(use_material, name);
 
   detray::io::detector_reader_config reader_cfg{};
-  reader_cfg.add_file((det_dir / "toy_detector_geometry.json").native())
-      .add_file((det_dir / "toy_detector_surface_grids.json").native())
+  reader_cfg
+      .add_files((path / "toy_detector_geometry.json").native(),
+                 (path / "toy_detector_surface_grids.json").native())
       .do_check(true);
-  if (std::get<2>(GetParam())) {
-    reader_cfg.add_file((det_dir / "toy_detector_material_maps.json").native());
+  if (use_material) {
+    reader_cfg.add_file((path / "toy_detector_material_maps.json").native());
   }
 
   auto [io_det, names] =
-      detray::io::read_detector<detector_t>(host_mr, reader_cfg);
+      detray::io::read_detector_json<detector_t>(host_mr, reader_cfg);
   traccc::host_detector host_det{};
   host_det.template set<detector_t>(std::move(io_det));
   const auto& det = host_det.template as<detector_t>();

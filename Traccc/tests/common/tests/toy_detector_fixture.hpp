@@ -64,6 +64,7 @@ class ToyDetectorFixture : public testing::Test {
         .n_edc_layers(n_endcaps)
         .envelope(2.f * traccc::unit<scalar>::mm)
         .use_material_maps(toggle_material_map)
+        .use_homogeneous_material(false)
         .do_check(false);
 
     // Create the toy geometry
@@ -78,7 +79,7 @@ class ToyDetectorFixture : public testing::Test {
                           .write_grids(true)
                           .write_material(true)
                           .path(path);
-    detray::io::write_detector(det, name_map, writer_cfg);
+    detray::io::write_detector_json(det, name_map, writer_cfg);
   }
 };
 

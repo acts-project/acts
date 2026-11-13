@@ -118,9 +118,9 @@ class detector_components_reader final {
     // Add any optional readers
     std::vector<reader_ptr_t> readers;
 
-    const auto print_type_err = [](const std::string& payload_type) {
+    const auto throw_type_err = [](const std::string& payload_type) {
       std::stringstream stream{};
-      stream << "Found " << payload_type << " payload, but detector type ("
+      stream << "Reader found " << payload_type << " payload, but detector ("
              << detray::types::get_name<typename detector_t::metadata>()
              << ") does not support it: Check the metadata!";
       DETRAY_FATAL_HOST(stream.str());
@@ -136,7 +136,7 @@ class detector_components_reader final {
             std::make_unique<
                 surface_grid_reader<detector_t, GRID_CAP, GRID_DIM>>());
       } else {
-        print_type_err("surface grids");
+        throw_type_err("surface grids");
       }
     }
     if (payload.homogeneous_material.has_value()) {
@@ -145,7 +145,7 @@ class detector_components_reader final {
             std::make_unique<
                 detray::io::homogeneous_material_reader<detector_t>>());
       } else {
-        print_type_err("homogeneous material");
+        throw_type_err("homogeneous material");
       }
     }
     if (payload.material_maps.has_value()) {
@@ -155,12 +155,12 @@ class detector_components_reader final {
             std::make_unique<
                 detray::io::material_map_reader<detector_t, MAP_DIM>>());
       } else {
-        print_type_err("material maps");
+        throw_type_err("material maps");
       }
     }
 
     // Set the detector name (may have been read from input file)
-    det_builder.set_name(payload.detector_name);
+    det_builder.set_name(payload.header.detector);
 
     // Fill the geometry data first
     geo_reader->from_payload(det_builder, payload);
