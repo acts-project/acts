@@ -14,6 +14,7 @@ def plotAlignImpacts(
     fname="align_impacts",
     title=None,
     xLim=None,
+    extraText=None,
 ):
     """
     "Impacts plot" style comparison of the alignment corrections.
@@ -70,6 +71,7 @@ def plotAlignImpacts(
     ax.set_yticklabels(labels, fontsize=9)
     ax.set_ylim(yPos[-1] + 0.6, yPos[0] - 0.6)  # row 0 at the top
     ax.set_xlabel("alignment correction [mm]")
+    ax.set_ylabel("alignment parameter index")
     ax.grid(axis="x", ls=":", color="0.8", zorder=0)
     ax.set_axisbelow(True)
 
@@ -79,9 +81,25 @@ def plotAlignImpacts(
     if title:
         ax.set_title(title, fontsize=11)
 
-    ax.legend(loc="upper left", fontsize=8, framealpha=0.95)
-
-    fig.tight_layout()
+    ax.legend(
+        loc="lower left",
+        bbox_to_anchor=(0.42, 1.001),
+        ncol=2,
+        frameon=False,
+        fontsize=11,
+        framealpha=0.95,
+    )
+    if extraText is not None:
+        ax.text(
+            0.00,
+            1.01,
+            "\n".join(extraText),
+            transform=ax.transAxes,
+            fontsize=11,
+            ha="left",
+            verticalalignment="bottom",
+        )
+    fig.subplots_adjust(top=0.88)
     fig.savefig(fname + ".png", dpi=150, bbox_inches="tight")
     fig.savefig(fname + ".pdf", bbox_inches="tight")
     return fig, ax
