@@ -9,6 +9,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SeedSpacePointSelection.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
@@ -173,6 +174,11 @@ void addEventData(py::module& mex) {
       .value("InnermostTriplet", SeedSpacePointSelection::InnermostTriplet)
       .value("SpreadTriplet", SeedSpacePointSelection::SpreadTriplet)
       .value("All", SeedSpacePointSelection::All);
+
+  py::class_<GeometryIdMapActsAthena, std::shared_ptr<GeometryIdMapActsAthena>>(
+      mex, "GeometryIdMapActsAthena")
+      .def(py::init<>())
+      .def("__len__", &GeometryIdMapActsAthena::size);
 }
 
 }  // namespace ActsPython
