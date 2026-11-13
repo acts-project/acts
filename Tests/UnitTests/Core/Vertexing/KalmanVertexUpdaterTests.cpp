@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
-  auto fieldCache = bField->makeCache(magFieldContext);
+  MagneticFieldQuery fieldQuery(*bField, magFieldContext);
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -152,8 +153,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
-                            fieldCache)
+            .linearizeTrackWithField(params, 0, *perigee, geoContext,
+                                     fieldQuery)
             .value();
 
     // Create TrackAtVertex
@@ -230,7 +231,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
-  auto fieldCache = bField->makeCache(magFieldContext);
+  MagneticFieldQuery fieldQuery(*bField, magFieldContext);
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -277,8 +278,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
-                            fieldCache)
+            .linearizeTrackWithField(params, 0, *perigee, geoContext,
+                                     fieldQuery)
             .value();
 
     // Create TrackAtVertex

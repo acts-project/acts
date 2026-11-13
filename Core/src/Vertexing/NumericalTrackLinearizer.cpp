@@ -8,6 +8,7 @@
 
 #include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
 
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -21,6 +22,23 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
     const Acts::MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& /*fieldCache*/) const {
+  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx, mctx);
+}
+
+Acts::Result<Acts::LinearizedTrack>
+Acts::NumericalTrackLinearizer::linearizeTrackWithField(
+    const BoundTrackParameters& params, double linPointTime,
+    const Surface& perigeeSurface, const GeometryContext& gctx,
+    MagneticFieldQuery& field) const {
+  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx,
+                            field.context());
+}
+
+Acts::Result<Acts::LinearizedTrack>
+Acts::NumericalTrackLinearizer::linearizeTrackImpl(
+    const BoundTrackParameters& params, double linPointTime,
+    const Surface& perigeeSurface, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx) const {
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
 

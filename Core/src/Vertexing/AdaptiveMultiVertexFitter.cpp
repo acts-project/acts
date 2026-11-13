@@ -24,9 +24,10 @@ AdaptiveMultiVertexFitter::AdaptiveMultiVertexFitter(
         "from InputTrack_t provided.");
   }
 
-  if (!m_cfg.trackLinearizer.connected()) {
+  if (m_cfg.trackLinearizer.connected() ==
+      m_cfg.fieldTrackLinearizer.connected()) {
     throw std::invalid_argument(
-        "AdaptiveMultiVertexFitter: No track linearizer provided.");
+        "AdaptiveMultiVertexFitter: Configure exactly one track linearizer.");
   }
 }
 
@@ -331,10 +332,17 @@ Result<void> AdaptiveMultiVertexFitter::setWeightsAndUpdate(
         // Check if track is already linearized and whether we need to
         // relinearize
         if (!trkAtVtx.isLinearized || scratch.relinearize) {
-          auto result = m_cfg.trackLinearizer(
-              m_cfg.extractParameters(trk), scratch.linPoint[3],
-              *vtxPerigeeSurface, vertexingOptions.geoContext,
-              vertexingOptions.magFieldContext, cache.fieldCache);
+          auto result =
+              m_cfg.fieldTrackLinearizer.connected()
+                  ? m_cfg.fieldTrackLinearizer(
+                        m_cfg.extractParameters(trk), scratch.linPoint[3],
+                        *vtxPerigeeSurface, vertexingOptions.geoContext,
+                        cache.fieldQuery)
+                  : m_cfg.trackLinearizer(
+                        m_cfg.extractParameters(trk), scratch.linPoint[3],
+                        *vtxPerigeeSurface, vertexingOptions.geoContext,
+                        vertexingOptions.magFieldContext,
+                        cache.fieldQuery.m_cache);
           if (!result.ok()) {
             return result.error();
           }
@@ -478,7 +486,7 @@ void AdaptiveMultiVertexFitter::recomposeState(State& state,
 
   state.annealingState = cache.annealingState;
   state.ipState = std::move(cache.ipState);
-  state.fieldCache = std::move(cache.fieldCache);
+  state.fieldQuery = std::move(cache.fieldQuery);
 
   state.vtxInfoMap.clear();
   for (auto& [vtx, candidate] : problem.candidates) {
@@ -508,7 +516,7 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
     State& state, const std::vector<Vertex*>& newVertices,
     const VertexingOptions& vertexingOptions) const {
   VertexFitProblem problem;
-  Cache cache(std::move(state.ipState), std::move(state.fieldCache));
+  Cache cache(std::move(state.ipState), std::move(state.fieldQuery));
   decomposeState(state, problem, cache);
 
   auto res = addVtxToFit(problem, newVertices, vertexingOptions, cache);
@@ -520,7 +528,7 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
 Result<void> AdaptiveMultiVertexFitter::fit(
     State& state, const VertexingOptions& vertexingOptions) const {
   VertexFitProblem problem;
-  Cache cache(std::move(state.ipState), std::move(state.fieldCache));
+  Cache cache(std::move(state.ipState), std::move(state.fieldQuery));
   decomposeState(state, problem, cache);
 
   auto res = fit(problem, vertexingOptions, cache);

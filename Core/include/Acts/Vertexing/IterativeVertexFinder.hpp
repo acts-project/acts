@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
@@ -73,7 +74,7 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// Vertex fitter
     VertexFitter vertexFitter;
 
-    /// Track linearizer
+    /// Legacy cache-taking linearizer; use fieldTrackLinearizer for new code
     TrackLinearizer trackLinearizer;
 
     /// Vertex seed finder
@@ -118,6 +119,9 @@ class IterativeVertexFinder final : public IVertexFinder {
 
     /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> field;
+
+    /// Query-taking linearizer; mutually exclusive with trackLinearizer
+    FieldTrackLinearizer fieldTrackLinearizer;
   };
 
   /// State struct
@@ -129,7 +133,7 @@ class IterativeVertexFinder final : public IVertexFinder {
           const Acts::MagneticFieldContext& _magContext)
         : magContext(_magContext),
           ipState{field.makeCache(magContext)},
-          fieldCache(field.makeCache(magContext)) {}
+          fieldQuery(field, magContext) {}
 
     /// Reference to magnetic field context for vertex finding
     std::reference_wrapper<const Acts::MagneticFieldContext> magContext;
@@ -137,8 +141,8 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// The IP estimator state
     ImpactPointEstimator::State ipState;
 
-    /// Cached magnetic field information for efficient access
-    MagneticFieldProvider::Cache fieldCache;
+    /// Field query; its provider and context must outlive this state
+    MagneticFieldQuery fieldQuery;
   };
 
   /// @brief Constructor for user-defined InputTrack type

@@ -21,10 +21,11 @@ Acts::IterativeVertexFinder::IterativeVertexFinder(
         "provided.");
   }
 
-  if (!m_cfg.trackLinearizer.connected()) {
+  if (m_cfg.trackLinearizer.connected() ==
+      m_cfg.fieldTrackLinearizer.connected()) {
     throw std::invalid_argument(
         "IterativeVertexFinder: "
-        "No track linearizer provided.");
+        "Configure exactly one track linearizer.");
   }
 
   if (!m_cfg.seedFinder) {
@@ -92,7 +93,7 @@ auto Acts::IterativeVertexFinder::find(
 
     if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
       auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                              state.fieldCache);
+                                              state.fieldQuery);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
@@ -100,7 +101,7 @@ auto Acts::IterativeVertexFinder::find(
       }
     } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
       auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                              state.fieldCache);
+                                              state.fieldQuery);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
@@ -109,7 +110,7 @@ auto Acts::IterativeVertexFinder::find(
     }
     if (m_cfg.createSplitVertices && tracksToFitSplitVertex.size() > 1) {
       auto fitResult = m_cfg.vertexFitter.fit(
-          tracksToFitSplitVertex, vertexingOptions, state.fieldCache);
+          tracksToFitSplitVertex, vertexingOptions, state.fieldQuery);
       if (fitResult.ok()) {
         currentSplitVertex = std::move(*fitResult);
       } else {
@@ -247,9 +248,14 @@ Acts::Result<double> Acts::IterativeVertexFinder::getCompatibility(
     State& state) const {
   // Linearize track
   auto result =
-      m_cfg.trackLinearizer(params, vertex.fullPosition()[3], perigeeSurface,
-                            vertexingOptions.geoContext,
-                            vertexingOptions.magFieldContext, state.fieldCache);
+      m_cfg.fieldTrackLinearizer.connected()
+          ? m_cfg.fieldTrackLinearizer(
+                params, vertex.fullPosition()[3], perigeeSurface,
+                vertexingOptions.geoContext, state.fieldQuery)
+          : m_cfg.trackLinearizer(params, vertex.fullPosition()[3],
+                                  perigeeSurface, vertexingOptions.geoContext,
+                                  vertexingOptions.magFieldContext,
+                                  state.fieldQuery.m_cache);
   if (!result.ok()) {
     return result.error();
   }
@@ -527,7 +533,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
   currentVertex = Vertex();
   if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
     auto fitResult =
-        m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions, state.fieldCache);
+        m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions, state.fieldQuery);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {
@@ -535,7 +541,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
     }
   } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
     auto fitResult =
-        m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions, state.fieldCache);
+        m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions, state.fieldQuery);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {
