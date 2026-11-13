@@ -41,10 +41,10 @@ import subprocess
 import sys
 
 
-def run_cpu_material_validation(args, datadir):
-    # Read the detector
+def run_cpu_material_validation(args, datadir, logging):
+    # Configure the detector IO
     reader_cfg = fill_reader_config(args, detray.io.DetectorReaderConfig())
-    det, names = detray.io.readDetector(detray.core.HostMemoryResource(), reader_cfg)
+    logging.info("Detector IO config\n" + str(reader_cfg))
 
     # Configure material scan
     scan_cfg = detray.tests.MaterialScanConfig()
@@ -52,12 +52,17 @@ def run_cpu_material_validation(args, datadir):
     scan_cfg.trackGenerator.uniformEta = True
     scan_cfg.overlapsTol = args.overlaps_tol
     scan_cfg.materialFile = os.path.join(datadir, "material_scan")
+    logging.info("Material scan config\n\n" + str(scan_cfg))
 
     # Configure material validation
     val_cfg = detray.tests.MaterialValidationConfig()
     fill_propagation_config(args, val_cfg.propagation)
     val_cfg.relativeError = args.material_tol / 100.0
     val_cfg.materialFile = os.path.join(datadir, "navigation_material_trace")
+    logging.info("Material validation config\n\n" + str(val_cfg))
+
+    # Read the detector
+    det, names = detray.io.readDetector(detray.core.HostMemoryResource(), reader_cfg)
 
     detray.tests.runMaterialValidation(det, names, scan_cfg, val_cfg)
 
@@ -113,12 +118,6 @@ def __main__():
         action="store_true",
         default=False,
     )
-    parser.add_argument(
-        "--sycl",
-        help=("Run the SYCL material validation."),
-        action="store_true",
-        default=False,
-    )
 
     args = parser.parse_args()
 
@@ -143,7 +142,7 @@ def __main__():
 
     # Run the host validation and produce the truth data
     logging.debug("Running CPU material validation")
-    run_cpu_material_validation(args, datadir)
+    run_cpu_material_validation(args, datadir, logging)
 
     # Pass on the options for the CUDA validation tool
     args_list = [
@@ -169,9 +168,6 @@ def __main__():
 
     elif args.cuda:
         logging.error("Could not find CUDA material validation executable")
-
-    if args.sycl:
-        logging.error("SYCL material validation is not implemented")
 
     # ----------------------------------------------------------------------plot
 

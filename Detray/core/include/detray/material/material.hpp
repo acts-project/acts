@@ -100,8 +100,15 @@ struct material {
   /// @return whether radiation length, interaction length, atomic mass, and charge agree
   DETRAY_HOST_DEVICE
   constexpr bool operator==(const material<scalar_type> &rhs) const {
+    // Don't check dependent parameters
+    assert(m_molar_rho == mass_to_molar_density(m_ar, m_mass_rho));
+    assert(rhs.molar_density() ==
+           mass_to_molar_density(rhs.Ar(), rhs.mass_density()));
+
     return (m_x0 == rhs.X0() && m_l0 == rhs.L0() && m_ar == rhs.Ar() &&
-            m_z == rhs.Z());
+            m_z == rhs.Z() && m_mass_rho == rhs.mass_density() &&
+            m_has_density_effect_data == rhs.has_density_effect_data() &&
+            m_density == rhs.density_effect_data());
   }
 
   /// Equality operator
@@ -111,6 +118,23 @@ struct material {
   DETRAY_HOST_DEVICE
   constexpr bool operator!=(const material<scalar_type> &rhs) const {
     return !(*this == rhs);
+  }
+
+  /// Boolean operator
+  /// @returns whether the material contains valid values
+  DETRAY_HOST_DEVICE
+  constexpr bool is_valid() const {
+    if (m_x0 == detail::invalid_value<scalar_type>()) {
+      return false;
+    }
+    // Cannot happen independently from X0 not being invalid
+    assert(m_l0 != detail::invalid_value<scalar_type>());
+    assert(m_ar != 0.f);
+    assert(m_z != 0.f);
+    assert(m_mass_rho != 0.f);
+    assert(m_molar_rho);
+
+    return true;
   }
 
   /// @returns the radition length. Infinity in case of vacuum.
@@ -160,9 +184,9 @@ struct material {
       return m_density.get_mean_excitation_energy();
     }
   }
+
   /// Return this component's compile-time mass fraction.
   /// @return ratio numerator divided by denominator, or an invalid value for a zero denominator
-
   DETRAY_HOST_DEVICE
   constexpr scalar_type fraction() const {
     if constexpr (ratio::num == 0) {
@@ -184,9 +208,10 @@ struct material {
       return strm.str();
     }
     strm << "material: ";
-    strm << " X0 = " << m_x0;
-    strm << " | L0 = " << m_l0;
+    strm << " X0 = " << m_x0 << " mm";
+    strm << " | L0 = " << m_l0 << " mm";
     strm << " | Z = " << m_z;
+    strm << " | rho = " << m_mass_rho << " GeV/mm^3";
 
     strm << " | state = ";
     switch (m_state) {
@@ -257,7 +282,8 @@ struct material {
   /// @param mass_rho mass density
   /// @return molar density
   DETRAY_HOST_DEVICE
-  constexpr scalar_type mass_to_molar_density(double ar, double mass_rho) {
+  constexpr scalar_type mass_to_molar_density(double ar,
+                                              double mass_rho) const {
     if (mass_rho == 0.) {
       return 0.f;
     }
