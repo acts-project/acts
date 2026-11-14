@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfComponent.hpp"
+#include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
@@ -48,6 +49,9 @@ struct GsfResult {
   std::size_t measurementStates = 0;
   std::size_t measurementHoles = 0;
   std::size_t processedStates = 0;
+
+  /// Stop forward propagation and smooth from the last measurement state.
+  bool componentExhausted = false;
 
   std::vector<const Surface*> visitedSurfaces;
   std::vector<const Surface*> surfacesVisitedBwdAgain;
@@ -91,6 +95,9 @@ struct GsfActor {
     /// When to discard components
     double weightCutoff = 1.0e-4;
 
+    /// Minimum transverse momentum for components
+    double transverseMomentumCut = 0.0;
+
     /// When this option is enabled, material information on all surfaces is
     /// ignored. This disables the component convolution as well as the handling
     /// of energy. This may be useful for debugging.
@@ -127,6 +134,17 @@ struct GsfActor {
 
   using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
+  Result<void> handleComponentExhaustion(result_type& result) const {
+    if (m_cfg.inReversePass || result.measurementStates == 0) {
+      if (m_cfg.abortOnError) {
+        std::abort();
+      }
+      return GsfError::NoComponentsLeft;
+    }
+    result.componentExhausted = true;
+    return Result<void>::success();
+  }
+
   /// @brief GSF actor operation
   ///
   /// @tparam propagator_state_t is the type of Propagator state
@@ -142,6 +160,10 @@ struct GsfActor {
                    const navigator_t& navigator, result_type& result,
                    const Logger& /*logger*/) const {
     assert(result.fittedStates && "No MultiTrajectory set");
+
+    if (result.componentExhausted) {
+      return Result<void>::success();
+    }
 
     // Prints some VERBOSE things and performs some asserts. Can be removed
     // without change of behaviour
@@ -259,9 +281,6 @@ struct GsfActor {
       }
     }
 
-    // We do not need the component cache here, we can just update our stepper
-    // state with the filtered components.
-    // NOTE because of early return before we know that we have a measurement
     if (!haveMaterial) {
       TemporaryStates tmpStates;
 
@@ -269,13 +288,28 @@ struct GsfActor {
                               foundSourceLink->second, *jacobian);
 
       if (!res.ok()) {
+        if (res.error() == GsfError::NoComponentsLeft) {
+          return handleComponentExhaustion(result);
+        }
         if (m_cfg.abortOnError) {
           std::abort();
         }
         return res.error();
       }
 
-      updateStepper(state, stepper, tmpStates, m_cfg.weightCutoff);
+      if (tmpStates.tips.size() != stepper.numberComponents(state.stepping)) {
+        auto& components = result.componentCache;
+        components.clear();
+        FiltProjector proj{tmpStates.traj, tmpStates.weights};
+        for (const auto idx : tmpStates.tips) {
+          const auto& [weight, parameters, covariance] = proj(idx);
+          components.emplace_back(weight, parameters, covariance);
+        }
+        removeLowWeightComponents(components, m_cfg.weightCutoff);
+        updateStepper(state, stepper, surface, components);
+      } else {
+        updateStepper(state, stepper, tmpStates, m_cfg.weightCutoff);
+      }
     }
     // We have material, we thus need a component cache since we will
     // convolute the components and later reduce them again before updating
@@ -293,6 +327,9 @@ struct GsfActor {
       }
 
       if (!res.ok()) {
+        if (res.error() == GsfError::NoComponentsLeft) {
+          return handleComponentExhaustion(result);
+        }
         if (m_cfg.abortOnError) {
           std::abort();
         }
@@ -302,6 +339,9 @@ struct GsfActor {
       // Reuse memory over all calls to the Actor in a single propagation
       std::vector<GsfComponent>& componentCache = result.componentCache;
       componentCache.clear();
+
+      const double effectiveTransverseMomentumCut =
+          m_cfg.inReversePass ? 0.0 : m_cfg.transverseMomentumCut;
 
       double pathXOverX0 = 0.0;
       for (const TrackIndexType idx : tmpStates.tips) {
@@ -317,19 +357,16 @@ struct GsfActor {
             tmpStates.weights.at(idx), *m_cfg.bethe_heitler_approx,
             result.betheHeitlerCache, m_cfg.weightCutoff, componentCache,
             result.nInvalidBetheHeitler.tmp(), result.maxPathXOverX0.tmp(),
-            logger());
+            logger(), effectiveTransverseMomentumCut);
       }
       // Store average material seen by the components
       // Should not be too broadly distributed
       result.sumPathXOverX0.tmp() += pathXOverX0 / tmpStates.tips.size();
 
       if (componentCache.empty()) {
-        ACTS_WARNING(
-            "No components left after applying energy loss. "
-            "Is the weight cutoff "
-            << m_cfg.weightCutoff << " too high?");
-        ACTS_WARNING("Return to propagator without applying energy loss");
-        return Result<void>::success();
+        ACTS_VERBOSE(
+            "All components removed by cuts (weight or momentum cutoff)");
+        return handleComponentExhaustion(result);
       }
 
       // reduce component number
@@ -368,6 +405,10 @@ struct GsfActor {
       return true;
     }
 
+    if (result.componentExhausted) {
+      ACTS_VERBOSE("Stop forward propagation, no components left");
+      return true;
+    }
     return false;
   }
 
@@ -382,6 +423,9 @@ struct GsfActor {
     // Keep track of all created components for outlier handling
     std::vector<TrackIndexType> allTips;
     allTips.reserve(stepper.numberComponents(state.stepping));
+    bool momentumRejected = false;
+    const double effectiveTransverseMomentumCut =
+        m_cfg.inReversePass ? 0.0 : m_cfg.transverseMomentumCut;
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
@@ -437,11 +481,26 @@ struct GsfActor {
           return updateRes.error();
         }
 
+        const auto& params = trackStateProxy.parameters();
+        const auto p = stepper.particleHypothesis(state.stepping)
+                           .extractMomentum(params[eBoundQOverP]);
+        const auto pT = p * std::sin(params[eBoundTheta]);
+        if (pT < effectiveTransverseMomentumCut) {
+          ACTS_VERBOSE("Skip component with pT=" << pT
+                                                 << " after Kalman update");
+          momentumRejected = true;
+          continue;
+        }
+
         tmpStates.tips.push_back(trackStateProxy.index());
         tmpStates.weights[trackStateProxy.index()] = cmp.weight();
       }
 
       allTips.push_back(trackStateProxy.index());
+    }
+
+    if (tmpStates.tips.empty() && momentumRejected) {
+      return GsfError::NoComponentsLeft;
     }
 
     const bool isOutlier = tmpStates.tips.empty();
@@ -660,6 +719,7 @@ struct GsfActor {
     m_cfg.abortOnError = options.abortOnError;
     m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
     m_cfg.weightCutoff = options.weightCutoff;
+    m_cfg.transverseMomentumCut = options.transverseMomentumCut;
     m_cfg.mergeMethod = options.componentMergeMethod;
     m_cfg.calibrationContext = &options.calibrationContext.get();
   }
