@@ -25,12 +25,14 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     return std::nullopt;
   }
 
-  auto result = fit(fillAuxiliaries(measurements, signs));
+  const FitAuxiliaries fitPars{fillAuxiliaries(measurements, signs)};
+  auto result = fit(fitPars);
   if (!result) {
     return std::nullopt;
   }
   // Calculate the chi2
   calcPostFitChi2(measurements, *result);
+  toChamberFrame(fitPars, ResidualIdx::bending, *result);
   return result;
 }
 
@@ -131,8 +133,10 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
             : strip->toNextSensor()};
 
     if (!centerSet) {
-      auxVars.centerY = centerOfGravity.dot(measDir);
-      auxVars.centerZ = centerOfGravity.dot(strip->planeNormal());
+      auxVars.axisY = measDir;
+      auxVars.axisZ = strip->planeNormal();
+      auxVars.centerY = centerOfGravity.dot(auxVars.axisY);
+      auxVars.centerZ = centerOfGravity.dot(auxVars.axisZ);
       centerSet = true;
     }
 
@@ -143,7 +147,11 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     auxVars.T_zzyy += invCov * (Acts::square(z) - Acts::square(y));
     auxVars.T_yz += invCov * z * y;
   }
-  return fit(auxVars);
+  auto result = fit(auxVars);
+  if (result) {
+    toChamberFrame(auxVars, projection, *result);
+  }
+  return result;
 }
 
 template <CompositeSpacePointContainer StrawCont_t,
@@ -223,8 +231,10 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
       continue;
     }
     if (!centerSet) {
-      auxVars.centerY = centerOfGravity.dot(strawMeas->toNextSensor());
-      auxVars.centerZ = centerOfGravity.dot(strawMeas->planeNormal());
+      auxVars.axisY = strawMeas->toNextSensor();
+      auxVars.axisZ = strawMeas->planeNormal();
+      auxVars.centerY = centerOfGravity.dot(auxVars.axisY);
+      auxVars.centerZ = centerOfGravity.dot(auxVars.axisZ);
       centerSet = true;
     }
     const Vector pos = strawMeas->localPosition() - centerOfGravity;
@@ -274,6 +284,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
          UpdateStatus::Exceeded) {
     if (iterStatus == UpdateStatus::Converged) {
       calcPostFitChi2(ctx, measurements, calibrator, result);
+      toChamberFrame(fitPars, ResidualIdx::bending, result);
       return result;
     }
     fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0);

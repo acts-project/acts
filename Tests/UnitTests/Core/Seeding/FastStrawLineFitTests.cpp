@@ -13,6 +13,8 @@
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <format>
 #include <random>
@@ -312,11 +314,11 @@ void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
   auto outTree = std::make_unique<TTree>("StrawFitTree", "FastFitTree");
 
   DECLARE_BRANCH(double, trueY0);
-  DECLARE_BRANCH(double, trueTheta);
+  DECLARE_BRANCH(double, trueTanTheta);
   DECLARE_BRANCH(double, recoY0);
-  DECLARE_BRANCH(double, recoTheta);
+  DECLARE_BRANCH(double, recoTanTheta);
   DECLARE_BRANCH(double, uncertY0);
-  DECLARE_BRANCH(double, uncertTheta);
+  DECLARE_BRANCH(double, uncertTanTheta);
   DECLARE_BRANCH(double, chi2);
   DECLARE_BRANCH(std::size_t, nDoF);
   DECLARE_BRANCH(std::size_t, nIter);
@@ -351,11 +353,15 @@ void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
     auto trackPars = track.parameters();
 
     trueY0 = trackPars[toUnderlying(Line_t::ParIndex::y0)];
-    trueTheta = trackPars[toUnderlying(Line_t::ParIndex::theta)];
-    /// Calculate the chi2 again
-    trackPars[toUnderlying(Line_t::ParIndex::theta)] = (*fitResult).theta;
+    trueTanTheta = track.direction().y() / track.direction().z();
+    /// Calculate the chi2 again, from the fitted slope tan(theta)
+    const Vector3 recoDir =
+        makeDirectionFromAxisTangents(0., (*fitResult).theta);
+    trackPars[toUnderlying(Line_t::ParIndex::theta)] =
+        VectorHelpers::theta(recoDir);
     trackPars[toUnderlying(Line_t::ParIndex::y0)] = (*fitResult).y0;
-    trackPars[toUnderlying(Line_t::ParIndex::phi)] = 90._degree;
+    trackPars[toUnderlying(Line_t::ParIndex::phi)] =
+        VectorHelpers::phi(recoDir);
     track.updateParameters(trackPars);
     ACTS_DEBUG("Updated parameters: "
                << (trackPars[toUnderlying(Line_t::ParIndex::theta)] / 1._degree)
@@ -367,9 +373,9 @@ void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
     ACTS_DEBUG("testChi2: " << testChi2 << ", fit:" << (*fitResult).chi2);
 
     BOOST_CHECK_LE(abs(testChi2 - (*fitResult).chi2), 1.e-9);
-    recoTheta = (*fitResult).theta;
+    recoTanTheta = (*fitResult).theta;
     recoY0 = (*fitResult).y0;
-    uncertTheta = (*fitResult).dTheta;
+    uncertTanTheta = (*fitResult).dTheta;
     uncertY0 = (*fitResult).dY0;
     nDoF = (*fitResult).nDoF;
     chi2 = (*fitResult).chi2;
@@ -383,13 +389,13 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
   auto outTree = std::make_unique<TTree>("StrawFitTreeT0", "FastFitTree");
 
   DECLARE_BRANCH(double, trueY0);
-  DECLARE_BRANCH(double, trueTheta);
+  DECLARE_BRANCH(double, trueTanTheta);
   DECLARE_BRANCH(double, trueT0);
   DECLARE_BRANCH(double, recoY0);
-  DECLARE_BRANCH(double, recoTheta);
+  DECLARE_BRANCH(double, recoTanTheta);
   DECLARE_BRANCH(double, recoT0);
   DECLARE_BRANCH(double, uncertY0);
-  DECLARE_BRANCH(double, uncertTheta);
+  DECLARE_BRANCH(double, uncertTanTheta);
   DECLARE_BRANCH(double, uncertT0);
   DECLARE_BRANCH(double, chi2);
   DECLARE_BRANCH(double, meanSign);
@@ -467,14 +473,14 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
     auto linePars = track.parameters();
     /// True parameters
     trueY0 = linePars[toUnderlying(Line_t::ParIndex::y0)];
-    trueTheta = linePars[toUnderlying(Line_t::ParIndex::theta)];
+    trueTanTheta = track.direction().y() / track.direction().z();
     trueT0 = inNanoS(timeOffSet);
     /// Fit parameters
     recoY0 = (*result).y0;
-    recoTheta = (*result).theta;
+    recoTanTheta = (*result).theta;
     recoT0 = inNanoS((*result).t0);
     uncertY0 = (*result).dY0;
-    uncertTheta = (*result).dTheta;
+    uncertTanTheta = (*result).dTheta;
     uncertT0 = inNanoS((*result).dT0);
     nDoF = (*result).nDoF;
     chi2 = (*result).chi2;
@@ -492,11 +498,11 @@ void testStripFit(RandomEngine& engine, TFile& outFile) {
   auto outTree = std::make_unique<TTree>("StripFitTree", "FastFitTree");
 
   DECLARE_BRANCH(double, trueY0);
-  DECLARE_BRANCH(double, trueTheta);
+  DECLARE_BRANCH(double, trueTanTheta);
   DECLARE_BRANCH(double, recoY0);
-  DECLARE_BRANCH(double, recoTheta);
+  DECLARE_BRANCH(double, recoTanTheta);
   DECLARE_BRANCH(double, uncertY0);
-  DECLARE_BRANCH(double, uncertTheta);
+  DECLARE_BRANCH(double, uncertTanTheta);
   DECLARE_BRANCH(double, chi2);
   DECLARE_BRANCH(std::size_t, nDoF);
   DECLARE_BRANCH(std::size_t, nIter);
@@ -512,7 +518,7 @@ void testStripFit(RandomEngine& engine, TFile& outFile) {
     auto linePars = track.parameters();
     /// True parameters
     trueY0 = linePars[toUnderlying(Line_t::ParIndex::y0)];
-    trueTheta = linePars[toUnderlying(Line_t::ParIndex::theta)];
+    trueTanTheta = track.direction().y() / track.direction().z();
 
     auto stripPoints = generateStrips(track, engine);
 
@@ -522,14 +528,14 @@ void testStripFit(RandomEngine& engine, TFile& outFile) {
     }
     /// Fit parameters
     recoY0 = (*result).y0;
-    recoTheta = (*result).theta;
+    recoTanTheta = (*result).theta;
     uncertY0 = (*result).dY0;
-    uncertTheta = (*result).dTheta;
+    uncertTanTheta = (*result).dTheta;
     nDoF = (*result).nDoF;
     nIter = (*result).nIter;
     chi2 = 0.;
     auto pos = recoY0 * Vector3::UnitY();
-    auto dir = makeDirectionFromPhiTheta(90._degree, recoTheta);
+    auto dir = makeDirectionFromAxisTangents(0., recoTanTheta);
     for (const auto& strip : stripPoints) {
       chi2 += CompSpacePointAuxiliaries::chi2Term(pos, dir, *strip);
     }

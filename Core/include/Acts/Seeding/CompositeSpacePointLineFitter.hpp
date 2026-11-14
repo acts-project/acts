@@ -247,6 +247,26 @@ class CompositeSpacePointLineFitter {
   /// @param parValue: Value of the line parameter to check
   /// @param fitPar: Parameter index to which the value corresponds and which interval shall be picked
   bool withinRange(const double parValue, const FitParIndex fitPar) const;
+  /// Covariance of the line parameters from the fast fit in one plane alone.
+  /// The parameters of the other plane are not fitted and keep their identity
+  /// rows: in the bending plane theta is the polar angle at fixed phi, in the
+  /// non-bending plane phi is the azimuth at fixed theta.
+  /// @param planeResult: Fast fit in one plane, in the chamber frame ((tanBeta, y0) or (tanAlpha, x0))
+  /// @param projection: Plane of the fit (bending or non-bending)
+  /// @param lineDir: Direction of the fitted line
+  /// @param cov: Covariance whose (y0, theta) or (x0, phi) block is set
+  static void fastFitCovariance(const FastFitter_t::FitResult& planeResult,
+                                const FastFitter_t::ResidualIdx projection,
+                                const Vector_t& lineDir, CovMat_t& cov);
+  /// Covariance of the line parameters from the fast fits in the bending and in
+  /// the non-bending plane: (y0, x0, tanBeta, tanAlpha) -> (y0, theta, x0, phi)
+  /// @param precResult: Fast fit in the bending plane, in the chamber frame (tanBeta, y0)
+  /// @param nonPrecResult: Fast fit in the non-bending plane, in the chamber frame (tanAlpha, x0)
+  /// @param lineDir: Direction of the fitted line
+  /// @param cov: Covariance whose (y0, theta, x0, phi) block is set
+  static void fastFitCovariance(const FastFitter_t::FitResult& precResult,
+                                const FastFitter_t::FitResult& nonPrecResult,
+                                const Vector_t& lineDir, CovMat_t& cov);
   /// Abrivation of the fit result returned by the FastStrawLineFitter
   using FastFitResult = std::optional<FastFitter_t::FitResult>;
   using FastFitResultT0 = std::optional<FastFitter_t::FitResultT0>;
@@ -288,13 +308,6 @@ class CompositeSpacePointLineFitter {
       const Cont_t& measurements, const Line_t& initialGuess,
       const FastFitDelegate_t<Cont_t, fitTime>& delegate) const;
 
-  /// Executes the fast fit in the non-bending direction. In case of success,
-  /// the
-  ///        fitted angle is overwritten with tanAlpha for an easier combination
-  ///        with the precision fit
-  /// @param measurements: List of measurements to fit
-  template <CompositeSpacePointContainer Cont_t>
-  FastFitResult fastNonPrecFit(const Cont_t& measurements) const;
   /// Update the straight line parameters based on the current chi2 and its
   ///        derivatives. Returns whether the parameter update succeeded or was
   ///        sufficiently small such that the fit is converged. If converged,
