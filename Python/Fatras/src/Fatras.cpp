@@ -17,6 +17,12 @@
 
 namespace py = pybind11;
 
+namespace ActsPython {
+
+void addFatrasSynthetic(py::module_& fatras);
+
+}  // namespace ActsPython
+
 PYBIND11_MODULE(ActsFatrasPythonBindings, fatras) {
   using Barcode = ActsFatras::Barcode;
   using Particle = ActsFatras::Particle;
@@ -95,4 +101,6 @@ PYBIND11_MODULE(ActsFatrasPythonBindings, fatras) {
       .def_property_readonly("fourMomentum", &Particle::fourMomentum)
       .def_property_readonly("direction", &Particle::direction)
       .def_property_readonly("absoluteMomentum", &Particle::absoluteMomentum);
+
+  ActsPython::addFatrasSynthetic(fatras);
 }
