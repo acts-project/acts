@@ -127,20 +127,6 @@
                 "default"
             ]
         },
-        "Detray/detectors/detray/detectors/itk_metadata.hpp": {
-            "script": "Detray/detectors/codegen/generate_metadata.py",
-            "output": "detray/detectors/itk_metadata.hpp",
-            "with_requirements": [],
-            "with": [
-                "Detray/detectors/codegen"
-            ],
-            "isolated": true,
-            "python_version": "3.13",
-            "arguments": [
-                "--detector",
-                "itk"
-            ]
-        },
         "Detray/detectors/detray/detectors/odd_metadata.hpp": {
             "script": "Detray/detectors/codegen/generate_metadata.py",
             "output": "detray/detectors/odd_metadata.hpp",

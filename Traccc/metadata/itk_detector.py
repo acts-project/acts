@@ -20,7 +20,7 @@ def configure(md: metadata):
     logger.info("Define types required by the ATLAS Inner Tracker (ITk):")
 
     # Strip stereo annulus shape
-    logger.info("-> adding ITk strip detecor custom shape")
+    logger.info("-> adding ITk strip detector custom shape")
     md.add_sensitive(Shape.ANNULUS)
 
     # Add default types for silicon trackers (cylindrical detector shape)

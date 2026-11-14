@@ -45,13 +45,7 @@ endif()
 # Generate the metadata headers. Only hand-written headers (telescope) live in
 # the source tree; the shipped detector configurations in
 # codegen/detray_metadata/configurations are always generated.
-set(_detray_shipped_metadata
-    default
-    itk
-    odd
-    toy
-    wire_chamber
-)
+set(_detray_shipped_metadata default odd toy wire_chamber)
 foreach(_name IN LISTS _detray_shipped_metadata)
     detray_add_metadata_header(detray_detectors "${_name}")
 endforeach()
@@ -64,6 +58,14 @@ foreach(_configuration IN LISTS DETRAY_GENERATE_METADATA)
             DEPRECATION
             "DETRAY_GENERATE_METADATA: '${_configuration}' is always generated, "
             "remove it from the list"
+        )
+        continue()
+    endif()
+    if(_name STREQUAL "itk")
+        message(
+            DEPRECATION
+            "DETRAY_GENERATE_METADATA: the ITk metadata is no longer shipped by "
+            "detray; traccc generates it (see TRACCC_ITK_METADATA_CONFIGURATION)"
         )
         continue()
     endif()
