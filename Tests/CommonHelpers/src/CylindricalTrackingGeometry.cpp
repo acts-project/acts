@@ -19,8 +19,11 @@
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
@@ -313,60 +316,167 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3(
   Blueprint root{cfg};
 
   root.addCylinderContainer("Detector", AxisR, [&](auto& detector) {
+    if (gen3GapVolumes) {
+      detector.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+    }
     auto beampipeBounds =
         std::make_unique<CylinderVolumeBounds>(0_mm, kBeamPipeRadius, 100_mm);
     auto beampipe = std::make_unique<TrackingVolume>(
         Transform3::Identity(), std::move(beampipeBounds), "Beampipe");
 
-    detector.addMaterial("BeampipeMaterial", [&](auto& bpMat) {
-      MaterialSlab beamPipeMaterial(makeBeryllium(), kBeamPipeThickness);
-      bpMat.configureFace(OuterCylinder, binnedMaterial);
-      bpMat.addStaticVolume(std::move(beampipe));
-    });
+    if (gen3PassiveMaterial) {
+      detector.addMaterial("BeampipeMaterial", [&](auto& bpMat) {
+        MaterialSlab beamPipeMaterial(makeBeryllium(), kBeamPipeThickness);
+        bpMat.configureFace(OuterCylinder, binnedMaterial);
+        bpMat.addStaticVolume(std::move(beampipe));
+      });
+    } else {
+      detector.addStaticVolume(std::move(beampipe));
+    }
 
     auto layerMaterialPtr =
         std::make_shared<HomogeneousSurfaceMaterial>(lProperties);
 
-    for (std::size_t ilp = 0; ilp < kLayerRadii.size(); ++ilp) {
-      std::vector<Surface*> layerSurfaces =
-          surfacesCylinder(detectorStore, kModuleHalfX[ilp], kModuleHalfY[ilp],
-                           kModuleThickness[ilp], kModuleTiltPhi[ilp],
-                           kLayerRadii[ilp], 2_mm, 5_mm, kLayerBinning[ilp]);
+    // Portal policy of the layer volumes, next to their surface array
+    auto layerPolicy =
+        [&](const SurfaceArrayNavigationPolicy::Config& arrayConfig) {
+          if (gen3CylinderPortalPolicy) {
+            return NavigationPolicyFactory{}
+                .add<CylinderNavigationPolicy>()
+                .add<SurfaceArrayNavigationPolicy>(arrayConfig)
+                .asUniquePtr();
+          }
+          return NavigationPolicyFactory{}
+              .add<TryAllNavigationPolicy>(
+                  TryAllNavigationPolicy::Config{.sensitives = false})
+              .add<SurfaceArrayNavigationPolicy>(arrayConfig)
+              .asUniquePtr();
+        };
 
-      // Make a shared version out of it
-      std::vector<std::shared_ptr<Surface>> layerSurfacePtrs;
-      layerSurfacePtrs.reserve(layerSurfaces.size());
-      for (auto& sf : layerSurfaces) {
-        layerSurfacePtrs.push_back(sf->getSharedPtr());
+    auto addBarrelLayers = [&](auto& container) {
+      for (std::size_t ilp = 0; ilp < kLayerRadii.size(); ++ilp) {
+        std::vector<Surface*> layerSurfaces = surfacesCylinder(
+            detectorStore, kModuleHalfX[ilp], kModuleHalfY[ilp],
+            kModuleThickness[ilp], kModuleTiltPhi[ilp], kLayerRadii[ilp], 2_mm,
+            5_mm, kLayerBinning[ilp]);
+
+        // Make a shared version out of it
+        std::vector<std::shared_ptr<Surface>> layerSurfacePtrs;
+        layerSurfacePtrs.reserve(layerSurfaces.size());
+        for (auto& sf : layerSurfaces) {
+          layerSurfacePtrs.push_back(sf->getSharedPtr());
+        }
+
+        // create the layer and store it
+        MutableProtoLayer protoLayer(geoContext, layerSurfaces);
+        protoLayer.envelope[AxisR] = {0.5, 0.5};
+
+        std::string layerName = "L" + std::to_string(ilp);
+        auto addLayer = [&](auto& parent) {
+          parent.addLayer(layerName, [&](auto& layer) {
+            layer.setProtoLayer(protoLayer);
+            layer.setLayerType(LayerType::Cylinder);
+            layer.setEnvelope(ExtentEnvelope{
+                {.z = {5_mm, 5_mm},
+                 .r = {gen3LayerEnvelopeR, gen3LayerEnvelopeR}}});
+
+            using SrfArrayNavPol = SurfaceArrayNavigationPolicy;
+
+            const SrfArrayNavPol::Config arrayConfig{
+                .layerType = SrfArrayNavPol::LayerType::Cylinder,
+                .bins = kLayerBinning[ilp]};
+            layer.setNavigationPolicyFactory(layerPolicy(arrayConfig));
+          });
+        };
+        if (gen3PassiveMaterial) {
+          container.addMaterial(layerName + "_Mat", [&](auto& mat) {
+            mat.configureFace(OuterCylinder, layerMaterialPtr);
+            addLayer(mat);
+          });
+        } else {
+          addLayer(container);
+        }
+
+      }  // loop over layers
+    };
+
+    if (!gen3Endcaps) {
+      addBarrelLayers(detector);
+      return;
+    }
+
+    // Endcap disc layers: two rings of trapezoids per disc, the inner and the
+    // outer ring and every second module in phi staggered in z
+    auto addDiscLayer = [&](auto& container, const std::string& layerName,
+                            double discZ) {
+      std::vector<Surface*> discSurfaces;
+      for (const DiscRing& ring : kDiscRings) {
+        const double ringZ =
+            discZ + (discZ < 0. ? -ring.zOffset : ring.zOffset);
+        auto ringSurfaces = surfacesRing(
+            detectorStore, ring.halfXminY, ring.halfXmaxY, ring.halfY,
+            kModuleThickness[0], 0., ring.radius, ringZ,
+            std::copysign(kDiscModuleStagger, discZ), ring.nPhi);
+        discSurfaces.insert(discSurfaces.end(), ringSurfaces.begin(),
+                            ringSurfaces.end());
       }
-
-      // create the layer and store it
-      MutableProtoLayer protoLayer(geoContext, layerSurfaces);
-      protoLayer.envelope[AxisR] = {0.5, 0.5};
-
-      std::string layerName = "L" + std::to_string(ilp);
-      detector.addMaterial(layerName + "_Mat", [&](auto& mat) {
-        mat.configureFace(OuterCylinder, layerMaterialPtr);
-        mat.addLayer(layerName, [&](auto& layer) {
+      MutableProtoLayer protoLayer(geoContext, discSurfaces);
+      protoLayer.envelope[AxisZ] = {0.5, 0.5};
+      auto addLayer = [&](auto& parent) {
+        parent.addLayer(layerName, [&](auto& layer) {
           layer.setProtoLayer(protoLayer);
-          layer.setLayerType(LayerType::Cylinder);
+          layer.setLayerType(LayerType::Disc);
           layer.setEnvelope(
-              ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
-
-          using SrfArrayNavPol = SurfaceArrayNavigationPolicy;
-
+              ExtentEnvelope{{.z = {gen3LayerEnvelopeR, gen3LayerEnvelopeR},
+                              .r = {5_mm, 5_mm}}});
           layer.setNavigationPolicyFactory(
-              NavigationPolicyFactory{}
-                  .add<TryAllNavigationPolicy>(
-                      TryAllNavigationPolicy::Config{.sensitives = false})
-                  .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
-                      .layerType = SrfArrayNavPol::LayerType::Cylinder,
-                      .bins = kLayerBinning[ilp]})
-                  .asUniquePtr());
+              layerPolicy(SurfaceArrayNavigationPolicy::Config{
+                  .layerType = SurfaceArrayNavigationPolicy::LayerType::Disc,
+                  .bins = {0, 0}}));
         });
-      });
+      };
+      if (gen3PassiveMaterial) {
+        container.addMaterial(layerName + "_Mat", [&](auto& mat) {
+          // on the face towards z = 0: the outer faces of the last discs are
+          // merged with the beampipe when the detector is stacked in r
+          mat.configureFace(discZ < 0. ? PositiveDisc : NegativeDisc,
+                            layerMaterialPtr);
+          addLayer(mat);
+        });
+      } else {
+        addLayer(container);
+      }
+    };
 
-    }  // loop over layers
+    auto& pixel = detector.addCylinderContainer("Pixel", AxisZ);
+    pixel.addCylinderContainer("NegEndcap", AxisZ, [&](auto& endcap) {
+      if (!gen3ThickEndcaps) {
+        endcap.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+        endcap.setResizeStrategy(VolumeResizeStrategy::Gap);
+      }
+      for (std::size_t id = kDiscZ.size(); id-- > 0;) {
+        addDiscLayer(endcap, "NEC" + std::to_string(id), -kDiscZ[id]);
+      }
+    });
+    pixel.addCylinderContainer("Barrel", AxisR, [&](auto& barrel) {
+      if (gen3GapVolumes) {
+        barrel.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+      }
+      // thin: a gap volume also between the beampipe and L0
+      barrel.setResizeStrategies(gen3GapVolumes ? VolumeResizeStrategy::Gap
+                                                : VolumeResizeStrategy::Expand,
+                                 VolumeResizeStrategy::Gap);
+      addBarrelLayers(barrel);
+    });
+    pixel.addCylinderContainer("PosEndcap", AxisZ, [&](auto& endcap) {
+      if (!gen3ThickEndcaps) {
+        endcap.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+        endcap.setResizeStrategy(VolumeResizeStrategy::Gap);
+      }
+      for (std::size_t id = 0; id < kDiscZ.size(); ++id) {
+        addDiscLayer(endcap, "PEC" + std::to_string(id), kDiscZ[id]);
+      }
+    });
   });
 
   BlueprintOptions opts;
