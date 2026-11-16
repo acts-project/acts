@@ -104,6 +104,10 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
           [](writer_config_t &c, const std::string &p) { c.path(p); },
           "Path to the output files")
       .def_property(
+          "source", [](const writer_config_t &c) { return c.source(); },
+          [](writer_config_t &c, const std::string &s) { c.source(s); },
+          "Description of the geometry source")
+      .def_property(
           "replaceFiles",
           [](const writer_config_t &c) { return c.replace_files(); },
           [](writer_config_t &c, bool b) { c.replace_files(b); },

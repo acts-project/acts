@@ -17,13 +17,11 @@
 
 #include <array>
 
-#include <covfie/core/field.hpp>
 #include <detray/core/concepts.hpp>
 #include <detray/navigation/caching_navigator.hpp>
 #include <detray/propagator/actor_chain.hpp>
 #include <detray/propagator/propagation_config.hpp>
 #include <detray/propagator/propagator.hpp>
-#include <detray/test/common/bfield.hpp>
 #include <detray/test/utils/inspectors.hpp>
 #include <detray/test/validation/material_validation_utils.hpp>
 #include <vecmem/memory/memory_resource.hpp>
@@ -47,7 +45,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
   ///        if results change with a larger window, the converted grids are
   ///        missing neighbor entries and the filling should be optimized.
   explicit DetrayConcretePropagator(
-      std::shared_ptr<detector_t> dGeometry,
+      std::shared_ptr<const detector_t> dGeometry,
       vecmem::memory_resource& memoryResource,
       std::unique_ptr<const Acts::Logger> logger =
           Acts::getDefaultLogger("DetrayPropagator", Acts::Logging::INFO),
@@ -212,7 +210,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
   }
 
   /// The detray detector store and memory resource
-  std::shared_ptr<detector_t> m_detrayGeometry = nullptr;
+  std::shared_ptr<const detector_t> m_detrayGeometry = nullptr;
   vecmem::memory_resource* m_memoryResource = nullptr;
 
   /// Grid acceleration search window (per axis) applied to the navigation

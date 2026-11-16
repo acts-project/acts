@@ -76,3 +76,20 @@ material and accelerator stores are not part of this initial inspection API.
 Detectors returned by IO and test builders keep their memory resource alive.
 SVG illustrators retain their detector and names. Standalone detray imports
 never import ACTS; ACTS bridge modules use these canonical registrations.
+
+## ACTS bridge and propagation
+
+`acts.detray.DetrayGeometryConverter.convert(resource, context, geometry,
+metadataId="odd")` returns a result whose `detector` is this same
+`detray.Detector`. The extracted detector keeps the conversion result, allocator,
+and ACTS tracking geometry alive. `acts.vecmem` forwards the detray resource types.
+
+Use `detray.io.readDetector` and `writeDetector` for both standalone and converted
+geometries. `acts.examples.detray.StraightLinePropagator` accepts the common
+`Detector` and dispatches to its registered concrete type; it retains the detector
+and propagation allocator. The validation scripts accept `--detray-metadata` for
+explicit metadata selection, including legacy JSON files.
+
+The ACTS bridge tests in `Python/Plugins/tests/test_detray.py` cover import order,
+conversion, JSON round trips and allocator ownership. ACTS jobs discover these
+alongside detray's own tests.

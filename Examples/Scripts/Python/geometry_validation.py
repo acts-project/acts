@@ -61,6 +61,11 @@ def main():
         help="Run the consistency check for the detray geometry",
     )
 
+    p.add_argument(
+        "--detray-metadata",
+        default=None,
+        help="Detector metadata ID (override for legacy input files)",
+    )
     args = p.parse_args()
 
     prfx = args.output + "_" if args.output != "" else ""
@@ -112,15 +117,21 @@ def main():
     # check if the mode does not contain geant4
     elif args.geo_mode == "detray":
         import glob
-        import acts.vecmem, acts.detray
+        import acts.detray
+        import detray, detray.io
         import acts.examples.detray
 
-        __pmr = acts.vecmem.HostMemoryResource()
+        __pmr = detray.HostMemoryResource()
 
         if args.input != "":
             files = glob.glob(args.input.rstrip("/") + "/*.json")
             print(">>> Reading detray geometry from", args.input, "->", files)
-            detrayDetector, detrayNames = acts.detray.readODD(__pmr, files)
+            reader = detray.io.DetectorReaderConfig()
+            for file in files:
+                reader.addFile(file)
+            detrayDetector, detrayNames = detray.io.readDetector(
+                __pmr, reader, metadataId=args.detray_metadata or ""
+            )
         else:
             payloadConfig = acts.detray.DetrayPayloadConverter.Config()
             payloadConfig.detectorName = "odd"
@@ -133,7 +144,12 @@ def main():
             converterConfig.payloadConverter = payloadConverter
             converter = acts.detray.DetrayGeometryConverter(converterConfig, logLevel)
 
-            detrayGeometry = converter.convert(__pmr, gContext, trackingGeometry)
+            detrayGeometry = converter.convert(
+                __pmr,
+                gContext,
+                trackingGeometry,
+                metadataId=args.detray_metadata or "odd",
+            )
             detrayDetector, detrayNames = (
                 detrayGeometry.detector,
                 detrayGeometry.names,
@@ -145,7 +161,10 @@ def main():
         if args.output_json:
             print(">>> Outputting the detray geometry to json file ...")
             detray_out = prfx + "detray/"
-            detrayDetector.writeToJson(detrayNames, "ACTS_geo_validation", detray_out)
+            writer = detray.io.DetectorWriterConfig()
+            writer.path = detray_out
+            writer.source = "ACTS_geo_validation"
+            detray.io.writeDetector(detrayDetector, detrayNames, writer)
             print(">>> Written to", detray_out)
 
     elif args.geo_mode == "geant4":

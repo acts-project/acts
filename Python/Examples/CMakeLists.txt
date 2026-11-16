@@ -272,10 +272,13 @@ add_examples_binding_if(
 )
 add_examples_binding_if(
     NAME Detray
-    LINK_LIBRARIES Acts::PluginCovfie Acts::ExamplesDetray
+    LINK_LIBRARIES Acts::PluginCovfie Acts::ExamplesDetray detray::python_common
     FLAG ACTS_BUILD_PLUGIN_TRACCC
     PLUGIN_IMPORT FALSE
 )
+if(TARGET ActsExamplesPythonBindingsDetray)
+    add_dependencies(ActsExamplesPythonBindingsDetray DetrayPythonBindings)
+endif()
 add_examples_binding_if(
     NAME TruthJet
     LINK_LIBRARIES Acts::ExamplesJets

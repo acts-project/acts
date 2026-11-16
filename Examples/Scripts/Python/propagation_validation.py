@@ -119,6 +119,11 @@ def main():
         "surface grids are missing neighbor-cell entries",
     )
 
+    p.add_argument(
+        "--detray-metadata",
+        default=None,
+        help="Detector metadata ID (override for legacy input files)",
+    )
     args = p.parse_args()
 
     prfx = args.output + "_" if args.output != "" else ""
@@ -187,15 +192,21 @@ def main():
             propagatorImpl = acts.examples.ConcretePropagator(propagator)
         else:
             import glob
-            import acts.vecmem, acts.detray
+            import acts.detray
+            import detray, detray.io
             import acts.examples.detray
 
-            __pmr = acts.vecmem.HostMemoryResource()
+            __pmr = detray.HostMemoryResource()
 
             if args.input != "":
                 files = glob.glob(args.input.rstrip("/") + "/*.json")
                 print(">>> Reading detray geometry from", args.input, "->", files)
-                detrayDetector, _ = acts.detray.readODD(__pmr, files)
+                reader = detray.io.DetectorReaderConfig()
+                for file in files:
+                    reader.addFile(file)
+                detrayDetector, _ = detray.io.readDetector(
+                    __pmr, reader, metadataId=args.detray_metadata or ""
+                )
             else:
                 payloadConfig = acts.detray.DetrayPayloadConverter.Config()
                 payloadConfig.convertMaterial = True
@@ -214,9 +225,12 @@ def main():
                 )
 
                 detrayDetector = converter.convert(
-                    __pmr, gContext, trackingGeometry
+                    __pmr,
+                    gContext,
+                    trackingGeometry,
+                    metadataId=args.detray_metadata or "odd",
                 ).detector
-            propagatorImpl = acts.examples.detray.StraightLinePropagatorODD(
+            propagatorImpl = acts.examples.detray.StraightLinePropagator(
                 detrayDetector,
                 __pmr,
                 sterileRun,

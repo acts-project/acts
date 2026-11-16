@@ -38,20 +38,7 @@ def test_conversion_io_and_allocator_lifetime(metadata_id, tmp_path):
     import detray
     import detray.io
 
-    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
-    root = acts.Blueprint(envelope=acts.ExtentEnvelope(r=[1, 1], z=[1, 1]))
-    root.addStaticVolume(
-        acts.Transform3.Identity(), acts.CylinderVolumeBounds(10, 20, 30), name="volume"
-    )
-    geometry = root.construct(acts.BlueprintOptions(), gctx, level=acts.logging.WARNING)
-    payload_cfg = acts.detray.DetrayPayloadConverter.Config()
-    payload_cfg.beampipeVolume = geometry.findVolumeByName("volume")
-    converter_cfg = acts.detray.DetrayGeometryConverter.Config()
-    converter_cfg.payloadConverter = acts.detray.DetrayPayloadConverter(
-        payload_cfg, acts.logging.WARNING
-    )
-    converter = acts.detray.DetrayGeometryConverter(converter_cfg, acts.logging.WARNING)
-    mr = detray.HostMemoryResource()
+    converter, mr, gctx, geometry = make_conversion()
     mr_ref = weakref.ref(mr)
     geometry_ref = weakref.ref(geometry)
     result = converter.convert(mr, gctx, geometry, metadataId=metadata_id)
@@ -79,3 +66,48 @@ def test_conversion_io_and_allocator_lifetime(metadata_id, tmp_path):
     gc.collect()
     assert mr_ref() is None
     assert geometry_ref() is None
+
+
+def make_conversion():
+    import acts.detray
+    import detray
+
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+    root = acts.Blueprint(envelope=acts.ExtentEnvelope(r=[1, 1], z=[1, 1]))
+    root.addStaticVolume(
+        acts.Transform3.Identity(), acts.CylinderVolumeBounds(10, 20, 30), name="volume"
+    )
+    geometry = root.construct(acts.BlueprintOptions(), gctx, level=acts.logging.WARNING)
+    payload_cfg = acts.detray.DetrayPayloadConverter.Config()
+    payload_cfg.beampipeVolume = geometry.findVolumeByName("volume")
+    converter_cfg = acts.detray.DetrayGeometryConverter.Config()
+    converter_cfg.payloadConverter = acts.detray.DetrayPayloadConverter(
+        payload_cfg, acts.logging.WARNING
+    )
+    converter = acts.detray.DetrayGeometryConverter(converter_cfg, acts.logging.WARNING)
+    mr = detray.HostMemoryResource()
+    return converter, mr, gctx, geometry
+
+
+@pytest.mark.parametrize("metadata_id", ["default", "odd"])
+@pytest.mark.parametrize("sterile", [False, True])
+def test_propagator_retains_detector_and_resources(metadata_id, sterile):
+    if importlib.util.find_spec("acts.examples") is None:
+        pytest.skip("ACTS examples are not built")
+    import acts.examples.detray
+    import detray
+
+    converter, mr, gctx, geometry = make_conversion()
+    result = converter.convert(mr, gctx, geometry, metadataId=metadata_id)
+    detector = result.detector
+    scratch = detray.HostMemoryResource()
+    refs = [weakref.ref(value) for value in (mr, geometry, detector, scratch)]
+    propagator = acts.examples.detray.StraightLinePropagator(
+        detector, scratch, sterile, acts.logging.WARNING
+    )
+    del result, detector, mr, geometry, scratch
+    gc.collect()
+    assert all(ref() is not None for ref in refs)
+    del propagator
+    gc.collect()
+    assert all(ref() is None for ref in refs)
