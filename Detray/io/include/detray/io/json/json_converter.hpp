@@ -107,13 +107,15 @@ class json_converter<detector_t, backend_t> final
   /// @param source the detector source description
   /// @param mode Output stream mode.
   /// @param file_path Directory in which the JSON file is created.
+  /// @param metadata_id Optional stable metadata family ID.
   /// @return Path to the created file.
   std::string write(const detector_t& det,
                     const typename detector_t::name_map& names,
                     const std::string& source,
                     const std::ios_base::openmode mode = std::ios::out |
                                                          std::ios::binary,
-                    const std::filesystem::path& file_path = {"./"}) override {
+                    const std::filesystem::path& file_path = {"./"},
+                    std::string_view metadata_id = {}) override {
     // Assert output stream
     assert(((mode == std::ios_base::out) ||
             (mode == (std::ios_base::out | std::ios_base::binary)) ||
@@ -134,6 +136,10 @@ class json_converter<detector_t, backend_t> final
     out_json["header"]["common"] =
         io::detail::basic_converter::to_tagged_header_payload<detector_t>(
             det_name, std::string(io_backend::tag), source);
+
+    if (!metadata_id.empty()) {
+      out_json["header"]["common"]["metadata"] = metadata_id;
+    }
 
     // Write the detector data into the json stream by using the
     // conversion functions defined in "detray/io/json/json_io.hpp"

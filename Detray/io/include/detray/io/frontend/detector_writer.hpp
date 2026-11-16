@@ -18,6 +18,7 @@
 // System include(s)
 #include <filesystem>
 #include <ios>
+#include <string_view>
 
 namespace detray::io {
 
@@ -28,9 +29,12 @@ namespace detray::io {
 /// @param det detector whose component stores are written
 /// @param names map used to write component names
 /// @param cfg output format, destination, and component-selection options
+/// @param metadata_id optional stable metadata family ID written to file headers
 template <class detector_t>
-void write_detector(detector_t& det, const typename detector_t::name_map& names,
-                    detector_writer_config& cfg) {
+void write_detector(const detector_t& det,
+                    const typename detector_t::name_map& names,
+                    detector_writer_config& cfg,
+                    std::string_view metadata_id = {}) {
   // How to open the file
   const std::ios_base::openmode out_mode{std::ios_base::out |
                                          std::ios_base::binary};
@@ -53,7 +57,7 @@ void write_detector(detector_t& det, const typename detector_t::name_map& names,
     DETRAY_ERROR_HOST("Compactifying json files is not yet implemented");
   }
 
-  writer.write(det, names, cfg.source(), mode, file_path);
+  writer.write(det, names, cfg.source(), mode, file_path, metadata_id);
 }
 
 }  // namespace detray::io

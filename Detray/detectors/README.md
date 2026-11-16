@@ -71,8 +71,13 @@ families.
 
 When ITk moves out of tree, remove its shipped registration and let its provider
 register `itk`. Registry consumers and their selections then stay unchanged.
-The registry does not yet change legacy JSON reader fallback behavior; IO
-selection by stable ID belongs to the subsequent reader migration.
+`detray/detectors/io.hpp` supplies `read_registered_detector_json<algebra_t>`,
+`read_registered_detector<algebra_t>` (from a payload), and
+`write_registered_detector<algebra_t>`. These functions return or accept the
+common host detector owner. Writers record the stable family ID in every JSON
+component. Readers also accept the older `<id>_metadata` spelling. Missing or
+unknown IDs throw; pass an explicit ID to read legacy data. Detector display
+names do not select metadata types.
 
 The configure/export checks run with `ctest -R detray_metadata_registry` in a
 build with `DETRAY_BUILD_TESTING=ON`.
