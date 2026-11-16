@@ -56,7 +56,7 @@ struct material_rod {
   DETRAY_HOST_DEVICE
   constexpr bool is_valid() const {
     if (m_radius <= std::numeric_limits<scalar_type>::epsilon() ||
-        m_material.state() == material_state::e_unknown ||
+        m_radius == std::numeric_limits<scalar_type>::max() ||
         !m_material.is_valid()) {
       return false;
     }

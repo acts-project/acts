@@ -23,14 +23,6 @@
 
 namespace detray {
 
-/// Material State
-enum class material_state {
-  e_solid = 0,
-  e_liquid = 1,
-  e_gas = 2,
-  e_unknown = 3
-};
-
 /// Material composition properties and density data used by interactions.
 template <concepts::scalar scalar_t, typename R = std::ratio<1, 1>>
 struct material {
@@ -47,17 +39,11 @@ struct material {
   /// @param ar relative atomic mass
   /// @param z nuclear charge number
   /// @param mass_rho mass density
-  /// @param state physical state of the material
   DETRAY_HOST_DEVICE
   constexpr material(const scalar_type x0, const scalar_type l0,
                      const scalar_type ar, const scalar_type z,
-                     const scalar_type mass_rho, const material_state state)
-      : m_x0(x0),
-        m_l0(l0),
-        m_ar(ar),
-        m_z(z),
-        m_mass_rho(mass_rho),
-        m_state(state) {
+                     const scalar_type mass_rho)
+      : m_x0(x0), m_l0(l0), m_ar(ar), m_z(z), m_mass_rho(mass_rho) {
     m_molar_rho = mass_to_molar_density(ar, mass_rho);
   }
 
@@ -67,7 +53,6 @@ struct material {
   /// @param ar relative atomic mass
   /// @param z nuclear charge number
   /// @param mass_rho mass density
-  /// @param state physical state of the material
   /// @param d_a density-effect fit parameter a
   /// @param d_m density-effect fit parameter m
   /// @param d_X0 lower density-effect threshold
@@ -78,17 +63,15 @@ struct material {
   DETRAY_HOST_DEVICE
   constexpr material(const scalar_type x0, const scalar_type l0,
                      const scalar_type ar, const scalar_type z,
-                     const scalar_type mass_rho, const material_state state,
-                     const scalar_type d_a, const scalar_type d_m,
-                     const scalar_type d_X0, const scalar_type d_X1,
-                     const scalar_type d_I, const scalar_type d_nC,
-                     const scalar_type d_delta0)
+                     const scalar_type mass_rho, const scalar_type d_a,
+                     const scalar_type d_m, const scalar_type d_X0,
+                     const scalar_type d_X1, const scalar_type d_I,
+                     const scalar_type d_nC, const scalar_type d_delta0)
       : m_x0(x0),
         m_l0(l0),
         m_ar(ar),
         m_z(z),
         m_mass_rho(mass_rho),
-        m_state(state),
         m_density(d_a, d_m, d_X0, d_X1, d_I, d_nC, d_delta0),
         m_has_density_effect_data(true) {
     m_molar_rho = mass_to_molar_density(ar, mass_rho);
@@ -156,9 +139,6 @@ struct material {
   /// @brief mass_density / A
   DETRAY_HOST_DEVICE
   constexpr scalar_type molar_density() const { return m_molar_rho; }
-  /// @returns the material state.
-  DETRAY_HOST_DEVICE
-  constexpr material_state state() const { return m_state; }
   /// @returns the molar electron density.
   /// @brief (Z/A) * mass_density
   DETRAY_HOST_DEVICE
@@ -212,27 +192,6 @@ struct material {
     strm << " | L0 = " << m_l0 << " mm";
     strm << " | Z = " << m_z;
     strm << " | rho = " << m_mass_rho << " GeV/mm^3";
-
-    strm << " | state = ";
-    switch (m_state) {
-      using enum material_state;
-      case e_solid: {
-        strm << "solid";
-        break;
-      }
-      case e_liquid: {
-        strm << "liquid";
-        break;
-      }
-      case e_gas: {
-        strm << "gaseous";
-        break;
-      }
-      default: {
-        strm << "unknown";
-        break;
-      }
-    }
 
     return strm.str();
   }
@@ -301,7 +260,6 @@ struct material {
   scalar_type m_z = 0.f;
   scalar_type m_mass_rho = 0.f;
   scalar_type m_molar_rho = 0.f;
-  material_state m_state = material_state::e_unknown;
   detail::density_effect_data<scalar_type> m_density = {};
   bool m_has_density_effect_data = false;
 };
@@ -313,15 +271,14 @@ struct material {
 /// @param Ar relative atomic mass
 /// @param Z nuclear charge number
 /// @param Rho mass density
-/// @param State physical material state
-#define DETRAY_DECLARE_MATERIAL(MATERIAL_NAME, X0, L0, Ar, Z, Rho, State) \
-  template <concepts::scalar scalar_t, typename R = std::ratio<1, 1>>     \
-  struct MATERIAL_NAME final : public material<scalar_t, R> {             \
-    /** Material storage and property accessors. */                       \
-    using base_type = material<scalar_t, R>;                              \
-    using base_type::base_type;                                           \
-    DETRAY_HOST_DEVICE                                                    \
-    constexpr MATERIAL_NAME() : base_type(X0, L0, Ar, Z, Rho, State) {}   \
+#define DETRAY_DECLARE_MATERIAL(MATERIAL_NAME, X0, L0, Ar, Z, Rho)    \
+  template <concepts::scalar scalar_t, typename R = std::ratio<1, 1>> \
+  struct MATERIAL_NAME final : public material<scalar_t, R> {         \
+    /** Material storage and property accessors. */                   \
+    using base_type = material<scalar_t, R>;                          \
+    using base_type::base_type;                                       \
+    DETRAY_HOST_DEVICE                                                \
+    constexpr MATERIAL_NAME() : base_type(X0, L0, Ar, Z, Rho) {}      \
   }
 
 /// !EXPERIMENTAL!
@@ -332,7 +289,6 @@ struct material {
 /// @param Ar relative atomic mass
 /// @param Z nuclear charge number
 /// @param Rho mass density
-/// @param State physical material state
 /// @param Density0 density-effect fit parameter a
 /// @param Density1 density-effect fit parameter m
 /// @param Density2 lower density-effect threshold
@@ -340,18 +296,18 @@ struct material {
 /// @param Density4 mean excitation energy
 /// @param Density5 density-effect normalization
 /// @param Density6 low-energy density-effect correction
-#define DETRAY_DECLARE_MATERIAL_WITH_DED(                                    \
-    MATERIAL_NAME, X0, L0, Ar, Z, Rho, State, Density0, Density1, Density2,  \
-    Density3, Density4, Density5, Density6)                                  \
-  template <concepts::scalar scalar_t, typename R = std::ratio<1, 1>>        \
-  struct MATERIAL_NAME final : public material<scalar_t, R> {                \
-    /** Material storage and property accessors. */                          \
-    using base_type = material<scalar_t, R>;                                 \
-    using base_type::base_type;                                              \
-    DETRAY_HOST_DEVICE                                                       \
-    constexpr MATERIAL_NAME()                                                \
-        : base_type(X0, L0, Ar, Z, Rho, State, Density0, Density1, Density2, \
-                    Density3, Density4, Density5, Density6) {}               \
+#define DETRAY_DECLARE_MATERIAL_WITH_DED(                                      \
+    MATERIAL_NAME, X0, L0, Ar, Z, Rho, Density0, Density1, Density2, Density3, \
+    Density4, Density5, Density6)                                              \
+  template <concepts::scalar scalar_t, typename R = std::ratio<1, 1>>          \
+  struct MATERIAL_NAME final : public material<scalar_t, R> {                  \
+    /** Material storage and property accessors. */                            \
+    using base_type = material<scalar_t, R>;                                   \
+    using base_type::base_type;                                                \
+    DETRAY_HOST_DEVICE                                                         \
+    constexpr MATERIAL_NAME()                                                  \
+        : base_type(X0, L0, Ar, Z, Rho, Density0, Density1, Density2,          \
+                    Density3, Density4, Density5, Density6) {}                 \
   }
 
 }  // namespace detray

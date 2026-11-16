@@ -62,19 +62,17 @@ class material_data {
   /// @param material_paramters Vector containing radiation length, nuclear
   /// interaction length, relative atomic mass, charge number, and molar
   /// density.
-  /// @param state of the material (liquid, solid etc.)
   /// @param sf_idx the index of the surface this material belongs to, needs
   ///               to be passed only if a special oredering must be observed
   DETRAY_HOST
   constexpr material_data(
       const scalar_t thickness, const std::vector<scalar_t> &material_paramters,
-      const material_state state = material_state::e_solid,
       const std::size_t sf_idx = detail::invalid_value<std::size_t>())
       : m_sf_index{sf_idx},
         m_mat{material<scalar_t>{
             material_paramters.at(0), material_paramters.at(1),
             material_paramters.at(2), material_paramters.at(3),
-            material_paramters.at(4), state}},
+            material_paramters.at(4)}},
         m_thickness{thickness} {}
 
   /// @returns tuple based access to the contained material data.
@@ -112,15 +110,13 @@ class material_data {
   /// @param material_paramters Vector containing radiation length, nuclear
   /// interaction length, relative atomic mass, charge number, and molar
   /// density.
-  /// @param state of the material (liquid, solid etc.)
   DETRAY_HOST
   void append(const scalar_t thickness,
-              const std::vector<scalar_t> &material_paramters,
-              const material_state state = material_state::e_solid) {
+              const std::vector<scalar_t> &material_paramters) {
     m_mat.push_back(
         material<scalar_t>{material_paramters.at(0), material_paramters.at(1),
                            material_paramters.at(2), material_paramters.at(3),
-                           material_paramters.at(4), state});
+                           material_paramters.at(4)});
     m_thickness.push_back(thickness);
   }
 
