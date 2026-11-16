@@ -85,9 +85,10 @@ if(ACTS_ENABLE_CUDA)
         ActsPluginGnn
         PROPERTIES CUDA_SEPARABLE_COMPILATION OFF
     )
-    target_link_libraries(ActsPluginGnn PRIVATE CUDA::cudart CUDA::nvtx3)
-    # Only the pipeline sets up CUDA streams, resources and copy objects
-    target_link_libraries(ActsPluginGnn PRIVATE vecmem::cuda)
+    target_link_libraries(
+        ActsPluginGnn
+        PRIVATE CUDA::cudart CUDA::nvtx3 vecmem::cuda
+    )
     target_sources(
         ActsPluginGnn
         PRIVATE
@@ -129,3 +130,5 @@ if(ACTS_GNN_ENABLE_TORCH)
         )
     endif()
 endif()
+
+add_component_dependencies(PluginGnn vecmem)

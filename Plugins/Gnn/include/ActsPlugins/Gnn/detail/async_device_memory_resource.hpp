@@ -20,9 +20,9 @@ namespace ActsPlugins::detail {
 /// vecmem memory resource on the stream-ordered CUDA allocator
 /// (cudaMallocAsync / cudaFreeAsync). Freed memory is only reused by work
 /// ordered after the free, and the driver pool is thread safe.
-class CudaStreamOrderedMemoryResource final : public vecmem::memory_resource {
+class async_device_memory_resource final : public vecmem::memory_resource {
  public:
-  explicit CudaStreamOrderedMemoryResource(cudaStream_t stream)
+  explicit async_device_memory_resource(cudaStream_t stream)
       : m_stream(stream) {}
 
   cudaStream_t stream() const { return m_stream; }
@@ -47,8 +47,7 @@ class CudaStreamOrderedMemoryResource final : public vecmem::memory_resource {
 
   bool do_is_equal(
       const vecmem::memory_resource &other) const noexcept override {
-    const auto *o =
-        dynamic_cast<const CudaStreamOrderedMemoryResource *>(&other);
+    const auto *o = dynamic_cast<const async_device_memory_resource *>(&other);
     return o != nullptr && o->m_stream == m_stream;
   }
 

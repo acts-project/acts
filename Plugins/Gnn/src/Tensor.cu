@@ -8,6 +8,9 @@
 
 #include "ActsPlugins/Gnn/Tensor.hpp"
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/async_device_memory_resource.hpp"
+
+#include <memory_resource>
 
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -163,10 +166,15 @@ Tensor<T> cudaSelectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
   const auto nCols = tensor.shape()[1];
   const auto nRows = tensor.shape()[0];
   const auto stream = execContext.stream.value();
+  async_device_memory_resource streamMr(stream);
+  std::pmr::memory_resource &mr = execContext.memoryResource != nullptr
+                                      ? *execContext.memoryResource
+                                      : streamMr;
 
   auto pred = [] __device__(bool x) { return x; };
   const std::size_t nSelected = thrust::count(
-      thrust::device.on(stream), mask.data(), mask.data() + nRows, true);
+      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&mr)).on(stream),
+      mask.data(), mask.data() + nRows, true);
 
   auto result = Tensor<T>::Create({nSelected, nCols}, execContext);
 
@@ -176,25 +184,25 @@ Tensor<T> cudaSelectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
 
   if (nCols == 1) {
     // Fast path: direct element selection via thrust stencil
-    thrust::copy_if(thrust::device.on(stream), tensor.data(),
-                    tensor.data() + nRows, mask.data(), result.data(), pred);
+    thrust::copy_if(
+        thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&mr))
+            .on(stream),
+        tensor.data(), tensor.data() + nRows, mask.data(), result.data(), pred);
   } else {
     // General path: collect surviving row indices, then gather rows
-    std::size_t *devRowIndices{};
-    ACTS_CUDA_CHECK(cudaMallocAsync(&devRowIndices,
-                                    nSelected * sizeof(std::size_t), stream));
-    thrust::copy_if(thrust::device.on(stream),
-                    thrust::make_counting_iterator<std::size_t>(0),
-                    thrust::make_counting_iterator<std::size_t>(nRows),
-                    mask.data(), devRowIndices, pred);
+    auto rowIndices = Tensor<std::size_t>::Create({nSelected, 1}, execContext);
+    thrust::copy_if(
+        thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&mr))
+            .on(stream),
+        thrust::make_counting_iterator<std::size_t>(0),
+        thrust::make_counting_iterator<std::size_t>(nRows), mask.data(),
+        rowIndices.data(), pred);
 
     dim3 blockDim = 1024;
     dim3 gridDim = (nSelected + blockDim.x - 1) / blockDim.x;
     gatherRowsKernel<<<gridDim, blockDim, 0, stream>>>(
-        devRowIndices, nSelected, nCols, tensor.data(), result.data());
+        rowIndices.data(), nSelected, nCols, tensor.data(), result.data());
     ACTS_CUDA_CHECK(cudaGetLastError());
-
-    ACTS_CUDA_CHECK(cudaFreeAsync(devRowIndices, stream));
   }
 
   return result;
@@ -206,10 +214,15 @@ Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
   const auto nRows = tensor.shape()[0];
   const auto nColsSrc = tensor.shape()[1];
   const auto stream = execContext.stream.value();
+  async_device_memory_resource streamMr(stream);
+  std::pmr::memory_resource &mr = execContext.memoryResource != nullptr
+                                      ? *execContext.memoryResource
+                                      : streamMr;
 
   auto pred = [] __device__(bool x) { return x; };
   const std::size_t nSelected = thrust::count(
-      thrust::device.on(stream), mask.data(), mask.data() + nColsSrc, true);
+      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&mr)).on(stream),
+      mask.data(), mask.data() + nColsSrc, true);
 
   auto result = Tensor<T>::Create({nRows, nSelected}, execContext);
 
@@ -218,21 +231,19 @@ Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
   }
 
   // Collect surviving column indices on device, then use gather kernel
-  std::size_t *devColIndices{};
-  ACTS_CUDA_CHECK(
-      cudaMallocAsync(&devColIndices, nSelected * sizeof(std::size_t), stream));
-  thrust::copy_if(thrust::device.on(stream),
-                  thrust::make_counting_iterator<std::size_t>(0),
-                  thrust::make_counting_iterator<std::size_t>(nColsSrc),
-                  mask.data(), devColIndices, pred);
+  auto colIndices = Tensor<std::size_t>::Create({nSelected, 1}, execContext);
+  thrust::copy_if(
+      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&mr)).on(stream),
+      thrust::make_counting_iterator<std::size_t>(0),
+      thrust::make_counting_iterator<std::size_t>(nColsSrc), mask.data(),
+      colIndices.data(), pred);
 
   dim3 blockDim = 1024;
   dim3 gridDim = (nSelected + blockDim.x - 1) / blockDim.x;
   gatherColsKernel<<<gridDim, blockDim, 0, stream>>>(
-      devColIndices, nRows, nColsSrc, nSelected, tensor.data(), result.data());
+      colIndices.data(), nRows, nColsSrc, nSelected, tensor.data(),
+      result.data());
   ACTS_CUDA_CHECK(cudaGetLastError());
-
-  ACTS_CUDA_CHECK(cudaFreeAsync(devColIndices, stream));
   return result;
 }
 
@@ -252,20 +263,17 @@ Tensor<T> cudaGatherCols(const Tensor<T> &tensor,
     return result;
   }
 
-  std::size_t *devIndices{};
-  ACTS_CUDA_CHECK(
-      cudaMallocAsync(&devIndices, nColsDst * sizeof(std::size_t), stream));
-  ACTS_CUDA_CHECK(cudaMemcpyAsync(devIndices, indices.data(),
-                                  nColsDst * sizeof(std::size_t),
-                                  cudaMemcpyHostToDevice, stream));
+  auto devIndices = Tensor<std::size_t>::Create({nColsDst, 1}, execContext);
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(devIndices.data(), indices.data(),
+                                  devIndices.nbytes(), cudaMemcpyHostToDevice,
+                                  stream));
 
   dim3 blockDim = 256;
   dim3 gridDim = (total + blockDim.x - 1) / blockDim.x;
   gatherColsByIndexKernel<<<gridDim, blockDim, 0, stream>>>(
-      devIndices, nRows, nColsSrc, nColsDst, tensor.data(), result.data());
+      devIndices.data(), nRows, nColsSrc, nColsDst, tensor.data(),
+      result.data());
   ACTS_CUDA_CHECK(cudaGetLastError());
-
-  ACTS_CUDA_CHECK(cudaFreeAsync(devIndices, stream));
   return result;
 }
 

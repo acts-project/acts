@@ -8,6 +8,9 @@
 
 #include "ActsPlugins/Gnn/Stages.hpp"
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/async_device_memory_resource.hpp"
+
+#include <memory_resource>
 
 #include <thrust/copy.h>
 #include <thrust/execution_policy.h>
@@ -53,6 +56,9 @@ PipelineTensors cudaRemoveUnusedNodes(PipelineTensors &&tensors,
                                       std::vector<int> &spacePointIds,
                                       const ExecutionContext &execCtx) {
   const auto stream = execCtx.stream.value();
+  async_device_memory_resource streamMr(stream);
+  std::pmr::memory_resource &mr =
+      execCtx.memoryResource != nullptr ? *execCtx.memoryResource : streamMr;
   const auto nNodes = tensors.nodeFeatures.shape()[0];
   const auto nEdges = tensors.edgeIndex.shape()[1];
 
@@ -64,9 +70,12 @@ PipelineTensors cudaRemoveUnusedNodes(PipelineTensors &&tensors,
                                   stream));
 
   // Sort + unique → sorted unique used-node indices in tmp[0..nUsed)
-  thrust::sort(thrust::device.on(stream), tmp.data(), tmp.data() + 2 * nEdges);
-  auto *uniqEnd = thrust::unique(thrust::device.on(stream), tmp.data(),
-                                 tmp.data() + 2 * nEdges);
+  thrust::sort(
+      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&mr)).on(stream),
+      tmp.data(), tmp.data() + 2 * nEdges);
+  auto *uniqEnd = thrust::unique(
+      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&mr)).on(stream),
+      tmp.data(), tmp.data() + 2 * nEdges);
   // nUsed must be read on host — sync the stream just for this scalar
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
   const std::size_t nUsed = static_cast<std::size_t>(uniqEnd - tmp.data());

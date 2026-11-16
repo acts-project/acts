@@ -219,13 +219,13 @@
                 "ACTS_GNN_ENABLE_TORCH": "ON",
                 "ACTS_GNN_ENABLE_ONNX": "ON",
                 "ACTS_ENABLE_CUDA": "ON",
-                "VECMEM_BUILD_CUDA_LIBRARY": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "ON",
                 "ACTS_BUILD_INTEGRATIONTESTS": "OFF",
                 "ACTS_BUILD_CORE_UNITTESTS": "OFF",
                 "ACTS_BUILD_EXAMPLES_UNITTESTS": "OFF",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_USE_SYSTEM_PYBIND11": "ON",
+                "ACTS_USE_SYSTEM_VECMEM": "ON",
                 "ACTS_USE_SYSTEM_MODULEMAPGRAPH": "ON"
             }
         },
