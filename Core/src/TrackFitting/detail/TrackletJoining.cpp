@@ -8,49 +8,14 @@
 
 #include "Acts/TrackFitting/detail/TrackletJoining.hpp"
 
-#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 
+#include <array>
+
 #include <Eigen/Cholesky>
 
-namespace {
-
-using namespace Acts;
-
-/// Inverse residual covariance and Kalman gain of a measurement state
-template <std::size_t N>
-struct MeasurementGain {
-  Matrix<N, eBoundSize> h;
-  SquareMatrix<N> sInv;
-  Matrix<eBoundSize, N> k;
-
-  template <typename track_state_proxy_t>
-  explicit MeasurementGain(const track_state_proxy_t& ts)
-      : h(ts.template projectorSubspaceHelper<N>().projector()) {
-    const BoundMatrix pp = ts.predictedCovariance();
-    const SquareMatrix<N> s =
-        h * pp * h.transpose() + ts.template calibratedCovariance<N>();
-    sInv = s.inverse();
-    k = pp * h.transpose() * sInv;
-  }
-};
-
-}  // namespace
-
 namespace Acts::detail {
-
-void setSmoothedWithoutSharing(AnyMutableTrackStateProxy ts, BoundVector mean,
-                               BoundMatrix cov) {
-  if (ts.hasSmoothed() &&
-      ((ts.hasFiltered() && ts.smoothed().data() == ts.filtered().data()) ||
-       (ts.hasPredicted() && ts.smoothed().data() == ts.predicted().data()))) {
-    ts.unset(TrackStatePropMask::Smoothed);
-  }
-  ts.addComponents(TrackStatePropMask::Smoothed);
-  ts.smoothed() = mean;
-  ts.smoothedCovariance() = cov;
-}
 
 Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
     const AnyConstTrackStateProxy& first, const BoundVector& priorMean,
@@ -86,7 +51,17 @@ Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
 Result<SharedStateCondition> makeSharedStateCondition(
     const AnyConstTrackStateProxy& shared, const BoundVector& newMean,
     const BoundMatrix& newCov, const Logger& logger) {
-  const BoundMatrix smoothedCov = shared.smoothedCovariance();
+  return makeNodeCondition(shared.predictedCovariance(), shared.smoothed(),
+                           shared.smoothedCovariance(), newMean, newCov,
+                           logger);
+}
+
+Result<SharedStateCondition> makeNodeCondition(const BoundMatrix& predictedCov,
+                                               const BoundVector& smoothedMean,
+                                               const BoundMatrix& smoothedCov,
+                                               const BoundVector& newMean,
+                                               const BoundMatrix& newCov,
+                                               const Logger& logger) {
   if (!smoothedCov.allFinite()) {
     return KalmanFitterError::SmoothFailed;
   }
@@ -97,10 +72,8 @@ Result<SharedStateCondition> makeSharedStateCondition(
   }
 
   // Z = Pp Ps^-1, applied to the change of the shared state
-  const BoundMatrix predictedCov = shared.predictedCovariance();
   const BoundMatrix z = ldlt.solve(predictedCov).transpose();
-  const BoundVector deltaMean =
-      subtractBoundParameters(newMean, shared.smoothed());
+  const BoundVector deltaMean = subtractBoundParameters(newMean, smoothedMean);
   const BoundMatrix deltaCov = newCov - smoothedCov;
 
   SharedStateCondition condition;
@@ -113,54 +86,58 @@ Result<SharedStateCondition> makeSharedStateCondition(
   return condition;
 }
 
-BoundMatrix filteredSensitivity(const AnyConstTrackStateProxy& ts,
-                                const BoundMatrix& dp) {
-  if (!ts.typeFlags().isMeasurement()) {
-    return dp;
+Result<std::pair<BoundVector, BoundMatrix>> subtractSecondPrior(
+    const BoundVector& sharedMean, const BoundMatrix& sharedCov,
+    const BoundVector& priorMean, const BoundMatrix& priorCov,
+    const BoundVector& nodeMean, const BoundMatrix& nodeCov,
+    const Logger& logger) {
+  const std::array<const BoundMatrix*, 3> covs = {&sharedCov, &priorCov,
+                                                  &nodeCov};
+  std::array<BoundMatrix, 3> information;
+  for (std::size_t i = 0; i < covs.size(); ++i) {
+    if (!covs[i]->allFinite()) {
+      return KalmanFitterError::SmoothFailed;
+    }
+    const Eigen::LDLT<BoundMatrix> ldlt(*covs[i]);
+    if (ldlt.info() != Eigen::Success || !(ldlt.vectorD().array() > 0).all()) {
+      ACTS_DEBUG("Covariance at the shared state is not positive definite");
+      return KalmanFitterError::SmoothFailed;
+    }
+    information[i] = ldlt.solve(BoundMatrix::Identity());
   }
-  BoundMatrix df = dp;
-  visit_measurement(ts.calibratedSize(),
-                    [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
-                      const MeasurementGain<N> gain(ts);
-                      df = dp - gain.k * (gain.h * dp);
-                    });
-  return df;
-}
+  const auto& [yShared, yPrior, yNode] = information;
 
-Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
-                                 const BoundMatrix& dp, const BoundMatrix& df,
-                                 BoundMatrix& psiHat,
-                                 const SharedStateCondition& condition,
-                                 const Logger& logger) {
-  const BoundMatrix filteredCov = ts.hasFiltered()
-                                      ? BoundMatrix(ts.filteredCovariance())
-                                      : BoundMatrix(ts.predictedCovariance());
-  // T = Df - Pf Psi^
-  const BoundMatrix t = df - filteredCov * psiHat;
-
-  const BoundVector mean =
-      normalizeBoundParameters(ts.smoothed() + t * condition.u);
-  const BoundMatrix cov =
-      ts.smoothedCovariance() + t * condition.w * t.transpose();
-  if (!mean.allFinite() || !cov.allFinite()) {
-    ACTS_DEBUG("Conditioned state " << ts.index() << " is not finite");
+  const BoundMatrix y = yShared - yPrior + yNode;
+  const Eigen::LDLT<BoundMatrix> ldlt(y);
+  if (ldlt.info() != Eigen::Success || !(ldlt.vectorD().array() > 0).all()) {
+    ACTS_DEBUG("Combined information is not positive definite");
     return KalmanFitterError::SmoothFailed;
   }
-  setSmoothedWithoutSharing(ts, mean, 0.5 * (cov + cov.transpose()));
-
-  // Psi~ = H^T S^-1 H Dp + (I - K H)^T Psi^, then transport to the previous
-  BoundMatrix psiTilde = psiHat;
-  if (ts.typeFlags().isMeasurement()) {
-    visit_measurement(
-        ts.calibratedSize(),
-        [&]<std::size_t N>(std::integral_constant<std::size_t, N>) {
-          const MeasurementGain<N> gain(ts);
-          psiTilde = gain.h.transpose() * (gain.sInv * (gain.h * dp)) + psiHat -
-                     gain.h.transpose() * (gain.k.transpose() * psiHat);
-        });
+  const BoundMatrix cov = ldlt.solve(BoundMatrix::Identity());
+  // relative to the shared mean, so that the angles need no unwrapping
+  const BoundVector mean = normalizeBoundParameters(
+      sharedMean +
+      cov * (yNode * subtractBoundParameters(nodeMean, sharedMean) -
+             yPrior * subtractBoundParameters(priorMean, sharedMean)));
+  if (!mean.allFinite() || !cov.allFinite()) {
+    ACTS_DEBUG("Combined estimate is not finite");
+    return KalmanFitterError::SmoothFailed;
   }
-  psiHat = ts.jacobian().transpose() * psiTilde;
-  return Result<void>::success();
+  return std::pair{mean, BoundMatrix(0.5 * (cov + cov.transpose()))};
+}
+
+Result<void> conditionSmoothedStatesOnPriorNode(
+    std::span<AnyMutableTrackStateProxy> states, const BoundMatrix& priorCov,
+    const BoundVector& nodeMean, const BoundMatrix& nodeCov,
+    const BoundVector& newMean, const BoundMatrix& newCov,
+    const Logger& logger) {
+  auto condition =
+      makeNodeCondition(priorCov, nodeMean, nodeCov, newMean, newCov, logger);
+  if (!condition.ok()) {
+    return condition.error();
+  }
+  return conditionStatesAfterNode<eBoundSize>(
+      states, BoundMatrix::Identity(), condition->u, condition->w, logger);
 }
 
 }  // namespace Acts::detail

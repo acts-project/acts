@@ -223,6 +223,14 @@ struct Tracklets {
   std::map<std::size_t, std::size_t> nodeOfState;
   /// states that must stay without smoothed parameters
   std::vector<std::size_t> unsmoothed;
+  /// the prior the second tracklet was filtered from
+  TrackletJoiner::SecondPrior secondPrior;
+};
+
+/// The prior of the second tracklet relative to the smoothed shared state
+struct SecondPriorChange {
+  double inflation = 1;
+  BoundVector offset = BoundVector::Zero();
 };
 
 /// Build the first tracklet, smooth it from its last measurement as
@@ -230,7 +238,8 @@ struct Tracklets {
 /// shared state, which is the first measurement.
 template <typename first_smoother_t = MbfSmoother>
 Tracklets buildTracklets(Container& tc, const std::vector<Node>& nodes,
-                         Variant variant) {
+                         Variant variant,
+                         const SecondPriorChange& change = {}) {
   std::map<std::size_t, std::size_t> nodeOfState;
   std::vector<std::size_t> unsmoothed;
 
@@ -279,8 +288,11 @@ Tracklets buildTracklets(Container& tc, const std::vector<Node>& nodes,
   BOOST_REQUIRE(shared.typeFlags().isMeasurement());
 
   auto second = tc.makeTrack();
-  mean = shared.smoothed();
-  cov = shared.smoothedCovariance();
+  const TrackletJoiner::SecondPrior secondPrior{
+      shared.smoothed() + change.offset,
+      change.inflation * shared.smoothedCovariance()};
+  mean = secondPrior.mean;
+  cov = secondPrior.covariance;
   for (std::size_t node = 4; node < 7; ++node) {
     const std::size_t index = appendState(second, nodes[node], mean, cov);
     nodeOfState[index] = node;
@@ -289,7 +301,7 @@ Tracklets buildTracklets(Container& tc, const std::vector<Node>& nodes,
     cov = ts.filteredCovariance();
   }
 
-  return {first, shared, second, nodeOfState, unsmoothed};
+  return {first, shared, second, nodeOfState, unsmoothed, secondPrior};
 }
 
 /// Check one smoothed state against the dense joint posterior
@@ -604,6 +616,96 @@ BOOST_AUTO_TEST_CASE(JoinEmptySecondPassKeepsStatesAndTargetEstimate) {
       CHECK_CLOSE_ABS(ts.smoothedCovariance(), before[i].second, 0.);
       ++i;
     }
+  }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(JoinSubtractsSecondPrior, smoother_t, Smoothers) {
+  // the second tracklet filtered from an inflated or shifted prior gives the
+  // joint posterior once that prior is passed to the join
+  BoundVector offset = BoundVector::Zero();
+  offset[eBoundLoc0] = 0.05;
+  offset[eBoundQOverP] = -0.002;
+  for (const auto variant :
+       {Variant::Base, Variant::TrailingHole, Variant::StemHole}) {
+    for (const SecondPriorChange change :
+         {SecondPriorChange{1., BoundVector::Zero()},
+          SecondPriorChange{10., BoundVector::Zero()},
+          SecondPriorChange{100., offset}}) {
+      BOOST_TEST_CONTEXT("variant " << static_cast<int>(variant)
+                                    << " inflation " << change.inflation) {
+        const auto nodes = makeModel(variant);
+        Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+        auto t = buildTracklets(tc, nodes, variant, change);
+        BOOST_REQUIRE(TrackletJoiner{}
+                          .joinInPlace(gctx, t.first, t.shared, t.second,
+                                       smoother_t{}, t.secondPrior)
+                          .ok());
+        const std::size_t onChain =
+            variant == Variant::StemHole ? 7 : nodes.size();
+        checkJoinedAgainstDense(t.first, t.nodeOfState, t.unsmoothed, nodes,
+                                1e-9, onChain);
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(JoinSubtractsCorrelatedSecondPrior, smoother_t,
+                              Smoothers) {
+  const auto nodes = makeModel(Variant::Base);
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = buildTracklets(tc, nodes, Variant::Base);
+  BoundVector shift;
+  shift << 0.03, -0.02, 0.01, -0.01, 0.001, 0.1;
+  const TrackletJoiner::SecondPrior prior{
+      t.shared.smoothed() + shift, kPriorCov + shift * shift.transpose()};
+  auto second = tc.makeTrack();
+  BoundVector mean = prior.mean;
+  BoundMatrix cov = prior.covariance;
+  for (std::size_t node = 4; node < 7; ++node) {
+    const auto index = appendState(second, nodes[node], mean, cov);
+    t.nodeOfState[index] = node;
+    mean = second.outermostTrackState().filtered();
+    cov = second.outermostTrackState().filteredCovariance();
+  }
+  BOOST_REQUIRE(
+      TrackletJoiner{}
+          .joinInPlace(gctx, t.first, t.shared, second, smoother_t{}, prior)
+          .ok());
+  checkJoinedAgainstDense(t.first, t.nodeOfState, t.unsmoothed, nodes, 1e-9, 7);
+}
+
+BOOST_AUTO_TEST_CASE(JoinCopySubtractsSecondPrior) {
+  const auto nodes = makeModel(Variant::Base);
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = buildTracklets(tc, nodes, Variant::Base, {10., BoundVector::Zero()});
+  auto joined = TrackletJoiner{}.joinCopy(gctx, tc, t.first, t.shared, t.second,
+                                          {}, t.secondPrior);
+  BOOST_REQUIRE(joined.ok());
+  const auto [mean, cov] = densePosterior(nodes);
+  // the innermost state of the joined copy is node 6
+  checkStateAgainstDense(joined->innermostTrackState().value(), 6, mean, cov,
+                         1e-9);
+}
+
+BOOST_AUTO_TEST_CASE(JoinWithoutInflationIsUnchanged) {
+  // passing the smoothed shared state as the prior gives the same states as
+  // the join without a prior, up to the rounding of the subtraction
+  const auto nodes = makeModel(Variant::Base);
+  Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto a = buildTracklets(tc, nodes, Variant::Base);
+  auto b = buildTracklets(tc, nodes, Variant::Base);
+  BOOST_REQUIRE(
+      TrackletJoiner{}.joinInPlace(gctx, a.first, a.shared, a.second).ok());
+  BOOST_REQUIRE(
+      TrackletJoiner{}
+          .joinInPlace(gctx, b.first, b.shared, b.second, {}, b.secondPrior)
+          .ok());
+  auto bStates = b.first.trackStatesReversed();
+  auto it = bStates.begin();
+  for (const auto& ts : a.first.trackStatesReversed()) {
+    CHECK_CLOSE_ABS(ts.smoothed(), (*it).smoothed(), 1e-12);
+    CHECK_CLOSE_ABS(ts.smoothedCovariance(), (*it).smoothedCovariance(), 1e-12);
+    ++it;
   }
 }
 
