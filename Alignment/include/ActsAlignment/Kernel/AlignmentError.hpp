@@ -22,7 +22,8 @@ enum class AlignmentError {
   InvalidAlignmentSelection = 5,
   AlignmentFrameResolutionFailure = 6,
   UnsupportedAlignmentConstraints = 7,
-  NoActiveAlignmentParameters = 8
+  NoActiveAlignmentParameters = 8,
+  UnsupportedStructureAlignment = 9
 };
 
 namespace detail {
@@ -51,6 +52,8 @@ class AlignmentErrorCategory : public std::error_category {
         return "Numerical structure constraints are not supported";
       case AlignmentError::NoActiveAlignmentParameters:
         return "No active alignment parameters";
+      case AlignmentError::UnsupportedStructureAlignment:
+        return "Structure solving is not yet supported";
       default:
         return "unknown";
     }

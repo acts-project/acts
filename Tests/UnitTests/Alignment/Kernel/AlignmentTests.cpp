@@ -11,11 +11,15 @@
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsTests/CommonHelpers/AlignmentHelpers.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <string>
+#include <utility>
+#include <vector>
 
 using namespace Acts;
 using namespace ActsTests;
@@ -55,10 +59,16 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
       utils.geoCtx, utils.magCtx, utils.calCtx, extensions,
       PropagatorPlainOptions(utils.geoCtx, utils.magCtx));
 
-  // Construct a non-updating alignment updater
+  // Record proposed updates without moving geometry: each comparison starts
+  // from the same detector and fitted tracks.
+  using ProposedUpdate = std::pair<SurfacePlacementBase*, Transform3>;
+  std::vector<ProposedUpdate> proposedUpdates;
   ActsAlignment::AlignedTransformUpdater voidAlignUpdater =
-      [](SurfacePlacementBase* /*element*/, const GeometryContext& /*gctx*/,
-         const Transform3& /*transform*/) { return true; };
+      [&](SurfacePlacementBase* element, const GeometryContext& /*gctx*/,
+          const Transform3& transform) {
+        proposedUpdates.emplace_back(element, transform);
+        return true;
+      };
 
   // Construct the alignment options
   ActsAlignment::AlignmentOptions<KalmanFitterOptions<VectorMultiTrajectory>>
@@ -132,8 +142,167 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
     trajCollection.push_back(traj.sourceLinks);
     sParametersCollection.push_back(*traj.startParameters);
   }
-  auto alignRes =
-      alignZero.align(trajCollection, sParametersCollection, alignOptions);
+  const auto checkCompatibility =
+      [&](const ActsAlignment::AlignmentResult& actual,
+          const ActsAlignment::AlignmentResult& expected,
+          const std::vector<ProposedUpdate>& expectedUpdates) {
+        BOOST_CHECK(actual.idxedAlignSurfaces == expected.idxedAlignSurfaces);
+        BOOST_CHECK_EQUAL(actual.alignmentDof, expected.alignmentDof);
+        BOOST_CHECK_EQUAL(actual.measurementDim, expected.measurementDim);
+        BOOST_CHECK_EQUAL(actual.numTracks, expected.numTracks);
+        BOOST_REQUIRE_EQUAL(actual.result.ok(), expected.result.ok());
+        if (!expected.result.ok()) {
+          BOOST_CHECK_EQUAL(actual.result.error(), expected.result.error());
+        }
+        CHECK_CLOSE_ABS(actual.chi2, expected.chi2, 1e-12);
+        CHECK_CLOSE_ABS(actual.averageChi2ONdf, expected.averageChi2ONdf,
+                        1e-12);
+        CHECK_CLOSE_ABS(actual.deltaChi2, expected.deltaChi2, 1e-12);
+        CHECK_CLOSE_ABS(actual.sumChi2Derivative, expected.sumChi2Derivative,
+                        1e-12);
+        CHECK_CLOSE_ABS(actual.sumChi2SecondDerivative,
+                        expected.sumChi2SecondDerivative, 1e-12);
+        CHECK_CLOSE_ABS(actual.deltaAlignmentParameters,
+                        expected.deltaAlignmentParameters, 1e-12);
+        CHECK_CLOSE_ABS(actual.alignmentCovariance,
+                        expected.alignmentCovariance, 1e-12);
+        BOOST_REQUIRE_EQUAL(actual.alignedParameters.size(),
+                            expected.alignedParameters.size());
+        for (const auto& [element, transform] : expected.alignedParameters) {
+          const auto it = actual.alignedParameters.find(element);
+          BOOST_REQUIRE(it != actual.alignedParameters.end());
+          CHECK_CLOSE_ABS(it->second.matrix(), transform.matrix(), 1e-12);
+        }
+        BOOST_REQUIRE_EQUAL(proposedUpdates.size(), expectedUpdates.size());
+        for (std::size_t i = 0; i < expectedUpdates.size(); ++i) {
+          BOOST_CHECK(proposedUpdates[i].first == expectedUpdates[i].first);
+          CHECK_CLOSE_ABS(proposedUpdates[i].second.matrix(),
+                          expectedUpdates[i].second.matrix(), 1e-12);
+        }
+      };
 
-  // BOOST_CHECK(alignRes.ok());
+  // Cover both immediate convergence and one update followed by convergence.
+  // The recording updater leaves chi2 unchanged, so the latter converges when
+  // the second iteration compares it with the first.
+  for (bool exerciseUpdate : {false, true}) {
+    BOOST_TEST_CONTEXT("exerciseUpdate=" << exerciseUpdate) {
+      alignOptions.maxIterations = exerciseUpdate ? 2 : 1;
+      alignOptions.averageChi2ONdfCutOff = exerciseUpdate ? 0. : 0.5;
+      alignOptions.deltaAverageChi2ONdfCutOff = {1, 0.};
+      alignOptions.alignedStructures.clear();
+      alignOptions.activeStructures.clear();
+      proposedUpdates.clear();
+      auto alignRes =
+          alignZero.align(trajCollection, sParametersCollection, alignOptions);
+      BOOST_REQUIRE(alignRes.ok());
+      BOOST_REQUIRE(alignRes->result.ok());
+      BOOST_REQUIRE_GT(alignRes->measurementDim, 0u);
+      BOOST_REQUIRE_EQUAL(alignRes->deltaAlignmentParameters.size(),
+                          alignRes->alignmentDof);
+      BOOST_REQUIRE(alignRes->deltaAlignmentParameters.allFinite());
+      BOOST_REQUIRE(alignRes->alignmentCovariance.allFinite());
+      const auto expectedUpdates = proposedUpdates;
+      const auto expectedUpdateCount =
+          exerciseUpdate ? alignOptions.alignedDetElements.size() : 0u;
+      BOOST_REQUIRE_EQUAL(expectedUpdates.size(), expectedUpdateCount);
+      BOOST_REQUIRE_EQUAL(alignRes->alignedParameters.size(),
+                          expectedUpdateCount);
+
+      // Registration alone does not activate group solving, even with All and
+      // no structure frame provider.
+      auto metadata = std::make_shared<ActsAlignment::AlignableStructure>(
+          GeometryIdentifier());
+      metadata->alignmentMask() = ActsAlignment::AlignmentMask::All;
+      metadata->addSurface(
+          detector.detectorStore.front()->surface().getSharedPtr());
+      alignOptions.alignedStructures = {metadata};
+      proposedUpdates.clear();
+      auto metadataResult =
+          alignZero.align(trajCollection, sParametersCollection, alignOptions);
+      BOOST_REQUIRE(metadataResult.ok());
+      checkCompatibility(*metadataResult, *alignRes, expectedUpdates);
+
+      // Explicit None preserves the same module results and update proposals.
+      metadata->alignmentMask() = ActsAlignment::AlignmentMask::None;
+      alignOptions.activeStructures = {metadata};
+      proposedUpdates.clear();
+      auto inactiveResult =
+          alignZero.align(trajCollection, sParametersCollection, alignOptions);
+      BOOST_REQUIRE(inactiveResult.ok());
+      checkCompatibility(*inactiveResult, *alignRes, expectedUpdates);
+    }
+  }
+}
+
+namespace {
+struct SelectionTestOptions {
+  GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
+  const Surface* referenceSurface = nullptr;
+};
+
+struct SelectionTestTrack {
+  std::size_t tipIndex() const { return 0; }
+};
+
+struct CountingSelectionFitter {
+  std::size_t* calls;
+
+  template <typename Iterator, typename Parameters, typename Options,
+            typename Tracks>
+  Result<SelectionTestTrack> fit(Iterator /*begin*/, Iterator /*end*/,
+                                 const Parameters& /*parameters*/,
+                                 const Options& /*options*/,
+                                 Tracks& /*tracks*/) const {
+    ++*calls;
+    return std::make_error_code(std::errc::operation_canceled);
+  }
+};
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(StructureSolveGuardPrecedesFittingAndUpdates) {
+  using namespace ActsAlignment;
+  auto element = std::make_shared<DetectorElementStub>(
+      Transform3::Identity(),
+      std::make_shared<const RectangleBounds>(10_mm, 10_mm), 1_um);
+  auto structure = std::make_shared<AlignableStructure>(GeometryIdentifier(),
+                                                        Transform3::Identity());
+  structure->addSurface(element->surface().getSharedPtr());
+  structure->alignmentMask() = AlignmentMask::All;
+  std::size_t fitCalls = 0;
+  std::size_t updateCalls = 0;
+  Alignment engine(CountingSelectionFitter{&fitCalls},
+                   getDummyLogger().clone());
+  AlignedTransformUpdater updater = [&](auto*, const auto&, const auto&) {
+    ++updateCalls;
+    return true;
+  };
+  AlignmentOptions options(SelectionTestOptions{}, updater, {}, 0.5, {5, 0.01},
+                           1, {}, {structure}, {structure});
+  const std::vector<std::vector<SourceLink>> tracks(1);
+  const std::vector<BoundTrackParameters> parameters{
+      BoundTrackParameters::createCurvilinear(Vector4::Zero(), Vector3::UnitZ(),
+                                              1., std::nullopt,
+                                              ParticleHypothesis::pion())};
+  auto result = engine.align(tracks, parameters, options);
+  BOOST_REQUIRE(!result.ok());
+  BOOST_CHECK_EQUAL(result.error(),
+                    AlignmentError::UnsupportedStructureAlignment);
+  BOOST_CHECK_EQUAL(fitCalls, 0u);
+  BOOST_CHECK_EQUAL(updateCalls, 0u);
+
+  options.activeStructures = {nullptr};
+  auto invalid = engine.align(tracks, parameters, options);
+  BOOST_REQUIRE(!invalid.ok());
+  BOOST_CHECK_EQUAL(invalid.error(), AlignmentError::InvalidAlignmentSelection);
+
+  AlignableStructure cycle{GeometryIdentifier()};
+  auto alias = std::shared_ptr<AlignableStructure>(&cycle, [](auto*) {});
+  cycle.addChild(alias);
+  options.alignedStructures = {alias};
+  options.activeStructures.clear();
+  auto cyclic = engine.align(tracks, parameters, options);
+  BOOST_REQUIRE(!cyclic.ok());
+  BOOST_CHECK_EQUAL(cyclic.error(), AlignmentError::HierarchyValidationFailure);
+  BOOST_CHECK_EQUAL(fitCalls, 0u);
+  BOOST_CHECK_EQUAL(updateCalls, 0u);
 }

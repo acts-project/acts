@@ -222,6 +222,18 @@ ActsAlignment::Alignment<fitter_t>::align(
   // Construct an AlignmentResult object
   AlignmentResult alignResult;
 
+  // Check graph safety before the registry's recursive traversal. Registration
+  // alone remains metadata and must never activate numerical structure solving.
+  auto selection = detail::validateAlignmentSelection(
+      alignOptions.alignedStructures, alignOptions.activeStructures);
+  if (!selection.ok()) {
+    ACTS_DEBUG(selection.error().message);
+    return selection.error().code;
+  }
+  if (*selection) {
+    return AlignmentError::UnsupportedStructureAlignment;
+  }
+
   // Build the hierarchy registry and validate it. Mixed mode is supported:
   // a detector element may float as a standalone module (i.e. not appear in
   // any structure) and is then aligned at module level.

@@ -190,3 +190,19 @@ columns. Fixed-reference and track-model rows may have no active target. A track
 with no active target has an empty column mapping and retains its measurement
 metadata. These helpers do not calculate derivatives or change the track-model
 gradient, and they do not query frame providers again.
+
+## Solver entry-point selection
+
+`AlignmentOptions::alignedStructures` registers membership metadata. It does
+not select structures for numerical alignment, even when a registered structure
+has a non-`None` mask. `activeStructures` is an explicit selection of registered
+leaves. Selecting an inactive `None` structure leaves its members available for
+standalone selection through `alignedDetElements`.
+
+`align()` validates the hierarchy before recursive registry construction and
+returns `UnsupportedStructureAlignment` for an effective explicit structure
+selection before fitting or updating anything. The compact layouts are not yet
+connected to the existing surface solver. Calls with only registered metadata or
+selected `None` structures retain the module-only calculation and result layout.
+Shared normal-equation assembly, result/export integration, rigid publication,
+and iterative structure recovery are separate follow-ups.
