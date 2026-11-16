@@ -32,6 +32,9 @@ struct PropagationSummary {
   /// Path length
   double pathLength = 0;
 
+  /// Wall-clock time spent in the propagator, in ms
+  double propagationTime = 0;
+
   /// Steps
   std::vector<Acts::detail::Step> steps;
 

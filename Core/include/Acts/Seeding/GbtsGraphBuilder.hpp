@@ -90,6 +90,13 @@ class GbtsGraphBuilder {
     /// Maximum number of GBTS edges/doublets per space point.
     float maxEdgesPerSP = 30.0f;
 
+    /// Leave out edges whose chain cannot grow beyond the edge itself, too
+    /// short for a seed. An edge of an inner bin that no connection leads into
+    /// is never extended inwards, so it is kept only if it links to an outer
+    /// edge, and outer nodes without edges are not tried for it. The seeds are
+    /// unchanged unless the edge array reaches `maxEdgesPerSP`.
+    bool dropDeadEnds = true;
+
     /// Minimum delta radius between layers.
     float minDeltaRadius = 2.0f * Acts::UnitConstants::mm;
 
@@ -204,6 +211,9 @@ class GbtsGraphBuilder {
   Config m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
+
+  /// Per eta bin, whether a connection leads into it from an inner bin.
+  std::vector<bool> m_binHasInnerLink;
 
   std::unique_ptr<const Acts::Logger> m_logger;
 

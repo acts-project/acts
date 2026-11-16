@@ -375,6 +375,14 @@ components.
 | ACTS_COMPILE_HEADERS                          | Generate targets to compile header files<br> type: `bool`, default: `ON`                                                                                                                                                                                                    |
 <!-- CMAKE_OPTS_END -->
 
+Some options automatically enable dependencies during configuration. CMake
+prints each newly enabled option and the condition that enabled it, followed
+by a summary of their effective values at the end of configuration. Options
+already enabled by the user are not marked as automatically enabled.
+
+These overrides do not change the CMake cache, so tools such as `ccmake` or
+`cmake -LAH` can still show an option as `OFF` even though the build uses `ON`.
+
 All ACTS-specific options are disabled or empty by default and must be
 specifically requested.
 

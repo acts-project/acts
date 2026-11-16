@@ -18,7 +18,9 @@
 #include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/backend/detail/type_info.hpp"
 #include "detray/io/frontend/payloads.hpp"
+#include "detray/io/frontend/reader_interface.hpp"
 #include "detray/material/material.hpp"
+#include "detray/utils/logging.hpp"
 
 // System include(s)
 #include <memory>
@@ -31,31 +33,60 @@ namespace detray::io {
 /// @brief Homogeneous material reader backend
 ///
 /// Fills a @c detector_builder from a @c detector_homogeneous_material_payload
-class homogeneous_material_reader {
+/// @tparam detector_t Detector type being constructed.
+template <detray::concepts::detector detector_t>
+class homogeneous_material_reader final : public reader_interface<detector_t> {
   /// IO material ids do not need to coincide with the detector ids,
   /// they are shared with ACTS
   using material_type = io::material_id;
 
  public:
   /// Tag the reader as "homogeneous material"
-  static constexpr std::string_view tag = "homogeneous_material";
+  static constexpr std::string_view s_tag = "homogeneous_material";
 
   /// Payload type that the reader processes
   using payload_type = detector_homogeneous_material_payload;
 
+  /// @returns the tag of the reader: "homogeneous_material"
+  std::string_view tag() const override { return s_tag; }
+
   /// Convert the detector material @p det_mat_data from its IO
   /// payload
-  /// @tparam detector_t Detector type being constructed.
   /// @param det_builder Builder receiving material stores and links.
-  /// @param det_mat_data Serialized homogeneous material payload.
-  template <class detector_t>
-  static void from_payload(detector_builder<typename detector_t::metadata,
-                                            volume_builder>& det_builder,
-                           const payload_type& det_mat_data) {
+  /// @param det_data Detector payload that contains the sub-payload
+  void from_payload(detector_builder<typename detector_t::metadata,
+                                     volume_builder>& det_builder,
+                    const detector_payload& det_data) const override {
+    if constexpr (detray::concepts::has_material_slabs<detector_t> ||
+                  detray::concepts::has_material_rods<detector_t>) {
+      from_payload_impl(det_builder, det_data);
+    } else {
+      throw std::invalid_argument(
+          "Detector type does not support homogeneous material");
+    }
+  }
+
+  /// Implementation of the detector material conversion
+  /// @param det_builder Builder receiving material stores and links.
+  /// @param det_data Detector payload that contains the sub-payload
+  static void from_payload_impl(detector_builder<typename detector_t::metadata,
+                                                 volume_builder>& det_builder,
+                                const detector_payload& det_data)
+    requires(detray::concepts::has_material_slabs<detector_t> ||
+             detray::concepts::has_material_rods<detector_t>)
+  {
     DETRAY_VERBOSE_HOST("Reading payload object...");
 
     using scalar_t = dscalar<typename detector_t::algebra_type>;
     using mat_id = typename detector_t::material::id;
+
+    if (!det_data.homogeneous_material.has_value()) {
+      std::string err_str{"No data in homogeneous material payload"};
+      DETRAY_FATAL_HOST(err_str);
+      throw std::invalid_argument(err_str);
+    }
+
+    const payload_type& det_mat_data = *det_data.homogeneous_material;
 
     DETRAY_DEBUG_HOST("Converting material for " << det_mat_data.volumes.size()
                                                  << " volumes");
@@ -104,7 +135,17 @@ class homogeneous_material_reader {
             mat_type = mat_id::e_material_slab;
           }
         }
-        assert(mat_type != mat_id::e_none);
+        if (mat_type == mat_id::e_none) {
+          std::stringstream err_str{};
+          err_str << "Homogeneous material ID \"" << mat_data.type
+                  << "\" in payload does not match any material type in "
+                     "detector ("
+                  << detray::types::get_name<typename detector_t::metadata>()
+                  << "). Check the detector metadata!\nMaterial store:\n"
+                  << detray::types::get_name<typename detector_t::material>();
+          DETRAY_FATAL_HOST(err_str.str());
+          throw std::invalid_argument(err_str.str());
+        }
 
         const auto mat_idx{mat_data.index_in_coll.has_value()
                                ? mat_data.index_in_coll.value()
@@ -112,8 +153,8 @@ class homogeneous_material_reader {
 
         DETRAY_DEBUG_HOST("-> Surface link is: " << mat_idx);
 
-        mat_factory->add_material(mat_type, from_payload<scalar_t>(mat_data),
-                                  mat_idx);
+        mat_factory->add_material(
+            mat_type, from_payload_impl<scalar_t>(mat_data), mat_idx);
       }
 
       // Add the material to the volume
@@ -125,16 +166,16 @@ class homogeneous_material_reader {
   /// @returns material data for a material factory from a slab io payload
   /// @param slab_data
   template <detray::concepts::scalar scalar_t>
-  static material_data<scalar_t> from_payload(
+  static material_data<scalar_t> from_payload_impl(
       const surface_material_payload& slab_data) {
     return {static_cast<scalar_t>(slab_data.thickness),
-            from_payload<scalar_t>(slab_data.mat),
+            from_payload_impl<scalar_t>(slab_data.mat),
             detail::basic_converter::from_payload(slab_data.surface)};
   }
 
   /// @returns the material from its IO payload @param mat_data
   template <detray::concepts::scalar scalar_t>
-  static auto from_payload(const material_param_payload& mat_data) {
+  static auto from_payload_impl(const material_param_payload& mat_data) {
     return material<scalar_t>{
         static_cast<scalar_t>(mat_data.params[0]),
         static_cast<scalar_t>(mat_data.params[1]),
