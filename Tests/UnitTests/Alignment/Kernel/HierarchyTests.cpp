@@ -20,6 +20,7 @@
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
+#include "ActsAlignment/Kernel/detail/AlignmentTarget.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -381,4 +382,117 @@ BOOST_AUTO_TEST_CASE(MaskConflictDetection, *boost::unit_test::disabled()) {
         hierarchy.detectMaskConflicts(AlignmentMask::All, {el3.get()});
     BOOST_CHECK(conflicts.empty());
   }
+}
+
+namespace {
+namespace AlignDetail = ActsAlignment::detail;
+
+auto validateSelection(
+    const std::vector<std::shared_ptr<AlignableStructure>>& registered,
+    const std::vector<std::shared_ptr<AlignableStructure>>& active) {
+  return AlignDetail::validateAlignmentSelection(registered, active);
+}
+
+template <typename T>
+void checkTargetError(
+    const Acts::Result<T, AlignDetail::AlignmentTargetError>& r,
+    AlignmentError code, const std::string& diagnostic) {
+  BOOST_REQUIRE(!r.ok());
+  BOOST_CHECK(r.error().code == code);
+  BOOST_CHECK_NE(r.error().message.find(diagnostic), std::string::npos);
+}
+
+struct TargetFixture {
+  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+  std::shared_ptr<ActsTests::DetectorElementStub> first =
+      makeDummyElement(Transform3::Identity());
+  std::shared_ptr<ActsTests::DetectorElementStub> second = makeDummyElement(
+      Translation3(10_mm, 20_mm, 30_mm) * AngleAxis3(0.3, Vector3::UnitY()));
+  std::shared_ptr<ActsTests::DetectorElementStub> module =
+      makeDummyElement(Transform3::Identity());
+  std::shared_ptr<ActsTests::DetectorElementStub> other =
+      makeDummyElement(Transform3::Identity());
+  // Reverse ID order: the selection order determines the numerical indices.
+  std::shared_ptr<AlignableStructure> group =
+      std::make_shared<AlignableStructure>(GeometryIdentifier().withVolume(2),
+                                           Transform3::Identity());
+  std::shared_ptr<AlignableStructure> otherGroup =
+      std::make_shared<AlignableStructure>(GeometryIdentifier().withVolume(1),
+                                           Transform3::Identity());
+
+  TargetFixture() {
+    group->alignmentMask() = AlignmentMask::All;
+    group->addSurface(first->surface().getSharedPtr());
+    group->addSurface(second->surface().getSharedPtr());
+    otherGroup->alignmentMask() = AlignmentMask::Center2;
+    otherGroup->addSurface(other->surface().getSharedPtr());
+  }
+};
+}  // namespace
+
+BOOST_FIXTURE_TEST_CASE(ExplicitStructureSelectionValidation, TargetFixture) {
+  auto metadata = validateSelection({group}, {});
+  BOOST_REQUIRE(metadata.ok());
+  BOOST_CHECK(!*metadata);
+  auto parent = std::make_shared<AlignableStructure>(GeometryIdentifier());
+  parent->addChild(group);
+  auto selected = validateSelection({parent}, {group});
+  BOOST_REQUIRE(selected.ok());
+  BOOST_CHECK(*selected);
+  parent->alignmentMask() = AlignmentMask::All;
+  checkTargetError(validateSelection({parent}, {parent}),
+                   AlignmentError::InvalidAlignmentSelection, "non-leaf");
+  checkTargetError(validateSelection({parent}, {parent, group}),
+                   AlignmentError::InvalidAlignmentSelection, "non-leaf");
+  checkTargetError(validateSelection({group}, {nullptr}),
+                   AlignmentError::InvalidAlignmentSelection, "null");
+  checkTargetError(validateSelection({group}, {otherGroup}),
+                   AlignmentError::InvalidAlignmentSelection, "unregistered");
+  checkTargetError(validateSelection({group}, {group, group}),
+                   AlignmentError::InvalidAlignmentSelection, "Duplicate");
+  parent->alignmentMask() = AlignmentMask::None;
+  group->alignmentMask() = AlignmentMask::None;
+  group->constraints()[eAlignmentCenter0] = 0.;
+  group->setTransform([](const GeometryContext&) -> Transform3 {
+    throw std::runtime_error("validation must not query providers");
+  });
+  auto inactive = validateSelection({parent}, {parent, group});
+  BOOST_REQUIRE(inactive.ok());
+  BOOST_CHECK(!*inactive);
+  checkTargetError(validateSelection({parent}, {group, group}),
+                   AlignmentError::InvalidAlignmentSelection, "Duplicate");
+}
+
+BOOST_FIXTURE_TEST_CASE(InvalidGraphsAreRejectedBeforeTraversal,
+                        TargetFixture) {
+  checkTargetError(validateSelection({nullptr}, {}),
+                   AlignmentError::HierarchyValidationFailure, "Null");
+  checkTargetError(validateSelection({group, group}, {}),
+                   AlignmentError::HierarchyValidationFailure, "repeated");
+  auto parent = std::make_shared<AlignableStructure>(GeometryIdentifier());
+  parent->addChild(group);
+  parent->addChild(group);
+  checkTargetError(validateSelection({parent}, {}),
+                   AlignmentError::HierarchyValidationFailure, "repeated");
+  auto nullChild = std::make_shared<AlignableStructure>(GeometryIdentifier());
+  nullChild->addChild(nullptr);
+  checkTargetError(validateSelection({nullChild}, {}),
+                   AlignmentError::HierarchyValidationFailure, "Null");
+  auto nullSurface = std::make_shared<AlignableStructure>(GeometryIdentifier());
+  nullSurface->addSurface(nullptr);
+  checkTargetError(validateSelection({nullSurface}, {}),
+                   AlignmentError::HierarchyValidationFailure, "Null member");
+  otherGroup->addSurface(first->surface().getSharedPtr());
+  checkTargetError(validateSelection({group, otherGroup}, {group, otherGroup}),
+                   AlignmentError::HierarchyValidationFailure, "placement");
+  group->addSurface(first->surface().getSharedPtr());
+  checkTargetError(validateSelection({group}, {group}),
+                   AlignmentError::HierarchyValidationFailure, "placement");
+  AlignableStructure cycleA{GeometryIdentifier()}, cycleB{GeometryIdentifier()};
+  auto a = std::shared_ptr<AlignableStructure>(&cycleA, [](auto*) {});
+  auto b = std::shared_ptr<AlignableStructure>(&cycleB, [](auto*) {});
+  cycleA.addChild(b);
+  cycleB.addChild(a);
+  checkTargetError(validateSelection({a}, {}),
+                   AlignmentError::HierarchyValidationFailure, "Cycle");
 }
