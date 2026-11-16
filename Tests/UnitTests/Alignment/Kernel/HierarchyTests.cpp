@@ -479,6 +479,127 @@ BOOST_FIXTURE_TEST_CASE(ExplicitStructureSelectionValidation, TargetFixture) {
                    AlignmentError::InvalidAlignmentSelection, "Duplicate");
 }
 
+BOOST_FIXTURE_TEST_CASE(SharedTargetColumnsAndTrackRows, TargetFixture) {
+  auto prepared = prepareTargets(gctx, {group}, {group});
+  BOOST_REQUIRE(prepared.ok());
+  BOOST_REQUIRE_EQUAL(prepared->targets.size(), 1u);
+  BOOST_CHECK(prepared->targets[0].kind ==
+              AlignDetail::AlignmentTarget::Kind::Structure);
+  BOOST_REQUIRE_EQUAL(prepared->targets[0].members.size(), 2u);
+  auto layout = AlignDetail::makeAlignmentParameterLayout(*prepared, 0);
+  BOOST_REQUIRE(layout.ok());
+  BOOST_CHECK_EQUAL(layout->parameters.size(), 6u);
+  BOOST_CHECK_EQUAL(layout->placementTargets.at(first.get()), 0u);
+  BOOST_CHECK_EQUAL(layout->placementTargets.at(second.get()), 0u);
+  const std::vector<AlignDetail::AlignmentMeasurement> hits{{first.get(), 1},
+                                                            {module.get(), 2},
+                                                            {second.get(), 2},
+                                                            {first.get(), 2},
+                                                            {nullptr, 3}};
+  const auto track = AlignDetail::makeTrackAlignmentLayout(*layout, hits);
+  BOOST_REQUIRE_EQUAL(track.targets.size(), 1u);
+  BOOST_CHECK_EQUAL(track.localToGlobal.size(), 6u);
+  BOOST_CHECK_EQUAL(track.measurementDim, 10u);
+  BOOST_REQUIRE_EQUAL(track.measurements.size(), hits.size());
+  BOOST_CHECK(track.measurements[0].target == 0u);
+  BOOST_CHECK(!track.measurements[1].target);
+  BOOST_CHECK(track.measurements[2].target == 0u);
+  BOOST_CHECK(track.measurements[3].target == 0u);
+  BOOST_CHECK(!track.measurements[4].target);
+  BOOST_CHECK_EQUAL(track.measurements[2].rowOffset, 3u);
+  BOOST_CHECK_EQUAL(track.measurements[4].rowOffset, 7u);
+  BOOST_CHECK_EQUAL(track.measurements[4].dimension, 3u);
+  for (std::size_t i = 0; i < eAlignmentSize; ++i) {
+    BOOST_CHECK_EQUAL(track.localToGlobal[i], i);
+    BOOST_CHECK(track.targets[0].columns[i] == i);
+  }
+  const std::vector<AlignDetail::AlignmentMeasurement> fixed{{module.get(), 2},
+                                                             {nullptr, 1}};
+  const auto noTargets = AlignDetail::makeTrackAlignmentLayout(*layout, fixed);
+  BOOST_CHECK(noTargets.targets.empty());
+  BOOST_CHECK(noTargets.localToGlobal.empty());
+  BOOST_CHECK_EQUAL(noTargets.measurementDim, 3u);
+  const auto emptyTrack = AlignDetail::makeTrackAlignmentLayout(*layout, {});
+  BOOST_CHECK(emptyTrack.targets.empty());
+  BOOST_CHECK(emptyTrack.localToGlobal.empty());
+  BOOST_CHECK(emptyTrack.measurements.empty());
+  BOOST_CHECK_EQUAL(emptyTrack.measurementDim, 0u);
+}
+
+BOOST_FIXTURE_TEST_CASE(OrderedMixedTargetsAndIterationMasks, TargetFixture) {
+  group->alignmentMask() = AlignmentMask::Center0 | AlignmentMask::Rotation2;
+  auto prepared = prepareTargets(gctx, {otherGroup, group}, {group, otherGroup},
+                                 {module.get()});
+  BOOST_REQUIRE(prepared.ok());
+  const std::map<unsigned int, AlignmentMask> schedule{
+      {0, AlignmentMask::Rotation1}, {2, AlignmentMask::None}};
+  auto layout =
+      AlignDetail::makeAlignmentParameterLayout(*prepared, 0, schedule);
+  BOOST_REQUIRE(layout.ok());
+  BOOST_REQUIRE_EQUAL(layout->parameters.size(), 4u);
+  BOOST_CHECK_EQUAL(layout->parameters[0].target, 0u);
+  BOOST_CHECK(layout->parameters[0].dof == eAlignmentRotation1);
+  BOOST_CHECK_EQUAL(layout->parameters[1].target, 1u);
+  BOOST_CHECK(layout->parameters[1].dof == eAlignmentCenter0);
+  BOOST_CHECK(layout->parameters[2].dof == eAlignmentRotation2);
+  BOOST_CHECK_EQUAL(layout->parameters[3].target, 2u);
+  BOOST_CHECK(layout->parameters[3].dof == eAlignmentCenter2);
+  BOOST_CHECK(!layout->targetColumns[1][eAlignmentCenter1]);
+  const std::vector<AlignDetail::AlignmentMeasurement> forward{
+      {other.get(), 2},
+      {module.get(), 1},
+      {second.get(), 1},
+      {first.get(), 2},
+      {other.get(), 1}};
+  const std::vector<AlignDetail::AlignmentMeasurement> backward(
+      forward.rbegin(), forward.rend());
+  const auto a = AlignDetail::makeTrackAlignmentLayout(*layout, forward);
+  const auto b = AlignDetail::makeTrackAlignmentLayout(*layout, backward);
+  BOOST_CHECK(a.localToGlobal == b.localToGlobal);
+  BOOST_CHECK(a.localToGlobal == std::vector<std::size_t>({0, 1, 2, 3}));
+  BOOST_REQUIRE_EQUAL(a.targets.size(), 3u);
+  BOOST_CHECK_EQUAL(a.targets[0].globalTarget, 0u);
+  BOOST_CHECK_EQUAL(a.targets[1].globalTarget, 1u);
+  BOOST_CHECK_EQUAL(a.targets[2].globalTarget, 2u);
+  BOOST_CHECK(a.targets[0].columns[eAlignmentRotation1] == 0u);
+  BOOST_CHECK(a.targets[1].columns[eAlignmentCenter0] == 1u);
+  BOOST_CHECK(a.targets[1].columns[eAlignmentRotation2] == 2u);
+  BOOST_CHECK(a.measurements[0].target == 2u);
+  BOOST_CHECK(a.measurements[1].target == 0u);
+  BOOST_CHECK(a.measurements[2].target == 1u);
+  const std::vector<AlignDetail::AlignmentMeasurement> sparseHits{
+      {other.get(), 2}, {module.get(), 1}, {other.get(), 1}};
+  const auto sparse =
+      AlignDetail::makeTrackAlignmentLayout(*layout, sparseHits);
+  BOOST_CHECK(sparse.localToGlobal == std::vector<std::size_t>({0, 3}));
+  BOOST_REQUIRE_EQUAL(sparse.targets.size(), 2u);
+  BOOST_CHECK_EQUAL(sparse.targets[0].globalTarget, 0u);
+  BOOST_CHECK_EQUAL(sparse.targets[1].globalTarget, 2u);
+  BOOST_CHECK(sparse.targets[0].columns[eAlignmentRotation1] == 0u);
+  BOOST_CHECK(sparse.targets[1].columns[eAlignmentCenter2] == 1u);
+  BOOST_REQUIRE_EQUAL(sparse.measurements.size(), 3u);
+  BOOST_CHECK(sparse.measurements[0].target == 1u);
+  BOOST_CHECK(sparse.measurements[1].target == 0u);
+  BOOST_CHECK(sparse.measurements[2].target == 1u);
+  auto missing =
+      AlignDetail::makeAlignmentParameterLayout(*prepared, 1, schedule);
+  BOOST_REQUIRE(missing.ok());
+  BOOST_CHECK_EQUAL(missing->parameters.size(), 9u);
+  auto fixed =
+      AlignDetail::makeAlignmentParameterLayout(*prepared, 2, schedule);
+  BOOST_REQUIRE(fixed.ok());
+  BOOST_CHECK_EQUAL(fixed->parameters.size(), 3u);
+  BOOST_CHECK(!fixed->placementTargets.contains(module.get()));
+  BOOST_CHECK_EQUAL(fixed->parameters.front().target, 1u);
+  const auto fixedTrack =
+      AlignDetail::makeTrackAlignmentLayout(*fixed, forward);
+  BOOST_CHECK(fixedTrack.localToGlobal == std::vector<std::size_t>({0, 1, 2}));
+  BOOST_REQUIRE_EQUAL(fixedTrack.measurements.size(), forward.size());
+  BOOST_CHECK(!fixedTrack.measurements[1].target);
+  BOOST_CHECK_EQUAL(fixedTrack.measurements[2].rowOffset, 3u);
+  BOOST_CHECK_EQUAL(fixedTrack.measurementDim, 7u);
+}
+
 BOOST_FIXTURE_TEST_CASE(SelectionSnapshotsFramesMasksAndMembership,
                         TargetFixture) {
   const Transform3 initial =
@@ -720,6 +841,38 @@ BOOST_FIXTURE_TEST_CASE(MemberContextAndBacklinkValidation, TargetFixture) {
   wrongGroup->addSurface(wrong.surface().getSharedPtr());
   checkTargetError(prepareTargets(gctx, {wrongGroup}, {wrongGroup}),
                    AlignmentError::InvalidAlignmentSelection, "backlink");
+}
+
+BOOST_FIXTURE_TEST_CASE(PreparedLayoutsReuseSnapshots, TargetFixture) {
+  ContextualTargetElement contextual;
+  const Transform3 initial =
+      Translation3(5_mm, -20_mm, 8_mm) * AngleAxis3(0.4, Vector3::UnitX());
+  GeometryContext context{initial};
+  std::size_t calls = 0;
+  group->setTransform([&](const GeometryContext& ctx) {
+    ++calls;
+    return ctx.get<Transform3>();
+  });
+  group->addSurface(contextual.surface().getSharedPtr());
+  auto prepared = prepareTargets(context, {group}, {group});
+  BOOST_REQUIRE(prepared.ok());
+  group->alignmentMask() = AlignmentMask::None;
+  group->addSurface(other->surface().getSharedPtr());
+  auto layout = AlignDetail::makeAlignmentParameterLayout(*prepared, 3);
+  BOOST_REQUIRE(layout.ok());
+  BOOST_CHECK_EQUAL(layout->parameters.size(), 6u);
+  BOOST_CHECK_EQUAL(calls, 1u);
+  BOOST_CHECK_EQUAL(contextual.calls, 1u);
+  BOOST_CHECK(!layout->placementTargets.contains(other.get()));
+  auto empty = prepareTargets(gctx, {group}, {group}, {}, {});
+  BOOST_REQUIRE(empty.ok());
+  checkTargetError(AlignDetail::makeAlignmentParameterLayout(*empty, 0),
+                   AlignmentError::NoActiveAlignmentParameters, "Iteration 0");
+  auto inactive = prepareTargets(gctx, {group}, {group}, {first.get()});
+  BOOST_REQUIRE(inactive.ok());
+  checkTargetError(AlignDetail::makeAlignmentParameterLayout(
+                       *inactive, 1, {{1, AlignmentMask::None}}),
+                   AlignmentError::NoActiveAlignmentParameters, "Iteration 1");
 }
 
 BOOST_FIXTURE_TEST_CASE(PreparedTargetOrdering, TargetFixture) {

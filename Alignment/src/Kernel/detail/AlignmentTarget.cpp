@@ -10,6 +10,7 @@
 
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <new>
@@ -245,6 +246,82 @@ prepareAlignmentTargets(
     }
   }
   return prepared;
+}
+
+Acts::Result<AlignmentParameterLayout, AlignmentTargetError>
+makeAlignmentParameterLayout(
+    const PreparedAlignmentTargets& selection, unsigned int iteration,
+    const std::map<unsigned int, AlignmentMask>& iterationState) {
+  const auto it = iterationState.find(iteration);
+  const auto moduleMask =
+      it == iterationState.end() ? AlignmentMask::All : it->second;
+  AlignmentParameterLayout layout;
+  layout.targetColumns.resize(selection.targets.size());
+  for (std::size_t i = 0; i < selection.targets.size(); ++i) {
+    const auto& target = selection.targets[i];
+    const auto mask =
+        target.kind == AlignmentTarget::Kind::Module ? moduleMask : target.mask;
+    for (const auto& [dof, bit] : namedDofs) {
+      if (ACTS_CHECK_BIT(mask, bit)) {
+        layout.targetColumns[i][dof] = layout.parameters.size();
+        layout.parameters.push_back({i, dof});
+      }
+    }
+    if (hasParameters(mask)) {
+      for (const auto& member : target.members) {
+        layout.placementTargets.emplace(member.placement, i);
+      }
+    }
+  }
+  if (layout.parameters.empty()) {
+    return AlignmentTargetError{AlignmentError::NoActiveAlignmentParameters,
+                                "Iteration " + std::to_string(iteration) +
+                                    " has no active alignment parameters"};
+  }
+  return layout;
+}
+
+TrackAlignmentLayout makeTrackAlignmentLayout(
+    const AlignmentParameterLayout& layout,
+    std::span<const AlignmentMeasurement> measurements) {
+  std::vector<std::size_t> participating;
+  participating.reserve(measurements.size());
+  for (const auto& measurement : measurements) {
+    const auto it = layout.placementTargets.find(measurement.placement);
+    if (it != layout.placementTargets.end()) {
+      participating.push_back(it->second);
+    }
+  }
+  std::sort(participating.begin(), participating.end());
+  participating.erase(std::unique(participating.begin(), participating.end()),
+                      participating.end());
+  TrackAlignmentLayout track;
+  track.targets.reserve(participating.size());
+  track.measurements.reserve(measurements.size());
+  for (const auto i : participating) {
+    TrackAlignmentTarget target{i, {}};
+    for (const auto& [dof, bit] : namedDofs) {
+      if (const auto column = layout.targetColumns[i][dof]; column) {
+        target.columns[dof] = track.localToGlobal.size();
+        track.localToGlobal.push_back(*column);
+      }
+    }
+    track.targets.push_back(target);
+  }
+  for (const auto& measurement : measurements) {
+    std::optional<std::size_t> target;
+    const auto it = layout.placementTargets.find(measurement.placement);
+    if (it != layout.placementTargets.end()) {
+      target = static_cast<std::size_t>(std::lower_bound(participating.begin(),
+                                                         participating.end(),
+                                                         it->second) -
+                                        participating.begin());
+    }
+    track.measurements.push_back(
+        {target, track.measurementDim, measurement.dimension});
+    track.measurementDim += measurement.dimension;
+  }
+  return track;
 }
 
 }  // namespace ActsAlignment::detail

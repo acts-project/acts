@@ -13,11 +13,15 @@
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Kernel/AlignmentError.hpp"
 
+#include <array>
+#include <cstddef>
 #include <functional>
+#include <map>
 #include <memory>
 #include <optional>
 #include <span>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace ActsAlignment::detail {
@@ -60,6 +64,62 @@ struct PreparedAlignmentTargets {
   std::vector<AlignmentTarget> targets;
 };
 
+/// One optional compact column per named alignment DoF; nullopt means fixed.
+using AlignmentParameterIndices =
+    std::array<std::optional<std::size_t>, Acts::eAlignmentSize>;
+
+/// Reverse mapping from a compact column to its target and named DoF.
+struct AlignmentParameter {
+  std::size_t target;
+  Acts::AlignmentIndices dof;
+};
+
+/// Iteration-specific compact parameter layout, built from a prepared
+/// selection.
+struct AlignmentParameterLayout {
+  /// Indexed by target in PreparedAlignmentTargets, including fixed modules.
+  std::vector<AlignmentParameterIndices> targetColumns;
+  /// Compact columns in target order, then Center0..2, Rotation0..2 order.
+  std::vector<AlignmentParameter> parameters;
+  /// Only placements with active columns appear here.
+  std::unordered_map<const Acts::SurfacePlacementBase*, std::size_t>
+      placementTargets;
+};
+
+/// Measurement rows supplied to the track layout builder.
+struct AlignmentMeasurement {
+  /// Null for rows without an associated placement (e.g. track-model rows).
+  const Acts::SurfacePlacementBase* placement = nullptr;
+  std::size_t dimension = 0;
+};
+
+/// One target present on a track, with indices into its local parameter vector.
+struct TrackAlignmentTarget {
+  std::size_t globalTarget = 0;
+  AlignmentParameterIndices columns;
+};
+
+/// Measurement metadata is independent of the number of active parameters.
+struct TrackAlignmentMeasurement {
+  /// Index into TrackAlignmentLayout::targets, or nullopt for fixed/target-less
+  /// rows.
+  std::optional<std::size_t> target;
+  std::size_t rowOffset = 0;
+  std::size_t dimension = 0;
+};
+
+/// Mapping only: does not compute residuals, derivatives, or a track-model
+/// gradient.
+struct TrackAlignmentLayout {
+  /// Unique participating targets in global target order.
+  std::vector<TrackAlignmentTarget> targets;
+  /// Global column for each local column, for normal-equation accumulation.
+  std::vector<std::size_t> localToGlobal;
+  /// One entry for every input measurement, including repeated member hits.
+  std::vector<TrackAlignmentMeasurement> measurements;
+  std::size_t measurementDim = 0;
+};
+
 /// Read-only declaration of whether an application can update a placement.
 /// Must not publish transforms. This does not guarantee transactional updates;
 /// the eventual numerical solver must also validate its publication interface.
@@ -96,5 +156,25 @@ prepareAlignmentTargets(
     std::span<const std::shared_ptr<AlignableStructure>> activeStructures,
     std::span<Acts::SurfacePlacementBase* const> modules,
     const AlignmentUpdateSupport& supportsUpdate);
+
+/// Build a compact layout with module masks resolved for this exact iteration.
+/// Structure masks come from the snapshot and are independent of the schedule.
+/// @param selection Snapshot returned by prepareAlignmentTargets
+/// @param iteration Current iteration number
+/// @param iterationState Module masks; a missing entry means All
+/// @return Compact layout, or NoActiveAlignmentParameters if it has no columns
+Acts::Result<AlignmentParameterLayout, AlignmentTargetError>
+makeAlignmentParameterLayout(
+    const PreparedAlignmentTargets& selection, unsigned int iteration,
+    const std::map<unsigned int, AlignmentMask>& iterationState = {});
+
+/// Map a track's measurement rows to shared columns. Scratch storage scales
+/// with the track's measurements, independently of the global target count.
+/// @param layout Global layout returned by makeAlignmentParameterLayout
+/// @param measurements Rows in track order; may include fixed/target-less rows
+/// @return Track-local mapping (possibly with no active targets)
+TrackAlignmentLayout makeTrackAlignmentLayout(
+    const AlignmentParameterLayout& layout,
+    std::span<const AlignmentMeasurement> measurements);
 
 }  // namespace ActsAlignment::detail

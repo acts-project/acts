@@ -21,7 +21,8 @@ enum class AlignmentError {
   HierarchyValidationFailure = 4,
   InvalidAlignmentSelection = 5,
   AlignmentFrameResolutionFailure = 6,
-  UnsupportedAlignmentConstraints = 7
+  UnsupportedAlignmentConstraints = 7,
+  NoActiveAlignmentParameters = 8
 };
 
 namespace detail {
@@ -48,6 +49,8 @@ class AlignmentErrorCategory : public std::error_category {
         return "Alignment target frame resolution failed";
       case AlignmentError::UnsupportedAlignmentConstraints:
         return "Numerical structure constraints are not supported";
+      case AlignmentError::NoActiveAlignmentParameters:
+        return "No active alignment parameters";
       default:
         return "unknown";
     }

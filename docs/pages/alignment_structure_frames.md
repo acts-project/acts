@@ -165,3 +165,28 @@ seeds for future solver-owned working state. Preparation never alters a structur
 provider or nominal/contextual member geometry. Provider failures retain the
 target and phase in a diagnostic; allocation and non-standard exceptions propagate.
 An empty prepared selection is allowed.
+
+## Parameter and track layouts
+
+`makeAlignmentParameterLayout()` assigns compact parameter columns to a prepared
+selection. Targets follow preparation order: standalone modules first, then
+structures, each in supplied order. Within a target, only active DoFs receive
+columns, in Center0..2, Rotation0..2 order. The six named components are enumerated
+explicitly; unused bits in `AlignmentMask::All` do not create extra columns.
+
+An exact `iterationState` entry supplies the module mask; a missing entry means
+`All`. Structure masks remain the per-call snapshot and are independent of the
+module schedule. A layout with no active columns returns
+`NoActiveAlignmentParameters`.
+
+`makeTrackAlignmentLayout()` assigns local columns to each unique participating
+target in global target order. Repeated hits or hits on different members of one
+structure reuse those columns. The `localToGlobal` mapping identifies the global
+column corresponding to each track-local column. Per-track scratch storage scales
+with the number of measurements, independently of the total number of targets.
+
+Measurement row offsets and dimensions are recorded separately from parameter
+columns. Fixed-reference and track-model rows may have no active target. A track
+with no active target has an empty column mapping and retains its measurement
+metadata. These helpers do not calculate derivatives or change the track-model
+gradient, and they do not query frame providers again.
