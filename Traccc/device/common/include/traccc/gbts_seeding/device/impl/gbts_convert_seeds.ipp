@@ -33,7 +33,7 @@ struct Tracklet {
 };
 
 template <typename T>
-TRACCC_HOST_DEVICE inline void set_seed(traccc::edm::seed<T> seed,
+TRACCC_HOST_DEVICE inline void set_seed(traccc::edm::seed<T>& seed,
                                         const int bottom, const int middle,
                                         const int top, const float quality) {
   seed.bottom_index() = bottom;
