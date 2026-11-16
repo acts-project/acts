@@ -84,3 +84,12 @@ add_plugin_binding_if(Mille Acts::PluginMille ACTS_BUILD_PLUGIN_MILLE)
 
 # Propagate the list of built plugins to the parent scope
 set(_plugins_built "${_plugins_built}" PARENT_SCOPE)
+
+if(TARGET ActsPluginsPythonBindingsDetray)
+    target_link_libraries(
+        ActsPluginsPythonBindingsDetray
+        PRIVATE detray::python_common
+    )
+    add_dependencies(ActsPluginsPythonBindingsDetray DetrayPythonBindings)
+    add_dependencies(ActsPluginsPythonBindingsVecmem DetrayPythonBindings)
+endif()
