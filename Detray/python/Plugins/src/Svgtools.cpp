@@ -8,10 +8,10 @@
 
 // Detray include(s)
 #include "detray/algebra/concepts.hpp"
-#include "detray/core/detector.hpp"
 #include "detray/plugins/svgtools/illustrator.hpp"
 #include "detray/plugins/svgtools/styling/styling.hpp"
 #include "detray/plugins/svgtools/writer.hpp"
+#include "detray/python/detector.hpp"
 
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
@@ -40,10 +40,65 @@ namespace {
 
 using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
 using algebra_t = detray::array<scalar_t>;
-using detector_t = detray::host::detector<detray::default_metadata<algebra_t>>;
-using geometry_context_t = detector_t::geometry_context;
+using geometry_context_t = detray::geometry_context;
 using style_t = detray::svgtools::styling::style;
-using illustrator_t = detray::svgtools::illustrator<detector_t>;
+
+/// Preserve the presentation settings while dispatching to the concrete family.
+struct illustrator_t {
+  const detray::host_detector &detector;
+  const detray::name_map &names;
+  style_t style;
+  bool info = true, eta = false, grids = false, material = true;
+  bool portals = false, passives = false;
+  std::array<detray::dindex, 2> window{2u, 2u};
+  illustrator_t(const detray::host_detector &d, const detray::name_map &n,
+                const style_t &s)
+      : detector(d), names(n), style(s) {}
+  template <typename F>
+  auto visit(F &&callable) const {
+    return detray::python::visit(detector, [&]<typename T>(const T &concrete) {
+      detray::svgtools::illustrator<T> il{concrete, names, style};
+      il.show_info(info);
+      il.hide_eta_lines(eta);
+      il.hide_grids(grids);
+      il.hide_material(material);
+      il.hide_portals(portals);
+      il.hide_passives(passives);
+      il.search_window(window);
+      return callable(il);
+    });
+  }
+  template <typename V>
+  auto draw_detector(const V &view, const geometry_context_t &ctx, float r,
+                     float z) const {
+    return visit(
+        [&](const auto &il) { return il.draw_detector(view, ctx, r, z); });
+  }
+  template <typename I, typename V>
+  auto draw_volumes(const I &indices, const V &view,
+                    const geometry_context_t &ctx) const {
+    return visit(
+        [&](const auto &il) { return il.draw_volumes(indices, view, ctx); });
+  }
+  template <typename V>
+  auto draw_surfaces(const std::vector<detray::dindex> &indices, const V &view,
+                     const geometry_context_t &ctx) const {
+    return visit(
+        [&](const auto &il) { return il.draw_surfaces(indices, view, ctx); });
+  }
+  void show_info(bool value) { info = value; }
+  void hide_eta_lines(bool value) { eta = value; }
+  void hide_grids(bool value) { grids = value; }
+  void hide_material(bool value) { material = value; }
+  void hide_portals(bool value) { portals = value; }
+  void hide_passives(bool value) { passives = value; }
+  void search_window(std::array<detray::dindex, 2> value) { window = value; }
+  std::string det_name() const {
+    return detray::python::visit(detector, [&]<typename T>(const T &concrete) {
+      return concrete.name(names);
+    });
+  }
+};
 
 /// Bind the draw methods of the illustrator for @tparam view_t .
 template <typename view_t>
@@ -184,8 +239,8 @@ PYBIND11_MODULE(DetraySvgtoolsPythonBindings, m) {
   {
     auto c =
         py::class_<illustrator_t>(m, "Illustrator")
-            .def(py::init<const detector_t &, const detray::name_map &,
-                          const style_t &>(),
+            .def(py::init<const detray::host_detector &,
+                          const detray::name_map &, const style_t &>(),
                  py::arg("detector"), py::arg("names"), py::arg("style"),
                  py::keep_alive<1, 2>(), py::keep_alive<1, 3>(),
                  "Build the svg generator of a detector. The detector and its "

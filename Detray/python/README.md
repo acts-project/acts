@@ -43,3 +43,36 @@ optional suites are selected explicitly rather than hiding import failures.
 
 ACTS interoperability tests belong under `Python`; tests that only exercise
 detray belong here. Shared helper changes must trigger both build entry points.
+
+## Detector API
+
+`detray.Detector` is the common Python type for all registered metadata families.
+`detray.core.availableMetadata` lists the families available in this build.
+There is one configured scalar/algebra choice per build.
+
+```python
+import detray
+import detray.io
+
+cfg = detray.io.DetectorReaderConfig().addFile("detector_geometry.json")
+detector, names = detray.io.readDetector(detray.HostMemoryResource(), cfg)
+print(detector.metadataId, detector.name(names))
+print(len(detector.volumes), len(detector.surfaces))
+print(detector.surfaces[0].identifier)
+```
+
+The reader selects the family from the file header. Use `metadataId="odd"`
+(or another registered ID) explicitly for older files without metadata.
+Unknown IDs raise `ValueError`. `writeDetector` accepts the same common type
+and records its stable metadata ID.
+
+`volumes`, `surfaces`, and `portals` are read-only sequences with negative-index
+support. They retain the detector and its allocator. Their `VolumeInfo` and
+`SurfaceInfo` elements are independent snapshots containing indices, surface
+ranges, identifiers and surface classifications. Metadata-specific mask,
+material and accelerator stores are not part of this initial inspection API.
+`VolumeGraph` captures a printable/DOT snapshot of the detector connectivity.
+
+Detectors returned by IO and test builders keep their memory resource alive.
+SVG illustrators retain their detector and names. Standalone detray imports
+never import ACTS; ACTS bridge modules use these canonical registrations.

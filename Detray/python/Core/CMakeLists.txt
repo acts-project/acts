@@ -20,7 +20,12 @@ acts_add_python_module(
 
 target_link_libraries(
     DetrayPythonBindings
-    PRIVATE detray::core_array detray::io detray::detectors vecmem::core
+    PRIVATE
+        detray::python_common
+        detray::core_array
+        detray::io
+        detray::detectors
+        vecmem::core
 )
 
 # Generate the package __init__ that re-exports the compiled module.

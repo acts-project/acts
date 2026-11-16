@@ -19,6 +19,17 @@ acts_python_file(
     ${DETRAY_PYTHON_INSTALL_DIR}
 )
 
+add_library(detray_python_common INTERFACE)
+add_library(detray::python_common ALIAS detray_python_common)
+target_include_directories(
+    detray_python_common
+    INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(
+    detray_python_common
+    INTERFACE detray::core_array detray::detectors pybind11::headers
+)
+
 add_subdirectory(Core)
 add_subdirectory(Io)
 add_subdirectory(Plugins)

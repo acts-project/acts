@@ -35,6 +35,7 @@ acts_add_python_module(
 target_link_libraries(
     DetrayTestsPythonBindings
     PRIVATE
+        detray::python_common
         detray::core_array
         detray::io
         detray::test_common

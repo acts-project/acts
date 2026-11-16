@@ -30,6 +30,7 @@ acts_add_python_module(
 target_link_libraries(
     DetraySvgtoolsPythonBindings
     PRIVATE
+        detray::python_common
         detray::core_array
         detray::io
         detray::detectors
