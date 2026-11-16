@@ -150,8 +150,8 @@ class SurfaceArray {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to lookup
   /// @param direction The direction to lookup
-  /// @note Curvature is reserved for a follow-up crossing correction;
-  /// the lookup currently uses a ray.
+  /// @note Curvature shifts the lookup crossing; it does not enlarge the neighbor
+  /// window to cover bending through the layer thickness.
   /// @param curvature Global geometric curvature for the lookup crossing
   /// @return span of surface pointers of neighbors and nominal
   std::span<const Surface* const> neighbors(
