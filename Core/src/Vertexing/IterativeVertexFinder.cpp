@@ -21,11 +21,10 @@ Acts::IterativeVertexFinder::IterativeVertexFinder(
         "provided.");
   }
 
-  if (m_cfg.trackLinearizer.connected() ==
-      m_cfg.fieldTrackLinearizer.connected()) {
+  if (!m_cfg.trackLinearizer.connected()) {
     throw std::invalid_argument(
         "IterativeVertexFinder: "
-        "Configure exactly one track linearizer.");
+        "No track linearizer provided.");
   }
 
   if (!m_cfg.seedFinder) {
@@ -248,14 +247,8 @@ Acts::Result<double> Acts::IterativeVertexFinder::getCompatibility(
     State& state) const {
   // Linearize track
   auto result =
-      m_cfg.fieldTrackLinearizer.connected()
-          ? m_cfg.fieldTrackLinearizer(
-                params, vertex.fullPosition()[3], perigeeSurface,
-                vertexingOptions.geoContext, state.fieldQuery)
-          : m_cfg.trackLinearizer(params, vertex.fullPosition()[3],
-                                  perigeeSurface, vertexingOptions.geoContext,
-                                  vertexingOptions.magFieldContext,
-                                  state.fieldQuery.m_cache);
+      m_cfg.trackLinearizer(params, vertex.fullPosition()[3], perigeeSurface,
+                            vertexingOptions.geoContext, state.fieldQuery);
   if (!result.ok()) {
     return result.error();
   }

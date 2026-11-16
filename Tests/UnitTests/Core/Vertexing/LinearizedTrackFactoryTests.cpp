@@ -23,7 +23,6 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
@@ -167,11 +166,11 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   // Linearizer for constant field and corresponding state
   AnalyticalLinearizer::Config linConfig;
-  linConfig.bField = constField;
+
   linConfig.propagator = propagator;
   AnalyticalLinearizer linFactory(linConfig);
 
-  NumericalLinearizer::Config numLinConfig(constField, propagator);
+  NumericalLinearizer::Config numLinConfig(propagator);
   NumericalLinearizer numLinFactory(numLinConfig);
 
   // Linearizer for 0 field and corresponding state
@@ -182,23 +181,16 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   StraightNumericalLinearizer::Config numStraightLinConfig(straightPropagator);
   StraightNumericalLinearizer numStraightLinFactory(numStraightLinConfig);
 
-  MagneticFieldProvider::Cache fieldCache =
-      constField->makeCache(magFieldContext);
-  MagneticFieldProvider::Cache zeroFieldCache =
-      zeroField->makeCache(magFieldContext);
-
   MagneticFieldQuery fieldQuery(*constField, magFieldContext);
   MagneticFieldQuery zeroFieldQuery(*zeroField, magFieldContext);
 
   // Lambda for comparing outputs of the two linearization methods
   // We compare the linearization result at the PCA to "linPoint"
-  auto checkLinearizers = [&fieldCache, &zeroFieldCache](
-                              auto& lin1, auto& lin2,
-                              const BoundTrackParameters& track,
-                              const Vector4& linPoint,
-                              const auto& geometryContext,
-                              const auto& fieldContext,
-                              MagneticFieldQuery& query) {
+  auto checkLinearizers = [](auto& lin1, auto& lin2,
+                             const BoundTrackParameters& track,
+                             const Vector4& linPoint,
+                             const auto& geometryContext,
+                             MagneticFieldQuery& query) {
     // In addition to comparing the output of the linearizers, we check that
     // they return non-zero quantities
     BoundVector vecBoundZero = BoundVector::Zero();
@@ -216,34 +208,14 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     std::shared_ptr<PerigeeSurface> perigee =
         Surface::makeShared<PerigeeSurface>(VectorHelpers::position(linPoint));
 
-    // Compare the deprecated entry points against the query-based API.
-    ACTS_PUSH_IGNORE_DEPRECATED()
     const LinearizedTrack linTrack1 =
         lin1.linearizeTrack(track, linPoint[3], *perigee, geometryContext,
-                            fieldContext, fieldCache)
+                            query)
             .value();
     const LinearizedTrack linTrack2 =
         lin2.linearizeTrack(track, linPoint[3], *perigee, geometryContext,
-                            fieldContext, zeroFieldCache)
+                            query)
             .value();
-
-    ACTS_POP_IGNORE_DEPRECATED()
-
-    // Both public entry points use the same numerical implementation.
-    auto queryTrack1 = lin1.linearizeTrackWithField(
-        track, linPoint[3], *perigee, geometryContext, query);
-    auto queryTrack2 = lin2.linearizeTrackWithField(
-        track, linPoint[3], *perigee, geometryContext, query);
-    BOOST_REQUIRE(queryTrack1.ok());
-    BOOST_REQUIRE(queryTrack2.ok());
-    CHECK_CLOSE_ABS(queryTrack1->positionJacobian, linTrack1.positionJacobian,
-                    1e-12);
-    CHECK_CLOSE_ABS(queryTrack2->positionJacobian, linTrack2.positionJacobian,
-                    1e-12);
-    CHECK_CLOSE_ABS(queryTrack1->momentumJacobian, linTrack1.momentumJacobian,
-                    1e-12);
-    CHECK_CLOSE_ABS(queryTrack2->momentumJacobian, linTrack2.momentumJacobian,
-                    1e-12);
 
     // There should be no problem here because both linearizers compute
     // "parametersAtPCA" the same way
@@ -286,11 +258,11 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   for (const BoundTrackParameters& trk : tracks) {
     BOOST_TEST_CONTEXT("Linearization in constant magnetic field") {
       checkLinearizers(linFactory, numLinFactory, trk, vtxPos, geoContext,
-                       magFieldContext, fieldQuery);
+                       fieldQuery);
     }
     BOOST_TEST_CONTEXT("Linearization without magnetic field") {
       checkLinearizers(straightLinFactory, numStraightLinFactory, trk, vtxPos,
-                       geoContext, magFieldContext, zeroFieldQuery);
+                       geoContext, zeroFieldQuery);
     }
   }
 }

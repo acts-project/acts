@@ -32,7 +32,6 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
-#include "ActsTests/CommonHelpers/LegacyTrackLinearizer.hpp"
 
 #include <iostream>
 #include <map>
@@ -117,25 +116,21 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
+
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   AdaptiveMultiVertexFitter::Config fitterCfg(ip3dEst);
-  fitterCfg.trackLinearizer = ActsTests::makeLegacyTrackLinearizer(linearizer);
+  fitterCfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
+      &linearizer);
 
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  // Reject ambiguous and missing linearizer configurations.
+  // A track linearizer is required.
   auto invalidCfg = fitterCfg;
-  invalidCfg.fieldTrackLinearizer
-      .connect<&HelicalTrackLinearizer::linearizeTrackWithField>(&linearizer);
-  BOOST_CHECK_THROW(AdaptiveMultiVertexFitter{invalidCfg},
-                    std::invalid_argument);
   invalidCfg.trackLinearizer = {};
-  invalidCfg.fieldTrackLinearizer = {};
   BOOST_CHECK_THROW(AdaptiveMultiVertexFitter{invalidCfg},
                     std::invalid_argument);
 
@@ -352,7 +347,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
+
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
@@ -361,8 +356,8 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   // Do time fit
   fitterCfg.useTime = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  fitterCfg.fieldTrackLinearizer
-      .connect<&HelicalTrackLinearizer::linearizeTrackWithField>(&linearizer);
+  fitterCfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
+      &linearizer);
 
   AdaptiveMultiVertexFitter fitter(std::move(fitterCfg));
 
@@ -546,12 +541,12 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
+
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
-  fitterCfg.fieldTrackLinearizer
-      .connect<&HelicalTrackLinearizer::linearizeTrackWithField>(&linearizer);
+  fitterCfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
+      &linearizer);
 
   // Test smoothing
   // fitterCfg.doSmoothing = true;
@@ -840,13 +835,13 @@ BOOST_AUTO_TEST_CASE(deprecated_state_interface) {
   ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
+
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   AdaptiveMultiVertexFitter::Config fitterCfg(ip3dEst);
-  fitterCfg.fieldTrackLinearizer
-      .connect<&HelicalTrackLinearizer::linearizeTrackWithField>(&linearizer);
+  fitterCfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
+      &linearizer);
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
 

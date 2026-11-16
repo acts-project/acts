@@ -19,28 +19,10 @@
 Acts::Result<Acts::LinearizedTrack>
 Acts::NumericalTrackLinearizer::linearizeTrack(
     const BoundTrackParameters& params, double linPointTime,
-    const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
-    const Acts::MagneticFieldContext& mctx,
-    MagneticFieldProvider::Cache& /*fieldCache*/) const {
-  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx, mctx);
-}
-
-Acts::Result<Acts::LinearizedTrack>
-Acts::NumericalTrackLinearizer::linearizeTrackWithField(
-    const BoundTrackParameters& params, double linPointTime,
     const Surface& perigeeSurface, const GeometryContext& gctx,
-    MagneticFieldQuery& field) const {
-  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx,
-                            field.context());
-}
-
-Acts::Result<Acts::LinearizedTrack>
-Acts::NumericalTrackLinearizer::linearizeTrackImpl(
-    const BoundTrackParameters& params, double linPointTime,
-    const Surface& perigeeSurface, const GeometryContext& gctx,
-    const MagneticFieldContext& mctx) const {
+    MagneticFieldQuery& fieldQuery) const {
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, fieldQuery.context());
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.

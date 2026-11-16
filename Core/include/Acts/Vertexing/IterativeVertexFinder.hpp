@@ -74,7 +74,7 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// Vertex fitter
     VertexFitter vertexFitter;
 
-    /// Legacy cache-taking linearizer; use fieldTrackLinearizer for new code
+    /// Track linearizer using a reusable magnetic field query
     TrackLinearizer trackLinearizer;
 
     /// Vertex seed finder
@@ -119,9 +119,6 @@ class IterativeVertexFinder final : public IVertexFinder {
 
     /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> field;
-
-    /// Query-taking linearizer; mutually exclusive with trackLinearizer
-    FieldTrackLinearizer fieldTrackLinearizer;
   };
 
   /// State struct

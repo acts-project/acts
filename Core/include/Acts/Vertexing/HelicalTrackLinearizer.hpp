@@ -10,9 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -46,10 +43,6 @@ class HelicalTrackLinearizer {
  public:
   /// @brief Configuration struct
   struct Config {
-    /// Field provider for the legacy cache-taking linearization overload
-    std::shared_ptr<const MagneticFieldProvider> bField =
-        std::make_shared<NullBField>();
-
     /// Track propagator for linearization calculations
     std::shared_ptr<const BasePropagator> propagator;
 
@@ -72,50 +65,21 @@ class HelicalTrackLinearizer {
     }
   }
 
-  /// @brief Function that linearizes BoundTrackParameters at
-  /// the PCA to a given Perigee surface
-  ///
-  /// @param params Parameters to linearize
-  /// @param linPointTime Time associated to the linearization point
-  /// @note Transverse plane of the Perigee corresponding to @p linPoint is
-  /// parallel to the global x-y plane
-  /// @param perigeeSurface Perigee surface belonging to @p linPoint
-  /// @param gctx Geometry context
-  /// @param mctx Magnetic field context
-  /// @param fieldCache Magnetic field cache
-  ///
-  /// @return Linearized track
-  /// @deprecated Use linearizeTrackWithField with a reusable field query.
-  [[deprecated("Use linearizeTrackWithField with MagneticFieldQuery instead")]]
-  Result<LinearizedTrack> linearizeTrack(
-      const BoundTrackParameters& params, double linPointTime,
-      const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
-      const Acts::MagneticFieldContext& mctx,
-      MagneticFieldProvider::Cache& fieldCache) const;
-
   /// Linearize using a caller-owned field query for the PCA lookup.
   /// The propagator keeps its own cache and must use the same physical field.
   /// @param params Parameters to linearize
   /// @param linPointTime Time of the linearization point
   /// @param perigeeSurface Surface defining the linearization point
   /// @param gctx Geometry context
-  /// @param field Query providing both the PCA field and propagation context
+  /// @param fieldQuery Query providing both the PCA field and propagation context
   /// @return Linearized track or a propagation/field error
-  Result<LinearizedTrack> linearizeTrackWithField(
-      const BoundTrackParameters& params, double linPointTime,
-      const Surface& perigeeSurface, const GeometryContext& gctx,
-      MagneticFieldQuery& field) const;
+  Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
+                                         double linPointTime,
+                                         const Surface& perigeeSurface,
+                                         const GeometryContext& gctx,
+                                         MagneticFieldQuery& fieldQuery) const;
 
  private:
-  // Transitional implementation shared with the deprecated API.
-  // Exactly one of fieldCache and field is supplied by the public overloads.
-  Result<LinearizedTrack> linearizeTrackImpl(
-      const BoundTrackParameters& params, double linPointTime,
-      const Surface& perigeeSurface, const GeometryContext& gctx,
-      const MagneticFieldContext& mctx,
-      MagneticFieldProvider::Cache* fieldCache,
-      MagneticFieldQuery* fieldQuery) const;
-
   /// Configuration object
   const Config m_cfg;
 

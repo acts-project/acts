@@ -71,11 +71,10 @@ Acts::FullBilloirVertexFitter::FullBilloirVertexFitter(
         "provided.");
   }
 
-  if (m_cfg.trackLinearizer.connected() ==
-      m_cfg.fieldTrackLinearizer.connected()) {
+  if (!m_cfg.trackLinearizer.connected()) {
     throw std::invalid_argument(
         "FullBilloirVertexFitter: "
-        "Configure exactly one track linearizer.");
+        "No track linearizer provided.");
   }
 }
 
@@ -85,28 +84,7 @@ const Acts::Logger& Acts::FullBilloirVertexFitter::logger() const {
 
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     const std::vector<InputTrack>& paramVector,
-    const VertexingOptions& vertexingOptions,
-    MagneticFieldProvider::Cache& fieldCache) const {
-  if (!m_cfg.trackLinearizer.connected()) {
-    throw std::invalid_argument(
-        "FullBilloirVertexFitter: cache-taking fit requires trackLinearizer");
-  }
-  return fitImpl(paramVector, vertexingOptions, &fieldCache, nullptr);
-}
-
-Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
-    const std::vector<InputTrack>& paramVector,
     const VertexingOptions& vertexingOptions, MagneticFieldQuery& field) const {
-  if (!m_cfg.fieldTrackLinearizer.connected()) {
-    return fitImpl(paramVector, vertexingOptions, &field.m_cache, nullptr);
-  }
-  return fitImpl(paramVector, vertexingOptions, nullptr, &field);
-}
-
-Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitImpl(
-    const std::vector<InputTrack>& paramVector,
-    const VertexingOptions& vertexingOptions,
-    MagneticFieldProvider::Cache* fieldCache, MagneticFieldQuery* field) const {
   unsigned int nTracks = paramVector.size();
   double chi2 = std::numeric_limits<double>::max();
 
@@ -158,14 +136,9 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitImpl(
 
       const auto& trackParams = m_cfg.extractParameters(trackContainer);
 
-      auto result = field != nullptr
-                        ? m_cfg.fieldTrackLinearizer(
-                              trackParams, linPoint[3], *perigeeSurface,
-                              vertexingOptions.geoContext, *field)
-                        : m_cfg.trackLinearizer(
-                              trackParams, linPoint[3], *perigeeSurface,
-                              vertexingOptions.geoContext,
-                              vertexingOptions.magFieldContext, *fieldCache);
+      auto result =
+          m_cfg.trackLinearizer(trackParams, linPoint[3], *perigeeSurface,
+                                vertexingOptions.geoContext, field);
       if (!result.ok()) {
         return result.error();
       }

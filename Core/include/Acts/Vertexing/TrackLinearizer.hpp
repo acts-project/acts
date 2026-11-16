@@ -10,8 +10,6 @@
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -21,19 +19,9 @@ struct LinearizedTrack;
 class Surface;
 class MagneticFieldQuery;
 
-/// @typedef TrackLinearizer
-/// A delegate for linearizing a track at a given point in time and surface.
-/// @note Used for track fitting and vertexing. Retained for compatibility;
-/// new callers should use FieldTrackLinearizer.
-using TrackLinearizer = Delegate<Result<LinearizedTrack>(
-    const BoundTrackParameters& params, double linPointTime,
-    const Surface& perigeeSurface, const GeometryContext& gctx,
-    const MagneticFieldContext& mctx,
-    MagneticFieldProvider::Cache& fieldCache)>;
-
 /// Linearizer using a caller-owned field query. The query must not be retained.
 /// Propagation uses the query's context and its own independent field cache.
-using FieldTrackLinearizer = Delegate<Result<LinearizedTrack>(
+using TrackLinearizer = Delegate<Result<LinearizedTrack>(
     const BoundTrackParameters& params, double linPointTime,
     const Surface& perigeeSurface, const GeometryContext& gctx,
     MagneticFieldQuery& field)>;

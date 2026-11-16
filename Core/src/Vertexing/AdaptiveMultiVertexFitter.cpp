@@ -24,10 +24,9 @@ AdaptiveMultiVertexFitter::AdaptiveMultiVertexFitter(
         "from InputTrack_t provided.");
   }
 
-  if (m_cfg.trackLinearizer.connected() ==
-      m_cfg.fieldTrackLinearizer.connected()) {
+  if (!m_cfg.trackLinearizer.connected()) {
     throw std::invalid_argument(
-        "AdaptiveMultiVertexFitter: Configure exactly one track linearizer.");
+        "AdaptiveMultiVertexFitter: No track linearizer provided.");
   }
 }
 
@@ -332,17 +331,10 @@ Result<void> AdaptiveMultiVertexFitter::setWeightsAndUpdate(
         // Check if track is already linearized and whether we need to
         // relinearize
         if (!trkAtVtx.isLinearized || scratch.relinearize) {
-          auto result =
-              m_cfg.fieldTrackLinearizer.connected()
-                  ? m_cfg.fieldTrackLinearizer(
-                        m_cfg.extractParameters(trk), scratch.linPoint[3],
-                        *vtxPerigeeSurface, vertexingOptions.geoContext,
-                        cache.fieldQuery)
-                  : m_cfg.trackLinearizer(
-                        m_cfg.extractParameters(trk), scratch.linPoint[3],
-                        *vtxPerigeeSurface, vertexingOptions.geoContext,
-                        vertexingOptions.magFieldContext,
-                        cache.fieldQuery.m_cache);
+          auto result = m_cfg.trackLinearizer(
+              m_cfg.extractParameters(trk), scratch.linPoint[3],
+              *vtxPerigeeSurface, vertexingOptions.geoContext,
+              cache.fieldQuery);
           if (!result.ok()) {
             return result.error();
           }

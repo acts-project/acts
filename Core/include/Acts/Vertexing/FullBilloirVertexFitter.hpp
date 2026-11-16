@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
@@ -55,11 +53,8 @@ class FullBilloirVertexFitter {
     /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
 
-    /// Legacy cache-taking linearizer; use fieldTrackLinearizer for new code
+    /// Track linearizer using a reusable magnetic field query
     TrackLinearizer trackLinearizer;
-
-    /// Query-taking linearizer; mutually exclusive with trackLinearizer
-    FieldTrackLinearizer fieldTrackLinearizer;
   };
 
   /// @brief Constructor for user-defined InputTrack type
@@ -71,21 +66,7 @@ class FullBilloirVertexFitter {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("FullBilloirVertexFitter", Logging::INFO));
 
-  /// @brief Fit method, fitting vertex for provided tracks with constraint
-  ///
-  /// @param paramVector Vector of track objects to fit vertex to
-  /// @param vertexingOptions Vertexing options
-  /// @param fieldCache The magnetic field cache
-  ///
-  /// @return Fitted vertex
-  /// @deprecated Use the overload taking a MagneticFieldQuery instead.
-  [[deprecated("Use fit with MagneticFieldQuery instead of a raw field cache")]]
-  Result<Vertex> fit(const std::vector<InputTrack>& paramVector,
-                     const VertexingOptions& vertexingOptions,
-                     MagneticFieldProvider::Cache& fieldCache) const;
-
   /// Fit using a reusable field query.
-  /// Falls back to the legacy linearizer configuration when needed.
   /// @param paramVector Tracks to fit
   /// @param vertexingOptions Vertex fitting options
   /// @param field Field query, reused across tracks and iterations
@@ -95,12 +76,6 @@ class FullBilloirVertexFitter {
                      MagneticFieldQuery& field) const;
 
  private:
-  // Shared implementation for the legacy cache and field-query entry points.
-  Result<Vertex> fitImpl(const std::vector<InputTrack>& paramVector,
-                         const VertexingOptions& vertexingOptions,
-                         MagneticFieldProvider::Cache* fieldCache,
-                         MagneticFieldQuery* field) const;
-
   /// Configuration object
   Config m_cfg;
 

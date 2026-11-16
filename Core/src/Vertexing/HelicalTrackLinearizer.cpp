@@ -17,30 +17,10 @@
 Acts::Result<Acts::LinearizedTrack>
 Acts::HelicalTrackLinearizer::linearizeTrack(
     const BoundTrackParameters& params, double linPointTime,
-    const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
-    const Acts::MagneticFieldContext& mctx,
-    MagneticFieldProvider::Cache& fieldCache) const {
-  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx, mctx,
-                            &fieldCache, nullptr);
-}
-
-Acts::Result<Acts::LinearizedTrack>
-Acts::HelicalTrackLinearizer::linearizeTrackWithField(
-    const BoundTrackParameters& params, double linPointTime,
     const Surface& perigeeSurface, const GeometryContext& gctx,
-    MagneticFieldQuery& field) const {
-  return linearizeTrackImpl(params, linPointTime, perigeeSurface, gctx,
-                            field.context(), nullptr, &field);
-}
-
-Acts::Result<Acts::LinearizedTrack>
-Acts::HelicalTrackLinearizer::linearizeTrackImpl(
-    const BoundTrackParameters& params, double linPointTime,
-    const Surface& perigeeSurface, const GeometryContext& gctx,
-    const MagneticFieldContext& mctx, MagneticFieldProvider::Cache* fieldCache,
-    MagneticFieldQuery* fieldQuery) const {
+    MagneticFieldQuery& fieldQuery) const {
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, fieldQuery.context());
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
@@ -117,10 +97,7 @@ Acts::HelicalTrackLinearizer::linearizeTrackImpl(
   double absoluteCharge = params.particleHypothesis().absoluteCharge();
 
   // get the z-component of the B-field at the PCA
-  auto field =
-      fieldQuery != nullptr
-          ? fieldQuery->getField(VectorHelpers::position(pca))
-          : m_cfg.bField->getField(VectorHelpers::position(pca), *fieldCache);
+  auto field = fieldQuery.getField(VectorHelpers::position(pca));
   if (!field.ok()) {
     return field.error();
   }

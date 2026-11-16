@@ -159,11 +159,8 @@ class AdaptiveMultiVertexFitter {
     /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
 
-    /// Legacy cache-taking linearizer; use fieldTrackLinearizer for new code
+    /// Track linearizer using a reusable magnetic field query
     TrackLinearizer trackLinearizer;
-
-    /// Query-taking linearizer; mutually exclusive with trackLinearizer
-    FieldTrackLinearizer fieldTrackLinearizer;
   };
 
   /// @brief Constructor for user-defined InputTrack_t type !=

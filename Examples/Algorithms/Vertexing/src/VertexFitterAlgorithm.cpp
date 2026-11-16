@@ -55,7 +55,7 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   // Setup the linearizer
   Linearizer::Config ltConfig;
-  ltConfig.bField = m_cfg.bField;
+
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
 
@@ -64,8 +64,8 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
   VertexFitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters
       .connect<&Acts::InputTrack::extractParameters>();
-  vertexFitterCfg.fieldTrackLinearizer
-      .connect<&Linearizer::linearizeTrackWithField>(&linearizer);
+  vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+      &linearizer);
   VertexFitter vertexFitter(vertexFitterCfg);
   Acts::MagneticFieldQuery field(*m_cfg.bField, ctx.magFieldContext);
 

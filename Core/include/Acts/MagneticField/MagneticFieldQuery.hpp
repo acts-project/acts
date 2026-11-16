@@ -63,12 +63,6 @@ class MagneticFieldQuery {
   Result<Vector3> getField(const Vector3& position);
 
  private:
-  // Transitional access for tools accepting legacy cache-taking linearizers.
-  // Remove with their legacy configuration members.
-  friend class FullBilloirVertexFitter;
-  friend class AdaptiveMultiVertexFitter;
-  friend class IterativeVertexFinder;
-
   std::reference_wrapper<const MagneticFieldProvider> m_provider;
   std::reference_wrapper<const MagneticFieldContext> m_context;
   MagneticFieldProvider::Cache m_cache;
