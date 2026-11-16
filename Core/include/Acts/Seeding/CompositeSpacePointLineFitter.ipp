@@ -281,13 +281,16 @@ CompositeSpacePointLineFitter::fit(
     }
     FitParameters fastResult{};
     // The fast fit uses only the measurements accepted by the selector
-    // (outliers excluded). They are passed as non-owning pointers.
+    // and with a measurement plane (no beam spot). They are passed as
+    // non-owning pointers.
     using FastFitCont_t = std::vector<const SpacePoint_t<Cont_t>*>;
     static_assert(CompositeSpacePointContainer<FastFitCont_t>);
     FastFitCont_t selectedMeas{};
     selectedMeas.reserve(result.measurements.size());
     for (const auto& m : result.measurements) {
-      if (!fitOpts.selector.connected() || fitOpts.selector(*m)) {
+      if (m->planeNormal().squaredNorm() >
+              std::numeric_limits<double>::epsilon() &&
+          (!fitOpts.selector.connected() || fitOpts.selector(*m))) {
         selectedMeas.push_back(std::addressof(*m));
       }
     }
