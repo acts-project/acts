@@ -133,7 +133,35 @@ late_bound.setTransform(transformProvider=frame_provider)
 ```
 
 Providing a frame does not yet enable numerical structure alignment. The native
-solver still needs shared parameter indexing, Jacobian accumulation, and rigid
-updates of the members. The frame API supplies the geometry contract for that
-integration; hierarchy validation and standalone-module alignment retain their
-existing behavior.
+solver still needs shared Jacobian accumulation and rigid updates of the members.
+
+## Preparing alignment targets
+
+The internal `prepareAlignmentTargets()` helper in
+`ActsAlignment/Kernel/detail/AlignmentTarget.hpp` prepares numerical targets
+without fitting tracks or publishing transforms. It accepts registered roots,
+explicitly selected structures, standalone placements, an initial fit geometry
+context, and a read-only update-capability predicate.
+
+Preparation snapshots direct membership and structure masks, retains structure
+ownership, and resolves each selected structure and member frame once in the
+initial fit geometry context. Standalone modules come first in supplied order,
+followed by active structures in selection order. All placement pointers are
+non-owning and must outlive use of the snapshot. Caller declarations and geometry
+must not be mutated concurrently with preparation.
+
+Registered structures are metadata unless explicitly selected. A selected `None`
+structure stays inactive, requires no frame or update capability, and leaves its
+members available for standalone selection. Active structures must be nonempty
+leaves. Preparation rejects overlapping placements, inconsistent placement/surface
+links, and nonempty active structure constraints. Every initial frame must be a
+finite proper rigid transform; the orthogonality, determinant and affine-row
+checks use an absolute tolerance of `1e-10`.
+
+The update-capability predicate declares whether the application supports a
+placement; it must only inspect state. It is not an updater and does not promise
+transactional publication. Prepared member and structure transforms are initial
+seeds for future solver-owned working state. Preparation never alters a structure
+provider or nominal/contextual member geometry. Provider failures retain the
+target and phase in a diagnostic; allocation and non-standard exceptions propagate.
+An empty prepared selection is allowed.

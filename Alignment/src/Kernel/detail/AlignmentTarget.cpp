@@ -11,6 +11,8 @@
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <array>
+#include <cmath>
+#include <new>
 #include <sstream>
 #include <unordered_set>
 #include <utility>
@@ -41,6 +43,19 @@ std::string describe(const AlignableStructure& structure) {
   std::ostringstream os;
   os << "structure " << structure.geometryId() << " (" << &structure << ")";
   return os.str();
+}
+
+bool isRigid(const Acts::Transform3& transform) {
+  constexpr double tolerance = 1e-10;
+  return transform.matrix().allFinite() &&
+         (transform.matrix().row(3) - Acts::Vector4(0, 0, 0, 1).transpose())
+                 .cwiseAbs()
+                 .maxCoeff() <= tolerance &&
+         (transform.linear().transpose() * transform.linear() -
+          Acts::RotationMatrix3::Identity())
+                 .cwiseAbs()
+                 .maxCoeff() <= tolerance &&
+         std::abs(transform.linear().determinant() - 1.) <= tolerance;
 }
 
 using StructureSet = std::unordered_set<const AlignableStructure*>;
@@ -118,6 +133,118 @@ Acts::Result<bool, AlignmentTargetError> validateAlignmentSelection(
     hasActiveStructures = true;
   }
   return hasActiveStructures;
+}
+
+Acts::Result<PreparedAlignmentTargets, AlignmentTargetError>
+prepareAlignmentTargets(
+    const Acts::GeometryContext& gctx,
+    std::span<const std::shared_ptr<AlignableStructure>> structures,
+    std::span<const std::shared_ptr<AlignableStructure>> activeStructures,
+    std::span<Acts::SurfacePlacementBase* const> modules,
+    const AlignmentUpdateSupport& supportsUpdate) {
+  auto validation = validateAlignmentSelection(structures, activeStructures);
+  if (!validation.ok()) {
+    return validation.error();
+  }
+  PreparedAlignmentTargets prepared;
+  prepared.structures.assign(structures.begin(), structures.end());
+  for (const auto* module : modules) {
+    if (module == nullptr) {
+      return AlignmentTargetError{AlignmentError::InvalidAlignmentSelection,
+                                  "Null standalone module"};
+    }
+    AlignmentTarget target;
+    target.members.push_back({module, Acts::Transform3::Identity()});
+    prepared.targets.push_back(std::move(target));
+  }
+  for (const auto& structure : activeStructures) {
+    const auto mask = structure->alignmentMask();
+    if (!hasParameters(mask)) {
+      continue;
+    }
+    if (!structure->constraints().empty()) {
+      return AlignmentTargetError{
+          AlignmentError::UnsupportedAlignmentConstraints,
+          "Constraints on " + describe(*structure)};
+    }
+    if (structure->surfacePointers().empty()) {
+      return AlignmentTargetError{AlignmentError::InvalidAlignmentSelection,
+                                  "Empty active " + describe(*structure)};
+    }
+    AlignmentTarget target;
+    target.kind = AlignmentTarget::Kind::Structure;
+    target.structure = structure;
+    target.mask = mask;
+    for (const auto& surface : structure->surfacePointers()) {
+      const auto* placement = surface->surfacePlacement();
+      if (placement == nullptr || &placement->surface() != surface.get()) {
+        return AlignmentTargetError{
+            AlignmentError::InvalidAlignmentSelection,
+            "Missing placement or invalid member backlink in " +
+                describe(*structure)};
+      }
+      target.members.push_back({placement, Acts::Transform3::Identity()});
+    }
+    prepared.targets.push_back(std::move(target));
+  }
+
+  std::unordered_set<const Acts::SurfacePlacementBase*> claimed;
+  for (std::size_t i = 0; i < prepared.targets.size(); ++i) {
+    auto& target = prepared.targets[i];
+    const std::string label = target.structure ? describe(*target.structure)
+                                               : "module " + std::to_string(i);
+    for (const auto& member : target.members) {
+      if (!claimed.insert(member.placement).second) {
+        return AlignmentTargetError{
+            AlignmentError::InvalidAlignmentSelection,
+            "Duplicate/overlapping placement at " + label};
+      }
+      if (member.placement->surface().surfacePlacement() != member.placement) {
+        return AlignmentTargetError{AlignmentError::InvalidAlignmentSelection,
+                                    "Invalid placement backlink at " + label};
+      }
+    }
+  }
+
+  // All structural checks precede provider/capability calls. These calls only
+  // read the caller's state; nothing is published, even on partial failure.
+  for (std::size_t i = 0; i < prepared.targets.size(); ++i) {
+    auto& target = prepared.targets[i];
+    const std::string label = target.structure ? describe(*target.structure)
+                                               : "module " + std::to_string(i);
+    AlignmentError code = AlignmentError::InvalidAlignmentSelection;
+    std::string phase = "update capability";
+    try {
+      for (const auto& member : target.members) {
+        if (!supportsUpdate || !supportsUpdate(*member.placement)) {
+          return AlignmentTargetError{code, label + ": no update route"};
+        }
+      }
+      code = AlignmentError::AlignmentFrameResolutionFailure;
+      phase = "initial structure frame in fit geometry context";
+      if (target.structure) {
+        target.frame = target.structure->localToGlobalTransform(gctx);
+        if (!isRigid(*target.frame)) {
+          return AlignmentTargetError{code, label + ": invalid " + phase};
+        }
+      }
+      for (std::size_t j = 0; j < target.members.size(); ++j) {
+        phase = "initial member " + std::to_string(j) +
+                " frame in fit geometry context";
+        auto& member = target.members[j];
+        member.transform = member.placement->localToGlobalTransform(gctx);
+        if (!isRigid(member.transform)) {
+          return AlignmentTargetError{code, label + ": invalid " + phase};
+        }
+      }
+    } catch (const std::bad_alloc&) {
+      throw;
+    } catch (const std::exception& error) {
+      return AlignmentTargetError{code,
+                                  label + ": " + phase + ": " + error.what()};
+    }
+  }
+  return prepared;
 }
 
 }  // namespace ActsAlignment::detail

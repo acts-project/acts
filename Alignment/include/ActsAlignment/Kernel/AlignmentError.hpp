@@ -19,7 +19,9 @@ enum class AlignmentError {
   AlignmentParametersUpdateFailure = 2,
   ConvergeFailure = 3,
   HierarchyValidationFailure = 4,
-  InvalidAlignmentSelection = 5
+  InvalidAlignmentSelection = 5,
+  AlignmentFrameResolutionFailure = 6,
+  UnsupportedAlignmentConstraints = 7
 };
 
 namespace detail {
@@ -42,6 +44,10 @@ class AlignmentErrorCategory : public std::error_category {
                "placement assignment)";
       case AlignmentError::InvalidAlignmentSelection:
         return "Invalid alignment target selection";
+      case AlignmentError::AlignmentFrameResolutionFailure:
+        return "Alignment target frame resolution failed";
+      case AlignmentError::UnsupportedAlignmentConstraints:
+        return "Numerical structure constraints are not supported";
       default:
         return "unknown";
     }
