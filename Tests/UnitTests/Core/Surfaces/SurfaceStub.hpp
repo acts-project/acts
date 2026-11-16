@@ -22,6 +22,8 @@ namespace ActsTests {
 /// Surface derived class stub
 class SurfaceStub : public Acts::RegularSurface {
  public:
+  using Acts::Surface::intersect;
+
   explicit SurfaceStub(
       const Acts::Transform3& htrans = Acts::Transform3::Identity())
       : Acts::GeometryObject(), Acts::RegularSurface(htrans) {}
