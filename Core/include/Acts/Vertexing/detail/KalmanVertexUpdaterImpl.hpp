@@ -18,18 +18,51 @@ namespace Acts::KalmanVertexUpdater::detail {
 
 /// Weight matrix G_k of the track parameters that enter the vertex fit, i.e.
 /// the inverse covariance of the bound parameters at the PCA.
+///
+/// When all bound parameters are fitted, this is `weightAtPCA`. When time is
+/// not fitted, it is the inverse of the covariance block without time, which
+/// is not a block of `weightAtPCA` because time is in general correlated with
+/// the other parameters. It is obtained from `weightAtPCA` without a matrix
+/// inversion, using the Schur complement:
+///
+///   (C_55)^-1 = W_55 - W_5t W_t5 / W_tt
+///
+/// where W is the full weight, and `5` and `t` denote the parameters without
+/// time and time. If the time variance is not positive (e.g. for tracks
+/// without time information) the full covariance cannot be inverted, and the
+/// covariance block without time is inverted directly instead.
+///
 /// @tparam nBoundParams number of fitted bound parameters (5 or 6)
 /// @param linTrack the linearized track
 /// @return the weight matrix of the fitted bound parameters
 template <unsigned int nBoundParams>
-const SquareMatrix<nBoundParams>& trackParameterWeight(
+SquareMatrix<nBoundParams> trackParameterWeight(
     const LinearizedTrack& linTrack) {
   static_assert(nBoundParams == eBoundSize || nBoundParams == eBoundSize - 1,
                 "Either all bound parameters or all but time are fitted");
+  // The fitted parameters are taken as the leading block of the bound
+  // parameters, which leaves out time only if it is the last one.
+  static_assert(eBoundTime == eBoundSize - 1,
+                "Time must be the last bound parameter");
   if constexpr (nBoundParams == eBoundSize) {
     return linTrack.weightAtPCA;
   } else {
-    return linTrack.weightAtPCAWithoutTime;
+    const BoundMatrix& weight = linTrack.weightAtPCA;
+    const double timeWeight = weight(eBoundTime, eBoundTime);
+    if (linTrack.covarianceAtPCA(eBoundTime, eBoundTime) > 0. &&
+        timeWeight > 0.) {
+      const Vector<nBoundParams> timeCorrelation =
+          weight.template block<nBoundParams, 1>(0, eBoundTime);
+      const SquareMatrix<nBoundParams> weightWithoutTime =
+          weight.template topLeftCorner<nBoundParams, nBoundParams>() -
+          timeCorrelation * timeCorrelation.transpose() / timeWeight;
+      if (weightWithoutTime.allFinite()) {
+        return weightWithoutTime;
+      }
+    }
+    return linTrack.covarianceAtPCA
+        .template topLeftCorner<nBoundParams, nBoundParams>()
+        .inverse();
   }
 }
 
@@ -93,7 +126,7 @@ void calculateUpdate(const Vertex& vtx, const Acts::LinearizedTrack& linTrack,
   // with the track weight from the AMVF formalism. Here, we choose to
   // consider these two multiplicative factors directly in the updates of
   // newVertexWeight and newVertexPos.
-  const ParameterMatrix& trkParamWeight =
+  const ParameterMatrix trkParamWeight =
       trackParameterWeight<nBoundParams>(linTrack);
 
   // Retrieve current position of the vertex and its current weight matrix
@@ -154,7 +187,7 @@ double trackParametersChi2(const LinearizedTrack& linTrack,
   // c_k
   const ParameterVector constTerm = linTrack.constantTerm.head<nBoundParams>();
   // G_k
-  const ParameterMatrix& trkParamWeight =
+  const ParameterMatrix trkParamWeight =
       trackParameterWeight<nBoundParams>(linTrack);
 
   // A_k * \tilde{x_k}
@@ -343,7 +376,7 @@ void updateTrackWithVertexImpl(TrackAtVertex& track, const Vertex& vtx) {
   // c_k
   const ParameterVector constTerm = linTrack.constantTerm.head<nBoundParams>();
   // G_k
-  const ParameterMatrix& trkParamWeight =
+  const ParameterMatrix trkParamWeight =
       trackParameterWeight<nBoundParams>(linTrack);
 
   // Cache object filled with zeros

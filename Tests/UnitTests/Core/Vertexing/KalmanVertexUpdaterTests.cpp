@@ -27,6 +27,8 @@
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/detail/KalmanVertexUpdaterImpl.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -331,6 +333,88 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   }  // end for loop
 
 }  // end test case
+
+///
+/// @brief Unit test for the weight of the fitted track parameters: the full
+/// weight when fitting time, otherwise the inverse of the covariance without
+/// time, obtained from the full weight or, without time information, from the
+/// covariance
+///
+BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackParameterWeight) {
+  using WeightWithoutTime = SquareMatrix<eBoundSize - 1>;
+  std::mt19937 gen(31415);
+  std::normal_distribution<double> gauss(0., 1.);
+
+  // Random covariance with the typical scales of perigee parameters (mm, rad,
+  // 1/GeV, ns), with the time correlations scaled by `timeCorrelationScale`
+  auto makeCovariance = [&](double timeSigma, double timeCorrelationScale) {
+    BoundMatrix a;
+    for (unsigned int i = 0; i < eBoundSize; ++i) {
+      for (unsigned int j = 0; j < eBoundSize; ++j) {
+        a(i, j) = gauss(gen);
+      }
+    }
+    const BoundMatrix spd = a * a.transpose() + 6. * BoundMatrix::Identity();
+    const BoundVector invSigma = spd.diagonal().cwiseSqrt().cwiseInverse();
+    BoundMatrix correlation =
+        invSigma.asDiagonal() * spd * invSigma.asDiagonal();
+    correlation.row(eBoundTime).head<eBoundSize - 1>() *= timeCorrelationScale;
+    correlation.col(eBoundTime).head<eBoundSize - 1>() *= timeCorrelationScale;
+    BoundVector sigma;
+    sigma << 20_um, 50_um, 1e-4, 1e-4, 1e-3 / 1_GeV, timeSigma;
+    return BoundMatrix(sigma.asDiagonal() * correlation * sigma.asDiagonal());
+  };
+
+  struct TimeCase {
+    double sigma;
+    double correlationScale;
+  };
+  // Correlated time, uncorrelated time, precise and inflated time
+  for (const TimeCase& timeCase :
+       {TimeCase{1_ns, 1.}, TimeCase{1_ns, 0.}, TimeCase{1e-3_ns, 1.},
+        TimeCase{1e6_ns, 1.}}) {
+    for (unsigned int i = 0; i < 100; ++i) {
+      LinearizedTrack linTrack;
+      linTrack.covarianceAtPCA =
+          makeCovariance(timeCase.sigma, timeCase.correlationScale);
+      linTrack.weightAtPCA = linTrack.covarianceAtPCA.inverse();
+
+      // Fitting time: the full weight
+      BOOST_CHECK_EQUAL(
+          KalmanVertexUpdater::detail::trackParameterWeight<eBoundSize>(
+              linTrack),
+          linTrack.weightAtPCA);
+
+      // Not fitting time: the inverse of the covariance without time
+      const WeightWithoutTime weight =
+          KalmanVertexUpdater::detail::trackParameterWeight<eBoundSize - 1>(
+              linTrack);
+      const WeightWithoutTime covarianceWithoutTime =
+          linTrack.covarianceAtPCA
+              .topLeftCorner<eBoundSize - 1, eBoundSize - 1>();
+      CHECK_CLOSE_OR_SMALL(weight, covarianceWithoutTime.inverse().eval(),
+                           1e-10, 1e-10);
+      CHECK_CLOSE_OR_SMALL((weight * covarianceWithoutTime).eval(),
+                           WeightWithoutTime::Identity(), 1e-10, 1e-10);
+    }
+  }
+
+  // Without time information the full covariance is singular, and the
+  // covariance without time is inverted directly
+  for (unsigned int i = 0; i < 100; ++i) {
+    LinearizedTrack linTrack;
+    linTrack.covarianceAtPCA = makeCovariance(0., 0.);
+    linTrack.weightAtPCA = linTrack.covarianceAtPCA.inverse();
+    const WeightWithoutTime covarianceWithoutTime =
+        linTrack.covarianceAtPCA
+            .topLeftCorner<eBoundSize - 1, eBoundSize - 1>();
+    const WeightWithoutTime weight =
+        KalmanVertexUpdater::detail::trackParameterWeight<eBoundSize - 1>(
+            linTrack);
+    BOOST_CHECK(weight.allFinite());
+    BOOST_CHECK_EQUAL(weight, covarianceWithoutTime.inverse().eval());
+  }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
