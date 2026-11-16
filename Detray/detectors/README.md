@@ -76,3 +76,30 @@ selection by stable ID belongs to the subsequent reader migration.
 
 The configure/export checks run with `ctest -R detray_metadata_registry` in a
 build with `DETRAY_BUILD_TESTING=ON`.
+
+### Host type erasure
+
+`detray/core/host_detector.hpp` and `detray/core/detector_buffer.hpp` provide
+move-only owners for concrete detectors and buffers. They belong to `detray::core`
+and do not depend on the registry: external concrete types can also be stored.
+The memory resource must outlive the owner. Buffer views borrow the buffer;
+asynchronous work must finish before the buffer or its resource is destroyed.
+
+Operations explicitly choose a tuple of supported concrete detector types:
+
+```cpp
+detray::host_detector detector;
+detector.set<my_metadata>(std::move(concrete_detector));
+auto count = detray::host_detector_visitor<my_detector_types>(
+    detector, []<typename T>(const T& concrete) {
+        return concrete.volumes().size();
+    });
+auto buffer = detray::buffer_from_host_detector<my_detector_types>(
+    detector, resource, copy);
+```
+
+`detector_buffer_visitor` similarly calls the operation with a concrete view.
+Dispatch happens on the host; kernels and navigation still use concrete types.
+An empty owner or a type outside the operation's supported list throws
+`std::invalid_argument`. Visitor return types must agree across the list;
+references are preserved and borrow their underlying owner.
