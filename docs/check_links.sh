@@ -13,6 +13,8 @@ set -euo pipefail
 #
 # The set of external URLs to skip is fetched from a shared ignore list
 # (acts-project/linkcheck-ignore) and passed to lychee as --exclude patterns.
+# A separate ignore-403.json list allows only HTTP 403 for matching URLs;
+# these URLs are still checked for other failures in a second pass.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -23,6 +25,8 @@ LINKCHECK_IGNORE_REPO="${LINKCHECK_IGNORE_REPO:-acts-project/linkcheck-ignore}"
 LINKCHECK_IGNORE_REF="${LINKCHECK_IGNORE_REF:-main}"
 LINKCHECK_IGNORE_PATH="${LINKCHECK_IGNORE_PATH:-data.json}"
 LINKCHECK_IGNORE_URL="${LINKCHECK_IGNORE_URL:-https://raw.githubusercontent.com/${LINKCHECK_IGNORE_REPO}/${LINKCHECK_IGNORE_REF}/${LINKCHECK_IGNORE_PATH}}"
+LINKCHECK_IGNORE_403_PATH="${LINKCHECK_IGNORE_403_PATH:-ignore-403.json}"
+LINKCHECK_IGNORE_403_URL="${LINKCHECK_IGNORE_403_URL:-https://raw.githubusercontent.com/${LINKCHECK_IGNORE_REPO}/${LINKCHECK_IGNORE_REF}/${LINKCHECK_IGNORE_403_PATH}}"
 
 # Check external links too (1) or internal links only (0).
 LINKCHECK_CHECK_EXTERN="${LINKCHECK_CHECK_EXTERN:-1}"
@@ -73,15 +77,28 @@ jq -e 'type == "array" and all(.[]; type == "string")' <<<"${IGNORE_JSON}" >/dev
 mapfile -t IGNORE_PATTERNS < <(jq -r '.[]' <<<"${IGNORE_JSON}")
 echo "Loaded ${#IGNORE_PATTERNS[@]} external link ignore patterns"
 
+IGNORE_403_PATTERNS=()
+if [[ "${LINKCHECK_CHECK_EXTERN}" == "1" ]]; then
+  echo "Loading HTTP 403 ignore list from ${LINKCHECK_IGNORE_403_URL}"
+  IGNORE_403_JSON="$(curl -fsSL "${LINKCHECK_IGNORE_403_URL}")"
+  jq -e 'type == "array" and all(.[]; type == "string" and length > 0)' <<<"${IGNORE_403_JSON}" >/dev/null
+  mapfile -t IGNORE_403_PATTERNS < <(jq -r '.[]' <<<"${IGNORE_403_JSON}")
+  echo "Loaded ${#IGNORE_403_PATTERNS[@]} HTTP 403 ignore patterns"
+fi
+
 # lychee treats --exclude values as regular expressions matched against the URL.
 # mailto: links are excluded by lychee by default (opt in with --include-mail).
 EXCLUDE_ARGS=(--exclude '^https?://localhost')
 for pattern in "${IGNORE_PATTERNS[@]}"; do
   EXCLUDE_ARGS+=(--exclude "${pattern}")
 done
+for pattern in "${IGNORE_403_PATTERNS[@]}"; do
+  EXCLUDE_ARGS+=(--exclude "${pattern}")
+done
 
 # --- assemble the lychee invocation ----------------------------------------
 LYCHEE_ARGS=(--no-progress --root-dir "${ROOT_ABS}")
+ACCEPT_ARGS=()
 
 if [[ "${LINKCHECK_CHECK_EXTERN}" == "1" ]]; then
   echo "External link checking: ENABLED"
@@ -95,7 +112,7 @@ if [[ "${LINKCHECK_CHECK_EXTERN}" == "1" ]]; then
     LYCHEE_ARGS+=(--accept-timeouts)
   fi
   if [[ -n "${LINKCHECK_ACCEPT}" ]]; then
-    LYCHEE_ARGS+=(--accept "${LINKCHECK_ACCEPT}")
+    ACCEPT_ARGS+=(--accept "${LINKCHECK_ACCEPT}")
   fi
   if [[ "${LINKCHECK_CACHE}" == "1" ]]; then
     LYCHEE_ARGS+=(--cache --max-cache-age "${LINKCHECK_MAX_CACHE_AGE}")
@@ -119,15 +136,43 @@ fi
 # Write a markdown report for the console (on failure) and, if requested, for
 # use as a GitHub issue body.
 REPORT="${LINKCHECK_FAILURES_OUT:-$(mktemp)}"
-LYCHEE_ARGS+=(--format markdown --output "${REPORT}")
+LYCHEE_ARGS+=(--format markdown)
 
 # Run from a stable cwd (not the docs root) so any on-disk cache (.lycheecache)
 # lands somewhere cacheable rather than in the ephemeral build output.
 echo "Running lychee over ${ROOT_ABS}"
 set +e
-"${LYCHEE_BIN}" "${LYCHEE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" "${ROOT_ABS}/**/*.html"
+"${LYCHEE_BIN}" "${LYCHEE_ARGS[@]}" "${ACCEPT_ARGS[@]}" --output "${REPORT}" "${EXCLUDE_ARGS[@]}" "${ROOT_ABS}/**/*.html"
 rc=$?
 set -e
+
+# --include overrides --exclude in lychee. Exclude everything here, then
+# include only the listed URLs. Keep 403 out of the normal pass's accepted
+# statuses, and keep other HTTP errors visible for the listed URLs.
+if [[ ${#IGNORE_403_PATTERNS[@]} -gt 0 ]]; then
+  INCLUDE_ARGS=()
+  for pattern in "${IGNORE_403_PATTERNS[@]}"; do
+    INCLUDE_ARGS+=(--include "${pattern}")
+  done
+  REPORT_403="$(mktemp)"
+  trap 'rm -f "${REPORT_403}"' EXIT
+  echo "Checking HTTP 403 exceptions"
+  set +e
+  "${LYCHEE_BIN}" "${LYCHEE_ARGS[@]}" --output "${REPORT_403}" \
+    --accept "${LINKCHECK_ACCEPT:-200..=299},403" \
+    --exclude '.*' "${INCLUDE_ARGS[@]}" "${ROOT_ABS}/**/*.html"
+  rc_403=$?
+  set -e
+  {
+    echo
+    echo '## URLs with HTTP 403 exceptions'
+    echo
+    cat "${REPORT_403}"
+  } >> "${REPORT}"
+  if [[ ${rc_403} -ne 0 ]]; then
+    rc=${rc_403}
+  fi
+fi
 
 if [[ ${rc} -ne 0 ]]; then
   echo "=== lychee report ==="

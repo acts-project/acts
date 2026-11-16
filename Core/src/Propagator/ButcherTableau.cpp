@@ -98,7 +98,8 @@ std::shared_ptr<const ButcherTableau> ButcherTableau::dormandPrince54() {
 }
 
 std::shared_ptr<const ButcherTableau> ButcherTableau::verner98() {
-  // Coefficients from J. H. Verner, https://www.sfu.ca/~jverner/, file
+  // J. H. Verner, Numerically optimal Runge-Kutta pairs with interpolants,
+  // https://doi.org/10.1007/s11075-009-9290-3. Coefficients from his file
   // RKV98.IIa.Efficient.000000349.081210.CoeffsOnlyRADandFLOATS.
   //
   // The exact coefficients are rationals and rationals times sqrt(6). Where
