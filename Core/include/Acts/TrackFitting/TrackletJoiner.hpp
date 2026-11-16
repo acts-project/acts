@@ -50,6 +50,9 @@ namespace Acts {
 /// taken from the second tracklet.
 /// If the second tracklet has no states, only its track-level data is copied;
 /// this covers propagation to the target without another detector surface.
+///
+/// With smoothing and conditioning disabled, the tracklets are only linked and
+/// need no smoothed states, e.g. after a filter without a smoother.
 class TrackletJoiner {
  public:
   /// Configuration
@@ -78,7 +81,8 @@ class TrackletJoiner {
   const Config& config() const { return m_cfg; }
 
   /// Join in place: the first tracklet becomes the joined track. It must own
-  /// its states; with several second tracklets use @ref joinCopy.
+  /// its states; with several second tracklets use @ref joinCopy. It must be
+  /// smoothed unless smoothing and conditioning are disabled.
   /// Both tracklets must use the same trajectory and own disjoint states.
   /// If the first tracklet is not linked forward, this links it forward.
   /// On failure, smoothed states may already have been modified.
@@ -86,7 +90,7 @@ class TrackletJoiner {
   /// @tparam smoother_t The smoother for the second tracklet
   /// @tparam track_proxy_t The track proxy type
   /// @param gctx The geometry context
-  /// @param first The first tracklet, smoothed
+  /// @param first The first tracklet
   /// @param sharedState The state the second tracklet started from
   /// @param second The second tracklet
   /// @param smoother The smoother
@@ -109,6 +113,10 @@ class TrackletJoiner {
       first.copyFromWithoutStates(second);
       first.tipIndex() = tipIndex;
       first.stemIndex() = stemIndex;
+      return Result<void>::success();
+    }
+    if (!m_cfg.smoothSecond && !m_cfg.conditionFirst) {
+      link(first, sharedState, second);
       return Result<void>::success();
     }
     if (!sharedState.hasSmoothed()) {
@@ -155,12 +163,7 @@ class TrackletJoiner {
                                         sharedMean, sharedCov);
     }
 
-    const auto tipIndex = first.tipIndex();
-    detail::linkTrackletBehind(sharedState, second, m_cfg.invertJacobians);
-    first.copyFromWithoutStates(second);
-    first.tipIndex() = tipIndex;
-    first.stemIndex() = second.stemIndex();
-
+    link(first, sharedState, second);
     return Result<void>::success();
   }
 
@@ -173,7 +176,7 @@ class TrackletJoiner {
   /// @tparam track_state_proxy_t The input track state proxy type
   /// @param gctx The geometry context
   /// @param out The container that receives the copies
-  /// @param first The first tracklet, smoothed
+  /// @param first The first tracklet
   /// @param sharedState The state the second tracklet started from
   /// @param second The second tracklet
   /// @param smoother The smoother
@@ -222,6 +225,19 @@ class TrackletJoiner {
   }
 
  private:
+  /// Link the second tracklet behind the shared state and take its track-level
+  /// data
+  template <TrackProxyConcept track_proxy_t>
+  void link(track_proxy_t& first,
+            typename track_proxy_t::TrackStateProxy sharedState,
+            track_proxy_t& second) const {
+    const auto tipIndex = first.tipIndex();
+    detail::linkTrackletBehind(sharedState, second, m_cfg.invertJacobians);
+    first.copyFromWithoutStates(second);
+    first.tipIndex() = tipIndex;
+    first.stemIndex() = second.stemIndex();
+  }
+
   const Logger& logger() const { return *m_logger; }
 
   Config m_cfg;

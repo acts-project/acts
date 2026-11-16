@@ -26,6 +26,8 @@ namespace traccc::device {
 /// Based on the information collected by @c traccc::device::count_doublets it
 /// can fill collection with the specific doublet pairs that exist in the event.
 ///
+/// @tparam use_dphi_cut Whether to apply the doublet azimuthal separation cut
+///
 /// @param[in] globalIndex       The index of the current thread
 /// @param[in] config            Seedfinder configuration
 /// @param[in] spacepoints       All spacepoints in the event
@@ -36,8 +38,8 @@ namespace traccc::device {
 /// @param[out] mb_doublets_view Collection of middle-bottom doublets
 /// @param[out] mt_doublets_view Collection of middle-top doublets
 ///
-TRACCC_HOST_DEVICE
-inline void find_doublets(
+template <bool use_dphi_cut>
+TRACCC_HOST_DEVICE inline void find_doublets(
     global_index_t globalIndex, const seedfinder_config& config,
     const edm::spacepoint_collection::const_view& spacepoints,
     const traccc::details::spacepoint_grid_types::const_view& sp_view,

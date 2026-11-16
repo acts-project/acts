@@ -221,7 +221,14 @@ GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
                                    std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(config),
       m_geometry(std::move(geometry)),
-      m_logger(std::move(logger)) {}
+      m_logger(std::move(logger)) {
+  m_binHasInnerLink.assign(m_geometry->numBins(), false);
+  for (const GbtsBinGroup& bg : m_geometry->binGroups()) {
+    for (const GbtsBinLink& link : bg.links) {
+      m_binHasInnerLink[link.bin] = true;
+    }
+  }
+}
 
 GbtsGraph GbtsGraphBuilder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
@@ -276,8 +283,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
 
   KeptContainer kept;
 
-  // per window: the nodes of its bin that the z0 histogram or the chain
-  // pruning keeps; reused across bin groups as the windows are
+  // per window: the nodes of its bin that the z0 histogram, dropDeadEnds or the
+  // chain pruning keeps; reused across bin groups as the windows are
   std::vector<std::vector<std::pair<float, SpacePointIndex>>> connectedPhiNodes;
 
   const bool pruneShortChains = m_cfg.pruneShortChains && !minEdgeLevel.empty();
@@ -330,6 +337,12 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
     const bool useMatchBeforeCreate =
         m_cfg.matchBeforeCreate && barrelOrder1 >= 0 &&
         barrelOrder1 <= m_cfg.matchBeforeCreateMaxBarrelOrder;
+
+    // Nothing extends an edge of this bin inwards, so one that links to no
+    // outer edge, or whose outer node has no edges, stays a chain of its own,
+    // too short for a seed. Relies on the outer bins being built first, as the
+    // groups are ordered.
+    const bool dropDeadEnds = m_cfg.dropDeadEnds && !m_binHasInnerLink[bg.bin];
 
     // An edge of this bin below this level is on no chain long enough for a
     // seed. Its level is final once it is linked, as the outer bins are built
@@ -389,10 +402,11 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
 
       // Isolated n2 nodes are skipped below for every n1 of this group, and
       // the branch is unpredictable. Filter them out of the window once
-      // instead, and with the chain pruning the n2 nodes whose chains are too
-      // short. Not for the group's own bin: its nodes gain connections as n1
-      // is processed.
-      if ((useZ0Histogram || pruneGroup) && link.bin != bg.bin) {
+      // instead, and with dropDeadEnds or the chain pruning the n2 nodes whose
+      // chains are too short. Not for the group's own bin: its nodes gain
+      // connections as n1 is processed.
+      if ((useZ0Histogram || dropDeadEnds || pruneGroup) &&
+          link.bin != bg.bin) {
         const std::size_t windowIdx = phiSlidingWindow.size() - 1;
         // growing the outer vector moves the inner ones, which keeps their
         // buffers, so earlier windows' pointers stay valid
@@ -403,8 +417,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
             connectedPhiNodes[windowIdx];
         connected.clear();
         for (const auto& phiNode : B2.phiNodes) {
+          const detail::GbtsNodeEdgeInfo& n2Info = edgeInfo[phiNode.second];
           const bool keep =
-              (!useZ0Histogram || edgeInfo[phiNode.second].isConnected != 0) &&
+              (!useZ0Histogram || n2Info.isConnected != 0) &&
+              (!dropDeadEnds || n2Info.numEdges != 0) &&
               (!pruneGroup || nodeLevel[phiNode.second] + 1u >= minLevel1);
           if (keep) {
             connected.push_back(phiNode);
@@ -814,9 +830,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
               }
             }
 
-            if (pruneGroup && level < minLevel1) {
-              // Its z0 stays in the histogram, so that the z0 cut further in is
-              // the same as without the pruning.
+            if ((pruneGroup && level < minLevel1) ||
+                (dropDeadEnds && links.size() == numLinks)) {
+              // A pruned edge's z0 stays in the histogram, so that the z0 cut
+              // further in is the same as without the pruning.
               links.resize(numLinks);
               edgeStorage.pop_back();
               --numCreatedEdges;

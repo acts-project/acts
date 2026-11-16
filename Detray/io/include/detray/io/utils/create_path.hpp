@@ -83,7 +83,9 @@ inline auto create_path(const std::string& outdir) {
   auto path = std::filesystem::path(outdir);
 
   if (!path.empty() && !std::filesystem::exists(path)) {
-    if (std::error_code err; !std::filesystem::create_directories(path, err)) {
+    // The return value is false for a trailing slash, even on success
+    if (std::error_code err;
+        !std::filesystem::create_directories(path, err) && err) {
       throw std::runtime_error(err.message());
     }
   }
