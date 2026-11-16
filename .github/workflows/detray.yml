@@ -168,6 +168,13 @@ jobs:
         export PYTHONPATH="${PWD}/build/python"
         .venv/bin/python -m pytest Detray/python -v
 
+    - name: Installed Python binding tests
+      run: |
+        cmake --install build --config ${{ matrix.BUILD_TYPE }} --prefix "${PWD}/install"
+        export PYTHONPATH="${PWD}/install/python"
+        .venv/bin/python -c 'import sys, detray, detray.io, detray.svgtools, detray.tests; assert "acts" not in sys.modules'
+        .venv/bin/python -m pytest Detray/python -v
+
     - name: ccache statistics
       if: always()
       uses: $/.github/actions/ccache-s3/stats

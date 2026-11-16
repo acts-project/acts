@@ -46,6 +46,22 @@ target_link_libraries(
         covfie::core
 )
 
+# Validation is a public Python utility, so a locally built shared GoogleTest
+# is a runtime dependency of the installed module, not only a build dependency.
+get_target_property(_gtest_target GTest::gtest ALIASED_TARGET)
+if(NOT _gtest_target)
+    set(_gtest_target GTest::gtest)
+endif()
+get_target_property(_gtest_imported ${_gtest_target} IMPORTED)
+get_target_property(_gtest_type ${_gtest_target} TYPE)
+if(NOT _gtest_imported AND _gtest_type STREQUAL "SHARED_LIBRARY")
+    install(
+        TARGETS ${_gtest_target}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endif()
+
 # Generate the package __init__ that re-exports the compiled module.
 set(BINDINGS_IMPORTS "from .. import core as _core\n\n")
 set(BINDINGS_MODULE DetrayTestsPythonBindings)
