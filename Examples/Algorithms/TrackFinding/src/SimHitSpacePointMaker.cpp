@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #include "ActsExamples/TrackFinding/SimHitSpacePointMaker.hpp"
 
 #include "Acts/EventData/SpacePointColumns.hpp"
@@ -27,7 +35,8 @@ bool hasVolumeLists(const SimHitSpacePointMaker::Config& cfg) {
          !cfg.stripBarrelVolumes.empty() || !cfg.stripEndcapVolumes.empty();
 }
 
-// classify a hit by its volume ID, using the lists in the config (returns false if the volume is not in any list)
+// classify a hit by its volume ID, using the lists in the config (returns false
+// if the volume is not in any list)
 bool classByVolume(const SimHitSpacePointMaker::Config& cfg,
                    std::uint32_t volume, Acts::CosmicSpacePointClass& out) {
   using Acts::CosmicSpacePointClass;
@@ -45,7 +54,7 @@ bool classByVolume(const SimHitSpacePointMaker::Config& cfg,
   return true;
 }
 
-}
+}  // namespace
 
 SimHitSpacePointMaker::SimHitSpacePointMaker(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -78,9 +87,8 @@ SimHitSpacePointMaker::SimHitSpacePointMaker(
         for (std::uint32_t v : *lists[i]) {
           const auto it = listOf.emplace(v, i).first;
           if (it->second != i) {
-            throw std::invalid_argument(
-                "volume " + std::to_string(v) +
-                " appears in more than one class list");
+            throw std::invalid_argument("volume " + std::to_string(v) +
+                                        " appears in more than one class list");
           }
         }
       }
@@ -156,8 +164,8 @@ Acts::CosmicSpacePointClass SimHitSpacePointMaker::classifyHit(
 
   const Acts::Vector3 pos = hit.position();
   const bool strip = std::hypot(pos.x(), pos.y()) >= cfg.stripMinRadius;
-  const bool barrel = std::abs(pos.z()) < (strip ? cfg.stripBarrelMaxAbsZ
-                                                 : cfg.pixelBarrelMaxAbsZ);
+  const bool barrel = std::abs(pos.z()) <
+                      (strip ? cfg.stripBarrelMaxAbsZ : cfg.pixelBarrelMaxAbsZ);
   if (strip) {
     return barrel ? CosmicSpacePointClass::BarrelStrip
                   : CosmicSpacePointClass::EndcapStrip;
@@ -170,14 +178,15 @@ std::vector<Acts::CosmicSpacePointClass> SimHitSpacePointMaker::classifyHits(
     const Config& cfg, const SimHitContainer& simHits) {
   std::vector<Acts::CosmicSpacePointClass> classes;
   classes.reserve(simHits.size());
-  // volumes lists are used to classify hits; if a volume is not in any list, it is an error
+  // volumes lists are used to classify hits; if a volume is not in any list, it
+  // is an error
   std::set<std::uint32_t> unmapped;
   const bool byVolume = hasVolumeLists(cfg);
   for (const SimHit& hit : simHits) {
     if (byVolume) {
-      const auto volume =
-          static_cast<std::uint32_t>(hit.geometryId().volume());
-      Acts::CosmicSpacePointClass cls = Acts::CosmicSpacePointClass::BarrelPixel;
+      const auto volume = static_cast<std::uint32_t>(hit.geometryId().volume());
+      Acts::CosmicSpacePointClass cls =
+          Acts::CosmicSpacePointClass::BarrelPixel;
       if (!classByVolume(cfg, volume, cls)) {
         unmapped.insert(volume);
       }
@@ -212,7 +221,9 @@ ProcessCode SimHitSpacePointMaker::execute(const AlgorithmContext& ctx) const {
     for (const auto cls : classes) {
       ++counts[static_cast<std::size_t>(cls)];
     }
-    ACTS_DEBUG("SimHitSpacePointMaker classes: pixel barrel=" << counts[0] << " pixel endcap=" << counts[1] << " strip barrel=" << counts[2] << " strip endcap=" << counts[3]);
+    ACTS_DEBUG("SimHitSpacePointMaker classes: pixel barrel="
+               << counts[0] << " pixel endcap=" << counts[1] << " strip barrel="
+               << counts[2] << " strip endcap=" << counts[3]);
   }
 
   std::vector<SimBarcode> particleIds;
@@ -220,7 +231,9 @@ ProcessCode SimHitSpacePointMaker::execute(const AlgorithmContext& ctx) const {
       simHits, m_cfg.sigmaR, m_cfg.sigmaZ,
       m_outputParticleIds.isInitialized() ? &particleIds : nullptr);
 
-  ACTS_DEBUG("SimHitSpacePointMaker: " << simHits.size() << " sim hits -> " << spacePoints.size() << " space points");
+  ACTS_DEBUG("SimHitSpacePointMaker: " << simHits.size() << " sim hits -> "
+                                       << spacePoints.size()
+                                       << " space points");
 
   m_outputSpacePoints(ctx, std::move(spacePoints));
   if (m_outputParticleIds.isInitialized()) {
@@ -242,4 +255,4 @@ ProcessCode SimHitSpacePointMaker::execute(const AlgorithmContext& ctx) const {
   return ProcessCode::SUCCESS;
 }
 
-}
+}  // namespace ActsExamples

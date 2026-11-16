@@ -1,16 +1,27 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #include "ActsExamples/TrackFinding/CosmicTripletSeedingAlgorithm.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
+
 #include <cstdint>
+#include <memory>
 #include <stdexcept>
 #include <utility>
-#include <memory>
-#include "Acts/Utilities/Logger.hpp"
 
 namespace ActsExamples {
 
-CosmicTripletSeedingAlgorithm::CosmicTripletSeedingAlgorithm(Config cfg,std::unique_ptr<const Acts::Logger> logger):
-                                IAlgorithm("CosmicTripletSeedingAlgorithm", std::move(logger)), m_cfg(std::move(cfg)),m_finder(m_cfg.cuts) {
-  
+CosmicTripletSeedingAlgorithm::CosmicTripletSeedingAlgorithm(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("CosmicTripletSeedingAlgorithm", std::move(logger)),
+      m_cfg(std::move(cfg)),
+      m_finder(m_cfg.cuts) {
   // requirements on the configuration
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing input space point collection");
@@ -18,7 +29,8 @@ CosmicTripletSeedingAlgorithm::CosmicTripletSeedingAlgorithm(Config cfg,std::uni
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing output seed collection");
   }
-  if ((m_cfg.cuts.requireSameSubdetector || m_cfg.cuts.useCovarianceScale || m_cfg.cuts.useSubdetectorAngularCuts) &&
+  if ((m_cfg.cuts.requireSameSubdetector || m_cfg.cuts.useCovarianceScale ||
+       m_cfg.cuts.useSubdetectorAngularCuts) &&
       m_cfg.inputSpacePointClasses.empty()) {
     throw std::invalid_argument(
         "cuts.requireSameSubdetector / cuts.useCovarianceScale / "
@@ -39,7 +51,8 @@ CosmicTripletSeedingAlgorithm::CosmicTripletSeedingAlgorithm(Config cfg,std::uni
   }
 
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
-  // handle opciotional, which initialize only if the corresponding input is not empty
+  // handle opciotional, which initialize only if the corresponding input is not
+  // empty
   if (!m_cfg.inputSpacePointClasses.empty()) {
     m_inputSpacePointClasses.initialize(m_cfg.inputSpacePointClasses);
   }
@@ -55,7 +68,8 @@ CosmicTripletSeedingAlgorithm::CosmicTripletSeedingAlgorithm(Config cfg,std::uni
   }
 }
 
-ProcessCode CosmicTripletSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
+ProcessCode CosmicTripletSeedingAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
   const Acts::SpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
   Acts::SeedContainer seeds;
@@ -69,22 +83,30 @@ ProcessCode CosmicTripletSeedingAlgorithm::execute(const AlgorithmContext& ctx) 
     surfaces = &m_inputSpacePointSurfaces(ctx);
   }
   // if the input space points have strip calibration details,
-  // we can use them to recalibrate the positions of strip space points in the seeds
+  // we can use them to recalibrate the positions of strip space points in the
+  // seeds
   std::shared_ptr<Acts::SpacePointContainer> calibrated;
-  if (m_cfg.cuts.useStripCalibration && spacePoints.hasColumns(Acts::SpacePointColumns::StripCalibrationDetails)) {
+  if (m_cfg.cuts.useStripCalibration &&
+      spacePoints.hasColumns(
+          Acts::SpacePointColumns::StripCalibrationDetails)) {
     calibrated = std::make_shared<Acts::SpacePointContainer>(spacePoints);
-    seeds.assignSpacePointContainer(std::shared_ptr<const Acts::SpacePointContainer>(calibrated));
+    seeds.assignSpacePointContainer(
+        std::shared_ptr<const Acts::SpacePointContainer>(calibrated));
   }
 
   // createSeeds() generates triplet seeds from the given space points,
   // applying the configured cuts and storing the results in outputSeeds
-  try {m_finder.createSeeds(spacePoints, seeds, classes, calibrated.get(),surfaces);
+  try {
+    m_finder.createSeeds(spacePoints, seeds, classes, calibrated.get(),
+                         surfaces);
   } catch (const std::invalid_argument& e) {
     ACTS_ERROR("CosmicTripletSeedingAlgorithm: " << e.what());
     return ProcessCode::ABORT;
   }
 
-  ACTS_DEBUG("CosmicTripletSeedingAlgorithm: " << spacePoints.size() << " space points -> "<< seeds.size() << " seeds");
+  ACTS_DEBUG("CosmicTripletSeedingAlgorithm: " << spacePoints.size()
+                                               << " space points -> "
+                                               << seeds.size() << " seeds");
 
   if (m_outputTwoSpacePointSeeds.isInitialized()) {
     Acts::SeedContainer doublets;
@@ -112,7 +134,8 @@ ProcessCode CosmicTripletSeedingAlgorithm::execute(const AlgorithmContext& ctx) 
       ACTS_ERROR("CosmicTripletSeedingAlgorithm: " << e.what());
       return ProcessCode::ABORT;
     }
-    ACTS_DEBUG("CosmicTripletSeedingAlgorithm: " << doublets.size() << " two space point seeds");
+    ACTS_DEBUG("CosmicTripletSeedingAlgorithm: " << doublets.size()
+                                                 << " two space point seeds");
     m_outputTwoSpacePointSeeds(ctx, std::move(doublets));
   }
 
@@ -125,4 +148,4 @@ ProcessCode CosmicTripletSeedingAlgorithm::execute(const AlgorithmContext& ctx) 
   return ProcessCode::SUCCESS;
 }
 
-}
+}  // namespace ActsExamples

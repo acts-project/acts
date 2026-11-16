@@ -26,4 +26,5 @@ target_sources(
         GbtsRoiDescriptor.cpp
         GbtsLayerConnectionTool.cpp
         HoughAccumulatorSection.cpp
+        CosmicTripletSeedFinder.cpp
 )

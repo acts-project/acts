@@ -1,6 +1,15 @@
-//cosmictripletseedfinder.cpp
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// cosmictripletseedfinder.cpp
 
 #include "Acts/Seeding/CosmicTripletSeedFinder.hpp"
+
 #include "Acts/EventData/SeedContainer.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
@@ -10,8 +19,8 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace Acts {
 
@@ -26,21 +35,32 @@ double varianceZ(const ConstSpacePointProxy& sp) {
 
 constexpr int kNumZBins = 11;
 
-// zBin() returns the index of the z bin for a given z coordinate, based on predefined ranges
+// zBin() returns the index of the z bin for a given z coordinate, based on
+// predefined ranges
 int zBin(double z) {
   if (z > 0.0) {
-    if (z < 250.0) return 5;
-    if (z < 450.0) return 6;
-    if (z < 925.0) return 7;
-    if (z < 1400.0) return 8;
-    if (z < 2500.0) return 9;
+    if (z < 250.0)
+      return 5;
+    if (z < 450.0)
+      return 6;
+    if (z < 925.0)
+      return 7;
+    if (z < 1400.0)
+      return 8;
+    if (z < 2500.0)
+      return 9;
     return 10;
   }
-  if (z > -250.0) return 5;
-  if (z > -450.0) return 4;
-  if (z > -925.0) return 3;
-  if (z > -1400.0) return 2;
-  if (z > -2500.0) return 1;
+  if (z > -250.0)
+    return 5;
+  if (z > -450.0)
+    return 4;
+  if (z > -925.0)
+    return 3;
+  if (z > -1400.0)
+    return 2;
+  if (z > -2500.0)
+    return 1;
   return 0;
 }
 
@@ -59,8 +79,8 @@ const std::array<std::vector<int>, kNumZBins> kZNeighbors = {{
     {9, 10},
 }};
 
-
-// kPrefilterTol avoid numerical issues in the prefiltering cuts (its never stricter than passCosmicCuts)
+// kPrefilterTol avoid numerical issues in the prefiltering cuts (its never
+// stricter than passCosmicCuts)
 constexpr double kPrefilterTol = 1e-9;
 
 // Local copy (double) of a space point + the original proxy
@@ -101,21 +121,21 @@ struct Candidate {
   double cT2;         // dx^2 + dy^2  (transverse distance squared)
   double y;           // absolute y of the candidate (for sorting)
   double ux, uy, uz;  // 3D unit vector middle -> candidate
-  bool calibratable;  // true if the candidate or the middle space point is a strip that can be recalibrated
+  bool calibratable;  // true if the candidate or the middle space point is a
+                      // strip that can be recalibrated
 };
 
 // calibrateStripSpacePoints recalibrates the y of the space points of a triplet
 // if any of them is a strip that can be recalibrated
 constexpr int kMaxCalibrationIterations = 50;
 constexpr double kCalibrationConvergence = 1e-3;
-// |cos| minimum between the direction of the triplet and the normal of the module,
-// below which the recalibration is not attempted
+// |cos| minimum between the direction of the triplet and the normal of the
+// module, below which the recalibration is not attempted
 constexpr double kMinCosToModuleNormal = 1e-6;
-}
+}  // namespace
 
-
-
-// CosmicTripletSeedFinder constructor: checks the validity of the cuts and precomputes some derived quantities
+// CosmicTripletSeedFinder constructor: checks the validity of the cuts and
+// precomputes some derived quantities
 CosmicTripletSeedFinder::CosmicTripletSeedFinder(const CosmicSeedCuts& cuts)
     : m_cuts(cuts) {
   if (!(m_cuts.zMin < m_cuts.zMax)) {
@@ -185,8 +205,8 @@ CosmicTripletSeedFinder::CosmicTripletSeedFinder(const CosmicSeedCuts& cuts)
 
   // Derived quantities for prefiltering and passCosmicCuts
   m_ptDependent = m_cuts.usePtDependentKinkResidual;
-  m_ptPrefilter = m_cuts.usePtCut && m_cuts.minPt > 0.0 &&
-                  m_cuts.magneticFieldBz != 0.0;
+  m_ptPrefilter =
+      m_cuts.usePtCut && m_cuts.minPt > 0.0 && m_cuts.magneticFieldBz != 0.0;
   if (m_ptPrefilter) {
     // pT_est >= 0.9 minPt  <=>  rho >= 0.9 minPt / (0.3 |Bz|)  [mm]
     m_rhoMin = 0.9 * m_cuts.minPt / (0.3 * std::abs(m_cuts.magneticFieldBz));
@@ -209,14 +229,15 @@ CosmicTripletSeedFinder::EventData CosmicTripletSeedFinder::prepareEvent(
     const std::vector<CosmicSpacePointClass>* spClasses,
     const std::vector<GeometryIdentifier>* spSurfaces, bool needCovariance,
     bool needType, EventBuffers& buffers) const {
-  // to prepare the event, we need to fill the buffers with the necessary information for each space point,
-  // depending on the cuts that are enabled. This includes covariance scaling and type information,
-  // as well as any surface identifiers if rejectSameSurface is enabled
+  // to prepare the event, we need to fill the buffers with the necessary
+  // information for each space point, depending on the cuts that are enabled.
+  // This includes covariance scaling and type information, as well as any
+  // surface identifiers if rejectSameSurface is enabled
   EventData ev;
   ev.spacePoints = &spacePoints;
 
-  // the veto compares ids: one without the sensitive part (sensitive() == 0) is a layer or a volume,
-  // and would veto all pairs within it
+  // the veto compares ids: one without the sensitive part (sensitive() == 0) is
+  // a layer or a volume, and would veto all pairs within it
   if (m_cuts.rejectSameSurface) {
     if (spSurfaces == nullptr || spSurfaces->size() != spacePoints.size()) {
       throw std::invalid_argument(
@@ -263,17 +284,15 @@ CosmicTripletSeedFinder::EventData CosmicTripletSeedFinder::prepareEvent(
         throw std::invalid_argument(
             "CosmicTripletSeedFinder: invalid CosmicSpacePointClass");
       }
-      const bool barrel = cls == static_cast<std::size_t>(
-                                     CosmicSpacePointClass::BarrelPixel) ||
-                          cls == static_cast<std::size_t>(
-                                     CosmicSpacePointClass::BarrelStrip);
-      const bool strip = cls == static_cast<std::size_t>(
-                                    CosmicSpacePointClass::BarrelStrip) ||
-                         cls == static_cast<std::size_t>(
-                                    CosmicSpacePointClass::EndcapStrip);
+      const bool barrel =
+          cls == static_cast<std::size_t>(CosmicSpacePointClass::BarrelPixel) ||
+          cls == static_cast<std::size_t>(CosmicSpacePointClass::BarrelStrip);
+      const bool strip =
+          cls == static_cast<std::size_t>(CosmicSpacePointClass::BarrelStrip) ||
+          cls == static_cast<std::size_t>(CosmicSpacePointClass::EndcapStrip);
       // fill the covariance buffers with the scaled variances if needed
-      // errorsc: only the dominant coordinate is scaled (z in barrel, r in endcap);
-      // the other remains with the variance of the container.
+      // errorsc: only the dominant coordinate is scaled (z in barrel, r in
+      // endcap); the other remains with the variance of the container.
       if (needCovariance) {
         const double scale = m_cuts.covarianceScale[cls];
         buffers.covR[i] = barrel ? varianceR(sp) : varianceR(sp) * scale;
@@ -295,11 +314,12 @@ CosmicTripletSeedFinder::EventData CosmicTripletSeedFinder::prepareEvent(
   }
 
   // Two strip SPs that are recalculated based on the direction of each seed
-  // (useStripCalibration): those with non-zero values in StripCalibrationDetails
-  // (pixel SPs retain their default value, all zeros).
-  // stripShiftY limits how much the y coordinate of an SP can change when it is recalculated
-  // (shift from the inner strip to the outer strip + movement along the outer strip
-  // within the tolerance); this expands the window in the y direction.
+  // (useStripCalibration): those with non-zero values in
+  // StripCalibrationDetails (pixel SPs retain their default value, all zeros).
+  // stripShiftY limits how much the y coordinate of an SP can change when it is
+  // recalculated (shift from the inner strip to the outer strip + movement
+  // along the outer strip within the tolerance); this expands the window in the
+  // y direction.
   if (m_cuts.useStripCalibration &&
       spacePoints.hasColumns(SpacePointColumns::StripCalibrationDetails)) {
     const std::size_t n = spacePoints.size();
@@ -311,7 +331,8 @@ CosmicTripletSeedFinder::EventData CosmicTripletSeedFinder::prepareEvent(
       auto norm2 = [](const std::array<float, 3>& v) {
         return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
       };
-      // skip SPs that are not recalibratable (e.g., pixel SPs or strip SPs with zero vectors)
+      // skip SPs that are not recalibratable (e.g., pixel SPs or strip SPs with
+      // zero vectors)
       if (!(norm2(d.outerHalfVector) > 0.f) ||
           !(norm2(d.innerHalfVector) > 0.f)) {
         continue;
@@ -320,9 +341,10 @@ CosmicTripletSeedFinder::EventData CosmicTripletSeedFinder::prepareEvent(
       buffers.isCalibratable[sp.index()] = 1;
       buffers.stripDetails[sp.index()] =
           detail::deriveOuterStripSpacePointCalibrationDetails(d);
-      // Y shift for the recalibration: the maximum shift in y when recalibrating a strip SP
-      // this is the sum of the absolute values of the inner to outer separation in y,
-      // the inner half vector in y, and the outer half vector in y scaled by the strip calibration tolerance.
+      // Y shift for the recalibration: the maximum shift in y when
+      // recalibrating a strip SP this is the sum of the absolute values of the
+      // inner to outer separation in y, the inner half vector in y, and the
+      // outer half vector in y scaled by the strip calibration tolerance.
       const double shift =
           std::abs(static_cast<double>(d.innerToOuterSeparation[1])) +
           std::abs(static_cast<double>(d.innerHalfVector[1])) +
@@ -336,8 +358,10 @@ CosmicTripletSeedFinder::EventData CosmicTripletSeedFinder::prepareEvent(
   return ev;
 }
 
-// createSeeds() generates triplet seeds from the given space points, applying the configured cuts and storing the results in outputSeeds.
-// It also optionally recalibrates strip space points and stores them in calibratedSpacePoints.
+// createSeeds() generates triplet seeds from the given space points, applying
+// the configured cuts and storing the results in outputSeeds. It also
+// optionally recalibrates strip space points and stores them in
+// calibratedSpacePoints.
 void CosmicTripletSeedFinder::createSeeds(
     const SpacePointContainer& spacePoints, SeedContainer& outputSeeds,
     const std::vector<CosmicSpacePointClass>* spClasses,
@@ -352,16 +376,17 @@ void CosmicTripletSeedFinder::createSeeds(
   const bool needType =
       m_cuts.requireSameSubdetector || m_cuts.useSubdetectorAngularCuts;
   EventBuffers buffers;
-  const EventData ev = prepareEvent(spacePoints, spClasses, spSurfaces,
-                                    m_cuts.useCovarianceScale, needType,
-                                    buffers);
+  const EventData ev =
+      prepareEvent(spacePoints, spClasses, spSurfaces,
+                   m_cuts.useCovarianceScale, needType, buffers);
   const double stripShiftY = buffers.stripShiftY;
   auto calibratable = [&ev](std::size_t index) {
     return ev.isCalibratable != nullptr && ev.isCalibratable[index] != 0;
   };
 
-  // Best quality is used to determine if a recalibrated strip space point should be updated in the calibratedSpacePoints container.
-  // minor quality = better quality
+  // Best quality is used to determine if a recalibrated strip space point
+  // should be updated in the calibratedSpacePoints container. minor quality =
+  // better quality
   std::vector<float> bestQuality;
   if (calibratedSpacePoints != nullptr && ev.isCalibratable != nullptr) {
     if (calibratedSpacePoints->size() != spacePoints.size()) {
@@ -369,20 +394,22 @@ void CosmicTripletSeedFinder::createSeeds(
           "CosmicTripletSeedFinder: calibratedSpacePoints must be a copy of "
           "spacePoints");
     }
-    // assign the best quality vector to have the same size as the number of space points, initialized to infinity
-    bestQuality.assign(spacePoints.size(), std::numeric_limits<float>::infinity());
+    // assign the best quality vector to have the same size as the number of
+    // space points, initialized to infinity
+    bestQuality.assign(spacePoints.size(),
+                       std::numeric_limits<float>::infinity());
   }
 
   const ZBins bins = fillZBins(spacePoints, m_cuts.zMin, m_cuts.zMax, nullptr);
 
-  // tryEmit() attempts to create a seed from a triplet of space points (top, middle, bottom)
+  // tryEmit() attempts to create a seed from a triplet of space points (top,
+  // middle, bottom)
   auto tryEmit = [&](const Hit& top, const Hit& middle, const Hit& bottom) {
     Point pT{top.x, top.y, top.z, top.sp.index()};
     Point pM{middle.x, middle.y, middle.z, middle.sp.index()};
     Point pB{bottom.x, bottom.y, bottom.z, bottom.sp.index()};
-    const bool anyStrip =
-        calibratable(pT.index) || calibratable(pM.index) ||
-        calibratable(pB.index);
+    const bool anyStrip = calibratable(pT.index) || calibratable(pM.index) ||
+                          calibratable(pB.index);
     if (anyStrip && !calibrateStripSpacePoints(pT, &pM, pB, ev)) {
       return;
     }
@@ -390,24 +417,28 @@ void CosmicTripletSeedFinder::createSeeds(
     if (!passCosmicCuts(pT, pM, pB, quality, ev)) {
       return;
     }
-    // acts convention:bottom-middle-top 
-    std::array<SpacePointIndex, 3> seedSpacePoints{bottom.sp.index(), middle.sp.index(), top.sp.index()};
+    // acts convention:bottom-middle-top
+    std::array<SpacePointIndex, 3> seedSpacePoints{
+        bottom.sp.index(), middle.sp.index(), top.sp.index()};
 
-    // create a new seed in the outputSeeds container and assign the space point indices, quality, and estimated vertex Z position
+    // create a new seed in the outputSeeds container and assign the space point
+    // indices, quality, and estimated vertex Z position
     MutableSeedProxy seed = outputSeeds.createSeed();
     seed.assignSpacePointIndices(seedSpacePoints);
     seed.quality() = quality;
     seed.vertexZ() = estimateVertexZ(pT, pM, pB);
 
-    // if any of the space points are recalibratable strip space points, update their positions
-    // in the calibratedSpacePoints container if the new quality is better than the previous best quality
+    // if any of the space points are recalibratable strip space points, update
+    // their positions in the calibratedSpacePoints container if the new quality
+    // is better than the previous best quality
     if (anyStrip && !bestQuality.empty()) {
       for (const Point* p : {&pB, &pM, &pT}) {
         if (!calibratable(p->index) || !(quality < bestQuality[p->index])) {
           continue;
         }
         bestQuality[p->index] = quality;
-        MutableSpacePointProxy out = calibratedSpacePoints->at(static_cast<SpacePointIndex>(p->index));
+        MutableSpacePointProxy out =
+            calibratedSpacePoints->at(static_cast<SpacePointIndex>(p->index));
         out.x() = static_cast<float>(p->x);
         out.y() = static_cast<float>(p->y);
         out.z() = static_cast<float>(p->z);
@@ -421,15 +452,18 @@ void CosmicTripletSeedFinder::createSeeds(
     }
   };
 
-  // preselection cuts: same subdetector, not in the same surface, dz/dr, kink/cosThetaY, pT (rho)
-  // if any of the two is a recalibratable strip SP, the position is not yet the final
-  // one and the angular cuts are left for passCosmicCuts.
-  auto makeCandidate = [&](const Hit& h, const Hit& mid, bool pixelMid, Candidate& c) {
+  // preselection cuts: same subdetector, not in the same surface, dz/dr,
+  // kink/cosThetaY, pT (rho) if any of the two is a recalibratable strip SP,
+  // the position is not yet the final one and the angular cuts are left for
+  // passCosmicCuts.
+  auto makeCandidate = [&](const Hit& h, const Hit& mid, bool pixelMid,
+                           Candidate& c) {
     if (m_cuts.requireSameSubdetector &&
         ev.isStrip[h.sp.index()] != ev.isStrip[mid.sp.index()]) {
       return false;
     }
-    // surface veto: if the two SPs are in the same surface, they cannot be part of the same triplet
+    // surface veto: if the two SPs are in the same surface, they cannot be part
+    // of the same triplet
     if (ev.surfaces != nullptr &&
         ev.surfaces[h.sp.index()] == ev.surfaces[mid.sp.index()]) {
       return false;
@@ -438,8 +472,10 @@ void CosmicTripletSeedFinder::createSeeds(
     const double dy = h.y - mid.y;
     const double dz = h.z - mid.z;
     const double cT2 = dx * dx + dy * dy;
-    const bool strip = calibratable(h.sp.index()) || calibratable(mid.sp.index());
-    // computeUV: r2 = dx^2 + dy^2 = 0 -> cannot compute the unit vector in the transverse plane
+    const bool strip =
+        calibratable(h.sp.index()) || calibratable(mid.sp.index());
+    // computeUV: r2 = dx^2 + dy^2 = 0 -> cannot compute the unit vector in the
+    // transverse plane
     if (cT2 == 0.0 && !strip) {
       return false;
     }
@@ -454,29 +490,36 @@ void CosmicTripletSeedFinder::createSeeds(
       if (std::abs(dz) > m_dzdrMax * cT * (1.0 + kPrefilterTol)) {
         return false;
       }
-      // cote by segment derived from minCosThetaY and maxKinkAngle (see the .hpp):
-      // the top-bottom vector is the sum of the two segments and each segment forms at most `maxKinkAngle` with it
-      // with middle pixel and useSubdetectorAngularCuts there is no 3D kink cut, so there is no bound
+      // cote by segment derived from minCosThetaY and maxKinkAngle (see the
+      // .hpp): the top-bottom vector is the sum of the two segments and each
+      // segment forms at most `maxKinkAngle` with it with middle pixel and
+      // useSubdetectorAngularCuts there is no 3D kink cut, so there is no bound
       if (!pixelMid &&
           std::abs(dy) < m_segCosThetaYMin * L * (1.0 - kPrefilterTol)) {
         return false;
       }
     }
-    // candidate structure: pointer to the hit, distances, transverse distance squared,
-    // absolute y, unit vector components, and whether it is calibratable
+    // candidate structure: pointer to the hit, distances, transverse distance
+    // squared, absolute y, unit vector components, and whether it is
+    // calibratable
     c = Candidate{&h, dx, dy, cT2, h.y, dx / L, dy / L, dz / L, strip};
     return true;
   };
 
-  // prefilter cuts: same subdetector, not in the same surface, dz/dr, kink/cosThetaY, pT (rho)
-  auto pairPrefilter = [&](const Candidate& t, const Candidate& b, bool pixelMid) {
+  // prefilter cuts: same subdetector, not in the same surface, dz/dr,
+  // kink/cosThetaY, pT (rho)
+  auto pairPrefilter = [&](const Candidate& t, const Candidate& b,
+                           bool pixelMid) {
     if (t.calibratable || b.calibratable) {
-      return true;  // container position is not yet final, leave the cuts for passCosmicCuts
+      return true;  // container position is not yet final, leave the cuts for
+                    // passCosmicCuts
     }
     if (pixelMid) {
-      // cos(dphi) between the xy proyections (middle - top) and (bottom - middle) = -(T . B) / (|T| |B|)
+      // cos(dphi) between the xy proyections (middle - top) and (bottom -
+      // middle) = -(T . B) / (|T| |B|)
       const double cosDphi = -(t.dx * b.dx + t.dy * b.dy);
-      if (cosDphi < (m_cuts.pixelMinCosDeltaPhi - kPrefilterTol) * std::sqrt(t.cT2 * b.cT2)) {
+      if (cosDphi < (m_cuts.pixelMinCosDeltaPhi - kPrefilterTol) *
+                        std::sqrt(t.cT2 * b.cT2)) {
         return false;
       }
     } else if (!m_ptDependent) {
@@ -505,10 +548,12 @@ void CosmicTripletSeedFinder::createSeeds(
   std::vector<Candidate> bottoms;
   std::vector<Candidate> tops;
 
-  // for each z bin with activity, the central point ("middle"/r0) is taken only from that bin,
-  // while the candidates for "top" and "bottom" are taken from the union of their neighboring
-  // bins (buildFrameWork() / production3Sp: rb/rt are filled from m_rfz_ib/m_rfz_it)
-  // this reduces the combinatorial complexity from N^3 to something much smaller when there are many space points per event.
+  // for each z bin with activity, the central point ("middle"/r0) is taken only
+  // from that bin, while the candidates for "top" and "bottom" are taken from
+  // the union of their neighboring bins (buildFrameWork() / production3Sp:
+  // rb/rt are filled from m_rfz_ib/m_rfz_it) this reduces the combinatorial
+  // complexity from N^3 to something much smaller when there are many space
+  // points per event.
   for (int a = 0; a < kNumZBins; ++a) {
     if (bins[a].empty()) {
       continue;
@@ -521,8 +566,8 @@ void CosmicTripletSeedFinder::createSeeds(
       }
     }
     if (!m_cuts.requireTopMiddleBottom) {
-      // if the top-middle-bottom ordering is not required, the pool is not sorted by y
-      // and the candidates are generated in a forced manner
+      // if the top-middle-bottom ordering is not required, the pool is not
+      // sorted by y and the candidates are generated in a forced manner
       for (const Hit& middle : bins[a]) {
         for (const Hit* top : pool) {
           if (top->sp.index() == middle.sp.index()) {
@@ -543,7 +588,8 @@ void CosmicTripletSeedFinder::createSeeds(
               continue;
             }
 
-            // other cuts are symmetric under top<->bottom, each unordered triplet would appear twice.
+            // other cuts are symmetric under top<->bottom, each unordered
+            // triplet would appear twice.
             if (top->sp.index() < bottom->sp.index()) {
               continue;
             }
@@ -559,27 +605,31 @@ void CosmicTripletSeedFinder::createSeeds(
     std::sort(pool.begin(), pool.end(), [](const Hit* l, const Hit* r) {
       return l->y < r->y || (l->y == r->y && l->sp.index() < r->sp.index());
     });
-    // angular cuts are applied in makeCandidate() and pairPrefilter(), which are called for each middle point and candidate pair
+    // angular cuts are applied in makeCandidate() and pairPrefilter(), which
+    // are called for each middle point and candidate pair
     for (const Hit& middle : bins[a]) {
-      const bool isPixelMid = ev.isStrip != nullptr && ev.isStrip[middle.sp.index()] == 0;
+      const bool isPixelMid =
+          ev.isStrip != nullptr && ev.isStrip[middle.sp.index()] == 0;
       const bool pixelMid = m_cuts.useSubdetectorAngularCuts && isPixelMid;
       // window in y for the segments, |Δy| in [minDeltaY, maxDeltaY]
-      // iff the segment has a recalibratable strip SP, each end can move up to stripShiftY in y:
-      // the window is enlarged by that and the exact cut is done by passCosmicCuts
+      // iff the segment has a recalibratable strip SP, each end can move up to
+      // stripShiftY in y: the window is enlarged by that and the exact cut is
+      // done by passCosmicCuts
       const double margin = 2.0 * stripShiftY;
       // bottom: y < y_mid
       // top: y > y_mid
-      auto lo = std::lower_bound(
-          pool.begin(), pool.end(), middle.y,
-          [](const Hit* h, double v) { return h->y < v; });
-      auto hi = std::upper_bound(
-          lo, pool.end(), middle.y,
-          [](double v, const Hit* h) { return v < h->y; });
+      auto lo =
+          std::lower_bound(pool.begin(), pool.end(), middle.y,
+                           [](const Hit* h, double v) { return h->y < v; });
+      auto hi =
+          std::upper_bound(lo, pool.end(), middle.y,
+                           [](double v, const Hit* h) { return v < h->y; });
 
       tops.clear();
       bottoms.clear();
       Candidate c{};
-      // generate candidates for the top and bottom space points relative to the middle point
+      // generate candidates for the top and bottom space points relative to the
+      // middle point
       for (auto it = hi; it != pool.end(); ++it) {
         if (makeCandidate(**it, middle, pixelMid, c)) {
           tops.push_back(c);
@@ -594,18 +644,22 @@ void CosmicTripletSeedFinder::createSeeds(
       if (tops.empty() || bottoms.empty()) {
         continue;
       }
-      
-      // for each bottom candidate, find the top candidates that are within the y window defined by minDeltaY and maxDeltaY
-      // taking into account the margin for recalibratable strip SPs
+
+      // for each bottom candidate, find the top candidates that are within the
+      // y window defined by minDeltaY and maxDeltaY taking into account the
+      // margin for recalibratable strip SPs
       for (const Candidate& b : bottoms) {
         const double dyB = middle.y - b.y;
         const double slackB = b.calibratable ? margin : 0.0;
-        if (dyB < m_cuts.minDeltaY - slackB - 1e-6 || dyB > m_cuts.maxDeltaY + slackB + 1e-6) {
+        if (dyB < m_cuts.minDeltaY - slackB - 1e-6 ||
+            dyB > m_cuts.maxDeltaY + slackB + 1e-6) {
           continue;
         }
-        // binary search for the first top candidate whose y is greater than middle.y + minDeltaY - margin
+        // binary search for the first top candidate whose y is greater than
+        // middle.y + minDeltaY - margin
         auto first = std::lower_bound(
-            tops.begin(), tops.end(), middle.y + m_cuts.minDeltaY - margin - 1e-6,
+            tops.begin(), tops.end(),
+            middle.y + m_cuts.minDeltaY - margin - 1e-6,
             [](const Candidate& t, double v) { return t.y < v; });
         auto last = std::upper_bound(
             first, tops.end(), middle.y + m_cuts.maxDeltaY + margin + 1e-6,
@@ -627,8 +681,10 @@ void CosmicTripletSeedFinder::createSeeds(
   }
 }
 
-// createTwoSpacePointSeeds() generates doublet seeds from the given space points, applying the configured cuts and storing the results in outputSeeds.
-// its optional recalibration of strip space points is not performed, as doublets do not have a third point to determine the direction
+// createTwoSpacePointSeeds() generates doublet seeds from the given space
+// points, applying the configured cuts and storing the results in outputSeeds.
+// its optional recalibration of strip space points is not performed, as
+// doublets do not have a third point to determine the direction
 void CosmicTripletSeedFinder::createTwoSpacePointSeeds(
     const SpacePointContainer& spacePoints, SeedContainer& outputSeeds,
     const std::vector<CosmicSpacePointClass>* spClasses,
@@ -654,10 +710,12 @@ void CosmicTripletSeedFinder::createTwoSpacePointSeeds(
     return ev.isCalibratable != nullptr && ev.isCalibratable[index] != 0;
   };
 
-  // the margin is twice the maximum shift in y for recalibratable strip space points
+  // the margin is twice the maximum shift in y for recalibratable strip space
+  // points
   const double margin = 2.0 * buffers.stripShiftY;
 
-  const ZBins bins = fillZBins(spacePoints, m_cuts.zMin, m_cuts.zMax, skipSpacePoints);
+  const ZBins bins =
+      fillZBins(spacePoints, m_cuts.zMin, m_cuts.zMax, skipSpacePoints);
 
   std::vector<const Hit*> pool;
   for (int a = 0; a < kNumZBins; ++a) {
@@ -676,7 +734,8 @@ void CosmicTripletSeedFinder::createTwoSpacePointSeeds(
       return l->y < r->y || (l->y == r->y && l->sp.index() < r->sp.index());
     });
 
-    // top is used as the central point: each pair is considered only once, from the top bin
+    // top is used as the central point: each pair is considered only once, from
+    // the top bin
     for (const Hit& top : bins[a]) {
       auto first = std::lower_bound(
           pool.begin(), pool.end(), top.y - m_cuts.maxDeltaY - margin - 1e-6,
@@ -706,22 +765,25 @@ void CosmicTripletSeedFinder::createTwoSpacePointSeeds(
         if (!passDoubletCuts(pT, pB)) {
           continue;
         }
-        std::array<SpacePointIndex, 2> seedSpacePoints{bottom.sp.index(), top.sp.index()};
+        std::array<SpacePointIndex, 2> seedSpacePoints{bottom.sp.index(),
+                                                       top.sp.index()};
         MutableSeedProxy seed = outputSeeds.createSeed();
         seed.assignSpacePointIndices(seedSpacePoints);
-        // without a third point there is no dT, so all doublets have the same quality 
+        // without a third point there is no dT, so all doublets have the same
+        // quality
         seed.quality() = m_cuts.seedQuality;
         seed.vertexZ() = 0.0f;
       }
     }
   }
 }
-// bottom-middle segment cuts: the same as production3Sp, but without the kink cut (no third point to determine the direction)
+// bottom-middle segment cuts: the same as production3Sp, but without the kink
+// cut (no third point to determine the direction)
 bool CosmicTripletSeedFinder::passDoubletCuts(const Point& top,
                                               const Point& bottom) const {
-  if (!std::isfinite(top.x) || !std::isfinite(top.y) ||
-      !std::isfinite(top.z) || !std::isfinite(bottom.x) ||
-      !std::isfinite(bottom.y) || !std::isfinite(bottom.z)) {
+  if (!std::isfinite(top.x) || !std::isfinite(top.y) || !std::isfinite(top.z) ||
+      !std::isfinite(bottom.x) || !std::isfinite(bottom.y) ||
+      !std::isfinite(bottom.z)) {
     return false;
   }
   if (top.z < m_cuts.zMin || top.z > m_cuts.zMax || bottom.z < m_cuts.zMin ||
@@ -740,29 +802,29 @@ bool CosmicTripletSeedFinder::passDoubletCuts(const Point& top,
   if (!(rT > 0.0) || std::abs(dz) > m_dzdrMax * rT) {
     return false;
   }
-  // y aligment
+  // y alignment
   const double distance = std::sqrt(rT * rT + dz * dz);
   return dy / distance >= m_cuts.minCosThetaY;
 }
 
-// passCosmicCuts applies vertical order, kink angle, vertical separation/alignment,
-// residual relative to the top-bottom line, Z envelope, and finally the
-// curvature/longitudinal cut (which also calculates the quality).
+// passCosmicCuts applies vertical order, kink angle, vertical
+// separation/alignment, residual relative to the top-bottom line, Z envelope,
+// and finally the curvature/longitudinal cut (which also calculates the
+// quality).
 bool CosmicTripletSeedFinder::passCosmicCuts(const Point& top,
                                              const Point& middle,
                                              const Point& bottom,
                                              float& quality,
                                              const EventData& ev) const {
-
-  if (!std::isfinite(top.x) || !std::isfinite(top.y) ||
-      !std::isfinite(top.z) || !std::isfinite(middle.x) ||
-      !std::isfinite(middle.y) || !std::isfinite(middle.z) ||
-      !std::isfinite(bottom.x) || !std::isfinite(bottom.y) ||
-      !std::isfinite(bottom.z)) {
+  if (!std::isfinite(top.x) || !std::isfinite(top.y) || !std::isfinite(top.z) ||
+      !std::isfinite(middle.x) || !std::isfinite(middle.y) ||
+      !std::isfinite(middle.z) || !std::isfinite(bottom.x) ||
+      !std::isfinite(bottom.y) || !std::isfinite(bottom.z)) {
     return false;
   }
 
-  // all the points must be of the same type (pixel or strip) if requireSameSubdetector is enabled
+  // all the points must be of the same type (pixel or strip) if
+  // requireSameSubdetector is enabled
   if (m_cuts.requireSameSubdetector) {
     const std::uint8_t kind = ev.isStrip[middle.index];
     if (ev.isStrip[top.index] != kind || ev.isStrip[bottom.index] != kind) {
@@ -770,8 +832,9 @@ bool CosmicTripletSeedFinder::passCosmicCuts(const Point& top,
     }
   }
 
- // vertical order: top > middle > bottom in y
-  if (m_cuts.requireTopMiddleBottom && !(top.y > middle.y && middle.y > bottom.y)) {
+  // vertical order: top > middle > bottom in y
+  if (m_cuts.requireTopMiddleBottom &&
+      !(top.y > middle.y && middle.y > bottom.y)) {
     return false;
   }
 
@@ -840,7 +903,8 @@ bool CosmicTripletSeedFinder::passCosmicCuts(const Point& top,
   // Δy per segment in [minDeltaY, maxDeltaY]
   const double dyTop = std::abs(top.y - middle.y);
   const double dyBottom = std::abs(middle.y - bottom.y);
-  if (dyTop < m_cuts.minDeltaY || dyTop > m_cuts.maxDeltaY || dyBottom < m_cuts.minDeltaY || dyBottom > m_cuts.maxDeltaY) {
+  if (dyTop < m_cuts.minDeltaY || dyTop > m_cuts.maxDeltaY ||
+      dyBottom < m_cuts.minDeltaY || dyBottom > m_cuts.maxDeltaY) {
     return false;
   }
 
@@ -858,15 +922,15 @@ bool CosmicTripletSeedFinder::passCosmicCuts(const Point& top,
       return false;
     }
   }
-  // return true if all cuts are passed, and update the quality parameter with the calculated quality
+  // return true if all cuts are passed, and update the quality parameter with
+  // the calculated quality
   return passCurvatureAndQuality(top, middle, bottom, quality, ev);
 }
 
 // pT-dependent terms: curvature, kink, residual, and scattering tolerance
 // Notation: d1 = middle - top, d2 = bottom - middle
-// c_i = transverse length (xy plane) of d_i, L_i = 3D length, chord = bottom - top.
-
-
+// c_i = transverse length (xy plane) of d_i, L_i = 3D length, chord = bottom -
+// top.
 
 bool CosmicTripletSeedFinder::ptDependentTerms(const Point& top,
                                                const Point& middle,
@@ -890,12 +954,13 @@ bool CosmicTripletSeedFinder::ptDependentTerms(const Point& top,
     return false;
   }
 
-  // pT estimated: the circunference for the three points in the xy plane has radius rho = c1 c2 c_chord / (2 |d1 x d2|_z) (Menger formula),
-  // and pT[MeV] = 0.3 Bz[T] rho[mm]
-  // the cut pT >= 0.9 minPt is applied
+  // pT estimated: the circumference for the three points in the xy plane has
+  // radius rho = c1 c2 c_chord / (2 |d1 x d2|_z) (Menger formula), and pT[MeV]
+  // = 0.3 Bz[T] rho[mm] the cut pT >= 0.9 minPt is applied
   const double cross = x1 * y2 - y1 * x2;
-  const double invRho = 2.0 * std::abs(cross) / (c1 * c2 * cc);       // 1/mm
-  const double invPt = invRho / (0.3 * std::abs(m_cuts.magneticFieldBz));  // 1/MeV
+  const double invRho = 2.0 * std::abs(cross) / (c1 * c2 * cc);  // 1/mm
+  const double invPt =
+      invRho / (0.3 * std::abs(m_cuts.magneticFieldBz));  // 1/MeV
   if (invPt > 1.0 / (0.9 * m_cuts.minPt)) {
     return false;
   }
@@ -909,23 +974,26 @@ bool CosmicTripletSeedFinder::ptDependentTerms(const Point& top,
   out.residualSlack = thetaMS * L1 * L2 / (L1 + L2);
 
   // the transverse turn is already bounded by the pT cut
-  // the kink compare the polar deviation |theta1 - theta2|, with theta_i = atan2(c_i, dz_i)
+  // the kink compare the polar deviation |theta1 - theta2|, with theta_i =
+  // atan2(c_i, dz_i)
   out.polarKink = std::abs(std::atan2(c1, z1) - std::atan2(c2, z2));
-  // the residual is the distance from the middle point to the line connecting top and bottom
-  // which can be decomposed into a transverse component (h_T) and a parallel component (h_par)
-  // residual out of transversal plane: h3D^2 = h_T^2 + h_par^2
+  // the residual is the distance from the middle point to the line connecting
+  // top and bottom which can be decomposed into a transverse component (h_T)
+  // and a parallel component (h_par) residual out of transversal plane: h3D^2 =
+  // h_T^2 + h_par^2
   const double hT = std::abs(cross) / cc;
   const double h3 = residualToTopBottomLine(top, middle, bottom);
   out.parallelResidual = std::sqrt(std::max(0.0, h3 * h3 - hT * hT));
   return true;
 }
 
-// built the local frame (U, V) centered in "middle", calculates the slopes Tz of each segment,
-// applies the pseudorapidity window, the longitudinal discriminant dT
-// and (depending on B) the momentum cut by curvature and its scattering correction.
-bool CosmicTripletSeedFinder::passCurvatureAndQuality(const Point& top, const Point& middle,
-                                                      const Point& bottom, float& quality,
-                                                      const EventData& ev) const {
+// built the local frame (U, V) centered in "middle", calculates the slopes Tz
+// of each segment, applies the pseudorapidity window, the longitudinal
+// discriminant dT and (depending on B) the momentum cut by curvature and its
+// scattering correction.
+bool CosmicTripletSeedFinder::passCurvatureAndQuality(
+    const Point& top, const Point& middle, const Point& bottom, float& quality,
+    const EventData& ev) const {
   const double X = middle.x;
   const double Y = middle.y;
   const double dirX = top.x - X;
@@ -939,7 +1007,8 @@ bool CosmicTripletSeedFinder::passCurvatureAndQuality(const Point& top, const Po
 
   struct UV {
     double U = 0.0, V = 0.0;
-    double invDist = 0.0;  // inverse of the distance from the middle point to the other point
+    double invDist = 0.0;  // inverse of the distance from the middle point to
+                           // the other point
     double dz = 0.0;
   };
 
@@ -975,35 +1044,34 @@ bool CosmicTripletSeedFinder::passCurvatureAndQuality(const Point& top, const Po
 
   // Varianzas: las del container, o las efectivas (con escala de clase) si
   // useCovarianceScale está activo.
-  // container variances are used for doublets and effective variances for triplets
+  // container variances are used for doublets and effective variances for
+  // triplets
   auto covRof = [&ev](const Point& sp) {
-    return ev.covR != nullptr
-               ? ev.covR[sp.index]
-               : varianceR(ev.spacePoints->at(
-                     static_cast<SpacePointIndex>(sp.index)));
+    return ev.covR != nullptr ? ev.covR[sp.index]
+                              : varianceR(ev.spacePoints->at(
+                                    static_cast<SpacePointIndex>(sp.index)));
   };
   auto covZof = [&ev](const Point& sp) {
-    return ev.covZ != nullptr
-               ? ev.covZ[sp.index]
-               : varianceZ(ev.spacePoints->at(
-                     static_cast<SpacePointIndex>(sp.index)));
+    return ev.covZ != nullptr ? ev.covZ[sp.index]
+                              : varianceZ(ev.spacePoints->at(
+                                    static_cast<SpacePointIndex>(sp.index)));
   };
 
   const double covr0 = covRof(middle);
   const double covz0 = covZof(middle);
 
-  const double ErB = (covz0 + covZof(bottom) +
-                       TzB * TzB * (covr0 + covRof(bottom))) *
-                      (b.invDist * b.invDist);
-  const double ErT = (covz0 + covZof(top) +
-                       TzT * TzT * (covr0 + covRof(top))) *
-                      (t.invDist * t.invDist);
+  const double ErB =
+      (covz0 + covZof(bottom) + TzB * TzB * (covr0 + covRof(bottom))) *
+      (b.invDist * b.invDist);
+  const double ErT = (covz0 + covZof(top) + TzT * TzT * (covr0 + covRof(top))) *
+                     (t.invDist * t.invDist);
 
   const double Ts = 0.5 * (TzB + TzT);
   const double dTz = TzB - TzT;
 
   // longitudinal discriminant dT, which is negative for a compatible triplet
-  double dT = dTz * dTz - ErB - ErT - 2.0 * b.invDist * t.invDist * (Ts * Ts * covr0 + covz0);
+  double dT = dTz * dTz - ErB - ErT -
+              2.0 * b.invDist * t.invDist * (Ts * Ts * covr0 + covz0);
 
   // momentum cut by curvature and its scattering correction
   if (m_cuts.minPt > 0.0) {
@@ -1026,11 +1094,13 @@ bool CosmicTripletSeedFinder::passCurvatureAndQuality(const Point& top, const Po
         return false;
       }
 
-      // scattering correction: dT -= (BK^2) * multipleScatteringCof * (1 + TzB^2) / S^2
+      // scattering correction: dT -= (BK^2) * multipleScatteringCof * (1 +
+      // TzB^2) / S^2
       const double SA = 1.0 + TzB * TzB;
       dT -= (BK * BK) * m_cuts.multipleScatteringCof * SA / S2;
     } else {
-      // if there is no magnetic field, the scattering correction is applied with the effective pT cut
+      // if there is no magnetic field, the scattering correction is applied
+      // with the effective pT cut
       const double ipt = 1.0 / std::abs(0.9 * m_cuts.minPt);
       const double SA = 1.0 + TzB * TzB;
       dT -= (ipt * ipt) * m_cuts.multipleScatteringCof * SA;
@@ -1047,8 +1117,9 @@ bool CosmicTripletSeedFinder::passCurvatureAndQuality(const Point& top, const Po
     return false;
   }
 
-  // if useSeedQuality is true, the quality is calculated as dT * invDistTop * invDistBottom / (invDistTop + invDistBottom)
-  // else, the quality is left as the fixed value m_cuts.seedQuality
+  // if useSeedQuality is true, the quality is calculated as dT * invDistTop *
+  // invDistBottom / (invDistTop + invDistBottom) else, the quality is left as
+  // the fixed value m_cuts.seedQuality
   if (m_cuts.useSeedQuality) {
     const double denom = b.invDist + t.invDist;
     quality = denom > 0.0
@@ -1063,10 +1134,9 @@ bool CosmicTripletSeedFinder::passCurvatureAndQuality(const Point& top, const Po
 // with magnetic field, each SP uses the tangent at its own point:
 // in xy, perpendicular to the radius of the circle through the three points
 // in z, the slope of the chord
-bool CosmicTripletSeedFinder::tripletDirections(const Point& top,
-                                                const Point& middle,
-                                                const Point& bottom,
-                                                std::array<std::array<float, 3>, 3>& dirs) const {
+bool CosmicTripletSeedFinder::tripletDirections(
+    const Point& top, const Point& middle, const Point& bottom,
+    std::array<std::array<float, 3>, 3>& dirs) const {
   const double cx = top.x - bottom.x;
   const double cy = top.y - bottom.y;
   const double cz = top.z - bottom.z;
@@ -1119,30 +1189,29 @@ bool CosmicTripletSeedFinder::tripletDirections(const Point& top,
     const double dx = tx / tn;
     const double dy = ty / tn;
     const double n = std::sqrt(1.0 + slope * slope);
-    dirs[i] = {static_cast<float>(dx / n),
-                static_cast<float>(dy / n),
-                static_cast<float>(slope / n)};
+    dirs[i] = {static_cast<float>(dx / n), static_cast<float>(dy / n),
+               static_cast<float>(slope / n)};
   }
   return true;
 }
 
 // recalculates the SPs of strips of the seed with the direction of the track
-// with the direction of the seed the crossing is calculated, with the new crossings a new direction, and
-// so on until no point moves more than kCalibrationConvergence
-// then, with the final direction, the crossing must fall within the two strips with stripCalibrationTolerance
-// (if not, the seed is not a track)
+// with the direction of the seed the crossing is calculated, with the new
+// crossings a new direction, and so on until no point moves more than
+// kCalibrationConvergence then, with the final direction, the crossing must
+// fall within the two strips with stripCalibrationTolerance (if not, the seed
+// is not a track)
 
-bool CosmicTripletSeedFinder::calibrateStripSpacePoints(Point& top,
-                                                        Point* middle,
-                                                        Point& bottom,
-                                                        const EventData& ev) const {
+bool CosmicTripletSeedFinder::calibrateStripSpacePoints(
+    Point& top, Point* middle, Point& bottom, const EventData& ev) const {
   const std::array<Point*, 3> points = {&bottom, middle, &top};
   std::array<bool, 3> strip{};
   for (std::size_t i = 0; i < 3; ++i) {
     strip[i] = points[i] != nullptr && ev.isCalibratable != nullptr &&
                ev.isCalibratable[points[i]->index] != 0;
   }
-  // direction in bottom, middle and top: that of the triplet or, in a doublet, the chord
+  // direction in bottom, middle and top: that of the triplet or, in a doublet,
+  // the chord
   auto directions = [&](std::array<std::array<float, 3>, 3>& dirs) {
     if (middle != nullptr) {
       return tripletDirections(top, *middle, bottom, dirs);
@@ -1160,9 +1229,9 @@ bool CosmicTripletSeedFinder::calibrateStripSpacePoints(Point& top,
     dirs = {d, d, d};
     return true;
   };
-  // note: a direction (almost) parallel to the module plane crosses the strips at infinity, so its crossing is not valid
-  auto crossesModule = [&ev](const std::array<float, 3>& d,
-                             std::size_t index) {
+  // note: a direction (almost) parallel to the module plane crosses the strips
+  // at infinity, so its crossing is not valid
+  auto crossesModule = [&ev](const std::array<float, 3>& d, std::size_t index) {
     const auto& n = ev.stripDetails[index].innerCrossOuterHalfVector;
     const double scale = static_cast<double>(d[0]) * n[0] +
                          static_cast<double>(d[1]) * n[1] +
@@ -1175,8 +1244,7 @@ bool CosmicTripletSeedFinder::calibrateStripSpacePoints(Point& top,
   constexpr float kNoLimit = std::numeric_limits<float>::infinity();
   std::array<std::array<float, 3>, 3> dirs{};
   bool converged = false;
-  for (int iteration = 0; iteration < kMaxCalibrationIterations;
-       ++iteration) {
+  for (int iteration = 0; iteration < kMaxCalibrationIterations; ++iteration) {
     if (!directions(dirs)) {
       return false;
     }
@@ -1203,7 +1271,8 @@ bool CosmicTripletSeedFinder::calibrateStripSpacePoints(Point& top,
       points[i]->y = r[1];
       points[i]->z = r[2];
     }
-    // if the maximum shift is less than the convergence threshold, its considered that the calibration converged
+    // if the maximum shift is less than the convergence threshold, its
+    // considered that the calibration converged
     if (maxShift < kCalibrationConvergence) {
       converged = true;
       break;
@@ -1213,7 +1282,8 @@ bool CosmicTripletSeedFinder::calibrateStripSpacePoints(Point& top,
     return false;
   }
   // tolerance for the crossing of the strips with the final direction
-  // if the crossing is outside the two strips by more than this tolerance, the seed is rejected
+  // if the crossing is outside the two strips by more than this tolerance, the
+  // seed is rejected
   const auto tolerance = static_cast<float>(m_cuts.stripCalibrationTolerance);
   for (std::size_t i = 0; i < 3; ++i) {
     std::array<float, 3> r{};
@@ -1227,10 +1297,11 @@ bool CosmicTripletSeedFinder::calibrateStripSpacePoints(Point& top,
   return true;
 }
 
-// calculates the distance from the middle point to the line connecting top and bottom
+// calculates the distance from the middle point to the line connecting top and
+// bottom
 double CosmicTripletSeedFinder::residualToTopBottomLine(const Point& top,
-                                                       const Point& middle,
-                                                       const Point& bottom) {
+                                                        const Point& middle,
+                                                        const Point& bottom) {
   const double ax = middle.x - top.x;
   const double ay = middle.y - top.y;
   const double az = middle.z - top.z;
@@ -1251,8 +1322,9 @@ double CosmicTripletSeedFinder::residualToTopBottomLine(const Point& top,
   return std::sqrt(cx * cx + cy * cy + cz * cz) / bNorm;
 }
 
-// estimates the vertex z position from the three space points, but for cosmic rays,
-// there is no primary vertex, therefore the reference implementation always records zVertex = 0 instead of estimating it from the SPs.
+// estimates the vertex z position from the three space points, but for cosmic
+// rays, there is no primary vertex, therefore the reference implementation
+// always records zVertex = 0 instead of estimating it from the SPs.
 float CosmicTripletSeedFinder::estimateVertexZ(const Point& top,
                                                const Point& middle,
                                                const Point& bottom) {
@@ -1262,4 +1334,4 @@ float CosmicTripletSeedFinder::estimateVertexZ(const Point& top,
   return 0.0f;
 }
 
-}
+}  // namespace Acts
