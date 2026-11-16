@@ -38,6 +38,24 @@
 /// starting at zero
 namespace detray::io {
 
+namespace detail {
+
+/// Reusable write toggle for detector component headers
+struct write_switch {
+  /// @brief toggle the output writing of a detector component
+  /// @param toggle whether or not to write the component
+  void write_component(const bool toggle) { m_do_write = toggle; }
+  /// @brief Access to the writer toggle
+  /// @returns whether or not to write a detector component
+  bool write_component() const { return m_do_write; }
+
+ private:
+  /// Writer toggle
+  bool m_do_write{true};
+};
+
+}  // namespace detail
+
 /// @brief A payload for a single object link (volume local)
 struct single_link_payload {
   /// Volume-local index of the linked object.
@@ -60,7 +78,7 @@ struct typed_link_payload {
 /// @{
 
 /// @brief a payload for the geometry specific part of the file header
-struct geometry_header_payload {
+struct geometry_header_payload : public detail::write_switch {
   /// Number of volumes in the detector
   std::size_t n_volumes{0ul};
   /// Total number of surfaces in the detector
@@ -168,7 +186,7 @@ struct volume_payload {
 /// @{
 
 /// @brief a payload for the material specific part of the file header
-struct homogeneous_material_header_payload {
+struct homogeneous_material_header_payload : public detail::write_switch {
   /// Total number of material slabs in the detector
   std::size_t n_slabs{0ul};
   /// Total number of surface with material slabs
@@ -239,7 +257,7 @@ struct detector_homogeneous_material_payload {
 /// @{
 
 /// @brief a payload for the grid specific part of the file header
-struct grid_header_payload {
+struct grid_header_payload : public detail::write_switch {
   /// Number of grid payloads described by the file.
   std::size_t n_grids{0u};
 };

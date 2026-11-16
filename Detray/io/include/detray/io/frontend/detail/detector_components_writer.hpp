@@ -109,7 +109,7 @@ inline common_header_payload generate_common_header(
   header.metadata = detray::types::get_name<typename detector_t::metadata>();
   header.source = source;
 
-  if (!names.empty()) {
+  if (!names.get_detector_name().empty()) {
     header.detector = det.name(names);
   }
 
@@ -136,24 +136,25 @@ inline void fill_sub_header_payloads(
   // If the payload is empty, do nothing
   if (payload.geometry.is_valid()) {
     header.geometry = to_header_payload(payload.geometry);
+  } else if (header.geometry.has_value()) {
+    header.geometry->write_component(false);
   }
-  if (cfg.write_material()) {
-    if (has_data(payload.homogeneous_material)) {
-      header.homogeneous_material =
-          to_header_payload(*payload.homogeneous_material);
-    }
-    if (has_data(payload.material_maps)) {
-      header.material_maps = to_header_payload(*payload.material_maps);
-    }
+  if (has_data(payload.homogeneous_material)) {
+    header.homogeneous_material =
+        to_header_payload(*payload.homogeneous_material);
+    header.homogeneous_material->write_component(cfg.write_material());
   }
-
-  if (cfg.write_grids()) {
-    if (has_data(payload.surface_grids)) {
-      header.surface_grids = to_header_payload(*payload.surface_grids);
-    }
-    if (has_data(payload.volume_grids)) {
-      header.volume_grids = to_header_payload(*payload.volume_grids);
-    }
+  if (has_data(payload.material_maps)) {
+    header.material_maps = to_header_payload(*payload.material_maps);
+    header.material_maps->write_component(cfg.write_material());
+  }
+  if (has_data(payload.surface_grids)) {
+    header.surface_grids = to_header_payload(*payload.surface_grids);
+    header.surface_grids->write_component(cfg.write_grids());
+  }
+  if (has_data(payload.volume_grids)) {
+    header.volume_grids = to_header_payload(*payload.volume_grids);
+    header.volume_grids->write_component(cfg.write_grids());
   }
 }
 

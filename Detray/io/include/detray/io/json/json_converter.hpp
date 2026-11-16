@@ -122,24 +122,35 @@ class json_output_converter final : public output_file_converter_interface {
 
     // Write every detector component that contains data
     std::vector<std::string> file_names{};
-    if (!payload.geometry.volumes.empty()) {
+
+    const auto has_component_data =
+        []<typename payload_t, typename header_t>(
+            const std::optional<payload_t>& sub_payload,
+            const std::optional<header_t>& sub_header) -> bool {
+      return sub_payload.has_value() && sub_payload->is_valid() &&
+             sub_header.has_value() && sub_header->write_component();
+    };
+
+    if (payload.geometry.is_valid() && header.geometry.has_value() &&
+        header.geometry->write_component()) {
       tagged_header.tag = "geometry";
       file_names.push_back(write_component(tagged_header, header.geometry,
                                            payload.geometry, file_path, mode));
     }
-    if (payload.homogeneous_material.has_value()) {
+    if (has_component_data(payload.homogeneous_material,
+                           header.homogeneous_material)) {
       tagged_header.tag = "homogeneous_material";
       file_names.push_back(
           write_component(tagged_header, header.homogeneous_material,
                           *payload.homogeneous_material, file_path, mode));
     }
-    if (payload.material_maps.has_value()) {
+    if (has_component_data(payload.material_maps, header.material_maps)) {
       tagged_header.tag = "material_maps";
       file_names.push_back(write_component(tagged_header, header.material_maps,
                                            *payload.material_maps, file_path,
                                            mode));
     }
-    if (payload.surface_grids.has_value()) {
+    if (has_component_data(payload.surface_grids, header.surface_grids)) {
       tagged_header.tag = "surface_grids";
       file_names.push_back(write_component(tagged_header, header.surface_grids,
                                            *payload.surface_grids, file_path,
@@ -167,13 +178,6 @@ class json_output_converter final : public output_file_converter_interface {
                               const data_t& data,
                               const std::filesystem::path& file_path,
                               const std::ios_base::openmode mode) const {
-    if (!sub_header.has_value()) {
-      std::stringstream err_str{};
-      err_str << "Sub header '" << header.tag << "' does not contain any data.";
-      DETRAY_FATAL_HOST(err_str.str());
-      throw std::invalid_argument(err_str.str());
-    }
-
     // Write the header and the detector data into the json stream by using
     // the conversion functions defined in "detray/io/json/json_io.hpp"
     nlohmann::ordered_json out_json;
