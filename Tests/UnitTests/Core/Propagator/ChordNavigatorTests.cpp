@@ -49,7 +49,7 @@ std::shared_ptr<const TrackingGeometry> gen3Geometry() {
   // The builder owns the detector elements of the surfaces
   static CylindricalTrackingGeometry builder(gctx, true);
   static const std::shared_ptr<const TrackingGeometry> geometry = [] {
-    auto logger = getDefaultLogger("Geometry", Logging::ERROR);
+    auto logger = getDefaultLogger("Geometry", Logging::INFO);
     return std::shared_ptr<const TrackingGeometry>(builder(*logger));
   }();
   return geometry;
@@ -63,7 +63,7 @@ std::shared_ptr<const TrackingGeometry> gen3EndcapGeometry() {
     return b;
   }();
   static const std::shared_ptr<const TrackingGeometry> geometry = [] {
-    auto logger = getDefaultLogger("Geometry", Logging::ERROR);
+    auto logger = getDefaultLogger("Geometry", Logging::INFO);
     return std::shared_ptr<const TrackingGeometry>(builder(*logger));
   }();
   return geometry;
@@ -104,13 +104,13 @@ ChordNavigator makeChordNavigator(
     ChordNavigator::CandidateSearch search =
         ChordNavigator::CandidateSearch::Policy,
     bool envelopePreCheck = false,
-    std::shared_ptr<const TrackingGeometry> geometry = nullptr) {
+    const std::shared_ptr<const TrackingGeometry>& geometry = nullptr) {
   ChordNavigator::Config cfg;
   cfg.trackingGeometry = geometry != nullptr ? geometry : gen3Geometry();
   cfg.candidateSearch = search;
   cfg.forwardHint = forwardHint;
   cfg.envelopePreCheck = envelopePreCheck;
-  return ChordNavigator(cfg, getDefaultLogger("ChordNav", Logging::ERROR));
+  return ChordNavigator(cfg, getDefaultLogger("ChordNav", Logging::INFO));
 }
 
 /// Whether @p hits holds a hit on the surface of @p hit at its position
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(ChordNavigatorConstruction) {
 // limit are not reported.
 BOOST_AUTO_TEST_CASE(ChordNavigatorStraightLine) {
   const Navigator navigator({gen3Geometry()},
-                            getDefaultLogger("Nav", Logging::ERROR));
+                            getDefaultLogger("Nav", Logging::INFO));
   const Propagator<StraightLineStepper, Navigator> reference(
       StraightLineStepper{}, navigator);
 
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(ChordNavigatorStraightLine) {
 BOOST_AUTO_TEST_CASE(ChordNavigatorConstantField) {
   auto field = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
   const Navigator navigator({gen3Geometry()},
-                            getDefaultLogger("Nav", Logging::ERROR));
+                            getDefaultLogger("Nav", Logging::INFO));
   const Propagator<EigenStepper<>, Navigator> reference(EigenStepper<>(field),
                                                         navigator);
 
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(ChordNavigatorEndcaps) {
     fastCfg.envelopePreCheck = true;
     const Propagator<EigenStepper<>, ChordNavigator> fast(
         EigenStepper<>(field),
-        ChordNavigator(fastCfg, getDefaultLogger("ChordNav", Logging::ERROR)));
+        ChordNavigator(fastCfg, getDefaultLogger("ChordNav", Logging::INFO)));
     for (double pT : {25_MeV, 40_MeV}) {
       for (double cotTheta : {1.2, 3.}) {
         const double theta = std::atan2(1., cotTheta);

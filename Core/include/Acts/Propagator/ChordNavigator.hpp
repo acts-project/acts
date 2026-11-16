@@ -420,6 +420,13 @@ class ChordNavigator final {
 
   /// Collect the candidates of the current volume for a chord
   ///
+  /// @param state The navigation state, receives the candidates
+  /// @param start The start point of the chord, from which the navigation
+  ///        policy is queried
+  /// @param end The end point of the chord
+  /// @param direction The unit direction from @p start to @p end
+  /// @param queryFromEnd Whether to query the navigation policy a second time
+  ///        from @p end, looking back, see Config::queryFromChordEnd
   /// @param padding Distance by which the trajectory can deviate from the
   ///        chord, for the envelope pre-check
   void collectCandidates(State& state, const Vector3& start, const Vector3& end,
