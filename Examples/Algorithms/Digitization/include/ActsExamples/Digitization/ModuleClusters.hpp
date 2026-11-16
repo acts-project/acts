@@ -68,10 +68,11 @@ class ModuleClusters {
   /// @param chargeQuantization readout after same-channel summation (default off)
   /// @pre Readout settings are validated; enabled quantization requires merging.
   /// DigitizationAlgorithm enforces these requirements before construction.
-  ModuleClusters(std::shared_ptr<const Acts::IMultiAxis> segmentation,
-                 std::vector<Acts::BoundIndices> geoIndices, bool merge,
-                 double nsigma, bool commonCorner,
-                 std::optional<ChargeQuantizationConfig> chargeQuantization = std::nullopt)
+  ModuleClusters(
+      std::shared_ptr<const Acts::IMultiAxis> segmentation,
+      std::vector<Acts::BoundIndices> geoIndices, bool merge, double nsigma,
+      bool commonCorner,
+      std::optional<ChargeQuantizationConfig> chargeQuantization = std::nullopt)
       : m_segmentation(std::move(segmentation)),
         m_geoIndices(std::move(geoIndices)),
         m_merge(merge),

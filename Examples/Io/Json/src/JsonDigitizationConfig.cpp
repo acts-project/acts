@@ -208,7 +208,8 @@ void ActsExamples::from_json(const nlohmann::json& j, GeometricConfig& gdc) {
   if (j.contains("charge-quantization")) {
     const auto& jq = j.at("charge-quantization");
     if (!jq.at("bits").is_number_integer()) {
-      throw std::invalid_argument("Charge quantization bits must be an integer");
+      throw std::invalid_argument(
+          "Charge quantization bits must be an integer");
     }
     auto& q = gdc.chargeQuantization.emplace();
     q.bits = jq.at("bits").get<unsigned int>();
