@@ -98,10 +98,10 @@ void addTrackFinding(py::module& mex) {
     using Config = Acts::Experimental::GbtsGraphBuilder::Config;
     auto c =
         py::class_<Config>(mex, "GbtsGraphBuilderConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, maxEdgesPerSP, minDeltaRadius, doubletFilterRZ,
-                       matchBeforeCreate, validateTriplets, calibrateStrips,
-                       maxOuterRadius, z0HistogramMaxBarrelOrder,
-                       useSumRatioCut, sumRatioCutMax);
+    ACTS_PYTHON_STRUCT(
+        c, minPt, maxEdgesPerSP, dropDeadEnds, minDeltaRadius, doubletFilterRZ,
+        matchBeforeCreate, validateTriplets, calibrateStrips, maxOuterRadius,
+        z0HistogramMaxBarrelOrder, useSumRatioCut, sumRatioCutMax);
     patchKwargsConstructor(c);
   }
 
