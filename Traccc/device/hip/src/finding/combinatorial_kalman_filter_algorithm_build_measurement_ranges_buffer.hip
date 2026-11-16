@@ -42,7 +42,7 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
         vecmem::data::vector_buffer<
             edm::measurement_collection::const_view::size_type>
             result{device_det.surfaces().size(), mr().main};
-        copy().setup(result)->ignore();
+        copy().setup(vecmem::ignore_event, result);
 
         // Create a measurement device object for convenience.
         const edm::measurement_collection::const_device measurements_device{

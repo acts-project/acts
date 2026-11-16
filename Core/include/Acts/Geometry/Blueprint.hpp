@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/IVolumeLookup.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -77,6 +78,17 @@ class Blueprint : public BlueprintNode {
       const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger());
 
+  /// Set the lookup factory for the world only.
+  /// An empty factory leaves the volume's lookup unchanged. Descendant policies
+  /// are installed first, so subtree indices can stop at explicit overrides.
+  /// @param factory Factory returning a non-null lookup
+  /// @return This node for chaining
+  Blueprint& setVolumeLookupFactory(VolumeLookupFactory factory);
+
+  /// Return the optional lookup factory.
+  /// @return Configured factory, which may be empty
+  const VolumeLookupFactory& volumeLookupFactory() const;
+
  protected:
   /// The name of the blueprint node, always "Root"
   /// @return The name
@@ -100,6 +112,8 @@ class Blueprint : public BlueprintNode {
   void addToGraphviz(std::ostream& os) const override;
 
  private:
+  VolumeLookupFactory m_volumeLookupFactory;
+
   Config m_cfg;
 };
 

@@ -39,8 +39,8 @@ struct gbts_compress_graph_payload {
   vecmem::data::vector_view<const unsigned int> neighbours;
   /// Inclusive prefix sum of the per-edge "kept" flags.
   vecmem::data::vector_view<const unsigned int> reIndexer;
-  /// Output: compacted neighbour lists in row-major layout; each edge owns
-  /// a block of nMaxNei ints (nei0..neiN-1)
+  /// Output: compacted neighbour lists in column-major layout; neighbour k
+  /// of edge e is at k * nConnectedEdgesMax + e (nMaxNei columns)
   vecmem::data::vector_view<unsigned int> output_graph;
   /// Output: (node1, node2) original spacepoint indices per compacted edge
   vecmem::data::vector_view<uint2> output_edge_nodes;

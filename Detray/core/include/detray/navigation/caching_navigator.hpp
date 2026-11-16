@@ -62,9 +62,13 @@ class caching_navigator
   using scalar_t = dscalar<typename detector_t::algebra_type>;
 
  public:
+  /// Detector whose surfaces are navigated.
   using detector_type = detector_t;
+  /// Geometry context expected by the detector.
   using context_type = typename detector_type::geometry_context;
+  /// Intersection result type associated with a surface descriptor.
   using intersection_type = intersection_t;
+  /// Policy used to expose navigation diagnostics.
   using inspector_type = inspector_t;
 
   /// @brief Navigation state that contains a cache of candidates
@@ -111,9 +115,12 @@ class caching_navigator
     using dist_t = typename base_type::dist_t;
 
    public:
+    /// Value type stored in the bins or result.
     using value_type = candidate_t;
 
+    /// View type exposing inspector state.
     using view_type = detail::get_view_t<inspector_t>;
+    /// Const view type exposing inspector state.
     using const_view_type = detail::get_view_t<const inspector_t>;
 
     /// Use common methods of constructing a nvaigation state
@@ -234,7 +241,7 @@ class caching_navigator
   /// @tparam track_t type of track, needs to provide pos() and dir() methods
   ///
   /// @param track access to the track parameters
-  /// @param state the current navigation state
+  /// @param navigation the current navigation state
   /// @param cfg the navigation configuration
   /// @param ctx the geometry context
   template <typename track_t>

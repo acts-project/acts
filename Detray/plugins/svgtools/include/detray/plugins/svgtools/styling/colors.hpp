@@ -203,7 +203,11 @@ inline std::vector<actsvg::style::color> green_theme(
 }
 
 // Same color circle that is used in matplot plugin
+/// Tableau colorblind palette with grey, blue, and red tone sequences.
 struct tableau_colorblind10 {
+  /// Return the palette's neutral grey tones.
+  /// @param opacity Alpha value applied to each color.
+  /// @return Grey colors with the requested opacity.
   static std::vector<actsvg::style::color> grey_tones(
       const actsvg::scalar opacity) {
     return {{dark_grey, opacity},
@@ -211,10 +215,16 @@ struct tableau_colorblind10 {
             {suva_grey, opacity},
             {very_light_grey, opacity}};
   }
+  /// Return the palette's blue tones.
+  /// @param opacity Alpha value applied to each color.
+  /// @return Blue colors with the requested opacity.
   static std::vector<actsvg::style::color> blue_tones(
       const actsvg::scalar opacity) {
     return {{cerulean, opacity}, {picton_blue, opacity}, {sail, opacity}};
   }
+  /// Return the palette's red tones.
+  /// @param opacity Alpha value applied to each color.
+  /// @return Red colors with the requested opacity.
   static std::vector<actsvg::style::color> red_tones(
       const actsvg::scalar opacity) {
     return {
@@ -223,3 +233,9 @@ struct tableau_colorblind10 {
 };
 
 }  // namespace detray::svgtools::styling::colors
+   /// Return the palette's blue tones.
+/// @param opacity Alpha value applied to each color.
+/// @return Blue colors with the requested opacity.
+/// Return the palette's red tones.
+/// @param opacity Alpha value applied to each color.
+/// @return Red colors with the requested opacity.

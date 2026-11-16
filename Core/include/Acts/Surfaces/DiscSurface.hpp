@@ -117,6 +117,11 @@ class DiscSurface : public RegularSurface {
   ///
   /// @param other The source sourface for the assignment
   /// @return Reference to this DiscSurface after assignment
+  /// @deprecated Surface copy-assignment will be removed; copy via
+  ///             `Surface::makeShared<DiscSurface>(other)` instead.
+  [[deprecated(
+      "Surface copy-assignment is deprecated and will be removed; copy via "
+      "Surface::makeShared<DiscSurface>(other) instead.")]]
   DiscSurface& operator=(const DiscSurface& other);
 
   /// Return the surface type
@@ -346,11 +351,13 @@ class DiscSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position of the parameters in global
+  /// @param direction The track direction. The disc derivative does not use it.
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
   Matrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3& position) const final;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
 
   /// Merge two disc surfaces into a single one.
   /// @image html Disc_Merging.svg

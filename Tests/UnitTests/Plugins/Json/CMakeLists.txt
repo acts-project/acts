@@ -32,3 +32,9 @@ add_unittest(
     TrackingGeometryMaterialJsonConverterTests.cpp
     "${PROJECT_SOURCE_DIR}/docs/examples/material-map-v1"
 )
+
+add_dependencies(
+    ActsUnitTestTrackingGeometryMaterialJsonConverter
+    ActsMaterialMapMigrate
+)
+add_test(NAME MaterialMapMigrateHelp COMMAND ActsMaterialMapMigrate --help)

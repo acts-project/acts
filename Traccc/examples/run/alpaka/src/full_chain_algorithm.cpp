@@ -108,7 +108,8 @@ full_chain_algorithm::full_chain_algorithm(
           logger->cloneWithSuffix("ClusteringAlg"), m_await_function),
       m_measurement_sorting({m_cached_device_mr, &m_cached_pinned_host_mr},
                             m_vecmem_objects.async_copy(), m_queue,
-                            logger->cloneWithSuffix("MeasSortingAlg")),
+                            logger->cloneWithSuffix("MeasSortingAlg"),
+                            m_await_function),
       m_spacepoint_formation({m_cached_device_mr, &m_cached_pinned_host_mr},
                              m_vecmem_objects.async_copy(), m_queue,
                              logger->cloneWithSuffix("SpFormationAlg"),
@@ -149,8 +150,8 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
-  m_vecmem_objects.async_copy()(::vecmem::get_data(cells), cells_buffer)
-      ->ignore();
+  m_vecmem_objects.async_copy()(::vecmem::ignore_event,
+                                ::vecmem::get_data(cells), cells_buffer);
 
   // Run the clusterization (asynchronously).
   const auto unsorted_measurements =
@@ -207,8 +208,8 @@ bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
-  m_vecmem_objects.async_copy()(::vecmem::get_data(cells), cells_buffer)
-      ->ignore();
+  m_vecmem_objects.async_copy()(::vecmem::ignore_event,
+                                ::vecmem::get_data(cells), cells_buffer);
 
   // Run the clusterization (asynchronously).
   const auto unsorted_measurements =

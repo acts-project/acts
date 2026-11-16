@@ -573,7 +573,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     // the significance of the update relative to the estimated errors.
     double normUpdate{0.};
     for (unsigned i = 0; i < N; ++i) {
-      normUpdate += Acts::square(update[i]) / (*inverseH)(i, i);
+      normUpdate += Acts::square(update[i]) / (2. * (*inverseH)(i, i));
     }
 
     if (normUpdate < Acts::square(m_cfg.normPrecCutOff) ||
@@ -587,7 +587,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     // If we converged, set the covariance and return (only if Hessian is
     // invertible)
     if (retCode == UpdateStep::converged) {
-      covariance.block<N, N>(firstIdx, firstIdx) = *inverseH;
+      covariance.block<N, N>(firstIdx, firstIdx) = 2. * (*inverseH);
 
       // swap back t0 component if needed
       if constexpr (N == 3) {

@@ -42,8 +42,8 @@ enum class SpacePointColumns : std::uint32_t {
 
   /// All columns
   All = SourceLinks | X | Y | Z | R | Phi | Time | VarianceZ | VarianceR |
-        VarianceT | CopiedFromIndex | StripCalibrationDetails | PackedXY |
-        PackedZR | PackedXYZ | PackedXYZR | PackedVarianceZR,
+      VarianceT | CopiedFromIndex | StripCalibrationDetails | PackedXY |
+      PackedZR | PackedXYZ | PackedXYZR | PackedVarianceZR,
 };
 
 /// Enable bitwise operators for SpacePointColumns enum

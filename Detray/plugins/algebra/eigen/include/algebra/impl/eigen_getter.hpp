@@ -37,6 +37,10 @@ namespace detray::algebra::eigen::storage {
 /// Functor used to access elements of Eigen matrices
 struct element_getter {
   /// Get non-const access to a matrix element
+  /// @param m Matrix to read.
+  /// @param row Zero-based row index.
+  /// @param col Zero-based column index.
+  /// @returns Mutable access to the selected element.
   template <typename derived_type, concepts::index index_t_1,
             concepts::index index_t_2>
     requires std::is_base_of_v<
@@ -47,6 +51,10 @@ struct element_getter {
     return m(static_cast<Eigen::Index>(row), static_cast<Eigen::Index>(col));
   }
   /// Get const access to a matrix element
+  /// @param m Matrix to read.
+  /// @param row Zero-based row index.
+  /// @param col Zero-based column index.
+  /// @returns The selected element.
   template <typename derived_type, concepts::index index_t_1,
             concepts::index index_t_2>
   DETRAY_HOST_DEVICE constexpr auto operator()(
@@ -55,6 +63,9 @@ struct element_getter {
     return m(static_cast<Eigen::Index>(row), static_cast<Eigen::Index>(col));
   }
   /// Get non-const access to a matrix element
+  /// @param m Matrix to read.
+  /// @param row Zero-based linear index.
+  /// @returns Mutable access to the selected element.
   template <typename derived_type, concepts::index index_t>
     requires std::is_base_of_v<
         Eigen::DenseCoeffsBase<derived_type, Eigen::WriteAccessors>,
@@ -64,6 +75,9 @@ struct element_getter {
     return m(static_cast<Eigen::Index>(row));
   }
   /// Get const access to a matrix element
+  /// @param m Matrix to read.
+  /// @param row Zero-based linear index.
+  /// @returns The selected element.
   template <typename derived_type, concepts::index index_t>
   DETRAY_HOST_DEVICE constexpr auto operator()(
       const Eigen::MatrixBase<derived_type> &m, index_t row) const {
@@ -130,6 +144,11 @@ DETRAY_HOST_DEVICE decltype(auto) element(V &vector) {
 
 /// Functor used to extract a block from Eigen matrices
 struct block_getter {
+  /// Return a block expression from a const matrix.
+  /// @param m Source matrix.
+  /// @param row First row of the block.
+  /// @param col First column of the block.
+  /// @returns A const block expression.
   template <int kROWS, int kCOLS, typename derived_type,
             concepts::index index_t_1, concepts::index index_t_2>
   DETRAY_HOST_DEVICE decltype(auto) operator()(
@@ -138,6 +157,11 @@ struct block_getter {
     return m.template block<kROWS, kCOLS>(row, col);
   }
 
+  /// Return a mutable block expression from a matrix.
+  /// @param m Matrix to access.
+  /// @param row First row of the block.
+  /// @param col First column of the block.
+  /// @returns A mutable block expression.
   template <int kROWS, int kCOLS, typename derived_type,
             concepts::index index_t_1, concepts::index index_t_2>
   DETRAY_HOST_DEVICE decltype(auto) operator()(
@@ -146,6 +170,11 @@ struct block_getter {
     return m.template block<kROWS, kCOLS>(row, col);
   }
 
+  /// Return a mutable column segment from a matrix.
+  /// @param m Matrix to access.
+  /// @param row First row of the segment.
+  /// @param col Column containing the segment.
+  /// @returns A mutable column-block expression.
   template <int SIZE, typename derived_type, concepts::index index_t_1,
             concepts::index index_t_2>
   DETRAY_HOST_DEVICE decltype(auto) vector(Eigen::MatrixBase<derived_type> &m,
@@ -154,6 +183,11 @@ struct block_getter {
     return m.template block<SIZE, 1>(row, col);
   }
 
+  /// Return a const column segment from a matrix.
+  /// @param m Source matrix.
+  /// @param row First row of the segment.
+  /// @param col Column containing the segment.
+  /// @returns A const column-block expression.
   template <int SIZE, typename derived_type, concepts::index index_t_1,
             concepts::index index_t_2>
   DETRAY_HOST_DEVICE decltype(auto) vector(
@@ -163,6 +197,10 @@ struct block_getter {
   }
 
   /// Operator setting a block
+  /// @param m Matrix to update.
+  /// @param b Block values to write.
+  /// @param row First destination row.
+  /// @param col First destination column.
   template <typename derived_type1, typename derived_type2,
             concepts::index index_t_1, concepts::index index_t_2>
   DETRAY_HOST_DEVICE void set(Eigen::MatrixBase<derived_type1> &m,

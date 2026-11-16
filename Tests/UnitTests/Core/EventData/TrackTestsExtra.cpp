@@ -16,9 +16,11 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <numeric>
+#include <optional>
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
@@ -461,6 +463,67 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
   for (const auto [e, ts] : zip(exp, t.trackStates())) {
     BOOST_CHECK_EQUAL(ts.jacobian(), BoundMatrix::Identity() * e);
   }
+}
+
+BOOST_AUTO_TEST_CASE(ReverseTrackStatesStitchJacobian) {
+  VectorTrackContainer vtc{};
+  VectorMultiTrajectory mtj{};
+  TrackContainer tc{vtc, mtj};
+
+  auto jacobian = [](double scale) {
+    BoundMatrix jac = BoundMatrix::Identity() * scale;
+    jac(eBoundLoc0, eBoundPhi) = 0.5 * scale;
+    return jac;
+  };
+
+  // first pass
+  auto first = tc.makeTrack();
+  for (std::size_t i = 0; i < 3; i++) {
+    first.appendTrackState().jacobian() = jacobian(2.0 + i);
+  }
+  first.linkForward();
+  auto firstMeasurement = first.innermostTrackState().value();
+
+  // second pass, starting at the first measurement
+  auto second = tc.makeTrack();
+  for (std::size_t i = 0; i < 3; i++) {
+    second.appendTrackState().jacobian() = jacobian(5.0 + i);
+  }
+  second.linkForward();
+  const BoundMatrix secondStart = second.innermostTrackState()->jacobian();
+
+  auto checkJacobians = [&](const std::vector<BoundMatrix>& expected) {
+    std::vector<BoundMatrix> actual;
+    tc.trackStateContainer().visitBackwards(
+        first.tipIndex(),
+        [&](const auto& ts) { actual.push_back(ts.jacobian()); });
+    BOOST_REQUIRE_EQUAL(actual.size(), expected.size());
+    for (const auto [exp, act] : zip(expected, actual)) {
+      CHECK_CLOSE_ABS(act, exp, 1e-12);
+    }
+  };
+
+  BOOST_CHECK(!tc.makeTrack().reverseTrackStates(true).has_value());
+  // reverse twice to keep the order
+  BOOST_CHECK(!first.reverseTrackStates().has_value());
+  first.reverseTrackStates();
+
+  std::optional<BoundMatrix> stitch = second.reverseTrackStates(true);
+  BOOST_REQUIRE(stitch.has_value());
+  CHECK_CLOSE_ABS(*stitch, secondStart.inverse(), 1e-12);
+
+  // stitch the reversed second pass behind the first measurement
+  firstMeasurement.previous() = second.outermostTrackState().index();
+  firstMeasurement.jacobian() = *stitch;
+  checkJacobians({jacobian(4.0), jacobian(3.0), jacobian(5.0).inverse(),
+                  jacobian(6.0).inverse(), jacobian(7.0).inverse(),
+                  BoundMatrix::Zero()});
+
+  // the old stem has a zero jacobian, so a second reversal returns nothing
+  BOOST_CHECK(!first.reverseTrackStates(true).has_value());
+  checkJacobians({jacobian(7.0), jacobian(6.0), jacobian(5.0),
+                  jacobian(3.0).inverse(), jacobian(4.0).inverse(),
+                  BoundMatrix::Zero()});
 }
 
 BOOST_AUTO_TEST_CASE(CopyTrackProxyCalibrated) {

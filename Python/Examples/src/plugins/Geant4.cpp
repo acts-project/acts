@@ -257,12 +257,12 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
   {
     using Tool = Geant4::RegionCreator;
     using Config = Tool::Config;
-    auto tool = py::class_<Tool>(mod, "RegionCreator")
+    auto tool = py::class_<Tool, std::shared_ptr<Tool>>(mod, "RegionCreator")
                     .def(py::init<const Config&>(), py::arg("config"))
                     .def_property_readonly("config", &Tool::config);
 
     auto c = py::class_<Config>(tool, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, gammaCut, electronCut, positronCut, protonCut,
+    ACTS_PYTHON_STRUCT(c, name, gammaCut, electronCut, positronCut, protonCut,
                        volumes);
   }
 }

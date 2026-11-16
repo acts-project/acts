@@ -4,6 +4,7 @@ acts_add_library(
     src/DetrayPayloadConverter.cpp
     src/DetrayMaterial.cpp
     src/DetrayNavigation.cpp
+    src/DetraySurfaceIdMap.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
@@ -27,3 +28,5 @@ target_link_libraries(
 )
 
 acts_compile_headers(PluginDetray GLOB include/**/*.hpp)
+
+add_component_dependencies(PluginDetray vecmem covfie actsvg detray)

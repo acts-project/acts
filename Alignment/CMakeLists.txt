@@ -2,6 +2,7 @@ acts_add_library(
     Alignment
     SHARED
     src/Kernel/detail/AlignmentEngine.cpp
+    src/Alignment.cpp
     ACTS_INCLUDE_FOLDER include/ActsAlignment
 )
 

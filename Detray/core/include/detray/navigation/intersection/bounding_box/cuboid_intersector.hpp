@@ -31,7 +31,8 @@ struct cuboid_intersector {
   ///
   /// @param ray is the input ray trajectory
   /// @param box is the input mask
-  /// @param mask_tolerance is the tolerance for mask edges
+  /// The optional tolerance argument is retained for intersector compatibility
+  /// and is not used by this axis-aligned box test.
   ///
   /// @return true if the cuboid aabb was intersected
   template <concepts::algebra algebra_t, typename mask_t>

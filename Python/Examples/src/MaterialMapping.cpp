@@ -9,6 +9,7 @@
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
@@ -46,15 +47,19 @@ void addMaterialMapping(py::module& mex) {
   {
     auto [alg, c] =
         declareAlgorithm<MaterialMapping, IAlgorithm>(mex, "MaterialMapping");
+    alg.def_property_readonly("material", &MaterialMapping::material,
+                              py::return_value_policy::reference_internal);
     c.def(py::init([](const Acts::GeometryContext& gc) {
             MaterialMapping::Config cfg;
             cfg.geoContext = gc;
             return cfg;
           }),
           py::arg("geoContext"));
+    ACTS_PUSH_IGNORE_DEPRECATED()
     ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappedMaterialTracks,
                        unmappedMaterialTracks, geoContext, materialMapper,
                        materialWriters);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   {

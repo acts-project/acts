@@ -12,7 +12,7 @@
 #include "detray/utils/logging.hpp"
 
 // Detray IO include(s)
-#include "detray/io/frontend/detector_reader.hpp"
+#include "detray/io/json/detector_reader.hpp"
 #include "detray/io/utils/file_handle.hpp"
 
 // Example linear algebra plugin: std::array
@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
 
   // Read the detector in
   const auto [det, names] =
-      detray::io::read_detector<detector_t>(host_mr, reader_cfg);
+      detray::io::read_detector_json<detector_t>(host_mr, reader_cfg);
 
   // Display the detector volume graph
   detray::volume_graph graph(det);

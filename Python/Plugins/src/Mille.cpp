@@ -12,30 +12,43 @@
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using ActsPlugins::MillePedeSolver;
+using ActsPlugins::MillePedeExitStatus;
+using ActsPlugins::MillePedeSolverConfig;
+using ActsPlugins::MillePedeSolverResult;
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
   {
-    auto ps = py::class_<MillePedeSolver, std::shared_ptr<MillePedeSolver>>(
-                  mille, "MillePedeSolver")
-                  .def(py::init<std::unique_ptr<Acts::Logger>>())
-                  .def("solve", &MillePedeSolver::solve);
+    using enum ActsPlugins::MillePedeExitStatus;
+    auto es = py::enum_<ActsPlugins::MillePedeExitStatus>(mille,
+                                                          "MillePedeExitStatus")
+                  .value("NotFinishedOrCrashed", NotFinishedOrCrashed)
+                  .value("NominalExit", NominalExit)
+                  .value("TolerableWarnings", TolerableWarnings)
+                  .value("SeriousWarnings", SeriousWarnings)
+                  .value("NoSolution", NoSolution)
+                  .value("Aborted", Aborted);
 
-    auto mr =
-        py::class_<MillePedeSolver::Result>(ps, "Result").def(py::init<>());
+    auto mr = py::class_<MillePedeSolverResult>(mille, "MillePedeSolverResult")
+                  .def(py::init<>());
     ACTS_PYTHON_STRUCT(mr, exitCode, exitStatus, exitMessage, resultsFile,
                        logFile, histoFile, evFile);
 
-    auto sc =
-        py::class_<MillePedeSolver::Config>(ps, "Config").def(py::init<>());
+    auto sc = py::class_<MillePedeSolverConfig>(mille, "MillePedeSolverConfig")
+                  .def(py::init<>());
     ACTS_PYTHON_STRUCT(sc, steeringFile, workDir, extraOpts, resFileName,
                        redirectStdout, logFileName, histoFileName, evFileName);
+    // unwrap Acts::Result - will throw in case of an error-result
+    mille.def("runMillePedeSolver",
+              [](const MillePedeSolverConfig& cfg, const Acts::Logger& logger) {
+                return ActsPlugins::runMillePedeSolver(cfg, logger).value();
+              });
   }
 
   {
@@ -54,12 +67,23 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
   {
     using enum ActsPlugins::MillePedeSolutionStrategy;
     mille.def("generateMillePedeSteeringFile",
-              &ActsPlugins::generateMillePedeSteeringFile);
+              [](const std::filesystem::path& destination,
+                 const ActsPlugins::MillePedeSteeringConfig& config,
+                 const Acts::Logger& logger) {
+                return ActsPlugins::generateMillePedeSteeringFile(
+                           destination, config, logger)
+                    .value();
+              });
 
     auto e = py::class_<ActsPlugins::MillePedeEqualityConstraint>(
                  mille, "MillePedeEqualityConstraint")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT(e, labelsAndWeights, constraint);
+
+    auto ps = py::class_<ActsPlugins::MillePedeParameterSeed>(
+                  mille, "MillePedeParameterSeed")
+                  .def(py::init<>());
+    ACTS_PYTHON_STRUCT(ps, label, start, fixed, preSigma);
 
     auto s = py::enum_<ActsPlugins::MillePedeSolutionStrategy>(
                  mille, "MillePedeSolutionStrategy")
@@ -81,6 +105,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
                        outlierDownweighting, downweightFractionCut, nOMPthreads,
                        nIOthreads, matIter, printCounts, chi2Cut,
                        monitorResiduals, monitorPulls, skipEmptyCons,
-                       countRecords, extraLines, constraints, inputFiles);
+                       countRecords, extraLines, constraints, seeds,
+                       inputFiles);
   }
 }

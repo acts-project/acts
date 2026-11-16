@@ -108,7 +108,7 @@ GTEST_TEST(detray_navigation, guided_navigator) {
   EXPECT_EQ(obj_tracer.object_trace.size(), sf_sequence.size())
       << debug_printer.to_string();
   for (std::size_t i = 0u; i < sf_sequence.size(); ++i) {
-    const auto &candidate = obj_tracer[i].intersection;
+    const auto &candidate = obj_tracer[i].intersection();
     auto geo_id = geometry::identifier{};
     geo_id.set_volume(0u).set_index(sf_sequence[i]);
     // The first transform in the detector belongs to the volume

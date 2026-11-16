@@ -72,6 +72,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(traccc-functions)
 
+# Honour ACTS_FORCE_ASSERTIONS in standalone builds inside the ACTS tree. When
+# traccc is built via add_subdirectory from ACTS this is a no-op.
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsForceAssertions.cmake)
+
 # Temporary setting for the traccc::scalar type, until it can be removed.
 set(TRACCC_CUSTOM_SCALARTYPE
     "float"
@@ -143,9 +147,13 @@ if(${TRACCC_BUILD_HIP} AND ${CMAKE_HIP_STANDARD} LESS 20)
     )
 endif()
 
-# In order to generate specializations for our kernels, we need to have both
-# a working Python interpreter, and a list of supported detectors.
-find_package(Python COMPONENTS Interpreter REQUIRED)
+# If we are building with CUDA, we need to find the toolkit early because it
+# contains CCCL and Thrust.
+if(TRACCC_BUILD_CUDA)
+    enable_language(CUDA)
+    find_package(CUDAToolkit REQUIRED)
+endif()
+
 # The detector types supported by this build of traccc.
 set(TRACCC_SUPPORTED_DETECTORS
     "default_detector;odd_detector;telescope_detector"
@@ -244,7 +252,7 @@ endif()
 
 # Set up CCCL.
 option(TRACCC_SETUP_THRUST "Set up the Thrust target(s) explicitly" TRUE)
-if(TRACCC_USE_SYSTEM_LIBS OR TRACCC_USE_SPACK_LIBS)
+if(TRACCC_USE_SYSTEM_LIBS OR TRACCC_USE_SPACK_LIBS OR CUDAToolkit_FOUND)
     set(TRACCC_USE_SYSTEM_THRUST_DEFAULT ON)
 else()
     set(TRACCC_USE_SYSTEM_THRUST_DEFAULT OFF)
@@ -257,8 +265,27 @@ option(
 unset(TRACCC_USE_SYSTEM_THRUST_DEFAULT)
 if(TRACCC_SETUP_THRUST)
     if(TRACCC_USE_SYSTEM_THRUST)
-        find_package(Thrust REQUIRED)
+        if(CUDAToolkit_FOUND)
+            find_package(
+                Thrust
+                REQUIRED
+                HINTS "${CUDAToolkit_LIBRARY_DIR}/cmake"
+            )
+        else()
+            find_package(Thrust REQUIRED)
+        endif()
     else()
+        if(CUDAToolkit_FOUND)
+            set(TRACCC_CCCL_DIAGNOSTIC WARNING)
+            if("$ENV{CI}")
+                set(TRACCC_CCCL_DIAGNOSTIC FATAL_ERROR)
+            endif()
+            message(
+                ${TRACCC_CCCL_DIAGNOSTIC}
+                "CUDA toolkit is available, but a bundled CCCL is to be used. This may lead to cross-version include path pollution and errors."
+            )
+            unset(TRACCC_CCCL_DIAGNOSTIC)
+        endif()
         add_subdirectory(extern/cccl)
     endif()
 endif()
@@ -358,6 +385,19 @@ if(TRACCC_SETUP_ALPAKA)
     else()
         add_subdirectory(extern/alpaka)
     endif()
+endif()
+# Alpaka drops members under NDEBUG that its (now forced) asserts still use.
+if(ACTS_FORCE_ASSERTIONS AND TARGET alpaka::alpaka)
+    get_target_property(_alpaka_target alpaka::alpaka ALIASED_TARGET)
+    if(NOT _alpaka_target)
+        set(_alpaka_target alpaka::alpaka)
+    endif()
+    set_property(
+        TARGET ${_alpaka_target}
+        APPEND
+        PROPERTY INTERFACE_COMPILE_OPTIONS -UNDEBUG
+    )
+    unset(_alpaka_target)
 endif()
 
 # Set up covfie.

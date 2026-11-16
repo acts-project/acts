@@ -124,8 +124,8 @@ GeoModelMuonMockupBuilder::trackingGeometry(
     // Current station index
     StationIdx currentIdx = getStationIdx(*it);
     const bool isBarrel =
-        (currentIdx == StationIdx ::BI || currentIdx == StationIdx ::BM ||
-         currentIdx == StationIdx ::BO);
+        (currentIdx == StationIdx::BI || currentIdx == StationIdx::BM ||
+         currentIdx == StationIdx::BO);
 
     // Find the range of boxes for the current station
     auto rangeEnd = std::find_if(it, boundingBoxes.end(),

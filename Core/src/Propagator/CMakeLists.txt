@@ -1,7 +1,9 @@
 target_sources(
     ActsCore
     PRIVATE
+        ButcherTableau.cpp
         EigenStepperError.cpp
+        GenericRungeKuttaStepper.cpp
         HelixStepper.cpp
         MultiStepperError.cpp
         NavigatorError.cpp

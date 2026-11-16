@@ -130,6 +130,31 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     }
   }
 }
+
+BOOST_AUTO_TEST_CASE(test_particle_hypothesis) {
+  std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3::Ones(), Vector3::Ones().normalized())
+          .planeSurface();
+
+  MultiComponentBoundTrackParameters pars(surface, true, particleHypothesis);
+  const BoundMatrix cov = BoundMatrix::Identity();
+  for (int i = 0; i < 4; ++i) {
+    const BoundVector params = BoundVector::Ones() * (i + 1);
+    pars.pushComponent(0.25, params, cov);
+  }
+
+  const auto newHypothesis = ParticleHypothesis::electron();
+  const auto withHypothesis = pars.withParticleHypothesis(newHypothesis);
+  BOOST_CHECK(withHypothesis.particleHypothesis() == newHypothesis);
+  BOOST_CHECK(pars.particleHypothesis() == particleHypothesis);
+  BOOST_CHECK(withHypothesis.toComponents() == pars.toComponents());
+  BOOST_CHECK(withHypothesis[0].second.particleHypothesis() == newHypothesis);
+
+  pars.setParticleHypothesis(newHypothesis);
+  BOOST_CHECK(pars.particleHypothesis() == newHypothesis);
+  BOOST_CHECK(pars.toComponents() == withHypothesis.toComponents());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

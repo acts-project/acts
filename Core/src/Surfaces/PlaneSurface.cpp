@@ -22,6 +22,7 @@
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
@@ -55,7 +56,9 @@ PlaneSurface::PlaneSurface(const Transform3& transform,
 
 PlaneSurface& PlaneSurface::operator=(const PlaneSurface& other) {
   if (this != &other) {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     Surface::operator=(other);
+    ACTS_POP_IGNORE_DEPRECATED()
     m_bounds = other.m_bounds;
   }
   return *this;
@@ -192,7 +195,8 @@ MultiIntersection3D PlaneSurface::intersect(
 }
 
 Matrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& /*gctx*/, const Vector3& /*position*/) const {
+    const GeometryContext& /*gctx*/, const Vector3& /*position*/,
+    const Vector3& /*direction*/) const {
   const Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Identity();
   return loc3DToLocBound;
 }

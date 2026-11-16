@@ -32,12 +32,8 @@ from acts.examples.alignmentmillepede import (
     MillePedeSolverAlgorithm,
 )
 from acts.mille import (
-    MillePedeSolver,
+    MillePedeSolverConfig,
     readMillePedeResult,
-    MillePedeParameterResult,
-    generateMillePedeSteeringFile,
-    MillePedeEqualityConstraint,
-    MillePedeSolutionStrategy,
     MillePedeSteeringConfig,
 )
 from acts.examples.simulation import (
@@ -127,7 +123,7 @@ def addAlignmentSandbox(
 def addMillePedeSolver(
     s: Sequencer,
     steerCfg: MillePedeSteeringConfig,
-    solverCfg: MillePedeSolver.Config,
+    solverCfg: MillePedeSolverConfig,
     logLevel: acts.logging.Level = acts.logging.INFO,
 ):
     solver = MillePedeSolverAlgorithm(
@@ -168,9 +164,9 @@ def addMisalignmentDeco(detector, trackingGeometry, seq):
     # Misalign the second tracking layer (ID = 4).
     layerToBump = acts.GeometryIdentifier(layer=4, volume=1, sensitive=1)
 
-    # shift this layer by 200 microns in the global Z direction
+    # shift this layer by 50 microns in the global Z direction
     leShift = AlignmentGeneratorGlobalShift()
-    leShift.shift = acts.Vector3(0, 0, 200.0e-3)
+    leShift.shift = acts.Vector3(0, 0, 50.0e-3)
 
     # now add some boilerplate code to make this happen
     alignDecoConfig = AlignmentDecorator.Config()
@@ -247,95 +243,11 @@ def drawResult(
     plotAlignImpacts(labels, central, sigma, formatDict, fname, title, xLim=xLim)
 
 
-def main():
-    logger = acts.getDefaultLogger("MillePedeResultReader", acts.logging.INFO)
+def addTrackingSequence(s, field, detector):
     u = acts.UnitConstants
 
-    # Can also use zero-field - but not healthy for track covariance.
-    # field = acts.NullBField()
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
-
-    parser = argparse.ArgumentParser(
-        description="MillePede alignment demo with the Telescope Detector"
-    )
-    parser.add_argument(
-        "--output",
-        "-o",
-        help="Output directory",
-        type=pathlib.Path,
-        default=pathlib.Path.cwd() / "mpali_output",
-    )
-    parser.add_argument(
-        "--events", "-n", help="Number of events", type=int, default=2000
-    )
-    parser.add_argument("--skip", "-s", help="Number of events", type=int, default=0)
-
-    args = parser.parse_args()
-
-    outputDir = args.output
-    # ensure out output dir exists
-    os.makedirs(outputDir, exist_ok=True)
-
-    # decide on at least on detector module to fix in place
-    # as a reference for the alignment.
-    # By default, fix the innermost layer.
-    fixModules = {
-        acts.GeometryIdentifier(layer=2, volume=1, sensitive=1),
-        acts.GeometryIdentifier(layer=10, volume=1, sensitive=1),
-        acts.GeometryIdentifier(layer=18, volume=1, sensitive=1),
-    }
-
-    # Set file locations for results
-
-    milleBinaryName = outputDir / "MilleBinary.root"
-    actsInternalSolution = outputDir / "ActsInternalAlignment.txt"
-    actsViaMilleSolution = outputDir / "ActsViaMilleAlignment.txt"
-    millePedeSolution = outputDir / "MillePedeAlignment.txt"
-    # configure the solver and steering file for Millepede.
-    # For this example, we use the defaults for everything and
-    # only touch the file names
-    solverCfg = MillePedeSolver.Config(
-        steeringFile="mpsteer.txt",
-        workDir="mpTmp",
-        resFileName=str(millePedeSolution),
-        redirectStdout=str(outputDir / "MillepedeAlignment.log"),
-    )
-
-    # EXAMPLE: This is how you could introduce global
-    # equality constraints to prevent a 3D
-    # translation of the entire detector:
-    # The sum of all global movements
-    # (labels = 6 * sensor_index
-    #           + 0...6 (counts degrees of freedom)
-    #           + 1 )
-    # is required to be 0 in each
-    # translation directions (1..3)
-    # Will not apply this as it would be inconsistent
-    # with the ACTS solver setup, and we want to
-    # compare side-by-side.
-
-    # eqc = [
-    #     MillePedeEqualityConstraint(
-    #     labelsAndWeights = [(1 + 6 * k+ j,1) for k in range(9) ],
-    #     constraint = 0.
-    # ) for j in range(3)]
-
-    steerCfg = MillePedeSteeringConfig(
-        inputFiles=[str(milleBinaryName)],
-        # constraints = eqc             # this would enable constraints
-    )
-
-    # More Boilerplate code - for setting up the sequence
-
     rnd = RandomNumbers(seed=42)
-    s = Sequencer(
-        events=args.events,
-        skip=args.skip,
-        numThreads=8,
-        outputDir=str(outputDir),
-    )
 
-    detector = getTelescopeDetector()
     trackingGeometry = detector.trackingGeometry()
 
     # Add a context with the alignment shift - sim and digi will "see" the
@@ -448,7 +360,85 @@ def main():
         writeTrackSummary=False,
     )
 
-    # And add our alignment sandbox
+
+def main():
+    logger = acts.getDefaultLogger("MillePedeResultReader", acts.logging.INFO)
+
+    parser = argparse.ArgumentParser(
+        description="MillePede alignment demo with the Telescope Detector"
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        help="Output directory",
+        type=pathlib.Path,
+        default=pathlib.Path.cwd() / "mpali_output",
+    )
+    parser.add_argument(
+        "--events", "-n", help="Number of events", type=int, default=2000
+    )
+    parser.add_argument("--skip", "-s", help="Number of events", type=int, default=0)
+
+    args = parser.parse_args()
+
+    outputDir = args.output
+    os.makedirs(outputDir, exist_ok=True)
+
+    # decide on at least on detector module to fix in place
+    # as a reference for the alignment.
+    # By default, fix the innermost layer.
+    fixModules = {
+        acts.GeometryIdentifier(layer=2, volume=1, sensitive=1),
+        acts.GeometryIdentifier(layer=10, volume=1, sensitive=1),
+        acts.GeometryIdentifier(layer=18, volume=1, sensitive=1),
+    }
+
+    # Set file locations for results
+    milleBinaryName = outputDir / "MilleBinary.root"
+    actsInternalSolution = outputDir / "ActsInternalAlignment.txt"
+    actsViaMilleSolution = outputDir / "ActsViaMilleAlignment.txt"
+    millePedeSolution = outputDir / "MillePedeAlignment.txt"
+
+    # configure the solver and steering file for Millepede.
+    # For this example, we use the defaults for everything and
+    # only touch the file names
+    solverCfg = MillePedeSolverConfig(
+        steeringFile="mpsteer.txt",
+        workDir="mpTmp",
+        resFileName=str(millePedeSolution),
+        redirectStdout=str(outputDir / "MillepedeAlignment.log"),
+    )
+
+    steerCfg = MillePedeSteeringConfig(
+        inputFiles=[str(milleBinaryName)],
+    )
+
+    # More Boilerplate code - for setting up the sequence
+
+    s = Sequencer(
+        events=args.events,
+        skip=args.skip,
+        numThreads=8,
+        outputDir=str(outputDir),
+    )
+
+    # Can also use zero-field - but not healthy for track covariance.
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+
+    detector = getTelescopeDetector()
+
+    trackingGeometry = detector.trackingGeometry()
+
+    # Add a context with the alignment shift - sim and digi will "see" the
+    # distorted detector, reconstruction will not
+    addMisalignmentDeco(detector, trackingGeometry, s)
+
+    # Add single particle generation, FATRAS, and reco
+    # via CKF
+    addTrackingSequence(s, field, detector)
+
+    # Add our alignment sandbox (Mille writer,
+    # ACTS-internal alignment
     addAlignmentSandbox(
         s,
         trackingGeometry,
@@ -457,7 +447,8 @@ def main():
         milleOutput=str(milleBinaryName),
         outFileInternalSolving=str(actsInternalSolution),
     )
-    # And finally read back and solve in ACTS
+
+    # Read back Mille and solve in ACTS
     addSolverFromMille(
         s,
         trackingGeometry,
@@ -467,6 +458,7 @@ def main():
         outFile=str(actsViaMilleSolution),
     )
 
+    # and solve within Millepede
     addMillePedeSolver(
         s,
         solverCfg=solverCfg,
@@ -482,7 +474,9 @@ def main():
     res_MillepedeII = readMillePedeResult(str(millePedeSolution), logger)
 
     # visualise the outcome!
-    drawResult(res_actsInternal, res_actsViaMille, res_MillepedeII, {3: 0.20})
+    drawResult(
+        res_actsInternal, res_actsViaMille, res_MillepedeII, {3: 0.05}, xLim=(-0.2, 0.2)
+    )
 
 
 if __name__ == "__main__":

@@ -57,35 +57,61 @@ struct wire_chamber_config {
 
   /// Setters
   /// @{
+  /// @brief Set the number of layers.
+  /// @param n number of layers
+  /// @return reference to the updated configuration
   constexpr wire_chamber_config &n_layers(const unsigned int n) {
     m_n_layers = n;
     return *this;
   }
+  /// @brief Set the first layer inner radius.
+  /// @param r radius of the first layer
+  /// @return reference to the updated configuration
   constexpr wire_chamber_config &first_layer_inner_radius(const scalar_t r) {
     m_first_layer_inner_rad = r;
     return *this;
   }
+  /// @brief Set the half z.
+  /// @param hz half length along z
+  /// @return reference to the updated configuration
   constexpr wire_chamber_config &half_z(const scalar_t hz) {
     m_half_z = hz;
     return *this;
   }
+  /// @brief Set the cell size.
+  /// @param c wire cell size
+  /// @return reference to the updated configuration
   constexpr wire_chamber_config &cell_size(const scalar_t c) {
     m_wire_factory_cfg.cell_size(c);
     return *this;
   }
+  /// @brief Set the stereo angle.
+  /// @param s stereo angle
+  /// @return reference to the updated configuration
   constexpr wire_chamber_config &stereo_angle(const scalar_t s) {
     m_wire_factory_cfg.stereo_angle(s);
     return *this;
   }
+  /// @brief Set the mat radius.
+  /// @param r radius of the first layer
+  /// @return reference to the updated configuration
   constexpr wire_chamber_config &mat_radius(const scalar_t r) {
     m_mat_radius = r;
     return *this;
   }
+  /// @brief Set the wire material.
+  /// @param m wire material
+  /// @return reference to the updated configuration
   constexpr wire_chamber_config &wire_material(const material<scalar_t> &m) {
     m_wire_mat = m;
     return *this;
   }
+  /// @brief Return the builder options.
+  /// @return configured builder options
   volume_builder_options builder_options() { return m_builder_opts; }
+  /// @brief Set the do check.
+  /// @param check whether to run the consistency check
+  /// @return reference to the updated configuration
   constexpr wire_chamber_config &do_check(const bool check) {
     m_do_check = check;
     return *this;
@@ -94,32 +120,58 @@ struct wire_chamber_config {
 
   /// Getters
   /// @{
+  /// @brief Return the number of layers.
+  /// @return configured number of layers
   constexpr unsigned int n_layers() const { return m_n_layers; }
+  /// @brief Return the first layer inner radius.
+  /// @return configured first layer inner radius
   constexpr scalar_t first_layer_inner_radius() const {
     return m_first_layer_inner_rad;
   }
+  /// @brief Return the half z.
+  /// @return configured half z
   constexpr scalar_t half_z() const { return m_half_z; }
+  /// @brief Return the cell size.
+  /// @return configured cell size
   constexpr scalar_t cell_size() const {
     return m_wire_factory_cfg.cell_size();
   }
+  /// @brief Return the stereo angle.
+  /// @return configured stereo angle
   constexpr scalar_t stereo_angle() const {
     return m_wire_factory_cfg.stereo_angle();
   }
+  /// @brief Return the mat radius.
+  /// @return configured mat radius
   constexpr scalar_t mat_radius() const { return m_mat_radius; }
+  /// @brief Return the wire material.
+  /// @return configured wire material
   constexpr const material<scalar_t> &wire_material() const {
     return m_wire_mat;
   }
+  /// @brief Return the layer config.
+  /// @return configured layer config
   constexpr wire_layer_generator_config<scalar_t> &layer_config() {
     return m_wire_factory_cfg;
   }
+  /// @brief Return the const wire layer configuration.
+  /// @return const wire layer configuration
   constexpr const wire_layer_generator_config<scalar_t> &layer_config() const {
     return m_wire_factory_cfg;
   }
+  /// @brief Return the material config.
+  /// @return configured material config
   constexpr auto &material_config() { return m_material_config; }
+  /// @brief Return the const material configuration.
+  /// @return const homogeneous material configuration
   constexpr const auto &material_config() const { return m_material_config; }
+  /// @brief Return the builder options.
+  /// @return configured builder options
   const volume_builder_options &builder_options() const {
     return m_builder_opts;
   }
+  /// @brief Return the do check.
+  /// @return configured do check
   constexpr bool do_check() const { return m_do_check; }
   /// @}
 
@@ -150,6 +202,10 @@ struct wire_chamber_config {
 
 };  // wire chamber config
 
+/// @brief Build a wire chamber detector.
+/// @param resource memory resource used for detector allocations
+/// @param cfg wire chamber configuration
+/// @return the detector and its name map
 template <concepts::algebra algebra_t, typename wire_shape_t>
 inline auto build_wire_chamber(
     vecmem::memory_resource &resource,

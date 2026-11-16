@@ -50,36 +50,61 @@ struct barrel_generator_config {
 
   /// Setters
   /// @{
+  /// @brief Set the half length.
+  /// @param hz half length along z
+  /// @return reference to the updated configuration
   constexpr barrel_generator_config &half_length(const scalar_t hz) {
     m_half_z = hz;
     return *this;
   }
+  /// @brief Set the module bounds.
+  /// @param bnds module mask boundary values
+  /// @return reference to the updated configuration
   barrel_generator_config &module_bounds(const std::vector<scalar_t> &bnds) {
     m_mask_values.clear();
     std::ranges::copy(bnds, std::back_inserter(m_mask_values));
     return *this;
   }
+  /// @brief Set the tilt phi.
+  /// @param tilt module tilt angle
+  /// @return reference to the updated configuration
   constexpr barrel_generator_config &tilt_phi(const scalar_t tilt) {
     m_tilt_phi = tilt;
     return *this;
   }
+  /// @brief Set the radius.
+  /// @param r barrel radius
+  /// @return reference to the updated configuration
   constexpr barrel_generator_config &radius(const scalar_t r) {
     m_radius = r;
     return *this;
   }
+  /// @brief Set the radial stagger.
+  /// @param r_st radial stagger
+  /// @return reference to the updated configuration
   constexpr barrel_generator_config &radial_stagger(const scalar_t r_st) {
     m_radial_stagger = r_st;
     return *this;
   }
+  /// @brief Set the z overlap.
+  /// @param zo overlap in z
+  /// @return reference to the updated configuration
   constexpr barrel_generator_config &z_overlap(const scalar_t zo) {
     m_z_overlap = zo;
     return *this;
   }
+  /// @brief Set the binning.
+  /// @param n_phi number of bins in phi
+  /// @param n_z number of bins in z
+  /// @return reference to the updated configuration
   constexpr barrel_generator_config &binning(const unsigned int n_phi,
                                              const unsigned int n_z) {
     m_binning = {n_phi, n_z};
     return *this;
   }
+  /// @brief Set the binning.
+  /// @param binning number of bins in phi and z
+  /// @return reference to the updated configuration
   constexpr barrel_generator_config &binning(
       const std::pair<unsigned int, const unsigned int> &binning) {
     m_binning = binning;
@@ -89,12 +114,26 @@ struct barrel_generator_config {
 
   /// Getters
   /// @{
+  /// @brief Return the half length.
+  /// @return configured half length
   constexpr scalar_t half_length() const { return m_half_z; }
+  /// @brief Return the module bounds.
+  /// @return configured module bounds
   const std::vector<scalar_t> &module_bounds() const { return m_mask_values; }
+  /// @brief Return the tilt phi.
+  /// @return configured tilt phi
   constexpr scalar_t tilt_phi() const { return m_tilt_phi; }
+  /// @brief Return the radius.
+  /// @return configured radius
   constexpr scalar_t radius() const { return m_radius; }
+  /// @brief Return the radial stagger.
+  /// @return configured radial stagger
   constexpr scalar_t radial_stagger() const { return m_radial_stagger; }
+  /// @brief Return the z overlap.
+  /// @return configured z overlap
   constexpr scalar_t z_overlap() const { return m_z_overlap; }
+  /// @brief Return the binning.
+  /// @return configured binning
   constexpr const auto &binning() const { return m_binning; }
   /// @}
 };
@@ -130,6 +169,7 @@ class barrel_generator final : public surface_factory_interface<detector_t> {
   void push_back(
       surface_data<detector_t> && /*unused*/) override { /*Do nothing*/ }
   DETRAY_HOST
+  /// @brief Ignore supplied surface data because this factory generates its own.
   auto push_back(std::vector<surface_data<detector_t>> && /*unused*/)
       -> void override { /*Do nothing*/ }
   /// @}
@@ -142,6 +182,7 @@ class barrel_generator final : public surface_factory_interface<detector_t> {
   /// @param masks the masks of the surfaces.
   /// @param ctx the geometry context (not needed for portals).
   DETRAY_HOST
+  /// @return range of generated surfaces
   auto operator()(typename detector_t::volume_type &volume,
                   typename detector_t::surface_lookup_container &surfaces,
                   typename detector_t::transform_container &transforms,

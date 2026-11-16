@@ -102,10 +102,33 @@ install(
     DESTINATION ${install_package_config_dir}
 )
 
-# install target configs for all available components
+# install target configs and dependency files for all available components.
+# components can be installed separately, so each one records the ACTS version
+# it was built with and the versions of its external dependencies.
 foreach(_component ${_components})
     install(
         EXPORT Acts${_component}Targets
+        DESTINATION ${install_package_config_dir}
+    )
+    get_property(
+        _dependencies
+        GLOBAL
+        PROPERTY ACTS_COMPONENT_DEPENDENCIES_${_component}
+    )
+    set(_find_dependencies)
+    foreach(_dependency ${_dependencies})
+        string(
+            APPEND _find_dependencies
+            "find_dependency(${_dependency} ${${_dependency}_VERSION} CONFIG EXACT)\n"
+        )
+    endforeach()
+    configure_file(
+        ${CMAKE_CURRENT_LIST_DIR}/ActsComponentDependencies.cmake.in
+        ${PROJECT_BINARY_DIR}/Acts${_component}Dependencies.cmake
+        @ONLY
+    )
+    install(
+        FILES ${PROJECT_BINARY_DIR}/Acts${_component}Dependencies.cmake
         DESTINATION ${install_package_config_dir}
     )
 endforeach()

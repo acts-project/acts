@@ -44,6 +44,17 @@ struct MillePedeEqualityConstraint {
   double constraint;     ///< right hand side.
 };
 
+/// encodes pre-configuration for an alignment parameter.
+/// Allows to assign a "pre-sigma" (= soft mode cut),
+/// to lock the parameter and to assign a starting value
+struct MillePedeParameterSeed {
+  int label = 0;          ///< parameter label
+  double start = 0.0;     ///< starting value
+  bool fixed = false;     ///< if true, parameter is fixed in the fit
+  double preSigma = 0.0;  ///< if non-zero, add a diagonal constraint
+                          ///< for this parameter to condition the system
+};
+
 /// Configuration options.
 /// The full set of options is described at
 /// https://millepede.pages.desy.de/millepede-ii/option_page.html and
@@ -80,7 +91,8 @@ struct MillePedeSteeringConfig {
   std::vector<std::string> extraLines =
       {};  ///< any other config lines to add to the steering file
   std::vector<MillePedeEqualityConstraint> constraints =
-      {};                                    ///< equality constraints to apply
+      {};  ///< equality constraints to apply
+  std::vector<MillePedeParameterSeed> seeds = {};
   std::vector<std::string> inputFiles = {};  ///< input files to use
 };
 

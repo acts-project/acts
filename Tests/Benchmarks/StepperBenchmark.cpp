@@ -9,6 +9,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/GenericRungeKuttaStepper.hpp"
 #include "Acts/Propagator/HelixStepper.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
@@ -34,6 +35,8 @@ int main(int argc, char* argv[]) {
   benchmark.run(eigenStepper, "EigenStepper");
   HelixStepper helixStepper(bField);
   benchmark.run(helixStepper, "HelixStepper");
+  GenericRungeKuttaStepper genericRungeKuttaStepper(bField);
+  benchmark.run(genericRungeKuttaStepper, "GenericRungeKuttaStepper");
   StraightLineStepper straightLineStepper;
   benchmark.run(straightLineStepper, "StraightLineStepper");
   SympyStepper sympyStepper(bField);

@@ -74,6 +74,11 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
   /// The direction of the propagation
   Vector3 direction = Vector3::Zero();
 
+  /// Global geometric curvature last prepared for navigation, in inverse length
+  /// units. Refreshed before navigation calls, including after actor updates.
+  /// Unchanged by reversing the propagation direction.
+  Vector3 curvature = Vector3::Zero();
+
   /// Stepper state - internal state of the Stepper
   stepper_state_t stepping;
 

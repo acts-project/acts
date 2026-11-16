@@ -333,6 +333,11 @@ class Propagator final
       const Surface* target = nullptr) const;
 
  private:
+  /// Refresh position, navigation direction, and geometric curvature from the
+  /// current stepper state. Propagates magnetic-field lookup failures.
+  template <typename propagator_state_t>
+  Result<void> updateNavigationState(propagator_state_t& state) const;
+
   /// Implementation of propagation algorithm
   Stepper m_stepper;
 

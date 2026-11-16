@@ -173,8 +173,8 @@ def test_cxx23_is_published_for_both_compilers():
 
 
 def test_cxx20_request_stays_on_its_compiler_when_only_cxx23_is_published():
-    # ACTS' clang_tidy job asks for clang with no cxx_std, so cxx20, and
-    # v24.0.3 publishes llvm at cxx23 only. It must fall back within llvm: gcc
+    # An explicit cxx20 request against v24.0.3 encounters llvm at cxx23 only.
+    # It must fall back within llvm: gcc
     # does publish cxx20, and answering with it would hand a clang job a
     # gcc-built stack.
     got = _select(V24_ASSETS, UBUNTU26, "clang@22.1.8", cxx="cxx20")

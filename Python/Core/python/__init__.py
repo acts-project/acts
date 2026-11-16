@@ -33,7 +33,14 @@ if (
 
 
 def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
-    for prefix in ("Eigen", "Atlas", "Helix", "StraightLine", "Sympy"):
+    for prefix in (
+        "Eigen",
+        "Atlas",
+        "Helix",
+        "GenericRungeKutta",
+        "StraightLine",
+        "Sympy",
+    ):
         _stepper = getattr(ActsPythonBindings, f"{prefix}Stepper")
         if isinstance(stepper, _stepper):
             return getattr(ActsPythonBindings, f"{prefix}Propagator")(
@@ -64,13 +71,37 @@ class with_log_threshold:
 
 @staticmethod
 def _decoratorFromFile(file: Union[str, Path], **kwargs):
+    warnings.warn(
+        "IMaterialDecorator.fromFile is deprecated; load material with "
+        "TrackingGeometryMaterialJsonConverter.fromFile() and apply it to the geometry.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if isinstance(file, str):
         file = Path(file)
 
     kwargs.setdefault("level", ActsPythonBindings.logging.INFO)
 
-    if file.suffix in (".json", ".cbor"):
-        from .json import MaterialMapJsonConverter, JsonMaterialDecorator
+    if file.suffix in (".json", ".cbor", ".zst"):
+        from .json import (
+            TrackingGeometryMaterialJsonConverter,
+            MaterialMapDecorator,
+            MaterialMapJsonConverter,
+            JsonMaterialDecorator,
+        )
+
+        try:
+            material = TrackingGeometryMaterialJsonConverter().fromFile(file)
+        except ValueError as error:
+            if not str(error).startswith("Legacy material format"):
+                raise
+        else:
+            unsupported = set(kwargs) - {"level"}
+            if unsupported:
+                raise TypeError(
+                    f"Unsupported material reader options: {sorted(unsupported)}"
+                )
+            return MaterialMapDecorator(material)
 
         c = MaterialMapJsonConverter.Config()
         for k in kwargs.keys():

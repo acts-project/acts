@@ -21,6 +21,8 @@
 #include <limits>
 #include <string>
 
+#include <boost/container/small_vector.hpp>
+
 namespace ActsExamples {
 
 /// Select particles by applying some selection cuts.

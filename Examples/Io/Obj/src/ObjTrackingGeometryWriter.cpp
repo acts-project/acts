@@ -21,7 +21,8 @@ namespace ActsExamples {
 
 ObjTrackingGeometryWriter::ObjTrackingGeometryWriter(
     const ObjTrackingGeometryWriter::Config& config, Acts::Logging::Level level)
-    : m_logger{Acts::getDefaultLogger(name(), level)}, m_cfg(config) {}
+    : m_logger{Acts::getDefaultLogger("ObjTrackingGeometryWriter", level)},
+      m_cfg(config) {}
 
 std::string ObjTrackingGeometryWriter::name() const {
   return "ObjTrackingGeometryWriter";

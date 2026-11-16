@@ -29,11 +29,14 @@ set(ACTS_SETUP_EIGEN3 TRUE CACHE BOOL "Set up Eigen in the Acts code")
 set(ACTS_BUILD_PLUGIN_JSON TRUE CACHE BOOL "Build JSON plugin in Acts")
 set(ACTS_SETUP_DETRAY TRUE CACHE BOOL "Set up Detray in the Acts code")
 
-# Acts and Detray are in-tree, first-party code here, so build them with
-# warnings-as-errors (matching Acts' own CI). This catches warnings in their own
+# Acts and Detray are in-tree, first-party code here, so when
+# TRACCC_FAIL_ON_WARNINGS is set, build them with warnings-as-errors too
+# (matching Acts' own CI). This catches warnings in their own
 # compilation -- not just those in headers pulled into traccc translation units,
 # which are already covered by dropping the -isystem treatment.
-set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
+if(TRACCC_FAIL_ON_WARNINGS)
+    set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
+endif()
 
 # Set the detray log level
 set(DETRAY_SET_LOGGING
@@ -52,11 +55,6 @@ set(DETRAY_BUILD_VALIDATION_TOOLS TRUE CACHE BOOL "")
 set(DETRAY_BUILD_TEST_UTILS TRUE CACHE BOOL "")
 # HACK: Make sure that ACTS builds ACTSVG, which is required by Detray validation tools.
 set(ACTS_BUILD_PLUGIN_ACTSVG TRUE CACHE BOOL "")
-
-# The ITk metadata is required, so explicitly request that it be built.
-if(NOT ("itk_metadata" IN_LIST DETRAY_GENERATE_METADATA))
-    list(APPEND DETRAY_GENERATE_METADATA "itk_metadata")
-endif()
 
 # Build the colocated Acts (and, transitively, Detray) as a subdirectory of this
 # build. An explicit binary dir is required because the source lives outside the

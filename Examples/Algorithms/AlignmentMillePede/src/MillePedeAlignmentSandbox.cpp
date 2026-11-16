@@ -16,6 +16,7 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -253,12 +254,9 @@ ProcessCode MillePedeAlignmentSandbox::solveInternal() {
                   << std::sqrt(alignResult.alignmentCovariance(row, row)));
       }
     }
-    std::ofstream resFile;
-    resFile.open(m_cfg.outFileInternalSolving);
     // also write in a text file format that can be parsed consistently with
     // Millepede output
-    ActsPlugins::ActsToMille::dumpAsMillepedeRes(alignResult, resFile);
-    resFile.close();
+    ActsAlignment::dumpResultAsMP2(alignResult, m_cfg.outFileInternalSolving);
   }
 
   if (!m_cfg.outFileDecomposition.empty()) {

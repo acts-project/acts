@@ -83,10 +83,31 @@ void addConstraint(std::ofstream& out, const EqualityConstraint& constraint,
   out << std::endl;
 }
 
+void addSeed(std::ofstream& out, const MillePedeParameterSeed& seed,
+             const Acts::Logger& /*logger*/) {
+  const auto& [label, start, fixed, preSigma] = seed;
+  double sigma = preSigma;
+  // negative uncertainty means fixed parameter
+  if (fixed) {
+    sigma = -1.;
+  }
+  out << std::format("    {}     {:.6f}    {:.6f}", label, start, sigma)
+      << std::endl;
+}
+
 void addConstraintsBlock(std::ofstream& out, const Config& conf,
                          const Acts::Logger& logger) {
   for (const EqualityConstraint& con : conf.constraints) {
     addConstraint(out, con, logger);
+  }
+  out << std::endl;
+}
+
+void addSeedBlock(std::ofstream& out, const Config& conf,
+                  const Acts::Logger& logger) {
+  out << " Parameter ! label    start value    pre-sigma" << std::endl;
+  for (const MillePedeParameterSeed& seed : conf.seeds) {
+    addSeed(out, seed, logger);
   }
   out << std::endl;
 }
@@ -158,6 +179,25 @@ Acts::Result<std::filesystem::path> ActsPlugins::generateMillePedeSteeringFile(
     }
     addConstraintsBlock(theCons, config, logger());
     theCons.close();
+  }
+
+  if (!config.seeds.empty()) {
+    std::filesystem::path seedFile = destination;
+    seedFile.replace_extension("pars.txt");
+    theSteer << "*** Parameter seed file " << std::endl;
+    if (seedFile.is_relative()) {
+      seedFile = std::filesystem::current_path() / seedFile;
+    }
+    theSteer << seedFile.string() << std::endl;
+    std::cout << seedFile.string() << std::endl;
+    std::ofstream theSeed(seedFile);
+    if (!theSteer.is_open()) {
+      ACTS_ERROR("Unable to create the MP parameter seed file " << seedFile);
+      return Acts::Result<std::filesystem::path>::failure(
+          MillePedeError::UnableToWriteSteering);
+    }
+    addSeedBlock(theSeed, config, logger());
+    theSeed.close();
   }
 
   addInputBlock(theSteer, config, logger());

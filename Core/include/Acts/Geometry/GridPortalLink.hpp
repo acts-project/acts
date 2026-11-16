@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Geometry/PortalError.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -114,6 +115,27 @@ class GridPortalLink : public PortalLinkBase {
   static std::unique_ptr<GridPortalLink> make(
       const std::shared_ptr<RegularSurface>& surface, TrackingVolume& volume,
       AxisDirection direction);
+
+  /// Factory function for a one-dimensional grid portal link from a
+  /// type-erased axis. Dispatches to the templated overload inside Core, so
+  /// callers do not instantiate every axis type themselves.
+  /// @param surface The surface
+  /// @param direction The binning direction
+  /// @param axis The axis to use for the binning
+  /// @return A unique pointer to the grid portal link
+  static std::unique_ptr<GridPortalLink> make(
+      const std::shared_ptr<RegularSurface>& surface, AxisDirection direction,
+      const IAxis& axis);
+
+  /// Factory function for a two-dimensional grid portal link from type-erased
+  /// axes, see the one-dimensional overload.
+  /// @param surface The surface
+  /// @param axis0 The first axis to use for the binning
+  /// @param axis1 The second axis to use for the binning
+  /// @return A unique pointer to the grid portal link
+  static std::unique_ptr<GridPortalLink> make(
+      const std::shared_ptr<RegularSurface>& surface, const IAxis& axis0,
+      const IAxis& axis1);
 
   /// Merge two grid portal links into a single one. The routine can merge
   /// one-dimensional, two-dimensional and mixed links. The merge will try to
@@ -449,11 +471,20 @@ class GridPortalLinkT : public GridPortalLink {
   /// @param direction The binning direction
   /// @param axes The axes for the grid
   /// @note The axes are checked for consistency with the bounds of @p surface.
+  /// @throws std::invalid_argument if an axis has an open boundary type
   GridPortalLinkT(std::shared_ptr<RegularSurface> surface,
                   AxisDirection direction, Axes&&... axes)
       : GridPortalLink(std::move(surface), direction),
         m_grid(std::tuple{std::move(axes)...}) {
     using enum AxisDirection;
+
+    // prevent open axis from having a nullptr edge from under/overflow bins
+    for (const IAxis* axis : m_grid.axes()) {
+      if (axis->getBoundaryType() == AxisBoundaryType::Open) {
+        throw std::invalid_argument(
+            "GridPortalLink: open axis boundary type is not supported");
+      }
+    }
 
     if (const auto* cylinder =
             dynamic_cast<const CylinderSurface*>(m_surface.get())) {
@@ -575,14 +606,27 @@ class GridPortalLinkT : public GridPortalLink {
 
   /// Lookup the tracking volume at a position on the surface
   /// @param position The local position
-  /// @note The position is required to be on the associated surface
-  /// @return The tracking volume (can be null)
+  /// @param tolerance The tolerance on the surface bounds
+  /// @note The position is required to be on the associated surface. A position
+  ///       outside the bounds by less than @p tolerance (a portal reached at
+  ///       its edge) is moved onto the bounds before the lookup.
+  /// @return The tracking volume (can be null), or an error if the position is
+  ///         outside the bounds by more than @p tolerance
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& /*gctx*/, const Vector2& position,
-      double /*tolerance*/ = s_onSurfaceTolerance) const override {
-    throw_assert(surface().insideBounds(position, BoundaryTolerance::None()),
-                 "Checking volume outside of bounds");
-    return m_grid.atPosition(m_projection(position));
+      double tolerance = s_onSurfaceTolerance) const override {
+    if (surface().insideBounds(position, BoundaryTolerance::None())) {
+      return m_grid.atPosition(m_projection(position));
+    }
+    if (!surface().insideBounds(
+            position, BoundaryTolerance::AbsoluteEuclidean(tolerance))) {
+      return Result<const TrackingVolume*>::failure(
+          PortalError::PositionOutsideLinkBounds);
+    }
+    const SurfaceBounds& bounds = surface().bounds();
+    const Vector2 onBounds =
+        bounds.closestPoint(position, bounds.boundToCartesianMetric(position));
+    return m_grid.atPosition(m_projection(onBounds));
   }
 
  private:

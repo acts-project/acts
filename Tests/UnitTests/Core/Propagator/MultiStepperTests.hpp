@@ -449,6 +449,10 @@ struct MultiStepperTester {
     multi_stepper.initialize(multi_state, multi_pars);
     single_stepper.initialize(single_state, std::get<1>(multi_pars[0]));
 
+    const auto curvature = multi_stepper.curvature(multi_state);
+    BOOST_REQUIRE(curvature.ok());
+    BOOST_CHECK_SMALL(curvature->norm(), 1e-18);
+
     // Update surface status and check
     {
       auto status = multi_stepper.updateSurfaceStatus(
@@ -457,6 +461,13 @@ struct MultiStepperTester {
           ConstrainedStep::Type::Navigator);
 
       BOOST_CHECK_EQUAL(status, IntersectionStatus::reachable);
+
+      const auto curvedStatus = multi_stepper.updateSurfaceStatusWithCurvature(
+          multi_state, *right_surface, 0, Direction::Forward(),
+          BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+          ConstrainedStep::Type::Navigator);
+      BOOST_REQUIRE(curvedStatus.ok());
+      BOOST_CHECK_EQUAL(*curvedStatus, status);
 
       auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
       auto cmp_1 = *cmp_iterable.begin();

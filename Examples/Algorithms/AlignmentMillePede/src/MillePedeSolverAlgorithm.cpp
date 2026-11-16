@@ -27,9 +27,8 @@ ProcessCode MillePedeSolverAlgorithm::finalize() {
   }
   ACTS_INFO("=== Proceeding to run Millepede-II alignment fit ===");
 
-  ActsPlugins::MillePedeSolver solver(logger().clone());
-
-  const auto& solverResult = solver.solve(m_cfg.solverConfig);
+  const auto& solverResult =
+      ActsPlugins::runMillePedeSolver(m_cfg.solverConfig, logger());
 
   if (!solverResult.ok()) {
     ACTS_ERROR("=== Alignment FAILED! ===");

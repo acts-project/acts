@@ -51,7 +51,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsRoot, root) {
                    std::shared_ptr<RootMaterialDecorator>>(
             root, "RootMaterialDecorator")
             .def(py::init<RootMaterialDecorator::Config, Logging::Level>(),
-                 py::arg("config"), py::arg("level"));
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("materialMaps",
+                                   &RootMaterialDecorator::materialMaps);
 
     using Config = RootMaterialDecorator::Config;
     auto c = py::class_<Config>(rmd, "Config").def(py::init<>());

@@ -58,11 +58,9 @@ void navigation_validation_device(
         &truth_intersection_traces_view,
     vecmem::data::jagged_vector_view<intersection_record<detector_t>>
         &recorded_intersections_view,
-    vecmem::data::vector_view<
-        material_validator::track_material<typename detector_t::scalar_type>>
+    vecmem::data::vector_view<material_validator::track_material>
         &track_mat_view,
-    vecmem::data::jagged_vector_view<
-        material_record<typename detector_t::scalar_type>> &mat_steps_view);
+    vecmem::data::jagged_vector_view<material_record> &mat_steps_view);
 
 /// Prepare data for device navigation run
 template <typename bfield_t, concepts::detector detector_t>
@@ -73,9 +71,8 @@ inline auto run_navigation_validation(
     bfield_t field_data,
     const std::vector<dvector<intersection_record<detector_t>>>
         &truth_intersection_traces) {
-  using scalar_t = dscalar<typename detector_t::algebra_type>;
-  using material_record_t = material_record<scalar_t>;
-  using track_material_t = material_validator::track_material<scalar_t>;
+  using material_record_t = material_record;
+  using track_material_t = material_validator::track_material;
 
   // Helper object for performing memory copies (to CUDA devices)
   vecmem::cuda::copy cuda_cpy;
@@ -299,7 +296,7 @@ class navigation_validation : public test::fixture_base<> {
       const auto &trck_param = start.track_param();
       trajectory_type test_traj = get_parametrized_trajectory(trck_param);
 
-      const scalar q = start.charge;
+      const scalar q = start.template charge<>();
       const scalar pT{q == 0.f ? 1.f * unit<scalar>::GeV : trck_param.pT(q)};
       const scalar p{q == 0.f ? 1.f * unit<scalar>::GeV : trck_param.p(q)};
 
@@ -324,8 +321,8 @@ class navigation_validation : public test::fixture_base<> {
       } else {
         // Adjust the track charge, which is unknown to the navigation
         for (auto &record : recorded_trace) {
-          record.charge = q;
-          record.p_mag = p;
+          record.charge(q);
+          record.p(p);
         }
 
         // Compare truth and recorded data elementwise
@@ -362,8 +359,8 @@ class navigation_validation : public test::fixture_base<> {
       navigation_validator::surface_stats n_truth{};
       navigation_validator::surface_stats n_nav{};
       for (std::size_t j = 0; j < truth_trace.size(); ++j) {
-        const auto truth_desc = truth_trace[j].intersection.surface();
-        const auto rec_desc = recorded_trace[j].intersection.surface();
+        const auto truth_desc = truth_trace.at(j).intersection().surface();
+        const auto rec_desc = recorded_trace.at(j).intersection().surface();
 
         // Exclude dummy records for missing surfaces
         if (!truth_desc.identifier().is_invalid()) {

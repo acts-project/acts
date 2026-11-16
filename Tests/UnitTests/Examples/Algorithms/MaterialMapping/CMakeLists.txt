@@ -1,0 +1,3 @@
+set(unittest_extra_libraries ActsExamplesMaterialMapping)
+
+add_unittest(MaterialMapping MaterialMappingTests.cpp)

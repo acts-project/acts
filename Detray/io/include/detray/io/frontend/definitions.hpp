@@ -23,8 +23,10 @@
 /// The following enums are global for all detectors
 namespace detray::io {
 
+/// Default scalar precision used for serialized geometry payloads.
 using scalar = double;
 
+/// Supported serialization formats.
 enum class format { json = 0u };
 
 /// Enumerate the shape primitives globally
@@ -110,6 +112,10 @@ using frame_registry =
     os << #x;          \
     break
 
+/// Write a surface-shape identifier using its enumerator name.
+/// @param os output stream
+/// @param sid identifier to print
+/// @return the output stream
 DETRAY_HOST inline std::ostream& operator<<(std::ostream& os, shape_id sid) {
   switch (sid) {
     using enum shape_id;
@@ -134,6 +140,10 @@ DETRAY_HOST inline std::ostream& operator<<(std::ostream& os, shape_id sid) {
   return os;
 }
 
+/// Write a material representation identifier using its enumerator name.
+/// @param os output stream
+/// @param mid identifier to print
+/// @return the output stream
 DETRAY_HOST inline std::ostream& operator<<(std::ostream& os, material_id mid) {
   switch (mid) {
     using enum material_id;
@@ -160,6 +170,10 @@ DETRAY_HOST inline std::ostream& operator<<(std::ostream& os, material_id mid) {
   return os;
 }
 
+/// Write a navigation-accelerator identifier using its enumerator name.
+/// @param os output stream
+/// @param aid identifier to print
+/// @return the output stream
 DETRAY_HOST inline std::ostream& operator<<(std::ostream& os, accel_id aid) {
   switch (aid) {
     using enum accel_id;

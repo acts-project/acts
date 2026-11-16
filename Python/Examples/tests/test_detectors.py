@@ -181,17 +181,29 @@ def test_odd(odd_detector):
 # ODD v6 adds a calorimeter and a muon system. Neither contributes surfaces to
 # the tracking geometry, so the count must stay at 18824 as they are staged in.
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
-def test_odd_tracker():
+@pytest.mark.parametrize("gen3", [False, True])
+def test_odd_tracker(gen3):
     from acts.examples.odd import getOpenDataDetector
 
     with getOpenDataDetector(
-        buildTracker=True, buildCalorimeter=False, buildMuonSystem=False
+        buildTracker=True, buildCalorimeter=False, buildMuonSystem=False, gen3=gen3
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
 
-        trackingGeometry.visitSurfaces(check_extra_odd)
+        if not gen3:
+            trackingGeometry.visitSurfaces(check_extra_odd)
 
         assert count_surfaces(trackingGeometry) == 18824
+
+        field = detector.field
+        cache = field.makeCache(acts.MagneticFieldContext())
+        # ODD v6 defines a 3 T solenoid, not a globally constant field.
+        for position, expected in (
+            (acts.Vector3(0, 0, 0), (0, 0, 3 * acts.UnitConstants.T)),
+            (acts.Vector3(0, 0, 100 * acts.UnitConstants.m), (0, 0, 0)),
+        ):
+            actual = field.getField(position, cache)
+            assert [actual[i] for i in range(3)] == pytest.approx(expected)
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")

@@ -9,16 +9,24 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/KDTree.hpp"
 #include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsExamples/Geant4/AlgebraConverters.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
+#include <optional>
 #include <ostream>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -139,6 +147,25 @@ std::vector<const Acts::Surface*> SensitiveCandidates::queryPosition(
   }
   return surfaces;
 }
+const Acts::GeometryObject* SensitiveCandidatesBase::queryRegion(
+    const Acts::GeometryContext& /*gctx*/,
+    const Acts::Vector3& /*position*/) const {
+  return nullptr;
+}
+
+const Acts::GeometryObject* SensitiveCandidates::queryRegion(
+    const Acts::GeometryContext& gctx, const Acts::Vector3& position) const {
+  // Must resolve the same object that `queryPosition` takes the surfaces from
+  switch (m_trackingGeo->geometryVersion()) {
+    using enum Acts::TrackingGeometry::GeometryVersion;
+    case Gen1:
+      return m_trackingGeo->associatedLayer(gctx, position);
+    case Gen3:
+      return m_trackingGeo->resolveLowestTrackingVolume(gctx, position).value();
+  }
+  return nullptr;
+}
+
 std::vector<const Acts::Surface*> SensitiveCandidates::queryAll() const {
   std::vector<const Acts::Surface*> surfaces;
 
@@ -149,12 +176,151 @@ std::vector<const Acts::Surface*> SensitiveCandidates::queryAll() const {
   return surfaces;
 }
 
+/// Candidate surfaces of one region together with their centers, and a k-d
+/// tree over the centers. It finds the first candidate centered at a position
+/// without computing and comparing the centers of all candidates.
+class SensitiveSurfaceMapper::CandidateIndex {
+ public:
+  /// @param surfaces the candidate surfaces, in the order they are matched
+  /// @param gctx the geometry context to compute the centers
+  /// @param buildTree whether to build the tree; without it the center lookup
+  ///        is a linear scan, which is cheaper for a single lookup
+  CandidateIndex(std::vector<const Acts::Surface*> surfaces,
+                 const Acts::GeometryContext& gctx, bool buildTree)
+      : m_surfaces{std::move(surfaces)} {
+    m_centers.reserve(m_surfaces.size());
+    for (const auto [i, surface] : Acts::enumerate(m_surfaces)) {
+      m_centers.push_back(surface->center(gctx));
+      if (surface->bounds().type() == Acts::SurfaceBounds::eAnnulus) {
+        m_annulusIndices.push_back(i);
+      }
+    }
+    if (!buildTree) {
+      return;
+    }
+    std::vector<std::size_t> indexed;
+    for (const auto [i, center] : Acts::enumerate(m_centers)) {
+      if (isIndexable(center)) {
+        indexed.push_back(i);
+      } else {
+        m_unindexed.push_back(i);
+      }
+    }
+    // Identical centers share one tree entry: the tree construction can
+    // recurse without end on many identical points
+    const auto lexicographic = [&](std::size_t a, std::size_t b) {
+      const Acts::Vector3& ca = m_centers[a];
+      const Acts::Vector3& cb = m_centers[b];
+      return std::tie(ca.x(), ca.y(), ca.z()) <
+             std::tie(cb.x(), cb.y(), cb.z());
+    };
+    std::ranges::sort(indexed, lexicographic);
+    CenterTree::vector_t entries;
+    for (const std::size_t i : indexed) {
+      const Acts::Vector3& center = m_centers[i];
+      if (m_groups.empty() || center != m_centers[m_groups.back().front()]) {
+        m_groups.emplace_back();
+        entries.push_back(
+            {{center.x(), center.y(), center.z()}, m_groups.size() - 1});
+      }
+      m_groups.back().push_back(i);
+    }
+    m_tree.emplace(std::move(entries));
+  }
+
+  bool empty() const { return m_surfaces.empty(); }
+  std::size_t size() const { return m_surfaces.size(); }
+  const Acts::Surface& surface(std::size_t i) const { return *m_surfaces[i]; }
+  const Acts::Vector3& center(std::size_t i) const { return m_centers[i]; }
+
+  /// Indices of the candidates with annulus bounds, in ascending order
+  const std::vector<std::size_t>& annulusIndices() const {
+    return m_annulusIndices;
+  }
+
+  /// Indices of all candidates whose center compares equal to @p position,
+  /// in ascending order. The first one is what a linear scan in candidate
+  /// order would find.
+  std::vector<std::size_t> centerMatches(const Acts::Vector3& position) const {
+    std::vector<std::size_t> result;
+    const auto check = [&](std::size_t i) {
+      if (m_comparator.compare<3>(m_centers[i], position) == 0) {
+        result.push_back(i);
+      }
+    };
+    if (!m_tree.has_value() || !isIndexable(position)) {
+      for (std::size_t i = 0; i < m_centers.size(); ++i) {
+        check(i);
+      }
+      return result;
+    }
+    std::ranges::for_each(m_unindexed, check);
+    CenterTree::range_t range;
+    for (std::size_t d = 0; d < 3; ++d) {
+      range.set(d, position[d] - s_searchMargin, position[d] + s_searchMargin);
+    }
+    m_tree->rangeSearchMapDiscard(
+        range,
+        [&](const CenterTree::coordinate_t& /*center*/, std::size_t group) {
+          std::ranges::for_each(m_groups[group], check);
+        });
+    std::ranges::sort(result);
+    return result;
+  }
+
+ private:
+  using CenterTree = Acts::KDTree<3, std::size_t>;
+
+  /// Translation tolerance of the center comparison
+  static constexpr double s_tolerance = 0.1 * Acts::UnitConstants::um;
+  /// Half width of the tree search range around a position, larger than the
+  /// tolerance so that rounding of the range bounds can not exclude a match
+  static constexpr double s_searchMargin = 2. * s_tolerance;
+  /// Larger coordinates are not indexed: their rounding error would no
+  /// longer be negligible against the tolerance
+  static constexpr double s_maxCoordinate = 1000. * Acts::UnitConstants::km;
+
+  /// Whether a position can be indexed. Other centers are always compared,
+  /// other positions use the linear scan.
+  static bool isIndexable(const Acts::Vector3& position) {
+    // Also false for NaN
+    return (position.array().abs() < s_maxCoordinate).all();
+  }
+
+  std::vector<const Acts::Surface*> m_surfaces;
+  std::vector<Acts::Vector3> m_centers;
+  std::vector<std::size_t> m_annulusIndices;
+  /// Compares only positions, the rotation tolerance is not used
+  Acts::detail::TransformComparator m_comparator{
+      s_tolerance, 0.01 * Acts::UnitConstants::mrad};
+  /// Candidates with identical, indexable centers, by tree entry
+  std::vector<std::vector<std::size_t>> m_groups;
+  std::optional<CenterTree> m_tree;
+  std::vector<std::size_t> m_unindexed;
+};
+
+/// Candidate lookups shared over one traversal of the Geant4 tree
+struct SensitiveSurfaceMapper::Cache {
+  /// Per region returned by `SensitiveCandidatesBase::queryRegion`
+  std::unordered_map<const Acts::GeometryObject*, CandidateIndex> regions;
+  /// All sensitive surfaces, the fallback if no region has candidates
+  std::optional<CandidateIndex> all;
+};
+
 SensitiveSurfaceMapper::SensitiveSurfaceMapper(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
 void SensitiveSurfaceMapper::remapSensitiveNames(
     State& state, const Acts::GeometryContext& gctx,
+    G4VPhysicalVolume* g4PhysicalVolume,
+    const Acts::Transform3& motherTransform) const {
+  Cache cache;
+  remapSensitiveNames(state, cache, gctx, g4PhysicalVolume, motherTransform);
+}
+
+void SensitiveSurfaceMapper::remapSensitiveNames(
+    State& state, Cache& cache, const Acts::GeometryContext& gctx,
     G4VPhysicalVolume* g4PhysicalVolume,
     const Acts::Transform3& motherTransform) const {
   // Make sure the unit conversion is correct
@@ -186,7 +352,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
   if (G4int nDaughters = g4LogicalVolume->GetNoDaughters(); nDaughters > 0) {
     // Step down to all daughters
     for (G4int id = 0; id < nDaughters; ++id) {
-      remapSensitiveNames(state, gctx, g4LogicalVolume->GetDaughter(id),
+      remapSensitiveNames(state, cache, gctx, g4LogicalVolume->GetDaughter(id),
                           localG4ToGlobal);
     }
   }
@@ -215,76 +381,143 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
                                  << g4AbsPosition.transpose()
                                  << " to the tracking geometry");
 
-  // Prepare the mapped surface
-  const Acts::Surface* mappedSurface = nullptr;
-
-  std::vector<const Acts::Surface*> candidateSurfaces;
+  // Query the candidates at the first polyhedron vertex that has any. They
+  // are cached per region, so the lookup is built only once per region.
+  const CandidateIndex* candidates = nullptr;
+  std::optional<CandidateIndex> uncachedCandidates;
   const auto g4Polyhedron = g4LogicalVolume->GetSolid()->GetPolyhedron();
   for (int i = 1; i < g4Polyhedron->GetNoVertices(); ++i) {
     auto vtx = convertPosition(g4Polyhedron->GetVertex(i));
     auto vtxGlobal = localG4ToGlobal * vtx;
 
-    candidateSurfaces = m_cfg.candidateSurfaces->queryPosition(gctx, vtxGlobal);
+    if (const auto* region =
+            m_cfg.candidateSurfaces->queryRegion(gctx, vtxGlobal);
+        region != nullptr) {
+      auto it = cache.regions.find(region);
+      if (it == cache.regions.end()) {
+        it = cache.regions
+                 .try_emplace(
+                     region,
+                     m_cfg.candidateSurfaces->queryPosition(gctx, vtxGlobal),
+                     gctx, true)
+                 .first;
+      }
+      candidates = &it->second;
+    } else {
+      uncachedCandidates.emplace(
+          m_cfg.candidateSurfaces->queryPosition(gctx, vtxGlobal), gctx, false);
+      candidates = &*uncachedCandidates;
+    }
 
-    if (!candidateSurfaces.empty()) {
+    if (!candidates->empty()) {
       break;
     }
   }
 
   // Fall back to query all surfaces
-  if (candidateSurfaces.empty()) {
+  if (candidates == nullptr || candidates->empty()) {
     ACTS_DEBUG("No candidate surfaces for volume '" << volumeName << "' at "
                                                     << g4AbsPosition.transpose()
                                                     << ", query all surfaces");
-    candidateSurfaces = m_cfg.candidateSurfaces->queryAll();
+    if (!cache.all.has_value()) {
+      cache.all.emplace(m_cfg.candidateSurfaces->queryAll(), gctx, true);
+    }
+    candidates = &*cache.all;
   }
 
-  ACTS_VERBOSE("Found " << candidateSurfaces.size()
-                        << " candidate surfaces for " << volumeName);
+  ACTS_VERBOSE("Found " << candidates->size() << " candidate surfaces for "
+                        << volumeName);
 
-  Acts::detail::TransformComparator trfSorter{};
-  for (const auto& candidateSurface : candidateSurfaces) {
-    if (trfSorter.compare<3>(candidateSurface->center(gctx), g4AbsPosition) ==
-        0) {
-      ACTS_DEBUG("Successful match with center: "
-                 << candidateSurface->center(gctx).transpose()
-                 << ", G4-position: " << g4AbsPosition.transpose());
-      mappedSurface = candidateSurface;
+  // The match is the first candidate that either has its center at the G4
+  // position or, for annulus bounds, has its bounds centroid inside the G4
+  // solid. So only annulus candidates before the first center match need the
+  // centroid check.
+  const Acts::Surface* mappedSurface = nullptr;
+  const auto centerMatches = candidates->centerMatches(g4AbsPosition);
+  const std::size_t nBeforeCenterMatch =
+      centerMatches.empty() ? candidates->size() : centerMatches.front();
+  for (const std::size_t i : candidates->annulusIndices()) {
+    if (i >= nBeforeCenterMatch) {
       break;
-    } else if (candidateSurface->bounds().type() ==
-               Acts::SurfaceBounds::eAnnulus) {
-      const auto& bounds =
-          *static_cast<const Acts::AnnulusBounds*>(&candidateSurface->bounds());
+    }
+    const Acts::Surface& candidateSurface = candidates->surface(i);
+    const auto& bounds =
+        *static_cast<const Acts::AnnulusBounds*>(&candidateSurface.bounds());
 
-      const auto vertices = bounds.vertices(0);
+    const auto vertices = bounds.vertices(0);
 
-      constexpr bool clockwise = false;
-      constexpr bool closed = false;
-      using Polygon =
-          boost::geometry::model::polygon<Acts::Vector2, clockwise, closed>;
+    constexpr bool clockwise = false;
+    constexpr bool closed = false;
+    using Polygon =
+        boost::geometry::model::polygon<Acts::Vector2, clockwise, closed>;
 
-      Polygon poly;
-      boost::geometry::assign_points(poly, vertices);
+    Polygon poly;
+    boost::geometry::assign_points(poly, vertices);
 
-      Acts::Vector2 boundsCentroidSurfaceFrame = Acts::Vector2::Zero();
-      boost::geometry::centroid(poly, boundsCentroidSurfaceFrame);
+    Acts::Vector2 boundsCentroidSurfaceFrame = Acts::Vector2::Zero();
+    boost::geometry::centroid(poly, boundsCentroidSurfaceFrame);
 
-      Acts::Vector3 boundsCentroidGlobal{boundsCentroidSurfaceFrame[0],
-                                         boundsCentroidSurfaceFrame[1], 0.0};
-      boundsCentroidGlobal =
-          candidateSurface->localToGlobalTransform(gctx) * boundsCentroidGlobal;
+    Acts::Vector3 boundsCentroidGlobal{boundsCentroidSurfaceFrame[0],
+                                       boundsCentroidSurfaceFrame[1], 0.0};
+    boundsCentroidGlobal =
+        candidateSurface.localToGlobalTransform(gctx) * boundsCentroidGlobal;
 
-      const auto boundsCentroidG4Frame =
-          localG4ToGlobal.inverse() * boundsCentroidGlobal;
+    const auto boundsCentroidG4Frame =
+        localG4ToGlobal.inverse() * boundsCentroidGlobal;
 
-      if (g4LogicalVolume->GetSolid()->Inside(
-              convertPosition(boundsCentroidG4Frame)) != EInside::kOutside) {
-        ACTS_VERBOSE("Successful match with centroid matching");
-        mappedSurface = candidateSurface;
-        break;
-      }
+    if (g4LogicalVolume->GetSolid()->Inside(
+            convertPosition(boundsCentroidG4Frame)) != EInside::kOutside) {
+      ACTS_VERBOSE("Successful match with centroid matching");
+      mappedSurface = &candidateSurface;
+      break;
     }
   }
+  if (mappedSurface == nullptr && !centerMatches.empty()) {
+    std::size_t centerMatch = centerMatches.front();
+    if (centerMatches.size() > 1) {
+      // Several surfaces share this center, e.g. concentric cylinders. Take
+      // the one whose extent, in the frame of the G4 volume, is closest to
+      // the bounding box of the G4 solid. Ties keep the candidate order.
+      G4ThreeVector g4SolidMin;
+      G4ThreeVector g4SolidMax;
+      g4LogicalVolume->GetSolid()->BoundingLimits(g4SolidMin, g4SolidMax);
+      const Acts::Vector3 solidMin = convertPosition(g4SolidMin);
+      const Acts::Vector3 solidMax = convertPosition(g4SolidMax);
+      const Acts::Transform3 globalToG4 = localG4ToGlobal.inverse();
+
+      double bestDistance = std::numeric_limits<double>::infinity();
+      for (const std::size_t i : centerMatches) {
+        Acts::Vector3 surfaceMin =
+            Acts::Vector3::Constant(std::numeric_limits<double>::infinity());
+        Acts::Vector3 surfaceMax = -surfaceMin;
+        for (const auto& vertex :
+             candidates->surface(i).polyhedronRepresentation(gctx).vertices) {
+          const Acts::Vector3 vertexG4 = globalToG4 * vertex;
+          surfaceMin = surfaceMin.cwiseMin(vertexG4);
+          surfaceMax = surfaceMax.cwiseMax(vertexG4);
+        }
+        const double distance = (surfaceMin - solidMin).cwiseAbs().sum() +
+                                (surfaceMax - solidMax).cwiseAbs().sum();
+        ACTS_VERBOSE("Surface " << candidates->surface(i).geometryId()
+                                << " has extent distance " << distance);
+        // False for a non-finite distance, e.g. NaN vertices or none at all
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          centerMatch = i;
+        }
+      }
+      ACTS_DEBUG(centerMatches.size()
+                 << " surfaces share the center, chose "
+                 << candidates->surface(centerMatch).geometryId()
+                 << " by extent for " << volumeName);
+    }
+    ACTS_DEBUG("Successful match with center: "
+               << candidates->center(centerMatch).transpose()
+               << ", G4-position: " << g4AbsPosition.transpose());
+    mappedSurface = &candidates->surface(centerMatch);
+  }
+
+  Acts::detail::TransformComparator trfSorter{};
 
   if (mappedSurface == nullptr) {
     ACTS_DEBUG("No mapping found for '"
@@ -320,7 +553,19 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
 bool SensitiveSurfaceMapper::checkMapping(
     const State& state, const Acts::GeometryContext& gctx,
     bool writeMissingG4VolsAsObj, bool writeMissingSurfacesAsObj) const {
-  auto allSurfaces = m_cfg.candidateSurfaces->queryAll();
+  // Candidates have a sensitive geometry id. Only those also flagged
+  // sensitive (e.g. by their placement) are sensors that need a mapping;
+  // others, like passive surfaces that a Gen3 layer gives a sensitive id,
+  // are not.
+  std::vector<const Acts::Surface*> allSurfaces;
+  std::size_t nNotFlaggedSensitive = 0;
+  for (const auto* surface : m_cfg.candidateSurfaces->queryAll()) {
+    if (surface->isSensitive()) {
+      allSurfaces.push_back(surface);
+    } else {
+      ++nNotFlaggedSensitive;
+    }
+  }
   std::ranges::sort(allSurfaces);
 
   std::vector<const Acts::Surface*> found;
@@ -338,6 +583,12 @@ bool SensitiveSurfaceMapper::checkMapping(
                       found.end(), std::back_inserter(missing));
 
   ACTS_INFO("Number of overall sensitive surfaces: " << allSurfaces.size());
+  if (nNotFlaggedSensitive > 0) {
+    ACTS_INFO(
+        "Number of surfaces with a sensitive geometry id that are not "
+        "flagged sensitive, not required to be mapped: "
+        << nNotFlaggedSensitive);
+  }
   ACTS_INFO("Number of mapped volume->surface mappings: " << found.size());
   ACTS_INFO(
       "Number of sensitive surfaces that are not mapped: " << missing.size());

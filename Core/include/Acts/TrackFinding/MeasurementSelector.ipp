@@ -89,7 +89,7 @@ MeasurementSelector::select(
     }
 
     // only consider track states which pass the chi2 cut
-    if (chi2 >= cuts.chi2Measurement) {
+    if (chi2 >= cuts.chi2Measurement[trackState.calibratedSize()]) {
       continue;
     }
 
@@ -105,7 +105,8 @@ MeasurementSelector::select(
   // Handle if there are no measurements below the chi2 cut off
   if (passedCandidates == 0ul) {
     // minIndex stays unset if every candidate was rejected above.
-    if (minIndex < candidates.size() && minChi2 < cuts.chi2Outlier) {
+    if (minIndex < candidates.size() &&
+        minChi2 < cuts.chi2Outlier[candidates[minIndex].calibratedSize()]) {
       ACTS_VERBOSE(
           "No measurement candidate. Return an outlier measurement chi2="
           << minChi2);
@@ -119,10 +120,12 @@ MeasurementSelector::select(
   }
 
   if (passedCandidates <= 1ul) {
-    // return single item range, no sorting necessary
-    ACTS_VERBOSE("Returning only 1 element chi2=" << minChi2);
-    return Result::success(std::pair(candidates.begin() + minIndex,
-                                     candidates.begin() + minIndex + 1));
+    // Return the single item range, so no sorting is necessary. The loop moves
+    // the passed candidate to the front. It is not always the candidate with
+    // minChi2, because the chi2 cut can depend on the measurement dimension.
+    ACTS_VERBOSE("Returning only 1 element chi2=" << candidates.front().chi2());
+    return Result::success(
+        std::pair(candidates.begin(), candidates.begin() + 1));
   }
 
   std::sort(

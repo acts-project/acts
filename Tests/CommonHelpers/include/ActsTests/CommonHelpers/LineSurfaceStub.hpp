@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 
 namespace ActsTests {
 
@@ -36,7 +37,14 @@ class LineSurfaceStub : public Acts::LineSurface {
   LineSurfaceStub(const LineSurfaceStub& ls)
       : Acts::GeometryObject(), Acts::LineSurface(ls) { /* nop */ }
 
-  LineSurfaceStub& operator=(const LineSurfaceStub& ls) = default;
+  // NOLINTNEXTLINE(modernize-use-equals-default) base assignment is deprecated
+  LineSurfaceStub& operator=(const LineSurfaceStub& ls) {
+    // The base surface copy-assignment is deprecated; this stub still needs it.
+    ACTS_PUSH_IGNORE_DEPRECATED()
+    Acts::LineSurface::operator=(ls);
+    ACTS_POP_IGNORE_DEPRECATED()
+    return *this;
+  }
 
   LineSurfaceStub(const Acts::GeometryContext& gctx, const LineSurfaceStub& ls,
                   const Acts::Transform3& t)

@@ -10,6 +10,12 @@
 
 add_custom_target(unit_tests)
 
+if(ACTS_ENABLE_CUDA)
+    acts_add_assertion_tests(CUDA)
+else()
+    acts_add_assertion_tests()
+endif()
+
 macro(add_unittest _name _source)
     # automatically prefix the target name
     set(_target "ActsUnitTest${_name}")

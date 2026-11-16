@@ -57,6 +57,7 @@ concept TrackProxyConcept = requires(const T& cv, HashedString key) {
   { cv.nHoles() } -> std::convertible_to<unsigned int>;
   { cv.nOutliers() } -> std::convertible_to<unsigned int>;
   { cv.nSharedHits() } -> std::convertible_to<unsigned int>;
+  { cv.nSplitHits() } -> std::convertible_to<unsigned int>;
   { cv.chi2() } -> std::convertible_to<float>;
   { cv.nDoF() } -> std::convertible_to<unsigned int>;
 
@@ -87,6 +88,7 @@ concept MutableTrackProxyConcept =
       { v.nHoles() } -> std::same_as<unsigned int&>;
       { v.nOutliers() } -> std::same_as<unsigned int&>;
       { v.nSharedHits() } -> std::same_as<unsigned int&>;
+      { v.nSplitHits() } -> std::same_as<unsigned int&>;
       { v.chi2() } -> std::same_as<float&>;
       { v.nDoF() } -> std::same_as<unsigned int&>;
 
