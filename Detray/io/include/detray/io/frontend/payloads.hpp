@@ -188,8 +188,7 @@ struct material_param_payload {
   /// 3: Z
   /// 4: Mass density
   /// 5: Molar densitty (unused)
-  /// 6: @c material_state enum (solid, liquid, gaseous)
-  std::array<io::scalar, 7u> params{};
+  std::array<io::scalar, 6u> params{};
 };
 
 /// @brief A payload object for a material slab/rod

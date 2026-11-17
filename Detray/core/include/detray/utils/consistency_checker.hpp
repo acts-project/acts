@@ -219,7 +219,7 @@ struct material_checker {
 
       } else {
         // Material slabs and rods
-        if (!mat) {
+        if (!mat.is_valid()) {
           throw_material_error("homogeneous surface material", idx, mat);
         }
       }
