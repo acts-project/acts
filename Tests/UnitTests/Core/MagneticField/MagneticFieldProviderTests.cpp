@@ -115,99 +115,117 @@ BOOST_AUTO_TEST_CASE(FieldGradientConstant) {
   BOOST_CHECK_EQUAL(nullRes->gradient, SquareMatrix3::Zero());
 }
 
-/// Field counting cache creations and the lookups made through each cache
 class CountingField final : public MagneticFieldProvider {
  public:
+  struct LookupCache {
+    const CountingField* owner;
+    int lookups = 0;
+  };
   mutable int cacheCreations = 0;
+  mutable const MagneticFieldContext* lastContext = nullptr;
 
-  MagneticFieldProvider::Cache makeCache(
-      const MagneticFieldContext& /*mctx*/) const override {
+  Cache makeCache(const MagneticFieldContext& mctx) const override {
+    lastContext = &mctx;
     ++cacheCreations;
-    return MagneticFieldProvider::Cache(std::in_place_type<int>, 0);
+    return Cache(std::in_place_type<LookupCache>, this, 0);
   }
 
   Result<Vector3> getField(const Vector3& position,
-                           MagneticFieldProvider::Cache& cache) const override {
+                           Cache& cache) const override {
+    auto& state = cache.as<LookupCache>();
+    BOOST_CHECK(state.owner == this);
     if (position.x() < 0.) {
       return Result<Vector3>::failure(MagneticFieldError::OutOfBounds);
     }
-    return Result<Vector3>::success(Vector3(0., 0., ++cache.as<int>()));
+    return Result<Vector3>::success(Vector3(0., 0., ++state.lookups));
   }
 };
 
-// The query borrows provider and context, so temporaries must not bind.
-static_assert(
-    std::is_constructible_v<MagneticFieldQuery, const MagneticFieldProvider&,
-                            const MagneticFieldContext&>);
-static_assert(
-    !std::is_constructible_v<MagneticFieldQuery, const MagneticFieldProvider&&,
-                             const MagneticFieldContext&>);
-static_assert(
-    !std::is_constructible_v<MagneticFieldQuery, const MagneticFieldProvider&,
-                             const MagneticFieldContext&&>);
-
-BOOST_AUTO_TEST_CASE(FieldQueryReusesCache) {
-  const CountingField field;
-  MagneticFieldQuery query(field, mfContext);
-  BOOST_CHECK(&query.context() == &mfContext);
-
+BOOST_AUTO_TEST_CASE(FieldQueryOwnsAndReusesCache) {
+  CountingField provider;
+  MagneticFieldContext context;
+  MagneticFieldQuery first(provider, context);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
   for (int i = 1; i <= 3; ++i) {
-    auto res = query.getField(Vector3::Zero());
-    BOOST_REQUIRE(res.ok());
-    BOOST_CHECK_EQUAL(res->z(), i);
+    auto result = first.getField(Vector3::Zero());
+    BOOST_REQUIRE(result.ok());
+    BOOST_CHECK_EQUAL(result->z(), i);
   }
-  BOOST_CHECK_EQUAL(field.cacheCreations, 1);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
 
-  // A second query on the same provider has its own cache
-  MagneticFieldQuery other(field, mfContext);
-  BOOST_CHECK_EQUAL(field.cacheCreations, 2);
-  BOOST_CHECK_EQUAL(other.getField(Vector3::Zero()).value().z(), 1.);
+  // A second operation has independent cache state, even with one provider.
+  MagneticFieldQuery second(provider, context);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 2);
+  auto result = second.getField(Vector3::Zero());
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(result->z(), 1.);
+  auto error = first.getField(Vector3(-1., 0., 0.));
+  BOOST_REQUIRE(!error.ok());
+  BOOST_CHECK(error.error() == MagneticFieldError::OutOfBounds);
+}
 
-  auto res = query.getField(Vector3(-1., 0., 0.));
-  BOOST_REQUIRE(!res.ok());
-  BOOST_CHECK(res.error() == MagneticFieldError::OutOfBounds);
+// Borrowing an lvalue is supported; temporaries must not silently dangle.
+using FieldProviderRef = const MagneticFieldProvider&;
+static_assert(std::is_constructible_v<MagneticFieldQuery, FieldProviderRef,
+                                      const MagneticFieldContext&>);
+static_assert(!std::is_constructible_v<MagneticFieldQuery, FieldProviderRef,
+                                       MagneticFieldContext&&>);
+static_assert(!std::is_constructible_v<MagneticFieldQuery, FieldProviderRef,
+                                       const MagneticFieldContext&&>);
+
+static_assert(!std::is_constructible_v<MagneticFieldQuery, CountingField&&,
+                                       const MagneticFieldContext&>);
+static_assert(
+    !std::is_constructible_v<MagneticFieldQuery, const CountingField&&,
+                             const MagneticFieldContext&>);
+
+BOOST_AUTO_TEST_CASE(FieldQueryRetainsContextAcrossMoves) {
+  CountingField provider;
+  const MagneticFieldContext firstContext;
+  const MagneticFieldContext secondContext;
+  MagneticFieldQuery first(provider, firstContext);
+  BOOST_CHECK(provider.lastContext == &first.context());
+  BOOST_CHECK(&first.context() == &firstContext);
+  BOOST_REQUIRE(first.getField(Vector3::Zero()).ok());
+
+  MagneticFieldQuery moved(std::move(first));
+  BOOST_CHECK(&moved.context() == &firstContext);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
+
+  CountingField secondProvider;
+  MagneticFieldQuery second(secondProvider, secondContext);
+  BOOST_CHECK(secondProvider.lastContext == &second.context());
+  BOOST_CHECK(&second.context() == &secondContext);
+  second = std::move(moved);
+  BOOST_CHECK(&second.context() == &firstContext);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
+  BOOST_CHECK_EQUAL(secondProvider.cacheCreations, 1);
+  auto result = second.getField(Vector3::Zero());
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(result->z(), 2.);
 }
 
 BOOST_AUTO_TEST_CASE(FieldQueryCopiesHaveIndependentCaches) {
-  const CountingField field;
-  const CountingField otherField;
+  CountingField provider;
+  const MagneticFieldContext context;
+  MagneticFieldQuery first(provider, context);
+  BOOST_REQUIRE(first.getField(Vector3::Zero()).ok());
+
+  MagneticFieldQuery copied(first);
+  BOOST_CHECK(&copied.context() == &context);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
+  BOOST_CHECK_EQUAL(copied.getField(Vector3::Zero()).value().z(), 2.);
+  BOOST_CHECK_EQUAL(first.getField(Vector3::Zero()).value().z(), 2.);
+
+  CountingField otherProvider;
   const MagneticFieldContext otherContext;
-  MagneticFieldQuery query(field, mfContext);
-  BOOST_REQUIRE(query.getField(Vector3::Zero()).ok());
-
-  MagneticFieldQuery copy(query);
-  BOOST_CHECK(&copy.context() == &mfContext);
-  BOOST_CHECK_EQUAL(copy.getField(Vector3::Zero()).value().z(), 2.);
-  BOOST_CHECK_EQUAL(query.getField(Vector3::Zero()).value().z(), 2.);
-
-  MagneticFieldQuery assigned(otherField, otherContext);
-  assigned = query;
-  BOOST_CHECK(&assigned.context() == &mfContext);
+  MagneticFieldQuery assigned(otherProvider, otherContext);
+  assigned = first;
+  BOOST_CHECK(&assigned.context() == &context);
   BOOST_CHECK_EQUAL(assigned.getField(Vector3::Zero()).value().z(), 3.);
-  BOOST_CHECK_EQUAL(query.getField(Vector3::Zero()).value().z(), 3.);
-
-  BOOST_CHECK_EQUAL(field.cacheCreations, 1);
-  BOOST_CHECK_EQUAL(otherField.cacheCreations, 1);
-}
-
-BOOST_AUTO_TEST_CASE(FieldQueryMovesRetainContextAndCache) {
-  const CountingField field;
-  const CountingField otherField;
-  const MagneticFieldContext otherContext;
-  MagneticFieldQuery query(field, mfContext);
-  BOOST_REQUIRE(query.getField(Vector3::Zero()).ok());
-
-  MagneticFieldQuery moved(std::move(query));
-  BOOST_CHECK(&moved.context() == &mfContext);
-  BOOST_CHECK_EQUAL(moved.getField(Vector3::Zero()).value().z(), 2.);
-
-  MagneticFieldQuery assigned(otherField, otherContext);
-  assigned = std::move(moved);
-  BOOST_CHECK(&assigned.context() == &mfContext);
-  BOOST_CHECK_EQUAL(assigned.getField(Vector3::Zero()).value().z(), 3.);
-
-  BOOST_CHECK_EQUAL(field.cacheCreations, 1);
-  BOOST_CHECK_EQUAL(otherField.cacheCreations, 1);
+  BOOST_CHECK_EQUAL(first.getField(Vector3::Zero()).value().z(), 3.);
+  BOOST_CHECK_EQUAL(provider.cacheCreations, 1);
+  BOOST_CHECK_EQUAL(otherProvider.cacheCreations, 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
