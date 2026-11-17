@@ -147,6 +147,17 @@ BOOST_AUTO_TEST_CASE(FieldQueryReusesCache) {
   BOOST_CHECK(res.error() == MagneticFieldError::OutOfBounds);
 }
 
+BOOST_AUTO_TEST_CASE(FieldQueryCopiesHaveIndependentCaches) {
+  const LookupCountingField field;
+  MagneticFieldQuery query(field, mfContext);
+  BOOST_REQUIRE(query.getField(Vector3::Zero()).ok());
+
+  MagneticFieldQuery copy(query);
+  BOOST_CHECK(&copy.context() == &mfContext);
+  BOOST_CHECK_EQUAL(copy.getField(Vector3::Zero()).value().z(), 2.);
+  BOOST_CHECK_EQUAL(query.getField(Vector3::Zero()).value().z(), 2.);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActssTests

@@ -38,6 +38,7 @@
 #include <memory>
 #include <numbers>
 #include <random>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -124,6 +125,12 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+
+  // A track linearizer is required.
+  auto invalidCfg = fitterCfg;
+  invalidCfg.trackLinearizer = {};
+  BOOST_CHECK_THROW(AdaptiveMultiVertexFitter{invalidCfg},
+                    std::invalid_argument);
 
   AdaptiveMultiVertexFitter fitter(std::move(fitterCfg));
 
