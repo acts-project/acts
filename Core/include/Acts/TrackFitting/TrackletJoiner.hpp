@@ -19,6 +19,7 @@
 #include "Acts/TrackFitting/detail/TrackletJoining.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/ScopeExit.hpp"
 
 #include <algorithm>
 #include <concepts>
@@ -198,33 +199,23 @@ class TrackletJoiner {
       }
       first.stemIndex() = stemIndex;
     };
-    auto joinAndVisit = [&]() -> Result<void> {
-      if (first.stemIndex() == kTrackIndexInvalid) {
-        first.linkForward();
-      }
-      if (second.tipIndex() == kTrackIndexInvalid) {
-        second.tipIndex() = first.tipIndex();
-        second.stemIndex() = first.stemIndex();
-      } else {
-        auto res = joinStates(gctx, first, sharedState, second, smoother);
-        if (!res.ok()) {
-          return res.error();
-        }
-        second.tipIndex() = first.tipIndex();
-      }
-      visitor(second);
-      return Result<void>::success();
-    };
+    const detail::ScopeExit restore(undo);
 
-    Result<void> res = Result<void>::success();
-    try {
-      res = joinAndVisit();
-    } catch (...) {
-      undo();
-      throw;
+    if (first.stemIndex() == kTrackIndexInvalid) {
+      first.linkForward();
     }
-    undo();
-    return res;
+    if (second.tipIndex() == kTrackIndexInvalid) {
+      second.tipIndex() = first.tipIndex();
+      second.stemIndex() = first.stemIndex();
+    } else {
+      auto res = joinStates(gctx, first, sharedState, second, smoother);
+      if (!res.ok()) {
+        return res.error();
+      }
+      second.tipIndex() = first.tipIndex();
+    }
+    visitor(second);
+    return Result<void>::success();
   }
 
   /// Join copies of both tracklets in @p out and return the joined copy. The
