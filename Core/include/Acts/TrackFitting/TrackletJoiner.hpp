@@ -53,6 +53,9 @@ namespace Acts {
 /// taken from the second tracklet.
 /// If the second tracklet has no states, only its track-level data is copied;
 /// this covers propagation to the target without another detector surface.
+///
+/// With smoothing and conditioning disabled, the tracklets are only linked and
+/// need no smoothed states, e.g. after a filter without a smoother.
 class TrackletJoiner {
  public:
   /// Configuration
@@ -81,7 +84,8 @@ class TrackletJoiner {
   const Config& config() const { return m_cfg; }
 
   /// Join in place: the first tracklet becomes the joined track. It must own
-  /// its states; with several second tracklets use @ref joinCopy.
+  /// its states; with several second tracklets use @ref joinCopy. It must be
+  /// smoothed unless smoothing and conditioning are disabled.
   /// Both tracklets must use the same trajectory and own disjoint states.
   /// If the first tracklet is not linked forward, this links it forward.
   /// On failure, smoothed states may already have been modified.
@@ -89,7 +93,7 @@ class TrackletJoiner {
   /// @tparam smoother_t The smoother for the second tracklet
   /// @tparam track_proxy_t The track proxy type
   /// @param gctx The geometry context
-  /// @param first The first tracklet, smoothed
+  /// @param first The first tracklet
   /// @param sharedState The state the second tracklet started from
   /// @param second The second tracklet
   /// @param smoother The smoother
@@ -139,7 +143,7 @@ class TrackletJoiner {
   /// @tparam smoother_t The smoother for the second tracklet
   /// @tparam track_proxy_t The track proxy type
   /// @param gctx The geometry context
-  /// @param first The first tracklet, smoothed
+  /// @param first The first tracklet
   /// @param sharedState The state the second tracklet started from
   /// @param second The second tracklet
   /// @param visitor Called with the joined track if the join succeeds
@@ -222,7 +226,7 @@ class TrackletJoiner {
   /// @tparam track_state_proxy_t The input track state proxy type
   /// @param gctx The geometry context
   /// @param out The container that receives the copies
-  /// @param first The first tracklet, smoothed
+  /// @param first The first tracklet
   /// @param sharedState The state the second tracklet started from
   /// @param second The second tracklet
   /// @param smoother The smoother
@@ -287,6 +291,10 @@ class TrackletJoiner {
                           const smoother_t& smoother) const {
     auto& trajectory = first.container().trackStateContainer();
 
+    if (!m_cfg.smoothSecond && !m_cfg.conditionFirst) {
+      detail::linkTrackletBehind(sharedState, second, m_cfg.invertJacobians);
+      return Result<void>::success();
+    }
     if (!sharedState.hasSmoothed()) {
       ACTS_DEBUG("Shared state " << sharedState.index()
                                  << " has no smoothed parameters");

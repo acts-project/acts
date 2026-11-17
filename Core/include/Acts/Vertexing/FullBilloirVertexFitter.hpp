@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
@@ -55,7 +53,7 @@ class FullBilloirVertexFitter {
     /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
 
-    /// Track linearizer
+    /// Track linearizer using a reusable magnetic field query
     TrackLinearizer trackLinearizer;
   };
 
@@ -68,16 +66,14 @@ class FullBilloirVertexFitter {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("FullBilloirVertexFitter", Logging::INFO));
 
-  /// @brief Fit method, fitting vertex for provided tracks with constraint
-  ///
-  /// @param paramVector Vector of track objects to fit vertex to
-  /// @param vertexingOptions Vertexing options
-  /// @param fieldCache The magnetic field cache
-  ///
+  /// Fit using a reusable field query.
+  /// @param paramVector Tracks to fit
+  /// @param vertexingOptions Vertex fitting options
+  /// @param field Field query, reused across tracks and iterations
   /// @return Fitted vertex
   Result<Vertex> fit(const std::vector<InputTrack>& paramVector,
                      const VertexingOptions& vertexingOptions,
-                     MagneticFieldProvider::Cache& fieldCache) const;
+                     MagneticFieldQuery& field) const;
 
  private:
   /// Configuration object

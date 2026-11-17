@@ -102,6 +102,7 @@ macro(detray_add_cpu_test algebra)
        "utils/curvilinear_frame.cpp"
        "utils/axis_rotation.cpp"
        "utils/quadratic_equation.cpp"
+       "utils/root_finding.cpp"
        "utils/unit_vectors.cpp"
        LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::core_${algebra}
        covfie::core vecmem::core detray::io detray::test_common detray::test_utils
