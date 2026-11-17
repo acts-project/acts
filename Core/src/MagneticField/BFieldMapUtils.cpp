@@ -181,8 +181,11 @@ fieldMapXYZ(
   };
 
   // [5] Create the mapper & BField Service create field mapping
-  return InterpolatedBFieldMap<Grid_t>(
-      {transformPos, transformBField, std::move(grid)});
+  InterpolatedBFieldMap<Grid_t>::Config cfg{transformPos, transformBField,
+                                            std::move(grid)};
+  // the identity transformation can be applied once per cached cell
+  cfg.transformDependsOnPosition = false;
+  return InterpolatedBFieldMap<Grid_t>(std::move(cfg));
 }
 
 InterpolatedBFieldMap<
@@ -445,9 +448,11 @@ toroidFieldMapXYZ(
     }
   }
 
-  InterpolatedBFieldMap<Grid_t> map(
-      {transformPos, transformBField, std::move(grid)});
-  return map;
+  InterpolatedBFieldMap<Grid_t>::Config cfg{transformPos, transformBField,
+                                            std::move(grid)};
+  // the identity transformation can be applied once per cached cell
+  cfg.transformDependsOnPosition = false;
+  return InterpolatedBFieldMap<Grid_t>(std::move(cfg));
 }
 
 }  // namespace Acts

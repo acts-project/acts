@@ -15,8 +15,11 @@
 #include "Acts/Utilities/Interpolation.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <cassert>
 #include <functional>
 #include <optional>
+#include <stdexcept>
+#include <type_traits>
 #include <vector>
 
 namespace Acts {
@@ -118,6 +121,13 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// performs interpolation for any position within the cell boundaries.
   /// This allows for efficient repeated lookups within the same grid cell
   /// without consulting the full grid structure.
+  ///
+  /// If @c Config::transformDependsOnPosition is @c true (the default), the
+  /// field values are stored in the frame of the grid, i.e. before
+  /// @c Config::transformBField is applied, because the transformation
+  /// depends on the global position (e.g. the azimuth for maps in cylindrical
+  /// coordinates) and has to be applied for each lookup position. Otherwise
+  /// the stored field values are already transformed.
   struct FieldCell {
     /// number of corner points defining the confining hyper-box
     static constexpr unsigned int N = 1 << DIM_POS;
@@ -131,22 +141,24 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     /// @param [in] upperRight  generalized upper-right corner of hyper box
     ///                         (containing the maxima of the hyper box along
     ///                         each Dimension)
-    /// @param [in] fieldValues field values at the hyper box corners sorted in
-    ///                         the canonical order defined in Acts::interpolate
+    /// @param [in] fieldValues field values at the hyper box corners (see
+    ///                         @ref FieldCell for their frame) sorted in the
+    ///                         canonical order defined in Acts::interpolate
     FieldCell(std::array<double, DIM_POS> lowerLeft,
               std::array<double, DIM_POS> upperRight,
-              std::array<Vector3, N> fieldValues)
+              std::array<FieldType, N> fieldValues)
         : m_lowerLeft(std::move(lowerLeft)),
           m_upperRight(std::move(upperRight)),
           m_fieldValues(std::move(fieldValues)) {}
 
     /// @brief retrieve field at given position
     ///
-    /// @param [in] position global 3D position
-    /// @return magnetic field value at the given position
+    /// @param [in] position position in the grid frame
+    /// @return magnetic field value at the given position, in the frame of
+    ///         the stored values (see @ref FieldCell)
     ///
     /// @pre The given @c position must lie within the current field cell.
-    Vector3 getField(const Vector<DIM_POS>& position) const {
+    FieldType getField(const Vector<DIM_POS>& position) const {
       // defined in Interpolation.hpp
       return interpolate(position, m_lowerLeft, m_upperRight, m_fieldValues);
     }
@@ -172,11 +184,11 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     /// generalized upper-right corner of the confining hyper-box
     std::array<double, DIM_POS> m_upperRight;
 
-    /// @brief magnetic field vectors at the hyper-box corners
+    /// @brief magnetic field values at the hyper-box corners
     ///
     /// @note These values must be order according to the prescription detailed
     ///       in Acts::interpolate.
-    std::array<Vector3, N> m_fieldValues;
+    std::array<FieldType, N> m_fieldValues;
   };
 
   /// @brief Cache for field cell to improve performance of field lookups
@@ -215,12 +227,35 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     /// @note Negative values for @p scale are accepted and will invert the
     ///       direction of the magnetic field.
     double scale = 1.;
+
+    /// @brief whether @c transformBField depends on the global position
+    ///
+    /// If @c true, a cached field cell stores the grid values and the
+    /// cached lookup applies @c transformBField at each lookup position.
+    ///
+    /// If @c false, @c transformBField is applied once to the corner values
+    /// when a cell is filled, and the cached lookup interpolates the
+    /// transformed values directly. This saves one call of
+    /// @c transformBField per cached lookup, but is only correct if
+    /// @c transformBField ignores its position argument (e.g. a map in
+    /// Cartesian coordinates with Cartesian field components). It requires
+    /// @c FieldType to be @c Vector3.
+    bool transformDependsOnPosition = true;
   };
 
   /// @brief default constructor
   ///
   /// @param cfg Configuration containing grid and scaling factor
+  ///
+  /// @throws std::invalid_argument if @c cfg.transformDependsOnPosition is
+  ///         @c false and @c FieldType is not @c Vector3
   explicit InterpolatedBFieldMap(Config cfg) : m_cfg{std::move(cfg)} {
+    if (!m_cfg.transformDependsOnPosition &&
+        !std::is_same_v<FieldType, Vector3>) {
+      throw std::invalid_argument(
+          "InterpolatedBFieldMap: transformDependsOnPosition = false requires "
+          "Vector3 grid values");
+    }
     typename Grid::index_t minBin{};
     minBin.fill(1);
     m_lowerLeft = m_cfg.grid.multiAxis().getLowerLeftBinEdge(minBin);
@@ -231,7 +266,8 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @brief retrieve field cell for given position
   ///
   /// @param [in] position global 3D position
-  /// @return field cell containing the given global position
+  /// @return field cell containing the given global position (see
+  ///         @ref FieldCell for the frame of its field values)
   ///
   /// @pre The given @c position must lie within the range of the underlying
   ///      magnetic field map.
@@ -245,7 +281,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
     // loop through all corner points
     constexpr std::size_t nCorners = 1 << DIM_POS;
-    std::array<Vector3, nCorners> neighbors{};
+    std::array<FieldType, nCorners> neighbors{};
     const auto& cornerIndices =
         m_cfg.grid.multiAxis().getClosestPointsIndices(gridPosition);
 
@@ -254,8 +290,20 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     }
 
     std::size_t i = 0;
+    if constexpr (std::is_same_v<FieldType, Vector3>) {
+      if (!m_cfg.transformDependsOnPosition) {
+        // position-independent transformation: apply it once per cell
+        for (std::size_t index : cornerIndices) {
+          neighbors.at(i++) =
+              m_cfg.transformBField(m_cfg.grid.at(index), position);
+        }
+        assert(i == nCorners);
+        return FieldCell(lowerLeft, upperRight, std::move(neighbors));
+      }
+    }
+
     for (std::size_t index : cornerIndices) {
-      neighbors.at(i++) = m_cfg.transformBField(m_cfg.grid.at(index), position);
+      neighbors.at(i++) = m_cfg.grid.at(index);
     }
 
     assert(i == nCorners);
@@ -362,7 +410,16 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
       }
       lcache.fieldCell = *res;
     }
-    return Result<Vector3>::success((*lcache.fieldCell).getField(gridPosition));
+    if constexpr (std::is_same_v<FieldType, Vector3>) {
+      if (!m_cfg.transformDependsOnPosition) {
+        // the cell stores already transformed values
+        return Result<Vector3>::success(
+            (*lcache.fieldCell).getField(gridPosition));
+      }
+    }
+    // the cell stores grid-frame values: transform at the lookup position
+    return Result<Vector3>::success(m_cfg.transformBField(
+        (*lcache.fieldCell).getField(gridPosition), position));
   }
 
  private:

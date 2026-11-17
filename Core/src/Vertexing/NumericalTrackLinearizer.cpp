@@ -8,6 +8,7 @@
 
 #include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
 
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/detail/DirectionToSurface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -18,11 +19,10 @@
 Acts::Result<Acts::LinearizedTrack>
 Acts::NumericalTrackLinearizer::linearizeTrack(
     const BoundTrackParameters& params, double linPointTime,
-    const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
-    const Acts::MagneticFieldContext& mctx,
-    MagneticFieldProvider::Cache& /*fieldCache*/) const {
+    const Surface& perigeeSurface, const GeometryContext& gctx,
+    MagneticFieldQuery& fieldQuery) const {
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, fieldQuery.context());
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
