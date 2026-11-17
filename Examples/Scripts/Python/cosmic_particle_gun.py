@@ -266,7 +266,7 @@ def add_cosmic_seeding(s, args, outputDir, trackingGeometry):
     import acts.examples
     import uproot
 
-    import compute_seeding_efficiency as cse
+    import seeding_validation as cse
 
     u = acts.UnitConstants
 
@@ -708,8 +708,6 @@ def build_parser():
         default="cylinder",
         help="cylinder = crosses a volume; sphere = OptimizeForCavern",
     )
-    # Defaults inside the ODD tracker envelope that
-    # full_chain_odd.py uses for the particles (r <= 1080 mm, |z| <= 3030 mm).
     f.add_argument(
         "--vol-radius",
         type=float,
@@ -880,9 +878,7 @@ def build_parser():
     # Athena's maxdRadius (1000 mm) is meant for the ID, where it also
     # discards the SPs with r > 600 mm (radMax). In the ODD the long strips
     # reach r = 1023 mm: a muon that only crosses them leaves two SPs above and
-    # two below, and with 1000 mm no triplet passes. With 20k events the
-    # efficiency saturates at ~2000 mm (the ODD diameter): 2100 cuts nothing
-    # inside the detector.
+    # two below, and with 1000 mm no triplet passes.
     k.add_argument(
         "--max-delta-y",
         type=float,

@@ -10,14 +10,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Seeding/CosmicSeedCuts.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Utilities/StripModulePairing.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -69,6 +72,21 @@ class SpacePointMaker final : public IAlgorithm {
     double stripLengthTolerance = 0.01;
     /// Tolerance on the gap between the two strip detector elements, in mm.
     double stripLengthGapTolerance = 0.01;
+
+    bool cosmicStripSpacePoints = false;
+    double cosmicStripTolerance = 1e-6;
+    bool cosmicStripKeepAllPairs = false;
+
+    std::string outputSpacePointClasses;
+    std::vector<std::uint32_t> pixelBarrelVolumes;
+    std::vector<std::uint32_t> pixelEndcapVolumes;
+    std::vector<std::uint32_t> stripBarrelVolumes;
+    std::vector<std::uint32_t> stripEndcapVolumes;
+
+    std::string outputSpacePointSurfaces;
+
+    std::string inputMeasurementParticlesMap;
+    std::string outputSpacePointParticlesMap;
   };
 
   /// Construct the space point maker.
@@ -99,6 +117,16 @@ class SpacePointMaker final : public IAlgorithm {
 
   WriteDataHandle<SpacePointContainer> m_outputSpacePoints{this,
                                                            "OutputSpacePoints"};
+
+  WriteDataHandle<std::vector<Acts::CosmicSpacePointClass>>
+      m_outputSpacePointClasses{this, "OutputSpacePointClasses"};
+  WriteDataHandle<std::vector<Acts::GeometryIdentifier>>
+      m_outputSpacePointSurfaces{this, "OutputSpacePointSurfaces"};
+
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMap"};
+  WriteDataHandle<IndexMultimap<SimBarcode>> m_outputSpacePointParticlesMap{
+      this, "OutputSpacePointParticlesMap"};
 };
 
 }  // namespace ActsExamples

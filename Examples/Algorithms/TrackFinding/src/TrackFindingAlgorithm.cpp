@@ -417,7 +417,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     TrackFinderOptions options(ctx.recoGeoContext, ctx.magFieldContext,
                                ctx.calibContext, extensions, propOptions);
     // an inward pass ends at the perigee, or it would cross the beam line
-    options.targetSurface = toPerigee ? pSurface.get() : nullptr;
+    options.targetSurface =
+        toPerigee && m_cfg.stopAtPerigee ? pSurface.get() : nullptr;
     options.skipPrePropagationUpdate = secondPass;
     options.recordMaterialStates = m_cfg.recordMaterialStates;
     options.betheHeitlerApprox = betheHeitlerApprox;

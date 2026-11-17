@@ -191,6 +191,7 @@ CkfConfig = namedtuple(
         "constrainToVolumes",
         "endOfWorldVolumes",
         "seedDeduplicatorConfig",
+        "stopAtPerigee",
     ],
     defaults=[
         15.0,
@@ -206,6 +207,7 @@ CkfConfig = namedtuple(
         None,
         None,
         False,
+        None,
         None,
         None,
         None,
@@ -2064,6 +2066,7 @@ def addCKFTracks(
             useJosephFormulation=ckfConfig.useJosephFormulation,
             constrainToVolumeIds=ckfConfig.constrainToVolumes,
             endOfWorldVolumeIds=ckfConfig.endOfWorldVolumes,
+            stopAtPerigee=ckfConfig.stopAtPerigee,
         ),
     )
     s.addAlgorithm(trackFinder)

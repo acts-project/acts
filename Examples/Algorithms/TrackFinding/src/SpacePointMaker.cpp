@@ -29,10 +29,16 @@
 #include "ActsExamples/Utilities/GroupBy.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
 #include <functional>
 #include <iterator>
+#include <limits>
+#include <map>
 #include <ostream>
+#include <set>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace ActsExamples {
@@ -40,6 +46,24 @@ namespace ActsExamples {
 namespace {
 
 static constexpr float nanf = std::numeric_limits<float>::quiet_NaN();
+
+std::array<const std::vector<std::uint32_t>*, 4> classVolumeLists(
+    const SpacePointMaker::Config& cfg) {
+  return {&cfg.pixelBarrelVolumes, &cfg.pixelEndcapVolumes,
+          &cfg.stripBarrelVolumes, &cfg.stripEndcapVolumes};
+}
+
+bool classByVolume(const SpacePointMaker::Config& cfg, std::uint32_t volume,
+                   Acts::CosmicSpacePointClass& out) {
+  const auto lists = classVolumeLists(cfg);
+  for (std::size_t i = 0; i < lists.size(); ++i) {
+    if (std::ranges::find(*lists[i], volume) != lists[i]->end()) {
+      out = static_cast<Acts::CosmicSpacePointClass>(i);
+      return true;
+    }
+  }
+  return false;
+}
 
 void createPixelSpacePoint(
     const Acts::GeometryContext& gctx, const Acts::Surface& surface,
@@ -114,17 +138,30 @@ Acts::Result<void> createStripSpacePoint(
     const ConstVariableBoundMeasurementProxy& measurement2,
     const IndexSourceLink& sourceLink1, const IndexSourceLink& sourceLink2,
     const Acts::StripSpacePointBuilder::ConstrainedOptions& options,
-    SpacePointContainer& spacePoints) {
+    const Acts::StripSpacePointBuilder::CosmicOptions* cosmicOptions,
+    bool clampToStrip, SpacePointContainer& spacePoints) {
   const Acts::StripSpacePointBuilder::StripEnds stripEnds1 =
       getStripEnds(gctx, surface1, measurement1);
   const Acts::StripSpacePointBuilder::StripEnds stripEnds2 =
       getStripEnds(gctx, surface2, measurement2);
 
-  const Acts::Result<Acts::Vector3> spacePoint =
-      Acts::StripSpacePointBuilder::computeConstrainedSpacePoint(
-          stripEnds1, stripEnds2, options);
+  Acts::Result<Acts::Vector3> spacePoint =
+      cosmicOptions != nullptr
+          ? Acts::StripSpacePointBuilder::computeCosmicSpacePoint(
+                stripEnds1, stripEnds2, *cosmicOptions)
+          : Acts::StripSpacePointBuilder::computeConstrainedSpacePoint(
+                stripEnds1, stripEnds2, options);
   if (!spacePoint.ok()) {
     return spacePoint.error();
+  }
+  if (clampToStrip) {
+    const Acts::Vector3 btmToTop = stripEnds1.top - stripEnds1.bottom;
+    const double lambda = std::clamp(
+        (*spacePoint - stripEnds1.bottom).dot(btmToTop) /
+            btmToTop.squaredNorm(),
+        0.0, 1.0);
+    spacePoint = Acts::Result<Acts::Vector3>::success(stripEnds1.bottom +
+                                                      lambda * btmToTop);
   }
 
   const double var1 =
@@ -247,6 +284,47 @@ SpacePointMaker::SpacePointMaker(Config cfg,
     m_stripModulePairMap = pairStripModules(
         *m_cfg.trackingGeometry, m_cfg.stripGeometrySelection, this->logger());
   }
+
+  if (!(m_cfg.cosmicStripTolerance >= 0.0)) {
+    throw std::invalid_argument("cosmicStripTolerance must be non-negative");
+  }
+  if (m_cfg.cosmicStripKeepAllPairs && !m_cfg.cosmicStripSpacePoints) {
+    throw std::invalid_argument(
+        "cosmicStripKeepAllPairs requires cosmicStripSpacePoints");
+  }
+  if (!m_cfg.outputSpacePointClasses.empty()) {
+    std::map<std::uint32_t, std::size_t> listOf;
+    const auto lists = classVolumeLists(m_cfg);
+    for (std::size_t i = 0; i < lists.size(); ++i) {
+      for (std::uint32_t v : *lists[i]) {
+        if (listOf.emplace(v, i).first->second != i) {
+          throw std::invalid_argument("Volume " + std::to_string(v) +
+                                      " is in two space point class lists");
+        }
+      }
+    }
+    if (listOf.empty()) {
+      throw std::invalid_argument(
+          "outputSpacePointClasses requires pixelBarrelVolumes, "
+          "pixelEndcapVolumes, stripBarrelVolumes or stripEndcapVolumes");
+    }
+    m_outputSpacePointClasses.initialize(m_cfg.outputSpacePointClasses);
+  }
+  if (!m_cfg.outputSpacePointSurfaces.empty()) {
+    m_outputSpacePointSurfaces.initialize(m_cfg.outputSpacePointSurfaces);
+  }
+  if (m_cfg.inputMeasurementParticlesMap.empty() !=
+      m_cfg.outputSpacePointParticlesMap.empty()) {
+    throw std::invalid_argument(
+        "inputMeasurementParticlesMap and outputSpacePointParticlesMap must "
+        "be set together");
+  }
+  if (!m_cfg.outputSpacePointParticlesMap.empty()) {
+    m_inputMeasurementParticlesMap.initialize(
+        m_cfg.inputMeasurementParticlesMap);
+    m_outputSpacePointParticlesMap.initialize(
+        m_cfg.outputSpacePointParticlesMap);
+  }
 }
 
 ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
@@ -360,6 +438,18 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
           continue;
         }
 
+        if (m_cfg.cosmicStripSpacePoints) {
+          for (const IndexSourceLink& sourceLink2 : *mod2SourceLinks) {
+            if (!measurements.getMeasurement(sourceLink2.index())
+                     .contains(Acts::eBoundLoc0)) {
+              ACTS_WARNING("Encountered non-strip measurement");
+              continue;
+            }
+            stripSourceLinkPairs.emplace_back(sourceLink1, sourceLink2);
+          }
+          continue;
+        }
+
         Acts::Vector2 local1 = measurement1.fullParameters().head<2>();
         local1[1] = surface1.center(ctx.recoGeoContext)[1];
         const Acts::Vector3 global1 = surface1.localToGlobal(
@@ -411,6 +501,12 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
     constrainedOptions.stripLengthTolerance = m_cfg.stripLengthTolerance;
     constrainedOptions.stripLengthGapTolerance = m_cfg.stripLengthGapTolerance;
 
+    Acts::StripSpacePointBuilder::CosmicOptions cosmicOptions;
+    cosmicOptions.tolerance = m_cfg.cosmicStripTolerance;
+    cosmicOptions.stripLengthTolerance =
+        m_cfg.cosmicStripKeepAllPairs ? std::numeric_limits<double>::infinity()
+                                      : m_cfg.stripLengthTolerance;
+
     // Loop over the collected source link pairs
     for (const auto& [sourceLink1, sourceLink2] : stripSourceLinkPairs) {
       // In the following, we collect the 3D coordinates of the strip endpoints
@@ -436,9 +532,15 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
 
       Acts::Result<void> spResult = createStripSpacePoint(
           ctx.recoGeoContext, surface1, surface2, measurement1, measurement2,
-          sourceLink1, sourceLink2, constrainedOptions, spacePoints);
+          sourceLink1, sourceLink2, constrainedOptions,
+          m_cfg.cosmicStripSpacePoints ? &cosmicOptions : nullptr,
+          m_cfg.cosmicStripKeepAllPairs, spacePoints);
       if (!spResult.ok()) {
-        ACTS_DEBUG("Skipping strip space point: " << spResult.error());
+        if (m_cfg.cosmicStripSpacePoints) {
+          ACTS_VERBOSE("Skipping strip space point: " << spResult.error());
+        } else {
+          ACTS_DEBUG("Skipping strip space point: " << spResult.error());
+        }
       }
     }
 
@@ -449,7 +551,83 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
   ACTS_DEBUG("Created " << spacePoints.size() - nPixelSpacePoints
                         << " strip space points");
   ACTS_DEBUG("Created " << spacePoints.size() << " space points");
+
+  std::vector<Acts::CosmicSpacePointClass> classes;
+  if (m_outputSpacePointClasses.isInitialized()) {
+    classes.reserve(spacePoints.size());
+    std::set<std::uint32_t> unmapped;
+    std::array<std::size_t, 4> counts{};
+    for (const auto& sp : spacePoints) {
+      const auto volume = static_cast<std::uint32_t>(
+          sp.sourceLinks()[0].get<IndexSourceLink>().geometryId().volume());
+      Acts::CosmicSpacePointClass cls =
+          Acts::CosmicSpacePointClass::BarrelPixel;
+      if (!classByVolume(m_cfg, volume, cls)) {
+        unmapped.insert(volume);
+      }
+      classes.push_back(cls);
+      ++counts[static_cast<std::size_t>(cls)];
+    }
+    if (!unmapped.empty()) {
+      std::string list;
+      for (std::uint32_t v : unmapped) {
+        list += (list.empty() ? "" : ", ") + std::to_string(v);
+      }
+      ACTS_ERROR("Measurement volumes not in any space point class list: "
+                 << list);
+      return ProcessCode::ABORT;
+    }
+    ACTS_DEBUG("Space point classes: pixel barrel="
+               << counts[0] << " pixel endcap=" << counts[1]
+               << " strip barrel=" << counts[2]
+               << " strip endcap=" << counts[3]);
+  }
+
+  std::vector<Acts::GeometryIdentifier> surfaces;
+  if (m_outputSpacePointSurfaces.isInitialized()) {
+    surfaces.reserve(spacePoints.size());
+    for (const auto& sp : spacePoints) {
+      surfaces.push_back(
+          sp.sourceLinks()[0].get<IndexSourceLink>().geometryId());
+    }
+  }
+
+  IndexMultimap<SimBarcode> spacePointParticles;
+  if (m_outputSpacePointParticlesMap.isInitialized()) {
+    const MeasurementParticlesMap& measurementParticles =
+        m_inputMeasurementParticlesMap(ctx);
+    std::vector<SimBarcode> barcodes;
+    Index spIndex = 0;
+    for (const auto& sp : spacePoints) {
+      barcodes.clear();
+      for (const Acts::SourceLink& sl : sp.sourceLinks()) {
+        const auto [first, last] =
+            measurementParticles.equal_range(sl.get<IndexSourceLink>().index());
+        for (auto it = first; it != last; ++it) {
+          barcodes.push_back(it->second);
+        }
+      }
+      std::sort(barcodes.begin(), barcodes.end());
+      barcodes.erase(std::unique(barcodes.begin(), barcodes.end()),
+                     barcodes.end());
+      for (const SimBarcode& barcode : barcodes) {
+        spacePointParticles.emplace_hint(spacePointParticles.end(), spIndex,
+                                         barcode);
+      }
+      ++spIndex;
+    }
+  }
+
   m_outputSpacePoints(ctx, std::move(spacePoints));
+  if (m_outputSpacePointClasses.isInitialized()) {
+    m_outputSpacePointClasses(ctx, std::move(classes));
+  }
+  if (m_outputSpacePointSurfaces.isInitialized()) {
+    m_outputSpacePointSurfaces(ctx, std::move(surfaces));
+  }
+  if (m_outputSpacePointParticlesMap.isInitialized()) {
+    m_outputSpacePointParticlesMap(ctx, std::move(spacePointParticles));
+  }
 
   return ProcessCode::SUCCESS;
 }

@@ -138,6 +138,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// parameters are used as they are, so they must lie on the last space
     /// point.
     bool reverseSearch = false;
+    bool stopAtPerigee = true;
     /// Run the reverse search for a seed whose last space point lies beyond
     /// this transverse radius or this absolute z, so that the first pass
     /// covers the larger part of the track. This needs `inputSeeds`.

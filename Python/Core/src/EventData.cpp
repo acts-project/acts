@@ -133,6 +133,27 @@ auto guardedWrite(SpacePointColumns requiredColumn,
   };
 }
 
+py::tuple seedIndexArrays(const SeedContainer& self, py::ssize_t size) {
+  const auto n = static_cast<py::ssize_t>(self.size());
+  py::array_t<std::int64_t> indices({n, size});
+  py::array_t<float> quality(n);
+  py::array_t<float> vertexZ(n);
+  auto idx = indices.mutable_unchecked<2>();
+  auto q = quality.mutable_unchecked<1>();
+  auto vz = vertexZ.mutable_unchecked<1>();
+  for (py::ssize_t i = 0; i < n; ++i) {
+    const ConstSeedProxy seed(self, static_cast<SeedIndex>(i));
+    const auto sps = seed.spacePointIndices();
+    const bool match = static_cast<py::ssize_t>(sps.size()) == size;
+    for (py::ssize_t j = 0; j < size; ++j) {
+      idx(i, j) = match ? static_cast<std::int64_t>(sps[j]) : std::int64_t{-1};
+    }
+    q(i) = seed.quality();
+    vz(i) = seed.vertexZ();
+  }
+  return py::make_tuple(indices, quality, vertexZ);
+}
+
 /// @brief This adds the classes from Core/EventData to the python module
 /// @param m the pybind11 core module
 void addEventData(py::module_& m) {
@@ -466,7 +487,12 @@ void addEventData(py::module_& m) {
               [](SeedContainer& self, const SpacePointContainer& sp) {
                 self.assignSpacePointContainer(sp);
               },
-              py::keep_alive<1, 2>());
+              py::keep_alive<1, 2>())
+          .def("tripletArrays",
+               [](const SeedContainer& self) {
+                 return seedIndexArrays(self, 3);
+               })
+          .def("indexArrays", &seedIndexArrays, py::arg("size"));
 
   WhiteBoardRegistry::registerClass(seedContainer);
 
