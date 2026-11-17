@@ -243,6 +243,13 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     BOOST_CHECK_NE(linTrack1.covarianceAtPCA, matBoundZero);
     BOOST_CHECK_NE(linTrack2.covarianceAtPCA, matBoundZero);
 
+    // The weight is the inverse of the covariance
+    for (const LinearizedTrack* linTrack : {&linTrack1, &linTrack2}) {
+      CHECK_CLOSE_OR_SMALL(
+          (linTrack->weightAtPCA * linTrack->covarianceAtPCA).eval(),
+          BoundMatrix::Identity(), relTol, small);
+    }
+
     // Check whether "linPoint" is saved correctly in the LinearizerTrack
     // objects
     BOOST_CHECK_EQUAL(linTrack1.linearizationPoint, linPoint);
