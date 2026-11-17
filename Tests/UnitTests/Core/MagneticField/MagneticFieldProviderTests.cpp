@@ -115,8 +115,8 @@ BOOST_AUTO_TEST_CASE(FieldGradientConstant) {
   BOOST_CHECK_EQUAL(nullRes->gradient, SquareMatrix3::Zero());
 }
 
-/// Field returning the number of lookups made through its cache
-class LookupCountingField final : public MagneticFieldProvider {
+/// Field counting cache creations and the lookups made through each cache
+class CountingField final : public MagneticFieldProvider {
  public:
   mutable int cacheCreations = 0;
 
@@ -147,7 +147,7 @@ static_assert(
                              const MagneticFieldContext&&>);
 
 BOOST_AUTO_TEST_CASE(FieldQueryReusesCache) {
-  const LookupCountingField field;
+  const CountingField field;
   MagneticFieldQuery query(field, mfContext);
   BOOST_CHECK(&query.context() == &mfContext);
 
@@ -169,8 +169,8 @@ BOOST_AUTO_TEST_CASE(FieldQueryReusesCache) {
 }
 
 BOOST_AUTO_TEST_CASE(FieldQueryCopiesHaveIndependentCaches) {
-  const LookupCountingField field;
-  const LookupCountingField otherField;
+  const CountingField field;
+  const CountingField otherField;
   const MagneticFieldContext otherContext;
   MagneticFieldQuery query(field, mfContext);
   BOOST_REQUIRE(query.getField(Vector3::Zero()).ok());
@@ -191,8 +191,8 @@ BOOST_AUTO_TEST_CASE(FieldQueryCopiesHaveIndependentCaches) {
 }
 
 BOOST_AUTO_TEST_CASE(FieldQueryMovesRetainContextAndCache) {
-  const LookupCountingField field;
-  const LookupCountingField otherField;
+  const CountingField field;
+  const CountingField otherField;
   const MagneticFieldContext otherContext;
   MagneticFieldQuery query(field, mfContext);
   BOOST_REQUIRE(query.getField(Vector3::Zero()).ok());
