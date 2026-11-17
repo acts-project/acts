@@ -261,7 +261,7 @@ MultiIntersection3D CylinderSurface::intersect(
       // Built-in local to global for speed reasons
       const auto& tMatrix = gctxTransform.matrix();
       // Create the reference vector in local
-      double cZ;
+      double cZ = 0.;
       if (tMatrix(0, 2) == 0. && tMatrix(1, 2) == 0.) {
         cZ = (solution.z() - tMatrix(2, 3)) * tMatrix(2, 2);
       } else {
