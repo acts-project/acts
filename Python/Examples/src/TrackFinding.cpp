@@ -9,6 +9,7 @@
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
+#include "ActsExamples/TrackFinding/CosmicTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
@@ -16,6 +17,7 @@
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/OrthogonalTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedParamsEstimator.hpp"
+#include "ActsExamples/TrackFinding/SimHitSpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
@@ -43,11 +45,15 @@ void addTrackFinding(py::module& mex) {
                                 inputMeasurementSubset, outputMeasurementSubset,
                                 includeOutliers);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(SpacePointMaker, mex, "SpacePointMaker",
-                                inputMeasurements, outputSpacePoints,
-                                trackingGeometry, geometrySelection,
-                                stripGeometrySelection, stripVertex,
-                                stripLengthTolerance, stripLengthGapTolerance);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      SpacePointMaker, mex, "SpacePointMaker", inputMeasurements,
+      outputSpacePoints, trackingGeometry, geometrySelection,
+      stripGeometrySelection, stripVertex, stripLengthTolerance,
+      stripLengthGapTolerance, cosmicStripSpacePoints, cosmicStripTolerance,
+      cosmicStripKeepAllPairs, outputSpacePointClasses, pixelBarrelVolumes,
+      pixelEndcapVolumes, stripBarrelVolumes, stripEndcapVolumes,
+      outputSpacePointSurfaces, inputMeasurementParticlesMap,
+      outputSpacePointParticlesMap);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GridTripletSeedingAlgorithm, mex, "GridTripletSeedingAlgorithm",
@@ -67,6 +73,57 @@ void addTrackFinding(py::module& mex) {
       maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useTimeDoubletCut,
       doubletTimeCutNSigma, useTimeTripletCut, tripletTimeChi2Max, useExtraCuts,
       inputVertices, vertexZNSigma, vertexZMargin);
+
+  {
+    using Config = Acts::CosmicSeedCuts;
+    py::class_<Config>(mex, "CosmicSeedCuts")
+        .def(py::init<>())
+        .def_readwrite("requireTopMiddleBottom",
+                       &Config::requireTopMiddleBottom)
+        .def_readwrite("maxKinkAngle", &Config::maxKinkAngle)
+        .def_readwrite("minDeltaY", &Config::minDeltaY)
+        .def_readwrite("maxDeltaY", &Config::maxDeltaY)
+        .def_readwrite("minCosThetaY", &Config::minCosThetaY)
+        .def_readwrite("maxResidual", &Config::maxResidual)
+        .def_readwrite("zMin", &Config::zMin)
+        .def_readwrite("zMax", &Config::zMax)
+        .def_readwrite("maxAbsEta", &Config::maxAbsEta)
+        .def_readwrite("minPt", &Config::minPt)
+        .def_readwrite("usePtCut", &Config::usePtCut)
+        .def_readwrite("magneticFieldBz", &Config::magneticFieldBz)
+        .def_readwrite("multipleScatteringCof", &Config::multipleScatteringCof)
+        .def_readwrite("useLongitudinalCompatibility",
+                       &Config::useLongitudinalCompatibility)
+        .def_readwrite("usePtDependentKinkResidual",
+                       &Config::usePtDependentKinkResidual)
+        .def_readwrite("maxPtForScattering", &Config::maxPtForScattering)
+        .def_readwrite("useCovarianceScale", &Config::useCovarianceScale)
+        .def_readwrite("covarianceScale", &Config::covarianceScale)
+        .def_readwrite("requireSameSubdetector",
+                       &Config::requireSameSubdetector)
+        .def_readwrite("rejectSameSurface", &Config::rejectSameSurface)
+        .def_readwrite("useSubdetectorAngularCuts",
+                       &Config::useSubdetectorAngularCuts)
+        .def_readwrite("pixelMinCosDeltaPhi", &Config::pixelMinCosDeltaPhi)
+        .def_readwrite("useStripCalibration", &Config::useStripCalibration)
+        .def_readwrite("stripCalibrationTolerance",
+                       &Config::stripCalibrationTolerance)
+        .def_readwrite("useSeedQuality", &Config::useSeedQuality)
+        .def_readwrite("seedQuality", &Config::seedQuality);
+  }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::CosmicTripletSeedingAlgorithm, mex,
+      "CosmicTripletSeedingAlgorithm", inputSpacePoints, outputSeeds, cuts,
+      inputSpacePointClasses, inputSpacePointSurfaces, outputSpacePoints,
+      outputTwoSpacePointSeeds, twoSpacePointSeedsFromUnused);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      SimHitSpacePointMaker, mex, "SimHitSpacePointMaker", inputSimHits,
+      outputSpacePoints, outputParticleIds, sigmaR, sigmaZ,
+      outputSpacePointClasses, outputSpacePointSurfaces, pixelBarrelVolumes,
+      pixelEndcapVolumes, stripBarrelVolumes, stripEndcapVolumes,
+      stripMinRadius, pixelBarrelMaxAbsZ, stripBarrelMaxAbsZ);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       OrthogonalTripletSeedingAlgorithm, mex,
@@ -193,7 +250,7 @@ void addTrackFinding(py::module& mex) {
         outputTracks, trackingGeometry, magneticField, findTracks,
         findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
         twoWay, twoWaySmoothing, seedParamsEstimation, reverseSearch,
-        reverseSearchMinR, reverseSearchMinAbsZ, inwardOnlyMinR,
+        stopAtPerigee, reverseSearchMinR, reverseSearchMinAbsZ, inwardOnlyMinR,
         inwardOnlyMinAbsZ, seedDeduplication, seedDeduplicatorCfg, stayOnSeed,
         pixelVolumeIds, stripVolumeIds, maxPixelHoles, maxStripHoles,
         trimTracks, recordMaterialStates, useJosephFormulation,
