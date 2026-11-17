@@ -1,0 +1,953 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include "ActsExamples/TrackFinding/GlobalPatternFinderAlgorithm.hpp"
+
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <cstdlib>
+#include <format>
+#include <iterator>
+#include <numbers>
+#include <sstream>
+#include <stdexcept>
+#include <tuple>
+#include <vector>
+
+using namespace Acts::UnitLiterals;
+
+namespace {
+
+/// @brief Sector geometry of the muon spectrometer used by ExpandedSector:
+///        sizes, central phi and overlaps of the 16 sectors
+namespace SectorMap {
+
+/// @brief One eighth of pi
+constexpr double kOneEighthOfPi{std::numbers::pi / 8.};
+/// @brief Inverse of one eighth of pi
+constexpr double kInverseOneEighthOfPi{8. / std::numbers::pi};
+/// @brief Half-size [rad] of the small (even) and the large (odd) sectors
+constexpr std::array<double, 2> kSectorSize{0.4 * kOneEighthOfPi,
+                                            0.6 * kOneEighthOfPi};
+/// @brief Size [rad] of the overlap between a small and a large sector
+constexpr double kSectorOverlap{0.1 * kOneEighthOfPi};
+
+/// @brief Sector half-size without the overlap [rad]
+double sectorSize(int sector) {
+  const int idx = sector % 2;
+  return kSectorSize[idx];
+}
+
+/// @brief Sector half-size including the overlap [rad]
+double sectorWidth(int sector) {
+  return sectorSize(sector) + kSectorOverlap;
+}
+
+/// @brief Central phi of a sector [rad]
+double sectorPhi(int sector) {
+  if (sector < 10) {
+    return std::numbers::pi * (sector - 1) / 8.;
+  }
+  return -std::numbers::pi * (2 - (sector - 1) / 8.);
+}
+
+/// @brief Transforms a phi position [rad] into or out of the frame of a sector
+double transformPhiToSector(double phi, int sector, bool toSector = true) {
+  double sign = toSector ? -1 : 1;
+  double dphi = phi + sign * sectorPhi(sector);
+  if (dphi > std::numbers::pi) {
+    dphi -= 2 * std::numbers::pi;
+  }
+  if (dphi < -std::numbers::pi) {
+    dphi += 2 * std::numbers::pi;
+  }
+  return dphi;
+}
+
+/// @brief Whether a phi position lies within a sector, including its overlaps
+bool insideSector(int sector, double phi) {
+  const double phiInSec = transformPhiToSector(phi, sector);
+  return phiInSec >= -sectorWidth(sector) && phiInSec <= sectorWidth(sector);
+}
+
+/// @brief Sector a phi position belongs to
+int getSector(double phi) {
+  // Map phi onto [0, 16), shifted by the half-size of the first sector
+  double val = (phi + sectorSize(1)) * kInverseOneEighthOfPi;
+  if (val < 0) {
+    val += 16;
+  }
+  // Each slice holds one large and one small sector
+  int sliceIndex = static_cast<int>(val / 2);
+  double valueInSlice = val - 2 * sliceIndex;
+  int sector = 2 * sliceIndex + 1;
+  if (valueInSlice > 1.2) {
+    ++sector;
+  }
+  return sector;
+}
+
+/// @brief Sector of a phi position plus the neighbours whose overlap it lies
+///        in, ordered by increasing phi
+void getSectors(double phi, std::vector<int>& sectors) {
+  int sector = getSector(phi);
+  int sectorNext = sector != 16 ? sector + 1 : 1;
+  int sectorBefore = sector != 1 ? sector - 1 : 16;
+  if (insideSector(sectorBefore, phi)) {
+    sectors.push_back(sectorBefore);
+  }
+  if (insideSector(sector, phi)) {
+    sectors.push_back(sector);
+  }
+  if (insideSector(sectorNext, phi)) {
+    sectors.push_back(sectorNext);
+  }
+}
+
+/// @brief Phi [rad] of the overlap between two neighbouring sectors, or the
+///        central phi if both are the same sector
+double sectorOverlapPhi(int sector1, int sector2) {
+  if (sector1 == sector2) {
+    return sectorPhi(sector1);
+  }
+
+  int s1 = std::min(sector1, sector2);
+  int s2 = std::max(sector1, sector2);
+  if (s2 == 16 && s1 == 1) {
+    s1 = 16;
+    s2 = 1;
+  } else if (std::abs(s1 - s2) > 1) {
+    return 0;
+  }
+
+  double phi1 = sectorPhi(s1);
+  double phio1 = phi1 + sectorSize(s1);
+  if (phio1 > std::numbers::pi) {
+    phio1 -= 2 * std::numbers::pi;
+  }
+
+  return phio1;
+}
+
+}  // namespace SectorMap
+
+/// @brief Number of sectors in the muon spectrometer
+constexpr unsigned kNumberOfSectors{16};
+
+using SectorProjector = ActsExamples::ExpandedSector::SectorProjector;
+/// @brief Number of expanded sectors
+constexpr std::int8_t kNumberOfExpanded{2 * kNumberOfSectors};
+
+inline std::tuple<unsigned, SectorProjector> msSectorAndProj(
+    const std::int8_t expandSector) {
+  assert(expandSector >= 0 && expandSector < kNumberOfExpanded);
+  if (expandSector == 0) {
+    return std::make_tuple(kNumberOfSectors, SectorProjector::center);
+  } else if (expandSector == 1) {
+    return std::make_tuple(kNumberOfSectors, SectorProjector::rightOverlap);
+  }
+  const int regSector = expandSector / 2;
+  const int backConv = expandSector - 2 * regSector;
+  switch (backConv) {
+    case 1:
+      return std::make_tuple(regSector, SectorProjector::rightOverlap);
+    case 0:
+      return std::make_tuple(regSector, SectorProjector::center);
+    case -1:
+      return std::make_tuple(regSector, SectorProjector::leftOverlap);
+    default:
+      throw std::runtime_error(
+          std::format("Cannot deduce the sector overlap {}", expandSector));
+  }
+  // all cases have been addressed
+}
+
+}  // namespace
+
+namespace ActsExamples {
+
+namespace {
+
+/// @brief Transformation from the sector frame, in which the space points are
+///        expressed, into the global frame. The space point carries the
+///        transform of its own measurement surface into the sector frame, hence
+///        the global frame is reached as surfaceToGlobal * surfaceToSector^-1.
+/// @param gctx Geometry context
+/// @param surface Measurement surface of the space point
+/// @param sp Space point of interest
+Acts::Transform3 localToGlobalTransform(const Acts::GeometryContext& gctx,
+                                        const Acts::Surface& surface,
+                                        const MuonSpacePoint& sp) {
+  return surface.localToGlobalTransform(gctx) *
+         sp.toSectorTransform().inverse();
+}
+
+/// @brief Measurement surface of a space point, looked up by its geometry
+///        identifier. The surface defines the local axes of the hit
+/// @param trackingGeometry Geometry holding the muon measurement surfaces
+/// @param sp Space point of interest
+const Acts::Surface& measurementSurface(
+    const Acts::TrackingGeometry& trackingGeometry, const MuonSpacePoint& sp) {
+  const Acts::Surface* surface{trackingGeometry.findSurface(sp.geometryId())};
+  if (surface == nullptr) {
+    throw std::runtime_error(
+        std::format("measurementSurface() No surface for geometry id {}",
+                    sp.geometryId().value()));
+  }
+  return *surface;
+}
+
+/// @brief Transformation from the sector frame of a bucket into the global
+///        frame. The space points of a bucket are all expressed in the frame
+///        of the sector of the first one, hence the transform is determined
+///        once per bucket and shared by its hits.
+/// @param gctx Geometry context
+/// @param trackingGeometry Geometry holding the muon measurement surfaces
+/// @param bucket Bucket of interest, which must not be empty
+Acts::Transform3 bucketToGlobalTransform(
+    const Acts::GeometryContext& gctx,
+    const Acts::TrackingGeometry& trackingGeometry,
+    const MuonSpacePointBucket& bucket) {
+  assert(!bucket.empty());
+  const MuonSpacePoint& first{bucket.front()};
+  return localToGlobalTransform(
+      gctx, measurementSurface(trackingGeometry, first), first);
+}
+
+}  // namespace
+
+ExpandedSector::ExpandedSector(const std::int8_t expSector)
+    : m_sector{expSector} {}
+ExpandedSector::ExpandedSector(const unsigned msSector,
+                               const SectorProjector proj) {
+  m_sector = (2 * msSector + Acts::toUnderlying(proj)) % kNumberOfExpanded;
+}
+
+ExpandedSector::ExpandedSector(const double phi) {
+  std::vector<int> sectors{};
+  SectorMap::getSectors(phi, sectors);
+  assert(!sectors.empty());
+  if (sectors.size() == 1) {
+    (*this) = ExpandedSector{static_cast<unsigned>(sectors[0]),
+                             SectorProjector::center};
+  } else {
+    // The sectors are ordered by phi; across the 16 -> 1 boundary the
+    // difference wraps around
+    int dS{sectors[1] - sectors[0]};
+    if (dS < -1) {
+      dS += static_cast<int>(kNumberOfSectors);
+    }
+    assert(dS == 1);
+    (*this) = ExpandedSector{static_cast<unsigned>(sectors[0]),
+                             static_cast<SectorProjector>(dS)};
+  }
+}
+
+SectorProjector ExpandedSector::projector() const {
+  return std::get<1>(msSectorAndProj(sector()));
+}
+unsigned ExpandedSector::msSector() const {
+  return std::get<0>(msSectorAndProj(sector()));
+}
+std::int8_t ExpandedSector::sector() const {
+  return m_sector;
+}
+unsigned ExpandedSector::adjacentMsSector() const {
+  const auto [msSec, proj] = msSectorAndProj(sector());
+  if (msSec == 1 && proj == SectorProjector::leftOverlap) {
+    return kNumberOfSectors;
+  } else if (msSec == kNumberOfSectors &&
+             proj == SectorProjector::rightOverlap) {
+    return 1;
+  }
+  return msSec + Acts::toUnderlying(proj);
+}
+double ExpandedSector::sectorSize() const {
+  unsigned sector1{msSector()};
+  unsigned sector2{adjacentMsSector()};
+
+  if (sector1 == sector2) {
+    return SectorMap::sectorSize(sector1);
+  }
+  // The overlap size is the same for small and large sectors
+  return SectorMap::sectorWidth(sector1) - SectorMap::sectorSize(sector1);
+}
+bool ExpandedSector::operator<(const ExpandedSector& other) const {
+  return sector() < other.sector();
+}
+bool ExpandedSector::operator==(const ExpandedSector& other) const {
+  return sector() == other.sector();
+}
+bool ExpandedSector::operator!=(const ExpandedSector& other) const {
+  return sector() != other.sector();
+}
+double ExpandedSector::phi() const {
+  return SectorMap::sectorOverlapPhi(msSector(), adjacentMsSector());
+}
+Acts::Vector3 ExpandedSector::normalDir() const {
+  return Acts::makeDirectionFromPhiTheta(phi() + 90._degree, 90._degree);
+}
+bool ExpandedSector::isNeighbour(const ExpandedSector& other) const {
+  const int dS = std::abs(other.sector() - sector());
+  return std::min(dS, kNumberOfExpanded - dS) <= 1;
+}
+bool ExpandedSector::insideSector(const double phi) const {
+  return SectorMap::insideSector(msSector(), phi) &&
+         SectorMap::insideSector(adjacentMsSector(), phi);
+}
+
+std::string ExpandedSector::toString(const SectorProjector proj) {
+  switch (proj) {
+    using enum SectorProjector;
+    case leftOverlap:
+      return "leftOverlap";
+    case center:
+      return "center";
+    case rightOverlap:
+      return "rightOverlap";
+  }
+  return "";
+}
+std::ostream& ExpandedSector::toString(std::ostream& ostr) const {
+  ostr << "Expanded sector: " << static_cast<int>(sector()) << " ->  "
+       << projector() << " of sector " << msSector();
+  return ostr;
+}
+
+namespace {
+
+/// @brief Station index of a chamber
+/// @param index Station name of the chamber
+/// @return The station index, StUnknown for an undefined name
+constexpr StIndex toStationIndex(MuonSpacePoint::MuonId::StationName index) {
+  using ChIndex = MuonSpacePoint::MuonId::StationName;
+  switch (index) {
+    case ChIndex::BIS:
+    case ChIndex::BIL:
+      return StIndex::BI;
+    case ChIndex::BMS:
+    case ChIndex::BML:
+      return StIndex::BM;
+    case ChIndex::BOL:
+    case ChIndex::BOS:
+      return StIndex::BO;
+    case ChIndex::BEE:
+      return StIndex::BE;
+    case ChIndex::EIL:
+    case ChIndex::EIS:
+      return StIndex::EI;
+    case ChIndex::EML:
+    case ChIndex::EMS:
+      return StIndex::EM;
+    case ChIndex::EOL:
+    case ChIndex::EOS:
+      return StIndex::EO;
+    case ChIndex::EEL:
+    case ChIndex::EES:
+      return StIndex::EE;
+    // No station index for these
+    case ChIndex::MaxVal:
+    case ChIndex::UnDef:
+      break;
+  };
+  return StIndex::StUnknown;
+}
+/// @brief Station layer of a station index
+/// @param index Station index of interest
+/// @return The station layer, LayerIndexMax for an unknown station
+constexpr LayerIndex toLayerIndex(StIndex index) {
+  switch (index) {
+    case StIndex::BI:
+    case StIndex::EI:
+      return LayerIndex::Inner;
+    case StIndex::BM:
+    case StIndex::EM:
+      return LayerIndex::Middle;
+    case StIndex::EO:
+    case StIndex::BO:
+      return LayerIndex::Outer;
+    case StIndex::BE:
+      return LayerIndex::BarrelExtended;
+    case StIndex::EE:
+      return LayerIndex::Extended;
+    case StIndex::StUnknown:
+    case StIndex::StIndexMax:
+      break;
+  }
+  return LayerIndex::LayerIndexMax;
+}
+/// @brief Returns true if the station index points to a barrel chamber
+/// @param index Station index of interest
+constexpr bool isBarrel(const StIndex index) {
+  switch (index) {
+    case StIndex::BI:
+    case StIndex::BM:
+    case StIndex::BO:
+    case StIndex::BE:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/// @brief Returns whether a space point is a precision hit: an MDT, a
+///        micromegas or an sTGC strip measurement
+/// @param hit Space point of interest
+bool isPrecisionHit(const MuonSpacePoint& hit) {
+  using enum MuonSpacePoint::MuonId::TechField;
+  // Mdt & micromega measurements are precision hits. An sTgc space point is
+  //  one if it stems from a strip, which can only be told apart from a pad if
+  //  the space point measures the precision coordinate alone.
+  return hit.isStraw() || hit.id().technology() == Mm ||
+         (hit.id().technology() == sTgc && hit.id().measuresEta() &&
+          !hit.id().measuresPhi());
+}
+
+/// @brief The symmetric seed station x hit station windows of every |eta| bin
+SeedSelector::Windows_t buildThetaWindows(const SeedSelector::Config& cfg) {
+  struct PairWindow {
+    StIndex a;
+    StIndex b;
+    double halfWidth;
+  };
+  auto makeWindows = [](std::initializer_list<PairWindow> pairs) {
+    SeedSelector::Matrix_t m{};
+    for (const auto& [a, b, w] : pairs) {
+      m[Acts::toUnderlying(a)][Acts::toUnderlying(b)] = w;
+      m[Acts::toUnderlying(b)][Acts::toUnderlying(a)] = w;
+    }
+    return m;
+  };
+  using enum StIndex;
+  using EtaBin = SeedSelector::EtaBin;
+  SeedSelector::Windows_t windows{};
+  windows[Acts::toUnderlying(EtaBin::Barrel)] = makeWindows({
+      {BI, BI, cfg.barrelSameStation},
+      {BM, BM, cfg.barrelSameStation},
+      {BO, BO, cfg.barrelSameStation},
+      {BI, BM, cfg.barrelAdjacent},
+      {BM, BO, cfg.barrelAdjacent},
+      {BI, BO, cfg.barrelSkip},
+  });
+  windows[Acts::toUnderlying(EtaBin::Transition)] = makeWindows({
+      {BI, BI, cfg.transSameStation}, {BM, BM, cfg.transSameStation},
+      {BO, BO, cfg.transSameStation}, {BE, BE, cfg.transSameStation},
+      {EI, EI, cfg.transSameStation}, {EM, EM, cfg.transSameStation},
+      {EO, EO, cfg.transSameStation}, {EE, EE, cfg.transSameStation},
+      {BI, BM, cfg.transBarrelAdj},   {BM, BO, cfg.transBarrelAdj},
+      {BI, BO, cfg.transBarrelSkip},  {BI, BE, cfg.transBIToExt},
+      {BI, EE, cfg.transBIToExt},     {BI, EM, cfg.transBIToEM},
+      {BI, EI, cfg.transBIToEI},      {BM, BE, cfg.transBMToEndcap},
+      {BM, EE, cfg.transBMToEndcap},  {BM, EM, cfg.transBMToEndcap},
+      {BM, EI, cfg.transBMToEndcap},  {BO, BE, cfg.transBOToExt},
+      {BO, EE, cfg.transBOToExt},     {BO, EM, cfg.transBOToEM},
+      {BO, EI, cfg.transBOToEI},      {BE, EE, cfg.transBEToEE},
+      {BE, EI, cfg.transExtToEI},     {EE, EI, cfg.transExtToEI},
+      {BE, EM, cfg.transExtToEM},     {EE, EM, cfg.transExtToEM},
+      {BE, EO, cfg.transExtToEO},     {EE, EO, cfg.transExtToEO},
+      {EI, EM, cfg.transEndcapAdj},   {EM, EO, cfg.transEndcapAdj},
+      {EI, EO, cfg.transEndcapSkip},
+  });
+  windows[Acts::toUnderlying(EtaBin::Endcap)] = makeWindows({
+      {EI, EI, cfg.endcapSameInnerOuter},
+      {EO, EO, cfg.endcapSameInnerOuter},
+      {EM, EM, cfg.endcapSameMiddle},
+      {EI, EM, cfg.endcapAdjacent},
+      {EM, EO, cfg.endcapAdjacent},
+      {EI, EO, cfg.endcapSkip},
+  });
+  return windows;
+}
+}  // namespace
+
+SeedSelector::SeedSelector(const Config& config)
+    : m_thetaWindows{buildThetaWindows(config)}, m_cfg{config} {
+  if (m_cfg.seedFromInner) {
+    m_seedingLayers.push_back(LayerIndex::Inner);
+  }
+}
+
+bool SeedSelector::goodForSeeding(const HitPayload& hit) const {
+  const LayerIndex hitLayer{toLayerIndex(hit.station())};
+  if (std::ranges::find(m_seedingLayers, hitLayer) == m_seedingLayers.end() ||
+      (hit.spacePoint().isStraw() && !m_cfg.seedFromMdt)) {
+    return false;
+  }
+  return true;
+}
+SeedSelector::EtaBin SeedSelector::etaBin(const HitPayload& seed) const {
+  const double eta{std::abs(Acts::VectorHelpers::eta(seed.position))};
+  return eta <= m_cfg.etaBarrelMax
+             ? EtaBin::Barrel
+             : (eta < m_cfg.etaEndcapMin ? EtaBin::Transition : EtaBin::Endcap);
+}
+const SeedSelector::Row_t& SeedSelector::thetaSearchWindow(
+    const HitPayload& seed) const {
+  if (seed.station() == StIndex::StUnknown) {
+    throw std::runtime_error(
+        "SeedSelector: no theta window for a hit in an unknown station");
+  }
+  return m_thetaWindows[Acts::toUnderlying(etaBin(seed))]
+                       [Acts::toUnderlying(seed.station())];
+}
+double SeedSelector::maxThetaWindow() const {
+  double maxWindow{0.};
+  for (const Matrix_t& m : m_thetaWindows) {
+    for (const Row_t& row : m) {
+      maxWindow = std::max(maxWindow, std::ranges::max(row));
+    }
+  }
+  return maxWindow;
+}
+
+using MuonId = MuonSpacePoint::MuonId;
+
+HitPayload::HitPayload(const Acts::GeometryContext& gctx,
+                       const MuonSpacePoint& sp,
+                       const MuonSpacePointBucket& parentBucket,
+                       const Acts::Transform3& localToGlobal,
+                       const Acts::Surface& measSurface)
+    : position{localToGlobal * sp.localPosition()},
+      underlyingSp{&sp},
+      bucket{&parentBucket},
+      surface{&measSurface} {
+  // Only the eta strips of two-dimensional TGC measurements can be tilted
+  // against their phi strips; their sensor direction follows the tilt
+  if (!sp.id().measuresEta() || !sp.id().measuresPhi() || sp.isStraw() ||
+      sp.id().technology() != MuonId::TechField::Tgc) {
+    return;
+  }
+  const auto& surfLinearTrf = measSurface.localToGlobalTransform(gctx).linear();
+  const Acts::Vector3 phiMeasDir = surfLinearTrf.col(Acts::eY);
+  const Acts::Vector3 etaMeasDir = localToGlobal.rotation() * sp.toNextSensor();
+  const Acts::Vector3 phiSensorDir = surfLinearTrf.col(Acts::eX);
+  const double c{etaMeasDir.dot(phiMeasDir)};
+  if (std::abs(c) > Acts::s_epsilon) {
+    stripAngle = std::atan2(etaMeasDir.dot(phiSensorDir), c);
+  }
+}
+bool HitPayload::isPrecision() const {
+  return isPrecisionHit(spacePoint());
+}
+StIndex HitPayload::station() const {
+  return toStationIndex(spacePoint().id().msStation());
+}
+std::uint8_t HitPayload::locLayer() const {
+  return spacePoint().id().detLayer();
+}
+const Acts::Vector3& HitPayload::globalPosition(
+    const Acts::GeometryContext& /*gctx*/) const {
+  return position;
+}
+Acts::Vector3 HitPayload::globalSensorDirection(
+    const Acts::GeometryContext& gctx) const {
+  const auto& surfLinearTrf = surface->localToGlobalTransform(gctx).linear();
+
+  if (spacePoint().isStraw()) {
+    return surfLinearTrf.col(Acts::eZ);
+  } else {
+    if (stripAngle) {
+      return -std::sin(*stripAngle) * surfLinearTrf.col(Acts::eY) +
+             std::cos(*stripAngle) * surfLinearTrf.col(Acts::eX);
+    }
+    return surfLinearTrf.col(Acts::eY);
+  }
+}
+Acts::Experimental::detail::StripMeasurementDirections
+HitPayload::stripMeasurementDirections(
+    const Acts::GeometryContext& gctx) const {
+  assert(!spacePoint().isStraw());
+  const auto& surfLinearTrf = surface->localToGlobalTransform(gctx).linear();
+  if (!stripAngle) {
+    return {surfLinearTrf.col(Acts::eX), std::nullopt};
+  }
+  const Acts::Vector3 etaMeasDir{
+      globalSensorDirection(gctx).cross(surfLinearTrf.col(Acts::eZ))};
+  return {etaMeasDir, Acts::Vector3{surfLinearTrf.col(Acts::eY)}};
+}
+bool HitPayload::overlaps(const HitPayload& other) const {
+  // A measurement enters a space point for every non-precision hit it was
+  // combined with and for every bucket it was sorted into. Those space points
+  // share the surface and the precision coordinate and differ only along the
+  // sensor, where the non-precision hit placed them
+  return spacePoint().geometryId() == other.spacePoint().geometryId() &&
+         std::abs(spacePoint().localPosition().y() -
+                  other.spacePoint().localPosition().y()) < Acts::s_epsilon;
+}
+
+std::weak_ordering PatternTopology::compareLayers(const HitPayload& hit1,
+                                                  const HitPayload& hit2) {
+  // Order of two hits that are not on the same layer
+  auto order = [](const bool firstIsInner) {
+    return firstIsInner ? std::weak_ordering::less
+                        : std::weak_ordering::greater;
+  };
+  const StIndex st1{hit1.station()};
+  const StIndex st2{hit2.station()};
+  if (st1 == st2) {
+    const bool sameChamber{
+        hit1.spacePoint().id().sameStation(hit2.spacePoint().id())};
+    // Distance between the two hits along the stacking direction of the
+    // layers: the radius in the barrel and |z| in the endcap
+    const double delta{isBarrel(st1)
+                           ? Acts::VectorHelpers::perp(hit1.position) -
+                                 Acts::VectorHelpers::perp(hit2.position)
+                           : std::abs(hit1.position.z()) -
+                                 std::abs(hit2.position.z())};
+    if ((sameChamber && hit1.locLayer() == hit2.locLayer()) ||
+        std::abs(delta) <= Acts::s_epsilon) {
+      return std::weak_ordering::equivalent;
+    }
+    // Hits in one chamber are ordered by their layer number, hits of two
+    // adjacent sectors in the same station by their position
+    return sameChamber ? order(hit1.locLayer() < hit2.locLayer())
+                       : order(delta < 0.);
+  }
+  LayerIndex layer1{toLayerIndex(st1)};
+  LayerIndex layer2{toLayerIndex(st2)};
+  using enum LayerIndex;
+  if (layer1 == layer2) {
+    // Hit in different stations but same station layer. Expected to happen
+    // only for Inner and Middle
+    if (layer1 == Middle) {
+      // If both hits are in the middle layer, the one in the barrel comes
+      // first
+      return order(st1 == StIndex::BM);
+    }
+    if (layer1 == Inner) {
+      // If both hits are in the inner layer, we use the global R, since in
+      // large sector BI comes first, while in small sector EI comes first.
+      return order(Acts::VectorHelpers::perp(hit1.position) <
+                   Acts::VectorHelpers::perp(hit2.position));
+    }
+    throw std::runtime_error(
+        "Unexpected to have two pattern-compatible hits one in BO and the "
+        "other in EO.");
+  }
+  if (layer1 == Inner || layer2 == Inner) {
+    // If we have one hit in Inner layer for sure it comes first
+    return order(layer1 == Inner);
+  }
+  if (layer1 == Outer || layer2 == Outer) {
+    // If we have one hit in Outer layer for sure it comes last
+    return order(layer2 == Outer);
+  }
+  if (layer1 == BarrelExtended || layer2 == BarrelExtended) {
+    // If we have one hit in BarrelExtended and the other in the Middle layer,
+    // the former comes first
+    return order(layer1 == BarrelExtended);
+  }
+  // If we have one hit in Extended (EE) layer and the other in the Middle
+  // layer, it depends if the latter is endcap or barrel
+  if (layer1 == Extended) {
+    return order(st2 == StIndex::EM);
+  }
+  return order(st1 == StIndex::BM);
+}
+
+std::uint8_t PatternTopology::groupIndex(const HitPayload& hit) {
+  return static_cast<std::uint8_t>(Acts::toUnderlying(hit.station()));
+}
+
+OnlyPhiHitsProvider::PhiHitsPerGroup OnlyPhiHitsProvider::getPhiOnlyHits(
+    const PatternStateAux& pattern, const Acts::GeometryContext& gctx) const {
+  PhiHitsPerGroup phiOnlyHits{};
+  for (const auto& [group, hits] : Acts::enumerate(pattern.hitsPerGroup)) {
+    std::vector<const MuonSpacePointBucket*> parentBuckets{};
+    for (const auto& hit : hits) {
+      const MuonSpacePointBucket* bucket{hit->bucket};
+      if (std::ranges::find(parentBuckets, bucket) == parentBuckets.end()) {
+        parentBuckets.push_back(bucket);
+      }
+    }
+    for (const MuonSpacePointBucket* bucket : parentBuckets) {
+      const Acts::Transform3 localToGlobal{
+          bucketToGlobalTransform(gctx, *trackingGeometry, *bucket)};
+
+      for (const MuonSpacePoint& h : *bucket) {
+        if (!h.id().measuresEta()) {
+          phiOnlyHits[group].emplace_back(
+              gctx, h, *bucket, localToGlobal,
+              measurementSurface(*trackingGeometry, h));
+        }
+      }
+    }
+  }
+  return phiOnlyHits;
+}
+
+GlobalPatternFinderAlgorithm::GlobalPatternFinderAlgorithm(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("GlobalPatternFinderAlgorithm", std::move(logger)),
+      m_cfg{cfg} {
+  if (m_cfg.inSpacePoints.empty()) {
+    throw std::invalid_argument(
+        "GlobalPatternFinderAlgorithm: Missing space point collection");
+  }
+  if (m_cfg.outPatterns.empty()) {
+    throw std::invalid_argument(
+        "GlobalPatternFinderAlgorithm: Missing output pattern collection");
+  }
+  if (!m_cfg.trackingGeometry) {
+    throw std::invalid_argument(
+        "GlobalPatternFinderAlgorithm: Missing tracking geometry");
+  }
+  m_onlyPhiProvider.trackingGeometry = m_cfg.trackingGeometry.get();
+  m_inSpacePoints.initialize(m_cfg.inSpacePoints);
+  m_outPatterns.initialize(m_cfg.outPatterns);
+
+  m_seedSelector = std::make_unique<SeedSelector>(SeedSelector::Config{});
+
+  GlobalPatternFinder_t::Config patCfg{};
+  patCfg.nResidualSigma = m_cfg.nResidualSigma;
+  patCfg.lowConfidenceResSigma = m_cfg.lowConfidenceResSigma;
+  // Two patterns are checked for an overlap if their theta differs by less
+  // than twice the widest seed window plus a margin
+  const double maxThetaSizeOverlap{2. * m_seedSelector->maxThetaWindow() +
+                                   0.5_degree};
+  patCfg.maxThetaSizeOverlap = maxThetaSizeOverlap;
+  patCfg.phiTolerance = m_cfg.phiTolerance;
+  patCfg.loosenAcceptanceFactor = 2.5;
+  patCfg.minStripEtaLayers = m_cfg.minTriggerLayers;
+  patCfg.minPrecisionLayers = m_cfg.minPrecisionLayers;
+  patCfg.minPhiLayers = m_cfg.minPhiLayers;
+  patCfg.minGroupLayers = m_cfg.minStationLayers;
+  patCfg.meanNormRes2Cut = m_cfg.meanNormRes2Cut;
+  patCfg.maxSeedAttempts = m_cfg.maxSeedAttempts;
+  patCfg.maxMissLayersInGroup = m_cfg.maxMissLayersInStation;
+  patCfg.minHitDistance4Line = m_cfg.minHitDistance4Line;
+
+  m_globPatFinder = std::make_unique<GlobalPatternFinder_t>(
+      GlobalPatternFinder_t::Config{patCfg},
+      this->logger().clone("GlobalPatternFinder"));
+
+  // Print Configuration
+  ACTS_LOG_WITH_LOGGER(
+      this->logger(), Acts::Logging::DEBUG,
+      "Global Pattern Finder Configuration:\n"
+          << " Max theta size overlap [rad]: " << maxThetaSizeOverlap << "\n"
+          << " Number of residual standard deviations: " << m_cfg.nResidualSigma
+          << "\n"
+          << " Low confidence residual sigma [mm]: "
+          << m_cfg.lowConfidenceResSigma << "\n"
+          << " Max missed layer hits in station: "
+          << m_cfg.maxMissLayersInStation << "\n"
+          << " Min hit distance for line [mm]: " << m_cfg.minHitDistance4Line
+          << "\n"
+          << " Phi tolerance [deg]: " << m_cfg.phiTolerance / 1_degree << "\n"
+          << " Min trigger layers: " << m_cfg.minTriggerLayers << "\n"
+          << " Min precision layers: " << m_cfg.minPrecisionLayers << "\n"
+          << " Min phi layers: " << m_cfg.minPhiLayers << "\n"
+          << " Min station layers: " << m_cfg.minStationLayers << "\n"
+          << " Mean norm residual^2 cut: " << m_cfg.meanNormRes2Cut << "\n"
+          << " Use MDT hits: " << m_cfg.useMdtHits << "\n"
+          << " Max seed attempts: " << m_cfg.maxSeedAttempts << "\n"
+          << " Beam spot radius: " << m_cfg.beamSpotRadius << "\n"
+          << " Beam spot length: " << m_cfg.beamSpotLength << "\n");
+}
+
+ProcessCode GlobalPatternFinderAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
+  const MuonSpacePointContainer& inSpacePoints{m_inSpacePoints(ctx)};
+  ACTS_DEBUG("Reading " << inSpacePoints.size()
+                        << " SP buckets from collection: "
+                        << m_cfg.inSpacePoints);
+
+  const Acts::GeometryContext& gctx{ctx.recoGeoContext};
+
+  SearchTreeData treeData{constructTree(gctx, inSpacePoints)};
+
+  GlobalPatternFinder_t::BeamspotInfo beamSpot{};
+  beamSpot.position = Acts::Vector3::Zero();
+  beamSpot.radius = m_cfg.beamSpotRadius;
+  beamSpot.length = m_cfg.beamSpotLength;
+
+  MuonGlobalPatternContainer patterns{
+      convertToPattern(m_globPatFinder->findPatterns(
+          gctx, treeData.tree, *m_seedSelector, m_onlyPhiProvider, beamSpot))};
+
+  ACTS_DEBUG("Found " << patterns.size() << " global patterns.");
+  if (logger().doPrint(Acts::Logging::DEBUG)) {
+    for (const MuonGlobalPattern& pat : patterns) {
+      std::ostringstream hitsPerStation{};
+      for (const auto& [st, hits] : Acts::enumerate(pat.hitsPerStation)) {
+        if (!hits.empty()) {
+          hitsPerStation << " " << static_cast<int>(st) << ":" << hits.size();
+        }
+      }
+      ACTS_DEBUG("Pattern in "
+                 << ExpandedSector{pat.sector} << ", theta: " << pat.theta
+                 << ", phi: " << pat.phi
+                 << ", precision/trigger/phi layers: " << pat.nPrecisionLayers
+                 << "/" << pat.nTriggerLayers << "/" << pat.nPhiLayers
+                 << ", meanNormRes2: " << pat.meanNormResidual2
+                 << ", hits per station:" << hitsPerStation.str());
+    }
+  }
+  // Write out the global patterns.
+  m_outPatterns(ctx, std::move(patterns));
+  return ProcessCode::SUCCESS;
+}
+
+SearchTreeData GlobalPatternFinderAlgorithm::constructTree(
+    const Acts::GeometryContext& gctx,
+    const MuonSpacePointContainer& spacepoints) const {
+  std::vector<HitPayload> hitPayloads{};
+  using enum ExpandedSector::SectorProjector;
+  // First estimate the number of hits
+  std::size_t totalHits = 0;
+  for (const MuonSpacePointBucket& bucket : spacepoints) {
+    totalHits += bucket.size();
+  }
+  hitPayloads.reserve(totalHits);
+
+  for (const MuonSpacePointBucket& bucket : spacepoints) {
+    if (bucket.empty()) {
+      continue;
+    }
+    const Acts::Transform3 localToGlobal{
+        bucketToGlobalTransform(gctx, *m_cfg.trackingGeometry, bucket)};
+
+    for (const MuonSpacePoint& hit : bucket) {
+      // Ignore only-phi hits and MDT hits if desired
+      if (!hit.id().measuresEta() || (!m_cfg.useMdtHits && hit.isStraw())) {
+        continue;
+      }
+
+      const Acts::Surface& surface{
+          measurementSurface(*m_cfg.trackingGeometry, hit)};
+      hitPayloads.emplace_back(gctx, hit, bucket, localToGlobal, surface);
+
+      if (logger().doPrint(Acts::Logging::VERBOSE)) {
+        const HitPayload& newHit{hitPayloads.back()};
+        std::ostringstream oss{};
+        oss << __func__ << "() Building hit from " << hit << "\n"
+            << "Pos: " << Acts::toString(newHit.position) << ", SensorDir: "
+            << Acts::toString(newHit.globalSensorDirection(gctx));
+        if (!newHit.spacePoint().isStraw()) {
+          oss << ", orthogonalStrips: " << !newHit.stripAngle;
+        }
+        ACTS_VERBOSE(oss.str());
+      }
+    }
+  }
+
+  SearchTree_t::vector_t treeData{};
+  // An event without eta hits gives an empty tree
+  if (hitPayloads.empty()) {
+    return SearchTreeData{std::move(hitPayloads),
+                          SearchTree_t{std::move(treeData)}};
+  }
+  treeData.reserve(3 * hitPayloads.size());
+
+  // The sector entries of a hit: its own sector and the overlaps with the
+  // neighbours, common to all hits of a bucket
+  auto addEntry = [&](const double theta, const ExpandedSector& expSect,
+                      const HitPayload& hit) {
+    std::array<double, 2> coords{};
+    using HitCoords = GlobalPatternFinder_t::HitCoords;
+    coords[Acts::toUnderlying(HitCoords::eTheta)] = theta;
+    coords[Acts::toUnderlying(HitCoords::eSector)] = expSect.sector();
+    ACTS_VERBOSE(__func__ << "() Add hit with coordinates [" << coords[0]
+                          << ", " << coords[1] << "] to search tree");
+    treeData.emplace_back(coords, &hit);
+  };
+  for (const HitPayload& hit : hitPayloads) {
+    ACTS_VERBOSE(__func__ << "() Spacepoint: " << hit.spacePoint());
+    const Acts::Vector3& pos{hit.position};
+    // The sector of the bucket, from its first hit
+    const unsigned msSector{hit.bucket->front().id().sector()};
+    if (hit.spacePoint().id().measuresPhi()) {
+      // No projection: theta is the same for all sectors
+      const double phi{Acts::VectorHelpers::phi(pos)};
+      const double theta{Acts::VectorHelpers::theta(pos)};
+      for (const ExpandedSector::SectorProjector proj :
+           {leftOverlap, center, rightOverlap}) {
+        const ExpandedSector expSect{msSector, proj};
+        if (proj != center && !expSect.insideSector(phi)) {
+          continue;
+        }
+        addEntry(theta, expSect, hit);
+      }
+      continue;
+    }
+    // Project the hit onto the plane along the sector radial direction, which
+    // removes the bias of the hit displacement in phi
+    const double r2{pos.head<2>().squaredNorm()};
+    for (const ExpandedSector::SectorProjector proj :
+         {leftOverlap, center, rightOverlap}) {
+      const ExpandedSector expSect{msSector, proj};
+      const double projR{std::sqrt(
+          std::max(0., r2 - Acts::square(pos.dot(expSect.normalDir()))))};
+      addEntry(std::atan2(projR, pos.z()), expSect, hit);
+    }
+  }
+  ACTS_VERBOSE(__func__ << "() Create a new tree with " << treeData.size()
+                        << " entries and " << hitPayloads.size() << " hits.");
+  return SearchTreeData{std::move(hitPayloads),
+                        SearchTree_t{std::move(treeData)}};
+}
+
+MuonGlobalPattern GlobalPatternFinderAlgorithm::convertToPattern(
+    const PatternResult& candidate) const {
+  MuonGlobalPattern pattern{};
+  // Add eta hits
+  for (std::uint8_t g = 0u; g < PatternTopology::nGroups; ++g) {
+    const auto& hits{candidate.hitsPerGroup[g]};
+    if (hits.empty()) {
+      continue;
+    }
+
+    auto& outHits{pattern.hitsPerStation[g]};
+    outHits.reserve(hits.size());
+
+    std::ranges::for_each(hits, [&outHits](const HitPayload* h) {
+      outHits.push_back(&h->spacePoint());
+    });
+  }
+
+  // Add phi-only hits
+  for (const HitPayload& hit : candidate.phiOnlyHits) {
+    pattern.hitsPerStation[Acts::toUnderlying(hit.station())].push_back(
+        &hit.spacePoint());
+  }
+  pattern.theta = candidate.patTheta;
+  pattern.phi = candidate.patPhi;
+  // Set the pattern sector(s) and theta.
+  pattern.sector = candidate.sector.sector();
+  // Set pattern quality information.
+  pattern.nPrecisionLayers = candidate.nPrecisionLayers;
+  pattern.nTriggerLayers = candidate.nTriggerLayers;
+  pattern.nPhiLayers = candidate.nPhiLayers;
+  pattern.meanNormResidual2 = candidate.meanNormResidual2;
+  return pattern;
+}
+MuonGlobalPatternContainer GlobalPatternFinderAlgorithm::convertToPattern(
+    const std::vector<PatternResult>& candidates) const {
+  MuonGlobalPatternContainer patterns{};
+  patterns.reserve(candidates.size());
+  std::transform(candidates.begin(), candidates.end(),
+                 std::back_inserter(patterns),
+                 [this](const PatternResult& candidate) {
+                   return convertToPattern(candidate);
+                 });
+  return patterns;
+}
+
+}  // namespace ActsExamples
