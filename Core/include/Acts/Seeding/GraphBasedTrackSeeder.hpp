@@ -62,16 +62,8 @@ class GraphBasedTrackSeeder {
     /// the maximum allowed eta value in which
     /// three spacepoint seeds are passed through
     float maxAbsEtaAddTriplets = 1.5;
-    /// Smallest seed size that is split into drop-out candidates.
-    std::uint32_t minSplitSeedSize = 4;
-    /// Largest seed size that is split.
-    std::uint32_t maxSplitSeedSize = 5;
     /// Threshold for hit sharing between seeds.
     float hitShareThreshold = 0.49;
-    /// Max seed eta value considered for splitting.
-    float maxSeedSplitEta = 0.6;
-    /// Max allowed curvature for seed self consistency check.
-    float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
     /// Reject a complete chain whose fitted |curvature| times this factor
     /// exceeds `GbtsTrackingFilter::Config::maxCurvature`: a tighter minimum
     /// pT once the whole chain has been fitted. Values below 1 does nothing.
@@ -164,13 +156,9 @@ class GraphBasedTrackSeeder {
     /// @param quality Seed quality score
     /// @param clone Whether the candidate was rejected as a clone
     /// @param sps Vector of graph node indices
-    /// @param splitFlag used to flag if seed needs to be split in two
     SeedCandidateProperties(float quality, bool clone,
-                            std::vector<SpacePointIndex> sps, bool splitFlag)
-        : seedQuality(quality),
-          isClone(clone),
-          nodes(std::move(sps)),
-          forSeedSplitting(splitFlag) {}
+                            std::vector<SpacePointIndex> sps)
+        : seedQuality(quality), isClone(clone), nodes(std::move(sps)) {}
 
     /// Seed quality score.
     float seedQuality{};
@@ -178,8 +166,6 @@ class GraphBasedTrackSeeder {
     bool isClone{};
     /// Graph node indices.
     std::vector<SpacePointIndex> nodes;
-    /// Flag for seed splitting.
-    bool forSeedSplitting{};
     /// Fit of the tracking filter.
     std::optional<GbtsSeedFit> fit;
   };
@@ -235,13 +221,6 @@ class GraphBasedTrackSeeder {
   std::vector<FittedPath> extractBestPathPerEdge(
       const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
       const GbtsTrackingFilter& filter) const;
-
-  /// Estimate the inverse radius of the circle through three nodes.
-  /// @param nodeView View of the node positions and layers
-  /// @param nodes The three graph nodes, innermost first
-  /// @return The estimated inverse radius
-  float estimateCurvature(const detail::GbtsNodeView& nodeView,
-                          const std::array<SpacePointIndex, 3>& nodes) const;
 };
 
 }  // namespace Acts::Experimental
