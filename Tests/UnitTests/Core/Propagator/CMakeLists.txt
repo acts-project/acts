@@ -1,6 +1,7 @@
 add_unittest(ActorList ActorListTests.cpp)
 add_unittest(AtlasStepper AtlasStepperTests.cpp)
 add_unittest(ConstrainedStep ConstrainedStepTests.cpp)
+add_unittest(CylinderPortalNavigation CylinderPortalNavigationTests.cpp)
 add_unittest(CovarianceEngine CovarianceEngineTests.cpp)
 add_unittest(DirectNavigator DirectNavigatorTests.cpp)
 add_unittest(Extrapolator ExtrapolatorTests.cpp)
@@ -26,3 +27,4 @@ add_unittest(BoundToCurvilinearConversionTests BoundToCurvilinearConversionTests
 add_unittest(SympyStepper SympyStepperTests.cpp)
 add_unittest(RiddersStepper RiddersStepperTests.cpp)
 add_unittest(NavigationPolicyState NavigationPolicyStateTests.cpp)
+add_unittest(SteppingHelper SteppingHelperTests.cpp)

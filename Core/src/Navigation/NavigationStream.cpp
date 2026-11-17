@@ -168,6 +168,7 @@ bool NavigationStream::update(const GeometryContext& gctx,
 }
 
 void NavigationStream::reset() {
+  m_cylinderPortalBounds = nullptr;
   m_candidates.clear();
   m_currentIndex = 0;
 }

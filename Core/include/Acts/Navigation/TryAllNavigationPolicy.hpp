@@ -10,6 +10,7 @@
 
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Navigation/detail/CylinderPortalBounds.hpp"
 
 namespace Acts {
 
@@ -70,6 +71,7 @@ class TryAllNavigationPolicy final : public INavigationPolicy {
  private:
   Config m_cfg;
   const TrackingVolume* m_volume;
+  detail::CylinderPortalBounds m_cylinderPortalBounds;
 };
 
 static_assert(NavigationPolicyConcept<TryAllNavigationPolicy>);

@@ -14,6 +14,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Navigation/detail/CylinderPortalGuard.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
@@ -256,6 +257,9 @@ class Navigator final {
     /// Stream for navigation debugging and monitoring
     NavigationStream stream;
 
+    /// Per-propagation deadlines and pending arrivals of the optional guard.
+    detail::CylinderPortalGuard cylinderPortalGuard;
+
     /// Reset navigation state after switching layers
     void resetAfterLayerSwitch() {
       navSurfaces.clear();
@@ -300,6 +304,7 @@ class Navigator final {
     /// target information.
     void resetForInitialization() {
       resetForRenavigation();
+      cylinderPortalGuard = {};
 
       startVolume = nullptr;
       startLayer = nullptr;
@@ -565,3 +570,5 @@ class Navigator final {
 };
 
 }  // namespace Acts
+
+#include "Acts/Propagator/detail/NavigatorStepGuard.hpp"

@@ -16,6 +16,7 @@
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
+#include "Acts/Propagator/detail/NavigationStepGuard.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -87,7 +88,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
               m_stepper, state.stepping, nextTarget.surface(),
               nextTarget.intersectionIndex(), state.options.direction,
               nextTarget.boundaryTolerance(), state.options.surfaceTolerance,
-              ConstrainedStep::Type::Navigator, logger());
+              ConstrainedStep::Type::Navigator, logger(), &state.curvature);
       if (!preStepSurfaceResult.ok()) {
         return preStepSurfaceResult.error();
       }
@@ -131,6 +132,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
 
   // Stepping loop
   for (; state.steps < state.options.maxSteps; ++state.steps) {
+    detail::NavigationStepGuard<N>::beforeStep(m_stepper, state, nextTarget);
     // Perform a step
     Result<double> res =
         m_stepper.step(state.stepping, state.options.direction,
@@ -156,23 +158,29 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     m_stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Navigator);
     m_stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Actor);
 
+    detail::NavigationStepGuard<N>::afterStep(state, nextTarget, *res);
+
     // Post-stepping: check target status, call actors, check abort conditions
     state.stage = PropagatorStage::postStep;
 
     if (!nextTarget.isNone()) {
+      std::optional<Vector3> evaluatedCurvature;
       const auto postStepSurfaceResult =
           detail::updateSurfaceStatusWithCurvature(
               m_stepper, state.stepping, nextTarget.surface(),
               nextTarget.intersectionIndex(), state.options.direction,
               nextTarget.boundaryTolerance(), state.options.surfaceTolerance,
-              ConstrainedStep::Type::Navigator, logger());
+              ConstrainedStep::Type::Navigator, logger(), nullptr,
+              &evaluatedCurvature);
       if (!postStepSurfaceResult.ok()) {
         return postStepSurfaceResult.error();
       }
       const IntersectionStatus postStepSurfaceStatus = *postStepSurfaceResult;
       if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
         // A portal transition can create a policy state before actors run.
-        if (auto update = updateNavigationState(state); !update.ok()) {
+        if (evaluatedCurvature.has_value()) {
+          state.curvature = *evaluatedCurvature;
+        } else if (auto update = updateNavigationState(state); !update.ok()) {
           return update.error();
         }
         if constexpr (Concepts::NavigatorHandleSurfaceReachedWithCurvature<N>) {
@@ -186,6 +194,8 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
         }
       }
       if (postStepSurfaceStatus != IntersectionStatus::reachable) {
+        detail::NavigationStepGuard<N>::targetStatus(state,
+                                                     postStepSurfaceStatus);
         nextTarget = NavigationTarget::None();
       }
     }

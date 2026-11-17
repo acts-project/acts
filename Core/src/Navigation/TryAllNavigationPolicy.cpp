@@ -13,11 +13,11 @@
 
 namespace Acts {
 
-TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& /*gctx*/,
+TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& gctx,
                                                const TrackingVolume& volume,
                                                const Logger& logger,
                                                const Config& config)
-    : m_cfg{config}, m_volume(&volume) {
+    : m_cfg{config}, m_volume(&volume), m_cylinderPortalBounds(gctx, volume) {
   assert(m_volume != nullptr);
   ACTS_VERBOSE("TryAllNavigationPolicy created for volume "
                << m_volume->volumeName() << " with config: "
@@ -44,6 +44,7 @@ void TryAllNavigationPolicy::initializeCandidates(
   std::size_t numCandidates = 0;
 
   if (m_cfg.portals) {
+    m_cylinderPortalBounds.attach(stream);
     for (const auto& portal : m_volume->portals()) {
       stream.addPortalCandidate(portal);
       numCandidates++;

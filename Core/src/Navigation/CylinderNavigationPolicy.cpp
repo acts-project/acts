@@ -82,7 +82,7 @@ bool CylinderNavigationPolicy::isApplicable(const TrackingVolume& volume,
 CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
                                                    const TrackingVolume& volume,
                                                    const Logger& logger)
-    : m_volume(&volume) {
+    : m_volume(&volume), m_cylinderPortalBounds(gctx, volume) {
   ACTS_VERBOSE("CylinderNavigationPolicy constructor for volume "
                << volume.volumeName());
   using enum CylinderVolumeBounds::Face;
@@ -233,6 +233,7 @@ void CylinderNavigationPolicy::initializeCandidates(
     const NavigationArguments& args, NavigationPolicyState& /*state*/,
     AppendOnlyNavigationStream& stream, const Logger& logger) const {
   using enum CylinderVolumeBounds::Face;
+  m_cylinderPortalBounds.attach(stream);
 
   ACTS_VERBOSE("CylinderNavigationPolicy::initializeCandidates for volume "
                << m_volume->volumeName()

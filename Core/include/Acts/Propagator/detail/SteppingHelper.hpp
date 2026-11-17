@@ -19,8 +19,25 @@
 
 #include <concepts>
 #include <limits>
+#include <optional>
+
+namespace Acts {
+template <typename Extension>
+class EigenStepper;
+}  // namespace Acts
 
 namespace Acts::detail {
+
+// A curvature-aware status signature alone does not guarantee that the stepper
+// preserves kinematics: composite steppers can remove or reweight components,
+// and custom steppers may modify the track state. EigenStepper only updates
+// step constraints, so its curvature remains valid across a status update.
+template <typename Stepper>
+inline constexpr bool kSurfaceStatusPreservesKinematics = false;
+
+template <typename Extension>
+inline constexpr bool
+    kSurfaceStatusPreservesKinematics<EigenStepper<Extension>> = true;
 
 /// Calculate geometric curvature from the current state and local field.
 /// @param stepper Stepper providing position, direction, q/p and field
@@ -133,13 +150,23 @@ IntersectionStatus updateSingleSurfaceStatus(
 /// @param surfaceTolerance On-surface tolerance
 /// @param stype Step constraint type
 /// @param logger Logger
+/// @param knownCurvature Optional curvature evaluated at the current state.
+/// The caller must refresh it after stepping or an actor changes the state.
+/// It is reused only for steppers known to preserve kinematics during a status
+/// update; other steppers keep their existing curvature-query behavior.
+/// @param evaluatedCurvature Optional output, containing curvature valid after
+/// the update only for a stepper known to preserve kinematics. Otherwise, or on
+/// a lookup error, the output is cleared. This can avoid a duplicate query when
+/// notifying navigation of an arrival, before any actors run.
 /// @return Status or curvature lookup error
 template <typename Stepper>
 Result<IntersectionStatus> updateSurfaceStatusWithCurvature(
     const Stepper& stepper, typename Stepper::State& state,
     const Surface& surface, std::uint8_t index, Direction direction,
     const BoundaryTolerance& boundaryTolerance, double surfaceTolerance,
-    ConstrainedStep::Type stype, const Logger& logger) {
+    ConstrainedStep::Type stype, const Logger& logger,
+    const Vector3* knownCurvature = nullptr,
+    std::optional<Vector3>* evaluatedCurvature = nullptr) {
   if constexpr (requires {
                   {
                     stepper.updateSurfaceStatusWithCurvature(
@@ -147,6 +174,9 @@ Result<IntersectionStatus> updateSurfaceStatusWithCurvature(
                         surfaceTolerance, stype, logger)
                   } -> std::same_as<Result<IntersectionStatus>>;
                 }) {
+    if (evaluatedCurvature != nullptr) {
+      evaluatedCurvature->reset();
+    }
     return stepper.updateSurfaceStatusWithCurvature(
         state, surface, index, direction, boundaryTolerance, surfaceTolerance,
         stype, logger);
@@ -158,14 +188,30 @@ Result<IntersectionStatus> updateSurfaceStatusWithCurvature(
                                logger, Vector3::Zero())
                          } -> std::same_as<IntersectionStatus>;
                        }) {
-    const auto curvature = getCurvature(stepper, state);
+    const auto curvature =
+        kSurfaceStatusPreservesKinematics<Stepper> && knownCurvature != nullptr
+            ? Result<Vector3>::success(*knownCurvature)
+            : getCurvature(stepper, state);
+    // Read the input first: it may refer to the previous captured value.
+    if (evaluatedCurvature != nullptr) {
+      evaluatedCurvature->reset();
+    }
     if (!curvature.ok()) {
       return curvature.error();
     }
-    return Result<IntersectionStatus>::success(stepper.updateSurfaceStatus(
+    const auto status = stepper.updateSurfaceStatus(
         state, surface, index, direction, boundaryTolerance, surfaceTolerance,
-        stype, logger, *curvature));
+        stype, logger, *curvature);
+    if constexpr (kSurfaceStatusPreservesKinematics<Stepper>) {
+      if (evaluatedCurvature != nullptr) {
+        *evaluatedCurvature = *curvature;
+      }
+    }
+    return Result<IntersectionStatus>::success(status);
   } else {
+    if (evaluatedCurvature != nullptr) {
+      evaluatedCurvature->reset();
+    }
     return Result<IntersectionStatus>::success(stepper.updateSurfaceStatus(
         state, surface, index, direction, boundaryTolerance, surfaceTolerance,
         stype, logger));

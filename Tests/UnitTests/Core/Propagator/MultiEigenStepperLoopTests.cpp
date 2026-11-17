@@ -6,8 +6,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/BlueprintOptions.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
+#include "Acts/Propagator/MultiEigenStepperLoop.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+
+#include <memory>
+#include <optional>
 
 #include "MultiStepperTests.hpp"
 
@@ -61,6 +76,55 @@ BOOST_AUTO_TEST_CASE(test_curvilinear_state) {
 
 BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
   tester.propagator_instatiation_test_function();
+}
+
+BOOST_AUTO_TEST_CASE(
+    cylindrical_portal_guard_preserves_multi_stepper_navigation) {
+  using namespace Acts::UnitLiterals;
+  const auto& gctx = tester.geoCtx;
+  const auto& mctx = tester.magCtx;
+  Blueprint::Config config;
+  config.envelope[AxisDirection::AxisR] = {100_mm, 100_mm};
+  config.envelope[AxisDirection::AxisZ] = {100_mm, 100_mm};
+  Blueprint root(config);
+  root.addStaticVolume(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(100_mm, 200_mm, 500_mm),
+      "annulus");
+  std::shared_ptr<const TrackingGeometry> geometry = root.construct({}, gctx);
+  Propagator<MultiEigenStepperLoop<>, Navigator> propagator(
+      MultiEigenStepperLoop<>(
+          std::make_shared<ConstantBField>(Vector3(0., 0., 2_T))),
+      Navigator({.trackingGeometry = geometry}));
+
+  const auto single = BoundTrackParameters::createCurvilinear(
+      Vector4(150_mm, 0., 0., 0.), Vector3::UnitX(), 1. / 10_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+  MultiComponentBoundTrackParameters parameters(
+      single.referenceSurface().getSharedPtr(), false,
+      ParticleHypothesis::pion());
+  parameters.pushComponent(0.5, single.parameters(), std::nullopt);
+  parameters.pushComponent(0.5, single.parameters(), std::nullopt);
+
+  decltype(propagator)::Options<> options(gctx, mctx);
+  options.pathLimit = 100_mm;
+  options.loopProtection = false;
+  options.maxSteps = 100;
+  options.stepping.maxStepSize = 20_mm;
+  options.navigation.experimentalCylindricalPortalGuard = false;
+  const auto disabled = propagator.propagate(parameters, options, false);
+  BOOST_REQUIRE(disabled.ok());
+  BOOST_CHECK_GT(disabled->steps, 1u);
+  BOOST_CHECK_SMALL(disabled->pathLength - options.pathLimit,
+                    s_onSurfaceTolerance);
+
+  // The optional single-trajectory guard must compile and remain a no-op for
+  // composite steppers, which have no single ConstrainedStep accessor.
+  options.navigation.experimentalCylindricalPortalGuard = true;
+  const auto enabled = propagator.propagate(parameters, options, false);
+  BOOST_REQUIRE(enabled.ok());
+  BOOST_CHECK_EQUAL(enabled->steps, disabled->steps);
+  BOOST_CHECK_EQUAL(enabled->pathLength, disabled->pathLength);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

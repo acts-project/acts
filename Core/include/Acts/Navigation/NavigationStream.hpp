@@ -22,6 +22,9 @@
 namespace Acts {
 
 class Surface;
+namespace detail {
+struct CylinderPortalBounds;
+}
 
 /// The NavigationStream is a container for the navigation candidates that
 /// are currentlu processed in a given context. The context could be local to a
@@ -162,6 +165,10 @@ class NavigationStream {
   void reset();
 
  private:
+  friend struct detail::CylinderPortalBounds;
+  // Non-owning descriptor: its policy and geometry outlive propagation.
+  const detail::CylinderPortalBounds* m_cylinderPortalBounds = nullptr;
+
   /// The candidates of this navigation stream
   std::vector<NavigationTarget> m_candidates;
 
@@ -191,6 +198,7 @@ class AppendOnlyNavigationStream {
   void addPortalCandidate(const Portal& portal);
 
  private:
+  friend struct detail::CylinderPortalBounds;
   NavigationStream* m_stream;
 };
 

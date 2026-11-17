@@ -76,6 +76,16 @@ struct NavigatorPlainOptions {
   /// The far limit to resolve surfaces
   double farLimit = std::numeric_limits<double>::max();
 
+  /// Experimental guard against omitted cylindrical portals. Enable only for
+  /// a homogeneous field parallel to global z, constant momentum magnitude,
+  /// no direction-changing actors, and the immutable context used to construct
+  /// the policies. Material loss and scattering invalidate these assumptions.
+  /// Applies to full-phi annuli and coaxial single-child containers. Other
+  /// geometries and multi-steppers retain ordinary navigation. This does not
+  /// correct sensor lookup, and does not provide a general field-map safety
+  /// bound.
+  bool experimentalCylindricalPortalGuard = false;
+
   /// Surfaces of the tracking geometry with bounds extended by the caller
   std::vector<ExtendedSurface> extendedSurfaces;
 

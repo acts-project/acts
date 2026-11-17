@@ -10,6 +10,7 @@
 
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Navigation/detail/CylinderPortalBounds.hpp"
 
 namespace Acts {
 
@@ -97,6 +98,7 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
  private:
   /// Pointer to the cylindrical tracking volume this policy navigates
   const TrackingVolume* m_volume;
+  detail::CylinderPortalBounds m_cylinderPortalBounds;
 
   /// Inverse transform for converting global to local coordinates (optional)
   /// Only computed if volume transform is not identity
