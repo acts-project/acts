@@ -507,9 +507,9 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
   }
 }
 
-// Handling coincident additional surfaces must not leave a zero step constraint
-// when there is no next target. Only the step to the path limit is needed.
-BOOST_AUTO_TEST_CASE(AlreadyOnAdditionalSurfaceDoesNotConsumeStep) {
+// Coincident additional surfaces are reached by steps of zero length, which
+// must not leave a zero step constraint for the step to the path limit.
+BOOST_AUTO_TEST_CASE(AlreadyOnAdditionalSurfaceIsReachedByZeroStep) {
   Propagator propagator{StraightLineStepper{}, VoidNavigator{}};
   auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mctx;
@@ -526,12 +526,12 @@ BOOST_AUTO_TEST_CASE(AlreadyOnAdditionalSurfaceDoesNotConsumeStep) {
   options.navigation.registerAdditionalSurface(*first);
   options.navigation.registerAdditionalSurface(*second);
   options.pathLimit = 1_mm;
-  options.maxSteps = 1;
+  options.maxSteps = 3;
 
   auto result = propagator.propagate(start, options);
   BOOST_REQUIRE(result.ok());
   CHECK_CLOSE_ABS(result->pathLength, 1_mm, 1_nm);
-  BOOST_CHECK_EQUAL(result->statistics.stepping.nSuccessfulSteps, 1);
+  BOOST_CHECK_EQUAL(result->statistics.stepping.nSuccessfulSteps, 3);
 }
 
 // A target behind the start is not reached, so the caller selects the

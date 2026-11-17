@@ -82,29 +82,8 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     }
   };
 
-  // Runs the actors and sets terminatedNormally if an aborter stops
-  const auto actAndCheckAbort = [&]() -> Result<void> {
-    if (Result<void> actResult = state.options.actorList.act(
-            state, m_stepper, m_navigator, logger());
-        !actResult.ok()) {
-      ACTS_DEBUG("Actor call failed: " << actResult.error() << ": "
-                                       << actResult.error().message());
-      return actResult.error();
-    }
-    if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
-                                           logger())) {
-      terminatedNormally = true;
-      return Result<void>::success();
-    }
-    // Actors may have changed direction or momentum (and hence curvature).
-    return updateNavigationState(state);
-  };
-
-  // Returns none if an aborter stops the propagation on a surface it is on
   auto getNextTarget = [&]() -> Result<NavigationTarget> {
     for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
-      const Surface* currentSurface =
-          m_navigator.currentSurface(state.navigation);
       NavigationTarget nextTarget = [&] {
         if constexpr (Concepts::NavigatorNextTargetWithCurvature<N>) {
           return m_navigator.nextTarget(state.navigation, state.position,
@@ -126,36 +105,9 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
       if (!preStepSurfaceResult.ok()) {
         return preStepSurfaceResult.error();
       }
-      const IntersectionStatus preStepSurfaceStatus = *preStepSurfaceResult;
-      if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
-        // The surface status installed a constraint for a target already
-        // reached. Release it before actors set constraints for the next step.
-        m_stepper.releaseStepSize(state.stepping,
-                                  ConstrainedStep::Type::Navigator);
-        // The actors handled the current surface already
-        if (&nextTarget.surface() == currentSurface) {
-          ACTS_VERBOSE(
-              "Pre-step surface status is onSurface, skipping "
-              "current surface "
-              << currentSurface->geometryId());
-          continue;
-        }
-        // The propagation is on the target already, e.g. at a geometry overlap
-        // or at the start. Reach it with a step of zero length.
-        ACTS_VERBOSE("Pre-step surface status is onSurface, reaching target "
-                     << nextTarget.surface().geometryId() << " without a step");
-        state.stage = PropagatorStage::postStep;
-        handleSurfaceReached(nextTarget.surface());
-        if (Result<void> actResult = actAndCheckAbort(); !actResult.ok()) {
-          return actResult.error();
-        }
-        if (terminatedNormally) {
-          return NavigationTarget::None();
-        }
-        state.stage = PropagatorStage::preStep;
-        continue;
-      }
-      if (preStepSurfaceStatus == IntersectionStatus::reachable) {
+      // A target the propagation is on already, e.g. at a geometry overlap,
+      // is reached by a step of (almost) zero length
+      if (*preStepSurfaceResult != IntersectionStatus::unreachable) {
         return nextTarget;
       }
     }
@@ -181,8 +133,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
   ACTS_VERBOSE("Starting stepping loop.");
 
   // Stepping loop
-  for (; !terminatedNormally && state.steps < state.options.maxSteps;
-       ++state.steps) {
+  for (; state.steps < state.options.maxSteps; ++state.steps) {
     // Perform a step
     Result<double> res =
         m_stepper.step(state.stepping, state.options.direction,
@@ -234,11 +185,23 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
       }
     }
 
-    if (Result<void> actResult = actAndCheckAbort(); !actResult.ok()) {
+    Result<void> actResult =
+        state.options.actorList.act(state, m_stepper, m_navigator, logger());
+    if (!actResult.ok()) {
+      ACTS_DEBUG("Actor call failed: " << actResult.error() << ": "
+                                       << actResult.error().message());
       return actResult.error();
     }
-    if (terminatedNormally) {
+
+    if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
+                                           logger())) {
+      terminatedNormally = true;
       break;
+    }
+
+    // Actors may have changed direction or momentum (and hence curvature).
+    if (auto update = updateNavigationState(state); !update.ok()) {
+      return update.error();
     }
 
     // Pre-Stepping: target setting
@@ -269,9 +232,6 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
                    << nextTargetResult.error() << ": "
                    << nextTargetResult.error().message());
         return nextTargetResult.error();
-      }
-      if (terminatedNormally) {
-        break;
       }
       nextTarget = *nextTargetResult;
     }
