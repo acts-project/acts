@@ -13,6 +13,7 @@
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/device/concepts/thread_id.hpp"
 #include "traccc/edm/seed_collection.hpp"
+#include "traccc/gbts_seeding/device/details/gbts_seed_conversion_helpers.hpp"
 #include "traccc/gbts_seeding/gbts_seeding_config.hpp"
 #include "traccc/gbts_seeding/gbts_types.hpp"
 
@@ -23,61 +24,6 @@
 #include <array>
 
 namespace traccc::device {
-
-namespace detail {
-
-struct Tracklet {
-  unsigned int
-      nodes[traccc::device::gbts_consts::max_seed_candidate_length + 1];
-  int size;
-};
-
-template <typename T>
-TRACCC_HOST_DEVICE inline void set_seed(traccc::edm::seed<T>& seed,
-                                        const int bottom, const int middle,
-                                        const int top, const float quality) {
-  seed.bottom_index() = bottom;
-  seed.middle_index() = middle;
-  seed.top_index() = top;
-  seed.quality() = quality;
-}
-
-TRACCC_HOST_DEVICE inline traccc::float2 gbts_estimate_seed_params(
-    const std::array<traccc::float4, 3>& sps) {
-  float u[2], v[2];
-
-  const float x0 = sps[1].x;
-  const float y0 = sps[1].y;
-  const float r0 = math::sqrt(x0 * x0 + y0 * y0);
-  const float cosA = x0 / r0;
-  const float sinA = y0 / r0;
-
-  for (unsigned int k = 0; k < 2; k++) {
-    const unsigned int sp_idx = (k == 1) ? 2u : k;
-    const float dx = sps[sp_idx].x - x0;
-    const float dy = sps[sp_idx].y - y0;
-    const float r2_inv = 1.0f / (dx * dx + dy * dy);
-    const float xn = dx * cosA + dy * sinA;
-    const float yn = -dx * sinA + dy * cosA;
-    u[k] = xn * r2_inv;
-    v[k] = yn * r2_inv;
-  }
-
-  const float du = u[0] - u[1];
-  if (du == 0.0f) {
-    return float2{0.0f, 0.0f};
-  }
-  const float A = (v[0] - v[1]) / du;
-  const float B = v[1] - A * u[1];
-  const float curv =
-      1000.0f * B / math::sqrt(1 + A * A);  // Curvature from mm^-1 to m^-1
-  const float cot_t =
-      (sps[2].z - sps[1].z) /
-      (math::sqrt(sps[2].x * sps[2].x + sps[2].y * sps[2].y) - r0);
-  return float2{curv, cot_t};
-}
-
-}  // namespace detail
 
 template <concepts::thread_id1 thread_id_t>
 TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
@@ -123,7 +69,7 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
     if (d_seed_ambiguity[prop_idx] == -2) {
       continue;
     }
-    detail::Tracklet seed;
+    details::Tracklet seed;
     seed.size = 0;
     int2 path = int2{0, prop.y};
     while (path.y >= 0) {
@@ -146,11 +92,11 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
           d_sp_params[seed.nodes[seed.size - 1]],
           d_sp_params[seed.nodes[(seed.size - 1) / 2 + 1]],
           d_sp_params[seed.nodes[0]]};
-      const traccc::float2 curv_cot_1 = detail::gbts_estimate_seed_params(sps);
+      const traccc::float2 curv_cot_1 = details::gbts_estimate_seed_params(sps);
       sps[1] = d_sp_params[seed.nodes[(seed.size - 1) / 2]];
-      const traccc::float2 curv_cot_2 = detail::gbts_estimate_seed_params(sps);
+      const traccc::float2 curv_cot_2 = details::gbts_estimate_seed_params(sps);
       sps[0] = d_sp_params[seed.nodes[seed.size - 2]];
-      const traccc::float2 curv_cot_3 = detail::gbts_estimate_seed_params(sps);
+      const traccc::float2 curv_cot_3 = details::gbts_estimate_seed_params(sps);
       if ((best_for_hit < seed.size - 1) &
           (fabsf(curv_cot_1.y + curv_cot_2.y +
                  curv_cot_3.y) <  // Checking against the average
@@ -218,50 +164,6 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
                                 quality});
       }
     }
-  }
-}
-
-template <concepts::thread_id1 thread_id_t>
-TRACCC_HOST_DEVICE inline void gbts_fill_seeds_from_sorted_bids(
-    const thread_id_t& thread_id,
-    const gbts_fill_seeds_from_sorted_bids_payload& payload) {
-  edm::seed_collection::device seeds_device(payload.output_seeds);
-  vecmem::device_vector<long long unsigned int> d_seed_bids(payload.seed_bids);
-  const vecmem::device_vector<const int2> d_path_store(payload.path_store);
-  const vecmem::device_vector<const uint2> d_output_edge_nodes(
-      payload.output_edge_nodes);
-
-  const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
-  const unsigned int blockDimX = thread_id.getBlockDimX();
-  const unsigned int gridDimX = thread_id.getGridDimX();
-
-  for (unsigned int prop_idx = globalIdx; prop_idx < payload.nSeeds;
-       prop_idx += blockDimX * gridDimX) {
-    // take the dropout index from the saved bid
-    unsigned long long int bid = d_seed_bids.at(prop_idx);
-    int2 prop = {static_cast<int>(bid >> 32),
-                 static_cast<int>(bid & 0xFFFFFFFF)};
-    unsigned int dropout_index = static_cast<unsigned int>(prop.x & 0x3);
-    // match quality to non-sorted case
-    prop.x -= dropout_index;
-
-    detail::Tracklet seed;
-    seed.size = 0;
-    int2 path = int2{0, prop.y};
-    while (path.y >= 0) {
-      path = d_path_store[static_cast<unsigned int>(path.y)];
-      seed.nodes[seed.size++] =
-          d_output_edge_nodes[static_cast<unsigned int>(path.x)].x;
-    }
-    seed.nodes[seed.size++] =
-        d_output_edge_nodes[static_cast<unsigned int>(path.x)].y;
-
-    const int node1 = seed.nodes[seed.size - 1 - (dropout_index == 0)];
-    const int node2 = seed.nodes[(seed.size - 1) / 2 + (dropout_index == 2)];
-    const int node3 = seed.nodes[0];
-
-    auto out = seeds_device.at(prop_idx);
-    detail::set_seed(out, node1, node2, node3, static_cast<float>(prop.x));
   }
 }
 

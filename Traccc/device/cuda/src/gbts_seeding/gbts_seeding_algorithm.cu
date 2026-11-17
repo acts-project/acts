@@ -23,6 +23,7 @@
 #include "traccc/gbts_seeding/device/gbts_count_paths.hpp"
 #include "traccc/gbts_seeding/device/gbts_fill_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_fill_path_store.hpp"
+#include "traccc/gbts_seeding/device/gbts_fill_seeds_from_sorted_bids.hpp"
 #include "traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
 #include "traccc/gbts_seeding/device/gbts_finish_cca.hpp"
 #include "traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
