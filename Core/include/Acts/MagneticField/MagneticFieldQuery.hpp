@@ -35,24 +35,6 @@ class MagneticFieldQuery {
   MagneticFieldQuery(const MagneticFieldProvider& provider,
                      const MagneticFieldContext&& mctx) = delete;
 
-  /// Copy the cache, retaining the borrowed provider and context.
-  /// @param other Query whose cache state is copied
-  MagneticFieldQuery(const MagneticFieldQuery& other) = default;
-
-  /// Copy the cache and borrowed provider/context references.
-  /// @param other Query whose cache state is copied
-  /// @return This query
-  MagneticFieldQuery& operator=(const MagneticFieldQuery& other) = default;
-  /// Move another query, preserving its borrowed provider and context.
-  /// @param other Query to move from
-  MagneticFieldQuery(MagneticFieldQuery&& other) = default;
-
-  /// Move another query's provider and context references and cache into this
-  /// query.
-  /// @param other Query to move from
-  /// @return This query
-  MagneticFieldQuery& operator=(MagneticFieldQuery&& other) = default;
-
   /// Access the context used to create this query's cache.
   /// @return Borrowed magnetic field context
   const MagneticFieldContext& context() const;

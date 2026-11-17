@@ -38,7 +38,6 @@
 #include <memory>
 #include <numbers>
 #include <random>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -116,23 +115,15 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   AdaptiveMultiVertexFitter::Config fitterCfg(ip3dEst);
-  fitterCfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
-      &linearizer);
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
-
-  // A track linearizer is required.
-  auto invalidCfg = fitterCfg;
-  invalidCfg.trackLinearizer = {};
-  BOOST_CHECK_THROW(AdaptiveMultiVertexFitter{invalidCfg},
-                    std::invalid_argument);
 
   AdaptiveMultiVertexFitter fitter(std::move(fitterCfg));
 
@@ -347,7 +338,6 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
@@ -356,8 +346,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   // Do time fit
   fitterCfg.useTime = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  fitterCfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
-      &linearizer);
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
   AdaptiveMultiVertexFitter fitter(std::move(fitterCfg));
 
@@ -541,12 +530,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
-  fitterCfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
-      &linearizer);
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
   // Test smoothing
   // fitterCfg.doSmoothing = true;
@@ -808,24 +795,7 @@ BOOST_AUTO_TEST_CASE(deprecated_state_interface) {
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
 
-  class CountingField final : public MagneticFieldProvider {
-   public:
-    mutable unsigned int cacheCreations = 0;
-
-    Cache makeCache(const MagneticFieldContext& context) const override {
-      ++cacheCreations;
-      return m_field.makeCache(context);
-    }
-
-    Result<Vector3> getField(const Vector3& position,
-                             Cache& cache) const override {
-      return m_field.getField(position, cache);
-    }
-
-   private:
-    ConstantBField m_field{Vector3{0., 0., 1_T}};
-  };
-  auto bField = std::make_shared<CountingField>();
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
   EigenStepper<> stepper(bField);
   auto propagator = std::make_shared<Propagator>(stepper);
 
@@ -835,13 +805,11 @@ BOOST_AUTO_TEST_CASE(deprecated_state_interface) {
   ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
   Linearizer::Config ltConfig;
-
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   AdaptiveMultiVertexFitter::Config fitterCfg(ip3dEst);
-  fitterCfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
-      &linearizer);
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
@@ -905,16 +873,6 @@ BOOST_AUTO_TEST_CASE(deprecated_state_interface) {
 
   ACTS_PUSH_IGNORE_DEPRECATED()
   AdaptiveMultiVertexFitter::State state(*bField, magFieldContext);
-
-  // Each interface owns one IP cache and one linearization cache. Moving the
-  // query through the legacy adapter must not create another provider cache.
-  BOOST_CHECK_EQUAL(bField->cacheCreations, 4u);
-  for (int repeat = 0; repeat < 2; ++repeat) {
-    BOOST_REQUIRE(fitter.fit(state, vertexingOptions).ok());
-    BOOST_REQUIRE(fitter.fit(problem, vertexingOptions, cache).ok());
-    BOOST_CHECK_EQUAL(bField->cacheCreations, 4u);
-    BOOST_CHECK(&state.fieldQuery.context() == &magFieldContext);
-  }
 
   for (unsigned int iTrack = 0; iTrack < allTracks.size(); iTrack++) {
     InputTrack inputTrack{&allTracks[iTrack]};

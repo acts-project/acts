@@ -166,7 +166,6 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   // Linearizer for constant field and corresponding state
   AnalyticalLinearizer::Config linConfig;
-
   linConfig.propagator = propagator;
   AnalyticalLinearizer linFactory(linConfig);
 

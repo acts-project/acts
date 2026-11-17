@@ -101,7 +101,6 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
   MagneticFieldQuery fieldQuery(*bField, magFieldContext);
@@ -226,7 +225,6 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   // Set up HelicalTrackLinearizer, needed for linearizing the tracks
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
   MagneticFieldQuery fieldQuery(*bField, magFieldContext);

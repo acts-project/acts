@@ -86,6 +86,8 @@ class NumericalTrackLinearizer {
   /// @param params Parameters to linearize
   /// @param linPointTime Time of the linearization point
   /// @param perigeeSurface Surface defining the linearization point
+  /// @note The transverse plane of @p perigeeSurface is parallel to the
+  /// global x-y plane
   /// @param gctx Geometry context
   /// @param fieldQuery Query supplying the context for propagation
   /// @return Linearized track or a propagation error
