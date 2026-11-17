@@ -161,8 +161,8 @@ class TrackletJoiner {
 
     // what the join changes on the first tracklet
     struct Smoothed {
-      TrackIndexType index;
-      TrackIndexType next;
+      TrackIndexType index{};
+      TrackIndexType next{};
       std::optional<std::pair<BoundVector, BoundMatrix>> estimate;
     };
     std::vector<Smoothed> smoothed;
@@ -198,23 +198,33 @@ class TrackletJoiner {
       }
       first.stemIndex() = stemIndex;
     };
-    const ScopeExit<decltype(undo)> restore{undo};
-
-    if (first.stemIndex() == kTrackIndexInvalid) {
-      first.linkForward();
-    }
-    if (second.tipIndex() == kTrackIndexInvalid) {
-      second.tipIndex() = first.tipIndex();
-      second.stemIndex() = first.stemIndex();
-    } else {
-      auto res = joinStates(gctx, first, sharedState, second, smoother);
-      if (!res.ok()) {
-        return res.error();
+    auto joinAndVisit = [&]() -> Result<void> {
+      if (first.stemIndex() == kTrackIndexInvalid) {
+        first.linkForward();
       }
-      second.tipIndex() = first.tipIndex();
+      if (second.tipIndex() == kTrackIndexInvalid) {
+        second.tipIndex() = first.tipIndex();
+        second.stemIndex() = first.stemIndex();
+      } else {
+        auto res = joinStates(gctx, first, sharedState, second, smoother);
+        if (!res.ok()) {
+          return res.error();
+        }
+        second.tipIndex() = first.tipIndex();
+      }
+      visitor(second);
+      return Result<void>::success();
+    };
+
+    Result<void> res = Result<void>::success();
+    try {
+      res = joinAndVisit();
+    } catch (...) {
+      undo();
+      throw;
     }
-    visitor(second);
-    return Result<void>::success();
+    undo();
+    return res;
   }
 
   /// Join copies of both tracklets in @p out and return the joined copy. The
@@ -275,12 +285,6 @@ class TrackletJoiner {
   }
 
  private:
-  template <typename F>
-  struct ScopeExit {
-    F f;
-    ~ScopeExit() { f(); }
-  };
-
   /// The join of the states: smooth the second tracklet, condition the first
   /// and link the second behind the shared state. The second tracklet must
   /// not be empty; afterwards its stem is the stem of the joined chain.
