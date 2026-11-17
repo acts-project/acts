@@ -264,7 +264,7 @@ class EfficiencyRootWriter(acts.examples.IAlgorithm):
         if nHits == 0:
             self.eventWriter.add((event, 0, 0, 0, 0, 0))
             return acts.examples.ProcessCode.SUCCESS
-        
+
         barcodes = np.empty(nHits, dtype=np.int64)
         positions = np.empty((nHits, 3), dtype=np.float64)
         momenta = np.empty((nHits, 3), dtype=np.float64)
@@ -384,7 +384,9 @@ class EfficiencyRootWriter(acts.examples.IAlgorithm):
                 )
             )
 
-        self.eventWriter.add((event, nSpacePoints, nParticles, nPrimaries, nSeeds, nPureSeeds))
+        self.eventWriter.add(
+            (event, nSpacePoints, nParticles, nPrimaries, nSeeds, nPureSeeds)
+        )
 
         return acts.examples.ProcessCode.SUCCESS
 
@@ -721,11 +723,11 @@ def main():
                 )
         if seedTreeWriter.totalDropped > 0:
             print(
-                    f"[NOTICE] The 'Seeds' TTree was truncated at "
-                    f"{seedTreeWriter.totalWritten} rows: {seedTreeWriter.totalDropped} "
-                    f"seeds were not written (--max-seed-rows). Global purity and "
-                    f"seeds per event are derived from 'Events' and remain unaffected; "
-                    f"purity vs. eta/phi, however, is affected (it is biased toward the initial events)."
+                f"[NOTICE] The 'Seeds' TTree was truncated at "
+                f"{seedTreeWriter.totalWritten} rows: {seedTreeWriter.totalDropped} "
+                f"seeds were not written (--max-seed-rows). Global purity and "
+                f"seeds per event are derived from 'Events' and remain unaffected; "
+                f"purity vs. eta/phi, however, is affected (it is biased toward the initial events)."
             )
     finally:
         del s

@@ -156,10 +156,10 @@ Acts::Result<void> createStripSpacePoint(
   }
   if (clampToStrip) {
     const Acts::Vector3 btmToTop = stripEnds1.top - stripEnds1.bottom;
-    const double lambda = std::clamp(
-        (*spacePoint - stripEnds1.bottom).dot(btmToTop) /
-            btmToTop.squaredNorm(),
-        0.0, 1.0);
+    const double lambda =
+        std::clamp((*spacePoint - stripEnds1.bottom).dot(btmToTop) /
+                       btmToTop.squaredNorm(),
+                   0.0, 1.0);
     spacePoint = Acts::Result<Acts::Vector3>::success(stripEnds1.bottom +
                                                       lambda * btmToTop);
   }
@@ -573,14 +573,13 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       for (std::uint32_t v : unmapped) {
         list += (list.empty() ? "" : ", ") + std::to_string(v);
       }
-      ACTS_ERROR("Measurement volumes not in any space point class list: "
-                 << list);
+      ACTS_ERROR(
+          "Measurement volumes not in any space point class list: " << list);
       return ProcessCode::ABORT;
     }
     ACTS_DEBUG("Space point classes: pixel barrel="
-               << counts[0] << " pixel endcap=" << counts[1]
-               << " strip barrel=" << counts[2]
-               << " strip endcap=" << counts[3]);
+               << counts[0] << " pixel endcap=" << counts[1] << " strip barrel="
+               << counts[2] << " strip endcap=" << counts[3]);
   }
 
   std::vector<Acts::GeometryIdentifier> surfaces;

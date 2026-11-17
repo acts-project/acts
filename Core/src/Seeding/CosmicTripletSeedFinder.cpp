@@ -18,6 +18,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -39,28 +40,38 @@ constexpr int kNumZBins = 11;
 // predefined ranges
 int zBin(double z) {
   if (z > 0.0) {
-    if (z < 250.0)
+    if (z < 250.0) {
       return 5;
-    if (z < 450.0)
+    }
+    if (z < 450.0) {
       return 6;
-    if (z < 925.0)
+    }
+    if (z < 925.0) {
       return 7;
-    if (z < 1400.0)
+    }
+    if (z < 1400.0) {
       return 8;
-    if (z < 2500.0)
+    }
+    if (z < 2500.0) {
       return 9;
+    }
     return 10;
   }
-  if (z > -250.0)
+  if (z > -250.0) {
     return 5;
-  if (z > -450.0)
+  }
+  if (z > -450.0) {
     return 4;
-  if (z > -925.0)
+  }
+  if (z > -925.0) {
     return 3;
-  if (z > -1400.0)
+  }
+  if (z > -1400.0) {
     return 2;
-  if (z > -2500.0)
+  }
+  if (z > -2500.0) {
     return 1;
+  }
   return 0;
 }
 
@@ -203,7 +214,7 @@ CosmicTripletSeedFinder::CosmicTripletSeedFinder(const CosmicSeedCuts& cuts)
     }
   }
 
-  // Derived quantities for prefiltering and passCosmicCuts
+  // derived quantities for prefiltering and passCosmicCuts
   m_ptDependent = m_cuts.usePtDependentKinkResidual;
   m_ptPrefilter =
       m_cuts.usePtCut && m_cuts.minPt > 0.0 && m_cuts.magneticFieldBz != 0.0;
@@ -212,7 +223,7 @@ CosmicTripletSeedFinder::CosmicTripletSeedFinder(const CosmicSeedCuts& cuts)
     m_rhoMin = 0.9 * m_cuts.minPt / (0.3 * std::abs(m_cuts.magneticFieldBz));
   }
   if (!m_ptDependent) {
-    // Kink: 1 - k^2/2 <= cos(k) for every k in [0, maxKinkAngle]
+    // kink: 1 - k^2/2 <= cos(k) for every k in [0, maxKinkAngle]
     const double k = m_cuts.maxKinkAngle;
     m_kinkCosThreshold = 1.0 - 0.5 * k * k;
     // add of the both segments, and each segment forms at most "k" with it
@@ -220,7 +231,8 @@ CosmicTripletSeedFinder::CosmicTripletSeedFinder(const CosmicSeedCuts& cuts)
     // by the triangular inequality on the sphere,
     // each segment forms at most acos(minCosThetaY) + k with the y-axis.
     const double maxAngleY = std::acos(m_cuts.minCosThetaY) + k;
-    m_segCosThetaYMin = maxAngleY < 0.5 * M_PI ? std::cos(maxAngleY) : 0.0;
+    m_segCosThetaYMin =
+        maxAngleY < 0.5 * std::numbers::pi ? std::cos(maxAngleY) : 0.0;
   }
 }
 
@@ -515,7 +527,7 @@ void CosmicTripletSeedFinder::createSeeds(
                     // passCosmicCuts
     }
     if (pixelMid) {
-      // cos(dphi) between the xy proyections (middle - top) and (bottom -
+      // cos(dphi) between the xy projections (middle - top) and (bottom -
       // middle) = -(T . B) / (|T| |B|)
       const double cosDphi = -(t.dx * b.dx + t.dy * b.dy);
       if (cosDphi < (m_cuts.pixelMinCosDeltaPhi - kPrefilterTol) *

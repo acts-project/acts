@@ -1,4 +1,13 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
+
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -9,6 +18,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -24,15 +34,16 @@ class SimHitSpacePointMaker final : public IAlgorithm {
     std::string inputSimHits;
     // sim hits output collection (Acts::SpacePointContainer)
     std::string outputSpacePoints;
-    //optional: if not empty, writes a std::vector<SimBarcode> with the barcode of each sim hit
-    // (same index as the space point)
+    // optional: if not empty, writes a std::vector<SimBarcode> with the barcode
+    // of each sim hit
+    //  (same index as the space point)
     std::string outputParticleIds;
     // assigned standard deviation to r [mm]; only defines the variance
     double sigmaR = 0.1 * Acts::UnitConstants::mm;
     // assigned standard deviation to z [mm]; only defines the variance
     double sigmaZ = 0.1 * Acts::UnitConstants::mm;
-    // optional: if not empty, writes a std::vector<Acts::CosmicSpacePointClass> with
-    // the class of each space point (same index as the space point)
+    // optional: if not empty, writes a std::vector<Acts::CosmicSpacePointClass>
+    // with the class of each space point (same index as the space point)
     std::string outputSpacePointClasses;
     // optional: if not empty, writes a std::vector<Acts::GeometryIdentifier>
     // with the geometryID() of SimHit of each space point
@@ -88,4 +99,4 @@ class SimHitSpacePointMaker final : public IAlgorithm {
       m_outputSpacePointSurfaces{this, "OutputSpacePointSurfaces"};
 };
 
-}
+}  // namespace ActsExamples
