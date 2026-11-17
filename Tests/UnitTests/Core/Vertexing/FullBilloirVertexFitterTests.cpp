@@ -119,7 +119,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   auto propagator = std::make_shared<Propagator<EigenStepper<>>>(stepper);
 
   HelicalTrackLinearizer::Config ltConfig;
-
   ltConfig.propagator = propagator;
   HelicalTrackLinearizer linearizer(ltConfig);
 
@@ -178,7 +177,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     const std::vector<InputTrack> emptyVectorInput;
 
     // Without constraint
-
     Vertex fittedVertex =
         billoirFitter.fit(emptyVectorInput, vfOptions, field).value();
 
@@ -188,7 +186,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
 
     // With constraint
-
     fittedVertex =
         billoirFitter.fit(emptyVectorInput, vfOptionsConstr, field).value();
 
@@ -266,7 +263,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
                                                const auto& trksPtr,
                                                const auto& vfOpts) {
       auto fittedVertex = fitter.fit(trksPtr, vfOpts, field).value();
-
       if (!fittedVertex.tracks().empty()) {
         CHECK_CLOSE_ABS(fittedVertex.position(), trueVertex.head(3), 1_mm);
         auto tracksAtVtx = fittedVertex.tracks();

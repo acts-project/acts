@@ -132,7 +132,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     // Linearizer for BoundTrackParameters type test
     Linearizer::Config ltConfig;
-
     ltConfig.propagator = propagator;
     Linearizer linearizer(ltConfig);
 
@@ -141,8 +140,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;
     vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
-    vertexFitterCfg.trackLinearizer
-        .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
+    vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+        &linearizer);
 
     BilloirFitter bFitter(vertexFitterCfg);
 
@@ -161,8 +160,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     IterativeVertexFinder::Config cfg(std::move(bFitter), std::move(sFinder),
                                       ipEstimator);
     cfg.field = bField;
-    cfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
-        &linearizer);
+    cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
     cfg.reassignTracksAfterFirstFit = true;
     cfg.extractParameters.connect<&InputTrack::extractParameters>();
@@ -375,8 +373,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;
     vertexFitterCfg.extractParameters.connect(extractParameters);
-    vertexFitterCfg.trackLinearizer
-        .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
+    vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+        &linearizer);
 
     BilloirFitter bFitter(vertexFitterCfg);
 
@@ -394,8 +392,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
                                       ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
     cfg.extractParameters.connect(extractParameters);
-    cfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
-        &linearizer);
+    cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
     cfg.field = bField;
 
     IterativeVertexFinder finder(std::move(cfg));
@@ -570,7 +567,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
@@ -579,8 +575,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   // Set up Billoir Vertex Fitter
   BilloirFitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  vertexFitterCfg.trackLinearizer
-      .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
+  vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+      &linearizer);
 
   BilloirFitter bFitter(vertexFitterCfg);
 
@@ -600,8 +596,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   cfg.maximumChi2cutForSeeding = 49;
   cfg.significanceCutSeeding = 12;
   cfg.extractParameters.connect<&InputTrack::extractParameters>();
-  cfg.trackLinearizer.connect<&HelicalTrackLinearizer::linearizeTrack>(
-      &linearizer);
+  cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
   cfg.field = bField;
 
   IterativeVertexFinder finder(std::move(cfg));
