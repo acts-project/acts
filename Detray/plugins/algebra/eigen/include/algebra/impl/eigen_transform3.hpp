@@ -23,8 +23,18 @@
 #pragma nv_diag_suppress 20012
 #pragma nv_diag_suppress 20014
 #endif  // __NVCC_DIAG_PRAGMA_SUPPORT__
+// Suppress GCC false positives in Eigen while keeping our own code checked.
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER) && \
+    __GNUC__ >= 12
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER) && \
+    __GNUC__ >= 12
+#pragma GCC diagnostic pop
+#endif
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif  // MSVC
