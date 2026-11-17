@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -33,6 +34,7 @@
 #include <memory>
 #include <numbers>
 #include <random>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -117,7 +119,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   auto propagator = std::make_shared<Propagator<EigenStepper<>>>(stepper);
 
   HelicalTrackLinearizer::Config ltConfig;
-  ltConfig.bField = bField;
+
   ltConfig.propagator = propagator;
   HelicalTrackLinearizer linearizer(ltConfig);
 
@@ -142,8 +144,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
   vertexFitterCfg.trackLinearizer
       .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
+  // A track linearizer is required.
+  auto invalidCfg = vertexFitterCfg;
+  invalidCfg.trackLinearizer = {};
+  BOOST_CHECK_THROW(VertexFitter{invalidCfg}, std::invalid_argument);
+
   VertexFitter billoirFitter(vertexFitterCfg);
-  auto fieldCache = bField->makeCache(magFieldContext);
+  MagneticFieldQuery field(*bField, magFieldContext);
   // Vertexing options for default tracks
   VertexingOptions vfOptions(geoContext, magFieldContext);
   VertexingOptions vfOptionsConstr(geoContext, magFieldContext, constraint);
@@ -171,8 +178,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     const std::vector<InputTrack> emptyVectorInput;
 
     // Without constraint
+
     Vertex fittedVertex =
-        billoirFitter.fit(emptyVectorInput, vfOptions, fieldCache).value();
+        billoirFitter.fit(emptyVectorInput, vfOptions, field).value();
 
     Vector3 origin(0., 0., 0.);
     SquareMatrix4 zeroMat = SquareMatrix4::Zero();
@@ -180,9 +188,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
 
     // With constraint
+
     fittedVertex =
-        billoirFitter.fit(emptyVectorInput, vfOptionsConstr, fieldCache)
-            .value();
+        billoirFitter.fit(emptyVectorInput, vfOptionsConstr, field).value();
 
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
     BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
@@ -254,10 +262,11 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       customInputTracks.push_back(InputTrack{&trk});
     }
 
-    auto fit = [&trueVertex, &nTracks, &fieldCache](const auto& fitter,
-                                                    const auto& trksPtr,
-                                                    const auto& vfOpts) {
-      auto fittedVertex = fitter.fit(trksPtr, vfOpts, fieldCache).value();
+    auto fit = [&trueVertex, &nTracks, &field](const auto& fitter,
+                                               const auto& trksPtr,
+                                               const auto& vfOpts) {
+      auto fittedVertex = fitter.fit(trksPtr, vfOpts, field).value();
+
       if (!fittedVertex.tracks().empty()) {
         CHECK_CLOSE_ABS(fittedVertex.position(), trueVertex.head(3), 1_mm);
         auto tracksAtVtx = fittedVertex.tracks();
