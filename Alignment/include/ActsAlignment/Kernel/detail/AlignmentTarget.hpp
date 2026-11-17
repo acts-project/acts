@@ -145,7 +145,9 @@ Acts::Result<bool, AlignmentTargetError> validateAlignmentSelection(
 /// std::bad_alloc and non-standard exceptions propagate.
 /// @param gctx Initial fit geometry context, also passed to member placements
 /// @param structures Registered roots, retained by the returned selection
-/// @param activeStructures Explicit leaf selection; None entries stay metadata
+/// @param activeStructures Explicitly selected registered structures. Structures
+/// with active DoFs must be leaves; None selections stay metadata and may have
+/// children.
 /// @param modules Standalone placements; callers retain their lifetimes
 /// @param supportsUpdate Read-only per-placement update capability; required for targets
 /// @return A call-owned snapshot or a diagnostic (an empty snapshot is allowed)

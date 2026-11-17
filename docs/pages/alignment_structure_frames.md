@@ -144,8 +144,9 @@ explicitly selected structures, standalone placements, an initial fit geometry
 context, and a read-only update-capability predicate.
 
 Preparation snapshots direct membership and structure masks, retains structure
-ownership, and resolves each selected structure and member frame once in the
-initial fit geometry context. Standalone modules come first in supplied order,
+ownership, and resolves each active structure frame and each selected target
+member's transform once in the initial fit geometry context. Inactive `None`
+selections are skipped. Standalone modules come first in supplied order,
 followed by active structures in selection order. All placement pointers are
 non-owning and must outlive use of the snapshot. Caller declarations and geometry
 must not be mutated concurrently with preparation.
@@ -195,9 +196,10 @@ gradient, and they do not query frame providers again.
 
 `AlignmentOptions::alignedStructures` registers membership metadata. It does
 not select structures for numerical alignment, even when a registered structure
-has a non-`None` mask. `activeStructures` is an explicit selection of registered
-leaves. Selecting an inactive `None` structure leaves its members available for
-standalone selection through `alignedDetElements`.
+has a non-`None` mask. `activeStructures` explicitly selects registered structures.
+Structures with active DoFs must be leaves. `None` selections remain metadata,
+may have children, and leave their members available for standalone selection
+through `alignedDetElements`.
 
 `align()` validates the hierarchy before recursive registry construction and
 returns `UnsupportedStructureAlignment` for an effective explicit structure

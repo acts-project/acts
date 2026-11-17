@@ -91,7 +91,8 @@ struct AlignmentOptions {
   /// Registered hierarchy metadata; registration does not activate solving.
   std::vector<std::shared_ptr<AlignableStructure>> alignedStructures;
 
-  /// Explicit registered leaf selections. None masks remain inactive metadata.
+  /// Explicitly selected registered structures. Structures with active DoFs
+  /// must be leaves; None selections remain metadata and may have children.
   /// @note Preparation/indexing is available in detail::prepareAlignmentTargets.
   /// align() rejects an effective structure selection until shared solving and
   /// rigid updates are implemented; it never falls back to moving its modules.
