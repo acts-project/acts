@@ -105,4 +105,33 @@ TRACCC_HOST_DEVICE inline void inflate_covariance(
   }
 }
 
+/// On top of @c detray::bound_track_parameters::is_invalid() (non-finite
+/// parameters, all-zero parameter vector, all-zero covariance), this requires
+/// a valid surface link, theta strictly inside (0, pi), a non-zero q/p, and a
+/// finite, non-negative covariance diagonal.
+/// We check all these here.
+template <detray::concepts::algebra algebra_t>
+TRACCC_HOST_DEVICE inline bool is_valid_track_params(
+    const bound_track_parameters<algebra_t>& params) {
+  if (params.surface_link().is_invalid() || params.is_invalid()) {
+    return false;
+  }
+  // theta == pi passes detray's set_theta() assert, but gives sin(theta) == 0
+  const traccc::scalar theta = params.theta();
+  if (!(theta > 0.f && theta < constant<traccc::scalar>::pi)) {
+    return false;
+  }
+  if (params.qop() == 0.f) {
+    return false;
+  }
+  const auto& cov = params.covariance();
+  for (unsigned int i = 0u; i < e_bound_size; ++i) {
+    const traccc::scalar var = getter::element(cov, i, i);
+    if (!detray::math::isfinite(var) || var < 0.f) {
+      return false;
+    }
+  }
+  return true;
+}
+
 }  // namespace traccc
