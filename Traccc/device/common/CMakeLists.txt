@@ -111,6 +111,9 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/gbts_seeding/device/impl/gbts_bid_seeds_for_hits.ipp"
    "include/traccc/gbts_seeding/device/gbts_convert_seeds.hpp"
    "include/traccc/gbts_seeding/device/impl/gbts_convert_seeds.ipp"
+   "include/traccc/gbts_seeding/device/gbts_fill_seeds_from_sorted_bids.hpp"
+   "include/traccc/gbts_seeding/device/impl/gbts_fill_seeds_from_sorted_bids.ipp"
+   "include/traccc/gbts_seeding/device/details/gbts_seed_conversion_helpers.hpp"
    "include/traccc/gbts_seeding/device/gbts_seeding_algorithm.hpp"
    "src/gbts_seeding/gbts_seeding_algorithm.cpp"
    # Track parameters estimation function(s).

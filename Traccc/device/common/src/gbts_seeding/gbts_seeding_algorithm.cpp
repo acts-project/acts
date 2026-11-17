@@ -441,7 +441,7 @@ auto gbts_seeding_algorithm::extract_seeds(
         .path_store = path_store_buf,
         .output_edge_nodes = output_edge_nodes,
         .reducedSP = reducedSP,
-        .output_seeds = output_seeds,
+        .output_seeds = {},
         .hit_bids = hit_bids_buf,
         .gbts_convert_seeds_params = cfg.gbts_convert_seeds_params,
     });
@@ -470,7 +470,7 @@ auto gbts_seeding_algorithm::extract_seeds(
         .nPathsMax = nPathsMax,
         .nPathsGrid = nPathsGrid,
         .path_count = path_count,
-        .seed_bids = seed_bids_buf,
+        .seed_bids = {},
         .seed_proposals = seed_proposals_buf,
         .seed_ambiguity = seed_ambiguity_buf,
         .path_store = path_store_buf,
