@@ -258,11 +258,9 @@ class DirectNavigator {
         std::ranges::find(state.options.surfaceSequence, state.startSurface);
 
     if (found != state.options.surfaceSequence.end()) {
-      // The index should be the index before the start surface, depending on
-      // the direction
-      state.surfaceIndex =
-          std::distance(state.options.surfaceSequence.begin(), found);
-      state.surfaceIndex += state.direction == Direction::Backward() ? 1 : -1;
+      // The sequence continues after the start surface
+      state.surfaceIndex = static_cast<std::int32_t>(
+          std::distance(state.options.surfaceSequence.begin(), found));
     } else {
       ACTS_DEBUG(
           "Did not find the start surface in the sequence. Assuming it is not "
