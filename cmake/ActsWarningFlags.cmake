@@ -46,8 +46,7 @@ macro(acts_apply_warning_flags lang warnings_as_errors)
             endif()
         elseif(MSVC)
             string(
-                REGEX REPLACE
-                "/W[0-9]"
+                REGEX REPLACE "/W[0-9]"
                 ""
                 CMAKE_CXX_FLAGS
                 "${CMAKE_CXX_FLAGS}"
@@ -64,8 +63,7 @@ macro(acts_apply_warning_flags lang warnings_as_errors)
             OR CMAKE_SYCL_COMPILER_ID MATCHES "Clang"
         )
             list(
-                APPEND
-                _acts_warning_flags
+                APPEND _acts_warning_flags
                 -Wall
                 -Wextra
                 -Wno-unknown-cuda-version
@@ -77,8 +75,7 @@ macro(acts_apply_warning_flags lang warnings_as_errors)
             endif()
             if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
                 list(
-                    APPEND
-                    _acts_warning_flags
+                    APPEND _acts_warning_flags
                     -Wno-unused-command-line-argument
                 )
             endif()
@@ -86,8 +83,7 @@ macro(acts_apply_warning_flags lang warnings_as_errors)
     elseif("${lang}" STREQUAL "HIP")
         if(CMAKE_HIP_PLATFORM MATCHES "^(amd|hcc)$")
             list(
-                APPEND
-                _acts_warning_flags
+                APPEND _acts_warning_flags
                 -Wall
                 -Wextra
                 -Wshadow
