@@ -20,6 +20,7 @@
         {
             "name": "base-fp64",
             "displayName": "Base FP64 Configuration",
+            "description": "WARNING: the FP64 presets still build with float, as they did with the old (ignored) TRACCC_CUSTOM_SCALARTYPE. The traccc code does not compile with double yet. Set DETRAY_CUSTOM_SCALARTYPE to double here when it does.",
             "warnings": {
                 "deprecated": true
             },
@@ -30,7 +31,7 @@
                 "TRACCC_BUILD_EXAMPLES": "TRUE",
                 "TRACCC_FAIL_ON_WARNINGS": "TRUE",
                 "TRACCC_USE_ROOT": "FALSE",
-                "DETRAY_CUSTOM_SCALARTYPE": "double"
+                "DETRAY_CUSTOM_SCALARTYPE": "float"
             }
         },
         {
