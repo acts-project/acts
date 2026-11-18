@@ -141,9 +141,22 @@ else()
         set(${name} "${value}")
     endmacro()
 
+    # The CUDA dependencies (vecmem::cuda, CUDA architectures) follow
+    # ACTS_ENABLE_CUDA, so traccc CUDA code cannot be built without it.
+    if(_acts_traccc_build_cuda_utils AND NOT ACTS_ENABLE_CUDA)
+        message(
+            FATAL_ERROR
+            "The traccc CUDA code (ACTS_TRACCC_BUILD_CUDA or "
+            "alpaka_ACC_GPU_CUDA_ENABLE) requires ACTS_ENABLE_CUDA=ON."
+        )
+    endif()
+
     # Settings with an ACTS_TRACCC_* option of their own.
     traccc_set_from_acts(TRACCC_BUILD_CUDA "${ACTS_TRACCC_BUILD_CUDA}")
-    traccc_set_from_acts(TRACCC_BUILD_CUDA_UTILS "${ACTS_TRACCC_BUILD_CUDA}")
+    traccc_set_from_acts(
+        TRACCC_BUILD_CUDA_UTILS
+        "${_acts_traccc_build_cuda_utils}"
+    )
     traccc_set_from_acts(TRACCC_BUILD_HIP "${ACTS_TRACCC_BUILD_HIP}")
     traccc_set_from_acts(TRACCC_BUILD_HIP_UTILS "${_acts_traccc_build_hip_utils}")
     traccc_set_from_acts(TRACCC_BUILD_SYCL "${ACTS_TRACCC_BUILD_SYCL}")
@@ -215,13 +228,6 @@ else()
     traccc_set_from_acts(TRACCC_SETUP_ACTS FALSE)
     traccc_set_from_acts(TRACCC_SETUP_GOOGLETEST "${TRACCC_BUILD_TESTING}")
     traccc_set_from_acts(TRACCC_USE_SYSTEM_GOOGLETEST FALSE)
-endif()
-
-if(${CMAKE_CXX_STANDARD} LESS 20)
-    message(
-        SEND_ERROR
-        "CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}, but traccc requires C++>=20"
-    )
 endif()
 
 # Include the traccc CMake code.
@@ -427,12 +433,18 @@ if(TRACCC_SETUP_ROCTHRUST)
     endif()
 endif()
 
-# Set up DPL if SYCL is built.
+# Set up DPL if SYCL, or Alpaka with its SYCL back-end, is built.
+if(TRACCC_BUILD_SYCL OR (TRACCC_BUILD_ALPAKA AND alpaka_ACC_SYCL_ENABLE))
+    set(TRACCC_SETUP_DPL_DEFAULT ON)
+else()
+    set(TRACCC_SETUP_DPL_DEFAULT OFF)
+endif()
 option(
     TRACCC_SETUP_DPL
     "Set up the DPL target(s) explicitly"
-    ${TRACCC_BUILD_SYCL}
+    ${TRACCC_SETUP_DPL_DEFAULT}
 )
+unset(TRACCC_SETUP_DPL_DEFAULT)
 if(TRACCC_USE_SYSTEM_LIBS OR TRACCC_USE_SPACK_LIBS)
     set(TRACCC_USE_SYSTEM_DPL_DEFAULT ON)
 else()
