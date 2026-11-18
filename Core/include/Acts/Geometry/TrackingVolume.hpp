@@ -53,6 +53,7 @@ class IMaterialDecorator;
 class ISurfaceMaterial;
 class IVolumeMaterial;
 class Surface;
+class RegularSurface;
 class TrackingVolume;
 struct GeometryIdentifierHook;
 class Portal;
@@ -375,6 +376,12 @@ class TrackingVolume : public Volume {
   /// @param portal The portal to add
   void addPortal(std::shared_ptr<Portal> portal);
 
+  /// Return the face of this volume that a portal lies on, if the portal
+  /// surface is larger than that face, e.g. after merging
+  /// @param portal The portal of this volume
+  /// @return the volume-sized face, or nullptr if the portal surface is the face
+  const Surface* portalFace(const Portal& portal) const;
+
   /// Type alias for mutable range of surfaces in tracking volume
   using MutableSurfaceRange =
       detail::TransformRange<detail::Dereference,
@@ -600,6 +607,11 @@ class TrackingVolume : public Volume {
   std::span<const PlacementOwnPtr> placements() const;
 
  private:
+  /// Find the faces of this volume that its portals are larger than. Only
+  /// done for volumes that are not alignable.
+  /// @param gctx The geometry context
+  void findPortalFaces(const GeometryContext& gctx);
+
   void connectDenseBoundarySurfaces(
       MutableTrackingVolumeVector& confinedDenseVolumes);
 
@@ -644,6 +656,8 @@ class TrackingVolume : public Volume {
 
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
   std::vector<std::shared_ptr<Portal>> m_portals;
+  /// Volume-sized face for each portal in @c m_portals that is larger than it
+  std::vector<std::shared_ptr<const RegularSurface>> m_portalFaces;
   std::vector<std::shared_ptr<Surface>> m_surfaces;
   std::vector<PlacementOwnPtr> m_placements;
 

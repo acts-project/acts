@@ -238,6 +238,11 @@ TrackingGeometry::TrackingGeometry(
     apply(visitor);
   }
 
+  // Portal faces only depend on the context for alignable volumes, which are
+  // skipped
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  apply([&gctx](TrackingVolume& volume) { volume.findPortalFaces(gctx); });
+
   GeometryIdMapVisitor mapVisitor{logger};
   apply(mapVisitor);
   m_volumesById = std::move(mapVisitor.m_volumesById);

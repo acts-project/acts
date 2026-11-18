@@ -104,6 +104,17 @@ class NavigationTarget {
         m_surfaceRepresentation(&target.surface()),
         m_boundaryTolerance(boundaryTolerance) {}
 
+  /// Portal target intersected through a separate (clipped) representation
+  NavigationTarget(const Intersection3D& intersection,
+                   IntersectionIndex intersectionIndex, const Portal& target,
+                   const Surface& representation,
+                   const BoundaryTolerance& boundaryTolerance) noexcept
+      : m_intersection(intersection),
+        m_intersectionIndex(intersectionIndex),
+        m_target(&target),
+        m_surfaceRepresentation(&representation),
+        m_boundaryTolerance(boundaryTolerance) {}
+
   /// Copy constructor
   constexpr NavigationTarget(const NavigationTarget&) noexcept = default;
 
