@@ -22,7 +22,7 @@ if(PROJECT_IS_TOP_LEVEL)
     )
 
     # Set up the used C++ standard(s).
-    set(CMAKE_CXX_STANDARD 20 CACHE STRING "The (host) C++ standard to use")
+    set(CMAKE_CXX_STANDARD 23 CACHE STRING "The (host) C++ standard to use")
     set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "Disable (host) C++ extensions")
     set(CMAKE_CUDA_STANDARD 20 CACHE STRING "The (CUDA) C++ standard to use")
     set(CMAKE_CUDA_EXTENSIONS FALSE CACHE BOOL "Disable (CUDA) C++ extensions")
@@ -179,10 +179,8 @@ else()
 
     # Settings that follow the general ACTS options.
     traccc_set_from_acts(TRACCC_USE_ROOT "${ACTS_BUILD_PLUGIN_ROOT}")
-    traccc_set_from_acts(
-        TRACCC_FAIL_ON_WARNINGS
-        "${CMAKE_COMPILE_WARNING_AS_ERROR}"
-    )
+    traccc_set_from_acts(TRACCC_FAIL_ON_WARNINGS OFF)
+    set_option_if(TRACCC_FAIL_ON_WARNINGS CMAKE_COMPILE_WARNING_AS_ERROR)
 
     # Dependencies. ACTS sets up all of them, except for the ones below.
     traccc_set_from_acts(TRACCC_SETUP_VECMEM FALSE)
