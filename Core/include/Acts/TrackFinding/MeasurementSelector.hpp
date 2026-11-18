@@ -127,6 +127,9 @@ class MeasurementSelector {
   static Cuts getCutsByTheta(const InternalCutBins& config, double theta);
   Result<Cuts> getCuts(const GeometryIdentifier& geoID, double theta) const;
 
+  /// Compute the chi2 of a candidate, or NaN for a non-finite measurement.
+  /// @pre @p predicted is finite, which the caller checks once per distinct
+  ///      prediction.
   double calculateChi2(
       const BoundParametrization& parametrization, const double* fullCalibrated,
       const double* fullCalibratedCovariance,

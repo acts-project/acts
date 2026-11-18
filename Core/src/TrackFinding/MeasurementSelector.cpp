@@ -155,8 +155,9 @@ double MeasurementSelector::calculateChi2(
         FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
             validSubspaceIndices);
 
-        // Reject diverged candidates before invoking finite-input operations.
-        if (!detail::allFinite(predicted) || !detail::allFinite(calibrated)) {
+        // Reject diverged measurements before invoking finite-input
+        // operations. The caller has already checked the prediction.
+        if (!detail::allFinite(calibrated)) {
           return std::numeric_limits<double>::quiet_NaN();
         }
         const ParametersVector res = parametrization.subspaceDifference(

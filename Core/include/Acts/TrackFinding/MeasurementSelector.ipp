@@ -80,19 +80,39 @@ MeasurementSelector::select(
   // When done trackStateIterEnd will point to the first element that
   // does not satisfy the chi2 cut.
   std::size_t passedCandidates = 0ul;
+  // Candidates normally share the predicted storage of the first one, so the
+  // finiteness of a prediction only has to be checked once per distinct
+  // buffer. The predicted component is a writable view of the backend storage,
+  // so equal data pointers refer to the same, here unmodified, parameters.
+  // Candidates with separate storage, e.g. from a custom track state creator,
+  // are checked individually.
+  const double* checkedPredicted = predicted->data();
+  bool checkedPredictedFinite = true;
   for (std::size_t i(0ul); i < candidates.size(); ++i) {
     auto& trackState = candidates[i];
+
+    const auto candidatePredicted = trackState.predicted();
+    if (candidatePredicted.data() != checkedPredicted) {
+      checkedPredicted = candidatePredicted.data();
+      checkedPredictedFinite = detail::allFinite(candidatePredicted);
+    }
 
     // We access the dynamic size of the matrix here but use them later
     // through a template function which accesses the data pointer
     // with compile time size. That way the Eigen math operations are
     // still done with compile time size and no dynamic memory allocation
     // is needed.
-    double chi2 = calculateChi2(
-        parametrization, trackState.effectiveCalibrated().data(),
-        trackState.effectiveCalibratedCovariance().data(),
-        trackState.predicted(), trackState.predictedCovariance(),
-        trackState.projectorSubspaceIndices(), trackState.calibratedSize());
+    // A non-finite prediction must not reach the parametrization operations,
+    // which require finite coordinates.
+    double chi2 =
+        checkedPredictedFinite
+            ? calculateChi2(
+                  parametrization, trackState.effectiveCalibrated().data(),
+                  trackState.effectiveCalibratedCovariance().data(),
+                  candidatePredicted, trackState.predictedCovariance(),
+                  trackState.projectorSubspaceIndices(),
+                  trackState.calibratedSize())
+            : std::numeric_limits<double>::quiet_NaN();
     trackState.chi2() = chi2;
 
     // A diverging fit can inflate the predicted covariance until inverting it
