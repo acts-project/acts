@@ -76,6 +76,10 @@ struct NavigatorPlainOptions {
   /// The far limit to resolve surfaces
   double farLimit = std::numeric_limits<double>::max();
 
+  /// Step back onto the portal a bent trajectory left the volume through,
+  /// without the candidates targeting it
+  bool portalBacktracking = true;
+
   /// Surfaces of the tracking geometry with bounds extended by the caller
   std::vector<ExtendedSurface> extendedSurfaces;
 

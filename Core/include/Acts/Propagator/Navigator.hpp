@@ -21,6 +21,7 @@
 #include "Acts/Propagator/detail/AdditionalSurfaceNavigation.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/CompilerAttributes.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -266,6 +267,10 @@ class Navigator final {
       policyStateIsDefault = true;
 
       stream.reset();
+
+      exitCheckPolicy = nullptr;
+      exitCheckHasPrevious = false;
+      backtrack = Backtrack::eIdle;
     }
 
     /// Reset navigation state for renavigating within the same navigation run
@@ -296,6 +301,20 @@ class Navigator final {
 
       statistics = {};
     }
+
+    /// Policy of the current volume, for the exit check
+    const INavigationPolicy* exitCheckPolicy = nullptr;
+    /// Whether the exit check holds the state after the previous step
+    bool exitCheckHasPrevious = false;
+    /// Position after the previous step
+    Vector3 exitCheckPosition = Vector3::Zero();
+
+    /// Progress of stepping back onto a portal the candidates did not target
+    enum class Backtrack { eIdle, ePending, eActive, eFailed };
+    /// Backtracking in the current volume
+    Backtrack backtrack = Backtrack::eIdle;
+    /// The portal to step back onto, while pending
+    NavigationTarget backtrackTarget = NavigationTarget::None();
   };
 
   /// Constructor with configuration object
@@ -464,6 +483,71 @@ class Navigator final {
   /// @param direction The current direction
   void resolveCandidates(State& state, const Vector3& position,
                          const Vector3& direction) const;
+
+  /// @brief Check if the last step left the current volume
+  ///
+  /// Asks the volume exit policy of the volume, and falls back to
+  /// @c findVolumeExitGeneric if there is none. On an exit the portal to step
+  /// back onto is left pending in the state.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return True if the last step left the volume
+  /// @note Always inlined: the call costs about as much as the common case
+  ACTS_ALWAYS_INLINE bool checkVolumeExit(State& state, const Vector3& position,
+                                          const Vector3& direction) const {
+    // Runs on every step, so settle the common case right here
+    if (!state.options.portalBacktracking ||
+        state.backtrack != State::Backtrack::eIdle ||
+        state.currentVolume == nullptr ||
+        (state.exitCheckHasPrevious && position == state.exitCheckPosition)) {
+      return false;
+    }
+    if (state.exitCheckPolicy == nullptr) {
+      return resolveVolumeExit(state, position, direction);
+    }
+    const INavigationPolicy::VolumeExitArguments args{
+        .position = position,
+        .direction = direction,
+        .previousPosition =
+            state.exitCheckHasPrevious ? &state.exitCheckPosition : nullptr,
+        // A position on a portal is off the volume by up to the surface
+        // tolerance
+        .tolerance = 2 * state.options.surfaceTolerance};
+    const bool exited = state.exitCheckPolicy->checkVolumeExit(
+        state.options.geoContext, args, state.backtrackTarget, logger());
+    state.exitCheckHasPrevious = true;
+    state.exitCheckPosition = position;
+    return exited && startBacktrack(state);
+  }
+
+  /// @brief Check if the last step left a volume whose policy does not
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return True if the last step left the volume
+  bool resolveVolumeExit(State& state, const Vector3& position,
+                         const Vector3& direction) const;
+
+  /// @brief Step back onto @c State::backtrackTarget, unless the candidates
+  /// target it already
+  ///
+  /// @param state The navigation state
+  /// @return True if stepping back is pending
+  bool startBacktrack(State& state) const;
+
+  /// @brief Find the portal the position left the current volume through,
+  /// for any volume
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return The crossing behind the position, or none if inside
+  NavigationTarget findVolumeExitGeneric(const State& state,
+                                         const Vector3& position,
+                                         const Vector3& direction) const;
 
   /// @brief Create the navigation policy state for the given volume
   ///

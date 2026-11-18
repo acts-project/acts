@@ -256,6 +256,47 @@ class INavigationPolicy {
     visitor(*this);
   }
 
+  /// The state before and after a step, for @ref checkVolumeExit
+  struct VolumeExitArguments {
+    /// Position after the step
+    const Vector3& position;
+    /// Direction after the step
+    const Vector3& direction;
+    /// Position before the step. Null if the step ended on a surface, which
+    /// actors have handled already.
+    const Vector3* previousPosition = nullptr;
+    /// Distance by which a position on a portal can be off the volume
+    double tolerance = 0.;
+  };
+
+  /// The policy that checks if a step left the volume
+  ///
+  /// The navigator asks for it on entering a volume and calls its
+  /// @ref checkVolumeExit after every step. A policy combining others returns
+  /// the first one that checks.
+  ///
+  /// @return This policy if it checks volume exits, else none
+  virtual const INavigationPolicy* volumeExitPolicy() const { return nullptr; }
+
+  /// Check if the last step left the volume
+  ///
+  /// The navigation candidates follow the straight line from where they were
+  /// resolved, so a bent trajectory can leave the volume through a portal
+  /// they do not hold, or leave it and come back within one step.
+  ///
+  /// @param gctx The geometry context
+  /// @param args The state before and after the step
+  /// @param exit Set to the crossing behind the position to step back onto,
+  ///        if the step left the volume
+  /// @param logger Logger for debug output
+  /// @return True if the step left the volume
+  virtual bool checkVolumeExit([[maybe_unused]] const GeometryContext& gctx,
+                               [[maybe_unused]] const VolumeExitArguments& args,
+                               [[maybe_unused]] NavigationTarget& exit,
+                               [[maybe_unused]] const Logger& logger) const {
+    return false;
+  }
+
   /// Check if the policy is in a valid state for navigation
   /// @param gctx The geometry context
   /// @param args The navigation arguments
