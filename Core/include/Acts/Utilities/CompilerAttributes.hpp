@@ -15,8 +15,6 @@
 /// measurable fraction of their work. Does not imply @c inline.
 #if defined(__GNUC__) || defined(__clang__)
 #define ACTS_ALWAYS_INLINE [[gnu::always_inline]]
-#elif defined(_MSC_VER)
-#define ACTS_ALWAYS_INLINE [[msvc::forceinline]]
 #else
 #define ACTS_ALWAYS_INLINE
 #endif
