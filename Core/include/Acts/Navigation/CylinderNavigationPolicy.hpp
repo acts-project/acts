@@ -94,7 +94,56 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
   /// @param delegate is the navigation delegate
   void connect(NavigationDelegate& delegate) const override;
 
+  /// Check if the last step left the cylinder
+  ///
+  /// A position beyond a face left through the portal behind it. A step that
+  /// passed the closest approach to the axis can have dipped into the inner
+  /// cylinder and come back out, which shows as two crossings of the inner
+  /// portal within the step.
+  ///
+  /// @param gctx is the geometry context
+  /// @param args is the state before and after the step
+  /// @param exit is set to the crossing to step back onto, on an exit
+  /// @param logger is the logger
+  /// @return True if the step left the volume
+  bool checkVolumeExit(const GeometryContext& gctx,
+                       const VolumeExitArguments& args, NavigationTarget& exit,
+                       const Logger& logger) const override;
+
+  /// This policy checks volume exits
+  /// @return This policy
+  const INavigationPolicy* volumeExitPolicy() const override { return this; }
+
  private:
+  /// Find the crossing behind the position the last step left through
+  /// @param gctx is the geometry context
+  /// @param args is the state before and after the step
+  /// @param dipped is whether the step dipped into the inner cylinder and
+  ///        came back out
+  /// @return The crossing, or none
+  NavigationTarget findExit(const GeometryContext& gctx,
+                            const VolumeExitArguments& args, bool dipped) const;
+
+  /// Transform a global position into the volume frame
+  /// @param gctx is the geometry context
+  /// @param global is the global position
+  /// @return The local position
+  Vector3 toLocal(const GeometryContext& gctx, const Vector3& global) const;
+
+  /// Rotate a global direction into the volume frame
+  /// @param gctx is the geometry context
+  /// @param global is the global direction
+  /// @return The local direction
+  Vector3 toLocalDirection(const GeometryContext& gctx,
+                           const Vector3& global) const;
+
+  /// Whether a local position is on the face of this volume, which a portal
+  /// merged across volumes extends beyond
+  /// @param local is the local position
+  /// @param tolerance is the distance it may be off the face
+  /// @return True if the position is on the face
+  bool onFace(const Vector3& local, double tolerance) const;
+
   /// Pointer to the cylindrical tracking volume this policy navigates
   const TrackingVolume* m_volume;
 
@@ -110,6 +159,20 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
   /// Direct portal references for efficient candidate addition
   /// Index corresponds to CylinderVolumeBounds::Face enum values
   std::array<const Portal*, 4> m_portals{};
+
+  /// Whether the volume transform depends on the geometry context. If not,
+  /// the volume frame is cached.
+  bool m_alignable = false;
+
+  /// Whether the volume frame is the global one shifted by @c m_center
+  bool m_shifted = false;
+
+  /// Center of the volume, if not alignable
+  Vector3 m_center = Vector3::Zero();
+
+  /// Inner and outer radius
+  double m_rMin = 0.;
+  double m_rMax = 0.;
 };
 
 static_assert(NavigationPolicyConcept<CylinderNavigationPolicy>);
