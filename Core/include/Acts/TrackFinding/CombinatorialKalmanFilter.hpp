@@ -518,14 +518,13 @@ class CombinatorialKalmanFilter {
       // `initialize` re-roots the jacobian chain at this branch
       result.accumulatedJacobian = BoundMatrix::Identity();
 
-      // Reset the navigation state
-      // Set targetSurface to nullptr for forward filtering
+      // Reset the navigation state, keeping the target surface
       auto navInitRes = navigator.initialize(
           state.navigation, {.position = stepper.position(state.stepping),
                              .direction = stepper.direction(state.stepping),
                              .propagationDirection = state.options.direction,
                              .startSurface = &currentState.referenceSurface(),
-                             .targetSurface = nullptr});
+                             .targetSurface = targetReached.surface});
       if (!navInitRes.ok()) {
         ACTS_DEBUG("Navigation initialization failed: " << navInitRes.error());
         return navInitRes.error();
@@ -1235,12 +1234,6 @@ class CombinatorialKalmanFilter {
     // Set the trivial propagator options
     propOptions.setPlainOptions(tfOptions.propagatorPlainOptions);
 
-    // The navigator stops on the target surface as the current surface
-    if (tfOptions.targetSurface != nullptr) {
-      propOptions.navigation.registerAdditionalSurface(
-          *tfOptions.targetSurface, BoundaryTolerance::None());
-    }
-
     // Catch the actor
     auto& combKalmanActor =
         propOptions.actorList.template get<CombinatorialKalmanFilterActor>();
@@ -1285,7 +1278,7 @@ class CombinatorialKalmanFilter {
       const auto initResult =
           m_propagator.template initialize<decltype(propState), NoTargetAborter,
                                            StubPathLimitReached>(
-              propState, initialParameters, nullptr);
+              propState, initialParameters, tfOptions.targetSurface);
       if (!initResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
         return initResult.error();
@@ -1299,7 +1292,7 @@ class CombinatorialKalmanFilter {
       const auto initResult =
           m_propagator.template initialize<decltype(propState), NoTargetAborter,
                                            StubPathLimitReached>(
-              propState, multiBoundInitialParameters, nullptr);
+              propState, multiBoundInitialParameters, tfOptions.targetSurface);
       if (!initResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
         return initResult.error();

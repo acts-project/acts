@@ -359,7 +359,8 @@ class ReferenceTrajectoryBuilder {
       track_container_t& trackContainer) const {
     auto propagatorOptions = makePropagatorOptions(
         actorOptions, nullptr, actorOptions.referenceSurface);
-    return buildImpl(sParameters, propagatorOptions, trackContainer);
+    return buildImpl(sParameters, propagatorOptions,
+                     actorOptions.referenceSurface, trackContainer);
   }
 
   /// Build the reference trajectory with a given surface sequence and return a
@@ -380,7 +381,8 @@ class ReferenceTrajectoryBuilder {
   {
     auto propagatorOptions = makePropagatorOptions(
         actorOptions, &sSequence, actorOptions.referenceSurface);
-    return buildImpl(sParameters, propagatorOptions, trackContainer);
+    return buildImpl(sParameters, propagatorOptions,
+                     actorOptions.referenceSurface, trackContainer);
   }
 
   /// Attach source links to the track states in the trajectory based on the
@@ -599,12 +601,6 @@ class ReferenceTrajectoryBuilder {
       propagatorOptions.navigation.surfaceSequence = *sSequence;
     }
 
-    // The navigator stops on the target surface as the current surface
-    if (targetSurface != nullptr) {
-      propagatorOptions.navigation.registerAdditionalSurface(
-          *targetSurface, BoundaryTolerance::None());
-    }
-
     auto& actor = propagatorOptions.actorList.template get<Actor>();
     actor.targetReached.surface = targetSurface;
     actor.multipleScattering = actorOptions.multipleScattering;
@@ -619,12 +615,13 @@ class ReferenceTrajectoryBuilder {
             TrackContainerFrontend track_container_t>
   auto buildImpl(const BoundTrackParameters& sParameters,
                  const propagator_options_t& propagatorOptions,
+                 const Surface* targetSurface,
                  track_container_t& trackContainer) const
       -> Result<typename track_container_t::TrackProxy> {
     auto propagatorState = m_propagator.makeState(propagatorOptions);
 
     auto propagatorInitResult =
-        m_propagator.initialize(propagatorState, sParameters, nullptr);
+        m_propagator.initialize(propagatorState, sParameters, targetSurface);
     if (!propagatorInitResult.ok()) {
       ACTS_DEBUG("Propagation initialization failed: "
                  << propagatorInitResult.error());
