@@ -45,28 +45,10 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
   }
 
   // A seed's chain needs minSeedLevel edges, less what addTriplets may take
-  // off, and at least two, a seed having three space points. A chain through
-  // an edge can still end k connection steps further in, so an edge needs k
-  // fewer for every bin it can reach that way.
+  // off, and at least two, a seed having three space points.
   const std::uint32_t allowance = m_cfg.addTriplets ? 1 : 0;
-  const std::uint32_t minLength =
+  m_minEdgeLevel =
       std::max<std::uint32_t>(m_cfg.minSeedLevel, allowance + 2) - allowance;
-  m_minEdgeLevel.assign(m_geometry->numBins(), minLength);
-  // the groups come outside-in, so going through them inside-out settles a
-  // bin graph without loops in one sweep
-  for (bool changed = true; changed;) {
-    changed = false;
-    for (const GbtsBinGroup& group :
-         m_geometry->binGroups() | std::views::reverse) {
-      const std::uint32_t outer = std::max(m_minEdgeLevel[group.bin], 2u) - 1;
-      for (const GbtsBinLink& link : group.links) {
-        if (outer < m_minEdgeLevel[link.bin]) {
-          m_minEdgeLevel[link.bin] = outer;
-          changed = true;
-        }
-      }
-    }
-  }
 }
 
 GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {

@@ -207,13 +207,12 @@ class GbtsGraphBuilder {
   /// @param roi Region of interest descriptor
   /// @param nodeStorage Data storage containing nodes
   /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
-  /// @param minEdgeLevel Per eta bin, the level an edge whose inner node is in
-  ///        the bin needs to be on a seed, for `pruneShortChains`; empty for
-  ///        no pruning
+  /// @param minEdgeLevel The level a chain needs to be a seed, for
+  ///        `pruneShortChains`; 0 for no pruning
   /// @return The graph, with its edges and the links between them
-  GbtsGraph buildTheGraph(
-      const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-      float bFieldInZ, std::span<const std::uint32_t> minEdgeLevel = {}) const;
+  GbtsGraph buildTheGraph(const GbtsRoiDescriptor& roi,
+                          GbtsNodeStorage& nodeStorage, float bFieldInZ,
+                          std::uint32_t minEdgeLevel = 0) const;
 
  private:
   Config m_cfg;
@@ -222,6 +221,10 @@ class GbtsGraphBuilder {
 
   /// Per eta bin, whether a connection leads into it from an inner bin.
   std::vector<bool> m_binHasInnerLink;
+
+  /// Per eta bin, the most connection steps a chain can still go further in,
+  /// saturated.
+  std::vector<std::uint32_t> m_binInnerSteps;
 
   std::unique_ptr<const Acts::Logger> m_logger;
 

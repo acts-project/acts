@@ -211,10 +211,10 @@ nodes without edges are not tried for it. Neither could be part of a seed, so
 the seeds are unchanged while the graph and the edge array shrink.
 
 With `pruneShortChains` the graph builder also leaves out the
-edges that cannot be on a chain long enough for a seed. The seeder hands it a
-minimum level per eta bin: `minSeedLevel`, less one with `addTriplets`, and
-less @f$k@f$ for a bin from which a chain can still go @f$k@f$ connection steps
-further in. Edges are linked to the edges further out as they are created, and
+edges that cannot be on a chain long enough for a seed. The seeder hands it the
+level a seed needs: `minSeedLevel`, less one with `addTriplets`. An edge of a
+bin from which a chain can still go @f$k@f$ connection steps further in needs
+@f$k@f$ less. Edges are linked to the edges further out as they are created, and
 those are built first, so an edge's level is known right away: one below its
 bin's minimum is dropped, and outer nodes whose highest edge level cannot reach
 it are not tried. On the bins `dropDeadEnds` acts on, this drops at least the

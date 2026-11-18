@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <limits>
 #include <numbers>
+#include <ranges>
 #include <span>
 #include <utility>
 #include <vector>
@@ -228,12 +229,30 @@ GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
       m_binHasInnerLink[link.bin] = true;
     }
   }
+
+  // the groups come outside-in, so going through them inside-out settles a
+  // bin graph without loops in one sweep; a loop runs up to the saturation
+  constexpr std::uint32_t maxSteps = std::numeric_limits<std::uint8_t>::max();
+  m_binInnerSteps.assign(m_geometry->numBins(), 0);
+  for (bool changed = true; changed;) {
+    changed = false;
+    for (const GbtsBinGroup& bg :
+         m_geometry->binGroups() | std::views::reverse) {
+      const std::uint32_t steps =
+          std::min(m_binInnerSteps[bg.bin] + 1, maxSteps);
+      for (const GbtsBinLink& link : bg.links) {
+        if (steps > m_binInnerSteps[link.bin]) {
+          m_binInnerSteps[link.bin] = steps;
+          changed = true;
+        }
+      }
+    }
+  }
 }
 
 GbtsGraph GbtsGraphBuilder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-    const float bFieldInZ,
-    const std::span<const std::uint32_t> minEdgeLevel) const {
+    const float bFieldInZ, const std::uint32_t minEdgeLevel) const {
   GbtsGraph graph;
   std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
 
@@ -287,8 +306,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
   // chain pruning keeps; reused across bin groups as the windows are
   std::vector<std::vector<std::pair<float, SpacePointIndex>>> connectedPhiNodes;
 
-  const bool pruneShortChains = m_cfg.pruneShortChains && !minEdgeLevel.empty();
-  assert(!pruneShortChains || minEdgeLevel.size() == m_geometry->numBins());
+  const bool pruneShortChains = m_cfg.pruneShortChains && minEdgeLevel > 1;
 
   // per edge its level, the longest chain outwards, saturated; per node the
   // highest level of its edges
@@ -345,9 +363,14 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
     const bool dropDeadEnds = m_cfg.dropDeadEnds && !m_binHasInnerLink[bg.bin];
 
     // An edge of this bin below this level is on no chain long enough for a
-    // seed. Its level is final once it is linked, as the outer bins are built
+    // seed: a chain through it can still go k steps further in, so it needs k
+    // fewer. Its level is final once it is linked, as the outer bins are built
     // first. Every edge has level 1, so 1 prunes nothing.
-    const std::uint32_t minLevel1 = pruneShortChains ? minEdgeLevel[bg.bin] : 0;
+    const std::uint32_t innerSteps = m_binInnerSteps[bg.bin];
+    const std::uint32_t minLevel1 =
+        pruneShortChains && minEdgeLevel > innerSteps
+            ? minEdgeLevel - innerSteps
+            : 0;
     const bool pruneGroup = minLevel1 > 1;
 
     // prepare a sliding window for each non-empty bin2 in the group
