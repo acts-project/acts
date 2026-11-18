@@ -23,6 +23,7 @@
 #include <fstream>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -292,4 +293,42 @@ void ActsExamples::writeDigiConfigToJson(
   outfile << DigiConfigConverter("digitization-configuration")
                  .toJson(cfg, nullptr)
                  .dump(2);
+}
+
+ActsExamples::DigiSensorTypesConfig ActsExamples::digiSensorTypesFromJson(
+    const nlohmann::json& djson) {
+  // Geometry-keyed format: wrap every rule as its own type
+  if (!djson.contains("sensor-types")) {
+    return toSensorTypes(
+        DigiConfigConverter("digitization-configuration").fromJson(djson));
+  }
+
+  constexpr int kFormatVersion = 1;
+  if (djson.at("acts-digitization-config").at("format-version").get<int>() !=
+      kFormatVersion) {
+    throw std::invalid_argument(
+        "Unsupported format version in digitization configuration");
+  }
+
+  DigiSensorTypesConfig out;
+  for (const auto& [name, jcfg] : djson.at("sensor-types").items()) {
+    out.types.emplace(name, jcfg.get<DigiComponentsConfig>());
+  }
+  out.assignments =
+      Acts::GeometryHierarchyMapJsonConverter<std::string>("sensor-type")
+          .fromJson(djson.at("assignments"));
+  return out;
+}
+
+ActsExamples::DigiSensorTypesConfig ActsExamples::readDigiSensorTypesFromJson(
+    const std::string& path) {
+  if (path.empty()) {
+    return {};
+  }
+  nlohmann::json djson;
+  std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
+  // rely on exception for error handling
+  infile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+  infile >> djson;
+  return digiSensorTypesFromJson(djson);
 }

@@ -12,6 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/IMultiAxis.hpp"
@@ -23,6 +24,7 @@
 
 #include <cmath>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -254,6 +256,111 @@ BOOST_AUTO_TEST_CASE(ChargeQuantizationConfigRoundTrip) {
   encoded["charge-quantization"]["step"] = 0.01;
   encoded["digital"] = true;
   BOOST_CHECK_NO_THROW(encoded.get<GeometricConfig>());
+}
+BOOST_AUTO_TEST_CASE(SensorTypesFormat) {
+  nlohmann::json djson = nlohmann::json::parse(R"(
+{
+  "acts-digitization-config": { "format-version": 1 },
+  "sensor-types": {
+    "pixel": {
+      "smearing": [
+        { "index": 0, "mean": 0.0, "stddev": 0.015, "type": "Gauss" },
+        { "index": 1, "mean": 0.0, "stddev": 0.015, "type": "Gauss" }
+      ]
+    },
+    "strip": {
+      "smearing": [
+        { "index": 0, "mean": 0.0, "stddev": 0.043, "type": "Gauss" }
+      ]
+    }
+  },
+  "assignments": {
+    "acts-geometry-hierarchy-map": {
+      "format-version": 0,
+      "value-identifier": "sensor-type"
+    },
+    "entries": [
+      { "volume": 16, "value": "pixel" },
+      { "volume": 17, "value": "pixel" },
+      { "volume": 23, "value": "strip" }
+    ]
+  }
+})");
+
+  DigiSensorTypesConfig cfg = digiSensorTypesFromJson(djson);
+
+  BOOST_CHECK_EQUAL(cfg.types.size(), 2u);
+  BOOST_CHECK_EQUAL(cfg.assignments.size(), 3u);
+
+  // Two volumes resolve to the same type name
+  auto v16 = cfg.assignments.find(GeometryIdentifier().withVolume(16));
+  auto v17 = cfg.assignments.find(GeometryIdentifier().withVolume(17));
+  auto v23 = cfg.assignments.find(GeometryIdentifier().withVolume(23));
+  BOOST_REQUIRE(v16 != cfg.assignments.end());
+  BOOST_REQUIRE(v17 != cfg.assignments.end());
+  BOOST_REQUIRE(v23 != cfg.assignments.end());
+  BOOST_CHECK_EQUAL(*v16, "pixel");
+  BOOST_CHECK_EQUAL(*v17, "pixel");
+  BOOST_CHECK_EQUAL(*v23, "strip");
+
+  // Hierarchy lookup: a sensitive surface inside volume 16 is a pixel
+  auto sensitive = cfg.assignments.find(
+      GeometryIdentifier().withVolume(16).withLayer(2).withSensitive(5));
+  BOOST_REQUIRE(sensitive != cfg.assignments.end());
+  BOOST_CHECK_EQUAL(*sensitive, "pixel");
+
+  // The type content is decoded like a regular config entry
+  BOOST_REQUIRE(cfg.types.contains("pixel"));
+  BOOST_CHECK_EQUAL(cfg.types.at("pixel").smearingDigiConfig.params.size(), 2u);
+  BOOST_CHECK_EQUAL(cfg.types.at("strip").smearingDigiConfig.params.size(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(SensorTypesFromGeometryKeyedFormat) {
+  nlohmann::json djson = nlohmann::json::parse(R"(
+{
+  "acts-geometry-hierarchy-map": {
+    "format-version": 0,
+    "value-identifier": "digitization-configuration"
+  },
+  "entries": [
+    { "volume": 7,
+      "value": { "smearing": [
+        { "index": 0, "mean": 0.0, "stddev": 0.015, "type": "Gauss" } ] } },
+    { "volume": 8,
+      "value": { "smearing": [
+        { "index": 0, "mean": 0.0, "stddev": 0.015, "type": "Gauss" } ] } }
+  ]
+})");
+
+  DigiSensorTypesConfig cfg = digiSensorTypesFromJson(djson);
+
+  // One type per rule, even if the contents are identical
+  BOOST_CHECK_EQUAL(cfg.types.size(), 2u);
+  BOOST_CHECK(cfg.types.contains("rule-0"));
+  BOOST_CHECK(cfg.types.contains("rule-1"));
+
+  auto v7 = cfg.assignments.find(GeometryIdentifier().withVolume(7));
+  auto v8 = cfg.assignments.find(GeometryIdentifier().withVolume(8));
+  BOOST_REQUIRE(v7 != cfg.assignments.end());
+  BOOST_REQUIRE(v8 != cfg.assignments.end());
+  BOOST_CHECK_NE(*v7, *v8);
+}
+
+BOOST_AUTO_TEST_CASE(SensorTypesWrongVersion) {
+  nlohmann::json djson = nlohmann::json::parse(R"(
+{
+  "acts-digitization-config": { "format-version": 2 },
+  "sensor-types": {},
+  "assignments": {
+    "acts-geometry-hierarchy-map": {
+      "format-version": 0,
+      "value-identifier": "sensor-type"
+    },
+    "entries": []
+  }
+})");
+
+  BOOST_CHECK_THROW(digiSensorTypesFromJson(djson), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

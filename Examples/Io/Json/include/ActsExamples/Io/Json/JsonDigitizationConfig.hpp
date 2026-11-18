@@ -42,6 +42,24 @@ void writeDigiConfigToJson(
     const Acts::GeometryHierarchyMap<DigiComponentsConfig>& cfg,
     const std::string& path);
 
+/// Decode a digitization configuration in either supported format.
+///
+/// The sensor-type format has an "acts-digitization-config" header, a
+/// "sensor-types" object and an "assignments" geometry hierarchy map.
+/// Geometry-keyed files without "sensor-types" are accepted and converted
+/// with one type per rule.
+///
+/// @param djson the encoded configuration
+/// @return the decoded sensor-type configuration
+/// @throw std::invalid_argument on an unsupported format version
+DigiSensorTypesConfig digiSensorTypesFromJson(const nlohmann::json& djson);
+
+/// Read a digitization configuration file in either supported format.
+///
+/// @param path path to the json file; an empty path returns an empty config
+/// @return the decoded sensor-type configuration
+DigiSensorTypesConfig readDigiSensorTypesFromJson(const std::string& path);
+
 using DigiConfigConverter =
     Acts::GeometryHierarchyMapJsonConverter<DigiComponentsConfig>;
 
