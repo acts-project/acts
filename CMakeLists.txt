@@ -262,6 +262,12 @@ set_option_if(
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 set_option_if(ACTS_BUILD_TRACCC ACTS_BUILD_PLUGIN_TRACCC)
+set(_acts_traccc_build_hip_utils "${ACTS_TRACCC_BUILD_HIP}")
+set(_acts_traccc_build_sycl_utils "${ACTS_TRACCC_BUILD_SYCL}")
+if(ACTS_BUILD_TRACCC AND ACTS_TRACCC_BUILD_ALPAKA)
+    set_option_if(_acts_traccc_build_hip_utils alpaka_ACC_GPU_HIP_ENABLE)
+    set_option_if(_acts_traccc_build_sycl_utils alpaka_ACC_SYCL_ENABLE)
+endif()
 set_option_if(
     ACTS_TRACCC_BUILD_PERFORMANCE
     ACTS_TRACCC_BUILD_TESTS

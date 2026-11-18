@@ -219,8 +219,12 @@ git clone https://github.com/acts-project/acts.git
 > will be removed in a future version. Build traccc as part of ACTS instead,
 > with `-DACTS_BUILD_TRACCC=ON` and the `ACTS_TRACCC_*` options described in
 > the [ACTS build documentation](../docs/pages/contributing/building_acts.md).
-> The HIP and SYCL back-ends do not build as part of ACTS yet, so they still
-> need the standalone build below.
+
+In an ACTS build, enable Alpaka with `-DACTS_TRACCC_BUILD_ALPAKA=ON` and
+select HIP with `-Dalpaka_ACC_GPU_HIP_ENABLE=ON` or SYCL with
+`-Dalpaka_ACC_SYCL_ENABLE=ON`. These selections enable the corresponding
+backend utilities and dependencies. The native `traccc::hip` and
+`traccc::sycl` libraries are optional.
 
 ```sh
 cmake --preset <preset> [options] -S acts/Traccc/ -B traccc-build

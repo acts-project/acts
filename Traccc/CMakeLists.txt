@@ -133,7 +133,8 @@ else()
             message(
                 SEND_ERROR
                 "${name} cannot be set when traccc is built as part of ACTS. "
-                "Use the ACTS_TRACCC_* options instead."
+                "Use the ACTS_TRACCC_* options instead; not every traccc "
+                "setting has an equivalent ACTS option."
             )
             unset(${name} CACHE)
         endif()
@@ -144,9 +145,9 @@ else()
     traccc_set_from_acts(TRACCC_BUILD_CUDA "${ACTS_TRACCC_BUILD_CUDA}")
     traccc_set_from_acts(TRACCC_BUILD_CUDA_UTILS "${ACTS_TRACCC_BUILD_CUDA}")
     traccc_set_from_acts(TRACCC_BUILD_HIP "${ACTS_TRACCC_BUILD_HIP}")
-    traccc_set_from_acts(TRACCC_BUILD_HIP_UTILS "${ACTS_TRACCC_BUILD_HIP}")
+    traccc_set_from_acts(TRACCC_BUILD_HIP_UTILS "${_acts_traccc_build_hip_utils}")
     traccc_set_from_acts(TRACCC_BUILD_SYCL "${ACTS_TRACCC_BUILD_SYCL}")
-    traccc_set_from_acts(TRACCC_BUILD_SYCL_UTILS "${ACTS_TRACCC_BUILD_SYCL}")
+    traccc_set_from_acts(TRACCC_BUILD_SYCL_UTILS "${_acts_traccc_build_sycl_utils}")
     traccc_set_from_acts(TRACCC_BUILD_ALPAKA "${ACTS_TRACCC_BUILD_ALPAKA}")
     traccc_set_from_acts(TRACCC_BUILD_IO "${ACTS_TRACCC_BUILD_IO}")
     traccc_set_from_acts(
@@ -187,7 +188,7 @@ else()
     traccc_set_from_acts(TRACCC_USE_SYSTEM_VECMEM FALSE)
     # Only the examples and oneDPL need TBB. Build it if it is not available.
     traccc_set_from_acts(TRACCC_SETUP_TBB FALSE)
-    if(TRACCC_BUILD_EXAMPLES OR TRACCC_BUILD_SYCL)
+    if(TRACCC_BUILD_EXAMPLES OR TRACCC_BUILD_SYCL_UTILS)
         find_package(TBB ${_acts_tbb_version} CONFIG)
         if(NOT TBB_FOUND)
             traccc_set_from_acts(TRACCC_SETUP_TBB TRUE)
@@ -195,9 +196,17 @@ else()
     endif()
     traccc_set_from_acts(TRACCC_USE_SYSTEM_TBB FALSE)
     traccc_set_from_acts(TRACCC_SETUP_THRUST TRUE)
-    traccc_set_from_acts(TRACCC_SETUP_ROCTHRUST FALSE)
-    traccc_set_from_acts(TRACCC_USE_SYSTEM_ROCTHRUST FALSE)
-    traccc_set_from_acts(TRACCC_SETUP_DPL "${TRACCC_BUILD_SYCL}")
+    # rocThrust is needed for HIP on AMD, and is taken from the ROCm installation.
+    if(
+        (TRACCC_BUILD_HIP AND NOT "${CMAKE_HIP_PLATFORM}" STREQUAL "nvidia")
+        OR (TRACCC_BUILD_ALPAKA AND alpaka_ACC_GPU_HIP_ENABLE)
+    )
+        traccc_set_from_acts(TRACCC_SETUP_ROCTHRUST TRUE)
+    else()
+        traccc_set_from_acts(TRACCC_SETUP_ROCTHRUST FALSE)
+    endif()
+    traccc_set_from_acts(TRACCC_USE_SYSTEM_ROCTHRUST TRUE)
+    traccc_set_from_acts(TRACCC_SETUP_DPL "${TRACCC_BUILD_SYCL_UTILS}")
     traccc_set_from_acts(TRACCC_USE_SYSTEM_DPL FALSE)
     traccc_set_from_acts(TRACCC_SETUP_ALPAKA "${TRACCC_BUILD_ALPAKA}")
     traccc_set_from_acts(TRACCC_USE_SYSTEM_ALPAKA FALSE)
