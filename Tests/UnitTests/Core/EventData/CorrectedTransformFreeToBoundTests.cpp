@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // the loc0, phi are the same as that without correction
   CHECK_CLOSE_ABS(eCorrectedBoundParams[eBoundLoc0], loc0, 1e-12);
-  CHECK_CLOSE_ABS(eCorrectedBoundParams[eBoundPhi], phi, 1e-12);
+  CHECK_CLOSE_ABS(eCorrectedBoundParams[eBoundDir0], phi, 1e-12);
   CHECK_CLOSE_REL(eCorrectedBoundParams[eBoundLoc1], 11.2563, eps);
 
   BOOST_TEST_INFO("Corrected Bound Params: \n" << eCorrectedBoundParams);

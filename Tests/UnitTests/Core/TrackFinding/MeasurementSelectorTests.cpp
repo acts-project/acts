@@ -94,7 +94,7 @@ VectorMultiTrajectory::TrackStateProxy addCandidateWithChi2(
   ts.setReferenceSurface(surface);
 
   ts.predicted() = BoundVector::Zero();
-  ts.predicted()[eBoundTheta] = std::numbers::pi / 2.;
+  ts.predicted()[eBoundDir1] = std::numbers::pi / 2.;
   // The predicted covariance in the measurement subspace is zero, so the chi2
   // is the squared residual
   ts.predictedCovariance() = BoundMatrix::Zero();
