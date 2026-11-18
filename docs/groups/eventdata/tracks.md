@@ -215,12 +215,16 @@ using the destination surface's parametrization, including periodic direction
 differences. Its perturbation generation and finite-difference algorithm are
 unchanged.
 
-@ref Acts::MeasurementSelector::select now takes the caller's geometry context
-as its first argument. The measurement-selector delegate in
-@ref Acts::TrackStateCreator forwards this context; custom selector callbacks
-must accept it too. Selection uses the surface parametrization for physical
-theta and measurement residuals, including direction measurements across the
-phi seam. Non-finite candidates are rejected before evaluating these residuals.
+@ref Acts::MeasurementSelector::select now takes the bound parametrization of
+the candidates' common surface as its first argument, i.e.
+`select(parametrization, candidates, isOutlier, logger)`. The caller resolves
+it with `surface.boundParametrization(gctx)`; the selector does not look it up
+itself. The measurement-selector delegate in @ref Acts::TrackStateCreator
+resolves it once per surface from the bound state's reference surface and
+passes it on; custom selector callbacks must accept a
+`const BoundParametrization&` in place of the geometry context. Selection uses
+this parametrization for physical theta and measurement residuals, including
+direction measurements across the phi seam. Non-finite candidates are rejected before evaluating these residuals.
 
 The optional nonlinear free-to-bound correction averages sigma-point offsets
 relative to the nominal bound point using the surface parametrization. It uses

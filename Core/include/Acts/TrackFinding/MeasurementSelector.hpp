@@ -87,7 +87,10 @@ class MeasurementSelector {
   /// @brief Function that select the measurements compatible with
   /// the given track parameter on a surface
   ///
-  /// @param gctx Geometry context for physical theta and coordinate residuals
+  /// @param parametrization Bound parametrization of the candidates' common
+  ///        reference surface, used for physical theta and coordinate
+  ///        residuals. It must equal the surface's boundParametrization() in
+  ///        the current geometry context.
   /// @param candidates The track state candidates which already contain predicted parameters
   /// @param isOutlier The indicator for outlier or not
   /// @param logger The logger wrapper
@@ -99,7 +102,7 @@ class MeasurementSelector {
   Result<std::pair<
       typename std::vector<typename traj_t::TrackStateProxy>::iterator,
       typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
-  select(const GeometryContext& gctx,
+  select(const BoundParametrization& parametrization,
          std::vector<typename traj_t::TrackStateProxy>& candidates,
          bool& isOutlier, const Logger& logger) const;
 

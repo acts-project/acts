@@ -52,6 +52,9 @@ namespace Acts {
 class BoundParametrization {
  private:
   struct GlobalSpherical {
+    /// The convention carries no state, so all instances are equal.
+    constexpr bool operator==(const GlobalSpherical&) const noexcept = default;
+
     template <typename Derived>
     Vector3 direction(const Eigen::MatrixBase<Derived>& parameters) const {
       const double phi = parameters[eBoundDir0];
@@ -387,6 +390,13 @@ class BoundParametrization {
   /// @return Allocation-free parametrization value
   static constexpr BoundParametrization globalSpherical() noexcept {
     return BoundParametrization(GlobalSpherical{});
+  }
+
+  /// Whether two values describe the same parametrization.
+  /// @param other Parametrization to compare with
+  /// @return True if both hold the same convention with equal parameters
+  constexpr bool operator==(const BoundParametrization& other) const noexcept {
+    return m_chart == other.m_chart;
   }
 
   /// Whether algorithms requiring global spherical coordinates are supported.

@@ -68,8 +68,8 @@ struct TrackStateCreator {
   using MeasurementSelector =
       Delegate<Result<std::pair<typename candidate_container_t::iterator,
                                 typename candidate_container_t::iterator>>(
-          const GeometryContext&, candidate_container_t& trackStates, bool&,
-          const Logger&)>;
+          const BoundParametrization&, candidate_container_t& trackStates,
+          bool&, const Logger&)>;
 
   /// The source link accessor will return an source link range for a surface
   /// which link to the associated measurements.
@@ -203,11 +203,21 @@ struct TrackStateCreator {
       trackStateCandidates.push_back(ts);
     }
 
+    // All candidates share the bound state's reference surface. Its
+    // parametrization is resolved once here for the selector.
+    const Surface& referenceSurface = boundParams.referenceSurface();
+    const BoundParametrization parametrization =
+        referenceSurface.boundParametrization(gctx);
+    // The candidates must be on the surface the trajectory is extended onto.
+    // For the same surface the parametrizations agree trivially.
+    assert(&referenceSurface == &surface ||
+           parametrization == surface.boundParametrization(gctx));
+
     bool isOutlier = false;
     Result<std::pair<typename std::vector<TrackStateProxy>::iterator,
                      typename std::vector<TrackStateProxy>::iterator>>
-        selectorResult =
-            measurementSelector(gctx, trackStateCandidates, isOutlier, logger);
+        selectorResult = measurementSelector(
+            parametrization, trackStateCandidates, isOutlier, logger);
     if (!selectorResult.ok()) {
       ACTS_DEBUG("Selection of calibrated measurements failed: "
                  << selectorResult.error().message());
@@ -299,11 +309,10 @@ struct TrackStateCreator {
 
   /// Default measurement selector which will return all measurements
   /// @param candidates Measurement track state candidates
-  /// @param gctx Geometry context (unused)
   /// @return Iterator pair representing the range of all candidates
   static Result<std::pair<typename std::vector<TrackStateProxy>::iterator,
                           typename std::vector<TrackStateProxy>::iterator>>
-  voidMeasurementSelector(const GeometryContext& /*gctx*/,
+  voidMeasurementSelector(const BoundParametrization& /*parametrization*/,
                           typename std::vector<TrackStateProxy>& candidates,
                           bool& /*isOutlier*/, const Logger& /*logger*/) {
     return std::pair{candidates.begin(), candidates.end()};

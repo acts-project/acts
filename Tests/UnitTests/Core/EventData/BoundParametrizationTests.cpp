@@ -27,6 +27,14 @@ static_assert(std::is_trivially_copyable_v<BoundParametrization>);
 static_assert(std::is_nothrow_copy_constructible_v<BoundParametrization>);
 static_assert(noexcept(BoundParametrization::globalSpherical()));
 
+BOOST_AUTO_TEST_CASE(Equality) {
+  constexpr auto a = BoundParametrization::globalSpherical();
+  constexpr auto b = BoundParametrization::globalSpherical();
+  static_assert(a == b);
+  static_assert(!(a != b));
+  BOOST_CHECK(a == b);
+}
+
 BOOST_AUTO_TEST_CASE(ValuesMapsAndExpressions) {
   BoundVector values(1., 2., 0.3, 1.2, 0.01, 4.);
   Eigen::Map<BoundVector> map(values.data());

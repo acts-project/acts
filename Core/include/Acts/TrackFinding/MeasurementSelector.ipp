@@ -20,7 +20,7 @@ Result<
     std::pair<typename std::vector<typename traj_t::TrackStateProxy>::iterator,
               typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
 MeasurementSelector::select(
-    const GeometryContext& gctx,
+    const BoundParametrization& parametrization,
     std::vector<typename traj_t::TrackStateProxy>& candidates, bool& isOutlier,
     const Logger& logger) const {
   using Result = Result<std::pair<
@@ -54,10 +54,8 @@ MeasurementSelector::select(
     return Result::success(std::pair(candidates.begin(), candidates.begin()));
   }
   // All candidates are on the same surface, which also selects the cuts.
-  const auto& surface = prediction->referenceSurface();
-  const GeometryIdentifier geoID = surface.geometryId();
-  const BoundParametrization parametrization =
-      surface.boundParametrization(gctx);
+  // The caller resolves the surface's parametrization.
+  const GeometryIdentifier geoID = prediction->referenceSurface().geometryId();
   const double theta = parametrization.theta(*predicted);
   // Find the appropriate cuts
   const auto cutsResult = getCuts(geoID, theta);

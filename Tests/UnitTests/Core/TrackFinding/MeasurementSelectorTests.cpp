@@ -10,14 +10,20 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
+#include "Acts/TrackFinding/TrackStateCreator.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -27,6 +33,7 @@
 #include <limits>
 #include <memory>
 #include <numbers>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
@@ -118,8 +125,8 @@ Selection selectSingle(const MeasurementSelector& selector, double chi2) {
       addCandidateWithChi2<dim>(traj, surface, chi2)};
 
   bool isOutlier = false;
-  auto result = selector.select<VectorMultiTrajectory>(gctx, candidates,
-                                                       isOutlier, *logger);
+  auto result = selector.select<VectorMultiTrajectory>(
+      surface->boundParametrization(gctx), candidates, isOutlier, *logger);
   BOOST_REQUIRE(result.ok());
   auto [begin, end] = *result;
   BOOST_REQUIRE_LE(end - begin, 1);
@@ -235,8 +242,8 @@ BOOST_AUTO_TEST_CASE(Chi2CutPerDimensionMixedDimensions) {
       }
 
       bool isOutlier = false;
-      auto result = selector.select<VectorMultiTrajectory>(gctx, candidates,
-                                                           isOutlier, *logger);
+      auto result = selector.select<VectorMultiTrajectory>(
+          surface->boundParametrization(gctx), candidates, isOutlier, *logger);
       BOOST_REQUIRE(result.ok());
       auto [begin, end] = *result;
       BOOST_REQUIRE_EQUAL(end - begin, 1);
@@ -278,8 +285,8 @@ BOOST_AUTO_TEST_CASE(NonFiniteChi2IsRejected) {
   MeasurementSelector selector{cuts};
 
   bool isOutlier = false;
-  auto result = selector.select<VectorMultiTrajectory>(gctx, candidates,
-                                                       isOutlier, *logger);
+  auto result = selector.select<VectorMultiTrajectory>(
+      surface->boundParametrization(gctx), candidates, isOutlier, *logger);
 
   BOOST_REQUIRE(result.ok());
   BOOST_REQUIRE(!std::isfinite(candidates.front().chi2()));
@@ -309,8 +316,8 @@ BOOST_AUTO_TEST_CASE(FiniteChi2StillSelectedAlongsideNonFinite) {
   MeasurementSelector selector{cuts};
 
   bool isOutlier = false;
-  auto result = selector.select<VectorMultiTrajectory>(gctx, candidates,
-                                                       isOutlier, *logger);
+  auto result = selector.select<VectorMultiTrajectory>(
+      surface->boundParametrization(gctx), candidates, isOutlier, *logger);
 
   BOOST_REQUIRE(result.ok());
   auto [begin, end] = *result;
@@ -341,7 +348,7 @@ BOOST_AUTO_TEST_CASE(PhiSeamResidualAndThetaDependentCuts) {
     std::vector<VectorMultiTrajectory::TrackStateProxy> candidates{candidate};
     bool isOutlier = false;
     const auto result = selector.select<VectorMultiTrajectory>(
-        gctx, candidates, isOutlier, *logger);
+        surface->boundParametrization(gctx), candidates, isOutlier, *logger);
     BOOST_REQUIRE(result.ok());
     // Variance .02 in each measured slot; residuals (.02, .1).
     BOOST_CHECK_SMALL(candidate.chi2() - .52, 1e-6);
@@ -369,7 +376,7 @@ BOOST_AUTO_TEST_CASE(PhiSeamOutlierAndNonfiniteDirection) {
   MeasurementSelector selector(cuts);
   bool isOutlier = false;
   const auto result = selector.select<VectorMultiTrajectory>(
-      gctx, candidates, isOutlier, *logger);
+      surface->boundParametrization(gctx), candidates, isOutlier, *logger);
   BOOST_REQUIRE(result.ok());
   BOOST_REQUIRE_EQUAL(result->second - result->first, 1);
   BOOST_CHECK_EQUAL(result->first->index(), valid.index());
@@ -380,7 +387,7 @@ BOOST_AUTO_TEST_CASE(PhiSeamOutlierAndNonfiniteDirection) {
   // Position residuals must not wrap like direction coordinates.
   valid.calibrated<2>()[1] = 2. * std::numbers::pi + .1;
   const auto rejected = selector.select<VectorMultiTrajectory>(
-      gctx, candidates, isOutlier, *logger);
+      surface->boundParametrization(gctx), candidates, isOutlier, *logger);
   BOOST_REQUIRE(rejected.ok());
   BOOST_CHECK(rejected->first == rejected->second);
   BOOST_CHECK(!isOutlier);
@@ -405,7 +412,7 @@ BOOST_AUTO_TEST_CASE(SharedFinitePrediction) {
   const auto selector = makeSelector(3);
   bool isOutlier = true;
   const auto result = selector.select<VectorMultiTrajectory>(
-      gctx, candidates, isOutlier, *logger);
+      surface->boundParametrization(gctx), candidates, isOutlier, *logger);
 
   BOOST_REQUIRE(result.ok());
   BOOST_CHECK(!isOutlier);
@@ -436,7 +443,7 @@ BOOST_AUTO_TEST_CASE(SharedNonFinitePrediction) {
     const auto selector = makeSelector(3);
     bool isOutlier = true;
     const auto result = selector.select<VectorMultiTrajectory>(
-        gctx, candidates, isOutlier, *logger);
+        surface->boundParametrization(gctx), candidates, isOutlier, *logger);
 
     BOOST_REQUIRE(result.ok());
     BOOST_CHECK(!isOutlier);
@@ -466,7 +473,7 @@ BOOST_AUTO_TEST_CASE(SeparatePredictionsOneNonFinite) {
   const auto selector = makeSelector(5);
   bool isOutlier = true;
   const auto result = selector.select<VectorMultiTrajectory>(
-      gctx, candidates, isOutlier, *logger);
+      surface->boundParametrization(gctx), candidates, isOutlier, *logger);
 
   BOOST_REQUIRE(result.ok());
   BOOST_CHECK(!isOutlier);
@@ -483,7 +490,7 @@ BOOST_AUTO_TEST_CASE(SeparatePredictionsOneNonFinite) {
   // A non-finite prediction ahead of the first finite one.
   std::vector<VectorMultiTrajectory::TrackStateProxy> reordered{b, d, e, a};
   const auto second = selector.select<VectorMultiTrajectory>(
-      gctx, reordered, isOutlier, *logger);
+      surface->boundParametrization(gctx), reordered, isOutlier, *logger);
   BOOST_REQUIRE(second.ok());
   BOOST_REQUIRE_EQUAL(second->second - second->first, 2);
   BOOST_CHECK_EQUAL(reordered[0].index(), a.index());
@@ -511,7 +518,7 @@ BOOST_AUTO_TEST_CASE(NonFiniteCalibrated) {
   const auto selector = makeSelector(4);
   bool isOutlier = true;
   const auto result = selector.select<VectorMultiTrajectory>(
-      gctx, candidates, isOutlier, *logger);
+      surface->boundParametrization(gctx), candidates, isOutlier, *logger);
 
   BOOST_REQUIRE(result.ok());
   BOOST_CHECK(!isOutlier);
@@ -522,6 +529,85 @@ BOOST_AUTO_TEST_CASE(NonFiniteCalibrated) {
   BOOST_CHECK_SMALL(fourth.chi2() - 2., 1e-9);
   BOOST_CHECK(std::isnan(first.chi2()));
   BOOST_CHECK(std::isnan(third.chi2()));
+}
+
+namespace {
+
+struct TestSourceLink {
+  double loc0 = 0.;
+};
+
+void calibrateTestSourceLink(const GeometryContext& /*gctx*/,
+                             const CalibrationContext& /*cctx*/,
+                             const SourceLink& sourceLink,
+                             VectorMultiTrajectory::TrackStateProxy ts) {
+  setMeasurement(ts, sourceLink.get<TestSourceLink>().loc0);
+}
+
+/// Forwards to the measurement selector and records the parametrization the
+/// track state creator passes.
+struct RecordingSelector {
+  MeasurementSelector selector = makeSelector(3);
+  mutable std::optional<BoundParametrization> parametrization;
+  mutable std::size_t calls = 0;
+
+  Result<
+      std::pair<std::vector<VectorMultiTrajectory::TrackStateProxy>::iterator,
+                std::vector<VectorMultiTrajectory::TrackStateProxy>::iterator>>
+  select(const BoundParametrization& passed,
+         std::vector<VectorMultiTrajectory::TrackStateProxy>& candidates,
+         bool& isOutlier, const Logger& logger) const {
+    parametrization = passed;
+    ++calls;
+    return selector.select<VectorMultiTrajectory>(passed, candidates, isOutlier,
+                                                  logger);
+  }
+};
+
+}  // namespace
+
+/// The track state creator resolves the parametrization of the candidates'
+/// surface once and passes it to the selector.
+BOOST_AUTO_TEST_CASE(TrackStateCreatorPassesSurfaceParametrization) {
+  auto logger = getDefaultLogger("MeasurementSelector", Logging::INFO);
+  const auto surface = makeSurface();
+  const CalibrationContext cctx;
+
+  using TrackContainer =
+      Acts::TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
+                           std::shared_ptr>;
+  using Creator = TrackStateCreator<std::vector<SourceLink>::const_iterator,
+                                    TrackContainer>;
+  Creator creator;
+  creator.calibrator.connect<&calibrateTestSourceLink>();
+  RecordingSelector recorder;
+  creator.measurementSelector.connect<&RecordingSelector::select>(&recorder);
+
+  BoundVector parameters = BoundVector::Zero();
+  parameters[eBoundTheta] = std::numbers::pi / 2.;
+  parameters[eBoundQOverP] = 1.;
+  const Creator::BoundState boundState{
+      BoundTrackParameters(surface, parameters, BoundMatrix::Identity() * 1e-2,
+                           ParticleHypothesis::pion()),
+      BoundMatrix::Identity(), 1.};
+  const std::vector<SourceLink> sourceLinks{SourceLink{TestSourceLink{.2}},
+                                            SourceLink{TestSourceLink{.1}},
+                                            SourceLink{TestSourceLink{10.}}};
+
+  VectorMultiTrajectory trajectory;
+  std::vector<Creator::TrackStateProxy> candidates;
+  const auto result = creator.createSourceLinkTrackStates(
+      gctx, cctx, *surface, boundState, sourceLinks.begin(), sourceLinks.end(),
+      kTrackIndexInvalid, candidates, trajectory, *logger);
+
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(recorder.calls, 1u);
+  BOOST_REQUIRE(recorder.parametrization.has_value());
+  BOOST_CHECK(*recorder.parametrization == surface->boundParametrization(gctx));
+  // chi2 .5 and 2 pass the cut of 15, the third candidate does not.
+  BOOST_REQUIRE_EQUAL(result->size(), 2u);
+  BOOST_CHECK_SMALL(trajectory.getTrackState(result->at(0)).chi2() - .5, 1e-9);
+  BOOST_CHECK_SMALL(trajectory.getTrackState(result->at(1)).chi2() - 2., 1e-9);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
