@@ -122,6 +122,8 @@ if(PROJECT_IS_TOP_LEVEL)
     option(TRACCC_USE_SPACK_LIBS "Use Spack libraries by default" FALSE)
     option(TRACCC_USE_ROOT "Use ROOT in the build (if needed)" TRUE)
 else()
+    set(CMAKE_CXX_STANDARD "${ACTS_CXX_STANDARD}")
+
     # traccc is built as part of ACTS, and ACTS owns its configuration. So the
     # traccc settings are normal variables, set from the ACTS options. A cache
     # entry with the same name has no effect, so it is an error. Remove the
@@ -151,10 +153,6 @@ else()
         TRACCC_BUILD_PERFORMANCE
         "${ACTS_TRACCC_BUILD_PERFORMANCE}"
     )
-    traccc_set_from_acts(
-        TRACCC_BUILD_SIMULATION
-        "${ACTS_TRACCC_BUILD_SIMULATION}"
-    )
     traccc_set_from_acts(TRACCC_BUILD_TESTING "${ACTS_TRACCC_BUILD_TESTS}")
     traccc_set_from_acts(TRACCC_BUILD_EXAMPLES "${ACTS_TRACCC_BUILD_EXAMPLES}")
     traccc_set_from_acts(
@@ -169,6 +167,14 @@ else()
     traccc_set_from_acts(
         TRACCC_DEVICE_LOG_LVL
         "${ACTS_TRACCC_DEVICE_LOG_LEVEL}"
+    )
+
+    traccc_set_from_acts(TRACCC_BUILD_SIMULATION OFF)
+    set_option_if(
+        TRACCC_BUILD_SIMULATION
+        TRACCC_BUILD_TESTING
+        OR
+        TRACCC_BUILD_EXAMPLES
     )
 
     # Settings that follow the general ACTS options.

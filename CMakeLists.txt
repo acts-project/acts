@@ -157,7 +157,6 @@ option(ACTS_TRACCC_BUILD_SYCL "Build the traccc SYCL libraries" OFF)
 option(ACTS_TRACCC_BUILD_ALPAKA "Build the traccc Alpaka library" OFF)
 option(ACTS_TRACCC_BUILD_IO "Build the traccc IO library" ON)
 option(ACTS_TRACCC_BUILD_PERFORMANCE "Build the traccc performance library" OFF)
-option(ACTS_TRACCC_BUILD_SIMULATION "Build the traccc simulation library" OFF)
 option(ACTS_TRACCC_BUILD_TESTS "Build the traccc unit tests" ${ACTS_BUILD_UNITTESTS})
 option(ACTS_TRACCC_BUILD_EXAMPLES "Build the traccc examples" ${ACTS_BUILD_EXAMPLES})
 option(ACTS_TRACCC_ENABLE_NVTX_PROFILING "Instrument the traccc device code for NVTX profiling" OFF)
@@ -269,18 +268,7 @@ set_option_if(
     OR
     ACTS_TRACCC_BUILD_EXAMPLES
 )
-set_option_if(
-    ACTS_TRACCC_BUILD_SIMULATION
-    ACTS_TRACCC_BUILD_TESTS
-    OR
-    ACTS_TRACCC_BUILD_EXAMPLES
-)
-set_option_if(
-    ACTS_TRACCC_BUILD_IO
-    ACTS_TRACCC_BUILD_PERFORMANCE
-    OR
-    ACTS_TRACCC_BUILD_SIMULATION
-)
+set_option_if(ACTS_TRACCC_BUILD_IO ACTS_TRACCC_BUILD_PERFORMANCE)
 # Required for traccc
 set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_COVFIE ACTS_SETUP_DETRAY)
@@ -724,6 +712,7 @@ if(ACTS_SETUP_DETRAY)
     set_option_if(DETRAY_BUILD_TEST_UTILS ACTS_BUILD_EXAMPLES_UNITTESTS)
 
     if(ACTS_BUILD_TRACCC)
+        set(DETRAY_SET_LOGGING "${ACTS_TRACCC_DEVICE_LOG_LEVEL}")
         # Some detray validation tools are used in optional traccc libraries
         set_option_if(
             DETRAY_BUILD_VALIDATION_TOOLS
