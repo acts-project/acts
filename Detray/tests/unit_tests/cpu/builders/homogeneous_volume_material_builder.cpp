@@ -76,3 +76,68 @@ TEST(detray_builders, homogeneous_volume_material_builder) {
   EXPECT_EQ(d.material_store().template get<material_id>().at(0),
             argon_liquid<scalar>{});
 }
+
+/// Unittest: Test the deduplication of identical volume materials
+TEST(detray_builders, homogeneous_volume_material_deduplication) {
+  using metadata_t = test::default_metadata;
+  using detector_t = host::detector<metadata_t>;
+  using transform3 = typename detector_t::transform3_type;
+
+  constexpr auto material_id{detector_t::material::id::e_raw_material};
+
+  vecmem::host_memory_resource host_mr;
+
+  /// Build three volumes: The first and the last have the same material
+  auto build_detector = [&host_mr](const bool deduplicate) {
+    detector_t d(host_mr);
+
+    volume_builder_options builder_opts{};
+    builder_opts.deduplicate(deduplicate);
+
+    const std::vector<material<scalar>> materials{
+        argon_liquid<scalar>{}, silicon<scalar>{}, argon_liquid<scalar>{}};
+
+    for (const auto &mat : materials) {
+      auto vbuilder =
+          std::make_unique<volume_builder<detector_t>>(volume_id::e_cylinder);
+      auto mat_builder =
+          homogeneous_volume_material_builder<detector_t>{std::move(vbuilder)};
+
+      using rectangle_factory = surface_factory<detector_t, rectangle2D>;
+      auto sf_factory = std::make_shared<rectangle_factory>();
+      sf_factory->push_back({surface_id::e_sensitive,
+                             transform3(point3{0.f, 0.f, -1.f}), 1u,
+                             std::vector<scalar>{10.f, 8.f}});
+
+      mat_builder.add_surfaces(sf_factory);
+      mat_builder.set_material(mat);
+      mat_builder.build(d, builder_opts);
+    }
+
+    return d;
+  };
+
+  // With deduplication: The third volume reuses the first material
+  const detector_t d_dedup = build_detector(true);
+
+  ASSERT_EQ(d_dedup.volumes().size(), 3u);
+  EXPECT_EQ(d_dedup.material_store().template size<material_id>(), 2u);
+  EXPECT_EQ(d_dedup.volumes().at(0).material().index(), 0u);
+  EXPECT_EQ(d_dedup.volumes().at(1).material().index(), 1u);
+  EXPECT_EQ(d_dedup.volumes().at(2).material().index(), 0u);
+  for (const auto &vol_desc : d_dedup.volumes()) {
+    EXPECT_EQ(vol_desc.material().id(), material_id);
+  }
+
+  // Without deduplication: Every volume has its own material entry
+  const detector_t d = build_detector(false);
+
+  ASSERT_EQ(d.volumes().size(), 3u);
+  EXPECT_EQ(d.material_store().template size<material_id>(), 3u);
+  for (dindex i = 0u; i < 3u; ++i) {
+    EXPECT_EQ(d.volumes().at(i).material().id(), material_id);
+    EXPECT_EQ(d.volumes().at(i).material().index(), i);
+  }
+  EXPECT_EQ(d.material_store().template get<material_id>().at(2),
+            argon_liquid<scalar>{});
+}

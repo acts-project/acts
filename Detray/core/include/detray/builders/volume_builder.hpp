@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/builders/deduplication_cache.hpp"
 #include "detray/builders/surface_factory_interface.hpp"
 #include "detray/builders/volume_builder_interface.hpp"
 #include "detray/definitions/geometry.hpp"
@@ -19,6 +20,9 @@
 
 // System include(s)
 #include <algorithm>
+#include <cassert>
+#include <concepts>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
@@ -46,11 +50,62 @@ class volume_builder : public volume_builder_interface<detector_t> {
   /// Identifier enum for the detector's geometry object categories.
   using geo_obj_ids = typename detector_t::geo_obj_ids;
 
+  /// Hash function for the surface and volume placement transforms
+  ///
+  /// Uses all entries of the forward matrix, which are compared by the
+  /// equality operator of the transform.
+  struct transform_hash {
+    /// @param trf the transform
+    /// @returns the hash value of @p trf
+    DETRAY_HOST std::size_t operator()(
+        const typename detector_t::transform3_type& trf) const {
+      std::size_t seed{0u};
+      const auto combine = [&seed](const auto& v) {
+        for (unsigned int i = 0u; i < 3u; ++i) {
+          seed = hash_combine(seed, static_cast<scalar_t>(v[i]));
+        }
+      };
+      combine(trf.translation());
+      combine(trf.x());
+      combine(trf.y());
+      combine(trf.z());
+      return seed;
+    }
+  };
+
+  /// Hash function for the surface masks of all shape types
+  ///
+  /// Uses the boundary values and the volume link, which are compared by the
+  /// equality operator of the mask.
+  struct mask_hash {
+    /// @tparam mask_t the type of the mask
+    /// @param m the mask
+    /// @returns the hash value of @p m
+    template <typename mask_t>
+    DETRAY_HOST std::size_t operator()(const mask_t& m) const {
+      std::size_t seed{0u};
+      for (const auto v : m.values()) {
+        seed = hash_combine(seed, static_cast<scalar_t>(v));
+      }
+      if constexpr (std::integral<
+                        std::remove_cvref_t<decltype(m.volume_link())>>) {
+        seed = hash_combine(seed, m.volume_link());
+      }
+      return seed;
+    }
+  };
+
   /// Parametrized Constructor
   ///
   /// @param id flags the type of volume geometry (e.g. cylindrical, cuboid)
   /// @param idx the index of the volume in the detector volume container
-  explicit volume_builder(const volume_id id, const dindex idx = 0)
+  /// @param cache the global hash maps of the detector data, which are used
+  ///              for the deduplication (not owning). The detector builder
+  ///              shares it between all volume builders and keeps it
+  ///              consistent with the detector. If it is null, the builder
+  ///              creates and owns its own cache (standalone builder).
+  explicit volume_builder(const volume_id id, const dindex idx = 0,
+                          detail::deduplication_cache* external_cache = nullptr)
       : m_volume{id} {
     m_volume.set_index(idx);
     m_volume.set_material(volume_type::material_id::e_none, dindex_invalid);
@@ -60,6 +115,14 @@ class volume_builder : public volume_builder_interface<detector_t> {
     m_volume.template set_accel_link<
         static_cast<typename volume_type::object_id>(0)>(
         detector_t::accel::id::e_surface_default, 0);
+
+    if (external_cache == nullptr) {
+      m_deduplication_cache = std::make_unique<detail::deduplication_cache>();
+      m_cache_accessor = m_deduplication_cache.get();
+    } else {
+      m_deduplication_cache = nullptr;
+      m_cache_accessor = external_cache;
+    }
 
     DETRAY_VERBOSE_HOST("Created builder for volume: " << idx);
   };
@@ -126,10 +189,11 @@ class volume_builder : public volume_builder_interface<detector_t> {
     // Prepare volume data
     m_volume.set_index(static_cast<dindex>(det.volumes().size()));
 
-    m_volume.set_transform(add_transform(det, m_trf, opt.deduplicate(), ctx));
+    m_volume.set_transform(this->add_to_detector_collection(
+        det._transforms, m_trf, transform_hash{}, opt));
 
     // Add all data from the builder to the detector containers
-    add_to_detector(opt, ctx, det);
+    add_to_detector(det, opt);
 
     // Reset after the data was added to the detector
     m_surfaces.clear();
@@ -198,58 +262,55 @@ class volume_builder : public volume_builder_interface<detector_t> {
   /// @returns Access to the surface mask data
   typename detector_t::mask_container& masks() override { return m_masks; }
 
+  /// @returns Access to the hash maps of the detector data
+  detail::deduplication_cache& deduplication_cache() override {
+    return *m_cache_accessor;
+  }
+
   /// Adds a new full set of volume components (e.g. transforms or masks)
   /// to the global detector data stores and updates all links.
   ///
-  /// @param opt Options controlling deduplication and geometry storage.
-  /// @param ctx is the geometry_context of the call
-  /// @param det is the detector instance that the volume should be added to
+  /// @tparam surface_id the type of surfaces for the default accelerator link
   ///
+  /// @param det is the detector instance that the volume should be added to
+  /// @param cache the hash maps of the detector data (no deduplication if
+  ///              null)
+  ///
+  /// @note The detector data is accessed with the default geometry context,
+  /// since the detector is always built in this context.
   /// @note can throw an exception if input data is inconsistent
   template <geo_obj_ids surface_id = static_cast<geo_obj_ids>(0)>
   DETRAY_HOST auto add_to_detector(
-      const volume_builder_options& opt,
-      const typename detector_t::geometry_context ctx,
-      detector_t& det) noexcept(false) -> void {
-    const bool deduplicate{opt.deduplicate()};
+      detector_t& det, const volume_builder_options& opt) noexcept(false)
+      -> void {
+    if (opt.deduplicate()) {
+      DETRAY_VERBOSE_HOST("-> Deduplicate transforms and masks");
+    }
 
     // Global transform index for every volume local transform
-    std::vector<dindex> global_trf_idx{};
-    // Whether a global transform is used by more than one surface
-    std::vector<bool> is_shared_trf{};
+    const auto n_trfs_before{static_cast<dindex>(det.transform_store().size())};
+    const std::vector<dindex> global_trf_idx{this->add_to_detector_collection(
+        det._transforms, m_transforms, transform_hash{}, opt)};
 
-    const auto trf_offset = det.transform_store().size(ctx);
-    if (deduplicate) {
-      DETRAY_VERBOSE_HOST("-> Deduplicate transforms and masks");
-
-      // Check every local transform against the detector transforms
-      // (Any duplication within the new data is resolved the same way)
-      const auto n_local_trfs{m_transforms.size(ctx)};
-      global_trf_idx.reserve(n_local_trfs);
-      std::vector<dindex> found_trfs{};
-      for (dindex i = 0u; i < n_local_trfs; ++i) {
-        const auto n_trfs{det.transform_store().size(ctx)};
-        const dindex trf_idx{
-            add_transform(det, m_transforms.at(i, ctx), true, ctx)};
-        // An identical transform was already in the detector store
-        if (trf_idx < n_trfs) {
-          found_trfs.push_back(trf_idx);
-        }
-        global_trf_idx.push_back(trf_idx);
-      }
-
-      // Flag the transforms that are used by more than one local entry or
-      // that were in the detector before
-      is_shared_trf.resize(det.transform_store().size(ctx), false);
-      for (const dindex trf_idx : found_trfs) {
+    // Flag the transforms that were in the detector before (only possible
+    // if deduplicated)
+    std::vector<bool> is_shared_trf(det.transform_store().size(), false);
+    for (const dindex trf_idx : global_trf_idx) {
+      if (trf_idx < n_trfs_before) {
         is_shared_trf.at(trf_idx) = true;
       }
+    }
 
-      // Add the masks
-      add_masks(det, std::make_index_sequence<detector_t::masks::n_types>{});
+    // Add the masks and update the surface mask links
+    if (opt.deduplicate()) {
+      add_masks(det, opt,
+                std::make_index_sequence<detector_t::masks::n_types>{});
     } else {
-      // Append all transforms
-      det._transforms.append(std::move(m_transforms), ctx);
+      for (auto& sf_desc : m_surfaces) {
+        det._masks.template visit<detail::mask_index_update>(sf_desc.mask(),
+                                                             sf_desc);
+      }
+      det._masks.append(std::move(m_masks));
     }
 
     // Surface index offset in the global detector container
@@ -287,25 +348,19 @@ class volume_builder : public volume_builder_interface<detector_t> {
     // Update mask and transform index of surfaces and set the
     // correct index of the surface in container
     std::size_t n_portals{0u};
-    // Count the surfaces that use a given transform (only if deduplicated)
+    // Count the surfaces that use a given transform
     std::vector<dindex> n_sf_per_trf(is_shared_trf.size(), 0u);
     for (auto& sf_desc : m_surfaces) {
-      if (deduplicate) {
-        // Mask links were already updated during the deduplication
-        const dindex trf_idx{global_trf_idx.at(sf_desc.transform())};
-        sf_desc.set_transform(trf_idx);
-        ++n_sf_per_trf.at(trf_idx);
-      } else {
-        det._masks.template visit<detail::mask_index_update>(sf_desc.mask(),
-                                                             sf_desc);
-        sf_desc.update_transform(trf_offset);
-      }
+      const dindex trf_idx{global_trf_idx.at(sf_desc.transform())};
+      sf_desc.set_transform(trf_idx);
+      ++n_sf_per_trf.at(trf_idx);
+
       sf_desc.set_volume(m_volume.index());
       sf_desc.set_index(sf_offset++);
 
       // Sensitive surfaces with a shared transform cannot be aligned
       // independently
-      if (deduplicate && sf_desc.is_sensitive() &&
+      if (opt.deduplicate() && sf_desc.is_sensitive() &&
           (is_shared_trf.at(sf_desc.transform()) ||
            n_sf_per_trf.at(sf_desc.transform()) > 1u)) {
         warn_shared_sensitive_trf(det, sf_desc);
@@ -361,54 +416,21 @@ class volume_builder : public volume_builder_interface<detector_t> {
         default_acc_id,
         det.accelerator_store().template size<default_acc_id>() - 1u);
 
-    // Append masks
-    if (!deduplicate) {
-      det._masks.append(std::move(m_masks));
-    }
-
     // Finally, add the volume descriptor to the detector
     det._volumes.push_back(m_volume);
   }
 
  private:
-  /// Add a transform to the detector transform store
-  ///
-  /// @param det the detector that receives the transform
-  /// @param trf the transform that should be added
-  /// @param deduplicate whether to reuse an identical transform in @p det
-  /// @param ctx the geometry context of the call
-  ///
-  /// @returns the index of the transform in the detector transform store
-  DETRAY_HOST auto add_transform(
-      detector_t& det, const typename detector_t::transform3_type& trf,
-      const bool deduplicate,
-      const typename detector_t::geometry_context ctx) const -> dindex {
-    const auto n_trfs{static_cast<dindex>(det.transform_store().size(ctx))};
-
-    // Test only against the transforms that are already in the detector
-    if (deduplicate) {
-      for (dindex i = 0u; i < n_trfs; ++i) {
-        if (trf == det.transform_store().at(i, ctx)) {
-          DETRAY_DEBUG_HOST("Found identical transform at index "
-                            << i << ". Deduplicating...");
-          return i;
-        }
-      }
-    }
-
-    det._transforms.push_back(trf, ctx);
-
-    return n_trfs;
-  }
-
   /// Add the masks of all mask types to the detector and deduplicate them
   ///
   /// @tparam I the indices of the mask types in the mask store
   ///
   /// @param det the detector that receives the masks
+  /// @param cache the hash maps of the detector data
   template <std::size_t... I>
-  DETRAY_HOST void add_masks(detector_t& det, std::index_sequence<I...>) {
-    (add_masks<static_cast<typename detector_t::masks::id>(I)>(det), ...);
+  DETRAY_HOST void add_masks(detector_t& det, const volume_builder_options& opt,
+                             std::index_sequence<I...> /*unused*/) {
+    (add_masks<static_cast<typename detector_t::masks::id>(I)>(det, opt), ...);
   }
 
   /// Add the masks of type @tparam mask_id to the detector and reuse
@@ -419,8 +441,10 @@ class volume_builder : public volume_builder_interface<detector_t> {
   /// order in the detector store. The surface mask links are updated.
   ///
   /// @param det the detector that receives the masks
+  /// @param cache the hash maps of the detector data
   template <typename detector_t::masks::id mask_id>
-  DETRAY_HOST void add_masks(detector_t& det) {
+  DETRAY_HOST void add_masks(detector_t& det,
+                             const volume_builder_options& opt) {
     const auto& local_coll = m_masks.template get<mask_id>();
     if (local_coll.empty()) {
       return;
@@ -431,57 +455,10 @@ class volume_builder : public volume_builder_interface<detector_t> {
     [[maybe_unused]] const auto n_masks_before{det_coll.size()};
 
     for (auto& sf_desc : m_surfaces) {
-      auto mask_link{sf_desc.mask()};
-      if (mask_link.id() != mask_id) {
-        continue;
+      if (sf_desc.mask().id() == mask_id) {
+        sf_desc.set_mask(this->add_linked_objects(
+            det_coll, local_coll, sf_desc.mask(), mask_hash{}, opt));
       }
-
-      // The volume local masks of the surface
-      auto local_idx{mask_link.index()};
-      dindex first{0u};
-      dindex n_sf_masks{1u};
-      if constexpr (concepts::interval<decltype(local_idx)>) {
-        first = static_cast<dindex>(local_idx.lower());
-        n_sf_masks = static_cast<dindex>(local_idx.size());
-      } else {
-        first = static_cast<dindex>(local_idx);
-      }
-
-      // Search the detector for the same sequence of masks
-      const auto n_det_masks{static_cast<dindex>(det_coll.size())};
-      dindex new_first{n_det_masks};
-      for (dindex i = 0u; i + n_sf_masks <= n_det_masks; ++i) {
-        bool is_match{true};
-        for (dindex j = 0u; j < n_sf_masks; ++j) {
-          if (!(local_coll.at(first + j) == det_coll.at(i + j))) {
-            is_match = false;
-            break;
-          }
-        }
-        if (is_match) {
-          DETRAY_DEBUG_HOST("Found identical mask(s) at index "
-                            << i << ". Deduplicating...");
-          new_first = i;
-          break;
-        }
-      }
-
-      // No duplicate was found, append the new mask(s)
-      if (new_first == n_det_masks) {
-        for (dindex j = 0u; j < n_sf_masks; ++j) {
-          det_coll.push_back(local_coll.at(first + j));
-        }
-      }
-
-      // Update the surface mask link
-      if constexpr (concepts::interval<decltype(local_idx)>) {
-        local_idx.shift(static_cast<long>(new_first) -
-                        static_cast<long>(first));
-        mask_link.set_index(local_idx);
-      } else {
-        mask_link.set_index(new_first);
-      }
-      sf_desc.set_mask(mask_link);
     }
 
     DETRAY_VERBOSE_HOST("-> Appended " << det_coll.size() - n_masks_before
@@ -503,8 +480,8 @@ class volume_builder : public volume_builder_interface<detector_t> {
       if (other.is_sensitive() && other.transform() == sf_desc.transform()) {
         DETRAY_WARN_HOST(m_volume_name
                          << ": Sensitive surfaces share the transform "
-                         << sf_desc.transform() << " (surfaces " << other.index()
-                         << " and " << sf_desc.index()
+                         << sf_desc.transform() << " (surfaces "
+                         << other.index() << " and " << sf_desc.index()
                          << "). They cannot be aligned independently.");
         return;
       }
@@ -527,6 +504,15 @@ class volume_builder : public volume_builder_interface<detector_t> {
   typename detector_t::surface_lookup_container m_surfaces{};
   typename detector_t::transform_container m_transforms{};
   typename detector_t::mask_container m_masks{};
+  /// @}
+
+ private:
+  /// Hash maps of the detector data for the deduplication
+  /// @{
+  /// Own cache of a standalone builder (null, if the cache is external)
+  std::unique_ptr<detail::deduplication_cache> m_deduplication_cache{};
+  /// The cache in use: External (global) or owned cache. Never null.
+  detail::deduplication_cache* m_cache_accessor{nullptr};
   /// @}
 };
 

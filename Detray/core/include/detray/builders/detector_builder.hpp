@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/builders/deduplication_cache.hpp"
 #include "detray/builders/volume_builder.hpp"
 #include "detray/builders/volume_builder_interface.hpp"
 #include "detray/core/concepts.hpp"
@@ -70,8 +71,9 @@ class detector_builder {
       -> volume_builder_interface<detector_type>* {
     DETRAY_VERBOSE_HOST("Adding new volume: " << m_volumes.size());
 
+    // All volume builders share the global hash maps of the detector data
     m_volumes.push_back(std::make_unique<volume_builder_t<detector_type>>(
-        id, static_cast<dindex>(m_volumes.size()),
+        id, static_cast<dindex>(m_volumes.size()), m_deduplication_cache.get(),
         std::forward<Args>(args)...));
 
     return m_volumes.back().get();
@@ -139,11 +141,17 @@ class detector_builder {
 
     DETRAY_VERBOSE_HOST("Have " << m_volumes.size()
                                 << " configured volume builders");
+    // The hash maps are only valid for the detector under construction
+    m_deduplication_cache->clear();
+
     DETRAY_VERBOSE_HOST("Start building the volumes...");
     for (auto& vol_builder : m_volumes) {
       DETRAY_VERBOSE_HOST("-> Build: " << vol_builder->name());
       vol_builder->build(det, opt);
     }
+
+    // The detector will be moved: Release the hash maps
+    m_deduplication_cache->clear();
 
     // TODO: Make fully generic for more volume accelerator types
 
@@ -206,6 +214,12 @@ class detector_builder {
   /// Data structure that holds a volume builder for every detector volume
   volume_data_t<std::unique_ptr<volume_builder_interface<detector_type>>>
       m_volumes{};
+  /// Global hash maps of the detector data: Shared by all volume builders,
+  /// so that every detector object is hashed only once. The volume builders
+  /// only use them, if the deduplication is switched on. Allocated on the
+  /// heap, so that the address stays valid if the detector builder moves.
+  std::unique_ptr<detail::deduplication_cache> m_deduplication_cache{
+      std::make_unique<detail::deduplication_cache>()};
 };
 
 }  // namespace detray

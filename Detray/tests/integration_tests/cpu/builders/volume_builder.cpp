@@ -389,9 +389,9 @@ GTEST_TEST(detray_builders, tracking_volume_construction_deduplication) {
   // - identity: prefilled rectangle, portal cylinders and passive cylinder
   // - z = 1000mm: annuli and trapezoid
   // - z = 20mm: volume placement and the rectangle that is added last
-  const std::vector<dindex> trf_links{1u, 2u,  3u, 1u,  1u,  5u,  6u,
-                                      7u, 7u,  8u, 9u,  10u, 7u,  1u,
-                                      11u, 12u, 13u, 4u,  14u};
+  const std::vector<dindex> trf_links{1u,  2u,  3u,  1u, 1u,  5u, 6u,
+                                      7u,  7u,  8u,  9u, 10u, 7u, 1u,
+                                      11u, 12u, 13u, 4u, 14u};
   ASSERT_EQ(trf_links.size(), d.surfaces().size());
   for (const auto [idx, trf_link] : detray::views::enumerate(trf_links)) {
     geometry::identifier geo_id{};
@@ -475,21 +475,23 @@ GTEST_TEST(detray_builders, tracking_volume_multi_mask_deduplication) {
   const std::vector<scalar> r3{5.f, 6.f};
 
   // Build a volume with mask ranges that have to be compared as a block
-  auto build_volume = [&](std::vector<std::vector<std::vector<scalar>>> bounds) {
-    volume_builder<detector_t> vbuilder{volume_id::e_cuboid};
-    vbuilder.add_volume_placement(point3{0.f, 0.f, 0.f});
+  auto build_volume =
+      [&](std::vector<std::vector<std::vector<scalar>>> bounds) {
+        volume_builder<detector_t> vbuilder{volume_id::e_cuboid};
+        vbuilder.add_volume_placement(point3{0.f, 0.f, 0.f});
 
-    auto rect_factory = std::make_shared<rectangle_factory>();
-    for (const auto [i, sf_bounds] : detray::views::enumerate(bounds)) {
-      // Unique surface placements (different from the volume placement)
-      const scalar z{static_cast<scalar>(10u * (d.surfaces().size() + i) + 1u)};
-      rect_factory->push_back(sf_data_t{
-          surface_id::e_sensitive, transform3(point3{0.f, 0.f, z}),
-          std::vector<nav_link_t>(sf_bounds.size(), 0u), sf_bounds});
-    }
-    vbuilder.add_surfaces(rect_factory, geo_ctx);
-    vbuilder.build(d, builder_opts);
-  };
+        auto rect_factory = std::make_shared<rectangle_factory>();
+        for (const auto [i, sf_bounds] : detray::views::enumerate(bounds)) {
+          // Unique surface placements (different from the volume placement)
+          const scalar z{
+              static_cast<scalar>(10u * (d.surfaces().size() + i) + 1u)};
+          rect_factory->push_back(sf_data_t{
+              surface_id::e_sensitive, transform3(point3{0.f, 0.f, z}),
+              std::vector<nav_link_t>(sf_bounds.size(), 0u), sf_bounds});
+        }
+        vbuilder.add_surfaces(rect_factory, geo_ctx);
+        vbuilder.build(d, builder_opts);
+      };
 
   // Surfaces: {r1, r2}, {r1, r2}, {r2, r3}, {r2}, {r2, r3}
   build_volume({{r1, r2}, {r1, r2}, {r2, r3}, {r2}, {r2, r3}});
@@ -513,7 +515,8 @@ GTEST_TEST(detray_builders, tracking_volume_multi_mask_deduplication) {
   }
 
   // Check the mask values that the surfaces point to
-  const auto& rect_masks = d.mask_store().template get<mask_id::e_rectangle2D>();
+  const auto& rect_masks =
+      d.mask_store().template get<mask_id::e_rectangle2D>();
   const std::vector<std::vector<scalar>> expected_vals{r1, r2, r2, r3};
   for (const auto [idx, vals] : detray::views::enumerate(expected_vals)) {
     EXPECT_EQ(rect_masks.at(idx)[0], vals[0]) << "mask no. " << idx;

@@ -234,3 +234,70 @@ GTEST_TEST(detray_builders, volume_builder) {
   EXPECT_EQ(vol.index(), vbuilder.vol_index());
   EXPECT_EQ(vol.id(), volume_id::e_cylinder);
 }
+
+/// This tests volume builders that share a deduplication cache
+GTEST_TEST(detray_builders, volume_builder_shared_cache) {
+  using namespace detray;
+
+  vecmem::host_memory_resource host_mr;
+
+  using metadata_t = test::default_metadata;
+  using detector_t = host::detector<metadata_t>;
+  using transform3 = typename detector_t::transform3_type;
+  constexpr auto rect_id{detector_t::masks::id::e_rectangle2D};
+
+  /// Build two volumes with an identical surface each
+  auto build_detector = [&host_mr](const bool deduplicate,
+                                   detail::deduplication_cache* cache) {
+    detector_t d(host_mr);
+
+    volume_builder_options builder_opts{};
+    builder_opts.deduplicate(deduplicate);
+
+    for (dindex i = 0u; i < 2u; ++i) {
+      using rectangle_factory = surface_factory<detector_t, rectangle2D>;
+      auto sf_factory = std::make_shared<rectangle_factory>();
+      sf_factory->push_back({surface_id::e_passive,
+                             transform3(point3{0.f, 0.f, -1.f}), 1u,
+                             std::vector<scalar>{10.f, 8.f}});
+
+      volume_builder<detector_t> vbuilder{volume_id::e_cuboid, i, cache};
+      vbuilder.add_surfaces(sf_factory);
+      vbuilder.build(d, builder_opts);
+    }
+
+    return d;
+  };
+
+  // With deduplication: The second volume reuses the data of the first one
+  detail::deduplication_cache cache{};
+  const detector_t d_dedup = build_detector(true, &cache);
+
+  ASSERT_EQ(d_dedup.volumes().size(), 2u);
+  ASSERT_EQ(d_dedup.surfaces().size(), 2u);
+  // Volume placement (identity) and surface placement
+  EXPECT_EQ(d_dedup.transform_store().size(), 2u);
+  EXPECT_EQ(d_dedup.mask_store().template size<rect_id>(), 1u);
+  EXPECT_EQ(d_dedup.volumes().at(0).transform(),
+            d_dedup.volumes().at(1).transform());
+  EXPECT_EQ(d_dedup.surfaces().at(0).transform(),
+            d_dedup.surfaces().at(1).transform());
+  EXPECT_EQ(d_dedup.surfaces().at(0).mask(), d_dedup.surfaces().at(1).mask());
+  // The shared cache holds the hash maps (transforms and rectangle masks)
+  EXPECT_EQ(cache.size(), 2u);
+
+  // Without deduplication: The cache is not used
+  detail::deduplication_cache unused_cache{};
+  const detector_t d = build_detector(false, &unused_cache);
+
+  EXPECT_EQ(d.transform_store().size(), 4u);
+  EXPECT_EQ(d.mask_store().template size<rect_id>(), 2u);
+  EXPECT_EQ(unused_cache.size(), 0u);
+
+  // Without an external cache: Every builder owns a cache. It hashes the
+  // detector data lazily and deduplicates the same
+  const detector_t d_own = build_detector(true, nullptr);
+
+  EXPECT_EQ(d_own.transform_store().size(), 2u);
+  EXPECT_EQ(d_own.mask_store().template size<rect_id>(), 1u);
+}

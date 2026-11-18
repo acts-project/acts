@@ -37,6 +37,26 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
 
   static_assert(concepts::detector<detector_t>);
 
+  /// Hash function for the homogeneous surface material (slabs and rods)
+  ///
+  /// Uses the material (@c std::hash) and the thickness (radius), which are
+  /// compared by the equality operator of the material slab (rod).
+  struct material_hash {
+    /// @tparam mat_t the type of the homogeneous material (slab or rod)
+    /// @param mat the material slab or rod
+    /// @returns the hash value of @p mat
+    template <typename mat_t>
+    DETRAY_HOST std::size_t operator()(const mat_t &mat) const noexcept {
+      std::size_t seed{std::hash<material<scalar_type>>{}(mat.get_material())};
+      if constexpr (requires { mat.thickness(); }) {
+        seed = hash_combine(seed, mat.thickness());
+      } else {
+        seed = hash_combine(seed, mat.radius());
+      }
+      return seed;
+    }
+  };
+
   /// @param vol_builder volume builder that should be decorated with material
   DETRAY_HOST
   explicit homogeneous_material_builder(
@@ -103,6 +123,10 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
     DETRAY_VERBOSE_HOST("Build homogeneous material...");
     DETRAY_DEBUG_HOST("-> n_surfaces=" << this->surfaces().size());
 
+    if (opt.deduplicate()) {
+      DETRAY_VERBOSE_HOST("-> Deduplicate homogeneous surface material");
+    }
+
     if constexpr (concepts::has_material_slabs<detector_t>) {
       add_material<material_id::e_material_slab>(det, opt);
     }
@@ -124,7 +148,8 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
   /// Add material of type @tparam mat_id to a detector
   ///
   /// @param det the detector
-  /// @param opt volume builder options
+  /// @param cache the hash maps of the detector data (no deduplication if
+  ///              null)
   template <material_id mat_id>
   DETRAY_HOST void add_material(detector_t &det,
                                 const volume_builder_options &opt) {
@@ -135,59 +160,16 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
 
     // non-const access
     auto &det_coll = det._materials.template get<mat_id>();
-    const auto offset{static_cast<dindex>(det_coll.size())};
+    [[maybe_unused]] const auto offset{static_cast<dindex>(det_coll.size())};
 
-    // Conmpute the material indices
-    std::vector<dindex> global_idx;
-    global_idx.reserve(local_coll.size());
-
-    if (opt.deduplicate()) {
-      DETRAY_VERBOSE_HOST("-> Deduplicate homogeneous material");
-
-      // Global index for every volume local material entry
-      for (const auto &mat : local_coll) {
-        DETRAY_DEBUG_HOST("Building material " << mat);
-        // Insert into map
-        const auto coll_size{static_cast<dindex>(det_coll.size())};
-        dindex new_idx{coll_size};
-
-        // Test only against the material that is already in the detector
-        // Any duplication within the new data will be resolved the same way
-        for (dindex i = 0u; i < coll_size; ++i) {
-          if (mat == det_coll.at(i)) {
-            DETRAY_DEBUG_HOST("Found identical material grid at index "
-                              << i << ". Deduplicating...");
-            new_idx = i;
-            break;
-          }
-        }
-
-        // No duplicate was found, append new material
-        if (new_idx == coll_size) {
-          DETRAY_DEBUG_HOST("Adding to detector... ");
-          det_coll.push_back(mat);
-        }
-
-        // Save index
-        DETRAY_DEBUG_HOST(" -> Material index: " << new_idx);
-        global_idx.push_back(new_idx);
-      }
-    } else {  // Do not deduplicate
-      // Append all material
-      det._materials.insert(local_coll);
-    }
+    // Global index for every volume local material entry
+    const std::vector<dindex> global_idx{
+        this->add_objects(det_coll, local_coll, material_hash{}, opt)};
 
     // Update all surface links
     for (auto &sf : this->surfaces()) {
-      DETRAY_DEBUG_HOST("-> sf = " << sf);
-
       if (sf.material().id() == mat_id) {
-        if (opt.deduplicate()) {
-          assert(!global_idx.empty());
-          sf.material().set_index(global_idx.at(sf.material().index()));
-        } else {
-          sf.update_material(offset);
-        }
+        sf.material().set_index(global_idx.at(sf.material().index()));
         DETRAY_DEBUG_HOST("-> material link now: " << sf.material());
       }
     }

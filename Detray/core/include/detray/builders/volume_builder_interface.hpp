@@ -9,13 +9,17 @@
 #pragma once
 
 // Project include(s).
+#include "detray/builders/deduplication_cache.hpp"
 #include "detray/core/concepts.hpp"
 #include "detray/geometry/tracking_volume.hpp"
+#include "detray/utils/concepts.hpp"
+#include "detray/utils/logging.hpp"
 
 // System include(s)
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace detray {
 
@@ -174,6 +178,176 @@ class volume_builder_interface {
   /// Returns mutable access to the builder's masks.
   /// @returns The mask container.
   virtual typename detector_t::mask_container &masks() = 0;
+  /// Returns the hash maps of the detector data that the builder uses for
+  /// the deduplication: Either the global cache of the detector builder or
+  /// the builder's own cache (standalone builder).
+  /// @returns The deduplication cache.
+  virtual detail::deduplication_cache &deduplication_cache() = 0;
+  /// @}
+
+  /// Central data insertion and deduplication service
+  ///
+  /// All builders and decorators use these functions to add their
+  /// volume-local data to the detector data collections. This keeps the
+  /// deduplication in one place, while the builders do not depend on each
+  /// other and can be combined freely.
+  ///
+  /// The data is only deduplicated, if a deduplication cache is given (see
+  /// @c deduplication_cache()). The detector builder gives one global cache to all
+  /// volume builders on construction. A standalone volume builder owns its
+  /// cache.
+  ///
+  /// Every builder provides the hash function for its own data. The
+  /// deduplication cache uses the hash to find candidates and the equality
+  /// operator of the data type to confirm them. The hash function has to be
+  /// consistent with the equality operator: Identical objects must have the
+  /// same hash value.
+  /// @{
+
+  /// Add an object to a detector data collection
+  ///
+  /// @note The collection is accessed with the default geometry context,
+  /// since the detector is always built in this context.
+  ///
+  /// @tparam coll_t the type of the detector collection
+  /// @tparam obj_t the type of the object
+  /// @tparam hasher_t the type of the hash function for the objects
+  ///
+  /// @param coll the detector collection that receives the object
+  /// @param obj the object that should be added
+  /// @param hasher the hash function for the objects
+  /// @param opt the builder options
+  ///
+  /// @returns the index of the object in the detector collection
+  template <typename coll_t, typename obj_t, typename hasher_t>
+  DETRAY_HOST auto add_to_detector_collection(coll_t &coll, const obj_t &obj,
+                                              const hasher_t &hasher,
+                                              const volume_builder_options &opt)
+      -> dindex {
+    if (opt.deduplicate()) {
+      if (const dindex idx{this->deduplication_cache().find(coll, obj, hasher)};
+          idx != dindex_invalid) {
+        DETRAY_DEBUG_HOST("Found identical object at index "
+                          << idx << ". Deduplicating...");
+        return idx;
+      }
+    }
+
+    const auto n_objs{static_cast<dindex>(coll.size())};
+    coll.push_back(obj);
+
+    return n_objs;
+  }
+
+  /// Add all objects of a volume-local collection to a detector collection
+  ///
+  /// @note The collections are accessed with the default geometry context,
+  /// since the detector is always built in this context.
+  ///
+  /// @tparam coll_t the type of the detector collection
+  /// @tparam src_coll_t the type of the volume-local collection
+  /// @tparam hasher_t the type of the hash function for the objects
+  ///
+  /// @param coll the detector collection that receives the objects
+  /// @param src the volume-local objects
+  /// @param hasher the hash function for the objects
+  /// @param opt the builder options
+  ///
+  /// @returns the detector collection index for every local object
+  template <typename coll_t, concepts::range obj_t, typename hasher_t>
+  DETRAY_HOST auto add_to_detector_collection(coll_t &coll,
+                                              const std::vector<obj_t> &src,
+                                              const hasher_t &hasher,
+                                              const volume_builder_options &opt)
+      -> std::vector<dindex> {
+    const auto n_src{static_cast<dindex>(src.size())};
+
+    std::vector<dindex> global_idx{};
+    global_idx.reserve(n_src);
+    for (dindex i = 0u; i < n_src; ++i) {
+      global_idx.push_back(
+          add_to_detector_collection(coll, src.at(i), hasher, opt));
+    }
+
+    return global_idx;
+  }
+
+  /// Add the block of objects that a link refers to from a volume-local
+  /// collection to a detector collection
+  ///
+  /// A block is only reused, if all of its objects are found in the same
+  /// order in the detector collection.
+  ///
+  /// @tparam coll_t the type of the collections
+  /// @tparam link_t the type of the link (single index or index range)
+  /// @tparam hasher_t the type of the hash function for the objects
+  ///
+  /// @param coll the detector collection that receives the objects
+  /// @param src the volume-local objects
+  /// @param link the link into the volume-local collection
+  /// @param hasher the hash function for the objects
+  /// @param opt the builder options
+  ///
+  /// @returns the link into the detector collection
+  template <typename coll_t, typename link_t, typename hasher_t>
+  DETRAY_HOST auto add_linked_objects(coll_t &coll, const coll_t &src,
+                                      link_t link, const hasher_t &hasher,
+                                      const volume_builder_options &opt)
+      -> link_t {
+    auto local_idx{link.index()};
+    using index_t = decltype(local_idx);
+
+    dindex first{0u};
+    dindex n_block{1u};
+    if constexpr (concepts::interval<index_t>) {
+      first = static_cast<dindex>(local_idx.lower());
+      n_block = static_cast<dindex>(local_idx.size());
+    } else {
+      first = static_cast<dindex>(local_idx);
+    }
+
+    const auto n_objs{static_cast<dindex>(coll.size())};
+    dindex new_first{n_objs};
+    if (opt.deduplicate()) {
+      // Candidates for the block start: Objects identical to the first one
+      for (const dindex i :
+           this->deduplication_cache().find_all(coll, src.at(first), hasher)) {
+        if (i + n_block > n_objs) {
+          break;
+        }
+        bool is_match{true};
+        for (dindex j = 1u; j < n_block; ++j) {
+          if (!(src.at(first + j) == coll.at(i + j))) {
+            is_match = false;
+            break;
+          }
+        }
+        if (is_match) {
+          DETRAY_DEBUG_HOST("Found identical object(s) at index "
+                            << i << ". Deduplicating...");
+          new_first = i;
+          break;
+        }
+      }
+    }
+
+    // No identical block was found: Append the objects
+    if (new_first == n_objs) {
+      for (dindex j = 0u; j < n_block; ++j) {
+        coll.push_back(src.at(first + j));
+      }
+    }
+
+    // Move the link to the new position
+    if constexpr (concepts::interval<index_t>) {
+      local_idx.shift(static_cast<long>(new_first) - static_cast<long>(first));
+      link.set_index(local_idx);
+    } else {
+      link.set_index(static_cast<index_t>(new_first));
+    }
+
+    return link;
+  }
   /// @}
 };
 
@@ -239,12 +413,13 @@ class volume_decorator : public volume_builder_interface<detector_t> {
   /// Builds the wrapped volume in the detector.
   /// @param det Detector receiving the volume.
   /// @param opt Options controlling deduplication and sorting.
+  /// @param ctx Geometry context used while building.
   /// @returns Pointer to the built volume.
   DETRAY_HOST
   auto build(detector_t &det, const volume_builder_options &opt,
-             typename detector_t::geometry_context /*ctx*/ = {}) ->
+             typename detector_t::geometry_context ctx = {}) ->
       typename detector_t::volume_type * override {
-    return m_builder->build(det, opt);
+    return m_builder->build(det, opt, ctx);
   }
 
   /// Adds a placement transform to the wrapped builder.
@@ -307,6 +482,11 @@ class volume_decorator : public volume_builder_interface<detector_t> {
   /// @returns The mask container.
   typename detector_t::mask_container &masks() override {
     return m_builder->masks();
+  }
+  /// Returns the wrapped builder's deduplication cache.
+  /// @returns The deduplication cache.
+  detail::deduplication_cache &deduplication_cache() override {
+    return m_builder->deduplication_cache();
   }
   /// @}
 

@@ -81,9 +81,13 @@ struct mock_volume_builder : public volume_builder_interface<detector_t> {
     return m_transforms;
   }
   typename detector_t::mask_container& masks() override { return m_masks; }
+  detray::detail::deduplication_cache& deduplication_cache() override {
+    return m_cache;
+  }
 
  private:
   detector_t::volume_type m_vol{};
+  detray::detail::deduplication_cache m_cache{};
   detector_t::surface_lookup_container m_sf_lookup{};
   detector_t::transform_container m_transforms{};
   detector_t::mask_container m_masks{};

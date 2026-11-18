@@ -63,6 +63,10 @@ class homogeneous_volume_material_builder final
     typename detector_t::volume_type *vol =
         volume_decorator<detector_t>::build(det, opt, ctx);
 
+    if (opt.deduplicate()) {
+      DETRAY_VERBOSE_HOST("-> Deduplicate volume material");
+    }
+
     // Nothing left to do
     if (m_volume_material == detray::vacuum<scalar_type>{}) {
       DETRAY_WARN_HOST("Volume " << this->vol_index()
@@ -73,12 +77,13 @@ class homogeneous_volume_material_builder final
 
     constexpr auto material_id{detector_t::material::id::e_raw_material};
 
-    // Update the volume material link
-    dindex coll_size{det.material_store().template size<material_id>()};
-    vol->set_material(material_id, coll_size);
-
-    // Append the material
-    det._materials.template push_back<material_id>(m_volume_material);
+    // Add the material (or find an identical one) and update the volume
+    // material link
+    vol->set_material(
+        material_id,
+        this->add_to_detector_collection(
+            det._materials.template get<material_id>(), m_volume_material,
+            std::hash<material<scalar_type>>{}, opt));
 
     // Give the volume to the next decorator
     return vol;

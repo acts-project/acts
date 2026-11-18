@@ -26,7 +26,9 @@
 #include <gtest/gtest.h>
 
 // System include(s)
+#include <functional>
 #include <limits>
+#include <unordered_set>
 
 using namespace detray;
 
@@ -248,4 +250,28 @@ GTEST_TEST(detray_material, material_rod) {
   EXPECT_NEAR(rod.path_segment_in_L0(cos_inc_ang, approach),
               rod.path_segment(cos_inc_ang, approach) / rod.get_material().L0(),
               tol);
+}
+
+// This tests the std::hash specialization of the material
+GTEST_TEST(detray_material, material_hash) {
+  const std::hash<material<scalar>> hasher{};
+
+  // Identical materials have the same hash
+  const material<scalar> si{silicon<scalar>{}};
+  const material<scalar> si_copy{silicon<scalar>{}};
+  ASSERT_TRUE(si == si_copy);
+  EXPECT_EQ(hasher(si), hasher(si_copy));
+
+  // A changed parameter changes the hash
+  const material<scalar> si_dense{si.X0(), si.L0(), si.Ar(), si.Z(),
+                                  2.f * si.mass_density()};
+  EXPECT_FALSE(si == si_dense);
+  EXPECT_NE(hasher(si), hasher(si_dense));
+  EXPECT_NE(hasher(si), hasher(argon_liquid<scalar>{}));
+
+  // The material can be used in STL containers
+  std::unordered_set<material<scalar>> materials{
+      silicon<scalar>{}, argon_liquid<scalar>{}, silicon<scalar>{}};
+  EXPECT_EQ(materials.size(), 2u);
+  EXPECT_TRUE(materials.contains(si));
 }

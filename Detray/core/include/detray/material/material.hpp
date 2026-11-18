@@ -14,10 +14,13 @@
 #include "detray/definitions/math.hpp"
 #include "detray/definitions/units.hpp"
 #include "detray/material/detail/density_effect_data.hpp"
+#include "detray/utils/hash_combine.hpp"
 #include "detray/utils/invalid_values.hpp"
 #include "detray/utils/type_traits.hpp"
 
 // System include(s)
+#include <cstddef>
+#include <functional>
 #include <ratio>
 #include <sstream>
 
@@ -311,3 +314,31 @@ struct material {
   }
 
 }  // namespace detray
+
+namespace std {
+
+/// Specialize std::hash, so that the material can be used e.g. in an
+/// unordered_map or for the deduplication of the detector material
+///
+/// Uses the independent material parameters, which are compared by the
+/// equality operator of the material: Identical materials have the same hash.
+///
+/// @tparam scalar_t the scalar type of the material parameters
+/// @tparam R the ratio of the material in a mixture
+template <detray::concepts::scalar scalar_t, typename R>
+struct hash<detray::material<scalar_t, R>> {
+  /// @param mat the material
+  /// @returns the hash value of @p mat
+  std::size_t operator()(
+      const detray::material<scalar_t, R> &mat) const noexcept {
+    std::size_t seed{0u};
+    seed = detray::hash_combine(seed, mat.X0());
+    seed = detray::hash_combine(seed, mat.L0());
+    seed = detray::hash_combine(seed, mat.Ar());
+    seed = detray::hash_combine(seed, mat.Z());
+    seed = detray::hash_combine(seed, mat.mass_density());
+    return seed;
+  }
+};
+
+}  // namespace std
