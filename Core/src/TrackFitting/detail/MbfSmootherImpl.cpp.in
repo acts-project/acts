@@ -14,7 +14,7 @@
 namespace Acts {
 
 template Result<void>
-MbfSmoother::visitMeasurementImpl<@DIM@>(const GeometryContext& gctx,
+MbfSmoother::visitMeasurementImpl<@DIM@>(const BoundParametrization& parametrization,
                                          const AnyConstTrackStateProxy& ts,
                                          BoundMatrix& bigLambdaHat,
                                          BoundVector& smallLambdaHat) const;

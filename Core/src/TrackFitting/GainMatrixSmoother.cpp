@@ -20,6 +20,15 @@ Result<void> GainMatrixSmoother::calculate(const GeometryContext& gctx,
                                            AnyMutableTrackStateProxy ts,
                                            AnyConstTrackStateProxy prev_ts,
                                            const Logger& logger) const {
+  return calculate(ts, prev_ts, stateParametrization(gctx, ts),
+                   stateParametrization(gctx, prev_ts), logger);
+}
+
+Result<void> GainMatrixSmoother::calculate(
+    AnyMutableTrackStateProxy ts, AnyConstTrackStateProxy prev_ts,
+    const BoundParametrization& sourceParametrization,
+    const BoundParametrization& destinationParametrization,
+    const Logger& logger) const {
   auto prevPredictedCovariance = prev_ts.predictedCovariance();
   auto filteredCovariance = ts.filteredCovariance();
   auto prevJacobian = prev_ts.jacobian();
@@ -61,15 +70,6 @@ Result<void> GainMatrixSmoother::calculate(const GeometryContext& gctx,
   ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
   ACTS_VERBOSE("Prev. smoothed parameters: " << prevSmoothed.transpose());
   ACTS_VERBOSE("Prev. predicted parameters: " << prevPredicted.transpose());
-
-  const auto sourceParametrization =
-      ts.hasReferenceSurface()
-          ? ts.referenceSurface().boundParametrization(gctx)
-          : BoundParametrization::globalSpherical();
-  const auto destinationParametrization =
-      prev_ts.hasReferenceSurface()
-          ? prev_ts.referenceSurface().boundParametrization(gctx)
-          : BoundParametrization::globalSpherical();
 
   // The residual lives in the destination basis; G maps it to the source.
   BoundVector smoothed = filtered + G * destinationParametrization.difference(

@@ -9,8 +9,10 @@
 #pragma once
 
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -66,6 +68,11 @@ class GainMatrixSmoother {
     ACTS_VERBOSE("Start smoothing from previous track state at index: "
                  << prev_ts.previous());
 
+    // Each state's parametrization is resolved once: as the source of its own
+    // step, then carried forward as the destination of the next one.
+    BoundParametrization prevParametrization =
+        stateParametrization(gctx, prev_ts);
+
     // default-constructed error represents success, i.e. an invalid error code
     std::error_code error;
     trajectory.applyBackwards(prev_ts.previous(), [&, this](auto ts) {
@@ -86,14 +93,18 @@ class GainMatrixSmoother {
       // ensure the track state has a smoothed component
       ts.addComponents(TrackStatePropMask::Smoothed);
 
-      if (auto res = calculate(gctx, AnyMutableTrackStateProxy{ts},
-                               AnyConstTrackStateProxy{prev_ts}, logger);
+      const BoundParametrization parametrization =
+          stateParametrization(gctx, ts);
+      if (auto res = calculate(AnyMutableTrackStateProxy{ts},
+                               AnyConstTrackStateProxy{prev_ts},
+                               parametrization, prevParametrization, logger);
           !res.ok()) {
         error = res.error();
         return false;
       }
 
       prev_ts = ts;
+      prevParametrization = parametrization;
       return true;  // continue execution
     });
 
@@ -120,6 +131,30 @@ class GainMatrixSmoother {
   Result<void> calculate(const GeometryContext& gctx,
                          AnyMutableTrackStateProxy ts,
                          AnyConstTrackStateProxy prev_ts,
+                         const Logger& logger) const;
+
+ private:
+  /// Parametrization of a state's surface, or canonical global spherical for
+  /// states without a reference surface.
+  template <typename track_state_proxy_t>
+  static BoundParametrization stateParametrization(
+      const GeometryContext& gctx, const track_state_proxy_t& ts) {
+    return ts.hasReferenceSurface()
+               ? ts.referenceSurface().boundParametrization(gctx)
+               : BoundParametrization::globalSpherical();
+  }
+
+  /// Smoothing step with both parametrizations already resolved.
+  /// @param ts Current track state to be smoothed
+  /// @param prev_ts Next track state in forward propagation (already smoothed)
+  /// @param sourceParametrization Parametrization of @p ts
+  /// @param destinationParametrization Parametrization of @p prev_ts
+  /// @param logger Logger for verbose output
+  /// @return Success or failure of the smoothing calculation
+  Result<void> calculate(AnyMutableTrackStateProxy ts,
+                         AnyConstTrackStateProxy prev_ts,
+                         const BoundParametrization& sourceParametrization,
+                         const BoundParametrization& destinationParametrization,
                          const Logger& logger) const;
 };
 

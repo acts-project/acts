@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -76,9 +78,15 @@ class MbfSmoother {
 
       AnyMutableTrackStateProxy internalTrackState(ts);
 
+      // Resolved once and shared by smoothing and the backward transport.
+      const BoundParametrization parametrization =
+          ts.hasReferenceSurface()
+              ? ts.referenceSurface().boundParametrization(gctx)
+              : BoundParametrization::globalSpherical();
+
       // Smooth the current state before transporting backward information.
-      const auto smoothed = calculateSmoothed(gctx, internalTrackState,
-                                              bigLambdaHat, smallLambdaHat);
+      const auto smoothed = calculateSmoothed(
+          parametrization, internalTrackState, bigLambdaHat, smallLambdaHat);
       if (!smoothed.ok()) {
         error = smoothed.error();
         return false;
@@ -92,8 +100,9 @@ class MbfSmoother {
       // Update the lambdas depending on the type of track state
       auto transported = Result<void>::success();
       if (ts.typeFlags().isMeasurement()) {
-        transported = visitMeasurement(gctx, AnyConstTrackStateProxy{ts},
-                                       bigLambdaHat, smallLambdaHat);
+        transported =
+            visitMeasurement(parametrization, AnyConstTrackStateProxy{ts},
+                             bigLambdaHat, smallLambdaHat);
       } else {
         transported = visitNonMeasurement(std::as_const(ts).jacobian(),
                                           bigLambdaHat, smallLambdaHat);
@@ -110,7 +119,7 @@ class MbfSmoother {
 
  private:
   /// Calculate the smoothed parameters and covariance.
-  Result<void> calculateSmoothed(const GeometryContext& gctx,
+  Result<void> calculateSmoothed(const BoundParametrization& parametrization,
                                  AnyMutableTrackStateProxy& ts,
                                  const BoundMatrix& bigLambdaHat,
                                  const BoundVector& smallLambdaHat) const;
@@ -121,13 +130,13 @@ class MbfSmoother {
       BoundMatrix& bigLambdaHat, BoundVector& smallLambdaHat) const;
 
   /// Visit a measurement track state and update the lambdas.
-  Result<void> visitMeasurement(const GeometryContext& gctx,
+  Result<void> visitMeasurement(const BoundParametrization& parametrization,
                                 const AnyConstTrackStateProxy& ts,
                                 BoundMatrix& bigLambdaHat,
                                 BoundVector& smallLambdaHat) const;
 
   template <std::size_t N>
-  Result<void> visitMeasurementImpl(const GeometryContext& gctx,
+  Result<void> visitMeasurementImpl(const BoundParametrization& parametrization,
                                     const AnyConstTrackStateProxy& ts,
                                     BoundMatrix& bigLambdaHat,
                                     BoundVector& smallLambdaHat) const;

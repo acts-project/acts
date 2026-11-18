@@ -17,8 +17,9 @@ namespace Acts {
 
 template <std::size_t N>
 Result<void> MbfSmoother::visitMeasurementImpl(
-    const GeometryContext& gctx, const AnyConstTrackStateProxy& ts,
-    BoundMatrix& bigLambdaHat, BoundVector& smallLambdaHat) const {
+    const BoundParametrization& parametrization,
+    const AnyConstTrackStateProxy& ts, BoundMatrix& bigLambdaHat,
+    BoundVector& smallLambdaHat) const {
   const auto F = ts.jacobian();
 
   const auto subspaceHelper = ts.projectorSubspaceHelper<N>();
@@ -50,10 +51,6 @@ Result<void> MbfSmoother::visitMeasurementImpl(
   if (!K.allFinite()) {
     return KalmanFitterError::SmoothFailed;
   }
-  const auto parametrization =
-      ts.hasReferenceSurface()
-          ? ts.referenceSurface().boundParametrization(gctx)
-          : BoundParametrization::globalSpherical();
   const auto indices = ts.projectorSubspaceIndices<N>();
   BoundVector measured = ts.predicted();
   for (std::size_t i = 0; i < N; ++i) {
