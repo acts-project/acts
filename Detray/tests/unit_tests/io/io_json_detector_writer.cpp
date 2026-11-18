@@ -130,8 +130,10 @@ GTEST_TEST(io, json_telescope_material_writer) {
   // Telescope detector
   vecmem::host_memory_resource host_mr;
 
-  auto [det, names] = build_telescope_detector<test_algebra>(
-      host_mr, tel_cfg.positions(positions));
+  tel_cfg.positions(positions);
+  // Turn off deduplication, so that the header test holds true
+  tel_cfg.builder_options().deduplicate(false);
+  auto [det, names] = build_telescope_detector<test_algebra>(host_mr, tel_cfg);
 
   io::detector_payload payload{};
   io::homogeneous_material_writer<detector_t>{}.to_payload(det, names, payload);
@@ -160,6 +162,8 @@ GTEST_TEST(io, json_toy_material_maps_writer) {
   vecmem::host_memory_resource host_mr;
   toy_det_config<scalar> toy_cfg{};
   toy_cfg.use_material_maps(true);
+  // Turn off deduplication, so that the header test holds true
+  toy_cfg.builder_options().deduplicate(false);
   auto [det, names] = build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
   io::detector_payload payload{};
@@ -204,6 +208,8 @@ GTEST_TEST(io, json_toy_detector_writer) {
   vecmem::host_memory_resource host_mr;
   toy_det_config<scalar> toy_cfg{};
   toy_cfg.use_material_maps(true);
+  // Turn off deduplication, so that the header test holds true
+  toy_cfg.builder_options().deduplicate(false);
   const auto [det, names] = build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
   io::write_detector_json(det, names, writer_cfg);
@@ -245,6 +251,8 @@ GTEST_TEST(io, json_detector_header) {
 
   // Toy detector with homogeneous material
   toy_det_config<scalar> toy_cfg{};
+  // Turn off deduplication, so that the header test holds true
+  toy_cfg.builder_options().deduplicate(false);
   const auto [det, names] = build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
   // Only fill the payload: No output converters
