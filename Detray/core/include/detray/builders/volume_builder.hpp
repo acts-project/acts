@@ -21,6 +21,8 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace detray {
 
@@ -124,8 +126,7 @@ class volume_builder : public volume_builder_interface<detector_t> {
     // Prepare volume data
     m_volume.set_index(static_cast<dindex>(det.volumes().size()));
 
-    m_volume.set_transform(det.transform_store().size());
-    det._transforms.push_back(m_trf);
+    m_volume.set_transform(add_transform(det, m_trf, opt.deduplicate(), ctx));
 
     // Add all data from the builder to the detector containers
     add_to_detector(opt, ctx, det);
@@ -210,14 +211,46 @@ class volume_builder : public volume_builder_interface<detector_t> {
       const volume_builder_options& opt,
       const typename detector_t::geometry_context ctx,
       detector_t& det) noexcept(false) -> void {
-    if (opt.deduplicate()) {
-      DETRAY_WARN_HOST(m_volume_name
-                       << ": Geometry data deduplication not yet implemented");
-    }
+    const bool deduplicate{opt.deduplicate()};
 
-    // Append transforms
+    // Global transform index for every volume local transform
+    std::vector<dindex> global_trf_idx{};
+    // Whether a global transform is used by more than one surface
+    std::vector<bool> is_shared_trf{};
+
     const auto trf_offset = det.transform_store().size(ctx);
-    det._transforms.append(std::move(m_transforms), ctx);
+    if (deduplicate) {
+      DETRAY_VERBOSE_HOST("-> Deduplicate transforms and masks");
+
+      // Check every local transform against the detector transforms
+      // (Any duplication within the new data is resolved the same way)
+      const auto n_local_trfs{m_transforms.size(ctx)};
+      global_trf_idx.reserve(n_local_trfs);
+      std::vector<dindex> found_trfs{};
+      for (dindex i = 0u; i < n_local_trfs; ++i) {
+        const auto n_trfs{det.transform_store().size(ctx)};
+        const dindex trf_idx{
+            add_transform(det, m_transforms.at(i, ctx), true, ctx)};
+        // An identical transform was already in the detector store
+        if (trf_idx < n_trfs) {
+          found_trfs.push_back(trf_idx);
+        }
+        global_trf_idx.push_back(trf_idx);
+      }
+
+      // Flag the transforms that are used by more than one local entry or
+      // that were in the detector before
+      is_shared_trf.resize(det.transform_store().size(ctx), false);
+      for (const dindex trf_idx : found_trfs) {
+        is_shared_trf.at(trf_idx) = true;
+      }
+
+      // Add the masks
+      add_masks(det, std::make_index_sequence<detector_t::masks::n_types>{});
+    } else {
+      // Append all transforms
+      det._transforms.append(std::move(m_transforms), ctx);
+    }
 
     // Surface index offset in the global detector container
     auto sf_offset{static_cast<dindex>(det.surfaces().size())};
@@ -254,12 +287,29 @@ class volume_builder : public volume_builder_interface<detector_t> {
     // Update mask and transform index of surfaces and set the
     // correct index of the surface in container
     std::size_t n_portals{0u};
+    // Count the surfaces that use a given transform (only if deduplicated)
+    std::vector<dindex> n_sf_per_trf(is_shared_trf.size(), 0u);
     for (auto& sf_desc : m_surfaces) {
-      det._masks.template visit<detail::mask_index_update>(sf_desc.mask(),
-                                                           sf_desc);
+      if (deduplicate) {
+        // Mask links were already updated during the deduplication
+        const dindex trf_idx{global_trf_idx.at(sf_desc.transform())};
+        sf_desc.set_transform(trf_idx);
+        ++n_sf_per_trf.at(trf_idx);
+      } else {
+        det._masks.template visit<detail::mask_index_update>(sf_desc.mask(),
+                                                             sf_desc);
+        sf_desc.update_transform(trf_offset);
+      }
       sf_desc.set_volume(m_volume.index());
-      sf_desc.update_transform(trf_offset);
       sf_desc.set_index(sf_offset++);
+
+      // Sensitive surfaces with a shared transform cannot be aligned
+      // independently
+      if (deduplicate && sf_desc.is_sensitive() &&
+          (is_shared_trf.at(sf_desc.transform()) ||
+           n_sf_per_trf.at(sf_desc.transform()) > 1u)) {
+        warn_shared_sensitive_trf(det, sf_desc);
+      }
 
       if (sf_desc.is_portal()) {
         ++n_portals;
@@ -312,13 +362,155 @@ class volume_builder : public volume_builder_interface<detector_t> {
         det.accelerator_store().template size<default_acc_id>() - 1u);
 
     // Append masks
-    det._masks.append(std::move(m_masks));
+    if (!deduplicate) {
+      det._masks.append(std::move(m_masks));
+    }
 
     // Finally, add the volume descriptor to the detector
     det._volumes.push_back(m_volume);
   }
 
  private:
+  /// Add a transform to the detector transform store
+  ///
+  /// @param det the detector that receives the transform
+  /// @param trf the transform that should be added
+  /// @param deduplicate whether to reuse an identical transform in @p det
+  /// @param ctx the geometry context of the call
+  ///
+  /// @returns the index of the transform in the detector transform store
+  DETRAY_HOST auto add_transform(
+      detector_t& det, const typename detector_t::transform3_type& trf,
+      const bool deduplicate,
+      const typename detector_t::geometry_context ctx) const -> dindex {
+    const auto n_trfs{static_cast<dindex>(det.transform_store().size(ctx))};
+
+    // Test only against the transforms that are already in the detector
+    if (deduplicate) {
+      for (dindex i = 0u; i < n_trfs; ++i) {
+        if (trf == det.transform_store().at(i, ctx)) {
+          DETRAY_DEBUG_HOST("Found identical transform at index "
+                            << i << ". Deduplicating...");
+          return i;
+        }
+      }
+    }
+
+    det._transforms.push_back(trf, ctx);
+
+    return n_trfs;
+  }
+
+  /// Add the masks of all mask types to the detector and deduplicate them
+  ///
+  /// @tparam I the indices of the mask types in the mask store
+  ///
+  /// @param det the detector that receives the masks
+  template <std::size_t... I>
+  DETRAY_HOST void add_masks(detector_t& det, std::index_sequence<I...>) {
+    (add_masks<static_cast<typename detector_t::masks::id>(I)>(det), ...);
+  }
+
+  /// Add the masks of type @tparam mask_id to the detector and reuse
+  /// identical masks that are already in the detector store
+  ///
+  /// The masks of a surface are compared as a block, i.e. a mask range is
+  /// only reused if all masks of the surface are found in the same
+  /// order in the detector store. The surface mask links are updated.
+  ///
+  /// @param det the detector that receives the masks
+  template <typename detector_t::masks::id mask_id>
+  DETRAY_HOST void add_masks(detector_t& det) {
+    const auto& local_coll = m_masks.template get<mask_id>();
+    if (local_coll.empty()) {
+      return;
+    }
+
+    // non-const access
+    auto& det_coll = det._masks.template get<mask_id>();
+    [[maybe_unused]] const auto n_masks_before{det_coll.size()};
+
+    for (auto& sf_desc : m_surfaces) {
+      auto mask_link{sf_desc.mask()};
+      if (mask_link.id() != mask_id) {
+        continue;
+      }
+
+      // The volume local masks of the surface
+      auto local_idx{mask_link.index()};
+      dindex first{0u};
+      dindex n_sf_masks{1u};
+      if constexpr (concepts::interval<decltype(local_idx)>) {
+        first = static_cast<dindex>(local_idx.lower());
+        n_sf_masks = static_cast<dindex>(local_idx.size());
+      } else {
+        first = static_cast<dindex>(local_idx);
+      }
+
+      // Search the detector for the same sequence of masks
+      const auto n_det_masks{static_cast<dindex>(det_coll.size())};
+      dindex new_first{n_det_masks};
+      for (dindex i = 0u; i + n_sf_masks <= n_det_masks; ++i) {
+        bool is_match{true};
+        for (dindex j = 0u; j < n_sf_masks; ++j) {
+          if (!(local_coll.at(first + j) == det_coll.at(i + j))) {
+            is_match = false;
+            break;
+          }
+        }
+        if (is_match) {
+          DETRAY_DEBUG_HOST("Found identical mask(s) at index "
+                            << i << ". Deduplicating...");
+          new_first = i;
+          break;
+        }
+      }
+
+      // No duplicate was found, append the new mask(s)
+      if (new_first == n_det_masks) {
+        for (dindex j = 0u; j < n_sf_masks; ++j) {
+          det_coll.push_back(local_coll.at(first + j));
+        }
+      }
+
+      // Update the surface mask link
+      if constexpr (concepts::interval<decltype(local_idx)>) {
+        local_idx.shift(static_cast<long>(new_first) -
+                        static_cast<long>(first));
+        mask_link.set_index(local_idx);
+      } else {
+        mask_link.set_index(new_first);
+      }
+      sf_desc.set_mask(mask_link);
+    }
+
+    DETRAY_VERBOSE_HOST("-> Appended " << det_coll.size() - n_masks_before
+                                       << " of " << local_coll.size()
+                                       << " masks of type " << mask_id
+                                       << " to detector masks");
+  }
+
+  /// Warn if the sensitive surface @param sf_desc shares its transform
+  /// with another sensitive surface in the detector @param det
+  ///
+  /// @note Sensitive surfaces with a shared transform cannot be misaligned
+  /// independently
+  DETRAY_HOST void warn_shared_sensitive_trf(
+      const detector_t& det,
+      const typename detector_t::surface_lookup_container::value_type& sf_desc)
+      const {
+    for (const auto& other : det.surfaces()) {
+      if (other.is_sensitive() && other.transform() == sf_desc.transform()) {
+        DETRAY_WARN_HOST(m_volume_name
+                         << ": Sensitive surfaces share the transform "
+                         << sf_desc.transform() << " (surfaces " << other.index()
+                         << " and " << sf_desc.index()
+                         << "). They cannot be aligned independently.");
+        return;
+      }
+    }
+  }
+
   /// Whether the volume will get an acceleration structure
   bool m_has_accel{false};
 

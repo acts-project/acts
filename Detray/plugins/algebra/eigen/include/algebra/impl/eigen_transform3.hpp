@@ -165,10 +165,12 @@ struct transform3 {
 
   /// Equality operator
   /// @param rhs transform to compare with
-  /// @return whether the transforms have equal spatial mappings
+  /// @note The comparison is exact, which is consistent with the other
+  /// algebra plugins (needed e.g. for the geometry deduplication)
+  /// @return whether the forward matrices are identical
   DETRAY_HOST_DEVICE
   constexpr bool operator==(const transform3 &rhs) const {
-    return (_data.isApprox(rhs._data));
+    return (_data.matrix() == rhs._data.matrix());
   }
 
   /// Rotate a vector into / from a frame

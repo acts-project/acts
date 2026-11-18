@@ -743,13 +743,13 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   cfg.payloadConverter = std::make_shared<DetrayPayloadConverter>(
       payloadCfg, getDefaultLogger("PayloadCnv", Logging::INFO));
   // On by default
-  BOOST_CHECK(cfg.deduplicateMaterial);
+  BOOST_CHECK(cfg.deduplicate);
 
   vecmem::host_memory_resource mr;
 
   auto convert = [&](bool deduplicate) {
     auto converterCfg = cfg;
-    converterCfg.deduplicateMaterial = deduplicate;
+    converterCfg.deduplicate = deduplicate;
     DetrayGeometryConverter converter(
         converterCfg, getDefaultLogger("GeoCnv", Logging::INFO));
     return converter.convert<metadata_t>(mr, gctx, tGeometry);

@@ -28,7 +28,9 @@ class volume_decorator;
 /// Options for the volume builder classes
 struct volume_builder_options {
   /// Globally deduplicate identical data that is added by a builder to the
-  /// detector
+  /// detector (transforms, masks and material)
+  /// @note Surfaces that share a transform cannot be aligned independently.
+  /// The builder warns if this happens for sensitive surfaces.
   bool m_deduplicate{true};
   /// Globally sort data including the one that is added by a builder to the
   /// detector

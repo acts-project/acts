@@ -44,8 +44,9 @@ class DetrayGeometryConverter {
     /// strategy or the navigation/material dispatchers).
     std::shared_ptr<const DetrayPayloadConverter> payloadConverter;
 
-    /// Deduplicate material entries in the detraty detector data stores
-    bool deduplicateMaterial = true;
+    /// Deduplicate identical transforms, masks and material entries in the
+    /// detray detector data stores
+    bool deduplicate = true;
   };
 
   /// @brief Combined result of a geometry conversion
@@ -115,7 +116,7 @@ class DetrayGeometryConverter {
 
     // ── Build detray detector from payload ───────────────────────────────
     detray::io::detector_reader_config readerCfg{};
-    readerCfg.do_check(true).deduplicate(m_cfg.deduplicateMaterial);
+    readerCfg.do_check(true).deduplicate(m_cfg.deduplicate);
     auto [detector, names] =
         detray::io::read_detector<detector_t>(mr, readerCfg, payload);
 

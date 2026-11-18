@@ -130,6 +130,14 @@ class surface_descriptor {
     m_identifier.set_transform(transform() + offset);
   }
 
+  /// Set a new transform index
+  ///
+  /// @param new_idx the index of the transform in the transform store
+  DETRAY_HOST
+  auto set_transform(const dindex new_idx) -> void {
+    m_identifier.set_transform(new_idx);
+  }
+
   /// @return the transform index
   DETRAY_HOST_DEVICE
   constexpr auto transform() const -> dindex {
@@ -141,6 +149,12 @@ class surface_descriptor {
   /// @param offset update the position when move into new collection
   DETRAY_HOST
   auto update_mask(dindex offset) -> void { m_mask.shift(offset); }
+
+  /// Set a new mask link
+  ///
+  /// @param new_link the type id and index (range) of the mask(s)
+  DETRAY_HOST
+  auto set_mask(const mask_link &new_link) -> void { m_mask = new_link; }
 
   /// @return the mask link
   DETRAY_HOST_DEVICE

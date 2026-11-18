@@ -238,7 +238,8 @@ GTEST_TEST(io, json_toy_geometry) {
   // Toy detector
   vecmem::host_memory_resource host_mr;
   toy_det_config<scalar> toy_cfg{};
-  toy_cfg.use_material_maps(false);
+  // The deduplication is tested separately, check the full data layout
+  toy_cfg.use_material_maps(false).builder_options().deduplicate(false);
   auto [toy_det, names] = build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
   // Write the detector
@@ -262,7 +263,7 @@ GTEST_TEST(io, json_toy_geometry) {
   io::geometry_reader<detector_t>{}.from_payload(toy_builder, payload);
 
   names.clear_names();
-  volume_builder_options builder_opts{};
+  const auto builder_opts = volume_builder_options{}.deduplicate(false);
   auto det = toy_builder.build(host_mr, builder_opts, names);
 
   // @TODO: Will only work again after IO can perform data deduplication

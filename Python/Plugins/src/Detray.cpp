@@ -182,8 +182,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
       .def(py::init<>())
       .def_readwrite("payloadConverter",
                      &DetrayGeometryConverter::Config::payloadConverter)
-      .def_readwrite("deduplicateMaterial",
-                     &DetrayGeometryConverter::Config::deduplicateMaterial);
+      .def_readwrite("deduplicate",
+                     &DetrayGeometryConverter::Config::deduplicate);
 
   using DetrayGeometryODD =
       DetrayGeometryConverter::DetrayGeometry<DetrayMetaDataODD>;

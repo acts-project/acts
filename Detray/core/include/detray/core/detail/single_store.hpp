@@ -259,6 +259,13 @@ class single_store {
     m_context_size = m_container.size();
   }
 
+  /// Add the data of one or more additional contexts (e.g. alignment)
+  ///
+  /// @note The context data must have the same layout as the default
+  /// context data (indexed by the same links). If the store was deduplicated,
+  /// all objects that share an entry get the same context data.
+  ///
+  /// @param context_data the data of the new context(s)
   template <typename U>
   DETRAY_HOST auto add_context(container_t<U> &context_data) noexcept(false)
       -> void {
