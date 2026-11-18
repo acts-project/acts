@@ -2,6 +2,7 @@ target_sources(
     ActsCore
     PRIVATE
         ButcherTableau.cpp
+        ChordNavigator.cpp
         EigenStepperError.cpp
         GenericRungeKuttaStepper.cpp
         HelixStepper.cpp

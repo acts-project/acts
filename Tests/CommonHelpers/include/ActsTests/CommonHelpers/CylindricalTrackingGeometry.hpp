@@ -38,8 +38,46 @@ struct CylindricalTrackingGeometry {
   inline static const std::vector<double> kModuleThickness = {0.15, 0.15, 0.15,
                                                               0.15};
 
+  /// Gen3 endcaps (gen3Endcaps): |z| of the discs, mirrored at z = 0
+  inline static const std::vector<double> kDiscZ = {560., 660., 780., 920.};
+  /// A ring of trapezoid modules of a disc, local y radial
+  struct DiscRing {
+    double radius;
+    double halfXminY;
+    double halfXmaxY;
+    double halfY;
+    int nPhi;
+    /// z offset from the disc position, away from z = 0
+    double zOffset;
+  };
+  /// Inner ring r 29-81 mm, outer ring r 80-176 mm
+  inline static const std::vector<DiscRing> kDiscRings = {
+      {55., 4.2, 11.5, 26., 24, -2.}, {128., 6.8, 14.5, 48., 40, 2.}};
+  /// z offset of every second module in phi, away from z = 0
+  constexpr static double kDiscModuleStagger = 1. * Acts::UnitConstants::mm;
+
   std::reference_wrapper<const Acts::GeometryContext> geoContext;
   bool gen3 = false;
+  /// Gen3 only: fill the radial gaps between layers with gap volumes instead
+  /// of extending the layer volumes to the midpoint (default: midpoint)
+  bool gen3GapVolumes = false;
+  /// Gen3 only: radial envelope of the layer volumes around the modules
+  double gen3LayerEnvelopeR = 5. * Acts::UnitConstants::mm;
+  /// Gen3 only: give the layer volumes their portals through
+  /// CylinderNavigationPolicy (as ODD, GenericDetector and ATLAS ITk do)
+  /// instead of TryAllNavigationPolicy{.sensitives = false}
+  bool gen3CylinderPortalPolicy = false;
+  /// Gen3 only: add two endcaps of four disc layers (kDiscZ, kDiscRings) next
+  /// to the barrel. The barrel layers then sit in their own container; the
+  /// disc layers take gen3LayerEnvelopeR as their z envelope.
+  bool gen3Endcaps = false;
+  /// Gen3 endcaps only: stretch the disc layer volumes until they meet
+  /// (Midpoint attachment, Expand resize) instead of gap volumes between them
+  bool gen3ThickEndcaps = false;
+  /// Gen3 only: passive material on the beampipe and on the layer portals
+  /// (1.5 mm Si each). False leaves the module material (kModuleThickness of
+  /// Si) as the only material.
+  bool gen3PassiveMaterial = true;
 
   /// Only allowed constructor with reference wrapper
   explicit CylindricalTrackingGeometry(const Acts::GeometryContext& gctx,
