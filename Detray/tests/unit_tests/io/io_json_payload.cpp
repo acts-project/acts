@@ -310,7 +310,7 @@ GTEST_TEST(io, json_surface_material_payload) {
   m.index_in_coll = 21u;
   m.surface.link = 5u;
   m.thickness = 1.2f;
-  m.mat.params = {1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f};
+  m.mat.params = {1.f, 2.f, 3.f, 4.f, 5.f, 6.f};
 
   nlohmann::ordered_json j;
   j["material"] = m;

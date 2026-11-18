@@ -114,6 +114,66 @@ auto testDigitizedParametersWithTwoTimedClusters(bool merge,
 
 BOOST_AUTO_TEST_SUITE(DigitizationSuite)
 
+BOOST_AUTO_TEST_CASE(charge_quantization_response) {
+  for (unsigned int bits : {1u, 4u, 8u, 16u, 24u}) {
+    const ChargeQuantizationConfig q{bits, 0., 0.25};
+    BOOST_CHECK_EQUAL(q.quantize(-1.), 1.);
+    BOOST_CHECK_EQUAL(q.quantize(1e9), (1u << bits) - 1u);
+  }
+  ChargeQuantizationConfig q{4u, 0., 0.25};
+  BOOST_CHECK_EQUAL(q.quantize(0.249), 1.);
+  BOOST_CHECK_EQUAL(q.quantize(0.25), 2.);
+  BOOST_CHECK_EQUAL(q.quantize(0.251), 2.);
+  const ChargeQuantizationConfig wide{24u, 0., 0.25};
+  for (unsigned int code : {(1u << 24) - 2u, (1u << 24) - 1u}) {
+    const double encoded = wide.quantize((code - 1u) * wide.step);
+    BOOST_CHECK_EQUAL(encoded, code);
+    BOOST_CHECK_EQUAL(static_cast<double>(static_cast<float>(encoded)),
+                      encoded);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(charge_quantization_after_summation_and_before_weighting) {
+  const auto segmentation = makeSegmentation();
+  const ChargeQuantizationConfig q{4u, 0., 0.25};
+  ModuleClusters native(segmentation, {eBoundLoc0, eBoundLoc1}, true, 1., true);
+  ModuleClusters encoded(segmentation, {eBoundLoc0, eBoundLoc1}, true, 1., true,
+                         q);
+  // Two contributions share an address; a third occupies the adjacent channel.
+  for (std::size_t i = 0; i < 3; ++i) {
+    auto params = makeDigitizationParameters({i < 2 ? 0.5 : 1.5, 0.5}, {1., 1.},
+                                             *segmentation);
+    params.cluster.channels.front().activation = i < 2 ? 0.3125 : 0.875;
+    native.add(params, i);
+    encoded.add(params, i);
+  }
+  const auto reference = native.digitizedParameters();
+  const auto result = encoded.digitizedParameters();
+  BOOST_REQUIRE_EQUAL(reference.size(), 1);
+  BOOST_REQUIRE_EQUAL(result.size(), 1);
+  const auto &actual = result.front().first;
+  BOOST_REQUIRE_EQUAL(actual.cluster.channels.size(), 2);
+  BOOST_REQUIRE_EQUAL(reference.front().first.cluster.channels.size(), 2);
+  for (std::size_t i = 0; i < 2; ++i) {
+    const auto &cell = reference.front().first.cluster.channels[i];
+    BOOST_CHECK(actual.cluster.channels[i].bin == cell.bin);
+  }
+  // q(0.3125 + 0.3125) = 3, whereas q(0.3125) + q(0.3125) = 4.
+  BOOST_CHECK_EQUAL(actual.cluster.channels[0].activation, 3.);
+  BOOST_CHECK_EQUAL(actual.cluster.channels[1].activation, 4.);
+  BOOST_CHECK_CLOSE(actual.values[0], (3. * 0.5 + 4. * 1.5) / 7., 1e-10);
+  BOOST_CHECK_CLOSE(actual.values[1], 0.5, 1e-10);
+  BOOST_CHECK_CLOSE(actual.variances[0], 25. / (12. * 49.), 1e-10);
+  BOOST_CHECK_CLOSE(actual.variances[1], 25. / (12. * 49.), 1e-10);
+  BOOST_CHECK_EQUAL(reference.front().first.cluster.channels[0].activation,
+                    0.625);
+  BOOST_CHECK_EQUAL(reference.front().first.cluster.channels[1].activation,
+                    0.875);
+  BOOST_CHECK_CLOSE(reference.front().first.values[0],
+                    (0.625 * 0.5 + 0.875 * 1.5) / 1.5, 1e-10);
+  BOOST_CHECK(reference.front().second == result.front().second);
+}
+
 BOOST_AUTO_TEST_CASE(digitizedParameters_merging) {
   // overlapping hits are expected to be merged if turned on
   {

@@ -174,13 +174,8 @@ class homogeneous_material_writer {
   static material_param_payload to_payload(const material_t& mat) {
     material_param_payload mat_data;
 
-    mat_data.params = {mat.X0(),
-                       mat.L0(),
-                       mat.Ar(),
-                       mat.Z(),
-                       mat.mass_density(),
-                       mat.molar_density(),
-                       static_cast<io::scalar>(mat.state())};
+    mat_data.params = {mat.X0(), mat.L0(),           mat.Ar(),
+                       mat.Z(),  mat.mass_density(), mat.molar_density()};
     return mat_data;
   }
 
