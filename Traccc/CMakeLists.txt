@@ -130,14 +130,21 @@ else()
     # traccc settings are normal variables, set from the ACTS options. A cache
     # entry with the same name has no effect, so it is an error. Remove the
     # entry, so that it only reports a stale entry from an older build once.
+    # The optional third argument names the ACTS setting(s) that control the
+    # traccc setting, for the error message.
     macro(traccc_set_from_acts name value)
         if(DEFINED CACHE{${name}})
+            if(${ARGC} GREATER 2)
+                set(_traccc_set_from_acts_hint "ACTS sets it from ${ARGV2}.")
+            else()
+                set(_traccc_set_from_acts_hint "ACTS sets it itself.")
+            endif()
             message(
                 SEND_ERROR
                 "${name} cannot be set when traccc is built as part of ACTS. "
-                "Use the ACTS_TRACCC_* options instead; not every traccc "
-                "setting has an equivalent ACTS option."
+                "${_traccc_set_from_acts_hint}"
             )
+            unset(_traccc_set_from_acts_hint)
             unset(${name} CACHE)
         endif()
         set(${name} "${value}")
@@ -154,33 +161,77 @@ else()
     endif()
 
     # Settings with an ACTS_TRACCC_* option of their own.
-    traccc_set_from_acts(TRACCC_BUILD_CUDA "${ACTS_TRACCC_BUILD_CUDA}")
+    traccc_set_from_acts(
+        TRACCC_BUILD_CUDA
+        "${ACTS_TRACCC_BUILD_CUDA}"
+        ACTS_TRACCC_BUILD_CUDA
+    )
     traccc_set_from_acts(
         TRACCC_BUILD_CUDA_UTILS
         "${_acts_traccc_build_cuda_utils}"
+        "ACTS_TRACCC_BUILD_CUDA and alpaka_ACC_GPU_CUDA_ENABLE"
     )
-    traccc_set_from_acts(TRACCC_BUILD_HIP "${ACTS_TRACCC_BUILD_HIP}")
-    traccc_set_from_acts(TRACCC_BUILD_HIP_UTILS "${_acts_traccc_build_hip_utils}")
-    traccc_set_from_acts(TRACCC_BUILD_SYCL "${ACTS_TRACCC_BUILD_SYCL}")
-    traccc_set_from_acts(TRACCC_BUILD_SYCL_UTILS "${_acts_traccc_build_sycl_utils}")
-    traccc_set_from_acts(TRACCC_BUILD_ALPAKA "${ACTS_TRACCC_BUILD_ALPAKA}")
-    traccc_set_from_acts(TRACCC_BUILD_IO "${ACTS_TRACCC_BUILD_IO}")
+    traccc_set_from_acts(
+        TRACCC_BUILD_HIP
+        "${ACTS_TRACCC_BUILD_HIP}"
+        ACTS_TRACCC_BUILD_HIP
+    )
+    traccc_set_from_acts(
+        TRACCC_BUILD_HIP_UTILS
+        "${_acts_traccc_build_hip_utils}"
+        "ACTS_TRACCC_BUILD_HIP and alpaka_ACC_GPU_HIP_ENABLE"
+    )
+    traccc_set_from_acts(
+        TRACCC_BUILD_SYCL
+        "${ACTS_TRACCC_BUILD_SYCL}"
+        ACTS_TRACCC_BUILD_SYCL
+    )
+    traccc_set_from_acts(
+        TRACCC_BUILD_SYCL_UTILS
+        "${_acts_traccc_build_sycl_utils}"
+        "ACTS_TRACCC_BUILD_SYCL and alpaka_ACC_SYCL_ENABLE"
+    )
+    traccc_set_from_acts(
+        TRACCC_BUILD_ALPAKA
+        "${ACTS_TRACCC_BUILD_ALPAKA}"
+        ACTS_TRACCC_BUILD_ALPAKA
+    )
+    traccc_set_from_acts(
+        TRACCC_BUILD_IO
+        "${ACTS_TRACCC_BUILD_IO}"
+        ACTS_TRACCC_BUILD_IO
+    )
     traccc_set_from_acts(
         TRACCC_BUILD_PERFORMANCE
         "${ACTS_TRACCC_BUILD_PERFORMANCE}"
+        ACTS_TRACCC_BUILD_PERFORMANCE
     )
-    traccc_set_from_acts(TRACCC_BUILD_TESTING "${ACTS_TRACCC_BUILD_TESTS}")
-    traccc_set_from_acts(TRACCC_BUILD_EXAMPLES "${ACTS_TRACCC_BUILD_EXAMPLES}")
+    traccc_set_from_acts(
+        TRACCC_BUILD_TESTING
+        "${ACTS_TRACCC_BUILD_TESTS}"
+        ACTS_TRACCC_BUILD_TESTS
+    )
+    traccc_set_from_acts(
+        TRACCC_BUILD_EXAMPLES
+        "${ACTS_TRACCC_BUILD_EXAMPLES}"
+        ACTS_TRACCC_BUILD_EXAMPLES
+    )
     traccc_set_from_acts(
         TRACCC_ENABLE_NVTX_PROFILING
         "${ACTS_TRACCC_ENABLE_NVTX_PROFILING}"
+        ACTS_TRACCC_ENABLE_NVTX_PROFILING
     )
     traccc_set_from_acts(
         TRACCC_SUPPORTED_DETECTORS
         "${ACTS_TRACCC_SUPPORTED_DETECTORS}"
+        ACTS_TRACCC_SUPPORTED_DETECTORS
     )
 
-    traccc_set_from_acts(TRACCC_BUILD_SIMULATION OFF)
+    traccc_set_from_acts(
+        TRACCC_BUILD_SIMULATION
+        OFF
+        "ACTS_TRACCC_BUILD_TESTS and ACTS_TRACCC_BUILD_EXAMPLES"
+    )
     set_option_if(
         TRACCC_BUILD_SIMULATION
         TRACCC_BUILD_TESTING
@@ -189,13 +240,21 @@ else()
     )
 
     # Settings that follow the general ACTS options.
-    traccc_set_from_acts(TRACCC_USE_ROOT "${ACTS_BUILD_PLUGIN_ROOT}")
-    traccc_set_from_acts(TRACCC_FAIL_ON_WARNINGS OFF)
+    traccc_set_from_acts(
+        TRACCC_USE_ROOT
+        "${ACTS_BUILD_PLUGIN_ROOT}"
+        ACTS_BUILD_PLUGIN_ROOT
+    )
+    traccc_set_from_acts(TRACCC_FAIL_ON_WARNINGS OFF ACTS_FAIL_ON_WARNINGS)
     set_option_if(TRACCC_FAIL_ON_WARNINGS ACTS_FAIL_ON_WARNINGS)
 
     # Dependencies. ACTS sets up all of them, except for the ones below.
     traccc_set_from_acts(TRACCC_SETUP_VECMEM FALSE)
-    traccc_set_from_acts(TRACCC_USE_SYSTEM_VECMEM FALSE)
+    traccc_set_from_acts(
+        TRACCC_USE_SYSTEM_VECMEM
+        FALSE
+        ACTS_USE_SYSTEM_VECMEM
+    )
     # Only the examples and oneDPL need TBB. Build it if it is not available.
     traccc_set_from_acts(TRACCC_SETUP_TBB FALSE)
     if(TRACCC_BUILD_EXAMPLES OR TRACCC_BUILD_SYCL_UTILS)
@@ -218,12 +277,28 @@ else()
     traccc_set_from_acts(TRACCC_USE_SYSTEM_ROCTHRUST TRUE)
     traccc_set_from_acts(TRACCC_SETUP_DPL "${TRACCC_BUILD_SYCL_UTILS}")
     traccc_set_from_acts(TRACCC_USE_SYSTEM_DPL FALSE)
-    traccc_set_from_acts(TRACCC_SETUP_ALPAKA "${TRACCC_BUILD_ALPAKA}")
-    traccc_set_from_acts(TRACCC_USE_SYSTEM_ALPAKA FALSE)
+    traccc_set_from_acts(
+        TRACCC_SETUP_ALPAKA
+        "${TRACCC_BUILD_ALPAKA}"
+        ACTS_TRACCC_BUILD_ALPAKA
+    )
+    traccc_set_from_acts(
+        TRACCC_USE_SYSTEM_ALPAKA
+        "${ACTS_USE_SYSTEM_ALPAKA}"
+        ACTS_USE_SYSTEM_ALPAKA
+    )
     traccc_set_from_acts(TRACCC_SETUP_COVFIE FALSE)
-    traccc_set_from_acts(TRACCC_USE_SYSTEM_COVFIE FALSE)
+    traccc_set_from_acts(
+        TRACCC_USE_SYSTEM_COVFIE
+        FALSE
+        ACTS_USE_SYSTEM_COVFIE
+    )
     traccc_set_from_acts(TRACCC_SETUP_ACTS FALSE)
-    traccc_set_from_acts(TRACCC_SETUP_GOOGLETEST "${TRACCC_BUILD_TESTING}")
+    traccc_set_from_acts(
+        TRACCC_SETUP_GOOGLETEST
+        "${TRACCC_BUILD_TESTING}"
+        ACTS_TRACCC_BUILD_TESTS
+    )
     traccc_set_from_acts(TRACCC_USE_SYSTEM_GOOGLETEST FALSE)
 endif()
 
