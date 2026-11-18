@@ -53,7 +53,7 @@ class KalmanFittingTelescopeTests
 
   // Rectangle mask for the telescope geometry
   static constexpr detray::mask<detray::rectangle2D, traccc::default_algebra>
-      rectangle{0u, 100000.f, 100000.f};
+      rectangle{0u, -100000.f, -100000.f, 100000.f, 100000.f};
 
   /// Measurement smearing parameters
   static constexpr std::array<scalar, 2u> smearing{

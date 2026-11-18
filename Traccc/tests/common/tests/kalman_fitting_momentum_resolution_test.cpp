@@ -139,7 +139,8 @@ void KalmanFittingMomentumResolutionTests::SetUp() {
 
   constexpr scalar rect_half_length = 500.f;
   constexpr detray::mask<detray::rectangle2D, traccc::default_algebra>
-      rectangle{0u, rect_half_length, rect_half_length};
+      rectangle{0u, -rect_half_length, -rect_half_length, rect_half_length,
+                rect_half_length};
 
   detray::tel_det_config<default_algebra, detray::rectangle2D,
                          detray::detail::helix>

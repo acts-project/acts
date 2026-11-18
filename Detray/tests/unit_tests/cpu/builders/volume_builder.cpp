@@ -157,13 +157,15 @@ GTEST_TEST(detray_builders, surface_factory) {
   typename rectangle_factory::sf_data_collection rect_sf_data;
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, 0.f}), 1u,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_factory->push_back(std::move(rect_sf_data));
   rect_sf_data.clear();
 
   const auto& rectgl_comps = rect_factory->bounds().front().front();
-  EXPECT_NEAR(rectgl_comps[0], 10.f, tol);
-  EXPECT_NEAR(rectgl_comps[1], 8.f, tol);
+  EXPECT_NEAR(rectgl_comps[rectangle2D::e_min_x], -10.f, tol);
+  EXPECT_NEAR(rectgl_comps[rectangle2D::e_min_y], -8.f, tol);
+  EXPECT_NEAR(rectgl_comps[rectangle2D::e_max_x], 10.f, tol);
+  EXPECT_NEAR(rectgl_comps[rectangle2D::e_max_y], 8.f, tol);
 
   // ring
   using disc_factory = surface_factory<detector_t, ring2D>;
@@ -219,7 +221,7 @@ GTEST_TEST(detray_builders, volume_builder) {
   auto sf_factory = std::make_shared<rectangle_factory>();
   sf_factory->push_back({surface_id::e_sensitive,
                          transform3(point3{0.f, 0.f, -1.f}), 1u,
-                         std::vector<scalar>{10.f, 8.f}});
+                         std::vector<scalar>{-10.f, -8.f, 10.f, 8.f}});
 
   volume_builder<detector_t> vbuilder{volume_id::e_cylinder};
   vbuilder.add_surfaces(sf_factory);

@@ -161,7 +161,7 @@ GTEST_TEST(io, json_telescope_detector_reader) {
   using scalar = test::scalar;
 
   constexpr bool deduplicate{false};
-  mask<rectangle2D, test_algebra> rec2{0u, 100.f, 100.f};
+  mask<rectangle2D, test_algebra> rec2{0u, -100.f, -100.f, 100.f, 100.f};
 
   // Surface positions
   std::vector<scalar> positions = {1.f,   50.f,  100.f, 150.f, 200.f, 250.f,
@@ -198,7 +198,7 @@ GTEST_TEST(io, json_telescope_detector_reader_deduplicated) {
   using scalar = test::scalar;
 
   constexpr bool deduplicate{true};
-  mask<rectangle2D, test_algebra> rec2{0u, 100.f, 100.f};
+  mask<rectangle2D, test_algebra> rec2{0u, -100.f, -100.f, 100.f, 100.f};
 
   // Surface positions
   std::vector<scalar> positions = {1.f,   50.f,  100.f, 150.f, 200.f, 250.f,

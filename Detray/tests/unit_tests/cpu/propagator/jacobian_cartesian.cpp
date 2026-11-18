@@ -46,7 +46,7 @@ GTEST_TEST(detray_propagator, jacobian_cartesian2D) {
   const scalar charge{-1.f};
 
   const scalar h{2.f};
-  mask<rectangle2D, test_algebra> rect{0u, h, h};
+  mask<rectangle2D, test_algebra> rect{0u, -h, -h, h, h};
 
   // Free track parameter
   const free_track_parameters<test_algebra> free_params(global1, time, mom,

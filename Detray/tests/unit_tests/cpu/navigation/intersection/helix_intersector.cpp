@@ -103,7 +103,7 @@ GTEST_TEST(detray_intersection, helix_plane_intersector_no_bfield) {
   ASSERT_NEAR(hit_bound.local()[1], -1.f, tol);
 
   // The same test but bound to local frame & masked - inside
-  mask<rectangle2D, test_algebra> rect_for_inside{0u, 3.f, 3.f};
+  mask<rectangle2D, test_algebra> rect_for_inside{0u, -3.f, -3.f, 3.f, 3.f};
   const auto hit_bound_inside =
       pi(h, surface_descriptor<>{}, rect_for_inside, shifted, tol);
   ASSERT_TRUE(hit_bound_inside.is_inside());
@@ -118,7 +118,8 @@ GTEST_TEST(detray_intersection, helix_plane_intersector_no_bfield) {
   ASSERT_NEAR(hit_bound_inside.local()[1], -1.f, tol);
 
   // The same test but bound to local frame & masked - outside
-  mask<rectangle2D, test_algebra> rect_for_outside{0u, 0.5f, 3.5f};
+  mask<rectangle2D, test_algebra> rect_for_outside{0u, -0.5f, -3.5f, 0.5f,
+                                                   3.5f};
   const auto hit_bound_outside =
       pi(h, surface_descriptor<>{}, rect_for_outside, shifted, tol);
   ASSERT_FALSE(hit_bound_outside.is_inside());
@@ -142,8 +143,9 @@ GTEST_TEST(detray_intersection, helix_plane_intersector) {
   const transform3_t trf(trl, w, v);
 
   // Rectangle surface
-  const mask<rectangle2D, test_algebra> rectangle{0u, 10.f * unit<scalar>::cm,
-                                                  10.f * unit<scalar>::cm};
+  const mask<rectangle2D, test_algebra> rectangle{
+      0u, -10.f * unit<scalar>::cm, -10.f * unit<scalar>::cm,
+      10.f * unit<scalar>::cm, 10.f * unit<scalar>::cm};
 
   const helix_intersector<rectangle2D, test_algebra> hpi;
 
@@ -448,7 +450,8 @@ GTEST_TEST(detray_intersection, helix_plane_intersector_no_root_at_origin) {
   const vector3 x{1.f, 0.f, 0.f};
   const transform3_t trf(t, n, x);
 
-  const mask<rectangle2D, test_algebra> rectangle{0u, 19.3f, 20.1f};
+  const mask<rectangle2D, test_algebra> rectangle{0u, -19.3f, -20.1f, 19.3f,
+                                                  20.1f};
   const helix_intersector<rectangle2D, test_algebra> hpi;
 
   const auto is = hpi(h, surface_descriptor<>{}, rectangle, trf, tol);

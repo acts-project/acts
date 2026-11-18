@@ -256,6 +256,8 @@ inline auto build_telescope_detector(
     vecmem::memory_resource &resource,
     const tel_det_config<algebra_t, mask_shape_t, trajectory_t> &cfg =
         tel_det_config<algebra_t, mask_shape_t, trajectory_t>{
+            -20.f * unit<dscalar<algebra_t>>::mm,
+            -20.f * unit<dscalar<algebra_t>>::mm,
             20.f * unit<dscalar<algebra_t>>::mm,
             20.f * unit<dscalar<algebra_t>>::mm}) {
   using scalar_t = dscalar<algebra_t>;

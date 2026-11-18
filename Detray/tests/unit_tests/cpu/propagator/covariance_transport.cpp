@@ -66,8 +66,9 @@ GTEST_TEST(detray_propagator, covariance_transport) {
   detail::ray<test_algebra> traj{{0.f, 0.f, 0.f}, 0.f, {1.f, 0.f, 0.f}, -1.f};
   std::vector<scalar> positions = {0.f, 10.f, 20.f, 30.f, 40.f, 50.f, 60.f};
 
-  tel_det_config<test_algebra, rectangle2D> tel_cfg{200.f * unit<scalar>::mm,
-                                                    200.f * unit<scalar>::mm};
+  tel_det_config<test_algebra, rectangle2D> tel_cfg{
+      -200.f * unit<scalar>::mm, -200.f * unit<scalar>::mm,
+      200.f * unit<scalar>::mm, 200.f * unit<scalar>::mm};
   tel_cfg.positions(positions).pilot_track(traj);
 
   // Build telescope detector with unbounded planes

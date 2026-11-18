@@ -113,9 +113,10 @@ int main(int argc, char **argv) {
   // Options parsing
   po::options_description desc("\nTelescope detector generation options");
 
+  // Default values for rectangles: min_x, min_y, max_x, max_y
   std::vector<scalar> mask_params{
-      20.f * unit<scalar>::mm,
-      20.f * unit<scalar>::mm};  // < default values for rectangles
+      -20.f * unit<scalar>::mm, -20.f * unit<scalar>::mm,
+      20.f * unit<scalar>::mm, 20.f * unit<scalar>::mm};
   desc.add_options()("modules", po::value<unsigned int>()->default_value(10u),
                      "number of modules in telescope [1-20]")(
       "type", po::value<std::string>()->default_value("rectangle"),
