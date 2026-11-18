@@ -33,7 +33,7 @@ def run_detector_display(args, outdir):
 
     # Read the detector, but also display incorrect geometries for debugging
     reader_cfg = fill_reader_config(args, detray.io.DetectorReaderConfig())
-    reader_cfg.doCheck = False
+    reader_cfg.doCheck = True
     det, names = detray.io.readDetector(detray.core.HostMemoryResource(), reader_cfg)
 
     # Style settings for the illustrator

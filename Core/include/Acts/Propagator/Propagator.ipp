@@ -71,28 +71,10 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
   // priming error condition
   bool terminatedNormally = false;
 
-  const auto handleSurfaceReached = [&](const Surface& surface) {
-    if constexpr (Concepts::NavigatorHandleSurfaceReachedWithCurvature<N>) {
-      m_navigator.handleSurfaceReached(state.navigation, state.position,
-                                       state.direction, surface,
-                                       state.curvature);
-    } else {
-      m_navigator.handleSurfaceReached(state.navigation, state.position,
-                                       state.direction, surface);
-    }
-  };
-
   auto getNextTarget = [&]() -> Result<NavigationTarget> {
     for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
-      NavigationTarget nextTarget = [&] {
-        if constexpr (Concepts::NavigatorNextTargetWithCurvature<N>) {
-          return m_navigator.nextTarget(state.navigation, state.position,
-                                        state.direction, state.curvature);
-        } else {
-          return m_navigator.nextTarget(state.navigation, state.position,
-                                        state.direction);
-        }
-      }();
+      NavigationTarget nextTarget = m_navigator.nextTarget(
+          state.navigation, state.position, state.direction, state.curvature);
       if (nextTarget.isNone()) {
         return NavigationTarget::None();
       }
@@ -178,7 +160,9 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
         if (auto update = updateNavigationState(state); !update.ok()) {
           return update.error();
         }
-        handleSurfaceReached(nextTarget.surface());
+        m_navigator.handleSurfaceReached(state.navigation, state.position,
+                                         state.direction, nextTarget.surface(),
+                                         state.curvature);
       }
       if (postStepSurfaceStatus != IntersectionStatus::reachable) {
         nextTarget = NavigationTarget::None();
@@ -207,16 +191,9 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     // Pre-Stepping: target setting
     state.stage = PropagatorStage::preStep;
 
-    const auto checkTargetValid = [&] {
-      if constexpr (Concepts::NavigatorCheckTargetValidWithCurvature<N>) {
-        return m_navigator.checkTargetValid(state.navigation, state.position,
-                                            state.direction, state.curvature);
-      } else {
-        return m_navigator.checkTargetValid(state.navigation, state.position,
-                                            state.direction);
-      }
-    };
-    if (!nextTarget.isNone() && !checkTargetValid()) {
+    if (!nextTarget.isNone() &&
+        !m_navigator.checkTargetValid(state.navigation, state.position,
+                                      state.direction, state.curvature)) {
       ACTS_VERBOSE("Target is not valid anymore.");
       nextTarget = NavigationTarget::None();
     }
