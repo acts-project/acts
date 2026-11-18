@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
     TRACCC_INFO("Reading truth data in " << input_opts.directory << "\n");
   }
 
-  detray::propagation_validation_config<float> test_cfg{};
+  detray::propagation_validation_config<traccc::scalar> test_cfg{};
   traccc::seed_generator<host_detector_t>::config smearing_cfg{};
 
   // Specific config for the navigation test
