@@ -287,8 +287,20 @@ legacy diagonal update and includes material-physics and noise-mapping work. Leg
 @ref Acts::MaterialInteraction::sigmaTheta2 remain global angular diagnostics;
 nonzero scattering at a global pole has infinite phi variance.
 
-@ref Acts::GainMatrixUpdater resolves the bound parametrization from the track
-state's reference surface and the supplied geometry context. It forms the
+The updater delegates of the Kalman fitter and CKF
+(`KalmanFitterExtensions::Updater`), the GSF (`GsfExtensions::Updater`),
+GX2F (`Experimental::Gx2FitterExtensions::Updater`) and
+`Experimental::ReferenceTrajectoryBuilder::Updater` take the bound
+parametrization of the track state's reference surface after the geometry
+context:
+`Result<void>(const GeometryContext&, const BoundParametrization&,
+TrackStateProxy, const Logger&)`. The fitter, which knows the surface, resolves
+it once per surface and passes it on. Custom updaters must accept the extra
+parameter; the geometry context is still passed.
+
+@ref Acts::GainMatrixUpdater uses the passed bound parametrization; debug
+builds assert that it matches the track state's reference surface in the
+supplied geometry context. It forms the
 measurement innovation using coordinate differences and evaluates chi2 in the
 original measurement basis. Parameters and covariance are canonicalized together,
 so folding theta also changes its covariance cross terms. Both the standard

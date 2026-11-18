@@ -34,6 +34,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <cassert>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -725,8 +726,12 @@ class CombinatorialKalmanFilter {
       if (tsRes.ok() && !(*tsRes).empty()) {
         const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList =
             *tsRes;
+        // Track states are only created on sensitive surfaces, which are never
+        // material-only, so the covariance is anchored on this surface.
+        assert(isSensitive && !isMaterialOnly);
         const Result<unsigned int> procRes =
-            processNewTrackStates(state, stepper, newTrackStateList, result);
+            processNewTrackStates(state, stepper, newTrackStateList,
+                                  covarianceParametrization, result);
         if (!procRes.ok()) {
           ACTS_DEBUG("Processing of selected track states failed: "
                      << procRes.error().message());
@@ -818,8 +823,9 @@ class CombinatorialKalmanFilter {
         // Update stepping state using filtered parameters of last track
         // state on this surface
         updateStepper(state, stepper, currentState);
-        covarianceParametrization =
-            surface.boundParametrization(state.options.geoContext);
+        // Measurements only exist on sensitive surfaces, whose covariance is
+        // already anchored on the surface parametrization.
+        assert(isSensitive && !isMaterialOnly);
         ACTS_VERBOSE("Stepping state is updated with filtered parameter:");
         ACTS_VERBOSE("-> " << currentState.filtered().transpose()
                            << " of track state with tip = "
@@ -851,12 +857,14 @@ class CombinatorialKalmanFilter {
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
     /// @param newTrackStateList index list of new track states
+    /// @param parametrization Bound parametrization of the current surface
     /// @param result which contains among others the new states, and the list of active branches
     /// @return the number of newly added branches or an error
     template <typename propagator_state_t, typename stepper_t>
     Result<unsigned int> processNewTrackStates(
         propagator_state_t& state, const stepper_t& stepper,
         const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList,
+        const BoundParametrization& parametrization,
         result_type& result) const {
       using PM = TrackStatePropMask;
 
@@ -901,7 +909,8 @@ class CombinatorialKalmanFilter {
           // Allocate the filtered parameters right before they are written
           trackState.addComponents(PM::Filtered);
           // Kalman update
-          const auto updateRes = kalmanUpdate(state, stepper, trackState);
+          const auto updateRes =
+              kalmanUpdate(state, stepper, parametrization, trackState);
           if (!updateRes.ok()) {
             ACTS_DEBUG("Update step failed: " << updateRes.error().message());
             return updateRes.error();
@@ -1097,9 +1106,11 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> kalmanUpdate(propagator_state_t& state,
                               const stepper_t& stepper,
+                              const BoundParametrization& parametrization,
                               TrackStateProxy& trackState) const {
       if constexpr (!IsMultiStepper) {
-        return extensions.updater(state.geoContext, trackState, *updaterLogger);
+        return extensions.updater(state.geoContext, parametrization, trackState,
+                                  *updaterLogger);
       } else {
         using PrtProjector = detail::Gsf::MultiTrajectoryProjector<
             detail::Gsf::StatesType::ePredicted, TrackStateContainerBackend>;
@@ -1155,8 +1166,9 @@ class CombinatorialKalmanFilter {
           // Allocate the filtered parameters right before they are written
           trackStateProxy.addComponents(TrackStatePropMask::Filtered);
 
-          const auto updateRes = extensions.updater(
-              state.geoContext, trackStateProxy, *updaterLogger);
+          const auto updateRes =
+              extensions.updater(state.geoContext, parametrization,
+                                 trackStateProxy, *updaterLogger);
           if (!updateRes.ok()) {
             return updateRes.error();
           }

@@ -387,6 +387,10 @@ struct GsfActor {
     std::vector<TrackIndexType> allTips;
     allTips.reserve(stepper.numberComponents(state.stepping));
 
+    // All components are bound to the same surface
+    const BoundParametrization parametrization =
+        surface.boundParametrization(state.options.geoContext);
+
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
@@ -434,8 +438,8 @@ struct GsfActor {
         // Allocate the filtered parameters right before they are written
         trackStateProxy.addComponents(TrackStatePropMask::Filtered);
         // Run Kalman update
-        auto updateRes = m_cfg.extensions.updater(state.geoContext,
-                                                  trackStateProxy, logger());
+        auto updateRes = m_cfg.extensions.updater(
+            state.geoContext, parametrization, trackStateProxy, logger());
         if (!updateRes.ok()) {
           ACTS_DEBUG("Update step failed: " << updateRes.error());
           return updateRes.error();

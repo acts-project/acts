@@ -23,8 +23,8 @@ namespace Acts {
 
 template <std::size_t N>
 Result<void> GainMatrixUpdater::visitMeasurementImpl(
-    const GeometryContext& gctx, AnyMutableTrackStateProxy trackState,
-    const Logger& logger) const {
+    const BoundParametrization& parametrization,
+    AnyMutableTrackStateProxy trackState, const Logger& logger) const {
   constexpr std::size_t kMeasurementSize = N;
   using ProjectedVector = Vector<kMeasurementSize>;
   using ProjectedMatrix = SquareMatrix<kMeasurementSize>;
@@ -50,11 +50,6 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
 
   const auto predicted = trackState.predicted();
   const auto predictedCovariance = trackState.predictedCovariance();
-  const auto parametrization =
-      trackState.hasReferenceSurface()
-          ? trackState.referenceSurface().boundParametrization(gctx)
-          : BoundParametrization::globalSpherical();
-
   // The facade interprets periodic direction residuals in the measured
   // subspace, as if the measurement were embedded in the predicted state.
   const ProjectedVector innovation = parametrization.subspaceDifference(
@@ -111,8 +106,8 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
 
 #define _EXTERN(N)                                                         \
   extern template Result<void> GainMatrixUpdater::visitMeasurementImpl<N>( \
-      const GeometryContext& gctx, AnyMutableTrackStateProxy trackState,   \
-      const Logger& logger) const
+      const BoundParametrization& parametrization,                         \
+      AnyMutableTrackStateProxy trackState, const Logger& logger) const
 
 _EXTERN(1);
 _EXTERN(2);

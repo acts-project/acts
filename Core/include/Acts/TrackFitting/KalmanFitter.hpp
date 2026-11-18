@@ -54,9 +54,11 @@ struct KalmanFitterExtensions {
       Delegate<void(const GeometryContext&, const CalibrationContext&,
                     const SourceLink&, TrackStateProxy)>;
 
-  /// Type alias for Kalman filter update delegate
-  using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        const Logger&)>;
+  /// Type alias for Kalman filter update delegate. The caller passes the
+  /// bound parametrization of the track state's reference surface.
+  using Updater =
+      Delegate<Result<void>(const GeometryContext&, const BoundParametrization&,
+                            TrackStateProxy, const Logger&)>;
 
   /// Type alias for outlier detection delegate
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
@@ -463,6 +465,10 @@ class KalmanFitter {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface.geometryId()
                                             << " detected.");
+        // Interpretation of the bound coordinates on this surface, resolved
+        // once for the material effects and the Kalman update.
+        const BoundParametrization parametrization =
+            surface.boundParametrization(state.options.geoContext);
         // Transport the covariance to the surface
         auto transportRes = stepper.transportToBound(state.stepping, surface,
                                                      freeToBoundCorrection);
@@ -473,8 +479,7 @@ class KalmanFitter {
         // Update state and stepper with pre material effects
         const Result<detail::PointwiseMaterialEffects>
             materialInteractionPreRes = detail::performMaterialInteraction(
-                state, stepper, surface,
-                surface.boundParametrization(state.options.geoContext),
+                state, stepper, surface, parametrization,
                 detail::determineMaterialUpdateMode(
                     state, navigator, MaterialUpdateMode::PreUpdate),
                 NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
@@ -540,8 +545,8 @@ class KalmanFitter {
           // Allocate the filtered parameters right before they are written
           trackStateProxy.addComponents(TrackStatePropMask::Filtered);
           // Run Kalman update
-          auto updateRes =
-              extensions.updater(state.geoContext, trackStateProxy, logger());
+          auto updateRes = extensions.updater(state.geoContext, parametrization,
+                                              trackStateProxy, logger());
           if (!updateRes.ok()) {
             ACTS_DEBUG("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -579,8 +584,7 @@ class KalmanFitter {
         // Update state and stepper with post material effects
         const Result<detail::PointwiseMaterialEffects>
             materialInteractionPostRes = detail::performMaterialInteraction(
-                state, stepper, surface,
-                surface.boundParametrization(state.options.geoContext),
+                state, stepper, surface, parametrization,
                 detail::determineMaterialUpdateMode(
                     state, navigator, MaterialUpdateMode::PostUpdate),
                 NoiseUpdateMode::addNoise, multipleScattering, energyLoss,

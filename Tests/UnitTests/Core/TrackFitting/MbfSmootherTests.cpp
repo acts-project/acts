@@ -185,9 +185,11 @@ BOOST_AUTO_TEST_CASE(MbfAgreesWithRtsAcrossCoordinateBranches) {
                                     ? (phiSeam ? -std::numbers::pi + 0.1 : -1.)
                                     : (phiSeam ? 1.1 : 0.25);
         ts.calibratedCovariance<1>()(0, 0) = 1.;
-        BOOST_REQUIRE(GainMatrixUpdater()
-                          .operator()<VectorMultiTrajectory>(tgContext, ts)
-                          .ok());
+        BOOST_REQUIRE(
+            GainMatrixUpdater()
+                .operator()<VectorMultiTrajectory>(
+                    tgContext, surface->boundParametrization(tgContext), ts)
+                .ok());
         previous = index;
       }
       return trajectory;

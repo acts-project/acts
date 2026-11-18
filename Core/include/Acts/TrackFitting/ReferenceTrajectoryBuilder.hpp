@@ -464,9 +464,11 @@ class ReferenceTrajectoryBuilder {
     }
   }
 
-  /// Filter interface
-  using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        const Logger&)>;
+  /// Filter interface. The updater receives the bound parametrization of the
+  /// track state's reference surface.
+  using Updater =
+      Delegate<Result<void>(const GeometryContext&, const BoundParametrization&,
+                            TrackStateProxy, const Logger&)>;
 
   /// Update the track states in the trajectory using the provided updater. The
   /// updater is called for each track state that has a measurement.
@@ -542,8 +544,7 @@ class ReferenceTrajectoryBuilder {
                   freeParams[eFreeQOverP], true, true, true);
 
           const auto noise = detail::scatteringNoise(
-              trackState.referenceSurface().boundParametrization(geoContext),
-              freeParams.segment<3>(eFreeDir0),
+              parametrization, freeParams.segment<3>(eFreeDir0),
               materialEffects.scatteringVariance);
           if (!noise.ok()) {
             return noise.error();
@@ -563,7 +564,7 @@ class ReferenceTrajectoryBuilder {
         trackState.addComponents(TrackStatePropMask::Filtered);
 
         const Result<void> updateResult =
-            updater(geoContext, trackState, logger());
+            updater(geoContext, parametrization, trackState, logger());
         if (!updateResult.ok()) {
           ACTS_DEBUG("Error in filter: " << updateResult.error());
           return updateResult.error();
@@ -604,8 +605,7 @@ class ReferenceTrajectoryBuilder {
                 freeParams[eFreeQOverP], true, true, true);
 
         const auto noise = detail::scatteringNoise(
-            trackState.referenceSurface().boundParametrization(geoContext),
-            freeParams.segment<3>(eFreeDir0),
+            parametrization, freeParams.segment<3>(eFreeDir0),
             materialEffects.scatteringVariance);
         if (!noise.ok()) {
           return noise.error();
