@@ -161,7 +161,6 @@ option(ACTS_TRACCC_BUILD_TESTS "Build the traccc unit tests" ${ACTS_BUILD_UNITTE
 option(ACTS_TRACCC_BUILD_EXAMPLES "Build the traccc examples" ${ACTS_BUILD_EXAMPLES})
 option(ACTS_TRACCC_ENABLE_NVTX_PROFILING "Instrument the traccc device code for NVTX profiling" OFF)
 set(ACTS_TRACCC_SUPPORTED_DETECTORS "default_detector;odd_detector;telescope_detector" CACHE STRING "Semicolon-separated list of detector types that traccc supports")
-set(ACTS_TRACCC_SCALAR_TYPE "float" CACHE STRING "Scalar type to use in the traccc code")
 set(ACTS_TRACCC_DEVICE_LOG_LEVEL "NONE" CACHE STRING "Log level for traccc and detray device code")
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)

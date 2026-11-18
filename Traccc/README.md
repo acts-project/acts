@@ -220,11 +220,24 @@ git clone https://github.com/acts-project/acts.git
 > with `-DACTS_BUILD_TRACCC=ON` and the `ACTS_TRACCC_*` options described in
 > the [ACTS build documentation](../docs/pages/contributing/building_acts.md).
 
+#### As part of ACTS
+
+```sh
+cmake -S acts/ -B acts-build -DACTS_BUILD_TRACCC=ON [options]
+cmake --build acts-build/
+```
+
+Enable the native device libraries with `-DACTS_TRACCC_BUILD_CUDA=ON` (this
+needs `-DACTS_ENABLE_CUDA=ON`), `-DACTS_TRACCC_BUILD_HIP=ON` or
+`-DACTS_TRACCC_BUILD_SYCL=ON`.
+
 In an ACTS build, enable Alpaka with `-DACTS_TRACCC_BUILD_ALPAKA=ON` and
 select HIP with `-Dalpaka_ACC_GPU_HIP_ENABLE=ON` or SYCL with
 `-Dalpaka_ACC_SYCL_ENABLE=ON`. These selections enable the corresponding
 backend utilities and dependencies. The native `traccc::hip` and
 `traccc::sycl` libraries are optional.
+
+#### Standalone (deprecated)
 
 ```sh
 cmake --preset <preset> [options] -S acts/Traccc/ -B traccc-build

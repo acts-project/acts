@@ -13,6 +13,15 @@ project(traccc VERSION 1.6.0 LANGUAGES CXX)
 # Standard CMake include(s).
 include(GNUInstallDirs)
 
+# Nothing reads TRACCC_CUSTOM_SCALARTYPE, so a value for it would be ignored.
+if(DEFINED TRACCC_CUSTOM_SCALARTYPE)
+    message(
+        FATAL_ERROR
+        "TRACCC_CUSTOM_SCALARTYPE has no effect. The scalar type of traccc "
+        "is set with DETRAY_CUSTOM_SCALARTYPE."
+    )
+endif()
+
 if(PROJECT_IS_TOP_LEVEL)
     message(
         DEPRECATION
@@ -67,13 +76,6 @@ if(PROJECT_IS_TOP_LEVEL)
         "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
         CACHE PATH
         "Directory for the built static libraries"
-    )
-
-    # Temporary setting for the traccc::scalar type, until it can be removed.
-    set(TRACCC_CUSTOM_SCALARTYPE
-        "float"
-        CACHE STRING
-        "Scalar type to use in the TRACCC code"
     )
 
     # Temporary setting for the traccc device log level, until it can be removed.
@@ -176,11 +178,6 @@ else()
     traccc_set_from_acts(
         TRACCC_SUPPORTED_DETECTORS
         "${ACTS_TRACCC_SUPPORTED_DETECTORS}"
-    )
-    traccc_set_from_acts(TRACCC_CUSTOM_SCALARTYPE "${ACTS_TRACCC_SCALAR_TYPE}")
-    traccc_set_from_acts(
-        TRACCC_DEVICE_LOG_LVL
-        "${ACTS_TRACCC_DEVICE_LOG_LEVEL}"
     )
 
     traccc_set_from_acts(TRACCC_BUILD_SIMULATION OFF)
