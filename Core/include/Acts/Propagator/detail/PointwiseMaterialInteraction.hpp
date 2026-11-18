@@ -289,8 +289,24 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
   const double nextQOverP =
       particleHypothesis.qOverP(nextP, std::copysign(absQ, qOverP));
 
-  // Validate noise removal before committing either momentum or covariance.
   auto covariance = stepper.covariance(state.stepping);
+
+  if (noiseUpdateMode == NoiseUpdateMode::addNoise) {
+    // Adding positive-semidefinite noise cannot fail, so nothing needs to be
+    // validated before committing. This performs the same operations, in the
+    // same order, as updateMaterialCovariance with addNoise.
+    stepper.update(state.stepping, position, direction, nextQOverP, time);
+    if (covariance.has_value()) {
+      assert(std::isfinite(effects.varianceQoverP) &&
+             effects.varianceQoverP >= 0.);
+      covariance->template block<2, 2>(eBoundDir0, eBoundDir0) += *noise;
+      (*covariance)(eBoundQOverP, eBoundQOverP) += effects.varianceQoverP;
+      stepper.setCovariance(state.stepping, *covariance);
+    }
+    return effects;
+  }
+
+  // Validate noise removal before committing either momentum or covariance.
   if (covariance.has_value()) {
     const auto updateResult = updateMaterialCovariance(
         *covariance, *noise, effects.varianceQoverP, noiseUpdateMode);

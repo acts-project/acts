@@ -146,6 +146,82 @@ BOOST_AUTO_TEST_CASE(MaterialFailurePreservesState) {
   BOOST_CHECK(stepper.covariance(state.stepping)->isApprox(covariance, 1e-12));
 }
 
+BOOST_AUTO_TEST_CASE(AddNoiseMatchesCheckedUpdate) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const MagneticFieldContext mctx;
+  const StraightLineStepper stepper;
+  const StraightLineStepper::Options options(gctx, mctx);
+  struct State {
+    struct {
+      Direction direction = Direction::Forward();
+    } options;
+    StraightLineStepper::State stepping;
+  };
+  State state{{}, stepper.makeState(options)};
+  const auto surface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity());
+  const auto parametrization = surface->boundParametrization(gctx);
+  BoundMatrix covariance = BoundMatrix::Identity();
+  covariance(eBoundDir0, eBoundDir1) = covariance(eBoundDir1, eBoundDir0) =
+      0.25;
+  covariance(eBoundDir0, eBoundQOverP) = covariance(eBoundQOverP, eBoundDir0) =
+      -0.125;
+  covariance(eBoundLoc0, eBoundDir1) = covariance(eBoundDir1, eBoundLoc0) =
+      0.0625;
+  stepper.initialize(
+      state.stepping,
+      BoundTrackParameters(surface, BoundVector(0., 0., 0.3, 1.2, 0.1, 0.),
+                           covariance, ParticleHypothesis::pion()));
+  const Vector3 position(1., -2., 3.);
+  const Vector3 direction = Vector3(3., 4., 5.).normalized();
+  const double time = 7.;
+  stepper.update(state.stepping, position, direction, 0.1, time);
+  const double momentum = stepper.absoluteMomentum(state.stepping);
+  const MaterialSlab slab(makeSilicon(), 1.);
+
+  // Reference: the checked covariance update on the same inputs.
+  const auto effects =
+      detail::computeMaterialEffects(state, stepper, slab, true, true);
+  const auto noise = detail::scatteringNoise(parametrization, direction,
+                                             effects.scatteringVariance);
+  BOOST_REQUIRE(noise.ok());
+  BoundMatrix expected = covariance;
+  BOOST_REQUIRE(detail::updateMaterialCovariance(expected, *noise,
+                                                 effects.varianceQoverP,
+                                                 NoiseUpdateMode::addNoise)
+                    .ok());
+
+  const auto added =
+      detail::performMaterialInteraction(state, stepper, slab, parametrization,
+                                         NoiseUpdateMode::addNoise, true, true);
+  BOOST_REQUIRE(added.ok());
+  BOOST_CHECK_EQUAL(added->eLoss, effects.eLoss);
+  BOOST_CHECK_EQUAL(added->scatteringVariance, effects.scatteringVariance);
+  BOOST_CHECK_EQUAL(added->varianceQoverP, effects.varianceQoverP);
+  // Bitwise equal to the checked path, including untouched correlations.
+  BOOST_CHECK_EQUAL(*stepper.covariance(state.stepping), expected);
+  BOOST_CHECK_LT(stepper.absoluteMomentum(state.stepping), momentum);
+  BOOST_CHECK_EQUAL(stepper.position(state.stepping), position);
+  BOOST_CHECK_EQUAL(stepper.direction(state.stepping), direction);
+  BOOST_CHECK_EQUAL(stepper.time(state.stepping), time);
+
+  // At an exact pole the add-noise path still fails before modifying anything.
+  stepper.update(state.stepping, position, -Vector3::UnitZ(), 0.1, time);
+  state.stepping.cov = covariance;
+  const double poleMomentum = stepper.absoluteMomentum(state.stepping);
+  const auto pole =
+      detail::performMaterialInteraction(state, stepper, slab, parametrization,
+                                         NoiseUpdateMode::addNoise, true, true);
+  BOOST_REQUIRE(!pole.ok());
+  BOOST_CHECK(pole.error() == BoundParametrizationError::SingularDirection);
+  BOOST_CHECK_EQUAL(stepper.absoluteMomentum(state.stepping), poleMomentum);
+  BOOST_CHECK_EQUAL(stepper.position(state.stepping), position);
+  BOOST_CHECK_EQUAL(stepper.direction(state.stepping),
+                    (-Vector3::UnitZ()).eval());
+  BOOST_CHECK_EQUAL(stepper.time(state.stepping), time);
+  BOOST_CHECK_EQUAL(*stepper.covariance(state.stepping), covariance);
+}
+
 BOOST_AUTO_TEST_CASE(CorrelatedMaterialNoise) {
   BoundMatrix covariance = BoundMatrix::Identity();
   Matrix<2, 2> noise;
