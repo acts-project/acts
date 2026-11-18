@@ -26,13 +26,8 @@ Acts::AlignmentToBoundMatrix alignmentToBoundDerivative(
   if (structureTransform != nullptr) {
     const Acts::Transform3& surfaceTransform =
         surface.localToGlobalTransform(gctx);
-    // Surface and structure parameters use their respective local frames.
-    // The convention adapter is identity; convert frames before selecting DoFs.
-    derivative = (derivative *
-                  Acts::detail::localFrameToAlignmentParametersJacobian(
-                      surfaceTransform) *
-                  Acts::detail::compositeToComponentJacobian(
-                      *structureTransform, surfaceTransform))
+    derivative = (derivative * Acts::detail::compositeToComponentJacobian(
+                                   *structureTransform, surfaceTransform))
                      .eval();
   }
   resetAlignmentDerivative(derivative, mask);

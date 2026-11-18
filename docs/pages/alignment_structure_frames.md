@@ -15,8 +15,7 @@ structure's local axes to global axes. Structure corrections and surface
 alignment parameters both use local translations and local rotations, each in
 their own frame. `Acts::detail::compositeToComponentJacobian` maps structure
 corrections to the member surface's local parameters, including the rotation
-lever arm. `Acts::detail::localFrameToAlignmentParametersJacobian` is identity
-under this convention.
+lever arm.
 
 Every frame returned by `localToGlobalTransform(gctx)` maps structure-local
 coordinates to global coordinates, including for child structures. This return
@@ -151,15 +150,12 @@ if (owner != nullptr) {
 }
 ```
 
-The helper starts with the unmasked surface derivative, applies
-`localFrameToAlignmentParametersJacobian(surfaceTransform)` and then
-`compositeToComponentJacobian(currentFrame, surfaceTransform)`, and finally
-masks columns in structure coordinates. Masking surface columns before the
-conversion would incorrectly remove contributions to rotated structure axes.
-The convention adapter is identity because surface alignment parameters use
-local translations and rotations. The product therefore reduces to the local
-surface derivative times the composite Jacobian. With no structure frame, the
-helper retains the existing standalone-module derivative and mask convention.
+The helper multiplies the unmasked surface derivative by
+`compositeToComponentJacobian(currentFrame, surfaceTransform)` and then masks
+columns in structure coordinates. Masking surface columns before the conversion
+would incorrectly remove contributions to rotated structure axes. With no
+structure frame, the helper retains the existing standalone-module derivative
+and mask convention.
 
 This helper does not activate structure solving. The native solver still uses
 module indexing and calls it without a structure frame. Shared parameter

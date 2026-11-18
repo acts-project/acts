@@ -230,13 +230,10 @@ BOOST_AUTO_TEST_CASE(StructureDerivativeMaskAfterConversion) {
       gctx, position, fixture.direction, fixture.pathDerivative);
   AlignmentToBoundMatrix prematureMask = raw;
   ActsAlignment::detail::resetAlignmentDerivative(prematureMask, mask);
-  const AlignmentMatrix adapter =
-      Acts::detail::localFrameToAlignmentParametersJacobian(
-          fixture.frames.surface);
   const AlignmentMatrix composite =
       Acts::detail::compositeToComponentJacobian(frame, fixture.frames.surface);
-  const Vector2 wronglyMasked = -fixture.projector * prematureMask * adapter *
-                                composite.col(eAlignmentCenter0);
+  const Vector2 wronglyMasked =
+      -fixture.projector * prematureMask * composite.col(eAlignmentCenter0);
   AlignmentMatrix obsoleteAdapter = AlignmentMatrix::Identity();
   obsoleteAdapter.block<3, 3>(eAlignmentCenter0, eAlignmentCenter0) =
       fixture.frames.surface.rotation();
