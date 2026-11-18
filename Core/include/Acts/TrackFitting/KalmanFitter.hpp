@@ -289,7 +289,7 @@ class KalmanFitter {
     using result_type = KalmanFitterResult<traj_t>;
 
     /// The target surface aborter
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+    SurfaceReached targetReached;
 
     /// Allows retrieving measurements for a surface
     std::unordered_map<const Surface*, SourceLink> inputMeasurements;
@@ -809,12 +809,13 @@ class KalmanFitter {
             TrackContainerFrontend track_container_t>
   auto filter_impl(const BoundTrackParameters& sParameters,
                    const propagator_options_t& propagatorOptions,
+                   const Surface* targetSurface,
                    track_container_t& trackContainer) const
       -> Result<typename track_container_t::TrackProxy> {
     auto propagatorState = m_propagator.makeState(propagatorOptions);
 
     auto propagatorInitResult =
-        m_propagator.initialize(propagatorState, sParameters, nullptr);
+        m_propagator.initialize(propagatorState, sParameters, targetSurface);
     if (!propagatorInitResult.ok()) {
       ACTS_DEBUG("Propagation initialization failed: "
                  << propagatorInitResult.error());
@@ -884,8 +885,8 @@ class KalmanFitter {
     auto forwardPropagatorOptions =
         make_propagator_options(it, end, kfOptions, sSequence, nullptr, false);
 
-    auto forwardFilterResult =
-        filter_impl(sParameters, forwardPropagatorOptions, trackContainer);
+    auto forwardFilterResult = filter_impl(
+        sParameters, forwardPropagatorOptions, nullptr, trackContainer);
 
     if (!forwardFilterResult.ok()) {
       ACTS_DEBUG("KalmanFilter failed: "
@@ -921,8 +922,9 @@ class KalmanFitter {
           kfOptions.reverseFilteringCovarianceScaling;
       auto reversePropagatorOptions = make_propagator_options(
           it, end, kfOptions, sSequence, kfOptions.referenceSurface, true);
-      auto reverseFilterResult = filter_impl(
-          reverseStartParameters, reversePropagatorOptions, trackContainer);
+      auto reverseFilterResult =
+          filter_impl(reverseStartParameters, reversePropagatorOptions,
+                      kfOptions.referenceSurface, trackContainer);
 
       if (!reverseFilterResult.ok()) {
         ACTS_DEBUG("Reversed KalmanFilter failed: "

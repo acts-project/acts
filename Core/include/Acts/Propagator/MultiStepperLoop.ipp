@@ -78,9 +78,8 @@ auto MultiStepperLoop<S, R>::transportToBound(
   for (std::size_t i = 0; i < state.components.size(); ++i) {
     auto& cmpState = state.components[i].state;
 
-    // Force the component onto the surface. `MultiStepperSurfaceReached` can
-    // end the propagation once the mean of the components reached the surface,
-    // so a single component is not necessarily on it.
+    // The surface counts as reached once every component is on it within the
+    // surface tolerance. Project the component onto it exactly.
     cmpState.pars.template segment<3>(eFreePos0) =
         surface
             .intersect(state.options.geoContext,
@@ -135,6 +134,12 @@ Result<double> MultiStepperLoop<S, R>::step(
       removeMissedComponents(state);
       reweightComponents(state);
       //! [step limit]
+
+      // No component is on a surface, e.g. if the navigator dropped the target
+      if (components.empty()) {
+        ACTS_DEBUG("No components left after removing missed components");
+        return MultiStepperError::NoComponentsLeft;
+      }
 
       ACTS_VERBOSE(components.size()
                    << " components left after removing missed components");

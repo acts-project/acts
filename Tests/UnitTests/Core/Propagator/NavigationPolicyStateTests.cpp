@@ -511,7 +511,7 @@ class LegacyNavigator : public DirectNavigator {
  public:
   NavigationTarget nextTarget(State& state, const Vector3& position,
                               const Vector3& direction) const;
-  bool checkTargetValid(const State& state, const Vector3& position,
+  bool checkTargetValid(State& state, const Vector3& position,
                         const Vector3& direction) const;
   void handleSurfaceReached(State& state, const Vector3& position,
                             const Vector3& direction,
