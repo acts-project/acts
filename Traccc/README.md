@@ -214,6 +214,14 @@ git clone https://github.com/acts-project/acts.git
 
 ### Build the project
 
+> [!WARNING]
+> Building traccc as a standalone project is deprecated, and support for it
+> will be removed in a future version. Build traccc as part of ACTS instead,
+> with `-DACTS_BUILD_TRACCC=ON` and the `ACTS_TRACCC_*` options described in
+> the [ACTS build documentation](../docs/pages/contributing/building_acts.md).
+> The HIP and SYCL back-ends do not build as part of ACTS yet, so they still
+> need the standalone build below.
+
 ```sh
 cmake --preset <preset> [options] -S acts/Traccc/ -B traccc-build
 cmake --build traccc-build/

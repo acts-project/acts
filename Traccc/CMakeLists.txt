@@ -180,7 +180,7 @@ else()
     # Settings that follow the general ACTS options.
     traccc_set_from_acts(TRACCC_USE_ROOT "${ACTS_BUILD_PLUGIN_ROOT}")
     traccc_set_from_acts(TRACCC_FAIL_ON_WARNINGS OFF)
-    set_option_if(TRACCC_FAIL_ON_WARNINGS CMAKE_COMPILE_WARNING_AS_ERROR)
+    set_option_if(TRACCC_FAIL_ON_WARNINGS ACTS_FAIL_ON_WARNINGS)
 
     # Dependencies. ACTS sets up all of them, except for the ones below.
     traccc_set_from_acts(TRACCC_SETUP_VECMEM FALSE)
@@ -195,7 +195,6 @@ else()
     endif()
     traccc_set_from_acts(TRACCC_USE_SYSTEM_TBB FALSE)
     traccc_set_from_acts(TRACCC_SETUP_THRUST TRUE)
-    traccc_set_from_acts(TRACCC_USE_SYSTEM_THRUST FALSE)
     traccc_set_from_acts(TRACCC_SETUP_ROCTHRUST FALSE)
     traccc_set_from_acts(TRACCC_USE_SYSTEM_ROCTHRUST FALSE)
     traccc_set_from_acts(TRACCC_SETUP_DPL "${TRACCC_BUILD_SYCL}")

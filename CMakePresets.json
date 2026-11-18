@@ -63,7 +63,6 @@
                 "CMAKE_FIND_FRAMEWORK": "LAST",
                 "ACTS_FAIL_ON_WARNINGS": "ON",
                 "DETRAY_FAIL_ON_WARNINGS": "ON",
-                "TRACCC_FAIL_ON_WARNINGS": "ON",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_BENCHMARKS": "ON",
