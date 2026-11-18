@@ -214,11 +214,7 @@ detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
   Vector3 pc = position - ccenter;
   Vector3 pcXcd = pc.cross(caxis);
   Vector3 ldXcd = direction.cross(caxis);
-  double a = ldXcd.dot(ldXcd);
-  double b = 2. * (ldXcd.dot(pcXcd));
-  double c = pcXcd.dot(pcXcd) - (R * R);
-  // And solve the qaudratic equation
-  return detail::RealQuadraticEquation(a, b, c);
+  return detail::CylinderHelper::intersectionSolver(pcXcd, ldXcd, R);
 }
 
 MultiIntersection3D CylinderSurface::intersect(
@@ -300,10 +296,8 @@ MultiIntersection3D CylinderSurface::intersect(
       transform.linear().transpose() * (position - transform.translation());
   const Vector3 localDirection = transform.linear().transpose() * direction;
   const Vector3 localCurvature = transform.linear().transpose() * curvature;
-  const detail::RealQuadraticEquation roots(
-      localDirection.head<2>().squaredNorm(),
-      2. * localPosition.head<2>().dot(localDirection.head<2>()),
-      localPosition.head<2>().squaredNorm() - radius * radius);
+  const auto roots = detail::CylinderHelper::intersectionSolver(
+      localPosition.head<2>(), localDirection.head<2>(), radius);
   if (roots.solutions == 0) {
     return MultiIntersection3D(Intersection3D::Invalid(),
                                Intersection3D::Invalid());

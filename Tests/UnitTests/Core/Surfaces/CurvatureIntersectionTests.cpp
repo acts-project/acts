@@ -72,18 +72,15 @@ BOOST_AUTO_TEST_CASE(CurvatureQuadraticComparison) {
     Transform3 transform = Transform3::Identity();
     transform.translation() = Vector3(0., 0., 200.);
     transform.linear() = AngleAxis3(tilt, Vector3::UnitY()).toRotationMatrix();
+    const Vector3 normal = transform.linear().col(2);
     const auto plane = Surface::makeShared<PlaneSurface>(
         transform, std::make_shared<RectangleBounds>(1000., 1000.));
     for (double k : {0., 0.00025, 0.0005, -0.0005}) {
       const Vector3 curvature(k, 0., 0.);
-      const auto seed = plane->intersect(gctx, start, direction).at(0);
-      const Vector3 normal = transform.linear().col(2);
-      const auto first =
-          detail::PlanarHelper::correctPlanarCurvatureIntersection<false>(
-              seed, direction, curvature, normal);
-      const auto quadratic =
-          detail::PlanarHelper::correctPlanarCurvatureIntersection<true>(
-              seed, direction, curvature, normal);
+      const auto first = detail::PlanarHelper::intersect<false>(
+          transform, start, direction, curvature, s_onSurfaceTolerance);
+      const auto quadratic = detail::PlanarHelper::intersect<true>(
+          transform, start, direction, curvature, s_onSurfaceTolerance);
       const auto selected = plane
                                 ->intersect(gctx, start, direction, curvature,
                                             BoundaryTolerance::None())
@@ -99,10 +96,8 @@ BOOST_AUTO_TEST_CASE(CurvatureQuadraticComparison) {
                       (path * direction + 0.5 * path * path * curvature).eval(),
                       1e-10);
       BOOST_CHECK(plane->isOnSurface(gctx, quadratic.position(), direction));
-      const auto reverseSeed = plane->intersect(gctx, start, -direction).at(0);
-      const auto reverse =
-          detail::PlanarHelper::correctPlanarCurvatureIntersection<true>(
-              reverseSeed, -direction, curvature, normal);
+      const auto reverse = detail::PlanarHelper::intersect<true>(
+          transform, start, -direction, curvature, s_onSurfaceTolerance);
       CHECK_CLOSE_ABS(reverse.position(), quadratic.position(), 1e-10);
       CHECK_CLOSE_ABS(reverse.pathLength(), -path, 1e-10);
       const auto exact = [k](double s) -> Vector3 {

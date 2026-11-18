@@ -9,8 +9,21 @@
 #pragma once
 
 #include "Acts/Surfaces/detail/CurvatureCorrection.hpp"
+#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 namespace Acts::detail::CylinderHelper {
+
+/// Solve |position + s*direction|^2 = radius^2 in the transverse plane.
+/// Inputs may be local xy vectors or global vectors crossed with the cylinder
+/// axis. Keeping that choice with the caller avoids redundant transformations.
+template <typename PositionDerived, typename DirectionDerived>
+inline RealQuadraticEquation intersectionSolver(
+    const Eigen::MatrixBase<PositionDerived>& position,
+    const Eigen::MatrixBase<DirectionDerived>& direction, double radius) {
+  return RealQuadraticEquation(direction.squaredNorm(),
+                               2. * direction.dot(position),
+                               position.squaredNorm() - radius * radius);
+}
 
 /// Inputs are in the cylinder's local frame. Preserve arrival at the actual
 /// starting position; only predicted crossings receive a correction.
@@ -33,6 +46,10 @@ inline std::optional<CurvatureCorrection> correctIntersection(
 /// replace this implementation without changing Surface or navigation APIs.
 /// Corrected cylinder points lie on the seed's tangent plane. Radially project
 /// them back onto the cylinder, leaving z and the estimated path unchanged.
+/// A bound-coordinate Jacobian could instead map the tangential displacement
+/// u to an arc-length increment u. Radial projection gives R*atan(u/R), so the
+/// two agree to first order but differ beyond it. Keep the Cartesian correction
+/// and radial projection together to preserve the current approximation.
 /// This does not make the trajectory approximation second-order accurate.
 struct CylinderProjectionScales {
   double first = 0.;

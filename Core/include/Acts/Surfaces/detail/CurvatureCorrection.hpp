@@ -17,6 +17,8 @@ namespace Acts::detail {
 
 /// Predicted position and signed path before shape projection and bounds
 /// checks.
+/// Unlike Intersection3D, this intermediate result has no surface status:
+/// the position may still be off-surface and outside the physical bounds.
 struct CurvatureCorrection {
   /// Position before any cylinder projection.
   Vector3 position;
