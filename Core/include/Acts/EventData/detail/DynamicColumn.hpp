@@ -158,7 +158,7 @@ class DynamicColumn : public DynamicColumnBase {
 
  private:
   std::vector<T> m_vector;
-  std::string m_name{};
+  std::string m_name;
 };
 
 /// Template specification to circumvent the flaws of the bool implementation
@@ -236,7 +236,7 @@ class DynamicColumn<bool> : public DynamicColumnBase {
     bool value{false};
   };
   std::vector<Wrapper> m_vector;
-  std::string m_name{};
+  std::string m_name;
 };
 
 }  // namespace Acts::detail
