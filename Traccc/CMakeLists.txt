@@ -76,6 +76,9 @@ include(traccc-functions)
 # traccc is built via add_subdirectory from ACTS this is a no-op.
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsForceAssertions.cmake)
 
+# Use an absolute path to avoid changing package lookup via CMAKE_MODULE_PATH.
+include("${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsWarningFlags.cmake")
+
 # Temporary setting for the traccc::scalar type, until it can be removed.
 set(TRACCC_CUSTOM_SCALARTYPE
     "float"
