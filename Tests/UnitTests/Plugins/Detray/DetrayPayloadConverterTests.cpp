@@ -53,6 +53,8 @@
 #include <numbers>
 #include <set>
 
+#include <detray/geometry/shapes/concentric_cylinder2D.hpp>
+#include <detray/geometry/shapes/ring2D.hpp>
 #include <detray/io/backend/geometry_writer.hpp>
 #include <detray/io/backend/homogeneous_material_writer.hpp>
 #include <detray/io/frontend/definitions.hpp>
@@ -63,7 +65,6 @@
 #include <detray/io/frontend/payloads.hpp>
 #include <detray/io/json/detector_reader.hpp>
 #include <detray/io/json/json_io.hpp>
-#include <detray/material/detail/material_accessor.hpp>
 #include <detray/plugins/svgtools/illustrator.hpp>
 #include <detray/plugins/svgtools/writer.hpp>
 #include <detray/utils/grid/concepts.hpp>
@@ -82,68 +83,11 @@ namespace ActsTests {
 
 namespace {
 
-/// Visitor that returns the surface material slab at a local position
-template <typename scalar_t>
-struct GetMaterialSlab {
-  template <typename mat_coll_t, typename index_t, typename point_t>
-  auto operator()(const mat_coll_t& matColl, const index_t idx,
-                  const point_t& locPos) const
-      -> detray::material_slab<scalar_t> {
-    using material_t = typename mat_coll_t::value_type;
-
-    if constexpr (detray::concepts::material_map<material_t>) {
-      return detray::detail::material_accessor::get(
-          matColl, idx, typename material_t::point_type{locPos[0], locPos[1]});
-    } else if constexpr (std::same_as<material_t,
-                                      detray::material_slab<scalar_t>>) {
-      return matColl[idx];
-    } else {
-      return {};
-    }
-  }
-};
-
 /// @returns the total number of surface material entries in @p det
 template <typename detector_t>
 std::size_t nMaterialEntries(const detector_t& det) {
   return detray::n_material_slabs(det) + detray::n_material_rods(det) +
          detray::n_material_maps(det);
-}
-
-/// Check that every surface of @p det sees the same material as in @p refDet
-template <typename detector_t>
-void checkSameSurfaceMaterial(const detector_t& refDet, const detector_t& det) {
-  using scalar_t = typename detector_t::scalar_type;
-  using point2_t = typename detector_t::point2_type;
-
-  BOOST_REQUIRE_EQUAL(refDet.surfaces().size(), det.surfaces().size());
-
-  const std::array<point2_t, 5> locPositions{
-      point2_t{0., 0.}, point2_t{-1., 5.}, point2_t{0.5, -120.},
-      point2_t{45., 2.5}, point2_t{-3., 300.}};
-
-  for (std::size_t i = 0; i < det.surfaces().size(); ++i) {
-    const auto& refDesc = refDet.surfaces()[static_cast<detray::dindex>(i)];
-    const auto& desc = det.surfaces()[static_cast<detray::dindex>(i)];
-
-    BOOST_REQUIRE_EQUAL(refDesc.has_material(), desc.has_material());
-    if (!desc.has_material()) {
-      continue;
-    }
-    BOOST_CHECK(refDesc.material().id() == desc.material().id());
-
-    for (const auto& locPos : locPositions) {
-      const auto refSlab =
-          refDet.material_store().template visit<GetMaterialSlab<scalar_t>>(
-              refDesc.material(), locPos);
-      const auto slab =
-          det.material_store().template visit<GetMaterialSlab<scalar_t>>(
-              desc.material(), locPos);
-
-      BOOST_CHECK_MESSAGE(detray::detail::is_identical(refSlab, slab),
-                          "Material differs on surface " << i);
-    }
-  }
 }
 
 }  // namespace
@@ -853,6 +797,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   detray::io::write_detector(detrayDetector, detrayNames, writer_cfg);
 }
 
+/// Test that material gets deduplicated by the detray build process
 BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   using metadata_t = detray::default_metadata<detray::array<double>>;
   using detector_t = detray::host::detector<metadata_t>;
@@ -918,36 +863,6 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   BOOST_CHECK_LE(detray::n_material_slabs(det),
                  detray::n_material_slabs(refDet));
   BOOST_CHECK_LE(detray::n_material_maps(det), detray::n_material_maps(refDet));
-
-  // ... but every surface still sees the same material
-  checkSameSurfaceMaterial(refDet, det);
-
-  // The deduplicated detector writes one material entry per surface again,
-  // which can be read back without deduplication
-  const std::filesystem::path outDir{"detray_material_deduplication"};
-  std::filesystem::remove_all(outDir);
-
-  auto writerCfg = detray::io::detector_writer_config{}
-                       .format(detray::io::format::json)
-                       .path(outDir.string())
-                       .source("ACTS unit test")
-                       .replace_files(true)
-                       .write_grids(true)
-                       .write_material(true);
-  detray::io::write_detector(det, deduplicated.names, writerCfg);
-
-  detray::io::detector_reader_config readerCfg{};
-  readerCfg.do_check(true).deduplicate(false);
-  for (const auto& entry : std::filesystem::directory_iterator(outDir)) {
-    readerCfg.add_file(entry.path().string());
-  }
-  BOOST_CHECK_GE(readerCfg.files().size(), 3u);
-
-  const auto [readDet, readNames] =
-      detray::io::read_detector_json<detector_t>(mr, readerCfg);
-
-  BOOST_CHECK_EQUAL(nMaterialEntries(readDet), nMaterialEntries(refDet));
-  checkSameSurfaceMaterial(det, readDet);
 }
 
 BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {

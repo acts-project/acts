@@ -8,6 +8,7 @@
 
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -16,11 +17,10 @@
 Acts::Result<Acts::LinearizedTrack>
 Acts::HelicalTrackLinearizer::linearizeTrack(
     const BoundTrackParameters& params, double linPointTime,
-    const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
-    const Acts::MagneticFieldContext& mctx,
-    MagneticFieldProvider::Cache& fieldCache) const {
+    const Surface& perigeeSurface, const GeometryContext& gctx,
+    MagneticFieldQuery& fieldQuery) const {
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, fieldQuery.context());
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
@@ -97,7 +97,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   double absoluteCharge = params.particleHypothesis().absoluteCharge();
 
   // get the z-component of the B-field at the PCA
-  auto field = m_cfg.bField->getField(VectorHelpers::position(pca), fieldCache);
+  auto field = fieldQuery.getField(VectorHelpers::position(pca));
   if (!field.ok()) {
     return field.error();
   }

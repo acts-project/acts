@@ -183,7 +183,7 @@ class homogeneous_material_reader final : public reader_interface<detector_t> {
         static_cast<scalar_t>(mat_data.params[3]),
         static_cast<scalar_t>(mat_data.params[4]),
         // The molar density (params[5]) is calculated on the fly
-        static_cast<material_state>(mat_data.params[6])};
+    };
   }
 };
 

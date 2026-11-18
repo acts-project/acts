@@ -1,5 +1,3 @@
-include(ActsTargetLinkLibrariesSystem)
-
 acts_add_library(
     ExamplesIoCsv
     src/CsvMeasurementReader.cpp
