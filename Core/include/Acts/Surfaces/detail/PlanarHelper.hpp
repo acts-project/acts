@@ -9,10 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/detail/CurvatureCorrection.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 /// @brief Helpers for planar surfaces that share the same maths
-namespace Acts::PlanarHelper {
+namespace Acts::detail::PlanarHelper {
 
 /// @brief Intersect a line in 3D space with a plane represented by the Hesse-Normal form
 /// @param linePos: Arbitrary point on the line to intersect
@@ -76,4 +77,27 @@ inline Intersection3D intersect(const Transform3& transform,
   return Intersection3D{(position + path * direction), path, status};
 }
 
-}  // namespace Acts::PlanarHelper
+/// Intersect the supporting plane, then correct the ray seed. Physical bounds
+/// remain the responsibility of PlaneSurface and DiscSurface.
+template <bool Quadratic = s_useQuadraticCurvatureCorrection>
+inline Intersection3D intersect(const Transform3& transform,
+                                const Vector3& position,
+                                const Vector3& direction,
+                                const Vector3& curvature, double tolerance) {
+  const auto seed = intersect(transform, position, direction, tolerance);
+  // Parallel rays have no seed to correct. Arrival is determined from the
+  // actual starting position, never predicted.
+  if (!seed.isValid() || seed.status() == IntersectionStatus::onSurface) {
+    return seed;
+  }
+  const Vector3 normal = transform.matrix().block<3, 1>(0, 2);
+  if (auto corrected = correctCurvatureIntersection<Quadratic>(
+          seed.pathLength(), seed.position(), direction, curvature,
+          normal.dot(direction), normal.dot(curvature), curvature.norm())) {
+    return {corrected->position, corrected->pathLength,
+            IntersectionStatus::reachable};
+  }
+  return seed;
+}
+
+}  // namespace Acts::detail::PlanarHelper
