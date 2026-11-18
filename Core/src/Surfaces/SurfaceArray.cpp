@@ -514,10 +514,10 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
   std::optional<Crossing> findCrossing(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, double tolerance,
-      [[maybe_unused]] const Vector3& curvature = Vector3::Zero()) const {
+      const Vector3& curvature = Vector3::Zero()) const {
     const Intersection3D intersection =
         m_representative
-            ->intersect(gctx, position, direction,
+            ->intersect(gctx, position, direction, curvature,
                         BoundaryTolerance::Infinite())
             .closest();
     if (!intersection.isValid() ||
