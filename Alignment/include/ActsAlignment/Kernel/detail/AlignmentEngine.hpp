@@ -88,12 +88,13 @@ struct TrackAlignmentState {
 void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
                               AlignmentMask mask);
 
-/// Calculate a masked bound-parameter derivative for a module or structure.
+/// Differentiate the track's bound parameters with respect to local
+/// translations and rotations of the structure, or of the surface if
+/// @p structureTransform is null. Apply the mask in the corresponding frame.
 ///
-/// With a structure frame, convert the full surface derivative to local
-/// structure translations and rotations before masking. Without one, retain
-/// the ACTS surface alignment convention. For residual = measurement minus
-/// prediction, the caller forms the residual derivative as -H * result.
+/// For a residual defined as measurement minus prediction, the caller forms
+/// its derivative as @c -H*result, where H projects bound parameters into
+/// measurement coordinates.
 ///
 /// @param gctx Geometry context used to evaluate the surface
 /// @param surface Surface on which the track is measured
@@ -101,10 +102,10 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
 /// @param direction Global track direction
 /// @param pathDerivative Derivative of free track parameters with path length
 /// @param mask Floating degrees of freedom in the selected parameter frame
-/// @param structureTransform Resolved current structure-to-global frame, or
-/// nullptr for standalone-module parameters. The caller must supply a frame
-/// consistent with the member surface in gctx; it can be a solver-owned working
-/// frame rather than the value of a fixed initial provider.
+/// @param structureTransform Current transform from structure-local to global
+/// coordinates, or nullptr to use surface alignment parameters. The transform
+/// must describe the same geometry state as the member surface in @p gctx.
+/// During an iterative fit this may be the frame updated by the solver.
 /// @return Derivative of bound parameters with respect to the selected
 /// alignment parameters, with fixed columns set to zero
 Acts::AlignmentToBoundMatrix alignmentToBoundDerivative(

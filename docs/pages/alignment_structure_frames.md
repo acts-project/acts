@@ -133,11 +133,12 @@ late_bound.setTransform(transformProvider=frame_provider)
 
 ## Structure derivatives
 
-`ActsAlignment::detail::alignmentToBoundDerivative` can evaluate the bound
-parameter derivative for a supplied current structure frame. Resolve that frame
-with the same `GeometryContext` as the member surface, or supply the consistent
-working frame maintained by an iterative caller. For an immediate owner found
-through a validated `AlignmentHierarchy`, the connection is:
+With a structure frame, `ActsAlignment::detail::alignmentToBoundDerivative`
+differentiates the track's bound parameters with respect to translations along
+and rotations about the structure's local axes. Use a frame consistent with the
+member surface in the same `GeometryContext`, including when the frame comes from
+the current iteration of a fit. This example uses the immediate owner from a
+validated `AlignmentHierarchy`:
 
 ```cpp
 const auto* owner = hierarchy.structureFor(surface);
@@ -146,19 +147,20 @@ if (owner != nullptr) {
   const auto derivative = ActsAlignment::detail::alignmentToBoundDerivative(
       gctx, surface, position, direction, pathDerivative,
       owner->alignmentMask(), &currentFrame);
-  // Residual = measurement - prediction: residual derivative = -H * derivative.
+  // For measurement minus prediction, the residual derivative is
+  // -H * derivative, where H projects into measurement coordinates.
 }
 ```
 
 The helper multiplies the unmasked surface derivative by
 `compositeToComponentJacobian(currentFrame, surfaceTransform)` and then masks
 columns in structure coordinates. Masking surface columns before the conversion
-would incorrectly remove contributions to rotated structure axes. With no
-structure frame, the helper retains the existing standalone-module derivative
-and mask convention.
+could discard contributions from those surface axes to an active structure
+parameter. Without a structure frame, the helper differentiates
+with respect to local surface translations and rotations and applies the mask
+in the surface frame.
 
 This helper does not activate structure solving. The native solver still uses
 module indexing and calls it without a structure frame. Shared parameter
 indexing, structure accumulation, and rigid member updates remain follow-up
-work. Hierarchy membership continues to provide metadata until those pieces
-are integrated; a successful derivative test is not a recovered alignment.
+work.
