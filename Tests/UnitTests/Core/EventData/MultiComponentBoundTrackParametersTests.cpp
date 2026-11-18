@@ -112,17 +112,18 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
                           GeometryContext::dangerouslyDefaultConstruct()),
                       single_pars.fourPosition(
                           GeometryContext::dangerouslyDefaultConstruct()));
-    BOOST_CHECK_EQUAL(multi_pars_as_single.momentum(), single_pars.momentum());
+    BOOST_CHECK_EQUAL(multi_pars_as_single.momentum(gctx),
+                      single_pars.momentum(gctx));
     BOOST_CHECK_EQUAL(multi_pars_as_single.parameters(),
                       single_pars.parameters());
     BOOST_CHECK_EQUAL(
         multi_pars_as_single.position(
             GeometryContext::dangerouslyDefaultConstruct()),
         single_pars.position(GeometryContext::dangerouslyDefaultConstruct()));
-    BOOST_CHECK_EQUAL(multi_pars_as_single.transverseMomentum(),
-                      single_pars.transverseMomentum());
-    BOOST_CHECK_EQUAL(multi_pars_as_single.direction(),
-                      single_pars.direction());
+    BOOST_CHECK_EQUAL(multi_pars_as_single.transverseMomentum(gctx),
+                      single_pars.transverseMomentum(gctx));
+    BOOST_CHECK_EQUAL(multi_pars_as_single.direction(gctx),
+                      single_pars.direction(gctx));
 
     // Check the behaviour for std::nullopt or zero covariance
     if (cov.has_value()) {

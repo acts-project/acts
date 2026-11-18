@@ -42,11 +42,11 @@ BOOST_AUTO_TEST_CASE(jacobian_test) {
   CHECK_CLOSE_REL(f2cJacobian(eBoundLoc1, eFreePos1), -sinPhi * cosTheta, 1e-5);
   CHECK_CLOSE_REL(f2cJacobian(eBoundLoc1, eFreePos2), sinTheta, 1e-5);
   CHECK_CLOSE_REL(f2cJacobian(eBoundTime, eFreeTime), 1., 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundPhi, eFreeDir0), -sinPhi / sinTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundPhi, eFreeDir1), cosPhi / sinTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundTheta, eFreeDir0), cosPhi * cosTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundTheta, eFreeDir1), sinPhi * cosTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundTheta, eFreeDir2), -sinTheta, 1e-5);
+  CHECK_CLOSE_REL(f2cJacobian(eBoundDir0, eFreeDir0), -sinPhi / sinTheta, 1e-5);
+  CHECK_CLOSE_REL(f2cJacobian(eBoundDir0, eFreeDir1), cosPhi / sinTheta, 1e-5);
+  CHECK_CLOSE_REL(f2cJacobian(eBoundDir1, eFreeDir0), cosPhi * cosTheta, 1e-5);
+  CHECK_CLOSE_REL(f2cJacobian(eBoundDir1, eFreeDir1), sinPhi * cosTheta, 1e-5);
+  CHECK_CLOSE_REL(f2cJacobian(eBoundDir1, eFreeDir2), -sinTheta, 1e-5);
   CHECK_CLOSE_REL(f2cJacobian(eBoundQOverP, eFreeQOverP), 1., 1e-5);
 
   // (2a) Standard test with curvilinear not glazingly close to z axis
@@ -68,11 +68,11 @@ BOOST_AUTO_TEST_CASE(jacobian_test) {
   CHECK_CLOSE_REL(c2fJacobian(eFreePos2, eBoundLoc1), sinTheta, 1e-5);
   // Time parameter: stays as is
   CHECK_CLOSE_REL(c2fJacobian(eFreeTime, eBoundTime), 1, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreeDir0, eBoundPhi), -sinTheta * sinPhi, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreeDir0, eBoundTheta), cosTheta * cosPhi, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreeDir1, eBoundPhi), sinTheta * cosPhi, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreeDir1, eBoundTheta), cosTheta * sinPhi, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreeDir2, eBoundTheta), -sinTheta, 1e-5);
+  CHECK_CLOSE_REL(c2fJacobian(eFreeDir0, eBoundDir0), -sinTheta * sinPhi, 1e-5);
+  CHECK_CLOSE_REL(c2fJacobian(eFreeDir0, eBoundDir1), cosTheta * cosPhi, 1e-5);
+  CHECK_CLOSE_REL(c2fJacobian(eFreeDir1, eBoundDir0), sinTheta * cosPhi, 1e-5);
+  CHECK_CLOSE_REL(c2fJacobian(eFreeDir1, eBoundDir1), cosTheta * sinPhi, 1e-5);
+  CHECK_CLOSE_REL(c2fJacobian(eFreeDir2, eBoundDir1), -sinTheta, 1e-5);
   // Q/P parameter: stays as is
   CHECK_CLOSE_REL(c2fJacobian(eFreeQOverP, eBoundQOverP), 1, 1e-5);
 }

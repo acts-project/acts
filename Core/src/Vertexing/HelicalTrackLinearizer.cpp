@@ -27,7 +27,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   pOptions.surfaceTolerance = m_cfg.targetTolerance;
 
   pOptions.direction = detail::directionToSurface(
-      gctx, perigeeSurface, params.position(gctx), params.direction());
+      gctx, perigeeSurface, params.position(gctx), params.direction(gctx));
 
   // Propagate to the PCA of the reference point
   const auto res =

@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
                                                 particleHypothesis);
   BOOST_CHECK(!curvPars.covariance().has_value());
   CHECK_CLOSE_ABS(curvPars.position(tgContext), position, 1e-12);
-  CHECK_CLOSE_ABS(curvPars.direction(), direction, 1e-12);
+  CHECK_CLOSE_ABS(curvPars.direction(tgContext), direction, 1e-12);
 
   // Produce curvilinear parameters with covariance matrix
   curvPars =

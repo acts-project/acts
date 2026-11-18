@@ -56,7 +56,7 @@ auto MultiStepperLoop<S, R>::curvilinearParameters(const State& state) const
     const auto cp = m_singleStepper.curvilinearParameters(cmp.state);
 
     cmps.emplace_back(cmp.weight, cp.fourPosition(state.options.geoContext),
-                      cp.direction(), cp.qOverP(),
+                      cp.direction(state.options.geoContext), cp.qOverP(),
                       cp.covariance().value_or(BoundMatrix::Zero()));
   }
 

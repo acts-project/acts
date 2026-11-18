@@ -110,8 +110,8 @@ struct MultiStepperTester {
       } else {
         params[eBoundLoc0] = locDis(gen);
         params[eBoundLoc1] = locDis(gen);
-        params[eBoundPhi] = phiDis(gen);
-        params[eBoundTheta] = thetaDis(gen);
+        params[eBoundDir0] = phiDis(gen);
+        params[eBoundDir1] = thetaDis(gen);
         params[eBoundQOverP] = qOverPDis(gen);
         params[eBoundTime] = timeDis(gen);
       }
@@ -420,9 +420,9 @@ struct MultiStepperTester {
 
     std::vector<std::tuple<double, BoundVector>> cmps(
         2, {0.5, BoundVector::Zero()});
-    std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
-    std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
-    std::get<BoundVector>(cmps[1])[eBoundTheta] = std::numbers::pi / 2.;
+    std::get<BoundVector>(cmps[0])[eBoundDir1] = std::numbers::pi / 2.;
+    std::get<BoundVector>(cmps[1])[eBoundDir0] = std::numbers::pi;
+    std::get<BoundVector>(cmps[1])[eBoundDir1] = std::numbers::pi / 2.;
     std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
     std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
@@ -629,9 +629,9 @@ struct MultiStepperTester {
 
     std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
         cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
-    std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
-    std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
-    std::get<BoundVector>(cmps[1])[eBoundTheta] = std::numbers::pi / 2.;
+    std::get<BoundVector>(cmps[0])[eBoundDir1] = std::numbers::pi / 2.;
+    std::get<BoundVector>(cmps[1])[eBoundDir0] = std::numbers::pi;
+    std::get<BoundVector>(cmps[1])[eBoundDir1] = std::numbers::pi / 2.;
     std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
     std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 

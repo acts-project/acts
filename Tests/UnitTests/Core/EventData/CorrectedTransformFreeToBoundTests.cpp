@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   BoundMatrix sBoundCov = BoundMatrix::Zero();
   sBoundCov(eBoundLoc0, eBoundLoc0) = resLoc0 * resLoc0;
   sBoundCov(eBoundLoc1, eBoundLoc1) = resLoc1 * resLoc1;
-  sBoundCov(eBoundPhi, eBoundPhi) = resPhi * resPhi;
-  sBoundCov(eBoundTheta, eBoundTheta) = resTheta * resTheta;
+  sBoundCov(eBoundDir0, eBoundDir0) = resPhi * resPhi;
+  sBoundCov(eBoundDir1, eBoundDir1) = resTheta * resTheta;
   sBoundCov(eBoundQOverP, eBoundQOverP) = resQOverP * resQOverP;
   sBoundCov(eBoundTime, eBoundTime) = resTime * resTime;
 

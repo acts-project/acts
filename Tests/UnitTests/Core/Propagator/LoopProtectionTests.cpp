@@ -201,9 +201,9 @@ BOOST_DATA_TEST_CASE(
   const auto& result = epropagator.propagate(start, options).value();
 
   // this test assumes state.options.loopFraction = 0.5
-  CHECK_CLOSE_REL(px, -result.endParameters->momentum().x(), 1e-2);
-  CHECK_CLOSE_REL(py, -result.endParameters->momentum().y(), 1e-2);
-  CHECK_CLOSE_REL(pz, result.endParameters->momentum().z(), 1e-2);
+  CHECK_CLOSE_REL(px, -result.endParameters->momentum(tgContext).x(), 1e-2);
+  CHECK_CLOSE_REL(py, -result.endParameters->momentum(tgContext).y(), 1e-2);
+  CHECK_CLOSE_REL(pz, result.endParameters->momentum(tgContext).z(), 1e-2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

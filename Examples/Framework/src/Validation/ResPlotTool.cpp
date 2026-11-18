@@ -28,7 +28,7 @@ static constexpr double nan = std::numeric_limits<double>::quiet_NaN();
 /// Reduce a residual of one bound parameter to its minimal equivalent value,
 /// which only matters for the periodic phi.
 static double wrapResidual(std::size_t index, double residual) {
-  if (index != Acts::eBoundPhi) {
+  if (index != Acts::eBoundDir0) {
     return residual;
   }
   return Acts::detail::difference_periodic(residual, 0., 2 * std::numbers::pi);
@@ -163,8 +163,8 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   } else {
     ACTS_ERROR("Cannot get the truth perigee parameter");
   }
-  truthParameters[eBoundPhi] = phi(truthParticle.direction());
-  truthParameters[eBoundTheta] = theta(truthParticle.direction());
+  truthParameters[eBoundDir0] = phi(truthParticle.direction());
+  truthParameters[eBoundDir1] = theta(truthParticle.direction());
   truthParameters[eBoundQOverP] = truthParticle.qOverP();
   truthParameters[eBoundTime] = truthParticle.time();
 
@@ -176,7 +176,8 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
        truthParticle.charge(), truthParticle.absoluteCharge(), fittedParamters);
 }
 
-void ResPlotTool::fill(const Acts::BoundTrackParameters& truthParameters,
+void ResPlotTool::fill(const Acts::GeometryContext& gctx,
+                       const Acts::BoundTrackParameters& truthParameters,
                        const Acts::BoundTrackParameters& fittedParameters) {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::phi;
@@ -190,9 +191,9 @@ void ResPlotTool::fill(const Acts::BoundTrackParameters& truthParameters,
 
   const double truthCharge = truthParameters.charge();
   fill(truthParameters.parameters(),
-       Binning{eta(truthParameters.direction()),
-               phi(truthParameters.direction()),
-               truthParameters.transverseMomentum()},
+       Binning{eta(truthParameters.direction(gctx)),
+               phi(truthParameters.direction(gctx)),
+               truthParameters.transverseMomentum(gctx)},
        truthCharge, std::abs(truthCharge), fittedParameters);
 }
 
@@ -230,7 +231,7 @@ void ResPlotTool::fill(const Acts::BoundVector& truthVector,
     const double truthQoverPt = truthCharge / truthPt;
     const double truthPtOverAbsQ = truthPt / truthAbsCharge;
     const double recoQoverPt =
-        trackParameters[eBoundQOverP] / std::sin(trackParameters[eBoundTheta]);
+        trackParameters[eBoundQOverP] / std::sin(trackParameters[eBoundDir1]);
     const double residualQoverPt = recoQoverPt - truthQoverPt;
     fillResidual(m_cfg.qOverPtName, residualQoverPt, truthEta, truthPhi,
                  truthPt);
@@ -241,10 +242,10 @@ void ResPlotTool::fill(const Acts::BoundVector& truthVector,
 
     const double covarianceQoverPt = [&]() -> double {
       const Acts::Vector2 jacobian{
-          -recoQoverPt / std::tan(trackParameters[eBoundTheta]),
-          1 / std::sin(trackParameters[eBoundTheta])};
+          -recoQoverPt / std::tan(trackParameters[eBoundDir1]),
+          1 / std::sin(trackParameters[eBoundDir1])};
       const Acts::SquareMatrix2 covariance = trackCovariance(
-          {eBoundTheta, eBoundQOverP}, {eBoundTheta, eBoundQOverP});
+          {eBoundDir1, eBoundQOverP}, {eBoundDir1, eBoundQOverP});
       return jacobian.transpose() * covariance * jacobian;
     }();
     const double covarianceRelQoverPt =

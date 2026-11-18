@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   const BoundMatrix curvJacobian = es.transportToCurvilinear(esState).value();
   auto curvPars = es.curvilinearParameters(esState);
   CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), eps);
-  CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 10e-6);
+  CHECK_CLOSE_ABS(curvPars.momentum(tgContext), cp.momentum(tgContext), 10e-6);
   CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), eps);
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), eps);
   BOOST_CHECK(curvPars.covariance().has_value());
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
       es.transportToBound(esState, *plane).value();
   auto boundPars = es.boundParameters(esState, *plane).value();
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), eps);
-  CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-7);
+  CHECK_CLOSE_ABS(boundPars.momentum(tgContext), bp.momentum(tgContext), 1e-7);
   CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), eps);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), eps);
   BOOST_CHECK(boundPars.covariance().has_value());

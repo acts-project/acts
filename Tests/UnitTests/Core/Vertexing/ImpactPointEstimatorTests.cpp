@@ -104,8 +104,8 @@ BoundMatrix makeBoundParametersCovariance(double stdDevTime = 30_ps) {
   stddev[eBoundLoc0] = 15_um;
   stddev[eBoundLoc1] = 100_um;
   stddev[eBoundTime] = stdDevTime;
-  stddev[eBoundPhi] = 1_degree;
-  stddev[eBoundTheta] = 1_degree;
+  stddev[eBoundDir0] = 1_degree;
+  stddev[eBoundDir1] = 1_degree;
   stddev[eBoundQOverP] = 1_e / 100_GeV;
   return stddev.cwiseProduct(stddev).asDiagonal();
 }
@@ -137,8 +137,8 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
   par[eBoundLoc0] = d0;
   par[eBoundLoc1] = l0;
   par[eBoundTime] = t0;
-  par[eBoundPhi] = phi;
-  par[eBoundTheta] = theta;
+  par[eBoundDir0] = phi;
+  par[eBoundDir1] = theta;
   par[eBoundQOverP] = particleHypothesis.qOverP(p, q);
 
   Estimator ipEstimator = makeEstimator(2_T);
@@ -178,8 +178,8 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
     BOOST_CHECK_NE(atPerigee[eBoundLoc1], atIp3d[eBoundLoc1]);
   }
   // BOOST_CHECK_NE(atPerigee[eBoundTime], atIp3d[eBoundTime]);
-  // BOOST_CHECK_NE(atPerigee[eBoundPhi], atIp3d[eBoundPhi]);
-  CHECK_CLOSE_ABS(atPerigee[eBoundTheta], atIp3d[eBoundTheta], 0.01_mrad);
+  // BOOST_CHECK_NE(atPerigee[eBoundDir0], atIp3d[eBoundDir0]);
+  CHECK_CLOSE_ABS(atPerigee[eBoundDir1], atIp3d[eBoundDir1], 0.01_mrad);
   CHECK_CLOSE_REL(atPerigee[eBoundQOverP], atIp3d[eBoundQOverP],
                   std::numeric_limits<double>::epsilon());
 
@@ -229,8 +229,8 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   paramVec[eBoundLoc0] = 0.;
   paramVec[eBoundLoc1] = 0.;
   paramVec[eBoundTime] = t0;
-  paramVec[eBoundPhi] = phi;
-  paramVec[eBoundTheta] = theta;
+  paramVec[eBoundDir0] = phi;
+  paramVec[eBoundDir1] = theta;
   paramVec[eBoundQOverP] = q / p;
 
   BoundTrackParameters params(vtxPerigeeSurface, paramVec,
@@ -259,7 +259,8 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   Intersection3D intersection =
       refPerigeeSurface
           ->intersect(geoContext, params.position(geoContext),
-                      params.direction(), BoundaryTolerance::Infinite())
+                      params.direction(geoContext),
+                      BoundaryTolerance::Infinite())
           .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
@@ -372,8 +373,8 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
   BoundVector paramVecClose = BoundVector::Zero();
   paramVecClose[eBoundLoc0] = d0;
   paramVecClose[eBoundLoc1] = l0;
-  paramVecClose[eBoundPhi] = 0;
-  paramVecClose[eBoundTheta] = std::numbers::pi / 2;
+  paramVecClose[eBoundDir0] = 0;
+  paramVecClose[eBoundDir1] = std::numbers::pi / 2;
   paramVecClose[eBoundQOverP] = 0;
   paramVecClose[eBoundTime] = vt0 + sgnClose * timeDiffClose;
 
@@ -465,8 +466,8 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
   trk_par[eBoundLoc0] = 200_um;
   trk_par[eBoundLoc1] = 300_um;
   trk_par[eBoundTime] = 1_ns;
-  trk_par[eBoundPhi] = 45_degree;
-  trk_par[eBoundTheta] = 45_degree;
+  trk_par[eBoundDir0] = 45_degree;
+  trk_par[eBoundDir1] = 45_degree;
   trk_par[eBoundQOverP] = 1_e / 10_GeV;
 
   Vector4 ip_pos{0., 0., 0., 0.};
@@ -523,8 +524,8 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
   par[eBoundLoc0] = d0;
   par[eBoundLoc1] = l0;
   par[eBoundTime] = t0;
-  par[eBoundPhi] = phi;
-  par[eBoundTheta] = theta;
+  par[eBoundDir0] = phi;
+  par[eBoundDir1] = theta;
   par[eBoundQOverP] = q / p;
   Vector4 vtxPos;
   vtxPos[ePos0] = vx0;

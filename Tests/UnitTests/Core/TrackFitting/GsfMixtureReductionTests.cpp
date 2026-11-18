@@ -83,8 +83,9 @@ void testReductionEquivalence(std::vector<GsfComponent> &cmpsRef,
                       tol);
     BOOST_CHECK_CLOSE(ref.boundPars[eBoundLoc1], test.boundPars[eBoundLoc1],
                       tol);
-    BOOST_CHECK_CLOSE(ref.boundPars[eBoundPhi], test.boundPars[eBoundPhi], tol);
-    BOOST_CHECK_CLOSE(ref.boundPars[eBoundTheta], test.boundPars[eBoundTheta],
+    BOOST_CHECK_CLOSE(ref.boundPars[eBoundDir0], test.boundPars[eBoundDir0],
+                      tol);
+    BOOST_CHECK_CLOSE(ref.boundPars[eBoundDir1], test.boundPars[eBoundDir1],
                       tol);
     BOOST_CHECK_CLOSE(ref.boundPars[eBoundQOverP], test.boundPars[eBoundQOverP],
                       tol);
@@ -266,8 +267,8 @@ BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
     GsfComponent cmp = makeDefaultComponent(weightDist(rng));
     cmp.boundPars[eBoundLoc0] = loc0Dist(rng);
     cmp.boundPars[eBoundLoc1] = loc1Dist(rng);
-    cmp.boundPars[eBoundPhi] = phiDist(rng);
-    cmp.boundPars[eBoundTheta] = thetaDist(rng);
+    cmp.boundPars[eBoundDir0] = phiDist(rng);
+    cmp.boundPars[eBoundDir1] = thetaDist(rng);
     cmp.boundPars[eBoundQOverP] = qopDist(rng);
     cmp.boundPars[eBoundTime] = 0.0;
     weightSum += cmp.weight;

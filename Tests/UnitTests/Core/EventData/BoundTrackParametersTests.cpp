@@ -22,6 +22,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -57,10 +58,11 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundLoc0>(), l0, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundLoc1>(), l1, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundTime>(), time, eps, eps);
-  CHECK_CLOSE_OR_SMALL(detail::radian_sym(params.template get<eBoundPhi>()),
+  CHECK_CLOSE_OR_SMALL(detail::radian_sym(params.template get<eBoundDir0>()),
                        detail::radian_sym(phi), eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.template get<eBoundTheta>(), theta, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.template get<eBoundDir1>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundQOverP>(), qOverP, eps, eps);
+  ACTS_PUSH_IGNORE_DEPRECATED()
   BOOST_CHECK_EQUAL(params.get<eBoundDir0>(), params.get<eBoundPhi>());
   BOOST_CHECK_EQUAL(params.get<eBoundDir1>(), params.get<eBoundTheta>());
   CHECK_CLOSE_OR_SMALL(params.direction(geoCtx), unitDir, eps, eps);
@@ -81,6 +83,7 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
                          eps);
     CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
   }
+  ACTS_POP_IGNORE_DEPRECATED()
 
   // reflection
   BoundTrackParameters reflectedParams = params;
@@ -125,8 +128,8 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundLoc0] = l0;
     vector[eBoundLoc1] = l1;
     vector[eBoundTime] = time;
-    vector[eBoundPhi] = phi;
-    vector[eBoundTheta] = theta;
+    vector[eBoundDir0] = phi;
+    vector[eBoundDir1] = theta;
     vector[eBoundQOverP] = 0;
     BoundTrackParameters params(surface, vector, std::nullopt,
                                 ParticleHypothesis::pion0());
@@ -146,8 +149,8 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundLoc0] = l0;
     vector[eBoundLoc1] = l1;
     vector[eBoundTime] = time;
-    vector[eBoundPhi] = phi;
-    vector[eBoundTheta] = theta;
+    vector[eBoundDir0] = phi;
+    vector[eBoundDir1] = theta;
     vector[eBoundQOverP] = -1_e / p;
     BoundTrackParameters params(surface, vector, std::nullopt,
                                 ParticleHypothesis::pion());
@@ -167,8 +170,8 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundLoc0] = l0;
     vector[eBoundLoc1] = l1;
     vector[eBoundTime] = time;
-    vector[eBoundPhi] = phi;
-    vector[eBoundTheta] = theta;
+    vector[eBoundDir0] = phi;
+    vector[eBoundDir1] = theta;
     vector[eBoundQOverP] = 1_e / p;
     BoundTrackParameters params(surface, vector, std::nullopt,
                                 ParticleHypothesis::pion());
@@ -188,8 +191,8 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundLoc0] = l0;
     vector[eBoundLoc1] = l1;
     vector[eBoundTime] = time;
-    vector[eBoundPhi] = phi;
-    vector[eBoundTheta] = theta;
+    vector[eBoundDir0] = phi;
+    vector[eBoundDir1] = theta;
     vector[eBoundQOverP] = -2_e / p;
     BoundTrackParameters params(surface, vector, std::nullopt,
                                 ParticleHypothesis::pionLike(2_e));

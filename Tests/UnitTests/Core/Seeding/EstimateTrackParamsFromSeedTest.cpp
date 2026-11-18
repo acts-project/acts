@@ -69,8 +69,8 @@ BoundTrackParameters makeParameters(double phi, double theta, double p,
   stddev[eBoundLoc0] = 100_um;
   stddev[eBoundLoc1] = 100_um;
   stddev[eBoundTime] = 25_ns;
-  stddev[eBoundPhi] = 2_degree;
-  stddev[eBoundTheta] = 2_degree;
+  stddev[eBoundDir0] = 2_degree;
+  stddev[eBoundDir1] = 2_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
   BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle starts from the origin
@@ -172,10 +172,10 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                           expBoundParams[eBoundLoc0], 1e-5);
           CHECK_CLOSE_ABS(estBoundParams[eBoundLoc1],
                           expBoundParams[eBoundLoc1], 1e-5);
-          CHECK_CLOSE_ABS(estBoundParams[eBoundPhi], expBoundParams[eBoundPhi],
-                          1e-3);
-          CHECK_CLOSE_ABS(estBoundParams[eBoundTheta],
-                          expBoundParams[eBoundTheta], 1e-2);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundDir0],
+                          expBoundParams[eBoundDir0], 1e-3);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundDir1],
+                          expBoundParams[eBoundDir1], 1e-2);
           CHECK_CLOSE_ABS(estBoundParams[eBoundQOverP],
                           expBoundParams[eBoundQOverP], 1e-2);
           // time is not estimated so we check if it is default zero
@@ -293,10 +293,10 @@ BOOST_AUTO_TEST_CASE(spacepoint_estimator_vs_truth) {
                           expBoundParams[eBoundLoc0], 1e-4);
           CHECK_CLOSE_ABS(estBoundParams[eBoundLoc1],
                           expBoundParams[eBoundLoc1], 1e-4);
-          CHECK_CLOSE_ABS(estBoundParams[eBoundPhi], expBoundParams[eBoundPhi],
-                          1e-3);
-          CHECK_CLOSE_ABS(estBoundParams[eBoundTheta],
-                          expBoundParams[eBoundTheta], 1e-2);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundDir0],
+                          expBoundParams[eBoundDir0], 1e-3);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundDir1],
+                          expBoundParams[eBoundDir1], 1e-2);
           CHECK_CLOSE_ABS(estBoundParams[eBoundQOverP],
                           expBoundParams[eBoundQOverP], 1e-2);
 

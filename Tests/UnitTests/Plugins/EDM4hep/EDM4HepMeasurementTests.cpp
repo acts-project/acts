@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(WriteMeasurementNoPosition) {
   auto to = hits.create();
 
   // Only measure phi and theta
-  std::vector<std::uint8_t> indices = {eBoundPhi, eBoundTheta};
+  std::vector<std::uint8_t> indices = {eBoundDir0, eBoundDir1};
   FixedSubspaceHelper<eBoundSize, 2> helper(indices);
 
   Vector2 measPos = helper.projectVector(parameters);
@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE(WriteMeasurementNoPosition) {
   auto unpackedIndices = ActsPodioEdm::detail::decodeIndices(
       static_cast<std::uint32_t>(to.getType()));
   BOOST_CHECK_EQUAL(unpackedIndices.size(), 2);
-  BOOST_CHECK_EQUAL(unpackedIndices[0], eBoundPhi);
-  BOOST_CHECK_EQUAL(unpackedIndices[1], eBoundTheta);
+  BOOST_CHECK_EQUAL(unpackedIndices[0], eBoundDir0);
+  BOOST_CHECK_EQUAL(unpackedIndices[1], eBoundDir1);
 }
 
 BOOST_AUTO_TEST_CASE(WriteMeasurementWithTime) {
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(TrackerHitLocalEnumApi) {
   // findSubspaceIndex: maps enum value to position in measurement vector
   BOOST_CHECK_EQUAL(hit.findSubspaceIndex(eBoundLoc0), 0u);
   BOOST_CHECK_EQUAL(hit.findSubspaceIndex(eBoundLoc1), 1u);
-  BOOST_CHECK_THROW(hit.findSubspaceIndex(eBoundPhi), std::runtime_error);
+  BOOST_CHECK_THROW(hit.findSubspaceIndex(eBoundDir0), std::runtime_error);
 
   // setValue/getCov via enum should round-trip identically to index-based API
   hit.setValue(1.5f, eBoundLoc0);
@@ -342,16 +342,17 @@ BOOST_AUTO_TEST_CASE(TrackerHitLocalEnumApi) {
                   1e-6f);
 
   // Out-of-subspace enum values throw
-  BOOST_CHECK_THROW(hit.getValue(eBoundPhi), std::runtime_error);
-  BOOST_CHECK_THROW(hit.getCov(eBoundLoc0, eBoundPhi), std::runtime_error);
-  BOOST_CHECK_THROW(hit.setValue(0.f, eBoundPhi), std::runtime_error);
-  BOOST_CHECK_THROW(hit.setCov(0.f, eBoundLoc0, eBoundPhi), std::runtime_error);
+  BOOST_CHECK_THROW(hit.getValue(eBoundDir0), std::runtime_error);
+  BOOST_CHECK_THROW(hit.getCov(eBoundLoc0, eBoundDir0), std::runtime_error);
+  BOOST_CHECK_THROW(hit.setValue(0.f, eBoundDir0), std::runtime_error);
+  BOOST_CHECK_THROW(hit.setCov(0.f, eBoundLoc0, eBoundDir0),
+                    std::runtime_error);
 
   // Read-only view has the same enum API
   ActsPodioEdm::TrackerHitLocal roHit = hit;
   CHECK_CLOSE_REL(roHit.getValue(eBoundLoc0), 1.5f, 1e-6f);
   CHECK_CLOSE_REL(roHit.getCov(eBoundLoc1, eBoundLoc1), 9.0f, 1e-6f);
-  BOOST_CHECK_THROW(roHit.getValue(eBoundPhi), std::runtime_error);
+  BOOST_CHECK_THROW(roHit.getValue(eBoundDir0), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -52,21 +52,21 @@ void checkParameters(const BoundTrackParameters& params, double phi,
   CHECK_SMALL(params.template get<eBoundLoc1>(), eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundTime>(), pos4[eTime], eps,
                        eps);
-  CHECK_CLOSE_OR_SMALL(detail::radian_sym(params.template get<eBoundPhi>()),
+  CHECK_CLOSE_OR_SMALL(detail::radian_sym(params.template get<eBoundDir0>()),
                        detail::radian_sym(phi), eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.template get<eBoundTheta>(), theta, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.template get<eBoundDir1>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundQOverP>(), qOverP, eps, eps);
   // convenience accessors
   BOOST_CHECK_EQUAL(params.charge(), q);
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eTime], eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.direction(geoCtx), unitDir, eps, eps);
   if (q != 0) {
     CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
-    CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
-                         eps);
-    CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
+    CHECK_CLOSE_OR_SMALL(params.transverseMomentum(geoCtx), p * std::sin(theta),
+                         eps, eps);
+    CHECK_CLOSE_OR_SMALL(params.momentum(geoCtx), p * unitDir, eps, eps);
   }
   // curvilinear reference surface
   CHECK_CLOSE_OR_SMALL(referenceSurface->center(geoCtx), pos, eps, eps);

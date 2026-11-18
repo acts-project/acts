@@ -323,7 +323,7 @@ void TruthJetAlgorithm::trackJetMatching(const ConstTrackContainer& tracks,
       Acts::Vector4 jet_4mom = jets[ijet].fourMomentum();
       Acts::Vector3 jet_3mom{jet_4mom[0], jet_4mom[1], jet_4mom[2]};
 
-      Acts::Vector4 track_4mom = track.fourMomentum();
+      Acts::Vector4 track_4mom = track.fourMomentum(ctx.recoGeoContext);
       Acts::Vector3 track_3mom{track_4mom[0], track_4mom[1], track_4mom[2]};
 
       // Calculate deltaR between track and jet

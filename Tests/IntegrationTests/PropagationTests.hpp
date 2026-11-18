@@ -171,17 +171,17 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearWithCovariance(
   stddev[eBoundLoc0] = 15_um;
   stddev[eBoundLoc1] = 80_um;
   stddev[eBoundTime] = 20_ps;
-  stddev[eBoundPhi] = 20_mrad;
-  stddev[eBoundTheta] = 30_mrad;
+  stddev[eBoundDir0] = 20_mrad;
+  stddev[eBoundDir1] = 30_mrad;
   stddev[eBoundQOverP] = 1_e / 10_GeV;
   BoundMatrix corr = BoundMatrix::Identity();
   corr(eBoundLoc0, eBoundLoc1) = corr(eBoundLoc1, eBoundLoc0) = 0.125;
-  corr(eBoundLoc0, eBoundPhi) = corr(eBoundPhi, eBoundLoc0) = 0.25;
-  corr(eBoundLoc1, eBoundTheta) = corr(eBoundTheta, eBoundLoc1) = -0.25;
+  corr(eBoundLoc0, eBoundDir0) = corr(eBoundDir0, eBoundLoc0) = 0.25;
+  corr(eBoundLoc1, eBoundDir1) = corr(eBoundDir1, eBoundLoc1) = -0.25;
   corr(eBoundTime, eBoundQOverP) = corr(eBoundQOverP, eBoundTime) = 0.125;
-  corr(eBoundPhi, eBoundTheta) = corr(eBoundTheta, eBoundPhi) = -0.25;
-  corr(eBoundPhi, eBoundQOverP) = corr(eBoundPhi, eBoundQOverP) = -0.125;
-  corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
+  corr(eBoundDir0, eBoundDir1) = corr(eBoundDir1, eBoundDir0) = -0.25;
+  corr(eBoundDir0, eBoundQOverP) = corr(eBoundDir0, eBoundQOverP) = -0.125;
+  corr(eBoundDir1, eBoundQOverP) = corr(eBoundDir1, eBoundQOverP) = 0.5;
   BoundMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
   Vector4 pos4 = Vector4::Zero();
@@ -223,17 +223,17 @@ inline void checkParametersConsistency(const Acts::BoundTrackParameters& cmp,
   CHECK_CLOSE_ABS(cmp.template get<eBoundTime>(),
                   ref.template get<eBoundTime>(), epsTime);
   // check phi equivalence with circularity
-  CHECK_SMALL(detail::radian_sym(cmp.template get<eBoundPhi>() -
-                                 ref.template get<eBoundPhi>()),
+  CHECK_SMALL(detail::radian_sym(cmp.template get<eBoundDir0>() -
+                                 ref.template get<eBoundDir0>()),
               epsDir);
-  CHECK_CLOSE_ABS(cmp.template get<eBoundTheta>(),
-                  ref.template get<eBoundTheta>(), epsDir);
+  CHECK_CLOSE_ABS(cmp.template get<eBoundDir1>(),
+                  ref.template get<eBoundDir1>(), epsDir);
   CHECK_CLOSE_ABS(cmp.template get<eBoundQOverP>(),
                   ref.template get<eBoundQOverP>(), epsMom);
   // check derived parameters
   CHECK_CLOSE_ABS(cmp.position(geoCtx), ref.position(geoCtx), epsPos);
   CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsTime);
-  CHECK_CLOSE_ABS(cmp.direction(), ref.direction(), epsDir);
+  CHECK_CLOSE_ABS(cmp.direction(geoCtx), ref.direction(geoCtx), epsDir);
   CHECK_CLOSE_ABS(cmp.absoluteMomentum(), ref.absoluteMomentum(), epsMom);
   // charge should be identical not just similar
   BOOST_CHECK_EQUAL(cmp.charge(), ref.charge());
@@ -268,7 +268,7 @@ inline Acts::Transform3 createCurvilinearTransform(
     const Acts::GeometryContext& geoCtx) {
   using namespace Acts;
 
-  Vector3 unitW = params.direction();
+  Vector3 unitW = params.direction(geoCtx);
   auto [unitU, unitV] = createCurvilinearUnitVectors(unitW);
 
   RotationMatrix3 rotation = RotationMatrix3::Zero();
@@ -455,7 +455,8 @@ inline void runToSurfaceTest(
   CHECK_CLOSE_ABS(surfParams.position(geoCtx), freeParams.position(geoCtx),
                   epsPos);
   CHECK_CLOSE_ABS(surfParams.time(), freeParams.time(), epsTime);
-  CHECK_CLOSE_ABS(surfParams.direction(), freeParams.direction(), epsDir);
+  CHECK_CLOSE_ABS(surfParams.direction(geoCtx), freeParams.direction(geoCtx),
+                  epsDir);
   CHECK_CLOSE_ABS(surfParams.absoluteMomentum(), freeParams.absoluteMomentum(),
                   epsMom);
   CHECK_CLOSE_ABS(surfPathLength, freePathLength, epsPos);
@@ -569,7 +570,8 @@ inline void runDenseForwardTest(
   BOOST_CHECK(endParams.covariance());
   CHECK_CLOSE_ABS(initialParams.position(geoCtx) + Acts::Vector3(3_m, 0, 0),
                   endParams.position(geoCtx), 1e-6);
-  CHECK_CLOSE_ABS(initialParams.direction(), endParams.direction(), 1e-6);
+  CHECK_CLOSE_ABS(initialParams.direction(geoCtx), endParams.direction(geoCtx),
+                  1e-6);
 
   const auto& cov = endParams.covariance().value();
 
@@ -583,8 +585,8 @@ inline void runDenseForwardTest(
   const double endErrP =
       (absQ / std::pow(endParams.qOverP(), 2)) * endErrQOverP;
   const double endErrE = (p / Acts::fastHypot(p, mass)) * endErrP;
-  const double endErrTheta = std::sqrt(cov(eBoundTheta, eBoundTheta));
-  const double endErrPhi = std::sqrt(cov(eBoundPhi, eBoundPhi));
+  const double endErrTheta = std::sqrt(cov(eBoundDir1, eBoundDir1));
+  const double endErrPhi = std::sqrt(cov(eBoundDir0, eBoundDir0));
 
   ACTS_VERBOSE("input q/p = " << initialQOverP);
   ACTS_VERBOSE("input p = " << p);

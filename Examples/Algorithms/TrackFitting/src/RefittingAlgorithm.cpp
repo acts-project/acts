@@ -186,7 +186,8 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     ACTS_VERBOSE("Initial parameters: "
                  << initialParams.fourPosition(ctx.recoGeoContext).transpose()
-                 << " -> " << initialParams.direction().transpose());
+                 << " -> "
+                 << initialParams.direction(ctx.recoGeoContext).transpose());
 
     ACTS_DEBUG("Invoke direct fitter for track " << itrack);
     auto result = (*m_cfg.fit)(trackSourceLinks, initialParams, options,

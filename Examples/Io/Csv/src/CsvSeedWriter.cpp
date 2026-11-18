@@ -100,8 +100,8 @@ ProcessCode CsvSeedWriter::writeT(const AlgorithmContext& ctx,
     // The estimated bound parameters vector
     const auto params = trackParams[iparams].parameters();
 
-    float seedPhi = params[Acts::eBoundPhi];
-    float seedEta = std::atanh(std::cos(params[Acts::eBoundTheta]));
+    float seedPhi = params[Acts::eBoundDir0];
+    float seedEta = std::atanh(std::cos(params[Acts::eBoundDir1]));
 
     // Get the proto track from which the track parameters are estimated
     const auto& seed = seeds[iparams];
@@ -159,7 +159,7 @@ ProcessCode CsvSeedWriter::writeT(const AlgorithmContext& ctx,
     toAdd.seedID = iparams;
     toAdd.particleId = majorityParticleId;
     toAdd.seedPt = std::abs(1.0 / params[Acts::eBoundQOverP]) *
-                   std::sin(params[Acts::eBoundTheta]);
+                   std::sin(params[Acts::eBoundDir1]);
     toAdd.seedPhi = seedPhi;
     toAdd.seedEta = seedEta;
     toAdd.vertexZ = seed.vertexZ();

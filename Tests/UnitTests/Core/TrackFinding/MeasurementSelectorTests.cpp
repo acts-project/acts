@@ -70,7 +70,7 @@ VectorMultiTrajectory::TrackStateProxy addCandidate(
   ts.predicted() = BoundVector::Zero();
   // Avoid theta = 0, whose pseudorapidity is infinite, since the selector bins
   // its cuts in eta.
-  ts.predicted()[eBoundTheta] = std::numbers::pi / 2.;
+  ts.predicted()[eBoundDir1] = std::numbers::pi / 2.;
   if (diverged) {
     ts.predicted()[eBoundLoc0] = std::numeric_limits<double>::quiet_NaN();
   }
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(TrackStateCreatorPassesSurfaceParametrization) {
   creator.measurementSelector.connect<&RecordingSelector::select>(&recorder);
 
   BoundVector parameters = BoundVector::Zero();
-  parameters[eBoundTheta] = std::numbers::pi / 2.;
+  parameters[eBoundDir1] = std::numbers::pi / 2.;
   parameters[eBoundQOverP] = 1.;
   const Creator::BoundState boundState{
       BoundTrackParameters(surface, parameters, BoundMatrix::Identity() * 1e-2,

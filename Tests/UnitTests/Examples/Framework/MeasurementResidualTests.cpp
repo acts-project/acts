@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(TwoDimensionalMeasurement) {
 
   // everything outside the measured subspace stays zero
   BOOST_CHECK_EQUAL(residual->residual[eBoundQOverP], 0.);
-  BOOST_CHECK_EQUAL(residual->covariance(eBoundTheta, eBoundTheta), 0.);
+  BOOST_CHECK_EQUAL(residual->covariance(eBoundDir1, eBoundDir1), 0.);
 }
 
 BOOST_AUTO_TEST_CASE(CovarianceSignFollowsTheParameterType) {

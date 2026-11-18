@@ -50,8 +50,8 @@ ActsExamples::truthParametersOnSurface(
   Acts::BoundVector params = Acts::BoundVector::Zero();
   params[eBoundLoc0] = truthLocal[Acts::ePos0];
   params[eBoundLoc1] = truthLocal[Acts::ePos1];
-  params[eBoundPhi] = phi(truthUnitDir);
-  params[eBoundTheta] = theta(truthUnitDir);
+  params[eBoundDir0] = phi(truthUnitDir);
+  params[eBoundDir1] = theta(truthUnitDir);
   params[eBoundQOverP] =
       particle.hypothesis().qOverP(momentum.norm(), particle.charge());
   params[eBoundTime] = truthPos4[Acts::eTime];

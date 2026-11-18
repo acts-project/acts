@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 using namespace Acts;
@@ -18,6 +19,8 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
+// Exercise the deprecated aliases and forwarding helpers.
+ACTS_PUSH_IGNORE_DEPRECATED()
 BOOST_AUTO_TEST_CASE(CanonicalDirectionMapsAndExpressions) {
   static_assert(eBoundDir0 == eBoundPhi);
   static_assert(eBoundDir1 == eBoundTheta);
@@ -79,6 +82,8 @@ BOOST_AUTO_TEST_CASE(subtractBoundParametersTest) {
           {0, 0, 1, 1, 0, 0}),
       normalizeBoundParameters({1, 2, 3, 4, 5, 6}), 1e-3, 1e-3);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 BOOST_AUTO_TEST_SUITE_END()
 
