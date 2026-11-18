@@ -244,7 +244,8 @@ class TrackProxyCommon {
   /// @deprecated Use transverseMomentum(gctx) instead.
   [[deprecated("Use transverseMomentum(gctx) instead")]]
   double transverseMomentum() const {
-    return std::sin(derived().theta()) * derived().absoluteMomentum();
+    return std::sin(derived().parameters()[eBoundDir1]) *
+           derived().absoluteMomentum();
   }
 
   /// Get a unit vector along the track direction at the reference surface
@@ -252,7 +253,7 @@ class TrackProxyCommon {
   /// @deprecated Use direction(gctx) instead.
   [[deprecated("Use direction(gctx) instead")]]
   Vector3 direction() const {
-    return makeDirectionFromPhiTheta(derived().phi(), derived().theta());
+    return canonicalDirection();
   }
 
   /// Get the global momentum vector
@@ -260,7 +261,7 @@ class TrackProxyCommon {
   /// @deprecated Use momentum(gctx) instead.
   [[deprecated("Use momentum(gctx) instead")]]
   Vector3 momentum() const {
-    return derived().absoluteMomentum() * derived().direction();
+    return derived().absoluteMomentum() * canonicalDirection();
   }
 
   /// Global azimuthal direction angle in radians.
@@ -312,7 +313,7 @@ class TrackProxyCommon {
   Vector4 fourMomentum() const {
     Vector4 p4 = Vector4::Zero();
 
-    Vector3 p3 = derived().momentum();
+    const Vector3 p3 = derived().absoluteMomentum() * canonicalDirection();
     p4[eMom0] = p3[eMom0];
     p4[eMom1] = p3[eMom1];
     p4[eMom2] = p3[eMom2];
@@ -324,6 +325,12 @@ class TrackProxyCommon {
   }
 
  private:
+  Vector3 canonicalDirection() const {
+    const auto& parameters = derived().parameters();
+    return makeDirectionFromPhiTheta(parameters[eBoundDir0],
+                                     parameters[eBoundDir1]);
+  }
+
   BoundParametrization boundParametrization(
       const GeometryContext& geoCtx) const {
     // Tracks without a reference surface retain their canonical interpretation.

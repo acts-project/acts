@@ -296,7 +296,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   if (m_cfg.doTrackJetMatching) {
     const ConstTrackContainer& tracks = m_inputTracks(ctx);
-    trackJetMatching(tracks, outputJetContainer);
+    trackJetMatching(tracks, outputJetContainer, ctx.recoGeoContext);
   }
 
   m_outputJets(ctx, std::move(outputJetContainer));
@@ -309,8 +309,9 @@ ProcessCode TruthJetAlgorithm::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-void TruthJetAlgorithm::trackJetMatching(const ConstTrackContainer& tracks,
-                                         TruthJetContainer& jets) const {
+void TruthJetAlgorithm::trackJetMatching(
+    const ConstTrackContainer& tracks, TruthJetContainer& jets,
+    const Acts::GeometryContext& gctx) const {
   std::unordered_map<std::size_t, std::vector<std::int32_t>>
       jetToTrackIndicesMap;
 
@@ -323,7 +324,7 @@ void TruthJetAlgorithm::trackJetMatching(const ConstTrackContainer& tracks,
       Acts::Vector4 jet_4mom = jets[ijet].fourMomentum();
       Acts::Vector3 jet_3mom{jet_4mom[0], jet_4mom[1], jet_4mom[2]};
 
-      Acts::Vector4 track_4mom = track.fourMomentum(ctx.recoGeoContext);
+      Acts::Vector4 track_4mom = track.fourMomentum(gctx);
       Acts::Vector3 track_3mom{track_4mom[0], track_4mom[1], track_4mom[2]};
 
       // Calculate deltaR between track and jet
