@@ -158,7 +158,7 @@ struct CorrectionUpdater {
   Result<void> update(const GeometryContext& gctx,
                       const BoundParametrization& parametrization,
                       VectorMultiTrajectory::TrackStateProxy state,
-                      const Logger&) const {
+                      const Logger& /*logger*/) const {
     // The builder passes the parametrization of the state's surface.
     BOOST_CHECK(parametrization ==
                 state.referenceSurface().boundParametrization(gctx));

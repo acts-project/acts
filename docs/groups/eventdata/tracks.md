@@ -36,9 +36,9 @@ detailed information produced during track reconstruction.
 ## Bound coordinates and physical observables
 
 @ref Acts::BoundVector "BoundVector" remains a six-component Eigen vector in
-the order `(loc0, loc1, dir0, dir1, q/p, time)`. Use @ref Acts::eBoundDir0 and
-@ref Acts::eBoundDir1 for the raw direction slots. @ref Acts::eBoundPhi and
-@ref Acts::eBoundTheta remain compatible aliases, deprecated in favor of the
+the order `(loc0, loc1, dir0, dir1, q/p, time)`. Use the @ref Acts::BoundIndices
+values `eBoundDir0` and `eBoundDir1` for the raw direction slots.
+`eBoundPhi` and `eBoundTheta` remain compatible aliases, deprecated in favor of the
 neutral names. `parameters()[index]` and @ref Acts::BoundTrackParameters::get
 "get<Index>()" always read stored coordinates; they do not calculate physical
 observables. Covariance rows and columns and measurement projector indices refer

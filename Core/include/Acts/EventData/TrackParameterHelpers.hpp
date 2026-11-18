@@ -22,6 +22,7 @@ namespace Acts {
 /// @return Global unit direction vector
 /// @pre Direction coordinates are finite (asserted).
 /// @note This helper assumes the canonical global-spherical parametrization.
+/// @deprecated Use BoundParametrization::direction instead.
 template <typename Derived>
 [[deprecated("Use BoundParametrization::direction instead")]]
 Vector3 directionFromBoundParameters(
@@ -40,6 +41,7 @@ Vector3 directionFromBoundParameters(
 /// @param maxAbsEta The maximum allowed eta value
 ///
 /// @return True if the bound vector is valid
+/// @deprecated Use BoundParametrization::isValid instead.
 [[deprecated("Use BoundParametrization::isValid instead")]]
 bool isBoundVectorValid(
     const BoundVector& v, bool validateAngleRange, double epsilon = 1e-6,
@@ -64,6 +66,7 @@ bool isFreeVectorValid(
 ///
 /// @return The normalized bound parameters
 /// @pre Inputs and arithmetic results are finite (asserted).
+/// @deprecated Use BoundParametrization::canonicalize instead.
 [[deprecated("Use BoundParametrization::canonicalize instead")]]
 inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
   return BoundParametrization::globalSpherical().canonicalize(boundParams);
@@ -77,6 +80,7 @@ inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
 ///
 /// @return The sum of the bound parameters
 /// @pre Inputs and arithmetic results are finite (asserted).
+/// @deprecated Use BoundParametrization::update instead.
 [[deprecated("Use BoundParametrization::update instead")]]
 inline BoundVector addBoundParameters(const BoundVector& lhs,
                                       const BoundVector& rhs) {
@@ -91,6 +95,7 @@ inline BoundVector addBoundParameters(const BoundVector& lhs,
 ///
 /// @return The difference of the bound parameters
 /// @pre Inputs and arithmetic results are finite (asserted).
+/// @deprecated Use BoundParametrization::difference instead.
 [[deprecated("Use BoundParametrization::difference instead")]]
 inline BoundVector subtractBoundParameters(const BoundVector& lhs,
                                            const BoundVector& rhs) {

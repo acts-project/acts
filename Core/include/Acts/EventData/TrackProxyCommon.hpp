@@ -197,6 +197,7 @@ class TrackProxyCommon {
 
   /// Access the theta parameter of the track at the reference surface
   /// @return The theta parameter
+  /// @deprecated Use theta(gctx) instead.
   [[deprecated("Use theta(gctx) instead")]]
   double theta() const {
     return derived().parameters()[eBoundDir1];
@@ -204,6 +205,7 @@ class TrackProxyCommon {
 
   /// Access the phi parameter of the track at the reference surface
   /// @return The phi parameter
+  /// @deprecated Use phi(gctx) instead.
   [[deprecated("Use phi(gctx) instead")]]
   double phi() const {
     return derived().parameters()[eBoundDir0];
@@ -239,6 +241,7 @@ class TrackProxyCommon {
 
   /// Get the transverse momentum
   /// @return The transverse momentum value
+  /// @deprecated Use transverseMomentum(gctx) instead.
   [[deprecated("Use transverseMomentum(gctx) instead")]]
   double transverseMomentum() const {
     return std::sin(derived().theta()) * derived().absoluteMomentum();
@@ -246,6 +249,7 @@ class TrackProxyCommon {
 
   /// Get a unit vector along the track direction at the reference surface
   /// @return The direction unit vector
+  /// @deprecated Use direction(gctx) instead.
   [[deprecated("Use direction(gctx) instead")]]
   Vector3 direction() const {
     return makeDirectionFromPhiTheta(derived().phi(), derived().theta());
@@ -253,6 +257,7 @@ class TrackProxyCommon {
 
   /// Get the global momentum vector
   /// @return the global momentum vector
+  /// @deprecated Use momentum(gctx) instead.
   [[deprecated("Use momentum(gctx) instead")]]
   Vector3 momentum() const {
     return derived().absoluteMomentum() * derived().direction();
@@ -302,6 +307,7 @@ class TrackProxyCommon {
 
   /// Get the four-momentum vector: (px, py, pz, e)
   /// @return the four-momentum vector
+  /// @deprecated Use fourMomentum(gctx) instead.
   [[deprecated("Use fourMomentum(gctx) instead")]]
   Vector4 fourMomentum() const {
     Vector4 p4 = Vector4::Zero();

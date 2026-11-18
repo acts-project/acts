@@ -34,13 +34,15 @@ enum BoundIndices : unsigned int {
   // while the others are defined in free space.
   eBoundLoc0 = 0,
   eBoundLoc1 = 1,
-  // Raw direction coordinates in the bound parametrization.
+  /// First raw direction coordinate in the bound parametrization.
   eBoundDir0 = 2,
+  /// Second raw direction coordinate in the bound parametrization.
   eBoundDir1 = 3,
-  // Legacy aliases for the canonical global-spherical parametrization.
+  /// @deprecated Use eBoundDir0 for raw coordinates or phi(gctx) for global phi.
   eBoundPhi [[deprecated(
       "Use eBoundDir0 for raw coordinates or phi(gctx) for global phi")]] =
       eBoundDir0,
+  /// @deprecated Use eBoundDir1 for raw coordinates or theta(gctx) for global theta.
   eBoundTheta [[deprecated(
       "Use eBoundDir1 for raw coordinates or theta(gctx) for global theta")]] =
       eBoundDir1,

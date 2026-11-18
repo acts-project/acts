@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(PeriodicResidualAndCovarianceBasis) {
     BOOST_CHECK_EQUAL(transformed(eBoundDir0, eBoundDir1), sign * -0.3);
     BOOST_CHECK_EQUAL(transformed(eBoundDir1, eBoundDir1), 1.);
     constexpr double h = 1e-6;
-    for (int i = 0; i < eBoundSize; ++i) {
+    for (unsigned int i = 0; i < eBoundSize; ++i) {
       BoundVector plus = raw;
       BoundVector minus = raw;
       plus[i] += h;

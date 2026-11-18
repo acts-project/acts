@@ -240,12 +240,14 @@ class BoundTrackParameters {
 
   /// Phi direction.
   /// @return The azimuthal angle phi in radians
+  /// @deprecated Use phi(gctx) instead.
   [[deprecated("Use phi(gctx) instead")]]
   double phi() const {
     return m_params[eBoundDir0];
   }
   /// Theta direction.
   /// @return The polar angle theta in radians
+  /// @deprecated Use theta(gctx) instead.
   [[deprecated("Use theta(gctx) instead")]]
   double theta() const {
     return m_params[eBoundDir1];
@@ -257,6 +259,7 @@ class BoundTrackParameters {
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
   /// @return Normalized direction vector
+  /// @deprecated Use direction(gctx) instead.
   [[deprecated("Use direction(gctx) instead")]]
   Vector3 direction() const {
     return BoundParametrization::globalSpherical().direction(m_params);
@@ -268,12 +271,14 @@ class BoundTrackParameters {
   }
   /// Transverse momentum.
   /// @return The transverse momentum magnitude
+  /// @deprecated Use transverseMomentum(gctx) instead.
   [[deprecated("Use transverseMomentum(gctx) instead")]]
   double transverseMomentum() const {
     return std::sin(m_params[eBoundDir1]) * absoluteMomentum();
   }
   /// Momentum three-vector.
   /// @return Three-dimensional momentum vector
+  /// @deprecated Use momentum(gctx) instead.
   [[deprecated("Use momentum(gctx) instead")]]
   Vector3 momentum() const {
     return absoluteMomentum() *

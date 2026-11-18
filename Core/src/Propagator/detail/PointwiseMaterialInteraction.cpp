@@ -121,11 +121,11 @@ Result<void> detail::removeMaterialCovarianceNoise(
   // and use the established unit-scaled check for difficult numerical cases.
   prepare();
   BoundVector scale;
-  for (int i = 0; i < eBoundSize; ++i) {
+  for (unsigned int i = 0; i < eBoundSize; ++i) {
     const double variance = std::max(covariance(i, i), std::abs(scratch(i, i)));
     scale[i] = variance > 0. ? 1. / std::sqrt(variance) : 1.;
   }
-  for (int i = 0; i < eBoundSize; ++i) {
+  for (unsigned int i = 0; i < eBoundSize; ++i) {
     scratch.row(i) *= scale[i];
     scratch.col(i) *= scale[i];
   }

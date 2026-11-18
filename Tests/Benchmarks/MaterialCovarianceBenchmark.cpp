@@ -41,12 +41,12 @@ namespace {
   // angle, time and inverse-momentum units directly. Include the proposed
   // diagonal to detect even tiny negative variances when starting from zero.
   BoundVector scale;
-  for (int i = 0; i < eBoundSize; ++i) {
+  for (unsigned int i = 0; i < eBoundSize; ++i) {
     const double variance = std::max(covariance(i, i), std::abs(updated(i, i)));
     scale[i] = variance > 0. ? 1. / std::sqrt(variance) : 1.;
   }
   BoundMatrix normalized = updated;
-  for (int i = 0; i < eBoundSize; ++i) {
+  for (unsigned int i = 0; i < eBoundSize; ++i) {
     normalized.row(i) *= scale[i];
     normalized.col(i) *= scale[i];
   }

@@ -66,7 +66,7 @@ class Surface : public virtual GeometryObject,
   /// placement and alignment do not rotate its direction axes. No chart state
   /// is added to the surface, and the returned value borrows no context.
   BoundParametrization boundParametrization(
-      const GeometryContext& /*gctx*/) const {
+      [[maybe_unused]] const GeometryContext& gctx) const {
     return BoundParametrization::globalSpherical();
   }
 
