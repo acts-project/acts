@@ -25,6 +25,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -58,7 +59,7 @@ std::shared_ptr<TrackingGeometry> makeCylinderStack(const Logger& logger) {
 }
 
 const TrackingVolume& findVolume(const TrackingGeometry& geometry,
-                                 const std::string& name) {
+                                 std::string_view name) {
   const TrackingVolume* found = nullptr;
   geometry.visitVolumes([&](const TrackingVolume* volume) {
     if (volume->volumeName() == name) {

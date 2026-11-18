@@ -104,7 +104,14 @@ class NavigationTarget {
         m_surfaceRepresentation(&target.surface()),
         m_boundaryTolerance(boundaryTolerance) {}
 
-  /// Portal target intersected through a separate (clipped) representation
+  /// Constructor for a portal target that is intersected through a different
+  /// surface than the portal surface, e.g. the portal clipped to a volume face
+  /// @param intersection is the intersection
+  /// @param intersectionIndex is the intersection index
+  /// @param target is the intersected portal
+  /// @param representation is the surface that is intersected
+  /// @param boundaryTolerance is the boundary tolerance used for this
+  /// intersection
   NavigationTarget(const Intersection3D& intersection,
                    IntersectionIndex intersectionIndex, const Portal& target,
                    const Surface& representation,
