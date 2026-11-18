@@ -434,10 +434,10 @@ struct MultiStepperTester {
         particleHypothesis);
 
     BOOST_REQUIRE(std::get<1>(multi_pars[0])
-                      .direction()
+                      .direction(geoCtx)
                       .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
     BOOST_REQUIRE(std::get<1>(multi_pars[1])
-                      .direction()
+                      .direction(geoCtx)
                       .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
     MultiState multi_state = multi_stepper.makeState(options);
@@ -643,10 +643,10 @@ struct MultiStepperTester {
         particleHypothesis);
 
     BOOST_REQUIRE(std::get<1>(multi_pars[0])
-                      .direction()
+                      .direction(geoCtx)
                       .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
     BOOST_REQUIRE(std::get<1>(multi_pars[1])
-                      .direction()
+                      .direction(geoCtx)
                       .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
     MultiState multi_state = multi_stepper.makeState(options);
@@ -798,8 +798,8 @@ struct MultiStepperTester {
 
     BOOST_CHECK(single_curv_pars.fourPosition(geoCtx).isApprox(
         check_pars.fourPosition(geoCtx), 1.e-8));
-    BOOST_CHECK(
-        single_curv_pars.direction().isApprox(check_pars.direction(), 1.e-8));
+    BOOST_CHECK(single_curv_pars.direction(geoCtx).isApprox(
+        check_pars.direction(geoCtx), 1.e-8));
     BOOST_CHECK_CLOSE(single_curv_pars.absoluteMomentum(),
                       check_pars.absoluteMomentum(), 1.e-8);
     BOOST_CHECK_CLOSE(single_curv_pars.charge(), check_pars.charge(), 1.e-8);
