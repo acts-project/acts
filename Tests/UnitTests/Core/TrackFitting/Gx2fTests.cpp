@@ -1205,6 +1205,227 @@ BOOST_AUTO_TEST_CASE(Material) {
 
   ACTS_INFO("*** Test: Material -- Finish");
 }
+// Minimal stand-ins for the propagator state and stepper seen by the
+// propagation guard
+struct PropagationGuardTestState {
+  PropagatorStage stage = PropagatorStage::postStep;
+  double pathLength = 0.;
+  int stepping = 0;
+};
+struct PropagationGuardTestStepper {
+  double momentum = 1_GeV;
+  double absoluteMomentum(int /*stepping*/) const { return momentum; }
+};
+
+// This test drives the propagation guard directly: the momentum cut-off, and
+// the limit on consecutive steps that reverse the direction
+BOOST_AUTO_TEST_CASE(PropagationGuardActor) {
+  ACTS_INFO("*** Test: PropagationGuardActor -- Start");
+
+  const int navigator = 0;
+  PropagationGuardTestStepper stepper;
+  Gx2FitterPropagationGuard guard;
+
+  ACTS_DEBUG("Momentum cut-off, checked before the first step");
+  guard.momentumCutOff = 1.5_GeV;
+  PropagationGuardTestState state;
+  state.stage = PropagatorStage::prePropagation;
+  Gx2FitterPropagationGuard::result_type result;
+  stepper.momentum = 1_GeV;
+  const auto resLow = guard.act(state, stepper, navigator, result, logger());
+  BOOST_REQUIRE(!resLow.ok());
+  BOOST_CHECK_EQUAL(resLow.error(),
+                    GlobalChiSquareFitterError::MomentumBelowCutOff);
+  stepper.momentum = 2_GeV;
+  BOOST_CHECK(guard.act(state, stepper, navigator, result, logger()).ok());
+  guard.momentumCutOff = 0.;
+
+  // Take nSteps steps with the given (repeating) step lengths and return the
+  // step after which the guard fails, or 0 if it never fails
+  auto stepsUntilAbort = [&](const std::vector<double>& steps,
+                             std::size_t nSteps) {
+    PropagationGuardTestState stepState;
+    Gx2FitterPropagationGuard::result_type stepResult;
+    for (std::size_t i = 1; i <= nSteps; ++i) {
+      stepState.pathLength += steps[(i - 1) % steps.size()];
+      const auto res =
+          guard.act(stepState, stepper, navigator, stepResult, logger());
+      if (!res.ok()) {
+        BOOST_CHECK_EQUAL(
+            res.error(), GlobalChiSquareFitterError::DirectionFlipLimitReached);
+        return i;
+      }
+    }
+    return std::size_t{0};
+  };
+
+  ACTS_DEBUG("Direction flips");
+  guard.maxDirectionFlips = 100;
+  // Steady forward steps, e.g. a track looping in the field
+  BOOST_CHECK_EQUAL(stepsUntilAbort({1_mm}, 1000), 0u);
+  // Back and forth: every step from the second on is a flip
+  BOOST_CHECK_EQUAL(stepsUntilAbort({1_mm, -1_mm}, 1000), 102u);
+  // Back and forth with a step in the same direction after every 48 flips
+  std::vector<double> interrupted;
+  for (int i = 0; i < 49; ++i) {
+    interrupted.push_back(i % 2 == 0 ? 1_mm : -1_mm);
+  }
+  interrupted.push_back(1_mm);
+  BOOST_CHECK_EQUAL(stepsUntilAbort(interrupted, 1000), 0u);
+  // Inactive
+  guard.maxDirectionFlips = 0;
+  BOOST_CHECK_EQUAL(stepsUntilAbort({1_mm, -1_mm}, 1000), 0u);
+
+  ACTS_INFO("*** Test: PropagationGuardActor -- Finish");
+}
+
+// This test checks that a momentum cut-off below the momentum of the track
+// does not change the fit, and that one above it aborts the fit
+BOOST_AUTO_TEST_CASE(MomentumCutOff) {
+  ACTS_INFO("*** Test: MomentumCutOff -- Start");
+
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
+  const std::size_t nSurfaces = 5;
+  Detector detector;
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
+
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+
+  ACTS_DEBUG("Create the measurements");
+  using SimPropagator = Propagator<StraightLineStepper, Navigator>;
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
+
+  ACTS_DEBUG("Set up the fitter");
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  using RecoStepper = EigenStepper<>;
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
+
+  using RecoPropagator = decltype(recoPropagator);
+  using Gx2Fitter = Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+
+  Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibratorStrict<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
+  Gx2FitterOptions gx2fOptions(geoCtx, magCtx, calCtx, extensions,
+                               PropagatorPlainOptions(geoCtx, magCtx), rSurface,
+                               false, false, FreeToBoundCorrection(false), 5,
+                               0);
+
+  ACTS_DEBUG("Fit the track with the default options");
+  TrackContainer tracksRef{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  const auto resRef = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                                 startParametersFit, gx2fOptions, tracksRef);
+  BOOST_REQUIRE(resRef.ok());
+
+  ACTS_DEBUG("Fit the track with a cut-off below its momentum");
+  gx2fOptions.momentumCutOff = 0.5_GeV;
+  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
+  BOOST_REQUIRE(res.ok());
+  BOOST_CHECK_EQUAL(res->chi2(), resRef->chi2());
+  BOOST_CHECK(res->parameters() == resRef->parameters());
+
+  ACTS_DEBUG("Fit the track with a cut-off above its momentum");
+  gx2fOptions.momentumCutOff = 2_GeV;
+  TrackContainer tracksAbort{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  const auto resAbort =
+      fitter.fit(sourceLinks.begin(), sourceLinks.end(), startParametersFit,
+                 gx2fOptions, tracksAbort);
+  BOOST_REQUIRE(!resAbort.ok());
+  BOOST_CHECK_EQUAL(resAbort.error(),
+                    GlobalChiSquareFitterError::MomentumBelowCutOff);
+
+  ACTS_INFO("*** Test: MomentumCutOff -- Finish");
+}
+
+// This test checks that even the strictest limit on direction flips does not
+// change a regular fit, in which the propagation always moves forward
+BOOST_AUTO_TEST_CASE(DirectionFlipLimitRegularFit) {
+  ACTS_INFO("*** Test: DirectionFlipLimitRegularFit -- Start");
+
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
+  const std::size_t nSurfaces = 5;
+  Detector detector;
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
+
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+
+  ACTS_DEBUG("Create the measurements");
+  using SimPropagator = Propagator<StraightLineStepper, Navigator>;
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
+
+  ACTS_DEBUG("Set up the fitter");
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  using RecoStepper = EigenStepper<>;
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
+
+  using RecoPropagator = decltype(recoPropagator);
+  using Gx2Fitter = Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+
+  Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibratorStrict<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
+  Gx2FitterOptions gx2fOptions(geoCtx, magCtx, calCtx, extensions,
+                               PropagatorPlainOptions(geoCtx, magCtx), rSurface,
+                               false, false, FreeToBoundCorrection(false), 5,
+                               0);
+
+  ACTS_DEBUG("Fit the track with the default options");
+  TrackContainer tracksRef{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  const auto resRef = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                                 startParametersFit, gx2fOptions, tracksRef);
+  BOOST_REQUIRE(resRef.ok());
+
+  ACTS_DEBUG("Fit the track with a limit of one direction flip");
+  gx2fOptions.maxDirectionFlips = 1;
+  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
+  BOOST_REQUIRE(res.ok());
+  BOOST_CHECK_EQUAL(res->chi2(), resRef->chi2());
+  BOOST_CHECK(res->parameters() == resRef->parameters());
+  BOOST_CHECK_EQUAL(res->nMeasurements(), resRef->nMeasurements());
+
+  ACTS_INFO("*** Test: DirectionFlipLimitRegularFit -- Finish");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

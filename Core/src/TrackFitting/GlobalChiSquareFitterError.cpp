@@ -32,6 +32,11 @@ class GlobalChiSquareFitterErrorCategory : public std::error_category {
         return "Gx2f: Not enough measurements.";
       case GlobalChiSquareFitterError::UpdatePushedToNewVolume:
         return "Gx2f: Update pushed the parameters to a new volume.";
+      case GlobalChiSquareFitterError::MomentumBelowCutOff:
+        return "Gx2f: Momentum below the cut-off during a propagation.";
+      case GlobalChiSquareFitterError::DirectionFlipLimitReached:
+        return "Gx2f: Too many consecutive direction flips during a "
+               "propagation.";
       default:
         return "unknown";
     }

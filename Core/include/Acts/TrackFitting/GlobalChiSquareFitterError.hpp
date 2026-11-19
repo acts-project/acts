@@ -26,6 +26,10 @@ enum class GlobalChiSquareFitterError {
   NotEnoughMeasurements = 3,
   /// Update pushed the parameters to a new volume.
   UpdatePushedToNewVolume = 4,
+  /// Momentum below the cut-off during a propagation.
+  MomentumBelowCutOff = 5,
+  /// Too many consecutive direction flips during a propagation.
+  DirectionFlipLimitReached = 6,
 
 };
 
