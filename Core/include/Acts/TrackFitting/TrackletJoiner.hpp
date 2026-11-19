@@ -168,20 +168,20 @@ class TrackletJoiner {
     };
     std::vector<Smoothed> smoothed;
     for (const auto& ts : first.trackStatesReversed()) {
-      smoothed.push_back(
-          {ts.index(),
-           ts.template component<TrackIndexType>(detail_tp::kNextKey),
-           ts.hasSmoothed() ? std::make_optional(std::pair{
-                                  BoundVector(ts.smoothed()),
-                                  BoundMatrix(ts.smoothedCovariance())})
-                            : std::nullopt});
+      Smoothed& entry = smoothed.emplace_back(
+          ts.index(),
+          ts.template component<TrackIndexType>(detail_tp::kNextKey),
+          std::nullopt);
+      if (ts.hasSmoothed()) {
+        entry.estimate.emplace(ts.smoothed(), ts.smoothedCovariance());
+      }
     }
     const TrackIndexType stemIndex = first.stemIndex();
     const TrackIndexType previous = sharedState.previous();
-    const std::optional<BoundMatrix> jacobian =
-        sharedState.hasJacobian()
-            ? std::optional<BoundMatrix>(sharedState.jacobian())
-            : std::nullopt;
+    std::optional<BoundMatrix> jacobian;
+    if (sharedState.hasJacobian()) {
+      jacobian = sharedState.jacobian();
+    }
     auto undo = [&] {
       for (const auto& [index, next, estimate] : smoothed) {
         auto ts = trajectory.getTrackState(index);
