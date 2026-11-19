@@ -214,10 +214,10 @@ class ConnectedComponentAnalysisTests
       const auto match = meas.at(meas_idx);
       EXPECT_NEAR(match.local_position()[0], io_truth.channel0, tol);
       EXPECT_NEAR(match.local_position()[1], io_truth.channel1, tol);
-      EXPECT_NEAR(match.local_variance()[0],
-                  io_truth.variance0 + var_adjustment, tol);
-      EXPECT_NEAR(match.local_variance()[1],
-                  io_truth.variance1 + var_adjustment, tol);
+      EXPECT_NEAR(match.local_variance()[0], var_adjustment, tol);
+      EXPECT_NEAR(match.local_variance()[1], var_adjustment, tol);
+      EXPECT_NEAR(match.charge_variance()[0], io_truth.variance0, tol);
+      EXPECT_NEAR(match.charge_variance()[1], io_truth.variance1, tol);
 
       ++total_truth;
     }

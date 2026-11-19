@@ -141,6 +141,10 @@ struct gbts_match_graph_edges_params {
   // deta_max *= 1.0f-high_pT_correction*((curv < less_scattering_curv) + (curv
   // < much_less_scattering_curv))
   float high_pT_correction = 0.2f;
+  // tighten cuts a low eta and loosen at high eta to account for material
+  float eta_correction = 0.2f;
+  float eta_low_threshold = 1.6f;
+  float eta_high_threshold = 2.7f;
   // cut on dphi/dphi_max + dcurv/dcurv_max + deta/deta_max
   float cut_ratio_sum_max = 1.3f;
 };
@@ -198,9 +202,6 @@ struct gbts_fit_segments_params {
   float inv_max_curvature = 900.0f;
   // factor to tighen inv_max_curvature when cutting after the fit is complete
   float final_curv_cut_tighten = 1.5f;
-  // detector r and z bounds, used in seed quality calculation
-  float rmax = 350.0f;
-  float zmax = 3000.0f;
 
   // max_z0 is used from the graph_making to insure concistency
 };

@@ -123,7 +123,13 @@ class navigation_validation : public test::fixture_base<> {
     }
     auto &truth_traces =
         m_whiteboard->template get<std::vector<truth_trace_t>>(truth_data_name);
-    ASSERT_EQ(m_cfg.n_tracks(), truth_traces.size());
+    // The scan removes the traces it could not validate itself
+    ASSERT_LE(truth_traces.size(), m_cfg.n_tracks());
+    if (truth_traces.size() < m_cfg.n_tracks()) {
+      DETRAY_WARN_HOST("Detector scan kept " << truth_traces.size() << " of "
+                                             << m_cfg.n_tracks()
+                                             << " traces, validating those");
+    }
 
     DETRAY_INFO_HOST("Running navigation validation on: " << det_name
                                                           << "...\n");

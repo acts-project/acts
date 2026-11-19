@@ -81,6 +81,7 @@ def test_truth_tracking_kalman(
         assert entry.hasFittedParams
 
 
+@pytest.mark.xdist_group("heavy")
 def test_python_track_access(generic_detector_config, tmp_path):
     with generic_detector_config.detector:
         from truth_tracking_kalman import runTruthTrackingKalman

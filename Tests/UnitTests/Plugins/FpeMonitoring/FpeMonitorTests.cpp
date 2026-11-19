@@ -12,6 +12,7 @@
 
 #include <cmath>
 #include <optional>
+#include <type_traits>
 
 namespace {
 
@@ -44,6 +45,11 @@ __attribute__((noinline)) void invalid2() {
 }  // namespace
 
 using namespace ActsPlugins;
+
+static_assert(!std::is_copy_constructible_v<FpeMonitor>);
+static_assert(!std::is_copy_assignable_v<FpeMonitor>);
+static_assert(!std::is_move_constructible_v<FpeMonitor>);
+static_assert(!std::is_move_assignable_v<FpeMonitor>);
 
 namespace ActsTests {
 

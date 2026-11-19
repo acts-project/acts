@@ -9,6 +9,7 @@
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
@@ -54,7 +55,7 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   // Setup the linearizer
   Linearizer::Config ltConfig;
-  ltConfig.bField = m_cfg.bField;
+
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
 
@@ -66,7 +67,7 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
   vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
       &linearizer);
   VertexFitter vertexFitter(vertexFitterCfg);
-  auto fieldCache = m_cfg.bField->makeCache(ctx.magFieldContext);
+  Acts::MagneticFieldQuery field(*m_cfg.bField, ctx.magFieldContext);
 
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
@@ -104,7 +105,7 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
     if (!m_cfg.doConstrainedFit) {
       VertexFitterOptions vfOptions(ctx.recoGeoContext, ctx.magFieldContext);
 
-      auto fitRes = vertexFitter.fit(inputTracks, vfOptions, fieldCache);
+      auto fitRes = vertexFitter.fit(inputTracks, vfOptions, field);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
@@ -121,7 +122,7 @@ ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
       VertexFitterOptions vfOptionsConstr(ctx.recoGeoContext,
                                           ctx.magFieldContext, theConstraint);
 
-      auto fitRes = vertexFitter.fit(inputTracks, vfOptionsConstr, fieldCache);
+      auto fitRes = vertexFitter.fit(inputTracks, vfOptionsConstr, field);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {

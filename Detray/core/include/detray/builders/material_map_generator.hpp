@@ -121,6 +121,11 @@ struct material_map_config {
 
   /// Setters
   /// @{
+  /// Store the configuration for one mask and surface category.
+  /// @param map_type Mask identifier selecting the shape configuration.
+  /// @param sf_type Surface category using the map.
+  /// @param cfg Binning and material variation settings.
+  /// @returns Reference to this configuration object.
   template <typename mask_id_t>
   constexpr material_map_config &set_map_config(mask_id_t map_type,
                                                 surface_id sf_type,
@@ -138,18 +143,30 @@ struct material_map_config {
 
   /// Getters
   /// @{
+  /// Check whether a configuration exists for a mask and surface category.
+  /// @param map_type Mask identifier selecting the shape configuration.
+  /// @param sf_type Surface category using the map.
+  /// @returns True when a matching configuration is stored.
   template <typename mask_id_t>
   bool has_config(mask_id_t map_type, surface_id sf_type) const {
     const auto key =
         std::make_pair(static_cast<unsigned int>(map_type), sf_type);
     return m_map_configs.contains(key);
   }
+  /// Get the configuration for a mask and surface category.
+  /// @param map_type Mask identifier selecting the shape configuration.
+  /// @param sf_type Surface category using the map.
+  /// @returns Const reference to the matching configuration.
   template <typename mask_id_t>
   const auto &get_map_config(mask_id_t map_type, surface_id sf_type) const {
     const auto key =
         std::make_pair(static_cast<unsigned int>(map_type), sf_type);
     return m_map_configs.at(key);
   }
+  /// Get the mutable configuration for a mask and surface category.
+  /// @param map_type Mask identifier selecting the shape configuration.
+  /// @param sf_type Surface category using the map.
+  /// @returns Reference to the matching configuration.
   template <typename mask_id_t>
   auto &get_map_config(mask_id_t map_type, surface_id sf_type) {
     const auto key =
@@ -167,7 +184,9 @@ class material_map_generator final : public factory_decorator<detector_t> {
   using scalar_t = dscalar<typename detector_t::algebra_type>;
 
  public:
-  /// Construct from configuration @param cfg
+  /// Construct from configuration @p cfg
+  /// @param factory Surface factory whose surfaces receive material maps.
+  /// @param cfg Binning and material variation settings.
   DETRAY_HOST
   material_map_generator(
       std::unique_ptr<surface_factory_interface<detector_t>> factory,
@@ -182,6 +201,7 @@ class material_map_generator final : public factory_decorator<detector_t> {
   /// @param transforms the transforms of the surfaces.
   /// @param masks the masks of the surfaces.
   /// @param ctx the geometry context (not needed for portals).
+  /// @returns Range of surfaces produced by the wrapped factory.
   DETRAY_HOST
   auto operator()(typename detector_t::volume_type &volume,
                   typename detector_t::surface_lookup_container &surfaces,
@@ -207,6 +227,7 @@ class material_map_generator final : public factory_decorator<detector_t> {
   /// @param material_map map the local bin indices and their content to a
   ///                  volume local surface index.
   /// @param n_bins the number of bins per axis per surface.
+  /// @returns No value; material map data and bin counts are written in place.
   template <typename bin_data_t, std::size_t N>
   DETRAY_HOST auto operator()(
       typename detector_t::surface_lookup_container &surfaces,

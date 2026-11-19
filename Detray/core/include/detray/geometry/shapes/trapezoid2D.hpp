@@ -36,6 +36,7 @@ class trapezoid2D {
   /// The name for this shape
   static constexpr std::string_view name = "trapezoid2D";
 
+  /// Indices describing the entries in the shape boundary array.
   enum boundaries : unsigned int {
     e_half_length_0 = 0u,
     e_half_length_1 = 1u,
@@ -92,6 +93,7 @@ class trapezoid2D {
   /// @param trf the surface transform
   /// @param glob_p the point to be checked in the global coordinate system
   /// @param tol dynamic tolerance determined by caller
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::algebra algebra_t>
@@ -115,6 +117,7 @@ class trapezoid2D {
   /// @param bounds the boundary values for this shape
   /// @param loc_p the point to be checked in the local coordinate system
   /// @param tol dynamic tolerance determined by caller
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::scalar scalar_t, concepts::point point_t>
@@ -217,6 +220,7 @@ class trapezoid2D {
     return {-x_bound, -y_bound, -env, x_bound, y_bound, env};
   }
 
+  /// @param bounds Boundary values used to determine the center.
   /// @returns the shapes centroid in local cartesian coordinates
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE dpoint3D<algebra_t> centroid(
@@ -235,7 +239,6 @@ class trapezoid2D {
   /// Generate vertices in local cartesian frame
   ///
   /// @param bounds the boundary values for the trapezoid
-  /// @param ls is the number of line segments
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>

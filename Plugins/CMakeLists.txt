@@ -1,3 +1,5 @@
+acts_apply_warning_flags(CXX ${ACTS_FAIL_ON_WARNINGS})
+
 # plugins are manually ordered such that dependent plugins appear after their
 # dependencies in the component list.
 # independent plugins
@@ -11,6 +13,7 @@ add_component_if(Onnx PluginOnnx ACTS_BUILD_PLUGIN_ONNX)
 add_component_if(Gnn PluginGnn ACTS_BUILD_PLUGIN_GNN)
 add_component_if(Detray PluginDetray ACTS_BUILD_PLUGIN_TRACCC)
 add_component_if(Covfie PluginCovfie ACTS_BUILD_PLUGIN_TRACCC)
+add_component_if(Traccc PluginTraccc ACTS_BUILD_PLUGIN_TRACCC)
 
 # dependent plugins. depend either on a independent plugins or on one another
 add_component_if(Root PluginRoot ACTS_BUILD_PLUGIN_ROOT)

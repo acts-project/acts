@@ -31,12 +31,14 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
 #include <cmath>
 #include <memory>
@@ -243,7 +245,11 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
   auto assignedDisc =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 2.2, 4.4, 0.07);
 
+  // TODO: surface copy-assignment is deprecated; switch to a makeShared copy
+  // when it is removed (SonarCloud cpp:S3624).
+  ACTS_PUSH_IGNORE_DEPRECATED()
   BOOST_CHECK_NO_THROW(*assignedDisc = *discSurfaceObject);
+  ACTS_POP_IGNORE_DEPRECATED()
   BOOST_CHECK((*assignedDisc) == (*discSurfaceObject));
 }
 
@@ -331,11 +337,19 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
 
+  // Tilt the direction off the z axis, where the bound angles are singular.
+  const Vector3 tiltedDirection = Vector3(0.25, -0.2, 0.95).normalized();
+  checkSurfaceDerivatives(
+      tgContext, *discSurfaceObject, transform, globalPosition, tiltedDirection,
+      [&](const Transform3& tf) {
+        return Surface::makeShared<DiscSurface>(tf, rMin, rMax, halfPhiSector);
+      });
+
   // (b) Test the derivative of bound track parameters local position w.r.t.
   // position in local 3D Cartesian coordinates
   const auto& loc3DToLocBound =
-      discSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
-                                                              globalPosition);
+      discSurfaceObject->localCartesianToBoundLocalDerivative(
+          tgContext, globalPosition, direction);
   // Check if the result is as expected
   Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
   expLoc3DToLocBound << 0, 1, 0, -1. / 3, 0, 0;
@@ -919,6 +933,67 @@ BOOST_AUTO_TEST_CASE(DiscBoundToCartesianJacobianMatchesTheSurface) {
       CHECK_CLOSE_ABS(b->boundToCartesianJacobian(lposition), numeric, 1e-6);
     }
   }
+}
+
+/// Unit test for DiscSurface::contains
+BOOST_AUTO_TEST_CASE(DiscSurfaceContains) {
+  using std::numbers::pi;
+  auto disc = [](const Transform3& transform, double rMin, double rMax,
+                 double halfPhi = pi, double avgPhi = 0.) {
+    return Surface::makeShared<DiscSurface>(
+        transform,
+        std::make_shared<const RadialBounds>(rMin, rMax, halfPhi, avgPhi));
+  };
+  const Transform3 identity = Transform3::Identity();
+  auto rotatedZ = [](double angle) {
+    return Transform3{AngleAxis3{angle, Vector3::UnitZ()}};
+  };
+  auto ring = disc(identity, 10_mm, 50_mm);
+
+  BOOST_CHECK(ring->contains(tgContext, *ring));
+  BOOST_CHECK(ring->contains(tgContext, *disc(identity, 20_mm, 40_mm)));
+  BOOST_CHECK(!ring->contains(tgContext, *disc(identity, 5_mm, 40_mm)));
+  BOOST_CHECK(!ring->contains(tgContext, *disc(identity, 20_mm, 60_mm)));
+  BOOST_CHECK(!disc(identity, 20_mm, 40_mm)->contains(tgContext, *ring));
+
+  // Phi sectors, also through the rotation of the other disc
+  auto sector = disc(identity, 10_mm, 50_mm, pi / 4.);
+  BOOST_CHECK(sector->contains(
+      tgContext, *disc(identity, 20_mm, 40_mm, pi / 8., pi / 8.)));
+  BOOST_CHECK(!sector->contains(
+      tgContext, *disc(identity, 20_mm, 40_mm, pi / 8., pi / 4.)));
+  BOOST_CHECK(sector->contains(
+      tgContext, *disc(rotatedZ(pi / 8.), 20_mm, 40_mm, pi / 8.)));
+  BOOST_CHECK(!sector->contains(
+      tgContext, *disc(rotatedZ(pi / 4.), 20_mm, 40_mm, pi / 8.)));
+  BOOST_CHECK(!sector->contains(tgContext, *ring));
+
+  // Sectors across phi = +-pi
+  auto back = disc(identity, 10_mm, 50_mm, pi / 4., -pi);
+  BOOST_CHECK(back->contains(
+      tgContext, *disc(identity, 20_mm, 40_mm, pi / 16., 7. * pi / 8.)));
+
+  // A flipped normal mirrors the phi sector
+  auto upper = disc(identity, 10_mm, 50_mm, pi / 8., pi / 8.);
+  const Transform3 flipped{AngleAxis3{pi, Vector3::UnitX()}};
+  BOOST_CHECK(upper->contains(
+      tgContext, *disc(identity, 20_mm, 40_mm, pi / 16., pi / 8.)));
+  BOOST_CHECK(!upper->contains(
+      tgContext, *disc(flipped, 20_mm, 40_mm, pi / 16., pi / 8.)));
+  BOOST_CHECK(upper->contains(
+      tgContext, *disc(flipped, 20_mm, 40_mm, pi / 16., -pi / 8.)));
+
+  // Not concentric or not on the same plane
+  BOOST_CHECK(!ring->contains(
+      tgContext, *disc(Transform3{Translation3{1_mm, 0, 0}}, 20_mm, 40_mm)));
+  BOOST_CHECK(!ring->contains(
+      tgContext, *disc(Transform3{Translation3{0, 0, 1_mm}}, 20_mm, 40_mm)));
+
+  // Other bounds are not supported
+  auto trapezoid = Surface::makeShared<DiscSurface>(
+      identity,
+      std::make_shared<const DiscTrapezoidBounds>(2_mm, 4_mm, 20_mm, 40_mm));
+  BOOST_CHECK(!ring->contains(tgContext, *trapezoid));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -92,7 +92,7 @@ inline void test_mat_map(const mat_map_t& mat_map, const bool is_cyl) {
 template <concepts::algebra algebra_t, typename container_t>
 inline bool toy_detector_test(
     const detail::detector<toy_metadata<algebra_t>, container_t>& toy_det,
-    const detray::name_map& names) {
+    const detray::name_map& names, const bool deduplicated) {
   using detector_t = detail::detector<toy_metadata<algebra_t>, container_t>;
   using scalar_t = dscalar<typename detector_t::algebra_type>;
   using geo_obj_ids = typename detector_t::geo_obj_ids;
@@ -156,13 +156,18 @@ inline bool toy_detector_test(
   }
   if (has_hom_material) {
     EXPECT_FALSE(has_material_maps);
-    EXPECT_EQ(materials.template size<material_id::e_material_slab>(), 3141u);
+
+    const std::size_t n_mat{deduplicated ? 2u : 3141u};
+    EXPECT_EQ(materials.template size<material_id::e_material_slab>(), n_mat);
   } else if (has_material_maps) {
     EXPECT_FALSE(has_hom_material);
+
+    const std::size_t n_cyl_map{deduplicated ? 16u : 44u};
+    const std::size_t n_disc_map{deduplicated ? 10u : 42u};
     EXPECT_EQ(
         materials.template size<material_id::e_concentric_cylinder2D_map>(),
-        44u);
-    EXPECT_EQ(materials.template size<material_id::e_ring2D_map>(), 42u);
+        n_cyl_map);
+    EXPECT_EQ(materials.template size<material_id::e_ring2D_map>(), n_disc_map);
   }
 
   // Check the surface source links
@@ -285,8 +290,8 @@ inline bool toy_detector_test(
   auto test_module_links = [&](const dindex vol_index,
                                decltype(surfaces.begin())&& sf_itr,
                                const darray<dindex, 2>& range, dindex trf_index,
-                               mask_link_t&& mask_index,
-                               material_link_t&& material_index,
+                               mask_link_t&& mask_link,
+                               material_link_t&& material_link,
                                const material_slab<scalar_t>& mat,
                                const dvector<dindex>&& volume_links,
                                bool is_deduplicated = false) {
@@ -298,12 +303,18 @@ inline bool toy_detector_test(
       // The volume index compensates for the number of volume
       // transforms in the transform store
       EXPECT_EQ(sf_itr->transform(), trf_index + vol_index + 1);
-      EXPECT_EQ(sf_itr->mask(), mask_index);
+      EXPECT_EQ(sf_itr->mask(), mask_link);
       const geometry::surface sf{toy_det, *sf_itr};
       const auto m_volume_links = sf.volume_links();
       EXPECT_EQ(m_volume_links[0], volume_links[0]);
       if (has_hom_material) {
-        EXPECT_EQ(sf_itr->material(), material_index);
+        dindex mat_idx{deduplicated ? 1u : material_link.index()};
+        // Correct for the beampipe material
+        mat_idx = material_link.index() == 0u ? 0u : mat_idx;
+
+        EXPECT_EQ(sf_itr->material().id(), material_link.id());
+        EXPECT_EQ(sf_itr->material().index(), mat_idx);
+
         EXPECT_EQ(
             materials.template get<
                 material_id::e_material_slab>()[sf_itr->material().index()],
@@ -325,9 +336,9 @@ inline bool toy_detector_test(
       ++sf_itr;
       ++trf_index;
       if (!is_deduplicated) {
-        ++mask_index;
+        ++mask_link;
       }
-      ++material_index;
+      ++material_link;
     }
   };
 

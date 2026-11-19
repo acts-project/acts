@@ -34,9 +34,11 @@ using index_t = typename index<M>::type;
 template <class M>
 struct value {};
 
+/// Map an arithmetic scalar type to itself as its value type.
 template <typename T>
   requires(std::is_arithmetic_v<T> && std::is_scalar_v<T>)
 struct value<T> {
+  /// The arithmetic type itself.
   using type = T;
 };
 
@@ -48,6 +50,7 @@ using value_t = typename value<M>::type;
 /// @{
 template <class M>
 struct scalar {
+  /// By default, the scalar type is the matrix value type.
   using type = value_t<M>;
 };
 
@@ -77,23 +80,25 @@ using get_matrix_t = typename matrix<M>::template other_type<T, ROWS, COLS>;
 /// @{
 template <typename M>
 struct dimensions {
+  /// Index type used to represent dimensions.
   using index_type = int;
 
   // Error case
-  static constexpr index_type _dim{-1};
-  static constexpr index_type _rows{-1};
-  static constexpr index_type _columns{-1};
+  static constexpr index_type _dim{-1};      ///< Invalid dimension sentinel.
+  static constexpr index_type _rows{-1};     ///< Invalid row count sentinel.
+  static constexpr index_type _columns{-1};  ///< Invalid column count sentinel.
 };
 
 /// Specialization for scalar types
 template <typename M>
   requires std::is_fundamental_v<M>
 struct dimensions<M> {
+  /// Index type used to represent dimensions.
   using index_type = std::size_t;
 
-  static constexpr index_type _dim{0};
-  static constexpr index_type _rows{1};
-  static constexpr index_type _columns{1};
+  static constexpr index_type _dim{0};      ///< Scalars have rank zero.
+  static constexpr index_type _rows{1};     ///< Scalars occupy one row.
+  static constexpr index_type _columns{1};  ///< Scalars occupy one column.
 };
 
 template <class M>
@@ -142,86 +147,123 @@ using block_getter_t = typename block_getter<M>::type;
 template <typename A, typename = void>
 struct get_algebra {};
 
+/// Expose the types provided by a supported algebra.
 template <typename A>
   requires(!std::is_same_v<typename A::point3D, void>)
 struct get_algebra<A> {
+  /// The algebra type itself.
   using algebra_type = A;
 
+  /// SIMD type parameterized by the lane value type.
   template <typename U>
   using simd = typename A::template simd<U>;
+  /// Integer type used for indices.
   using index_type = typename A::index_type;
+  /// Boolean type used by the algebra.
   using boolean = typename A::boolean;
+  /// Value type used by the algebra.
   using value = typename A::value_type;
+  /// Scalar type, possibly containing multiple values in an SoA algebra.
   using scalar = typename A::scalar;
+  /// Two-dimensional point type.
   using point2D = typename A::point2D;
+  /// Three-dimensional point type.
   using point3D = typename A::point3D;
+  /// Two-dimensional vector type.
   using vector2D = typename A::vector2D;
+  /// Three-dimensional vector type.
   using vector3D = typename A::vector3D;
+  /// Three-dimensional transform type.
   using transform3D = typename A::transform3D;
+  /// Matrix type with the requested dimensions.
   template <std::size_t ROWS, std::size_t COLS>
   using matrix = typename A::template matrix<ROWS, COLS>;
 };
 
-// Switch the value type of an existing algebra definition
+/// Switch the value type of an existing algebra definition
 template <template <typename> class A, typename W, typename V>
   requires(!std::is_same_v<typename A<V>::point3D, void> &&
            !std::is_same_v<typename A<W>::point3D, void>)
 struct get_algebra<A<V>, W> {
+  /// The algebra instantiated with the replacement value type.
   using algebra_type = A<W>;
 
+  /// SIMD type parameterized by the lane value type.
   template <typename U>
   using simd = typename A<W>::template simd<U>;
+  /// Integer type used for indices.
   using index_type = typename A<W>::index_type;
+  /// Boolean type used by the algebra.
   using boolean = typename A<W>::boolean;
+  /// Value type used by the algebra.
   using value = typename A<W>::value_type;
+  /// Scalar type, possibly containing multiple values in an SoA algebra.
   using scalar = typename A<W>::scalar;
+  /// Two-dimensional point type.
   using point2D = typename A<W>::point2D;
+  /// Three-dimensional point type.
   using point3D = typename A<W>::point3D;
+  /// Two-dimensional vector type.
   using vector2D = typename A<W>::vector2D;
+  /// Three-dimensional vector type.
   using vector3D = typename A<W>::vector3D;
+  /// Three-dimensional transform type.
   using transform3D = typename A<W>::transform3D;
+  /// Matrix type with the requested dimensions.
   template <std::size_t ROWS, std::size_t COLS>
   using matrix = typename A<W>::template matrix<ROWS, COLS>;
 };
 
 }  // namespace traits
 
+// Algebra type aliases
+/// Select the algebra type, optionally replacing its value type.
 template <typename A, typename T>
 using get_algebra_t = typename traits::get_algebra<A, T>::algebra_type;
 
+/// Get the algebra value type.
 template <typename A>
 using get_value_t = typename traits::get_algebra<A>::value;
 
+/// Get the algebra boolean type.
 template <typename A>
 using get_boolean_t = typename traits::get_algebra<A>::boolean;
 
+/// Get the algebra SIMD type for a lane value type.
 template <typename A, typename T>
 using get_simd_t = typename traits::get_algebra<A>::template simd<T>;
 
+/// Get the algebra index type.
 template <typename A>
 using get_index_t = typename traits::get_algebra<A>::index_type;
 
+/// Get the algebra scalar type, optionally for a replacement value type.
 template <typename A, typename T = get_value_t<A>>
 using get_scalar_t = typename traits::get_algebra<A, T>::scalar;
 
+/// Get the 2D point type, optionally for a replacement value type.
 template <typename A, typename T = get_value_t<A>>
 using get_point2D_t = typename traits::get_algebra<A, T>::point2D;
 
+/// Get the 3D point type, optionally for a replacement value type.
 template <typename A, typename T = get_value_t<A>>
 using get_point3D_t = typename traits::get_algebra<A, T>::point3D;
 
+/// Get the 2D vector type, optionally for a replacement value type.
 template <typename A, typename T = get_value_t<A>>
 using get_vector2D_t = typename traits::get_algebra<A, T>::vector2D;
 
+/// Get the 3D vector type, optionally for a replacement value type.
 template <typename A, typename T = get_value_t<A>>
 using get_vector3D_t = typename traits::get_algebra<A, T>::vector3D;
 
+/// Get the 3D transform type, optionally for a replacement value type.
 template <typename A, typename T = get_value_t<A>>
 using get_transform3D_t = typename traits::get_algebra<A, T>::transform3D;
 
+/// Get a matrix type with the requested dimensions and value type.
 template <typename A, std::size_t R, std::size_t C, typename T = get_value_t<A>>
 using get_matrix_t = typename traits::get_algebra<A, T>::template matrix<R, C>;
-/// @}
 
 }  // namespace detray
 
@@ -317,3 +359,5 @@ using get_matrix_t = typename traits::get_algebra<A, T>::template matrix<R, C>;
   };                                                                    \
                                                                         \
   }  // namespace detray::traits
+
+/// @}

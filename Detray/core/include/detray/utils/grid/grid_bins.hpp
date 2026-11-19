@@ -26,6 +26,7 @@ class single : public detray::ranges::single_view<entry_t> {
   using base_type = detray::ranges::single_view<entry_t>;
 
  public:
+  /// Type stored in each bin.
   using entry_type = entry_t;
   using base_type::base_type;
   using base_type::operator=;
@@ -39,12 +40,14 @@ class single : public detray::ranges::single_view<entry_t> {
   constexpr dindex capacity() noexcept { return 1u; }
 
   /// Add a new entry to the bin
+  /// @param entry Value to store.
   template <typename E = entry_t>
   DETRAY_HOST_DEVICE constexpr void push_back(E&& entry) noexcept {
     (*this).ref() = std::forward<E>(entry);
   }
 
   /// @returns an initialized bin in the backend storage
+  /// @param entry Initial value; the invalid sentinel leaves the bin empty.
   DETRAY_HOST_DEVICE
   constexpr auto init(entry_t entry = detail::invalid_value<entry_t>())
       -> single& {
@@ -77,26 +80,41 @@ class static_array
       typename detray::ranges::const_iterator_t<const_bin_view_t>;
 
  public:
+  /// Type stored in each bin.
   using entry_type = entry_t;
 
   /// Default constructor initializer the bin with an invalid value
   DETRAY_HOST_DEVICE constexpr static_array() { init(); };
+  /// Copies a bin and its contents.
+  /// @param other Bin to copy.
   constexpr static_array(const static_array& other) = default;
+  /// Moves a bin and its contents.
+  /// @param other Bin to move from.
   constexpr static_array(static_array&& other) noexcept = default;
+  /// Copies another bin's contents.
+  /// @param other Bin whose contents are copied.
+  /// @returns This bin after assignment.
   static_array& operator=(const static_array& other) noexcept = default;
 
+  /// Returns an iterator to the first valid entry.
   /// @returns view iterator over bin content in start or end position
   /// @{
   DETRAY_HOST_DEVICE bin_iterator_t begin() {
     return detray::ranges::begin(m_content);
   }
+  /// Returns an iterator one past the last valid entry.
+  /// @returns Iterator past the last valid entry.
   DETRAY_HOST_DEVICE bin_iterator_t end() {
     return detray::ranges::begin(m_content) + m_size;
   }
+  /// Returns a const iterator to the first valid entry.
+  /// @returns Const iterator to the first valid entry.
   DETRAY_HOST_DEVICE
   const_bin_iterator_t begin() const {
     return detray::ranges::cbegin(m_content);
   }
+  /// Returns a const iterator one past the last valid entry.
+  /// @returns Const iterator past the last valid entry.
   DETRAY_HOST_DEVICE
   const_bin_iterator_t end() const {
     return detray::ranges::cbegin(m_content) + m_size;
@@ -107,13 +125,14 @@ class static_array
   DETRAY_HOST_DEVICE
   constexpr dindex size() const { return m_size; }
 
-  /// The storage capacity of this bin
+  /// @returns The fixed storage capacity of this bin.
   DETRAY_HOST_DEVICE
   constexpr dindex capacity() const noexcept {
     return static_cast<dindex>(m_content.size());
   }
 
   /// Add a new entry to the bin
+  /// @param entry Value to append. The caller must ensure capacity is available.
   template <typename E = entry_t>
   DETRAY_HOST_DEVICE constexpr void push_back(E&& entry) noexcept {
     m_content[m_size] = std::forward<E>(entry);
@@ -121,6 +140,7 @@ class static_array
   }
 
   /// Initialize with a single entry filled
+  /// @param entry Initial value; the invalid sentinel leaves the bin empty.
   ///
   /// @returns Access to the initialized bin
   DETRAY_HOST_DEVICE
@@ -143,7 +163,9 @@ class static_array
     return *this;
   }
 
-  /// Initialize from an entire bin content @param content.
+  /// Initialize from an entire bin content @p content.
+  /// @param content Array containing the bin contents; invalid sentinels are
+  /// excluded from the resulting size.
   ///
   /// @returns Access to the initialized bin
   DETRAY_HOST_DEVICE
@@ -185,21 +207,33 @@ class dynamic_array
   using container_t = device_container_types::template vector_type<entry_t>;
 
  public:
+  /// Metadata describing one bin's range in shared storage.
   struct data {
+    /// Offset of this bin in the shared entry storage.
     dindex offset{0u};
+    /// Number of valid entries in this bin.
     dindex size{0u};
+    /// Number of storage slots reserved for this bin.
     dindex capacity{0u};
 
+    /// Compares the bin metadata fields.
+    /// @param rhs Metadata to compare with.
+    /// @returns Whether all metadata fields are equal.
     constexpr bool operator==(const data& rhs) const = default;
 
+    /// Moves this bin's starting offset by a storage shift.
+    /// @param shift Number of storage slots by which to advance the offset.
     DETRAY_HOST_DEVICE
     constexpr void update_offset(std::size_t shift) {
       offset += static_cast<dindex>(shift);
     }
   };
 
+  /// Type stored in each bin.
   using entry_type = entry_t;
+  /// Pointer type used to view entries in shared storage.
   using entry_ptr_t = const entry_type*;
+  /// Pointer type used to view shared bin metadata.
   using data_ptr_t = const data*;
 
   /// Default constructor initializer the bin with an invalid value
@@ -229,18 +263,25 @@ class dynamic_array
     }
   }
 
+  /// Returns an iterator to the first entry in this bin.
   /// @returns view iterator over bin content in start or end position
   /// @{
   DETRAY_HOST_DEVICE auto begin() {
     return const_cast<entry_type*>(m_global_storage);
   }
 
+  /// Returns an iterator one past the last valid entry.
+  /// @returns Iterator past the last valid entry.
   DETRAY_HOST_DEVICE auto end() {
     return const_cast<entry_type*>(m_global_storage) + m_data->size;
   }
 
+  /// Returns a const iterator to the first entry in this bin.
+  /// @returns Const iterator to the first entry.
   DETRAY_HOST_DEVICE auto begin() const { return m_global_storage; }
 
+  /// Returns a const iterator one past the last valid entry.
+  /// @returns Const iterator past the last valid entry.
   DETRAY_HOST_DEVICE auto end() const {
     return m_global_storage + m_data->size;
   }
@@ -250,11 +291,12 @@ class dynamic_array
   DETRAY_HOST_DEVICE
   constexpr dindex size() const { return m_data->size; }
 
-  /// The storage capacity of this bin
+  /// @returns The storage capacity reserved for this bin.
   DETRAY_HOST_DEVICE
   constexpr dindex capacity() const noexcept { return m_capacity; }
 
   /// Add a new entry to the bin
+  /// @param entry Value to append.
   /// @note This does not check the state of the container it points to!!!
   template <typename E = entry_type>
   DETRAY_HOST_DEVICE constexpr void push_back(E&& entry) {
@@ -269,6 +311,7 @@ class dynamic_array
     }
   }
 
+  /// @param entry Initial value; the invalid sentinel leaves the bin empty.
   /// @note The bin capacity has to be set correctly before calling this
   /// method
   /// @returns Access to an initialized bin in the backend storage
@@ -294,7 +337,9 @@ class dynamic_array
     return *this;
   }
 
-  /// Initialize from an entire bin content @param content.
+  /// Initialize from an entire bin content @p content.
+  /// @param content Storage indexed from zero with at least capacity entries;
+  /// invalid sentinels are excluded from the resulting size.
   ///
   /// @returns Access to the initialized bin
   template <typename storage_t>
@@ -351,6 +396,4 @@ dynamic_array(entry_t* bin_storage, data_t& bin_data) -> dynamic_array<entry_t>;
 template <typename entry_t, typename data_t>
 dynamic_array(const entry_t* bin_storage, const data_t& bin_data)
     -> dynamic_array<entry_t>;
-/// @}
-
 }  // namespace detray::bins

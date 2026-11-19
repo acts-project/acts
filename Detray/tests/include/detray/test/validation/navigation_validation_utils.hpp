@@ -52,6 +52,11 @@ namespace detray::navigation_validator {
 
 /// A functor to get the minimum distance to any surface boundary.
 struct min_dist_to_boundary {
+  /// Find the minimum distance to the boundary among a mask range.
+  /// @param mask_group Group containing the masks.
+  /// @param idx_range Range of masks to inspect.
+  /// @param loc_p Local position to evaluate.
+  /// @return Minimum distance to a boundary.
   template <typename mask_group_t, typename idx_range_t, typename point_t>
   DETRAY_HOST_DEVICE inline auto operator()(const mask_group_t &mask_group,
                                             const idx_range_t idx_range,
@@ -72,21 +77,31 @@ struct empty_bfield {};
 
 /// Struct that keeps track of the number of encountered/skipped surfaces
 struct surface_stats {
+  /// Number of encountered portals.
   std::size_t n_portals{0u};
+  /// Number of encountered sensitive surfaces.
   std::size_t n_sensitives{0u};
+  /// Number of encountered passive surfaces.
   std::size_t n_passives{0u};
 
   /// The total number of skipped surfaces
+  /// @return Total number of counted surfaces.
   std::size_t n_total() const { return n_portals + n_sensitives + n_passives; }
 
   /// Count a surface depending on its type
   /// @returns true of the surface type was recognized
+  /// @param sf_desc Descriptor of the surface to count.
+  /// @param verbose Whether to log unknown surface types.
   /// @{
   template <typename sf_descriptor_t>
   bool count(const sf_descriptor_t &sf_desc, const bool verbose = true) {
     return count(sf_desc.identifier(), verbose);
   }
 
+  /// Count a surface by its geometry identifier.
+  /// @param geo_id Identifier of the surface.
+  /// @param verbose Whether to log unknown surface types.
+  /// @return Whether the surface type was recognized.
   bool count(geometry::identifier geo_id, const bool verbose = true) {
     switch (geo_id.id()) {
       using enum surface_id;
@@ -113,6 +128,8 @@ struct surface_stats {
   /// @}
 
   /// Count up
+  /// @param other Statistics to add.
+  /// @return This statistics object after addition.
   surface_stats &operator+=(const surface_stats &other) {
     n_portals += other.n_portals;
     n_sensitives += other.n_sensitives;
@@ -124,12 +141,18 @@ struct surface_stats {
 
 /// Statistics on tracks with holes and extra surfaces
 struct track_statistics {
+  /// Number of processed tracks.
   std::size_t n_tracks{0u};
+  /// Number of tracks with missing surfaces.
   std::size_t n_tracks_w_holes{0u};  //< Number of tracks with missing surface
+  /// Number of tracks with additional surfaces.
   std::size_t n_tracks_w_extra{0u};  //< Number of tracks with extra surfaces
-  std::size_t n_good_tracks{0u};     //< Number of tracks that match exactly
+  /// Number of tracks that match exactly.
+  std::size_t n_good_tracks{0u};  //< Number of tracks that match exactly
+  /// Maximum number of missed surfaces on one track.
   std::size_t n_max_missed_per_trk{0u};  //< Max hole count
-  std::size_t n_max_extra_per_trk{0u};   //< Max count of additional sf
+  /// Maximum number of additional surfaces on one track.
+  std::size_t n_max_extra_per_trk{0u};  //< Max count of additional sf
 };
 
 /// Run the propagation and record test data along the way
@@ -355,8 +378,8 @@ inline auto record_propagation(
                          std::move(nav_printer), std::move(step_printer));
 }
 
-/// Compare the recorded intersection trace in @param recorded_trace
-/// to the truth trace in @param truth_trace
+/// Compare the recorded intersection trace in @p recorded_trace
+/// to the truth trace in @p truth_trace
 ///
 /// This function gathers and displays some statistics about missed and
 /// additional surfaces in the recorded trace and provides detailed outputs
@@ -367,6 +390,9 @@ inline auto record_propagation(
 /// @param traj initial track parameters at the beginning of the track
 /// @param trk_no number of the track in the sample
 /// @param debug_file where to output debugging information to
+/// @param cfg Validation configuration.
+/// @param truth_trace Reference intersection trace.
+/// @param recorded_trace Recorded intersection trace.
 ///
 /// @returns the counts on missed and additional surfaces, matching errors,
 /// as well as the collections of the intersections that did not match
@@ -881,7 +907,11 @@ auto write_tracks(const std::string &track_param_file_name,
 }
 
 /// Write the distance between the intersection and the surface boundaries in
-/// @param missed_intersections to a csv file at the path @param file_name
+/// @p missed_intersections to a csv file at the path @p file_name
+/// @param det Detector used for the intersections.
+/// @param names Detector volume names.
+/// @param file_name Output CSV file name.
+/// @param missed_intersections Tracks and missed intersections to write.
 template <concepts::detector detector_t, typename track_t,
           typename intersection_t>
 auto write_dist_to_boundary(

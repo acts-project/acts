@@ -348,12 +348,14 @@ TEST_P(PropagatorWithRkStepper, rk4_propagator_inhom_bfield) {
 
     // Propagate the entire detector
     state.debug(true);
+    updater_state.init(track);
     ASSERT_TRUE(p.propagate(state, actor_states))
         << state.navigation().inspector().to_string() << std::endl;
 
     // Propagate with path limit
     ASSERT_NEAR(pathlimit_aborter_state.path_limit(), path_limit, tol);
     lim_state.debug(true);
+    updater_state.init(lim_track);
     ASSERT_FALSE(p.propagate(lim_state, lim_actor_states))
         << lim_state.navigation().inspector().to_string() << std::endl;
 

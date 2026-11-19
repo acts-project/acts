@@ -27,7 +27,7 @@ using namespace Acts::VectorHelpers;
 using namespace Acts::Experimental::detail;
 using namespace Acts::Experimental;
 using namespace Acts::detail::LineHelper;
-using namespace Acts::PlanarHelper;
+using namespace Acts::detail::PlanarHelper;
 
 using RandomEngine = std::mt19937;
 
@@ -251,6 +251,11 @@ class FitTestSpacePoint {
     if (!m_layer) {
       m_layer = lay;
     }
+  }
+  /// Update to next sensor
+  void setToNextSensor(const Vector3& v) {
+    m_toNextSen = v.normalized();
+    m_planeNorm = m_sensorDir.cross(m_toNextSen).normalized();
   }
 
  private:
@@ -858,7 +863,7 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
         CompSpacePointAuxiliaries::strawSign(line, **firstTube);
     const int signLast = CompSpacePointAuxiliaries::strawSign(line, **lastTube);
 
-    auto seedPars = CompositeSpacePointLineSeeder::constructTangentLine(
+    auto seedPars = CompositeSpacePointLineSeeder::constructTangentSeed(
         **lastTube, **firstTube,
         CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
     const auto seedDir = CompositeSpacePointLineSeeder::makeDirection(

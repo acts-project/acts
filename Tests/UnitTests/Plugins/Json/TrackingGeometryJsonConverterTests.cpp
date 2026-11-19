@@ -262,6 +262,9 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   auto compositeLink = std::make_unique<CompositePortalLink>(
       std::move(compositeLinkA), std::move(compositeLinkB),
       AxisDirection::AxisX);
+  const auto compositeGeometryId =
+      GeometryIdentifier{}.withVolume(1u).withExtra(17u);
+  compositeLink->surfacePtr()->assignGeometryId(compositeGeometryId);
   root->addPortal(std::make_shared<Portal>(Direction::AlongNormal(),
                                            std::move(compositeLink)));
 
@@ -349,6 +352,8 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   BOOST_REQUIRE(decodedComposite != nullptr);
   BOOST_CHECK_EQUAL(decodedComposite->size(), 2u);
   BOOST_CHECK_EQUAL(decodedComposite->direction(), AxisDirection::AxisX);
+  BOOST_CHECK_EQUAL(decodedComposite->surface().geometryId(),
+                    compositeGeometryId);
 
   const auto* decodedGrid = dynamic_cast<const GridPortalLink*>(
       decodedPortals.at(2)->getLink(Direction::AlongNormal()));

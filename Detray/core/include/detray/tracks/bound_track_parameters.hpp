@@ -23,16 +23,23 @@
 
 namespace detray {
 
+/// Six-component parameter vector expressed in a surface-bound coordinate
+/// frame.
 template <concepts::algebra algebra_t>
 struct bound_parameters_vector {
   /// @name Type definitions for the struct
   /// @{
+  /** Algebra backend used for the vector operations. */
   using algebra_type = algebra_t;
+  /// Scalar type used by the stored parameters.
   using scalar_type = dscalar<algebra_t>;
+  /// Two-dimensional type for local surface coordinates.
   using point2_type = dpoint2D<algebra_t>;
+  /// Three-dimensional type for directions and momentum.
   using vector3_type = dvector3D<algebra_t>;
 
   // Underlying vector type related to bound track vector.
+  /// Fixed-size vector storing the six bound parameters.
   using vector_type = bound_vector<algebra_t>;
 
   /// @}
@@ -41,6 +48,7 @@ struct bound_parameters_vector {
   bound_parameters_vector() = default;
 
   /// Construct from a 6-dim vector of parameters
+  /// @param vec vector containing the bound parameters in canonical order
   DETRAY_HOST_DEVICE
   explicit bound_parameters_vector(const vector_type& vec) : m_vector(vec) {
     assert(!this->is_invalid());
@@ -66,7 +74,9 @@ struct bound_parameters_vector {
     assert(!this->is_invalid());
   }
 
-  /// @param rhs is the left hand side params for comparison
+  /// Compare all six bound parameters within scalar precision.
+  /// @param rhs parameter vector to compare with this vector
+  /// @return whether every component agrees within machine precision
   DETRAY_HOST_DEVICE
   bool operator==(const bound_parameters_vector& rhs) const {
     for (unsigned int i = 0u; i < e_bound_size; i++) {
@@ -83,26 +93,34 @@ struct bound_parameters_vector {
   }
 
   /// Convenience access to the track parameters - const
+  /// @param i index in the bound parameter vector
+  /// @return the selected parameter value
   DETRAY_HOST_DEVICE
   scalar_type operator[](const std::size_t i) const {
     return getter::element(m_vector, static_cast<unsigned int>(i), 0u);
   }
 
   /// Convenience access to the track parameters - non-const
+  /// @param i index in the bound parameter vector
+  /// @return a reference to the selected parameter
   DETRAY_HOST_DEVICE
   decltype(auto) operator[](const std::size_t i) {
     return getter::element(m_vector, static_cast<unsigned int>(i), 0u);
   }
 
   /// Access the track parameters as a 6-dim vector - const
+  /// @return a const reference to the stored vector
   DETRAY_HOST_DEVICE
   const vector_type& vector() const { return m_vector; }
 
   /// Access the track parameters as a 6-dim vector - non-const
+  /// @return a reference to the stored vector
   DETRAY_HOST_DEVICE
   vector_type& vector() { return m_vector; }
 
   /// Set the underlying vector
+  /// @param v new parameter vector
+  /// @param skip_check bypass the validity assertion when true
   DETRAY_HOST_DEVICE
   void set_vector(const vector_type& v,
                   [[maybe_unused]] const bool skip_check = false) {
@@ -118,6 +136,7 @@ struct bound_parameters_vector {
   }
 
   /// Set the bound local position
+  /// @param pos new local position
   DETRAY_HOST_DEVICE
   void set_bound_local(const point2_type& pos) {
     assert(math::isfinite(pos[0]));
@@ -130,6 +149,7 @@ struct bound_parameters_vector {
   scalar_type phi() const { return getter::element(m_vector, e_bound_phi, 0u); }
 
   /// Set the global phi angle
+  /// @param phi azimuth in radians
   DETRAY_HOST_DEVICE
   void set_phi(const scalar_type phi) {
     assert(math::fabs(phi) <= constant<scalar_type>::pi);
@@ -143,6 +163,7 @@ struct bound_parameters_vector {
   }
 
   /// Set the global theta angle
+  /// @param theta polar angle in radians
   DETRAY_HOST_DEVICE
   void set_theta(const scalar_type theta) {
     assert(0.f < theta);
@@ -168,6 +189,7 @@ struct bound_parameters_vector {
   }
 
   /// Set the time
+  /// @param t time value
   DETRAY_HOST_DEVICE
   void set_time(const scalar_type t) {
     assert(math::isfinite(t));
@@ -181,6 +203,7 @@ struct bound_parameters_vector {
   }
 
   /// Set the q/p value
+  /// @param qop signed charge divided by momentum
   DETRAY_HOST_DEVICE
   void set_qop(const scalar_type qop) {
     assert(math::isfinite(qop));
@@ -205,6 +228,7 @@ struct bound_parameters_vector {
     return getter::element(m_vector, e_bound_qoverp, 0u) / cosTheta;
   }
 
+  /// @param q particle charge
   /// @returns the absolute momentum
   DETRAY_HOST_DEVICE
   scalar_type p(const scalar_type q) const {
@@ -213,10 +237,12 @@ struct bound_parameters_vector {
     return q / qop();
   }
 
+  /// @param q particle charge
   /// @returns the global momentum 3-vector
   DETRAY_HOST_DEVICE
   vector3_type mom(const scalar_type q) const { return p(q) * dir(); }
 
+  /// @param q particle charge
   /// @returns the transverse momentum
   DETRAY_HOST_DEVICE
   scalar_type pT(const scalar_type q) const {
@@ -225,6 +251,7 @@ struct bound_parameters_vector {
     return math::fabs(q / qop() * vector::perp(dir()));
   }
 
+  /// @param q particle charge
   /// @returns the absolute momentum z-component
   DETRAY_HOST_DEVICE
   scalar_type pz(const scalar_type q) const {
@@ -268,17 +295,24 @@ struct bound_parameters_vector {
 /// surface
 template <concepts::algebra algebra_t>
 struct bound_track_parameters : public bound_parameters_vector<algebra_t> {
+  /// Base parameter-vector type inherited by this track state.
   using base_type = bound_parameters_vector<algebra_t>;
 
   /// @name Type definitions for the struct
   /// @{
+  /** Algebra backend used for the vector operations. */
   using algebra_type = algebra_t;
+  /// Scalar type used by the stored parameters.
   using scalar_type = dscalar<algebra_t>;
+  /// Two-dimensional type for local surface coordinates.
   using point2_type = dpoint2D<algebra_t>;
+  /// Three-dimensional type for directions and momentum.
   using vector3_type = dvector3D<algebra_t>;
 
   // Shorthand vector/matrix types related to bound track parameters.
+  /// Type of the bound track parameter vector.
   using parameter_vector_type = bound_parameters_vector<algebra_t>;
+  /// Matrix type storing covariance between bound parameters.
   using covariance_type = bound_matrix<algebra_t>;
 
   /// @}
@@ -286,13 +320,20 @@ struct bound_track_parameters : public bound_parameters_vector<algebra_t> {
   /// Default constructor sets the covaraicne to zero
   bound_track_parameters() = default;
 
+  /// Construct a bound state on a surface with a parameter vector and
+  /// covariance.
+  /// @param sf_idx identifier of the surface carrying the state
+  /// @param vec bound parameter values
+  /// @param cov covariance matrix in the bound parameter basis
   DETRAY_HOST_DEVICE
   bound_track_parameters(const geometry::identifier sf_idx,
                          const parameter_vector_type& vec,
                          const covariance_type& cov)
       : base_type(vec), m_covariance(cov), m_identifier(sf_idx) {}
 
-  /// @param rhs is the left hand side params for comparison
+  /// Compare all six bound parameters within scalar precision.
+  /// @param rhs parameter vector to compare with this vector
+  /// @return whether every component agrees within machine precision
   DETRAY_HOST_DEVICE
   bool operator==(const bound_track_parameters& rhs) const {
     if (m_identifier != rhs.surface_link()) {
@@ -323,10 +364,13 @@ struct bound_track_parameters : public bound_parameters_vector<algebra_t> {
   const geometry::identifier& surface_link() const { return m_identifier; }
 
   /// Set the identifier of the associated surface
+  /// @param link identifier of the new associated surface
   DETRAY_HOST_DEVICE
   void set_surface_link(geometry::identifier link) { m_identifier = link; }
 
   /// Set the track parameter vector
+  /// @param v new bound parameter vector
+  /// @param skip_check bypass the validity assertion when true
   DETRAY_HOST_DEVICE
   void set_parameter_vector(const parameter_vector_type& v,
                             const bool skip_check = false) {
@@ -342,6 +386,7 @@ struct bound_track_parameters : public bound_parameters_vector<algebra_t> {
   const covariance_type& covariance() const { return m_covariance; }
 
   /// Set the track parameter covariance
+  /// @param c covariance in the bound parameter basis
   DETRAY_HOST_DEVICE
   void set_covariance(const covariance_type& c) { m_covariance = c; }
 
@@ -382,7 +427,8 @@ struct bound_track_parameters : public bound_parameters_vector<algebra_t> {
 
 namespace algebra {
 
-/// Cast a bound track parameters vector @param param to the precision given by @tparam value_t
+/// Cast a bound parameter vector to the precision given by @tparam value_t.
+/// @param param_vec vector to convert
 template <concepts::value value_t, concepts::algebra algebra_t>
 DETRAY_HOST_DEVICE constexpr decltype(auto) cast_to(
     const bound_parameters_vector<algebra_t>& param_vec) {

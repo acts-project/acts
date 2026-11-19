@@ -20,15 +20,20 @@ namespace detray::utils {
 
 /// @brief Convenience class to statically concatenate two string views.
 struct string_view_concat2 {
+  /// First string view in the concatenation.
   std::string_view s1;
+  /// Second string view in the concatenation.
   std::string_view s2;
 
+  /// Materialize the two views as one owning string.
   explicit operator std::string() const {
     return std::string(s1) + std::string(s2);
   }
 };
 
-/// Split string @param input at every occurrence of @param delim
+/// Split string @p input at every occurrence of @p delim
+/// @param input string to split
+/// @param delim character that separates tokens
 inline dvector<std::string> split_at_delim(const std::string &input,
                                            const char delim) {
   dvector<std::string> tokens{};

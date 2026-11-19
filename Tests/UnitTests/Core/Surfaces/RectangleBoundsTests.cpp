@@ -133,6 +133,20 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsCenter) {
   CHECK_CLOSE_ABS(centerAsym, expected, 1e-6);
 }
 
+/// Unit test for the distance to the boundary, also for points on it
+BOOST_AUTO_TEST_CASE(RectangleBoundsDistance) {
+  RectangleBounds bounds(10., 5.);
+  for (const Vector2& onBoundary :
+       {Vector2{10., 0.}, Vector2{-10., 0.}, Vector2{0., 5.}, Vector2{0., -5.},
+        Vector2{10., 5.}, Vector2{-10., -5.}, Vector2{10., -5.},
+        Vector2{-10., 5.}}) {
+    BOOST_CHECK_SMALL(bounds.distance(onBoundary), 1e-12);
+  }
+  BOOST_CHECK_CLOSE(bounds.distance(Vector2{8., 0.}), 2., 1e-9);
+  BOOST_CHECK_CLOSE(bounds.distance(Vector2{12., 0.}), 2., 1e-9);
+  BOOST_CHECK_CLOSE(bounds.distance(Vector2{0., 7.}), 2., 1e-9);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

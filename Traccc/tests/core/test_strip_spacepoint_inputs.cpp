@@ -41,7 +41,8 @@ void add_measurement(measurements_t& measurements, unsigned int index,
                           0u,
                           barcode(index, volume),
                           {1u, 0u},
-                          0u});
+                          0u,
+                          {0.f, 0.f}});
 }
 
 strip_measurement_surface_info linear_info(std::uint64_t link) {

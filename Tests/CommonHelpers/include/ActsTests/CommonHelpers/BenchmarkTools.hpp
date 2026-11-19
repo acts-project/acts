@@ -426,7 +426,9 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run,
   result.run_timings = std::vector(num_runs, MicroBenchmarkResult::Duration());
 
   const auto warmup_start = Clock::now();
-  while (Clock::now() - warmup_start < warmup_time) {
+  const auto warmup_duration =
+      std::chrono::duration_cast<Clock::duration>(warmup_time);
+  while ((Clock::now() - warmup_start).count() < warmup_duration.count()) {
     run();
   }
 

@@ -34,6 +34,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Json/ITrackingGeometryJsonDecorator.hpp"
 #include "ActsPlugins/Json/IVolumeMaterialJsonDecorator.hpp"
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
@@ -46,6 +47,9 @@
 #include <cstddef>
 #include <map>
 #include <numbers>
+
+// Legacy implementations intentionally call the deprecated material APIs.
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace {
 void to_json(nlohmann::json& entry,
@@ -473,3 +477,5 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
     }
   }
 }
+
+ACTS_POP_IGNORE_DEPRECATED()

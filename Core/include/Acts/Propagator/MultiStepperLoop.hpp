@@ -544,14 +544,50 @@ class MultiStepperLoop final {
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
       double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
+    return updateSurfaceStatusImpl<false>(state, surface, index, navDir,
+                                          boundaryTolerance, surfaceTolerance,
+                                          stype, logger)
+        .value();
+  }
+
+  /// @copydoc updateSurfaceStatus
+  /// Query each component's curvature for the surface-status update.
+  Result<IntersectionStatus> updateSurfaceStatusWithCurvature(
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction navDir, const BoundaryTolerance& boundaryTolerance,
+      double surfaceTolerance, ConstrainedStep::Type stype,
+      const Logger& logger = getDummyLogger()) const {
+    return updateSurfaceStatusImpl<true>(state, surface, index, navDir,
+                                         boundaryTolerance, surfaceTolerance,
+                                         stype, logger);
+  }
+
+ private:
+  template <bool correctCurvature>
+  Result<IntersectionStatus> updateSurfaceStatusImpl(
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction navDir, const BoundaryTolerance& boundaryTolerance,
+      double surfaceTolerance, ConstrainedStep::Type stype,
+      const Logger& logger = getDummyLogger()) const {
     using Status = IntersectionStatus;
 
     std::array<int, 3> counts = {0, 0, 0};
 
     for (auto& component : state.components) {
-      component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
-          m_singleStepper, component.state, surface, index, navDir,
-          boundaryTolerance, surfaceTolerance, stype, logger);
+      if constexpr (correctCurvature) {
+        const auto status =
+            detail::updateSurfaceStatusWithCurvature<SingleStepper>(
+                m_singleStepper, component.state, surface, index, navDir,
+                boundaryTolerance, surfaceTolerance, stype, logger);
+        if (!status.ok()) {
+          return status.error();
+        }
+        component.status = *status;
+      } else {
+        component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
+            m_singleStepper, component.state, surface, index, navDir,
+            boundaryTolerance, surfaceTolerance, stype, logger);
+      }
       ++counts[static_cast<std::size_t>(component.status)];
     }
 
@@ -596,15 +632,16 @@ class MultiStepperLoop final {
     // certain state, this determines the total state (in the order of a
     // somewhat importance)
     if (counts[static_cast<std::size_t>(Status::reachable)] > 0) {
-      return Status::reachable;
+      return Result<IntersectionStatus>::success(Status::reachable);
     } else if (counts[static_cast<std::size_t>(Status::onSurface)] > 0) {
       state.stepCounterAfterFirstComponentOnSurface.reset();
-      return Status::onSurface;
+      return Result<IntersectionStatus>::success(Status::onSurface);
     } else {
-      return Status::unreachable;
+      return Result<IntersectionStatus>::success(Status::unreachable);
     }
   }
 
+ public:
   /// Update step size
   ///
   /// This method intersects the provided surface and update the navigation

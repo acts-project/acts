@@ -11,7 +11,6 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
-#include "Acts/Propagator/MultiStepperAborters.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -375,6 +374,10 @@ struct GaussianSumFitter {
       actor.m_cfg.logger = m_actorLogger.get();
 
       bwdPropOptions.direction = gsfBackward;
+      // The backward pass retraces the forward path. The loop protection limit
+      // would be derived from the momentum at the end of the track, which for
+      // electrons after bremsstrahlung is far too low to get back.
+      bwdPropOptions.loopProtection = false;
 
       const Surface& target = options.referenceSurface
                                   ? *options.referenceSurface
@@ -394,15 +397,12 @@ struct GaussianSumFitter {
           },
           sParameters.particleHypothesis());
 
-      auto state =
-          m_propagator
-              .template makeState<OptionsType, MultiStepperSurfaceReached>(
-                  bwdPropOptions);
+      auto state = m_propagator.template makeState<OptionsType, SurfaceReached>(
+          bwdPropOptions);
 
       auto initRes =
-          m_propagator
-              .template initialize<decltype(state), MultiStepperSurfaceReached>(
-                  state, inflatedParams, &target);
+          m_propagator.template initialize<decltype(state), SurfaceReached>(
+              state, inflatedParams, &target);
       if (!initRes.ok()) {
         return ResultType::failure(initRes.error());
       }

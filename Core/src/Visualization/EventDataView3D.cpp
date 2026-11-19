@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cmath>
+#include <optional>
 #include <utility>
 
 namespace Acts {
@@ -80,8 +81,6 @@ void Acts::EventDataView3D::drawCovarianceAngular(
 void Acts::EventDataView3D::drawTrack(IVisualization3D& helper,
                                       const AnyConstTrackProxy& track,
                                       const GeometryContext& gctx) {
-  /// auto track = trackcontainer.getTrack(itrack); /// Need to change this to
-  /// tacke ConstTrackProxy directly
   auto tparams = track.parameters();
   auto tphi = tparams[eBoundPhi];
   auto ttheta = tparams[eBoundTheta];
@@ -92,7 +91,7 @@ void Acts::EventDataView3D::drawTrack(IVisualization3D& helper,
   auto& rs = track.referenceSurface();
   auto tglobpos = rs.localToGlobal(gctx, tlocpos, tlocdir);
 
-  auto previouspos = tglobpos;
+  std::optional<Vector3> previouspos;
 
   for (auto ts : track.trackStatesReversed()) {
     auto params = ts.parameters();
@@ -104,7 +103,13 @@ void Acts::EventDataView3D::drawTrack(IVisualization3D& helper,
     auto& s = ts.referenceSurface();
     auto currentpos = s.localToGlobal(gctx, locpos, locdir);
 
-    helper.line(previouspos, currentpos);
+    if (previouspos.has_value()) {
+      helper.line(*previouspos, currentpos);
+    }
     previouspos = currentpos;
+  }
+
+  if (previouspos.has_value()) {
+    helper.line(*previouspos, tglobpos);
   }
 }

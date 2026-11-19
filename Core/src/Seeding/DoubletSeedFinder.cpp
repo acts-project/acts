@@ -40,19 +40,14 @@ void DoubletsForMiddleSp::sortByCotTheta(
   indexAndCotTheta.clear();
   indexAndCotTheta.reserve(range.second - range.first);
   for (Index i = range.first; i < range.second; ++i) {
-    indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
+    indexAndCotTheta.emplace_back(i, m_doublets[i].cotTheta);
   }
 
   const auto cotThetaOf = [](const IndexAndCotTheta& item) {
     return item.cotTheta;
   };
 
-  // The limit up to which a quadratic sort is used: the rank sort for the whole
-  // list instead of the linear bucket sort, and the insertion pass for one
-  // bucket instead of std::ranges::stable_sort
-  constexpr std::size_t kQuadraticLinearCrossover = 32;
-  detail::sortByKey<kQuadraticLinearCrossover>(std::span(indexAndCotTheta),
-                                               storage, cotThetaOf);
+  detail::sortByKey(std::span(indexAndCotTheta), storage, cotThetaOf);
 }
 
 namespace {

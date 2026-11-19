@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "algebra/impl/detail/eigen_includes.hpp"
 #include "algebra/impl/eigen_getter.hpp"
 #include "algebra/impl/eigen_matrix.hpp"
 #include "algebra/impl/eigen_types.hpp"
@@ -16,15 +17,6 @@
 #include "detray/algebra/common/boolean.hpp"
 #include "detray/algebra/common/math.hpp"
 #include "detray/algebra/generic/generic.hpp"
-
-// Eigen include(s).
-#ifdef _MSC_VER
-#pragma warning(push, 0)
-#endif  // MSVC
-#include <Eigen/Core>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif  // MSVC
 
 namespace detray {
 
@@ -35,19 +27,30 @@ struct eigen {
   /// Define scalar type
   using value_type = V;
 
+  /// Backend vectorized representation of an element type.
   template <concepts::element T>
   using simd = T;
 
+  /// Boolean type used for element-wise predicates.
   using boolean = bool;
+  /// Scalar type represented by this backend.
   using scalar = value_type;
+  /// Index type used for matrix and vector access.
   using index_type = algebra::eigen::index_type;
+  /// Three-dimensional transform type.
   using transform3D = algebra::eigen::transform3<value_type>;
+  /// Two-dimensional point type.
   using point2D = algebra::eigen::point2<value_type>;
+  /// Three-dimensional point type.
   using point3D = algebra::eigen::point3<value_type>;
+  /// Two-dimensional vector type.
   using vector2D = algebra::eigen::vector2<value_type>;
+  /// Three-dimensional vector type.
   using vector3D = algebra::eigen::vector3<value_type>;
 
+  /// Fixed-size matrix type with the requested dimensions.
   template <std::size_t ROWS, std::size_t COLS>
+  /// Fixed-size matrix type with the requested row and column counts.
   using matrix = algebra::eigen::matrix_type<value_type, ROWS, COLS>;
 };
 /// @}

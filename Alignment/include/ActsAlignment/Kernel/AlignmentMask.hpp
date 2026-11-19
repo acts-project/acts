@@ -15,11 +15,11 @@
 
 namespace ActsAlignment {
 
-/// Collection of bit masks to enable steering which alignment degree of freedom
-/// should be float. should be initialized, and which should be left invalid.
+/// Collection of bit masks to steer which alignment degrees of freedom are
+/// fitted and which stay fixed.
 /// These mask values can be combined using binary operators, so
 /// (AlignmentMask::Center0 | AlignmentMask::Center1) will instruct
-/// alignment for geometry object center x and y
+/// alignment for translations along the local x and y axes.
 /// The enum is used as a strong type wrapper around the bits to prevent
 /// autoconversion from integer
 enum struct AlignmentMask : std::uint8_t {

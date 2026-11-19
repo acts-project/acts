@@ -45,10 +45,14 @@ namespace detray {
 /// An inspector that aggregates a number of different inspectors.
 template <typename... Inspectors>
 struct aggregate_inspector {
+  /// Device view type for the contained inspectors.
   using view_type = dmulti_view<detail::get_view_t<Inspectors>...>;
+  /// Const device view type for the contained inspectors.
   using const_view_type = dmulti_view<detail::get_view_t<const Inspectors>...>;
 
+  /// Tuple type storing the inspectors.
   using inspector_tuple_t = std::tuple<Inspectors...>;
+  /// Inspectors aggregated by this object.
   inspector_tuple_t _inspectors{};
 
   /// Default constructor
@@ -61,6 +65,13 @@ struct aggregate_inspector {
             view, std::make_index_sequence<sizeof...(Inspectors)>{})) {}
 
   /// Inspector interface
+  /// @param state State passed to each inspector.
+  /// @param cfg Navigation configuration.
+  /// @param pos Current track position.
+  /// @param dir Current track direction.
+  /// @param message Message associated with the inspection.
+  /// @param args Additional inspector arguments.
+  /// @return Result of the last inspector call.
   template <unsigned int current_id = 0, typename state_type,
             concepts::point3D point3_t, concepts::vector3D vector3_t,
             typename... Args>
@@ -80,6 +91,10 @@ struct aggregate_inspector {
   }
 
   /// Inspector interface
+  /// @param state State passed to each inspector.
+  /// @param message Message associated with the inspection.
+  /// @param args Additional inspector arguments.
+  /// @return Result of the last inspector call.
   template <unsigned int current_id = 0, typename state_type, typename... Args>
   DETRAY_HOST_DEVICE auto operator()(state_type &state, const char *message,
                                      Args &&...args) {
@@ -117,7 +132,9 @@ struct aggregate_inspector {
     return std::get<I>(_inspectors);
   }
 
-  /// @returns a tuple constructed from the inspector @param view s.
+  /// @returns a tuple constructed from the inspector view.
+  /// @param view Device view containing the inspector views.
+  /// The index sequence selects the view for each inspector.
   template <concepts::device_view view_t, std::size_t... I>
   DETRAY_HOST_DEVICE constexpr auto unroll_views(
       view_t &view, std::index_sequence<I...> /*seq*/) {
@@ -134,30 +151,45 @@ template <concepts::detector detector_t,
           template <typename...> class vector_t = dvector,
           status... navigation_status>
 struct object_tracer {
+  /// Record type for an encountered candidate.
   using candidate_record_t = intersection_record<detector_t>;
+  /// Scalar type used by candidate records.
   using scalar_type = typename candidate_record_t::scalar_type;
+  /// 3D point type used by candidate records.
   using point3_type = typename candidate_record_t::point3_type;
+  /// 3D vector type used by candidate records.
   using vector3_type = typename candidate_record_t::vector3_type;
 
+  /// Mutable device view type for candidate records.
   using view_type = dvector_view<candidate_record_t>;
+  /// Const device view type for candidate records.
   using const_view_type = dvector_view<const candidate_record_t>;
 
   /// Default constructor
   object_tracer() = default;
 
   /// Device-side construction from a vecmem based view type
+  /// @param view View used for storing candidate records.
   DETRAY_HOST_DEVICE explicit object_tracer(
       dvector_view<candidate_record_t> &view)
       : object_trace(view) {}
 
-  // Record all objects the navigator encounters
+  /// Record all objects the navigator encounters.
   vector_t<candidate_record_t> object_trace;
+  /// Current volume index.
   dindex current_vol{dindex_invalid};
+  /// Invalid position value used to initialize the trace.
   const scalar_type inv_pos{detray::detail::invalid_value<scalar_type>()};
+  /// Last recorded position.
   point3_type last_pos = {inv_pos, inv_pos, inv_pos};
+  /// Last recorded direction.
   vector3_type last_dir = {0., 0., 0.};
 
   /// Inspector interface
+  /// @param state Current navigation state.
+  /// @param pos Current track position.
+  /// @param dir Current track direction.
+  /// @return No value.
   template <typename state_type, concepts::point3D point3_t,
             concepts::vector3D vector3_t, typename... Args>
   DETRAY_HOST_DEVICE auto operator()(const state_type &state,
@@ -192,12 +224,14 @@ struct object_tracer {
   }
 
   /// Inspector interface
+  /// @return No value.
   template <typename state_type>
   DETRAY_HOST_DEVICE auto operator()(const state_type & /*state*/,
                                      const char * /*message*/) { /* Do nothing*/
   }
 
   /// @returns a specific candidate from the trace
+  /// @param i Index of the candidate.
   DETRAY_HOST_DEVICE
   constexpr const candidate_record_t &operator[](std::size_t i) const {
     return object_trace[i];
@@ -208,6 +242,9 @@ struct object_tracer {
   constexpr const auto &trace() const { return object_trace; }
 
   /// Compares a navigation status with the tracers references
+  /// @param nav_stat Navigation status to compare.
+  /// @param ref_stat Reference status.
+  /// @return Whether the statuses are equal.
   DETRAY_HOST_DEVICE
   constexpr bool is_status(const status &nav_stat, const status &ref_stat) {
     return (nav_stat == ref_stat);
@@ -217,7 +254,9 @@ struct object_tracer {
 /// A navigation inspector that prints information about the current navigation
 /// state. Meant for debugging.
 struct print_inspector {
+  /// Mutable device view type for the debug stream.
   using view_type = dvector_view<char>;
+  /// Const device view type for the debug stream.
   using const_view_type = dvector_view<const char>;
 
   struct void_generator {};
@@ -226,10 +265,12 @@ struct print_inspector {
   print_inspector() = default;
 
   /// Copy constructor ensures that the string stream is set up identically
+  /// @param other Inspector to copy.
   print_inspector(const print_inspector &other)
       : debug_stream(other.debug_stream.str()) {}
 
   /// Move constructor
+  /// @param other Inspector to move from.
   print_inspector(print_inspector &&other) = default;
 
   /// Default destructor
@@ -237,6 +278,8 @@ struct print_inspector {
 
   /// Copy assignemten operator ensures that the string stream is set up
   /// identically
+  /// @param other Inspector to copy.
+  /// @return This inspector.
   print_inspector &operator=(const print_inspector &other) {
     // Reset
     debug_stream.str(std::string());
@@ -247,9 +290,18 @@ struct print_inspector {
   }
 
   /// Move assignemten operator
+  /// @param other Inspector to move from.
+  /// @return This inspector.
   print_inspector &operator=(print_inspector &&other) = default;
 
   /// Inspector interface. Gathers detailed information during navigation
+  /// @param state Navigation state to inspect.
+  /// @param cfg Navigation configuration.
+  /// @param track_pos Current track position.
+  /// @param track_dir Current track direction.
+  /// @param message Message to record.
+  /// @param msg_gen Optional message generator.
+  /// @return No value.
   template <typename state_type, concepts::point3D point3_t,
             concepts::vector3D vector3_t,
             typename message_generator_t = void_generator>
@@ -277,6 +329,10 @@ struct print_inspector {
   }
 
   /// Inspector interface. Print basic state information
+  /// @param state Navigation state to inspect.
+  /// @param message Message to record.
+  /// @param msg_gen Optional message generator.
+  /// @return No value.
   template <typename state_type, typename message_generator_t = void_generator>
   auto operator()(const state_type &state, const char *message,
                   const message_generator_t &msg_gen = {}) {
@@ -317,11 +373,14 @@ struct print_inspector {
   print_inspector() = default;
 
   /// Copy constructor ensures that the string stream is set up identically
+  /// @param other Inspector to copy.
   print_inspector(const print_inspector &other)
       : debug_stream(other.debug_stream.str()) {}
 
   /// Copy assignemten operator ensures that the string stream is set up
   /// identically
+  /// @param other Inspector to copy.
+  /// @return This inspector.
   print_inspector &operator=(const print_inspector &other) {
     // Reset
     debug_stream.str(std::string());
@@ -332,12 +391,17 @@ struct print_inspector {
   }
 
   /// Move assignemten operator
+  /// @param other Inspector to move from.
+  /// @return This inspector.
   print_inspector &operator=(print_inspector &&other) = default;
 
   /// Gathers stepping information from inside the stepper methods
   std::stringstream debug_stream{};
 
   /// Inspector interface. Gathers detailed information during stepping
+  /// @param state Stepper state to inspect.
+  /// @param message Message to record.
+  /// @param dist Distance to the next constraint.
   template <typename state_type, concepts::scalar scalar_t>
   void operator()(const state_type &state, const stepping::config & /*unused*/,
                   const char *message, const scalar_t dist) {
@@ -348,6 +412,10 @@ struct print_inspector {
   }
 
   /// Inspector interface. Gathers detailed information during stepping
+  /// @param state Stepper state to inspect.
+  /// @param message Message to record.
+  /// @param n_trials Number of trials performed.
+  /// @param step_scalor Step scaling factor.
   template <typename state_type, concepts::scalar scalar_t>
   void operator()(const state_type &state, const stepping::config & /*unused*/,
                   const char *message, const scalar_t /*dist*/,

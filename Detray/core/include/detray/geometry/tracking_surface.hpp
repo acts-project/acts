@@ -37,24 +37,33 @@ class tracking_surface : public geometry::surface<const det_t> {
   using bound_param_vector_type = typename kernels::bound_param_vector_type;
 
  public:
+  /// Algebra backend used for surface tracking calculations.
   using algebra_type = typename base_surface_t::algebra_type;
+  /// Scalar type used for track parameters and geometry values.
   using scalar_type = typename base_surface_t::scalar_type;
+  /// Two-dimensional local point type.
   using point2_type = typename base_surface_t::point2_type;
+  /// Three-dimensional point type.
   using point3_type = typename base_surface_t::point3_type;
+  /// Three-dimensional vector type.
   using vector3_type = typename base_surface_t::vector3_type;
+  /// Transform type used by the underlying surface.
   using transform3_type = typename base_surface_t::transform3_type;
+  /// Geometry context type used to resolve contextual transforms.
   using context = typename base_surface_t::context;
 
   /// Use base class constructors
   using base_surface_t::base_surface_t;
 
   /// Decorate a geometric surface with tracking functionality
+  /// @param sf Geometric surface to decorate.
   DETRAY_HOST_DEVICE
   explicit constexpr tracking_surface(const base_surface_t sf)
       : base_surface_t(sf) {}
 
   /// Conversion to surface interface around constant detector type,
   /// which has no semantic difference (the detector is always const internally)
+  /// @returns Equivalent tracking surface with a const detector type.
   template <typename detector_type = detector_t>
     requires(!std::is_const_v<detector_type>)
   // NOLINTNEXTLINE
@@ -64,6 +73,8 @@ class tracking_surface : public geometry::surface<const det_t> {
                                                  this->m_desc};
   }
 
+  /// @param ctx Geometry context for resolving the surface transform.
+  /// @param free_vec Track parameters in global coordinates.
   /// @returns the track parametrization projected onto the surface (bound)
   DETRAY_HOST_DEVICE
   constexpr auto free_to_bound_vector(
@@ -72,6 +83,8 @@ class tracking_surface : public geometry::surface<const det_t> {
         this->transform(ctx), free_vec);
   }
 
+  /// @param ctx Geometry context for resolving the surface transform.
+  /// @param bound_vec Track parameters in the surface's bound representation.
   /// @returns the global track parametrization from a bound representation
   DETRAY_HOST_DEVICE
   constexpr auto bound_to_free_vector(
@@ -80,6 +93,8 @@ class tracking_surface : public geometry::surface<const det_t> {
         this->transform(ctx), bound_vec);
   }
 
+  /// @param ctx Geometry context for resolving the surface transform.
+  /// @param free_vec Track parameters in global coordinates.
   /// @returns the jacobian to go from a free to a bound track parametrization
   DETRAY_HOST_DEVICE
   constexpr auto free_to_bound_jacobian(
@@ -88,6 +103,8 @@ class tracking_surface : public geometry::surface<const det_t> {
         this->transform(ctx), free_vec);
   }
 
+  /// @param ctx Geometry context for resolving the surface transform.
+  /// @param bound_vec Track parameters in the surface's bound representation.
   /// @returns the jacobian to go from a bound to a free track parametrization
   DETRAY_HOST_DEVICE
   constexpr auto bound_to_free_jacobian(
@@ -96,6 +113,11 @@ class tracking_surface : public geometry::surface<const det_t> {
         this->transform(ctx), bound_vec);
   }
 
+  /// @param ctx Geometry context for resolving the surface transform.
+  /// @param pos Particle position in global coordinates.
+  /// @param dir Particle direction in global coordinates.
+  /// @param dtds Derivative of direction with respect to path length.
+  /// @param dqopds Derivative of q/p with respect to path length.
   /// @returns the path correction term
   DETRAY_HOST_DEVICE
   constexpr auto path_correction(const context &ctx, const vector3_type &pos,
@@ -106,6 +128,10 @@ class tracking_surface : public geometry::surface<const det_t> {
         this->transform(ctx), pos, dir, dtds, dqopds);
   }
 
+  /// @param ctx Geometry context for resolving the surface transform.
+  /// @param pos Particle position in global coordinates.
+  /// @param dir Particle direction in global coordinates.
+  /// @param dtds Derivative of direction with respect to path length.
   /// @returns the free to path derivative
   DETRAY_HOST_DEVICE
   constexpr auto free_to_path_derivative(const context &ctx,
@@ -117,20 +143,24 @@ class tracking_surface : public geometry::surface<const det_t> {
   }
 };
 
+/// Deduce the detector type from a detector and surface descriptor pair.
 template <concepts::detector detector_t, typename descr_t>
 DETRAY_HOST_DEVICE_DEDUCTION_GUIDE tracking_surface(const detector_t &,
                                                     const descr_t &)
     -> tracking_surface<detector_t>;
 
+/// Deduce the detector type when wrapping an existing surface.
 template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE_DEDUCTION_GUIDE tracking_surface(const detector_t &,
                                                     const geometry::identifier)
     -> tracking_surface<detector_t>;
 
+/// Deduce the detector type from a geometry identifier.
 template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE_DEDUCTION_GUIDE tracking_surface(
     const geometry::surface<detector_t>) -> tracking_surface<detector_t>;
 
+/// Deduce the detector type from a const geometry surface.
 template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE_DEDUCTION_GUIDE tracking_surface(
     const geometry::surface<const detector_t>) -> tracking_surface<detector_t>;

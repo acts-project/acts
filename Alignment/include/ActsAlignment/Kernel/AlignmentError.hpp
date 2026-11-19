@@ -17,7 +17,8 @@ namespace ActsAlignment {
 enum class AlignmentError {
   NoAlignmentDofOnTrack = 1,
   AlignmentParametersUpdateFailure = 2,
-  ConvergeFailure = 3
+  ConvergeFailure = 3,
+  HierarchyValidationFailure = 4
 };
 
 namespace detail {
@@ -35,6 +36,9 @@ class AlignmentErrorCategory : public std::error_category {
         return "Update to alignment parameters failure";
       case AlignmentError::ConvergeFailure:
         return "The alignment is not converged";
+      case AlignmentError::HierarchyValidationFailure:
+        return "Alignment hierarchy validation failed (assignment uniqueness "
+               "error)";
       default:
         return "unknown";
     }

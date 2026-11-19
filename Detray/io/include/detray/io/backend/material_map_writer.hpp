@@ -40,15 +40,19 @@ class material_map_writer : public detail::grid_writer {
   using base_type::base_type;
 
   /// Convert the header information into its payload
+  /// @tparam detector_t Detector type to serialize.
+  /// @param det Detector whose material grids are written.
+  /// @return Header payload describing the material grids.
   template <class detector_t>
-  static auto header_to_payload(const detector_t& det,
-                                const std::string_view det_name) {
-    return grid_writer_t::header_to_payload(tag, det.material_store(),
-                                            det_name);
+  static auto to_header_payload(const detector_t& det) {
+    return grid_writer_t::to_header_payload(det.material_store());
   }
 
-  /// Convert the material description of a detector @param det into its io
+  /// Convert the material description of a detector @p det into its io
   /// payload
+  /// @tparam detector_t Detector type to serialize.
+  /// @param det Detector whose material maps are serialized.
+  /// @return Payload containing material-grid entries grouped by volume.
   template <class detector_t>
   static payload_type to_payload(
       const detector_t& det, const typename detector_t::name_map& /*unused*/) {
