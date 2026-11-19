@@ -190,7 +190,7 @@ BoundVector localToLocal(const propagator_t& prop, const BoundVector& local,
 
   // The perturbed start can be past the destination
   const Intersection3D intersection =
-      dst.intersect(gctx, start.position(gctx), start.direction(),
+      dst.intersect(gctx, start.position(gctx), start.direction(gctx),
                     BoundaryTolerance::Infinite())
           .closest();
   options.direction =

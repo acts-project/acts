@@ -505,7 +505,8 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
 
   // A vertex ahead of the track is reached too
   Vector4 aheadPos = ip_pos;
-  aheadPos.head<3>() = track.position(geoContext) + 10_mm * track.direction();
+  aheadPos.head<3>() =
+      track.position(geoContext) + 10_mm * track.direction(geoContext);
   Vertex aheadVtx(aheadPos, makeVertexCovariance(), {});
   BOOST_CHECK(ipEstimator
                   .getLifetimeSignOfTrack(track, aheadVtx, direction,

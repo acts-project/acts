@@ -547,8 +547,8 @@ struct MultiStepperTester {
     std::vector<std::tuple<double, BoundVector>> cmps(
         2, {0.5, BoundVector::Zero()});
     for (auto &[weight, pars] : cmps) {
-      pars[eBoundPhi] = -std::numbers::pi / 2.;
-      pars[eBoundTheta] = std::numbers::pi / 2.;
+      pars[eBoundDir0] = -std::numbers::pi / 2.;
+      pars[eBoundDir1] = std::numbers::pi / 2.;
       pars[eBoundQOverP] = 1.0;
     }
     std::get<BoundVector>(cmps[1])[eBoundLoc0] = 1.0;
