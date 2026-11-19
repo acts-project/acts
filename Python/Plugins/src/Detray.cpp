@@ -6,10 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
+#include "ActsPlugins/Detray/DetrayJsonConverter.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
+#include "ActsPlugins/Detray/DetraySurfaceGridPolicy.hpp"
 #include "ActsPlugins/Detray/DetraySurfaceIdMap.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -70,6 +73,40 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
         return detray::io::read_detector_json<DetrayDetectorODD>(mr, cfg);
       },
       "mr"_a, "files"_a);
+
+  // ── Surface grid policy ────────────────────────────────────────────────
+  {
+    py::class_<DetraySurfaceGridConfig>(detray, "DetraySurfaceGridConfig")
+        .def(py::init<>())
+        .def_readwrite("vertexZHalfRange",
+                       &DetraySurfaceGridConfig::vertexZHalfRange)
+        .def_readwrite("minPt", &DetraySurfaceGridConfig::minPt)
+        .def_readwrite("bField", &DetraySurfaceGridConfig::bField)
+        .def_readwrite("nVertexZ", &DetraySurfaceGridConfig::nVertexZ)
+        .def_readwrite("nCurvature", &DetraySurfaceGridConfig::nCurvature)
+        .def_readwrite("maxSampleSpacing",
+                       &DetraySurfaceGridConfig::maxSampleSpacing)
+        .def_readwrite("numberOfBinsFactor",
+                       &DetraySurfaceGridConfig::numberOfBinsFactor);
+
+    py::class_<DetraySurfaceGridPolicy>(detray, "DetraySurfaceGridPolicy")
+        .def_property_readonly("config", &DetraySurfaceGridPolicy::config);
+
+    detray.def(
+        "addDetraySurfaceGridPolicy",
+        [](Acts::NavigationPolicyFactory& factory,
+           const DetraySurfaceGridConfig& config) {
+          return std::move(factory).template add<DetraySurfaceGridPolicy>(
+              config);
+        },
+        "factory"_a, "config"_a = DetraySurfaceGridConfig{},
+        "Add a DetraySurfaceGridPolicy carrying @p config to the factory");
+
+    detray.def("addDetrayNavigationPolicies", &addDetrayNavigationPolicies,
+               "config"_a,
+               "Register the Detray navigation policies with a "
+               "TrackingGeometryJsonConverter config");
+  }
 
   // ── Payload converter ──────────────────────────────────────────────────
   auto payloadConverter = py::class_<DetrayPayloadConverter,
