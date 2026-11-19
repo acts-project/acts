@@ -332,6 +332,14 @@ class DiscSurface : public RegularSurface {
           BoundaryTolerance::Infinite(),
       double tolerance = s_onSurfaceTolerance) const final;
 
+  /// @copydoc Surface::intersect(const GeometryContext&, const Vector3&, const Vector3&, const Vector3&, const BoundaryTolerance&, double) const
+  MultiIntersection3D intersect(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const Vector3& curvature,
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
+      double tolerance = s_onSurfaceTolerance) const final;
+
   /// Return properly formatted class name for screen output
   /// @return String representation of the class name
   std::string name() const override;
@@ -358,6 +366,10 @@ class DiscSurface : public RegularSurface {
   Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const final;
+
+  /// @copydoc Surface::contains
+  bool contains(const GeometryContext& gctx, const Surface& other,
+                double tolerance = s_onSurfaceTolerance) const override;
 
   /// Merge two disc surfaces into a single one.
   /// @image html Disc_Merging.svg

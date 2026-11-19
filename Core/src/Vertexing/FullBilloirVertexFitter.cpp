@@ -9,6 +9,7 @@
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
@@ -83,8 +84,7 @@ const Acts::Logger& Acts::FullBilloirVertexFitter::logger() const {
 
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     const std::vector<InputTrack>& paramVector,
-    const VertexingOptions& vertexingOptions,
-    MagneticFieldProvider::Cache& fieldCache) const {
+    const VertexingOptions& vertexingOptions, MagneticFieldQuery& field) const {
   unsigned int nTracks = paramVector.size();
   double chi2 = std::numeric_limits<double>::max();
 
@@ -138,8 +138,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
 
       auto result =
           m_cfg.trackLinearizer(trackParams, linPoint[3], *perigeeSurface,
-                                vertexingOptions.geoContext,
-                                vertexingOptions.magFieldContext, fieldCache);
+                                vertexingOptions.geoContext, field);
       if (!result.ok()) {
         return result.error();
       }

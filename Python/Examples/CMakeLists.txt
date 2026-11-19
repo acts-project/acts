@@ -141,6 +141,7 @@ target_sources(
         src/Propagation.cpp
         src/PythonSpecific.cpp
         src/TrackFinding.cpp
+        src/Seeding.cpp
         src/TrackFitting.cpp
         src/TruthTracking.cpp
         src/HelloWorld.cpp

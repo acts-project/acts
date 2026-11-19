@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -27,6 +28,8 @@
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/detail/KalmanVertexUpdaterImpl.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -100,10 +103,9 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
-  auto fieldCache = bField->makeCache(magFieldContext);
+  MagneticFieldQuery fieldQuery(*bField, magFieldContext);
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -151,9 +153,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
 
     // Linearized state of the track
     LinearizedTrack linTrack =
-        linearizer
-            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
-                            fieldCache)
+        linearizer.linearizeTrack(params, 0, *perigee, geoContext, fieldQuery)
             .value();
 
     // Create TrackAtVertex
@@ -163,35 +163,39 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     trkAtVtx.linearizedState = linTrack;
     trkAtVtx.isLinearized = true;
 
-    // Create a vertex
+    // Create a vertex position
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
-    Vertex vtx(vtxPos);
-    vtx.setFullCovariance(SquareMatrix4::Identity() * 0.01);
 
-    // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexUpdater::updateVertexWithTrack(vtx, trkAtVtx, 3);
+    // Fit the spatial vertex coordinates (3) or also time (4)
+    for (unsigned int nDimVertex : {3u, 4u}) {
+      Vertex vtx(vtxPos);
+      vtx.setFullCovariance(SquareMatrix4::Identity() * 0.01);
 
-    if (debug) {
-      std::cout << "Old vertex position: " << vtxPos << std::endl;
-      std::cout << "New vertex position: " << vtx.position() << std::endl;
+      // Update trkAtVertex with assumption of originating from vtx
+      KalmanVertexUpdater::updateVertexWithTrack(vtx, trkAtVtx, nDimVertex);
+
+      if (debug) {
+        std::cout << "Old vertex position: " << vtxPos << std::endl;
+        std::cout << "New vertex position: " << vtx.position() << std::endl;
+      }
+
+      double oldDistance = vtxPos.norm();
+      double newDistance = vtx.position().norm();
+
+      if (debug) {
+        std::cout << "Old distance: " << oldDistance << std::endl;
+        std::cout << "New distance: " << newDistance << std::endl;
+      }
+
+      // After update, vertex should be closer to the track
+      BOOST_CHECK_LT(newDistance, oldDistance);
+
+      // Note: KalmanVertexUpdater updates the vertex w.r.t. the
+      // newly given track, but does NOT add the track to the
+      // TrackAtVertex list. Has to be done manually after calling
+      // the update method.
+      BOOST_CHECK(vtx.tracks().empty());
     }
-
-    double oldDistance = vtxPos.norm();
-    double newDistance = vtx.position().norm();
-
-    if (debug) {
-      std::cout << "Old distance: " << oldDistance << std::endl;
-      std::cout << "New distance: " << newDistance << std::endl;
-    }
-
-    // After update, vertex should be closer to the track
-    BOOST_CHECK_LT(newDistance, oldDistance);
-
-    // Note: KalmanVertexUpdater updates the vertex w.r.t. the
-    // newly given track, but does NOT add the track to the
-    // TrackAtVertex list. Has to be done manually after calling
-    // the update method.
-    BOOST_CHECK(vtx.tracks().empty());
 
   }  // end for loop
 
@@ -227,10 +231,9 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   // Set up HelicalTrackLinearizer, needed for linearizing the tracks
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
-  auto fieldCache = bField->makeCache(magFieldContext);
+  MagneticFieldQuery fieldQuery(*bField, magFieldContext);
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -276,52 +279,137 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // Linearized state of the track
     LinearizedTrack linTrack =
-        linearizer
-            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
-                            fieldCache)
+        linearizer.linearizeTrack(params, 0, *perigee, geoContext, fieldQuery)
             .value();
 
-    // Create TrackAtVertex
-    TrackAtVertex trkAtVtx(0., params, InputTrack{&params});
-
-    // Set linearized state of trackAtVertex
-    trkAtVtx.linearizedState = linTrack;
-    trkAtVtx.isLinearized = true;
-
-    // Copy parameters for later comparison of old and new version
-    auto fittedParamsCopy = trkAtVtx.fittedParams;
-
-    // Create a vertex
+    // Create a vertex position
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
-    Vertex vtx(vtxPos);
 
-    // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexUpdater::updateTrackWithVertex(trkAtVtx, vtx, 3);
+    // Fit the spatial vertex coordinates (3) or also time (4)
+    for (unsigned int nDimVertex : {3u, 4u}) {
+      // Create TrackAtVertex
+      TrackAtVertex trkAtVtx(0., params, InputTrack{&params});
 
-    // The old distance
-    double oldDistance =
-        ip3dEst.calculateDistance(geoContext, fittedParamsCopy, vtxPos, state)
-            .value();
+      // Set linearized state of trackAtVertex
+      trkAtVtx.linearizedState = linTrack;
+      trkAtVtx.isLinearized = true;
 
-    // The new distance after update
-    double newDistance =
-        ip3dEst
-            .calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos, state)
-            .value();
-    if (debug) {
-      std::cout << "Old distance: " << oldDistance << std::endl;
-      std::cout << "New distance: " << newDistance << std::endl;
+      // Copy parameters for later comparison of old and new version
+      auto fittedParamsCopy = trkAtVtx.fittedParams;
+
+      Vertex vtx(vtxPos);
+
+      // Update trkAtVertex with assumption of originating from vtx
+      KalmanVertexUpdater::updateTrackWithVertex(trkAtVtx, vtx, nDimVertex);
+
+      // The old distance
+      double oldDistance =
+          ip3dEst.calculateDistance(geoContext, fittedParamsCopy, vtxPos, state)
+              .value();
+
+      // The new distance after update
+      double newDistance =
+          ip3dEst
+              .calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos,
+                                 state)
+              .value();
+      if (debug) {
+        std::cout << "Old distance: " << oldDistance << std::endl;
+        std::cout << "New distance: " << newDistance << std::endl;
+      }
+
+      // Parameters should have changed
+      BOOST_CHECK_NE(fittedParamsCopy, trkAtVtx.fittedParams);
+
+      // After update, track should be closer to the vertex
+      BOOST_CHECK_LT(newDistance, oldDistance);
     }
-
-    // Parameters should have changed
-    BOOST_CHECK_NE(fittedParamsCopy, trkAtVtx.fittedParams);
-
-    // After update, track should be closer to the vertex
-    BOOST_CHECK_LT(newDistance, oldDistance);
 
   }  // end for loop
 
 }  // end test case
+
+///
+/// @brief Unit test for the weight of the fitted track parameters: the full
+/// weight when fitting time, otherwise the inverse of the covariance without
+/// time, obtained from the full weight or, without time information, from the
+/// covariance
+///
+BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackParameterWeight) {
+  using WeightWithoutTime = SquareMatrix<eBoundSize - 1>;
+  std::mt19937 gen(31415);
+  std::normal_distribution<double> gauss(0., 1.);
+
+  // Random covariance with the typical scales of perigee parameters (mm, rad,
+  // 1/GeV, ns), with the time correlations scaled by `timeCorrelationScale`
+  auto makeCovariance = [&](double timeSigma, double timeCorrelationScale) {
+    BoundMatrix a;
+    for (unsigned int i = 0; i < eBoundSize; ++i) {
+      for (unsigned int j = 0; j < eBoundSize; ++j) {
+        a(i, j) = gauss(gen);
+      }
+    }
+    const BoundMatrix spd = a * a.transpose() + 6. * BoundMatrix::Identity();
+    const BoundVector invSigma = spd.diagonal().cwiseSqrt().cwiseInverse();
+    BoundMatrix correlation =
+        invSigma.asDiagonal() * spd * invSigma.asDiagonal();
+    correlation.row(eBoundTime).head<eBoundSize - 1>() *= timeCorrelationScale;
+    correlation.col(eBoundTime).head<eBoundSize - 1>() *= timeCorrelationScale;
+    BoundVector sigma;
+    sigma << 20_um, 50_um, 1e-4, 1e-4, 1e-3 / 1_GeV, timeSigma;
+    return BoundMatrix(sigma.asDiagonal() * correlation * sigma.asDiagonal());
+  };
+
+  struct TimeCase {
+    double sigma;
+    double correlationScale;
+  };
+  // Correlated time, uncorrelated time, precise and inflated time
+  for (const TimeCase& timeCase :
+       {TimeCase{1_ns, 1.}, TimeCase{1_ns, 0.}, TimeCase{1e-3_ns, 1.},
+        TimeCase{1e6_ns, 1.}}) {
+    for (unsigned int i = 0; i < 100; ++i) {
+      LinearizedTrack linTrack;
+      linTrack.covarianceAtPCA =
+          makeCovariance(timeCase.sigma, timeCase.correlationScale);
+      linTrack.weightAtPCA = linTrack.covarianceAtPCA.inverse();
+
+      // Fitting time: the full weight
+      BOOST_CHECK_EQUAL(
+          KalmanVertexUpdater::detail::trackParameterWeight<eBoundSize>(
+              linTrack),
+          linTrack.weightAtPCA);
+
+      // Not fitting time: the inverse of the covariance without time
+      const WeightWithoutTime weight =
+          KalmanVertexUpdater::detail::trackParameterWeight<eBoundSize - 1>(
+              linTrack);
+      const WeightWithoutTime covarianceWithoutTime =
+          linTrack.covarianceAtPCA
+              .topLeftCorner<eBoundSize - 1, eBoundSize - 1>();
+      CHECK_CLOSE_OR_SMALL(weight, covarianceWithoutTime.inverse().eval(),
+                           1e-10, 1e-10);
+      CHECK_CLOSE_OR_SMALL((weight * covarianceWithoutTime).eval(),
+                           WeightWithoutTime::Identity(), 1e-10, 1e-10);
+    }
+  }
+
+  // Without time information the full covariance is singular, and the
+  // covariance without time is inverted directly
+  for (unsigned int i = 0; i < 100; ++i) {
+    LinearizedTrack linTrack;
+    linTrack.covarianceAtPCA = makeCovariance(0., 0.);
+    linTrack.weightAtPCA = linTrack.covarianceAtPCA.inverse();
+    const WeightWithoutTime covarianceWithoutTime =
+        linTrack.covarianceAtPCA
+            .topLeftCorner<eBoundSize - 1, eBoundSize - 1>();
+    const WeightWithoutTime weight =
+        KalmanVertexUpdater::detail::trackParameterWeight<eBoundSize - 1>(
+            linTrack);
+    BOOST_CHECK(weight.allFinite());
+    BOOST_CHECK_EQUAL(weight, covarianceWithoutTime.inverse().eval());
+  }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

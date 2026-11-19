@@ -31,6 +31,7 @@
 #include "traccc/geometry/detector_conditions_description.hpp"
 #include "traccc/geometry/detector_design_description.hpp"
 #include "traccc/geometry/host_detector.hpp"
+#include "traccc/seeding/detail/hough_seeding_config.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/messaging.hpp"
 #include "traccc/utils/propagation.hpp"
@@ -120,11 +121,12 @@ class full_chain_algorithm
       const spacepoint_grid_config& grid_config,
       const seedfilter_config& filter_config,
       const gbts_seedfinder_config& gbts_config,
+      const hough_seeding_config& hough_config,
       const track_params_estimation_config& track_params_estimation_config,
       const finding_algorithm::config_type& finding_config,
       const fitting_algorithm::config_type& fitting_config,
       const shared_data& data, std::unique_ptr<const traccc::Logger> logger,
-      bool useGBTS = false,
+      bool useGBTS = false, bool useHough = false,
       await_strategy await_mode = await_strategy::sync_event);
 
   /// Algorithm destructor
@@ -202,6 +204,7 @@ class full_chain_algorithm
   /// @{
 
   bool usingGBTS;
+  bool usingHough;
 
   /// @}
 

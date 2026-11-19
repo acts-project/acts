@@ -1,3 +1,5 @@
+acts_apply_warning_flags(CXX ${ACTS_FAIL_ON_WARNINGS})
+
 acts_add_library(
     Alignment
     SHARED

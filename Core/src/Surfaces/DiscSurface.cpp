@@ -267,6 +267,47 @@ FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
   return jacToLocal;
 }
 
+namespace {
+
+// Apply identical physical bounds to ray and curvature-corrected predictions.
+inline MultiIntersection3D boundedIntersection(
+    const DiscSurface& surface, const DiscBounds* bounds,
+    const Transform3& gctxTransform, const Intersection3D& intersection,
+    const BoundaryTolerance& boundaryTolerance) {
+  IntersectionStatus status = intersection.status();
+  if (status == IntersectionStatus::unreachable) {
+    return MultiIntersection3D(Intersection3D::Invalid());
+  }
+  if (bounds == nullptr || boundaryTolerance.isInfinite()) {
+    return MultiIntersection3D(intersection);
+  }
+  // Built-in local to global for speed reasons
+  const auto& tMatrix = gctxTransform.matrix();
+  const Vector3 fromCenter =
+      intersection.position() - tMatrix.block<3, 1>(0, 3);
+  if (bounds->coversFullAzimuth() && boundaryTolerance.isNone()) {
+    // avoids `atan2` in case of full phi coverage
+    const double r2 = fromCenter.squaredNorm();
+    const bool isInside =
+        (r2 >= square(bounds->rMin())) && (r2 <= square(bounds->rMax()));
+    if (!isInside) {
+      status = IntersectionStatus::unreachable;
+    }
+  } else {
+    const Vector2 localCartesian =
+        tMatrix.block<3, 2>(0, 0).transpose() * fromCenter;
+    const bool isInside = surface.insideBounds(
+        surface.localCartesianToPolar(localCartesian), boundaryTolerance);
+    if (!isInside) {
+      status = IntersectionStatus::unreachable;
+    }
+  }
+  return MultiIntersection3D(Intersection3D(intersection.position(),
+                                            intersection.pathLength(), status));
+}
+
+}  // namespace
+
 MultiIntersection3D DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
@@ -274,38 +315,26 @@ MultiIntersection3D DiscSurface::intersect(
   // Get the contextual transform
   const Transform3& gctxTransform = localToGlobalTransform(gctx);
   // Use the intersection helper for planar surfaces
-  const Intersection3D intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
-  IntersectionStatus status = intersection.status();
-  if (status == IntersectionStatus::unreachable) {
-    return MultiIntersection3D(Intersection3D::Invalid());
+  const Intersection3D intersection = Acts::detail::PlanarHelper::intersect(
+      gctxTransform, position, direction, tolerance);
+  return boundedIntersection(*this, m_bounds.get(), gctxTransform, intersection,
+                             boundaryTolerance);
+}
+
+MultiIntersection3D DiscSurface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const Vector3& curvature,
+    const BoundaryTolerance& boundaryTolerance, double tolerance) const {
+  if (curvature.isZero(0.) || !curvature.allFinite()) {
+    return intersect(gctx, position, direction, boundaryTolerance, tolerance);
   }
-  if (m_bounds == nullptr || boundaryTolerance.isInfinite()) {
-    return MultiIntersection3D(intersection);
-  }
-  // Built-in local to global for speed reasons
-  const auto& tMatrix = gctxTransform.matrix();
-  const Vector3 fromCenter =
-      intersection.position() - tMatrix.block<3, 1>(0, 3);
-  if (m_bounds->coversFullAzimuth() && boundaryTolerance.isNone()) {
-    // avoids `atan2` in case of full phi coverage
-    const double r2 = fromCenter.squaredNorm();
-    const bool isInside =
-        (r2 >= square(m_bounds->rMin())) && (r2 <= square(m_bounds->rMax()));
-    if (!isInside) {
-      status = IntersectionStatus::unreachable;
-    }
-  } else {
-    const Vector2 localCartesian =
-        tMatrix.block<3, 2>(0, 0).transpose() * fromCenter;
-    const bool isInside =
-        insideBounds(localCartesianToPolar(localCartesian), boundaryTolerance);
-    if (!isInside) {
-      status = IntersectionStatus::unreachable;
-    }
-  }
-  return MultiIntersection3D(Intersection3D(intersection.position(),
-                                            intersection.pathLength(), status));
+  // Get the contextual transform
+  const Transform3& gctxTransform = localToGlobalTransform(gctx);
+  // Use the intersection helper for planar surfaces
+  auto intersection = detail::PlanarHelper::intersect(
+      gctxTransform, position, direction, curvature, tolerance);
+  return boundedIntersection(*this, m_bounds.get(), gctxTransform, intersection,
+                             boundaryTolerance);
 }
 
 Matrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
@@ -373,6 +402,46 @@ double DiscSurface::pathCorrection(const GeometryContext& gctx,
                                    const Vector3& direction) const {
   // we can ignore the global position here
   return 1. / std::abs(normal(gctx).dot(direction));
+}
+
+bool DiscSurface::contains(const GeometryContext& gctx, const Surface& other,
+                           double tolerance) const {
+  const auto* disc = dynamic_cast<const DiscSurface*>(&other);
+  if (disc == nullptr) {
+    return false;
+  }
+  const auto* bounds = dynamic_cast<const RadialBounds*>(m_bounds.get());
+  const auto* otherBounds =
+      dynamic_cast<const RadialBounds*>(disc->m_bounds.get());
+  if (bounds == nullptr || otherBounds == nullptr) {
+    return false;
+  }
+
+  // The other surface in the frame of this one, which has to be concentric
+  const Transform3 otherLocal = localToGlobalTransform(gctx).inverse() *
+                                disc->localToGlobalTransform(gctx);
+  if (otherLocal.linear().col(2).head<2>().norm() > tolerance ||
+      otherLocal.translation().norm() > tolerance) {
+    return false;
+  }
+
+  if (otherBounds->get(RadialBounds::eMinR) <
+          bounds->get(RadialBounds::eMinR) - tolerance ||
+      otherBounds->get(RadialBounds::eMaxR) >
+          bounds->get(RadialBounds::eMaxR) + tolerance) {
+    return false;
+  }
+
+  const double otherAvgPhi = otherBounds->get(RadialBounds::eAveragePhi);
+  const Vector3 otherAvgDir =
+      otherLocal.linear() *
+      Vector3{std::cos(otherAvgPhi), std::sin(otherAvgPhi), 0};
+  return detail::phiSectorContains(
+      bounds->get(RadialBounds::eHalfPhiSector),
+      bounds->get(RadialBounds::eAveragePhi),
+      otherBounds->get(RadialBounds::eHalfPhiSector),
+      std::atan2(otherAvgDir.y(), otherAvgDir.x()),
+      tolerance / bounds->get(RadialBounds::eMaxR));
 }
 
 std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
