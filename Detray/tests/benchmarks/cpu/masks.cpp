@@ -96,7 +96,7 @@ BENCHMARK(BM_MASK_CUBOID_3D)
 // This runs a benchmark on a rectangle2D mask
 void BM_MASK_RECTANGLE_2D(benchmark::State &state) {
   using mask_type = mask<rectangle2D, bench_algebra>;
-  constexpr mask_type r(0u, 3.f, 4.f);
+  constexpr mask_type r(0u, -3.f, -4.f, 3.f, 4.f);
 
   constexpr scalar world{10.f};
 

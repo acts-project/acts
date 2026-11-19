@@ -42,8 +42,9 @@ int main(int argc, char **argv) {
   /// Set a consistent minimum step size across all tests
   const float min_stepsize{stepping::config{}.min_stepsize};
 
-  tel_det_config<test_algebra, rectangle2D> tel_cfg{20.f * unit<scalar>::mm,
-                                                    20.f * unit<scalar>::mm};
+  tel_det_config<test_algebra, rectangle2D> tel_cfg{
+      -20.f * unit<scalar>::mm, -20.f * unit<scalar>::mm,
+      20.f * unit<scalar>::mm, 20.f * unit<scalar>::mm};
   tel_cfg.n_surfaces(10u)
       .length(500.f * unit<scalar>::mm)
       .envelope(500.f * unit<scalar>::um);

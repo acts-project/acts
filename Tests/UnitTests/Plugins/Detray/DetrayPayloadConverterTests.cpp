@@ -154,8 +154,24 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversion) {
     auto payload = DetrayPayloadConverter::convertMask(rectangle, false);
     BOOST_CHECK(payload.shape == detray::io::shape_id::rectangle2);
     using enum detray::rectangle2D::boundaries;
-    CHECK_CLOSE_ABS(payload.boundaries[e_half_x], 5., 1e-10);   // half_x
-    CHECK_CLOSE_ABS(payload.boundaries[e_half_y], 10., 1e-10);  // half_y
+    CHECK_CLOSE_ABS(payload.boundaries[e_min_x], -5., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_min_y], -10., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_max_x], 5., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_max_y], 10., 1e-10);
+  }
+
+  // Test non-symmetric RectangleBounds conversion
+  {
+    std::array<double, Acts::RectangleBounds::eSize> values = {
+        -2., -3., 5., 4.};  // minX, minY, maxX, maxY
+    Acts::RectangleBounds asymmetricRect(values);
+    auto payload = DetrayPayloadConverter::convertMask(asymmetricRect, false);
+    BOOST_CHECK(payload.shape == detray::io::shape_id::rectangle2);
+    using enum detray::rectangle2D::boundaries;
+    CHECK_CLOSE_ABS(payload.boundaries[e_min_x], -2., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_min_y], -3., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_max_x], 5., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_max_y], 4., 1e-10);
   }
 
   // Test CylinderBounds conversion (normal and portal)
@@ -208,18 +224,6 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(DetrayMaskConversionErrors) {
-  // Test non-symmetric RectangleBounds throws
-  // The regular rectangle bounds constructor does not allow this, but let's
-  // test it anyway.
-  {
-    std::array<double, Acts::RectangleBounds::eSize> values = {
-        -2., -3., 5., 4.};  // minX, minY, maxX, maxY
-    Acts::RectangleBounds asymmetricRect(values);
-    BOOST_CHECK_THROW(
-        DetrayPayloadConverter::convertMask(asymmetricRect, false),
-        std::runtime_error);
-  }
-
   // Test partial azimuth RadialBounds throws
   {
     Acts::RadialBounds partialRadial(5., 15., 0.5 * std::numbers::pi);
@@ -340,8 +344,10 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
       BOOST_CHECK(payload.masks.at(0).shape ==
                   detray::io::shape_id::rectangle2);
       using enum detray::rectangle2D::boundaries;
-      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_x], 5., 1e-10);
-      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_y], 10., 1e-10);
+      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_min_x], -5., 1e-10);
+      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_max_x], 5., 1e-10);
+      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_min_y], -10., 1e-10);
+      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_max_y], 10., 1e-10);
     }
 
     // Test sensitive surface
@@ -424,8 +430,10 @@ BOOST_AUTO_TEST_CASE(DetrayPortalConversionTests) {
     // special portal handling
     BOOST_CHECK(payload.masks.at(0).shape == detray::io::shape_id::rectangle2);
     using enum detray::rectangle2D::boundaries;
-    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_x], 5., 1e-10);
-    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_y], 10., 1e-10);
+    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_min_x], -5., 1e-10);
+    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_max_x], 5., 1e-10);
+    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_min_y], -10., 1e-10);
+    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_max_y], 10., 1e-10);
   }
 }
 

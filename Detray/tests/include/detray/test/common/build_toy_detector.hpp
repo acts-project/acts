@@ -54,7 +54,8 @@ struct toy_det_config {
   toy_det_config() {
     // Barrel module creator
     m_barrel_factory_cfg.half_length(500.f * unit<scalar_t>::mm)
-        .module_bounds({8.4f * unit<scalar_t>::mm, 36.f * unit<scalar_t>::mm})
+        .module_bounds({-8.4f * unit<scalar_t>::mm, -36.f * unit<scalar_t>::mm,
+                        8.4f * unit<scalar_t>::mm, 36.f * unit<scalar_t>::mm})
         .tilt_phi(0.14f /*0.145*/)
         .radial_stagger(0.5f * unit<scalar_t>::mm /*2.f*/)
         .z_overlap(2.f * unit<scalar_t>::mm /*5.f*/);
