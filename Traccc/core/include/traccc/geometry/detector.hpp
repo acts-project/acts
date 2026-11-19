@@ -20,39 +20,26 @@
 #include <detray/utils/quiet_log_end.hpp>
 // clang-format on
 
-#include <detray/detectors/default_metadata.hpp>
-#include <detray/detectors/itk_metadata.hpp>
-#include <detray/detectors/odd_metadata.hpp>
-#include <detray/detectors/telescope_metadata.hpp>
-#include <detray/detectors/toy_metadata.hpp>
-#include <detray/detectors/wire_chamber_metadata.hpp>
+#include <detray/detectors/metadata_registry.hpp>
 
 namespace traccc {
 
-/// Default detector (can contain (almost) any detector data)
-using default_detector =
-    detray::host::detector<detray::default_metadata<traccc::default_algebra>>;
+/// Concrete aliases for every available metadata family. Backend instantiation
+/// remains controlled by TRACCC_SUPPORTED_DETECTORS.
+// clang-format off
+#define TRACCC_DEFINE_DETECTOR(ID) \
+  using ID##_detector = detray::host::detector< \
+      detray::registry::ID##_metadata<traccc::default_algebra>>;
+DETRAY_FOR_EACH_METADATA(TRACCC_DEFINE_DETECTOR)
+#undef TRACCC_DEFINE_DETECTOR
+// clang-format on
+
+using available_detector_type_list =
+    detray::registry::detector_types<traccc::default_algebra>;
+using available_metadata_list =
+    detray::registry::metadata_types<traccc::default_algebra>;
 
 using default_detector_traits = detray::detector_traits<default_detector>;
-
-/// ATLAS Inner Tracker (ITk) detector
-using itk_detector =
-    detray::host::detector<detray::itk_metadata<traccc::default_algebra>>;
-
-/// Open Data Detector (ODD) detector
-using odd_detector =
-    detray::host::detector<detray::odd_metadata<traccc::default_algebra>>;
-
-/// Detray telescope detector (test detector)
-using telescope_detector = detray::host::detector<
-    detray::telescope_metadata<traccc::default_algebra, detray::rectangle2D>>;
-
-/// Detray toy detector (test detector)
-using toy_detector =
-    detray::host::detector<detray::toy_metadata<traccc::default_algebra>>;
-
-/// Detray wire chamber detector (test detector)
-using wire_chamber = detray::host::detector<
-    detray::wire_chamber_metadata<traccc::default_algebra>>;
+using wire_chamber = wire_chamber_detector;
 
 }  // namespace traccc

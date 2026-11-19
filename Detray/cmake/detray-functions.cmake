@@ -8,6 +8,7 @@
 
 # CMake include(s).
 include(CMakeParseArguments)
+include(${CMAKE_CURRENT_LIST_DIR}/detray-metadata.cmake)
 
 # Helper function to create and set the `--keep` flag on CUDA targets.
 function(detray_add_cuda_artifact_dir_to_target target)
@@ -287,7 +288,15 @@ endfunction(detray_add_codegen_header)
 # external configuration given as /path/to/<name>_detector.py:configure. Both
 # produce detray/detectors/<name>_metadata.hpp.
 function(detray_add_metadata_header target configuration)
+    cmake_parse_arguments(PARSE_ARGV 2 ARG "" "ID" "")
+    if(ARG_UNPARSED_ARGUMENTS OR ARG_KEYWORDS_MISSING_VALUES)
+        message(FATAL_ERROR "Invalid metadata generator arguments")
+    endif()
     if(NOT configuration MATCHES "^(.+\\.py):([A-Za-z_][A-Za-z0-9_]*)$")
+        detray_register_metadata(${target} ID "${configuration}"
+            HEADER "detray/detectors/${configuration}_metadata.hpp"
+            TYPE "detray::${configuration}_metadata<@ALGEBRA@>"
+        )
         detray_add_codegen_header(
             TARGET ${target}
             KEY "Detray/detectors/detray/detectors/${configuration}_metadata.hpp"
@@ -299,22 +308,25 @@ function(detray_add_metadata_header target configuration)
     set(_function "${CMAKE_MATCH_2}")
     get_filename_component(_name "${_file}" NAME_WE)
     string(REGEX REPLACE "_detector$" "" _name "${_name}")
-    if(NOT _name MATCHES "^[A-Za-z_][A-Za-z0-9_]*$")
-        message(
-            FATAL_ERROR
-            "Metadata configuration filename must be a Python identifier: ${_file}"
-        )
+    if(ARG_ID)
+        set(_name "${ARG_ID}")
     endif()
+    detray_register_metadata(${target} ID "${_name}"
+        HEADER "detray/detectors/${_name}_metadata.hpp"
+        TYPE "detray::${_name}_metadata<@ALGEBRA@>"
+    )
     # Reuse the runtime and package settings of the shipped metadata generator.
     acts_codegen_manifest(_manifest)
     string(
-        JSON _unit
+        JSON
+        _unit
         GET "${_manifest}"
         units
         "Detray/detectors/detray/detectors/default_metadata.hpp"
     )
     string(
-        JSON _unit
+        JSON
+        _unit
         SET "${_unit}"
         output
         "\"detray/detectors/${_name}_metadata.hpp\""
@@ -323,6 +335,10 @@ function(detray_add_metadata_header target configuration)
     string(REPLACE "\\" "\\\\" _selector "${_file}:${_function}")
     string(REPLACE "\"" "\\\"" _selector "${_selector}")
     string(JSON _unit SET "${_unit}" arguments 1 "\"${_selector}\"")
+    string(JSON _argc LENGTH "${_unit}" arguments)
+    string(JSON _unit SET "${_unit}" arguments ${_argc} "\"--name\"")
+    math(EXPR _argc "${_argc} + 1")
+    string(JSON _unit SET "${_unit}" arguments ${_argc} "\"${_name}\"")
     detray_add_codegen_header(
         TARGET ${target}
         KEY "Detray/detectors/detray/detectors/${_name}_metadata.hpp"

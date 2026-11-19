@@ -229,6 +229,10 @@ jobs:
           # worker, several GB that is never freed, so three do not fit.
           pytest -rfExw -k "not gnn" -v -n 3 --dist loadgroup --max-worker-restart 0
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
+          # Collect both packages together to catch import-path conflicts. Full
+          # detray validation/SVG coverage lives in the standalone jobs.
+          PYTEST_MD_REPORT_OUTPUT=detray-pytest.md python -m pytest Python/Core/tests/test_core_basics.py Detray/python/Core/tests Detray/python/Io/tests/test_io_configs.py -v
+          cat detray-pytest.md >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
@@ -1086,6 +1090,7 @@ jobs:
           # memory-hungry ones never run at the same time. A crashed worker
           # fails the run: replacing it has been seen to hang the session.
           .venv/bin/python -m pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n 3 --dist loadgroup --max-worker-restart 0
+          .venv/bin/python -m pytest Python/Core/tests/test_core_basics.py Detray/python/Core/tests Detray/python/Io/tests/test_io_configs.py -v
 
   # This moving nightly view is independent of PR changes. Keep it separate
   # from the release-view matrix so it can run only on main without referring
