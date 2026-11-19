@@ -20,6 +20,6 @@ namespace ActsExamples {
 /// @param path The CSV file
 /// @return The geometry identifier map
 std::shared_ptr<GeometryIdMapActsAthena> readCsvGeometryIdMap(
-    const std::string& path);
+    const std::filesystem::path& path);
 
 }  // namespace ActsExamples
