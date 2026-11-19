@@ -404,6 +404,46 @@ double DiscSurface::pathCorrection(const GeometryContext& gctx,
   return 1. / std::abs(normal(gctx).dot(direction));
 }
 
+bool DiscSurface::contains(const GeometryContext& gctx, const Surface& other,
+                           double tolerance) const {
+  const auto* disc = dynamic_cast<const DiscSurface*>(&other);
+  if (disc == nullptr) {
+    return false;
+  }
+  const auto* bounds = dynamic_cast<const RadialBounds*>(m_bounds.get());
+  const auto* otherBounds =
+      dynamic_cast<const RadialBounds*>(disc->m_bounds.get());
+  if (bounds == nullptr || otherBounds == nullptr) {
+    return false;
+  }
+
+  // The other surface in the frame of this one, which has to be concentric
+  const Transform3 otherLocal = localToGlobalTransform(gctx).inverse() *
+                                disc->localToGlobalTransform(gctx);
+  if (otherLocal.linear().col(2).head<2>().norm() > tolerance ||
+      otherLocal.translation().norm() > tolerance) {
+    return false;
+  }
+
+  if (otherBounds->get(RadialBounds::eMinR) <
+          bounds->get(RadialBounds::eMinR) - tolerance ||
+      otherBounds->get(RadialBounds::eMaxR) >
+          bounds->get(RadialBounds::eMaxR) + tolerance) {
+    return false;
+  }
+
+  const double otherAvgPhi = otherBounds->get(RadialBounds::eAveragePhi);
+  const Vector3 otherAvgDir =
+      otherLocal.linear() *
+      Vector3{std::cos(otherAvgPhi), std::sin(otherAvgPhi), 0};
+  return detail::phiSectorContains(
+      bounds->get(RadialBounds::eHalfPhiSector),
+      bounds->get(RadialBounds::eAveragePhi),
+      otherBounds->get(RadialBounds::eHalfPhiSector),
+      std::atan2(otherAvgDir.y(), otherAvgDir.x()),
+      tolerance / bounds->get(RadialBounds::eMaxR));
+}
+
 std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
     const DiscSurface& other, AxisDirection direction, bool externalRotation,
     const Logger& logger) const {

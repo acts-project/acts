@@ -820,6 +820,52 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceMaterialAssignment) {
   }
 }
 
+/// Unit test for CylinderSurface::contains
+BOOST_AUTO_TEST_CASE(CylinderSurfaceContains) {
+  using std::numbers::pi;
+  auto cylinder = [](const Transform3& transform, double r, double halfZ,
+                     double halfPhi = pi, double avgPhi = 0.) {
+    return Surface::makeShared<CylinderSurface>(
+        transform,
+        std::make_shared<const CylinderBounds>(r, halfZ, halfPhi, avgPhi));
+  };
+  auto shifted = [](const Vector3& shift) {
+    return Transform3{Translation3{shift}};
+  };
+  const Transform3 identity = Transform3::Identity();
+  auto full = cylinder(identity, 20_mm, 100_mm);
+
+  BOOST_CHECK(full->contains(testContext, *full));
+  BOOST_CHECK(full->contains(testContext,
+                             *cylinder(shifted({0, 0, 50_mm}), 20_mm, 30_mm)));
+  BOOST_CHECK(!full->contains(testContext,
+                              *cylinder(shifted({0, 0, 80_mm}), 20_mm, 30_mm)));
+  BOOST_CHECK(!cylinder(shifted({0, 0, 50_mm}), 20_mm, 30_mm)
+                   ->contains(testContext, *full));
+
+  // Different radius, not coaxial, or tilted
+  BOOST_CHECK(!full->contains(testContext, *cylinder(identity, 21_mm, 30_mm)));
+  BOOST_CHECK(!full->contains(testContext,
+                              *cylinder(shifted({1_mm, 0, 0}), 20_mm, 30_mm)));
+  const Transform3 tilted{AngleAxis3{0.1, Vector3::UnitX()}};
+  BOOST_CHECK(!full->contains(testContext, *cylinder(tilted, 20_mm, 30_mm)));
+
+  // The orientation of the axis does not matter
+  const Transform3 flipped =
+      shifted({0, 0, -50_mm}) * AngleAxis3{pi, Vector3::UnitX()};
+  BOOST_CHECK(full->contains(testContext, *cylinder(flipped, 20_mm, 30_mm)));
+
+  // Phi sectors, also through the rotation of the other cylinder
+  auto sector = cylinder(identity, 20_mm, 100_mm, pi / 4.);
+  BOOST_CHECK(sector->contains(
+      testContext, *cylinder(identity, 20_mm, 30_mm, pi / 8., pi / 16.)));
+  BOOST_CHECK(!sector->contains(
+      testContext, *cylinder(Transform3{AngleAxis3{pi / 4., Vector3::UnitZ()}},
+                             20_mm, 30_mm, pi / 8., pi / 16.)));
+  BOOST_CHECK(!sector->contains(testContext, *full));
+  BOOST_CHECK(full->contains(testContext, *sector));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
