@@ -303,20 +303,45 @@ ActsExamples::DigiSensorTypesConfig ActsExamples::digiSensorTypesFromJson(
         DigiConfigConverter("digitization-configuration").fromJson(djson));
   }
 
-  constexpr int kFormatVersion = 1;
-  if (djson.at("acts-digitization-config").at("format-version").get<int>() !=
-      kFormatVersion) {
+  if (!djson.at("acts-digitization-config")
+           .at("format-version")
+           .is_number_integer()) {
     throw std::invalid_argument(
         "Unsupported format version in digitization configuration");
   }
 
+  if (!djson.at("sensor-types").is_object()) {
+    throw std::invalid_argument(
+        "Digitization configuration: 'sensor-types' must be a JSON object.");
+  }
+
   DigiSensorTypesConfig out;
   for (const auto& [name, jcfg] : djson.at("sensor-types").items()) {
+    if (!jcfg.is_object()) {
+      throw std::invalid_argument("Digitization configuration: sensor type '" +
+                                  name + "' must be a JSON object");
+    }
     out.types.emplace(name, jcfg.get<DigiComponentsConfig>());
   }
   out.assignments =
       Acts::GeometryHierarchyMapJsonConverter<std::string>("sensor-type")
           .fromJson(djson.at("assignments"));
+
+  std::string unknown;
+  for (std::size_t i = 0; i < out.assignments.size(); ++i) {
+    const std::string& name = out.assignments.valueAt(i);
+    if (!out.types.contains(name)) {
+      const Acts::GeometryIdentifier id = out.assignments.idAt(i);
+      unknown += "\n  vol=" + std::to_string(id.volume()) +
+                 " lay=" + std::to_string(id.layer()) +
+                 " sen=" + std::to_string(id.sensitive()) + " -> '" + name +
+                 "'";
+    }
+  }
+  if (!unknown.empty()) {
+    throw std::invalid_argument(
+        "Digitization configuration assigns undefined sensor types:" + unknown);
+  }
   return out;
 }
 

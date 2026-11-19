@@ -363,6 +363,62 @@ BOOST_AUTO_TEST_CASE(SensorTypesWrongVersion) {
   BOOST_CHECK_THROW(digiSensorTypesFromJson(djson), std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(SensorTypesUnknownAssignment) {
+  nlohmann::json djson = nlohmann::json::parse(R"(
+{
+  "acts-digitization-config": { "format-version": 1 },
+  "sensor-types": {
+    "pixel": { "smearing": [
+      { "index": 0, "mean": 0.0, "stddev": 0.015, "type": "Gauss" } ] }
+  },
+  "assignments": {
+    "acts-geometry-hierarchy-map": {
+      "format-version": 0,
+      "value-identifier": "sensor-type"
+    },
+    "entries": [
+      { "volume": 16, "value": "pixel" },
+      { "volume": 17, "value": "pixle" }
+    ]
+  }
+})");
+
+  BOOST_CHECK_THROW(digiSensorTypesFromJson(djson), std::invalid_argument);
+}
+BOOST_AUTO_TEST_CASE(SensorTypesNotAnObject) {
+  nlohmann::json djson = nlohmann::json::parse(R"(
+{
+  "acts-digitization-config": { "format-version": 1 },
+  "sensor-types": [],
+  "assignments": {
+    "acts-geometry-hierarchy-map": {
+      "format-version": 0,
+      "value-identifier": "sensor-type"
+    },
+    "entries": []
+  }
+})");
+
+  BOOST_CHECK_THROW(digiSensorTypesFromJson(djson), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(SensorTypeEntryNotAnObject) {
+  nlohmann::json djson = nlohmann::json::parse(R"(
+{
+  "acts-digitization-config": { "format-version": 1 },
+  "sensor-types": { "pixel": "foo" },
+  "assignments": {
+    "acts-geometry-hierarchy-map": {
+      "format-version": 0,
+      "value-identifier": "sensor-type"
+    },
+    "entries": [ { "volume": 16, "value": "pixel" } ]
+  }
+})");
+
+  BOOST_CHECK_THROW(digiSensorTypesFromJson(djson), std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
