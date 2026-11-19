@@ -310,6 +310,21 @@ class Surface : public virtual GeometryObject,
       const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::None(),
       double tolerance = s_onSurfaceTolerance) const;
 
+  /// Check whether another surface lies within this one, i.e. on the same
+  /// unbounded surface and within the bounds of this surface. The orientation
+  /// of the other surface, e.g. a flipped normal, does not matter.
+  ///
+  /// This is implemented for plane surfaces with polygon bounds, disc surfaces
+  /// with radial bounds and cylinder surfaces. Every other combination,
+  /// including surfaces of different types, returns false.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param other The surface to check
+  /// @param tolerance Absolute tolerance on positions and bounds
+  /// @return true if @p other lies within this surface
+  virtual bool contains(const GeometryContext& gctx, const Surface& other,
+                        double tolerance = s_onSurfaceTolerance) const;
+
   /// Calculates the closest point on the boundary of the surface to a given
   /// point in local coordinates.
   /// @param lposition The local position to check

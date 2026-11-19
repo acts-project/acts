@@ -421,6 +421,41 @@ Matrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
+bool CylinderSurface::contains(const GeometryContext& gctx,
+                               const Surface& other, double tolerance) const {
+  const auto* cylinder = dynamic_cast<const CylinderSurface*>(&other);
+  if (cylinder == nullptr) {
+    return false;
+  }
+
+  // The other surface in the frame of this one, which has to be coaxial
+  const Transform3 otherLocal = localToGlobalTransform(gctx).inverse() *
+                                cylinder->localToGlobalTransform(gctx);
+  if (otherLocal.linear().col(2).head<2>().norm() > tolerance ||
+      otherLocal.translation().head<2>().norm() > tolerance) {
+    return false;
+  }
+
+  const CylinderBounds& otherBounds = cylinder->bounds();
+  const double r = bounds().get(CylinderBounds::eR);
+  if (std::abs(otherBounds.get(CylinderBounds::eR) - r) > tolerance ||
+      std::abs(otherLocal.translation().z()) +
+              otherBounds.get(CylinderBounds::eHalfLengthZ) >
+          bounds().get(CylinderBounds::eHalfLengthZ) + tolerance) {
+    return false;
+  }
+
+  const double otherAvgPhi = otherBounds.get(CylinderBounds::eAveragePhi);
+  const Vector3 otherAvgDir =
+      otherLocal.linear() *
+      Vector3{std::cos(otherAvgPhi), std::sin(otherAvgPhi), 0};
+  return detail::phiSectorContains(
+      bounds().get(CylinderBounds::eHalfPhiSector),
+      bounds().get(CylinderBounds::eAveragePhi),
+      otherBounds.get(CylinderBounds::eHalfPhiSector),
+      std::atan2(otherAvgDir.y(), otherAvgDir.x()), tolerance / r);
+}
+
 std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
     const CylinderSurface& other, AxisDirection direction,
     bool externalRotation, const Logger& logger) const {
