@@ -259,7 +259,7 @@ class CombinatorialKalmanFilter {
     using BranchStopperResult = CombinatorialKalmanFilterBranchStopperResult;
 
     /// The target surface aborter
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+    SurfaceReached targetReached;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -355,8 +355,9 @@ class CombinatorialKalmanFilter {
       // Initialize path limit reached aborter
       if (result.pathLimitReached.internalLimit ==
           std::numeric_limits<double>::max()) {
-        detail::setupLoopProtection(state, stepper, result.pathLimitReached,
-                                    true, logger());
+        detail::setupLoopProtection(state, stepper,
+                                    result.pathLimitReached.internalLimit, true,
+                                    logger());
       }
 
       // Update:
@@ -518,14 +519,13 @@ class CombinatorialKalmanFilter {
       // `initialize` re-roots the jacobian chain at this branch
       result.accumulatedJacobian = BoundMatrix::Identity();
 
-      // Reset the navigation state
-      // Set targetSurface to nullptr for forward filtering
+      // Reset the navigation state, keeping the target surface
       auto navInitRes = navigator.initialize(
           state.navigation, {.position = stepper.position(state.stepping),
                              .direction = stepper.direction(state.stepping),
                              .propagationDirection = state.options.direction,
                              .startSurface = &currentState.referenceSurface(),
-                             .targetSurface = nullptr});
+                             .targetSurface = targetReached.surface});
       if (!navInitRes.ok()) {
         ACTS_DEBUG("Navigation initialization failed: " << navInitRes.error());
         return navInitRes.error();
@@ -544,11 +544,9 @@ class CombinatorialKalmanFilter {
       }
 
       // Set path limit based on loop protection
-      detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
+      detail::setupLoopProtection(state, stepper,
+                                  result.pathLimitReached.internalLimit, true,
                                   logger());
-
-      // Set path limit based on target surface
-      targetReached.checkAbort(state, stepper, navigator, logger());
 
       return Result<void>::success();
     }
@@ -1282,7 +1280,7 @@ class CombinatorialKalmanFilter {
       const auto initResult =
           m_propagator.template initialize<decltype(propState), NoTargetAborter,
                                            StubPathLimitReached>(
-              propState, initialParameters, nullptr);
+              propState, initialParameters, tfOptions.targetSurface);
       if (!initResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
         return initResult.error();
@@ -1296,7 +1294,7 @@ class CombinatorialKalmanFilter {
       const auto initResult =
           m_propagator.template initialize<decltype(propState), NoTargetAborter,
                                            StubPathLimitReached>(
-              propState, multiBoundInitialParameters, nullptr);
+              propState, multiBoundInitialParameters, tfOptions.targetSurface);
       if (!initResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
         return initResult.error();

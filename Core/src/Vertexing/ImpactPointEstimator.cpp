@@ -10,16 +10,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
+#include "Acts/Propagator/detail/DirectionToSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PointSurface.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 namespace Acts {
 
 namespace {
+
 template <typename vector_t>
 Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
                                           const BoundTrackParameters* trkParams,
@@ -337,15 +338,8 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-
-  // Use a straight-line intersection to decide the propagation direction
-  Intersection3D intersection =
-      pointSurface
-          ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
-                      BoundaryTolerance::Infinite())
-          .closest();
-  pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.pathLength());
+  pOptions.direction = detail::directionToSurface(
+      gctx, *pointSurface, trkParams.position(gctx), trkParams.direction());
 
   // Propagate to the point surface; the resulting parameters are at the 3D PCA
   auto result =
@@ -399,13 +393,8 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  Intersection3D intersection =
-      perigeeSurface
-          ->intersect(gctx, track.position(gctx), track.direction(),
-                      BoundaryTolerance::Infinite())
-          .closest();
-  pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.pathLength());
+  pOptions.direction = detail::directionToSurface(
+      gctx, *perigeeSurface, track.position(gctx), track.direction());
 
   // Do the propagation to linPoint
   auto result =
@@ -483,7 +472,8 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  pOptions.direction = Direction::Backward();
+  pOptions.direction = detail::directionToSurface(
+      gctx, *perigeeSurface, track.position(gctx), track.direction());
 
   // Do the propagation to the perigeee
   auto result =
@@ -522,7 +512,8 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  pOptions.direction = Direction::Backward();
+  pOptions.direction = detail::directionToSurface(
+      gctx, *perigeeSurface, track.position(gctx), track.direction());
 
   // Do the propagation to the perigeee
   auto result =

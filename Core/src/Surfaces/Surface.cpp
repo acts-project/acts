@@ -41,6 +41,11 @@ std::ostream& operator<<(std::ostream& os, Surface::SurfaceType type) {
   return os << Surface::s_surfaceTypeNames[static_cast<std::size_t>(type)];
 }
 
+bool Surface::contains(const GeometryContext& /*gctx*/,
+                       const Surface& /*other*/, double /*tolerance*/) const {
+  return false;
+}
+
 bool Surface::isOnSurface(const GeometryContext& gctx, const Vector3& position,
                           const Vector3& direction,
                           const BoundaryTolerance& boundaryTolerance,

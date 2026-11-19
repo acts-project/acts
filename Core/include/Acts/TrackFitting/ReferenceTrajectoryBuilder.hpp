@@ -152,7 +152,7 @@ class ReferenceTrajectoryBuilder {
     using result_type = ResultType;
 
     /// The target surface aborter
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+    SurfaceReached targetReached;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -205,8 +205,9 @@ class ReferenceTrajectoryBuilder {
 
       if (result.pathLimitReached.internalLimit ==
           std::numeric_limits<double>::max()) {
-        detail::setupLoopProtection(state, stepper, result.pathLimitReached,
-                                    true, logger());
+        detail::setupLoopProtection(state, stepper,
+                                    result.pathLimitReached.internalLimit, true,
+                                    logger());
       }
 
       if (const Surface* surface = navigator.currentSurface(state.navigation);
@@ -359,7 +360,8 @@ class ReferenceTrajectoryBuilder {
       track_container_t& trackContainer) const {
     auto propagatorOptions = makePropagatorOptions(
         actorOptions, nullptr, actorOptions.referenceSurface);
-    return buildImpl(sParameters, propagatorOptions, trackContainer);
+    return buildImpl(sParameters, propagatorOptions,
+                     actorOptions.referenceSurface, trackContainer);
   }
 
   /// Build the reference trajectory with a given surface sequence and return a
@@ -380,7 +382,8 @@ class ReferenceTrajectoryBuilder {
   {
     auto propagatorOptions = makePropagatorOptions(
         actorOptions, &sSequence, actorOptions.referenceSurface);
-    return buildImpl(sParameters, propagatorOptions, trackContainer);
+    return buildImpl(sParameters, propagatorOptions,
+                     actorOptions.referenceSurface, trackContainer);
   }
 
   /// Attach source links to the track states in the trajectory based on the
@@ -613,12 +616,13 @@ class ReferenceTrajectoryBuilder {
             TrackContainerFrontend track_container_t>
   auto buildImpl(const BoundTrackParameters& sParameters,
                  const propagator_options_t& propagatorOptions,
+                 const Surface* targetSurface,
                  track_container_t& trackContainer) const
       -> Result<typename track_container_t::TrackProxy> {
     auto propagatorState = m_propagator.makeState(propagatorOptions);
 
     auto propagatorInitResult =
-        m_propagator.initialize(propagatorState, sParameters, nullptr);
+        m_propagator.initialize(propagatorState, sParameters, targetSurface);
     if (!propagatorInitResult.ok()) {
       ACTS_DEBUG("Propagation initialization failed: "
                  << propagatorInitResult.error());
