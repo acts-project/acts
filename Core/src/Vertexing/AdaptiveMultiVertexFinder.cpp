@@ -217,7 +217,13 @@ Result<double> AdaptiveMultiVertexFinder::getIPSignificance(
   // it probably should be used.
   Vertex newVtx = vtx;
   if (!m_cfg.useVertexCovForIPEstimation) {
-    newVtx.setFullCovariance(SquareMatrix4::Zero());
+    // Keep the seed time variance, so that tracks are not rejected
+    // only because the seed time is not known yet; spatial part still set to zero
+    SquareMatrix4 ipCov = SquareMatrix4::Zero();
+    if (m_cfg.useTime) {
+      ipCov(eTime, eTime) = vtx.fullCovariance()(eTime, eTime);
+    }
+    newVtx.setFullCovariance(ipCov);
   }
 
   auto estRes = m_cfg.ipEstimator.getImpactParameters(
