@@ -512,15 +512,10 @@ if(ACTS_BUILD_PYTHON_BINDINGS)
         add_subdirectory(thirdparty/pybind11)
     endif()
 endif()
-# Set up ActSVG when explicitly requested via plugin build, or when Detray's
-# SVG display path is enabled in the superbuild.
-if(
-    ACTS_BUILD_PLUGIN_ACTSVG
-    OR (
-        ACTS_SETUP_DETRAY
-        AND (NOT DEFINED DETRAY_SVG_DISPLAY OR DETRAY_SVG_DISPLAY)
-    )
-)
+# Set up ActSVG when explicitly requested via plugin build, or whenever Detray
+# is built. Detray decides about its SVG display only after it is added, so
+# ACTS cannot know beforehand whether Detray needs actsvg.
+if(ACTS_BUILD_PLUGIN_ACTSVG OR ACTS_SETUP_DETRAY)
     if(ACTS_USE_SYSTEM_ACTSVG)
         find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
     else()
@@ -697,39 +692,8 @@ if(ACTS_SETUP_COVFIE)
 endif()
 
 if(ACTS_SETUP_DETRAY)
-    # HACK: Temporary logic (aka technical debt) to make the detray component
-    # work in traccc.
-
-    # Let ACTS set up all of the dependencies
-    option(DETRAY_SETUP_VECMEM "" FALSE)
-    option(DETRAY_SETUP_NLOHMANN "" FALSE)
-    option(DETRAY_SETUP_EIGEN3 "" FALSE)
-    option(DETRAY_SETUP_ACTSVG "" FALSE)
-    option(DETRAY_SETUP_COVFIE "" FALSE)
-    option(DETRAY_SETUP_PYBIND11 "" FALSE)
-
-    # Enable optional components depending on ACTS configuration
-    set_option_if(DETRAY_BUILD_CUDA ACTS_ENABLE_CUDA)
-    set_option_if(DETRAY_BUILD_UNIT_TESTS ACTS_BUILD_UNITTESTS)
-    set_option_if(DETRAY_BUILD_INTEGRATION_TESTS ACTS_BUILD_INTEGRATIONTESTS)
-    set_option_if(DETRAY_BUILD_BENCHMARKS ACTS_BUILD_BENCHMARKS)
-    set_option_if(DETRAY_BUILD_TUTORIALS ACTS_BUILD_EXAMPLES)
-    set_option_if(DETRAY_SVG_DISPLAY ACTS_BUILD_PLUGIN_ACTSVG)
-
-    # Enable dependencies of ACTS Detray plugin unit tests
-    set_option_if(DETRAY_BUILD_TEST_UTILS ACTS_BUILD_EXAMPLES_UNITTESTS)
-
-    if(ACTS_BUILD_TRACCC)
-        set(DETRAY_SET_LOGGING "${ACTS_TRACCC_DEVICE_LOG_LEVEL}")
-        # Some detray validation tools are used in optional traccc libraries
-        set_option_if(
-            DETRAY_BUILD_VALIDATION_TOOLS
-            ACTS_TRACCC_BUILD_PERFORMANCE
-            OR
-            ACTS_TRACCC_BUILD_TESTS
-        )
-    endif()
-
+    # Tell detray that it is built as a component of ACTS
+    set(DETRAY_IS_ACTS_COMPONENT TRUE)
     add_subdirectory(Detray)
 endif()
 
