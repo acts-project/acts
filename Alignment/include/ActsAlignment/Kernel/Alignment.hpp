@@ -17,6 +17,7 @@
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsAlignment/Kernel/detail/AlignmentTarget.hpp"
 
 #include <limits>
 #include <map>
@@ -51,7 +52,8 @@ struct AlignmentOptions {
   /// @param fOptions The fit options
   /// @param aTransformUpdater The updater to update aligned transform
   /// @param aDetElements The alignable detector elements
-  /// @param aStructures The alignable structures (groups of surfaces)
+  /// @param aStructures Registered structures (membership metadata)
+  /// @param activeStructureSelection Explicit numerical structure selection
   /// @param chi2CufOff The alignment chi2 tolerance
   /// @param deltaChi2CutOff The change of chi2 within a few iterations
   /// @param maxIters The alignment maximum iterations
@@ -64,11 +66,14 @@ struct AlignmentOptions {
       const std::pair<std::size_t, double>& deltaChi2CutOff = {5, 0.01},
       std::size_t maxIters = 5,
       const std::map<unsigned int, AlignmentMask>& iterState = {},
-      const std::vector<std::shared_ptr<AlignableStructure>>& aStructures = {})
+      const std::vector<std::shared_ptr<AlignableStructure>>& aStructures = {},
+      const std::vector<std::shared_ptr<AlignableStructure>>&
+          activeStructureSelection = {})
       : fitOptions(fOptions),
         alignedTransformUpdater(aTransformUpdater),
         alignedDetElements(aDetElements),
         alignedStructures(aStructures),
+        activeStructures(activeStructureSelection),
         averageChi2ONdfCutOff(chi2CutOff),
         deltaAverageChi2ONdfCutOff(deltaChi2CutOff),
         maxIterations(maxIters),
@@ -83,8 +88,15 @@ struct AlignmentOptions {
   // The detector elements to be aligned
   std::vector<Acts::SurfacePlacementBase*> alignedDetElements;
 
-  // The structures to be aligned
+  /// Registered hierarchy metadata; registration does not activate solving.
   std::vector<std::shared_ptr<AlignableStructure>> alignedStructures;
+
+  /// Explicitly selected registered structures. Structures with active DoFs
+  /// must be leaves; None selections remain metadata and may have children.
+  /// @note Preparation/indexing is available in detail::prepareAlignmentTargets.
+  /// align() rejects an effective structure selection until shared solving and
+  /// rigid updates are implemented; it never falls back to moving its modules.
+  std::vector<std::shared_ptr<AlignableStructure>> activeStructures;
 
   // The alignment tolerance to determine if the alignment is covered
   double averageChi2ONdfCutOff = 0.5;

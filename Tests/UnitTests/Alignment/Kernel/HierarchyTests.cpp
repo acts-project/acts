@@ -14,16 +14,20 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
+#include "ActsAlignment/Kernel/detail/AlignmentTarget.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <limits>
 #include <memory>
+#include <new>
 #include <stdexcept>
 #include <vector>
 
@@ -381,4 +385,512 @@ BOOST_AUTO_TEST_CASE(MaskConflictDetection, *boost::unit_test::disabled()) {
         hierarchy.detectMaskConflicts(AlignmentMask::All, {el3.get()});
     BOOST_CHECK(conflicts.empty());
   }
+}
+
+namespace {
+namespace AlignDetail = ActsAlignment::detail;
+
+const AlignDetail::AlignmentUpdateSupport updateSupported =
+    [](const SurfacePlacementBase&) { return true; };
+
+auto validateSelection(
+    const std::vector<std::shared_ptr<AlignableStructure>>& registered,
+    const std::vector<std::shared_ptr<AlignableStructure>>& active) {
+  return AlignDetail::validateAlignmentSelection(registered, active);
+}
+
+auto prepareTargets(
+    const GeometryContext& gctx,
+    const std::vector<std::shared_ptr<AlignableStructure>>& registered,
+    const std::vector<std::shared_ptr<AlignableStructure>>& active,
+    const std::vector<SurfacePlacementBase*>& modules = {},
+    const AlignDetail::AlignmentUpdateSupport& support = updateSupported) {
+  return AlignDetail::prepareAlignmentTargets(gctx, registered, active, modules,
+                                              support);
+}
+
+template <typename T>
+void checkTargetError(
+    const Acts::Result<T, AlignDetail::AlignmentTargetError>& r,
+    AlignmentError code, const std::string& diagnostic) {
+  BOOST_REQUIRE(!r.ok());
+  BOOST_CHECK(r.error().code == code);
+  BOOST_CHECK_NE(r.error().message.find(diagnostic), std::string::npos);
+}
+
+struct TargetFixture {
+  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+  std::shared_ptr<ActsTests::DetectorElementStub> first =
+      makeDummyElement(Transform3::Identity());
+  std::shared_ptr<ActsTests::DetectorElementStub> second = makeDummyElement(
+      Translation3(10_mm, 20_mm, 30_mm) * AngleAxis3(0.3, Vector3::UnitY()));
+  std::shared_ptr<ActsTests::DetectorElementStub> module =
+      makeDummyElement(Transform3::Identity());
+  std::shared_ptr<ActsTests::DetectorElementStub> other =
+      makeDummyElement(Transform3::Identity());
+  // Reverse ID order: the selection order determines the numerical indices.
+  std::shared_ptr<AlignableStructure> group =
+      std::make_shared<AlignableStructure>(GeometryIdentifier().withVolume(2),
+                                           Transform3::Identity());
+  std::shared_ptr<AlignableStructure> otherGroup =
+      std::make_shared<AlignableStructure>(GeometryIdentifier().withVolume(1),
+                                           Transform3::Identity());
+
+  TargetFixture() {
+    group->alignmentMask() = AlignmentMask::All;
+    group->addSurface(first->surface().getSharedPtr());
+    group->addSurface(second->surface().getSharedPtr());
+    otherGroup->alignmentMask() = AlignmentMask::Center2;
+    otherGroup->addSurface(other->surface().getSharedPtr());
+  }
+};
+}  // namespace
+
+BOOST_FIXTURE_TEST_CASE(ExplicitStructureSelectionValidation, TargetFixture) {
+  auto metadata = validateSelection({group}, {});
+  BOOST_REQUIRE(metadata.ok());
+  BOOST_CHECK(!*metadata);
+  auto parent = std::make_shared<AlignableStructure>(GeometryIdentifier());
+  parent->addChild(group);
+  auto selected = validateSelection({parent}, {group});
+  BOOST_REQUIRE(selected.ok());
+  BOOST_CHECK(*selected);
+  parent->alignmentMask() = AlignmentMask::All;
+  checkTargetError(validateSelection({parent}, {parent}),
+                   AlignmentError::InvalidAlignmentSelection, "non-leaf");
+  checkTargetError(validateSelection({parent}, {parent, group}),
+                   AlignmentError::InvalidAlignmentSelection, "non-leaf");
+  checkTargetError(validateSelection({group}, {nullptr}),
+                   AlignmentError::InvalidAlignmentSelection, "null");
+  checkTargetError(validateSelection({group}, {otherGroup}),
+                   AlignmentError::InvalidAlignmentSelection, "unregistered");
+  checkTargetError(validateSelection({group}, {group, group}),
+                   AlignmentError::InvalidAlignmentSelection, "Duplicate");
+  parent->alignmentMask() = AlignmentMask::None;
+  group->alignmentMask() = AlignmentMask::None;
+  group->constraints()[eAlignmentCenter0] = 0.;
+  group->setTransform([](const GeometryContext&) -> Transform3 {
+    throw std::runtime_error("validation must not query providers");
+  });
+  auto inactive = validateSelection({parent}, {parent, group});
+  BOOST_REQUIRE(inactive.ok());
+  BOOST_CHECK(!*inactive);
+  checkTargetError(validateSelection({parent}, {group, group}),
+                   AlignmentError::InvalidAlignmentSelection, "Duplicate");
+}
+
+BOOST_FIXTURE_TEST_CASE(SharedTargetColumnsAndTrackRows, TargetFixture) {
+  auto prepared = prepareTargets(gctx, {group}, {group});
+  BOOST_REQUIRE(prepared.ok());
+  BOOST_REQUIRE_EQUAL(prepared->targets.size(), 1u);
+  BOOST_CHECK(prepared->targets[0].kind ==
+              AlignDetail::AlignmentTarget::Kind::Structure);
+  BOOST_REQUIRE_EQUAL(prepared->targets[0].members.size(), 2u);
+  auto layout = AlignDetail::makeAlignmentParameterLayout(*prepared, 0);
+  BOOST_REQUIRE(layout.ok());
+  BOOST_CHECK_EQUAL(layout->parameters.size(), 6u);
+  BOOST_CHECK_EQUAL(layout->placementTargets.at(first.get()), 0u);
+  BOOST_CHECK_EQUAL(layout->placementTargets.at(second.get()), 0u);
+  const std::vector<AlignDetail::AlignmentMeasurement> hits{{first.get(), 1},
+                                                            {module.get(), 2},
+                                                            {second.get(), 2},
+                                                            {first.get(), 2},
+                                                            {nullptr, 3}};
+  const auto track = AlignDetail::makeTrackAlignmentLayout(*layout, hits);
+  BOOST_REQUIRE_EQUAL(track.targets.size(), 1u);
+  BOOST_CHECK_EQUAL(track.localToGlobal.size(), 6u);
+  BOOST_CHECK_EQUAL(track.measurementDim, 10u);
+  BOOST_REQUIRE_EQUAL(track.measurements.size(), hits.size());
+  BOOST_CHECK(track.measurements[0].target == 0u);
+  BOOST_CHECK(!track.measurements[1].target);
+  BOOST_CHECK(track.measurements[2].target == 0u);
+  BOOST_CHECK(track.measurements[3].target == 0u);
+  BOOST_CHECK(!track.measurements[4].target);
+  BOOST_CHECK_EQUAL(track.measurements[2].rowOffset, 3u);
+  BOOST_CHECK_EQUAL(track.measurements[4].rowOffset, 7u);
+  BOOST_CHECK_EQUAL(track.measurements[4].dimension, 3u);
+  for (std::size_t i = 0; i < eAlignmentSize; ++i) {
+    BOOST_CHECK_EQUAL(track.localToGlobal[i], i);
+    BOOST_CHECK(track.targets[0].columns[i] == i);
+  }
+  const std::vector<AlignDetail::AlignmentMeasurement> fixed{{module.get(), 2},
+                                                             {nullptr, 1}};
+  const auto noTargets = AlignDetail::makeTrackAlignmentLayout(*layout, fixed);
+  BOOST_CHECK(noTargets.targets.empty());
+  BOOST_CHECK(noTargets.localToGlobal.empty());
+  BOOST_CHECK_EQUAL(noTargets.measurementDim, 3u);
+  const auto emptyTrack = AlignDetail::makeTrackAlignmentLayout(*layout, {});
+  BOOST_CHECK(emptyTrack.targets.empty());
+  BOOST_CHECK(emptyTrack.localToGlobal.empty());
+  BOOST_CHECK(emptyTrack.measurements.empty());
+  BOOST_CHECK_EQUAL(emptyTrack.measurementDim, 0u);
+}
+
+BOOST_FIXTURE_TEST_CASE(OrderedMixedTargetsAndIterationMasks, TargetFixture) {
+  group->alignmentMask() = AlignmentMask::Center0 | AlignmentMask::Rotation2;
+  auto prepared = prepareTargets(gctx, {otherGroup, group}, {group, otherGroup},
+                                 {module.get()});
+  BOOST_REQUIRE(prepared.ok());
+  const std::map<unsigned int, AlignmentMask> schedule{
+      {0, AlignmentMask::Rotation1}, {2, AlignmentMask::None}};
+  auto layout =
+      AlignDetail::makeAlignmentParameterLayout(*prepared, 0, schedule);
+  BOOST_REQUIRE(layout.ok());
+  BOOST_REQUIRE_EQUAL(layout->parameters.size(), 4u);
+  BOOST_CHECK_EQUAL(layout->parameters[0].target, 0u);
+  BOOST_CHECK(layout->parameters[0].dof == eAlignmentRotation1);
+  BOOST_CHECK_EQUAL(layout->parameters[1].target, 1u);
+  BOOST_CHECK(layout->parameters[1].dof == eAlignmentCenter0);
+  BOOST_CHECK(layout->parameters[2].dof == eAlignmentRotation2);
+  BOOST_CHECK_EQUAL(layout->parameters[3].target, 2u);
+  BOOST_CHECK(layout->parameters[3].dof == eAlignmentCenter2);
+  BOOST_CHECK(!layout->targetColumns[1][eAlignmentCenter1]);
+  const std::vector<AlignDetail::AlignmentMeasurement> forward{
+      {other.get(), 2},
+      {module.get(), 1},
+      {second.get(), 1},
+      {first.get(), 2},
+      {other.get(), 1}};
+  const std::vector<AlignDetail::AlignmentMeasurement> backward(
+      forward.rbegin(), forward.rend());
+  const auto a = AlignDetail::makeTrackAlignmentLayout(*layout, forward);
+  const auto b = AlignDetail::makeTrackAlignmentLayout(*layout, backward);
+  BOOST_CHECK(a.localToGlobal == b.localToGlobal);
+  BOOST_CHECK(a.localToGlobal == std::vector<std::size_t>({0, 1, 2, 3}));
+  BOOST_REQUIRE_EQUAL(a.targets.size(), 3u);
+  BOOST_CHECK_EQUAL(a.targets[0].globalTarget, 0u);
+  BOOST_CHECK_EQUAL(a.targets[1].globalTarget, 1u);
+  BOOST_CHECK_EQUAL(a.targets[2].globalTarget, 2u);
+  BOOST_CHECK(a.targets[0].columns[eAlignmentRotation1] == 0u);
+  BOOST_CHECK(a.targets[1].columns[eAlignmentCenter0] == 1u);
+  BOOST_CHECK(a.targets[1].columns[eAlignmentRotation2] == 2u);
+  BOOST_CHECK(a.measurements[0].target == 2u);
+  BOOST_CHECK(a.measurements[1].target == 0u);
+  BOOST_CHECK(a.measurements[2].target == 1u);
+  const std::vector<AlignDetail::AlignmentMeasurement> sparseHits{
+      {other.get(), 2}, {module.get(), 1}, {other.get(), 1}};
+  const auto sparse =
+      AlignDetail::makeTrackAlignmentLayout(*layout, sparseHits);
+  BOOST_CHECK(sparse.localToGlobal == std::vector<std::size_t>({0, 3}));
+  BOOST_REQUIRE_EQUAL(sparse.targets.size(), 2u);
+  BOOST_CHECK_EQUAL(sparse.targets[0].globalTarget, 0u);
+  BOOST_CHECK_EQUAL(sparse.targets[1].globalTarget, 2u);
+  BOOST_CHECK(sparse.targets[0].columns[eAlignmentRotation1] == 0u);
+  BOOST_CHECK(sparse.targets[1].columns[eAlignmentCenter2] == 1u);
+  BOOST_REQUIRE_EQUAL(sparse.measurements.size(), 3u);
+  BOOST_CHECK(sparse.measurements[0].target == 1u);
+  BOOST_CHECK(sparse.measurements[1].target == 0u);
+  BOOST_CHECK(sparse.measurements[2].target == 1u);
+  auto missing =
+      AlignDetail::makeAlignmentParameterLayout(*prepared, 1, schedule);
+  BOOST_REQUIRE(missing.ok());
+  BOOST_CHECK_EQUAL(missing->parameters.size(), 9u);
+  auto fixed =
+      AlignDetail::makeAlignmentParameterLayout(*prepared, 2, schedule);
+  BOOST_REQUIRE(fixed.ok());
+  BOOST_CHECK_EQUAL(fixed->parameters.size(), 3u);
+  BOOST_CHECK(!fixed->placementTargets.contains(module.get()));
+  BOOST_CHECK_EQUAL(fixed->parameters.front().target, 1u);
+  const auto fixedTrack =
+      AlignDetail::makeTrackAlignmentLayout(*fixed, forward);
+  BOOST_CHECK(fixedTrack.localToGlobal == std::vector<std::size_t>({0, 1, 2}));
+  BOOST_REQUIRE_EQUAL(fixedTrack.measurements.size(), forward.size());
+  BOOST_CHECK(!fixedTrack.measurements[1].target);
+  BOOST_CHECK_EQUAL(fixedTrack.measurements[2].rowOffset, 3u);
+  BOOST_CHECK_EQUAL(fixedTrack.measurementDim, 7u);
+}
+
+BOOST_FIXTURE_TEST_CASE(SelectionSnapshotsFramesMasksAndMembership,
+                        TargetFixture) {
+  const Transform3 initial =
+      Translation3(5_mm, -20_mm, 8_mm) * AngleAxis3(0.4, Vector3::UnitX());
+  GeometryContext context{initial};
+  std::size_t calls = 0;
+  group->setTransform([&](const GeometryContext& ctx) {
+    ++calls;
+    return ctx.get<Transform3>();
+  });
+  auto prepared = prepareTargets(context, {group}, {group});
+  BOOST_REQUIRE(prepared.ok());
+  BOOST_CHECK_EQUAL(calls, 1u);
+  group->setTransform(Transform3::Identity());
+  group->alignmentMask() = AlignmentMask::None;
+  group->addSurface(other->surface().getSharedPtr());
+  BOOST_CHECK(prepared->targets[0].mask == AlignmentMask::All);
+  BOOST_CHECK_EQUAL(prepared->targets[0].members.size(), 2u);
+  CHECK_CLOSE_ABS(prepared->targets[0].frame->matrix(), initial.matrix(),
+                  1e-14);
+  CHECK_CLOSE_ABS(prepared->targets[0].members[1].transform.matrix(),
+                  second->localToGlobalTransform(gctx).matrix(), 1e-14);
+  std::weak_ptr<const AlignableStructure> lifetime = group;
+  group.reset();
+  BOOST_CHECK(!lifetime.expired());
+}
+
+BOOST_FIXTURE_TEST_CASE(InactiveMetadataAndSelectedLeaves, TargetFixture) {
+  auto parent = std::make_shared<AlignableStructure>(GeometryIdentifier());
+  parent->addChild(group);
+  auto prepared = prepareTargets(gctx, {parent}, {group});
+  BOOST_REQUIRE(prepared.ok());
+  BOOST_CHECK_EQUAL(prepared->targets.size(), 1u);
+  parent->alignmentMask() = AlignmentMask::All;
+  checkTargetError(prepareTargets(gctx, {parent}, {parent}),
+                   AlignmentError::InvalidAlignmentSelection, "non-leaf");
+  checkTargetError(prepareTargets(gctx, {parent}, {parent, group}),
+                   AlignmentError::InvalidAlignmentSelection, "non-leaf");
+  parent->alignmentMask() = AlignmentMask::None;
+  group->alignmentMask() = AlignmentMask::None;
+  group->constraints()[eAlignmentCenter0] = 0.;
+  group->setTransform([](const GeometryContext&) -> Transform3 {
+    throw std::runtime_error("inactive provider must not be queried");
+  });
+  auto inactive =
+      prepareTargets(gctx, {parent}, {parent, group}, {first.get()});
+  BOOST_REQUIRE(inactive.ok());
+  BOOST_REQUIRE_EQUAL(inactive->targets.size(), 1u);
+  BOOST_CHECK(inactive->targets.front().kind ==
+              AlignDetail::AlignmentTarget::Kind::Module);
+  auto empty = prepareTargets(gctx, {parent}, {group}, {}, {});
+  BOOST_REQUIRE(empty.ok());
+  BOOST_CHECK(empty->targets.empty());
+}
+
+BOOST_FIXTURE_TEST_CASE(InvalidTargetSelections, TargetFixture) {
+  checkTargetError(prepareTargets(gctx, {group}, {nullptr}),
+                   AlignmentError::InvalidAlignmentSelection, "null");
+  checkTargetError(prepareTargets(gctx, {group}, {otherGroup}),
+                   AlignmentError::InvalidAlignmentSelection, "unregistered");
+  checkTargetError(prepareTargets(gctx, {group}, {group, group}),
+                   AlignmentError::InvalidAlignmentSelection, "Duplicate");
+  checkTargetError(prepareTargets(gctx, {group}, {group}, {first.get()}),
+                   AlignmentError::InvalidAlignmentSelection, "overlapping");
+  checkTargetError(prepareTargets(gctx, {}, {}, {nullptr}),
+                   AlignmentError::InvalidAlignmentSelection, "Null");
+  checkTargetError(prepareTargets(gctx, {}, {}, {module.get(), module.get()}),
+                   AlignmentError::InvalidAlignmentSelection, "Duplicate");
+  group->alignmentMask() = AlignmentMask::None;
+  checkTargetError(prepareTargets(gctx, {group}, {group, group}),
+                   AlignmentError::InvalidAlignmentSelection, "Duplicate");
+  auto empty = std::make_shared<AlignableStructure>(GeometryIdentifier());
+  empty->alignmentMask() = AlignmentMask::All;
+  checkTargetError(prepareTargets(gctx, {empty}, {empty}),
+                   AlignmentError::InvalidAlignmentSelection, "Empty active");
+  empty->addSurface(Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(1_mm, 1_mm)));
+  checkTargetError(prepareTargets(gctx, {empty}, {empty}),
+                   AlignmentError::InvalidAlignmentSelection, "placement");
+}
+
+BOOST_FIXTURE_TEST_CASE(InvalidGraphsAreRejectedBeforeTraversal,
+                        TargetFixture) {
+  checkTargetError(validateSelection({nullptr}, {}),
+                   AlignmentError::HierarchyValidationFailure, "Null");
+  checkTargetError(validateSelection({group, group}, {}),
+                   AlignmentError::HierarchyValidationFailure, "repeated");
+  auto parent = std::make_shared<AlignableStructure>(GeometryIdentifier());
+  parent->addChild(group);
+  parent->addChild(group);
+  checkTargetError(validateSelection({parent}, {}),
+                   AlignmentError::HierarchyValidationFailure, "repeated");
+  auto nullChild = std::make_shared<AlignableStructure>(GeometryIdentifier());
+  nullChild->addChild(nullptr);
+  checkTargetError(validateSelection({nullChild}, {}),
+                   AlignmentError::HierarchyValidationFailure, "Null");
+  auto nullSurface = std::make_shared<AlignableStructure>(GeometryIdentifier());
+  nullSurface->addSurface(nullptr);
+  checkTargetError(validateSelection({nullSurface}, {}),
+                   AlignmentError::HierarchyValidationFailure, "Null member");
+  otherGroup->addSurface(first->surface().getSharedPtr());
+  checkTargetError(validateSelection({group, otherGroup}, {group, otherGroup}),
+                   AlignmentError::HierarchyValidationFailure, "placement");
+  group->addSurface(first->surface().getSharedPtr());
+  checkTargetError(validateSelection({group}, {group}),
+                   AlignmentError::HierarchyValidationFailure, "placement");
+  AlignableStructure cycleA{GeometryIdentifier()}, cycleB{GeometryIdentifier()};
+  auto a = std::shared_ptr<AlignableStructure>(&cycleA, [](auto*) {});
+  auto b = std::shared_ptr<AlignableStructure>(&cycleB, [](auto*) {});
+  cycleA.addChild(b);
+  cycleB.addChild(a);
+  checkTargetError(validateSelection({a}, {}),
+                   AlignmentError::HierarchyValidationFailure, "Cycle");
+}
+
+BOOST_FIXTURE_TEST_CASE(ConstraintsAndUpdateCapabilities, TargetFixture) {
+  for (double variance : {0., 1., -1.}) {
+    group->constraints()[eAlignmentCenter0] = variance;
+    checkTargetError(prepareTargets(gctx, {group}, {group}),
+                     AlignmentError::UnsupportedAlignmentConstraints,
+                     "Constraints");
+  }
+  group->constraints().clear();
+  checkTargetError(prepareTargets(gctx, {group}, {group}, {}, {}),
+                   AlignmentError::InvalidAlignmentSelection, "update route");
+  std::size_t calls = 0;
+  checkTargetError(prepareTargets(gctx, {group}, {group}, {},
+                                  [&](const auto& placement) {
+                                    ++calls;
+                                    return &placement != second.get();
+                                  }),
+                   AlignmentError::InvalidAlignmentSelection, "update route");
+  BOOST_CHECK_EQUAL(calls, 2u);
+  checkTargetError(
+      prepareTargets(gctx, {group}, {group}, {},
+                     [](const auto&) -> bool {
+                       throw std::runtime_error("capability failed");
+                     }),
+      AlignmentError::InvalidAlignmentSelection, "capability failed");
+}
+
+BOOST_FIXTURE_TEST_CASE(InvalidFramesAndProviderExceptions, TargetFixture) {
+  std::vector<Transform3> invalid(6, Transform3::Identity());
+  invalid[0].matrix()(0, 3) = std::numeric_limits<double>::quiet_NaN();
+  invalid[1].matrix()(0, 0) = std::numeric_limits<double>::infinity();
+  invalid[2].linear()(0, 0) = 2.;
+  invalid[3].linear()(0, 1) = 0.1;
+  invalid[4].linear()(0, 0) = -1.;
+  invalid[5].matrix()(3, 0) = 0.1;
+  for (const auto& transform : invalid) {
+    group->setTransform(transform);
+    checkTargetError(prepareTargets(gctx, {group}, {group}),
+                     AlignmentError::AlignmentFrameResolutionFailure,
+                     "invalid initial structure frame");
+  }
+  auto noFrame = std::make_shared<AlignableStructure>(GeometryIdentifier());
+  noFrame->alignmentMask() = AlignmentMask::All;
+  noFrame->addSurface(first->surface().getSharedPtr());
+  checkTargetError(prepareTargets(gctx, {noFrame}, {noFrame}),
+                   AlignmentError::AlignmentFrameResolutionFailure,
+                   "no frame provider");
+  group->setTransform([](const GeometryContext&) -> Transform3 {
+    throw std::runtime_error("conditions IOV missing");
+  });
+  auto failure = prepareTargets(gctx, {group}, {group});
+  checkTargetError(failure, AlignmentError::AlignmentFrameResolutionFailure,
+                   "conditions IOV missing");
+  BOOST_CHECK_NE(failure.error().message.find("fit geometry context"),
+                 std::string::npos);
+  group->setTransform(
+      [](const GeometryContext&) -> Transform3 { throw std::bad_alloc(); });
+  BOOST_CHECK_THROW(static_cast<void>(prepareTargets(gctx, {group}, {group})),
+                    std::bad_alloc);
+  group->setTransform([](const GeometryContext&) -> Transform3 { throw 42; });
+  BOOST_CHECK_THROW(static_cast<void>(prepareTargets(gctx, {group}, {group})),
+                    int);
+}
+
+namespace {
+class ContextualTargetElement : public ActsTests::DetectorElementStub {
+ public:
+  ContextualTargetElement()
+      : DetectorElementStub(
+            Transform3::Identity(),
+            std::make_shared<const RectangleBounds>(10_mm, 10_mm), 1_um) {}
+
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& ctx) const override {
+    ++calls;
+    return ctx.get<Transform3>();
+  }
+  mutable std::size_t calls = 0;
+};
+
+class WrongBacklinkElement : public ActsTests::DetectorElementStub {
+ public:
+  explicit WrongBacklinkElement(const Surface& other)
+      : DetectorElementStub(
+            Transform3::Identity(),
+            std::make_shared<const RectangleBounds>(10_mm, 10_mm), 1_um),
+        m_other(other) {}
+  using DetectorElementStub::surface;
+  const Surface& surface() const override { return m_other; }
+
+ private:
+  const Surface& m_other;
+};
+}  // namespace
+
+BOOST_FIXTURE_TEST_CASE(MemberContextAndBacklinkValidation, TargetFixture) {
+  ContextualTargetElement contextual;
+  auto selected = std::make_shared<AlignableStructure>(GeometryIdentifier(),
+                                                       Transform3::Identity());
+  selected->alignmentMask() = AlignmentMask::All;
+  selected->addSurface(contextual.surface().getSharedPtr());
+  const Transform3 initial =
+      Translation3(10_mm, -40_mm, 5_mm) * AngleAxis3(0.2, Vector3::UnitZ());
+  GeometryContext context{initial};
+  auto prepared = prepareTargets(context, {selected}, {selected});
+  BOOST_REQUIRE(prepared.ok());
+  BOOST_CHECK_EQUAL(contextual.calls, 1u);
+  CHECK_CLOSE_ABS(prepared->targets[0].members[0].transform.matrix(),
+                  initial.matrix(), 1e-14);
+  checkTargetError(prepareTargets(gctx, {selected}, {selected}),
+                   AlignmentError::AlignmentFrameResolutionFailure,
+                   "initial member 0 frame in fit geometry context");
+  Transform3 invalid = initial;
+  invalid.matrix()(3, 3) = 0.;
+  GeometryContext invalidContext{invalid};
+  checkTargetError(prepareTargets(invalidContext, {selected}, {selected}),
+                   AlignmentError::AlignmentFrameResolutionFailure,
+                   "invalid initial member");
+  WrongBacklinkElement wrong(first->surface());
+  checkTargetError(prepareTargets(gctx, {}, {}, {&wrong}),
+                   AlignmentError::InvalidAlignmentSelection, "backlink");
+  auto wrongGroup = std::make_shared<AlignableStructure>(
+      GeometryIdentifier(), Transform3::Identity());
+  wrongGroup->alignmentMask() = AlignmentMask::Center0;
+  wrongGroup->addSurface(wrong.surface().getSharedPtr());
+  checkTargetError(prepareTargets(gctx, {wrongGroup}, {wrongGroup}),
+                   AlignmentError::InvalidAlignmentSelection, "backlink");
+}
+
+BOOST_FIXTURE_TEST_CASE(PreparedLayoutsReuseSnapshots, TargetFixture) {
+  ContextualTargetElement contextual;
+  const Transform3 initial =
+      Translation3(5_mm, -20_mm, 8_mm) * AngleAxis3(0.4, Vector3::UnitX());
+  GeometryContext context{initial};
+  std::size_t calls = 0;
+  group->setTransform([&](const GeometryContext& ctx) {
+    ++calls;
+    return ctx.get<Transform3>();
+  });
+  group->addSurface(contextual.surface().getSharedPtr());
+  auto prepared = prepareTargets(context, {group}, {group});
+  BOOST_REQUIRE(prepared.ok());
+  group->alignmentMask() = AlignmentMask::None;
+  group->addSurface(other->surface().getSharedPtr());
+  auto layout = AlignDetail::makeAlignmentParameterLayout(*prepared, 3);
+  BOOST_REQUIRE(layout.ok());
+  BOOST_CHECK_EQUAL(layout->parameters.size(), 6u);
+  BOOST_CHECK_EQUAL(calls, 1u);
+  BOOST_CHECK_EQUAL(contextual.calls, 1u);
+  BOOST_CHECK(!layout->placementTargets.contains(other.get()));
+  auto empty = prepareTargets(gctx, {group}, {group}, {}, {});
+  BOOST_REQUIRE(empty.ok());
+  checkTargetError(AlignDetail::makeAlignmentParameterLayout(*empty, 0),
+                   AlignmentError::NoActiveAlignmentParameters, "Iteration 0");
+  auto inactive = prepareTargets(gctx, {group}, {group}, {first.get()});
+  BOOST_REQUIRE(inactive.ok());
+  checkTargetError(AlignDetail::makeAlignmentParameterLayout(
+                       *inactive, 1, {{1, AlignmentMask::None}}),
+                   AlignmentError::NoActiveAlignmentParameters, "Iteration 1");
+}
+
+BOOST_FIXTURE_TEST_CASE(PreparedTargetOrdering, TargetFixture) {
+  auto prepared = prepareTargets(gctx, {otherGroup, group}, {group, otherGroup},
+                                 {module.get()});
+  BOOST_REQUIRE(prepared.ok());
+  BOOST_REQUIRE_EQUAL(prepared->targets.size(), 3u);
+  const auto& standalone = prepared->targets[0];
+  BOOST_CHECK(standalone.kind == AlignDetail::AlignmentTarget::Kind::Module);
+  BOOST_CHECK(!standalone.structure);
+  BOOST_CHECK(!standalone.frame);
+  BOOST_REQUIRE_EQUAL(standalone.members.size(), 1u);
+  BOOST_CHECK(standalone.members[0].placement == module.get());
+  CHECK_CLOSE_ABS(standalone.members[0].transform.matrix(),
+                  module->localToGlobalTransform(gctx).matrix(), 1e-14);
+  BOOST_CHECK(prepared->targets[1].kind ==
+              AlignDetail::AlignmentTarget::Kind::Structure);
+  BOOST_CHECK(prepared->targets[1].structure == group);
+  BOOST_CHECK(prepared->targets[2].structure == otherGroup);
+  BOOST_CHECK(prepared->targets[2].mask == AlignmentMask::Center2);
 }

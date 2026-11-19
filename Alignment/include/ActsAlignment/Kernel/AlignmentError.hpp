@@ -18,7 +18,12 @@ enum class AlignmentError {
   NoAlignmentDofOnTrack = 1,
   AlignmentParametersUpdateFailure = 2,
   ConvergeFailure = 3,
-  HierarchyValidationFailure = 4
+  HierarchyValidationFailure = 4,
+  InvalidAlignmentSelection = 5,
+  AlignmentFrameResolutionFailure = 6,
+  UnsupportedAlignmentConstraints = 7,
+  NoActiveAlignmentParameters = 8,
+  UnsupportedStructureAlignment = 9
 };
 
 namespace detail {
@@ -37,8 +42,18 @@ class AlignmentErrorCategory : public std::error_category {
       case AlignmentError::ConvergeFailure:
         return "The alignment is not converged";
       case AlignmentError::HierarchyValidationFailure:
-        return "Alignment hierarchy validation failed (assignment uniqueness "
-               "error)";
+        return "Alignment hierarchy validation failed (invalid graph or "
+               "placement assignment)";
+      case AlignmentError::InvalidAlignmentSelection:
+        return "Invalid alignment target selection";
+      case AlignmentError::AlignmentFrameResolutionFailure:
+        return "Alignment target frame resolution failed";
+      case AlignmentError::UnsupportedAlignmentConstraints:
+        return "Numerical structure constraints are not supported";
+      case AlignmentError::NoActiveAlignmentParameters:
+        return "No active alignment parameters";
+      case AlignmentError::UnsupportedStructureAlignment:
+        return "Structure solving is not yet supported";
       default:
         return "unknown";
     }

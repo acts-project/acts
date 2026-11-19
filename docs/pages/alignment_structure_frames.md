@@ -133,7 +133,78 @@ late_bound.setTransform(transformProvider=frame_provider)
 ```
 
 Providing a frame does not yet enable numerical structure alignment. The native
-solver still needs shared parameter indexing, Jacobian accumulation, and rigid
-updates of the members. The frame API supplies the geometry contract for that
-integration; hierarchy validation and standalone-module alignment retain their
-existing behavior.
+solver still needs shared Jacobian accumulation and rigid updates of the members.
+
+## Preparing alignment targets
+
+The internal `prepareAlignmentTargets()` helper in
+`ActsAlignment/Kernel/detail/AlignmentTarget.hpp` prepares numerical targets
+without fitting tracks or publishing transforms. It accepts registered roots,
+explicitly selected structures, standalone placements, an initial fit geometry
+context, and a read-only update-capability predicate.
+
+Preparation snapshots direct membership and structure masks, retains structure
+ownership, and resolves each active structure frame and each selected target
+member's transform once in the initial fit geometry context. Inactive `None`
+selections are skipped. Standalone modules come first in supplied order,
+followed by active structures in selection order. All placement pointers are
+non-owning and must outlive use of the snapshot. Caller declarations and geometry
+must not be mutated concurrently with preparation.
+
+Registered structures are metadata unless explicitly selected. A selected `None`
+structure stays inactive, requires no frame or update capability, and leaves its
+members available for standalone selection. Active structures must be nonempty
+leaves. Preparation rejects overlapping placements, inconsistent placement/surface
+links, and nonempty active structure constraints. Every initial frame must be a
+finite proper rigid transform; the orthogonality, determinant and affine-row
+checks use an absolute tolerance of `1e-10`.
+
+The update-capability predicate declares whether the application supports a
+placement; it must only inspect state. It is not an updater and does not promise
+transactional publication. Prepared member and structure transforms are initial
+seeds for future solver-owned working state. Preparation never alters a structure
+provider or nominal/contextual member geometry. Provider failures retain the
+target and phase in a diagnostic; allocation and non-standard exceptions propagate.
+An empty prepared selection is allowed.
+
+## Parameter and track layouts
+
+`makeAlignmentParameterLayout()` assigns compact parameter columns to a prepared
+selection. Targets follow preparation order: standalone modules first, then
+structures, each in supplied order. Within a target, only active DoFs receive
+columns, in Center0..2, Rotation0..2 order. The six named components are enumerated
+explicitly; unused bits in `AlignmentMask::All` do not create extra columns.
+
+An exact `iterationState` entry supplies the module mask; a missing entry means
+`All`. Structure masks remain the per-call snapshot and are independent of the
+module schedule. A layout with no active columns returns
+`NoActiveAlignmentParameters`.
+
+`makeTrackAlignmentLayout()` assigns local columns to each unique participating
+target in global target order. Repeated hits or hits on different members of one
+structure reuse those columns. The `localToGlobal` mapping identifies the global
+column corresponding to each track-local column. Per-track scratch storage scales
+with the number of measurements, independently of the total number of targets.
+
+Measurement row offsets and dimensions are recorded separately from parameter
+columns. Fixed-reference and track-model rows may have no active target. A track
+with no active target has an empty column mapping and retains its measurement
+metadata. These helpers do not calculate derivatives or change the track-model
+gradient, and they do not query frame providers again.
+
+## Solver entry-point selection
+
+`AlignmentOptions::alignedStructures` registers membership metadata. It does
+not select structures for numerical alignment, even when a registered structure
+has a non-`None` mask. `activeStructures` explicitly selects registered structures.
+Structures with active DoFs must be leaves. `None` selections remain metadata,
+may have children, and leave their members available for standalone selection
+through `alignedDetElements`.
+
+`align()` validates the hierarchy before recursive registry construction and
+returns `UnsupportedStructureAlignment` for an effective explicit structure
+selection before fitting or updating anything. The compact layouts are not yet
+connected to the existing surface solver. Calls with only registered metadata or
+selected `None` structures retain the module-only calculation and result layout.
+Shared normal-equation assembly, result/export integration, rigid publication,
+and iterative structure recovery are separate follow-ups.
