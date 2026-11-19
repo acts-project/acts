@@ -81,10 +81,7 @@ Acts::FullBilloirVertexFitter::FullBilloirVertexFitter(
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     const VertexFitInput& input, const GeometryContext& gctx,
     MagneticFieldQuery& field) const {
-  VertexingOptions options =
-      input.constraint
-          ? VertexingOptions(gctx, field.context(), *input.constraint)
-          : VertexingOptions(gctx, field.context());
+  VertexingOptions options(gctx, field.context(), input.constraint);
   return fitImpl(input.tracks, options, field, input.seedPosition);
 }
 
