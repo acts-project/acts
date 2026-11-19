@@ -847,25 +847,30 @@ def addDigitization(
     s.addAlgorithm(digiAlg)
 
     if outputDirRoot is not None:
+        RootMeasurementWriter, RootClusterWriter, RootMeasurementPerformanceWriter = (
+            acts.examples._tryImportRoot(
+                "RootMeasurementWriter",
+                "RootClusterWriter",
+                "RootMeasurementPerformanceWriter",
+            )
+        )
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
-        rmwConfig = acts.examples.root.RootMeasurementWriter.Config(
+        rmwConfig = RootMeasurementWriter.Config(
             inputMeasurements=digiAlg.config.outputMeasurements,
             inputSimHits=digiAlg.config.inputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
             surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         )
-        s.addWriter(
-            acts.examples.root.RootMeasurementWriter(rmwConfig, customLogLevel())
-        )
-        rcwConfig = acts.examples.root.RootClusterWriter.Config(
+        s.addWriter(RootMeasurementWriter(rmwConfig, customLogLevel()))
+        rcwConfig = RootClusterWriter.Config(
             inputClusters=digiAlg.config.outputClusters,
             filePath=str(outputDirRoot / f"{digiAlg.config.outputClusters}.root"),
         )
-        s.addWriter(acts.examples.root.RootClusterWriter(rcwConfig, customLogLevel()))
-        rmpwConfig = acts.examples.root.RootMeasurementPerformanceWriter.Config(
+        s.addWriter(RootClusterWriter(rcwConfig, customLogLevel()))
+        rmpwConfig = RootMeasurementPerformanceWriter.Config(
             inputMeasurements=digiAlg.config.outputMeasurements,
             inputSimHits=digiAlg.config.inputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
@@ -875,11 +880,7 @@ def addDigitization(
                 outputDirRoot / f"performance_{digiAlg.config.outputMeasurements}.root"
             ),
         )
-        s.addWriter(
-            acts.examples.root.RootMeasurementPerformanceWriter(
-                rmpwConfig, customLogLevel()
-            )
-        )
+        s.addWriter(RootMeasurementPerformanceWriter(rmpwConfig, customLogLevel()))
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
