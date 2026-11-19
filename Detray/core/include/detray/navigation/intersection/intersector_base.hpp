@@ -193,9 +193,15 @@ DETRAY_HOST_DEVICE constexpr void resolve_mask(
     const surface_descr_t sf_desc, const mask_t &mask, const transform3_t &trf,
     const intersection::config &cfg = {},
     const scalar_t external_mask_tolerance = 0.f) {
-  // Mask out solutions that don't meet the overstepping tolerance (SoA)
-  is.set_status_if(intersection::status::e_outside,
-                   ip.path < cfg.overstep_tolerance);
+  // Reset the status: In SoA, mask out the solutions that don't meet the
+  // overstepping tolerance. In AoS, the status is always reset, so that a
+  // stale status cannot survive a failed mask check
+  if constexpr (concepts::soa<algebra_t>) {
+    is.set_status_if(intersection::status::e_outside,
+                     ip.path < cfg.overstep_tolerance);
+  } else {
+    is.set_status(intersection::status::e_outside);
+  }
   // is.set_status_if(intersection::status::e_outside,
   // !math::isfinite(ip.path));
 
