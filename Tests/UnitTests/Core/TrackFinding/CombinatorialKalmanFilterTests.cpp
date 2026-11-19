@@ -368,20 +368,20 @@ struct HoleTrackStateCreator {
   const Fixture::TestSourceLinkContainer* container = nullptr;
 
   Result<CkfTypes::BranchVector<TrackIndexType>> createTrackStates(
-      const CkfTypes::TrackStateCreatorInput<TrackContainer>& input) const {
+      const CkfTypes::TrackStateCreatorArguments<TrackContainer>& args) const {
     CkfTypes::BranchVector<TrackIndexType> trackStates;
-    if (!container->contains(input.surface->geometryId())) {
+    if (!container->contains(args.surface->geometryId())) {
       return trackStates;
     }
 
-    auto trackState = input.trajectory->makeTrackState(
+    auto trackState = args.trajectory->makeTrackState(
         TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian,
-        input.prevTip);
-    const auto& params = std::get<BoundTrackParameters>(*input.boundState);
+        args.prevTip);
+    const auto& params = std::get<BoundTrackParameters>(*args.boundState);
     trackState.predicted() = params.parameters();
     trackState.predictedCovariance() = *params.covariance();
-    trackState.jacobian() = std::get<BoundMatrix>(*input.boundState);
-    trackState.setReferenceSurface(input.surface->getSharedPtr());
+    trackState.jacobian() = std::get<BoundMatrix>(*args.boundState);
+    trackState.setReferenceSurface(args.surface->getSharedPtr());
     trackState.typeFlags().setHasParameters().setIsHole();
 
     trackStates.push_back(trackState.index());

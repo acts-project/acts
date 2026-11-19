@@ -30,6 +30,7 @@
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -688,7 +689,7 @@ class CombinatorialKalmanFilter {
         // which may create extra trajectory branches if more than one
         // measurement is selected.
         if (extensions.trackStateCreator.connected()) {
-          const CkfTypes::TrackStateCreatorInput<track_container_t> input{
+          const CkfTypes::TrackStateCreatorArguments<track_container_t> args{
               .geoContext = &state.geoContext.get(),
               .calibrationContext = calibrationContextPtr,
               .surface = &surface,
@@ -696,12 +697,14 @@ class CombinatorialKalmanFilter {
               .prevTip = prevTip,
               .trajectory = result.trackStates,
               .logger = &logger()};
-          tsRes = extensions.trackStateCreator(input);
+          tsRes = extensions.trackStateCreator(args);
         } else {
+          ACTS_PUSH_IGNORE_DEPRECATED()
           tsRes = extensions.createTrackStates(
               state.geoContext, *calibrationContextPtr, surface, boundState,
               prevTip, result.trackStateCandidates, *result.trackStates,
               logger());
+          ACTS_POP_IGNORE_DEPRECATED()
         }
       }
 
@@ -1232,8 +1235,12 @@ class CombinatorialKalmanFilter {
   Result<std::vector<TrackProxy>> findTracks(
       const BoundTrackParameters& initialParameters, const Options& tfOptions,
       track_container_t& trackContainer, TrackProxy rootBranch) const {
+    ACTS_PUSH_IGNORE_DEPRECATED()
+    const bool legacyCreatorConnected =
+        tfOptions.extensions.createTrackStates.connected();
+    ACTS_POP_IGNORE_DEPRECATED()
     if (tfOptions.extensions.trackStateCreator.connected() ==
-        tfOptions.extensions.createTrackStates.connected()) {
+        legacyCreatorConnected) {
       throw std::invalid_argument(
           "CombinatorialKalmanFilter: exactly one of "
           "`extensions.trackStateCreator` and the deprecated "

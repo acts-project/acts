@@ -235,7 +235,7 @@ struct Fixture {
 
   DefaultSelectionCreator defaultCreator;
 
-  CkfTypes::TrackStateCreatorInput<TrackContainer> input() {
+  CkfTypes::TrackStateCreatorArguments<TrackContainer> arguments() {
     return {.geoContext = &gctx,
             .calibrationContext = &cctx,
             .surface = surface.get(),
@@ -246,11 +246,11 @@ struct Fixture {
   }
 
   Result<CkfTypes::BranchVector<TrackIndexType>> runDefault() {
-    return defaultCreator.createTrackStates(input());
+    return defaultCreator.createTrackStates(arguments());
   }
 
   Result<CkfTypes::BranchVector<TrackIndexType>> run() {
-    return creator.createTrackStates(input());
+    return creator.createTrackStates(arguments());
   }
 };
 

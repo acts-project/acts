@@ -18,7 +18,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -28,9 +27,6 @@
 #include <memory>
 #include <numbers>
 #include <vector>
-
-// the measurement selector is deprecated in favour of CkfTrackStateCreatorBase
-ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts::Test {
 
@@ -141,5 +137,3 @@ BOOST_AUTO_TEST_CASE(FiniteChi2StillSelectedAlongsideNonFinite) {
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test
-
-ACTS_POP_IGNORE_DEPRECATED()

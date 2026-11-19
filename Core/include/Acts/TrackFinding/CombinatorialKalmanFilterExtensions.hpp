@@ -13,6 +13,7 @@
 #include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -35,14 +36,14 @@ using BranchVector = boost::container::small_vector<T, s_maxBranchesPerSurface>;
 
 using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
 
-/// The input of the track state creation on one surface.
+/// The arguments of the track state creation on one surface.
 ///
 /// Only the CKF makes this object. It can get more fields without a change to
 /// the signature of the track state creator delegate.
 ///
 /// @tparam track_container_t the track container used by the track finder
 template <typename track_container_t>
-struct TrackStateCreatorInput {
+struct TrackStateCreatorArguments {
   /// Type alias for the track state container backend
   using TrackStateContainerBackend =
       typename track_container_t::TrackStateContainerBackend;
@@ -72,6 +73,10 @@ enum class CombinatorialKalmanFilterBranchStopperResult {
   StopAndDrop,
   StopAndKeep,
 };
+
+// The implicit special members copy the deprecated `createTrackStates`, which
+// GCC reports at the struct itself. Uses of the member still warn.
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 /// Extension struct which holds the delegates to customize the CKF behavior
 template <typename track_container_t>
@@ -129,26 +134,29 @@ struct CombinatorialKalmanFilterExtensions {
   ///   exists so that clients with their own implementation of this signature
   ///   keep working; it hands out a scratch buffer for temporary track states,
   ///   which a creator that does not push all measurements through the track
-  ///   EDM has no use for. No implementation of it ships with ACTS anymore.
+  ///   EDM has no use for.
+  [[deprecated(
+      "Connect `trackStateCreator` to a class derived from "
+      "Acts::CkfTrackStateCreatorBase instead")]]
   TrackStateCreator createTrackStates;
 
   /// @brief Delegate the extension of the trajectory onto the given surface to
   ///        an external unit.
   ///
   /// Same contract as @ref TrackStateCreator, but without the scratch buffer
-  /// for temporary track states. All inputs are in one struct, so that the CKF
-  /// can pass more of them later without a break of the implementations.
+  /// for temporary track states. All arguments are in one struct, so that the
+  /// CKF can pass more of them later without a break of the implementations.
   ///
-  /// @param input the surface, the predicted bound state, the trajectory to
+  /// @param args the surface, the predicted bound state, the trajectory to
   ///        extend, and the contexts
   /// @return indices of new track states which extend the trajectory given by
-  ///         `input.prevTip`. Each of them must be a measurement or an outlier,
+  ///         `args.prevTip`. Each of them must be a measurement or an outlier,
   ///         otherwise the CKF fails with
   ///         @ref CombinatorialKalmanFilterError::UnsupportedTrackState. An
   ///         empty list means that the CKF creates a hole.
   using TrackStateCreatorDelegate =
       Delegate<Result<CkfTypes::BranchVector<TrackIndexType>>(
-          const CkfTypes::TrackStateCreatorInput<track_container_t>& input)>;
+          const CkfTypes::TrackStateCreatorArguments<track_container_t>& args)>;
 
   /// The delegate to create new track states.
   /// @note derive from @ref CkfTrackStateCreatorBase to implement one
@@ -172,6 +180,8 @@ struct CombinatorialKalmanFilterExtensions {
     return BranchStopperResult::Continue;
   }
 };
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 /// @}
 

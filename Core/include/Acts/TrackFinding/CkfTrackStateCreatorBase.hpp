@@ -78,18 +78,17 @@ concept CalibratedMeasurementConcept = requires(const T& measurement) {
   requires std::convertible_to<
       std::ranges::range_value_t<decltype(measurement.subspaceIndices())>,
       std::uint8_t>;
+  // Eigen types, so that they can be evaluated and passed to the Eigen math
+  requires std::derived_from<
+      detail::MeasurementParametersType<T>,
+      Eigen::MatrixBase<detail::MeasurementParametersType<T>>>;
+  requires std::derived_from<
+      detail::MeasurementCovarianceType<T>,
+      Eigen::MatrixBase<detail::MeasurementCovarianceType<T>>>;
   requires detail::MeasurementParametersType<T>::ColsAtCompileTime == 1;
   requires detail::MeasurementParametersType<T>::RowsAtCompileTime ==
                detail::MeasurementCovarianceType<T>::RowsAtCompileTime;
 };
-
-/// The dimension of a measurement if it is known at compile time,
-/// `Eigen::Dynamic` otherwise.
-///
-/// @tparam measurement_t the measurement type
-template <CalibratedMeasurementConcept measurement_t>
-constexpr int CalibratedMeasurementSizeAtCompileTime =
-    detail::MeasurementParametersType<measurement_t>::RowsAtCompileTime;
 
 /// A calibrated measurement whose dimension is known at compile time.
 ///
@@ -100,7 +99,8 @@ constexpr int CalibratedMeasurementSizeAtCompileTime =
 template <typename measurement_t>
 concept StaticCalibratedMeasurementConcept =
     CalibratedMeasurementConcept<measurement_t> &&
-    (CalibratedMeasurementSizeAtCompileTime<measurement_t> != Eigen::Dynamic);
+    (MeasurementParametersType<measurement_t>::RowsAtCompileTime !=
+     Eigen::Dynamic);
 
 }  // namespace detail
 
@@ -137,7 +137,7 @@ void fillTrackStateCalibrated(const measurement_t& measurement,
 /// Everything a @ref CkfTrackStateCreatorBase customization point needs to know
 /// about the surface it is currently working on.
 ///
-/// This is the input from the CKF, see @ref CkfTypes::TrackStateCreatorInput,
+/// These are the arguments from the CKF, see @ref CkfTypes::TrackStateCreatorArguments,
 /// together with the scratch data of the creator. It does not depend on the
 /// concrete creator type, so that customization points can be plain,
 /// non-template member functions.
@@ -145,15 +145,15 @@ void fillTrackStateCalibrated(const measurement_t& measurement,
 /// @tparam track_container_t the track container used by the track finder
 template <typename track_container_t>
 struct CkfTrackStateCreatorState
-    : public CkfTypes::TrackStateCreatorInput<track_container_t> {
-  /// Type alias for the input from the CKF
-  using Input = CkfTypes::TrackStateCreatorInput<track_container_t>;
+    : public CkfTypes::TrackStateCreatorArguments<track_container_t> {
+  /// Type alias for the arguments from the CKF
+  using Arguments = CkfTypes::TrackStateCreatorArguments<track_container_t>;
   /// Type alias for the track state proxy
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
 
-  /// Make the state for one surface from the input of the CKF
-  /// @param input the input from the CKF
-  explicit CkfTrackStateCreatorState(const Input& input) : Input(input) {}
+  /// Make the state for one surface from the arguments of the CKF
+  /// @param args the arguments from the CKF
+  explicit CkfTrackStateCreatorState(const Arguments& args) : Arguments(args) {}
 
   /// The track state on this surface which owns the predicted parameters and
   /// the jacobian. All further track states on the same surface share them.
@@ -234,40 +234,40 @@ class CkfTrackStateCreatorBase {
   /// Type alias for the result of the track state creation
   using TrackStatesResult = Result<CkfTypes::BranchVector<TrackIndexType>>;
 
-  /// Expected maximum number of measurements considered on a single surface.
-  /// Exceeding this only costs a dynamic allocation of the candidate buffer.
-  static constexpr std::size_t kMaxCandidatesPerSurface = 16;
+  /// Number of candidates the buffer holds without a heap allocation. This is
+  /// not a limit: more candidates on a surface only cost an allocation.
+  static constexpr std::size_t kInlineCandidatesPerSurface = 16;
 
   /// The buffer a selection fills with the measurements it selected
   /// @tparam measurement_t whatever the creator calls a measurement
   template <typename measurement_t>
   using Candidates =
       boost::container::small_vector<CkfTrackStateCandidate<measurement_t>,
-                                     kMaxCandidatesPerSurface>;
+                                     kInlineCandidatesPerSurface>;
 
-  /// Type alias for the input from the CKF
-  using Input = CkfTypes::TrackStateCreatorInput<track_container_t>;
+  /// Type alias for the arguments from the CKF
+  using Arguments = CkfTypes::TrackStateCreatorArguments<track_container_t>;
 
   /// Extend the trajectory onto the given surface.
   ///
   /// This is the function to connect to
   /// @ref CombinatorialKalmanFilterExtensions::trackStateCreator.
   ///
-  /// @param input the surface, the predicted bound state, the trajectory to
+  /// @param args the surface, the predicted bound state, the trajectory to
   ///        extend, and the contexts
   ///
   /// @return the indices of the newly created track states, in the order the
   ///         selection produced them, or an error. An empty list means that no
   ///         compatible measurement was found and the caller is expected to
   ///         create a hole.
-  TrackStatesResult createTrackStates(const Input& input) const {
-    assert(input.geoContext != nullptr && input.calibrationContext != nullptr &&
-           input.surface != nullptr && input.boundState != nullptr &&
-           input.trajectory != nullptr && input.logger != nullptr &&
-           "Incomplete input for the track state creation");
+  TrackStatesResult createTrackStates(const Arguments& args) const {
+    assert(args.geoContext != nullptr && args.calibrationContext != nullptr &&
+           args.surface != nullptr && args.boundState != nullptr &&
+           args.trajectory != nullptr && args.logger != nullptr &&
+           "Incomplete arguments for the track state creation");
 
-    const Logger& logger = *input.logger;
-    State state(input);
+    const Logger& logger = *args.logger;
+    State state(args);
 
     CkfTypes::BranchVector<TrackIndexType> trackStates;
 
@@ -275,8 +275,7 @@ class CkfTrackStateCreatorBase {
     // Bail out before the selection is consulted, so that an ordinary surface
     // without measurements can never turn into a selection error.
     if (std::ranges::empty(range)) {
-      ACTS_VERBOSE("No measurements on surface "
-                   << input.surface->geometryId());
+      ACTS_VERBOSE("No measurements on surface " << args.surface->geometryId());
       return trackStates;
     }
 
