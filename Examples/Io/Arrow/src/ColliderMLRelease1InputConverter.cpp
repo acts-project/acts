@@ -15,6 +15,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -23,6 +24,7 @@
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -30,7 +32,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
-#include <unordered_set>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -79,6 +81,62 @@ std::shared_ptr<ArrowArrayType> colValues(const arrow::Table& table,
   }
   return values;
 }
+
+/// Maps a ColliderML particle_id to its row in the particles table.
+///
+/// ColliderML particle_ids are sorted with ~20% gaps, so a dense table over
+/// [min, max] is small; a hash map is the fallback for very sparse ids.
+/// For duplicate ids the last row wins.
+class ParticleRowLookup {
+ public:
+  static constexpr std::int32_t kNoRow = -1;
+
+  ParticleRowLookup(const arrow::UInt64Array& pids, std::int64_t offset,
+                    std::int64_t n) {
+    if (n <= 0) {
+      return;
+    }
+    if (n > std::numeric_limits<std::int32_t>::max()) {
+      throw std::runtime_error(
+          "ColliderMLRelease1InputConverter: too many particles");
+    }
+    std::uint64_t maxPid = 0;
+    m_minPid = std::numeric_limits<std::uint64_t>::max();
+    for (std::int64_t i = 0; i < n; ++i) {
+      const std::uint64_t pid = pids.Value(offset + i);
+      m_minPid = std::min(m_minPid, pid);
+      maxPid = std::max(maxPid, pid);
+    }
+    const std::uint64_t range = maxPid - m_minPid + 1;
+    if (range <= 4 * static_cast<std::uint64_t>(n) + 1024) {
+      m_dense.assign(range, kNoRow);
+      for (std::int64_t i = 0; i < n; ++i) {
+        m_dense[pids.Value(offset + i) - m_minPid] =
+            static_cast<std::int32_t>(i);
+      }
+    } else {
+      m_sparse.reserve(static_cast<std::size_t>(n));
+      for (std::int64_t i = 0; i < n; ++i) {
+        m_sparse[pids.Value(offset + i)] = static_cast<std::int32_t>(i);
+      }
+    }
+  }
+
+  /// @return the row of @p pid, or kNoRow if there is no such particle
+  std::int32_t find(std::uint64_t pid) const {
+    if (!m_dense.empty()) {
+      const std::uint64_t key = pid - m_minPid;  // wraps for pid < min
+      return key < m_dense.size() ? m_dense[key] : kNoRow;
+    }
+    auto it = m_sparse.find(pid);
+    return it != m_sparse.end() ? it->second : kNoRow;
+  }
+
+ private:
+  std::uint64_t m_minPid = 0;
+  std::vector<std::int32_t> m_dense;
+  std::unordered_map<std::uint64_t, std::int32_t> m_sparse;
+};
 
 std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
 loadGeoIdMapFromCsv(const std::filesystem::path& path,
@@ -306,23 +364,9 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   const arrow::Table& hitsTable = *m_inputHits(ctx).table();
 
   // ------------------------------------------------------------------
-  // 0. Build set of particle_ids that have at least one hit (optional), so
-  //    the particle loop below can skip unreferenced particles without a
-  //    second pass.
-  // ------------------------------------------------------------------
-  std::unordered_set<std::uint64_t> particleIdsWithHits;
-  if (!m_cfg.keepParticlesWithoutHits) {
-    auto [hpOff, nHitsForFilter] = rowBounds(hitsTable, "particle_id");
-    auto hpidFilterArr =
-        colValues<arrow::UInt64Array>(hitsTable, "particle_id");
-    particleIdsWithHits.reserve(static_cast<std::size_t>(nHitsForFilter));
-    for (std::int64_t i = 0; i < nHitsForFilter; ++i) {
-      particleIdsWithHits.insert(hpidFilterArr->Value(hpOff + i));
-    }
-  }
-
-  // ------------------------------------------------------------------
-  // 1. Parse particles table → SimParticleContainer + barcode index
+  // 1. Particles table: columns + particle_id → row lookup. The particle
+  //    container itself is built after the hits, so that only particles
+  //    referenced by a hit need to be materialized.
   // ------------------------------------------------------------------
   auto [pOff, nParticles] = rowBounds(particleTable, "particle_id");
   auto pidArr = colValues<arrow::UInt64Array>(particleTable, "particle_id");
@@ -340,53 +384,69 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
       colValues<arrow::UInt16Array>(particleTable, "vertex_primary");
   auto primaryArr = colValues<arrow::BooleanArray>(particleTable, "primary");
 
-  // barcode map keyed by ColliderML particle_id, not row index (particle_ids
-  // are not 0-based consecutive row indices).
-  std::unordered_map<std::uint64_t, SimBarcode> cmlPidToActsBarcode;
-  cmlPidToActsBarcode.reserve(static_cast<std::size_t>(nParticles));
+  // particle_ids are not 0-based consecutive row indices.
+  const ParticleRowLookup pidToRow(*pidArr, pOff, nParticles);
 
-  SimParticleContainer::sequence_type particleSeq;
-  particleSeq.reserve(static_cast<std::size_t>(nParticles));
+  auto barcodeForRow = [&](std::int64_t row) {
+    return SimBarcode()
+        .withVertexPrimary(vprimArr->Value(pOff + row))
+        .withParticle(static_cast<std::uint64_t>(row))
+        .withGeneration(primaryArr->Value(pOff + row) ? 0u : 1u);
+  };
 
-  for (std::int64_t i = 0; i < nParticles; ++i) {
-    const std::uint16_t vp = vprimArr->Value(pOff + i);
-    const bool isPrimary = primaryArr->Value(pOff + i);
+  // Rows referenced by at least one hit; only filled when filtering.
+  const bool filterParticles =
+      m_outputParticles.isInitialized() && !m_cfg.keepParticlesWithoutHits;
+  std::vector<std::uint8_t> rowHasHit(
+      filterParticles ? static_cast<std::size_t>(nParticles) : 0u, 0u);
 
-    SimBarcode bc = SimBarcode()
-                        .withVertexPrimary(vp)
-                        .withParticle(static_cast<std::uint64_t>(i))
-                        .withGeneration(isPrimary ? 0u : 1u);
-    const std::uint64_t pid = pidArr->Value(pOff + i);
-    cmlPidToActsBarcode[pid] = bc;
+  auto writeParticles = [&]() {
+    if (!m_outputParticles.isInitialized()) {
+      return;
+    }
+    // Barcodes are (vertex_primary, 0, row, generation, 0) with unique rows,
+    // so sorting (vertex_primary, row) keys yields the container order
+    // without sorting the particle objects themselves.
+    using SortKey = Acts::MultiIndex<std::uint64_t, 32, 32>;
+    std::vector<SortKey> sortKeys;
+    sortKeys.reserve(static_cast<std::size_t>(nParticles));
+    for (std::int64_t i = 0; i < nParticles; ++i) {
+      if (filterParticles && rowHasHit[i] == 0u) {
+        continue;
+      }
+      sortKeys.push_back(SortKey::Encode(vprimArr->Value(pOff + i),
+                                         static_cast<std::uint64_t>(i)));
+    }
+    std::ranges::sort(sortKeys);
 
-    if (!m_cfg.keepParticlesWithoutHits &&
-        particleIdsWithHits.count(pid) == 0) {
-      continue;
+    SimParticleContainer::sequence_type particleSeq;
+    particleSeq.reserve(sortKeys.size());
+
+    for (const SortKey key : sortKeys) {
+      const auto i = static_cast<std::int64_t>(key.level(1));
+      const double mass = static_cast<double>(massArr->Value(pOff + i));
+      const double charge = static_cast<double>(chargeArr->Value(pOff + i));
+      const auto pdg =
+          Acts::PdgParticle{static_cast<int>(pdgArr->Value(pOff + i))};
+
+      SimParticleState state(barcodeForRow(i), pdg, charge, mass);
+      state.setPosition4(vxArr->Value(pOff + i), vyArr->Value(pOff + i),
+                         vzArr->Value(pOff + i), vtArr->Value(pOff + i));
+      const double px = pxArr->Value(pOff + i);
+      const double py = pyArr->Value(pOff + i);
+      const double pz = pzArr->Value(pOff + i);
+      state.setDirection(px, py, pz);
+      state.setAbsoluteMomentum(std::hypot(px, py, pz));
+
+      particleSeq.emplace_back(state, state);
     }
 
-    const double mass = static_cast<double>(massArr->Value(pOff + i));
-    const double charge = static_cast<double>(chargeArr->Value(pOff + i));
-    const auto pdg =
-        Acts::PdgParticle{static_cast<int>(pdgArr->Value(pOff + i))};
+    SimParticleContainer particles;
+    particles.adopt_sequence(boost::container::ordered_unique_range,
+                             std::move(particleSeq));
 
-    SimParticleState state(bc, pdg, charge, mass);
-    state.setPosition4(vxArr->Value(pOff + i), vyArr->Value(pOff + i),
-                       vzArr->Value(pOff + i), vtArr->Value(pOff + i));
-    const double px = pxArr->Value(pOff + i);
-    const double py = pyArr->Value(pOff + i);
-    const double pz = pzArr->Value(pOff + i);
-    state.setDirection(px, py, pz);
-    state.setAbsoluteMomentum(std::hypot(px, py, pz));
-
-    particleSeq.emplace_back(state, state);
-  }
-
-  SimParticleContainer particles;
-  particles.insert(particleSeq.begin(), particleSeq.end());
-
-  if (m_outputParticles.isInitialized()) {
-    m_outputParticles(ctx, SimParticleContainer(particles));
-  }
+    m_outputParticles(ctx, std::move(particles));
+  };
 
   // ------------------------------------------------------------------
   // 2. Parse hits table
@@ -395,6 +455,17 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   const bool needMeasurements = m_outputMeasurements.isInitialized();
 
   if (!needSimHits && !needMeasurements) {
+    if (filterParticles) {
+      auto [hpOff, nHitPids] = rowBounds(hitsTable, "particle_id");
+      auto hpidArr = colValues<arrow::UInt64Array>(hitsTable, "particle_id");
+      for (std::int64_t i = 0; i < nHitPids; ++i) {
+        const std::int32_t row = pidToRow.find(hpidArr->Value(hpOff + i));
+        if (row != ParticleRowLookup::kNoRow) {
+          rowHasHit[row] = 1u;
+        }
+      }
+    }
+    writeParticles();
     return ProcessCode::SUCCESS;
   }
 
@@ -452,10 +523,14 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     }
     const Acts::GeometryIdentifier geoId = geoIt->second;
 
-    const std::uint64_t cmlPid = hpidArr->Value(hOff + i);
-    auto bcIt = cmlPidToActsBarcode.find(cmlPid);
-    SimBarcode barcode =
-        (bcIt != cmlPidToActsBarcode.end()) ? bcIt->second : SimBarcode{};
+    SimBarcode barcode{};
+    if (const std::int32_t row = pidToRow.find(hpidArr->Value(hOff + i));
+        row != ParticleRowLookup::kNoRow) {
+      barcode = barcodeForRow(row);
+      if (filterParticles) {
+        rowHasHit[row] = 1u;
+      }
+    }
 
     const double tx = txArr->Value(hOff + i);
     const double ty = tyArr->Value(hOff + i);
@@ -532,6 +607,8 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
       }
     }
   }
+
+  writeParticles();
 
   // Build measSimHitsMap from the sorted SimHitContainer, using the temporary
   // index() as cross-reference, then reset index() to -1 (undefined).
