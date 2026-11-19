@@ -57,15 +57,13 @@ std::vector<double> xPositionsOfPassedSurfaces(Navigator::Config navCfg,
 
   TestPropagator::Options<ActorList<DefaultActor, detail::SteppingLogger>> opts(
       geoCtx, magCtx);
-  opts.stopAtEndOfWorld = true;
 
   auto state = propagator.makeState(opts);
   auto res = propagator.propagate(state, start);
 
   BOOST_CHECK(res.ok());
 
-  const auto &stepLog =
-      state.actorState.get<detail::SteppingLogger::state_type>();
+  const auto &stepLog = state.actor.get<detail::SteppingLogger::state_type>();
 
   std::vector<double> xPositions;
   for (const auto &step : stepLog.steps) {

@@ -75,7 +75,6 @@ class ConcretePropagator : public PropagatorInterface {
         typename propagator_t::template Options<ActorList>;
 
     PropagatorOptions options(context.recoGeoContext, context.magFieldContext);
-    options.stopAtEndOfWorld = true;
     // Activate loop protection at some pt value
     options.loopProtection =
         startParameters.transverseMomentum() < cfg.ptLoopers;
@@ -107,7 +106,7 @@ class ConcretePropagator : public PropagatorInterface {
 
     // Collect the steps
     auto& steppingResults =
-        state.actorState.template get<SteppingLogger::state_type>();
+        state.actor.template get<SteppingLogger::state_type>();
     summary.steps = std::move(steppingResults.steps);
 
     summary.statistics = resultValue.statistics;
@@ -115,8 +114,8 @@ class ConcretePropagator : public PropagatorInterface {
 
     // Also set the material recording result - if configured
     if (cfg.recordMaterialInteractions) {
-      recordedMaterial = std::move(
-          state.actorState.template get<MaterialInteractor::state_type>());
+      recordedMaterial =
+          std::move(state.actor.template get<MaterialInteractor::state_type>());
     }
 
     return std::pair{std::move(summary), std::move(recordedMaterial)};

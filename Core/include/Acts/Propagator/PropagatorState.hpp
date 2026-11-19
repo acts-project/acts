@@ -83,7 +83,7 @@ struct PropagatorState {
   navigator_state_t navigation;
 
   /// State of the actor of the propagation
-  ActorStateType<typename propagator_options_t::actor_type> actorState;
+  ActorStateType<typename propagator_options_t::actor_type> actor;
 
   /// Number of propagation steps that were carried out
   std::size_t steps = 0;

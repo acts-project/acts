@@ -61,8 +61,7 @@ void testResult(std::array<bool, 3> failing, std::array<bool, 3> expectedCalled,
 
   auto state = propagator.makeState(options);
 
-  Result<void> res =
-      options.actor.act(state, stepper, navigator, state.actorState);
+  Result<void> res = options.actor.act(state, stepper, navigator, state.actor);
   BOOST_CHECK_EQUAL(res.ok(), expectedSuccess);
   BOOST_CHECK_EQUAL(called[0], expectedCalled[0]);
   BOOST_CHECK_EQUAL(called[1], expectedCalled[1]);
@@ -124,12 +123,11 @@ BOOST_AUTO_TEST_CASE(composite_abort) {
 
   auto state = propagator.makeState(options);
   BOOST_CHECK(
-      !options.actor.checkAbort(state, stepper, navigator, state.actorState));
+      !options.actor.checkAbort(state, stepper, navigator, state.actor));
   BOOST_CHECK(called[0] && called[1]);
 
   called = {false, false};
   options.actor.get<AbortingActor<1>>().abort = true;
-  BOOST_CHECK(
-      options.actor.checkAbort(state, stepper, navigator, state.actorState));
+  BOOST_CHECK(options.actor.checkAbort(state, stepper, navigator, state.actor));
   BOOST_CHECK(called[0] && !called[1]);
 }

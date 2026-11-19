@@ -444,7 +444,6 @@ BOOST_AUTO_TEST_CASE(ConeValidityPolicy_MagneticField) {
 
     using MyActorList = ActorList<DefaultActor, StepCollector>;
     EigenPropagatorType::Options<MyActorList> propOpts(gctx, mfContext);
-    propOpts.stopAtEndOfWorld = true;
     propOpts.pathLimit = 5_m;
     propOpts.stepping.maxStepSize = 100_mm;
 
@@ -452,8 +451,7 @@ BOOST_AUTO_TEST_CASE(ConeValidityPolicy_MagneticField) {
     auto result = propagator.propagate(state, start);
     BOOST_REQUIRE(result.ok());
 
-    const auto& info =
-        state.actorState.template get<StepCollector::this_result>();
+    const auto& info = state.actor.template get<StepCollector::this_result>();
 
     const auto& positions = info.position;
     if (!positions.empty()) {
@@ -636,7 +634,6 @@ BOOST_AUTO_TEST_CASE(CurvatureReachesEveryPolicyEntryPoint) {
       decltype(propagator)::Options<
           ActorList<DefaultActor, ChangeCurvatureActor>>
           options(gctx, mfContext);
-      options.stopAtEndOfWorld = true;
       options.direction = propagationDirection;
       options.pathLimit = 3_m;
       options.stepping.maxStepSize = 50_mm;

@@ -417,7 +417,6 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
 
   // Options definition
   PropagatorOptions options(gctx, mctx);
-  options.stopAtEndOfWorld = true;
   options.pathLimit = 100._m;
 
   // Build geometry
@@ -471,9 +470,9 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   decodedPropagator.propagate(decodedState, start).value();
 
   auto& sourceStates =
-      sourceState.actorState.template get<StateCollector<>::state_type>();
+      sourceState.actor.template get<StateCollector<>::state_type>();
   auto& decodedStates =
-      decodedState.actorState.template get<StateCollector<>::state_type>();
+      decodedState.actor.template get<StateCollector<>::state_type>();
   BOOST_REQUIRE_EQUAL(sourceStates.navigation.size(),
                       decodedStates.navigation.size());
   BOOST_REQUIRE_EQUAL(sourceStates.stepping.size(),

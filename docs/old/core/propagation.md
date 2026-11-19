@@ -20,7 +20,7 @@ Propagator<Navigator, Stepper>
 
 Additional to these mandatory components, the propagator runs exactly one **actor** to allow for custom behaviour. The actor is a function object that is hooked in the propagation loop. It performs actions on the propagator state (e.g. the {class}`Acts::KalmanFitter` uses an actor), and it decides when the propagation stops.
 
-The propagator exposes its state to the actor as arguments to `act()` and `checkAbort()`. An actor can define a default-constructable `state_type`. The propagator holds one instance of it in `state.actorState` and hands it to each call:
+The propagator exposes its state to the actor as arguments to `act()` and `checkAbort()`. An actor can define a default-constructable `state_type`. The propagator holds one instance of it in `state.actor` and hands it to each call:
 
 ```cpp
 template <typename propagator_state_t, typename stepper_t, typename navigator_t>
@@ -41,7 +41,7 @@ The result of a propagation holds the track parameters at the endpoint of the pr
 ## Initialization and running
 
 The {class}`Acts::Propagator` is initialized with the helper class
-{struct}`Acts::PropagatorOptions`, which is templated on the actor. If no actor is given, the propagator uses {struct}`Acts::DefaultActor`. It stops at the target surface, at the path limit (lowered by the loop protection), outside the volumes that the options allow, and, if `stopAtEndOfWorld` is set, at the end of the world.
+{struct}`Acts::PropagatorOptions`, which is templated on the actor. If no actor is given, the propagator uses {struct}`Acts::DefaultActor`. It stops at the target surface, at the path limit (lowered by the loop protection), outside the volumes that the options allow, and at the end of the world. A propagation to a target surface outside the world needs `stopAtEndOfWorld = false`; with the stop on, it fails with `PropagatorError::EndOfWorldReached` instead of returning parameters on a target it did not reach.
 
 To run several actors, combine them with the composite actor {struct}`Acts::ActorList`. Add {struct}`Acts::DefaultActor` to keep its abort conditions. Put it first, so the loop protection sees the start momentum before other actors change it:
 
@@ -74,7 +74,7 @@ auto state = propagator.makeState(options);
 auto res = propagator.propagate(state, myParams);
 
 if (res.ok()) {
-  state.actorState.get<MyActor1::state_type>();
+  state.actor.get<MyActor1::state_type>();
 }
 ```
 

@@ -1267,7 +1267,7 @@ class CombinatorialKalmanFilter {
       }
     }
 
-    auto& r = propState.actorState;
+    auto& r = propState.actor;
     r.tracks = &trackContainer;
     r.trackStates = &trackContainer.trackStateContainer();
 

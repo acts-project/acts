@@ -1083,8 +1083,7 @@ class Gx2Fitter {
         return propagatorInitResult.error();
       }
 
-      auto& r =
-          propagatorState.actorState.template get<Gx2FitterResult<traj_t>>();
+      auto& r = propagatorState.actor.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trajectoryTempBackend;
 
       // Clear the track container. It could be more performant to update the
@@ -1245,8 +1244,7 @@ class Gx2Fitter {
         return propagatorInitResult.error();
       }
 
-      auto& r =
-          propagatorState.actorState.template get<Gx2FitterResult<traj_t>>();
+      auto& r = propagatorState.actor.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trajectoryTempBackend;
 
       // Clear the track container. It could be more performant to update the
@@ -1393,8 +1391,7 @@ class Gx2Fitter {
         return propagatorInitResult.error();
       }
 
-      auto& r =
-          propagatorState.actorState.template get<Gx2FitterResult<traj_t>>();
+      auto& r = propagatorState.actor.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
       // Run the fitter

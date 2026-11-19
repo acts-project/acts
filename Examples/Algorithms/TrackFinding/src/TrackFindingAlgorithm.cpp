@@ -445,7 +445,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   ExtrapolatorOptions extrapolationOptions(ctx.recoGeoContext,
                                            ctx.magFieldContext);
-  extrapolationOptions.stopAtEndOfWorld = true;
   extrapolationOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
   extrapolationOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 

@@ -45,7 +45,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
 
   // Pre-Propagation: call to the actor, abort condition check
   if (Result<void> preActResult =
-          detail::callActorAct(state.options.actor, state.actorState, state,
+          detail::callActorAct(state.options.actor, state.actor, state,
                                m_stepper, m_navigator, logger());
       !preActResult.ok()) {
     ACTS_DEBUG("Pre-propagation actor call failed: "
@@ -54,13 +54,13 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     return preActResult.error();
   }
 
-  if (detail::callActorCheckAbort(state.options.actor, state.actorState, state,
+  if (detail::callActorCheckAbort(state.options.actor, state.actor, state,
                                   m_stepper, m_navigator, logger())) {
     ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
 
     state.stage = PropagatorStage::postPropagation;
 
-    return detail::callActorAct(state.options.actor, state.actorState, state,
+    return detail::callActorAct(state.options.actor, state.actor, state,
                                 m_stepper, m_navigator, logger());
   }
 
@@ -171,16 +171,16 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     }
 
     Result<void> actResult =
-        detail::callActorAct(state.options.actor, state.actorState, state,
-                             m_stepper, m_navigator, logger());
+        detail::callActorAct(state.options.actor, state.actor, state, m_stepper,
+                             m_navigator, logger());
     if (!actResult.ok()) {
       ACTS_DEBUG("Actor call failed: " << actResult.error() << ": "
                                        << actResult.error().message());
       return actResult.error();
     }
 
-    if (detail::callActorCheckAbort(state.options.actor, state.actorState,
-                                    state, m_stepper, m_navigator, logger())) {
+    if (detail::callActorCheckAbort(state.options.actor, state.actor, state,
+                                    m_stepper, m_navigator, logger())) {
       terminatedNormally = true;
       break;
     }
@@ -230,7 +230,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
 
   // Post-stepping call to the actor
   if (auto postPropagationResult =
-          detail::callActorAct(state.options.actor, state.actorState, state,
+          detail::callActorAct(state.options.actor, state.actor, state,
                                m_stepper, m_navigator, logger());
       !postPropagationResult.ok()) {
     ACTS_DEBUG("Post-propagation actor call failed: "
@@ -338,6 +338,14 @@ auto Propagator<S, N>::makeResult(propagator_state_t& state,
   result.statistics.navigation = state.navigation.statistics;
 
   if (createFinalParameters) {
+    // Bound parameters on a target the propagation did not reach are wrong
+    if (target != nullptr && state.options.stopAtEndOfWorld &&
+        m_navigator.currentSurface(state.navigation) != target &&
+        m_navigator.endOfWorldReached(state.navigation)) {
+      ACTS_DEBUG("End of the world reached before the target surface.");
+      return PropagatorError::EndOfWorldReached;
+    }
+
     if (target == nullptr) {
       target = m_navigator.currentSurface(state.navigation);
     }

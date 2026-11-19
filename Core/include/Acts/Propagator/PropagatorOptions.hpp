@@ -42,8 +42,9 @@ struct PurePropagatorPlainOptions {
   /// Absolute maximum path length
   double pathLimit = std::numeric_limits<double>::max();
 
-  /// Whether the @c DefaultActor stops the propagation at the end of the world
-  bool stopAtEndOfWorld = false;
+  /// Stop the propagation at the end of the world
+  /// @note switch this off to reach a target surface outside the world
+  bool stopAtEndOfWorld = true;
 
   /// Loop protection step, it adapts the pathLimit
   bool loopProtection = true;

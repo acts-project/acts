@@ -167,7 +167,6 @@ struct GaussianSumFitter {
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
-      propOptions.stopAtEndOfWorld = true;
 
       if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
@@ -190,7 +189,6 @@ struct GaussianSumFitter {
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
-      propOptions.stopAtEndOfWorld = true;
 
       if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
@@ -320,7 +318,7 @@ struct GaussianSumFitter {
         return initRes.error();
       }
 
-      auto& r = state.actorState.template get<GsfResult>();
+      auto& r = state.actor.template get<GsfResult>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
       auto propagationResult = m_propagator.propagate(state);
@@ -372,6 +370,8 @@ struct GaussianSumFitter {
       // would be derived from the momentum at the end of the track, which for
       // electrons after bremsstrahlung is far too low to get back.
       bwdPropOptions.loopProtection = false;
+      // The target surface may lie outside the world
+      bwdPropOptions.stopAtEndOfWorld = false;
 
       const Surface& target = options.referenceSurface
                                   ? *options.referenceSurface
@@ -406,7 +406,7 @@ struct GaussianSumFitter {
       proxy.shareFrom(TrackStatePropMask::Filtered,
                       TrackStatePropMask::Smoothed);
 
-      auto& r = state.actorState.template get<GsfResult>();
+      auto& r = state.actor.template get<GsfResult>();
       r.fittedStates = &trackContainer.trackStateContainer();
       r.currentTip = fwdGsfResult.lastMeasurementTip;
       r.visitedSurfaces.push_back(&proxy.referenceSurface());

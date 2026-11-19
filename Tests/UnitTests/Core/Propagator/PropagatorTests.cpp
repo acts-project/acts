@@ -237,7 +237,7 @@ BOOST_DATA_TEST_CASE(
   // propagate to the cylinder surface
   auto state = epropagator.makeState(options);
   epropagator.propagate(state, start).value();
-  auto& sor = state.actorState.get<so_result>();
+  auto& sor = state.actor.get<so_result>();
 
   BOOST_CHECK_EQUAL(sor.surfaces_passed, 1u);
   CHECK_CLOSE_ABS(sor.surface_passed_r, 10., 1e-5);

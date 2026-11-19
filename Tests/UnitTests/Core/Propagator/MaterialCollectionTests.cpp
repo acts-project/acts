@@ -102,7 +102,7 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
   auto fwdState = prop.makeState(fwdOptions);
   const auto& fwdResult = prop.propagate(fwdState, start).value();
   const auto& fwdMaterial =
-      fwdState.actorState.template get<MaterialInteractor::state_type>();
+      fwdState.actor.template get<MaterialInteractor::state_type>();
   // check that the collected material is not zero
   BOOST_CHECK_NE(fwdMaterial.materialInX0, 0.);
   BOOST_CHECK_NE(fwdMaterial.materialInL0, 0.);
@@ -151,8 +151,7 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
     std::cout << ">>> Backward Propagation : end." << std::endl;
   }
   const auto& bwdMaterial =
-      bwdState.actorState
-          .template get<typename MaterialInteractor::state_type>();
+      bwdState.actor.template get<typename MaterialInteractor::state_type>();
   // check that the collected material is not zero
   BOOST_CHECK_NE(bwdMaterial.materialInX0, 0.);
   BOOST_CHECK_NE(bwdMaterial.materialInL0, 0.);
@@ -226,7 +225,7 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
         prop.propagate(fwdStepState, sParameters, fwdSteps.surface).value();
 
     auto& fwdStepMaterial =
-        fwdStepState.actorState
+        fwdStepState.actor
             .template get<typename MaterialInteractor::state_type>();
     fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
     fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
@@ -250,7 +249,7 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
   prop.propagate(fwdStepFinalState, sParameters, &dSurface).value();
 
   auto& fwdStepMaterial =
-      fwdStepFinalState.actorState
+      fwdStepFinalState.actor
           .template get<typename MaterialInteractor::state_type>();
   fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
   fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
@@ -300,7 +299,7 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
         prop.propagate(bwdStepState, sParameters, bwdSteps.surface).value();
 
     auto& bwdStepMaterial =
-        bwdStepState.actorState
+        bwdStepState.actor
             .template get<typename MaterialInteractor::state_type>();
     bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
     bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
@@ -324,7 +323,7 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
   prop.propagate(bwdStepFinalState, sParameters, &dbSurface).value();
 
   auto& bwdStepMaterial =
-      bwdStepFinalState.actorState
+      bwdStepFinalState.actor
           .template get<typename MaterialInteractor::state_type>();
   bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
   bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;

@@ -817,7 +817,7 @@ class KalmanFitter {
     }
 
     auto& kalmanResult =
-        propagatorState.actorState.template get<KalmanFitterResult<traj_t>>();
+        propagatorState.actor.template get<KalmanFitterResult<traj_t>>();
     kalmanResult.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
@@ -969,6 +969,8 @@ class KalmanFitter {
     if (!track.hasReferenceSurface() && kfOptions.referenceSurface != nullptr) {
       typename propagator_t::template Options<> extrapolationOptions(
           kfOptions.geoContext, kfOptions.magFieldContext);
+      // The reference surface may lie outside the world
+      extrapolationOptions.stopAtEndOfWorld = false;
       auto extrapolationResult = extrapolateTrackToReferenceSurface(
           track, *kfOptions.referenceSurface, m_propagator,
           extrapolationOptions, kfOptions.referenceSurfaceStrategy, logger());

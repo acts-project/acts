@@ -143,14 +143,13 @@ class PropagatorMaterialAssigner /*final*/ : public IAssignmentFinder {
         typename propagator_t::template Options<ActorList>;
 
     PropagatorOptions options(gctx, mctx);
-    options.stopAtEndOfWorld = true;
 
     auto state = m_propagator.makeState(options);
     m_propagator.propagate(state, start, nullptr, false).value();
 
     // The surface collection results
     const auto& scResult =
-        state.actorState.template get<MaterialSurfaceCollector::state_type>();
+        state.actor.template get<MaterialSurfaceCollector::state_type>();
 
     for (const auto& mSurface : scResult.collected) {
       candidates.first.push_back(IAssignmentFinder::SurfaceAssignment{
@@ -159,7 +158,7 @@ class PropagatorMaterialAssigner /*final*/ : public IAssignmentFinder {
 
     // The volume collection results
     const auto& vcResult =
-        state.actorState.template get<InteractionVolumeCollector::state_type>();
+        state.actor.template get<InteractionVolumeCollector::state_type>();
     for (const auto& [geoId, vIntersection] : vcResult.collected) {
       candidates.second.push_back(vIntersection);
     }

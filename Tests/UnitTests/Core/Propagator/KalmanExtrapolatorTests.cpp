@@ -136,11 +136,9 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   // Create some options
   using StepWiseOptions = Propagator::Options<StepWiseActors>;
   StepWiseOptions swOptions(tgContext, mfContext);
-  swOptions.stopAtEndOfWorld = true;
 
   using PlainOptions = Propagator::Options<>;
   PlainOptions pOptions(tgContext, mfContext);
-  pOptions.stopAtEndOfWorld = true;
 
   // Run the standard propagation
   const auto& pResult = propagator.propagate(start, pOptions).value();
@@ -150,7 +148,7 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   // Run the stepwise propagation
   auto swState = propagator.makeState(swOptions);
   const auto& swResult = propagator.propagate(swState, start).value();
-  auto swJacobianTest = swState.actorState.template get<StepWiseResult>();
+  auto swJacobianTest = swState.actor.template get<StepWiseResult>();
 
   // (1) Path length test
   double accPath = 0.;

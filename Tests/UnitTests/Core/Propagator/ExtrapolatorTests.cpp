@@ -156,7 +156,6 @@ BOOST_DATA_TEST_CASE(
       Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
   EigenPropagatorType::Options<> options(tgContext, mfContext);
-  options.stopAtEndOfWorld = true;
   options.stepping.maxStepSize = 10_cm;
   options.pathLimit = 10_m;
 
@@ -216,7 +215,7 @@ BOOST_DATA_TEST_CASE(
 
   auto state = epropagator.makeState(options);
   epropagator.propagate(state, start).value();
-  auto collector_result = state.actorState.get<PlaneCollector::state_type>();
+  auto collector_result = state.actor.get<PlaneCollector::state_type>();
 
   // step through the surfaces and go step by step
   EigenPropagatorType::Options<> optionsEmpty(tgContext, mfContext);
@@ -324,6 +323,8 @@ BOOST_DATA_TEST_CASE(
       options(tgContext, mfContext);
   options.stepping.maxStepSize = 25_cm;
   options.pathLimit = 1500_mm;
+  // The path limit lies outside the world
+  options.stopAtEndOfWorld = false;
 
   const auto& status = epropagator.propagate(start, options).value();
   // this test assumes state.options.loopFraction = 0.5

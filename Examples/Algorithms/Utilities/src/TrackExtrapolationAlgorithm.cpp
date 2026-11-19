@@ -69,7 +69,6 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
       logger().cloneWithSuffix("Propagator"));
 
   Options options(ctx.recoGeoContext, ctx.magFieldContext);
-  options.stopAtEndOfWorld = true;
   options.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
   options.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 

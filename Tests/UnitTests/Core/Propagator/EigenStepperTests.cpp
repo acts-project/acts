@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   auto state = prop.makeState(propOpts);
   prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      state.actorState.get<typename StepCollector::state_type>();
+      state.actor.get<typename StepCollector::state_type>();
 
   // Check that the propagation happened without interactions
   for (const auto& pos : stepResult.position) {
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   auto stateDef = propDef.makeState(propOptsDef);
   propDef.propagate(stateDef, sbtp).value();
   const StepCollector::this_result& stepResultDef =
-      stateDef.actorState.template get<typename StepCollector::state_type>();
+      stateDef.actor.template get<typename StepCollector::state_type>();
 
   // Check that the right extension was chosen
   // If chosen correctly, the number of elements should be identical
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   auto state = prop.makeState(propOpts);
   prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      state.actorState.get<typename StepCollector::state_type>();
+      state.actor.get<typename StepCollector::state_type>();
 
   // Check that there occurred interaction
   for (const auto& pos : stepResult.position) {
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   auto stateDense = propDense.makeState(propOptsDense);
   propDense.propagate(stateDense, sbtp).value();
   const StepCollector::this_result& stepResultDense =
-      stateDense.actorState.template get<typename StepCollector::state_type>();
+      stateDense.actor.template get<typename StepCollector::state_type>();
 
   // Check that the right extension was chosen
   // If chosen correctly, the number of elements should be identical
@@ -699,7 +699,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   auto stateB = propB.makeState(propOptsDense);
   propB.propagate(stateB, sbtp).value();
   const StepCollector::this_result& stepResultB =
-      stateB.actorState.template get<typename StepCollector::state_type>();
+      stateB.actor.template get<typename StepCollector::state_type>();
 
   // Check that there occurred interaction
   for (const auto& pos : stepResultB.position) {
@@ -781,7 +781,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   auto state = prop.makeState(propOpts);
   const auto& result = prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      state.actorState.get<typename StepCollector::state_type>();
+      state.actor.get<typename StepCollector::state_type>();
 
   // Manually set the extensions for each step and propagate through each
   // volume by propagation to the boundaries
@@ -837,7 +837,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   auto stateDef = propDef.makeState(propOptsDef);
   propDef.propagate(stateDef, sbtp).value();
   const StepCollector::this_result& stepResultDef =
-      stateDef.actorState.template get<typename StepCollector::state_type>();
+      stateDef.actor.template get<typename StepCollector::state_type>();
 
   // Check the exit situation of the first volume
   std::pair<Vector3, Vector3> endParams, endParamsControl;
@@ -889,7 +889,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   auto stateDense = propDense.makeState(propOptsDense);
   propDense.propagate(stateDense, sbtp).value();
   const StepCollector::this_result& stepResultDense =
-      stateDense.actorState.template get<typename StepCollector::state_type>();
+      stateDense.actor.template get<typename StepCollector::state_type>();
 
   // Check the exit situation of the second volume
   for (unsigned int i = 0; i < stepResultDense.position.size(); i++) {
@@ -1019,7 +1019,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   auto state = prop.makeState(propOpts);
   prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      state.actorState.get<typename StepCollector::state_type>();
+      state.actor.get<typename StepCollector::state_type>();
 
   // Test that momentum changes only occurred at the right detector parts
   double lastMomentum = stepResult.momentum[0].x();

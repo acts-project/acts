@@ -98,7 +98,7 @@ struct SingleParticleSimulation {
     if (!result.ok()) {
       return result.error();
     }
-    return std::move(state.actorState.template get<Result>());
+    return std::move(state.actor.template get<Result>());
   }
 };
 

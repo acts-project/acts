@@ -622,7 +622,7 @@ class ReferenceTrajectoryBuilder {
       return propagatorInitResult.error();
     }
 
-    auto& actorResult = propagatorState.actorState.template get<ResultType>();
+    auto& actorResult = propagatorState.actor.template get<ResultType>();
     actorResult.trajectory = &trackContainer.trackStateContainer();
 
     auto result = m_propagator.propagate(propagatorState);

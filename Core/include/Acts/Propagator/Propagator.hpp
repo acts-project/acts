@@ -190,7 +190,7 @@ class Propagator final
   ///
   /// This function initializes the state, runs the propagation and builds the
   /// result. The actor state stays in @p state, so the caller can read it
-  /// afterwards in `state.actorState`.
+  /// afterwards in `state.actor`.
   ///
   /// @tparam propagator_state_t Type of the propagator state object
   ///

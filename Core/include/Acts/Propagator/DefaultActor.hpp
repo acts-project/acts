@@ -25,7 +25,7 @@ namespace Acts {
 /// - at the target surface of the propagation, if there is one,
 /// - at the path limit of the options, lowered by the loop protection,
 /// - outside the volumes that the options allow,
-/// - at the end of the world, if the options say so.
+/// - at the end of the world, unless the options switch this off.
 ///
 /// An actor of your own replaces this actor. To keep these conditions, put
 /// this actor in an @c ActorList with your actor. Put it first, so the loop

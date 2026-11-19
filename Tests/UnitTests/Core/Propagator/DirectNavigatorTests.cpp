@@ -111,7 +111,6 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   // Options definition
   using Options = typename rpropagator_t::template Options<ReferenceActorList>;
   Options pOptions(tgContext, mfContext);
-  pOptions.stopAtEndOfWorld = true;
   if (oversteppingTest) {
     pOptions.stepping.maxStepSize = oversteppingMaxStepSize;
   }
@@ -124,10 +123,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   // Result is immediately used, non-valid result would indicate failure
   auto pState = rprop.makeState(pOptions);
   const auto& pResult = rprop.propagate(pState, start).value();
-  auto& cSurfaces =
-      pState.actorState.template get<SurfaceCollector<>::state_type>();
-  auto& cMaterial =
-      pState.actorState.template get<MaterialInteractor::state_type>();
+  auto& cSurfaces = pState.actor.template get<SurfaceCollector<>::state_type>();
+  auto& cMaterial = pState.actor.template get<MaterialInteractor::state_type>();
   const Surface& destination = pResult.endParameters->referenceSurface();
 
   std::cout << " - the standard navigator yielded "
@@ -160,9 +157,9 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     auto ddState = dprop.makeState(dOptions);
     dprop.propagate(ddState, start, &destination).value();
     auto& ddSurfaces =
-        ddState.actorState.template get<SurfaceCollector<>::state_type>();
+        ddState.actor.template get<SurfaceCollector<>::state_type>();
     auto& ddMaterial =
-        ddState.actorState.template get<MaterialInteractor::state_type>();
+        ddState.actor.template get<MaterialInteractor::state_type>();
 
     // CHECK if you have as many surfaces collected as the default navigator
     BOOST_CHECK_EQUAL(cSurfaces.collected.size(), ddSurfaces.collected.size());
@@ -172,7 +169,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     auto dwState = dprop.makeState(dOptions);
     dprop.propagate(dwState, start).value();
     auto& dwSurfaces =
-        dwState.actorState.template get<SurfaceCollector<>::state_type>();
+        dwState.actor.template get<SurfaceCollector<>::state_type>();
 
     // CHECK if you have as many surfaces collected as the default navigator
     BOOST_CHECK_EQUAL(cSurfaces.collected.size(), dwSurfaces.collected.size());
@@ -268,7 +265,7 @@ void runSimpleTest(const std::vector<const Surface*>& surfaces,
 
   // Check if the surfaces are the same
   const auto& collectedSurfaceHits =
-      state.actorState.get<SurfaceCollector<>::state_type>().collected;
+      state.actor.get<SurfaceCollector<>::state_type>().collected;
   std::vector<const Surface*> collectedSurfaces;
   std::ranges::transform(collectedSurfaceHits,
                          std::back_inserter(collectedSurfaces),

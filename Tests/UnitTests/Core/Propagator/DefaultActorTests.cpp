@@ -17,7 +17,10 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -73,17 +76,35 @@ BOOST_AUTO_TEST_CASE(DefaultActorEndOfWorld) {
   TestPropagator::Options<> options(gctx, mctx);
   options.pathLimit = farPathLimit;
 
-  // By default the propagation goes on after the end of the world
-  CHECK_CLOSE_ABS(propagatePathLength(options), farPathLimit, 1_um);
-
-  options.stopAtEndOfWorld = true;
+  // By default the propagation stops at the end of the world
   BOOST_CHECK_LT(propagatePathLength(options), farPathLimit);
+
+  options.stopAtEndOfWorld = false;
+  CHECK_CLOSE_ABS(propagatePathLength(options), farPathLimit, 1_um);
+}
+
+BOOST_AUTO_TEST_CASE(DefaultActorTargetOutsideWorld) {
+  TestPropagator::Options<> options(gctx, mctx);
+  options.pathLimit = farPathLimit;
+
+  // A plane far outside the world, on the straight path of the track
+  const auto target =
+      CurvilinearSurface(10_m * Vector3::UnitX(), Vector3::UnitX())
+          .planeSurface();
+
+  auto stopped = makePropagator().propagate(start, *target, options);
+  BOOST_REQUIRE(!stopped.ok());
+  BOOST_CHECK(stopped.error() == PropagatorError::EndOfWorldReached);
+
+  options.stopAtEndOfWorld = false;
+  auto reached = makePropagator().propagate(start, *target, options);
+  BOOST_REQUIRE(reached.ok());
+  CHECK_CLOSE_ABS(reached->pathLength, 10_m, 1_um);
 }
 
 BOOST_AUTO_TEST_CASE(DefaultActorVolumeConstraint) {
   TestPropagator::Options<> options(gctx, mctx);
   options.pathLimit = farPathLimit;
-  options.stopAtEndOfWorld = true;
   const double endOfWorldPathLength = propagatePathLength(options);
 
   // Stop when the track leaves the volume it starts in

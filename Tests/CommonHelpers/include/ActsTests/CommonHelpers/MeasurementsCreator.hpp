@@ -160,7 +160,6 @@ Measurements createMeasurements(const propagator_t& propagator,
 
   // Set options for propagator
   PropagatorOptions options(geoCtx, magCtx);
-  options.stopAtEndOfWorld = true;
   auto& creator = options.actor.template get<MeasurementsCreator>();
   creator.resolutions = resolutions;
   creator.rng = &rng;
@@ -169,7 +168,7 @@ Measurements createMeasurements(const propagator_t& propagator,
   // Launch and collect the measurements
   auto state = propagator.makeState(options);
   propagator.propagate(state, trackParameters).value();
-  return std::move(state.actorState.template get<Measurements>());
+  return std::move(state.actor.template get<Measurements>());
 }
 
 }  // namespace ActsTests
