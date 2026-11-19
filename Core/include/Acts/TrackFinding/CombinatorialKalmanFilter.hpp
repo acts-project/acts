@@ -355,8 +355,9 @@ class CombinatorialKalmanFilter {
       // Initialize path limit reached aborter
       if (result.pathLimitReached.internalLimit ==
           std::numeric_limits<double>::max()) {
-        detail::setupLoopProtection(state, stepper, result.pathLimitReached,
-                                    true, logger());
+        detail::setupLoopProtection(state, stepper,
+                                    result.pathLimitReached.internalLimit, true,
+                                    logger());
       }
 
       // Update:
@@ -543,7 +544,8 @@ class CombinatorialKalmanFilter {
       }
 
       // Set path limit based on loop protection
-      detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
+      detail::setupLoopProtection(state, stepper,
+                                  result.pathLimitReached.internalLimit, true,
                                   logger());
 
       return Result<void>::success();
