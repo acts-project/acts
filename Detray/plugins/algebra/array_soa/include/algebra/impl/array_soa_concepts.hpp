@@ -12,7 +12,9 @@
 #include "detray/algebra/concepts.hpp"
 
 // System include(s).
+#include <concepts>
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
 
 namespace detray {
@@ -23,8 +25,9 @@ namespace algebra::array_soa {
 template <concepts::value T, std::size_t W>
 struct simd;
 
-/// Result of a lane-wise comparison
-template <std::size_t W>
+/// Result of a lane-wise comparison: one signed integer of type @tparam I per
+/// lane
+template <std::size_t W, std::signed_integral I = std::int32_t>
 struct mask;
 
 namespace detail {
@@ -38,8 +41,8 @@ struct is_simd<simd<T, W>> : public std::true_type {};
 template <typename T>
 struct is_mask : public std::false_type {};
 
-template <std::size_t W>
-struct is_mask<mask<W>> : public std::true_type {};
+template <std::size_t W, std::signed_integral I>
+struct is_mask<mask<W, I>> : public std::true_type {};
 
 }  // namespace detail
 

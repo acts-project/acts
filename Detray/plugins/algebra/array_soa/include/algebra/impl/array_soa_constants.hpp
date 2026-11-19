@@ -11,29 +11,31 @@
 // Project include(s).
 #include "algebra/impl/array_soa_concepts.hpp"
 #include "detray/algebra/common/constants.hpp"
+#include "detray/definitions/detail/qualifiers.hpp"
+
+// System include(s).
+#include <cstddef>
 
 namespace detray::algebra::constants {
 
-/// Pulling in global constants for overload resolution
-/// @{
-using algebra::constants::iota;
-using algebra::constants::one;
-using algebra::constants::size;
-using algebra::constants::zero;
-/// @}
-
 /// Utilities to generate values
 /// @{
+/// @tparam scalar_t Lane bundle type.
+/// @returns zero in all lanes
 template <detray::concepts::array_soa_simd scalar_t>
 consteval scalar_t zero() {
   return {0.f};
 }
 
+/// @tparam scalar_t Lane bundle type.
+/// @returns one in all lanes
 template <detray::concepts::array_soa_simd scalar_t>
 consteval scalar_t one() {
   return {1.f};
 }
 
+/// @tparam scalar_t Lane bundle type.
+/// @returns the lane index in every lane
 template <detray::concepts::array_soa_simd scalar_t>
 consteval scalar_t iota() {
   scalar_t ret;
@@ -44,11 +46,15 @@ consteval scalar_t iota() {
   return ret;
 }
 
+/// @tparam scalar_t Lane bundle type.
+/// @returns the number of lanes
 template <detray::concepts::array_soa_simd scalar_t>
 consteval std::size_t size() {
   return scalar_t::size();
 }
 
+/// @tparam scalar_t Lane bundle type.
+/// @returns the number of lanes
 template <detray::concepts::array_soa_simd scalar_t>
 constexpr std::size_t size(const scalar_t& /*unused*/) {
   return scalar_t::size();

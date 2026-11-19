@@ -91,12 +91,11 @@ inline void fill_random_trf(std::vector<transform3_t> &collection) {
     t[2] = rand_simd();
     t = detray::vector::normalize(t);
 
-    // Gram-Schmidt projection
-    simd_vector_t coeff =
-        detray::vector::dot(x_axis, z_axis) / detray::vector::norm(x_axis);
-    z_axis = x_axis - coeff * z_axis;
+    // Gram-Schmidt projection: remove the x component from z (x is unit)
+    const simd_vector_t coeff = detray::vector::dot(x_axis, z_axis);
+    z_axis = z_axis - coeff * x_axis;
 
-    return transform3_t{t, x_axis, detray::vector::normalize(z_axis)};
+    return transform3_t{t, detray::vector::normalize(z_axis), x_axis};
   };
 
   collection.resize(collection.capacity());

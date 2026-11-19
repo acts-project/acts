@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
                        array_soa::vector_type<double, 8, simd_size>>;
 
   std::cout << "-----------------------------------------------\n"
-            << "Detray linear algebra benchmark (Vc SoA)\n"
+            << "Detray linear algebra benchmark (array SoA)\n"
             << "-----------------------------------------------\n\n"
             << "(single)\n"
             << cfg_s << "(double)\n"

@@ -15,102 +15,187 @@
 
 // System include(s).
 #include <array>
+#include <bit>
+#include <concepts>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <ostream>
 #include <type_traits>
 
 namespace detray::algebra::array_soa {
 
-/// Result of a lane-wise comparison: one boolean per lane
-template <std::size_t W>
-struct mask {
+namespace detail {
+
+/// Signed integer type with a size of @tparam S bytes
+/// @{
+template <std::size_t S>
+struct lane_int {};
+
+template <>
+struct lane_int<1u> {
+  using type = std::int8_t;
+};
+
+template <>
+struct lane_int<2u> {
+  using type = std::int16_t;
+};
+
+template <>
+struct lane_int<4u> {
+  using type = std::int32_t;
+};
+
+template <>
+struct lane_int<8u> {
+  using type = std::int64_t;
+};
+/// @}
+
+/// Signed integer type with the same size as @tparam T
+template <typename T>
+using lane_int_t = typename lane_int<sizeof(T)>::type;
+
+/// Unsigned integer type with the same size as @tparam T
+template <typename T>
+using lane_uint_t = std::make_unsigned_t<lane_int_t<T>>;
+
+/// Alignment of @tparam W lanes of type @tparam T: The size of the lane bundle
+/// rounded up to a power of two, so that one bundle fills a vector register
+template <typename T, std::size_t W>
+inline constexpr std::size_t lane_alignment{std::bit_ceil(sizeof(T) * W)};
+
+}  // namespace detail
+
+/// Result of a lane-wise comparison: one integer per lane
+///
+/// A lane is set if all bits are set (-1) and not set if all bits are zero.
+/// The lane integer has the same size as the values that were compared. This
+/// is the same layout as a hardware vector mask, so that the compiler can
+/// vectorize the comparisons, the logical operations and the masked
+/// assignments.
+///
+/// @tparam W Number of lanes.
+/// @tparam I Signed integer type of a lane.
+template <std::size_t W, std::signed_integral I>
+struct DETRAY_ALIGN((detail::lane_alignment<I, W>)) mask {
   static_assert(W > 0u, "A mask needs at least one lane");
 
+  /// Value type of a single lane, when it is read
   using value_type = bool;
+  /// Integer type that stores a lane
+  using lane_type = I;
 
-  /// Holds the boolean for every lane
-  std::array<bool, W> m_data{};
+  /// Bit pattern of a lane that is set
+  static constexpr I s_true{static_cast<I>(-1)};
+  /// Bit pattern of a lane that is not set
+  static constexpr I s_false{static_cast<I>(0)};
+
+  /// Holds the bit pattern of every lane
+  std::array<I, W> m_data{};
 
   /// Default constructor: all lanes false
   constexpr mask() = default;
 
   /// Broadcast constructor
+  ///
+  /// @param b Value for all lanes.
   // NOLINTNEXTLINE(google-explicit-constructor)
   DETRAY_HOST_DEVICE constexpr mask(bool b) {
+    const I v{b ? s_true : s_false};
     DETRAY_UNROLL_N(W)
     for (std::size_t i = 0u; i < W; ++i) {
-      m_data[i] = b;
+      m_data[i] = v;
     }
   }
 
-  /// Construct from the underlying array
-  DETRAY_HOST_DEVICE constexpr explicit mask(const std::array<bool, W> &d)
-      : m_data{d} {}
+  /// Construct from one boolean per lane
+  ///
+  /// @param d Value for every lane.
+  DETRAY_HOST_DEVICE constexpr explicit mask(const std::array<bool, W> &d) {
+    DETRAY_UNROLL_N(W)
+    for (std::size_t i = 0u; i < W; ++i) {
+      m_data[i] = d[i] ? s_true : s_false;
+    }
+  }
+
+  /// Lane-wise conversion from a mask with a different lane integer size
+  ///
+  /// @tparam J Lane integer type of the other mask.
+  ///
+  /// @param o Mask to convert.
+  template <std::signed_integral J>
+    requires(!std::same_as<I, J>)
+  DETRAY_HOST_DEVICE constexpr explicit mask(const mask<W, J> &o) {
+    DETRAY_UNROLL_N(W)
+    for (std::size_t i = 0u; i < W; ++i) {
+      // Conversion between signed integers keeps the values 0 and -1
+      m_data[i] = static_cast<I>(o.m_data[i]);
+    }
+  }
 
   /// @returns the number of lanes
   DETRAY_HOST_DEVICE
   static consteval std::size_t size() { return W; }
 
-  /// Lane access
-  /// @{
+  /// @param i Lane index.
+  /// @returns true if lane @p i is set
   DETRAY_HOST_DEVICE
-  constexpr bool operator[](std::size_t i) const { return m_data[i]; }
+  constexpr bool operator[](std::size_t i) const {
+    return m_data[i] != s_false;
+  }
+
+  /// Set a single lane
+  ///
+  /// @param i Lane index.
+  /// @param b New value of the lane.
   DETRAY_HOST_DEVICE
-  constexpr bool &operator[](std::size_t i) { return m_data[i]; }
-  /// @}
+  constexpr void set(std::size_t i, bool b) {
+    m_data[i] = b ? s_true : s_false;
+  }
 
   /// @returns true if every lane is set
   DETRAY_HOST_DEVICE
   constexpr bool isFull() const {
-    bool ret{true};
+    I ret{s_true};
     DETRAY_UNROLL_N(W)
     for (std::size_t i = 0u; i < W; ++i) {
-      ret = ret && m_data[i];
+      ret = static_cast<I>(ret & m_data[i]);
     }
-    return ret;
+    return ret != s_false;
   }
 
-  /// Logical operators (lane-wise, no short-circuit)
+  /// Logical operators: lane-wise bit operations, no short-circuit
   /// @{
   DETRAY_HOST_DEVICE
   friend constexpr mask operator!(const mask &m) {
     mask ret;
     DETRAY_UNROLL_N(W)
     for (std::size_t i = 0u; i < W; ++i) {
-      ret.m_data[i] = !m.m_data[i];
-    }
-    return ret;
-  }
-
-  DETRAY_HOST_DEVICE
-  friend constexpr mask operator&&(const mask &a, const mask &b) {
-    mask ret;
-    DETRAY_UNROLL_N(W)
-    for (std::size_t i = 0u; i < W; ++i) {
-      ret.m_data[i] = a.m_data[i] && b.m_data[i];
-    }
-    return ret;
-  }
-
-  DETRAY_HOST_DEVICE
-  friend constexpr mask operator||(const mask &a, const mask &b) {
-    mask ret;
-    DETRAY_UNROLL_N(W)
-    for (std::size_t i = 0u; i < W; ++i) {
-      ret.m_data[i] = a.m_data[i] || b.m_data[i];
+      ret.m_data[i] = static_cast<I>(~m.m_data[i]);
     }
     return ret;
   }
 
   DETRAY_HOST_DEVICE
   friend constexpr mask operator&(const mask &a, const mask &b) {
-    return a && b;
+    mask ret;
+    DETRAY_UNROLL_N(W)
+    for (std::size_t i = 0u; i < W; ++i) {
+      ret.m_data[i] = static_cast<I>(a.m_data[i] & b.m_data[i]);
+    }
+    return ret;
   }
 
   DETRAY_HOST_DEVICE
   friend constexpr mask operator|(const mask &a, const mask &b) {
-    return a || b;
+    mask ret;
+    DETRAY_UNROLL_N(W)
+    for (std::size_t i = 0u; i < W; ++i) {
+      ret.m_data[i] = static_cast<I>(a.m_data[i] | b.m_data[i]);
+    }
+    return ret;
   }
 
   DETRAY_HOST_DEVICE
@@ -118,9 +203,19 @@ struct mask {
     mask ret;
     DETRAY_UNROLL_N(W)
     for (std::size_t i = 0u; i < W; ++i) {
-      ret.m_data[i] = a.m_data[i] != b.m_data[i];
+      ret.m_data[i] = static_cast<I>(a.m_data[i] ^ b.m_data[i]);
     }
     return ret;
+  }
+
+  DETRAY_HOST_DEVICE
+  friend constexpr mask operator&&(const mask &a, const mask &b) {
+    return a & b;
+  }
+
+  DETRAY_HOST_DEVICE
+  friend constexpr mask operator||(const mask &a, const mask &b) {
+    return a | b;
   }
   /// @}
 
@@ -128,12 +223,7 @@ struct mask {
   /// @{
   DETRAY_HOST_DEVICE
   friend constexpr bool operator==(const mask &a, const mask &b) {
-    bool ret{true};
-    DETRAY_UNROLL_N(W)
-    for (std::size_t i = 0u; i < W; ++i) {
-      ret = ret && (a.m_data[i] == b.m_data[i]);
-    }
-    return ret;
+    return (!(a ^ b)).isFull();
   }
 
   DETRAY_HOST_DEVICE
@@ -147,7 +237,7 @@ struct mask {
   friend std::ostream &operator<<(std::ostream &out, const mask &m) {
     out << "[";
     for (std::size_t i = 0u; i < W; ++i) {
-      out << (m.m_data[i] ? "1" : "0");
+      out << (m[i] ? "1" : "0");
       if (i != W - 1u) {
         out << ", ";
       }
@@ -162,11 +252,11 @@ struct mask {
 /// This is the scalar type of the SoA plugin. Every operation is a plain loop
 /// over the lanes, so that the compiler can vectorize it.
 template <concepts::value T, std::size_t W>
-struct DETRAY_ALIGN(16) simd {
+struct DETRAY_ALIGN((detail::lane_alignment<T, W>)) simd {
   static_assert(W > 0u, "A lane bundle needs at least one lane");
 
   using value_type = T;
-  using mask_type = mask<W>;
+  using mask_type = mask<W, detail::lane_int_t<T>>;
 
   /// Holds the value for every lane
   std::array<T, W> m_data{};
@@ -343,7 +433,8 @@ struct DETRAY_ALIGN(16) simd {
     mask_type ret;                                                       \
     DETRAY_UNROLL_N(W)                                                   \
     for (std::size_t i = 0u; i < W; ++i) {                               \
-      ret.m_data[i] = a.m_data[i] OP b.m_data[i];                        \
+      ret.m_data[i] = (a.m_data[i] OP b.m_data[i]) ? mask_type::s_true   \
+                                                   : mask_type::s_false; \
     }                                                                    \
     return ret;                                                          \
   }                                                                      \
@@ -352,7 +443,8 @@ struct DETRAY_ALIGN(16) simd {
     mask_type ret;                                                       \
     DETRAY_UNROLL_N(W)                                                   \
     for (std::size_t i = 0u; i < W; ++i) {                               \
-      ret.m_data[i] = a.m_data[i] OP b;                                  \
+      ret.m_data[i] =                                                    \
+          (a.m_data[i] OP b) ? mask_type::s_true : mask_type::s_false;   \
     }                                                                    \
     return ret;                                                          \
   }                                                                      \
@@ -361,7 +453,8 @@ struct DETRAY_ALIGN(16) simd {
     mask_type ret;                                                       \
     DETRAY_UNROLL_N(W)                                                   \
     for (std::size_t i = 0u; i < W; ++i) {                               \
-      ret.m_data[i] = a OP b.m_data[i];                                  \
+      ret.m_data[i] =                                                    \
+          (a OP b.m_data[i]) ? mask_type::s_true : mask_type::s_false;   \
     }                                                                    \
     return ret;                                                          \
   }

@@ -134,7 +134,7 @@ struct transform3 {
   transform3(const matrix44 &m, const matrix44 &m_inv)
       : _data{m}, _data_inv{m_inv} {
     // The assertion will not hold for (casts to) int
-    if constexpr (std::floating_point<scalar_type>) {
+    if constexpr (std::floating_point<typename scalar_type::value_type>) {
       [[maybe_unused]] constexpr auto epsilon{
           std::numeric_limits<float>::epsilon()};
       assert(algebra::approx_equal(invert(m), m_inv, 16.f * epsilon, 1e-6f));
@@ -225,7 +225,8 @@ struct transform3 {
         m[e_t][0] * m[e_x][1] * m[e_y][2] + m[e_x][0] * m[e_t][1] * m[e_y][2] +
         m[e_y][0] * m[e_x][1] * m[e_t][2] - m[e_x][0] * m[e_y][1] * m[e_t][2];
     // i[e_t][3] = 1;
-    const scalar_type idet{scalar_type(1.f) / determinant(i)};
+    // Scale the adjugate with the determinant of the input matrix
+    const scalar_type idet{scalar_type(1.f) / determinant(m)};
 
     i[e_x] = i[e_x] * idet;
     i[e_y] = i[e_y] * idet;

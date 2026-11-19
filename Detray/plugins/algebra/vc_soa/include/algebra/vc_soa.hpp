@@ -87,7 +87,7 @@ struct vc_soa {
   using matrix = algebra::vc_soa::matrix_type<value_type, ROWS, COLS>;
   /// @}
 
-  /// @returns the widh of the SIMD lane
+  /// @returns the number of SIMD lanes
   static consteval std::size_t size() { return simd<V>::Size; }
 };
 /// @}

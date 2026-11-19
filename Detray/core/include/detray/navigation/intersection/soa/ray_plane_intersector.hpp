@@ -75,7 +75,9 @@ struct ray_intersector_impl<cartesian2D<algebra_t>, algebra_t, resolve_pos> {
 
     const scalar_type denom = vector::dot(rd, sn);
 
-    // This is dangerous...
+    // Exit early only if all lanes are parallel to the plane. In a mixed
+    // bundle, the parallel lanes get an inf/NaN path and position. The mask
+    // check in @c resolve_mask then fails for these lanes
     if (detail::all_of(denom == 0.f)) [[unlikely]] {
       return {};
     }

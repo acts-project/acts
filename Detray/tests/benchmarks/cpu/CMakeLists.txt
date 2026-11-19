@@ -95,7 +95,7 @@ if(DETRAY_VC_AOS_PLUGIN)
 
     target_compile_options(
         detray_benchmark_cpu_linear_algebra_vc_aos
-        INTERFACE ${Vc_COMPILE_FLAGS} ${Vc_ARCHITECTURE_FLAGS}
+        PRIVATE ${Vc_COMPILE_FLAGS} ${Vc_ARCHITECTURE_FLAGS}
     )
 endif()
 
@@ -142,9 +142,7 @@ if(DETRAY_ARRAY_SOA_PLUGIN)
         PRIVATE "-march=native"
     )
 
-    detray_add_soa_benchmark( array_soa array )
-    # detray_add_soa_benchmark( array_soa eigen )
-    # detray_add_soa_benchmark( array_soa vc_aos )
+    detray_add_soa_benchmark( array_soa )
 endif()
 
 if(DETRAY_VC_SOA_PLUGIN)
@@ -163,16 +161,14 @@ if(DETRAY_VC_SOA_PLUGIN)
 
     target_compile_options(
         detray_benchmark_cpu_linear_algebra_vc_soa
-        INTERFACE ${Vc_COMPILE_FLAGS} ${Vc_ARCHITECTURE_FLAGS}
+        PRIVATE ${Vc_COMPILE_FLAGS} ${Vc_ARCHITECTURE_FLAGS}
     )
 
-    detray_add_soa_benchmark( vc_soa array )
-    # detray_add_soa_benchmark( vc_soa eigen )
-    # detray_add_soa_benchmark( vc_soa vc_aos )
+    detray_add_soa_benchmark( vc_soa )
 
     # Add Vc specific flags
     target_compile_options(
         detray_benchmark_cpu_vc_soa_vs_array
-        INTERFACE ${Vc_COMPILE_FLAGS} ${Vc_ARCHITECTURE_FLAGS}
+        PRIVATE ${Vc_COMPILE_FLAGS} ${Vc_ARCHITECTURE_FLAGS}
     )
 endif()

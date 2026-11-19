@@ -24,21 +24,15 @@
 
 namespace detray {
 
-/// @name Operators on @c algebra::storage::vector types
-/// @{
-
-using algebra::storage::operator*;
-using algebra::storage::operator/;
-using algebra::storage::operator-;
-using algebra::storage::operator+;
-
-/// @}
+// The operators on @c algebra::storage::vector types are found by argument
+// dependent lookup. They are not pulled into the detray namespace, because they
+// would be ambiguous with the operators of the AoS array plugin
 
 /// Define the plugin types
 /// @{
 template <concepts::value V, std::size_t W = 8u>
 struct array_soa {
-  /// @returns the widh of the SIMD lane
+  /// @returns the number of SIMD lanes
   static consteval std::size_t size() { return W; }
 
   /// Define scalar precision
@@ -47,7 +41,8 @@ struct array_soa {
   template <concepts::element T>
   using simd = algebra::array_soa::simd<T, W>;
 
-  using boolean = algebra::array_soa::mask<W>;
+  /// Lane mask: one integer per lane with the same size as the values
+  using boolean = typename simd<value_type>::mask_type;
 
   /// Linear Algebra type definitions
   /// @{
