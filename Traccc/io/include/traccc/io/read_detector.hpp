@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
 
 // VecMem include(s).
@@ -16,10 +17,11 @@
 
 // System include(s).
 #include <string_view>
+#include <tuple>
 
 namespace traccc::io {
 
-/// Construct a "default" / ODD detector geometry from a set of input files
+/// Construct a detector geometry from a set of input files
 ///
 /// It is mostly just a wrapper around Detray's more generic
 /// @c detray::io::read_detector_json code.

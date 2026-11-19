@@ -1,1 +1,1 @@
-from .@BINDINGS_MODULE@ import *
+@BINDINGS_IMPORTS@from .@BINDINGS_MODULE@ import *

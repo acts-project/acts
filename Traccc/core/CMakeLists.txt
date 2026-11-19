@@ -123,6 +123,14 @@ target_link_libraries(
         Acts::Core
 )
 
+# Validate selections against the registry, including installed providers.
+foreach(_traccc_det IN LISTS TRACCC_SUPPORTED_DETECTORS)
+    if(NOT _traccc_det MATCHES "^(.+)_detector$")
+        message(FATAL_ERROR "Invalid registered detector type '${_traccc_det}'")
+    endif()
+    detray_validate_metadata_ids(detray::detectors "${CMAKE_MATCH_1}")
+endforeach()
+
 string(REPLACE ";" ", " TRACCC_DETECTOR_TYPES "${TRACCC_SUPPORTED_DETECTORS}")
 message(STATUS "Building with detector types: ${TRACCC_DETECTOR_TYPES}")
 configure_file(
