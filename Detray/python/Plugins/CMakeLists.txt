@@ -19,7 +19,13 @@ endif()
 
 file(MAKE_DIRECTORY ${_pkg_dir})
 
-pybind11_add_module(DetraySvgtoolsPythonBindings src/Svgtools.cpp)
+acts_add_python_module(
+    DetraySvgtoolsPythonBindings
+    SOURCES src/Svgtools.cpp
+    OUTPUT_DIRECTORY ${_pkg_dir}
+    INSTALL_DIRECTORY ${DETRAY_PYTHON_INSTALL_DIR}/svgtools
+    LIBRARY_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
+)
 
 target_link_libraries(
     DetraySvgtoolsPythonBindings
@@ -31,26 +37,21 @@ target_link_libraries(
         vecmem::core
 )
 
-# Place the compiled module inside the `detray.svgtools` package.
-set_target_properties(
-    DetraySvgtoolsPythonBindings
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_pkg_dir}
-)
-install(
-    TARGETS DetraySvgtoolsPythonBindings
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/svgtools
-)
-
 # Generate the package __init__ that re-exports the compiled module.
+set(BINDINGS_IMPORTS "from .. import core as _core\n\n")
 set(BINDINGS_MODULE DetraySvgtoolsPythonBindings)
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/module_init.py.in
+acts_python_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/../module_init.py.in
     ${_pkg_dir}/__init__.py
-    @ONLY
-)
-install(
-    FILES ${_pkg_dir}/__init__.py
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/svgtools
+    ${DETRAY_PYTHON_INSTALL_DIR}/svgtools
 )
 
-acts_pybind_generate_stubs(detray.svgtools DetraySvgtoolsPythonBindings)
+acts_pybind_generate_stubs(
+    detray.svgtools
+    DetraySvgtoolsPythonBindings
+    PACKAGE
+    ENABLED ${DETRAY_GENERATE_PYTHON_STUBS}
+    PYTHON_ROOT ${_python_dir}
+    PYTHON_EXECUTABLE ${Python_EXECUTABLE}
+    DEPENDS DetrayPythonBindings
+)

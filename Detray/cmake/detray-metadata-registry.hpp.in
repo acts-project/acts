@@ -1,0 +1,40 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include <detray/core/detector.hpp>
+#include <detray/utils/tuple_helpers.hpp>
+#include <array>
+#include <string_view>
+#include <tuple>
+
+// The registry describes available metadata, not enabled backend instantiations.
+// clang-format off
+@DETRAY_REGISTRY_INCLUDES@
+#define DETRAY_FOR_EACH_METADATA(X)@DETRAY_REGISTRY_LIST@
+
+namespace detray::registry {
+@DETRAY_REGISTRY_ALIASES@
+#define DETRAY_METADATA_ID(ID) std::string_view{#ID},
+inline constexpr std::array metadata_ids{DETRAY_FOR_EACH_METADATA(DETRAY_METADATA_ID)};
+#undef DETRAY_METADATA_ID
+
+#define DETRAY_METADATA_TUPLE(ID) , std::tuple<ID##_metadata<algebra_t>>
+template <typename algebra_t>
+using metadata_types = detray::detail::tuple_cat_t<std::tuple<>
+    DETRAY_FOR_EACH_METADATA(DETRAY_METADATA_TUPLE)>;
+#undef DETRAY_METADATA_TUPLE
+
+#define DETRAY_DETECTOR_TUPLE(ID) , std::tuple<detray::host::detector<ID##_metadata<algebra_t>>>
+template <typename algebra_t>
+using detector_types = detray::detail::tuple_cat_t<std::tuple<>
+    DETRAY_FOR_EACH_METADATA(DETRAY_DETECTOR_TUPLE)>;
+#undef DETRAY_DETECTOR_TUPLE
+}  // namespace detray::registry
+// clang-format on

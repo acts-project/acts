@@ -2,21 +2,13 @@ set(_python_dir "${CMAKE_BINARY_DIR}/python")
 file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
-pybind11_add_module(ActsFatrasPythonBindings src/Fatras.cpp)
-install(
-    TARGETS ActsFatrasPythonBindings
-    DESTINATION ${_acts_python_install_dir}
-)
-
-set_target_properties(
+acts_add_python_module(
     ActsFatrasPythonBindings
-    PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath}"
+    SOURCES src/Fatras.cpp
+    OUTPUT_DIRECTORY ${_python_dir}/acts
+    INSTALL_DIRECTORY ${_acts_python_install_dir}
+    LIBRARY_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
 )
-set_target_properties(
-    ActsFatrasPythonBindings
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
-)
-
 target_link_libraries(
     ActsFatrasPythonBindings
     PUBLIC Acts::Core Acts::Fatras Acts::PythonUtilities
@@ -25,35 +17,15 @@ add_dependencies(ActsPythonBindings ActsFatrasPythonBindings)
 acts_pybind_generate_stubs(
     acts.fatras
     ActsFatrasPythonBindings
-    ActsPythonBindings
+    ENABLED ${ACTS_GENERATE_PYTHON_STUBS}
+    PYTHON_ROOT ${_python_dir}
+    PYTHON_EXECUTABLE ${Python_EXECUTABLE}
+    DEPENDS ActsPythonBindings
+    IGNORE_INVALID_IDENTIFIERS "GeoModelTree::FpvConstLink"
 )
 
-set(_target ${_python_dir}/acts/fatras.py)
-file(
-    CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/fatras.py ${_target}
-    SYMBOLIC
+acts_python_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/python/fatras.py
+    ${_python_dir}/acts/fatras.py
+    ${_acts_python_install_dir}
 )
-install(
-    FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/fatras.py
-    DESTINATION ${_acts_python_install_dir}
-)
-
-set(py_files fatras.py)
-
-foreach(f ${py_files})
-    set(_target ${_python_dir}/acts/${f})
-    get_filename_component(_dir ${_target} DIRECTORY)
-    file(MAKE_DIRECTORY ${_dir})
-
-    file(
-        CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/${f} ${_target}
-        SYMBOLIC
-    )
-
-    get_filename_component(_rel ${f} DIRECTORY)
-
-    install(
-        FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-        DESTINATION ${_acts_python_install_dir}/${_rel}
-    )
-endforeach()

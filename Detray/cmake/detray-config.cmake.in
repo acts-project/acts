@@ -84,3 +84,5 @@ find_package_handle_standard_args(
 
 # Include the file listing all the imported targets and options.
 include("${detray_CMAKE_DIR}/detray-config-targets.cmake")
+
+include("${detray_CMAKE_DIR}/detray-metadata.cmake")
