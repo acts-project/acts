@@ -21,8 +21,18 @@ detray_add_unit_test(cpu
    LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::test_utils detray::core
 )
 
+detray_add_unit_test(erased_storage
+    "utils/move_only_any.cpp"
+    LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::core
+)
+
 # Macro setting up the CPU tests for a specific algebra plugin.
 macro(detray_add_cpu_test algebra)
+    detray_add_unit_test(erased_detector_${algebra}
+        "core/erased_detector.cpp"
+        LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::core_${algebra}
+        detray::test_common
+    )
     # Build the test executable.
     detray_add_unit_test(cpu_${algebra}
        "algebra/matrix.cpp"

@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
 
 // VecMem include(s).
@@ -16,10 +17,11 @@
 
 // System include(s).
 #include <string_view>
+#include <tuple>
 
 namespace traccc::io {
 
-/// Construct a "default" / ODD detector geometry from a set of input files
+/// Construct a detector geometry from a set of input files
 ///
 /// It is mostly just a wrapper around Detray's more generic
 /// @c detray::io::read_detector_json code.
@@ -30,11 +32,13 @@ namespace traccc::io {
 /// @param material_file The file containing the material description
 /// @param grid_file The file containing the detector grid description
 /// @param do_consistency_check run check on detector after building
+/// @param metadata_id explicit family ID for files with missing/legacy metadata
 ///
 void read_detector(host_detector& detector, vecmem::memory_resource& mr,
                    const std::string_view geometry_file,
                    const std::string_view material_file = "",
                    const std::string_view grid_file = "",
-                   const bool do_consistency_check = true);
+                   const bool do_consistency_check = true,
+                   const std::string_view metadata_id = "");
 
 }  // namespace traccc::io

@@ -43,13 +43,15 @@ class writer_interface {
   /// @param source the source description of the detector
   /// @param mode stream open mode
   /// @param path output directory guaranteed to exist by the caller
+  /// @param metadata_id optional stable metadata family ID
   /// @return path or filename written by the implementation
   /// @note The existence of the file path has to be guaranteed by the caller
   virtual std::string write(const detector_t& detector,
                             const typename detector_t::name_map& names,
                             const std::string& source,
                             const std::ios_base::openmode mode,
-                            const std::filesystem::path& path) = 0;
+                            const std::filesystem::path& path,
+                            std::string_view metadata_id = {}) = 0;
 
  private:
   /// Extension that matches the file format of the respective writer

@@ -9,50 +9,58 @@
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
 set(_pkg_dir ${_python_dir}/detray/tests)
 
-if(NOT TARGET detray::svgtools)
+if(
+    NOT TARGET detray::svgtools
+    OR NOT TARGET detray::test_common
+    OR NOT TARGET detray::test_framework
+    OR NOT TARGET GTest::gtest
+)
     message(
         STATUS
-        "Skipping 'detray.tests' python module: 'detray::svgtools' not available"
+        "Skipping 'detray.tests' python module: validation dependencies not available"
     )
     return()
 endif()
 
 file(MAKE_DIRECTORY ${_pkg_dir})
 
-pybind11_add_module(DetrayTestsPythonBindings src/TestsModuleEntry.cpp)
+acts_add_python_module(
+    DetrayTestsPythonBindings
+    SOURCES src/TestsModuleEntry.cpp
+    OUTPUT_DIRECTORY ${_pkg_dir}
+    INSTALL_DIRECTORY ${DETRAY_PYTHON_INSTALL_DIR}/tests
+    LIBRARY_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
+)
 
 target_link_libraries(
     DetrayTestsPythonBindings
     PRIVATE
+        detray::python_common
         detray::core_array
         detray::io
         detray::test_common
+        detray::test_framework
         detray::svgtools
         GTest::gtest
         vecmem::core
         covfie::core
 )
 
-# Place the compiled module inside the `detray.tests` package.
-set_target_properties(
-    DetrayTestsPythonBindings
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_pkg_dir}
-)
-install(
-    TARGETS DetrayTestsPythonBindings
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/tests
-)
-
 # Generate the package __init__ that re-exports the compiled module.
+set(BINDINGS_IMPORTS "from .. import core as _core\n\n")
 set(BINDINGS_MODULE DetrayTestsPythonBindings)
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/module_init.py.in
+acts_python_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/../module_init.py.in
     ${_pkg_dir}/__init__.py
-    @ONLY
-)
-install(
-    FILES ${_pkg_dir}/__init__.py
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/tests
+    ${DETRAY_PYTHON_INSTALL_DIR}/tests
 )
 
-acts_pybind_generate_stubs(detray.tests DetrayTestsPythonBindings)
+acts_pybind_generate_stubs(
+    detray.tests
+    DetrayTestsPythonBindings
+    PACKAGE
+    ENABLED ${DETRAY_GENERATE_PYTHON_STUBS}
+    PYTHON_ROOT ${_python_dir}
+    PYTHON_EXECUTABLE ${Python_EXECUTABLE}
+    DEPENDS DetrayPythonBindings
+)

@@ -50,6 +50,8 @@
 #include <tuple>
 #include <utility>
 
+#include "detray/python/detector.hpp"
+
 namespace py = pybind11;
 
 namespace {
@@ -89,18 +91,27 @@ int run_gtest(const std::function<void()> &register_checks_fn) {
 }
 
 /// Run the CPU material validation for the given detector.
-int run_material_validation(const detector_t &det,
+int run_material_validation(const detray::host_detector &det,
                             const detray::name_map &names,
                             const material_scan_config_t &scan_cfg,
                             const material_validation_config_t &val_cfg) {
-  detector_t::geometry_context ctx{};
-  auto wb = std::make_shared<detray::test::whiteboard>();
-
-  return run_gtest([&] {
-    detray::test::register_checks<detray::test::material_scan>(
-        det, names, scan_cfg, ctx, wb);
-    detray::test::register_checks<detray::test::material_validation>(
-        det, names, val_cfg, ctx, wb);
+  return detray::python::visit(det, [&]<typename T>(const T &concrete) {
+    typename T::geometry_context ctx{};
+    auto wb = std::make_shared<detray::test::whiteboard>();
+    typename detray::test::material_scan<T>::config typed_cfg;
+    static_cast<base_config_t &>(typed_cfg) =
+        static_cast<const base_config_t &>(scan_cfg);
+    typed_cfg.name(scan_cfg.name())
+        .material_file(scan_cfg.material_file())
+        .overlaps_removal(scan_cfg.overlaps_removal())
+        .overlaps_tol(scan_cfg.overlaps_tol());
+    typed_cfg.track_generator() = scan_cfg.track_generator();
+    return run_gtest([&] {
+      detray::test::register_checks<detray::test::material_scan>(
+          concrete, names, typed_cfg, ctx, wb);
+      detray::test::register_checks<detray::test::material_validation>(
+          concrete, names, val_cfg, ctx, wb);
+    });
   });
 }
 
@@ -112,8 +123,7 @@ std::pair<py::object, detray::name_map> build_toy_detector(
     std::shared_ptr<vecmem::memory_resource> mr, const toy_det_config_t &cfg) {
   auto [det, names] = detray::build_toy_detector<algebra_t>(*mr, cfg);
 
-  py::object detector = py::cast(std::move(det));
-  py::detail::keep_alive_impl(detector, py::cast(std::move(mr)));
+  py::object detector = detray::python::wrap(std::move(det), std::move(mr));
 
   return {std::move(detector), std::move(names)};
 }

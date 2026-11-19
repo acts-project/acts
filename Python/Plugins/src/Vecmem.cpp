@@ -19,14 +19,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsVecmem, vecmem) {
-  {
-    py::class_<vecmem::memory_resource,
-               std::shared_ptr<vecmem::memory_resource>>(vecmem,
-                                                         "MemoryResource");
-
-    py::class_<vecmem::host_memory_resource, vecmem::memory_resource,
-               std::shared_ptr<vecmem::host_memory_resource>>(
-        vecmem, "HostMemoryResource")
-        .def(py::init<>());
-  }
+  auto core = py::module_::import("detray.core");
+  vecmem.attr("MemoryResource") = core.attr("MemoryResource");
+  vecmem.attr("HostMemoryResource") = core.attr("HostMemoryResource");
 }
