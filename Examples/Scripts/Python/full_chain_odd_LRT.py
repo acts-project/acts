@@ -443,6 +443,7 @@ if args.reco:
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
             ambiVolumeFile=ambi_config,
+            ambiMonitorFile=outputDir / "scoreMonitor.root",
             writeCovMat=True,
         )
     else:
