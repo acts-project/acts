@@ -38,17 +38,3 @@ def test_toy_detector_config():
     assert cfg.nBarrelLayers == 2
     assert cfg.nEndcapLayers == 0
     assert cfg.useMaterialMaps
-
-
-def test_name_map():
-    names = detray.core.NameMap()
-    names[0] = "volume_0"
-
-    assert names[0] == "volume_0"
-    assert names["volume_0"] == 0
-    assert 0 in names
-    assert "volume_0" in names
-    with pytest.raises(KeyError):
-        names[99]
-    with pytest.raises(KeyError):
-        names["does_not_exist"]

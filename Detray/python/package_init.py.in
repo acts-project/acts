@@ -11,3 +11,5 @@
 The metadata code generator is the separate ``detray_metadata`` package in
 ``Detray/detectors/codegen``.
 """
+
+from .core import Detector, HostMemoryResource, MemoryResource, NameMap

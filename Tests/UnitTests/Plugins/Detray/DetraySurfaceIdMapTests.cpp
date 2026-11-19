@@ -111,8 +111,9 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceIdMapFromConversion) {
                                     getDefaultLogger("GeoCnv", Logging::INFO));
 
   vecmem::host_memory_resource mr;
-  auto geometry = converter.convert<detector_t::metadata>(mr, gctx, tGeometry);
-  const detector_t& detector = *geometry.detector;
+  auto geometry = converter.convertRegistered<detray::array<double>>(
+      mr, gctx, tGeometry, "default");
+  const detector_t& detector = geometry.detector->as<detector_t>();
   const DetraySurfaceIdMap& map = geometry.surfaceIds;
 
   // Every sensitive detray surface is mapped to the ACTS surface it was

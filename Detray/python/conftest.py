@@ -12,12 +12,13 @@ import pytest
 
 import detray.core
 import detray.io
-import detray.tests
 
 
 @pytest.fixture(scope="session")
 def toy_detector_files(tmp_path_factory):
     """Write a toy detector to disk."""
+    import detray.tests
+
     out_dir = str(tmp_path_factory.mktemp("toy_detector")) + os.sep
 
     det, names = detray.tests.buildToyDetector(

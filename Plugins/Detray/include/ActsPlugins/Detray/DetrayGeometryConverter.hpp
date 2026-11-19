@@ -18,7 +18,10 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <string_view>
 
+#include <detray/core/host_detector.hpp>
+#include <detray/detectors/metadata.hpp>
 #include <detray/io/frontend/detector_reader.hpp>
 #include <detray/io/frontend/detector_reader_config.hpp>
 #include <vecmem/memory/memory_resource.hpp>
@@ -64,6 +67,14 @@ class DetrayGeometryConverter {
     /// The map between ACTS and detray identifiers of the sensitive surfaces.
     /// It points to the surfaces of the converted tracking geometry, which
     /// has to outlive it.
+    DetraySurfaceIdMap surfaceIds;
+  };
+
+  /// Conversion result whose detector metadata type is selected at runtime.
+  /// The allocator and ACTS tracking geometry must outlive this result.
+  struct RegisteredDetrayGeometry {
+    std::shared_ptr<detray::host_detector> detector;
+    detray::name_map names;
     DetraySurfaceIdMap surfaceIds;
   };
 
@@ -130,6 +141,25 @@ class DetrayGeometryConverter {
                          << " sensitive surfaces between ACTS and detray");
 
     return result;
+  }
+
+  /// Convert using a stable registry ID. The algebra remains a compile-time
+  /// choice; Python uses the algebra configured for detray's bindings.
+  template <typename algebra_t>
+  RegisteredDetrayGeometry convertRegistered(
+      vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
+      const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
+      std::string_view metadataId) const {
+    return detray::registry::visit_metadata<algebra_t>(
+        metadataId, [&]<detray::concepts::metadata metadata_t>() {
+          auto typed = convert<metadata_t>(mr, gctx, trackingGeometry);
+          RegisteredDetrayGeometry result;
+          result.detector = std::make_shared<detray::host_detector>();
+          result.detector->set<metadata_t>(std::move(*typed.detector));
+          result.names = std::move(typed.names);
+          result.surfaceIds = std::move(typed.surfaceIds);
+          return result;
+        });
   }
 
  private:

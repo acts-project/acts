@@ -31,3 +31,9 @@ detray_add_unit_test( io_writer
 _run_test_in_dir( io_writer
    "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/io_writer_test_rundir"
 )
+
+detray_add_unit_test(registered_io
+    "io_registered_detector.cpp"
+    LINK_LIBRARIES GTest::gtest_main detray::core_array detray::detectors detray::test_common
+)
+_run_test_in_dir(registered_io "${CMAKE_CURRENT_BINARY_DIR}/registered_io_test_rundir")

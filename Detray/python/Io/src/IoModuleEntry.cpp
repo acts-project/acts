@@ -7,7 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Detray core include(s)
-#include "detray/core/detector.hpp"
+#include "detray/detectors/io.hpp"
+#include "detray/python/detector.hpp"
 
 // Detray IO include(s)
 #include "detray/io/frontend/detector_reader_config.hpp"
@@ -39,11 +40,7 @@ namespace py = pybind11;
 namespace {
 
 using reader_config_t = detray::io::detector_reader_config;
-using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
-using algebra_t = detray::array<scalar_t>;
-using detector_t = detray::host::detector<detray::default_metadata<algebra_t>>;
 using writer_config_t = detray::io::detector_writer_config;
-using toy_detector_t = detray::host::detector<detray::toy_metadata<algebra_t>>;
 
 template <typename T>
 std::string to_string(const T &obj) {
@@ -57,11 +54,13 @@ std::string to_string(const T &obj) {
 /// The memory resource object is automatically kept alive at least as long as
 /// the returned detector object.
 std::pair<py::object, detray::name_map> read_detector(
-    std::shared_ptr<vecmem::memory_resource> mr, const reader_config_t &cfg) {
-  auto [det, names] = detray::io::read_detector_json<detector_t>(*mr, cfg);
+    std::shared_ptr<vecmem::memory_resource> mr, const reader_config_t &cfg,
+    std::string_view metadata_id) {
+  auto [det, names] =
+      detray::io::read_registered_detector_json<detray::python::algebra>(
+          *mr, cfg, metadata_id);
 
-  py::object detector = py::cast(std::move(det));
-  py::detail::keep_alive_impl(detector, py::cast(std::move(mr)));
+  py::object detector = detray::python::wrap(std::move(det), std::move(mr));
 
   return {std::move(detector), std::move(names)};
 }
@@ -103,7 +102,7 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
       .def("__repr__", &to_string<reader_config_t>);
 
   m.def("readDetector", &read_detector, py::arg("memoryResource"),
-        py::arg("config"),
+        py::arg("config"), py::arg("metadataId") = "",
         "Read a detector using the given memory resource as configured by a "
         "DetectorReaderConfig. The returned detector keeps the memory resource "
         "alive for as long as it is used");
@@ -138,8 +137,11 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
 
   m.def(
       "writeDetector",
-      [](toy_detector_t &det, const typename toy_detector_t::name_map &names,
-         writer_config_t &cfg) { detray::io::write_detector(det, names, cfg); },
+      [](const detray::host_detector &det, const detray::name_map &names,
+         writer_config_t &cfg) {
+        detray::io::write_registered_detector<detray::python::algebra>(
+            det, names, cfg);
+      },
       py::arg("detector"), py::arg("names"), py::arg("config"),
       "Write a detector to file as configured by a DetectorWriterConfig. The "
       "config is modified in place if the detector carries no material");

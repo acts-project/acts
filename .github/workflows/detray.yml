@@ -13,6 +13,10 @@ on:
     # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
+      - "cmake/ActsPython.cmake"
+      - "cmake/ActsPybindStubs.cmake"
+      - "cmake/python_setup.sh.in"
+      - "cmake/ActsEnsureUv.cmake"
       - ".github/workflows/detray.yml"
       - ".github/actions/dependencies/**"
       - ".github/actions/ccache-s3/**"
@@ -25,6 +29,10 @@ on:
     # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
+      - "cmake/ActsPython.cmake"
+      - "cmake/ActsPybindStubs.cmake"
+      - "cmake/python_setup.sh.in"
+      - "cmake/ActsEnsureUv.cmake"
       - ".github/workflows/detray.yml"
       - ".github/actions/dependencies/**"
       - ".github/actions/ccache-s3/**"
@@ -128,11 +136,18 @@ jobs:
     - name: Reset ccache statistics
       run: ccache --zero-stats
 
+    - name: Python test environment
+      run: |
+        uv venv .venv
+        uv pip install --python .venv/bin/python pytest numpy
+
     # Run the CMake configuration. Test that the metadata generation runs
     - name: Configure
       run: cmake --preset detray-full-fp32
                  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
                  -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }}
+                 -DDETRAY_BUILD_PYTHON_BINDINGS=ON
+                 -DPython_EXECUTABLE=${{ github.workspace }}/.venv/bin/python
                  -DDETRAY_FAIL_ON_WARNINGS=ON
                  -DDETRAY_SET_LOGGING=DEBUG
                  -DDETRAY_EIGEN_PLUGIN=OFF
@@ -147,6 +162,11 @@ jobs:
     - name: Build
       run: cmake --build build --config ${{ matrix.BUILD_TYPE }}
                  --target all detray_headers -- -j 2
+
+    - name: Python binding tests
+      run: |
+        export PYTHONPATH="${PWD}/build/python"
+        .venv/bin/python -m pytest Detray/python -v
 
     - name: ccache statistics
       if: always()

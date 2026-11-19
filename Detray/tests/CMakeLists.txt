@@ -147,6 +147,8 @@ endif()
 
 # Build test executables
 if(DETRAY_BUILD_TESTING)
+    add_subdirectory(cmake)
+
     # Check that ACTS_FORCE_ASSERTIONS works
     acts_add_assertion_tests()
 

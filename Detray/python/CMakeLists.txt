@@ -6,49 +6,37 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-# Set up the python stall directories
+if(NOT DETRAY_BUILD_PYTHON_BINDINGS)
+    return()
+endif()
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ActsPython.cmake)
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
-file(MAKE_DIRECTORY ${_python_dir})
-file(MAKE_DIRECTORY ${_python_dir}/detray)
-
-# Set up the source script in the python directory
-configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
-install(FILES ${_python_dir}/setup.sh DESTINATION python)
-
-# Set up the init file for the detray python module
-set(_target ${_python_dir}/detray/__init__.py)
-file(
-    CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/detray/__init__.py ${_target}
-    SYMBOLIC
+acts_python_environment(${_python_dir} python)
+acts_python_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/package_init.py.in
+    ${_python_dir}/detray/__init__.py
+    ${DETRAY_PYTHON_INSTALL_DIR}
 )
 
-# Allow access to the python detectors package from the main __init__.py
-install(
-    FILES ${CMAKE_CURRENT_SOURCE_DIR}/detray/__init__.py
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}
+add_library(detray_python_common INTERFACE)
+add_library(detray::python_common ALIAS detray_python_common)
+target_include_directories(
+    detray_python_common
+    INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(
+    detray_python_common
+    INTERFACE detray::core_array detray::detectors pybind11::headers
 )
 
-if(NOT COMMAND acts_pybind_generate_stubs)
-    # Put acts/cmake on the module path so the include(ActsEnsureUv) call inside ActsPybindStubs resolves.
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ActsPybindStubs.cmake)
-endif()
+add_subdirectory(Core)
+add_subdirectory(Io)
+add_subdirectory(Plugins)
+add_subdirectory(Tests)
 
-set(ACTS_GENERATE_PYTHON_STUBS ${DETRAY_GENERATE_PYTHON_STUBS})
-
-if(DETRAY_BUILD_PYTHON_BINDINGS)
-    add_subdirectory(Core)
-    add_subdirectory(Io)
-    add_subdirectory(Plugins)
-    add_subdirectory(Tests)
-endif()
-
-# Install the generated stub files alongside the package.
-if(DETRAY_GENERATE_PYTHON_STUBS)
-    install(
-        DIRECTORY ${_python_dir}/detray/
-        DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}
-        FILES_MATCHING
-        PATTERN "*.pyi"
-    )
-endif()
+acts_python_install_stubs(
+    ${_python_dir}/detray
+    ${DETRAY_PYTHON_INSTALL_DIR}
+    ${DETRAY_GENERATE_PYTHON_STUBS}
+)

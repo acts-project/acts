@@ -7,7 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Detray core include(s)
-#include "detray/core/detector.hpp"
+#include "detray/python/detector.hpp"
+#include "detray/utils/consistency_checker.hpp"
 
 // Detray navigation include(s)
 #include "detray/navigation/volume_graph.hpp"
@@ -40,77 +41,92 @@
 
 namespace py = pybind11;
 
-#define STRINGIFY(x) #x
-/// Expand macro and turn its value into a string.
-#define STRINGIFY_HELPER(x) STRINGIFY(x)
-
 namespace {
 
 using intersection_config_t = detray::intersection::config;
 using navigation_config_t = detray::navigation::config;
 using stepping_config_t = detray::stepping::config;
 using propagation_config_t = detray::propagation::config;
-using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
 
 template <typename T>
-std::string to_string(const T &obj) {
+std::string to_string(const T& obj) {
   std::ostringstream os;
   os << obj;
   return os.str();
 }
 
-/// Bind @p Container , a read-only vector with elements type @p Element.
-template <typename Container, typename Element>
-void bind_const_vector(py::module_ &m, const char *name) {
-  py::class_<Container>(m, name)
-      .def("__len__", [](const Container &c) { return c.size(); })
-      .def(
-          "__getitem__",
-          [](const Container &c, py::ssize_t i) -> const Element & {
-            const auto n = static_cast<py::ssize_t>(c.size());
-            if (i < 0) {
-              i += n;
-            }
-            if (i < 0 || i >= n) {
-              throw py::index_error();
-            }
-            return c[static_cast<std::size_t>(i)];
-          },
-          py::arg("index"), py::return_value_policy::reference_internal,
-          "Element at a given index")
-      .def(
-          "__iter__",
-          [](const Container &c) {
-            return py::make_iterator<
-                py::return_value_policy::reference_internal,
-                decltype(c.begin()), decltype(c.end()), const Element &>(
-                c.begin(), c.end());
-          },
-          py::keep_alive<0, 1>(), "Iterate over the elements");
-}
+using geometry_context_t = detray::geometry_context;
 
-using algebra_t = detray::array<scalar_t>;
-using detector_t = detray::host::detector<detray::default_metadata<algebra_t>>;
-using toy_detector_t = detray::host::detector<detray::toy_metadata<algebra_t>>;
-using volume_descriptor_t = detector_t::volume_type;
-using volume_container_t = detector_t::volume_container;
-using surface_descriptor_t = detector_t::surface_type;
-using surface_store_t = detector_t::surface_lookup_container;
-using surface_container_t = detector_t::surface_container;
-using geometry_context_t = detector_t::geometry_context;
-using transform_store_t = detector_t::transform_container;
-using mask_store_t = detector_t::mask_container;
-using material_store_t = detector_t::material_container;
-using accelerator_store_t = detector_t::accelerator_container;
-using volume_graph_t = detray::volume_graph<detector_t>;
+struct SurfaceInfo {
+  std::uint64_t identifier;
+  detray::dindex index, volume, transformIndex;
+  bool sensitive, portal;
+};
+struct VolumeInfo {
+  detray::dindex index, transformIndex;
+  std::array<detray::dindex, 2> surfaceRange;
+};
+
+/// Keep the Python detector alive, including its allocator lifetime attachment.
+struct GeometryCollection {
+  py::object owner;
+  enum class Kind { volumes, surfaces, portals } kind;
+  std::size_t size() const {
+    return detray::python::visit(
+        owner.cast<const detray::host_detector&>(),
+        [this]<typename T>(const T& detector) -> std::size_t {
+          if (kind == Kind::volumes) {
+            return detector.volumes().size();
+          }
+          if (kind == Kind::portals) {
+            return detector.portals().size();
+          }
+          return detector.surfaces().size();
+        });
+  }
+  py::object at(py::ssize_t index) const {
+    auto count = static_cast<py::ssize_t>(size());
+    if (index < 0) {
+      index += count;
+    }
+    if (index < 0 || index >= count) {
+      throw py::index_error();
+    }
+    return detray::python::visit(
+        owner.cast<const detray::host_detector&>(),
+        [this, index]<typename T>(const T& detector) -> py::object {
+          if (kind == Kind::volumes) {
+            const auto& volume = detector.volumes()[index];
+            const auto range = volume.full_sf_range();
+            return py::cast(VolumeInfo{
+                volume.index(), volume.transform(), {range[0], range[1]}});
+          }
+          auto describe = [](const auto& surface) {
+            return py::cast(
+                SurfaceInfo{surface.identifier().value(), surface.index(),
+                            surface.volume(), surface.transform(),
+                            surface.is_sensitive(), surface.is_portal()});
+          };
+          if (kind == Kind::portals) {
+            return describe(detector.portals()[index]);
+          }
+          return describe(detector.surfaces()[index]);
+        });
+  }
+};
+
+struct VolumeGraph {
+  std::string dot, description;
+  explicit VolumeGraph(const detray::host_detector& detector) {
+    detray::python::visit(detector, [this]<typename T>(const T& concrete) {
+      detray::volume_graph<T> graph{concrete};
+      dot = graph.to_dot_string();
+      description = graph.to_string();
+    });
+  }
+};
 
 }  // namespace
-
-// Treat the detector's volume/portal containers as opaque so that returning
-// them by reference exposes the live storage instead of copying it into a
-// Python list (the default for std::vector via pybind11/stl.h).
-PYBIND11_MAKE_OPAQUE(volume_container_t)
-PYBIND11_MAKE_OPAQUE(surface_container_t)
 
 PYBIND11_MODULE(DetrayPythonBindings, m) {
   m.doc() = "Detray core bindings";
@@ -183,31 +199,35 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
                      "Stepping configuration")
       .def("__repr__", &to_string<propagation_config_t>);
 
-  py::class_<volume_descriptor_t>(m, "VolumeDescriptor");
-  py::class_<surface_descriptor_t>(m, "SurfaceDescriptor");
-  bind_const_vector<surface_store_t, surface_descriptor_t>(m, "SurfaceStore");
-  bind_const_vector<volume_container_t, volume_descriptor_t>(m,
-                                                             "VolumeContainer");
-  bind_const_vector<surface_container_t, surface_descriptor_t>(
-      m, "SurfaceContainer");
+  py::class_<SurfaceInfo>(m, "SurfaceInfo")
+      .def_readonly("identifier", &SurfaceInfo::identifier)
+      .def_readonly("index", &SurfaceInfo::index)
+      .def_readonly("volume", &SurfaceInfo::volume)
+      .def_readonly("transformIndex", &SurfaceInfo::transformIndex)
+      .def_readonly("sensitive", &SurfaceInfo::sensitive)
+      .def_readonly("portal", &SurfaceInfo::portal);
+  py::class_<VolumeInfo>(m, "VolumeInfo")
+      .def_readonly("index", &VolumeInfo::index)
+      .def_readonly("transformIndex", &VolumeInfo::transformIndex)
+      .def_readonly("surfaceRange", &VolumeInfo::surfaceRange);
+  py::class_<GeometryCollection>(m, "GeometryCollection")
+      .def("__len__", &GeometryCollection::size)
+      .def("__getitem__", &GeometryCollection::at);
+
   py::class_<geometry_context_t>(m, "GeometryContext")
       .def(py::init<>())
       .def(py::init<detray::dindex>(), py::arg("index"))
       .def_property_readonly("index", &geometry_context_t::get,
                              "Index into the geometry data store")
-      .def("__repr__", [](const geometry_context_t &gctx) {
+      .def("__repr__", [](const geometry_context_t& gctx) {
         return "GeometryContext(index=" + std::to_string(gctx.get()) + ")";
       });
-  py::class_<transform_store_t>(m, "TransformStore");
-  py::class_<mask_store_t>(m, "MaskStore");
-  py::class_<material_store_t>(m, "MaterialStore");
-  py::class_<accelerator_store_t>(m, "AcceleratorStore");
   py::class_<detray::name_map>(m, "NameMap")
       .def(py::init<>())
       .def_property(
           "detectorName",
-          [](const detray::name_map &n) { return n.get_detector_name(); },
-          [](detray::name_map &n, std::string_view name) {
+          [](const detray::name_map& n) { return n.get_detector_name(); },
+          [](detray::name_map& n, std::string_view name) {
             n.set_detector_name(name);
           },
           "Name of the detector")
@@ -215,38 +235,38 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
            "Whether no volume names are mapped")
       .def(
           "__contains__",
-          [](const detray::name_map &n, detray::dindex index) {
+          [](const detray::name_map& n, detray::dindex index) {
             return n.contains(index);
           },
           py::arg("index"), "Whether a volume index is mapped")
       .def(
           "__contains__",
-          [](const detray::name_map &n, std::string_view name) {
+          [](const detray::name_map& n, std::string_view name) {
             return n.contains(name);
           },
           py::arg("name"), "Whether a volume name is mapped")
       .def(
           "__setitem__",
-          [](detray::name_map &n, detray::dindex index,
-             const std::string &name) { n.emplace(index, name); },
+          [](detray::name_map& n, detray::dindex index,
+             const std::string& name) { n.emplace(index, name); },
           py::arg("index"), py::arg("name"), "Map a volume index to a name")
       .def(
           "__getitem__",
-          [](const detray::name_map &n, detray::dindex index) -> std::string {
+          [](const detray::name_map& n, detray::dindex index) -> std::string {
             try {
               return n.at(index);
-            } catch (const std::out_of_range &) {
+            } catch (const std::out_of_range&) {
               throw py::key_error(std::to_string(index));
             }
           },
           py::arg("index"), "Volume name at a volume index")
       .def(
           "__getitem__",
-          [](const detray::name_map &n,
+          [](const detray::name_map& n,
              std::string_view name) -> detray::dindex {
             try {
               return n.at(name);
-            } catch (const std::out_of_range &) {
+            } catch (const std::out_of_range&) {
               throw py::key_error(std::string{name});
             }
           },
@@ -254,7 +274,7 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
       .def("clear", &detray::name_map::clear, "Clear detector and volume names")
       .def("clearNames", &detray::name_map::clear_names,
            "Clear volume names, keep the detector name")
-      .def("__repr__", [](const detray::name_map &n) {
+      .def("__repr__", [](const detray::name_map& n) {
         return "NameMap(detectorName='" + n.get_detector_name() + "')";
       });
 
@@ -265,67 +285,59 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
       m, "HostMemoryResource")
       .def(py::init<>());
 
-  py::class_<detector_t>(
-      m, "DetectorDefaultMetadata" STRINGIFY_HELPER(DETRAY_CUSTOM_SCALARTYPE))
+  py::class_<detray::host_detector, std::shared_ptr<detray::host_detector>>(
+      m, "Detector")
+      .def_property_readonly(
+          "metadataId",
+          [](const detray::host_detector& detector) {
+            return detray::python::visit(detector, []<typename T>(const T&) {
+              return std::string(detray::registry::metadata_id<
+                                 detray::detector_metadata_t<T>>());
+            });
+          })
       .def(
           "name",
-          [](const detector_t &d, const detray::name_map &names) {
-            return d.name(names);
+          [](const detray::host_detector& detector,
+             const detray::name_map& names) {
+            return detray::python::visit(detector,
+                                         [&]<typename T>(const T& concrete) {
+                                           return concrete.name(names);
+                                         });
           },
-          py::arg("names"), "Detector name")
-      .def_property_readonly(
-          "volumes",
-          [](const detector_t &d) -> const volume_container_t & {
-            return d.volumes();
-          },
-          py::return_value_policy::reference_internal, "All volumes")
-      .def_property_readonly(
-          "surfaces",
-          [](const detector_t &d) -> const surface_store_t & {
-            return d.surfaces();
-          },
-          py::return_value_policy::reference_internal, "All surfaces")
-      .def_property_readonly(
-          "portals",
-          [](const detector_t &d) -> const surface_container_t & {
-            return d.portals();
-          },
-          py::return_value_policy::reference_internal, "All portals")
-      .def_property_readonly(
-          "transformStore",
-          [](const detector_t &d) -> const transform_store_t & {
-            return d.transform_store();
-          },
-          py::return_value_policy::reference_internal, "Transform store")
-      .def_property_readonly(
-          "maskStore",
-          [](const detector_t &d) -> const mask_store_t & {
-            return d.mask_store();
-          },
-          py::return_value_policy::reference_internal, "Mask store")
-      .def_property_readonly(
-          "materialStore",
-          [](const detector_t &d) -> const material_store_t & {
-            return d.material_store();
-          },
-          py::return_value_policy::reference_internal, "Material store")
-      .def_property_readonly(
-          "acceleratorStore",
-          [](const detector_t &d) -> const accelerator_store_t & {
-            return d.accelerator_store();
-          },
-          py::return_value_policy::reference_internal, "Accelerator store")
-      .def("__repr__", [](const detector_t &d) { return to_string(d); });
-
-  py::class_<toy_detector_t>(
-      m, "DetectorToyMetadata" STRINGIFY_HELPER(DETRAY_CUSTOM_SCALARTYPE));
-
-  py::class_<volume_graph_t>(m, "VolumeGraph")
-      .def(py::init<const detector_t &>(), py::arg("detector"),
-           py::keep_alive<1, 2>(),
-           "Build the volume graph of a detector. The detector is kept alive "
-           "for as long as the graph is used")
-      .def("toDotString", &volume_graph_t::to_dot_string,
-           "The volume linking description in DOT syntax")
-      .def("__repr__", &volume_graph_t::to_string);
+          py::arg("names"))
+      .def_property_readonly("volumes",
+                             [](py::object self) {
+                               return GeometryCollection{
+                                   std::move(self),
+                                   GeometryCollection::Kind::volumes};
+                             })
+      .def_property_readonly("surfaces",
+                             [](py::object self) {
+                               return GeometryCollection{
+                                   std::move(self),
+                                   GeometryCollection::Kind::surfaces};
+                             })
+      .def_property_readonly("portals",
+                             [](py::object self) {
+                               return GeometryCollection{
+                                   std::move(self),
+                                   GeometryCollection::Kind::portals};
+                             })
+      .def("checkConsistency",
+           [](const detray::host_detector& detector) {
+             detray::python::visit(detector, []<typename T>(const T& concrete) {
+               detray::detail::check_consistency(concrete);
+             });
+           })
+      .def("__repr__", [](const detray::host_detector& detector) {
+        return detray::python::visit(
+            detector,
+            []<typename T>(const T& concrete) { return to_string(concrete); });
+      });
+  m.attr("availableMetadata") = py::cast(detray::registry::metadata_ids);
+  py::class_<VolumeGraph>(m, "VolumeGraph")
+      .def(py::init<const detray::host_detector&>(), py::arg("detector"))
+      .def("toDotString", [](const VolumeGraph& graph) { return graph.dot; })
+      .def("__repr__",
+           [](const VolumeGraph& graph) { return graph.description; });
 }
