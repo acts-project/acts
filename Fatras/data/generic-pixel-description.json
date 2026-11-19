@@ -1,0 +1,216 @@
+{
+    "acts-fatras-synthetic-description": {
+        "format-version": 0
+    },
+    "escapeHalfZ": 3000.0,
+    "escapeRadius": 1100.0,
+    "passives": [
+        {
+            "layer": 0,
+            "maxBound": 1500.0,
+            "minBound": 0.0,
+            "refCoord": 19.0,
+            "shape": "cylinder"
+        }
+    ],
+    "subsystems": [
+        {
+            "barrels": [
+                {
+                    "cylinders": [
+                        {
+                            "halfLengthZ": 491.0,
+                            "layer": 0,
+                            "modules": 1,
+                            "overlapOffset": 0.0,
+                            "overlapProbability": 0.0,
+                            "radius": 32.0
+                        },
+                        {
+                            "halfLengthZ": 491.0,
+                            "layer": 1,
+                            "modules": 1,
+                            "overlapOffset": 0.0,
+                            "overlapProbability": 0.0,
+                            "radius": 72.0
+                        },
+                        {
+                            "halfLengthZ": 491.0,
+                            "layer": 2,
+                            "modules": 1,
+                            "overlapOffset": 0.0,
+                            "overlapProbability": 0.0,
+                            "radius": 116.0
+                        },
+                        {
+                            "halfLengthZ": 491.0,
+                            "layer": 3,
+                            "modules": 1,
+                            "overlapOffset": 0.0,
+                            "overlapProbability": 0.0,
+                            "radius": 172.0
+                        }
+                    ]
+                }
+            ],
+            "endcaps": [
+                {
+                    "discs": [
+                        {
+                            "absZ": 600.0,
+                            "layer": 0,
+                            "overlapOffset": 0.0,
+                            "overlapProbability": 0.0,
+                            "rings": [
+                                {
+                                    "rMax": 176.2,
+                                    "rMin": 31.15
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 700.0,
+                            "layer": 1,
+                            "overlapOffset": 0.0,
+                            "overlapProbability": 0.0,
+                            "rings": [
+                                {
+                                    "rMax": 176.2,
+                                    "rMin": 31.15
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 820.0,
+                            "layer": 2,
+                            "overlapOffset": 0.0,
+                            "overlapProbability": 0.0,
+                            "rings": [
+                                {
+                                    "rMax": 176.2,
+                                    "rMin": 31.15
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 960.0,
+                            "layer": 3,
+                            "overlapOffset": 0.0,
+                            "overlapProbability": 0.0,
+                            "rings": [
+                                {
+                                    "rMax": 176.2,
+                                    "rMin": 31.15
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1100.0,
+                            "layer": 4,
+                            "overlapOffset": 0.0,
+                            "overlapProbability": 0.0,
+                            "rings": [
+                                {
+                                    "rMax": 176.2,
+                                    "rMin": 31.15
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1300.0,
+                            "layer": 5,
+                            "overlapOffset": 0.0,
+                            "overlapProbability": 0.0,
+                            "rings": [
+                                {
+                                    "rMax": 176.2,
+                                    "rMin": 31.15
+                                }
+                            ]
+                        },
+                        {
+                            "absZ": 1500.0,
+                            "layer": 6,
+                            "overlapOffset": 0.0,
+                            "overlapProbability": 0.0,
+                            "rings": [
+                                {
+                                    "rMax": 176.2,
+                                    "rMin": 31.15
+                                }
+                            ]
+                        }
+                    ],
+                    "placement": "mirrored"
+                }
+            ],
+            "name": "generic-pixel",
+            "passives": [
+                {
+                    "layer": 0,
+                    "maxBound": 177.2,
+                    "minBound": 29.0,
+                    "placement": "mirrored",
+                    "refCoord": 570.6,
+                    "shape": "disc"
+                },
+                {
+                    "layer": 1,
+                    "maxBound": 177.2,
+                    "minBound": 29.0,
+                    "placement": "mirrored",
+                    "refCoord": 650.0,
+                    "shape": "disc"
+                },
+                {
+                    "layer": 2,
+                    "maxBound": 177.2,
+                    "minBound": 29.0,
+                    "placement": "mirrored",
+                    "refCoord": 760.0,
+                    "shape": "disc"
+                },
+                {
+                    "layer": 3,
+                    "maxBound": 177.2,
+                    "minBound": 29.0,
+                    "placement": "mirrored",
+                    "refCoord": 890.0,
+                    "shape": "disc"
+                },
+                {
+                    "layer": 4,
+                    "maxBound": 177.2,
+                    "minBound": 29.0,
+                    "placement": "mirrored",
+                    "refCoord": 1030.0,
+                    "shape": "disc"
+                },
+                {
+                    "layer": 5,
+                    "maxBound": 177.2,
+                    "minBound": 29.0,
+                    "placement": "mirrored",
+                    "refCoord": 1200.0,
+                    "shape": "disc"
+                },
+                {
+                    "layer": 6,
+                    "maxBound": 177.2,
+                    "minBound": 29.0,
+                    "placement": "mirrored",
+                    "refCoord": 1400.0,
+                    "shape": "disc"
+                },
+                {
+                    "layer": 7,
+                    "maxBound": 177.2,
+                    "minBound": 29.0,
+                    "placement": "mirrored",
+                    "refCoord": 2252.0,
+                    "shape": "disc"
+                }
+            ]
+        }
+    ]
+}
