@@ -30,6 +30,7 @@
 #include <cmath>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -617,8 +618,13 @@ const Surface* TrackingVolume::portalFace(const Portal& portal) const {
 
 void TrackingVolume::findPortalFaces(const GeometryContext& gctx) {
   m_portalFaces.clear();
-  if (isAlignable() || m_portals.empty()) {
+  if (m_portals.empty()) {
     return;
+  }
+  if (isAlignable()) {
+    throw std::logic_error("TrackingVolume: portal faces of alignable volume " +
+                           volumeName() +
+                           " would depend on the geometry context");
   }
   std::vector<OrientedSurface> faces =
       volumeBounds().orientedSurfaces(localToGlobalTransform(gctx));

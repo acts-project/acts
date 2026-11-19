@@ -238,10 +238,15 @@ TrackingGeometry::TrackingGeometry(
     apply(visitor);
   }
 
-  // Portal faces only depend on the context for alignable volumes, which are
-  // skipped
+  // The faces are found without a context, which is only valid for volumes
+  // and portal surfaces with fixed transforms. Alignable portal surfaces are
+  // skipped in findPortalFaces.
   const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
-  apply([&gctx](TrackingVolume& volume) { volume.findPortalFaces(gctx); });
+  apply([&gctx](TrackingVolume& volume) {
+    if (!volume.isAlignable()) {
+      volume.findPortalFaces(gctx);
+    }
+  });
 
   GeometryIdMapVisitor mapVisitor{logger};
   apply(mapVisitor);

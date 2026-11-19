@@ -15,15 +15,19 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/VolumePlacementBase.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -39,6 +43,42 @@ const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 constexpr double rMin = 10_mm;
 constexpr double rMax = 20_mm;
 constexpr double halfZ = 30_mm;
+
+/// Placement with a fixed transform, which makes a volume alignable
+class FixedPlacement final : public VolumePlacementBase {
+ public:
+  explicit FixedPlacement(const Transform3& transform)
+      : m_transform{transform}, m_inverse{transform.inverse()} {}
+
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& /*gctx*/) const override {
+    return m_transform;
+  }
+
+  const Transform3& globalToLocalTransform(
+      const GeometryContext& /*gctx*/) const override {
+    return m_inverse;
+  }
+
+  const Transform3& portalLocalToGlobal(const GeometryContext& /*gctx*/,
+                                        std::size_t portalIdx) const override {
+    return m_portals.at(portalIdx);
+  }
+
+  void makePortalsAlignable(const GeometryContext& context,
+                            const std::vector<std::shared_ptr<RegularSurface>>&
+                                portalsToAlign) override {
+    VolumePlacementBase::makePortalsAlignable(context, portalsToAlign);
+    for (std::size_t i = 0; i < portalsToAlign.size(); ++i) {
+      m_portals.push_back(alignPortal(context, i));
+    }
+  }
+
+ private:
+  Transform3 m_transform;
+  Transform3 m_inverse;
+  std::vector<Transform3> m_portals;
+};
 
 /// Three cylinders stacked along z, so their inner and outer cylinder portals
 /// are merged into portals three times as long as each volume.
@@ -121,6 +161,38 @@ BOOST_AUTO_TEST_CASE(CylinderStackFaces) {
                         1e-9);
     }
   }
+}
+
+// The faces are found without a geometry context, so an alignable volume
+// keeps its full portal surfaces. Containers cannot stack alignable volumes,
+// so the oversized portal is attached by hand.
+
+BOOST_AUTO_TEST_CASE(AlignableVolumeHasNoFaces) {
+  auto bounds = std::make_shared<CylinderVolumeBounds>(rMin, rMax, halfZ);
+  auto makeGeometry = [&](std::shared_ptr<TrackingVolume> volume) {
+    const auto volumeId = GeometryIdentifier().withVolume(1);
+    volume->assignGeometryId(volumeId);
+    auto surface = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                        rMax, 3 * halfZ);
+    surface->assignGeometryId(volumeId.withBoundary(1));
+    volume->addPortal(std::make_shared<Portal>(Direction::OppositeNormal(),
+                                               std::move(surface), *volume));
+    return std::make_shared<TrackingGeometry>(
+        volume, nullptr, GeometryIdentifierHook{}, getDummyLogger(), false);
+  };
+
+  auto fixed =
+      std::make_shared<TrackingVolume>(Transform3::Identity(), bounds, "fixed");
+  auto fixedGeometry = makeGeometry(fixed);
+  BOOST_CHECK(fixed->portalFace(*fixed->portals().begin()) != nullptr);
+
+  auto placement = std::make_shared<FixedPlacement>(Transform3::Identity());
+  auto alignable =
+      std::make_shared<TrackingVolume>(*placement, bounds, "alignable");
+  alignable->retainPlacement(placement);
+  BOOST_REQUIRE(alignable->isAlignable());
+  auto alignableGeometry = makeGeometry(alignable);
+  BOOST_CHECK(alignable->portalFace(*alignable->portals().begin()) == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(CuboidStackFaces) {

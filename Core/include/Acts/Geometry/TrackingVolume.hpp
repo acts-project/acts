@@ -607,9 +607,10 @@ class TrackingVolume : public Volume {
   std::span<const PlacementOwnPtr> placements() const;
 
  private:
-  /// Find the faces of this volume that its portals are larger than. Only
-  /// done for volumes that are not alignable.
+  /// Find the faces of this volume that its portals are larger than. Portals
+  /// with an alignable surface are skipped.
   /// @param gctx The geometry context
+  /// @throws std::logic_error if the volume is alignable
   void findPortalFaces(const GeometryContext& gctx);
 
   void connectDenseBoundarySurfaces(
