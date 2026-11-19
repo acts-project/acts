@@ -144,13 +144,10 @@ using block_getter_t = typename block_getter<M>::type;
 
 /// The algebra types
 /// @{
-template <typename A, typename = void>
-struct get_algebra {};
 
-/// Expose the types provided by a supported algebra.
+/// Expose the types provided by the algebra @tparam A
 template <typename A>
-  requires(!std::is_same_v<typename A::point3D, void>)
-struct get_algebra<A> {
+struct algebra_types {
   /// The algebra type itself.
   using algebra_type = A;
 
@@ -180,39 +177,37 @@ struct get_algebra<A> {
   using matrix = typename A::template matrix<ROWS, COLS>;
 };
 
+template <typename A, typename = void>
+struct get_algebra {};
+
+/// Expose the types provided by a supported algebra.
+template <typename A>
+  requires(!std::is_same_v<typename A::point3D, void>)
+struct get_algebra<A> : public algebra_types<A> {};
+
 /// Switch the value type of an existing algebra definition
+///
+/// @tparam A Algebra template with the value type as only parameter.
+/// @tparam W Replacement value type.
+/// @tparam V Current value type.
 template <template <typename> class A, typename W, typename V>
   requires(!std::is_same_v<typename A<V>::point3D, void> &&
            !std::is_same_v<typename A<W>::point3D, void>)
-struct get_algebra<A<V>, W> {
-  /// The algebra instantiated with the replacement value type.
-  using algebra_type = A<W>;
+struct get_algebra<A<V>, W> : public algebra_types<A<W>> {};
 
-  /// SIMD type parameterized by the lane value type.
-  template <typename U>
-  using simd = typename A<W>::template simd<U>;
-  /// Integer type used for indices.
-  using index_type = typename A<W>::index_type;
-  /// Boolean type used by the algebra.
-  using boolean = typename A<W>::boolean;
-  /// Value type used by the algebra.
-  using value = typename A<W>::value_type;
-  /// Scalar type, possibly containing multiple values in an SoA algebra.
-  using scalar = typename A<W>::scalar;
-  /// Two-dimensional point type.
-  using point2D = typename A<W>::point2D;
-  /// Three-dimensional point type.
-  using point3D = typename A<W>::point3D;
-  /// Two-dimensional vector type.
-  using vector2D = typename A<W>::vector2D;
-  /// Three-dimensional vector type.
-  using vector3D = typename A<W>::vector3D;
-  /// Three-dimensional transform type.
-  using transform3D = typename A<W>::transform3D;
-  /// Matrix type with the requested dimensions.
-  template <std::size_t ROWS, std::size_t COLS>
-  using matrix = typename A<W>::template matrix<ROWS, COLS>;
-};
+/// Switch the value type of an algebra with a fixed number of SIMD lanes
+///
+/// @tparam A Algebra template with the value type and the number of lanes as
+///           parameters.
+/// @tparam N Number of SIMD lanes, which is kept.
+/// @tparam W Replacement value type.
+/// @tparam V Current value type.
+template <template <typename, std::size_t> class A, std::size_t N, typename W,
+          typename V>
+  requires(!std::is_same_v<typename A<V, N>::point3D, void> &&
+           !std::is_same_v<typename A<W, N>::point3D, void>)
+struct get_algebra<A<V, N>, W> : public algebra_types<A<W, N>> {};
+/// @}
 
 }  // namespace traits
 

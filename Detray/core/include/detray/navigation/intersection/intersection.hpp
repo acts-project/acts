@@ -326,10 +326,6 @@ class intersection2D {
 
   /// @returns the intersection status
   DETRAY_HOST_DEVICE
-  constexpr dsimd<algebra_t, status_type> status() { return m_status; }
-
-  /// @returns the intersection status
-  DETRAY_HOST_DEVICE
   constexpr dsimd<algebra_t, status_type> status() const { return m_status; }
 
   /// Set the intersection status according to enum value @p s

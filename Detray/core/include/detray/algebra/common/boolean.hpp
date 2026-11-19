@@ -8,6 +8,14 @@
 
 #pragma once
 
+// Project include(s).
+#include "detray/definitions/detail/qualifiers.hpp"
+
+// System include(s).
+#include <concepts>
+#include <cstddef>
+#include <type_traits>
+
 namespace detray {
 
 namespace algebra::boolean {
@@ -23,25 +31,52 @@ constexpr bool all_of(bool b) {
 constexpr bool none_of(bool b) {
   return !b;
 }
-constexpr std::size_t count(bool b) {
+/// @param b Boolean to count.
+/// @returns 1 if @p b is set, 0 otherwise.
+DETRAY_HOST_DEVICE constexpr std::size_t count(bool b) {
   return b ? 1u : 0u;
 }
+/// @}
 
+/// Masked assignments for single values
+/// @{
+
+/// Assign a new value if the mask is set
+///
+/// @tparam T Scalar type of the value to update.
+/// @tparam U Type of the new value, must be convertible to @p T.
+///
+/// @param value Value to update.
+/// @param mask Update @p value only if this is set.
+/// @param new_value Value to assign.
 template <typename T, typename U>
   requires(std::is_scalar_v<T> && std::convertible_to<U, T>)
-constexpr void set_if(T& value, const bool mask, const U new_value) {
+DETRAY_HOST_DEVICE constexpr void set_if(T& value, const bool mask,
+                                         const U new_value) {
   value = mask ? static_cast<T>(new_value) : value;
 }
 
+/// Set a value to zero if the mask is set
+///
+/// @tparam T Scalar type of the value to update.
+///
+/// @param value Value to update.
+/// @param mask Set @p value to zero only if this is set.
 template <typename T>
   requires std::is_scalar_v<T>
-constexpr void set_zero(T& value, const bool mask) {
+DETRAY_HOST_DEVICE constexpr void set_zero(T& value, const bool mask) {
   set_if(value, mask, static_cast<T>(0));
 }
 
+/// Set a value to zero if the mask is not set
+///
+/// @tparam T Scalar type of the value to update.
+///
+/// @param value Value to update.
+/// @param mask Keep @p value only if this is set, otherwise set it to zero.
 template <typename T>
   requires std::is_scalar_v<T>
-constexpr void set_zero_inverted(T& value, const bool mask) {
+DETRAY_HOST_DEVICE constexpr void set_zero_inverted(T& value, const bool mask) {
   set_if(value, !mask, static_cast<T>(0));
 }
 ///@}

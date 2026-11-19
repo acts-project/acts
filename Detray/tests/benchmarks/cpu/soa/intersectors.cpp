@@ -120,10 +120,14 @@ dvector<dscalar<algebra_t>> get_dists(std::size_t n) {
 void BM_INTERSECT_PLANES_AOS(benchmark::State& state) {
   using mask_t = mask<rectangle2D, algebra_s, std::uint_least16_t>;
 
-  std::cout << "SoA algebra:" << std::endl;
-  detray::types::print<detray::types::list<algebra_v>>();
-  std::cout << "AoS algebra:" << std::endl;
-  detray::types::print<detray::types::list<algebra_s>>();
+  // Google Benchmark calls this function more than once: print only once
+  [[maybe_unused]] static const bool printed_types = [] {
+    std::cout << "SoA algebra:" << std::endl;
+    detray::types::print<detray::types::list<algebra_v>>();
+    std::cout << "AoS algebra:" << std::endl;
+    detray::types::print<detray::types::list<algebra_s>>();
+    return true;
+  }();
 
   auto dists = get_dists<algebra_s>(n_surfaces);
   auto [plane_descs, transforms] = test::planes_along_direction<algebra_s>(

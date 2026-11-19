@@ -15,7 +15,9 @@
 
 // System include(s)
 #include <algorithm>
+#include <bit>
 #include <cmath>
+#include <concepts>
 #include <cstddef>
 #include <type_traits>
 
@@ -132,13 +134,28 @@ DETRAY_ARRAY_SOA_BINARY_MATH(pow)
 #undef DETRAY_ARRAY_SOA_UNARY_MATH
 #undef DETRAY_ARRAY_SOA_BINARY_MATH
 
+/// Lane-wise sign bit
+///
+/// @tparam T Value type of the lanes.
+/// @tparam W Number of lanes.
+///
+/// @param v Lane bundle to check.
+/// @returns a mask that is set for the lanes with the sign bit set
 template <concepts::value T, std::size_t W>
-DETRAY_HOST_DEVICE constexpr array_soa::mask<W> signbit(
-    const array_soa::simd<T, W> &v) {
-  array_soa::mask<W> ret;
+DETRAY_HOST_DEVICE constexpr auto signbit(const array_soa::simd<T, W> &v) {
+  using mask_t = typename array_soa::simd<T, W>::mask_type;
+  using lane_t = typename mask_t::lane_type;
+
+  mask_t ret;
   DETRAY_UNROLL_N(W)
   for (std::size_t i = 0u; i < W; ++i) {
-    ret[i] = signbit(v[i]);
+    if constexpr (std::floating_point<T>) {
+      // Arithmetic shift copies the sign bit into all bits of the lane
+      constexpr int shift{static_cast<int>(sizeof(lane_t) * 8u) - 1};
+      ret.m_data[i] = static_cast<lane_t>(std::bit_cast<lane_t>(v[i]) >> shift);
+    } else {
+      ret.set(i, signbit(v[i]));
+    }
   }
   return ret;
 }

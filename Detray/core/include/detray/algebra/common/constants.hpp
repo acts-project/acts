@@ -11,32 +11,45 @@
 // Project include(s).
 #include "detray/algebra/concepts.hpp"
 
+// System include(s).
+#include <cstddef>
+
 namespace detray {
 
 namespace algebra::constants {
 
 /// Utilities to generate values (single value)
 /// @{
+/// @tparam T Value type.
+/// @returns zero
 template <detray::concepts::value T>
 consteval T zero() {
   return 0.f;
 }
 
+/// @tparam T Value type.
+/// @returns one
 template <detray::concepts::value T>
 consteval T one() {
   return 1.f;
 }
 
+/// @tparam T Value type.
+/// @returns the lane indices, which is zero for a single value
 template <detray::concepts::value T>
 consteval T iota() {
   return zero<T>();
 }
 
+/// @tparam T Value type.
+/// @returns the number of lanes, which is one for a single value
 template <detray::concepts::value T>
 consteval std::size_t size() {
   return 1u;
 }
 
+/// @tparam T Value type.
+/// @returns the number of lanes, which is one for a single value
 template <detray::concepts::value T>
 constexpr std::size_t size(T /*unused*/) {
   return 1u;

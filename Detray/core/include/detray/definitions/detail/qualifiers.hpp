@@ -59,6 +59,10 @@
 #if defined(__clang__)
 #define ARG_TO_STRING(A) #A
 #define DETRAY_UNROLL_N(n) _Pragma(ARG_TO_STRING(clang loop unroll_count(n)))
+#elif defined(__CUDACC__)
+// nvcc defines __GNUC__ as well, but does not know the GCC pragma
+#define ARG_TO_STRING(A) #A
+#define DETRAY_UNROLL_N(n) _Pragma(ARG_TO_STRING(unroll n))
 #elif defined(__GNUC__) || defined(__GNUG__)
 #define ARG_TO_STRING(A) #A
 #if __GNUC__ >= 14

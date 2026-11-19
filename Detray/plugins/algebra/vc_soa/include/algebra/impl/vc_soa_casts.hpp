@@ -25,7 +25,7 @@ namespace detray::algebra {
 
 // Forward declare the generic cast impl from matrices
 template <concepts::value value_t, concepts::matrix matrix_t>
-DETRAY_HOST_DEVICE constexpr auto cast_to(const matrix_t& m);
+DETRAY_HOST_DEVICE constexpr decltype(auto) cast_to(const matrix_t& m);
 
 /// Cast a Vc SoA salar @param s to the precision given by @tparam other_value_t
 template <concepts::value other_value_t, concepts::value value_t>
