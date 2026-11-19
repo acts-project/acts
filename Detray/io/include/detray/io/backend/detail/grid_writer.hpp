@@ -15,6 +15,7 @@
 #include "detray/io/backend/detail/type_info.hpp"
 #include "detray/io/frontend/payloads.hpp"
 #include "detray/io/frontend/writer_interface.hpp"
+#include "detray/navigation/accelerators/spatial_grid.hpp"
 #include "detray/utils/grid/concepts.hpp"
 #include "detray/utils/grid/grid.hpp"
 #include "detray/utils/type_list.hpp"
@@ -25,7 +26,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <type_traits>
 #include <vector>
 
 namespace detray::io::detail {
@@ -99,14 +99,11 @@ class grid_writer : public writer_interface<detector_t> {
     std::ranges::copy(axes_data, std::begin(grid_data.axes));
 
     // Cylinder search grids are looked up on a cylinder of their own radius
-    if constexpr (requires { gr.mask(); }) {
-      if constexpr (detray::concepts::cylindrical<
-                        typename grid_t::local_frame_type>) {
-        using shape_t =
-            typename std::remove_cvref_t<decltype(gr.mask())>::shape;
-        grid_data.reference_radius =
-            static_cast<io::scalar>(gr.mask()[shape_t::e_r]);
-      }
+    if constexpr (concepts::spatial_grid<grid_t> &&
+                  concepts::cylindrical<typename grid_t::local_frame_type>) {
+      using shape_t = typename grid_t::mask_type::shape;
+      grid_data.reference_radius =
+          static_cast<io::scalar>(gr.mask()[shape_t::e_r]);
     }
 
     // Write the surface indices
