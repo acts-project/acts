@@ -17,6 +17,7 @@ import argparse
 from importlib import import_module
 from pathlib import Path
 import runpy
+import re
 
 from detray_metadata import (
     add_io_options,
@@ -36,11 +37,11 @@ def detector_name(stem: str) -> str:
     return name
 
 
-def load_configuration(selector: str):
+def load_configuration(selector: str, name_override: str | None = None):
     """Resolve NAME or FILE.py:FUNCTION to (detector name, callable)."""
     if ":" in selector:
         filename, function_name = selector.rsplit(":", 1)
-        name = detector_name(Path(filename).stem)
+        name = name_override or detector_name(Path(filename).stem)
         configure = runpy.run_path(filename)[function_name]
     else:
         name = selector
@@ -48,7 +49,7 @@ def load_configuration(selector: str):
         configure = module.configure
     if not callable(configure):
         raise ValueError(f"{selector} is not callable")
-    return name, configure
+    return name_override or name, configure
 
 
 def main():
@@ -60,6 +61,9 @@ def main():
         help="Shipped detector name (e.g. 'odd') or an external Python file and "
         "callable; <name>_detector.py names the detector <name>",
     )
+    parser.add_argument(
+        "--name", help="Stable metadata ID, independent of the configuration filename"
+    )
     add_logging_options(parser)
     add_io_options(parser)
     args = parser.parse_args()
@@ -67,7 +71,9 @@ def main():
     parse_io_options(args)
 
     try:
-        name, configure = load_configuration(args.detector)
+        if args.name and not re.fullmatch(r"[a-z][a-z0-9_]*", args.name):
+            raise ValueError("metadata ID must match [a-z][a-z0-9_]*")
+        name, configure = load_configuration(args.detector, args.name)
     except (ValueError, ImportError, AttributeError, KeyError, OSError) as error:
         parser.error(f"Invalid detector configuration {args.detector!r}: {error}")
 

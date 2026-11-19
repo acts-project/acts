@@ -79,6 +79,12 @@ to form the name, so this produces `detray/detectors/custom_metadata.hpp` with
 `detray::custom_metadata`. The name must not reuse a shipped one. CMake tracks
 changes to the configuration file.
 
+To make the family ID independent of the filename, use
+`-DDETRAY_GENERATE_METADATA='tracker=/path/to/custom_detector.py:configure'`.
+The equivalent direct generator option is `--name tracker`; this produces
+`tracker_metadata.hpp` and `detray::tracker_metadata`. See
+[the metadata registry](../README.md) for pregenerated header providers.
+
 External configurations use the common generator runtime and prebuilt lookup,
 but are not part of release pregeneration. They generate locally unless a header
 is supplied at

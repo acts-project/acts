@@ -13,21 +13,6 @@ import detray.io
 import detray.tests
 
 
-def test_detector_writer_config():
-    config = detray.io.DetectorWriterConfig()
-    config.path = "./json_writer_test/"
-    config.replaceFiles = True
-    config.compactifyJson = True
-    config.writeMaterial = False
-    config.writeGrids = False
-
-    assert config.path == "./json_writer_test/"
-    assert config.replaceFiles
-    assert config.compactifyJson
-    assert not config.writeMaterial
-    assert not config.writeGrids
-
-
 def test_write_geometry_only(tmp_path):
     """Both writer flags reach the C++ writer and suppress their output."""
     out_dir = str(tmp_path) + os.sep

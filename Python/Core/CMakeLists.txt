@@ -5,7 +5,13 @@ file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 set(py_files __init__.py _adapter.py histogram.py)
 
-pybind11_add_module(ActsPythonBindings src/CoreModuleEntry.cpp)
+acts_add_python_module(
+    ActsPythonBindings
+    SOURCES src/CoreModuleEntry.cpp
+    OUTPUT_DIRECTORY ${_python_dir}/acts
+    INSTALL_DIRECTORY ${_acts_python_install_dir}
+    LIBRARY_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
+)
 
 target_sources(
     ActsPythonBindings
@@ -26,41 +32,26 @@ target_sources(
         src/Visualization.cpp
 )
 
-install(TARGETS ActsPythonBindings DESTINATION ${_acts_python_install_dir})
-
-set_target_properties(
-    ActsPythonBindings
-    PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath}"
-)
-set_target_properties(
-    ActsPythonBindings
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
-)
-
 target_link_libraries(
     ActsPythonBindings
     PUBLIC Acts::Core Acts::PythonUtilities
 )
 
-configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
-install(FILES ${_python_dir}/setup.sh DESTINATION python)
-
 foreach(f ${py_files})
-    set(_target ${_python_dir}/acts/${f})
-    get_filename_component(_dir ${_target} DIRECTORY)
-    file(MAKE_DIRECTORY ${_dir})
-
-    file(
-        CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/${f} ${_target}
-        SYMBOLIC
-    )
-
     get_filename_component(_rel ${f} DIRECTORY)
-
-    install(
-        FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-        DESTINATION ${_acts_python_install_dir}/${_rel}
+    acts_python_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
+        ${_python_dir}/acts/${f}
+        ${_acts_python_install_dir}/${_rel}
     )
 endforeach()
 
-acts_pybind_generate_stubs(acts ActsPythonBindings)
+acts_pybind_generate_stubs(
+    acts
+    ActsPythonBindings
+    PACKAGE
+    ENABLED ${ACTS_GENERATE_PYTHON_STUBS}
+    PYTHON_ROOT ${_python_dir}
+    PYTHON_EXECUTABLE ${Python_EXECUTABLE}
+    IGNORE_INVALID_IDENTIFIERS "GeoModelTree::FpvConstLink"
+)

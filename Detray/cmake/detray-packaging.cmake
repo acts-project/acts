@@ -40,3 +40,10 @@ install(
         "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/detray-config-version.cmake"
     DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
 )
+
+install(
+    FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/detray-metadata.cmake"
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/detray-metadata-registry.hpp.in"
+    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+)

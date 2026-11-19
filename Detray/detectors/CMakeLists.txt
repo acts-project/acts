@@ -19,7 +19,7 @@ file(
     "include/detray/detectors/*.hpp"
 )
 
-detray_add_library( detray_detectors detectors ${_detray_detectors_headers})
+detray_add_library( detray_detectors detectors ${_detray_detector_headers})
 target_link_libraries(
     detray_detectors
     INTERFACE vecmem::core detray::core detray::io
@@ -67,7 +67,18 @@ foreach(_configuration IN LISTS DETRAY_GENERATE_METADATA)
         )
         continue()
     endif()
-    detray_add_metadata_header(detray_detectors "${_configuration}")
+    if(_configuration MATCHES "^([a-z][a-z0-9_]*)=(.+)$")
+        detray_add_metadata_header(detray_detectors "${CMAKE_MATCH_2}" ID "${CMAKE_MATCH_1}")
+    else()
+        detray_add_metadata_header(detray_detectors "${_configuration}")
+    endif()
 endforeach()
 
 unset(_detray_shipped_metadata)
+
+# All metadata families, including handwritten and external headers.
+detray_register_metadata(detray_detectors ID telescope
+    HEADER "detray/detectors/telescope_metadata.hpp"
+    TYPE "detray::telescope_metadata<@ALGEBRA@, detray::rectangle2D>"
+)
+detray_generate_metadata_registry(detray_detectors ${DETRAY_METADATA_PROVIDERS})
