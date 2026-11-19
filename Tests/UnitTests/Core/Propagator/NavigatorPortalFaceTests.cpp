@@ -18,18 +18,22 @@
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/VolumePlacementBase.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <vector>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -169,7 +173,7 @@ BOOST_AUTO_TEST_CASE(CylinderStackFaces) {
 
 BOOST_AUTO_TEST_CASE(AlignableVolumeHasNoFaces) {
   auto bounds = std::make_shared<CylinderVolumeBounds>(rMin, rMax, halfZ);
-  auto makeGeometry = [&](std::shared_ptr<TrackingVolume> volume) {
+  auto makeGeometry = [&](const std::shared_ptr<TrackingVolume>& volume) {
     const auto volumeId = GeometryIdentifier().withVolume(1);
     volume->assignGeometryId(volumeId);
     auto surface = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
@@ -193,6 +197,55 @@ BOOST_AUTO_TEST_CASE(AlignableVolumeHasNoFaces) {
   BOOST_REQUIRE(alignable->isAlignable());
   auto alignableGeometry = makeGeometry(alignable);
   BOOST_CHECK(alignable->portalFace(*alignable->portals().begin()) == nullptr);
+}
+
+// The two sector planes of a half cylinder lie in the same plane, on opposite
+// sides of the axis. Each portal gets the face on its own side.
+
+BOOST_AUTO_TEST_CASE(HalfCylinderSectorFaces) {
+  using std::numbers::pi;
+  auto bounds =
+      std::make_shared<CylinderVolumeBounds>(rMin, rMax, halfZ, pi / 2.);
+  auto volume =
+      std::make_shared<TrackingVolume>(Transform3::Identity(), bounds, "half");
+  const auto volumeId = GeometryIdentifier().withVolume(1);
+  volume->assignGeometryId(volumeId);
+
+  // Sector planes three times as long as the volume, as after merging
+  std::vector<const Portal*> sectorPortals;
+  std::size_t boundary = 0;
+  for (const OrientedSurface& face :
+       bounds->orientedSurfaces(Transform3::Identity())) {
+    if (face.surface->type() != Surface::Plane) {
+      continue;
+    }
+    auto surface = Surface::makeShared<PlaneSurface>(
+        face.surface->localToGlobalTransform(gctx),
+        std::make_shared<const RectangleBounds>(0.5 * (rMax - rMin),
+                                                3 * halfZ));
+    surface->assignGeometryId(volumeId.withBoundary(++boundary));
+    auto portal = std::make_shared<Portal>(Direction::OppositeNormal(),
+                                           std::move(surface), *volume);
+    sectorPortals.push_back(portal.get());
+    volume->addPortal(std::move(portal));
+  }
+  BOOST_REQUIRE_EQUAL(sectorPortals.size(), 2u);
+  // The planes coincide
+  BOOST_REQUIRE(sectorPortals[0]->surface().isOnSurface(
+      gctx, sectorPortals[1]->surface().center(gctx),
+      BoundaryTolerance::Infinite()));
+
+  auto geometry = std::make_shared<TrackingGeometry>(
+      volume, nullptr, GeometryIdentifierHook{}, getDummyLogger(), false);
+
+  for (const Portal* portal : sectorPortals) {
+    const Surface* face = volume->portalFace(*portal);
+    BOOST_REQUIRE(face != nullptr);
+    BOOST_CHECK_SMALL(
+        (face->center(gctx) - portal->surface().center(gctx)).norm(), 1e-9);
+  }
+  BOOST_CHECK(volume->portalFace(*sectorPortals[0]) !=
+              volume->portalFace(*sectorPortals[1]));
 }
 
 BOOST_AUTO_TEST_CASE(CuboidStackFaces) {

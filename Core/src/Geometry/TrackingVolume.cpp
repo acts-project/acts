@@ -27,7 +27,6 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -576,37 +575,6 @@ void TrackingVolume::addPortal(std::shared_ptr<Portal> portal) {
   m_portalFaces.clear();
 }
 
-namespace {
-
-/// Check if @p face is the part of the larger @p surface that covers one
-/// face of a volume. Portals cover whole faces, so it is enough to check that
-/// the face lies on the (unbounded) portal surface.
-bool isFaceOf(const GeometryContext& gctx, const RegularSurface& surface,
-              const RegularSurface& face) {
-  if (face.type() != surface.type() || face.bounds() == surface.bounds()) {
-    return false;
-  }
-  const Transform3& faceTransform = face.localToGlobalTransform(gctx);
-  const Transform3& transform = surface.localToGlobalTransform(gctx);
-  // Normal of planes and discs, axis of cylinders
-  const Vector3 axis = transform.linear().col(2);
-  if (std::abs(faceTransform.linear().col(2).dot(axis)) <
-      1. - s_onSurfaceTolerance) {
-    return false;
-  }
-  if (face.type() == Surface::Cylinder &&
-      (faceTransform.translation() - transform.translation())
-              .cross(axis)
-              .norm() > s_onSurfaceTolerance) {
-    return false;
-  }
-  return surface.isOnSurface(gctx, face.localToGlobal(gctx, Vector2::Zero()),
-                             BoundaryTolerance::Infinite(),
-                             s_onSurfaceTolerance);
-}
-
-}  // namespace
-
 const Surface* TrackingVolume::portalFace(const Portal& portal) const {
   for (std::size_t i = 0; i < m_portalFaces.size(); ++i) {
     if (m_portals[i].get() == &portal) {
@@ -637,7 +605,9 @@ void TrackingVolume::findPortalFaces(const GeometryContext& gctx) {
       continue;
     }
     for (const OrientedSurface& face : faces) {
-      if (isFaceOf(gctx, surface, *face.surface)) {
+      // Faces with the bounds of the portal are the portal surface itself
+      if (face.surface->bounds() != surface.bounds() &&
+          surface.contains(gctx, *face.surface)) {
         portalFaces[i] = face.surface;
         clipped = true;
         break;
