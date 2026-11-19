@@ -468,6 +468,30 @@ class Surface : public virtual GeometryObject,
           BoundaryTolerance::Infinite(),
       double tolerance = s_onSurfaceTolerance) const = 0;
 
+  /// Estimate intersections using local geometric curvature.
+  ///
+  /// The default implementation uses the straight-line intersection. Supported
+  /// shapes apply a first-order correction about each ray root, preserving its
+  /// index. This is a prediction, not an exact helix intersection. Unsupported
+  /// or unreliable corrections retain the bounded ray result.
+  /// A finite-bounds rejection applies to this approximate prediction; it does
+  /// not establish that the physical trajectory misses the surface. Callers
+  /// selecting distant navigation candidates must account for prediction error.
+  ///
+  /// @param gctx Geometry context
+  /// @param position Starting global position
+  /// @param direction Unit propagation direction
+  /// @param curvature Global d^2 x / ds^2, unchanged under path reversal
+  /// @param boundaryTolerance Bounds tolerance at the predicted crossing
+  /// @param tolerance On-surface tolerance for arrival
+  /// @return Intersections with the original ray branch indices
+  virtual MultiIntersection3D intersect(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const Vector3& curvature,
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
+      double tolerance = s_onSurfaceTolerance) const;
+
   /// Helper method for printing: the returned object captures the
   /// surface and the geometry context and will print the surface
   /// @param gctx The current geometry context object, e.g. alignment

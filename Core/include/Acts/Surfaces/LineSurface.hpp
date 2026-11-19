@@ -82,6 +82,8 @@ class LineSurface : public Surface {
                        const Transform3& shift);
 
  public:
+  using Surface::intersect;
+
   ~LineSurface() override = default;
 
   /// Assignment operator
