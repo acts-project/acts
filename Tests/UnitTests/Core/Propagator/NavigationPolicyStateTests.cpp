@@ -778,7 +778,10 @@ BOOST_AUTO_TEST_CASE(CurvatureZeroCasesAndFieldErrors) {
   auto field = std::make_shared<FailingCurvatureField>();
   field->fail = false;
   Propagator refreshingPropagator{EigenStepper<>(field)};
-  auto refreshingState = refreshingPropagator.makeState(options);
+  // The loop protection would look up the failing field on its own.
+  auto refreshingOptions = options;
+  refreshingOptions.loopProtection = false;
+  auto refreshingState = refreshingPropagator.makeState(refreshingOptions);
   BOOST_REQUIRE(
       refreshingPropagator.initialize(refreshingState, start(), nullptr).ok());
   field->fail = true;
