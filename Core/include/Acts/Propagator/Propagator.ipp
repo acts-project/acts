@@ -295,6 +295,10 @@ template <typename propagator_state_t>
 Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
                                           const BoundParameters& start,
                                           const Surface* target) const {
+  state.steps = 0;
+  state.pathLength = 0.;
+  state.statistics = {};
+
   m_stepper.initialize(state.stepping, start);
 
   if (auto update = updateNavigationState(state); !update.ok()) {
@@ -339,11 +343,10 @@ auto Propagator<S, N>::makeResult(propagator_state_t& state,
 
   if (createFinalParameters) {
     // Bound parameters on a target the propagation did not reach are wrong
-    if (target != nullptr && state.options.stopAtEndOfWorld &&
-        m_navigator.currentSurface(state.navigation) != target &&
-        m_navigator.endOfWorldReached(state.navigation)) {
-      ACTS_DEBUG("End of the world reached before the target surface.");
-      return PropagatorError::EndOfWorldReached;
+    if (target != nullptr &&
+        m_navigator.currentSurface(state.navigation) != target) {
+      ACTS_DEBUG("Propagation stopped before the target surface.");
+      return PropagatorError::TargetNotReached;
     }
 
     if (target == nullptr) {

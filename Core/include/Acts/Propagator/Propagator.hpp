@@ -222,7 +222,9 @@ class Propagator final
   /// @brief Initialize the propagator state
   ///
   /// This function initializes the propagator state for a new propagation. The
-  /// target surface goes to the navigator, which steers to it.
+  /// target surface goes to the navigator, which steers to it. The step count,
+  /// the path length and the statistics start from zero, so a state can be
+  /// reused. The actor state is left to the caller.
   ///
   /// @tparam propagator_state_t Type of the propagator state object
   ///

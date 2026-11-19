@@ -94,12 +94,48 @@ BOOST_AUTO_TEST_CASE(DefaultActorTargetOutsideWorld) {
 
   auto stopped = makePropagator().propagate(start, *target, options);
   BOOST_REQUIRE(!stopped.ok());
-  BOOST_CHECK(stopped.error() == PropagatorError::EndOfWorldReached);
+  BOOST_CHECK(stopped.error() == PropagatorError::TargetNotReached);
 
   options.stopAtEndOfWorld = false;
   auto reached = makePropagator().propagate(start, *target, options);
   BOOST_REQUIRE(reached.ok());
   CHECK_CLOSE_ABS(reached->pathLength, 10_m, 1_um);
+}
+
+BOOST_AUTO_TEST_CASE(DefaultActorTargetOutsideVolumeConstraint) {
+  TestPropagator::Options<> options(gctx, mctx);
+  options.pathLimit = farPathLimit;
+  options.stopAtEndOfWorld = false;
+
+  const auto startVolume =
+      geometry->resolveLowestTrackingVolume(gctx, start.position(gctx));
+  BOOST_REQUIRE(startVolume.ok());
+  options.constrainToVolumeIds = {
+      static_cast<std::uint32_t>((*startVolume)->geometryId().volume())};
+
+  // The volume constraint stops the propagation before the target
+  const auto target =
+      CurvilinearSurface(10_m * Vector3::UnitX(), Vector3::UnitX())
+          .planeSurface();
+  auto stopped = makePropagator().propagate(start, *target, options);
+  BOOST_REQUIRE(!stopped.ok());
+  BOOST_CHECK(stopped.error() == PropagatorError::TargetNotReached);
+}
+
+BOOST_AUTO_TEST_CASE(DefaultActorReusedState) {
+  TestPropagator::Options<> options(gctx, mctx);
+  options.pathLimit = 10_cm;
+
+  const auto propagator = makePropagator();
+  auto state = propagator.makeState(options);
+  auto first = propagator.propagate(state, start);
+  BOOST_REQUIRE(first.ok());
+  auto second = propagator.propagate(state, start);
+  BOOST_REQUIRE(second.ok());
+
+  // The second run starts its counters from zero
+  CHECK_CLOSE_ABS(second->pathLength, 10_cm, 1_um);
+  BOOST_CHECK_EQUAL(second->steps, first->steps);
 }
 
 BOOST_AUTO_TEST_CASE(DefaultActorVolumeConstraint) {

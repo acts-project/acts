@@ -29,9 +29,8 @@ class PropagatorErrorCategory : public std::error_category {
       case PropagatorError::NextTargetLimitReached:
         return "Propagation reached the configured maximum number of next "
                "target calls";
-      case PropagatorError::EndOfWorldReached:
-        return "Propagation reached the end of the world before the target "
-               "surface";
+      case PropagatorError::TargetNotReached:
+        return "Propagation stopped before it reached the target surface";
       default:
         return "unknown";
     }

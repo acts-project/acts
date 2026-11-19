@@ -41,7 +41,7 @@ The result of a propagation holds the track parameters at the endpoint of the pr
 ## Initialization and running
 
 The {class}`Acts::Propagator` is initialized with the helper class
-{struct}`Acts::PropagatorOptions`, which is templated on the actor. If no actor is given, the propagator uses {struct}`Acts::DefaultActor`. It stops at the target surface, at the path limit (lowered by the loop protection), outside the volumes that the options allow, and at the end of the world. A propagation to a target surface outside the world needs `stopAtEndOfWorld = false`; with the stop on, it fails with `PropagatorError::EndOfWorldReached` instead of returning parameters on a target it did not reach.
+{struct}`Acts::PropagatorOptions`, which is templated on the actor. If no actor is given, the propagator uses {struct}`Acts::DefaultActor`. It stops at the target surface, at the path limit (lowered by the loop protection), outside the volumes that the options allow, and at the end of the world. A propagation to a target surface outside the world needs `stopAtEndOfWorld = false`; with the stop on, it fails with `PropagatorError::TargetNotReached`. Any propagation with a target that stops elsewhere, for example at a volume constraint or at the path limit, fails the same way instead of returning parameters on a target it did not reach.
 
 To run several actors, combine them with the composite actor {struct}`Acts::ActorList`. Add {struct}`Acts::DefaultActor` to keep its abort conditions. Put it first, so the loop protection sees the start momentum before other actors change it:
 
