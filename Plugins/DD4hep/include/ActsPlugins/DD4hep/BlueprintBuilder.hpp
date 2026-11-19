@@ -100,7 +100,8 @@ class DD4hepBackend {
   DetectorElementPtr createDetectorElement(const Element& detElement,
                                            AxisDefinition axes) const;
 
-  /// Convert a set of DD4hep sensitive elements into ACTS surfaces.
+  /// Convert a set of DD4hep sensitive elements into ACTS surfaces. Warns if
+  /// any of them is not a sensitive volume.
   /// @param sensitives Sensitive DD4hep elements belonging to one layer.
   /// @param layerSpec Layer configuration controlling axes and naming.
   /// @return Converted ACTS surfaces for the given sensitives.
