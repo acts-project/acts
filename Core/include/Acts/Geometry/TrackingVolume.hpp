@@ -373,6 +373,9 @@ class TrackingVolume : public Volume {
   MutablePortalRange portals();
 
   /// Add a portal to this tracking volume
+  /// @note This clears the portal faces found when the tracking geometry was
+  ///       built (see @ref portalFace), so portal candidates of this volume
+  ///       are intersected against the full portal surfaces afterwards.
   /// @param portal The portal to add
   void addPortal(std::shared_ptr<Portal> portal);
 
