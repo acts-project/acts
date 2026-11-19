@@ -21,16 +21,16 @@ namespace detray::algebra::array {
 /// @name Operators on 2-element arrays
 /// @{
 
-template <concepts::scalar scalar_t>
-DETRAY_HOST_DEVICE constexpr std::array<scalar_t, 2> operator*(
-    const std::array<scalar_t, 2> &a, scalar_t s) {
-  return {a[0] * s, a[1] * s};
+template <concepts::scalar scalar1_t, concepts::scalar scalar2_t>
+DETRAY_HOST_DEVICE constexpr std::array<scalar1_t, 2> operator*(
+    const std::array<scalar1_t, 2> &a, scalar2_t s) {
+  return {a[0] * static_cast<scalar1_t>(s), a[1] * static_cast<scalar1_t>(s)};
 }
 
-template <concepts::scalar scalar_t>
-DETRAY_HOST_DEVICE constexpr std::array<scalar_t, 2> operator*(
-    scalar_t s, const std::array<scalar_t, 2> &a) {
-  return {s * a[0], s * a[1]};
+template <concepts::scalar scalar1_t, concepts::scalar scalar2_t>
+DETRAY_HOST_DEVICE constexpr std::array<scalar1_t, 2> operator*(
+    scalar2_t s, const std::array<scalar1_t, 2> &a) {
+  return {static_cast<scalar1_t>(s) * a[0], static_cast<scalar1_t>(s) * a[1]};
 }
 
 template <concepts::scalar scalar_t>
@@ -50,16 +50,18 @@ DETRAY_HOST_DEVICE constexpr std::array<scalar_t, 2> operator+(
 /// @name Operators on 3-element arrays
 /// @{
 
-template <concepts::scalar scalar_t>
-DETRAY_HOST_DEVICE constexpr std::array<scalar_t, 3> operator*(
-    const std::array<scalar_t, 3> &a, scalar_t s) {
-  return {a[0] * s, a[1] * s, a[2] * s};
+template <concepts::scalar scalar1_t, concepts::scalar scalar2_t>
+DETRAY_HOST_DEVICE constexpr std::array<scalar1_t, 3> operator*(
+    const std::array<scalar1_t, 3> &a, scalar2_t s) {
+  return {a[0] * static_cast<scalar1_t>(s), a[1] * static_cast<scalar1_t>(s),
+          a[2] * static_cast<scalar1_t>(s)};
 }
 
-template <concepts::scalar scalar_t>
-DETRAY_HOST_DEVICE constexpr std::array<scalar_t, 3> operator*(
-    scalar_t s, const std::array<scalar_t, 3> &a) {
-  return {s * a[0], s * a[1], s * a[2]};
+template <concepts::scalar scalar1_t, concepts::scalar scalar2_t>
+DETRAY_HOST_DEVICE constexpr std::array<scalar1_t, 3> operator*(
+    scalar2_t s, const std::array<scalar1_t, 3> &a) {
+  return {static_cast<scalar1_t>(s) * a[0], static_cast<scalar1_t>(s) * a[1],
+          static_cast<scalar1_t>(s) * a[2]};
 }
 
 template <concepts::scalar scalar_t>
@@ -79,30 +81,30 @@ DETRAY_HOST_DEVICE constexpr std::array<scalar_t, 3> operator+(
 /// @name Operators on matrix
 /// @{
 
-template <typename index_t, concepts::scalar scalar_t, index_t ROWS,
-          index_t COLS>
-DETRAY_HOST_DEVICE constexpr std::array<std::array<scalar_t, ROWS>, COLS>
-operator*(const std::array<std::array<scalar_t, ROWS>, COLS> &a, scalar_t s) {
-  std::array<std::array<scalar_t, ROWS>, COLS> ret{};
+template <typename index_t, concepts::scalar scalar1_t,
+          concepts::scalar scalar2_t, index_t ROWS, index_t COLS>
+DETRAY_HOST_DEVICE constexpr std::array<std::array<scalar1_t, ROWS>, COLS>
+operator*(const std::array<std::array<scalar1_t, ROWS>, COLS> &a, scalar2_t s) {
+  std::array<std::array<scalar1_t, ROWS>, COLS> ret{};
 
   for (index_t j = 0; j < COLS; ++j) {
     for (index_t i = 0; i < ROWS; ++i) {
-      ret[j][i] = a[j][i] * s;
+      ret[j][i] = a[j][i] * static_cast<scalar1_t>(s);
     }
   }
 
   return ret;
 }
 
-template <typename index_t, concepts::scalar scalar_t, index_t ROWS,
-          index_t COLS>
-DETRAY_HOST_DEVICE constexpr std::array<std::array<scalar_t, ROWS>, COLS>
-operator*(scalar_t s, const std::array<std::array<scalar_t, ROWS>, COLS> &a) {
-  std::array<std::array<scalar_t, ROWS>, COLS> ret{};
+template <typename index_t, concepts::scalar scalar1_t,
+          concepts::scalar scalar2_t, index_t ROWS, index_t COLS>
+DETRAY_HOST_DEVICE constexpr std::array<std::array<scalar1_t, ROWS>, COLS>
+operator*(scalar2_t s, const std::array<std::array<scalar1_t, ROWS>, COLS> &a) {
+  std::array<std::array<scalar1_t, ROWS>, COLS> ret{};
 
   for (index_t j = 0; j < COLS; ++j) {
     for (index_t i = 0; i < ROWS; ++i) {
-      ret[j][i] = a[j][i] * s;
+      ret[j][i] = a[j][i] * static_cast<scalar1_t>(s);
     }
   }
 
