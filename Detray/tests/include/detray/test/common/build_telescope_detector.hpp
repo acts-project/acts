@@ -90,8 +90,7 @@ struct tel_det_config {
   /// Safety envelope between the test surfaces and the portals
   scalar_t m_envelope{0.1f * unit<scalar_t>::mm};
   /// Volume builder configuration
-  volume_builder_options m_builder_opts{.m_deduplicate = false,
-                                        .m_sort = false};
+  volume_builder_options m_builder_opts{.m_deduplicate = true, .m_sort = false};
   /// Run detector consistency check after reading
   bool m_do_check{true};
 

@@ -39,7 +39,13 @@ elseif(alpaka_ACC_GPU_HIP_ENABLE)
     )
 elseif(alpaka_ACC_SYCL_ENABLE)
     include(traccc-compiler-options-sycl)
-    list(APPEND PRIVATE_LIBRARIES vecmem::sycl traccc::sycl_utils covfie::sycl)
+    list(
+        APPEND PRIVATE_LIBRARIES
+        vecmem::sycl
+        traccc::sycl_utils
+        covfie::sycl
+        oneDPL
+    )
 endif()
 
 traccc_add_alpaka_library( traccc_alpaka alpaka TYPE SHARED

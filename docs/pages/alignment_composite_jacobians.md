@@ -30,12 +30,12 @@ of a structure are the sum of this product over all its sensors on the track.
 
 ## ACTS alignment parameter convention
 
-In short, **current ACTS surface alignment parameters are mixed**: global-frame
-translations of the center, and local-frame rotations about the center.
+ACTS surface alignment parameters are local-frame parameters: translations
+along the surface's own local axes, and rotations about those axes.
 
-ACTS is expected to move to fully local-frame parameters. The implementation is
-structured so that only one function changes when that happens (see
-@ref alignment_composite_convention_adapter).
+The adapter from these parameters to the local-frame parameters used below is
+the identity. It is kept in one function so that a change of convention stays
+local to it (see @ref alignment_composite_convention_adapter).
 
 ## Derivation
 
@@ -105,51 +105,33 @@ component axes and @f$\mathbf{b}@f$ the composite axes. The two agree:
   = (\mathbf{d} \times \hat{a}_i)\cdot\hat{b}_j@f$, the CMS expression with
   @f$\mathbf{T} = \mathbf{d}@f$, including the sign.
 
-This form is only correct when **both** levels use local-frame parameters. It
-does not apply directly to current ACTS surface parameters, whose translations
-are global. Porting CMS or Belle II code without accounting for this gives a
-wrong top-left block. On a pure translation test with @f$R_c \approx 1@f$ that
-mistake can look correct.
+Both levels use local-frame parameters, which is also the ACTS surface
+convention, so this matrix applies directly to ACTS alignment derivatives.
 
 @anchor alignment_composite_convention_adapter
 ### Convention adapter
 
-The ACTS parameters of a surface relate to its local-frame parameters by
-@f$\delta\mathbf{c} = R_s\,\delta\mathbf{t}@f$, with the rotations unchanged:
+ACTS alignment parameters are the local-frame parameters
+@f$(\delta\mathbf{t}, \delta\boldsymbol{\omega})@f$. They match the parameters
+of the composite Jacobian, so
 
 @f[
 \frac{\partial\,\mathbf{a}_\mathrm{ACTS}}{\partial(\delta\mathbf{t}, \delta\boldsymbol{\omega})}
-= \begin{pmatrix} R_s & 0 \\ 0 & 1 \end{pmatrix}.
+= I.
 @f]
 
-The Jacobian used on the derivatives ACTS provides is therefore
-
-@f[
-\frac{\partial\,\mathbf{a}_\mathrm{ACTS}}{\partial(\delta\mathbf{T}, \delta\mathbf{W})}
-= \begin{pmatrix} R_s & 0 \\ 0 & 1 \end{pmatrix}
-  \begin{pmatrix} R_\mathrm{rel}^T & -R_s^T [\mathbf{d}]_\times R_c \\ 0 & R_\mathrm{rel}^T \end{pmatrix}
-= \begin{pmatrix} R_c & -[\mathbf{d}]_\times R_c \\ 0 & R_s^T R_c \end{pmatrix}.
-@f]
-
-The adapter is only needed when chaining to structure parameters:
+The derivative with respect to the composite parameters is therefore
 
 @f[
 \frac{\partial r}{\partial(\delta\mathbf{T}, \delta\mathbf{W})}
 = \frac{\partial r}{\partial \mathbf{a}_\mathrm{ACTS}}
-  \begin{pmatrix} R_s & 0 \\ 0 & 1 \end{pmatrix}
   \frac{\partial(\delta\mathbf{t}, \delta\boldsymbol{\omega})_s}
        {\partial(\delta\mathbf{T}, \delta\mathbf{W})_c}.
 @f]
 
-An alignment of single surfaces uses the derivatives
-@f$\partial r/\partial \mathbf{a}_\mathrm{ACTS}@f$ as they are: the solver then
-returns ACTS parameters, which is the convention corrections are applied in, and
-no adapter enters. Applying the adapter to the surface derivatives alone (the
-surface as its own structure) would instead give parameters in the surface's
-local frame.
-
-When ACTS moves to local-frame parameters, the adapter becomes the identity and
-the composite Jacobian is used unchanged.
+`localFrameToAlignmentParametersJacobian` returns that identity. It is the
+single place that records the convention. While the center parameters were a
+shift in global coordinates, it returned @f$\mathrm{diag}(R_s, 1)@f$.
 
 ## Implementation
 
@@ -163,15 +145,17 @@ namespace Acts::detail {
 AlignmentMatrix compositeToComponentJacobian(
     const Transform3& compositeTransform, const Transform3& componentTransform);
 
-/// d(ACTS alignment parameters) / d(local-frame parameters) = diag(R, 1)
+/// d(ACTS alignment parameters) / d(local-frame parameters) = Identity
 AlignmentMatrix localFrameToAlignmentParametersJacobian(
     const Transform3& surfaceTransform);
 
 }  // namespace Acts::detail
 ```
 
-Both take local-to-global transforms. `localFrameToAlignmentParametersJacobian`
-is the only place that encodes the ACTS convention.
+`compositeToComponentJacobian` takes the local-to-global transforms.
+`localFrameToAlignmentParametersJacobian` still takes the surface transform so
+a later convention change can use it; the argument is unused while the
+conventions agree. It is the only place that encodes the ACTS convention.
 
 ## Limitations and open items
 

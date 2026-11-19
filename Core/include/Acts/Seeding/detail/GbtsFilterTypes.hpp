@@ -12,7 +12,6 @@
 
 #include <array>
 #include <cstdint>
-#include <vector>
 
 namespace Acts::Experimental::detail {
 
@@ -32,8 +31,6 @@ struct GbtsEdgeState final {
 
   /// Score for comparison
   float j{};
-
-  std::vector<const GbtsEdge*> vs;
 
   std::array<float, 3> x{};
   std::array<float, 2> y{};

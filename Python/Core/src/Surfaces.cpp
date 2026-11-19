@@ -333,6 +333,8 @@ void addSurfaces(py::module_& m) {
              "Raises RuntimeError if the surface is alignable as the "
              "sensitivity is redirected to the placement object.")
         .def_property_readonly("isAlignable", &Surface::isAlignable)
+        .def("surfacePlacement", &Surface::surfacePlacement,
+             py::return_value_policy::reference)
         .def("visualize", &Surface::visualize)
         .def_property_readonly("surfaceMaterial",
                                &Surface::surfaceMaterialSharedPtr)

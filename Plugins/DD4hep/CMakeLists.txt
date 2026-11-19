@@ -101,3 +101,5 @@ if(ACTS_BUILD_PLUGIN_GEANT4 AND TARGET DD4hep::DDG4)
 else()
     message(STATUS "Skip DDG4 actions in 'PluginDD4hepGeant4'")
 endif()
+
+add_component_dependencies(PluginDD4hep DD4hep)

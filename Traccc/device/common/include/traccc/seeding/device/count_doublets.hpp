@@ -26,6 +26,8 @@ namespace traccc::device {
 /// The count is necessary for allocating the appropriate amount of memory
 /// for storing the information of the candidates in a next step.
 ///
+/// @tparam use_dphi_cut Whether to apply the doublet azimuthal separation cut
+///
 /// @param[in] globalIndex   The index of the current thread
 /// @param[in] config        Seedfinder configuration
 /// @param[in] spacepoints   All the spacepoints of the event
@@ -36,8 +38,8 @@ namespace traccc::device {
 /// @param[out] nMidBot      Total number of middle-bottom doublets
 /// @param[out] nMidTop      Total number of middle-top doublets
 ///
-TRACCC_HOST_DEVICE
-inline void count_doublets(
+template <bool use_dphi_cut>
+TRACCC_HOST_DEVICE inline void count_doublets(
     global_index_t globalIndex, const seedfinder_config& config,
     const edm::spacepoint_collection::const_view& spacepoints,
     const traccc::details::spacepoint_grid_types::const_view& sp_view,

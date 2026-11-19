@@ -8,8 +8,9 @@
 
 #include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
 
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
-#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Propagator/detail/DirectionToSurface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
@@ -18,32 +19,17 @@
 Acts::Result<Acts::LinearizedTrack>
 Acts::NumericalTrackLinearizer::linearizeTrack(
     const BoundTrackParameters& params, double linPointTime,
-    const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
-    const Acts::MagneticFieldContext& mctx,
-    MagneticFieldProvider::Cache& /*fieldCache*/) const {
+    const Surface& perigeeSurface, const GeometryContext& gctx,
+    MagneticFieldQuery& fieldQuery) const {
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, fieldQuery.context());
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
   pOptions.surfaceTolerance = m_cfg.targetTolerance;
 
-  // Get intersection of the track with the Perigee if the particle would
-  // move on a straight line.
-  // This allows us to determine whether we need to propagate the track
-  // forward or backward to arrive at the PCA.
-  Intersection3D intersection =
-      perigeeSurface
-          .intersect(gctx, params.position(gctx), params.direction(),
-                     BoundaryTolerance::Infinite())
-          .closest();
-
-  // Setting the propagation direction using the intersection length from
-  // above.
-  // We handle zero path length as forward propagation, but we could actually
-  // skip the whole propagation in this case.
-  pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.pathLength());
+  pOptions.direction = detail::directionToSurface(
+      gctx, perigeeSurface, params.position(gctx), params.direction());
 
   // Propagate to the PCA of the reference point
   auto result =
@@ -127,12 +113,8 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
             paramVecCopy(eLinQOverP), std::nullopt, ParticleHypothesis::pion());
 
     // Obtain propagation direction
-    intersection = perigeeSurface
-                       .intersect(gctx, paramVecCopy.template head<3>(),
-                                  wiggledDir, BoundaryTolerance::Infinite())
-                       .closest();
-    pOptions.direction =
-        Direction::fromScalarZeroAsPositive(intersection.pathLength());
+    pOptions.direction = detail::directionToSurface(
+        gctx, perigeeSurface, paramVecCopy.template head<3>(), wiggledDir);
 
     // Propagate to the new PCA and extract Perigee parameters
     auto newResult = m_cfg.propagator->propagateToSurface(

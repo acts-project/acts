@@ -178,6 +178,10 @@ struct CombinatorialKalmanFilterResult {
   /// recorded track state to keep the jacobian chain intact
   BoundMatrix accumulatedJacobian = BoundMatrix::Identity();
 
+  /// Path length of the branch tip at the last restart of the stepper. The
+  /// stepper counts its path length from zero after a restart.
+  double pathLengthOffset = 0;
+
   /// Indicator if track finding has been done
   bool finished = false;
 
@@ -256,7 +260,7 @@ class CombinatorialKalmanFilter {
     using BranchStopperResult = CombinatorialKalmanFilterBranchStopperResult;
 
     /// The target surface aborter
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+    SurfaceReached targetReached;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -494,6 +498,9 @@ class CombinatorialKalmanFilter {
       ACTS_VERBOSE("Propagation jumps to branch with tip = "
                    << currentBranch.tipIndex());
 
+      // The stepper restarts its path length at zero
+      result.pathLengthOffset = currentState.pathLength();
+
       // Reset the stepping state
       if constexpr (!IsMultiStepper) {
         stepper.initialize(state.stepping, currentState.filtered(),
@@ -512,14 +519,13 @@ class CombinatorialKalmanFilter {
       // `initialize` re-roots the jacobian chain at this branch
       result.accumulatedJacobian = BoundMatrix::Identity();
 
-      // Reset the navigation state
-      // Set targetSurface to nullptr for forward filtering
+      // Reset the navigation state, keeping the target surface
       auto navInitRes = navigator.initialize(
           state.navigation, {.position = stepper.position(state.stepping),
                              .direction = stepper.direction(state.stepping),
                              .propagationDirection = state.options.direction,
                              .startSurface = &currentState.referenceSurface(),
-                             .targetSurface = nullptr});
+                             .targetSurface = targetReached.surface});
       if (!navInitRes.ok()) {
         ACTS_DEBUG("Navigation initialization failed: " << navInitRes.error());
         return navInitRes.error();
@@ -540,9 +546,6 @@ class CombinatorialKalmanFilter {
       // Set path limit based on loop protection
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
                                   logger());
-
-      // Set path limit based on target surface
-      targetReached.checkAbort(state, stepper, navigator, logger());
 
       return Result<void>::success();
     }
@@ -645,7 +648,8 @@ class CombinatorialKalmanFilter {
             return res.error();
           }
           return Result<SingleBoundState>::success(
-              {std::move(*res), jacobian, stepper.pathLength(state.stepping)});
+              {std::move(*res), jacobian,
+               result.pathLengthOffset + stepper.pathLength(state.stepping)});
         } else {
           // This triggers a second covariance transport which is wasteful in
           // terms of compute. But the multi stepper might filter bound
@@ -664,7 +668,8 @@ class CombinatorialKalmanFilter {
           }
           const auto singleParams = res->merge(brem.mergeMethod);
           return Result<SingleBoundState>::success(
-              {singleParams, jacobian, stepper.pathLength(state.stepping)});
+              {singleParams, jacobian,
+               result.pathLengthOffset + stepper.pathLength(state.stepping)});
         }
       }();
       if (!boundStateRes.ok()) {
@@ -1303,7 +1308,7 @@ class CombinatorialKalmanFilter {
       const auto initResult =
           m_propagator.template initialize<decltype(propState), NoTargetAborter,
                                            StubPathLimitReached>(
-              propState, initialParameters, nullptr);
+              propState, initialParameters, tfOptions.targetSurface);
       if (!initResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
         return initResult.error();
@@ -1317,7 +1322,7 @@ class CombinatorialKalmanFilter {
       const auto initResult =
           m_propagator.template initialize<decltype(propState), NoTargetAborter,
                                            StubPathLimitReached>(
-              propState, multiBoundInitialParameters, nullptr);
+              propState, multiBoundInitialParameters, tfOptions.targetSurface);
       if (!initResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
         return initResult.error();

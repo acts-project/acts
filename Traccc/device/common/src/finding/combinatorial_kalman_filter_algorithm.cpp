@@ -733,8 +733,10 @@ auto combinatorial_kalman_filter_algorithm::operator()(
     await(*ev);
     // The following is only necessary if filtering was not turned on. Since
     // with filtering on, the buffer is resizable, so the host vector would
-    // already have the correct size.
-    if (cfg.max_num_tracks_per_measurement == 0) {
+    // already have the correct size. Filtering is skipped when there are no
+    // tips though, in which case the original fixed-size buffer is still in
+    // use and its (uninitialised) contents must not be used as track sizes.
+    if (cfg.max_num_tracks_per_measurement == 0 || n_tips_total == 0) {
       tips_length_host.resize(n_tips_total);
     }
 

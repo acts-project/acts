@@ -23,13 +23,6 @@ file(
 )
 
 # Allow access to the python detectors package from the main __init__.py
-file(
-    CREATE_LINK
-        ${CMAKE_CURRENT_SOURCE_DIR}/detray/detectors
-        ${_python_dir}/detray/detectors
-    SYMBOLIC
-)
-
 install(
     FILES ${CMAKE_CURRENT_SOURCE_DIR}/detray/__init__.py
     DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}

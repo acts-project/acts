@@ -122,12 +122,10 @@ AlignmentMatrix detail::compositeToComponentJacobian(
 }
 
 AlignmentMatrix detail::localFrameToAlignmentParametersJacobian(
-    const Transform3& surfaceTransform) {
-  AlignmentMatrix jacobian = AlignmentMatrix::Identity();
-  // The ACTS center parameters are global, local ones along the local axes
-  jacobian.block<3, 3>(eAlignmentCenter0, eAlignmentCenter0) =
-      surfaceTransform.rotation();
-  return jacobian;
+    const Transform3& /*surfaceTransform*/) {
+  // ACTS translations are along the local axes, same as the local-frame
+  // parameters, so the adapter is the identity.
+  return AlignmentMatrix::Identity();
 }
 
 }  // namespace Acts

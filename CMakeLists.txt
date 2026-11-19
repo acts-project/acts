@@ -57,6 +57,7 @@ endif()
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
+option(ACTS_FAIL_ON_WARNINGS "Treat compiler warnings in Acts' own code as errors" OFF)
 # code generation related options
 set(ACTS_CODEGEN_PREBUILT_DIR "" CACHE PATH "Directory holding pre-generated code; a generated file found there is used verbatim instead of being regenerated. Defaults to prebuilt-codegen/ next to this file when it exists, which is what release source archives ship")
 option(ACTS_CODEGEN_REQUIRE_PREBUILT "Fail the configure step instead of running the code generators when pre-generated code is missing" OFF)
@@ -76,6 +77,7 @@ option(ACTS_SETUP_DETRAY "If we want to set up detray" OFF)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_VECMEM "If we want to set up vecmem" OFF)
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_ALPAKA "Use a system-provided Alpaka installation for traccc" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGraph" ${ACTS_USE_SYSTEM_LIBS})
@@ -149,6 +151,18 @@ else()
 endif()
 option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build Examples unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
+# traccc options, only relevant if ACTS_BUILD_TRACCC is ON
+option(ACTS_TRACCC_BUILD_CUDA "Build the traccc CUDA libraries" ${ACTS_ENABLE_CUDA})
+option(ACTS_TRACCC_BUILD_HIP "Build the traccc HIP libraries" OFF)
+option(ACTS_TRACCC_BUILD_SYCL "Build the traccc SYCL libraries" OFF)
+option(ACTS_TRACCC_BUILD_ALPAKA "Build the traccc Alpaka library" OFF)
+option(ACTS_TRACCC_BUILD_IO "Build the traccc IO library" ON)
+option(ACTS_TRACCC_BUILD_PERFORMANCE "Build the traccc performance library" OFF)
+option(ACTS_TRACCC_BUILD_TESTS "Build the traccc unit tests" ${ACTS_BUILD_UNITTESTS})
+option(ACTS_TRACCC_BUILD_EXAMPLES "Build the traccc examples" ${ACTS_BUILD_EXAMPLES})
+option(ACTS_TRACCC_ENABLE_NVTX_PROFILING "Instrument the traccc device code for NVTX profiling" OFF)
+set(ACTS_TRACCC_SUPPORTED_DETECTORS "default_detector;odd_detector;telescope_detector" CACHE STRING "Semicolon-separated list of detector types that traccc supports")
+set(ACTS_TRACCC_DEVICE_LOG_LEVEL "NONE" CACHE STRING "Log level for traccc and detray device code")
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
 option(ACTS_SETUP_BOOST "Explicitly set up Boost for the project" ON)
@@ -248,6 +262,21 @@ set_option_if(
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 set_option_if(ACTS_BUILD_TRACCC ACTS_BUILD_PLUGIN_TRACCC)
+set(_acts_traccc_build_cuda_utils "${ACTS_TRACCC_BUILD_CUDA}")
+set(_acts_traccc_build_hip_utils "${ACTS_TRACCC_BUILD_HIP}")
+set(_acts_traccc_build_sycl_utils "${ACTS_TRACCC_BUILD_SYCL}")
+if(ACTS_BUILD_TRACCC AND ACTS_TRACCC_BUILD_ALPAKA)
+    set_option_if(_acts_traccc_build_cuda_utils alpaka_ACC_GPU_CUDA_ENABLE)
+    set_option_if(_acts_traccc_build_hip_utils alpaka_ACC_GPU_HIP_ENABLE)
+    set_option_if(_acts_traccc_build_sycl_utils alpaka_ACC_SYCL_ENABLE)
+endif()
+set_option_if(
+    ACTS_TRACCC_BUILD_PERFORMANCE
+    ACTS_TRACCC_BUILD_TESTS
+    OR
+    ACTS_TRACCC_BUILD_EXAMPLES
+)
+set_option_if(ACTS_TRACCC_BUILD_IO ACTS_TRACCC_BUILD_PERFORMANCE)
 # Required for traccc
 set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_COVFIE ACTS_SETUP_DETRAY)
@@ -297,6 +326,7 @@ elseif(PROJECT_IS_TOP_LEVEL)
 endif()
 
 include(ActsCompilerOptions) # default compile options
+include(ActsWarningFlags) # warning flags, applied per-directory to our own code
 include(ActsComponentsHelpers) # handle components via add_..._if commands
 include(ActsStaticAnalysis)
 
@@ -338,7 +368,7 @@ set(_acts_gbl_version 04.00.05)
 set(_acts_mille_version 01.01.02)
 set(_acts_mp2_version 05.01.06)
 set(_acts_onnxruntime_version 1.12.0)
-set(_acts_geomodel_version 6.8.0)
+set(_acts_geomodel_version 6.16.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
@@ -690,18 +720,13 @@ if(ACTS_SETUP_DETRAY)
     set_option_if(DETRAY_BUILD_TEST_UTILS ACTS_BUILD_EXAMPLES_UNITTESTS)
 
     if(ACTS_BUILD_TRACCC)
+        set(DETRAY_SET_LOGGING "${ACTS_TRACCC_DEVICE_LOG_LEVEL}")
         # Some detray validation tools are used in optional traccc libraries
         set_option_if(
             DETRAY_BUILD_VALIDATION_TOOLS
-            TRACCC_BUILD_PERFORMANCE
+            ACTS_TRACCC_BUILD_PERFORMANCE
             OR
-            TRACCC_BUILD_TESTING
-        )
-
-        set(DETRAY_GENERATE_METADATA
-            "itk_metadata"
-            CACHE STRING
-            "Semicolon-separated list of metadata generator scripts to run in this build"
+            ACTS_TRACCC_BUILD_TESTS
         )
     endif()
 
@@ -709,24 +734,6 @@ if(ACTS_SETUP_DETRAY)
 endif()
 
 if(ACTS_BUILD_TRACCC)
-    # HACK: Temporary logic (aka technical debt) to make the traccc
-    # component work. Remove this ASAP.
-    option(TRACCC_USE_ROOT "" FALSE)
-    option(TRACCC_SETUP_ACTS "" FALSE)
-    option(TRACCC_SETUP_VECMEM "" FALSE)
-    option(TRACCC_SETUP_EIGEN3 "" FALSE)
-    option(TRACCC_SETUP_THRUST "" TRUE)
-    option(TRACCC_SETUP_COVFIE "" FALSE)
-    option(TRACCC_SETUP_DETRAY "" FALSE)
-    option(TRACCC_BUILD_CUDA "" ${ACTS_ENABLE_CUDA})
-    option(TRACCC_SETUP_TBB "" FALSE)
-    option(TRACCC_BUILD_IO "" TRUE)
-    option(TRACCC_BUILD_PERFORMANCE "" FALSE)
-    option(TRACCC_BUILD_SIMULATION "" FALSE)
-    option(TRACCC_BUILD_TESTING "" FALSE)
-    option(TRACCC_BUILD_EXAMPLES "" FALSE)
-    option(TRACCC_BUILD_BENCHMARKS "" FALSE)
-
     add_subdirectory(Traccc)
 endif()
 
@@ -830,3 +837,5 @@ add_subdirectory(docs)
 # create cmake configuration files and environment setup script
 include(ActsCreatePackageConfig)
 include(ActsCreateSetup)
+
+acts_print_auto_enabled_options()
