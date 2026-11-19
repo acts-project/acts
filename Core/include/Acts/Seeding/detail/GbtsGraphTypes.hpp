@@ -74,8 +74,12 @@ struct GbtsEtaBinInfo final {
   /// by +-2pi at the wrap-around so the phi sliding window never has to wrap.
   std::vector<std::pair<float, SpacePointIndex>> phiNodes;
 
-  float minRadius{};
-  float maxRadius{};
+  /// Radial and z extent of the bin's nodes, empty until a node widens it.
+  /// Only the storage's finalize widens them; an empty bin's are never read.
+  float minRadius{std::numeric_limits<float>::max()};
+  float maxRadius{std::numeric_limits<float>::lowest()};
+  float minZ{std::numeric_limits<float>::max()};
+  float maxZ{std::numeric_limits<float>::lowest()};
   /// Inside-out pixel barrel ordinal of the bin's layer, -1 for the rest.
   std::int32_t barrelOrder{-1};
 
