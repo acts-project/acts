@@ -30,12 +30,14 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/LineSurfaceStub.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
 #include <cmath>
 #include <memory>
@@ -211,7 +213,12 @@ BOOST_AUTO_TEST_CASE(LineSurface_assignment_test) {
 /// Unit test for testing LineSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   Translation3 translation{0., 1., 2.};
-  Transform3 transform(translation);
+  // Rotate by 90 degrees about global z. The line axis stays global z, so the
+  // track below is still at the point of closest approach. The center columns
+  // are then the local-frame components, not the global center derivative.
+  const AngleAxis3 rotationAngle(std::numbers::pi / 2., Vector3::UnitZ());
+  Transform3 transform =
+      makeTransform3(rotationAngle.toRotationMatrix(), translation.vector());
   LineSurfaceStub line(transform, 2., 20.);
 
   const auto& rotation = transform.rotation();
@@ -231,17 +238,24 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   const double value = std::numbers::sqrt3 / 2;
-  expAlignToPath << -value, value, 0, -3 * value, -value, 0;
+  expAlignToPath << value, value, 0, -value, 3 * value, 0;
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
 
+  checkSurfaceDerivatives(tgContext, line, transform, globalPosition, direction,
+                          [](const Transform3& tf) {
+                            return std::make_shared<LineSurfaceStub>(tf, 2.,
+                                                                     20.);
+                          });
+
   // (b) Test the derivative of bound track parameters local position w.r.t.
   // position in local 3D Cartesian coordinates
-  const auto& loc3DToLocBound =
-      line.localCartesianToBoundLocalDerivative(tgContext, globalPosition);
-  // Check if the result is as expected
+  const auto& loc3DToLocBound = line.localCartesianToBoundLocalDerivative(
+      tgContext, globalPosition, direction);
+  // The rows are the measurement-frame x/y axes in local coordinates. Here the
+  // x axis points opposite to the local radial direction of the hit.
   Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
-  expLoc3DToLocBound << 1 / std::numbers::sqrt2, 1 / std::numbers::sqrt2, 0, 0,
+  expLoc3DToLocBound << -1 / std::numbers::sqrt2, 1 / std::numbers::sqrt2, 0, 0,
       0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }

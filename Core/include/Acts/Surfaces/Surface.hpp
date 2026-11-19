@@ -468,6 +468,30 @@ class Surface : public virtual GeometryObject,
           BoundaryTolerance::Infinite(),
       double tolerance = s_onSurfaceTolerance) const = 0;
 
+  /// Estimate intersections using local geometric curvature.
+  ///
+  /// The default implementation uses the straight-line intersection. Supported
+  /// shapes apply a first-order correction about each ray root, preserving its
+  /// index. This is a prediction, not an exact helix intersection. Unsupported
+  /// or unreliable corrections retain the bounded ray result.
+  /// A finite-bounds rejection applies to this approximate prediction; it does
+  /// not establish that the physical trajectory misses the surface. Callers
+  /// selecting distant navigation candidates must account for prediction error.
+  ///
+  /// @param gctx Geometry context
+  /// @param position Starting global position
+  /// @param direction Unit propagation direction
+  /// @param curvature Global d^2 x / ds^2, unchanged under path reversal
+  /// @param boundaryTolerance Bounds tolerance at the predicted crossing
+  /// @param tolerance On-surface tolerance for arrival
+  /// @return Intersections with the original ray branch indices
+  virtual MultiIntersection3D intersect(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const Vector3& curvature,
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
+      double tolerance = s_onSurfaceTolerance) const;
+
   /// Helper method for printing: the returned object captures the
   /// surface and the geometry context and will print the surface
   /// @param gctx The current geometry context object, e.g. alignment
@@ -512,12 +536,11 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, unsigned int quarterSegments = 2u) const = 0;
 
   /// The derivative of bound track parameters w.r.t. alignment
-  /// parameters of its reference surface (i.e. local frame origin in
-  /// global 3D Cartesian coordinates and its rotation represented with
-  /// extrinsic Euler angles)
+  /// parameters of its reference surface (i.e. translations along the local
+  /// x/y/z axes and rotations represented with extrinsic Euler angles around
+  /// the local x/y/z axes)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// change of alignment parameters
   /// @param position global 3D position
   /// @param direction global 3D momentum direction
   /// @param pathDerivative is the derivative of free parameters w.r.t. path
@@ -531,8 +554,8 @@ class Surface : public virtual GeometryObject,
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
-  /// local frame origin in global 3D Cartesian coordinates and its rotation
-  /// represented with extrinsic Euler angles)
+  /// translations along the local x/y/z axes and rotations represented with
+  /// extrinsic Euler angles around the local x/y/z axes)
   ///
   /// @note Re-implementation is needed for surface whose intersection with
   /// track is not its local xy plane, e.g. LineSurface, CylinderSurface and
@@ -552,11 +575,14 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position of the parameters in global
+  /// @param direction The track direction, used by surfaces whose measurement
+  /// frame depends on it
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
   virtual Matrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3& position) const = 0;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const = 0;
 
   /// Visualize the surface for debugging and inspection
   /// @param helper Visualization helper for 3D rendering
@@ -579,6 +605,26 @@ class Surface : public virtual GeometryObject,
   /// @return The corresponding local coordinates for material lookup
   virtual Vector2 transformSurfaceLocalToMaterialLocal(
       const Vector2& surfaceLocal) const;
+
+  /// Calculate the derivative of bound track parameters w.r.t.
+  /// alignment parameters of its reference surface (i.e. translations along
+  /// the local x/y/z axes and rotations represented with extrinsic Euler
+  /// angles around the local x/y/z axes) without any path correction
+  ///
+  /// @note Used together with the alignment to path derivative to get the
+  /// full alignment to bound derivatives. The default implementation
+  /// multiplies @c localCartesianToBoundLocalDerivative by the derivative of
+  /// the local 3D Cartesian position w.r.t. the alignment parameters.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
+  ///
+  /// @return Derivative of bound track parameters w.r.t. local frame alignment
+  /// parameters without path correction
+  virtual AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const;
 
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
@@ -603,24 +649,6 @@ class Surface : public virtual GeometryObject,
 
   /// Thickness of the surface in the normal direction
   double m_thickness{0.};
-
-  /// Calculate the derivative of bound track parameters w.r.t.
-  /// alignment parameters of its reference surface (i.e. origin in global 3D
-  /// Cartesian coordinates and its rotation represented with extrinsic Euler
-  /// angles) without any path correction
-  ///
-  /// @note This function should be used together with alignment to path
-  /// derivative to get the full alignment to bound derivatives
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position global 3D position
-  /// @param direction global 3D momentum direction
-  ///
-  /// @return Derivative of bound track parameters w.r.t. local frame alignment
-  /// parameters without path correction
-  AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
-      const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction) const;
 };
 
 }  // namespace Acts

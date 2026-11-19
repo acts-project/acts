@@ -68,7 +68,7 @@ CompSpacePointAuxiliaries::Vector CompSpacePointAuxiliaries::extrapolateToPlane(
 template <CompositeSpacePoint SpacePoint_t>
 CompSpacePointAuxiliaries::Vector CompSpacePointAuxiliaries::extrapolateToPlane(
     const Vector& pos, const Vector& dir, const SpacePoint_t& hit) {
-  using namespace Acts::PlanarHelper;
+  using namespace Acts::detail::PlanarHelper;
   const auto planeIsect =
       intersectPlane(pos, dir, hit.planeNormal(), hit.localPosition());
   return planeIsect.position();

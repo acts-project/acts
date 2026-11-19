@@ -9,23 +9,19 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
+#include "Acts/Propagator/detail/AdditionalSurfaceNavigation.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
-class TrackingVolume;
 class IVolumeMaterial;
-class Surface;
 
-/// @brief A navigator that does nothing
-///
-/// It does not provide any navigation action
-///
+/// A navigator without a tracking geometry. It visits the additional surfaces
+/// in its options and the target surface, if one is provided.
 class VoidNavigator {
  public:
   /// Nested Config struct
@@ -34,12 +30,17 @@ class VoidNavigator {
   /// Nested Options struct
   struct Options : public NavigatorPlainOptions {
     /// Constructor for void navigator options
-    /// @param gctx Geometry context (required but unused by void navigator)
+    /// @param gctx Geometry context
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
 
+    /// Constructor from the plain options of another navigator
+    /// @param options The plain navigator options to copy
+    explicit Options(const NavigatorPlainOptions& options)
+        : NavigatorPlainOptions(options) {}
+
     /// Sets the plain navigator options
-    /// @param options The plain navigator options to copy (unused by void navigator)
+    /// @param options The plain navigator options to copy
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
     }
@@ -54,6 +55,15 @@ class VoidNavigator {
     /// Configuration options for the navigator
     Options options;
 
+    /// Surface that is the target of the navigation
+    const Surface* targetSurface = nullptr;
+
+    /// The additional surface the propagation is on
+    const Surface* currentSurface = nullptr;
+
+    /// Additional surfaces and candidate history
+    detail::AdditionalSurfaceNavigation additional;
+
     /// Navigation statistics
     NavigatorStatistics statistics;
   };
@@ -66,10 +76,11 @@ class VoidNavigator {
     return state;
   }
 
-  /// Returns the current surface (always nullptr for void navigator)
-  /// @return Always nullptr since void navigator has no surfaces
-  const Surface* currentSurface(const State& /*state*/) const {
-    return nullptr;
+  /// Returns the additional surface the propagation is on
+  /// @param state The navigation state
+  /// @return The current surface, nullptr if none
+  const Surface* currentSurface(const State& state) const {
+    return state.currentSurface;
   }
 
   /// Returns the current tracking volume (always nullptr for void navigator)
@@ -85,12 +96,15 @@ class VoidNavigator {
   }
 
   /// Returns the start surface (always nullptr for void navigator)
-  /// @return Always nullptr since void navigator has no surfaces
+  /// @return Always nullptr
   const Surface* startSurface(const State& /*state*/) const { return nullptr; }
 
-  /// Returns the target surface (always nullptr for void navigator)
-  /// @return Always nullptr since void navigator has no surfaces
-  const Surface* targetSurface(const State& /*state*/) const { return nullptr; }
+  /// Returns the target surface
+  /// @param state The navigation state
+  /// @return The target surface, nullptr if none
+  const Surface* targetSurface(const State& state) const {
+    return state.targetSurface;
+  }
 
   /// Checks if the end of the world has been reached (always false for void
   /// navigator)
@@ -98,39 +112,56 @@ class VoidNavigator {
   bool endOfWorldReached(const State& /*state*/) const { return false; }
 
   /// Checks if navigation should break (always true for void navigator)
-  /// @return Always true to immediately stop navigation
+  /// @return Always true since void navigator has no geometry to navigate
   bool navigationBreak(const State& /*state*/) const { return true; }
 
-  /// Initializes the void navigator (always succeeds and does nothing)
-  /// @return Always successful result since no initialization is needed
+  /// Initializes the void navigator for a new run
+  /// @param state The navigation state
+  /// @param args The initialization arguments of this navigation run
+  /// @return Always successful result
   [[nodiscard]] Result<void> initialize(
-      State& /*state*/, const NavigatorInitializeArguments& /*args*/) const {
+      State& state, const NavigatorInitializeArguments& args) const {
+    state.targetSurface = args.targetSurface;
+    state.currentSurface = nullptr;
+
+    state.additional.initialize(state.options, args.targetSurface);
     return Result<void>::success();
   }
 
-  /// Returns the next navigation target (always None for void navigator)
-  /// @return NavigationTarget::None() since there are no targets in void space
+  /// Returns the closest additional surface
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return The next target, or none
   NavigationTarget nextTarget(
-      State& /*state*/, const Vector3& /*position*/,
-      const Vector3& /*direction*/,
+      State& state, const Vector3& position, const Vector3& direction,
       const Vector3& /*curvature*/ = Vector3::Zero()) const {
-    return NavigationTarget::None();
+    state.currentSurface = nullptr;
+    return state.additional.nextTarget(state.options, position, direction);
   }
 
-  /// Checks if the current target is valid (always true for void navigator)
-  /// @return Always true since there are no targets to invalidate
-  bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
-                        const Vector3& /*direction*/,
+  /// Checks whether the selected additional surface is still the closest
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return True if the selected target remains valid
+  bool checkTargetValid(State& state, const Vector3& position,
+                        const Vector3& direction,
                         const Vector3& /*curvature*/ = Vector3::Zero()) const {
-    return true;
+    return state.additional.checkTargetValid(state.options, position, direction,
+                                             nullptr, true);
   }
 
-  /// Handles reaching a surface (does nothing for void navigator)
+  /// Records reaching an additional surface
+  /// @param state The navigation state
+  /// @param surface The surface reached
   void handleSurfaceReached(
-      State& /*state*/, const Vector3& /*position*/,
-      const Vector3& /*direction*/, const Surface& /*surface*/,
+      State& state, const Vector3& /*position*/, const Vector3& /*direction*/,
+      const Surface& surface,
       const Vector3& /*curvature*/ = Vector3::Zero()) const {
-    return;
+    if (state.additional.handleSurfaceReached(surface)) {
+      state.currentSurface = &surface;
+    }
   }
 };
 

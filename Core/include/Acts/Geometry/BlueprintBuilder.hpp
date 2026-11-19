@@ -1199,6 +1199,25 @@ class BlueprintBuilder {
       const Element& element, const std::string& volumeName = "") const
     requires(detail::HasPassiveVolume<Backend>);
 
+  /// @brief Create a static blueprint node for a synthetic
+  /// material-collector volume: a plain cylindrical volume with explicit
+  /// bounds and no corresponding detector element.
+  ///
+  /// Used to place bookkeeping surfaces just outside the tracker's own
+  /// envelope so that, during material mapping, interactions originating in
+  /// nearby non-tracker material (e.g. in the gap before the calorimeter)
+  /// are attributed to these surfaces instead of being misattributed to the
+  /// nearest real tracker surface.
+  /// @param rMin Inner radius of the collector volume.
+  /// @param rMax Outer radius of the collector volume.
+  /// @param halfLengthZ Half-length along z of the collector volume.
+  /// @param zCenter Position of the volume's center along z.
+  /// @param name Name for the created volume.
+  /// @return Shared pointer to the generated blueprint node.
+  std::shared_ptr<StaticBlueprintNode> makeMaterialCollector(
+      double rMin, double rMax, double halfLengthZ, double zCenter,
+      const std::string& name) const;
+
   /// @brief Return the logger associated with this builder.
   /// @return Reference to the logger instance.
   const Acts::Logger& logger() const;

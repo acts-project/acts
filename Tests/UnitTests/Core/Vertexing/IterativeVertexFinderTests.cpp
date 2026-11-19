@@ -42,6 +42,7 @@
 #include <numbers>
 #include <optional>
 #include <random>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <utility>
@@ -131,7 +132,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     // Linearizer for BoundTrackParameters type test
     Linearizer::Config ltConfig;
-    ltConfig.bField = bField;
     ltConfig.propagator = propagator;
     Linearizer linearizer(ltConfig);
 
@@ -164,6 +164,17 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     cfg.reassignTracksAfterFirstFit = true;
     cfg.extractParameters.connect<&InputTrack::extractParameters>();
+
+    // A track linearizer is required.
+    auto makeInvalidConfig = [&]() {
+      IterativeVertexFinder::Config result(BilloirFitter(vertexFitterCfg),
+                                           cfg.seedFinder, ipEstimator);
+      result.field = bField;
+      result.extractParameters = cfg.extractParameters;
+      return result;
+    };
+    BOOST_CHECK_THROW(IterativeVertexFinder{makeInvalidConfig()},
+                      std::invalid_argument);
 
     IterativeVertexFinder finder(std::move(cfg));
     IVertexFinder::State state{
@@ -347,7 +358,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     // Linearizer for user defined InputTrackStub type test
     Linearizer::Config ltConfigUT;
-    ltConfigUT.bField = bField;
     ltConfigUT.propagator = propagator;
     Linearizer linearizer(ltConfigUT);
 
@@ -557,7 +567,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 

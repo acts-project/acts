@@ -71,8 +71,7 @@ connected layers, which *eta bin* pairs are geometrically compatible with the
 allowed @f$z_0@f$ range. The result is a **bin group** list — one inner bin
 together with all outer bins it may connect to — which serves as the graph
 builder's iteration schedule, ordered so that outer bins are processed before
-the inner bins that depend on them. The @f$z_0@f$ range is widened on both ends
-by `GbtsZ0Range::z0Tolerance`.
+the inner bins that depend on them.
 
 The binning it worked out is readable back off the geometry, so a consumer that
 runs the same algorithm elsewhere does not have to recompute or pre-generate it:
@@ -158,7 +157,7 @@ A candidate pair @f$(n_1, n_2)@f$ becomes an edge if it survives, in order:
 | @f$\Delta r > @f$ `minDeltaRadius` | the two hits are radially separated enough for @f$\tau@f$ to be meaningful |
 | @f$\lvert\tau\rvert < @f$ `maxAbsTau` | within the detector's angular acceptance |
 | @f$\tau@f$ inside both nodes' windows | per-node acceptance from the ML lookup table |
-| @f$z_0@f$ inside `[minZ0, maxZ0]`, and @f$z@f$ at the outer radius inside the ROI | the pair points back to the luminous region |
+| @f$z_0@f$ inside the geometry's `GbtsZ0Range`, and @f$z@f$ at the outer radius inside the ROI | the pair points back to the luminous region |
 | @f$\lvert\kappa\rvert@f$ below an @f$\eta@f$-dependent bound | consistent with the @f$p_T@f$ threshold |
 
 with @f$\tau = \Delta z/\Delta r@f$, @f$z_0 = z_1 - r_1\tau@f$ and the curvature
@@ -188,8 +187,7 @@ not add up to more than `sumRatioCutMax`, which rejects a pair that is marginal
 in all three at once. For
 pixel-barrel triplets an optional
 @ref Acts::Experimental::GraphBasedTrackSeeder "validateTriplets" step also fits
-a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$. Each
-edge stores up to `kGbtsMaxEdgeNeighbours` (6) such neighbours.
+a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$.
 
 Two further cuts apply on the innermost pixel barrel layers, where the
 combinatorics are worst. Each cut has its own depth limit on the `barrelOrder`
@@ -205,6 +203,12 @@ of the inner layer, and a negative limit switches the cut off:
   confirmed edges. On the layers down to `z0HistogramMaxBarrelOrder` that mask
   rejects candidates whose @f$z_0@f$ falls in an empty bin, and nodes with no
   connections at all are skipped outright.
+
+Edges of an inner bin that no connection leads into, in practice the innermost
+pixel barrel layer, are never extended inwards. With `dropDeadEnds` (on by
+default) such an edge is kept only if it links to an outer edge, and outer
+nodes without edges are not tried for it. Neither could be part of a seed, so
+the seeds are unchanged while the graph and the edge array shrink.
 
 ## Chain levels {#gbts-levels}
 
@@ -287,12 +291,13 @@ The cuts that build and link the doublets live on
 | --- | --- | --- |
 | `minPt` | @ref gbts-graph | drives the curvature and @f$\phi@f$-window bounds |
 | `minDeltaRadius`, `maxAbsTau` | @ref gbts-graph | doublet acceptance |
-| `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
+| `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet, against the geometry's `GbtsZ0Range` |
 | `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
 | `useSumRatioCut`, `sumRatioCutMax` | @ref gbts-graph | bound on the summed linking tolerances, against pairs marginal in all three |
 | `tauRatioCut` | @ref gbts-graph | @f$\tau@f$ scale of the `validateTriplets` high-pT check. The linking cut comes from @ref Acts::Experimental::GbtsLayerConnection |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
 | `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
+| `dropDeadEnds` | @ref gbts-graph | leave out the innermost edges that cannot join a chain (on by default); the seeds are unchanged |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
 | `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
 The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
@@ -322,7 +327,7 @@ separately controls the chain-following filter of @ref gbts-extraction "seed ext
 | `maxDChi2X`, `maxDChi2Y` | per-step @f$\chi^2@f$ ceilings; a branch exceeding either is dropped |
 | `addHit`, `weightX`, `weightY` | the reward and the two @f$\chi^2@f$ weights in the branch score |
 | `sigmaMS`, `radLen` | multiple-scattering inflation added before each extrapolation |
-| `maxCurvature`, `maxZ0` | track-level bounds checked after each update |
+| `maxCurvature` | track-level bounds checked after each update, with @f$z_0@f$ against the geometry's `GbtsZ0Range` |
 
 ## Implementation pointers {#gbts-implementation}
 

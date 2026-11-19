@@ -31,8 +31,6 @@ concept material_params = requires(const M m) {
 
   { m.molar_density() } -> std::same_as<typename M::scalar_type>;
 
-  { m.state() } -> std::same_as<detray::material_state>;
-
   { m.molar_electron_density() } -> std::same_as<typename M::scalar_type>;
 
   {

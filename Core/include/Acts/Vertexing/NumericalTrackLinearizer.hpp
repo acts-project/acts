@@ -9,14 +9,13 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 
 namespace Acts {
+
+class MagneticFieldQuery;
 
 /// @class NumericalTrackLinearizer
 /// Linearizes the track parameters at the PCA to a user-provided
@@ -56,22 +55,10 @@ class NumericalTrackLinearizer {
  public:
   /// @brief Configuration struct
   struct Config {
-    /// @ Config constructor if magnetic field is present
-    ///
-    /// @param bIn The magnetic field
-    /// @param prop The propagator
-    explicit Config(std::shared_ptr<const MagneticFieldProvider> bIn,
-                    std::shared_ptr<const BasePropagator> prop)
-        : bField(std::move(bIn)), propagator(std::move(prop)) {}
-
-    /// @brief Config constructor without B field -> uses NullBField
-    ///
+    /// Construct the configuration with a propagator.
     /// @param prop Propagator
     explicit Config(std::shared_ptr<const BasePropagator> prop)
-        : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
-
-    /// Magnetic field provider for numerical linearization
-    std::shared_ptr<const MagneticFieldProvider> bField;
+        : propagator(std::move(prop)) {}
 
     /// Track propagator for numerical calculations
     std::shared_ptr<const BasePropagator> propagator;
@@ -95,23 +82,20 @@ class NumericalTrackLinearizer {
                                                                Logging::INFO))
       : m_cfg(config), m_logger{std::move(_logger)} {}
 
-  /// @brief Function that linearizes BoundTrackParameters at
-  /// the PCA to a given Perigee surface
-  ///
+  /// Linearize using propagation; no separate field lookup is needed.
   /// @param params Parameters to linearize
-  /// @param linPointTime Time associated to the linearization point
-  /// @note Transverse plane of the Perigee corresponding to @p linPoint is
-  /// parallel to the global x-y plane
-  /// @param perigeeSurface Perigee surface belonging to @p linPoint
+  /// @param linPointTime Time of the linearization point
+  /// @param perigeeSurface Surface defining the linearization point
+  /// @note The transverse plane of @p perigeeSurface is parallel to the
+  /// global x-y plane
   /// @param gctx Geometry context
-  /// @param mctx Magnetic field context
-  ///
-  /// @return Linearized track
-  Result<LinearizedTrack> linearizeTrack(
-      const BoundTrackParameters& params, double linPointTime,
-      const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
-      const Acts::MagneticFieldContext& mctx,
-      MagneticFieldProvider::Cache& /*fieldCache*/) const;
+  /// @param fieldQuery Query supplying the context for propagation
+  /// @return Linearized track or a propagation error
+  Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
+                                         double linPointTime,
+                                         const Surface& perigeeSurface,
+                                         const GeometryContext& gctx,
+                                         MagneticFieldQuery& fieldQuery) const;
 
  private:
   const Config m_cfg;

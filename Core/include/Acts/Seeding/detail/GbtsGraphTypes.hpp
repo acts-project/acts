@@ -22,9 +22,6 @@
 
 namespace Acts::Experimental::detail {
 
-/// Maximum number of neighbouring edges recorded per graph edge
-static constexpr std::uint32_t kGbtsMaxEdgeNeighbours = 6;
-
 /// Bins of the per-node z0 histogram, which is kept as a bit mask in
 /// GbtsNodeEdgeInfo::isConnected and so may not exceed its width.
 static constexpr std::int32_t kGbtsZ0HistogramBins = 16;
@@ -194,9 +191,7 @@ struct GbtsEdge final {
   /// Outer node of the edge
   SpacePointIndex n2{kSpacePointIndexInvalid};
 
-  std::uint8_t nNei{0};
-
-  /// Whether the outer node is on the pixel barrel. Sits in padding.
+  /// Whether the outer node is on the pixel barrel.
   bool n2PixelBarrel{};
 
   std::array<float, 3> p{};
@@ -204,8 +199,6 @@ struct GbtsEdge final {
   /// GbtsLayerConnection::tauRatioCutOuter of this doublet's layer pair,
   /// cached for the neighbour loop.
   float tauRatioCut{};
-
-  std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};
 };
 //! [gbts edge]
 

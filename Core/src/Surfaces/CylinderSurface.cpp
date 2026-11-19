@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
+#include "Acts/Surfaces/detail/CylinderHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
@@ -213,11 +214,7 @@ detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
   Vector3 pc = position - ccenter;
   Vector3 pcXcd = pc.cross(caxis);
   Vector3 ldXcd = direction.cross(caxis);
-  double a = ldXcd.dot(ldXcd);
-  double b = 2. * (ldXcd.dot(pcXcd));
-  double c = pcXcd.dot(pcXcd) - (R * R);
-  // And solve the qaudratic equation
-  return detail::RealQuadraticEquation(a, b, c);
+  return detail::CylinderHelper::intersectionSolver(pcXcd, ldXcd, R);
 }
 
 MultiIntersection3D CylinderSurface::intersect(
@@ -285,56 +282,128 @@ MultiIntersection3D CylinderSurface::intersect(
   return MultiIntersection3D(second, first);
 }
 
+MultiIntersection3D CylinderSurface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const Vector3& curvature,
+    const BoundaryTolerance& boundaryTolerance, double tolerance) const {
+  if (curvature.isZero(0.) || !curvature.allFinite()) {
+    return intersect(gctx, position, direction, boundaryTolerance, tolerance);
+  }
+  const auto& transform = localToGlobalTransform(gctx);
+  const double radius = bounds().get(CylinderBounds::eR);
+  const double halfLength = bounds().get(CylinderBounds::eHalfLengthZ);
+  const Vector3 localPosition =
+      transform.linear().transpose() * (position - transform.translation());
+  const Vector3 localDirection = transform.linear().transpose() * direction;
+  const Vector3 localCurvature = transform.linear().transpose() * curvature;
+  const auto roots = detail::CylinderHelper::intersectionSolver(
+      localPosition.head<2>(), localDirection.head<2>(), radius);
+  if (roots.solutions == 0) {
+    return MultiIntersection3D(Intersection3D::Invalid(),
+                               Intersection3D::Invalid());
+  }
+  double s1 = roots.first;
+  double s2 = roots.solutions == 1 ? roots.first : roots.second;
+  if (s1 > s2) {
+    std::swap(s1, s2);
+  }
+  // Keep the ray branch order even when corrections change the path ordering:
+  // navigation stores indices and re-intersects those same branches.
+  const Vector3 seed1 = localPosition + s1 * localDirection;
+  const Vector3 seed2 = localPosition + s2 * localDirection;
+  const double curvatureNorm = curvature.norm();
+  const auto status = [tolerance](double s) {
+    return std::abs(s) < std::abs(tolerance) ? IntersectionStatus::onSurface
+                                             : IntersectionStatus::reachable;
+  };
+  auto first = detail::CylinderHelper::correctIntersection(
+      s1, seed1, localDirection, localCurvature, curvatureNorm, radius,
+      tolerance);
+  auto second = detail::CylinderHelper::correctIntersection(
+      s2, seed2, localDirection, localCurvature, curvatureNorm, radius,
+      tolerance);
+  const auto scales =
+      detail::CylinderHelper::cylinderProjectionScales(first, second, radius);
+  const auto inside = [&](const Vector3& local, bool fallback) {
+    if (boundaryTolerance.isInfinite()) {
+      return true;
+    }
+    if (boundaryTolerance.isNone() && bounds().coversFullAzimuth()) {
+      // Preserve the ray's tolerance-expanded length check on fallback, but
+      // check a corrected prediction against the requested physical bounds.
+      return fallback ? std::abs(local.z()) < std::abs(halfLength + tolerance)
+                      : std::abs(local.z()) <= halfLength;
+    }
+    if (fallback) {
+      // The general ray path checks membership before bounds. Retain that
+      // check for sector/toleranced bounds, especially for distant seeds.
+      const double radialTolerance = std::max(
+          tolerance == s_onSurfaceTolerance ? radius * 0.0001 : tolerance,
+          0.01);
+      if (std::abs(local.head<2>().norm() - radius) > radialTolerance) {
+        return false;
+      }
+    }
+    return insideBounds(
+        Vector2(radius * std::atan2(local.y(), local.x()), local.z()),
+        boundaryTolerance);
+  };
+  const auto finish = [&](double s, const Vector3& seed,
+                          std::optional<detail::CurvatureCorrection>& corrected,
+                          double scale) {
+    if (corrected && scale > 0. && std::isfinite(scale)) {
+      corrected->position.head<2>() *= scale;
+      const Vector3 global = transform * corrected->position;
+      if (global.allFinite()) {
+        return Intersection3D(global, corrected->pathLength,
+                              inside(corrected->position, false)
+                                  ? IntersectionStatus::reachable
+                                  : IntersectionStatus::unreachable);
+      }
+    }
+    // Fallback reuses the ray seed; do not solve the intersection again.
+    return Intersection3D(
+        position + s * direction, s,
+        inside(seed, true) ? status(s) : IntersectionStatus::unreachable);
+  };
+  return MultiIntersection3D(finish(s1, seed1, first, scales.first),
+                             finish(s2, seed2, second, scales.second));
+}
+
 AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
-  // The vector between position and center
-  const auto pcRowVec = (position - center(gctx)).transpose().eval();
-  // The rotation
+  // Local-frame constraint F(x, y, z) = x^2 + y^2 - R^2 = 0.
+  // Implicit differentiation at the current position gives the
+  // alignment-to-path derivative.
   const auto& rotation = localToGlobalTransform(gctx).rotation();
-  // The local frame x/y/z axis
-  const auto& localXAxis = rotation.col(0);
-  const auto& localYAxis = rotation.col(1);
-  const auto& localZAxis = rotation.col(2);
-  // The local coordinates
-  const auto localPos = (rotation.transpose() * position).eval();
-  const auto dx = direction.dot(localXAxis);
-  const auto dy = direction.dot(localYAxis);
-  const auto dz = direction.dot(localZAxis);
-  // The normalization factor
-  const auto norm = 1 / (1 - dz * dz);
-  // The direction transpose
-  const auto& dirRowVec = direction.transpose();
-  // The derivative of path w.r.t. the local axes
-  // @note The following calculations assume that the intersection of the track
-  // with the cylinder always satisfy: perp(localPos) = R
-  const auto localXAxisToPath =
-      (-2 * norm * (dx * pcRowVec + localPos.x() * dirRowVec)).eval();
-  const auto localYAxisToPath =
-      (-2 * norm * (dy * pcRowVec + localPos.y() * dirRowVec)).eval();
-  const auto localZAxisToPath =
-      (-4 * norm * norm * (dx * localPos.x() + dy * localPos.y()) * dz *
-       dirRowVec)
-          .eval();
-  // Calculate the derivative of local frame axes w.r.t its rotation
-  const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(rotation);
-  // Initialize the derivative of propagation path w.r.t. local frame
-  // translation (origin) and rotation
+  const Vector3 localPos = rotation.transpose() * (position - center(gctx));
+  const Vector3 localDir = rotation.transpose() * direction;
+  // Vanishes when the track is tangent to the cylinder.
+  const double denom =
+      localPos.x() * localDir.x() + localPos.y() * localDir.y();
+
   AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
-  alignToPath.segment<3>(eAlignmentCenter0) =
-      2 * norm * (dx * localXAxis.transpose() + dy * localYAxis.transpose());
+  const Vector3 globalCenterDerivative =
+      (localPos.x() * rotation.col(0) + localPos.y() * rotation.col(1)) / denom;
+  detail::setAlignToPathLocalCenterDerivative(alignToPath,
+                                              globalCenterDerivative, rotation);
+  // A rotation w about the local axes moves the surface point at localPos by
+  // cross(w, localPos), so ds/dw = cross(localPos, grad(F) / 2) / denom
+  // = z (-y, x, 0) / denom.
   alignToPath.segment<3>(eAlignmentRotation0) =
-      localXAxisToPath * rotToLocalXAxis + localYAxisToPath * rotToLocalYAxis +
-      localZAxisToPath * rotToLocalZAxis;
+      Vector3(-localPos.z() * localPos.y() / denom,
+              localPos.z() * localPos.x() / denom, 0.)
+          .transpose();
 
   return alignToPath;
 }
 
 Matrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& gctx, const Vector3& position) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& /*direction*/) const {
   using VectorHelpers::perp;
   // The local frame transform
   const auto& sTransform = localToGlobalTransform(gctx);

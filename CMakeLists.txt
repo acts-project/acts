@@ -57,6 +57,7 @@ endif()
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
+option(ACTS_FAIL_ON_WARNINGS "Treat compiler warnings in Acts' own code as errors" OFF)
 # code generation related options
 set(ACTS_CODEGEN_PREBUILT_DIR "" CACHE PATH "Directory holding pre-generated code; a generated file found there is used verbatim instead of being regenerated. Defaults to prebuilt-codegen/ next to this file when it exists, which is what release source archives ship")
 option(ACTS_CODEGEN_REQUIRE_PREBUILT "Fail the configure step instead of running the code generators when pre-generated code is missing" OFF)
@@ -297,6 +298,7 @@ elseif(PROJECT_IS_TOP_LEVEL)
 endif()
 
 include(ActsCompilerOptions) # default compile options
+include(ActsWarningFlags) # warning flags, applied per-directory to our own code
 include(ActsComponentsHelpers) # handle components via add_..._if commands
 include(ActsStaticAnalysis)
 
@@ -697,12 +699,6 @@ if(ACTS_SETUP_DETRAY)
             OR
             TRACCC_BUILD_TESTING
         )
-
-        set(DETRAY_GENERATE_METADATA
-            "itk_metadata"
-            CACHE STRING
-            "Semicolon-separated list of metadata generator scripts to run in this build"
-        )
     endif()
 
     add_subdirectory(Detray)
@@ -830,3 +826,5 @@ add_subdirectory(docs)
 # create cmake configuration files and environment setup script
 include(ActsCreatePackageConfig)
 include(ActsCreateSetup)
+
+acts_print_auto_enabled_options()
