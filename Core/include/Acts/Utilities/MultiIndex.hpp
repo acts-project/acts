@@ -11,6 +11,7 @@
 #include <array>
 #include <cassert>
 #include <climits>
+#include <compare>
 #include <ostream>
 #include <type_traits>
 #include <utility>
@@ -124,7 +125,7 @@ class MultiIndex {
   /// @return Maximum value that can be stored at the specified level
   constexpr std::size_t maxValue(std::size_t lvl) const {
     assert((lvl < kNumLevels) && "Index level outside allowed range");
-    return (1 << s_bits.at(lvl)) - 1;
+    return mask(lvl);
   }
 
   /// Create index with the selected level increased and levels below zeroed.
@@ -168,18 +169,17 @@ class MultiIndex {
     return s;
   }
   static constexpr Value mask(std::size_t lvl) {
+    // shifting by the full storage width is undefined
+    if (s_bits[lvl] == sizeof(Value) * CHAR_BIT) {
+      return ~Value{0u};
+    }
     return (Value{1u} << s_bits[lvl]) - 1u;
   }
 
   Value m_value;
 
-  friend constexpr bool operator<(MultiIndex lhs, MultiIndex rhs) {
-    return lhs.m_value < rhs.m_value;
-  }
-
-  friend constexpr bool operator==(MultiIndex lhs, MultiIndex rhs) {
-    return lhs.m_value == rhs.m_value;
-  }
+  // also declares a defaulted operator==
+  friend constexpr auto operator<=>(MultiIndex lhs, MultiIndex rhs) = default;
 
   friend inline std::ostream& operator<<(std::ostream& os, MultiIndex idx) {
     // one level is always defined
