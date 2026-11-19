@@ -10,38 +10,33 @@ set(_python_dir "${CMAKE_BINARY_DIR}/python")
 set(_pkg_dir ${_python_dir}/detray/core)
 file(MAKE_DIRECTORY ${_pkg_dir})
 
-pybind11_add_module(DetrayPythonBindings src/CoreModuleEntry.cpp)
+acts_add_python_module(
+    DetrayPythonBindings
+    SOURCES src/CoreModuleEntry.cpp
+    OUTPUT_DIRECTORY ${_pkg_dir}
+    INSTALL_DIRECTORY ${DETRAY_PYTHON_INSTALL_DIR}/core
+    LIBRARY_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
+)
 
 target_link_libraries(
     DetrayPythonBindings
-    PRIVATE
-        detray::core_array
-        detray::io
-        detray::detectors
-        vecmem::core
-        covfie::core
-)
-
-# Place the compiled module inside the `detray.core` package.
-set_target_properties(
-    DetrayPythonBindings
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_pkg_dir}
-)
-install(
-    TARGETS DetrayPythonBindings
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/core
+    PRIVATE detray::core_array detray::io detray::detectors vecmem::core
 )
 
 # Generate the package __init__ that re-exports the compiled module.
+set(BINDINGS_IMPORTS "")
 set(BINDINGS_MODULE DetrayPythonBindings)
-configure_file(
+acts_python_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/../module_init.py.in
     ${_pkg_dir}/__init__.py
-    @ONLY
-)
-install(
-    FILES ${_pkg_dir}/__init__.py
-    DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}/core
+    ${DETRAY_PYTHON_INSTALL_DIR}/core
 )
 
-acts_pybind_generate_stubs(detray.core DetrayPythonBindings)
+acts_pybind_generate_stubs(
+    detray.core
+    DetrayPythonBindings
+    PACKAGE
+    ENABLED ${DETRAY_GENERATE_PYTHON_STUBS}
+    PYTHON_ROOT ${_python_dir}
+    PYTHON_EXECUTABLE ${Python_EXECUTABLE}
+)

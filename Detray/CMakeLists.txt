@@ -49,7 +49,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
     "Directory for the built static libraries"
 )
 
-set(DETRAY_PYTHON_INSTALL_DIR "python/detray")
+if(NOT DEFINED DETRAY_PYTHON_INSTALL_DIR)
+    set(DETRAY_PYTHON_INSTALL_DIR "python/detray")
+endif()
 
 # Include the Detray CMake code.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -527,7 +529,6 @@ add_subdirectory(core)
 add_subdirectory(detectors)
 add_subdirectory(io)
 add_subdirectory(plugins)
-add_subdirectory(python)
 
 # Test utils and validation tools can also be required standalone
 # (e.g. in ACTS detray plugin)
@@ -540,6 +541,9 @@ if(
 )
     add_subdirectory(tests)
 endif()
+
+# Python validation bindings need the optional test utility targets above.
+add_subdirectory(python)
 
 # Set up the tutorial(s).
 if(DETRAY_BUILD_TUTORIALS)
