@@ -56,6 +56,7 @@ struct BoundState {
 ///
 /// @tparam traj_t the track state container backend
 template <typename traj_t>
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 struct TrackStateCreatorArguments {
   /// The current geometry context
   std::reference_wrapper<const GeometryContext> geoContext;
