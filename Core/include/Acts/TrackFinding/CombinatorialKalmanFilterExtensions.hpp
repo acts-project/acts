@@ -64,18 +64,15 @@ class TrackStateCreatorArguments {
   ///        extended onto
   /// @param prevTip the tip of the trajectory which is extended
   /// @param trajectory the trajectory the new track states are added to
-  /// @param logger a logger for messages
   TrackStateCreatorArguments(const GeometryContext& geoContext,
                              const CalibrationContext& calibrationContext,
                              const BoundState& boundState,
-                             TrackIndexType prevTip, traj_t& trajectory,
-                             const Logger& logger)
+                             TrackIndexType prevTip, traj_t& trajectory)
       : m_geoContext(&geoContext),
         m_calibrationContext(&calibrationContext),
         m_boundState(&boundState),
         m_prevTip(prevTip),
-        m_trajectory(&trajectory),
-        m_logger(&logger) {}
+        m_trajectory(&trajectory) {}
 
   /// @return the current geometry context
   const GeometryContext& geoContext() const { return *m_geoContext; }
@@ -111,8 +108,6 @@ class TrackStateCreatorArguments {
   TrackIndexType prevTip() const { return m_prevTip; }
   /// @return the trajectory the new track states are added to
   traj_t& trajectory() const { return *m_trajectory; }
-  /// @return a logger for messages
-  const Logger& logger() const { return *m_logger; }
 
  private:
   const GeometryContext* m_geoContext;
@@ -120,7 +115,6 @@ class TrackStateCreatorArguments {
   const BoundState* m_boundState;
   TrackIndexType m_prevTip;
   traj_t* m_trajectory;
-  const Logger* m_logger;
 };
 
 }  // namespace CkfTypes
@@ -169,6 +163,7 @@ struct CombinatorialKalmanFilterExtensions {
   ///
   /// @param args the predicted state, the trajectory to extend, and the
   ///        contexts
+  /// @param logger a logger for messages
   /// @return indices of new track states which extend the trajectory given by
   ///         `args.prevTip()`. Each one must be a measurement or an outlier,
   ///         otherwise the CKF fails with
@@ -178,7 +173,8 @@ struct CombinatorialKalmanFilterExtensions {
   ///         creates a state without an expected measurement.
   using TrackStateCreator =
       Delegate<Result<CkfTypes::BranchVector<TrackIndexType>>(
-          const CkfTypes::TrackStateCreatorArguments<traj_t>& args)>;
+          const CkfTypes::TrackStateCreatorArguments<traj_t>& args,
+          const Logger& logger)>;
 
   /// The delegate to create new track states.
   /// @note a reference implementation can be found in @ref TrackStateCreator

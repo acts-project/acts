@@ -91,6 +91,7 @@ struct TrackStateCreator {
   ///
   /// @param args the predicted state, the trajectory to extend, and the
   ///        contexts
+  /// @param logger a logger for messages
   ///
   /// @return a list of indices of newly created track states which extend the
   ///    trajectory onto the given surface and match the bound state, or an
@@ -101,7 +102,7 @@ struct TrackStateCreator {
   /// This may create multiple branches. The new track states still miss the
   /// "filtered" data.
   Result<CkfTypes::BranchVector<TrackIndexType>> createTrackStates(
-      const Arguments& args) const {
+      const Arguments& args, const Logger& logger) const {
     const Surface& surface = args.surface();
     TrackStatesResult tsRes = TrackStatesResult::success({});
     using SourceLinkRange = decltype(sourceLinkAccessor(surface));
@@ -112,7 +113,7 @@ struct TrackStateCreator {
       tsRes = createSourceLinkTrackStates(
           args.geoContext(), args.calibrationContext(), surface,
           args.boundState(), slBegin, slEnd, args.prevTip(),
-          trackStateCandidates, args.trajectory(), args.logger());
+          trackStateCandidates, args.trajectory(), logger);
     }
     return tsRes;
   }

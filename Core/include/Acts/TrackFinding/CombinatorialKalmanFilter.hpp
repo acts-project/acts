@@ -686,8 +686,8 @@ class CombinatorialKalmanFilter {
         // measurement is selected.
         const CkfTypes::TrackStateCreatorArguments<TrackStateContainerBackend>
             args(state.geoContext, *calibrationContextPtr, boundState, prevTip,
-                 *result.trackStates, logger());
-        tsRes = extensions.createTrackStates(args);
+                 *result.trackStates);
+        tsRes = extensions.createTrackStates(args, logger());
       }
 
       if (tsRes.ok() && !(*tsRes).empty()) {
