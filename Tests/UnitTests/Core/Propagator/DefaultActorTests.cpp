@@ -96,6 +96,14 @@ BOOST_AUTO_TEST_CASE(DefaultActorTargetOutsideWorld) {
   BOOST_REQUIRE(!stopped.ok());
   BOOST_CHECK(stopped.error() == PropagatorError::TargetNotReached);
 
+  // Also without final parameters
+  const auto propagator = makePropagator();
+  auto state = propagator.makeState(options);
+  auto stoppedNoParameters =
+      propagator.propagate(state, start, target.get(), false);
+  BOOST_REQUIRE(!stoppedNoParameters.ok());
+  BOOST_CHECK(stoppedNoParameters.error() == PropagatorError::TargetNotReached);
+
   options.stopAtEndOfWorld = false;
   auto reached = makePropagator().propagate(start, *target, options);
   BOOST_REQUIRE(reached.ok());
@@ -130,12 +138,17 @@ BOOST_AUTO_TEST_CASE(DefaultActorReusedState) {
   auto state = propagator.makeState(options);
   auto first = propagator.propagate(state, start);
   BOOST_REQUIRE(first.ok());
+  state.navigation.statistics.nRenavigations = 42;
   auto second = propagator.propagate(state, start);
   BOOST_REQUIRE(second.ok());
 
   // The second run starts its counters from zero
   CHECK_CLOSE_ABS(second->pathLength, 10_cm, 1_um);
   BOOST_CHECK_EQUAL(second->steps, first->steps);
+  BOOST_CHECK_EQUAL(second->statistics.stepping.nSuccessfulSteps,
+                    first->statistics.stepping.nSuccessfulSteps);
+  BOOST_CHECK_EQUAL(second->statistics.navigation.nRenavigations,
+                    first->statistics.navigation.nRenavigations);
 }
 
 BOOST_AUTO_TEST_CASE(DefaultActorVolumeConstraint) {

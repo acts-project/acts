@@ -297,7 +297,6 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
                                           const Surface* target) const {
   state.steps = 0;
   state.pathLength = 0.;
-  state.statistics = {};
 
   m_stepper.initialize(state.stepping, start);
 
@@ -341,14 +340,13 @@ auto Propagator<S, N>::makeResult(propagator_state_t& state,
   result.statistics.stepping = m_stepper.statistics(state.stepping);
   result.statistics.navigation = state.navigation.statistics;
 
-  if (createFinalParameters) {
-    // Bound parameters on a target the propagation did not reach are wrong
-    if (target != nullptr &&
-        m_navigator.currentSurface(state.navigation) != target) {
-      ACTS_DEBUG("Propagation stopped before the target surface.");
-      return PropagatorError::TargetNotReached;
-    }
+  if (target != nullptr &&
+      m_navigator.currentSurface(state.navigation) != target) {
+    ACTS_DEBUG("Propagation stopped before the target surface.");
+    return PropagatorError::TargetNotReached;
+  }
 
+  if (createFinalParameters) {
     if (target == nullptr) {
       target = m_navigator.currentSurface(state.navigation);
     }

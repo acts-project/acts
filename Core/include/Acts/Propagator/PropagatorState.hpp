@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/ActorConcepts.hpp"
-#include "Acts/Propagator/PropagatorStatistics.hpp"
 
 #include <functional>
 
@@ -90,9 +89,6 @@ struct PropagatorState {
 
   /// Signed distance over which the parameters were propagated
   double pathLength = 0.;
-
-  /// Statistics of the propagation
-  PropagatorStatistics statistics;
 };
 
 }  // namespace Acts

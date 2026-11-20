@@ -266,8 +266,9 @@ class Propagator final
   /// @param [in,out] state Propagator state object
   /// @param [in] result Result of the propagation
   /// @param [in] createFinalParameters Whether to produce parameters at the end of the propagation
-  /// @param [in] target Surface to be used for the final parameters, if createFinalParameters is true
-  ///             If nullptr, the current surface of the navigator will be used
+  /// @param [in] target Surface the propagation must have reached, also used
+  ///             for the final parameters. If nullptr, the final parameters
+  ///             are on the current surface of the navigator, if any.
   ///
   /// @return Propagation result
   template <typename propagator_state_t>

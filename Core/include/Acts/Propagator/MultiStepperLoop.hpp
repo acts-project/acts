@@ -293,6 +293,7 @@ class MultiStepperLoop final {
     }
 
     state.covTransport = par.hasCovariance();
+    state.statistics = {};
   }
 
   /// A proxy struct which allows access to a single component of the
