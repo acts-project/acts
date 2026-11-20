@@ -29,6 +29,9 @@ struct gbts_convert_seeds_payload {
   unsigned int nPathsGrid;
   /// Device-side number of paths (clamped to nPathsMax by the kernel)
   vecmem::data::vector_view<const unsigned int> path_count;
+  /// seed quality (30 bits) + dropout_index (2 bits) + prop_idx (32 bits) for
+  /// ordering the seeds
+  vecmem::data::vector_view<unsigned long long int> seed_bids;
   /// Per-seed-proposal (quality, path-store index), index -1 if empty
   vecmem::data::vector_view<const int2> seed_proposals;
   /// Per-seed-proposal ambiguity tag
