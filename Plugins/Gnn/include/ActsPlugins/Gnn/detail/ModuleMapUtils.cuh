@@ -9,27 +9,16 @@
 #pragma once
 
 #include <algorithm>
-#include <iostream>
-#include <numbers>
-#include <vector>
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 
-#include <MMG/CUDA_graph_creator>
 #include <cuda_runtime_api.h>
 
 namespace ActsPlugins::detail {
 
-constexpr float g_pi = std::numbers::pi_v<float>;
-
-template <class T>
-__global__ void rescaleFeature(std::size_t nbHits, T *data, T scale) {
-  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if (i >= nbHits) {
-    return;
-  }
-
-  data[i] *= scale;
-}
+constexpr float g_pi = 3.14159265358979323846f;
 
 template <typename T>
 __device__ T resetAngle(T angle) {
@@ -43,21 +32,12 @@ __device__ T resetAngle(T angle) {
   return angle;
 };
 
+constexpr int g_nEdgeFeatures = 6;
+
 template <typename T>
-__global__ void makeEdgeFeatures(std::size_t nEdges, const int *srcEdges,
-                                 const int *tgtEdges, std::size_t nNodeFeatures,
-                                 const T *nodeFeatures, T *edgeFeatures) {
+__device__ void computeEdgeFeatures(int src, int tgt, std::size_t nNodeFeatures,
+                                    const T *nodeFeatures, T *efPtr) {
   enum NodeFeatures { r = 0, phi, z, eta };
-  constexpr static int nEdgeFeatures = 6;
-
-  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if (i >= nEdges) {
-    return;
-  }
-
-  const int src = srcEdges[i];
-  const int tgt = tgtEdges[i];
 
   const T *srcNodeFeatures = nodeFeatures + src * nNodeFeatures;
   const T *tgtNodeFeatures = nodeFeatures + tgt * nNodeFeatures;
@@ -76,7 +56,6 @@ __global__ void makeEdgeFeatures(std::size_t nEdges, const int *srcEdges,
     rphislope = avgR * phislope;
   }
 
-  T *efPtr = edgeFeatures + i * nEdgeFeatures;
   efPtr[0] = dr;
   efPtr[1] = dphi;
   efPtr[2] = dz;
@@ -85,23 +64,64 @@ __global__ void makeEdgeFeatures(std::size_t nEdges, const int *srcEdges,
   efPtr[5] = rphislope;
 }
 
-template <class T>
-__global__ void computeXandY(std::size_t nbHits, T *cuda_x, T *cuda_y,
-                             const T *cuda_R, const T *cuda_phi) {
+/// Compact the candidate edges selected by @p mask into the final
+/// [2, nEdges] int64 edge index and compute their edge features in the same
+/// pass. The compaction preserves the order of the candidates.
+template <typename T>
+__global__ void compactEdgesAndMakeFeatures(
+    std::size_t nCandidates, const bool *__restrict__ mask,
+    const int *__restrict__ maskSum, const int *__restrict__ srcCandidates,
+    const int *__restrict__ tgtCandidates, std::size_t nEdges,
+    std::size_t nNodeFeatures, const T *__restrict__ nodeFeatures,
+    std::int64_t *edgeIndex, T *edgeFeatures) {
+  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (i >= nCandidates || !mask[i]) {
+    return;
+  }
+
+  const std::size_t out = maskSum[i];
+  const int src = srcCandidates[i];
+  const int tgt = tgtCandidates[i];
+
+  edgeIndex[out] = src;
+  edgeIndex[nEdges + out] = tgt;
+  computeEdgeFeatures(src, tgt, nNodeFeatures, nodeFeatures,
+                      edgeFeatures + out * g_nEdgeFeatures);
+}
+
+template <typename T>
+__global__ void preprocessHitFeatures(std::size_t nbHits,
+                                      std::size_t nNodeFeatures,
+                                      const T *nodeFeatures, T *cuda_R,
+                                      T *cuda_phi, T *cuda_z, T *cuda_eta,
+                                      T *cuda_x, T *cuda_y, T rScale,
+                                      T phiScale, T zScale) {
   std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (i >= nbHits) {
     return;
   }
 
-  double r = cuda_R[i];
-  double phi = cuda_phi[i];
+  enum NodeFeatures { r = 0, phi, z, eta };
+  const T *hitFeatures = nodeFeatures + i * nNodeFeatures;
 
-  cuda_x[i] = r * std::cos(phi);
-  cuda_y[i] = r * std::sin(phi);
+  const T scaledR = hitFeatures[r] * rScale;
+  const T scaledPhi = hitFeatures[phi] * phiScale;
+  const T scaledZ = hitFeatures[z] * zScale;
+
+  cuda_R[i] = scaledR;
+  cuda_phi[i] = scaledPhi;
+  cuda_z[i] = scaledZ;
+  cuda_eta[i] = hitFeatures[eta];
+
+  const double rd = scaledR;
+  const double phid = scaledPhi;
+  cuda_x[i] = static_cast<T>(rd * std::cos(phid));
+  cuda_y[i] = static_cast<T>(rd * std::sin(phid));
 }
 
-inline void __global__ mapModuleIdsToNbHits(int *nbHitsOnModule,
+static __global__ void mapModuleIdsToNbHits(int *nbHitsOnModule,
                                             std::size_t nHits,
                                             const std::uint64_t *moduleIds,
                                             std::size_t moduleMapSize,
@@ -115,7 +135,6 @@ inline void __global__ mapModuleIdsToNbHits(int *nbHitsOnModule,
 
   auto mId = moduleIds[i];
 
-  // bisect moduleMapKey to find mId
   int left = 0;
   int right = moduleMapSize - 1;
   while (left <= right) {
