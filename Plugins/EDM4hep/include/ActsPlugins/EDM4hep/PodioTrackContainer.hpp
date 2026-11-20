@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/DynamicColumnInfo.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
@@ -451,6 +452,11 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
 
+  /// Return descriptors for this backend's dynamic columns.
+  auto dynamicColumns_impl() const {
+    return Acts::detail::dynamicColumnView(m_dynamic);
+  }
+
   /// Set particle hypothesis
   /// @param itrack Track index
   /// @param particleHypothesis Particle hypothesis
@@ -579,6 +585,11 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   Acts::detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>
   dynamicKeys_impl() const {
     return PodioTrackContainerBase::dynamicKeys_impl(*this);
+  }
+
+  /// Return descriptors for this backend's dynamic columns.
+  auto dynamicColumns_impl() const {
+    return Acts::detail::dynamicColumnView(m_dynamic);
   }
 
  private:

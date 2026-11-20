@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/DynamicColumnInfo.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryBackendConcept.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -334,6 +335,11 @@ class VectorMultiTrajectoryBase {
     return {m_dynamic.begin(), m_dynamic.end()};
   }
 
+  /// Return descriptors for this backend's dynamic columns.
+  auto dynamicColumns_impl() const {
+    return Acts::detail::dynamicColumnView(m_dynamic);
+  }
+
   // END INTERFACE HELPER
 
   IndexType calibratedSize_impl(IndexType istate) const {
@@ -504,7 +510,7 @@ class VectorMultiTrajectory final
   void addColumn_impl(std::string_view key) {
     HashedString hashedKey = hashStringDynamic(key);
     auto insertItr = m_dynamic.insert(
-        {hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
+        {hashedKey, std::make_unique<detail::DynamicColumn<T>>(key)});
     if (insertItr.second && size() > 0ul) {
       insertItr.first->second->resize(size());
     }

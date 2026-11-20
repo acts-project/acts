@@ -11,6 +11,9 @@
 #include <any>
 #include <cassert>
 #include <memory>
+#include <string>
+#include <string_view>
+#include <typeindex>
 #include <vector>
 
 namespace Acts::detail {
@@ -21,6 +24,11 @@ namespace Acts::detail {
 /// defined
 class DynamicColumnBase {
  public:
+  explicit DynamicColumnBase(std::string_view name) : m_name{name} {}
+
+  std::string_view name() const { return m_name; }
+  virtual std::type_index type() const = 0;
+
   virtual ~DynamicColumnBase() = default;
 
   /// Retrieve the stored data for the i-th proxy object stored in the container
@@ -76,6 +84,9 @@ class DynamicColumnBase {
   /// @returns A unique_ptr to a fresh DynamicColumnBase instance
   virtual std::unique_ptr<DynamicColumnBase> clone(
       bool empty = false) const = 0;
+
+ private:
+  std::string m_name;
 };
 
 /// Actual implementation of the Column memory using a std::vector as backend.
@@ -85,6 +96,9 @@ class DynamicColumnBase {
 template <typename T>
 class DynamicColumn : public DynamicColumnBase {
  public:
+  using DynamicColumnBase::DynamicColumnBase;
+  std::type_index type() const override { return typeid(T); }
+
   /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
@@ -118,7 +132,7 @@ class DynamicColumn : public DynamicColumnBase {
   /// @copydoc DynamicColumnBase::clone
   std::unique_ptr<DynamicColumnBase> clone(bool empty) const override {
     if (empty) {
-      return std::make_unique<DynamicColumn<T>>();
+      return std::make_unique<DynamicColumn<T>>(name());
     }
     return std::make_unique<DynamicColumn<T>>(*this);
   }
@@ -149,6 +163,9 @@ class DynamicColumn : public DynamicColumnBase {
 template <>
 class DynamicColumn<bool> : public DynamicColumnBase {
  public:
+  using DynamicColumnBase::DynamicColumnBase;
+  std::type_index type() const override { return typeid(bool); }
+
   /// @copydoc DynamicColumnBase::get
   std::any get(std::size_t i) override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
@@ -182,7 +199,7 @@ class DynamicColumn<bool> : public DynamicColumnBase {
   /// @copydoc DynamicColumnBase::clone
   std::unique_ptr<DynamicColumnBase> clone(bool empty) const override {
     if (empty) {
-      return std::make_unique<DynamicColumn<bool>>();
+      return std::make_unique<DynamicColumn<bool>>(name());
     }
     return std::make_unique<DynamicColumn<bool>>(*this);
   }

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/DynamicColumnInfo.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
@@ -182,6 +183,11 @@ class VectorTrackContainerBase {
     return {m_dynamic.begin(), m_dynamic.end()};
   }
 
+  /// Return descriptors for this backend's dynamic columns.
+  auto dynamicColumns_impl() const {
+    return Acts::detail::dynamicColumnView(m_dynamic);
+  }
+
   /// @endcond
 
   // END INTERFACE HELPER
@@ -252,7 +258,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   constexpr void addColumn_impl(const std::string_view& key) {
     HashedString hashedKey = hashStringDynamic(key);
     auto insertItr = m_dynamic.insert(
-        {hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
+        {hashedKey, std::make_unique<detail::DynamicColumn<T>>(key)});
     if (insertItr.second && size() > 0ul) {
       insertItr.first->second->resize(size());
     }

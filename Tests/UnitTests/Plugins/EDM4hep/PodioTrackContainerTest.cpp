@@ -285,6 +285,18 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     BOOST_CHECK(tc.hasColumn("int_column"_hash));
     BOOST_CHECK(tc.hasColumn("float_column"_hash));
 
+    BOOST_CHECK_EQUAL(std::ranges::distance(tc.dynamicColumns()), 2);
+    BOOST_CHECK_EQUAL(std::ranges::distance(tsc.dynamicColumns()), 0);
+    for (auto column : tc.dynamicColumns()) {
+      BOOST_CHECK_EQUAL(column.key, hashStringDynamic(column.name));
+      if (column.name == "int_column") {
+        BOOST_CHECK(column.type == typeid(std::int32_t));
+      } else {
+        BOOST_CHECK_EQUAL(column.name, "float_column");
+        BOOST_CHECK(column.type == typeid(float));
+      }
+    }
+
     BOOST_CHECK_EQUAL(tc.size(), 3);
 
     auto t = tc.getTrack(0);
@@ -364,10 +376,21 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
       helper, std::make_unique<ActsPodioEdm::TrackCollection>()};
   TrackContainer tc3{ptc3, tsc3};
 
-  tc3.addColumn<std::uint64_t>("counter");
-  tc3.addColumn<std::uint8_t>("odd");
-  tsc3.addColumn<std::uint64_t>("ts_counter");
-  tsc3.addColumn<std::uint8_t>("ts_odd");
+  auto createColumns = [](const auto& source, auto& destination) {
+    for (const auto column : source.dynamicColumns()) {
+      BOOST_CHECK_EQUAL(column.key, hashStringDynamic(column.name));
+      if (column.type == typeid(std::uint64_t)) {
+        destination.template addColumn<std::uint64_t>(column.name);
+      } else if (column.type == typeid(std::uint8_t)) {
+        destination.template addColumn<std::uint8_t>(column.name);
+      } else {
+        BOOST_FAIL("Unexpected dynamic column type");
+      }
+    }
+    BOOST_CHECK_EQUAL(std::ranges::distance(destination.dynamicColumns()), 2);
+  };
+  createColumns(tc, tc3);
+  createColumns(mtj, tsc3);
 
   for (std::size_t i = 0; i < 10; i++) {
     auto t = tc.makeTrack();

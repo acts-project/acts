@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/DynamicColumnInfo.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryBackendConcept.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
@@ -464,6 +465,11 @@ class ConstPodioTrackStateContainer final
   Acts::detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>
   dynamicKeys_impl() const {
     return {m_dynamic.begin(), m_dynamic.end()};
+  }
+
+  /// Return descriptors for this backend's dynamic columns.
+  auto dynamicColumns_impl() const {
+    return Acts::detail::dynamicColumnView(m_dynamic);
   }
 
  public:
@@ -1170,6 +1176,11 @@ class MutablePodioTrackStateContainer final
   Acts::detail::DynamicKeyRange<podio_detail::DynamicColumnBase>
   dynamicKeys_impl() const {
     return {m_dynamic.begin(), m_dynamic.end()};
+  }
+
+  /// Return descriptors for this backend's dynamic columns.
+  auto dynamicColumns_impl() const {
+    return Acts::detail::dynamicColumnView(m_dynamic);
   }
 
   /// Copy dynamic column data from another track state
