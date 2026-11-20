@@ -425,7 +425,18 @@ BOOST_AUTO_TEST_CASE(EnsureDynamicColumns) {
   BOOST_CHECK(!tc2.hasColumn("counter"));
   BOOST_CHECK(!tc2.hasColumn("odd"));
 
+  BOOST_CHECK_EQUAL(std::ranges::distance(tc2.dynamicColumns()), 0);
   tc2.ensureDynamicColumns(tc);
+  BOOST_CHECK_EQUAL(std::ranges::distance(tc2.dynamicColumns()), 2);
+  for (const auto column : tc2.dynamicColumns()) {
+    BOOST_CHECK_EQUAL(column.key, hashStringDynamic(column.name));
+    if (column.name == "odd") {
+      BOOST_CHECK(column.type == typeid(bool));
+    } else {
+      BOOST_CHECK_EQUAL(column.name, "counter");
+      BOOST_CHECK(column.type == typeid(std::size_t));
+    }
+  }
 
   BOOST_CHECK(tc2.hasColumn("counter"));
   BOOST_CHECK(tc2.hasColumn("odd"));
