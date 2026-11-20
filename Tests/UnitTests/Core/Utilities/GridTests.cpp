@@ -315,6 +315,50 @@ BOOST_AUTO_TEST_CASE(grid_full_conversion) {
   BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point{0.6}), 2);
 }
 
+BOOST_AUTO_TEST_CASE(bound_and_closed_axes_have_no_exterior_bins) {
+  const Axis a(AxisBound, 0.0, 1.0, 1u);
+  const Axis b(AxisClosed, 0.0, 2.0, 2u);
+  const Axis c(AxisBound, 0.0, 3.0, 3u);
+  Grid grid(Type<double>, a, b, c);
+  using Index = decltype(grid)::index_t;
+
+  BOOST_CHECK_EQUAL(grid.size(), 6u);
+  BOOST_CHECK_EQUAL(grid.multiAxis().getNTotalBins(true), 6u);
+  BOOST_CHECK_EQUAL(grid.multiAxis().getGlobalBinFromLocalBins({1, 1, 1}), 0u);
+  BOOST_CHECK_EQUAL(grid.multiAxis().getGlobalBinFromLocalBins({1, 2, 3}), 5u);
+  BOOST_CHECK(
+      (grid.multiAxis().getLocalBinsFromGlobalBin(0u) == Index{1, 1, 1}));
+  BOOST_CHECK(
+      (grid.multiAxis().getLocalBinsFromGlobalBin(5u) == Index{1, 2, 3}));
+  grid.setExteriorBins(1.0);
+  for (std::size_t globalBin = 0; globalBin < grid.size(); ++globalBin) {
+    BOOST_CHECK_EQUAL(grid.at(globalBin), 0.0);
+  }
+
+  const Axis open(AxisOpen, 0.0, 1.0, 1u);
+  Grid mixedGrid(Type<double>, open, b, c);
+  using MixedIndex = decltype(mixedGrid)::index_t;
+
+  BOOST_CHECK_EQUAL(mixedGrid.size(), 18u);
+  BOOST_CHECK_EQUAL(mixedGrid.multiAxis().getGlobalBinFromLocalBins({0, 1, 1}),
+                    0u);
+  BOOST_CHECK_EQUAL(mixedGrid.multiAxis().getGlobalBinFromLocalBins({1, 1, 1}),
+                    6u);
+  BOOST_CHECK_EQUAL(mixedGrid.multiAxis().getGlobalBinFromLocalBins({2, 2, 3}),
+                    17u);
+  BOOST_CHECK((mixedGrid.multiAxis().getLocalBinsFromGlobalBin(0u) ==
+               MixedIndex{0, 1, 1}));
+  BOOST_CHECK((mixedGrid.multiAxis().getLocalBinsFromGlobalBin(6u) ==
+               MixedIndex{1, 1, 1}));
+  BOOST_CHECK((mixedGrid.multiAxis().getLocalBinsFromGlobalBin(17u) ==
+               MixedIndex{2, 2, 3}));
+  mixedGrid.setExteriorBins(1.0);
+  for (std::size_t globalBin = 0; globalBin < mixedGrid.size(); ++globalBin) {
+    const double expected = globalBin < 6u || globalBin >= 12u ? 1.0 : 0.0;
+    BOOST_CHECK_EQUAL(mixedGrid.at(globalBin), expected);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(Output) {
   const Axis a{AxisOpen, 0.0, 1.0, 10u};
   const Axis b{AxisBound, {1, 2, 3}};

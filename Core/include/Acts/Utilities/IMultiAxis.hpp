@@ -42,9 +42,9 @@ using IMultiAxis3D = IMultiAxisXD<3>;
 /// methods, using small vectors) so that grids of differing dimension can be
 /// handled through a common pointer. Bins are addressed either via a
 /// multi-index (one local bin index per axis) or via a single flattened global
-/// bin index. As for @c IAxis, local bin indices start at @c 1, with index
-/// @c 0 and <tt>nBins + 1</tt> denoting the underflow and overflow bins of an
-/// axis; flattened global indices include these under-/overflow bins.
+/// bin index. As for @c IAxis, regular local bin indices start at @c 1.
+/// Open axes additionally have an underflow bin at @c 0 and an overflow bin at
+/// <tt>nBins + 1</tt>, while bound and closed axes have no exterior bins.
 class IMultiAxis {
  private:
   /// Small vector type used to hold per-axis values without heap allocation
@@ -106,13 +106,13 @@ class IMultiAxis {
   }
 
   /// Get the total number of bins in the grid
-  /// @param includeOverflowBins if @c true the under-/overflow bins of every axis are
-  /// included in the count, otherwise only the regular bins are counted
+  /// @param includeOverflowBins if @c true the under-/overflow bins of open
+  /// axes are included in the count, otherwise only regular bins are counted
   /// @return product of the per-axis bin counts
   virtual std::size_t getNTotalBins(bool includeOverflowBins = false) const {
     std::size_t result = 1;
     for (const IAxis& axis : *this) {
-      result *= axis.getNBins() + (includeOverflowBins ? 2 : 0);
+      result *= includeOverflowBins ? axis.getNTotalBins() : axis.getNBins();
     }
     return result;
   }
@@ -496,7 +496,7 @@ class IMultiAxisXD : public IMultiAxis {
 
   /// Determine the flattened global bin index from a multi-index
   /// @param localBins local bin indices along each axis (under-/overflow bins
-  ///        are allowed)
+  ///        are allowed for open axes)
   /// @return global bin index of the bin
   virtual GlobalBin getGlobalBinFromLocalBins(
       const LocalBins& localBins) const {
@@ -506,7 +506,8 @@ class IMultiAxisXD : public IMultiAxis {
 
   /// Determine the multi-index of local bin indices for a given point
   /// @param point coordinates to look up, one per axis
-  /// @return local bin indices along each axis (may be under-/overflow bins)
+  /// @return local bin indices along each axis (may be under-/overflow bins for
+  /// open axes)
   virtual LocalBins getLocalBinsFromPoint(const Point& point) const {
     return detail::MultiAxisHelper::getLocalBinsFromPoint(point,
                                                           getAnyAxesTuple());
@@ -515,7 +516,8 @@ class IMultiAxisXD : public IMultiAxis {
   /// Determine the multi-index of local bin indices from a flattened global
   /// bin index
   /// @param globalBin global bin index
-  /// @return local bin indices along each axis (may be under-/overflow bins)
+  /// @return local bin indices along each axis (may be under-/overflow bins for
+  /// open axes)
   virtual LocalBins getLocalBinsFromGlobalBin(GlobalBin globalBin) const {
     return detail::MultiAxisHelper::getLocalBinsFromGlobalBin(
         globalBin, getAnyAxesTuple());

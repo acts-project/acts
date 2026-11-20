@@ -81,7 +81,8 @@ struct SurfaceArray::ISurfaceGridLookup {
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const Vector3& curvature) const = 0;
 
-  /// Returns the total size of the grid (including under/overflow bins)
+  /// Returns the total size of the grid, including under/overflow bins for
+  /// open axes
   /// @return Size of the grid data structure
   virtual std::size_t size() const = 0;
 
@@ -102,8 +103,8 @@ struct SurfaceArray::ISurfaceGridLookup {
   /// Checks if global bin is valid
   /// @param bin the global bin index
   /// @return bool if the bin is valid
-  /// @note Valid means that the index points to a bin which is not a under
-  ///       or overflow bin or out of range in any axis.
+  /// @note Valid means that the index points to a bin which is not an underflow
+  ///       or overflow bin of an open axis, or out of range in any axis.
   virtual bool isValidBin(std::size_t bin) const = 0;
 
   /// The binning values described by this surface grid lookup. They are in
@@ -241,10 +242,13 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
       throw std::out_of_range(
           "neighbor distance exceeds the neighbor window bound");
     }
-    // local bins run from the underflow bin 0 to the overflow bin nBins + 1
-    if (gridIndices[0] > m_numLocalBins[0] + 1 ||
-        gridIndices[1] > m_numLocalBins[1] + 1) {
-      throw std::out_of_range("local bin is outside the grid");
+    for (std::size_t i = 0; i < gridIndices.size(); ++i) {
+      const IAxis& axis = *m_iAxes[i];
+      const std::size_t begin = axis.getBinIndexOffset();
+      if (gridIndices[i] < begin ||
+          gridIndices[i] >= begin + axis.getNTotalBins()) {
+        throw std::out_of_range("local bin is outside the grid");
+      }
     }
     return surfacePack(neighborPackIndex(gridIndices, neighborDistance));
   }
@@ -351,7 +355,6 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
       throw std::invalid_argument("neighbor window floor exceeds its bound");
     }
 
-    m_numGridBins = (m_numLocalBins[0] + 2) * (m_numLocalBins[1] + 2);
     m_packStride1 = static_cast<std::size_t>(m_neighborWindow.max[1]) + 1;
     m_packStridePerBin =
         (static_cast<std::size_t>(m_neighborWindow.max[0]) + 1) * m_packStride1;
@@ -366,6 +369,7 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
   /// Called by the derived class once it holds the concrete axes
   void setAxes(const IAxis& axis0, const IAxis& axis1) {
     m_iAxes = {&axis0, &axis1};
+    m_numGridBins = axis0.getNTotalBins() * axis1.getNTotalBins();
   }
 
   /// Local bins of a point in grid coordinates
