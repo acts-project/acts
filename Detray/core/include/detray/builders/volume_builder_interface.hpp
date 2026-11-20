@@ -14,8 +14,10 @@
 #include "detray/geometry/tracking_volume.hpp"
 #include "detray/utils/concepts.hpp"
 #include "detray/utils/logging.hpp"
+#include "detray/utils/ranges/ranges.hpp"
 
 // System include(s)
+#include <concepts>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -254,9 +256,12 @@ class volume_builder_interface {
   /// @param opt the builder options
   ///
   /// @returns the detector collection index for every local object
-  template <typename coll_t, concepts::range obj_t, typename hasher_t>
+  template <typename coll_t, detray::ranges::range src_coll_t,
+            typename hasher_t>
+    requires std::same_as<typename coll_t::value_type,
+                          typename src_coll_t::value_type>
   DETRAY_HOST auto add_to_detector_collection(coll_t &coll,
-                                              const std::vector<obj_t> &src,
+                                              const src_coll_t &src,
                                               const hasher_t &hasher,
                                               const volume_builder_options &opt)
       -> std::vector<dindex> {

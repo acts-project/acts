@@ -148,8 +148,7 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
   /// Add material of type @tparam mat_id to a detector
   ///
   /// @param det the detector
-  /// @param cache the hash maps of the detector data (no deduplication if
-  ///              null)
+  /// @param opt the volume builder options (e.g. deduplication)
   template <material_id mat_id>
   DETRAY_HOST void add_material(detector_t &det,
                                 const volume_builder_options &opt) {
@@ -163,8 +162,8 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
     [[maybe_unused]] const auto offset{static_cast<dindex>(det_coll.size())};
 
     // Global index for every volume local material entry
-    const std::vector<dindex> global_idx{
-        this->add_objects(det_coll, local_coll, material_hash{}, opt)};
+    const std::vector<dindex> global_idx{this->add_to_detector_collection(
+        det_coll, local_coll, material_hash{}, opt)};
 
     // Update all surface links
     for (auto &sf : this->surfaces()) {

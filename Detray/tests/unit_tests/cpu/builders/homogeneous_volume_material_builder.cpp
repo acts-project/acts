@@ -107,7 +107,7 @@ TEST(detray_builders, homogeneous_volume_material_deduplication) {
       auto sf_factory = std::make_shared<rectangle_factory>();
       sf_factory->push_back({surface_id::e_sensitive,
                              transform3(point3{0.f, 0.f, -1.f}), 1u,
-                             std::vector<scalar>{10.f, 8.f}});
+                             std::vector<scalar>{-10.f, -8.f, 10.f, 8.f}});
 
       mat_builder.add_surfaces(sf_factory);
       mat_builder.set_material(mat);

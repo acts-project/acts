@@ -259,7 +259,7 @@ GTEST_TEST(detray_builders, volume_builder_shared_cache) {
       auto sf_factory = std::make_shared<rectangle_factory>();
       sf_factory->push_back({surface_id::e_passive,
                              transform3(point3{0.f, 0.f, -1.f}), 1u,
-                             std::vector<scalar>{10.f, 8.f}});
+                             std::vector<scalar>{-10.f, -8.f, 10.f, 8.f}});
 
       volume_builder<detector_t> vbuilder{volume_id::e_cuboid, i, cache};
       vbuilder.add_surfaces(sf_factory);
