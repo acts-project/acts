@@ -108,6 +108,8 @@ enum class MixtureReductionAlgorithm { weightCut, KLDistance, KLDistanceNaive };
 /// @param betheHeitlerApprox The object that encapsulates the approximation.
 /// @param maxComponents number of maximum components in the track state
 /// @param weightCutoff when to drop components
+/// @param transverseMomentumCut minimum transverse momentum (in GeV) for
+/// components
 /// @param componentMergeMethod How to merge a mixture to a single set of
 /// parameters and covariance
 /// @param mixtureReductionAlgorithm How to reduce the number of components
@@ -122,7 +124,8 @@ std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     std::size_t maxComponents, double weightCutoff,
     Acts::ComponentMergeMethod componentMergeMethod,
     MixtureReductionAlgorithm mixtureReductionAlgorithm,
-    double reverseFilteringCovarianceScaling, const Acts::Logger& logger);
+    double reverseFilteringCovarianceScaling, const Acts::Logger& logger,
+    double transverseMomentumCut = 0.0);
 
 /// Makes a fitter function object for the Global Chi Square Fitter (GX2F)
 ///

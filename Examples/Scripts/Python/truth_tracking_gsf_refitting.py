@@ -63,6 +63,7 @@ def runRefittingGsf(
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
         "weightCutoff": 1.0e-4,
+        "transverseMomentumCut": 100 * u.MeV,
         "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
         "level": acts.logging.INFO,
     }
