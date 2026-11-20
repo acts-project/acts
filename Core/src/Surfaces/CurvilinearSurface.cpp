@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
 
 #include <iomanip>
 #include <ios>
@@ -60,14 +59,22 @@ BoundToFreeMatrix CurvilinearSurface::boundToFreeJacobian() const {
   // the time component
   jacobian(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacobian.block<3, 2>(eFreeDir0, eBoundPhi) =
-      sphericalToFreeDirectionJacobian(m_direction);
+  jacobian.block<3, 2>(eFreeDir0, eBoundDir0) =
+      boundParametrization().directionJacobianFromUnitDirection(m_direction);
   jacobian(eFreeQOverP, eBoundQOverP) = 1;
 
   return jacobian;
 }
 
-FreeToBoundMatrix CurvilinearSurface::freeToBoundJacobian() const {
+Result<FreeToBoundMatrix> CurvilinearSurface::freeToBoundJacobian() const {
+  // Preserve the existing domain without an additional conditioning cutoff.
+  const auto directionJacobian =
+      boundParametrization().directionCoordinatesJacobianFromUnitDirection(
+          m_direction, 0.);
+  if (!directionJacobian.ok()) {
+    return Result<FreeToBoundMatrix>::failure(directionJacobian.error());
+  }
+
   // this is copied from the `Surface::freeToBoundJacobian`
   // implementation without bounds check and definite direction
 
@@ -82,11 +89,11 @@ FreeToBoundMatrix CurvilinearSurface::freeToBoundJacobian() const {
   // Time component
   jacobian(eBoundTime, eFreeTime) = 1;
   // Directional and momentum elements for reference frame surface
-  jacobian.block<2, 3>(eBoundPhi, eFreeDir0) =
-      freeToSphericalDirectionJacobian(m_direction);
+
+  jacobian.block<2, 3>(eBoundDir0, eFreeDir0) = *directionJacobian;
   jacobian(eBoundQOverP, eFreeQOverP) = 1;
 
-  return jacobian;
+  return Result<FreeToBoundMatrix>::success(jacobian);
 }
 
 FreeToPathMatrix CurvilinearSurface::freeToPathDerivative() const {

@@ -291,8 +291,8 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     const auto perigeeZ0 = perigee_pars[Acts::BoundIndices::eBoundLoc1];
 
     // truth phi;theta;q/p *at the perigee*,
-    const auto perigeePhi = perigee_pars[Acts::BoundIndices::eBoundPhi];
-    const auto perigeeTheta = perigee_pars[Acts::BoundIndices::eBoundTheta];
+    const auto perigeePhi = perigee_pars[Acts::BoundIndices::eBoundDir0];
+    const auto perigeeTheta = perigee_pars[Acts::BoundIndices::eBoundDir1];
     const auto perigeeQop = perigee_pars[Acts::BoundIndices::eBoundQOverP];
 
     m_perigeePhi.push_back(Acts::clampValue<float>(perigeePhi));
@@ -303,14 +303,15 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     const auto perigeeP =
         atPerigee.absoluteMomentum() / Acts::UnitConstants::GeV;
     m_perigeeP.push_back(Acts::clampValue<float>(perigeeP));
-    const auto dir = atPerigee.direction();
+    const auto dir = atPerigee.direction(ctx.recoGeoContext);
     m_perigeePx.push_back(Acts::clampValue<float>(perigeeP * dir.x()));
     m_perigeePy.push_back(Acts::clampValue<float>(perigeeP * dir.y()));
     m_perigeePz.push_back(Acts::clampValue<float>(perigeeP * dir.z()));
     m_perigeeEta.push_back(Acts::clampValue<float>(
-        Acts::VectorHelpers::eta(atPerigee.direction())));
+        Acts::VectorHelpers::eta(atPerigee.direction(ctx.recoGeoContext))));
     m_perigeePt.push_back(Acts::clampValue<float>(
-        perigeeP * Acts::VectorHelpers::perp(atPerigee.direction())));
+        perigeeP *
+        Acts::VectorHelpers::perp(atPerigee.direction(ctx.recoGeoContext))));
 
     // Push the perigee parameters
     m_perigeeD0.push_back(

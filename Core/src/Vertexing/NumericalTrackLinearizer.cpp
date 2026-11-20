@@ -29,7 +29,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   pOptions.surfaceTolerance = m_cfg.targetTolerance;
 
   pOptions.direction = detail::directionToSurface(
-      gctx, perigeeSurface, params.position(gctx), params.direction());
+      gctx, perigeeSurface, params.position(gctx), params.direction(gctx));
 
   // Propagate to the PCA of the reference point
   auto result =
@@ -65,8 +65,8 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   {
     Vector3 globalCoords = endParams.position(gctx);
     double globalTime = endParams.time();
-    double phi = perigeeParams(BoundIndices::eBoundPhi);
-    double theta = perigeeParams(BoundIndices::eBoundTheta);
+    double phi = perigeeParams(BoundIndices::eBoundDir0);
+    double theta = perigeeParams(BoundIndices::eBoundDir1);
     double qOvP = perigeeParams(BoundIndices::eBoundQOverP);
 
     paramVec.head<3>() = globalCoords;

@@ -241,6 +241,7 @@ struct GsfActor {
       if (haveMeasurement) {
         const Result<void> materialInteractionRes = applyMultipleScattering(
             state, stepper, surface,
+            surface.boundParametrization(state.options.geoContext),
             determineMaterialUpdateMode(state, navigator,
                                         MaterialUpdateMode::PreUpdate),
             logger());
@@ -250,6 +251,7 @@ struct GsfActor {
       } else {
         const Result<void> materialInteractionRes = applyMultipleScattering(
             state, stepper, surface,
+            surface.boundParametrization(state.options.geoContext),
             determineMaterialUpdateMode(state, navigator,
                                         MaterialUpdateMode::FullUpdate),
             logger());
@@ -335,7 +337,8 @@ struct GsfActor {
       // reduce component number
       const auto finalCmpNumber = std::min(
           static_cast<std::size_t>(stepper.maxComponents), m_cfg.maxComponents);
-      m_cfg.extensions.mixtureReducer(componentCache, finalCmpNumber, surface);
+      m_cfg.extensions.mixtureReducer(state.options.geoContext, componentCache,
+                                      finalCmpNumber, surface);
 
       removeLowWeightComponents(componentCache, m_cfg.weightCutoff);
 
@@ -346,6 +349,7 @@ struct GsfActor {
     if (m_cfg.multipleScattering && haveMaterial && haveMeasurement) {
       const Result<void> materialInteractionRes = applyMultipleScattering(
           state, stepper, surface,
+          surface.boundParametrization(state.options.geoContext),
           determineMaterialUpdateMode(state, navigator,
                                       MaterialUpdateMode::PostUpdate),
           logger());
@@ -382,6 +386,10 @@ struct GsfActor {
     // Keep track of all created components for outlier handling
     std::vector<TrackIndexType> allTips;
     allTips.reserve(stepper.numberComponents(state.stepping));
+
+    // All components are bound to the same surface
+    const BoundParametrization parametrization =
+        surface.boundParametrization(state.options.geoContext);
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
@@ -430,8 +438,8 @@ struct GsfActor {
         // Allocate the filtered parameters right before they are written
         trackStateProxy.addComponents(TrackStatePropMask::Filtered);
         // Run Kalman update
-        auto updateRes = m_cfg.extensions.updater(state.geoContext,
-                                                  trackStateProxy, logger());
+        auto updateRes = m_cfg.extensions.updater(
+            state.geoContext, parametrization, trackStateProxy, logger());
         if (!updateRes.ok()) {
           ACTS_DEBUG("Update step failed: " << updateRes.error());
           return updateRes.error();
@@ -475,7 +483,7 @@ struct GsfActor {
       ++result.measurementStates;
     }
 
-    updateMultiTrajectory(result, tmpStates, surface,
+    updateMultiTrajectory(state.geoContext, result, tmpStates, surface,
                           TrackStateType()
                               .setHasParameters()
                               .setHasMaterial(surface.hasMaterial())
@@ -556,7 +564,7 @@ struct GsfActor {
       ++result.measurementHoles;
     }
 
-    updateMultiTrajectory(result, tmpStates, surface,
+    updateMultiTrajectory(state.geoContext, result, tmpStates, surface,
                           TrackStateType()
                               .setHasParameters()
                               .setHasMaterial(surface.hasMaterial())
@@ -566,7 +574,7 @@ struct GsfActor {
     return Result<void>::success();
   }
 
-  void updateMultiTrajectory(result_type& result,
+  void updateMultiTrajectory(const GeometryContext& gctx, result_type& result,
                              const TemporaryStates& tmpStates,
                              const Surface& surface, TrackStateType type,
                              const BoundMatrix& jacobian) const {
@@ -607,15 +615,16 @@ struct GsfActor {
       combinedState.jacobian() = jacobian;
 
       auto [prtMean, prtCov] = mergeGaussianMixture(
-          tmpStates.tips, PrtProjector{tmpStates.traj, tmpStates.weights},
+          gctx, tmpStates.tips, PrtProjector{tmpStates.traj, tmpStates.weights},
           surface, m_cfg.mergeMethod);
       combinedState.predicted() = prtMean;
       combinedState.predictedCovariance() = prtCov;
 
       if (type.isMeasurement()) {
         auto [fltMean, fltCov] = mergeGaussianMixture(
-            tmpStates.tips, FltProjector{tmpStates.traj, tmpStates.weights},
-            surface, m_cfg.mergeMethod);
+            gctx, tmpStates.tips,
+            FltProjector{tmpStates.traj, tmpStates.weights}, surface,
+            m_cfg.mergeMethod);
         combinedState.filtered() = fltMean;
         combinedState.filteredCovariance() = fltCov;
       } else {
@@ -638,7 +647,7 @@ struct GsfActor {
             // filtered and is skipped as an already visited surface
             if (trackState.typeFlags().isMeasurement()) {
               const auto [smtMean, smtCov] = mergeGaussianMixture(
-                  tmpStates.tips,
+                  gctx, tmpStates.tips,
                   FltProjector{tmpStates.traj, tmpStates.weights}, surface,
                   m_cfg.mergeMethod);
 

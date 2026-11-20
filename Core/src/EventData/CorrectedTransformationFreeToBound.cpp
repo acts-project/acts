@@ -112,8 +112,10 @@ detail::CorrectedFreeToBoundTransformer::operator()(
                                    0.5 / kappa, 0.5 / kappa);
   }
 
-  // Initialize the mean of the bound parameters
-  BoundVector bpMean = BoundVector::Zero();
+  const auto parametrization = surface.boundParametrization(geoContext);
+  // Average local offsets from the nominal point so periodic seams do not
+  // separate nearby sigma points. The nominal offset is zero.
+  BoundVector meanOffset = BoundVector::Zero();
   // Initialize the bound covariance
   BoundMatrix bv = BoundMatrix::Zero();
 
@@ -124,7 +126,8 @@ detail::CorrectedFreeToBoundTransformer::operator()(
   // 1. The nominal one
   // The sampled free parameters, the weight for measurement W_m and weight for
   // covariance, W_c
-  const auto& [paramsNom, mweightNom, cweightNom] = sampledFreeParams[0];
+  const auto& paramsNom = std::get<0>(sampledFreeParams[0]);
+  const double cweightNom = std::get<2>(sampledFreeParams[0]);
   // Transform the free to bound
   auto nominalRes =
       transformFreeToBoundParameters(paramsNom, surface, geoContext);
@@ -136,7 +139,6 @@ detail::CorrectedFreeToBoundTransformer::operator()(
   }
   auto nominalBound = nominalRes.value();
   transformedBoundParams.emplace_back(nominalBound, cweightNom);
-  bpMean = bpMean + mweightNom * nominalBound;
 
   // 2. Loop over the rest sample points of the free parameters to get the
   // corrected bound parameters
@@ -166,18 +168,33 @@ detail::CorrectedFreeToBoundTransformer::operator()(
 
     auto bp = result.value();
     transformedBoundParams.emplace_back(bp, cweight);
-    bpMean = bpMean + mweight * bp;
+    meanOffset += mweight * parametrization.difference(bp, nominalBound);
   }
 
-  // Get the corrected bound covariance
+  const BoundVector bpMean = nominalBound + meanOffset;
+  if (!bpMean.allFinite()) {
+    return std::nullopt;
+  }
+
+  // Get the corrected bound covariance in the same local basis as the mean.
   for (unsigned isample = 0; isample < sampleSize; ++isample) {
-    BoundVector bSigma = transformedBoundParams[isample].first - bpMean;
+    const BoundVector bSigma = parametrization.difference(
+        transformedBoundParams[isample].first, bpMean);
 
     bv = bv +
          transformedBoundParams[isample].second * bSigma * bSigma.transpose();
   }
 
-  return std::make_tuple(bpMean, bv);
+  if (!bv.allFinite()) {
+    return std::nullopt;
+  }
+  const auto canonical = parametrization.canonicalize(bpMean, bv);
+  if (!canonical.ok()) {
+    ACTS_VERBOSE("Corrected bound mean has no canonical covariance basis: "
+                 << canonical.error().message());
+    return std::nullopt;
+  }
+  return std::make_tuple(canonical->first, canonical->second);
 }
 
 }  // namespace Acts

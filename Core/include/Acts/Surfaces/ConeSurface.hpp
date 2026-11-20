@@ -136,10 +136,11 @@ class ConeSurface : public RegularSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
   /// @param direction global 3D momentum direction
-  /// @return Jacobian from global to local
-  FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
-                                        const Vector3& position,
-                                        const Vector3& direction) const final;
+  /// @return Jacobian from global to local, or a chart-domain error for a
+  /// singular direction.
+  Result<FreeToBoundMatrix> freeToBoundJacobian(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
 
   /// Return method for surface normal information
   ///

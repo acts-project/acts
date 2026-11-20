@@ -13,6 +13,7 @@
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPython/Utilities/ProxyTether.hpp"
@@ -561,9 +562,36 @@ void addEventData(py::module_& m) {
            &BoundTrackParameters::withParticleHypothesis,
            py::arg("particleHypothesis"))
       .def_property_readonly("position", &BoundTrackParameters::position)
-      .def_property_readonly("momentum", &BoundTrackParameters::momentum)
-      .def_property_readonly("transverseMomentum",
-                             &BoundTrackParameters::transverseMomentum);
+      .def(
+          "phi",
+          [](const BoundTrackParameters& self, const GeometryContext& gctx) {
+            return self.phi(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "theta",
+          [](const BoundTrackParameters& self, const GeometryContext& gctx) {
+            return self.theta(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "direction",
+          [](const BoundTrackParameters& self, const GeometryContext& gctx) {
+            return self.direction(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "momentum",
+          [](const BoundTrackParameters& self, const GeometryContext& gctx) {
+            return self.momentum(gctx);
+          },
+          py::arg("gctx"))
+      .def(
+          "transverseMomentum",
+          [](const BoundTrackParameters& self, const GeometryContext& gctx) {
+            return self.transverseMomentum(gctx);
+          },
+          py::arg("gctx"));
 
   // SourceLink - type-erased wrapper (minimal binding for type identity)
   // Note: SourceLink has no default constructor; concrete types (e.g.

@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
+#include "Acts/EventData/BoundParametrizationError.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -17,9 +19,9 @@
 Acts::FreeVector Acts::transformBoundToFreeParameters(
     const Acts::Surface& surface, const GeometryContext& geoCtx,
     const Acts::BoundVector& boundParams) {
-  // convert angles to global unit direction vector
-  Vector3 direction = makeDirectionFromPhiTheta(boundParams[eBoundPhi],
-                                                boundParams[eBoundTheta]);
+  // decode global direction in the surface-selected parametrization
+  Vector3 direction =
+      surface.boundParametrization(geoCtx).direction(boundParams);
 
   // convert local position to global position vector
   Vector2 local(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);
@@ -41,31 +43,21 @@ Acts::FreeVector Acts::transformBoundToFreeParameters(
 Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
     const FreeVector& freeParams, const Surface& surface,
     const GeometryContext& geoCtx, double tolerance) {
-  // initialize the bound vector
-  BoundVector bp = BoundVector::Zero();
-  // convert global to local position on the surface
-  auto position = freeParams.segment<3>(eFreePos0);
-  auto direction = freeParams.segment<3>(eFreeDir0);
-  auto result = surface.globalToLocal(geoCtx, position, direction, tolerance);
-  if (!result.ok()) {
-    return Result<Acts::BoundVector>::failure(result.error());
-  }
-
-  auto localPosition = result.value();
-  bp[eBoundLoc0] = localPosition[ePos0];
-  bp[eBoundLoc1] = localPosition[ePos1];
-
-  bp[eBoundTime] = freeParams[eFreeTime];
-  bp[eBoundPhi] = VectorHelpers::phi(direction);
-  bp[eBoundTheta] = VectorHelpers::theta(direction);
-  bp[eBoundQOverP] = freeParams[eFreeQOverP];
-  return Result<Acts::BoundVector>::success(bp);
+  return transformFreeToBoundParameters(
+      freeParams.segment<3>(eFreePos0), freeParams[eFreeTime],
+      freeParams.segment<3>(eFreeDir0), freeParams[eFreeQOverP], surface,
+      geoCtx, tolerance);
 }
 
 Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
     const Acts::Vector3& position, double time, const Acts::Vector3& direction,
     double qOverP, const Acts::Surface& surface,
     const Acts::GeometryContext& geoCtx, double tolerance) {
+  if (!BoundParametrization::isValidDirection(direction)) {
+    return Result<BoundVector>::failure(
+        BoundParametrizationError::InvalidDirection);
+  }
+
   // initialize the bound vector
   BoundVector bp = BoundVector::Zero();
   // convert global to local position on the surface
@@ -79,8 +71,10 @@ Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
   bp[eBoundLoc1] = localPosition[ePos1];
 
   bp[eBoundTime] = time;
-  bp[eBoundPhi] = VectorHelpers::phi(direction);
-  bp[eBoundTheta] = VectorHelpers::theta(direction);
+  const Vector2 coordinates =
+      surface.boundParametrization(geoCtx).directionCoordinates(direction);
+  bp[eBoundDir0] = coordinates[0];
+  bp[eBoundDir1] = coordinates[1];
   bp[eBoundQOverP] = qOverP;
   return Result<Acts::BoundVector>::success(bp);
 }
@@ -92,8 +86,8 @@ Acts::BoundVector Acts::transformFreeToCurvilinearParameters(double time,
   BoundVector bp = BoundVector::Zero();
   // local coordinates are zero by construction
   bp[eBoundTime] = time;
-  bp[eBoundPhi] = phi;
-  bp[eBoundTheta] = theta;
+  bp[eBoundDir0] = phi;
+  bp[eBoundDir1] = theta;
   bp[eBoundQOverP] = qOverP;
   return bp;
 }
@@ -103,8 +97,8 @@ Acts::BoundVector Acts::transformFreeToCurvilinearParameters(
   BoundVector bp = BoundVector::Zero();
   // local coordinates are zero by construction
   bp[eBoundTime] = time;
-  bp[eBoundPhi] = VectorHelpers::phi(direction);
-  bp[eBoundTheta] = VectorHelpers::theta(direction);
+  bp[eBoundDir0] = VectorHelpers::phi(direction);
+  bp[eBoundDir1] = VectorHelpers::theta(direction);
   bp[eBoundQOverP] = qOverP;
   return bp;
 }

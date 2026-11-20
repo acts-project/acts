@@ -57,7 +57,7 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
   // (e.g. PlaneSurface) referenceFrame returns the transform rotation, so this
   // is behavior-preserving there.
   RotationMatrix3 surfaceAxes = trkParams->referenceSurface().referenceFrame(
-      gctx, trkParams->position(gctx), trkParams->direction());
+      gctx, trkParams->position(gctx), trkParams->direction(gctx));
   // Origin of the surface coordinate system
   Vector3 surfaceOrigin = trkParams->referenceSurface().center(gctx);
 
@@ -193,7 +193,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
   // Sec 3.2 of the reference.
   if (absoluteCharge == 0. || bZ == 0.) {
     // Momentum direction (constant for straight tracks)
-    Vector3 momDirStraightTrack = trkParams.direction();
+    Vector3 momDirStraightTrack = trkParams.direction(gctx);
 
     // Current position on the track
     Vector3 positionOnTrack = trkParams.position(gctx);
@@ -234,8 +234,8 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
   double d0 = trkParams.parameters()[BoundIndices::eBoundLoc0];
   double z0 = trkParams.parameters()[BoundIndices::eBoundLoc1];
   // Momentum angles at 2D PCA
-  double phiP = trkParams.parameters()[BoundIndices::eBoundPhi];
-  double theta = trkParams.parameters()[BoundIndices::eBoundTheta];
+  double phiP = trkParams.parameters()[BoundIndices::eBoundDir0];
+  double theta = trkParams.parameters()[BoundIndices::eBoundDir1];
   // Functions of the polar angle theta for later use
   double sinTheta = std::sin(theta);
   double cotTheta = 1. / std::tan(theta);
@@ -339,7 +339,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
   pOptions.direction = detail::directionToSurface(
-      gctx, *pointSurface, trkParams.position(gctx), trkParams.direction());
+      gctx, *pointSurface, trkParams.position(gctx), trkParams.direction(gctx));
 
   // Propagate to the point surface; the resulting parameters are at the 3D PCA
   auto result =
@@ -394,7 +394,7 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
   pOptions.direction = detail::directionToSurface(
-      gctx, *perigeeSurface, track.position(gctx), track.direction());
+      gctx, *perigeeSurface, track.position(gctx), track.direction(gctx));
 
   // Do the propagation to linPoint
   auto result =
@@ -473,7 +473,7 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
   pOptions.direction = detail::directionToSurface(
-      gctx, *perigeeSurface, track.position(gctx), track.direction());
+      gctx, *perigeeSurface, track.position(gctx), track.direction(gctx));
 
   // Do the propagation to the perigeee
   auto result =
@@ -486,8 +486,8 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
   const auto& params = (*result).parameters();
   const double d0 = params[BoundIndices::eBoundLoc0];
   const double z0 = params[BoundIndices::eBoundLoc1];
-  const double phi = params[BoundIndices::eBoundPhi];
-  const double theta = params[BoundIndices::eBoundTheta];
+  const double phi = params[BoundIndices::eBoundDir0];
+  const double theta = params[BoundIndices::eBoundDir1];
 
   double vs = std::sin(std::atan2(direction[1], direction[0]) - phi) * d0;
   double eta = AngleHelpers::etaFromTheta(theta);
@@ -513,7 +513,7 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
   pOptions.direction = detail::directionToSurface(
-      gctx, *perigeeSurface, track.position(gctx), track.direction());
+      gctx, *perigeeSurface, track.position(gctx), track.direction(gctx));
 
   // Do the propagation to the perigeee
   auto result =
@@ -525,7 +525,7 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
 
   const auto& params = *result;
   const Vector3 trkpos = params.position(gctx);
-  const Vector3 trkmom = params.momentum();
+  const Vector3 trkmom = params.momentum(gctx);
 
   double sign =
       (direction.cross(trkmom)).dot(trkmom.cross(vtx.position() - trkpos));

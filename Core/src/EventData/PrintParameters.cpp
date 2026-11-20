@@ -26,8 +26,8 @@ constexpr std::array<const char*, eBoundSize> makeBoundNames() {
   names[eBoundLoc0] = "loc0:";
   names[eBoundLoc1] = "loc1:";
   names[eBoundTime] = "time:";
-  names[eBoundPhi] = "phi:";
-  names[eBoundTheta] = "theta:";
+  names[eBoundDir0] = "phi:";
+  names[eBoundDir1] = "theta:";
   names[eBoundQOverP] = "q/p:";
   return names;
 }

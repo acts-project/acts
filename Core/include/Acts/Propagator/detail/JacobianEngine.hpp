@@ -12,28 +12,18 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+/// @file
+/// Internal covariance-transport implementation shared by steppers.
+/// These helpers are not public API; see @ref versioning. Custom steppers may
+/// use them, but must not expose their implementation types in public
+/// interfaces.
+
 namespace Acts::detail {
 
 /// @brief These functions perform the calculation of the Jacobians for the
 /// the covariance transport. This is a purely algebraic problem the
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
 /// As a consequence the methods can be located in a separate file.
-
-/// @brief Evaluate the projection Jacobian from free to curvilinear parameters
-///        without transport jacobian.
-///
-/// @param [in] direction Normalised direction vector
-///
-/// @return Projection Jacobian
-FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction);
-
-/// @brief Evaluate the projection Jacobian from curvilinear to free parameters
-///        without transport jacobian.
-///
-/// @param [in] direction Normalised direction vector
-///
-/// @return Projection Jacobian
-BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction);
 
 /// @brief This function calculates the full transport jacobian from a bound
 ///        curvilinear representation to a new bound representation
@@ -54,14 +44,15 @@ BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction);
 ///
 /// @note jac(locA->locB) = jac(gloB->locB)*(1+
 ///       pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
-void boundToBoundTransportJacobian(const GeometryContext& geoContext,
-                                   const Surface& surface,
-                                   const FreeVector& freeParameters,
-                                   const BoundToFreeMatrix& boundToFreeJacobian,
-                                   const FreeMatrix& freeTransportJacobian,
-                                   FreeToBoundMatrix& freeToBoundJacobian,
-                                   const FreeVector& freeToPathDerivatives,
-                                   BoundMatrix& fullTransportJacobian);
+/// @return Success, or a chart-domain error without modifying the outputs
+Result<void> boundToBoundTransportJacobian(
+    const GeometryContext& geoContext, const Surface& surface,
+    const FreeVector& freeParameters,
+    const BoundToFreeMatrix& boundToFreeJacobian,
+    const FreeMatrix& freeTransportJacobian,
+    FreeToBoundMatrix& freeToBoundJacobian,
+    const FreeVector& freeToPathDerivatives,
+    BoundMatrix& fullTransportJacobian);
 
 /// @brief This function calculates the full transport jacobian from a bound
 ///        curvilinear representation to a new bound representation
@@ -82,8 +73,8 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
 /// @note jac(locA->locB) = jac(gloB->locB)*(1+
 /// pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
 ///
-/// @return a 6x6 transport jacobian from bound to bound
-BoundMatrix boundToBoundTransportJacobian(
+/// @return A 6x6 transport Jacobian, or a chart-domain error
+Result<BoundMatrix> boundToBoundTransportJacobian(
     const GeometryContext& geoContext, const FreeVector& freeParameters,
     const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
@@ -108,7 +99,8 @@ BoundMatrix boundToBoundTransportJacobian(
 /// @note The parameter @p surface is only required if projected to bound
 /// parameters. In the case of curvilinear parameters the geometry and the
 /// position is known and the calculation can be simplified
-void boundToCurvilinearTransportJacobian(
+/// @return Success, or a chart-domain error without modifying the outputs
+Result<void> boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
@@ -142,12 +134,12 @@ BoundToFreeMatrix boundToFreeTransportJacobian(
 /// @param [in] freeToPathDerivatives Path length derivatives for free parameters
 /// @param [out] fullTransportJacobian The 6x8 transport jacobian from bound to free
 ///
-void freeToBoundTransportJacobian(const GeometryContext& geoContext,
-                                  const Surface& surface,
-                                  const FreeVector& freeParameters,
-                                  const FreeMatrix& freeTransportJacobian,
-                                  const FreeVector& freeToPathDerivatives,
-                                  FreeToBoundMatrix& fullTransportJacobian);
+/// @return Success, or a chart-domain error without modifying the output
+Result<void> freeToBoundTransportJacobian(
+    const GeometryContext& geoContext, const Surface& surface,
+    const FreeVector& freeParameters, const FreeMatrix& freeTransportJacobian,
+    const FreeVector& freeToPathDerivatives,
+    FreeToBoundMatrix& fullTransportJacobian);
 
 /// @brief This function calculates the full transport jacobian from a free
 /// parameterisation to a bound one. Since a variation of the start
@@ -159,8 +151,8 @@ void freeToBoundTransportJacobian(const GeometryContext& geoContext,
 /// @param [in] freeTransportJacobian Transport jacobian free to free
 /// @param [in] freeToPathDerivatives Path length derivatives for free
 ///
-/// @return a 6x8 transport jacobian from curvilinear to free
-FreeToBoundMatrix freeToCurvilinearTransportJacobian(
+/// @return A 6x8 transport Jacobian, or a chart-domain error
+Result<FreeToBoundMatrix> freeToCurvilinearTransportJacobian(
     const Vector3& direction, const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives);
 

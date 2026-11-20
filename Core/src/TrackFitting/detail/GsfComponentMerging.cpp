@@ -17,17 +17,18 @@
 namespace Acts {
 
 std::tuple<BoundVector, BoundMatrix> detail::Gsf::mergeGaussianMixture(
-    std::span<const GsfComponent> mixture, const Surface &surface,
-    ComponentMergeMethod method) {
+    const GeometryContext &gctx, std::span<const GsfComponent> mixture,
+    const Surface &surface, ComponentMergeMethod method) {
   return mergeGaussianMixture(
-      mixture,
+      gctx, mixture,
       [](const GsfComponent &c) {
         return std::tie(c.weight, c.boundPars, c.boundCov);
       },
       surface, method);
 }
 
-GsfComponent detail::Gsf::mergeTwoComponents(const GsfComponent &a,
+GsfComponent detail::Gsf::mergeTwoComponents(const GeometryContext &gctx,
+                                             const GsfComponent &a,
                                              const GsfComponent &b,
                                              const Surface &surface) {
   assert(a.weight >= 0.0 && b.weight >= 0.0 && "non-positive weight");
@@ -37,7 +38,7 @@ GsfComponent detail::Gsf::mergeTwoComponents(const GsfComponent &a,
     return std::tie(c->weight, c->boundPars, c->boundCov);
   };
   auto [mergedPars, mergedCov] =
-      angleDescriptionSwitch(surface, [&](const auto &desc) {
+      angleDescriptionSwitch(gctx, surface, [&](const auto &desc) {
         return mergeGaussianMixtureMeanCov(components, proj, desc);
       });
 

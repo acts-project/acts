@@ -33,7 +33,7 @@ namespace bd = boost::unit_test::data;
 
 namespace {
 constexpr BoundIndices boundIndices[] = {
-    eBoundLoc0, eBoundLoc1, eBoundTime, eBoundPhi, eBoundTheta, eBoundQOverP,
+    eBoundLoc0, eBoundLoc1, eBoundTime, eBoundDir0, eBoundDir1, eBoundQOverP,
 };
 constexpr GeometryIdentifier geoId{1};
 // fix seed for reproducible tests
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(VariableBoundAll) {
   FixedBoundMeasurementProxy<eBoundSize> meas =
       container.makeMeasurement<eBoundSize>(geoId);
   meas.setSubspaceIndices(std::array{eBoundLoc0, eBoundLoc1, eBoundTime,
-                                     eBoundPhi, eBoundTheta, eBoundQOverP});
+                                     eBoundDir0, eBoundDir1, eBoundQOverP});
   meas.parameters() = params;
   meas.covariance() = cov;
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(VariableBoundAllEmplace) {
   FixedBoundMeasurementProxy<eBoundSize> meas =
       container.emplaceMeasurement<eBoundSize>(
           geoId,
-          std::array{eBoundLoc0, eBoundLoc1, eBoundTime, eBoundPhi, eBoundTheta,
+          std::array{eBoundLoc0, eBoundLoc1, eBoundTime, eBoundDir0, eBoundDir1,
                      eBoundQOverP},
           params, cov);
 
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(VariableBoundReassign) {
   auto [params1, cov1] = generateParametersCovariance<double, 2u>(rng);
 
   VariableBoundMeasurementProxy meas = container.makeMeasurement(2, geoId);
-  meas.setSubspaceIndices(std::array{eBoundPhi, eBoundTheta});
+  meas.setSubspaceIndices(std::array{eBoundDir0, eBoundDir1});
   meas.parameters() = params1;
   meas.covariance() = cov1;
 
@@ -141,8 +141,8 @@ BOOST_AUTO_TEST_CASE(VariableBoundReassign) {
   BOOST_CHECK(!meas.contains(eBoundLoc0));
   BOOST_CHECK(!meas.contains(eBoundLoc1));
   BOOST_CHECK(!meas.contains(eBoundTime));
-  BOOST_CHECK(meas.contains(eBoundPhi));
-  BOOST_CHECK(meas.contains(eBoundTheta));
+  BOOST_CHECK(meas.contains(eBoundDir0));
+  BOOST_CHECK(meas.contains(eBoundDir1));
   BOOST_CHECK(!meas.contains(eBoundQOverP));
 
   // reassign w/ all parameters
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(VariableBoundReassign) {
 
   meas = container.makeMeasurement(eBoundSize, geoId);
   meas.setSubspaceIndices(std::array{eBoundLoc0, eBoundLoc1, eBoundTime,
-                                     eBoundPhi, eBoundTheta, eBoundQOverP});
+                                     eBoundDir0, eBoundDir1, eBoundQOverP});
   meas.parameters() = paramsN;
   meas.covariance() = covN;
 
@@ -158,8 +158,8 @@ BOOST_AUTO_TEST_CASE(VariableBoundReassign) {
   BOOST_CHECK(meas.contains(eBoundLoc0));
   BOOST_CHECK(meas.contains(eBoundLoc1));
   BOOST_CHECK(meas.contains(eBoundTime));
-  BOOST_CHECK(meas.contains(eBoundPhi));
-  BOOST_CHECK(meas.contains(eBoundTheta));
+  BOOST_CHECK(meas.contains(eBoundDir0));
+  BOOST_CHECK(meas.contains(eBoundDir1));
   BOOST_CHECK(meas.contains(eBoundQOverP));
 }
 

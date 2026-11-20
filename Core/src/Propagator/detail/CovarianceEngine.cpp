@@ -49,7 +49,7 @@ BoundTrackParameters detail::curvilinearParameters(
       std::move(covariance), particleHypothesis);
 }
 
-void detail::transportCovarianceToBound(
+Result<void> detail::transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
@@ -61,10 +61,13 @@ void detail::transportCovarianceToBound(
 
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
-  boundToBoundTransportJacobian(geoContext, surface, freeParameters,
-                                boundToFreeJacobian, freeTransportJacobian,
-                                freeToBoundJacobian, freeToPathDerivatives,
-                                fullTransportJacobian);
+  const auto transportResult = boundToBoundTransportJacobian(
+      geoContext, surface, freeParameters, boundToFreeJacobian,
+      freeTransportJacobian, freeToBoundJacobian, freeToPathDerivatives,
+      fullTransportJacobian);
+  if (!transportResult.ok()) {
+    return transportResult.error();
+  }
 
   bool correction = false;
   if (freeToBoundCorrection) {
@@ -112,9 +115,10 @@ void detail::transportCovarianceToBound(
   reinitializeJacobians(geoContext, surface, freeTransportJacobian,
                         freeToPathDerivatives, boundToFreeJacobian,
                         freeParameters);
+  return Result<void>::success();
 }
 
-void detail::transportCovarianceToCurvilinear(
+Result<void> detail::transportCovarianceToCurvilinear(
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,
@@ -124,9 +128,12 @@ void detail::transportCovarianceToCurvilinear(
 
   // Calculate the full jacobian from local parameters at the start surface to
   // current curvilinear parameters
-  boundToCurvilinearTransportJacobian(
+  const auto transportResult = boundToCurvilinearTransportJacobian(
       direction, boundToFreeJacobian, freeTransportJacobian,
       freeToBoundJacobian, freeToPathDerivatives, fullTransportJacobian);
+  if (!transportResult.ok()) {
+    return transportResult.error();
+  }
 
   // Apply the actual covariance transport to get covariance of the current
   // curvilinear parameters
@@ -145,6 +152,7 @@ void detail::transportCovarianceToCurvilinear(
   // curvilinear surface
   reinitializeJacobians(freeTransportJacobian, freeToPathDerivatives,
                         boundToFreeJacobian, direction);
+  return Result<void>::success();
 }
 
 Result<BoundTrackParameters> detail::boundToBoundConversion(
@@ -182,10 +190,13 @@ Result<BoundTrackParameters> detail::boundToBoundConversion(
 
     BoundMatrix boundToBoundJac;
     FreeToBoundMatrix freeToBoundJacobian;
-    detail::boundToBoundTransportJacobian(
+    const auto transportResult = detail::boundToBoundTransportJacobian(
         gctx, targetSurface, freePars, boundToFreeJacobian,
         freeTransportJacobian, freeToBoundJacobian, freeToPathDerivatives,
         boundToBoundJac);
+    if (!transportResult.ok()) {
+      return transportResult.error();
+    }
 
     covOut = boundToBoundJac * (*boundParameters.covariance()) *
              boundToBoundJac.transpose();

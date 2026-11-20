@@ -110,8 +110,8 @@ struct MultiStepperTester {
       } else {
         params[eBoundLoc0] = locDis(gen);
         params[eBoundLoc1] = locDis(gen);
-        params[eBoundPhi] = phiDis(gen);
-        params[eBoundTheta] = thetaDis(gen);
+        params[eBoundDir0] = phiDis(gen);
+        params[eBoundDir1] = thetaDis(gen);
         params[eBoundQOverP] = qOverPDis(gen);
         params[eBoundTime] = timeDis(gen);
       }
@@ -285,11 +285,11 @@ struct MultiStepperTester {
       // Single stepper
       auto single_result =
           single_stepper.step(single_state, defaultNDir, nullptr);
-      single_stepper.transportToCurvilinear(single_state);
+      BOOST_REQUIRE(single_stepper.transportToCurvilinear(single_state).ok());
 
       // Multi stepper;
       auto multi_result = multi_stepper.step(multi_state, defaultNDir, nullptr);
-      multi_stepper.transportToCurvilinear(multi_state);
+      BOOST_REQUIRE(multi_stepper.transportToCurvilinear(multi_state).ok());
 
       // Check equality
       BOOST_REQUIRE(multi_result.ok());
@@ -420,9 +420,9 @@ struct MultiStepperTester {
 
     std::vector<std::tuple<double, BoundVector>> cmps(
         2, {0.5, BoundVector::Zero()});
-    std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
-    std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
-    std::get<BoundVector>(cmps[1])[eBoundTheta] = std::numbers::pi / 2.;
+    std::get<BoundVector>(cmps[0])[eBoundDir1] = std::numbers::pi / 2.;
+    std::get<BoundVector>(cmps[1])[eBoundDir0] = std::numbers::pi;
+    std::get<BoundVector>(cmps[1])[eBoundDir1] = std::numbers::pi / 2.;
     std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
     std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
@@ -434,10 +434,10 @@ struct MultiStepperTester {
         particleHypothesis);
 
     BOOST_REQUIRE(std::get<1>(multi_pars[0])
-                      .direction()
+                      .direction(geoCtx)
                       .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
     BOOST_REQUIRE(std::get<1>(multi_pars[1])
-                      .direction()
+                      .direction(geoCtx)
                       .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
     MultiState multi_state = multi_stepper.makeState(options);
@@ -547,8 +547,8 @@ struct MultiStepperTester {
     std::vector<std::tuple<double, BoundVector>> cmps(
         2, {0.5, BoundVector::Zero()});
     for (auto &[weight, pars] : cmps) {
-      pars[eBoundPhi] = -std::numbers::pi / 2.;
-      pars[eBoundTheta] = std::numbers::pi / 2.;
+      pars[eBoundDir0] = -std::numbers::pi / 2.;
+      pars[eBoundDir1] = std::numbers::pi / 2.;
       pars[eBoundQOverP] = 1.0;
     }
     std::get<BoundVector>(cmps[1])[eBoundLoc0] = 1.0;
@@ -629,9 +629,9 @@ struct MultiStepperTester {
 
     std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
         cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
-    std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
-    std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
-    std::get<BoundVector>(cmps[1])[eBoundTheta] = std::numbers::pi / 2.;
+    std::get<BoundVector>(cmps[0])[eBoundDir1] = std::numbers::pi / 2.;
+    std::get<BoundVector>(cmps[1])[eBoundDir0] = std::numbers::pi;
+    std::get<BoundVector>(cmps[1])[eBoundDir1] = std::numbers::pi / 2.;
     std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
     std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
@@ -643,10 +643,10 @@ struct MultiStepperTester {
         particleHypothesis);
 
     BOOST_REQUIRE(std::get<1>(multi_pars[0])
-                      .direction()
+                      .direction(geoCtx)
                       .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
     BOOST_REQUIRE(std::get<1>(multi_pars[1])
-                      .direction()
+                      .direction(geoCtx)
                       .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
     MultiState multi_state = multi_stepper.makeState(options);
@@ -740,7 +740,8 @@ struct MultiStepperTester {
     auto res = multi_stepper.boundParameters(multi_state, *surface);
     BOOST_REQUIRE(res.ok());
 
-    const auto single_bound_pars = res->merge(ComponentMergeMethod::eMean);
+    const auto single_bound_pars =
+        res->merge(geoCtx, ComponentMergeMethod::eMean);
 
     // all components are equal, so the jacobian is the one of a single state
     SingleStepper single_stepper(defaultBField);
@@ -792,12 +793,13 @@ struct MultiStepperTester {
     multi_stepper.initialize(multi_state, multi_pars);
 
     const auto curv_pars = multi_stepper.curvilinearParameters(multi_state);
-    const auto single_curv_pars = curv_pars.merge(ComponentMergeMethod::eMean);
+    const auto single_curv_pars =
+        curv_pars.merge(geoCtx, ComponentMergeMethod::eMean);
 
     BOOST_CHECK(single_curv_pars.fourPosition(geoCtx).isApprox(
         check_pars.fourPosition(geoCtx), 1.e-8));
-    BOOST_CHECK(
-        single_curv_pars.direction().isApprox(check_pars.direction(), 1.e-8));
+    BOOST_CHECK(single_curv_pars.direction(geoCtx).isApprox(
+        check_pars.direction(geoCtx), 1.e-8));
     BOOST_CHECK_CLOSE(single_curv_pars.absoluteMomentum(),
                       check_pars.absoluteMomentum(), 1.e-8);
     BOOST_CHECK_CLOSE(single_curv_pars.charge(), check_pars.charge(), 1.e-8);

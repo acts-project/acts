@@ -28,10 +28,10 @@ class Surface;
 inline BoundVector reflectBoundParameters(const BoundVector& boundParams) {
   BoundVector reflected = boundParams;
   auto [phi, theta] =
-      detail::normalizePhiTheta(boundParams[eBoundPhi] - std::numbers::pi,
-                                std::numbers::pi - boundParams[eBoundTheta]);
-  reflected[eBoundPhi] = phi;
-  reflected[eBoundTheta] = theta;
+      detail::normalizePhiTheta(boundParams[eBoundDir0] - std::numbers::pi,
+                                std::numbers::pi - boundParams[eBoundDir1]);
+  reflected[eBoundDir0] = phi;
+  reflected[eBoundDir1] = theta;
   reflected[eBoundQOverP] = -boundParams[eBoundQOverP];
   return reflected;
 }
@@ -66,7 +66,7 @@ FreeVector transformBoundToFreeParameters(const Surface& surface,
 /// @param geoCtx Geometry context for the global-to-local transformation
 /// @param tolerance Tolerance used for globalToLocal
 ///
-/// @return Bound track parameters vector on the given surface
+/// @return Bound parameters, or an error for an invalid direction or off-surface position
 Result<BoundVector> transformFreeToBoundParameters(
     const FreeVector& freeParams, const Surface& surface,
     const GeometryContext& geoCtx, double tolerance = s_onSurfaceTolerance);
@@ -81,7 +81,7 @@ Result<BoundVector> transformFreeToBoundParameters(
 /// @param geoCtx Geometry context for the global-to-local transformation
 /// @param tolerance Tolerance used for globalToLocal
 ///
-/// @return Equivalent bound parameters vector on the given surface
+/// @return Bound parameters, or an error for an invalid direction or off-surface position
 Result<BoundVector> transformFreeToBoundParameters(
     const Vector3& position, double time, const Vector3& direction,
     double qOverP, const Surface& surface, const GeometryContext& geoCtx,

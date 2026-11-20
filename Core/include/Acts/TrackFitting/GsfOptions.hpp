@@ -60,8 +60,10 @@ struct GsfExtensions {
       Delegate<void(const GeometryContext &, const CalibrationContext &,
                     const SourceLink &, TrackStateProxy)>;
 
-  /// Type alias for updater delegate function
+  /// Type alias for updater delegate function. The caller passes the bound
+  /// parametrization of the track state's reference surface.
   using Updater = Delegate<Result<void>(const GeometryContext &,
+                                        const BoundParametrization &,
                                         TrackStateProxy, const Logger &)>;
 
   /// Type alias for outlier finder delegate function
@@ -70,7 +72,8 @@ struct GsfExtensions {
   /// Type alias for component reducer delegate function
   //! [mixture reducer]
   using ComponentReducer =
-      Delegate<void(std::vector<GsfComponent> &, std::size_t, const Surface &)>;
+      Delegate<void(const GeometryContext &, std::vector<GsfComponent> &,
+                    std::size_t, const Surface &)>;
   //! [mixture reducer]
 
   /// The Calibrator is a dedicated calibration algorithm that allows

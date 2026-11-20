@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -26,6 +27,7 @@
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitterBackend.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitterError.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
@@ -46,6 +48,22 @@ namespace Acts::Experimental {
 /// @addtogroup track_fitting
 /// @{
 
+namespace detail {
+/// Resolve the parametrization consumed by the canonical GX2F model.
+/// @param gctx Geometry context
+/// @param surface Surface anchoring the bound state
+/// @return The canonical parametrization
+/// @throws std::system_error if the parametrization is unsupported
+inline BoundParametrization gx2fParametrization(const GeometryContext& gctx,
+                                                const Surface& surface) {
+  const auto parametrization = surface.boundParametrization(gctx);
+  if (!parametrization.isGlobalSpherical()) {
+    throwUnsupportedGx2fParametrization(surface);
+  }
+  return parametrization;
+}
+}  // namespace detail
+
 /// Extension struct which holds delegates to customise the GX2F behaviour
 template <typename traj_t>
 struct Gx2FitterExtensions {
@@ -63,9 +81,11 @@ struct Gx2FitterExtensions {
                     const SourceLink&, TrackStateProxy)>;
 
   /// Type alias for updater delegate to incorporate measurements into track
-  /// parameters
-  using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        const Logger&)>;
+  /// parameters. The caller passes the bound parametrization of the track
+  /// state's reference surface.
+  using Updater =
+      Delegate<Result<void>(const GeometryContext&, const BoundParametrization&,
+                            TrackStateProxy, const Logger&)>;
 
   /// Type alias for outlier finder delegate to identify measurement outliers
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
@@ -230,12 +250,14 @@ struct Gx2FitterResult {
 /// @tparam kMeasDim Number of dimensions of the measurement
 /// @tparam track_state_t The type of the track state
 ///
+/// @param gctx Geometry context for the bound interpretation
 /// @param extendedSystem All parameters of the current equation system to update
 /// @param jacobianFromStart The Jacobian matrix from start to the current state
 /// @param trackState The track state to analyse
 /// @param logger A logger instance
 template <std::size_t kMeasDim, typename track_state_t>
-void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
+void addMeasurementToGx2fSums(const GeometryContext& gctx,
+                              Gx2fSystem& extendedSystem,
                               const std::vector<BoundMatrix>& jacobianFromStart,
                               const track_state_t& trackState,
                               const Logger& logger) {
@@ -250,9 +272,18 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
   const Matrix<kMeasDim, eBoundSize> projector =
       trackState.template projectorSubspaceHelper<kMeasDim>().projector();
 
+  const auto parametrization =
+      detail::gx2fParametrization(gctx, trackState.referenceSurface());
+  BoundVector measured = predicted;
+  const auto indices = trackState.template projectorSubspaceIndices<kMeasDim>();
+  for (std::size_t i = 0; i < kMeasDim; ++i) {
+    measured[indices[i]] = measurement[i];
+  }
+  const Vector<kMeasDim> residual =
+      projector * parametrization.difference(measured, predicted);
   addMeasurementToGx2fSumsBackend(extendedSystem, jacobianFromStart,
-                                  covarianceMeasurement, predicted, measurement,
-                                  projector, logger);
+                                  covarianceMeasurement, residual, projector,
+                                  logger);
 }
 
 /// @brief Process material and fill the aMatrix and bVector
@@ -263,6 +294,7 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
 ///
 /// @tparam track_state_t The type of the track state
 ///
+/// @param gctx Geometry context for the bound interpretation
 /// @param extendedSystem All parameters of the current equation system
 /// @param nMaterialsHandled How many materials we already handled. Used for the offset.
 /// @param scatteringMap The scattering map, containing all scattering angles and covariances
@@ -270,10 +302,12 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
 /// @param logger A logger instance
 template <typename track_state_t>
 void addMaterialToGx2fSums(
-    Gx2fSystem& extendedSystem, const std::size_t nMaterialsHandled,
+    const GeometryContext& gctx, Gx2fSystem& extendedSystem,
+    const std::size_t nMaterialsHandled,
     const std::unordered_map<GeometryIdentifier, ScatteringProperties>&
         scatteringMap,
     const track_state_t& trackState, const Logger& logger) {
+  detail::gx2fParametrization(gctx, trackState.referenceSurface());
   // Get and store geoId for the current material surface
   const GeometryIdentifier geoId = trackState.referenceSurface().geometryId();
   const auto scatteringMapId = scatteringMap.find(geoId);
@@ -290,22 +324,22 @@ void addMaterialToGx2fSums(
       scatteringMapId->second.scatteringAngles();
 
   const double invCovTheta = scatteringMapId->second.invCovarianceMaterial();
-  const double sinThetaLoc = std::sin(trackState.smoothed()[eBoundTheta]);
+  const double sinThetaLoc = std::sin(trackState.smoothed()[eBoundDir1]);
   const double invCovPhi = invCovTheta * sinThetaLoc * sinThetaLoc;
 
   // Phi contribution
   extendedSystem.aMatrix()(deltaPosition, deltaPosition) += invCovPhi;
   extendedSystem.bVector()(deltaPosition, 0) -=
-      invCovPhi * scatteringAngles[eBoundPhi];
+      invCovPhi * scatteringAngles[eBoundDir0];
   extendedSystem.chi2() +=
-      invCovPhi * scatteringAngles[eBoundPhi] * scatteringAngles[eBoundPhi];
+      invCovPhi * scatteringAngles[eBoundDir0] * scatteringAngles[eBoundDir0];
 
   // Theta Contribution
   extendedSystem.aMatrix()(deltaPosition + 1, deltaPosition + 1) += invCovTheta;
   extendedSystem.bVector()(deltaPosition + 1, 0) -=
-      invCovTheta * scatteringAngles[eBoundTheta];
-  extendedSystem.chi2() += invCovTheta * scatteringAngles[eBoundTheta] *
-                           scatteringAngles[eBoundTheta];
+      invCovTheta * scatteringAngles[eBoundDir1];
+  extendedSystem.chi2() +=
+      invCovTheta * scatteringAngles[eBoundDir1] * scatteringAngles[eBoundDir1];
 
   ACTS_VERBOSE(
       "Contributions in addMaterialToGx2fSums:\n"
@@ -313,22 +347,23 @@ void addMaterialToGx2fSums(
       << "    sinThetaLoc:   " << sinThetaLoc << "\n"
       << "    deltaPosition: " << deltaPosition << "\n"
       << "    Phi:\n"
-      << "        scattering angle:     " << scatteringAngles[eBoundPhi] << "\n"
+      << "        scattering angle:     " << scatteringAngles[eBoundDir0]
+      << "\n"
       << "        aMatrix contribution: " << invCovPhi << "\n"
       << "        bVector contribution: "
-      << invCovPhi * scatteringAngles[eBoundPhi] << "\n"
+      << invCovPhi * scatteringAngles[eBoundDir0] << "\n"
       << "        chi2sum contribution: "
-      << invCovPhi * scatteringAngles[eBoundPhi] * scatteringAngles[eBoundPhi]
+      << invCovPhi * scatteringAngles[eBoundDir0] * scatteringAngles[eBoundDir0]
       << "\n"
       << "    Theta:\n"
-      << "        scattering angle:     " << scatteringAngles[eBoundTheta]
+      << "        scattering angle:     " << scatteringAngles[eBoundDir1]
       << "\n"
       << "        aMatrix contribution: " << invCovTheta << "\n"
       << "        bVector contribution: "
-      << invCovTheta * scatteringAngles[eBoundTheta] << "\n"
+      << invCovTheta * scatteringAngles[eBoundDir1] << "\n"
       << "        chi2sum contribution: "
-      << invCovTheta * scatteringAngles[eBoundTheta] *
-             scatteringAngles[eBoundTheta]
+      << invCovTheta * scatteringAngles[eBoundDir1] *
+             scatteringAngles[eBoundDir1]
       << "\n");
 
   return;
@@ -343,6 +378,7 @@ void addMaterialToGx2fSums(
 /// @tparam track_proxy_t The type of the track proxy
 ///
 /// @param track A constant track proxy to inspect
+/// @param gctx Geometry context for the bound interpretation
 /// @param extendedSystem All parameters of the current equation system
 /// @param multipleScattering Flag to consider multiple scattering in the calculation
 /// @param scatteringMap Map of geometry identifiers to scattering properties,
@@ -351,8 +387,8 @@ void addMaterialToGx2fSums(
 /// @param logger A logger instance
 template <TrackProxyConcept track_proxy_t>
 void fillGx2fSystem(
-    const track_proxy_t track, Gx2fSystem& extendedSystem,
-    const bool multipleScattering,
+    const GeometryContext& gctx, const track_proxy_t track,
+    Gx2fSystem& extendedSystem, const bool multipleScattering,
     const std::unordered_map<GeometryIdentifier, ScatteringProperties>&
         scatteringMap,
     std::vector<GeometryIdentifier>& geoIdVector, const Logger& logger) {
@@ -378,6 +414,8 @@ void fillGx2fSystem(
              "No scattering angles found for material surface.");
       doMaterial = doMaterial && scatteringMapId->second.materialIsValid();
     }
+
+    detail::gx2fParametrization(gctx, trackState.referenceSurface());
 
     // Every state closes a transport segment, so its jacobian enters the
     // jacobians from start even if the state itself is skipped
@@ -407,7 +445,7 @@ void fillGx2fSystem(
       extendedSystem.ndf() += measDim;
 
       visit_measurement(measDim, [&](auto N) {
-        addMeasurementToGx2fSums<N>(extendedSystem, jacobianFromStart,
+        addMeasurementToGx2fSums<N>(gctx, extendedSystem, jacobianFromStart,
                                     trackState, logger);
       });
     }
@@ -419,8 +457,8 @@ void fillGx2fSystem(
       jacobianFromStart.emplace_back(BoundMatrix::Identity());
 
       // Add the material contribution to the system
-      addMaterialToGx2fSums(extendedSystem, geoIdVector.size(), scatteringMap,
-                            trackState, logger);
+      addMaterialToGx2fSums(gctx, extendedSystem, geoIdVector.size(),
+                            scatteringMap, trackState, logger);
 
       geoIdVector.emplace_back(geoId);
     }
@@ -474,6 +512,13 @@ std::size_t countMaterialStates(
 }
 
 /// Global Chi Square fitter (GX2F) implementation.
+///
+/// The scattering weights, kicks and derivative columns require canonical
+/// global-spherical bound coordinates. Unsupported bound states throw
+/// std::system_error with
+/// GlobalChiSquareFitterError::UnsupportedBoundParametrization. The initial
+/// state and states bound for measurements, material and stored holes are
+/// checked; merely traversed surfaces are not.
 ///
 /// @tparam propagator_t Type of the propagation class
 ///
@@ -682,6 +727,8 @@ class Gx2Fitter {
           sourceLinkIt != inputMeasurements->end()) {
         ACTS_DEBUG("    The surface contains a measurement.");
 
+        // Check only when binding a state that GX2F actually consumes.
+        detail::gx2fParametrization(state.geoContext, *surface);
         // Transport the covariance to the surface
         auto transportRes = stepper.transportToBound(state.stepping, *surface,
                                                      freeToBoundCorrection);
@@ -787,6 +834,8 @@ class Gx2Fitter {
             "    The surface contains no measurement, but material and maybe "
             "a hole.");
 
+        // Check only when binding a state that GX2F actually consumes.
+        detail::gx2fParametrization(state.geoContext, *surface);
         // Transport the covariance to the surface
         auto transportRes = stepper.transportToBound(state.stepping, *surface,
                                                      freeToBoundCorrection);
@@ -895,6 +944,8 @@ class Gx2Fitter {
           return Result<void>::success();
         }
 
+        // Check only when binding a state that GX2F actually consumes.
+        detail::gx2fParametrization(state.geoContext, *surface);
         // Transport the covariance to the surface
         auto transportRes = stepper.transportToBound(state.stepping, *surface,
                                                      freeToBoundCorrection);
@@ -995,6 +1046,8 @@ class Gx2Fitter {
       track_container_t& trackContainer) const
     requires(!isDirectNavigator)
   {
+    detail::gx2fParametrization(gx2fOptions.geoContext,
+                                sParameters.referenceSurface());
     // Preprocess Measurements (SourceLinks -> map)
     // To be able to find measurements later, we put them into a map.
     // We need to copy input SourceLinks anyway, so the map can own them.
@@ -1142,8 +1195,8 @@ class Gx2Fitter {
       // all stored material in each propagation.
       std::vector<GeometryIdentifier> geoIdVector;
 
-      fillGx2fSystem(track, extendedSystem, false, scatteringMap, geoIdVector,
-                     *m_addToSumLogger);
+      fillGx2fSystem(gx2fOptions.geoContext, track, extendedSystem, false,
+                     scatteringMap, geoIdVector, *m_addToSumLogger);
 
       chi2sum = extendedSystem.chi2();
 
@@ -1308,8 +1361,8 @@ class Gx2Fitter {
       // all stored material in each propagation.
       std::vector<GeometryIdentifier> geoIdVector;
 
-      fillGx2fSystem(track, extendedSystem, true, scatteringMap, geoIdVector,
-                     *m_addToSumLogger);
+      fillGx2fSystem(gx2fOptions.geoContext, track, extendedSystem, true,
+                     scatteringMap, geoIdVector, *m_addToSumLogger);
 
       chi2sum = extendedSystem.chi2();
 
@@ -1360,7 +1413,7 @@ class Gx2Fitter {
         continue;
       }
       const auto& angles = value.scatteringAngles();
-      ACTS_VERBOSE("    ( " << angles[eBoundTheta] << " | " << angles[eBoundPhi]
+      ACTS_VERBOSE("    ( " << angles[eBoundDir1] << " | " << angles[eBoundDir0]
                             << " )");
     }
 

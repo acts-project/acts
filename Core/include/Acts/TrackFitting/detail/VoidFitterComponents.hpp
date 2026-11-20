@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -28,6 +29,7 @@ void voidFitterCalibrator(const GeometryContext& /*gctx*/,
 
 template <typename traj_t>
 Result<void> voidFitterUpdater(const GeometryContext& /*gctx*/,
+                               const BoundParametrization& /*parametrization*/,
                                typename traj_t::TrackStateProxy trackState,
                                const Logger& /*logger*/) {
   trackState.filtered() = trackState.predicted();
@@ -63,7 +65,8 @@ inline const Surface* voidSurfaceAccessor(const SourceLink& /*sourceLink*/) {
 }
 
 template <typename component_t>
-void voidComponentReducer(std::vector<component_t>& /*components*/,
+void voidComponentReducer(const GeometryContext& /*gctx*/,
+                          std::vector<component_t>& /*components*/,
                           std::size_t /*n*/, const Surface& /*surface*/) {
   throw std::runtime_error{"voidComponentReducer should not ever execute"};
 }

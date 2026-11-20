@@ -78,7 +78,8 @@ class DetrayConcretePropagator : public PropagatorInterface {
     const auto& geoContext = context.recoGeoContext;
     // Get the track information
     const Acts::Vector3 position = startParameters.position(geoContext);
-    const Acts::Vector3 direction = startParameters.momentum().normalized();
+    const Acts::Vector3 direction =
+        startParameters.momentum(geoContext).normalized();
     ACTS_VERBOSE("Starting propagation at " << position.transpose()
                                             << " with direction "
                                             << direction.transpose());
@@ -89,7 +90,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
 
     // The full momentum, so the helix in a field has the right curvature;
     // ACTS and detray share GeV as momentum unit
-    const Acts::Vector3 momentum = startParameters.momentum();
+    const Acts::Vector3 momentum = startParameters.momentum(geoContext);
     detray::free_track_parameters<DAlgebra> track(
         {static_cast<float>(position.x()), static_cast<float>(position.y()),
          static_cast<float>(position.z())},

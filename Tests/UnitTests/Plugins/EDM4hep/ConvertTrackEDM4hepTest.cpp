@@ -52,10 +52,10 @@ BOOST_AUTO_TEST_CASE(JacobianRoundtrip) {
 
   double Bz = 2_T;
 
-  double tanLambda = std::tan(std::numbers::pi / 2. - par[eBoundTheta]);
-  double omega = par[eBoundQOverP] / std::sin(par[eBoundTheta]) * Bz;
+  double tanLambda = std::tan(std::numbers::pi / 2. - par[eBoundDir1]);
+  double omega = par[eBoundQOverP] / std::sin(par[eBoundDir1]) * Bz;
 
-  auto J1 = EDM4hepUtil::detail::jacobianToEdm4hep(par[eBoundTheta],
+  auto J1 = EDM4hepUtil::detail::jacobianToEdm4hep(par[eBoundDir1],
                                                    par[eBoundQOverP], Bz);
 
   BoundMatrix cov2 = J1 * cov * J1.transpose();

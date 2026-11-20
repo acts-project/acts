@@ -3,6 +3,8 @@ tracks/track states, track containers) that needs no detector or simulation.
 Mirrors Python/Core/tests/test_event_data.py, but for acts.examples types.
 """
 
+import math
+
 import numpy as np
 import pytest
 
@@ -213,6 +215,26 @@ def _check_track(track, state, *, linked):
     assert track.nDoF == 5
     assert track.nTrackStates == 1
     assert track.isForwardLinked is linked
+
+    # physical accessors take a geometry context; the perigee surface uses the
+    # canonical global-spherical parametrization (phi = 0.3, theta = 1.4)
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+    assert track.phi(gctx) == pytest.approx(0.3)
+    assert track.theta(gctx) == pytest.approx(1.4)
+    p = 1 / 0.01
+    assert track.transverseMomentum(gctx) == pytest.approx(p * math.sin(1.4))
+    direction = track.direction(gctx)
+    momentum = track.momentum(gctx)
+    four = track.fourMomentum(gctx)
+    expected = [
+        math.cos(0.3) * math.sin(1.4),
+        math.sin(0.3) * math.sin(1.4),
+        math.cos(1.4),
+    ]
+    for i in range(3):
+        assert direction[i] == pytest.approx(expected[i])
+        assert momentum[i] == pytest.approx(p * expected[i])
+        assert four[i] == pytest.approx(p * expected[i])
 
 
 def _check_state(state, geo_id, *, is_const):

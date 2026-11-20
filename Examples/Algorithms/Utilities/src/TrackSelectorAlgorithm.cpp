@@ -56,7 +56,7 @@ ProcessCode TrackSelectorAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   ACTS_DEBUG("Track container size before filtering: " << inputTracks.size());
 
-  m_selector.selectTracks(inputTracks, filteredTracks);
+  m_selector.selectTracks(inputTracks, filteredTracks, ctx.recoGeoContext);
 
   ACTS_DEBUG("Track container size after filtering: " << filteredTracks.size());
 

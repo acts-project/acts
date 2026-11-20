@@ -242,10 +242,10 @@ struct GaussianSumFitter {
     // Check if the start parameters are on the start surface
     IntersectionStatus intersectionStatusStartSurface =
         sParameters.referenceSurface()
-            .intersect(GeometryContext::dangerouslyDefaultConstruct(),
-                       sParameters.position(
-                           GeometryContext::dangerouslyDefaultConstruct()),
-                       sParameters.direction(), BoundaryTolerance::None())
+            .intersect(options.geoContext,
+                       sParameters.position(options.geoContext),
+                       sParameters.direction(options.geoContext),
+                       BoundaryTolerance::None())
             .closest()
             .status();
 
@@ -502,7 +502,8 @@ struct GaussianSumFitter {
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
-      const auto singleParams = params.merge(options.componentMergeMethod);
+      const auto singleParams =
+          params.merge(options.geoContext, options.componentMergeMethod);
 
       track.parameters() = singleParams.parameters();
       track.covariance() = singleParams.covariance().value();

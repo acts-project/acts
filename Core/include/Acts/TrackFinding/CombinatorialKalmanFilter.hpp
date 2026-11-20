@@ -23,6 +23,7 @@
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterExtensions.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
@@ -33,6 +34,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <cassert>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -436,7 +438,8 @@ class CombinatorialKalmanFilter {
             currentBranch.parameters() = boundParams.parameters();
             currentBranch.covariance() = *boundParams.covariance();
           } else {
-            const auto singleParams = boundParams.merge(brem.mergeMethod);
+            const auto singleParams =
+                boundParams.merge(state.options.geoContext, brem.mergeMethod);
             currentBranch.parameters() = singleParams.parameters();
             currentBranch.covariance() = *singleParams.covariance();
           }
@@ -535,6 +538,8 @@ class CombinatorialKalmanFilter {
       // to consider the material effects here
       const Result<void> materialRes = performMaterialInteraction(
           state, stepper, currentState.referenceSurface(),
+          currentState.referenceSurface().boundParametrization(
+              state.options.geoContext),
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::PostUpdate));
       if (!materialRes.ok()) {
@@ -592,7 +597,12 @@ class CombinatorialKalmanFilter {
       // Transport the covariance to the surface
       BoundMatrix jacobian;
       if (isMaterialOnly) {
-        jacobian = stepper.transportToCurvilinear(state.stepping);
+        const auto transportResult =
+            stepper.transportToCurvilinear(state.stepping);
+        if (!transportResult.ok()) {
+          return transportResult.error();
+        }
+        jacobian = *transportResult;
       } else {
         auto transportRes = stepper.transportToBound(state.stepping, surface);
         if (!transportRes.ok()) {
@@ -601,9 +611,17 @@ class CombinatorialKalmanFilter {
         jacobian = *transportRes;
       }
 
+      // Material-only transport anchors covariance in a curvilinear frame.
+      // Keep its interpretation until a subsequent surface binding or update.
+      auto covarianceParametrization =
+          isMaterialOnly
+              ? CurvilinearSurface(stepper.direction(state.stepping))
+                    .boundParametrization()
+              : surface.boundParametrization(state.options.geoContext);
+
       // Update state and stepper with pre material effects
       const Result<void> materialPreRes = performMaterialInteraction(
-          state, stepper, surface,
+          state, stepper, surface, covarianceParametrization,
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::PreUpdate));
       if (!materialPreRes.ok()) {
@@ -623,6 +641,8 @@ class CombinatorialKalmanFilter {
             return transportRes.error();
           }
           jacobian = *transportRes * jacobian;
+          covarianceParametrization =
+              surface.boundParametrization(state.options.geoContext);
         }
 
         // keep the jacobian segment the transport above just closed
@@ -631,7 +651,7 @@ class CombinatorialKalmanFilter {
         // apply the post material effects and return early, skipping the
         // track state creation below
         const Result<void> materialPostRes = performMaterialInteraction(
-            state, stepper, surface,
+            state, stepper, surface, covarianceParametrization,
             detail::determineMaterialUpdateMode(
                 state, navigator, MaterialUpdateMode::PostUpdate));
         if (!materialPostRes.ok()) {
@@ -663,11 +683,14 @@ class CombinatorialKalmanFilter {
             return transportRes.error();
           }
           jacobian = *transportRes * jacobian;
+          covarianceParametrization =
+              surface.boundParametrization(state.options.geoContext);
           auto res = stepper.boundParameters(state.stepping, surface);
           if (!res.ok()) {
             return res.error();
           }
-          const auto singleParams = res->merge(brem.mergeMethod);
+          const auto singleParams =
+              res->merge(state.options.geoContext, brem.mergeMethod);
           return Result<SingleBoundState>::success(
               {singleParams, jacobian,
                result.pathLengthOffset + stepper.pathLength(state.stepping)});
@@ -703,8 +726,12 @@ class CombinatorialKalmanFilter {
       if (tsRes.ok() && !(*tsRes).empty()) {
         const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList =
             *tsRes;
+        // Track states are only created on sensitive surfaces, which are never
+        // material-only, so the covariance is anchored on this surface.
+        assert(isSensitive && !isMaterialOnly);
         const Result<unsigned int> procRes =
-            processNewTrackStates(state, stepper, newTrackStateList, result);
+            processNewTrackStates(state, stepper, newTrackStateList,
+                                  covarianceParametrization, result);
         if (!procRes.ok()) {
           ACTS_DEBUG("Processing of selected track states failed: "
                      << procRes.error().message());
@@ -796,6 +823,9 @@ class CombinatorialKalmanFilter {
         // Update stepping state using filtered parameters of last track
         // state on this surface
         updateStepper(state, stepper, currentState);
+        // Measurements only exist on sensitive surfaces, whose covariance is
+        // already anchored on the surface parametrization.
+        assert(isSensitive && !isMaterialOnly);
         ACTS_VERBOSE("Stepping state is updated with filtered parameter:");
         ACTS_VERBOSE("-> " << currentState.filtered().transpose()
                            << " of track state with tip = "
@@ -804,7 +834,7 @@ class CombinatorialKalmanFilter {
 
       // Update state and stepper with post material effects
       const Result<void> materialPostRes = performMaterialInteraction(
-          state, stepper, surface,
+          state, stepper, surface, covarianceParametrization,
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::PostUpdate));
       if (!materialPostRes.ok()) {
@@ -827,12 +857,14 @@ class CombinatorialKalmanFilter {
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
     /// @param newTrackStateList index list of new track states
+    /// @param parametrization Bound parametrization of the current surface
     /// @param result which contains among others the new states, and the list of active branches
     /// @return the number of newly added branches or an error
     template <typename propagator_state_t, typename stepper_t>
     Result<unsigned int> processNewTrackStates(
         propagator_state_t& state, const stepper_t& stepper,
         const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList,
+        const BoundParametrization& parametrization,
         result_type& result) const {
       using PM = TrackStatePropMask;
 
@@ -877,7 +909,8 @@ class CombinatorialKalmanFilter {
           // Allocate the filtered parameters right before they are written
           trackState.addComponents(PM::Filtered);
           // Kalman update
-          const auto updateRes = kalmanUpdate(state, stepper, trackState);
+          const auto updateRes =
+              kalmanUpdate(state, stepper, parametrization, trackState);
           if (!updateRes.ok()) {
             ACTS_DEBUG("Update step failed: " << updateRes.error().message());
             return updateRes.error();
@@ -990,7 +1023,8 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> performMaterialInteraction(
         propagator_state_t& state, const stepper_t& stepper,
-        const Surface& surface, MaterialUpdateMode updateMode) const {
+        const Surface& surface, BoundParametrization covarianceParametrization,
+        MaterialUpdateMode updateMode) const {
       if (!surface.hasMaterial()) {
         return Result<void>::success();
       }
@@ -998,8 +1032,9 @@ class CombinatorialKalmanFilter {
       if constexpr (!IsMultiStepper) {
         const Result<detail::PointwiseMaterialEffects> materialInteractionRes =
             detail::performMaterialInteraction(
-                state, stepper, surface, updateMode, NoiseUpdateMode::addNoise,
-                multipleScattering, energyLoss, logger());
+                state, stepper, surface, covarianceParametrization, updateMode,
+                NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
+                logger());
         if (!materialInteractionRes.ok()) {
           ACTS_DEBUG("Material interaction failed during reset: "
                      << materialInteractionRes.error().message());
@@ -1049,7 +1084,8 @@ class CombinatorialKalmanFilter {
           const auto finalCmpNumber =
               std::min(static_cast<std::size_t>(stepper.maxComponents),
                        brem.maxComponents);
-          extensions.mixtureReducer(*brem.componentCache, finalCmpNumber,
+          extensions.mixtureReducer(state.options.geoContext,
+                                    *brem.componentCache, finalCmpNumber,
                                     surface);
 
           detail::Gsf::removeLowWeightComponents(*brem.componentCache,
@@ -1057,9 +1093,12 @@ class CombinatorialKalmanFilter {
 
           detail::Gsf::updateStepper(state, stepper, surface,
                                      *brem.componentCache);
+          covarianceParametrization =
+              surface.boundParametrization(state.options.geoContext);
         }
 
         return detail::Gsf::applyMultipleScattering(state, stepper, surface,
+                                                    covarianceParametrization,
                                                     updateMode, logger());
       }
     }
@@ -1067,9 +1106,11 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> kalmanUpdate(propagator_state_t& state,
                               const stepper_t& stepper,
+                              const BoundParametrization& parametrization,
                               TrackStateProxy& trackState) const {
       if constexpr (!IsMultiStepper) {
-        return extensions.updater(state.geoContext, trackState, *updaterLogger);
+        return extensions.updater(state.geoContext, parametrization, trackState,
+                                  *updaterLogger);
       } else {
         using PrtProjector = detail::Gsf::MultiTrajectoryProjector<
             detail::Gsf::StatesType::ePredicted, TrackStateContainerBackend>;
@@ -1125,8 +1166,9 @@ class CombinatorialKalmanFilter {
           // Allocate the filtered parameters right before they are written
           trackStateProxy.addComponents(TrackStatePropMask::Filtered);
 
-          const auto updateRes = extensions.updater(
-              state.geoContext, trackStateProxy, *updaterLogger);
+          const auto updateRes =
+              extensions.updater(state.geoContext, parametrization,
+                                 trackStateProxy, *updaterLogger);
           if (!updateRes.ok()) {
             return updateRes.error();
           }
@@ -1145,14 +1187,14 @@ class CombinatorialKalmanFilter {
                                       });
 
         const auto [prtMean, prtCov] = detail::Gsf::mergeGaussianMixture(
-            temporaryStates.tips,
+            state.geoContext, temporaryStates.tips,
             PrtProjector{temporaryStates.traj, temporaryStates.weights},
             surface, brem.mergeMethod);
         trackState.predicted() = prtMean;
         trackState.predictedCovariance() = prtCov;
 
         const auto [fltMean, fltCov] = detail::Gsf::mergeGaussianMixture(
-            temporaryStates.tips,
+            state.geoContext, temporaryStates.tips,
             FltProjector{temporaryStates.traj, temporaryStates.weights},
             surface, brem.mergeMethod);
         trackState.filtered() = fltMean;

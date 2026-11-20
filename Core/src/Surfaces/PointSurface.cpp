@@ -187,19 +187,22 @@ BoundToFreeMatrix PointSurface::boundToFreeJacobian(
         scale * uDot * (loc0 * V - loc1 * U) -
         (loc0 * uDot + loc1 * V.dot(dT)) * T;
   };
-  setPositionColumn(eBoundPhi);
-  setPositionColumn(eBoundTheta);
+  setPositionColumn(eBoundDir0);
+  setPositionColumn(eBoundDir1);
 
   return jacToGlobal;
 }
 
-FreeToBoundMatrix PointSurface::freeToBoundJacobian(
+Result<FreeToBoundMatrix> PointSurface::freeToBoundJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
-  FreeToBoundMatrix jacToLocal =
-      Surface::freeToBoundJacobian(gctx, position, direction);
+  auto jacobian = Surface::freeToBoundJacobian(gctx, position, direction);
+  if (!jacobian.ok()) {
+    return jacobian;
+  }
+  FreeToBoundMatrix& jacToLocal = *jacobian;
 
   // loc = frame(direction)^T * (position - center). The position block above
   // is that frame. Differentiating the frame at fixed position gives
@@ -218,7 +221,7 @@ FreeToBoundMatrix PointSurface::freeToBoundJacobian(
   jacToLocal.block<1, 3>(eBoundLoc0, eFreeDir0) = loc1 * tangential.transpose();
   jacToLocal.block<1, 3>(eBoundLoc1, eFreeDir0) =
       -loc0 * tangential.transpose();
-  return jacToLocal;
+  return jacobian;
 }
 
 FreeToPathMatrix PointSurface::freeToPathDerivative(

@@ -74,8 +74,8 @@ template <TrackContainerFrontend track_container_t>
 std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const track_container_t& tracks,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-    const Optionals<typename track_container_t::ConstTrackProxy>& optionals)
-    const {
+    const Optionals<typename track_container_t::ConstTrackProxy>& optionals,
+    const GeometryContext& gctx) const {
   std::vector<double> trackScore;
   trackScore.reserve(tracks.size());
 
@@ -90,7 +90,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     // get the trackFeatures map for the track
     const auto& trackFeaturesVector = trackFeaturesVectors[iTrack];
     double score = 1;
-    auto eta = Acts::VectorHelpers::eta(track.momentum());
+    auto eta = Acts::VectorHelpers::eta(track.momentum(gctx));
 
     // cuts on optional cuts
     for (const auto& cutFunction : optionals.cuts) {
@@ -191,8 +191,8 @@ template <TrackContainerFrontend track_container_t>
 std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     const track_container_t& tracks,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-    const Optionals<typename track_container_t::ConstTrackProxy>& optionals)
-    const {
+    const Optionals<typename track_container_t::ConstTrackProxy>& optionals,
+    const GeometryContext& gctx) const {
   std::vector<double> trackScore;
   trackScore.reserve(tracks.size());
 
@@ -209,8 +209,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     // get the trackFeatures map for the track
     const auto& trackFeaturesVector = trackFeaturesVectors[iTrack];
     double score = 1;
-    auto pT = Acts::VectorHelpers::perp(track.momentum());
-    auto eta = Acts::VectorHelpers::eta(track.momentum());
+    auto pT = Acts::VectorHelpers::perp(track.momentum(gctx));
+    auto eta = Acts::VectorHelpers::eta(track.momentum(gctx));
 
     // cuts on optional cuts
     for (const auto& cutFunction : optionals.cuts) {
@@ -329,8 +329,8 @@ template <TrackContainerFrontend track_container_t, typename source_link_hash_t,
 std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const track_container_t& tracks, source_link_hash_t sourceLinkHash,
     source_link_equality_t sourceLinkEquality,
-    const Optionals<typename track_container_t::ConstTrackProxy>& optionals)
-    const {
+    const Optionals<typename track_container_t::ConstTrackProxy>& optionals,
+    const GeometryContext& gctx) const {
   ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
   // vector of trackFeaturesVectors. where each trackFeaturesVector contains the
   // number of hits/hole/outliers for each detector in a track.
@@ -341,9 +341,9 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   std::vector<double> trackScore;
   trackScore.reserve(tracks.size());
   if (m_cfg.useAmbiguityScoring) {
-    trackScore = ambiguityScore(tracks, trackFeaturesVectors, optionals);
+    trackScore = ambiguityScore(tracks, trackFeaturesVectors, optionals, gctx);
   } else {
-    trackScore = simpleScore(tracks, trackFeaturesVectors, optionals);
+    trackScore = simpleScore(tracks, trackFeaturesVectors, optionals, gctx);
   }
 
   auto MeasurementIndexMap =

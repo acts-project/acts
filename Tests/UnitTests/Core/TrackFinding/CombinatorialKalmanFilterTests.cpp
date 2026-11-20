@@ -214,8 +214,8 @@ struct Fixture {
     stddev[eBoundLoc0] = 100_um;
     stddev[eBoundLoc1] = 100_um;
     stddev[eBoundTime] = 25_ns;
-    stddev[eBoundPhi] = 2_degree;
-    stddev[eBoundTheta] = 2_degree;
+    stddev[eBoundDir0] = 2_degree;
+    stddev[eBoundDir1] = 2_degree;
     stddev[eBoundQOverP] = 1 / 100_GeV;
     BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
     // all tracks close to the transverse plane along the x axis w/ small
@@ -321,6 +321,7 @@ template Result<std::pair<
     std::vector<
         ActsTests::TrackStateContainerBackend::TrackStateProxy>::iterator>>
 MeasurementSelector::select<ActsTests::TrackStateContainerBackend>(
+    const BoundParametrization&,
     std::vector<ActsTests::TrackStateContainerBackend::TrackStateProxy>&, bool&,
     const Logger&) const;
 }  // namespace Acts
@@ -597,8 +598,8 @@ struct MaterialFixture {
             stddev[eBoundLoc0] = 100_um;
             stddev[eBoundLoc1] = 100_um;
             stddev[eBoundTime] = 25_ns;
-            stddev[eBoundPhi] = 2_degree;
-            stddev[eBoundTheta] = 2_degree;
+            stddev[eBoundDir0] = 2_degree;
+            stddev[eBoundDir1] = 2_degree;
             stddev[eBoundQOverP] = 1 / 100_GeV;
             return BoundMatrix(stddev.cwiseProduct(stddev).asDiagonal());
           }(),

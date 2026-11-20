@@ -64,10 +64,10 @@ BOOST_AUTO_TEST_CASE(MeasuredParametersAreKept) {
                                     o + Acts::eBoundLoc0) = 1e-3;
     state.trackParametersCovariance(o + Acts::eBoundLoc1,
                                     o + Acts::eBoundLoc1) = 1e-3;
-    state.trackParametersCovariance(o + Acts::eBoundPhi, o + Acts::eBoundPhi) =
-        1e-12;
-    state.trackParametersCovariance(o + Acts::eBoundTheta,
-                                    o + Acts::eBoundTheta) = 1e-12;
+    state.trackParametersCovariance(o + Acts::eBoundDir0,
+                                    o + Acts::eBoundDir0) = 1e-12;
+    state.trackParametersCovariance(o + Acts::eBoundDir1,
+                                    o + Acts::eBoundDir1) = 1e-12;
     state.trackParametersCovariance(o + Acts::eBoundQOverP,
                                     o + Acts::eBoundQOverP) = 1e-10;
     state.trackParametersCovariance(o + Acts::eBoundTime,

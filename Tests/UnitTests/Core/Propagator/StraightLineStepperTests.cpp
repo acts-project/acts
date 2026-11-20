@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(sls.outputStepSize(slsState), originalStepSize);
 
   // Test the curvilinear state construction
-  const BoundMatrix curvJacobian = sls.transportToCurvilinear(slsState);
+  const BoundMatrix curvJacobian = sls.transportToCurvilinear(slsState).value();
   auto curvPars = sls.curvilinearParameters(slsState);
   CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), 1e-6);
   CHECK_CLOSE_ABS(curvPars.absoluteMomentum(), cp.absoluteMomentum(), 1e-6);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // The covariance transport
   slsState.cov = cov;
-  sls.transportToCurvilinear(slsState);
+  BOOST_REQUIRE(sls.transportToCurvilinear(slsState).ok());
   BOOST_CHECK_NE(*slsState.cov, cov);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
       sls.transportToBound(slsState, *plane, freeToBoundCorrection).value();
   auto boundPars = sls.boundParameters(slsState, *plane).value();
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), 1e-6);
-  CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
+  CHECK_CLOSE_ABS(boundPars.momentum(tgContext), bp.momentum(tgContext), 1e-6);
   CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
   BOOST_CHECK(boundPars.covariance().has_value());

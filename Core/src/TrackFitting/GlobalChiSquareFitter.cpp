@@ -6,9 +6,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitterBackend.hpp"
+#include "Acts/TrackFitting/GlobalChiSquareFitterError.hpp"
 
 #include <cassert>
+#include <format>
+#include <system_error>
+
+void Acts::Experimental::detail::throwUnsupportedGx2fParametrization(
+    const Surface& surface) {
+  throw std::system_error(
+      make_error_code(
+          GlobalChiSquareFitterError::UnsupportedBoundParametrization),
+      std::format("GlobalChiSquareFitter requires global-spherical bound "
+                  "coordinates on surface {}",
+                  surface.geometryId()));
+}
 
 void Acts::Experimental::updateGx2fParams(
     BoundTrackParameters& params, const Eigen::VectorXd& deltaParamsExtended,

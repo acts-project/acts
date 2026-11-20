@@ -84,7 +84,7 @@ double detail::Gsf::applyBetheHeitler(
 
   const double pathCorrection =
       surface.pathCorrection(geoContext, initialParameters.position(geoContext),
-                             initialParameters.direction());
+                             initialParameters.direction(geoContext));
   slab.scaleThickness(pathCorrection);
 
   const double pathXOverX0 = slab.thicknessInX0();

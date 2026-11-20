@@ -133,11 +133,13 @@ class TrackParameterPerformanceCollector {
   ///
   /// The efficiency and track summary plots stay empty in this mode.
   ///
+  /// @param geoContext the geometry context
   /// @param tracks the input tracks
   ///
   /// @note The caller must ensure exclusive access (e.g. hold a mutex).
   /// @note Only valid with `reference = Measurement`.
-  void fill(const ConstTrackContainer& tracks);
+  void fill(const Acts::GeometryContext& geoContext,
+            const ConstTrackContainer& tracks);
 
   /// Summary count statistics accumulated across all filled events.
   struct Stats {
@@ -198,10 +200,12 @@ class TrackParameterPerformanceCollector {
   /// Fill the residuals of the selected measurement states of one track on
   /// their own surfaces.
   ///
+  /// @param geoContext the geometry context
   /// @param track the track to take the states from
   /// @param truth the truth inputs for the `Truth` reference; a null pointer
   ///        selects the `Measurement` reference
-  void fillTrackStates(const ConstTrackProxy& track,
+  void fillTrackStates(const Acts::GeometryContext& geoContext,
+                       const ConstTrackProxy& track,
                        const TrackStateTruth* truth);
 
   /// Fit every histogram in @p histMap and append the resulting mean/width

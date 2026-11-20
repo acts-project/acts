@@ -11,6 +11,12 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Interactions.hpp"
 
+#include <cassert>
+#include <limits>
+
+#include <Eigen/Cholesky>
+#include <Eigen/Eigenvalues>
+
 namespace Acts {
 
 MaterialUpdateMode detail::determineMaterialUpdateMode(
@@ -52,8 +58,7 @@ Result<MaterialSlab> detail::evaluateMaterialSlab(
 
 detail::PointwiseMaterialEffects detail::computeMaterialEffects(
     const MaterialSlab& slab, const ParticleHypothesis& particleHypothesis,
-    const Vector3& direction, float qOverP, bool multipleScattering,
-    bool energyLoss, bool covTransport) {
+    float qOverP, bool multipleScattering, bool energyLoss, bool covTransport) {
   PointwiseMaterialEffects result;
 
   const double mass = particleHypothesis.mass();
@@ -69,12 +74,7 @@ detail::PointwiseMaterialEffects detail::computeMaterialEffects(
       //! [scattering variance]
       const double theta0 =
           computeMultipleScatteringTheta0(slab, absPdg, mass, qOverP, absQ);
-      // sigmaPhi = theta0 / sin(theta)
-      const double sigmaPhi =
-          theta0 * (direction.norm() / VectorHelpers::perp(direction));
-      result.variancePhi = sigmaPhi * sigmaPhi;
-      // sigmaTheta = theta0
-      result.varianceTheta = theta0 * theta0;
+      result.scatteringVariance = theta0 * theta0;
       //! [scattering variance]
     }
     if (energyLoss) {
@@ -87,6 +87,81 @@ detail::PointwiseMaterialEffects detail::computeMaterialEffects(
   }
 
   return result;
+}
+
+Result<void> detail::removeMaterialCovarianceNoise(
+    BoundMatrix& covariance, const Matrix<2, 2>& directionNoise,
+    double varianceQoverP) {
+  if (directionNoise.isZero(0.) && varianceQoverP == 0.) {
+    return Result<void>::success();
+  }
+
+  // Factor a single scratch matrix in place. The input stays untouched until
+  // validation succeeds; committing needs only the five changed entries.
+  BoundMatrix scratch;
+  const auto prepare = [&] {
+    scratch = covariance;
+    scratch.block<2, 2>(eBoundDir0, eBoundDir0) -= directionNoise;
+    scratch(eBoundQOverP, eBoundQOverP) -= varianceQoverP;
+  };
+  const auto commit = [&] {
+    covariance.block<2, 2>(eBoundDir0, eBoundDir0) -= directionNoise;
+    covariance(eBoundQOverP, eBoundQOverP) -= varianceQoverP;
+    return Result<void>::success();
+  };
+  prepare();
+  if (scratch.allFinite()) {
+    const Eigen::LLT<Eigen::Ref<BoundMatrix>> cholesky(scratch);
+    if (cholesky.info() == Eigen::Success && scratch.allFinite()) {
+      return commit();
+    }
+  }
+
+  // A failed in-place factorization overwrites scratch. Recreate the candidate
+  // and use the established unit-scaled check for difficult numerical cases.
+  prepare();
+  BoundVector scale;
+  for (unsigned int i = 0; i < eBoundSize; ++i) {
+    const double variance = std::max(covariance(i, i), std::abs(scratch(i, i)));
+    scale[i] = variance > 0. ? 1. / std::sqrt(variance) : 1.;
+  }
+  for (unsigned int i = 0; i < eBoundSize; ++i) {
+    scratch.row(i) *= scale[i];
+    scratch.col(i) *= scale[i];
+  }
+  if (!scratch.allFinite()) {
+    return MaterialInteractionError::InvalidCovarianceAfterNoiseRemoval;
+  }
+  const Eigen::LLT<BoundMatrix> cholesky(scratch);
+  if (cholesky.info() == Eigen::Success) {
+    return commit();
+  }
+  const Eigen::SelfAdjointEigenSolver<BoundMatrix> solver(
+      scratch, Eigen::EigenvaluesOnly);
+  if (solver.info() != Eigen::Success) {
+    return MaterialInteractionError::InvalidCovarianceAfterNoiseRemoval;
+  }
+  const double tolerance =
+      64. * std::numeric_limits<double>::epsilon() *
+      std::max(1., solver.eigenvalues().cwiseAbs().maxCoeff());
+  if (solver.eigenvalues().minCoeff() < -tolerance) {
+    return MaterialInteractionError::InvalidCovarianceAfterNoiseRemoval;
+  }
+  return commit();
+}
+
+Vector2 detail::globalAngularScatteringVariances(const Vector3& direction,
+                                                 double scatteringVariance) {
+  assert(direction.allFinite() &&
+         std::abs(direction.squaredNorm() - 1.) < 1e-6);
+  assert(std::isfinite(scatteringVariance) && scatteringVariance >= 0.);
+  if (scatteringVariance == 0.) {
+    return Vector2::Zero();
+  }
+  const double transverseSquared = direction.head<2>().squaredNorm();
+  return {transverseSquared == 0. ? std::numeric_limits<double>::infinity()
+                                  : scatteringVariance / transverseSquared,
+          scatteringVariance};
 }
 
 }  // namespace Acts

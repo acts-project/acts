@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 
 #include <iosfwd>
 #include <memory>
@@ -67,6 +68,13 @@ class CurvilinearSurface final {
   /// @return the contextual transform
   Transform3 transform() const;
 
+  /// Interpretation shared with the synthesized plane surface.
+  /// @return Canonical global-spherical parametrization, independent of the
+  /// curvilinear position frame
+  BoundParametrization boundParametrization() const {
+    return BoundParametrization::globalSpherical();
+  }
+
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
   ///
@@ -76,8 +84,10 @@ class CurvilinearSurface final {
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here.
   ///
-  /// @return Jacobian from global to local
-  FreeToBoundMatrix freeToBoundJacobian() const;
+  /// @pre The direction is normalized.
+  /// @return Jacobian from global to local, or a chart-domain error for a
+  /// singular direction.
+  Result<FreeToBoundMatrix> freeToBoundJacobian() const;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters. The calculation is

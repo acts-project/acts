@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(PointSurfaceIntersectionBounds) {
 
 // Build a free vector from a bound vector consistent with the surface frame
 FreeVector boundToFree(const PointSurface& surface, const BoundVector& b) {
-  Vector3 dir = makeDirectionFromPhiTheta(b[eBoundPhi], b[eBoundTheta]);
+  Vector3 dir = makeDirectionFromPhiTheta(b[eBoundDir0], b[eBoundDir1]);
   Vector3 pos = surface.localToGlobal(
       tgContext, Vector2(b[eBoundLoc0], b[eBoundLoc1]), dir);
   FreeVector f = FreeVector::Zero();
@@ -215,29 +215,30 @@ FreeVector boundToFree(const PointSurface& surface, const BoundVector& b) {
 BOOST_AUTO_TEST_CASE(PointSurfaceBoundToFreeJacobian) {
   auto surface = Surface::makeShared<PointSurface>(Vector3(1., -2., 0.5));
 
-  // pick a non-forward direction (standard frame branch) and nonzero local so
-  // the frame-rotation correction is exercised
-  double phi = 0.6;
-  double theta = std::numbers::pi / 3.;
-  BoundVector b;
-  b << 0.7, -0.4, phi, theta, 0.5, 1.5;
+  // Exercise both frame branches with nonzero local coordinates.
+  for (double theta :
+       {0.001, std::numbers::pi / 3., std::numbers::pi - 0.001}) {
+    double phi = 0.6;
+    BoundVector b;
+    b << 0.7, -0.4, phi, theta, 0.5, 1.5;
 
-  FreeVector f0 = boundToFree(*surface, b);
-  Vector3 pos0 = f0.segment<3>(eFreePos0);
-  Vector3 dir0 = f0.segment<3>(eFreeDir0);
+    FreeVector f0 = boundToFree(*surface, b);
+    Vector3 pos0 = f0.segment<3>(eFreePos0);
+    Vector3 dir0 = f0.segment<3>(eFreeDir0);
 
-  BoundToFreeMatrix jac = surface->boundToFreeJacobian(tgContext, pos0, dir0);
+    BoundToFreeMatrix jac = surface->boundToFreeJacobian(tgContext, pos0, dir0);
 
-  double h = 1e-6;
-  for (int i = 0; i < static_cast<int>(eBoundSize); ++i) {
-    BoundVector bp = b;
-    BoundVector bm = b;
-    bp[i] += h;
-    bm[i] -= h;
-    FreeVector numeric =
-        (boundToFree(*surface, bp) - boundToFree(*surface, bm)) / (2 * h);
-    for (int j = 0; j < static_cast<int>(eFreeSize); ++j) {
-      BOOST_CHECK_SMALL(numeric[j] - jac(j, i), 1e-6);
+    double h = 1e-6;
+    for (int i = 0; i < static_cast<int>(eBoundSize); ++i) {
+      BoundVector bp = b;
+      BoundVector bm = b;
+      bp[i] += h;
+      bm[i] -= h;
+      FreeVector numeric =
+          (boundToFree(*surface, bp) - boundToFree(*surface, bm)) / (2 * h);
+      for (int j = 0; j < static_cast<int>(eFreeSize); ++j) {
+        BOOST_CHECK_SMALL(numeric[j] - jac(j, i), 1e-6);
+      }
     }
   }
 }
@@ -251,7 +252,7 @@ BOOST_AUTO_TEST_CASE(PointSurfaceJacobianRoundTrip) {
     const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
     const Vector3 pos = surface->localToGlobal(tgContext, local, dir);
     const FreeToBoundMatrix freeToBound =
-        surface->freeToBoundJacobian(tgContext, pos, dir);
+        surface->freeToBoundJacobian(tgContext, pos, dir).value();
     const BoundToFreeMatrix boundToFree =
         surface->boundToFreeJacobian(tgContext, pos, dir);
     CHECK_CLOSE_ABS(freeToBound * boundToFree, SquareMatrix<6>::Identity(),
