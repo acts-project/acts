@@ -15,9 +15,8 @@
 #include "algebra/impl/vc_soa_constants.hpp"
 #include "algebra/impl/vc_soa_math.hpp"
 #include "algebra/impl/vc_soa_types.hpp"
-#include "detray/algebra/common/matrix_getter.hpp"
-#include "detray/algebra/common/soa_matrix.hpp"
-#include "detray/algebra/common/soa_vector.hpp"
+#include "detray/algebra/common/impl/storage_getter.hpp"
+#include "detray/algebra/common/soa.hpp"
 #include "detray/algebra/generic/impl/generic_matrix.hpp"
 
 // System include(s).

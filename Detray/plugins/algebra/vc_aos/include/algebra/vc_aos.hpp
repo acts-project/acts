@@ -14,7 +14,7 @@
 #include "algebra/impl/vc_aos_types.hpp"
 #include "algebra/impl/vc_aos_vector.hpp"
 #include "detray/algebra/common/boolean.hpp"
-#include "detray/algebra/common/matrix_getter.hpp"
+#include "detray/algebra/common/impl/storage_getter.hpp"
 #include "detray/algebra/generic/generic.hpp"
 
 // System include(s).

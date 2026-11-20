@@ -13,7 +13,7 @@
 #endif
 
 // Project include(s)
-#include "detray/algebra/common/array_operators.hpp"
+#include "detray/algebra/common/impl/storage_array_operators.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
@@ -84,8 +84,7 @@ class DETRAY_ALIGN(
   template <typename... Scalars>
     requires(concepts::simd_scalar<scalar_t> && (sizeof...(Scalars) == N) &&
              ((concepts::simd_scalar<Scalars> ||
-               std::convertible_to<Scalars, scalar_t>) &&
-              ...))
+               std::convertible_to<Scalars, scalar_t>)&&...))
   // Element-wise construction, not a conversion: the requires-clause pins the
   // argument count to N.
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -101,8 +100,7 @@ class DETRAY_ALIGN(
   template <typename... Values>
     requires(!concepts::simd_scalar<scalar_t> && (sizeof...(Values) > 1) &&
              ((concepts::value<Values> ||
-               std::convertible_to<Values, scalar_t>) &&
-              ...))
+               std::convertible_to<Values, scalar_t>)&&...))
   // NOLINTNEXTLINE(google-explicit-constructor)
   DETRAY_HOST_DEVICE constexpr vector(Values &&...vals) {
     static_assert(sizeof...(Values) <= N);

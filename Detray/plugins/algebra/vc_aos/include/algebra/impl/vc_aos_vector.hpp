@@ -10,8 +10,8 @@
 
 // Project include(s).
 #include "algebra/impl/vc_aos_types.hpp"
+#include "detray/algebra/common/impl/storage_vector.hpp"
 #include "detray/algebra/common/math.hpp"
-#include "detray/algebra/common/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
