@@ -10,6 +10,9 @@
 
 // Project include(s)
 #include "detray/core/concepts.hpp"
+#include "detray/geometry/mask.hpp"
+#include "detray/geometry/shapes/concentric_cylinder2D.hpp"
+#include "detray/geometry/shapes/ring2D.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/geometry/tracking_volume.hpp"
 #include "detray/material/concepts.hpp"
@@ -306,6 +309,183 @@ inline void check_empty(const detector_t &det, const bool verbose) {
   // TODO: Implement volume acceleration structure check
 }
 
+/// @brief Checks the consistency of volume boundaries
+/// @param vol the tracking volume to be checked
+/// @param det the detector the volume belongs to
+/// @param names the name map for the detector
+/// @param bounds_tol tolerance for boundary value comparisons
+template <concepts::detector detector_t>
+inline void check_volume_extent(
+    const tracking_volume<detector_t> vol, const detector_t &det,
+    const typename detector_t::name_map &names = {},
+    typename detector_t::scalar_type bounds_tol =
+        10.f *
+        std::numeric_limits<typename detector_t::scalar_type>::epsilon()) {
+  // Make sure, the portals fit the volume boundaries
+  using algebra_t = typename detector_t::algebra_type;
+  using scalar_t = dscalar<algebra_t>;
+  using surface_t = typename detector_t::surface_type;
+
+  switch (vol.id()) {
+    case volume_id::e_cylinder: {
+      using masks = typename detector_t::masks;
+      using cylinder_t = mask<concentric_cylinder2D, algebra_t>;
+      using disc_t = mask<ring2D, algebra_t>;
+
+      if constexpr (detray::types::contains<masks, cylinder_t> &&
+                    detray::types::contains<masks, disc_t>) {
+        const auto &cyls =
+            det.mask_store().template get<masks::id::e_concentric_cylinder2D>();
+        const auto &discs =
+            det.mask_store().template get<masks::id::e_ring2D>();
+
+        constexpr auto inv{detail::invalid_value<scalar_t>()};
+
+        // Find z extent
+        scalar_t min_z{inv};
+        scalar_t max_z{-inv};
+        for (const surface_t &sf_desc : det.surfaces()) {
+          if (sf_desc.is_portal() &&
+              sf_desc.mask().id() == masks::id::e_ring2D) {
+            const auto &t =
+                det.transform_store().at(sf_desc.transform()).translation();
+            min_z = math::min(min_z, t[2]);
+            max_z = math::max(max_z, t[2]);
+          }
+        }
+        if (min_z >= max_z) {
+          std::stringstream err{};
+          err << "Detected invalid cylinder volume extent: min z: " << min_z
+              << "mm, max z: " << max_z << "mm";
+          DETRAY_FATAL_HOST(err.str());
+          throw std::invalid_argument(err.str());
+        }
+
+        // Find radial extent and check cylinders in z
+        scalar_t min_r{inv};
+        scalar_t max_r{-inv};
+        for (const cylinder_t &c : cyls) {
+          const scalar_t r{c[concentric_cylinder2D::e_r]};
+          min_r = math::min(min_r, r);
+          max_r = math::max(max_r, r);
+
+          if ((c[concentric_cylinder2D::e_lower_z] < min_z &&
+               c[concentric_cylinder2D::e_upper_z] < min_z) ||
+              (c[concentric_cylinder2D::e_lower_z] > max_z &&
+               c[concentric_cylinder2D::e_upper_z] > max_z)) {
+            DETRAY_ERROR_HOST(
+                "Portal [" << c << "] lies completely outside cylinder volume '"
+                           << vol.name(names) << "' z: [" << min_z << ", "
+                           << max_z << "] and needs to be removed!");
+            continue;
+          }
+
+          // Check that each sub-cylinder is within bounds
+          if (c[concentric_cylinder2D::e_lower_z] < (min_z - bounds_tol)) {
+            std::stringstream err_str{};
+            err_str << "Cylinder: " << c
+                    << "\n has invalid lower bound! Cyliner extends beyond "
+                       "volume min z bound of "
+                    << min_z << " mm";
+            DETRAY_FATAL_HOST(err_str.str());
+            throw std::invalid_argument(err_str.str());
+          }
+          if (c[concentric_cylinder2D::e_upper_z] > (max_z + bounds_tol)) {
+            std::stringstream err_str{};
+            err_str << "Cylinder: " << c
+                    << "\n has invalid upper bound! Cyliner extends beyond "
+                       "volume max z bound of "
+                    << max_z << " mm";
+            DETRAY_FATAL_HOST(err_str.str());
+            throw std::invalid_argument(err_str.str());
+          }
+        }
+
+        // Beampipe or world volume (no inner cylinder, r is exactly eq.)
+        if (min_r == max_r) {
+          min_r = 0.f;
+        }
+        if (min_r >= max_r) {
+          std::stringstream err{};
+          err << "Detected invalid cylinder volume extent: min r: " << min_r
+              << "mm, max r: " << max_r << "mm";
+          DETRAY_FATAL_HOST(err.str());
+          throw std::invalid_argument(err.str());
+        }
+
+        // Check disc portals radius
+        for (const disc_t &d : discs) {
+          if ((d[ring2D::e_inner_r] < min_r && d[ring2D::e_outer_r] < min_r) ||
+              (d[ring2D::e_inner_r] > max_r && d[ring2D::e_outer_r] > max_r)) {
+            DETRAY_ERROR_HOST(
+                "Portal [" << d << "] lies completely outside cylinder volume '"
+                           << vol.name(names) << "' radius: [" << min_r << ", "
+                           << max_r << "] and needs to be removed!");
+            continue;
+          }
+
+          // Check that each sub-ring is within bounds
+          if (d[ring2D::e_inner_r] < (min_r - bounds_tol)) {
+            std::stringstream err_str{};
+            err_str
+                << "Ring: " << d
+                << "\n has invalid inner radius! Ring extends beyond volume "
+                   "min r bound of "
+                << min_r << " mm";
+            DETRAY_FATAL_HOST(err_str.str());
+            throw std::invalid_argument(err_str.str());
+          }
+          if (d[ring2D::e_outer_r] > (max_r + bounds_tol)) {
+            std::stringstream err_str{};
+            err_str
+                << "Ring: " << d
+                << "\n has invalid outer radius! Ring extends beyond volume "
+                   "max r bound of "
+                << max_r << " mm";
+            DETRAY_FATAL_HOST(err_str.str());
+            throw std::invalid_argument(err_str.str());
+          }
+        }
+      } else {
+        const std::string err{
+            "Detector with cylinder volumes does not contain cylinder and "
+            "disc types in metadata!"};
+        DETRAY_FATAL_HOST(err);
+        throw std::invalid_argument(err);
+      }
+      break;
+    }
+    case volume_id::e_rectangle: {
+      DETRAY_DEBUG_HOST(
+          "Portal extent check not implemented for rectangle volumes");
+      break;
+    }
+    case volume_id::e_trapezoid: {
+      DETRAY_DEBUG_HOST(
+          "Portal extent check not implemented for trapezoid volumes");
+      break;
+    }
+    case volume_id::e_cone: {
+      DETRAY_DEBUG_HOST("Portal extent check not implemented for cone volumes");
+      break;
+    }
+    case volume_id::e_cuboid: {
+      DETRAY_DEBUG_HOST(
+          "Portal extent check not implemented for cuboid volumes");
+      break;
+    }
+    case volume_id::e_unknown: {
+      DETRAY_WARN_HOST("Unknown volume shape: portal extent check impossible");
+      break;
+    }
+    default: {
+      const std::string err{"Unknown error during volume portal extent check"};
+      DETRAY_FATAL_HOST(err);
+      throw std::invalid_argument(err);
+    }
+  }
+}
+
 /// @brief Checks the internal consistency of a detector
 template <concepts::detector detector_t>
 inline bool check_consistency(const detector_t &det, const bool verbose = false,
@@ -410,6 +590,9 @@ inline bool check_consistency(const detector_t &det, const bool verbose = false,
         throw std::invalid_argument(err_stream.str());
       }
     }
+
+    // Make sure the portals match each other
+    check_volume_extent(vol, det, names);
 
     // Go through the acceleration data structures and check the surfaces
     vol.template visit_surfaces<surface_id::e_all, detail::surface_checker>(
