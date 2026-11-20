@@ -121,7 +121,7 @@ class TrackHandler<container_t, true> /*final*/ : public TrackHandlerConstBase {
  public:
   /// Get the singleton instance for this track container type
   static const TrackHandler& instance() {
-    static const TrackHandler s_instance;
+    static constexpr TrackHandler s_instance;
     return s_instance;
   }
 
@@ -200,7 +200,7 @@ class TrackHandler<container_t,
  public:
   /// Get the singleton instance for this track container type
   static const TrackHandler& instance() {
-    static const TrackHandler s_instance;
+    static constexpr TrackHandler s_instance;
     return s_instance;
   }
 
