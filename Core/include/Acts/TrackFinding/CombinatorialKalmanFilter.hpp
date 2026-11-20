@@ -254,7 +254,7 @@ class CombinatorialKalmanFilter {
    public:
     using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
     /// Type alias for the actor state
-    using state_type = CombinatorialKalmanFilterResult<track_container_t>;
+    using State = CombinatorialKalmanFilterResult<track_container_t>;
 
     using BranchStopperResult = CombinatorialKalmanFilterBranchStopperResult;
 
@@ -325,7 +325,7 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                     const navigator_t& navigator, state_type& result,
+                     const navigator_t& navigator, State& result,
                      const Logger& /*logger*/) const {
       ACTS_VERBOSE("CKF Actor called");
 
@@ -455,7 +455,7 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, const state_type& result,
+                    const navigator_t& /*navigator*/, const State& result,
                     const Logger& /*logger*/) const {
       return result.finished;
     }
@@ -473,7 +473,7 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     Result<void> reset(propagator_state_t& state, const stepper_t& stepper,
-                       const navigator_t& navigator, state_type& result) const {
+                       const navigator_t& navigator, State& result) const {
       if (result.activeBranches.empty()) {
         ACTS_VERBOSE("Stop CKF with " << result.collectedTracks.size()
                                       << " found tracks");
@@ -558,7 +558,7 @@ class CombinatorialKalmanFilter {
               typename navigator_t>
     Result<void> filter(const Surface& surface, propagator_state_t& state,
                         const stepper_t& stepper, const navigator_t& navigator,
-                        state_type& result) const {
+                        State& result) const {
       using PM = TrackStatePropMask;
 
       const bool isSensitive = surface.isSensitive();
@@ -822,7 +822,7 @@ class CombinatorialKalmanFilter {
     Result<unsigned int> processNewTrackStates(
         propagator_state_t& state, const stepper_t& stepper,
         const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList,
-        state_type& result) const {
+        State& result) const {
       using PM = TrackStatePropMask;
 
       unsigned int nBranchesOnSurface = 0;
@@ -916,7 +916,7 @@ class CombinatorialKalmanFilter {
     /// @return The tip of added state
     TrackIndexType addNonSourcelinkState(TrackStatePropMask stateMask,
                                          const BoundState& boundState,
-                                         state_type& result, bool isSensitive,
+                                         State& result, bool isSensitive,
                                          bool expectMeasurements,
                                          TrackIndexType prevTip) const {
       using PM = TrackStatePropMask;
@@ -963,7 +963,7 @@ class CombinatorialKalmanFilter {
       return trackStateProxy.index();
     }
 
-    void storeLastActiveBranch(state_type& result) const {
+    void storeLastActiveBranch(State& result) const {
       auto currentBranch = result.activeBranches.back();
       TrackIndexType currentTip = currentBranch.tipIndex();
 

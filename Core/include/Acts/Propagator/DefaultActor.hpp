@@ -37,15 +37,13 @@ struct DefaultActor {
     double pathLimit = std::numeric_limits<double>::max();
   };
 
-  /// Type alias for the actor state
-  using state_type = State;
-
   /// Set the path limit at the start of the propagation
   ///
   /// @param [in,out] state The propagation state
   /// @param [in] stepper Stepper used for the propagation
   /// @param [in] navigator Navigator used for the propagation
-  /// @param [in,out] actorState The state of the actor
+  /// @param [in,out] actorState The state of this actor, which is
+  ///        @c state.actor only if the actor is not part of an @c ActorList
   /// @param [in] logger A logger instance
   /// @return Always success
   template <typename propagator_state_t, typename stepper_t,
@@ -67,7 +65,8 @@ struct DefaultActor {
   /// @param [in,out] state The propagation state
   /// @param [in] stepper Stepper used for the propagation
   /// @param [in] navigator Navigator used for the propagation
-  /// @param [in] actorState The state of the actor
+  /// @param [in] actorState The state of this actor, which is @c state.actor
+  ///        only if the actor is not part of an @c ActorList
   /// @param [in] logger A logger instance
   /// @return True if the propagation should stop
   template <typename propagator_state_t, typename stepper_t,

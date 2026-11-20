@@ -72,7 +72,7 @@ struct SingleParticleSimulation {
     // propagator-related additional types
     using Actor = detail::SimulationActor<generator_t, decay_t, interactions_t,
                                           hit_surface_selector_t>;
-    using Result = typename Actor::state_type;
+    using Result = typename Actor::State;
     using ActorList = Acts::ActorList<Acts::DefaultActor, Actor>;
     using PropagatorOptions =
         typename propagator_t::template Options<ActorList>;

@@ -288,7 +288,7 @@ class KalmanFitter {
   class Actor {
    public:
     /// Type alias for the actor state
-    using state_type = KalmanFitterResult<traj_t>;
+    using State = KalmanFitterResult<traj_t>;
 
     /// The surface to stop at, or nullptr for none
     const Surface* targetSurface = nullptr;
@@ -333,7 +333,7 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                     const navigator_t& navigator, state_type& result,
+                     const navigator_t& navigator, State& result,
                      const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
@@ -425,7 +425,7 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, const state_type& result,
+                    const navigator_t& /*navigator*/, const State& result,
                     const Logger& /*logger*/) const {
       return result.finished;
     }
@@ -445,7 +445,7 @@ class KalmanFitter {
               typename navigator_t>
     Result<void> filter(const Surface& surface, propagator_state_t& state,
                         const stepper_t& stepper, const navigator_t& navigator,
-                        state_type& result) const {
+                        State& result) const {
       const bool precedingMeasurementExists = result.measurementStates > 0;
       const bool surfaceIsSensitive = surface.isSensitive();
       const bool surfaceHasMaterial = surface.hasMaterial();

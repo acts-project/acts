@@ -110,7 +110,7 @@ struct StepCollector {
     std::vector<Vector3> momentum;
   };
 
-  using state_type = this_result;
+  using State = this_result;
 
   /// @brief Main call operator for the action list. It stores the data for
   /// analysis afterwards
@@ -126,7 +126,7 @@ struct StepCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, state_type& result,
+                  const navigator_t& /*navigator*/, State& result,
                   const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping));

@@ -21,13 +21,12 @@ template <int N>
 struct FailingActor {
   bool fail{};
   bool* called = nullptr;
-  using state_type = ActorResult<N>;
+  using State = ActorResult<N>;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                   const navigator_t& /*navigator*/,
-                   state_type& /*result*/) const {
+                   const navigator_t& /*navigator*/, State& /*result*/) const {
     *called = true;
     if (fail) {
       return std::make_error_code(std::errc{});

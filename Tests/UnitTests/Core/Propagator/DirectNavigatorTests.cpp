@@ -123,8 +123,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   // Result is immediately used, non-valid result would indicate failure
   auto pState = rprop.makeState(pOptions);
   const auto& pResult = rprop.propagate(pState, start).value();
-  auto& cSurfaces = pState.actor.template get<SurfaceCollector<>::state_type>();
-  auto& cMaterial = pState.actor.template get<MaterialInteractor::state_type>();
+  auto& cSurfaces = pState.actor.template get<SurfaceCollector<>::State>();
+  auto& cMaterial = pState.actor.template get<MaterialInteractor::State>();
   const Surface& destination = pResult.endParameters->referenceSurface();
 
   std::cout << " - the standard navigator yielded "
@@ -156,10 +156,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     // Now redo the propagation with the direct propagator
     auto ddState = dprop.makeState(dOptions);
     dprop.propagate(ddState, start, &destination).value();
-    auto& ddSurfaces =
-        ddState.actor.template get<SurfaceCollector<>::state_type>();
-    auto& ddMaterial =
-        ddState.actor.template get<MaterialInteractor::state_type>();
+    auto& ddSurfaces = ddState.actor.template get<SurfaceCollector<>::State>();
+    auto& ddMaterial = ddState.actor.template get<MaterialInteractor::State>();
 
     // CHECK if you have as many surfaces collected as the default navigator
     BOOST_CHECK_EQUAL(cSurfaces.collected.size(), ddSurfaces.collected.size());
@@ -168,8 +166,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     // Now redo the propagation with the direct propagator - without destination
     auto dwState = dprop.makeState(dOptions);
     dprop.propagate(dwState, start).value();
-    auto& dwSurfaces =
-        dwState.actor.template get<SurfaceCollector<>::state_type>();
+    auto& dwSurfaces = dwState.actor.template get<SurfaceCollector<>::State>();
 
     // CHECK if you have as many surfaces collected as the default navigator
     BOOST_CHECK_EQUAL(cSurfaces.collected.size(), dwSurfaces.collected.size());
@@ -265,7 +262,7 @@ void runSimpleTest(const std::vector<const Surface*>& surfaces,
 
   // Check if the surfaces are the same
   const auto& collectedSurfaceHits =
-      state.actor.get<SurfaceCollector<>::state_type>().collected;
+      state.actor.get<SurfaceCollector<>::State>().collected;
   std::vector<const Surface*> collectedSurfaces;
   std::ranges::transform(collectedSurfaceHits,
                          std::back_inserter(collectedSurfaces),

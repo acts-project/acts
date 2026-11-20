@@ -529,7 +529,7 @@ class Gx2Fitter {
   class Actor {
    public:
     /// Type alias for the actor state
-    using state_type = Gx2FitterResult<traj_t>;
+    using State = Gx2FitterResult<traj_t>;
 
     /// The target surface
     const Surface* targetSurface = nullptr;
@@ -582,7 +582,7 @@ class Gx2Fitter {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                     const navigator_t& navigator, state_type& result,
+                     const navigator_t& navigator, State& result,
                      const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
@@ -1012,7 +1012,7 @@ class Gx2Fitter {
     // Create the ActorList
     using GX2FActor = Actor;
 
-    using GX2FResult = typename GX2FActor::state_type;
+    using GX2FResult = typename GX2FActor::State;
     using Actors = Acts::ActorList<DefaultActor, GX2FActor>;
 
     using PropagatorOptions = typename propagator_t::template Options<Actors>;

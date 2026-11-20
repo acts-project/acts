@@ -120,7 +120,7 @@ struct StepCollector {
     std::vector<Vector3> momentum;
   };
 
-  using state_type = this_result;
+  using State = this_result;
 
   /// @brief Main call operator for the action list. It stores the data for
   /// analysis afterwards
@@ -136,7 +136,7 @@ struct StepCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& /*navigator*/, state_type& result,
+                   const navigator_t& /*navigator*/, State& result,
                    const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping));
@@ -146,7 +146,7 @@ struct StepCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/, state_type& /*result*/,
+                  const navigator_t& /*navigator*/, State& /*result*/,
                   const Logger& /*logger*/) const {
     return false;
   }
@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   auto state = prop.makeState(propOpts);
   prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      state.actor.get<typename StepCollector::state_type>();
+      state.actor.get<typename StepCollector::State>();
 
   // Check that the propagation happened without interactions
   for (const auto& pos : stepResult.position) {
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   auto stateDef = propDef.makeState(propOptsDef);
   propDef.propagate(stateDef, sbtp).value();
   const StepCollector::this_result& stepResultDef =
-      stateDef.actor.template get<typename StepCollector::state_type>();
+      stateDef.actor.template get<typename StepCollector::State>();
 
   // Check that the right extension was chosen
   // If chosen correctly, the number of elements should be identical
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   auto state = prop.makeState(propOpts);
   prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      state.actor.get<typename StepCollector::state_type>();
+      state.actor.get<typename StepCollector::State>();
 
   // Check that there occurred interaction
   for (const auto& pos : stepResult.position) {
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   auto stateDense = propDense.makeState(propOptsDense);
   propDense.propagate(stateDense, sbtp).value();
   const StepCollector::this_result& stepResultDense =
-      stateDense.actor.template get<typename StepCollector::state_type>();
+      stateDense.actor.template get<typename StepCollector::State>();
 
   // Check that the right extension was chosen
   // If chosen correctly, the number of elements should be identical
@@ -699,7 +699,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   auto stateB = propB.makeState(propOptsDense);
   propB.propagate(stateB, sbtp).value();
   const StepCollector::this_result& stepResultB =
-      stateB.actor.template get<typename StepCollector::state_type>();
+      stateB.actor.template get<typename StepCollector::State>();
 
   // Check that there occurred interaction
   for (const auto& pos : stepResultB.position) {
@@ -781,7 +781,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   auto state = prop.makeState(propOpts);
   const auto& result = prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      state.actor.get<typename StepCollector::state_type>();
+      state.actor.get<typename StepCollector::State>();
 
   // Manually set the extensions for each step and propagate through each
   // volume by propagation to the boundaries
@@ -837,7 +837,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   auto stateDef = propDef.makeState(propOptsDef);
   propDef.propagate(stateDef, sbtp).value();
   const StepCollector::this_result& stepResultDef =
-      stateDef.actor.template get<typename StepCollector::state_type>();
+      stateDef.actor.template get<typename StepCollector::State>();
 
   // Check the exit situation of the first volume
   std::pair<Vector3, Vector3> endParams, endParamsControl;
@@ -889,7 +889,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   auto stateDense = propDense.makeState(propOptsDense);
   propDense.propagate(stateDense, sbtp).value();
   const StepCollector::this_result& stepResultDense =
-      stateDense.actor.template get<typename StepCollector::state_type>();
+      stateDense.actor.template get<typename StepCollector::State>();
 
   // Check the exit situation of the second volume
   for (unsigned int i = 0; i < stepResultDense.position.size(); i++) {
@@ -1019,7 +1019,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   auto state = prop.makeState(propOpts);
   prop.propagate(state, sbtp).value();
   const StepCollector::this_result& stepResult =
-      state.actor.get<typename StepCollector::state_type>();
+      state.actor.get<typename StepCollector::State>();
 
   // Test that momentum changes only occurred at the right detector parts
   double lastMomentum = stepResult.momentum[0].x();

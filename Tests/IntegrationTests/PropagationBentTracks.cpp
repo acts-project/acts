@@ -63,7 +63,7 @@ std::vector<double> xPositionsOfPassedSurfaces(Navigator::Config navCfg,
 
   BOOST_CHECK(res.ok());
 
-  const auto &stepLog = state.actor.get<detail::SteppingLogger::state_type>();
+  const auto &stepLog = state.actor.get<detail::SteppingLogger::State>();
 
   std::vector<double> xPositions;
   for (const auto &step : stepLog.steps) {

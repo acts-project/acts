@@ -82,7 +82,7 @@ struct SurfaceCollector {
   };
 
   /// Type alias for the collector state type
-  using state_type = this_result;
+  using State = this_result;
 
   /// Collector action for the ActionList of the Propagator
   /// It checks if the propagator state has a current surface,
@@ -102,7 +102,7 @@ struct SurfaceCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, state_type& actorState,
+                   const navigator_t& navigator, State& actorState,
                    const Logger& logger) const {
     if (state.stage == PropagatorStage::postPropagation) {
       return {};
@@ -138,7 +138,7 @@ struct BoundParameterRecorder {
   Selector selector;
 
   /// Type alias for the collector state type
-  using state_type = std::vector<BoundTrackParameters>;
+  using State = std::vector<BoundTrackParameters>;
 
   /// Collector action for the ActionList of the Propagator
   /// It checks if the propagator state has a current surface,
@@ -158,7 +158,7 @@ struct BoundParameterRecorder {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, state_type& actorState,
+                   const navigator_t& navigator, State& actorState,
                    const Logger& logger) const {
     if (state.stage == PropagatorStage::postPropagation) {
       return {};

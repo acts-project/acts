@@ -49,7 +49,7 @@ using TestSurfaceCollector = SurfaceCollector<SurfaceSelector>;
 using ParamRecorder = BoundParameterRecorder<SurfaceSelector>;
 
 std::vector<GeometryIdentifier> collectRelevantGeoIds(
-    const TestSurfaceCollector::state_type& surfaceHits) {
+    const TestSurfaceCollector::State& surfaceHits) {
   std::vector<GeometryIdentifier> geoIds;
   for (const auto& surfaceHit : surfaceHits.collected) {
     auto geoId = surfaceHit.surface->geometryId();
@@ -99,14 +99,13 @@ void runSelfConsistencyTest(const propagator_t& prop,
   auto fwdState = prop.makeState(fwdOptions);
   auto fwdResult = prop.propagate(fwdState, start).value();
   auto fwdSurfaceHits =
-      fwdState.actor.template get<TestSurfaceCollector::state_type>().collected;
+      fwdState.actor.template get<TestSurfaceCollector::State>().collected;
 
-  auto fwdTrackRecords =
-      fwdState.actor.template get<ParamRecorder::state_type>();
+  auto fwdTrackRecords = fwdState.actor.template get<ParamRecorder::State>();
 
   BOOST_CHECK_EQUAL(fwdTrackRecords.size(), fwdSurfaceHits.size());
   for (const auto& boundPars :
-       fwdState.actor.template get<ParamRecorder::state_type>()) {
+       fwdState.actor.template get<ParamRecorder::State>()) {
     BOOST_CHECK_EQUAL(boundPars.particleHypothesis(),
                       start.particleHypothesis());
     BOOST_CHECK_EQUAL(boundPars.covariance().has_value(),
@@ -122,7 +121,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
   }
 
   auto fwdSurfaces = collectRelevantGeoIds(
-      fwdState.actor.template get<TestSurfaceCollector::state_type>());
+      fwdState.actor.template get<TestSurfaceCollector::State>());
 
   ACTS_DEBUG(">>> Surface hits found on ...");
   for (const auto& fwdSteps : fwdSurfaces) {
@@ -148,9 +147,9 @@ void runSelfConsistencyTest(const propagator_t& prop,
   auto bwdState = prop.makeState(bwdOptions);
   prop.propagate(bwdState, *fwdResult.endParameters, &startSurface).value();
   auto bwdSurfaceHits =
-      bwdState.actor.template get<TestSurfaceCollector::state_type>().collected;
+      bwdState.actor.template get<TestSurfaceCollector::State>().collected;
   auto bwdSurfaces = collectRelevantGeoIds(
-      bwdState.actor.template get<TestSurfaceCollector::state_type>());
+      bwdState.actor.template get<TestSurfaceCollector::State>());
 
   ACTS_DEBUG(">>> Surface hits found on ...");
   for (auto& bwdSteps : bwdSurfaces) {
@@ -192,7 +191,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
         prop.propagate(fwdStepState, sParameters, fwdSteps.surface).value();
 
     auto fwdStepSurfacesTmp = collectRelevantGeoIds(
-        fwdStepState.actor.template get<TestSurfaceCollector::state_type>());
+        fwdStepState.actor.template get<TestSurfaceCollector::State>());
     fwdStepSurfaces.insert(fwdStepSurfaces.end(), fwdStepSurfacesTmp.begin(),
                            fwdStepSurfacesTmp.end());
 
@@ -210,7 +209,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
   auto fwdStepFinalState = prop.makeState(fwdStepOptions);
   prop.propagate(fwdStepFinalState, sParameters, &dSurface).value();
   auto fwdStepSurfacesTmp = collectRelevantGeoIds(
-      fwdStepFinalState.actor.template get<TestSurfaceCollector::state_type>());
+      fwdStepFinalState.actor.template get<TestSurfaceCollector::State>());
   fwdStepSurfaces.insert(fwdStepSurfaces.end(), fwdStepSurfacesTmp.begin(),
                          fwdStepSurfacesTmp.end());
 
@@ -243,7 +242,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
         prop.propagate(bwdStepState, sParameters, bwdSteps.surface).value();
 
     auto bwdStepSurfacesTmp = collectRelevantGeoIds(
-        bwdStepState.actor.template get<TestSurfaceCollector::state_type>());
+        bwdStepState.actor.template get<TestSurfaceCollector::State>());
     bwdStepSurfaces.insert(bwdStepSurfaces.end(), bwdStepSurfacesTmp.begin(),
                            bwdStepSurfacesTmp.end());
 
@@ -261,7 +260,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
   auto bwdStepFinalState = prop.makeState(bwdStepOptions);
   prop.propagate(bwdStepFinalState, sParameters, &dbSurface).value();
   auto bwdStepSurfacesTmp = collectRelevantGeoIds(
-      bwdStepFinalState.actor.template get<TestSurfaceCollector::state_type>());
+      bwdStepFinalState.actor.template get<TestSurfaceCollector::State>());
   bwdStepSurfaces.insert(bwdStepSurfaces.end(), bwdStepSurfacesTmp.begin(),
                          bwdStepSurfacesTmp.end());
 
@@ -309,7 +308,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
     auto fwdState = prop.makeState(fwdOptions);
     prop.propagate(fwdState, start).value();
     auto fwdSurfaces = collectRelevantGeoIds(
-        fwdState.actor.template get<TestSurfaceCollector::state_type>());
+        fwdState.actor.template get<TestSurfaceCollector::State>());
 
     ACTS_DEBUG(">>> Surface hits found on ...");
     for (const auto& fwdSteps : fwdSurfaces) {

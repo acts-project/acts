@@ -76,8 +76,7 @@ BOOST_AUTO_TEST_CASE(TryAllNavigatorKeepsTargetBehind) {
   auto state = propagator.makeState(options);
   auto result = propagator.propagate(state, start);
   BOOST_REQUIRE(result.ok());
-  const auto& hits =
-      state.actor.get<SurfaceCollector<>::state_type>().collected;
+  const auto& hits = state.actor.get<SurfaceCollector<>::State>().collected;
 
   // every module crossing of the helix in order (L0 = layer 2, L1 = layer 4):
   // two L0 modules, three L1 modules, back through L0, three times; without

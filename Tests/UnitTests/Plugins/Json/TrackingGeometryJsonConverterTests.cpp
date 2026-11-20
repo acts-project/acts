@@ -81,11 +81,11 @@ struct StateCollector {
     std::vector<typename stepper_t::State> stepping;
   };
 
-  using state_type = this_result;
+  using State = this_result;
 
   template <typename propagator_state_t>
   Result<void> act(propagator_state_t& state, const stepper_t& /*stepper*/,
-                   const navigator_t& /*navigator*/, state_type& result,
+                   const navigator_t& /*navigator*/, State& result,
                    const Logger& /*logger*/) const {
     result.navigation.push_back(state.navigation);
     result.stepping.push_back(state.stepping);
@@ -470,9 +470,9 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   decodedPropagator.propagate(decodedState, start).value();
 
   auto& sourceStates =
-      sourceState.actor.template get<StateCollector<>::state_type>();
+      sourceState.actor.template get<StateCollector<>::State>();
   auto& decodedStates =
-      decodedState.actor.template get<StateCollector<>::state_type>();
+      decodedState.actor.template get<StateCollector<>::State>();
   BOOST_REQUIRE_EQUAL(sourceStates.navigation.size(),
                       decodedStates.navigation.size());
   BOOST_REQUIRE_EQUAL(sourceStates.stepping.size(),

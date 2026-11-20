@@ -57,7 +57,7 @@ struct StepWiseActor {
     bool finalized = false;
   };
   /// Broadcast the result type
-  using state_type = this_result;
+  using State = this_result;
 
   /// @brief Kalman sequence operation
   ///
@@ -72,7 +72,7 @@ struct StepWiseActor {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, state_type& result,
+                   const navigator_t& navigator, State& result,
                    const Logger& /*logger*/) const {
     // Listen to the surface and create bound state where necessary
     auto surface = navigator.currentSurface(state.navigation);
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
       ParticleHypothesis::pion());
 
   // Create the ActionList and AbortList
-  using StepWiseResult = StepWiseActor::state_type;
+  using StepWiseResult = StepWiseActor::State;
   using StepWiseActors = ActorList<DefaultActor, StepWiseActor>;
 
   // Create some options

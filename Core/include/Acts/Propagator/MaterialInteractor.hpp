@@ -34,7 +34,7 @@ struct MaterialInteractor {
   NoiseUpdateMode noiseUpdateMode = NoiseUpdateMode::addNoise;
 
   /// Type alias for the material interaction state
-  using state_type = RecordedMaterial;
+  using State = RecordedMaterial;
 
   /// @brief Interaction with detector material for the ActionList
   /// of the Propagator
@@ -57,7 +57,7 @@ struct MaterialInteractor {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, state_type& actorState,
+                   const navigator_t& navigator, State& actorState,
                    const Logger& logger) const {
     if (state.stage == PropagatorStage::postPropagation) {
       return Result<void>::success();
@@ -177,7 +177,7 @@ struct MaterialInteractor {
                     const navigator_t& navigator, const MaterialSlab& slab,
                     double initialMomentum,
                     const detail::PointwiseMaterialEffects& effects,
-                    state_type& actorState) const {
+                    State& actorState) const {
     actorState.materialInX0 += slab.thicknessInX0();
     actorState.materialInL0 += slab.thicknessInL0();
 
@@ -215,7 +215,7 @@ struct MaterialInteractor {
   /// @param [in] interaction Interaction cache container
   /// @param [in, out] actorState State of the actor
   void recordResult(const detail::VolumeMaterialInteraction& interaction,
-                    state_type& actorState) const {
+                    State& actorState) const {
     // Record the interaction if requested
     if (!recordInteractions) {
       return;
@@ -239,7 +239,7 @@ struct MaterialInteractor {
   /// @param [in, out] actorState State of the actor
   template <typename propagator_state_t, typename stepper_t>
   void updateResult(propagator_state_t& state, const stepper_t& stepper,
-                    state_type& actorState) const {
+                    State& actorState) const {
     // Update the previous interaction if requested
     if (!recordInteractions) {
       return;

@@ -151,7 +151,7 @@ class ReferenceTrajectoryBuilder {
   class Actor {
    public:
     /// Type alias for the actor state
-    using state_type = ResultType;
+    using State = ResultType;
 
     /// The surface to stop at, or nullptr for none
     const Surface* targetSurface = nullptr;
@@ -185,7 +185,7 @@ class ReferenceTrajectoryBuilder {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                     const navigator_t& navigator, state_type& result,
+                     const navigator_t& navigator, State& result,
                      const Logger& /*logger*/) const {
       assert(result.trajectory && "No MultiTrajectory set");
 
@@ -262,7 +262,7 @@ class ReferenceTrajectoryBuilder {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, const state_type& result,
+                    const navigator_t& /*navigator*/, const State& result,
                     const Logger& /*logger*/) const {
       return result.finished;
     }
@@ -273,7 +273,7 @@ class ReferenceTrajectoryBuilder {
                                propagator_state_t& state,
                                const stepper_t& stepper,
                                const navigator_t& navigator,
-                               state_type& result) const {
+                               State& result) const {
       auto transportRes = stepper.transportToBound(state.stepping, surface,
                                                    freeToBoundCorrection);
       if (!transportRes.ok()) {

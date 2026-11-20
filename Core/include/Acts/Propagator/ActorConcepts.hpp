@@ -17,7 +17,7 @@
 namespace Acts {
 
 template <typename actor_t>
-concept ActorHasState = requires { typename actor_t::state_type; };
+concept ActorHasState = requires { typename actor_t::State; };
 
 /// Helper struct exposing ActorHasState as a boolean.
 template <typename actor_t>
@@ -36,7 +36,7 @@ struct ActorStateTypeImpl {
 };
 template <ActorHasState actor_t>
 struct ActorStateTypeImpl<actor_t> {
-  using type = typename actor_t::state_type;
+  using type = typename actor_t::State;
 };
 }  // namespace detail
 
@@ -60,7 +60,7 @@ concept ActorHasActWithState =
     ActorHasState<actor_t> &&
     requires(const actor_t& a, propagator_state_t& state,
              const stepper_t& stepper, const navigator_t& navigator,
-             typename actor_t::state_type& actorState, Args&&... args) {
+             typename actor_t::State& actorState, Args&&... args) {
       {
         a.act(state, stepper, navigator, actorState,
               std::forward<Args>(args)...)
@@ -70,7 +70,7 @@ concept ActorHasActWithState =
 template <typename actor_t, typename propagator_state_t, typename stepper_t,
           typename navigator_t, typename... Args>
 concept ActorHasOldVoidInterface =
-    // Check without state parameter (for actors without state_type)
+    // Check without state parameter (for actors without State)
     requires(const actor_t& a, propagator_state_t& state,
              const stepper_t& stepper, const navigator_t& navigator,
              Args&&... args) {
@@ -78,11 +78,11 @@ concept ActorHasOldVoidInterface =
         a.act(state, stepper, navigator, std::forward<Args>(args)...)
       } -> std::same_as<void>;
     } ||
-    // Check with state parameter (for actors with state_type)
+    // Check with state parameter (for actors with State)
     (ActorHasState<actor_t> &&
      requires(const actor_t& a, propagator_state_t& state,
               const stepper_t& stepper, const navigator_t& navigator,
-              typename actor_t::state_type& actorState, Args&&... args) {
+              typename actor_t::State& actorState, Args&&... args) {
        {
          a.act(state, stepper, navigator, actorState,
                std::forward<Args>(args)...)
@@ -113,7 +113,7 @@ concept ActorHasAbortWithState =
     ActorHasState<actor_t> &&
     requires(const actor_t& a, propagator_state_t& state,
              const stepper_t& stepper, const navigator_t& navigator,
-             typename actor_t::state_type& actorState, Args&&... args) {
+             typename actor_t::State& actorState, Args&&... args) {
       {
         a.checkAbort(state, stepper, navigator, actorState,
                      std::forward<Args>(args)...)

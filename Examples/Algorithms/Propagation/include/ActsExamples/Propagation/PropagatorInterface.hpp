@@ -105,8 +105,7 @@ class ConcretePropagator : public PropagatorInterface {
     summary.pathLength = resultValue.pathLength;
 
     // Collect the steps
-    auto& steppingResults =
-        state.actor.template get<SteppingLogger::state_type>();
+    auto& steppingResults = state.actor.template get<SteppingLogger::State>();
     summary.steps = std::move(steppingResults.steps);
 
     summary.statistics = resultValue.statistics;
@@ -115,7 +114,7 @@ class ConcretePropagator : public PropagatorInterface {
     // Also set the material recording result - if configured
     if (cfg.recordMaterialInteractions) {
       recordedMaterial =
-          std::move(state.actor.template get<MaterialInteractor::state_type>());
+          std::move(state.actor.template get<MaterialInteractor::State>());
     }
 
     return std::pair{std::move(summary), std::move(recordedMaterial)};

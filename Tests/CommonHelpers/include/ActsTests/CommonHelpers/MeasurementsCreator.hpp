@@ -49,7 +49,7 @@ struct Measurements {
 
 /// Propagator action to create smeared measurements.
 struct MeasurementsCreator {
-  using state_type = Measurements;
+  using State = Measurements;
 
   MeasurementResolutionMap resolutions;
   std::default_random_engine* rng = nullptr;
@@ -69,7 +69,7 @@ struct MeasurementsCreator {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Acts::Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                         const navigator_t& navigator, state_type& result,
+                         const navigator_t& navigator, State& result,
                          const Acts::Logger& logger) const {
     using namespace Acts::UnitLiterals;
 

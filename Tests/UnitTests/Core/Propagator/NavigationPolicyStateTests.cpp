@@ -217,12 +217,12 @@ struct StepCollector {
     std::vector<const Surface*> surfaces;
   };
 
-  using state_type = this_result;
+  using State = this_result;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& /*navigator*/, state_type& result,
+                   const navigator_t& /*navigator*/, State& result,
                    const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     if (state.navigation.currentSurface != nullptr) {
@@ -234,7 +234,7 @@ struct StepCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/, state_type& /*result*/,
+                  const navigator_t& /*navigator*/, State& /*result*/,
                   const Logger& /*logger*/) const {
     return false;
   }
@@ -571,14 +571,14 @@ class CurvatureRecordingPolicy final : public INavigationPolicy {
 // then change the momentum again after the first step. Policy callbacks must
 // see the updated curvature, not a derivative cached by the previous step.
 struct ChangeCurvatureActor {
-  struct state_type {
+  struct State {
     bool changedAfterStep = false;
   };
   std::shared_ptr<CurvatureRecords> records;
 
   template <typename PropagatorState, typename Stepper, typename Nav>
   Result<void> act(PropagatorState& state, const Stepper& stepper,
-                   const Nav& /*navigator*/, state_type& result,
+                   const Nav& /*navigator*/, State& result,
                    const Logger& /*logger*/) const {
     Vector3 direction = stepper.direction(state.stepping);
     if (state.stage == PropagatorStage::prePropagation) {
@@ -597,7 +597,7 @@ struct ChangeCurvatureActor {
 
   template <typename PropagatorState, typename Stepper, typename Nav>
   bool checkAbort(PropagatorState& /*state*/, const Stepper& /*stepper*/,
-                  const Nav& /*navigator*/, state_type& /*result*/,
+                  const Nav& /*navigator*/, State& /*result*/,
                   const Logger& /*logger*/) const {
     return false;
   }

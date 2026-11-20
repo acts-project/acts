@@ -215,7 +215,7 @@ BOOST_DATA_TEST_CASE(
 
   auto state = epropagator.makeState(options);
   epropagator.propagate(state, start).value();
-  auto collector_result = state.actor.get<PlaneCollector::state_type>();
+  auto collector_result = state.actor.get<PlaneCollector::State>();
 
   // step through the surfaces and go step by step
   EigenPropagatorType::Options<> optionsEmpty(tgContext, mfContext);

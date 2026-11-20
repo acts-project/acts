@@ -67,14 +67,14 @@ struct PerpendicularMeasure {
     double distance = std::numeric_limits<double>::max();
   };
 
-  using state_type = this_result;
+  using State = this_result;
 
   PerpendicularMeasure() = default;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, state_type& result) const {
+                  const navigator_t& /*navigator*/, State& result) const {
     result.distance = perp(stepper.position(state.stepping));
   }
 };
@@ -99,12 +99,12 @@ struct SurfaceObserver {
     double surface_passed_r = std::numeric_limits<double>::max();
   };
 
-  using state_type = this_result;
+  using State = this_result;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& /*navigator*/, state_type& result,
+                   const navigator_t& /*navigator*/, State& result,
                    const Logger& logger) const {
     if (surface == nullptr || result.surfaces_passed != 0) {
       return Result<void>::success();
@@ -145,7 +145,7 @@ struct SurfaceObserver {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/, state_type& result,
+                  const navigator_t& /*navigator*/, State& result,
                   const Logger& /*logger*/) const {
     return result.surfaces_passed != 0;
   }
@@ -219,7 +219,7 @@ BOOST_DATA_TEST_CASE(
   // set the surface to be passed by
   options.actor.get<CylinderObserver>().surface = mSurface.get();
 
-  using so_result = typename CylinderObserver::state_type;
+  using so_result = typename CylinderObserver::State;
 
   // define start parameters
   double x = 0;

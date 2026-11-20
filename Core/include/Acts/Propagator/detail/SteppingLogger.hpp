@@ -51,7 +51,7 @@ struct SteppingLogger {
     std::vector<Step> steps;
   };
 
-  using state_type = this_result;
+  using State = this_result;
 
   /// Set the Logger to sterile
   bool sterile = false;
@@ -69,7 +69,7 @@ struct SteppingLogger {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, state_type& actorState,
+                   const navigator_t& navigator, State& actorState,
                    const Logger& /*logger*/) const {
     // Don't log if you have reached the target or are sterile
     if (sterile || state.stage == PropagatorStage::postPropagation) {

@@ -280,7 +280,7 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("| Gsf: Do forward propagation |");
     ACTS_VERBOSE("+-----------------------------+");
 
-    using GsfResult = typename GsfActor::state_type;
+    using GsfResult = typename GsfActor::State;
 
     auto fwdResult = [&]() -> Result<GsfResult> {
       auto fwdPropOptions = fwdPropInitializer(options);

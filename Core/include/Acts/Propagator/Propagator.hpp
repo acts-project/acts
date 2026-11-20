@@ -63,8 +63,8 @@ class BasePropagatorHelper : public BasePropagator {
 ///
 /// The Propagator works with a state objects given at function call
 /// This state object contains the thread local state objects
-///  - Navigator::state_type for object navigation and screen output
-///  - Stepper::state_type state for the actual transport caching
+///  - Navigator::State for object navigation and screen output
+///  - Stepper::State state for the actual transport caching
 ///  (pos,dir,field)
 ///
 /// @tparam stepper_t Type of stepper implementation of the propagation

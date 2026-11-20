@@ -20,12 +20,12 @@ Propagator<Navigator, Stepper>
 
 Additional to these mandatory components, the propagator runs exactly one **actor** to allow for custom behaviour. The actor is a function object that is hooked in the propagation loop. It performs actions on the propagator state (e.g. the {class}`Acts::KalmanFitter` uses an actor), and it decides when the propagation stops.
 
-The propagator exposes its state to the actor as arguments to `act()` and `checkAbort()`. An actor can define a default-constructable `state_type`. The propagator holds one instance of it in `state.actor` and hands it to each call:
+The propagator exposes its state to the actor as arguments to `act()` and `checkAbort()`. An actor can define a default-constructable `State`, as a nested struct or as an alias. The propagator holds one instance of it in `state.actor` and hands it to each call. Inside an {struct}`Acts::ActorList`, each actor gets its own entry of the composite state instead of `state.actor`:
 
 ```cpp
 template <typename propagator_state_t, typename stepper_t, typename navigator_t>
 Result<void> act(propagator_state_t &state, const stepper_t &stepper,
-                 const navigator_t &navigator, state_type &actorState,
+                 const navigator_t &navigator, State &actorState,
                  const Logger &logger) const {
   const auto &navigatorState = state.navigation;
   const auto &stepperState = state.stepping;
@@ -74,7 +74,7 @@ auto state = propagator.makeState(options);
 auto res = propagator.propagate(state, myParams);
 
 if (res.ok()) {
-  state.actor.get<MyActor1::state_type>();
+  state.actor.get<MyActor1::State>();
 }
 ```
 

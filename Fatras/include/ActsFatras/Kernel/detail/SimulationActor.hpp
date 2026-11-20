@@ -36,7 +36,7 @@ namespace ActsFatras::detail {
 template <typename generator_t, typename decay_t, typename interactions_t,
           typename hit_surface_selector_t>
 struct SimulationActor {
-  using state_type = SingleParticleSimulationResult;
+  using State = SingleParticleSimulationResult;
 
   /// Random number generator used for the simulation.
   generator_t *generator = nullptr;
@@ -64,7 +64,7 @@ struct SimulationActor {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Acts::Result<void> act(propagator_state_t &state, stepper_t &stepper,
-                         navigator_t &navigator, state_type &result,
+                         navigator_t &navigator, State &result,
                          const Acts::Logger & /*logger*/) const {
     assert(generator != nullptr && "The generator pointer must be valid");
 
@@ -198,7 +198,7 @@ struct SimulationActor {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t & /*state*/, const stepper_t & /*stepper*/,
-                  const navigator_t & /*navigator*/, const state_type &result,
+                  const navigator_t & /*navigator*/, const State &result,
                   const Acts::Logger & /*logger*/) const {
     // must return true if the propagation should abort
     return !result.isAlive;
@@ -235,8 +235,7 @@ struct SimulationActor {
   }
 
   /// Prepare limits and process selection for the next point-like interaction.
-  void armPointLikeInteractions(const Particle &particle,
-                                state_type &result) const {
+  void armPointLikeInteractions(const Particle &particle, State &result) const {
     auto selection = interactions.armPointLike(*generator, particle);
     result.x0Limit = selection.x0Limit;
     result.l0Limit = selection.l0Limit;
@@ -248,7 +247,7 @@ struct SimulationActor {
   ///
   /// Simulate all continuous processes and at most one point-like process
   /// within the material.
-  void interact(const Acts::MaterialSlab &slab, state_type &result) const {
+  void interact(const Acts::MaterialSlab &slab, State &result) const {
     // run the continuous processes over a fraction of the material. returns
     // true on break condition (same as the underlying physics lists).
     auto runContinuousPartial = [&, this](float fraction) {

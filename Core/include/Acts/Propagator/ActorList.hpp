@@ -26,7 +26,8 @@ namespace Acts {
 /// the first failure, and the propagation aborts if any actor aborts.
 ///
 /// The state of the composite holds the states of the actors that have one.
-/// Access them with `actorState.get<actor_t::state_type>()`.
+/// Access them with `actorState.get<actor_t::State>()`. Each actor of the list
+/// gets its own entry as its actor state, not the whole composite state.
 ///
 /// @note The composite is fully responsible for the abort conditions of the
 ///       propagation, like any other actor. Add @c DefaultActor to stop at the
@@ -39,7 +40,7 @@ template <typename... actors_t>
            ((Types::count<actors_t, TypeList<actors_t...>>::value == 1) && ...))
 struct ActorList {
   /// State of the composite: the states of the actors that have one
-  using state_type = typename Types::apply<
+  using State = typename Types::apply<
       detail::Extendable,
       typename Types::map<detail::ActorStateTypeImpl,
                           typename Types::filter<ActorHasStateStruct,
@@ -79,7 +80,7 @@ struct ActorList {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, state_type& actorState,
+                   const navigator_t& navigator, State& actorState,
                    Args&&... args) const {
     Result<void> result = Result<void>::success();
     std::apply(
@@ -111,7 +112,7 @@ struct ActorList {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, state_type& actorState,
+                  const navigator_t& navigator, State& actorState,
                   Args&&... args) const {
     return std::apply(
         [&](const actors_t&... actor) {
@@ -128,9 +129,9 @@ struct ActorList {
 
   /// The state of one actor of the list, or a placeholder if it has none
   template <typename actor_t>
-  static decltype(auto) stateOf(state_type& actorState) {
+  static decltype(auto) stateOf(State& actorState) {
     if constexpr (ActorHasState<actor_t>) {
-      return actorState.template get<typename actor_t::state_type>();
+      return actorState.template get<typename actor_t::State>();
     } else {
       return NoActorState{};
     }

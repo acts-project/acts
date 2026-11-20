@@ -47,7 +47,7 @@ struct InteractionVolumeCollector {
   };
 
   /// Type alias for the volume collection state
-  using state_type = this_result;
+  using State = this_result;
 
   /// Collector action for the ActionList of the Propagator
   /// It checks if the propagator state has a current volume,
@@ -66,7 +66,7 @@ struct InteractionVolumeCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& navigator, state_type& actorState,
+                   const navigator_t& navigator, State& actorState,
                    const Logger& /*logger*/) const {
     // Retrieve the current volume
     auto currentVolume = navigator.currentVolume(state.navigation);
@@ -149,7 +149,7 @@ class PropagatorMaterialAssigner /*final*/ : public IAssignmentFinder {
 
     // The surface collection results
     const auto& scResult =
-        state.actor.template get<MaterialSurfaceCollector::state_type>();
+        state.actor.template get<MaterialSurfaceCollector::State>();
 
     for (const auto& mSurface : scResult.collected) {
       candidates.first.push_back(IAssignmentFinder::SurfaceAssignment{
@@ -158,7 +158,7 @@ class PropagatorMaterialAssigner /*final*/ : public IAssignmentFinder {
 
     // The volume collection results
     const auto& vcResult =
-        state.actor.template get<InteractionVolumeCollector::state_type>();
+        state.actor.template get<InteractionVolumeCollector::State>();
     for (const auto& [geoId, vIntersection] : vcResult.collected) {
       candidates.second.push_back(vIntersection);
     }
