@@ -273,8 +273,8 @@ bool TRACCC_HOST_DEVICE doublet_finding_helper::isCompatibleDPhi(
   // through sin(asin(v)) = v and cos(asin(v)) = sqrt(1 - v^2). It lies in
   // [0, pi/2].
   const scalar d0 = config.doubletDPhiD0Max;
-  const scalar v1 = math::min(1.f, d0 / math::max(r1, 1.f));
-  const scalar v2 = math::min(1.f, d0 / math::max(r2, 1.f));
+  const scalar v1 = math::min(scalar{1.f}, d0 / math::max(r1, scalar{1.f}));
+  const scalar v2 = math::min(scalar{1.f}, d0 / math::max(r2, scalar{1.f}));
   const scalar c1 = math::sqrt(1.f - v1 * v1);
   const scalar c2 = math::sqrt(1.f - v2 * v2);
   scalar sinM = math::fabs(v2 * c1 - c2 * v1);
@@ -282,8 +282,8 @@ bool TRACCC_HOST_DEVICE doublet_finding_helper::isCompatibleDPhi(
 
   // min(cap, s): on [0, pi/2] the sine rises and the cosine falls
   if (config.doubletDPhiCap < 0.5f * constant<scalar>::pi) {
-    sinM = math::min(sinM, math::sin(config.doubletDPhiCap));
-    cosM = math::max(cosM, math::cos(config.doubletDPhiCap));
+    sinM = math::min(sinM, math::sin(scalar{config.doubletDPhiCap}));
+    cosM = math::max(cosM, math::cos(scalar{config.doubletDPhiCap}));
   }
 
   // b = a + min(cap, s) lies in [a, a + pi/2]; the comparison below needs

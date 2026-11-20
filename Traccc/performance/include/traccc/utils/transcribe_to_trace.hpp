@@ -127,7 +127,9 @@ auto transcribe_to_trace(
 
     // TODO: Use correct track direction at measurement for line sf.
     const vector3 dir{vector::normalize(ptc.momentum)};
-    const point3 glob_pos{sf.local_to_global(ctx, meas.local_position(), dir)};
+    const typename detector_t::point2_type loc_pos{meas.local_position()[0],
+                                                   meas.local_position()[1]};
+    const point3 glob_pos{sf.local_to_global(ctx, loc_pos, dir)};
 
     // Rough estimate of intersection distance from origin
     const scalar path{vector::norm(glob_pos)};
