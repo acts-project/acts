@@ -70,21 +70,26 @@ namespace detray::algebra::boolean {
 ///
 /// The reductions combine the lane bits without branches, so that the
 /// compiler can vectorize them
+///
+/// @note The functions with a loop take the number of lanes @c W as a template
+/// parameter: GCC 14 only accepts a template parameter as the count of
+/// @c DETRAY_UNROLL_N, but no other constant expression.
 /// @{
 
-/// @tparam M Lane mask type.
+/// @tparam W Number of lanes.
+/// @tparam I Signed integer type of a lane.
 /// @param mask Lane mask to check.
 /// @returns true if at least one lane is set
-template <detray::concepts::array_soa_mask M>
-DETRAY_HOST_DEVICE constexpr bool any_of(const M& mask) {
-  using lane_t = typename M::lane_type;
+template <std::size_t W, std::signed_integral I>
+DETRAY_HOST_DEVICE constexpr bool any_of(const array_soa::mask<W, I>& mask) {
+  using mask_t = array_soa::mask<W, I>;
 
-  lane_t ret{M::s_false};
-  DETRAY_UNROLL_N(M::size())
-  for (std::size_t i = 0u; i < M::size(); ++i) {
-    ret = static_cast<lane_t>(ret | mask.m_data[i]);
+  I ret{mask_t::s_false};
+  DETRAY_UNROLL_N(W)
+  for (std::size_t i = 0u; i < W; ++i) {
+    ret = static_cast<I>(ret | mask.m_data[i]);
   }
-  return ret != M::s_false;
+  return ret != mask_t::s_false;
 }
 
 /// @tparam M Lane mask type.
@@ -103,14 +108,16 @@ DETRAY_HOST_DEVICE constexpr bool all_of(const M& mask) {
   return mask.isFull();
 }
 
-/// @tparam M Lane mask type.
+/// @tparam W Number of lanes.
+/// @tparam I Signed integer type of a lane.
 /// @param mask Lane mask to check.
 /// @returns the number of lanes that are set
-template <detray::concepts::array_soa_mask M>
-DETRAY_HOST_DEVICE constexpr std::size_t count(const M& mask) {
+template <std::size_t W, std::signed_integral I>
+DETRAY_HOST_DEVICE constexpr std::size_t count(
+    const array_soa::mask<W, I>& mask) {
   std::size_t n{0u};
-  DETRAY_UNROLL_N(M::size())
-  for (std::size_t i = 0u; i < M::size(); ++i) {
+  DETRAY_UNROLL_N(W)
+  for (std::size_t i = 0u; i < W; ++i) {
     n += static_cast<std::size_t>(mask.m_data[i] & 1);
   }
   return n;
@@ -122,51 +129,52 @@ DETRAY_HOST_DEVICE constexpr std::size_t count(const M& mask) {
 
 /// Assign a single value to the lanes where the mask is set
 ///
-/// @tparam S Lane bundle type.
-/// @tparam M Lane mask type.
+/// @tparam T Value type of a lane.
+/// @tparam W Number of lanes.
+/// @tparam I Signed integer type of a mask lane.
 /// @tparam U Type of the new value, convertible to the lane value type.
 ///
 /// @param s Lane bundle to update.
 /// @param mask Lanes to update.
 /// @param new_value Value to assign.
-template <detray::concepts::array_soa_simd S,
-          detray::concepts::array_soa_mask M, typename U>
-  requires(std::is_scalar_v<U> &&
-           std::convertible_to<U, typename S::value_type>)
-DETRAY_HOST_DEVICE constexpr void set_if(S& s, const M& mask,
+template <detray::concepts::value T, std::size_t W, std::signed_integral I,
+          typename U>
+  requires(std::is_scalar_v<U> && std::convertible_to<U, T>)
+DETRAY_HOST_DEVICE constexpr void set_if(array_soa::simd<T, W>& s,
+                                         const array_soa::mask<W, I>& mask,
                                          const U new_value) {
-  using value_t = typename S::value_type;
+  const auto k{array_soa::detail::to_lane_mask<array_soa::simd<T, W>>(mask)};
+  const auto v{static_cast<T>(new_value)};
 
-  const auto k{array_soa::detail::to_lane_mask<S>(mask)};
-  const auto v{static_cast<value_t>(new_value)};
-
-  DETRAY_UNROLL_N(S::size())
-  for (std::size_t i = 0u; i < S::size(); ++i) {
+  DETRAY_UNROLL_N(W)
+  for (std::size_t i = 0u; i < W; ++i) {
     s[i] = array_soa::detail::blend(s[i], v, k.m_data[i]);
   }
 }
 
 /// Assign the lanes of a lane bundle where the mask is set
 ///
-/// @tparam S Lane bundle type.
-/// @tparam M Lane mask type.
-/// @tparam U Type of the new values, convertible to @tparam S.
+/// @tparam T Value type of a lane.
+/// @tparam W Number of lanes.
+/// @tparam I Signed integer type of a mask lane.
+/// @tparam U Type of the new values, convertible to the lane bundle.
 ///
 /// @param s Lane bundle to update.
 /// @param mask Lanes to update.
 /// @param new_s Lane bundle with the new values.
-template <detray::concepts::array_soa_simd S,
-          detray::concepts::array_soa_mask M, typename U>
-  requires(!std::is_scalar_v<U> && std::convertible_to<U, S>)
-DETRAY_HOST_DEVICE constexpr void set_if(S& s, const M& mask, const U& new_s) {
-  using value_t = typename S::value_type;
+template <detray::concepts::value T, std::size_t W, std::signed_integral I,
+          typename U>
+  requires(!std::is_scalar_v<U> &&
+           std::convertible_to<U, array_soa::simd<T, W>>)
+DETRAY_HOST_DEVICE constexpr void set_if(array_soa::simd<T, W>& s,
+                                         const array_soa::mask<W, I>& mask,
+                                         const U& new_s) {
+  const auto k{array_soa::detail::to_lane_mask<array_soa::simd<T, W>>(mask)};
 
-  const auto k{array_soa::detail::to_lane_mask<S>(mask)};
-
-  DETRAY_UNROLL_N(S::size())
-  for (std::size_t i = 0u; i < S::size(); ++i) {
-    s[i] = array_soa::detail::blend(s[i], static_cast<value_t>(new_s[i]),
-                                    k.m_data[i]);
+  DETRAY_UNROLL_N(W)
+  for (std::size_t i = 0u; i < W; ++i) {
+    s[i] =
+        array_soa::detail::blend(s[i], static_cast<T>(new_s[i]), k.m_data[i]);
   }
 }
 

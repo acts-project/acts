@@ -104,7 +104,8 @@ dvector<dscalar<algebra_t>> get_dists(std::size_t n) {
   using value_t = typename algebra_t::value_type;
 
   dvector<scalar_t> dists;
-  dists.resize(static_cast<std::size_t>(std::ceil(n / simd_size)));
+  // Round up, so that all n samples are covered
+  dists.resize((n + simd_size - 1u) / simd_size);
   for (std::size_t i = 0u; i < dists.size(); ++i) {
     dists[i] = detray::detail::iota<scalar_t>() +
                detray::detail::one<scalar_t>() +

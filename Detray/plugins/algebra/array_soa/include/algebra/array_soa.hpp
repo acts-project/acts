@@ -12,14 +12,16 @@
 #include "algebra/impl/array_soa_approximately_equal.hpp"
 #include "algebra/impl/array_soa_boolean.hpp"
 #include "algebra/impl/array_soa_casts.hpp"
-#include "algebra/impl/array_soa_getter.hpp"
+#include "algebra/impl/array_soa_constants.hpp"
 #include "algebra/impl/array_soa_math.hpp"
-#include "algebra/impl/array_soa_matrix.hpp"
 #include "algebra/impl/array_soa_types.hpp"
-#include "algebra/impl/array_soa_vector.hpp"
+#include "detray/algebra/common/matrix_getter.hpp"
+#include "detray/algebra/common/soa_matrix.hpp"
+#include "detray/algebra/common/soa_vector.hpp"
 #include "detray/algebra/generic/impl/generic_matrix.hpp"
 
 // System include(s).
+#include <bit>
 #include <cstddef>
 
 namespace detray {
@@ -29,9 +31,15 @@ namespace detray {
 // would be ambiguous with the operators of the AoS array plugin
 
 /// Define the plugin types
+///
+/// @tparam V Value type (scalar precision) of a lane.
+/// @tparam W Number of SIMD lanes, must be a power of two.
 /// @{
 template <concepts::value V, std::size_t W = 8u>
 struct array_soa {
+  static_assert(std::has_single_bit(W),
+                "The number of SIMD lanes must be a power of two");
+
   /// @returns the number of SIMD lanes
   static consteval std::size_t size() { return W; }
 
@@ -65,10 +73,10 @@ namespace getter {
 /// @name Getter functions on @c algebra::array_soa types
 /// @{
 
-using algebra::array_soa::storage::block;
-using algebra::array_soa::storage::element;
-using algebra::array_soa::storage::set_block;
-using algebra::array_soa::storage::vector;
+using algebra::storage::getter::block;
+using algebra::storage::getter::element;
+using algebra::storage::getter::set_block;
+using algebra::storage::getter::vector;
 
 /// @}
 
@@ -79,14 +87,14 @@ namespace vector {
 /// @name Vector functions on @c algebra::array_soa types
 /// @{
 
-using algebra::array_soa::math::cross;
-using algebra::array_soa::math::dot;
-using algebra::array_soa::math::eta;
-using algebra::array_soa::math::norm;
-using algebra::array_soa::math::normalize;
-using algebra::array_soa::math::perp;
-using algebra::array_soa::math::phi;
-using algebra::array_soa::math::theta;
+using algebra::soa::cross;
+using algebra::soa::dot;
+using algebra::soa::eta;
+using algebra::soa::norm;
+using algebra::soa::normalize;
+using algebra::soa::perp;
+using algebra::soa::phi;
+using algebra::soa::theta;
 
 /// @}
 
@@ -95,13 +103,13 @@ using algebra::array_soa::math::theta;
 // Produces clash with matrix typedefs in other plugins
 namespace matrix {
 
-using algebra::array_soa::math::determinant;
-using algebra::array_soa::math::identity;
-using algebra::array_soa::math::inverse;
-using algebra::array_soa::math::set_identity;
-using algebra::array_soa::math::set_zero;
-using algebra::array_soa::math::transpose;
-using algebra::array_soa::math::zero;
+using algebra::soa::determinant;
+using algebra::soa::identity;
+using algebra::soa::inverse;
+using algebra::soa::set_identity;
+using algebra::soa::set_zero;
+using algebra::soa::transpose;
+using algebra::soa::zero;
 
 using algebra::generic::math::cholesky_decomposition;
 using algebra::generic::math::column_wise_cross;

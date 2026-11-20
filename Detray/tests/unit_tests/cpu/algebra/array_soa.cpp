@@ -30,7 +30,9 @@
 // System include(s)
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <limits>
+#include <type_traits>
 
 using namespace detray;
 
@@ -38,9 +40,25 @@ using value_t = float;
 
 constexpr value_t tol{1e-5f};
 
+/// Lane widths that are tested for the lane bundle based tests
+using lane_widths = ::testing::Types<std::integral_constant<std::size_t, 1u>,
+                                     std::integral_constant<std::size_t, 2u>,
+                                     std::integral_constant<std::size_t, 4u>,
+                                     std::integral_constant<std::size_t, 8u>,
+                                     std::integral_constant<std::size_t, 16u>,
+                                     std::integral_constant<std::size_t, 32u>>;
+
+/// Test fixture for the tests with different lane widths
+template <typename T>
+class detray_algebra_soa_lanes : public ::testing::Test {};
+
+TYPED_TEST_SUITE(detray_algebra_soa_lanes, lane_widths, );
+
 /// This tests the lane bundle that serves as the scalar of the SoA plugin
-TEST(detray_algebra_soa, simd) {
-  using test_algebra_t = detray::array_soa<value_t>;
+TYPED_TEST(detray_algebra_soa_lanes, simd) {
+  constexpr std::size_t W{TypeParam::value};
+
+  using test_algebra_t = detray::array_soa<value_t, W>;
   using scalar_t = dscalar<test_algebra_t>;
   using bool_t = dbool<test_algebra_t>;
 
@@ -49,7 +67,7 @@ TEST(detray_algebra_soa, simd) {
   static_assert(detray::concepts::soa<test_algebra_t>);
   static_assert(!detray::concepts::aos<test_algebra_t>);
   static_assert(detray::concepts::algebra<test_algebra_t>);
-  static_assert(scalar_t::size() == 8u);
+  static_assert(scalar_t::size() == W);
   static_assert(std::same_as<dscalar<detray::array_soa<value_t, 4>>,
                              algebra::array_soa::simd<value_t, 4>>);
 
@@ -87,11 +105,13 @@ TEST(detray_algebra_soa, simd) {
   // Comparisons yield masks
   const bool_t m = idx < 3.f;
   static_assert(std::same_as<decltype(m), const bool_t>);
-  EXPECT_FALSE(detray::detail::all_of(m));
+  // The lanes 0, 1 and 2 are set: these can be all lanes for a small W
+  constexpr std::size_t n_set{W < 3u ? W : 3u};
+  EXPECT_EQ(detray::detail::all_of(m), n_set == W);
   EXPECT_FALSE(detray::detail::none_of(m));
   EXPECT_TRUE(detray::detail::any_of(m));
-  EXPECT_EQ(detray::detail::count(m), 3u);
-  EXPECT_TRUE(detray::detail::count(!m) == scalar_t::size() - 3u);
+  EXPECT_EQ(detray::detail::count(m), n_set);
+  EXPECT_EQ(detray::detail::count(!m), W - n_set);
   EXPECT_TRUE(detray::detail::none_of(m && !m));
   EXPECT_TRUE(detray::detail::all_of(m || !m));
   EXPECT_TRUE(detray::detail::all_of(idx >= 0.f));
@@ -101,7 +121,7 @@ TEST(detray_algebra_soa, simd) {
 
   // Boolean reductions used by the core
   EXPECT_TRUE(detray::detail::any_of(m));
-  EXPECT_FALSE(detray::detail::all_of(m));
+  EXPECT_EQ(detray::detail::all_of(m), n_set == W);
   EXPECT_FALSE(detray::detail::none_of(m));
   EXPECT_TRUE(detray::detail::none_of(idx < 0.f));
 
@@ -135,7 +155,8 @@ TEST(detray_algebra_soa, simd) {
   static_assert(std::numeric_limits<scalar_t>::is_specialized);
 
   // Math functions lane by lane
-  const scalar_t v = 0.25f * (idx + 1.f);
+  // Values in (0, 1) for every lane width, so that atanh(0.5 * v) is defined
+  const scalar_t v = (idx + 1.f) / static_cast<value_t>(W + 1u);
   const scalar_t w = -v;
   const scalar_t s_sqrt = math::sqrt(v);
   const scalar_t s_fabs = math::fabs(w);
@@ -178,8 +199,10 @@ TEST(detray_algebra_soa, simd) {
 }
 
 /// This test the vector functions on an SoA (lane bundle) based vector
-TEST(detray_algebra_soa, vector) {
-  using test_algebra_t = detray::array_soa<value_t>;
+TYPED_TEST(detray_algebra_soa_lanes, vector) {
+  constexpr std::size_t W{TypeParam::value};
+
+  using test_algebra_t = detray::array_soa<value_t, W>;
   using vector3_v = dvector3D<test_algebra_t>;
 
   // Value type is a lane bundle of float
@@ -190,9 +213,9 @@ TEST(detray_algebra_soa, vector) {
   static_assert(detray::concepts::vector3D<vector3_v>);
 
   // Cast simd scalar to different precisions
-  using scalar_f = dscalar<detray::array_soa<float>>;
-  using scalar_d = dscalar<detray::array_soa<double>>;
-  using scalar_i = dscalar<detray::array_soa<int>>;
+  using scalar_f = dscalar<detray::array_soa<float, W>>;
+  using scalar_d = dscalar<detray::array_soa<double, W>>;
+  using scalar_i = dscalar<detray::array_soa<int, W>>;
 
   auto s1 = detray::algebra::cast_to<float>(scalar_t(1.f));
   auto s2 = detray::algebra::cast_to<double>(scalar_t(2.f));
@@ -247,9 +270,9 @@ TEST(detray_algebra_soa, vector) {
   auto a_cast_d = detray::algebra::cast_to<double>(a);
   auto a_cast_i = detray::algebra::cast_to<int>(a);
 
-  using algebra_f_t = detray::array_soa<float>;
-  using algebra_d_t = detray::array_soa<double>;
-  using algebra_i_t = detray::array_soa<int>;
+  using algebra_f_t = detray::array_soa<float, W>;
+  using algebra_d_t = detray::array_soa<double, W>;
+  using algebra_i_t = detray::array_soa<int, W>;
   static_assert(std::same_as<decltype(a_cast_f), dvector3D<algebra_f_t>>);
   static_assert(std::same_as<decltype(a_cast_d), dvector3D<algebra_d_t>>);
   static_assert(std::same_as<decltype(a_cast_i), dvector3D<algebra_i_t>>);
@@ -340,8 +363,10 @@ TEST(detray_algebra_soa, vector) {
 }
 
 /// This test the getter functions on an SoA (lane bundle) based vector
-TEST(detray_algebra_soa, getter) {
-  using test_algebra_t = detray::array_soa<value_t>;
+TYPED_TEST(detray_algebra_soa_lanes, getter) {
+  constexpr std::size_t W{TypeParam::value};
+
+  using test_algebra_t = detray::array_soa<value_t, W>;
 
   using vector3_v = dvector3D<test_algebra_t>;
 
@@ -373,8 +398,10 @@ TEST(detray_algebra_soa, getter) {
 }
 
 /// This test an SoA (lane bundle) based affine transform3
-TEST(detray_algebra_soa, transform3) {
-  using test_algebra_t = detray::array_soa<value_t>;
+TYPED_TEST(detray_algebra_soa_lanes, transform3) {
+  constexpr std::size_t W{TypeParam::value};
+
+  using test_algebra_t = detray::array_soa<value_t, W>;
 
   // Print the linear algebra types of this backend
   using algebra::operator<<;
@@ -444,9 +471,9 @@ TEST(detray_algebra_soa, transform3) {
   auto trf1_cast_d = detray::algebra::cast_to<double>(trf1);
   auto trf1_cast_i = detray::algebra::cast_to<int>(trf1);
 
-  using algebra_f_t = detray::array_soa<float>;
-  using algebra_d_t = detray::array_soa<double>;
-  using algebra_i_t = detray::array_soa<int>;
+  using algebra_f_t = detray::array_soa<float, W>;
+  using algebra_d_t = detray::array_soa<double, W>;
+  using algebra_i_t = detray::array_soa<int, W>;
   static_assert(std::same_as<decltype(trf1_cast_f), dtransform3D<algebra_f_t>>);
   static_assert(std::same_as<decltype(trf1_cast_d), dtransform3D<algebra_d_t>>);
   static_assert(std::same_as<decltype(trf1_cast_i), dtransform3D<algebra_i_t>>);

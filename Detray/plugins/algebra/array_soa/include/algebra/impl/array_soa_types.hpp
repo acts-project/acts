@@ -9,13 +9,14 @@
 #pragma once
 
 // Project include(s).
+#include "algebra/impl/array_soa_approximately_equal.hpp"
 #include "algebra/impl/array_soa_casts.hpp"
 #include "algebra/impl/array_soa_concepts.hpp"
 #include "algebra/impl/array_soa_constants.hpp"
-#include "algebra/impl/array_soa_getter.hpp"
 #include "algebra/impl/array_soa_simd.hpp"
-#include "algebra/impl/array_soa_transform3.hpp"
 #include "detray/algebra/common/matrix.hpp"
+#include "detray/algebra/common/matrix_getter.hpp"
+#include "detray/algebra/common/transform3.hpp"
 #include "detray/algebra/common/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/type_traits.hpp"
@@ -69,7 +70,7 @@ using vector8 = vector_type<T, 8, W>;
 
 /// Geometry transformation implementation using a lane bundle in every element
 template <concepts::value T, std::size_t W = 8u>
-using transform3 = array_soa::math::transform3<storage_type, simd<T, W>>;
+using transform3 = algebra::storage::transform3<storage_type, simd<T, W>>;
 
 /// Element Getter
 using element_getter = algebra::storage::element_getter;

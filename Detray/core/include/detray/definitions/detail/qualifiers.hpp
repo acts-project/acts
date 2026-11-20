@@ -56,6 +56,10 @@
 
 // @see
 // https://stackoverflow.com/questions/78071873/gcc-preprocessor-macro-and-pragma-gcc-unroll
+//
+// @note For portability, the count @c n has to be a literal or the name of a
+// template parameter. GCC 14 rejects all other constant expressions, e.g. the
+// call of a static member function or a local constexpr variable.
 #if defined(__clang__)
 #define ARG_TO_STRING(A) #A
 #define DETRAY_UNROLL_N(n) _Pragma(ARG_TO_STRING(clang loop unroll_count(n)))

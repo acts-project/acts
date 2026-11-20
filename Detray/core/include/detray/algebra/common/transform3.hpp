@@ -9,37 +9,35 @@
 #pragma once
 
 // Project include(s).
-#include "algebra/impl/vc_aos_approximately_equal.hpp"
 #include "detray/algebra/common/math.hpp"
 #include "detray/algebra/common/matrix.hpp"
 #include "detray/algebra/common/matrix_getter.hpp"
 #include "detray/algebra/common/vector.hpp"
 #include "detray/algebra/concepts.hpp"
+#include "detray/algebra/type_traits.hpp"
 #include "detray/algebra/utils/approximately_equal.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
-
-// Vc include(s).
-#ifdef _MSC_VER
-#pragma warning(push, 0)
-#endif  // MSVC
-#include <Vc/Vc>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif  // MSVC
 
 // System include(s).
 #include <cassert>
 #include <concepts>
+#include <cstddef>
 #include <limits>
 
-namespace detray::algebra::vc_aos::math {
+namespace detray::algebra::storage {
 
-using algebra::storage::operator*;
-using algebra::storage::operator/;
-using algebra::storage::operator-;
-using algebra::storage::operator+;
-
-/// Transform wrapper class to ensure standard API within different plugins
+/// Affine transform on the @c algebra::storage vector and matrix types
+///
+/// The transform is used by all plugins that are based on the storage types
+/// (Vc AoS, Vc SoA and array SoA). It works with a plain value type
+/// (AoS) as well as with a SIMD type (SoA) as scalar.
+///
+/// @note The @c approx_equal overload for @tparam scalar_t has to be declared
+/// before this header is included. Otherwise the consistency check of the
+/// inverse matrix cannot find it.
+///
+/// @tparam array_t Underlying storage array template of the vectors
+/// @tparam scalar_t Scalar type: a value type (AoS) or a SIMD type (SoA)
 template <template <typename, std::size_t> class array_t,
           concepts::scalar scalar_t>
 struct transform3 {
@@ -59,22 +57,17 @@ struct transform3 {
   /// Scalar type used by the transform
   using scalar_type = scalar_t;
 
-  /// Vector storage with `N` components in the selected array layout.
   template <std::size_t N>
   using array_type = array_t<scalar_type, N>;
 
   /// Vector and point types
   using vector2 = algebra::storage::vector<2u, scalar_type, array_t>;
-  /// Three-component vector type used for spatial quantities.
   using vector3 = algebra::storage::vector<3u, scalar_type, array_t>;
-  /// Two-dimensional point representation.
   using point2 = vector2;
-  /// Three-dimensional point representation.
   using point3 = vector3;
 
   /// 4x4 matrix type (Last row is {0, 0, 0, 1} and can be omitted)
   using matrix44 = algebra::storage::matrix<array_t, scalar_type, 3u, 4u>;
-  /// Column type used to construct the stored matrix.
   using column_t = typename matrix44::vector_type;
 
   /// Function (object) used for accessing a matrix element
@@ -89,9 +82,7 @@ struct transform3 {
   /// @name Data objects
   /// @{
 
-  /// Local-to-global transformation matrix.
   matrix44 _data;
-  /// Global-to-local transformation matrix.
   matrix44 _data_inv;
 
   /// @}
@@ -150,7 +141,7 @@ struct transform3 {
   transform3(const matrix44 &m, const matrix44 &m_inv)
       : _data{m}, _data_inv{m_inv} {
     // The assertion will not hold for (casts to) int
-    if constexpr (std::floating_point<scalar_type>) {
+    if constexpr (std::floating_point<detray::traits::value_t<scalar_type>>) {
       [[maybe_unused]] constexpr auto epsilon{
           std::numeric_limits<float>::epsilon()};
       assert(algebra::approx_equal(invert(m), m_inv, 16.f * epsilon, 1e-6f));
@@ -172,32 +163,22 @@ struct transform3 {
     _data_inv = invert(_data);
   }
 
-  /// Copy an existing transform.
-  /// @param rhs Transform whose matrices are copied.
+  /// Defaults
   transform3(const transform3 &rhs) = default;
   ~transform3() = default;
 
   /// Equality operator
-  /// @param rhs transform to compare with
-  /// @return whether the transforms have equal spatial mappings
   DETRAY_HOST_DEVICE
   constexpr bool operator==(const transform3 &rhs) const {
     return (_data == rhs._data);
   }
 
   /// Matrix access operator
-  /// @param row zero-based row index
-  /// @param col zero-based column index
-  /// @return element at the requested matrix position
   DETRAY_HOST_DEVICE
   constexpr const scalar_type &operator()(std::size_t row,
                                           std::size_t col) const {
     return _data[col][row];
   }
-  /// Return a writable matrix element.
-  /// @param row zero-based row index
-  /// @param col zero-based column index
-  /// @return mutable reference to the requested matrix position
   DETRAY_HOST_DEVICE
   constexpr scalar_type &operator()(std::size_t row, std::size_t col) {
     return _data[col][row];
@@ -251,7 +232,8 @@ struct transform3 {
         m[e_t][0] * m[e_x][1] * m[e_y][2] + m[e_x][0] * m[e_t][1] * m[e_y][2] +
         m[e_y][0] * m[e_x][1] * m[e_t][2] - m[e_x][0] * m[e_y][1] * m[e_t][2];
     // i[e_t][3] = 1;
-    const scalar_type idet{scalar_type(1.f) / determinant(i)};
+    // Scale the adjugate with the determinant of the input matrix
+    const scalar_type idet{scalar_type(1.f) / determinant(m)};
 
     i[e_x] = i[e_x] * idet;
     i[e_y] = i[e_y] * idet;
@@ -265,7 +247,6 @@ struct transform3 {
   ///
   /// @param m is the rotation matrix
   /// @param v is the vector to be rotated
-  /// @return the rotated vector
   template <concepts::vector2D vector2_type>
   DETRAY_HOST_DEVICE constexpr auto rotate(const matrix44 &m,
                                            const vector2_type &v) const {
@@ -276,7 +257,6 @@ struct transform3 {
   ///
   /// @param m is the rotation matrix
   /// @param v is the vector to be rotated
-  /// @return the rotated vector
   template <concepts::vector3D vector3_type>
   DETRAY_HOST_DEVICE constexpr auto rotate(const matrix44 &m,
                                            const vector3_type &v) const {
@@ -284,7 +264,6 @@ struct transform3 {
   }
 
   /// This method retrieves the rotation of a transform
-  /// @return rotation matrix
   DETRAY_HOST_DEVICE
   constexpr auto rotation() const {
     using matrix_t = algebra::storage::matrix<array_t, scalar_type, 3u, 3u>;
@@ -297,41 +276,35 @@ struct transform3 {
   }
 
   /// This method retrieves the new x-axis
-  /// @return x-axis vector
   DETRAY_HOST_DEVICE
   constexpr const auto &x() const { return _data[e_x]; }
 
   /// This method retrieves the new y-axis
-  /// @return y-axis vector
   DETRAY_HOST_DEVICE
   constexpr const auto &y() const { return _data[e_y]; }
 
   /// This method retrieves the new z-axis
-  /// @return z-axis vector
   DETRAY_HOST_DEVICE
   constexpr const auto &z() const { return _data[e_z]; }
 
   /// This method retrieves the translation
-  /// @return translation vector
   DETRAY_HOST_DEVICE
   constexpr const auto &translation() const { return _data[e_t]; }
 
   /// This method retrieves the 4x4 matrix of a transform
-  /// @return forward transformation matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix() const { return _data; }
 
   /// This method retrieves the 4x4 matrix of an inverse transform
-  /// @return inverse transformation matrix
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix_inverse() const { return _data_inv; }
 
   /// This method transform from a point from the local 2D cartesian frame
   ///  to the global 3D cartesian frame
   ///
-  /// @tparam point2_type point in the local plane
+  /// @tparam point_type 3D point
   ///
-  /// @param p is the point to be transformed
+  /// @param v is the point to be transformed
   ///
   /// @return a global point
   template <concepts::point2D point2_type>
@@ -343,9 +316,9 @@ struct transform3 {
   /// This method transform from a point from the local 3D cartesian frame
   ///  to the global 3D cartesian frame
   ///
-  /// @tparam point3_type point in local coordinates
+  /// @tparam point_type 3D point
   ///
-  /// @param p is the point to be transformed
+  /// @param v is the point to be transformed
   ///
   /// @return a global point
   template <concepts::point3D point3_type>
@@ -357,9 +330,9 @@ struct transform3 {
   /// This method transform from a vector from the global 3D cartesian frame
   ///  into the local 3D cartesian frame
   ///
-  /// @tparam point3_type point in global coordinates
+  /// @tparam point_type 3D point
   ///
-  /// @param p is the point to be transformed
+  /// @param v is the point to be transformed
   ///
   /// @return a local point
   template <concepts::point3D point3_type>
@@ -402,7 +375,7 @@ struct transform3 {
   ///
   /// @param v is the vector to be transformed
   ///
-  /// @return a vector in local coordinates
+  /// @return a vector in global coordinates
   template <concepts::vector3D vector3_type>
   DETRAY_HOST_DEVICE constexpr auto vector_to_local(
       const vector3_type &v) const {
@@ -410,4 +383,4 @@ struct transform3 {
   }
 };  // struct transform3
 
-}  // namespace detray::algebra::vc_aos::math
+}  // namespace detray::algebra::storage
