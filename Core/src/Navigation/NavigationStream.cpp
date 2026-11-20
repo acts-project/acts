@@ -8,6 +8,7 @@
 
 #include "Acts/Navigation/NavigationStream.hpp"
 
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -191,11 +192,24 @@ void NavigationStream::addPortalCandidate(const Portal& portal) {
                             BoundaryTolerance::None());
 }
 
-AppendOnlyNavigationStream::AppendOnlyNavigationStream(NavigationStream& stream)
-    : m_stream{&stream} {}
+void NavigationStream::addPortalCandidate(const Portal& portal,
+                                          const Surface& representation) {
+  m_candidates.emplace_back(Intersection3D::Invalid(), 0, portal,
+                            representation, BoundaryTolerance::None());
+}
+
+AppendOnlyNavigationStream::AppendOnlyNavigationStream(
+    NavigationStream& stream, const TrackingVolume* volume)
+    : m_stream{&stream}, m_volume{volume} {}
 
 void AppendOnlyNavigationStream::addPortalCandidate(const Portal& portal) {
-  m_stream->addPortalCandidate(portal);
+  const Surface* face =
+      m_volume != nullptr ? m_volume->portalFace(portal) : nullptr;
+  if (face != nullptr) {
+    m_stream->addPortalCandidate(portal, *face);
+  } else {
+    m_stream->addPortalCandidate(portal);
+  }
 }
 
 void AppendOnlyNavigationStream::addSurfaceCandidate(

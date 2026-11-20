@@ -432,6 +432,7 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
 
       // Switch to the next volume using the portal
       const Portal* portal = &state.navCandidate().portal();
+      state.currentSurface = &portal->surface();
       auto res =
           portal->resolveVolume(state.options.geoContext, position, direction);
       if (!res.ok()) {
@@ -713,7 +714,7 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   ACTS_VERBOSE(volInfo(state) << "Searching for compatible candidates.");
 
   state.stream.reset();
-  AppendOnlyNavigationStream appendOnly{state.stream};
+  AppendOnlyNavigationStream appendOnly{state.stream, state.currentVolume};
   NavigationArguments args;
   args.position = position;
   args.direction = direction;
