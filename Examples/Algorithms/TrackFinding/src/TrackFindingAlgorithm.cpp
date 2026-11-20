@@ -799,8 +799,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   m_nStoppedBranches += branchStopper.m_nStoppedBranches;
 
-  m_memoryStatistics.local().hist +=
-      tracks.trackStateContainer().statistics().hist;
+  // only printed at debug level in finalize
+  if (logger().doPrint(Acts::Logging::DEBUG)) {
+    m_memoryStatistics.local().hist +=
+        tracks.trackStateContainer().statistics().hist;
+  }
 
   auto constTrackStateContainer =
       std::make_shared<Acts::ConstVectorMultiTrajectory>(
