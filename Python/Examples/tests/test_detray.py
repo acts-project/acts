@@ -23,6 +23,7 @@ def test_detray_surface_grid_policy():
     assert cfg.vertexZHalfRange == pytest.approx(150 * u.mm)
     assert cfg.minPt == pytest.approx(0.5 * u.GeV)
     assert cfg.numberOfBinsFactor == pytest.approx(2.0)
+    assert cfg.lookupOnLayer
     cfg.minPt = 1 * u.GeV
     cfg.numberOfBinsFactor = None
     assert cfg.numberOfBinsFactor is None

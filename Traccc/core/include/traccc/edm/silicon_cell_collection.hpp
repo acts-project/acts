@@ -30,15 +30,13 @@ namespace traccc::edm {
 template <typename BASE>
 class silicon_cell : public BASE {
  public:
-  /// @name Constructors
+  /// @name Functions inherited from the base class
   /// @{
 
   /// Inherit the base class's constructor(s)
   using BASE::BASE;
-  /// Use a default copy constructor
-  silicon_cell(const silicon_cell& other) = default;
-  /// Use a default move constructor
-  silicon_cell(silicon_cell&& other) noexcept = default;
+  /// Inherit the base class's assignment operator(s)
+  using BASE::operator=;
 
   /// @}
 
@@ -118,22 +116,6 @@ class silicon_cell : public BASE {
 
   /// @name Utility functions
   /// @{
-
-  /// Assignment operator
-  ///
-  /// @param[in] other The object to assign from
-  /// @return A reference to this object
-  ///
-  TRACCC_HOST_DEVICE silicon_cell& operator=(const silicon_cell& other);
-
-  /// Assignment operator
-  ///
-  /// @param[in] other The object to assign from
-  /// @return A reference to this object
-  ///
-  template <typename T,
-            std::enable_if_t<!std::is_same_v<BASE, T>, bool> = false>
-  TRACCC_HOST_DEVICE silicon_cell& operator=(const silicon_cell<T>& other);
 
   /// Equality operator
   ///

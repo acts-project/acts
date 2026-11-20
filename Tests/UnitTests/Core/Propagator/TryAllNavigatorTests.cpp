@@ -17,6 +17,7 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
@@ -62,20 +63,20 @@ BOOST_AUTO_TEST_CASE(TryAllNavigatorKeepsTargetBehind) {
       Vector4::Zero(), phi, theta, charge * std::sin(theta) / pT, std::nullopt,
       ParticleHypothesis::pion());
 
-  using Actors = ActorList<SurfaceCollector<>>;
+  using Actors = ActorList<DefaultActor, SurfaceCollector<>>;
   Propagator<Stepper, TryAll>::Options<Actors> options(gctx, mctx);
   // three turns of the helix (one turn: 262 mm)
   options.pathLimit = 787_mm;
   options.loopProtection = false;
   options.maxSteps = 100000;
-  auto& collector = options.actorList.get<SurfaceCollector<>>();
+  auto& collector = options.actor.get<SurfaceCollector<>>();
   collector.selector.selectSensitive = true;
   collector.selector.selectMaterial = false;
 
-  auto result = propagator.propagate(start, options);
+  auto state = propagator.makeState(options);
+  auto result = propagator.propagate(state, start);
   BOOST_REQUIRE(result.ok());
-  const auto& hits =
-      result.value().get<SurfaceCollector<>::result_type>().collected;
+  const auto& hits = state.actor.get<SurfaceCollector<>::State>().collected;
 
   // every module crossing of the helix in order (L0 = layer 2, L1 = layer 4):
   // two L0 modules, three L1 modules, back through L0, three times; without

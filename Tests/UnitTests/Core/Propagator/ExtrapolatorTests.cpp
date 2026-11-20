@@ -155,8 +155,7 @@ BOOST_DATA_TEST_CASE(
   BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
       Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
-  EigenPropagatorType::Options<ActorList<EndOfWorldReached>> options(tgContext,
-                                                                     mfContext);
+  EigenPropagatorType::Options<> options(tgContext, mfContext);
   options.stepping.maxStepSize = 10_cm;
   options.pathLimit = 10_m;
 
@@ -208,14 +207,15 @@ BOOST_DATA_TEST_CASE(
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
 
-  EigenPropagatorType::Options<ActorList<PlaneCollector>> options(tgContext,
-                                                                  mfContext);
+  EigenPropagatorType::Options<ActorList<DefaultActor, PlaneCollector>> options(
+      tgContext, mfContext);
 
   options.stepping.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
 
-  const auto& result = epropagator.propagate(start, options).value();
-  auto collector_result = result.get<PlaneCollector::result_type>();
+  auto state = epropagator.makeState(options);
+  epropagator.propagate(state, start).value();
+  auto collector_result = state.actor.get<PlaneCollector::State>();
 
   // step through the surfaces and go step by step
   EigenPropagatorType::Options<> optionsEmpty(tgContext, mfContext);
@@ -271,8 +271,8 @@ BOOST_DATA_TEST_CASE(
   BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
       Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
-  EigenPropagatorType::Options<ActorList<MaterialInteractor>> options(
-      tgContext, mfContext);
+  EigenPropagatorType::Options<ActorList<DefaultActor, MaterialInteractor>>
+      options(tgContext, mfContext);
   options.stepping.maxStepSize = 25_cm;
   options.pathLimit = 25_cm;
 
@@ -319,10 +319,12 @@ BOOST_DATA_TEST_CASE(
       Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
   // Action list and abort list
-  EigenPropagatorType::Options<ActorList<MaterialInteractor>> options(
-      tgContext, mfContext);
+  EigenPropagatorType::Options<ActorList<DefaultActor, MaterialInteractor>>
+      options(tgContext, mfContext);
   options.stepping.maxStepSize = 25_cm;
   options.pathLimit = 1500_mm;
+  // The path limit lies outside the world
+  options.stopAtEndOfWorld = false;
 
   const auto& status = epropagator.propagate(start, options).value();
   // this test assumes state.options.loopFraction = 0.5
