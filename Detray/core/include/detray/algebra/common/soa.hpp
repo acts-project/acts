@@ -8,13 +8,13 @@
 
 #pragma once
 
-/// Vector and matrix functions for the SoA plugins (Vc SoA and array SoA)
-///
-/// The functions operate on the @c algebra::storage types with a SIMD scalar.
-///
-/// @note The plugin has to declare the overloads of the math functions and
-/// constants for its SIMD type before this header is included (see
-/// @c algebra::soa::dot).
+// Vector and matrix functions for the SoA plugins (Vc SoA and array SoA)
+//
+// The functions operate on the algebra::storage types with a SIMD scalar.
+//
+// Note: The plugin has to make the overloads of the math functions for its
+// SIMD type visible to argument dependent lookup (see
+// algebra::generic::math).
 
 // Impl include(s).
 #include "detray/algebra/common/impl/soa_matrix.hpp"

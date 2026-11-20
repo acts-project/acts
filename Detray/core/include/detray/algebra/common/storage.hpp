@@ -8,15 +8,15 @@
 
 #pragma once
 
-/// Vector, matrix and transform types on top of a storage array
-///
-/// The types are used by the plugins that are based on the
-/// @c algebra::storage types (Vc AoS, Vc SoA and array SoA). Their scalar type
-/// can be a plain value type (AoS) or a SIMD type (SoA).
-///
-/// @note The overloads of @c approx_equal for the scalar type of a plugin
-/// have to be declared before this header is included (see
-/// @c algebra::storage::transform3).
+// Vector, matrix and transform types on top of a storage array
+//
+// The types are used by the plugins that are based on the
+// algebra::storage types (Vc AoS, Vc SoA and array SoA). Their scalar type
+// can be a plain value type (AoS) or a SIMD type (SoA).
+//
+// Note: The overloads of approx_equal for the scalar type of a plugin
+// have to be declared before this header is included (see
+// algebra::storage::transform3).
 
 // Impl include(s).
 #include "detray/algebra/common/impl/storage_array_operators.hpp"

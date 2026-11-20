@@ -352,11 +352,11 @@ DETRAY_HOST_DEVICE constexpr void set_block(
   block_getter{}.set(m, b, row, col);
 }
 
-/// Getter functions that the storage based plugins (Vc AoS, Vc SoA and
-/// array SoA) export into the @c detray::getter namespace
-///
-/// @note The function @c vector is defined in a separate namespace, so that
-/// it does not conflict with the @c algebra::storage::vector class.
+// Getter functions that the storage based plugins (Vc AoS, Vc SoA and
+// array SoA) export into the detray::getter namespace
+//
+// Note: The function vector is defined in a separate namespace, so that
+// it does not conflict with the algebra::storage::vector class.
 namespace getter {
 
 using algebra::storage::block;
@@ -372,8 +372,8 @@ using algebra::storage::set_block;
 /// @tparam array_t Underlying storage array template
 ///
 /// @param m Source matrix.
-/// @param row First row of the vector in @param m.
-/// @param col Column of the vector in @param m.
+/// @param row First row of the vector in @p m.
+/// @param col Column of the vector in @p m.
 ///
 /// @returns a copy of the selected vector
 template <std::size_t SIZE, std::size_t ROW, std::size_t COL,
