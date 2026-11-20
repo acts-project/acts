@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/SpacePointFilter.hpp"
 #include "Acts/Seeding/detail/GbtsFilterTypes.hpp"
+#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -78,6 +80,9 @@ class GbtsTrackingFilter final {
   /// Configuration for the tracking filter.
   Config m_cfg{};
 
+  /// The filter on the space points, from the configuration.
+  ParabolaSpacePointFilter m_filter;
+
   /// GBTS geometry for layer information
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
@@ -87,6 +92,20 @@ class GbtsTrackingFilter final {
   /// Access the logging instance
   /// @return Logger reference
   const Logger& logger() const { return *m_logger; }
+
+  /// Start a state at the outer node of an edge, towards its inner node
+  /// @param nodeView View of the node positions and layers
+  /// @param pS Edge to start from
+  /// @return Initial edge state
+  detail::GbtsEdgeState initialize(const detail::GbtsNodeView& nodeView,
+                                   const detail::GbtsEdge& pS) const;
+
+  /// Node as the space point filter reads it
+  /// @param nodeView View of the node positions and layers
+  /// @param index Index of the node
+  /// @return Filter input
+  SpacePointFilterInput input(const detail::GbtsNodeView& nodeView,
+                              SpacePointIndex index) const;
 
   /// Update edge state with edge
   /// @param nodeView View of the node positions and layers

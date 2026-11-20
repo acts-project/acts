@@ -6,6 +6,10 @@ add_unittest(AdaptiveHoughTransformTest HoughAccumulatorSectionTest.cpp)
 add_unittest(StrawLineResiduals StrawLineResidualTest.cpp)
 add_unittest(SphericalSpacePointGrid SphericalSpacePointGridTests.cpp)
 add_unittest(GbtsSeeding GbtsSeedingTests.cpp)
+add_unittest(SpacePointFilter SpacePointFilterTests.cpp)
+# the bit-identity test compares two differently written copies of the same
+# arithmetic; FMA contraction would round them differently
+target_compile_options(ActsUnitTestSpacePointFilter PRIVATE -ffp-contract=off)
 add_unittest(SpacePointGridPhiBinning SpacePointGridPhiBinningTests.cpp)
 add_unittest(SortByCotTheta SortByCotThetaTests.cpp)
 add_unittest(DoubletSeedFinder DoubletSeedFinderTests.cpp)
