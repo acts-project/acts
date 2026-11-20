@@ -8,8 +8,13 @@
 
 #pragma once
 
+#include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/EventData/Types.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <vector>
@@ -29,7 +34,37 @@ static constexpr std::size_t s_maxBranchesPerSurface = 10;
 template <typename T>
 using BranchVector = boost::container::small_vector<T, s_maxBranchesPerSurface>;
 
-using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+/// The predicted state of the trajectory on a surface
+struct BoundState {
+  /// The predicted bound parameters, including their reference surface
+  BoundTrackParameters parameters;
+  /// The jacobian from the previous track state to this surface
+  BoundMatrix jacobian;
+  /// The path length accumulated up to this surface
+  double pathLength{};
+};
+
+/// The arguments of the track state creation on one surface.
+///
+/// Only the CKF makes this object, so it can get more fields without a change
+/// of the track state creator signature. Every pointer is non-null.
+///
+/// @tparam traj_t the track state container backend
+template <typename traj_t>
+struct TrackStateCreatorArguments {
+  /// The current geometry context
+  const GeometryContext* geoContext{};
+  /// The current calibration context
+  const CalibrationContext* calibrationContext{};
+  /// The predicted state on the surface the trajectory is extended onto
+  const BoundState* boundState{};
+  /// The tip of the trajectory which is extended
+  TrackIndexType prevTip{kTrackIndexInvalid};
+  /// The trajectory the new track states are added to
+  traj_t* trajectory{};
+  /// A logger for messages
+  const Logger* logger{};
+};
 
 }  // namespace CkfTypes
 
@@ -66,31 +101,27 @@ struct CombinatorialKalmanFilterExtensions {
   /// The branch stopper is called during the filtering by the Actor.
   BranchStopper branchStopper{DelegateFuncTag<voidBranchStopper>{}};
 
-  /// @brief Delegate the extension of the trajectory onto the given surface to
-  ///        an external unit.
+  /// @brief Delegate the extension of the trajectory onto the surface of
+  ///        `args.boundState` to an external unit.
   ///
-  /// @note Expected to create track states for measurements associated to the
-  ///       given surface which match the given bound state. Moreover the
-  ///       The "filtered" data is not expected to be set, but the outlier
-  ///       flag should be set for states that are considered to be outlier.
+  /// @note Expected to create track states for measurements on that surface
+  ///       which match the predicted state. The "filtered" data is not
+  ///       expected to be set, but the outlier flag should be set for states
+  ///       that are considered to be outlier. A track state may have its own
+  ///       predicted parameters instead of sharing them.
   ///
-  /// @param geoContext The current geometry context
-  /// @param calibrationContext pointer to the current calibration context
-  /// @param surface the surface at which new track states are to be created
-  /// @param boundState the current bound state of the trajectory
-  /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
-  /// @param trackStateCandidates a temporary buffer that can be used to collect track states
-  /// @param trajectory the trajectory to which the new states are to be added
-  /// @param logger a logger for messages
-  /// @return indices of new track states which extend the trajectory given by prevTip
-
+  /// @param args the predicted state, the trajectory to extend, and the
+  ///        contexts
+  /// @return indices of new track states which extend the trajectory given by
+  ///         `args.prevTip`. Each one must be a measurement or an outlier,
+  ///         otherwise the CKF fails with
+  ///         @ref CombinatorialKalmanFilterError::UnsupportedTrackState. An
+  ///         empty list means that the CKF creates a hole, the error
+  ///         @ref CombinatorialKalmanFilterError::NoMeasurementExpected that it
+  ///         creates a state without an expected measurement.
   using TrackStateCreator =
       Delegate<Result<CkfTypes::BranchVector<TrackIndexType>>(
-          const GeometryContext& geoContext,
-          const CalibrationContext& calibrationContext, const Surface& surface,
-          const CkfTypes::BoundState& boundState, TrackIndexType prevTip,
-          std::vector<TrackStateProxy>& trackStateCandidates,
-          traj_t& trajectory, const Logger& logger)>;
+          const CkfTypes::TrackStateCreatorArguments<traj_t>& args)>;
 
   /// The delegate to create new track states.
   /// @note a reference implementation can be found in @ref TrackStateCreator
