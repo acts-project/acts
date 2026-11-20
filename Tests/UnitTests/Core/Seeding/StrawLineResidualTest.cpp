@@ -584,10 +584,16 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   using ChiSq_t = ResCalc_t::ChiSqWithDerivatives;
 
   ResCalc_t resCalc{resCfg, Acts::getDefaultLogger("chiSquareTest", logLvl)};
+  // Same calculation without the second derivatives of the residuals
+  Config_t gaussNewtonCfg{resCfg};
+  gaussNewtonCfg.useHessian = false;
+  ResCalc_t gaussNewtonCalc{gaussNewtonCfg,
+                            Acts::getDefaultLogger("chiSquareTestGN", logLvl)};
 
   ChiSq_t chi2{};
   ChiSq_t chi2Up{};
   ChiSq_t chi2Dn{};
+  ChiSq_t chi2GaussNewton{};
 
   Line_t line{};
 
@@ -597,14 +603,15 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
 
   RandomEngine rndEngine{1789};
 
-  auto runCalculation = [&line, &resCalc, &calibrator, &cctx](
-                            FitTestSpacePoint testMe, const Pars_t& pars,
-                            const double t0, ChiSq_t& chiSq, const bool calib) {
+  auto runCalculation = [&line, &calibrator, &cctx](
+                            ResCalc_t& calc, FitTestSpacePoint testMe,
+                            const Pars_t& pars, const double t0, ChiSq_t& chiSq,
+                            const bool calib) {
     line.updateParameters(pars);
-    resCalc.reset();
+    calc.reset();
     chiSq.reset();
     if (calib && testMe.isStraw() &&
-        Acts::rangeContainsValue(resCalc.config().parsToUse, ParIdx::t0)) {
+        Acts::rangeContainsValue(calc.config().parsToUse, ParIdx::t0)) {
       testMe = *calibrator.calibrate(cctx, line.position(), line.direction(),
                                      t0, testMe);
     }
@@ -614,15 +621,15 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
       testMe.updateDriftR(std::copysign(testMe.driftRadius(), sign));
     }
 
-    if (Acts::rangeContainsValue(resCalc.config().parsToUse, ParIdx::t0)) {
-      resCalc.updateFullResidual(line, t0, testMe,
-                                 calibrator.driftVelocity(cctx, testMe),
-                                 calibrator.driftAcceleration(cctx, testMe));
+    if (Acts::rangeContainsValue(calc.config().parsToUse, ParIdx::t0)) {
+      calc.updateFullResidual(line, t0, testMe,
+                              calibrator.driftVelocity(cctx, testMe),
+                              calibrator.driftAcceleration(cctx, testMe));
     } else {
-      resCalc.updateSpatialResidual(line, testMe);
+      calc.updateSpatialResidual(line, testMe);
     }
-    resCalc.updateChiSq(chiSq, testMe.covariance());
-    resCalc.symmetrizeHessian(chiSq);
+    calc.updateChiSq(chiSq, testMe.covariance());
+    calc.symmetrizeHessian(chiSq);
   };
 
   auto testChi2 = [&](const Pars_t& linePars, const double t0,
@@ -646,7 +653,7 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
 
     ACTS_DEBUG(__func__ << "() - " << __LINE__
                         << " Evaluated chi2 term: " << chi2Term);
-    runCalculation(testMe, linePars, t0, chi2, false);
+    runCalculation(resCalc, testMe, linePars, t0, chi2, false);
     constexpr auto N = 5u;
     for (std::size_t i = 1; i < N; ++i) {
       for (std::size_t j = 0; j <= i; ++j) {
@@ -660,7 +667,13 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
                         << toString(chi2.hessian)
                         << "\ndeterminant: " << chi2.hessian.determinant());
     CHECK_CLOSE(chi2Term, chi2.chi2, 1.e-10);
-    runCalculation(testMe, linePars, t0, chi2, true);
+    runCalculation(resCalc, testMe, linePars, t0, chi2, true);
+    // The Gauss-Newton Hessian is the Hessian without the second derivatives
+    // of the residuals
+    runCalculation(gaussNewtonCalc, testMe, linePars, t0, chi2GaussNewton,
+                   true);
+    BOOST_CHECK(chi2.gaussNewtonHessian == chi2GaussNewton.hessian);
+    BOOST_CHECK(chi2GaussNewton.gaussNewtonHessian == chi2GaussNewton.hessian);
     constexpr double h = 5.e-8;
     for (const auto par : resCfg.parsToUse) {
       Pars_t lineParsUp{linePars};
@@ -675,8 +688,8 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
         t0Up += h;
         t0Dn -= h;
       }
-      runCalculation(testMe, lineParsUp, t0Up, chi2Up, true);
-      runCalculation(testMe, lineParsDn, t0Dn, chi2Dn, true);
+      runCalculation(resCalc, testMe, lineParsUp, t0Up, chi2Up, true);
+      runCalculation(resCalc, testMe, lineParsDn, t0Dn, chi2Dn, true);
 
       const double anaDeriv = chi2.gradient[dIdx];
       const double numDeriv = (chi2Up.chi2 - chi2Dn.chi2) / (2. * h);

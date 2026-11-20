@@ -31,6 +31,8 @@ const unsigned nThreads = std::min(logLvl != Acts::Logging::Level::INFO
                                        : std::thread::hardware_concurrency(),
                                    1u);
 std::mutex writeMutex{};
+/// Number of converged fits with a non-positive variance, summed over all tests
+std::size_t nNonPositiveVariance{0};
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
@@ -144,6 +146,7 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
   // Pass a localToGlobal transform to the calibrator to proper handling the ToF
   auto calibrator = std::make_unique<SpCalibrator>();
   std::size_t goodFits{0};
+  std::size_t badCovFits{0};
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Start event " << (evt + 1)
                         << "/" << nEvents << ".");
@@ -180,6 +183,13 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
     ACTS_DEBUG("Fit Successful.");
     converged = 1;
     ++goodFits;
+    // The variances of a converged fit must be positive (also catches NaN)
+    if (!(result.covariance.diagonal().array() > 0.).all()) {
+      ++badCovFits;
+      ACTS_INFO("Test " << testName << ", event " << evt
+                        << ": non-positive variance in the covariance \n"
+                        << toString(result.covariance));
+    }
     fillPars(result.parameters, recoY0, recoX0, recoTheta, recoPhi);
     fillProjected(result.parameters, recoProjTheta, recoProjPhi);
 
@@ -210,9 +220,11 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
                   .count();
   std::unique_lock guard{writeMutex};
   outFile.WriteObject(outTree.get(), outTree->GetName());
+  nNonPositiveVariance += badCovFits;
   ACTS_INFO("Test " << outTree->GetName() << " finished. " << goodFits
-                    << " tracks written. It took " << (diff / 1000)
-                    << " seconds.");
+                    << " tracks written, " << badCovFits
+                    << " with a non-positive variance. It took "
+                    << (diff / 1000) << " seconds.");
   return diff;
 }
 #undef DECLARE_BRANCH
@@ -420,6 +432,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     }
     outFile->WriteObject(timeHisto.get(), timeHisto->GetName());
   }
+  BOOST_CHECK_EQUAL(nNonPositiveVariance, 0u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
