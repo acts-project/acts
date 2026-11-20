@@ -85,10 +85,9 @@ void sort_by_key(queue &q, const memory_resource &mr,
 #endif
 }
 
-template <typename RandomAccessIterator1, typename RandomAccessIterator2>
+template <typename RandomAccessIterator>
 void sort(queue &q, const memory_resource &mr,
-          RandomAccessIterator1 values_first,
-          RandomAccessIterator2 values_last) {
+          RandomAccessIterator values_first, RandomAccessIterator values_last) {
   auto execPolicy = getExecutionPolicy(q, mr);
 
 #if defined(ALPAKA_ACC_SYCL_ENABLED)
@@ -98,13 +97,11 @@ void sort(queue &q, const memory_resource &mr,
 #endif
 }
 
-template <typename RandomAccessIterator1, typename RandomAccessIterator2,
-          typename Compare>
+template <typename RandomAccessIterator, typename Compare>
 void sort(queue &q, const memory_resource &mr,
-          RandomAccessIterator1 values_first, RandomAccessIterator2 values_last,
+          RandomAccessIterator values_first, RandomAccessIterator values_last,
           Compare comp) {
   auto execPolicy = getExecutionPolicy(q, mr);
-
 #if defined(ALPAKA_ACC_SYCL_ENABLED)
   oneapi::dpl::sort(execPolicy, values_first, values_last, comp);
 #else
