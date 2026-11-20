@@ -170,9 +170,6 @@ struct CombinatorialKalmanFilterResult {
   /// Indices into `tracks` which mark active branches
   std::vector<TrackProxy> collectedTracks;
 
-  /// Track state candidates buffer which can be used by the track state creator
-  std::vector<TrackStateProxy> trackStateCandidates;
-
   /// Transport jacobians of skipped material surfaces, folded into the next
   /// recorded track state to keep the jacobian chain intact
   BoundMatrix accumulatedJacobian = BoundMatrix::Identity();
@@ -222,7 +219,7 @@ class CombinatorialKalmanFilter {
         m_updaterLogger{m_logger->cloneWithSuffix("Updater")} {}
 
  private:
-  using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+  using BoundState = CkfTypes::BoundState;
   using TrackStateContainerBackend =
       typename track_container_t::TrackStateContainerBackend;
   using TrackProxy = typename track_container_t::TrackProxy;
@@ -231,11 +228,6 @@ class CombinatorialKalmanFilter {
   static constexpr bool IsMultiStepper =
       Concepts::MultiStepper<typename propagator_t::Stepper>;
   using TemporaryStates = detail::Gsf::TemporaryStates<VectorMultiTrajectory>;
-
-  /// Single component bound state tuple containing parameters, Jacobian, and
-  /// path length
-  using SingleBoundState =
-      std::tuple<BoundTrackParameters, BoundMatrix, double>;
 
   /// The propagator for the transport and material update
   propagator_t m_propagator;
@@ -252,7 +244,6 @@ class CombinatorialKalmanFilter {
   /// be sorted along the track.
   class Actor {
    public:
-    using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
     /// Type alias for the actor state
     using State = CombinatorialKalmanFilterResult<track_container_t>;
 
@@ -631,13 +622,13 @@ class CombinatorialKalmanFilter {
       }
 
       // Bind the transported state to the current surface
-      auto boundStateRes = [&]() -> Result<SingleBoundState> {
+      auto boundStateRes = [&]() -> Result<BoundState> {
         if constexpr (!IsMultiStepper) {
           auto res = stepper.boundParameters(state.stepping, surface);
           if (!res.ok()) {
             return res.error();
           }
-          return Result<SingleBoundState>::success(
+          return Result<BoundState>::success(
               {std::move(*res), jacobian,
                result.pathLengthOffset + stepper.pathLength(state.stepping)});
         } else {
@@ -657,7 +648,7 @@ class CombinatorialKalmanFilter {
             return res.error();
           }
           const auto singleParams = res->merge(brem.mergeMethod);
-          return Result<SingleBoundState>::success(
+          return Result<BoundState>::success(
               {singleParams, jacobian,
                result.pathLengthOffset + stepper.pathLength(state.stepping)});
         }
@@ -669,8 +660,7 @@ class CombinatorialKalmanFilter {
 
       if (!recordMaterialStates) {
         // prepend the jacobians of the surfaces skipped since the last state
-        std::get<1>(boundState) =
-            std::get<1>(boundState) * result.accumulatedJacobian;
+        boundState.jacobian = boundState.jacobian * result.accumulatedJacobian;
         result.accumulatedJacobian = BoundMatrix::Identity();
       }
 
@@ -683,10 +673,13 @@ class CombinatorialKalmanFilter {
         // extend trajectory with measurements associated to the current surface
         // which may create extra trajectory branches if more than one
         // measurement is selected.
-        tsRes = extensions.createTrackStates(
-            state.geoContext, *calibrationContextPtr, surface, boundState,
-            prevTip, result.trackStateCandidates, *result.trackStates,
-            logger());
+        const CkfTypes::TrackStateCreatorArguments<TrackStateContainerBackend>
+            args{.geoContext = state.geoContext,
+                 .calibrationContext = *calibrationContextPtr,
+                 .boundState = boundState,
+                 .prevTip = prevTip,
+                 .trajectory = *result.trackStates};
+        tsRes = extensions.createTrackStates(args, logger());
       }
 
       if (tsRes.ok() && !(*tsRes).empty()) {
@@ -878,8 +871,11 @@ class CombinatorialKalmanFilter {
           newBranch.nDoF() += trackState.calibratedSize();
           newBranch.chi2() += trackState.chi2();
         } else {
-          ACTS_WARNING("Cannot handle this track state flags");
-          continue;
+          ACTS_DEBUG("Track state " << trackState.index() << " with flags "
+                                    << typeFlags
+                                    << " is neither a measurement nor an "
+                                       "outlier");
+          return CombinatorialKalmanFilterError::UnsupportedTrackState;
         }
 
         result.activeBranches.push_back(newBranch);
@@ -932,15 +928,15 @@ class CombinatorialKalmanFilter {
                    << " output track state #" << trackStateProxy.index()
                    << " with mask: " << stateMask);
 
-      const auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
-      trackStateProxy.predicted() = boundParams.parameters();
-      trackStateProxy.predictedCovariance() = boundParams.covariance().value();
-      trackStateProxy.jacobian() = jacobian;
-      trackStateProxy.pathLength() = pathLength;
+      trackStateProxy.predicted() = boundState.parameters.parameters();
+      trackStateProxy.predictedCovariance() =
+          boundState.parameters.covariance().value();
+      trackStateProxy.jacobian() = boundState.jacobian;
+      trackStateProxy.pathLength() = boundState.pathLength;
       // Set the surface
       trackStateProxy.setReferenceSurface(
-          boundParams.referenceSurface().getSharedPtr());
+          boundState.parameters.referenceSurface().getSharedPtr());
 
       // Set the track state flags
       auto typeFlags = trackStateProxy.typeFlags();
