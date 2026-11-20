@@ -130,8 +130,9 @@ struct CombinatorialKalmanFilterExtensions {
           const Logger& logger)>;
 
   /// The delegate to create new track states.
-  /// @note a reference implementation can be found in @ref TrackStateCreator
-  ///   which makes uses of @ref MeasurementSelector and SourceLinkAccessor
+  /// @note derive from @ref CkfTrackStateCreatorBase to implement one. A
+  ///   reference implementation on the track EDM is @ref TrackStateCreator,
+  ///   which makes use of @ref MeasurementSelector and SourceLinkAccessor
   TrackStateCreator createTrackStates;
 
   // The following options are only relevant if a multi stepper is used

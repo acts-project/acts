@@ -1,0 +1,264 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/TrackFinding/CkfTrackStateCreatorBase.hpp"
+#include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
+#include "Acts/TrackFinding/MeasurementSelector.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <utility>
+
+namespace ActsExamples {
+
+// The Examples apply no calibration, so the creators below use the measurement
+// proxies from the container as the calibrated measurements.
+static_assert(Acts::detail::CalibratedMeasurementConcept<
+              ConstVariableBoundMeasurementProxy>);
+static_assert(Acts::detail::StaticCalibratedMeasurementConcept<
+              ConstFixedBoundMeasurementProxy<2>>);
+
+/// Cuts applied when extending a track onto a surface.
+struct TrackStateSelectionCuts {
+  /// Maximum local chi2 contribution to accept a measurement
+  double chi2CutOffMeasurement = 15;
+  /// Maximum local chi2 contribution to accept an outlier. Below the
+  /// measurement cut this has no effect, since a compatible measurement is
+  /// always preferred over an outlier.
+  double chi2CutOffOutlier = 25;
+  /// Maximum number of branches created on a single surface
+  std::size_t maxBranchesPerSurface = 1;
+  /// If true, the chi2 cuts are the cuts for one-dimensional measurements. A
+  /// measurement of dimension D uses the chi2 value with the same p-value for D
+  /// degrees of freedom, see @ref Acts::MeasurementSelectorCuts.
+  bool chi2CutPerDimension = false;
+};
+
+/// Creates track states directly from the measurement container, i.e. without
+/// pushing every measurement on a surface through the track EDM first.
+///
+/// This carries the selection, which cuts the local chi2 with respect to the
+/// predicted parameters on @ref TrackStateSelectionCuts. The derived class only
+/// has to say which measurements are on the current surface, via
+/// `measurementRange`, and hand out the calibrated form of one, via
+/// `calibrate`.
+///
+/// @tparam derived_t the concrete creator, see CRTP
+template <typename derived_t>
+class Chi2CkfTrackStateCreatorBase
+    : public Acts::CkfTrackStateCreatorBase<derived_t, TrackContainer> {
+ public:
+  /// Type alias for the CRTP base
+  using Base = Acts::CkfTrackStateCreatorBase<derived_t, TrackContainer>;
+  /// Type alias for the per surface state object
+  using State = typename Base::State;
+
+  Chi2CkfTrackStateCreatorBase() { setCuts({}); }
+
+  /// Set the selection cuts
+  /// @param cuts the selection cuts
+  void setCuts(const TrackStateSelectionCuts& cuts) {
+    m_cuts = cuts;
+    m_chi2CutMeasurement = Acts::detail::chi2CutPerDimension(
+        cuts.chi2CutOffMeasurement, cuts.chi2CutPerDimension);
+    m_chi2CutOutlier = Acts::detail::chi2CutPerDimension(
+        cuts.chi2CutOffOutlier, cuts.chi2CutPerDimension);
+  }
+
+  /// The selection cuts
+  /// @return the selection cuts
+  const TrackStateSelectionCuts& cuts() const { return m_cuts; }
+
+  /// The uncalibrated source link of a measurement.
+  ///
+  /// @param state the state of the current surface
+  /// @param measurement the measurement
+  /// @return the source link
+  Acts::SourceLink sourceLink(const State& state,
+                              const IndexSourceLink& measurement) const {
+    static_cast<void>(state);
+
+    return Acts::SourceLink{measurement};
+  }
+
+  /// Whether @ref preselectMeasurement should be consulted on this surface.
+  ///
+  /// @param state the state of the current surface
+  /// @return false, i.e. no preselection
+  bool hasMeasurementPreselection(const State& state) const {
+    static_cast<void>(state);
+
+    return false;
+  }
+
+  /// Cheap filter applied before any measurement is calibrated.
+  ///
+  /// @note If this rejects every measurement on the surface it is ignored and
+  ///       all measurements are considered.
+  ///
+  /// @param state the state of the current surface
+  /// @param measurement the measurement to check
+  /// @return true, i.e. accept everything
+  bool preselectMeasurement(const State& state,
+                            const IndexSourceLink& measurement) const {
+    static_cast<void>(state);
+    static_cast<void>(measurement);
+
+    return true;
+  }
+
+  /// Select the measurements compatible with the predicted parameters.
+  ///
+  /// If none of them satisfies the chi2 measurement cut, the best one is
+  /// selected as an outlier if it satisfies the outlier cut. Otherwise nothing
+  /// is selected and the caller creates a hole. Measurements and outliers are
+  /// never mixed.
+  ///
+  /// @tparam range_t the measurement range type
+  /// @tparam candidates_t the candidate buffer type
+  ///
+  /// @param state the state of the current surface
+  /// @param range the measurements on the current surface
+  /// @param candidates the buffer to append the selected measurements to
+  ///
+  /// @return always success
+  template <typename range_t, typename candidates_t>
+  Acts::Result<void> selectMeasurements(const State& state, range_t&& range,
+                                        candidates_t& candidates) const {
+    const Acts::Logger& logger = state.logger;
+
+    if (m_cuts.maxBranchesPerSurface == 0ul) {
+      return Acts::CombinatorialKalmanFilterError::MeasurementSelectionFailed;
+    }
+
+    if (derived().hasMeasurementPreselection(state)) {
+      for (const IndexSourceLink& measurement : range) {
+        if (derived().preselectMeasurement(state, measurement)) {
+          candidates.push_back({measurement, 0., false});
+        }
+      }
+    }
+    // If the preselection is inactive, or rejected every measurement on this
+    // surface, fall back to considering all of them.
+    if (candidates.empty()) {
+      for (const IndexSourceLink& measurement : range) {
+        candidates.push_back({measurement, 0., false});
+      }
+    }
+
+    // Compute the chi2 of every candidate and sort those which do not satisfy
+    // the chi2 cut to the back. When done `passedCandidates` is the number of
+    // candidates at the front which do satisfy it.
+    double minChi2 = std::numeric_limits<double>::max();
+    std::size_t minIndex = std::numeric_limits<std::size_t>::max();
+    std::size_t minSize = 0ul;
+    std::size_t passedCandidates = 0ul;
+    for (std::size_t i = 0ul; i < candidates.size(); ++i) {
+      const auto calibrated =
+          derived().calibrate(state, candidates[i].measurement);
+      const std::size_t size = calibrated.size();
+      const double chi2 = derived().calculatePredictedChi2(state, calibrated);
+      candidates[i].chi2 = chi2;
+
+      // A diverging prediction can give a non-finite chi2. Every comparison
+      // with NaN is false, so such a candidate would pass the cut without
+      // becoming the minimum, and would break the sort below.
+      if (!std::isfinite(chi2)) {
+        ACTS_VERBOSE("Non-finite chi2 " << chi2
+                                        << ", rejecting measurement candidate");
+        continue;
+      }
+
+      if (chi2 < minChi2) {
+        minChi2 = chi2;
+        minIndex = i;
+        minSize = size;
+      }
+
+      if (chi2 >= m_chi2CutMeasurement[size]) {
+        continue;
+      }
+
+      if (passedCandidates != i) {
+        std::swap(candidates[passedCandidates], candidates[i]);
+        if (minIndex == i) {
+          minIndex = passedCandidates;
+        }
+      }
+      ++passedCandidates;
+    }
+
+    if (passedCandidates == 0ul) {
+      // minIndex stays unset if every candidate is rejected above
+      if (minIndex < candidates.size() && minChi2 < m_chi2CutOutlier[minSize]) {
+        ACTS_VERBOSE(
+            "No measurement candidate. Create an outlier measurement chi2="
+            << minChi2);
+        candidates[minIndex].isOutlier = true;
+        keepOnly(candidates, minIndex);
+      } else {
+        ACTS_VERBOSE("No measurement candidate. Create none chi2=" << minChi2);
+        candidates.clear();
+      }
+      return Acts::Result<void>::success();
+    }
+
+    if (passedCandidates == 1ul) {
+      // single candidate, no sorting necessary
+      ACTS_VERBOSE("Creating only 1 track state chi2=" << minChi2);
+      keepOnly(candidates, minIndex);
+      return Acts::Result<void>::success();
+    }
+
+    std::sort(candidates.begin(), candidates.begin() + passedCandidates,
+              [](const auto& a, const auto& b) { return a.chi2 < b.chi2; });
+
+    ACTS_VERBOSE("Number of selected measurements: "
+                 << passedCandidates
+                 << ", max: " << m_cuts.maxBranchesPerSurface);
+
+    candidates.erase(candidates.begin() + std::min(m_cuts.maxBranchesPerSurface,
+                                                   passedCandidates),
+                     candidates.end());
+    return Acts::Result<void>::success();
+  }
+
+ protected:
+  // the base is dependent, so pull this in for unqualified lookup
+  using Base::derived;
+
+ private:
+  /// Chi2 cut for each measurement dimension, index 0 is not used
+  using Chi2CutPerDimension = std::array<double, Acts::kMeasurementSizeMax + 1>;
+
+  TrackStateSelectionCuts m_cuts;
+  Chi2CutPerDimension m_chi2CutMeasurement{};
+  Chi2CutPerDimension m_chi2CutOutlier{};
+
+  /// Reduce the candidates to the single one at @p index.
+  template <typename candidates_t>
+  static void keepOnly(candidates_t& candidates, std::size_t index) {
+    if (index != 0ul) {
+      candidates[0] = candidates[index];
+    }
+    candidates.erase(candidates.begin() + 1, candidates.end());
+  }
+};
+
+}  // namespace ActsExamples

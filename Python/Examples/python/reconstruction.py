@@ -2005,21 +2005,19 @@ def addCKFTracks(
             "which needs seedParamsEstimation"
         )
 
-    # The chi2 cuts are the cuts for 1D measurements. With chi2CutPerDimension
-    # every measurement dimension uses the cut with the same p-value.
-    measurementSelectorCuts = acts.MeasurementSelectorCuts()
-    measurementSelectorCuts.chi2CutOffMeasurement = [ckfConfig.chi2CutOffMeasurement]
-    measurementSelectorCuts.chi2CutOffOutlier = [ckfConfig.chi2CutOffOutlier]
-    measurementSelectorCuts.numMeasurementsCutOff = [ckfConfig.numMeasurementsCutOff]
-    measurementSelectorCuts.chi2CutPerDimension = ckfConfig.chi2CutPerDimension
-
     # Set up the track finding algorithm with CKF
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=customLogLevel(),
-        measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [(acts.GeometryIdentifier(), measurementSelectorCuts)]
+        # The chi2 cuts are the cuts for 1D measurements. With
+        # chi2CutPerDimension every measurement dimension uses the cut with the
+        # same p-value.
+        trackStateSelection=acts.examples.TrackStateSelectionCuts(
+            chi2CutOffMeasurement=ckfConfig.chi2CutOffMeasurement,
+            chi2CutOffOutlier=ckfConfig.chi2CutOffOutlier,
+            maxBranchesPerSurface=ckfConfig.numMeasurementsCutOff,
+            chi2CutPerDimension=ckfConfig.chi2CutPerDimension,
         ),
         inputMeasurements=f"{prefix}measurement_subset",
         inputInitialTrackParameters=(
