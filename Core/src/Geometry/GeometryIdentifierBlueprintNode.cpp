@@ -19,6 +19,11 @@
 
 namespace Acts {
 
+void GeometryIdentifierBlueprintNode::visitBuiltVolumes(
+    const std::function<void(Volume&)>& visitor) {
+  visitBuiltChildVolumes(visitor);
+}
+
 namespace {
 class Configuration {
  public:

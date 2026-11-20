@@ -1,5 +1,6 @@
 add_unittest(AlignmentContext AlignmentContextTests.cpp)
 add_unittest(Blueprint BlueprintTests.cpp)
+add_unittest(BlueprintPlacement BlueprintPlacementTests.cpp)
 add_unittest(BoundaryVolumeResolution BoundaryVolumeResolutionTests.cpp)
 add_unittest(BlueprintApi BlueprintApiTests.cpp)
 add_unittest(BlueprintBuilder BlueprintBuilderTests.cpp)

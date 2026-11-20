@@ -26,6 +26,15 @@ const VolumeLookupFactory& StaticBlueprintNode::volumeLookupFactory() const {
   return m_volumeLookupFactory;
 }
 
+void StaticBlueprintNode::visitBuiltVolumes(
+    const std::function<void(Volume&)>& visitor) {
+  if (!m_volume) {
+    throw std::logic_error("Cannot visit an unbuilt static blueprint node");
+  }
+  visitor(*m_volume);
+  visitBuiltChildVolumes(visitor);
+}
+
 StaticBlueprintNode::StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume)
     : m_volume(std::move(volume)) {}
 
