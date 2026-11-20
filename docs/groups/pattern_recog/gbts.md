@@ -246,15 +246,10 @@ circle and the @f$z@f$ versus @f$r@f$ line. Of the complete paths from an
 edge, the one with the best score per space point wins, and a path that fails
 the filter is dropped.
 
-The result is a set of seed candidates. These are reduced in two passes:
-
-- **Clone removal.** Candidates are ranked by quality, and each space point is
-  assigned to the best candidate claiming it. A candidate that has lost more than
-  `hitShareThreshold` of its hits to better candidates is dropped.
-- **Seed splitting.** Short, central candidates are checked for self-consistency
-  by fitting the circle through three different hit subsets. If the three
-  curvature estimates disagree by more than `maxInvRadDiff`, the candidate is
-  emitted as two shorter "drop-out" seeds instead of one.
+The result is a set of seed candidates, reduced by clone removal: candidates
+are ranked by quality, and each space point is assigned to the best candidate
+claiming it. A candidate that has lost more than `hitShareThreshold` of its hits
+to better candidates is dropped.
 
 The surviving candidates are written to the output @ref Acts::SeedContainer, with
 node indices translated back to the caller's own space point indices.
@@ -310,7 +305,6 @@ The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackS
 | `postFitCurvatureFactor` | @ref gbts-extraction | tighter curvature bound on the fitted chain, as a factor on the filter's `maxCurvature`; values below 1 does nothing |
 | `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
-| `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
 | `useClusterWidthCuts`, `tauLookupTable` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
 | `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-ml | cluster-width acceptance and module-edge handling |
 
