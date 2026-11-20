@@ -467,7 +467,7 @@ class ConstPodioTrackStateContainer final
     return {m_dynamic.begin(), m_dynamic.end()};
   }
 
-  /// Return descriptors for this backend's dynamic columns.
+  /// @return A lazy range of descriptors for the dynamic track-state columns.
   auto dynamicColumns_impl() const {
     return Acts::detail::dynamicColumnView(m_dynamic);
   }
@@ -1178,7 +1178,7 @@ class MutablePodioTrackStateContainer final
     return {m_dynamic.begin(), m_dynamic.end()};
   }
 
-  /// Return descriptors for this backend's dynamic columns.
+  /// @return A lazy range of descriptors for the dynamic track-state columns.
   auto dynamicColumns_impl() const {
     return Acts::detail::dynamicColumnView(m_dynamic);
   }

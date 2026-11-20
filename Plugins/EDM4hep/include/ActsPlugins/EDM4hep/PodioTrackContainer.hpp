@@ -452,7 +452,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
 
-  /// Return descriptors for this backend's dynamic columns.
+  /// @return A lazy range of descriptors for the dynamic track columns.
   auto dynamicColumns_impl() const {
     return Acts::detail::dynamicColumnView(m_dynamic);
   }
@@ -587,7 +587,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
 
-  /// Return descriptors for this backend's dynamic columns.
+  /// @return A lazy range of descriptors for the dynamic track columns.
   auto dynamicColumns_impl() const {
     return Acts::detail::dynamicColumnView(m_dynamic);
   }
