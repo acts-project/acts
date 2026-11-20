@@ -145,7 +145,9 @@ using block_getter_t = typename block_getter<M>::type;
 /// The algebra types
 /// @{
 
-/// Expose the types provided by the algebra @tparam A
+/// Expose the types provided by the algebra @p A
+///
+/// @tparam A Algebra type that provides the linear algebra types.
 template <typename A>
 struct algebra_types {
   /// The algebra type itself.
@@ -177,6 +179,9 @@ struct algebra_types {
   using matrix = typename A::template matrix<ROWS, COLS>;
 };
 
+/// Get the types of an algebra: empty for types that are not an algebra
+///
+/// @tparam A Type to get the algebra types from.
 template <typename A, typename = void>
 struct get_algebra {};
 

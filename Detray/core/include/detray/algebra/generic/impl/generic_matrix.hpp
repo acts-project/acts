@@ -435,6 +435,9 @@ DETRAY_HOST_DEVICE constexpr M cholesky_decomposition(const M &m) {
   constexpr element_getter_t elem{};
   constexpr index_t N{detray::traits::max_rank<M>};
 
+  // Unqualified call: argument dependent lookup finds SIMD overloads
+  using algebra::math::sqrt;
+
   auto L = zero<M>();
 
   // Cholesky–Banachiewicz algorithm
@@ -446,8 +449,7 @@ DETRAY_HOST_DEVICE constexpr M cholesky_decomposition(const M &m) {
       }
 
       if (i == j) {
-        elem(L, i, j) = static_cast<scalar_t>(
-            detray::algebra::math::sqrt(elem(m, i, i) - sum));
+        elem(L, i, j) = static_cast<scalar_t>(sqrt(elem(m, i, i) - sum));
       } else {
         elem(L, i, j) = (1.f / elem(L, j, j) * (elem(m, i, j) - sum));
       }

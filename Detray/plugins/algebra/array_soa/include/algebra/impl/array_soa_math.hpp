@@ -174,3 +174,42 @@ DETRAY_HOST_DEVICE constexpr array_soa::simd<T, W> fma(
 /// @}
 
 }  // namespace detray::algebra::math
+
+namespace detray::algebra::array_soa {
+
+/// Make the lane-wise math functions visible to argument dependent lookup
+///
+/// The generic algebra implementation calls the math functions without
+/// namespace qualifier. Argument dependent lookup then finds the overloads
+/// for @c simd in this namespace at the point of instantiation, also if the
+/// generic headers were included before this header.
+/// @{
+using algebra::math::abs;
+using algebra::math::acos;
+using algebra::math::asin;
+using algebra::math::atan;
+using algebra::math::atan2;
+using algebra::math::atanh;
+using algebra::math::ceil;
+using algebra::math::copysign;
+using algebra::math::cos;
+using algebra::math::cosh;
+using algebra::math::exp;
+using algebra::math::fabs;
+using algebra::math::floor;
+using algebra::math::fma;
+using algebra::math::hypot;
+using algebra::math::log;
+using algebra::math::log10;
+using algebra::math::max;
+using algebra::math::min;
+using algebra::math::pow;
+using algebra::math::signbit;
+using algebra::math::sin;
+using algebra::math::sinh;
+using algebra::math::sqrt;
+using algebra::math::tan;
+using algebra::math::tanh;
+/// @}
+
+}  // namespace detray::algebra::array_soa

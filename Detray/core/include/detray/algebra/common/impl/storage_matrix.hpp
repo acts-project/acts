@@ -79,6 +79,12 @@ struct DETRAY_ALIGN(
       const matrix<A, S, R, C> &lhs, const matrix<A, S, R, C> &rhs);
 
   /// Checks for equality over all columns
+  ///
+  /// @tparam I Column indices
+  ///
+  /// @param rhs Matrix to compare with.
+  ///
+  /// @returns true if all columns are equal
   template <std::size_t... I>
   DETRAY_HOST_DEVICE constexpr bool equal(
       const matrix &rhs, std::index_sequence<I...> /*unused*/) const {

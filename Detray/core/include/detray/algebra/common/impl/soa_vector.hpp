@@ -9,23 +9,25 @@
 #pragma once
 
 // Project include(s).
-#include "detray/algebra/common/constants.hpp"
 #include "detray/algebra/common/impl/storage_vector.hpp"
-#include "detray/algebra/common/math.hpp"
 #include "detray/algebra/concepts.hpp"
+#include "detray/algebra/generic/impl/generic_vector.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
 // System include(s).
 #include <cstddef>
 
-/// Vector functions for the SoA plugins (Vc SoA and array SoA)
-///
-/// The functions operate on @c algebra::storage::vector types with a SIMD
-/// scalar. All lanes are evaluated at the same time.
-///
-/// @note The plugin has to declare the overloads of @c algebra::math::fma,
-/// @c sqrt, @c atan2, @c atanh and of @c algebra::constants::one for its SIMD
-/// type before this header is included.
+// Vector functions for the SoA plugins (Vc SoA and array SoA)
+//
+// The functions operate on algebra::storage::vector types with a SIMD
+// scalar. All lanes are evaluated at the same time. The implementation is in
+// algebra::generic::math. The functions here only restrict the overloads to
+// the SoA vector types, so that they do not clash with the overloads of the
+// AoS plugins (e.g. Vc AoS) when several plugins are used together.
+//
+// Note: The plugin has to make the overloads of the math functions (fma,
+// sqrt, atan2 and atanh) for its SIMD type visible to argument dependent lookup
+// (see algebra::generic::math).
 namespace detray::algebra::soa {
 
 /// Get the azimuthal angle of a vector in every lane
@@ -42,7 +44,7 @@ template <std::size_t N, concepts::simd_scalar scalar_t,
   requires(N >= 2)
 DETRAY_HOST_DEVICE constexpr scalar_t phi(
     const algebra::storage::vector<N, scalar_t, array_t> &v) {
-  return algebra::math::atan2(v[1], v[0]);
+  return algebra::generic::math::phi(v);
 }
 
 /// Get the transverse component of a vector in every lane
@@ -59,7 +61,7 @@ template <std::size_t N, concepts::simd_scalar scalar_t,
   requires(N >= 2)
 DETRAY_HOST_DEVICE constexpr scalar_t perp(
     const algebra::storage::vector<N, scalar_t, array_t> &v) {
-  return algebra::math::sqrt(algebra::math::fma(v[0], v[0], v[1] * v[1]));
+  return algebra::generic::math::perp(v);
 }
 
 /// Get the polar angle of a vector in every lane
@@ -76,7 +78,7 @@ template <std::size_t N, concepts::simd_scalar scalar_t,
   requires(N >= 3)
 DETRAY_HOST_DEVICE constexpr scalar_t theta(
     const algebra::storage::vector<N, scalar_t, array_t> &v) {
-  return algebra::math::atan2(perp(v), v[2]);
+  return algebra::generic::math::theta(v);
 }
 
 /// Get the cross product of two 3D vectors in every lane
@@ -88,16 +90,14 @@ DETRAY_HOST_DEVICE constexpr scalar_t theta(
 /// @param a the first input vector
 /// @param b the second input vector
 ///
-/// @returns the cross product of @param a and @param b
+/// @returns the cross product of @p a and @p b
 template <std::size_t N, concepts::simd_scalar scalar_t,
           template <typename, std::size_t> class array_t>
   requires(N == 3)
 DETRAY_HOST_DEVICE constexpr algebra::storage::vector<N, scalar_t, array_t>
 cross(const algebra::storage::vector<N, scalar_t, array_t> &a,
       const algebra::storage::vector<N, scalar_t, array_t> &b) {
-  return {algebra::math::fma(a[1], b[2], -b[1] * a[2]),
-          algebra::math::fma(a[2], b[0], -b[2] * a[0]),
-          algebra::math::fma(a[0], b[1], -b[0] * a[1])};
+  return algebra::generic::math::cross(a, b);
 }
 
 /// Get the dot product of two vectors in every lane
@@ -109,19 +109,13 @@ cross(const algebra::storage::vector<N, scalar_t, array_t> &a,
 /// @param a the first input vector
 /// @param b the second input vector
 ///
-/// @returns the dot product of @param a and @param b
+/// @returns the dot product of @p a and @p b
 template <std::size_t N, concepts::simd_scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr scalar_t dot(
     const algebra::storage::vector<N, scalar_t, array_t> &a,
     const algebra::storage::vector<N, scalar_t, array_t> &b) {
-  scalar_t ret{a[0] * b[0]};
-
-  for (std::size_t i = 1u; i < N; ++i) {
-    ret = algebra::math::fma(a[i], b[i], ret);
-  }
-
-  return ret;
+  return algebra::generic::math::dot(a, b);
 }
 
 /// Get the norm of a vector in every lane
@@ -132,12 +126,12 @@ DETRAY_HOST_DEVICE constexpr scalar_t dot(
 ///
 /// @param v the input vector
 ///
-/// @returns the euclidean norm of @param v
+/// @returns the euclidean norm of @p v
 template <std::size_t N, concepts::simd_scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr scalar_t norm(
     const algebra::storage::vector<N, scalar_t, array_t> &v) {
-  return algebra::math::sqrt(dot(v, v));
+  return algebra::generic::math::norm(v);
 }
 
 /// Get the normalized vector in every lane
@@ -148,12 +142,12 @@ DETRAY_HOST_DEVICE constexpr scalar_t norm(
 ///
 /// @param v the input vector
 ///
-/// @returns the unit vector in the direction of @param v
+/// @returns the unit vector in the direction of @p v
 template <std::size_t N, concepts::simd_scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr algebra::storage::vector<N, scalar_t, array_t>
 normalize(const algebra::storage::vector<N, scalar_t, array_t> &v) {
-  return (algebra::constants::one<scalar_t>() / norm(v)) * v;
+  return algebra::generic::math::normalize(v);
 }
 
 /// Get the pseudorapidity of a vector in every lane
@@ -170,7 +164,7 @@ template <std::size_t N, concepts::simd_scalar scalar_t,
   requires(N >= 3)
 DETRAY_HOST_DEVICE constexpr scalar_t eta(
     const algebra::storage::vector<N, scalar_t, array_t> &v) {
-  return algebra::math::atanh(v[2] / norm(v));
+  return algebra::generic::math::eta(v);
 }
 
 }  // namespace detray::algebra::soa

@@ -57,12 +57,11 @@ class DETRAY_ALIGN(
     return concepts::value<scalar_t> ? detail::nearest_power_of_two(N, 2u) : N;
   }
 
-  /// Value type is a simd vector in SoA and a scalar in AoS
   /// @returns the number of vector elements
   DETRAY_HOST_DEVICE
   static consteval std::size_t size() { return N; }
 
-  // Value type is a simd vector in SoA and a scalar in AoS
+  /// Value type is a simd vector in SoA and a scalar in AoS
   using scalar_type = scalar_t;
   /// Underlying data array type
   using array_type = array_t<scalar_t, simd_size()>;

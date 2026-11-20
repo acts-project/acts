@@ -16,7 +16,7 @@
 // System include(s).
 #include <cstddef>
 
-/// Matrix functions for the SoA plugins (Vc SoA and array SoA)
+// Matrix functions for the SoA plugins (Vc SoA and array SoA)
 namespace detray::algebra::soa {
 
 using algebra::storage::identity;
