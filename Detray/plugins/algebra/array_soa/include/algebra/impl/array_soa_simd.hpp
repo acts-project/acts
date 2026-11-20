@@ -61,10 +61,21 @@ using lane_int_t = typename lane_int<sizeof(T)>::type;
 template <typename T>
 using lane_uint_t = std::make_unsigned_t<lane_int_t<T>>;
 
+/// Largest alignment of a lane bundle in bytes: the size of the widest common
+/// vector register (AVX-512) and of a cache line. A larger alignment does not
+/// improve the vectorization, and the support of large extended alignments
+/// depends on the compiler and the platform (e.g. on the stack in device code).
+inline constexpr std::size_t max_lane_alignment{64u};
+
 /// Alignment of @tparam W lanes of type @tparam T: The size of the lane bundle
-/// rounded up to a power of two, so that one bundle fills a vector register
+/// rounded up to a power of two, so that one bundle fills a vector register.
+/// The alignment is limited to @c max_lane_alignment. The size of a bundle is
+/// still a multiple of the alignment, because both are powers of two.
 template <typename T, std::size_t W>
-inline constexpr std::size_t lane_alignment{std::bit_ceil(sizeof(T) * W)};
+inline constexpr std::size_t lane_alignment{std::bit_ceil(sizeof(T) * W) <
+                                                    max_lane_alignment
+                                                ? std::bit_ceil(sizeof(T) * W)
+                                                : max_lane_alignment};
 
 }  // namespace detail
 
@@ -76,11 +87,12 @@ inline constexpr std::size_t lane_alignment{std::bit_ceil(sizeof(T) * W)};
 /// vectorize the comparisons, the logical operations and the masked
 /// assignments.
 ///
-/// @tparam W Number of lanes.
+/// @tparam W Number of lanes, must be a power of two.
 /// @tparam I Signed integer type of a lane.
 template <std::size_t W, std::signed_integral I>
 struct DETRAY_ALIGN((detail::lane_alignment<I, W>)) mask {
-  static_assert(W > 0u, "A mask needs at least one lane");
+  static_assert(std::has_single_bit(W),
+                "The number of lanes of a mask must be a power of two");
 
   /// Value type of a single lane, when it is read
   using value_type = bool;
@@ -251,9 +263,13 @@ struct DETRAY_ALIGN((detail::lane_alignment<I, W>)) mask {
 ///
 /// This is the scalar type of the SoA plugin. Every operation is a plain loop
 /// over the lanes, so that the compiler can vectorize it.
+///
+/// @tparam T Value type of a lane.
+/// @tparam W Number of lanes, must be a power of two.
 template <concepts::value T, std::size_t W>
 struct DETRAY_ALIGN((detail::lane_alignment<T, W>)) simd {
-  static_assert(W > 0u, "A lane bundle needs at least one lane");
+  static_assert(std::has_single_bit(W),
+                "The number of lanes of a lane bundle must be a power of two");
 
   using value_type = T;
   using mask_type = mask<W, detail::lane_int_t<T>>;

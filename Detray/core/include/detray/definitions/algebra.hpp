@@ -8,37 +8,38 @@
 
 #pragma once
 
+// The array AoS plugin can be used together with the SoA plugins (array SoA and
+// Vc SoA), e.g. to compare them in the same benchmark. The Vc SoA plugin
+// depends on the Vc AoS plugin, so Vc AoS is included together with Vc SoA.
+// All other plugins are mutually exclusive with these and with each other:
+// their generic getter functions would be ambiguous. The first selected plugin
+// is used, in the same order as in the test types.
+#if DETRAY_ALGEBRA_ARRAY || DETRAY_ALGEBRA_ARRAY_SOA || DETRAY_ALGEBRA_VC_SOA
+
 #if DETRAY_ALGEBRA_ARRAY
 #include "algebra/array.hpp"
 #endif
+
 #if DETRAY_ALGEBRA_ARRAY_SOA
 #include "algebra/array_soa.hpp"
 #endif
-#if DETRAY_ALGEBRA_EIGEN
-#include "algebra/eigen.hpp"
-#endif
-#if DETRAY_ALGEBRA_FASTOR
-#include "algebra/fastor.hpp"
-#endif
-#if DETRAY_ALGEBRA_SMATRIX
-#include "algebra/smatrix.hpp"
-#endif
-#if DETRAY_ALGEBRA_VC_AOS || DETRAY_ALGEBRA_VC_SOA
 
+#if DETRAY_ALGEBRA_VC_SOA
 #if DETRAY_ALGEBRA_VC_AOS
 #include "algebra/vc_aos.hpp"
 #endif
-
-#if DETRAY_ALGEBRA_VC_SOA
 #include "algebra/vc_soa.hpp"
 #endif
 
-#endif  // DETRAY_ALGEBRA_VC_AOS || DETRAY_ALGEBRA_VC_SOA
-
-#if !DETRAY_ALGEBRA_ARRAY && !DETRAY_ALGEBRA_ARRAY_SOA && \
-    !DETRAY_ALGEBRA_EIGEN && !DETRAY_ALGEBRA_FASTOR &&    \
-    !DETRAY_ALGEBRA_SMATRIX && !DETRAY_ALGEBRA_VC_AOS &&  \
-    !DETRAY_ALGEBRA_VC_SOA
+#elif DETRAY_ALGEBRA_EIGEN
+#include "algebra/eigen.hpp"
+#elif DETRAY_ALGEBRA_FASTOR
+#include "algebra/fastor.hpp"
+#elif DETRAY_ALGEBRA_SMATRIX
+#include "algebra/smatrix.hpp"
+#elif DETRAY_ALGEBRA_VC_AOS
+#include "algebra/vc_aos.hpp"
+#else
 #error "No algebra plugin selected! Please link to one of the algebra plugins."
 #endif
 

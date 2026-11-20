@@ -25,10 +25,28 @@
 using namespace detray::benchmarks;
 using namespace detray::algebra;
 
+namespace {
+
+/// Number of SIMD lanes of the benchmarked types
+constexpr std::size_t simd_size{8u};
+
+/// Vector types with the benchmarked number of lanes
+///
+/// @note The vector benchmark macro expects a vector template with only the
+/// value type as parameter. Passing the array SoA template with the additional
+/// lane parameter directly is not portable (rejected by Clang < 19).
+namespace array_soa_lanes {
+
+template <typename T>
+using vector3 = array_soa::vector3<T, simd_size>;
+
+}  // namespace array_soa_lanes
+
+}  // namespace
+
 /// Run vector benchmarks
 int main(int argc, char** argv) {
   constexpr std::size_t n_samples{100000u};
-  constexpr unsigned int simd_size{8u};
 
   //
   // Prepare benchmarks
@@ -137,7 +155,7 @@ int main(int argc, char** argv) {
   //
 
   // Vector benchmarks
-  DETRAY_DEFINE_VECTOR_BENCH(array_soa)
+  DETRAY_DEFINE_VECTOR_BENCH(array_soa_lanes)
   DETRAY_REGISTER_VECTOR_BENCH(cfg_s, cfg_d)
 
   // Transform benchmarks

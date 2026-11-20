@@ -11,9 +11,9 @@
 // Project include(s).
 #include "algebra/impl/vc_aos_approximately_equal.hpp"
 #include "algebra/impl/vc_aos_concepts.hpp"
-#include "algebra/impl/vc_aos_getter.hpp"
-#include "algebra/impl/vc_aos_transform3.hpp"
 #include "detray/algebra/common/matrix.hpp"
+#include "detray/algebra/common/matrix_getter.hpp"
+#include "detray/algebra/common/transform3.hpp"
 #include "detray/algebra/common/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/type_traits.hpp"
@@ -80,7 +80,7 @@ using vector8 = vector_type<T, 8>;
 
 /// Geometry transformation implementation using @c Vc::SimdArray
 template <concepts::value T>
-using transform3 = vc_aos::math::transform3<vc_aos::storage_type, T>;
+using transform3 = algebra::storage::transform3<vc_aos::storage_type, T>;
 
 /// Element Getter
 using element_getter = algebra::storage::element_getter;

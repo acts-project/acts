@@ -164,9 +164,30 @@ constexpr decltype(auto) signbit(T &&vec) {
 /// @param y Second SIMD operand.
 /// @param z Addend SIMD operand.
 /// @returns The fused multiply-add result.
+/// @note The arguments are taken by const reference, so that lvalues and
+/// temporaries can be mixed in one call.
 template <detray::concepts::vc_simd_vector T>
-constexpr decltype(auto) fma(T &&x, T &&y, T &&z) {
-  return Vc::fma(std::forward<T>(x), std::forward<T>(y), std::forward<T>(z));
+constexpr T fma(const T &x, const T &y, const T &z) {
+  return Vc::fma(x, y, z);
+}
+
+/// Evaluate the two-argument inverse tangent lane by lane.
+/// @param y SIMD vector with the y coordinates.
+/// @param x SIMD vector with the x coordinates.
+/// @returns The angle of each lane in the range [-pi, pi].
+template <detray::concepts::vc_simd_vector T>
+constexpr T atan2(const T &y, const T &x) {
+  return Vc::atan2(y, x);
+}
+
+/// Evaluate the inverse hyperbolic tangent lane by lane.
+/// @note Vc does not provide @c atanh, so it is evaluated for every lane
+/// with the standard library function.
+/// @param vec SIMD vector whose lanes are evaluated.
+/// @returns Inverse hyperbolic tangent of each lane.
+template <detray::concepts::vc_simd_vector T>
+constexpr T atanh(const T &vec) {
+  return vec.apply([](typename T::EntryType e) { return std::atanh(e); });
 }
 /// @}
 

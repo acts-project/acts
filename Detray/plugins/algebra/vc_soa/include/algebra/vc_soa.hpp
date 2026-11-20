@@ -12,11 +12,12 @@
 #include "algebra/impl/vc_aos_approximately_equal.hpp"
 #include "algebra/impl/vc_soa_boolean.hpp"
 #include "algebra/impl/vc_soa_casts.hpp"
-#include "algebra/impl/vc_soa_getter.hpp"
+#include "algebra/impl/vc_soa_constants.hpp"
 #include "algebra/impl/vc_soa_math.hpp"
-#include "algebra/impl/vc_soa_matrix.hpp"
 #include "algebra/impl/vc_soa_types.hpp"
-#include "algebra/impl/vc_soa_vector.hpp"
+#include "detray/algebra/common/matrix_getter.hpp"
+#include "detray/algebra/common/soa_matrix.hpp"
+#include "detray/algebra/common/soa_vector.hpp"
 #include "detray/algebra/generic/impl/generic_matrix.hpp"
 
 // System include(s).
@@ -25,31 +26,9 @@
 
 namespace detray {
 
-/// @name Operators on @c algebra::storage::vector types
-/// @{
-
-/// Multiply an SoA vector by a scalar or another compatible vector.
-/// @param a First vector operand when multiplying two vectors.
-/// @param s Scalar multiplier when multiplying by a scalar.
-/// @returns The component-wise product or scaled vector.
-using algebra::storage::operator*;
-/// Divide compatible SoA vectors component-wise.
-/// @param a Numerator vector.
-/// @param b Denominator vector.
-/// @returns The component-wise quotient.
-using algebra::storage::operator/;
-/// Subtract compatible SoA vectors component-wise.
-/// @param a Left-hand vector.
-/// @param b Right-hand vector.
-/// @returns The component-wise difference.
-using algebra::storage::operator-;
-/// Add compatible SoA vectors component-wise.
-/// @param a Left-hand vector.
-/// @param b Right-hand vector.
-/// @returns The component-wise sum.
-using algebra::storage::operator+;
-
-/// @}
+// The operators on @c algebra::storage::vector types are found by argument
+// dependent lookup. They are not pulled into the detray namespace, because they
+// would be ambiguous with the operators of the AoS array plugin
 
 /// Define the plugin types
 /// @{
@@ -97,10 +76,10 @@ namespace getter {
 /// @name Getter functions on @c algebra::vc_soa types
 /// @{
 
-using algebra::vc_soa::storage::block;
-using algebra::vc_soa::storage::element;
-using algebra::vc_soa::storage::set_block;
-using algebra::vc_soa::storage::vector;
+using algebra::storage::getter::block;
+using algebra::storage::getter::element;
+using algebra::storage::getter::set_block;
+using algebra::storage::getter::vector;
 
 /// @}
 
@@ -111,14 +90,14 @@ namespace vector {
 /// @name Vector functions on @c algebra::vc_soa types
 /// @{
 
-using algebra::vc_soa::math::cross;
-using algebra::vc_soa::math::dot;
-using algebra::vc_soa::math::eta;
-using algebra::vc_soa::math::norm;
-using algebra::vc_soa::math::normalize;
-using algebra::vc_soa::math::perp;
-using algebra::vc_soa::math::phi;
-using algebra::vc_soa::math::theta;
+using algebra::soa::cross;
+using algebra::soa::dot;
+using algebra::soa::eta;
+using algebra::soa::norm;
+using algebra::soa::normalize;
+using algebra::soa::perp;
+using algebra::soa::phi;
+using algebra::soa::theta;
 
 /// @}
 
@@ -127,13 +106,13 @@ using algebra::vc_soa::math::theta;
 // Produces clash with matrix typedefs in other plugins
 namespace matrix {
 
-using algebra::vc_soa::math::determinant;
-using algebra::vc_soa::math::identity;
-using algebra::vc_soa::math::inverse;
-using algebra::vc_soa::math::set_identity;
-using algebra::vc_soa::math::set_zero;
-using algebra::vc_soa::math::transpose;
-using algebra::vc_soa::math::zero;
+using algebra::soa::determinant;
+using algebra::soa::identity;
+using algebra::soa::inverse;
+using algebra::soa::set_identity;
+using algebra::soa::set_zero;
+using algebra::soa::transpose;
+using algebra::soa::zero;
 
 using algebra::generic::math::cholesky_decomposition;
 using algebra::generic::math::column_wise_cross;

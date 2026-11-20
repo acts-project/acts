@@ -10,11 +10,11 @@
 
 // Project include(s).
 #include "algebra/impl/vc_aos_approximately_equal.hpp"
-#include "algebra/impl/vc_aos_getter.hpp"
 #include "algebra/impl/vc_aos_matrix.hpp"
 #include "algebra/impl/vc_aos_types.hpp"
 #include "algebra/impl/vc_aos_vector.hpp"
 #include "detray/algebra/common/boolean.hpp"
+#include "detray/algebra/common/matrix_getter.hpp"
 #include "detray/algebra/generic/generic.hpp"
 
 // System include(s).
@@ -62,10 +62,10 @@ namespace getter {
 /// @name Getter functions on @c algebra::vc_aos::matrix_type
 /// @{
 
-using algebra::vc_aos::storage::block;
-using algebra::vc_aos::storage::element;
-using algebra::vc_aos::storage::set_block;
-using algebra::vc_aos::storage::vector;
+using algebra::storage::getter::block;
+using algebra::storage::getter::element;
+using algebra::storage::getter::set_block;
+using algebra::storage::getter::vector;
 
 /// @}
 

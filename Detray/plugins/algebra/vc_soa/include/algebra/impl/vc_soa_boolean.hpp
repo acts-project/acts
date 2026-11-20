@@ -10,6 +10,7 @@
 
 // Project include(s).
 #include "detray/algebra/common/boolean.hpp"
+#include "detray/algebra/concepts.hpp"
 
 // Vc include(s).
 #ifdef _MSC_VER
@@ -19,6 +20,11 @@
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif  // MSVC
+
+// System include(s).
+#include <concepts>
+#include <cstddef>
+#include <type_traits>
 
 namespace detray::algebra::boolean {
 

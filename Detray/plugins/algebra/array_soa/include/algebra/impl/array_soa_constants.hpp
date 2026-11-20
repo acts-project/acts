@@ -36,10 +36,11 @@ consteval scalar_t one() {
 
 /// @tparam scalar_t Lane bundle type.
 /// @returns the lane index in every lane
+///
+/// @note The loop is evaluated at compile time, so it needs no unrolling
 template <detray::concepts::array_soa_simd scalar_t>
 consteval scalar_t iota() {
   scalar_t ret;
-  DETRAY_UNROLL_N(scalar_t::size())
   for (std::size_t i = 0u; i < scalar_t::size(); ++i) {
     ret[i] = static_cast<typename scalar_t::value_type>(i);
   }
