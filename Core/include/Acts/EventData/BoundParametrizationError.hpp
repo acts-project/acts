@@ -20,6 +20,8 @@ enum class BoundParametrizationError {
   SingularDirection = 1,
   /// Canonicalization has no unique local derivative at a pole.
   UndefinedCanonicalization,
+  /// Global direction cannot be encoded as bound coordinates.
+  InvalidDirection,
 };
 
 /// Convert a bound-parametrization error to a standard error code.

@@ -745,7 +745,7 @@ BOOST_AUTO_TEST_CASE(ConditioningRejectsMissingPrediction) {
   auto t = buildTracklets(tc, makeModel(Variant::Base), Variant::Base);
   t.shared.unset(TrackStatePropMask::Predicted);
   BOOST_CHECK(!detail::conditionSmoothedStatesOnSharedState(
-                   tc.trackStateContainer(), t.shared.index(),
+                   gctx, tc.trackStateContainer(), t.shared.index(),
                    t.first.tipIndex(), t.shared.smoothed(),
                    t.shared.smoothedCovariance(), getDummyLogger())
                    .ok());

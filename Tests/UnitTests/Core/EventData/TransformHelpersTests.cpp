@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/BoundParametrizationError.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -20,6 +21,7 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <numbers>
 #include <utility>
@@ -88,6 +90,28 @@ BOOST_AUTO_TEST_CASE(CanonicalDirectionUnderAlignment) {
         free[eFreeQOverP], surface, gctx);
     BOOST_REQUIRE(restoredComponents.ok());
     CHECK_CLOSE_ABS(*restoredComponents, bound, 1e-14);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(InvalidFreeDirection) {
+  DetectorElementStub element(Transform3::Identity(),
+                              std::make_shared<RectangleBounds>(10., 10.), 0.1);
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const auto& surface = element.surface();
+  for (const Vector3& direction : std::array<Vector3, 4>{
+           Vector3::Zero(),
+           Vector3::Constant(std::numeric_limits<double>::max()),
+           Vector3(0., 0., std::numeric_limits<double>::infinity()),
+           Vector3(0., std::numeric_limits<double>::quiet_NaN(), 0.)}) {
+    FreeVector free = FreeVector::Zero();
+    free.segment<3>(eFreeDir0) = direction;
+    const auto packed = transformFreeToBoundParameters(free, surface, gctx);
+    const auto components = transformFreeToBoundParameters(
+        Vector3::Zero(), 0., direction, 0., surface, gctx);
+    BOOST_REQUIRE(!packed.ok());
+    BOOST_REQUIRE(!components.ok());
+    BOOST_CHECK(packed.error() == BoundParametrizationError::InvalidDirection);
+    BOOST_CHECK(components.error() == packed.error());
   }
 }
 

@@ -64,7 +64,7 @@ class BoundParametrization {
     }
 
     Vector2 directionCoordinates(const Vector3& direction) const {
-      assert(hasNonzeroRepresentableNorm(direction) &&
+      assert(isValidDirection(direction) &&
              "Direction must be finite and nonzero with a representable norm");
       // Angles are scale invariant: no normalization is needed. Preserve the
       // atan2 endpoint convention used by bound/free conversion at +/-pi.
@@ -324,19 +324,6 @@ class BoundParametrization {
       const double sinPhi = y / transverse;
       return {cosPhi, sinPhi, cosPhi / transverse, sinPhi / transverse};
     }
-    /// Whether a direction is finite and nonzero with a representable norm.
-    /// The norm is bounded by sqrt(3) times the largest component, so the
-    /// expensive overflow-safe norm is only needed close to the overflow
-    /// threshold.
-    static bool hasNonzeroRepresentableNorm(const Vector3& direction) {
-      if (!direction.allFinite()) {
-        return false;
-      }
-      const double maxComponent = direction.cwiseAbs().maxCoeff();
-      return maxComponent > 0. &&
-             (maxComponent <= 0.5 * std::numeric_limits<double>::max() ||
-              std::isfinite(direction.stableNorm()));
-    }
     static void assertFiniteAngles([[maybe_unused]] double phi,
                                    [[maybe_unused]] double theta) {
       assert(std::isfinite(phi) && std::isfinite(theta) &&
@@ -403,6 +390,20 @@ class BoundParametrization {
   /// @return True for the canonical convention
   constexpr bool isGlobalSpherical() const noexcept {
     return std::holds_alternative<GlobalSpherical>(m_chart);
+  }
+
+  /// Check the input domain of directionCoordinates().
+  /// @param direction Global direction three-vector
+  /// @return Whether the vector is finite and has a nonzero, representable norm
+  static bool isValidDirection(const Vector3& direction) {
+    if (!direction.allFinite()) {
+      return false;
+    }
+    const double largest = direction.cwiseAbs().maxCoeff();
+    const double limit = std::numeric_limits<double>::max();
+    // Only directions close to overflow need a scaled norm check.
+    return largest > 0. && (largest <= 0.5 * limit ||
+                            (direction / largest).norm() <= limit / largest);
   }
 
   /// Decode the global direction without copying the bound vector.

@@ -24,6 +24,9 @@ class BoundParametrizationErrorCategory : public std::error_category {
         return "Direction Jacobian is singular or insufficiently conditioned";
       case BoundParametrizationError::UndefinedCanonicalization:
         return "Canonicalization derivative is undefined at a pole";
+      case BoundParametrizationError::InvalidDirection:
+        return "Direction must be finite and have a nonzero, representable "
+               "norm";
       default:
         return "unknown";
     }
