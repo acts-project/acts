@@ -95,13 +95,12 @@ struct Fixture {
       BoundMatrix::Identity(), 1.5};
 
   auto run() {
-    return creator.createTrackStates({.geoContext = &gctx,
-                                      .calibrationContext = &cctx,
-                                      .surface = surface.get(),
-                                      .boundState = &boundState,
-                                      .prevTip = kTrackIndexInvalid,
-                                      .trajectory = &trajectory,
-                                      .logger = logger.get()});
+    const CustomTrackStateCreator::Arguments args{.geoContext = gctx,
+                                                  .calibrationContext = cctx,
+                                                  .boundState = boundState,
+                                                  .prevTip = kTrackIndexInvalid,
+                                                  .trajectory = trajectory};
+    return creator.createTrackStates(args, *logger);
   }
 };
 
@@ -115,7 +114,8 @@ BOOST_AUTO_TEST_SUITE(ExamplesChi2CkfTrackStateCreatorSuite)
 BOOST_AUTO_TEST_CASE(NonFiniteChi2IsRejected) {
   Fixture f;
   f.creator.setValues({kNaN});
-  f.creator.cuts.chi2CutOffOutlier = std::numeric_limits<double>::infinity();
+  f.creator.setCuts(
+      {.chi2CutOffOutlier = std::numeric_limits<double>::infinity()});
 
   auto result = f.run();
 
@@ -127,8 +127,7 @@ BOOST_AUTO_TEST_CASE(NonFiniteChi2IsRejected) {
 /// candidate above the measurement cut must stay an outlier
 BOOST_AUTO_TEST_CASE(FiniteChi2SelectedAlongsideNonFinite) {
   Fixture f;
-  f.creator.cuts.chi2CutOffMeasurement = 15;
-  f.creator.cuts.chi2CutOffOutlier = 25;
+  f.creator.setCuts({.chi2CutOffMeasurement = 15, .chi2CutOffOutlier = 25});
 
   // chi2 = 2
   f.creator.setValues({kNaN, 2.});
@@ -153,7 +152,7 @@ BOOST_AUTO_TEST_CASE(FiniteChi2SelectedAlongsideNonFinite) {
 BOOST_AUTO_TEST_CASE(ZeroBranchesFails) {
   Fixture f;
   f.creator.setValues({0.});
-  f.creator.cuts.maxBranchesPerSurface = 0;
+  f.creator.setCuts({.maxBranchesPerSurface = 0});
 
   auto result = f.run();
 

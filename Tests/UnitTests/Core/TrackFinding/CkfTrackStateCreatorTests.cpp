@@ -235,22 +235,22 @@ struct Fixture {
 
   DefaultSelectionCreator defaultCreator;
 
-  CkfTypes::TrackStateCreatorArguments<TrackContainer> arguments() {
-    return {.geoContext = &gctx,
-            .calibrationContext = &cctx,
-            .surface = surface.get(),
-            .boundState = &boundState,
+  CkfTypes::TrackStateCreatorArguments<
+      TrackContainer::TrackStateContainerBackend>
+  arguments() {
+    return {.geoContext = gctx,
+            .calibrationContext = cctx,
+            .boundState = boundState,
             .prevTip = kTrackIndexInvalid,
-            .trajectory = &trajectory,
-            .logger = logger.get()};
+            .trajectory = trajectory};
   }
 
   Result<CkfTypes::BranchVector<TrackIndexType>> runDefault() {
-    return defaultCreator.createTrackStates(arguments());
+    return defaultCreator.createTrackStates(arguments(), *logger);
   }
 
   Result<CkfTypes::BranchVector<TrackIndexType>> run() {
-    return creator.createTrackStates(arguments());
+    return creator.createTrackStates(arguments(), *logger);
   }
 };
 

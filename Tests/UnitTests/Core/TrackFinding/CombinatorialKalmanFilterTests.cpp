@@ -304,7 +304,7 @@ struct TestTrackStateCreator final
 
   auto measurementRange(const State& state) const {
     assert(container != nullptr);
-    auto [begin, end] = container->equal_range(state.surface->geometryId());
+    auto [begin, end] = container->equal_range(state.surface().geometryId());
     return std::ranges::subrange(begin, end) | std::views::values;
   }
 
@@ -362,33 +362,6 @@ struct TestTrackStateCreator final
   }
 };
 
-/// Returns a hole state on every surface with measurements, which the CKF
-/// does not support from a track state creator.
-struct HoleTrackStateCreator {
-  const Fixture::TestSourceLinkContainer* container = nullptr;
-
-  Result<CkfTypes::BranchVector<TrackIndexType>> createTrackStates(
-      const CkfTypes::TrackStateCreatorArguments<TrackContainer>& args) const {
-    CkfTypes::BranchVector<TrackIndexType> trackStates;
-    if (!container->contains(args.surface->geometryId())) {
-      return trackStates;
-    }
-
-    auto trackState = args.trajectory->makeTrackState(
-        TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian,
-        args.prevTip);
-    const auto& params = std::get<BoundTrackParameters>(*args.boundState);
-    trackState.predicted() = params.parameters();
-    trackState.predictedCovariance() = *params.covariance();
-    trackState.jacobian() = std::get<BoundMatrix>(*args.boundState);
-    trackState.setReferenceSurface(args.surface->getSharedPtr());
-    trackState.typeFlags().setHasParameters().setIsHole();
-
-    trackStates.push_back(trackState.index());
-    return trackStates;
-  }
-};
-
 }  // namespace ActsTests
 
 namespace ActsTests {
@@ -409,7 +382,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   TestTrackStateCreator trackStateCreator;
   trackStateCreator.container = &f.sourceLinks;
 
-  options.extensions.trackStateCreator
+  options.extensions.createTrackStates
       .template connect<&TestTrackStateCreator::createTrackStates>(
           &trackStateCreator);
 
@@ -455,29 +428,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   }
 }
 
-/// A track state which is neither a measurement nor an outlier must stop the
-/// track finding. Before, the CKF dropped the branch without an error.
-BOOST_AUTO_TEST_CASE(UnsupportedTrackStateFails) {
-  Fixture f(0_T);
-
-  auto options = f.makeCkfOptions();
-
-  HoleTrackStateCreator trackStateCreator;
-  trackStateCreator.container = &f.sourceLinks;
-
-  options.extensions.trackStateCreator
-      .template connect<&HoleTrackStateCreator::createTrackStates>(
-          &trackStateCreator);
-
-  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-
-  auto res = f.ckf.findTracks(f.startParameters.front(), options, tc);
-
-  BOOST_REQUIRE(!res.ok());
-  BOOST_CHECK_EQUAL(res.error(),
-                    CombinatorialKalmanFilterError::UnsupportedTrackState);
-}
-
 /// After a branch switch, the stepper counts its path length from zero again.
 /// The path length of the track states must still grow along each track.
 BOOST_AUTO_TEST_CASE(PathLengthGrowsAfterBranchSwitch) {
@@ -491,7 +441,7 @@ BOOST_AUTO_TEST_CASE(PathLengthGrowsAfterBranchSwitch) {
   trackStateCreator.container = &f.sourceLinks;
   trackStateCreator.numMeasurements = 2;
 
-  options.extensions.trackStateCreator
+  options.extensions.createTrackStates
       .template connect<&TestTrackStateCreator::createTrackStates>(
           &trackStateCreator);
 
@@ -511,6 +461,41 @@ BOOST_AUTO_TEST_CASE(PathLengthGrowsAfterBranchSwitch) {
   }
 }
 
+/// Creates one track state which is neither a measurement nor an outlier
+struct HoleTrackStateCreator {
+  Result<CkfTypes::BranchVector<TrackIndexType>> createTrackStates(
+      const CkfTypes::TrackStateCreatorArguments<TrackStateContainerBackend>&
+          args,
+      const Logger& /*logger*/) const {
+    const BoundTrackParameters& parameters = args.boundState.get().parameters;
+    auto trackState = args.trajectory.get().makeTrackState(
+        TrackStatePropMask::Predicted, args.prevTip);
+    trackState.setReferenceSurface(
+        parameters.referenceSurface().getSharedPtr());
+    trackState.predicted() = parameters.parameters();
+    trackState.predictedCovariance() = *parameters.covariance();
+    trackState.typeFlags().setIsHole();
+    return CkfTypes::BranchVector<TrackIndexType>{trackState.index()};
+  }
+};
+
+BOOST_AUTO_TEST_CASE(UnsupportedTrackStateFails) {
+  Fixture f(0_T);
+
+  auto options = f.makeCkfOptions();
+
+  HoleTrackStateCreator trackStateCreator;
+  options.extensions.createTrackStates
+      .template connect<&HoleTrackStateCreator::createTrackStates>(
+          &trackStateCreator);
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto res = f.ckf.findTracks(f.startParameters.front(), options, tc);
+  BOOST_REQUIRE(!res.ok());
+  BOOST_CHECK_EQUAL(res.error(),
+                    CombinatorialKalmanFilterError::UnsupportedTrackState);
+}
+
 BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   Fixture f(0_T);
 
@@ -524,7 +509,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   TestTrackStateCreator trackStateCreator;
   trackStateCreator.container = &f.sourceLinks;
 
-  options.extensions.trackStateCreator
+  options.extensions.createTrackStates
       .template connect<&TestTrackStateCreator::createTrackStates>(
           &trackStateCreator);
 
@@ -743,7 +728,7 @@ struct MaterialFixture {
     // cut, which is all this material test needs
     TestTrackStateCreator trackStateCreator;
     trackStateCreator.container = &sourceLinks;
-    options.extensions.trackStateCreator
+    options.extensions.createTrackStates
         .template connect<&TestTrackStateCreator::createTrackStates>(
             &trackStateCreator);
 
@@ -769,7 +754,7 @@ struct MaterialFixture {
 
     TestTrackStateCreator trackStateCreator;
     trackStateCreator.container = &sourceLinks;
-    options.extensions.trackStateCreator
+    options.extensions.createTrackStates
         .template connect<&TestTrackStateCreator::createTrackStates>(
             &trackStateCreator);
 

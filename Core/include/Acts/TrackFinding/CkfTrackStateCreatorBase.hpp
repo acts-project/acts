@@ -26,6 +26,7 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <optional>
 #include <ranges>
@@ -137,23 +138,31 @@ void fillTrackStateCalibrated(const measurement_t& measurement,
 /// Everything a @ref CkfTrackStateCreatorBase customization point needs to know
 /// about the surface it is currently working on.
 ///
-/// These are the arguments from the CKF, see @ref CkfTypes::TrackStateCreatorArguments,
-/// together with the scratch data of the creator. It does not depend on the
-/// concrete creator type, so that customization points can be plain,
-/// non-template member functions.
+/// These are the arguments from the CKF, see
+/// @ref CkfTypes::TrackStateCreatorArguments, together with the logger and the
+/// scratch data of the creator. It does not depend on the concrete creator
+/// type, so that customization points can be plain, non-template member
+/// functions.
 ///
 /// @tparam track_container_t the track container used by the track finder
 template <typename track_container_t>
 struct CkfTrackStateCreatorState
-    : public CkfTypes::TrackStateCreatorArguments<track_container_t> {
+    : public CkfTypes::TrackStateCreatorArguments<
+          typename track_container_t::TrackStateContainerBackend> {
   /// Type alias for the arguments from the CKF
-  using Arguments = CkfTypes::TrackStateCreatorArguments<track_container_t>;
+  using Arguments = CkfTypes::TrackStateCreatorArguments<
+      typename track_container_t::TrackStateContainerBackend>;
   /// Type alias for the track state proxy
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
 
   /// Make the state for one surface from the arguments of the CKF
   /// @param args the arguments from the CKF
-  explicit CkfTrackStateCreatorState(const Arguments& args) : Arguments(args) {}
+  /// @param logger_ the logger from the CKF
+  CkfTrackStateCreatorState(const Arguments& args, const Logger& logger_)
+      : Arguments(args), logger(logger_) {}
+
+  /// A logger for messages
+  std::reference_wrapper<const Logger> logger;
 
   /// The track state on this surface which owns the predicted parameters and
   /// the jacobian. All further track states on the same surface share them.
@@ -162,7 +171,12 @@ struct CkfTrackStateCreatorState
   /// The predicted bound parameters on the surface
   /// @return the bound track parameters
   const BoundTrackParameters& boundParameters() const {
-    return std::get<0>(*this->boundState);
+    return this->boundState.get().parameters;
+  }
+  /// The surface the trajectory is extended onto
+  /// @return the reference surface of the predicted parameters
+  const Surface& surface() const {
+    return boundParameters().referenceSurface();
   }
   /// The predicted parameter vector
   /// @return the predicted parameters
@@ -178,10 +192,12 @@ struct CkfTrackStateCreatorState
   }
   /// The jacobian from the previous surface to this one
   /// @return the jacobian
-  const BoundMatrix& jacobian() const { return std::get<1>(*this->boundState); }
+  const BoundMatrix& jacobian() const {
+    return this->boundState.get().jacobian;
+  }
   /// The path length accumulated up to this surface
   /// @return the path length
-  double pathLength() const { return std::get<2>(*this->boundState); }
+  double pathLength() const { return this->boundState.get().pathLength; }
 };
 
 /// A measurement which was selected to become a track state on a surface.
@@ -207,7 +223,8 @@ struct CkfTrackStateCandidate {
 ///
 /// This class only provides the mechanism, i.e. correctly populating the track
 /// EDM. The derived class has to provide
-/// - `measurementRange(state)`: the measurements associated to `state.surface`
+/// - `measurementRange(state)`: the measurements associated to
+///   `state.surface()`
 /// - `sourceLink(state, measurement)`: the uncalibrated source link
 /// - `calibrate(state, measurement)`: the calibrated measurement, see
 ///   @c detail::CalibratedMeasurementConcept
@@ -215,7 +232,7 @@ struct CkfTrackStateCandidate {
 /// and may override any of the defaulted customization points below.
 ///
 /// @note This is expected to be connected to
-///       @ref CombinatorialKalmanFilterExtensions::trackStateCreator.
+///       @ref CombinatorialKalmanFilterExtensions::createTrackStates.
 /// @note The API is not stable yet and is expected to grow further
 ///       customization points, in particular for hole creation.
 ///
@@ -246,28 +263,25 @@ class CkfTrackStateCreatorBase {
                                      kInlineCandidatesPerSurface>;
 
   /// Type alias for the arguments from the CKF
-  using Arguments = CkfTypes::TrackStateCreatorArguments<track_container_t>;
+  using Arguments =
+      CkfTypes::TrackStateCreatorArguments<TrackStateContainerBackend>;
 
-  /// Extend the trajectory onto the given surface.
+  /// Extend the trajectory onto the surface of the predicted state.
   ///
   /// This is the function to connect to
-  /// @ref CombinatorialKalmanFilterExtensions::trackStateCreator.
+  /// @ref CombinatorialKalmanFilterExtensions::createTrackStates.
   ///
-  /// @param args the surface, the predicted bound state, the trajectory to
-  ///        extend, and the contexts
+  /// @param args the predicted bound state, the trajectory to extend, and the
+  ///        contexts
+  /// @param logger a logger for messages
   ///
   /// @return the indices of the newly created track states, in the order the
   ///         selection produced them, or an error. An empty list means that no
   ///         compatible measurement was found and the caller is expected to
   ///         create a hole.
-  TrackStatesResult createTrackStates(const Arguments& args) const {
-    assert(args.geoContext != nullptr && args.calibrationContext != nullptr &&
-           args.surface != nullptr && args.boundState != nullptr &&
-           args.trajectory != nullptr && args.logger != nullptr &&
-           "Incomplete arguments for the track state creation");
-
-    const Logger& logger = *args.logger;
-    State state(args);
+  TrackStatesResult createTrackStates(const Arguments& args,
+                                      const Logger& logger) const {
+    State state(args, logger);
 
     CkfTypes::BranchVector<TrackIndexType> trackStates;
 
@@ -275,7 +289,8 @@ class CkfTrackStateCreatorBase {
     // Bail out before the selection is consulted, so that an ordinary surface
     // without measurements can never turn into a selection error.
     if (std::ranges::empty(range)) {
-      ACTS_VERBOSE("No measurements on surface " << args.surface->geometryId());
+      ACTS_VERBOSE("No measurements on surface "
+                   << state.surface().geometryId());
       return trackStates;
     }
 
@@ -303,9 +318,9 @@ class CkfTrackStateCreatorBase {
   /// first. An empty result means that the caller creates a hole.
   ///
   /// The default selects the measurement with the smallest chi2, without a
-  /// cut, as a measurement and not as an outlier. This is the default of the
-  /// deprecated @ref MeasurementSelector. A measurement with a non-finite chi2
-  /// is never selected, so if all of them have one, the caller creates a hole.
+  /// cut, as a measurement and not as an outlier. This is the default of
+  /// @ref MeasurementSelector. A measurement with a non-finite chi2 is never
+  /// selected, so if all of them have one, the caller creates a hole.
   ///
   /// @note This is only called when the surface has measurements.
   ///
@@ -415,7 +430,7 @@ class CkfTrackStateCreatorBase {
     }
 
     TrackStateProxy trackState =
-        state.trajectory->makeTrackState(mask, state.prevTip);
+        state.trajectory.get().makeTrackState(mask, state.prevTip);
 
     if (isFirst) {
       trackState.predicted() = state.predicted();

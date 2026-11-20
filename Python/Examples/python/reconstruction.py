@@ -191,6 +191,7 @@ CkfConfig = namedtuple(
         "constrainToVolumes",
         "endOfWorldVolumes",
         "seedDeduplicatorConfig",
+        "chi2CutPerDimension",
     ],
     defaults=[
         15.0,
@@ -209,6 +210,7 @@ CkfConfig = namedtuple(
         None,
         None,
         None,
+        True,
     ],
 )
 
@@ -2008,10 +2010,14 @@ def addCKFTracks(
     # truth particle smearing and source link selection config
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=customLogLevel(),
+        # The chi2 cuts are the cuts for 1D measurements. With
+        # chi2CutPerDimension every measurement dimension uses the cut with the
+        # same p-value.
         trackStateSelection=acts.examples.TrackStateSelectionCuts(
             chi2CutOffMeasurement=ckfConfig.chi2CutOffMeasurement,
             chi2CutOffOutlier=ckfConfig.chi2CutOffOutlier,
             maxBranchesPerSurface=ckfConfig.numMeasurementsCutOff,
+            chi2CutPerDimension=ckfConfig.chi2CutPerDimension,
         ),
         inputMeasurements=f"{prefix}measurement_subset",
         inputInitialTrackParameters=(
@@ -2320,6 +2326,7 @@ def addGnn(
     outputDirRoot: Optional[Union[Path, str]] = None,
     device=None,
     shrinkNodes: bool = False,
+    geometryIdMap=None,
     writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
@@ -2341,6 +2348,9 @@ def addGnn(
         outputDirRoot: Optional output directory for performance ROOT files
         device: acts.gnn.Device to run the GNN pipeline on (default: acts.gnn.Device.Cuda())
         shrinkNodes: Remove unused nodes before each edge classification step
+        geometryIdMap: Athena <-> ACTS geometry identifier map, needed when the
+                       measurements are on ACTS surfaces but the module map uses
+                       Athena identifiers
         logLevel: Logging level
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -2370,6 +2380,7 @@ def addGnn(
         featureScales=featureScales,
         device=device,
         shrinkNodes=shrinkNodes,
+        geometryIdMap=geometryIdMap,
     )
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)

@@ -19,10 +19,10 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Propagator/DefaultActor.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -79,8 +79,8 @@ class CustomTrackStateCreator final
 
   auto measurementRange(const State& state) const {
     assert(measurements != nullptr);
-    auto [begin, end] =
-        measurements->orderedIndices().equal_range(state.surface->geometryId());
+    auto [begin, end] = measurements->orderedIndices().equal_range(
+        state.surface().geometryId());
     return std::ranges::subrange(begin, end);
   }
 
@@ -373,13 +373,13 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   CustomTrackStateCreator trackStateCreator;
   trackStateCreator.measurements = &measurements;
-  trackStateCreator.cuts = m_cfg.trackStateSelection;
+  trackStateCreator.setCuts(m_cfg.trackStateSelection);
 
   Extensions extensions;
   extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
       typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
-  extensions.trackStateCreator
+  extensions.createTrackStates
       .template connect<&CustomTrackStateCreator::createTrackStates>(
           &trackStateCreator);
   extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
@@ -418,7 +418,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   using Extrapolator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using ExtrapolatorOptions = Extrapolator::template Options<
-      Acts::ActorList<Acts::MaterialInteractor, Acts::EndOfWorldReached>>;
+      Acts::ActorList<Acts::DefaultActor, Acts::MaterialInteractor>>;
 
   Extrapolator extrapolator(
       Acts::SympyStepper(m_cfg.magneticField),

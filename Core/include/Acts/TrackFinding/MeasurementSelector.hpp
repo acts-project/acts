@@ -48,6 +48,21 @@ struct MeasurementSelectorCuts {
   bool chi2CutPerDimension = false;
 };
 
+namespace detail {
+
+/// Convert the chi2 cut @p cut1D for one-dimensional measurements to the cut
+/// with the same p-value for each measurement dimension. Without
+/// @p perDimension every dimension uses @p cut1D.
+/// @param cut1D the chi2 cut for one-dimensional measurements
+/// @param perDimension whether to convert the cut per dimension
+/// @return the cut for each measurement dimension, index 0 is not used
+/// @throws std::invalid_argument if @p perDimension is set and @p cut1D is
+///         NaN or negative, because such a cut has no p-value
+std::array<double, kMeasurementSizeMax + 1> chi2CutPerDimension(
+    double cut1D, bool perDimension);
+
+}  // namespace detail
+
 /// @brief Measurement selection struct selecting those measurements compatible
 /// with the given track parameter against provided criteria on one surface
 ///

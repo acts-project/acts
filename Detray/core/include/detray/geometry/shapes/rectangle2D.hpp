@@ -24,19 +24,27 @@
 
 namespace detray {
 
-/// @brief Geometrical shape of a rectangle2D.
+/// @brief Geometrical shape of an axis-aligned rectangle2D.
 ///
-/// It is defined by half length in local0 coordinates bounds[0] and bounds[1]
+/// The rectangle is defined by the absolute positions of its lower left
+/// corner (bounds[e_min_x], bounds[e_min_y]) and its upper right corner
+/// (bounds[e_max_x], bounds[e_max_y]) in the local cartesian frame of the
+/// surface. The rectangle does not have to be centered at the origin of the
+/// local frame. Multiple rectangles can therefore share a single surface
+/// (and transform).
 class rectangle2D {
  public:
   /// The name for this shape
   static constexpr std::string_view name = "rectangle2D";
 
   /// Indices describing the entries in the shape boundary array.
+  /// @note The order is the same as in the ACTS @c RectangleBounds
   enum boundaries : unsigned int {
-    e_half_x = 0u,
-    e_half_y = 1u,
-    e_size = 2u,
+    e_min_x = 0u,
+    e_min_y = 1u,
+    e_max_x = 2u,
+    e_max_y = 3u,
+    e_size = 4u,
   };
 
   /// Container definition for the shape boundary values
@@ -66,8 +74,12 @@ class rectangle2D {
   template <concepts::scalar scalar_t, concepts::point point_t>
   DETRAY_HOST_DEVICE inline scalar_t min_dist_to_boundary(
       const bounds_type<scalar_t> &bounds, const point_t &loc_p) const {
-    return math::min(math::fabs(math::fabs(loc_p[0]) - bounds[e_half_x]),
-                     math::fabs(math::fabs(loc_p[1]) - bounds[e_half_y]));
+    const scalar_t dist_x{math::min(math::fabs(loc_p[0] - bounds[e_min_x]),
+                                    math::fabs(loc_p[0] - bounds[e_max_x]))};
+    const scalar_t dist_y{math::min(math::fabs(loc_p[1] - bounds[e_min_y]),
+                                    math::fabs(loc_p[1] - bounds[e_max_y]))};
+
+    return math::min(dist_x, dist_y);
   }
 
   /// @brief Check boundary values for a local point.
@@ -108,18 +120,21 @@ class rectangle2D {
       const bounds_type<scalar_t> &bounds, const point_t &loc_p,
       const scalar_t tol = std::numeric_limits<scalar_t>::epsilon(),
       const scalar_t edge_tol = 0.f) const {
-    const scalar_t loc_0{math::fabs(loc_p[0])};
-    const scalar_t loc_1{math::fabs(loc_p[1])};
+    const scalar_t loc_0{loc_p[0]};
+    const scalar_t loc_1{loc_p[1]};
 
-    auto inside_mask{(loc_0 <= (bounds[e_half_x] + tol) &&
-                      loc_1 <= (bounds[e_half_y] + tol))};
+    auto inside_mask{
+        ((bounds[e_min_x] - tol) <= loc_0 && loc_0 <= (bounds[e_max_x] + tol) &&
+         (bounds[e_min_y] - tol) <= loc_1 && loc_1 <= (bounds[e_max_y] + tol))};
 
     decltype(inside_mask) inside_edge{false};
     if (detail::any_of(edge_tol > 0.f)) {
       const scalar_t full_tol{tol + edge_tol};
 
-      inside_edge = (loc_0 <= (bounds[e_half_x] + full_tol) &&
-                     loc_1 <= (bounds[e_half_y] + full_tol));
+      inside_edge = ((bounds[e_min_x] - full_tol) <= loc_0 &&
+                     loc_0 <= (bounds[e_max_x] + full_tol) &&
+                     (bounds[e_min_y] - full_tol) <= loc_1 &&
+                     loc_1 <= (bounds[e_max_y] + full_tol));
     }
 
     return result_type<decltype(inside_mask)>{inside_mask, inside_edge};
@@ -145,10 +160,14 @@ class rectangle2D {
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t area(
       const bounds_type<scalar_t> &bounds) const {
-    return 4.f * bounds[e_half_x] * bounds[e_half_y];
+    return (bounds[e_max_x] - bounds[e_min_x]) *
+           (bounds[e_max_y] - bounds[e_min_y]);
   }
 
   /// @brief Merge two rectangle shapes
+  ///
+  /// The result is the smallest axis aligned rectangle that contains both
+  /// rectangles.
   ///
   /// @param bounds the boundary values for this shape
   /// @param o_bounds the boundary values for the other shape
@@ -160,8 +179,10 @@ class rectangle2D {
       const bounds_type<scalar_t> &o_bounds) const {
     bounds_type<scalar_t> new_bounds{};
 
-    new_bounds[e_half_x] = math::max(bounds[e_half_x], o_bounds[e_half_x]);
-    new_bounds[e_half_y] = math::max(bounds[e_half_y], o_bounds[e_half_y]);
+    new_bounds[e_min_x] = math::min(bounds[e_min_x], o_bounds[e_min_x]);
+    new_bounds[e_min_y] = math::min(bounds[e_min_y], o_bounds[e_min_y]);
+    new_bounds[e_max_x] = math::max(bounds[e_max_x], o_bounds[e_max_x]);
+    new_bounds[e_max_y] = math::max(bounds[e_max_y], o_bounds[e_max_y]);
 
     return new_bounds;
   }
@@ -180,24 +201,27 @@ class rectangle2D {
       const bounds_type<dscalar<algebra_t>> &bounds,
       const dscalar<algebra_t> env =
           std::numeric_limits<dscalar<algebra_t>>::epsilon()) const {
-    using scalar_t = dscalar<algebra_t>;
-
     assert(env > 0.f);
-    const scalar_t x_bound{bounds[e_half_x] + env};
-    const scalar_t y_bound{bounds[e_half_y] + env};
-    return {-x_bound, -y_bound, -env, x_bound, y_bound, env};
+    return {bounds[e_min_x] - env, bounds[e_min_y] - env, -env,
+            bounds[e_max_x] + env, bounds[e_max_y] + env, env};
   }
 
+  /// @param bounds the boundary values for this shape
+  ///
   /// @returns the shapes centroid in local cartesian coordinates
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE dpoint3D<algebra_t> centroid(
-      const bounds_type<dscalar<algebra_t>> & /*unused*/) const {
-    return {0.f, 0.f, 0.f};
+      const bounds_type<dscalar<algebra_t>> &bounds) const {
+    using scalar_t = dscalar<algebra_t>;
+
+    return {0.5f * (bounds[e_min_x] + bounds[e_max_x]),
+            0.5f * (bounds[e_min_y] + bounds[e_max_y]),
+            static_cast<scalar_t>(0.f)};
   }
 
   /// Generate vertices in local cartesian frame
   ///
-  /// @param bounds Half-widths of the rectangle.
+  /// @param bounds Corner positions of the rectangle.
   /// The second argument is unused because a rectangle always has four
   /// corners.
   ///
@@ -205,20 +229,19 @@ class rectangle2D {
   template <concepts::algebra algebra_t>
   DETRAY_HOST dvector<dpoint3D<algebra_t>> vertices(
       const bounds_type<dscalar<algebra_t>> &bounds, dindex /*ignored*/) const {
+    using scalar_t = dscalar<algebra_t>;
     using point3_t = dpoint3D<algebra_t>;
 
+    constexpr auto z{static_cast<scalar_t>(0.f)};
+
     // left hand lower corner
-    point3_t lh_lc{-bounds[e_half_x], -bounds[e_half_y],
-                   static_cast<dscalar<algebra_t>>(0.f)};
+    point3_t lh_lc{bounds[e_min_x], bounds[e_min_y], z};
     // right hand lower corner
-    point3_t rh_lc{bounds[e_half_x], -bounds[e_half_y],
-                   static_cast<dscalar<algebra_t>>(0.f)};
+    point3_t rh_lc{bounds[e_max_x], bounds[e_min_y], z};
     // right hand upper corner
-    point3_t rh_uc{bounds[e_half_x], bounds[e_half_y],
-                   static_cast<dscalar<algebra_t>>(0.f)};
+    point3_t rh_uc{bounds[e_max_x], bounds[e_max_y], z};
     // left hand upper corner
-    point3_t lh_uc{-bounds[e_half_x], bounds[e_half_y],
-                   static_cast<dscalar<algebra_t>>(0.f)};
+    point3_t lh_uc{bounds[e_min_x], bounds[e_max_y], z};
 
     // Return the confining vertices
     return {lh_lc, rh_lc, rh_uc, lh_uc};
@@ -234,9 +257,10 @@ class rectangle2D {
   DETRAY_HOST constexpr bool check_consistency(
       const bounds_type<scalar_t> &bounds, std::ostream &os) const {
     if (constexpr auto tol{10.f * std::numeric_limits<scalar_t>::epsilon()};
-        bounds[e_half_x] < tol || bounds[e_half_y] < tol) {
-      os << "DETRAY ERROR (HOST): Half lengths must be in the range (0, "
-            "numeric_max)"
+        (bounds[e_max_x] - bounds[e_min_x]) < tol ||
+        (bounds[e_max_y] - bounds[e_min_y]) < tol) {
+      os << "DETRAY ERROR (HOST): The upper corner must be larger than the "
+            "lower corner in x and y"
          << std::endl;
       return false;
     }

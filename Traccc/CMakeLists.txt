@@ -255,16 +255,36 @@ else()
         FALSE
         ACTS_USE_SYSTEM_VECMEM
     )
-    # Only the examples and oneDPL need TBB. Build it if it is not available.
-    traccc_set_from_acts(TRACCC_SETUP_TBB FALSE)
+    # Only the examples and oneDPL need TBB.
     if(TRACCC_BUILD_EXAMPLES OR TRACCC_BUILD_SYCL_UTILS)
-        find_package(TBB ${_acts_tbb_version} CONFIG)
-        if(NOT TBB_FOUND)
-            traccc_set_from_acts(TRACCC_SETUP_TBB TRUE)
-        endif()
+        traccc_set_from_acts(TRACCC_SETUP_TBB TRUE)
+    else()
+        traccc_set_from_acts(TRACCC_SETUP_TBB FALSE)
     endif()
-    traccc_set_from_acts(TRACCC_USE_SYSTEM_TBB FALSE)
-    traccc_set_from_acts(TRACCC_SETUP_THRUST TRUE)
+    traccc_set_from_acts(
+        TRACCC_USE_SYSTEM_TBB
+        "${ACTS_USE_SYSTEM_TBB}"
+        ACTS_USE_SYSTEM_TBB
+    )
+    traccc_set_from_acts(
+        TRACCC_SETUP_THRUST
+        "${ACTS_SETUP_THRUST}"
+        ACTS_SETUP_THRUST
+    )
+    # The CCCL of the CUDA toolkit is always used if the toolkit is found.
+    if(ACTS_USE_SYSTEM_THRUST OR CUDAToolkit_FOUND)
+        traccc_set_from_acts(
+            TRACCC_USE_SYSTEM_THRUST
+            TRUE
+            "ACTS_USE_SYSTEM_THRUST and ACTS_ENABLE_CUDA"
+        )
+    else()
+        traccc_set_from_acts(
+            TRACCC_USE_SYSTEM_THRUST
+            FALSE
+            "ACTS_USE_SYSTEM_THRUST and ACTS_ENABLE_CUDA"
+        )
+    endif()
     # rocThrust is needed for HIP on AMD, and is taken from the ROCm installation.
     if(
         (TRACCC_BUILD_HIP AND NOT "${CMAKE_HIP_PLATFORM}" STREQUAL "nvidia")
@@ -274,9 +294,17 @@ else()
     else()
         traccc_set_from_acts(TRACCC_SETUP_ROCTHRUST FALSE)
     endif()
-    traccc_set_from_acts(TRACCC_USE_SYSTEM_ROCTHRUST TRUE)
+    traccc_set_from_acts(
+        TRACCC_USE_SYSTEM_ROCTHRUST
+        "${ACTS_USE_SYSTEM_ROCTHRUST}"
+        ACTS_USE_SYSTEM_ROCTHRUST
+    )
     traccc_set_from_acts(TRACCC_SETUP_DPL "${TRACCC_BUILD_SYCL_UTILS}")
-    traccc_set_from_acts(TRACCC_USE_SYSTEM_DPL FALSE)
+    traccc_set_from_acts(
+        TRACCC_USE_SYSTEM_DPL
+        "${ACTS_USE_SYSTEM_DPL}"
+        ACTS_USE_SYSTEM_DPL
+    )
     traccc_set_from_acts(
         TRACCC_SETUP_ALPAKA
         "${TRACCC_BUILD_ALPAKA}"
@@ -299,7 +327,11 @@ else()
         "${TRACCC_BUILD_TESTING}"
         ACTS_TRACCC_BUILD_TESTS
     )
-    traccc_set_from_acts(TRACCC_USE_SYSTEM_GOOGLETEST FALSE)
+    traccc_set_from_acts(
+        TRACCC_USE_SYSTEM_GOOGLETEST
+        "${ACTS_USE_SYSTEM_GOOGLETEST}"
+        ACTS_USE_SYSTEM_GOOGLETEST
+    )
 endif()
 
 # Include the traccc CMake code.

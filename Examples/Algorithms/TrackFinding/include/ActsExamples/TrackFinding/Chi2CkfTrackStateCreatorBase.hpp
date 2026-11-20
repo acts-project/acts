@@ -11,6 +11,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/TrackFinding/CkfTrackStateCreatorBase.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
+#include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -18,6 +19,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <limits>
@@ -42,6 +44,10 @@ struct TrackStateSelectionCuts {
   double chi2CutOffOutlier = 25;
   /// Maximum number of branches created on a single surface
   std::size_t maxBranchesPerSurface = 1;
+  /// If true, the chi2 cuts are the cuts for one-dimensional measurements. A
+  /// measurement of dimension D uses the chi2 value with the same p-value for D
+  /// degrees of freedom, see @ref Acts::MeasurementSelectorCuts.
+  bool chi2CutPerDimension = false;
 };
 
 /// Creates track states directly from the measurement container, i.e. without
@@ -63,8 +69,21 @@ class Chi2CkfTrackStateCreatorBase
   /// Type alias for the per surface state object
   using State = typename Base::State;
 
+  Chi2CkfTrackStateCreatorBase() { setCuts({}); }
+
+  /// Set the selection cuts
+  /// @param cuts the selection cuts
+  void setCuts(const TrackStateSelectionCuts& cuts) {
+    m_cuts = cuts;
+    m_chi2CutMeasurement = Acts::detail::chi2CutPerDimension(
+        cuts.chi2CutOffMeasurement, cuts.chi2CutPerDimension);
+    m_chi2CutOutlier = Acts::detail::chi2CutPerDimension(
+        cuts.chi2CutOffOutlier, cuts.chi2CutPerDimension);
+  }
+
   /// The selection cuts
-  TrackStateSelectionCuts cuts;
+  /// @return the selection cuts
+  const TrackStateSelectionCuts& cuts() const { return m_cuts; }
 
   /// The uncalibrated source link of a measurement.
   ///
@@ -122,9 +141,9 @@ class Chi2CkfTrackStateCreatorBase
   template <typename range_t, typename candidates_t>
   Acts::Result<void> selectMeasurements(const State& state, range_t&& range,
                                         candidates_t& candidates) const {
-    const Acts::Logger& logger = *state.logger;
+    const Acts::Logger& logger = state.logger;
 
-    if (cuts.maxBranchesPerSurface == 0ul) {
+    if (m_cuts.maxBranchesPerSurface == 0ul) {
       return Acts::CombinatorialKalmanFilterError::MeasurementSelectionFailed;
     }
 
@@ -148,10 +167,13 @@ class Chi2CkfTrackStateCreatorBase
     // candidates at the front which do satisfy it.
     double minChi2 = std::numeric_limits<double>::max();
     std::size_t minIndex = std::numeric_limits<std::size_t>::max();
+    std::size_t minSize = 0ul;
     std::size_t passedCandidates = 0ul;
     for (std::size_t i = 0ul; i < candidates.size(); ++i) {
-      const double chi2 = derived().calculatePredictedChi2(
-          state, derived().calibrate(state, candidates[i].measurement));
+      const auto calibrated =
+          derived().calibrate(state, candidates[i].measurement);
+      const std::size_t size = calibrated.size();
+      const double chi2 = derived().calculatePredictedChi2(state, calibrated);
       candidates[i].chi2 = chi2;
 
       // A diverging prediction can give a non-finite chi2. Every comparison
@@ -166,9 +188,10 @@ class Chi2CkfTrackStateCreatorBase
       if (chi2 < minChi2) {
         minChi2 = chi2;
         minIndex = i;
+        minSize = size;
       }
 
-      if (chi2 >= cuts.chi2CutOffMeasurement) {
+      if (chi2 >= m_chi2CutMeasurement[size]) {
         continue;
       }
 
@@ -183,7 +206,7 @@ class Chi2CkfTrackStateCreatorBase
 
     if (passedCandidates == 0ul) {
       // minIndex stays unset if every candidate is rejected above
-      if (minIndex < candidates.size() && minChi2 < cuts.chi2CutOffOutlier) {
+      if (minIndex < candidates.size() && minChi2 < m_chi2CutOutlier[minSize]) {
         ACTS_VERBOSE(
             "No measurement candidate. Create an outlier measurement chi2="
             << minChi2);
@@ -208,10 +231,10 @@ class Chi2CkfTrackStateCreatorBase
 
     ACTS_VERBOSE("Number of selected measurements: "
                  << passedCandidates
-                 << ", max: " << cuts.maxBranchesPerSurface);
+                 << ", max: " << m_cuts.maxBranchesPerSurface);
 
-    candidates.erase(candidates.begin() +
-                         std::min(cuts.maxBranchesPerSurface, passedCandidates),
+    candidates.erase(candidates.begin() + std::min(m_cuts.maxBranchesPerSurface,
+                                                   passedCandidates),
                      candidates.end());
     return Acts::Result<void>::success();
   }
@@ -221,6 +244,13 @@ class Chi2CkfTrackStateCreatorBase
   using Base::derived;
 
  private:
+  /// Chi2 cut for each measurement dimension, index 0 is not used
+  using Chi2CutPerDimension = std::array<double, Acts::kMeasurementSizeMax + 1>;
+
+  TrackStateSelectionCuts m_cuts;
+  Chi2CutPerDimension m_chi2CutMeasurement{};
+  Chi2CutPerDimension m_chi2CutOutlier{};
+
   /// Reduce the candidates to the single one at @p index.
   template <typename candidates_t>
   static void keepOnly(candidates_t& candidates, std::size_t index) {

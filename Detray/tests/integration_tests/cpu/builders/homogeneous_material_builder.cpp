@@ -87,13 +87,13 @@ detector_t build_detector(vecmem::memory_resource &mr,
 
     hom_factory->push_back({surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, -20.f}), vol_link,
-                            std::vector<scalar>{10.f, 10.f}});
+                            std::vector<scalar>{-10.f, -10.f, 10.f, 10.f}});
     hom_factory->add_material(mat_id::e_material_slab,
                               {1.f * unit<scalar>::mm, silicon<scalar>()});
 
     hom_factory->push_back({surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, -10.f}), vol_link,
-                            std::vector<scalar>{10.f, 10.f}});
+                            std::vector<scalar>{-10.f, -10.f, 10.f, 10.f}});
     hom_factory->add_material(
         mat_id::e_material_slab,
         {(1.f + static_cast<scalar>(v_idx)) * unit<scalar>::mm,
@@ -170,13 +170,13 @@ GTEST_TEST(detray_builders, decorator_homogeneous_material_builder) {
   typename rectangle_factory::sf_data_collection rect_sf_data;
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, -10.f}), 0u,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, -20.f}), 0u,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, -30.f}), 0u,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_factory->push_back(std::move(rect_sf_data));
 
   auto trpz_factory = std::make_unique<trapezoid_factory>();
@@ -292,7 +292,7 @@ GTEST_TEST(detray_builders, homogeneous_material_on_sparse_surfaces) {
       dummy_sf_data.emplace_back(
           surface_id::e_sensitive,
           transform3(point3{0.f, 0.f, 10.f * static_cast<scalar>(i)}), 0u,
-          std::vector<scalar>{10.f, 8.f});
+          std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
     }
     dummy_factory->push_back(std::move(dummy_sf_data));
     dummy_mat_builder.add_surfaces(dummy_factory, geo_ctx);
@@ -321,7 +321,7 @@ GTEST_TEST(detray_builders, homogeneous_material_on_sparse_surfaces) {
     rect_sf_data.emplace_back(
         surface_id::e_sensitive,
         transform3(point3{0.f, 0.f, -10.f * static_cast<scalar>(i)}), 0u,
-        std::vector<scalar>{10.f, 8.f});
+        std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   }
   rect_factory->push_back(std::move(rect_sf_data));
   mat_builder.add_surfaces(rect_factory, geo_ctx);

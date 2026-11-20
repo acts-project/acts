@@ -43,21 +43,21 @@ class CustomTrackStateCreator final
   auto measurementRange(const State& state) const {
     const auto& logger = *loggerPtr;
 
-    if (protoTrackSourceLinks.contains(state.surface->geometryId())) {
+    if (protoTrackSourceLinks.contains(state.surface().geometryId())) {
       auto [begin, end] =
-          protoTrackSourceLinks.equal_range(state.surface->geometryId());
+          protoTrackSourceLinks.equal_range(state.surface().geometryId());
       ACTS_VERBOSE("Select " << std::distance(begin, end)
                              << " source-links from proto track on "
-                             << state.surface->geometryId());
+                             << state.surface().geometryId());
       return std::ranges::subrange(begin, end);
     }
 
     assert(measurements != nullptr);
-    auto [begin, end] =
-        measurements->orderedIndices().equal_range(state.surface->geometryId());
+    auto [begin, end] = measurements->orderedIndices().equal_range(
+        state.surface().geometryId());
     ACTS_VERBOSE("Select " << std::distance(begin, end)
                            << " source-links from collection on "
-                           << state.surface->geometryId());
+                           << state.surface().geometryId());
     return std::ranges::subrange(begin, end);
   }
 
@@ -104,12 +104,12 @@ ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
   CustomTrackStateCreator trackStateCreator;
   trackStateCreator.loggerPtr = logger().clone("TrackStateCreator");
   trackStateCreator.measurements = &measurements;
-  trackStateCreator.cuts = m_cfg.trackStateSelection;
+  trackStateCreator.setCuts(m_cfg.trackStateSelection);
 
   CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
   extensions.updater.connect<&GainMatrixUpdater::operator()<
       typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
-  extensions.trackStateCreator
+  extensions.createTrackStates
       .template connect<&CustomTrackStateCreator::createTrackStates>(
           &trackStateCreator);
 

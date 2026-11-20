@@ -123,6 +123,7 @@ class VoidNavigator {
       State& state, const NavigatorInitializeArguments& args) const {
     state.targetSurface = args.targetSurface;
     state.currentSurface = nullptr;
+    state.statistics = {};
 
     state.additional.initialize(state.options, args.targetSurface);
     return Result<void>::success();

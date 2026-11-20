@@ -8,15 +8,17 @@
 
 #pragma once
 
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <functional>
 #include <vector>
 
 namespace Acts {
@@ -34,34 +36,38 @@ static constexpr std::size_t s_maxBranchesPerSurface = 10;
 template <typename T>
 using BranchVector = boost::container::small_vector<T, s_maxBranchesPerSurface>;
 
-using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+/// The predicted state of the trajectory on a surface
+struct BoundState {
+  /// The predicted bound parameters, including their reference surface
+  BoundTrackParameters parameters;
+  /// The jacobian from the previous track state to this surface
+  BoundMatrix jacobian;
+  /// The path length accumulated up to this surface
+  double pathLength{};
+};
 
 /// The arguments of the track state creation on one surface.
 ///
-/// Only the CKF makes this object. It can get more fields without a change to
-/// the signature of the track state creator delegate.
+/// Only the CKF makes this object, so it can get more fields without a change
+/// of the track state creator signature.
 ///
-/// @tparam track_container_t the track container used by the track finder
-template <typename track_container_t>
+/// @note It borrows everything it refers to for the duration of one call of
+///       the track state creator. Do not store it.
+///
+/// @tparam traj_t the track state container backend
+template <typename traj_t>
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 struct TrackStateCreatorArguments {
-  /// Type alias for the track state container backend
-  using TrackStateContainerBackend =
-      typename track_container_t::TrackStateContainerBackend;
-
   /// The current geometry context
-  const GeometryContext* geoContext{};
+  std::reference_wrapper<const GeometryContext> geoContext;
   /// The current calibration context
-  const CalibrationContext* calibrationContext{};
-  /// The surface the trajectory is being extended onto
-  const Surface* surface{};
-  /// The predicted bound state on @ref surface
-  const BoundState* boundState{};
-  /// The tip of the trajectory which is being extended
-  TrackIndexType prevTip{kTrackIndexInvalid};
-  /// The trajectory new track states are added to
-  TrackStateContainerBackend* trajectory{};
-  /// A logger for messages
-  const Logger* logger{};
+  std::reference_wrapper<const CalibrationContext> calibrationContext;
+  /// The predicted state on the surface the trajectory is extended onto
+  std::reference_wrapper<const BoundState> boundState;
+  /// The tip of the trajectory which is extended
+  TrackIndexType prevTip{};
+  /// The trajectory the new track states are added to
+  std::reference_wrapper<traj_t> trajectory;
 };
 
 }  // namespace CkfTypes
@@ -73,10 +79,6 @@ enum class CombinatorialKalmanFilterBranchStopperResult {
   StopAndDrop,
   StopAndKeep,
 };
-
-// The implicit special members copy the deprecated `createTrackStates`, which
-// GCC reports at the struct itself. Uses of the member still warn.
-ACTS_PUSH_IGNORE_DEPRECATED()
 
 /// Extension struct which holds the delegates to customize the CKF behavior
 template <typename track_container_t>
@@ -103,65 +105,35 @@ struct CombinatorialKalmanFilterExtensions {
   /// The branch stopper is called during the filtering by the Actor.
   BranchStopper branchStopper{DelegateFuncTag<voidBranchStopper>{}};
 
-  /// @brief Delegate the extension of the trajectory onto the given surface to
-  ///        an external unit.
+  /// @brief Delegate the extension of the trajectory onto the surface of
+  ///        `args.boundState` to an external unit.
   ///
-  /// @note Expected to create track states for measurements associated to the
-  ///       given surface which match the given bound state. Moreover the
-  ///       The "filtered" data is not expected to be set, but the outlier
-  ///       flag should be set for states that are considered to be outlier.
+  /// @note Expected to create track states for measurements on that surface
+  ///       which match the predicted state. The "filtered" data is not
+  ///       expected to be set, but the outlier flag should be set for states
+  ///       that are considered to be outlier. A track state may have its own
+  ///       predicted parameters instead of sharing them.
   ///
-  /// @param geoContext The current geometry context
-  /// @param calibrationContext pointer to the current calibration context
-  /// @param surface the surface at which new track states are to be created
-  /// @param boundState the current bound state of the trajectory
-  /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
-  /// @param trackStateCandidates a temporary buffer that can be used to collect track states
-  /// @param trajectory the trajectory to which the new states are to be added
+  /// @param args the predicted state, the trajectory to extend, and the
+  ///        contexts
   /// @param logger a logger for messages
-  /// @return indices of new track states which extend the trajectory given by prevTip
-
-  using TrackStateCreator =
-      Delegate<Result<CkfTypes::BranchVector<TrackIndexType>>(
-          const GeometryContext& geoContext,
-          const CalibrationContext& calibrationContext, const Surface& surface,
-          const CkfTypes::BoundState& boundState, TrackIndexType prevTip,
-          std::vector<TrackStateProxy>& trackStateCandidates,
-          traj_t& trajectory, const Logger& logger)>;
-
-  /// The delegate to create new track states.
-  /// @deprecated Connect @ref trackStateCreator instead. This variant only
-  ///   exists so that clients with their own implementation of this signature
-  ///   keep working; it hands out a scratch buffer for temporary track states,
-  ///   which a creator that does not push all measurements through the track
-  ///   EDM has no use for.
-  [[deprecated(
-      "Connect `trackStateCreator` to a class derived from "
-      "Acts::CkfTrackStateCreatorBase instead")]]
-  TrackStateCreator createTrackStates;
-
-  /// @brief Delegate the extension of the trajectory onto the given surface to
-  ///        an external unit.
-  ///
-  /// Same contract as @ref TrackStateCreator, but without the scratch buffer
-  /// for temporary track states. All arguments are in one struct, so that the
-  /// CKF can pass more of them later without a break of the implementations.
-  ///
-  /// @param args the surface, the predicted bound state, the trajectory to
-  ///        extend, and the contexts
   /// @return indices of new track states which extend the trajectory given by
-  ///         `args.prevTip`. Each of them must be a measurement or an outlier,
+  ///         `args.prevTip`. Each one must be a measurement or an outlier,
   ///         otherwise the CKF fails with
   ///         @ref CombinatorialKalmanFilterError::UnsupportedTrackState. An
-  ///         empty list means that the CKF creates a hole.
-  using TrackStateCreatorDelegate =
+  ///         empty list means that the CKF creates a hole, the error
+  ///         @ref CombinatorialKalmanFilterError::NoMeasurementExpected that it
+  ///         creates a state without an expected measurement.
+  using TrackStateCreator =
       Delegate<Result<CkfTypes::BranchVector<TrackIndexType>>(
-          const CkfTypes::TrackStateCreatorArguments<track_container_t>& args)>;
+          const CkfTypes::TrackStateCreatorArguments<traj_t>& args,
+          const Logger& logger)>;
 
   /// The delegate to create new track states.
-  /// @note derive from @ref CkfTrackStateCreatorBase to implement one
-  /// @note exactly one of this and @ref createTrackStates has to be connected
-  TrackStateCreatorDelegate trackStateCreator;
+  /// @note derive from @ref CkfTrackStateCreatorBase to implement one. A
+  ///   reference implementation on the track EDM is @ref TrackStateCreator,
+  ///   which makes use of @ref MeasurementSelector and SourceLinkAccessor
+  TrackStateCreator createTrackStates;
 
   // The following options are only relevant if a multi stepper is used
 
@@ -180,8 +152,6 @@ struct CombinatorialKalmanFilterExtensions {
     return BranchStopperResult::Continue;
   }
 };
-
-ACTS_POP_IGNORE_DEPRECATED()
 
 /// @}
 
