@@ -10,8 +10,8 @@
 
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 
+#include <filesystem>
 #include <memory>
-#include <string>
 
 namespace ActsExamples {
 

@@ -17,17 +17,18 @@
 namespace ActsExamples {
 
 std::shared_ptr<GeometryIdMapActsAthena> readCsvGeometryIdMap(
-    const std::string& path) {
+    const std::filesystem::path& path) {
   auto map = std::make_shared<GeometryIdMapActsAthena>();
 
-  BoostDescribeCsvReader<GeometryIdMapData> reader(path);
+  BoostDescribeCsvReader<GeometryIdMapData> reader(path.string());
   GeometryIdMapData data;
   while (reader.read(data)) {
     const bool inserted =
         map->insert({data.athena_id, Acts::GeometryIdentifier(data.acts_id)})
             .second;
     if (!inserted) {
-      throw std::runtime_error("Duplicate geometry identifier in " + path);
+      throw std::runtime_error("Duplicate geometry identifier in " +
+                               path.string());
     }
   }
 
