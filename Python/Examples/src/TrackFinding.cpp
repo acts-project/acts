@@ -100,7 +100,7 @@ void addTrackFinding(py::module& mex) {
         reverseSearchMinR, reverseSearchMinAbsZ, inwardOnlyMinR,
         inwardOnlyMinAbsZ, seedDeduplication, seedDeduplicatorCfg, stayOnSeed,
         pixelVolumeIds, stripVolumeIds, maxPixelHoles, maxStripHoles,
-        trimTracks, recordMaterialStates, useJosephFormulation,
+        trimTracks, recordMaterialStates, useJosephFormulation, scatteringTail,
         constrainToVolumeIds, endOfWorldVolumeIds);
   }
 }

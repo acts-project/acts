@@ -130,6 +130,30 @@ Selection selectSingle(const MeasurementSelector& selector, double chi2) {
 
 }  // namespace
 
+/// A candidate beyond the cuts of the core is selected with a wide tail.
+BOOST_AUTO_TEST_CASE(SelectWithScatteringTail) {
+  MeasurementSelectorCuts cuts;
+  cuts.chi2CutOff = {15};
+  cuts.chi2CutOffOutlier = {25};
+  MeasurementSelector selector{cuts};
+  auto logger = getDefaultLogger("MeasurementSelector", Logging::INFO);
+  auto surface = makeSurface();
+
+  VectorMultiTrajectory traj;
+  std::vector<VectorMultiTrajectory::TrackStateProxy> candidates{
+      addCandidateWithChi2<1>(traj, surface, 30)};
+  ScatteringTailPrior tail{.weight = 0.02};
+  tail.covariance(eBoundLoc0, eBoundLoc0) = 100;
+
+  bool isOutlier = false;
+  auto result = selector.selectWithTail<VectorMultiTrajectory>(
+      candidates, tail, isOutlier, *logger);
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(result->second - result->first, 1);
+  BOOST_CHECK(!isOutlier);
+  BOOST_CHECK_LT(candidates.front().chi2(), 15);
+}
+
 /// Without the per dimension flag every dimension uses the same chi2 cut.
 BOOST_AUTO_TEST_CASE(Chi2CutSameForAllDimensions) {
   MeasurementSelectorCuts cuts;

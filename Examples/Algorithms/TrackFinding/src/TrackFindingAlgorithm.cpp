@@ -80,24 +80,39 @@ class MeasurementSelector {
                          std::vector<Traj::TrackStateProxy>::iterator>>
   select(std::vector<Traj::TrackStateProxy>& candidates, bool& isOutlier,
          const Acts::Logger& logger) const {
-    if (!m_seedIndices.empty()) {
-      // the selector sorts by chi2 anyway, so partitioning in place is enough
-      auto rest = std::partition(
-          candidates.begin(), candidates.end(),
-          [this](const auto& candidate) { return isSeedCandidate(candidate); });
-      if (rest != candidates.begin()) {
-        candidates.erase(rest, candidates.end());
-      }
-    }
-
+    keepSeedCandidates(candidates);
     return m_selector.select<Acts::VectorMultiTrajectory>(candidates, isOutlier,
                                                           logger);
+  }
+
+  Acts::Result<std::pair<std::vector<Traj::TrackStateProxy>::iterator,
+                         std::vector<Traj::TrackStateProxy>::iterator>>
+  selectWithTail(std::vector<Traj::TrackStateProxy>& candidates,
+                 const Acts::ScatteringTailPrior& scatteringTail,
+                 bool& isOutlier, const Acts::Logger& logger) const {
+    keepSeedCandidates(candidates);
+    return m_selector.selectWithTail<Acts::VectorMultiTrajectory>(
+        candidates, scatteringTail, isOutlier, logger);
   }
 
  private:
   Acts::MeasurementSelector m_selector;
   /// measurement indices of the current seed, at most a handful
   std::vector<Index> m_seedIndices;
+
+  void keepSeedCandidates(
+      std::vector<Traj::TrackStateProxy>& candidates) const {
+    if (m_seedIndices.empty()) {
+      return;
+    }
+    // the selector sorts by chi2 anyway, so partitioning in place is enough
+    auto rest = std::partition(
+        candidates.begin(), candidates.end(),
+        [this](const auto& candidate) { return isSeedCandidate(candidate); });
+    if (rest != candidates.begin()) {
+      candidates.erase(rest, candidates.end());
+    }
+  }
 
   bool isSeedCandidate(const Traj::TrackStateProxy& candidate) const {
     assert(candidate.hasUncalibratedSourceLink());
@@ -391,6 +406,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       .template connect<&MeasurementCalibratorAdapter::calibrate>(&calibrator);
   trackStateCreator.measurementSelector
       .template connect<&MeasurementSelector::select>(&measSel);
+  trackStateCreator.measurementSelectorWithTail
+      .template connect<&MeasurementSelector::selectWithTail>(&measSel);
 
   Extensions extensions;
   extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
@@ -420,6 +437,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     options.targetSurface = toPerigee ? pSurface.get() : nullptr;
     options.skipPrePropagationUpdate = secondPass;
     options.recordMaterialStates = m_cfg.recordMaterialStates;
+    if (m_cfg.scatteringTail) {
+      options.scatteringTailModel
+          .template connect<&Acts::siliconScatteringTail>();
+    }
     options.betheHeitlerApprox = betheHeitlerApprox;
     return options;
   };
