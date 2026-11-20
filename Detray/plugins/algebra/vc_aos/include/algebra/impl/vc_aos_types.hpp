@@ -11,10 +11,10 @@
 // Project include(s).
 #include "algebra/impl/vc_aos_approximately_equal.hpp"
 #include "algebra/impl/vc_aos_concepts.hpp"
-#include "detray/algebra/common/matrix.hpp"
-#include "detray/algebra/common/matrix_getter.hpp"
-#include "detray/algebra/common/transform3.hpp"
-#include "detray/algebra/common/vector.hpp"
+#include "detray/algebra/common/impl/storage_getter.hpp"
+#include "detray/algebra/common/impl/storage_matrix.hpp"
+#include "detray/algebra/common/impl/storage_transform3.hpp"
+#include "detray/algebra/common/impl/storage_vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/type_traits.hpp"
 

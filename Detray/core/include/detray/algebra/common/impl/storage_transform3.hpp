@@ -9,10 +9,10 @@
 #pragma once
 
 // Project include(s).
+#include "detray/algebra/common/impl/storage_getter.hpp"
+#include "detray/algebra/common/impl/storage_matrix.hpp"
+#include "detray/algebra/common/impl/storage_vector.hpp"
 #include "detray/algebra/common/math.hpp"
-#include "detray/algebra/common/matrix.hpp"
-#include "detray/algebra/common/matrix_getter.hpp"
-#include "detray/algebra/common/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/type_traits.hpp"
 #include "detray/algebra/utils/approximately_equal.hpp"

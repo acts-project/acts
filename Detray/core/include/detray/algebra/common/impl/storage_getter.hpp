@@ -8,8 +8,8 @@
 #pragma once
 
 // Project include(s).
-#include "detray/algebra/common/matrix.hpp"
-#include "detray/algebra/common/vector.hpp"
+#include "detray/algebra/common/impl/storage_matrix.hpp"
+#include "detray/algebra/common/impl/storage_vector.hpp"
 #include "detray/algebra/concepts.hpp"
 
 // System include(s).

@@ -9,7 +9,7 @@
 #pragma once
 
 // Project include(s).
-#include "detray/algebra/common/matrix.hpp"
+#include "detray/algebra/common/impl/storage_matrix.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/generic/generic.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
