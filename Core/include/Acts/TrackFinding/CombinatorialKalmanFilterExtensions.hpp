@@ -47,23 +47,56 @@ struct BoundState {
 /// The arguments of the track state creation on one surface.
 ///
 /// Only the CKF makes this object, so it can get more fields without a change
-/// of the track state creator signature. Every pointer is non-null.
+/// of the track state creator signature.
+///
+/// @note It borrows everything it refers to for the duration of one call of
+///       the track state creator. Do not store it.
 ///
 /// @tparam traj_t the track state container backend
 template <typename traj_t>
-struct TrackStateCreatorArguments {
-  /// The current geometry context
-  const GeometryContext* geoContext{};
-  /// The current calibration context
-  const CalibrationContext* calibrationContext{};
-  /// The predicted state on the surface the trajectory is extended onto
-  const BoundState* boundState{};
-  /// The tip of the trajectory which is extended
-  TrackIndexType prevTip{kTrackIndexInvalid};
-  /// The trajectory the new track states are added to
-  traj_t* trajectory{};
-  /// A logger for messages
-  const Logger* logger{};
+class TrackStateCreatorArguments {
+ public:
+  /// @param geoContext the current geometry context
+  /// @param calibrationContext the current calibration context
+  /// @param boundState the predicted state on the surface the trajectory is
+  ///        extended onto
+  /// @param prevTip the tip of the trajectory which is extended
+  /// @param trajectory the trajectory the new track states are added to
+  /// @param logger a logger for messages
+  TrackStateCreatorArguments(const GeometryContext& geoContext,
+                             const CalibrationContext& calibrationContext,
+                             const BoundState& boundState,
+                             TrackIndexType prevTip, traj_t& trajectory,
+                             const Logger& logger)
+      : m_geoContext(&geoContext),
+        m_calibrationContext(&calibrationContext),
+        m_boundState(&boundState),
+        m_prevTip(prevTip),
+        m_trajectory(&trajectory),
+        m_logger(&logger) {}
+
+  /// @return the current geometry context
+  const GeometryContext& geoContext() const { return *m_geoContext; }
+  /// @return the current calibration context
+  const CalibrationContext& calibrationContext() const {
+    return *m_calibrationContext;
+  }
+  /// @return the predicted state on the surface the trajectory is extended onto
+  const BoundState& boundState() const { return *m_boundState; }
+  /// @return the tip of the trajectory which is extended
+  TrackIndexType prevTip() const { return m_prevTip; }
+  /// @return the trajectory the new track states are added to
+  traj_t& trajectory() const { return *m_trajectory; }
+  /// @return a logger for messages
+  const Logger& logger() const { return *m_logger; }
+
+ private:
+  const GeometryContext* m_geoContext;
+  const CalibrationContext* m_calibrationContext;
+  const BoundState* m_boundState;
+  TrackIndexType m_prevTip;
+  traj_t* m_trajectory;
+  const Logger* m_logger;
 };
 
 }  // namespace CkfTypes
@@ -102,7 +135,7 @@ struct CombinatorialKalmanFilterExtensions {
   BranchStopper branchStopper{DelegateFuncTag<voidBranchStopper>{}};
 
   /// @brief Delegate the extension of the trajectory onto the surface of
-  ///        `args.boundState` to an external unit.
+  ///        `args.boundState()` to an external unit.
   ///
   /// @note Expected to create track states for measurements on that surface
   ///       which match the predicted state. The "filtered" data is not
@@ -113,7 +146,7 @@ struct CombinatorialKalmanFilterExtensions {
   /// @param args the predicted state, the trajectory to extend, and the
   ///        contexts
   /// @return indices of new track states which extend the trajectory given by
-  ///         `args.prevTip`. Each one must be a measurement or an outlier,
+  ///         `args.prevTip()`. Each one must be a measurement or an outlier,
   ///         otherwise the CKF fails with
   ///         @ref CombinatorialKalmanFilterError::UnsupportedTrackState. An
   ///         empty list means that the CKF creates a hole, the error
