@@ -203,6 +203,10 @@ class GraphBasedTrackSeeder {
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
+  /// The level a chain needs to be a seed, for
+  /// `GbtsGraphBuilder::Config::pruneShortChains`.
+  std::uint32_t m_minEdgeLevel{};
+
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
 

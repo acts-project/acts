@@ -43,6 +43,12 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
         "GraphBasedTrackSeeder: the cluster width cuts need a tau lookup "
         "table");
   }
+
+  // A seed's chain needs minSeedLevel edges, less what addTriplets may take
+  // off, and at least two, a seed having three space points.
+  const std::uint32_t allowance = m_cfg.addTriplets ? 1 : 0;
+  m_minEdgeLevel =
+      std::max<std::uint32_t>(m_cfg.minSeedLevel, allowance + 2) - allowance;
 }
 
 GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
@@ -85,8 +91,8 @@ void GraphBasedTrackSeeder::createSeeds(
     std::vector<std::optional<GbtsSeedFit>>* outputFits) const {
   ACTS_DEBUG("Loaded " << nodeStorage.numberOfNodes() << " graph nodes");
 
-  GbtsGraph graph =
-      graphBuilder.buildTheGraph(roi, nodeStorage, options.bFieldInZ);
+  GbtsGraph graph = graphBuilder.buildTheGraph(
+      roi, nodeStorage, options.bFieldInZ, m_minEdgeLevel);
 
   ACTS_DEBUG("Created graph with " << graph.edgeStorage.size() << " edges and "
                                    << graph.neighbours.size() << " edge links");
