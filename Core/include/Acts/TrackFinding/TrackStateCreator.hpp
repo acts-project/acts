@@ -102,7 +102,7 @@ struct TrackStateCreator {
   /// "filtered" data.
   Result<CkfTypes::BranchVector<TrackIndexType>> createTrackStates(
       const Arguments& args) const {
-    const Surface& surface = args.boundState().parameters.referenceSurface();
+    const Surface& surface = args.surface();
     TrackStatesResult tsRes = TrackStatesResult::success({});
     using SourceLinkRange = decltype(sourceLinkAccessor(surface));
     SourceLinkRange slRange = sourceLinkAccessor(surface);

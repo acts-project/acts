@@ -11,12 +11,14 @@
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <cassert>
 #include <vector>
 
 namespace Acts {
@@ -83,6 +85,28 @@ class TrackStateCreatorArguments {
   }
   /// @return the predicted state on the surface the trajectory is extended onto
   const BoundState& boundState() const { return *m_boundState; }
+  /// @return the surface the trajectory is extended onto
+  const Surface& surface() const {
+    return boundParameters().referenceSurface();
+  }
+  /// @return the predicted bound parameters
+  const BoundTrackParameters& boundParameters() const {
+    return m_boundState->parameters;
+  }
+  /// @return the predicted parameter vector
+  const BoundVector& predicted() const {
+    return boundParameters().parameters();
+  }
+  /// @return the predicted parameter covariance
+  const BoundMatrix& predictedCovariance() const {
+    assert(boundParameters().covariance().has_value() &&
+           "Track state creation requires a predicted covariance");
+    return *boundParameters().covariance();
+  }
+  /// @return the jacobian from the previous track state to the surface
+  const BoundMatrix& jacobian() const { return m_boundState->jacobian; }
+  /// @return the path length accumulated up to the surface
+  double pathLength() const { return m_boundState->pathLength; }
   /// @return the tip of the trajectory which is extended
   TrackIndexType prevTip() const { return m_prevTip; }
   /// @return the trajectory the new track states are added to
