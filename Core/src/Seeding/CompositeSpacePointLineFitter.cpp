@@ -8,6 +8,10 @@
 
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 
+#include <optional>
+
+#include <Eigen/Cholesky>
+
 namespace Acts::Experimental {
 
 CompositeSpacePointLineFitter::CompositeSpacePointLineFitter(
@@ -69,6 +73,70 @@ bool CompositeSpacePointLineFitter::withinRange(
   return std::ranges::all_of(parsToUse, [&](const FitParIndex par) {
     return withinRange(pars[toUnderlying(par)], par);
   });
+}
+
+bool CompositeSpacePointLineFitter::evaluateCovariance(
+    const CovMat_t& gaussNewtonHessian, std::vector<FitParIndex> parsToUse,
+    CovMat_t& covariance) const {
+  using DynMat_t = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, 0,
+                                 s_nPars, s_nPars>;
+  /// Returns 2 H^-1 of the Hessian block of the given parameters, or
+  /// std::nullopt if the block is not positive definite. The block is
+  /// normalized to unit diagonal before the inversion, as its entries span
+  /// many orders of magnitude (the time entries are tiny compared to the
+  /// angular ones)
+  auto invertBlock =
+      [&gaussNewtonHessian](
+          const std::vector<FitParIndex>& pars) -> std::optional<DynMat_t> {
+    DynMat_t block(pars.size(), pars.size());
+    for (std::size_t i = 0; i < pars.size(); ++i) {
+      for (std::size_t j = 0; j < pars.size(); ++j) {
+        block(i, j) =
+            gaussNewtonHessian(toUnderlying(pars[i]), toUnderlying(pars[j]));
+      }
+    }
+    if ((block.diagonal().array() <= 0.).any()) {
+      return std::nullopt;
+    }
+    const auto scale = block.diagonal().cwiseSqrt().cwiseInverse().eval();
+    block = scale.asDiagonal() * block * scale.asDiagonal();
+    Eigen::LLT<DynMat_t> llt{block};
+    if (llt.info() != Eigen::Success) {
+      return std::nullopt;
+    }
+    return DynMat_t{2. * scale.asDiagonal() *
+                    llt.solve(DynMat_t::Identity(pars.size(), pars.size())) *
+                    scale.asDiagonal()};
+  };
+  constexpr auto t0Idx = toUnderlying(FitParIndex::t0);
+  std::optional<DynMat_t> inverse = invertBlock(parsToUse);
+  const bool t0Unconstrained =
+      !parsToUse.empty() && parsToUse.back() == FitParIndex::t0 &&
+      (!inverse || (*inverse)(parsToUse.size() - 1, parsToUse.size() - 1) >
+                       m_cfg.unconstrainedT0Variance);
+  if (t0Unconstrained) {
+    ACTS_DEBUG(__func__ << "() " << __LINE__
+                        << ": t0 not constrained by the measurements");
+    parsToUse.pop_back();
+    inverse = invertBlock(parsToUse);
+  }
+  if (!inverse) {
+    return false;
+  }
+  for (std::size_t i = 0; i < parsToUse.size(); ++i) {
+    for (std::size_t j = 0; j < parsToUse.size(); ++j) {
+      covariance(toUnderlying(parsToUse[i]), toUnderlying(parsToUse[j])) =
+          (*inverse)(i, j);
+    }
+  }
+  if (t0Unconstrained) {
+    for (const auto par : parsToUse) {
+      covariance(toUnderlying(par), t0Idx) = 0.;
+      covariance(t0Idx, toUnderlying(par)) = 0.;
+    }
+    covariance(t0Idx, t0Idx) = m_cfg.unconstrainedT0Variance;
+  }
+  return true;
 }
 
 void CompositeSpacePointLineFitter::FitParameters::print(

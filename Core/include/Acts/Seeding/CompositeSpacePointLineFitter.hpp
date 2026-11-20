@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/EventData/CompositeSpacePointCalibrator.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
@@ -15,6 +16,7 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 namespace Acts::Experimental {
 /// Generic Implementation to fit a straight line to set of composite space
@@ -81,6 +83,9 @@ class CompositeSpacePointLineFitter {
     bool ignoreFailedPreFit{false};
     /// Use the second derivative in the residual calculation
     bool useHessian{false};
+    /// Variance assigned to t0 if the measurements do not constrain it, e.g. if
+    /// t0 is degenerate with the intercept
+    double unconstrainedT0Variance{square(100. * UnitConstants::ns)};
     /// Flag toggling whether the along the wire component of straws shall be
     /// calculated if provided by the straw measurement.
     bool calcAlongStraw{true};
@@ -312,6 +317,21 @@ class CompositeSpacePointLineFitter {
                               ParamVec_t& currentPars,
                               CovMat_t& covariance) const
     requires(N >= 2 && N <= s_nPars);
+  /// Evaluates the covariance of the fitted parameters as 2 H^-1 from the
+  ///        Gauss-Newton approximation H of the chi2 Hessian, which is
+  ///        positive semi-definite by construction unlike the full Hessian
+  ///        with useHessian. If t0 is fitted but not constrained by the
+  ///        measurements (H block not positive definite or t0 variance above
+  ///        Config::unconstrainedT0Variance), the spatial block is evaluated
+  ///        at fixed t0 and t0 is assigned Config::unconstrainedT0Variance
+  ///        without correlations. Returns false and leaves the covariance
+  ///        unchanged if the spatial block is not positive definite
+  /// @param gaussNewtonHessian: Gauss-Newton approximation of the chi2 Hessian
+  /// @param parsToUse: Sorted list of the fitted parameters
+  /// @param covariance: Reference to the covariance matrix
+  bool evaluateCovariance(const CovMat_t& gaussNewtonHessian,
+                          std::vector<FitParIndex> parsToUse,
+                          CovMat_t& covariance) const;
 
   /// Reference to the logger object
   const Logger& logger() const { return *m_logger; }

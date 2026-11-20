@@ -493,6 +493,17 @@ CompositeSpacePointLineFitter::fit(
       using enum UpdateStep;
       case converged: {
         result.converged = true;
+        // Covariance from the Gauss-Newton Hessian, as the full Hessian used
+        // with useHessian is not necessarily positive definite. If this fails,
+        // the covariance from updateParameters() is kept
+        if (!evaluateCovariance(cache.gaussNewtonHessian,
+                                pullCalculator.config().parsToUse,
+                                result.covariance)) {
+          ACTS_DEBUG(__func__ << "() " << __LINE__
+                              << ": Gauss-Newton Hessian not positive definite"
+                              << "\n"
+                              << toString(cache.gaussNewtonHessian));
+        }
         break;
       }
       case goodStep: {
@@ -565,6 +576,12 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << printEigenDecomposition(miniHessian)
                         << "\n, determinant: " << miniHessian.determinant());
   std::optional<SquareMatrix<N>> inverseH{safeInverse(miniHessian)};
+  // The normalized update divides by the diagonal of the inverse, which can
+  // vanish if the Hessian is singular to numerical precision: treat such a
+  // Hessian as not invertible
+  if (inverseH && (inverseH->diagonal().array() == 0.).any()) {
+    inverseH.reset();
+  }
 
   if (inverseH) {
     const Vector<N> update{(*inverseH) * miniGradient};

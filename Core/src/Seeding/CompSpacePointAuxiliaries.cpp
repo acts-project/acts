@@ -103,10 +103,14 @@ void CompSpacePointAuxiliaries::updateChiSq(
       ACTS_VERBOSE("updateChiSq() - Update chi2 hessian w.r.t. "
                    << parName(partial1) << " & " << parName(partial2) << ".");
 
-      double& hessElem =
-          chiSqObj.hessian(toUnderlying(partial1), toUnderlying(partial2));
+      const auto idx1 = toUnderlying(partial1);
+      const auto idx2 = toUnderlying(partial2);
+      double& hessElem = chiSqObj.hessian(idx1, idx2);
 
-      hessElem += 2. * contract(gradient(partial1), gradient(partial2));
+      const double gaussNewtonTerm =
+          2. * contract(gradient(partial1), gradient(partial2));
+      hessElem += gaussNewtonTerm;
+      chiSqObj.gaussNewtonHessian(idx1, idx2) += gaussNewtonTerm;
 
       if (!m_cfg.useHessian) {
         continue;
@@ -122,8 +126,11 @@ void CompSpacePointAuxiliaries::symmetrizeHessian(
       if (partial2 >= partial1) {
         break;
       }
-      chiSqObj.hessian(toUnderlying(partial2), toUnderlying(partial1)) =
-          chiSqObj.hessian(toUnderlying(partial1), toUnderlying(partial2));
+      const auto idx1 = toUnderlying(partial1);
+      const auto idx2 = toUnderlying(partial2);
+      chiSqObj.hessian(idx2, idx1) = chiSqObj.hessian(idx1, idx2);
+      chiSqObj.gaussNewtonHessian(idx2, idx1) =
+          chiSqObj.gaussNewtonHessian(idx1, idx2);
     }
   }
 }
