@@ -685,8 +685,11 @@ class CombinatorialKalmanFilter {
         // which may create extra trajectory branches if more than one
         // measurement is selected.
         const CkfTypes::TrackStateCreatorArguments<TrackStateContainerBackend>
-            args(state.geoContext, *calibrationContextPtr, boundState, prevTip,
-                 *result.trackStates);
+            args{.geoContext = state.geoContext,
+                 .calibrationContext = *calibrationContextPtr,
+                 .boundState = boundState,
+                 .prevTip = prevTip,
+                 .trajectory = *result.trackStates};
         tsRes = extensions.createTrackStates(args, logger());
       }
 

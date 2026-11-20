@@ -435,11 +435,13 @@ struct HoleTrackStateCreator {
       const CkfTypes::TrackStateCreatorArguments<TrackStateContainerBackend>&
           args,
       const Logger& /*logger*/) const {
-    auto trackState = args.trajectory().makeTrackState(
-        TrackStatePropMask::Predicted, args.prevTip());
-    trackState.setReferenceSurface(args.surface().getSharedPtr());
-    trackState.predicted() = args.predicted();
-    trackState.predictedCovariance() = args.predictedCovariance();
+    const BoundTrackParameters& parameters = args.boundState.get().parameters;
+    auto trackState = args.trajectory.get().makeTrackState(
+        TrackStatePropMask::Predicted, args.prevTip);
+    trackState.setReferenceSurface(
+        parameters.referenceSurface().getSharedPtr());
+    trackState.predicted() = parameters.parameters();
+    trackState.predictedCovariance() = *parameters.covariance();
     trackState.typeFlags().setIsHole();
     return CkfTypes::BranchVector<TrackIndexType>{trackState.index()};
   }

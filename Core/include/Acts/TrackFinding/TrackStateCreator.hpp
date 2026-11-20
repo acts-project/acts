@@ -103,7 +103,8 @@ struct TrackStateCreator {
   /// "filtered" data.
   Result<CkfTypes::BranchVector<TrackIndexType>> createTrackStates(
       const Arguments& args, const Logger& logger) const {
-    const Surface& surface = args.surface();
+    const BoundState& boundState = args.boundState;
+    const Surface& surface = boundState.parameters.referenceSurface();
     TrackStatesResult tsRes = TrackStatesResult::success({});
     using SourceLinkRange = decltype(sourceLinkAccessor(surface));
     SourceLinkRange slRange = sourceLinkAccessor(surface);
@@ -111,9 +112,9 @@ struct TrackStateCreator {
       auto [slBegin, slEnd] = slRange;
       std::vector<TrackStateProxy> trackStateCandidates;
       tsRes = createSourceLinkTrackStates(
-          args.geoContext(), args.calibrationContext(), surface,
-          args.boundState(), slBegin, slEnd, args.prevTip(),
-          trackStateCandidates, args.trajectory(), logger);
+          args.geoContext, args.calibrationContext, surface, boundState,
+          slBegin, slEnd, args.prevTip, trackStateCandidates,
+          args.trajectory.get(), logger);
     }
     return tsRes;
   }

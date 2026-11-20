@@ -18,7 +18,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cassert>
+#include <functional>
 #include <vector>
 
 namespace Acts {
@@ -56,65 +56,17 @@ struct BoundState {
 ///
 /// @tparam traj_t the track state container backend
 template <typename traj_t>
-class TrackStateCreatorArguments {
- public:
-  /// @param geoContext the current geometry context
-  /// @param calibrationContext the current calibration context
-  /// @param boundState the predicted state on the surface the trajectory is
-  ///        extended onto
-  /// @param prevTip the tip of the trajectory which is extended
-  /// @param trajectory the trajectory the new track states are added to
-  TrackStateCreatorArguments(const GeometryContext& geoContext,
-                             const CalibrationContext& calibrationContext,
-                             const BoundState& boundState,
-                             TrackIndexType prevTip, traj_t& trajectory)
-      : m_geoContext(&geoContext),
-        m_calibrationContext(&calibrationContext),
-        m_boundState(&boundState),
-        m_prevTip(prevTip),
-        m_trajectory(&trajectory) {}
-
-  /// @return the current geometry context
-  const GeometryContext& geoContext() const { return *m_geoContext; }
-  /// @return the current calibration context
-  const CalibrationContext& calibrationContext() const {
-    return *m_calibrationContext;
-  }
-  /// @return the predicted state on the surface the trajectory is extended onto
-  const BoundState& boundState() const { return *m_boundState; }
-  /// @return the surface the trajectory is extended onto
-  const Surface& surface() const {
-    return boundParameters().referenceSurface();
-  }
-  /// @return the predicted bound parameters
-  const BoundTrackParameters& boundParameters() const {
-    return m_boundState->parameters;
-  }
-  /// @return the predicted parameter vector
-  const BoundVector& predicted() const {
-    return boundParameters().parameters();
-  }
-  /// @return the predicted parameter covariance
-  const BoundMatrix& predictedCovariance() const {
-    assert(boundParameters().covariance().has_value() &&
-           "Track state creation requires a predicted covariance");
-    return *boundParameters().covariance();
-  }
-  /// @return the jacobian from the previous track state to the surface
-  const BoundMatrix& jacobian() const { return m_boundState->jacobian; }
-  /// @return the path length accumulated up to the surface
-  double pathLength() const { return m_boundState->pathLength; }
-  /// @return the tip of the trajectory which is extended
-  TrackIndexType prevTip() const { return m_prevTip; }
-  /// @return the trajectory the new track states are added to
-  traj_t& trajectory() const { return *m_trajectory; }
-
- private:
-  const GeometryContext* m_geoContext;
-  const CalibrationContext* m_calibrationContext;
-  const BoundState* m_boundState;
-  TrackIndexType m_prevTip;
-  traj_t* m_trajectory;
+struct TrackStateCreatorArguments {
+  /// The current geometry context
+  std::reference_wrapper<const GeometryContext> geoContext;
+  /// The current calibration context
+  std::reference_wrapper<const CalibrationContext> calibrationContext;
+  /// The predicted state on the surface the trajectory is extended onto
+  std::reference_wrapper<const BoundState> boundState;
+  /// The tip of the trajectory which is extended
+  TrackIndexType prevTip{};
+  /// The trajectory the new track states are added to
+  std::reference_wrapper<traj_t> trajectory;
 };
 
 }  // namespace CkfTypes
@@ -153,7 +105,7 @@ struct CombinatorialKalmanFilterExtensions {
   BranchStopper branchStopper{DelegateFuncTag<voidBranchStopper>{}};
 
   /// @brief Delegate the extension of the trajectory onto the surface of
-  ///        `args.boundState()` to an external unit.
+  ///        `args.boundState` to an external unit.
   ///
   /// @note Expected to create track states for measurements on that surface
   ///       which match the predicted state. The "filtered" data is not
@@ -165,7 +117,7 @@ struct CombinatorialKalmanFilterExtensions {
   ///        contexts
   /// @param logger a logger for messages
   /// @return indices of new track states which extend the trajectory given by
-  ///         `args.prevTip()`. Each one must be a measurement or an outlier,
+  ///         `args.prevTip`. Each one must be a measurement or an outlier,
   ///         otherwise the CKF fails with
   ///         @ref CombinatorialKalmanFilterError::UnsupportedTrackState. An
   ///         empty list means that the CKF creates a hole, the error
