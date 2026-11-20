@@ -2328,6 +2328,7 @@ def addGnn(
     outputDirRoot: Optional[Union[Path, str]] = None,
     device=None,
     shrinkNodes: bool = False,
+    geometryIdMap=None,
     writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
@@ -2349,6 +2350,9 @@ def addGnn(
         outputDirRoot: Optional output directory for performance ROOT files
         device: acts.gnn.Device to run the GNN pipeline on (default: acts.gnn.Device.Cuda())
         shrinkNodes: Remove unused nodes before each edge classification step
+        geometryIdMap: Athena <-> ACTS geometry identifier map, needed when the
+                       measurements are on ACTS surfaces but the module map uses
+                       Athena identifiers
         logLevel: Logging level
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -2378,6 +2382,7 @@ def addGnn(
         featureScales=featureScales,
         device=device,
         shrinkNodes=shrinkNodes,
+        geometryIdMap=geometryIdMap,
     )
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)
