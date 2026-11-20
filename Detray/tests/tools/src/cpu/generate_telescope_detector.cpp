@@ -13,7 +13,7 @@
 #include "detray/geometry/shapes.hpp"
 
 // Detray IO include(s)
-#include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/json/detector_writer.hpp"
 
 // Detray test include(s)
 #include "detray/options/detector_io_options.hpp"
@@ -57,7 +57,7 @@ void write_telecope(const po::variables_map &vm,
       build_telescope_detector<algebra_t>(host_mr, tel_cfg);
 
   // Write to file
-  detray::io::write_detector(tel_det, tel_names, writer_cfg);
+  detray::io::write_detector_json(tel_det, tel_names, writer_cfg);
 }
 
 /// Generate and write a telescope detector, given the commandline variables
@@ -113,9 +113,10 @@ int main(int argc, char **argv) {
   // Options parsing
   po::options_description desc("\nTelescope detector generation options");
 
+  // Default values for rectangles: min_x, min_y, max_x, max_y
   std::vector<scalar> mask_params{
-      20.f * unit<scalar>::mm,
-      20.f * unit<scalar>::mm};  // < default values for rectangles
+      -20.f * unit<scalar>::mm, -20.f * unit<scalar>::mm,
+      20.f * unit<scalar>::mm, 20.f * unit<scalar>::mm};
   desc.add_options()("modules", po::value<unsigned int>()->default_value(10u),
                      "number of modules in telescope [1-20]")(
       "type", po::value<std::string>()->default_value("rectangle"),

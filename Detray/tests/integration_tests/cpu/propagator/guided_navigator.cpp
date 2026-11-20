@@ -47,6 +47,7 @@ GTEST_TEST(detray_navigation, guided_navigator) {
 
   // Build telescope detector with unbounded rectangles
   tel_det_config<test_algebra, unbounded<rectangle2D>> tel_cfg{
+      -20.f * unit<scalar>::mm, -20.f * unit<scalar>::mm,
       20.f * unit<scalar>::mm, 20.f * unit<scalar>::mm};
   tel_cfg.positions(positions).envelope(0.2f * unit<scalar>::mm);
 

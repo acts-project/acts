@@ -216,6 +216,20 @@ class geometry_reader final : public reader_interface<detector_t> {
     for (const auto& mask_data : sf_data.masks) {
       std::vector<scalar_t>& boundaries = mask_boundaries.emplace_back();
       std::ranges::copy(mask_data.boundaries, std::back_inserter(boundaries));
+
+      // Legacy format: The rectangle was given by its half lengths and was
+      // centered at the origin of the local frame. Convert to corner positions
+      if (mask_data.shape == io_shape_id::rectangle2 &&
+          boundaries.size() == 2u) {
+        const scalar_t half_x{boundaries[0]};
+        const scalar_t half_y{boundaries[1]};
+
+        boundaries.resize(rectangle2D::e_size);
+        boundaries[rectangle2D::e_min_x] = -half_x;
+        boundaries[rectangle2D::e_min_y] = -half_y;
+        boundaries[rectangle2D::e_max_x] = half_x;
+        boundaries[rectangle2D::e_max_y] = half_y;
+      }
     }
 
     // If the concentric cylinder is shifted in z, discard the shift

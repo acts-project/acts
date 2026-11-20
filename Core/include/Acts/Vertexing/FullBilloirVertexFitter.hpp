@@ -10,11 +10,13 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <memory>
+#include <span>
 #include <vector>
 
 namespace Acts {
@@ -43,7 +45,7 @@ namespace Acts {
 /// ACTS White Paper: Cross-Covariance Matrices in the Billoir Vertex Fit
 /// https://acts.readthedocs.io/en/latest/white_papers/billoir-covariances.html
 /// Author(s) Russo, F
-class FullBilloirVertexFitter {
+class FullBilloirVertexFitter final : public IVertexFitter {
  public:
   /// Configuration options for the Billoir vertex fitter.
   struct Config {
@@ -75,7 +77,22 @@ class FullBilloirVertexFitter {
                      const VertexingOptions& vertexingOptions,
                      MagneticFieldQuery& field) const;
 
+  /// @copydoc IVertexFitter::fit
+  Result<Vertex> fit(const VertexFitInput& input, const GeometryContext& gctx,
+                     MagneticFieldQuery& field) const override;
+
  private:
+  /// Fit with an explicit seed and reusable field query.
+  /// @param paramVector Tracks to fit
+  /// @param vertexingOptions Contexts and constraint settings
+  /// @param field Reusable field query
+  /// @param seedPosition Initial linearization point
+  /// @return Fitted vertex or a fitting error
+  Result<Vertex> fitImpl(std::span<const InputTrack> paramVector,
+                         const VertexingOptions& vertexingOptions,
+                         MagneticFieldQuery& field,
+                         const Vector4& seedPosition) const;
+
   /// Configuration object
   Config m_cfg;
 
