@@ -172,6 +172,11 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// is typically more stable but also more computationally expensive.
     bool useJosephFormulation = false;
 
+    /// Whether to select and update with the scattering tail of
+    /// `Acts::siliconScatteringTail`, see
+    /// `Acts::CombinatorialKalmanFilterOptions::scatteringTailModel`.
+    bool scatteringTail = false;
+
     // Pixel and strip volume ids to be used for maxPixel/StripHoles cuts
     std::vector<std::uint32_t> pixelVolumeIds;
     std::vector<std::uint32_t> stripVolumeIds;

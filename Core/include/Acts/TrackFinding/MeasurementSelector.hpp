@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
+#include "Acts/TrackFinding/ScatteringTail.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -98,6 +99,23 @@ class MeasurementSelector {
   select(std::vector<typename traj_t::TrackStateProxy>& candidates,
          bool& isOutlier, const Logger& logger) const;
 
+  /// @brief As `select`, with the chi2 of the two-component prediction with
+  /// the scattering tail, see `scatteringTailChi2`
+  ///
+  /// @param candidates The track state candidates which already contain predicted parameters
+  /// @param scatteringTail The scattering tail of the prediction
+  /// @param isOutlier The indicator for outlier or not
+  /// @param logger The logger wrapper
+  ///
+  /// @return Pair of iterators into @a candidates marking the range of selected candidates
+  template <typename traj_t>
+  Result<std::pair<
+      typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+      typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
+  selectWithTail(std::vector<typename traj_t::TrackStateProxy>& candidates,
+                 const ScatteringTailPrior& scatteringTail, bool& isOutlier,
+                 const Logger& logger) const;
+
  private:
   /// Chi2 cut for each measurement dimension, index 0 is not used
   using Chi2CutPerDimension = std::array<double, kMeasurementSizeMax + 1>;
@@ -116,6 +134,14 @@ class MeasurementSelector {
     Chi2CutPerDimension chi2Measurement{};
     Chi2CutPerDimension chi2Outlier{};
   };
+
+  template <typename traj_t, typename chi2_function_t>
+  Result<std::pair<
+      typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+      typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
+  selectImpl(std::vector<typename traj_t::TrackStateProxy>& candidates,
+             bool& isOutlier, const Logger& logger,
+             const chi2_function_t& chi2Function) const;
 
   static InternalCutBins convertCutBins(const MeasurementSelectorCuts& config);
 

@@ -3,6 +3,7 @@ target_sources(
     PRIVATE
         CombinatorialKalmanFilterError.cpp
         MeasurementSelector.cpp
+        ScatteringTail.cpp
         AmbiguityTrackClustering.cpp
         SeedDeduplicator.cpp
 )
