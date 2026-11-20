@@ -376,6 +376,12 @@ bool Navigator::checkStagedTargetValid(State& state, const Vector3& position,
     return false;
   }
 
+  if (m_geometryVersion == GeometryVersion::Gen3 &&
+      checkVolumeExit(state, position, direction)) {
+    ACTS_VERBOSE(volInfo(state) << "Left the volume, target is not valid.");
+    return false;
+  }
+
   if (state.currentVolume != nullptr &&
       state.currentVolume->navigationPolicy() != nullptr) {
     // A default (EmptyState) policy state signals no validity constraint, so
@@ -420,6 +426,9 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
   }
 
   state.currentSurface = &surface;
+  // Actors handle the surface, so the step does not count for the exit check
+  const bool exitCheckHadPrevious = state.exitCheckHasPrevious;
+  state.exitCheckHasPrevious = false;
 
   ACTS_VERBOSE(volInfo(state)
                << "Current surface: " << state.currentSurface->geometryId());
@@ -429,6 +438,17 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
     if (state.navCandidate().isPortalTarget() &&
         &state.navCandidate().surface() == &surface) {
       ACTS_VERBOSE(volInfo(state) << "Handling portal status.");
+
+      // A portal merged across volumes extends beyond the face of this one,
+      // and the step onto it can have left the volume before. Actors have not
+      // seen the portal yet, so there is still a way back.
+      state.exitCheckHasPrevious = exitCheckHadPrevious;
+      if (checkVolumeExit(state, position, direction)) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Left the volume before reaching the portal.");
+        state.currentSurface = nullptr;
+        return;
+      }
 
       // Switch to the next volume using the portal
       const Portal* portal = &state.navCandidate().portal();
@@ -608,6 +628,27 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
     return NavigationTarget::None();
   }
 
+  {
+    using enum State::Backtrack;
+    if (state.backtrack == eActive) {
+      // The portal was dropped before the propagation got onto it
+      ACTS_VERBOSE(volInfo(state) << "Stepping back onto the portal failed.");
+      state.backtrack = eFailed;
+      state.stream.reset();
+    }
+    checkVolumeExit(state, position, direction);
+    if (state.backtrack == ePending) {
+      ACTS_VERBOSE(volInfo(state) << "Left the volume, step back onto "
+                                  << state.backtrackTarget);
+      state.backtrack = eActive;
+      ++state.statistics.nPortalBacktracks;
+      state.stream.reset();
+      state.stream.addPortalCandidate(state.backtrackTarget.portal());
+      state.stream.currentCandidate() = state.backtrackTarget;
+      return state.backtrackTarget;
+    }
+  }
+
   // Only consult isValid() when the policy state is non-default; a default
   // (EmptyState) state signals the resolved sequence cannot be invalidated.
   // The defaultness is cached in the navigator state since it only changes at
@@ -680,10 +721,70 @@ NavigationTarget Navigator::tryGetNextTarget(State& state,
   }
 }
 
+bool Navigator::resolveVolumeExit(State& state, const Vector3& position,
+                                  const Vector3& direction) const {
+  state.exitCheckHasPrevious = true;
+  state.exitCheckPosition = position;
+  if (state.currentVolume->inside(state.options.geoContext, position,
+                                  2 * state.options.surfaceTolerance)) {
+    return false;
+  }
+  state.backtrackTarget = findVolumeExitGeneric(state, position, direction);
+  return !state.backtrackTarget.isNone() && startBacktrack(state);
+}
+
+bool Navigator::startBacktrack(State& state) const {
+  // Converging onto the portal the candidates target already
+  if (state.stream.isValid() && state.navCandidate().isPortalTarget() &&
+      &state.navCandidate().surface() == &state.backtrackTarget.surface()) {
+    return false;
+  }
+  state.backtrack = State::Backtrack::ePending;
+  return true;
+}
+
+NavigationTarget Navigator::findVolumeExitGeneric(
+    const State& state, const Vector3& position,
+    const Vector3& direction) const {
+  const TrackingVolume& volume = *state.currentVolume;
+  const double tolerance = 2 * state.options.surfaceTolerance;
+  if (volume.inside(state.options.geoContext, position, tolerance)) {
+    return NavigationTarget::None();
+  }
+
+  // The last crossing behind the position that is on this volume, a portal
+  // can extend beyond its face
+  NavigationTarget last = NavigationTarget::None();
+  for (const Portal& portal : volume.portals()) {
+    const MultiIntersection3D intersections = portal.surface().intersect(
+        state.options.geoContext, position, direction,
+        BoundaryTolerance::None(), state.options.surfaceTolerance);
+    for (const auto [index, intersection] : enumerate(intersections)) {
+      if (intersection.status() != IntersectionStatus::reachable ||
+          intersection.pathLength() >= 0. ||
+          (!last.isNone() && intersection.pathLength() <= last.pathLength()) ||
+          !volume.inside(state.options.geoContext, intersection.position(),
+                         tolerance)) {
+        continue;
+      }
+      last =
+          NavigationTarget(intersection, static_cast<IntersectionIndex>(index),
+                           portal, BoundaryTolerance::None());
+    }
+  }
+  return last;
+}
+
 void Navigator::createPolicyState(State& state, const TrackingVolume& volume,
                                   const Vector3& position,
                                   const Vector3& direction) const {
   const INavigationPolicy& policy = *volume.navigationPolicy();
+
+  state.backtrack = State::Backtrack::eIdle;
+  state.exitCheckPolicy =
+      state.options.portalBacktracking ? policy.volumeExitPolicy() : nullptr;
+  state.exitCheckHasPrevious = true;
+  state.exitCheckPosition = position;
 
   // Statelessness is probed once at construction and fixed thereafter, so it is
   // the single source of truth for whether this volume's policy carries a

@@ -19,6 +19,9 @@ struct NavigatorStatistics {
   /// Number of renavigation attempts
   std::size_t nRenavigations = 0;
 
+  /// Number of steps back onto a portal the candidates did not target
+  std::size_t nPortalBacktracks = 0;
+
   /// Number of volume switches
   std::size_t nVolumeSwitches = 0;
 };
