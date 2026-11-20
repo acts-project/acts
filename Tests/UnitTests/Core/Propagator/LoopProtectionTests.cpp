@@ -15,10 +15,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -97,9 +95,6 @@ struct Options {
   int debugMsgWidth = 60;
   int debugPfxWidth = 30;
 
-  /// Contains: target aborters
-  ActorList<PathLimitReached> abortList;
-
   const Logger& logger = getDummyLogger();
 };
 
@@ -137,15 +132,13 @@ BOOST_DATA_TEST_CASE(
 
   Stepper pStepper;
 
-  auto& pathLimit = pState.options.abortList.get<PathLimitReached>();
-  auto initialLimit = pathLimit.internalLimit;
+  double pathLimit = std::numeric_limits<double>::max();
+  const double initialLimit = pathLimit;
 
-  detail::setupLoopProtection(pState, pStepper, pathLimit.internalLimit, false,
+  detail::setupLoopProtection(pState, pStepper, pathLimit, false,
                               *getDefaultLogger("LoopProt", Logging::INFO));
 
-  auto updatedLimit =
-      pState.options.abortList.get<PathLimitReached>().internalLimit;
-  BOOST_CHECK_LT(updatedLimit, initialLimit);
+  BOOST_CHECK_LT(pathLimit, initialLimit);
 }
 
 using BField = ConstantBField;
@@ -195,7 +188,7 @@ BOOST_DATA_TEST_CASE(
       Vector4(0, 0, 0, 42), phi, theta, q / p, std::nullopt,
       ParticleHypothesis::pion());
 
-  using PropagatorOptions = EigenPropagator::Options<ActorList<>>;
+  using PropagatorOptions = EigenPropagator::Options<>;
   PropagatorOptions options(tgContext, mfContext);
   options.maxSteps = 1e6;
   const auto& result = epropagator.propagate(start, options).value();

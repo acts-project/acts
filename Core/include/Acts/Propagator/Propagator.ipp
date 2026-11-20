@@ -14,8 +14,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/Propagator/detail/LoopProtection.hpp"
+#include "Acts/Propagator/detail/ActorCalls.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -44,9 +43,10 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
 
   state.stage = PropagatorStage::prePropagation;
 
-  // Pre-Propagation: call to the actor list, abort condition check
+  // Pre-Propagation: call to the actor, abort condition check
   if (Result<void> preActResult =
-          state.options.actorList.act(state, m_stepper, m_navigator, logger());
+          detail::callActorAct(state.options.actor, state.actor, state,
+                               m_stepper, m_navigator, logger());
       !preActResult.ok()) {
     ACTS_DEBUG("Pre-propagation actor call failed: "
                << preActResult.error() << ": "
@@ -54,13 +54,14 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     return preActResult.error();
   }
 
-  if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
-                                         logger())) {
+  if (detail::callActorCheckAbort(state.options.actor, state.actor, state,
+                                  m_stepper, m_navigator, logger())) {
     ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
 
     state.stage = PropagatorStage::postPropagation;
 
-    return state.options.actorList.act(state, m_stepper, m_navigator, logger());
+    return detail::callActorAct(state.options.actor, state.actor, state,
+                                m_stepper, m_navigator, logger());
   }
 
   // Pre-propagation actors may have changed momentum or direction.
@@ -170,15 +171,16 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     }
 
     Result<void> actResult =
-        state.options.actorList.act(state, m_stepper, m_navigator, logger());
+        detail::callActorAct(state.options.actor, state.actor, state, m_stepper,
+                             m_navigator, logger());
     if (!actResult.ok()) {
       ACTS_DEBUG("Actor call failed: " << actResult.error() << ": "
                                        << actResult.error().message());
       return actResult.error();
     }
 
-    if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
-                                           logger())) {
+    if (detail::callActorCheckAbort(state.options.actor, state.actor, state,
+                                    m_stepper, m_navigator, logger())) {
       terminatedNormally = true;
       break;
     }
@@ -214,7 +216,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     }
   }  // end of stepping loop
 
-  // check if we didn't terminate normally via aborters
+  // check if we didn't terminate normally via the actor
   if (!terminatedNormally) {
     ACTS_DEBUG("Propagation reached the step count limit of "
                << state.options.maxSteps << " (did " << state.steps
@@ -226,9 +228,10 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
 
   state.stage = PropagatorStage::postPropagation;
 
-  // Post-stepping call to the actor list
+  // Post-stepping call to the actor
   if (auto postPropagationResult =
-          state.options.actorList.act(state, m_stepper, m_navigator, logger());
+          detail::callActorAct(state.options.actor, state.actor, state,
+                               m_stepper, m_navigator, logger());
       !postPropagationResult.ok()) {
     ACTS_DEBUG("Post-propagation actor call failed: "
                << postPropagationResult.error() << ": "
@@ -239,42 +242,33 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
 }
 
 template <StepperConcept S, NavigatorConcept N>
-template <typename propagator_options_t, typename path_aborter_t>
+template <typename propagator_options_t>
 auto Propagator<S, N>::propagate(const BoundParameters& start,
                                  const propagator_options_t& options,
                                  bool createFinalParameters) const
-    -> Result<ResultType<propagator_options_t>> {
-  auto state =
-      makeState<propagator_options_t, NoTargetAborter, path_aborter_t>(options);
-
-  auto initRes = initialize<decltype(state), NoTargetAborter, path_aborter_t>(
-      state, start, nullptr);
-  if (!initRes.ok()) {
-    ACTS_DEBUG("Initialization failed: " << initRes.error() << ": "
-                                         << initRes.error().message());
-    return initRes.error();
-  }
-
-  // Perform the actual propagation
-  auto propagationResult = propagate(state);
-
-  return makeResult(std::move(state), propagationResult, options,
-                    createFinalParameters, nullptr);
+    -> Result<ResultType> {
+  auto state = makeState(options);
+  return propagate(state, start, nullptr, createFinalParameters);
 }
 
 template <StepperConcept S, NavigatorConcept N>
-template <typename propagator_options_t, typename target_aborter_t,
-          typename path_aborter_t>
+template <typename propagator_options_t>
 auto Propagator<S, N>::propagate(const BoundParameters& start,
                                  const Surface& target,
                                  const propagator_options_t& options) const
-    -> Result<ResultType<propagator_options_t>> {
-  auto state =
-      makeState<propagator_options_t, target_aborter_t, path_aborter_t>(
-          options);
+    -> Result<ResultType> {
+  auto state = makeState(options);
+  return propagate(state, start, &target, true);
+}
 
-  auto initRes = initialize<decltype(state), target_aborter_t, path_aborter_t>(
-      state, start, &target);
+template <StepperConcept S, NavigatorConcept N>
+template <typename propagator_state_t>
+auto Propagator<S, N>::propagate(propagator_state_t& state,
+                                 const BoundParameters& start,
+                                 const Surface* target,
+                                 bool createFinalParameters) const
+    -> Result<ResultType> {
+  auto initRes = initialize(state, start, target);
   if (!initRes.ok()) {
     ACTS_DEBUG("Initialization failed: " << initRes.error() << ": "
                                          << initRes.error().message());
@@ -284,51 +278,27 @@ auto Propagator<S, N>::propagate(const BoundParameters& start,
   // Perform the actual propagation
   auto propagationResult = propagate(state);
 
-  return makeResult(std::move(state), propagationResult, options, true,
-                    &target);
+  return makeResult(state, propagationResult, createFinalParameters, target);
 }
 
 template <StepperConcept S, NavigatorConcept N>
-template <typename propagator_options_t, typename target_aborter_t,
-          typename path_aborter_t>
-auto Propagator<S, N>::makeState(const propagator_options_t& options) const {
-  // Expand the actor list with a path aborter, and with a target aborter
-  // unless the propagation has no target surface
-  path_aborter_t pathAborter;
-  pathAborter.internalLimit = options.pathLimit;
-
-  auto actorList = [&] {
-    if constexpr (std::is_same_v<target_aborter_t, NoTargetAborter>) {
-      return options.actorList.append(pathAborter);
-    } else {
-      return options.actorList.append(target_aborter_t{}, pathAborter);
-    }
-  }();
-
-  // Create the extended options and declare their type
-  auto eOptions = options.extend(actorList);
-
-  using OptionsType = decltype(eOptions);
-  using StateType = State<OptionsType>;
-
-  StateType state{eOptions, m_stepper.makeState(eOptions.stepping),
-                  m_navigator.makeState(eOptions.navigation)};
-
-  return state;
+template <typename propagator_options_t>
+auto Propagator<S, N>::makeState(const propagator_options_t& options) const
+    -> State<propagator_options_t> {
+  return State<propagator_options_t>{options,
+                                     m_stepper.makeState(options.stepping),
+                                     m_navigator.makeState(options.navigation)};
 }
 
 template <StepperConcept S, NavigatorConcept N>
-template <typename propagator_state_t, typename target_aborter_t,
-          typename path_aborter_t>
+template <typename propagator_state_t>
 Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
                                           const BoundParameters& start,
                                           const Surface* target) const {
-  m_stepper.initialize(state.stepping, start);
+  state.steps = 0;
+  state.pathLength = 0.;
 
-  // Hand the target surface to the aborter that stops the propagation there
-  if constexpr (!std::is_same_v<target_aborter_t, NoTargetAborter>) {
-    state.options.actorList.template get<target_aborter_t>().surface = target;
-  }
+  m_stepper.initialize(state.stepping, start);
 
   if (auto update = updateNavigationState(state); !update.ok()) {
     return update.error();
@@ -348,34 +318,33 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
     return navInitRes.error();
   }
 
-  // Apply the loop protection - it resets the internal path limit
-  detail::setupLoopProtection(
-      state, m_stepper,
-      state.options.actorList.template get<path_aborter_t>().internalLimit,
-      false, logger());
-
   return Result<void>::success();
 }
 
 template <StepperConcept S, NavigatorConcept N>
-template <typename propagator_state_t, typename propagator_options_t>
-auto Propagator<S, N>::makeResult(propagator_state_t state,
+template <typename propagator_state_t>
+auto Propagator<S, N>::makeResult(propagator_state_t& state,
                                   Result<void> propagationResult,
-                                  const propagator_options_t& /*options*/,
                                   bool createFinalParameters,
                                   const Surface* target) const
-    -> Result<ResultType<propagator_options_t>> {
-  // Type of the full propagation result, including output from actors
-  using ThisResultType = ResultType<propagator_options_t>;
-
+    -> Result<ResultType> {
   if (!propagationResult.ok()) {
     ACTS_DEBUG("Propagation failed: " << propagationResult.error() << ": "
                                       << propagationResult.error().message());
     return propagationResult.error();
   }
 
-  ThisResultType result{};
-  moveStateToResult(state, result);
+  ResultType result{};
+  result.steps = state.steps;
+  result.pathLength = state.pathLength;
+  result.statistics.stepping = m_stepper.statistics(state.stepping);
+  result.statistics.navigation = state.navigation.statistics;
+
+  if (target != nullptr &&
+      m_navigator.currentSurface(state.navigation) != target) {
+    ACTS_DEBUG("Propagation stopped before the target surface.");
+    return PropagatorError::TargetNotReached;
+  }
 
   if (createFinalParameters) {
     if (target == nullptr) {
@@ -414,20 +383,7 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
     }
   }
 
-  return Result<ThisResultType>::success(std::move(result));
-}
-
-template <StepperConcept S, NavigatorConcept N>
-template <typename propagator_state_t, typename propagator_result_t>
-void Propagator<S, N>::moveStateToResult(propagator_state_t& state,
-                                         propagator_result_t& result) const {
-  result.tuple() = std::move(state.tuple());
-
-  result.steps = state.steps;
-  result.pathLength = state.pathLength;
-
-  result.statistics.stepping = m_stepper.statistics(state.stepping);
-  result.statistics.navigation = state.navigation.statistics;
+  return Result<ResultType>::success(std::move(result));
 }
 
 template <typename derived_t>
@@ -436,14 +392,11 @@ detail::BasePropagatorHelper<derived_t>::propagateToSurface(
     const BoundTrackParameters& start, const Surface& target,
     const Options& options) const {
   using DerivedOptions = typename derived_t::template Options<>;
-  using DerivedResult = typename derived_t::template ResultType<DerivedOptions>;
 
   DerivedOptions derivedOptions(options);
 
-  Result<DerivedResult> res =
-      static_cast<const derived_t*>(this)
-          ->template propagate<DerivedOptions, SurfaceReached,
-                               PathLimitReached>(start, target, derivedOptions);
+  auto res = static_cast<const derived_t*>(this)->propagate(start, target,
+                                                            derivedOptions);
 
   if (!res.ok()) {
     return res.error();

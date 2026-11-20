@@ -293,6 +293,8 @@ class Navigator final {
       startLayer = nullptr;
       startSurface = nullptr;
       targetSurface = nullptr;
+
+      statistics = {};
     }
   };
 
