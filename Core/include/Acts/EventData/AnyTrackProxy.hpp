@@ -167,7 +167,10 @@ class TrackHandler<container_t, true> /*final*/ : public TrackHandlerConstBase {
     return tc->getTrack(index).nTrackStates();
   }
 
-  AnyConstTrackStateProxy trackStateAtIndex(
+  // Kept out of line: GCC >= 16 otherwise speculatively devirtualises the
+  // call in AnyTrackProxy, inlines every handler instantiation visible in the
+  // TU and emits spurious -Warray-bounds on the unreachable branches.
+  [[gnu::noinline]] AnyConstTrackStateProxy trackStateAtIndex(
       const void* container, TrackIndexType stateIndex) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
@@ -258,7 +261,10 @@ class TrackHandler<container_t,
     return tc->getTrack(index).nTrackStates();
   }
 
-  AnyConstTrackStateProxy trackStateAtIndex(
+  // Kept out of line: GCC >= 16 otherwise speculatively devirtualises the
+  // call in AnyTrackProxy, inlines every handler instantiation visible in the
+  // TU and emits spurious -Warray-bounds on the unreachable branches.
+  [[gnu::noinline]] AnyConstTrackStateProxy trackStateAtIndex(
       const void* container, TrackIndexType stateIndex) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
@@ -266,7 +272,10 @@ class TrackHandler<container_t,
     return AnyConstTrackStateProxy(ts);
   }
 
-  AnyMutableTrackStateProxy trackStateAtIndex(
+  // Kept out of line: GCC >= 16 otherwise speculatively devirtualises the
+  // call in AnyTrackProxy, inlines every handler instantiation visible in the
+  // TU and emits spurious -Warray-bounds on the unreachable branches.
+  [[gnu::noinline]] AnyMutableTrackStateProxy trackStateAtIndex(
       void* container, TrackIndexType stateIndex) const final {
     assert(container != nullptr);
     auto* tc = static_cast<ContainerType*>(container);
