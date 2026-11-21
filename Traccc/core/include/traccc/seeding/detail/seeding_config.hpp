@@ -256,6 +256,24 @@ struct spacepoint_grid_config {
   int phiBinDeflectionCoverage = 1;
 };
 
+/// Seed confirmation settings for a z region of the middle spacepoint
+struct seed_confirmation_range {
+  // z range of the middle spacepoint the settings apply to
+  float zMinSeedConf = -std::numeric_limits<float>::infinity();
+  float zMaxSeedConf = std::numeric_limits<float>::infinity();
+  // bottom spacepoints below this radius need nTopForSmallR compatible top
+  // spacepoints, above it nTopForLargeR
+  float rMaxSeedConf = std::numeric_limits<float>::infinity();
+  unsigned int nTopForLargeR = 0;
+  unsigned int nTopForSmallR = 0;
+  // seeds with a bottom spacepoint below this radius or a z origin beyond
+  // seedConfMaxZOrigin need a compatible top spacepoint if their impact
+  // parameter is above minImpactSeedConf
+  float seedConfMinBottomRadius = 60.f * unit<float>::mm;
+  float seedConfMaxZOrigin = 150.f * unit<float>::mm;
+  float minImpactSeedConf = 1.f * unit<float>::mm;
+};
+
 struct seedfilter_config {
   // the allowed delta between two inverted seed radii for them to be
   // considered compatible.
@@ -284,6 +302,46 @@ struct seedfilter_config {
   // seed cut
   float seed_min_weight = 200.f;
   float spB_min_radius = 43.f * unit<float>::mm;
+
+  // Apply the seed weights and cuts above (good_spB_*, good_spT_*,
+  // seed_min_weight, spB_min_radius). They are not part of the Acts seed
+  // filter and are switched off for parity with it.
+  bool useTracccSeedCuts = true;
+
+  // the longitudinal impact parameter (z0) is multiplied by this factor and
+  // subtracted from weight (only with seed confirmation)
+  float zOriginWeightFactor = 1.f;
+  // increment of the seed weight if the number of compatible seeds is larger
+  // than numSeedIncrement
+  float seedWeightIncrement = 0.f;
+  float numSeedIncrement = std::numeric_limits<float>::infinity();
+  // weight factor for the |delta eta| penalty between the seed direction and
+  // the direction from the beam spot to the point of closest approach, applied
+  // to seeds with an impact parameter above absDeltaEtaMinImpact
+  float absDeltaEtaWeightFactor = 0.f;
+  float absDeltaEtaMinImpact = 2.f * unit<float>::mm;
+  // use the distance in r between top and middle spacepoint instead of the
+  // top radius to search for compatible seeds
+  bool useDeltaRinsteadOfTopRadius = false;
+
+  // Seed confirmation: seeds with at least one compatible top spacepoint are
+  // quality seeds, only quality seeds are kept per middle spacepoint if any
+  // exist, and a seed is dropped when all three of its spacepoints belong to
+  // seeds of a higher weight
+  bool seedConfirmation = false;
+  seed_confirmation_range centralSeedConfirmationRange;
+  seed_confirmation_range forwardSeedConfirmationRange;
+  // maximum number of non-quality and quality seed candidates kept per middle
+  // spacepoint with seed confirmation
+  unsigned int maxSeedsPerSpMConf = 5;
+  unsigned int maxQualitySeedsPerSpMConf = 5;
+
+  // Number of triplets the seed selection keeps per middle spacepoint
+  TRACCC_HOST_DEVICE
+  unsigned int seed_candidates_per_spM(unsigned int maxSeedsPerSpM) const {
+    return seedConfirmation ? (maxSeedsPerSpMConf + maxQualitySeedsPerSpMConf)
+                            : maxSeedsPerSpM;
+  }
 };
 
 }  // namespace traccc

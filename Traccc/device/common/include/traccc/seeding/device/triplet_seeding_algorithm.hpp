@@ -328,6 +328,42 @@ class triplet_seeding_algorithm
   virtual void select_seeds_kernel(
       const select_seeds_kernel_payload& payload) const = 0;
 
+  /// Payload for the seed weight marking kernel
+  struct mark_seed_weights_kernel_payload {
+    /// The number of seeds selected per middle spacepoint
+    edm::seed_collection::const_view::size_type n_seeds;
+    /// The seeds selected per middle spacepoint
+    const edm::seed_collection::const_view& seeds;
+    /// The encoded best seed weight per spacepoint to fill
+    vecmem::data::vector_view<unsigned int>& best_weights;
+  };
+
+  /// Seed weight marking kernel launcher (seed confirmation)
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void mark_seed_weights_kernel(
+      const mark_seed_weights_kernel_payload& payload) const = 0;
+
+  /// Payload for the seed suppression kernel
+  struct suppress_seeds_kernel_payload {
+    /// The number of seeds selected per middle spacepoint
+    edm::seed_collection::const_view::size_type n_seeds;
+    /// The seeds selected per middle spacepoint
+    const edm::seed_collection::const_view& seeds;
+    /// The encoded best seed weight per spacepoint
+    const vecmem::data::vector_view<const unsigned int>& best_weights;
+    /// The seed collection to fill
+    edm::seed_collection::view& out;
+  };
+
+  /// Seed suppression kernel launcher (seed confirmation)
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void suppress_seeds_kernel(
+      const suppress_seeds_kernel_payload& payload) const = 0;
+
   /// @}
 
  private:
