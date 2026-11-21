@@ -30,6 +30,7 @@ macro(detray_add_cpu_test algebra)
        "propagator/backward_propagation.cpp"
        "propagator/propagation_validation.cpp"
        "propagator/covariance_transport.cpp"
+       "propagator/jacobian_validation.cpp"
        "propagator/guided_navigator.cpp"
        "propagator/perigee_extrapolator.cpp"
        "propagator/propagation_caching_navigator.cpp"
@@ -112,22 +113,4 @@ set_tests_properties(
     PROPERTIES
         DEPENDS
             "detray_unit_test_cpu;detray_unit_test_cpu_array;detray_unit_test_svgtools"
-)
-
-include(CMakeFindDependencyMacro)
-
-find_dependency(Boost COMPONENTS program_options)
-
-detray_add_integration_test(jacobian_validation
-                            "propagator/jacobian_validation.cpp"
-                            LINK_LIBRARIES GTest::gtest GTest::gtest_main
-                            Boost::program_options detray::core_array
-                            detray::test_framework detray::test_common detray::test_utils detray::tools
-)
-
-set_tests_properties(
-    detray_integration_test_jacobian_validation
-    PROPERTIES
-        DEPENDS
-            "detray_unit_test_cpu;detray_unit_test_cpu_arraydetray_integration_test_telescope_detector"
 )
