@@ -10,23 +10,27 @@
 
 // Project include(s).
 #include "algebra/impl/vc_aos_approximately_equal.hpp"
-#include "algebra/impl/vc_aos_transform3.hpp"
 #include "algebra/impl/vc_soa_casts.hpp"
-#include "algebra/impl/vc_soa_getter.hpp"
-#include "detray/algebra/common/matrix.hpp"
-#include "detray/algebra/common/vector.hpp"
+#include "algebra/impl/vc_soa_constants.hpp"
+#include "detray/algebra/common/impl/storage_getter.hpp"
+#include "detray/algebra/common/impl/storage_matrix.hpp"
+#include "detray/algebra/common/impl/storage_transform3.hpp"
+#include "detray/algebra/common/impl/storage_vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/type_traits.hpp"
 
 // System include(s).
 #include <array>
 #include <cstddef>
+#include <limits>
 
 // Vc include(s).
 #ifdef _MSC_VER
 #pragma warning(push, 0)
 #endif  // MSVC
 #include <Vc/Vc>
+// Numeric limits of the Vc vector types
+#include <Vc/limits>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif  // MSVC
@@ -76,7 +80,7 @@ using vector8 = vector_type<T, 8>;
 /// Geometry transformation implementation using @c Vc::Vector in every element
 template <concepts::value T>
 using transform3 =
-    vc_aos::math::transform3<vc_soa::storage_type, Vc::Vector<T>>;
+    algebra::storage::transform3<vc_soa::storage_type, Vc::Vector<T>>;
 
 /// Element Getter
 using element_getter = algebra::storage::element_getter;
@@ -107,6 +111,13 @@ struct scalar<
   using type = Vc::Vector<T>;
 };
 /// @}
+
+/// Use the generic vector functions (see
+/// detray/algebra/generic/impl/generic_vector.hpp)
+template <concepts::value T, std::size_t N>
+struct uses_generic_vector_functions<
+    algebra::storage::vector<N, Vc::Vector<T>, algebra::vc_soa::storage_type>>
+    : std::true_type {};
 
 /// Get the single value type from the simd scalar type
 /// @{

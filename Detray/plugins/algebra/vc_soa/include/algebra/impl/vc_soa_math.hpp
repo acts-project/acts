@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "algebra/impl/vc_soa_concepts.hpp"
+#include "detray/algebra/common/math.hpp"
 
 // Vc include(s).
 #ifdef _MSC_VER
@@ -26,35 +27,8 @@
 
 namespace detray::algebra::math {
 
-/// Math functions on single values
-/// @{
-using std::abs;
-using std::acos;
-using std::asin;
-using std::atan;
-using std::atan2;
-using std::atanh;
-using std::ceil;
-using std::copysign;
-using std::cos;
-using std::cosh;
-using std::exp;
-using std::fabs;
-using std::floor;
-using std::fma;
-using std::hypot;
-using std::log;
-using std::log10;
-using std::max;
-using std::min;
-using std::pow;
-using std::signbit;
-using std::sin;
-using std::sinh;
-using std::sqrt;
-using std::tan;
-using std::tanh;
-/// @}
+// The math functions on single values are declared in
+// detray/algebra/common/math.hpp
 
 /// Vc overloads of common math functions
 /// @{
@@ -164,10 +138,37 @@ constexpr decltype(auto) signbit(T &&vec) {
 /// @param y Second SIMD operand.
 /// @param z Addend SIMD operand.
 /// @returns The fused multiply-add result.
+/// @note The arguments are taken by const reference, so that lvalues and
+/// temporaries can be mixed in one call.
 template <detray::concepts::vc_simd_vector T>
-constexpr decltype(auto) fma(T &&x, T &&y, T &&z) {
-  return Vc::fma(std::forward<T>(x), std::forward<T>(y), std::forward<T>(z));
+constexpr T fma(const T &x, const T &y, const T &z) {
+  return Vc::fma(x, y, z);
 }
+
+/// Evaluate the two-argument inverse tangent lane by lane.
+/// @param y SIMD vector with the y coordinates.
+/// @param x SIMD vector with the x coordinates.
+/// @returns The angle of each lane in the range [-pi, pi].
+template <detray::concepts::vc_simd_vector T>
+constexpr T atan2(const T &y, const T &x) {
+  return Vc::atan2(y, x);
+}
+
+/// Evaluate the inverse hyperbolic tangent lane by lane
+///
+/// @note Vc does not provide @c atanh. The value of every lane is evaluated
+/// with the standard library function.
+///
+/// @tparam T Vc SIMD vector type
+///
+/// @param vec SIMD vector whose lanes are evaluated
+///
+/// @returns the inverse hyperbolic tangent of each lane
+template <detray::concepts::vc_simd_vector T>
+constexpr T atanh(const T &vec) {
+  return vec.apply([](typename T::EntryType e) { return std::atanh(e); });
+}
+
 /// @}
 
 }  // namespace detray::algebra::math

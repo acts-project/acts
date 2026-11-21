@@ -43,12 +43,12 @@ inline void fill_random_trf(std::vector<transform3_t>& collection) {
     t.random();
     t = detray::vector::normalize(t);
 
-    // Gram-Schmidt projection
-    typename transform3_t::scalar_type coeff =
-        detray::vector::dot(x_axis, z_axis) / detray::vector::norm(x_axis);
-    z_axis = x_axis - coeff * z_axis;
+    // Gram-Schmidt projection: remove the x component from z (x is unit)
+    const typename transform3_t::scalar_type coeff =
+        detray::vector::dot(x_axis, z_axis);
+    z_axis = z_axis - coeff * x_axis;
 
-    trf = transform3_t{t, x_axis, detray::vector::normalize(z_axis)};
+    trf = transform3_t{t, detray::vector::normalize(z_axis), x_axis};
   };
 
   collection.resize(collection.capacity());

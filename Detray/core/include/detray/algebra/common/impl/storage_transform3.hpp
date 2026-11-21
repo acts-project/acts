@@ -9,37 +9,35 @@
 #pragma once
 
 // Project include(s).
-#include "algebra/impl/vc_aos_approximately_equal.hpp"
+#include "detray/algebra/common/impl/storage_getter.hpp"
+#include "detray/algebra/common/impl/storage_matrix.hpp"
+#include "detray/algebra/common/impl/storage_vector.hpp"
 #include "detray/algebra/common/math.hpp"
-#include "detray/algebra/common/matrix.hpp"
-#include "detray/algebra/common/matrix_getter.hpp"
-#include "detray/algebra/common/vector.hpp"
 #include "detray/algebra/concepts.hpp"
+#include "detray/algebra/type_traits.hpp"
 #include "detray/algebra/utils/approximately_equal.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
-
-// Vc include(s).
-#ifdef _MSC_VER
-#pragma warning(push, 0)
-#endif  // MSVC
-#include <Vc/Vc>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif  // MSVC
 
 // System include(s).
 #include <cassert>
 #include <concepts>
+#include <cstddef>
 #include <limits>
 
-namespace detray::algebra::vc_aos::math {
+namespace detray::algebra::storage {
 
-using algebra::storage::operator*;
-using algebra::storage::operator/;
-using algebra::storage::operator-;
-using algebra::storage::operator+;
-
-/// Transform wrapper class to ensure standard API within different plugins
+/// Affine transform on the @c algebra::storage vector and matrix types
+///
+/// The transform is used by all plugins that are based on the storage types
+/// (Vc AoS, Vc SoA and array SoA). It works with a plain value type
+/// (AoS) as well as with a SIMD type (SoA) as scalar.
+///
+/// @note The @c approx_equal overload for the scalar type @p scalar_t has to
+/// be declared before this header is included. Otherwise the consistency check
+/// of the inverse matrix cannot find it.
+///
+/// @tparam array_t Underlying storage array template of the vectors
+/// @tparam scalar_t Scalar type: a value type (AoS) or a SIMD type (SoA)
 template <template <typename, std::size_t> class array_t,
           concepts::scalar scalar_t>
 struct transform3 {
@@ -150,7 +148,7 @@ struct transform3 {
   transform3(const matrix44 &m, const matrix44 &m_inv)
       : _data{m}, _data_inv{m_inv} {
     // The assertion will not hold for (casts to) int
-    if constexpr (std::floating_point<scalar_type>) {
+    if constexpr (std::floating_point<detray::traits::value_t<scalar_type>>) {
       [[maybe_unused]] constexpr auto epsilon{
           std::numeric_limits<float>::epsilon()};
       assert(algebra::approx_equal(invert(m), m_inv, 16.f * epsilon, 1e-6f));
@@ -251,7 +249,8 @@ struct transform3 {
         m[e_t][0] * m[e_x][1] * m[e_y][2] + m[e_x][0] * m[e_t][1] * m[e_y][2] +
         m[e_y][0] * m[e_x][1] * m[e_t][2] - m[e_x][0] * m[e_y][1] * m[e_t][2];
     // i[e_t][3] = 1;
-    const scalar_type idet{scalar_type(1.f) / determinant(i)};
+    // Scale the adjugate with the determinant of the input matrix
+    const scalar_type idet{scalar_type(1.f) / determinant(m)};
 
     i[e_x] = i[e_x] * idet;
     i[e_y] = i[e_y] * idet;
@@ -370,7 +369,7 @@ struct transform3 {
   /// This method transform from a vector from the local 2D cartesian frame
   /// to the global 3D cartesian frame
   ///
-  /// @tparam vector3_type 3D vector
+  /// @tparam vector2_type 2D vector in the local plane
   ///
   /// @param v is the vector to be transformed
   ///
@@ -410,4 +409,4 @@ struct transform3 {
   }
 };  // struct transform3
 
-}  // namespace detray::algebra::vc_aos::math
+}  // namespace detray::algebra::storage

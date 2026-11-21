@@ -41,7 +41,7 @@ concept scalar =
     !traits::is_matrix<T> && !traits::is_vector<T> && requires(T a, T b) {
       { a + b } -> std::convertible_to<T>;
       { a - b } -> std::convertible_to<T>;
-      { a * b } -> std::convertible_to<T>;
+      { a* b } -> std::convertible_to<T>;
       { a / b } -> std::convertible_to<T>;
     };
 
@@ -63,6 +63,12 @@ concept vector2D = vector<V> && (traits::size<V> == 2);
 
 template <typename V>
 concept vector3D = vector<V> && (traits::size<V> == 3);
+
+/// Vector that uses the generic vector functions in @c algebra::generic::math
+/// (see @c traits::uses_generic_vector_functions)
+template <typename V>
+concept generic_vector =
+    vector<V> && traits::uses_generic_vector_functions_v<V>;
 /// @}
 
 /// Point concepts

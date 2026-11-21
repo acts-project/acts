@@ -1,0 +1,160 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+// Project include(s)
+#include "algebra/impl/array_soa_simd.hpp"
+#include "detray/algebra/common/math.hpp"
+#include "detray/algebra/concepts.hpp"
+#include "detray/definitions/detail/qualifiers.hpp"
+
+// System include(s)
+#include <algorithm>
+#include <bit>
+#include <cmath>
+#include <concepts>
+#include <cstddef>
+#include <type_traits>
+
+namespace detray::algebra::math {
+
+// The math functions on single values are declared in
+// detray/algebra/common/math.hpp
+
+/// Lane-wise overloads of common math functions
+/// @{
+
+/// Unary function applied to every lane
+#define DETRAY_ARRAY_SOA_UNARY_MATH(FN)                  \
+  template <concepts::value T, std::size_t W>            \
+  DETRAY_HOST_DEVICE constexpr array_soa::simd<T, W> FN( \
+      const array_soa::simd<T, W> &v) {                  \
+    array_soa::simd<T, W> ret;                           \
+    DETRAY_UNROLL_N(W)                                   \
+    for (std::size_t i = 0u; i < W; ++i) {               \
+      ret[i] = static_cast<T>(FN(v[i]));                 \
+    }                                                    \
+    return ret;                                          \
+  }
+
+/// Binary function applied to every lane, with a lane bundle or a single
+/// value as second argument
+#define DETRAY_ARRAY_SOA_BINARY_MATH(FN)                                \
+  template <concepts::value T, std::size_t W>                           \
+  DETRAY_HOST_DEVICE constexpr array_soa::simd<T, W> FN(                \
+      const array_soa::simd<T, W> &a, const array_soa::simd<T, W> &b) { \
+    array_soa::simd<T, W> ret;                                          \
+    DETRAY_UNROLL_N(W)                                                  \
+    for (std::size_t i = 0u; i < W; ++i) {                              \
+      ret[i] = static_cast<T>(FN(a[i], b[i]));                          \
+    }                                                                   \
+    return ret;                                                         \
+  }                                                                     \
+  template <concepts::value T, std::size_t W>                           \
+  DETRAY_HOST_DEVICE constexpr array_soa::simd<T, W> FN(                \
+      const array_soa::simd<T, W> &a, std::type_identity_t<T> b) {      \
+    array_soa::simd<T, W> ret;                                          \
+    DETRAY_UNROLL_N(W)                                                  \
+    for (std::size_t i = 0u; i < W; ++i) {                              \
+      ret[i] = static_cast<T>(FN(a[i], b));                             \
+    }                                                                   \
+    return ret;                                                         \
+  }                                                                     \
+  template <concepts::value T, std::size_t W>                           \
+  DETRAY_HOST_DEVICE constexpr array_soa::simd<T, W> FN(                \
+      std::type_identity_t<T> a, const array_soa::simd<T, W> &b) {      \
+    array_soa::simd<T, W> ret;                                          \
+    DETRAY_UNROLL_N(W)                                                  \
+    for (std::size_t i = 0u; i < W; ++i) {                              \
+      ret[i] = static_cast<T>(FN(a, b[i]));                             \
+    }                                                                   \
+    return ret;                                                         \
+  }
+
+// clang-format off
+DETRAY_ARRAY_SOA_UNARY_MATH(abs)
+DETRAY_ARRAY_SOA_UNARY_MATH(acos)
+DETRAY_ARRAY_SOA_UNARY_MATH(asin)
+DETRAY_ARRAY_SOA_UNARY_MATH(atan)
+DETRAY_ARRAY_SOA_UNARY_MATH(atanh)
+DETRAY_ARRAY_SOA_UNARY_MATH(ceil)
+DETRAY_ARRAY_SOA_UNARY_MATH(cos)
+DETRAY_ARRAY_SOA_UNARY_MATH(cosh)
+DETRAY_ARRAY_SOA_UNARY_MATH(exp)
+DETRAY_ARRAY_SOA_UNARY_MATH(fabs)
+DETRAY_ARRAY_SOA_UNARY_MATH(floor)
+DETRAY_ARRAY_SOA_UNARY_MATH(log)
+DETRAY_ARRAY_SOA_UNARY_MATH(log10)
+DETRAY_ARRAY_SOA_UNARY_MATH(sin)
+DETRAY_ARRAY_SOA_UNARY_MATH(sinh)
+DETRAY_ARRAY_SOA_UNARY_MATH(sqrt)
+DETRAY_ARRAY_SOA_UNARY_MATH(tan)
+DETRAY_ARRAY_SOA_UNARY_MATH(tanh)
+
+DETRAY_ARRAY_SOA_BINARY_MATH(atan2)
+DETRAY_ARRAY_SOA_BINARY_MATH(copysign)
+DETRAY_ARRAY_SOA_BINARY_MATH(hypot)
+DETRAY_ARRAY_SOA_BINARY_MATH(max)
+DETRAY_ARRAY_SOA_BINARY_MATH(min)
+DETRAY_ARRAY_SOA_BINARY_MATH(pow)
+// clang-format on
+
+#undef DETRAY_ARRAY_SOA_UNARY_MATH
+#undef DETRAY_ARRAY_SOA_BINARY_MATH
+
+/// Lane-wise sign bit
+///
+/// @tparam T Value type of the lanes.
+/// @tparam W Number of lanes.
+///
+/// @param v Lane bundle to check.
+/// @returns a mask that is set for the lanes with the sign bit set
+template <concepts::value T, std::size_t W>
+DETRAY_HOST_DEVICE constexpr auto signbit(const array_soa::simd<T, W> &v) {
+  using mask_t = typename array_soa::simd<T, W>::mask_type;
+  using lane_t = typename mask_t::lane_type;
+
+  mask_t ret;
+  DETRAY_UNROLL_N(W)
+  for (std::size_t i = 0u; i < W; ++i) {
+    if constexpr (std::floating_point<T>) {
+      // Arithmetic shift copies the sign bit into all bits of the lane
+      constexpr int shift{static_cast<int>(sizeof(lane_t) * 8u) - 1};
+      ret.m_data[i] = static_cast<lane_t>(std::bit_cast<lane_t>(v[i]) >> shift);
+    } else {
+      ret.set(i, signbit(v[i]));
+    }
+  }
+  return ret;
+}
+
+/// Fused multiply-add in every lane: x * y + z
+///
+/// @tparam T Value type of a lane
+/// @tparam W Number of lanes
+///
+/// @param x the first factor
+/// @param y the second factor
+/// @param z the addend
+///
+/// @returns the lane bundle with @c fma(x[i], y[i], z[i]) in every lane
+template <concepts::value T, std::size_t W>
+DETRAY_HOST_DEVICE constexpr array_soa::simd<T, W> fma(
+    const array_soa::simd<T, W> &x, const array_soa::simd<T, W> &y,
+    const array_soa::simd<T, W> &z) {
+  array_soa::simd<T, W> ret;
+  DETRAY_UNROLL_N(W)
+  for (std::size_t i = 0u; i < W; ++i) {
+    ret[i] = static_cast<T>(fma(x[i], y[i], z[i]));
+  }
+  return ret;
+}
+/// @}
+
+}  // namespace detray::algebra::math
