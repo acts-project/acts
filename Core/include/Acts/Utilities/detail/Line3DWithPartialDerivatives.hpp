@@ -80,6 +80,17 @@ class Line3DWithPartialDerivatives {
   /// Returns the currently set parameters
   ParamVector parameters() const;
 
+  /// @brief Jacobian of (y0, tanBeta, x0, tanAlpha) w.r.t. the line
+  ///        parameters (y0, theta, x0, phi). It is indexed by ParIndex: each
+  ///        slope takes the slot of its angle. Identity for the intercepts.
+  ///        Given its determinant -tan(theta) / cos^2(theta), the inverse,
+  ///        the Jacobian of the line parameters w.r.t. the slopes, exists
+  ///        unless the direction is along z, where phi is not defined.
+  /// @param dir: Direction of the line, not parallel to the z = 0 plane
+  /// @return The 4x4 Jacobian
+  static Eigen::Matrix<T, s_nPars, s_nPars> lineToSlopesJacobian(
+      const Vector& dir);
+
  private:
   /// Current line position
   Vector m_pos{Vector::Zero()};

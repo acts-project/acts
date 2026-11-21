@@ -10,6 +10,18 @@
 
 namespace Acts::Experimental {
 
+namespace {
+/// @brief Covariance of a fast fit in its (intercept, angle) parameters
+/// @param result: Fast fit result
+SquareMatrix<2> planeCov(const detail::FastStrawLineFitter::FitResult& result) {
+  SquareMatrix<2> cov = SquareMatrix<2>::Zero();
+  cov(0, 0) = Acts::square(result.dY0);
+  cov(1, 1) = Acts::square(result.dTheta);
+  cov(0, 1) = cov(1, 0) = result.covY0Theta;
+  return cov;
+}
+}  // namespace
+
 CompositeSpacePointLineFitter::CompositeSpacePointLineFitter(
     const Config& cfg, std::unique_ptr<const Logger> logger)
     : m_cfg{cfg}, m_logger{std::move(logger)} {
@@ -22,6 +34,48 @@ CompositeSpacePointLineFitter::fastFitterCfg() const {
   fastCfg.maxIter = m_cfg.maxIter;
   fastCfg.precCutOff = m_cfg.precCutOff;
   return fastCfg;
+}
+
+void CompositeSpacePointLineFitter::fastFitCovariance(
+    const FastFitter_t::FitResult& planeResult,
+    const FastFitter_t::ResidualIdx projection, const Vector_t& lineDir,
+    CovMat_t& cov) {
+  using enum FitParIndex;
+  assert(projection == FastFitter_t::ResidualIdx::bending ||
+         projection == FastFitter_t::ResidualIdx::nonBending);
+  const bool bending = projection == FastFitter_t::ResidualIdx::bending;
+  const auto iPos = toUnderlying(bending ? y0 : x0);
+  const auto iAng = toUnderlying(bending ? theta : phi);
+  // The other angle is fixed: dtanBeta / dtheta at fixed phi (bending),
+  // dtanAlpha / dphi at fixed theta (non-bending)
+  const double dSlopedAng = Line_t::lineToSlopesJacobian(lineDir)(iAng, iAng);
+  // The slope does not change with the angle, e.g. tanAlpha for tanBeta = 0
+  if (std::abs(dSlopedAng) < std::numeric_limits<double>::epsilon()) {
+    return;
+  }
+
+  SquareMatrix<2> jac = SquareMatrix<2>::Identity();
+  jac(1, 1) = 1. / dSlopedAng;
+  cov.block<2, 2>(iPos, iPos) = jac * planeCov(planeResult) * jac.transpose();
+}
+
+void CompositeSpacePointLineFitter::fastFitCovariance(
+    const FastFitter_t::FitResult& precResult,
+    const FastFitter_t::FitResult& nonPrecResult, const Vector_t& lineDir,
+    CovMat_t& cov) {
+  using enum FitParIndex;
+  const SquareMatrix<4> toSlopes = Line_t::lineToSlopesJacobian(lineDir);
+  // A direction along z has no phi
+  assert(std::abs(toSlopes.determinant()) >
+         std::numeric_limits<double>::epsilon());
+  const SquareMatrix<4> jac = toSlopes.inverse();
+
+  SquareMatrix<4> planeCovs = SquareMatrix<4>::Zero();
+  planeCovs.block<2, 2>(toUnderlying(y0), toUnderlying(y0)) =
+      planeCov(precResult);
+  planeCovs.block<2, 2>(toUnderlying(x0), toUnderlying(x0)) =
+      planeCov(nonPrecResult);
+  cov.block<4, 4>(0, 0) = jac * planeCovs * jac.transpose();
 }
 
 std::vector<CompositeSpacePointLineFitter::FitParIndex>

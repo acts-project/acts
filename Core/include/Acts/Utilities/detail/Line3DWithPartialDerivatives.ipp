@@ -122,4 +122,26 @@ Line3DWithPartialDerivatives<T>::Vector Line3DWithPartialDerivatives<T>::point(
     const double lambda) const {
   return position() + lambda * direction();
 }
+
+template <std::floating_point T>
+auto Line3DWithPartialDerivatives<T>::lineToSlopesJacobian(const Vector& dir)
+    -> Eigen::Matrix<T, s_nPars, s_nPars> {
+  constexpr auto iTh = toUnderlying(ParIndex::theta);
+  constexpr auto iPh = toUnderlying(ParIndex::phi);
+  assert(std::abs(dir.z()) > std::numeric_limits<T>::epsilon());
+  const T theta = VectorHelpers::theta(dir);
+  const T phi = VectorHelpers::phi(dir);
+  const T tanTheta = std::tan(theta);
+  const T cosThetaSq = Acts::square(std::cos(theta));
+  const T cosPhi = std::cos(phi);
+  const T sinPhi = std::sin(phi);
+  // tanAlpha = tan(theta) cos(phi), tanBeta = tan(theta) sin(phi)
+  Eigen::Matrix<T, s_nPars, s_nPars> jac =
+      Eigen::Matrix<T, s_nPars, s_nPars>::Identity();
+  jac(iTh, iTh) = sinPhi / cosThetaSq;  // dtanBeta / dtheta
+  jac(iTh, iPh) = tanTheta * cosPhi;    // dtanBeta / dphi
+  jac(iPh, iTh) = cosPhi / cosThetaSq;  // dtanAlpha / dtheta
+  jac(iPh, iPh) = -tanTheta * sinPhi;   // dtanAlpha / dphi
+  return jac;
+}
 }  // namespace Acts::detail
