@@ -46,6 +46,11 @@ struct propagate_to_next_surface_payload {
   vecmem::data::vector_view<const candidate_link> links_view;
 
   /**
+   * @brief View object to the vector of predicted parameters for each link
+   */
+  bound_track_parameters_collection_types::view link_predicted_parameter_view;
+
+  /**
    * @brief Index in the link vector at which the current step starts
    */
   const unsigned int prev_links_idx;
@@ -70,7 +75,7 @@ struct propagate_to_next_surface_payload {
    */
   vecmem::data::vector_view<unsigned int> tip_lengths_view;
 
-  vecmem::data::vector_view<bound_matrix<default_algebra> > tmp_jacobian_view;
+  vecmem::data::vector_view<bound_matrix<default_algebra> > jacobian_view;
 };
 
 /// Function for propagating the kalman-updated tracks to the next surface
