@@ -57,6 +57,29 @@ class material_map_builder final : public volume_decorator<detector_t> {
   using bin_data_type =
       typename fill_by_bin::template bin_data<DIM, value_type>;
 
+  /// Hash function for the material maps of all grid types
+  ///
+  /// Uses the number of bins and the material (@c std::hash) and thickness
+  /// in every bin, which are compared by the equality operator of the grid.
+  /// The axis bin edges are not used, because identical material content is
+  /// rare for different axes.
+  struct material_map_hash {
+    /// @tparam grid_t the type of the material grid (owning or non-owning)
+    /// @param gr the material grid
+    /// @returns the hash value of @p gr
+    template <typename grid_t>
+    DETRAY_HOST std::size_t operator()(const grid_t& gr) const noexcept {
+      std::size_t seed{hash_combine(0u, gr.nbins())};
+      for (dindex i = 0u; i < gr.nbins(); ++i) {
+        for (const auto& slab : gr.bin(i)) {
+          seed = hash_combine(seed, slab.thickness());
+          seed = hash_combine(seed, slab.get_material());
+        }
+      }
+      return seed;
+    }
+  };
+
   /// @param vol_builder volume builder that should be decorated with material
   /// maps
   DETRAY_HOST
@@ -122,8 +145,19 @@ class material_map_builder final : public volume_decorator<detector_t> {
       typename detector_t::volume_type* override {
     DETRAY_VERBOSE_HOST("Build material maps...");
 
+    if (opt.deduplicate()) {
+      DETRAY_VERBOSE_HOST("-> Deduplicate material maps");
+    }
+
     // The total number of surfaces that will be built by this builder
     const dindex n_surfaces{static_cast<dindex>(this->surfaces().size())};
+
+    // Add a material grid to a detector collection with the central
+    // deduplication service of the volume builders
+    const auto add_grid = [opt, this](auto& coll, const auto& grid) {
+      return this->add_to_detector_collection(coll, grid, material_map_hash{},
+                                              opt);
+    };
 
     for (dindex sf_idx = 0u; sf_idx < n_surfaces; ++sf_idx) {
       if (!surface_has_map(sf_idx)) {
@@ -149,8 +183,7 @@ class material_map_builder final : public volume_decorator<detector_t> {
       auto [mat_id, mat_idx] =
           this->masks().template visit<detail::add_sf_material_map<material_t>>(
               sf_desc.mask(), m_factory, m_bin_data.at(sf_idx),
-              m_n_bins.at(sf_idx), axis_spans, det._materials,
-              opt.deduplicate());
+              m_n_bins.at(sf_idx), axis_spans, det._materials, add_grid);
 
       // Make sure the material type was set correctly by the factory
       if (mat_id != sf_desc.material().id() || mat_idx == dindex_invalid) {
@@ -211,8 +244,8 @@ namespace detail {
 
 /// A functor to add a material map to a surface
 ///
-/// If @c deduplicate is set, an identical material map that is already in the
-/// material store is reused instead of adding a new one.
+/// The material map is added to the material store by the @c add_grid
+/// callable, which can reuse an identical material map (deduplication).
 ///
 /// @returns the type id and index of the material map in the store
 template <typename material_t>
@@ -225,11 +258,13 @@ struct add_sf_material_map {
   /// @param n_bins Number of bins on each grid axis.
   /// @param axis_spans Optional coordinate spans for the map axes.
   /// @param mat_store Material store receiving the generated map.
-  /// @param deduplicate Whether to reuse an identical map already in the store.
+  /// @param add_grid Callable that adds a grid to a grid collection and
+  ///                 returns its index in the collection.
   /// @returns Material identifier and index assigned to the grid.
   template <typename mask_coll_t, typename index_range_t,
             typename mat_factory_t, typename bin_data_t, std::size_t DIM,
-            typename material_store_t, concepts::scalar scalar_t>
+            typename material_store_t, concepts::scalar scalar_t,
+            typename add_grid_t>
   DETRAY_HOST inline std::pair<typename material_t::id, dindex> operator()(
       [[maybe_unused]] const mask_coll_t& mask_coll,
       [[maybe_unused]] const index_range_t& index,
@@ -238,7 +273,7 @@ struct add_sf_material_map {
       [[maybe_unused]] const darray<std::size_t, DIM>& n_bins,
       [[maybe_unused]] const darray<std::vector<scalar_t>, DIM>& axis_spans,
       [[maybe_unused]] material_store_t& mat_store,
-      [[maybe_unused]] const bool deduplicate) const {
+      [[maybe_unused]] const add_grid_t& add_grid) const {
     using mask_t = typename mask_coll_t::value_type;
 
     // No material maps for line surfaces
@@ -302,26 +337,14 @@ struct add_sf_material_map {
         DETRAY_VERBOSE_HOST("Filled material grid:" << gid << ":\n"
                                                     << mat_grid.axes());
 
-        // Look for an identical material grid in the detector
-        if (deduplicate) {
-          const auto& grid_coll = mat_store.template get<gid>();
-          for (dindex i = 0u; i < grid_coll.size(); ++i) {
-            if (mat_grid == grid_coll.at(i)) {
-              DETRAY_VERBOSE_HOST("Found identical material grid at index "
-                                  << i << ". Deduplicating...");
-              return {gid, i};
-            }
-          }
-        }
+        // Add the material grid to the detector (or find an identical one)
+        auto& grid_coll = mat_store.template get<gid>();
+        const dindex grid_idx{add_grid(grid_coll, mat_grid)};
 
-        // Add the material grid to the detector
-        dindex grid_idx{static_cast<dindex>(mat_store.template size<gid>())};
-        mat_store.template push_back<gid>(mat_grid);
-
-        DETRAY_VERBOSE_HOST("Added material grid to collection. New size: "
+        DETRAY_VERBOSE_HOST("Material grid index: "
+                            << grid_idx << ", collection size: "
                             << mat_store.template size<gid>());
 
-        // Return the index of the new material map
         return {gid, grid_idx};
       } else {
         DETRAY_ERROR_HOST("Material grid type unknown to detector");

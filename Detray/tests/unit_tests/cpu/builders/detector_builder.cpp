@@ -112,7 +112,8 @@ GTEST_TEST(detray_builders, detector_builder) {
   // build the detector
   //
   vecmem::host_memory_resource host_mr;
-  volume_builder_options builder_opts{};
+  // The deduplication is tested separately, check the full data layout
+  const auto builder_opts = volume_builder_options{}.deduplicate(false);
   const detector_t d = det_builder.build(host_mr, builder_opts);
   const auto& vol0 = tracking_volume{d, 0u};
   const auto& vol1 = tracking_volume{d, 1u};

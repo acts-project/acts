@@ -16,6 +16,11 @@ namespace detray::detail {
 
 /// Creates detector view using "static" detector components and
 /// a "misaligned" transform store
+///
+/// @note The misaligned transforms must have the same layout as the detector
+/// transform store, i.e. they have to be indexed by the surface transform
+/// links. If the detector was built with deduplication, surfaces can share
+/// a transform and are then aligned together.
 template <detray::concepts::detector host_detector_type>
 typename host_detector_type::const_view_type misaligned_detector_view(
     const typename host_detector_type::buffer_type& det_buffer,
