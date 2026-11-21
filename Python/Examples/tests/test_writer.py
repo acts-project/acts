@@ -438,10 +438,10 @@ def test_csv_writer_interface(writer, conf_const, tmp_path, trk_geo):
 @pytest.mark.root
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_root_material_writer(tmp_path, assert_root_hash, odd_detector):
+def test_root_material_writer(tmp_path, assert_root_hash, odd_detector_gen1):
     from acts.examples.root import RootMaterialWriter
 
-    detector = odd_detector
+    detector = odd_detector_gen1
 
     trackingGeometry = detector.trackingGeometry()
 
@@ -456,6 +456,26 @@ def test_root_material_writer(tmp_path, assert_root_hash, odd_detector):
 
     assert out.stat().st_size > 1000
     assert_root_hash(out.name, out)
+
+
+@pytest.mark.root
+@pytest.mark.odd
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_root_material_writer_rejects_gen3_keys(tmp_path, odd_detector_gen3):
+    from acts.examples.root import RootMaterialWriter
+
+    trackingGeometry = odd_detector_gen3.trackingGeometry()
+
+    # Gen3 assigns stable material keys to designated faces at blueprint-build
+    # time, independent of whether a material decorator was ever applied --
+    # so this detector already carries keyed (but unfilled) material.
+    material = acts.TrackingGeometryMaterial.fromGeometry(trackingGeometry)
+    assert material.keyedSurfaces
+
+    out = tmp_path / "material.root"
+    rmw = RootMaterialWriter(level=acts.logging.WARNING, filePath=str(out))
+    with pytest.raises(ValueError, match="does not support stable keys"):
+        rmw.writeMaterial(material)
 
 
 @pytest.mark.json
