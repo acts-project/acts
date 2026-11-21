@@ -18,6 +18,7 @@
 #include "./kernels/find_tracks.cuh"
 #include "./kernels/gather_best_tips_per_measurement.cuh"
 #include "./kernels/gather_measurement_votes.cuh"
+#include "./kernels/permute_tracks.cuh"
 #include "./kernels/progressive_kalman_filter.hpp"
 #include "./kernels/propagate_to_next_surface.hpp"
 #include "./kernels/remove_duplicates.cuh"
@@ -265,6 +266,19 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_keys(
                           .on(details::get_stream(stream())),
                       keys.ptr(), keys.ptr() + keys.capacity(),
                       param_ids.ptr());
+}
+
+void combinatorial_kalman_filter_algorithm::permute_tracks_kernel(
+    unsigned int n_threads,
+    const device::permute_tracks_payload& payload) const {
+  const unsigned int deviceThreads = warp_size() * 8;
+  const unsigned int deviceBlocks =
+      (n_threads + deviceThreads - 1) / deviceThreads;
+
+  // Launch the kernel.
+  permute_tracks(deviceBlocks, deviceThreads, 0, details::get_stream(stream()),
+                 payload);
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
