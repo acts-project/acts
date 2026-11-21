@@ -359,7 +359,7 @@ std::pair<euler_rotation<test_algebra>, std::array<scalar, 3u>> tilt_surface(
 
   vector3 displacement({x_shift, y_shift, z_shift});
   translation = trf.translation() + displacement;
-  transform3_type new_trf(translation, local_z, local_x, true);
+  transform3_type new_trf(translation, local_z, local_x);
   // @todo : Remove and use different context
   detray::detail::set_transform(det, new_trf, trf_link);
 

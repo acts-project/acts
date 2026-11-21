@@ -60,9 +60,6 @@ struct transform3 {
 
   matrix44 _data = ROOT::Math::SMatrixIdentity();  ///< Local-to-global
                                                    ///< transformation matrix.
-  matrix44 _data_inv =
-      ROOT::Math::SMatrixIdentity();  ///< Global-to-local transformation
-                                      ///< matrix.
 
   /// @}
 
@@ -72,10 +69,9 @@ struct transform3 {
   ///  @param x the x axis of the new frame
   ///  @param y the y axis of the new frame
   ///  @param z the z axis of the new frame, normal vector for planes
-  ///  @param get_inverse whether to compute and store the inverse
   DETRAY_HOST_DEVICE
   transform3(const vector3 &t, const vector3 &x, const vector3 &y,
-             const vector3 &z, bool get_inverse = true) {
+             const vector3 &z) {
     _data(0, 0) = x[0];
     _data(1, 0) = x[1];
     _data(2, 0) = x[2];
@@ -88,12 +84,6 @@ struct transform3 {
     _data(0, 3) = t[0];
     _data(1, 3) = t[1];
     _data(2, 3) = t[2];
-
-    if (get_inverse) {
-      int ifail = 0;
-      _data_inv = _data.Inverse(ifail);
-      SMATRIX_CHECK(ifail);
-    }
   }
 
   /// Constructor with arguments: t, z, x
@@ -101,11 +91,9 @@ struct transform3 {
   /// @param t the translation (or origin of the new frame)
   /// @param z the z axis of the new frame, normal vector for planes
   /// @param x the x axis of the new frame
-  /// @param get_inverse whether to compute and store the inverse
   DETRAY_HOST
-  transform3(const vector3 &t, const vector3 &z, const vector3 &x,
-             bool get_inverse = true)
-      : transform3(t, x, ROOT::Math::Cross(z, x), z, get_inverse) {}
+  transform3(const vector3 &t, const vector3 &z, const vector3 &x)
+      : transform3(t, x, ROOT::Math::Cross(z, x), z) {}
 
   /// Constructor with arguments: translation
   ///
@@ -115,40 +103,13 @@ struct transform3 {
     _data(0, 3) = t[0];
     _data(1, 3) = t[1];
     _data(2, 3) = t[2];
-
-    int ifail = 0;
-    _data_inv = _data.Inverse(ifail);
-    SMATRIX_CHECK(ifail);
   }
 
   /// Constructor with arguments: matrix
   ///
   /// @param m is the full 4x4 matrix
   DETRAY_HOST
-  explicit transform3(const matrix44 &m) {
-    _data = m;
-
-    int ifail = 0;
-    _data_inv = _data.Inverse(ifail);
-    SMATRIX_CHECK(ifail);
-  }
-
-  /// Constructor with arguments: matrix and its inverse
-  ///
-  /// @param m is the full 4x4 matrix
-  /// @param m_inv is the inverse to m
-  DETRAY_HOST
-  transform3(const matrix44 &m, const matrix44 &m_inv)
-      : _data{m}, _data_inv{m_inv} {
-    // The assertion will not hold for (casts to) int
-    if constexpr (std::floating_point<scalar_type>) {
-      [[maybe_unused]] constexpr auto epsilon{
-          std::numeric_limits<scalar_type>::epsilon()};
-      assert(algebra::approx_equal(matrix44(m * m_inv),
-                                   matrix44(ROOT::Math::SMatrixIdentity()),
-                                   16.f * epsilon, 1e-6f));
-    }
-  }
+  explicit transform3(const matrix44 &m) { _data = m; }
 
   /// Constructor with arguments: matrix as ROOT::Math::SVector<scalar_t, 16>
   /// of scalars
@@ -172,16 +133,11 @@ struct transform3 {
     _data(1, 3) = ma[7];
     _data(2, 3) = ma[11];
     _data(3, 3) = ma[15];
-
-    int ifail = 0;
-    _data_inv = _data.Inverse(ifail);
-    // Ignore failures here, since the unit test does manage to trigger an
-    // error from ROOT in this place...
   }
 
   /// Default constructors
   transform3() = default;
-  /// Copy a transform and its cached inverse.
+  /// Copy an existing transform.
   /// @param rhs transform to copy
   transform3(const transform3 &rhs) = default;
   ~transform3() = default;
@@ -229,9 +185,25 @@ struct transform3 {
   constexpr matrix44 matrix() const { return _data; }
 
   /// This method retrieves the 4x4 matrix of an inverse transform
+  ///
+  /// @note the rotation is assumed to be orthonormal, so that the inverse is
+  /// the transpose of the rotation and @c -R^T*t as the translation.
   /// @return inverse transformation matrix
   DETRAY_HOST
-  constexpr matrix44 matrix_inverse() const { return _data_inv; }
+  constexpr matrix44 matrix_inverse() const {
+    matrix44 ret = ROOT::Math::SMatrixIdentity();
+
+    const vector3 t{translation()};
+
+    for (unsigned int i = 0u; i < 3u; ++i) {
+      for (unsigned int j = 0u; j < 3u; ++j) {
+        ret(i, j) = _data(j, i);
+      }
+      ret(i, 3) = -ROOT::Math::Dot(_data.template SubCol<vector3>(i, 0), t);
+    }
+
+    return ret;
+  }
 
   /// This method transform from a point from the local 3D cartesian frame to
   /// the global 3D cartesian frame
@@ -264,11 +236,10 @@ struct transform3 {
   /// @return point in local coordinates
   DETRAY_HOST
   constexpr point3 point_to_local(const point3 &v) const {
-    ROOT::Math::SVector<scalar_type, 4> vector_4;
-    vector_4.Place_at(v, 0);
-    vector_4[3] = static_cast<scalar_type>(1);
-    return ROOT::Math::SVector<scalar_type, 4>(_data_inv * vector_4)
-        .template Sub<point3>(0);
+    const vector3 d{v - translation()};
+
+    return point3{ROOT::Math::Dot(x(), d), ROOT::Math::Dot(y(), d),
+                  ROOT::Math::Dot(z(), d)};
   }
 
   /// This method transform from a vector from the local 2D cartesian frame to
@@ -301,10 +272,8 @@ struct transform3 {
   /// @return vector in local coordinates
   DETRAY_HOST
   constexpr point3 vector_to_local(const vector3 &v) const {
-    ROOT::Math::SVector<scalar_type, 4> vector_4;
-    vector_4.Place_at(v, 0);
-    return ROOT::Math::SVector<scalar_type, 4>(_data_inv * vector_4)
-        .template Sub<point3>(0);
+    return point3{ROOT::Math::Dot(x(), v), ROOT::Math::Dot(y(), v),
+                  ROOT::Math::Dot(z(), v)};
   }
 };  // struct transform3
 

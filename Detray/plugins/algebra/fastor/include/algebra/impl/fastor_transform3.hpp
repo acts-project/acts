@@ -66,17 +66,13 @@ struct transform3 {
   /// @name Data objects
   /// @{
 
-  matrix44 _data;      ///< Local-to-global transformation matrix.
-  matrix44 _data_inv;  ///< Global-to-local transformation matrix.
+  matrix44 _data;  ///< Local-to-global transformation matrix.
 
   /// @}
 
   /// Default constructor: identity
   DETRAY_HOST_DEVICE
-  constexpr transform3() {
-    _data.eye();
-    _data_inv.eye();
-  }
+  constexpr transform3() { _data.eye(); }
 
   /// Constructor with arguments: t, x, y, z
   ///
@@ -84,10 +80,9 @@ struct transform3 {
   /// @param x the x axis of the new frame
   /// @param y the y axis of the new frame
   /// @param z the z axis of the new frame, normal vector for planes
-  /// @param get_inverse whether to compute and store the inverse
   DETRAY_HOST_DEVICE
   transform3(const vector3 &t, const vector3 &x, const vector3 &y,
-             const vector3 &z, bool get_inverse = true) {
+             const vector3 &z) {
     // The matrix needs to be initialized to the identity matrix first. We
     // only modify the top 4x3 portion of the matrix, so it doesn't matter
     // what values it initially had. However, the bottom row is required to
@@ -99,10 +94,6 @@ struct transform3 {
     _data(Fastor::fseq<0, 3>(), 1) = y;
     _data(Fastor::fseq<0, 3>(), 2) = z;
     _data(Fastor::fseq<0, 3>(), 3) = t;
-
-    if (get_inverse) {
-      _data_inv = Fastor::inverse(_data);
-    }
   }
 
   /// Constructor with arguments: t, z, x
@@ -110,11 +101,9 @@ struct transform3 {
   /// @param t the translation (or origin of the new frame)
   /// @param z the z axis of the new frame, normal vector for planes
   /// @param x the x axis of the new frame
-  /// @param get_inverse whether to compute and store the inverse
   DETRAY_HOST
-  transform3(const vector3 &t, const vector3 &z, const vector3 &x,
-             bool get_inverse = true)
-      : transform3(t, x, Fastor::cross(z, x), z, get_inverse) {}
+  transform3(const vector3 &t, const vector3 &z, const vector3 &x)
+      : transform3(t, x, Fastor::cross(z, x), z) {}
 
   /// Constructor with arguments: translation
   ///
@@ -128,45 +117,20 @@ struct transform3 {
     _data.eye2();
 
     _data(Fastor::fseq<0, 3>(), 3) = t;
-
-    _data_inv = Fastor::inverse(_data);
   }
 
   /// Constructor with arguments: matrix
   ///
   /// @param m is the full 4x4 matrix
   DETRAY_HOST
-  explicit transform3(const matrix44 &m) : _data{m} {
-    _data_inv = Fastor::inverse(_data);
-  }
-
-  /// Constructor with arguments: matrix and its inverse
-  ///
-  /// @param m is the full 4x4 matrix
-  /// @param m_inv is the inverse to m
-  DETRAY_HOST
-  transform3(const matrix44 &m, const matrix44 &m_inv)
-      : _data{m}, _data_inv{m_inv} {
-    // The assertion will not hold for (casts to) int
-    if constexpr (std::floating_point<scalar_type>) {
-      [[maybe_unused]] constexpr auto epsilon{
-          std::numeric_limits<scalar_type>::epsilon()};
-
-      [[maybe_unused]] matrix44 identity_matrix;
-      identity_matrix.eye2();
-      assert(algebra::approx_equal(m * m_inv, identity_matrix, 16.f * epsilon,
-                                   1e-6f));
-    }
-  }
+  explicit transform3(const matrix44 &m) : _data{m} {}
 
   /// Constructor with arguments: matrix as Fastor::Tensor<scalar_t, 16> of
   /// scalars
   ///
   /// @param ma is the full 4x4 matrix as a 16-element array
   DETRAY_HOST
-  explicit transform3(const array_type<16> &ma) : _data{ma} {
-    _data_inv = Fastor::inverse(_data);
-  }
+  explicit transform3(const array_type<16> &ma) : _data{ma} {}
 
   /// Copy an existing transform.
   /// @param rhs Transform whose matrices are copied.
@@ -217,9 +181,23 @@ struct transform3 {
   constexpr matrix44 matrix() const { return _data; }
 
   /// This method retrieves the 4x4 matrix of an inverse transform
+  ///
+  /// @note the rotation is assumed to be orthonormal, so that the inverse is
+  /// the transpose of the rotation and @c -R^T*t as the translation.
   /// @return inverse transformation matrix
   DETRAY_HOST
-  constexpr matrix44 matrix_inverse() const { return _data_inv; }
+  constexpr matrix44 matrix_inverse() const {
+    matrix44 ret;
+    ret.eye2();
+
+    const Fastor::Tensor<scalar_type, 3, 3> rot_inv{
+        Fastor::transpose(rotation())};
+
+    ret(Fastor::fseq<0, 3>(), Fastor::fseq<0, 3>()) = rot_inv;
+    ret(Fastor::fseq<0, 3>(), 3) = -Fastor::matmul(rot_inv, translation());
+
+    return ret;
+  }
 
   /// This method transform from a point from the local 3D cartesian frame to
   /// the global 3D cartesian frame
@@ -253,11 +231,9 @@ struct transform3 {
   /// @return point in local coordinates
   DETRAY_HOST
   constexpr point3 point_to_local(const point3 &v) const {
-    Fastor::Tensor<scalar_type, 4> vector_4;
-    vector_4(Fastor::fseq<0, 3>()) = v;
-    vector_4[3] = static_cast<scalar_type>(1);
-    return Fastor::Tensor<scalar_type, 3>(
-        Fastor::matmul(_data_inv, vector_4)(Fastor::fseq<0, 3>()));
+    const vector3 d{v - translation()};
+
+    return point3{Fastor::matmul(Fastor::transpose(rotation()), d)};
   }
 
   /// This method transform from a vector from the local 2D cartesian frame to
@@ -293,11 +269,7 @@ struct transform3 {
   /// @return vector in local coordinates
   DETRAY_HOST
   constexpr point3 vector_to_local(const vector3 &v) const {
-    Fastor::Tensor<scalar_type, 4> vector_4;
-    vector_4(Fastor::fseq<0, 3>()) = v;
-    vector_4[3] = static_cast<scalar_type>(0);
-    return Fastor::Tensor<scalar_type, 3>(
-        Fastor::matmul(_data_inv, vector_4)(Fastor::fseq<0, 3>()));
+    return point3{Fastor::matmul(Fastor::transpose(rotation()), v)};
   }
 };  // struct transform3
 
