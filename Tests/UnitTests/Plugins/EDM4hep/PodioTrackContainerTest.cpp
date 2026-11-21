@@ -44,10 +44,15 @@
 #include "ActsPodioEdm/TrackCollection.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <iterator>
 #include <memory>
 #include <random>
 #include <stdexcept>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <typeinfo>
 
 using namespace Acts;
 using namespace ActsPlugins;
@@ -443,6 +448,255 @@ BOOST_AUTO_TEST_CASE(ExternalCollectionSupport) {
   // Test that releaseInto works for owned collection
   podio::Frame frame;
   BOOST_CHECK_NO_THROW(ownedContainer.releaseInto(frame, ""));
+}
+
+namespace {
+
+/// Check that the backend maps @p key back to @p expName and reports
+/// @p expType as data type of the column
+template <typename backend_t>
+void checkTrackColumnInfo(const backend_t& backend, HashedString key,
+                          std::string_view expName,
+                          const std::type_info& expType) {
+  BOOST_TEST_CONTEXT("Column '" << expName << "'") {
+    BOOST_CHECK_EQUAL(backend.columnName_impl(key), expName);
+    const std::type_info& type = backend.columnDataType_impl(key);
+    BOOST_CHECK_MESSAGE(type == expType, "Expected data type " << expType.name()
+                                                               << " but got "
+                                                               << type.name());
+  }
+}
+
+template <typename backend_t>
+void checkStaticPodioTrackColumns(const backend_t& backend) {
+  checkTrackColumnInfo(backend, "tipIndex"_hash, "tipIndex",
+                       typeid(std::uint32_t));
+  checkTrackColumnInfo(backend, "stemIndex"_hash, "stemIndex",
+                       typeid(std::uint32_t));
+  checkTrackColumnInfo(backend, "params"_hash, "params",
+                       typeid(PodioTrackContainerBase::ConstParameters));
+  checkTrackColumnInfo(backend, "cov"_hash, "cov",
+                       typeid(PodioTrackContainerBase::ConstCovariance));
+  checkTrackColumnInfo(backend, "nMeasurements"_hash, "nMeasurements",
+                       typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nHoles"_hash, "nHoles", typeid(unsigned int));
+  checkTrackColumnInfo(backend, "chi2"_hash, "chi2", typeid(float));
+  checkTrackColumnInfo(backend, "ndf"_hash, "ndf", typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nOutliers"_hash, "nOutliers",
+                       typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nSharedHits"_hash, "nSharedHits",
+                       typeid(unsigned int));
+  checkTrackColumnInfo(backend, "nSplitHits"_hash, "nSplitHits",
+                       typeid(unsigned int));
+}
+
+template <typename backend_t>
+void checkDynamicPodioTrackColumns(const backend_t& backend) {
+  BOOST_CHECK(backend.hasColumn_impl(hashString("col_float")));
+  BOOST_CHECK(backend.hasColumn_impl(hashString("col_i32")));
+  BOOST_CHECK(backend.hasColumn_impl(hashString("col_u64")));
+  checkTrackColumnInfo(backend, hashString("col_float"), "col_float",
+                       typeid(float));
+  checkTrackColumnInfo(backend, hashString("col_i32"), "col_i32",
+                       typeid(std::int32_t));
+  checkTrackColumnInfo(backend, hashString("col_u64"), "col_u64",
+                       typeid(std::uint64_t));
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(ColumnInfo) {
+  NullHelper helper;
+
+  MutablePodioTrackContainer ptc{
+      helper, std::make_unique<ActsPodioEdm::TrackCollection>()};
+  checkStaticPodioTrackColumns(ptc);
+
+  ptc.addColumn_impl<float>("col_float");
+  ptc.addColumn_impl<std::int32_t>("col_i32");
+  ptc.addTrack_impl();
+  ptc.addColumn_impl<std::uint64_t>("col_u64");
+  ptc.addTrack_impl();
+
+  checkStaticPodioTrackColumns(ptc);
+  checkDynamicPodioTrackColumns(ptc);
+
+  BOOST_CHECK_EQUAL(ptc.columnName_impl(hashString("unknown")), "");
+  BOOST_CHECK_THROW(ptc.columnDataType_impl(hashString("unknown")),
+                    std::runtime_error);
+
+  // Name and type must survive the round trip through a podio frame
+  podio::Frame frame;
+  ptc.releaseInto(frame, "test");
+
+  ConstPodioTrackContainer<> cptc{helper, frame, "test"};
+  checkStaticPodioTrackColumns(cptc);
+  checkDynamicPodioTrackColumns(cptc);
+}
+
+namespace {
+
+/// Add a dynamic column to the track container @p dst which matches the
+/// dynamic column @p key of the source backend @p src in name and data type
+template <typename dst_container_t, typename src_backend_t>
+void addMatchingColumn(dst_container_t& dst, const src_backend_t& src,
+                       HashedString key) {
+  const std::type_info& type = src.columnDataType_impl(key);
+  const std::string name{src.columnName_impl(key)};
+  // An empty name means the source backend does not know the key
+  BOOST_REQUIRE_MESSAGE(
+      !name.empty(),
+      "Source backend returned an empty name for column key " << key);
+
+  auto tryAdd = [&]<typename T>(std::type_identity<T> /*tag*/) {
+    if (type != typeid(T)) {
+      return false;
+    }
+    dst.template addColumn<T>(name);
+    return true;
+  };
+
+  const bool added = tryAdd(std::type_identity<float>{}) ||
+                     tryAdd(std::type_identity<double>{}) ||
+                     tryAdd(std::type_identity<std::int8_t>{}) ||
+                     tryAdd(std::type_identity<std::int16_t>{}) ||
+                     tryAdd(std::type_identity<std::int32_t>{}) ||
+                     tryAdd(std::type_identity<std::int64_t>{}) ||
+                     tryAdd(std::type_identity<std::uint8_t>{}) ||
+                     tryAdd(std::type_identity<std::uint16_t>{}) ||
+                     tryAdd(std::type_identity<std::uint32_t>{}) ||
+                     tryAdd(std::type_identity<std::uint64_t>{});
+  if (!added) {
+    throw std::invalid_argument(
+        "Column '" + name +
+        "' has data type unsupported by podio: " + type.name());
+  }
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(ConvertVectorTrackContainerWithDynamicColumns) {
+  MapHelper helper;
+
+  auto surface = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(15, 20));
+  // Register the surface "with the detector" to look it up after conversion
+  helper.surfaces[42] = surface.get();
+
+  // Source container with the vector backends & a set of dynamic columns
+  VectorTrackContainer vtc{};
+  VectorMultiTrajectory mtj{};
+  TrackContainer src{vtc, mtj};
+
+  src.addColumn<float>("col_float");
+  src.addColumn<std::int32_t>("col_i32");
+  src.addColumn<std::uint64_t>("col_u64");
+  BOOST_CHECK(src.hasColumn(hashString("col_float")));
+  BOOST_CHECK(src.hasColumn(hashString("col_i32")));
+  BOOST_CHECK(src.hasColumn(hashString("col_u64")));
+
+  constexpr std::size_t nTracks = 5;
+  for (std::size_t i = 0; i < nTracks; ++i) {
+    auto t = src.makeTrack();
+    for (std::size_t s = 0; s <= i; ++s) {
+      auto ts = t.appendTrackState();
+      ts.predicted() = BoundVector::Constant(static_cast<double>(s + 1));
+    }
+    t.parameters() = BoundVector::Constant(static_cast<double>(i));
+    t.nMeasurements() = static_cast<unsigned int>(2 * i);
+    t.chi2() = 1.5f * static_cast<float>(i);
+    t.setParticleHypothesis(ParticleHypothesis::pion());
+    t.setReferenceSurface(surface);
+
+    t.template component<float>("col_float") = 0.5f * static_cast<float>(i);
+    t.template component<std::int32_t>("col_i32") =
+        -static_cast<std::int32_t>(i);
+    t.template component<std::uint64_t>("col_u64") = 1000 + i;
+  }
+  BOOST_REQUIRE_EQUAL(src.size(), nTracks);
+
+  // Compare the converted container against the source container
+  auto checkConverted = [&](const auto& dst) {
+    BOOST_REQUIRE_EQUAL(dst.size(), src.size());
+    for (std::size_t i = 0; i < src.size(); ++i) {
+      BOOST_TEST_CONTEXT("Track " << i) {
+        auto s = src.getTrack(i);
+        auto d = dst.getTrack(i);
+
+        BOOST_CHECK_EQUAL(d.nTrackStates(), s.nTrackStates());
+        BOOST_CHECK_EQUAL(d.parameters(), s.parameters());
+        BOOST_CHECK_EQUAL(d.nMeasurements(), s.nMeasurements());
+        BOOST_CHECK_EQUAL(d.chi2(), s.chi2());
+        BOOST_CHECK_EQUAL(d.particleHypothesis(), s.particleHypothesis());
+        BOOST_REQUIRE(d.hasReferenceSurface());
+        BOOST_CHECK_EQUAL(&d.referenceSurface(), surface.get());
+
+        for (auto [tsS, tsD] :
+             zip(s.trackStatesReversed(), d.trackStatesReversed())) {
+          BOOST_CHECK_EQUAL(tsD.predicted(), tsS.predicted());
+        }
+
+        BOOST_CHECK_EQUAL((d.template component<float, "col_float"_hash>()),
+                          (s.template component<float, "col_float"_hash>()));
+        BOOST_CHECK_EQUAL(
+            (d.template component<std::int32_t, "col_i32"_hash>()),
+            (s.template component<std::int32_t, "col_i32"_hash>()));
+        BOOST_CHECK_EQUAL(
+            (d.template component<std::uint64_t, "col_u64"_hash>()),
+            (s.template component<std::uint64_t, "col_u64"_hash>()));
+      }
+    }
+  };
+
+  podio::Frame frame;
+  {
+    MutablePodioTrackStateContainer tsc{
+        helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+        std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
+        std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr};
+    MutablePodioTrackContainer ptc{
+        helper, std::make_unique<ActsPodioEdm::TrackCollection>()};
+    TrackContainer dst{ptc, tsc};
+
+    // Mirror the dynamic columns of the source onto the podio container using
+    // only the column name and data type exposed by the vector backend
+    std::size_t nDynamic = 0;
+    for (const auto key : vtc.dynamicKeys_impl()) {
+      addMatchingColumn(dst, vtc, key);
+      ++nDynamic;
+    }
+    BOOST_CHECK_EQUAL(nDynamic, 3);
+    checkDynamicPodioTrackColumns(ptc);
+
+    for (const auto& srcTrack : src) {
+      auto dstTrack = dst.makeTrack();
+      dstTrack.copyFrom(srcTrack);
+    }
+    checkConverted(dst);
+
+    ptc.releaseInto(frame);
+    tsc.releaseInto(frame);
+  }
+
+  BOOST_REQUIRE_NE(frame.get("tracks"), nullptr);
+  BOOST_CHECK_EQUAL(frame.get("tracks")->size(), nTracks);
+  for (const char* col : {"col_float", "col_i32", "col_u64"}) {
+    BOOST_TEST_CONTEXT("Column " << col) {
+      const auto* extra = frame.get(std::string{"tracks_extra__"} + col);
+      BOOST_REQUIRE_NE(extra, nullptr);
+      BOOST_CHECK_EQUAL(extra->size(), nTracks);
+    }
+  }
+
+  // The dynamic columns must also be recovered when reading back the frame
+  {
+    ConstPodioTrackStateContainer tsc{helper, frame};
+    ConstPodioTrackContainer ptc{helper, frame};
+    TrackContainer dst{ptc, tsc};
+
+    checkDynamicPodioTrackColumns(ptc);
+    checkConverted(dst);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

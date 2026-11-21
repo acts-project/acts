@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <ranges>
+#include <stdexcept>
 #include <string_view>
 
 namespace Acts {
@@ -364,10 +365,16 @@ class TrackStateProxyCommon {
                                  std::uint8_t>)
   {
     assert(derived().template has<detail_tsp::kProjectorKey>());
-    assert(subspaceIndices.size() <= eBoundSize);
+    if (std::ranges::size(subspaceIndices) > eBoundSize) {
+      throw std::invalid_argument(
+          "Number of projector subspace indices exceeds eBoundSize");
+    }
     BoundSubspaceIndices boundSubspace{};
-    std::ranges::transform(subspaceIndices, boundSubspace.begin(),
-                           [](auto i) { return static_cast<std::uint8_t>(i); });
+    // zip bounds the copy by the destination size as well, which lets the
+    // compiler prove the writes stay in range (GCC >= 16 -Wstringop-overflow)
+    for (auto&& [dst, src] : std::views::zip(boundSubspace, subspaceIndices)) {
+      dst = static_cast<std::uint8_t>(src);
+    }
     derived()
         .template component<SerializedSubspaceIndices,
                             detail_tsp::kProjectorKey>() =
