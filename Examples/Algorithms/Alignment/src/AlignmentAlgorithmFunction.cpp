@@ -11,6 +11,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
@@ -45,7 +46,8 @@ struct AlignmentFunctionImpl
 std::shared_ptr<ActsExamples::AlignmentAlgorithm::AlignmentFunction>
 ActsExamples::AlignmentAlgorithm::makeAlignmentFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    Acts::Logging::Level logLevel) {
   Stepper stepper(std::move(magneticField));
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
@@ -54,7 +56,8 @@ ActsExamples::AlignmentAlgorithm::makeAlignmentFunction(
   Acts::Navigator navigator(cfg);
   Propagator propagator(std::move(stepper), std::move(navigator));
   Fitter trackFitter(std::move(propagator));
-  Alignment alignment(std::move(trackFitter));
+  Alignment alignment(std::move(trackFitter),
+                      Acts::getDefaultLogger("Alignment", logLevel));
 
   // build the alignment functions. owns the alignment object.
   return std::make_shared<AlignmentFunctionImpl>(std::move(alignment));
