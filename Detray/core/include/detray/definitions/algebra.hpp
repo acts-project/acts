@@ -16,6 +16,17 @@
 // is used, in the same order as in the test types.
 #if DETRAY_ALGEBRA_ARRAY || DETRAY_ALGEBRA_ARRAY_SOA || DETRAY_ALGEBRA_VC_SOA
 
+// The generic algebra implementation calls the math functions with the
+// @c algebra::math qualifier. A qualified call only finds the overloads that
+// are declared before the generic headers. The other plugins include the
+// generic headers, so the SIMD math overloads of the SoA plugins come first.
+#if DETRAY_ALGEBRA_ARRAY_SOA
+#include "algebra/impl/array_soa_math.hpp"
+#endif
+#if DETRAY_ALGEBRA_VC_SOA
+#include "algebra/impl/vc_soa_math.hpp"
+#endif
+
 #if DETRAY_ALGEBRA_ARRAY
 #include "algebra/array.hpp"
 #endif

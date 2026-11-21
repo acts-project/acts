@@ -200,6 +200,12 @@ struct block_getter<algebra::array_soa::matrix_type<T, ROWS, COLS, W>> {
 };
 /// @}
 
+/// Use the generic vector functions (see
+/// detray/algebra/generic/impl/generic_vector.hpp)
+template <concepts::value T, auto N, std::size_t W>
+struct uses_generic_vector_functions<algebra::array_soa::vector_type<T, N, W>>
+    : std::true_type {};
+
 // Vector and storage types are different: the array of lane bundles that the
 // storage operators return must also count as a vector
 template <concepts::array_soa_simd T, auto N>

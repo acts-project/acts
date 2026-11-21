@@ -10,6 +10,8 @@
 
 // Project include(s).
 #include "detray/algebra/common/impl/storage_vector.hpp"
+#include "detray/algebra/concepts.hpp"
+#include "detray/algebra/type_traits.hpp"
 
 // Vc include(s).
 #ifdef _MSC_VER
@@ -29,9 +31,14 @@ namespace detray::concepts {
 template <typename T>
 concept vc_simd_vector = Vc::is_simd_vector<T>::value;
 
-/// Vc SIMD types
+/// Vc AoS storage vector: a storage vector with a non-SIMD scalar
+///
+/// @note The SoA plugins also use storage vectors, but with a SIMD scalar.
+/// These do not match, so that the Vc AoS overloads do not clash with the
+/// SoA overloads in the same translation unit.
 template <typename T>
-concept simd_storage_vector = algebra::detail::is_storage_vector_v<T>;
+concept simd_storage_vector = algebra::detail::is_storage_vector_v<T> &&
+                              !concepts::simd_scalar<traits::scalar_t<T>>;
 
 /// Vc AoS vector
 template <typename T>

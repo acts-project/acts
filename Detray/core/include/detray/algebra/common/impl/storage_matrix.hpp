@@ -21,8 +21,8 @@ namespace detray::algebra::storage {
 /// Generic matrix type that can take vectors as columns
 template <template <typename, std::size_t> class array_t,
           concepts::scalar scalar_t, std::size_t ROW, std::size_t COL>
-struct DETRAY_ALIGN(
-    alignof(algebra::storage::vector<ROW, scalar_t, array_t>)) matrix {
+struct DETRAY_ALIGN(alignof(algebra::storage::vector<ROW, scalar_t, array_t>))
+    matrix {
   /// The matrix consists of column vectors
   using vector_type = algebra::storage::vector<ROW, scalar_t, array_t>;
   /// Value type: Can be simd types

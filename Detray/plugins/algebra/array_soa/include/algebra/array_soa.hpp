@@ -18,6 +18,7 @@
 #include "detray/algebra/common/impl/storage_getter.hpp"
 #include "detray/algebra/common/soa.hpp"
 #include "detray/algebra/generic/impl/generic_matrix.hpp"
+#include "detray/algebra/generic/impl/generic_vector.hpp"
 
 // System include(s).
 #include <bit>
@@ -86,14 +87,14 @@ namespace vector {
 /// @name Vector functions on @c algebra::array_soa types
 /// @{
 
-using algebra::soa::cross;
-using algebra::soa::dot;
-using algebra::soa::eta;
-using algebra::soa::norm;
-using algebra::soa::normalize;
-using algebra::soa::perp;
-using algebra::soa::phi;
-using algebra::soa::theta;
+using algebra::generic::cross;
+using algebra::generic::dot;
+using algebra::generic::eta;
+using algebra::generic::norm;
+using algebra::generic::normalize;
+using algebra::generic::perp;
+using algebra::generic::phi;
+using algebra::generic::theta;
 
 /// @}
 
@@ -103,12 +104,13 @@ using algebra::soa::theta;
 namespace matrix {
 
 using algebra::soa::determinant;
-using algebra::soa::identity;
 using algebra::soa::inverse;
-using algebra::soa::set_identity;
-using algebra::soa::set_zero;
-using algebra::soa::transpose;
-using algebra::soa::zero;
+
+using algebra::storage::identity;
+using algebra::storage::set_identity;
+using algebra::storage::set_zero;
+using algebra::storage::transpose;
+using algebra::storage::zero;
 
 using algebra::generic::math::cholesky_decomposition;
 using algebra::generic::math::column_wise_cross;
