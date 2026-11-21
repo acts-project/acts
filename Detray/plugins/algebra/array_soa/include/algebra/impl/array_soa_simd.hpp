@@ -169,7 +169,7 @@ struct DETRAY_ALIGN((detail::lane_alignment<I, W>)) mask {
 
   /// @returns true if every lane is set
   DETRAY_HOST_DEVICE
-  constexpr bool isFull() const {
+  constexpr bool is_full() const {
     I ret{s_true};
     DETRAY_UNROLL_N(W)
     for (std::size_t i = 0u; i < W; ++i) {
@@ -235,7 +235,7 @@ struct DETRAY_ALIGN((detail::lane_alignment<I, W>)) mask {
   /// @{
   DETRAY_HOST_DEVICE
   friend constexpr bool operator==(const mask &a, const mask &b) {
-    return (!(a ^ b)).isFull();
+    return (!(a ^ b)).is_full();
   }
 
   DETRAY_HOST_DEVICE
@@ -507,43 +507,56 @@ namespace std {
 
 /// Numeric limits of a lane bundle: the constants of the value type, the
 /// values broadcast to every lane
+///
+/// @tparam T Value type of a lane
+/// @tparam W Number of lanes
 template <detray::concepts::value T, std::size_t W>
 struct numeric_limits<detray::algebra::array_soa::simd<T, W>>
     : public numeric_limits<T> {
+  /// Lane bundle type
   using simd_t = detray::algebra::array_soa::simd<T, W>;
 
+  /// @returns the smallest positive normal value of @c T in every lane
   DETRAY_HOST_DEVICE
   static constexpr simd_t min() noexcept {
     return simd_t{numeric_limits<T>::min()};
   }
+  /// @returns the largest finite value of @c T in every lane
   DETRAY_HOST_DEVICE
   static constexpr simd_t max() noexcept {
     return simd_t{numeric_limits<T>::max()};
   }
+  /// @returns the lowest finite value of @c T in every lane
   DETRAY_HOST_DEVICE
   static constexpr simd_t lowest() noexcept {
     return simd_t{numeric_limits<T>::lowest()};
   }
+  /// @returns the machine epsilon of @c T in every lane
   DETRAY_HOST_DEVICE
   static constexpr simd_t epsilon() noexcept {
     return simd_t{numeric_limits<T>::epsilon()};
   }
+  /// @returns the maximum rounding error of @c T in every lane
   DETRAY_HOST_DEVICE
   static constexpr simd_t round_error() noexcept {
     return simd_t{numeric_limits<T>::round_error()};
   }
+  /// @returns the positive infinity of @c T in every lane
   DETRAY_HOST_DEVICE
   static constexpr simd_t infinity() noexcept {
     return simd_t{numeric_limits<T>::infinity()};
   }
+  /// @returns a quiet NaN of @c T in every lane
   DETRAY_HOST_DEVICE
   static constexpr simd_t quiet_NaN() noexcept {
     return simd_t{numeric_limits<T>::quiet_NaN()};
   }
+  /// @returns a signaling NaN of @c T in every lane
   DETRAY_HOST_DEVICE
   static constexpr simd_t signaling_NaN() noexcept {
     return simd_t{numeric_limits<T>::signaling_NaN()};
   }
+  /// @returns the smallest positive subnormal value of @c T in every lane
   DETRAY_HOST_DEVICE
   static constexpr simd_t denorm_min() noexcept {
     return simd_t{numeric_limits<T>::denorm_min()};

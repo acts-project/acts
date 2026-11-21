@@ -87,14 +87,14 @@ namespace vector {
 /// @name Vector functions on @c algebra::array_soa types
 /// @{
 
-using algebra::generic::cross;
-using algebra::generic::dot;
-using algebra::generic::eta;
-using algebra::generic::norm;
-using algebra::generic::normalize;
-using algebra::generic::perp;
-using algebra::generic::phi;
-using algebra::generic::theta;
+using algebra::generic::math::cross;
+using algebra::generic::math::dot;
+using algebra::generic::math::eta;
+using algebra::generic::math::norm;
+using algebra::generic::math::normalize;
+using algebra::generic::math::perp;
+using algebra::generic::math::phi;
+using algebra::generic::math::theta;
 
 /// @}
 

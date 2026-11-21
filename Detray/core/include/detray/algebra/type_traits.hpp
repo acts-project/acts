@@ -127,15 +127,16 @@ template <class M>
 inline constexpr bool is_square{(rows<M> == columns<M>)};
 /// @}
 
-/// Opt-in for the generic vector functions in @c algebra::generic
+/// Opt-in for the generic vector functions in @c algebra::generic::math
 ///
-/// A plugin specializes this trait for its vector types, if it uses the
-/// generic implementation (see detray/algebra/generic/impl/generic_vector.hpp).
+/// A plugin specializes this trait for its vector (and column matrix) types, if
+/// it uses the generic implementation (see
+/// detray/algebra/generic/impl/generic_vector.hpp).
 /// Types without the specialization never match the generic overloads. Thus,
 /// the generic overloads do not clash with the specific overloads of other
 /// plugins in the same translation unit.
 ///
-/// @tparam V Vector type
+/// @tparam V Vector or column matrix type
 /// @{
 template <class V>
 struct uses_generic_vector_functions : std::false_type {};

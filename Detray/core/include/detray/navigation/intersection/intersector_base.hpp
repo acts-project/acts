@@ -202,8 +202,6 @@ DETRAY_HOST_DEVICE constexpr void resolve_mask(
   } else {
     is.set_status(intersection::status::e_outside);
   }
-  // is.set_status_if(intersection::status::e_outside,
-  // !math::isfinite(ip.path));
 
   // Build intersection struct from test trajectory, if the distance is valid
   if (detray::detail::none_of(ip.path >=

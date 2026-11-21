@@ -121,6 +121,7 @@ namespace matrix {
 /// @name Matrix functions on @c algebra::vc_aos types
 /// @{
 
+using algebra::vc_aos::math::column_wise_cross;
 using algebra::vc_aos::math::determinant;
 using algebra::vc_aos::math::identity;
 using algebra::vc_aos::math::inverse;
@@ -130,7 +131,6 @@ using algebra::vc_aos::math::transpose;
 using algebra::vc_aos::math::zero;
 
 using algebra::generic::math::cholesky_decomposition;
-using algebra::generic::math::column_wise_cross;
 using algebra::generic::math::column_wise_multiply;
 using algebra::generic::math::cross_matrix;
 using algebra::generic::math::outer_product;

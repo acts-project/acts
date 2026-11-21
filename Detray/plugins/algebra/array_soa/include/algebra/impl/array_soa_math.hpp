@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "algebra/impl/array_soa_simd.hpp"
+#include "detray/algebra/common/math.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
@@ -23,35 +24,8 @@
 
 namespace detray::algebra::math {
 
-/// Math functions on single values
-/// @{
-using std::abs;
-using std::acos;
-using std::asin;
-using std::atan;
-using std::atan2;
-using std::atanh;
-using std::ceil;
-using std::copysign;
-using std::cos;
-using std::cosh;
-using std::exp;
-using std::fabs;
-using std::floor;
-using std::fma;
-using std::hypot;
-using std::log;
-using std::log10;
-using std::max;
-using std::min;
-using std::pow;
-using std::signbit;
-using std::sin;
-using std::sinh;
-using std::sqrt;
-using std::tan;
-using std::tanh;
-/// @}
+// The math functions on single values are declared in
+// detray/algebra/common/math.hpp
 
 /// Lane-wise overloads of common math functions
 /// @{
@@ -160,6 +134,16 @@ DETRAY_HOST_DEVICE constexpr auto signbit(const array_soa::simd<T, W> &v) {
   return ret;
 }
 
+/// Fused multiply-add in every lane: x * y + z
+///
+/// @tparam T Value type of a lane
+/// @tparam W Number of lanes
+///
+/// @param x the first factor
+/// @param y the second factor
+/// @param z the addend
+///
+/// @returns the lane bundle with @c fma(x[i], y[i], z[i]) in every lane
 template <concepts::value T, std::size_t W>
 DETRAY_HOST_DEVICE constexpr array_soa::simd<T, W> fma(
     const array_soa::simd<T, W> &x, const array_soa::simd<T, W> &y,

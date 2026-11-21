@@ -20,17 +20,23 @@ target_link_libraries(detray_algebra_array_soa INTERFACE detray::core)
 # The lane-wise math functions only vectorize on the host, if they do not have
 # to set errno. Detray does not read errno, so the flag does not change the
 # results. Device code never sets errno, so the device compilation needs no flag.
-set(_detray_gnu_like_cxx
-    "$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:IntelLLVM>>"
-)
-target_compile_options(
-    detray_algebra_array_soa
-    INTERFACE
-        "$<$<AND:$<COMPILE_LANGUAGE:CXX>,${_detray_gnu_like_cxx}>:-fno-math-errno>"
-        "$<$<AND:$<COMPILE_LANGUAGE:CUDA>,${_detray_gnu_like_cxx}>:SHELL:-Xcompiler -fno-math-errno>"
-        "$<$<COMPILE_LANGUAGE:HIP>:-fno-math-errno>"
-)
-unset(_detray_gnu_like_cxx)
+#
+# Note: The flag is an interface option, so it propagates to all targets that
+# link the plugin. These targets do not see errno from the math functions
+# either. Switch it off with DETRAY_ARRAY_SOA_NO_MATH_ERRNO=OFF.
+if(DETRAY_ARRAY_SOA_NO_MATH_ERRNO)
+    set(_detray_gnu_like_cxx
+        "$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:IntelLLVM>>"
+    )
+    target_compile_options(
+        detray_algebra_array_soa
+        INTERFACE
+            "$<$<AND:$<COMPILE_LANGUAGE:CXX>,${_detray_gnu_like_cxx}>:-fno-math-errno>"
+            "$<$<AND:$<COMPILE_LANGUAGE:CUDA>,${_detray_gnu_like_cxx}>:SHELL:-Xcompiler -fno-math-errno>"
+            "$<$<COMPILE_LANGUAGE:HIP>:-fno-math-errno>"
+    )
+    unset(_detray_gnu_like_cxx)
+endif()
 
 target_compile_definitions(
     detray_algebra_array_soa
