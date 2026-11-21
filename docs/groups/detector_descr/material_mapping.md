@@ -41,7 +41,7 @@ material-carrying in the first place. Gen1 annotates an already-built geometry
 through an @ref Acts::IMaterialDecorator, typically driven by an edited JSON
 geometry map. Gen3 designates during construction, via
 @ref Acts::MaterialDesignatorBlueprintNode in the blueprint tree, which attaches
-@ref Acts::ProtoGridSurfaceMaterial to selected volume faces;
+@ref Acts::ProtoSurfaceMaterial to selected volume faces;
 @ref Acts::Blueprint::construct does not apply a material decorator at all. Both
 end up as proto material on ordinary surfaces, which is why the mapping step
 that follows is identical. See @ref material_mapping_howto for the practical

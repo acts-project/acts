@@ -9,6 +9,8 @@
 import json
 import sys
 
+from surface_binning import configure_surface
+
 # Should be run with Python 3 if possible
 # Script that use the json config file to configure the Json surfaces map for the material mapping
 # Take two arguments in input : The path to the surfaces map and the path of the json config file
@@ -51,20 +53,7 @@ with open(inFileName, "r+") as json_file:
                                 and conf["value"]["bounds"]["type"]
                                 == entry["value"]["bounds"]["type"]
                             ):
-                                entry["value"]["material"]["mapMaterial"] = conf[
-                                    "value"
-                                ]["material"]["mapMaterial"]
-                                entry["value"]["material"]["mappingType"] = conf[
-                                    "value"
-                                ]["material"]["mappingType"]
-                                ibin = 0
-                                for bin in entry["value"]["material"]["binUtility"][
-                                    "binningdata"
-                                ]:
-                                    bin["bins"] = conf["value"]["material"][
-                                        "binUtility"
-                                    ]["binningdata"][ibin]["bins"]
-                                    ibin = ibin + 1
+                                configure_surface(entry, conf)
                                 continue
                         continue
 
@@ -77,20 +66,7 @@ with open(inFileName, "r+") as json_file:
                             and conf["value"]["bounds"]["type"]
                             == entry["value"]["bounds"]["type"]
                         ):
-                            entry["value"]["material"]["mapMaterial"] = conf["value"][
-                                "material"
-                            ]["mapMaterial"]
-                            entry["value"]["material"]["mappingType"] = conf["value"][
-                                "material"
-                            ]["mappingType"]
-                            ibin = 0
-                            for bin in entry["value"]["material"]["binUtility"][
-                                "binningdata"
-                            ]:
-                                bin["bins"] = conf["value"]["material"]["binUtility"][
-                                    "binningdata"
-                                ][ibin]["bins"]
-                                ibin = ibin + 1
+                            configure_surface(entry, conf)
                             continue
                     continue
 
@@ -103,20 +79,7 @@ with open(inFileName, "r+") as json_file:
                             and conf["value"]["bounds"]["type"]
                             == entry["value"]["bounds"]["type"]
                         ):
-                            entry["value"]["material"]["mapMaterial"] = conf["value"][
-                                "material"
-                            ]["mapMaterial"]
-                            entry["value"]["material"]["mappingType"] = conf["value"][
-                                "material"
-                            ]["mappingType"]
-                            ibin = 0
-                            for bin in entry["value"]["material"]["binUtility"][
-                                "binningdata"
-                            ]:
-                                bin["bins"] = conf["value"]["material"]["binUtility"][
-                                    "binningdata"
-                                ][ibin]["bins"]
-                                ibin = ibin + 1
+                            configure_surface(entry, conf)
                             continue
                     continue
 
@@ -130,20 +93,7 @@ with open(inFileName, "r+") as json_file:
                             and conf["value"]["bounds"]["type"]
                             == entry["value"]["bounds"]["type"]
                         ):
-                            entry["value"]["material"]["mapMaterial"] = conf["value"][
-                                "material"
-                            ]["mapMaterial"]
-                            entry["value"]["material"]["mappingType"] = conf["value"][
-                                "material"
-                            ]["mappingType"]
-                            ibin = 0
-                            for bin in entry["value"]["material"]["binUtility"][
-                                "binningdata"
-                            ]:
-                                bin["bins"] = conf["value"]["material"]["binUtility"][
-                                    "binningdata"
-                                ][ibin]["bins"]
-                                ibin = ibin + 1
+                            configure_surface(entry, conf)
                             continue
                     continue
         data["Volumes"] = config["Volumes"]

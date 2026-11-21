@@ -168,24 +168,17 @@ GenericDetectorBuilder::GenericDetectorBuilder(
     : m_cfg(cfg), m_logger(std::move(logger)) {
   // Prepare the proto material - in case it's designed to do so
   // - cylindrical
-  Acts::BinUtility pCylinderUtility(10, -1, 1, Acts::closed,
-                                    Acts::AxisDirection::AxisPhi);
-  pCylinderUtility +=
-      Acts::BinUtility(10, -1, 1, Acts::open, Acts::AxisDirection::AxisZ);
-  auto pCylinderMaterial =
-      std::make_shared<const Acts::ProtoSurfaceMaterial>(pCylinderUtility);
-  // - disc
-  Acts::BinUtility pDiscUtility(10, 0, 1, Acts::open,
-                                Acts::AxisDirection::AxisR);
-  pDiscUtility +=
-      Acts::BinUtility(10, -1, 1, Acts::closed, Acts::AxisDirection::AxisPhi);
+  auto pCylinderMaterial = std::make_shared<const Acts::ProtoSurfaceMaterial>(
+      Acts::MultiAxisSpec2D({Acts::AxisSpec::DeferredEquidistant(
+                                 10, Acts::AxisDirection::AxisRPhi),
+                             Acts::AxisSpec::DeferredEquidistant(
+                                 10, Acts::AxisDirection::AxisZ)}));
   auto pDiscMaterial =
-      std::make_shared<const Acts::ProtoSurfaceMaterial>(pDiscUtility);
-  // - plane
-  Acts::BinUtility pPlaneUtility(1, -1, 1, Acts::open,
-                                 Acts::AxisDirection::AxisX);
-  auto pPlaneMaterial =
-      std::make_shared<const Acts::ProtoSurfaceMaterial>(pPlaneUtility);
+      std::make_shared<const Acts::ProtoSurfaceMaterial>(Acts::MultiAxisSpec2D(
+          {Acts::AxisSpec::DeferredEquidistant(10, Acts::AxisDirection::AxisR),
+           Acts::AxisSpec::DeferredEquidistant(10,
+                                               Acts::AxisDirection::AxisPhi)}));
+  auto pPlaneMaterial = std::make_shared<const Acts::ProtoSurfaceMaterial>();
 
   ///
   /// BeamPipe material

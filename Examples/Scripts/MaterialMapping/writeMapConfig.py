@@ -9,6 +9,8 @@
 import json
 import sys
 
+from surface_binning import surface_binning
+
 # Should be run with Python 3 if possible
 # Script that parse a Json surfaces map to create an easy to use json config file for the mapping
 # Take two arguments in input : The path to the surfaces map and the path of the json config file
@@ -26,15 +28,18 @@ def getSurfaceMaterial(mat):
     if "boundary" in mat:
         outputmat["boundary"] = mat["boundary"]
     if "layer" in mat:
-        if "approach" not in entry:
-            if "sensitive" not in entry:
+        if "approach" not in mat:
+            if "sensitive" not in mat:
                 outputmat["layer"] = "X"
     if "approach" in mat:
         outputmat["approach"] = mat["approach"]
     if "sensitive" in mat:
         outputmat["layer"] = mat["layer"]
         outputmat["sensitive"] = "X"
-    material["binUtility"] = mat["value"]["material"]["binUtility"]
+    source = mat["value"]["material"]
+    for key in ("type", "axis_specs", "binUtility"):
+        if key in source:
+            material[key] = source[key]
     material["mapMaterial"] = False
     material["mappingType"] = mat["value"]["material"]["mappingType"]
     bound["type"] = mat["value"]["bounds"]["type"]
@@ -103,7 +108,7 @@ with open(inFileName, "r") as json_file:
 
         if "sensitive" in entry:
             if "approach" not in entry:
-                if entry["value"]["material"]["binUtility"]["binningdata"] != None:
+                if surface_binning(entry["value"]["material"]):
                     if not entry["layer"] in typeSensitive:
                         typeSensitive[entry["layer"]] = []
                     if (
