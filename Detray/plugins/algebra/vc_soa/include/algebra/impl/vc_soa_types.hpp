@@ -110,6 +110,13 @@ struct scalar<
 };
 /// @}
 
+/// Use the generic vector functions (see
+/// detray/algebra/generic/impl/generic_vector.hpp)
+template <concepts::value T, std::size_t N>
+struct uses_generic_vector_functions<
+    algebra::storage::vector<N, Vc::Vector<T>, algebra::vc_soa::storage_type>>
+    : std::true_type {};
+
 /// Get the single value type from the simd scalar type
 /// @{
 /// Value trait that unwraps the element type from a Vc vector.

@@ -17,13 +17,11 @@
 #include <cstddef>
 
 // Matrix functions for the SoA plugins (Vc SoA and array SoA)
+//
+// The plugins use zero, identity, set_zero, set_identity and transpose from
+// algebra::storage directly. This header only blocks the generic determinant
+// and inverse, which are not correct for SIMD scalars.
 namespace detray::algebra::soa {
-
-using algebra::storage::identity;
-using algebra::storage::set_identity;
-using algebra::storage::set_zero;
-using algebra::storage::transpose;
-using algebra::storage::zero;
 
 namespace detail {
 

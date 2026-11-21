@@ -180,31 +180,21 @@ constexpr T atan2(const T &y, const T &x) {
   return Vc::atan2(y, x);
 }
 
-/// @}
-
-}  // namespace detray::algebra::math
-
-// Vc does not provide @c atanh. The overload is declared in the namespace of
-// the Vc vector types, so that argument dependent lookup finds it in the
-// generic algebra implementation (see algebra::generic::math). The other math
-// functions that the generic implementation uses are provided by Vc.
-namespace Vc_VERSIONED_NAMESPACE {
-
-/// Evaluate the inverse hyperbolic tangent lane by lane.
-/// @note The value of every lane is evaluated with the standard library
-/// function.
-/// @param vec SIMD vector whose lanes are evaluated.
-/// @returns Inverse hyperbolic tangent of each lane.
+/// Evaluate the inverse hyperbolic tangent lane by lane
+///
+/// @note Vc does not provide @c atanh. The value of every lane is evaluated
+/// with the standard library function.
+///
+/// @tparam T Vc SIMD vector type
+///
+/// @param vec SIMD vector whose lanes are evaluated
+///
+/// @returns the inverse hyperbolic tangent of each lane
 template <detray::concepts::vc_simd_vector T>
 constexpr T atanh(const T &vec) {
   return vec.apply([](typename T::EntryType e) { return std::atanh(e); });
 }
 
-}  // namespace Vc_VERSIONED_NAMESPACE
-
-namespace detray::algebra::math {
-
-/// Inverse hyperbolic tangent for Vc vector types
-using Vc_VERSIONED_NAMESPACE::atanh;
+/// @}
 
 }  // namespace detray::algebra::math
