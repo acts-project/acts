@@ -23,7 +23,15 @@ namespace detray::algebra {
 template <concepts::value value_t, concepts::matrix matrix_t>
 DETRAY_HOST_DEVICE constexpr decltype(auto) cast_to(const matrix_t& m);
 
-/// Cast a lane bundle @param s to the precision given by @tparam other_value_t
+/// Cast a lane bundle to a different precision
+///
+/// @tparam other_value_t Value type of the result
+/// @tparam value_t Value type of the input lane bundle
+/// @tparam W Number of lanes
+///
+/// @param s the input lane bundle
+///
+/// @returns the lane bundle with the value type @p other_value_t
 template <concepts::value other_value_t, concepts::value value_t, std::size_t W>
 DETRAY_HOST_DEVICE constexpr auto cast_to(
     const array_soa::simd<value_t, W>& s) {
@@ -34,7 +42,14 @@ DETRAY_HOST_DEVICE constexpr auto cast_to(
   }
 }
 
-/// Cast a lane bundle based transform @param trf to the precision given by @tparam value_t
+/// Cast a lane bundle based transform to a different precision
+///
+/// @tparam value_t Value type of the result
+/// @tparam transform_t Type of the input transform
+///
+/// @param trf the input transform
+///
+/// @returns the transform with lane bundles of the value type @p value_t
 template <concepts::value value_t, concepts::transform3D transform_t>
   requires concepts::array_soa_simd<typename transform_t::scalar_type>
 DETRAY_HOST_DEVICE constexpr auto cast_to(const transform_t& trf) {

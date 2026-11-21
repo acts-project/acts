@@ -8,14 +8,14 @@
 #pragma once
 
 // Project include(s).
-#include "detray/algebra/common/impl/storage_matrix.hpp"
-#include "detray/algebra/common/impl/storage_vector.hpp"
+#include "detray/algebra/common/storage/matrix.hpp"
+#include "detray/algebra/common/storage/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 
 // System include(s).
 #include <cassert>
 
-namespace detray::algebra::storage {
+namespace detray::algebra::common {
 
 /// Functor used to access elements of a matrix
 struct element_getter {
@@ -27,7 +27,7 @@ struct element_getter {
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t ROW, std::size_t COL>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
-      const matrix<array_t, scalar_t, ROW, COL> &m, std::size_t row,
+      const storage::matrix<array_t, scalar_t, ROW, COL> &m, std::size_t row,
       std::size_t col) const {
     // Make sure that the indices are valid.
     assert(row < ROW);
@@ -45,7 +45,7 @@ struct element_getter {
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t ROW, std::size_t COL>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
-      matrix<array_t, scalar_t, ROW, COL> &m, std::size_t row,
+      storage::matrix<array_t, scalar_t, ROW, COL> &m, std::size_t row,
       std::size_t col) const {
     assert(row < ROW);
     assert(col < COL);
@@ -60,7 +60,8 @@ struct element_getter {
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t ROW>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
-      const matrix<array_t, scalar_t, ROW, 1> &m, std::size_t row) const {
+      const storage::matrix<array_t, scalar_t, ROW, 1> &m,
+      std::size_t row) const {
     assert(row < ROW);
     return m[0][row];
   }
@@ -72,7 +73,7 @@ struct element_getter {
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t ROW>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
-      matrix<array_t, scalar_t, ROW, 1> &m, std::size_t row) const {
+      storage::matrix<array_t, scalar_t, ROW, 1> &m, std::size_t row) const {
     assert(row < ROW);
     return m[0][row];
   }
@@ -84,7 +85,7 @@ struct element_getter {
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t N>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
-      const vector<N, scalar_t, array_t> &v, std::size_t row) const {
+      const storage::vector<N, scalar_t, array_t> &v, std::size_t row) const {
     assert(row < N);
     return v[row];
   }
@@ -96,7 +97,7 @@ struct element_getter {
   template <template <typename, std::size_t> class array_t,
             concepts::scalar scalar_t, std::size_t N>
   DETRAY_HOST_DEVICE constexpr decltype(auto) operator()(
-      vector<N, scalar_t, array_t> &v, std::size_t row) const {
+      storage::vector<N, scalar_t, array_t> &v, std::size_t row) const {
     assert(row < N);
     return v[row];
   }
@@ -107,7 +108,7 @@ struct element_getter {
 template <std::size_t ROW, std::size_t COL, concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr decltype(auto) element(
-    const matrix<array_t, scalar_t, ROW, COL> &m, std::size_t row,
+    const storage::matrix<array_t, scalar_t, ROW, COL> &m, std::size_t row,
     std::size_t col) {
   return element_getter{}(m, row, col);
 }
@@ -116,7 +117,8 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) element(
 template <std::size_t ROW, std::size_t COL, concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr decltype(auto) element(
-    matrix<array_t, scalar_t, ROW, COL> &m, std::size_t row, std::size_t col) {
+    storage::matrix<array_t, scalar_t, ROW, COL> &m, std::size_t row,
+    std::size_t col) {
   return element_getter{}(m, row, col);
 }
 
@@ -124,7 +126,7 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) element(
 template <std::size_t ROW, concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr decltype(auto) element(
-    const matrix<array_t, scalar_t, ROW, 1> &m, std::size_t row) {
+    const storage::matrix<array_t, scalar_t, ROW, 1> &m, std::size_t row) {
   return element_getter{}(m, row);
 }
 
@@ -132,7 +134,7 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) element(
 template <std::size_t ROW, concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr decltype(auto) element(
-    matrix<array_t, scalar_t, ROW, 1> &m, std::size_t row) {
+    storage::matrix<array_t, scalar_t, ROW, 1> &m, std::size_t row) {
   return element_getter{}(m, row);
 }
 
@@ -140,7 +142,7 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) element(
 template <std::size_t N, concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr decltype(auto) element(
-    const vector<N, scalar_t, array_t> &v, std::size_t row) {
+    const storage::vector<N, scalar_t, array_t> &v, std::size_t row) {
   return element_getter{}(v, row);
 }
 
@@ -148,7 +150,7 @@ DETRAY_HOST_DEVICE constexpr decltype(auto) element(
 template <std::size_t N, concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr decltype(auto) element(
-    vector<N, scalar_t, array_t> &v, std::size_t row) {
+    storage::vector<N, scalar_t, array_t> &v, std::size_t row) {
   return element_getter{}(v, row);
 }
 
@@ -183,15 +185,15 @@ struct block_getter {
             std::size_t mCOL, concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
   DETRAY_HOST_DEVICE constexpr auto operator()(
-      const matrix<array_t, scalar_t, mROW, mCOL> &m, const std::size_t row,
-      const std::size_t col) const noexcept {
+      const storage::matrix<array_t, scalar_t, mROW, mCOL> &m,
+      const std::size_t row, const std::size_t col) const noexcept {
     static_assert(ROWS <= mROW);
     static_assert(COLS <= mCOL);
     assert(row + ROWS <= mROW);
     assert(col + COLS <= mCOL);
 
-    using input_matrix_t = matrix<array_t, scalar_t, mROW, mCOL>;
-    using matrix_t = matrix<array_t, scalar_t, ROWS, COLS>;
+    using input_matrix_t = storage::matrix<array_t, scalar_t, mROW, mCOL>;
+    using matrix_t = storage::matrix<array_t, scalar_t, ROWS, COLS>;
 
     matrix_t res_m;
 
@@ -224,15 +226,15 @@ struct block_getter {
             concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
   DETRAY_HOST_DEVICE constexpr auto vector(
-      const matrix<array_t, scalar_t, ROWS, COLS> &m, const std::size_t row,
-      const std::size_t col) const noexcept {
+      const storage::matrix<array_t, scalar_t, ROWS, COLS> &m,
+      const std::size_t row, const std::size_t col) const noexcept {
     static_assert(SIZE <= ROWS);
     static_assert(SIZE <= COLS);
     assert(row + SIZE <= ROWS);
     assert(col <= COLS);
 
-    using input_matrix_t = matrix<array_t, scalar_t, ROWS, COLS>;
-    using vector_t = algebra::storage::vector<SIZE, scalar_t, array_t>;
+    using input_matrix_t = storage::matrix<array_t, scalar_t, ROWS, COLS>;
+    using vector_t = storage::vector<SIZE, scalar_t, array_t>;
 
     vector_t res_v{};
 
@@ -258,16 +260,16 @@ struct block_getter {
             std::size_t mCOL, concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
   DETRAY_HOST_DEVICE constexpr void set(
-      matrix<array_t, scalar_t, mROW, mCOL> &m,
-      const matrix<array_t, scalar_t, ROWS, COLS> &b, const std::size_t row,
-      const std::size_t col) const noexcept {
+      storage::matrix<array_t, scalar_t, mROW, mCOL> &m,
+      const storage::matrix<array_t, scalar_t, ROWS, COLS> &b,
+      const std::size_t row, const std::size_t col) const noexcept {
     static_assert(ROWS <= mROW);
     static_assert(COLS <= mCOL);
     assert(row + ROWS <= mROW);
     assert(col + COLS <= mCOL);
 
-    using input_matrix_t = matrix<array_t, scalar_t, mROW, mCOL>;
-    using matrix_t = matrix<array_t, scalar_t, ROWS, COLS>;
+    using input_matrix_t = storage::matrix<array_t, scalar_t, mROW, mCOL>;
+    using matrix_t = storage::matrix<array_t, scalar_t, ROWS, COLS>;
 
     // Don't access single elements in underlying vectors unless necessary
     if constexpr (ROWS == mROW &&
@@ -295,11 +297,11 @@ struct block_getter {
             concepts::scalar scalar_t,
             template <typename, std::size_t> class array_t>
   DETRAY_HOST_DEVICE constexpr void set(
-      matrix<array_t, scalar_t, ROWS, COLS> &m,
-      const detray::algebra::storage::vector<N, scalar_t, array_t> &b,
-      const std::size_t row, const std::size_t col) const noexcept {
-    using matrix_t = matrix<array_t, scalar_t, ROWS, COLS>;
-    using vector_t = detray::algebra::storage::vector<N, scalar_t, array_t>;
+      storage::matrix<array_t, scalar_t, ROWS, COLS> &m,
+      const storage::vector<N, scalar_t, array_t> &b, const std::size_t row,
+      const std::size_t col) const noexcept {
+    using matrix_t = storage::matrix<array_t, scalar_t, ROWS, COLS>;
+    using vector_t = storage::vector<N, scalar_t, array_t>;
 
     static_assert(N <= ROWS);
     assert(row + N <= matrix_t::rows());
@@ -325,8 +327,8 @@ template <std::size_t ROWS, std::size_t COLS, std::size_t mROW,
           std::size_t mCOL, concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr auto block(
-    const matrix<array_t, scalar_t, mROW, mCOL> &m, const std::size_t row,
-    const std::size_t col) noexcept {
+    const storage::matrix<array_t, scalar_t, mROW, mCOL> &m,
+    const std::size_t row, const std::size_t col) noexcept {
   return block_getter{}.template operator()<ROWS, COLS>(m, row, col);
 }
 
@@ -335,8 +337,8 @@ template <std::size_t ROWS, std::size_t COLS, std::size_t N,
           concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr void set_block(
-    matrix<array_t, scalar_t, ROWS, COLS> &m,
-    const vector<N, scalar_t, array_t> &b, const std::size_t row,
+    storage::matrix<array_t, scalar_t, ROWS, COLS> &m,
+    const storage::vector<N, scalar_t, array_t> &b, const std::size_t row,
     const std::size_t col) noexcept {
   block_getter{}.set(m, b, row, col);
 }
@@ -346,9 +348,9 @@ template <std::size_t ROWS, std::size_t COLS, std::size_t mROW,
           std::size_t mCOL, concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr void set_block(
-    matrix<array_t, scalar_t, mROW, mCOL> &m,
-    const matrix<array_t, scalar_t, ROWS, COLS> &b, const std::size_t row,
-    const std::size_t col) noexcept {
+    storage::matrix<array_t, scalar_t, mROW, mCOL> &m,
+    const storage::matrix<array_t, scalar_t, ROWS, COLS> &b,
+    const std::size_t row, const std::size_t col) noexcept {
   block_getter{}.set(m, b, row, col);
 }
 
@@ -356,12 +358,12 @@ DETRAY_HOST_DEVICE constexpr void set_block(
 // array SoA) export into the detray::getter namespace
 //
 // Note: The function vector is defined in a separate namespace, so that
-// it does not conflict with the algebra::storage::vector class.
+// it does not conflict with the storage::vector class.
 namespace getter {
 
-using algebra::storage::block;
-using algebra::storage::element;
-using algebra::storage::set_block;
+using algebra::common::block;
+using algebra::common::element;
+using algebra::common::set_block;
 
 /// Get a vector of a const matrix
 ///
@@ -380,11 +382,11 @@ template <std::size_t SIZE, std::size_t ROW, std::size_t COL,
           concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr auto vector(
-    const algebra::storage::matrix<array_t, scalar_t, ROW, COL> &m,
+    const storage::matrix<array_t, scalar_t, ROW, COL> &m,
     const std::size_t row, const std::size_t col) noexcept {
-  return algebra::storage::block_getter{}.template vector<SIZE>(m, row, col);
+  return algebra::common::block_getter{}.template vector<SIZE>(m, row, col);
 }
 
 }  // namespace getter
 
-}  // namespace detray::algebra::storage
+}  // namespace detray::algebra::common

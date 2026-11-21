@@ -10,8 +10,8 @@
 
 // Project include(s).
 #include "algebra/impl/vc_aos_types.hpp"
-#include "detray/algebra/common/impl/storage_vector.hpp"
 #include "detray/algebra/common/math.hpp"
+#include "detray/algebra/common/storage/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
@@ -65,7 +65,10 @@ DETRAY_HOST_DEVICE constexpr auto dot(const vector_t1 &a, const vector_t2 &b) {
   } else if constexpr (detray::concepts::simd_storage_vector<result_t>) {
     return (a * b).get().sum();
   } else {
-    static_assert(false);
+    // Dependent condition: the assertion only fails if this branch is taken
+    static_assert(detray::concepts::vc_simd_vector<result_t> ||
+                      detray::concepts::simd_storage_vector<result_t>,
+                  "dot: unsupported Vc AoS vector type");
   }
 }
 

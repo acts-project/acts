@@ -13,7 +13,7 @@
 #endif
 
 // Project include(s)
-#include "detray/algebra/common/impl/storage_array_operators.hpp"
+#include "detray/algebra/common/storage/array_operators.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
@@ -217,11 +217,27 @@ class DETRAY_ALIGN(
 
     DETRAY_UNROLL_N(N)
     for (unsigned int i{0u}; i < N; ++i) {
-      // Ducktyping the Vc::Vector::MaskType
-      is_full = is_full && comp[i].isFull();
+      is_full = is_full && all_lanes_set(comp[i]);
     }
 
     return is_full;
+  }
+
+  /// @returns true if all lanes of the mask @p m are set
+  ///
+  /// @note The masks of the array SoA plugin provide @c is_full(), the
+  /// @c Vc::Mask types provide @c isFull()
+  ///
+  /// @tparam mask_t SIMD mask type
+  ///
+  /// @param m the mask
+  template <typename mask_t>
+  DETRAY_HOST_DEVICE static constexpr bool all_lanes_set(const mask_t &m) {
+    if constexpr (requires { m.is_full(); }) {
+      return m.is_full();
+    } else {
+      return m.isFull();
+    }
   }
   /// @}
 

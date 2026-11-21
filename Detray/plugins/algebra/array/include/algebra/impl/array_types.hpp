@@ -17,6 +17,7 @@
 // System include(s).
 #include <array>
 #include <cstddef>
+#include <type_traits>
 
 namespace detray {
 
@@ -67,5 +68,24 @@ using block_getter = array::storage::block_getter;
 }  // namespace algebra::array
 
 DETRAY_ALGEBRA_DEFINE_TYPE_TRAITS(algebra::array)
+
+namespace traits {
+
+/// Use the generic vector functions (see
+/// detray/algebra/generic/impl/generic_vector.hpp)
+/// @{
+/// Vectors
+template <concepts::value T, std::size_t N>
+struct plugin_uses_generic_vector<algebra::array::storage_type<T, N>>
+    : std::true_type {};
+
+/// Column matrices
+template <concepts::value T, std::size_t N>
+struct plugin_uses_generic_vector<
+    algebra::array::storage_type<algebra::array::storage_type<T, N>, 1>>
+    : std::true_type {};
+/// @}
+
+}  // namespace traits
 
 }  // namespace detray

@@ -42,7 +42,7 @@ DETRAY_HOST_DEVICE constexpr scalar_t perp(const array_t<scalar_t, N> &v) {
 /// @param v the input vector
 template <concepts::index index_t, template <typename, index_t> class array_t,
           concepts::scalar scalar_t, index_t N>
-  requires(N >= 2)
+  requires(N >= 3)
 DETRAY_HOST_DEVICE constexpr scalar_t theta(const array_t<scalar_t, N> &v) {
   return algebra::generic::math::theta(v);
 }

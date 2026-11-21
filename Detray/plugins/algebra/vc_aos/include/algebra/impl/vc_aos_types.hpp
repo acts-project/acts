@@ -11,10 +11,10 @@
 // Project include(s).
 #include "algebra/impl/vc_aos_approximately_equal.hpp"
 #include "algebra/impl/vc_aos_concepts.hpp"
-#include "detray/algebra/common/impl/storage_getter.hpp"
-#include "detray/algebra/common/impl/storage_matrix.hpp"
-#include "detray/algebra/common/impl/storage_transform3.hpp"
-#include "detray/algebra/common/impl/storage_vector.hpp"
+#include "detray/algebra/common/impl/matrix_getter.hpp"
+#include "detray/algebra/common/impl/transform3.hpp"
+#include "detray/algebra/common/storage/matrix.hpp"
+#include "detray/algebra/common/storage/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/type_traits.hpp"
 
@@ -80,12 +80,12 @@ using vector8 = vector_type<T, 8>;
 
 /// Geometry transformation implementation using @c Vc::SimdArray
 template <concepts::value T>
-using transform3 = algebra::storage::transform3<vc_aos::storage_type, T>;
+using transform3 = algebra::common::transform3<vc_aos::storage_type, T>;
 
 /// Element Getter
-using element_getter = algebra::storage::element_getter;
+using element_getter = algebra::common::element_getter;
 /// Block Getter
-using block_getter = algebra::storage::block_getter;
+using block_getter = algebra::common::block_getter;
 
 }  // namespace algebra::vc_aos
 

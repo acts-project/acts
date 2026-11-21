@@ -127,22 +127,20 @@ template <class M>
 inline constexpr bool is_square{(rows<M> == columns<M>)};
 /// @}
 
-/// Opt-in for the generic vector functions in @c algebra::generic
+/// Opt-in for the generic vector functions in @c algebra::generic::math
 ///
-/// A plugin specializes this trait for its vector types, if it uses the
-/// generic implementation (see detray/algebra/generic/impl/generic_vector.hpp).
-/// Types without the specialization never match the generic overloads. Thus,
-/// the generic overloads do not clash with the specific overloads of other
-/// plugins in the same translation unit.
+/// A plugin specializes this trait for its vector (and column matrix) types, if
+/// it uses the generic implementation.
+/// Types without the specialization never match the generic overloads.
 ///
-/// @tparam V Vector type
+/// @tparam V Vector or column matrix type
 /// @{
 template <class V>
-struct uses_generic_vector_functions : std::false_type {};
+struct plugin_uses_generic_vector : std::false_type {};
 
 template <class V>
-inline constexpr bool uses_generic_vector_functions_v{
-    uses_generic_vector_functions<std::remove_cvref_t<V>>::value};
+inline constexpr bool plugin_uses_generic_vector_v{
+    plugin_uses_generic_vector<std::remove_cvref_t<V>>::value};
 /// @}
 
 /// Getter types
@@ -163,6 +161,7 @@ using block_getter_t = typename block_getter<M>::type;
 /// The algebra types
 /// @{
 
+namespace detail {
 /// Expose the types provided by the algebra @p A
 ///
 /// @tparam A Algebra type that provides the linear algebra types.
@@ -197,6 +196,8 @@ struct algebra_types {
   using matrix = typename A::template matrix<ROWS, COLS>;
 };
 
+}  // namespace detail
+
 /// Get the types of an algebra: empty for types that are not an algebra
 ///
 /// @tparam A Type to get the algebra types from.
@@ -206,7 +207,7 @@ struct get_algebra {};
 /// Expose the types provided by a supported algebra.
 template <typename A>
   requires(!std::is_same_v<typename A::point3D, void>)
-struct get_algebra<A> : public algebra_types<A> {};
+struct get_algebra<A> : public detail::algebra_types<A> {};
 
 /// Switch the value type of an existing algebra definition
 ///
@@ -216,7 +217,7 @@ struct get_algebra<A> : public algebra_types<A> {};
 template <template <typename> class A, typename W, typename V>
   requires(!std::is_same_v<typename A<V>::point3D, void> &&
            !std::is_same_v<typename A<W>::point3D, void>)
-struct get_algebra<A<V>, W> : public algebra_types<A<W>> {};
+struct get_algebra<A<V>, W> : public detail::algebra_types<A<W>> {};
 
 /// Switch the value type of an algebra with a fixed number of SIMD lanes
 ///
@@ -229,7 +230,7 @@ template <template <typename, std::size_t> class A, std::size_t N, typename W,
           typename V>
   requires(!std::is_same_v<typename A<V, N>::point3D, void> &&
            !std::is_same_v<typename A<W, N>::point3D, void>)
-struct get_algebra<A<V, N>, W> : public algebra_types<A<W, N>> {};
+struct get_algebra<A<V, N>, W> : public detail::algebra_types<A<W, N>> {};
 /// @}
 
 }  // namespace traits

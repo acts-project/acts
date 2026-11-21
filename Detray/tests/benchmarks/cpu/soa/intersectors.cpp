@@ -134,7 +134,7 @@ void BM_INTERSECT_PLANES_AOS(benchmark::State& state) {
   auto [plane_descs, transforms] = test::planes_along_direction<algebra_s>(
       dists, dvector3D<algebra_s>{1.f, 1.f, 1.f});
 
-  constexpr mask_t rect{0u, 100.f, 200.f};
+  constexpr mask_t rect{0u, 100.f, 200.f, 100.f, 200.f};
   std::vector<mask_t> masks(plane_descs.size(), rect);
 
   const auto rays = generate_rays();
@@ -192,7 +192,7 @@ void BM_INTERSECT_PLANES_SOA(benchmark::State& state) {
 
   std::vector<mask_t> masks{};
   for (std::size_t i = 0u; i < plane_descs.size(); ++i) {
-    masks.emplace_back(0u, 100.f, 200.f);
+    masks.emplace_back(0u, 100.f, 200.f, 100.f, 200.f);
   }
 
   const auto rays = generate_rays();

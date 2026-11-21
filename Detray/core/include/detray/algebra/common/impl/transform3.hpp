@@ -9,10 +9,11 @@
 #pragma once
 
 // Project include(s).
-#include "detray/algebra/common/impl/storage_getter.hpp"
-#include "detray/algebra/common/impl/storage_matrix.hpp"
-#include "detray/algebra/common/impl/storage_vector.hpp"
+#include "detray/algebra/common/impl/matrix.hpp"
+#include "detray/algebra/common/impl/matrix_getter.hpp"
 #include "detray/algebra/common/math.hpp"
+#include "detray/algebra/common/storage/matrix.hpp"
+#include "detray/algebra/common/storage/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/type_traits.hpp"
 #include "detray/algebra/utils/approximately_equal.hpp"
@@ -24,13 +25,13 @@
 #include <cstddef>
 #include <limits>
 
-namespace detray::algebra::storage {
+namespace detray::algebra::common {
 
 /// Affine transform on the @c algebra::storage vector and matrix types
 ///
-/// The transform is used by all plugins that are based on the storage types
-/// (Vc AoS, Vc SoA and array SoA). It works with a plain value type
-/// (AoS) as well as with a SIMD type (SoA) as scalar.
+/// The transform is used by all plugins that are based on the common storage
+/// types. It works with a plain value type (AoS) as well as with a SIMD type
+/// (SoA) as scalar.
 ///
 /// @note The @c approx_equal overload for the scalar type @p scalar_t has to
 /// be declared before this header is included. Otherwise the consistency check
@@ -76,7 +77,7 @@ struct transform3 {
   using column_t = typename matrix44::vector_type;
 
   /// Function (object) used for accessing a matrix element
-  using element_getter = algebra::storage::element_getter;
+  using element_getter = algebra::common::element_getter;
 
   /// Helper type to cast this to another floating point precision
   template <concepts::scalar o_scalar_t>
@@ -96,8 +97,8 @@ struct transform3 {
   /// Default constructor: identity
   DETRAY_HOST_DEVICE
   constexpr transform3()
-      : _data{algebra::storage::identity<matrix44>()},
-        _data_inv{algebra::storage::identity<matrix44>()} {}
+      : _data{algebra::common::identity<matrix44>()},
+        _data_inv{algebra::common::identity<matrix44>()} {}
 
   /// Constructor with arguments: t, x, y, z
   ///
@@ -409,4 +410,4 @@ struct transform3 {
   }
 };  // struct transform3
 
-}  // namespace detray::algebra::storage
+}  // namespace detray::algebra::common

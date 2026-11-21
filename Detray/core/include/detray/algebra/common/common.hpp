@@ -8,11 +8,14 @@
 
 #pragma once
 
-// Matrix functions for the SoA plugins (Vc SoA and array SoA)
+// Common implementations that are based on the common storage types
 //
 // The functions operate on the algebra::storage types with a SIMD scalar.
 // The vector functions use the generic implementation (see
 // detray/algebra/generic/impl/generic_vector.hpp).
 
 // Impl include(s).
-#include "detray/algebra/common/impl/soa_matrix.hpp"
+#include "detray/algebra/common/impl/matrix.hpp"
+#include "detray/algebra/common/impl/transform3.hpp"
+#include "detray/algebra/common/storage/matrix.hpp"
+#include "detray/algebra/common/storage/vector.hpp"

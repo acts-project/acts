@@ -8,50 +8,40 @@
 
 #pragma once
 
-// The array AoS plugin can be used together with the SoA plugins (array SoA and
-// Vc SoA), e.g. to compare them in the same benchmark. The Vc SoA plugin
-// depends on the Vc AoS plugin, so Vc AoS is included together with Vc SoA.
-// All other plugins are mutually exclusive with these and with each other:
-// their generic getter functions would be ambiguous. The first selected plugin
-// is used, in the same order as in the test types.
-#if DETRAY_ALGEBRA_ARRAY || DETRAY_ALGEBRA_ARRAY_SOA || DETRAY_ALGEBRA_VC_SOA
-
-// The generic algebra implementation calls the math functions with the
-// @c algebra::math qualifier. A qualified call only finds the overloads that
-// are declared before the generic headers. The other plugins include the
-// generic headers, so the SIMD math overloads of the SoA plugins come first.
+// The generic algebra implementation calls the math and comparison functions
+// with a namespace qualifier (@c algebra::math, @c algebra::approx_equal). A
+// qualified call only finds the overloads that are declared before the generic
+// headers. The other plugins include the generic headers, so the SIMD overloads
+// of the SoA plugins come first.
 #if DETRAY_ALGEBRA_ARRAY_SOA
+#include "algebra/impl/array_soa_approximately_equal.hpp"
 #include "algebra/impl/array_soa_math.hpp"
 #endif
 #if DETRAY_ALGEBRA_VC_SOA
+#include "algebra/impl/vc_aos_approximately_equal.hpp"
 #include "algebra/impl/vc_soa_math.hpp"
 #endif
 
 #if DETRAY_ALGEBRA_ARRAY
 #include "algebra/array.hpp"
 #endif
-
 #if DETRAY_ALGEBRA_ARRAY_SOA
 #include "algebra/array_soa.hpp"
 #endif
-
 #if DETRAY_ALGEBRA_VC_SOA
+#include "algebra/vc_soa.hpp"
+#endif
 #if DETRAY_ALGEBRA_VC_AOS
 #include "algebra/vc_aos.hpp"
 #endif
-#include "algebra/vc_soa.hpp"
-#endif
-
-#elif DETRAY_ALGEBRA_EIGEN
+#if DETRAY_ALGEBRA_EIGEN
 #include "algebra/eigen.hpp"
-#elif DETRAY_ALGEBRA_FASTOR
+#endif
+#if DETRAY_ALGEBRA_FASTOR
 #include "algebra/fastor.hpp"
-#elif DETRAY_ALGEBRA_SMATRIX
+#endif
+#if DETRAY_ALGEBRA_SMATRIX
 #include "algebra/smatrix.hpp"
-#elif DETRAY_ALGEBRA_VC_AOS
-#include "algebra/vc_aos.hpp"
-#else
-#error "No algebra plugin selected! Please link to one of the algebra plugins."
 #endif
 
 // Algebra-plugins include(s)

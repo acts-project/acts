@@ -14,10 +14,10 @@
 #include "algebra/impl/array_soa_concepts.hpp"
 #include "algebra/impl/array_soa_constants.hpp"
 #include "algebra/impl/array_soa_simd.hpp"
-#include "detray/algebra/common/impl/storage_getter.hpp"
-#include "detray/algebra/common/impl/storage_matrix.hpp"
-#include "detray/algebra/common/impl/storage_transform3.hpp"
-#include "detray/algebra/common/impl/storage_vector.hpp"
+#include "detray/algebra/common/impl/matrix_getter.hpp"
+#include "detray/algebra/common/impl/transform3.hpp"
+#include "detray/algebra/common/storage/matrix.hpp"
+#include "detray/algebra/common/storage/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/type_traits.hpp"
 
@@ -70,12 +70,12 @@ using vector8 = vector_type<T, 8, W>;
 
 /// Geometry transformation implementation using a lane bundle in every element
 template <concepts::value T, std::size_t W = 8u>
-using transform3 = algebra::storage::transform3<storage_type, simd<T, W>>;
+using transform3 = algebra::common::transform3<storage_type, simd<T, W>>;
 
 /// Element Getter
-using element_getter = algebra::storage::element_getter;
+using element_getter = algebra::common::element_getter;
 /// Block Getter
-using block_getter = algebra::storage::block_getter;
+using block_getter = algebra::common::block_getter;
 
 }  // namespace algebra::array_soa
 
@@ -203,7 +203,7 @@ struct block_getter<algebra::array_soa::matrix_type<T, ROWS, COLS, W>> {
 /// Use the generic vector functions (see
 /// detray/algebra/generic/impl/generic_vector.hpp)
 template <concepts::value T, auto N, std::size_t W>
-struct uses_generic_vector_functions<algebra::array_soa::vector_type<T, N, W>>
+struct plugin_uses_generic_vector<algebra::array_soa::vector_type<T, N, W>>
     : std::true_type {};
 
 // Vector and storage types are different: the array of lane bundles that the

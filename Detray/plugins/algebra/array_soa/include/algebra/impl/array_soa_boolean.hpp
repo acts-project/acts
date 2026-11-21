@@ -105,7 +105,7 @@ DETRAY_HOST_DEVICE constexpr bool none_of(const M& mask) {
 /// @returns true if all lanes are set
 template <detray::concepts::array_soa_mask M>
 DETRAY_HOST_DEVICE constexpr bool all_of(const M& mask) {
-  return mask.isFull();
+  return mask.is_full();
 }
 
 /// @tparam W Number of lanes.

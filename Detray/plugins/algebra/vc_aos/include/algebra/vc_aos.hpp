@@ -14,7 +14,7 @@
 #include "algebra/impl/vc_aos_types.hpp"
 #include "algebra/impl/vc_aos_vector.hpp"
 #include "detray/algebra/common/boolean.hpp"
-#include "detray/algebra/common/impl/storage_getter.hpp"
+#include "detray/algebra/common/impl/matrix_getter.hpp"
 #include "detray/algebra/generic/generic.hpp"
 
 // System include(s).
@@ -62,10 +62,10 @@ namespace getter {
 /// @name Getter functions on @c algebra::vc_aos::matrix_type
 /// @{
 
-using algebra::storage::getter::block;
-using algebra::storage::getter::element;
-using algebra::storage::getter::set_block;
-using algebra::storage::getter::vector;
+using algebra::common::getter::block;
+using algebra::common::getter::element;
+using algebra::common::getter::set_block;
+using algebra::common::getter::vector;
 
 /// @}
 
@@ -121,6 +121,7 @@ namespace matrix {
 /// @name Matrix functions on @c algebra::vc_aos types
 /// @{
 
+using algebra::vc_aos::math::column_wise_cross;
 using algebra::vc_aos::math::determinant;
 using algebra::vc_aos::math::identity;
 using algebra::vc_aos::math::inverse;
@@ -130,7 +131,6 @@ using algebra::vc_aos::math::transpose;
 using algebra::vc_aos::math::zero;
 
 using algebra::generic::math::cholesky_decomposition;
-using algebra::generic::math::column_wise_cross;
 using algebra::generic::math::column_wise_multiply;
 using algebra::generic::math::cross_matrix;
 using algebra::generic::math::outer_product;

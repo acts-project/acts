@@ -9,7 +9,7 @@
 #pragma once
 
 // Project include(s).
-#include "detray/algebra/common/impl/storage_vector.hpp"
+#include "detray/algebra/common/storage/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/type_traits.hpp"
 

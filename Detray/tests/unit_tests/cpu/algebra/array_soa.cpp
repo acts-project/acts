@@ -693,7 +693,7 @@ TEST(detray_algebra_soa, ray_plane_intersection) {
                           material_link_t{material_id::e_slab, 0u}, 0u,
                           surface_id::e_sensitive);
   // Half lengths 5 x 5: the lanes with |x| > 5 are outside
-  const mask_t rect{0u, 5.f, 5.f};
+  const mask_t rect{0u, 5.f, 5.f, 5.f, 5.f};
 
   // One plane per lane, shifted in x by 3 * lane and in z by 10 + lane
   const scalar_t idx = detray::detail::iota<scalar_t>();

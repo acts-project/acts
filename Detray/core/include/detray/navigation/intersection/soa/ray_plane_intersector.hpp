@@ -67,7 +67,7 @@ struct ray_intersector_impl<cartesian2D<algebra_t>, algebra_t, resolve_pos> {
     const vector3_type &sn = trf.z();
     const vector3_type &st = trf.translation();
 
-    // Broadcast ray data;
+    // Broadcast ray data
     const auto &pos = ray.pos();
     const auto &dir = ray.dir();
     const vector3_type &ro = {pos[0], pos[1], pos[2]};

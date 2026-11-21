@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "algebra/impl/vc_soa_concepts.hpp"
+#include "detray/algebra/common/math.hpp"
 
 // Vc include(s).
 #ifdef _MSC_VER
@@ -26,35 +27,8 @@
 
 namespace detray::algebra::math {
 
-/// Math functions on single values
-/// @{
-using std::abs;
-using std::acos;
-using std::asin;
-using std::atan;
-using std::atan2;
-using std::atanh;
-using std::ceil;
-using std::copysign;
-using std::cos;
-using std::cosh;
-using std::exp;
-using std::fabs;
-using std::floor;
-using std::fma;
-using std::hypot;
-using std::log;
-using std::log10;
-using std::max;
-using std::min;
-using std::pow;
-using std::signbit;
-using std::sin;
-using std::sinh;
-using std::sqrt;
-using std::tan;
-using std::tanh;
-/// @}
+// The math functions on single values are declared in
+// detray/algebra/common/math.hpp
 
 /// Vc overloads of common math functions
 /// @{

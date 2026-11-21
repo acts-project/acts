@@ -83,8 +83,12 @@ DETRAY_HOST_DEVICE constexpr auto transpose(const M &m) {
 }
 
 /// Column-wise cross product between matrix (m) and vector (v)
+///
+/// @note Only for vectors that use the generic vector functions (see
+/// @c traits::plugin_uses_generic_vector)
 template <concepts::square_matrix M, concepts::vector3D V>
-  requires(detray::traits::max_rank<M> == 3u)
+  requires(detray::traits::max_rank<M> == 3u &&
+           detray::traits::plugin_uses_generic_vector_v<V>)
 DETRAY_HOST_DEVICE constexpr M column_wise_cross(const M &m, const V &v) {
   using block_getter_t = detray::traits::block_getter_t<M>;
   constexpr block_getter_t block{};
@@ -95,9 +99,12 @@ DETRAY_HOST_DEVICE constexpr M column_wise_cross(const M &m, const V &v) {
   const V m_col1 = block.template vector<3>(m, 0u, 1u);
   const V m_col2 = block.template vector<3>(m, 0u, 2u);
 
-  block.set(ret, static_cast<V>(cross(m_col0, v)), 0u, 0u);
-  block.set(ret, static_cast<V>(cross(m_col1, v)), 0u, 1u);
-  block.set(ret, static_cast<V>(cross(m_col2, v)), 0u, 2u);
+  block.set(ret, static_cast<V>(algebra::generic::math::cross(m_col0, v)), 0u,
+            0u);
+  block.set(ret, static_cast<V>(algebra::generic::math::cross(m_col1, v)), 0u,
+            1u);
+  block.set(ret, static_cast<V>(algebra::generic::math::cross(m_col2, v)), 0u,
+            2u);
 
   return ret;
 }

@@ -12,10 +12,10 @@
 #include "algebra/impl/vc_aos_approximately_equal.hpp"
 #include "algebra/impl/vc_soa_casts.hpp"
 #include "algebra/impl/vc_soa_constants.hpp"
-#include "detray/algebra/common/impl/storage_getter.hpp"
-#include "detray/algebra/common/impl/storage_matrix.hpp"
-#include "detray/algebra/common/impl/storage_transform3.hpp"
-#include "detray/algebra/common/impl/storage_vector.hpp"
+#include "detray/algebra/common/impl/matrix_getter.hpp"
+#include "detray/algebra/common/impl/transform3.hpp"
+#include "detray/algebra/common/storage/matrix.hpp"
+#include "detray/algebra/common/storage/vector.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/algebra/type_traits.hpp"
 
@@ -29,6 +29,8 @@
 #pragma warning(push, 0)
 #endif  // MSVC
 #include <Vc/Vc>
+// Numeric limits of the Vc vector types
+#include <Vc/limits>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif  // MSVC
@@ -78,12 +80,12 @@ using vector8 = vector_type<T, 8>;
 /// Geometry transformation implementation using @c Vc::Vector in every element
 template <concepts::value T>
 using transform3 =
-    algebra::storage::transform3<vc_soa::storage_type, Vc::Vector<T>>;
+    algebra::common::transform3<vc_soa::storage_type, Vc::Vector<T>>;
 
 /// Element Getter
-using element_getter = algebra::storage::element_getter;
+using element_getter = algebra::common::element_getter;
 /// Block Getter
-using block_getter = algebra::storage::block_getter;
+using block_getter = algebra::common::block_getter;
 
 }  // namespace algebra::vc_soa
 
@@ -113,7 +115,7 @@ struct scalar<
 /// Use the generic vector functions (see
 /// detray/algebra/generic/impl/generic_vector.hpp)
 template <concepts::value T, std::size_t N>
-struct uses_generic_vector_functions<
+struct plugin_uses_generic_vector<
     algebra::storage::vector<N, Vc::Vector<T>, algebra::vc_soa::storage_type>>
     : std::true_type {};
 
@@ -145,52 +147,3 @@ struct dimensions<algebra::vc_soa::storage_type<T, N>> {
 }  // namespace traits
 
 }  // namespace detray
-
-namespace std {
-
-/// Numeric limits of a simd scalar: the constants of the value type, the
-/// values broadcast to every lane
-template <detray::concepts::value T>
-struct numeric_limits<detray::algebra::vc_soa::scalar_type<T>>
-    : public numeric_limits<T> {
-  using simd_t = detray::algebra::vc_soa::scalar_type<T>;
-
-  DETRAY_HOST_DEVICE
-  static constexpr simd_t min() noexcept {
-    return simd_t(numeric_limits<T>::min());
-  }
-  DETRAY_HOST_DEVICE
-  static constexpr simd_t max() noexcept {
-    return simd_t(numeric_limits<T>::max());
-  }
-  DETRAY_HOST_DEVICE
-  static constexpr simd_t lowest() noexcept {
-    return simd_t(numeric_limits<T>::lowest());
-  }
-  DETRAY_HOST_DEVICE
-  static constexpr simd_t epsilon() noexcept {
-    return simd_t(numeric_limits<T>::epsilon());
-  }
-  DETRAY_HOST_DEVICE
-  static constexpr simd_t round_error() noexcept {
-    return simd_t(numeric_limits<T>::round_error());
-  }
-  DETRAY_HOST_DEVICE
-  static constexpr simd_t infinity() noexcept {
-    return simd_t(numeric_limits<T>::infinity());
-  }
-  DETRAY_HOST_DEVICE
-  static constexpr simd_t quiet_NaN() noexcept {
-    return simd_t(numeric_limits<T>::quiet_NaN());
-  }
-  DETRAY_HOST_DEVICE
-  static constexpr simd_t signaling_NaN() noexcept {
-    return simd_t(numeric_limits<T>::signaling_NaN());
-  }
-  DETRAY_HOST_DEVICE
-  static constexpr simd_t denorm_min() noexcept {
-    return simd_t(numeric_limits<T>::denorm_min());
-  }
-};
-
-}  // namespace std

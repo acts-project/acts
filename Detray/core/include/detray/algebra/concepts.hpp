@@ -64,11 +64,10 @@ concept vector2D = vector<V> && (traits::size<V> == 2);
 template <typename V>
 concept vector3D = vector<V> && (traits::size<V> == 3);
 
-/// Vector that uses the generic vector functions in @c algebra::generic
-/// (see @c traits::uses_generic_vector_functions)
+/// Vector type of a plugin that uses the generic vector implementation in @c algebra::generic::math
+/// (see @c traits::plugin_uses_generic_vector)
 template <typename V>
-concept generic_vector =
-    vector<V> && traits::uses_generic_vector_functions_v<V>;
+concept generic_vector = vector<V> && traits::plugin_uses_generic_vector_v<V>;
 /// @}
 
 /// Point concepts

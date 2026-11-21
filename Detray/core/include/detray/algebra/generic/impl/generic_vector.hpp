@@ -14,9 +14,11 @@
 #include "detray/algebra/type_traits.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
-// The math functions are called with the @c algebra::math qualifier. A
-// qualified call only finds the overloads that are declared before this
-// header.
+// Generic vector implementations
+//
+// A plugin opts in to these functions for its vector (and column matrix) types:
+// it specializes @c traits::plugin_uses_generic_vector. The functions only
+// match the opted-in types.
 //
 // Note: A plugin with a SIMD scalar type has to declare its math overloads in
 // @c algebra::math and include them before this header (see
@@ -24,10 +26,15 @@
 
 namespace detray::algebra::generic::math {
 
-/// This method retrieves phi from a vector with rows >= 2
+/// @brief Retrieves phi from a vector with rows >= 2
+///
+/// @tparam vector_t vector type that uses the generic implementation
 ///
 /// @param v the input vector
-template <concepts::vector vector_t>
+///
+/// @returns the azimuthal angle phi
+template <concepts::generic_vector vector_t>
+  requires(detray::traits::size<vector_t> >= 2)
 DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector_t> phi(
     const vector_t &v) noexcept {
   using element_getter_t = detray::traits::element_getter_t<vector_t>;
@@ -36,10 +43,15 @@ DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector_t> phi(
                               element_getter_t{}(v, 0));
 }
 
-/// This method retrieves the perpendicular magnitude of a vector with rows >= 2
+/// @brief Retrieves the perpendicular magnitude of a vector with rows >= 2
+///
+/// @tparam vector_t vector type that uses the generic implementation
 ///
 /// @param v the input vector
-template <concepts::vector vector_t>
+///
+/// @returns the transverse component perp
+template <concepts::generic_vector vector_t>
+  requires(detray::traits::size<vector_t> >= 2)
 DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector_t> perp(
     const vector_t &v) noexcept {
   using element_getter_t = detray::traits::element_getter_t<vector_t>;
@@ -49,15 +61,21 @@ DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector_t> perp(
                          element_getter_t{}(v, 1) * element_getter_t{}(v, 1)));
 }
 
-/// This method retrieves theta from a vector with rows >= 3
+/// @brief Retrieves theta from a vector with rows >= 3
+///
+/// @tparam vector_t vector type that uses the generic implementation
 ///
 /// @param v the input vector
-template <concepts::vector vector_t>
+///
+/// @returns the polar angle theta
+template <concepts::generic_vector vector_t>
+  requires(detray::traits::size<vector_t> >= 3)
 DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector_t> theta(
     const vector_t &v) noexcept {
   using element_getter_t = detray::traits::element_getter_t<vector_t>;
 
-  return algebra::math::atan2(perp(v), element_getter_t{}(v, 2));
+  return algebra::math::atan2(algebra::generic::math::perp(v),
+                              element_getter_t{}(v, 2));
 }
 
 /// Cross product between two input vectors - 3 Dim
@@ -68,11 +86,13 @@ DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector_t> theta(
 /// @param a the first input vector
 /// @param b the second input vector
 ///
-/// @return a vector representing the cross product
+/// @returns the cross product of @p a and @p b
 template <typename vector1_t, typename vector2_t>
   requires(
       (concepts::vector3D<vector1_t> || concepts::column_matrix3D<vector1_t>) &&
-      (concepts::vector3D<vector2_t> || concepts::column_matrix3D<vector2_t>))
+      (concepts::vector3D<vector2_t> || concepts::column_matrix3D<vector2_t>) &&
+      detray::traits::plugin_uses_generic_vector_v<vector1_t> &&
+      detray::traits::plugin_uses_generic_vector_v<vector2_t>)
 DETRAY_HOST_DEVICE constexpr detray::traits::vector_t<vector1_t> cross(
     const vector1_t &a, const vector2_t &b) {
   using element_getter_t = detray::traits::element_getter_t<vector1_t>;
@@ -94,11 +114,13 @@ DETRAY_HOST_DEVICE constexpr detray::traits::vector_t<vector1_t> cross(
 /// @param a the first input vector
 /// @param b the second input vector
 ///
-/// @return the scalar dot product value
+/// @returns the dot product of @p a and @p b
 template <typename vector1_t, typename vector2_t>
-  requires((concepts::vector<vector1_t> ||
-            concepts::column_matrix<vector1_t>) &&
-           (concepts::vector<vector2_t> || concepts::column_matrix<vector2_t>))
+  requires(
+      (concepts::vector<vector1_t> || concepts::column_matrix<vector1_t>) &&
+      (concepts::vector<vector2_t> || concepts::column_matrix<vector2_t>) &&
+      detray::traits::plugin_uses_generic_vector_v<vector1_t> &&
+      detray::traits::plugin_uses_generic_vector_v<vector2_t>)
 DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector1_t> dot(
     const vector1_t &a, const vector2_t &b) {
   using scalar_t = detray::traits::scalar_t<vector1_t>;
@@ -115,167 +137,49 @@ DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector1_t> dot(
   return ret;
 }
 
-/// This method retrieves the norm of a vector with rows >= 3
+/// @brief Retrieves the norm of a vector
 ///
-/// @param v the input vector
-template <concepts::vector vector_t>
-DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector_t> norm(
-    const vector_t &v) {
-  return algebra::math::sqrt(dot(v, v));
-}
-
-/// This method retrieves the pseudo-rapidity from a vector or vector base with
-/// rows >= 3
-///
-/// @param v the input vector
-template <concepts::vector vector_t>
-DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector_t> eta(
-    const vector_t &v) noexcept {
-  using element_getter_t = detray::traits::element_getter_t<vector_t>;
-
-  return algebra::math::atanh(element_getter_t{}(v, 2) / norm(v));
-}
-
-/// Get a normalized version of the input vector
-///
-/// @tparam vector_t vector or column matrix type
-///
-/// @param v the input vector
-///
-/// @returns the normalized vector
-template <concepts::vector vector_t>
-DETRAY_HOST_DEVICE constexpr vector_t normalize(const vector_t &v) {
-  using scalar_t = detray::traits::scalar_t<vector_t>;
-
-  // One division and N multiplications instead of N divisions
-  return (static_cast<scalar_t>(1.f) / norm(v)) * v;
-}
-
-}  // namespace detray::algebra::generic::math
-
-// Generic vector functions for the plugins that opt in
-//
-// A plugin includes this header to use the generic implementation of the
-// vector functions (see algebra::generic::math). The plugin specializes
-// @c traits::uses_generic_vector_functions for its vector types and adds
-// using-declarations for these functions in the @c detray::vector namespace.
-// The overloads here only match the opted-in types. Thus, they do not clash
-// with the specific overloads of other plugins (e.g. Vc AoS) in the same
-// translation unit.
-namespace detray::algebra::generic {
-
-/// Get the azimuthal angle of a vector
-///
-/// @tparam vector_t Vector type that uses the generic implementation
-///
-/// @param v the input vector
-///
-/// @returns the azimuthal angle phi
-template <concepts::generic_vector vector_t>
-  requires(traits::size<vector_t> >= 2)
-DETRAY_HOST_DEVICE constexpr traits::scalar_t<vector_t> phi(
-    const vector_t &v) noexcept {
-  return algebra::generic::math::phi(v);
-}
-
-/// Get the transverse component of a vector
-///
-/// @tparam vector_t Vector type that uses the generic implementation
-///
-/// @param v the input vector
-///
-/// @returns the transverse component perp
-template <concepts::generic_vector vector_t>
-  requires(traits::size<vector_t> >= 2)
-DETRAY_HOST_DEVICE constexpr traits::scalar_t<vector_t> perp(
-    const vector_t &v) noexcept {
-  return algebra::generic::math::perp(v);
-}
-
-/// Get the polar angle of a vector
-///
-/// @tparam vector_t Vector type that uses the generic implementation
-///
-/// @param v the input vector
-///
-/// @returns the polar angle theta
-template <concepts::generic_vector vector_t>
-  requires(traits::size<vector_t> >= 3)
-DETRAY_HOST_DEVICE constexpr traits::scalar_t<vector_t> theta(
-    const vector_t &v) noexcept {
-  return algebra::generic::math::theta(v);
-}
-
-/// Get the cross product of two 3D vectors
-///
-/// @tparam vector1_t First vector type that uses the generic implementation
-/// @tparam vector2_t Second vector type that uses the generic implementation
-///
-/// @param a the first input vector
-/// @param b the second input vector
-///
-/// @returns the cross product of @p a and @p b
-template <concepts::generic_vector vector1_t,
-          concepts::generic_vector vector2_t>
-  requires(concepts::vector3D<vector1_t> && concepts::vector3D<vector2_t>)
-DETRAY_HOST_DEVICE constexpr traits::vector_t<vector1_t> cross(
-    const vector1_t &a, const vector2_t &b) {
-  return algebra::generic::math::cross(a, b);
-}
-
-/// Get the dot product of two vectors
-///
-/// @tparam vector1_t First vector type that uses the generic implementation
-/// @tparam vector2_t Second vector type that uses the generic implementation
-///
-/// @param a the first input vector
-/// @param b the second input vector
-///
-/// @returns the dot product of @p a and @p b
-template <concepts::generic_vector vector1_t,
-          concepts::generic_vector vector2_t>
-DETRAY_HOST_DEVICE constexpr traits::scalar_t<vector1_t> dot(
-    const vector1_t &a, const vector2_t &b) {
-  return algebra::generic::math::dot(a, b);
-}
-
-/// Get the norm of a vector
-///
-/// @tparam vector_t Vector type that uses the generic implementation
+/// @tparam vector_t vector type that uses the generic implementation
 ///
 /// @param v the input vector
 ///
 /// @returns the euclidean norm of @p v
 template <concepts::generic_vector vector_t>
-DETRAY_HOST_DEVICE constexpr traits::scalar_t<vector_t> norm(
+DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector_t> norm(
     const vector_t &v) {
-  return algebra::generic::math::norm(v);
+  return algebra::math::sqrt(algebra::generic::math::dot(v, v));
 }
 
-/// Get the normalized vector
+/// @brief Retrieves the pseudo-rapidity from a vector
 ///
-/// @tparam vector_t Vector type that uses the generic implementation
+/// @tparam vector_t vector type that uses the generic implementation
+///
+/// @param v the input vector
+///
+/// @returns the pseudorapidity eta
+template <concepts::generic_vector vector_t>
+  requires(detray::traits::size<vector_t> >= 3)
+DETRAY_HOST_DEVICE constexpr detray::traits::scalar_t<vector_t> eta(
+    const vector_t &v) noexcept {
+  using element_getter_t = detray::traits::element_getter_t<vector_t>;
+
+  return algebra::math::atanh(element_getter_t{}(v, 2) /
+                              algebra::generic::math::norm(v));
+}
+
+/// @brief Retrieves a normalized version of the input vector
+///
+/// @tparam vector_t vector type that uses the generic implementation
 ///
 /// @param v the input vector
 ///
 /// @returns the unit vector in the direction of @p v
 template <concepts::generic_vector vector_t>
 DETRAY_HOST_DEVICE constexpr vector_t normalize(const vector_t &v) {
-  return algebra::generic::math::normalize(v);
+  using scalar_t = detray::traits::scalar_t<vector_t>;
+
+  // One division and N multiplications instead of N divisions
+  return (static_cast<scalar_t>(1.f) / algebra::generic::math::norm(v)) * v;
 }
 
-/// Get the pseudorapidity of a vector
-///
-/// @tparam vector_t Vector type that uses the generic implementation
-///
-/// @param v the input vector
-///
-/// @returns the pseudorapidity eta
-template <concepts::generic_vector vector_t>
-  requires(traits::size<vector_t> >= 3)
-DETRAY_HOST_DEVICE constexpr traits::scalar_t<vector_t> eta(
-    const vector_t &v) noexcept {
-  return algebra::generic::math::eta(v);
-}
-
-}  // namespace detray::algebra::generic
+}  // namespace detray::algebra::generic::math

@@ -23,7 +23,8 @@
 
 namespace detray::algebra {
 
-// Forward declare the generic cast impl from matrices
+/// Forward declare the generic cast impl for matrices
+/// @param m the matrix whose elements should be cast to value_t
 template <concepts::value value_t, concepts::matrix matrix_t>
 DETRAY_HOST_DEVICE constexpr decltype(auto) cast_to(const matrix_t& m);
 
