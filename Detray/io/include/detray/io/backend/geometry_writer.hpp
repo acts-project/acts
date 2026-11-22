@@ -165,6 +165,9 @@ class geometry_writer final : public writer_interface<detector_t> {
     vol_data.transform =
         to_payload_impl(det.transform_store().at(vol_desc.transform()));
     vol_data.type = vol_desc.id();
+    if (vol_desc.has_mother()) {
+      vol_data.mother = detail::basic_converter::to_payload(vol_desc.mother());
+    }
 
     // Count the surfaces belonging to this volume
     std::size_t sf_idx{0};
@@ -185,6 +188,12 @@ class geometry_writer final : public writer_interface<detector_t> {
     // Skip the first acceleration structure which exists in every volume
     // and is handled automatically during detector building
     for (unsigned int i = 1u; i < link.size(); ++i) {
+      // The daughter volume accelerators are rebuilt from the mother links
+      // of the volumes (default brute force builder). Volume accelerators
+      // that are registered explicitly are not written yet
+      if (i == static_cast<unsigned int>(detector_t::geo_obj_ids::e_volume)) {
+        continue;
+      }
       const auto& l = link[i];
       if (!l.is_invalid()) {
         const auto aclp =

@@ -447,4 +447,36 @@ DETRAY_HOST_DEVICE constexpr void resolve_mask(
   DETRAY_DEBUG_HOST("Intersection status: " << intr_status);
 }
 
+namespace detail {
+
+/// @brief Fill an intersection with the result of the root finding
+///
+/// Overload of the mask resolution with portal tolerance flag for the
+/// intersection kernels. The helix intersectors are not used by the
+/// navigation, so the flag is ignored here.
+///
+/// @param is Intersection object to populate.
+/// @param traj Trajectory used to evaluate the intersection point.
+/// @param ip Path length and error estimate returned by root finding.
+/// @param sf_desc Descriptor of the intersected surface.
+/// @param mask Shape mask defining the surface bounds.
+/// @param trf Transform from the surface frame to global coordinates.
+/// @param intr_cfg Intersection configuration, including mask tolerances.
+/// @param external_mask_tol Additional mask tolerance (unused).
+/// @param use_portal_tolerance Apply the mask tolerance to portals (unused).
+template <typename intersection_t, concepts::algebra algebra_t,
+          typename surface_descr_t, typename mask_t, typename trajectory_t,
+          concepts::transform3D transform3_t, concepts::scalar scalar_t>
+DETRAY_HOST_DEVICE constexpr void resolve_mask_impl(
+    intersection_t &is, const trajectory_t &traj,
+    const intersection_point_err<algebra_t> &ip, const surface_descr_t sf_desc,
+    const mask_t &mask, const transform3_t &trf,
+    const intersection::config &intr_cfg, const scalar_t external_mask_tol,
+    const bool /*use_portal_tolerance*/) {
+  detray::resolve_mask(is, traj, ip, sf_desc, mask, trf, intr_cfg,
+                       external_mask_tol);
+}
+
+}  // namespace detail
+
 }  // namespace detray

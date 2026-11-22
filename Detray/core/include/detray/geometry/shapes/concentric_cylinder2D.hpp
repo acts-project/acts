@@ -192,18 +192,21 @@ class concentric_cylinder2D {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// Boundary values define the vertices in the local frame.
-  /// The optional segment count is ignored because cylindrical vertices are
-  /// not implemented for this shape.
+  /// The vertices lie on the circles at the lower and upper z boundary.
+  ///
+  /// @param bounds the boundary values for this shape
+  /// @param n_seg the number of segments along each circle (at least 4)
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>
   DETRAY_HOST dvector<dpoint3D<algebra_t>> vertices(
-      const bounds_type<dscalar<algebra_t>> & /*unused*/,
-      dindex /*unused*/) const {
-    throw std::runtime_error(
-        "Vertex generation for cylinders is not implemented");
-    return {};
+      const bounds_type<dscalar<algebra_t>> &bounds, dindex n_seg) const {
+    dvector<dpoint3D<algebra_t>> vertices{};
+    detail::add_circle_vertices<algebra_t>(bounds[e_r], bounds[e_lower_z],
+                                           n_seg, vertices);
+    detail::add_circle_vertices<algebra_t>(bounds[e_r], bounds[e_upper_z],
+                                           n_seg, vertices);
+    return vertices;
   }
 
   /// @brief Check consistency of boundary values.

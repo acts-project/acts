@@ -27,6 +27,7 @@
 
 // System include(s)
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 #include <stdexcept>
 #include <type_traits>
@@ -201,7 +202,21 @@ inline auto run(const typename detector_t::geometry_context gctx,
   if (auto it = std::ranges::find_if(intersection_trace, is_world_exit);
       it != intersection_trace.end()) {
     auto n{static_cast<std::size_t>(it - intersection_trace.begin())};
-    intersection_trace.resize(n + 1u);
+    std::size_t n_keep{n + 1u};
+
+    // Nested volumes: The portals of a daughter volume and its mother
+    // volume can leave the detector at the same position. Keep all of them
+    if (std::ranges::any_of(detector.volumes(),
+                            [](const auto &v) { return v.has_mother(); })) {
+      constexpr double tol{1e-4 * unit<double>::mm};
+      const double exit_path{it->intersection().path()};
+      while (n_keep < intersection_trace.size() &&
+             std::abs(intersection_trace[n_keep].intersection().path() -
+                      exit_path) < tol) {
+        ++n_keep;
+      }
+    }
+    intersection_trace.resize(n_keep);
   }
 
   return intersection_trace;

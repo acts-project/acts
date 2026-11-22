@@ -105,6 +105,26 @@ class volume_descriptor {
     m_transform = trf_idx;
   }
 
+  /// @returns the index of the mother volume in the detector volume
+  /// container. The index is invalid for a top-level volume.
+  DETRAY_HOST_DEVICE
+  constexpr auto mother() const -> dindex { return m_mother; }
+
+  /// Set the index of the mother volume.
+  ///
+  /// @param mother_idx the index of the mother volume in the detector volume
+  /// container. Use @c dindex_invalid for a top-level volume.
+  DETRAY_HOST
+  constexpr auto set_mother(const dindex mother_idx) -> void {
+    m_mother = mother_idx;
+  }
+
+  /// @returns true if the volume is placed inside a mother volume
+  DETRAY_HOST_DEVICE
+  constexpr auto has_mother() const -> bool {
+    return m_mother != dindex_invalid;
+  }
+
   /// @returns surface link for all object types - const
   DETRAY_HOST_DEVICE constexpr auto sf_link() const -> const sf_link_type& {
     return m_sf_links;
@@ -316,6 +336,12 @@ class volume_descriptor {
     os << "id = " << v_desc.id() << "(" << static_cast<int>(v_desc.id()) << ")";
     os << " | index = " << v_desc.index();
     os << " | trf. = " << v_desc.transform();
+    os << " | mother = ";
+    if (v_desc.has_mother()) {
+      os << v_desc.mother();
+    } else {
+      os << "none";
+    }
     os << " | acc link: " << v_desc.accel_link();
     os << " | sf link: " << v_desc.sf_link();
     os << " | mat link: " << v_desc.material();
@@ -344,8 +370,12 @@ class volume_descriptor {
   /// Volume index in the detector's volume container
   dindex m_index{dindex_invalid};
 
-  /// Volume index in the detector's volume container
+  /// Index of the volume transform in the detector's transform store
   dindex m_transform{dindex_invalid};
+
+  /// Index of the mother volume in the detector's volume container
+  /// (invalid for top-level volumes)
+  dindex m_mother{dindex_invalid};
 
   /// Index range for every object type
   sf_link_type m_sf_links{};

@@ -49,6 +49,8 @@ struct mock_volume_builder : public volume_builder_interface<detector_t> {
   bool has_accel() const override { return false; }
   void set_name(std::string /*unused*/) override { /*Do nothing*/ }
   std::string_view name() override { return "test_volume_0"; }
+  void set_mother(dindex mother_idx) override { m_vol.set_mother(mother_idx); }
+  auto mother() const -> dindex override { return m_vol.mother(); }
   auto operator()() const -> const typename detector_t::volume_type& override {
     return m_vol;
   }

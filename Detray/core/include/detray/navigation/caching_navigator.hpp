@@ -201,10 +201,28 @@ class caching_navigator
       constexpr auto shift_max{static_cast<dist_t>(k_cache_capacity - 2)};
       const dist_t shift_begin{math::min(this->last_index(), shift_max)};
 
-      // In case of overlaps, prefer sensitives over portals and
-      // direct hits over edge hits
-      if (is_overlap_at_pos(idxu) &&
-          (new_candidate.is_edge() || new_candidate.surface().is_portal())) {
+      // A daughter volume that touches the boundary of the current volume:
+      // Prefer entering the daughter over leaving the current volume
+      const auto is_own_portal_at_pos =
+          [this, &is_overlap_at_pos](std::size_t index) {
+            const auto &other = this->candidates()[index];
+            return is_overlap_at_pos(index) && other.surface().is_portal() &&
+                   !navigation::is_daughter_entry(this->volume(), other);
+          };
+      const bool is_prio_daughter_entry{
+          !new_candidate.is_edge() &&
+          navigation::is_daughter_entry(this->volume(), new_candidate)};
+
+      if (is_prio_daughter_entry && (idx > this->next_index()) &&
+          is_own_portal_at_pos(idxu - 1u)) {
+        // Put the new candidate before the overlapping portal
+        idx--;
+      } else if (is_overlap_at_pos(idxu) &&
+                 !(is_prio_daughter_entry && is_own_portal_at_pos(idxu)) &&
+                 (new_candidate.is_edge() ||
+                  new_candidate.surface().is_portal())) {
+        // In case of overlaps, prefer sensitives over portals and
+        // direct hits over edge hits
         // Don't shift the overlapping candidate and put the new
         // candidate behind it
         idx++;

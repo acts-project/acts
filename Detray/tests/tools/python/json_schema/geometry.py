@@ -72,6 +72,11 @@ geometry_schema = {
                                 "description": "The volume index",
                                 "minimum": 0,
                             },
+                            "mother": {
+                                "type": "integer",
+                                "description": "Index of the mother volume (only for daughter volumes)",
+                                "minimum": 0,
+                            },
                             "type": {
                                 "type": "integer",
                                 "description": "The volume type id (e.g. cylinder)",

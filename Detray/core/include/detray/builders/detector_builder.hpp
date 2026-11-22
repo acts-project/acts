@@ -9,6 +9,8 @@
 #pragma once
 
 // Project include(s).
+#include "detray/builders/volume_accelerator_builder_interface.hpp"
+#include "detray/builders/volume_brute_force_builder.hpp"
 #include "detray/builders/volume_builder.hpp"
 #include "detray/builders/volume_builder_interface.hpp"
 #include "detray/core/concepts.hpp"
@@ -20,8 +22,12 @@
 #include <vecmem/memory/memory_resource.hpp>
 
 // System include(s)
+#include <concepts>
 #include <ios>
+#include <map>
 #include <memory>
+#include <set>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -115,6 +121,40 @@ class detector_builder {
     return decorate<builder_t>(v_builder->vol_index());
   }
 
+  /// Add a builder for volume acceleration structures, which hold the
+  /// daughter volumes of root volumes.
+  ///
+  /// The volume acceleration builders run after all volumes are built, in
+  /// the order in which they were added. Roots that are not registered with
+  /// any builder get a volume brute force accelerator (if the detector type
+  /// provides it). Their daughter volumes are found by the mother links.
+  ///
+  /// @tparam builder_t the type of volume acceleration builder
+  /// @tparam Args the types of the builder constructor arguments
+  ///
+  /// @param args the arguments that are forwarded to the builder constructor
+  ///
+  /// @returns pointer to the new builder (e.g. to configure it)
+  template <class builder_t, typename... Args>
+    requires std::derived_from<
+        builder_t, volume_accelerator_builder_interface<detector_type>>
+  DETRAY_HOST auto add_volume_accelerator(Args&&... args) -> builder_t* {
+    auto v_acc_builder =
+        std::make_unique<builder_t>(std::forward<Args>(args)...);
+    builder_t* v_acc_builder_ptr{v_acc_builder.get()};
+
+    DETRAY_VERBOSE_HOST(
+        "Adding volume accelerator builder: " << v_acc_builder->name());
+    m_volume_accelerators.push_back(std::move(v_acc_builder));
+
+    return v_acc_builder_ptr;
+  }
+
+  /// @returns the number of registered volume acceleration builders
+  DETRAY_HOST auto n_volume_accelerators() const -> std::size_t {
+    return m_volume_accelerators.size();
+  }
+
   /// Access a particular volume builder by volume index @p volume_idx
   /// @param volume_idx Index of the requested builder.
   /// @returns Pointer to the requested builder.
@@ -145,7 +185,8 @@ class detector_builder {
       vol_builder->build(det, opt);
     }
 
-    // TODO: Make fully generic for more volume accelerator types
+    // Volume acceleration structures: Need all volumes
+    build_volume_accelerators(det);
 
     // TODO: Add sorting, data deduplication etc. here later...
 
@@ -201,11 +242,75 @@ class detector_builder {
   }
 
  private:
+  /// Run the volume acceleration builders on the detector @p det
+  ///
+  /// Every mother volume that is not registered as root with a volume
+  /// acceleration builder is added to a volume brute force builder, if the
+  /// detector type provides the volume brute force accelerator. Its daughter
+  /// volumes are found by their mother links. Otherwise, the daughter volumes
+  /// are not part of any accelerator (reported by the consistency checker).
+  ///
+  /// @param det the detector, which already contains all volumes
+  ///
+  /// @throws std::invalid_argument if a root volume (including the world
+  /// root @c dindex_invalid ) is registered with more than one builder
+  DETRAY_HOST void build_volume_accelerators(detector_type& det) {
+    // Roots that are registered with a volume accelerator builder
+    std::set<dindex> claimed_roots{};
+    for (const auto& v_acc_builder : m_volume_accelerators) {
+      for (const dindex root : v_acc_builder->roots()) {
+        if (!claimed_roots.insert(root).second) {
+          const std::string err_str{
+              "Root volume " + std::to_string(root) +
+              " is registered with more than one volume accelerator builder"};
+          DETRAY_FATAL_HOST(err_str);
+          throw std::invalid_argument(err_str);
+        }
+      }
+    }
+
+    // Daughter volumes of all other mother volumes (by their mother links)
+    std::map<dindex, std::vector<dindex>> unclaimed_roots{};
+    for (const auto& vol_desc : det.volumes()) {
+      if (vol_desc.has_mother() && !claimed_roots.contains(vol_desc.mother())) {
+        unclaimed_roots[vol_desc.mother()].push_back(vol_desc.index());
+      }
+    }
+
+    // Default: Volume brute force accelerator for the unclaimed roots
+    std::unique_ptr<volume_accelerator_builder_interface<detector_type>>
+        default_builder{nullptr};
+    if constexpr (concepts::has_volume_brute_force<detector_type>) {
+      if (!unclaimed_roots.empty()) {
+        default_builder =
+            std::make_unique<volume_brute_force_builder<detector_type>>();
+        for (const auto& [root, daughters] : unclaimed_roots) {
+          default_builder->add_root(root, daughters);
+        }
+      }
+    }
+
+    DETRAY_VERBOSE_HOST("Build the volume acceleration structures...");
+    for (const auto& v_acc_builder : m_volume_accelerators) {
+      DETRAY_VERBOSE_HOST("-> Build: " << v_acc_builder->name());
+      v_acc_builder->build(det);
+    }
+    if (default_builder) {
+      DETRAY_VERBOSE_HOST("-> Build (default): " << default_builder->name());
+      default_builder->build(det);
+    }
+  }
+
   /// Name of the new detector
   std::string m_detector_name{"detray_detector"};
   /// Data structure that holds a volume builder for every detector volume
   volume_data_t<std::unique_ptr<volume_builder_interface<detector_type>>>
       m_volumes{};
+  /// Builders for the volume acceleration structures (run after the volumes
+  /// are built)
+  std::vector<
+      std::unique_ptr<volume_accelerator_builder_interface<detector_type>>>
+      m_volume_accelerators{};
 };
 
 }  // namespace detray

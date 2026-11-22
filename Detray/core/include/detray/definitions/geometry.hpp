@@ -46,11 +46,41 @@ enum class surface_id : std::uint_least8_t {
   e_all = e_unknown
 };
 
+/// Position of a point with respect to a detector volume.
+///
+/// outside: the point is outside of the volume.
+/// inside: the point is inside of the volume.
+/// on_boundary: the point lies on a portal of the volume (within tolerance).
+/// ambiguous: the position could not be determined (e.g. the test rays only
+///            touched portal edges).
+enum class volume_containment : std::uint_least8_t {
+  e_outside = 0u,
+  e_inside = 1u,
+  e_on_boundary = 2u,
+  e_ambiguous = 3u
+};
+
 // Print the values of an enum by identifier
 #define ENUM_PRINT(x) \
   case x:             \
     os << #x;         \
     break
+
+/// Write the volume containment using its enumerator name.
+/// @param os output stream
+/// @param vc volume containment to print
+/// @return the output stream
+DETRAY_HOST inline std::ostream& operator<<(std::ostream& os,
+                                            volume_containment vc) {
+  switch (vc) {
+    using enum volume_containment;
+    ENUM_PRINT(e_outside);
+    ENUM_PRINT(e_inside);
+    ENUM_PRINT(e_on_boundary);
+    ENUM_PRINT(e_ambiguous);
+  }
+  return os;
+}
 
 /// Write the volume shape identifier using its enumerator name.
 /// @param os output stream

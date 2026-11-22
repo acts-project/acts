@@ -30,7 +30,9 @@
 #include <vecmem/memory/host_memory_resource.hpp>
 
 // System include(s)
+#include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <string>
@@ -210,6 +212,21 @@ class navigation_validation : public test::fixture_base<> {
         for (auto &record : obj_tracer.object_trace) {
           record.charge(q);
           record.p(p);
+        }
+
+        // Compare only the sensitive surfaces, if requested. Keep the first
+        // (dummy) record with the initial track parameters
+        if (m_cfg.collect_sensitives_only()) {
+          auto is_not_sensitive = [](const auto &rec) {
+            return !rec.intersection().surface().is_sensitive();
+          };
+          truth_trace.erase(std::remove_if(std::next(truth_trace.begin()),
+                                           truth_trace.end(), is_not_sensitive),
+                            truth_trace.end());
+          auto &obj_trace = obj_tracer.object_trace;
+          obj_trace.erase(std::remove_if(std::next(obj_trace.begin()),
+                                         obj_trace.end(), is_not_sensitive),
+                          obj_trace.end());
         }
 
         auto [result, n_missed_nav, n_missed_truth, n_error, missed_inters] =

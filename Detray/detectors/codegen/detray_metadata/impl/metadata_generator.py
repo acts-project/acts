@@ -584,36 +584,20 @@ template <template <typename...> class vector_t = dvector>\n\
                 f"\tregular_multi_store<{id_name}, {context}, dtuple, vector_t, {','.join(itertools.chain(*types.values()))}>;"
             )
         else:
-            type_list = []
-            # Take one representative type from the list
-            flattened_types = [v[0] for k, v in types.items()]
+            # Take one representative type from the list. The position of a
+            # type in the store must be its id in the type enumeration
+            flattened_types = [v[0] for k, v in sorted(types.items())]
 
-            # The brute force searcher needs to be at the beginning of the store
-            if "surface_brute_force_t" in flattened_types:
-                flattened_types = [
-                    t for t in flattened_types if t != "surface_brute_force_t"
-                ]
-                type_list.append("brute_force_collection<surface_type, container_t>")
+            def collection_type(t):
+                if t == "surface_brute_force_t":
+                    return "brute_force_collection<surface_type, container_t>"
+                if t == "volume_brute_force_t":
+                    return "brute_force_collection<dindex, container_t>"
+                if t.endswith("map_t") or t.endswith("grid_t"):
+                    return f"grid_collection<{t}<container_t>>"
+                return f"typename container_t::template vector_type<{t}>"
 
-            # Have the volume acceleration structure at the end of the store
-            volume_brute_force = ""
-            if "volume_brute_force_t" in flattened_types:
-                flattened_types = [
-                    t for t in flattened_types if t != "volume_brute_force_t"
-                ]
-                volume_brute_force = "brute_force_collection<dindex, container_t>"
-
-            type_list = type_list + [
-                (
-                    f"grid_collection<{t}<container_t>>"
-                    if (t.endswith("map_t") or t.endswith("grid_t"))
-                    else f"typename container_t::template vector_type<{t}>"
-                )
-                for t in flattened_types
-            ]
-
-            if volume_brute_force:
-                type_list.append(volume_brute_force)
+            type_list = [collection_type(t) for t in flattened_types]
 
             self.__put(
                 f"\tmulti_store<{id_name}, {context}, dtuple, {','.join(type_list)}>;"

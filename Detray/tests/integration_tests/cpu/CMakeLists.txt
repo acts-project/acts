@@ -86,6 +86,20 @@ set_tests_properties(
             "detray_unit_test_cpu;detray_unit_test_cpu_array;detray_unit_test_svgtools"
 )
 
+detray_add_integration_test(nested_detector
+                            "detectors/nested_detector_navigation.cpp"
+                            LINK_LIBRARIES GTest::gtest GTest::gtest_main
+                            detray::test_cpu detray::io detray::test_framework detray::test_common
+                            detray::core_array
+)
+
+set_tests_properties(
+    detray_integration_test_nested_detector
+    PROPERTIES
+        DEPENDS
+            "detray_unit_test_cpu;detray_unit_test_cpu_array;detray_unit_test_svgtools"
+)
+
 detray_add_integration_test(toy_detector
                             "detectors/toy_detector_navigation.cpp"
                             LINK_LIBRARIES GTest::gtest GTest::gtest_main

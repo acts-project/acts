@@ -144,7 +144,7 @@ class detector_scan : public test::fixture_base<> {
 
       // Run consistency checks on the trace
       bool success = detector_scanner::check_trace<detector_t>(
-          intersection_trace, start_index, adj_mat_scan, obj_hashes);
+          intersection_trace, start_index, adj_mat_scan, obj_hashes, &m_det);
 
       // Display the detector, track and intersections for debugging
       if (!success) {

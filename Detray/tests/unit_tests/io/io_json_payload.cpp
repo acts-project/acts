@@ -301,6 +301,15 @@ GTEST_TEST(io, json_volume_payload) {
   EXPECT_EQ(v.type, pv.type);
   EXPECT_EQ(v.surfaces.size(), pv.surfaces.size());
   EXPECT_EQ(v.acc_links->size(), pv.acc_links->size());
+  // Top-level volume: No mother link
+  EXPECT_FALSE(pv.mother.has_value());
+
+  // Daughter volume
+  v.mother = detray::io::single_link_payload{5u};
+  j["daughter_volume"] = v;
+  detray::io::volume_payload pdv = j["daughter_volume"];
+  ASSERT_TRUE(pdv.mother.has_value());
+  EXPECT_EQ(pdv.mother->link, 5u);
 }
 
 /// This tests the json io for a material slab/rod

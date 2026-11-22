@@ -115,6 +115,9 @@ inline void to_json(nlohmann::ordered_json& j, const volume_payload& v) {
   j["name"] = v.name;
   j["index"] = v.index;
   j["type"] = v.type;
+  if (v.mother.has_value()) {
+    j["mother"] = v.mother.value();
+  }
   j["transform"] = v.transform;
   nlohmann::ordered_json sjson;
   for (const auto& s : v.surfaces) {
@@ -134,6 +137,9 @@ inline void from_json(const nlohmann::ordered_json& j, volume_payload& v) {
   v.name = j["name"];
   v.index = j["index"];
   v.type = j["type"];
+  if (j.find("mother") != j.end()) {
+    v.mother = j["mother"];
+  }
   v.transform = j["transform"];
   for (const auto& js : j["surfaces"]) {
     surface_payload s = js;

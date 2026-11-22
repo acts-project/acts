@@ -15,15 +15,19 @@
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/geometry.hpp"
 #include "detray/definitions/indexing.hpp"
+#include "detray/definitions/units.hpp"
 #include "detray/geometry/detail/volume_kernels.hpp"
+#include "detray/geometry/surface.hpp"
 #include "detray/material/material.hpp"
 #include "detray/navigation/accelerators/search_window.hpp"
+#include "detray/tracks/ray.hpp"
 #include "detray/utils/logging.hpp"
 #include "detray/utils/ranges.hpp"
 
 // System include(s)
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 namespace detray {
@@ -94,6 +98,56 @@ class tracking_volume {
   /// @returns the index of the volume in the detector volume container.
   DETRAY_HOST_DEVICE
   constexpr auto index() const -> dindex { return m_desc.index(); }
+
+  /// @returns the index of the mother volume in the detector volume
+  /// container. The index is invalid for a top-level volume.
+  DETRAY_HOST_DEVICE
+  constexpr auto mother() const -> dindex { return m_desc.mother(); }
+
+  /// @returns true if the volume is not placed inside a mother volume
+  DETRAY_HOST_DEVICE
+  constexpr auto is_top_level() const -> bool { return !m_desc.has_mother(); }
+
+  /// @returns true if the volume contains daughter volumes
+  DETRAY_HOST_DEVICE
+  constexpr auto has_daughters() const -> bool {
+    return !m_desc.template accel_link<object_id::e_volume>().is_invalid();
+  }
+
+  /// Check whether a point lies inside the volume
+  ///
+  /// The check uses only the portals of the volume. The volume of the
+  /// daughter volumes is part of the volume. Depending on the volume shape:
+  /// - cuboid: The point must lie on the inner side of every portal plane.
+  ///   The inner side is the side of the mean portal position.
+  /// - cylinder: The discs give the radial bounds and the cylinder mantles
+  ///   give the bounds in z (in the volume frame).
+  /// - other shapes: A ray from the point crosses the portals an odd number
+  ///   of times, if the point is inside. If a ray passes close to a portal
+  ///   edge, the check is repeated with another ray direction.
+  ///
+  /// @param glob_p the point in global coordinates
+  /// @param ctx the geometry context
+  /// @param tol tolerance for points on the boundary (and for portal edges)
+  ///
+  /// @returns whether the point is inside, outside or on the boundary
+  DETRAY_HOST_DEVICE constexpr auto is_inside(
+      const point3_type &glob_p, const context_t &ctx = {},
+      const scalar_type tol = 1.f * unit<scalar_type>::um) const
+      -> volume_containment {
+    if (id() == volume_id::e_cuboid) {
+      return is_inside_cuboid(glob_p, ctx, tol);
+    }
+    if (id() == volume_id::e_cylinder) {
+      bool is_supported{true};
+      const volume_containment result{
+          is_inside_cylinder(glob_p, ctx, tol, is_supported)};
+      if (is_supported) {
+        return result;
+      }
+    }
+    return is_inside_ray_test(glob_p, ctx, tol);
+  }
 
   /// @returns the (non contextual) transform for the placement of the
   /// volume in the detector geometry.
@@ -239,14 +293,13 @@ class tracking_volume {
     }
   }
 
-  /// Apply a functor to all daughter volumes
+  /// Apply a functor to all daughter volumes (every daughter volume once)
   ///
   /// @tparam functor_t the prescription to be applied to the daughter volumes
   /// @tparam Args      types of additional arguments to the functor
   /// @param args Arguments forwarded to the daughter-volume visitor.
   template <typename functor_t, typename... Args>
-  DETRAY_HOST_DEVICE constexpr void visit_daughter_volumes(
-      Args &&...args) const {
+  DETRAY_HOST constexpr void visit_daughter_volumes(Args &&...args) const {
     using volume_getter_t = detail::apply_to_volumes<functor_t>;
 
     visit_accelerator<object_id::e_volume, volume_getter_t>(
@@ -329,6 +382,19 @@ class tracking_volume {
             "in volume:\n"
          << *this << std::endl;
       return false;
+    }
+    if (m_desc.has_mother()) {
+      if (m_desc.mother() >= m_detector.volumes().size()) {
+        os << "DETRAY ERROR (HOST): Mother volume index out of bounds in "
+              "volume:\n"
+           << *this << std::endl;
+        return false;
+      }
+      if (m_desc.mother() == index()) {
+        os << "DETRAY ERROR (HOST): Volume is its own mother:\n"
+           << *this << std::endl;
+        return false;
+      }
     }
     // Only check, if there is material in the detector
     if (!m_detector.material_store().all_empty() && has_material() &&
@@ -415,6 +481,148 @@ class tracking_volume {
   }
 
  private:
+  /// @returns the containment of a point from its minimal distance @p dist
+  /// to the boundary (negative: outside) with tolerance @p tol
+  DETRAY_HOST_DEVICE static constexpr auto to_containment(
+      const scalar_type dist, const scalar_type tol) -> volume_containment {
+    if (dist < -tol) {
+      return volume_containment::e_outside;
+    }
+    return (dist <= tol) ? volume_containment::e_on_boundary
+                         : volume_containment::e_inside;
+  }
+
+  /// Inside check for a cuboid volume: The volume is the intersection of
+  /// the half-spaces of its portal planes. The inner side of every plane is
+  /// the side of the mean portal position, which lies inside of the (convex)
+  /// volume.
+  ///
+  /// @param glob_p the point in global coordinates
+  /// @param ctx the geometry context
+  /// @param tol tolerance for points on the boundary
+  ///
+  /// @returns whether the point is inside, outside or on the boundary
+  DETRAY_HOST_DEVICE constexpr auto is_inside_cuboid(
+      const point3_type &glob_p, const context_t &ctx,
+      const scalar_type tol) const -> volume_containment {
+    // Reference point inside of the volume
+    point3_type center{0.f, 0.f, 0.f};
+    for (const auto &pt_desc : portals()) {
+      center =
+          center +
+          geometry::surface{m_detector, pt_desc}.transform(ctx).translation();
+    }
+    center = (1.f / static_cast<scalar_type>(n_portals())) * center;
+
+    // Minimal distance to the planes (negative: outside)
+    scalar_type dist{std::numeric_limits<scalar_type>::max()};
+    for (const auto &pt_desc : portals()) {
+      const auto &trf = geometry::surface{m_detector, pt_desc}.transform(ctx);
+      const auto &n = trf.z();
+      const scalar_type d_center{vector::dot(n, center - trf.translation())};
+      const scalar_type d_point{vector::dot(n, glob_p - trf.translation())};
+      dist = math::min(dist, d_center < 0.f ? -d_point : d_point);
+    }
+
+    return to_containment(dist, tol);
+  }
+
+  /// Inside check for a cylinder volume, whose portals are discs and
+  /// cylinder mantles
+  ///
+  /// @param glob_p the point in global coordinates
+  /// @param ctx the geometry context
+  /// @param tol tolerance for points on the boundary
+  /// @param is_supported set to false, if the portals are not supported
+  ///                     (e.g. planes for phi sectors) (output)
+  ///
+  /// @returns whether the point is inside, outside or on the boundary
+  DETRAY_HOST_DEVICE constexpr auto is_inside_cylinder(
+      const point3_type &glob_p, const context_t &ctx, const scalar_type tol,
+      bool &is_supported) const -> volume_containment {
+    constexpr scalar_type inf{std::numeric_limits<scalar_type>::max()};
+
+    const auto &vol_trf =
+        m_detector.transform_store().at(m_desc.transform(), ctx);
+
+    // r_min, r_max, z_min, z_max
+    darray<scalar_type, 4> bounds{inf, -inf, inf, -inf};
+    for (const auto &pt_desc : portals()) {
+      const auto pt = geometry::surface{m_detector, pt_desc};
+      const auto &pt_trf = pt.transform(ctx);
+
+      const scalar_type z_offset{
+          vol_trf.point_to_local(pt_trf.translation())[2]};
+      const scalar_type z_sign{
+          vector::dot(vol_trf.z(), pt_trf.z()) < 0.f ? -1.f : 1.f};
+      pt.template visit_mask<detail::cylinder_volume_bounds>(
+          z_offset, z_sign, bounds, is_supported);
+    }
+
+    // At least one disc and one mantle are needed
+    if (!is_supported || bounds[1] < bounds[0] || bounds[3] < bounds[2]) {
+      is_supported = false;
+      return volume_containment::e_ambiguous;
+    }
+
+    const point3_type loc{vol_trf.point_to_local(glob_p)};
+    const scalar_type r{vector::perp(loc)};
+
+    // Without an inner mantle, the volume reaches down to the z-axis
+    const scalar_type dist_r_min{bounds[0] > tol ? r - bounds[0] : inf};
+    const scalar_type dist{
+        math::min(math::min(dist_r_min, bounds[1] - r),
+                  math::min(loc[2] - bounds[2], bounds[3] - loc[2]))};
+
+    return to_containment(dist, tol);
+  }
+
+  /// Inside check for volumes of any shape: A ray from the point crosses the
+  /// portals an odd number of times, if the point is inside. If a ray passes
+  /// close to a portal edge, the check is repeated with another ray direction.
+  ///
+  /// @param glob_p the point in global coordinates
+  /// @param ctx the geometry context
+  /// @param tol tolerance for points on a portal and for portal edges
+  ///
+  /// @returns whether the point is inside, outside, on the boundary, or
+  /// whether the check is ambiguous
+  DETRAY_HOST_DEVICE constexpr auto is_inside_ray_test(
+      const point3_type &glob_p, const context_t &ctx,
+      const scalar_type tol) const -> volume_containment {
+    using vector3_t = dvector3D<algebra_type>;
+
+    // Test directions that are not aligned with the coordinate axes
+    const darray<vector3_t, 3> directions{
+        vector::normalize(vector3_t{0.31f, 0.47f, 0.83f}),
+        vector::normalize(vector3_t{-0.71f, 0.29f, -0.64f}),
+        vector::normalize(vector3_t{0.53f, -0.81f, 0.25f})};
+
+    for (const vector3_t &dir : directions) {
+      const detail::ray<algebra_type> ray{glob_p, 0.f, dir, 0.f};
+
+      unsigned int n_crossings{0u};
+      bool is_ambiguous{false};
+      bool is_on_portal{false};
+      for (const auto &pt_desc : portals()) {
+        const auto pt = geometry::surface{m_detector, pt_desc};
+        pt.template visit_mask<detail::count_portal_crossings>(
+            ray, pt.transform(ctx), tol, n_crossings, is_ambiguous,
+            is_on_portal);
+      }
+
+      if (is_on_portal) {
+        return volume_containment::e_on_boundary;
+      }
+      if (!is_ambiguous) {
+        return (n_crossings % 2u == 1u) ? volume_containment::e_inside
+                                        : volume_containment::e_outside;
+      }
+    }
+
+    return volume_containment::e_ambiguous;
+  }
+
   /// Access to the detector stores
   const detector_t &m_detector;
   /// Access to the descriptor

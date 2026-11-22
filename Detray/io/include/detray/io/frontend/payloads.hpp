@@ -176,6 +176,8 @@ struct volume_payload {
   std::vector<surface_payload> surfaces{};
   /// Index of the volume in the detector volume container
   single_link_payload index{};
+  /// Index of the mother volume (not set for top-level volumes)
+  std::optional<single_link_payload> mother{};
   /// Optional accelerator data structures
   std::optional<std::vector<acc_links_payload>> acc_links{};
 };
