@@ -15,6 +15,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -121,7 +122,8 @@ struct PointwiseMaterialEffects {
 PointwiseMaterialEffects computeMaterialEffects(
     const MaterialSlab& slab, const ParticleHypothesis& particleHypothesis,
     const Vector3& direction, float qOverP, bool multipleScattering,
-    bool energyLoss, bool covTransport);
+    bool energyLoss, bool covTransport,
+    ScatteringModel scatteringModel = ScatteringModel::Highland);
 
 /// Compute the material effects given the propagation state and material slab
 /// @tparam propagator_state_t The type of the propagator state
@@ -133,11 +135,10 @@ PointwiseMaterialEffects computeMaterialEffects(
 /// @param energyLoss Whether to compute energy loss effects
 /// @return The computed material effects
 template <typename propagator_state_t, typename stepper_t>
-PointwiseMaterialEffects computeMaterialEffects(const propagator_state_t& state,
-                                                const stepper_t& stepper,
-                                                const MaterialSlab& slab,
-                                                bool multipleScattering,
-                                                bool energyLoss) {
+PointwiseMaterialEffects computeMaterialEffects(
+    const propagator_state_t& state, const stepper_t& stepper,
+    const MaterialSlab& slab, bool multipleScattering, bool energyLoss,
+    ScatteringModel scatteringModel = ScatteringModel::Highland) {
   const bool covTransport = stepper.hasCovariance(state.stepping);
   const Vector3 direction = stepper.direction(state.stepping);
   const float qOverP = stepper.qOverP(state.stepping);
@@ -145,7 +146,8 @@ PointwiseMaterialEffects computeMaterialEffects(const propagator_state_t& state,
       stepper.particleHypothesis(state.stepping);
 
   return computeMaterialEffects(slab, particleHypothesis, direction, qOverP,
-                                multipleScattering, energyLoss, covTransport);
+                                multipleScattering, energyLoss, covTransport,
+                                scatteringModel);
 }
 
 /// Perform the material interaction given the propagation state and material
@@ -163,13 +165,14 @@ template <typename propagator_state_t, typename stepper_t>
 PointwiseMaterialEffects performMaterialInteraction(
     propagator_state_t& state, const stepper_t& stepper,
     const MaterialSlab& slab, NoiseUpdateMode noiseUpdateMode,
-    bool multipleScattering, bool energyLoss) {
+    bool multipleScattering, bool energyLoss,
+    ScatteringModel scatteringModel = ScatteringModel::Highland) {
   if (slab.isVacuum()) {
     return {};
   }
 
   const PointwiseMaterialEffects effects = computeMaterialEffects(
-      state, stepper, slab, multipleScattering, energyLoss);
+      state, stepper, slab, multipleScattering, energyLoss, scatteringModel);
 
   const Direction propDir = state.options.direction;
   const ParticleHypothesis& particleHypothesis =
@@ -243,13 +246,15 @@ PointwiseMaterialEffects performMaterialInteraction(
 /// @param noiseUpdateMode The noise update mode
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
+/// @param scatteringModel The multiple-scattering model to use
 /// @param logger The logger to use for verbose output
 /// @return The computed material effects
 template <typename propagator_state_t, typename stepper_t>
 Result<PointwiseMaterialEffects> performMaterialInteraction(
     propagator_state_t& state, const stepper_t& stepper, const Surface& surface,
     MaterialUpdateMode updateMode, NoiseUpdateMode noiseUpdateMode,
-    bool multipleScattering, bool energyLoss, const Logger& logger) {
+    bool multipleScattering, bool energyLoss, ScatteringModel scatteringModel,
+    const Logger& logger) {
   const Result<MaterialSlab> slabResult =
       evaluateMaterialSlab(state, stepper, surface, updateMode);
   if (!slabResult.ok()) {
@@ -263,7 +268,8 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
   }
 
   const PointwiseMaterialEffects effects = performMaterialInteraction(
-      state, stepper, slab, noiseUpdateMode, multipleScattering, energyLoss);
+      state, stepper, slab, noiseUpdateMode, multipleScattering, energyLoss,
+      scatteringModel);
 
   const Direction propDir = state.options.direction;
 
@@ -276,6 +282,18 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
                           << "varianceQoverP = " << effects.varianceQoverP);
 
   return effects;
+}
+
+/// Compatibility overload for callers passing the logger immediately after
+/// energyLoss; uses the standard Highland scattering model.
+template <typename propagator_state_t, typename stepper_t>
+Result<PointwiseMaterialEffects> performMaterialInteraction(
+    propagator_state_t& state, const stepper_t& stepper, const Surface& surface,
+    MaterialUpdateMode updateMode, NoiseUpdateMode noiseUpdateMode,
+    bool multipleScattering, bool energyLoss, const Logger& logger) {
+  return performMaterialInteraction(
+      state, stepper, surface, updateMode, noiseUpdateMode, multipleScattering,
+      energyLoss, ScatteringModel::Highland, logger);
 }
 
 }  // namespace Acts::detail

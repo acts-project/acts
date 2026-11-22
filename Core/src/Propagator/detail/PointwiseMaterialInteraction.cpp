@@ -53,7 +53,7 @@ Result<MaterialSlab> detail::evaluateMaterialSlab(
 detail::PointwiseMaterialEffects detail::computeMaterialEffects(
     const MaterialSlab& slab, const ParticleHypothesis& particleHypothesis,
     const Vector3& direction, float qOverP, bool multipleScattering,
-    bool energyLoss, bool covTransport) {
+    bool energyLoss, bool covTransport, ScatteringModel scatteringModel) {
   PointwiseMaterialEffects result;
 
   const double mass = particleHypothesis.mass();
@@ -67,8 +67,8 @@ detail::PointwiseMaterialEffects detail::computeMaterialEffects(
   if (covTransport) {
     if (multipleScattering) {
       //! [scattering variance]
-      const double theta0 =
-          computeMultipleScatteringTheta0(slab, absPdg, mass, qOverP, absQ);
+      const double theta0 = computeMultipleScatteringTheta0(
+          slab, absPdg, mass, qOverP, absQ, scatteringModel);
       // sigmaPhi = theta0 / sin(theta)
       const double sigmaPhi =
           theta0 * (direction.norm() / VectorHelpers::perp(direction));

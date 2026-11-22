@@ -26,6 +26,9 @@ namespace Acts {
 struct MaterialInteractor {
   /// Whether to consider multiple scattering.
   bool multipleScattering = true;
+  /// The multiple-scattering model (the Highland formula without the log term
+  /// for many thin layers)
+  ScatteringModel scatteringModel = ScatteringModel::Highland;
   /// Whether to consider energy loss.
   bool energyLoss = true;
   /// Whether to record all material interactions.
@@ -102,9 +105,9 @@ struct MaterialInteractor {
 
         // Apply the material interactions
         const detail::PointwiseMaterialEffects effects =
-            detail::performMaterialInteraction(state, stepper, slab,
-                                               noiseUpdateMode,
-                                               multipleScattering, energyLoss);
+            detail::performMaterialInteraction(
+                state, stepper, slab, noiseUpdateMode, multipleScattering,
+                energyLoss, scatteringModel);
 
         if (energyLoss) {
           using namespace UnitLiterals;
