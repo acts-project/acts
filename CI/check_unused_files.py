@@ -45,7 +45,6 @@ EXCLUDE_FILES = (
     "codecov.yml",
     "pytest.ini",
     "README.md",
-    "readthedocs.yml",
     "sonar-project.properties",
     # Filename not completed in source
     "vertexing_event_mu20_beamspot.csv",

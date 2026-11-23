@@ -54,7 +54,6 @@ jobs:
             CI/clang_tidy
             CI/fpe_masks
             codegen
-            docs/old
             Python/Examples/tests
             Examples/Scripts
           )
