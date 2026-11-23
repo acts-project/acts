@@ -94,18 +94,18 @@ CudaTracccBackend::makeTripletSeeding(
     std::unique_ptr<const Acts::Logger> logger) const {
   return {m_impl->copy,
           std::make_shared<traccc::cuda::triplet_seeding_algorithm>(
-              finderConfig, gridConfig, filterConfig, m_impl->mr,
-              m_impl->copy, m_impl->stream, std::move(logger))};
+              finderConfig, gridConfig, filterConfig, m_impl->mr, m_impl->copy,
+              m_impl->stream, std::move(logger))};
 }
 
 TracccDeviceAlgorithm<traccc::device::seed_parameter_estimation_algorithm>
 CudaTracccBackend::makeSeedParameterEstimation(
     const traccc::track_params_estimation_config& config,
     std::unique_ptr<const Acts::Logger> logger) const {
-  return {m_impl->copy,
-          std::make_shared<traccc::cuda::seed_parameter_estimation_algorithm>(
-              config, m_impl->mr, m_impl->copy, m_impl->stream,
-              std::move(logger))};
+  return {
+      m_impl->copy,
+      std::make_shared<traccc::cuda::seed_parameter_estimation_algorithm>(
+          config, m_impl->mr, m_impl->copy, m_impl->stream, std::move(logger))};
 }
 
 TracccDeviceAlgorithm<traccc::device::combinatorial_kalman_filter_algorithm>
@@ -115,8 +115,7 @@ CudaTracccBackend::makeCombinatorialKalmanFilter(
   return {
       m_impl->copy,
       std::make_shared<traccc::cuda::combinatorial_kalman_filter_algorithm>(
-          config, m_impl->mr, m_impl->copy, m_impl->stream,
-          std::move(logger))};
+          config, m_impl->mr, m_impl->copy, m_impl->stream, std::move(logger))};
 }
 
 }  // namespace ActsExamples

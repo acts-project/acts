@@ -283,11 +283,17 @@ def main():
     parser.add_argument("--gun-particles", type=int, default=4)
     parser.add_argument("--gun-multiplicity", type=int, default=50)
     parser.add_argument(
-        "--gun-pt-range", nargs=2, type=float, default=[1.0, 10.0],
+        "--gun-pt-range",
+        nargs=2,
+        type=float,
+        default=[1.0, 10.0],
         metavar=("PT_MIN", "PT_MAX"),
     )
     parser.add_argument(
-        "--gun-eta-range", nargs=2, type=float, default=[-3.0, 3.0],
+        "--gun-eta-range",
+        nargs=2,
+        type=float,
+        default=[-3.0, 3.0],
         metavar=("ETA_MIN", "ETA_MAX"),
     )
     parser.add_argument("--ttbar", action="store_true")
@@ -378,7 +384,9 @@ def main():
             npileup=args.ttbar_pu,
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
-                stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
+                ),
             ),
             rnd=rnd,
         )
@@ -406,7 +414,9 @@ def main():
             ),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
-                stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+                ),
             ),
             multiplicity=args.gun_multiplicity,
             rnd=rnd,

@@ -141,7 +141,8 @@ void addDetector(py::module_& m) {
       [](const ActsPlugins::DetrayGeometryConverter& converter,
          const std::shared_ptr<vecmem::memory_resource>& mr,
          const Acts::GeometryContext& gctx,
-         const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry) {
+         const std::shared_ptr<const Acts::TrackingGeometry>&
+             trackingGeometry) {
         if (mr == nullptr) {
           throw std::invalid_argument(
               "convertToTracccOddDetector: memory resource is not set");
@@ -265,20 +266,20 @@ void addAlgorithms(py::module_& m) {
                                 "TracccDeviceSpacepointFormationAlg", detector,
                                 inputMeasurements, outputSpacepoints);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(TracccDeviceTripletSeedingAlg, m,
-                                "TracccDeviceTripletSeedingAlg", detector,
-                                inputSpacepoints, outputSeeds, seedFinder,
-                                seedFilter);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      TracccDeviceTripletSeedingAlg, m, "TracccDeviceTripletSeedingAlg",
+      detector, inputSpacepoints, outputSeeds, seedFinder, seedFilter);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(TracccDeviceTrackParamEstimationAlg, m,
                                 "TracccDeviceTrackParamEstimationAlg", detector,
-                                magneticField, inputMeasurements, inputSpacepoints,
-                                inputSeeds, outputTrackParameters, estimation);
+                                magneticField, inputMeasurements,
+                                inputSpacepoints, inputSeeds,
+                                outputTrackParameters, estimation);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(TracccDeviceTrackFindingAlg, m,
                                 "TracccDeviceTrackFindingAlg", detector,
-                                magneticField, inputMeasurements, inputTrackParameters,
-                                outputTracks, finding);
+                                magneticField, inputMeasurements,
+                                inputTrackParameters, outputTracks, finding);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(TracccTrackToActsAlg, m, "TracccTrackToActsAlg",
                                 detector, inputTracks, inputMeasurements,

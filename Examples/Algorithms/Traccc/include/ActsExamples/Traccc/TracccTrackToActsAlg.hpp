@@ -18,7 +18,6 @@
 #include <memory>
 #include <string>
 
-
 namespace ActsExamples {
 
 /// Convert (host) traccc tracks into ACTS tracks

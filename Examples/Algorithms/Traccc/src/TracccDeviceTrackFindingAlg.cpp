@@ -16,8 +16,7 @@ namespace ActsExamples {
 
 TracccDeviceTrackFindingAlg::TracccDeviceTrackFindingAlg(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
-    : IAlgorithm("TracccDeviceTrackFindingAlg", std::move(logger)),
-      m_cfg(cfg) {
+    : IAlgorithm("TracccDeviceTrackFindingAlg", std::move(logger)), m_cfg(cfg) {
   if (m_cfg.detector == nullptr) {
     throw std::invalid_argument(
         "TracccDeviceTrackFindingAlg: detector is not set");

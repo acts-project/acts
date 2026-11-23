@@ -90,10 +90,9 @@ ProcessCode ActsMeasToTracccAlg::execute(const AlgorithmContext& ctx) const {
   }
 
   if (nUnmapped > 0 || nNoLocal > 0) {
-    ACTS_WARNING("Skipped " << nUnmapped
-                            << " measurements without detray surface and "
-                            << nNoLocal
-                            << " measurements without local coordinates");
+    ACTS_WARNING("Skipped "
+                 << nUnmapped << " measurements without detray surface and "
+                 << nNoLocal << " measurements without local coordinates");
   }
   ACTS_DEBUG("Converted " << tracccMeasurements.size() << " / "
                           << measurements.size() << " measurements, " << n2D
