@@ -8,15 +8,15 @@
 
 #pragma once
 
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <memory>
+#include <span>
 #include <vector>
 
 namespace Acts {
@@ -45,7 +45,7 @@ namespace Acts {
 /// ACTS White Paper: Cross-Covariance Matrices in the Billoir Vertex Fit
 /// https://acts.readthedocs.io/en/latest/white_papers/billoir-covariances.html
 /// Author(s) Russo, F
-class FullBilloirVertexFitter {
+class FullBilloirVertexFitter final : public IVertexFitter {
  public:
   /// Configuration options for the Billoir vertex fitter.
   struct Config {
@@ -55,7 +55,7 @@ class FullBilloirVertexFitter {
     /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
 
-    /// Track linearizer
+    /// Track linearizer using a reusable magnetic field query
     TrackLinearizer trackLinearizer;
   };
 
@@ -68,18 +68,31 @@ class FullBilloirVertexFitter {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("FullBilloirVertexFitter", Logging::INFO));
 
-  /// @brief Fit method, fitting vertex for provided tracks with constraint
-  ///
-  /// @param paramVector Vector of track objects to fit vertex to
-  /// @param vertexingOptions Vertexing options
-  /// @param fieldCache The magnetic field cache
-  ///
+  /// Fit using a reusable field query.
+  /// @param paramVector Tracks to fit
+  /// @param vertexingOptions Vertex fitting options
+  /// @param field Field query, reused across tracks and iterations
   /// @return Fitted vertex
   Result<Vertex> fit(const std::vector<InputTrack>& paramVector,
                      const VertexingOptions& vertexingOptions,
-                     MagneticFieldProvider::Cache& fieldCache) const;
+                     MagneticFieldQuery& field) const;
+
+  /// @copydoc IVertexFitter::fit
+  Result<Vertex> fit(const VertexFitInput& input, const GeometryContext& gctx,
+                     MagneticFieldQuery& field) const override;
 
  private:
+  /// Fit with an explicit seed and reusable field query.
+  /// @param paramVector Tracks to fit
+  /// @param vertexingOptions Contexts and constraint settings
+  /// @param field Reusable field query
+  /// @param seedPosition Initial linearization point
+  /// @return Fitted vertex or a fitting error
+  Result<Vertex> fitImpl(std::span<const InputTrack> paramVector,
+                         const VertexingOptions& vertexingOptions,
+                         MagneticFieldQuery& field,
+                         const Vector4& seedPosition) const;
+
   /// Configuration object
   Config m_cfg;
 

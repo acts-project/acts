@@ -16,6 +16,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/PadBlueprintNode.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
@@ -40,6 +41,7 @@
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
+#include "ActsPlugins/Detray/DetraySurfaceGridPolicy.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
@@ -53,33 +55,21 @@
 #include <numbers>
 #include <set>
 
-#include <detray/builders/detail/material_deduplication.hpp>
 #include <detray/geometry/shapes/concentric_cylinder2D.hpp>
 #include <detray/geometry/shapes/ring2D.hpp>
-#include <detray/io/backend/geometry_reader.hpp>
-#include <detray/io/backend/geometry_writer.hpp>
-#include <detray/io/backend/homogeneous_material_reader.hpp>
-#include <detray/io/backend/homogeneous_material_writer.hpp>
-#include <detray/io/backend/material_map_reader.hpp>
-#include <detray/io/backend/surface_grid_reader.hpp>
 #include <detray/io/frontend/definitions.hpp>
 #include <detray/io/frontend/detector_reader.hpp>
 #include <detray/io/frontend/detector_reader_config.hpp>
-#include <detray/io/frontend/detector_writer.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
 #include <detray/io/frontend/payloads.hpp>
-#include <detray/io/json/json_io.hpp>
-#include <detray/material/detail/material_accessor.hpp>
+#include <detray/io/json/detector_reader.hpp>
+#include <detray/io/json/detector_writer.hpp>
 #include <detray/plugins/svgtools/illustrator.hpp>
 #include <detray/plugins/svgtools/writer.hpp>
-#include <detray/utils/consistency_checker.hpp>
 #include <detray/utils/detector_statistics.hpp>
-#include <detray/utils/grid/concepts.hpp>
-#include <nlohmann/json_fwd.hpp>
+#include <detray/utils/print_detector.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
-
-#include "detray/geometry/tracking_volume.hpp"
 
 auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO);
 
@@ -90,68 +80,11 @@ namespace ActsTests {
 
 namespace {
 
-/// Visitor that returns the surface material slab at a local position
-template <typename scalar_t>
-struct GetMaterialSlab {
-  template <typename mat_coll_t, typename index_t, typename point_t>
-  auto operator()(const mat_coll_t& matColl, const index_t idx,
-                  const point_t& locPos) const
-      -> detray::material_slab<scalar_t> {
-    using material_t = typename mat_coll_t::value_type;
-
-    if constexpr (detray::concepts::material_map<material_t>) {
-      return detray::detail::material_accessor::get(
-          matColl, idx, typename material_t::point_type{locPos[0], locPos[1]});
-    } else if constexpr (std::same_as<material_t,
-                                      detray::material_slab<scalar_t>>) {
-      return matColl[idx];
-    } else {
-      return {};
-    }
-  }
-};
-
 /// @returns the total number of surface material entries in @p det
 template <typename detector_t>
 std::size_t nMaterialEntries(const detector_t& det) {
   return detray::n_material_slabs(det) + detray::n_material_rods(det) +
          detray::n_material_maps(det);
-}
-
-/// Check that every surface of @p det sees the same material as in @p refDet
-template <typename detector_t>
-void checkSameSurfaceMaterial(const detector_t& refDet, const detector_t& det) {
-  using scalar_t = typename detector_t::scalar_type;
-  using point2_t = typename detector_t::point2_type;
-
-  BOOST_REQUIRE_EQUAL(refDet.surfaces().size(), det.surfaces().size());
-
-  const std::array<point2_t, 5> locPositions{
-      point2_t{0., 0.}, point2_t{-1., 5.}, point2_t{0.5, -120.},
-      point2_t{45., 2.5}, point2_t{-3., 300.}};
-
-  for (std::size_t i = 0; i < det.surfaces().size(); ++i) {
-    const auto& refDesc = refDet.surfaces()[static_cast<detray::dindex>(i)];
-    const auto& desc = det.surfaces()[static_cast<detray::dindex>(i)];
-
-    BOOST_REQUIRE_EQUAL(refDesc.has_material(), desc.has_material());
-    if (!desc.has_material()) {
-      continue;
-    }
-    BOOST_CHECK(refDesc.material().id() == desc.material().id());
-
-    for (const auto& locPos : locPositions) {
-      const auto refSlab =
-          refDet.material_store().template visit<GetMaterialSlab<scalar_t>>(
-              refDesc.material(), locPos);
-      const auto slab =
-          det.material_store().template visit<GetMaterialSlab<scalar_t>>(
-              desc.material(), locPos);
-
-      BOOST_CHECK_MESSAGE(detray::detail::is_identical(refSlab, slab),
-                          "Material differs on surface " << i);
-    }
-  }
 }
 
 }  // namespace
@@ -216,8 +149,24 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversion) {
     auto payload = DetrayPayloadConverter::convertMask(rectangle, false);
     BOOST_CHECK(payload.shape == detray::io::shape_id::rectangle2);
     using enum detray::rectangle2D::boundaries;
-    CHECK_CLOSE_ABS(payload.boundaries[e_half_x], 5., 1e-10);   // half_x
-    CHECK_CLOSE_ABS(payload.boundaries[e_half_y], 10., 1e-10);  // half_y
+    CHECK_CLOSE_ABS(payload.boundaries[e_min_x], -5., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_min_y], -10., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_max_x], 5., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_max_y], 10., 1e-10);
+  }
+
+  // Test non-symmetric RectangleBounds conversion
+  {
+    std::array<double, Acts::RectangleBounds::eSize> values = {
+        -2., -3., 5., 4.};  // minX, minY, maxX, maxY
+    Acts::RectangleBounds asymmetricRect(values);
+    auto payload = DetrayPayloadConverter::convertMask(asymmetricRect, false);
+    BOOST_CHECK(payload.shape == detray::io::shape_id::rectangle2);
+    using enum detray::rectangle2D::boundaries;
+    CHECK_CLOSE_ABS(payload.boundaries[e_min_x], -2., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_min_y], -3., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_max_x], 5., 1e-10);
+    CHECK_CLOSE_ABS(payload.boundaries[e_max_y], 4., 1e-10);
   }
 
   // Test CylinderBounds conversion (normal and portal)
@@ -270,18 +219,6 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(DetrayMaskConversionErrors) {
-  // Test non-symmetric RectangleBounds throws
-  // The regular rectangle bounds constructor does not allow this, but let's
-  // test it anyway.
-  {
-    std::array<double, Acts::RectangleBounds::eSize> values = {
-        -2., -3., 5., 4.};  // minX, minY, maxX, maxY
-    Acts::RectangleBounds asymmetricRect(values);
-    BOOST_CHECK_THROW(
-        DetrayPayloadConverter::convertMask(asymmetricRect, false),
-        std::runtime_error);
-  }
-
   // Test partial azimuth RadialBounds throws
   {
     Acts::RadialBounds partialRadial(5., 15., 0.5 * std::numbers::pi);
@@ -402,8 +339,10 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
       BOOST_CHECK(payload.masks.at(0).shape ==
                   detray::io::shape_id::rectangle2);
       using enum detray::rectangle2D::boundaries;
-      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_x], 5., 1e-10);
-      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_y], 10., 1e-10);
+      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_min_x], -5., 1e-10);
+      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_max_x], 5., 1e-10);
+      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_min_y], -10., 1e-10);
+      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_max_y], 10., 1e-10);
     }
 
     // Test sensitive surface
@@ -486,8 +425,10 @@ BOOST_AUTO_TEST_CASE(DetrayPortalConversionTests) {
     // special portal handling
     BOOST_CHECK(payload.masks.at(0).shape == detray::io::shape_id::rectangle2);
     using enum detray::rectangle2D::boundaries;
-    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_x], 5., 1e-10);
-    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_y], 10., 1e-10);
+    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_min_x], -5., 1e-10);
+    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_max_x], 5., 1e-10);
+    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_min_y], -10., 1e-10);
+    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_max_y], 10., 1e-10);
   }
 }
 
@@ -581,95 +522,16 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
   }
 }
 
-// namespace {
-//
-// namespace detail {
-//
-// /// A functor that retrieves an acceleration struct and prints it
-// struct accelerator_printer {
-//   /// Print an acceleration structure
-//   ///
-//   /// @param accel_coll collection of acceleration structs
-//   /// @param idx the specific grid to be checked
-//   /// @param id type id of the material grid collection
-//   template <typename accel_coll_t, typename index_t>
-//   DETRAY_HOST void operator()(const accel_coll_t& accel_coll, const index_t
-//   idx,
-//                               std::stringstream& os) const {
-//     // os << accel_coll[idx];
-//   }
-// };
-//
-// /// A functor that retrieves material and prints it
-// struct material_printer {
-//   /// Print material
-//   ///
-//   /// @param material_coll collection of material
-//   /// @param idx the specific grid to be checked
-//   /// @param id type id of the material grid collection
-//   template <typename material_coll_t, typename index_t>
-//   DETRAY_HOST void operator()(const material_coll_t& material_coll,
-//                               const index_t idx, std::stringstream& os) const
-//                               {
-//     if constexpr (!detray::concepts::grid<
-//                       typename material_coll_t::value_type>) {
-//       os << material_coll[idx];
-//     }
-//   }
-// };
-//
-// }  // namespace detail
-//
-// template <concepts::detector detector_t>
-// inline std::string print_detector(
-//     const detector_t& det, const typename detector_t::name_map& names = {}) {
-//   // Gathers navigation information across navigator update calls
-//   std::stringstream debug_stream{};
-//
-//   debug_stream << std::left << "[>] Detector " << det.name(names) << " has "
-//                << det.volumes().size() << " volumes." << std::endl;
-//
-//   for (const auto [i, v_desc] : detray::views::enumerate(det.volumes())) {
-//     detray::tracking_volume v{det, v_desc};
-//
-//     debug_stream << "[>>] Volume " << v.name(names) << std::endl;
-//     debug_stream << v << std::endl;
-//
-//     debug_stream << "[>>>] Acceleration Structures:" << std::endl;
-//     const auto acc_link = v_desc.accel_link();
-//     for (std::size_t j = 0u; j < acc_link.size(); ++j) {
-//       // An acceleration data structure link was set, but is invalid
-//       if (!acc_link[j].is_invalid_id() && !acc_link[j].is_invalid_index()) {
-//         debug_stream << j << ":" << std::endl;
-//         det.accelerator_store().template visit<detail::accelerator_printer>(
-//             acc_link[j], debug_stream);
-//       }
-//     }
-//
-//     debug_stream << "[>>>] Surfaces:" << std::endl;
-//     for (const auto sf_desc : v.template surfaces<>()) {
-//       detray::geometry::surface sf{det, sf_desc};
-//       debug_stream << sf << std::endl;
-//
-//       // Check the surface material, if present
-//       if (sf.has_material()) {
-//         debug_stream << "[>>>>] Surface material:" << std::endl;
-//         sf.template visit_material<detail::material_printer>(debug_stream);
-//       }
-//     }
-//
-//     debug_stream << std::endl;
-//   }
-//
-//   return debug_stream.str();
-// }
-// }  // namespace
-
 BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   auto geoLogger = getDefaultLogger("Geo", Logging::VERBOSE);
 
   CylindricalTrackingGeometry cGeometry(gctx, true);
+  // Surface arrays only get a detray grid with the detray policy next to them
+  cGeometry.extendLayerNavigationPolicy =
+      [](NavigationPolicyFactory&& factory) {
+        return std::move(factory).add<DetraySurfaceGridPolicy>();
+      };
   auto tGeometry = cGeometry(*geoLogger);
 
   ObjVisualization3D obj;
@@ -692,11 +554,18 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   DetrayPayloadConverter converter(cfg, std::move(logger));
   auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
 
-  const auto& detector = *payloads.detector;
-  BOOST_REQUIRE_NE(payloads.homogeneousMaterial, nullptr);
-  const auto& homogeneousMaterial = *payloads.homogeneousMaterial;
-  auto& materialGrids = *payloads.materialGrids;
-  const auto& surfaceGrids = *payloads.surfaceGrids;
+  BOOST_REQUIRE(payloads.material_maps.has_value());
+  BOOST_REQUIRE(payloads.homogeneous_material.has_value());
+  BOOST_REQUIRE(payloads.surface_grids.has_value());
+  BOOST_CHECK(payloads.geometry.is_valid());
+  BOOST_CHECK(payloads.material_maps->is_valid());
+  BOOST_CHECK(payloads.homogeneous_material->is_valid());
+  BOOST_CHECK(payloads.surface_grids->is_valid());
+
+  const auto& detector = payloads.geometry;
+  const auto& homogeneousMaterial = *payloads.homogeneous_material;
+  const auto& materialGrids = *payloads.material_maps;
+  const auto& surfaceGrids = *payloads.surface_grids;
 
   BOOST_CHECK_EQUAL(detector.volumes.size(), 6);
   for (const auto& volume : detector.volumes) {
@@ -742,7 +611,6 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   }
 
   BOOST_CHECK_EQUAL(materialGrids.grids.size(), 2);
-
   BOOST_CHECK_EQUAL(surfaceGrids.grids.size(), 4);
 
   // Empirical binning config from construction
@@ -769,125 +637,94 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
     BOOST_CHECK_EQUAL(grid.bins.size(), nBinsExp);
   }
 
-  BOOST_CHECK_EQUAL(payloads.names.size(), 7);
-
   // Write payloads to JSON directly
-
-  {
-    detray::io::geo_header_payload header_data;
-    header_data.common = detray::io::detail::basic_converter::to_payload(
-        payloads.names.at(0), detray::io::geometry_writer::tag);
-    header_data.sub_header.emplace();
-    auto& geo_sub_header = header_data.sub_header.value();
-    geo_sub_header.n_volumes = detector.volumes.size();
-    geo_sub_header.n_surfaces = 0;
-    for (const auto& volume : detector.volumes) {
-      geo_sub_header.n_surfaces += volume.surfaces.size();
-    }
-
-    nlohmann::ordered_json out_json;
-    out_json["header"] = header_data;
-    out_json["data"] = detector;
-
-    std::ofstream ofs{"Detector_geometry_direct.json"};
-    ofs << out_json.dump(2) << std::endl;
-  }
-
-  {
-    detray::io::homogeneous_material_header_payload header_data;
-    header_data.common = detray::io::detail::basic_converter::to_payload(
-        payloads.names.at(0), detray::io::homogeneous_material_writer::tag);
-    header_data.sub_header.emplace();
-    header_data.sub_header->n_rods = 0;
-    header_data.sub_header->n_slabs = 0;
-
-    for (const auto& hVol : homogeneousMaterial.volumes) {
-      if (!hVol.surface_mat.empty()) {
-        header_data.sub_header->n_rods += hVol.surface_mat.size();
-      }
-      header_data.sub_header->n_slabs += hVol.surface_mat.size();
-    }
-
-    nlohmann::ordered_json out_json;
-    out_json["header"] = header_data;
-    out_json["data"] = homogeneousMaterial;
-
-    std::ofstream ofs{"Detector_homogeneous_material_direct.json"};
-    ofs << out_json.dump(2) << std::endl;
-  }
-
-  // Payloads DONE, let's actually build a detray detector from them.
-
   using detector_t =
       detray::host::detector<detray::default_metadata<detray::array<double>>>;
 
-  // build detector
-  detray::detector_builder<detector_t::metadata> detectorBuilder{};
-  // (1) geometry
-  detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                        detector);
+  auto directWriterCfg = detray::io::detector_writer_config{}
+                             .format(detray::io::format::json)
+                             .path("./direct_payload_json")
+                             .source("ACTS unit test")
+                             .replace_files(true);
+  detray::io::convert_payload_to_json(payloads, directWriterCfg);
 
-  detray::io::homogeneous_material_reader::from_payload<detector_t>(
-      detectorBuilder, homogeneousMaterial);
+  // Check the file headers generated during the conversion
+  const detray::io::header_payload& header = payloads.header;
 
-  detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-      from_payload<detector_t>(detectorBuilder, std::move(materialGrids));
+  // Geometry
+  BOOST_CHECK_EQUAL(header.source, "ACTS unit test");
+  BOOST_REQUIRE(header.geometry.has_value());
+  BOOST_CHECK_EQUAL(header.geometry->n_volumes, detector.volumes.size());
+  std::size_t nSurfaces = 0;
+  for (const auto& volume : detector.volumes) {
+    nSurfaces += volume.surfaces.size();
+  }
+  BOOST_CHECK_EQUAL(header.geometry->n_surfaces, nSurfaces);
 
-  detray::io::surface_grid_reader<detector_t::surface_type,
-                                  std::integral_constant<std::size_t, 0>,
-                                  std::integral_constant<std::size_t, 2>>::
-      from_payload<detector_t>(detectorBuilder, surfaceGrids);
+  // Material
+  BOOST_REQUIRE(header.homogeneous_material.has_value());
+  std::size_t nSlabs = 0;
+  for (const auto& hVol : homogeneousMaterial.volumes) {
+    nSlabs += hVol.surface_mat.size();
+  }
+  BOOST_CHECK_EQUAL(header.homogeneous_material->n_slabs +
+                        header.homogeneous_material->n_rods,
+                    nSlabs);
 
-  detray::volume_builder_options builder_opts{};
-  detector_t detrayDetector(detectorBuilder.build(mr, builder_opts));
+  BOOST_REQUIRE(header.material_maps.has_value());
 
-  // Checks and print
-  detray::detail::check_consistency(detrayDetector);
+  // Grids
+  BOOST_REQUIRE(header.surface_grids.has_value());
+  BOOST_CHECK_EQUAL(header.surface_grids->n_grids, 4);
 
-  // Helper to convert std::map<unsigned int, std::string> to detray::name_map
-  auto toDetrayNameMap = [](const std::map<unsigned int, std::string>& src) {
-    detray::name_map result;
-    for (const auto& [idx, name] : src) {
-      result.emplace(static_cast<detray::dindex>(idx), name);
-    }
-    return result;
-  };
+  // Payloads DONE, let's actually build a detray detector from them.
+  auto readerCfg =
+      detray::io::detector_reader_config{}.deduplicate(false).verbose_check(
+          true);
+  const auto [detrayDetector, detrayNames] =
+      detray::io::read_detector<detector_t>(mr, readerCfg, payloads);
 
-  auto detrayNames = toDetrayNameMap(payloads.names);
+  // Check some detector statistics
+  BOOST_CHECK_EQUAL(detray::n_surfaces(detrayDetector), nSurfaces);
+  BOOST_CHECK_EQUAL(detray::n_surface_grids(detrayDetector),
+                    header.surface_grids->n_grids);
+  BOOST_CHECK_EQUAL(detray::n_material_maps(detrayDetector),
+                    header.material_maps->n_grids);
+  BOOST_CHECK_EQUAL(detray::n_material_slabs(detrayDetector), nSlabs);
+  BOOST_CHECK_EQUAL(detray::n_material_rods(detrayDetector), 0u);
 
+  // std::cout << detray::utils::print_detector(detrayDetector, detrayNames)
+  //           << std::endl;
+
+  // Write the detector to SVG
   detray::svgtools::illustrator illustrator(detrayDetector, detrayNames);
   illustrator.hide_eta_lines(true);
   illustrator.show_info(true);
 
-  const auto svg_zr = illustrator.draw_detector(actsvg::views::z_r{});
   actsvg::style::stroke stroke_black = actsvg::style::stroke();
+  auto xy_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
+                                        stroke_black, "x", "y");
+
   auto zr_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
                                         stroke_black, "z", "r");
+
+  // Draw two detector views
+  const auto svg_zr = illustrator.draw_detector(actsvg::views::z_r{});
+  const auto svg_xy = illustrator.draw_detector(actsvg::views::x_y{});
+
+  // Write to file
+  detray::svgtools::write_svg(
+      "test_svgtools_detector_xy",
+      std::initializer_list<actsvg::svg::object>{xy_axis, svg_xy});
   detray::svgtools::write_svg(
       "test_svgtools_detector_zr",
       std::initializer_list<actsvg::svg::object>{zr_axis, svg_zr});
-
-  const auto svg_xy = illustrator.draw_detector(actsvg::views::x_y{});
-  auto xy_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
-                                        stroke_black, "x", "y");
-  detray::svgtools::write_svg("test_svgtools_detector_xy", {
-                                                               xy_axis,
-                                                               svg_xy,
-                                                           });
-
-  auto writer_cfg = detray::io::detector_writer_config{}
-                        .format(detray::io::format::json)
-                        .replace_files(true);
-
-  // std::cout << detray::utils::print_detector(detrayDetector, payloads.names)
-  //           << std::endl;
-
-  detray::io::write_detector(detrayDetector, detrayNames, writer_cfg);
 }
 
+/// Test that material gets deduplicated by the detray build process
 BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
-  using detector_t =
-      detray::host::detector<detray::default_metadata<detray::array<double>>>;
+  using metadata_t = detray::default_metadata<detray::array<double>>;
+  using detector_t = detray::host::detector<metadata_t>;
 
   auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
@@ -915,14 +752,14 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
     converterCfg.deduplicateMaterial = deduplicate;
     DetrayGeometryConverter converter(
         converterCfg, getDefaultLogger("GeoCnv", Logging::INFO));
-    return converter.convert<detector_t::metadata>(mr, gctx, tGeometry);
+    return converter.convert<metadata_t>(mr, gctx, tGeometry);
   };
 
   auto reference = convert(false);
   auto deduplicated = convert(true);
 
   const detector_t& refDet = *reference.detector;
-  detector_t& det = *deduplicated.detector;
+  const detector_t& det = *deduplicated.detector;
 
   BOOST_CHECK(detray::detail::check_consistency(refDet));
   BOOST_CHECK(detray::detail::check_consistency(det));
@@ -950,35 +787,6 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   BOOST_CHECK_LE(detray::n_material_slabs(det),
                  detray::n_material_slabs(refDet));
   BOOST_CHECK_LE(detray::n_material_maps(det), detray::n_material_maps(refDet));
-
-  // ... but every surface still sees the same material
-  checkSameSurfaceMaterial(refDet, det);
-
-  // The deduplicated detector writes one material entry per surface again,
-  // which can be read back without deduplication
-  const std::filesystem::path outDir{"detray_material_deduplication"};
-  std::filesystem::remove_all(outDir);
-
-  auto writerCfg = detray::io::detector_writer_config{}
-                       .format(detray::io::format::json)
-                       .path(outDir.string())
-                       .replace_files(true)
-                       .write_grids(true)
-                       .write_material(true);
-  detray::io::write_detector(det, deduplicated.names, writerCfg);
-
-  detray::io::detector_reader_config readerCfg{};
-  readerCfg.do_check(true).deduplicate(false);
-  for (const auto& entry : std::filesystem::directory_iterator(outDir)) {
-    readerCfg.add_file(entry.path().string());
-  }
-  BOOST_CHECK_GE(readerCfg.files().size(), 3u);
-
-  const auto [readDet, readNames] =
-      detray::io::read_detector<detector_t>(mr, readerCfg);
-
-  BOOST_CHECK_EQUAL(nMaterialEntries(readDet), nMaterialEntries(refDet));
-  checkSameSurfaceMaterial(det, readDet);
 }
 
 BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
@@ -1010,11 +818,11 @@ BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
     return DetrayPayloadConverter{cfg}.convertTrackingGeometry(gctx, *geometry);
   };
   auto selected = convert();
-  BOOST_REQUIRE_EQUAL(selected.detector->volumes.size(), 3u);
-  BOOST_CHECK_EQUAL(selected.detector->volumes.front().name, "BeamPipe");
+  BOOST_REQUIRE_EQUAL(selected.geometry.volumes.size(), 3u);
+  BOOST_CHECK_EQUAL(selected.geometry.volumes.front().name, "BeamPipe");
   std::set<std::pair<std::string, std::string>> links;
   std::size_t exits = 0;
-  for (const auto& volume : selected.detector->volumes) {
+  for (const auto& volume : selected.geometry.volumes) {
     for (const auto& surface : volume.surfaces) {
       for (const auto& mask : surface.masks) {
         auto target = mask.volume_link.link;
@@ -1022,9 +830,8 @@ BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
           ++exits;
           BOOST_CHECK_EQUAL(volume.name, "Envelope");
         } else {
-          BOOST_REQUIRE_LT(target, selected.detector->volumes.size());
-          links.emplace(volume.name,
-                        selected.detector->volumes.at(target).name);
+          BOOST_REQUIRE_LT(target, selected.geometry.volumes.size());
+          links.emplace(volume.name, selected.geometry.volumes.at(target).name);
         }
       }
     }
@@ -1037,23 +844,23 @@ BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
 
   using detector_t =
       detray::host::detector<detray::default_metadata<detray::array<double>>>;
-  detray::detector_builder<detector_t::metadata> builder{};
-  detray::io::geometry_reader::from_payload<detector_t>(builder,
-                                                        *selected.detector);
   vecmem::host_memory_resource mr;
-  auto det = builder.build(mr, detray::volume_builder_options{});
-  detray::detail::check_consistency(det);
+  detray::io::detector_reader_config readerCfg{};
+  readerCfg.do_check(true).deduplicate(false);
+  const auto [det, detNames] =
+      detray::io::read_detector<detector_t>(mr, readerCfg, selected);
 
   cfg.includeWorld = false;
   auto withoutWorld = convert();
-  BOOST_REQUIRE_EQUAL(withoutWorld.detector->volumes.size(), 2u);
-  BOOST_CHECK_EQUAL(withoutWorld.detector->volumes.front().name, "BeamPipe");
+  BOOST_REQUIRE_EQUAL(withoutWorld.geometry.volumes.size(), 2u);
+  BOOST_CHECK_EQUAL(withoutWorld.geometry.volumes.front().name, "BeamPipe");
+
   // Every retained surface keeps its masks; only the envelope destination
   // changes. Compare by name because removing the world renumbers volumes.
-  for (const auto& volume : withoutWorld.detector->volumes) {
-    auto original = std::ranges::find(selected.detector->volumes, volume.name,
+  for (const auto& volume : withoutWorld.geometry.volumes) {
+    auto original = std::ranges::find(selected.geometry.volumes, volume.name,
                                       &detray::io::volume_payload::name);
-    BOOST_REQUIRE(original != selected.detector->volumes.end());
+    BOOST_REQUIRE(original != selected.geometry.volumes.end());
     BOOST_REQUIRE_EQUAL(volume.surfaces.size(), original->surfaces.size());
     for (std::size_t i = 0; i < volume.surfaces.size(); ++i) {
       const auto& masks = volume.surfaces.at(i).masks;
@@ -1062,27 +869,23 @@ BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
       for (std::size_t j = 0; j < masks.size(); ++j) {
         BOOST_CHECK(masks[j].boundaries == originalMasks[j].boundaries);
         const auto& target =
-            selected.detector->volumes.at(originalMasks[j].volume_link.link)
+            selected.geometry.volumes.at(originalMasks[j].volume_link.link)
                 .name;
         if (target == "Envelope") {
           BOOST_CHECK_EQUAL(masks[j].volume_link.link,
                             detray::io::mask_payload::end_of_world);
         } else {
           BOOST_REQUIRE_LT(masks[j].volume_link.link,
-                           withoutWorld.detector->volumes.size());
+                           withoutWorld.geometry.volumes.size());
           BOOST_CHECK_EQUAL(
-              withoutWorld.detector->volumes.at(masks[j].volume_link.link).name,
+              withoutWorld.geometry.volumes.at(masks[j].volume_link.link).name,
               target);
         }
       }
     }
   }
-  detray::detector_builder<detector_t::metadata> withoutWorldBuilder{};
-  detray::io::geometry_reader::from_payload<detector_t>(withoutWorldBuilder,
-                                                        *withoutWorld.detector);
-  auto withoutWorldDetector =
-      withoutWorldBuilder.build(mr, detray::volume_builder_options{});
-  detray::detail::check_consistency(withoutWorldDetector);
+  const auto [withoutWorldDetector, withoutWorldNames] =
+      detray::io::read_detector<detector_t>(mr, readerCfg, withoutWorld);
 
   const auto* beampipe = cfg.beampipeVolume;
   cfg.beampipeVolume = cfg.replacementWorld;
@@ -1094,26 +897,26 @@ BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
   // Omitting the original world also works without a replacement pointer.
   cfg.replacementWorld = nullptr;
   auto withoutOriginalWorld = convert();
-  BOOST_REQUIRE_EQUAL(withoutOriginalWorld.detector->volumes.size(), 3u);
+  BOOST_REQUIRE_EQUAL(withoutOriginalWorld.geometry.volumes.size(), 3u);
   BOOST_CHECK(std::ranges::none_of(
-      withoutOriginalWorld.detector->volumes,
+      withoutOriginalWorld.geometry.volumes,
       [](const auto& volume) { return volume.name == "World"; }));
 
   // Conversion must not disconnect shared portals in the original geometry.
   cfg.includeWorld = true;
   cfg.replacementWorld = nullptr;
   auto full = convert();
-  BOOST_REQUIRE_EQUAL(full.detector->volumes.size(), 4u);
+  BOOST_REQUIRE_EQUAL(full.geometry.volumes.size(), 4u);
   bool stillConnected = false;
-  for (const auto& volume : full.detector->volumes) {
+  for (const auto& volume : full.geometry.volumes) {
     if (volume.name != "Envelope") {
       continue;
     }
     for (const auto& surface : volume.surfaces) {
       for (const auto& mask : surface.masks) {
-        BOOST_REQUIRE_LT(mask.volume_link.link, full.detector->volumes.size());
+        BOOST_REQUIRE_LT(mask.volume_link.link, full.geometry.volumes.size());
         stillConnected |=
-            full.detector->volumes.at(mask.volume_link.link).name == "World";
+            full.geometry.volumes.at(mask.volume_link.link).name == "World";
       }
     }
   }
@@ -1122,8 +925,8 @@ BOOST_AUTO_TEST_CASE(DetrayReplacementWorld) {
   // Selecting the original world is equivalent to the default conversion.
   cfg.replacementWorld = geometry->highestTrackingVolume();
   auto explicitWorld = convert();
-  BOOST_CHECK_EQUAL(explicitWorld.detector->volumes.size(),
-                    full.detector->volumes.size());
+  BOOST_CHECK_EQUAL(explicitWorld.geometry.volumes.size(),
+                    full.geometry.volumes.size());
 
   cfg.replacementWorld = geometry->findVolumeByName("Tracker");
   BOOST_CHECK_THROW(convert(), std::invalid_argument);
@@ -1228,8 +1031,9 @@ BOOST_AUTO_TEST_CASE(DetrayPortalSegmentation) {
   BOOST_REQUIRE_NE(cfg.beampipeVolume, nullptr);
 
   DetrayPayloadConverter converter(cfg, getDefaultLogger("Cnv", Logging::INFO));
-  auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
-  const auto& detector = *payloads.detector;
+  detray::io::detector_payload payloads =
+      converter.convertTrackingGeometry(gctx, *tGeometry);
+  const auto& detector = payloads.geometry;
 
   std::map<std::size_t, std::string> names;
   for (const auto& volume : detector.volumes) {
@@ -1291,9 +1095,9 @@ BOOST_AUTO_TEST_CASE(DetrayPortalSegmentation) {
 
   // The portal material ends up on the portal surface of every volume
   // bordering the L0 | L1 portal, and only there
-  BOOST_REQUIRE_NE(payloads.homogeneousMaterial, nullptr);
+  BOOST_CHECK(payloads.homogeneous_material.has_value());
   std::set<std::string> withMaterial;
-  for (const auto& hMat : payloads.homogeneousMaterial->volumes) {
+  for (const auto& hMat : payloads.homogeneous_material->volumes) {
     const auto& volume = detector.volumes.at(hMat.volume_link.link);
     for (const auto& slab : hMat.surface_mat) {
       const auto& srf = volume.surfaces.at(slab.surface.link);
@@ -1335,26 +1139,23 @@ BOOST_AUTO_TEST_CASE(DetrayPortalSegmentation) {
     }
   }
 
-  // The payload has to build into a consistent detray detector
+  // Build the detector
   using detector_t =
       detray::host::detector<detray::default_metadata<detray::array<double>>>;
-  detray::detector_builder<detector_t::metadata> detectorBuilder{};
-  detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                        detector);
-  detray::io::homogeneous_material_reader::from_payload<detector_t>(
-      detectorBuilder, *payloads.homogeneousMaterial);
   vecmem::host_memory_resource mr;
-  detray::volume_builder_options builder_opts{};
-  detector_t detrayDetector(detectorBuilder.build(mr, builder_opts));
-  detray::detail::check_consistency(detrayDetector);
+  detray::io::detector_reader_config readerCfg{};
+  readerCfg.verbose_check(true).deduplicate(false);
+
+  const auto [readDet, readNames] =
+      detray::io::read_detector<detector_t>(mr, readerCfg, payloads);
 
   // Promote a leaf whose outer portal has three different neighbours. All
   // segments become exits, with the original clipping and material preserved.
   cfg.replacementWorld = cfg.beampipeVolume;
   auto isolated =
       DetrayPayloadConverter{cfg}.convertTrackingGeometry(gctx, *tGeometry);
-  BOOST_REQUIRE_EQUAL(isolated.detector->volumes.size(), 1u);
-  const auto& isolatedVolume = isolated.detector->volumes.front();
+  BOOST_REQUIRE_EQUAL(isolated.geometry.volumes.size(), 1u);
+  const auto& isolatedVolume = isolated.geometry.volumes.front();
   BOOST_CHECK_EQUAL(isolatedVolume.name, "L0_0");
   std::size_t outerMasks = 0;
   for (const auto& surface : isolatedVolume.surfaces) {
@@ -1367,8 +1168,8 @@ BOOST_AUTO_TEST_CASE(DetrayPortalSegmentation) {
     }
   }
   BOOST_CHECK_EQUAL(outerMasks, 3u);
-  BOOST_REQUIRE(isolated.homogeneousMaterial != nullptr);
-  BOOST_CHECK_EQUAL(isolated.homogeneousMaterial->volumes.size(), 1u);
+  BOOST_REQUIRE(isolated.homogeneous_material.has_value());
+  BOOST_CHECK_EQUAL(isolated.homogeneous_material->volumes.size(), 1u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

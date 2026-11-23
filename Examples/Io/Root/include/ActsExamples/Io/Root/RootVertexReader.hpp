@@ -46,6 +46,8 @@ class RootVertexReader : public IReader {
   /// @param config The Configuration struct
   RootVertexReader(const Config& config, Acts::Logging::Level level);
 
+  ~RootVertexReader() override;
+
   /// Framework name() method
   std::string name() const override { return "RootVertexReader"; }
 

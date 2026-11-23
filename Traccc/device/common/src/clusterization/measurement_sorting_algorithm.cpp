@@ -39,7 +39,7 @@ measurement_sorting_algorithm::operator()(
   }
 
   // Create and resize the output buffer.
-  output_type result{measurements.capacity(), mr().main,
+  output_type result{n_measurements, mr().main,
                      vecmem::data::buffer_type::resizable};
   copy().setup(vecmem::ignore_event, result);
   if (n_measurements == 0) {

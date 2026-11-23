@@ -32,6 +32,9 @@ struct PropagationSummary {
   /// Path length
   double pathLength = 0;
 
+  /// Wall-clock time spent in the propagator, in ms
+  double propagationTime = 0;
+
   /// Steps
   std::vector<Acts::detail::Step> steps;
 
@@ -42,7 +45,7 @@ struct PropagationSummary {
 using PropagationSummaries = std::vector<PropagationSummary>;
 
 /// Using some short hands for Recorded Material
-using RecordedMaterial = Acts::MaterialInteractor::result_type;
+using RecordedMaterial = Acts::MaterialInteractor::State;
 
 /// And recorded material track
 /// - this is start:  position, start momentum

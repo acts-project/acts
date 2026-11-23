@@ -334,7 +334,7 @@ Result<void> AdaptiveMultiVertexFitter::setWeightsAndUpdate(
           auto result = m_cfg.trackLinearizer(
               m_cfg.extractParameters(trk), scratch.linPoint[3],
               *vtxPerigeeSurface, vertexingOptions.geoContext,
-              vertexingOptions.magFieldContext, cache.fieldCache);
+              cache.fieldQuery);
           if (!result.ok()) {
             return result.error();
           }
@@ -478,7 +478,7 @@ void AdaptiveMultiVertexFitter::recomposeState(State& state,
 
   state.annealingState = cache.annealingState;
   state.ipState = std::move(cache.ipState);
-  state.fieldCache = std::move(cache.fieldCache);
+  state.fieldQuery = std::move(cache.fieldQuery);
 
   state.vtxInfoMap.clear();
   for (auto& [vtx, candidate] : problem.candidates) {
@@ -508,7 +508,7 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
     State& state, const std::vector<Vertex*>& newVertices,
     const VertexingOptions& vertexingOptions) const {
   VertexFitProblem problem;
-  Cache cache(std::move(state.ipState), std::move(state.fieldCache));
+  Cache cache(std::move(state.ipState), std::move(state.fieldQuery));
   decomposeState(state, problem, cache);
 
   auto res = addVtxToFit(problem, newVertices, vertexingOptions, cache);
@@ -520,7 +520,7 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
 Result<void> AdaptiveMultiVertexFitter::fit(
     State& state, const VertexingOptions& vertexingOptions) const {
   VertexFitProblem problem;
-  Cache cache(std::move(state.ipState), std::move(state.fieldCache));
+  Cache cache(std::move(state.ipState), std::move(state.fieldQuery));
   decomposeState(state, problem, cache);
 
   auto res = fit(problem, vertexingOptions, cache);

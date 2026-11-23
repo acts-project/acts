@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/name_map.hpp"
 #include "detray/definitions/geometry.hpp"
 #include "detray/definitions/grid_axis.hpp"
 #include "detray/io/frontend/definitions.hpp"
@@ -37,26 +38,23 @@
 /// starting at zero
 namespace detray::io {
 
-/// @brief a payload for common information
-struct common_header_payload {
-  /// Detray version number
-  std::string version{};
-  /// Detector name
-  std::string detector{};
-  /// Type of data the file contains (e.g. geometry vs material_maps)
-  std::string tag{};
-  /// Date of file creation
-  std::string date{};
+namespace detail {
+
+/// Reusable write toggle for detector component headers
+struct write_switch {
+  /// @brief toggle the output writing of a detector component
+  /// @param toggle whether or not to write the component
+  void write_component(const bool toggle) { m_do_write = toggle; }
+  /// @brief Access to the writer toggle
+  /// @returns whether or not to write a detector component
+  bool write_component() const { return m_do_write; }
+
+ private:
+  /// Writer toggle
+  bool m_do_write{true};
 };
 
-/// @brief a payload for common and extra information
-template <typename sub_header_payload_t = bool>
-struct header_payload {
-  /// Shared version, detector name, tag, and creation date.
-  common_header_payload common{};
-  /// Information that is specific to a tag, i.e. type of detector payload
-  std::optional<sub_header_payload_t> sub_header;
-};
+}  // namespace detail
 
 /// @brief A payload for a single object link (volume local)
 struct single_link_payload {
@@ -80,15 +78,12 @@ struct typed_link_payload {
 /// @{
 
 /// @brief a payload for the geometry specific part of the file header
-struct geo_sub_header_payload {
+struct geometry_header_payload : public detail::write_switch {
   /// Number of volumes in the detector
   std::size_t n_volumes{0ul};
   /// Total number of surfaces in the detector
   std::size_t n_surfaces{0ul};
 };
-
-/// @brief a payload for the geometry file header
-using geo_header_payload = header_payload<geo_sub_header_payload>;
 
 /// @brief A payload object to link a surface to its material
 using material_link_payload = typed_link_payload<io::material_id>;
@@ -191,7 +186,7 @@ struct volume_payload {
 /// @{
 
 /// @brief a payload for the material specific part of the file header
-struct homogeneous_material_sub_header_payload {
+struct homogeneous_material_header_payload : public detail::write_switch {
   /// Total number of material slabs in the detector
   std::size_t n_slabs{0ul};
   /// Total number of surface with material slabs
@@ -202,10 +197,6 @@ struct homogeneous_material_sub_header_payload {
   std::size_t n_rod_surfaces{0ul};
 };
 
-/// @brief a payload for the homogeneous material file header
-using homogeneous_material_header_payload =
-    header_payload<homogeneous_material_sub_header_payload>;
-
 /// @brief A payload object for a material parametrization
 struct material_param_payload {
   /// Material parametrization
@@ -215,8 +206,7 @@ struct material_param_payload {
   /// 3: Z
   /// 4: Mass density
   /// 5: Molar densitty (unused)
-  /// 6: @c material_state enum (solid, liquid, gaseous)
-  std::array<io::scalar, 7u> params{};
+  std::array<io::scalar, 6u> params{};
 };
 
 /// @brief A payload object for a material slab/rod
@@ -257,6 +247,8 @@ struct material_volume_payload {
 struct detector_homogeneous_material_payload {
   /// Material payloads grouped by detector volume.
   std::vector<material_volume_payload> volumes{};
+  /// @returns whether the payload contains any valid data
+  bool is_valid() const { return !volumes.empty(); }
 };
 
 /// @}
@@ -265,13 +257,10 @@ struct detector_homogeneous_material_payload {
 /// @{
 
 /// @brief a payload for the grid specific part of the file header
-struct grid_sub_header_payload {
+struct grid_header_payload : public detail::write_switch {
   /// Number of grid payloads described by the file.
   std::size_t n_grids{0u};
 };
-
-/// @brief a payload for the grid file header
-using grid_header_payload = header_payload<grid_sub_header_payload>;
 
 /// @brief axis definition and bin edges
 struct axis_payload {
@@ -333,6 +322,9 @@ struct grid_payload {
 
   /// Must match the number of axis in the grid type indicated by @c grid_link
   std::vector<axis_payload> axes{};
+  /// Radius of the virtual cylinder a cylinder surface grid is looked up on.
+  /// If unset, the reader derives it from the portals of the volume.
+  std::optional<io::scalar> reference_radius{};
   /// Bin contents in serializer-defined order.
   /// Bin contents arranged in serializer order.
   std::vector<grid_bin_payload<bin_content_t>> bins{};
@@ -342,21 +334,125 @@ struct grid_payload {
 template <typename bin_content_t = std::size_t,
           typename grid_id_t = io::accel_id>
 struct detector_grids_payload {
-  // A collection of grids (can be the surface search grid, volume or surface
-  // material grids) per volume index (not all volumes may contain grids)
+  /// A collection of grids (can be the surface search grid, volume or surface
+  /// material grids) per volume index (not all volumes may contain grids)
   std::map<std::size_t, std::vector<grid_payload<bin_content_t, grid_id_t>>>
-      /// Grid collections keyed by owning volume index.
       grids = {};
+  /// @returns whether the payload contains any valid data
+  bool is_valid() const { return !grids.empty(); }
 };
 
 /// @}
 
 /// @brief A payload for a detector geometry
-struct detector_payload {
-  /// Material payloads grouped by detector volume.
+struct detector_geometry_payload {
+  /// Volume payloads
   std::vector<volume_payload> volumes = {};
   /// Volume acceleration structure
   std::optional<grid_payload<std::size_t, io::accel_id>> volume_grid;
+  /// @returns whether the payload contains any valid data
+  bool is_valid() const { return !volumes.empty(); }
+};
+
+/// @brief a payload for common information in file IO
+struct common_header_payload {
+  /// Detray version number
+  std::string version{};
+  /// Date of file creation
+  std::string date{};
+  /// Detector metadata type
+  std::string metadata{"unknown"};
+  /// Name of the detector (might be different from metadata name type)
+  std::string detector{"unknown_detector"};
+  /// Detector source (e.g. version tag of experiments original geometry)
+  std::string source{"unknown"};
+};
+
+/// @brief a payload for common information and a content tag
+struct tagged_header_payload : public common_header_payload {
+  /// Default constructor
+  constexpr tagged_header_payload() = default;
+
+  /// Constructor from common data and tag
+  /// @param cp the common header payload
+  /// @param header_tag tag that represents the subheader type
+  explicit tagged_header_payload(const common_header_payload& cp,
+                                 const std::string& header_tag = "")
+      : common_header_payload(cp), tag{header_tag} {}
+
+  /// Type of data the file contains (e.g. geometry vs material_maps)
+  std::string tag{};
+};
+
+/// @brief a payload for common and extra information in file IO
+struct header_payload : public common_header_payload {
+  /// Default constructor
+  constexpr header_payload() = default;
+
+  /// Constructor from common data
+  /// @param cp the common header payload
+  explicit header_payload(const common_header_payload& cp)
+      : common_header_payload(cp) {}
+
+  /// Assign the common information from @param ch
+  void operator=(const common_header_payload& ch) {
+    this->version = ch.version;
+    this->date = ch.date;
+    this->metadata = ch.metadata;
+    this->detector = ch.detector;
+    this->source = ch.source;
+  }
+  /// Required detector component: geometry
+  std::optional<geometry_header_payload> geometry{};
+  /// Optional detector components:
+  /// @{
+  /// Volume acceleration structures: Spatial grids
+  std::optional<grid_header_payload> volume_grids{};
+  /// Surface acceleration structures: Spatial grids
+  std::optional<grid_header_payload> surface_grids{};
+  /// Homogeneous material payload
+  std::optional<homogeneous_material_header_payload> homogeneous_material{};
+  /// Material maps payload
+  std::optional<grid_header_payload> material_maps{};
+  /// @}
+};
+
+/// Detector intermediate data representation
+struct detector_payload {
+  /// Types of detector component payloads
+  /// @{
+  /// Geometry payload type
+  using geometry_payload_type = detector_geometry_payload;
+  /// Volume grids payload type
+  using volume_grids_payload_type =
+      detector_grids_payload<std::size_t, io::accel_id>;
+  /// Surface grids payload type
+  using surface_grids_payload_type =
+      detector_grids_payload<std::size_t, io::accel_id>;
+  /// Homogeneous material payload type
+  using homogeneous_material_payload_type =
+      detector_homogeneous_material_payload;
+  /// Material maps payload type
+  using material_maps_payload_type =
+      detector_grids_payload<surface_material_payload, io::material_id>;
+  /// @}
+
+  /// Metadata about the contained payloads
+  header_payload header{};
+
+  /// Required detector component: geometry
+  geometry_payload_type geometry{};
+  /// Optional detector components:
+  /// @{
+  /// Volume acceleration structures: Spatial grids
+  std::optional<volume_grids_payload_type> volume_grids{};
+  /// Surface acceleration structures: Spatial grids
+  std::optional<surface_grids_payload_type> surface_grids{};
+  /// Homogeneous material payload
+  std::optional<homogeneous_material_payload_type> homogeneous_material{};
+  /// Material maps payload
+  std::optional<material_maps_payload_type> material_maps{};
+  /// @}
 };
 
 }  // namespace detray::io

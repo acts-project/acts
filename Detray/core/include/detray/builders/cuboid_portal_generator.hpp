@@ -170,8 +170,8 @@ class cuboid_portal_generator final
     } else {
       mask_link.set_index(mask_idx);
     }
-    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link, h_x,
-                                              h_y);
+    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link,
+                                              -h_x, -h_y, h_x, h_y);
 
     // No rotation, but shift in z for both faces
     vector3_t shift{static_cast<scalar_type>(0), static_cast<scalar_type>(0),
@@ -193,8 +193,8 @@ class cuboid_portal_generator final
     // ... x-z plane
     //
     mask_link.shift(1u);
-    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link, h_x,
-                                              h_z);
+    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link,
+                                              -h_x, -h_z, h_x, h_z);
 
     // Rotate by 90deg around x-axis, plus shift in y
     shift = {static_cast<scalar_type>(0),
@@ -219,8 +219,8 @@ class cuboid_portal_generator final
     // ... y-z plane
     //
     mask_link.shift(1u);
-    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link, h_z,
-                                              h_y);
+    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link,
+                                              -h_z, -h_y, h_z, h_y);
 
     // Rotate by 90deg around y-axis, plus shift in x
     shift = {detail::is_invalid_value(h_x) ? max_shift : h_x,

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <cmath>
 #include <numbers>
 
 namespace Acts::detail {
@@ -93,6 +94,15 @@ std::tuple<double, double, bool> mergedPhiSector(double hlPhi1, double avgPhi1,
                            << newHlPhi / 1_degree);
 
   return {newHlPhi, newAvgPhi, reversed};
+}
+
+bool phiSectorContains(double hlPhi1, double avgPhi1, double hlPhi2,
+                       double avgPhi2, double tolerance) {
+  if (hlPhi1 >= std::numbers::pi - tolerance) {
+    return true;
+  }
+  const double delta = std::abs(radian_sym(avgPhi2 - avgPhi1));
+  return delta + hlPhi2 <= hlPhi1 + tolerance;
 }
 
 }  // namespace Acts::detail

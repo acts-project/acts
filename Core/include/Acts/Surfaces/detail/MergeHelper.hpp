@@ -23,4 +23,9 @@ std::tuple<double, double, bool> mergedPhiSector(
     const Logger& logger = getDummyLogger(),
     double tolerance = s_onSurfaceTolerance);
 
+/// Check whether the phi sector @p avgPhi2 ± @p hlPhi2 lies within the phi
+/// sector @p avgPhi1 ± @p hlPhi1, up to an angular @p tolerance
+bool phiSectorContains(double hlPhi1, double avgPhi1, double hlPhi2,
+                       double avgPhi2, double tolerance);
+
 }  // namespace Acts::detail

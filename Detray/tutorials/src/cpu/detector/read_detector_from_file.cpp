@@ -8,7 +8,7 @@
 
 // Project include(s)
 #include "detray/core/detector.hpp"
-#include "detray/io/frontend/detector_reader.hpp"
+#include "detray/io/json/detector_reader.hpp"
 #include "detray/navigation/volume_graph.hpp"
 #include "detray/utils/logging.hpp"
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 
   // Read the json files
   const auto [det, names] =
-      detray::io::read_detector<detector_t>(host_mr, reader_cfg);
+      detray::io::read_detector_json<detector_t>(host_mr, reader_cfg);
 
   // Print the detector volume graph
   detray::volume_graph graph(det);

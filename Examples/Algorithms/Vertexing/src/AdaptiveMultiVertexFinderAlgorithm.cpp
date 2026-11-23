@@ -63,7 +63,7 @@ AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
       m_linearizer{[&] {
         // Set up the helical track linearizer
         Linearizer::Config ltConfig;
-        ltConfig.bField = m_cfg.bField;
+
         ltConfig.propagator = m_propagator;
         return Linearizer(
             ltConfig, this->logger().cloneWithSuffix("HelicalTrackLinearizer"));
@@ -159,7 +159,8 @@ AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder(
   fitterCfg.doSmoothing = m_cfg.doSmoothing;
   fitterCfg.useTime = m_cfg.useTime;
   fitterCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
-  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&m_linearizer);
+  fitterCfg.trackLinearizer
+      .connect<&Acts::HelicalTrackLinearizer::linearizeTrack>(&m_linearizer);
   Fitter fitter(std::move(fitterCfg),
                 logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 

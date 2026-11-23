@@ -493,7 +493,7 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
         slide;
     const Vector2 boundSlide =
         m_representative->localCartesianToBoundLocalDerivative(
-            gctx, crossing.global) *
+            gctx, crossing.global, direction) *
         localSlide;
     // linear, so it maps a step like a position
     const GridPoint gridSlide = surfaceToGridLocal(boundSlide);

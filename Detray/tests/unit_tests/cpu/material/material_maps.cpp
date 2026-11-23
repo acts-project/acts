@@ -135,7 +135,7 @@ GTEST_TEST(detray_material, rectangle_map) {
   constexpr scalar hx{1.f * unit<scalar>::mm};
   constexpr scalar hy{9.3f * unit<scalar>::mm};
 
-  mask<rectangle2D, test_algebra> r2{0u, hx, hy};
+  mask<rectangle2D, test_algebra> r2{0u, -hx, -hy, hx, hy};
 
   auto rectangle_map = mat_map_factory.new_grid(r2, {10u, 20u});
 
@@ -280,7 +280,7 @@ GTEST_TEST(detray_material, material_grid_comparison) {
    */
   auto createGrid = [](const scalar hx, const scalar hy, unsigned int bx,
                        unsigned int by, bool distort_entries) {
-    mask<rectangle2D, test_algebra> r2{0u, hx, hy};
+    mask<rectangle2D, test_algebra> r2{0u, -hx, -hy, hx, hy};
     auto material_grid = mat_map_factory.new_grid(r2, {bx, by});
 
     // Fill the material grid with some data

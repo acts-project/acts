@@ -212,7 +212,7 @@ GTEST_TEST(detray_utils, rectangle2D_aabb) {
   constexpr scalar hx{1.f * unit<scalar>::mm};
   constexpr scalar hy{9.3f * unit<scalar>::mm};
 
-  mask<rectangle2D, test_algebra> r2{0u, hx, hy};
+  mask<rectangle2D, test_algebra> r2{0u, -hx, -hy, hx, hy};
 
   // Construct local aabb around mask
   axis_aligned_bounding_volume<cuboid3D, test_algebra> aabb{r2, 0u, envelope};
