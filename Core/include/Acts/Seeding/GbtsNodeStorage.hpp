@@ -16,7 +16,6 @@
 #include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 
-#include <array>
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -253,7 +252,7 @@ class GbtsNodeStorage final {
 
   /// Per node, in node order, i.e. by (eta bin, phi): the packed (x, y, z, r)
   /// position, the caller's index and the derived data.
-  std::vector<std::array<float, 4>> m_positions;
+  std::vector<detail::GbtsNodePosition> m_positions;
   std::vector<SpacePointIndex> m_spacePointIndex;
   std::vector<detail::GbtsNodeParams> m_params;
   std::vector<detail::GbtsNodeEdgeInfo> m_edgeInfo;

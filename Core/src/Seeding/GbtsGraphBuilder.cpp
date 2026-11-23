@@ -492,9 +492,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       float x1 = 0.f;
       float y1 = 0.f;
       if (calibrate) {
-        const std::array<float, 4>& position = nodeView.positions[n1Idx];
-        x1 = position[0];
-        y1 = position[1];
+        const detail::GbtsNodePosition& position = nodeView.positions[n1Idx];
+        x1 = position.x;
+        y1 = position.y;
       }
 
       // the intermediate loop over sliding windows
@@ -590,9 +590,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
             // A circle's chord bisects the tangent directions, so turning the
             // chord by the pair's own azimuth difference gives each tangent.
-            const std::array<float, 4>& position = nodeView.positions[n2Idx];
-            const float dx = position[0] - x1;
-            const float dy = position[1] - y1;
+            const detail::GbtsNodePosition& position =
+                nodeView.positions[n2Idx];
+            const float dx = position.x - x1;
+            const float dy = position.y - y1;
             const float dzc = z2 - z1;
             const float turn = phi2 - phi1;
 
