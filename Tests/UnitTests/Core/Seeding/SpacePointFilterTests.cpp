@@ -10,13 +10,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Seeding/SpacePointFilter.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
-#include <functional>
 #include <numbers>
 #include <random>
 #include <vector>
@@ -232,7 +231,6 @@ struct Helix {
   /// +1 counter-clockwise, -1 clockwise
   double helicity() const { return q * bz > 0 ? -1. : 1.; }
   double cotTheta() const { return std::sinh(eta); }
-  double qOverP() const { return q / (pT * std::cosh(eta)); }
 
   /// at transverse arc length s
   Vector3 position(double s) const {
@@ -242,7 +240,6 @@ struct Helix {
     return {h * R * (std::sin(phi) - std::sin(phi0)),
             -h * R * (std::cos(phi) - std::cos(phi0)), z0 + s * cotTheta()};
   }
-  double phi(double s) const { return phi0 + helicity() * s / radius(); }
 
   /// arc length at a cylinder radius
   double sAtRadius(double rho) const {
@@ -252,18 +249,13 @@ struct Helix {
   double sAtZ(double z) const { return (z - z0) / cotTheta(); }
 };
 
-SpacePointFilterInput makeInput(const Vector3& p, bool measuresR, double bz,
-                                double varT, double varL, double thickness) {
+SpacePointFilterInput makeInput(const Vector3& p, bool measuresR) {
   SpacePointFilterInput n;
   n.x = static_cast<float>(p.x());
   n.y = static_cast<float>(p.y());
   n.z = static_cast<float>(p.z());
   n.r = static_cast<float>(fastHypot(p.x(), p.y()));
   n.measuresR = measuresR;
-  n.varianceTransverse = static_cast<float>(varT);
-  n.varianceLongitudinal = static_cast<float>(varL);
-  n.bz = static_cast<float>(bz);
-  n.thicknessInX0 = static_cast<float>(thickness);
   return n;
 }
 
@@ -272,15 +264,14 @@ constexpr std::array<double, 5> kDiscZ = {300, 400, 550, 700, 900};
 
 /// Space points along the helix, outwards; also the arc length of each.
 std::pair<std::vector<SpacePointFilterInput>, std::vector<double>> helixInputs(
-    const Helix& h, bool discs, double thickness = 0) {
+    const Helix& h, bool discs) {
   std::vector<SpacePointFilterInput> nodes;
   std::vector<double> arcs;
   const auto& where = discs ? kDiscZ : kBarrelRadii;
   for (const double w : where) {
     const double s = discs ? h.sAtZ(w) : h.sAtRadius(w);
     arcs.push_back(s);
-    nodes.push_back(makeInput(h.position(s), discs, h.bz, 1e-6 * 1_mm * 1_mm,
-                              1e-6 * 1_mm * 1_mm, thickness));
+    nodes.push_back(makeInput(h.position(s), discs));
   }
   return {nodes, arcs};
 }
@@ -294,19 +285,6 @@ SpacePointFilterParameters fit(
     filter.apply(state, p);
   }
   return filter.parameters(state, nodes.back());
-}
-
-HelixSpacePointFilter makeHelixFilter() {
-  HelixSpacePointFilter::Config cfg;
-  cfg.initialVarianceTransverse = {1, 0.01, 4 / (1_GeV * 1_GeV)};
-  cfg.initialVarianceLongitudinal = {1, 0.01};
-  return HelixSpacePointFilter(cfg, HelixPropagation{}, SpacePointResolution{});
-}
-
-CoupledHelixSpacePointFilter makeCoupledFilter() {
-  CoupledHelixSpacePointFilter::Config cfg;
-  cfg.initialVariance = {1, 0.01, 1, 0.01, 4 / (1_GeV * 1_GeV)};
-  return CoupledHelixSpacePointFilter(cfg, SpacePointResolution{});
 }
 
 }  // namespace
@@ -408,9 +386,9 @@ const std::vector<HelixCase> kHelixCases = {
 
 }  // namespace
 
-// Noise-free points, no material: the field-aware models recover the helix.
-BOOST_DATA_TEST_CASE(HelixRecovery, boost::unit_test::data::make(kHelixCases),
-                     c) {
+// The parabola approximates a helix with a line in r-z.
+BOOST_DATA_TEST_CASE(ParabolaParameters,
+                     boost::unit_test::data::make(kHelixCases), c) {
   Helix h;
   h.pT = c.pT;
   h.eta = c.eta;
@@ -418,38 +396,7 @@ BOOST_DATA_TEST_CASE(HelixRecovery, boost::unit_test::data::make(kHelixCases),
   const auto [nodes, arcs] = helixInputs(h, c.discs);
   const Vector3 pos = h.position(arcs.back());
 
-  const auto check = [&](const SpacePointFilterParameters& par,
-                         const std::string& name, double sLast) {
-    const Vector3 expected = h.position(sLast);
-    // the bias left is the fixed frame and the arc length to second order:
-    // q/p 0.16% at 0.6 GeV, 0.06% at 1 GeV; the nodes have 1 um errors
-    BOOST_TEST_CONTEXT(name) {
-      BOOST_CHECK_SMALL(
-          (par.position.template cast<double>() - expected).norm(), 2e-3);
-      BOOST_CHECK_SMALL(
-          std::remainder(par.phi - h.phi(sLast), 2 * std::numbers::pi), 3e-4);
-      BOOST_CHECK_CLOSE(par.cotTheta, h.cotTheta(), 0.01);
-      BOOST_CHECK_CLOSE(par.curvature, h.q * h.bz / h.pT, 0.3);
-      BOOST_REQUIRE(par.qOverP.has_value());
-      BOOST_CHECK_CLOSE(*par.qOverP, h.qOverP(), 0.3);
-    }
-  };
-
-  check(fit(makeHelixFilter(), nodes), "helix q/pT", arcs.back());
-  check(fit(makeCoupledFilter(), nodes), "coupled q/p", arcs.back());
-
-  // a fit against the motion gives the first point, reversed
-  const std::vector<SpacePointFilterInput> backwards(nodes.rbegin(),
-                                                     nodes.rend());
-  check(fit(makeHelixFilter(), backwards).reversed(), "helix q/pT reversed",
-        arcs.front());
-  check(fit(makeCoupledFilter(), backwards).reversed(), "coupled q/p reversed",
-        arcs.front());
-
-  // the parabola has no field and fits z(r), so z carries the r-z model
-  // error (0.12 mm on the discs here): the curvature only
   const auto par = fit(makeParabolaFilter(), nodes);
-  BOOST_CHECK(!par.qOverP.has_value());
   BOOST_CHECK_SMALL((par.position.template cast<double>() - pos).norm(), 0.5);
   BOOST_CHECK_CLOSE(par.curvature, h.q * h.bz / h.pT, 10.);
 }
@@ -458,112 +405,18 @@ BOOST_DATA_TEST_CASE(HelixRecovery, boost::unit_test::data::make(kHelixCases),
 BOOST_AUTO_TEST_CASE(OutlierChi2) {
   Helix h;
   auto [nodes, arcs] = helixInputs(h, false);
-  for (auto& n : nodes) {
-    n.varianceTransverse = 0.01_mm * 0.01_mm;
-    n.varianceLongitudinal = 0.015_mm * 0.015_mm;
-  }
-  const auto filter = makeHelixFilter();
+  const auto filter = makeParabolaFilter();
   auto state = filter.initialize(nodes[0], nodes[1]);
   for (std::size_t k = 1; k + 1 < nodes.size(); ++k) {
     filter.apply(state, filter.predict(state, nodes[k - 1], nodes[k]));
   }
   const auto good = filter.predict(state, nodes[3], nodes[4]);
   auto shifted = nodes[4];
-  shifted.z += 1_mm;
+  shifted.z += 10_mm;
   const auto bad = filter.predict(state, nodes[3], shifted);
   BOOST_CHECK_LT(good.chi2Longitudinal(), 1.);
   BOOST_CHECK_GT(bad.chi2Longitudinal(), 100.);
   BOOST_CHECK_CLOSE(bad.chi2Transverse(), good.chi2Transverse(), 1e-6);
-}
-
-namespace {
-
-/// Space points of a track integrated through a field, where it crosses the
-/// given surfaces in order. Path-length RK4 on direction and position.
-std::vector<SpacePointFilterInput> integrateTrack(
-    const SolenoidBField& field, Vector3 pos, Vector3 dir, double qOverP,
-    const std::vector<std::function<double(const Vector3&)>>& surfaces,
-    bool measuresR, bool withRadialField) {
-  const auto derivative = [&](const Vector3& d, const Vector3& x) {
-    return Vector3(qOverP * d.cross(field.getField(x)));
-  };
-  std::vector<SpacePointFilterInput> out;
-  constexpr double h = 0.5_mm;
-  std::size_t next = 0;
-  for (int i = 0; i < 20000 && next < surfaces.size(); ++i) {
-    const Vector3 k1 = derivative(dir, pos);
-    const Vector3 k2 = derivative(dir + h / 2 * k1, pos + h / 2 * dir);
-    const Vector3 k3 =
-        derivative(dir + h / 2 * k2, pos + h / 2 * dir + h * h / 4 * k1);
-    const Vector3 k4 = derivative(dir + h * k3, pos + h * dir + h * h / 2 * k2);
-    const Vector3 newPos = pos + h * dir + h * h / 6 * (k1 + k2 + k3);
-    const Vector3 newDir =
-        (dir + h / 6 * (k1 + 2 * k2 + 2 * k3 + k4)).normalized();
-    const double before = surfaces[next](pos);
-    const double after = surfaces[next](newPos);
-    if (before * after <= 0) {
-      const Vector3 at = pos + before / (before - after) * (newPos - pos);
-      const Vector3 b = field.getField(at);
-      SpacePointFilterInput in = makeInput(
-          at, measuresR, b.z(), 1e-6 * 1_mm * 1_mm, 1e-6 * 1_mm * 1_mm, 0);
-      if (withRadialField) {
-        in.br = static_cast<float>(b.head<2>().dot(at.head<2>().normalized()));
-      }
-      out.push_back(in);
-      ++next;
-    }
-    pos = newPos;
-    dir = newDir;
-  }
-  return out;
-}
-
-}  // namespace
-
-// A solenoid's radial field at its ends bends forward tracks through their
-// motion along z. With the radial field the helix models recover q/p;
-// without it they are biased.
-BOOST_AUTO_TEST_CASE(SolenoidRadialField) {
-  const SolenoidBField field(SolenoidBField::Config{
-      .radius = 1250_mm, .length = 5300_mm, .nCoils = 1154, .bMagCenter = 2_T});
-
-  for (const double eta : {2.6, 3.0}) {
-    for (const double q : {1., -1.}) {
-      const double pT = 1_GeV;
-      const double theta = 2 * std::atan(std::exp(-eta));
-      const Vector3 dir(std::cos(0.4) * std::sin(theta),
-                        std::sin(0.4) * std::sin(theta), std::cos(theta));
-      const double qOverP = q / (pT * std::cosh(eta));
-
-      std::vector<std::function<double(const Vector3&)>> discs;
-      for (const double z : {1500., 1900., 2300., 2700., 3000.}) {
-        discs.emplace_back([z](const Vector3& x) { return x.z() - z; });
-      }
-
-      for (const bool withField : {true, false}) {
-        const auto inputs = integrateTrack(field, Vector3::Zero(), dir, qOverP,
-                                           discs, true, withField);
-        BOOST_REQUIRE_EQUAL(inputs.size(), discs.size());
-        const float helix = *fit(makeHelixFilter(), inputs).qOverP;
-        const float coupled = *fit(makeCoupledFilter(), inputs).qOverP;
-        const double helixBias = helix / qOverP - 1;
-        const double coupledBias = coupled / qOverP - 1;
-        BOOST_TEST_MESSAGE("eta " << eta << " q " << q << " radial field "
-                                  << withField << ": q/p bias helix "
-                                  << helixBias << " coupled " << coupledBias);
-        // with: 0.4-1.5%, the drift of theta along the step is left out;
-        // without: Bz - tau * Br changes sign at the solenoid end, and q/p
-        // comes out 2.5-5 times too large with the wrong sign
-        if (withField) {
-          BOOST_CHECK_SMALL(helixBias, 0.02);
-          BOOST_CHECK_SMALL(coupledBias, 0.02);
-        } else {
-          BOOST_CHECK_GT(std::abs(helixBias), 0.5);
-          BOOST_CHECK_GT(std::abs(coupledBias), 0.5);
-        }
-      }
-    }
-  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

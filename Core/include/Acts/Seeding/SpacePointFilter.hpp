@@ -10,11 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
-#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
@@ -35,51 +32,23 @@ struct SpacePointFilterInput final {
   /// Whether r is measured at a known z (disc), instead of z at a known r
   /// (cylinder).
   bool measuresR{false};
-  /// Variance across the track in the transverse plane.
-  float varianceTransverse{};
-  /// Variance of the measured longitudinal coordinate, z or r.
-  float varianceLongitudinal{};
   /// Half of the outer strip for a strip space point; the crossing is
   /// unconstrained along it.
   std::optional<std::array<float, 3>> stripHalfVector;
-  /// Radial field at the space point. The field is taken axially symmetric,
-  /// without an azimuthal component, as in a solenoid.
-  float br{};
-  /// Field along z at the space point.
-  float bz{};
-  /// Material at the space point in radiation lengths, at normal incidence.
-  float thicknessInX0{};
 };
 
-/// Track parameters at the last space point, along the fit direction. In
-/// float like the filters; the caller widens.
+/// Track parameters at the last space point. In float like the filter; the
+/// caller widens.
 struct SpacePointFilterParameters final {
   /// Position at the last space point.
   Eigen::Vector3f position{Eigen::Vector3f::Zero()};
   /// Azimuthal angle of the direction.
   float phi{0};
-  /// dz over the transverse length; dz/dr for the parabola.
+  /// Longitudinal slope dz/dr.
   float cotTheta{0};
   /// Signed transverse curvature, positive clockwise seen from +z: a positive
   /// charge in a positive field moving along the fit direction.
   float curvature{0};
-  /// q/p if the model knows the field, for a charge moving along the fit
-  /// direction.
-  std::optional<float> qOverP;
-
-  /// The same track traversed the other way: a fit run in the opposite
-  /// direction gives the reversed parameters.
-  /// @return Parameters with direction and charge inverted
-  SpacePointFilterParameters reversed() const {
-    SpacePointFilterParameters out = *this;
-    out.phi = Acts::detail::radian_sym(phi + std::numbers::pi_v<float>);
-    out.cotTheta = -cotTheta;
-    out.curvature = -curvature;
-    if (qOverP.has_value()) {
-      out.qOverP = -*qOverP;
-    }
-    return out;
-  }
 };
 
 /// Kalman filter on space points for seeding.
@@ -152,65 +121,6 @@ struct DecoupledSpacePointFilterStep final {
 };
 
 namespace detail {
-
-/// Transverse arc length for a chord on a circle of curvature `kappa`, to
-/// second order in the turning angle.
-inline float spacePointFilterArcLength(float chord, float kappa) {
-  const float k2c2 = kappa * kappa * chord * chord;
-  return chord * (1 + k2c2 / 24);
-}
-
-/// Highland scattering angle squared (PDG).
-inline float spacePointFilterTheta0Squared(float pathInX0, float p,
-                                           const ParticleHypothesis& particle) {
-  assert(p > 0 && "momentum must be positive");
-  // no material, or no bending measured yet
-  if (pathInX0 <= 0 || std::isinf(p)) {
-    return 0;
-  }
-  const float q = particle.absoluteCharge();
-  const float beta = p / fastHypot(p, particle.mass());
-  const float scale = 13.6 * UnitConstants::MeV;
-  const float theta0 =
-      scale * q / (beta * p) * std::sqrt(pathInX0) *
-      (1 + 0.038f * std::log(pathInX0 * q * q / (beta * beta)));
-  return theta0 * theta0;
-}
-
-/// Material crossed at a space point: a cylinder at 1/sin(theta), a disc at
-/// 1/cos(theta).
-inline float spacePointFilterPathInX0(const SpacePointFilterInput& input,
-                                      float tau) {
-  const float invSin = fastHypot(1.0f, tau);
-  if (input.measuresR) {
-    constexpr float minTau = 1e-3f;
-    return input.thicknessInX0 * invSin / std::max(std::abs(tau), minTau);
-  }
-  return input.thicknessInX0 * invSin;
-}
-
-/// Cosine between the radial direction at the transverse position (x, y) and
-/// the transverse direction of the fit.
-inline float spacePointFilterRadialAlong(float x, float y, float c, float s,
-                                         float slope) {
-  const float tx = c - s * slope;
-  const float ty = s + c * slope;
-  return (x * tx + y * ty) / (fastHypot(tx, ty) * fastHypot(x, y));
-}
-
-/// Field bending the track in the transverse plane, Bz - tau * Br r . t: a
-/// radial field along the track bends it through its motion along z.
-inline float spacePointFilterBendingField(float br, float bz, float x, float y,
-                                          float c, float s, float slope,
-                                          float tau) {
-  return bz - tau * br * spacePointFilterRadialAlong(x, y, c, s, slope);
-}
-
-/// Transverse distance between two space points.
-inline float spacePointFilterChord(const SpacePointFilterInput& a,
-                                   const SpacePointFilterInput& b) {
-  return fastHypot(b.x - a.x, b.y - a.y);
-}
 
 /// Cosine and sine of the frame of a fit from `from` towards `to`.
 inline std::array<float, 2> spacePointFilterFrame(
@@ -293,22 +203,6 @@ struct ConfiguredResolution final {
   }
 };
 
-/// Resolution from the space point's own variances. A measured r becomes a z
-/// variance through the longitudinal slope.
-struct SpacePointResolution final {
-  /// @copydoc ConfiguredResolution::inverseResidualVariances
-  std::array<float, 2> inverseResidualVariances(
-      const SpacePointFilterInput& measured, const float /*c*/,
-      const float /*s*/, const float tau, const float predictedTransverse,
-      const float predictedLongitudinal) const {
-    const float varianceZ = measured.measuresR
-                                ? measured.varianceLongitudinal * tau * tau
-                                : measured.varianceLongitudinal;
-    return {1.0f / (predictedTransverse + measured.varianceTransverse),
-            1.0f / (predictedLongitudinal + varianceZ)};
-  }
-};
-
 /// Parabola in the frame and a line in r-z, the GBTS tracking filter.
 ///
 /// Bending variable d2y'/dx'2, l = r. Scattering from a fixed radiation
@@ -377,100 +271,6 @@ struct ParabolaPropagation final {
                   const SpacePointFilterInput& /*last*/) const {
     const float slope2 = 1 + state.x[1] * state.x[1];
     return -state.x[2] / (slope2 * std::sqrt(slope2));
-  }
-
-  /// @param state State at the last space point
-  /// @param last Last space point
-  /// @return q/p, unknown without a field
-  std::optional<float> qOverP(const DecoupledSpacePointFilterState& /*state*/,
-                              const SpacePointFilterInput& /*last*/) const {
-    return std::nullopt;
-  }
-};
-
-/// Helix with the field per step.
-///
-/// Bending variable q/pT with Bz at the mean of the two space points, l =
-/// transverse arc length. Highland scattering with p from the state and the
-/// space point's material.
-struct HelixPropagation final {
-  /// Configuration of the propagation.
-  struct Config {
-    /// Particle hypothesis for the scattering: mass and absolute charge.
-    ParticleHypothesis particle = ParticleHypothesis::pion();
-  };
-
-  /// Configuration
-  Config cfg{};
-
-  /// @copydoc ParabolaPropagation::initialReference
-  float initialReference(const SpacePointFilterInput& /*from*/) const {
-    return 0;
-  }
-
-  /// @copydoc ParabolaPropagation::initialLongitudinalSlope
-  float initialLongitudinalSlope(const SpacePointFilterInput& from,
-                                 const SpacePointFilterInput& to) const {
-    return (to.z - from.z) / detail::spacePointFilterChord(from, to);
-  }
-
-  /// @copydoc ParabolaPropagation::step
-  DecoupledSpacePointFilterStep step(
-      const DecoupledSpacePointFilterState& state,
-      const SpacePointFilterInput& previous,
-      const SpacePointFilterInput& measured, const float a) const {
-    const float qOverPt = state.x[2];
-    const float slope = state.x[1];
-    const float tau = state.y[1];
-    // bending field at the middle of the step
-    const float bz = detail::spacePointFilterBendingField(
-        (previous.br + measured.br) / 2, (previous.bz + measured.bz) / 2,
-        (previous.x + measured.x) / 2, (previous.y + measured.y) / 2, state.c,
-        state.s, slope, tau);
-
-    // y'' = q/pT * g, with g at the slope halfway through the step
-    const float slope2 = 1 + slope * slope;
-    const float g0 = -bz * slope2 * std::sqrt(slope2);
-    const float mid = slope + qOverPt * g0 * a / 2;
-    const float mid2 = 1 + mid * mid;
-    const float g = -bz * mid2 * std::sqrt(mid2);
-
-    // scattering at the space point we leave
-    const float invSin2 = 1 + tau * tau;
-    const float p =
-        cfg.particle.absoluteCharge() * std::sqrt(invSin2) / std::abs(qOverPt);
-    const float theta02 = detail::spacePointFilterTheta0Squared(
-        detail::spacePointFilterPathInX0(previous, tau), p, cfg.particle);
-
-    DecoupledSpacePointFilterStep out;
-    out.a = a;
-    out.b = g * a * a / 2;
-    out.g = g * a;
-    out.dl = detail::spacePointFilterArcLength(
-        detail::spacePointFilterChord(previous, measured), qOverPt * bz);
-    out.l = state.refL + out.dl;
-    // d(dy'/dx') = (1 + y'^2) dphi, dphi = theta0 / sin(theta)
-    out.varianceTransverse = theta02 * invSin2 * slope2 * slope2;
-    // d(cot theta) = (1 + cot^2) dtheta
-    out.varianceLongitudinal = theta02 * invSin2 * invSin2;
-    return out;
-  }
-
-  /// @copydoc ParabolaPropagation::curvature
-  float curvature(const DecoupledSpacePointFilterState& state,
-                  const SpacePointFilterInput& last) const {
-    return state.x[2] * detail::spacePointFilterBendingField(
-                            last.br, last.bz, last.x, last.y, state.c, state.s,
-                            state.x[1], state.y[1]);
-  }
-
-  /// @param state State at the last space point
-  /// @param last Last space point
-  /// @return q/p
-  std::optional<float> qOverP(const DecoupledSpacePointFilterState& state,
-                              const SpacePointFilterInput& /*last*/) const {
-    const float tau = state.y[1];
-    return state.x[2] / fastHypot(1.0f, tau);
   }
 };
 
@@ -669,7 +469,6 @@ class DecoupledSpacePointFilter final {
         state.refX, state.c, state.s, state.x[0], state.x[1], state.y[0],
         state.y[1]);
     out.curvature = m_propagation.curvature(state, last);
-    out.qOverP = m_propagation.qOverP(state, last);
     return out;
   }
 
@@ -682,238 +481,9 @@ class DecoupledSpacePointFilter final {
   Resolution m_resolution;
 };
 
-/// State of the coupled family: y', dy'/dx', z, dz/ds, q/p in the decoupled
-/// family's frame, l = transverse arc length.
-struct CoupledSpacePointFilterState final {
-  /// y', dy'/dx', z, dz/ds, q/p
-  Eigen::Matrix<float, 5, 1> x{Eigen::Matrix<float, 5, 1>::Zero()};
-  /// Covariance
-  Eigen::Matrix<float, 5, 5> cov{Eigen::Matrix<float, 5, 5>::Zero()};
-  /// x' of the last space point
-  float refX{};
-  /// l of the last space point
-  float refL{};
-  /// Cosine of the frame
-  float c{};
-  /// Sine of the frame
-  float s{};
-};
-
-/// Prediction of the coupled family.
-struct CoupledSpacePointFilterPrediction final {
-  /// Predicted state at the measured space point
-  CoupledSpacePointFilterState state;
-  /// The measured space point, for the second residual after the first update
-  SpacePointFilterInput measured;
-  /// Transverse residual
-  float residualTransverse{};
-  /// Longitudinal residual
-  float residualLongitudinal{};
-  /// Inverse variance of the transverse residual
-  float inverseVarianceTransverse{};
-  /// Inverse variance of the longitudinal residual
-  float inverseVarianceLongitudinal{};
-
-  /// @return Marginal chi2 of the transverse residual, before either update
-  float chi2Transverse() const {
-    return residualTransverse * residualTransverse * inverseVarianceTransverse;
-  }
-  /// @return Marginal chi2 of the longitudinal residual, before either update
-  float chi2Longitudinal() const {
-    return residualLongitudinal * residualLongitudinal *
-           inverseVarianceLongitudinal;
-  }
-};
-
-/// Coupled family: helix with q/p.
-///
-/// The bending depends on the longitudinal slope, so the planes share a
-/// covariance. The two residuals are taken one after the other, which is
-/// exact for independent measurement errors and needs no inverse.
-template <typename Resolution>
-class CoupledSpacePointFilter final {
- public:
-  /// State type
-  using State = CoupledSpacePointFilterState;
-  /// Prediction type
-  using Prediction = CoupledSpacePointFilterPrediction;
-
-  /// Configuration of the filter.
-  struct Config {
-    /// Initial variance of y', dy'/dx', z, dz/ds, q/p.
-    std::array<float, 5> initialVariance{};
-    /// Particle hypothesis for the scattering: mass and absolute charge.
-    ParticleHypothesis particle = ParticleHypothesis::pion();
-  };
-
-  /// @param config Configuration
-  /// @param resolution Resolution policy
-  CoupledSpacePointFilter(const Config& config, const Resolution& resolution)
-      : m_cfg(config), m_resolution(resolution) {}
-
-  /// @copydoc DecoupledSpacePointFilter::initialize
-  State initialize(const SpacePointFilterInput& from,
-                   const SpacePointFilterInput& to) const {
-    State state;
-    const auto [c, s] = detail::spacePointFilterFrame(from, to);
-    state.c = c;
-    state.s = s;
-    state.refX = from.x * c + from.y * s;
-
-    state.x(0) = -from.x * s + from.y * c;
-    state.x(1) = 0;
-    state.x(2) = from.z;
-    state.x(3) = (to.z - from.z) / detail::spacePointFilterChord(from, to);
-    state.x(4) = 0;
-
-    for (int i = 0; i < 5; ++i) {
-      state.cov(i, i) = m_cfg.initialVariance[i];
-    }
-    return state;
-  }
-
-  /// @copydoc DecoupledSpacePointFilter::predict
-  Prediction predict(const State& state, const SpacePointFilterInput& previous,
-                     const SpacePointFilterInput& measured) const {
-    using Matrix5 = Eigen::Matrix<float, 5, 5>;
-
-    const float refX = measured.x * state.c + measured.y * state.s;
-    const float mx = -measured.x * state.s + measured.y * state.c;
-    const float a = refX - state.refX;
-
-    const float slope = state.x(1);
-    const float tau = state.x(3);
-    const float qOverP = state.x(4);
-    // bending field at the middle of the step, Bz - tau * bAlong
-    const float bAlong =
-        (previous.br + measured.br) / 2 *
-        detail::spacePointFilterRadialAlong((previous.x + measured.x) / 2,
-                                            (previous.y + measured.y) / 2,
-                                            state.c, state.s, slope);
-    const float bz = (previous.bz + measured.bz) / 2 - tau * bAlong;
-
-    // y'' = q/p * g with g = -B / sin(theta) * (1 + y'^2)^(3/2), at the slope
-    // halfway through the step; B depends on tau, its dependence on the slope
-    // through the direction is left out
-    const float invSin2 = 1 + tau * tau;
-    const float invSin = std::sqrt(invSin2);
-    const float slope2 = 1 + slope * slope;
-    const float g0 = -bz * invSin * slope2 * std::sqrt(slope2);
-    const float mid = slope + qOverP * g0 * a / 2;
-    const float mid2 = 1 + mid * mid;
-    const float midRoot = std::sqrt(mid2);
-    const float g = -bz * invSin * mid2 * midRoot;
-    const float dgdSlope = -bz * invSin * 3 * mid * midRoot;
-    const float dgdTau = (bAlong * invSin - bz * tau / invSin) * mid2 * midRoot;
-
-    const float ds = detail::spacePointFilterArcLength(
-        detail::spacePointFilterChord(previous, measured),
-        qOverP * invSin * bz);
-    const float a2 = a * a / 2;
-
-    // scattering at the space point we leave
-    const float theta02 = detail::spacePointFilterTheta0Squared(
-        detail::spacePointFilterPathInX0(previous, tau),
-        m_cfg.particle.absoluteCharge() / std::abs(qOverP), m_cfg.particle);
-    Matrix5 cov = state.cov;
-    cov(1, 1) += theta02 * invSin2 * slope2 * slope2;
-    cov(3, 3) += theta02 * invSin2 * invSin2;
-
-    Matrix5 F = Matrix5::Identity();
-    F(0, 1) = a + qOverP * a2 * dgdSlope;
-    F(0, 3) = qOverP * a2 * dgdTau;
-    F(0, 4) = g * a2;
-    F(1, 1) = 1 + qOverP * a * dgdSlope;
-    F(1, 3) = qOverP * a * dgdTau;
-    F(1, 4) = g * a;
-    F(2, 3) = ds;
-
-    Prediction p;
-    State& out = p.state;
-    out.c = state.c;
-    out.s = state.s;
-    out.refX = refX;
-    out.refL = state.refL + ds;
-
-    out.x = state.x;
-    out.x(0) += slope * a + qOverP * g * a2;
-    out.x(1) += qOverP * g * a;
-    out.x(2) += tau * ds;
-    out.cov = F * cov * F.transpose();
-
-    p.measured = measured;
-    p.residualTransverse = mx - out.x(0);
-    p.residualLongitudinal = measured.z - out.x(2);
-
-    const auto [dx, dy] = m_resolution.inverseResidualVariances(
-        measured, state.c, state.s, tau, out.cov(0, 0), out.cov(2, 2));
-    p.inverseVarianceTransverse = dx;
-    p.inverseVarianceLongitudinal = dy;
-    return p;
-  }
-
-  /// @copydoc DecoupledSpacePointFilter::apply
-  void apply(State& state, const Prediction& prediction) const {
-    using Vector5 = Eigen::Matrix<float, 5, 1>;
-
-    state = prediction.state;
-
-    // transverse residual
-    {
-      const Vector5 k = state.cov.col(0) * prediction.inverseVarianceTransverse;
-      state.x += k * prediction.residualTransverse;
-      state.cov -= k * state.cov.row(0);
-    }
-
-    // longitudinal residual, after the transverse update
-    {
-      const float residual = prediction.measured.z - state.x(2);
-      const float d = m_resolution.inverseResidualVariances(
-          prediction.measured, state.c, state.s, state.x(3), state.cov(0, 0),
-          state.cov(2, 2))[1];
-      const Vector5 k = state.cov.col(2) * d;
-      state.x += k * residual;
-      state.cov -= k * state.cov.row(2);
-    }
-
-    state.cov = (state.cov + state.cov.transpose()) / 2;
-  }
-
-  /// @copydoc DecoupledSpacePointFilter::parameters
-  SpacePointFilterParameters parameters(
-      const State& state, const SpacePointFilterInput& last) const {
-    SpacePointFilterParameters out = detail::spacePointFilterGeometry(
-        state.refX, state.c, state.s, state.x(0), state.x(1), state.x(2),
-        state.x(3));
-    const float qOverP = state.x(4);
-    out.curvature = qOverP * fastHypot(1.0f, out.cotTheta) *
-                    detail::spacePointFilterBendingField(
-                        last.br, last.bz, last.x, last.y, state.c, state.s,
-                        state.x(1), state.x(3));
-    out.qOverP = qOverP;
-    return out;
-  }
-
-  /// @return Configuration
-  const Config& config() const { return m_cfg; }
-
- private:
-  Config m_cfg;
-  Resolution m_resolution;
-};
-
 /// Parabola filter, the GBTS tracking filter.
 using ParabolaSpacePointFilter =
     DecoupledSpacePointFilter<ParabolaPropagation, ConfiguredResolution>;
-/// Decoupled helix with q/pT, the field per step and Highland scattering.
-using HelixSpacePointFilter =
-    DecoupledSpacePointFilter<HelixPropagation, SpacePointResolution>;
-/// Coupled helix with q/p.
-using CoupledHelixSpacePointFilter =
-    CoupledSpacePointFilter<SpacePointResolution>;
-
 static_assert(SpacePointFilter<ParabolaSpacePointFilter>);
-static_assert(SpacePointFilter<HelixSpacePointFilter>);
-static_assert(SpacePointFilter<CoupledHelixSpacePointFilter>);
 
 }  // namespace Acts::Experimental
