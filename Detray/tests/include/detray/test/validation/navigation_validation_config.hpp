@@ -57,6 +57,9 @@ struct navigation_validation_config
   bool m_fail_on_diff{true};
   /// Verbosity of the console output
   bool m_verbose{true};
+  /// Mismatches on non-portal surfaces closer than this to the mask boundary
+  /// are below the numerical precision and are not counted as failures
+  scalar_type m_boundary_tol{0.f};
   /// Configured momentum range of the test sample (only needed to generate
   /// correct file names). If none was passed, it will be determined from
   /// the track data (imprecise!)
@@ -105,6 +108,9 @@ struct navigation_validation_config
   /// Check whether verbose output is enabled.
   /// @return Whether verbose output is enabled.
   bool verbose() const { return m_verbose; }
+  /// Get the mask boundary tolerance for mismatches.
+  /// @return The boundary tolerance.
+  scalar_type boundary_tolerance() const { return m_boundary_tol; }
   /// Get the configured momentum range.
   /// @return The configured momentum range.
   darray<scalar_type, 2> p_range() const { return m_p_range; }
@@ -175,6 +181,13 @@ struct navigation_validation_config
   /// @return This configuration.
   navigation_validation_config &display_only_missed(const bool only_missed) {
     m_display_only_missed = only_missed;
+    return *this;
+  }
+  /// Set the mask boundary tolerance for mismatches.
+  /// @param tol New boundary tolerance.
+  /// @return This configuration.
+  navigation_validation_config &boundary_tolerance(const scalar_type tol) {
+    m_boundary_tol = tol;
     return *this;
   }
   /// Set whether validation stops at the first difference.

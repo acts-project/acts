@@ -268,6 +268,7 @@ class navigation_validation : public test::fixture_base<> {
     // Collect some statistics
     std::size_t n_tracks{0u};
     std::size_t n_matching_error{0u};
+    std::size_t n_edge_cases{0u};
     std::size_t n_fatal{0u};
     // Total number of encountered surfaces
     navigation_validator::surface_stats n_surfaces{};
@@ -326,8 +327,9 @@ class navigation_validation : public test::fixture_base<> {
         }
 
         // Compare truth and recorded data elementwise
-        auto [result, n_missed_nav, n_missed_truth, n_error, missed_inters] =
-            navigation_validator::compare_traces(m_cfg, truth_trace,
+        auto [result, n_missed_nav, n_missed_truth, n_error, missed_inters,
+              n_edge] =
+            navigation_validator::compare_traces(m_cfg, m_det, truth_trace,
                                                  recorded_trace, test_traj,
                                                  n_tracks, &(*debug_file));
 
@@ -339,6 +341,7 @@ class navigation_validation : public test::fixture_base<> {
         n_miss_nav += n_missed_nav;
         n_miss_truth += n_missed_truth;
         n_matching_error += n_error;
+        n_edge_cases += n_edge;
       }
 
       if (!success) {
@@ -392,7 +395,7 @@ class navigation_validation : public test::fixture_base<> {
     // Calculate and display the result
     navigation_validator::print_efficiency(n_tracks, n_surfaces, n_miss_nav,
                                            n_miss_truth, n_fatal,
-                                           n_matching_error);
+                                           n_matching_error, n_edge_cases);
 
     // Print track positions for plotting
     if constexpr (!k_use_rays) {

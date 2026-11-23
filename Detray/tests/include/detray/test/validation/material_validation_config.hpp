@@ -42,6 +42,9 @@ struct material_validation_config
   std::size_t m_n_tracks{detray::detail::invalid_value<std::size_t>()};
   /// Allowed relative discrepancy between truth and navigation material
   scalar_type m_rel_error{0.001f};
+  /// Allowed material (in X0 or L0) found by the navigation on a track where
+  /// the truth has none, e.g. from a graze at the edge of a material rod
+  scalar_type m_abs_error{0.f};
 
   /// Getters
   /// @{
@@ -60,6 +63,9 @@ struct material_validation_config
   /// Get the allowed relative discrepancy.
   /// @return The allowed relative discrepancy.
   scalar_type relative_error() const { return m_rel_error; }
+  /// Get the allowed material where the truth has none.
+  /// @return The allowed absolute material (in X0 or L0).
+  scalar_type absolute_error() const { return m_abs_error; }
   /// @}
 
   /// Setters
@@ -98,6 +104,14 @@ struct material_validation_config
   material_validation_config &relative_error(scalar_type re) {
     assert(re > 0.f);
     m_rel_error = re;
+    return *this;
+  }
+  /// Set the allowed material where the truth has none.
+  /// @param ae Absolute material (in X0 or L0).
+  /// @return This configuration.
+  material_validation_config &absolute_error(scalar_type ae) {
+    assert(ae >= 0.f);
+    m_abs_error = ae;
     return *this;
   }
   /// @}

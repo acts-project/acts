@@ -154,15 +154,17 @@ class material_validation_impl : public test::fixture_base<> {
       const track_material_t &truth_mat = truth_track_mat[i];
       const track_material_t &recorded_mat = track_mat_vec[i];
 
-      auto get_rel_error = [](const double truth, const double rec) {
+      const double abs_error{m_cfg.absolute_error()};
+      auto get_rel_error = [abs_error](const double truth, const double rec) {
         constexpr scalar_t e{std::numeric_limits<double>::epsilon()};
 
         if (truth <= e && rec <= e) {
           // No material for this ray => valid
           return double{0.f};
         } else if (truth <= e) {
-          // Material found where none should be
-          return detail::invalid_value<double>();
+          // Material found where none should be (within tolerance: valid)
+          return rec <= abs_error ? double{0.f}
+                                  : detail::invalid_value<double>();
         } else {
           return math::fabs(truth - rec) / truth;
         }

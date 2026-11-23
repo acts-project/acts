@@ -391,15 +391,18 @@ inline auto record_propagation(
 /// @param trk_no number of the track in the sample
 /// @param debug_file where to output debugging information to
 /// @param cfg Validation configuration.
+/// @param det Detector, used to find the mask boundaries.
 /// @param truth_trace Reference intersection trace.
 /// @param recorded_trace Recorded intersection trace.
 ///
 /// @returns the counts on missed and additional surfaces, matching errors,
-/// as well as the collections of the intersections that did not match
+/// the collections of the intersections that did not match, as well as the
+/// number of mismatches within the boundary tolerance (edge cases)
 template <concepts::detector detector_t, typename traj_t,
           concepts::algebra algebra_t>
 auto compare_traces(
     const detray::test::navigation_validation_config<algebra_t> &cfg,
+    const detector_t &det,
     dvector<intersection_record<detector_t>> &truth_trace,
     dvector<intersection_record<detector_t>> &recorded_trace,
     const traj_t &traj, std::size_t trk_no,
@@ -733,9 +736,44 @@ auto compare_traces(
     }
   }
 
+  // Count the mismatches on non-portal surfaces that lie within the boundary
+  // tolerance of the mask edge (exactly one of the two records is a dummy)
+  std::size_t n_boundary{0u};
+  if (cfg.boundary_tolerance() > 0.f) {
+    for (std::size_t j = 0u; j < truth_trace.size(); ++j) {
+      const auto &truth_sfi = truth_trace[j].intersection();
+      const auto &nav_sfi = recorded_trace[j].intersection();
+
+      const bool truth_is_dummy{truth_sfi.surface().identifier().is_invalid()};
+      const bool nav_is_dummy{nav_sfi.surface().identifier().is_invalid()};
+      if (truth_is_dummy == nav_is_dummy) {
+        continue;
+      }
+
+      const auto &sfi = truth_is_dummy ? nav_sfi : truth_sfi;
+      if (sfi.surface().is_portal()) {
+        continue;
+      }
+
+      const geometry::surface sf{det, sfi.surface().identifier()};
+      const auto dist =
+          sf.template visit_mask<min_dist_to_boundary>(sfi.local());
+      if (dist < cfg.boundary_tolerance()) {
+        ++n_boundary;
+      }
+    }
+  }
+
+  const std::size_t n_mismatch{missed_stats_nav.n_total() +
+                               missed_stats_tr.n_total()};
+  if (n_boundary > 0u && cfg.verbose()) {
+    DETRAY_WARN_HOST("Track " << trk_no << ": " << n_boundary
+                              << " mismatch(es) within the boundary "
+                                 "tolerance were not counted as failures\n");
+  }
+
   // Missed surfaces or errors during matching
-  const bool any_error{(missed_stats_nav.n_total() != 0u) ||
-                       (missed_stats_tr.n_total() != 0u) || (n_errors != 0u)};
+  const bool any_error{(n_mismatch != n_boundary) || (n_errors != 0u)};
 
   // Print debugging information if anything went wrong
   if (any_error) {
@@ -876,7 +914,7 @@ auto compare_traces(
 
   const bool success{!any_error && is_size};
   return std::make_tuple(success, missed_stats_nav, missed_stats_tr, n_errors,
-                         missed_intersections);
+                         missed_intersections, n_boundary);
 }
 
 /// Write the track positions of a trace @param intersection_traces to a csv
@@ -957,9 +995,17 @@ inline auto print_efficiency(std::size_t n_tracks,
                              const surface_stats &n_miss_nav,
                              const surface_stats &n_miss_truth,
                              std::size_t n_fatal_error,
-                             std::size_t n_matching_error) {
+                             std::size_t n_matching_error,
+                             std::size_t n_edge_cases = 0u) {
   // Column width in output
   constexpr int cw{20};
+
+  if (n_edge_cases > 0u) {
+    DETRAY_WARN_HOST(
+        "Mismatches within the boundary tolerance (edge cases), "
+        "not counted as failures: "
+        << n_edge_cases << "\n");
+  }
 
   // Print general information
   if (n_miss_nav.n_total() > 0u || n_miss_truth.n_total() > 0u ||
@@ -1097,6 +1143,7 @@ auto compare_to_navigation(
   std::size_t n_trk_holes{0};
   std::size_t n_matching_error{0u};
   std::size_t n_fatal_error{0u};
+  std::size_t n_edge_cases{0u};
 
   // Collect global track statistics
   track_statistics trk_stats{};
@@ -1175,8 +1222,9 @@ auto compare_to_navigation(
     // Compare recorded and truth traces and count missed surfaces for both
     detray::detail::helix ideal_traj{track, *field_view};
     auto [traces_match, n_miss_trace_nav, n_miss_trace_truth, n_error_trace,
-          missed_inters] = compare_traces(cfg, truth_trace, recorded_trace,
-                                          ideal_traj, i, &(*debug_file));
+          missed_inters, n_edge_trace] =
+        compare_traces(cfg, det, truth_trace, recorded_trace, ideal_traj, i,
+                       &(*debug_file));
     // Comparison failed or propagation failed
     if (!traces_match || !success) {
       // Write debug info to file
@@ -1217,6 +1265,7 @@ auto compare_to_navigation(
     n_miss_nav += n_miss_trace_nav;
     n_miss_truth += n_miss_trace_truth;
     n_matching_error += n_error_trace;
+    n_edge_cases += n_edge_trace;
 
     // Count the number of surfaces per type in all traces
     for (std::size_t j = 0; j < truth_trace.size(); ++j) {
@@ -1264,7 +1313,7 @@ auto compare_to_navigation(
   // Calculate and display the surface finding efficiency
   if (cfg.verbose()) {
     print_efficiency(trk_stats.n_tracks, n_surfaces, n_miss_nav, n_miss_truth,
-                     n_fatal_error, n_matching_error);
+                     n_fatal_error, n_matching_error, n_edge_cases);
   }
 
   // Column width in output

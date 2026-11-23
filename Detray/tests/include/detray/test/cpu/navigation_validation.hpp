@@ -108,6 +108,7 @@ class navigation_validation : public test::fixture_base<> {
     // Collect some statistics
     std::size_t n_tracks{0u};
     std::size_t n_matching_error{0u};
+    std::size_t n_edge_cases{0u};
     std::size_t n_fatal{0u};
     // Total number of encountered surfaces
     navigation_validator::surface_stats n_surfaces{};
@@ -212,9 +213,10 @@ class navigation_validation : public test::fixture_base<> {
           record.p(p);
         }
 
-        auto [result, n_missed_nav, n_missed_truth, n_error, missed_inters] =
+        auto [result, n_missed_nav, n_missed_truth, n_error, missed_inters,
+              n_edge] =
             navigation_validator::compare_traces(
-                m_cfg, truth_trace, obj_tracer.object_trace, test_traj,
+                m_cfg, m_det, truth_trace, obj_tracer.object_trace, test_traj,
                 n_tracks, &(*debug_file));
 
         missed_intersections.push_back(
@@ -225,6 +227,7 @@ class navigation_validation : public test::fixture_base<> {
         n_miss_nav += n_missed_nav;
         n_miss_truth += n_missed_truth;
         n_matching_error += n_error;
+        n_edge_cases += n_edge;
 
       } else {
         // Propagation did not succeed
@@ -298,7 +301,7 @@ class navigation_validation : public test::fixture_base<> {
     // Calculate and display the result
     navigation_validator::print_efficiency(n_tracks, n_surfaces, n_miss_nav,
                                            n_miss_truth, n_fatal,
-                                           n_matching_error);
+                                           n_matching_error, n_edge_cases);
 
     // Print track positions for plotting
     if constexpr (!k_use_rays) {
