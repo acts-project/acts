@@ -12,6 +12,7 @@
 #include "ActsPlugins/Gnn/Stages.hpp"
 
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -59,6 +60,19 @@ class GnnPipeline {
       std::shared_ptr<TrackBuildingBase> trackBuilder,
       std::unique_ptr<const Acts::Logger> logger, bool shrinkNodes = false);
 
+  /// @brief Construct GNN pipeline with a seeded graph construction stage
+  /// @param seededGraphConstructor Graph construction stage that takes seeds
+  /// @param edgeClassifiers Edge classification stages
+  /// @param trackBuilder Track building stage
+  /// @param logger Logger instance
+  /// @param shrinkNodes If true, unused nodes are removed from the graph
+  /// before each edge classification stage
+  GnnPipeline(
+      std::shared_ptr<SeededGraphConstructionBase> seededGraphConstructor,
+      std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
+      std::shared_ptr<TrackBuildingBase> trackBuilder,
+      std::unique_ptr<const Acts::Logger> logger, bool shrinkNodes = false);
+
   /// @brief Run the GNN pipeline
   /// @param features Input feature vector
   /// @param moduleIds Module identifiers for each space point
@@ -73,10 +87,40 @@ class GnnPipeline {
                                     Device device, const GnnHook &hook = {},
                                     GnnTiming *timing = nullptr) const;
 
+  /// @brief Run the GNN pipeline with seeds
+  /// Requires a pipeline built with a seeded graph construction stage.
+  /// @param features Input feature vector
+  /// @param seeds Seeds passed to the graph construction stage. Seed hit
+  /// indices refer to the nodes of @p features
+  /// @param moduleIds Module identifiers for each space point
+  /// @param spacePointIDs Space point identifiers
+  /// @param device Device to run on (CPU/GPU)
+  /// @param hook Optional callback hook for pipeline execution
+  /// @param timing Optional timing output
+  /// @return Vector of track candidates (each track is a vector of space point IDs)
+  std::vector<std::vector<int>> run(std::vector<float> &features,
+                                    const std::vector<Seed> &seeds,
+                                    const std::vector<std::uint64_t> &moduleIds,
+                                    std::vector<int> &spacePointIDs,
+                                    Device device, const GnnHook &hook = {},
+                                    GnnTiming *timing = nullptr) const;
+
  private:
+  using GraphBuilder = std::function<PipelineTensors(const ExecutionContext &)>;
+
+  /// Shared pipeline body; buildGraph runs the graph construction stage
+  std::vector<std::vector<int>> runPipeline(const GraphBuilder &buildGraph,
+                                            std::vector<int> &spacePointIds,
+                                            Device device, const GnnHook &hook,
+                                            GnnTiming *timing) const;
+
+  /// Throws if the stages are not consistently configured
+  void validateStages() const;
+
   std::unique_ptr<const Acts::Logger> m_logger;
 
   std::shared_ptr<GraphConstructionBase> m_graphConstructor;
+  std::shared_ptr<SeededGraphConstructionBase> m_seededGraphConstructor;
   std::vector<std::shared_ptr<EdgeClassificationBase>> m_edgeClassifiers;
   std::shared_ptr<TrackBuildingBase> m_trackBuilder;
   bool m_shrinkNodes = false;
