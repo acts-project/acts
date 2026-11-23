@@ -22,6 +22,17 @@ namespace ActsPlugins {
 /// Error that is thrown if no edges are found
 struct NoEdgesError : std::exception {};
 
+/// Representation of a seed
+struct Seed {
+  double d0{0.};
+  double z0{0.};
+  double phi0{0.};
+  double tanLambda{0.};
+  double kappa{0.};
+  double t0{0.};
+  std::vector<int> hitIndices{};
+};
+
 /// Struct that ties together the tensors used in the GNN pipeline
 struct PipelineTensors {
   /// Tensor containing node feature data
@@ -52,6 +63,27 @@ class GraphConstructionBase {
       const ExecutionContext &execContext = {}) = 0;
 
   virtual ~GraphConstructionBase() = default;
+};
+
+/// Base class for graph construction algorithms
+class SeededGraphConstructionBase {
+ public:
+  /// Perform the graph construction
+  ///
+  /// @param inputValues Flattened input data
+  /// @param numNodes Number of nodes. inputValues.size() / numNodes
+  /// then gives the number of features
+  /// @param moduleIds Module IDs of the features (used for module-map-like
+  /// graph construction)
+  /// @param execContext Device & stream information
+  /// @return (node_features, edge_features, edge_index)
+  virtual PipelineTensors operator()(
+      std::vector<float> &inputValues, std::size_t numNodes,
+      const std::vector<Seed> &seeds,
+      const std::vector<std::uint64_t> &moduleIds,
+      const ExecutionContext &execContext = {}) = 0;
+
+  virtual ~SeededGraphConstructionBase() = default;
 };
 
 /// @brief Base class for edge classification stage in GNN pipeline
