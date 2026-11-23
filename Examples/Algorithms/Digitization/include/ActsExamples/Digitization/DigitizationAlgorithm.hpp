@@ -25,11 +25,13 @@
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <variant>
 #include <vector>
 
 namespace ActsExamples {
+class DigitizationDesign;
 
 /// Algorithm that turns simulated hits into measurements by truth smearing.
 class DigitizationAlgorithm final : public IAlgorithm {
@@ -136,8 +138,9 @@ class DigitizationAlgorithm final : public IAlgorithm {
 
   /// Configuration of the Algorithm
   Config m_cfg;
-  /// Digitizers within geometry hierarchy
-  Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
+  /// One shared design per config rule, looked up by geometry hierarchy
+  Acts::GeometryHierarchyMap<std::shared_ptr<const DigitizationDesign>>
+      m_designs;
   /// Geometric digitizer
   ActsFatras::Channelizer m_channelizer;
 

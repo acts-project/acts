@@ -88,11 +88,10 @@ EXCLUDE_FILES = (
     "Detray/tests/include/detray/test/utils/perigee_stopper.hpp",
     "Detray/tests/include/detray/test/validation/propagation_validation.hpp",
     # Build-time metadata generation
-    "Detray/python/detray/detectors/impl/definitions.py",
-    "Detray/python/detray/detectors/impl/type_helpers.py",
+    "Detray/detectors/codegen/detray_metadata/impl/definitions.py",
+    "Detray/detectors/codegen/detray_metadata/impl/type_helpers.py",
     # Python uv files
     "Detray/codegen/detray-sympy/uv.lock",
-    "Detray/python/detray/uv.lock",
     # Generated PyPI readme, checked by Python/Examples/tests/test_pypi_readme.py
     "CI/pypi_readme.md",
     # TODO: remove after file is gone

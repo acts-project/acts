@@ -11,7 +11,6 @@
 // Project include(s).
 #include "detray/definitions/grid_axis.hpp"
 #include "detray/io/frontend/payloads.hpp"
-#include "detray/io/json/detail/json_algebra_io.hpp"
 #include "detray/io/json/detail/json_common_io.hpp"
 #include "detray/io/json/json.hpp"
 
@@ -23,21 +22,12 @@
 namespace detray::io {
 
 inline void to_json(nlohmann::ordered_json& j, const grid_header_payload& h) {
-  j["common"] = h.common;
-
-  if (h.sub_header.has_value()) {
-    const auto& grid_sub_header = h.sub_header.value();
-    j["grid_count"] = grid_sub_header.n_grids;
-  }
+  j["grid_count"] = h.n_grids;
 }
 
 inline void from_json(const nlohmann::ordered_json& j, grid_header_payload& h) {
-  h.common = j["common"];
-
   if (j.find("grid_count") != j.end()) {
-    h.sub_header.emplace();
-    auto& grid_sub_header = h.sub_header.value();
-    grid_sub_header.n_grids = j["grid_count"];
+    h.n_grids = j["grid_count"];
   }
 }
 
@@ -82,6 +72,9 @@ inline void to_json(nlohmann::ordered_json& j,
     jaxes.push_back(a);
   }
   j["axes"] = jaxes;
+  if (g.reference_radius.has_value()) {
+    j["reference_radius"] = *g.reference_radius;
+  }
 
   nlohmann::ordered_json jbins;
   for (const auto& bin : g.bins) {
@@ -100,6 +93,9 @@ inline void from_json(const nlohmann::ordered_json& j,
   for (const auto& jax : jaxes) {
     axis_payload a = jax;
     g.axes.push_back(std::move(a));
+  }
+  if (j.contains("reference_radius")) {
+    g.reference_radius = j["reference_radius"].get<io::scalar>();
   }
 
   nlohmann::ordered_json jbins = j["bins"];

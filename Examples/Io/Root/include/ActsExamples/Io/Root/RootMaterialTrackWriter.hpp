@@ -24,7 +24,7 @@ class TTree;
 
 namespace Acts {
 // Using some short hands for Recorded Material
-using RecordedMaterial = MaterialInteractor::result_type;
+using RecordedMaterial = MaterialInteractor::State;
 // And recorded material track
 // - this is start:  position, start momentum
 //   and the Recorded material

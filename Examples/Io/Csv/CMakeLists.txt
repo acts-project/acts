@@ -1,5 +1,3 @@
-include(ActsTargetLinkLibrariesSystem)
-
 acts_add_library(
     ExamplesIoCsv
     src/CsvMeasurementReader.cpp
@@ -21,6 +19,7 @@ acts_add_library(
     src/CsvGnnGraphWriter.cpp
     src/CsvGnnGraphReader.cpp
     src/CsvBFieldWriter.cpp
+    src/CsvGeometryIdMap.cpp
     src/CsvVertexWriter.cpp
 )
 target_include_directories(

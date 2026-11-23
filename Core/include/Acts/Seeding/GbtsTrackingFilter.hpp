@@ -52,14 +52,11 @@ class GbtsTrackingFilter final {
     /// Maximum delta chi2 in y direction.
     float maxDChi2Y = 6.0;
 
-    /// Chi2 penalty for adding a hit.
+    /// Score a hit adds to a path before its weighted chi2 is subtracted.
     float addHit = 14.0;
 
     /// Maximum track curvature.
     float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
-    /// Maximum longitudinal impact parameter.
-    float maxZ0 = 170.0 * Acts::UnitConstants::mm;
-
     /// Initial variance of the transverse state (y, dy/dx, d2y/dx2).
     std::array<float, 3> initialVarianceX = {0.25f, 0.001f, 0.001f};
     /// Initial variance of the longitudinal state (z, dz/dr).

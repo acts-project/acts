@@ -26,11 +26,14 @@
 
 namespace detray::actor {
 
-template <concepts::algebra algebra_t>
-struct parameter_transporter;
+template <concepts::algebra algebra_t, typename state_t>
+struct parameter_transporter_base;
+
+template <concepts::algebra algebra_t, typename state_t>
+struct parameter_setter_base;
 
 template <concepts::algebra algebra_t>
-struct parameter_setter;
+struct parameter_updater_mbf_state;
 
 /// Configuration of noise estimation
 struct noise_cfg {
@@ -47,35 +50,37 @@ struct noise_cfg {
 template <concepts::algebra algebra_t>
 struct parameter_updater_state {
   // Allow only the corresponding actors to modify the parameter data
-  friend struct parameter_transporter<algebra_t>;
-  friend struct parameter_setter<algebra_t>;
+  friend struct parameter_transporter_base<algebra_t,
+                                           parameter_updater_state<algebra_t>>;
+  friend struct parameter_setter_base<algebra_t,
+                                      parameter_updater_state<algebra_t>>;
+  friend struct parameter_transporter_base<
+      algebra_t, parameter_updater_mbf_state<algebra_t>>;
+  friend struct parameter_setter_base<algebra_t,
+                                      parameter_updater_mbf_state<algebra_t>>;
+
+  /// This state does not accumulate the full Jacobian between surfaces
+  static constexpr bool stores_full_jacobian = false;
 
   /// Construct an empty updater state.
   constexpr parameter_updater_state() = default;
 
   /// Start without explicit track parameters
   /// @param cfg Propagation configuration supplying navigation noise settings.
-  /// @param full_jac Optional storage for the accumulated full Jacobian.
   DETRAY_HOST_DEVICE
-  explicit constexpr parameter_updater_state(
-      const propagation::config& cfg,
-      bound_matrix<algebra_t>* full_jac = nullptr)
-      : m_full_jacobian(full_jac),
-        m_cfg{cfg.navigation.accumulated_error,
+  explicit constexpr parameter_updater_state(const propagation::config& cfg)
+      : m_cfg{cfg.navigation.accumulated_error,
               cfg.navigation.n_scattering_stddev,
               cfg.navigation.estimate_scattering_noise} {}
 
   /// Start from free track parameters
   /// @param cfg Propagation configuration supplying navigation noise settings.
   /// @param free_params Initial free track parameters.
-  /// @param full_jac Optional storage for the accumulated full Jacobian.
   DETRAY_HOST_DEVICE
   constexpr parameter_updater_state(
       const propagation::config& cfg,
-      const free_track_parameters<algebra_t>& free_params,
-      bound_matrix<algebra_t>* full_jac = nullptr)
-      : m_full_jacobian(full_jac),
-        m_cfg{cfg.navigation.accumulated_error,
+      const free_track_parameters<algebra_t>& free_params)
+      : m_cfg{cfg.navigation.accumulated_error,
               cfg.navigation.n_scattering_stddev,
               cfg.navigation.estimate_scattering_noise} {
     // Set bound track parameters
@@ -88,14 +93,11 @@ struct parameter_updater_state {
   /// Start from bound track parameters
   /// @param cfg Propagation configuration supplying navigation noise settings.
   /// @param bound_params Initial bound parameters and covariance.
-  /// @param full_jac Optional storage for the accumulated full Jacobian.
   DETRAY_HOST_DEVICE
   constexpr parameter_updater_state(
       const propagation::config& cfg,
-      const bound_track_parameters<algebra_t>& bound_params,
-      bound_matrix<algebra_t>* full_jac = nullptr)
+      const bound_track_parameters<algebra_t>& bound_params)
       : m_bound_params{bound_params},
-        m_full_jacobian(full_jac),
         m_cfg{cfg.navigation.accumulated_error,
               cfg.navigation.n_scattering_stddev,
               cfg.navigation.estimate_scattering_noise} {}
@@ -163,6 +165,26 @@ struct parameter_updater_state {
     return m_bound_params;
   }
 
+ private:
+  /// Bound track parameters and covariance
+  bound_track_parameters<algebra_t> m_bound_params{};
+  /// Configuration for the noise estimation
+  noise_cfg m_cfg{};
+  /// Always update the free track parameters, even if nothing changed
+  bool m_always_update{false};
+  /// Notify observing actors on initial surface (propagation init)
+  bool m_notify_on_initial{true};
+};
+
+/// State of the parameter updater that can additionally accumulate the full
+/// Jacobian between two surfaces, as needed by the MBF smoother
+template <concepts::algebra algebra_t>
+struct parameter_updater_mbf_state : parameter_updater_state<algebra_t> {
+  /// This state can accumulate the full Jacobian between surfaces
+  static constexpr bool stores_full_jacobian = true;
+
+  using parameter_updater_state<algebra_t>::parameter_updater_state;
+
   /// @returns true if the full Jacobian matrix should be assembled.
   DETRAY_HOST_DEVICE
   constexpr bool has_full_jacobian() const {
@@ -193,16 +215,8 @@ struct parameter_updater_state {
   }
 
  private:
-  /// Bound track parameters and covariance
-  bound_track_parameters<algebra_t> m_bound_params{};
   /// Full jacobian for up to the current destination surface
   bound_matrix<algebra_t>* m_full_jacobian{nullptr};
-  /// Configuration for the noise estimation
-  noise_cfg m_cfg{};
-  /// Always update the free track parameters, even if nothing changed
-  bool m_always_update{false};
-  /// Notify observing actors on initial surface (propagation init)
-  bool m_notify_on_initial{true};
 };
 
 /// Result of the param. transporter: bound track parameters at dest. sf.
@@ -265,8 +279,8 @@ struct parameter_transporter_result : public actor::result {
 /// Transport the free track parameters at the destination surface
 /// and the covariance at the departure surface to bound track parameters
 /// at the destination surface (current sensitive/material surface)
-template <concepts::algebra algebra_t>
-struct parameter_transporter : base_actor {
+template <concepts::algebra algebra_t, typename state_t>
+struct parameter_transporter_base : base_actor {
   /// Transformation type used for surface-frame Jacobians.
   using transform3_type = dtransform3D<algebra_t>;
   /// The current free track parameters in the stepper algorithm
@@ -277,7 +291,7 @@ struct parameter_transporter : base_actor {
   using bound_matrix_type = bound_matrix<algebra_t>;
 
   /// Use the parameter updater state
-  using state = parameter_updater_state<algebra_t>;
+  using state = state_t;
   /// Result returned to observers after transporting parameters.
   using result = parameter_transporter_result<algebra_t>;
 
@@ -409,9 +423,11 @@ struct parameter_transporter : base_actor {
 
       // Update the full Jacobian, if required
       if (math::fabs(stepping.path_length()) > 0.f) {
-        if (updater_state.has_full_jacobian()) {
-          updater_state.set_full_jacobian(propagation_step_jacobian *
-                                          updater_state.full_jacobian());
+        if constexpr (state_t::stores_full_jacobian) {
+          if (updater_state.has_full_jacobian()) {
+            updater_state.set_full_jacobian(propagation_step_jacobian *
+                                            updater_state.full_jacobian());
+          }
         }
 
         // Reset transport Jacobian to identity matrix
@@ -601,12 +617,21 @@ struct parameter_transporter : base_actor {
   }
 };
 
+template <concepts::algebra algebra_t>
+using parameter_transporter =
+    parameter_transporter_base<algebra_t, parameter_updater_state<algebra_t>>;
+
+template <concepts::algebra algebra_t>
+using parameter_transporter_mbf =
+    parameter_transporter_base<algebra_t,
+                               parameter_updater_mbf_state<algebra_t>>;
+
 /// Set the free track parameters in the stepper state, in case
 /// observing actors (e.g. the material interactor) changed the bound parameters
-template <concepts::algebra algebra_t>
-struct parameter_setter : base_actor {
+template <concepts::algebra algebra_t, typename state_t>
+struct parameter_setter_base : base_actor {
   /// Access the same parameter updater state as the parameter transporter
-  using state = parameter_updater_state<algebra_t>;
+  using state = state_t;
 
   /// Actor interface: Observer to the parameter transporter and its observers
   /// @tparam propagator_state_t Propagator state type.
@@ -656,11 +681,24 @@ struct parameter_setter : base_actor {
   }
 };
 
+template <concepts::algebra algebra_t>
+using parameter_setter =
+    parameter_setter_base<algebra_t, parameter_updater_state<algebra_t>>;
+
+template <concepts::algebra algebra_t>
+using parameter_setter_mbf =
+    parameter_setter_base<algebra_t, parameter_updater_mbf_state<algebra_t>>;
+
 /// Call actors that depend on the bound track parameters safely together
 /// with the parameter transporter and parameter setter
 template <typename algebra_t, typename... transporter_observers>
 using parameter_updater =
     composite_actor<parameter_transporter<algebra_t>, transporter_observers...,
                     parameter_setter<algebra_t>>;
+
+template <typename algebra_t, typename... transporter_observers>
+using parameter_updater_mbf =
+    composite_actor<parameter_transporter_mbf<algebra_t>,
+                    transporter_observers..., parameter_setter_mbf<algebra_t>>;
 
 }  // namespace detray::actor

@@ -15,13 +15,11 @@
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
-#include "Acts/EventData/TrackProxyCommon.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
@@ -361,8 +359,7 @@ Result<void> extrapolateTrackToReferenceSurface(
                << " with starting parameters " << parameters);
 
   auto propagateResult =
-      propagator.template propagate<propagator_options_t, ForcedSurfaceReached>(
-          parameters, referenceSurface, options);
+      propagator.propagate(parameters, referenceSurface, options);
 
   if (!propagateResult.ok()) {
     ACTS_DEBUG("failed to extrapolate track: " << propagateResult.error());
@@ -428,10 +425,8 @@ void calculateTrackQuantities(track_proxy_t track)
   track.nHoles() = 0;
   track.nMeasurements() = 0;
   track.nSharedHits() = 0;
+  track.nSplitHits() = 0;
   track.nOutliers() = 0;
-
-  // The split hit column is optional, so only count if the track has it
-  unsigned int nSplitHits = 0;
 
   for (const auto &trackState : track.trackStatesReversed()) {
     ConstTrackStateTypeMap typeFlags = trackState.typeFlags();
@@ -445,17 +440,11 @@ void calculateTrackQuantities(track_proxy_t track)
         track.nSharedHits()++;
       }
       if (typeFlags.isSplitHit()) {
-        nSplitHits++;
+        track.nSplitHits()++;
       }
       track.nMeasurements()++;
       track.chi2() += trackState.chi2();
       track.nDoF() += trackState.calibratedSize();
-    }
-  }
-
-  if constexpr (requires { track.nSplitHits(); }) {
-    if (track.hasColumn(detail_tp::kSplitHitsKey)) {
-      track.nSplitHits() = nSplitHits;
     }
   }
 }

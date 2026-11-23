@@ -16,7 +16,7 @@
 #include "detray/core/detector.hpp"
 #include "detray/definitions/geometry.hpp"
 #include "detray/definitions/units.hpp"
-#include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/json/detector_writer.hpp"
 
 // Example include(s)
 #include "detray/tutorial/detector_metadata.hpp"
@@ -115,9 +115,10 @@ int main() {
   // Write the detector to file
   auto writer_cfg = detray::io::detector_writer_config{}
                         .format(detray::io::format::json)
+                        .source("detray tutorial")
                         .replace_files(true);
 
   std::clog << writer_cfg << std::endl;
 
-  detray::io::write_detector(det, name_map, writer_cfg);
+  detray::io::write_detector_json(det, name_map, writer_cfg);
 }
