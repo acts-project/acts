@@ -17,7 +17,6 @@
 
 #include <traccc/geometry/detector_buffer.hpp>
 #include <traccc/geometry/host_detector.hpp>
-#include <vecmem/memory/memory_resource.hpp>
 
 namespace ActsExamples {
 
@@ -35,10 +34,9 @@ class TracccDetector {
     std::shared_ptr<const TracccBackend> backend;
     /// The ACTS tracking geometry the detray detector was converted from
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    /// Host memory resource the detray detector was created with. It has to
-    /// outlive the detector, so it is declared (and destroyed) before it.
-    std::shared_ptr<vecmem::memory_resource> detrayMemoryResource;
-    /// The detray detector converted from the ACTS tracking geometry
+    /// The detray detector converted from the ACTS tracking geometry. It has
+    /// to keep the memory resource it was created with alive, e.g. through
+    /// the deleter of the shared pointer.
     std::shared_ptr<const traccc::host_detector> detrayDetector;
     /// The ACTS <-> detray surface identifier map from the same conversion
     std::shared_ptr<const ActsPlugins::DetraySurfaceIdMap> surfaceIds;

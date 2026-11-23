@@ -27,6 +27,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include <pybind11/pybind11.h>
@@ -67,18 +68,27 @@ void addDetector(py::module_& m) {
   py::class_<traccc::host_detector, std::shared_ptr<traccc::host_detector>>(
       m, "TracccHostDetector");
 
-  // Convert an ACTS tracking geometry into a type erased detray detector,
-  // returned together with the ACTS <-> detray surface identifier map of the
-  // conversion. The detray detector is move only, so it is moved into the
-  // type erased container right after the conversion.
+  // Convert the ACTS tracking geometry of the ODD into a type erased detray
+  // detector of the traccc ODD type, returned together with the ACTS <->
+  // detray surface identifier map of the conversion. The detray detector is
+  // move only, so it is moved into the type erased container right after the
+  // conversion. The detector keeps the memory resource it was created with
+  // alive.
   m.def(
-      "convertToTracccHostDetector",
+      "convertToTracccOddDetector",
       [](const ActsPlugins::DetrayGeometryConverter& converter,
-         vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
+         const std::shared_ptr<vecmem::memory_resource>& mr,
+         const Acts::GeometryContext& gctx,
          const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry) {
+        if (mr == nullptr) {
+          throw std::invalid_argument(
+              "convertToTracccOddDetector: memory resource is not set");
+        }
         auto geometry = converter.convert<traccc::odd_detector::metadata>(
-            mr, gctx, trackingGeometry);
-        auto hostDetector = std::make_shared<traccc::host_detector>();
+            *mr, gctx, trackingGeometry);
+        std::shared_ptr<traccc::host_detector> hostDetector(
+            new traccc::host_detector(),
+            [mr](traccc::host_detector* detector) { delete detector; });
         hostDetector->set<traccc::odd_detector>(std::move(*geometry.detector));
         auto surfaceIds = std::make_shared<ActsPlugins::DetraySurfaceIdMap>(
             std::move(geometry.surfaceIds));
@@ -97,8 +107,7 @@ void addDetector(py::module_& m) {
                .def_property_readonly("config", &TracccDetector::config);
 
   auto c = py::class_<TracccDetector::Config>(d, "Config").def(py::init<>());
-  ACTS_PYTHON_STRUCT(c, backend, trackingGeometry, detrayMemoryResource,
-                     detrayDetector, surfaceIds);
+  ACTS_PYTHON_STRUCT(c, backend, trackingGeometry, detrayDetector, surfaceIds);
 }
 
 void addMagneticField(py::module_& m) {
