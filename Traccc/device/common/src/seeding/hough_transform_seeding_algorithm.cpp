@@ -161,8 +161,7 @@ auto hough_transform_seeding_algorithm::operator()(
   // Take the pictures from the merged maxima
   // ---------------------------------------------------
   vecmem::data::jagged_vector_buffer<scalar> images(
-      std::vector<unsigned int>(total_maxima, 32 * 32), mr().main, mr().host,
-      vecmem::data::buffer_type::resizable);
+      std::vector<unsigned int>(total_maxima, 32 * 32), mr().main, mr().host);
   vecmem::data::vector_buffer<scalar> maxima_x_value(total_maxima, mr().main);
 
   copy().setup(vecmem::ignore_event, maxima_x_value);
