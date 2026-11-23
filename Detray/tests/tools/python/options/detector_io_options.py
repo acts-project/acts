@@ -80,19 +80,19 @@ def parse_detector_io_options(args, logging):
 
 def fill_reader_config(args, config):
 
-    config.doCheck = args.no_check
+    config.do_check = args.no_check
     config.deduplicate = args.no_deduplication
 
     if not args.geometry_file:
         raise ValueError("Please specify a geometry input file!")
 
-    config.addFile(args.geometry_file)
+    config.add_file(args.geometry_file)
 
     if args.material_file:
-        config.addFile(args.material_file)
+        config.add_file(args.material_file)
 
     if args.grid_file:
-        config.addFile(args.grid_file)
+        config.add_file(args.grid_file)
 
     return config
 
@@ -131,9 +131,9 @@ def fill_writer_config(args, config):
     """Fill a detector writer config from the parsed commandline options."""
 
     config.path = args.outdir
-    config.compactifyJson = args.compactify_json
-    config.writeMaterial = args.write_material
-    config.writeGrids = args.write_grids
-    config.replaceFiles = args.replace_files
+    config.compactify_json = args.compactify_json
+    config.write_material = args.write_material
+    config.write_grids = args.write_grids
+    config.replace_files = args.replace_files
 
     return config

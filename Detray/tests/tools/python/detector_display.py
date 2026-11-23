@@ -33,30 +33,32 @@ def run_detector_display(args, outdir):
 
     # Read the detector, but also display incorrect geometries for debugging
     reader_cfg = fill_reader_config(args, detray.io.DetectorReaderConfig())
-    reader_cfg.doCheck = True
-    det, names = detray.io.readDetector(detray.core.HostMemoryResource(), reader_cfg)
+    reader_cfg.do_check = True
+    det, names = detray.io.read_detector_json(
+        detray.core.HostMemoryResource(), reader_cfg
+    )
 
     # Style settings for the illustrator
-    style = detray.svgtools.tableauColorblindStyle()
-    style.fontSize = args.font_size
+    style = detray.svgtools.tableau_colorblind_style()
+    style.font_size = args.font_size
     # Align the material gradient box with the major axis
-    style.materialGradientPos = [args.material_gradient_axis + 100.0, -200.0]
+    style.material_gradient_pos = [args.material_gradient_axis + 100.0, -200.0]
 
     # Creating the svg generator for the detector
     il = detray.svgtools.Illustrator(det, names, style)
-    il.showInfo(args.show_info)
-    il.hideEtaLines(args.hide_eta_lines)
-    il.hidePortals(args.hide_portals)
-    il.hidePassives(args.hide_passives)
-    il.hideMaterial(not args.material_file or args.hide_material)
-    il.hideGrids(not args.grid_file)
-    il.searchWindow(args.search_window)
+    il.show_info(args.show_info)
+    il.hide_eta_lines(args.hide_eta_lines)
+    il.hide_portals(args.hide_portals)
+    il.hide_passives(args.hide_passives)
+    il.hide_material(not args.material_file or args.hide_material)
+    il.hide_grids(not args.grid_file)
+    il.search_window(args.search_window)
 
     # The geometry context to be displayed
     gctx = detray.core.GeometryContext(args.context)
 
     # x-y, z-r and z-phi axes
-    xy_axis = detray.svgtools.drawAxes(
+    xy_axis = detray.svgtools.draw_axes(
         "axes",
         [-args.x_axis, args.x_axis],
         [-args.y_axis, args.y_axis],
@@ -64,7 +66,7 @@ def run_detector_display(args, outdir):
         "y",
         args.font_size,
     )
-    zr_axis = detray.svgtools.drawAxes(
+    zr_axis = detray.svgtools.draw_axes(
         "axes",
         [-args.z_axis, args.z_axis],
         [-5.0, args.r_axis],
@@ -72,7 +74,7 @@ def run_detector_display(args, outdir):
         "r",
         args.font_size,
     )
-    zphi_axis = detray.svgtools.drawAxes(
+    zphi_axis = detray.svgtools.draw_axes(
         "axes",
         [-args.z_axis, args.z_axis],
         [-args.r_axis, args.r_axis],
@@ -88,19 +90,19 @@ def run_detector_display(args, outdir):
     zrphi = detray.svgtools.ViewZRPhi()
 
     def write_svg(name, svgs):
-        detray.svgtools.writeSvg(os.path.join(outdir, name), svgs)
+        detray.svgtools.write_svg(os.path.join(outdir, name), svgs)
 
     # Draw the volumes from a collection of volume identifiers
     def draw_volumes(vol_ids):
-        vol_xy_svg, xy_grids = il.drawVolumes(vol_ids, xy, gctx)
+        vol_xy_svg, xy_grids = il.draw_volumes(vol_ids, xy, gctx)
         write_svg(vol_xy_svg.id, [xy_axis, vol_xy_svg])
         for grid in xy_grids:
             write_svg(grid.id, [grid])
 
-        vol_zr_svg, _ = il.drawVolumes(vol_ids, zr, gctx)
+        vol_zr_svg, _ = il.draw_volumes(vol_ids, zr, gctx)
         write_svg(vol_zr_svg.id, [zr_axis, vol_zr_svg])
 
-        _, zrphi_grids = il.drawVolumes(vol_ids, zrphi, gctx)
+        _, zrphi_grids = il.draw_volumes(vol_ids, zrphi, gctx)
         for grid in zrphi_grids:
             write_svg(grid.id, [grid])
 
@@ -112,31 +114,31 @@ def run_detector_display(args, outdir):
 
     # Display the surfaces
     if args.surfaces:
-        sf_xy_svg, mat_xy_svg = il.drawSurfaces(args.surfaces, xy, gctx)
+        sf_xy_svg, mat_xy_svg = il.draw_surfaces(args.surfaces, xy, gctx)
         write_svg(sf_xy_svg.id, [xy_axis, sf_xy_svg])
         write_svg(mat_xy_svg.id, [xy_axis, mat_xy_svg])
 
-        sf_zr_svg, _ = il.drawSurfaces(args.surfaces, zr, gctx)
+        sf_zr_svg, _ = il.draw_surfaces(args.surfaces, zr, gctx)
         write_svg(sf_zr_svg.id, [zr_axis, sf_zr_svg])
 
-        _, mat_zphi_svg = il.drawSurfaces(args.surfaces, zphi, gctx)
+        _, mat_zphi_svg = il.draw_surfaces(args.surfaces, zphi, gctx)
         write_svg(mat_zphi_svg.id, [zphi_axis, mat_zphi_svg])
 
     # If nothing was specified, display the whole detector
     if not args.volume_indices and not args.volume_names and not args.surfaces:
-        det_xy_svg = il.drawDetector(xy, gctx)
+        det_xy_svg = il.draw_detector(xy, gctx)
         write_svg(det_xy_svg.id, [xy_axis, det_xy_svg])
 
-        det_zr_svg = il.drawDetector(zr, gctx, args.r_axis, args.z_axis)
+        det_zr_svg = il.draw_detector(zr, gctx, args.r_axis, args.z_axis)
         write_svg(det_zr_svg.id, [zr_axis, det_zr_svg])
 
     # Display the detector volume graph
     if args.write_volume_graph:
         graph = detray.core.VolumeGraph(det)
 
-        graph_file = os.path.join(outdir, il.detName + "_volume_graph.dot")
+        graph_file = os.path.join(outdir, il.det_name + "_volume_graph.dot")
         with open(graph_file, "w") as out_file:
-            out_file.write(graph.toDotString())
+            out_file.write(graph.to_dot_string())
 
 
 def __main__():
