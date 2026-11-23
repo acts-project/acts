@@ -75,18 +75,16 @@ void addDetector(py::module_& m) {
       "convertToTracccHostDetector",
       [](const ActsPlugins::DetrayGeometryConverter& converter,
          vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
-         const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
-         const std::string& detectorName) {
+         const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry) {
         auto geometry = converter.convert<traccc::odd_detector::metadata>(
-            mr, gctx, trackingGeometry, detectorName);
+            mr, gctx, trackingGeometry);
         auto hostDetector = std::make_shared<traccc::host_detector>();
         hostDetector->set<traccc::odd_detector>(std::move(*geometry.detector));
         auto surfaceIds = std::make_shared<ActsPlugins::DetraySurfaceIdMap>(
             std::move(geometry.surfaceIds));
         return std::make_pair(hostDetector, surfaceIds);
       },
-      "converter"_a, "mr"_a, "gctx"_a, "trackingGeometry"_a,
-      "detectorName"_a = "");
+      "converter"_a, "mr"_a, "gctx"_a, "trackingGeometry"_a);
 
   auto d = py::class_<TracccDetector, std::shared_ptr<TracccDetector>>(
                m, "TracccDetector")
