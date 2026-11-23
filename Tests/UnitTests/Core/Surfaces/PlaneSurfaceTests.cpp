@@ -610,6 +610,66 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceMaterialAssignment) {
   }
 }
 
+/// Unit test for PlaneSurface::contains
+BOOST_AUTO_TEST_CASE(PlaneSurfaceContains) {
+  auto rectangle = [](const Transform3& transform, double halfX, double halfY) {
+    return Surface::makeShared<PlaneSurface>(
+        transform, std::make_shared<const RectangleBounds>(halfX, halfY));
+  };
+  auto shifted = [](const Vector3& shift) {
+    return Transform3{Translation3{shift}};
+  };
+  const Transform3 identity = Transform3::Identity();
+  auto plane = rectangle(identity, 10_mm, 5_mm);
+
+  BOOST_CHECK(plane->contains(tgContext, *plane));
+  BOOST_CHECK(plane->contains(
+      tgContext, *rectangle(shifted({5_mm, 2_mm, 0}), 4_mm, 2_mm)));
+  BOOST_CHECK(!plane->contains(tgContext,
+                               *rectangle(shifted({7_mm, 0, 0}), 4_mm, 2_mm)));
+  // The larger plane is not contained in the smaller one
+  BOOST_CHECK(!rectangle(identity, 4_mm, 2_mm)->contains(tgContext, *plane));
+
+  // Bounds are compared in the frame of this plane
+  const Transform3 rotated{AngleAxis3{std::numbers::pi / 2., Vector3::UnitZ()}};
+  BOOST_CHECK(plane->contains(tgContext, *rectangle(rotated, 4_mm, 9_mm)));
+  BOOST_CHECK(!plane->contains(tgContext, *rectangle(identity, 4_mm, 9_mm)));
+
+  // The orientation of the normal does not matter
+  const Transform3 flipped{AngleAxis3{std::numbers::pi, Vector3::UnitX()}};
+  BOOST_CHECK(plane->contains(tgContext, *rectangle(flipped, 4_mm, 2_mm)));
+
+  // Not on the same plane
+  BOOST_CHECK(!plane->contains(tgContext,
+                               *rectangle(shifted({0, 0, 1_mm}), 4_mm, 2_mm)));
+  const Transform3 tilted{AngleAxis3{0.1, Vector3::UnitX()}};
+  BOOST_CHECK(!plane->contains(tgContext, *rectangle(tilted, 4_mm, 2_mm)));
+
+  // Equal edges are contained within the tolerance
+  BOOST_CHECK(plane->contains(tgContext,
+                              *rectangle(shifted({1e-6, 0, 0}), 10_mm, 5_mm)));
+  BOOST_CHECK(!plane->contains(tgContext,
+                               *rectangle(shifted({1e-3, 0, 0}), 10_mm, 5_mm)));
+
+  // Two halves of the plane do not contain each other
+  auto left = rectangle(shifted({-5_mm, 0, 0}), 5_mm, 5_mm);
+  auto right = rectangle(shifted({5_mm, 0, 0}), 5_mm, 5_mm);
+  BOOST_CHECK(plane->contains(tgContext, *left));
+  BOOST_CHECK(plane->contains(tgContext, *right));
+  BOOST_CHECK(!left->contains(tgContext, *right));
+
+  // Other polygons
+  auto trapezoid = Surface::makeShared<PlaneSurface>(
+      identity, std::make_shared<const TrapezoidBounds>(2_mm, 4_mm, 3_mm));
+  BOOST_CHECK(plane->contains(tgContext, *trapezoid));
+  BOOST_CHECK(!trapezoid->contains(tgContext, *plane));
+
+  // Unbounded planes are not supported
+  auto infinite = Surface::makeShared<PlaneSurface>(identity);
+  BOOST_CHECK(!infinite->contains(tgContext, *plane));
+  BOOST_CHECK(!plane->contains(tgContext, *infinite));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

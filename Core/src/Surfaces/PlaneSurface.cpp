@@ -26,6 +26,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 #include <numeric>
@@ -228,6 +229,45 @@ Matrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
     const Vector3& /*direction*/) const {
   const Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Identity();
   return loc3DToLocBound;
+}
+
+bool PlaneSurface::contains(const GeometryContext& gctx, const Surface& other,
+                            double tolerance) const {
+  const auto* plane = dynamic_cast<const PlaneSurface*>(&other);
+  if (plane == nullptr) {
+    return false;
+  }
+  // Polygons, so that the vertices describe the bounds exactly. A polygon
+  // lies within a convex polygon if its vertices do.
+  auto isPolygon = [](const SurfaceBounds& bounds) {
+    switch (bounds.type()) {
+      case SurfaceBounds::eRectangle:
+      case SurfaceBounds::eTrapezoid:
+      case SurfaceBounds::eDiamond:
+      case SurfaceBounds::eConvexPolygon:
+        return true;
+      default:
+        return false;
+    }
+  };
+  if (!isPolygon(bounds()) || !isPolygon(plane->bounds())) {
+    return false;
+  }
+
+  // The other surface in the frame of this one
+  const Transform3 otherLocal = localToGlobalTransform(gctx).inverse() *
+                                plane->localToGlobalTransform(gctx);
+  if (otherLocal.linear().col(2).head<2>().norm() > tolerance ||
+      std::abs(otherLocal.translation().z()) > tolerance) {
+    return false;
+  }
+
+  return std::ranges::all_of(
+      plane->m_bounds->vertices(), [&](const Vector2& vertex) {
+        const Vector2 local =
+            (otherLocal * Vector3{vertex.x(), vertex.y(), 0}).head<2>();
+        return bounds().inside(local) || bounds().distance(local) <= tolerance;
+      });
 }
 
 std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(

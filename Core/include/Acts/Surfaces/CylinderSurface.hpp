@@ -280,6 +280,10 @@ class CylinderSurface : public RegularSurface {
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const final;
 
+  /// @copydoc Surface::contains
+  bool contains(const GeometryContext& gctx, const Surface& other,
+                double tolerance = s_onSurfaceTolerance) const override;
+
   /// Merge two cylinder surfaces into a single one.
   /// @image html Cylinder_Merging.svg
   /// @note The surfaces need to be *compatible*, i.e. have cylinder bounds

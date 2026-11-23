@@ -258,6 +258,10 @@ class PlaneSurface : public RegularSurface {
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const final;
 
+  /// @copydoc Surface::contains
+  bool contains(const GeometryContext& gctx, const Surface& other,
+                double tolerance = s_onSurfaceTolerance) const override;
+
   /// Merge two plane surfaces into a single one.
   /// @note The surfaces need to be *compatible*, i.e. have bounds
   ///       that align along merging direction, and have the same bound size

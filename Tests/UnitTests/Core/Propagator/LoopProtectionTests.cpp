@@ -140,7 +140,7 @@ BOOST_DATA_TEST_CASE(
   auto& pathLimit = pState.options.abortList.get<PathLimitReached>();
   auto initialLimit = pathLimit.internalLimit;
 
-  detail::setupLoopProtection(pState, pStepper, pathLimit, false,
+  detail::setupLoopProtection(pState, pStepper, pathLimit.internalLimit, false,
                               *getDefaultLogger("LoopProt", Logging::INFO));
 
   auto updatedLimit =
