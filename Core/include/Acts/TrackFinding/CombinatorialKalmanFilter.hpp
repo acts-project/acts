@@ -571,8 +571,8 @@ class CombinatorialKalmanFilter {
 
       // Transport the covariance to the surface
       BoundMatrix jacobian;
-      // Multi-steppers bind to the surface below; going through curvilinear
-      // first would clear the path derivatives needed for that transport.
+      // Brem material handling needs bound components. Transport directly to
+      // bound: a curvilinear detour would clear the required path derivatives.
       if (isMaterialOnly && !IsMultiStepper) {
         jacobian = stepper.transportToCurvilinear(state.stepping);
       } else {
@@ -597,15 +597,6 @@ class CombinatorialKalmanFilter {
       if (isMaterialOnly && !recordMaterialStates) {
         ACTS_VERBOSE("Skip material track state on surface "
                      << surface.geometryId());
-
-        if constexpr (IsMultiStepper) {
-          // the post material effects read the components on the surface
-          auto transportRes = stepper.transportToBound(state.stepping, surface);
-          if (!transportRes.ok()) {
-            return transportRes.error();
-          }
-          jacobian = *transportRes * jacobian;
-        }
 
         // keep the jacobian segment the transport above just closed
         result.accumulatedJacobian = jacobian * result.accumulatedJacobian;
@@ -634,17 +625,6 @@ class CombinatorialKalmanFilter {
               {std::move(*res), jacobian,
                result.pathLengthOffset + stepper.pathLength(state.stepping)});
         } else {
-          // This triggers a second covariance transport which is wasteful in
-          // terms of compute. But the multi stepper might filter bound
-          // components and we cannot easily match stepper components to bound
-          // parameter components right now to make use of the same track as
-          // above.
-          // TODO this should be revisited
-          auto transportRes = stepper.transportToBound(state.stepping, surface);
-          if (!transportRes.ok()) {
-            return transportRes.error();
-          }
-          jacobian = *transportRes * jacobian;
           auto res = stepper.boundParameters(state.stepping, surface);
           if (!res.ok()) {
             return res.error();
