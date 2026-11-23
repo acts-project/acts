@@ -123,6 +123,11 @@ if(PROJECT_IS_TOP_LEVEL)
     option(TRACCC_USE_SYSTEM_LIBS "Use system libraries be default" FALSE)
     option(TRACCC_USE_SPACK_LIBS "Use Spack libraries by default" FALSE)
     option(TRACCC_USE_ROOT "Use ROOT in the build (if needed)" TRUE)
+    option(
+        TRACCC_USE_ONNXRUNTIME
+        "Run the Hough seeding peak filter network with ONNX Runtime"
+        FALSE
+    )
 else()
     set(CMAKE_CXX_STANDARD "${ACTS_CXX_STANDARD}")
 
@@ -244,6 +249,11 @@ else()
         TRACCC_USE_ROOT
         "${ACTS_BUILD_PLUGIN_ROOT}"
         ACTS_BUILD_PLUGIN_ROOT
+    )
+    traccc_set_from_acts(
+        TRACCC_USE_ONNXRUNTIME
+        "${ACTS_TRACCC_USE_ONNXRUNTIME}"
+        ACTS_TRACCC_USE_ONNXRUNTIME
     )
     traccc_set_from_acts(TRACCC_FAIL_ON_WARNINGS OFF ACTS_FAIL_ON_WARNINGS)
     set_option_if(TRACCC_FAIL_ON_WARNINGS ACTS_FAIL_ON_WARNINGS)
