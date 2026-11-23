@@ -571,7 +571,9 @@ class CombinatorialKalmanFilter {
 
       // Transport the covariance to the surface
       BoundMatrix jacobian;
-      if (isMaterialOnly) {
+      // Multi-steppers bind to the surface below; going through curvilinear
+      // first would clear the path derivatives needed for that transport.
+      if (isMaterialOnly && !IsMultiStepper) {
         jacobian = stepper.transportToCurvilinear(state.stepping);
       } else {
         auto transportRes = stepper.transportToBound(state.stepping, surface);
