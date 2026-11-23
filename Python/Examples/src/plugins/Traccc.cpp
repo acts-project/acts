@@ -79,7 +79,8 @@ void addDetector(py::module_& m) {
       [](const ActsPlugins::DetrayGeometryConverter& converter,
          const std::shared_ptr<vecmem::memory_resource>& mr,
          const Acts::GeometryContext& gctx,
-         const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry) {
+         const std::shared_ptr<const Acts::TrackingGeometry>&
+             trackingGeometry) {
         if (mr == nullptr) {
           throw std::invalid_argument(
               "convertToTracccOddDetector: memory resource is not set");
