@@ -1587,8 +1587,9 @@ int main(int argc, char** argv) {
     const scalar detector_length = rand_length(mt1);
     const scalar constraint_step_size = detector_length * 1.25f;
 
-    mask<rect_type, test_algebra> rect{0u, detector_length * mask_scaler,
-                                       detector_length * mask_scaler};
+    mask<rect_type, test_algebra> rect{
+        0u, -detector_length * mask_scaler, -detector_length * mask_scaler,
+        detector_length * mask_scaler, detector_length * mask_scaler};
     mask<wire_type, test_algebra> wire{0u, detector_length * mask_scaler,
                                        detector_length * mask_scaler};
 

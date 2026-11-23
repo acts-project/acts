@@ -69,18 +69,18 @@ TEST(detray_builders, homogeneous_material_factory) {
   // Add material for a few rectangle surfaces
   mat_factory->push_back({surface_id::e_sensitive,
                           transform3(point3{0.f, 0.f, -1.f}), 1u,
-                          std::vector<scalar>{10.f, 8.f}});
+                          std::vector<scalar>{-10.f, -8.f, 10.f, 8.f}});
   mat_factory->add_material(material_id::e_material_slab,
                             {1.f * unit<scalar>::mm, silicon<scalar>()});
   mat_factory->push_back({surface_id::e_sensitive,
                           transform3(point3{0.f, 0.f, 1.f}), 1u,
-                          std::vector<scalar>{20.f, 16.f}});
+                          std::vector<scalar>{-20.f, -16.f, 20.f, 16.f}});
   mat_factory->add_material(material_id::e_material_slab,
                             {10.f * unit<scalar>::mm, tungsten<scalar>()});
   // Pass the parameters for 'gold'
   mat_factory->push_back({surface_id::e_sensitive,
                           transform3(point3{0.f, 0.f, 1.f}), 1u,
-                          std::vector<scalar>{20.f, 16.f}});
+                          std::vector<scalar>{-20.f, -16.f, 20.f, 16.f}});
   mat_factory->add_material(
       material_id::e_material_rod,
       {0.1f * unit<scalar>::mm,

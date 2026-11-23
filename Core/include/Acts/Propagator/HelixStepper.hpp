@@ -44,8 +44,8 @@ class IVolumeMaterial;
 /// The navigation estimates the distance to a surface with a straight line.
 /// A step of that length along the helix passes a surface perpendicular to the
 /// track by about |omega x T|^2 h^3 / 3, with omega = (q/p) B, and the next
-/// step goes back. A target aborter must accept an intersection that far behind
-/// the track. The default near limit of @ref SurfaceReached is 100 um.
+/// step goes back. The navigation must accept an intersection that far behind
+/// the track.
 ///
 /// @note The stepper propagates in vacuum only. It ignores volume material.
 class HelixStepper final {

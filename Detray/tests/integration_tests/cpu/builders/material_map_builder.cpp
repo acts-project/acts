@@ -115,14 +115,14 @@ detector_t build_detector(vecmem::memory_resource &mr,
 
     map_factory->push_back({surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, 0.f}), vol_link,
-                            std::vector<scalar>{10.f, 10.f}});
+                            std::vector<scalar>{-10.f, -10.f, 10.f, 10.f}});
     add_material_data(map_factory, mat_id::e_rectangle2D_map, shared_map_sf,
                       1.f * unit<scalar>::mm, silicon<scalar>());
 
     // Same map on an equivalent surface in the same volume
     map_factory->push_back({surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, 10.f}), vol_link,
-                            std::vector<scalar>{10.f, 10.f}});
+                            std::vector<scalar>{-10.f, -10.f, 10.f, 10.f}});
     add_material_data(map_factory, mat_id::e_rectangle2D_map,
                       shared_map_same_vol_sf, 1.f * unit<scalar>::mm,
                       silicon<scalar>());
@@ -130,7 +130,7 @@ detector_t build_detector(vecmem::memory_resource &mr,
     // Different surface extent than the first surface, same bin content
     map_factory->push_back({surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, 20.f}), vol_link,
-                            std::vector<scalar>{6.f, 4.f}});
+                            std::vector<scalar>{-6.f, -4.f, 6.f, 4.f}});
     add_material_data(map_factory, mat_id::e_rectangle2D_map,
                       shared_map_small_sf, 1.f * unit<scalar>::mm,
                       silicon<scalar>());
@@ -138,7 +138,7 @@ detector_t build_detector(vecmem::memory_resource &mr,
     // Scale material thickness with volume index to make it unique
     map_factory->push_back({surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, 30.f}), vol_link,
-                            std::vector<scalar>{10.f, 10.f}});
+                            std::vector<scalar>{-10.f, -10.f, 10.f, 10.f}});
     add_material_data(map_factory, mat_id::e_rectangle2D_map, unique_map_sf,
                       (1.f + static_cast<scalar>(v_idx)) * unit<scalar>::mm,
                       gold<scalar>());
@@ -213,13 +213,13 @@ GTEST_TEST(detray_builders, decorator_material_map_builder) {
   typename rectangle_factory::sf_data_collection rect_sf_data;
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, -10.f}), 0u,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, -20.f}), 0u,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_sf_data.emplace_back(surface_id::e_sensitive,
                             transform3(point3{0.f, 0.f, -30.f}), 0u,
-                            std::vector<scalar>{10.f, 8.f});
+                            std::vector<scalar>{-10.f, -8.f, 10.f, 8.f});
   rect_factory->push_back(std::move(rect_sf_data));
 
   auto trpz_factory = std::make_unique<trapezoid_factory>();

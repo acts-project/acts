@@ -86,7 +86,8 @@ int simulate(const traccc::opts::generation& generation_opts,
 
   // Use rectangle surfaces
   detray::mask<detray::rectangle2D, traccc::default_algebra> rectangle{
-      0u, telescope_opts.half_length, telescope_opts.half_length};
+      0u, -telescope_opts.half_length, -telescope_opts.half_length,
+      telescope_opts.half_length, telescope_opts.half_length};
 
   detray::tel_det_config tel_cfg{rectangle};
   tel_cfg.positions(plane_positions);
@@ -148,7 +149,7 @@ int simulate(const traccc::opts::generation& generation_opts,
                         .format(detray::io::format::json)
                         .source("Traccc simulation detector")
                         .replace_files(true);
-  detray::io::write_detector(det, name_map, writer_cfg);
+  detray::io::write_detector_json(det, name_map, writer_cfg);
 
   return 1;
 }

@@ -24,8 +24,15 @@ namespace traccc::edm {
 template <typename BASE>
 class silicon_cluster : public BASE {
  public:
+  /// @name Functions inherited from the base class
+  /// @{
+
   /// Inherit the base class's constructor(s)
   using BASE::BASE;
+  /// Inherit the base class's assignment operator(s)
+  using BASE::operator=;
+
+  /// @}
 
   /// @name Cell Information
   /// @{

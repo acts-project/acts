@@ -217,12 +217,12 @@ struct StepCollector {
     std::vector<const Surface*> surfaces;
   };
 
-  using result_type = this_result;
+  using State = this_result;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& /*navigator*/, result_type& result,
+                   const navigator_t& /*navigator*/, State& result,
                    const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     if (state.navigation.currentSurface != nullptr) {
@@ -234,7 +234,7 @@ struct StepCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/, result_type& /*result*/,
+                  const navigator_t& /*navigator*/, State& /*result*/,
                   const Logger& /*logger*/) const {
     return false;
   }
@@ -442,16 +442,16 @@ BOOST_AUTO_TEST_CASE(ConeValidityPolicy_MagneticField) {
         Vector4(startPos.x(), startPos.y(), startPos.z(), 0), startDir,
         1.0 / 1_GeV, std::nullopt, ParticleHypothesis::pion());
 
-    using MyActorList = ActorList<StepCollector, EndOfWorldReached>;
+    using MyActorList = ActorList<DefaultActor, StepCollector>;
     EigenPropagatorType::Options<MyActorList> propOpts(gctx, mfContext);
     propOpts.pathLimit = 5_m;
     propOpts.stepping.maxStepSize = 100_mm;
 
-    auto result = propagator.propagate(start, propOpts);
+    auto state = propagator.makeState(propOpts);
+    auto result = propagator.propagate(state, start);
     BOOST_REQUIRE(result.ok());
 
-    const auto& info =
-        result.value().template get<StepCollector::this_result>();
+    const auto& info = state.actor.template get<StepCollector::this_result>();
 
     const auto& positions = info.position;
     if (!positions.empty()) {
@@ -571,14 +571,14 @@ class CurvatureRecordingPolicy final : public INavigationPolicy {
 // then change the momentum again after the first step. Policy callbacks must
 // see the updated curvature, not a derivative cached by the previous step.
 struct ChangeCurvatureActor {
-  struct result_type {
+  struct State {
     bool changedAfterStep = false;
   };
   std::shared_ptr<CurvatureRecords> records;
 
   template <typename PropagatorState, typename Stepper, typename Nav>
   Result<void> act(PropagatorState& state, const Stepper& stepper,
-                   const Nav& /*navigator*/, result_type& result,
+                   const Nav& /*navigator*/, State& result,
                    const Logger& /*logger*/) const {
     Vector3 direction = stepper.direction(state.stepping);
     if (state.stage == PropagatorStage::prePropagation) {
@@ -597,7 +597,7 @@ struct ChangeCurvatureActor {
 
   template <typename PropagatorState, typename Stepper, typename Nav>
   bool checkAbort(PropagatorState& /*state*/, const Stepper& /*stepper*/,
-                  const Nav& /*navigator*/, result_type& /*result*/,
+                  const Nav& /*navigator*/, State& /*result*/,
                   const Logger& /*logger*/) const {
     return false;
   }
@@ -632,12 +632,12 @@ BOOST_AUTO_TEST_CASE(CurvatureReachesEveryPolicyEntryPoint) {
           Vector3::UnitX(), records->qOverP, std::nullopt,
           ParticleHypothesis::pion());
       decltype(propagator)::Options<
-          ActorList<ChangeCurvatureActor, EndOfWorldReached>>
+          ActorList<DefaultActor, ChangeCurvatureActor>>
           options(gctx, mfContext);
       options.direction = propagationDirection;
       options.pathLimit = 3_m;
       options.stepping.maxStepSize = 50_mm;
-      options.actorList.get<ChangeCurvatureActor>().records = records;
+      options.actor.get<ChangeCurvatureActor>().records = records;
       auto result = propagator.propagate(start, options);
       BOOST_REQUIRE(result.ok());
       BOOST_REQUIRE(!records->calls.empty());
@@ -775,7 +775,10 @@ BOOST_AUTO_TEST_CASE(CurvatureZeroCasesAndFieldErrors) {
   auto field = std::make_shared<FailingCurvatureField>();
   field->fail = false;
   Propagator refreshingPropagator{EigenStepper<>(field)};
-  auto refreshingState = refreshingPropagator.makeState(options);
+  // The loop protection would look up the failing field on its own.
+  auto refreshingOptions = options;
+  refreshingOptions.loopProtection = false;
+  auto refreshingState = refreshingPropagator.makeState(refreshingOptions);
   BOOST_REQUIRE(
       refreshingPropagator.initialize(refreshingState, start(), nullptr).ok());
   field->fail = true;
