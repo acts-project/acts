@@ -303,9 +303,10 @@ ActsExamples::DigiSensorTypesConfig ActsExamples::digiSensorTypesFromJson(
         DigiConfigConverter("digitization-configuration").fromJson(djson));
   }
 
-  if (!djson.at("acts-digitization-config")
-           .at("format-version")
-           .is_number_integer()) {
+  constexpr int kFormatVersion = 1;
+  const auto& jversion =
+      djson.at("acts-digitization-config").at("format-version");
+  if (!jversion.is_number_integer() || jversion.get<int>() != kFormatVersion) {
     throw std::invalid_argument(
         "Unsupported format version in digitization configuration");
   }
