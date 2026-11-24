@@ -130,6 +130,15 @@ using the destination surface's parametrization, including periodic direction
 differences. Its perturbation generation and finite-difference algorithm are
 unchanged.
 
+The optional nonlinear free-to-bound correction averages sigma-point offsets
+relative to the nominal bound point using the surface parametrization. It uses
+periodic residuals for covariance and canonicalizes the resulting mean and
+covariance together. This avoids artificial spreads at the phi seam while
+retaining the existing local sigma-point approximation and weights. If the
+corrected covariance basis is undefined, correction falls back to nominal
+transport through its existing optional-result interface. Broad distributions
+spanning direction singularities remain outside this local approximation.
+
 Pointwise material physics computes a projected scattering variance independently
 of the direction coordinates. A separate mapping produces the direction-noise
 block, with a direct diagonal calculation for the canonical spherical convention.

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -138,6 +139,62 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   // resolution of loc0 at end position = dloc0/dphi * resLoc0 = 2.5
   CHECK_CLOSE_REL(eCorrectedBoundCov(eBoundLoc0, eBoundLoc0), std::pow(2.5, 2),
                   eps);
+}
+
+BOOST_AUTO_TEST_CASE(CorrectedMeanAndCovarianceAcrossPhiSeam) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const auto surface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity());
+  const auto parametrization = surface->boundParametrization(gctx);
+  const detail::CorrectedFreeToBoundTransformer transformer;
+
+  FreeVector nominal = FreeVector::Zero();
+  nominal.segment<3>(eFreeDir0) = Vector3(.8, 0., .6);
+  nominal[eFreeQOverP] = .01;
+  nominal[eFreeTime] = 1.;
+  // Correlated direction and momentum noise also tests covariance cross terms.
+  FreeVector noise = FreeVector::Zero();
+  noise[eFreeDir1] = .02;
+  noise[eFreeQOverP] = .001;
+  const FreeMatrix covariance = noise * noise.transpose();
+  const auto reference = transformer(nominal, covariance, *surface, gctx);
+  BOOST_REQUIRE(reference.has_value());
+  const auto& [referenceMean, referenceCovariance] = *reference;
+  BOOST_CHECK_GT(std::abs(referenceCovariance(eBoundDir0, eBoundQOverP)), 1e-6);
+
+  for (double angle :
+       {std::numbers::pi, std::numbers::pi - 1e-4, -std::numbers::pi + 1e-4}) {
+    const RotationMatrix3 rotation =
+        AngleAxis3(angle, Vector3::UnitZ()).toRotationMatrix();
+    FreeVector rotated = nominal;
+    rotated.segment<3>(eFreeDir0) = rotation * nominal.segment<3>(eFreeDir0);
+    FreeMatrix jacobian = FreeMatrix::Identity();
+    jacobian.block<3, 3>(eFreeDir0, eFreeDir0) = rotation;
+    const FreeMatrix rotatedCovariance =
+        jacobian * covariance * jacobian.transpose();
+    const auto result = transformer(rotated, rotatedCovariance, *surface, gctx);
+    BOOST_REQUIRE(result.has_value());
+    const auto& [mean, cov] = *result;
+    BoundVector expected = referenceMean;
+    expected[eBoundDir0] += angle;
+    BOOST_CHECK_SMALL(parametrization.difference(mean, expected).norm(), 1e-10);
+    BOOST_CHECK_SMALL((cov - referenceCovariance).norm(), 1e-10);
+    BOOST_CHECK(parametrization.isValid(mean));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CorrectedCovarianceAtPoleFallsBack) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  // A tilted plane keeps incidence within the correction window at the pole.
+  const auto surface =
+      CurvilinearSurface(Vector3::Zero(), Vector3(1., 0., 1.).normalized())
+          .planeSurface();
+  FreeVector nominal = FreeVector::Zero();
+  nominal[eFreeDir2] = 1.;
+  nominal[eFreeQOverP] = .01;
+  const detail::CorrectedFreeToBoundTransformer transformer;
+  BOOST_CHECK(
+      !transformer(nominal, FreeMatrix::Zero(), *surface, gctx).has_value());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

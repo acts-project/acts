@@ -84,7 +84,14 @@ struct CorrectedFreeToBoundTransformer {
   CorrectedFreeToBoundTransformer& operator=(
       CorrectedFreeToBoundTransformer&&) = default;
 
-  /// Get the non-linearity corrected bound parameters and its covariance
+  /// Get the non-linearity corrected bound parameters and its covariance.
+  /// Sigma points are averaged locally about the nominal bound point using
+  /// the surface parametrization. Mean and covariance are canonicalized
+  /// together. This remains a local approximation, not a global angular mean.
+  ///
+  /// @return Corrected state, or nullopt to use nominal transport if correction
+  /// is skipped, a transformation fails, or the corrected covariance basis is
+  /// undefined.
   ///
   /// @param freeParams The free parameters vector
   /// @param freeCovariance The free parameters covariance
