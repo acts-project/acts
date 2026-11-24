@@ -76,11 +76,14 @@ Acts::Vector4 convertPosition(const HepMC3::GenVertex& vertex) {
   return unit * Acts::Vector4(vec.x(), vec.y(), vec.z(), vec.t());
 }
 
+double momentumUnit(const HepMC3::GenParticle& particle) {
+  return particle.parent_event()->momentum_unit() == HepMC3::Units::MEV ? 1_MeV
+                                                                        : 1_GeV;
+}
+
 Acts::Vector4 convertMomentum(const HepMC3::GenParticle& particle) {
   const auto& vec = particle.momentum();
-  const double unit =
-      particle.parent_event()->momentum_unit() == HepMC3::Units::MEV ? 1_MeV
-                                                                     : 1_GeV;
+  const double unit = momentumUnit(particle);
   return unit * Acts::Vector4(vec.px(), vec.py(), vec.pz(), vec.e());
 }
 
@@ -223,12 +226,27 @@ std::optional<SimParticle> HepMC3InputConverter::makeParticle(
     ACTS_ERROR("No mass or charge found for PDG ID " << pdg);
     throw std::bad_optional_access{};
   }
-  const double mass = massFromPdg.value();
+  double mass = massFromPdg.value();
   const double charge = chargeFromPdg.value();
   const Acts::Vector4 mom = convertMomentum(*source);
   if (prescribed) {
-    // Allow HepMC text rounding and small differences between PDG table
-    // editions.
+    // Generators round nominal masses differently (e.g. Pythia's pi0 is
+    // 3.2 keV heavier than the ACTS value). Keep the generator mass for
+    // transport and proper time within 5 keV plus 10 ppm of the PDG mass.
+    // For massless species, retain zero; an inferred invariant mass can be
+    // noisy for a highly boosted particle when the record omits its mass.
+    const double generated = source->generated_mass() * momentumUnit(*source);
+    const double tolerance = 5_keV + 1e-5 * mass;
+    if (std::isfinite(generated) && generated >= 0. &&
+        std::abs(generated - mass) <= tolerance) {
+      if (mass > 0.) {
+        mass = generated;
+      }
+    } else if (source->is_generated_mass_set()) {
+      throw badDecay(*source,
+                     "generated mass is inconsistent with the PDG mass");
+    }
+    // Independently check the specified four-vector against that mass.
     if (pdg == Acts::PdgParticle::eInvalid || !mom.allFinite() ||
         !position.allFinite() || !std::isfinite(mass) ||
         !std::isfinite(charge) || mom[3] <= 0. ||

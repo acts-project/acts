@@ -23,10 +23,12 @@ using namespace Acts::UnitLiterals;
 
 // K0S at rest -> pi0 pi0, each pi0 -> gamma gamma. A separate photon is
 // produced at the collision to exercise mixing flat inputs and decay trees.
-std::shared_ptr<GenEvent> makeEvent() {
+std::shared_ptr<GenEvent> makeEvent(
+    std::optional<double> generatedPionMass = std::nullopt) {
   auto event = std::make_shared<GenEvent>(Units::GEV, Units::MM);
   const double mK = Acts::findMass(Acts::PdgParticle{310}).value() / 1_GeV;
-  const double mPi = Acts::findMass(Acts::PdgParticle{111}).value() / 1_GeV;
+  const double mPi = generatedPionMass.value_or(
+      Acts::findMass(Acts::PdgParticle{111}).value() / 1_GeV);
   const double e = mK / 2;
   const double p = std::sqrt(e * e - mPi * mPi);
   auto primary = std::make_shared<GenVertex>(FourVector{2., 0., 0., 0.});
@@ -42,6 +44,9 @@ std::shared_ptr<GenEvent> makeEvent() {
   for (const double pz : {-p, p}) {
     auto pion =
         std::make_shared<GenParticle>(FourVector{0., 0., pz, e}, 111, 2);
+    if (generatedPionMass) {
+      pion->set_generated_mass(mPi);
+    }
     decay->add_particle_out(pion);
     auto photons = std::make_shared<GenVertex>(
         FourVector{2., 0., pz / mPi, 20. + e / mPi});
@@ -119,6 +124,25 @@ BOOST_AUTO_TEST_CASE(UnitsAndNestedDecays) {
       }
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(PreserveRoundedGeneratorMass) {
+  // Pythia's pi0 mass seen in a ttbar event, in GeV.
+  constexpr double mPi = 0.13498;
+  for (bool alternateUnits : {false, true}) {
+    auto event = makeEvent(mPi);
+    if (alternateUnits) {
+      event->set_units(Units::MEV, Units::CM);
+    }
+    const auto [roots, graph] = convert(event, {310, 111});
+    for (const auto& pion : graph.at(roots.begin()->particleId()).daughters) {
+      BOOST_CHECK_CLOSE(pion.mass(), mPi * 1_GeV, 1e-9);
+      BOOST_CHECK_CLOSE(graph.at(pion.particleId()).properTime, 1_mm, 1e-9);
+    }
+  }
+  // Internally conserved but materially different from the nominal pi0 mass.
+  BOOST_CHECK_THROW(convert(makeEvent(mPi + 0.001), {310, 111}),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(MasslessNeutrinoConvention) {
