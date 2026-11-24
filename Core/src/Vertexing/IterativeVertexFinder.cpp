@@ -27,6 +27,12 @@ Acts::Result<Acts::Vertex> fitVertex(
 
 }  // namespace
 
+Acts::IterativeVertexFinder::Config::Config(
+    FullBilloirVertexFitter fitter, std::shared_ptr<IVertexFinder> sfinder,
+    ImpactPointEstimator est)
+    : Config(std::make_shared<FullBilloirVertexFitter>(std::move(fitter)),
+             std::move(sfinder), std::move(est)) {}
+
 Acts::IterativeVertexFinder::IterativeVertexFinder(
     Config cfg, std::unique_ptr<const Logger> logger)
     : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {

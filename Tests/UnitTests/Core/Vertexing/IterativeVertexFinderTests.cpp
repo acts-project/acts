@@ -21,6 +21,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
@@ -410,7 +411,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
         &linearizer);
 
-    auto bFitter = std::make_shared<BilloirFitter>(vertexFitterCfg);
+    BilloirFitter bFitter(vertexFitterCfg);
 
     ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
     ImpactPointEstimator ipEstimator(ipEstimatorCfg);
@@ -422,8 +423,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     auto sFinder = std::make_shared<ZScanSeedFinder>(seedFinderCfg);
 
     // Vertex Finder
+    // Exercise the deprecated by-value constructor with custom tracks.
+    ACTS_PUSH_IGNORE_DEPRECATED()
     IterativeVertexFinder::Config cfg(std::move(bFitter), std::move(sFinder),
                                       ipEstimator);
+    ACTS_POP_IGNORE_DEPRECATED()
     cfg.reassignTracksAfterFirstFit = true;
     cfg.extractParameters.connect(extractParameters);
     cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);

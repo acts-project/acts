@@ -14,6 +14,7 @@
 #include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
@@ -68,6 +69,15 @@ class IterativeVertexFinder final : public IVertexFinder {
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
           ipEst(std::move(est)) {}
+
+    /// Construct with a Billoir fitter by value.
+    /// @param fitter Vertex fitter, moved into shared ownership
+    /// @param sfinder The seed finder
+    /// @param est ImpactPointEstimator
+    /// @deprecated Pass a shared_ptr<const IVertexFitter> instead.
+    [[deprecated("Pass a shared_ptr<const IVertexFitter> instead")]]
+    Config(FullBilloirVertexFitter fitter,
+           std::shared_ptr<IVertexFinder> sfinder, ImpactPointEstimator est);
 
     /// Shared ownership of the single-vertex fitter; must not be null.
     std::shared_ptr<const IVertexFitter> vertexFitter;
