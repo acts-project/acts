@@ -99,13 +99,10 @@ inline void make_seeds(
 
   // create seeds
   edm::seed_collection::device seeds(seeds_view);
-
-  seeds[globalIndex].bottom_index() = filtered_hits[globalIndex][0];
-  seeds[globalIndex].middle_index() =
-      filtered_hits[globalIndex][(n_filtered_hits - 1) / 2];
-  seeds[globalIndex].top_index() =
-      filtered_hits[globalIndex][n_filtered_hits - 1];
-  seeds[globalIndex].quality() = 0.00f;
+  seeds.push_back({filtered_hits[globalIndex][0], 
+                   filtered_hits[globalIndex][(n_filtered_hits - 1) / 2],
+                   filtered_hits[globalIndex][n_filtered_hits - 1],
+                   0.f});
 }
 
 }  // namespace traccc::device

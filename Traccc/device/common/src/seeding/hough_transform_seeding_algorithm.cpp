@@ -257,8 +257,23 @@ auto hough_transform_seeding_algorithm::operator()(
       vecmem::data::buffer_type::resizable);
   copy().setup(vecmem::ignore_event, selected_hits);
 
+  // count how many valid seeds we have
+  // - nn outcome is 1
+  // - n filtered hits is higher than 3
+  vecmem::vector<unsigned int> nn_outcome_host =
+      ((mr().host != nullptr) ? vecmem::vector<unsigned int>(mr().host)
+                              : vecmem::vector<unsigned int>());
+  copy()(nn_outcome, nn_outcome_host)->wait();
+
+  unsigned int n_valid_seeds = 0u;
+  for (unsigned int i = 0; i < n_filtered_hits_host.size(); ++i) {
+    if (nn_outcome_host[i] == 0u) continue;
+    if (n_filtered_hits_host[i] < 3u) continue;
+    ++n_valid_seeds;
+  }
+
   // Create the result object.
-  edm::seed_collection::buffer seed_buffer(total_maxima, mr().main);
+  edm::seed_collection::buffer seed_buffer(n_valid_seeds, mr().main, vecmem::data::buffer_type::resizable);
   copy().setup(vecmem::ignore_event, seed_buffer);
 
   make_seeds_kernel({total_maxima, spacepoint_r, nn_outcome, hits, matrices,
