@@ -15,10 +15,10 @@
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsProfiler.hpp"
+#include "Acts/Seeding/GbtsProfilerTypes.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
-#include "Acts/Seeding/detail/GbtsProfilerTypes.hpp"
 
 #include <algorithm>
 #include <array>
@@ -842,7 +842,7 @@ BOOST_AUTO_TEST_CASE(PruneShortChainsKeepsTheSeeds) {
 // With the short chains pruned, a profiler still leaves the seeds as they are,
 // and records the edges the pruning drops and the outer nodes it leaves out.
 BOOST_AUTO_TEST_CASE(ProfilerLeavesThePrunedSeedsAlone) {
-  using Experimental::detail::GbtsDoubletCut;
+  namespace DoubletCut = Experimental::GbtsDoubletCut;
   std::size_t nPruned = 0;
   for (const ToyDetector& detector : {barrelDetector(), forwardDetector()}) {
     for (const auto& tracks : {makeMixedLengthTracks(),
@@ -880,13 +880,13 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesThePrunedSeedsAlone) {
           std::set<std::pair<SpacePointIndex, SpacePointIndex>> dropped;
           for (const auto& doublet : event.rejectedDoublets) {
             BOOST_CHECK(!edges.contains({doublet.inner, doublet.outer}));
-            if (doublet.cut == GbtsDoubletCut::ShortChain ||
-                doublet.cut == GbtsDoubletCut::ShortChainOuterNode) {
+            if (doublet.cut == DoubletCut::ShortChain ||
+                doublet.cut == DoubletCut::ShortChainOuterNode) {
               BOOST_CHECK_LT(doublet.value, doublet.threshold);
               ++nPruned;
             }
-            if (doublet.cut == GbtsDoubletCut::ShortChain ||
-                doublet.cut == GbtsDoubletCut::DeadEnd) {
+            if (doublet.cut == DoubletCut::ShortChain ||
+                doublet.cut == DoubletCut::DeadEnd) {
               dropped.emplace(doublet.inner, doublet.outer);
             }
           }
@@ -1227,8 +1227,8 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   // the graph dropped it afterwards for finding no link or too short a chain
   std::set<std::pair<SpacePointIndex, SpacePointIndex>> droppedEdges;
   for (const auto& doublet : event->rejectedDoublets) {
-    if (doublet.cut == Experimental::detail::GbtsDoubletCut::DeadEnd ||
-        doublet.cut == Experimental::detail::GbtsDoubletCut::ShortChain) {
+    if (doublet.cut == Experimental::GbtsDoubletCut::DeadEnd ||
+        doublet.cut == Experimental::GbtsDoubletCut::ShortChain) {
       droppedEdges.emplace(doublet.inner, doublet.outer);
     }
   }
@@ -1243,7 +1243,7 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   std::size_t nCandidateHeads = 0;
   for (const auto& head : event->heads) {
     BOOST_CHECK(edges.contains({head.inner, head.outer}));
-    if (head.outcome == Experimental::detail::GbtsHeadOutcome::Candidate) {
+    if (head.outcome == Experimental::GbtsHeadOutcome::Candidate) {
       ++nCandidateHeads;
     }
   }
@@ -1267,10 +1267,12 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   BOOST_CHECK_EQUAL(event->candidates.size(), nCandidateHeads);
   std::size_t nOutput = 0;
   std::size_t nClones = 0;
+  namespace Fate = Experimental::GbtsCandidateFate;
   for (const auto& candidate : event->candidates) {
-    using enum Experimental::detail::GbtsCandidateFate;
-    nOutput += candidate.fate == Seed ? 1 : candidate.fate == Split ? 2 : 0;
-    if (candidate.fate == Clone) {
+    nOutput += candidate.fate == Fate::Seed    ? 1
+               : candidate.fate == Fate::Split ? 2
+                                               : 0;
+    if (candidate.fate == Fate::Clone) {
       ++nClones;
     }
   }
@@ -1280,17 +1282,16 @@ BOOST_AUTO_TEST_CASE(ProfilerLeavesTheSeedsAlone) {
   // a clone shares more than the threshold with better candidates, the one
   // it is a clone of among them; a kept candidate shares no more than that
   for (const auto& candidate : event->candidates) {
-    using enum Experimental::detail::GbtsCandidateFate;
-    if (candidate.fate == TooFewSpacePoints) {
+    if (candidate.fate == Fate::TooFewSpacePoints) {
       continue;
     }
     const float limit = candidate.shareThreshold * candidate.spacePoints.size();
-    if (candidate.fate == Clone) {
+    if (candidate.fate == Fate::Clone) {
       BOOST_CHECK_GT(candidate.nShared, limit);
       BOOST_REQUIRE_GE(candidate.sharedWith, 0);
       const auto& owner =
           event->candidates.at(static_cast<std::size_t>(candidate.sharedWith));
-      BOOST_CHECK(owner.fate != TooFewSpacePoints);
+      BOOST_CHECK(owner.fate != Fate::TooFewSpacePoints);
       BOOST_CHECK_LE(owner.quality, candidate.quality);
     } else {
       BOOST_CHECK_LE(candidate.nShared, limit);
@@ -1345,7 +1346,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheCutThatRejects) {
       continue;
     }
     ++nTrueTriplets;
-    BOOST_CHECK(triplet.cut == Experimental::detail::GbtsTripletCut::TauRatio);
+    BOOST_CHECK(triplet.cut == Experimental::GbtsTripletCut::TauRatio);
     BOOST_CHECK_GT(triplet.value, triplet.threshold);
   }
   BOOST_CHECK_EQUAL(nTrueTriplets, tracks.size());
@@ -1356,8 +1357,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheCutThatRejects) {
       continue;
     }
     ++nTrueDoublets;
-    BOOST_CHECK(doublet.cut ==
-                Experimental::detail::GbtsDoubletCut::IsolatedOuterNode);
+    BOOST_CHECK(doublet.cut == Experimental::GbtsDoubletCut::IsolatedOuterNode);
   }
   BOOST_CHECK_EQUAL(nTrueDoublets, tracks.size());
   BOOST_CHECK_EQUAL(event.edges.size(), 2 * tracks.size());
@@ -1365,8 +1365,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheCutThatRejects) {
   // so no edge has a path long enough to seed
   BOOST_CHECK(!event.heads.empty());
   for (const auto& head : event.heads) {
-    BOOST_CHECK(head.outcome ==
-                Experimental::detail::GbtsHeadOutcome::ChainTooShort);
+    BOOST_CHECK(head.outcome == Experimental::GbtsHeadOutcome::ChainTooShort);
   }
   BOOST_CHECK(event.candidates.empty());
 }
@@ -1404,35 +1403,25 @@ BOOST_AUTO_TEST_CASE(ProfilerKeepsAnEventNumberPerThread) {
   BOOST_CHECK_EQUAL(events[1]->eventNumber, 1u);
 }
 
-// The name lists hold every label, including the first and last of each type,
-// in the order of the labels' values.
+// Each list holds every name of its kind once, from the first to the last.
 BOOST_AUTO_TEST_CASE(ProfilerListsTheLabelNames) {
-  using Profiler = Experimental::GbtsProfiler;
-  namespace detail = Experimental::detail;
-
-  const auto check = [](const std::vector<std::string_view>& names,
-                        const std::string_view first,
-                        const std::string_view last, const auto lastLabel) {
+  const auto check = [](const auto& names, const std::string_view first,
+                        const std::string_view last) {
     BOOST_REQUIRE(!names.empty());
     BOOST_CHECK_EQUAL(names.front(), first);
     BOOST_CHECK_EQUAL(names.back(), last);
-    BOOST_CHECK_EQUAL(names.size(), static_cast<std::size_t>(lastLabel) + 1u);
-    BOOST_CHECK_EQUAL(Profiler::name(lastLabel), last);
-    BOOST_CHECK(std::ranges::find(names, "Unknown") == names.end());
+    const std::set<std::string_view> unique(names.begin(), names.end());
+    BOOST_CHECK_EQUAL(unique.size(), names.size());
   };
 
-  check(Profiler::nodeCutNames(), "EndcapClusterWidth", "EndcapClusterWidth",
-        detail::GbtsNodeCut::EndcapClusterWidth);
-  check(Profiler::doubletCutNames(), "IsolatedOuterNode", "ShortChain",
-        detail::GbtsDoubletCut::ShortChain);
-  check(Profiler::tripletCutNames(), "TauRatio", "ValidationHighPtTauRatio",
-        detail::GbtsTripletCut::ValidationHighPtTauRatio);
-  check(Profiler::filterCutNames(), "Chi2X", "PostFitCurvature",
-        detail::GbtsFilterCut::PostFitCurvature);
-  check(Profiler::headOutcomeNames(), "Candidate", "NoPathSurvived",
-        detail::GbtsHeadOutcome::NoPathSurvived);
-  check(Profiler::candidateFateNames(), "Seed", "TooFewSpacePoints",
-        detail::GbtsCandidateFate::TooFewSpacePoints);
+  check(Experimental::GbtsNodeCut::all, "EndcapClusterWidth",
+        "EndcapClusterWidth");
+  check(Experimental::GbtsDoubletCut::all, "IsolatedOuterNode", "ShortChain");
+  check(Experimental::GbtsTripletCut::all, "TauRatio",
+        "ValidationHighPtTauRatio");
+  check(Experimental::GbtsFilterCut::all, "Chi2X", "PostFitCurvature");
+  check(Experimental::GbtsHeadOutcome::all, "Candidate", "NoPathSurvived");
+  check(Experimental::GbtsCandidateFate::all, "Seed", "TooFewSpacePoints");
 }
 
 // At a threshold of zero the sum of ratios rejects what the separate cuts let
@@ -1458,7 +1447,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsTheSumRatioCut) {
 
   std::size_t nRejected = 0;
   for (const auto& triplet : events.front()->rejectedTriplets) {
-    if (triplet.cut != Experimental::detail::GbtsTripletCut::SumRatio) {
+    if (triplet.cut != Experimental::GbtsTripletCut::SumRatio) {
       continue;
     }
     ++nRejected;
@@ -1498,8 +1487,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsThePostFitCurvatureCut) {
       Experimental::GbtsTrackingFilter::Config{}.maxCurvature;
   std::size_t nRejected = 0;
   for (const auto& rejection : event.filterRejections) {
-    if (rejection.cut !=
-        Experimental::detail::GbtsFilterCut::PostFitCurvature) {
+    if (rejection.cut != Experimental::GbtsFilterCut::PostFitCurvature) {
       continue;
     }
     ++nRejected;
@@ -1517,7 +1505,7 @@ BOOST_AUTO_TEST_CASE(ProfilerRecordsThePostFitCurvatureCut) {
 
   std::size_t nNoPathSurvived = 0;
   for (const auto& head : event.heads) {
-    if (head.outcome == Experimental::detail::GbtsHeadOutcome::NoPathSurvived) {
+    if (head.outcome == Experimental::GbtsHeadOutcome::NoPathSurvived) {
       ++nNoPathSurvived;
     }
   }

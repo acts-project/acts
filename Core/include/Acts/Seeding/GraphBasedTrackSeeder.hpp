@@ -251,7 +251,7 @@ class GraphBasedTrackSeeder {
       const GbtsTrackingFilter& filter, GbtsProfiler::Event* profile) const;
 
   /// `extractBestPathPerEdge`, compiled with and without the profiling.
-  template <bool kProfile>
+  template <bool doProfile>
   std::vector<FittedPath> extractBestPathPerEdgeImpl(
       const GbtsNodeStorage& nodeStorage, const GbtsGraph& graph,
       const GbtsTrackingFilter& filter, GbtsProfiler::Event* profile) const;

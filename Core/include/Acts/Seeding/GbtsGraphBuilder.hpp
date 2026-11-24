@@ -221,7 +221,7 @@ class GbtsGraphBuilder {
  private:
   /// `buildTheGraph`, compiled with and without the profiling so that the
   /// graph costs nothing extra without a profiler.
-  template <bool kProfile>
+  template <bool doProfile>
   GbtsGraph buildTheGraphImpl(const GbtsRoiDescriptor& roi,
                               GbtsNodeStorage& nodeStorage, float bFieldInZ,
                               std::uint32_t minEdgeLevel,

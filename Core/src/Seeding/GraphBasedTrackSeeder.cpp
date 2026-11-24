@@ -23,6 +23,7 @@
 #include <ranges>
 #include <span>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -154,7 +155,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   // profiling: a seed candidate and what became of it
   const auto recordCandidate =
       [&](const std::vector<SpacePointIndex>& nodes, const float quality,
-          const detail::GbtsCandidateFate fate, const std::uint32_t nShared = 0,
+          const std::string_view fate, const std::uint32_t nShared = 0,
           const float shareThreshold = 0.f,
           const std::int32_t sharedWith = -1) {
         auto& candidate = profile->candidates.emplace_back();
@@ -186,7 +187,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     if (vN.size() < 3) {
       if (profile != nullptr) {
         recordCandidate(vN, -rs.j / static_cast<float>(vN.size()),
-                        detail::GbtsCandidateFate::TooFewSpacePoints);
+                        GbtsCandidateFate::TooFewSpacePoints);
       }
       continue;
     }
@@ -369,11 +370,11 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
           owner == 0
               ? -1
               : first + static_cast<std::int32_t>(vArgSort[owner - 1].second);
-      using enum detail::GbtsCandidateFate;
+      namespace Fate = GbtsCandidateFate;
       recordCandidate(seed.nodes, seed.seedQuality,
-                      seed.isClone            ? Clone
-                      : seed.forSeedSplitting ? Split
-                                              : Seed,
+                      seed.isClone            ? Fate::Clone
+                      : seed.forSeedSplitting ? Fate::Split
+                                              : Fate::Seed,
                       nShared, m_cfg.hitShareThreshold, sharedWith);
     }
   }
@@ -442,7 +443,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
                                   nodeStorage, graph, filter, nullptr);
 }
 
-template <bool kProfile>
+template <bool doProfile>
 std::vector<GraphBasedTrackSeeder::FittedPath>
 GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
     const GbtsNodeStorage& nodeStorage, const GbtsGraph& graph,
@@ -514,11 +515,11 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
   // profiling: the head being searched from, and why the filter rejected an
   // edge
   std::uint32_t currentHead = 0;
-  detail::GbtsFilterFailure failure;
+  detail::GbtsCutFailure failure;
   // the filter without the failure argument where nothing is profiled
   const auto update = [&](const detail::GbtsEdge& edge,
                           detail::GbtsEdgeState& state) {
-    if constexpr (kProfile) {
+    if constexpr (doProfile) {
       return filter.update(nodeView, edge, state, failure);
     } else {
       return filter.update(nodeView, edge, state);
@@ -549,14 +550,14 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
           nodeStorage.spacePointIndex(edgeStorage[*it].n2));
     }
   };
-  [[maybe_unused]] const auto recordHead =
-      [&](const std::uint32_t e, const detail::GbtsHeadOutcome outcome) {
-        const detail::GbtsEdge& edge = edgeStorage[e];
-        profile->heads.push_back({.inner = nodeStorage.spacePointIndex(edge.n1),
-                                  .outer = nodeStorage.spacePointIndex(edge.n2),
-                                  .outcome = outcome,
-                                  .maxPathLength = edgesToRoot[e]});
-      };
+  [[maybe_unused]] const auto recordHead = [&](const std::uint32_t e,
+                                               const std::string_view outcome) {
+    const detail::GbtsEdge& edge = edgeStorage[e];
+    profile->heads.push_back({.inner = nodeStorage.spacePointIndex(edge.n1),
+                              .outer = nodeStorage.spacePointIndex(edge.n2),
+                              .outcome = outcome,
+                              .maxPathLength = edgesToRoot[e]});
+  };
   // profiling: an edge without an inner neighbour heads no path of three
   // space points, so the search below leaves it out; a profiler still records
   // it, in the order of the edges
@@ -564,10 +565,9 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
   [[maybe_unused]] const auto recordUnlinkedHeads =
       [&](const std::uint32_t end) {
         for (; nextUnheaded < end; ++nextUnheaded) {
-          recordHead(nextUnheaded,
-                     edgesToRoot[nextUnheaded] == 0
-                         ? detail::GbtsHeadOutcome::ChainTooLong
-                         : detail::GbtsHeadOutcome::ChainTooShort);
+          recordHead(nextUnheaded, edgesToRoot[nextUnheaded] == 0
+                                       ? GbtsHeadOutcome::ChainTooLong
+                                       : GbtsHeadOutcome::ChainTooShort);
         }
       };
 
@@ -585,10 +585,10 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
           std::abs(state.x[2]) * m_cfg.postFitCurvatureFactor >
               filter.m_cfg.maxCurvature;
       if (maxCurvatureCut) {
-        if constexpr (kProfile) {
+        if constexpr (doProfile) {
           // recorded like an edge that failed to extend the path, which does
           // not hold that edge yet
-          failure = {detail::GbtsFilterCut::PostFitCurvature,
+          failure = {GbtsFilterCut::PostFitCurvature,
                      std::abs(state.x[2]) * m_cfg.postFitCurvatureFactor,
                      filter.m_cfg.maxCurvature};
           path.pop_back();
@@ -624,7 +624,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
         detail::GbtsEdgeState innerState = state;
         if (update(edgeStorage[inner], innerState)) {
           self(self, inner, innerState);
-        } else if constexpr (kProfile) {
+        } else if constexpr (doProfile) {
           rejectEdge(inner, static_cast<std::uint32_t>(path.size()));
         }
       }
@@ -636,7 +636,7 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
   for (const std::uint32_t head : linkedEdges) {
     const detail::GbtsEdge& headEdge = edgeStorage[head];
 
-    if constexpr (kProfile) {
+    if constexpr (doProfile) {
       recordUnlinkedHeads(head);
       nextUnheaded = head + 1;
     }
@@ -649,10 +649,10 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
     }
 
     if (edgesToRoot[head] == 0 || edgesToRoot[head] < minLength) {
-      if constexpr (kProfile) {
+      if constexpr (doProfile) {
         recordHead(head, edgesToRoot[head] == 0
-                             ? detail::GbtsHeadOutcome::ChainTooLong
-                             : detail::GbtsHeadOutcome::ChainTooShort);
+                             ? GbtsHeadOutcome::ChainTooLong
+                             : GbtsHeadOutcome::ChainTooShort);
       }
       continue;
     }
@@ -663,9 +663,9 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
     state.initialize(headEdge, nodeView, filter.m_cfg.initialVarianceX,
                      filter.m_cfg.initialVarianceY);
     if (!update(headEdge, state)) {
-      if constexpr (kProfile) {
+      if constexpr (doProfile) {
         rejectEdge(head, 0);
-        recordHead(head, detail::GbtsHeadOutcome::FilterRejected);
+        recordHead(head, GbtsHeadOutcome::FilterRejected);
       }
       continue;
     }
@@ -674,20 +674,20 @@ GraphBasedTrackSeeder::extractBestPathPerEdgeImpl(
     bestPath.clear();
     search(search, head, state);
     if (bestPath.empty()) {
-      if constexpr (kProfile) {
-        recordHead(head, detail::GbtsHeadOutcome::NoPathSurvived);
+      if constexpr (doProfile) {
+        recordHead(head, GbtsHeadOutcome::NoPathSurvived);
       }
       continue;
     }
 
-    if constexpr (kProfile) {
-      recordHead(head, detail::GbtsHeadOutcome::Candidate);
+    if constexpr (doProfile) {
+      recordHead(head, GbtsHeadOutcome::Candidate);
     }
 
     candidates.emplace_back(bestState, bestPath);
   }
 
-  if constexpr (kProfile) {
+  if constexpr (doProfile) {
     recordUnlinkedHeads(nEdges);
   }
 

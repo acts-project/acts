@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Seeding/detail/GbtsProfilerTypes.hpp"
+#include "Acts/Seeding/GbtsProfilerTypes.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -36,8 +36,10 @@ class GraphBasedTrackSeeder;
 /// cuts are applied. A pair or triplet that is never formed, because it falls
 /// outside the phi window or the layer connections, does not appear at all.
 ///
-/// What a record failed, or became of it, is a label to read with `name`. The
-/// labels' types are not part of the interface, nor are their values stable.
+/// What a record failed, or became of it, is a name from
+/// `GbtsProfilerTypes.hpp`, e.g. `GbtsDoubletCut::Curvature`, which also lists
+/// every name of each kind in `all`. Compare against those constants rather
+/// than spelled out strings, so that a misspelt name does not compile.
 ///
 /// One busy event records on the order of ten million rejections, so a caller
 /// processing many events should take each event out once it is done with it.
@@ -47,8 +49,8 @@ class GbtsProfiler {
   struct Node {
     /// The space point.
     SpacePointIndex spacePoint{};
-    /// The cut it failed.
-    detail::GbtsNodeCut cut{};
+    /// The cut it failed, one of `GbtsNodeCut`.
+    std::string_view cut;
     /// The value cut on, e.g. the cluster width.
     float value{};
     /// The threshold it failed.
@@ -69,8 +71,8 @@ class GbtsProfiler {
     SpacePointIndex inner{};
     /// The outer space point.
     SpacePointIndex outer{};
-    /// The cut it failed.
-    detail::GbtsDoubletCut cut{};
+    /// The cut it failed, one of `GbtsDoubletCut`.
+    std::string_view cut;
     /// The value cut on, e.g. the curvature for the `Curvature` cut.
     float value{};
     /// The threshold it failed, zero for a cut without one.
@@ -97,8 +99,8 @@ class GbtsProfiler {
     SpacePointIndex middle{};
     /// The outer space point.
     SpacePointIndex outer{};
-    /// The cut it failed.
-    detail::GbtsTripletCut cut{};
+    /// The cut it failed, one of `GbtsTripletCut`.
+    std::string_view cut;
     /// The value cut on, e.g. |tau ratio| for the `TauRatio` cut.
     float value{};
     /// The threshold it failed, zero for a cut without one.
@@ -111,8 +113,8 @@ class GbtsProfiler {
     SpacePointIndex inner{};
     /// The outer space point of the edge.
     SpacePointIndex outer{};
-    /// What became of it.
-    detail::GbtsHeadOutcome outcome{};
+    /// What became of it, one of `GbtsHeadOutcome`.
+    std::string_view outcome;
     /// Edges on the longest path from it inwards, itself included.
     std::uint32_t maxPathLength{};
   };
@@ -130,8 +132,8 @@ class GbtsProfiler {
     SpacePointIndex inner{};
     /// The outer space point of that edge.
     SpacePointIndex outer{};
-    /// The cut it failed.
-    detail::GbtsFilterCut cut{};
+    /// The cut it failed, one of `GbtsFilterCut`.
+    std::string_view cut;
     /// Edges on the path before the failed one.
     std::uint32_t pathLength{};
     /// The value cut on.
@@ -150,8 +152,8 @@ class GbtsProfiler {
     std::vector<SpacePointIndex> spacePoints;
     /// The quality the clone removal ranks by, lower is better.
     float quality{};
-    /// What became of it.
-    detail::GbtsCandidateFate fate{};
+    /// What became of it, one of `GbtsCandidateFate`.
+    std::string_view fate;
     /// Its space points that better candidates own; it is a clone when
     /// more than `shareThreshold` of `spacePoints` are.
     std::uint32_t nShared{};
@@ -203,38 +205,6 @@ class GbtsProfiler {
   /// Take every event out. Thread safe.
   /// @return The events, in the order they were added
   std::vector<std::unique_ptr<const Event>> takeAll();
-
-  /// @param cut The cut
-  /// @return Its name
-  static std::string_view name(detail::GbtsNodeCut cut);
-  /// @param cut The cut
-  /// @return Its name
-  static std::string_view name(detail::GbtsDoubletCut cut);
-  /// @param cut The cut
-  /// @return Its name
-  static std::string_view name(detail::GbtsTripletCut cut);
-  /// @param cut The cut
-  /// @return Its name
-  static std::string_view name(detail::GbtsFilterCut cut);
-  /// @param outcome The outcome
-  /// @return Its name
-  static std::string_view name(detail::GbtsHeadOutcome outcome);
-  /// @param fate The fate
-  /// @return Its name
-  static std::string_view name(detail::GbtsCandidateFate fate);
-
-  /// @return The name of every node cut
-  static std::vector<std::string_view> nodeCutNames();
-  /// @return The name of every doublet cut
-  static std::vector<std::string_view> doubletCutNames();
-  /// @return The name of every triplet cut
-  static std::vector<std::string_view> tripletCutNames();
-  /// @return The name of every tracking filter cut
-  static std::vector<std::string_view> filterCutNames();
-  /// @return The name of every path head outcome
-  static std::vector<std::string_view> headOutcomeNames();
-  /// @return The name of every candidate fate
-  static std::vector<std::string_view> candidateFateNames();
 
  private:
   friend class GraphBasedTrackSeeder;

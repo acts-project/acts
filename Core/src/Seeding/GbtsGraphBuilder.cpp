@@ -9,7 +9,7 @@
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/detail/GbtsProfilerTypes.hpp"
+#include "Acts/Seeding/detail/GbtsCutFailure.hpp"
 #include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -23,6 +23,7 @@
 #include <numbers>
 #include <ranges>
 #include <span>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -78,7 +79,7 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
                      const std::array<SpacePointIndex, 3>& candidateTriplet,
                      const float tripletMinPt, const float tauRatio,
                      const float tauRatioCut, const float bFieldInZ,
-                     detail::GbtsTripletFailure* failure) {
+                     detail::GbtsCutFailure* failure) {
   // conformal mapping with the center at the middle spacepoint
 
   std::array<float, 2> u{};
@@ -118,7 +119,7 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
 
   if (du == 0.0) {
     if (failure != nullptr) {
-      *failure = {detail::GbtsTripletCut::ValidationDegenerate, 0.f, 0.f};
+      *failure = {GbtsTripletCut::ValidationDegenerate, 0.f, 0.f};
     }
     return false;
   }
@@ -131,8 +132,7 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
 
   if (std::abs(d0) > cfg.d0Max) {
     if (failure != nullptr) {
-      *failure = {detail::GbtsTripletCut::ValidationD0, std::abs(d0),
-                  cfg.d0Max};
+      *failure = {GbtsTripletCut::ValidationD0, std::abs(d0), cfg.d0Max};
     }
     return false;
   }
@@ -146,7 +146,7 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
 
     if (pT < tripletMinPt) {
       if (failure != nullptr) {
-        *failure = {detail::GbtsTripletCut::ValidationPt, pT, tripletMinPt};
+        *failure = {GbtsTripletCut::ValidationPt, pT, tripletMinPt};
       }
       return false;
     }
@@ -155,8 +155,8 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
 
       if (tauRatio > 0.9f * tauRatioCut) {
         if (failure != nullptr) {
-          *failure = {detail::GbtsTripletCut::ValidationHighPtTauRatio,
-                      tauRatio, 0.9f * tauRatioCut};
+          *failure = {GbtsTripletCut::ValidationHighPtTauRatio, tauRatio,
+                      0.9f * tauRatioCut};
         }
         return false;
       }
@@ -278,7 +278,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(
                                         minEdgeLevel, nullptr);
 }
 
-template <bool kProfile>
+template <bool doProfile>
 GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
     const float bFieldInZ, const std::uint32_t minEdgeLevel,
@@ -366,11 +366,11 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
   };
 
   // profiling: a doublet or triplet some cut rejected, by the caller's indices
-  using DoubletCut = detail::GbtsDoubletCut;
-  using TripletCut = detail::GbtsTripletCut;
+  namespace DoubletCut = GbtsDoubletCut;
+  namespace TripletCut = GbtsTripletCut;
   [[maybe_unused]] const auto rejectDoublet =
       [&](const SpacePointIndex inner, const SpacePointIndex outer,
-          const DoubletCut cut, const float value = 0.f,
+          const std::string_view cut, const float value = 0.f,
           const float threshold = 0.f) {
         profile->rejectedDoublets.push_back(
             {.inner = nodeStorage.spacePointIndex(inner),
@@ -381,8 +381,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
       };
   [[maybe_unused]] const auto rejectTriplet =
       [&](const SpacePointIndex inner, const SpacePointIndex middle,
-          const SpacePointIndex outer, const TripletCut cut, const float value,
-          const float threshold) {
+          const SpacePointIndex outer, const std::string_view cut,
+          const float value, const float threshold) {
         profile->rejectedTriplets.push_back(
             {.inner = nodeStorage.spacePointIndex(inner),
              .middle = nodeStorage.spacePointIndex(middle),
@@ -437,7 +437,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
     // prepare a sliding window for each non-empty bin2 in the group
 
     phiSlidingWindow.clear();
-    if constexpr (kProfile) {
+    if constexpr (doProfile) {
       windowFiltersNodes.clear();
     }
 
@@ -495,10 +495,10 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
       // records those pairs.
       const bool filterNodes =
           (useZ0Histogram || dropDeadEnds || pruneGroup) && link.bin != bg.bin;
-      if constexpr (kProfile) {
+      if constexpr (doProfile) {
         windowFiltersNodes.push_back(filterNodes);
       }
-      if (!kProfile && filterNodes) {
+      if (!doProfile && filterNodes) {
         const std::size_t windowIdx = phiSlidingWindow.size() - 1;
         // growing the outer vector moves the inner ones, which keeps their
         // buffers, so earlier windows' pointers stay valid
@@ -706,7 +706,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
         // not judged here. Skipping leaves firstIt behind; the next visit
         // catches up. A profiler records the cut each of those pairs fails, so
         // it sees them all.
-        if (!kProfile && !stripPair) {
+        if (!doProfile && !stripPair) {
           if (slw.maxRadius - r1 < m_cfg.minDeltaRadius) {
             continue;
           }
@@ -756,7 +756,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
 
           // profiling: the n2 nodes the window would have left out, in the
           // order of the filter's conditions
-          if constexpr (kProfile) {
+          if constexpr (doProfile) {
             if (windowFiltersNodes[static_cast<std::size_t>(
                     &slw - phiSlidingWindow.data())]) {
               if (useZ0Histogram && nodeInfo == 0) {
@@ -785,7 +785,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
           // On the nominal radii, so an endcap pair the slide would have
           // opened up is lost here. The cheap reject is worth more.
           if (dr < m_cfg.minDeltaRadius) {
-            if constexpr (kProfile) {
+            if constexpr (doProfile) {
               rejectDoublet(n1Idx, n2Idx, DoubletCut::MinDeltaRadius, dr,
                             m_cfg.minDeltaRadius);
             }
@@ -807,7 +807,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
             // skip isolated nodes as their incoming edges lead to nowhere; only
             // the group's own bin can still hold them here
             if (useZ0Histogram && (nodeInfo == 0)) {
-              if constexpr (kProfile) {
+              if constexpr (doProfile) {
                 rejectDoublet(n1Idx, n2Idx, DoubletCut::IsolatedOuterNode);
               }
               continue;
@@ -831,7 +831,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
                   n2Idx, {dx - dy * turn, dy + dx * turn, dzc}, r2c, z2c);
             }
             if (!resolved) {
-              if constexpr (kProfile) {
+              if constexpr (doProfile) {
                 rejectDoublet(n1Idx, n2Idx, DoubletCut::StripCrossing);
               }
               continue;
@@ -839,7 +839,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
 
             dr = r2c - r1c;
             if (dr < m_cfg.minDeltaRadius) {
-              if constexpr (kProfile) {
+              if constexpr (doProfile) {
                 rejectDoublet(n1Idx, n2Idx, DoubletCut::MinDeltaRadius, dr,
                               m_cfg.minDeltaRadius);
               }
@@ -860,7 +860,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
           const bool passes =
               passesDoubletCuts(n2pars, nodeInfo, r1c, z1c, tau, curv);
           numKept += static_cast<std::uint32_t>(passes);
-          if constexpr (kProfile) {
+          if constexpr (doProfile) {
             if (!passes) {
               rejectFoldedCut(n2Idx, n2pars, nodeInfo, r1c, z1c, tau, curv);
             }
@@ -917,7 +917,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
             }
 
             if (!isGood) {  // no match found, skip creating [n1 <- n2] edge
-              if constexpr (kProfile) {
+              if constexpr (doProfile) {
                 // the closest match there was
                 float bestTauRatio = std::numeric_limits<float>::max();
                 for (std::uint32_t n2InIdx = n2FirstEdge; n2InIdx < n2LastEdge;
@@ -965,7 +965,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
                   std::max(slw.tauRatioCutInner, pS->tauRatioCut);
 
               if (absTauRatio > tauRatioCut) {
-                if constexpr (kProfile) {
+                if constexpr (doProfile) {
                   rejectTriplet(n1Idx, n2Idx, pS->n2, TripletCut::TauRatio,
                                 absTauRatio, tauRatioCut);
                 }
@@ -983,7 +983,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
               }
 
               if (std::abs(dPhi) > m_cfg.cutDPhiMax) {
-                if constexpr (kProfile) {
+                if constexpr (doProfile) {
                   rejectTriplet(n1Idx, n2Idx, pS->n2, TripletCut::DeltaPhi,
                                 std::abs(dPhi), m_cfg.cutDPhiMax);
                 }
@@ -993,7 +993,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
               const float dcurv = curv2 - pS->p[1];
 
               if (dcurv < -m_cfg.cutDCurvMax || dcurv > m_cfg.cutDCurvMax) {
-                if constexpr (kProfile) {
+                if constexpr (doProfile) {
                   rejectTriplet(n1Idx, n2Idx, pS->n2,
                                 TripletCut::DeltaCurvature, dcurv,
                                 m_cfg.cutDCurvMax);
@@ -1007,7 +1007,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
                                        std::abs(dPhi) / m_cfg.cutDPhiMax +
                                        std::abs(dcurv) / m_cfg.cutDCurvMax;
                 if (sumRatio > m_cfg.sumRatioCutMax) {
-                  if constexpr (kProfile) {
+                  if constexpr (doProfile) {
                     rejectTriplet(n1Idx, n2Idx, pS->n2, TripletCut::SumRatio,
                                   sumRatio, m_cfg.sumRatioCutMax);
                   }
@@ -1021,12 +1021,12 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
                 const std::array<SpacePointIndex, 3> candidateTriplet = {
                     n1Idx, n2Idx, pS->n2};
 
-                detail::GbtsTripletFailure failure;
+                detail::GbtsCutFailure failure;
                 if (!validateTriplet(m_cfg, nodeView, candidateTriplet,
                                      tripletPtMin, absTauRatio,
                                      m_cfg.tauRatioCut, bFieldInZ,
-                                     kProfile ? &failure : nullptr)) {
-                  if constexpr (kProfile) {
+                                     doProfile ? &failure : nullptr)) {
+                  if constexpr (doProfile) {
                     rejectTriplet(n1Idx, n2Idx, pS->n2, failure.cut,
                                   failure.value, failure.threshold);
                   }
@@ -1057,7 +1057,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
 
             if ((pruneGroup && level < minLevel1) ||
                 (dropDeadEnds && links.size() == numLinks)) {
-              if constexpr (kProfile) {
+              if constexpr (doProfile) {
                 if (dropDeadEnds && links.size() == numLinks) {
                   rejectDoublet(n1Idx, n2Idx, DoubletCut::DeadEnd);
                 } else {
@@ -1077,7 +1077,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
                 maxLevel1 = std::max(maxLevel1, level);
               }
               // profiling: the edge and its links, now that it is kept
-              if constexpr (kProfile) {
+              if constexpr (doProfile) {
                 profile->edges.push_back(
                     {.inner = nodeStorage.spacePointIndex(n1Idx),
                      .outer = nodeStorage.spacePointIndex(n2Idx)});
@@ -1090,7 +1090,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
                 }
               }
             }
-          } else if constexpr (kProfile) {
+          } else if constexpr (doProfile) {
             rejectDoublet(n1Idx, n2Idx, DoubletCut::EdgeLimit,
                           static_cast<float>(edgeStorage.size()),
                           static_cast<float>(maxEdges));

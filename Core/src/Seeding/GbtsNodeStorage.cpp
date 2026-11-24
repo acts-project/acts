@@ -61,7 +61,7 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
       clusterWidth > m_cfg.maxEndcapClusterWidth) {
     if (m_cfg.recordRejected) {
       m_rejectedNodes.push_back({.spacePoint = index,
-                                 .cut = detail::GbtsNodeCut::EndcapClusterWidth,
+                                 .cut = GbtsNodeCut::EndcapClusterWidth,
                                  .value = clusterWidth,
                                  .threshold = m_cfg.maxEndcapClusterWidth});
     }
