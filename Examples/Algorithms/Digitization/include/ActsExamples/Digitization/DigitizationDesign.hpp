@@ -21,17 +21,17 @@ namespace ActsExamples {
 
 class DigitizationDesign final : public Acts::ISensorDesign {
  public:
-  explicit DigitizationDesign(const DigitizationAlgorithm::Digitizer* digitizer)
-      : m_digitizer(digitizer) {}
+  explicit DigitizationDesign(DigitizationAlgorithm::Digitizer digitizer)
+      : m_digitizer(std::move(digitizer)) {}
 
   const DigitizationAlgorithm::Digitizer& digitizer() const {
-    return *m_digitizer;
+    return m_digitizer;
   }
 
   std::string_view name() const override { return "DigitizationDesign"; }
 
  private:
-  const DigitizationAlgorithm::Digitizer* m_digitizer;
+  DigitizationAlgorithm::Digitizer m_digitizer;
 };
 
 }  // namespace ActsExamples

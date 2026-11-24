@@ -36,7 +36,8 @@ TEST(SYCLSpacepointFormation, sycl) {
   vecmem::sycl::copy copy{vecmem_queue};
   // Use rectangle surfaces
   detray::mask<detray::rectangle2D, traccc::default_algebra> rectangle{
-      0u, 10000.f * traccc::unit<scalar>::mm,
+      0u, -10000.f * traccc::unit<scalar>::mm,
+      -10000.f * traccc::unit<scalar>::mm, 10000.f * traccc::unit<scalar>::mm,
       10000.f * traccc::unit<scalar>::mm};
 
   // Plane alignment direction (aligned to x-axis)

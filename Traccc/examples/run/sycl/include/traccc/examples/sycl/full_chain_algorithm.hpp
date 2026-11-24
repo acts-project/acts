@@ -17,6 +17,7 @@
 #include "traccc/geometry/detector_conditions_description.hpp"
 #include "traccc/geometry/detector_design_description.hpp"
 #include "traccc/geometry/host_detector.hpp"
+#include "traccc/seeding/detail/hough_seeding_config.hpp"
 #include "traccc/sycl/clusterization/clusterization_algorithm.hpp"
 #include "traccc/sycl/clusterization/measurement_sorting_algorithm.hpp"
 #include "traccc/sycl/finding/combinatorial_kalman_filter_algorithm.hpp"
@@ -119,6 +120,7 @@ class full_chain_algorithm
       const spacepoint_grid_config& grid_config,
       const seedfilter_config& filter_config,
       const gbts_seedfinder_config& gbts_config,
+      const hough_seeding_config& hough_config,
       const track_params_estimation_config& track_params_estimation_config,
       const finding_algorithm::config_type& finding_config,
       const fitting_algorithm::config_type& fitting_config,
@@ -203,6 +205,7 @@ class full_chain_algorithm
   /// @{
 
   bool usingGBTS;
+  bool usingHough;
 
   /// @}
 };  // class full_chain_algorithm

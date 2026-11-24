@@ -11,9 +11,9 @@
 
 // Detray IO include(s)
 #include "detray/io/frontend/detector_reader_config.hpp"
-#include "detray/io/frontend/detector_writer.hpp"
 #include "detray/io/frontend/detector_writer_config.hpp"
 #include "detray/io/json/detector_reader.hpp"
+#include "detray/io/json/detector_writer.hpp"
 
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
@@ -83,6 +83,16 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
           [](const reader_config_t &c) { return c.verbose_check(); },
           [](reader_config_t &c, bool v) { c.verbose_check(v); },
           "Verbosity of the detector consistency check")
+      .def_property(
+          "deduplicate",
+          [](const reader_config_t &c) { return c.deduplicate(); },
+          [](reader_config_t &c, bool v) { c.deduplicate(v); },
+          "Data deduplication in the detector")
+      .def_property(
+          "verboseCheck",
+          [](const reader_config_t &c) { return c.verbose_check(); },
+          [](reader_config_t &c, bool v) { c.verbose_check(v); },
+          "Verbosity of the detector consistency check")
       .def(
           "addFile",
           [](reader_config_t &c, const std::string &f) -> reader_config_t & {
@@ -129,7 +139,9 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
   m.def(
       "writeDetector",
       [](toy_detector_t &det, const typename toy_detector_t::name_map &names,
-         writer_config_t &cfg) { detray::io::write_detector(det, names, cfg); },
+         writer_config_t &cfg) {
+        detray::io::write_detector_json(det, names, cfg);
+      },
       py::arg("detector"), py::arg("names"), py::arg("config"),
       "Write a detector to file as configured by a DetectorWriterConfig. The "
       "config is modified in place if the detector carries no material");

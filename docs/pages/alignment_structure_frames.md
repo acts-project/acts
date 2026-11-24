@@ -15,8 +15,7 @@ structure's local axes to global axes. Structure corrections and surface
 alignment parameters both use local translations and local rotations, each in
 their own frame. `Acts::detail::compositeToComponentJacobian` maps structure
 corrections to the member surface's local parameters, including the rotation
-lever arm. `Acts::detail::localFrameToAlignmentParametersJacobian` is identity
-under this convention.
+lever arm.
 
 Every frame returned by `localToGlobalTransform(gctx)` maps structure-local
 coordinates to global coordinates, including for child structures. This return
@@ -132,8 +131,36 @@ late_bound.setTransform(transform=structure_to_global)
 late_bound.setTransform(transformProvider=frame_provider)
 ```
 
-Providing a frame does not yet enable numerical structure alignment. The native
-solver still needs shared parameter indexing, Jacobian accumulation, and rigid
-updates of the members. The frame API supplies the geometry contract for that
-integration; hierarchy validation and standalone-module alignment retain their
-existing behavior.
+## Structure derivatives
+
+With a structure frame, `ActsAlignment::detail::alignmentToBoundDerivative`
+differentiates the track's bound parameters with respect to translations along
+and rotations about the structure's local axes. Use a frame consistent with the
+member surface in the same `GeometryContext`, including when the frame comes from
+the current iteration of a fit. This example uses the immediate owner from a
+validated `AlignmentHierarchy`:
+
+```cpp
+const auto* owner = hierarchy.structureFor(surface);
+if (owner != nullptr) {
+  const Acts::Transform3 currentFrame = owner->localToGlobalTransform(gctx);
+  const auto derivative = ActsAlignment::detail::alignmentToBoundDerivative(
+      gctx, surface, position, direction, pathDerivative,
+      owner->alignmentMask(), &currentFrame);
+  // For measurement minus prediction, the residual derivative is
+  // -H * derivative, where H projects into measurement coordinates.
+}
+```
+
+The helper multiplies the unmasked surface derivative by
+`compositeToComponentJacobian(currentFrame, surfaceTransform)` and then masks
+columns in structure coordinates. Masking surface columns before the conversion
+could discard contributions from those surface axes to an active structure
+parameter. Without a structure frame, the helper differentiates
+with respect to local surface translations and rotations and applies the mask
+in the surface frame.
+
+This helper does not activate structure solving. The native solver still uses
+module indexing and calls it without a structure frame. Shared parameter
+indexing, structure accumulation, and rigid member updates remain follow-up
+work.

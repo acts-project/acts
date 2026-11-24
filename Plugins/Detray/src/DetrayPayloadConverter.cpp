@@ -84,19 +84,12 @@ detray::io::mask_payload convertBounds(const RectangleBounds& rectangle) {
   payload.shape = rectangle2;
   payload.boundaries.resize(e_size);
 
-  double minX = rectangle.get(eMinX);
-  double maxX = rectangle.get(eMaxX);
-  double minY = rectangle.get(eMinY);
-  double maxY = rectangle.get(eMaxY);
-
-  if (minX != -maxX || minY != -maxY) {
-    throw std::runtime_error(
-        "Rectangle bounds are not symmetric: adjust module translation to "
-        "center local coordinate frame");
-  }
-
-  payload.boundaries.at(e_half_x) = maxX;
-  payload.boundaries.at(e_half_y) = maxY;
+  // The detray rectangle is defined by its corner positions in the local frame,
+  // so asymmetric bounds can be converted as is
+  payload.boundaries.at(e_min_x) = rectangle.get(eMinX);
+  payload.boundaries.at(e_min_y) = rectangle.get(eMinY);
+  payload.boundaries.at(e_max_x) = rectangle.get(eMaxX);
+  payload.boundaries.at(e_max_y) = rectangle.get(eMaxY);
 
   return payload;
 }
@@ -588,66 +581,51 @@ void DetrayPayloadConverter::handlePortal(
                                      : detray::io::mask_payload::end_of_world;
   };
 
-  if (direction == AxisDirection::AxisZ || direction == AxisDirection::AxisR) {
-    // Concentric cylinders and rings: all segments share the portal surface
-    // transform, so a single detray portal with one mask per segment is used.
-    // Surface material defined on the portal surface lines up with it as is.
-    auto& srfPayload = volPayload.surfaces.emplace_back(
-        convertSurface(gctx, portalSurface, true));
-    srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
+  // Concentric cylinders, rings and rectangles: all segments share the portal
+  // surface transform, so a single detray portal with one mask per segment is
+  // used. Surface material defined on the portal surface lines up with it as
+  // is.
+  auto& srfPayload = volPayload.surfaces.emplace_back(
+      convertSurface(gctx, portalSurface, true));
+  srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
 
-    const detray::io::mask_payload baseMask = srfPayload.masks.at(0);
-    srfPayload.masks.clear();
-    for (const auto& segment : segments) {
-      auto& mask = srfPayload.masks.emplace_back(baseMask);
-      if (direction == AxisDirection::AxisZ) {
+  const detray::io::mask_payload baseMask = srfPayload.masks.at(0);
+  srfPayload.masks.clear();
+  for (const auto& segment : segments) {
+    auto& mask = srfPayload.masks.emplace_back(baseMask);
+    switch (direction) {
+      case AxisDirection::AxisZ: {
         using enum detray::concentric_cylinder2D::boundaries;
         mask.boundaries.at(e_lower_z) = segment.min;
         mask.boundaries.at(e_upper_z) = segment.max;
-      } else {
+        break;
+      }
+      case AxisDirection::AxisR: {
         using enum detray::ring2D::boundaries;
         mask.boundaries.at(e_inner_r) = segment.min;
         mask.boundaries.at(e_outer_r) = segment.max;
+        break;
       }
-      mask.volume_link.link = linkOf(segment);
+      case AxisDirection::AxisX: {
+        using enum detray::rectangle2D::boundaries;
+        mask.boundaries.at(e_min_x) = segment.min;
+        mask.boundaries.at(e_max_x) = segment.max;
+        break;
+      }
+      case AxisDirection::AxisY: {
+        using enum detray::rectangle2D::boundaries;
+        mask.boundaries.at(e_min_y) = segment.min;
+        mask.boundaries.at(e_max_y) = segment.max;
+        break;
+      }
+      default:
+        throw std::runtime_error("Unsupported portal segmentation direction " +
+                                 axisDirectionName(direction));
     }
-
-    surfaceIndices[&portalSurface] = srfPayload.index_in_coll.value();
-    return;
-  }
-
-  // Planes: detray rectangles are centered on their surface, so every segment
-  // gets its own surface, shifted along the segmentation direction.
-  if (segments.size() > 1 && portalSurface.hasMaterial()) {
-    ACTS_ERROR("Plane portal on " << portalSurface.geometryId()
-                                  << " carries material but is split into "
-                                  << segments.size() << " segments in volume "
-                                  << volume.volumeName());
-    throw DetrayUnsupportedMaterialException(
-        "Material on segmented plane portals is not supported");
-  }
-
-  const Transform3& portalTransform =
-      portalSurface.localToGlobalTransform(gctx);
-  for (const auto& segment : segments) {
-    const double center = 0.5 * (segment.min + segment.max);
-    const double halfLength = 0.5 * (segment.max - segment.min);
-    const bool dirX = direction == AxisDirection::AxisX;
-
-    auto& srfPayload = volPayload.surfaces.emplace_back(
-        convertSurface(gctx, portalSurface, true));
-    srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
-    srfPayload.transform = DetrayConversionUtils::convertTransform(
-        portalTransform *
-        Translation3{dirX ? Vector3{center, 0, 0} : Vector3{0, center, 0}});
-
-    auto& mask = srfPayload.masks.at(0);
-    using enum detray::rectangle2D::boundaries;
-    mask.boundaries.at(dirX ? e_half_x : e_half_y) = halfLength;
     mask.volume_link.link = linkOf(segment);
-
-    surfaceIndices[&portalSurface] = srfPayload.index_in_coll.value();
   }
+
+  surfaceIndices[&portalSurface] = srfPayload.index_in_coll.value();
 }
 
 std::pair<std::vector<detray::io::grid_payload<
@@ -1192,7 +1170,7 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
   }
 
   // Write some general information about the payload
-  payloads.detector_name = m_cfg.detectorName;
+  payloads.header.detector = m_cfg.detectorName;
   payloads.header.source = "ACTS Detray Plugin";
   payloads.header.date = detray::io::detail::get_current_date();
 

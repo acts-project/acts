@@ -191,6 +191,7 @@ CkfConfig = namedtuple(
         "constrainToVolumes",
         "endOfWorldVolumes",
         "seedDeduplicatorConfig",
+        "chi2CutPerDimension",
     ],
     defaults=[
         15.0,
@@ -209,6 +210,7 @@ CkfConfig = namedtuple(
         None,
         None,
         None,
+        True,
     ],
 )
 
@@ -2003,23 +2005,21 @@ def addCKFTracks(
             "which needs seedParamsEstimation"
         )
 
+    # The chi2 cuts are the cuts for 1D measurements. With chi2CutPerDimension
+    # every measurement dimension uses the cut with the same p-value.
+    measurementSelectorCuts = acts.MeasurementSelectorCuts()
+    measurementSelectorCuts.chi2CutOffMeasurement = [ckfConfig.chi2CutOffMeasurement]
+    measurementSelectorCuts.chi2CutOffOutlier = [ckfConfig.chi2CutOffOutlier]
+    measurementSelectorCuts.numMeasurementsCutOff = [ckfConfig.numMeasurementsCutOff]
+    measurementSelectorCuts.chi2CutPerDimension = ckfConfig.chi2CutPerDimension
+
     # Set up the track finding algorithm with CKF
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=customLogLevel(),
         measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [
-                (
-                    acts.GeometryIdentifier(),
-                    (
-                        [],
-                        [ckfConfig.chi2CutOffMeasurement],
-                        [ckfConfig.chi2CutOffOutlier],
-                        [ckfConfig.numMeasurementsCutOff],
-                    ),
-                )
-            ]
+            [(acts.GeometryIdentifier(), measurementSelectorCuts)]
         ),
         inputMeasurements=f"{prefix}measurement_subset",
         inputInitialTrackParameters=(
@@ -2328,6 +2328,7 @@ def addGnn(
     outputDirRoot: Optional[Union[Path, str]] = None,
     device=None,
     shrinkNodes: bool = False,
+    geometryIdMap=None,
     writeMatchingDetails: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
@@ -2349,6 +2350,9 @@ def addGnn(
         outputDirRoot: Optional output directory for performance ROOT files
         device: acts.gnn.Device to run the GNN pipeline on (default: acts.gnn.Device.Cuda())
         shrinkNodes: Remove unused nodes before each edge classification step
+        geometryIdMap: Athena <-> ACTS geometry identifier map, needed when the
+                       measurements are on ACTS surfaces but the module map uses
+                       Athena identifiers
         logLevel: Logging level
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -2378,6 +2382,7 @@ def addGnn(
         featureScales=featureScales,
         device=device,
         shrinkNodes=shrinkNodes,
+        geometryIdMap=geometryIdMap,
     )
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)

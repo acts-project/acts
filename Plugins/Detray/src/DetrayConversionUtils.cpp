@@ -134,7 +134,7 @@ detray::io::surface_material_payload DetrayConversionUtils::convertMaterialSlab(
   matPayload.thickness = slab.thickness();
   matPayload.mat = detray::io::material_param_payload{
       {material.X0(), material.L0(), material.Ar(), material.Z(),
-       material.massDensity(), material.molarDensity(), 0.}};
+       material.massDensity(), material.molarDensity()}};
   matPayload.type = detray::io::material_id::slab;
 
   return matPayload;

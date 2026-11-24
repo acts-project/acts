@@ -29,14 +29,9 @@ set(ACTS_SETUP_EIGEN3 TRUE CACHE BOOL "Set up Eigen in the Acts code")
 set(ACTS_BUILD_PLUGIN_JSON TRUE CACHE BOOL "Build JSON plugin in Acts")
 set(ACTS_SETUP_DETRAY TRUE CACHE BOOL "Set up Detray in the Acts code")
 
-# Acts and Detray are in-tree, first-party code here, so when
-# TRACCC_FAIL_ON_WARNINGS is set, build them with warnings-as-errors too
-# (matching Acts' own CI). This catches warnings in their own
-# compilation -- not just those in headers pulled into traccc translation units,
-# which are already covered by dropping the -isystem treatment.
-if(TRACCC_FAIL_ON_WARNINGS)
-    set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
-endif()
+# Default to Traccc's warning policy on first configuration; preserve cache overrides.
+set(ACTS_FAIL_ON_WARNINGS ${TRACCC_FAIL_ON_WARNINGS} CACHE BOOL "")
+set(DETRAY_FAIL_ON_WARNINGS ${TRACCC_FAIL_ON_WARNINGS} CACHE BOOL "")
 
 # Set the detray log level
 set(DETRAY_SET_LOGGING

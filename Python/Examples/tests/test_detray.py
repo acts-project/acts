@@ -12,3 +12,27 @@ def test_detray_propagator_bindings():
 
     assert hasattr(exdetray, "StraightLinePropagatorODD")
     assert hasattr(exdetray, "HelixPropagatorODD")
+
+
+@pytest.mark.skipif(not detrayEnabled, reason="Detray plugin not available")
+def test_detray_surface_grid_policy():
+    from acts import detray
+    import acts.json
+
+    cfg = detray.DetraySurfaceGridConfig()
+    assert cfg.vertexZHalfRange == pytest.approx(150 * u.mm)
+    assert cfg.minPt == pytest.approx(0.5 * u.GeV)
+    assert cfg.numberOfBinsFactor == pytest.approx(2.0)
+    assert cfg.lookupOnLayer
+    cfg.minPt = 1 * u.GeV
+    cfg.numberOfBinsFactor = None
+    assert cfg.numberOfBinsFactor is None
+
+    factory = detray.addDetraySurfaceGridPolicy(
+        acts.NavigationPolicyFactory.make().add(acts.TryAllNavigationPolicy), cfg
+    )
+    assert factory is not None
+
+    jsonCfg = acts.json.TrackingGeometryJsonConverter.Config()
+    detray.addDetrayNavigationPolicies(jsonCfg)
+    acts.json.TrackingGeometryJsonConverter(jsonCfg)

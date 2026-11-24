@@ -15,6 +15,7 @@
 #include "traccc/cuda/finding/combinatorial_kalman_filter_algorithm.hpp"
 #include "traccc/cuda/fitting/kalman_fitting_algorithm.hpp"
 #include "traccc/cuda/gbts_seeding/gbts_seeding_algorithm.hpp"
+#include "traccc/cuda/seeding/hough_transform_seeding_algorithm.hpp"
 #include "traccc/cuda/seeding/seed_parameter_estimation_algorithm.hpp"
 #include "traccc/cuda/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
 #include "traccc/cuda/seeding/triplet_seeding_algorithm.hpp"
@@ -141,11 +142,13 @@ class full_chain_algorithm
       const spacepoint_grid_config& grid_config,
       const seedfilter_config& filter_config,
       const gbts_seedfinder_config& gbts_config,
+      const hough_seeding_config& hough_config,
       const track_params_estimation_config& track_params_estimation_config,
       const finding_algorithm::config_type& finding_config,
       const fitting_algorithm::config_type& fitting_config,
       const shared_data& data, std::unique_ptr<const traccc::Logger> logger,
-      bool useGBTS = false, await_strategy = await_strategy::sync_event);
+      bool useGBTS = false, bool useHough = false,
+      await_strategy = await_strategy::sync_event);
 
   /// Algorithm destructor
   ~full_chain_algorithm();
@@ -206,6 +209,8 @@ class full_chain_algorithm
   triplet_seeding_algorithm m_seeding;
   /// Seeding with GBTS algorithm
   gbts_seeding_algorithm m_gbts_seeding;
+  /// Seeding with Hough algorithm
+  hough_transform_seeding_algorithm m_hough_seeding;
   /// Track parameter estimation algorithm
   seed_parameter_estimation_algorithm m_track_parameter_estimation;
 
@@ -220,6 +225,7 @@ class full_chain_algorithm
   /// @{
 
   bool usingGBTS;
+  bool usingHough;
 
   /// @}
 };  // class full_chain_algorithm

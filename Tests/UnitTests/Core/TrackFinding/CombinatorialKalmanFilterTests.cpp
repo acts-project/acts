@@ -429,6 +429,41 @@ BOOST_AUTO_TEST_CASE(PathLengthGrowsAfterBranchSwitch) {
   }
 }
 
+/// Creates one track state which is neither a measurement nor an outlier
+struct HoleTrackStateCreator {
+  Result<CkfTypes::BranchVector<TrackIndexType>> createTrackStates(
+      const CkfTypes::TrackStateCreatorArguments<TrackStateContainerBackend>&
+          args,
+      const Logger& /*logger*/) const {
+    const BoundTrackParameters& parameters = args.boundState.get().parameters;
+    auto trackState = args.trajectory.get().makeTrackState(
+        TrackStatePropMask::Predicted, args.prevTip);
+    trackState.setReferenceSurface(
+        parameters.referenceSurface().getSharedPtr());
+    trackState.predicted() = parameters.parameters();
+    trackState.predictedCovariance() = *parameters.covariance();
+    trackState.typeFlags().setIsHole();
+    return CkfTypes::BranchVector<TrackIndexType>{trackState.index()};
+  }
+};
+
+BOOST_AUTO_TEST_CASE(UnsupportedTrackStateFails) {
+  Fixture f(0_T);
+
+  auto options = f.makeCkfOptions();
+
+  HoleTrackStateCreator trackStateCreator;
+  options.extensions.createTrackStates
+      .template connect<&HoleTrackStateCreator::createTrackStates>(
+          &trackStateCreator);
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto res = f.ckf.findTracks(f.startParameters.front(), options, tc);
+  BOOST_REQUIRE(!res.ok());
+  BOOST_CHECK_EQUAL(res.error(),
+                    CombinatorialKalmanFilterError::UnsupportedTrackState);
+}
+
 BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   Fixture f(0_T);
 

@@ -220,6 +220,14 @@ class PlaneSurface : public RegularSurface {
           BoundaryTolerance::Infinite(),
       double tolerance = s_onSurfaceTolerance) const final;
 
+  /// @copydoc Surface::intersect(const GeometryContext&, const Vector3&, const Vector3&, const Vector3&, const BoundaryTolerance&, double) const
+  MultiIntersection3D intersect(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const Vector3& curvature,
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
+      double tolerance = s_onSurfaceTolerance) const final;
+
   /// Return a Polyhedron for the surfaces
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -249,6 +257,10 @@ class PlaneSurface : public RegularSurface {
   Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const final;
+
+  /// @copydoc Surface::contains
+  bool contains(const GeometryContext& gctx, const Surface& other,
+                double tolerance = s_onSurfaceTolerance) const override;
 
   /// Merge two plane surfaces into a single one.
   /// @note The surfaces need to be *compatible*, i.e. have bounds

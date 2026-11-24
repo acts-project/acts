@@ -463,16 +463,18 @@ class grid_factory {
     // Overwrite the mask values if axis spans are provided
     if (!axis_spans[0UL].empty()) {
       assert(axis_spans[0UL].size() == 2UL);
-      b_values[boundary::e_half_x] = axis_spans[0UL].at(1UL);
+      b_values[boundary::e_min_x] = axis_spans[0UL].at(0UL);
+      b_values[boundary::e_max_x] = axis_spans[0UL].at(1UL);
     }
     if (!axis_spans[1UL].empty()) {
       assert(axis_spans[1UL].size() == 2UL);
-      b_values[boundary::e_half_y] = axis_spans[1UL].at(1UL);
+      b_values[boundary::e_min_y] = axis_spans[1UL].at(0UL);
+      b_values[boundary::e_max_y] = axis_spans[1UL].at(1UL);
     }
 
     return new_grid<local_frame>(
-        {-b_values[boundary::e_half_x], b_values[boundary::e_half_x],
-         -b_values[boundary::e_half_y], b_values[boundary::e_half_y]},
+        {b_values[boundary::e_min_x], b_values[boundary::e_max_x],
+         b_values[boundary::e_min_y], b_values[boundary::e_max_y]},
         {n_bins[e_x_axis], n_bins[e_y_axis]}, bin_capacities,
         {bin_edges[e_x_axis], bin_edges[e_y_axis]},
         types::list<x_bounds, y_bounds>{}, types::list<x_binning, y_binning>{});
@@ -655,7 +657,7 @@ class grid_factory {
           std::pair<typename grid_t::loc_bin_index, dindex>> &bin_capacities =
           {},
       const std::vector<std::vector<scalar_type>> &ax_bin_edges = {}) const {
-    using owning_grid_t = typename grid_t::template type<true>;
+    using owning_grid_t = typename grid_t::template owning_type<true>;
     using axes_t = typename owning_grid_t::axes_type;
 
     // Prepare data

@@ -51,8 +51,9 @@ TEST_P(BackwardPropagation, backward_propagation) {
   detail::ray<test_algebra> traj{{0.f, 0.f, 0.f}, 0.f, {1.f, 0.f, 0.f}, -1.f};
   std::vector<scalar> positions = std::get<0>(GetParam());
 
-  tel_det_config<test_algebra, rectangle2D> tel_cfg{200.f * unit<scalar>::mm,
-                                                    200.f * unit<scalar>::mm};
+  tel_det_config<test_algebra, rectangle2D> tel_cfg{
+      -200.f * unit<scalar>::mm, -200.f * unit<scalar>::mm,
+      200.f * unit<scalar>::mm, 200.f * unit<scalar>::mm};
   tel_cfg.positions(positions).pilot_track(traj).mat_thickness(
       10.f * unit<scalar>::mm);
 
