@@ -175,13 +175,14 @@ BOOST_AUTO_TEST_CASE(SmoothingResidualAndCovarianceBasis) {
       covariance(eBoundDir1, eBoundLoc0) = -0.2;
       CHECK_CLOSE_ABS(source.smoothedCovariance(), covariance, 1e-12);
 
-      // The public single-step API must agree exactly with the trajectory loop.
+      // The public single-step API resolves both parametrizations itself and
+      // must agree exactly with the trajectory loop, which carries them.
       const BoundVector loopSmoothed = source.smoothed();
       const BoundMatrix loopSmoothedCovariance = source.smoothedCovariance();
       source.smoothed().setConstant(42.);
       source.smoothedCovariance().setConstant(43.);
       BOOST_REQUIRE(GainMatrixSmoother()
-                        .calculate(AnyMutableTrackStateProxy{source},
+                        .calculate(tgContext, AnyMutableTrackStateProxy{source},
                                    AnyConstTrackStateProxy{destination},
                                    getDummyLogger())
                         .ok());

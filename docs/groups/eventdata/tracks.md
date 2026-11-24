@@ -249,6 +249,15 @@ legacy diagonal update and includes material-physics and noise-mapping work. Leg
 @ref Acts::MaterialInteraction::sigmaTheta2 remain global angular diagnostics;
 nonzero scattering at a global pole has infinite phi variance.
 
+@ref Acts::GainMatrixSmoother uses the destination state's parametrization for
+the smoothed-minus-predicted residual and the source state's parametrization
+for the corrected values and covariance. Its single-step `calculate` API now
+requires a geometry context. States without a reference surface retain the
+canonical global-spherical interpretation. Undefined canonicalization at an
+exact pole returns a failed Result. The updater preserves filtered values,
+covariance and chi2 on failure; the smoother preserves the failing state's
+values, but later states may already have been smoothed.
+
 @ref Acts::MbfSmoother also uses surface-resolved residuals and canonicalizes
 smoothed parameters and covariance together. Its backward information recursion
 includes the forward update's canonicalization Jacobian, since backward

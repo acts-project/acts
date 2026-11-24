@@ -239,7 +239,7 @@ Result<void> conditionSmoothedStatesOnSharedState(
     trajectory.applyBackwards(shared.previous(), [&](TrackStateProxy ts) {
       setSmoothedWithoutSharing(AnyMutableTrackStateProxy{ts}, ts.filtered(),
                                 ts.filteredCovariance());
-      auto res = smoother.calculate(AnyMutableTrackStateProxy{ts},
+      auto res = smoother.calculate(gctx, AnyMutableTrackStateProxy{ts},
                                     AnyConstTrackStateProxy{later}, logger);
       if (!res.ok()) {
         result = res;
