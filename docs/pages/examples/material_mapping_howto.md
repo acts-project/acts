@@ -228,9 +228,10 @@ helper yet.
 > @ref Acts::Blueprint::construct passes a null decorator to the
 > @ref Acts::TrackingGeometry constructor, so the `--matconfig` /
 > @ref Acts::IMaterialDecorator route in steps 1 and 3 has no effect on a Gen3 geometry.
-> Concretely, `getOpenDataDetector(gen3=True)` builds its decorator and then
-> drops it (`Python/Examples/python/odd.py`), and the Gen3 `OpenDataDetector`
-> config has no `materialDecorator` field at all. Designating in the blueprint
+> Concretely, the Gen3 `OpenDataDetector` config has no `materialDecorator`
+> field; `getOpenDataDetector(gen3=True, materialDecorator=...)` only applies a
+> finished map after construction (see Step 4), it cannot designate material.
+> Designating in the blueprint
 > is currently the only route.
 
 Once construction is done the two generations converge completely. The
@@ -419,7 +420,7 @@ picks up `data/odd-material-maps.root` by default.
 For the Gen3 ODD, loading works slightly differently from the generic snippet
 above. `getOpenDataDetector(gen3=True, materialDecorator=...)`
 (`Python/Examples/python/odd.py`) first builds the detector without material,
-then pulls `materialDecorator.materialMaps` out of the given decorator and
+then takes `materialDecorator.material` from the given decorator and
 applies it to the constructed geometry with
 @ref Acts::TrackingGeometryMaterial::apply "TrackingGeometryMaterial::apply()",
 now that geometry identifiers are assigned. This replaces the designated proto
@@ -538,7 +539,8 @@ either disable the calorimeter or add an equivalent collector.
 
 `Python/Examples/tests/test_material_mapping.py` runs the whole chain against
 the ODD and is the most reliable executable reference for it. The ODD itself
-ships a finished map at `data/odd-material-maps.root`.
+ships a finished map at `data/odd-material-maps.root`, which only works for
+the Gen1 ODD (see Step 4 above).
 
 The chain is additionally guarded by tests in `Python/Examples/tests`:
 
