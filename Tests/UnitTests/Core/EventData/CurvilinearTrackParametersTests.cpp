@@ -52,9 +52,9 @@ void checkParameters(const BoundTrackParameters& params, double phi,
   CHECK_SMALL(params.template get<eBoundLoc1>(), eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundTime>(), pos4[eTime], eps,
                        eps);
-  CHECK_CLOSE_OR_SMALL(detail::radian_sym(params.template get<eBoundPhi>()),
+  CHECK_CLOSE_OR_SMALL(detail::radian_sym(params.template get<eBoundDir0>()),
                        detail::radian_sym(phi), eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.template get<eBoundTheta>(), theta, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.template get<eBoundDir1>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundQOverP>(), qOverP, eps, eps);
   // convenience accessors
   BOOST_CHECK_EQUAL(params.charge(), q);

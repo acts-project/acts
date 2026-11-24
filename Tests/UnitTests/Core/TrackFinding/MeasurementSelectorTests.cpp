@@ -61,7 +61,7 @@ VectorMultiTrajectory::TrackStateProxy addCandidate(
   ts.predicted() = BoundVector::Zero();
   // Avoid theta = 0, whose pseudorapidity is infinite, since the selector bins
   // its cuts in eta.
-  ts.predicted()[eBoundTheta] = std::numbers::pi / 2.;
+  ts.predicted()[eBoundDir1] = std::numbers::pi / 2.;
   if (diverged) {
     ts.predicted()[eBoundLoc0] = std::numeric_limits<double>::quiet_NaN();
   }
@@ -85,7 +85,7 @@ VectorMultiTrajectory::TrackStateProxy addCandidateWithChi2(
   ts.setReferenceSurface(surface);
 
   ts.predicted() = BoundVector::Zero();
-  ts.predicted()[eBoundTheta] = std::numbers::pi / 2.;
+  ts.predicted()[eBoundDir1] = std::numbers::pi / 2.;
   // The predicted covariance in the measurement subspace is zero, so the chi2
   // is the squared residual
   ts.predictedCovariance() = BoundMatrix::Zero();

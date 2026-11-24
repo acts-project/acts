@@ -47,8 +47,8 @@ void fillTestTrack(typename track_container_t::TrackProxy track) {
   params[eBoundLoc0] = 1.0;
   params[eBoundLoc1] = 2.0;
   params[eBoundTime] = 3.0;
-  params[eBoundPhi] = 0.5;
-  params[eBoundTheta] = std::numbers::pi / 4.0;
+  params[eBoundDir0] = 0.5;
+  params[eBoundDir1] = std::numbers::pi / 4.0;
   params[eBoundQOverP] = 0.1;
 
   // Set covariance
@@ -183,8 +183,8 @@ BOOST_AUTO_TEST_CASE(AccessParameters) {
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundLoc0), 1.0, 1e-6);
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundLoc1), 2.0, 1e-6);
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundTime), 3.0, 1e-6);
-  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundPhi), 0.5, 1e-6);
-  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundTheta), std::numbers::pi / 4.0,
+  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundDir0), 0.5, 1e-6);
+  BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundDir1), std::numbers::pi / 4.0,
                     1e-6);
   BOOST_CHECK_CLOSE(anyTrack.parameter(eBoundQOverP), 0.1, 1e-6);
 

@@ -221,9 +221,9 @@ void test_surface(const Surface &surface, const LocPosArray &loc_pos,
           a.boundPars = BoundVector::Ones();
           a.boundPars[eBoundLoc0] *= p_it->first;
           a.boundPars[eBoundLoc1] *= p_it->second;
-          a.boundPars[eBoundPhi] = detail::wrap_periodic(
+          a.boundPars[eBoundDir0] = detail::wrap_periodic(
               phi + dphi, -std::numbers::pi, 2 * std::numbers::pi);
-          a.boundPars[eBoundTheta] = theta + dtheta;
+          a.boundPars[eBoundDir1] = theta + dtheta;
 
           // We don't look at covariance in this test
           a.boundCov = BoundMatrix::Zero();

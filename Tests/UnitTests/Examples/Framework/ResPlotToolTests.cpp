@@ -56,8 +56,8 @@ ResPlotTool::Config makeConfig() {
 BoundTrackParameters makeParameters(
     const std::shared_ptr<const Surface>& surface, double phi) {
   BoundVector parameters = BoundVector::Zero();
-  parameters[eBoundPhi] = phi;
-  parameters[eBoundTheta] = std::numbers::pi / 2;
+  parameters[eBoundDir0] = phi;
+  parameters[eBoundDir1] = std::numbers::pi / 2;
   parameters[eBoundQOverP] = 1. / (1. * UnitConstants::GeV);
 
   return BoundTrackParameters(surface, parameters,

@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
       BoundVector paramVec = BoundVector::Zero();
       paramVec[eBoundLoc0] = d0_v + d0Dist(gen);
       paramVec[eBoundLoc1] = z0_v + z0Dist(gen);
-      paramVec[eBoundPhi] = phiDist(gen);
-      paramVec[eBoundTheta] = thetaDist(gen);
+      paramVec[eBoundDir0] = phiDist(gen);
+      paramVec[eBoundDir1] = thetaDist(gen);
       paramVec[eBoundQOverP] = q / pTDist(gen);
 
       // Resolutions

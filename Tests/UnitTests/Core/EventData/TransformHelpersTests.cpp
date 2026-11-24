@@ -54,8 +54,8 @@ BOOST_DATA_TEST_CASE(Parameters,
   bv[eBoundLoc0] = l0;
   bv[eBoundLoc1] = l1;
   bv[eBoundTime] = time;
-  bv[eBoundPhi] = phi;
-  bv[eBoundTheta] = theta;
+  bv[eBoundDir0] = phi;
+  bv[eBoundDir1] = theta;
   bv[eBoundQOverP] = qOverP;
 
   // convert to free parameters
@@ -105,8 +105,8 @@ BOOST_DATA_TEST_CASE(GlobalToBoundTrackParameters,
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc0], l0, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc1], l1, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundTime], time, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundPhi], phi, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundTheta], theta, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir0], phi, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir1], theta, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
   }
 
@@ -140,8 +140,8 @@ BOOST_DATA_TEST_CASE(GlobalToBoundTrackParameters,
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc0], l0, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc1], l1, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundTime], time, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundPhi], phi, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundTheta], theta, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir0], phi, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir1], theta, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
   }
 
@@ -173,8 +173,8 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
     CHECK_SMALL(bv[eBoundLoc0], eps);
     CHECK_SMALL(bv[eBoundLoc1], eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundTime], time, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundPhi], phi, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundTheta], theta, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir0], phi, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir1], theta, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
   }
   // convert w/ angles
@@ -184,8 +184,8 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
     CHECK_SMALL(bv[eBoundLoc0], eps);
     CHECK_SMALL(bv[eBoundLoc1], eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundTime], time, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundPhi], phi, eps, eps);
-    CHECK_CLOSE_OR_SMALL(bv[eBoundTheta], theta, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir0], phi, eps, eps);
+    CHECK_CLOSE_OR_SMALL(bv[eBoundDir1], theta, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
   }
 }

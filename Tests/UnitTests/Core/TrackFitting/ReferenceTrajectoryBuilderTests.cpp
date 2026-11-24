@@ -50,8 +50,8 @@ BoundTrackParameters makeParameters(
   stddev[eBoundLoc0] = 100_um;
   stddev[eBoundLoc1] = 100_um;
   stddev[eBoundTime] = 25_ns;
-  stddev[eBoundPhi] = 2_degree;
-  stddev[eBoundTheta] = 2_degree;
+  stddev[eBoundDir0] = 2_degree;
+  stddev[eBoundDir1] = 2_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
   BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x

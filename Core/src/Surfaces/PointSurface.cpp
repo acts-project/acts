@@ -187,8 +187,8 @@ BoundToFreeMatrix PointSurface::boundToFreeJacobian(
         scale * uDot * (loc0 * V - loc1 * U) -
         (loc0 * uDot + loc1 * V.dot(dT)) * T;
   };
-  setPositionColumn(eBoundPhi);
-  setPositionColumn(eBoundTheta);
+  setPositionColumn(eBoundDir0);
+  setPositionColumn(eBoundDir1);
 
   return jacToGlobal;
 }

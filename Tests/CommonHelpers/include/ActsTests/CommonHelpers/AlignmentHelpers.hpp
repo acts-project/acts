@@ -229,17 +229,17 @@ Acts::BoundTrackParameters makeParameters(aliTestUtils& utils) {
   stddev[Acts::eBoundLoc0] = 100_um;
   stddev[Acts::eBoundLoc1] = 100_um;
   stddev[Acts::eBoundTime] = 25_ns;
-  stddev[Acts::eBoundPhi] = 0.5_degree;
-  stddev[Acts::eBoundTheta] = 0.5_degree;
+  stddev[Acts::eBoundDir0] = 0.5_degree;
+  stddev[Acts::eBoundDir1] = 0.5_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
   Acts::BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
 
   auto loc0 = 0. + stddev[Acts::eBoundLoc0] * utils.normalDist(utils.rng);
   auto loc1 = 0. + stddev[Acts::eBoundLoc1] * utils.normalDist(utils.rng);
   auto t = 42_ns + stddev[Acts::eBoundTime] * utils.normalDist(utils.rng);
-  auto phi = 0_degree + stddev[Acts::eBoundPhi] * utils.normalDist(utils.rng);
+  auto phi = 0_degree + stddev[Acts::eBoundDir0] * utils.normalDist(utils.rng);
   auto theta =
-      90_degree + stddev[Acts::eBoundTheta] * utils.normalDist(utils.rng);
+      90_degree + stddev[Acts::eBoundDir1] * utils.normalDist(utils.rng);
   auto qOverP =
       1_e / 1_GeV + stddev[Acts::eBoundQOverP] * utils.normalDist(utils.rng);
 

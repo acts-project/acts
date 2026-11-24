@@ -50,8 +50,8 @@ bool isFreeVectorValid(
 /// @return The normalized bound parameters
 inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
   BoundVector result = boundParams;
-  std::tie(result[eBoundPhi], result[eBoundTheta]) =
-      detail::normalizePhiTheta(result[eBoundPhi], result[eBoundTheta]);
+  std::tie(result[eBoundDir0], result[eBoundDir1]) =
+      detail::normalizePhiTheta(result[eBoundDir0], result[eBoundDir1]);
   return result;
 }
 
@@ -77,8 +77,8 @@ inline BoundVector addBoundParameters(const BoundVector& lhs,
 inline BoundVector subtractBoundParameters(const BoundVector& lhs,
                                            const BoundVector& rhs) {
   BoundVector result = lhs - rhs;
-  result[eBoundPhi] = detail::radian_sym(result[eBoundPhi]);
-  result[eBoundTheta] = detail::radian_sym(result[eBoundTheta]);
+  result[eBoundDir0] = detail::radian_sym(result[eBoundDir0]);
+  result[eBoundDir1] = detail::radian_sym(result[eBoundDir1]);
   return result;
 }
 

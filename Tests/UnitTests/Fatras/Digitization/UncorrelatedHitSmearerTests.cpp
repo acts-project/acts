@@ -118,7 +118,7 @@ struct Fixture {
 // track parameter indices to test smearing with. q/p smearing is not supported
 // in either case.
 const BoundIndices boundIndices[] = {
-    eBoundLoc0, eBoundLoc1, eBoundTime, eBoundPhi, eBoundTheta,
+    eBoundLoc0, eBoundLoc1, eBoundTime, eBoundDir0, eBoundDir1,
 };
 const FreeIndices freeIndices[] = {
     eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2,

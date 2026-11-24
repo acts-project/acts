@@ -80,8 +80,8 @@ void ActsPlugins::RootMeasurementIo::fillTruthParameters(
     const std::pair<double, double> angles) {
   m_measurementPayload.trueBound[eBoundLoc0] = lp[eBoundLoc0];
   m_measurementPayload.trueBound[eBoundLoc1] = lp[eBoundLoc1];
-  m_measurementPayload.trueBound[eBoundPhi] = VectorHelpers::phi(dir);
-  m_measurementPayload.trueBound[eBoundTheta] = VectorHelpers::theta(dir);
+  m_measurementPayload.trueBound[eBoundDir0] = VectorHelpers::phi(dir);
+  m_measurementPayload.trueBound[eBoundDir1] = VectorHelpers::theta(dir);
   m_measurementPayload.trueBound[eBoundTime] = xt[eTime];
 
   m_measurementPayload.trueGx = xt[ePos0];

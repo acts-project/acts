@@ -108,8 +108,8 @@ void checkSurfaceDerivatives(const Acts::GeometryContext& gctx,
     BoundVector bound = BoundVector::Zero();
     bound[eBoundLoc0] = local[0];
     bound[eBoundLoc1] = local[1];
-    bound[eBoundPhi] = VectorHelpers::phi(direction);
-    bound[eBoundTheta] = VectorHelpers::theta(direction);
+    bound[eBoundDir0] = VectorHelpers::phi(direction);
+    bound[eBoundDir1] = VectorHelpers::theta(direction);
     bound[eBoundQOverP] = kQOverP;
     bound[eBoundTime] = kTime;
     return bound;

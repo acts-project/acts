@@ -151,8 +151,8 @@ ProcessCode RootAthenaNTupleReader::read(const AlgorithmContext& context) {
 
     params[Acts::BoundIndices::eBoundLoc0] = m_branches.track_d0[i];
     params[Acts::BoundIndices::eBoundLoc1] = m_branches.track_z0[i];
-    params[Acts::BoundIndices::eBoundPhi] = m_branches.track_phi[i];
-    params[Acts::BoundIndices::eBoundTheta] = m_branches.track_theta[i];
+    params[Acts::BoundIndices::eBoundDir0] = m_branches.track_phi[i];
+    params[Acts::BoundIndices::eBoundDir1] = m_branches.track_theta[i];
     params[Acts::BoundIndices::eBoundQOverP] = m_branches.track_qOverP[i];
     params[Acts::BoundIndices::eBoundTime] = m_branches.track_t[i];
 
@@ -164,53 +164,53 @@ ProcessCode RootAthenaNTupleReader::read(const AlgorithmContext& context) {
         m_branches.track_var_d0[i];
     cov(Acts::BoundIndices::eBoundLoc1, Acts::BoundIndices::eBoundLoc1) =
         m_branches.track_var_z0[i];
-    cov(Acts::BoundIndices::eBoundPhi, Acts::BoundIndices::eBoundPhi) =
+    cov(Acts::BoundIndices::eBoundDir0, Acts::BoundIndices::eBoundDir0) =
         m_branches.track_var_phi[i];
-    cov(Acts::BoundIndices::eBoundTheta, Acts::BoundIndices::eBoundTheta) =
+    cov(Acts::BoundIndices::eBoundDir1, Acts::BoundIndices::eBoundDir1) =
         m_branches.track_var_theta[i];
     cov(Acts::BoundIndices::eBoundQOverP, Acts::BoundIndices::eBoundQOverP) =
         m_branches.track_var_qOverP[i];
 
     cov(Acts::BoundIndices::eBoundLoc0, Acts::BoundIndices::eBoundLoc1) =
         m_branches.track_cov_d0z0[i];
-    cov(Acts::BoundIndices::eBoundLoc0, Acts::BoundIndices::eBoundPhi) =
+    cov(Acts::BoundIndices::eBoundLoc0, Acts::BoundIndices::eBoundDir0) =
         m_branches.track_cov_d0phi[i];
-    cov(Acts::BoundIndices::eBoundLoc0, Acts::BoundIndices::eBoundTheta) =
+    cov(Acts::BoundIndices::eBoundLoc0, Acts::BoundIndices::eBoundDir1) =
         m_branches.track_cov_d0theta[i];
     cov(Acts::BoundIndices::eBoundLoc0, Acts::BoundIndices::eBoundQOverP) =
         m_branches.track_cov_d0qOverP[i];
-    cov(Acts::BoundIndices::eBoundLoc1, Acts::BoundIndices::eBoundPhi) =
+    cov(Acts::BoundIndices::eBoundLoc1, Acts::BoundIndices::eBoundDir0) =
         m_branches.track_cov_z0phi[i];
-    cov(Acts::BoundIndices::eBoundLoc1, Acts::BoundIndices::eBoundTheta) =
+    cov(Acts::BoundIndices::eBoundLoc1, Acts::BoundIndices::eBoundDir1) =
         m_branches.track_cov_z0theta[i];
     cov(Acts::BoundIndices::eBoundLoc1, Acts::BoundIndices::eBoundQOverP) =
         m_branches.track_cov_z0qOverP[i];
-    cov(Acts::BoundIndices::eBoundPhi, Acts::BoundIndices::eBoundTheta) =
+    cov(Acts::BoundIndices::eBoundDir0, Acts::BoundIndices::eBoundDir1) =
         m_branches.track_cov_phitheta[i];
-    cov(Acts::BoundIndices::eBoundPhi, Acts::BoundIndices::eBoundQOverP) =
+    cov(Acts::BoundIndices::eBoundDir0, Acts::BoundIndices::eBoundQOverP) =
         m_branches.track_cov_phiqOverP[i];
-    cov(Acts::BoundIndices::eBoundTheta, Acts::BoundIndices::eBoundQOverP) =
+    cov(Acts::BoundIndices::eBoundDir1, Acts::BoundIndices::eBoundQOverP) =
         m_branches.track_cov_tehtaqOverP[i];
 
     cov(Acts::BoundIndices::eBoundLoc1, Acts::BoundIndices::eBoundLoc0) =
         m_branches.track_cov_d0z0[i];
-    cov(Acts::BoundIndices::eBoundPhi, Acts::BoundIndices::eBoundLoc0) =
+    cov(Acts::BoundIndices::eBoundDir0, Acts::BoundIndices::eBoundLoc0) =
         m_branches.track_cov_d0phi[i];
-    cov(Acts::BoundIndices::eBoundTheta, Acts::BoundIndices::eBoundLoc0) =
+    cov(Acts::BoundIndices::eBoundDir1, Acts::BoundIndices::eBoundLoc0) =
         m_branches.track_cov_d0theta[i];
     cov(Acts::BoundIndices::eBoundQOverP, Acts::BoundIndices::eBoundLoc0) =
         m_branches.track_cov_d0qOverP[i];
-    cov(Acts::BoundIndices::eBoundPhi, Acts::BoundIndices::eBoundLoc1) =
+    cov(Acts::BoundIndices::eBoundDir0, Acts::BoundIndices::eBoundLoc1) =
         m_branches.track_cov_z0phi[i];
-    cov(Acts::BoundIndices::eBoundTheta, Acts::BoundIndices::eBoundLoc1) =
+    cov(Acts::BoundIndices::eBoundDir1, Acts::BoundIndices::eBoundLoc1) =
         m_branches.track_cov_z0theta[i];
     cov(Acts::BoundIndices::eBoundQOverP, Acts::BoundIndices::eBoundLoc1) =
         m_branches.track_cov_z0qOverP[i];
-    cov(Acts::BoundIndices::eBoundTheta, Acts::BoundIndices::eBoundPhi) =
+    cov(Acts::BoundIndices::eBoundDir1, Acts::BoundIndices::eBoundDir0) =
         m_branches.track_cov_phitheta[i];
-    cov(Acts::BoundIndices::eBoundQOverP, Acts::BoundIndices::eBoundPhi) =
+    cov(Acts::BoundIndices::eBoundQOverP, Acts::BoundIndices::eBoundDir0) =
         m_branches.track_cov_phiqOverP[i];
-    cov(Acts::BoundIndices::eBoundQOverP, Acts::BoundIndices::eBoundTheta) =
+    cov(Acts::BoundIndices::eBoundQOverP, Acts::BoundIndices::eBoundDir1) =
         m_branches.track_cov_tehtaqOverP[i];
 
     // TODO we do not have a hypothesis at hand here. defaulting to pion

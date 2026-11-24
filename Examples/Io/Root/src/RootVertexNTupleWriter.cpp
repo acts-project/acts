@@ -718,10 +718,10 @@ void RootVertexNTupleWriter::writeTrackInfo(
         propagateToVtx(*(trk.originalParams.as<Acts::BoundTrackParameters>()));
     if (paramsAtVtx.has_value()) {
       Acts::Vector3 recoMom =
-          paramsAtVtx->parameters().segment(Acts::eBoundPhi, 3);
+          paramsAtVtx->parameters().segment(Acts::eBoundDir0, 3);
       const Acts::SquareMatrix3& momCov =
-          paramsAtVtx->covariance()->template block<3, 3>(Acts::eBoundPhi,
-                                                          Acts::eBoundPhi);
+          paramsAtVtx->covariance()->template block<3, 3>(Acts::eBoundDir0,
+                                                          Acts::eBoundDir0);
       innerRecoPhi.push_back(recoMom[0]);
       innerRecoTheta.push_back(recoMom[1]);
       innerRecoQOverP.push_back(recoMom[2]);
@@ -772,10 +772,10 @@ void RootVertexNTupleWriter::writeTrackInfo(
     const auto paramsAtVtxFitted = propagateToVtx(trk.fittedParams);
     if (paramsAtVtxFitted.has_value()) {
       Acts::Vector3 recoMomFitted =
-          paramsAtVtxFitted->parameters().segment(Acts::eBoundPhi, 3);
+          paramsAtVtxFitted->parameters().segment(Acts::eBoundDir0, 3);
       const Acts::SquareMatrix3& momCovFitted =
-          paramsAtVtxFitted->covariance()->block<3, 3>(Acts::eBoundPhi,
-                                                       Acts::eBoundPhi);
+          paramsAtVtxFitted->covariance()->block<3, 3>(Acts::eBoundDir0,
+                                                       Acts::eBoundDir0);
       innerRecoPhiFitted.push_back(recoMomFitted[0]);
       innerRecoThetaFitted.push_back(recoMomFitted[1]);
       innerRecoQOverPFitted.push_back(recoMomFitted[2]);

@@ -291,22 +291,22 @@ void addMaterialToGx2fSums(
       scatteringMapId->second.scatteringAngles();
 
   const double invCovTheta = scatteringMapId->second.invCovarianceMaterial();
-  const double sinThetaLoc = std::sin(trackState.smoothed()[eBoundTheta]);
+  const double sinThetaLoc = std::sin(trackState.smoothed()[eBoundDir1]);
   const double invCovPhi = invCovTheta * sinThetaLoc * sinThetaLoc;
 
   // Phi contribution
   extendedSystem.aMatrix()(deltaPosition, deltaPosition) += invCovPhi;
   extendedSystem.bVector()(deltaPosition, 0) -=
-      invCovPhi * scatteringAngles[eBoundPhi];
+      invCovPhi * scatteringAngles[eBoundDir0];
   extendedSystem.chi2() +=
-      invCovPhi * scatteringAngles[eBoundPhi] * scatteringAngles[eBoundPhi];
+      invCovPhi * scatteringAngles[eBoundDir0] * scatteringAngles[eBoundDir0];
 
   // Theta Contribution
   extendedSystem.aMatrix()(deltaPosition + 1, deltaPosition + 1) += invCovTheta;
   extendedSystem.bVector()(deltaPosition + 1, 0) -=
-      invCovTheta * scatteringAngles[eBoundTheta];
-  extendedSystem.chi2() += invCovTheta * scatteringAngles[eBoundTheta] *
-                           scatteringAngles[eBoundTheta];
+      invCovTheta * scatteringAngles[eBoundDir1];
+  extendedSystem.chi2() +=
+      invCovTheta * scatteringAngles[eBoundDir1] * scatteringAngles[eBoundDir1];
 
   ACTS_VERBOSE(
       "Contributions in addMaterialToGx2fSums:\n"
@@ -314,22 +314,23 @@ void addMaterialToGx2fSums(
       << "    sinThetaLoc:   " << sinThetaLoc << "\n"
       << "    deltaPosition: " << deltaPosition << "\n"
       << "    Phi:\n"
-      << "        scattering angle:     " << scatteringAngles[eBoundPhi] << "\n"
+      << "        scattering angle:     " << scatteringAngles[eBoundDir0]
+      << "\n"
       << "        aMatrix contribution: " << invCovPhi << "\n"
       << "        bVector contribution: "
-      << invCovPhi * scatteringAngles[eBoundPhi] << "\n"
+      << invCovPhi * scatteringAngles[eBoundDir0] << "\n"
       << "        chi2sum contribution: "
-      << invCovPhi * scatteringAngles[eBoundPhi] * scatteringAngles[eBoundPhi]
+      << invCovPhi * scatteringAngles[eBoundDir0] * scatteringAngles[eBoundDir0]
       << "\n"
       << "    Theta:\n"
-      << "        scattering angle:     " << scatteringAngles[eBoundTheta]
+      << "        scattering angle:     " << scatteringAngles[eBoundDir1]
       << "\n"
       << "        aMatrix contribution: " << invCovTheta << "\n"
       << "        bVector contribution: "
-      << invCovTheta * scatteringAngles[eBoundTheta] << "\n"
+      << invCovTheta * scatteringAngles[eBoundDir1] << "\n"
       << "        chi2sum contribution: "
-      << invCovTheta * scatteringAngles[eBoundTheta] *
-             scatteringAngles[eBoundTheta]
+      << invCovTheta * scatteringAngles[eBoundDir1] *
+             scatteringAngles[eBoundDir1]
       << "\n");
 
   return;
@@ -1348,7 +1349,7 @@ class Gx2Fitter {
         continue;
       }
       const auto& angles = value.scatteringAngles();
-      ACTS_VERBOSE("    ( " << angles[eBoundTheta] << " | " << angles[eBoundPhi]
+      ACTS_VERBOSE("    ( " << angles[eBoundDir1] << " | " << angles[eBoundDir0]
                             << " )");
     }
 

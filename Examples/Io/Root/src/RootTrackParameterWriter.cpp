@@ -202,8 +202,8 @@ ProcessCode RootTrackParameterWriter::writeT(
 
     m_loc0 = params.parameters()[Acts::eBoundLoc0];
     m_loc1 = params.parameters()[Acts::eBoundLoc1];
-    m_phi = params.parameters()[Acts::eBoundPhi];
-    m_theta = params.parameters()[Acts::eBoundTheta];
+    m_phi = params.parameters()[Acts::eBoundDir0];
+    m_theta = params.parameters()[Acts::eBoundDir1];
     m_qop = params.parameters()[Acts::eBoundQOverP];
     m_time = params.parameters()[Acts::eBoundTime];
 
@@ -220,8 +220,8 @@ ProcessCode RootTrackParameterWriter::writeT(
 
     m_err_loc0 = getError(Acts::eBoundLoc0);
     m_err_loc1 = getError(Acts::eBoundLoc1);
-    m_err_phi = getError(Acts::eBoundPhi);
-    m_err_theta = getError(Acts::eBoundTheta);
+    m_err_phi = getError(Acts::eBoundDir0);
+    m_err_theta = getError(Acts::eBoundDir1);
     m_err_qop = getError(Acts::eBoundQOverP);
     m_err_time = getError(Acts::eBoundTime);
 

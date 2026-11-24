@@ -460,8 +460,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         // get the truth track parameter at this track State
         truthParams[Acts::eBoundLoc0] = truthLocal[Acts::ePos0];
         truthParams[Acts::eBoundLoc1] = truthLocal[Acts::ePos1];
-        truthParams[Acts::eBoundPhi] = phi(truthUnitDir);
-        truthParams[Acts::eBoundTheta] = theta(truthUnitDir);
+        truthParams[Acts::eBoundDir0] = phi(truthUnitDir);
+        truthParams[Acts::eBoundDir1] = theta(truthUnitDir);
         truthParams[Acts::eBoundTime] = truthPos4[Acts::eTime];
 
         // fill the truth track parameter at this track State
@@ -470,9 +470,9 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         m_t_eLOC1.push_back(
             Acts::clampValue<float>(truthParams[Acts::eBoundLoc1]));
         m_t_ePHI.push_back(
-            Acts::clampValue<float>(truthParams[Acts::eBoundPhi]));
+            Acts::clampValue<float>(truthParams[Acts::eBoundDir0]));
         m_t_eTHETA.push_back(
-            Acts::clampValue<float>(truthParams[Acts::eBoundTheta]));
+            Acts::clampValue<float>(truthParams[Acts::eBoundDir1]));
         m_t_eQOP.push_back(
             Acts::clampValue<float>(truthParams[Acts::eBoundQOverP]));
         m_t_eT.push_back(
@@ -584,9 +584,9 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         m_eLOC1[ipar].push_back(
             Acts::clampValue<float>(parameters[Acts::eBoundLoc1]));
         m_ePHI[ipar].push_back(
-            Acts::clampValue<float>(parameters[Acts::eBoundPhi]));
+            Acts::clampValue<float>(parameters[Acts::eBoundDir0]));
         m_eTHETA[ipar].push_back(
-            Acts::clampValue<float>(parameters[Acts::eBoundTheta]));
+            Acts::clampValue<float>(parameters[Acts::eBoundDir1]));
         m_eQOP[ipar].push_back(
             Acts::clampValue<float>(parameters[Acts::eBoundQOverP]));
         m_eT[ipar].push_back(
@@ -609,9 +609,9 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         m_err_eLOC1[ipar].push_back(
             Acts::clampValue<float>(errors[Acts::eBoundLoc1]));
         m_err_ePHI[ipar].push_back(
-            Acts::clampValue<float>(errors[Acts::eBoundPhi]));
+            Acts::clampValue<float>(errors[Acts::eBoundDir0]));
         m_err_eTHETA[ipar].push_back(
-            Acts::clampValue<float>(errors[Acts::eBoundTheta]));
+            Acts::clampValue<float>(errors[Acts::eBoundDir1]));
         m_err_eQOP[ipar].push_back(
             Acts::clampValue<float>(errors[Acts::eBoundQOverP]));
         m_err_eT[ipar].push_back(
@@ -646,17 +646,17 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         // track parameters residual
         Acts::BoundVector residuals = parameters - truthParams;
-        residuals[Acts::eBoundPhi] = Acts::detail::difference_periodic(
-            parameters[Acts::eBoundPhi], truthParams[Acts::eBoundPhi],
+        residuals[Acts::eBoundDir0] = Acts::detail::difference_periodic(
+            parameters[Acts::eBoundDir0], truthParams[Acts::eBoundDir0],
             2 * std::numbers::pi);
         m_res_eLOC0[ipar].push_back(
             Acts::clampValue<float>(residuals[Acts::eBoundLoc0]));
         m_res_eLOC1[ipar].push_back(
             Acts::clampValue<float>(residuals[Acts::eBoundLoc1]));
         m_res_ePHI[ipar].push_back(
-            Acts::clampValue<float>(residuals[Acts::eBoundPhi]));
+            Acts::clampValue<float>(residuals[Acts::eBoundDir0]));
         m_res_eTHETA[ipar].push_back(
-            Acts::clampValue<float>(residuals[Acts::eBoundTheta]));
+            Acts::clampValue<float>(residuals[Acts::eBoundDir1]));
         m_res_eQOP[ipar].push_back(
             Acts::clampValue<float>(residuals[Acts::eBoundQOverP]));
         m_res_eT[ipar].push_back(
@@ -674,9 +674,9 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         m_pull_eLOC1[ipar].push_back(
             Acts::clampValue<float>(pulls[Acts::eBoundLoc1]));
         m_pull_ePHI[ipar].push_back(
-            Acts::clampValue<float>(pulls[Acts::eBoundPhi]));
+            Acts::clampValue<float>(pulls[Acts::eBoundDir0]));
         m_pull_eTHETA[ipar].push_back(
-            Acts::clampValue<float>(pulls[Acts::eBoundTheta]));
+            Acts::clampValue<float>(pulls[Acts::eBoundDir1]));
         m_pull_eQOP[ipar].push_back(
             Acts::clampValue<float>(pulls[Acts::eBoundQOverP]));
         m_pull_eT[ipar].push_back(

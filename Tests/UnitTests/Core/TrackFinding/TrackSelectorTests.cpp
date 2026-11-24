@@ -141,8 +141,8 @@ struct MockTrack {
     m_parameterBuffer[eBoundLoc0] = m_loc0;
     m_parameterBuffer[eBoundLoc1] = m_loc1;
     m_parameterBuffer[eBoundTime] = m_time;
-    m_parameterBuffer[eBoundPhi] = m_phi;
-    m_parameterBuffer[eBoundTheta] = m_theta;
+    m_parameterBuffer[eBoundDir0] = m_phi;
+    m_parameterBuffer[eBoundDir1] = m_theta;
     m_parameterBuffer[eBoundQOverP] = m_qOverP;
   }
 

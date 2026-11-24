@@ -239,10 +239,10 @@ class BoundTrackParameters {
 
   /// Phi direction.
   /// @return The azimuthal angle phi in radians
-  double phi() const { return m_params[eBoundPhi]; }
+  double phi() const { return m_params[eBoundDir0]; }
   /// Theta direction.
   /// @return The polar angle theta in radians
-  double theta() const { return m_params[eBoundTheta]; }
+  double theta() const { return m_params[eBoundDir1]; }
   /// Charge over momentum.
   /// @return The charge over momentum ratio
   double qOverP() const { return m_params[eBoundQOverP]; }
@@ -251,8 +251,8 @@ class BoundTrackParameters {
   /// three-vector.
   /// @return Normalized direction vector
   Vector3 direction() const {
-    return makeDirectionFromPhiTheta(m_params[eBoundPhi],
-                                     m_params[eBoundTheta]);
+    return makeDirectionFromPhiTheta(m_params[eBoundDir0],
+                                     m_params[eBoundDir1]);
   }
   /// Absolute momentum.
   /// @return The absolute momentum magnitude
@@ -262,7 +262,7 @@ class BoundTrackParameters {
   /// Transverse momentum.
   /// @return The transverse momentum magnitude
   double transverseMomentum() const {
-    return std::sin(m_params[eBoundTheta]) * absoluteMomentum();
+    return std::sin(m_params[eBoundDir1]) * absoluteMomentum();
   }
   /// Momentum three-vector.
   /// @return Three-dimensional momentum vector
@@ -338,9 +338,9 @@ class BoundTrackParameters {
   /// Ensure phi and theta angles are within bounds.
   void normalizePhiTheta() {
     auto [phi, theta] =
-        detail::normalizePhiTheta(m_params[eBoundPhi], m_params[eBoundTheta]);
-    m_params[eBoundPhi] = phi;
-    m_params[eBoundTheta] = theta;
+        detail::normalizePhiTheta(m_params[eBoundDir0], m_params[eBoundDir1]);
+    m_params[eBoundDir0] = phi;
+    m_params[eBoundDir1] = theta;
   }
 
   /// Compare two bound track parameters for bitwise equality.
