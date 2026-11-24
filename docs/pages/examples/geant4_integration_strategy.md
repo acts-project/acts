@@ -1,3 +1,5 @@
+@page geant4_integration_strategy Geant4 integration strategy
+
 # Geant4 integration strategy
 
 Evolve the ACTS Examples Geant4 integration around a persistent simulation
@@ -32,7 +34,7 @@ building blocks. Native Geant4 multithreading, a wholesale simulation rewrite,
 and a general external-decayer interface are deferred. The proposed interfaces
 below describe responsibilities; their final C++ APIs remain to be designed.
 
-## Current integration on this base
+## Integration at the persistent-run baseline
 
 `Geant4Simulation` converts a flat `SimParticleContainer` into G4 primaries,
 executes transport, and publishes simulated particles and hits. One ACTS input
@@ -174,6 +176,58 @@ run/event callbacks, material-output regression coverage, and correct cleanup
 after failure. Record numerical performance results before setting optimization
 targets.
 
+Use the [serial benchmark](../../../Examples/Scripts/Python/geant4_persistent_run_benchmark.py)
+with the ACTS Python bindings, Geant4 datasets and ROOT writers available.
+The `odd` geometry also requires the OpenDataDetector and DD4hep bindings.
+Start each sample in a fresh process and use separate output directories:
+
+```sh
+python Examples/Scripts/Python/geant4_persistent_run_benchmark.py build/sample \
+  --geometry telescope --field constant --particles 1 --events 20 --skip 5 --seed 42
+```
+
+Repeat with the ODD tracker, mapped solenoid field and higher multiplicity
+using `--geometry odd`, `--field mapped` and `--particles 32`. The driver
+writes setup and run times and peak process memory to `metrics.json`.
+`timing.csv` gives per-algorithm timings for generation, HepMC conversion,
+Geant4 simulation and ROOT output. Compare the particle and hit tree contents
+for identical event ranges and seeds when changing the adapter.
+
+#### Persistent-run measurements
+
+Measured on 24 November 2026 at `e0e07d517d` with GCC 15.2, a Release build
+with assertions, Geant4 11.4.3, HepMC3 3.3.1 and ROOT 6.40.04 on a Ryzen 7
+5800X. Each row is one fresh serial process with warm dataset caches, seed 42,
+events 5–24, 5 GeV muons with pseudorapidity between 1 and 1.5, FTFP_BERT
+default production cuts, a 1 m propagator step cap, and ROOT particle and hit
+writers. The telescope has four silicon planes. The ODD v6.0.3 configuration
+loads the tracker. Both fields have a nominal central strength of 2 T.
+
+| Geometry | Field | Muons/event | Setup (s) | Initialize (s) | Geant4 algorithm (ms/event) | Event throughput (events/s) | Peak RSS (MiB) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Telescope | Constant | 1 | 0.37 | 0.34 | 0.079 | 6830 | 433 |
+| Telescope | Constant | 32 | 0.37 | 0.32 | 1.270 | 679 | 434 |
+| Telescope | Mapped | 1 | 0.43 | 0.33 | 0.115 | 5488 | 434 |
+| Telescope | Mapped | 32 | 0.44 | 0.33 | 1.912 | 471 | 435 |
+| ODD | Constant | 1 | 1.24 | 9.24 | 2.639 | 361 | 951 |
+| ODD | Constant | 32 | 1.37 | 9.36 | 83.308 | 11.5 | 960 |
+| ODD | Mapped | 1 | 1.26 | 9.41 | 2.735 | 349 | 951 |
+| ODD | Mapped | 32 | 1.26 | 9.30 | 90.429 | 10.5 | 965 |
+
+Setup starts at detector construction. Initialization runs from sequencer
+entry through Geant4 run initialization. Throughput covers the subsequent
+event window, including generation, conversion, simulation, per-event output
+and end-run. Python imports and closing the output files are outside that
+window. These short particle-gun runs establish a reference for this host.
+
+For the mapped ODD sample with 32 muons, HepMC conversion took 0.037 ms/event
+and the ROOT writers took 4.400 ms/event. A separate instrumented repeat
+timed the Geant4 callbacks over the same 20 events. Per event, primary
+translation took 0.007 ms, the sensitive stepping action 1.317 ms, the kill
+action 1.505 ms and the tracking actions 5.296 ms. The remaining Geant4 event
+manager time, including transport and its internal bookkeeping, was 83.007 ms.
+The throughput table uses the uninstrumented runs.
+
 ### Separate session and event ownership
 
 Extract lifecycle and event-result ownership, then introduce configurable action
@@ -185,6 +239,30 @@ central algorithm, and must not bypass truth or hit bookkeeping.
 Acceptance requires unchanged particle and hit output for fixed inputs and
 seeds, explicit thread-affinity failures, safe event-result extraction, and
 cleanup tests. This is the first implementation step after the baseline.
+
+The serial implementation reads the particle collection in the ACTS algorithm.
+Its [simulation session](../../../Examples/Algorithms/Geant4/src/SimulationSession.hpp)
+binds those particles and the geometry context for one synchronous Geant4
+event. When transport finishes, the algorithm receives owned result
+collections and publishes them to the WhiteBoard. An exception ends the
+binding before the event data goes out of scope. Material recording uses the
+same session and publishes its material tracks.
+
+For a C++ stepping diagnostic, append a factory to
+`Geant4Simulation::Config::steppingActionFactories`. Each factory receives
+read-only access to the active event during callbacks and creates one action
+per simulation instance. The built-in kill and hit actions run first, followed
+by the configured actions in order. The
+[telescope test](../../../Tests/UnitTests/Examples/Algorithms/Geant4/Geant4SimulationActionsTests.cpp)
+exercises this interface over two events.
+
+The refactor was checked against `e0e07d517d` across the eight benchmark
+configurations above. All particle and hit ROOT branches matched bit for bit
+over 160 events. Rerunning telescope events 12–14 separately reproduced all
+384 hits and the particle records for those events. The material-recording
+test reproduced all 60 material tracks both across builds and across event
+partitions. The lifecycle, event-context, session-reuse, ordered-action and
+sensitive-surface-mapping C++ tests passed on Linux.
 
 ### Implement one complete quasi-stable workflow
 
@@ -235,5 +313,5 @@ Settle the supported initial particle species and generator conventions, the
 decay-graph schema, proper-time derivation, and invalid-input policy. Specify
 which truth relationships survive filtering and serialization. Choose action
 factory ownership and ordering rules that work for serial execution and allow
-independent workers later. Select representative benchmark samples and record
-the persistent-run baseline before broad performance changes.
+independent workers later. Select generator and pileup samples to complement
+the particle-gun baseline before setting broader performance targets.

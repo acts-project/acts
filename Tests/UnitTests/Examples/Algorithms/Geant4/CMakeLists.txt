@@ -1,4 +1,10 @@
 set(unittest_extra_libraries ActsExamplesGeant4)
 
+add_unittest(Geant4EventContext EventContextTests.cpp)
 add_unittest(Geant4SensitiveSurfaceMapper SensitiveSurfaceMapperTests.cpp)
 add_unittest(Geant4RunManager RunManagerTests.cpp)
+
+set(unittest_extra_libraries ActsExamplesGeant4 ActsExamplesDetectorTelescope)
+add_unittest(Geant4SimulationActions Geant4SimulationActionsTests.cpp)
+
+add_unittest(Geant4Session Geant4SessionTests.cpp)

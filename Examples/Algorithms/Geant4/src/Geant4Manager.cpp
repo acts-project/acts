@@ -18,8 +18,11 @@
 #include <FTFP_BERT.hh>
 #include <FTFP_BERT_ATL.hh>
 #include <G4EmParameters.hh>
+#include <G4FieldManager.hh>
 #include <G4HadronicParameters.hh>
 #include <G4HadronicProcessStore.hh>
+#include <G4LogicalVolumeStore.hh>
+#include <G4MagneticField.hh>
 #include <G4RunManager.hh>
 #include <G4UserEventAction.hh>
 #include <G4UserRunAction.hh>
@@ -49,7 +52,24 @@ Geant4Handle::Geant4Handle(std::unique_ptr<G4RunManager> _runManager,
   runManager->SetUserInitialization(physicsList);
 }
 
-Geant4Handle::~Geant4Handle() = default;
+Geant4Handle::~Geant4Handle() {
+  clearMagneticField();
+}
+
+void Geant4Handle::clearMagneticField() {
+  if (!m_fieldManager) {
+    return;
+  }
+  // Multiple detector constructions may reuse logical volumes. Remove only
+  // the field manager that this handle installed, wherever it is still used.
+  for (auto* volume : *G4LogicalVolumeStore::GetInstance()) {
+    if (volume->GetFieldManager() == m_fieldManager.get()) {
+      volume->AssignFieldManager(nullptr);
+    }
+  }
+  m_fieldManager.reset();
+  m_magneticField.reset();
+}
 
 void Geant4Handle::tweakLogging(int level) const {
   Geant4Manager::tweakLogging(*runManager, level);

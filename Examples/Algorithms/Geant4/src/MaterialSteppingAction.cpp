@@ -36,7 +36,7 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
   const G4Track& track = *step.GetTrack();
 
   // Every track gets an entry, also if it never crosses recorded material
-  auto& materialTracks = eventStore().materialTracks;
+  auto& materialTracks = eventStore().result.materialTracks;
   const std::size_t trackId = track.GetTrackID() - 1;
   auto it = materialTracks.find(trackId);
   if (it == materialTracks.end()) {

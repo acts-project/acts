@@ -25,6 +25,30 @@ class SteppingActionList : public G4UserSteppingAction {
 
   explicit SteppingActionList(const Config &cfg) : m_cfg(cfg) {}
 
+  /// Register a batch of actions on the installed list before a run starts.
+  /// @param extensions New actions in callback order.
+  void appendActions(const Config &extensions) {
+    for (const auto &action : extensions.actions) {
+      if (action != nullptr) {
+        action->SetSteppingManagerPointer(fpSteppingManager);
+      }
+    }
+    m_cfg.actions.insert(m_cfg.actions.end(), extensions.actions.begin(),
+                         extensions.actions.end());
+  }
+
+  /// Forward the manager to the delegated actions when Geant4 installs this
+  /// list.
+  /// @param manager Geant4 stepping manager for the current worker.
+  void SetSteppingManagerPointer(G4SteppingManager *manager) override {
+    G4UserSteppingAction::SetSteppingManagerPointer(manager);
+    for (const auto &action : m_cfg.actions) {
+      if (action != nullptr) {
+        action->SetSteppingManagerPointer(manager);
+      }
+    }
+  }
+
   void UserSteppingAction(const G4Step *stepPtr) override {
     for (const auto &action : m_cfg.actions) {
       if (action != nullptr) {
