@@ -93,12 +93,12 @@ Acts::BoundVector Acts::transformFreeToCurvilinearParameters(double time,
 }
 
 Acts::BoundVector Acts::transformFreeToCurvilinearParameters(
-    double time, const Vector3& direction, double qOverP) {
+    double time, const Vector3& direction, double qOverP,
+    BoundParametrization parametrization) {
   BoundVector bp = BoundVector::Zero();
   // local coordinates are zero by construction
   bp[eBoundTime] = time;
-  bp[eBoundDir0] = VectorHelpers::phi(direction);
-  bp[eBoundDir1] = VectorHelpers::theta(direction);
+  bp.segment<2>(eBoundDir0) = parametrization.directionCoordinates(direction);
   bp[eBoundQOverP] = qOverP;
   return bp;
 }

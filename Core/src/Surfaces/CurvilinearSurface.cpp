@@ -121,7 +121,8 @@ std::string CurvilinearSurface::toString() const {
 }
 
 std::shared_ptr<PlaneSurface> CurvilinearSurface::planeSurface() const {
-  return Surface::makeShared<PlaneSurface>(transform());
+  return Surface::makeShared<PlaneSurface>(transform(), nullptr,
+                                           m_parametrization);
 }
 
 std::shared_ptr<Surface> CurvilinearSurface::surface() const {

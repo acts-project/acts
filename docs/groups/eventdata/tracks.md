@@ -76,12 +76,14 @@ resolves the interpretation for a surface. Context-aware observables and
 bound/free value conversions use this lookup. It currently returns the canonical
 global-spherical interpretation for every surface, including curvilinear planes;
 surface placement and alignment do not rotate the direction axes. Track proxies
-without a reference surface retain the canonical interpretation. No chart state
-is added to surfaces. Bound/free surface Jacobians use the same interpretation, including the
+without a reference surface retain the canonical interpretation. Surfaces store
+the selected parametrization; plane and curvilinear construction accept it explicitly.
+Only the canonical global-spherical value is selectable. Bound/free surface
+Jacobians use the same interpretation, including the
 curvilinear utility and the direction-dependent line/point position terms.
 Covariance transport retains its source-to-free-to-destination composition and
 path-length correction; reinitialization uses the destination interpretation.
-Chart configuration and alternative charts remain follow-up work.
+Alternative charts remain follow-up work.
 
 @ref Acts::Surface::freeToBoundJacobian "Surface inverse Jacobians" and
 @ref Acts::Surface::alignmentToBoundDerivative "alignment derivatives" return

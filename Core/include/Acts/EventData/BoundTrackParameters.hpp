@@ -72,20 +72,40 @@ class BoundTrackParameters {
                                 particleHypothesis};
   }
 
-  /// Construct from four-position, direction, and qOverP.
+  /// Construct canonical curvilinear parameters from a Cartesian direction.
   ///
   /// @param pos4 Track position/time four-vector
   /// @param dir Track direction three-vector; normalization is ignored.
   /// @param qOverP Charge over momentum
-  /// @param cov Curvilinear bound parameters covariance matrix
+  /// @param cov Covariance in the canonical curvilinear basis
   /// @param particleHypothesis Particle hypothesis
   /// @return Curvilinear bound track parameters
   static BoundTrackParameters createCurvilinear(
       const Vector4& pos4, const Vector3& dir, double qOverP,
       std::optional<BoundMatrix> cov, ParticleHypothesis particleHypothesis) {
+    return createCurvilinear(pos4, dir, qOverP, std::move(cov),
+                             particleHypothesis,
+                             BoundParametrization::globalSpherical());
+  }
+
+  /// Construct curvilinear parameters with a selected direction chart.
+  ///
+  /// @param pos4 Track position/time four-vector
+  /// @param dir Track direction three-vector; normalization is ignored.
+  /// @param qOverP Charge over momentum
+  /// @param cov Covariance in the specified curvilinear basis
+  /// @param particleHypothesis Particle hypothesis
+  /// @param parametrization Direction chart for the parameters and covariance
+  /// @return Curvilinear bound track parameters
+  static BoundTrackParameters createCurvilinear(
+      const Vector4& pos4, const Vector3& dir, double qOverP,
+      std::optional<BoundMatrix> cov, ParticleHypothesis particleHypothesis,
+      BoundParametrization parametrization) {
     return BoundTrackParameters(
-        CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface(),
-        transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP),
+        CurvilinearSurface(pos4.segment<3>(ePos0), dir, parametrization)
+            .surface(),
+        transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP,
+                                             parametrization),
         std::move(cov), particleHypothesis);
   }
 
@@ -129,11 +149,17 @@ class BoundTrackParameters {
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
-    // TODO set `validateAngleRange` to `true` after fixing caller code
-    assert(BoundParametrization::globalSpherical().isValid(m_params, false) &&
-           "Invalid bound parameters vector");
     assert(m_surface != nullptr && "Reference surface must not be null");
-    normalizePhiTheta();
+    const auto chart = m_surface->boundParametrization(
+        GeometryContext::dangerouslyDefaultConstruct());
+    // TODO set `validateAngleRange` to `true` after fixing caller code
+    assert(chart.isValid(m_params, false) && "Invalid bound parameters vector");
+    if (m_cov && detail::radian_pos(m_params[eBoundDir1]) > std::numbers::pi) {
+      // Folding over a chart pole can reverse a covariance axis.
+      chart.canonicalizeInPlace(m_params, *m_cov).value();
+    } else {
+      m_params = chart.canonicalize(m_params);
+    }
   }
 
   /// Parameters vector.
@@ -243,14 +269,14 @@ class BoundTrackParameters {
   /// @deprecated Use phi(gctx) instead.
   [[deprecated("Use phi(gctx) instead")]]
   double phi() const {
-    return m_params[eBoundDir0];
+    return phi(GeometryContext::dangerouslyDefaultConstruct());
   }
   /// Theta direction.
   /// @return The polar angle theta in radians
   /// @deprecated Use theta(gctx) instead.
   [[deprecated("Use theta(gctx) instead")]]
   double theta() const {
-    return m_params[eBoundDir1];
+    return theta(GeometryContext::dangerouslyDefaultConstruct());
   }
   /// Charge over momentum.
   /// @return The charge over momentum ratio
@@ -262,7 +288,7 @@ class BoundTrackParameters {
   /// @deprecated Use direction(gctx) instead.
   [[deprecated("Use direction(gctx) instead")]]
   Vector3 direction() const {
-    return BoundParametrization::globalSpherical().direction(m_params);
+    return direction(GeometryContext::dangerouslyDefaultConstruct());
   }
   /// Absolute momentum.
   /// @return The absolute momentum magnitude
@@ -274,15 +300,14 @@ class BoundTrackParameters {
   /// @deprecated Use transverseMomentum(gctx) instead.
   [[deprecated("Use transverseMomentum(gctx) instead")]]
   double transverseMomentum() const {
-    return std::sin(m_params[eBoundDir1]) * absoluteMomentum();
+    return transverseMomentum(GeometryContext::dangerouslyDefaultConstruct());
   }
   /// Momentum three-vector.
   /// @return Three-dimensional momentum vector
   /// @deprecated Use momentum(gctx) instead.
   [[deprecated("Use momentum(gctx) instead")]]
   Vector3 momentum() const {
-    return absoluteMomentum() *
-           BoundParametrization::globalSpherical().direction(m_params);
+    return momentum(GeometryContext::dangerouslyDefaultConstruct());
   }
 
   /// Global azimuthal direction angle in radians.
@@ -313,7 +338,8 @@ class BoundTrackParameters {
   /// @param geoCtx Geometry context for direction interpretation
   /// @return Transverse momentum magnitude
   double transverseMomentum(const GeometryContext& geoCtx) const {
-    return std::sin(theta(geoCtx)) * absoluteMomentum();
+    return m_surface->boundParametrization(geoCtx).sinTheta(m_params) *
+           absoluteMomentum();
   }
 
   /// Particle electric charge.
@@ -383,11 +409,6 @@ class BoundTrackParameters {
   std::shared_ptr<const Surface> m_surface;
   // TODO use [[no_unique_address]] once we switch to C++20
   ParticleHypothesis m_particleHypothesis;
-
-  /// Ensure phi and theta angles are within bounds.
-  void normalizePhiTheta() {
-    m_params = BoundParametrization::globalSpherical().canonicalize(m_params);
-  }
 
   /// Compare two bound track parameters for bitwise equality.
   ///

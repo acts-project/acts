@@ -24,6 +24,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -526,9 +527,29 @@ void addEventData(py::module_& m) {
             self.checked().assignSpacePointIndices(indices);
           });
 
-  // BoundTrackParameters (alias for
-  // GenericBoundTrackParameters<ParticleHypothesis>)
   py::class_<BoundTrackParameters>(m, "BoundTrackParameters")
+      .def_static(
+          "create",
+          [](const GeometryContext& gctx,
+             std::shared_ptr<const Surface> surface, const Vector4& pos4,
+             const Vector3& dir, double qOverP, std::optional<BoundMatrix> cov,
+             ParticleHypothesis particleHypothesis, double tolerance) {
+            auto result = BoundTrackParameters::create(
+                gctx, std::move(surface), pos4, dir, qOverP, std::move(cov),
+                particleHypothesis, tolerance);
+            if (!result.ok()) {
+              throw std::runtime_error(
+                  std::format("Creating bound track parameters failed: {}",
+                              result.error().message()));
+            }
+            return std::move(result).value();
+          },
+          py::arg("gctx"), py::arg("surface").none(false), py::arg("pos4"),
+          py::arg("dir"), py::arg("qOverP"), py::arg("cov"),
+          py::arg("particleHypothesis"),
+          py::arg("tolerance") = s_onSurfaceTolerance,
+          "Create a bound state from global position, time, and direction. "
+          "Supply the covariance in the surface's bound coordinates.")
       .def_static(
           "createCurvilinear",
           py::overload_cast<const Vector4&, const Vector3&, double,

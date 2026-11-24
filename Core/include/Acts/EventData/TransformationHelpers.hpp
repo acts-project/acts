@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -88,6 +89,7 @@ Result<BoundVector> transformFreeToBoundParameters(
     double tolerance = s_onSurfaceTolerance);
 
 /// Convert direction to curvilinear track parameters.
+/// @param parametrization Direction chart of the curvilinear surface
 ///
 /// @param time Global track time
 /// @param direction Global direction three-vector; normalization is ignored.
@@ -97,9 +99,10 @@ Result<BoundVector> transformFreeToBoundParameters(
 /// @note The parameters are assumed to be defined at the origin of the
 ///       curvilinear frame derived from the direction vector. The local
 ///       coordinates are zero by construction.
-BoundVector transformFreeToCurvilinearParameters(double time,
-                                                 const Vector3& direction,
-                                                 double qOverP);
+BoundVector transformFreeToCurvilinearParameters(
+    double time, const Vector3& direction, double qOverP,
+    BoundParametrization parametrization =
+        BoundParametrization::globalSpherical());
 
 /// Convert direction angles to curvilinear track parameters.
 ///

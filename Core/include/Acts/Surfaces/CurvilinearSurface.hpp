@@ -26,15 +26,23 @@ class PlaneSurface;
 class CurvilinearSurface final {
  public:
   /// Constructor with direction vector
+  /// @param parametrization Direction chart of this covariance anchor
   /// @param direction The direction vector of the curvilinear surface
-  explicit CurvilinearSurface(const Vector3& direction)
-      : m_direction{direction} {}
+  explicit CurvilinearSurface(const Vector3& direction,
+                              BoundParametrization parametrization =
+                                  BoundParametrization::globalSpherical())
+      : m_parametrization(parametrization), m_direction{direction} {}
 
   /// Constructor with direction vector
   /// @param position The position of the curvilinear surface
+  /// @param parametrization Direction chart of this covariance anchor
   /// @param direction The direction vector of the curvilinear surface
-  CurvilinearSurface(const Vector3& position, const Vector3& direction)
-      : m_position{position}, m_direction{direction} {}
+  CurvilinearSurface(const Vector3& position, const Vector3& direction,
+                     BoundParametrization parametrization =
+                         BoundParametrization::globalSpherical())
+      : m_parametrization(parametrization),
+        m_position{position},
+        m_direction{direction} {}
 
   /// Return method for the surface center by reference
   /// @note the center is always recalculated in order to not keep a cache
@@ -69,10 +77,9 @@ class CurvilinearSurface final {
   Transform3 transform() const;
 
   /// Interpretation shared with the synthesized plane surface.
-  /// @return Canonical global-spherical parametrization, independent of the
-  /// curvilinear position frame
+  /// @return Direction chart, independent of the curvilinear position frame
   BoundParametrization boundParametrization() const {
-    return BoundParametrization::globalSpherical();
+    return m_parametrization;
   }
 
   /// Calculate the jacobian from local to global which the surface knows best,
@@ -130,6 +137,7 @@ class CurvilinearSurface final {
                                   const CurvilinearSurface& surface);
 
  private:
+  BoundParametrization m_parametrization;
   Vector3 m_position = Vector3::Zero();
   Vector3 m_direction = Vector3::UnitZ();
 };

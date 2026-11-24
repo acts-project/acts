@@ -45,15 +45,18 @@ PlaneSurface::PlaneSurface(const GeometryContext& gctx,
     : RegularSurface(gctx, other, transform), m_bounds(other.m_bounds) {}
 
 PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-                           const SurfacePlacementBase& placement)
-    : RegularSurface{placement}, m_bounds(std::move(pbounds)) {
+                           const SurfacePlacementBase& placement,
+                           BoundParametrization parametrization)
+    : RegularSurface{placement, parametrization}, m_bounds(std::move(pbounds)) {
   // surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "PlaneBounds must not be nullptr");
 }
 
 PlaneSurface::PlaneSurface(const Transform3& transform,
-                           std::shared_ptr<const PlanarBounds> pbounds)
-    : RegularSurface(transform), m_bounds(std::move(pbounds)) {}
+                           std::shared_ptr<const PlanarBounds> pbounds,
+                           BoundParametrization parametrization)
+    : RegularSurface(transform, parametrization),
+      m_bounds(std::move(pbounds)) {}
 
 PlaneSurface& PlaneSurface::operator=(const PlaneSurface& other) {
   if (this != &other) {
@@ -276,6 +279,14 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   ACTS_VERBOSE("Merging plane surfaces in " << axisDirectionName(direction)
                                             << " direction");
 
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const auto chart = boundParametrization(gctx);
+  if (other.boundParametrization(gctx) != chart) {
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
+        "Planes have different bound direction charts");
+  }
+
   if (isAlignable() || other.isAlignable()) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "PlaneSurface::merge: surfaces are "
@@ -378,7 +389,7 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
 
   Vector3 unitDir = mergeX ? Vector3::UnitX() : Vector3::UnitY();
   Transform3 newTransform = *m_transform * Translation3{unitDir * newMidMerge};
-  return {Surface::makeShared<PlaneSurface>(newTransform, newBounds),
+  return {Surface::makeShared<PlaneSurface>(newTransform, newBounds, chart),
           mergeShift < 0};
 }
 const std::shared_ptr<const PlanarBounds>& PlaneSurface::boundsPtr() const {

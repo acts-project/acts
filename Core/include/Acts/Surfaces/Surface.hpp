@@ -62,12 +62,11 @@ class Surface : public virtual GeometryObject,
   /// Resolve the interpretation of bound coordinates on this surface.
   /// @param gctx Geometry context for the interpretation
   /// @return A self-contained, allocation-free parametrization value
-  /// @note All surfaces currently use the global-spherical convention. Surface
-  /// placement and alignment do not rotate its direction axes. No chart state
-  /// is added to the surface, and the returned value borrows no context.
+  /// @note The direction frame is fixed in global space. Only the canonical
+  /// global-spherical interpretation is currently available.
   BoundParametrization boundParametrization(
       [[maybe_unused]] const GeometryContext& gctx) const {
-    return BoundParametrization::globalSpherical();
+    return m_boundParametrization;
   }
 
   /// @enum SurfaceType
@@ -97,8 +96,11 @@ class Surface : public virtual GeometryObject,
   /// Constructor with Transform3 as a shared object
   ///
   /// @param transform Transform3 positions the surface in 3D global space
+  /// @param parametrization Direction chart of states bound to this surface
   /// @note also acts as default constructor
-  explicit Surface(const Transform3& transform = Transform3::Identity());
+  explicit Surface(const Transform3& transform = Transform3::Identity(),
+                   BoundParametrization parametrization =
+                       BoundParametrization::globalSpherical());
 
   /// Copy constructor
   ///
@@ -110,13 +112,16 @@ class Surface : public virtual GeometryObject,
 
   /// Constructor from SurfacePlacement: Element proxy
   ///
+  /// @param parametrization Direction chart of states bound to this surface
   /// @param placement Reference to the surface placement
   /// @note The Surface does not take any ownership over the
   ///       `SurfacePlacementBase` it is expected that the user
   ///        ensures the life-time of the `SurfacePlacementBase`
   ///        and that the `Surface` is actually owned by
   ///        the `SurfacePlacementBase` instance
-  explicit Surface(const SurfacePlacementBase& placement) noexcept;
+  explicit Surface(const SurfacePlacementBase& placement,
+                   BoundParametrization parametrization =
+                       BoundParametrization::globalSpherical()) noexcept;
 
   /// Copy constructor with optional shift
   ///
@@ -667,6 +672,8 @@ class Surface : public virtual GeometryObject,
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated
   const Layer* m_associatedLayer{nullptr};
+
+  BoundParametrization m_boundParametrization;
 
   /// Flag to indicate whether the surface is sensitive
   bool m_isSensitive{false};

@@ -55,6 +55,7 @@ class PlaneSurface : public RegularSurface {
 
   /// Constructor from SurfacePlacementBase : Element proxy
   ///
+  /// @param parametrization Direction chart, fixed in global space
   /// @param pbounds are the provided planar bounds
   /// @param placement Reference to the surface placement
   /// @note The Surface does not take any ownership over the
@@ -63,14 +64,19 @@ class PlaneSurface : public RegularSurface {
   ///        and that the `Surface` is actually owned by
   ///        the `SurfacePlacementBase` instance
   PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-               const SurfacePlacementBase& placement);
+               const SurfacePlacementBase& placement,
+               BoundParametrization parametrization =
+                   BoundParametrization::globalSpherical());
 
   /// Constructor for Planes with (optional) shared bounds object
   ///
   /// @param transform transform in 3D that positions this surface
+  /// @param parametrization Direction chart, fixed in global space
   /// @param pbounds bounds object to describe the actual surface area
   explicit PlaneSurface(const Transform3& transform,
-                        std::shared_ptr<const PlanarBounds> pbounds = nullptr);
+                        std::shared_ptr<const PlanarBounds> pbounds = nullptr,
+                        BoundParametrization parametrization =
+                            BoundParametrization::globalSpherical());
 
  public:
   ~PlaneSurface() override = default;

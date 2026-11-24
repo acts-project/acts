@@ -88,6 +88,11 @@ class BoundParametrization {
     }
 
     template <typename Derived>
+    double sinTheta(const Eigen::MatrixBase<Derived>& parameters) const {
+      return std::sin(theta(parameters));
+    }
+
+    template <typename Derived>
     Matrix<3, 2> directionJacobian(
         const Eigen::MatrixBase<Derived>& parameters) const {
       const double phi = parameters[eBoundDir0];
@@ -435,6 +440,15 @@ class BoundParametrization {
   template <typename Derived>
   double theta(const Eigen::MatrixBase<Derived>& parameters) const {
     return visit([&](const auto& chart) { return chart.theta(parameters); });
+  }
+
+  /// Transverse component of the global unit direction.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @param parameters Bound coordinates
+  /// @return Sine of the global polar direction angle
+  template <typename Derived>
+  double sinTheta(const Eigen::MatrixBase<Derived>& parameters) const {
+    return visit([&](const auto& chart) { return chart.sinTheta(parameters); });
   }
 
   /// Encode a global direction into the two direction coordinates.

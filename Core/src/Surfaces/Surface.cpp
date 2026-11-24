@@ -21,18 +21,25 @@
 
 namespace Acts {
 
-Surface::Surface(const Transform3& transform)
-    : GeometryObject(), m_transform(std::make_unique<Transform3>(transform)) {}
+Surface::Surface(const Transform3& transform,
+                 BoundParametrization parametrization)
+    : GeometryObject(),
+      m_transform(std::make_unique<Transform3>(transform)),
+      m_boundParametrization(parametrization) {}
 
-Surface::Surface(const SurfacePlacementBase& placement) noexcept
-    : GeometryObject(), m_placement(&placement) {}
+Surface::Surface(const SurfacePlacementBase& placement,
+                 BoundParametrization parametrization) noexcept
+    : GeometryObject(),
+      m_placement(&placement),
+      m_boundParametrization(parametrization) {}
 
 Surface::Surface(const GeometryContext& gctx, const Surface& other,
                  const Transform3& shift) noexcept
     : GeometryObject(),
       m_transform(std::make_unique<Transform3>(
           shift * other.localToGlobalTransform(gctx))),
-      m_surfaceMaterial(other.m_surfaceMaterial) {}
+      m_surfaceMaterial(other.m_surfaceMaterial),
+      m_boundParametrization(other.m_boundParametrization) {}
 
 Surface::~Surface() noexcept = default;
 
@@ -183,8 +190,7 @@ bool Surface::operator==(const Surface& other) const {
     return false;
   }
 
-  // we should be good
-  return true;
+  return m_boundParametrization == other.m_boundParametrization;
 }
 
 std::ostream& Surface::toStreamImpl(const GeometryContext& gctx,
