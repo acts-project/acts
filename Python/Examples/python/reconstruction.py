@@ -259,8 +259,8 @@ HashingAlgorithmConfigArg = namedtuple(
 
 GbtsConfigArg = namedtuple(
     "GbtsConfig",
-    ["seederConfig", "graphConfig", "useAdaptiveCuts"],
-    defaults=[None] * 3,
+    ["seederConfig", "graphConfig", "useAdaptiveCuts", "trackingFilterConfig"],
+    defaults=[None] * 4,
 )
 
 
@@ -1539,6 +1539,7 @@ def addGbtsSeeding(
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
             useAdaptiveCuts=gbtsConfigArg.useAdaptiveCuts,
+            trackingFilterConfig=gbtsConfigArg.trackingFilterConfig,
             outputFreeParameters=outputFreeParameters,
             magneticField=magneticField,
         ),
