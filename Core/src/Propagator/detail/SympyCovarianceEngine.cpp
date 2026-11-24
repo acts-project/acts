@@ -9,6 +9,7 @@
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
 
@@ -107,14 +108,14 @@ Result<void> sympy::transportCovarianceToCurvilinear(
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
-    const Vector3& direction) {
+    const Vector3& direction, BoundParametrization parametrization) {
   FreeToBoundMatrix freeToBoundJacobian;
 
   // Calculate the full jacobian from local parameters at the start surface to
   // current curvilinear parameters
   const auto transportResult = sympy::boundToCurvilinearTransportJacobian(
       direction, boundToFreeJacobian, freeToBoundJacobian,
-      freeToPathDerivatives, fullTransportJacobian);
+      freeToPathDerivatives, fullTransportJacobian, parametrization);
   if (!transportResult.ok()) {
     return transportResult.error();
   }
@@ -135,7 +136,8 @@ Result<void> sympy::transportCovarianceToCurvilinear(
   // ->The path derivatives are reinitialized to Zero
   // ->The boundToFreeJacobian is reinitialized to that at the current
   // curvilinear surface
-  reinitializeJacobians(freeToPathDerivatives, boundToFreeJacobian, direction);
+  reinitializeJacobians(freeToPathDerivatives, boundToFreeJacobian, direction,
+                        parametrization);
   return Result<void>::success();
 }
 

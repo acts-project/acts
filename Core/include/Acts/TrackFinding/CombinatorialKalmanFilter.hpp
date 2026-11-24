@@ -23,7 +23,7 @@
 #include "Acts/Propagator/detail/AbortConditions.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
-#include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterExtensions.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
@@ -42,6 +42,42 @@
 #include <type_traits>
 
 namespace Acts {
+
+namespace detail {
+
+/// Transport to a CKF material-only surface. On entry chart describes the
+/// surface. On success it describes the covariance used for pre/post material.
+template <typename Stepper, typename State>
+Result<BoundMatrix> transportToCkfMaterialSurface(
+    const Stepper& stepper, State& state, const GeometryContext& gctx,
+    const Surface& surface, bool recordMaterialStates, bool energyLoss,
+    BoundParametrization& chart) {
+  const auto incident = curvilinearParametrization(state);
+  if ((chart.isGlobalSpherical() && incident.isGlobalSpherical()) ||
+      (!recordMaterialStates && !energyLoss)) {
+    chart = incident;
+    return stepper.transportToCurvilinear(state);
+  }
+  // Recording a state requires the physical surface basis. Energy loss also
+  // needs its intersection constraint: a perturbed trajectory changes speed at
+  // a different path length on a tilted slab than on a curvilinear plane.
+  auto transport = stepper.transportToBound(state, surface);
+  if (transport.ok() ||
+      transport.error() != BoundParametrizationError::SingularDirection ||
+      recordMaterialStates || surface.type() != Surface::Plane ||
+      chart == incident) {
+    return transport;
+  }
+  // A skipped plane only constrains the intersection. At its own pole, keep
+  // its position axes and use the incident direction chart. The failed inverse
+  // projection has left the incoming covariance untouched.
+  const auto anchor = Surface::makeShared<PlaneSurface>(
+      surface.localToGlobalTransform(gctx), nullptr, incident);
+  chart = incident;
+  return stepper.transportToBound(state, *anchor);
+}
+
+}  // namespace detail
 
 /// @addtogroup track_finding
 /// @{
@@ -574,33 +610,23 @@ class CombinatorialKalmanFilter {
         return Result<void>::success();
       }
 
-      // Transport the covariance to the surface
-      BoundMatrix jacobian;
-      // Brem material handling needs bound components. Transport directly to
-      // bound: a curvilinear detour would clear the required path derivatives.
-      if (isMaterialOnly && !IsMultiStepper) {
-        const auto transportResult =
-            stepper.transportToCurvilinear(state.stepping);
-        if (!transportResult.ok()) {
-          return transportResult.error();
-        }
-        jacobian = *transportResult;
-      } else {
-        auto transportRes = stepper.transportToBound(state.stepping, surface);
-        if (!transportRes.ok()) {
-          return transportRes.error();
-        }
-        jacobian = *transportRes;
-      }
-
-      // Single-component material-only transport anchors covariance in a
-      // curvilinear frame. Keep its interpretation until a subsequent surface
-      // binding or update.
       auto covarianceParametrization =
-          (isMaterialOnly && !IsMultiStepper)
-              ? CurvilinearSurface(stepper.direction(state.stepping))
-                    .boundParametrization()
-              : surface.boundParametrization(state.options.geoContext);
+          surface.boundParametrization(state.options.geoContext);
+      auto transport = [&]() -> Result<BoundMatrix> {
+        if constexpr (!IsMultiStepper) {
+          if (isMaterialOnly) {
+            return detail::transportToCkfMaterialSurface(
+                stepper, state.stepping, state.options.geoContext, surface,
+                recordMaterialStates, energyLoss, covarianceParametrization);
+          }
+        }
+        // Brem handling needs bound components and surface path derivatives.
+        return stepper.transportToBound(state.stepping, surface);
+      }();
+      if (!transport.ok()) {
+        return transport.error();
+      }
+      BoundMatrix jacobian = *transport;
 
       // Update state and stepper with pre material effects
       const Result<void> materialPreRes = performMaterialInteraction(

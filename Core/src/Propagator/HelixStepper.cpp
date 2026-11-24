@@ -116,6 +116,8 @@ void HelixStepper::initialize(State& state, const BoundVector& boundParams,
   state.previousStepSize = 0;
   state.statistics = StepperStatistics();
 
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   state.pars = freeParams;
   state.field.reset();
 
@@ -162,13 +164,16 @@ bool HelixStepper::prepareCurvilinearState(State& state) const {
 HelixStepper::BoundParameters HelixStepper::curvilinearParameters(
     const State& state) const {
   return detail::curvilinearParameters(state.pars, state.cov,
-                                       state.particleHypothesis);
+                                       state.particleHypothesis,
+                                       state.anchorParametrization);
 }
 
 void HelixStepper::update(State& state, const FreeVector& freeParams,
                           const BoundVector& /*boundParams*/,
                           const Covariance& covariance,
                           const Surface& surface) const {
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   state.pars = freeParams;
   state.field.reset();
   if (state.cov.has_value()) {
@@ -202,7 +207,8 @@ Result<HelixStepper::Jacobian> HelixStepper::transportToCurvilinear(
   }
   const auto transportResult = detail::transportCovarianceToCurvilinear(
       *state.cov, jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, std::nullopt, direction(state));
+      state.jacToGlobal, std::nullopt, direction(state),
+      state.anchorParametrization);
   if (!transportResult.ok()) {
     return Result<Jacobian>::failure(transportResult.error());
   }
@@ -219,6 +225,8 @@ Result<HelixStepper::Jacobian> HelixStepper::transportToBound(
 
   Jacobian jacobian = Jacobian::Identity();
   if (!state.cov.has_value()) {
+    state.anchorParametrization =
+        surface.boundParametrization(state.options.geoContext);
     return Result<Jacobian>::success(jacobian);
   }
   const auto transportResult = detail::transportCovarianceToBound(
@@ -228,6 +236,8 @@ Result<HelixStepper::Jacobian> HelixStepper::transportToBound(
   if (!transportResult.ok()) {
     return Result<Jacobian>::failure(transportResult.error());
   }
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   return Result<Jacobian>::success(jacobian);
 }
 

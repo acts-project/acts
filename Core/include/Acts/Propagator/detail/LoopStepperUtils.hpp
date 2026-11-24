@@ -8,11 +8,26 @@
 
 #pragma once
 
+#include "Acts/Propagator/MultiStepperError.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <format>
 #include <type_traits>
 
 namespace Acts::detail {
+
+/// Mixture covariance combination assumes a canonical curvilinear frame.
+inline void requireMultiStepperParametrization(const GeometryContext& gctx,
+                                               const Surface& surface) {
+  if (!surface.boundParametrization(gctx).isGlobalSpherical()) {
+    throw std::system_error(
+        make_error_code(MultiStepperError::UnsupportedBoundParametrization),
+        std::format(
+            "MultiStepperLoop cannot consume noncanonical coordinates on "
+            "surface {}",
+            surface.geometryId()));
+  }
+}
 
 /// A helper struct to store a reference to a single-component state and its
 /// associated navigation state and options
@@ -124,6 +139,7 @@ struct LoopComponentProxy
   void update(const loop_stepper_t& stepper, const FreeVector& freeParams,
               const BoundVector& boundParams, const Covariance& covariance,
               const Surface& surface) {
+    requireMultiStepperParametrization(all_state.options.geoContext, surface);
     singleStepper(stepper).update(cmp.state, freeParams, boundParams,
                                   covariance, surface);
   }

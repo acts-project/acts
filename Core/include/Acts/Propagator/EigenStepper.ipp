@@ -55,6 +55,8 @@ void Acts::EigenStepper<E>::initialize(State& state,
   state.previousStepSize = 0;
   state.statistics = StepperStatistics();
 
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   state.pars = freeParams;
 
   // Init the jacobian matrix if needed
@@ -114,7 +116,8 @@ template <typename E>
 auto Acts::EigenStepper<E>::curvilinearParameters(const State& state) const
     -> BoundParameters {
   return detail::curvilinearParameters(state.pars, state.cov,
-                                       state.particleHypothesis);
+                                       state.particleHypothesis,
+                                       state.anchorParametrization);
 }
 
 template <typename E>
@@ -122,6 +125,8 @@ void Acts::EigenStepper<E>::update(State& state, const FreeVector& freeParams,
                                    const BoundVector& /*boundParams*/,
                                    const Covariance& covariance,
                                    const Surface& surface) const {
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   state.pars = freeParams;
   if (state.cov.has_value()) {
     state.cov = covariance;
@@ -152,7 +157,8 @@ auto Acts::EigenStepper<E>::transportToCurvilinear(State& state) const
   }
   const auto transportResult = detail::transportCovarianceToCurvilinear(
       *state.cov, jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, std::nullopt, direction(state));
+      state.jacToGlobal, std::nullopt, direction(state),
+      state.anchorParametrization);
   if (!transportResult.ok()) {
     return Result<Jacobian>::failure(transportResult.error());
   }
@@ -171,6 +177,8 @@ auto Acts::EigenStepper<E>::transportToBound(
 
   Jacobian jacobian = Jacobian::Identity();
   if (!state.cov.has_value()) {
+    state.anchorParametrization =
+        surface.boundParametrization(state.options.geoContext);
     return Result<Jacobian>::success(jacobian);
   }
   const auto transportResult = detail::transportCovarianceToBound(
@@ -180,6 +188,8 @@ auto Acts::EigenStepper<E>::transportToBound(
   if (!transportResult.ok()) {
     return Result<Jacobian>::failure(transportResult.error());
   }
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   return Result<Jacobian>::success(jacobian);
 }
 

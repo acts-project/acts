@@ -46,6 +46,8 @@ void StraightLineStepper::initialize(State& state,
   state.previousStepSize = 0;
   state.statistics = StepperStatistics();
 
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   state.pars = freeParams;
 
   // Init the jacobian matrix if needed
@@ -69,13 +71,16 @@ StraightLineStepper::boundParameters(const State& state,
 StraightLineStepper::BoundParameters StraightLineStepper::curvilinearParameters(
     const State& state) const {
   return detail::curvilinearParameters(state.pars, state.cov,
-                                       state.particleHypothesis);
+                                       state.particleHypothesis,
+                                       state.anchorParametrization);
 }
 
 void StraightLineStepper::update(State& state, const FreeVector& freeParams,
                                  const BoundVector& /*boundParams*/,
                                  const Covariance& covariance,
                                  const Surface& surface) const {
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   state.pars = freeParams;
   if (state.cov.has_value()) {
     state.cov = covariance;
@@ -105,7 +110,7 @@ StraightLineStepper::transportToCurvilinear(State& state) const {
   const auto transportResult = detail::transportCovarianceToCurvilinear(
       *state.cov, jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, std::nullopt,
-      state.pars.template segment<3>(eFreeDir0));
+      state.pars.template segment<3>(eFreeDir0), state.anchorParametrization);
   if (!transportResult.ok()) {
     return Result<Jacobian>::failure(transportResult.error());
   }
@@ -122,6 +127,8 @@ Result<StraightLineStepper::Jacobian> StraightLineStepper::transportToBound(
 
   Jacobian jacobian = Jacobian::Identity();
   if (!state.cov.has_value()) {
+    state.anchorParametrization =
+        surface.boundParametrization(state.options.geoContext);
     return Result<Jacobian>::success(jacobian);
   }
   const auto transportResult = detail::transportCovarianceToBound(
@@ -131,6 +138,8 @@ Result<StraightLineStepper::Jacobian> StraightLineStepper::transportToBound(
   if (!transportResult.ok()) {
     return Result<Jacobian>::failure(transportResult.error());
   }
+  state.anchorParametrization =
+      surface.boundParametrization(state.options.geoContext);
   return Result<Jacobian>::success(jacobian);
 }
 

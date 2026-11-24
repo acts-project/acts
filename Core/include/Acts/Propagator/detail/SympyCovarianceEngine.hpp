@@ -63,6 +63,7 @@ Result<void> transportCovarianceToBound(
 /// @param [in, out] freeToPathDerivatives Path length derivatives
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 ///        parametrisation to free parameters
+/// @param parametrization Direction chart of the curvilinear covariance anchor
 /// @param [in] direction Normalised direction vector
 ///
 /// @return Success, or a chart-domain error without modifying the state
@@ -70,6 +71,8 @@ Result<void> transportCovarianceToCurvilinear(
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
-    const Vector3& direction);
+    const Vector3& direction,
+    BoundParametrization parametrization =
+        BoundParametrization::globalSpherical());
 
 }  // namespace Acts::detail::sympy

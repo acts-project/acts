@@ -90,6 +90,7 @@ Result<BoundMatrix> boundToBoundTransportJacobian(
 /// the end parameters, these need to be propagated onto the target surface.
 /// This is an approximated approach to treat the (assumed) small change.
 ///
+/// @param parametrization Direction chart of the curvilinear covariance anchor
 /// @param [in] direction Normalised direction vector
 /// @param [in] boundToFreeJacobian Jacobian from bound to free at start
 /// @param [in] freeTransportJacobian Transport jacobian free to free
@@ -104,8 +105,9 @@ Result<void> boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
-    const FreeVector& freeToPathDerivatives,
-    BoundMatrix& fullTransportJacobian);
+    const FreeVector& freeToPathDerivatives, BoundMatrix& fullTransportJacobian,
+    BoundParametrization parametrization =
+        BoundParametrization::globalSpherical());
 
 /// @brief This function calculates the full jacobian from a given
 /// bound/curvilinear parameterisation from a new free parameterisation.
@@ -147,6 +149,7 @@ Result<void> freeToBoundTransportJacobian(
 /// parameters, these need to be propagated onto the target surface. This an
 /// approximated approach to treat the (assumed) small change.
 ///
+/// @param parametrization Direction chart of the curvilinear covariance anchor
 /// @param [in] direction Normalised direction vector
 /// @param [in] freeTransportJacobian Transport jacobian free to free
 /// @param [in] freeToPathDerivatives Path length derivatives for free
@@ -154,7 +157,9 @@ Result<void> freeToBoundTransportJacobian(
 /// @return A 6x8 transport Jacobian, or a chart-domain error
 Result<FreeToBoundMatrix> freeToCurvilinearTransportJacobian(
     const Vector3& direction, const FreeMatrix& freeTransportJacobian,
-    const FreeVector& freeToPathDerivatives);
+    const FreeVector& freeToPathDerivatives,
+    BoundParametrization parametrization =
+        BoundParametrization::globalSpherical());
 
 /// @brief This function reinitialises the state members required for the
 ///        covariance transport for usual surfaces
@@ -196,11 +201,14 @@ void reinitializeJacobians(const GeometryContext& geoContext,
 ///        parameters
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 ///        parametrisation to free parameters
+/// @param parametrization Direction chart of the curvilinear covariance anchor
 /// @param [in] direction Normalised direction vector
 void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
                            FreeVector& freeToPathDerivatives,
                            BoundToFreeMatrix& boundToFreeJacobian,
-                           const Vector3& direction);
+                           const Vector3& direction,
+                           BoundParametrization parametrization =
+                               BoundParametrization::globalSpherical());
 
 /// @brief Overload for steppers that transport the bound-to-free jacobian
 ///        itself and so have no free-to-free transport to reset.
@@ -223,9 +231,12 @@ void reinitializeJacobians(const GeometryContext& geoContext,
 /// @param [out] freeToPathDerivatives Path length derivatives
 /// @param [out] boundToFreeJacobian Jacobian from the local parametrisation
 ///        to free parameters
+/// @param parametrization Direction chart of the curvilinear covariance anchor
 /// @param [in] direction Normalised direction vector
 void reinitializeJacobians(FreeVector& freeToPathDerivatives,
                            BoundToFreeMatrix& boundToFreeJacobian,
-                           const Vector3& direction);
+                           const Vector3& direction,
+                           BoundParametrization parametrization =
+                               BoundParametrization::globalSpherical());
 
 }  // namespace Acts::detail

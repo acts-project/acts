@@ -54,10 +54,11 @@ Result<void> sympy::boundToBoundTransportJacobian(
 Result<void> sympy::boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
-    const FreeVector& freeToPathDerivatives,
-    BoundMatrix& fullTransportJacobian) {
+    const FreeVector& freeToPathDerivatives, BoundMatrix& fullTransportJacobian,
+    BoundParametrization parametrization) {
   // Calculate the jacobian from global to local at the curvilinear surface
-  const auto projection = CurvilinearSurface(direction).freeToBoundJacobian();
+  const auto projection =
+      CurvilinearSurface(direction, parametrization).freeToBoundJacobian();
   if (!projection.ok()) {
     return projection.error();
   }

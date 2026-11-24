@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -71,10 +72,11 @@ Result<void> detail::boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
-    const FreeVector& freeToPathDerivatives,
-    BoundMatrix& fullTransportJacobian) {
+    const FreeVector& freeToPathDerivatives, BoundMatrix& fullTransportJacobian,
+    BoundParametrization parametrization) {
   // Calculate the jacobian from global to local at the curvilinear surface
-  const auto projection = CurvilinearSurface(direction).freeToBoundJacobian();
+  const auto projection =
+      CurvilinearSurface(direction, parametrization).freeToBoundJacobian();
   if (!projection.ok()) {
     return projection.error();
   }
@@ -128,13 +130,15 @@ Result<void> detail::freeToBoundTransportJacobian(
 
 Result<FreeToBoundMatrix> detail::freeToCurvilinearTransportJacobian(
     const Vector3& direction, const FreeMatrix& freeTransportJacobian,
-    const FreeVector& freeToPathDerivatives) {
+    const FreeVector& freeToPathDerivatives,
+    BoundParametrization parametrization) {
   auto sfactors = direction.transpose() *
                   freeTransportJacobian.template topLeftCorner<3, 8>();
 
   // Since the jacobian to local needs to calculated for the bound parameters
   // here, it is convenient to do the same here
-  const auto projection = CurvilinearSurface(direction).freeToBoundJacobian();
+  const auto projection =
+      CurvilinearSurface(direction, parametrization).freeToBoundJacobian();
   if (!projection.ok()) {
     return Result<FreeToBoundMatrix>::failure(projection.error());
   }
@@ -157,10 +161,12 @@ void detail::reinitializeJacobians(const GeometryContext& geoContext,
 void detail::reinitializeJacobians(FreeMatrix& freeTransportJacobian,
                                    FreeVector& freeToPathDerivatives,
                                    BoundToFreeMatrix& boundToFreeJacobian,
-                                   const Vector3& direction) {
+                                   const Vector3& direction,
+                                   BoundParametrization parametrization) {
   // Reset the jacobians
   freeTransportJacobian = FreeMatrix::Identity();
-  reinitializeJacobians(freeToPathDerivatives, boundToFreeJacobian, direction);
+  reinitializeJacobians(freeToPathDerivatives, boundToFreeJacobian, direction,
+                        parametrization);
 }
 
 void detail::reinitializeJacobians(const GeometryContext& geoContext,
@@ -176,9 +182,11 @@ void detail::reinitializeJacobians(const GeometryContext& geoContext,
 
 void detail::reinitializeJacobians(FreeVector& freeToPathDerivatives,
                                    BoundToFreeMatrix& boundToFreeJacobian,
-                                   const Vector3& direction) {
+                                   const Vector3& direction,
+                                   BoundParametrization parametrization) {
   freeToPathDerivatives = FreeVector::Zero();
-  boundToFreeJacobian = CurvilinearSurface(direction).boundToFreeJacobian();
+  boundToFreeJacobian =
+      CurvilinearSurface(direction, parametrization).boundToFreeJacobian();
 }
 
 }  // namespace Acts

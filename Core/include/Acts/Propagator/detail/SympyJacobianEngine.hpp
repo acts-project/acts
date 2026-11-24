@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -67,6 +68,7 @@ Result<void> boundToBoundTransportJacobian(
 /// the end parameters, these need to be propagated onto the target surface.
 /// This is an approximated approach to treat the (assumed) small change.
 ///
+/// @param parametrization Direction chart of the curvilinear covariance anchor
 /// @param [in] direction Normalised direction vector
 /// @param [in] boundToFreeJacobian Jacobian from the bound parameters at the
 ///        start surface to the free parameters here
@@ -80,7 +82,8 @@ Result<void> boundToBoundTransportJacobian(
 Result<void> boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
-    const FreeVector& freeToPathDerivatives,
-    BoundMatrix& fullTransportJacobian);
+    const FreeVector& freeToPathDerivatives, BoundMatrix& fullTransportJacobian,
+    BoundParametrization parametrization =
+        BoundParametrization::globalSpherical());
 
 }  // namespace Acts::detail::sympy

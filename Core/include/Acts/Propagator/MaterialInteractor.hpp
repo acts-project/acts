@@ -16,7 +16,6 @@
 #include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
-#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
@@ -108,9 +107,8 @@ struct MaterialInteractor {
         // Apply the material interactions
         const auto effectsResult = detail::performMaterialInteraction(
             state, stepper, slab,
-            CurvilinearSurface(stepper.direction(state.stepping))
-                .boundParametrization(),
-            noiseUpdateMode, multipleScattering, energyLoss);
+            detail::curvilinearParametrization(state.stepping), noiseUpdateMode,
+            multipleScattering, energyLoss);
         if (!effectsResult.ok()) {
           return effectsResult.error();
         }

@@ -37,6 +37,8 @@ class MultiStepperErrorCategory : public std::error_category {
         return "The conversion to the bound state failed for some components";
       case MultiStepperError::NoComponentsLeft:
         return "No components are left";
+      case MultiStepperError::UnsupportedBoundParametrization:
+        return "MultiStepperLoop requires global-spherical bound coordinates";
       default:
         return "unknown";
     }

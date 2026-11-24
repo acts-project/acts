@@ -108,6 +108,10 @@ class HelixStepper final {
     /// Covariance matrix for track parameter uncertainties, set if the
     /// covariance is transported
     std::optional<Covariance> cov;
+    /// Direction chart of the last bound state, also used for curvilinear
+    /// anchors.
+    BoundParametrization anchorParametrization =
+        BoundParametrization::globalSpherical();
 
     /// Particle hypothesis
     ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
@@ -446,9 +450,9 @@ class HelixStepper final {
 
   /// Transport the covariance to a surface at the current position
   ///
-  /// This anchors the state on @p surface. Without a covariance the state
-  /// does not change. The state must be on @p surface, and it stays unchanged
-  /// if it is not.
+  /// This anchors the state on @p surface and remembers its direction chart
+  /// for subsequent curvilinear output, also in value-only propagation.
+  /// The state must be on @p surface.
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface The surface to transport the covariance to

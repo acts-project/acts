@@ -27,6 +27,19 @@
 
 namespace Acts::detail {
 
+/// Direction chart used by a stepper's curvilinear covariance transport.
+/// Steppers implementing the original interface use global spherical angles.
+/// @param state Stepper state after transport
+/// @return Parametrization in which to add a material noise increment
+template <typename SteppingState>
+BoundParametrization curvilinearParametrization(const SteppingState& state) {
+  if constexpr (requires { state.anchorParametrization; }) {
+    return state.anchorParametrization;
+  } else {
+    return BoundParametrization::globalSpherical();
+  }
+}
+
 /// Determine the material update mode to be used for a given surface. Depending
 /// on whether the surface is the start or target surface, the update mode is
 /// restricted to pre- or post-update only. This is necessary to avoid double

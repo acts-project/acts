@@ -78,7 +78,9 @@ global-spherical interpretation for every surface, including curvilinear planes;
 surface placement and alignment do not rotate the direction axes. Track proxies
 without a reference surface retain the canonical interpretation. Surfaces store
 the selected parametrization; plane and curvilinear construction accept it explicitly.
-Only the canonical global-spherical value is selectable. Bound/free surface
+Only the canonical global-spherical value is selectable. Cartesian and Ridders
+steppers retain the last bound anchor's parametrization for curvilinear output.
+Bound/free surface
 Jacobians use the same interpretation, including the
 curvilinear utility and the direction-dependent line/point position terms.
 Covariance transport retains its source-to-free-to-destination composition and
@@ -177,7 +179,8 @@ direction coordinates.
 The circular-mean implementation checks for global-spherical support before
 interpreting the direction slots. An unsupported parametrization throws a
 `std::system_error` with @ref Acts::GsfError::UnsupportedBoundParametrization and
-the surface identifier; it is not converted into a rejected component. No
+the surface identifier; it is not converted into a rejected component. The
+multi-stepper also checks the parametrization when it consumes bound states. No
 alternative parametrization is selectable yet, so that rejection path awaits
 validation when one is introduced. Custom mixture-reducer callbacks now take
 `const GeometryContext&` as their first argument; parameter merging takes

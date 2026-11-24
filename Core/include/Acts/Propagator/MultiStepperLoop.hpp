@@ -127,6 +127,8 @@ using MaxWeightReducerLoop =
 /// * There are certain redundancies between the global State and the
 /// component states
 /// * The components do not share a single magnetic-field-cache
+/// Consuming a noncanonical bound parametrization throws std::system_error
+/// with MultiStepperError::UnsupportedBoundParametrization.
 /// @tparam sstepper_t The single-component stepper type to use
 /// @tparam component_reducer_t How to map the multi-component state to a single
 /// component
@@ -278,9 +280,9 @@ class MultiStepperLoop final {
           "multi-component parameters");
     }
 
+    detail::requireMultiStepperParametrization(state.options.geoContext,
+                                               par.referenceSurface());
     state.particleHypothesis = par.particleHypothesis();
-
-    const auto surface = par.referenceSurface().getSharedPtr();
 
     state.components.clear();
     state.components.reserve(par.size());
@@ -436,6 +438,8 @@ class MultiStepperLoop final {
   /// @return ComponentProxy for the newly added component or error
   ComponentProxy addComponent(State& state, const BoundTrackParameters& pars,
                               double weight) const {
+    detail::requireMultiStepperParametrization(state.options.geoContext,
+                                               pars.referenceSurface());
     auto& cmp =
         state.components.emplace_back(m_singleStepper.makeState(state.options),
                                       weight, IntersectionStatus::onSurface);

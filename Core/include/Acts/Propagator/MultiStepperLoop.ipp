@@ -23,6 +23,7 @@ auto MultiStepperLoop<S, R>::boundParameters(const State& state,
                                              const Surface& surface) const
     -> Result<BoundParameters> {
   assert(!state.components.empty());
+  detail::requireMultiStepperParametrization(state.options.geoContext, surface);
 
   MultiComponentBoundTrackParameters params(
       surface.getSharedPtr(), state.covTransport, state.particleHypothesis);
@@ -54,6 +55,8 @@ auto MultiStepperLoop<S, R>::curvilinearParameters(const State& state) const
 
   for (const auto& cmp : state.components) {
     const auto cp = m_singleStepper.curvilinearParameters(cmp.state);
+    detail::requireMultiStepperParametrization(state.options.geoContext,
+                                               cp.referenceSurface());
 
     cmps.emplace_back(cmp.weight, cp.fourPosition(state.options.geoContext),
                       cp.direction(state.options.geoContext), cp.qOverP(),
@@ -70,6 +73,7 @@ auto MultiStepperLoop<S, R>::transportToBound(
     const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<Jacobian> {
   assert(!state.components.empty());
+  detail::requireMultiStepperParametrization(state.options.geoContext, surface);
 
   const std::size_t selected = Reducer::index(state);
   assert(selected < state.components.size());

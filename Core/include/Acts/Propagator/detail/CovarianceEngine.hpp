@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -50,6 +51,7 @@ Result<BoundTrackParameters> boundParameters(
     const ParticleHypothesis& particleHypothesis);
 
 /// Create curvilinear parameters from free parameters
+/// @param parametrization Direction chart of the curvilinear covariance anchor
 ///
 /// @param [in] freeParameters The free parameters
 /// @param [in] covariance The optional curvilinear covariance
@@ -58,7 +60,9 @@ Result<BoundTrackParameters> boundParameters(
 /// @return The curvilinear parameters at the free position
 BoundTrackParameters curvilinearParameters(
     const FreeVector& freeParameters, std::optional<BoundMatrix> covariance,
-    const ParticleHypothesis& particleHypothesis);
+    const ParticleHypothesis& particleHypothesis,
+    BoundParametrization parametrization =
+        BoundParametrization::globalSpherical());
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear to
 ///        another bound representation.
@@ -95,6 +99,7 @@ Result<void> transportCovarianceToBound(
 /// @param [in, out] freeToPathDerivatives Path length derivatives
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 ///        parametrisation to free parameters
+/// @param parametrization Direction chart of the curvilinear covariance anchor
 /// @param [in] direction Normalised direction vector
 ///
 /// @return Success, or a chart-domain error without modifying the state
@@ -103,7 +108,9 @@ Result<void> transportCovarianceToCurvilinear(
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
-    const Vector3& direction);
+    const Vector3& direction,
+    BoundParametrization parametrization =
+        BoundParametrization::globalSpherical());
 
 /// Convert bound track parameters to another bound surface.
 /// @pre The @p targetSurface must intersect with the surface attached to
