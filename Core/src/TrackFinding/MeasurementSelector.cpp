@@ -13,6 +13,7 @@
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/detail/AllFinite.hpp"
 
 #include <algorithm>
 #include <array>
@@ -129,7 +130,8 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
 }
 
 double MeasurementSelector::calculateChi2(
-    const double* fullCalibrated, const double* fullCalibratedCovariance,
+    const BoundParametrization& parametrization, const double* fullCalibrated,
+    const double* fullCalibratedCovariance,
     TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted,
     TrackStateTraits<kMeasurementSizeMax, false>::Covariance
         predictedCovariance,
@@ -137,7 +139,7 @@ double MeasurementSelector::calculateChi2(
   return visit_measurement(
       calibratedSize,
       [&fullCalibrated, &fullCalibratedCovariance, &predicted,
-       &predictedCovariance, &projector](auto N) -> double {
+       &predictedCovariance, &projector, &parametrization](auto N) -> double {
         constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
         typename TrackStateTraits<kMeasurementSize, true>::Calibrated
@@ -153,9 +155,13 @@ double MeasurementSelector::calculateChi2(
         FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
             validSubspaceIndices);
 
-        // Get the residuals
-        ParametersVector res =
-            calibrated - subspaceHelper.projectVector(predicted);
+        // Reject diverged measurements before invoking finite-input
+        // operations. The caller has already checked the prediction.
+        if (!detail::allFinite(calibrated)) {
+          return std::numeric_limits<double>::quiet_NaN();
+        }
+        const ParametersVector res = parametrization.subspaceDifference(
+            calibrated, predicted, validSubspaceIndices);
 
         // Get the chi2
         return (res.transpose() *
