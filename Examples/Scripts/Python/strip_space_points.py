@@ -152,16 +152,11 @@ if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     # ODD
-    from acts.examples.odd import (
-        getOpenDataDetector,
-        getOpenDataDetectorDirectory,
-    )
+    from acts.examples.odd import getOpenDataDetector
 
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
-    digiConfigFile = (
-        getOpenDataDetectorDirectory() / "config/odd-digi-smearing-config.json"
-    )
+    digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
 
     geoSelection = srcdir / "Examples/Configs/odd-strip-spacepoint-selection.json"
     print(geoSelection.resolve())
