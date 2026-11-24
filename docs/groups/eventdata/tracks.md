@@ -77,7 +77,45 @@ bound/free value conversions use this lookup. It currently returns the canonical
 global-spherical interpretation for every surface, including curvilinear planes;
 surface placement and alignment do not rotate the direction axes. Track proxies
 without a reference surface retain the canonical interpretation. No chart state
-is added to surfaces. Chart configuration and alternative charts remain follow-up work.
+is added to surfaces. Bound/free surface Jacobians use the same interpretation, including the
+curvilinear utility and the direction-dependent line/point position terms.
+Covariance transport retains its source-to-free-to-destination composition and
+path-length correction; reinitialization uses the destination interpretation.
+Chart configuration and alternative charts remain follow-up work.
+
+@ref Acts::Surface::freeToBoundJacobian "Surface inverse Jacobians" and
+@ref Acts::Surface::alignmentToBoundDerivative "alignment derivatives" return
+@ref Acts::Result "Result" for chart-domain failures. The covariance engines,
+steppers (including curvilinear transport), material interactions and final
+propagation results propagate those errors. Exactly axial canonical directions
+return @ref Acts::BoundParametrizationError::SingularDirection when an inverse
+derivative is required. Value-only transport remains available without a
+covariance. The transport path introduces no additional conditioning cutoff;
+use @ref Acts::BoundParametrization::directionCoordinatesJacobian for an
+explicit threshold. Normalized-direction Jacobians avoid normalization and
+angle reconstruction in the propagation path.
+
+Callers of `freeToBoundJacobian`, `alignmentToBoundDerivative`, and
+`transportToCurvilinear` must check `.ok()` before accessing the returned
+matrix. The covariance engines return `Result<void>` and preserve their inputs
+on chart-domain failure. Sympy also retains its scaled Jacobian and accumulated
+material effects on failure. Multi-component transport reports a component
+failure immediately; earlier components may already have been transported.
+
+The public extension API consists of the mathematical operations on
+@ref Acts::BoundParametrization, the surface Jacobians, and the operations
+required by @ref Acts::Concepts::CommonStepper and the other stepper concepts.
+Custom surface Jacobians must agree with
+@ref Acts::Surface::boundParametrization and propagate inverse-derivative
+failures through @ref Acts::Result. The unit-direction derivative methods are
+supported primitives for custom surfaces and steppers; their normalized-input
+preconditions avoid redundant work in transport.
+
+The covariance and Jacobian engines in `Acts::detail`, including their Sympy
+implementations, are internal helpers under the @ref versioning "API policy".
+Their installed headers allow use by template implementations but do not make
+them public API. Custom steppers can implement the public contract without
+using these engines. Parametrization storage and dispatch are also private.
 
 The canonical-only wrappers in @ref TrackParameterHelpers.hpp are deprecated:
 @ref Acts::directionFromBoundParameters, @ref Acts::isBoundVectorValid,

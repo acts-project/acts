@@ -577,7 +577,12 @@ class CombinatorialKalmanFilter {
       // Brem material handling needs bound components. Transport directly to
       // bound: a curvilinear detour would clear the required path derivatives.
       if (isMaterialOnly && !IsMultiStepper) {
-        jacobian = stepper.transportToCurvilinear(state.stepping);
+        const auto transportResult =
+            stepper.transportToCurvilinear(state.stepping);
+        if (!transportResult.ok()) {
+          return transportResult.error();
+        }
+        jacobian = *transportResult;
       } else {
         auto transportRes = stepper.transportToBound(state.stepping, surface);
         if (!transportRes.ok()) {

@@ -152,13 +152,16 @@ BoundToFreeMatrix ConeSurface::boundToFreeJacobian(
   return jacToGlobal;
 }
 
-FreeToBoundMatrix ConeSurface::freeToBoundJacobian(
+Result<FreeToBoundMatrix> ConeSurface::freeToBoundJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
-  FreeToBoundMatrix jacToLocal =
-      Surface::freeToBoundJacobian(gctx, position, direction);
+  auto jacobian = Surface::freeToBoundJacobian(gctx, position, direction);
+  if (!jacobian.ok()) {
+    return jacobian;
+  }
+  FreeToBoundMatrix& jacToLocal = *jacobian;
 
   // On the surface R/r = 1, so the (rphi, z) rows are e_phi + phi*tan(alpha)*ez
   // and ez.
@@ -168,7 +171,7 @@ FreeToBoundMatrix ConeSurface::freeToBoundJacobian(
   jacToLocal.block<1, 3>(eBoundLoc0, eFreePos0) =
       (axes.phiAxis + axes.localPhi * tanAlpha * axes.axis).transpose();
   jacToLocal.block<1, 3>(eBoundLoc1, eFreePos0) = axes.axis.transpose();
-  return jacToLocal;
+  return jacobian;
 }
 
 Vector3 ConeSurface::localToGlobal(const GeometryContext& gctx,

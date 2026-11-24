@@ -140,10 +140,11 @@ void checkSurfaceDerivatives(const Acts::GeometryContext& gctx,
   const AlignmentToPathMatrix alignToPath =
       surface.alignmentToPathDerivative(gctx, position, direction);
   const FreeToBoundMatrix usedJac =
-      surface.freeToBoundJacobian(gctx, position, direction);
+      surface.freeToBoundJacobian(gctx, position, direction).value();
   const AlignmentToBoundMatrix alignToBound =
-      surface.alignmentToBoundDerivative(gctx, position, direction,
-                                         pathDerivative);
+      surface
+          .alignmentToBoundDerivative(gctx, position, direction, pathDerivative)
+          .value();
 
   // ds/da
   {

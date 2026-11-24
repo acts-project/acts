@@ -535,14 +535,15 @@ class AtlasStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @return The jacobian from the previous anchor to the curvilinear frame
-  Jacobian transportToCurvilinear(State& state) const {
+  /// @note Chart-domain errors are returned when covariance transport fails.
+  Result<Jacobian> transportToCurvilinear(State& state) const {
     if (!state.cov.has_value()) {
-      return Jacobian::Identity();
+      return Result<Jacobian>::success(Jacobian::Identity());
     }
 
     const auto surface =
         CurvilinearSurface(position(state), direction(state)).surface();
-    return transportToBound(state, *surface).value();
+    return transportToBound(state, *surface);
   }
 
   /// Transport the covariance to a surface at the current position
@@ -570,6 +571,13 @@ class AtlasStepper {
     if (!state.cov.has_value()) {
       return Result<Jacobian>::success(Jacobian::Identity());
     }
+    const auto chartJacobian =
+        surface.boundParametrization(state.options.geoContext)
+            .directionCoordinatesJacobianFromUnitDirection(direction(state),
+                                                           0.);
+    if (!chartJacobian.ok()) {
+      return Result<Jacobian>::failure(chartJacobian.error());
+    }
 
     auto prepared = prepareDerivatives(state);
     if (!prepared.ok()) {
@@ -592,10 +600,13 @@ class AtlasStepper {
         Eigen::Map<const Vector3>(state.pVector.data() + 56);
     const FreeToPathMatrix freeToPath =
         surface.freeToPathDerivative(state.options.geoContext, pos, dir);
-    const FreeToBoundMatrix freeToBound =
+    const auto freeToBound =
         surface.freeToBoundJacobian(state.options.geoContext, pos, dir);
+    if (!freeToBound.ok()) {
+      return Result<Jacobian>::failure(freeToBound.error());
+    }
     const Jacobian jac =
-        freeToBound *
+        *freeToBound *
         (transportJacobian + pathDerivative * (freeToPath * transportJacobian));
     *state.cov = jac * *state.cov * jac.transpose();
 
