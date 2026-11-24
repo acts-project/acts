@@ -580,23 +580,21 @@ GraphBasedTrackSeeder::extractBestPathPerEdge(
     // the best candidate per head edge so far
     constexpr auto kNoCandidate = std::numeric_limits<std::uint32_t>::max();
     std::vector<std::uint32_t> candidateOfHead(nEdges, kNoCandidate);
-    std::vector<float> qualityOfHead(nEdges,
-                                     std::numeric_limits<float>::max());
+    std::vector<float> qualityOfHead(nEdges, std::numeric_limits<float>::max());
     std::vector<FittedPath> headCandidates;
     // `edges` from the head inwards
-    const auto store = [&](const std::uint32_t head,
-                           const detail::GbtsEdgeState& state,
-                           const float quality,
-                           const std::vector<std::uint32_t>& edges) {
-      qualityOfHead[head] = quality;
-      if (candidateOfHead[head] == kNoCandidate) {
-        candidateOfHead[head] =
-            static_cast<std::uint32_t>(headCandidates.size());
-        headCandidates.emplace_back(state, edges);
-      } else {
-        headCandidates[candidateOfHead[head]] = FittedPath{state, edges};
-      }
-    };
+    const auto store =
+        [&](const std::uint32_t head, const detail::GbtsEdgeState& state,
+            const float quality, const std::vector<std::uint32_t>& edges) {
+          qualityOfHead[head] = quality;
+          if (candidateOfHead[head] == kNoCandidate) {
+            candidateOfHead[head] =
+                static_cast<std::uint32_t>(headCandidates.size());
+            headCandidates.emplace_back(state, edges);
+          } else {
+            headCandidates[candidateOfHead[head]] = FittedPath{state, edges};
+          }
+        };
 
     // The strips picked up outwards from a pixel path, `pixelPath` from its
     // head inwards: each strip edge reached ends a candidate path of its own.

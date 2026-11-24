@@ -130,8 +130,8 @@ class GbtsTrackingFilter final {
   /// @param previousNode Node the state was last updated with
   /// @param ts Edge state to update
   /// @return Success flag
-  bool updateImpl(const detail::GbtsNodeView& nodeView,
-                  SpacePointIndex newNode, SpacePointIndex previousNode,
+  bool updateImpl(const detail::GbtsNodeView& nodeView, SpacePointIndex newNode,
+                  SpacePointIndex previousNode,
                   detail::GbtsEdgeState& ts) const;
 
   /// Get layer type from layer index

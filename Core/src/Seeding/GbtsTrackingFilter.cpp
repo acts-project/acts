@@ -74,17 +74,15 @@ void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
     float r2c = n2.r();
     float z2c = n2.z();
     std::array<float, 3> point{};
-    if (strip1 != nullptr &&
-        Acts::detail::calibrateOuterStripSpacePoint(
-            {ox + oy * turn, oy - ox * turn, dzc}, *strip1, point,
-            stripLengthFraction)) {
+    if (strip1 != nullptr && Acts::detail::calibrateOuterStripSpacePoint(
+                                 {ox + oy * turn, oy - ox * turn, dzc}, *strip1,
+                                 point, stripLengthFraction)) {
       r1c = fastHypot(point[0], point[1]);
       z1c = point[2];
     }
-    if (strip2 != nullptr &&
-        Acts::detail::calibrateOuterStripSpacePoint(
-            {ox - oy * turn, oy + ox * turn, dzc}, *strip2, point,
-            stripLengthFraction)) {
+    if (strip2 != nullptr && Acts::detail::calibrateOuterStripSpacePoint(
+                                 {ox - oy * turn, oy + ox * turn, dzc}, *strip2,
+                                 point, stripLengthFraction)) {
       r2c = fastHypot(point[0], point[1]);
       z2c = point[2];
     }
