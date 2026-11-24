@@ -18,6 +18,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -80,7 +81,8 @@ BOOST_AUTO_TEST_CASE(Update) {
 
   // Gain matrix update and filtered state
   BOOST_CHECK(GainMatrixUpdater()
-                  .operator()<VectorMultiTrajectory>(tgContext, ts)
+                  .operator()<VectorMultiTrajectory>(
+                      tgContext, BoundParametrization::globalSpherical(), ts)
                   .ok());
 
   // Check for regression. This does NOT test if the math is correct, just that
@@ -130,7 +132,8 @@ BOOST_AUTO_TEST_CASE(UpdateFailed) {
 
   // Gain matrix update and filtered state
   BOOST_CHECK(GainMatrixUpdater()
-                  .operator()<VectorMultiTrajectory>(tgContext, ts)
+                  .operator()<VectorMultiTrajectory>(
+                      tgContext, BoundParametrization::globalSpherical(), ts)
                   .error() == KalmanFitterError::UpdateFailed);
 }
 
@@ -146,7 +149,10 @@ BOOST_AUTO_TEST_CASE(AngularInnovationAcrossPhiSeam) {
     testSourceLinkCalibrator<VectorMultiTrajectory>(
         tgContext, CalibrationContext{}, SourceLink{measurement}, ts);
     BOOST_REQUIRE(GainMatrixUpdater(joseph)
-                      .operator()<VectorMultiTrajectory>(tgContext, ts)
+                      .operator()<VectorMultiTrajectory>(
+                          tgContext,
+                          ts.referenceSurface().boundParametrization(tgContext),
+                          ts)
                       .ok());
     CHECK_CLOSE_ABS(ts.filtered()[eBoundDir0], -std::numbers::pi, 1e-12);
     CHECK_CLOSE_ABS(ts.filteredCovariance()(eBoundDir0, eBoundDir0), 0.5,
@@ -177,8 +183,9 @@ BOOST_AUTO_TEST_CASE(UpdateTransformsCovarianceWhenFoldingTheta) {
       testSourceLinkCalibrator<VectorMultiTrajectory>(
           tgContext, CalibrationContext{}, SourceLink{measurement}, ts);
       const auto result =
-          GainMatrixUpdater(joseph).operator()<VectorMultiTrajectory>(tgContext,
-                                                                      ts);
+          GainMatrixUpdater(joseph).operator()<VectorMultiTrajectory>(
+              tgContext, ts.referenceSurface().boundParametrization(tgContext),
+              ts);
       if (pole) {
         BOOST_REQUIRE(!result.ok());
         BOOST_CHECK(result.error() ==
@@ -202,6 +209,52 @@ BOOST_AUTO_TEST_CASE(UpdateTransformsCovarianceWhenFoldingTheta) {
       }
     }
   }
+}
+
+/// The updater uses the parametrization passed by the caller, also through the
+/// fitter's updater delegate, and gives the same result as a direct call.
+BOOST_AUTO_TEST_CASE(UpdateWithPassedParametrization) {
+  const auto surface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity());
+  const BoundParametrization parametrization =
+      surface->boundParametrization(tgContext);
+  BOOST_CHECK(parametrization == BoundParametrization::globalSpherical());
+
+  VectorMultiTrajectory traj;
+  auto makeState = [&]() {
+    auto ts = traj.getTrackState(traj.addTrackState(TrackStatePropMask::All));
+    ts.setReferenceSurface(surface);
+    ts.predicted() =
+        BoundVector(0.1, -0.2, std::numbers::pi - 0.1, 1., 0.1, 0.);
+    ts.predictedCovariance().setIdentity();
+    const TestSourceLink measurement(eBoundDir0, eBoundLoc0,
+                                     Vector2(-std::numbers::pi + 0.1, 0.2),
+                                     SquareMatrix2::Identity());
+    testSourceLinkCalibrator<VectorMultiTrajectory>(
+        tgContext, CalibrationContext{}, SourceLink{measurement}, ts);
+    return ts;
+  };
+
+  const GainMatrixUpdater updater;
+  auto direct = makeState();
+  BOOST_REQUIRE(
+      updater
+          .operator()<VectorMultiTrajectory>(tgContext, parametrization, direct)
+          .ok());
+
+  KalmanFitterExtensions<VectorMultiTrajectory>::Updater delegate;
+  delegate.connect<&GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
+      &updater);
+  auto viaDelegate = makeState();
+  BOOST_REQUIRE(
+      delegate(tgContext, parametrization, viaDelegate, getDummyLogger()).ok());
+
+  BOOST_CHECK_EQUAL(viaDelegate.filtered(), direct.filtered());
+  BOOST_CHECK_EQUAL(viaDelegate.filteredCovariance(),
+                    direct.filteredCovariance());
+  BOOST_CHECK_EQUAL(viaDelegate.chi2(), direct.chi2());
+  // The phi residual is taken across the seam with the passed parametrization.
+  CHECK_CLOSE_ABS(direct.filtered()[eBoundDir0], -std::numbers::pi, 1e-12);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

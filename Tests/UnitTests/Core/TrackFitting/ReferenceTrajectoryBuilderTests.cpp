@@ -156,10 +156,12 @@ using Builder = Experimental::ReferenceTrajectoryBuilder<
 struct CorrectionUpdater {
   BoundVector delta = BoundVector::Zero();
   Result<void> update(const GeometryContext& gctx,
+                      const BoundParametrization& parametrization,
                       VectorMultiTrajectory::TrackStateProxy state,
                       const Logger& /*logger*/) const {
-    const auto parametrization =
-        state.referenceSurface().boundParametrization(gctx);
+    // The builder passes the parametrization of the state's surface.
+    BOOST_CHECK(parametrization ==
+                state.referenceSurface().boundParametrization(gctx));
     const auto result = parametrization.canonicalize(
         state.predicted() + delta, state.predictedCovariance());
     if (!result.ok()) {

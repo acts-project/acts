@@ -20,7 +20,7 @@
 namespace Acts {
 
 /// Kalman update step using the gain matrix formalism.
-/// Uses the bound parametrization of the track state's reference
+/// Uses the supplied bound parametrization of the track state's reference
 /// surface for coordinate residuals and canonicalizes parameters and covariance
 /// together. States without a reference surface use the canonical
 /// global-spherical interpretation.
@@ -39,20 +39,26 @@ class GainMatrixUpdater {
   /// Run the Kalman update step for a single trajectory state.
   ///
   /// @tparam traj_t Trajectory type
-  /// @param[in] gctx Geometry context used to resolve the surface parametrization
+  /// @param[in] gctx Geometry context, used to check @p parametrization in
+  ///            debug builds
+  /// @param[in] parametrization Bound parametrization of the track state's
+  ///            reference surface in @p gctx, or the canonical global-spherical
+  ///            one for a state without a reference surface
   /// @param[in,out] trackState The track state
   /// @param[in] logger Where to write logging information to
   /// @return Success or failure of the update procedure
   template <typename traj_t>
-  Result<void> operator()(const GeometryContext& gctx,
+  Result<void> operator()([[maybe_unused]] const GeometryContext& gctx,
+                          const BoundParametrization& parametrization,
                           typename traj_t::TrackStateProxy trackState,
                           const Logger& logger = getDummyLogger()) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
 
-    const auto parametrization =
-        trackState.hasReferenceSurface()
-            ? trackState.referenceSurface().boundParametrization(gctx)
-            : BoundParametrization::globalSpherical();
+    // the caller resolves the parametrization of the state's surface
+    assert(parametrization ==
+           (trackState.hasReferenceSurface()
+                ? trackState.referenceSurface().boundParametrization(gctx)
+                : BoundParametrization::globalSpherical()));
 
     // there should be a calibrated measurement
     assert(trackState.hasCalibrated());

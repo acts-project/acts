@@ -82,9 +82,11 @@ struct Gx2FitterExtensions {
                     const SourceLink&, TrackStateProxy)>;
 
   /// Type alias for updater delegate to incorporate measurements into track
-  /// parameters
-  using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        const Logger&)>;
+  /// parameters. The caller passes the bound parametrization of the track
+  /// state's reference surface.
+  using Updater =
+      Delegate<Result<void>(const GeometryContext&, const BoundParametrization&,
+                            TrackStateProxy, const Logger&)>;
 
   /// Type alias for outlier finder delegate to identify measurement outliers
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
