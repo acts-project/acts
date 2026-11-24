@@ -20,6 +20,7 @@ Result<
     std::pair<typename std::vector<typename traj_t::TrackStateProxy>::iterator,
               typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
 MeasurementSelector::select(
+    const BoundParametrization& parametrization,
     std::vector<typename traj_t::TrackStateProxy>& candidates, bool& isOutlier,
     const Logger& logger) const {
   using Result = Result<std::pair<
@@ -27,7 +28,6 @@ MeasurementSelector::select(
       typename std::vector<typename traj_t::TrackStateProxy>::iterator>>;
 
   ACTS_VERBOSE("Invoked MeasurementSelector");
-  const auto parametrization = BoundParametrization::globalSpherical();
 
   // Return if no measurement
   if (candidates.empty()) {
@@ -54,6 +54,7 @@ MeasurementSelector::select(
     return Result::success(std::pair(candidates.begin(), candidates.begin()));
   }
   // All candidates are on the same surface, which also selects the cuts.
+  // The caller resolves the surface's parametrization.
   const GeometryIdentifier geoID = prediction->referenceSurface().geometryId();
   const double theta = parametrization.theta(*predicted);
   // Find the appropriate cuts

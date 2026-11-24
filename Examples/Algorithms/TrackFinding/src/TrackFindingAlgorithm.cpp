@@ -78,7 +78,8 @@ class MeasurementSelector {
 
   Acts::Result<std::pair<std::vector<Traj::TrackStateProxy>::iterator,
                          std::vector<Traj::TrackStateProxy>::iterator>>
-  select(std::vector<Traj::TrackStateProxy>& candidates, bool& isOutlier,
+  select(const Acts::BoundParametrization& parametrization,
+         std::vector<Traj::TrackStateProxy>& candidates, bool& isOutlier,
          const Acts::Logger& logger) const {
     if (!m_seedIndices.empty()) {
       // the selector sorts by chi2 anyway, so partitioning in place is enough
@@ -90,8 +91,8 @@ class MeasurementSelector {
       }
     }
 
-    return m_selector.select<Acts::VectorMultiTrajectory>(candidates, isOutlier,
-                                                          logger);
+    return m_selector.select<Acts::VectorMultiTrajectory>(
+        parametrization, candidates, isOutlier, logger);
   }
 
  private:
