@@ -122,7 +122,7 @@ bool is_contiguous_on(P&& projection, vecmem::memory_resource& mr,
   // Allocate memory for intermediate values and outputs, then set them up.
   vecmem::data::vector_buffer<projection_t> iout(
       n, mr, vecmem::data::buffer_type::resizable);
-  copy.setup(iout)->ignore();
+  copy.setup(vecmem::ignore_event, iout);
   vecmem::unique_alloc_ptr<bool> out = vecmem::make_unique_alloc<bool>(mr);
 
   bool initial_out = true;

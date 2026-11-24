@@ -29,14 +29,21 @@ class bit_encoder {
  public:
   bit_encoder() = delete;
 
-  /// Check whether the set @param v encodes valid values according to the
-  /// given masks (@tparam head and @tparam tail)
+  /// Check whether `v` sets every bit in any of the supplied invalid masks.
+  ///
+  /// @tparam masks masks whose all-ones encoding is reserved as invalid
+  /// @param v encoded value to inspect
+  /// @return true if at least one mask is fully set in `v`
   template <value_t... masks>
   DETRAY_HOST_DEVICE static constexpr bool is_invalid(value_t v) noexcept {
     // All bits set to one in the range of a given mask defined as invalid
     return (((v & masks) == masks) || ...);
   }
 
+  /// Extract the field selected by `mask` from an encoded value.
+  ///
+  /// @tparam mask nonzero bit mask selecting the field
+  /// @param v encoded value to inspect
   /// @returns the masked bits from the encoded value as value of the same
   /// type.
   template <value_t mask>
@@ -48,6 +55,9 @@ class bit_encoder {
   }
 
   /// Set the masked bits to id in the encoded value.
+  /// @tparam mask nonzero bit mask selecting the field
+  /// @param v encoded value to update
+  /// @param id field value to encode
   template <value_t mask>
     requires(mask != static_cast<value_t>(0))
   DETRAY_HOST_DEVICE static constexpr void set_bits(value_t& v,

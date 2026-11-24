@@ -28,7 +28,7 @@ struct accelerator_printer {
   ///
   /// @param accel_coll collection of acceleration structs
   /// @param idx the specific grid to be checked
-  /// @param id type id of the material grid collection
+  /// @param os Stream receiving the output.
   template <typename accel_coll_t, typename index_t>
   DETRAY_HOST void operator()(const accel_coll_t &accel_coll, const index_t idx,
                               std::stringstream &os) const {
@@ -42,7 +42,7 @@ struct material_printer {
   ///
   /// @param material_coll collection of material
   /// @param idx the specific grid to be checked
-  /// @param id type id of the material grid collection
+  /// @param os Stream receiving the output.
   template <typename material_coll_t, typename index_t>
   DETRAY_HOST void operator()(const material_coll_t &material_coll,
                               const index_t idx, std::stringstream &os) const {
@@ -52,7 +52,10 @@ struct material_printer {
 
 }  // namespace detail
 
-/// Print basic information about the detector @param det
+/// Print basic information about the detector @p det
+/// @param det Detector to describe.
+/// @param names Optional map used to resolve detector names.
+/// @returns A formatted description of the detector.
 template <concepts::detector detector_t>
 DETRAY_HOST inline std::string print_detector(
     const detector_t &det, const typename detector_t::name_map &names = {}) {

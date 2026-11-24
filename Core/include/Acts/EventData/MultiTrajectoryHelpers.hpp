@@ -45,6 +45,8 @@ struct TrajectoryState {
   std::vector<unsigned int> outlierLayer = {};
   /// Number of hits shared with other tracks
   std::size_t nSharedHits = 0;
+  /// Number of split hits, which other tracks may use without penalty
+  std::size_t nSplitHits = 0;
 };
 
 // Container for trajectory summary info at a specific volume
@@ -77,6 +79,9 @@ TrajectoryState trajectoryState(const traj_t& multiTraj, std::size_t tipIndex) {
     } else if (typeFlags.isMeasurement()) {
       if (typeFlags.isSharedHit()) {
         trajState.nSharedHits++;
+      }
+      if (typeFlags.isSplitHit()) {
+        trajState.nSplitHits++;
       }
       trajState.nMeasurements++;
       trajState.measurementChi2.push_back(state.chi2());
@@ -129,6 +134,9 @@ VolumeTrajectoryStateContainer trajectoryState(
     } else if (typeFlags.isMeasurement()) {
       if (typeFlags.isSharedHit()) {
         trajState.nSharedHits++;
+      }
+      if (typeFlags.isSplitHit()) {
+        trajState.nSplitHits++;
       }
       trajState.nMeasurements++;
       trajState.measurementChi2.push_back(state.chi2());

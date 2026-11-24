@@ -34,6 +34,7 @@ class concentric_cylinder2D {
   /// The name for this shape
   static constexpr std::string_view name = "concentric_cylinder2D";
 
+  /// Indices describing the entries in the shape boundary array.
   enum boundaries : unsigned int {
     e_r = 0u,
     e_lower_z = 1u,
@@ -75,7 +76,6 @@ class concentric_cylinder2D {
   /// @brief Check boundary values for a local point.
   /// @{
   /// @param bounds the boundary values for this shape
-  /// @param trf the surface transform
   /// @param glob_p the point to be checked in the global coordinate system
   /// @param tol dynamic tolerance determined by caller
   ///
@@ -180,6 +180,7 @@ class concentric_cylinder2D {
             xy_bound,  xy_bound,  bounds[e_upper_z] + env};
   }
 
+  /// @param bounds Boundary values used to determine the center.
   /// @returns the shapes centroid in local cartesian coordinates
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE dpoint3D<algebra_t> centroid(
@@ -191,8 +192,9 @@ class concentric_cylinder2D {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// @param bounds the boundary values for the cylinder
-  /// @param n_seg is the number of line segments
+  /// Boundary values define the vertices in the local frame.
+  /// The optional segment count is ignored because cylindrical vertices are
+  /// not implemented for this shape.
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>

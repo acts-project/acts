@@ -31,9 +31,12 @@ class OnnxEdgeClassifier final : public EdgeClassificationBase {
   struct Config {
     /// Path to the ONNX model file
     std::string modelPath;
-    /// Vector of selected node feature indices to use as input for the model
+    /// Indices of the node features the model is given, in the order the
+    /// model expects them. A feature may be listed more than once. If empty,
+    /// all node features are passed in their original order.
     std::vector<int> selectedFeatures = {};
-    /// Vector of per-feature scale factors applied to selected features
+    /// Per-feature scale factors, the i-th one dividing the i-th model input
+    /// feature (i.e. the i-th entry of selectedFeatures, if given)
     std::vector<float> featureScales = {};
     /// Classification threshold cut
     float cut = 0.5;

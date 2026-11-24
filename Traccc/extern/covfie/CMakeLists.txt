@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS)
 
 # Declare where to get covfie from.
 set(TRACCC_COVFIE_SOURCE
-    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v0.15.4.tar.gz;URL_MD5;80de9b43644c59d8239fb8cc184c6276"
+    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v0.16.0.tar.gz;URL_MD5;6f645c2e5cc7e0587d801aff0c6fc75b"
     CACHE STRING
     "Source for covfie, when built as part of this project"
 )

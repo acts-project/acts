@@ -29,6 +29,7 @@
 #include "traccc/options/track_finding.hpp"
 #include "traccc/options/track_fitting.hpp"
 #include "traccc/options/track_gbts_seeding.hpp"
+#include "traccc/options/track_hough_seeding.hpp"
 #include "traccc/options/track_propagation.hpp"
 #include "traccc/options/track_seeding.hpp"
 
@@ -82,6 +83,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
   opts::clusterization clusterization_opts;
   opts::track_seeding seeding_opts;
   opts::track_gbts_seeding seeding_gbts_opts;
+  opts::track_hough_seeding seeding_hough_opts;
   opts::track_finding finding_opts;
   opts::track_propagation propagation_opts;
   opts::track_fitting fitting_opts;
@@ -91,8 +93,9 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
   opts::program_options program_opts{
       description,
       {detector_opts, bfield_opts, input_opts, clusterization_opts,
-       seeding_opts, seeding_gbts_opts, finding_opts, propagation_opts,
-       fitting_opts, throughput_opts, threading_opts, logging_opts},
+       seeding_opts, seeding_gbts_opts, seeding_hough_opts, finding_opts,
+       propagation_opts, fitting_opts, throughput_opts, threading_opts,
+       logging_opts},
       argc,
       argv,
       prelogger->cloneWithSuffix("Options")};
@@ -160,6 +163,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
   const traccc::spacepoint_grid_config spacepoint_grid_config(seeding_opts);
 
   const traccc::gbts_seedfinder_config gbts_config(seeding_gbts_opts);
+  const traccc::hough_seeding_config hough_config(seeding_hough_opts);
 
   const traccc::track_params_estimation_config track_params_estimation_config;
 
@@ -178,15 +182,20 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
     await_mode = await_strategy::callback;
   }
 
+  // Set up the data shared by all full-chain algorithms.
+  const typename FULL_CHAIN_ALG::shared_data shared_data{
+      unpinned_host_mr, det_descr, det_cond, field, &detector};
+
   // Set up the full-chain algorithm(s). One for each concurrent event slot.
-  std::vector<FULL_CHAIN_ALG> algs;
+  std::vector<std::unique_ptr<FULL_CHAIN_ALG>> algs;
   algs.reserve(threading_opts.concurrent_slots);
   for (std::size_t i = 0; i < threading_opts.concurrent_slots; ++i) {
-    algs.push_back({unpinned_host_mr, clustering_cfg, seedfinder_config,
-                    spacepoint_grid_config, seedfilter_config, gbts_config,
-                    track_params_estimation_config, finding_cfg, fitting_cfg,
-                    det_descr, det_cond, field, &detector, logger().clone(),
-                    seeding_gbts_opts.useGBTS, await_mode});
+    algs.emplace_back(std::make_unique<FULL_CHAIN_ALG>(
+        unpinned_host_mr, clustering_cfg, seedfinder_config,
+        spacepoint_grid_config, seedfilter_config, gbts_config, hough_config,
+        track_params_estimation_config, finding_cfg, fitting_cfg, shared_data,
+        logger().clone(), seeding_gbts_opts.useGBTS,
+        seeding_hough_opts.useHough, await_mode));
   }
 
   // Set up and populate a queue with concurrent slot indices.
@@ -206,13 +215,13 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
     process_event =
         [&](std::size_t slot,
             const edm::silicon_cell_collection::host& cells) -> std::size_t {
-      return algs.at(slot).seeding(cells).size();
+      return algs.at(slot)->seeding(cells).size();
     };
   } else if (throughput_opts.reco_stage == opts::throughput::stage::full) {
     process_event =
         [&](std::size_t slot,
             const edm::silicon_cell_collection::host& cells) -> std::size_t {
-      return algs.at(slot)(cells).size();
+      return (*algs.at(slot))(cells).size();
     };
   } else {
     throw std::invalid_argument("Unknown reconstruction stage");

@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/IVolumeLookup.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
@@ -59,8 +60,22 @@ class StaticBlueprintNode : public BlueprintNode {
   /// @return Pointer to the navigation policy factory (may be nullptr)
   const NavigationPolicyFactory* navigationPolicyFactory() const;
 
+  /// Set the lookup factory for the wrapped volume only.
+  /// An empty factory leaves the volume's lookup unchanged. Descendant policies
+  /// are installed first, so subtree indices can stop at explicit overrides.
+  /// @param factory Factory returning a non-null lookup
+  /// @return This node for chaining
+  StaticBlueprintNode& setVolumeLookupFactory(VolumeLookupFactory factory);
+
+  /// Return the optional lookup factory.
+  /// @return Configured factory, which may be empty
+  const VolumeLookupFactory& volumeLookupFactory() const;
+
  protected:
   void addToGraphviz(std::ostream& os) const override;
+
+  /// Optional factory for the lookup installed after descendant finalization.
+  VolumeLookupFactory m_volumeLookupFactory;
 
   /// The wrapped tracking volume managed by this blueprint node
   std::unique_ptr<TrackingVolume> m_volume;

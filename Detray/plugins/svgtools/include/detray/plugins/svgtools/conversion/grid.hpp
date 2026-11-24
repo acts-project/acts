@@ -120,6 +120,14 @@ inline auto grid_type_and_edges(const grid_t& grid, const view_t& /*unused*/) {
 /// A functor to access the type and bin edges of a grid.
 template <concepts::scalar scalar_t>
 struct type_and_edge_getter {
+  /// Get the display type and bin edges for an accelerator entry.
+  /// @tparam group_t Accelerator group type.
+  /// @tparam index_t Entry index type.
+  /// @tparam view_t SVG projection type.
+  /// @param group Accelerator collection.
+  /// @param index Selected accelerator entry.
+  /// @param view Projection that determines displayed axes.
+  /// @return Grid display type and the corresponding bin edges.
   template <typename group_t, typename index_t, typename view_t>
   DETRAY_HOST_DEVICE inline auto operator()(
       [[maybe_unused]] const group_t& group,

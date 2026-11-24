@@ -46,7 +46,7 @@ void FastStrawLineFitter::FitAuxiliaries::print(std::ostream& ostr) const {
        << std::format("y0: {:.3f}", fitY0)
        << std::format(", norm: {:.3f}", covNorm) << ", nDoF: " << nDoF;
 }
-void FastStrawLineFitter::FitAuxiliariesWithT0 ::print(
+void FastStrawLineFitter::FitAuxiliariesWithT0::print(
     std::ostream& ostr) const {
   ostr << std::format("R_vr: {:.3f}, ", R_vr);
   ostr << std::format("R_ar: {:.3f}, ", R_ar);

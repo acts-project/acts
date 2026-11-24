@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <fstream>
@@ -16,6 +17,9 @@
 #include <vector>
 
 #include <nlohmann/json.hpp>
+
+// Legacy implementations intentionally call the deprecated material APIs.
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace ActsExamples {
 
@@ -65,3 +69,5 @@ void JsonMaterialWriter::write(const Acts::TrackingGeometry& tGeometry) {
 }
 
 }  // namespace ActsExamples
+
+ACTS_POP_IGNORE_DEPRECATED()

@@ -61,7 +61,7 @@ GTEST_TEST(detray_intersection, translated_plane_ray) {
   ASSERT_NEAR(hit_bound.local()[1], -1.f, tol);
 
   // The same test but bound to local frame & masked - inside
-  mask<rectangle2D, test_algebra> rect_for_inside{0u, 3.f, 3.f};
+  mask<rectangle2D, test_algebra> rect_for_inside{0u, -3.f, -3.f, 3.f, 3.f};
   const auto hit_bound_inside =
       pi(r, surface_descriptor<>{}, rect_for_inside, shifted, tol);
 
@@ -77,7 +77,8 @@ GTEST_TEST(detray_intersection, translated_plane_ray) {
   ASSERT_NEAR(hit_bound_inside.local()[1], -1.f, tol);
 
   // The same test but bound to local frame & masked - outside
-  mask<rectangle2D, test_algebra> rect_for_outside{0u, 0.5f, 3.5f};
+  mask<rectangle2D, test_algebra> rect_for_outside{0u, -0.5f, -3.5f, 0.5f,
+                                                   3.5f};
   const auto hit_bound_outside =
       pi(r, surface_descriptor<>{}, rect_for_outside, shifted, tol);
   ASSERT_FALSE(hit_bound_outside.is_inside());

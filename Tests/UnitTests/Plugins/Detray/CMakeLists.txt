@@ -6,3 +6,7 @@ target_link_libraries(
 )
 
 add_unittest(DetrayMaterialConversion DetrayMaterialConversionTests.cpp)
+
+add_unittest(DetraySurfaceIdMap DetraySurfaceIdMapTests.cpp)
+
+add_unittest(DetraySurfaceGrid DetraySurfaceGridTests.cpp)

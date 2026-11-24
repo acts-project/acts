@@ -39,10 +39,19 @@ namespace detray {
 /// Records intersections with every detector surface along the trajectory.
 template <typename trajectory_t>
 struct brute_force_scan {
+  /// Type of the intersection trace produced for a detector.
   template <typename D>
   using intersection_trace_type = dvector<intersection_record<D>>;
+  /// Type of trajectory scanned by this functor.
   using trajectory_type = trajectory_t;
 
+  /// Scan a detector along the configured trajectory.
+  /// @param ctx Geometry context for the scan.
+  /// @param detector Detector to scan.
+  /// @param traj Trajectory to propagate through the detector.
+  /// @param mask_tol Tolerance used by surface intersectors.
+  /// @param p Momentum magnitude used for the scan.
+  /// @return Intersection trace along the trajectory.
   template <concepts::detector detector_t>
   inline auto operator()(const typename detector_t::geometry_context ctx,
                          const detector_t &detector, const trajectory_t &traj,
@@ -120,7 +129,7 @@ struct brute_force_scan {
     intersection_t start_intersection{};
     // Must not be invalid, since it will otherwise throw the navigation
     // validation off
-    start_intersection.set_surface(first_record.intersection.surface());
+    start_intersection.set_surface(first_record.intersection().surface());
     start_intersection.surface().set_id(surface_id::e_passive);
     start_intersection.surface().set_index(0);
     start_intersection.surface()
@@ -130,10 +139,11 @@ struct brute_force_scan {
     start_intersection.set_path(0.f);
     start_intersection.set_local({0.f, 0.f, 0.f});
     start_intersection.set_volume_link(
-        static_cast<nav_link_t>(first_record.vol_idx));
+        static_cast<nav_link_t>(first_record.volume()));
 
     intersection_record<detector_t> start_record{
-        traj.pos(), traj.dir(), start_intersection, q, p, first_record.vol_idx};
+        traj.pos(), traj.dir(), start_intersection,
+        q,          p,          first_record.volume()};
 
     intersection_trace.insert(intersection_trace.begin(), start_record);
 
@@ -141,15 +151,23 @@ struct brute_force_scan {
   }
 };
 
+/// Type of a ray scan for the selected algebra.
 template <concepts::algebra algebra_t>
 using ray_scan = brute_force_scan<detail::ray<algebra_t>>;
 
+/// Type of a helix scan for the selected algebra.
 template <concepts::algebra algebra_t>
 using helix_scan = brute_force_scan<detail::helix<algebra_t>>;
 
 /// Run a scan on detector object by shooting test particles through it
 namespace detector_scanner {
 
+/// Run a scan on detector object by shooting test particles through it.
+/// @param gctx Geometry context for the scan.
+/// @param detector Detector to scan.
+/// @param traj Trajectory to scan through the detector.
+/// @param args Additional arguments forwarded to the scan.
+/// @return Scan result.
 template <template <typename> class scan_type, concepts::detector detector_t,
           typename trajectory_t, typename... Args>
 inline auto run(const typename detector_t::geometry_context gctx,
@@ -169,14 +187,14 @@ inline auto run(const typename detector_t::geometry_context gctx,
   // aligned types like the ones in Eigen and Fastor, so we have to sort
   // by indices and then reconstruct the sorted intersection record.
   auto sort_path = [&](const record_t &a, const record_t &b) -> bool {
-    return (a.intersection < b.intersection);
+    return (a.intersection() < b.intersection());
   };
 
   std::ranges::stable_sort(intersection_trace, sort_path);
 
   // Make sure the intersection record terminates at world portals
   auto is_world_exit = [](const record_t &r) {
-    return r.intersection.volume_link() ==
+    return r.intersection().volume_link() ==
            detray::detail::invalid_value<nav_link_t>();
   };
 
@@ -189,7 +207,10 @@ inline auto run(const typename detector_t::geometry_context gctx,
   return intersection_trace;
 }
 
-/// Write the @param intersection_traces to file
+/// Write the intersection_traces to file
+/// @param intersection_file_name Output file name.
+/// @param intersection_traces Intersection traces to write.
+/// @return No value is returned.
 template <concepts::detector detector_t, typename allocator_t>
 inline auto write_intersections(
     const std::string &intersection_file_name,
@@ -206,7 +227,7 @@ inline auto write_intersections(
     intrs.reserve(trace.size());
 
     for (const auto &record : trace) {
-      intrs.push_back(record.intersection);
+      intrs.push_back(record.intersection());
     }
   }
 
@@ -214,12 +235,16 @@ inline auto write_intersections(
   io::csv::write_intersection2D(intersection_file_name, intersections);
 }
 
-/// Write the @param intersection_traces to file
+/// Write the intersection_traces to file
+/// @param track_param_file_name Output file name.
+/// @param intersection_traces Traces containing the track parameters.
+/// @return No value is returned.
 template <concepts::detector detector_t, typename allocator_t>
 inline auto write_tracks(
     const std::string &track_param_file_name,
     const std::vector<dvector<intersection_record<detector_t>>, allocator_t>
         &intersection_traces) {
+  using value_t = dvalue<typename detector_t::algebra_type>;
   using scalar_t = dscalar<typename detector_t::algebra_type>;
   using track_param_t =
       free_track_parameters<typename detector_t::algebra_type>;
@@ -232,7 +257,8 @@ inline auto write_tracks(
     track_params.back().reserve(trace.size());
 
     for (const auto &record : trace) {
-      track_params.back().emplace_back(record.charge, record.track_param());
+      track_params.back().emplace_back(record.template charge<value_t>(),
+                                       record.track_param());
     }
   }
 
@@ -240,7 +266,11 @@ inline auto write_tracks(
   io::csv::write_free_track_params(track_param_file_name, track_params);
 }
 
-/// Read the @param intersection_record from file
+/// Read the intersection_record from file
+/// @param intersection_file_name Intersection input file name.
+/// @param track_param_file_name Track parameter input file name.
+/// @param intersection_traces Destination for the read traces.
+/// @return No value is returned.
 template <concepts::detector detector_t, typename allocator_t>
 inline auto read(
     const std::string &intersection_file_name,

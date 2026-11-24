@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s)
+#include "detray/builders/volume_builder_interface.hpp"
 #include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/utils/consistency_checker.hpp"
@@ -15,8 +16,8 @@
 // Detray IO include(s)
 #include "detray/io/backend/geometry_reader.hpp"
 #include "detray/io/backend/geometry_writer.hpp"
-#include "detray/io/frontend/detector_reader.hpp"
-#include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/json/detector_reader.hpp"
+#include "detray/io/json/detector_writer.hpp"
 #include "detray/io/json/json_converter.hpp"
 
 // Detray test include(s)
@@ -90,26 +91,28 @@ template <std::size_t CAP = 0u, concepts::detector detector_t>
 auto test_detector_json_io(
     const detector_t& det, const typename detector_t::name_map& names,
     std::map<std::string, std::string, std::less<>>& file_names,
-    vecmem::host_memory_resource& host_mr) {
+    vecmem::host_memory_resource& host_mr, const bool deduplicate = true) {
   auto writer_cfg = io::detector_writer_config{}
                         .format(io::format::json)
+                        .source("detray integration test")
                         .replace_files(true)
                         .write_grids(true)
                         .write_material(true);
-  io::write_detector(det, names, writer_cfg);
+  io::write_detector_json(det, names, writer_cfg);
 
   // Read the detector back in
   io::detector_reader_config reader_cfg{};
-  reader_cfg.verbose_check(true);
+  reader_cfg.verbose_check(true).deduplicate(deduplicate);
   for (auto& [_, name] : file_names) {
     reader_cfg.add_file(name);
   }
 
-  auto [det2, names2] = io::read_detector<detector_t, CAP>(host_mr, reader_cfg);
+  auto [det2, names2] =
+      io::read_detector_json<detector_t, CAP>(host_mr, reader_cfg);
 
   // Write the result to a different set of files
   writer_cfg.replace_files(false);
-  io::write_detector(det2, names2, writer_cfg);
+  io::write_detector_json(det2, names2, writer_cfg);
 
   // Compare writing round-trip
   std::string geometry_file{names.get_detector_name() + "_geometry_2.json"};
@@ -157,7 +160,8 @@ GTEST_TEST(io, json_telescope_detector_reader) {
   using test_algebra = test::algebra;
   using scalar = test::scalar;
 
-  mask<rectangle2D, test_algebra> rec2{0u, 100.f, 100.f};
+  constexpr bool deduplicate{false};
+  mask<rectangle2D, test_algebra> rec2{0u, -100.f, -100.f, 100.f, 100.f};
 
   // Surface positions
   std::vector<scalar> positions = {1.f,   50.f,  100.f, 150.f, 200.f, 250.f,
@@ -165,6 +169,7 @@ GTEST_TEST(io, json_telescope_detector_reader) {
 
   tel_det_config tel_cfg{rec2};
   tel_cfg.positions(positions);
+  tel_cfg.builder_options().deduplicate(deduplicate);
 
   // Telescope detector
   vecmem::host_memory_resource host_mr;
@@ -176,8 +181,8 @@ GTEST_TEST(io, json_telescope_detector_reader) {
   file_names["homogeneous_material"] =
       "telescope_detector_homogeneous_material.json";
 
-  auto [det_io, names_io] =
-      test_detector_json_io(tel_det, tel_names, file_names, host_mr);
+  auto [det_io, names_io] = test_detector_json_io(
+      tel_det, tel_names, file_names, host_mr, deduplicate);
 
   const auto& mat_store = det_io.material_store();
   const auto& slabs =
@@ -185,6 +190,42 @@ GTEST_TEST(io, json_telescope_detector_reader) {
 
   EXPECT_EQ(det_io.volumes().size(), 1u);
   EXPECT_EQ(slabs.size(), positions.size());
+}
+
+/// Test the reading and writing of a telescope detector - deduplicated
+GTEST_TEST(io, json_telescope_detector_reader_deduplicated) {
+  using test_algebra = test::algebra;
+  using scalar = test::scalar;
+
+  constexpr bool deduplicate{true};
+  mask<rectangle2D, test_algebra> rec2{0u, -100.f, -100.f, 100.f, 100.f};
+
+  // Surface positions
+  std::vector<scalar> positions = {1.f,   50.f,  100.f, 150.f, 200.f, 250.f,
+                                   300.f, 350.f, 400.f, 450.f, 500.f};
+
+  tel_det_config tel_cfg{rec2};
+  tel_cfg.builder_options().deduplicate(deduplicate);
+
+  // Telescope detector
+  vecmem::host_memory_resource host_mr;
+  auto [tel_det, tel_names] =
+      build_telescope_detector<test_algebra>(host_mr, tel_cfg);
+
+  std::map<std::string, std::string, std::less<>> file_names;
+  file_names["geometry"] = "telescope_detector_geometry.json";
+  file_names["homogeneous_material"] =
+      "telescope_detector_homogeneous_material.json";
+
+  auto [det_io, names_io] = test_detector_json_io(
+      tel_det, tel_names, file_names, host_mr, deduplicate);
+
+  const auto& mat_store = det_io.material_store();
+  const auto& slabs =
+      mat_store.get<decltype(tel_det)::material::id::e_material_slab>();
+
+  EXPECT_EQ(det_io.volumes().size(), 1u);
+  EXPECT_EQ(slabs.size(), 1u);
 }
 
 /// Test the reading and writing of a toy detector geometry
@@ -201,19 +242,28 @@ GTEST_TEST(io, json_toy_geometry) {
   auto [toy_det, names] = build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
   // Write the detector
-  io::json_converter<detector_t, io::geometry_writer> geo_writer;
-  auto file_name = geo_writer.write(
-      toy_det, names, std::ios::out | std::ios::binary | std::ios::trunc);
+  io::detector_payload out_payload{};
+  out_payload.header.detector = toy_det.name(names);
+  out_payload.header.source = "detray integration test";
+  io::geometry_writer<detector_t>{}.to_payload(toy_det, names, out_payload);
+  out_payload.header.geometry = io::to_header_payload(out_payload.geometry);
 
-  // Empty volume name map to be filled
-  typename detector_t::name_map volume_name_map{};
-  volume_name_map.set_detector_name("toy_detector");
+  const auto file_name =
+      io::json_output_converter{}
+          .write_to_file(out_payload, "./",
+                         std::ios::out | std::ios::binary | std::ios::trunc)
+          .front();
 
   // Read the detector back in
+  io::detector_payload payload{};
+  io::json_input_converter{}.add_to_payload(file_name, payload);
+
   detector_builder<metadata_t> toy_builder;
-  io::json_converter<detector_t, io::geometry_reader> geo_reader;
-  geo_reader.read(toy_builder, file_name);
-  auto det = toy_builder.build(host_mr, volume_name_map);
+  io::geometry_reader<detector_t>{}.from_payload(toy_builder, payload);
+
+  names.clear_names();
+  volume_builder_options builder_opts{};
+  auto det = toy_builder.build(host_mr, builder_opts, names);
 
   // @TODO: Will only work again after IO can perform data deduplication
   // EXPECT_TRUE(toy_detector_test(det, volume_name_map));
@@ -221,11 +271,10 @@ GTEST_TEST(io, json_toy_geometry) {
   // Read the toy detector into the default detector type
   using default_metadata_t = test::default_metadata;
   detector_builder<default_metadata_t> comp_builder;
-  io::json_converter<host::detector<default_metadata_t>, io::geometry_reader>
-      comp_geo_reader;
-  comp_geo_reader.read(comp_builder, file_name);
-  volume_name_map.clear_names();
-  auto comp_det = comp_builder.build(host_mr, volume_name_map);
+  io::geometry_reader<host::detector<default_metadata_t>>{}.from_payload(
+      comp_builder, payload);
+  names.clear_names();
+  auto comp_det = comp_builder.build(host_mr, builder_opts, names);
 
   using mask_id = host::detector<default_metadata_t>::masks::id;
   const auto& masks = comp_det.mask_store();
@@ -267,8 +316,8 @@ GTEST_TEST(io, json_toy_detector_roundtrip_homogeneous_material) {
       test_detector_json_io<1u>(toy_det, toy_names, file_names, host_mr);
 
   // Remove empty files as there are not material maps
-  std::filesystem::remove("toy_detector_material_maps.json");
-  std::filesystem::remove("toy_detector_material_maps_2.json");
+  EXPECT_FALSE(io::file_exists("toy_detector_material_maps.json"));
+  EXPECT_FALSE(io::file_exists("toy_detector_material_maps_2.json"));
 
   // @TODO: Will only work again after IO can perform data deduplication
   // EXPECT_TRUE(toy_detector_test(det_io, names_io));
@@ -288,12 +337,15 @@ GTEST_TEST(io, json_toy_detector_roundtrip_material_maps) {
 
   std::map<std::string, std::string, std::less<>> file_names;
   file_names["geometry"] = "toy_detector_geometry.json";
-  file_names["homogeneous_material"] = "toy_detector_homogeneous_material.json";
   file_names["material_maps"] = "toy_detector_material_maps.json";
   file_names["surface_grids"] = "toy_detector_surface_grids.json";
 
   auto [det_io, names_io] =
       test_detector_json_io<1u>(toy_det, toy_names, file_names, host_mr);
+
+  // Remove empty files as there are not material maps
+  EXPECT_FALSE(io::file_exists("toy_detector_homogeneous_material.json"));
+  EXPECT_FALSE(io::file_exists("toy_detector_homogeneous_material_2.json"));
 
   // @TODO: Will only work again after IO can perform data deduplication
   // EXPECT_TRUE(toy_detector_test(det_io, names_io));
@@ -319,8 +371,8 @@ GTEST_TEST(io, json_wire_chamber_reader) {
       test_detector_json_io(wire_det, wire_names, file_names, host_mr);
 
   // Remove empty files as there are material
-  std::filesystem::remove("wire_chamber_material_maps.json");
-  std::filesystem::remove("wire_chamber_material_maps_2.json");
+  EXPECT_FALSE(io::file_exists("wire_chamber_material_maps.json"));
+  EXPECT_FALSE(io::file_exists("wire_chamber_material_maps_2.json"));
 
   EXPECT_EQ(det_io.volumes().size(), 11u);
 }

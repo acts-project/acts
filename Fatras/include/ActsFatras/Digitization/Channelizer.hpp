@@ -44,13 +44,16 @@ class Channelizer {
   /// @param segmentation the segmentation of the surface
   /// @param thickness the thickness of the surface
   /// @param minRelPerpDrift minimum relative perpendicular drift (to avoid numerical instability)
+  /// @param limitCylinderPathToChord on cylinders, limit the path to the
+  ///        longest chord through the curved layer (see SurfaceDrift)
   ///
   /// @return the list of channels
   Acts::Result<std::vector<Segmentizer::ChannelSegment>> channelize(
       const Hit& hit, const Acts::Surface& surface,
       const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
       const Acts::IMultiAxis& segmentation, double thickness,
-      double minRelPerpDrift = 0.001) const;
+      double minRelPerpDrift = 0.001,
+      bool limitCylinderPathToChord = false) const;
 };
 
 }  // namespace ActsFatras

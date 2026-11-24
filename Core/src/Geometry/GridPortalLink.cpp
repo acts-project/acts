@@ -533,4 +533,26 @@ void GridPortalLink::setArtifactPortalLinks(
   m_artifactPortalLinks = std::move(links);
 }
 
+std::unique_ptr<GridPortalLink> GridPortalLink::make(
+    const std::shared_ptr<RegularSurface>& surface, AxisDirection direction,
+    const IAxis& axis) {
+  return axis.visit([&]<typename axis_t>(const axis_t& concrete)
+                        -> std::unique_ptr<GridPortalLink> {
+    return GridPortalLink::make(surface, direction, axis_t{concrete});
+  });
+}
+
+std::unique_ptr<GridPortalLink> GridPortalLink::make(
+    const std::shared_ptr<RegularSurface>& surface, const IAxis& axis0,
+    const IAxis& axis1) {
+  return axis0.visit([&]<typename axis0_t>(const axis0_t& concrete0)
+                         -> std::unique_ptr<GridPortalLink> {
+    return axis1.visit([&]<typename axis1_t>(const axis1_t& concrete1)
+                           -> std::unique_ptr<GridPortalLink> {
+      return GridPortalLink::make(surface, axis0_t{concrete0},
+                                  axis1_t{concrete1});
+    });
+  });
+}
+
 }  // namespace Acts

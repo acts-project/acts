@@ -28,18 +28,39 @@ GTEST_TEST(detray_detectors, toy_detector) {
 
   vecmem::host_memory_resource host_mr;
 
+  constexpr bool deduplicate{true};
+
   toy_det_config<test::scalar> toy_cfg{};
   toy_cfg.use_material_maps(false).do_check(true);
+  toy_cfg.builder_options().deduplicate(!deduplicate);
+
   const auto [toy_det, names] =
       build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
-  EXPECT_TRUE(toy_detector_test(toy_det, names));
+  EXPECT_TRUE(toy_detector_test(toy_det, names, !deduplicate))
+      << toy_cfg << std::endl;
 
   toy_cfg.use_material_maps(true);
   const auto [toy_det2, names2] =
       build_toy_detector<test_algebra>(host_mr, toy_cfg);
 
-  EXPECT_TRUE(toy_detector_test(toy_det2, names2));
+  EXPECT_TRUE(toy_detector_test(toy_det2, names2, !deduplicate))
+      << toy_cfg << std::endl;
+
+  // Same test with fully deduplicated material
+  toy_cfg.builder_options().deduplicate(deduplicate);
+  const auto [toy_det3, names3] =
+      build_toy_detector<test_algebra>(host_mr, toy_cfg);
+
+  EXPECT_TRUE(toy_detector_test(toy_det3, names3, deduplicate))
+      << toy_cfg << std::endl;
+
+  toy_cfg.use_material_maps(false);
+  const auto [toy_det4, names4] =
+      build_toy_detector<test_algebra>(host_mr, toy_cfg);
+
+  EXPECT_TRUE(toy_detector_test(toy_det4, names4, deduplicate))
+      << toy_cfg << std::endl;
 
   // Device detector type
   auto det_view = detray::get_data(toy_det2);
@@ -47,5 +68,5 @@ GTEST_TEST(detray_detectors, toy_detector) {
 
   detray::detail::check_consistency(toy_det_dev, true, names2);
 
-  EXPECT_TRUE(toy_detector_test(toy_det_dev, names2));
+  EXPECT_TRUE(toy_detector_test(toy_det_dev, names2, !deduplicate));
 }

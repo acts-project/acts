@@ -12,10 +12,12 @@
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
+#include "Acts/Geometry/LinearVolumeLookup.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
+#include "Acts/Geometry/RzGridVolumeLookup.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
@@ -47,6 +49,20 @@ namespace ActsPython {
 namespace {
 using std::uniform_real_distribution;
 
+VolumeLookupFactory wrapVolumeLookupFactory(py::function factory) {
+  return [factory = std::move(factory)](const GeometryContext& gctx,
+                                        const TrackingVolume& volume,
+                                        const Logger& logger) {
+    py::gil_scoped_acquire acquire;
+    // Callback arguments are borrowed; the returned smart holder transfers
+    // ownership of the Python-created lookup to the volume.
+    return factory(py::cast(&gctx, py::return_value_policy::reference),
+                   py::cast(&volume, py::return_value_policy::reference),
+                   py::cast(&logger, py::return_value_policy::reference))
+        .cast<std::unique_ptr<IVolumeLookup>>();
+  };
+}
+
 // This is temporary!
 void pseudoNavigation(const TrackingGeometry& trackingGeometry,
                       const GeometryContext& gctx, std::filesystem::path& path,
@@ -66,8 +82,9 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   std::uniform_real_distribution<> dist{-1, 1};
   std::uniform_real_distribution<> subStepDist{0.01, 0.99};
 
-  double thetaMin = 2 * std::atan(std::exp(-etaRange.first));
-  double thetaMax = 2 * std::atan(std::exp(-etaRange.second));
+  // Theta decreases with eta, so the interval endpoints exchange roles.
+  double thetaMin = 2 * std::atan(std::exp(-etaRange.second));
+  double thetaMax = 2 * std::atan(std::exp(-etaRange.first));
   std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
 
   using namespace UnitLiterals;
@@ -252,8 +269,12 @@ void addGeometryGen3(py::module_& m) {
       py::class_<Blueprint, BlueprintNode, std::shared_ptr<Blueprint>>(
           m, "Blueprint");
 
-  rootNode
-      .def(py::init<const Blueprint::Config&>())
+  rootNode.def(py::init<const Blueprint::Config&>())
+      .def_property("volumeLookupFactory", &Blueprint::volumeLookupFactory,
+                    [](Blueprint& self, py::function factory) {
+                      self.setVolumeLookupFactory(
+                          wrapVolumeLookupFactory(std::move(factory)));
+                    })
       // Return value needs to be shared pointer because python otherwise
       // can't manage the lifetime
       .def(
@@ -309,6 +330,46 @@ void addGeometryGen3(py::module_& m) {
         fh.attr("write")(ss.str());
       });
 
+  py::class_<IVolumeLookup, py::smart_holder>(m, "IVolumeLookup");
+  auto linearLookup =
+      py::class_<LinearVolumeLookup, IVolumeLookup, py::smart_holder>(
+          m, "LinearVolumeLookup");
+  py::class_<LinearVolumeLookup::Config>(linearLookup, "Config")
+      .def(py::init<>())
+      .def_readwrite("warningThreshold",
+                     &LinearVolumeLookup::Config::warningThreshold);
+  linearLookup
+      .def(py::init([](const LinearVolumeLookup::Config& config,
+                       const TrackingVolume& volume, const Logger& logger) {
+             return std::make_unique<LinearVolumeLookup>(volume, config,
+                                                         logger);
+           }),
+           py::arg("config"), py::arg("volume"), py::arg("logger"))
+      .def_property_readonly("config", [](const LinearVolumeLookup& self) {
+        return self.config();
+      });
+  auto gridLookup =
+      py::class_<RzGridVolumeLookup, IVolumeLookup, py::smart_holder>(
+          m, "RzGridVolumeLookup");
+  using GridConfig = RzGridVolumeLookup::Config;
+  py::class_<GridConfig>(gridLookup, "Config")
+      .def(py::init<>())
+      .def_readwrite("maxTolerance", &GridConfig::maxTolerance)
+      .def_readwrite("fallbackWarningFraction",
+                     &GridConfig::fallbackWarningFraction)
+      .def_readwrite("maxGridCells", &GridConfig::maxGridCells);
+  gridLookup
+      .def(py::init([](const GridConfig& config, const GeometryContext& gctx,
+                       const TrackingVolume& volume, const Logger& logger) {
+             return std::make_unique<RzGridVolumeLookup>(gctx, volume, config,
+                                                         logger);
+           }),
+           py::arg("config"), py::arg("gctx"), py::arg("volume"),
+           py::arg("logger"))
+      .def_property_readonly("config", [](const RzGridVolumeLookup& self) {
+        return self.config();
+      });
+
   py::class_<BlueprintOptions>(m, "BlueprintOptions")
       .def(py::init<>())
       .def_readwrite("defaultNavigationPolicyFactory",
@@ -348,6 +409,12 @@ void addGeometryGen3(py::module_& m) {
                }),
                py::arg("transform"), py::arg("bounds"),
                py::arg("name") = "undefined")
+          .def_property("volumeLookupFactory",
+                        &StaticBlueprintNode::volumeLookupFactory,
+                        [](StaticBlueprintNode& self, py::function factory) {
+                          self.setVolumeLookupFactory(
+                              wrapVolumeLookupFactory(std::move(factory)));
+                        })
           .def_property("navigationPolicyFactory",
                         &StaticBlueprintNode::navigationPolicyFactory,
                         &StaticBlueprintNode::setNavigationPolicyFactory);

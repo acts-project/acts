@@ -42,27 +42,37 @@ class grid_impl {
 
   /// Single value in a bin entry
   using bin_type = bin_t;
+  /// Type stored in each bin.
   using value_type = typename bin_type::entry_type;
 
+  /// Serializer type used for a grid with `DIM` axes.
   template <std::size_t DIM>
   using serializer_type = serializer_t<DIM>;
 
   /// The type of the multi-axis is tied to the type of the grid: a non-
   /// owning grid holds a non-owning multi-axis member.
   using axes_type = axes_t;
+  /// Index of a bin in the flattened grid storage.
   using glob_bin_index = dindex;
+  /// Per-axis indices identifying one bin.
   using loc_bin_index = typename axes_type::loc_bin_index;
+  /// Coordinate frame spanned by the grid axes.
   using local_frame_type = typename axes_type::local_frame_type;
+  /// Algebra backend used by the axes.
   using algebra_type = typename axes_type::algebra_type;
+  /// Scalar type used by the grid axes.
   using scalar_type = dscalar<algebra_type>;
+  /// Point type used for coordinates in the grid frame.
   using point_type = typename axes_type::point_type;
 
+  /// Whether this grid owns its axis and bin storage.
   static constexpr bool is_owning{axes_type::is_owning};
 
   /// Backend storage type for the grid
   using bin_storage =
       detray::detail::bin_storage<is_owning, bin_type,
                                   typename axes_type::container_types>;
+  /// Container holding the bins.
   using bin_container_type = typename bin_storage::bin_container_type;
 
   /// Vecmem based grid view type
@@ -77,50 +87,73 @@ class grid_impl {
 
   /// Find the corresponding (non-)owning grid type
   template <bool owning>
-  using type =
-      grid_impl<typename axes_t::template type<owning>, bin_t, serializer_t>;
+  using owning_type = grid_impl<typename axes_t::template owning_type<owning>,
+                                bin_t, serializer_t>;
 
   /// Make grid default constructible: Empty grid with empty axis
   grid_impl() = default;
 
   /// Create empty grid with empty axes from specific vecmem memory resource
+  /// @param resource Resource used for bin and axis allocations.
   DETRAY_HOST
   explicit grid_impl(vecmem::memory_resource &resource)
       : m_bins(resource), m_axes(resource) {}
 
-  /// Create grid with well defined @param axes and @param bins_data - move
+  /// Create grid with well defined @p axes and @p bin_data - move
+  /// @param bin_data Bin storage for the grid.
+  /// @param axes Axis definitions for the grid.
   DETRAY_HOST_DEVICE
   grid_impl(bin_container_type &&bin_data, axes_type &&axes)
       : m_bins(std::move(bin_data)), m_axes(std::move(axes)) {}
 
   /// Create grid from container pointers - non-owning (both grid and axes)
+  /// @{
+  /// @param bin_data_ptr Bin storage to view.
+  /// @param axes Axis definitions to view.
+  /// @param offset Offset of this grid's bins in the container.
   DETRAY_HOST_DEVICE
-  grid_impl(const bin_container_type *bin_data_ptr, const axes_type &axes,
-            const dindex offset = 0)
-      : m_bins(*bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
+  grid_impl(typename bin_storage::const_pointer_type const bin_data_ptr,
+            const axes_type &axes, const dindex offset = 0)
+      : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
 
-  /// Create grid from container pointers - non-owning (both grid and axes)
+  /// @param bin_data_ptr Bin storage to view.
+  /// @param axes Axis definitions to view.
+  /// @param offset Offset of this grid's bins in the container.
   DETRAY_HOST_DEVICE
-  grid_impl(bin_container_type *bin_data_ptr, axes_type &axes,
-            const dindex offset = 0u)
-      : m_bins(*bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
+  grid_impl(typename bin_storage::pointer_type const bin_data_ptr,
+            axes_type &axes, const dindex offset = 0u)
+      : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
 
-  /// Create grid from container pointers - non-owning (both grid and axes)
-  // TODO: const correctness
+  /// @param bin_data_ptr Bin storage to view.
+  /// @param axes Axis definitions to view.
+  /// @param offset Offset of this grid's bins in the container.
   DETRAY_HOST_DEVICE
-  grid_impl(const bin_container_type *bin_data_ptr, axes_type &&axes,
-            const dindex offset = 0)
-      : m_bins(*(const_cast<bin_container_type *>(bin_data_ptr)), offset,
-               axes.nbins()),
-        m_axes(std::move(axes)) {}
+  grid_impl(typename bin_storage::const_pointer_type const bin_data_ptr,
+            axes_type &&axes, const dindex offset = 0)
+      : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(std::move(axes)) {}
 
-  /// Create grid from container pointers - non-owning (both grid and axes)
+  /// @param bin_data_ptr Bin storage to view.
+  /// @param axes Axis definitions to view.
+  /// @param offset Offset of this grid's bins in the container.
   DETRAY_HOST_DEVICE
-  grid_impl(bin_container_type *bin_data_ptr, axes_type &&axes,
-            const dindex offset = 0u)
-      : m_bins(*bin_data_ptr, offset, axes.nbins()), m_axes(std::move(axes)) {}
+  grid_impl(typename bin_storage::pointer_type const bin_data_ptr,
+            axes_type &&axes, const dindex offset = 0u)
+      : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(std::move(axes)) {}
+  /// @}
+
+  /// Create non-owning grid from owning grid. A single owning grid cannot be
+  /// part of a grid collection, so the offset is 0
+  /// @tparam owner whether the grid is owning: non-owning
+  /// @param owning_grid the owning grid of which to create a non-owning grid
+  template <bool owner = is_owning>
+    requires(!owner)
+  DETRAY_HOST_DEVICE explicit grid_impl(const owning_type<true> &owning_grid)
+      : m_bins(owning_grid.bins().data(), 0u, owning_grid.nbins()),
+        m_axes(owning_grid.axes().bin_edge_offsets(),
+               owning_grid.axes().bin_edges()) {}
 
   /// Device-side construction from a vecmem based view type
+  /// @param view View containing the bin and axis data.
   template <concepts::device_view grid_view_t>
   DETRAY_HOST_DEVICE explicit grid_impl(grid_view_t &view)
       : m_bins(detray::detail::get<0>(view.m_view)),
@@ -183,12 +216,16 @@ class grid_impl {
   /// @returns an instance of the grid serializer
   static constexpr auto serializer() -> serializer_t<dim> { return {}; }
 
-  /// @returns a local multi-bin index from a global bin index @param gid
+  /// Convert a flattened bin index to per-axis bin indices.
+  /// @param gid Flattened index of the bin.
+  /// @returns a local multi-bin index from a global bin index @p gid
   constexpr auto deserialize(const glob_bin_index gid) const -> loc_bin_index {
     return serializer()(axes(), gid);
   }
 
-  /// @returns a global bin index from a local bin index @param mbin
+  /// Convert per-axis bin indices to a flattened bin index.
+  /// @param mbin Per-axis indices of the bin.
+  /// @returns a global bin index from a local bin index @p mbin
   constexpr auto serialize(const loc_bin_index &mbin) const -> glob_bin_index {
     return serializer()(axes(), mbin);
   }
@@ -208,16 +245,19 @@ class grid_impl {
   decltype(auto) bin(const glob_bin_index gbin) const { return m_bins[gbin]; }
 
   /// @param gbin the global bin index
+  /// @returns An iterable view of the bin contents.
   DETRAY_HOST_DEVICE
   decltype(auto) bin(const glob_bin_index gbin) { return m_bins[gbin]; }
 
   /// @param mbin the multi-index of bins over all axes - const
+  /// @returns An iterable view of the bin contents.
   DETRAY_HOST_DEVICE
   decltype(auto) bin(const loc_bin_index &mbin) const {
     return bin(serialize(mbin));
   }
 
   /// @param mbin the multi-index of bins over all axes
+  /// @returns An iterable view of the bin contents.
   DETRAY_HOST_DEVICE
   decltype(auto) bin(const loc_bin_index &mbin) { return bin(serialize(mbin)); }
 
@@ -239,7 +279,9 @@ class grid_impl {
     return bin(m_axes.bins(p));
   }
 
+  /// Access a bin using one index per axis.
   /// @param indices the single indices corresponding to a multi_bin
+  /// @returns An iterable view of the bin contents.
   template <concepts::index... I>
     requires(sizeof...(I) == dim)
   DETRAY_HOST_DEVICE decltype(auto) bin(I... indices) const {
@@ -250,22 +292,31 @@ class grid_impl {
   /// Access a single entry in a bin from the global bin index, as well as
   /// the index of the entry in the bin.
   ///
-  /// @param idx the index of a specific grid entry
-  ///
-  /// @returns a single bin entry.
   /// @{
+  /// @param gbin Flattened index of the bin.
+  /// @param idx Index of the entry within that bin.
+  /// @returns The selected entry.
   DETRAY_HOST_DEVICE
   decltype(auto) at(const glob_bin_index gbin, const dindex idx) {
     return bin(gbin)[idx];
   }
+  /// @param gbin Flattened index of the bin.
+  /// @param idx Index of the entry within that bin.
+  /// @returns The selected entry.
   DETRAY_HOST_DEVICE
   decltype(auto) at(const glob_bin_index gbin, const dindex idx) const {
     return bin(gbin)[idx];
   }
+  /// @param mbin Per-axis indices of the bin.
+  /// @param idx Index of the entry within that bin.
+  /// @returns The selected entry.
   DETRAY_HOST_DEVICE
   decltype(auto) at(const loc_bin_index &mbin, const dindex idx) {
     return bin(mbin)[idx];
   }
+  /// @param mbin Per-axis indices of the bin.
+  /// @param idx Index of the entry within that bin.
+  /// @returns The selected entry.
   DETRAY_HOST_DEVICE
   decltype(auto) at(const loc_bin_index &mbin, const dindex idx) const {
     return bin(mbin)[idx];
@@ -278,15 +329,17 @@ class grid_impl {
   /// @returns a view over the flattened bin content by joining the bin ranges
   DETRAY_HOST_DEVICE auto all() const { return detray::views::join(bins()); }
 
-  /// Poupulate a bin with a single one of its corresponding values @param v
+  /// Poupulate a bin with a single one of its corresponding values @p v
   /// @{
   /// @param mbin the multi bin index to be populated
+  /// @param v Value to insert into the bin.
   template <typename populator_t, typename V = value_type>
   DETRAY_HOST_DEVICE void populate(const loc_bin_index &mbin, V &&v) {
     populator_t{}(bin(mbin), std::forward<V>(v));
   }
 
   /// @param gbin the global bin index to be populated
+  /// @param v Value to insert into the bin.
   template <typename populator_t, typename V = value_type>
   DETRAY_HOST_DEVICE void populate(const glob_bin_index gbin, V &&v) {
     populator_t{}(bin(gbin), std::forward<V>(v));
@@ -294,6 +347,7 @@ class grid_impl {
 
   /// @param p the point in local coordinates that defines the bin to be
   ///          populated
+  /// @param v Value to insert into the bin.
   template <typename populator_t, typename V = value_type>
   DETRAY_HOST_DEVICE void populate(const point_type &p, V &&v) {
     populator_t{}(bin(m_axes.bins(p)), std::forward<V>(v));
@@ -371,5 +425,35 @@ template <concepts::algebra algebra_t, typename axes_t, typename bin_t,
 using grid =
     grid_impl<coordinate_axes<axes_t, algebra_t, ownership, containers>, bin_t,
               simple_serializer>;
+
+/// Equality comparison across grids of owning and non-owning type
+///
+/// @param lhs the right-hand side of the comparison
+/// @param rhs the right-hand side of the comparison
+///
+/// @returns whether the two grids are equal
+template <concepts::grid grid_lhs_t, concepts::grid grid_rhs_t>
+  requires(!std::same_as<grid_lhs_t, grid_rhs_t> &&
+           (std::same_as<typename grid_lhs_t::template owning_type<false>,
+                         grid_rhs_t> ||
+            std::same_as<typename grid_rhs_t::template owning_type<false>,
+                         grid_lhs_t>))
+DETRAY_HOST_DEVICE constexpr bool operator==(const grid_lhs_t &lhs,
+                                             const grid_rhs_t &rhs) {
+  // Generate a non-owning grid from the owning grid and compare
+  if constexpr (grid_lhs_t::is_owning) {
+    typename grid_lhs_t::template owning_type<false> n_owning_lhs(lhs);
+
+    return (n_owning_lhs == rhs);
+
+  } else if constexpr (grid_rhs_t::is_owning) {
+    typename grid_rhs_t::template owning_type<false> n_owning_rhs(rhs);
+
+    return (n_owning_rhs == lhs);
+  } else {
+    // Cannot be reached as per requirements list
+    return false;
+  }
+}
 
 }  // namespace detray

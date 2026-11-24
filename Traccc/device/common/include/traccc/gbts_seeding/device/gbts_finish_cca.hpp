@@ -23,8 +23,8 @@ namespace traccc::device {
 struct gbts_finish_cca_payload {
   /// Number of edges in the compacted graph
   unsigned int nConnectedEdges;
-  /// Maximum number of neighbours retained per edge
-  unsigned int max_num_neighbours;
+  /// Capacity of the compacted graph, the column stride of output_graph
+  unsigned int nConnectedEdgesMax;
   /// Minimum level (path length in edges) of a seed root
   unsigned char minLevel;
   /// Compacted graph from gbts_compress_graph
@@ -43,9 +43,10 @@ struct gbts_finish_cca_payload {
 /// @brief Write the parent marks and terminus flags of the settled edges.
 ///
 /// Run once after the sweeps of gbts_run_cca_iteration. Every settled edge
-/// marks its neighbours as having a parent and gets its terminus flag from
-/// its level. An edge whose longest path exceeds max_seed_candidate_length
-/// edges is not a root and marks nobody, which truncates the path.
+/// marks its neighbours one level below it as having a parent, so a neighbour
+/// further below stays a root, and gets its terminus flag from its level. An
+/// edge whose longest path exceeds max_seed_candidate_length edges is not a
+/// root and marks nobody, which truncates the path.
 ///
 /// @param[in] thread_id Thread identifier for the kernel launch
 /// @param[in] payload   The global memory payload

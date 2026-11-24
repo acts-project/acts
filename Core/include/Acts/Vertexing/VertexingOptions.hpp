@@ -12,6 +12,8 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
+#include <optional>
+
 namespace Acts {
 
 /// @brief Vertex Finder Options
@@ -38,6 +40,17 @@ struct VertexingOptions {
           "Vertex constraint covariance matrix must be invertible.");
     }
   }
+
+  /// VertexingOptions with context and an optional vertex constraint
+  ///
+  /// @param gctx Geometry context
+  /// @param mctx Magnetic field context
+  /// @param constr Vertex constraint, or nullopt for an unconstrained fit
+  VertexingOptions(const GeometryContext& gctx,
+                   const MagneticFieldContext& mctx,
+                   const std::optional<Vertex>& constr)
+      : VertexingOptions(gctx, mctx, constr.value_or(Vertex{}),
+                         constr.has_value()) {}
 
   /// VertexingOptions with context and without vertex constraint
   ///

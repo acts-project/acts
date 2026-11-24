@@ -348,6 +348,8 @@ class VectorMultiTrajectoryBase {
     return m_referenceSurfaces[istate].get();
   }
 
+  void ensureDynamicColumns_impl(const VectorMultiTrajectoryBase& other);
+
  protected:
   /// index to map track states to the corresponding
   std::vector<IndexData> m_index;

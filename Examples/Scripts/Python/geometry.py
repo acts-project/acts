@@ -6,7 +6,10 @@ from pathlib import Path
 
 import acts
 import acts.examples
-from acts.json import MaterialMapJsonConverter, TrackingGeometryJsonConverter
+from acts.json import (
+    TrackingGeometryJsonConverter,
+    TrackingGeometryMaterialJsonConverter,
+)
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
     WhiteBoard,
@@ -18,8 +21,6 @@ from acts.examples import (
 
 from acts.examples.json import (
     JsonSurfacesWriter,
-    JsonMaterialWriter,
-    JsonFormat,
 )
 
 
@@ -87,24 +88,12 @@ def runGeometry(
             writer.write(context)
 
             if outputMaterialMap and ievt == 0:
-                jmConverterCfg = MaterialMapJsonConverter.Config(
-                    processSensitives=True,
-                    processApproaches=True,
-                    processRepresenting=True,
-                    processBoundaries=True,
-                    processVolumes=True,
-                    processNonMaterial=True,
-                    context=context.recoGeoContext,
+                material = acts.TrackingGeometryMaterial.fromGeometry(
+                    trackingGeometry, includeNonMaterial=True
                 )
-
-                jmw = JsonMaterialWriter(
-                    level=acts.logging.VERBOSE,
-                    converterCfg=jmConverterCfg,
-                    fileName=str(outputDir / "geometry-map"),
-                    writeFormat=JsonFormat.Json,
+                TrackingGeometryMaterialJsonConverter().toFile(
+                    material, outputDir / "geometry-map.json"
                 )
-
-                jmw.write(trackingGeometry)
 
         if serializeGeometryJson:
             converter = TrackingGeometryJsonConverter(level=acts.logging.INFO)

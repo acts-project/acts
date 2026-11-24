@@ -21,12 +21,15 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperDenseExtension.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -64,14 +67,14 @@ struct PerpendicularMeasure {
     double distance = std::numeric_limits<double>::max();
   };
 
-  using result_type = this_result;
+  using State = this_result;
 
   PerpendicularMeasure() = default;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, result_type& result) const {
+                  const navigator_t& /*navigator*/, State& result) const {
     result.distance = perp(stepper.position(state.stepping));
   }
 };
@@ -96,12 +99,12 @@ struct SurfaceObserver {
     double surface_passed_r = std::numeric_limits<double>::max();
   };
 
-  using result_type = this_result;
+  using State = this_result;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
-                   const navigator_t& /*navigator*/, result_type& result,
+                   const navigator_t& /*navigator*/, State& result,
                    const Logger& logger) const {
     if (surface == nullptr || result.surfaces_passed != 0) {
       return Result<void>::success();
@@ -142,7 +145,7 @@ struct SurfaceObserver {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/, result_type& result,
+                  const navigator_t& /*navigator*/, State& result,
                   const Logger& /*logger*/) const {
     return result.surfaces_passed != 0;
   }
@@ -174,7 +177,7 @@ BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
   using NullOptionsType = EigenPropagatorType::Options<>;
   NullOptionsType null_options(tgContext, mfContext);
 
-  using ActorList = ActorList<PerpendicularMeasure>;
+  using ActorList = ActorList<DefaultActor, PerpendicularMeasure>;
   using OptionsType = EigenPropagatorType::Options<ActorList>;
   OptionsType options(tgContext, mfContext);
 }
@@ -205,7 +208,7 @@ BOOST_DATA_TEST_CASE(
   static_cast<void>(index);
 
   using CylinderObserver = SurfaceObserver<CylinderSurface>;
-  using ActorList = ActorList<CylinderObserver>;
+  using ActorList = ActorList<DefaultActor, CylinderObserver>;
 
   // setup propagation options
   EigenPropagatorType::Options<ActorList> options(tgContext, mfContext);
@@ -214,9 +217,9 @@ BOOST_DATA_TEST_CASE(
   options.stepping.maxStepSize = 1_cm;
 
   // set the surface to be passed by
-  options.actorList.get<CylinderObserver>().surface = mSurface.get();
+  options.actor.get<CylinderObserver>().surface = mSurface.get();
 
-  using so_result = typename CylinderObserver::result_type;
+  using so_result = typename CylinderObserver::State;
 
   // define start parameters
   double x = 0;
@@ -232,8 +235,9 @@ BOOST_DATA_TEST_CASE(
       makeVector4(pos, time), mom.normalized(), q / mom.norm(), std::nullopt,
       ParticleHypothesis::pion());
   // propagate to the cylinder surface
-  const auto& result = epropagator.propagate(start, options).value();
-  auto& sor = result.get<so_result>();
+  auto state = epropagator.makeState(options);
+  epropagator.propagate(state, start).value();
+  auto& sor = state.actor.get<so_result>();
 
   BOOST_CHECK_EQUAL(sor.surfaces_passed, 1u);
   CHECK_CLOSE_ABS(sor.surface_passed_r, 10., 1e-5);
@@ -501,6 +505,158 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
     Propagator propagator{denseEigenStepper, navigator};
     static_assert(!std::is_base_of_v<BasePropagator, decltype(propagator)>,
                   "Propagator unexpectedly inherits from BasePropagator");
+  }
+}
+
+// Coincident additional surfaces are reached by steps of zero length, which
+// must not leave a zero step constraint for the step to the path limit.
+BOOST_AUTO_TEST_CASE(AlreadyOnAdditionalSurfaceIsReachedByZeroStep) {
+  Propagator propagator{StraightLineStepper{}, VoidNavigator{}};
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx;
+
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+  auto first =
+      CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface();
+  auto second =
+      CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface();
+
+  decltype(propagator)::Options<> options{gctx, mctx};
+  options.navigation.registerAdditionalSurface(*first);
+  options.navigation.registerAdditionalSurface(*second);
+  options.pathLimit = 1_mm;
+  options.maxSteps = 3;
+
+  auto result = propagator.propagate(start, options);
+  BOOST_REQUIRE(result.ok());
+  CHECK_CLOSE_ABS(result->pathLength, 1_mm, 1_nm);
+  BOOST_CHECK_EQUAL(result->statistics.stepping.nSuccessfulSteps, 3);
+}
+
+// A target behind the start is not reached, so the caller selects the
+// direction
+BOOST_AUTO_TEST_CASE(TargetBehindStart) {
+  auto field = std::make_shared<ConstantBField>(Vector3{0, 0, 2_T});
+  Propagator propagator{EigenStepper<>{field}, VoidNavigator{}};
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx;
+
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
+      ParticleHypothesis::pion());
+  auto target = Surface::makeShared<PerigeeSurface>(Vector3{-10_mm, 0, 0});
+
+  EigenPropagatorType::Options<> options{gctx, mctx};
+  BOOST_CHECK(!propagator.propagate(start, *target, options).ok());
+
+  options.direction = Direction::Backward();
+  auto result = propagator.propagate(start, *target, options);
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(&result->endParameters->referenceSurface(), target.get());
+  CHECK_CLOSE_ABS(result->pathLength, -10_mm, 1_um);
+}
+
+// A track that turns before reaching the target may keep trying backward
+// corrections. The existing step limit bounds those attempts.
+BOOST_AUTO_TEST_CASE(UnreachableTargetStopsAtStepLimit) {
+  auto field = std::make_shared<ConstantBField>(Vector3{0, 0, 2_T});
+  Propagator propagator{EigenStepper<>{field}, VoidNavigator{}};
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx;
+
+  // The radius of the track is about 167 mm
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitX(), 1. / 100_MeV, std::nullopt,
+      ParticleHypothesis::pion());
+  const Transform3 transform(
+      Translation3(Vector3{500_mm, 0, 0}) *
+      AngleAxis3(std::numbers::pi / 2, Vector3::UnitY()));
+  const std::shared_ptr<const Surface> unbounded =
+      Surface::makeShared<PlaneSurface>(transform);
+  const std::shared_ptr<const Surface> bounded =
+      Surface::makeShared<PlaneSurface>(
+          transform, std::make_shared<RectangleBounds>(2_m, 2_m));
+
+  for (const auto& [name, target] :
+       {std::pair{"unbounded", unbounded}, std::pair{"bounded", bounded}}) {
+    BOOST_TEST_CONTEXT(name) {
+      EigenPropagatorType::Options<> options{gctx, mctx};
+      options.maxSteps = 200;
+      options.loopProtection = false;
+      auto result = propagator.propagate(start, *target, options);
+      BOOST_REQUIRE(!result.ok());
+      BOOST_CHECK_EQUAL(
+          result.error(),
+          make_error_code(PropagatorError::StepCountLimitReached));
+    }
+  }
+}
+
+// The point of closest approach to a perigee moves with the direction. Reached
+// on another surface shortly before it, the propagation targets a second
+// surface just past it, which the straight line puts closer. That surface
+// leaves the perigee behind, and the propagation steps back onto it.
+BOOST_AUTO_TEST_CASE(TargetCrossedByTheLastStep) {
+  auto field = std::make_shared<ConstantBField>(Vector3{0, 0, 2_T});
+  Propagator propagator{EigenStepper<>{field}, VoidNavigator{}};
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx;
+
+  auto target = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+
+  // A plane across the track at the path length
+  const auto planeAt = [&](const BoundTrackParameters& start,
+                           double pathLength) {
+    EigenPropagatorType::Options<> options{gctx, mctx};
+    options.pathLimit = pathLength;
+    auto result = propagator.propagate(start, options);
+    BOOST_REQUIRE(result.ok());
+    const BoundTrackParameters& parameters = result->endParameters.value();
+    return CurvilinearSurface(parameters.position(gctx), parameters.direction())
+        .planeSurface();
+  };
+
+  for (double startX : {-50_mm, -200_mm, -500_mm}) {
+    for (double momentum : {0.5_GeV, 2_GeV}) {
+      BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+          Vector4{startX, 5_mm, 0, 0}, Vector3::UnitX(), 1. / momentum,
+          std::nullopt, ParticleHypothesis::pion());
+
+      EigenPropagatorType::Options<> options{gctx, mctx};
+      auto direct = propagator.propagate(start, *target, options);
+      BOOST_REQUIRE(direct.ok());
+      const double pathLength = direct->pathLength;
+
+      for (double before : {2_mm, 10_mm, 20_mm}) {
+        for (double past : {10_um, 100_um, 1_mm}) {
+          if (before >= pathLength) {
+            continue;
+          }
+          BOOST_TEST_CONTEXT("start x " << startX << ", momentum " << momentum
+                                        << ", before " << before << ", past "
+                                        << past) {
+            auto first = planeAt(start, pathLength - before);
+            auto second = planeAt(start, pathLength + past);
+
+            EigenPropagatorType::Options<> withPlanes{gctx, mctx};
+            withPlanes.navigation.registerAdditionalSurface(*first);
+            withPlanes.navigation.registerAdditionalSurface(*second);
+            auto result = propagator.propagate(start, *target, withPlanes);
+            BOOST_CHECK(result.ok());
+            if (result.ok()) {
+              BOOST_CHECK_EQUAL(&result->endParameters->referenceSurface(),
+                                target.get());
+              CHECK_CLOSE_ABS(result->pathLength, pathLength, 1_um);
+            }
+          }
+        }
+      }
+    }
   }
 }
 

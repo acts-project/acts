@@ -11,9 +11,14 @@ include(traccc-compiler-options-cpp)
 
 # # Add all the subdirectories that can be built.
 add_subdirectory(common)
+add_subdirectory(validation)
 
 if(TRACCC_BUILD_CUDA)
     add_subdirectory(cuda)
+endif()
+
+if(TRACCC_BUILD_HIP)
+    add_subdirectory(hip)
 endif()
 
 if(TRACCC_BUILD_SYCL)

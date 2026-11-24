@@ -10,3 +10,8 @@ endif()
 
 add_unittest(ActsKalmanToMilleConsistency ActsKalmanToMilleConsistency.cpp)
 add_unittest(ActsMilleBasicCalls ActsMilleBasicCalls.cpp)
+add_unittest(ActsMilleReadRecordSequence ActsMilleReadRecordSequence.cpp)
+add_unittest(ActsToMilleDiscardGuard ActsToMilleDiscardGuard.cpp)
+add_unittest(ActsToMillePseudoResiduals ActsToMillePseudoResiduals.cpp)
+add_unittest(MillePedeResultReaderSimpleFile MillePedeResultReaderSimpleFile.cpp)
+add_unittest(MillePedeSteeringTests MillePedeSteeringTests.cpp)

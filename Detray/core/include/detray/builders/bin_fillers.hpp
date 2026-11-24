@@ -38,9 +38,13 @@ struct fill_by_bin {
     value_t single_element;
   };
 
+  /// Grid-bin payload type used by the bin filler.
   template <concepts::grid grid_t>
   using bin_data_type = bin_data<grid_t::dim, typename grid_t::value_type>;
 
+  /// Populate a grid from the supplied bin indices and payload values.
+  /// @param grid Grid to populate.
+  /// @param bins Bin indices and values to insert.
   template <concepts::grid grid_t, typename volume_t,
             typename surface_container_t, typename mask_container,
             typename transform_container, typename context_t, typename... Args>
@@ -63,6 +67,12 @@ struct fill_by_bin {
 /// @param vol the volume the grid belongs to
 /// @param ctx the geometry context
 struct fill_by_pos {
+  /// Populate a surface grid from the translations of its sensitive surfaces.
+  /// @param grid Grid to populate.
+  /// @param vol Volume whose surfaces are selected.
+  /// @param surfaces Surface lookup data to filter.
+  /// @param transforms Transform store used to obtain surface positions.
+  /// @param ctx Geometry context for transform lookup.
   template <concepts::surface_grid grid_t, typename volume_t,
             typename surface_container_t, typename mask_container,
             typename transform_container, typename context_t, typename... Args>
@@ -96,6 +106,11 @@ struct fill_by_pos {
 /// @param vol the volume the grid belongs to
 /// @param ctx the geometry context
 struct bin_associator {
+  /// Associate detector surfaces with bins based on their boundaries.
+  /// @param grid Grid to populate.
+  /// @param det Detector providing surfaces, masks, and transforms.
+  /// @param vol Volume whose surfaces are selected.
+  /// @param ctx Geometry context for transform lookup.
   template <concepts::detector detector_t, typename volume_type,
             concepts::surface_grid grid_t, typename... Args>
   DETRAY_HOST auto operator()(grid_t &grid, detector_t &det,
@@ -106,6 +121,12 @@ struct bin_associator {
                      det.transform_store(), ctx);
   }
 
+  /// Associate supplied surfaces with bins by matching their contours.
+  /// @param grid Grid to populate.
+  /// @param surfaces Surfaces to associate with grid bins.
+  /// @param transforms Transform store for those surfaces.
+  /// @param masks Mask store containing their shape boundaries.
+  /// @param ctx Geometry context for transform lookup.
   template <concepts::surface_grid grid_t, typename volume_t,
             typename surface_container_t, typename mask_container,
             typename transform_container, typename context_t, typename... Args>

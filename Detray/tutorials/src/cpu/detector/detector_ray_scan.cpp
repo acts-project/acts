@@ -112,7 +112,7 @@ int main() {
   // one for the toy detector.
   // The hash tree is still Work in Progress !
   auto geo_checker = detray::hash_tree(adj_mat);
-  const bool check_links = (geo_checker.root() == root_hash);
+  [[maybe_unused]] const bool check_links = (geo_checker.root() == root_hash);
 
   DETRAY_INFO_HOST("All links reachable: " << (check_links ? "OK" : "FAILURE"));
 }

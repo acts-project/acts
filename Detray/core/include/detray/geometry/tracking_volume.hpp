@@ -54,13 +54,15 @@ class tracking_volume {
  public:
   /// In case the geometry needs to be printed
   using name_map = detray::name_map;
+  /// Object identifier enum used by the volume descriptor's accelerator links.
   using object_id = descr_t::object_id;
 
   /// Not allowed: always needs a detector and a descriptor.
   tracking_volume() = delete;
 
-  /// Constructor from detector @param det and volume descriptor
-  /// @param vol_idx from that detector.
+  /// Construct a volume facade from its detector and descriptor.
+  /// @param det Detector that owns the volume data.
+  /// @param desc Descriptor containing links for this volume.
   constexpr tracking_volume(const detector_t &det, const descr_t &desc)
       : m_detector{det}, m_desc{desc} {
     assert(m_desc.index() < det.volumes().size());
@@ -79,6 +81,7 @@ class tracking_volume {
   /// Equality operator
   ///
   /// @param rhs is the right hand side to be compared to
+  /// @returns True when both facades refer to the same detector and descriptor.
   DETRAY_HOST_DEVICE
   constexpr auto operator==(const tracking_volume &rhs) const -> bool {
     return (&m_detector == &(rhs.m_detector) && m_desc == rhs.m_desc);
@@ -165,6 +168,7 @@ class tracking_volume {
   /// @tparam I type of object to retrieve (passive, portal, sensitive etc)
   /// @tparam functor_t the prescription to be applied to the surfaces
   /// @tparam Args      types of additional arguments to the functor
+  /// @param args Arguments forwarded to the accelerator visitor.
   template <object_id I, typename functor_t, typename... Args>
   DETRAY_HOST_DEVICE constexpr void visit_accelerator(Args &&...args) const {
     static_assert(I < object_id::e_all);
@@ -182,6 +186,7 @@ class tracking_volume {
   /// @tparam I type of object to retrieve (surface types, daughters etc)
   /// @tparam functor_t the prescription to be applied to the acc structure
   /// @tparam Args      types of additional arguments to the functor
+  /// @param args Arguments forwarded to each accelerator visitor.
   template <typename functor_t, int I = static_cast<int>(object_id::e_all) - 1,
             typename... Args>
   DETRAY_HOST_DEVICE constexpr void visit_accelerators(Args &&...args) const {
@@ -205,6 +210,7 @@ class tracking_volume {
   ///
   /// @tparam functor_t the prescription to be applied to the surfaces
   /// @tparam Args      types of additional arguments to the functor
+  /// @param args Arguments forwarded to the surface visitor.
   template <surface_id I, typename functor_t, typename... Args>
   DETRAY_HOST_DEVICE constexpr void visit_surfaces(Args &&...args) const {
     using surface_getter_t = detail::apply_to_surfaces<functor_t>;
@@ -237,6 +243,7 @@ class tracking_volume {
   ///
   /// @tparam functor_t the prescription to be applied to the daughter volumes
   /// @tparam Args      types of additional arguments to the functor
+  /// @param args Arguments forwarded to the daughter-volume visitor.
   template <typename functor_t, typename... Args>
   DETRAY_HOST_DEVICE constexpr void visit_daughter_volumes(
       Args &&...args) const {
@@ -257,6 +264,10 @@ class tracking_volume {
   ///                   (customization point for the navigation)
   /// @tparam track_t   the track around which to build up the neighborhood
   /// @tparam Args      types of additional arguments to the functor
+  /// @param track Track position and direction used for neighborhood lookup.
+  /// @param win_size Search window around the track position.
+  /// @param ctx Geometry context used to resolve transforms.
+  /// @param args Additional arguments forwarded to the neighborhood visitor.
   template <object_id I, typename functor_t, typename track_t,
             concepts::arithmetic window_size_t, typename... Args>
   DETRAY_HOST_DEVICE constexpr void visit_neighborhood(
@@ -277,6 +288,8 @@ class tracking_volume {
   ///
   /// @tparam functor_t the prescription to be applied to the material
   /// @tparam Args      types of additional arguments to the functor
+  /// @param args Arguments forwarded to the material visitor.
+  /// @returns The result produced by the material visitor.
   template <typename functor_t, typename... Args>
   DETRAY_HOST_DEVICE constexpr auto visit_material(Args &&...args) const {
     assert(has_material());
@@ -386,6 +399,7 @@ class tracking_volume {
     return true;
   }
 
+  /// @param names Optional detector volume names indexed by volume index.
   /// @returns the volume name (add an offset for the detector name).
   DETRAY_HOST_DEVICE
   auto name(const name_map &names) const -> std::string {

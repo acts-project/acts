@@ -32,6 +32,7 @@ class homogeneous_volume_material_builder final
   static_assert(concepts::detector<detector_t>);
 
  public:
+  /// Scalar type used by the detector's material definitions.
   using scalar_type = dscalar<typename detector_t::algebra_type>;
 
   /// @param vol_builder volume builder that should be decorated with volume
@@ -45,15 +46,22 @@ class homogeneous_volume_material_builder final
   ///
   /// @param mat the material parameters
   DETRAY_HOST
-  void set_material(material<scalar_type> mat) { m_volume_material = mat; }
+  void set_material(const material<scalar_type> &mat) {
+    m_volume_material = mat;
+  }
 
-  /// Add the volume and the material to the detector @param det
+  /// Add the volume and the material to the detector @p det
+  /// @param det Detector that receives the volume and material.
+  /// @param opt Options controlling volume construction.
+  /// @param ctx Geometry context used by the decorated builder.
+  /// @returns Pointer to the constructed volume.
   DETRAY_HOST
-  auto build(detector_t &det, typename detector_t::geometry_context ctx = {}) ->
+  auto build(detector_t &det, const volume_builder_options &opt,
+             typename detector_t::geometry_context ctx = {}) ->
       typename detector_t::volume_type * override {
     // Call the underlying volume builder(s)
     typename detector_t::volume_type *vol =
-        volume_decorator<detector_t>::build(det, ctx);
+        volume_decorator<detector_t>::build(det, opt, ctx);
 
     // Nothing left to do
     if (m_volume_material == detray::vacuum<scalar_type>{}) {

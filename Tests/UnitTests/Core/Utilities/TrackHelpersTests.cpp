@@ -142,14 +142,16 @@ BOOST_AUTO_TEST_CASE(CalculateQuantities) {
                                    {IsHole},
                                    {HasMeasurement, IsSharedHit},
                                    {HasMeasurement, IsOutlier},
+                                   {HasMeasurement, IsSplitHit},
                                });
 
   calculateTrackQuantities(t);
 
   BOOST_CHECK_EQUAL(t.nHoles(), 2);
-  BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
+  BOOST_CHECK_EQUAL(t.nMeasurements(), 4);
   BOOST_CHECK_EQUAL(t.nOutliers(), 3);
   BOOST_CHECK_EQUAL(t.nSharedHits(), 2);
+  BOOST_CHECK_EQUAL(t.nSplitHits(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(TrimTrack) {

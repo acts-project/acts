@@ -11,13 +11,15 @@
 #include "./kernels/fill_fitting_sort_keys.hpp"
 #include "traccc/cuda/fitting/kalman_fitting_algorithm.hpp"
 
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
+
 // Thrust include(s).
 #include <thrust/execution_policy.h>
 #include <thrust/sort.h>
 
 // System include(s).
 #include <cassert>
-#include <memory_resource>
 
 namespace traccc::cuda {
 
@@ -42,10 +44,11 @@ void kalman_fitting_algorithm::prepare_track_fit_order(
   // Sort the key to get the sorted parameter ids
   vecmem::device_vector<device::sort_key> keys_device(track_sort_keys);
   vecmem::device_vector<unsigned int> track_indices_device(track_indices);
-  thrust::sort_by_key(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&mr().main))
-          .on(details::get_stream(stream())),
-      keys_device.begin(), keys_device.end(), track_indices_device.begin());
+  thrust::sort_by_key(thrust::cuda::par_nosync(
+                          stream_synchronizing_allocator(mr().main, stream()))
+                          .on(details::get_stream(stream())),
+                      keys_device.begin(), keys_device.end(),
+                      track_indices_device.begin());
 }
 
 }  // namespace traccc::cuda

@@ -148,6 +148,8 @@ class PodioTrackContainerBase {
         return &data.nOutliers;
       case "nSharedHits"_hash:
         return &data.nSharedHits;
+      case "nSplitHits"_hash:
+        return &data.nSplitHits;
       default:
         auto it = instance.m_dynamic.find(key);
         if (it == instance.m_dynamic.end()) {

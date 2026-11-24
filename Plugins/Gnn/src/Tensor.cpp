@@ -196,6 +196,40 @@ Tensor<T> selectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
 }
 
 template <Acts::Concepts::arithmetic T>
+Tensor<T> gatherCols(const Tensor<T> &tensor,
+                     const std::vector<std::size_t> &indices,
+                     const ExecutionContext &execContext) {
+  const auto nRows = tensor.shape()[0];
+  const auto nColsSrc = tensor.shape()[1];
+  const auto nColsDst = indices.size();
+  for (const auto index : indices) {
+    if (index >= nColsSrc) {
+      throw std::invalid_argument("gatherCols: column index " +
+                                  std::to_string(index) +
+                                  " out of range for tensor with " +
+                                  std::to_string(nColsSrc) + " columns");
+    }
+  }
+  if (tensor.device() != execContext.device) {
+    throw std::invalid_argument(
+        "gatherCols: tensor and execution context must be on the same device");
+  }
+
+  if (tensor.device().type == Device::Type::eCUDA) {
+    return detail::cudaGatherCols(tensor, indices, execContext);
+  }
+
+  auto result = Tensor<T>::Create({nRows, nColsDst}, execContext);
+  for (std::size_t row = 0; row < nRows; ++row) {
+    for (std::size_t k = 0; k < nColsDst; ++k) {
+      result.data()[row * nColsDst + k] =
+          tensor.data()[row * nColsSrc + indices[k]];
+    }
+  }
+  return result;
+}
+
+template <Acts::Concepts::arithmetic T>
 Tensor<T> mulPerColumn(const Tensor<T> &src, const std::vector<T> &scales,
                        const ExecutionContext &execContext) {
   const auto rows = src.shape()[0];
@@ -231,6 +265,12 @@ template Tensor<float> selectCols(const Tensor<float> &, const Tensor<bool> &,
                                   const ExecutionContext &);
 template Tensor<std::int64_t> selectCols(const Tensor<std::int64_t> &,
                                          const Tensor<bool> &,
+                                         const ExecutionContext &);
+template Tensor<float> gatherCols(const Tensor<float> &,
+                                  const std::vector<std::size_t> &,
+                                  const ExecutionContext &);
+template Tensor<std::int64_t> gatherCols(const Tensor<std::int64_t> &,
+                                         const std::vector<std::size_t> &,
                                          const ExecutionContext &);
 template Tensor<float> mulPerColumn(const Tensor<float> &,
                                     const std::vector<float> &,

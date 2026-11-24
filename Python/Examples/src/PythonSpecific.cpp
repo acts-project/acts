@@ -22,6 +22,7 @@
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <limits>
 #include <mutex>
 #include <stdexcept>
 #include <string>
@@ -163,6 +164,57 @@ class PythonPatternRecognitionPerformanceWriter final
     for (const auto& [name, prof] : coll.trackQualityPlotTool().profiles()) {
       insertUniqueHistogram(d, name, prof);
     }
+
+    return d;
+  }
+
+  /// Return the integrated counts and derived ratios as a Python dict.
+  py::dict stats() const {
+    const auto& s = m_collector.stats();
+    auto ratio = [](std::size_t num, std::size_t den) {
+      return den > 0 ? static_cast<double>(num) / den
+                     : std::numeric_limits<double>::quiet_NaN();
+    };
+
+    py::dict d;
+    d["nTotalTracks"] = s.nTotalTracks;
+    d["nTotalMatchedTracks"] = s.nTotalMatchedTracks;
+    d["nTotalFakeTracks"] = s.nTotalFakeTracks;
+    d["nTotalDuplicateTracks"] = s.nTotalDuplicateTracks;
+    d["nTotalUnmatchedTracks"] = s.nTotalUnmatchedTracks;
+    d["nTotalTracksMissingRefSurface"] = s.nTotalTracksMissingRefSurface;
+    d["nTotalMeasurements"] = s.nTotalMeasurements;
+    d["nTotalOutliers"] = s.nTotalOutliers;
+    d["nTotalHoles"] = s.nTotalHoles;
+    d["nTotalSharedHits"] = s.nTotalSharedHits;
+    d["nTotalParticles"] = s.nTotalParticles;
+    d["nTotalMatchedParticles"] = s.nTotalMatchedParticles;
+    d["nTotalDuplicateParticles"] = s.nTotalDuplicateParticles;
+    d["nTotalFakeParticles"] = s.nTotalFakeParticles;
+    d["nTotalQualityTracks"] = s.nTotalQualityTracks;
+
+    d["efficiencyTracks"] = ratio(s.nTotalMatchedTracks, s.nTotalTracks);
+    d["fakeRatioTracks"] = ratio(s.nTotalFakeTracks, s.nTotalTracks);
+    d["duplicateRatioTracks"] = ratio(s.nTotalDuplicateTracks, s.nTotalTracks);
+    d["efficiencyParticles"] =
+        ratio(s.nTotalMatchedParticles, s.nTotalParticles);
+    d["fakeRatioParticles"] = ratio(s.nTotalFakeParticles, s.nTotalParticles);
+    d["duplicateRatioParticles"] =
+        ratio(s.nTotalDuplicateParticles, s.nTotalParticles);
+    d["meanCompleteness"] = s.meanCompleteness();
+    d["meanPurity"] = s.meanPurity();
+
+    py::dict subDetectors;
+    for (const auto& [key, sub] : s.subDetectors) {
+      py::dict sd;
+      sd["nTrackStates"] = sub.nTrackStates;
+      sd["nMeasurements"] = sub.nMeasurements;
+      sd["nOutliers"] = sub.nOutliers;
+      sd["nHoles"] = sub.nHoles;
+      sd["nSharedHits"] = sub.nSharedHits;
+      subDetectors[py::str(key)] = sd;
+    }
+    d["subDetectors"] = subDetectors;
 
     return d;
   }
@@ -366,7 +418,8 @@ void addPythonSpecific(py::module_& mex) {
                  .def(py::init<const Config&, Acts::Logging::Level>(),
                       py::arg("config"), py::arg("level"))
                  .def_property_readonly("config", &Writer::config)
-                 .def("histograms", &Writer::histograms);
+                 .def("histograms", &Writer::histograms)
+                 .def("stats", &Writer::stats);
 
     auto c = py::class_<Config>(w, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, inputTracks, inputParticles,

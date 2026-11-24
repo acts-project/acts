@@ -16,9 +16,9 @@ More information can be found in the [ACTS documentation](https://acts-project.g
 
 ## Quick start
 
-ACTS is developed in C++ and is build using [CMake](https://cmake.org). Building
-the core library requires a C++20 compatible compiler,
-[Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
+ACTS is developed in C++ and is built using [CMake](https://cmake.org). Building
+the core library requires [Boost](https://www.boost.org) and
+[Eigen](https://eigen.tuxfamily.org). C++23 is the minimum supported C++ standard. The
 following commands will clone the repository, configure, and build the core
 library
 

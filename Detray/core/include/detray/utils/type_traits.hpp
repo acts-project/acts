@@ -21,18 +21,23 @@ namespace detray::detail {
 /// @{
 template <typename T>
 struct get_value_type {
+  /// The type itself when the argument is not a container or pointer.
   using type = T;
 };
 
+/// Extract the pointee type when the input is a raw pointer.
 template <typename T>
 struct get_value_type<T*> {
+  /// The pointee type.
   using type = T;
 };
 
+/// Extract a container's `value_type` when it is not `void`.
 template <typename container_t>
   requires(!std::same_as<typename std::remove_cvref_t<container_t>::value_type,
                          void>)
 struct get_value_type<container_t> {
+  /// The container's value type.
   using type = typename std::remove_cvref_t<container_t>::value_type;
 };
 
@@ -44,6 +49,7 @@ using get_value_t = typename get_value_type<T>::type;
 /// @{
 template <typename first_t = void, typename... other_t>
 struct first_type {
+  /// The first type in the pack, or `void` for an empty pack.
   using type = first_t;
 };
 
@@ -53,6 +59,7 @@ using first_t = typename first_type<TYPES...>::type;
 /// Extract the first value from an index pack.
 template <std::size_t first_t, std::size_t... other_t>
 struct first_idx {
+  /// The first index in the pack.
   static constexpr std::size_t value = first_t;
 };
 
@@ -64,9 +71,11 @@ inline constexpr std::size_t first_idx_v = first_idx<TYPES...>::value;
 /// @{
 template <typename T, typename... Ts>
 struct get_type_pos {
-  /// Unroll a parameter pack without using a tuple.
-  ///
-  /// @note Returns the position of the type counted from the back!
+  /// Unroll a parameter pack without using a tuple to find `T`.
+  /// @tparam first_t current type being compared
+  /// @tparam remaining_types types still to examine
+  /// @return one-based position from the back, or the maximum `std::size_t` if no
+  /// match is found
   template <typename first_t, typename... remaining_types>
   DETRAY_HOST_DEVICE static constexpr std::size_t type_pos_back() {
     if constexpr (!std::is_same_v<T, first_t>) {
@@ -78,6 +87,7 @@ struct get_type_pos {
     return std::numeric_limits<std::size_t>::max();
   }
 
+  /// Zero-based position of `T` in `Ts...`.
   static constexpr std::size_t value = sizeof...(Ts) - type_pos_back<Ts...>();
 };
 

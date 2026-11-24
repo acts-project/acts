@@ -13,6 +13,7 @@
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/IVolumeLookup.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
@@ -52,6 +53,7 @@ class IMaterialDecorator;
 class ISurfaceMaterial;
 class IVolumeMaterial;
 class Surface;
+class RegularSurface;
 class TrackingVolume;
 struct GeometryIdentifierHook;
 class Portal;
@@ -176,6 +178,18 @@ class TrackingVolume : public Volume {
   const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
                                              const Vector3& position,
                                              const double tol = 0.) const;
+
+  /// Install a subtree lookup; nullptr restores the implicit linear scan.
+  /// Explicit policies stop enclosing indices, including explicit linear ones.
+  /// Install local policies before enclosing indices and concurrent queries.
+  /// Rebuild after changes to bounds, transforms, hierarchy, local policies,
+  /// or the volume's address. Construct the policy for this volume.
+  /// @param lookup Policy owned by this volume, or nullptr for the default scan
+  void setVolumeLookup(std::unique_ptr<const IVolumeLookup> lookup);
+
+  /// Return the explicitly installed lookup, or nullptr for the default scan.
+  /// @return Optional installed policy
+  const IVolumeLookup* volumeLookup() const;
 
   /// @brief Visit all reachable surfaces
   ///
@@ -359,8 +373,17 @@ class TrackingVolume : public Volume {
   MutablePortalRange portals();
 
   /// Add a portal to this tracking volume
+  /// @note This clears the portal faces found when the tracking geometry was
+  ///       built (see @ref portalFace), so portal candidates of this volume
+  ///       are intersected against the full portal surfaces afterwards.
   /// @param portal The portal to add
   void addPortal(std::shared_ptr<Portal> portal);
+
+  /// Return the face of this volume that a portal lies on, if the portal
+  /// surface is larger than that face, e.g. after merging
+  /// @param portal The portal of this volume
+  /// @return the volume-sized face, or nullptr if the portal surface is the face
+  const Surface* portalFace(const Portal& portal) const;
 
   /// Type alias for mutable range of surfaces in tracking volume
   using MutableSurfaceRange =
@@ -587,6 +610,12 @@ class TrackingVolume : public Volume {
   std::span<const PlacementOwnPtr> placements() const;
 
  private:
+  /// Find the faces of this volume that its portals are larger than. Portals
+  /// with an alignable surface are skipped.
+  /// @param gctx The geometry context
+  /// @throws std::logic_error if the volume is alignable
+  void findPortalFaces(const GeometryContext& gctx);
+
   void connectDenseBoundarySurfaces(
       MutableTrackingVolumeVector& confinedDenseVolumes);
 
@@ -631,10 +660,15 @@ class TrackingVolume : public Volume {
 
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
   std::vector<std::shared_ptr<Portal>> m_portals;
+  /// Volume-sized face for each portal in @c m_portals that is larger than it
+  std::vector<std::shared_ptr<const RegularSurface>> m_portalFaces;
   std::vector<std::shared_ptr<Surface>> m_surfaces;
   std::vector<PlacementOwnPtr> m_placements;
 
   std::unique_ptr<INavigationPolicy> m_navigationPolicy;
+
+  // Destroy the lookup before the children it references.
+  std::unique_ptr<const IVolumeLookup> m_volumeLookup;
 
   NavigationDelegate m_navigationDelegate{};
 };

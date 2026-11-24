@@ -9,21 +9,11 @@
 #pragma once
 
 // Local include(s).
-#include "traccc/alpaka/utils/queue.hpp"
+#include "traccc/alpaka/utils/algorithm_base.hpp"
+#include "traccc/alpaka/utils/await.hpp"
 
 // Project include(s).
-#include "traccc/edm/measurement_collection.hpp"
-#include "traccc/utils/algorithm.hpp"
-#include "traccc/utils/memory_resource.hpp"
-#include "traccc/utils/messaging.hpp"
-
-// VecMem include(s).
-#include <vecmem/containers/data/vector_view.hpp>
-#include <vecmem/containers/vector.hpp>
-#include <vecmem/utils/copy.hpp>
-
-// System include(s).
-#include <functional>
+#include "traccc/clusterization/device/measurement_sorting_algorithm.hpp"
 
 namespace traccc::alpaka {
 
@@ -36,34 +26,30 @@ namespace traccc::alpaka {
 /// to the rescue.
 ///
 class measurement_sorting_algorithm
-    : public algorithm<edm::measurement_collection::buffer(
-          const edm::measurement_collection::const_view&)>,
-      public messaging {
+    : public device::measurement_sorting_algorithm,
+      public alpaka::algorithm_base {
  public:
   /// Constructor for the algorithm
   ///
+  /// @param mr The memory resource(s) to use in the algorithm
   /// @param copy The copy object to use in the algorithm
   /// @param q The Alpaka queue to schedule the measurement sorting in
+  /// @param logger The logger to use in the algorithm
+  /// @param await_func The function to use for synchronizing async operations
   ///
   measurement_sorting_algorithm(
-      const traccc::memory_resource& mr, const ::vecmem::copy& copy, queue& q,
-      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
-
-  /// Callable operator performing the sorting on a container
-  ///
-  /// @param measurements The measurements to sort
-  ///
-  [[nodiscard]] output_type operator()(
-      const edm::measurement_collection::const_view& measurements)
-      const override;
+      const traccc::memory_resource& mr, const ::vecmem::copy& copy,
+      alpaka::queue& q,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
+      await_function_type await_func = await_sync_event);
 
  private:
-  // The memory resource(s) to use
-  traccc::memory_resource m_mr;
-  /// Copy object to use in the algorithm
-  std::reference_wrapper<const ::vecmem::copy> m_copy;
-  /// The Alpaka queue to use
-  std::reference_wrapper<queue> m_queue;
+  /// Run the measurement-sorting kernels on the Alpaka queue.
+  void sorting_kernel(
+      const measurement_sorting_kernel_payload& payload) const override;
+
+  /// Wait for outstanding work on the algorithm stream or queue.
+  void synchronize() const override;
 
 };  // class measurement_sorting_algorithm
 

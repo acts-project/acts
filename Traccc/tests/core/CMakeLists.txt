@@ -12,6 +12,7 @@ traccc_add_test(core
    "test_axis.cpp"
    "test_copy.cpp"
    "test_grid2.cpp"
+   "test_kalman_filter_toy_detector.cpp"
    "test_populator.cpp"
    "test_pvalue.cpp"
    "test_ranges.cpp"
@@ -21,6 +22,17 @@ traccc_add_test(core
    "particle.cpp"
    LINK_LIBRARIES GTest::gtest_main vecmem::core traccc_tests_common
    traccc::core traccc::io traccc::performance traccc::simulation
+   detray::core detray::io detray::test_common detray::validation_utils
+   covfie::core
+)
+
+# Test the host-side strip inputs and the device-common Strip SP kernels
+# independently of a concrete accelerator backend.
+traccc_add_test(strip_spacepoint
+   "test_strip_spacepoint_inputs.cpp"
+   "test_strip_spacepoint_migration.cpp"
+   LINK_LIBRARIES GTest::gtest_main vecmem::core traccc_tests_common
+   traccc::core traccc::device_common detray::core
 )
 
 if(TRACCC_USE_ROOT)

@@ -33,7 +33,6 @@ macro(detray_add_cpu_test algebra)
        "builders/grid_builder.cpp"
        "builders/homogeneous_volume_material_builder.cpp"
        "builders/homogeneous_material_builder.cpp"
-       "builders/material_deduplication.cpp"
        "builders/material_map_builder.cpp"
        "builders/volume_builder.cpp"
        "core/detector.cpp"
@@ -102,6 +101,7 @@ macro(detray_add_cpu_test algebra)
        "utils/curvilinear_frame.cpp"
        "utils/axis_rotation.cpp"
        "utils/quadratic_equation.cpp"
+       "utils/root_finding.cpp"
        "utils/unit_vectors.cpp"
        LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::core_${algebra}
        covfie::core vecmem::core detray::io detray::test_common detray::test_utils
@@ -117,7 +117,7 @@ if(DETRAY_EIGEN_PLUGIN)
 endif()
 # Build the Fastor tests.
 if(DETRAY_FASTOR_PLUGIN)
-    detray_add_cpu_test( fastor )
+    detray_add_cpu_test(fastor)
 endif()
 
 # Build the SMatrix tests.

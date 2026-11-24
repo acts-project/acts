@@ -14,12 +14,13 @@ Acts::Result<std::vector<Segmentizer::ChannelSegment>> Channelizer::channelize(
     const Hit& hit, const Acts::Surface& surface,
     const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
     const Acts::IMultiAxis& segmentation, double thickness,
-    double minRelPerpDrift) const {
+    double minRelPerpDrift, bool limitCylinderPathToChord) const {
   // Drifted surface and scalor 2D to 3D segment
   // SurfaceDrift handles the surface-type-specific local frame internally
   // (plane/disc Cartesian, cylinder unrolled (rPhi, z))
   const auto atReadoutPlane = m_surfaceDrift.toReadout(
-      gctx, surface, thickness, hit.position(), hit.direction(), driftDir);
+      gctx, surface, thickness, hit.position(), hit.direction(), driftDir,
+      limitCylinderPathToChord);
   if (!atReadoutPlane.ok()) {
     return atReadoutPlane.error();
   }

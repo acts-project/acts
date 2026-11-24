@@ -11,8 +11,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
@@ -106,6 +108,19 @@ TGeoDetectorElement::TGeoDetectorElement(
       m_bounds(tgBounds),
       m_thickness(tgThickness) {
   m_surface = Surface::makeShared<DiscSurface>(tgBounds, *this);
+  m_surface->assignThickness(m_thickness);
+}
+
+TGeoDetectorElement::TGeoDetectorElement(
+    const Identifier& identifier, const TGeoNode& tGeoNode,
+    const Transform3& tgTransform,
+    const std::shared_ptr<const LineBounds>& tgBounds, double tgThickness)
+    : m_detElement(&tGeoNode),
+      m_transform(tgTransform),
+      m_identifier(identifier),
+      m_bounds(tgBounds),
+      m_thickness(tgThickness) {
+  m_surface = Surface::makeShared<StrawSurface>(tgBounds, *this);
   m_surface->assignThickness(m_thickness);
 }
 

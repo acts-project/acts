@@ -146,6 +146,8 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
     if (!track.hasReferenceSurface() && options.referenceSurface != nullptr) {
       typename Propagator::template Options<> extrapolationOptions(
           options.geoContext, options.magFieldContext);
+      // The reference surface may lie outside the world
+      extrapolationOptions.stopAtEndOfWorld = false;
       auto extrapolationResult = extrapolateTrackToReferenceSurface(
           track, *options.referenceSurface, extrapolator, extrapolationOptions,
           Acts::TrackExtrapolationStrategy::first, *m_extrapolationLogger);
@@ -211,6 +213,8 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
     if (!track.hasReferenceSurface() && options.referenceSurface != nullptr) {
       typename Propagator::template Options<> extrapolationOptions(
           options.geoContext, options.magFieldContext);
+      // The reference surface may lie outside the world
+      extrapolationOptions.stopAtEndOfWorld = false;
       auto extrapolationResult = extrapolateTrackToReferenceSurface(
           track, *options.referenceSurface, extrapolator, extrapolationOptions,
           Acts::TrackExtrapolationStrategy::first);

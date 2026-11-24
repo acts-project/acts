@@ -28,7 +28,7 @@ concept NavigatorConcept = requires {
 
   requires requires(const Navigator& n, const Options& o, State& s,
                     const Surface& sf, const Vector3& position,
-                    const Vector3& direction,
+                    const Vector3& direction, const Vector3& curvature,
                     const NavigatorInitializeArguments& args) {
     { n.makeState(o) } -> std::same_as<State>;
     { n.currentSurface(s) } -> std::same_as<const Surface*>;
@@ -39,10 +39,14 @@ concept NavigatorConcept = requires {
     { n.endOfWorldReached(s) } -> std::same_as<bool>;
     { n.navigationBreak(s) } -> std::same_as<bool>;
     { n.initialize(s, args) } -> std::same_as<Result<void>>;
-    { n.nextTarget(s, position, direction) } -> std::same_as<NavigationTarget>;
-    { n.checkTargetValid(s, position, direction) } -> std::same_as<bool>;
     {
-      n.handleSurfaceReached(s, position, direction, sf)
+      n.nextTarget(s, position, direction, curvature)
+    } -> std::same_as<NavigationTarget>;
+    {
+      n.checkTargetValid(s, position, direction, curvature)
+    } -> std::same_as<bool>;
+    {
+      n.handleSurfaceReached(s, position, direction, sf, curvature)
     } -> std::same_as<void>;
   };
 };

@@ -36,6 +36,7 @@ class single3D {
   /// The name for this shape
   static constexpr std::string_view name = "single3D";
 
+  /// Indices describing the entries in the shape boundary array.
   enum boundaries : unsigned int {
     e_lower = 0u,
     e_upper = 1u,
@@ -80,6 +81,7 @@ class single3D {
   /// @param trf the surface transform
   /// @param glob_p the point to be checked in the global coordinate system
   /// @param tol dynamic tolerance determined by caller
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::algebra algebra_t>
@@ -103,6 +105,7 @@ class single3D {
   /// @param bounds the boundary values for this shape
   /// @param loc_p the point to be checked in the local coordinate system
   /// @param tol dynamic tolerance determined by caller
+  /// @param edge_tol Additional tolerance used to classify points near an edge.
   ///
   /// @return true if the local point lies within the given boundaries.
   template <concepts::scalar scalar_t, concepts::point point_t>
@@ -186,6 +189,7 @@ class single3D {
     return o_bounds;
   }
 
+  /// @param bounds Boundary values used to determine the center.
   /// @returns the shapes centroid in local cartesian coordinates
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE auto centroid(
@@ -200,8 +204,7 @@ class single3D {
 
   /// Generate vertices in local cartesian frame
   ///
-  /// @param bounds the boundary values for the single value
-  /// @param n_seg is the number of line segments
+  /// This point shape does not require boundary values or a segment count.
   ///
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>

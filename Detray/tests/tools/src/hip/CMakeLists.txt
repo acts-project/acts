@@ -12,6 +12,7 @@ find_package(HIPToolkit)
 
 # Enable HIP as a language.
 enable_language(HIP)
+include(detray-compiler-options-hip)
 
 include(CMakeFindDependencyMacro)
 

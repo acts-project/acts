@@ -45,7 +45,7 @@ void BM_INTERSECT_PLANES(benchmark::State &state) {
 
   auto [plane_descs, transforms] = test::planes_along_direction(
       dists, vector::normalize(benchmarks::vector3{1.f, 1.f, 1.f}));
-  constexpr mask<rectangle2D, bench_algebra> rect{0u, 10.f, 20.f};
+  constexpr mask<rectangle2D, bench_algebra> rect{0u, -10.f, -20.f, 10.f, 20.f};
 
   // Iterate through uniformly distributed momentum directions
   auto ray_generator = ray_generator_t{};

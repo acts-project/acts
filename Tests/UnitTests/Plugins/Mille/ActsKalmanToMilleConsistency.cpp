@@ -13,6 +13,7 @@
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
@@ -31,6 +32,8 @@ using namespace Acts::detail::Test;
 using namespace Acts::UnitConstants;
 
 BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
+  ACTS_LOCAL_LOGGER(getDefaultLogger("ZeroFieldKalmanToMille", Logging::INFO));
+
   /// Part 1): Build some test data.
   /// This is shamelessly "borrowed" from
   /// the existing alignment unit test.
@@ -105,7 +108,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
   // here we test the case where the unconstrained track params are *not*
   // removed, to achieve equality even when the time coordinate is not
   // constrained.
-  ActsPlugins::ActsToMille::dumpToMille(alignState, *milleRecord, false);
+  ActsPlugins::ActsToMille::dumpToMille(alignState, *milleRecord, false,
+                                        logger());
 
   // trigger file close by destroying the Mille record
   milleRecord->flushOutputFile();
@@ -125,7 +129,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
   // we need to externally supply the alignment parameter indexing logic
   millePedeState.alignedSurfaces = alignState.alignedSurfaces;
   BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(
-                  *milleReader, millePedeState, idxedAlignSurfaces) ==
+                  *milleReader, millePedeState, idxedAlignSurfaces, logger()) ==
               Mille::MilleDecoder::ReadResult::OK);
 
   // now compare the results!

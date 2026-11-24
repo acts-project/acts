@@ -44,9 +44,11 @@ struct TrackStateCreator {
   using TrackProxy = typename track_container_t::TrackProxy;
   /// Type alias for track state proxy from track container
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
-  /// Type alias for bound state tuple containing parameters, jacobian and path
-  /// length
-  using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+  /// Type alias for the predicted state on a surface
+  using BoundState = CkfTypes::BoundState;
+  /// Type alias for the arguments from the CKF
+  using Arguments =
+      CkfTypes::TrackStateCreatorArguments<TrackStateContainerBackend>;
   /// Type alias for container of candidate track state proxies
   using candidate_container_t =
       typename std::vector<typename track_container_t::TrackStateProxy>;
@@ -85,17 +87,11 @@ struct TrackStateCreator {
       DelegateFuncTag<voidMeasurementSelector>{}};
 
  public:
-  /// @brief extend the trajectory onto the given surface.
+  /// @brief extend the trajectory onto the surface of the predicted state.
   ///
-  /// @param gctx The geometry context to be used for this task
-  /// @param calibrationContext The calibration context used to fill the calibrated data
-  /// @param surface The surface onto which the trajectory is extended
-  /// @param boundState the predicted bound state on the given surface
-  /// @param prevTip the tip of the trajectory which is to be extended
-  /// @param trackStateCandidates a temporary buffer which can be used to
-  ///        to keep track of newly created temporary track states.
-  /// @param trajectory the trajectory to be extended.
-  /// @param logger a logger for messages.
+  /// @param args the predicted state, the trajectory to extend, and the
+  ///        contexts
+  /// @param logger a logger for messages
   ///
   /// @return a list of indices of newly created track states which extend the
   ///    trajectory onto the given surface and match the bound state, or an
@@ -106,19 +102,19 @@ struct TrackStateCreator {
   /// This may create multiple branches. The new track states still miss the
   /// "filtered" data.
   Result<CkfTypes::BranchVector<TrackIndexType>> createTrackStates(
-      const GeometryContext& gctx, const CalibrationContext& calibrationContext,
-      [[maybe_unused]] const Surface& surface, const BoundState& boundState,
-      TrackIndexType prevTip,
-      std::vector<TrackStateProxy>& trackStateCandidates,
-      TrackStateContainerBackend& trajectory, const Logger& logger) const {
+      const Arguments& args, const Logger& logger) const {
+    const BoundState& boundState = args.boundState;
+    const Surface& surface = boundState.parameters.referenceSurface();
     TrackStatesResult tsRes = TrackStatesResult::success({});
     using SourceLinkRange = decltype(sourceLinkAccessor(surface));
     SourceLinkRange slRange = sourceLinkAccessor(surface);
     if (slRange.first != slRange.second) {
       auto [slBegin, slEnd] = slRange;
+      std::vector<TrackStateProxy> trackStateCandidates;
       tsRes = createSourceLinkTrackStates(
-          gctx, calibrationContext, surface, boundState, slBegin, slEnd,
-          prevTip, trackStateCandidates, trajectory, logger);
+          args.geoContext, args.calibrationContext, surface, boundState,
+          slBegin, slEnd, args.prevTip, trackStateCandidates,
+          args.trajectory.get(), logger);
     }
     return tsRes;
   }

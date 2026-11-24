@@ -123,7 +123,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
@@ -282,7 +281,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   // Linearizer
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
@@ -426,7 +424,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
@@ -578,7 +575,6 @@ BOOST_AUTO_TEST_CASE(
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
@@ -719,7 +715,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_removes_rejected_seed) {
   fitterCfg.annealingTool = annealingUtility;
 
   Linearizer::Config ltConfig;
-  ltConfig.bField = bField;
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 

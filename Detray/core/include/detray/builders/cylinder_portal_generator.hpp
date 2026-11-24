@@ -49,42 +49,72 @@ struct cylinder_portal_config {
 
   /// Setters
   /// @{
+  /// Set whether to create an inner cylindrical portal.
+  /// @param b True to create the inner portal.
+  /// @returns Reference to this configuration.
   constexpr cylinder_portal_config &build_inner(const bool b) {
     m_build_inner = b;
     return *this;
   }
+  /// Set whether portal bounds are fitted from the contained surfaces.
+  /// @param b True to fit bounds automatically.
+  /// @returns Reference to this configuration.
   constexpr cylinder_portal_config &do_autofit(const bool b) {
     m_do_autofit = b;
     return *this;
   }
+  /// Set the gap between fitted portals and the contained surfaces.
+  /// @param e Portal envelope distance.
+  /// @returns Reference to this configuration.
   constexpr cylinder_portal_config &envelope(const scalar_t e) {
     m_envelope = e;
     return *this;
   }
+  /// Set the inner radius used when autofitting is disabled.
+  /// @param r Fixed inner radius.
+  /// @returns Reference to this configuration.
   constexpr cylinder_portal_config &fixed_inner_radius(const scalar_t r) {
     m_fixed_inner_r = r;
     return *this;
   }
+  /// Set the outer radius used when autofitting is disabled.
+  /// @param r Fixed outer radius.
+  /// @returns Reference to this configuration.
   constexpr cylinder_portal_config &fixed_outer_radius(const scalar_t r) {
     m_fixed_outer_r = r;
     return *this;
   }
+  /// Set the half-length used when autofitting is disabled.
+  /// @param z Fixed half-length along the cylinder axis.
+  /// @returns Reference to this configuration.
   constexpr cylinder_portal_config &fixed_half_length(const scalar_t z) {
     m_fixed_z = z;
     return *this;
   }
+  /// Set the volume adjacent to the north endcap.
+  /// @param l Adjacent volume index.
+  /// @returns Reference to this configuration.
   constexpr cylinder_portal_config &link_north(const dindex l) {
     m_volume_links[0] = l;
     return *this;
   }
+  /// Set the volume adjacent to the south endcap.
+  /// @param l Adjacent volume index.
+  /// @returns Reference to this configuration.
   constexpr cylinder_portal_config &link_south(const dindex l) {
     m_volume_links[1] = l;
     return *this;
   }
+  /// Set the volume adjacent to the outer cylindrical surface.
+  /// @param l Adjacent volume index.
+  /// @returns Reference to this configuration.
   constexpr cylinder_portal_config &link_east(const dindex l) {
     m_volume_links[2] = l;
     return *this;
   }
+  /// Set the volume adjacent to the inner cylindrical surface.
+  /// @param l Adjacent volume index.
+  /// @returns Reference to this configuration.
   constexpr cylinder_portal_config &link_west(const dindex l) {
     m_volume_links[3] = l;
     return *this;
@@ -93,16 +123,27 @@ struct cylinder_portal_config {
 
   /// Getters
   /// @{
+  /// @returns Whether an inner portal should be generated.
   constexpr bool build_inner() const { return m_build_inner; }
+  /// @returns Whether portal bounds are fitted from the contained surfaces.
   constexpr bool do_autofit() const { return m_do_autofit; }
+  /// @returns Gap between fitted portals and contained surfaces.
   constexpr scalar_t envelope() const { return m_envelope; }
+  /// @returns Configured inner radius when autofitting is disabled.
   constexpr scalar_t fixed_inner_radius() const { return m_fixed_inner_r; }
+  /// @returns Configured outer radius when autofitting is disabled.
   constexpr scalar_t fixed_outer_radius() const { return m_fixed_outer_r; }
+  /// @returns Configured half-length when autofitting is disabled.
   constexpr scalar_t fixed_half_length() const { return m_fixed_z; }
+  /// @returns Volume indices adjacent to the north, south, east, and west portals.
   constexpr const auto &volume_links() const { return m_volume_links; }
+  /// @returns Volume index adjacent to the north endcap.
   constexpr const auto &link_north() const { return m_volume_links[0]; }
+  /// @returns Volume index adjacent to the south endcap.
   constexpr const auto &link_south() const { return m_volume_links[1]; }
+  /// @returns Volume index adjacent to the outer cylindrical surface.
   constexpr const auto &link_east() const { return m_volume_links[2]; }
+  /// @returns Volume index adjacent to the inner cylindrical surface.
   constexpr const auto &link_west() const { return m_volume_links[3]; }
   /// @}
 };
@@ -147,13 +188,18 @@ class cylinder_portal_generator final
  public:
   /// Save the boundaries of the cylinder after autofitting the portals
   struct boundaries {
+    /// Inner radius of the fitted cylinder.
     scalar_t inner_radius{0.f};
+    /// Outer radius of the fitted cylinder.
     scalar_t outer_radius{0.f};
+    /// Lower axial coordinate of the fitted cylinder.
     scalar_t lower_z{0.f};
+    /// Upper axial coordinate of the fitted cylinder.
     scalar_t upper_z{0.f};
   };
 
-  /// Construct from configuration @param cfg
+  /// Construct from configuration @p cfg
+  /// @param cfg Configuration for bounds, envelope, and adjacent volumes.
   DETRAY_HOST
   explicit cylinder_portal_generator(
       const cylinder_portal_config<scalar_t> &cfg)
@@ -169,11 +215,14 @@ class cylinder_portal_generator final
   DETRAY_HOST
   void push_back(
       surface_data<detector_t> && /*unused*/) override { /*Do nothing*/ }
+  /// Ignore inserted surface records; portal geometry is derived from the
+  /// existing volume surfaces when this generator is invoked.
   DETRAY_HOST
   auto push_back(std::vector<surface_data<detector_t>> && /*unused*/)
       -> void override { /*Do nothing*/ }
 
   /// @brief Access the volume boundaries after fitting
+  /// @returns Fitted inner and outer radii and axial limits.
   const boundaries &volume_boundaries() const { return m_boundaries; }
 
   /// Create minimum aabbs around all surfaces that are passed and then
@@ -185,6 +234,7 @@ class cylinder_portal_generator final
   /// @param transforms the transforms of the surfaces.
   /// @param masks the masks of the surfaces.
   /// @param ctx the geometry context (not needed for portals).
+  /// @returns Half-open range of portal surfaces appended to the lookup.
   DETRAY_HOST
   auto operator()(typename detector_t::volume_type &volume,
                   typename detector_t::surface_lookup_container &surfaces,

@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 
 #include <unordered_map>
@@ -22,6 +23,7 @@
 
 namespace ActsAlignment {
 struct AlignmentResult;
+class AlignableStructure;
 }  // namespace ActsAlignment
 
 namespace ActsAlignment::detail {
@@ -70,6 +72,12 @@ struct TrackAlignmentState {
   // alignable surfaces pool and those relevant with this track
   std::unordered_map<const Acts::Surface*, std::pair<std::size_t, std::size_t>>
       alignedSurfaces;
+
+  // Per-alignable-surface pointer to its owning AlignableStructure. Absent
+  // when the surface is a standalone floating module or no hierarchy is in
+  // use. Populated alongside @c alignedSurfaces.
+  std::unordered_map<const Acts::Surface*, const AlignableStructure*>
+      surfaceStructures;
 };
 
 /// Reset some columns of the alignment to bound derivative to zero if the
@@ -79,6 +87,32 @@ struct TrackAlignmentState {
 /// @param mask The alignment mask
 void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
                               AlignmentMask mask);
+
+/// Differentiate the track's bound parameters with respect to local
+/// translations and rotations of the structure, or of the surface if
+/// @p structureTransform is null. Apply the mask in the corresponding frame.
+///
+/// For a residual defined as measurement minus prediction, the caller forms
+/// its derivative as @c -H*result, where H projects bound parameters into
+/// measurement coordinates.
+///
+/// @param gctx Geometry context used to evaluate the surface
+/// @param surface Surface on which the track is measured
+/// @param position Global track position on the surface
+/// @param direction Global track direction
+/// @param pathDerivative Derivative of free track parameters with path length
+/// @param mask Floating degrees of freedom in the selected parameter frame
+/// @param structureTransform Current transform from structure-local to global
+/// coordinates, or nullptr to use surface alignment parameters. The transform
+/// must describe the same geometry state as the member surface in @p gctx.
+/// During an iterative fit this may be the frame updated by the solver.
+/// @return Derivative of bound parameters with respect to the selected
+/// alignment parameters, with fixed columns set to zero
+Acts::AlignmentToBoundMatrix alignmentToBoundDerivative(
+    const Acts::GeometryContext& gctx, const Acts::Surface& surface,
+    const Acts::Vector3& position, const Acts::Vector3& direction,
+    const Acts::FreeVector& pathDerivative, AlignmentMask mask,
+    const Acts::Transform3* structureTransform = nullptr);
 
 /// @brief Helper function to calculate first and second derivative
 /// of chi2 w.r.t. alignment parameters for a single track once the
@@ -133,6 +167,10 @@ void solveAlignmentParameters(
 /// all smoothed track states including those non-measurement states. Selection
 /// of certain rows/columns for measurement states is needed.
 /// @param idxedAlignSurfaces The indexed surfaces to be aligned
+/// @param alignMask The alignment mask
+/// @param hierarchy Optional hierarchy registry; when non-null, each aligned
+///                  surface is tagged with its owning structure on the
+///                  returned state. No effect on derivatives at this step.
 ///
 /// @return The track alignment state containing fundamental alignment
 /// ingredients
@@ -145,7 +183,8 @@ TrackAlignmentState trackAlignmentState(
         globalTrackParamsCov,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces,
-    const AlignmentMask& alignMask) {
+    const AlignmentMask& alignMask,
+    const AlignmentHierarchy* hierarchy = nullptr) {
   // Construct an alignment state
   TrackAlignmentState alignState;
 
@@ -181,6 +220,15 @@ TrackAlignmentState trackAlignmentState(
       isAlignable = true;
       // Remember the surface and its index
       alignState.alignedSurfaces[surface].first = it->second;
+      // Tag the surface with its owning structure (if any). The pointer is
+      // not consumed at this step; it is recorded for later derivative
+      // propagation to structure-level DoFs.
+      if (hierarchy != nullptr) {
+        if (auto* structure = hierarchy->structureFor(*surface);
+            structure != nullptr) {
+          alignState.surfaceStructures.emplace(surface, structure);
+        }
+      }
       nAlignSurfaces++;
     }
     // Remember the index of the state within the trajectory and whether it's
@@ -270,13 +318,11 @@ TrackAlignmentState trackAlignmentState(
       // parameters
       Acts::FreeVector pathDerivative = Acts::FreeVector::Zero();
       pathDerivative.head<3>() = direction;
-      // Get the derivative of bound parameters w.r.t. alignment parameters
-      Acts::AlignmentToBoundMatrix alignToBound =
-          surface->alignmentToBoundDerivative(gctx, position, direction,
-                                              pathDerivative);
-      // Set the degree of freedom per surface.
+      // Get the bound derivative and mask the surface degrees of freedom.
       // @Todo: don't allocate memory for fixed degree of freedom and consider surface/layer/volume wise align mask (instead of using global mask as now)
-      resetAlignmentDerivative(alignToBound, alignMask);
+      const Acts::AlignmentToBoundMatrix alignToBound =
+          alignmentToBoundDerivative(gctx, *surface, position, direction,
+                                     pathDerivative, alignMask);
 
       // Residual is calculated as the (measurement - parameters), thus we need
       // a minus sign below

@@ -92,7 +92,8 @@ class detray_propagation_HelixCovarianceTransportValidation
       masks = std::make_tuple(
           annulus_type{0u, 7.2f * unit<scalar>::mm, 12.0f * unit<scalar>::mm,
                        0.74195f, 1.33970f, 0.f, -2.f, 2.f},
-          rectangle_type{0u, 50 * unit<scalar>::mm, 50 * unit<scalar>::mm},
+          rectangle_type{0u, -50 * unit<scalar>::mm, -50 * unit<scalar>::mm,
+                         50 * unit<scalar>::mm, 50 * unit<scalar>::mm},
           trapezoid_type{0u, 50 * unit<scalar>::mm, 100 * unit<scalar>::mm,
                          50 * unit<scalar>::mm,
                          1.f / (2.f * 50 * unit<scalar>::mm)},

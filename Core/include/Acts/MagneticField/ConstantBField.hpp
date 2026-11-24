@@ -47,6 +47,20 @@ class ConstantBField final : public MagneticFieldProvider {
     return Result<Vector3>::success(m_BField);
   }
 
+  /// @copydoc MagneticFieldProvider::providesFieldGradient() const
+  bool providesFieldGradient() const override { return true; }
+
+  /// @copydoc MagneticFieldProvider::getFieldAndGradient(const Vector3&,MagneticFieldProvider::Cache&) const
+  ///
+  /// @note The gradient of a constant field is zero.
+  Result<FieldAndGradient> getFieldAndGradient(
+      const Vector3& position,
+      MagneticFieldProvider::Cache& cache) const override {
+    static_cast<void>(position);
+    static_cast<void>(cache);
+    return Result<FieldAndGradient>::success({m_BField, SquareMatrix3::Zero()});
+  }
+
   /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&) const
   Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override {

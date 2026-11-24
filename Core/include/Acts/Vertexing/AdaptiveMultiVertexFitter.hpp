@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/MagneticField/MagneticFieldQuery.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -79,8 +80,7 @@ class AdaptiveMultiVertexFitter {
     /// @param magContext Magnetic field context for field evaluations
     Cache(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
-        : ipState{field.makeCache(magContext)},
-          fieldCache(field.makeCache(magContext)) {}
+        : ipState{field.makeCache(magContext)}, fieldQuery(field, magContext) {}
 
     /// Drop the scratch data associated with @p vtx
     ///
@@ -97,20 +97,21 @@ class AdaptiveMultiVertexFitter {
     /// Impact point estimator state for track parameter calculations
     ImpactPointEstimator::State ipState;
 
-    /// Magnetic field cache for field evaluations during fitting
-    MagneticFieldProvider::Cache fieldCache;
+    /// Field query for fitting; its provider and context must outlive this
+    /// object
+    MagneticFieldQuery fieldQuery;
 
     /// Per-vertex scratch data, lazily created by @c scratchFor
     std::map<const Vertex*, VertexScratch> vertexScratch;
 
     /// Construct a cache adopting an already existing impact point estimator
-    /// state and magnetic field cache. Used by the deprecated @c State based
+    /// state and magnetic field query. Used by the deprecated @c State based
     /// entry points, which own those two caches themselves.
     /// @param ipStateIn Impact point estimator state to adopt
-    /// @param fieldCacheIn Magnetic field cache to adopt
+    /// @param fieldQueryIn Magnetic field query to adopt
     Cache(ImpactPointEstimator::State ipStateIn,
-          MagneticFieldProvider::Cache fieldCacheIn)
-        : ipState(std::move(ipStateIn)), fieldCache(std::move(fieldCacheIn)) {}
+          MagneticFieldQuery fieldQueryIn)
+        : ipState(std::move(ipStateIn)), fieldQuery(std::move(fieldQueryIn)) {}
 
     friend class AdaptiveMultiVertexFitter;
   };
@@ -158,7 +159,7 @@ class AdaptiveMultiVertexFitter {
     /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
 
-    /// TrackLinearizer
+    /// Track linearizer using a reusable magnetic field query
     TrackLinearizer trackLinearizer;
   };
 
@@ -171,6 +172,11 @@ class AdaptiveMultiVertexFitter {
   explicit AdaptiveMultiVertexFitter(
       Config cfg, std::unique_ptr<const Logger> logger = getDefaultLogger(
                       "AdaptiveMultiVertexFitter", Logging::INFO));
+
+  /// Move constructor
+  /// @param other The fitter to move from
+  AdaptiveMultiVertexFitter(AdaptiveMultiVertexFitter&& other) noexcept =
+      default;
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.
   /// 1. The 3D impact parameters are calculated for all tracks associated
@@ -226,8 +232,7 @@ class AdaptiveMultiVertexFitter {
     /// @param magContext Magnetic field context for field evaluations
     State(const MagneticFieldProvider& field,
           const MagneticFieldContext& magContext)
-        : ipState{field.makeCache(magContext)},
-          fieldCache(field.makeCache(magContext)) {}
+        : ipState{field.makeCache(magContext)}, fieldQuery(field, magContext) {}
 
     /// Vertex collection to be fitted
     std::vector<Vertex*> vertexCollection;
@@ -238,8 +243,9 @@ class AdaptiveMultiVertexFitter {
     /// Impact point estimator state for track parameter calculations
     ImpactPointEstimator::State ipState;
 
-    /// Magnetic field cache for field evaluations during fitting
-    MagneticFieldProvider::Cache fieldCache;
+    /// Field query for fitting; its provider and context must outlive this
+    /// object
+    MagneticFieldQuery fieldQuery;
 
     /// Map storing vertex information for each vertex in the fit
     std::map<Vertex*, VertexInfo> vtxInfoMap;

@@ -29,8 +29,10 @@ namespace detray {
 /// future)
 template <concepts::algebra algebra_t>
 struct perigee_stopper : public base_actor {
+  /// Scalar type used by the algebra.
   using scalar_t = dscalar<algebra_t>;
 
+  /// Per-actor configuration for checking the perigee.
   struct state {
     /// Radius around the beamline, where to test against the perigee
     /// Outside this radius, the track is considered as not originating
@@ -47,6 +49,7 @@ struct perigee_stopper : public base_actor {
   /// the navigation, if the perigee is reached.
   ///
   /// @param prop_state state of the propagation
+  /// @param actor_state Perigee stopper state.
   template <typename propagator_state_t>
   DETRAY_HOST_DEVICE void operator()(state &actor_state,
                                      propagator_state_t &prop_state) const {

@@ -53,7 +53,8 @@ KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
 
 // Construct initial track parameters.
-Acts::BoundTrackParameters makeParameters() {
+Acts::BoundTrackParameters makeParameters(
+    const Acts::ParticleHypothesis& particleHypothesis = pion) {
   // create covariance matrix from reasonable standard deviations
   Acts::BoundVector stddev;
   stddev[Acts::eBoundLoc0] = 100_um;
@@ -66,7 +67,7 @@ Acts::BoundTrackParameters makeParameters() {
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
   return Acts::BoundTrackParameters::createCurvilinear(
-      mPos4, 0_degree, 90_degree, 1_e / 1_GeV, cov, pion);
+      mPos4, 0_degree, 90_degree, 1_e / 1_GeV, cov, particleHypothesis);
 }
 
 // Instantiate the tester
@@ -293,6 +294,13 @@ BOOST_AUTO_TEST_CASE(GlobalCovariance) {
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
   tester.test_GlobalCovariance(kfZero, kfOptions, start, rng);
+}
+
+BOOST_AUTO_TEST_CASE(OutputTrackParticleHypothesis) {
+  auto start = makeParameters(Acts::ParticleHypothesis::muon());
+  auto kfOptions = makeDefaultKalmanFitterOptions();
+
+  tester.test_ParticleHypothesis(kfZero, kfOptions, start, rng);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

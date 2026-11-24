@@ -198,6 +198,8 @@ def main():
                 detrayDetector, _ = acts.detray.readODD(__pmr, files)
             else:
                 payloadConfig = acts.detray.DetrayPayloadConverter.Config()
+                payloadConfig.convertMaterial = True
+                payloadConfig.convertSurfaceGrids = True
                 payloadConfig.beampipeVolume = trackingGeometry.findVolumeByName(
                     "BeamPipe"
                 )
@@ -207,8 +209,6 @@ def main():
 
                 converterConfig = acts.detray.DetrayGeometryConverter.Config()
                 converterConfig.payloadConverter = payloadConverter
-                converterConfig.convertMaterial = True
-                converterConfig.convertSurfaceGrids = True
                 converter = acts.detray.DetrayGeometryConverter(
                     converterConfig, logLevel
                 )

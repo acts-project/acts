@@ -67,8 +67,10 @@ struct tuple_element<N, std::tuple<value_types...>>
     : std::tuple_element<N, std::tuple<value_types...>> {};
 
 // detray::dtuple
+/// Select tuple element `N` from a detray tuple.
 template <std::size_t N, typename... value_types>
 struct tuple_element<N, detray::dtuple<value_types...>> {
+  /// Decayed type of the selected element.
   using type = std::decay_t<decltype(::detray::get<N>(
       std::declval<detray::dtuple<value_types...>>()))>;
 };
@@ -91,8 +93,10 @@ struct tuple_size<std::tuple<value_types...>>
     : std::tuple_size<std::tuple<value_types...>> {};
 
 // detray::dtuple
+/// Report the number of elements in a detray tuple.
 template <typename... value_types>
 struct tuple_size<::detray::dtuple<value_types...>> {
+  /// Number of element types in the tuple.
   static constexpr std::size_t value = sizeof...(value_types);
 };
 
@@ -108,11 +112,13 @@ constexpr std::size_t tuple_size_v{tuple_size<T>::value};
 /// @{
 template <class T>
 struct unwrap_refwrapper {
+  /// Decayed type when the argument is not a reference wrapper.
   using type = T;
 };
 
 template <class T>
 struct unwrap_refwrapper<std::reference_wrapper<T>> {
+  /// Referenced type, preserving the wrapper's reference semantics.
   using type = T&;
 };
 
@@ -186,14 +192,18 @@ struct tuple_cat_type<std::tuple<Args1...>, std::tuple<Args2...>, tuple_ts...> {
                                        tuple_ts...>::type;
 };
 
+/// Preserve a detray tuple type as the concatenation result.
 template <typename... Args>
 struct tuple_cat_type<detray::dtuple<Args...>> {
+  /// Tuple type produced by concatenation.
   using type = detray::dtuple<Args...>;
 };
 
+/// Concatenate two or more detray tuple type lists recursively.
 template <typename... Args1, typename... Args2, typename... tuple_ts>
 struct tuple_cat_type<detray::dtuple<Args1...>, detray::dtuple<Args2...>,
                       tuple_ts...> {
+  /// Tuple type containing the concatenated element types.
   using type = typename tuple_cat_type<detray::dtuple<Args1..., Args2...>,
                                        tuple_ts...>::type;
 };
@@ -228,21 +238,27 @@ struct unique_types<0u, std::tuple<Arg1, Args...>> {
   using type = std::tuple<Arg1, Args...>;
 };
 
+/// Base case for removing duplicates from an empty detray tuple.
 template <std::size_t I>
 struct unique_types<I, detray::dtuple<>> {
+  /// Empty tuple type.
   using type = detray::dtuple<>;
 };
 
+/// Remove duplicate entries from a detray tuple recursively.
 template <std::size_t I, typename Arg1, typename... Args>
 struct unique_types<I, detray::dtuple<Arg1, Args...>> {
+  /// Tuple type with repeated element types removed.
   using type = std::conditional_t<
       has_type_v<Arg1, detray::dtuple<Args...>>,
       typename unique_types<I - 1u, detray::dtuple<Args...>>::type,
       typename unique_types<I - 1u, detray::dtuple<Args..., Arg1>>::type>;
 };
 
+/// Base case retaining the remaining unique element types.
 template <typename Arg1, typename... Args>
 struct unique_types<0u, detray::dtuple<Arg1, Args...>> {
+  /// Tuple type at the end of duplicate removal.
   using type = detray::dtuple<Arg1, Args...>;
 };
 
@@ -260,11 +276,16 @@ template <>
 struct is_permutation<detray::dtuple<>, detray::dtuple<>>
     : public std::true_type {};
 
+/// Compare the two detray tuple type lists as unordered sets of types.
 template <typename... Args1, typename... Args2>
 struct is_permutation<detray::dtuple<Args1...>, detray::dtuple<Args2...>> {
+  /// First tuple type being compared.
   using T1 = detray::dtuple<Args1...>;
+  /// Second tuple type being compared.
   using T2 = detray::dtuple<Args2...>;
 
+  /// Check whether every type in the pack occurs in the other tuple.
+  /// @returns Whether the tuple types form the same set.
   template <typename o_tuple_t, typename T, typename... U>
   static consteval bool compare() {
     if constexpr (detray::detail::has_type_v<T, o_tuple_t>) {
@@ -278,6 +299,7 @@ struct is_permutation<detray::dtuple<Args1...>, detray::dtuple<Args2...>> {
     }
   }
 
+  /// Whether both tuples contain the same types, regardless of order.
   static constexpr bool value =
       ((detray::detail::tuple_size_v<T1> == detray::detail::tuple_size_v<T2>) &&
        (compare<T1, Args2...>() && compare<T2, Args1...>()));
@@ -298,8 +320,10 @@ template <template <typename...> class trait, typename... Args>
 struct tuple_any<trait, std::tuple<Args...>> {
   static constexpr bool value = (trait<Args>::value || ...);
 };
+/// Apply `trait` to each element type of a detray tuple and combine with OR.
 template <template <typename...> class trait, typename... Args>
 struct tuple_any<trait, detray::dtuple<Args...>> {
+  /// Whether at least one element type satisfies `trait`.
   static constexpr bool value = (trait<Args>::value || ...);
 };
 
@@ -314,8 +338,10 @@ template <template <typename...> class trait, typename... Args>
 struct tuple_all<trait, std::tuple<Args...>> {
   static constexpr bool value = (trait<Args>::value && ...);
 };
+/// Apply `trait` to each element type of a detray tuple and combine with AND.
 template <template <typename...> class trait, typename... Args>
 struct tuple_all<trait, detray::dtuple<Args...>> {
+  /// Whether every element type satisfies `trait`.
   static constexpr bool value = (trait<Args>::value && ...);
 };
 

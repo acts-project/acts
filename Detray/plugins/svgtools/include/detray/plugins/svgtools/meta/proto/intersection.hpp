@@ -24,8 +24,11 @@ namespace detray::svgtools::meta::proto {
 /// an intersection description.
 template <concepts::point3D point3_t>
 struct intersection {
+  /// Landmark record type used for intersection points.
   using landmark_type = svgtools::meta::proto::landmark<point3_t>;
+  /// Landmark record type used for intersection points.
   std::vector<landmark_type> _landmarks;
+  /// Label for the intersection record.
   std::string _name;
 };
 

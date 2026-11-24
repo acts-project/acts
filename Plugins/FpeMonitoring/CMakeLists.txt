@@ -32,7 +32,13 @@ target_link_libraries(ActsPluginFpeMonitoring PUBLIC Acts::Core)
 acts_compile_headers(PluginFpeMonitoring GLOB include/**/*.hpp)
 
 # Fpe flags
-set(_fpe_options "")
+# With the libbacktrace backend, Boost.Stacktrace keeps one libbacktrace state
+# per thread by default. libbacktrace never frees a state, and each one loads
+# its own copy of the debug info on first use, so every thread that symbolizes
+# a stack trace permanently costs as much memory as the debug info of all
+# loaded libraries. Share a single state instead; FpeMonitor serializes access
+# to it. This has no effect with the other backends.
+set(_fpe_options "-DBOOST_STACKTRACE_BACKTRACE_FORCE_STATIC")
 
 # In case we're going to run clang-tidy, let's unconditionally turn off backtrace
 if(ACTS_RUN_CLANG_TIDY)

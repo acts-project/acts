@@ -7,6 +7,7 @@ acts_add_library(
     src/HoughTransformSeeder.cpp
     src/AdaptiveHoughTransformSeeder.cpp
     src/TrackParamsEstimationAlgorithm.cpp
+    src/SeedParamsEstimator.cpp
     src/MuonHoughSeeder.cpp
     src/GraphBasedSeedingAlgorithm.cpp
     src/TrackParamsLookupEstimation.cpp
@@ -22,6 +23,7 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesTrackFinding
     PUBLIC Acts::ExamplesMagneticField
+    PRIVATE Acts::PluginJson
 )
 
 acts_compile_headers(ExamplesTrackFinding GLOB "include/**/*.hpp")

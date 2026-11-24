@@ -22,6 +22,8 @@ namespace ActsTests {
 /// Surface derived class stub
 class SurfaceStub : public Acts::RegularSurface {
  public:
+  using Acts::Surface::intersect;
+
   explicit SurfaceStub(
       const Acts::Transform3& htrans = Acts::Transform3::Identity())
       : Acts::GeometryObject(), Acts::RegularSurface(htrans) {}
@@ -114,8 +116,8 @@ class SurfaceStub : public Acts::RegularSurface {
 
   // Cartesian 3D to local bound derivative
   Acts::Matrix<2, 3> localCartesianToBoundLocalDerivative(
-      const Acts::GeometryContext& /*gctx*/,
-      const Acts::Vector3& /*position*/) const final {
+      const Acts::GeometryContext& /*gctx*/, const Acts::Vector3& /*position*/,
+      const Acts::Vector3& /*direction*/) const final {
     return Acts::Matrix<2, 3>::Identity();
   }
 

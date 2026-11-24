@@ -11,6 +11,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -28,14 +29,18 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/SurfaceDerivatives.hpp"
 
+#include <array>
 #include <cmath>
 #include <memory>
 #include <numbers>
@@ -253,9 +258,142 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
   /// Test assignment
   auto assignedCylinderSurface =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 6.6, 5.4);
+  // TODO: surface copy-assignment is deprecated; switch to a makeShared copy
+  // when it is removed (SonarCloud cpp:S3624).
+  ACTS_PUSH_IGNORE_DEPRECATED()
   *assignedCylinderSurface = *cylinderSurfaceObject;
+  ACTS_POP_IGNORE_DEPRECATED()
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedCylinderSurface == *cylinderSurfaceObject);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderSurfaceIntersectionTransforms) {
+  Transform3 translated{Translation3{17., -23., 41.}};
+  Transform3 flipped = translated;
+  flipped.linear() = Vector3(1., -1., -1.).asDiagonal();
+  const std::array<Transform3, 5> transforms{
+      Transform3::Identity(), translated,
+      translated * AngleAxis3(0.7, Vector3::UnitZ()), flipped,
+      translated * AngleAxis3(0.4, Vector3(1., 2., 3.).normalized())};
+
+  for (const auto& transform : transforms) {
+    BOOST_TEST_CONTEXT("transform: " << transform.matrix()) {
+      auto cylinder = Surface::makeShared<CylinderSurface>(transform, 5., 10.);
+      auto intersect = [&](const Vector3& position, const Vector3& direction) {
+        return cylinder->intersect(testContext, transform * position,
+                                   transform.linear() * direction,
+                                   BoundaryTolerance::None());
+      };
+
+      // Both crossings remain available, including an on-surface entry
+      // followed by the exit on the opposite side.
+      for (double startX : {-10., 0., -5.}) {
+        const auto intersections =
+            intersect(Vector3(startX, 0., 0.), Vector3::UnitX());
+        for (std::size_t i = 0; i < 2; ++i) {
+          const double hitX = i == 0 ? -5. : 5.;
+          BOOST_CHECK(intersections[i].isValid());
+          CHECK_CLOSE_ABS(intersections[i].pathLength(), hitX - startX, 1e-12);
+          CHECK_CLOSE_ABS(intersections[i].position(),
+                          transform * Vector3(hitX, 0., 0.), 1e-12);
+        }
+        if (startX == -5.) {
+          BOOST_CHECK_EQUAL(intersections[0].status(),
+                            IntersectionStatus::onSurface);
+          BOOST_CHECK_EQUAL(intersections[1].status(),
+                            IntersectionStatus::reachable);
+        }
+      }
+
+      // The farther crossing leaves the finite cylinder through its end.
+      const auto oblique =
+          intersect(Vector3(-10., 0., 0.), Vector3(0.8, 0., 0.6));
+      BOOST_CHECK(oblique[0].isValid());
+      BOOST_CHECK(!oblique[1].isValid());
+      CHECK_CLOSE_ABS(oblique[0].pathLength(), 6.25, 1e-12);
+      CHECK_CLOSE_ABS(oblique[1].pathLength(), 18.75, 1e-12);
+
+      const auto miss = intersect(Vector3(-10., 6., 0.), Vector3::UnitX());
+      BOOST_CHECK(!miss[0].isValid());
+      BOOST_CHECK(!miss[1].isValid());
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CylinderSurfaceIntersectionBoundaryTolerances) {
+  const Transform3 transform =
+      Translation3{17., -23., 41.} * AngleAxis3(0.7, Vector3::UnitZ());
+  constexpr double tolerance = 0.01;
+  auto full = Surface::makeShared<CylinderSurface>(transform, 5., 10.);
+  auto sector = Surface::makeShared<CylinderSurface>(transform, 5., 10.,
+                                                     std::numbers::pi / 4.);
+  auto intersect = [&](const CylinderSurface& cylinder, double z,
+                       const BoundaryTolerance& boundaryTolerance) {
+    return cylinder.intersect(testContext, transform * Vector3(0., 0., z),
+                              transform.linear() * Vector3::UnitX(),
+                              boundaryTolerance, tolerance);
+  };
+
+  for (double sign : {-1., 1.}) {
+    const auto within = intersect(*full, sign * (10. + 0.5 * tolerance),
+                                  BoundaryTolerance::None());
+    BOOST_CHECK(within[0].isValid());
+    BOOST_CHECK(within[1].isValid());
+
+    const double outsideZ = sign * (10. + 2. * tolerance);
+    const auto outside = intersect(*full, outsideZ, BoundaryTolerance::None());
+    BOOST_CHECK(!outside[0].isValid());
+    BOOST_CHECK(!outside[1].isValid());
+
+    // Keep both intersections away from the azimuthal seam while checking
+    // the extension of the longitudinal bounds.
+    const auto extended =
+        full->intersect(testContext, transform * Vector3(4., 0., outsideZ),
+                        transform.linear() * Vector3::UnitY(),
+                        BoundaryTolerance::AbsoluteEuclidean(0.1), tolerance);
+    BOOST_CHECK(extended[0].isValid());
+    BOOST_CHECK(extended[1].isValid());
+
+    const auto unbounded =
+        intersect(*sector, outsideZ, BoundaryTolerance::Infinite());
+    BOOST_CHECK(unbounded[0].isValid());
+    BOOST_CHECK(unbounded[1].isValid());
+  }
+
+  const auto sectorHits = intersect(*sector, 0., BoundaryTolerance::None());
+  BOOST_CHECK(!sectorHits[0].isValid());
+  BOOST_CHECK(sectorHits[1].isValid());
+  const auto extendedSector =
+      intersect(*sector, 10.05, BoundaryTolerance::AbsoluteEuclidean(0.1));
+  BOOST_CHECK(!extendedSector[0].isValid());
+  BOOST_CHECK(extendedSector[1].isValid());
+}
+
+BOOST_AUTO_TEST_CASE(CylinderSurfaceIntersectionNearlyParallel) {
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 5., 10.);
+  const Vector3 direction = Vector3(1e-10, 0., 1.).normalized();
+  const auto intersections = cylinder->intersect(
+      testContext, Vector3::Zero(), direction, BoundaryTolerance::Infinite());
+  for (std::size_t i = 0; i < 2; ++i) {
+    BOOST_CHECK(intersections[i].isValid());
+    BOOST_CHECK(std::isfinite(intersections[i].pathLength()));
+    CHECK_CLOSE_REL(intersections[i].pathLength(),
+                    (i == 0 ? -5. : 5.) / direction.x(), 1e-12);
+    CHECK_CLOSE_ABS(intersections[i].position().x(), i == 0 ? -5. : 5., 1e-12);
+  }
+
+  // A small but nonzero tilt must still use the actual cylinder axis.
+  const Transform3 tilted{AngleAxis3(1e-7, Vector3::UnitY())};
+  auto tiltedCylinder = Surface::makeShared<CylinderSurface>(tilted, 5., 10.);
+  const auto tiltedIntersections = tiltedCylinder->intersect(
+      testContext, Vector3::Zero(), tilted.linear() * direction,
+      BoundaryTolerance::Infinite());
+  for (std::size_t i = 0; i < 2; ++i) {
+    BOOST_CHECK(tiltedIntersections[i].isValid());
+    CHECK_CLOSE_REL(tiltedIntersections[i].pathLength(),
+                    intersections[i].pathLength(), 1e-10);
+  }
 }
 
 /// Unit test for testing CylinderSurface properties
@@ -289,29 +427,53 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
   const double radius = 1.;
   const double halfZ = 10.;
   const Translation3 translation{0., 1., 2.};
-
-  auto pTransform = Transform3(translation);
+  // Rotate by 90 degrees about global z. The cylinder axis stays global z, so
+  // the point below stays on the surface. The center columns are then the
+  // local-frame components, not the global center derivative.
+  const AngleAxis3 rotationAngle(std::numbers::pi / 2., Vector3::UnitZ());
+  Transform3 transform =
+      makeTransform3(rotationAngle.toRotationMatrix(), translation.vector());
   auto cylinderSurfaceObject =
-      Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
+      Surface::makeShared<CylinderSurface>(transform, radius, halfZ);
 
-  const auto& rotation = pTransform.rotation();
+  const auto& rotation = transform.rotation();
   // The local frame z axis
   const Vector3 localZAxis = rotation.col(2);
   // Check the local z axis is aligned to global z axis
   CHECK_CLOSE_ABS(localZAxis, Vector3(0., 0., 1.), 1e-15);
 
-  /// Define the track (global) position and direction
+  // On the cylinder, along the rotated local x axis.
   Vector3 globalPosition{0, 2, 2};
 
   // Test the derivative of bound track parameters local position w.r.t.
   // position in local 3D Cartesian coordinates
   const auto& loc3DToLocBound =
       cylinderSurfaceObject->localCartesianToBoundLocalDerivative(
-          testContext, globalPosition);
-  // Check if the result is as expected
+          testContext, globalPosition, Vector3::UnitZ());
+  // Local position is (R, 0, 0), so d(phi)/d(local) is along local y.
   Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
-  expLoc3DToLocBound << -1, 0, 0, 0, 0, 1;
+  expLoc3DToLocBound << 0, 1, 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+
+  // Local hit (1, 0, 2) and local direction (0.6, 0, 0.8). The denominator
+  // is 0.6, so the local path derivative is (1, 0, 0, 0, 2, 0) / 0.6.
+  const Vector3 hit = transform * Vector3{1., 0., 2.};
+  const Vector3 direction = rotation * Vector3{0.6, 0., 0.8};
+  const AlignmentToPathMatrix alignToPath =
+      cylinderSurfaceObject->alignmentToPathDerivative(testContext, hit,
+                                                       direction);
+  AlignmentToPathMatrix expected = AlignmentToPathMatrix::Zero();
+  expected << 1. / 0.6, 0., 0., 0., 2. / 0.6, 0.;
+  CHECK_CLOSE_ABS(alignToPath, expected, 1e-10);
+
+  // A hit off the local x axis, checked against finite differences.
+  const Vector3 skewedHit = transform * Vector3{0.6, 0.8, 1.5};
+  const Vector3 skewedDir = rotation * Vector3{0.6, 0.3, 0.2};
+  checkSurfaceDerivatives(testContext, *cylinderSurfaceObject, transform,
+                          skewedHit, skewedDir, [&](const Transform3& tf) {
+                            return Surface::makeShared<CylinderSurface>(
+                                tf, radius, halfZ);
+                          });
 }
 
 BOOST_AUTO_TEST_CASE(CylinderSurfaceBinningPosition) {
@@ -786,6 +948,52 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceMaterialAssignment) {
     BOOST_CHECK_THROW(surface->assignSurfaceMaterial(matBad),
                       std::invalid_argument);
   }
+}
+
+/// Unit test for CylinderSurface::contains
+BOOST_AUTO_TEST_CASE(CylinderSurfaceContains) {
+  using std::numbers::pi;
+  auto cylinder = [](const Transform3& transform, double r, double halfZ,
+                     double halfPhi = pi, double avgPhi = 0.) {
+    return Surface::makeShared<CylinderSurface>(
+        transform,
+        std::make_shared<const CylinderBounds>(r, halfZ, halfPhi, avgPhi));
+  };
+  auto shifted = [](const Vector3& shift) {
+    return Transform3{Translation3{shift}};
+  };
+  const Transform3 identity = Transform3::Identity();
+  auto full = cylinder(identity, 20_mm, 100_mm);
+
+  BOOST_CHECK(full->contains(testContext, *full));
+  BOOST_CHECK(full->contains(testContext,
+                             *cylinder(shifted({0, 0, 50_mm}), 20_mm, 30_mm)));
+  BOOST_CHECK(!full->contains(testContext,
+                              *cylinder(shifted({0, 0, 80_mm}), 20_mm, 30_mm)));
+  BOOST_CHECK(!cylinder(shifted({0, 0, 50_mm}), 20_mm, 30_mm)
+                   ->contains(testContext, *full));
+
+  // Different radius, not coaxial, or tilted
+  BOOST_CHECK(!full->contains(testContext, *cylinder(identity, 21_mm, 30_mm)));
+  BOOST_CHECK(!full->contains(testContext,
+                              *cylinder(shifted({1_mm, 0, 0}), 20_mm, 30_mm)));
+  const Transform3 tilted{AngleAxis3{0.1, Vector3::UnitX()}};
+  BOOST_CHECK(!full->contains(testContext, *cylinder(tilted, 20_mm, 30_mm)));
+
+  // The orientation of the axis does not matter
+  const Transform3 flipped =
+      shifted({0, 0, -50_mm}) * AngleAxis3{pi, Vector3::UnitX()};
+  BOOST_CHECK(full->contains(testContext, *cylinder(flipped, 20_mm, 30_mm)));
+
+  // Phi sectors, also through the rotation of the other cylinder
+  auto sector = cylinder(identity, 20_mm, 100_mm, pi / 4.);
+  BOOST_CHECK(sector->contains(
+      testContext, *cylinder(identity, 20_mm, 30_mm, pi / 8., pi / 16.)));
+  BOOST_CHECK(!sector->contains(
+      testContext, *cylinder(Transform3{AngleAxis3{pi / 4., Vector3::UnitZ()}},
+                             20_mm, 30_mm, pi / 8., pi / 16.)));
+  BOOST_CHECK(!sector->contains(testContext, *full));
+  BOOST_CHECK(full->contains(testContext, *sector));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

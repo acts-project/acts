@@ -11,12 +11,17 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/DD4hep/BlueprintBuilder.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoAxes.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
@@ -317,6 +322,49 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementTrapezoid) {
   CHECK_CLOSE_ABS(boundValues[2u], 150, 1e-10);
 
   lcdd->destroyInstance();
+}
+
+BOOST_AUTO_TEST_CASE(DD4hepPluginWarnNonSensitiveSensors) {
+  // Warnings of makeSurfaces for the rectangle, made sensitive or not
+  auto warnings = [](bool sensitive) {
+    std::ofstream cxml("PassiveRectangle.xml");
+    cxml << head_xml << rectangle_xml << end_xml;
+    cxml.close();
+
+    auto lcdd = &(dd4hep::Detector::getInstance());
+    lcdd->fromCompact("PassiveRectangle.xml");
+    lcdd->volumeManager();
+    lcdd->apply("DD4hepVolumeManager", 0, nullptr);
+
+    const auto rectangle = lcdd->world().child("Rectangle");
+    if (sensitive) {
+      dd4hep::SensitiveDetector sd("RectangleSD", "tracker");
+      lcdd->addSensitiveDetector(sd);
+      rectangle.volume().setSensitiveDetector(sd);
+    }
+
+    std::ostringstream log;
+    auto logger = getDefaultLogger("DD4hepBackend", Logging::WARNING, &log);
+    using ActsPlugins::DD4hep::DD4hepBackend;
+    DD4hepBackend backend{
+        {.dd4hepDetector = lcdd, .lengthScale = 10., .gctx = tContext},
+        *logger};
+    {
+      Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
+      backend.makeSurfaces(std::vector{rectangle},
+                           DD4hepBackend::LayerSpec{.axes = TGeoAxes{"XYZ"},
+                                                    .layerAxes = std::nullopt,
+                                                    .layerName = std::nullopt});
+    }
+
+    lcdd->destroyInstance();
+    return log.str();
+  };
+
+  BOOST_CHECK(warnings(false).find(
+                  "1 of 1 sensor elements are not sensitive volumes") !=
+              std::string::npos);
+  BOOST_CHECK(warnings(true).empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -116,14 +116,12 @@ struct BenchmarkStepper {
     std::size_t numIters = 0;
     const auto propagationBenchResult = microBenchmark(
         [&] {
-          auto state = propagator.makeState(options);
-          auto initRes = propagator.initialize(state, pars, nullptr);
-          if (!initRes.ok()) {
-            ACTS_ERROR("initialization failed: " << initRes.error());
+          auto res = propagator.propagate(pars, options);
+          if (!res.ok()) {
+            ACTS_ERROR("propagation failed: " << res.error());
             return;
           }
-          auto tmp = propagator.propagate(state);
-          auto r = propagator.makeResult(state, tmp, options, true).value();
+          const auto& r = *res;
           if (totalPathLength == 0.) {
             ACTS_DEBUG("reached position "
                        << r.endParameters->position(tgContext).transpose()

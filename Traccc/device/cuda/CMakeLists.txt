@@ -42,8 +42,12 @@ traccc_add_library( traccc_cuda cuda TYPE SHARED
   "src/seeding/seed_parameter_estimation_algorithm.cu"
   "include/traccc/cuda/seeding/triplet_seeding_algorithm.hpp"
   "src/seeding/triplet_seeding_algorithm.cu"
+  "include/traccc/cuda/seeding/hough_transform_seeding_algorithm.hpp"
+  "src/seeding/hough_transform_seeding_algorithm.cu"
   "include/traccc/cuda/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
   "src/seeding/silicon_pixel_spacepoint_formation_algorithm.cu"
+  "include/traccc/cuda/seeding/silicon_strip_spacepoint_formation_algorithm.hpp"
+  "src/seeding/silicon_strip_spacepoint_formation_algorithm.cu"
   #GBTS seed finding code
   "include/traccc/cuda/gbts_seeding/gbts_seeding_algorithm.hpp"
   "src/gbts_seeding/gbts_seeding_algorithm.cu"

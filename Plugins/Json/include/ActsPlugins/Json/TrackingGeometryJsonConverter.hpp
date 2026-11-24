@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeDispatcher.hpp"
 #include "ActsPlugins/Json/JsonKindDispatcher.hpp"
+#include "ActsPlugins/Json/TrackingGeometryMaterialJsonConverter.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -65,8 +66,13 @@ class TrackingGeometryJsonConverter {
     /// The number of white space characters used for indentation
     unsigned indentation{4};
 
-    /// Whether to write surface material information during serialization
+    /// Whether to include the versioned material document during serialization
     bool writeMaterial{true};
+
+    /// Material codec options. File formatting and compression are controlled
+    /// by the outer geometry options; material precision is forwarded
+    /// unchanged.
+    TrackingGeometryMaterialJsonConverter::Options materialOptions{};
 
     /// zstd compression level used when writing to a compressed file.
     /// Ignored for uncompressed output. Higher levels trade write time for
@@ -145,6 +151,9 @@ class TrackingGeometryJsonConverter {
 
   /// Configuration for the tracking geometry JSON converter.
   struct Config {
+    /// Full material codec configuration, including application-defined kinds.
+    TrackingGeometryMaterialJsonConverter::Config materialConfig{
+        TrackingGeometryMaterialJsonConverter::Config::defaultConfig()};
     /// Dispatcher for portal link serialization.
     PortalLinkEncoder encodePortalLink{};
     /// Dispatcher for volume bounds serialization.
@@ -174,6 +183,11 @@ class TrackingGeometryJsonConverter {
           "TrackingGeometryJsonConverter", Acts::Logging::INFO));
 
   /// Convert a tracking geometry to JSON.
+  /// Built-in volume lookup policies are stored as an optional `volume_lookup`
+  /// construction recipe on each volume record (kind and settings), not as
+  /// bin/node assignments. Explicit linear policies are recorded even with
+  /// default settings, since they form subtree delegation boundaries.
+  /// Unsupported custom lookup policies cause an exception.
   ///
   /// @param gctx geometry context
   /// @param geometry tracking geometry to convert
@@ -185,6 +199,9 @@ class TrackingGeometryJsonConverter {
       const Options& options = Options::defaultOptions()) const;
 
   /// Reconstruct a tracking geometry from an in-memory JSON payload.
+  /// A `volume_lookup` recipe is rebuilt after loading the volume hierarchy,
+  /// with descendant policies installed before enclosing indices.
+  /// Payloads without this field retain the default linear lookup.
   ///
   /// @param gctx geometry context
   /// @param encoded Reference to the encoded JSON object

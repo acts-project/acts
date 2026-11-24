@@ -23,8 +23,11 @@ struct unit {
   /// Length, native unit mm
   /// @{
   static constexpr scalar_t um{static_cast<scalar_t>(1e-3)};
+  /// Native length unit, the millimetre.
   static constexpr scalar_t mm{static_cast<scalar_t>(1.0)};
+  /// Centimetre expressed in millimetres.
   static constexpr scalar_t cm{static_cast<scalar_t>(1e1)};
+  /// Metre expressed in millimetres.
   static constexpr scalar_t m{static_cast<scalar_t>(1e3)};
   /// @}
 
@@ -51,21 +54,32 @@ struct unit {
   /// Time, native unit mm{[speed-of-light * time]{mm/s * s}}
   /// @{
   static constexpr scalar_t s{static_cast<scalar_t>(299792458000.0)};
+  /// Femtosecond expressed in the internal length-equivalent time unit.
   static constexpr scalar_t fs{static_cast<scalar_t>(1e-15 * 299792458000.0)};
+  /// Picosecond expressed in the internal length-equivalent time unit.
   static constexpr scalar_t ps{static_cast<scalar_t>(1e-12 * 299792458000.0)};
+  /// Nanosecond expressed in the internal length-equivalent time unit.
   static constexpr scalar_t ns{static_cast<scalar_t>(1e-9 * 299792458000.0)};
+  /// Microsecond expressed in the internal length-equivalent time unit.
   static constexpr scalar_t us{static_cast<scalar_t>(1e-6 * 299792458000.0)};
+  /// Millisecond expressed in the internal length-equivalent time unit.
   static constexpr scalar_t ms{static_cast<scalar_t>(1e-3 * 299792458000.0)};
+  /// Minute expressed in the internal length-equivalent time unit.
   static constexpr scalar_t min{static_cast<scalar_t>(60.0 * 299792458000.0)};
+  /// Hour expressed in the internal length-equivalent time unit.
   static constexpr scalar_t h{static_cast<scalar_t>(3600.0 * 299792458000.0)};
   /// @}
 
   /// Energy, native unit GeV
   /// @{
   static constexpr scalar_t eV{static_cast<scalar_t>(1e-9)};
+  /// Kiloelectronvolt expressed in GeV.
   static constexpr scalar_t keV{static_cast<scalar_t>(1e-6)};
+  /// Megaelectronvolt expressed in GeV.
   static constexpr scalar_t MeV{static_cast<scalar_t>(1e-3)};
+  /// Native energy unit, the gigaelectronvolt.
   static constexpr scalar_t GeV{static_cast<scalar_t>(1.0)};
+  /// Teraelectronvolt expressed in GeV.
   static constexpr scalar_t TeV{static_cast<scalar_t>(1e3)};
   /// @}
 
@@ -80,6 +94,7 @@ struct unit {
   /// ->      1g == (1/(1e3*1.782662e-27))GeV/c²
   /// @{
   static constexpr scalar_t g{static_cast<scalar_t>(1.0 / 1.782662e-24)};
+  /// Kilogram expressed in GeV/c².
   static constexpr scalar_t kg{static_cast<scalar_t>(1.0 / 1.782662e-27)};
   /// @}
 
@@ -94,8 +109,11 @@ struct unit {
       0.000299792458)};  // equivalent to c in appropriate SI units
 
   // Angles, native unit radian
+  /// Conversion factor from milliradians to radians.
   static constexpr scalar_t mrad{static_cast<scalar_t>(1e-3)};
+  /// Native angular unit, the radian.
   static constexpr scalar_t rad{static_cast<scalar_t>(1.0)};
+  /// Conversion factor from degrees to radians.
   static constexpr scalar_t degree{
       static_cast<scalar_t>(0.017453292519943295)};  // pi / 180
 };
@@ -146,6 +164,7 @@ struct constant {
   // electron mass
   // https://physics.nist.gov/cgi-bin/cuu/Value?eqmec2mev (Visited Aug 1st,
   // 2024)
+  /// Electron rest energy expressed in the internal energy unit.
   static constexpr scalar_t m_e{
       static_cast<scalar_t>(0.51099895069 * unit<scalar_t>::MeV)};
 };

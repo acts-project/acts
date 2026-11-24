@@ -93,43 +93,61 @@ DETRAY_ALGEBRA_DEFINE_TYPE_TRAITS(algebra::vc_aos)
 
 namespace traits {
 
+/// Index type associated with a Vc AoS storage type.
 template <typename T, auto N>
 struct index<algebra::vc_aos::storage_type<T, N>> {
+  /// Index type used by the Vc AoS backend.
   using type = algebra::vc_aos::index_type;
 };
 
+/// Index trait for a fixed-size Vc vector.
 template <typename T, auto N>
 struct index<Vc_1::Vector<T, Vc_1::simd_abi::fixed_size<N>>> {
+  /// Index type used by the Vc AoS backend.
   using type = algebra::vc_aos::index_type;
 };
 
+/// Scalar type associated with a Vc AoS storage type.
 template <typename T, auto N>
 struct value<algebra::vc_aos::storage_type<T, N>> {
+  /// Scalar element type carried by the Vc array.
   using type = T;
 };
 
+/// Value trait for a fixed-size Vc vector.
 template <typename T, auto N>
 struct value<Vc_1::Vector<T, Vc_1::simd_abi::fixed_size<N>>> {
+  /// Scalar element type carried by the Vc vector.
   using type = T;
 };
 
 // Vector and storage types are different
+/// Dimensions of Vc AoS storage, represented as one column of `N` rows.
 template <typename T, auto N>
 struct dimensions<algebra::vc_aos::storage_type<T, N>> {
+  /// Index type used for the storage dimensions.
   using index_type = algebra::vc_aos::index_type;
 
+  /// Number of logical dimensions represented by the storage.
   static constexpr index_type _dim{1};
+  /// Number of stored vector components.
   static constexpr index_type _rows{N};
+  /// Number of storage columns.
   static constexpr index_type _columns{1};
 };
 
 // Vector and storage types are different
+/// Dimensions of a fixed-size Vc vector, represented as one column.
 template <typename T, auto N>
 struct dimensions<Vc_1::Vector<T, Vc_1::simd_abi::fixed_size<N>>> {
+  /// Index type used for the vector dimensions.
   using index_type = algebra::vc_aos::index_type;
 
+  /// Number of logical dimensions represented by the vector.
   static constexpr index_type _dim{1};
+  /// Number of vector components.
   static constexpr index_type _rows{N};
+  /// Number of vector columns.
   static constexpr index_type _columns{1};
 };
 

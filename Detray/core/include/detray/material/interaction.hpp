@@ -18,12 +18,20 @@
 
 namespace detray {
 
+/// Computes energy loss and multiple scattering in detector material.
 template <concepts::scalar scalar_t>
 struct interaction {
+  /// Scalar type used by the interaction calculations.
   using scalar_type = scalar_t;
+  /// Cached particle kinematics used by the interaction formulas.
   using relativistic_quantities = detail::relativistic_quantities<scalar_type>;
 
   // @returns the total stopping power (<-dE/dx>)
+  /// Sum collisional and radiative stopping-power contributions.
+  /// @param mat material traversed by the particle
+  /// @param ptc particle hypothesis
+  /// @param rq cached relativistic quantities for the particle
+  /// @return computed interaction quantity in the corresponding units
   DETRAY_HOST_DEVICE scalar_type
   compute_stopping_power(const detray::material<scalar_type>& mat,
                          const pdg_particle<scalar_type>& ptc,
@@ -39,6 +47,10 @@ struct interaction {
     return stopping_power;
   }
 
+  /// Compute the collisional stopping power from the Bethe–Bloch expression.
+  /// @param mat material traversed by the particle
+  /// @param rq cached relativistic quantities for the particle
+  /// @return computed interaction quantity in the corresponding units
   DETRAY_HOST_DEVICE scalar_type
   compute_bethe_bloch(const detray::material<scalar_type>& mat,
                       const pdg_particle<scalar_type>& /*ptc*/,
@@ -59,6 +71,12 @@ struct interaction {
   // For more rigorous calculation, check "G4eBremsstrahlungRelModel.cc" of
   // Geant4 library. The Fig 34.13 of PDG 2024 shows the difference between
   // the approximated and precise calculation.
+  /// Estimate electron or positron radiative stopping power using Rossi’s
+  /// approximation.
+  /// @param mat material traversed by the particle
+  /// @param ptc particle hypothesis
+  /// @param rq cached relativistic quantities for the particle
+  /// @return computed interaction quantity in the corresponding units
   DETRAY_HOST_DEVICE scalar_type
   compute_bremsstrahlung(const detray::material<scalar_type>& mat,
                          const pdg_particle<scalar_type>& ptc,
@@ -87,6 +105,13 @@ struct interaction {
     return stopping_power;
   }
 
+  /// Differentiate the total stopping power with respect to q/p.
+  /// @return computed derivative in the corresponding units
+  /// Differentiate total stopping power with respect to q/p.
+  /// @param mat material traversed by the particle
+  /// @param ptc particle hypothesis
+  /// @param rq cached relativistic quantities for the particle
+  /// @return derivative of stopping power with respect to q/p
   DETRAY_HOST_DEVICE scalar_type
   derive_stopping_power(const detray::material<scalar_type>& mat,
                         const pdg_particle<scalar_type>& ptc,
@@ -102,6 +127,13 @@ struct interaction {
     return derivative;
   }
 
+  /// Differentiate the Bethe–Bloch stopping power with respect to q/p.
+  /// @return computed derivative in the corresponding units
+  /// Differentiate Bethe–Bloch stopping power with respect to q/p.
+  /// @param mat material traversed by the particle
+  /// @param ptc particle hypothesis
+  /// @param rq cached relativistic quantities for the particle
+  /// @return derivative of stopping power with respect to q/p
   DETRAY_HOST_DEVICE scalar_type
   derive_bethe_bloch(const detray::material<scalar_type>& mat,
                      const pdg_particle<scalar_type>& ptc,
@@ -146,6 +178,11 @@ struct interaction {
     return first_term + second_term;
   }
 
+  /// Differentiate the bremsstrahlung stopping power with respect to q/p.
+  /// @param mat material traversed by the particle
+  /// @param ptc particle hypothesis
+  /// @param rq cached relativistic quantities for the particle
+  /// @return computed derivative in the corresponding units
   DETRAY_HOST_DEVICE scalar_type
   derive_bremsstrahlung(const detray::material<scalar_type>& mat,
                         const pdg_particle<scalar_type>& ptc,
@@ -164,6 +201,12 @@ struct interaction {
     return derivative;
   }
 
+  /// Compute the collisional energy loss over a path segment.
+  /// @param path_segment distance travelled in the material
+  /// @param mat material traversed by the particle
+  /// @param ptc particle hypothesis
+  /// @param rq cached relativistic quantities for the particle
+  /// @return computed interaction quantity in the corresponding units
   DETRAY_HOST_DEVICE scalar_type compute_energy_loss_bethe_bloch(
       const scalar_type path_segment, const detray::material<scalar_type>& mat,
       const pdg_particle<scalar_type>& ptc,
@@ -171,6 +214,11 @@ struct interaction {
     return path_segment * compute_bethe_bloch(mat, ptc, rq);
   }
 
+  /// Compute the most-probable energy loss using the Landau approximation.
+  /// @param path_segment distance travelled in the material
+  /// @param mat material traversed by the particle
+  /// @param rq cached relativistic quantities for the particle
+  /// @return most-probable energy loss for the segment
   DETRAY_HOST_DEVICE scalar_type compute_energy_loss_landau(
       const scalar_type path_segment, const material<scalar_type>& mat,
       const pdg_particle<scalar_type>& /*ptc*/,
@@ -190,6 +238,11 @@ struct interaction {
     return eps * running;
   }
 
+  /// Compute the Landau energy-loss distribution full width at half maximum.
+  /// @param path_segment distance travelled in the material
+  /// @param mat material traversed by the particle
+  /// @param rq cached relativistic quantities for the particle
+  /// @return full width at half maximum of the energy-loss distribution
   DETRAY_HOST_DEVICE scalar_type compute_energy_loss_landau_fwhm(
       const scalar_type path_segment, const material<scalar_type>& mat,
       const pdg_particle<scalar_type>& /*ptc*/,
@@ -198,6 +251,12 @@ struct interaction {
     return 4.f * rq.compute_epsilon(mat, path_segment);
   }
 
+  /// Convert the Landau width to a Gaussian-equivalent energy-loss sigma.
+  /// @param path_segment distance travelled in the material
+  /// @param mat material traversed by the particle
+  /// @param ptc particle hypothesis
+  /// @param rq cached relativistic quantities for the particle
+  /// @return Gaussian-equivalent standard deviation of the energy loss
   DETRAY_HOST_DEVICE scalar_type compute_energy_loss_landau_sigma(
       const scalar_type path_segment, const material<scalar_type>& mat,
       const pdg_particle<scalar_type>& ptc,
@@ -208,6 +267,12 @@ struct interaction {
     return convert_landau_fwhm_to_gaussian_sigma(fwhm);
   }
 
+  /// Convert energy-loss sigma to a q/p uncertainty.
+  /// @param path_segment distance travelled in the material
+  /// @param mat material traversed by the particle
+  /// @param ptc particle hypothesis
+  /// @param rq cached relativistic quantities for the particle
+  /// @return standard deviation in q/p units
   template <typename material_t>
   DETRAY_HOST_DEVICE scalar_type compute_energy_loss_landau_sigma_QOverP(
       const scalar_type path_segment, const material_t& mat,
@@ -227,6 +292,11 @@ struct interaction {
     return math::sqrt(rq.m_q2OverBeta2) * pInv * pInv * sigmaE;
   }
 
+  /// Estimate the projected multiple-scattering angle for a material thickness.
+  /// @param xOverX0 material thickness in radiation lengths
+  /// @param ptc particle hypothesis
+  /// @param rq cached relativistic quantities for the particle
+  /// @return computed interaction quantity in the corresponding units
   DETRAY_HOST_DEVICE scalar_type compute_multiple_scattering_theta0(
       const scalar_type xOverX0, const pdg_particle<scalar_type>& ptc,
       const relativistic_quantities& rq) const {

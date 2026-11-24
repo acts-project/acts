@@ -35,10 +35,13 @@ namespace detray::geometry {
 /// https://github.com/acts-project/acts/blob/main/Core/include/Acts/Geometry/GeometryIdentifier.hpp
 class identifier {
  public:
+  /// Unsigned storage type for the packed identifier fields.
   using value_t = std::uint_least64_t;
+  /// Bit encoder used to read and update the packed fields.
   using encoder = detail::bit_encoder<value_t>;
 
   /// Construct from an already encoded value.
+  /// @param encoded Value containing the encoded geometry fields.
   DETRAY_HOST_DEVICE
   constexpr explicit identifier(value_t encoded) : m_value(encoded) {}
 
@@ -85,6 +88,8 @@ class identifier {
   }
 
   /// Set the volume index.
+  /// @param volume Volume index to encode.
+  /// @returns Reference to this identifier.
   DETRAY_HOST_DEVICE
   constexpr identifier& set_volume(value_t volume) {
     encoder::template set_bits<k_volume_mask>(m_value, volume);
@@ -92,6 +97,8 @@ class identifier {
   }
 
   /// Set the surface id.
+  /// @param id Surface category to encode.
+  /// @returns Reference to this identifier.
   DETRAY_HOST_DEVICE
   constexpr identifier& set_id(surface_id id) {
     encoder::template set_bits<k_id_mask>(
@@ -101,6 +108,8 @@ class identifier {
   }
 
   /// Set the surface index.
+  /// @param index Surface index to encode.
+  /// @returns Reference to this identifier.
   DETRAY_HOST_DEVICE
   constexpr identifier& set_index(value_t index) {
     encoder::template set_bits<k_index_mask>(m_value, index);
@@ -108,6 +117,8 @@ class identifier {
   }
 
   /// Set the transform index.
+  /// @param index Transform index to encode.
+  /// @returns Reference to this identifier.
   DETRAY_HOST_DEVICE
   constexpr identifier& set_transform(value_t index) {
     encoder::template set_bits<k_transform_mask>(m_value, index);
@@ -115,6 +126,8 @@ class identifier {
   }
 
   /// Set the extra identifier.
+  /// @param extra Extra tag value to encode.
+  /// @returns Reference to this identifier.
   DETRAY_HOST_DEVICE
   constexpr identifier& set_extra(value_t extra) {
     encoder::template set_bits<k_extra_mask>(m_value, extra);
@@ -123,12 +136,16 @@ class identifier {
 
   /// Check whether the identifier is valid to use.
   /// @note The extra bits are allowed to be invalid and will not be checked
+  /// @returns True when a required field has its invalid sentinel value.
   DETRAY_HOST_DEVICE
   constexpr bool is_invalid() const noexcept {
     return encoder::template is_invalid<k_volume_mask, k_id_mask, k_index_mask,
                                         k_transform_mask>(m_value);
   }
 
+  /// Compare the complete packed identifier value.
+  /// @param rhs Identifier to compare with.
+  /// @returns True when both encoded values are equal.
   bool operator==(const identifier& rhs) const = default;
 
   /// Comparison operators

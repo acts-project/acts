@@ -30,6 +30,8 @@ target_sources(
         ProtoLayerHelper.cpp
         VolumePlacementBase.cpp
         SurfaceArrayCreator.cpp
+        LinearVolumeLookup.cpp
+        RzGridVolumeLookup.cpp
         TrackingGeometry.cpp
         TrackingGeometryBuilder.cpp
         TrackingVolume.cpp

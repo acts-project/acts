@@ -10,12 +10,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsPlugins/Root/TGeoAxes.hpp"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
+#include <optional>
 #include <tuple>
 
 #include "RtypesCore.h"
@@ -27,6 +29,7 @@ namespace Acts {
 
 class CylinderBounds;
 class DiscBounds;
+class LineBounds;
 class PlanarBounds;
 class Surface;
 
@@ -85,6 +88,26 @@ struct TGeoSurfaceConverter {
                   const Double_t* translation, TGeoAxes axes,
                   double scalor = 10.) noexcept(false);
 
+  /// Convert a TGeoShape into line (straw) surface components
+  ///
+  /// Only full tubes are converted: the line runs along the tube axis and the
+  /// bounds radius is the outer radius. A tube can describe a cylinder as
+  /// well as a straw, so @ref toSurface never picks this conversion; use it
+  /// explicitly, e.g. from a detector element factory.
+  ///
+  /// @param tgShape The TGeoShape
+  /// @param rotation The rotation matrix as Double_t* from root
+  /// @param translation The translation vector as Double_t* from root
+  /// @param scalor The unit scalor between TGeo and Acts
+  ///
+  /// @return tuple of LineBounds, Transform, thickness, with null bounds if
+  ///         the shape is not a full tube
+  static std::tuple<std::shared_ptr<const Acts::LineBounds>,
+                    const Acts::Transform3, double>
+  lineComponents(const TGeoShape& tgShape, const Double_t* rotation,
+                 const Double_t* translation,
+                 double scalor = 10.) noexcept(false);
+
   /// Convert a TGeoShape to a Surface
   ///
   /// @param tgShape The TGeoShape
@@ -109,6 +132,22 @@ struct TGeoSurfaceConverter {
   /// @throws std::runtime_error if the shape cannot be converted
   static Acts::Transform3 transformFromShape(
       const TGeoShape& tgShape, const TGeoMatrix& tgMatrix, TGeoAxes axes,
+      double scalor = 10.) noexcept(false);
+
+  /// Convert a tube- or disc-like TGeoShape into a cylindrical volume
+  ///
+  /// Tube-like shapes (z half-length larger than the radial thickness, e.g. a
+  /// support tube) become a cylinder shell, disc-like shapes (e.g. an
+  /// endplate) an annular disc, both keeping the shape's own inner and outer
+  /// radius.
+  ///
+  /// @param tgShape The TGeoShape
+  /// @param tgMatrix The matrix representing the global transform
+  /// @param scalor The unit scalor between TGeo and Acts
+  /// @return The volume, or std::nullopt if the shape is neither tube- nor
+  ///         disc-like
+  static std::optional<Acts::Volume> cylinderVolume(
+      const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
       double scalor = 10.) noexcept(false);
 
   /// Translate TGeo degree [0, 360) to radian

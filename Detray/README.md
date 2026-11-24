@@ -65,7 +65,7 @@ The following cmake options are available and can also be specified explicitly f
 | DETRAY_BUILD_PYTHON_BINDINGS  | Build python bindings for all enabled components | OFF |
 | DETRAY_GENERATE_PYTHON_STUBS  | Generate Python stub files for Python bindings | OFF |
 | DETRAY_CUSTOM_SCALARTYPE | Floating point precision | float |
-| DETRAY_GENERATE_METADATA | List of metadata generator scripts (separated by semicolon) | empty |
+| DETRAY_GENERATE_METADATA | Additional external metadata configurations, `/path/to/<name>_detector.py:configure` (separated by semicolon) | empty |
 | DETRAY_EIGEN_PLUGIN | Build Eigen math plugin | OFF |
 | DETRAY_FASTOR_PLUGIN | Build Fastor math plugin | OFF |
 | DETRAY_SMATRIX_PLUGIN | Build ROOT/SMatrix math plugin | OFF |

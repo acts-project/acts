@@ -67,8 +67,9 @@ GTEST_TEST(svgtools, masks) {
   detray::svgtools::write_svg("test_svgtools_cylinder2D", {axes, cyl2D_svg});
 
   // Visualize a 2D rectangle.
-  // e_half_x, e_half_y
-  detray::mask<detray::rectangle2D, algebra_t> rec2D{0u, 100.f, 100.f};
+  // e_min_x, e_min_y, e_max_x, e_max_y
+  detray::mask<detray::rectangle2D, algebra_t> rec2D{0u, -100.f, -100.f, 100.f,
+                                                     100.f};
   const auto rec2D_proto =
       detray::svgtools::conversion::surface(transform, rec2D);
   const auto rec2D_svg = actsvg::display::surface("", rec2D_proto, view);

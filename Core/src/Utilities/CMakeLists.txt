@@ -22,4 +22,5 @@ target_sources(
         detail/CreateMultiAxis3Bound.cpp
         detail/CreateMultiAxis3Closed.cpp
         StringHelpers.cpp
+        detail/WorkerPool.cpp
 )

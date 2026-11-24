@@ -25,6 +25,7 @@ enum class id {
   e_rk = 1,
 };
 
+/// Configuration flags and limits consumed by a stepper.
 struct config {
   /// Minimum step size
   float min_stepsize{1e-4f * unit<float>::mm};

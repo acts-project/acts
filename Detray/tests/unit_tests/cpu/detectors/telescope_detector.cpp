@@ -77,8 +77,9 @@ GTEST_TEST(detray_detectors, telescope_detector) {
   using namespace detray;
 
   // Use rectangle surfaces
-  mask<rectangle2D, test_algebra> rectangle{0u, 20.f * unit<scalar>::mm,
-                                            20.f * unit<scalar>::mm};
+  mask<rectangle2D, test_algebra> rectangle{
+      0u, -20.f * unit<scalar>::mm, -20.f * unit<scalar>::mm,
+      20.f * unit<scalar>::mm, 20.f * unit<scalar>::mm};
   tel_det_config<test_algebra> tel_cfg{rectangle};
 
   using const_bfield_bknd_t =

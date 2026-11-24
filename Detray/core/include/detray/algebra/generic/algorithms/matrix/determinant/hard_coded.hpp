@@ -21,13 +21,17 @@ namespace detray::algebra::generic::matrix::determinant {
 /// "Determinant getter", assuming a N X N matrix
 template <concepts::square_matrix matrix_t>
 struct hard_coded {
+  /// Matrix element type.
   using scalar_t = detray::traits::value_t<matrix_t>;
+  /// Matrix index type.
   using index_t = detray::traits::index_t<matrix_t>;
 
   /// Function (object) used for accessing a matrix element
   using element_getter_t = detray::traits::element_getter_t<matrix_t>;
 
-  // 2 X 2 matrix determinant
+  /// 2 X 2 matrix determinant
+  /// @param m Matrix whose determinant is calculated.
+  /// @returns The determinant.
   template <typename M = matrix_t>
     requires(detray::traits::max_rank<M> == 2)
   DETRAY_HOST_DEVICE constexpr scalar_t operator()(const matrix_t &m) const {
@@ -36,7 +40,9 @@ struct hard_coded {
     return elem(m, 0, 0) * elem(m, 1, 1) - elem(m, 0, 1) * elem(m, 1, 0);
   }
 
-  // 4 X 4 matrix determinant
+  /// 4 X 4 matrix determinant
+  /// @param m Matrix whose determinant is calculated.
+  /// @returns The determinant.
   template <typename M = matrix_t>
     requires(detray::traits::max_rank<M> == 4)
   DETRAY_HOST_DEVICE constexpr scalar_t operator()(const matrix_t &m) const {

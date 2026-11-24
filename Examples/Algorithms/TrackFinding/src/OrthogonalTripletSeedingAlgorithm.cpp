@@ -150,22 +150,24 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   lhOptions.zMax = m_cfg.zMax;
   lhOptions.phiMin = m_cfg.phiMin;
   lhOptions.phiMax = m_cfg.phiMax;
-  lhOptions.deltaRMin = std::isnan(m_cfg.deltaRMinBottom)
-                            ? m_cfg.deltaRMin
-                            : m_cfg.deltaRMinBottom;
-  lhOptions.deltaRMax = std::isnan(m_cfg.deltaRMaxBottom)
-                            ? m_cfg.deltaRMax
-                            : m_cfg.deltaRMaxBottom;
+  // lhOptions (low-high) is used for top candidate search (middle->outer)
+  lhOptions.deltaRMin =
+      std::isnan(m_cfg.deltaRMinTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
+  lhOptions.deltaRMax =
+      std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
   lhOptions.collisionRegionMin = m_cfg.collisionRegionMin;
   lhOptions.collisionRegionMax = m_cfg.collisionRegionMax;
   lhOptions.cotThetaMax = m_cfg.cotThetaMax;
   lhOptions.deltaPhiMax = m_cfg.deltaPhiMax;
   Acts::Experimental::CylindricalSpacePointKDTree::Options hlOptions =
       lhOptions;
-  hlOptions.deltaRMin =
-      std::isnan(m_cfg.deltaRMinTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
-  hlOptions.deltaRMax =
-      std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
+  // hlOptions (high-low) is used for bottom candidate search (middle->inner)
+  hlOptions.deltaRMin = std::isnan(m_cfg.deltaRMinBottom)
+                            ? m_cfg.deltaRMin
+                            : m_cfg.deltaRMinBottom;
+  hlOptions.deltaRMax = std::isnan(m_cfg.deltaRMaxBottom)
+                            ? m_cfg.deltaRMax
+                            : m_cfg.deltaRMaxBottom;
 
   Acts::DoubletSeedFinder::Config bottomDoubletFinderConfig;
   bottomDoubletFinderConfig.spacePointsSortedByRadius = false;

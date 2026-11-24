@@ -5,6 +5,8 @@ target_sources(
         SolenoidBField.cpp
         ToroidField.cpp
         MagneticFieldError.cpp
+        MagneticFieldProvider.cpp
+        MagneticFieldQuery.cpp
         MultiRangeBField.cpp
         TextMagneticFieldIo.cpp
 )

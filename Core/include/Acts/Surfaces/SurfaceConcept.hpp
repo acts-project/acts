@@ -96,7 +96,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
   } -> std::same_as<AlignmentToPathMatrix>;
 
   {
-    cs.localCartesianToBoundLocalDerivative(gctx, Vector3{})
+    cs.localCartesianToBoundLocalDerivative(gctx, Vector3{}, Vector3{})
   } -> std::same_as<Matrix<2, 3>>;
 };
 

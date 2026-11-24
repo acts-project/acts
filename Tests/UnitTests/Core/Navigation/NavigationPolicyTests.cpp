@@ -27,8 +27,16 @@
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <array>
+#include <cmath>
+#include <numbers>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -684,6 +692,100 @@ BOOST_DATA_TEST_CASE(
   }
 }
 
+BOOST_AUTO_TEST_CASE(CylinderPolicyClosestApproachTest) {
+  using enum CylinderVolumeBounds::Face;
+
+  struct TestCase {
+    const char* name;
+    Vector3 position;
+    Vector3 direction;
+    CylinderVolumeBounds::Face expected;
+  };
+  const std::array cases{
+      TestCase{"radially inward", {150, 0, 0}, {-1, 0, 0}, InnerCylinder},
+      TestCase{"radially outward", {150, 0, 0}, {1, 0, 0}, OuterCylinder},
+      TestCase{"opposite side inward", {-150, 0, 0}, {1, 0, 0}, InnerCylinder},
+      TestCase{
+          "opposite side outward", {-150, 0, 0}, {-1, 0, 0}, OuterCylinder},
+      TestCase{"zero radial projection", {150, 0, 0}, {0, 1, 0}, OuterCylinder},
+      TestCase{"positive axial", {150, 0, 0}, {0, 0, 1}, PositiveDisc},
+      TestCase{"negative axial", {150, 0, 0}, {0, 0, -1}, NegativeDisc},
+      TestCase{"nearly axial", {150, 0, 0}, {-1e-12, 0, 1}, PositiveDisc},
+      TestCase{"disc before closest approach",
+               {150, 0, 290},
+               {-1, 0, 1},
+               PositiveDisc},
+      TestCase{"negative disc before closest approach",
+               {150, 0, -290},
+               {-1, 0, -1},
+               NegativeDisc},
+      TestCase{"disc after closest approach",
+               {150, 0, 0},
+               {-1, 0, 1},
+               InnerCylinder},
+      TestCase{"negative disc after closest approach",
+               {150, 0, 0},
+               {-1, 0, -1},
+               InnerCylinder},
+      TestCase{
+          "disc plane inside hole", {150, 0, 200}, {-1, 0, 1}, InnerCylinder},
+      TestCase{"disc plane beyond outer radius",
+               {150, 0, 0},
+               {-2, 0, 1},
+               InnerCylinder},
+      TestCase{"just inside tangency",
+               {100 - 1e-6, -200, 0},
+               {0, 1, 0},
+               InnerCylinder},
+      TestCase{"just outside tangency",
+               {100 + 1e-6, -200, 0},
+               {0, 1, 0},
+               OuterCylinder},
+      TestCase{"from inner boundary", {100, 0, 0}, {1, 0, 0}, OuterCylinder},
+      TestCase{"from outer boundary", {400, 0, 0}, {-1, 0, 0}, InnerCylinder},
+      TestCase{"from disc boundary", {150, 0, 300}, {0, 0, -1}, NegativeDisc},
+  };
+
+  const std::array<Transform3, 2> transforms{
+      Transform3::Identity(),
+      Transform3{Translation3{20, -30, 40} *
+                 AngleAxis3{0.7, Vector3{1, 2, 3}.normalized()}}};
+  for (const auto& transform : transforms) {
+    auto cylVolume = std::make_shared<TrackingVolume>(
+        transform,
+        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm),
+        "CylinderVolume");
+    SingleCylinderPortalShell shell{gctx, *cylVolume};
+    shell.applyToVolume();
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
+
+    for (const auto& test : cases) {
+      BOOST_TEST_CONTEXT(test.name << " transform=" << transform.matrix()) {
+        const auto actual = getSmart(test.position, test.direction.normalized(),
+                                     transform, policy);
+        checkEqual({shell.portal(test.expected).get()}, actual, shell);
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CylinderPolicyExactTangencyTest) {
+  auto cylVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm),
+      "CylinderVolume");
+  SingleCylinderPortalShell shell{gctx, *cylVolume};
+  shell.applyToVolume();
+  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
+
+  // Touching the inner cylinder does not exit the volume. Keep the strict
+  // closest-approach comparison, using exactly representable coordinates.
+  const auto actual =
+      getSmart({100, -200, 0}, {0, 1, 0}, Transform3::Identity(), policy);
+  checkEqual({shell.portal(CylinderVolumeBounds::Face::OuterCylinder).get()},
+             actual, shell);
+}
+
 namespace {
 
 std::mt19937 engine;
@@ -767,6 +869,14 @@ BOOST_DATA_TEST_CASE(
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
   Vector3 target{r * std::cos(phiTarget), r * std::sin(phiTarget), zTarget};
   Vector3 direction = (target - position).normalized();
+
+  // At the inner boundary the chord points into the hole, outside this
+  // volume. Reflect its radial component so both boundaries test a ray
+  // entering the shell, where this volume's navigation policy applies.
+  if (r == cylBounds->get(CylinderVolumeBounds::eMinR)) {
+    Vector3 radial{std::cos(phiPos), std::sin(phiPos), 0.};
+    direction -= 2. * direction.dot(radial) * radial;
+  }
 
   auto exp =
       getTruth(position, direction, transform, *cylVolume, shell, *logger);
@@ -889,6 +999,58 @@ BOOST_AUTO_TEST_CASE(FrustumNavigationPolicyTest) {
   frustumPolicy->initializeCandidates(gctx, args, policyState, stream, *logger);
   main.initialize(gctx, {Vector3{1, 1, 1}, Vector3{1, 1, 1}}, *logger);
   BOOST_CHECK_EQUAL(main.candidates().size(), 10);
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceArrayPolicyNeighborWindowTest) {
+  // A barrel layer with 12 modules in phi and 3 modules in z at r = 30 mm
+  auto cylBounds = std::make_shared<CylinderVolumeBounds>(20_mm, 40_mm, 100_mm);
+  auto cylVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(), cylBounds, "SurfaceArrayVolume");
+
+  auto moduleBounds = std::make_shared<RectangleBounds>(8_mm, 30_mm);
+  for (int iphi = 0; iphi < 12; ++iphi) {
+    const double phi = (iphi + 0.5) * 2 * std::numbers::pi / 12;
+    // The module normal points along r, the local y axis along z
+    RotationMatrix3 rotation;
+    rotation.col(0) = Vector3{-std::sin(phi), std::cos(phi), 0};
+    rotation.col(1) = Vector3::UnitZ();
+    rotation.col(2) = Vector3{std::cos(phi), std::sin(phi), 0};
+    for (int iz = -1; iz <= 1; ++iz) {
+      Transform3 transform = Transform3::Identity();
+      transform.linear() = rotation;
+      transform.translation() =
+          Vector3{30_mm * std::cos(phi), 30_mm * std::sin(phi), iz * 60_mm};
+      auto surface = Surface::makeShared<PlaneSurface>(transform, moduleBounds);
+      surface->assignIsSensitive(true);
+      cylVolume->addSurface(surface);
+    }
+  }
+
+  using enum SurfaceArrayNavigationPolicy::LayerType;
+
+  // Without a configured window, the policy uses the creator default
+  SurfaceArrayNavigationPolicy defaultPolicy(
+      gctx, *cylVolume, *logger,
+      SurfaceArrayNavigationPolicy::Config{.layerType = Cylinder,
+                                           .bins = {0, 0}});
+  const auto defaultWindow = defaultPolicy.surfaceArray().neighborWindow();
+  BOOST_CHECK_EQUAL(defaultWindow.max[0], 1);
+  BOOST_CHECK_EQUAL(defaultWindow.max[1], 2);
+
+  // A configured window reaches the surface array
+  SurfaceArrayNavigationPolicy windowPolicy(
+      gctx, *cylVolume, *logger,
+      SurfaceArrayNavigationPolicy::Config{
+          .layerType = Cylinder,
+          .bins = {0, 0},
+          .numberOfBinsFactor = 5.0,
+          .neighborWindow = SurfaceArray::NeighborWindow{{0, 1}, {1, 8}},
+          .overfill = 1});
+  const auto window = windowPolicy.surfaceArray().neighborWindow();
+  BOOST_CHECK_EQUAL(window.min[0], 0);
+  BOOST_CHECK_EQUAL(window.min[1], 1);
+  BOOST_CHECK_EQUAL(window.max[0], 1);
+  BOOST_CHECK_EQUAL(window.max[1], 8);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -15,6 +15,9 @@
 
 namespace detray {
 
+/// Build the curvilinear unit basis perpendicular to a three-dimensional
+/// direction.
+/// @tparam vector3_t three-dimensional vector representation
 template <concepts::vector3D vector3_t>
 struct unit_vectors {
   /// Construct the first curvilinear unit vector `U` for the given direction.

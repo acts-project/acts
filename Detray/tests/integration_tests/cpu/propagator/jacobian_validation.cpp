@@ -227,7 +227,8 @@ void wrap_angles(const bound_param_vector_type& ref_vector,
     }
   }
 
-  target_vector.set_phi(new_tphi);
+  // Unwrapped phi can leave [-pi, pi], which set_phi() rejects
+  target_vector[e_bound_phi] = new_tphi;
 }
 
 scalar get_relative_difference(scalar ref_val, scalar num_val) {
@@ -633,6 +634,8 @@ bound_track_parameters<test_algebra> get_initial_parameter(
   bound_track_parameters<test_algebra> ret;
   ret.set_surface_link(geometry::identifier{0u});
   ret.set_parameter_vector(bound_vec);
+  // Placeholder: a zero covariance marks the parameters as invalid
+  ret.set_covariance(matrix::identity<bound_covariance_type>());
 
   return ret;
 }
@@ -1584,8 +1587,9 @@ int main(int argc, char** argv) {
     const scalar detector_length = rand_length(mt1);
     const scalar constraint_step_size = detector_length * 1.25f;
 
-    mask<rect_type, test_algebra> rect{0u, detector_length * mask_scaler,
-                                       detector_length * mask_scaler};
+    mask<rect_type, test_algebra> rect{
+        0u, -detector_length * mask_scaler, -detector_length * mask_scaler,
+        detector_length * mask_scaler, detector_length * mask_scaler};
     mask<wire_type, test_algebra> wire{0u, detector_length * mask_scaler,
                                        detector_length * mask_scaler};
 

@@ -1,0 +1,32 @@
+# histcmp CLI defaults for comparisons without workflow-specific thresholds.
+[checks."*".Chi2Test]
+threshold = 0.01
+
+[checks."*".KolmogorovTest]
+threshold = 0.68
+
+[checks."*".RatioCheck]
+threshold = 3
+
+[checks."*".ResidualCheck]
+threshold = 1
+
+[checks."*".IntegralCheck]
+threshold = 3
+
+# Case-sensitive globs against histogram keys; tags may overlap.
+[report.tags]
+"Efficiency" = ["*eff_*"]
+"Fakes" = ["*fakeRatio_*", "*nFake*"]
+"Duplicates" = ["*duplicationRatio_*", "*nDuplicat*"]
+"Track quality" = ["*completeness_*", "*purity_*", "*chi2*", "*Chi2*", "*NDF*", "*trackClassification*"]
+"Track summary" = ["*nStates*", "*nMeasurements*", "*nHoles*", "*nOutliers*", "*nSharedHits*", "*nMajorityHits*"]
+"Residuals" = ["res_*", "resmean_*", "reswidth_*", "trk_res*", "resX", "resY", "resZ", "resT", "resSeed*"]
+"Pulls" = ["pull*", "trk_pull*"]
+"Resolution" = ["reswidth_*", "pullwidth_*"]
+"Bias" = ["resmean_*", "pullmean_*"]
+"Truth" = ["t_*", "truth*", "trk_truth*"]
+"Uncertainties" = ["err_*", "cov*"]
+"Vertexing" = ["nRecoVtx", "nTrueVtx", "nVtx*", "nTracks*", "recoOver*", "truthVertexMatchRatio", "reco[XYZT]", "seed[XYZT]", "sumPt2", "trk_weight", "trk_momOverlap*"]
+"Kinematics" = ["p", "pt", "p[xyz]", "eta", "phi", "m", "q", "*_vs_pT*", "*_vs_eta*", "*_vs_phi*"]
+"Simulation" = ["v[xyzt]", "vertex_*", "e_loss", "total_x0", "total_l0", "number_of_hits"]

@@ -63,8 +63,9 @@ GTEST_TEST(detray_material, telescope_geometry_energy_loss) {
   const auto mat = silicon_tml<scalar>();
   constexpr scalar thickness{0.17f * unit<scalar>::cm};
 
-  tel_det_config<test_algebra, rectangle2D> tel_cfg{20.f * unit<scalar>::mm,
-                                                    20.f * unit<scalar>::mm};
+  tel_det_config<test_algebra, rectangle2D> tel_cfg{
+      -20.f * unit<scalar>::mm, -20.f * unit<scalar>::mm,
+      20.f * unit<scalar>::mm, 20.f * unit<scalar>::mm};
   tel_cfg.positions(positions)
       .pilot_track(traj)
       .module_material(mat)
@@ -186,8 +187,9 @@ GTEST_TEST(detray_material, telescope_geometry_scattering_angle) {
   const scalar thickness = 100.f * unit<scalar>::cm;
 
   // Create telescope geometry
-  tel_det_config<test_algebra, rectangle2D> tel_cfg{2000.f * unit<scalar>::mm,
-                                                    2000.f * unit<scalar>::mm};
+  tel_det_config<test_algebra, rectangle2D> tel_cfg{
+      -2000.f * unit<scalar>::mm, -2000.f * unit<scalar>::mm,
+      2000.f * unit<scalar>::mm, 2000.f * unit<scalar>::mm};
   tel_cfg.positions(positions)
       .pilot_track(traj)
       .module_material(mat)
@@ -318,8 +320,9 @@ GTEST_TEST(detray_material, telescope_geometry_volume_material) {
   const auto module_mat = vacuum<scalar>();
 
   // Create telescope geometry
-  tel_det_config<test_algebra, rectangle2D> tel_cfg{50000.f * unit<scalar>::mm,
-                                                    50000.f * unit<scalar>::mm};
+  tel_det_config<test_algebra, rectangle2D> tel_cfg{
+      -50000.f * unit<scalar>::mm, -50000.f * unit<scalar>::mm,
+      50000.f * unit<scalar>::mm, 50000.f * unit<scalar>::mm};
   tel_cfg.positions(positions).pilot_track(traj).module_material(module_mat);
 
   std::vector<material<scalar>> vol_mats = {

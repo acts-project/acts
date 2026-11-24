@@ -32,6 +32,10 @@ BOOST_AUTO_TEST_CASE(test_surface_status_and_cmpwise_bound_state) {
   tester.test_multi_stepper_surface_status_update();
 }
 
+BOOST_AUTO_TEST_CASE(step_limit_after_first_component_on_surface) {
+  tester.test_step_limit_after_first_component_on_surface();
+}
+
 BOOST_AUTO_TEST_CASE(multi_eigen_vs_single_eigen) {
   tester.test_multi_stepper_vs_eigen_stepper();
 }

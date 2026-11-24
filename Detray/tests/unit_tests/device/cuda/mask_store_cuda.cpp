@@ -36,8 +36,8 @@ TEST(mask_store_cuda, mask_store) {
   ASSERT_TRUE(store.template empty<mask_id::e_single3D>());
   ASSERT_TRUE(store.template empty<mask_id::e_trapezoid2D>());
 
-  store.template emplace_back<mask_id::e_rectangle2D>(empty_context{}, 0u, 1.0f,
-                                                      2.0f);
+  store.template emplace_back<mask_id::e_rectangle2D>(empty_context{}, 0u,
+                                                      -1.0f, -2.0f, 1.0f, 2.0f);
   store.template emplace_back<mask_id::e_trapezoid2D>(empty_context{}, 0u, 0.5f,
                                                       1.5f, 4.0f, 1.f / 8.f);
   store.template emplace_back<mask_id::e_ring2D>(empty_context{}, 0u, 1.0f,

@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
         std::set<std::pair<double, double>> fourSeedPars{};
         for (const auto ambi : {LL, RL, LR, RR}) {
           const auto pars =
-              Seeder::constructTangentLine(topTube, bottomTube, ambi);
+              Seeder::constructTangentSeed(topTube, bottomTube, ambi);
 
           const bool isTruePars =
               Acts::abs(std::tan(pars.theta) - lineTanBeta) < tolerance &&
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
         BOOST_CHECK_EQUAL(seenTruePars, true);
         BOOST_CHECK_EQUAL(fourSeedPars.size(), 4);
         const auto seedPars =
-            Seeder::constructTangentLine(topTube, bottomTube, trueAmbi);
+            Seeder::constructTangentSeed(topTube, bottomTube, trueAmbi);
         /// Construct line parameters
         ACTS_DEBUG(__func__
                    << "() " << __LINE__ << " - Line tan beta: " << lineTanBeta
@@ -200,6 +200,38 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
         BOOST_CHECK_CLOSE(seedPars.y0, lineY0, tolerance);
       }
     }
+  }
+}
+BOOST_AUTO_TEST_CASE(SeedRotatedTangents) {
+  using Seeder = CompositeSpacePointLineSeeder;
+  using SeedAux = CompSpacePointAuxiliaries;
+  Acts::AngleAxis3 rot{15._degree, Vector3{1., 1., 1.}.normalized()};
+  Vector3 wireDir = rot * Vector3::UnitX();
+  Vector3 toNextDir = rot * Vector3::UnitY();
+  FitTestSpacePoint tube1{Vector3{0., -60._cm, -50._cm}, wireDir, 5._cm,
+                          0.1_mm};
+  FitTestSpacePoint tube2{Vector3{0., 30._cm, 50._cm}, wireDir, 5._cm, 0.1_mm};
+  tube1.setToNextSensor(toNextDir);
+  tube2.setToNextSensor(toNextDir);
+  ACTS_INFO(tube1.toNextSensor().dot(tube1.sensorDirection())
+            << ", " << tube1.toNextSensor().dot(tube1.planeNormal()));
+
+  constexpr double tolerance = 1.e-6;
+  using enum Seeder::TangentAmbi;
+  ACTS_INFO(__LINE__ << " - Test space points: " << toString(tube1) << ", "
+                     << toString(tube2) << ", ");
+  for (const auto ambi : {LL, RL, LR, RR}) {
+    const auto seedPars = Seeder::constructTangentSeed(tube1, tube2, ambi);
+    ACTS_INFO(__LINE__ << " Seed parameters " << seedPars
+                       << ", ambi: " << ambi);
+    const auto [pos, dir] = Seeder::makeLineFromSeed(tube1, seedPars);
+    BOOST_CHECK_LE(std::abs(pos.z()), tolerance);
+    const double pull1 = SeedAux::chi2Term(pos, dir, tube1);
+    const double pull2 = SeedAux::chi2Term(pos, dir, tube2);
+    ACTS_INFO(__LINE__ << " - " << toString(pos) << ", " << toString(dir)
+                       << ", chi2: " << pull1 << "/" << pull2);
+    BOOST_CHECK_LE(std::abs(pull1), tolerance);
+    BOOST_CHECK_LE(std::abs(pull2), tolerance);
   }
 }
 }  // namespace ActsTests

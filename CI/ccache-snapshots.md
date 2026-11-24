@@ -13,11 +13,11 @@ and matrix variants. The original `linux_ubuntu/v1/` prefix is unchanged.
 Each new variant starts cold until its first main publication.
 
 Restore and publish remain explicit so jobs retain saves after failures and
-before later tests. LCG nightly only publishes after a successful configure.
+before later tests. Cancelled jobs skip cleanup and publication. LCG nightly only publishes after a successful configure.
 Cleanup and statistics run where ccache is available: the job container, sourced
 LCG/Key4hep view, EIC Docker container, or wheel build environment. Wheels clean
 before tests; failures before that point rely on ccache's automatic size cleanup.
-Cache limits are 500 MB, with 1 GB for `linux_ubuntu`, Analysis, Detray
+Cache limits are 2 GB, with 4 GB for `linux_ubuntu`, Analysis, Detray
 container CPU Debug, and Traccc Debug/RelWithDebInfo builds.
 Traccc CUDA Debug caches only C++ compilation so its PTX check still gets
 fresh intermediate files; other CUDA and HIP builds also cache device compilation.
@@ -26,7 +26,14 @@ Publication uploads an immutable tar, then updates `latest.json`. There is no
 extra concurrency group; overlapping uploads may leave an older valid snapshot
 as latest. Restores verify checksums and extract into staging. Transfer failures
 are nonfatal. Entries are already compressed, so the tar is uncompressed. The
-existing 30-day S3 lifecycle applies to snapshots and pointers.
+nightly `ccache cleanup` workflow deletes non-latest archives without an age
+grace period, preserving each variant's `latest.json` and its archive. Manual
+runs default to dry-run. Missing/invalid pointers skip that variant and fail the
+cleanup job; deletion failures also fail the job. Credentials need S3 list and
+delete access. Logs and the job summary report deleted and retained space.
+A concurrent restore may lose its archive and fall back to a cold build.
+Remove the existing S3 expiration rule after verifying cleanup, so it cannot
+expire a rarely used variant's latest archive or pointer.
 
 Compare GitHub's restore, build, and publish step durations and ccache statistics.
 Do not set `CCACHE_BASEDIR`: path rewriting breaks source-path FPE masks.

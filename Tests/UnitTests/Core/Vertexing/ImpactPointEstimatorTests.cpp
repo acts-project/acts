@@ -501,6 +501,19 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
 
   // Check 3D sign (should be positive)
   BOOST_CHECK_GT((*sign3d), 0.);
+
+  // A vertex ahead of the track is reached too
+  Vector4 aheadPos = ip_pos;
+  aheadPos.head<3>() = track.position(geoContext) + 10_mm * track.direction();
+  Vertex aheadVtx(aheadPos, makeVertexCovariance(), {});
+  BOOST_CHECK(ipEstimator
+                  .getLifetimeSignOfTrack(track, aheadVtx, direction,
+                                          geoContext, magFieldContext)
+                  .ok());
+  BOOST_CHECK(ipEstimator
+                  .get3DLifetimeSignOfTrack(track, aheadVtx, direction,
+                                            geoContext, magFieldContext)
+                  .ok());
 }
 
 // Check `.getImpactParameters`.

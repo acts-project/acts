@@ -14,6 +14,8 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/FunctionComposition.hpp"
 
 namespace Acts {
@@ -694,6 +696,30 @@ BlueprintBuilder<BackendT>::barrelEndcap() const
   requires(detail::HasBarrelEndcapClassifier<BackendT>)
 {
   return BarrelEndcapAssembler(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+std::shared_ptr<StaticBlueprintNode>
+BlueprintBuilder<BackendT>::makePassiveElement(
+    const Element& element, const std::string& volumeName) const
+  requires(detail::HasPassiveVolume<BackendT>)
+{
+  const std::string name =
+      volumeName.empty() ? m_backend.nameOf(element) : volumeName;
+  return std::make_shared<StaticBlueprintNode>(
+      std::make_unique<TrackingVolume>(m_backend.passiveVolume(element), name));
+}
+
+template <detail::BlueprintBackend BackendT>
+std::shared_ptr<StaticBlueprintNode>
+BlueprintBuilder<BackendT>::makeMaterialCollector(
+    double rMin, double rMax, double halfLengthZ, double zCenter,
+    const std::string& name) const {
+  auto volumeBounds =
+      std::make_shared<CylinderVolumeBounds>(rMin, rMax, halfLengthZ);
+  const Transform3 transform{Translation3(0., 0., zCenter)};
+  auto volume = std::make_unique<TrackingVolume>(transform, volumeBounds, name);
+  return std::make_shared<StaticBlueprintNode>(std::move(volume));
 }
 
 template <detail::BlueprintBackend BackendT>

@@ -9,6 +9,7 @@
 #include "ActsPlugins/DD4hep/BlueprintBuilder.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 // Needed for explicit instantiation of template methods.
 #include "Acts/Geometry/detail/BlueprintBuilder_impl.hpp"
@@ -17,6 +18,7 @@
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <stdexcept>
@@ -115,6 +117,19 @@ std::vector<std::shared_ptr<Acts::Surface>> DD4hepBackend::makeSurfaces(
 
   ACTS_DEBUG("Using " << sensitives.size() << " sensitive elements.");
 
+  // Hits are only recorded in sensitive volumes, so a surface built from any
+  // other volume (e.g. a passive module around the silicon) never gets one
+  const auto isPassive = [this](const Element& e) { return !isSensitive(e); };
+  if (const auto passive = std::ranges::find_if(sensitives, isPassive);
+      passive != sensitives.end()) {
+    ACTS_WARNING(std::ranges::count_if(sensitives, isPassive)
+                 << " of " << sensitives.size()
+                 << " sensor elements are not sensitive volumes (first: "
+                 << passive->path()
+                 << "), no hits will be found on their surfaces. Select the "
+                    "sensitive elements, e.g. with resolveSensitives.");
+  }
+
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   surfaces.reserve(sensitives.size());
 
@@ -186,6 +201,21 @@ std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makeBeampipe() const {
   auto volume = std::make_unique<Acts::TrackingVolume>(transform, volumeBounds,
                                                        beampipeElement->name());
   return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
+}
+
+Acts::Volume DD4hepBackend::passiveVolume(const Element& element) const {
+  auto volume = ActsPlugins::TGeoSurfaceConverter::cylinderVolume(
+      *element.placement().ptr()->GetVolume()->GetShape(),
+      element.nominal().worldTransformation(), m_cfg.lengthScale);
+  if (!volume.has_value()) {
+    ACTS_ERROR("Element '" << element.name()
+                           << "' shape could not be converted to either a "
+                              "cylinder or a disc.");
+    throw std::runtime_error(
+        "Passive element shape could not be converted to either a cylinder "
+        "or a disc.");
+  }
+  return *volume;
 }
 
 }  // namespace ActsPlugins::DD4hep

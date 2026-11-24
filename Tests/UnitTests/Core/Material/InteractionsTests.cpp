@@ -45,6 +45,52 @@ static const auto momentum = momentum_low + momentum_med + momentum_high;
 
 BOOST_AUTO_TEST_SUITE(interactions)
 
+// Check the derivatives against the functions they differentiate, including
+// non-relativistic beta and either side of the density correction threshold.
+BOOST_AUTO_TEST_CASE(energy_loss_derivatives) {
+  const MaterialSlab slab(material, 1_mm);
+  for (float m : {105.7_MeV, 938.3_MeV}) {
+    for (float betaGamma : {0.5f, 2.f, 5.f, 20.f, 100.f}) {
+      for (float q : {-2.f, -1.f, 1.f, 2.f}) {
+        const float qop = q / (m * betaGamma);
+        const float absQ = std::abs(q);
+        const float delta = std::abs(qop) * 1e-3f;
+        const auto check = [&](auto value, auto derivative) {
+          const double numerical =
+              (value(qop + delta) - value(qop - delta)) / (2 * delta);
+          // The material functions use float; scale the tolerance by the
+          // loss rather than by a derivative that can vanish at the minimum.
+          BOOST_CHECK_SMALL((derivative(qop) - numerical) * qop,
+                            3e-4 * std::abs(value(qop)));
+        };
+        check([&](float l) { return computeEnergyLossBethe(slab, m, l, absQ); },
+              [&](float l) {
+                return deriveEnergyLossBetheQOverP(slab, m, l, absQ);
+              });
+        check(
+            [&](float l) { return computeEnergyLossLandau(slab, m, l, absQ); },
+            [&](float l) {
+              return deriveEnergyLossLandauQOverP(slab, m, l, absQ);
+            });
+        check(
+            [&](float l) {
+              return computeEnergyLossMean(slab, eMuon, m, l, absQ);
+            },
+            [&](float l) {
+              return deriveEnergyLossMeanQOverP(slab, eMuon, m, l, absQ);
+            });
+        check(
+            [&](float l) {
+              return computeEnergyLossMode(slab, eMuon, m, l, absQ);
+            },
+            [&](float l) {
+              return deriveEnergyLossModeQOverP(slab, eMuon, m, l, absQ);
+            });
+      }
+    }
+  }
+}
+
 // consistency checks for the energy loss values
 BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness * particle * momentum,
                      x, i, m, q, p) {

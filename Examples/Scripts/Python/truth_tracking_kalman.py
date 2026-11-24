@@ -23,6 +23,7 @@ def runTruthTrackingKalman(
     reverseFilteringCovarianceScaling=100.0,
     numParticles=1,
     linkForward: bool = False,
+    referenceSurface: acts.Surface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
     useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
 ):
@@ -181,6 +182,7 @@ def runTruthTrackingKalman(
         reverseFilteringMomThreshold,
         reverseFilteringCovarianceScaling,
         linkForward=linkForward,
+        referenceSurface=referenceSurface,
         useJosephFormulation=useJosephFormulation,
         logLevel=acts.logging.INFO,
     )
@@ -271,4 +273,4 @@ if "__main__" == __name__:
 
     s.run()
 
-    vis.plot(projection="xy", filename="truth_tracking_kalman_visualization.pdf")
+    vis.plot(projection="xy", filename="truth_tracking_kalman_interpolation.pdf")

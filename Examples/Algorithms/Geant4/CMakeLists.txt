@@ -27,5 +27,9 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesGeant4
-    PUBLIC Acts::ExamplesDetectorsCommon Boost::headers ${Geant4_LIBRARIES}
+    PUBLIC
+        Acts::ExamplesDetectorsCommon
+        Acts::PluginGeant4
+        Boost::headers
+        ${Geant4_LIBRARIES}
 )

@@ -13,6 +13,8 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <stdexcept>
+
 #include <TTree.h>
 
 using namespace Acts;
@@ -111,6 +113,18 @@ void RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
   if (m_cfg.volumeInfo) {
     materialTree.Branch("vol_id", &m_volumePayload.volumeId);
   }
+}
+
+void RootMaterialTrackIo::write(std::uint32_t eventNum,
+                                const RecordedMaterialTrack& materialTrack) {
+  if (m_cfg.surfaceInfo) {
+    throw std::invalid_argument(
+        "RootMaterialTrackIo: writing surface information requires a geometry "
+        "context");
+  }
+  // The geometry context is only used to compute surface information
+  write(GeometryContext::dangerouslyDefaultConstruct(), eventNum,
+        materialTrack);
 }
 
 void RootMaterialTrackIo::write(const GeometryContext& gctx,

@@ -27,6 +27,7 @@
 #include <cassert>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace detray {
@@ -45,15 +46,21 @@ class grid_builder : public volume_decorator<detector_t> {
   using spatial_grid_t =
       std::conditional_t<concepts::surface_accelerator<grid_t>, grid_t,
                          spatial_grid_impl<grid_t>>;
-  using spatial_grid_owning_t = typename spatial_grid_t::template type<true>;
+  using spatial_grid_owning_t =
+      typename spatial_grid_t::template owning_type<true>;
 
  public:
+  /// Detector type whose volume and accelerator data this builder updates.
   using detector_type = detector_t;
+  /// Algebra backend used by the grid and detector.
   using algebra_type = typename detector_t::algebra_type;
+  /// Surface type stored as a grid value.
   using value_type = typename detector_type::surface_type;
+  /// Scalar type used for grid axes and coordinates.
   using scalar_type = dscalar<algebra_type>;
 
   /// Decorate a volume with a surface accelerator grid
+  /// @param vol_builder Volume builder that receives the grid accelerator.
   DETRAY_HOST
   explicit grid_builder(
       std::unique_ptr<volume_builder_interface<detector_t>> vol_builder)
@@ -68,6 +75,7 @@ class grid_builder : public volume_decorator<detector_t> {
   }
 
   /// Should the passive surfaces be added to the grid ?
+  /// @param is_add_passive True to include passive surfaces.
   void set_add_passives(bool is_add_passive = false) {
     m_add_passives = is_add_passive;
 
@@ -78,10 +86,12 @@ class grid_builder : public volume_decorator<detector_t> {
 
   /// Set the surface category this grid should contain (type id in the
   /// accelerator link in the volume descriptor)
+  /// @param sf_id Surface category identifier to associate with this grid.
   void set_type(std::size_t sf_id) { set_type(static_cast<link_id_t>(sf_id)); }
 
   /// Set the surface category this grid should contain (type id in the
   /// accelerator link in the volume descriptor)
+  /// @param sf_id Surface category identifier to associate with this grid.
   void set_type(link_id_t sf_id) {
     // Exclude zero, it is reserved for the brute force method
     assert(static_cast<int>(sf_id) > 0);
@@ -91,7 +101,16 @@ class grid_builder : public volume_decorator<detector_t> {
     m_id = sf_id;
   }
 
-  /// Delegate init call depending on @param span type
+  /// Set the radius of the virtual cylinder a cylinder grid is looked up on,
+  /// instead of deriving it from the portals of the volume
+  /// @param r Lookup radius.
+  void set_reference_radius(scalar_type r) { m_reference_radius = r; }
+
+  /// Initialize a grid from a shape mask and explicit binning parameters.
+  /// @param m Mask defining the grid's geometric bounds.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param ax_bin_edges Optional explicit edges for each axis.
   template <typename grid_shape_t>
   DETRAY_HOST void init_grid(
       const mask<grid_shape_t, algebra_type> &m,
@@ -119,6 +138,10 @@ class grid_builder : public volume_decorator<detector_t> {
   }
 
   /// Build the empty grid from axis parameters
+  /// @param spans Coordinate span for each grid axis.
+  /// @param n_bins Number of bins on each axis.
+  /// @param bin_capacities Optional capacities for local bins.
+  /// @param ax_bin_edges Optional explicit edges for each axis.
   DETRAY_HOST void init_grid(
       const std::vector<scalar_type> &spans,
       const std::vector<std::size_t> &n_bins,
@@ -141,6 +164,11 @@ class grid_builder : public volume_decorator<detector_t> {
 
   /// Fill grid from existing volume using a bin filling strategy
   /// This can also be called without a volume builder
+  /// @param det Detector providing surface and transform data.
+  /// @param vol Volume whose surfaces populate the grid.
+  /// @param ctx Geometry context used for transform lookup.
+  /// @param bin_filler Strategy used to populate bins.
+  /// @param args Additional arguments forwarded to the bin filler.
   template <typename volume_type, typename... Args>
   DETRAY_HOST void fill_grid(
       const detector_t &det, const volume_type &vol,
@@ -151,6 +179,13 @@ class grid_builder : public volume_decorator<detector_t> {
 
   /// Fill grid from externally provided surfaces - temporary solution until
   /// the volume builders can be deployed in the toy detector
+  /// @param vol Volume whose surfaces populate the grid.
+  /// @param surfaces Surfaces to consider for the grid.
+  /// @param transforms Transform store for the supplied surfaces.
+  /// @param masks Mask store for the supplied surfaces.
+  /// @param ctx Geometry context used for transform lookup.
+  /// @param bin_filler Strategy used to populate bins.
+  /// @param args Additional arguments forwarded to the bin filler.
   template <typename volume_type, typename surface_container_t,
             typename transform_container_t, typename mask_container_t,
             typename... Args>
@@ -162,11 +197,21 @@ class grid_builder : public volume_decorator<detector_t> {
     bin_filler(m_grid, vol, surfaces, transforms, masks, ctx, args...);
   }
 
-  /// Add the volume and the grid to the detector @param det
+  /// Add the volume and the grid to the detector @p det
+  /// @param det Detector receiving the grid.
+  /// @param opt Options controlling volume construction.
+  /// @param ctx Geometry context used for transform lookup.
+  /// @returns Pointer to the built volume.
   DETRAY_HOST
-  auto build(detector_t &det, typename detector_t::geometry_context ctx = {}) ->
+  auto build(detector_t &det, const volume_builder_options &opt,
+             typename detector_t::geometry_context ctx = {}) ->
       typename detector_t::volume_type * override {
     DETRAY_VERBOSE_HOST("Build surface grid...");
+
+    if (opt.deduplicate()) {
+      DETRAY_WARN_HOST(this->name()
+                       << ": Surface grid deduplication not yet implemented");
+    }
 
     DETRAY_VERBOSE_HOST(
         " -> Defer to other builders to get complete surface descriptors "
@@ -176,7 +221,7 @@ class grid_builder : public volume_decorator<detector_t> {
 
     // Add the surfaces (portals and/or passives) that are owned by the vol
     typename detector_t::volume_type *vol_ptr =
-        volume_decorator<detector_t>::build(det, ctx);
+        volume_decorator<detector_t>::build(det, opt, ctx);
 
     DETRAY_VERBOSE_HOST("Resume building with updated surface descriptors");
 
@@ -244,7 +289,9 @@ class grid_builder : public volume_decorator<detector_t> {
       }
 
       scalar_type grid_r{0.f};
-      if (!radii.empty()) {
+      if (m_reference_radius.has_value()) {
+        grid_r = *m_reference_radius;
+      } else if (!radii.empty()) {
         const scalar_type inner_r{*std::ranges::min_element(radii)};
         const scalar_type outer_r{*std::ranges::max_element(radii)};
 
@@ -292,6 +339,7 @@ class grid_builder : public volume_decorator<detector_t> {
   spatial_grid_owning_t m_grid{};
   bin_filler_t m_bin_filler{};
   bool m_add_passives{false};
+  std::optional<scalar_type> m_reference_radius{};
 };
 
 /// Grid builder from single components

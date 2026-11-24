@@ -18,8 +18,8 @@ namespace Acts {
 enum class SeedColumns : std::uint32_t {
   None = 0,  ///< No columns
 
-  SpacePointIndices =
-      1 << 0,        ///< Indices of space points associated with the seed
+  SpacePointIndices = 1
+      << 0,          ///< Indices of space points associated with the seed
   Quality = 1 << 1,  ///< Quality of the seed
   VertexZ = 1 << 2,  ///< Z coordinate of the vertex associated with
 

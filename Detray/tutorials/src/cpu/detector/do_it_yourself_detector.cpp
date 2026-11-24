@@ -16,7 +16,7 @@
 #include "detray/core/detector.hpp"
 #include "detray/definitions/geometry.hpp"
 #include "detray/definitions/units.hpp"
-#include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/json/detector_writer.hpp"
 
 // Example include(s)
 #include "detray/tutorial/detector_metadata.hpp"
@@ -45,6 +45,8 @@ int main() {
 
   // Host memory resource for container allocations
   vecmem::host_memory_resource host_mr;
+  // Configure the detector build process: data deduplication, sorting etc
+  const detray::volume_builder_options builder_opts{};
 
   detector_builder_t det_builder{};
   det_builder.set_name("tutorial_detector");
@@ -108,14 +110,15 @@ int main() {
 
   // Optional: Empty name map to be filled
   detector_t::name_map name_map{};
-  const auto det = det_builder.build(host_mr, name_map);
+  const auto det = det_builder.build(host_mr, builder_opts, name_map);
 
   // Write the detector to file
   auto writer_cfg = detray::io::detector_writer_config{}
                         .format(detray::io::format::json)
+                        .source("detray tutorial")
                         .replace_files(true);
 
   std::clog << writer_cfg << std::endl;
 
-  detray::io::write_detector(det, name_map, writer_cfg);
+  detray::io::write_detector_json(det, name_map, writer_cfg);
 }

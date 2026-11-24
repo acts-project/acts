@@ -12,6 +12,8 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -20,9 +22,11 @@
 #include "ActsFatras/Digitization/SurfaceDrift.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <memory>
 #include <string>
+#include <tuple>
 
 using namespace ActsFatras;
 using namespace Acts;
@@ -254,6 +258,55 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
   auto trnErr = psd.toReadout(tContext, *readoutSurface, thickness,
                               intersectionPositions[1u], localX, localY);
   BOOST_CHECK(!trnErr.ok());
+}
+
+BOOST_AUTO_TEST_CASE(CylinderSurfaceDriftChordLimit) {
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+  SurfaceDrift psd;
+
+  const double radius = 5.;
+  const double thickness = 0.02;
+  const double maxChord = 2. * std::sqrt(2. * radius * thickness);
+  auto cylinder = Surface::makeShared<CylinderSurface>(
+      Transform3::Identity(), std::make_shared<CylinderBounds>(radius, 100.));
+  auto plane = CurvilinearSurface(Vector3(radius, 0., 0.), Vector3::UnitX())
+                   .planeSurface();
+
+  const Vector3 position(radius, 0., 0.);
+  const Vector3 noDrift(0., 0., 0.);
+  auto pathLength = [&](const Surface& surface, const Vector3& dir,
+                        bool limit) {
+    auto [segment2D, segment3D] =
+        psd.toReadout(geoCtx, surface, thickness, position, dir, noDrift, limit)
+            .value();
+    return std::tuple{Vector3(segment3D[1] - segment3D[0]),
+                      Vector2(segment2D[1] - segment2D[0])};
+  };
+
+  // Almost tangential direction: unbounded path without the limit
+  const Vector3 grazing = Vector3(1e-5, 1., 0.5).normalized();
+  auto [free3D, free2D] = pathLength(*cylinder, grazing, false);
+  BOOST_CHECK_GT(free3D.norm(), 100. * maxChord);
+  auto [limited3D, limited2D] = pathLength(*cylinder, grazing, true);
+  CHECK_CLOSE_REL(limited3D.norm(), maxChord, 1e-12);
+  // the direction of the path is kept
+  CHECK_CLOSE_ABS(limited3D.normalized().dot(free3D.normalized()), 1., 1e-12);
+  CHECK_CLOSE_ABS(limited2D.normalized().dot(free2D.normalized()), 1., 1e-12);
+
+  // Paths shorter than the chord are unchanged
+  const Vector3 inclined = Vector3(1., 0.4, 0.3).normalized();
+  auto [inclinedFree, inclinedFree2D] = pathLength(*cylinder, inclined, false);
+  auto [inclinedLimited, inclinedLimited2D] =
+      pathLength(*cylinder, inclined, true);
+  BOOST_CHECK_LT(inclinedFree.norm(), maxChord);
+  BOOST_CHECK(inclinedFree == inclinedLimited);
+  BOOST_CHECK(inclinedFree2D == inclinedLimited2D);
+
+  // Plane surfaces are not affected
+  auto [planeFree, planeFree2D] = pathLength(*plane, grazing, false);
+  auto [planeLimited, planeLimited2D] = pathLength(*plane, grazing, true);
+  BOOST_CHECK(planeFree == planeLimited);
+  BOOST_CHECK(planeFree2D == planeLimited2D);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

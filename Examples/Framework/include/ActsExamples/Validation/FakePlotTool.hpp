@@ -21,8 +21,9 @@ namespace ActsExamples {
 
 /// Tools to make fake ratio plots.
 ///
-/// The fake ratio (formerly called fake rate) is evaluated on all reco tracks.
-/// A track is 'fake' if it's not matched with truth.
+/// The fake ratio is the fraction of reconstructed tracks classified as Fake.
+/// Tracks without matching information enter only the denominator.
+/// Reco-parameter plots require fitted parameters at a reference surface.
 class FakePlotTool {
  public:
   using AxisVariant = Acts::Experimental::AxisVariant;

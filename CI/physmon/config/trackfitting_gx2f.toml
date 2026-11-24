@@ -1,0 +1,71 @@
+[checks."*".Chi2Test]
+threshold = 0.01
+
+[checks."*".KolmogorovTest]
+threshold = 0.68
+
+[checks."*".RatioCheck]
+threshold = 3
+
+[checks."*".ResidualCheck]
+threshold = 3
+
+[checks."*".IntegralCheck]
+threshold = 3
+
+[checks."nStates_*".KolmogorovTest]
+disabled = true
+
+[checks."nMeasurements_*".KolmogorovTest]
+disabled = true
+
+[checks.pullmean_phi_vs_eta.IntegralCheck]
+threshold = 4
+
+[checks.pullmean_theta_vs_eta.IntegralCheck]
+disabled = true
+
+[checks.pullmean_z0_vs_eta.IntegralCheck]
+disabled = true
+
+[checks.pullwidth_phi_vs_eta.IntegralCheck]
+threshold = 4.3
+
+[checks.reswidth_d0_vs_eta.IntegralCheck]
+threshold = 4
+
+[checks.resmean_d0_vs_eta.IntegralCheck]
+threshold = 4
+
+[checks."pullwidth_*".Chi2Test]
+disabled = true
+
+[checks."pullwidth_*".KolmogorovTest]
+disabled = true
+
+[checks."pullmean_*".Chi2Test]
+disabled = true
+
+[checks."pullmean_*".KolmogorovTest]
+disabled = true
+
+[checks."reswidth_*".Chi2Test]
+disabled = true
+
+[checks."reswidth_*".KolmogorovTest]
+disabled = true
+
+[checks."resmean_*".Chi2Test]
+disabled = true
+
+[checks."resmean_*".KolmogorovTest]
+disabled = true
+
+# Case-sensitive globs against histogram keys; tags may overlap.
+[report.tags]
+"Track summary" = ["*nStates*", "*nMeasurements*", "*nHoles*", "*nOutliers*", "*nSharedHits*", "*nMajorityHits*"]
+"Residuals" = ["res_*", "resmean_*", "reswidth_*", "trk_res*", "resX", "resY", "resZ", "resT", "resSeed*"]
+"Pulls" = ["pull*", "trk_pull*"]
+"Resolution" = ["reswidth_*", "pullwidth_*"]
+"Bias" = ["resmean_*", "pullmean_*"]
+"Kinematics" = ["p", "pt", "p[xyz]", "eta", "phi", "m", "q", "*_vs_pT*", "*_vs_eta*", "*_vs_phi*"]

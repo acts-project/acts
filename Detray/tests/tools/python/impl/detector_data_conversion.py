@@ -338,7 +338,6 @@ def __mix_material(mat1, mat2):
     # 3: Z
     # 4: Mass density
     # 5: Molar densitty (unused)
-    # 6: @c material_state enum (solid, liquid, gaseous)
     params1 = mat1["material"]["params"]
     params2 = mat2["material"]["params"]
 

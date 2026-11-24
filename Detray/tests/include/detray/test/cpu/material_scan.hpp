@@ -109,7 +109,7 @@ class material_scan : public test::fixture_base<> {
 
   /// Run the ray scan
   void TestBody() override {
-    using track_material_t = material_validator::track_material<scalar_t>;
+    using track_material_t = material_validator::track_material;
 
     std::size_t n_tracks{0u};
     auto ray_generator = track_generator_t(m_cfg.track_generator());
@@ -156,8 +156,8 @@ class material_scan : public test::fixture_base<> {
            detray::views::enumerate(intersection_record)) {
         // Check whether this record has a successor
         if (i < intersection_record.size() - 1) {
-          const auto &current_intr = record.intersection;
-          const auto &next_intr = intersection_record[i + 1].intersection;
+          const auto &current_intr = record.intersection();
+          const auto &next_intr = intersection_record[i + 1].intersection();
 
           const bool is_same_intrs{next_intr == current_intr};
           const bool current_is_pt{current_intr.surface().is_portal()};
@@ -175,25 +175,26 @@ class material_scan : public test::fixture_base<> {
 
         // Don't count the last portal, because navigation terminates
         // before the material is counted
-        if (detail::is_invalid_value(record.intersection.volume_link())) {
+        if (detail::is_invalid_value(record.intersection().volume_link())) {
           continue;
         }
 
-        const auto sf = geometry::surface{m_det, record.intersection.surface()};
+        const auto sf =
+            geometry::surface{m_det, record.intersection().surface()};
 
         if (!sf.has_material()) {
           continue;
         }
 
-        const auto &p = record.intersection.local();
+        const auto &p = record.intersection().local();
         const auto mat_record =
             sf.template visit_material<material_validator::get_material_record>(
                 point2_t{p[0], p[1]}, cos_angle(m_gctx, sf, ray.dir(), p));
 
-        const scalar_t seg{mat_record.path};
-        const scalar_t t{mat_record.thickness};
-        const scalar_t mx0{mat_record.mat_X0};
-        const scalar_t ml0{mat_record.mat_L0};
+        const double seg{mat_record.path};
+        const double t{mat_record.thickness};
+        const double mx0{mat_record.mat_X0};
+        const double ml0{mat_record.mat_L0};
 
         if (mx0 > 0.f) {
           track_mat.sX0 += seg / mx0;

@@ -6,6 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
+
 // Local include(s).
 #include "../utils/global_index.hpp"
 #include "../utils/hip_error_handling.hpp"
@@ -23,7 +26,6 @@
 
 // System include(s).
 #include <cassert>
-#include <memory_resource>
 
 namespace traccc::hip {
 namespace kernels {
@@ -77,13 +79,13 @@ void silicon_pixel_spacepoint_formation_algorithm::scan_spacepoint_flags(
 // Set up the Thrust execution policy. Unfortunately this has to be done in
 // a backend specific way. :-(
 #if defined(__HIP_PLATFORM_AMD__)
-  auto policy =
-      thrust::hip::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream()));
+  auto policy = thrust::hip::par_nosync(
+                    stream_synchronizing_allocator(mr().main, stream()))
+                    .on(details::get_stream(stream()));
 #elif defined(__HIP_PLATFORM_NVIDIA__)
-  auto policy =
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream()));
+  auto policy = thrust::cuda::par_nosync(
+                    stream_synchronizing_allocator(mr().main, stream()))
+                    .on(details::get_stream(stream()));
 #else
 #error "Unrecognised HIP platform."
 #endif

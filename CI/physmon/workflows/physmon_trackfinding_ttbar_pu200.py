@@ -112,7 +112,7 @@ with tempfile.TemporaryDirectory() as temp:
             minPt=0.5 * u.GeV,
             impactMax=5 * u.mm,
         ),
-        SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
+        SeedFinderOptionsArg(bFieldInZ=setup.bFieldInZ, beamPos=(0.0, 0.0)),
         seedingAlgorithm=SeedingAlgorithm.GridTriplet,
         initialSigmas=[
             1 * u.mm,
@@ -205,6 +205,7 @@ with tempfile.TemporaryDirectory() as temp:
         outputTruthVertexMatching="amvf_grid_time_truth_vertex_matching",
         seeder=acts.examples.VertexSeedFinder.AdaptiveGridSeeder,
         useTime=True,
+        spatialBinExtent=30 * u.um,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_grid_time",
         writeTrackInfo=True,

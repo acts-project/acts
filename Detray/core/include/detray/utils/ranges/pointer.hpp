@@ -26,6 +26,7 @@ template <typename value_t>
 class pointer_view
     : public detray::ranges::view_interface<pointer_view<value_t>> {
  public:
+  /// Pointer iterator over the referenced element.
   using iterator_t = value_t*;
 
   /// Default constructor
@@ -94,10 +95,13 @@ namespace views {
 /// @brief interface type to construct a @c pointer_view with CTAD
 template <typename value_t>
 struct pointer : public detray::ranges::pointer_view<const value_t> {
+  /// Base implementation referencing one constant value.
   using base_type = detray::ranges::pointer_view<const value_t>;
 
   constexpr pointer() = default;
 
+  /// Construct a view referring to `value`.
+  /// @param value element whose lifetime must outlast the view
   template <typename deduced_value_t>
   DETRAY_HOST_DEVICE constexpr explicit pointer(deduced_value_t& value)
       : base_type(value) {}

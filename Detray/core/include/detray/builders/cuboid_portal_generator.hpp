@@ -71,6 +71,8 @@ class cuboid_portal_generator final
   DETRAY_HOST
   void push_back(
       surface_data<detector_t> && /*unused*/) override { /*Do nothing*/ }
+  /// Ignore inserted surfaces; this factory derives portals from the volume's
+  /// existing surfaces when invoked.
   DETRAY_HOST
   auto push_back(std::vector<surface_data<detector_t>> && /*unused*/)
       -> void override { /*Do nothing*/ }
@@ -83,6 +85,7 @@ class cuboid_portal_generator final
   /// @param transforms the transforms of the surfaces.
   /// @param masks the masks of the surfaces.
   /// @param ctx the geometry context (not needed for portals).
+  /// @returns The half-open range of newly appended portal surfaces.
   DETRAY_HOST
   auto operator()(typename detector_t::volume_type &volume,
                   typename detector_t::surface_lookup_container &surfaces,
@@ -167,8 +170,8 @@ class cuboid_portal_generator final
     } else {
       mask_link.set_index(mask_idx);
     }
-    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link, h_x,
-                                              h_y);
+    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link,
+                                              -h_x, -h_y, h_x, h_y);
 
     // No rotation, but shift in z for both faces
     vector3_t shift{static_cast<scalar_type>(0), static_cast<scalar_type>(0),
@@ -190,8 +193,8 @@ class cuboid_portal_generator final
     // ... x-z plane
     //
     mask_link.shift(1u);
-    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link, h_x,
-                                              h_z);
+    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link,
+                                              -h_x, -h_z, h_x, h_z);
 
     // Rotate by 90deg around x-axis, plus shift in y
     shift = {static_cast<scalar_type>(0),
@@ -216,8 +219,8 @@ class cuboid_portal_generator final
     // ... y-z plane
     //
     mask_link.shift(1u);
-    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link, h_z,
-                                              h_y);
+    masks.template emplace_back<rectangle_id>(empty_context{}, volume_link,
+                                              -h_z, -h_y, h_z, h_y);
 
     // Rotate by 90deg around y-axis, plus shift in x
     shift = {detail::is_invalid_value(h_x) ? max_shift : h_x,

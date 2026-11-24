@@ -39,11 +39,9 @@ void material_validation_device(
     typename detector_t::view_type det_view, const propagation::config &cfg,
     vecmem::data::vector_view<
         free_track_parameters<typename detector_t::algebra_type>> &tracks_view,
-    vecmem::data::vector_view<
-        material_validator::track_material<typename detector_t::scalar_type>>
+    vecmem::data::vector_view<material_validator::track_material>
         &track_mat_view,
-    vecmem::data::jagged_vector_view<
-        material_record<typename detector_t::scalar_type>> &mat_steps_view);
+    vecmem::data::jagged_vector_view<material_record> &mat_steps_view);
 
 /// Prepare data for device material trace run
 struct run_material_validation {
@@ -57,10 +55,9 @@ struct run_material_validation {
           free_track_parameters<typename detector_t::algebra_type>> &tracks,
       const std::vector<std::size_t> &capacities) {
     using algebra_t = typename detector_t::algebra_type;
-    using scalar_t = dscalar<algebra_t>;
     using track_t = free_track_parameters<algebra_t>;
-    using material_record_t = material_record<scalar_t>;
-    using track_material_t = material_validator::track_material<scalar_t>;
+    using material_record_t = material_record;
+    using track_material_t = material_validator::track_material;
 
     // Helper object for performing memory copies (to CUDA devices)
     vecmem::cuda::copy cuda_cpy;

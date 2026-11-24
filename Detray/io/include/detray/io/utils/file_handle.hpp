@@ -44,7 +44,9 @@ class file_handle final {
   /// All writers must define a file name
   file_handle() = delete;
 
-  /// File gets created with a @param name and @param extension
+  /// Open the file at the supplied path.
+  /// @param file_name complete file path
+  /// @param mode stream open mode
   explicit file_handle(const std::string& file_name,
                        std::ios_base::openmode mode = std::ios_base::in |
                                                       std::ios_base::out)
@@ -52,7 +54,10 @@ class file_handle final {
                         std::filesystem::path{file_name}.stem(),
                     std::filesystem::path{file_name}.extension(), mode) {}
 
-  /// File gets created with a @param name and @param extension
+  /// File gets created with a @p name and @p extension
+  /// @param name file path without its extension
+  /// @param extension file extension, including its leading dot
+  /// @param mode stream open mode
   file_handle(const std::string& name, const std::string& extension,
               std::ios_base::openmode mode = std::ios_base::in |
                                              std::ios_base::out) {

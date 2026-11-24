@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   const Vector2 unitZ{0., 1.};
   const Vector2 unitR{1., 0.};
   const BoundaryTolerance tolerance = BoundaryTolerance::AbsoluteEuclidean(0.1);
-  // This fails because the bounds are not inclusive.
-  BOOST_CHECK(!lineBoundsObject.inside(atRadius, tolerance));
+  // On the boundary, so inside within the tolerance
+  BOOST_CHECK(lineBoundsObject.inside(atRadius, tolerance));
   BOOST_CHECK(!lineBoundsObject.inside(beyondEnd, tolerance));
   BOOST_CHECK(lineBoundsObject.inside(unitZ, tolerance));
   BOOST_CHECK(!lineBoundsObject.inside(unitR, tolerance));

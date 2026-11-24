@@ -8,12 +8,14 @@
 
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+
+#include <cstdint>
+#include <optional>
 
 #pragma once
 
 namespace Acts {
-
-class SurfaceArray;
 
 /// A navigation policy that internally uses the Gen1 @c SurfaceArray class
 class SurfaceArrayNavigationPolicy : public INavigationPolicy {
@@ -38,6 +40,13 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
     /// Envelope added to the ProtoLayer extent when computing the surface-array
     /// lookup tolerance.
     ExtentEnvelope envelope = ExtentEnvelope::Zero();
+    /// Bounds on the neighbor window of the surface array, in bins along the
+    /// local axes of the layer type. If not set, the surface array creator
+    /// uses its default for the layer type.
+    std::optional<SurfaceArray::NeighborWindow> neighborWindow = std::nullopt;
+    /// Extra cells per direction and axis that each surface fills around its
+    /// footprint in the surface array.
+    std::uint8_t overfill = 0;
   };
 
   /// Main constructor, which internally creates the surface array acceleration

@@ -9,51 +9,19 @@ if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting default build type: ${CMAKE_BUILD_TYPE}")
 endif()
 
-set(cxx_flags
-    "-Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast -Woverloaded-virtual"
-)
+# Warning flags are applied per directory by ActsWarningFlags.cmake.
+set(cxx_flags "")
 
-# Add assertions to standard libraries
-if(ACTS_FORCE_ASSERTIONS)
-    set(cxx_flags "${cxx_flags} -D_GLIBCXX_ASSERTIONS -D_LIBCPP_DEBUG")
-endif()
-
-# This adds some useful conversion checks like float-to-bool, float-to-int, etc.
-# However, at the moment this is only added to clang builds, since GCC's -Wfloat-conversion
-# is much more aggressive and also triggers on e.g., double-to-float
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(cxx_flags "${cxx_flags} -Wfloat-conversion")
-    # __COUNTER__ is classified as a C2y extension in Clang 22+.
-    # Third-party generated code (podio, Boost.Test, etc.) relies on it.
-    include(CheckCXXCompilerFlag)
-    check_cxx_compiler_flag("-Wno-c2y-extensions" _acts_has_wno_c2y)
-    if(_acts_has_wno_c2y)
-        set(cxx_flags "${cxx_flags} -Wno-c2y-extensions")
-    endif()
-endif()
-
-# -Wnull-dereference gets applied to -isystem includes in GCC13,
-# which causes lots of warnings in code we have no control over
-if(
-    CMAKE_CXX_COMPILER_ID MATCHES "Clang"
-    OR (
-        CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
-        AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 12
-    )
-)
-    set(cxx_flags "${cxx_flags} -Wnull-dereference")
-endif()
-
-set(ACTS_CXX_STANDARD 20)
-set(ACTS_CXX_STANDARD_FEATURE cxx_std_20)
+set(ACTS_CXX_STANDARD 23)
+set(ACTS_CXX_STANDARD_FEATURE cxx_std_23)
 if(DEFINED CMAKE_CXX_STANDARD)
-    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
+    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 23)
         set(ACTS_CXX_STANDARD ${CMAKE_CXX_STANDARD})
         set(ACTS_CXX_STANDARD_FEATURE "cxx_std_${CMAKE_CXX_STANDARD}")
     else()
         message(
             SEND_ERROR
-            "CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}, but ACTS requires C++ >=20"
+            "CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}, but ACTS requires C++ >=23"
         )
     endif()
 endif()
@@ -79,18 +47,19 @@ set(CMAKE_MACOSX_RPATH 1)
 # were not in the default library directories
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-message(CHECK_START "Checking C++20 std::format support")
+message(CHECK_START "Checking std::format support")
 try_compile(
     HAVE_STDFORMAT
     SOURCES ${PROJECT_SOURCE_DIR}/cmake/src/format.cpp
-    CXX_STANDARD 20
+    CXX_STANDARD ${ACTS_CXX_STANDARD}
+    CXX_STANDARD_REQUIRED ON
 )
 
 if(NOT HAVE_STDFORMAT)
     message(CHECK_FAIL "missing")
     message(
         SEND_ERROR
-        "C++20 std::format support is required, "
+        "std::format support is required, "
         "but not available in this compiler"
     )
 else()

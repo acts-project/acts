@@ -368,6 +368,7 @@ inline std::pair<Acts::BoundTrackParameters, double> transportFreely(
 }
 
 /// Propagate the initial parameters to the target surface.
+///
 template <typename propagator_t,
           typename options_t = typename propagator_t::template Options<>>
 inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
@@ -505,10 +506,16 @@ inline void runToSurfaceComparisonTest(
 
   // propagate twice to the surface using the two different propagators
   // increase path length limit to ensure the surface can be reached
-  auto [cmpParams, cmpPath] = transportToSurface<cmp_propagator_t>(
-      cmpPropagator, geoCtx, magCtx, initialParams, *surface, 1.5 * pathLength);
-  auto [refParams, refPath] = transportToSurface<ref_propagator_t>(
-      refPropagator, geoCtx, magCtx, initialParams, *surface, 1.5 * pathLength);
+  auto [cmpParams, cmpPath] =
+      transportToSurface<cmp_propagator_t,
+                         typename cmp_propagator_t::template Options<>>(
+          cmpPropagator, geoCtx, magCtx, initialParams, *surface,
+          1.5 * pathLength);
+  auto [refParams, refPath] =
+      transportToSurface<ref_propagator_t,
+                         typename ref_propagator_t::template Options<>>(
+          refPropagator, geoCtx, magCtx, initialParams, *surface,
+          1.5 * pathLength);
   // check parameter comparison
   checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsTime,
                              epsDir, epsMom);

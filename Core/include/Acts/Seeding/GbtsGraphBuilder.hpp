@@ -1,0 +1,234 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/GbtsNodeStorage.hpp"
+#include "Acts/Seeding/GbtsRoiDescriptor.hpp"
+#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+#include <cstdint>
+#include <memory>
+#include <span>
+#include <utility>
+#include <vector>
+
+namespace Acts::Experimental {
+
+/// The doublet graph of the GBTS workflow, as built by `GbtsGraphBuilder`.
+struct GbtsGraph {
+  /// The graph edges, i.e. the doublets.
+  std::vector<detail::GbtsEdge> edgeStorage;
+
+  /// The inner neighbours of edge `e` are `neighbours[neighbourOffsets[e]]` up
+  /// to, not including, `neighbours[neighbourOffsets[e + 1]]`, in the order
+  /// they were linked.
+  std::vector<std::uint32_t> neighbourOffsets;
+  /// Inner neighbour edges of all edges, see `neighbourOffsets`.
+  std::vector<std::uint32_t> neighbours;
+
+  /// The inner neighbour edges of an edge
+  /// @param edge Index of the edge in `edgeStorage`
+  /// @return The indices of its inner neighbours
+  std::span<const std::uint32_t> innerNeighbours(std::uint32_t edge) const {
+    return std::span(neighbours)
+        .subspan(neighbourOffsets[edge],
+                 neighbourOffsets[edge + 1] - neighbourOffsets[edge]);
+  }
+};
+
+/// Builds the doublet graph of the GBTS workflow.
+///
+/// Turns a finalized `GbtsNodeStorage` into a graph whose edges are doublets
+/// and whose links are the doublet pairs that a triplet cut accepted.
+/// `GraphBasedTrackSeeder` follows the best fitted path along those links
+/// from every edge to produce seeds.
+///
+/// The phi binning is the node storage's, so the sliding windows and the
+/// indexing they slide over cannot disagree.
+class GbtsGraphBuilder {
+ public:
+  /// Config for the prompt graph
+  struct Config {
+    /// Match seeds before creating them.
+    bool matchBeforeCreate = false;
+
+    /// Optional validation for barrel triplets.
+    bool validateTriplets = true;
+
+    /// Tau ratio scale of the `validateTriplets` high-pT check. The linking cut
+    /// comes from the layer pairs, see `GbtsLayerConnection`.
+    float tauRatioCut = 0.007f;
+
+    /// Tau ratio precut threshold.
+    float tauRatioPrecut = 0.009f;
+
+    /// Minimum transverse momentum.
+    float minPt = 1.0f * Acts::UnitConstants::GeV;
+
+    /// Fraction of `minPt` a triplet may fall to, allowing for three-point
+    /// pT resolution.
+    float tripletPtFraction = 0.8f;
+
+    // Graph-building options
+
+    /// Use eta binning from geometry structure.
+    bool useEtaBinning = true;
+
+    /// Apply RZ cuts on doublets.
+    bool doubletFilterRZ = true;
+
+    /// Maximum number of GBTS edges/doublets per space point.
+    float maxEdgesPerSP = 30.0f;
+
+    /// Leave out edges whose chain cannot grow beyond the edge itself, too
+    /// short for a seed. An edge of an inner bin that no connection leads into
+    /// is never extended inwards, so it is kept only if it links to an outer
+    /// edge, and outer nodes without edges are not tried for it. The seeds are
+    /// unchanged unless the edge array reaches `maxEdgesPerSP`.
+    bool dropDeadEnds = true;
+
+    /// Minimum delta radius between layers.
+    float minDeltaRadius = 2.0f * Acts::UnitConstants::mm;
+
+    /// Largest |cot(theta)| accepted for a doublet. The default corresponds to
+    /// |eta| of about 4.3, beyond the acceptance of any current tracker.
+    float maxAbsTau = 36.0f;
+
+    /// Maximum d0 impact parameter when validating an edge-connection triplet.
+    float d0Max = 3.0f * Acts::UnitConstants::mm;
+
+    /// Maximum difference in allowed tangent between candidate edge
+    /// connections.
+    float cutDPhiMax = 0.012f;
+
+    /// Maximum allowed curvature tolerance for candidate edge connections.
+    float cutDCurvMax = 0.001f;
+
+    /// Reject a candidate edge connection whose tau ratio, phi and curvature
+    /// differences, each divided by its own cut, add up to more than
+    /// `sumRatioCutMax`: a pair that is marginal in all three at once.
+    bool useSumRatioCut = false;
+
+    /// Threshold of the summed ratios, between 1 (only one difference
+    /// can use its full cut) and 3 (no effect beyond the individual cuts).
+    float sumRatioCutMax = 1.3f;
+
+    /// pT at which the default cut coefficients were tuned; they scale by
+    /// `tuningPt / minPt`.
+    float tuningPt = 0.9f * Acts::UnitConstants::GeV;
+
+    /// Maximum |curvature| above `curvatureSplitAbsTau`, before that scaling.
+    float maxCurvatureHighEta = 4.75e-4f / Acts::UnitConstants::mm;
+
+    /// Maximum |curvature| below `curvatureSplitAbsTau`, before that scaling.
+    float maxCurvatureLowEta = 3.75e-4f / Acts::UnitConstants::mm;
+
+    /// |cot(theta)| separating the two curvature cuts, corresponding to |eta|
+    /// of about 2.1.
+    float curvatureSplitAbsTau = 4.0f;
+
+    /// Radial separation splitting the two phi-window slopes below.
+    float phiWindowSplitDeltaRadius = 60.0f * Acts::UnitConstants::mm;
+
+    /// Phi window below `phiWindowSplitDeltaRadius`, as an offset plus a slope
+    /// times the radial separation.
+    float phiWindowNearOffset = 0.002f;
+
+    /// Slope of the near phi window per unit radial separation. Scaled by
+    /// `tuningPt / minPt`.
+    float phiWindowNearSlope = 4.33e-4f / Acts::UnitConstants::mm;
+
+    /// Phi window above `phiWindowSplitDeltaRadius`, in the same form.
+    float phiWindowFarOffset = 0.015f;
+
+    /// Slope of the far phi window per unit radial separation. Scaled by
+    /// `tuningPt / minPt`.
+    float phiWindowFarSlope = 2.2e-4f / Acts::UnitConstants::mm;
+
+    /// Incoming edge count below which a node is accepted without a tau match.
+    std::uint32_t matchBeforeCreateMaxEdges = 2;
+
+    /// Highest pixel barrel layer, counted inside out, whose nodes are cut
+    /// against the z0 histogram of their outer neighbourhood and whose isolated
+    /// nodes are skipped. A negative value disables the cut.
+    std::int32_t z0HistogramMaxBarrelOrder = 0;
+
+    /// Highest pixel barrel layer, counted inside out, to which
+    /// `matchBeforeCreate` applies when it is enabled. A negative value
+    /// disables it.
+    std::int32_t matchBeforeCreateMaxBarrelOrder = 1;
+
+    /// Leave out edges and outer nodes that cannot be on a chain long enough
+    /// for a seed, see `buildTheGraph`.
+    bool pruneShortChains = false;
+
+    /// Half-width of the z0 window against which a node is matched in the
+    /// histogram.
+    float z0Resolution = 2.5f * Acts::UnitConstants::mm;
+
+    /// Maximum radius of the pixel detector.
+    float maxOuterRadius = 550.0f;
+
+    /// Resolve a doublet's strip endpoints against its own direction before
+    /// cutting on them. Nothing is written back; the correction belongs to the
+    /// pair.
+    bool calibrateStrips = true;
+
+    /// How far along a strip a crossing may land and still be recovered, as a
+    /// multiple of the strip half-length, so 1 is the strip itself. This is the
+    /// same quantity as `TripletSeedFinder::Config::toleranceParam`.
+    float maxStripLengthFraction = 1.1f;
+  };
+
+  /// @param config Configuration for the graph
+  /// @param geometry GBTS geometry
+  /// @param logger Logging instance
+  GbtsGraphBuilder(const Config& config,
+                   std::shared_ptr<const GbtsGeometry> geometry,
+                   std::unique_ptr<const Acts::Logger> logger =
+                       Acts::getDefaultLogger("GbtsGraphBuilder",
+                                              Acts::Logging::Level::INFO));
+
+  /// Access the configuration.
+  /// @return The configuration
+  const Config& config() const { return m_cfg; }
+
+  /// Build doublet graph from nodes.
+  /// @param roi Region of interest descriptor
+  /// @param nodeStorage Data storage containing nodes
+  /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
+  /// @param minEdgeLevel The level a chain needs to be a seed, for
+  ///        `pruneShortChains`; 0 for no pruning
+  /// @return The graph, with its edges and the links between them
+  GbtsGraph buildTheGraph(const GbtsRoiDescriptor& roi,
+                          GbtsNodeStorage& nodeStorage, float bFieldInZ,
+                          std::uint32_t minEdgeLevel = 0) const;
+
+ private:
+  Config m_cfg;
+
+  std::shared_ptr<const GbtsGeometry> m_geometry;
+
+  /// Per eta bin, whether a connection leads into it from an inner bin.
+  std::vector<bool> m_binHasInnerLink;
+
+  /// Per eta bin, the most connection steps a chain can still go further in,
+  /// saturated.
+  std::vector<std::uint32_t> m_binInnerSteps;
+
+  std::unique_ptr<const Acts::Logger> m_logger;
+
+  const Acts::Logger& logger() const { return *m_logger; }
+};
+
+}  // namespace Acts::Experimental

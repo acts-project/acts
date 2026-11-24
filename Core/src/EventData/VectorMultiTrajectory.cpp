@@ -238,6 +238,14 @@ void VectorMultiTrajectory::clear_impl() {
   }
 }
 
+void detail_vmt::VectorMultiTrajectoryBase::ensureDynamicColumns_impl(
+    const VectorMultiTrajectoryBase& other) {
+  for (const auto& [key, column] : other.m_dynamic) {
+    if (m_dynamic.find(key) == m_dynamic.end()) {
+      m_dynamic.emplace(key, column->clone(true));
+    }
+  }
+}
 void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
     std::ostream& os, std::size_t n) {
   using namespace boost::histogram;
@@ -306,5 +314,4 @@ void VectorMultiTrajectory::copyDynamicFrom_impl(IndexType dstIdx,
 
   it->second->copyFrom(dstIdx, srcPtr);
 }
-
 }  // namespace Acts

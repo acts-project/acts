@@ -22,6 +22,7 @@
 namespace Acts {
 
 class Surface;
+class TrackingVolume;
 
 /// The NavigationStream is a container for the navigation candidates that
 /// are currentlu processed in a given context. The context could be local to a
@@ -40,6 +41,8 @@ class NavigationStream {
     Vector3 position = Vector3::Zero();
     /// The direction of the query point
     Vector3 direction = Vector3::Zero();
+    /// Global geometric curvature used for local crossing estimates
+    Vector3 curvature = Vector3::Zero();
   };
 
   /// Switch to next next candidate
@@ -113,6 +116,14 @@ class NavigationStream {
   /// @param portal the portals that are filled in
   void addPortalCandidate(const Portal& portal);
 
+  /// Fill one portal into the candidate vector, intersected through a
+  /// different surface
+  ///
+  /// @param portal the portal that is filled in
+  /// @param representation the surface to intersect instead of the portal
+  ///        surface, e.g. the portal clipped to one volume face
+  void addPortalCandidate(const Portal& portal, const Surface& representation);
+
   /// Initialize the stream from a query point
   ///
   /// @param gctx is the geometry context
@@ -178,7 +189,10 @@ class AppendOnlyNavigationStream {
  public:
   /// Constructor from navigation stream reference
   /// @param stream Navigation stream to append to
-  explicit AppendOnlyNavigationStream(NavigationStream& stream);
+  /// @param volume Volume the candidates are resolved in. Portal candidates
+  ///        are clipped to its faces if given.
+  explicit AppendOnlyNavigationStream(NavigationStream& stream,
+                                      const TrackingVolume* volume = nullptr);
   /// Add a surface candidate to the stream
   /// @param surface The surface to add
   /// @param bTolerance Boundary tolerance for the surface
@@ -190,6 +204,7 @@ class AppendOnlyNavigationStream {
 
  private:
   NavigationStream* m_stream;
+  const TrackingVolume* m_volume;
 };
 
 }  // namespace Acts

@@ -22,16 +22,22 @@
 #include "detray/tracks/tracks.hpp"
 
 namespace detray {
+/// Optional capabilities enabled in an RK stepper.
 enum class rk_stepper_flags : std::uint32_t {
+  /// Allow transport of the track covariance.
   e_allow_covariance_transport = 1,
+  /// Allow use of magnetic-field gradients in Jacobian transport.
   e_allow_field_gradient = 2,
 };
 
 /// Runge-Kutta-Nystrom 4th order stepper implementation
 ///
 /// @tparam magnetic_field_t the type of magnetic field
-/// @tparam track_t the type of track that is being advanced by the stepper
-/// @tparam constraint_ the type of constraints on the stepper
+/// @tparam algebra_t algebra backend used for track calculations
+/// @tparam constraint_t constraints applied to the step size
+/// @tparam policy_t policy used to update navigation trust
+/// @tparam inspector_t optional stepping inspector
+/// @tparam flags_v bitmask of enabled stepper capabilities
 template <typename magnetic_field_t, concepts::algebra algebra_t,
           typename constraint_t = unconstrained_step<dscalar<algebra_t>>,
           typename policy_t = stepper_rk_policy<dscalar<algebra_t>>,
@@ -47,22 +53,33 @@ class rk_stepper final
       base_stepper<algebra_t, constraint_t, policy_t, inspector_t>;
 
  public:
+  /// True when field-gradient terms are available for transport.
   static constexpr bool uses_gradient = static_cast<bool>(
       flags_v &
       static_cast<std::uint32_t>(rk_stepper_flags::e_allow_field_gradient));
 
+  /// Algebra backend used by this stepper.
   using algebra_type = algebra_t;
+  /// Scalar type associated with the algebra backend.
   using scalar_type = dscalar<algebra_t>;
+  /// Three-dimensional point type.
   using point3_type = dpoint3D<algebra_t>;
+  /// Three-dimensional vector type.
   using vector3_type = dvector3D<algebra_t>;
+  /// Three-dimensional transform type.
   using transform3_type = dtransform3D<algebra_t>;
+  /// Free track parameter type advanced by the stepper.
   using free_track_parameters_type =
       typename base_type::free_track_parameters_type;
+  /// Bound track parameter type accepted by the stepper.
   using bound_track_parameters_type =
       typename base_type::bound_track_parameters_type;
+  /// Magnetic field representation used by the stepper.
   using magnetic_field_type = magnetic_field_t;
+  /// Matrix type with the requested dimensions.
   template <std::size_t ROWS, std::size_t COLS>
   using matrix_type = dmatrix<algebra_t, ROWS, COLS>;
+  /// Transport Jacobian representation selected by the flags.
   using transport_jacobian_type = std::conditional_t<
       uses_gradient,
       detail::transport_jacobian_matrix_with_gradient<algebra_type>,
@@ -70,31 +87,46 @@ class rk_stepper final
 
   rk_stepper() = default;
 
+  /// Intermediate values evaluated at the RK integration stages.
   struct intermediate_state {
+    /// Magnetic field at the first integration stage.
     vector3_type b_first{0.f, 0.f, 0.f};
+    /// Magnetic field at the two middle integration stages.
     vector3_type b_middle{0.f, 0.f, 0.f};
+    /// Magnetic field at the final integration stage.
     vector3_type b_last{0.f, 0.f, 0.f};
-    // t = tangential direction = dr/ds
+    /// t = tangential direction = dr/ds
     darray<vector3_type, 4u> t;
-    // q/p
+    /// q/p
     darray<scalar_type, 4u> qop;
-    // dt/ds = d^2r/ds^2 = q/p ( t X B )
+    /// dt/ds = d^2r/ds^2 = q/p ( t X B )
     darray<vector3_type, 4u> dtds;
-    // d(q/p)/ds
+    /// d(q/p)/ds
     darray<scalar_type, 4u> dqopds;
   };
 
+  /// Per-track integration state maintained by the stepper.
   struct state : public base_type::template state<transport_jacobian_type> {
+    /// Identifier for Runge-Kutta stepping.
     static constexpr const stepping::id id = stepping::id::e_rk;
 
+    /// Base state holding common track and transport data.
     using base_state =
         typename base_type::template state<transport_jacobian_type>;
 
+    /// Construct from free parameters and a magnetic field.
+    /// @param t Initial free track parameters.
+    /// @param mag_field Magnetic field used for integration.
     DETRAY_HOST_DEVICE
     state(const free_track_parameters_type& t,
           const magnetic_field_t& mag_field)
         : base_state(t), m_magnetic_field(mag_field) {}
 
+    /// Construct from bound parameters, field, and detector geometry.
+    /// @param bound_params Initial bound track parameters.
+    /// @param mag_field Magnetic field used for integration.
+    /// @param det Detector used to resolve bound parameters.
+    /// @param ctx Geometry context for detector transforms.
     template <concepts::detector detector_t>
     DETRAY_HOST_DEVICE state(const bound_track_parameters_type& bound_params,
                              const magnetic_field_t& mag_field,
@@ -107,6 +139,7 @@ class rk_stepper final
     const magnetic_field_type& field() const { return m_magnetic_field; }
 
     /// Set the next step size
+    /// @param step Signed next step size.
     DETRAY_HOST_DEVICE
     inline void set_next_step_size(const scalar_type step) {
       assert(math::fabs(step) >= 1e-4f * unit<scalar_type>::mm);
@@ -118,6 +151,7 @@ class rk_stepper final
     inline scalar_type next_step_size() const { return m_next_step_size; }
 
     /// Evaluate dtds, where t is the unit tangential direction
+    /// @return Direction derivative at the current track state.
     DETRAY_HOST_DEVICE
     vector3_type dtds() const {
       // In case there was no step before
@@ -141,10 +175,13 @@ class rk_stepper final
     }
 
     /// Set dtds, where t is the unit tangential direction
+    /// @param v Direction derivative.
     DETRAY_HOST_DEVICE
     void dtds(const vector3_type& v) { m_dtds_3 = v; }
 
     /// Evaluate d(qop)/ds
+    /// @param vol_mat_ptr Material in the current volume, or null in vacuum.
+    /// @return Derivative of charge-over-momentum with path length.
     DETRAY_HOST_DEVICE
     scalar_type dqopds(const material<scalar_type>* vol_mat_ptr) const {
       // In case there was no step before
@@ -155,6 +192,10 @@ class rk_stepper final
       return m_dqopds_3;
     }
 
+    /// Evaluate the charge-over-momentum derivative at a supplied value.
+    /// @param qop Charge-over-momentum at which to evaluate.
+    /// @param vol_mat_ptr Material in the current volume, or null in vacuum.
+    /// @return Derivative of charge-over-momentum with path length.
     DETRAY_HOST_DEVICE
     scalar_type dqopds(const scalar_type qop,
                        const material<scalar_type>* vol_mat_ptr) const {
@@ -188,9 +229,13 @@ class rk_stepper final
     }
 
     /// Set d(qop)/ds
+    /// @param s Derivative value.
     DETRAY_HOST_DEVICE void dqopds(const scalar_type& s) { m_dqopds_3 = s; }
 
     /// Evaluate d(d(qop)/ds)dqop
+    /// @param qop Charge-over-momentum at which to evaluate.
+    /// @param vol_mat_ptr Material in the current volume, or null in vacuum.
+    /// @return Derivative of the charge-over-momentum derivative.
     DETRAY_HOST_DEVICE
     scalar_type d2qopdsdqop(const scalar_type qop,
                             const material<scalar_type>* vol_mat_ptr) const {
@@ -230,6 +275,10 @@ class rk_stepper final
     }
 
     /// Call the stepping inspector
+    /// @param cfg Stepping configuration.
+    /// @param message Diagnostic label.
+    /// @param dist Distance to the next surface.
+    /// @param args Additional inspector-specific data.
     template <typename... Args>
     DETRAY_HOST_DEVICE void run_inspector(
         [[maybe_unused]] const stepping::config& cfg,
@@ -265,6 +314,7 @@ class rk_stepper final
   /// @param stepping The state object of a stepper
   /// @param cfg The stepping configuration
   /// @param do_reset whether to reset the RKN step size to "dist to next"
+  /// @param vol_mat_ptr Material in the current volume, or null in vacuum.
   ///
   /// @return returning the heartbeat, indicating if the stepping is alive
   DETRAY_HOST_DEVICE bool step(
@@ -321,10 +371,6 @@ class rk_stepper final
     DETRAY_VERBOSE_HOST_DEVICE("Distance to nex: %f mm", dist_to_next);
     DETRAY_VERBOSE_HOST_DEVICE("Initial stepsize: %f mm", stepping.step_size());
 
-    // Don't allow too small stepsizes, unless the navigation needs it
-    const scalar_type min_stepsize{
-        math::min(math::fabs(stepping.step_size()),
-                  static_cast<scalar_type>(cfg.min_stepsize))};
     const point3_type pos = stepping().pos();
 
     intermediate_state sd{};
@@ -432,10 +478,43 @@ class rk_stepper final
 
     scalar_type error{1e20f};
 
+    // Apply an upper limit to the step size. The trial loop below only ever
+    // lowers the step size, so there is no risk of that pumping the step size
+    // up over this limit.
+    if (const scalar_type max_step =
+            stepping.constraints().template size<>(stepping.direction());
+        math::fabs(stepping.step_size()) > math::fabs(max_step)) {
+      // Run inspection before step size is cut
+      stepping.run_inspector(cfg, "Before constraint: ", dist_to_next);
+
+      stepping.set_step_size(max_step);
+    }
+
+    // Don't allow too small stepsizes, unless the navigation needs it
+    const scalar_type min_stepsize{
+        math::min(math::fabs(stepping.step_size()),
+                  static_cast<scalar_type>(cfg.min_stepsize))};
+
     // If the estimated error is larger than the tolerance with an
     // additional margin, reduce the step size and try again
-    const auto n_trials{cfg.max_rk_updates};
+    const auto n_trials{math::max(std::size_t{1u}, cfg.max_rk_updates)};
     for (unsigned int i = 0u; i < n_trials; i++) {
+      if (i != 0u) {
+        const scalar_type scaling_factor = step_size_scaling(error);
+        assert(scaling_factor <= scalar_type{1.f});
+        scalar_type new_step_size = stepping.step_size() * scaling_factor;
+
+        if (math::fabs(new_step_size) < min_stepsize) {
+          new_step_size = math::copysign(min_stepsize, new_step_size);
+        }
+
+        stepping.set_step_size(new_step_size);
+
+        // Run inspection while the stepsize is getting adjusted
+        stepping.run_inspector(cfg, "Adjust stepsize: ", dist_to_next, i,
+                               scaling_factor);
+      }
+
       stepping.count_trials();
 
       error = math::max(estimate_error(stepping.step_size()),
@@ -449,35 +528,15 @@ class rk_stepper final
       if (error <= 4.f * cfg.rk_error_tol) {
         break;
       }
-      // Error estimate is too big
-      // ---> Make step size smaller and estimate error again
-      else {
-        stepping.set_step_size(stepping.step_size() * step_size_scaling(error));
-
-        // Run inspection while the stepsize is getting adjusted
-        stepping.run_inspector(cfg, "Adjust stepsize: ", dist_to_next, i,
-                               step_size_scaling(error));
+      // Error estimate is too big, and we cannot go smaller
+      // ---> break, don't waste more steps
+      else if (math::fabs(stepping.step_size()) == min_stepsize) {
+        break;
       }
     }
 
     stepping.dtds(sd.dtds[3u]);
     stepping.dqopds(sd.dqopds[3u]);
-
-    // Check constraints
-    if (const scalar_type max_step =
-            stepping.constraints().template size<>(stepping.direction());
-        math::fabs(stepping.step_size()) > math::fabs(max_step)) {
-      // Run inspection before step size is cut
-      stepping.run_inspector(cfg, "Before constraint: ", dist_to_next);
-
-      stepping.set_step_size(max_step);
-    }
-
-    // Adjust the min step size
-    if (math::fabs(stepping.step_size()) < min_stepsize) {
-      stepping.set_step_size(
-          math::copysign(min_stepsize, stepping.step_size()));
-    }
 
     DETRAY_VERBOSE_HOST_DEVICE("Take step: %f mm", stepping.step_size());
 
@@ -521,6 +580,13 @@ class rk_stepper final
   }
 
   /// evaluate dqopds for a given step size and material
+  /// @param stepping State being integrated.
+  /// @param i RK stage index.
+  /// @param h Stage step offset.
+  /// @param dqopds_prev Derivative from the preceding stage.
+  /// @param vol_mat_ptr Material in the current volume, or null in vacuum.
+  /// @param cfg Stepping configuration.
+  /// @return Derivative and charge-over-momentum value for this stage.
   DETRAY_HOST_DEVICE
   detray::pair<scalar_type, scalar_type> evaluate_dqopds(
       detray::rk_stepper<magnetic_field_t, algebra_t, constraint_t, policy_t,
@@ -556,6 +622,13 @@ class rk_stepper final
   }
 
   /// Evaluate dtds for Runge-Kutta stepping
+  /// @param stepping State being integrated.
+  /// @param b_field Magnetic field at this stage.
+  /// @param i RK stage index.
+  /// @param h Stage step offset.
+  /// @param dtds_prev Direction derivative from the preceding stage.
+  /// @param qop Charge-over-momentum at this stage.
+  /// @return Direction derivative and tangential direction.
   DETRAY_HOST_DEVICE
   detray::pair<vector3_type, vector3_type> evaluate_dtds(
       detray::rk_stepper<magnetic_field_t, algebra_t, constraint_t, policy_t,
@@ -580,6 +653,9 @@ class rk_stepper final
   }
 
   /// Update the track state by Runge-Kutta-Nystrom integration.
+  /// @param stepping State to update.
+  /// @param sd Evaluated RK stage data.
+  /// @param vol_mat_ptr Material in the current volume, or null in vacuum.
   DETRAY_HOST_DEVICE
   void advance_track(
       detray::rk_stepper<magnetic_field_t, algebra_t, constraint_t, policy_t,
@@ -617,6 +693,10 @@ class rk_stepper final
   }
 
   /// Update the jacobian transport from free propagation
+  /// @param stepping State whose Jacobian is updated.
+  /// @param cfg Stepping configuration controlling gradient terms.
+  /// @param sd Evaluated RK stage data.
+  /// @param vol_mat_ptr Material in the current volume, or null in vacuum.
   DETRAY_HOST_DEVICE
   void advance_jacobian(
       detray::rk_stepper<magnetic_field_t, algebra_t, constraint_t, policy_t,
@@ -928,6 +1008,10 @@ class rk_stepper final
     }
   }
 
+  /// Estimate the magnetic-field spatial gradient by centered differences.
+  /// @param stepping State providing the magnetic field.
+  /// @param pos Position where the gradient is evaluated.
+  /// @return Matrix whose columns are field derivatives by coordinate.
   DETRAY_HOST_DEVICE
   matrix_type<3, 3> evaluate_field_gradient(
       detray::rk_stepper<magnetic_field_t, algebra_t, constraint_t, policy_t,

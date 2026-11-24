@@ -46,15 +46,12 @@ class [[nodiscard]] Result {
 
   /// Move construction is allowed
   /// @param other The other result instance to move from
-  Result(Result<T, E>&& other) noexcept : m_var(std::move(other.m_var)) {}
+  Result(Result<T, E>&& other) = default;
 
   /// Move assignment is allowed
   /// @param other The other result instance, rvalue reference
   /// @return The assigned instance
-  Result<T, E>& operator=(Result<T, E>&& other) noexcept {
-    m_var = std::move(other.m_var);
-    return *this;
-  }
+  Result<T, E>& operator=(Result<T, E>&& other) = default;
 
   /// @brief Constructor from arbitrary value
   /// This constructor allows construction from any value. This constructor is
@@ -362,26 +359,23 @@ class [[nodiscard]] Result<void, E> {
   /// Default constructor which initializes the result in the ok state.
   Result() = default;
 
-  /// The copy constructor is deleted.
+  /// Copy constructor.
   /// @param other The other result instance to copy from
   Result(const Result<void, E>& other) = default;
 
-  /// The (self) assignment operator is deleted.
+  /// Copy assignment operator.
   /// @param other The other result instance to assign from
   /// @return Reference to this result instance
   Result<void, E>& operator=(const Result<void, E>& other) = default;
 
   /// Move constructor
   /// @param other The other result object, rvalue ref
-  Result(Result<void, E>&& other) noexcept : m_opt(std::move(other.m_opt)) {}
+  Result(Result<void, E>&& other) = default;
 
   /// Move assignment operator
   /// @param other The other result object, rvalue ref
   /// @return Reference to this result for assignment chaining
-  Result<void, E>& operator=(Result<void, E>&& other) noexcept {
-    m_opt = std::move(other.m_opt);
-    return *this;
-  }
+  Result<void, E>& operator=(Result<void, E>&& other) = default;
 
   /// Constructor from error. This implicitly requires E2 to be convertible to
   /// E.
