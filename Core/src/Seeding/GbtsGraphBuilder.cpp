@@ -65,6 +65,7 @@ struct SlidingWindow {
 };
 
 /// Check a triplet against the pT and d0 cuts.
+/// @tparam doProfile Whether the failed cut is reported
 /// @param cfg Graph builder configuration
 /// @param nodeView View of the node positions and layers
 /// @param candidateTriplet The three graph nodes
@@ -72,14 +73,15 @@ struct SlidingWindow {
 /// @param tauRatio Tau ratio of the triplet
 /// @param tauRatioCut Tau ratio cut threshold
 /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
-/// @param failure Set to the failed cut on a rejection, if not null
+/// @param failure Set to the failed cut on a rejection, with doProfile
 /// @return Whether the triplet is accepted
+template <bool doProfile>
 bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
                      const detail::GbtsNodeView& nodeView,
                      const std::array<SpacePointIndex, 3>& candidateTriplet,
                      const float tripletMinPt, const float tauRatio,
                      const float tauRatioCut, const float bFieldInZ,
-                     detail::GbtsCutFailure* failure) {
+                     detail::GbtsCutFailure& failure) {
   // conformal mapping with the center at the middle spacepoint
 
   std::array<float, 2> u{};
@@ -118,8 +120,8 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
   const float du = u[0] - u[1];
 
   if (du == 0.0) {
-    if (failure != nullptr) {
-      *failure = {GbtsTripletCut::ValidationDegenerate, 0.f, 0.f};
+    if constexpr (doProfile) {
+      failure = {GbtsTripletCut::ValidationDegenerate, 0.f, 0.f};
     }
     return false;
   }
@@ -131,8 +133,8 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
   const float d0 = r0 * (B * r0 - A);
 
   if (std::abs(d0) > cfg.d0Max) {
-    if (failure != nullptr) {
-      *failure = {GbtsTripletCut::ValidationD0, std::abs(d0), cfg.d0Max};
+    if constexpr (doProfile) {
+      failure = {GbtsTripletCut::ValidationD0, std::abs(d0), cfg.d0Max};
     }
     return false;
   }
@@ -145,8 +147,8 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
     const float pT = std::abs(bFieldInZ * R / 2);
 
     if (pT < tripletMinPt) {
-      if (failure != nullptr) {
-        *failure = {GbtsTripletCut::ValidationPt, pT, tripletMinPt};
+      if constexpr (doProfile) {
+        failure = {GbtsTripletCut::ValidationPt, pT, tripletMinPt};
       }
       return false;
     }
@@ -154,9 +156,9 @@ bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
     if (pT > 5 * tripletMinPt) {  // relatively high-pT track
 
       if (tauRatio > 0.9f * tauRatioCut) {
-        if (failure != nullptr) {
-          *failure = {GbtsTripletCut::ValidationHighPtTauRatio, tauRatio,
-                      0.9f * tauRatioCut};
+        if constexpr (doProfile) {
+          failure = {GbtsTripletCut::ValidationHighPtTauRatio, tauRatio,
+                     0.9f * tauRatioCut};
         }
         return false;
       }
@@ -548,47 +550,52 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
       // n1's side of the tau window, the same for every n2
       const float maxTau1 = std::min(m_cfg.maxAbsTau, n1pars.maxTau);
 
-      const auto passesDoubletCuts = [&](const detail::GbtsNodeParams& n2pars,
-                                         const std::uint16_t nodeInfo,
-                                         const float r1c, const float z1c,
-                                         const float tau, const float curv) {
-        const float ftau = std::abs(tau);
-        // The doublet cuts as one test rather than a branch each: which cut
-        // a pair fails depends on the data, so separate branches
-        // mispredict. Equivalent to the separate cuts for finite values
-        // (dr >= minDeltaRadius > 0 by default). First maxAbsTau and both
-        // nodes' tau windows; z0 is bounded only by the detector's size,
-        // which keeps the casts below in range,
-        const float minTau = std::max(n1pars.minTau, n2pars.minTau);
-        const float maxTau = std::min(maxTau1, n2pars.maxTau);
-        const bool inTauWindow = (static_cast<int>(ftau >= minTau) &
-                                  static_cast<int>(ftau <= maxTau)) != 0;
+      // Forced inline: it runs for every pair of a window, and since the graph
+      // building became a template for the profiler the compiler no longer
+      // inlines it on its own, which cost ~5% of the seeding.
+      const auto passesDoubletCuts =
+          [&](const detail::GbtsNodeParams& n2pars,
+              const std::uint16_t nodeInfo, const float r1c, const float z1c,
+              const float tau,
+              const float curv) __attribute__((always_inline)) {
+            const float ftau = std::abs(tau);
+            // The doublet cuts as one test rather than a branch each: which cut
+            // a pair fails depends on the data, so separate branches
+            // mispredict. Equivalent to the separate cuts for finite values
+            // (dr >= minDeltaRadius > 0 by default). First maxAbsTau and both
+            // nodes' tau windows; z0 is bounded only by the detector's size,
+            // which keeps the casts below in range,
+            const float minTau = std::max(n1pars.minTau, n2pars.minTau);
+            const float maxTau = std::min(maxTau1, n2pars.maxTau);
+            const bool inTauWindow = (static_cast<int>(ftau >= minTau) &
+                                      static_cast<int>(ftau <= maxTau)) != 0;
 
-        const float z0 = z1c - r1c * tau;
+            const float z0 = z1c - r1c * tau;
 
-        // then the z0 histogram, the r-z cuts and the curvature cut. The two
-        // flags are fixed per bin group, so their branches are predicted.
-        const bool inZ0Histogram =
-            !useZ0Histogram ||
-            checkZ0BitMask(m_cfg, minZ0, nodeInfo, z0, z0HistoCoeff);
+            // then the z0 histogram, the r-z cuts and the curvature cut. The
+            // two flags are fixed per bin group, so their branches are
+            // predicted.
+            const bool inZ0Histogram =
+                !useZ0Histogram ||
+                checkZ0BitMask(m_cfg, minZ0, nodeInfo, z0, z0HistoCoeff);
 
-        const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
-        const bool inRZ =
-            !m_cfg.doubletFilterRZ ||
-            (static_cast<int>(z0 >= minZ0) & static_cast<int>(z0 <= maxZ0) &
-             static_cast<int>(zOuter >= cutZMinU) &
-             static_cast<int>(zOuter <= cutZMaxU)) != 0;
+            const float zOuter = z0 + m_cfg.maxOuterRadius * tau;
+            const bool inRZ =
+                !m_cfg.doubletFilterRZ ||
+                (static_cast<int>(z0 >= minZ0) & static_cast<int>(z0 <= maxZ0) &
+                 static_cast<int>(zOuter >= cutZMinU) &
+                 static_cast<int>(zOuter <= cutZMaxU)) != 0;
 
-        const float curvCut = ftau < m_cfg.curvatureSplitAbsTau
-                                  ? curvatureCutLowEta
-                                  : curvatureCutHighEta;
+            const float curvCut = ftau < m_cfg.curvatureSplitAbsTau
+                                      ? curvatureCutLowEta
+                                      : curvatureCutHighEta;
 
-        const bool inCurvature = std::abs(curv) <= curvCut;
+            const bool inCurvature = std::abs(curv) <= curvCut;
 
-        return (static_cast<int>(inTauWindow) &
-                static_cast<int>(inZ0Histogram) & static_cast<int>(inRZ) &
-                static_cast<int>(inCurvature)) != 0;
-      };
+            return (static_cast<int>(inTauWindow) &
+                    static_cast<int>(inZ0Histogram) & static_cast<int>(inRZ) &
+                    static_cast<int>(inCurvature)) != 0;
+          };
 
       // profiling: the folded cuts do not say which one a pair failed, so they
       // are gone through again, one at a time in the order they are listed
@@ -1022,10 +1029,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraphImpl(
                     n1Idx, n2Idx, pS->n2};
 
                 detail::GbtsCutFailure failure;
-                if (!validateTriplet(m_cfg, nodeView, candidateTriplet,
-                                     tripletPtMin, absTauRatio,
-                                     m_cfg.tauRatioCut, bFieldInZ,
-                                     doProfile ? &failure : nullptr)) {
+                if (!validateTriplet<doProfile>(
+                        m_cfg, nodeView, candidateTriplet, tripletPtMin,
+                        absTauRatio, m_cfg.tauRatioCut, bFieldInZ, failure)) {
                   if constexpr (doProfile) {
                     rejectTriplet(n1Idx, n2Idx, pS->n2, failure.cut,
                                   failure.value, failure.threshold);
