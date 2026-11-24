@@ -125,6 +125,17 @@ trajectory before filtering again. It remains a local linear approximation:
 large direction changes require rebuilding the reference transport Jacobians.
 Only canonical global-spherical coordinates are currently supported.
 
+@ref Acts::AtlasStepper also remains explicitly canonical-only because its
+internal direction derivatives are written in phi/theta coordinates. It checks
+the surface before initialization, bound updates, bound parameter extraction,
+and bound covariance transport, including the path without covariance.
+An unsupported parametrization throws `std::system_error` with
+@ref Acts::AtlasStepperError::UnsupportedBoundParametrization and the surface
+identifier before modifying the stepper state. Free Cartesian updates and
+canonical curvilinear output do not consume a configurable bound interpretation.
+These checks concern requested bound operations, not surfaces merely traversed
+by navigation. Alternative-parametrization rejection tests remain deferred.
+
 @ref Acts::Experimental::RiddersStepper forms its numerical transport residuals
 using the destination surface's parametrization, including periodic direction
 differences. Its perturbation generation and finite-difference algorithm are
