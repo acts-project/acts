@@ -41,9 +41,9 @@ namespace Acts {
 /// are supported API for custom implementations. Concrete representations and
 /// visitor dispatch are private implementation details.
 ///
-/// Currently only canonical global-spherical coordinates are supported. Values
-/// can represent the poles, but the inverse direction derivative is singular
-/// there. No alternative chart can be selected yet.
+/// Global-spherical and telescope coordinates use the same angular convention
+/// in different fixed frames. Each can represent its own poles, where the
+/// inverse direction derivative is singular.
 ///
 /// Computational methods require finite inputs and representable arithmetic
 /// results. These caller preconditions are checked with assertions. Use
@@ -51,16 +51,30 @@ namespace Acts {
 /// Runtime chart singularities remain errors in release builds.
 class BoundParametrization {
  private:
-  struct GlobalSpherical {
+  enum class Frame { Global, Telescope };
+
+  template <Frame frame>
+  struct Spherical {
+    // Global component index of each chart axis. Both frames are right-handed.
+    static constexpr int xIndex = frame == Frame::Global ? 0 : 1;
+    static constexpr int yIndex = frame == Frame::Global ? 1 : 2;
+    static constexpr int zIndex = frame == Frame::Global ? 2 : 0;
+
     /// The convention carries no state, so all instances are equal.
-    constexpr bool operator==(const GlobalSpherical&) const noexcept = default;
+    constexpr bool operator==(const Spherical&) const noexcept = default;
 
     template <typename Derived>
     Vector3 direction(const Eigen::MatrixBase<Derived>& parameters) const {
       const double phi = parameters[eBoundDir0];
       const double theta = parameters[eBoundDir1];
       assertFiniteAngles(phi, theta);
-      return makeDirectionFromPhiTheta(phi, theta);
+      const auto [cp, sp] = cosSin(phi);
+      const auto [ct, st] = cosSin(theta);
+      Vector3 result;
+      result[xIndex] = cp * st;
+      result[yIndex] = sp * st;
+      result[zIndex] = ct;
+      return result;
     }
 
     Vector2 directionCoordinates(const Vector3& direction) const {
@@ -68,27 +82,41 @@ class BoundParametrization {
              "Direction must be finite and nonzero with a representable norm");
       // Angles are scale invariant: no normalization is needed. Preserve the
       // atan2 endpoint convention used by bound/free conversion at +/-pi.
-      return {(direction.x() == 0. && direction.y() == 0.)
+      return {(direction[xIndex] == 0. && direction[yIndex] == 0.)
                   ? 0.
-                  : VectorHelpers::phi(direction),
-              std::atan2(transverseNorm(direction.x(), direction.y()),
-                         direction.z())};
+                  : std::atan2(direction[yIndex], direction[xIndex]),
+              std::atan2(transverseNorm(direction[xIndex], direction[yIndex]),
+                         direction[zIndex])};
     }
 
     template <typename Derived>
     double phi(const Eigen::MatrixBase<Derived>& parameters) const {
+      if constexpr (frame == Frame::Telescope) {
+        const Vector3 global = direction(parameters);
+        return global.x() == 0. && global.y() == 0.
+                   ? 0.
+                   : VectorHelpers::phi(global);
+      }
       assertFiniteAngles(parameters[eBoundDir0], parameters[eBoundDir1]);
       return parameters[eBoundDir0];
     }
 
     template <typename Derived>
     double theta(const Eigen::MatrixBase<Derived>& parameters) const {
+      if constexpr (frame == Frame::Telescope) {
+        const Vector3 global = direction(parameters);
+        return std::atan2(transverseNorm(global.x(), global.y()), global.z());
+      }
       assertFiniteAngles(parameters[eBoundDir0], parameters[eBoundDir1]);
       return parameters[eBoundDir1];
     }
 
     template <typename Derived>
     double sinTheta(const Eigen::MatrixBase<Derived>& parameters) const {
+      if constexpr (frame == Frame::Telescope) {
+        const Vector3 global = direction(parameters);
+        return transverseNorm(global.x(), global.y());
+      }
       return std::sin(theta(parameters));
     }
 
@@ -98,31 +126,33 @@ class BoundParametrization {
       const double phi = parameters[eBoundDir0];
       const double theta = parameters[eBoundDir1];
       assertFiniteAngles(phi, theta);
-      const double cp = std::cos(phi);
-      const double sp = std::sin(phi);
-      const double ct = std::cos(theta);
-      const double st = std::sin(theta);
+      const auto [cp, sp] = cosSin(phi);
+      const auto [ct, st] = cosSin(theta);
       Matrix<3, 2> jacobian;
-      jacobian << -sp * st, cp * ct, cp * st, sp * ct, 0., -st;
+      jacobian.row(xIndex) << -sp * st, cp * ct;
+      jacobian.row(yIndex) << cp * st, sp * ct;
+      jacobian.row(zIndex) << 0., -st;
       return jacobian;
     }
 
     Matrix<3, 2> directionJacobianFromUnitDirection(
         const Vector3& direction) const {
       assertUnitDirection(direction);
-      const double transverse = transverseNorm(direction.x(), direction.y());
+      const double transverse =
+          transverseNorm(direction[xIndex], direction[yIndex]);
       // Encoding chooses phi = 0 at an exact pole.
       double cp = 1.;
       double sp = 0.;
       if (transverse != 0.) {
         const Azimuth azimuth =
-            makeAzimuth(direction.x(), direction.y(), transverse);
+            makeAzimuth(direction[xIndex], direction[yIndex], transverse);
         cp = azimuth.cosPhi;
         sp = azimuth.sinPhi;
       }
       Matrix<3, 2> jacobian;
-      jacobian << -direction.y(), cp * direction.z(), direction.x(),
-          sp * direction.z(), 0., -transverse;
+      jacobian.row(xIndex) << -direction[yIndex], cp * direction[zIndex];
+      jacobian.row(yIndex) << direction[xIndex], sp * direction[zIndex];
+      jacobian.row(zIndex) << 0., -transverse;
       return jacobian;
     }
 
@@ -130,17 +160,20 @@ class BoundParametrization {
         const Vector3& direction, double minTransverse = 1e-12) const {
       assertUnitDirection(direction);
       assertValidThreshold(minTransverse);
-      const double transverse = transverseNorm(direction.x(), direction.y());
+      const double transverse =
+          transverseNorm(direction[xIndex], direction[yIndex]);
       if (transverse <= minTransverse) {
         return Result<Matrix<2, 3>>::failure(
             BoundParametrizationError::SingularDirection);
       }
       const Azimuth azimuth =
-          makeAzimuth(direction.x(), direction.y(), transverse);
+          makeAzimuth(direction[xIndex], direction[yIndex], transverse);
       Matrix<2, 3> jacobian;
-      jacobian << -azimuth.sinPhiOverTransverse, azimuth.cosPhiOverTransverse,
-          0., azimuth.cosPhi * direction.z(), azimuth.sinPhi * direction.z(),
-          -transverse;
+      jacobian.col(xIndex) << -azimuth.sinPhiOverTransverse,
+          azimuth.cosPhi * direction[zIndex];
+      jacobian.col(yIndex) << azimuth.cosPhiOverTransverse,
+          azimuth.sinPhi * direction[zIndex];
+      jacobian.col(zIndex) << 0., -transverse;
       return Result<Matrix<2, 3>>::success(jacobian);
     }
 
@@ -181,7 +214,7 @@ class BoundParametrization {
         return false;
       }
       if (std::isfinite(maxAbsEta)) {
-        const double eta = AngleHelpers::etaFromTheta(theta);
+        const double eta = AngleHelpers::etaFromTheta(this->theta(parameters));
         return std::isfinite(eta) && std::abs(eta) - epsilon <= maxAbsEta;
       }
       return true;
@@ -296,6 +329,20 @@ class BoundParametrization {
     }
 
    private:
+    static std::pair<double, double> cosSin(double angle) {
+      if constexpr (frame == Frame::Telescope) {
+        // Exact cardinal directions distinguish an axial track from a track
+        // with a tiny but physical transverse component and defined azimuth.
+        if (std::abs(angle) == std::numbers::pi / 2.) {
+          return {0., std::copysign(1., angle)};
+        }
+        if (std::abs(angle) == std::numbers::pi) {
+          return {-1., std::copysign(0., angle)};
+        }
+      }
+      return {std::cos(angle), std::sin(angle)};
+    }
+
     /// Transverse norm sqrt(x^2 + y^2) without spurious over- or underflow.
     /// Uses the direct formula whenever the sum of squares is a normal number,
     /// which matches VectorHelpers::perp, and std::hypot otherwise. Both keep
@@ -355,7 +402,9 @@ class BoundParametrization {
       return direction / norm;
     }
   };
-  using Variant = std::variant<GlobalSpherical>;
+  using GlobalSpherical = Spherical<Frame::Global>;
+  using TelescopeSpherical = Spherical<Frame::Telescope>;
+  using Variant = std::variant<GlobalSpherical, TelescopeSpherical>;
   // The supported alternatives cannot make the variant valueless by throwing.
   static_assert(std::is_nothrow_copy_constructible_v<Variant>);
   static_assert(std::is_nothrow_copy_assignable_v<Variant>);
@@ -365,23 +414,23 @@ class BoundParametrization {
 
   template <typename Visitor>
   [[gnu::always_inline]] decltype(auto) visit(Visitor&& visitor) const {
-    if constexpr (std::variant_size_v<Variant> == 1) {
-      // A single alternative needs no dispatch. Calling it directly keeps the
-      // std::visit invocation layers out of the per-candidate hot paths.
-      return std::forward<Visitor>(visitor)(*std::get_if<0>(&m_chart));
-    } else {
-      return std::visit(std::forward<Visitor>(visitor), m_chart);
-    }
+    return std::visit(std::forward<Visitor>(visitor), m_chart);
   }
 
-  explicit constexpr BoundParametrization(GlobalSpherical chart)
-      : m_chart(chart) {}
+  explicit constexpr BoundParametrization(Variant chart) : m_chart(chart) {}
 
  public:
   /// Construct the canonical global-spherical interpretation.
   /// @return Allocation-free parametrization value
   static constexpr BoundParametrization globalSpherical() noexcept {
     return BoundParametrization(GlobalSpherical{});
+  }
+
+  /// Construct the fixed telescope convention. Chart x, y and z point along
+  /// global Y, Z and X, respectively. Global ±Z lies on the chart equator.
+  /// @return Allocation-free parametrization value
+  static constexpr BoundParametrization telescope() noexcept {
+    return BoundParametrization(TelescopeSpherical{});
   }
 
   /// Whether two values describe the same parametrization.

@@ -13,6 +13,7 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <format>
 #include <random>
 #include <stdexcept>
 #include <utility>
@@ -85,6 +86,13 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
   std::normal_distribution<double> stdNormal(0.0, 1.0);
 
   for (const auto& inputTrackParameters : inputTrackParametersContainer) {
+    const auto& surface = inputTrackParameters.referenceSurface();
+    if (!surface.boundParametrization(ctx.recoGeoContext).isGlobalSpherical()) {
+      throw std::invalid_argument(std::format(
+          "TrackParameterSmearing requires global-spherical coordinates for "
+          "its angular resolutions; surface {} uses the telescope chart",
+          surface.geometryId()));
+    }
     const auto position = inputTrackParameters.localPosition();
     const auto time = inputTrackParameters.time();
     const auto phi = inputTrackParameters.phi(ctx.recoGeoContext);

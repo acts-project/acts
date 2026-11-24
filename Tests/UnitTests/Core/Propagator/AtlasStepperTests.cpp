@@ -110,6 +110,26 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
   BOOST_CHECK_EQUAL(state.previousStepSize, 0.);
 }
 
+BOOST_AUTO_TEST_CASE(RejectTelescopeChartOnBinding) {
+  const auto plane =
+      Surface::makeShared<PlaneSurface>(Transform3(Translation3(pos)), nullptr,
+                                        BoundParametrization::telescope());
+  Stepper stepper(magneticField);
+  for (const auto& covariance :
+       {std::optional<BoundMatrix>{}, std::optional<BoundMatrix>{cov}}) {
+    auto state = stepper.makeState(Stepper::Options(geoCtx, magCtx));
+    const auto start = BoundTrackParameters::createCurvilinear(
+        pos4, unitDir, charge / absMom, covariance, particleHypothesis);
+    stepper.initialize(state, start);
+    BOOST_CHECK_EXCEPTION(
+        static_cast<void>(stepper.transportToBound(state, *plane)),
+        std::system_error, [](const std::system_error& err) {
+          return err.code() ==
+                 AtlasStepperError::UnsupportedBoundParametrization;
+        });
+  }
+}
+
 // test state construction from parameters w/ covariance
 BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(

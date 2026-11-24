@@ -492,14 +492,20 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_covariance_matches_eigen) {
   const std::array particles = {ParticleHypothesis::pion(),
                                 ParticleHypothesis::pionLike(2.f)};
 
-  for (int track = 0; track < 4; ++track) {
+  for (int track = 0; track < 5; ++track) {
     const double phi = 0.3 * track;
     const double theta = 0.7 + 0.25 * track;
     const double qop = (track % 2 == 0 ? 1. : -1.) / ((1. + track) * 1_GeV);
     const ParticleHypothesis& particle = particles.at(track % particles.size());
 
-    auto start = BoundTrackParameters::createCurvilinear(
-        Vector4::Zero(), phi, theta, qop, cov, particle);
+    // The final track starts exactly along global Z in the telescope chart.
+    // This also exercises the generated Jacobian's direction-block sparsity.
+    const auto start =
+        track == 4 ? BoundTrackParameters::createCurvilinear(
+                         Vector4::Zero(), Vector3::UnitZ(), qop, cov, particle,
+                         BoundParametrization::telescope())
+                   : BoundTrackParameters::createCurvilinear(
+                         Vector4::Zero(), phi, theta, qop, cov, particle);
 
     auto sympyState = sympyStepper.makeState(sympyOptions);
     sympyStepper.initialize(sympyState, start);

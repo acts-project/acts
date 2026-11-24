@@ -62,8 +62,7 @@ class Surface : public virtual GeometryObject,
   /// Resolve the interpretation of bound coordinates on this surface.
   /// @param gctx Geometry context for the interpretation
   /// @return A self-contained, allocation-free parametrization value
-  /// @note The direction frame is fixed in global space. Only the canonical
-  /// global-spherical interpretation is currently available.
+  /// @note Both supported direction frames are fixed in global space.
   BoundParametrization boundParametrization(
       [[maybe_unused]] const GeometryContext& gctx) const {
     return m_boundParametrization;

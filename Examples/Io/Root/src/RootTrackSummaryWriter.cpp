@@ -26,6 +26,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <format>
 #include <ios>
 #include <limits>
 #include <numbers>
@@ -232,6 +233,19 @@ ProcessCode RootTrackSummaryWriter::finalize() {
 
 ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
                                            const ConstTrackContainer& tracks) {
+  // Check fitted reference surfaces before modifying any event buffers.
+  for (const auto& track : tracks) {
+    if (track.hasReferenceSurface() &&
+        !track.referenceSurface()
+             .boundParametrization(ctx.recoGeoContext)
+             .isGlobalSpherical()) {
+      throw std::invalid_argument(std::format(
+          "RootTrackSummaryWriter requires global-spherical fitted parameters "
+          "for its angular errors and pulls; surface {} uses the telescope "
+          "chart",
+          track.referenceSurface().geometryId()));
+    }
+  }
   // In case we do not have truth info, we bind to a empty collection
   const static SimParticleContainer emptyParticles;
   const static TrackParticleMatching emptyTrackParticleMatching;

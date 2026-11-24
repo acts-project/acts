@@ -34,6 +34,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <stdexcept>
 #include <utility>
 
 std::unique_ptr<const Acts::TrackingGeometry>
@@ -45,9 +46,15 @@ ActsExamples::buildTelescopeDetector(
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
     double thickness, TelescopeSurfaceType surfaceType,
-    Acts::AxisDirection rotDirection) {
+    Acts::AxisDirection rotDirection,
+    Acts::BoundParametrization parametrization) {
   using namespace Acts::UnitLiterals;
 
+  if (surfaceType != TelescopeSurfaceType::Plane &&
+      !parametrization.isGlobalSpherical()) {
+    throw std::invalid_argument(
+        "The telescope direction chart requires plane surfaces.");
+  }
   // The rectangle bounds for plane surface
   const auto pBounds =
       std::make_shared<const Acts::RectangleBounds>(bounds[0], bounds[1]);
@@ -99,7 +106,7 @@ ActsExamples::buildTelescopeDetector(
     if (surfaceType == TelescopeSurfaceType::Plane) {
       detElement = std::make_shared<TelescopeDetectorElement>(
           id, std::make_shared<Acts::Transform3>(trafo), pBounds, 1._um,
-          surfaceMaterial);
+          surfaceMaterial, parametrization);
     } else {
       detElement = std::make_shared<TelescopeDetectorElement>(
           id, std::make_shared<Acts::Transform3>(trafo), rBounds, 1._um,

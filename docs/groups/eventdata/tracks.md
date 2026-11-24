@@ -45,8 +45,18 @@ observables. Covariance rows and columns and measurement projector indices refer
 to that same stored basis. Integer indexing remains available and carries the
 same responsibility for interpreting the basis.
 
-Only the canonical global-spherical parametrization is currently supported:
-`dir0` is global phi and `dir1` is global theta. @ref Acts::BoundTrackParameters
+By default, `dir0` is global phi and `dir1` is global theta. A plane can
+instead select @ref Acts::BoundParametrization::telescope. Its spherical axes
+point along global `(Y, Z, X)`, so a track along global +Z has stored angles
+`(π/2, π/2)` and physical polar angle zero. The chart poles lie along global ±X.
+In the telescope example, set `TelescopeDetector.Config.useTelescopeChart` to
+`True` for the sensitive planes and the detector's seed/target reference planes.
+To seed an axial track with covariance from Python, obtain its plane with
+`detector.getReferenceSurface(...)` and call
+`acts.BoundTrackParameters.create(gctx, plane, pos4, direction, qOverP, cov, particleHypothesis)`.
+Supply `cov` in that plane's bound coordinates.
+
+@ref Acts::BoundTrackParameters
 "Bound parameters" and @ref Acts::TrackProxyCommon "track proxies" provide
 @ref Acts::BoundTrackParameters::direction "direction(gctx)",
 @ref Acts::BoundTrackParameters::phi "phi(gctx)",
@@ -73,19 +83,19 @@ parameter object or additional stored metadata. Existing parameter and proxy
 concepts do not require the new context overloads from client-defined types.
 @ref Acts::Surface::boundParametrization "surface.boundParametrization(gctx)"
 resolves the interpretation for a surface. Context-aware observables and
-bound/free value conversions use this lookup. It currently returns the canonical
-global-spherical interpretation for every surface, including curvilinear planes;
-surface placement and alignment do not rotate the direction axes. Track proxies
-without a reference surface retain the canonical interpretation. Surfaces store
-the selected parametrization; plane and curvilinear construction accept it explicitly.
-Only the canonical global-spherical value is selectable. Cartesian and Ridders
-steppers retain the last bound anchor's parametrization for curvilinear output.
-Bound/free surface
-Jacobians use the same interpretation, including the
+bound/free value conversions use this lookup. Both direction frames stay fixed
+in global space under alignment. Curvilinear transport in the Cartesian steppers inherits the last
+bound anchor's chart and attaches it to the synthesized reference plane. Track
+proxies without a reference surface use global spherical coordinates. Bound/free
+surface Jacobians use the same interpretation, including the
 curvilinear utility and the direction-dependent line/point position terms.
 Covariance transport retains its source-to-free-to-destination composition and
 path-length correction; reinitialization uses the destination interpretation.
-Alternative charts remain follow-up work.
+The telescope option currently applies to in-memory reconstruction. Persisting a
+rotated bound vector or covariance requires recording its chart separately.
+The example truth smearing algorithm and ROOT track summary/state writers
+require global spherical angles for their fitted angular resolutions or pulls.
+They report an error when given telescope parameters for those calculations.
 
 @ref Acts::Surface::freeToBoundJacobian "Surface inverse Jacobians" and
 @ref Acts::Surface::alignmentToBoundDerivative "alignment derivatives" return
@@ -165,7 +175,6 @@ prediction. Earlier states may already have been filtered.
 The filter consumes the stored reference predictions, so rebuild the reference
 trajectory before filtering again. It remains a local linear approximation:
 large direction changes require rebuilding the reference transport Jacobians.
-Only canonical global-spherical coordinates are currently supported.
 
 Mixture merging remains explicitly canonical-only. GSF, bremsstrahlung CKF,
 @ref Acts::MultiComponentBoundTrackParameters::merge and the KL-distance reducers
@@ -179,10 +188,8 @@ direction coordinates.
 The circular-mean implementation checks for global-spherical support before
 interpreting the direction slots. An unsupported parametrization throws a
 `std::system_error` with @ref Acts::GsfError::UnsupportedBoundParametrization and
-the surface identifier; it is not converted into a rejected component. The
-multi-stepper also checks the parametrization when it consumes bound states. No
-alternative parametrization is selectable yet, so that rejection path awaits
-validation when one is introduced. Custom mixture-reducer callbacks now take
+the surface identifier. The multi-stepper also checks the chart when it
+consumes a bound state. Custom mixture-reducer callbacks now take
 `const GeometryContext&` as their first argument; parameter merging takes
 `merge(gctx, method)`.
 
@@ -194,7 +201,6 @@ Standalone equation assembly checks the stored states it consumes as well.
 Unsupported interpretation throws `std::system_error` with
 @ref Acts::Experimental::GlobalChiSquareFitterError::UnsupportedBoundParametrization
 and the surface identifier; it is not treated as a missing measurement.
-Only canonical coordinates exist today, so unsupported-state tests remain deferred.
 
 GX2F measurement residuals use the surface parametrization before projection
 into the measurement basis. Its scattering model remains canonical-specific:
@@ -213,7 +219,7 @@ An unsupported parametrization throws `std::system_error` with
 identifier before modifying the stepper state. Free Cartesian updates and
 canonical curvilinear output do not consume a configurable bound interpretation.
 These checks concern requested bound operations, not surfaces merely traversed
-by navigation. Alternative-parametrization rejection tests remain deferred.
+by navigation.
 
 @ref Acts::Experimental::RiddersStepper forms its numerical transport residuals
 using the destination surface's parametrization, including periodic direction
@@ -240,17 +246,17 @@ corrected covariance basis is undefined, correction falls back to nominal
 transport through its existing optional-result interface. Broad distributions
 spanning direction singularities remain outside this local approximation.
 
-### Canonical support audit
+### Algorithm support
 
-Only canonical global-spherical coordinates are selectable. The current
-implementation and remaining work are:
+The telescope proof of concept exercises plane-to-plane and curvilinear
+transport, Kalman filtering, RTS smoothing, and pointwise material noise.
 
 | Path | Current status |
 | --- | --- |
 | Kalman update, RTS and MBF smoothing | Surface-selected residuals and covariance-aware canonicalization |
 | Reference-trajectory filtering | Surface-selected reference residuals and consistent prediction covariance/Jacobians |
 | Eigen, straight-line, helix and Sympy steppers | Surface conversions and shared/generated transport engines |
-| Multi-stepper transport | Delegates to component steppers; bound-direction domain errors propagate |
+| Multi-stepper transport | Explicit canonical-only checks for component states |
 | Ridders | Surface-selected numerical residuals; existing perturbation algorithm |
 | GSF and bremsstrahlung CKF merging | Context-aware entry points with explicit canonical-only checks |
 | GX2F | Surface-selected measurement residuals; explicitly canonical scattering model and raw fit updates |
@@ -262,10 +268,9 @@ The explicit unsupported-configuration exceptions from mixture merging, GX2F,
 and AtlasStepper escape the fitting and component-discard paths. The example
 framework logs the exception message and rethrows it. Existing numerical domain
 failures retain their `Result` handling; these are distinct from unsupported
-configurations. Tests with another parametrization are still needed to verify
-rejection at initial and subsequent states, harmless navigation-only encounters,
-and mixed-parametrization physical equivalence. Canonical regression tests alone
-do not establish those properties.
+configurations. The telescope tests exercise AtlasStepper rejection on binding,
+mixed-chart covariance transport and filtering, and a rigidly rotated canonical
+control for the axial telescope fit.
 
 Pointwise material physics computes a projected scattering variance independently
 of the direction coordinates. A separate mapping produces the direction-noise
@@ -275,8 +280,10 @@ this mapping. Pointwise material updates require callers to supply the active
 covariance anchor's parametrization separately from the material surface.
 Generic material interaction uses the curvilinear interpretation. KF and GSF
 use the bound surface interpretation. CKF retains the curvilinear interpretation
-for material-only transport until rebinding or a filtered-state update changes
-the anchor. The material helper neither selects an interpretation nor performs
+for skipped scattering-only states. In telescope geometry, recorded states
+and energy-loss updates use the physical slab plane as their covariance anchor.
+At a skipped plane's direction pole, the stepper uses the incident chart
+with the slab's position axes. The material helper neither selects an interpretation nor performs
 an additional covariance transport. Noise addition updates the full direction block and q/p variance directly.
 Noise removal subtracts the requested increment in full and checks the complete
 covariance, including correlations with other coordinates. An invalid result
@@ -327,7 +334,6 @@ information is expressed in the filtered basis while measurement residuals and
 the transport Jacobian use the predicted basis. Singular canonicalization and
 nonfinite recursion results stop smoothing with an error. States already
 processed may retain their smoothed results; earlier states are not visited.
-The supported interpretation remains canonical global spherical coordinates.
 
 Other fitting and mixture operations and specialized
 propagation algorithms still assume the canonical spherical coordinates.

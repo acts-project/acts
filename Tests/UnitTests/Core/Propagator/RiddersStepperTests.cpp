@@ -169,6 +169,31 @@ BOOST_AUTO_TEST_CASE(ridders_matches_analytic_across_phi_seam) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(ridders_curvilinear_telescope_anchor) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const MagneticFieldContext mctx;
+  Stepper numerical(std::make_shared<ConstantBField>(Vector3::Zero()));
+  const Stepper::Options options(gctx, mctx);
+  constexpr auto chart = BoundParametrization::telescope();
+  const auto start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitZ(), 1., BoundMatrix::Identity(),
+      ParticleHypothesis::pion(), chart);
+  auto state = numerical.makeState(options);
+  numerical.initialize(state, start);
+  BOOST_REQUIRE(numerical.updateSurfaceStatus(
+                    state, start.referenceSurface(), 0, Direction::Forward(),
+                    BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+                    ConstrainedStep::Type::Navigator) ==
+                IntersectionStatus::onSurface);
+  const auto jacobian = numerical.transportToCurvilinear(state);
+  BOOST_REQUIRE(jacobian.ok());
+  CHECK_CLOSE_ABS(*jacobian, BoundMatrix::Identity(), 1e-8);
+  const auto result = numerical.curvilinearParameters(state);
+  BOOST_CHECK(result.referenceSurface().boundParametrization(gctx) == chart);
+  BOOST_CHECK_EQUAL(result.direction(gctx), Vector3::UnitZ());
+  CHECK_CLOSE_ABS(*result.covariance(), BoundMatrix::Identity(), 1e-8);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

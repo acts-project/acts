@@ -30,6 +30,10 @@ static_assert(noexcept(BoundParametrization::globalSpherical()));
 BOOST_AUTO_TEST_CASE(Equality) {
   constexpr auto a = BoundParametrization::globalSpherical();
   constexpr auto b = BoundParametrization::globalSpherical();
+  constexpr auto telescope = BoundParametrization::telescope();
+  static_assert(!telescope.isGlobalSpherical());
+  static_assert(telescope != a);
+  static_assert(telescope == BoundParametrization::telescope());
   static_assert(a == b);
   static_assert(!(a != b));
   BOOST_CHECK(a == b);
@@ -68,29 +72,32 @@ BOOST_AUTO_TEST_CASE(EncodingScaleAndSeam) {
                     -std::numbers::pi);
 }
 
-BOOST_AUTO_TEST_CASE(Derivatives) {
+void checkDerivatives(const BoundParametrization& parametrization) {
   constexpr double h = 1e-6;
   for (double phi : {-2.8, -0.2, 1.4, 3.0}) {
     for (double theta : {0.01, 0.7, 1.5, 3.13}) {
       BoundVector values(1., 2., phi, theta, 0.01, 4.);
-      const Vector3 dir = chart.direction(values);
-      const auto forward = chart.directionJacobian(values);
-      CHECK_CLOSE_ABS(chart.directionJacobianFromUnitDirection(dir), forward,
-                      1e-14);
+      const Vector3 dir = parametrization.direction(values);
+      const auto forward = parametrization.directionJacobian(values);
+      CHECK_CLOSE_ABS(parametrization.directionJacobianFromUnitDirection(dir),
+                      forward, 1e-14);
       const auto unitInverse =
-          chart.directionCoordinatesJacobianFromUnitDirection(dir);
+          parametrization.directionCoordinatesJacobianFromUnitDirection(dir);
       BOOST_REQUIRE(unitInverse.ok());
-      const auto inverseResult = chart.directionCoordinatesJacobian(dir);
+      const auto inverseResult =
+          parametrization.directionCoordinatesJacobian(dir);
       BOOST_REQUIRE(inverseResult.ok());
       const auto& inverse = *inverseResult;
       CHECK_CLOSE_ABS(*unitInverse, inverse, 1e-12);
       // The legacy helpers reconstruct sin(theta) from 1 - cos(theta)^2,
       // which loses precision near the poles. Finite differences below test
       // the new derivatives independently.
-      CHECK_CLOSE_OR_SMALL(forward, sphericalToFreeDirectionJacobian(dir),
-                           1e-10, 1e-12);
-      CHECK_CLOSE_OR_SMALL(inverse, freeToSphericalDirectionJacobian(dir),
-                           1e-10, 1e-12);
+      if (parametrization.isGlobalSpherical()) {
+        CHECK_CLOSE_OR_SMALL(forward, sphericalToFreeDirectionJacobian(dir),
+                             1e-10, 1e-12);
+        CHECK_CLOSE_OR_SMALL(inverse, freeToSphericalDirectionJacobian(dir),
+                             1e-10, 1e-12);
+      }
       CHECK_CLOSE_ABS((inverse * forward).eval(), SquareMatrix2::Identity(),
                       1e-12);
       for (int i = 0; i < 2; ++i) {
@@ -98,12 +105,14 @@ BOOST_AUTO_TEST_CASE(Derivatives) {
         auto minus = values;
         plus[eBoundDir0 + i] += h;
         minus[eBoundDir0 + i] -= h;
-        const Vector3 numerical =
-            (chart.direction(plus) - chart.direction(minus)) / (2. * h);
+        const Vector3 numerical = (parametrization.direction(plus) -
+                                   parametrization.direction(minus)) /
+                                  (2. * h);
         CHECK_CLOSE_ABS(forward.col(i), numerical, 1e-8);
       }
       const Vector3 scaled = 2.5 * dir;
-      const auto scaledResult = chart.directionCoordinatesJacobian(scaled);
+      const auto scaledResult =
+          parametrization.directionCoordinatesJacobian(scaled);
       BOOST_REQUIRE(scaledResult.ok());
       const auto& scaledInverse = *scaledResult;
       for (int i = 0; i < 3; ++i) {
@@ -111,13 +120,19 @@ BOOST_AUTO_TEST_CASE(Derivatives) {
         Vector3 minus = scaled;
         plus[i] += h;
         minus[i] -= h;
-        const Vector2 numerical = (chart.directionCoordinates(plus) -
-                                   chart.directionCoordinates(minus)) /
-                                  (2. * h);
+        const Vector2 numerical =
+            (parametrization.directionCoordinates(plus) -
+             parametrization.directionCoordinates(minus)) /
+            (2. * h);
         CHECK_CLOSE_ABS(scaledInverse.col(i), numerical, 1e-6);
       }
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(Derivatives) {
+  checkDerivatives(chart);
+  checkDerivatives(BoundParametrization::telescope());
 }
 
 BOOST_AUTO_TEST_CASE(UnitDirectionDerivativesNearPoles) {
@@ -182,13 +197,14 @@ BOOST_AUTO_TEST_CASE(PolesAndInvalidInputs) {
   BOOST_CHECK(!chart.isInDomain(values));
 }
 
-BOOST_AUTO_TEST_CASE(PeriodicResidualAndCovarianceBasis) {
+void checkResidualAndCovarianceBasis(
+    const BoundParametrization& parametrization) {
   BoundVector lhs(1., 2., std::numbers::pi - 0.01, 1.2, 0.01, 4.);
   BoundVector rhs = lhs;
   rhs[eBoundDir0] = -std::numbers::pi + 0.01;
-  const BoundVector delta = chart.difference(lhs, rhs);
+  const BoundVector delta = parametrization.difference(lhs, rhs);
   BOOST_CHECK_CLOSE(delta[eBoundDir0], -0.02, 1e-9);
-  CHECK_CLOSE_ABS(chart.update(rhs, delta), lhs, 1e-14);
+  CHECK_CLOSE_ABS(parametrization.update(rhs, delta), lhs, 1e-14);
 
   BoundMatrix covariance = BoundMatrix::Identity();
   covariance(eBoundLoc0, eBoundDir1) = 0.2;
@@ -200,11 +216,12 @@ BOOST_AUTO_TEST_CASE(PeriodicResidualAndCovarianceBasis) {
     BoundVector raw = lhs;
     raw[eBoundDir1] = theta;
     const Eigen::Map<const BoundVector> map(raw.data());
-    const auto result = chart.canonicalize(map, covMap);
+    const auto result = parametrization.canonicalize(map, covMap);
     BOOST_REQUIRE(result.ok());
     const auto& [canonical, transformed] = *result;
-    CHECK_CLOSE_ABS(chart.direction(canonical), chart.direction(raw), 1e-14);
-    const auto jacobianResult = chart.canonicalizationJacobian(map);
+    CHECK_CLOSE_ABS(parametrization.direction(canonical),
+                    parametrization.direction(raw), 1e-14);
+    const auto jacobianResult = parametrization.canonicalizationJacobian(map);
     BOOST_REQUIRE(jacobianResult.ok());
     const BoundMatrix& jacobian = *jacobianResult;
     const double sign = (theta == -0.7 || theta == 3.8) ? -1. : 1.;
@@ -218,13 +235,13 @@ BOOST_AUTO_TEST_CASE(PeriodicResidualAndCovarianceBasis) {
       plus[i] += h;
       minus[i] -= h;
       const BoundVector numerical =
-          chart.difference(chart.canonicalize(plus),
-                           chart.canonicalize(minus)) /
+          parametrization.difference(parametrization.canonicalize(plus),
+                                     parametrization.canonicalize(minus)) /
           (2. * h);
       CHECK_CLOSE_ABS(jacobian.col(i), numerical, 1e-8);
     }
-    const Matrix<3, 2> before = chart.directionJacobian(raw);
-    const Matrix<3, 2> after = chart.directionJacobian(canonical);
+    const Matrix<3, 2> before = parametrization.directionJacobian(raw);
+    const Matrix<3, 2> after = parametrization.directionJacobian(canonical);
     CHECK_CLOSE_ABS((before * covariance.block<2, 2>(eBoundDir0, eBoundDir0) *
                      before.transpose())
                         .eval(),
@@ -233,6 +250,56 @@ BOOST_AUTO_TEST_CASE(PeriodicResidualAndCovarianceBasis) {
                         .eval(),
                     1e-13);
   }
+}
+
+BOOST_AUTO_TEST_CASE(PeriodicResidualAndCovarianceBasis) {
+  checkResidualAndCovarianceBasis(chart);
+  checkResidualAndCovarianceBasis(BoundParametrization::telescope());
+}
+
+BOOST_AUTO_TEST_CASE(TelescopeFrame) {
+  constexpr auto telescope = BoundParametrization::telescope();
+  BoundVector values = BoundVector::Zero();
+  for (double sign : {-1., 1.}) {
+    const Vector3 axial = sign * Vector3::UnitZ();
+    const Vector2 angles = telescope.directionCoordinates(axial);
+    BOOST_CHECK_EQUAL(
+        angles, Vector2(sign * std::numbers::pi / 2., std::numbers::pi / 2.));
+    values.segment<2>(eBoundDir0) = angles;
+    BOOST_CHECK_EQUAL(telescope.direction(values), axial);
+    BOOST_CHECK_EQUAL(telescope.phi(values), 0.);
+    BOOST_CHECK_EQUAL(telescope.sinTheta(values), 0.);
+    BOOST_CHECK_EQUAL(telescope.theta(values),
+                      sign > 0. ? 0. : std::numbers::pi);
+    BOOST_CHECK(telescope.isInDomain(values));
+    BOOST_CHECK(!telescope.isValid(values, true, 0., 8.));
+    // At the beam axis the chart's two angular derivatives are orthonormal.
+    Matrix<3, 2> expected;
+    expected.col(0) = -sign * Vector3::UnitY();
+    expected.col(1) = -Vector3::UnitX();
+    BOOST_CHECK_EQUAL(telescope.directionJacobian(values), expected);
+    BOOST_CHECK_EQUAL(telescope.directionJacobianFromUnitDirection(axial),
+                      expected);
+    const auto inverse = telescope.directionCoordinatesJacobian(axial);
+    BOOST_REQUIRE(inverse.ok());
+    BOOST_CHECK_EQUAL(*inverse, expected.transpose());
+
+    const Vector3 pole = sign * Vector3::UnitX();
+    values.segment<2>(eBoundDir0) = telescope.directionCoordinates(pole);
+    BOOST_CHECK_EQUAL(telescope.direction(values), pole);
+    BOOST_CHECK(telescope.isValid(values, true, 1e-6, 0.1));
+    BOOST_CHECK(!telescope.isInDomain(values, 0.));
+    const auto singular = telescope.directionCoordinatesJacobian(pole, 0.);
+    BOOST_REQUIRE(!singular.ok());
+    BOOST_CHECK(singular.error() ==
+                BoundParametrizationError::SingularDirection);
+  }
+
+  const Vector3 global = Vector3(2., -3., 4.).normalized();
+  values.segment<2>(eBoundDir0) = telescope.directionCoordinates(global);
+  CHECK_CLOSE_ABS(telescope.direction(values), global, 1e-14);
+  CHECK_CLOSE_ABS(telescope.phi(values), VectorHelpers::phi(global), 1e-14);
+  CHECK_CLOSE_ABS(telescope.theta(values), VectorHelpers::theta(global), 1e-14);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

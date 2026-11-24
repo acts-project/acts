@@ -63,6 +63,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <random>
 #include <string>
 #include <system_error>
@@ -663,11 +664,15 @@ struct MaterialFixture {
     return std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
   }
 
-  MaterialFixture()
+  explicit MaterialFixture(
+      std::optional<BoundTrackParameters> seed = std::nullopt)
       : ckf(ConstantFieldPropagator(ConstantFieldStepper(makeField()),
                                     makeNavigator(detector.geometry))),
         bremCkf(BremPropagator(BremPropagator::Stepper(makeField()),
                                makeNavigator(detector.geometry))) {
+    if (seed.has_value()) {
+      startParameters = std::move(*seed);
+    }
     MeasurementResolution res = {MeasurementType::eLoc01, {25_um, 50_um}};
     MeasurementResolutionMap resolutions = {{GeometryIdentifier(), res}};
 
@@ -693,11 +698,12 @@ struct MaterialFixture {
   }
 
   /// Run the CKF once and return the container holding the single found track
-  TrackContainer find(bool recordMaterialStates) {
+  TrackContainer find(bool recordMaterialStates, bool energyLoss = true) {
     auto options = CombinatorialKalmanFilterOptions(
         geoCtx, magCtx, calCtx, getExtensions(),
         PropagatorPlainOptions(geoCtx, magCtx));
     options.recordMaterialStates = recordMaterialStates;
+    options.energyLoss = energyLoss;
 
     TestSourceLinkAccessor slAccessor;
     slAccessor.container = &sourceLinks;
@@ -826,6 +832,131 @@ BOOST_AUTO_TEST_CASE(MaterialStatesSkipped) {
   for (const auto state : track.trackStatesReversed()) {
     BOOST_CHECK(state.typeFlags().hasMeasurement());
   }
+}
+
+BOOST_AUTO_TEST_CASE(TelescopeSeedAndCanonicalMaterialPlane) {
+  // Tilt the beam away from both chart poles. Scattering variances in the
+  // telescope and canonical angular coordinates are then quite different.
+  const Vector3 direction = Vector3(1., .08, .12).normalized();
+  constexpr auto sourceChart = BoundParametrization::telescope();
+  constexpr auto planeChart = BoundParametrization::globalSpherical();
+  BoundMatrix covariance = BoundMatrix::Identity() * 1e-3;
+  covariance(eBoundDir0, eBoundDir0) = 4e-3;
+  const auto seed = BoundTrackParameters::createCurvilinear(
+      Vector4(.1_m, 0., 0., 0.), direction, 1_e / 1_GeV, covariance, pion,
+      sourceChart);
+  MaterialFixture fixture(seed);
+  const auto check = [&](bool energyLoss) {
+    auto recorded = fixture.find(true, energyLoss);
+    auto skipped = fixture.find(false, energyLoss);
+    auto withMaterial = recorded.getTrack(0);
+    auto measurements = skipped.getTrack(0);
+    withMaterial.linkForward();
+    measurements.linkForward();
+
+    const auto material = withMaterial.innermostTrackState();
+    BOOST_REQUIRE(material.has_value());
+    BOOST_REQUIRE(material->typeFlags().isMaterial());
+    BOOST_REQUIRE(!material->typeFlags().hasMeasurement());
+    BOOST_REQUIRE(material->referenceSurface().boundParametrization(
+                      fixture.geoCtx) == planeChart);
+    // The first recorded state is the canonical approach plane. In zero field
+    // its direction block is exactly the coordinate change at the incident ray.
+    const auto encode = planeChart.directionCoordinatesJacobian(direction);
+    BOOST_REQUIRE(encode.ok());
+    const SquareMatrix2 change =
+        *encode * sourceChart.directionJacobian(seed.parameters());
+    const SquareMatrix2 directionBlock =
+        material->jacobian().block<2, 2>(eBoundDir0, eBoundDir0);
+    CHECK_CLOSE_ABS(directionBlock, change, 1e-12);
+    const SquareMatrix2 incoming =
+        change * covariance.block<2, 2>(eBoundDir0, eBoundDir0) *
+        change.transpose();
+    // This material has split factor one. On the forward pass all scattering
+    // is applied after the approach-plane prediction is recorded.
+    const SquareMatrix2 predicted =
+        material->predictedCovariance().block<2, 2>(eBoundDir0, eBoundDir0);
+    CHECK_CLOSE_ABS(predicted, incoming, 1e-12);
+
+    // With scattering alone the skipped plane can use the rotated curvilinear
+    // frame. Energy loss changes dt/ds at the physical intersection. In both
+    // cases the complete covariance must agree at the next measurement.
+    auto firstHit = measurements.innermostTrackState();
+    BOOST_REQUIRE(firstHit.has_value() &&
+                  firstHit->typeFlags().hasMeasurement());
+    for (const auto state : withMaterial.trackStates()) {
+      if (state.typeFlags().hasMeasurement()) {
+        BOOST_REQUIRE_EQUAL(&state.referenceSurface(),
+                            &firstHit->referenceSurface());
+        BOOST_CHECK_GT(state.predictedCovariance()(eBoundDir1, eBoundDir1),
+                       incoming(1, 1));
+        CHECK_CLOSE_ABS(state.predictedCovariance(),
+                        firstHit->predictedCovariance(), 1e-8);
+        return;
+      }
+    }
+    BOOST_FAIL("No measurement after the material-only approach plane");
+  };
+  for (bool energyLoss : {false, true}) {
+    BOOST_TEST_CONTEXT("energyLoss=" << energyLoss) {
+      check(energyLoss);
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(SkippedMaterialPlaneAtItsChartPole) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  const MagneticFieldContext mctx;
+  constexpr auto telescope = BoundParametrization::telescope();
+  BoundMatrix covariance = BoundMatrix::Identity();
+  covariance(eBoundLoc0, eBoundLoc0) = 3.;
+  covariance(eBoundLoc0, eBoundDir1) = covariance(eBoundDir1, eBoundLoc0) = .2;
+  const auto seed = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), Vector3::UnitZ(), 1_e / 1_GeV, covariance, pion,
+      telescope);
+  const EigenStepper<> stepper(MaterialFixture::makeField());
+  EigenStepper<>::Options options(gctx, mctx);
+  options.maxStepSize = 10_mm;
+  auto propagated = [&] {
+    auto state = stepper.makeState(options);
+    stepper.initialize(state, seed);
+    BOOST_REQUIRE(stepper.step(state, Direction::Forward(), nullptr).ok());
+    return state;
+  };
+  auto skipped = propagated();
+  Transform3 transform = Transform3::Identity();
+  transform.translate(stepper.position(skipped));
+  transform.rotate(AngleAxis3(.3, Vector3::UnitY()));
+  transform.rotate(AngleAxis3(.6, Vector3::UnitZ()));
+  const auto canonicalPlane = Surface::makeShared<PlaneSurface>(transform);
+  canonicalPlane->assignSurfaceMaterial(
+      std::make_shared<HomogeneousSurfaceMaterial>(
+          MaterialSlab(makeSilicon(), 5_mm)));
+
+  // The independent reference has the same physical intersection and local
+  // axes. Its telescope direction coordinates remain regular at global +Z.
+  auto reference = propagated();
+  const auto telescopePlane =
+      Surface::makeShared<PlaneSurface>(transform, nullptr, telescope);
+  const auto expected = stepper.transportToBound(reference, *telescopePlane);
+  BOOST_REQUIRE(expected.ok());
+  auto chart = canonicalPlane->boundParametrization(gctx);
+  const auto jacobian = detail::transportToCkfMaterialSurface(
+      stepper, skipped, gctx, *canonicalPlane, false, true, chart);
+  BOOST_REQUIRE(jacobian.ok());
+  BOOST_CHECK(chart == telescope);
+  CHECK_CLOSE_ABS(*jacobian, *expected, 1e-12);
+  CHECK_CLOSE_ABS(*stepper.covariance(skipped), *stepper.covariance(reference),
+                  1e-12);
+
+  // A recorded state must use the actual plane's chart, which has no inverse
+  // direction derivative here.
+  auto recorded = propagated();
+  chart = canonicalPlane->boundParametrization(gctx);
+  const auto singular = detail::transportToCkfMaterialSurface(
+      stepper, recorded, gctx, *canonicalPlane, true, true, chart);
+  BOOST_REQUIRE(!singular.ok());
+  BOOST_CHECK(singular.error() == BoundParametrizationError::SingularDirection);
 }
 
 // The transport must be the same whether or not the surfaces in between were

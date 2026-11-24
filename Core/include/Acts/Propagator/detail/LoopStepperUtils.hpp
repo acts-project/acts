@@ -22,10 +22,9 @@ inline void requireMultiStepperParametrization(const GeometryContext& gctx,
   if (!surface.boundParametrization(gctx).isGlobalSpherical()) {
     throw std::system_error(
         make_error_code(MultiStepperError::UnsupportedBoundParametrization),
-        std::format(
-            "MultiStepperLoop cannot consume noncanonical coordinates on "
-            "surface {}",
-            surface.geometryId()));
+        std::format("MultiStepperLoop cannot consume telescope coordinates on "
+                    "surface {}",
+                    surface.geometryId()));
   }
 }
 

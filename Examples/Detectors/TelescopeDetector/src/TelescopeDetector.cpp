@@ -20,32 +20,7 @@
 namespace ActsExamples {
 
 TelescopeDetector::TelescopeDetector(const Config& cfg)
-    : Detector(Acts::getDefaultLogger("TelescopeDetector", cfg.logLevel)),
-      m_cfg(cfg) {
-  if (m_cfg.surfaceType > 1) {
-    throw std::invalid_argument(
-        "The surface type could either be 0 for plane surface or 1 for disc "
-        "surface.");
-  }
-  if (m_cfg.rotDirection > 2) {
-    throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
-  }
-  // Check if the bounds values are valid
-  if (m_cfg.surfaceType == 1 && m_cfg.bounds[0] >= m_cfg.bounds[1]) {
-    throw std::invalid_argument(
-        "The minR should be smaller than the maxR for disc surface bounds.");
-  }
-
-  if (m_cfg.positions.empty()) {
-    throw std::invalid_argument("At least one surface position is required.");
-  }
-
-  if (m_cfg.positions.size() != m_cfg.stereos.size()) {
-    throw std::invalid_argument(
-        "The number of provided positions must match the number of "
-        "provided stereo angles.");
-  }
-
+    : TelescopeDetector(cfg, NoBuildTag{}) {
   m_nominalGeometryContext =
       Acts::GeometryContext::dangerouslyDefaultConstruct();
 
@@ -55,13 +30,15 @@ TelescopeDetector::TelescopeDetector(const Config& cfg)
         m_cfg.stereos, m_cfg.offsets, m_cfg.bounds, m_cfg.thickness,
         static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
         static_cast<Acts::AxisDirection>(m_cfg.rotDirection), m_cfg.envelope_x,
-        m_cfg.envelope_y, m_cfg.envelope_z, logger());
+        m_cfg.envelope_y, m_cfg.envelope_z, logger(),
+        m_cfg.boundParametrization());
   } else {
     m_trackingGeometry = buildTelescopeDetector(
         m_nominalGeometryContext, m_detectorStore, m_cfg.positions,
         m_cfg.stereos, m_cfg.offsets, m_cfg.bounds, m_cfg.thickness,
         static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
-        static_cast<Acts::AxisDirection>(m_cfg.rotDirection));
+        static_cast<Acts::AxisDirection>(m_cfg.rotDirection),
+        m_cfg.boundParametrization());
   }
 }
 
@@ -72,6 +49,10 @@ TelescopeDetector::TelescopeDetector(const Config& cfg, NoBuildTag /*unused*/)
     throw std::invalid_argument(
         "The surface type could either be 0 for plane surface or 1 for disc "
         "surface.");
+  }
+  if (m_cfg.useTelescopeChart && m_cfg.surfaceType != 0) {
+    throw std::invalid_argument(
+        "The telescope direction chart requires plane surfaces.");
   }
   if (m_cfg.rotDirection > 2) {
     throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
@@ -111,7 +92,8 @@ std::shared_ptr<Acts::PlaneSurface> TelescopeDetector::getReferenceSurface(
   transform.translation() = position;
 
   auto bounds = std::make_shared<Acts::RectangleBounds>(halfX, halfY);
-  return Acts::Surface::makeShared<Acts::PlaneSurface>(transform, bounds);
+  return Acts::Surface::makeShared<Acts::PlaneSurface>(
+      transform, bounds, m_cfg.boundParametrization());
 }
 
 }  // namespace ActsExamples

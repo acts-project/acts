@@ -28,6 +28,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cmath>
+#include <format>
 #include <ios>
 #include <limits>
 #include <numbers>
@@ -314,6 +315,29 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
   // Track states and measurements live in the reco geometry, the truth hits
   // below in the sim one
   const Acts::GeometryContext& gctx = ctx.recoGeoContext;
+  // A tree entry may already be committed when a later track fails. Validate
+  // the fitted states this event will write before touching the output.
+  for (const auto& track : tracks) {
+    for (const auto& state : track.trackStatesReversed()) {
+      if ((!state.hasPredicted() && !state.hasFiltered() &&
+           !state.hasSmoothed()) ||
+          state.referenceSurface()
+              .boundParametrization(gctx)
+              .isGlobalSpherical()) {
+        continue;
+      }
+      if (state.hasUncalibratedSourceLink() &&
+          state.getUncalibratedSourceLink()
+                  .template getPtr<IndexSourceLink>() == nullptr) {
+        continue;
+      }
+      throw std::invalid_argument(std::format(
+          "RootTrackStatesWriter requires global-spherical fitted parameters "
+          "for its angular errors and pulls; surface {} uses the telescope "
+          "chart",
+          state.referenceSurface().geometryId()));
+    }
+  }
   // Read additional input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);

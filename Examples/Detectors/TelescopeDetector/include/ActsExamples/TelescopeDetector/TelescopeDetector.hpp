@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
@@ -39,6 +40,15 @@ class TelescopeDetector : public Detector {
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
     Acts::Logging::Level logLevel{Acts::Logging::WARNING};
     bool gen3{false};
+    /// Use spherical direction coordinates with a fixed global X polar axis on
+    /// sensitive and reference planes, independently of rotDirection.
+    bool useTelescopeChart{false};
+
+    /// Resolve the direction chart shared by the telescope planes.
+    Acts::BoundParametrization boundParametrization() const {
+      return useTelescopeChart ? Acts::BoundParametrization::telescope()
+                               : Acts::BoundParametrization::globalSpherical();
+    }
   };
 
   explicit TelescopeDetector(const Config& cfg);

@@ -19,6 +19,7 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
@@ -291,6 +292,46 @@ BOOST_AUTO_TEST_CASE(AccessDerivedQuantities) {
   // Check transverse momentum
   double expectedPt = std::sin(track.theta(gctx)) * expectedMomentum;
   BOOST_CHECK_CLOSE(anyTrack.transverseMomentum(gctx), expectedPt, 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(TelescopePhysicalAccessors) {
+  constexpr auto chart = BoundParametrization::telescope();
+  const auto plane =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), nullptr, chart);
+  BoundVector coordinates = BoundVector::Zero();
+  coordinates.segment<2>(eBoundDir0) =
+      chart.directionCoordinates(-Vector3::UnitZ());
+  coordinates[eBoundQOverP] = 1.;
+  const BoundTrackParameters seed(plane, coordinates, std::nullopt,
+                                  ParticleHypothesis::pion());
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto track = tc.makeTrack();
+  track.setReferenceSurface(plane);
+  track.parameters() = coordinates;
+  track.setParticleHypothesis(seed.particleHypothesis());
+
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  const auto check = [&](const auto& parameters) {
+    BOOST_CHECK_EQUAL(parameters.direction(gctx), -Vector3::UnitZ());
+    BOOST_CHECK_EQUAL(parameters.direction(), parameters.direction(gctx));
+    BOOST_CHECK_EQUAL(parameters.phi(), 0.);
+    BOOST_CHECK_EQUAL(parameters.theta(), std::numbers::pi);
+    BOOST_CHECK_EQUAL(parameters.momentum(), parameters.momentum(gctx));
+    BOOST_CHECK_EQUAL(parameters.transverseMomentum(), 0.);
+  };
+  check(seed);
+  check(track);
+  check(AnyConstTrackProxy(track));
+  BOOST_CHECK_EQUAL(track.fourMomentum(), track.fourMomentum(gctx));
+  ACTS_POP_IGNORE_DEPRECATED()
+
+  coordinates[eBoundDir1] = -0.3;
+  BoundMatrix covariance = BoundMatrix::Identity();
+  covariance(eBoundDir1, eBoundLoc0) = covariance(eBoundLoc0, eBoundDir1) = .2;
+  const BoundTrackParameters folded(plane, coordinates, covariance,
+                                    ParticleHypothesis::pion());
+  BOOST_REQUIRE(folded.covariance().has_value());
+  BOOST_CHECK_EQUAL((*folded.covariance())(eBoundLoc0, eBoundDir1), -.2);
 }
 
 BOOST_AUTO_TEST_CASE(AccessStatistics) {

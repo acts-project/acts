@@ -939,10 +939,9 @@ class AtlasStepper {
              .isGlobalSpherical()) {
       throw std::system_error(
           make_error_code(AtlasStepperError::UnsupportedBoundParametrization),
-          std::format(
-              "AtlasStepper requires global-spherical bound coordinates "
-              "on surface {}",
-              surface.geometryId()));
+          std::format("AtlasStepper cannot consume telescope bound coordinates "
+                      "on surface {}",
+                      surface.geometryId()));
     }
   }
 
