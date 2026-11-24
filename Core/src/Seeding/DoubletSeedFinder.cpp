@@ -47,10 +47,8 @@ void DoubletsForMiddleSp::sortByCotTheta(
     return item.cotTheta;
   };
 
-  const auto [scratchSize, bucketSize] =
-      detail::sortByKeyBufferSizes(indexAndCotTheta.size());
-  storage.scratch.resize(std::max(storage.scratch.size(), scratchSize));
-  storage.buckets.resize(std::max(storage.buckets.size(), bucketSize));
+  detail::ensureSortByKeyBuffers(std::span(indexAndCotTheta), storage.scratch,
+                                 storage.buckets);
   detail::sortByKey(std::span(indexAndCotTheta), std::span(storage.scratch),
                     std::span(storage.buckets), cotThetaOf);
 }

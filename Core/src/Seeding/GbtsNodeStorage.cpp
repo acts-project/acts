@@ -175,10 +175,7 @@ void GbtsNodeStorage::finalize() {
       const StagedNode& nodeB = staged[b.second];
       return std::tie(nodeA.z, nodeA.r) < std::tie(nodeB.z, nodeB.r);
     };
-    const auto [scratchSize, bucketSize] =
-        Acts::detail::sortByKeyBufferSizes(phiOrder.size());
-    scratch.resize(std::max(scratch.size(), scratchSize));
-    buckets.resize(std::max(buckets.size(), bucketSize));
+    Acts::detail::ensureSortByKeyBuffers(std::span(phiOrder), scratch, buckets);
     Acts::detail::sortByKey(std::span(phiOrder), std::span(scratch),
                             std::span(buckets), keyOf, byPosition);
 

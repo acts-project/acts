@@ -21,6 +21,7 @@
 #include <numeric>
 #include <span>
 #include <utility>
+#include <vector>
 
 namespace Acts::detail {
 
@@ -40,6 +41,19 @@ constexpr std::pair<std::size_t, std::size_t> sortByKeyBufferSizes(
     return {0, 0};
   }
   return {size, 2 * std::bit_ceil(size) + size};
+}
+
+/// Grow the sorting buffers as needed, retaining their sizes for reuse.
+/// @param items The items to sort
+/// @param scratch Reusable item buffer
+/// @param buckets Reusable bucket buffer
+template <typename item_t>
+void ensureSortByKeyBuffers(std::span<item_t> items,
+                            std::vector<item_t>& scratch,
+                            std::vector<std::uint32_t>& buckets) {
+  const auto [scratchSize, bucketSize] = sortByKeyBufferSizes(items.size());
+  scratch.resize(std::max(scratch.size(), scratchSize));
+  buckets.resize(std::max(buckets.size(), bucketSize));
 }
 
 /// Sorts at most @p kMaxSize items stably by key with a rank sort: an item's
