@@ -424,7 +424,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(PriorNodeStepEqualsSmoothingWithPriorAsState,
 
   auto segmentFirstState = tc.trackStateContainer().getTrackState(segmentFirst);
   auto step =
-      detail::smoothPriorNode(AnyConstTrackStateProxy{segmentFirstState},
+      detail::smoothPriorNode(gctx, AnyConstTrackStateProxy{segmentFirstState},
+                              detail::trackletStateParametrization(gctx, prior),
                               priorMean, priorCov, getDummyLogger());
   BOOST_REQUIRE(step.ok());
   CHECK_CLOSE_ABS(step->first, prior.smoothed(), 1e-10);
@@ -547,7 +548,7 @@ BOOST_AUTO_TEST_CASE(ConditioningRejectsStateOffTheChain) {
   Container tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto tracklets = buildTracklets(tc, nodes, Variant::Base);
   auto res = detail::conditionSmoothedStatesOnSharedState(
-      tc.trackStateContainer(), tracklets.second.tipIndex(),
+      gctx, tc.trackStateContainer(), tracklets.second.tipIndex(),
       tracklets.first.tipIndex(), tracklets.shared.smoothed(),
       tracklets.shared.smoothedCovariance(), getDummyLogger());
   BOOST_CHECK(!res.ok());
@@ -744,7 +745,7 @@ BOOST_AUTO_TEST_CASE(ConditioningRejectsMissingPrediction) {
   auto t = buildTracklets(tc, makeModel(Variant::Base), Variant::Base);
   t.shared.unset(TrackStatePropMask::Predicted);
   BOOST_CHECK(!detail::conditionSmoothedStatesOnSharedState(
-                   tc.trackStateContainer(), t.shared.index(),
+                   gctx, tc.trackStateContainer(), t.shared.index(),
                    t.first.tipIndex(), t.shared.smoothed(),
                    t.shared.smoothedCovariance(), getDummyLogger())
                    .ok());
@@ -824,13 +825,14 @@ BOOST_AUTO_TEST_CASE(RejectInvalidCovariances) {
     t.shared.smoothedCovariance() = cov;
     t.shared.predictedCovariance() = cov;
     BOOST_CHECK(!detail::makeSharedStateCondition(
-                     AnyConstTrackStateProxy{t.shared}, kPriorMean, kPriorCov,
-                     getDummyLogger())
+                     gctx, AnyConstTrackStateProxy{t.shared}, kPriorMean,
+                     kPriorCov, getDummyLogger())
                      .ok());
-    BOOST_CHECK(!detail::smoothPriorNode(AnyConstTrackStateProxy{t.shared},
-                                         kPriorMean, kPriorCov,
-                                         getDummyLogger())
-                     .ok());
+    BOOST_CHECK(
+        !detail::smoothPriorNode(gctx, AnyConstTrackStateProxy{t.shared},
+                                 BoundParametrization::globalSpherical(),
+                                 kPriorMean, kPriorCov, getDummyLogger())
+             .ok());
   }
 }
 

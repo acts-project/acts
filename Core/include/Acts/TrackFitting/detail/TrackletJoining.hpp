@@ -11,11 +11,14 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/TrackProxyCommon.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -28,6 +31,19 @@
 #include <vector>
 
 namespace Acts::detail {
+
+/// Parametrization of a state's reference surface, or canonical global
+/// spherical for states without a reference surface.
+/// @param gctx The geometry context
+/// @param ts The track state
+/// @return The bound parametrization of @p ts
+template <typename track_state_proxy_t>
+BoundParametrization trackletStateParametrization(
+    const GeometryContext& gctx, const track_state_proxy_t& ts) {
+  return ts.hasReferenceSurface()
+             ? ts.referenceSurface().boundParametrization(gctx)
+             : BoundParametrization::globalSpherical();
+}
 
 /// Write a smoothed estimate without changing aliased filter history.
 /// @param ts The state to update
@@ -43,16 +59,23 @@ void setSmoothedWithoutSharing(AnyMutableTrackStateProxy ts, BoundVector mean,
 /// one factorization of `Pp` per segment. The modified Bryson-Frazier form
 /// would need the adjoint of the first state, which the smoother does not
 /// store and which costs the same factorization to recover.
+/// The residual `xs - xp` is taken in the parametrization of @p first and the
+/// result is canonicalized in @p priorParametrization.
+/// @param gctx The geometry context
 /// @param first The first state of the segment, smoothed
+/// @param priorParametrization The parametrization of the prior node
 /// @param priorMean The estimate at the prior node
 /// @param priorCov Its covariance
 /// @param logger The logger
 /// @return The estimate at the prior node with the segment included, or
 ///         `KalmanFitterError::SmoothFailed` if the predicted covariance
-///         is not positive definite or the result is not finite
+///         is not positive definite or the result is not finite, or a
+///         canonicalization error
 Result<std::pair<BoundVector, BoundMatrix>> smoothPriorNode(
-    const AnyConstTrackStateProxy& first, const BoundVector& priorMean,
-    const BoundMatrix& priorCov, const Logger& logger);
+    const GeometryContext& gctx, const AnyConstTrackStateProxy& first,
+    const BoundParametrization& priorParametrization,
+    const BoundVector& priorMean, const BoundMatrix& priorCov,
+    const Logger& logger);
 
 /// Per-track terms of the conditioning on a shared state: the change of the
 /// shared state mapped by `Z = Pp_s Ps_s^-1`
@@ -64,6 +87,7 @@ struct SharedStateCondition {
 };
 
 /// Build the conditioning terms from the shared state and its new estimate
+/// @param gctx The geometry context
 /// @param shared The shared state, smoothed
 /// @param newMean The new estimate of the shared state
 /// @param newCov Its covariance
@@ -71,8 +95,9 @@ struct SharedStateCondition {
 /// @return The terms, or `KalmanFitterError::SmoothFailed` if the shared
 ///         covariance is not positive definite or the terms are not finite
 Result<SharedStateCondition> makeSharedStateCondition(
-    const AnyConstTrackStateProxy& shared, const BoundVector& newMean,
-    const BoundMatrix& newCov, const Logger& logger);
+    const GeometryContext& gctx, const AnyConstTrackStateProxy& shared,
+    const BoundVector& newMean, const BoundMatrix& newCov,
+    const Logger& logger);
 
 /// Sensitivity of the filtered state to the prior mean, `Df = (I - K H) Dp`.
 /// This and @ref conditionTrackState are the recursions of the modified
@@ -88,6 +113,7 @@ BoundMatrix filteredSensitivity(const AnyConstTrackStateProxy& ts,
 /// previous state, as the modified Bryson-Frazier smoother transports its
 /// adjoint: `T = Df - Pf Psi^`, `x += T u`, `P += T w T^T`,
 /// `Psi^ <- F^T (H^T S^-1 H Dp + (I - K H)^T Psi^)`
+/// @param gctx The geometry context
 /// @param ts The state
 /// @param dp The sensitivity of its predicted state
 /// @param df The sensitivity of its filtered state
@@ -95,8 +121,9 @@ BoundMatrix filteredSensitivity(const AnyConstTrackStateProxy& ts,
 /// @param condition The per-track terms
 /// @param logger The logger
 /// @return Success, or `KalmanFitterError::SmoothFailed` if the result is
-///         not finite
-Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
+///         not finite, or a canonicalization error
+Result<void> conditionTrackState(const GeometryContext& gctx,
+                                 AnyMutableTrackStateProxy ts,
                                  const BoundMatrix& dp, const BoundMatrix& df,
                                  BoundMatrix& psiHat,
                                  const SharedStateCondition& condition,
@@ -119,6 +146,7 @@ Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
 /// estimate. States after the last smoothed state stay as they are.
 ///
 /// @tparam traj_t The MultiTrajectory type
+/// @param gctx The geometry context
 /// @param trajectory The trajectory that holds the segment
 /// @param sharedIndex The index of the shared state
 /// @param tipIndex The index of the last state of the segment in filter order
@@ -129,12 +157,10 @@ Result<void> conditionTrackState(AnyMutableTrackStateProxy ts,
 ///         state is not on the chain, a state lacks components, or a result
 ///         is not finite
 template <typename traj_t>
-Result<void> conditionSmoothedStatesOnSharedState(traj_t& trajectory,
-                                                  std::size_t sharedIndex,
-                                                  std::size_t tipIndex,
-                                                  const BoundVector& newMean,
-                                                  const BoundMatrix& newCov,
-                                                  const Logger& logger) {
+Result<void> conditionSmoothedStatesOnSharedState(
+    const GeometryContext& gctx, traj_t& trajectory, std::size_t sharedIndex,
+    std::size_t tipIndex, const BoundVector& newMean, const BoundMatrix& newCov,
+    const Logger& logger) {
   using TrackStateProxy = typename traj_t::TrackStateProxy;
 
   // collect the segment from the tip down to the shared state
@@ -166,8 +192,8 @@ Result<void> conditionSmoothedStatesOnSharedState(traj_t& trajectory,
                                << " lacks smoothed or predicted parameters");
     return KalmanFitterError::SmoothFailed;
   }
-  auto condition = makeSharedStateCondition(AnyConstTrackStateProxy{shared},
-                                            newMean, newCov, logger);
+  auto condition = makeSharedStateCondition(
+      gctx, AnyConstTrackStateProxy{shared}, newMean, newCov, logger);
   if (!condition.ok()) {
     return condition.error();
   }
@@ -197,7 +223,7 @@ Result<void> conditionSmoothedStatesOnSharedState(traj_t& trajectory,
   for (std::size_t k = 0; k + 1 < indices.size(); ++k) {
     auto ts = trajectory.getTrackState(indices[k]);
     const auto& [dp, dfk] = sensitivities[k];
-    auto res = conditionTrackState(AnyMutableTrackStateProxy{ts}, dp, dfk,
+    auto res = conditionTrackState(gctx, AnyMutableTrackStateProxy{ts}, dp, dfk,
                                    psiHat, *condition, logger);
     if (!res.ok()) {
       return res.error();
