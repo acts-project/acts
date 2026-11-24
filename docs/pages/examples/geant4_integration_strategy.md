@@ -308,6 +308,68 @@ ctest --test-dir build --output-on-failure -R 'Geant4|HepMC3Decay'
 python -m pytest -q Python/Examples/tests/test_geant4_hepmc_decays.py
 ```
 
+#### Charged-pion decays of the short-lived neutral kaon
+
+In 1,024 Pythia8 hadronic Z events at 91.2 GeV, 1,202 kaons were generated
+with the forced decay `K_S → π⁺π⁻`. The ODD input selection retained 1,175.
+Geant4 produced 1,136 prescribed pairs, 22 parents reached the transport
+volume limit, and 17 produced nuclear secondaries without the pion pair.
+
+The default ODD reconstruction gave unique, charge-correct CKF matches for
+both daughters of 102 decays. Truth identified the pairs. The decay-position
+estimate uses the closest approach of the two fitted helices in the 2 T
+field. Assigning pion masses to their momenta at closest approach gave a
+median dipion mass of 497.81 MeV/c², with the central 68% between 495.07 and
+500.52 MeV/c². The median 3D distance to the simulated decay vertex was
+0.14 mm. All matched pairs enter the plot without a mass or radius cut.
+
+![Dipion mass from the two fitted tracks and reconstructed decay radius](figures/ks-reconstruction.png)
+
+An independent gun sample contained 4,000 kaons at each of 0.5, 2 and
+5 GeV/c. Pythia8 sampled the lifetime and generated the decay in each
+event. Every kaon decayed inside the zero-field vacuum telescope. The four-worker
+and serial outputs had identical ROOT content hashes for particles and hits.
+At daughter creation, the mean pion rest-frame momentum was 205.9712 MeV/c.
+Two-body kinematics gives 205.9716 MeV/c using the PDG masses. Pythia used
+497.610 MeV/c² for the kaon and 139.570 MeV/c² for the pion. The small forward
+excess (6,102 of 12,000 positive pions) is already present in the HepMC sample.
+
+![Pion momenta, invariant-mass difference and decay angle at creation](figures/ks-kinematics.png)
+
+The gun's mean proper flight length, measured from the Geant4 vertices and
+kaon boost, was 26.83 ± 0.24 mm (statistical). The PDG value is 26.844 mm.
+In the ODD sample, five of the 1,136 prescribed decays moved by 0.81–3.94 mm
+relative to the generator endpoint. Four parents produced nuclear recoil
+tracks and a Geant4 step trace for the fifth recorded elastic scattering in
+a cooling pipe. The dipion invariant mass was preserved for all five.
+[PDG neutral kaon properties](https://pdg.lbl.gov/2025/tables/rpp2025-tab-mesons-strange.pdf)
+and [charged pion properties](https://pdg.lbl.gov/2025/tables/rpp2025-tab-mesons-light.pdf).
+
+![Proper-flight-length distribution and vertex shifts in detector material](figures/ks-flight.png)
+
+To reproduce the three figures, use an ACTS Examples build with ODD, ROOT,
+Pythia8, HepMC3 and multithreaded Geant4 with its physics datasets.
+The Python analysis uses NumPy, uproot, awkward, pyhepmc and Matplotlib.
+The particle gun accesses the installed Pythia8 headers and library through
+ROOT's cppyy.
+
+```sh
+s=Examples/Scripts/Python
+d=build/ks-check
+python "$s/geant4_ks_samples.py" generate-gun "$d/gun.hepmc3"
+python "$s/geant4_ks_samples.py" transport "$d/gun.hepmc3" "$d/gun" --workers 4
+python "$s/geant4_ks_samples.py" generate-z "$d/z.hepmc3" --events 1024
+python "$s/full_chain_odd.py" --hepmc3 "$d/z.hepmc3" --decay-pdg-codes 310 \
+  --geant4 --geant4-workers 3 -j 4 -n 1024 --output-root -o "$d/odd"
+python "$s/geant4_ks_candidates.py" --hepmc "$d/gun.hepmc3" \
+  --particles "$d/gun/particles_simulation.root" --output "$d/gun.csv"
+python "$s/geant4_ks_candidates.py" --hepmc "$d/z.hepmc3" \
+  --particles "$d/odd/particles_simulation.root" --output "$d/odd.csv"
+python "$s/geant4_ks_tracks.py" --candidates "$d/odd.csv" --odd "$d/odd" --output "$d/fits.csv"
+python "$s/plot_geant4_ks_decays.py" --gun "$d/gun.csv" --odd "$d/odd.csv" \
+  --fits "$d/fits.csv" --output "$d/figures"
+```
+
 ### Improve measured overhead and event throughput
 
 Incorporate #6407 and compare serial and multiprocessing results and resource
