@@ -227,8 +227,8 @@ ProcessCode RootTrackParameterWriter::writeT(
 
     m_charge = static_cast<int>(params.charge());
     m_p = params.absoluteMomentum();
-    m_pt = params.transverseMomentum();
-    m_eta = eta(params.momentum());
+    m_pt = params.transverseMomentum(ctx.recoGeoContext);
+    m_eta = eta(params.momentum(ctx.recoGeoContext));
 
     // Get the proto track from which the track parameters are estimated
     const auto& ptrack = protoTracks[iparams];

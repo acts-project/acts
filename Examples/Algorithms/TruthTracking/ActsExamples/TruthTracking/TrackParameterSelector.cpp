@@ -45,7 +45,8 @@ ProcessCode TrackParameterSelector::execute(const AlgorithmContext& ctx) const {
     const auto theta = trk.template get<Acts::eBoundDir1>();
     const auto eta = Acts::AngleHelpers::etaFromTheta(theta);
     // define charge selection
-    return within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
+    return within(trk.transverseMomentum(ctx.recoGeoContext), m_cfg.ptMin,
+                  m_cfg.ptMax) &&
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
            within(eta, m_cfg.etaMin, m_cfg.etaMax) &&
            within(trk.template get<Acts::eBoundDir0>(), m_cfg.phiMin,

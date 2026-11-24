@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
       sls.transportToBound(slsState, *plane, freeToBoundCorrection).value();
   auto boundPars = sls.boundParameters(slsState, *plane).value();
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), 1e-6);
-  CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
+  CHECK_CLOSE_ABS(boundPars.momentum(tgContext), bp.momentum(tgContext), 1e-6);
   CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
   BOOST_CHECK(boundPars.covariance().has_value());

@@ -649,7 +649,8 @@ void RootVertexNTupleWriter::writeTrackInfo(
     Acts::Intersection3D intersection =
         perigeeSurface
             ->intersect(ctx.recoGeoContext, params.position(ctx.recoGeoContext),
-                        params.direction(), Acts::BoundaryTolerance::Infinite())
+                        params.direction(ctx.recoGeoContext),
+                        Acts::BoundaryTolerance::Infinite())
             .closest();
 
     // Setting the geometry/magnetic field context for the event
@@ -743,7 +744,7 @@ void RootVertexNTupleWriter::writeTrackInfo(
         innerPullQOverP.push_back(
             pull(diffMom[2], momCov(2, 2), "q/p", false, logger()));
 
-        const auto& recoUnitDir = paramsAtVtx->direction();
+        const auto& recoUnitDir = paramsAtVtx->direction(ctx.recoGeoContext);
         double overlap = trueUnitDir.dot(recoUnitDir);
         innerMomOverlap.push_back(overlap);
       } else {
@@ -797,7 +798,8 @@ void RootVertexNTupleWriter::writeTrackInfo(
         innerPullQOverPFitted.push_back(
             pull(diffMomFitted[2], momCovFitted(2, 2), "q/p", true, logger()));
 
-        const auto& recoUnitDirFitted = paramsAtVtxFitted->direction();
+        const auto& recoUnitDirFitted =
+            paramsAtVtxFitted->direction(ctx.recoGeoContext);
         double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
         innerMomOverlapFitted.push_back(overlapFitted);
       } else {

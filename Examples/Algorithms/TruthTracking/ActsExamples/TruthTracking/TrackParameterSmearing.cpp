@@ -87,9 +87,9 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
   for (const auto& inputTrackParameters : inputTrackParametersContainer) {
     const auto position = inputTrackParameters.localPosition();
     const auto time = inputTrackParameters.time();
-    const auto phi = inputTrackParameters.phi();
-    const auto theta = inputTrackParameters.theta();
-    const auto pt = inputTrackParameters.transverseMomentum();
+    const auto phi = inputTrackParameters.phi(ctx.recoGeoContext);
+    const auto theta = inputTrackParameters.theta(ctx.recoGeoContext);
+    const auto pt = inputTrackParameters.transverseMomentum(ctx.recoGeoContext);
     const auto qOverP = inputTrackParameters.qOverP();
     const auto particleHypothesis = m_cfg.particleHypothesis.value_or(
         inputTrackParameters.particleHypothesis());

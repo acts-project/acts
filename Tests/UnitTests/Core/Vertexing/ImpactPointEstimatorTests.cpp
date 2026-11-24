@@ -259,7 +259,8 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   Intersection3D intersection =
       refPerigeeSurface
           ->intersect(geoContext, params.position(geoContext),
-                      params.direction(), BoundaryTolerance::Infinite())
+                      params.direction(geoContext),
+                      BoundaryTolerance::Infinite())
           .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
@@ -504,7 +505,8 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
 
   // A vertex ahead of the track is reached too
   Vector4 aheadPos = ip_pos;
-  aheadPos.head<3>() = track.position(geoContext) + 10_mm * track.direction();
+  aheadPos.head<3>() =
+      track.position(geoContext) + 10_mm * track.direction(geoContext);
   Vertex aheadVtx(aheadPos, makeVertexCovariance(), {});
   BOOST_CHECK(ipEstimator
                   .getLifetimeSignOfTrack(track, aheadVtx, direction,

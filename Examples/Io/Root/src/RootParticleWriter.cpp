@@ -303,14 +303,15 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     const auto perigeeP =
         atPerigee.absoluteMomentum() / Acts::UnitConstants::GeV;
     m_perigeeP.push_back(Acts::clampValue<float>(perigeeP));
-    const auto dir = atPerigee.direction();
+    const auto dir = atPerigee.direction(ctx.recoGeoContext);
     m_perigeePx.push_back(Acts::clampValue<float>(perigeeP * dir.x()));
     m_perigeePy.push_back(Acts::clampValue<float>(perigeeP * dir.y()));
     m_perigeePz.push_back(Acts::clampValue<float>(perigeeP * dir.z()));
     m_perigeeEta.push_back(Acts::clampValue<float>(
-        Acts::VectorHelpers::eta(atPerigee.direction())));
+        Acts::VectorHelpers::eta(atPerigee.direction(ctx.recoGeoContext))));
     m_perigeePt.push_back(Acts::clampValue<float>(
-        perigeeP * Acts::VectorHelpers::perp(atPerigee.direction())));
+        perigeeP *
+        Acts::VectorHelpers::perp(atPerigee.direction(ctx.recoGeoContext))));
 
     // Push the perigee parameters
     m_perigeeD0.push_back(

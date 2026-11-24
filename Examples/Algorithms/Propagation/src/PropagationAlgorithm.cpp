@@ -80,7 +80,7 @@ ProcessCode PropagationAlgorithm::execute(
 
     // Position / momentum for the output writing
     Acts::Vector3 position = parameters.position(context.recoGeoContext);
-    Acts::Vector3 direction = parameters.direction();
+    Acts::Vector3 direction = parameters.direction(context.recoGeoContext);
 
     // Record the propagator steps
     propagationSummaries.push_back(std::move(propagationOutput.first));

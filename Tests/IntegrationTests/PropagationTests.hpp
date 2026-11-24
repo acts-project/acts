@@ -233,7 +233,7 @@ inline void checkParametersConsistency(const Acts::BoundTrackParameters& cmp,
   // check derived parameters
   CHECK_CLOSE_ABS(cmp.position(geoCtx), ref.position(geoCtx), epsPos);
   CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsTime);
-  CHECK_CLOSE_ABS(cmp.direction(), ref.direction(), epsDir);
+  CHECK_CLOSE_ABS(cmp.direction(geoCtx), ref.direction(geoCtx), epsDir);
   CHECK_CLOSE_ABS(cmp.absoluteMomentum(), ref.absoluteMomentum(), epsMom);
   // charge should be identical not just similar
   BOOST_CHECK_EQUAL(cmp.charge(), ref.charge());
@@ -268,7 +268,7 @@ inline Acts::Transform3 createCurvilinearTransform(
     const Acts::GeometryContext& geoCtx) {
   using namespace Acts;
 
-  Vector3 unitW = params.direction();
+  Vector3 unitW = params.direction(geoCtx);
   auto [unitU, unitV] = createCurvilinearUnitVectors(unitW);
 
   RotationMatrix3 rotation = RotationMatrix3::Zero();
@@ -450,7 +450,8 @@ inline void runToSurfaceTest(const propagator_t& propagator,
   CHECK_CLOSE_ABS(surfParams.position(geoCtx), freeParams.position(geoCtx),
                   epsPos);
   CHECK_CLOSE_ABS(surfParams.time(), freeParams.time(), epsTime);
-  CHECK_CLOSE_ABS(surfParams.direction(), freeParams.direction(), epsDir);
+  CHECK_CLOSE_ABS(surfParams.direction(geoCtx), freeParams.direction(geoCtx),
+                  epsDir);
   CHECK_CLOSE_ABS(surfParams.absoluteMomentum(), freeParams.absoluteMomentum(),
                   epsMom);
   CHECK_CLOSE_ABS(surfPathLength, freePathLength, epsPos);
@@ -560,7 +561,8 @@ inline void runDenseForwardTest(
   BOOST_CHECK(endParams.covariance());
   CHECK_CLOSE_ABS(initialParams.position(geoCtx) + Acts::Vector3(3_m, 0, 0),
                   endParams.position(geoCtx), 1e-6);
-  CHECK_CLOSE_ABS(initialParams.direction(), endParams.direction(), 1e-6);
+  CHECK_CLOSE_ABS(initialParams.direction(geoCtx), endParams.direction(geoCtx),
+                  1e-6);
 
   const auto& cov = endParams.covariance().value();
 

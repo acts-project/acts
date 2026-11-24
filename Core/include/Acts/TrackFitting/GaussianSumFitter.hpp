@@ -243,10 +243,10 @@ struct GaussianSumFitter {
     // Check if the start parameters are on the start surface
     IntersectionStatus intersectionStatusStartSurface =
         sParameters.referenceSurface()
-            .intersect(GeometryContext::dangerouslyDefaultConstruct(),
-                       sParameters.position(
-                           GeometryContext::dangerouslyDefaultConstruct()),
-                       sParameters.direction(), BoundaryTolerance::None())
+            .intersect(options.geoContext,
+                       sParameters.position(options.geoContext),
+                       sParameters.direction(options.geoContext),
+                       BoundaryTolerance::None())
             .closest()
             .status();
 

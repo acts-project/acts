@@ -200,7 +200,7 @@ Parameters convertTrackParametersToEdm4hep(const GeometryContext& gctx,
                                            double Bz,
                                            const BoundTrackParameters& params) {
   Vector3 global = params.referenceSurface().localToGlobal(
-      gctx, params.parameters().template head<2>(), params.direction());
+      gctx, params.parameters().template head<2>(), params.direction(gctx));
 
   std::shared_ptr<const Surface> refSurface =
       params.referenceSurface().getSharedPtr();

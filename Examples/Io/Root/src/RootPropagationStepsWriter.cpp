@@ -158,9 +158,10 @@ ProcessCode RootPropagationStepsWriter::writeT(
     m_t = static_cast<float>(startParameters.parameters()[Acts::eBoundTime]);
 
     // Derived initial trajectory parameters
-    m_eta = static_cast<float>(
-        Acts::VectorHelpers::eta(startParameters.direction()));
-    m_pt = static_cast<float>(startParameters.transverseMomentum());
+    m_eta = static_cast<float>(Acts::VectorHelpers::eta(
+        startParameters.direction(context.recoGeoContext)));
+    m_pt = static_cast<float>(
+        startParameters.transverseMomentum(context.recoGeoContext));
     m_p = static_cast<float>(startParameters.absoluteMomentum());
 
     // Loop over single steps
