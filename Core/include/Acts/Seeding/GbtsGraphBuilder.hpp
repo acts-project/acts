@@ -12,6 +12,7 @@
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
+#include "Acts/Seeding/GbtsProfiler.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -209,12 +210,23 @@ class GbtsGraphBuilder {
   /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
   /// @param minEdgeLevel The level a chain needs to be a seed, for
   ///        `pruneShortChains`; 0 for no pruning
+  /// @param profile Records the doublets and triplets accepted and rejected,
+  ///                if not null
   /// @return The graph, with its edges and the links between them
   GbtsGraph buildTheGraph(const GbtsRoiDescriptor& roi,
                           GbtsNodeStorage& nodeStorage, float bFieldInZ,
-                          std::uint32_t minEdgeLevel = 0) const;
+                          std::uint32_t minEdgeLevel = 0,
+                          GbtsProfiler::Event* profile = nullptr) const;
 
  private:
+  /// `buildTheGraph`, compiled with and without the profiling so that the
+  /// graph costs nothing extra without a profiler.
+  template <bool kProfile>
+  GbtsGraph buildTheGraphImpl(const GbtsRoiDescriptor& roi,
+                              GbtsNodeStorage& nodeStorage, float bFieldInZ,
+                              std::uint32_t minEdgeLevel,
+                              GbtsProfiler::Event* profile) const;
+
   Config m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
