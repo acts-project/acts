@@ -5,72 +5,6 @@
     },
     "entries": [
         {
-            "volume": 16,
-            "value": {
-                "geometric": {
-                    "digital": false,
-                    "indices": [
-                        0,
-                        1
-                    ],
-                    "segmentation": {
-                        "binningdata": [
-                            {
-                                "bins": 660,
-                                "max": 16.5,
-                                "min": -16.5,
-                                "option": "open",
-                                "type": "equidistant",
-                                "value": "binX"
-                            },
-                            {
-                                "bins": 1360,
-                                "max": 34.0,
-                                "min": -34.0,
-                                "option": "open",
-                                "type": "equidistant",
-                                "value": "binY"
-                            }
-                        ]
-                    },
-                    "thickness": 0.125,
-                    "threshold": 0.01,
-                    "charge-smearing": {
-                        "mean": 0.0,
-                        "stddev": 0.01,
-                        "type": "Gauss"
-                    },
-                    "variances": [
-                        {
-                            "index": 0,
-                            "rms": [
-                                0.01408299244940281,
-                                0.0113332848995924
-                            ]
-                        },
-                        {
-                            "index": 1,
-                            "rms": [
-                                0.010534736327826977,
-                                0.0072141652926802635
-                            ]
-                        }
-                    ]
-                },
-                "smearing": [
-                    {
-                        "index": 5,
-                        "stddev": 25,
-                        "type": "GaussClipped",
-                        "range": [
-                            -3,
-                            3
-                        ]
-                    }
-                ]
-            }
-        },
-        {
             "volume": 17,
             "value": {
                 "geometric": {
@@ -150,6 +84,672 @@
                     "segmentation": {
                         "binningdata": [
                             {
+                                "bins": 336,
+                                "max": 8.4,
+                                "min": -8.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1440,
+                                "max": 36.0,
+                                "min": -36.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.011130222119390965,
+                                0.007683569099754095
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.01040897611528635,
+                                0.005050436593592167,
+                                0.005311123561114073,
+                                0.006626787595450878
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 19,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 336,
+                                "max": 8.4,
+                                "min": -8.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1440,
+                                "max": 36.0,
+                                "min": -36.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.011130222119390965,
+                                0.007683569099754095
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.01040897611528635,
+                                0.005050436593592167,
+                                0.005311123561114073,
+                                0.006626787595450878
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 20,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 336,
+                                "max": 8.4,
+                                "min": -8.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1440,
+                                "max": 36.0,
+                                "min": -36.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.011130222119390965,
+                                0.007683569099754095
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.01040897611528635,
+                                0.005050436593592167,
+                                0.005311123561114073,
+                                0.006626787595450878
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 30,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.01408299244940281,
+                                0.0113332848995924
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010534736327826977,
+                                0.0072141652926802635
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 31,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.01408299244940281,
+                                0.0113332848995924
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010534736327826977,
+                                0.0072141652926802635
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 32,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.01408299244940281,
+                                0.0113332848995924
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010534736327826977,
+                                0.0072141652926802635
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 33,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.01408299244940281,
+                                0.0113332848995924
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010534736327826977,
+                                0.0072141652926802635
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 34,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.01408299244940281,
+                                0.0113332848995924
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010534736327826977,
+                                0.0072141652926802635
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 35,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.01408299244940281,
+                                0.0113332848995924
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010534736327826977,
+                                0.0072141652926802635
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 36,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.01408299244940281,
+                                0.0113332848995924
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010534736327826977,
+                                0.0072141652926802635
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 47,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
                                 "bins": 660,
                                 "max": 16.5,
                                 "min": -16.5,
@@ -205,10 +805,10 @@
             }
         },
         {
-            "volume": 23,
+            "volume": 48,
             "value": {
                 "geometric": {
-                    "digital": true,
+                    "digital": false,
                     "indices": [
                         0,
                         1
@@ -216,24 +816,24 @@
                     "segmentation": {
                         "binningdata": [
                             {
-                                "bins": 1410,
-                                "max": 56.4,
-                                "min": -56.4,
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
                                 "option": "open",
                                 "type": "equidistant",
                                 "value": "binX"
                             },
                             {
-                                "bins": 312,
-                                "max": 78.0,
-                                "min": -78.0,
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
                                 "option": "open",
                                 "type": "equidistant",
                                 "value": "binY"
                             }
                         ]
                     },
-                    "thickness": 0.2,
+                    "thickness": 0.125,
                     "threshold": 0.01,
                     "charge-smearing": {
                         "mean": 0.0,
@@ -244,23 +844,364 @@
                         {
                             "index": 0,
                             "rms": [
-                                0.02119974046945572,
-                                0.004564409144222736
+                                0.014081510715186596,
+                                0.011437978595495224
                             ]
                         },
                         {
                             "index": 1,
                             "rms": [
-                                0.1295207291841507,
-                                0.018370402976870537
+                                0.010545756667852402,
+                                0.007189950440078974
                             ]
                         }
                     ]
-                }
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
             }
         },
         {
-            "volume": 24,
+            "volume": 49,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.014081510715186596,
+                                0.011437978595495224
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010545756667852402,
+                                0.007189950440078974
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 50,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.014081510715186596,
+                                0.011437978595495224
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010545756667852402,
+                                0.007189950440078974
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 51,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.014081510715186596,
+                                0.011437978595495224
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010545756667852402,
+                                0.007189950440078974
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 52,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.014081510715186596,
+                                0.011437978595495224
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010545756667852402,
+                                0.007189950440078974
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 53,
+            "value": {
+                "geometric": {
+                    "digital": false,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 660,
+                                "max": 16.5,
+                                "min": -16.5,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1360,
+                                "max": 34.0,
+                                "min": -34.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.125,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.014081510715186596,
+                                0.011437978595495224
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.010545756667852402,
+                                0.007189950440078974
+                            ]
+                        }
+                    ]
+                },
+                "smearing": [
+                    {
+                        "index": 5,
+                        "stddev": 25,
+                        "type": "GaussClipped",
+                        "range": [
+                            -3,
+                            3
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "volume": 61,
             "value": {
                 "geometric": {
                     "digital": true,
@@ -316,7 +1257,505 @@
             }
         },
         {
-            "volume": 25,
+            "volume": 62,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 600,
+                                "max": 24.0,
+                                "min": -24.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 216,
+                                "max": 54.0,
+                                "min": -54.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.016297858208417892,
+                                0.010280986316502094
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.11968211084604263,
+                                0.07279262691736221,
+                                0.06303081661462784
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 63,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 600,
+                                "max": 24.0,
+                                "min": -24.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 216,
+                                "max": 54.0,
+                                "min": -54.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.016297858208417892,
+                                0.010280986316502094
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.11968211084604263,
+                                0.07279262691736221,
+                                0.06303081661462784
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 64,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 600,
+                                "max": 24.0,
+                                "min": -24.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 216,
+                                "max": 54.0,
+                                "min": -54.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.016297858208417892,
+                                0.010280986316502094
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.11968211084604263,
+                                0.07279262691736221,
+                                0.06303081661462784
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 72,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1410,
+                                "max": 56.4,
+                                "min": -56.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 312,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.02119974046945572,
+                                0.004564409144222736
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.1295207291841507,
+                                0.018370402976870537
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 73,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1410,
+                                "max": 56.4,
+                                "min": -56.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 312,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.02119974046945572,
+                                0.004564409144222736
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.1295207291841507,
+                                0.018370402976870537
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 74,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1410,
+                                "max": 56.4,
+                                "min": -56.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 312,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.02119974046945572,
+                                0.004564409144222736
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.1295207291841507,
+                                0.018370402976870537
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 75,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1410,
+                                "max": 56.4,
+                                "min": -56.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 312,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.02119974046945572,
+                                0.004564409144222736
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.1295207291841507,
+                                0.018370402976870537
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 76,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1410,
+                                "max": 56.4,
+                                "min": -56.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 312,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.02119974046945572,
+                                0.004564409144222736
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.1295207291841507,
+                                0.018370402976870537
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 77,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1410,
+                                "max": 56.4,
+                                "min": -56.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 312,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.02119974046945572,
+                                0.004564409144222736
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.1295207291841507,
+                                0.018370402976870537
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 85,
             "value": {
                 "geometric": {
                     "digital": true,
@@ -371,25 +1810,26 @@
             }
         },
         {
-            "volume": 28,
+            "volume": 86,
             "value": {
                 "geometric": {
                     "digital": true,
                     "indices": [
-                        0
+                        0,
+                        1
                     ],
                     "segmentation": {
                         "binningdata": [
                             {
-                                "bins": 1120,
-                                "max": 70.0,
-                                "min": -70.0,
+                                "bins": 1410,
+                                "max": 56.4,
+                                "min": -56.4,
                                 "option": "open",
                                 "type": "equidistant",
                                 "value": "binX"
                             },
                             {
-                                "bins": 1,
+                                "bins": 312,
                                 "max": 78.0,
                                 "min": -78.0,
                                 "option": "open",
@@ -398,7 +1838,7 @@
                             }
                         ]
                     },
-                    "thickness": 0.25,
+                    "thickness": 0.2,
                     "threshold": 0.01,
                     "charge-smearing": {
                         "mean": 0.0,
@@ -409,8 +1849,15 @@
                         {
                             "index": 0,
                             "rms": [
-                                0.0315372459590435,
-                                0.010651092045009136
+                                0.021171171218156815,
+                                0.004553905688226223
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.1295597106218338,
+                                0.018329542130231857
                             ]
                         }
                     ]
@@ -418,7 +1865,227 @@
             }
         },
         {
-            "volume": 29,
+            "volume": 87,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1410,
+                                "max": 56.4,
+                                "min": -56.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 312,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.021171171218156815,
+                                0.004553905688226223
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.1295597106218338,
+                                0.018329542130231857
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 88,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1410,
+                                "max": 56.4,
+                                "min": -56.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 312,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.021171171218156815,
+                                0.004553905688226223
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.1295597106218338,
+                                0.018329542130231857
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 89,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1410,
+                                "max": 56.4,
+                                "min": -56.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 312,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.021171171218156815,
+                                0.004553905688226223
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.1295597106218338,
+                                0.018329542130231857
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 90,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0,
+                        1
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1410,
+                                "max": 56.4,
+                                "min": -56.4,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 312,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.2,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.021171171218156815,
+                                0.004553905688226223
+                            ]
+                        },
+                        {
+                            "index": 1,
+                            "rms": [
+                                0.1295597106218338,
+                                0.018329542130231857
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 94,
             "value": {
                 "geometric": {
                     "digital": true,
@@ -466,7 +2133,572 @@
             }
         },
         {
-            "volume": 30,
+            "volume": 95,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 960,
+                                "max": 48.0,
+                                "min": -48.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 54.0,
+                                "min": -54.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.02105148695409298,
+                                0.015449365600943565,
+                                0.009776489809155464
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 103,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1120,
+                                "max": 70.0,
+                                "min": -70.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.0315372459590435,
+                                0.010651092045009136
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 104,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1120,
+                                "max": 70.0,
+                                "min": -70.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.0315372459590435,
+                                0.010651092045009136
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 105,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1120,
+                                "max": 70.0,
+                                "min": -70.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.0315372459590435,
+                                0.010651092045009136
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 106,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1120,
+                                "max": 70.0,
+                                "min": -70.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.0315372459590435,
+                                0.010651092045009136
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 107,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1120,
+                                "max": 70.0,
+                                "min": -70.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.0315372459590435,
+                                0.010651092045009136
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 108,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1120,
+                                "max": 70.0,
+                                "min": -70.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.0315372459590435,
+                                0.010651092045009136
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 116,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1120,
+                                "max": 70.0,
+                                "min": -70.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.03152630850672722,
+                                0.010682390071451664
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 117,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1120,
+                                "max": 70.0,
+                                "min": -70.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.03152630850672722,
+                                0.010682390071451664
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 118,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1120,
+                                "max": 70.0,
+                                "min": -70.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.03152630850672722,
+                                0.010682390071451664
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 119,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1120,
+                                "max": 70.0,
+                                "min": -70.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.03152630850672722,
+                                0.010682390071451664
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 120,
+            "value": {
+                "geometric": {
+                    "digital": true,
+                    "indices": [
+                        0
+                    ],
+                    "segmentation": {
+                        "binningdata": [
+                            {
+                                "bins": 1120,
+                                "max": 70.0,
+                                "min": -70.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binX"
+                            },
+                            {
+                                "bins": 1,
+                                "max": 78.0,
+                                "min": -78.0,
+                                "option": "open",
+                                "type": "equidistant",
+                                "value": "binY"
+                            }
+                        ]
+                    },
+                    "thickness": 0.25,
+                    "threshold": 0.01,
+                    "charge-smearing": {
+                        "mean": 0.0,
+                        "stddev": 0.01,
+                        "type": "Gauss"
+                    },
+                    "variances": [
+                        {
+                            "index": 0,
+                            "rms": [
+                                0.03152630850672722,
+                                0.010682390071451664
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "volume": 121,
             "value": {
                 "geometric": {
                     "digital": true,
